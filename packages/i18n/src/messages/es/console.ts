@@ -149,6 +149,10 @@ export const consoleMsgs = {
       classReports: 'Informes de clase',
       lecture: 'Modo proyección',
     },
+    navAttention: {
+      classes: (n: number) => `Clases, ${n} por aprobar`,
+      home: (n: number) => `Inicio, ${n} por revisar`,
+    },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
   pageBack: {
@@ -241,6 +245,8 @@ export const consoleMsgs = {
     lessons: 'Lecciones',
     noClass: { title: 'Aún no tienes una clase.', setUp: 'Crear una clase', goFamily: 'Ir a Familia' },
     cross: { addFamily: '¿También aprenden en casa? Crea un espacio familiar', toFamily: 'Tu familia está en Familia' },
+    attention: (n: number) => `${n} por aprobar`,
+    schoolClassAttention: (className: string, n: number) => `${className}: ${n} por aprobar`,
   },
   space: {
     loading: 'Cargando…',
@@ -1156,6 +1162,26 @@ export const consoleMsgs = {
     actionsFor: (family: string) => `Acciones de ${family}`,
     askOwner: 'Pide un código familiar a quien creó el espacio familiar.',
     copyFailed: 'No se pudo copiar. El código está en la pantalla.',
+    needsYou: {
+      title: 'Necesita tu respuesta',
+      move: (name: string) => `Un cambio de clase de ${name} espera tu aprobación.`,
+      moveMeta: (to: string, days: number) => `Clase nueva: ${to} · ${plural('es', days, { one: `Termina en ${days} día`, other: `Termina en ${days} días` })}`,
+      relink: (name: string) => `${name} quiere seguir en un dispositivo nuevo.`,
+      scope: (name: string) => `Lee qué pueden ver los docentes de ${name}.`,
+      readOk: { cta: 'Leer y aceptar' },
+      more: (n: number) => plural('es', n, { one: `${n} cosa más por revisar`, other: `${n} cosas más por revisar` }),
+      seeAll: { cta: 'Ver todo' },
+    },
+    status: {
+      move: 'Cambio de clase · por aprobar',
+      relink: 'Dispositivo nuevo · por aprobar',
+      scope: 'Aviso de clase por leer',
+    },
+    classLine: {
+      one: (className: string) => `En: ${className}`,
+      many: (n: number) => `En ${n} clases`,
+      none: 'Solo en familia',
+    },
   },
   journey: {
     title: 'Ruta de aprendizaje',
@@ -1467,6 +1493,9 @@ export const consoleMsgs = {
     memberNoun: { family: 'estudiante', class: 'estudiante', school: 'miembro' },
     entry: { cta: 'Cambios de clase' },
     waiting: (n: number) => plural('es', n, { one: `${n} cambio de clase pendiente`, other: `${n} cambios de clase pendientes` }),
+    familyNeedsYou: (n: number) =>
+      plural('es', n, { one: `${n} cambio de clase espera tu aprobación`, other: `${n} cambios de clase esperan tu aprobación` }),
+    endsOn: (date: string) => `Termina el ${date}`,
     schoolRow: (className: string, n: number) =>
       `${className}: ${plural('es', n, { one: `${n} cambio de clase pendiente`, other: `${n} cambios de clase pendientes` })}`,
     back: (space: string) => `Volver a ${space}`,
@@ -1486,6 +1515,7 @@ export const consoleMsgs = {
       saidYes: 'dijo que sí',
       youSaidYes: 'dijiste que sí',
       waiting: 'pendiente',
+      yourAnswer: 'falta tu respuesta',
     },
     meta: {
       asked: (days: number) => (days === 0 ? 'se pidió hoy' : plural('es', days, { one: `se pidió hace ${days} día`, other: `se pidió hace ${days} días` })),
@@ -1832,5 +1862,41 @@ export const consoleMsgs = {
     firstSignIn: 'Esto funciona después de abrir aquí las páginas para adultos con el PIN. En la app, usa el código de rescate o la espera de 24 horas.',
     noPin: 'Este dispositivo no tiene un PIN de adultos que restablecer.',
     unavailable: 'Esto no está disponible ahora. Usa Olvidé el PIN en la app.',
+  },
+  status: {
+    inClass: 'En la clase',
+    needsOk: 'Por aprobar',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => plural('es', minutes, { one: `Dispositivo nuevo · queda ${minutes} min`, other: `Dispositivo nuevo · quedan ${minutes} min` }),
+    moveTo: (className: string) => `Cambio de clase: ${className}`,
+    moveWaiting: 'Cambio en espera',
+    waitingFor: (className: string) => `Esperando a: ${className}`,
+    moving: (date: string) => `Cambia de clase el ${date}`,
+    waitingSeat: 'Esperando un lugar',
+    new: 'Nueva llegada',
+    noPractice: 'Aún sin práctica registrada',
+    minutesLeft: (minutes: number) => plural('es', minutes, { one: `Queda ${minutes} min`, other: `Quedan ${minutes} min` }),
+    review: { cta: 'Revisar' },
+  },
+  attention: {
+    incomingHeading: 'Quieren unirse a esta clase',
+    from: (className: string) => `Viene de ${className}`,
+    title: (n: number) => plural('es', n, { one: `${n} solicitud espera tu aprobación`, other: `${n} solicitudes esperan tu aprobación` }),
+    devices: (n: number) => plural('es', n, { one: `${n} dispositivo nuevo`, other: `${n} dispositivos nuevos` }),
+    moves: (n: number) => plural('es', n, { one: `${n} cambio de clase`, other: `${n} cambios de clase` }),
+    reviewNow: { cta: 'Revisar ahora' },
+    sheetTitle: 'Espera tu aprobación',
+    devicesHeading: 'Dispositivos nuevos',
+    outgoingHeading: 'Salidas de esta clase',
+    empty: 'No hay nada pendiente.',
+  },
+  relinkPopup: {
+    title: (name: string) => `Solicitud de dispositivo nuevo: ${name}`,
+    closes: (minutes: number) => `Esta solicitud se cierra en ${minutes} min.`,
+    later: { cta: 'Más tarde' },
+  },
+  relinkBar: {
+    one: (space: string) => `Un dispositivo nuevo espera tu aprobación · ${space}`,
+    many: (n: number) => plural('es', n, { one: `${n} dispositivo nuevo espera tu aprobación`, other: `${n} dispositivos nuevos esperan tu aprobación` }),
   },
 } satisfies DeepPartial<Messages['console']>;

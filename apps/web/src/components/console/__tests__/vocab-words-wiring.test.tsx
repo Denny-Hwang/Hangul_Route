@@ -85,6 +85,9 @@ const api = {
   roster: async () => ok({ space: SPACE, learners, joinCode: null, joinCodeExpiresAt: null }),
   listPlans: async () => ok([]),
   relinkRequests: async () => ok([]),
+  // GX-1: the class page also reads the class's move lists (only while class moves are shown).
+  transferRequests: async () => ok({ requests: [] }),
+  classMoves: async () => ok({ outgoing: [], incoming: [] }),
   listSpaces: async () => ok([]),
   entitlements: async () => ok([]),
 };

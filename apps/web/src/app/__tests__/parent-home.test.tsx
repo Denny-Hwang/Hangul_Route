@@ -1,3 +1,4 @@
+import { typography } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
@@ -5,6 +6,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { findBannedWord } from '@/lib/console/banned-text';
 import { codeExpiry } from '@/lib/console/rollup';
+import { VISIBLE_POLL_MS } from '@/lib/console/visible-refresh';
 
 /**
  * F-APP-001 A-5b, section 3.8 (design/screens/app-shell/parent-home.md): the family home. Cards in
@@ -41,10 +43,11 @@ vi.mock('@/lib/console/join-handoff', () => ({
 }));
 
 // The frame has its own tests (adult-frame.test.tsx); here it records the spaces the page hands it.
-const frame = vi.hoisted(() => ({ spaces: [] as unknown[] }));
+const frame = vi.hoisted(() => ({ spaces: [] as unknown[], counts: [] as Array<{ attentionHere?: boolean; attentionTotal?: number }> }));
 vi.mock('@/components/console/AdultFrame', () => ({
-  AdultFrame: ({ children, spaces }: { children: ReactNode; spaces?: unknown }) => {
+  AdultFrame: ({ children, spaces, attentionHere, attentionTotal }: { children: ReactNode; spaces?: unknown; attentionHere?: boolean; attentionTotal?: number }) => {
     frame.spaces.push(spaces);
+    frame.counts.push({ attentionHere, attentionTotal });
     return <main>{children}</main>;
   },
 }));
@@ -61,6 +64,17 @@ const data = vi.hoisted(() => ({
   scopeThrows: false,
   /** [SA] The family renames the page sent (AMENDMENTS-SEATS-ADMINS section 5.3). */
   renames: [] as Array<{ id: string; name: string }>,
+  /** GX-4: the family's re-links, class moves (with options) and notices; the calls the page made. */
+  relinks: null as unknown,
+  transfers: null as unknown,
+  notices: null as unknown,
+  calls: [] as string[],
+  /** The next re-link read answers with this promise instead (a read that is still under way). */
+  relinkNext: null as Promise<unknown> | null,
+  /** GX-5: a family's own re-link read (by family id), before `relinks`. */
+  relinksBy: {} as Record<string, unknown>,
+  /** GX-5: the next decision fails with this answer instead. */
+  decideFails: null as unknown,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -81,9 +95,42 @@ vi.mock('@/components/console/use-console', async () => {
       if (data.scopeThrows) throw new Error('network');
       return data.scope ?? { ok: true, data: { current: 'class-scope-2026-10', learners: [] } };
     },
-    acknowledgeClassScope: async () => ({ ok: true, data: { version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' } }),
-    moveNotices: async () => ({ ok: true, data: [] }),
-    markMoveSeen: async () => ({ ok: true, data: { seen: true } }),
+    acknowledgeClassScope: async (id: string, learnerId: string, version: string) => {
+      data.calls.push(`ack:${id}:${learnerId}:${version}`);
+      return { ok: true, data: { version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' } };
+    },
+    moveNotices: async (id: string) => {
+      data.calls.push(`notices:${id}`);
+      return data.notices ?? { ok: true, data: [] };
+    },
+    markMoveSeen: async (id: string, moveId: string) => {
+      data.calls.push(`seen:${id}:${moveId}`);
+      return { ok: true, data: { seen: true } };
+    },
+    relinkRequests: async (id: string) => {
+      data.calls.push(`relinks:${id}`);
+      if (data.relinkNext) {
+        const next = data.relinkNext;
+        data.relinkNext = null;
+        return next;
+      }
+      return data.relinksBy[id] ?? data.relinks ?? { ok: true, data: [] };
+    },
+    transferRequests: async (id: string) => {
+      data.calls.push(`transfers:${id}`);
+      return data.transfers ?? { ok: true, data: { requests: [], options: [] } };
+    },
+    decideRelink: async (id: string, requestId: string, approve: boolean) => {
+      data.calls.push(`decide:${id}:${requestId}:${approve}`);
+      if (data.decideFails) {
+        const failure = data.decideFails;
+        data.decideFails = null;
+        return failure;
+      }
+      data.relinks = { ok: true, data: [] };
+      delete data.relinksBy[id];
+      return { ok: true, data: { id: requestId } };
+    },
     renameSpace: async (id: string, name: string) => {
       data.renames.push({ id, name });
       return { ok: true, data: { space: { id, kind: 'family', name, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: '2026-10-01T00:00:00Z' }, changed: true } };
@@ -144,6 +191,7 @@ beforeEach(() => {
   shellWrites.personas = [];
   handoff.calls = [];
   frame.spaces = [];
+  frame.counts = [];
   data.rosters = {};
   data.rosterCalls = [];
   data.regenerated = [];
@@ -152,6 +200,13 @@ beforeEach(() => {
   data.scope = null;
   data.scopeThrows = false;
   data.renames = [];
+  data.relinks = null;
+  data.transfers = null;
+  data.notices = null;
+  data.calls = [];
+  data.relinkNext = null;
+  data.relinksBy = {};
+  data.decideFails = null;
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
@@ -533,5 +588,529 @@ describe('the family home: rename and seats (SA-3)', () => {
     r = await render([family]);
     expect(textOf(byTestId(r, 'family-seats')[0] as ReactTestInstance)).toBe('0 of 4 learners');
     expect(byTestId(r, 'family-seats-line')).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AMENDMENTS-GROWNUP-UX GX-4 (section 7; wireframe design/wireframes/parent/needs-you.md): Needs you under the family
+// heading, a status chip and a class line on each child card, the move notice inside its child's card.
+
+describe('the family home: Needs you, child chips and class lines (GX-4)', () => {
+  const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
+  const sora = learner('profile:sora', 'Sora', '2026-09-09T00:00:00Z', 0);
+  const pendingRelink = { id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: '2026-10-12T11:57:00Z', expiresAt: '2026-10-12T12:07:00Z', status: 'pending' };
+  const familyMove = {
+    id: 'transfer:f1',
+    role: 'learner_side',
+    status: 'requested',
+    initiator: 'source',
+    learner: { id: 'profile:jun', name: 'Jun' },
+    from: { spaceId: 'space:a', name: 'Sunday Class A' },
+    to: { spaceId: 'space:d', name: 'Evening Class D', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 8 },
+    learnerState: 'pending',
+    sourceState: 'yes',
+    destinationState: 'waiting',
+    introduce: false,
+    premiumChange: 'none',
+    destinationConsentMode: 'parent',
+    relinkAffected: false,
+    sourcePlansAffected: false,
+    visibleToday: [],
+    blockReason: null,
+    executeAfter: null,
+    createdAt: '2026-10-11T12:00:00Z',
+    expiresAt: '2026-10-21T12:00:00Z',
+    executedAt: null,
+    endedAt: null,
+    learnerRoute: 'caregiver',
+    endedFrom: null,
+    termsDigest: 'b'.repeat(64),
+  };
+  const options = [
+    { learnerId: 'profile:mina', name: 'Mina', classes: [{ spaceId: 'space:d', name: 'Evening Class D' }], selfManaged: false, blockTeacherRequests: false },
+    { learnerId: 'profile:jun', name: 'Jun', classes: [{ spaceId: 'space:a', name: 'Sunday Class A' }, { spaceId: 'space:b', name: 'Saturday Class' }], selfManaged: false, blockTeacherRequests: false },
+    { learnerId: 'profile:sora', name: 'Sora', classes: [], selfManaged: false, blockTeacherRequests: false },
+  ];
+  const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
+  const order = (r: ReactTestRenderer): string[] =>
+    r.root.findAll((n) => typeof n.type === 'string' && ['needs-you', 'family-class-cards', 'learner-card'].includes(n.props['data-testid'] as string)).map((n) => n.props['data-testid'] as string);
+
+  it('nothing waits: no strip, no chip; children start right under the heading', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(byTestId(r, 'child-status')).toHaveLength(0);
+  });
+
+  it('a child asking to continue on a new device: the strip above every card with Approve inline, and the chip on that child (text, not a button)', async () => {
+    data.rosters = { sp_f: roster(family, [mina, jun]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    const r = await render([family]);
+    expect(order(r)).toEqual(['needs-you', 'learner-card', 'learner-card']);
+    expect(textOf(byTestId(r, 'needs-you')[0] as ReactTestInstance)).toContain(p.needsYou.relink('Mina'));
+    const chip = card(r, 'Mina').find((n) => n.props['data-testid'] === 'child-status' && typeof n.type === 'string');
+    expect(chip.type).toBe('span');
+    expect(textOf(chip)).toBe(p.status.relink);
+    expect(card(r, 'Jun').findAll((n) => n.props['data-testid'] === 'child-status')).toHaveLength(0);
+    // The re-link read runs whatever CLASS_TRANSFER says; the class-move reads do not (the flag is off here).
+    expect(data.calls).toContain('relinks:sp_f');
+    expect(data.calls.some((c) => c.startsWith('transfers:') || c.startsWith('notices:'))).toBe(false);
+    // GX-5: the pop-up opened on its own for the new request; Later closes it, and the strip's Approve opens it again
+    // (GX-D12: never approved without the hint). Its Approve answers, then the family is read again and the row leaves.
+    await act(async () => (byTestId(r, 'relink-popup-later')[0] as ReactTestInstance).props.onClick());
+    expect(byTestId(r, 'relink-popup')).toHaveLength(0);
+    await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    expect(data.calls).not.toContain('decide:sp_f:relink:1:true');
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+    expect(data.calls).toContain('decide:sp_f:relink:1:true');
+    expect(byTestId(r, 'relink-popup')).toHaveLength(0);
+    expect(data.calls.filter((c) => c === 'relinks:sp_f')).toHaveLength(2);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.approved('Mina'));
+  });
+
+  it('class moves on: the move row with Review, the move chip, and the class line on every child (one, many, none)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.rosters = { sp_f: roster(family, [mina, jun, sora]) };
+    data.transfers = { ok: true, data: { requests: [familyMove], options } };
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-review')).toHaveLength(1);
+    expect(textOf(byTestId(r, 'needs-you')[0] as ReactTestInstance)).toContain(p.needsYou.move('Jun'));
+    expect(textOf(card(r, 'Jun').find((n) => n.props['data-testid'] === 'child-status' && typeof n.type === 'string'))).toBe(p.status.move);
+    const lines = (name: string): string => textOf(card(r, name).find((n) => n.props['data-testid'] === 'child-class-line' && typeof n.type === 'string'));
+    expect(lines('Mina')).toBe(p.classLine.one('Evening Class D'));
+    expect(lines('Jun')).toBe(`${p.classLine.many(2)}Sunday Class A · Saturday Class`);
+    expect(lines('Sora')).toBe(p.classLine.none);
+    // The strip replaces the family actions' "N class moves waiting" pill.
+    expect(byTestId(r, 'family-moves-waiting')).toHaveLength(0);
+  });
+
+  it('the class line is omitted when the class-move read is skipped (flag off) or fails, never "Family only" on a guess', async () => {
+    data.rosters = { sp_f: roster(family, [sora]) };
+    data.transfers = { ok: true, data: { requests: [], options } };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    let r = await render([family]);
+    expect(byTestId(r, 'child-class-line')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.transfers = { ok: false, error: 'network', status: -1 };
+    r = await render([family]);
+    expect(byTestId(r, 'child-class-line')).toHaveLength(0);
+    expect(allText(r)).not.toContain(p.classLine.none);
+  });
+
+  it('three items fold: the soonest-closing row and "2 more things need you" with See all; the first child card still follows', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.rosters = { sp_f: roster(family, [mina, jun, sora]) };
+    data.relinks = { ok: true, data: [pendingRelink, { ...pendingRelink, id: 'relink:2', learnerId: 'profile:sora', learnerName: 'Sora', expiresAt: '2026-10-12T12:09:00Z' }] };
+    data.transfers = { ok: true, data: { requests: [familyMove], options } };
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-row').map((row) => row.props['data-kind'])).toEqual(['relink']);
+    expect(textOf(byTestId(r, 'needs-you-more')[0] as ReactTestInstance)).toContain(p.needsYou.more(2));
+    expect(order(r)[0]).toBe('needs-you');
+    expect(order(r)[1]).toBe('learner-card');
+  });
+
+  it("the move notice sits inside the card of the child it is about, after the child's lines and before the buttons; OK writes seen", async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.rosters = { sp_f: roster(family, [mina, jun]) };
+    data.notices = { ok: true, data: [{ id: 'mv:1', learnerId: 'profile:mina', learnerName: 'Mina', to: { spaceId: 'space:d', name: 'Evening Class D' }, executedAt: '2026-10-11T00:00:00Z' }] };
+    const r = await render([family]);
+    const notice = card(r, 'Mina').findAll((n) => n.props['data-testid'] === 'move-notice' && typeof n.type === 'string');
+    expect(notice).toHaveLength(1);
+    expect(textOf(notice[0] as ReactTestInstance)).toContain(en.console.classScope.notice('Mina', 'Evening Class D'));
+    expect(card(r, 'Jun').findAll((n) => n.props['data-testid'] === 'move-notice')).toHaveLength(0);
+    const inMina = card(r, 'Mina').findAll((n) => typeof n.type === 'string' && (n.props['data-testid'] === 'move-notice' || n.type === 'a')).map((n) => (n.type === 'a' ? 'link' : 'notice'));
+    expect(inMina[0]).toBe('notice');
+    await act(async () => (card(r, 'Mina').find((n) => n.props['data-testid'] === 'move-notice-ok' && typeof n.type === 'string')).props.onClick());
+    expect(data.calls).toContain('seen:sp_f:mv:1');
+    expect(byTestId(r, 'move-notice')).toHaveLength(0);
+  });
+
+  it('Read and OK brings the shipped class-scope card into view and focuses it (GX-OD-3 open: the card stays)', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    data.scope = { ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:mina', name: 'Mina', needed: true }] } };
+    const target = { scrollIntoView: vi.fn(), focus: vi.fn() };
+    const getElementById = vi.fn(() => target);
+    vi.stubGlobal('document', { getElementById, activeElement: null });
+    const r = await render([family]);
+    expect(byTestId(r, 'class-scope-card')).toHaveLength(1);
+    await act(async () => (byTestId(r, 'needs-you-read')[0] as ReactTestInstance).props.onClick());
+    expect(getElementById).toHaveBeenCalledWith('class-scope-sp_f-profile:mina');
+    expect(target.scrollIntoView).toHaveBeenCalled();
+    expect(target.focus).toHaveBeenCalledWith({ preventScroll: true });
+    vi.unstubAllGlobals();
+  });
+
+  it('a read that started before an answer and ends after it never puts the answered row back (the newest read draws)', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-approve')).toHaveLength(1);
+    // A read of the family starts and is still under way (it will say the re-link is pending)...
+    let finishOld: (value: unknown) => void = () => undefined;
+    data.relinkNext = new Promise((resolve) => {
+      finishOld = resolve;
+    });
+    const classCards = r.root.find((n) => typeof n.type !== 'string' && typeof n.props.onStale === 'function' && 'scope' in n.props);
+    act(() => classCards.props.onStale());
+    // ...then Approve (GX-5: the strip's Approve opens the pop-up, which answers): the answer's own read lands first and
+    // the row leaves.
+    await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    // The older read ends now: it is dropped, so the decided row and its chip do not come back.
+    await act(async () => finishOld({ ok: true, data: [pendingRelink] }));
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(byTestId(r, 'child-status')).toHaveLength(0);
+  });
+
+  it('an archived family asks nothing and draws no strip', async () => {
+    const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [mina]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    const r = await render([archived]);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(data.calls).toEqual([]);
+  });
+});
+
+describe('the family home: the re-link pop-up, the 20 s re-link read and the tab count (GX-5)', () => {
+  const ana = learner('profile:mina', 'Mina', '2026-09-05T00:00:00Z', 15);
+  const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
+  const NOW = new Date('2026-10-12T12:00:00Z');
+  const at = (minutes: number): string => new Date(NOW.getTime() + minutes * 60_000).toISOString();
+  const request = (over: Record<string, unknown> = {}) => ({ id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: at(-3), expiresAt: at(7), status: 'pending', ...over });
+  const listeners = new Map<string, Set<() => void>>();
+  const fakeDocument = {
+    visibilityState: 'visible',
+    activeElement: null,
+    body: null,
+    getElementById: () => null,
+    addEventListener: (type: string, l: () => void) => {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type)?.add(l);
+    },
+    removeEventListener: (type: string, l: () => void) => listeners.get(type)?.delete(l),
+  };
+  beforeEach(() => {
+    // The suite fakes the clock only; these cases also run the 20 s and 90 s timers.
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(NOW);
+    vi.stubGlobal('document', fakeDocument);
+    listeners.clear();
+    data.rosters = { sp_f: roster(family, [ana, jun]) };
+  });
+  afterEach(() => {
+    act(() => mounted?.unmount());
+    mounted = null;
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+  const advance = async (ms: number): Promise<void> => {
+    await act(async () => {
+      vi.advanceTimersByTime(ms);
+    });
+    await act(async () => undefined);
+  };
+  const popup = (r: ReactTestRenderer): ReactTestInstance[] => byTestId(r, 'relink-popup');
+  const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
+    await act(async () => (byTestId(r, id)[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+  };
+
+  it('a new device request opens the pop-up on its own: an alertdialog with its title, the shipped hint and the minutes left', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    expect(popup(r)).toHaveLength(1);
+    const dialog = popup(r)[0] as ReactTestInstance;
+    expect(dialog.props.role).toBe('alertdialog');
+    expect(textOf(dialog)).toContain(en.console.relinkPopup.title('Mina'));
+    expect(textOf(dialog)).toContain(en.console.relinkApproveHint);
+    expect(textOf(dialog)).toContain(en.console.relinkPopup.closes(7));
+    // The strip and the chip stay under it.
+    expect(byTestId(r, 'needs-you')).toHaveLength(1);
+  });
+
+  it('Approve answers for the family; the result is said by the strip, the family is read again and the request leaves', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-approve');
+    expect(data.calls).toContain('decide:sp_f:relink:1:true');
+    expect(popup(r)).toHaveLength(0);
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.approved('Mina'));
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+  });
+
+  it('Deny in the pop-up closes the request too, in one tap', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-deny');
+    expect(data.calls).toContain('decide:sp_f:relink:1:false');
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.denied('Mina'));
+  });
+
+  it('every 20 s in view the page reads the re-links alone (one call per live family, nothing else)', async () => {
+    const lee = item('sp_l', 'family', 'caregiver', 'Lee family');
+    data.rosters = { sp_f: roster(family, [ana]), sp_l: roster(lee, [jun]) };
+    await render([family, lee]);
+    data.calls = [];
+    data.rosterCalls = [];
+    await advance(20_000);
+    expect([...data.calls].sort()).toEqual(['relinks:sp_f', 'relinks:sp_l']);
+    expect(data.rosterCalls).toEqual([]);
+    await advance(20_000);
+    expect(data.calls.filter((c) => c.startsWith('relinks:'))).toHaveLength(4);
+  });
+
+  it('with nothing pending at load, a new request opens the pop-up within one 20 s read', async () => {
+    const r = await render([family]);
+    expect(popup(r)).toHaveLength(0);
+    data.relinks = { ok: true, data: [request({ requestedAt: at(0), expiresAt: at(10) })] };
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(1);
+  });
+
+  it('Later closes it once; it opens once more at 2 minutes left (the reminder), and never a third time', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-later');
+    expect(popup(r)).toHaveLength(0);
+    // The strip's row and the chip stay.
+    expect(byTestId(r, 'needs-you-row')).toHaveLength(1);
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(0);
+    // 7 min left at load: the reminder opens on the first read with 2 minutes or less left.
+    await advance(4 * 60_000 + 40_000);
+    expect(popup(r)).toHaveLength(1);
+    expect((popup(r)[0] as ReactTestInstance).props['data-reminder']).toBe('true');
+    expect(textOf(popup(r)[0] as ReactTestInstance)).toContain(en.console.relinkPopup.closes(2));
+    await tap(r, 'relink-popup-later');
+    await advance(60_000);
+    expect(popup(r)).toHaveLength(0);
+  });
+
+  it('waits while See all is open, then opens', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    data.scope = { ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:jun', name: 'Jun', needed: true }] } };
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-later');
+    data.relinks = { ok: true, data: [request(), request({ id: 'relink:2', learnerId: 'profile:jun', learnerName: 'Jun', expiresAt: at(9) })] };
+    await advance(20_000);
+    // Three items fold: See all opens the sheet; a new request then waits for it.
+    expect(popup(r)).toHaveLength(1);
+    await tap(r, 'relink-popup-later');
+    data.relinks = { ok: true, data: [request(), request({ id: 'relink:2', learnerId: 'profile:jun', learnerName: 'Jun', expiresAt: at(9) }), request({ id: 'relink:3', expiresAt: at(9.5) })] };
+    await tap(r, 'needs-you-see-all');
+    expect(byTestId(r, 'needs-you-sheet')).toHaveLength(1);
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(0);
+    await act(async () => r.root.find((n) => n.props.className === 'hr-move-scrim').props.onClick());
+    await act(async () => undefined);
+    expect(popup(r)).toHaveLength(1);
+  });
+
+  it('the Home tab and the title: the frame gets this page\'s count (re-links + answerable moves + class-scope updates) and reads none of its own', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    data.scope = { ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:jun', name: 'Jun', needed: true }] } };
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 2 });
+    await tap(r, 'relink-popup-approve');
+    expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 1 });
+  });
+
+  it('two families: the pop-up for the second family\'s request answers on that family\'s route', async () => {
+    const lee = item('sp_l', 'family', 'caregiver', 'Lee family');
+    data.rosters = { sp_f: roster(family, [ana]), sp_l: roster(lee, [jun]) };
+    data.relinksBy = { sp_f: { ok: true, data: [] }, sp_l: { ok: true, data: [request({ id: 'relink:b', learnerId: 'profile:jun', learnerName: 'Jun' })] } };
+    const r = await render([family, lee]);
+    expect(textOf(popup(r)[0] as ReactTestInstance)).toContain(en.console.relinkPopup.title('Jun'));
+    await tap(r, 'relink-popup-approve');
+    expect(data.calls).toContain('decide:sp_l:relink:b:true');
+    expect(data.calls.some((call) => call.startsWith('decide:sp_f:'))).toBe(false);
+    data.relinksBy = {};
+  });
+
+  it('a failed answer (offline, a 5xx) keeps the pop-up open with its line, so the parent can try again', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    data.decideFails = { ok: false, error: 'network', status: -1 };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-approve');
+    expect(popup(r)).toHaveLength(1);
+    expect(byTestId(r, 'relink-popup-failed')).toHaveLength(1);
+    await tap(r, 'relink-popup-approve');
+    expect(popup(r)).toHaveLength(0);
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.approved('Mina'));
+  });
+
+  it('a 20 s read that began before an answer never puts the answered request back (no row, no pop-up)', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    let finish: (value: unknown) => void = () => undefined;
+    data.relinkNext = new Promise((resolve) => {
+      finish = resolve;
+    });
+    await advance(20_000);
+    await tap(r, 'relink-popup-approve');
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    // The older read ends now, still listing the request as pending.
+    await act(async () => finish({ ok: true, data: [request()] }));
+    await act(async () => undefined);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(popup(r)).toHaveLength(0);
+  });
+
+  it('an archived family: no pop-up and no 20 s read', async () => {
+    const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [ana]) };
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([archived]);
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(0);
+    expect(data.calls).toEqual([]);
+  });
+});
+
+describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-3)', () => {
+  const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
+  const scopeFor = (learnerId: string, name: string) => ({ ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId, name, needed: true }] } });
+  const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
+  const chipOf = (r: ReactTestRenderer, name: string): ReactTestInstance => card(r, name).find((n) => n.props['data-testid'] === 'child-status' && typeof n.type === 'string');
+  const tap = async (node: ReactTestInstance): Promise<void> => {
+    await act(async () => node.props.onClick());
+    await act(async () => undefined);
+  };
+  const focusTarget = { scrollIntoView: vi.fn(), focus: vi.fn() };
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    focusTarget.scrollIntoView.mockClear();
+    focusTarget.focus.mockClear();
+    vi.stubGlobal('document', { getElementById: vi.fn(() => focusTarget), activeElement: null, visibilityState: 'visible', addEventListener: () => undefined, removeEventListener: () => undefined });
+    data.rosters = { sp_f: roster(family, [mina, jun]) };
+    data.scope = scopeFor('profile:jun', 'Jun');
+  });
+  afterEach(() => {
+    // Unmount while the stand-in document is still there (the pop-up's cleanup reads it).
+    act(() => mounted?.unmount());
+    mounted = null;
+    vi.unstubAllGlobals();
+  });
+
+  it('off by default: the shipped card stays under the strip, the chip is text, and no sheet opens', async () => {
+    const r = await render([family]);
+    expect(byTestId(r, 'class-scope-card')).toHaveLength(1);
+    expect(chipOf(r, 'Jun').type).toBe('span');
+    await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+    expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+    expect(focusTarget.scrollIntoView).toHaveBeenCalled();
+  });
+
+  describe('with NEXT_PUBLIC_FAMILY_SCOPE_SHEET on', () => {
+    beforeEach(() => {
+      vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', 'on');
+    });
+
+    it('the home draws no class-scope card, so the children follow the strip; the strip still lists the update', async () => {
+      const r = await render([family]);
+      expect(byTestId(r, 'class-scope-card')).toHaveLength(0);
+      expect(byTestId(r, 'family-class-cards')).toHaveLength(0);
+      const order = r.root.findAll((n) => typeof n.type === 'string' && ['needs-you', 'learner-card'].includes(n.props['data-testid'] as string)).map((n) => n.props['data-testid'] as string);
+      expect(order).toEqual(['needs-you', 'learner-card', 'learner-card']);
+      expect(textOf(byTestId(r, 'needs-you')[0] as ReactTestInstance)).toContain(p.needsYou.scope('Jun'));
+      // The count is unchanged: one class-scope update.
+      expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 1 });
+    });
+
+    it('Read and OK opens the sheet (no scroll); OK writes the acknowledgement, the sheet closes, the row and the chip leave and "Saved." is said', async () => {
+      const r = await render([family]);
+      await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+      expect(focusTarget.scrollIntoView).not.toHaveBeenCalled();
+      const sheet = byTestId(r, 'class-scope-sheet');
+      expect(sheet).toHaveLength(1);
+      expect(textOf(r.root.find((n) => n.type === 'h2' && textOf(n) === en.console.classScope.title('Jun')))).toBe(en.console.classScope.title('Jun'));
+      await tap(byTestId(r, 'class-scope-ok')[0] as ReactTestInstance);
+      expect(data.calls).toContain('ack:sp_f:profile:jun:class-scope-2026-10');
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+      expect(byTestId(r, 'needs-you')).toHaveLength(0);
+      expect(card(r, 'Jun').findAll((n) => n.props['data-testid'] === 'child-status')).toHaveLength(0);
+      expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.settings.notes.saved);
+      expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 0 });
+      // The opener (the strip row) left the page: focus goes to Jun's card, brought into view first (it can sit far below the strip).
+      expect(focusTarget.scrollIntoView).toHaveBeenCalledWith({ block: 'center' });
+      expect(focusTarget.focus).toHaveBeenCalledWith({ preventScroll: true });
+    });
+
+    it("the child's Class info to read chip is a button named with its reason; it opens the same sheet", async () => {
+      const r = await render([family]);
+      const chip = chipOf(r, 'Jun');
+      expect(chip.type).toBe('button');
+      expect(textOf(chip)).toBe(p.status.scope);
+      // The action-chip look of the class page's StatusChip: an amber dot (hidden from the name) and bold text.
+      expect(chip.findAll((n) => n.type === 'span' && n.props['aria-hidden'] === true)).toHaveLength(1);
+      expect(chip.props.style.fontWeight).toBe(typography.weight.bold);
+      expect(chip.props['aria-label']).toBe(en.console.status.chipName(p.status.scope, p.needsYou.scope('Jun')));
+      await tap(chip);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      // Close (a button) closes it unread: nothing is written and the row stays.
+      const close = r.root.find((n) => n.type === 'button' && n.props['aria-label'] === en.console.transfer.a11y.close);
+      await tap(close);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+      expect(data.calls.some((c) => c.startsWith('ack:'))).toBe(false);
+      expect(byTestId(r, 'needs-you-read')).toHaveLength(1);
+    });
+
+    it('a background read that shows the family archived closes the open sheet (its last scope read is kept, the family list decides)', async () => {
+      vi.useRealTimers();
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+      vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
+      const r = await render([family]);
+      await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-12T12:00:30Z' } };
+      data.rosters = { sp_f: roster(archived, [mina, jun]) };
+      data.list = { ok: true, data: [archived] };
+      await act(async () => {
+        vi.advanceTimersByTime(VISIBLE_POLL_MS);
+      });
+      await act(async () => undefined);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+      expect(data.calls.some((c) => c.startsWith('ack:'))).toBe(false);
+    });
+
+    it('the other chips stay text: a re-link chip is never a button', async () => {
+      data.relinks = { ok: true, data: [{ id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: '2026-10-12T11:57:00Z', expiresAt: '2026-10-12T12:07:00Z', status: 'pending' }] };
+      const r = await render([family]);
+      expect(chipOf(r, 'Mina').type).toBe('span');
+      expect(textOf(chipOf(r, 'Mina'))).toBe(p.status.relink);
+    });
+
+    it('the re-link pop-up waits while the sheet is open, then opens', async () => {
+      vi.useRealTimers();
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+      vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
+      const r = await render([family]);
+      await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      data.relinks = { ok: true, data: [{ id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: '2026-10-12T11:57:00Z', expiresAt: '2026-10-12T12:07:00Z', status: 'pending' }] };
+      // The 20 s re-link read finds a new request: the pop-up holds while the sheet is open.
+      await act(async () => {
+        vi.advanceTimersByTime(20_000);
+      });
+      await act(async () => undefined);
+      expect(byTestId(r, 'needs-you-approve')).toHaveLength(1);
+      expect(byTestId(r, 'relink-popup')).toHaveLength(0);
+      // A backdrop tap does nothing while unread; Close closes it, and then the pop-up opens.
+      await act(async () => r.root.find((n) => n.props.className === 'hr-move-scrim').props.onClick?.());
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      await tap(r.root.find((n) => n.type === 'button' && n.props['aria-label'] === en.console.transfer.a11y.close));
+      expect(byTestId(r, 'relink-popup')).toHaveLength(1);
+    });
   });
 });

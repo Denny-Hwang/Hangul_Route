@@ -321,5 +321,6 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   // F-TCH-004 PR 6: the presenter's slide counter, two numbers and a slash.
   'learner.presenter.bar.counter',
   // [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4 (OA-7b): a refused seat, the name and the cap line joined by ": ".
-  'caregiver.join.who.refused',
+  'caregiver.join.who.refused',  // AMENDMENTS-GROWNUP-UX GX-1: the status chip's accessible name, the chip and its reason line joined by ": ".
+  'console.status.chipName',
 ];

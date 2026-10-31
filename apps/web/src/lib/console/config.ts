@@ -25,6 +25,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_LOCK_PASSKEY?: string;
   /** [OA] The sign-in PIN reset page (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): off unless `true`, `1`, `on`, `yes` or `enabled`. */
   NEXT_PUBLIC_PIN_RESET_SIGNIN?: string;
+  /** The class-scope text in a sheet on the family home (AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b): off until the owner answers GX-OD-3. */
+  NEXT_PUBLIC_FAMILY_SCOPE_SHEET?: string;
   NODE_ENV?: string;
 }
 
@@ -51,6 +53,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_CLASS_TRANSFER: process.env.NEXT_PUBLIC_CLASS_TRANSFER,
     NEXT_PUBLIC_LOCK_PASSKEY: process.env.NEXT_PUBLIC_LOCK_PASSKEY,
     NEXT_PUBLIC_PIN_RESET_SIGNIN: process.env.NEXT_PUBLIC_PIN_RESET_SIGNIN,
+    NEXT_PUBLIC_FAMILY_SCOPE_SHEET: process.env.NEXT_PUBLIC_FAMILY_SCOPE_SHEET,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -226,6 +229,27 @@ export function pinResetSignInEnabled(env: ConsoleEnv = buildEnv()): boolean {
   if (value === 'true' || value === '1' || value === 'on' || value === 'yes' || value === 'enabled') return true;
   if (value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled') return false;
   return PIN_RESET_SIGNIN_LAUNCH_DEFAULT;
+}
+
+/**
+ * The class-scope sheet when the build sets no value: off. It moves a consent surface (the class-scope text, TV-D5), so
+ * it does not ship on a default; owner-blocked on AMENDMENTS-GROWNUP-UX GX-OD-3.
+ */
+const FAMILY_SCOPE_SHEET_LAUNCH_DEFAULT = false;
+
+/**
+ * The class-scope text in a sheet (AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b). On, the family home draws no
+ * class-scope card: the Needs you strip's **Read and OK** and the child's **Class info to read** chip open the same
+ * text, verbatim and with its list open, in a sheet whose **OK** writes the acknowledgement. Off (the launch default
+ * until the owner answers GX-OD-3), the shipped card stays under the strip and Read and OK scrolls to it. `true`, `1`,
+ * `on`, `yes` or `enabled` turns it on and `false`, `0`, `off`, `no` or `disabled` off (case and spaces ignored);
+ * anything else, or none, is the launch default.
+ */
+export function familyScopeSheetEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const value = env.NEXT_PUBLIC_FAMILY_SCOPE_SHEET?.trim().toLowerCase();
+  if (value === 'true' || value === '1' || value === 'on' || value === 'yes' || value === 'enabled') return true;
+  if (value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled') return false;
+  return FAMILY_SCOPE_SHEET_LAUNCH_DEFAULT;
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

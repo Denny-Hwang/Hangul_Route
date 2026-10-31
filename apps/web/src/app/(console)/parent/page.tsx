@@ -3,34 +3,55 @@
 import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { AvatarChip } from '@/components/AvatarChip';
 import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
-import { FamilyClassCards } from '@/components/console/FamilyClassCards';
+import { FamilyClassCards, FamilyScopeSheet, MoveNotice, scopeCardDomId } from '@/components/console/FamilyClassCards';
+import { FamilyNeedsYou } from '@/components/console/FamilyNeedsYou';
+import { RelinkPopup, useRelinkPopup } from '@/components/console/RelinkPopup';
+import { TextChip } from '@/components/console/LearnerStatusParts';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { LectureModeCard, useGridColumns, useMinWidth } from '@/components/console/LectureModeCard';
-import { useTransfersShown } from '@/components/console/TransferParts';
+import { useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
-import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
-import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
-import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import type { EntitlementView, PlanView, RelinkView, Roster, RosterLearner, SpaceListItem, TransferLearnerSideView } from '@/lib/console/api';
+import { appUrl, browseEntryShown, contentGatingEnabled, familyScopeSheetEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { spaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { openAppWithJoinCode } from '@/lib/console/join-handoff';
-import { familyActionLinks, familyLectureCard, firstRowEnd, isArchivedFamily, joinOrder, learnerCardActions, lectureCardSlot, managesJoinCode, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
+import {
+  childChipWords,
+  childStatus,
+  classLine,
+  classLineWords,
+  familyActionLinks,
+  familyLectureCard,
+  firstRowEnd,
+  isArchivedFamily,
+  joinOrder,
+  learnerCardActions,
+  lectureCardSlot,
+  managesJoinCode,
+  needsYou,
+  noticeFor,
+  parentHomeView,
+  type CardFlags,
+  type FamilyAsks,
+} from '@/lib/console/parent-home';
 import { personaHome } from '@/lib/console/personas';
 import { dateKey, livePublished } from '@/lib/console/plans';
 import { capState, codeExpiry, familyCountLine, relativeDay, seatLine } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
 import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import type { ConsoleApi } from '@/lib/console/api';
-import { ROUTES, spaceErrorText } from '@/lib/console/routing';
+import { spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
 import { headRem, rem } from '@/lib/console/rem';
+import { CLASS_RELINK_GAP_MS, CLASS_RELINK_REFRESH_MS } from '@/lib/console/visible-refresh';
 
 /**
  * The family home `/parent` (F-APP-001 A-5b, section 3.8; design mock design/screens/app-shell/parent-home.md,
@@ -45,8 +66,24 @@ import { headRem, rem } from '@/lib/console/rem';
  * under its figures for the owner of a family no Family Plan covers, with **Open billing** described by it.
  * With the switch off it reads neither and shows no line.
  *
- * Class moves (F-SPACE-002 T-6b, requests-page.md "Entry points"):
- * the family actions gain "N class moves waiting" to the family's page, only while a move waits for the family.
+ * Needs you (AMENDMENTS-GROWNUP-UX GX-4, section 7; wireframe design/wireframes/parent/needs-you.md, mock
+ * design/screens/approvals/mock/parent-*.html): under each family heading, before every card, a compact strip of what only
+ * the family can answer (a child's re-link, a class move that waits for the family, a class-scope update to read), with its
+ * buttons inline and the fold rule; each child card gets a status chip (text) and a class line ("In: Sunday Class A",
+ * omitted when the class-move read is skipped or fails), and TV-D10's move notice sits in the card of the child it is
+ * about. The family's re-links, class moves (with their `options`), class-scope state and notices join the page's quiet
+ * load, so a new item appears without a reload. The strip replaces the family actions' "N class moves waiting" pill.
+ *
+ * The re-link pop-up (GX-5, sections 5.3 and 5.4; owner request 2026-10-31: "a pop-up or a clearer alert"): a child's new
+ * device request opens the shipped `RelinkPopup` on its own (once per request per tab, once more at 2 minutes left after
+ * Later), and the strip's Approve opens it too (GX-D12: never approved without its safety hint). The page reads each live
+ * family's re-links alone every 20 s while in view (a request closes in 10 minutes while the child waits at the device).
+ * The frame's Home tab and the tab title carry this page's count of Needs you items (section 7.4).
+ *
+ * The class-scope sheet (GX-5b, section 7.3; owner-blocked on GX-OD-3, so behind `familyScopeSheetEnabled()`, off by
+ * default): on, the page draws no class-scope card; the strip's Read and OK and the child's Class info to read chip open
+ * the same text in a sheet (`FamilyScopeSheet`), the pop-up waits while it is open, and its OK is said in the family's
+ * strip region ("Saved."). Off, the shipped card stays under the strip and Read and OK scrolls to it.
  *
  * Lecture mode (AMENDMENTS-LECTURE-V2 E2, LV-5; design/screens/app-shell/lecture-card.md "Placement"): one card, in
  * the first family's section. From 70em first in its side column, above the family actions (outside their
@@ -56,8 +93,14 @@ import { headRem, rem } from '@/lib/console/rem';
  * main column. With no family, after the "no family yet" panel. Nothing while `lectureModeEnabled()` is off.
  */
 
+/** The DOM id of a child's card on the family home (focus lands there when the class-scope sheet closes after OK; an id, never in a URL). */
+const childCardDomId = (familyId: string, learnerId: string): string => `child-${familyId}-${learnerId}`;
+
 /** Background reads of the family list that may fail in a row before they stop (a signed-out answer stops them at once). */
 const QUIET_FAILURES_BEFORE_STOP = 3;
+
+/** A read that never throws: a failed or missing call (an older client shape, a network error) answers null. */
+const quietly = <T,>(read: () => Promise<T>): Promise<T | null> => Promise.resolve().then(read).catch(() => null);
 
 /** One family's roster read: loading, failed (that section alone shows Try again) or loaded. */
 type FamilyRoster = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; roster: Roster };
@@ -148,9 +191,18 @@ export default function ParentHomePage(): JSX.Element {
   const [plans, setPlans] = useState<Record<string, PlanView[]>>({});
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
   const homeView = items ? parentHomeView(items) : null;
-  const moves = useMovesWaiting(api, homeView?.state === 'families' ? homeView.families.map((family) => family.space.id) : []);
-  // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10).
+  // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10), and
+  // GX-4's Needs you: each live family's re-links, class moves, class-scope state and notices (absent until first read).
   const movesShown = useTransfersShown();
+  const online = useOnline();
+  const [asks, setAsks] = useState<Record<string, FamilyAsks>>({});
+  // GX-5: which family strips have a sheet open (the pop-up waits for them), and the pop-up's last answer per family.
+  const [stripDialogs, setStripDialogs] = useState<Record<string, boolean>>({});
+  const [popupResults, setPopupResults] = useState<Record<string, { key: number; text: string }>>({});
+  const resultSeq = useRef(0);
+  // GX-5b: the class-scope sheet (off until the owner answers GX-OD-3) and which learner it is open for.
+  const scopeSheet = familyScopeSheetEnabled();
+  const [scopeOpen, setScopeOpen] = useState<{ familyId: string; learnerId: string } | null>(null);
   // The Lecture mode card's slot follows the 70em switch of the page's own CSS (lecture-card.md "Placement").
   const wideHome = useMinWidth(FULL);
   // The first family's card grid (or the loading one), measured: below 70em the card follows the last card of its first row.
@@ -191,6 +243,44 @@ export default function ParentHomePage(): JSX.Element {
     [api, names],
   );
 
+  // GX-4: what waits for the family (section 7.1). The class-move reads follow the flag and the transfer lock
+  // (`useTransfersShown`): skipped, they are null, so no move row, no move chip and no class line (never a guess). A read
+  // that fails keeps what the last good read drew (a background read never removes a row on a network blip); expiry is
+  // checked again at every render, so a re-link past its end still leaves. Each read takes a number per family and only the
+  // newest one started may draw, so a background read that ends after an answer's read never puts a decided row back. While
+  // the strip's consent sheet is open the background reads of that family wait (as on the family moves page); a read after
+  // an answer (`force`) still runs.
+  const asksSeq = useRef<Record<string, number>>({});
+  const asksHeld = useRef<Set<string>>(new Set());
+  const loadAsks = useCallback(
+    async (spaceId: string, force = false): Promise<void> => {
+      if (!api) return;
+      if (!force && asksHeld.current.has(spaceId)) return;
+      const call = (asksSeq.current[spaceId] ?? 0) + 1;
+      asksSeq.current[spaceId] = call;
+      const [relinks, transfers, scope, notices] = await Promise.all([
+        quietly(() => api.relinkRequests(spaceId)),
+        movesShown ? quietly(() => api.transferRequests(spaceId)) : null,
+        quietly(() => api.classScope(spaceId)),
+        movesShown ? quietly(() => api.moveNotices(spaceId)) : null,
+      ]);
+      if (call !== asksSeq.current[spaceId]) return;
+      setAsks((prev) => {
+        const old = prev[spaceId];
+        return {
+          ...prev,
+          [spaceId]: {
+            relinks: relinks?.ok ? relinks.data : old?.relinks ?? null,
+            transfers: !movesShown ? null : transfers?.ok ? transfers.data : old?.transfers ?? null,
+            scope: scope?.ok ? scope.data : old?.scope ?? null,
+            notices: !movesShown ? [] : notices?.ok ? notices.data : old?.notices ?? [],
+          },
+        };
+      });
+    },
+    [api, movesShown],
+  );
+
   // Background reads that failed in a row. A signed-out answer, or the third failure, stops the background reads and
   // shows the usual "can't reach" line with Try again, so a home left open never sends failing reads with no sign.
   const quietFailures = useRef(0);
@@ -224,9 +314,11 @@ export default function ParentHomePage(): JSX.Element {
       const listed = result.data.map((item) => ({ ...item, space: { ...item.space, name: names.nameFor(item.space.id, item.space.name, read) } }));
       setItems(listed);
       const view = parentHomeView(listed);
-      if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id, family.role, quiet)));
+      if (view.state === 'families') {
+        await Promise.all(view.families.flatMap((family) => [loadRoster(family.space.id, family.role, quiet), ...(isArchivedFamily(family) ? [] : [loadAsks(family.space.id)])]));
+      }
     },
-    [api, loadRoster, names],
+    [api, loadRoster, loadAsks, names],
   );
 
   useEffect(() => {
@@ -236,6 +328,61 @@ export default function ParentHomePage(): JSX.Element {
   // An open family home shows a renamed learner or a new member without a reload.
   // A roster page: it also reads slowly while it stays in front.
   useVisibleRefresh(() => void load(true), !!api && !refreshStopped, { poll: true });
+
+  // GX-5 (section 5.4): each live family's re-links alone (one call per family, never the page's full read) every 20 s
+  // while the tab is in view, and on focus, so a child waiting at a new device is seen within one read.
+  const liveFamilyIds = homeView?.state === 'families' ? homeView.families.filter((family) => !isArchivedFamily(family)).map((family) => family.space.id) : [];
+  const liveKey = liveFamilyIds.join('\n');
+  // A family's full read (`loadAsks`, after an answer for one) that started after this read began is newer: this read's
+  // answer for that family is dropped, so an answered request never comes back for a moment.
+  const readRelinks = useCallback(async (): Promise<void> => {
+    if (!api || liveKey === '') return;
+    const ids = liveKey.split('\n');
+    const started = Object.fromEntries(ids.map((id) => [id, asksSeq.current[id] ?? 0]));
+    const answers = await Promise.all(ids.map(async (id) => [id, await quietly(() => api.relinkRequests(id))] as const));
+    setAsks((prev) => {
+      let next = prev;
+      for (const [id, result] of answers) {
+        const entry = next[id];
+        if (!entry || !result?.ok || (asksSeq.current[id] ?? 0) !== started[id]) continue;
+        next = { ...next, [id]: { ...entry, relinks: result.data } };
+      }
+      return next;
+    });
+  }, [api, liveKey]);
+  useVisibleRefresh(() => void readRelinks(), !!api && !refreshStopped && liveKey !== '', { pollMs: CLASS_RELINK_REFRESH_MS, gapMs: CLASS_RELINK_GAP_MS });
+
+  // The pop-up over every live family's pending requests, soonest-closing first; each request answers for its family.
+  const relinkPool = useMemo(() => {
+    const families = new Map<string, string>();
+    const list: RelinkView[] = [];
+    for (const id of liveKey === '' ? [] : liveKey.split('\n')) {
+      for (const request of asks[id]?.relinks ?? []) {
+        families.set(request.id, id);
+        list.push(request);
+      }
+    }
+    return { list: liveKey !== '' ? list : null, families };
+  }, [asks, liveKey]);
+  const popup = useRelinkPopup({
+    relinks: relinkPool.list,
+    blocked: scopeOpen !== null || Object.values(stripDialogs).some(Boolean),
+    enabled: !!api && liveKey !== '',
+  });
+  // GX-5b: a sheet closes when its family is no longer a live family on the page (archived or gone after a background
+  // read: `asks` keeps that family's last read, so the family list decides) or when the family's class-scope read no
+  // longer lists its learner (left the family meanwhile), so the pop-up never waits on a sheet for something not shown.
+  const homeLoaded = homeView !== null;
+  useEffect(() => {
+    if (!scopeOpen || !homeLoaded) return;
+    if (!(liveKey === '' ? [] : liveKey.split('\n')).includes(scopeOpen.familyId)) {
+      setScopeOpen(null);
+      return;
+    }
+    const scope = asks[scopeOpen.familyId]?.scope;
+    if (scope && !scope.learners.some((l) => l.learnerId === scopeOpen.learnerId)) setScopeOpen(null);
+  }, [asks, scopeOpen, liveKey, homeLoaded]);
+  const onStripDialog = useCallback((familyId: string, open: boolean) => setStripDialogs((prev) => (!!prev[familyId] === open ? prev : { ...prev, [familyId]: open })), []);
 
   // [SA] The inline rename of a family (AMENDMENTS-SEATS-ADMINS section 5.3): the heading, the actions' label and the
   // roster all read the new name at once. A read still under way would hold the old name, so the name is kept in
@@ -251,11 +398,15 @@ export default function ParentHomePage(): JSX.Element {
   }, [names]);
 
   const frameSpaces: FrameSpaces = !api || (failed && !items) ? 'failed' : items;
-  if (!ready || !session) return <AdultFrame spaces={frameSpaces}>{null}</AdultFrame>;
+  // Section 7.4: the Home tab's number and the tab title count what the strips list (each family's Needs you items).
+  const waitingHere = (liveKey === '' ? [] : liveKey.split('\n')).reduce((sum, id) => sum + (asks[id] ? needsYou(asks[id] as FamilyAsks, new Date()).length : 0), 0);
+  if (!ready || !session) return <AdultFrame spaces={frameSpaces} attentionHere attentionTotal={waitingHere}>{null}</AdultFrame>;
 
   const c = m.console;
   const p = c.parentHome;
   const now = new Date();
+  // The family the open pop-up's request belongs to (its answer goes to that family's re-link route).
+  const popupFamily = popup.pick ? (relinkPool.families.get(popup.pick.request.id) ?? null) : null;
   const flags: CardFlags = { reports: reportsEnabled(locale), notes: notesEnabled(), route: learningRouteEnabled() };
   const gating = contentGatingEnabled();
   const today = dateKey(now);
@@ -375,17 +526,53 @@ export default function ParentHomePage(): JSX.Element {
         )
       : null;
     const label = (key: 'seeReport' | 'open' | 'sendNote' | 'route'): string => p.child[key];
+    // GX-4 (section 7.2): one status chip (text; the strip owns the buttons), the class line, and TV-D10's notice here.
+    const familyAsks = asks[familyId];
+    const status = familyAsks ? childStatus(learner.id, familyAsks, now) : null;
+    const chip = status ? childChipWords(status, locale) : null;
+    const line = familyAsks ? classLine(learner.id, familyAsks.transfers) : null;
+    const notice = familyAsks && api ? noticeFor(learner.id, familyAsks.notices) : null;
     return (
-      <article key={learner.id} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
+      <article key={learner.id} id={childCardDomId(familyId, learner.id)} tabIndex={scopeSheet ? -1 : undefined} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
           <AvatarChip avatar={learner.avatar} />
           <h3 style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, overflowWrap: 'anywhere' }}>{learner.displayName}</h3>
+          {chip && scopeSheet && status?.kind === 'scope' ? (
+            <TextChip
+              text={chip.text}
+              tone={chip.tone}
+              label={c.status.chipName(chip.text, p.needsYou.scope(learner.displayName))}
+              onActivate={() => setScopeOpen({ familyId, learnerId: learner.id })}
+            />
+          ) : chip ? (
+            <TextChip text={chip.text} tone={chip.tone} />
+          ) : null}
         </div>
+        {line ? (
+          <div style={facts} data-testid="child-class-line">
+            {classLineWords(line, locale).map((text) => (
+              <span key={text}>{text}</span>
+            ))}
+          </div>
+        ) : null}
         <div style={facts}>
           <span>{c.space.learner.lastActive(relativeDay(learner.lastActiveAt, now, locale))}</span>
           {learner.summary ? <span>{p.minutes7d(learner.summary.minutesLast7d)}</span> : null}
         </div>
         <FreeLessonsLine line={freeLine} />
+        {notice && api ? (
+          <MoveNotice
+            familyId={familyId}
+            notice={notice}
+            api={api}
+            onSeen={(moveId) =>
+              setAsks((prev) => {
+                const entry = prev[familyId];
+                return entry ? { ...prev, [familyId]: { ...entry, notices: entry.notices.filter((n) => n.id !== moveId) } } : prev;
+              })
+            }
+          />
+        ) : null}
         <Link href={actions.primary.href} style={primary}>
           {label(actions.primary.key)}
         </Link>
@@ -400,6 +587,20 @@ export default function ParentHomePage(): JSX.Element {
         ) : null}
       </article>
     );
+  };
+
+  /**
+   * Read and OK: with the class-scope sheet on (GX-5b), open it for that learner; off (GX-4, until GX-OD-3), bring the
+   * shipped class-scope card into view and move focus to it.
+   */
+  const readScope = (familyId: string, learnerId: string): void => {
+    if (scopeSheet) {
+      setScopeOpen({ familyId, learnerId });
+      return;
+    }
+    const target = typeof document === 'undefined' ? null : (document.getElementById(scopeCardDomId(familyId, learnerId)) as HTMLElement | null);
+    target?.scrollIntoView?.({ block: 'start' });
+    target?.focus?.({ preventScroll: true });
   };
 
   const familySection = (family: SpaceListItem, isLast: boolean, cross: JSX.Element | null): JSX.Element => {
@@ -448,11 +649,6 @@ export default function ParentHomePage(): JSX.Element {
             {p.actions.addLearner}
           </button>
         ) : null}
-        {(moves[id] ?? 0) > 0 ? (
-          <Link href={ROUTES.spaceTransfers(id, 'family')} style={button} data-testid="family-moves-waiting">
-            {c.transfer.waiting(moves[id] ?? 0)}
-          </Link>
-        ) : null}
       </div>
     );
     const side = (
@@ -478,7 +674,36 @@ export default function ParentHomePage(): JSX.Element {
             onName={setFamilyName}
             announce={announce}
           />
-          {api && !archived ? <FamilyClassCards familyId={id} api={api} movesShown={movesShown} /> : null}
+          {api && !archived && asks[id] ? (
+            <FamilyNeedsYou
+              familyId={id}
+              familyName={family.space.name}
+              items={needsYou(asks[id] as FamilyAsks, now)}
+              views={(asks[id]?.transfers?.requests ?? []).filter((v): v is TransferLearnerSideView => v.role === 'learner_side')}
+              avatars={Object.fromEntries(learners.map((l) => [l.id, l.avatar]))}
+              api={api}
+              online={online}
+              now={now}
+              onChanged={() => Promise.all([loadAsks(id, true), loadRoster(id, family.role, true)]).then(() => undefined)}
+              onReadScope={(learnerId) => readScope(id, learnerId)}
+              onApproveRelink={popup.openFor}
+              onDialog={(open) => onStripDialog(id, open)}
+              result={popupResults[id] ?? null}
+              onReviewing={(open) => {
+                if (open) asksHeld.current.add(id);
+                else asksHeld.current.delete(id);
+              }}
+            />
+          ) : null}
+          {api && !archived && !scopeSheet ? (
+            <FamilyClassCards
+              familyId={id}
+              api={api}
+              scope={asks[id]?.scope ?? null}
+              onScope={(next) => setAsks((prev) => (prev[id] ? { ...prev, [id]: { ...(prev[id] as FamilyAsks), scope: next } } : prev))}
+              onStale={() => void loadAsks(id, true)}
+            />
+          ) : null}
           {entry.state === 'loading' ? (
             <div className="hr-ph-cards" ref={first ? setCardsGrid : undefined}>
               {withLectureCard(skeletons(), lectureSlot === 'afterFirstRow')}
@@ -547,7 +772,7 @@ export default function ParentHomePage(): JSX.Element {
     ) : null;
 
   return (
-    <AdultFrame onSignOut={signOut} spaces={frameSpaces}>
+    <AdultFrame onSignOut={signOut} spaces={frameSpaces} attentionHere attentionTotal={waitingHere}>
       <style>{HOME_CSS}</style>
       <RenameStyles />
       {renameLive}
@@ -597,6 +822,63 @@ export default function ParentHomePage(): JSX.Element {
           <h1 className="hr-ph-hidden">{p.title}</h1>
           {view.families.map((family, index) => familySection(family, index === view.families.length - 1, crossLink))}
         </div>
+      ) : null}
+      {scopeOpen && api ? (
+        <FamilyScopeSheet
+          key={`${scopeOpen.familyId}:${scopeOpen.learnerId}`}
+          familyId={scopeOpen.familyId}
+          learnerId={scopeOpen.learnerId}
+          api={api}
+          scope={asks[scopeOpen.familyId]?.scope ?? null}
+          onScope={(next) => {
+            const id = scopeOpen.familyId;
+            setAsks((prev) => (prev[id] ? { ...prev, [id]: { ...(prev[id] as FamilyAsks), scope: next } } : prev));
+          }}
+          onStale={() => void loadAsks(scopeOpen.familyId)}
+          onClose={() => setScopeOpen(null)}
+          onDone={() => {
+            const id = scopeOpen.familyId;
+            setScopeOpen(null);
+            resultSeq.current += 1;
+            const key = resultSeq.current;
+            setPopupResults((prev) => ({ ...prev, [id]: { key, text: c.settings.notes.saved } }));
+          }}
+          fallbackFocus={() => {
+            // The opener (a strip row, See all) may sit far above the child's card: bring the card into view with the focus.
+            const target = typeof document === 'undefined' ? null : (document.getElementById(childCardDomId(scopeOpen.familyId, scopeOpen.learnerId)) as HTMLElement | null);
+            target?.scrollIntoView?.({ block: 'center' });
+            target?.focus?.({ preventScroll: true });
+          }}
+        />
+      ) : null}
+      {popup.pick && api && popupFamily ? (
+        <RelinkPopup
+          key={popup.pick.request.id + (popup.pick.reminder ? ':again' : '')}
+          pick={popup.pick}
+          now={now}
+          api={api}
+          spaceId={popupFamily}
+          online={online}
+          onLater={popup.close}
+          onResult={(_learnerId, text, settled) => {
+            resultSeq.current += 1;
+            const key = resultSeq.current;
+            setPopupResults((prev) => ({ ...prev, [popupFamily]: { key, text } }));
+            // Not settled (offline, a 5xx): the pop-up stays with its line under the buttons, so the parent can try again.
+            if (!settled) return;
+            const answered = popup.pick?.request.id;
+            popup.close();
+            // The answered request leaves the strip, the count and the pop-up's pool at once (the read below confirms it).
+            setAsks((prev) => {
+              const entry = prev[popupFamily];
+              if (!entry?.relinks || !answered) return prev;
+              return { ...prev, [popupFamily]: { ...entry, relinks: entry.relinks.filter((r) => r.id !== answered) } };
+            });
+            const family = view?.state === 'families' ? view.families.find((f) => f.space.id === popupFamily) : undefined;
+            void loadAsks(popupFamily, true);
+            if (family) void loadRoster(popupFamily, family.role, true);
+          }}
+        />
       ) : null}
     </AdultFrame>
   );

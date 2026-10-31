@@ -30,14 +30,17 @@ export function useTransfersShown(): boolean {
 export function useOnline(): boolean {
   const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine !== false));
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    // A page without a real window (the static export's server pass, a test stub) has no online state to watch.
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return undefined;
+    // The window it listened on, kept: a test that removes its window stub before unmounting must not throw here.
+    const host = window;
     const on = (): void => setOnline(true);
     const off = (): void => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
+    host.addEventListener('online', on);
+    host.addEventListener('offline', off);
     return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
+      host.removeEventListener?.('online', on);
+      host.removeEventListener?.('offline', off);
     };
   }, []);
   return online;
@@ -128,11 +131,14 @@ const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select
 interface FocusTarget {
   focus?: (options?: { preventScroll?: boolean }) => void;
   querySelectorAll?: (selector: string) => ArrayLike<FocusTarget>;
+  isConnected?: boolean;
 }
 
 /**
  * A modal sheet: `role="dialog"`, `aria-modal`, labelled by its heading, which takes focus on open (never the
- * primary); Tab stays inside; Escape and the 64 px close button close it; focus returns to the opener.
+ * primary); Tab stays inside; Escape and the 64 px close button close it; focus returns to the opener, or, when the
+ * opener left the page meanwhile (its row answered), to `fallbackFocus`. A backdrop tap closes it too, unless
+ * `closeOnScrim` is false (the class-scope sheet while unread, AMENDMENTS-GROWNUP-UX section 7.3).
  */
 export function TransferSheet({
   title,
@@ -141,6 +147,8 @@ export function TransferSheet({
   testId,
   lang,
   closeLabel,
+  closeOnScrim = true,
+  fallbackFocus,
 }: {
   title: string;
   onClose: () => void;
@@ -149,17 +157,24 @@ export function TransferSheet({
   /** The sheet's own language when it differs from the page (the consent sheet's switch): heading and Close follow it. */
   lang?: string;
   closeLabel?: string;
+  /** False: a tap on the backdrop does nothing (Close and Escape still close). */
+  closeOnScrim?: boolean;
+  /** Where focus goes on close when the opener is no longer on the page. */
+  fallbackFocus?: () => void;
 }): JSX.Element {
   const { messages } = useConsoleLocale();
   const headingId = useId();
   const sheetRef = useRef<FocusTarget | null>(null);
   const headingRef = useRef<FocusTarget | null>(null);
+  const fallbackRef = useRef(fallbackFocus);
+  fallbackRef.current = fallbackFocus;
 
   useEffect(() => {
     const opener = typeof document === 'undefined' ? null : (document.activeElement as FocusTarget | null);
     headingRef.current?.focus?.({ preventScroll: true });
     return () => {
-      opener?.focus?.();
+      if (opener && opener.isConnected !== false) opener.focus?.();
+      else fallbackRef.current?.();
     };
   }, []);
 
@@ -187,7 +202,7 @@ export function TransferSheet({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: z.modal }}>
       <style>{SHEET_CSS}</style>
-      <div className="hr-move-scrim" aria-hidden onClick={onClose} />
+      <div className="hr-move-scrim" aria-hidden onClick={closeOnScrim ? onClose : undefined} />
       <div
         ref={(el) => {
           sheetRef.current = el as FocusTarget | null;

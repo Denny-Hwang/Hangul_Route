@@ -9,7 +9,7 @@ import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsoleAuth } from '@/components/console/auth-context';
 import { ClassMoves } from '@/components/console/ClassTransferParts';
 import { FamilyMoves, FamilyPageStateLine, type FamilyPageState } from '@/components/console/FamilyTransferParts';
-import { TeacherMovesSection } from '@/components/console/TeacherMovesSection';
+import { TeacherMovesIncoming, TeacherMovesSection, useTeacherMoves, waitingIncomingCount } from '@/components/console/TeacherMovesSection';
 import { MoveButton, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster, SpaceListItem } from '@/lib/console/api';
@@ -72,10 +72,15 @@ function TransfersInner(): JSX.Element {
     void loadRoster();
   }, [loadRoster]);
 
-  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
-
   const space = roster?.space ?? null;
   const pageState: FamilyPageState | 'failed' | null = !shown ? 'locked' : state ?? (space && space.kind === 'school' ? 'locked' : null);
+  // AMENDMENTS-GROWNUP-UX GX-2: one incoming list. Another teacher's asks into this class are read here once and drawn
+  // first under *Joining this class*, with the transfers that wait for this class, Accept first in both.
+  const classBody = pageState === null && !!api && space?.kind === 'class' && spacesRead;
+  const teacherMoves = useTeacherMoves({ spaceId, api, online, refreshMs: TRANSFER_REFRESH_MS, onPageState: setState, enabled: classBody });
+
+  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
+
   const stateText =
     pageState === 'locked' ? t.states.locked : pageState === 'signIn' ? c.start.signInAgain : pageState === 'forbidden' ? t.states.forbidden : pageState === 'failed' ? c.cantReach : null;
 
@@ -97,8 +102,6 @@ function TransfersInner(): JSX.Element {
         <FamilyMoves familyId={spaceId} familyName={space.name} api={api} online={online} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
       ) : space && api && space.kind === 'class' && spacesRead ? (
         <>
-        {/* [TV] Teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D8): asks into and out of this class. */}
-        <TeacherMovesSection spaceId={spaceId} api={api} online={online} readOnly={space.archivedAt !== null} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} />
         <ClassMoves
           spaceId={spaceId}
           spaceName={space.name}
@@ -109,7 +112,12 @@ function TransfersInner(): JSX.Element {
           direct={directClassIds(spaces)}
           confirm={confirm}
           onPageState={setState}
+          joiningLead={<TeacherMovesIncoming moves={teacherMoves} spaceId={spaceId} api={api} online={online} readOnly={space.archivedAt !== null} />}
+          joiningLeadCount={waitingIncomingCount(teacherMoves)}
         />
+        {/* [TV] Teacher moves (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D8): asks sent from this class and their history.
+            GX-2: after Leaving and Joining, so the cards that need an answer come first; absent when it has nothing. */}
+        <TeacherMovesSection spaceId={spaceId} api={api} online={online} readOnly={space.archivedAt !== null} refreshMs={TRANSFER_REFRESH_MS} onPageState={setState} moves={teacherMoves} incomingHere={false} />
         </>
       ) : null}
     </AdultFrame>
