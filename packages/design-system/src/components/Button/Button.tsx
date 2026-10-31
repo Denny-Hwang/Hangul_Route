@@ -3,6 +3,8 @@ import type { MutableRefObject, ReactElement } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import type { TypeSizeName } from '../../text-size';
+import { NO_PRESS_DELAY } from '../TapBoard/press-delay';
+import { usePressGuard } from '../TapBoard/use-press-guard';
 import { useTypeScale } from '../TextSize';
 import type { ButtonProps, ButtonSize, ButtonTone } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -86,6 +88,10 @@ export function Button({
   pressableRef,
 }: ButtonProps): ReactElement {
   const hintId = useId();
+  // AMENDMENTS-TOUCH 4.4 (R8): a bounce on the same button within TAP_LOCK_MS runs once, a press while the app-level
+  // tap lock is on is dropped, and a press that runs sets that lock, so a bounce on an answer cannot press a Continue
+  // that appears under the finger and a bounce on Continue or Next cannot answer on the next screen.
+  const guard = usePressGuard();
   const fontSize = useTypeScale().size[sizeFont[size]];
   // react-native-web drops accessibilityHint: describe the button by a hidden copy of the hint instead.
   const webHint = accessibilityHint !== undefined && Platform.OS === 'web';
@@ -120,7 +126,7 @@ export function Button({
     <Pressable
       {...describedBy}
       ref={setNode}
-      onPress={looksDisabled ? undefined : onPress}
+      onPress={looksDisabled ? undefined : guard(onPress)}
       disabled={disabled || (soft && !webSoft)}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
@@ -128,9 +134,14 @@ export function Button({
       accessibilityState={expanded === undefined ? { disabled: looksDisabled } : { disabled: looksDisabled, expanded }}
       aria-expanded={expanded}
       testID={testID}
+      // Native only (react-native-web drops it); the web size is already at least touchTarget.min.
       hitSlop={spacing.sm}
+      // The pressed look shows on the first touch frame, not after react-native-web's 50 ms delay.
+      {...NO_PRESS_DELAY}
       style={({ pressed }) => ({
         minHeight: sizeHeight[size],
+        // A one-glyph label is narrower than the 64 floor (AMENDMENTS-TOUCH KT-2: the web size is at least 64 each way).
+        minWidth: touchTarget.min,
         paddingHorizontal: sizePaddingX[size],
         paddingVertical: spacing.sm,
         borderRadius: radii.pill,
