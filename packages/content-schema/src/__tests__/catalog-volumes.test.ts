@@ -8,6 +8,9 @@ import {
   cellEpisodeIds,
   chooserGroups,
   classPosition,
+  effectiveRoute,
+  inRouteOrder,
+  onTheRoute,
   freeRouteQuestIds,
   gridLessonIds,
   groupOfKey,
@@ -250,5 +253,38 @@ describe('a later volume is no lecture route quest (row CM-40)', () => {
       expect(preset.blocks.some((b) => b.kind === 'quest')).toBe(true);
       expect(preset.blocks.some((b) => b.kind === 'quest' && later.has(b.id))).toBe(false);
     }
+  });
+});
+
+describe('a later volume is no placement start or override target (rows CM-40, CM-43 S6)', () => {
+  const route = routeCatalogOf(withVolumes());
+  const later = new Set([...NATURE_V2, ...CRAFTS4_V2, ...SHIPPED_V2_QUESTS]);
+  const base = {
+    id: 'placement:v2', startedAt: '2026-10-01T10:00:00.000Z', completedAt: '2026-10-01T10:08:00.000Z', source: 'onboarding', testLocale: 'en',
+    length: 'full', mode: 'standard', revealMode: 'tap', bankVersion: 1, contentVer: 'test', responses: [], gates: [],
+    strands: { 'hangul-recognition': 'secure', 'sound-letter': 'not-yet', 'syllable-reading': 'not-tested', vocabulary: 'not-yet', sentences: 'not-yet' },
+    level: { stage: 'stage1', band: 0 }, oralStage: null, beyondContent: false, startQuestId: null, placedOutQuestIds: [], priorityTokens: [],
+  } as unknown as Parameters<typeof effectiveRoute>[0][number];
+  const opts = (done: Iterable<string> = []) => ({ isEntitled: () => true, completedQuestIds: new Set(done), catalogHistory: { version: CATALOG_VERSION, idsAt: () => new Set(route.quests.map((q) => q.id)) } });
+
+  it('routeCatalogOf marks exactly the later volumes, and onTheRoute leaves them out', () => {
+    expect(route.quests.filter((q) => q.laterVolume === true).map((q) => q.id).sort()).toEqual([...later].sort());
+    expect(inRouteOrder(route).filter(onTheRoute).some((q) => later.has(q.id))).toBe(false);
+  });
+
+  it('every first volume done: no start, not a Volume 2', () => {
+    const firstVolumes = inRouteOrder(route).filter(onTheRoute).map((q) => q.id);
+    expect(effectiveRoute([base], route, opts(firstVolumes))?.startQuestId).toBeNull();
+  });
+
+  it('an override naming a Volume 2 quest moves nothing; one naming a first volume places a Volume 2 out with its own cell', () => {
+    const override = (startQuestId: string) => ({ ...base, override: { by: 'parent' as const, at: '2026-10-02T00:00:00.000Z', startQuestId } });
+    const ignored = effectiveRoute([override(NATURE_V2[0] as string)], route, opts());
+    expect(ignored?.placedOutQuestIds).toEqual([]);
+    expect(ignored?.startQuestId).toBe(effectiveRoute([base], route, opts())?.startQuestId);
+    const atStage3 = effectiveRoute([override('quest:stage3-letters-q1')], route, opts())?.placedOutQuestIds ?? [];
+    for (const id of NATURE_V2) expect(atStage3).toContain(id);
+    for (const id of CRAFTS4_V2) expect(atStage3).not.toContain(id);
+    expect(atStage3.filter((id) => later.has(id)).length).toBe(NATURE_V2.length);
   });
 });

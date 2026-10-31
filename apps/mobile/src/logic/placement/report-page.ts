@@ -1,6 +1,7 @@
 import {
   effectiveRoute,
   inRouteOrder,
+  onTheRoute,
   modeOf,
   placementStageNumber,
   type PlacementGate,
@@ -127,7 +128,7 @@ export function startChoices(
 ): StartChoice[] {
   const placedOut = new Set(seed.placedOutQuestIds);
   return inRouteOrder(catalog)
-    .filter((quest) => quest.grid && quest.playable && isEntitled(quest.stage))
+    .filter((quest) => onTheRoute(quest) && isEntitled(quest.stage))
     .map((quest) => ({
       questId: quest.id,
       state:

@@ -3,6 +3,7 @@ import {
   StageKeySchema,
   gatePassed,
   inRouteOrder,
+  onTheRoute,
   modeOf,
   rowsPassed,
   type ASSESSMENT_FORMATS,
@@ -124,7 +125,8 @@ function routeCards(input: ResultViewInput): ResultView['cards'] {
   const start = input.after.startQuestId;
   if (start === null) return { startHere: null, next: [], laterStage: null };
   const placedOut = new Set(input.after.placedOutQuestIds);
-  const route = inRouteOrder(input.catalog).filter((quest) => quest.grid && quest.playable);
+  // The route is each cell's first volume (F-CURR-002 row CM-40): a 'next' card never names a later volume.
+  const route = inRouteOrder(input.catalog).filter(onTheRoute);
   const at = route.findIndex((quest) => quest.id === start);
   const next = route
     .slice(at + 1)
