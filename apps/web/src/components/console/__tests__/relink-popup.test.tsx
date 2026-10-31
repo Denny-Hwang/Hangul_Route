@@ -29,6 +29,11 @@ const session: Record<string, string> = {};
 const keyListeners = new Set<(e: { key: string; shiftKey: boolean; defaultPrevented?: boolean; preventDefault: () => void }) => void>();
 const fakeDocument = {
   visibilityState: 'visible',
+  /** Another modal dialog on the page (`[aria-modal="true"]`): null when there is none. */
+  modal: null as unknown,
+  querySelector(selector: string): unknown {
+    return selector.includes('aria-modal') ? this.modal : null;
+  },
   activeElement: null as unknown,
   body: {},
   addEventListener: (type: string, l: (e: never) => void) => {
@@ -59,6 +64,7 @@ beforeEach(() => {
     },
   });
   fakeDocument.visibilityState = 'visible';
+  fakeDocument.modal = null;
   lang.locale = 'en';
 });
 
@@ -82,7 +88,7 @@ const byTestId = (id: string): ReactTestInstance[] => root().findAll((n) => type
 
 describe('RelinkPopup', () => {
   async function popup(pick: PopupPick, decide = vi.fn(async () => ({ ok: true as const, data: {} }))) {
-    const calls = { later: 0, results: [] as Array<[string, string]> };
+    const calls = { later: 0, results: [] as Array<[string, string]>, settled: [] as boolean[] };
     await act(async () => {
       renderer = create(
         <RelinkPopup
@@ -94,7 +100,10 @@ describe('RelinkPopup', () => {
           onLater={() => {
             calls.later += 1;
           }}
-          onResult={(learnerId, text) => calls.results.push([learnerId, text])}
+          onResult={(learnerId, text, settled) => {
+            calls.results.push([learnerId, text]);
+            calls.settled.push(settled);
+          }}
         />,
         { createNodeMock: nodeMock as never },
       );
@@ -129,6 +138,22 @@ describe('RelinkPopup', () => {
     const { calls } = await popup({ request: relink('r1', 7.5), reminder: false }, vi.fn(async () => ({ ok: false as const, error: 'unknown' as const, status: 409, code: 'expired' })) as never);
     await act(async () => (byTestId('relink-popup-approve')[0] as ReactTestInstance).props.onClick());
     expect(calls.results[0]?.[1]).toContain('This request already closed');
+    expect(calls.settled).toEqual([true]);
+  });
+
+  it('a failure that leaves the request open (a 5xx) keeps the pop-up with its line under the buttons', async () => {
+    const { calls } = await popup({ request: relink('r1', 7.5), reminder: false }, vi.fn(async () => ({ ok: false as const, error: 'unknown' as const, status: 503 })) as never);
+    await act(async () => (byTestId('relink-popup-approve')[0] as ReactTestInstance).props.onClick());
+    expect(calls.settled).toEqual([false]);
+    const line = byTestId('relink-popup-failed')[0] as ReactTestInstance;
+    expect(textOf(line)).toBe(calls.results[0]?.[1]);
+    expect(byTestId('relink-popup-approve')).toHaveLength(1);
+  });
+
+  it('the focused title draws no focus ring (it opens without a click); the buttons keep theirs', () => {
+    const source = readFileSync(new URL('../RelinkPopup.tsx', import.meta.url), 'utf8');
+    expect(source).toContain('.hr-relink-pop h2:focus,.hr-relink-pop h2:focus-visible{outline:none}');
+    expect(source).toContain('.hr-relink-pop :focus-visible{outline:');
   });
 
   it('Escape and Later put it off; the page behind gets the key from anywhere', async () => {
@@ -147,7 +172,7 @@ describe('RelinkPopup', () => {
     lang.locale = 'ko';
     await popup({ request: relink('r1', 7.5), reminder: false });
     expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('새 기기 연결 요청: Jaehan');
-    expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('8분 뒤에 이 요청이 닫혀요.');
+    expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('8분 뒤에 이 요청이 마감돼요.');
     expect(textOf(byTestId('relink-popup-later')[0] as ReactTestInstance)).toBe('나중에');
     act(() => renderer?.unmount());
     lang.locale = 'es';
@@ -160,8 +185,8 @@ describe('RelinkPopup', () => {
 describe('useRelinkPopup', () => {
   const seen: Array<PopupPick | null> = [];
   let control: ReturnType<typeof useRelinkPopup> | null = null;
-  function Harness({ relinks, blocked = false, enabled = true }: { relinks: RelinkView[] | null; blocked?: boolean; enabled?: boolean }): null {
-    control = useRelinkPopup({ relinks, blocked, enabled });
+  function Harness({ relinks, blocked = false, enabled = true, listed = [] }: { relinks: RelinkView[] | null; blocked?: boolean; enabled?: boolean; listed?: string[] }): null {
+    control = useRelinkPopup({ relinks, blocked, enabled, listed });
     seen.push(control.pick);
     return null;
   }
@@ -222,6 +247,29 @@ describe('useRelinkPopup', () => {
     fakeDocument.visibilityState = 'visible';
     await update([relink('r1', 8)], false);
     expect(current()?.request.id).toBe('r1');
+  });
+
+  it('never opens over another modal dialog (the frame display sheet); the next read with none open does', async () => {
+    fakeDocument.modal = { role: 'dialog' };
+    await mount([relink('r1', 8)]);
+    expect(current()).toBeNull();
+    fakeDocument.modal = null;
+    await update([relink('r1', 8)]);
+    expect(current()?.request.id).toBe('r1');
+  });
+
+  it('a request listed in the open review sheet counts as shown and reminded: no pop-up and no reminder after the sheet', async () => {
+    seen.length = 0;
+    await act(async () => {
+      renderer = create(<Harness relinks={[relink('r1', 8)]} blocked listed={['r1']} />);
+    });
+    expect(JSON.parse(session[RELINK_SHOWN_KEY] ?? '[]')).toEqual(['r1']);
+    expect(JSON.parse(session[RELINK_REMINDED_KEY] ?? '[]')).toEqual(['r1']);
+    await update([relink('r1', 8)], false);
+    expect(current()).toBeNull();
+    vi.setSystemTime(new Date(NOW.getTime() + 6 * 60_000));
+    await update([relink('r1', 8)], false);
+    expect(current()).toBeNull();
   });
 
   it('closes when its request leaves the list (answered elsewhere, expired); a failed read keeps it', async () => {

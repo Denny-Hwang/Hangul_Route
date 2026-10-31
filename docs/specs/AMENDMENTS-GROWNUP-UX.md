@@ -198,7 +198,7 @@ Rows are ordered as the cards (section 4). After each decision the row shows its
 - Trigger: a pending re-link id not in this tab's shown set (`sessionStorage` through the console's safe-storage wrapper, key `hr:console:relinkShown`, ids only), while the page is visible and no other dialog is open. One at a time, soonest-closing first. The action chip of a `relink` card opens the same pop-up for its request at any time.
 - **Reminder.** A request put off with **Later** opens the pop-up once more when it has `RELINK_REMIND_MS` (2 minutes) or less left, with the same title and "This request closes in {m} min." (ids in a second set, `hr:console:relinkReminded`). Never a third time.
 - `role="alertdialog"`, `aria-labelledby` the title, focus on the title; Esc = **Later**.
-- Title: "New device request: {name}" / "Solicitud de dispositivo nuevo: {name}" / "새 기기 연결 요청: {name}". Body: the shipped `relinkApproveHint` and "This request closes in {m} min." / "Esta solicitud se cierra en {m} min." / "{m}분 뒤에 이 요청이 닫혀요.".
+- Title: "New device request: {name}" / "Solicitud de dispositivo nuevo: {name}" / "새 기기 연결 요청: {name}". Body: the shipped `relinkApproveHint` and "This request closes in {m} min." / "Esta solicitud se cierra en {m} min." / "{m}분 뒤에 이 요청이 마감돼요.".
 - Buttons: **Approve** (primary) · **Deny** · **Later** (Más tarde / 나중에). Later only closes; the chip and banner stay.
 - Never on the lecture-mode or presenter pages (they are other routes; the pop-up lives in the class page and the parent home only; every other page has the bar of section 5.5).
 
@@ -340,7 +340,7 @@ Korean rule applied throughout: no particle whose form depends on the final cons
 | `attention.from(class)` | From {class} | Viene de {class} | 보낸 반: {class} |
 | `attention.empty` | Nothing is waiting. | No hay nada pendiente. | 기다리는 요청이 없어요. |
 | `relinkPopup.title(name)` | New device request: {name} | Solicitud de dispositivo nuevo: {name} | 새 기기 연결 요청: {name} |
-| `relinkPopup.closes(m)` | This request closes in {m} min. | Esta solicitud se cierra en {m} min. | {m}분 뒤에 이 요청이 닫혀요. |
+| `relinkPopup.closes(m)` | This request closes in {m} min. | Esta solicitud se cierra en {m} min. | {m}분 뒤에 이 요청이 마감돼요. |
 | `relinkPopup.later` | Later | Más tarde | 나중에 |
 | `relinkBar.one(space)` | A new device needs your OK · {space} | Un dispositivo nuevo espera tu aprobación · {space} | 새 기기 승인 대기 · {space} |
 | `relinkBar.many(n)` | {n} new devices need your OK | {n} dispositivos nuevos esperan tu aprobación | 새 기기 승인 대기 {n}건 |
