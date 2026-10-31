@@ -3,8 +3,8 @@
   "domain": "lessons-stage3-life-v2",
   "entries": {
     "episode:stage3-life-v2": {
-      "culture.n1.text": "{ko:나물}은 사람이 먹을 수 있는 풀이나 잎이에요. 반찬으로 먹을 때는 삶거나 볶거나 날것 그대로 두었다가 양념해서 버무려요.",
-      "culture.n2.text": "{ko:비빔밥}은 밥에 채소, {ko:나물}, 고기, 양념을 넣고 섞은 음식이에요. 집에서 만들 때는 먼저 섞은 다음 그릇에 나누어 담을 때가 많아요. 음식점에서는 밥 위에 재료를 올려 내고, 먹는 사람이 직접 섞어요.",
+      "culture.n1.text": "{ko:나물}은 사람이 먹는 여러 풀과 잎을 말해요. 반찬으로 먹을 때는 삶거나 볶거나, 또는 날것 그대로 양념해서 버무려요.",
+      "culture.n2.text": "{ko:비빔밥}은 밥에 채소, {ko:나물}, 고기, 양념을 넣고 섞은 음식이에요. 집에서 만들 때는 먼저 섞은 다음 그릇에 나누어 담을 때가 많아요. 음식점에서는 밥 위에 재료를 올려 내고, 저마다 자기 그릇을 섞어요.",
       "culture.n3.text": "지금까지 알려진 {ko:비빔밥}의 가장 오래된 조리법은 1800년대 말에 한글로 손으로 쓴 요리책에 나와요. 밥에 볶은 고기, {ko:나물}, 참기름을 넣고 섞은 뒤, 부친 달걀을 썰어 위에 얹어요.",
       "title": "맛과 요리법",
       "subtitle": "음식 맛을 말하고, 달라고 부탁하고, 비빔밥을 만들어요.",
@@ -72,7 +72,7 @@
     "quest:stage3-life-v2-q2": {
       "steps.s2.discover.pages.0.items.0.sentence.gloss": "김으로 만 밥을 즐겨 찾는다는 뜻",
       "steps.s2.discover.pages.0.items.1.sentence.gloss": "붉은 양념에 볶은 가래 모양 음식을 즐겨 찾는다는 뜻",
-      "steps.s2.discover.pages.0.caption": "'좋아해요'는 어떤 음식을 즐겨 찾는다는 말이에요. '먹어요' 앞에서처럼 음식 이름 뒤에 '을'이나 '를'을 붙여요.",
+      "steps.s2.discover.pages.0.caption": "'좋아해요' 앞에서는 음식 이름에 '을'이나 '를'을 붙이고, 1권에서 배운 '좋아요' 앞에서는 '이'나 '가'를 붙여요.",
       "steps.s2.discover.pages.1.items.0.frame.gloss": "무엇을 건네 달라고 공손히 부탁하는 틀",
       "steps.s2.discover.pages.1.items.0.note": "원하는 것을 말하고 {ko:주세요}를 붙여요. 그것을 건네 달라고 공손하게 부탁하는 말이에요.",
       "steps.s2.discover.pages.1.items.0.examples.mul-juseyo.gloss": "맑고 투명한 음료를 건네 달라는 부탁",
@@ -155,16 +155,16 @@
     "minigame:s3-life-v2-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "맨 처음에 쌀로 지은 음식을 그릇 안에 담는다는 뜻",
       "orderIt.rounds.r1.distractors.wayo.gloss": "말하는 사람 쪽으로 움직이다 (‘요’로 끝나는 꼴)",
-      "orderIt.rounds.r2.sentence.gloss": "양념한 풀과 잎 반찬을 그릇 안에 담는다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "붉고 매콤한 장을 그릇 안에 담는다는 뜻",
       "orderIt.rounds.r2.particle.choices.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
       "orderIt.rounds.r2.particle.choices.reul.gloss": "모음 뒤에 쓰는 목적어 표시",
-      "orderIt.rounds.r3.sentence.gloss": "붉고 매콤한 장을 그릇 안에 담는다는 뜻",
-      "orderIt.rounds.r3.particle.choices.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
-      "orderIt.rounds.r3.particle.choices.reul.gloss": "모음 뒤에 쓰는 목적어 표시",
-      "orderIt.rounds.r4.sentence.gloss": "그 뒤에 그릇 안의 것을 고루 섞는다는 뜻",
-      "orderIt.rounds.r4.distractors.wayo.gloss": "말하는 사람 쪽으로 움직이다 (‘요’로 끝나는 꼴)",
-      "orderIt.rounds.r5.sentence.gloss": "음식을 먹으니 혀가 얼얼하다는 뜻",
-      "orderIt.rounds.r5.distractors.gayo.gloss": "여기에서 다른 곳으로 움직이다 (‘요’로 끝나는 꼴)"
+      "orderIt.rounds.r3.sentence.gloss": "그 뒤에 그릇 안의 것을 고루 섞는다는 뜻",
+      "orderIt.rounds.r3.distractors.wayo.gloss": "말하는 사람 쪽으로 움직이다 (‘요’로 끝나는 꼴)",
+      "orderIt.rounds.r4.sentence.gloss": "음식을 먹으니 혀가 얼얼하다는 뜻",
+      "orderIt.rounds.r4.distractors.gayo.gloss": "여기에서 다른 곳으로 움직이다 (‘요’로 끝나는 꼴)",
+      "orderIt.rounds.r5.sentence.gloss": "여러 반찬을 얹어 섞은 밥을 즐겨 찾는다는 뜻",
+      "orderIt.rounds.r5.particle.choices.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
+      "orderIt.rounds.r5.particle.choices.reul.gloss": "모음 뒤에 쓰는 목적어 표시"
     },
     "minigame:s3-life-v2-q3-apply": {
       "clozePick.rounds.a1.sentence.gloss": "맨 처음에 쌀로 지은 음식을 그릇 안에 담는다는 뜻",
@@ -179,15 +179,15 @@
       "clozePick.rounds.a3.tiles.neoeoyo.gloss": "무언가를 그릇 같은 것의 안으로 들어가게 하다",
       "clozePick.rounds.a3.tiles.masyeoyo.gloss": "물 같은 것을 목으로 넘기다",
       "clozePick.rounds.a3.tiles.gayo.gloss": "여기에서 다른 곳으로 움직이다",
-      "clozePick.rounds.a4.sentence.gloss": "그 뒤에 그릇 안의 것을 고루 섞는다는 뜻",
-      "clozePick.rounds.a4.tiles.bibyeoyo.gloss": "여러 가지를 한데 고루 섞다",
-      "clozePick.rounds.a4.tiles.wayo.gloss": "말하는 사람 쪽으로 움직이다",
-      "clozePick.rounds.a4.tiles.masyeoyo.gloss": "물 같은 것을 목으로 넘기다"
+      "clozePick.rounds.a4.sentence.gloss": "그 뒤에 붉고 매콤한 장을 그릇 안에 담는다는 뜻",
+      "clozePick.rounds.a4.tiles.geudaeume.gloss": "앞의 일이 끝난 뒤에",
+      "clozePick.rounds.a4.tiles.meonjeo.gloss": "다른 일보다 앞서",
+      "clozePick.rounds.a4.tiles.mul.gloss": "맑고 투명한 음료"
     },
     "minigame:s3-life-v2-q3-check": {
       "orderIt.rounds.c1.sentence.gloss": "쌀로 지은 음식의 온도가 높다는 뜻",
       "orderIt.rounds.c1.distractors.masyeoyo.gloss": "물 같은 것을 목으로 넘기다 (‘요’로 끝나는 꼴)",
-      "orderIt.rounds.c2.sentence.gloss": "여러 반찬을 얹어 섞은 밥을 즐겨 찾는다는 뜻",
+      "orderIt.rounds.c2.sentence.gloss": "닭이 낳은 알을 그릇 안에 담는다는 뜻",
       "orderIt.rounds.c2.particle.choices.eul.gloss": "받침 뒤에 쓰는 목적어 표시",
       "orderIt.rounds.c2.particle.choices.reul.gloss": "모음 뒤에 쓰는 목적어 표시"
     }

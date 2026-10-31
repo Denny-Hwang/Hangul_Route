@@ -4,7 +4,7 @@
   "entries": {
     "episode:stage3-life-v2": {
       "culture.n1.text": "Los {ko:나물} son plantas y hojas que se pueden comer. Como guarnición, se hierven, se saltean o se dejan crudos, y luego se aliñan y se mezclan.",
-      "culture.n2.text": "El {ko:비빔밥} es arroz mezclado con verduras, {ko:나물}, carne y condimentos. En casa, muchas veces se mezcla antes de servirlo en los tazones. En un restaurante, lo de encima se pone sobre el arroz y cada persona mezcla el suyo.",
+      "culture.n2.text": "El {ko:비빔밥} es arroz mezclado con verduras, {ko:나물}, carne y condimentos. En casa, muchas veces se mezcla antes de servirlo en los tazones. En un restaurante, los ingredientes se ponen sobre el arroz y cada persona mezcla el suyo.",
       "culture.n3.text": "La primera receta escrita de {ko:비빔밥} que se conoce está en un libro de cocina escrito a mano en Hangul a finales del siglo XIX. Mezcla el arroz con carne salteada, {ko:나물} y aceite de sésamo, y luego pone trozos de huevo frito encima.",
       "title": "Sabores y recetas",
       "subtitle": "Di a qué sabe la comida, pídela y prepara bibimbap.",
@@ -64,15 +64,15 @@
       "clozePick.rounds.a4.tiles.wayo.gloss": "venir"
     },
     "minigame:s3-life-v2-q1-check": {
-      "typeHangul.rounds.d1.prompt": "Escribe la palabra para pan.",
+      "typeHangul.rounds.d1.prompt": "Escribe la palabra para el pan.",
       "typeHangul.rounds.d1.target.gloss": "pan",
-      "typeHangul.rounds.d2.prompt": "Escribe la palabra para pastel de arroz.",
+      "typeHangul.rounds.d2.prompt": "Escribe la palabra para el pastel de arroz.",
       "typeHangul.rounds.d2.target.gloss": "pastel de arroz"
     },
     "quest:stage3-life-v2-q2": {
       "steps.s2.discover.pages.0.items.0.sentence.gloss": "Me gusta el gimbap.",
       "steps.s2.discover.pages.0.items.1.sentence.gloss": "Me gusta el tteokbokki.",
-      "steps.s2.discover.pages.0.caption": "Joahaeyo dice que te gusta una comida. La comida lleva eul o reul, como con meogeoyo.",
+      "steps.s2.discover.pages.0.caption": "Con joahaeyo, la comida lleva eul o reul. Con joayo, del volumen 1, lleva i o ga.",
       "steps.s2.discover.pages.1.items.0.frame.gloss": "___, por favor.",
       "steps.s2.discover.pages.1.items.0.note": "Di lo que quieres y luego {ko:주세요}. Así pides con cortesía que te lo den.",
       "steps.s2.discover.pages.1.items.0.examples.mul-juseyo.gloss": "Agua, por favor.",
@@ -143,7 +143,7 @@
       "title": "Bibimbap paso a paso",
       "blurb": "Prepara bibimbap, un paso tras otro.",
       "steps.s1.title": "A cocinar",
-      "steps.s1.hoyaLine": "¡Hagamos bibimbap! Primero el arroz, luego lo de encima, y después mezclamos.",
+      "steps.s1.hoyaLine": "¡Hagamos bibimbap! Primero el arroz, luego los ingredientes, y después mezclamos.",
       "steps.s2.title": "Paso a paso",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada frase por tu cuenta.",
       "steps.s3.title": "Arma la frase",
@@ -155,16 +155,16 @@
     "minigame:s3-life-v2-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "Primero, pongo el arroz.",
       "orderIt.rounds.r1.distractors.wayo.gloss": "venir (en 'vengo')",
-      "orderIt.rounds.r2.sentence.gloss": "Pongo las verduras aliñadas.",
+      "orderIt.rounds.r2.sentence.gloss": "Pongo la pasta de chile rojo.",
       "orderIt.rounds.r2.particle.choices.eul.gloss": "marca de objeto, después de consonante final",
       "orderIt.rounds.r2.particle.choices.reul.gloss": "marca de objeto, después de vocal",
-      "orderIt.rounds.r3.sentence.gloss": "Pongo la pasta de chile rojo.",
-      "orderIt.rounds.r3.particle.choices.eul.gloss": "marca de objeto, después de consonante final",
-      "orderIt.rounds.r3.particle.choices.reul.gloss": "marca de objeto, después de vocal",
-      "orderIt.rounds.r4.sentence.gloss": "Después, lo mezclo.",
-      "orderIt.rounds.r4.distractors.wayo.gloss": "venir (en 'vengo')",
-      "orderIt.rounds.r5.sentence.gloss": "Sabe picante.",
-      "orderIt.rounds.r5.distractors.gayo.gloss": "ir (en 'voy')"
+      "orderIt.rounds.r3.sentence.gloss": "Después, lo mezclo.",
+      "orderIt.rounds.r3.distractors.wayo.gloss": "venir (en 'vengo')",
+      "orderIt.rounds.r4.sentence.gloss": "Sabe picante.",
+      "orderIt.rounds.r4.distractors.gayo.gloss": "ir (en 'voy')",
+      "orderIt.rounds.r5.sentence.gloss": "Me gusta el bibimbap.",
+      "orderIt.rounds.r5.particle.choices.eul.gloss": "marca de objeto, después de consonante final",
+      "orderIt.rounds.r5.particle.choices.reul.gloss": "marca de objeto, después de vocal"
     },
     "minigame:s3-life-v2-q3-apply": {
       "clozePick.rounds.a1.sentence.gloss": "Primero, pongo el arroz.",
@@ -179,15 +179,15 @@
       "clozePick.rounds.a3.tiles.neoeoyo.gloss": "poner dentro",
       "clozePick.rounds.a3.tiles.masyeoyo.gloss": "beber",
       "clozePick.rounds.a3.tiles.gayo.gloss": "ir",
-      "clozePick.rounds.a4.sentence.gloss": "Después, lo mezclo.",
-      "clozePick.rounds.a4.tiles.bibyeoyo.gloss": "mezclar",
-      "clozePick.rounds.a4.tiles.wayo.gloss": "venir",
-      "clozePick.rounds.a4.tiles.masyeoyo.gloss": "beber"
+      "clozePick.rounds.a4.sentence.gloss": "Después, pongo la pasta de chile rojo.",
+      "clozePick.rounds.a4.tiles.geudaeume.gloss": "después, luego",
+      "clozePick.rounds.a4.tiles.meonjeo.gloss": "primero",
+      "clozePick.rounds.a4.tiles.mul.gloss": "agua"
     },
     "minigame:s3-life-v2-q3-check": {
       "orderIt.rounds.c1.sentence.gloss": "El arroz está caliente.",
       "orderIt.rounds.c1.distractors.masyeoyo.gloss": "beber (en 'bebo')",
-      "orderIt.rounds.c2.sentence.gloss": "Me gusta el bibimbap.",
+      "orderIt.rounds.c2.sentence.gloss": "Pongo un huevo.",
       "orderIt.rounds.c2.particle.choices.eul.gloss": "marca de objeto, después de consonante final",
       "orderIt.rounds.c2.particle.choices.reul.gloss": "marca de objeto, después de vocal"
     }
