@@ -88,7 +88,7 @@
       "realiaRead.realia.entries.d7.value.gloss": "Rocío Blanco, un término solar",
       "realiaRead.realia.entries.d11.value.gloss": "el día 1 del octavo mes lunar",
       "realiaRead.realia.entries.d23.value.gloss": "equinoccio de otoño, un término solar",
-      "realiaRead.realia.entries.d25.value.gloss": "la fiesta de la cosecha de otoño (el día 15 del octavo mes lunar)",
+      "realiaRead.realia.entries.d25.value.gloss": "la fiesta de la cosecha de otoño, el día 15 del octavo mes lunar",
       "realiaRead.rounds.r1.question": "¿Qué día es Chuseok?",
       "realiaRead.rounds.r2.question": "¿Qué hay este día?",
       "realiaRead.rounds.r3.question": "¿Qué día es el día 1 del octavo mes lunar?",
@@ -98,15 +98,15 @@
       "realiaRead.rounds.r2.options.chuseok.text.gloss": "la fiesta de la cosecha de otoño",
       "realiaRead.rounds.r4.options.lunar-8-1.text.gloss": "el día 1 del octavo mes lunar",
       "realiaRead.rounds.r4.options.lunar-8-15.text.gloss": "el día 15 del octavo mes lunar",
-      "realiaRead.rounds.r4.options.lunar-1-1.text.gloss": "el día 1 del primer mes lunar"
+      "realiaRead.rounds.r4.options.lunar-7-15.text.gloss": "el día 15 del séptimo mes lunar"
     },
     "minigame:s6-rites-v2-q1-apply": {
       "clozePick.rounds.a1.sentence.gloss": "Chuseok es el ___ de septiembre.",
       "clozePick.rounds.a2.sentence.gloss": "El 23 de septiembre es ___.",
       "clozePick.rounds.a3.sentence.gloss": "El día 1 del octavo mes lunar es el ___ de septiembre.",
-      "clozePick.rounds.a1.tiles.oil.gloss": "el día 5",
       "clozePick.rounds.a1.tiles.siboil.gloss": "el día 15",
       "clozePick.rounds.a1.tiles.isiboil.gloss": "el día 25",
+      "clozePick.rounds.a1.tiles.samsibil.gloss": "el día 30",
       "clozePick.rounds.a2.tiles.seollal.gloss": "día del Año Nuevo lunar",
       "clozePick.rounds.a2.tiles.chubun.gloss": "equinoccio de otoño, un término solar",
       "clozePick.rounds.a2.tiles.chuseok.gloss": "la fiesta de la cosecha de otoño",
@@ -122,7 +122,7 @@
       "clozePick.realia.entries.d7.value.gloss": "Rocío Blanco, un término solar",
       "clozePick.realia.entries.d11.value.gloss": "el día 1 del octavo mes lunar",
       "clozePick.realia.entries.d23.value.gloss": "equinoccio de otoño, un término solar",
-      "clozePick.realia.entries.d25.value.gloss": "la fiesta de la cosecha de otoño (el día 15 del octavo mes lunar)"
+      "clozePick.realia.entries.d25.value.gloss": "la fiesta de la cosecha de otoño, el día 15 del octavo mes lunar"
     },
     "minigame:s6-rites-v2-q1-check": {
       "typeHangul.rounds.c1.prompt": "Escribe la palabra de fiesta que oyes.",
@@ -131,14 +131,16 @@
       "typeHangul.rounds.c2.target.gloss": "masa de arroz en media luna"
     },
     "minigame:s6-rites-v2-q2-practice": {
-      "realiaRead.realia.alt": "Un cartel de un festival de Chuseok: 25 de septiembre, en el parque del pueblo, a la una de la tarde",
+      "realiaRead.realia.alt": "Un cartel de un festival de Chuseok: 25 de septiembre, en el parque del pueblo, a la una de la tarde, con yut y la danza Ganggangsullae",
       "realiaRead.realia.title.gloss": "festival de Chuseok",
       "realiaRead.realia.entries.date.text.gloss": "25 de septiembre",
       "realiaRead.realia.entries.place.text.gloss": "el parque del pueblo",
       "realiaRead.realia.entries.time.text.gloss": "la una de la tarde",
+      "realiaRead.realia.entries.games.text.gloss": "yut y la danza Ganggangsullae",
       "realiaRead.rounds.r1.question": "¿Dónde es el festival?",
       "realiaRead.rounds.r2.question": "¿Qué día es el festival?",
       "realiaRead.rounds.r3.question": "¿A qué hora empieza?",
+      "realiaRead.rounds.r4.question": "¿Qué juego hay en el festival?",
       "realiaRead.rounds.r1.options.gichayeok.text.gloss": "estación de tren",
       "realiaRead.rounds.r1.options.maeul-gongwon.text.gloss": "el parque del pueblo",
       "realiaRead.rounds.r1.options.halmeoni-daek.text.gloss": "la casa de la abuela",
@@ -147,7 +149,10 @@
       "realiaRead.rounds.r2.options.sep-11.text.gloss": "11 de septiembre",
       "realiaRead.rounds.r3.options.ohu-han-si.text.gloss": "la una de la tarde",
       "realiaRead.rounds.r3.options.ohu-se-si.text.gloss": "las tres de la tarde",
-      "realiaRead.rounds.r3.options.ohu-daseot-si.text.gloss": "las cinco de la tarde"
+      "realiaRead.rounds.r3.options.ohu-daseot-si.text.gloss": "las cinco de la tarde",
+      "realiaRead.rounds.r4.options.jegichagi.text.gloss": "patear el jegi",
+      "realiaRead.rounds.r4.options.yunnori.text.gloss": "yut, juego de tablero con palitos",
+      "realiaRead.rounds.r4.options.yeonnalligi.text.gloss": "volar cometas"
     },
     "minigame:s6-rites-v2-q2-apply": {
       "clozePick.rounds.a1.sentence.gloss": "El yut es a la ___.",
@@ -204,16 +209,20 @@
       "realiaRead.realia.entries.seat.value.gloss": "número 12",
       "realiaRead.rounds.r1.question": "¿Qué día es el tren?",
       "realiaRead.rounds.r2.question": "¿Adónde llega el tren?",
-      "realiaRead.rounds.r3.question": "¿A qué hora sale el tren?",
+      "realiaRead.rounds.r3.question": "¿De dónde sale el tren?",
+      "realiaRead.rounds.r4.question": "¿Qué línea da el asiento?",
       "realiaRead.rounds.r1.options.sep-24.text.gloss": "24 de septiembre",
       "realiaRead.rounds.r1.options.sep-25.text.gloss": "25 de septiembre",
-      "realiaRead.rounds.r1.options.sep-26.text.gloss": "26 de septiembre",
+      "realiaRead.rounds.r1.options.sep-23.text.gloss": "23 de septiembre",
       "realiaRead.rounds.r2.options.seoul.text.gloss": "Seúl (una ciudad)",
       "realiaRead.rounds.r2.options.busan.text.gloss": "Busan (una ciudad)",
       "realiaRead.rounds.r2.options.daegu.text.gloss": "Daegu (una ciudad)",
-      "realiaRead.rounds.r3.options.han-si.text.gloss": "1:00",
-      "realiaRead.rounds.r3.options.du-si.text.gloss": "2:00",
-      "realiaRead.rounds.r3.options.se-si.text.gloss": "3:00"
+      "realiaRead.rounds.r3.options.daejeon.text.gloss": "Daejeon (una ciudad)",
+      "realiaRead.rounds.r3.options.seoul.text.gloss": "Seúl (una ciudad)",
+      "realiaRead.rounds.r3.options.busan.text.gloss": "Busan (una ciudad)",
+      "realiaRead.rounds.r4.options.naljja.text.gloss": "fecha",
+      "realiaRead.rounds.r4.options.dochak.text.gloss": "llegada",
+      "realiaRead.rounds.r4.options.jwaseok.text.gloss": "asiento"
     },
     "minigame:s6-rites-v2-q3-apply": {
       "dialogue.0.npc": "¿Adónde va?",
@@ -234,12 +243,12 @@
       "dialogue.3.options.du-si-gichayo.gloss": "El tren de las dos."
     },
     "minigame:s6-rites-v2-q3-check": {
-      "clozePick.rounds.c1.sentence.gloss": "El tren sale de ___.",
+      "clozePick.rounds.c1.sentence.gloss": "El tren sale a las ___.",
       "clozePick.rounds.c2.sentence.gloss": "El asiento es el ___.",
-      "clozePick.rounds.c1.tiles.busan.gloss": "Busan (una ciudad)",
-      "clozePick.rounds.c1.tiles.seoul.gloss": "Seúl (una ciudad)",
-      "clozePick.rounds.c1.tiles.daegu.gloss": "Daegu (una ciudad)",
-      "clozePick.rounds.c2.tiles.ibeon.gloss": "número 2",
+      "clozePick.rounds.c1.tiles.han-si.gloss": "1:00",
+      "clozePick.rounds.c1.tiles.du-si.gloss": "2:00",
+      "clozePick.rounds.c1.tiles.se-si.gloss": "3:00",
+      "clozePick.rounds.c2.tiles.sipbeon.gloss": "número 10",
       "clozePick.rounds.c2.tiles.sibibeon.gloss": "número 12",
       "clozePick.rounds.c2.tiles.isibilbeon.gloss": "número 21",
       "clozePick.realia.alt": "Un boleto de tren para el 24 de septiembre: de Seúl a Daegu, sale a las dos, asiento número 12",
