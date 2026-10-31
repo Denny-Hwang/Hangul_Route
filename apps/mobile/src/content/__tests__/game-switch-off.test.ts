@@ -71,7 +71,7 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
 
   it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
-    expect(cloze.filter((id) => id.startsWith('quest:stage3-')).sort()).toEqual([
+    expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-v2-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
       'quest:stage3-letters-q1',
       'quest:stage3-life-q1',
@@ -79,6 +79,11 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage3-nature-q1',
       'quest:stage3-rites-q3',
     ]);
+  });
+
+  it('reads the Volume 2 Cloze Pick steps too: every quest of Stage 6 Letters & Books Volume 2 plays one (row CM-44 S6)', () => {
+    const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
+    for (const id of ['quest:stage6-letters-v2-q1', 'quest:stage6-letters-v2-q2', 'quest:stage6-letters-v2-q3']) expect(cloze, id).toContain(id);
   });
 
   it('the check finds a fallback that cannot play (on the e2e fixture step)', () => {
@@ -92,7 +97,8 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     const shipped = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick');
     expect(shipped.length).toBeGreaterThan(0);
     // The Stage 6 Check rotation authors five value-gap realia questions (Letters q2, Life q2, Rites q2, Crafts q1 and q3).
-    expect(shipped.filter(({ questId }) => questId.startsWith('quest:stage6-')).map(({ questId }) => questId).sort()).toEqual([
+    // A Volume 2's Cloze Pick steps are read by their own test above (row CM-44 S6).
+    expect(shipped.filter(({ questId }) => questId.startsWith('quest:stage6-') && !questId.includes('-v2-')).map(({ questId }) => questId).sort()).toEqual([
       'quest:stage6-crafts-q1',
       'quest:stage6-crafts-q3',
       'quest:stage6-letters-q2',
