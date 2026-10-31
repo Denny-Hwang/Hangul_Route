@@ -1336,22 +1336,66 @@ const VOLUME2_PLAYS = new Map<string, (page: Page) => Promise<void>>([
   ],
 ]);
 
-/** A new learner whose stored remote copy holds `flags` (the `volumes` ramp), on the Journey. */
-async function journeyWithFlags(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+/**
+ * A new learner whose stored remote copy holds `flags` (the `volumes` ramp), on the Journey; `extra` seeds more stored
+ * values in the same write (the device settings' text size, say).
+ */
+async function journeyWithFlags(page: Page, flags: Record<string, { on: boolean; pct: number }>, extra: Record<string, unknown> = {}): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags } });
+  await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags }, ...extra });
   await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await openJourneyTab(page);
+}
+
+/** The Journey tab, from Home or after leaving a cell's page. */
+async function openJourneyTab(page: Page): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+}
+
+/** The cell's first volume: the episode a cell opens on while `volumes` is off. */
+const firstVolumeOf = (episode: (typeof LESSON_EPISODES)[number]) =>
+  FIRST_VOLUMES.find((e) => e.stage === episode.stage && e.theme === episode.theme);
+
+/** From the Journey: the later volume's cell, its Vol 2 tab, then quest `index`'s Start (a soft prerequisite may ask), up to its first game. */
+async function openVolumeQuest(page: Page, episode: (typeof LESSON_EPISODES)[number], index: number): Promise<void> {
+  const stage = Number(episode.stage.replace('stage', ''));
+  await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+  await page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' }).click();
+  await expect(page.getByText(episode.titleEn).first()).toBeVisible();
+  await page.getByTestId(`episode-quest-${episode.questIds[index]}`).getByRole('button', { name: 'Start', exact: true }).click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(headerClose(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+}
+
+/** Every line button of the Realia Read sheet `group` is on screen and inside a 320 column, and nothing scrolls sideways. */
+async function expectSheetFits320(page: Page, group: string): Promise<void> {
+  const sheet = page.getByRole('group', { name: group });
+  await expect(sheet).toBeVisible({ timeout: 10_000 });
+  const buttons = sheet.getByRole('button');
+  expect(await buttons.count()).toBeGreaterThan(0);
+  for (const button of await buttons.all()) {
+    await button.scrollIntoViewIfNeeded();
+    await expect(button).toBeVisible();
+    const box = (await button.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+  }
+  await expectNoHorizontalOverflow(page);
 }
 
 test.describe('Volume 2 cells (F-CURR-002 rows CM-40 and CM-41)', () => {
@@ -1380,12 +1424,70 @@ test.describe('Volume 2 cells (F-CURR-002 rows CM-40 and CM-41)', () => {
 
   test('volumes off (launch state): the cell opens Volume 1 alone, with no Vol tabs and no Volume 2 title', async ({ page }) => {
     await journeyWithFlags(page, {});
-    for (const episode of LATER_VOLUMES) {
+    for (const [i, episode] of LATER_VOLUMES.entries()) {
+      if (i > 0) await openJourneyTab(page);
       const stage = Number(episode.stage.replace('stage', ''));
       await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+      // The cell's page is open on Volume 1 first, so the zero counts below are read on that page, not before it loads.
+      const first = firstVolumeOf(episode);
+      expect(first, `${episode.id} has a first volume`).toBeDefined();
+      await expect(page.getByText(first!.titleEn).first()).toBeVisible();
+      await expect(page.getByTestId(`episode-quest-${first!.questIds[0]}`)).toBeVisible();
       await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
       await expect(page.getByText(episode.titleEn)).toHaveCount(0);
+      await page.goBack();
     }
   });
+});
+
+/**
+ * Row CM-41 S6 review fixes: the park map (kind `map`) draws no arrow, so each place shows its way as the line's value
+ * (주차장 ···· 왼쪽), and the q3 questions "Which way is ...?" are read off the sheet; q3 plays to the reward at 320.
+ * At the Largest text size each Volume 2 sheet (the forecast's 오늘 / 내일 / 모레 tiles, the 4-board trail sign with
+ * minutes, the 4-place map) keeps every line button inside the 320 column.
+ */
+test.describe('Stage 6 Nature Volume 2 sheets (F-CURR-002 row CM-41 S6)', () => {
+  test.use({ viewport: { width: 320, height: 720 } });
+  const episode = LESSON_EPISODES.find((e) => e.id === 'episode:stage6-nature-v2')!;
+
+  test('320: q3 shows the way to each place on the park map, and plays to the reward', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await journeyWithFlags(page, { volumes: { on: true, pct: 100 } });
+    await openVolumeQuest(page, episode, 2);
+    const map = page.getByRole('group', { name: 'Map, 4 lines' });
+    await expect(map).toBeVisible({ timeout: 10_000 });
+    // The way is printed on the sheet, not only in the line's accessible name.
+    await expect(map.getByText('왼쪽', { exact: true })).toHaveCount(2);
+    await expect(map.getByText('오른쪽', { exact: true })).toHaveCount(2);
+    await expect(map.getByRole('button', { name: /^호수, hosu, 오른쪽, oreunjjok/ })).toBeVisible();
+    await expectSheetFits320(page, 'Map, 4 lines');
+    await shot(page, 'cm41-s6-q3-map-320');
+    await pickRealia(page, ['juchajang', 'oreunjjok', 'annaeso', 'oreunjjok']);
+    // Apply: Tap to Respond, the way to each place as the map shows it.
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await replyTurns(page, ['안녕하세요!', '왼쪽으로 가세요.', '오른쪽으로 가세요.', '오른쪽으로 가세요.'], 'check');
+    // Check: Realia Read on the same map.
+    await playRealiaCheck(page, ['a', 'b']);
+    await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  for (const [index, group, ko] of [
+    [0, 'Weather forecast, 3 lines', '모레'],
+    [1, 'Trail sign, 4 lines', '대피소'],
+    [2, 'Map, 4 lines', '오른쪽'],
+  ] as const) {
+    test(`320 at the Largest text size: q${index + 1}'s sheet keeps every line button in the column`, async ({ page }) => {
+      await journeyWithFlags(page, { volumes: { on: true, pct: 100 } }, { 'device:settings': { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' } });
+      await openVolumeQuest(page, episode, index);
+      const sheet = page.getByRole('group', { name: group });
+      await expect(sheet).toBeVisible({ timeout: 10_000 });
+      // bodyLg (20) x 1.5: the setting reached the sheet.
+      expect(await sheet.getByText(ko, { exact: true }).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(30);
+      await expectSheetFits320(page, group);
+      await shot(page, `cm41-s6-q${index + 1}-largest-320`);
+    });
+  }
 });
 
