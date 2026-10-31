@@ -6,7 +6,7 @@
   "status": "ready",
   "titleEn": "Library Day",
   "subtitleEn": "Read a library card, a book, a poster and a subway board.",
-  "hoyaIntroEn": "Hangeul Day is coming! Let's read our way to the library and back.",
+  "hoyaIntroEn": "It's library day! Let's read everything we see on the way.",
   "order": 1,
   "pillarTags": [
     "A1"
@@ -1652,62 +1652,55 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "Why 9 October? A copy of the book {ko:훈민정음}, found in 1940, says it was published in the first ten days of the ninth lunar month of 1446. The last of those days is 9 October in today's calendar.",
+      "textEn": "Hangeul Day is one of South Korea's five national days, {ko:국경일}, along with 1 March, 17 July, 15 August and 3 October. A law passed in 2005 made it one.",
       "sources": [
         {
           "title": "한글날이 10월 9일인 이유는? (Why is Hangeul Day on 9 October?), 한박웃음 October 2018, no. 63",
           "publisher": "국립한글박물관 (National Hangeul Museum)",
           "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
-          "accessed": "2026-10-30",
-          "quoteOrLocator": "Section ‘1940년, ‘한글날’은 10월 9일’: ‘1940년 여름, 훈민정음 창제에 관한 모든 것을 기록한 ≪훈민정음≫(해례본)이 세상에 모습을 드러냈다. 책의 말미에는 ≪훈민정음≫(해례본)의 간행 시점이 1446년(세종 28년) 9월 상한(上澣)임이 기록되어 있다. 상한은 상순(上旬)과 같은 말로 한 달 가운데 1일에서 10일까지를 이르는 말이다. 이 기록에 따라 9월 상한의 마지막 날인 음력 9월 10일을 양력으로 환산한 10월 9일을 한글날로 정하게’"
-        },
-        {
-          "title": "한글날의 유래, 상담 사례 모음: where Hangeul Day comes from, from the counselling cases",
-          "publisher": "국립국어원 (National Institute of Korean Language)",
-          "url": "https://www.korean.go.kr/front/mcfaq/mcfaqView.do?mcfaq_seq=9028",
-          "accessed": "2026-10-30",
-          "quoteOrLocator": "Answer: ‘그러다가 1945년부터는 1940년 7월에 발견된 《훈민정음》(해례본) 정인지의 서문의 9월 상한(上澣)이라는 기록에 따라 9월 상한의 마지막 날인 9월 10일을 양력으로 계산하여 10월 9일에 기념식을 거행하게 되었습니다.’"
-        }
-      ],
-      "verification": {
-        "passes": 3,
-        "checkedAt": "2026-10-30",
-        "scope": "lesson",
-        "notes": "pass 1 (author sourcing, CM-44 S6, 2026-10-30): both pages fetched 2026-10-30, HTTP 200. The National Hangeul Museum webzine (한박웃음 no. 63) says the Haerye copy of Hunminjeongeum came to light in summer 1940, that its end gives the publication as the 상한 (days 1 to 10) of the ninth month of 1446, and that the last of those days, lunar 9.10, converted to the solar calendar is 10월 9일; the NIKL counselling page says the same (found July 1940, 9월 상한, 9월 10일 to 10월 9일). Used in: the q1 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-30): both quotes found word for word. Finding: the first draft said the copy 'dates it', which leaves open what the date is; the museum names the 간행 시점, so the note now says 'says it was published'. 'lunar' and 'in today's calendar' render 음력 and 양력으로 환산. Institutions named as on the access date (국립한글박물관, 국립국어원). Does not repeat the S4 Volume 1 notes (9 October, 1443 and 1446, UNESCO). No copied English wording. Outcome: fixed (reworded).\npass 3 (MAR third pass, 2026-10-30): note re-read against both sources after the fix; no claim beyond them (no claim about the copy's owner, its place today or its designation). Outcome: pass, no change."
-      }
-    },
-    {
-      "id": "n2",
-      "kind": "culture",
-      "textEn": "Hangeul Day was first held in 1926, as {ko:가갸날}. The name seems to come from {ko:가} and {ko:갸}, the first two blocks of the syllable chart people learned from then. Since 1928 it has been called {ko:한글날}.",
-      "sources": [
-        {
-          "title": "한글날이 10월 9일인 이유는? (Why is Hangeul Day on 9 October?), 한박웃음 October 2018, no. 63",
-          "publisher": "국립한글박물관 (National Hangeul Museum)",
-          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
-          "accessed": "2026-10-30",
-          "quoteOrLocator": "Section ‘1926년, 한글의 새로운 빛 ‘가갸날’’: ‘1926년 11월 조선어연구회는 훈민정음 반포 8회갑(480년)을 기념하여 … ‘가갸날’ 축하회를 열었다.’ / ‘‘가갸날’이라는 이름은 당시 한글 교육에 널리 사용되었던 한글 반절표 첫 행(가갸거겨고교구규그기 )의 처음 두 글자를 딴 것으로 보인다.’ / ‘1928년부터 ‘가갸날’은 ‘한글날’로 바뀌게 되었다.’"
-        },
-        {
-          "title": "한글날의 유래, 상담 사례 모음: where Hangeul Day comes from, from the counselling cases",
-          "publisher": "국립국어원 (National Institute of Korean Language)",
-          "url": "https://www.korean.go.kr/front/mcfaq/mcfaqView.do?mcfaq_seq=9028",
-          "accessed": "2026-10-30",
-          "quoteOrLocator": "Answer: ‘한글날 기념식을 처음으로 거행한 것은 1926년 11월 4일인데, … '가갸날'이라는 명칭(1927년까지)으로 기념식을 거행한 것입니다.’"
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "Section on Hangeul Day after 1945: ‘현재 한글날(10월 9일)은 삼일절(3월 1일), 제헌절(7월 17일), 광복절(8월 15일), 개천절(10월 3일)과 더불어 우리나라의 5대 국경일 중 하나로 지정되어 있다.’ / ‘결국 2005년 국경일에 관한 법률이 개정됨으로써 한글날은 국경일로 자리매김하게 되었고’ / timeline: ‘2005년 12월 법정 국경일 지정(2006년부터 적용)’"
         },
         {
           "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 ‘가갸날’에서 2016년의 ‘한글날’까지 (Hangeul Day yesterday, today and tomorrow), 새소식, 2016-10-07",
           "publisher": "국립한글박물관 (National Hangeul Museum)",
           "url": "https://www.hangeul.go.kr/news/newsDetail.do?bbs_id=1&bbs_no=777",
-          "accessed": "2026-10-30",
-          "quoteOrLocator": "List ‘한글날 기원 및 공휴일 지정 관련’: ‘○ 1926년: 조선어연구회, 음력 9월 29일(11월 4일) ‘가갸날’ 선포 ○ 1928년: 명칭을 ‘한글날’로 변경’"
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "List ‘한글날 기원 및 공휴일 지정 관련’: ‘2005년: 국경일로 격상(국경일에 관한 법률 일부개정)되었으나, 공휴일에서 제외(관공서의 공휴일에 관한 규정 제2조)’"
         }
       ],
       "verification": {
         "passes": 3,
-        "checkedAt": "2026-10-30",
+        "checkedAt": "2026-10-31",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, CM-44 S6, 2026-10-30): three pages fetched 2026-10-30, HTTP 200. National Hangeul Museum webzine: the 1926 가갸날 celebration, the name seemingly from the first two letters of the first row of the 반절표 (가갸거겨...), and the change to 한글날 from 1928. NIKL counselling page: first held 4 November 1926 under the name 가갸날 (until 1927). National Hangeul Museum notice of 2016-10-07: 1926 가갸날, 1928 renamed 한글날. Used in: the q2 Did you know? tip (the Hangeul Day poster).\npass 2 (MAR culture and facts, 2026-10-30): each quote found word for word. The museum says the name 'seems' (보인다) to come from the chart, so the note keeps 'seems' and claims no certainty; 'syllable chart' renders 반절표 and 'blocks' the chart's syllables 가 and 갸. No organiser, person or place is named, so no name-as-of-date question arises beyond the two institutions. No copied English wording. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-30): note re-read with the poster quest; the poster is drawn and generic (no organiser, venue or year) and makes no claim about the 1926 event. Outcome: pass, no change."
+        "notes": "pass 1 (author sourcing, CM-44 S6 revision, 2026-10-31): both National Hangeul Museum pages fetched 2026-10-31. The webzine names Hangeul Day one of the five 국경일 with 삼일절 (1 March), 제헌절 (17 July), 광복절 (15 August) and 개천절 (3 October), and says the 2005 amendment of 국경일에 관한 법률 made it a 국경일 (timeline: December 2005, applied from 2006); the 2016 notice gives 2005 as the year it became a 국경일. Replaces the earlier n1 (why 9 October), which Stage 4 Letters Volume 2 (row CM-44 S4) carries; the section 5.2 S4 row owns the Hangeul Day date notes. Used in: the q1 Did you know? tip, before the q2 Hangeul Day poster.\npass 2 (MAR culture and facts, 2026-10-31): each quote found word for word on the access date. 'South Korea's' renders 우리나라 in a South Korean institution's text; the four other days are named by date only, so no holiday name needs a gloss; 'A law passed in 2005' keeps to the amendment year both pages give and claims nothing about the day it took effect. Institution named as on the access date (국립한글박물관). No copied English wording. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): re-read against both pages and against every Letters note of Stages 2 to 7 (Volume 1, and the open S3 and S4 Volume 2 rows): no other note names 국경일 or the 2005 law. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "In 1946, 500 years after the letters were first shared, Hangeul Day was a day off for the first time. From 1991 it was no longer a day off, and since 2013 it has been one again.",
+      "sources": [
+        {
+          "title": "한글날이 10월 9일인 이유는? (Why is Hangeul Day on 9 October?), 한박웃음 October 2018, no. 63",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘이듬해인 1946년에는 훈민정음 반포 500돌을 기념하여 한글날이 임시 공휴일로 지정되었고’ / ‘1990년 공휴일이 많아 경제 활동에 어려움이 있다는 이유로 공휴일에서 제외하는 일이 벌어졌다.’ / timeline: ‘1946년 10월 임시 공휴일 지정(미군정청)’, ‘1990년 11월 법정 공휴일 제외(1991년부터 적용)’, ‘2012년 11월 법정 공휴일 재지정(2013년부터 적용)’"
+        },
+        {
+          "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 ‘가갸날’에서 2016년의 ‘한글날’까지 (Hangeul Day yesterday, today and tomorrow), 새소식, 2016-10-07",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/news/newsDetail.do?bbs_id=1&bbs_no=777",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "List ‘한글날 기원 및 공휴일 지정 관련’: ‘1946년: 10월 9일 한글날 공휴일로 지정(한글 반포 500돌 기념)’ / ‘1990년: 한글날 공휴일에서 제외’ / ‘2012년: 공휴일로 재지정 결정, 2013년 한글날부터 공휴일 적용’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-44 S6 revision, 2026-10-31): both National Hangeul Museum pages fetched 2026-10-31. Both give 1946 as the first year Hangeul Day was a 공휴일, for the 500th year of the 1446 반포; the webzine's timeline gives the removal as decided in November 1990 and applied from 1991, and the return as decided in November 2012 and applied from 2013. Replaces the earlier n2 (가갸날, 1926 and 1928), which Stage 4 Letters Volume 2 (row CM-44 S4) carries. Used in: the q2 Did you know? tip (the Hangeul Day poster).\npass 2 (MAR culture and facts, 2026-10-31): each quote found word for word. 'a day off' renders 공휴일 for any-age readers and recycles q1's 쉬는 날 in the ko text; 1946 was a 임시 공휴일 (a one-off day off), and the note says only that it was a day off 'for the first time', which both pages support; 'From 1991' follows the webzine's 적용 year, not the 1990 decision. Institution named as on the access date. No copied English wording. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): re-read against both pages; it claims nothing about why the day was removed, so the 1990 reason (economic activity) stays out of a children's tip; no other Letters note names these years. Outcome: pass, no change."
       }
     },
     {
@@ -1742,17 +1735,20 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-30",
+    "reviewedAt": "2026-10-31",
     "notes": [
       "Volume 2 MAR (row CM-44 S6, F-CURR-002 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass). The checker passes ran one after another in the authoring session, each against its own checklist. No native-speaker or expert review is claimed; native-reviewed is the schema's name for the language gate.",
       "Language pass: spelling, spacing and 해요체 line by line; particles by the last sound (한글날은, 이름을, 출구는, 화장실은; 시청이에요, 공원이에요; 미나가, 호야가); 시월 for 10월 (한글 맞춤법 제52항, 속음 시월(十月)); every romanization is the F-CNT-002 converter's, names capitalized (Hoya, Mina). The Cloze tiles of each gap share the same last sound, so no particle gives a tile away.",
-      "Culture and facts pass: n1 (why 9 October: the Haerye copy found in 1940, 9월 상한 of 1446) and n2 (가갸날 in 1926, 한글날 from 1928) on the National Hangeul Museum and NIKL pages; n3 (romanization by pronunciation since 2000, 신라 Silla) on two NIKL pages. Applied: n1 'says it was published' for the museum's 간행 시점. None repeats a Volume 1 note.",
+      "Culture and facts pass: n1 and n2 as first written (why 9 October; 가갸날 in 1926) on the National Hangeul Museum and NIKL pages; n3 (romanization by pronunciation since 2000, 신라 Silla) on two NIKL pages. Applied: n1 'says it was published' for the museum's 간행 시점. None repeats a Volume 1 note.",
       "Culture and facts pass (cont.): the library card, the book cover, the poster and the subway board are drawn and generic: no library, publisher, organiser, operator, line, logo or brand; 시청, 시장 and 공원 are common place nouns as stop names; the book is 'A Hangul Story' by Mina and Hoya, the cast; hours and counts are practice values; no line claims anything about real cards, posters or stations.",
       "Learning design pass: 3 quests; new items 7, 5 and 7 (at most 8); Practice and Check items from earlier quests 3 of 7, 2 of 5 and 5 of 10 (lesson-recycle at least 30 in 100; 책, 이름, 호야, 도서관, 공원, 출구, 왼쪽, 오른쪽, 화장실 recycled); Checks Dictation (도서관, 책), Cloze Pick on the poster's values and Realia Read on the board, one of each.",
-      "Learning design pass (cont.): triples RR/CP/TH, RR/OI/CP, RR/CP/RR differ from Volume 1's (RR/TH/RR, RR/TH/CP, RR/TH/TH) and each other; each Check asks what Practice did not (q2 the date and the time; q3 the stop before and what is on the left). Applied: the q2 c1 tile 구월 십일 (the lunar date in n1) became 시월 십일, so no wrong tile is a date the tip names.",
+      "Learning design pass (cont.): triples RR/CP/TH, RR/OI/CP, RR/CP/RR differ from Volume 1's (RR/TH/RR, RR/TH/CP, RR/TH/TH) and each other; each Check asks what Practice did not (q2 the date and the time; q3 the stop before and what is on the left). Applied: the q2 c1 tile 구월 십일 (the lunar date in the first n1) became 시월 십일.",
       "Learning design pass (cont.): device voice: 읽어요 [일거요], 월요일 [워료일], 다섯 권 [다섣꿘], 한글날 [한글랄] and 시월 구일 [시월구일] change or link in speech, so none is in Dictation; 도서관 and 책 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0.",
       "Realia kinds: the Hangeul Day poster and the book cover are poster (CM-47); the library card is ticket, a stand-in whose band shows a small train (no card kind exists; the alt text says library card); the subway board is timetable, whose clock the CM-47 art notes give for a timetable or a station board, since the sign kind draws a mountain trail.",
-      "Reviser: applied the fixes above (n1 wording, the q2 c1 tile). Third pass: no change."
+      "Reviser: applied the fixes above (n1 wording, the q2 c1 tile). Third pass: no change.",
+      "Independent pass (row CM-44 S6, 2026-10-31): a later session than the authoring one, run against the language, culture and facts and learning design checklists. No native-speaker or expert review is claimed.",
+      "Independent pass, culture: the first n1 (why 9 October) and n2 (가갸날, 1926 and 1928) repeated the Hangeul Day notes of Stage 4 Letters Volume 2 (row CM-44 S4, whose section 5.2 row owns them). Fixed: new National Hangeul Museum notes, n1 Hangeul Day as one of the five 국경일 (law of 2005), n2 its years as a day off (1946, off from 1991, again since 2013).",
+      "Independent pass, learning design: the cell intro said 'Hangeul Day is coming!', wrong for most of the year; it now says 'It's library day!' in en, es and ko. Checked with no change: particles and 해요체, F-CNT-002 romanizations, the Cloze tiles' shared last sounds, the Dictation words, and no brand, operator or real line on any sheet."
     ]
   },
   "contentVer": 1
