@@ -286,6 +286,12 @@ export const consoleMsgs = {
       cta: (count: number) => plural('es', count, { one: `${count} reconexión`, other: `${count} reconexiones` }),
     },
     settings: { cta: 'Ajustes' },
+    more: 'Más',
+    invite: (code: string) => `Invitar estudiantes · código ${code}`,
+    firstRun: {
+      title: 'Primeros pasos',
+      steps: ['Muestra el código de la clase o el código QR.', 'Los estudiantes tocan Unirme a una clase en la app.', 'Planea esta semana.'],
+    },
     studentsLabel: 'Estudiantes',
     recentFirst: 'Primero la actividad más reciente',
     learner: {
@@ -293,6 +299,7 @@ export const consoleMsgs = {
       questsCards: (done: number, total: number, cards: number) =>
         plural('es', cards, { one: `Misiones ${done} / ${total} · ${cards} tarjeta`, other: `Misiones ${done} / ${total} · ${cards} tarjetas` }),
       minutesThisWeek: (minutes: number) => `${minutes} min esta semana`,
+      practiced: (when: string, minutes: number) => `Practicó ${when} · ${minutes} min esta semana`,
       revisit: (jamo: string) => `Repasar: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `se unió ${when}`,

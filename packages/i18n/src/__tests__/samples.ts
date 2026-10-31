@@ -1058,4 +1058,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.attention.moves': [[1], [3]],
   'console.relinkPopup.title': [['Jaehan']],
   'console.relinkPopup.closes': [[1], [8]],
+  // AMENDMENTS-GROWNUP-UX GX-7: the invite disclosure's code and the roster card's activity line (a day word and minutes).
+  'console.space.invite': [['ABC234']],
+  'console.space.learner.practiced': [['today', 2], ['Thu', 14]],
 };
