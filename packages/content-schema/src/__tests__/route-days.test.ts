@@ -296,7 +296,10 @@ describe('golden: the default curriculum for an unlicensed space is the free pla
       const draft = generateCurriculum(params, catalog);
       const scheduledLessons = draft.items.map((item) => item.id).filter((id) => grid.has(id));
       expect(sorted(scheduledLessons)).toEqual(sorted(free));
-      expect(sorted(draft.locked)).toEqual(sorted([...grid].filter((id) => !free.has(id))));
+      // A plan reads each cell's first volume (row CM-40: a later volume adds no route day and no plan lesson), so the
+      // locked list is the first volumes' grid lessons past the free plan; the shipped Volume 2 (row CM-45 S6) is not in it.
+      const firstVolumes = new Set(catalog.cells.flatMap((cell) => cell.questIds));
+      expect(sorted(draft.locked)).toEqual(sorted([...grid].filter((id) => firstVolumes.has(id) && !free.has(id))));
       // With every stage unlocked, the same plan holds lessons past the free plan.
       const licensed = generateCurriculum({ ...params, unlockedStages: ALL_STAGES }, catalog);
       expect(licensed.items.some((item) => grid.has(item.id) && !free.has(item.id))).toBe(true);
