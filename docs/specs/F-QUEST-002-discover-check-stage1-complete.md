@@ -1,5 +1,7 @@
 Status: ready (all rows built 2026-10-12, Q-1 to Q-11)
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): Listen & Pick and the other pick-one answers take touches through the shared tap board (a graze still counts, a bounce never counts twice); Pic-Word Match no longer un-selects a tile tapped again, and its selection changes only by picking another tile (sections 3, 6.1; rows KT-3, KT-4a, KT-4b).
+
 # F-QUEST-002 — Discover and Check steps, the full Stage 1 (15 quests, 30 symbols), Stage 1 completion and the Hangul Check, plus Listen & Pick and Pic-Word Match
 
 > Start order (review of 2026-10-10): Q-1, Q-2 and Q-5b have no external dependency; Q-3b, Q-4 and Q-5a need `ChoiceCard` (F-STORY-003 PR 3.3) and `KoreanText` (F-I18N-001 PR 4), both startable now; **Q-9 alone is blocked** until F-STORY-006's award engine exists (interface in §3.8). Content PRs Q-6a-Q-8 need the native-speaker review listed under External before they ship to learners.
