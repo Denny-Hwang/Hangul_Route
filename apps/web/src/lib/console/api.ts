@@ -1,4 +1,4 @@
-import { CLASS_SCOPE_TEXT_VERSION, ClassReportSchema, ProgressSummarySchema, ReportPeriodSchema, ReportSummarySchema, isDateKey, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, type BillingSummary, type ReceiptView } from '@hangul-route/content-schema';
+import { CLASS_SCOPE_TEXT_VERSION, ClassReportSchema, ProgressSummarySchema, ReportPeriodSchema, ReportSummarySchema, isDateKey, ReceiptViewSchema, SpaceKindSchema, parseBillingSummary, readSchoolAttention, type BillingSummary, type ClassAttention, type ReceiptView } from '@hangul-route/content-schema';
 import { noteTransferResult } from './transfer-lock';
 import {
   readClassScope,
@@ -71,6 +71,11 @@ export interface SpaceListItem {
   counts: { learners: number; accounts: number; classes: number };
   joinCode: string | null;
   joinCodeExpiresAt: string | null;
+  /**
+   * [GX-W] What waits for this grown-up in the space, counts only (AMENDMENTS-GROWNUP-UX section 12); absent from an
+   * older Worker and where the account may not decide. Read leniently (`readSpaceAttention`), so it stays `unknown`.
+   */
+  attention?: unknown;
 }
 
 /**
@@ -431,6 +436,17 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
     issueRescueCode: (learnerId: string) =>
       call<{ code: string; issuedAt: string }>(`${recovery}/issue`, { method: 'POST', body: JSON.stringify({ learnerId }) }, [201]),
     school: (spaceId: string) => call<SchoolView>(`${base}/${encodeURIComponent(spaceId)}/school`, { method: 'GET' }, [200]),
+    /**
+     * [GX-W] AMENDMENTS-GROWNUP-UX section 12: a school's waiting counts per live child class (`GET /:id/attention`), for
+     * its owner and admins only (anyone else answers 404). Counts only; read leniently, so an answer this build cannot read
+     * is a failed read, never a zero.
+     */
+    schoolAttention: (spaceId: string): Promise<ApiResult<ClassAttention[]>> =>
+      call<unknown>(`${base}/${encodeURIComponent(spaceId)}/attention`, { method: 'GET' }, [200]).then((r) => {
+        if (!r.ok) return r;
+        const classes = readSchoolAttention(r.data);
+        return classes ? { ok: true as const, data: classes } : { ok: false as const, error: 'unknown' as const, status: 200 };
+      }),
     /** [SA] AMENDMENTS-SEATS-ADMINS section 6.4: the school's owner and administrators (owner: also invites and history). */
     admins: (spaceId: string): Promise<ApiResult<AdminsView>> =>
       call<unknown>(`${base}/${encodeURIComponent(spaceId)}/admins`, { method: 'GET' }, [200]).then((r) => {

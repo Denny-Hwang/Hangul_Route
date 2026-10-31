@@ -295,7 +295,9 @@ describe('the roster chip (beside Re-link requests)', () => {
 });
 
 describe('the home badges', () => {
-  it('teacher home: a class row gains "N class moves waiting"; a school row one link per child class with waiting moves', async () => {
+  // [GX-3] AMENDMENTS-GROWNUP-UX section 6: the class row's "N class moves waiting" pill became the amber "{n} need your
+  // OK" chip after the class name, to the class page's review; without GX-W's `attention` the school row keeps its links.
+  it('teacher home: a class row gains the "N need your OK" chip; a school row one link per child class with waiting moves', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.spaces = [item('space:a', 'class', 'owner', 'Sunday Class A'), item('space:s', 'school', 'admin', 'Riverside school')];
     state.requests['space:a'] = [waitingView({ id: 'a' }), waitingView({ id: 'b' })];
@@ -304,13 +306,29 @@ describe('the home badges', () => {
       { spaceId: 'space:c', waiting: 0 },
     ];
     const root = await render(<HomePage />);
-    const badge = byTestId(root, 'class-moves-space:a')[0] as ReactTestInstance;
-    expect(textOf(badge)).toBe(t.waiting(2));
-    expect(badge.props.href).toBe('/teach/space/transfers?id=space%3Aa');
+    const badge = byTestId(root, 'class-attention-space:a')[0] as ReactTestInstance;
+    expect(textOf(badge)).toBe(getMessages('en').console.home.attention(2));
+    expect(badge.props.href).toBe('/teach/space?id=space%3Aa#attention');
+    expect(byTestId(root, 'class-moves-space:a')).toEqual([]);
     const school = byTestId(root, 'school-moves-space:b')[0] as ReactTestInstance;
     expect(textOf(school)).toBe(t.schoolRow('Saturday Class B', 2));
     expect(school.props.href).toBe('/teach/space/transfers?id=space%3Ab');
     expect(byTestId(root, 'school-moves-space:c')).toEqual([]);
+  });
+
+  it('[GX-3] teacher home with GX-W attention on the list: the chip counts re-links and moves, and no per-class list or school move count is asked', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.spaces = [
+      { ...item('space:a', 'class', 'owner', 'Sunday Class A'), attention: { relinks: 1, moves: 1, relinkExpiresAt: '2030-01-01T00:00:00.000Z' } },
+      { ...item('space:s', 'school', 'admin', 'Riverside school'), attention: { relinks: 0, moves: 0, relinkExpiresAt: null } },
+    ];
+    state.requests['space:a'] = [waitingView({ id: 'a' }), waitingView({ id: 'b' }), waitingView({ id: 'c' })];
+    state.counts = [{ spaceId: 'space:b', waiting: 2 }];
+    const root = await render(<HomePage />);
+    expect(textOf(byTestId(root, 'class-attention-space:a')[0] as ReactTestInstance)).toBe(m.home.attention(2));
+    expect(state.calls.filter((c) => c.startsWith('transfers:'))).toEqual([]);
+    // The school row's links come from the school's own `attention` (the frame's read), not from the shipped move count.
+    expect(byTestId(root, 'school-moves-space:b')).toEqual([]);
   });
 
   it('teacher home: nothing waiting or the flag off draws no badge', async () => {
@@ -318,13 +336,13 @@ describe('the home badges', () => {
     state.spaces = [item('space:a', 'class', 'owner', 'Sunday Class A')];
     state.requests['space:a'] = [waitingView()];
     let root = await render(<HomePage />);
-    expect(byTestId(root, 'class-moves-space:a')).toEqual([]);
+    expect(byTestId(root, 'class-attention-space:a')).toEqual([]);
     expect(state.calls.some((c) => c.startsWith('transfers:'))).toBe(false);
     act(() => renderer?.unmount());
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.requests['space:a'] = [];
     root = await render(<HomePage />);
-    expect(byTestId(root, 'class-moves-space:a')).toEqual([]);
+    expect(byTestId(root, 'class-attention-space:a')).toEqual([]);
   });
 
   it('family home: the family actions gain "1 class move waiting" to the family page', async () => {

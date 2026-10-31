@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { AttentionCountChip } from '@/components/console/AttentionCounts';
 import { AdminsPanel } from './AdminsPanel';
 import { useConfirm } from './ConfirmSheet';
 import { spacePageBack } from '@/lib/console/page-back';
@@ -345,10 +346,14 @@ function ClassRowView({
           </>
         ) : (
           <>
-            <strong style={{ overflowWrap: 'anywhere' }}>
-              {row.space.name}
-              {row.space.archivedAt ? <span style={{ color: colors.text.muted }}> {c.home.archived}</span> : null}
-            </strong>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, rowGap: spacing.xs }}>
+              <strong style={{ overflowWrap: 'anywhere' }}>
+                {row.space.name}
+                {row.space.archivedAt ? <span style={{ color: colors.text.muted }}> {c.home.archived}</span> : null}
+              </strong>
+              {/* [GX-3] AMENDMENTS-GROWNUP-UX section 6: the class's requests waiting, from the school's `attention` read. */}
+              {row.space.archivedAt ? null : <AttentionCountChip spaceId={classId} testId={`school-class-attention-${classId}`} />}
+            </div>
             <Muted>{s.classes.line(row.teacher ? row.teacher.name : null, row.students, relativeDay(row.lastActiveAt, now, locale), row.hasPublishedPlan)}</Muted>
           </>
         )}

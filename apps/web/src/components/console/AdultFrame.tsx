@@ -13,16 +13,19 @@ import { deviceUsesOf } from '@/lib/console/one-account';
 import { activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeDeviceUses, writeLastPersona } from '@/lib/console/shell-store';
-import { currentNavItem, navFlags, navItemsFor, revealScrollLeft, samePageFragment, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
+import { currentNavItem, isLecturePage, navFlags, navItemsFor, revealScrollLeft, samePageFragment, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
+import { navCountText } from '@/lib/console/persona-attention';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { useConsoleAuth } from './auth-context';
+import { ATTENTION_CSS, RelinkBar } from './AttentionCounts';
 import { BrowseNoticeLine, useBrowseOpener } from './BrowseLink';
 import { useGrownUpLocation } from './grown-up-location';
 import { DisplayButton } from './DisplaySheet';
 import { PAGE_BACK_CSS, PageBack, type PageBackLink } from './PageBack';
 import { PinCards, browserPinCardsEnvironment, type PinCardsEnvironment } from './PinCards';
 import { useConsole } from './use-console';
+import { FrameAttentionContext, resetAttentionMemory, usePersonaAttention, useTitleCount } from './use-persona-attention';
 import { rem } from '@/lib/console/rem';
 
 /**
@@ -52,6 +55,12 @@ import { rem } from '@/lib/console/rem';
  *   (`hr-shell` `deviceUses`, `{ v: 1, uses, at }`, from the spaces list it holds; no name, email or id) and draws the
  *   PIN cards above the page (`PinCards`); the Learner app exit opens the learner app's chooser (`who=1`, OA-D12).
  * The frame refreshes nothing itself: `GrownUpLock` keeps the unlock fresh (A-4a review).
+ * - [GX-3] AMENDMENTS-GROWNUP-UX sections 5.5 and 6 (mock `design/screens/approvals/mock/home-{lc}.html`): on a teacher
+ *   page, once the Worker sends `attention` (GX-W), the Classes tab shows the number of requests waiting on screen
+ *   (`aria-hidden`; the tab's name says what it counts), the tab title gets "(n) " in front, and every page but the class
+ *   page (`attentionHere`) and lecture mode shows the re-link bar while a new device waits. Those pages read the counts
+ *   again every 30 s while in view (`usePersonaAttention`); the class page reads its own. The counts reach the page
+ *   through `FrameAttentionContext`. Counts and class names only, never a learner's name.
  */
 
 /** Everything the frame touches in the browser, injectable for tests. */
@@ -119,6 +128,7 @@ function readSoloLearner(api: ConsoleApi, spaceId: string): Promise<string | nul
 /** Test hook: forget the per-tab roster reads. */
 export function resetFrameMemory(): void {
   soloLearners.clear();
+  resetAttentionMemory();
 }
 
 /** The phone / wide switch (45em = `layout.maxWidth.reading`) and the step where the brand name joins (70em = `layout.maxWidth.full`). */
@@ -168,6 +178,7 @@ const FRAME_CSS = `
 .hr-frame-tools{display:none}
 }
 ${PAGE_BACK_CSS}
+${ATTENTION_CSS}
 @media (min-width:${FULL}){
 .hr-frame-bar,.hr-frame-nav,.hr-frame-main,.hr-frame-foot-inner{padding-left:${layout.gutter.wide}px;padding-right:${layout.gutter.wide}px}
 .hr-frame-name{position:static;width:auto;height:auto;overflow:visible;clip-path:none}
@@ -263,6 +274,7 @@ export function AdultFrame({
   onSignOut,
   spaces,
   env,
+  attentionHere,
 }: {
   children: ReactNode;
   /** The page's context line (a space or a page name), shown at the top of the content. */
@@ -273,6 +285,11 @@ export function AdultFrame({
   /** The spaces list the page already reads (the teacher home); omitted, the frame reads it. */
   spaces?: FrameSpaces;
   env?: AdultFrameEnvironment;
+  /**
+   * [GX-3] The page draws its own approvals (the class page: banner, chips, pop-up, its 20 s re-link read): the frame
+   * then draws no re-link bar, sets no title count and does not read the counts again on a timer.
+   */
+  attentionHere?: boolean;
 }): JSX.Element {
   const { api, m, locale, signOut } = useConsole();
   const auth = useConsoleAuth();
@@ -361,6 +378,11 @@ export function AdultFrame({
   const navPersona = list ? active.persona : fallbackPersona(last, null);
   const items: NavEntry[] = failed ? [] : navItemsFor({ persona: navPersona, spaces: list ?? [], soloLearner: solo, flags });
   const current = list ? currentNavItem(pathname, active.persona, active.resolved, flags.lecture) : currentNavItem(pathname, navPersona, false, flags.lecture);
+  // [GX-3] The teacher's waiting counts: the Classes tab's number, the re-link bar and the page's chips.
+  const teacherFrame = !!list && active.persona === 'teacher' && !isLecturePage(pathname);
+  const attention = usePersonaAttention(api, list, { enabled: teacherFrame, poll: !attentionHere });
+  const waitingTotal = attention?.total ?? 0;
+  useTitleCount(waitingTotal, teacherFrame && !attentionHere);
   const withSwitch = !!list && showPersonaSwitch(held);
   const rowRef = useRef<HTMLUListElement | null>(null);
   const currentShown = items.some((entry) => entry.id === current);
@@ -446,9 +468,15 @@ export function AdultFrame({
                       href={entry.target.href}
                       onClick={entry.id === 'lecture' ? toFragment(entry) : undefined}
                       aria-current={current === entry.id ? 'page' : undefined}
+                      aria-label={entry.id === 'classes' && waitingTotal > 0 ? shell.navAttention.classes(waitingTotal) : undefined}
                       data-testid={`nav-${entry.id}`}
                     >
                       {shell.nav[entry.labelKey]}
+                      {entry.id === 'classes' && waitingTotal > 0 ? (
+                        <span className="hr-frame-count" aria-hidden="true" data-testid="nav-count">
+                          {navCountText(waitingTotal)}
+                        </span>
+                      ) : null}
                     </Link>
                   )}
                 </li>
@@ -459,6 +487,8 @@ export function AdultFrame({
         ) : null}
       </header>
       <main className="hr-frame-main">
+        {/* [GX-3] Section 5.5: the re-link bar sits at the top of the content, under the nav, while a new device waits. */}
+        {!attentionHere && attention && attention.relinks > 0 ? <RelinkBar attention={attention} now={browser.now} /> : null}
         {back ? <PageBack href={back.href} label={back.label} /> : null}
         {onHome && browser.pinCards ? (
           <PinCards
@@ -476,7 +506,7 @@ export function AdultFrame({
             {title}
           </p>
         ) : null}
-        {children}
+        <FrameAttentionContext.Provider value={attention}>{children}</FrameAttentionContext.Provider>
       </main>
       <footer className="hr-frame-foot">
         <div className="hr-frame-foot-inner">

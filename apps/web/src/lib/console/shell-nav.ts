@@ -134,6 +134,11 @@ const LECTURE_PAGE = /^\/(?:teach|parent)\/space\/lecture(?:[/.]|$)/;
 const PARENT_HOME_PAGE = /^\/parent(?:\/|\.html)?$/;
 const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
 
+/** A lecture-mode setup page (AMENDMENTS-LECTURE-V2): the frame draws no re-link bar there (AMENDMENTS-GROWNUP-UX 5.5). */
+export function isLecturePage(pathname: string): boolean {
+  return LECTURE_PAGE.test(pathname);
+}
+
 /**
  * The item to highlight (`aria-current="page"`, section 3.8): Billing on the billing pages; Lecture mode on any
  * lecture setup page (AMENDMENTS-LECTURE-V2 E3; both personas draw it, so like Billing it needs no resolved persona); on the

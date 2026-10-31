@@ -184,7 +184,8 @@ function SpaceInner(): JSX.Element {
   );
   const rename = useSpaceRename({ api, spaceId, name: roster?.space.name ?? '', onName: setName, announce });
 
-  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
+  // [GX-3] The class page draws its own approvals (chips, asking-to-join cards, its 20 s re-link read): no frame bar.
+  if (!ready || !session) return <AdultFrame attentionHere>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.
   if (roster?.space.kind === 'school' && api) return <SchoolAdmin api={api} spaceId={spaceId} onSignOut={signOut} accountId={session.accountId} />;
 
@@ -256,6 +257,7 @@ function SpaceInner(): JSX.Element {
   return (
     <AdultFrame
       onSignOut={signOut}
+      attentionHere
       back={spacePageBack(roster?.space.kind ?? pathKind, c)}
       title={roster ? undefined : c.space.loading}
     >
@@ -584,7 +586,7 @@ function ClassReportLink({ spaceId, kind, locale }: { spaceId: string; kind: Ros
 
 export default function SpacePage(): JSX.Element {
   return (
-    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
+    <Suspense fallback={<AdultFrame attentionHere>{null}</AdultFrame>}>
       <SpaceInner />
     </Suspense>
   );
