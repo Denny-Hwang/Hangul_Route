@@ -6,9 +6,9 @@
       "title": "Estaciones y animales",
       "subtitle": "Lee las cuatro estaciones, su tiempo y dos animales.",
       "hoyaIntro": "Primavera, verano, otoño, invierno. ¡Leamos el año juntos!",
-      "culture.n1.text": "Corea tiene cuatro estaciones bien marcadas. A principios del verano llega el {ko:장마}, la temporada de lluvias, y más de la mitad de la lluvia del año cae en verano.",
-      "culture.n2.text": "El oso negro asiático, {ko:반달가슴곰}, tiene una mancha blanca en forma de media luna en el pecho. Le gustan las bellotas y la miel, y en invierno duerme en una cueva o en el hueco de un árbol.",
-      "culture.n3.text": "Las pinturas populares de un tigre con una urraca, {ko:까치호랑이}, nacieron de las pinturas chinas de tigres. En el siglo XIX se hicieron muy populares, y los pintores empezaron a dibujar al tigre gracioso y amable."
+      "culture.n1.text": "A principios del verano llega el {ko:장마}, la temporada de lluvias. Suele empezar en la isla de Jeju a mediados de junio, llega al centro del país unos días después y dura cerca de un mes.",
+      "culture.n2.text": "El oso negro asiático, {ko:반달가슴곰}, come plantas y animales. Le gustan sobre todo las bellotas y la miel.",
+      "culture.n3.text": "En el siglo XIX, las pinturas populares de un tigre con una urraca, {ko:까치호랑이}, empezaron a mostrar a la urraca plantándole cara al tigre. Estas pinturas se burlaban de los poderosos: el tigre representaba a los funcionarios con poder, y la urraca, a la gente común."
     },
     "quest:stage2-nature-v2-q1": {
       "blurb": "Lee primavera, verano, otoño e invierno.",
@@ -144,9 +144,9 @@
     },
     "minigame:s2-nature-v2-q3-apply": {
       "cardPairs.bandalgaseumgom.gloss": "oso negro asiático",
-      "cardPairs.gom.gloss": "oso",
       "cardPairs.kkachi.gloss": "urraca",
-      "cardPairs.sae.gloss": "pájaro"
+      "cardPairs.san.gloss": "montaña",
+      "cardPairs.kkot.gloss": "flor"
     },
     "minigame:s2-nature-v2-q3-check": {
       "picWord.boards.0.pairs.gom.word.gloss": "oso",

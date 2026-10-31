@@ -6,9 +6,9 @@
       "title": "계절과 동물",
       "subtitle": "네 계절과 날씨, 두 동물을 읽어요.",
       "hoyaIntro": "봄, 여름, 가을, 겨울. 함께 한 해를 읽어 봐요!",
-      "culture.n1.text": "한국은 네 계절이 뚜렷해요. 초여름에는 비가 오래 이어지는 {ko:장마}가 시작되고, 한 해 비의 절반 이상이 여름에 내려요.",
-      "culture.n2.text": "{ko:반달가슴곰}은 앞가슴에 하얀 반달 무늬가 있어요. 도토리와 꿀을 좋아하고, 겨울에는 굴이나 나무 구멍 속에서 겨울잠을 자요.",
-      "culture.n3.text": "호랑이와 까치를 함께 그린 민화인 {ko:까치호랑이}는 중국의 호랑이 그림에서 시작되었어요. 19세기에 크게 유행했고, 화가들은 호랑이를 우스꽝스럽고 친근하게 그리기 시작했어요."
+      "culture.n1.text": "초여름에는 비 오는 날이 이어지는 {ko:장마}가 와요. 보통 6월 중순 제주도에서 시작해 며칠 뒤 중부 지방에 이르고, 한 달쯤 계속돼요.",
+      "culture.n2.text": "{ko:반달가슴곰}은 식물과 동물을 가리지 않고 먹어요. 특히 도토리와 꿀을 좋아해요.",
+      "culture.n3.text": "19세기에 호랑이와 까치를 함께 그린 민화 {ko:까치호랑이}에서는 까치가 호랑이에게 당당히 맞서기 시작했어요. 이 그림들은 힘 있는 사람들을 풍자했는데, 호랑이는 권력을 가진 관리를, 까치는 평범한 사람들을 나타냈어요."
     },
     "quest:stage2-nature-v2-q1": {
       "blurb": "봄, 여름, 가을, 겨울을 읽어요.",
@@ -98,7 +98,7 @@
       "listenPick.rounds.see-san.options.san.label": "땅이 높이 솟은 곳",
       "listenPick.rounds.see-san.options.bada.label": "넓고 짠 물",
       "listenPick.rounds.see-san.options.dal.label": "밤하늘에 뜨는 둥근 빛",
-      "listenPick.rounds.see-bi.prompt": "구름에서 떨어지는 물방울",
+      "listenPick.rounds.see-bi.prompt": "하늘에서 떨어지는 물방울",
       "listenPick.rounds.see-bi.options.bi.label": "하늘에서 떨어지는 물방울",
       "listenPick.rounds.see-bi.options.nun.label": "겨울에 하늘에서 내리는 하얀 것",
       "listenPick.rounds.see-bi.options.gureum.label": "하늘에 뜬 하얗거나 회색인 덩어리"
@@ -143,10 +143,10 @@
       "picWord.boards.5.pairs.dal.word.gloss": "밤하늘에 뜨는 둥근 빛"
     },
     "minigame:s2-nature-v2-q3-apply": {
-      "cardPairs.bandalgaseumgom.gloss": "가슴에 하얀 V자 무늬가 있는 검은 짐승",
-      "cardPairs.gom.gloss": "몸집이 크고 털이 많은 숲속 동물",
-      "cardPairs.kkachi.gloss": "몸은 검고 배는 흰 날짐승",
-      "cardPairs.sae.gloss": "날개와 깃털이 있어 하늘을 나는 동물"
+      "cardPairs.bandalgaseumgom.gloss": "앞가슴에 흰 무늬가 있는 검은 동물",
+      "cardPairs.kkachi.gloss": "몸은 검고 배는 흰 새",
+      "cardPairs.san.gloss": "땅이 높이 솟은 곳",
+      "cardPairs.kkot.gloss": "식물에 피어나는 빛깔이 고운 부분"
     },
     "minigame:s2-nature-v2-q3-check": {
       "picWord.boards.0.pairs.gom.word.gloss": "몸집이 크고 털이 많은 숲속 동물",
