@@ -1,7 +1,7 @@
 import { Children, isValidElement, createElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { colors, radii, spacing } from '../../../tokens';
+import { borderWidth, colors, radii, spacing } from '../../../tokens';
 import { ChoiceCard } from '../ChoiceCard';
 import type { ChoiceCardProps } from '../types';
 
@@ -13,6 +13,12 @@ import type { ChoiceCardProps } from '../types';
  */
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable' }));
 vi.mock('../../Icon', () => ({ Icon: 'Icon' }));
+/** The platform's reduced-motion setting, read through `usePressLook` (AMENDMENTS-TOUCH section 4.3). */
+const motion = vi.hoisted(() => ({ reduced: false }));
+vi.mock('../../TapBoard', async () => {
+  const { pressLook } = await import('../../../press-look');
+  return { TapTarget: 'TapTarget', usePressLook: () => pressLook(motion.reduced) };
+});
 vi.mock('../../KoreanText', () => ({ KoreanText: 'KoreanText' }));
 /** The chosen text size step's factor, read through `useTypeScale` (owner items 6 and 7). */
 const textSize = vi.hoisted(() => ({ factor: 1 }));
@@ -24,11 +30,11 @@ vi.mock('../../TextSize', async () => {
 type Props = Record<string, unknown>;
 type El = ReactElement<Props>;
 
-/** The card body inside the Pressable (its children are a render function of `{ pressed }`). */
-function body(props: Partial<ChoiceCardProps>): El {
-  const pressable = ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', ...props }) as El;
-  const render = pressable.props.children as (s: { pressed: boolean }) => El;
-  return render({ pressed: false });
+/** The card body inside the TapTarget (its children are a render function of `{ pressed }`). */
+function body(props: Partial<ChoiceCardProps>, pressed = false): El {
+  const target = ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', ...props }) as El;
+  const render = target.props.children as (s: { pressed: boolean }) => El;
+  return render({ pressed });
 }
 
 const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
@@ -98,5 +104,85 @@ describe('ChoiceCard label follows the chosen text size (owner items 6 and 7)', 
     expect(labelStyle().fontSize).toBe(23);
     expect(labelStyle().lineHeight).toBeCloseTo(23 * 1.35);
     textSize.factor = 1;
+  });
+});
+
+describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row KT-2)', () => {
+  const target = (props: Partial<ChoiceCardProps>): El => ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', ...props }) as El;
+
+  it('is one TapTarget with the caller\'s label, testID and ref, stretched across its row, with no web-dead hitSlop', () => {
+    const ref = (): void => undefined;
+    const el = target({ testID: 'card-1', pressableRef: ref });
+    expect(el.type).toBe('TapTarget');
+    expect(el.props.accessibilityLabel).toBe('apple');
+    expect(el.props.testID).toBe('card-1');
+    expect(el.props.pressableRef).toBe(ref);
+    expect(el.props.style).toEqual({ alignSelf: 'stretch' });
+    expect('hitSlop' in el.props).toBe(false);
+  });
+
+  it('idle and hint commit the caller\'s onPress; answered and disabled cards are inactive, with today\'s accessible state', () => {
+    const presses: string[] = [];
+    const onPress = (): void => {
+      presses.push('x');
+    };
+    for (const state of ['idle', 'hint'] as const) {
+      const el = target({ state, onPress });
+      expect(el.props.inactive).toBe(false);
+      expect(el.props.accessibilityState).toEqual({ disabled: false, selected: false });
+      (el.props.onCommit as () => void)();
+    }
+    expect(presses).toEqual(['x', 'x']);
+    expect(target({ state: 'correct', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: false, selected: true } });
+    expect(target({ state: 'wrong', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: false, selected: true } });
+    expect(target({ state: 'disabled', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: true, selected: false } });
+    // A card with no handler commits nothing (and does not throw).
+    (target({ state: 'idle' }).props.onCommit as () => void)();
+    expect(presses).toHaveLength(2);
+    // TapTarget never disables an answered card's Pressable, so it keeps its focus (Story Order moves focus to one).
+    expect('disabled' in target({ state: 'disabled' }).props).toBe(false);
+  });
+
+  it('pressed: a thick border.shape outline and a 0.97 shrink on the drawn box, never the focus-blue hint ring', () => {
+    motion.reduced = false;
+    for (const state of ['idle', 'hint'] as const) {
+      const style = body({ state, label: 'apple' }, true).props.style as Props;
+      expect(style.borderColor).toBe(colors.border.shape);
+      expect(style.borderColor).not.toBe(colors.border.focus);
+      expect(style.borderWidth).toBe(borderWidth.thick);
+      expect(style.transform).toEqual([{ scale: 0.97 }]);
+    }
+  });
+
+  it('pressed: the thicker outline comes off the padding, so the card keeps its size (no layout shift); hint is already thick', () => {
+    const rest = body({ state: 'idle', label: 'apple' }).props.style as Props;
+    const down = body({ state: 'idle', label: 'apple' }, true).props.style as Props;
+    expect((down.paddingVertical as number) + (down.borderWidth as number)).toBe((rest.paddingVertical as number) + (rest.borderWidth as number));
+    expect((down.paddingHorizontal as number) + (down.borderWidth as number)).toBe((rest.paddingHorizontal as number) + (rest.borderWidth as number));
+    expect(body({ state: 'hint', label: 'apple' }, true).props.style).toMatchObject({ paddingVertical: spacing.md, paddingHorizontal: spacing.lg });
+  });
+
+  it('pressed under reduced motion: the outline alone, no shrink', () => {
+    motion.reduced = true;
+    const style = body({ state: 'idle', label: 'apple' }, true).props.style as Props;
+    expect(style.borderColor).toBe(colors.border.shape);
+    expect(style.borderWidth).toBe(borderWidth.thick);
+    expect(style.transform).toBeUndefined();
+    motion.reduced = false;
+  });
+
+  it('not pressed: the state\'s own border and no shrink (hint keeps its thick focus ring)', () => {
+    const idle = body({ state: 'idle', label: 'apple' }).props.style as Props;
+    expect(idle).toMatchObject({ borderColor: colors.border.subtle, borderWidth: borderWidth.base });
+    expect(idle.transform).toBeUndefined();
+    expect(body({ state: 'hint', label: 'apple' }).props.style).toMatchObject({ borderColor: colors.border.focus, borderWidth: borderWidth.thick });
+  });
+
+  it('an inactive card never paints the press look, whatever it is handed', () => {
+    for (const state of ['correct', 'wrong', 'disabled'] as const) {
+      const style = body({ state, label: 'apple' }, true).props.style as Props;
+      expect(style.borderColor).not.toBe(colors.border.shape);
+      expect(style.transform).toBeUndefined();
+    }
   });
 });

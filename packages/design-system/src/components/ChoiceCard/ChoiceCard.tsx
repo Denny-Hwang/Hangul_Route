@@ -1,8 +1,11 @@
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
+import { Text, View } from 'react-native';
+import { radii, spacing, touchTarget, typography } from '../../tokens';
+import { pressInset, pressTransform } from '../../press-look';
+import type { PressLook } from '../../press-look';
 import { Icon } from '../Icon';
 import { KoreanText } from '../KoreanText';
+import { TapTarget, usePressLook } from '../TapBoard';
 import { useTypeScale } from '../TextSize';
 import { choiceCardStyle } from './style';
 import type { ChoiceCardProps } from './types';
@@ -16,6 +19,10 @@ import { KOREAN_LINE_BREAK } from '../../line-break';
  * short dash of a locked miss), never red and never an X. `layout="tile"`
  * centres a picture and puts the mark on the top corner. No copy and no
  * motion: the caller passes `accessibilityLabel` (naming the outcome).
+ * It takes a touch through `TapTarget` (AMENDMENTS-TOUCH section 4.4): inside a
+ * `TapBoard` the board decides the tap (commit on release, reach, gap fill, the
+ * lock); outside one it is a plain button with the press guard. While pressed it
+ * shows the press look (section 4.3), never a state look.
  * Spec: design/components/ChoiceCard/spec.md.
  */
 export function ChoiceCard({
@@ -34,24 +41,28 @@ export function ChoiceCard({
 }: ChoiceCardProps): ReactElement {
   const look = choiceCardStyle(state, { wrongMark });
   const bodySize = useTypeScale().size.body;
+  const press = usePressLook();
   const tile = layout === 'tile';
   const hasArt = art !== undefined && art !== null && art !== false;
   const hasKorean = ko !== undefined && ko.trim().length > 0;
   const hasLabel = label !== undefined && label.length > 0;
 
-  const content = (borderColor: string): ReactElement => (
+  // The press look goes on the drawn box, so the shrink never changes the hit area the board measures.
+  const content = (pressed: PressLook | null): ReactElement => (
     <View
       style={{
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
         minHeight: look.minHeight,
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.lg,
+        // A thicker press outline grows inward (off the padding), so the card keeps its size and nothing below moves.
+        paddingVertical: spacing.md - pressInset(pressed, look.borderWidth),
+        paddingHorizontal: spacing.lg - pressInset(pressed, look.borderWidth),
         backgroundColor: look.backgroundColor,
-        borderColor,
-        borderWidth: look.borderWidth,
+        borderColor: pressed?.borderColor ?? look.borderColor,
+        borderWidth: pressed?.borderWidth ?? look.borderWidth,
         borderRadius: look.borderRadius,
+        transform: pressTransform(pressed),
       }}
     >
       <View style={{ flex: 1, gap: spacing.sm }}>
@@ -97,18 +108,17 @@ export function ChoiceCard({
   );
 
   return (
-    <Pressable
-      ref={pressableRef}
+    <TapTarget
+      pressableRef={pressableRef}
       testID={testID}
-      onPress={look.interactive ? onPress : undefined}
-      accessibilityRole="button"
+      onCommit={() => onPress?.()}
+      // An answered (or disabled) card takes no tap but stays a focusable button with today's accessible state.
+      inactive={!look.interactive}
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: look.disabled, selected: look.selected }}
-      hitSlop={spacing.sm}
-      // Pressed feedback is the focus-coloured border, instant: no scale or fade, so reduced motion needs nothing.
       style={{ alignSelf: 'stretch' }}
     >
-      {({ pressed }) => content(pressed && look.interactive ? colors.border.focus : look.borderColor)}
-    </Pressable>
+      {({ pressed }) => content(pressed && look.interactive ? press : null)}
+    </TapTarget>
   );
 }
