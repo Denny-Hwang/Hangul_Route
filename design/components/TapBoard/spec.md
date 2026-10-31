@@ -21,7 +21,7 @@ No copy and no i18n dependency. The caller passes the accessible names.
 | `disabled` | `boolean?` | No target commits; touches are still claimed so nothing under them fires |
 | `testID` | `string?` | |
 
-Web `touch-action`: every `TapTarget` is `pinch-zoom`; the board itself is `pinch-zoom` when its `Screen` fits, else `pan-y pinch-zoom` (`pan-x pinch-zoom` under a horizontal `TapScroller`).
+Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board itself is `pinch-zoom` when its `Screen` fits, else `pan-y pinch-zoom` (`pan-x pinch-zoom` under a horizontal `TapScroller`). A `TapTarget` outside a board keeps the browser's own `touch-action` (KT-2): no board is there to scroll the page for a drag that starts on it.
 
 `TapTarget`
 
@@ -29,12 +29,14 @@ Web `touch-action`: every `TapTarget` is `pinch-zoom`; the board itself is `pinc
 |---|---|---|
 | `onCommit` | `() => void` | Called once per tap, after the board's rules (`AMENDMENTS-TOUCH.md` §3.2) |
 | `disabled` | `boolean?` | Claimed, never pressed, never committed (a locked wrong tile) |
+| `inactive` | `boolean?` | KT-2. For the board like `disabled` (claimed, never pressed, never committed), but the button stays enabled and focusable and its `accessibilityState` is the caller's (an answered ChoiceCard, `correct` or a locked miss) |
 | `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it |
 | `accessibilityLabel` | `string` | Required |
-| `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop |
+| `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept) |
 | `lockMs` | `number?` | The target lock after a commit on a `target` board (default `TAP_LOCK_MS`); the keyboard's keys pass `KEY_BOUNCE_MS` (KT-7) |
 | `style` | `StyleProp<ViewStyle> \| (look) => StyleProp<ViewStyle>` | The hit area's own style: its box is what the board hit-tests, so a target that must fill a cell styles it here |
 | `testID` | `string?` | |
+| `pressableRef` | `Ref<View>?` | KT-2. The Pressable's node, for a screen that moves focus to the target (as Button's `pressableRef`) |
 | `children` | `(look: { pressed: boolean }) => ReactNode` | The caller paints its own states and the press look when `pressed` |
 
 `TapControl` wraps a non-target control inside a board (a speaker, a hint): the board never claims a touch on it, even within the gap reach of a target.
@@ -83,6 +85,12 @@ The press look is never `border.focus` (the focus ring and ChoiceCard's `hint`),
 
 `src/__tests__/tap-model.test.ts` (rules T1-T20 of the amendment on the pure model), `src/components/TapBoard/__tests__/controller.test.ts` (responder capture, latest finger, termination, scroller drive, fling and cancel, clicks, the app lock across a remount), `host.test.ts` (the web hit test and rectangles, the native rect cache, the clock), `TapBoard.test.tsx` (`touch-action` on the board and every target, the responder on the View, `TapControl`, `TapScroller`, the Screen registration and native re-measuring, `TapTarget`, the hooks), `TapLockProvider.test.tsx` (the app clock), `src/components/Screen/__tests__/screen-fit.test.tsx` (fit, scroller, opt-in native `scrollEnabled`), and the Playwright touch suites: `apps/mobile/e2e/web/type-hangul-tap-board.spec.ts` (KT-1, a fixture-only board of four targets at 320 px and tablet) and those of the rows that adopt it.
 
+## The press look in the design system (KT-2)
+
+`pressLook(reducedMotion)` (`packages/design-system/src/press-look.ts`, pure) returns the outline and the shrink; `usePressLook()` reads the platform's reduced-motion setting through one app-wide `AccessibilityInfo` subscription. ChoiceCard and Tile paint it on their drawn box inside the `TapTarget`, never on the hit area: ChoiceCard replaces its `border.focus` press border, Tile replaces its 1.04 grow. Both lose their web-dead `hitSlop`.
+
+`Button` shows its pressed fill without react-native-web's 50 ms `delayPressIn` and runs its `onPress` through `usePressGuard()` (a bounce within `TAP_LOCK_MS` runs once, a press during the app lock is dropped, a press that runs sets the lock). Its `hitSlop` stays (native only; the web size is already at least `touchTarget.min`).
+
 ## Where it appears
 
-ChoiceCard and Tile inside a board (KT-2); every learner answer area listed in `AMENDMENTS-TOUCH.md` §6 (KT-3 to KT-7). Not used by the presenter Stage, which keeps its own responder, or by Trace, which keeps its pan.
+ChoiceCard and Tile, inside a board or not (KT-2); every learner answer area listed in `AMENDMENTS-TOUCH.md` §6 (KT-3 to KT-7). Not used by the presenter Stage, which keeps its own responder, or by Trace, which keeps its pan.
