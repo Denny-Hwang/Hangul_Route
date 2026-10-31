@@ -2283,4 +2283,31 @@ export const consoleMsgs = {
     noPin: 'This device has no grown-up PIN to reset.',
     unavailable: "This isn't available right now. Use Forgot PIN? in the app.",
   },
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-1 (section 4, owner request 2026-10-31): the status chip next to every learner's name on a
+   * class or family roster, and its one reason line. One action wording per locale (section 10.1): every state that asks
+   * the grown-up to decide reads `needsOk`. No state says late, behind or missing; `new` describes a join, not a lack.
+   */
+  status: {
+    inClass: 'In class',
+    needsOk: 'Needs your OK',
+    /** An action chip's accessible name: the chip, then its reason line. */
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `New device · ${minutes} min left`,
+    moveTo: (className: string) => `Class move: ${className}`,
+    moveWaiting: 'Move waiting',
+    waitingFor: (className: string) => `Waiting for: ${className}`,
+    /** The date arrives formatted (`formatDate`, `monthDay`). */
+    moving: (date: string) => `Moving ${date}`,
+    waitingSeat: 'Waiting for a seat',
+    new: 'New',
+    noPractice: 'No practice shared yet',
+    minutesLeft: (minutes: number) => `${minutes} min left`,
+    review: { cta: 'Review' },
+  },
+  /** GX-1 section 4.1: learners asking to join this class (initials, picture and level only until accepted, T8). */
+  attention: {
+    incomingHeading: 'Asking to join this class',
+    from: (className: string) => `From ${className}`,
+  },
 } as const;

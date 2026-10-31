@@ -1731,4 +1731,23 @@ export const consoleMsgs = {
     noPin: '이 기기에는 다시 만들 어른용 PIN이 없어요.',
     unavailable: "지금은 쓸 수 없어요. 앱의 'PIN을 잊었나요?'를 써 주세요.",
   },
+  status: {
+    inClass: '참여 중',
+    needsOk: '승인 대기',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `새 기기 · ${minutes}분 남음`,
+    moveTo: (className: string) => `반 이동: ${className}`,
+    moveWaiting: '이동 대기 중',
+    waitingFor: (className: string) => `기다리는 반: ${className}`,
+    moving: (date: string) => `이동 예정 · ${date}`,
+    waitingSeat: '자리 기다리는 중',
+    new: '새로 참여',
+    noPractice: '아직 연습 기록이 없어요',
+    minutesLeft: (minutes: number) => `${minutes}분 남음`,
+    review: { cta: '확인하기' },
+  },
+  attention: {
+    incomingHeading: '이 반에 들어오려는 학생',
+    from: (className: string) => `보낸 반: ${className}`,
+  },
 } satisfies DeepPartial<Messages['console']>;

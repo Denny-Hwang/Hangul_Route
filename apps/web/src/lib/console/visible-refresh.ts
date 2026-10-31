@@ -14,6 +14,13 @@
 export const VISIBLE_REFRESH_GAP_MS = 30_000;
 /** The slow read while a roster tab stays in view. */
 export const VISIBLE_POLL_MS = 90_000;
+/**
+ * The class page's re-link-only read while the tab is in view (AMENDMENTS-GROWNUP-UX section 5.4): a re-link closes after
+ * 10 minutes and the learner waits at the device, so the page asks for its re-links alone (one call, not the five of the
+ * page's read) every 20 s, whether or not one is pending. Its own gap is half that, so a focus right after a read waits.
+ */
+export const CLASS_RELINK_REFRESH_MS = 20_000;
+export const CLASS_RELINK_GAP_MS = 10_000;
 
 /** The parts of `window` the watcher reads: easy to fake in a unit test. */
 export interface RefreshEvents {
