@@ -20,3 +20,12 @@ export function volumePageEpisode(asked: Episode | undefined, volumesOn: boolean
 export function cellVolumes(episode: Pick<Episode, 'stage' | 'theme'>, volumesOn: boolean, list: readonly Episode[] = episodesWithVolumes): Episode[] {
   return episodesFor(episode.stage, episode.theme, withVolumes(volumesOn, list)).filter(isPlayable);
 }
+
+/**
+ * Whether the quest player is asked to play a later volume (row CM-41 S2): the quest belongs to a volume 2 or later, or
+ * is opened under one. While `volumes` is off such a quest does not start (an older Play again, an assignment or a deck
+ * link): the player shows the episode page instead, which `volumePageEpisode` turns into the cell's first volume.
+ */
+export function isLaterVolumeQuest(questId: string, episodeId: string, list: readonly Episode[] = episodesWithVolumes): boolean {
+  return list.some((e) => volumeOf(e) >= 2 && (e.id === episodeId || e.questIds.includes(questId)));
+}
