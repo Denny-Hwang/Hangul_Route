@@ -13,7 +13,7 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-lessons.mjs");
 const OUT = join("apps", "mobile", "src", "content", "__generated__");
 
-const { BUDGET, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, discoverJamo, jamoOf, planChunks, runtimeScope, shapeCell, sizes } =
+const { BUDGET, BUILD_ONLY_FIELDS, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, discoverJamo, jamoOf, planChunks, runtimeScope, shapeCell, sizes, withoutBuildOnly } =
   await import(SCRIPT);
 
 const roots = [];
@@ -933,5 +933,19 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
     assert.equal(ci.status, 1, ci.stdout);
     assert.match(ci.stdout, /::error::addedIn stamp check: origin\/main does not resolve/);
     assert.equal(run(root, ["--check"], { GITHUB_ACTIONS: "true", HANGUL_ROUTE_STAMP_BASE: "none" }).status, 0);
+  });
+});
+
+describe("build-only fields (F-CURR-002 section 4.2, row CM-44 S2)", () => {
+  test("soundChange stays out of the lesson modules at any depth; everything else is kept as it was, in order", () => {
+    assert.deepEqual(BUILD_ONLY_FIELDS, ["soundChange"]);
+    const steps = [{ id: "s2", kind: "discover", discover: { pages: [{ items: [{ type: "word", word: { ko: "책이", romanization: "chaegi", en: "book", soundChange: true } }] }] } }];
+    const out = withoutBuildOnly(steps);
+    assert.deepEqual(out, [{ id: "s2", kind: "discover", discover: { pages: [{ items: [{ type: "word", word: { ko: "책이", romanization: "chaegi", en: "book" } }] }] } }]);
+    assert.deepEqual(Object.keys(out[0]), ["id", "kind", "discover"]);
+    assert.equal(steps[0].discover.pages[0].items[0].word.soundChange, true, "the content is not changed");
+    assert.deepEqual(withoutBuildOnly({ "minigame:x": { rounds: [{ id: "r", soundChange: true, target: { ko: "가" } }] } }), { "minigame:x": { rounds: [{ id: "r", target: { ko: "가" } }] } });
+    assert.equal(withoutBuildOnly(null), null);
+    assert.equal(withoutBuildOnly("가"), "가");
   });
 });
