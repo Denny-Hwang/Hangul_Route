@@ -45,6 +45,8 @@ export const routeCatalogOf = (catalog: Catalog): RouteCatalog => {
         teaches: [...quest.teaches],
         playable: quest.kind === 'lesson' ? readyEpisodes.has(quest.episodeId) : readyStoryQuests.has(quest.id),
         grid: quest.kind === 'lesson',
+        // Row CM-41: a later volume's quest is no route start and no next card (`isRouteStartQuest`).
+        ...(quest.kind === 'lesson' && laterVolume.has(quest.episodeId) ? { laterVolume: true } : {}),
       }),
     );
   return { quests };
