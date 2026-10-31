@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { CATALOG, StageKeySchema, classPosition, learnerPosition, resolvePreset } from '..';
 import { allowlistedInstitution, lintCurriculum, PRODUCE_KINDS, READ_MEANING_KINDS } from '../lesson-lint';
 import { rolePlayIssues, rolePlayPaths } from '../role-play-rules';
-import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE } from '../review-items/sources';
+import { Stage1TableSchema, reviewItemsOf } from '../review-items/build';
+import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from '../review-items/sources';
+import { StableIdSnapshotSchema } from '../review-items/stable-ids';
 import { LessonCellSchema, type LessonCell, type LessonQuest, type LessonScope } from '../schemas/lesson';
 import { isRolePlayEnd } from '../schemas/role-play';
 import { REPO_ROOT } from './helpers/romanization-registry';
@@ -141,5 +143,30 @@ describe('a later volume stays off the lecture route (row CM-40, shipped by CM-4
     expect(learnerPosition(null, ['quest:stage4-crafts-q3'], CATALOG)?.questId).toBe('quest:story-sejong-new-letters-read');
     const journey = { v: 1, here: 'stage4', stages: [{ stage: 'stage4', done: 15, known: 0 }] };
     expect(classPosition([{ journey }] as never, CATALOG)?.questId).not.toMatch(/-v2-/);
+  });
+});
+
+describe('Play Volume 2, Stage 4: sound changes stay out of Dictation (section 4.5, review fix)', () => {
+  const built = reviewItemsOf({
+    stage1: Stage1TableSchema.parse(tree.get(REVIEW_STAGE1_FILE)),
+    lessons: lessonSourcesOfTree(tree),
+    stories: storySourcesOfTree(tree),
+    ...vocabOfTree(tree),
+    snapshot: StableIdSnapshotSchema.parse(tree.get(REVIEW_SNAPSHOT_FILE)),
+  });
+  const byId = new Map(built.items.map((i) => [i.id, i]));
+
+  it('할게 is said [할께] (tensification after the -ㄹ ending), so lex:halge is a sound change and never a Dictation', () => {
+    const item = byId.get('lex:halge');
+    expect(item?.ko).toBe('할게');
+    expect(item?.soundChange).toBe(true);
+    expect(item?.formats).not.toContain('dictation');
+  });
+
+  it('the sentences with 할게 are asked by ear only (hear-pick)', () => {
+    for (const id of ['pat:naega-meonjeo-halge', 'exc:naega-meonjeo-halge']) {
+      const formats = byId.get(id)?.formats ?? [];
+      expect(formats, id).not.toContain('dictation');
+    }
   });
 });

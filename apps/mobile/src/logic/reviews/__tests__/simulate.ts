@@ -5,6 +5,7 @@ import { cellOfEpisode } from '../../memory/resolve';
 import { applyAnswer, type Rung } from '../../memory/spacing';
 import { addDays } from '../../vocab/srs';
 import { stage1Quests } from '../../../content/quests';
+import { CATALOG } from '@hangul-route/content-schema';
 import { INDEX, LESSON_QUESTS } from '../../memory/__tests__/fixtures';
 import {
   CREDIT_INSIDE_SENTENCES,
@@ -72,6 +73,13 @@ const INTRODUCE_NONE: ReadonlySet<string> = new Set(
   stage1Quests.filter((q) => !q.steps.some((s) => (s.discover?.pages.length ?? 0) > 0)).map((q) => q.id),
 );
 
+/**
+ * The route's lesson quests: a cell's later volumes (F-CURR-002 §5.1, row CM-40) are off the route, as in the app
+ * (route-catalog.ts, route-days.ts), so S-a and S-b never walk a Volume 2 quest (review fix, row CM-42 S4).
+ */
+const LATER_VOLUMES = new Set(CATALOG.cells.flatMap((cell) => (cell.episodeIds ?? [cell.episodeId]).slice(1)));
+const ROUTE_QUESTS = LESSON_QUESTS.filter((q) => !LATER_VOLUMES.has(q.episodeId));
+
 /** The lesson quests in route order, each with the items it introduces: a cell's items split evenly over its quests. */
 export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPlan[] {
   const firstCell = (item: ReviewItem): string | undefined => item.cells.find((c) => c.startsWith('episode:'));
@@ -82,12 +90,12 @@ export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPla
   }
   const questsOf = new Map<string, string[]>();
   const lastOf = new Map<string, string>();
-  for (const q of LESSON_QUESTS) {
+  for (const q of ROUTE_QUESTS) {
     const cell = cellOfEpisode(q.episodeId);
     lastOf.set(cell, q.id);
     if (!INTRODUCE_NONE.has(q.id)) questsOf.set(cell, [...(questsOf.get(cell) ?? []), q.id]);
   }
-  return LESSON_QUESTS.map((q) => {
+  return ROUTE_QUESTS.map((q) => {
     const cell = cellOfEpisode(q.episodeId);
     const quests = questsOf.get(cell) ?? [q.id];
     const at = quests.indexOf(q.id);
