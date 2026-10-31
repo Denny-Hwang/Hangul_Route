@@ -41,7 +41,7 @@ export function JoinLinkPanel({ url, copy, centered = false }: { url: string; co
       </p>
       <p style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm), margin: `0 0 ${spacing.sm}px` }}>{copy.note}</p>
       <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap', justifyContent: centered ? 'center' : 'flex-start' }}>
-        <button type="button" data-testid="join-link-copy" onClick={() => void doCopy()} style={{ ...buttonBase, minHeight: touchTarget.min }}>
+        <button type="button" data-testid="join-link-copy" onClick={() => void doCopy()} style={buttonBase}>
           {copyState === 'copied' ? copy.copied.cta : copy.copy.cta}
         </button>
         <button
@@ -50,7 +50,7 @@ export function JoinLinkPanel({ url, copy, centered = false }: { url: string; co
           aria-expanded={qrOpen}
           aria-controls={qrId}
           onClick={() => setQrOpen((open) => !open)}
-          style={{ ...buttonBase, minHeight: touchTarget.min }}
+          style={buttonBase}
         >
           {qrOpen ? copy.qr.hide.cta : copy.qr.show.cta}
         </button>

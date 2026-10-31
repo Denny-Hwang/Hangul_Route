@@ -4,6 +4,8 @@ Status: ready
 
 > **Amended 2026-10-16 by `AMENDMENTS-DISPLAY-NAV.md`** (sections 3.4, 6 and 7.3): the learner-to-grown-up hand-off always carries `?lang=` (the learner app's links in row DN-3, the console's in DN-5), and the console reads the device record (sections 3.7 and 3.9 here; row DN-5); every non-home console page has a top-left PageBack and the way to the learner app becomes a **Learner app** exit at the right of the header (section 3.8; row DN-6).
 
+> **Amended 2026-10-31 by `AMENDMENTS-GROWNUP-UX.md` [GX]** (section 3.8): the Classes (teacher) and Home (parent) tabs show the count of what waits as a number on screen, with its meaning in their accessible name, and every other console page of the persona (not lecture mode or the presenter) shows a re-link bar while a re-link waits (rows GX-3, GX-5); on a phone the nav is one row that scrolls inside itself (row GX-14).
+
 > **Amended 2026-10-21 by `AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` [OA]**: section 3.10 is replaced by that amendment's section 5.3 (one "Who is using this?" chooser in the learner app; the **Learner app** exit and Open the app on this device open it with a `who=1` boot intent); section 3.9 gains the browser's PIN owner (`hr-shell` `pinOwner`, the account that last proved the current PIN), a reset leg that writes no trusted epoch, a reset by signing in (`/account/pin-reset`, `gate=pin-reset`) and **Use a passkey** on the lock; the console writes the account's grown-up uses for the chooser (`hr-shell` `deviceUses`, no names). Rows OA-3, OA-4b, OA-6.
 
 # F-APP-001 — One product app: app.hangulroute.com with persona sign-in (learner, family, teacher) and a home per persona
