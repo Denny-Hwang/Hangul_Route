@@ -196,12 +196,19 @@ describe('the pilot: about 81 rows (section 11, AC-5)', () => {
     expect(new Set(rows.map((r) => r.ref)).size).toBe(81);
   });
 
-  it('includes the spec probes 국물 신라 같이 좋다 as pilot-only rows sent in standard spelling', () => {
-    for (const text of ['국물', '신라', '같이', '좋다']) {
+  it('includes the spec probes 신라 같이 좋다 as pilot-only rows sent in standard spelling', () => {
+    for (const text of ['신라', '같이', '좋다']) {
       const r = rows.find((x) => x.text === text);
       expect(r).toMatchObject({ ref: sayRef(text), key: sayKey(text), say: text, rate: 0.9, pack: 'pilot' });
       expect(MANIFEST.rows.some((m) => m.text === text)).toBe(false);
     }
+  });
+
+  it('takes the probe 국물 from the content once a cell teaches it (F-CURR-002 CM-44 S2), as the manifest says it', () => {
+    const shipped = MANIFEST.rows.find((m) => m.text === '국물');
+    expect(shipped).toBeDefined();
+    expect(rows.find((x) => x.text === '국물')).toEqual(shipped);
+    expect(pilotRows(MANIFEST.rows.filter((m) => m.text !== '국물'), keys).find((x) => x.text === '국물')).toMatchObject({ say: '국물', pack: 'pilot' });
   });
 
   it('takes the other words and the sentences from the content, as the manifest says them', () => {

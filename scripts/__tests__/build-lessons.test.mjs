@@ -46,22 +46,26 @@ const { readCells } = await import(SCRIPT);
 const readCellsOf = (root) => readCells(root);
 
 describe("build-lessons.mjs: empty trees", () => {
-  test("with no lesson cells it writes the manifest and the two title chunks", () => {
+  test("with no lesson cells it writes the manifest, the two title chunks and the three headers chunks", () => {
     const root = makeRoot();
     const r = run(root);
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.match(r.stdout, /wrote 3 lesson modules \(ready cells: 0, drafts left out: 0\)/);
+    assert.match(r.stdout, /wrote 6 lesson modules \(ready cells: 0, drafts left out: 0\)/);
     assert.deepEqual(LESSON_STAGES, [2, 3, 4, 6, 7]);
     assert.equal(CHUNK_DIR, "lesson-chunks");
     const index = read(root, "lessons-index.ts");
     assert.ok(index.startsWith(GENERATED_HEADER));
-    assert.match(index, /export const LESSON_EPISODES: Episode\[\] = \[\];/);
+    assert.match(index, /export const LESSON_EPISODES: LessonManifestEpisode\[\] = \[\];/);
     assert.match(index, /export const LESSON_QUESTS: LessonQuestHeader\[\] = \[\];/);
     assert.match(index, /export const LESSON_CELL_CHUNKS: Readonly<Record<string, string>> = \{\};/);
     assert.doesNotMatch(index, /require\(|^import (?!type )/m);
     for (const locale of ["es", "ko"]) {
       assert.match(index, new RegExp(`return import\\('\\./lesson-chunks/lessons-titles-${locale}'\\);`));
       assert.match(chunk(root, `lessons-titles-${locale}`), /export const LESSON_TITLE_OVERLAYS: LessonTitleChunk\['LESSON_TITLE_OVERLAYS'\] = \{\};/);
+    }
+    for (const locale of ["en", "es", "ko"]) {
+      assert.match(index, new RegExp(`return import\\('\\./lesson-chunks/lessons-headers-${locale}'\\);`));
+      assert.match(chunk(root, `lessons-headers-${locale}`), /export const LESSON_HEADER_OVERLAYS: LessonHeaderChunk\['LESSON_HEADER_OVERLAYS'\] = \{\};/);
     }
   });
 
@@ -143,7 +147,14 @@ describe("build-lessons.mjs: cells", () => {
     assert.equal(run(root).status, 0);
     assert.doesNotMatch(chunk(root, "lessons-cell-stage2-rites"), new RegExp(`CHUNK_HASH = "${hash}"`));
     const manifest = chunkManifest([{ ...shapeCell(cell("stage2", "rites"), "content/episodes/stage-2/rites.json"), overlays: { es: {}, ko: {} } }]);
-    assert.deepEqual(manifest.map((m) => m.name), ["lessons-cell-stage2-rites", "lessons-titles-es", "lessons-titles-ko"]);
+    assert.deepEqual(manifest.map((m) => m.name), [
+      "lessons-cell-stage2-rites",
+      "lessons-titles-es",
+      "lessons-titles-ko",
+      "lessons-headers-en",
+      "lessons-headers-es",
+      "lessons-headers-ko",
+    ]);
     assert.equal(manifest[0].hash, hash);
   });
 
@@ -339,6 +350,8 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       ],
       // F-CURR-002 row CM-38: a chain plays one round per frame.
       [{ kind: "my-story", frames: [1, 2, 3] }, { kind: "my-story", rounds: 3, myStory: { frames: [1, 2, 3] } }],
+      // F-CURR-002 row CM-44 S2: Syllable Build plays one round per block (the app's `syllableBuild` scope).
+      [{ kind: "syllable-build", rounds: [1, 2, 3, 4] }, { kind: "syllable-build", rounds: 4, syllableBuild: { rounds: [1, 2, 3, 4] } }],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });
@@ -461,7 +474,8 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(r.stdout, /stage 2 game content {2}1 cells {2}\d+ B raw {2}\d+ B gzip/);
     assert.match(r.stdout, /stage 3 game content {2}0 cells {2}0 B raw/);
     assert.match(r.stdout, /total {2}\d+ B raw {2}\d+ B gzip/);
-    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 90000 B raw and 16000 B gzip per cell chunk, 220000 B raw and 40000 B gzip per stage, 1400000 B raw and 210000 B gzip in total/);
+    assert.match(r.stdout, /lesson-chunks\/lessons-headers-en\.ts {2}\d+ B raw/);
+    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 40000 B raw per headers chunk, 90000 B raw and 16000 B gzip per cell chunk, 220000 B raw and 40000 B gzip per stage, 1400000 B raw and 210000 B gzip in total/);
   });
 
   test("--report fails over budget; a draft is never measured", () => {
@@ -484,21 +498,25 @@ describe("build-lessons.mjs: --check and --report", () => {
         { name: "lesson-chunks/lessons-titles-es.ts", raw: BUDGET.titleChunkRaw + 1, gzip: 1 },
         { name: "lesson-chunks/lessons-titles-ko.ts", raw: BUDGET.titleChunkRaw, gzip: 1 },
         { name: "lesson-chunks/lessons-cell-stage2-rites.ts", raw: 999_999, gzip: 999_999 },
+        { name: "lesson-chunks/lessons-headers-en.ts", raw: BUDGET.headersChunkRaw + 1, gzip: 1 },
+        { name: "lesson-chunks/lessons-headers-ko.ts", raw: BUDGET.headersChunkRaw, gzip: 1 },
       ],
       perStage: [{ stage: 2, cells: 5, raw: BUDGET.stageRaw + 1, gzip: BUDGET.stageGzip + 1 }],
       total: { raw: BUDGET.totalRaw + 1, gzip: BUDGET.totalGzip + 1 },
     });
-    assert.equal(over.length, 9);
+    assert.equal(over.length, 10);
     assert.match(over[0], /episode:x is 54001 B raw for 6 quests, over its ceiling of 54000 B/);
     assert.match(over[1], /the start-loaded manifest lessons-index\.ts is 60001 B raw, over the ceiling of 60000 B/);
     assert.match(over[2], /lessons-titles-es\.ts is 30001 B raw, over the title chunk ceiling of 30000 B/);
     assert.match(over[3], /lessons-cell-stage2-rites\.ts is 999999 B raw, over the cell chunk ceiling of 90000 B/);
     assert.match(over[4], /lessons-cell-stage2-rites\.ts is 999999 B gzip, over the cell chunk ceiling of 16000 B/);
-    assert.match(over[5], /the Stage 2 game content is 220001 B raw/);
+    assert.match(over[5], /lessons-headers-en\.ts is 40001 B raw, over the headers chunk ceiling of 40000 B/);
+    assert.match(over[6], /the Stage 2 game content is 220001 B raw/);
     assert.deepEqual(BUDGET, {
       perQuestRawAvg: 9_000,
       manifestRaw: 60_000,
       titleChunkRaw: 30_000,
+      headersChunkRaw: 40_000,
       cellChunkRaw: 90_000,
       cellChunkGzip: 16_000,
       stageRaw: 220_000,
@@ -511,7 +529,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.deepEqual(checkBudget({ perCell: [], perModule: [], total: { raw: 0, gzip: 0 } }), []);
     const report = sizes([{ status: "draft", episode: { id: "d" }, quests: [], scopes: {} }], buildModules([]));
     assert.deepEqual(report.perCell, []);
-    assert.equal(report.perModule.length, 3);
+    assert.equal(report.perModule.length, 6);
     assert.deepEqual(report.perStage.map((s) => [s.stage, s.raw]), LESSON_STAGES.map((n) => [n, 0]));
   });
 
@@ -524,6 +542,185 @@ describe("build-lessons.mjs: --check and --report", () => {
     const r = run(makeRoot(), ["--nope"]);
     assert.equal(r.status, 2);
     assert.match(r.stderr, /Usage: node scripts\/build-lessons\.mjs/);
+  });
+});
+
+// ---- F-CURR-002 row CM-40: two volumes per cell, and the display lines in a headers chunk per locale ----------
+
+/** A cell's Volume 2 as its file states it: every id gains -v2, and `volume: 2`. */
+function volume2(body) {
+  const { stage, theme } = body;
+  const n = stage.slice(5);
+  const text = JSON.stringify(body)
+    .split(`quest:${stage}-${theme}-q`)
+    .join(`quest:${stage}-${theme}-v2-q`)
+    .split(`minigame:s${n}-${theme}-q`)
+    .join(`minigame:s${n}-${theme}-v2-q`);
+  return { ...JSON.parse(text), id: `episode:${stage}-${theme}-v2`, volume: 2, titleEn: "Holiday Words 2" };
+}
+
+describe("build-lessons.mjs: Volume 2 beside Volume 1 (F-CURR-002 row CM-40)", () => {
+  test("<theme>.v2.json ships as the cell's second episode, volume 2, with a body chunk of its own and its own overlay file", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
+    put(root, "content/episodes/stage-2/rites.v2.json", volume2(cell("stage2", "rites")));
+    put(root, "content/i18n/es/lessons-stage2-rites-v2.json", overlay("es", "lessons-stage2-rites-v2", {
+      "episode:stage2-rites-v2": { title: "Palabras de fiesta 2", subtitle: "Más palabras" },
+      "minigame:s2-rites-v2-q1-practice": { "cardPairs.yeon.gloss": "cometa" },
+    }));
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /ready cells: 2, drafts left out: 0/);
+    const index = read(root, "lessons-index.ts");
+    const ids = [...index.matchAll(/"id":"(episode:[^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(ids, ["episode:stage2-rites", "episode:stage2-rites-v2"]);
+    assert.match(index, /"id":"episode:stage2-rites-v2","stage":"stage2","theme":"rites","order":3,"titleEn":"Holiday Words 2","questIds":\["quest:stage2-rites-v2-q1","quest:stage2-rites-v2-q2","quest:stage2-rites-v2-q3"\]/);
+    assert.match(index, /"status":"shipped","volume":2\}/);
+    // Volume 1 says nothing of a volume, so its manifest entry is what it was.
+    assert.doesNotMatch(index.slice(0, index.indexOf("episode:stage2-rites-v2")), /"volume"/);
+    assert.match(index, /case "episode:stage2-rites-v2":\n {6}return import\('\.\/lesson-chunks\/lessons-cell-stage2-rites-v2'\);/);
+    const v1 = chunk(root, "lessons-cell-stage2-rites");
+    const v2 = chunk(root, "lessons-cell-stage2-rites-v2");
+    assert.doesNotMatch(v1, /-v2/);
+    assert.match(v2, /"minigame:s2-rites-v2-q1-practice":\{"kind":"card-match"/);
+    assert.match(v2, /"cardPairs.yeon.gloss":"cometa"/);
+    assert.doesNotMatch(v2, /"quest:stage2-rites-q1"/);
+    assert.equal(cellChunkName("episode:stage2-rites-v2"), "lessons-cell-stage2-rites-v2");
+    assert.match(chunk(root, "lessons-titles-es"), /"episode:stage2-rites-v2":\{"title":"Palabras de fiesta 2"\}/);
+    assert.match(chunk(root, "lessons-headers-es"), /"episode:stage2-rites-v2":\{"subtitle":"Más palabras"\}/);
+    const names = chunkManifest(readCellsOf(root)).map((m) => m.name);
+    assert.deepEqual(names.slice(0, 2), ["lessons-cell-stage2-rites", "lessons-cell-stage2-rites-v2"]);
+  });
+
+  test("the catalogue rows put a cell's Volume 2 after its Volume 1, its volume last; a draft Volume 2 is left out", () => {
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/rites.json", cell("stage2", "rites"));
+    put(root, "content/episodes/stage-2/rites.v2.json", volume2(cell("stage2", "rites")));
+    put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "ready", { order: 5 }));
+    put(root, "content/episodes/stage-2/crafts.v2.json", { ...volume2(cell("stage2", "crafts", "draft", { order: 5 })), titleEn: "Draft" });
+    const model = catalogueOf({ cells: readCellsOf(root) });
+    assert.deepEqual(cellRowsOf(model).map((row) => [row[1], row[2], row[3], row[6]]), [
+      ["rites", "Holiday Words", "shipped", undefined],
+      ["rites", "Holiday Words 2", "shipped", 2],
+      ["crafts", "Holiday Words", "shipped", undefined],
+    ]);
+    assert.deepEqual(
+      model.quests.filter((q) => q.episodeId === "episode:stage2-rites-v2").map((q) => q.id),
+      ["quest:stage2-rites-v2-q1", "quest:stage2-rites-v2-q2", "quest:stage2-rites-v2-q3"],
+    );
+    assert.match(renderCatalogue(model), /\["stage2","rites","Holiday Words 2","shipped",13,\[\["Quest 1",4,\[\]\],\["Quest 2",4,\[\]\],\["Quest 3",4,\[\]\]\],2\],/);
+  });
+
+  test("a Volume 2 file must carry its -v2 ids and volume 2; a third volume, or a ready Volume 2 without its Volume 1, fails", () => {
+    const fails = (files, pattern) => {
+      const root = makeRoot();
+      for (const [rel, body] of Object.entries(files)) put(root, rel, body);
+      const r = run(root);
+      assert.equal(r.status, 1, r.stdout);
+      assert.match(r.stdout, pattern);
+    };
+    const v1 = cell("stage2", "rites");
+    fails({ "content/episodes/stage-2/rites.json": v1, "content/episodes/stage-2/rites.v2.json": { ...volume2(v1), id: "episode:stage2-rites" } }, /id must be episode:stage2-rites-v2/);
+    fails({ "content/episodes/stage-2/rites.json": v1, "content/episodes/stage-2/rites.v2.json": { ...volume2(v1), volume: undefined } }, /a rites\.v2\.json cell has volume 2/);
+    fails({ "content/episodes/stage-2/rites.json": { ...v1, volume: 2 } }, /a Volume 1 cell states no volume/);
+    fails({ "content/episodes/stage-2/rites.json": v1, "content/episodes/stage-2/rites.v3.json": volume2(v1) }, /<theme>\.v2\.json for its Volume 2/);
+    fails({ "content/episodes/stage-2/rites.v2.json": volume2(v1) }, /::error file=content\/episodes\/stage-2\/rites\.v2\.json::a ready Volume 2 needs its cell's Volume 1 ready/);
+    fails({ "content/episodes/stage-2/rites.json": { ...v1, status: "draft" }, "content/episodes/stage-2/rites.v2.json": volume2(v1) }, /a ready Volume 2 needs its cell's Volume 1 ready/);
+    const stray = volume2(v1);
+    stray.quests[0].scopes[0].ref = "minigame:s2-rites-q1-practice";
+    fails({ "content/episodes/stage-2/rites.json": v1, "content/episodes/stage-2/rites.v2.json": stray }, /scope minigame:s2-rites-q1-practice is not named after quest:stage2-rites-v2-q1/);
+    // A draft Volume 2 may wait for its Volume 1.
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/rites.v2.json", { ...volume2(v1), status: "draft" });
+    assert.equal(run(root).status, 0);
+  });
+});
+
+describe("build-lessons.mjs: the lesson headers chunks (F-CURR-002 §10, row CM-40)", () => {
+  test("the display lines leave the manifest and the title chunks for one headers chunk per locale, English included", () => {
+    const root = makeRoot();
+    const body = cell("stage2", "rites", "ready", { rewardCardIds: ["card:insa"] });
+    body.quests[0].blurbEn = "Read the holiday words.";
+    body.quests[0].teaserEn = "Next: kites!";
+    body.quests[0].rewardCardId = "card:insa";
+    put(root, "content/episodes/stage-2/rites.json", body);
+    put(root, "content/i18n/es/lessons-stage2-rites.json", overlay("es", "lessons-stage2-rites", {
+      "episode:stage2-rites": { title: "Palabras de fiesta", subtitle: "Palabras de las fiestas", hoyaIntro: "¡Leamos!" },
+      "quest:stage2-rites-q1": { title: "Misión 1", blurb: "Lee las palabras.", teaser: "Luego: ¡cometas!", "steps.s1.title": "Hola" },
+    }));
+    assert.equal(run(root).status, 0);
+    const index = read(root, "lessons-index.ts");
+    assert.doesNotMatch(index, /subtitleEn|hoyaIntroEn|rewardCardIds|blurbEn|teaserEn|Words of the holidays|Read the holiday/);
+    // A quest's card stays: the Results award reads it (three shipped taste quests carry one).
+    assert.match(index, /\{"id":"quest:stage2-rites-q1","titleEn":"Quest 1","estimatedMinutes":4,"rewardCardId":"card:insa"\}/);
+    assert.match(index, /export const LESSON_HEADER_CHUNKS: Readonly<Record<UiLocale, string>> = \{"en":"[0-9a-f]{16}","es":"[0-9a-f]{16}","ko":"[0-9a-f]{16}"\};/);
+    const en = chunk(root, "lessons-headers-en");
+    assert.match(en, /LESSON_EPISODE_HEADERS: LessonHeaderChunk\['LESSON_EPISODE_HEADERS'\] = \{"episode:stage2-rites":\{"subtitleEn":"Words of the holidays","hoyaIntroEn":"Let us read holiday words!","rewardCardIds":\["card:insa"\]\}\};/);
+    assert.match(en, /LESSON_QUEST_HEADERS: LessonHeaderChunk\['LESSON_QUEST_HEADERS'\] = \{"quest:stage2-rites-q1":\{"blurbEn":"Read the holiday words.","teaserEn":"Next: kites!"\}\};/);
+    assert.match(en, /LESSON_HEADER_OVERLAYS: LessonHeaderChunk\['LESSON_HEADER_OVERLAYS'\] = \{\};/);
+    const es = chunk(root, "lessons-headers-es");
+    assert.match(es, /= \{"episode:stage2-rites":\{"hoyaIntro":"¡Leamos!","subtitle":"Palabras de las fiestas"\},"quest:stage2-rites-q1":\{"blurb":"Lee las palabras.","teaser":"Luego: ¡cometas!"\}\};/);
+    assert.match(es, /LESSON_EPISODE_HEADERS: LessonHeaderChunk\['LESSON_EPISODE_HEADERS'\] = \{\};/);
+    assert.match(chunk(root, "lessons-titles-es"), /= \{"episode:stage2-rites":\{"title":"Palabras de fiesta"\},"quest:stage2-rites-q1":\{"title":"Misión 1"\}\};/);
+    assert.doesNotMatch(chunk(root, "lessons-titles-es"), /Lee las|Leamos|Hola/);
+    assert.match(chunk(root, "lessons-cell-stage2-rites"), /"steps.s1.title":"Hola"/);
+    // Each headers chunk carries the hash the manifest names, and a display line change moves only its hash.
+    const hashOf = (name) => /export const CHUNK_HASH = "([0-9a-f]{16})";/.exec(chunk(root, name))?.[1];
+    for (const locale of ["en", "es", "ko"]) assert.match(index, new RegExp(`"${locale}":"${hashOf(`lessons-headers-${locale}`)}"`));
+    const before = { en: hashOf("lessons-headers-en"), cell: hashOf("lessons-cell-stage2-rites") };
+    put(root, "content/episodes/stage-2/rites.json", { ...body, subtitleEn: "New words of the holidays" });
+    assert.equal(run(root).status, 0);
+    assert.notEqual(hashOf("lessons-headers-en"), before.en);
+    assert.equal(hashOf("lessons-cell-stage2-rites"), before.cell);
+  });
+
+  test("the repository's manifest keeps no display line, and its headers chunks hold every shipped episode's", () => {
+    const index = readFileSync(join(REPO, OUT, "lessons-index.ts"), "utf8");
+    assert.doesNotMatch(index, /"subtitleEn"|"hoyaIntroEn"|"rewardCardIds"|"blurbEn"|"teaserEn"/);
+    const en = readFileSync(join(REPO, OUT, CHUNK_DIR, "lessons-headers-en.ts"), "utf8");
+    const episodes = [...index.matchAll(/"id":"(episode:[^"]+)"/g)].map((m) => m[1]);
+    assert.ok(episodes.length >= 25);
+    for (const id of episodes) assert.match(en, new RegExp(`"${id}":\\{"subtitleEn":`), id);
+  });
+});
+
+describe("build-lessons.mjs --include-fixtures: the e2e Volume 2 (row CM-40)", () => {
+  test("copies Stage 2 Nature as its Volume 2: -v2 ids, volume 2, its overlays renamed; never with --check or --report", async () => {
+    const { FIXTURE_VOLUME2, volume2Fixture } = await import(SCRIPT);
+    assert.deepEqual({ ...FIXTURE_VOLUME2 }, { stageNo: 2, theme: "nature" });
+    const v1 = cell("stage2", "nature", "ready", { order: 4, titleEn: "Outdoor Words" });
+    const { cell: v2, files } = volume2Fixture(v1, [{ rel: "content/i18n/es/lessons-stage2-nature.json", locale: "es", json: overlay("es", "x", { "episode:stage2-nature": { title: "Palabras" }, "quest:stage2-nature-q1": { title: "Uno" } }) }]);
+    assert.equal(v2.id, "episode:stage2-nature-v2");
+    assert.equal(v2.volume, 2);
+    assert.equal(v2.titleEn, "Outdoor Words 2");
+    assert.equal(v2.quests[0].id, "quest:stage2-nature-v2-q1");
+    assert.ok(v2.quests[0].scopes.every((s) => s.ref.startsWith("minigame:s2-nature-v2-q1-")));
+    assert.equal(files[0].rel, "content/i18n/es/lessons-stage2-nature-v2.json");
+    assert.deepEqual(Object.keys(files[0].json.entries), ["episode:stage2-nature-v2", "quest:stage2-nature-v2-q1"]);
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/nature.json", v1);
+    put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "ready", { order: 5 }));
+    // The list the fixture bundle's post-build checks (pwa-postbuild.mjs --lesson-fixtures): the fixture after its Volume 1.
+    const { readCellsWithFixtures } = await import(SCRIPT);
+    assert.deepEqual(readCellsWithFixtures(root).map((c) => c.episode.id), ["episode:stage2-nature", "episode:stage2-nature-v2", "episode:stage2-crafts"]);
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /E2E FIXTURE MODULES/);
+    assert.match(read(root, "lessons-index.ts"), /case "episode:stage2-nature-v2"/);
+    assert.ok(existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
+    // A plain run removes it again.
+    assert.equal(run(root).status, 0);
+    assert.ok(!existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
+    assert.equal(run(root, ["--include-fixtures", "--check"]).status, 2);
+  });
+
+  test("gives no fixture once the cell ships a Volume 2 of its own (row CM-41 S2): the shipped one is played", async () => {
+    const { fixtureCells } = await import(SCRIPT);
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/nature.json", cell("stage2", "nature", "ready", { order: 4, titleEn: "Outdoor Words" }));
+    assert.equal(fixtureCells(root).length, 1);
+    put(root, "content/episodes/stage-2/nature.v2.json", {});
+    assert.deepEqual(fixtureCells(root), []);
   });
 });
 

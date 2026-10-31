@@ -724,6 +724,14 @@ describe('classPosition (N2)', () => {
     expect(at([{ journey: journey('stage7', [['stage7', 15, 0]]) }])).toBeNull();
   });
 
+  it('reads the first volumes only: a shipped Volume 2 (row CM-44 S2) is never a class place, and Stage 2 still ends at its last first-volume lesson', () => {
+    expect(CATALOG.quests.some((q) => q.id === 'quest:stage2-letters-v2-q1')).toBe(true);
+    const stage2 = CATALOG.cells.filter((c) => c.stage === 'stage2').flatMap((c) => c.questIds);
+    expect(at([{ journey: journey('stage2', [['stage2', stage2.length - 1, 0]]) }])).toBe(stage2[stage2.length - 1]);
+    expect(at([{ journey: journey('stage2', [['stage2', stage2.length, 0]]) }])).toBe('quest:stage3-letters-q1');
+    for (let n = 0; n <= stage2.length; n += 1) expect(at([{ journey: journey('stage2', [['stage2', n, 0]]) }])).not.toMatch(/-v2-/);
+  });
+
   it('no usable summary: null (absent, another version, no here, an unknown stage); bad counts read 0', () => {
     expect(at([])).toBeNull();
     expect(at([{}, { journey: null }, { journey: journey(null, [['stage1', 3, 0]]) }, { journey: journey('stage9', [['stage9', 3, 0]]) }])).toBeNull();

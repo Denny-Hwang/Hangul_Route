@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { clipUnitsOf } from '../../../../scripts/audio/lib.mjs';
-import { episodesAll } from '../../../content/episodes';
+import { episodesWithVolumes as episodesAll } from '../../../content/episodes';
 import { questsAll } from '../../../content/quests';
 import { vocabTopics } from '../../../content/vocab';
 import { ALL_CLIP_PACKS, clipScopeOfEpisode, lessonClipPlan, type ClipPlanEpisode, type ClipPlanQuest } from '../lesson-clips';

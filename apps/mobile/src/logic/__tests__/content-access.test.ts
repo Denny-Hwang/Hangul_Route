@@ -30,7 +30,8 @@ const LESSON_IDS = new Set(CATALOG.quests.filter((q) => q.kind === 'lesson').map
 const lessonsOfReadyCells = (stage?: string): string[] =>
   CATALOG.cells
     .filter((c) => cellIsReady(c) && (stage === undefined || c.stage === stage))
-    .flatMap((c) => c.questIds.filter((id) => LESSON_IDS.has(id)));
+    // A cell's later volumes too (F-CURR-002 rows CM-40, CM-41 S2): grid lessons past the free plan.
+    .flatMap((c) => [...c.questIds, ...(c.volumes ?? []).flatMap((v) => v.questIds)].filter((id) => LESSON_IDS.has(id)));
 const STAGE1_LESSONS = lessonsOfReadyCells('stage1');
 const GRID_LESSONS = lessonsOfReadyCells();
 const LATER_LESSONS = GRID_LESSONS.filter((id) => !STAGE1_LESSONS.includes(id));

@@ -246,7 +246,9 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
   it('keeps every shipped lesson the single grid episode of its cell (stories never take a cell)', () => {
     for (const key of lessonCells) {
       const [stage = '', theme = ''] = key.split(':');
-      expect(episodesFor(stage, theme).map((e) => e.format ?? 'lesson'), key).toEqual(['lesson']);
+      // A cell's later volume (F-CURR-002 rows CM-40, CM-41 S2) is a lesson too: the cell's own, never a story's.
+      expect(episodesFor(stage, theme, episodesAll).map((e) => e.format ?? 'lesson'), key).toEqual(['lesson']);
+      expect(new Set(episodesFor(stage, theme).map((e) => e.format ?? 'lesson')), key).toEqual(new Set(['lesson']));
     }
   });
 });

@@ -3,6 +3,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { CATALOGUE_TITLES } from '../catalogue-titles.generated';
 import { catalogLabel, catalogTitle, catalogTitleEntry, itemCategory, itemTitle, plannableQuest } from '../catalog';
+import { consoleChooserGroups } from '../../lib/console/lesson-picker';
 
 /**
  * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
@@ -138,5 +139,34 @@ describe('catalogTitle', () => {
       expect(catalogTitleEntry(id, 'ko')).toEqual({ title: id, fallback: true });
       expect(catalogTitleEntry(id, 'en')).toEqual({ title: id, fallback: true });
     }
+  });
+});
+
+describe('a cell\'s Volume 2 in the console (F-CURR-002 row CM-40)', () => {
+  // A fixture Volume 2 of Stage 4 Play & Crafts; Stage 2 Letters ships a real one (row CM-44 S2).
+  const v2 = 'episode:stage4-crafts-v2';
+  const withV2: Catalog = {
+    ...CATALOG,
+    cells: CATALOG.cells.map((c) =>
+      c.episodeId === 'episode:stage4-crafts' ? { ...c, episodeIds: [c.episodeId, v2], volumes: [{ episodeId: v2, title: 'Playdate Talk 2', minutes: 8, questIds: [] }] } : c,
+    ),
+  };
+
+  it('names a Volume 2 episode by its own English title, and an unknown one by its id', () => {
+    expect(catalogTitle(v2, 'en', withV2)).toBe('Playdate Talk 2');
+    expect(catalogTitleEntry(v2, 'es', withV2)).toEqual({ title: 'Playdate Talk 2', fallback: true });
+    expect(catalogTitle(v2, 'en', CATALOG)).toBe(v2);
+  });
+
+  it('names the shipped Volume 2 (Stage 2 Letters & Books, row CM-44 S2) by its own title in each language', () => {
+    const shipped = 'episode:stage2-letters-v2';
+    expect(catalogTitle(shipped, 'en', CATALOG)).toBe('Final Letters and Families');
+    expect(catalogTitleEntry(shipped, 'es', CATALOG)).toEqual({ title: 'Letras finales y familias', fallback: false });
+    expect(catalogTitleEntry(shipped, 'ko', CATALOG)).toEqual({ title: '받침과 낱말 가족', fallback: false });
+  });
+
+  it('the console chooser offers no Volume 2 row (the console reads no learner switch)', () => {
+    const keys = consoleChooserGroups('en', 'lecture').flatMap((g) => g.rows.map((r) => r.key));
+    expect(keys.some((k) => k.endsWith('-v2'))).toBe(false);
   });
 });
