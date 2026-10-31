@@ -1,5 +1,5 @@
 import type { AudioPack } from '@hangul-route/content-schema/audio-packs';
-import { episodesAll, questsAll } from '../content';
+import { episodesWithVolumes, questsAll } from '../content';
 import { loadAudioPackChunk } from '../content/__generated__/audio-assets';
 import { createClipPackLoader } from '../logic/audio/clip-pack-loader';
 import { lessonClipPlan } from '../logic/audio/lesson-clips';
@@ -24,7 +24,8 @@ export type ClipPrep = { scopes: readonly AudioPack[]; units: readonly string[] 
 
 /** Loads the packs; the warm-up then runs on its own (a prompt waits for the packs, never for the warm-up). */
 export async function prepareClips(prep: ClipPrep): Promise<void> {
-  const plan = 'questId' in prep ? lessonClipPlan({ ...prep, quests: questsAll, episodes: episodesAll }) : prep;
+  // A Volume 2 quest is opened under its own episode (F-CURR-002 row CM-40), so the plan reads the later volumes too.
+  const plan = 'questId' in prep ? lessonClipPlan({ ...prep, quests: questsAll, episodes: episodesWithVolumes }) : prep;
   await Promise.all(plan.scopes.map((scope) => clipPackLoader.loadFor(scope)));
   const refs = clipPackLoader.unitRefs(plan.units);
   if (refs.length > 0) void warmClips(refs).catch(() => undefined);

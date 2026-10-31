@@ -392,6 +392,11 @@ export const learner = {
       startThere: { cta: '거기서 시작' },
       playAnyway: { cta: '그냥 하기' },
     },
+    volumes: {
+      label: '권 선택',
+      tab: (n: number) => `${n}권`,
+      tabA11y: (n: number) => `${n}권`,
+    },
   },
 
   results: {

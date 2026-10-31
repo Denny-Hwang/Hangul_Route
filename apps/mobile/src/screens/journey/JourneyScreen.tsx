@@ -17,7 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { JourneyGrid, type JourneyMastery } from '../../components/JourneyGrid';
-import { episodeById, episodesAll, gridEpisodes, questsAll, stages, themes } from '../../content';
+import { episodeById, episodesAll, gridEpisodes, questsAll, stages, themes, withVolumes } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStage, localizeTheme } from '../../logic/content-locale';
 import { cursorEntitlement } from '../../logic/cursor-context';
@@ -35,6 +35,7 @@ import type { MainTabParamList, RootStackParamList } from '../../navigation/type
 import { ROOT_HEADER } from '../../navigation/screen-header-variants';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useMastery } from '../../store/mastery-entry';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { StageJumpSlot } from '../cell-check/cell-check-entry';
 import { DecodingSprintOffer } from '../minigames/syllable-build-entry';
 import { useToday } from '../route/use-today';
@@ -64,6 +65,10 @@ export function JourneyScreen(): ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  // A cell's Volume 2 (F-CURR-002 row CM-40): its dots, its open rule and its page only while `volumes` is on; off, every
+  // Volume 2 entry point hides and the grid is the route's. Progress, cards and memory states stay either way.
+  const volumesOn = useCurrFlag('volumes');
+  const gridList = useMemo(() => gridEpisodes(withVolumes(volumesOn)), [volumesOn]);
 
   // Two panes (wide window, F-LAYOUT-001 §3.7): a tap selects, the right pane shows it. One pane: a tap navigates as always.
   const { panes } = useLayoutClass();
@@ -75,18 +80,18 @@ export function JourneyScreen(): ReactElement {
   const requested = useRoute<RouteProp<MainTabParamList, 'Journey'>>().params?.episodeId;
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Journey'>>();
   const [latch, setLatch] = useState<PaneLatch | null>(() => {
-    const known = requestedSelection(requested, GRID_EPISODES);
+    const known = requestedSelection(requested, gridList);
     return known === null ? null : { ownerId, id: known };
   });
   const selected = latchedSelection(latch, ownerId);
   const setSelected = (id: string): void => setLatch({ ownerId, id });
   useEffect(() => {
     if (requested === undefined) return;
-    const known = requestedSelection(requested, GRID_EPISODES);
+    const known = requestedSelection(requested, gridList);
     if (known !== null) setLatch({ ownerId, id: known });
     tabNavigation.setParams({ episodeId: undefined });
-  }, [requested, tabNavigation, ownerId]);
-  const selectedId = reconcileSelection(selected, GRID_EPISODES, initialEpisode(GRID_EPISODES, snap));
+  }, [requested, tabNavigation, ownerId, gridList]);
+  const selectedId = reconcileSelection(selected, gridList, initialEpisode(GRID_EPISODES, snap));
   // Latch the first selection (the episode of the next quest) so finishing a quest does not move it:
   // back from the quest player returns to the same selection. It survives rotation as screen state.
   // The latch belongs to the profile: switching learner starts from that learner's next quest.
@@ -181,7 +186,7 @@ export function JourneyScreen(): ReactElement {
       <JourneyGrid
         stages={localStages}
         themes={localThemes}
-        gridEpisodes={GRID_EPISODES}
+        gridEpisodes={gridList}
         paneMode={paneMode}
         selectedId={selectedId}
         onOpen={(episodeId) => (paneMode ? setSelected(episodeId) : navigation.navigate('EpisodeDetail', { episodeId }))}
@@ -247,6 +252,7 @@ export function JourneyScreen(): ReactElement {
       onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
       onOpenCultureNotes={(storyId) => navigation.push('CultureNotes', { storyId })}
       onOpenCellStories={(stage, theme, source) => navigation.navigate('CellStories', { stage, theme, source })}
+      onOpenVolume={setSelected}
       {...episodeAccessExits(navigation, setSelected)}
     />
   ) : (
