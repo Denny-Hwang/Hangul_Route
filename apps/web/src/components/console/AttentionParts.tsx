@@ -353,7 +353,7 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
             style={{
               minHeight: touchTarget.min,
               minWidth: touchTarget.min,
-              // The move buttons' padding: a two-letter label ("닫기") stays a pill, never a circle.
+              // The move buttons' padding: a two-letter label (the ko Close) stays a pill, never a circle.
               padding: `${spacing.sm}px ${spacing.xl}px`,
               borderRadius: radii.pill,
               border: `${borderWidth.base}px solid ${colors.border.strong}`,
