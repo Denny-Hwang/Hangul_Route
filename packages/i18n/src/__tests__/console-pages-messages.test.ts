@@ -142,8 +142,8 @@ describe('space page (teach/space/page.tsx)', () => {
   it('keeps the action row, with a plural for pending new device requests (GX-12: one name with the status chip)', () => {
     expect(s.openPlan.label('Week 1')).toBe('Plan: Week 1');
     expect(s.relinkRequests.cta).toBe('New device requests');
-    expect(s.relinkPending.cta(1)).toBe('1 new device request');
-    expect(s.relinkPending.cta(2)).toBe('2 new device requests');
+    expect(s.relinkPending.cta(1)).toBe('1 new device needs your OK');
+    expect(s.relinkPending.cta(2)).toBe('2 new devices need your OK');
     expect(s.settings.cta).toBe('Settings');
   });
 

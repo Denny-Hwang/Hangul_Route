@@ -127,6 +127,11 @@ const WIDER_BUDGET: Readonly<Record<string, { max: number; reason: string }>> = 
     max: 48,
     reason: 'the one action of the persona-home PIN-owner card, a full-width button (400 px column) that wraps its words; en 35, es 48, ko 29 as measured in the OA-0b lengths board',
   },
+  // AMENDMENTS-GROWNUP-UX section 10.1 (review of PR #933): the class page's waiting count in the one action wording.
+  'console.space.relinkPending.cta': {
+    max: 34,
+    reason: '"12 dispositivos nuevos por aprobar" (34) against "12 new devices need your OK" (27): the glossary name plus "por aprobar"; a tool-row button that wraps its words, no sideways scroll at 360 (relink-page e2e)',
+  },
 };
 
 /**

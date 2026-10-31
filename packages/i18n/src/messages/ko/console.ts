@@ -243,7 +243,7 @@ export const consoleMsgs = {
     openPlan: { label: (plan: string) => `계획: ${plan}` },
     relinkRequests: { cta: '새 기기 연결 요청' },
     relinkPending: {
-      cta: (count: number) => `새 기기 연결 요청 ${count}건`,
+      cta: (count: number) => `새 기기 승인 대기 ${count}건`,
     },
     settings: { cta: '설정' },
     studentsLabel: '학생',

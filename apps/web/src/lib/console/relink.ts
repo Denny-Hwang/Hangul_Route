@@ -32,7 +32,10 @@ export function requestedLabel(requestedAt: string, now: Date, locale: UiLocale 
   return words.askedDaysAgo(Math.floor(ms / DAY_MS));
 }
 
-/** The platforms the learner app sends with a request (`Platform.OS`), each with a name in `console.relink.platform`. */
+/**
+ * The platforms a request may carry (`Platform.OS` values), each with a name in `console.relink.platform`. The learner
+ * app does not send `platform` yet (`membership-store.ts` `requestRelink`), so live cards read "device" until it does.
+ */
 const PLATFORMS = ['ios', 'android', 'web'] as const;
 type RelinkPlatform = (typeof PLATFORMS)[number];
 const isPlatform = (value: string): value is RelinkPlatform => (PLATFORMS as readonly string[]).includes(value);
@@ -95,6 +98,11 @@ export type RelinkNote =
   | { kind: 'approved' | 'denied'; name: string; spaceKind?: SpaceKind }
   | { kind: 'decideFailed'; result: { error: ApiError; code?: string } }
   | { kind: 'issueFailed' };
+
+/** A done decision is good news; a failed one is a nudge (amber, never danger), not the success fill (review of PR #933). */
+export function relinkNoteTone(note: RelinkNote): 'success' | 'nudge' {
+  return note.kind === 'approved' || note.kind === 'denied' ? 'success' : 'nudge';
+}
 
 /** The words for a `RelinkNote`, in `locale`. */
 export function relinkNoteText(note: RelinkNote, locale: UiLocale = DEFAULT_LOCALE): string {

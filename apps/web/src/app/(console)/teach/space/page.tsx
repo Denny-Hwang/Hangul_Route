@@ -300,8 +300,9 @@ function SpaceInner(): JSX.Element {
                 <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
               </Link>
             ) : null}
+            {/* A waiting request asks the grown-up to decide: the primary tone and the action wording (review of PR #933). */}
             <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
-              <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
+              <Button testId="relink-entry" tone={pendingRelinks > 0 ? 'primary' : 'secondary'}>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
             {movesShown && roster.space.kind === 'class' ? (
               <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>

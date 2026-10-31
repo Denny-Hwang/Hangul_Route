@@ -1,6 +1,6 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, nextMinuteTick, platformLabel, relinkNoteText, requestedLabel } from '../relink';
+import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, nextMinuteTick, platformLabel, relinkNoteText, relinkNoteTone, requestedLabel } from '../relink';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 
@@ -64,6 +64,9 @@ describe('relink notes and labels follow the locale they are given (F-I18N-001 P
     expect(relinkNoteText({ kind: 'decideFailed', result: { error: 'unknown', code: 'expired' } })).toBe('This request already closed — the learner can ask again.');
     expect(relinkNoteText({ kind: 'decideFailed', result: { error: 'unknown', code: 'not_a_member' } })).toBe("Didn't go through. Try again.");
     expect(relinkNoteText({ kind: 'issueFailed' })).toBe("Couldn't issue a code right now.");
+    // A failure is a nudge, never the success fill (review of PR #933).
+    expect([relinkNoteTone({ kind: 'approved', name: 'Mina' }), relinkNoteTone({ kind: 'denied', name: 'Mina', spaceKind: 'family' })]).toEqual(['success', 'success']);
+    expect([relinkNoteTone({ kind: 'decideFailed', result: { error: 'unknown', code: 'expired' } }), relinkNoteTone({ kind: 'issueFailed' })]).toEqual(['nudge', 'nudge']);
   });
 
   it('reads the pseudo-locale when given it', () => {

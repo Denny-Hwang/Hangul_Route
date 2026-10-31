@@ -370,8 +370,9 @@ export const consoleMsgs = {
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
     /** One name for a re-link with the status chip (AMENDMENTS-GROWNUP-UX section 10.1 glossary, GX-12): "new device". */
     relinkRequests: { cta: 'New device requests' },
+    /** A waiting count says the grown-up decides, in the one action wording (AMENDMENTS-GROWNUP-UX section 10.1, review of PR #933). */
     relinkPending: {
-      cta: (count: number) => plural('en', count, { one: `${count} new device request`, other: `${count} new device requests` }),
+      cta: (count: number) => plural('en', count, { one: `${count} new device needs your OK`, other: `${count} new devices need your OK` }),
     },
     settings: { cta: 'Settings' },
     studentsLabel: 'Students',

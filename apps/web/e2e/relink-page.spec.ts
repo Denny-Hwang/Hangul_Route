@@ -152,7 +152,7 @@ for (const locale of ['ko', 'en', 'es'] as const) {
       await expect(page.getByText(c.relinkNothing, { exact: true })).toBeVisible();
     });
 
-    test('the class page names its entry "new device requests", with the count', async ({ page }, testInfo) => {
+    test('the class page names its entry with the count in the action wording, in the primary tone', async ({ page }, testInfo) => {
       await mockConsole(page, 'class', locale);
       await page.goto('/teach/space?id=space%3Aa');
       const entry = page.getByRole('link', { name: c.space.relinkPending.cta(1) });

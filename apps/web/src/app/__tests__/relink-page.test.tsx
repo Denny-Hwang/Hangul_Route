@@ -1,4 +1,4 @@
-import { radii, touchTarget } from '@hangul-route/design-system/tokens';
+import { colors, radii, touchTarget } from '@hangul-route/design-system/tokens';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { CSSProperties, ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
@@ -183,6 +183,34 @@ describe('the re-link page (GX-12)', () => {
     };
     const root = await mount('en');
     expect(textOf(byTestId(root, 'relink-meta')[0]!)).toBe('device · asked 4 hours ago');
+  });
+
+  it('closes a card whose time ran out on its own clock: no Approve or Deny, the closed line instead (review of PR #933)', async () => {
+    fake.impl = { roster: () => roster('class'), relinkRequests: () => ok([request({ expiresAt: '2026-10-31T11:59:00.000Z' })]) };
+    const root = await mount('en');
+    const c = getMessages('en').console;
+    const card = byTestId(root, 'relink-card')[0]!;
+    expect(textOf(byTestId(card, 'relink-countdown')[0]!)).toBe(c.relink.expired);
+    expect(card.findAll((n) => n.type === 'button')).toHaveLength(0);
+    expect(textOf(byTestId(card, 'relink-closed')[0]!)).toBe(c.relink.closed);
+  });
+
+  it('shows a failed decision in the nudge tone and a done one in the success tone (review of PR #933)', async () => {
+    const statusFill = (root: ReactTestInstance): unknown => (root.find((n) => n.type === 'div' && n.props.role === 'status').props.style as CSSProperties).backgroundColor;
+    fake.impl = { roster: () => roster('class'), relinkRequests: () => ok([request()]), decideRelink: () => ({ ok: false, error: 'unknown', status: 409 }) };
+    let root = await mount('en');
+    const c = getMessages('en').console;
+    await press(button(byTestId(root, 'relink-card')[0]!, c.relink.approve.cta));
+    expect(textOf(root)).toContain(c.relink.closed);
+    expect(statusFill(root)).toBe(colors.feedback.nudgeLight);
+    act(() => mounted?.unmount());
+    mounted = null;
+    vi.useRealTimers();
+    fake.impl = { roster: () => roster('class'), relinkRequests: () => ok([request()]), decideRelink: () => ok(request({})) };
+    root = await mount('en');
+    await press(button(byTestId(root, 'relink-card')[0]!, c.relink.approve.cta));
+    expect(textOf(root)).toContain(c.relink.approved('Mina'));
+    expect(statusFill(root)).toBe(colors.feedback.successLight);
   });
 
   it("a family's Deny says the device will ask for a grown-up; a class's says a teacher (P8)", async () => {

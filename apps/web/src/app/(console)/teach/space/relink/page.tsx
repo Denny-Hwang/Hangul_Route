@@ -9,7 +9,7 @@ import { AdultFrame } from '@/components/console/AdultFrame';
 import { useConfirm } from '@/components/console/ConfirmSheet';
 import { useConsole } from '@/components/console/use-console';
 import type { RelinkView, Roster } from '@/lib/console/api';
-import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, nextMinuteTick, platformLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
+import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, minutesLeft, nextMinuteTick, platformLabel, relinkNoteText, relinkNoteTone, requestedLabel } from '@/lib/console/relink';
 import { spaceIdFrom } from '@/lib/console/routing';
 import { spaceSubPageBack } from '@/lib/console/page-back';
 import { aroundSlot } from '@/lib/i18n/slot';
@@ -104,7 +104,7 @@ function RelinkInner(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {note ? <Notice tone="success">{relinkNoteText(note, locale)}</Notice> : null}
+      {note ? <Notice tone={relinkNoteTone(note)}>{relinkNoteText(note, locale)}</Notice> : null}
 
       {requests && requests.length === 0 ? (
         <div style={{ ...panelStyle, marginBottom: spacing.lg }}>
@@ -114,6 +114,8 @@ function RelinkInner(): JSX.Element {
       <div style={{ display: 'grid', gap: spacing.md, marginBottom: spacing.xl }}>
         {(requests ?? []).map((req, index) => {
           const hintId = `${ids}-hint-${index}`;
+          // A request past its time on this page's own clock is closed: no Approve / Deny until the next read drops it.
+          const expired = minutesLeft(req.expiresAt, now) === 0;
           return (
             <article key={req.id} style={{ ...panelStyle, display: 'grid', gap: spacing.xs }} data-testid="relink-card">
               <h2 style={{ fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.regular, margin: 0, overflowWrap: 'anywhere' }}>
@@ -129,11 +131,19 @@ function RelinkInner(): JSX.Element {
               <p data-testid="relink-countdown" style={{ margin: 0, fontWeight: typography.weight.bold }}>
                 {expiresLabel(req.expiresAt, now, locale)}
               </p>
-              <Muted id={hintId}>{c.relinkApproveHint}</Muted>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs }}>
-                <Button tone="primary" disabled={busy} describedBy={hintId} onClick={() => void decide(req, true)}>{c.relink.approve.cta}</Button>
-                <Button disabled={busy} onClick={() => void decide(req, false)}>{c.relink.deny.cta}</Button>
-              </div>
+              {expired ? (
+                <Muted>
+                  <span data-testid="relink-closed">{c.relink.closed}</span>
+                </Muted>
+              ) : (
+                <>
+                  <Muted id={hintId}>{c.relinkApproveHint}</Muted>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs }}>
+                    <Button tone="primary" disabled={busy} describedBy={hintId} onClick={() => void decide(req, true)}>{c.relink.approve.cta}</Button>
+                    <Button disabled={busy} onClick={() => void decide(req, false)}>{c.relink.deny.cta}</Button>
+                  </div>
+                </>
+              )}
             </article>
           );
         })}

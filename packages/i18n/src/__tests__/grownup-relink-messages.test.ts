@@ -17,8 +17,8 @@ describe('re-link page words (GX-12)', () => {
     expect([en.relink.title, en.relink.titleFor('Kim family')]).toEqual(['New device requests', 'Kim family · new device requests']);
     expect([es.relink.title, es.relink.titleFor('Familia Kim')]).toEqual(['Solicitudes de dispositivo nuevo', 'Familia Kim · solicitudes de dispositivo nuevo']);
     expect([ko.relink.title, ko.relink.titleFor('김씨 가족')]).toEqual(['새 기기 연결 요청', '김씨 가족 · 새 기기 연결 요청']);
-    expect([es.space.relinkRequests.cta, es.space.relinkPending.cta(1), es.space.relinkPending.cta(2)]).toEqual(['Dispositivos nuevos', '1 dispositivo nuevo', '2 dispositivos nuevos']);
-    expect([ko.space.relinkRequests.cta, ko.space.relinkPending.cta(1), ko.space.relinkPending.cta(3)]).toEqual(['새 기기 연결 요청', '새 기기 연결 요청 1건', '새 기기 연결 요청 3건']);
+    expect([es.space.relinkRequests.cta, es.space.relinkPending.cta(1), es.space.relinkPending.cta(2)]).toEqual(['Dispositivos nuevos', '1 dispositivo nuevo por aprobar', '2 dispositivos nuevos por aprobar']);
+    expect([ko.space.relinkRequests.cta, ko.space.relinkPending.cta(1), ko.space.relinkPending.cta(3)]).toEqual(['새 기기 연결 요청', '새 기기 승인 대기 1건', '새 기기 승인 대기 3건']);
     // No locale keeps the old word for the same thing.
     for (const text of [ko.relink.title, ko.space.relinkRequests.cta, ko.space.relinkPending.cta(2)]) expect(text).not.toContain('다시 연결');
     for (const text of [es.relink.title, es.space.relinkRequests.cta, es.space.relinkPending.cta(2)]) expect(text.toLowerCase()).not.toContain('reconexi');

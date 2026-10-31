@@ -283,7 +283,7 @@ export const consoleMsgs = {
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
     relinkRequests: { cta: 'Dispositivos nuevos' },
     relinkPending: {
-      cta: (count: number) => plural('es', count, { one: `${count} dispositivo nuevo`, other: `${count} dispositivos nuevos` }),
+      cta: (count: number) => plural('es', count, { one: `${count} dispositivo nuevo por aprobar`, other: `${count} dispositivos nuevos por aprobar` }),
     },
     settings: { cta: 'Ajustes' },
     studentsLabel: 'Estudiantes',
