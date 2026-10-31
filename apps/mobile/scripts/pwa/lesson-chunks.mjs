@@ -119,7 +119,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (the tile pool rules), JV-4 0 (e2e), AC-1 +7,619 (the say key, the clip lookup order, the pack switches), AC-2, AC-3
   // and AC-4 0 (scripts), AC-6 +1,959 (the clip registry and the pack hooks; the loader is a lazy chunk), the
   // integration's Match Shape migration 0 (a screen chunk). The line is the measurement plus a 4,896 B rounding margin.
-  startBundleRaw: 4_840_000,
+  // AMENDMENTS-GROWNUP-UX row GX-3 (PR #936, stacked on GX-W and GX-1) measures 4,840,743 B raw / 1,294,560 B gzip in CI
+  // (release `build:web`), 743 B over the 4,840,000 B line: the console's English strings for the home chip, the Classes
+  // tab count and the re-link bar ride in the shared English dictionary the start bundle carries (no mobile code
+  // changed). The line is the measurement plus a 4,257 B rounding margin.
+  startBundleRaw: 4_845_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
