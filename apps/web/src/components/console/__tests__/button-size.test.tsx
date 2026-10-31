@@ -62,7 +62,7 @@ describe('buttonBase and Button (GX-6, T2)', () => {
     expect(buttonBase.textDecoration).toBe('none');
   });
 
-  for (const tone of ['primary', 'secondary', 'danger'] as const) {
+  for (const tone of ['primary', 'secondary', 'danger', 'dangerText'] as const) {
     it(`Button in the ${tone} tone keeps the floor, with a one-character label too`, () => {
       const root = render(
         <Button tone={tone} onClick={() => undefined}>
@@ -82,7 +82,9 @@ describe('buttonBase and Button (GX-6, T2)', () => {
   });
 });
 
-describe('Remove a learner uses the danger tone (GX-6, T2)', () => {
+// GX-10 (T11, P7) made the row's Remove the quieter `dangerText` look beside Move: still the danger colour on its label
+// and still the floor, with no fill and no border.
+describe('Remove a learner uses the danger colour (GX-6, T2), in the quieter text look (GX-10)', () => {
   const noop = (): void => undefined;
   const props = (kind: 'class' | 'family' | 'school'): SettingsSectionsProps => ({
     roster: {
@@ -113,14 +115,15 @@ describe('Remove a learner uses the danger tone (GX-6, T2)', () => {
   });
 
   for (const kind of ['class', 'family', 'school'] as const) {
-    it(`the learner row's ${en.settings.learners.remove[kind].cta} is drawn in the danger tone`, () => {
+    it(`the learner row's ${en.settings.learners.remove[kind].cta} is drawn in the danger colour, as a text button`, () => {
       const root = render(<SettingsSections {...props(kind)} />);
       const learners = root.find((n) => n.type === 'section' && n.props['aria-label'] === en.settings.learners.label);
       const remove = learners.findAll((n) => n.type === 'button').find((b) => textOf(b) === en.settings.learners.remove[kind].cta);
       expect(remove).toBeDefined();
       const style = (remove as ReactTestInstance).props.style as CSSProperties;
       expect(style.color).toBe(colors.feedback.danger);
-      expect(style.borderColor).toBe(colors.feedback.danger);
+      expect(style.borderColor).toBe('transparent');
+      expect(style.textDecoration).toBe('underline');
       expectFloor(style);
     });
   }

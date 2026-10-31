@@ -1052,4 +1052,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.status.moving': [['Nov 3']],
   'console.status.minutesLeft': [[1], [8]],
   'console.attention.from': [['Class B']],
+  // AMENDMENTS-GROWNUP-UX GX-10: the family code in the invite line, and a family learner's one class or class count.
+  'console.settings.inviteGrownUpLine': [['K7PM4Q']],
+  'console.parentHome.classLine.one': [['Sunday Class A']],
+  'console.parentHome.classLine.many': [[2], [3]],
 };

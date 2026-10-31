@@ -16,11 +16,13 @@ import { useConsole } from '@/components/console/use-console';
 import { useNotesApi } from '@/components/console/use-notes-api';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
-import { unarchiveOverCap, type ApiResult, type MemberView, type Roster, type TransferOption } from '@/lib/console/api';
+import { unarchiveOverCap, type ApiResult, type MemberView, type RelinkView, type Roster, type TransferOption, type TransferView } from '@/lib/console/api';
+import type { ClassMoveLists } from '@/lib/console/class-moves';
+import { attentionModel, type LearnerStatus } from '@/lib/console/learner-status';
 import { archiveConfirmText, archivePlanNote, settleWithin } from '@/lib/console/archive-plan-note';
 import { notesEnabled, schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
-import { isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
+import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
 import { spaceSubPageBack } from '@/lib/console/page-back';
 import { capState, familyCountLine, seatLine } from '@/lib/console/rollup';
 import { RenameStyles, SettingsNameRow, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
@@ -71,6 +73,12 @@ function SettingsInner(): JSX.Element {
   const online = useOnline();
   // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
   const [moveOptions, setMoveOptions] = useState<TransferOption[]>([]);
+  // AMENDMENTS-GROWNUP-UX GX-10 (T11, P7): the lists each learner row's status is drawn from (`attentionModel`, the class
+  // roster's model) and whether the family's classes were read (a class line only then). null: not read, adds nothing.
+  const [relinkList, setRelinkList] = useState<RelinkView[] | null>(null);
+  const [transferList, setTransferList] = useState<TransferView[] | null>(null);
+  const [classMoveLists, setClassMoveLists] = useState<ClassMoveLists | null>(null);
+  const [optionsRead, setOptionsRead] = useState(false);
   // F-BILL-002 B-12: the billing summary read, so the archive confirm can name the plan it affects; null = no line.
   const billingRead = useRef<Promise<BillingSummary | null> | null>(null);
   const asking = useRef(false);
@@ -111,12 +119,23 @@ function SettingsInner(): JSX.Element {
         drawn.current = true;
         setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, started) } });
         setMembers(mem.data);
-        if (r.data.space.kind === 'family' && movesShown) {
-          // The move options are extra: a failed read leaves them empty and never breaks the settings page.
-          const moves = await Promise.resolve()
-            .then(() => api.transferRequests(spaceId))
-            .catch(() => null);
-          if (call === loadSeq.current) setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
+        // GX-10: the status lists, extra like the move options: a failed read (or a method an older bundle lacks) adds
+        // nothing and never breaks the settings page. Re-links whatever CLASS_TRANSFER says; moves only while shown.
+        const kind = r.data.space.kind;
+        const movesRead = movesShown && (kind === 'class' || kind === 'family');
+        const extra = <T,>(read: () => Promise<ApiResult<T>>): Promise<ApiResult<T> | null> => Promise.resolve().then(read).catch(() => null);
+        const [relinks, moves, teacherMoves] = await Promise.all([
+          kind === 'class' || kind === 'family' ? extra(() => api.relinkRequests(spaceId)) : null,
+          movesRead ? extra(() => api.transferRequests(spaceId)) : null,
+          movesRead && kind === 'class' ? extra(() => api.classMoves(spaceId)) : null,
+        ]);
+        if (call === loadSeq.current) {
+          setRelinkList(relinks?.ok ? relinks.data : null);
+          setTransferList(moves?.ok ? moves.data.requests : null);
+          setClassMoveLists(teacherMoves?.ok ? teacherMoves.data : null);
+          // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
+          setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
+          setOptionsRead(kind === 'family' && moves?.ok === true && Array.isArray(moves.data.options));
         }
         return { members: mem.data };
       })();
@@ -185,6 +204,13 @@ function SettingsInner(): JSX.Element {
   const space = roster?.space ?? null;
   const archived = !!space?.archivedAt;
   // [SA] AMENDMENTS-SEATS-ADMINS section 6.6: an administrator (not the owner) of this school sees it control by control.
+  // GX-10: one status per learner, the class roster's own model (a school's rows carry none).
+  const statuses: Record<string, LearnerStatus> | undefined =
+    roster && (roster.space.kind === 'class' || roster.space.kind === 'family')
+      ? attentionModel({ kind: roster.space.kind, roster: roster.learners, relinks: relinkList, transfers: movesShown ? transferList : null, classMoves: movesShown && roster.space.kind === 'class' ? classMoveLists : null, now }).byLearner
+      : undefined;
+  // P7: a family learner's classes, only when the options were read (never "Family only" on a guess).
+  const familyClasses = optionsRead ? new Map(moveOptions.map((o) => [o.learnerId, o.classes.map((k) => k.name)] as const)) : null;
   const schoolAdmin = space?.kind === 'school' && members.some((mb) => mb.memberKind === 'account' && mb.memberId === session.accountId && mb.role === 'admin' && !mb.isOwner);
 
   return (
@@ -216,6 +242,10 @@ function SettingsInner(): JSX.Element {
             busy={busy}
             schoolConsent={schoolConsentModeEnabled()}
             schoolAdmin={schoolAdmin}
+            statuses={statuses}
+            familyClasses={familyClasses}
+            // An action chip opens the decision for that item on its shipped page (ids only in the address).
+            onOpenStatus={(status) => router.push(status.kind === 'relink' ? ROUTES.spaceRelink(spaceId, space.kind) : ROUTES.spaceTransfers(spaceId, space.kind))}
             deleteTarget={deleteTarget}
             typedName={typedName}
             onRegenerate={() => {

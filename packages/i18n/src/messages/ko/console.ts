@@ -994,6 +994,10 @@ export const consoleMsgs = {
       n === null
         ? `이미 반 ${cap}개에 들어가 있는 학생이 있어요. 보관을 풀기 전에 그 학생을 다른 반으로 옮기거나 빼 주세요.`
         : `학생 ${n}명이 이미 반 ${cap}개에 들어가 있어요. 보관을 풀기 전에 다른 반으로 옮기거나 빼 주세요.`,
+    /** AMENDMENTS-GROWNUP-UX GX-10 (T11, P7). */
+    moveOpen: '이미 진행 중인 이동이 있어요.',
+    inviteGrownUp: { cta: '다른 어른 초대하기' },
+    inviteGrownUpLine: (code: string) => `로그인한 뒤 이 코드를 입력하면 돼요: ${code}`,
   },
   school: {
     title: '학교',
@@ -1063,6 +1067,12 @@ export const consoleMsgs = {
     actionsFor: (family: string) => `${family}의 메뉴`,
     askOwner: '가족 코드는 가족 공간을 만든 어른에게 부탁해요.',
     copyFailed: '복사하지 못했어요. 코드는 화면에 그대로 있어요.',
+    /** AMENDMENTS-GROWNUP-UX GX-10 (P7, section 7.2): a family learner's classes. */
+    classLine: {
+      one: (className: string) => `소속: ${className}`,
+      many: (n: number) => `소속 반 ${n}곳`,
+      none: '반 없이 가족 학습',
+    },
   },
   journey: {
     title: '학습 루트',
