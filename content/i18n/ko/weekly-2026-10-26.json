@@ -40,12 +40,12 @@
     },
     "week:2026-11-23": {
       "title": "따뜻하게 입어요",
-      "note": "지금은 {ko:소설} 무렵이에요. 12월 7일 {ko:대설}까지 이어져요. 목도리와 장갑을 챙길 때예요!",
+      "note": "지금은 {ko:소설} 무렵이에요. 12월 7일 {ko:대설}까지 이어져요. 한국에서는 목도리와 장갑을 챙길 때예요!",
       "items.mokdori.gloss": "추울 때 목에 두르는 천",
       "items.janggap.gloss": "손에 끼는 것",
       "items.moja.gloss": "머리에 쓰는 것",
       "items.ot.gloss": "몸에 입는 것",
-      "items.ttatteuthaeyo.gloss": "춥지 않고 알맞게 더워요"
+      "items.ttatteuthaeyo.gloss": "춥지 않고 포근해요"
     },
     "week:2026-11-30": {
       "title": "스물네 절기",
@@ -67,7 +67,7 @@
     },
     "week:2026-12-14": {
       "title": "기나긴 밤",
-      "note": "요즘은 밤이 길어요. 다음 주에는 일 년 중 밤이 가장 길고 낮이 가장 짧은 날인 {ko:동지}가 와요.",
+      "note": "한국은 요즘 밤이 길어요. 다음 주에는 일 년 중 밤이 가장 길고 낮이 가장 짧은 날인 {ko:동지}가 와요.",
       "items.bam.gloss": "해가 진 뒤부터 해가 뜨기 전까지",
       "items.nat.gloss": "해가 떠서 질 때까지",
       "items.byeol.gloss": "밤하늘에서 반짝이는 것",
@@ -107,7 +107,7 @@
       "items.nallo.gloss": "불을 피워 방을 따뜻하게 하는 기구",
       "items.jip.gloss": "사람이 사는 곳",
       "items.gyul.gloss": "껍질을 손으로 까서 먹는 작은 주황색 과일",
-      "items.ttatteuthaeyo.gloss": "춥지 않고 알맞게 더워요",
+      "items.ttatteuthaeyo.gloss": "춥지 않고 포근해요",
       "items.mokdori.gloss": "추울 때 목에 두르는 천"
     },
     "week:2027-01-18": {

@@ -5,7 +5,8 @@ import { WEEK_DROP_KEY } from '../../store/week-drop-store';
  * The weeks whose "This week in Korea" drop a learner finished on this device (F-CURR-002 §5.7, row CM-48;
  * design/wireframes/home/this-week-in-korea.md A2 and D): the Mondays, newest last, at most `KEPT_WEEKS`. Only the
  * Home card reads them (A2's "Done for this week"); nothing counts them, shows them or sends them, and a week not done
- * is never named anywhere. An unreadable value reads as no week done and is never written over.
+ * is never named anywhere. A value that does not parse reads as no week done, and the next done mark replaces it with
+ * a clean list (only these device-local marks are at stake); a storage read that fails writes nothing.
  */
 
 /** About a year of weeks: the card reads only this week's, the rest keep the value small. */
@@ -26,7 +27,7 @@ export async function readDoneWeeks(profileId: string): Promise<string[]> {
   }
 }
 
-/** Marks a week done; a read that fails writes nothing (a value it could not see is never replaced). */
+/** Marks a week done; a storage read that fails writes nothing (a value it could not see is never replaced). */
 export async function markWeekDone(profileId: string, week: string): Promise<void> {
   let current: unknown;
   try {

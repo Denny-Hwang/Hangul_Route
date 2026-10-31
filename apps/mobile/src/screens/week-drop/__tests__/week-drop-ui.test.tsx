@@ -43,14 +43,19 @@ vi.mock('../../../logic/memory/boot', async (load) => ({
     }),
   }),
 }));
+/** While set, the round views' chunk waits on it (a slow first load). */
+const roundsGate = vi.hoisted(() => ({ wait: null as Promise<void> | null }));
 vi.mock('../../reviews/DailyReviewRoute', async () => {
   const { createElement } = await import('react');
   return {
-    dailyReviewChunk: async () => ({
+    dailyReviewChunk: async () => {
+      if (roundsGate.wait) await roundsGate.wait;
+      return {
       TopRow: ({ filled, total }: { filled: number; total: number }) => createElement('div', { 'data-testid': 'top-row', 'data-filled': filled, 'data-total': total }),
       RoundView: ({ onFirst, onSolved }: { onFirst: (a: { correct: boolean }) => void; onSolved: () => void }) =>
         createElement('button', { 'data-testid': 'round-stub', role: 'button', onClick: () => (onFirst({ correct: false }), onSolved()) }, 'answer'),
-    }),
+      };
+    },
   };
 });
 
@@ -90,6 +95,7 @@ beforeEach(() => {
   useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { weeklyDrop: { on: true, pct: 100 } } } });
   recorded.length = 0;
   planned.rounds = 5;
+  roundsGate.wait = null;
   navigate.mockClear();
   goBack.mockClear();
   useProfileStore.setState({ profiles: [{ id: ID, displayName: 'Mina', ageGroup: '8-9', avatar: 'hoya-orange', role: 'learner', createdAt: '2026-10-01T00:00:00.000Z', learnerType: 'self' }], activeId: ID });
@@ -168,6 +174,24 @@ describe('WeekDropScreen (B, C, D)', () => {
     expect(storage.get(WEEK_DROP_KEY(ID))).toEqual(['2026-11-02']);
     await press(buttonsNamed(r.root, EN.learner.results.backHome.cta)[0]!);
     expect(goBack).toHaveBeenCalled();
+  });
+
+  it('a tap on Practice before the round views have loaded: waits for them and plays the rounds, never a silent Done', async () => {
+    let open: () => void = () => undefined;
+    roundsGate.wait = new Promise<void>((resolve) => {
+      open = resolve;
+    });
+    const r = await meet();
+    await press(buttonsNamed(r.root, EN.learner.weekDrop.practice.cta)[0]!);
+    await idle();
+    expect(byTestId(r.root, 'week-drop-done')).toEqual([]);
+    expect(byTestId(r.root, 'week-drop-loading')).toHaveLength(1);
+    expect(storage.get(WEEK_DROP_KEY(ID))).toBeUndefined();
+    open();
+    await until(r, 'week-drop-practice');
+    expect(byTestId(r.root, 'top-row')[0]?.props['data-total']).toBe(5);
+    await press(byTestId(r.root, 'round-stub')[0]!);
+    expect(recorded).toEqual([{ index: 0, correct: false }]);
   });
 
   it('no playable practice (the items cannot load): Practice goes straight to Done', async () => {

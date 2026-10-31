@@ -40,7 +40,7 @@
     },
     "week:2026-11-23": {
       "title": "Abrígate bien",
-      "note": "Estamos en los días de {ko:소설}. Duran hasta {ko:대설}, el 7 de diciembre. ¡Es hora de bufanda y guantes!",
+      "note": "Estamos en los días de {ko:소설}. Duran hasta {ko:대설}, el 7 de diciembre. ¡En Corea, es hora de bufanda y guantes!",
       "items.mokdori.gloss": "bufanda",
       "items.janggap.gloss": "guantes",
       "items.moja.gloss": "gorro",
@@ -67,7 +67,7 @@
     },
     "week:2026-12-14": {
       "title": "Noches largas",
-      "note": "Ahora las noches son largas. La semana que viene llega {ko:동지}, el día con la noche más larga y el día más corto del año.",
+      "note": "En Corea, ahora las noches son largas. La semana que viene llega {ko:동지}, el día con la noche más larga y el día más corto del año.",
       "items.bam.gloss": "noche",
       "items.nat.gloss": "las horas de luz",
       "items.byeol.gloss": "estrella",
@@ -76,16 +76,16 @@
     },
     "week:2026-12-21": {
       "title": "Solsticio de invierno",
-      "note": "{ko:동지} es el 22 de diciembre. Se come {ko:팥죽}, unas gachas de judías rojas con bolitas de arroz. Antiguamente, a Dongji lo llamaban {ko:작은 설}, un pequeño año nuevo.",
+      "note": "{ko:동지} es el 22 de diciembre. Se come {ko:팥죽}, unas gachas de frijoles rojos con bolitas de arroz. Antiguamente, a Dongji lo llamaban {ko:작은 설}, un pequeño año nuevo.",
       "items.dongji.gloss": "Solsticio de invierno, un periodo solar",
-      "items.patjuk.gloss": "gachas de judías rojas",
-      "items.pat.gloss": "judías rojas",
+      "items.patjuk.gloss": "gachas de frijoles rojos",
+      "items.pat.gloss": "frijoles rojos",
       "items.saealsim.gloss": "bolitas de arroz",
       "items.jageun-seol.gloss": "un pequeño año nuevo"
     },
     "week:2026-12-28": {
       "title": "Un calendario de regalo",
-      "note": "Un viejo dicho dice: el regalo de Dano es un abanico, y el de {ko:동지}, un calendario. Todavía hoy se regalan calendarios a fin de año.",
+      "note": "Dice un viejo refrán: el regalo de Dano es un abanico, y el de {ko:동지}, un calendario. Todavía hoy se regalan calendarios a fin de año.",
       "items.dallyeok.gloss": "calendario",
       "items.seonmul.gloss": "regalo",
       "items.buchae.gloss": "abanico",

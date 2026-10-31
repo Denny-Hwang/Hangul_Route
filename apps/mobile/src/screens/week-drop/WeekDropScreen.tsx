@@ -102,6 +102,8 @@ export function WeekDropScreen({ navigation }: Props): ReactElement {
   const week = useRef(dropWeekFor(WEEK_DROP_WEEKS, localDay(new Date()))).current;
   const api = useRef<WeekPracticeApi | null>(null);
   const practice = useRef<Promise<WeekPractice | null> | null>(null);
+  // The round views' load, kept so a quick tap on Practice waits for it (a tap before it settles never skips the practice).
+  const rounds = useRef<Promise<Rounds | null> | null>(null);
   const answers = useRef(new Map<number, RoundAnswer>());
 
   const home = (): void => {
@@ -126,7 +128,13 @@ export function WeekDropScreen({ navigation }: Props): ReactElement {
         const view = weekDropView(drop, locale, m.learner.cardDetail.citation);
         setPhase({ kind: 'meet', view });
         // The rounds and their plan load while the learner reads; a plan that cannot be made skips the practice.
-        dailyReviewChunk().then((chunk) => alive && setUi(chunk), () => undefined);
+        rounds.current = dailyReviewChunk().then(
+          (chunk) => {
+            if (alive) setUi(chunk);
+            return chunk;
+          },
+          () => null,
+        );
         practice.current = memoryChunk()
           .then((chunk) => {
             api.current = chunk.weekPracticeApi();
@@ -150,9 +158,12 @@ export function WeekDropScreen({ navigation }: Props): ReactElement {
 
   const startPractice = (view: WeekDropView): void => {
     setPhase({ kind: 'loading' });
-    void (practice.current ?? Promise.resolve(null)).then((plan) => {
-      if (plan === null || ui === null) finish(view);
+    // Both the plan and the round views settle first: only a plan that cannot be made, or round views that fail to
+    // load, go straight to Done. A tap while either is still loading waits on the loading page.
+    void Promise.all([practice.current ?? Promise.resolve(null), rounds.current ?? Promise.resolve(null)]).then(([plan, chunk]) => {
+      if (plan === null || chunk === null) finish(view);
       else {
+        setUi(chunk);
         answers.current = new Map();
         setPhase({ kind: 'playing', view, practice: plan, index: 0 });
       }

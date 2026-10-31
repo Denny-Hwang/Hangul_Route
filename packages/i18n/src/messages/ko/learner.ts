@@ -2164,7 +2164,7 @@ export const learner = {
     home: '도착',
   },
   weekDrop: {
-    heading: '이번 주의 한국',
+    heading: '이번 주 한국 이야기',
     practice: { cta: '낱말 연습하기' },
     done: '이번 주는 다 했어요',
     next: '다음 주에 새 이야기가 와요.',

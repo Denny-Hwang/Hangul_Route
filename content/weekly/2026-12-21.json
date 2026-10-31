@@ -73,12 +73,13 @@
   ],
   "review": {
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-30",
-    "passes": 3,
+    "reviewedAt": "2026-10-31",
+    "passes": 4,
     "notes": [
       "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
       "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Date from the KASI table. Patjuk with saealsim rice balls, and Dongji called 작은 설, are the National Folk Museum of Korea's words (topics 104, 103 and 108). Dongji is both a solar term and a holiday (§5.7); this drop is the holiday. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
-      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review.",
+      "Pass 4, PR review (MAR, 2026-10-31): es overlay uses the Latin American 'frijoles rojos' (as the shipped es content does) in place of 'judías rojas'. No fact changed."
     ]
   }
 }
