@@ -322,15 +322,18 @@ export default function ParentHomePage(): JSX.Element {
   // while the tab is in view, and on focus, so a child waiting at a new device is seen within one read.
   const liveFamilyIds = homeView?.state === 'families' ? homeView.families.filter((family) => !isArchivedFamily(family)).map((family) => family.space.id) : [];
   const liveKey = liveFamilyIds.join('\n');
+  // A family's full read (`loadAsks`, after an answer for one) that started after this read began is newer: this read's
+  // answer for that family is dropped, so an answered request never comes back for a moment.
   const readRelinks = useCallback(async (): Promise<void> => {
     if (!api || liveKey === '') return;
     const ids = liveKey.split('\n');
+    const started = Object.fromEntries(ids.map((id) => [id, asksSeq.current[id] ?? 0]));
     const answers = await Promise.all(ids.map(async (id) => [id, await quietly(() => api.relinkRequests(id))] as const));
     setAsks((prev) => {
       let next = prev;
       for (const [id, result] of answers) {
         const entry = next[id];
-        if (!entry || !result?.ok) continue;
+        if (!entry || !result?.ok || (asksSeq.current[id] ?? 0) !== started[id]) continue;
         next = { ...next, [id]: { ...entry, relinks: result.data } };
       }
       return next;
@@ -789,13 +792,22 @@ export default function ParentHomePage(): JSX.Element {
           spaceId={popupFamily}
           online={online}
           onLater={popup.close}
-          onResult={(_learnerId, text) => {
-            popup.close();
+          onResult={(_learnerId, text, settled) => {
             resultSeq.current += 1;
             const key = resultSeq.current;
             setPopupResults((prev) => ({ ...prev, [popupFamily]: { key, text } }));
+            // Not settled (offline, a 5xx): the pop-up stays with its line under the buttons, so the parent can try again.
+            if (!settled) return;
+            const answered = popup.pick?.request.id;
+            popup.close();
+            // The answered request leaves the strip, the count and the pop-up's pool at once (the read below confirms it).
+            setAsks((prev) => {
+              const entry = prev[popupFamily];
+              if (!entry?.relinks || !answered) return prev;
+              return { ...prev, [popupFamily]: { ...entry, relinks: entry.relinks.filter((r) => r.id !== answered) } };
+            });
             const family = view?.state === 'families' ? view.families.find((f) => f.space.id === popupFamily) : undefined;
-            void loadAsks(popupFamily);
+            void loadAsks(popupFamily, true);
             if (family) void loadRoster(popupFamily, family.role, true);
           }}
         />

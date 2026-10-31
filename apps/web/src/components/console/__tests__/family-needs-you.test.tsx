@@ -364,6 +364,7 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
       now={NOW}
       onChanged={async () => undefined}
       onReadScope={extra.onReadScope ?? (() => undefined)}
+      onApproveRelink={() => undefined}
       onReviewing={extra.onReviewing}
     />
   );
@@ -395,9 +396,10 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
       renderer = create(strip(three(), { api }), { createNodeMock: world.createNodeMock });
     });
     await click('needs-you-see-all');
-    const approve = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-approve' && typeof n.type === 'string');
-    await act(async () => approve.props.onClick());
-    expect(text(one('needs-you-sheet-result')).trim()).toBe(getMessages('en').console.relink.approved('Mina'));
+    // GX-5: Approve leaves the sheet for the page's pop-up (the safety hint); Deny answers here, in one tap.
+    const deny = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-deny' && typeof n.type === 'string');
+    await act(async () => deny.props.onClick());
+    expect(text(one('needs-you-sheet-result')).trim()).toBe(getMessages('en').console.relink.denied('Mina'));
     expect(text(one('needs-you-result')).trim()).toBe('');
     // The page read again and the answered row left with its focused button: focus goes to the next row in the sheet.
     world.doc.activeElement = world.doc.body;

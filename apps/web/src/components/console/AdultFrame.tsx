@@ -530,8 +530,8 @@ export function AdultFrame({
           </p>
         ) : null}
         <FrameAttentionContext.Provider value={attention}>{children}</FrameAttentionContext.Provider>
-        {/* [GX-3] The bar's live region, mounted (empty) on every teacher page that can show the bar, so its arrival is said. */}
-        {teacherFrame && !attentionHere ? <RelinkLive attention={attention} /> : null}
+        {/* [GX-3] The bar's live region, mounted (empty) on every teacher or parent page that can show the bar, so its arrival is said. */}
+        {personaFrame && !ownCount && !attentionHere ? <RelinkLive attention={attention} /> : null}
       </main>
       <footer className="hr-frame-foot">
         <div className="hr-frame-foot-inner">

@@ -25,7 +25,7 @@ export const ATTENTION_CSS = `
 .hr-attn-chip::before{content:"";flex:none;width:${spacing.sm}px;height:${spacing.sm}px;border-radius:${radii.circle}px;background:${colors.feedback.nudge}}
 .hr-attn-chip::after{content:"";position:absolute;left:0;right:0;top:50%;height:${touchTarget.min}px;transform:translateY(-50%)}
 .hr-attn-hidden{position:absolute;width:${borderWidth.thin}px;height:${borderWidth.thin}px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.hr-frame-count{display:inline-flex;align-items:center;justify-content:center;min-width:${spacing.lg}px;padding:0 ${spacing.xs}px;margin-inline-start:${spacing.xs}px;border-radius:${radii.pill}px;background:${colors.feedback.nudge};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
+.hr-frame-count{display:inline-flex;align-items:center;justify-content:center;min-width:${spacing.lg}px;padding:0 ${spacing.xs}px;margin-inline:${spacing.xs}px;border-radius:${radii.pill}px;background:${colors.feedback.nudge};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight}}
 `;
 
 /** The class row's chip: the frame's count once GX-W is deployed, else the page's own (`fallback`). Nothing at 0. */
@@ -106,7 +106,7 @@ function relinkSentence(c: ConsoleMessages, view: { count: number; name: string 
 
 /**
  * The re-link bar's live region (section 5.5: announced once when the bar appears, and when the count changes). The frame
- * keeps it mounted, visually hidden and empty, on every teacher page that can show the bar, so the sentence arrives in a
+ * keeps it mounted, visually hidden and empty, on every teacher or parent page that can show the bar, so the sentence arrives in a
  * region already in the page: a screen reader announces a region's changes, not a region inserted with its text. Its
  * text is the bar's sentence only (never the minutes line), so it changes only with the count or the class.
  */

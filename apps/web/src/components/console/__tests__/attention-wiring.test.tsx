@@ -91,6 +91,8 @@ const familyMove = {
   from: { spaceId: 'space:a', name: 'Sunday Class A' },
   to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 8 },
   learnerState: 'pending',
+  // The family answers for this learner (GX-4 review: only a caregiver-route move waits for the family).
+  learnerRoute: 'caregiver',
   sourceState: 'yes',
   destinationState: 'waiting',
   blockReason: null,

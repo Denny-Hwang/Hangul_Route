@@ -245,8 +245,9 @@ export function useRelinkPopup({
     }
     if (blocked) return;
     if (typeof document !== 'undefined' && typeof document.visibilityState === 'string' && document.visibilityState !== 'visible') return;
-    // Any other modal dialog open (the frame's display sheet, for one): no second dialog over it; the next read tries again.
-    if (otherModalOpen()) return;
+    // Any other modal dialog open (the frame's display sheet, for one), or a text field being typed in (a family's
+    // rename): no dialog over it and no focus taken; the next read tries again.
+    if (otherModalOpen() || typingInField()) return;
     const now = new Date();
     const next = nextRelinkPopup(relinks, seen(RELINK_SHOWN_KEY), seen(RELINK_REMINDED_KEY), now);
     if (!next) return;
@@ -265,8 +266,35 @@ export function useRelinkPopup({
     },
     [relinks],
   );
-  const close = useCallback(() => setPick(null), []);
+  // Closed (Later, an answer) with 2 minutes or less left: that was its last showing, so the reminder never opens
+  // straight after it (section 5.3: never a third time, and never at once after Later).
+  const shownPick = useRef(pick);
+  shownPick.current = pick;
+  const close = useCallback(() => {
+    const current = shownPick.current;
+    const now = new Date();
+    if (current && closingLate(current.request, now)) mark({ request: current.request, reminder: true }, now);
+    setPick(null);
+    // `mark` reads refs and storage only.
+  }, []);
   return { pick, openFor, close };
+}
+
+/** Whether `request` has `RELINK_REMIND_MS` or less left at `now` (its reminder's time has come). */
+export function closingLate(request: RelinkView, now: Date): boolean {
+  return Date.parse(request.expiresAt) - now.getTime() <= RELINK_REMIND_MS;
+}
+
+/** Whether focus is in a field the grown-up types in (an input, a text area, an editable region). */
+export function typingInField(): boolean {
+  if (typeof document === 'undefined') return false;
+  const active = document.activeElement as (Element & { isContentEditable?: boolean }) | null;
+  if (!active || typeof active.tagName !== 'string') return false;
+  const tag = active.tagName.toLowerCase();
+  if (tag === 'textarea' || active.isContentEditable === true) return true;
+  if (tag !== 'input') return false;
+  const type = (active.getAttribute?.('type') ?? 'text').toLowerCase();
+  return !['button', 'checkbox', 'radio', 'submit', 'reset', 'range', 'color', 'file', 'image', 'hidden'].includes(type);
 }
 
 /** Whether a modal dialog other than the re-link pop-up is open on the page (`aria-modal="true"`). */
