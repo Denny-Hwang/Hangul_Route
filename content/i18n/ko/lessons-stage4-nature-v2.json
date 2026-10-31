@@ -7,8 +7,8 @@
       "subtitle": "날씨 이야기를 하고 국립공원 산행을 계획해요.",
       "hoyaIntro": "하늘이 정말 맑아요! 날씨 이야기를 하고 산행을 계획해 봐요.",
       "culture.n1.text": "한국의 국립공원에는 멸종 위기에 처한 동물과 식물이 200종 가까이 살아요. 국립공원을 지키면 이 생물들도 함께 지킬 수 있어요.",
-      "culture.n2.text": "국립공원공단은 2007년부터 깃대종을 정해 왔어요. 깃대종은 그 국립공원을 대표하는 야생 동물과 식물이에요. 북한산의 깃대종은 숲속의 의사라고 불리는 오색딱다구리예요.",
-      "culture.n3.text": "설악산의 깃대종은 가파른 바위 절벽에 사는 {ko:산양}이에요. 한국에서 이 동물이 가장 많이 사는 곳이 설악산이에요."
+      "culture.n2.text": "국립공원공단은 2007년부터 깃대종을 정해 왔어요. 깃대종은 그 국립공원을 대표하는 야생 동물과 식물이에요. 북한산의 깃대종은 숲속의 의사라고 불리는 오색딱따구리예요.",
+      "culture.n3.text": "설악산의 깃대종은 가파른 바위 절벽에 사는 {ko:산양}이에요. 국립공원공단은 설악산을 한국에서 이 동물이 가장 많이 사는 곳으로 소개해요."
     },
     "quest:stage4-nature-v2-q1": {
       "title": "더울까, 추울까?",
@@ -103,7 +103,6 @@
       "rolePlay.scene.nodes.t1.replies.home.text.gloss": "살고 있는 곳으로 돌아간다는 말",
       "rolePlay.scene.nodes.t1.replies.hello.text.gloss": "만났을 때 하는 공손한 인사",
       "rolePlay.scene.nodes.t1.replies.rice.text.gloss": "밥을 먹는다고 말하는 문장",
-      "rolePlay.scene.nodes.t2.replies.yes.text.gloss": "좋다고 대답하는 말",
       "rolePlay.scene.nodes.t2.replies.blue.text.gloss": "구름 없이 하늘빛이 푸르다는 말",
       "rolePlay.scene.nodes.t2.replies.home.text.gloss": "살고 있는 곳으로 돌아간다는 말",
       "rolePlay.scene.nodes.t3.replies.hot.text.gloss": "그렇다며 기온이 높다고 대답하는 말",
@@ -115,12 +114,13 @@
       "rolePlay.scene.nodes.t4-cool.replies.rice.text.gloss": "밥을 먹는다고 말하는 문장",
       "rolePlay.scene.nodes.t1.replies.home.why": "그건 가는 곳을 말하는 말이에요. 먼저 인사를 받아 줘요.",
       "rolePlay.scene.nodes.t1.replies.rice.why": "그건 음식 이야기예요. 친구가 인사하니 나도 인사해요.",
-      "rolePlay.scene.nodes.t2.replies.yes.why": "친구는 날씨가 어떤지 물어요. 하늘이 어떤지 말해요.",
       "rolePlay.scene.nodes.t2.replies.home.why": "그건 가는 곳을 말하는 말이에요. 친구는 날씨를 물어요.",
       "rolePlay.scene.nodes.t3.replies.rice.why": "그건 음식 이야기예요. 친구는 더운지 물어요.",
       "rolePlay.scene.nodes.t4-hot.replies.not-cold.why": "친구는 추위가 아니라 물 이야기를 해요. 좋다고 말해요.",
       "rolePlay.scene.nodes.t4-cool.replies.rice.why": "그건 음식 이야기예요. 친구는 함께 나가자고 해요.",
-      "rolePlay.scene.nodes.end.closing": "친구와 날씨 이야기를 나눴어요!"
+      "rolePlay.scene.nodes.end.closing": "친구와 날씨 이야기를 나눴어요!",
+      "rolePlay.scene.nodes.t2.replies.rice.text.gloss": "밥을 먹는다고 말하는 문장",
+      "rolePlay.scene.nodes.t2.replies.rice.why": "그건 음식 이야기예요. 친구는 날씨를 물어요."
     },
     "minigame:s4-nature-v2-q1-apply": {
       "orderIt.rounds.r1.sentence.gloss": "이따가 비가 내리겠다고 짐작하는 말",
@@ -198,11 +198,14 @@
       "realiaRead.rounds.r4.options.bukhansan.text.gloss": "서울 가까이 있는 국립공원 산"
     },
     "minigame:s4-nature-v2-q2-check": {
-      "orderIt.rounds.c1.sentence.gloss": "다음 날 강원도의 높은 바위산으로 간다는 말",
-      "orderIt.rounds.c2.sentence.gloss": "강원도의 높은 바위산이 나라가 돌보는 자연 공원이라는 말",
-      "orderIt.rounds.c1.distractors.jirisan.gloss": "한국의 첫 국립공원인 남쪽의 높은 산",
-      "orderIt.rounds.c2.particle.choices.neun.gloss": "주제를 나타내는 조사 (받침 없는 말 뒤)",
-      "orderIt.rounds.c2.particle.choices.eun.gloss": "주제를 나타내는 조사 (받침 있는 말 뒤)"
+      "dialogue.0.npc": "다음 날 가는 곳을 묻는 말",
+      "dialogue.1.npc": "강원도의 높은 바위산 날씨가 어떤지 묻는 말",
+      "dialogue.0.options.babeul-meogeoyo.gloss": "밥을 먹는다고 말하는 문장",
+      "dialogue.0.options.jirisane-gayo.gloss": "한국의 첫 국립공원인 남쪽 산으로 간다는 말",
+      "dialogue.0.options.annyeonghaseyo.gloss": "만났을 때 하는 공손한 인사",
+      "dialogue.1.options.jibe-gayo.gloss": "살고 있는 곳으로 돌아간다는 말",
+      "dialogue.1.options.babeul-meogeoyo.gloss": "밥을 먹는다고 말하는 문장",
+      "dialogue.1.options.chuwoyo.gloss": "기온이 낮다고 하는 말"
     },
     "minigame:s4-nature-v2-q3-practice": {
       "rolePlay.scene.title.gloss": "사는 곳",
@@ -215,33 +218,30 @@
       "rolePlay.scene.nodes.t1.replies.seorak.text.gloss": "강원도의 높은 바위산으로 간다는 말",
       "rolePlay.scene.nodes.t2.replies.seorak.text.gloss": "강원도의 높은 바위산으로 간다는 말",
       "rolePlay.scene.nodes.t2.replies.rain.text.gloss": "곧 비가 내리겠다고 짐작하는 말",
-      "rolePlay.scene.nodes.t2.replies.hot.text.gloss": "그렇다며 기온이 높다고 대답하는 말",
       "rolePlay.scene.nodes.t3.replies.take.text.gloss": "그러겠다며 챙겨 가겠다고 대답하는 말",
       "rolePlay.scene.nodes.t3.replies.cold.text.gloss": "그렇다며 기온이 낮다고 대답하는 말",
       "rolePlay.scene.nodes.t4.replies.not-cold.text.gloss": "기온이 낮지 않다고 대답하는 말",
       "rolePlay.scene.nodes.t4.replies.yes.text.gloss": "좋다고 대답하는 말",
       "rolePlay.scene.nodes.t1.replies.umbrella.why": "그건 물건 이름을 말하는 말이에요. 엄마는 어디 가는지 물으세요.",
       "rolePlay.scene.nodes.t2.replies.seorak.why": "가는 곳은 벌써 말했어요. 엄마는 날씨를 물으세요.",
-      "rolePlay.scene.nodes.t2.replies.hot.why": "엄마는 다음 날 날씨를 물으세요. 날씨가 어떨지 말해요.",
       "rolePlay.scene.nodes.t3.replies.cold.why": "엄마는 우산 이야기를 하세요. 챙겨 가겠다고 말해요.",
       "rolePlay.scene.nodes.t4.replies.not-cold.why": "엄마도 같이 가고 싶어 하세요. 좋다고 말해요.",
-      "rolePlay.scene.nodes.end.closing": "날씨에 맞게 챙겼어요. 엄마도 같이 가요!"
+      "rolePlay.scene.nodes.end.closing": "날씨에 맞게 챙겼어요. 엄마도 같이 가요!",
+      "rolePlay.scene.nodes.t2.replies.rice.text.gloss": "밥을 먹는다고 말하는 문장",
+      "rolePlay.scene.nodes.t2.replies.rice.why": "그건 음식 이야기예요. 엄마는 다음 날 날씨를 물으세요."
     },
     "minigame:s4-nature-v2-q3-apply": {
-      "storyOrder.rounds.hike-plan.panels.ask.caption.gloss": "다음 날 강원도의 높은 바위산에 함께 가자고 묻는 말",
+      "storyOrder.rounds.hike-plan.panels.ask.caption.gloss": "다음 날 날씨가 어떨지 묻는 말",
       "storyOrder.rounds.hike-plan.panels.rain.caption.gloss": "곧 비가 내리겠다고 짐작하는 말",
       "storyOrder.rounds.hike-plan.panels.umbrella.caption.gloss": "그렇다면 비를 막는 물건을 챙겨 가겠다는 말",
       "storyOrder.rounds.hike-plan.panels.water.caption.gloss": "마실 것도 챙겨 가라는 말"
     },
     "minigame:s4-nature-v2-q3-check": {
-      "dialogue.0.npc": "다음 날 강원도의 높은 바위산에 함께 가자고 묻는 말",
-      "dialogue.1.npc": "이따가 비가 내리겠다고 짐작하는 말",
-      "dialogue.0.options.usanieyo.gloss": "비를 막는 물건이라는 답",
-      "dialogue.0.options.ne-joayo.gloss": "좋다고 대답하는 말",
-      "dialogue.0.options.chuwoyo.gloss": "기온이 낮은지 묻는 말",
-      "dialogue.1.options.geureom-usaneul-gajyeogayo.gloss": "그렇다면 비를 막는 물건을 챙겨 가겠다는 말",
-      "dialogue.1.options.ne-deowoyo.gloss": "그렇다며 기온이 높다고 대답하는 말",
-      "dialogue.1.options.bukhansane-gayo.gloss": "서울 가까이 있는 국립공원 산으로 간다는 말"
+      "orderIt.rounds.c1.sentence.gloss": "다음 날 강원도의 높은 바위산에 함께 가자고 묻는 말",
+      "orderIt.rounds.c2.sentence.gloss": "그렇다면 비를 막는 물건을 챙겨 가겠다는 말",
+      "orderIt.rounds.c1.distractors.bukhansane.gloss": "서울 가까이 있는 국립공원 산으로",
+      "orderIt.rounds.c2.particle.choices.reul.gloss": "목적어를 나타내는 조사 (받침 없는 말 뒤)",
+      "orderIt.rounds.c2.particle.choices.eul.gloss": "목적어를 나타내는 조사 (받침 있는 말 뒤)"
     }
   }
 }

@@ -139,6 +139,30 @@ describe('Stage 4 Check rotation (F-CURR-002 section 7.1, row CM-3A S4)', () => 
     }
   });
 
+  it('a Volume 2 triple is no Volume 1 triple of its cell, as authored and with any game.<kind> switch dark (row CM-41 S4, section 5.1)', () => {
+    // The shipped kind each switched format plays while its `game.<kind>` switch is off (section 12.2): the app's
+    // fallbacks (`logic/role-play/fallback.ts`, `logic/cloze-pick/round.ts`, `GAME_SWITCHES` in `logic/game-switches.ts`).
+    const FALLBACK: Readonly<Record<string, string>> = { 'role-play': 'tap-respond', 'cloze-pick': 'listen-pick', 'story-order': 'story-sequence' };
+    const switched = Object.keys(FALLBACK);
+    const played = (quest: LessonQuest, off: ReadonlySet<string>): string =>
+      (['practice', 'apply', 'check'] as const)
+        .map((k) => scopeOf(quest, k).kind)
+        .map((kind) => (off.has(kind) ? (FALLBACK[kind] as string) : kind))
+        .join(' / ');
+    const v2Files = readdirSync(join(REPO_ROOT, 'content/episodes/stage-4')).filter((f) => /\.v[0-9]+\.json$/.test(f));
+    expect(v2Files).toContain('nature.v2.json');
+    for (const file of v2Files) {
+      const later = LessonCellSchema.parse(tree.get(`content/episodes/stage-4/${file}`));
+      const first = CELLS[THEMES.indexOf(later.theme as (typeof THEMES)[number])] as LessonCell;
+      // Every on/off state of the switches (2^3), the learner's one state applying to both volumes.
+      for (let mask = 0; mask < 1 << switched.length; mask += 1) {
+        const off = new Set(switched.filter((_, i) => (mask & (1 << i)) !== 0));
+        const v1 = new Set(first.quests.map((q) => played(q, off)));
+        for (const quest of later.quests) expect(v1.has(played(quest, off)), `${quest.id} with ${[...off].join(', ') || 'no switch'} off plays ${played(quest, off)}`).toBe(false);
+      }
+    }
+  });
+
   it('keeps the shipped card awards (cells and the Greeting Dialogues quest card)', () => {
     expect(CELLS.map((c) => c.rewardCardIds)).toEqual([['card:mwoyeyo'], ['card:masisseoyo'], ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'], ['card:biga-wayo'], ['card:gachi']]);
     expect(QUESTS.flatMap((q) => (q.rewardCardId ? [`${q.id} ${q.rewardCardId}`] : []))).toEqual(['quest:stage4-rites-q1 card:insa']);

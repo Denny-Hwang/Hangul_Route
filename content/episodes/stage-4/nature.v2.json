@@ -221,14 +221,14 @@
                 },
                 "replies": [
                   {
-                    "id": "yes",
+                    "id": "rice",
                     "text": {
-                      "ko": "네, 좋아요!",
-                      "romanization": "ne joayo",
-                      "en": "Yes, sounds good!"
+                      "ko": "밥을 먹어요.",
+                      "romanization": "babeul meogeoyo",
+                      "en": "I eat rice."
                     },
                     "kind": "lessNatural",
-                    "whyEn": "Your friend asks how the weather is. Say what the sky is like."
+                    "whyEn": "That is about food. Your friend asks about the weather."
                   },
                   {
                     "id": "blue",
@@ -612,7 +612,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "order-it",
+          "minigameKind": "tap-respond",
           "minigameRef": "minigame:s4-nature-v2-q2-check",
           "durationSeconds": 40
         },
@@ -1025,45 +1025,81 @@
         },
         {
           "ref": "minigame:s4-nature-v2-q2-check",
-          "kind": "order-it",
-          "rounds": [
+          "kind": "tap-respond",
+          "turns": [
             {
-              "id": "c1",
-              "sentence": {
-                "ko": "내일 설악산에 가요.",
-                "romanization": "naeil seoraksane gayo",
-                "en": "I am going to Seoraksan tomorrow."
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "내일 어디 가요?",
+                "romanization": "naeil eodi gayo",
+                "en": "Where are you going tomorrow?"
               },
-              "distractors": [
+              "replies": [
                 {
-                  "ko": "지리산",
-                  "romanization": "jirisan",
-                  "en": "Jirisan"
+                  "id": "r2",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "지리산에 가요.",
+                    "romanization": "jirisane gayo",
+                    "en": "I am going to Jirisan."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "안녕하세요!",
+                    "romanization": "annyeonghaseyo",
+                    "en": "Hello!"
+                  },
+                  "correct": false
                 }
               ]
             },
             {
-              "id": "c2",
-              "sentence": {
-                "ko": "설악산은 국립공원이에요.",
-                "romanization": "seoraksaneun gungnipgongwonieyo",
-                "en": "Seoraksan is a national park."
+              "speakerEn": "Friend",
+              "line": {
+                "ko": "설악산 날씨가 어때요?",
+                "romanization": "seoraksan nalssiga eottaeyo",
+                "en": "How is the weather at Seoraksan?"
               },
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "는",
-                    "romanization": "neun",
-                    "en": "topic marker (after a vowel)"
+              "replies": [
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "집에 가요.",
+                    "romanization": "jibe gayo",
+                    "en": "I am going home."
                   },
-                  {
-                    "ko": "은",
-                    "romanization": "eun",
-                    "en": "topic marker (after a final consonant)"
-                  }
-                ]
-              }
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "밥을 먹어요.",
+                    "romanization": "babeul meogeoyo",
+                    "en": "I eat rice."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "추워요!",
+                    "romanization": "chuwoyo",
+                    "en": "It is cold!"
+                  },
+                  "correct": true
+                }
+              ]
             }
           ]
         }
@@ -1198,7 +1234,7 @@
           "id": "s5",
           "kind": "check",
           "titleEn": "Two Quick Ones",
-          "minigameKind": "tap-respond",
+          "minigameKind": "order-it",
           "minigameRef": "minigame:s4-nature-v2-q3-check",
           "durationSeconds": 40
         },
@@ -1286,14 +1322,14 @@
                     "next": "t3"
                   },
                   {
-                    "id": "hot",
+                    "id": "rice",
                     "text": {
-                      "ko": "네, 더워요.",
-                      "romanization": "ne deowoyo",
-                      "en": "Yes, it is hot."
+                      "ko": "밥을 먹어요.",
+                      "romanization": "babeul meogeoyo",
+                      "en": "I eat rice."
                     },
                     "kind": "lessNatural",
-                    "whyEn": "Mom asks about the weather tomorrow. Say what it will be like."
+                    "whyEn": "That is about food. Mom asks about the weather tomorrow."
                   }
                 ]
               },
@@ -1376,9 +1412,9 @@
                 {
                   "id": "ask",
                   "caption": {
-                    "ko": "내일 설악산에 갈까요?",
-                    "romanization": "naeil seoraksane galkkayo",
-                    "en": "Shall we go to Seoraksan tomorrow?"
+                    "ko": "내일 날씨가 어때요?",
+                    "romanization": "naeil nalssiga eottaeyo",
+                    "en": "How will the weather be tomorrow?"
                   }
                 },
                 {
@@ -1411,81 +1447,45 @@
         },
         {
           "ref": "minigame:s4-nature-v2-q3-check",
-          "kind": "tap-respond",
-          "turns": [
+          "kind": "order-it",
+          "rounds": [
             {
-              "speakerEn": "Friend",
-              "line": {
+              "id": "c1",
+              "sentence": {
                 "ko": "내일 설악산에 갈까요?",
                 "romanization": "naeil seoraksane galkkayo",
                 "en": "Shall we go to Seoraksan tomorrow?"
               },
-              "replies": [
+              "distractors": [
                 {
-                  "id": "r2",
-                  "text": {
-                    "ko": "우산이에요.",
-                    "romanization": "usanieyo",
-                    "en": "It is an umbrella."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "네, 좋아요!",
-                    "romanization": "ne joayo",
-                    "en": "Yes, sounds good!"
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "추워요?",
-                    "romanization": "chuwoyo",
-                    "en": "Is it cold?"
-                  },
-                  "correct": false
+                  "ko": "북한산에",
+                  "romanization": "bukhansane",
+                  "en": "to Bukhansan"
                 }
               ]
             },
             {
-              "speakerEn": "Mom",
-              "line": {
-                "ko": "오늘 비가 올 거예요.",
-                "romanization": "oneul biga ol geoyeyo",
-                "en": "It will rain today."
+              "id": "c2",
+              "sentence": {
+                "ko": "그럼 우산을 가져가요.",
+                "romanization": "geureom usaneul gajyeogayo",
+                "en": "Then I will take an umbrella."
               },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "그럼 우산을 가져가요.",
-                    "romanization": "geureom usaneul gajyeogayo",
-                    "en": "Then I will take an umbrella."
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker (after a vowel)"
                   },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "네, 더워요.",
-                    "romanization": "ne deowoyo",
-                    "en": "Yes, it is hot."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "북한산에 가요.",
-                    "romanization": "bukhansane gayo",
-                    "en": "I am going to Bukhansan."
-                  },
-                  "correct": false
-                }
-              ]
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker (after a final consonant)"
+                  }
+                ]
+              }
             }
           ]
         }
@@ -1544,13 +1544,13 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "Pass 1 (author sourcing, CM-41 S4, 2026-10-30): the Korea National Park Service page 국립공원깃대종 defines a flagship species (상징적인 야생 동·식물), says the Service has named them since 2007 (22 parks, 43 species today) and gives Bukhansan's, the great spotted woodpecker (오색딱다구리), nicknamed 숲속의 의사. The korea.kr column of 2019, written with the Service, says flagship species were first chosen in 2007. English paraphrase; no count is claimed.\nPass 2 (independent MAR culture and facts, a reviewer agent other than the author, 2026-10-30): both sources fetched again; 2007, the definition and the nickname found; 21 parks and 41 species in the 2019 column are noted as of 2019 and not used. Holds.\nPass 3 (MAR language and learning design, independent reviewers, 2026-10-30): es (especies bandera, pico picapinos) and ko checked; no native-speaker or expert review is claimed."
+        "notes": "Pass 1 (author sourcing, CM-41 S4, 2026-10-30): the Korea National Park Service page 국립공원깃대종 defines a flagship species (상징적인 야생 동·식물), says the Service has named them since 2007 (22 parks, 43 species today) and gives Bukhansan's, the great spotted woodpecker (오색딱다구리), nicknamed 숲속의 의사. The quote keeps the page's own spelling; the ko overlay uses the standard spelling 오색딱따구리 (표준국어대사전). The korea.kr column of 2019, written with the Service, says flagship species were first chosen in 2007. English paraphrase; no count is claimed.\nPass 2 (independent MAR culture and facts, a reviewer agent other than the author, 2026-10-30): both sources fetched again; 2007, the definition and the nickname found; 21 parks and 41 species in the 2019 column are noted as of 2019 and not used. Holds.\nPass 3 (MAR language and learning design, independent reviewers, 2026-10-30): es (especies bandera, pico picapinos) and ko checked; no native-speaker or expert review is claimed."
       }
     },
     {
       "id": "n3",
       "kind": "culture",
-      "textEn": "Seoraksan's flagship species is the long-tailed goral, {ko:산양}. It lives on steep, rocky cliffs, and more gorals live on Seoraksan than anywhere else in Korea.",
+      "textEn": "Seoraksan's flagship species is the long-tailed goral, {ko:산양}. It lives on steep, rocky cliffs, and the Korea National Park Service calls Seoraksan the largest goral home in Korea.",
       "sources": [
         {
           "title": "국립공원깃대종",
@@ -1581,11 +1581,14 @@
     "reviewedBy": "MAR",
     "reviewedAt": "2026-10-30",
     "notes": [
-      "CM-41 S4 (F-CURR-002 §5.5 S4, 2026-10-30): weather small talk and a hike plan with national park names (Jirisan, Seoraksan, Bukhansan). Practice is Role Play in all three quests (read and tap, 4 turns on every way, every way ends well); Apply and Check rotate: Sentence Builder and Cloze Pick, Realia Read and Sentence Builder, Story Order and Tap to Respond.",
+      "CM-41 S4 (F-CURR-002 §5.5 S4, 2026-10-30): weather small talk and a hike plan with national park names (Jirisan, Seoraksan, Bukhansan). Practice is Role Play in all three quests (read and tap, 4 turns on every way, every way ends well); Apply and Check rotate: Sentence Builder and Cloze Pick, Realia Read and Tap to Respond, Story Order and Sentence Builder.",
       "MAR pass 1, language (independent reviewer agent, 2026-10-30): particles, 해요체, natural and less natural replies, glosses and romanization checked (gungnipgongwon, seoraksaneun, galkkayo, gajyeogayo); es and ko overlays checked. PASS with two nits: es especies bandera (applied); a smoother q1 t4-cool line (declined: 같이 가요! keeps the quest's Volume 1 recycling at 30 in 100 or more).",
       "MAR pass 1, culture and facts (independent reviewer agent, 2026-10-30): every source of n1-n3 fetched (Korea National Park Service, korea.kr); claims, numbers and the name 국립공원공단 as on the access date hold; the park weather card is made up and says so by its plain title; the notes are new against Volume 1. PASS; the verification records were then written.",
       "MAR pass 1, learning design (independent reviewer agent, 2026-10-30): triples differ from Volume 1; Role Play graphs and their Tap to Respond fallback hold; item load 3, 5, 3 units; recycling 33, 46, 55 in 100. Should-fix applied: the q3 Story Order captions settle one order (그럼, then 도). Declined: a Practice off Role Play (the row names it), 그럼 물을 마셔요 (both words taught earlier).",
-      "Reviser (2026-10-30): 맑아요 (final ㄺ, not decodable at Stage 4, U-4) became 하늘이 파래요! in q1 and 날씨가 좋아요! in the q2 Jirisan branch; the review load is 28 new review items (Stage 4 Volume 1 cells teach 20 to 30). Third pass (independent reviewer agent, 2026-10-30): every change and every declined item confirmed; PASS. No native-speaker or expert review is claimed."
+      "Reviser (2026-10-30): 맑아요 (final ㄺ, not decodable at Stage 4, U-4) became 하늘이 파래요! in q1 and 날씨가 좋아요! in the q2 Jirisan branch; the review load is 28 new review items (Stage 4 Volume 1 cells teach 20 to 30). Third pass (independent reviewer agent, 2026-10-30): every change and every declined item confirmed; PASS. No native-speaker or expert review is claimed.",
+      "Fix stage, triples (PR review, 2026-10-31): with game.role-play dark, q2 played Tap to Respond / Realia Read / Sentence Builder, Volume 1 Nature q2's triple. q2's Check is now Tap to Respond on the park talk and q3's Sentence Builder (내일 설악산에 갈까요?, then 을 after 우산), so no triple, as authored or with any game switch dark, is a Volume 1 Nature triple (stage4-check-rotation.test.ts).",
+      "Fix stage, replies and order (2026-10-31): distractors that were natural replies became off-topic taught ones (q1 t2 네, 좋아요! and q3 t2 네, 더워요. became 밥을 먹어요.; the Check option 추워요? left with that Check). The q3 Story Order opens with 내일 날씨가 어때요?, so the rain answer can only follow it, and 그럼 and 도 settle the rest. Recycling 33, 55 and 50 in 100; 27 new review items.",
+      "Fix stage, notes and overlays (2026-10-31): n3 attributes the superlative to the Korea National Park Service; ko n2 spells 오색딱따구리 (표준국어대사전; the source quote keeps the page's spelling); es Vale became Está bien. The changed es and ko strings go to the independent re-check of the next review pass. No native-speaker or expert review is claimed."
     ]
   },
   "contentVer": 1
