@@ -119,13 +119,15 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 111 quests since row CM-45 S2, the Holidays Volume 2 of Stage 2)', () => {
-  const snap = finished(111);
+describe('the all-quests fixture (scenario S-c; 108 first-volume quests since row CM-33, and every later volume\'s since row CM-45 S2)', () => {
+  const later = LESSON_QUESTS.filter((q) => /-v[2-9]$/.test(q.episodeId)).length;
+  const snap = finished(108 + later);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(111);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(111);
+    expect(later).toBeGreaterThanOrEqual(3);
+    expect(LESSON_QUESTS).toHaveLength(108 + later);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108 + later);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {

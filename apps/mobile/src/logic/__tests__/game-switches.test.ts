@@ -91,12 +91,12 @@ describe('every quest with the switches off (section 14)', () => {
     expect(scopes.length).toBeGreaterThan(100);
   });
 
-  it('the shipped Stage 2 Dictation Checks (row CM-3A S2, and the Holidays Volume 2 of row CM-45 S2): 8 steps, 16 hear rounds, each a see round with the switch off', () => {
+  it('the shipped Stage 2 Dictation Checks (row CM-3A S2, and each Volume 2, row CM-45 S2 the first): 7 steps and 14 hear rounds in Volume 1, each a see round with the switch off', () => {
     const dictation = scopes.filter(({ at, scope }) => at.startsWith('quest:stage2-') && (scope.typeHangul?.rounds ?? []).some((r) => typeHangulMode(r) === 'hear'));
-    // Volume 1: 7 steps and 14 rounds; the Holidays Volume 2 adds its quest 3 Check (실, 동지).
+    // Volume 1: 7 steps and 14 rounds; the Holidays Volume 2 adds its quest 3 Check (실, 동지). Each Volume 2 lists its own.
     expect(dictation.filter(({ at }) => !at.includes('-v2-'))).toHaveLength(7);
-    expect(dictation.map(({ at }) => at).filter((at) => at.includes('-v2-'))).toEqual(['quest:stage2-rites-v2-q3 step 4']);
-    expect(dictation.flatMap(({ scope }) => scope.typeHangul!.rounds)).toHaveLength(16);
+    expect(dictation.map(({ at }) => at).filter((at) => at.startsWith('quest:stage2-rites-v2-'))).toEqual(['quest:stage2-rites-v2-q3 step 4']);
+    expect(dictation.filter(({ at }) => !at.includes('-v2-')).flatMap(({ scope }) => scope.typeHangul!.rounds)).toHaveLength(14);
     for (const { at, scope } of dictation) {
       expect(needsDictationChunk(scope), at).toBe(true);
       const off = applyGameSwitches(scope, ALL_OFF);

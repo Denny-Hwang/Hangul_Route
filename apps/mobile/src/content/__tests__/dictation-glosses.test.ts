@@ -38,7 +38,8 @@ const hearRounds = Object.entries(ALL_LESSON_SCOPES).flatMap(([ref, scope]) =>
 describe('Dictation: the shown meaning never carries the word (row CM-3A S2)', () => {
   it('the Stage 2 Dictation Checks are shipped: fourteen rounds in Volume 1, two in the Holidays Volume 2 (row CM-45 S2)', () => {
     expect(hearRounds.filter(({ ref }) => /^minigame:s2-[a-z]+-q[0-9]-check$/.test(ref))).toHaveLength(14);
-    expect(hearRounds.filter(({ ref }) => /^minigame:s2-[a-z]+-v2-q[0-9]-check$/.test(ref)).map(({ ref, round }) => `${ref} ${round.id}`)).toEqual([
+    // Each later volume lists its own rounds, so a sibling Volume 2 adds its list beside this one without touching it.
+    expect(hearRounds.filter(({ ref }) => /^minigame:s2-rites-v2-q[0-9]-check$/.test(ref)).map(({ ref, round }) => `${ref} ${round.id}`)).toEqual([
       'minigame:s2-rites-v2-q3-check hear-sil',
       'minigame:s2-rites-v2-q3-check hear-dongji',
     ]);

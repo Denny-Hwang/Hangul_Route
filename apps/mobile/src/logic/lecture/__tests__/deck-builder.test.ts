@@ -24,6 +24,7 @@ import { describe, expect, it } from 'vitest';
 import { heritageCardsAll, jamoAll } from '../../../content';
 import { jamoKnown } from '../../../content/jamo';
 import { questsAll } from '../../../content/quests';
+import { ALL_LESSON_SCOPES } from '../../../content/__tests__/helpers/lesson-stages';
 import type { MinigameScope } from '../../minigame-config';
 import { lectureBundle } from '../content';
 import { letterSecondSound, slideSound } from '../slide-view';
@@ -2614,8 +2615,13 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
       }
     }
     // 73 Type Hangul rounds, and the Dictation rounds of the Checks: 14 in Stage 2 (row CM-3A S2), 8 in Stage 3 (row CM-3A
-    // S3) and 8 in Stage 6 (row CM-3A S6), and 2 in the Holidays Volume 2 of Stage 2 (row CM-45 S2), in three languages.
-    expect(typeSlides).toBe(105 * 3);
+    // S3) and 8 in Stage 6 (row CM-3A S6), in three languages; and every Type Hangul round of a later volume (F-CURR-002
+    // row CM-40; the Holidays Volume 2 of Stage 2, row CM-45 S2, has 2), counted from its scopes.
+    const laterTypeRounds = Object.entries(ALL_LESSON_SCOPES)
+      .filter(([ref]) => /-v[2-9]-q\d+-/.test(ref))
+      .reduce((n, [, scope]) => n + (scope.kind === 'type-hangul' ? (scope.typeHangul?.rounds.length ?? 0) : 0), 0);
+    expect(laterTypeRounds).toBeGreaterThanOrEqual(2);
+    expect(typeSlides).toBe((103 + laterTypeRounds) * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {

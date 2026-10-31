@@ -6,6 +6,7 @@ import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -1293,6 +1294,39 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  test('episode:stage2-rites-v2 at 320 and the Largest text size (150%): the Vol tabs and the Volume 2 page fit, nothing clipped', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourney(page);
+    await seedStoredAll(page, {
+      'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { volumes: { on: true, pct: 100 } } },
+      'device:settings': { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' },
+    });
+    await page.reload();
+    const guide = page.getByTestId('install-guide');
+    await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+    await page.getByRole('button', { name: journeyCellName(2, THEME_LABEL.rites), exact: true }).click();
+    const tabs = page.getByRole('tablist', { name: 'Volumes' });
+    await tabs.getByRole('tab', { name: 'Volume 2' }).click();
+    await expect(page.getByText('Holidays Through the Year').first()).toBeVisible();
+    for (const name of ['Volume 1', 'Volume 2']) {
+      const box = await tabs.getByRole('tab', { name }).boundingBox();
+      expect(box?.height ?? 0, name).toBeGreaterThanOrEqual(48);
+    }
+    for (const title of ['From Seollal to the Full Moon', 'Summer, Autumn and Winter', 'A First Birthday']) {
+      await page.getByText(title).first().scrollIntoViewIfNeeded();
+      await expect(page.getByText(title).first()).toBeVisible();
+    }
+    await expectNoHorizontalOverflow(page);
+    await expectTextFits(page, 'the Holidays Volume 2 page at Largest');
+    await shot(page, 'cm45-s2-rites-v2-page-320-largest');
+    expect(errors).toEqual([]);
+  });
 
   test('episode:stage2-rites-v2 with volumes off (the launch state): the Holidays cell opens Volume 1 and its page has no Vol tabs', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
