@@ -5,9 +5,9 @@
     "episode:stage6-letters-v2": {
       "title": "Día de biblioteca",
       "subtitle": "Lee una tarjeta de biblioteca, un libro, un cartel y un letrero del metro.",
-      "hoyaIntro": "¡Ya viene el Día del Hangeul! Vamos a leer de camino a la biblioteca y de vuelta.",
-      "culture.n1.text": "¿Por qué el 9 de octubre? Una copia del libro {ko:훈민정음}, hallada en 1940, dice que se publicó en los primeros diez días del noveno mes lunar de 1446. El último de esos días es el 9 de octubre en el calendario de hoy.",
-      "culture.n2.text": "El Día del Hangeul se celebró por primera vez en 1926, con el nombre {ko:가갸날}. El nombre parece venir de {ko:가} y {ko:갸}, los dos primeros bloques de la tabla de sílabas con la que se aprendía entonces. Desde 1928 se llama {ko:한글날}.",
+      "hoyaIntro": "¡Hoy es día de biblioteca! Vamos a leer todo lo que veamos por el camino.",
+      "culture.n1.text": "El Día del Hangeul es una de las cinco fiestas nacionales de Corea del Sur, {ko:국경일}, junto con el 1 de marzo, el 17 de julio, el 15 de agosto y el 3 de octubre. Una ley aprobada en 2005 la convirtió en una de ellas.",
+      "culture.n2.text": "En 1946, 500 años después de darse a conocer las letras, el Día del Hangeul fue por primera vez un día libre. Desde 1991 dejó de serlo, y desde 2013 vuelve a ser un día libre.",
       "culture.n3.text": "Desde 2000, las normas nacionales para escribir el coreano con letras latinas siguen cómo suena la palabra, no cada letra: {ko:신라} se dice con doble l, así que se escribe Silla. La romanización de esta app sigue estas normas."
     },
     "quest:stage6-letters-v2-q1": {
