@@ -1,4 +1,4 @@
-import type { UiLocale } from '@hangul-route/i18n';
+import { formatDate, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -170,7 +170,8 @@ describe('the roster readouts (GX-8)', () => {
     expect(textOf(root)).not.toMatch(/Most recent activity first|Students/);
     const junho = byTestId(root, 'student-card')[1];
     if (!junho) throw new Error('card');
-    expect(textOf(junho)).toContain('Joined Oct 14 · not synced yet');
+    // The date is the viewer's local day, as the page shows it, so the test holds in any time zone.
+    expect(textOf(junho)).toContain(`Joined ${formatDate('en', '2026-10-14T09:00:00.000Z', 'monthDay')} · not synced yet`);
   });
 
   it('P4: a class roster keeps the order the Worker sent and its heading', async () => {

@@ -71,12 +71,13 @@ const PLAN = {
   updatedAt: ago(1),
 };
 
-// The owner's screenshot of 2026-10-31, as rows: a learner on the first quest, one who synced today with no plan
-// progress, one who has not opened the app since the plan, a learner who joined today, one away for nine days.
+// The owner's screenshot of 2026-10-31, as rows in the Worker's most-recent-first order: a learner on the first
+// quest, one with plan progress, one who has not opened the app since the plan (last active and synced two days ago,
+// before it), one away for nine days, a learner who joined today.
 const CLASS_LEARNERS = [
   learner('profile:mina', 'Mina', { lastSyncedAt: ago(0), summary: summary({ stage1: { questsDone: 0, questsTotal: 15, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 2 }) }),
-  learner('profile:sam', 'Sam', { lastSyncedAt: ago(2), summary: summary({ planProgress: {} }) }),
   learner('profile:ana', 'Ana', { summary: summary({ planProgress: { 'plan:week-3': { done: 1, total: 3, notReady: 0 } } }) }),
+  learner('profile:sam', 'Sam', { lastActiveAt: ago(2), lastSyncedAt: ago(2), summary: summary({ lastActiveAt: ago(2), planProgress: {} }) }),
   learner('profile:jun', 'Jun', { lastActiveAt: ago(9), lastSyncedAt: ago(9), joinedAt: ago(40), summary: summary({ lastActiveAt: ago(9), minutesLast7d: 0 }) }),
   learner('profile:new', 'Noa', { joinedAt: ago(0), lastSyncedAt: null, summary: null }),
 ];
