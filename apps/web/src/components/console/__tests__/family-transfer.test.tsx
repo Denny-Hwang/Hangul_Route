@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { TRANSFER_CONSENT_TEXT, TRANSFER_CONSENT_TEXT_VERSION } from '@hangul-route/content-schema';
 import { colors } from '@hangul-route/design-system/tokens';
-import { getMessages, type UiLocale } from '@hangul-route/i18n';
+import { formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiResult, TransferLearnerSideView, TransferList, TransferOption } from '@/lib/console/api';
@@ -296,7 +296,11 @@ describe('FamilyMoves (family-page.md)', () => {
     const card = byTestId('family-move-card');
     expect(text(card)).toContain('Asked by the teacher of Sunday Class A · 1 day ago');
     expect(text(card)).toContain('Sunday Class A');
-    expect(text(card)).toContain('Family waiting');
+    // GX-4 Fix D (AMENDMENTS-GROWNUP-UX section 7.5): the family's own step asks for its answer, and the card says when it ends.
+    expect(text(card)).toContain(`Family ${t.steps.yourAnswer}`);
+    expect(text(card)).not.toContain('Family waiting');
+    expect(text(byTestId('family-move-ends'))).toBe(t.endsOn(formatDate('en', view().expiresAt, 'monthDay')));
+    expect(text(byTestId('family-needs-you-count'))).toBe(t.familyNeedsYou(1));
     expect(text(card)).toContain(t.lines.notNowEnds);
     expect(allTestId('family-review')).toHaveLength(1);
     const notNow = byTestId('family-not-now');

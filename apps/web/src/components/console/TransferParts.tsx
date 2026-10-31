@@ -30,14 +30,17 @@ export function useTransfersShown(): boolean {
 export function useOnline(): boolean {
   const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine !== false));
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    // A page without a real window (the static export's server pass, a test stub) has no online state to watch.
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return undefined;
+    // The window it listened on, kept: a test that removes its window stub before unmounting must not throw here.
+    const host = window;
     const on = (): void => setOnline(true);
     const off = (): void => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
+    host.addEventListener('online', on);
+    host.addEventListener('offline', off);
     return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
+      host.removeEventListener?.('online', on);
+      host.removeEventListener?.('offline', off);
     };
   }, []);
   return online;

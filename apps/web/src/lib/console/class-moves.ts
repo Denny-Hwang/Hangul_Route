@@ -24,6 +24,8 @@ export interface OutgoingMove {
   learner: { name: string; avatar: string } | null;
   createdAt: string;
   at: string | null;
+  /** [GX-W] The learner's id while the move waits (AMENDMENTS-GROWNUP-UX section 12); absent from an older Worker. */
+  learnerId?: string;
 }
 
 export interface IncomingMove {
@@ -81,7 +83,16 @@ function readNamed(v: unknown): { name: string; avatar: string } | null {
 
 export function readOutgoing(v: Plain): OutgoingMove | null {
   if (!str(v.id) || !isKind(v.kind) || !isStatus(v.status) || !isPlain(v.to) || !str(v.to.spaceId) || !str(v.to.name) || !str(v.createdAt)) return null;
-  return { id: v.id, kind: v.kind, status: v.status, to: { spaceId: v.to.spaceId, name: v.to.name }, learner: readNamed(v.learner), createdAt: v.createdAt, at: str(v.at) ? v.at : null };
+  return {
+    id: v.id,
+    kind: v.kind,
+    status: v.status,
+    to: { spaceId: v.to.spaceId, name: v.to.name },
+    learner: readNamed(v.learner),
+    createdAt: v.createdAt,
+    at: str(v.at) ? v.at : null,
+    ...(str(v.learnerId) ? { learnerId: v.learnerId } : {}),
+  };
 }
 
 export function readIncoming(v: Plain): IncomingMove | null {

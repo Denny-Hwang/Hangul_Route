@@ -47,11 +47,26 @@ function stepState(slot: TransferSlot, view: TransferSourceView | TransferLearne
   return view.steps?.[slot] ?? 'waiting';
 }
 
-/** A step's state word ("said yes", "waiting"); a class's own yes reads "you said yes". Never colour alone. */
+/** Whether a step said yes (the glyph of the steps list; the word says it too, never colour alone). */
+export function stepDone(slot: TransferSlot, view: TransferSourceView | TransferLearnerSideView): boolean {
+  return stepState(slot, view) === 'yes';
+}
+
+/**
+ * A step's state word ("said yes", "waiting"); a class's own yes reads "you said yes". Never colour alone. On the family
+ * page the family's own waiting step reads "your answer needed" (AMENDMENTS-GROWNUP-UX GX-4 Fix D, section 7.5).
+ */
 export function stepWord(slot: TransferSlot, view: TransferSourceView | TransferLearnerSideView, locale: UiLocale = DEFAULT_LOCALE): string {
   const steps = words(locale).steps;
-  if (stepState(slot, view) === 'waiting') return steps.waiting;
+  if (stepState(slot, view) === 'waiting') return view.role === 'learner_side' && slot === 'learner' ? steps.yourAnswer : steps.waiting;
   return view.role === 'source' && slot === 'source' ? steps.youSaidYes : steps.saidYes;
+}
+
+/** GX-4 Fix D: "Ends Oct 25" on a family card while the request is open and not yet agreed; null otherwise. */
+export function endsLine(view: TransferLearnerSideView, locale: UiLocale = DEFAULT_LOCALE): string | null {
+  if (view.status !== 'requested') return null;
+  const date = shortDate(view.expiresAt, locale);
+  return date === null ? null : words(locale).endsOn(date);
 }
 
 /** The room block of an agreed move that waits (`approved` with a block reason); only the destination reads "full" (D6). */

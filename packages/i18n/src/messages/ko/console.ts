@@ -1063,6 +1063,26 @@ export const consoleMsgs = {
     actionsFor: (family: string) => `${family}의 메뉴`,
     askOwner: '가족 코드는 가족 공간을 만든 어른에게 부탁해요.',
     copyFailed: '복사하지 못했어요. 코드는 화면에 그대로 있어요.',
+    needsYou: {
+      title: '확인이 필요해요',
+      move: (name: string) => `${name}의 반 이동에 승인이 필요해요.`,
+      moveMeta: (to: string, days: number) => `옮길 반: ${to} · ${days}일 뒤 마감`,
+      relink: (name: string) => `새 기기에서 이어서 하려는 요청: ${name}`,
+      scope: (name: string) => `${name}의 선생님이 보는 정보를 확인해 주세요.`,
+      readOk: { cta: '읽고 확인' },
+      more: (n: number) => `확인할 일 ${n}건 더`,
+      seeAll: { cta: '모두 보기' },
+    },
+    status: {
+      move: '반 이동 · 승인 대기',
+      relink: '새 기기 · 승인 대기',
+      scope: '반 안내 확인 필요',
+    },
+    classLine: {
+      one: (className: string) => `소속: ${className}`,
+      many: (n: number) => `소속 반 ${n}곳`,
+      none: '반 없이 가족 학습',
+    },
   },
   journey: {
     title: '학습 루트',
@@ -1372,6 +1392,8 @@ export const consoleMsgs = {
     memberNoun: { family: '학습자', class: '학생', school: '구성원' },
     entry: { cta: '반 이동' },
     waiting: (n: number) => `기다리는 반 이동 ${n}건`,
+    familyNeedsYou: (n: number) => `확인할 반 이동 ${n}건`,
+    endsOn: (date: string) => `${date} 마감`,
     schoolRow: (className: string, n: number) => `${className}: 기다리는 반 이동 ${n}건`,
     back: (space: string) => `돌아가기: ${space}`,
     groups: {
@@ -1390,6 +1412,7 @@ export const consoleMsgs = {
       saidYes: '동의함',
       youSaidYes: '내가 동의함',
       waiting: '기다리는 중',
+      yourAnswer: '내 답을 기다려요',
     },
     meta: {
       asked: (days: number) => (days === 0 ? '오늘 요청' : `${days}일 전 요청`),
@@ -1730,5 +1753,24 @@ export const consoleMsgs = {
     firstSignIn: '어른이 이 기기에서 PIN으로 어른용 페이지를 연 적이 있어야 쓸 수 있어요. 앱에서 복구 코드나 24시간 기다리기를 써 주세요.',
     noPin: '이 기기에는 다시 만들 어른용 PIN이 없어요.',
     unavailable: "지금은 쓸 수 없어요. 앱의 'PIN을 잊었나요?'를 써 주세요.",
+  },
+  status: {
+    inClass: '참여 중',
+    needsOk: '승인 대기',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `새 기기 · ${minutes}분 남음`,
+    moveTo: (className: string) => `반 이동: ${className}`,
+    moveWaiting: '이동 대기 중',
+    waitingFor: (className: string) => `기다리는 반: ${className}`,
+    moving: (date: string) => `이동 예정 · ${date}`,
+    waitingSeat: '자리 기다리는 중',
+    new: '새로 참여',
+    noPractice: '아직 연습 기록이 없어요',
+    minutesLeft: (minutes: number) => `${minutes}분 남음`,
+    review: { cta: '확인하기' },
+  },
+  attention: {
+    incomingHeading: '이 반에 들어오려는 학생',
+    from: (className: string) => `보낸 반: ${className}`,
   },
 } satisfies DeepPartial<Messages['console']>;

@@ -111,6 +111,13 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.library.albums.names.nature': '"Naturaleza" (10) against "Nature" (6), one letter over the 9 the floor allows: the one Spanish word for nature (the themeNames form; the Journey cell word is Campo); drawn on its own line in an album row that wraps at 320',
   // F-CURR-002 row CM-20: the level word of the mastery ring, the same word the grown-up report's mastery line uses.
   'learner.mastery.level.done': '"Terminado" (9) against "Done" (4), one letter over the 8-character floor: the report\'s level word ("1 terminado"); drawn only in a line that wraps (the level-up banner) and read in a cell label',
+  // AMENDMENTS-GROWNUP-UX GX-1 (section 10.1, the one date order of the PR #917 review): status chips beside a learner's name.
+  'console.status.moving': '"Cambia de clase el {date}" against "Moving {date}": Spanish needs the verb phrase and its article before a date; a chip that wraps under the name on a phone',
+  'console.status.new': '"Nueva llegada" (13) against "New" (3): a bare "Nuevo/Nueva" would take the learner\'s gender; the noun keeps the chip neutral, and it wraps under the name on a phone',
+  // AMENDMENTS-GROWNUP-UX GX-4 (section 10.1): the family's strip heading.
+  'console.transfer.familyNeedsYou': '"2 cambios de clase esperan tu aprobación" (40) against "2 class moves need your OK" (26), one letter over: the one action wording of section 10.1 ("espera(n) tu aprobación" in a sentence); a heading line on the family moves page, which wraps',
+  'console.transfer.endsOn': '"Termina el {date}" against "Ends {date}", one letter over at a short date: Spanish needs the article before a date (the same date order as "Cambia de clase el {date}"); a card line that wraps',
+  'console.parentHome.needsYou.title': '"Necesita tu respuesta" (21) against "Needs you" (9): Spanish needs the verb and its object ("Te necesita" would read as a person needing the parent); a heading on its own line above the strip, which wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

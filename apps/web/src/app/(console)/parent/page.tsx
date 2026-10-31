@@ -7,27 +7,46 @@ import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties 
 import { AvatarChip } from '@/components/AvatarChip';
 import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
-import { FamilyClassCards } from '@/components/console/FamilyClassCards';
+import { FamilyClassCards, MoveNotice, scopeCardDomId } from '@/components/console/FamilyClassCards';
+import { FamilyNeedsYou } from '@/components/console/FamilyNeedsYou';
+import { TextChip } from '@/components/console/LearnerStatusParts';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { LectureModeCard, useGridColumns, useMinWidth } from '@/components/console/LectureModeCard';
-import { useTransfersShown } from '@/components/console/TransferParts';
+import { useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
-import { useMovesWaiting } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
-import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
+import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem, TransferLearnerSideView } from '@/lib/console/api';
 import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { spaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { openAppWithJoinCode } from '@/lib/console/join-handoff';
-import { familyActionLinks, familyLectureCard, firstRowEnd, isArchivedFamily, joinOrder, learnerCardActions, lectureCardSlot, managesJoinCode, parentHomeView, type CardFlags } from '@/lib/console/parent-home';
+import {
+  childChipWords,
+  childStatus,
+  classLine,
+  classLineWords,
+  familyActionLinks,
+  familyLectureCard,
+  firstRowEnd,
+  isArchivedFamily,
+  joinOrder,
+  learnerCardActions,
+  lectureCardSlot,
+  managesJoinCode,
+  needsYou,
+  noticeFor,
+  parentHomeView,
+  type CardFlags,
+  type FamilyAsks,
+} from '@/lib/console/parent-home';
 import { personaHome } from '@/lib/console/personas';
 import { dateKey, livePublished } from '@/lib/console/plans';
 import { capState, codeExpiry, familyCountLine, relativeDay, seatLine } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
 import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import type { ConsoleApi } from '@/lib/console/api';
-import { ROUTES, spaceErrorText } from '@/lib/console/routing';
+import { spaceErrorText } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
 import { START_CLASS, START_FAMILY } from '@/lib/console/teacher-home';
 import { headRem, rem } from '@/lib/console/rem';
@@ -45,8 +64,13 @@ import { headRem, rem } from '@/lib/console/rem';
  * under its figures for the owner of a family no Family Plan covers, with **Open billing** described by it.
  * With the switch off it reads neither and shows no line.
  *
- * Class moves (F-SPACE-002 T-6b, requests-page.md "Entry points"):
- * the family actions gain "N class moves waiting" to the family's page, only while a move waits for the family.
+ * Needs you (AMENDMENTS-GROWNUP-UX GX-4, section 7; wireframe design/wireframes/parent/needs-you.md, mock
+ * design/screens/approvals/mock/parent-*.html): under each family heading, before every card, a compact strip of what only
+ * the family can answer (a child's re-link, a class move that waits for the family, a class-scope update to read), with its
+ * buttons inline and the fold rule; each child card gets a status chip (text) and a class line ("In: Sunday Class A",
+ * omitted when the class-move read is skipped or fails), and TV-D10's move notice sits in the card of the child it is
+ * about. The family's re-links, class moves (with their `options`), class-scope state and notices join the page's quiet
+ * load, so a new item appears without a reload. The strip replaces the family actions' "N class moves waiting" pill.
  *
  * Lecture mode (AMENDMENTS-LECTURE-V2 E2, LV-5; design/screens/app-shell/lecture-card.md "Placement"): one card, in
  * the first family's section. From 70em first in its side column, above the family actions (outside their
@@ -58,6 +82,9 @@ import { headRem, rem } from '@/lib/console/rem';
 
 /** Background reads of the family list that may fail in a row before they stop (a signed-out answer stops them at once). */
 const QUIET_FAILURES_BEFORE_STOP = 3;
+
+/** A read that never throws: a failed or missing call (an older client shape, a network error) answers null. */
+const quietly = <T,>(read: () => Promise<T>): Promise<T | null> => Promise.resolve().then(read).catch(() => null);
 
 /** One family's roster read: loading, failed (that section alone shows Try again) or loaded. */
 type FamilyRoster = { state: 'loading' } | { state: 'failed' } | { state: 'ready'; roster: Roster };
@@ -148,9 +175,11 @@ export default function ParentHomePage(): JSX.Element {
   const [plans, setPlans] = useState<Record<string, PlanView[]>>({});
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
   const homeView = items ? parentHomeView(items) : null;
-  const moves = useMovesWaiting(api, homeView?.state === 'families' ? homeView.families.map((family) => family.space.id) : []);
-  // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10).
+  // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10), and
+  // GX-4's Needs you: each live family's re-links, class moves, class-scope state and notices (absent until first read).
   const movesShown = useTransfersShown();
+  const online = useOnline();
+  const [asks, setAsks] = useState<Record<string, FamilyAsks>>({});
   // The Lecture mode card's slot follows the 70em switch of the page's own CSS (lecture-card.md "Placement").
   const wideHome = useMinWidth(FULL);
   // The first family's card grid (or the loading one), measured: below 70em the card follows the last card of its first row.
@@ -191,6 +220,35 @@ export default function ParentHomePage(): JSX.Element {
     [api, names],
   );
 
+  // GX-4: what waits for the family (section 7.1). The class-move reads follow the flag and the transfer lock
+  // (`useTransfersShown`): skipped, they are null, so no move row, no move chip and no class line (never a guess). A read
+  // that fails keeps what the last good read drew (a background read never removes a row on a network blip); expiry is
+  // checked again at every render, so a re-link past its end still leaves.
+  const loadAsks = useCallback(
+    async (spaceId: string): Promise<void> => {
+      if (!api) return;
+      const [relinks, transfers, scope, notices] = await Promise.all([
+        quietly(() => api.relinkRequests(spaceId)),
+        movesShown ? quietly(() => api.transferRequests(spaceId)) : null,
+        quietly(() => api.classScope(spaceId)),
+        movesShown ? quietly(() => api.moveNotices(spaceId)) : null,
+      ]);
+      setAsks((prev) => {
+        const old = prev[spaceId];
+        return {
+          ...prev,
+          [spaceId]: {
+            relinks: relinks?.ok ? relinks.data : old?.relinks ?? null,
+            transfers: !movesShown ? null : transfers?.ok ? transfers.data : old?.transfers ?? null,
+            scope: scope?.ok ? scope.data : old?.scope ?? null,
+            notices: !movesShown ? [] : notices?.ok ? notices.data : old?.notices ?? [],
+          },
+        };
+      });
+    },
+    [api, movesShown],
+  );
+
   // Background reads that failed in a row. A signed-out answer, or the third failure, stops the background reads and
   // shows the usual "can't reach" line with Try again, so a home left open never sends failing reads with no sign.
   const quietFailures = useRef(0);
@@ -224,9 +282,11 @@ export default function ParentHomePage(): JSX.Element {
       const listed = result.data.map((item) => ({ ...item, space: { ...item.space, name: names.nameFor(item.space.id, item.space.name, read) } }));
       setItems(listed);
       const view = parentHomeView(listed);
-      if (view.state === 'families') await Promise.all(view.families.map((family) => loadRoster(family.space.id, family.role, quiet)));
+      if (view.state === 'families') {
+        await Promise.all(view.families.flatMap((family) => [loadRoster(family.space.id, family.role, quiet), ...(isArchivedFamily(family) ? [] : [loadAsks(family.space.id)])]));
+      }
     },
-    [api, loadRoster, names],
+    [api, loadRoster, loadAsks, names],
   );
 
   useEffect(() => {
@@ -375,17 +435,44 @@ export default function ParentHomePage(): JSX.Element {
         )
       : null;
     const label = (key: 'seeReport' | 'open' | 'sendNote' | 'route'): string => p.child[key];
+    // GX-4 (section 7.2): one status chip (text; the strip owns the buttons), the class line, and TV-D10's notice here.
+    const familyAsks = asks[familyId];
+    const status = familyAsks ? childStatus(learner.id, familyAsks, now) : null;
+    const chip = status ? childChipWords(status, locale) : null;
+    const line = familyAsks ? classLine(learner.id, familyAsks.transfers) : null;
+    const notice = familyAsks && api ? noticeFor(learner.id, familyAsks.notices) : null;
     return (
       <article key={learner.id} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
           <AvatarChip avatar={learner.avatar} />
           <h3 style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, overflowWrap: 'anywhere' }}>{learner.displayName}</h3>
+          {chip ? <TextChip text={chip.text} tone={chip.tone} /> : null}
         </div>
+        {line ? (
+          <div style={facts} data-testid="child-class-line">
+            {classLineWords(line, locale).map((text) => (
+              <span key={text}>{text}</span>
+            ))}
+          </div>
+        ) : null}
         <div style={facts}>
           <span>{c.space.learner.lastActive(relativeDay(learner.lastActiveAt, now, locale))}</span>
           {learner.summary ? <span>{p.minutes7d(learner.summary.minutesLast7d)}</span> : null}
         </div>
         <FreeLessonsLine line={freeLine} />
+        {notice && api ? (
+          <MoveNotice
+            familyId={familyId}
+            notice={notice}
+            api={api}
+            onSeen={(moveId) =>
+              setAsks((prev) => {
+                const entry = prev[familyId];
+                return entry ? { ...prev, [familyId]: { ...entry, notices: entry.notices.filter((n) => n.id !== moveId) } } : prev;
+              })
+            }
+          />
+        ) : null}
         <Link href={actions.primary.href} style={primary}>
           {label(actions.primary.key)}
         </Link>
@@ -400,6 +487,13 @@ export default function ParentHomePage(): JSX.Element {
         ) : null}
       </article>
     );
+  };
+
+  /** Read and OK (GX-4, until GX-OD-3): bring the shipped class-scope card into view and move focus to it. */
+  const readScope = (familyId: string, learnerId: string): void => {
+    const target = typeof document === 'undefined' ? null : (document.getElementById(scopeCardDomId(familyId, learnerId)) as HTMLElement | null);
+    target?.scrollIntoView?.({ block: 'start' });
+    target?.focus?.({ preventScroll: true });
   };
 
   const familySection = (family: SpaceListItem, isLast: boolean, cross: JSX.Element | null): JSX.Element => {
@@ -448,11 +542,6 @@ export default function ParentHomePage(): JSX.Element {
             {p.actions.addLearner}
           </button>
         ) : null}
-        {(moves[id] ?? 0) > 0 ? (
-          <Link href={ROUTES.spaceTransfers(id, 'family')} style={button} data-testid="family-moves-waiting">
-            {c.transfer.waiting(moves[id] ?? 0)}
-          </Link>
-        ) : null}
       </div>
     );
     const side = (
@@ -478,7 +567,29 @@ export default function ParentHomePage(): JSX.Element {
             onName={setFamilyName}
             announce={announce}
           />
-          {api && !archived ? <FamilyClassCards familyId={id} api={api} movesShown={movesShown} /> : null}
+          {api && !archived && asks[id] ? (
+            <FamilyNeedsYou
+              familyId={id}
+              familyName={family.space.name}
+              items={needsYou(asks[id] as FamilyAsks, now)}
+              views={(asks[id]?.transfers?.requests ?? []).filter((v): v is TransferLearnerSideView => v.role === 'learner_side')}
+              avatars={Object.fromEntries(learners.map((l) => [l.id, l.avatar]))}
+              api={api}
+              online={online}
+              now={now}
+              onChanged={() => Promise.all([loadAsks(id), loadRoster(id, family.role, true)]).then(() => undefined)}
+              onReadScope={(learnerId) => readScope(id, learnerId)}
+            />
+          ) : null}
+          {api && !archived ? (
+            <FamilyClassCards
+              familyId={id}
+              api={api}
+              scope={asks[id]?.scope ?? null}
+              onScope={(next) => setAsks((prev) => (prev[id] ? { ...prev, [id]: { ...(prev[id] as FamilyAsks), scope: next } } : prev))}
+              onStale={() => void loadAsks(id)}
+            />
+          ) : null}
           {entry.state === 'loading' ? (
             <div className="hr-ph-cards" ref={first ? setCardsGrid : undefined}>
               {withLectureCard(skeletons(), lectureSlot === 'afterFirstRow')}
