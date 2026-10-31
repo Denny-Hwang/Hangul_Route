@@ -360,6 +360,14 @@ describe('needsYou: what only the family can answer (GX-4, section 7.1)', () => 
     expect(needsYou({ relinks: null, transfers: null, scope: null, notices: [] }, NOW_GX)).toEqual([]);
   });
 
+  it('a move the family cannot answer (a self-managed learner: learnerRoute device or none) is no row and no chip', () => {
+    for (const learnerRoute of ['device', 'none'] as const) {
+      const state = asks({ transfers: list([sideView({ learnerRoute })]) });
+      expect(needsYou(state, NOW_GX)).toEqual([]);
+      expect(childStatus('profile:jun', state, NOW_GX)).toBeNull();
+    }
+  });
+
   it('soonest-closing first (a re-link closes in minutes), then oldest first; an item with no end last', () => {
     const items = needsYou(
       asks({
