@@ -373,7 +373,7 @@
           ]
         }
       ],
-      "addedIn": 20261030
+      "addedIn": 20261105
     },
     {
       "id": "quest:stage3-life-v2-q2",
@@ -417,7 +417,7 @@
                     "picture": "word:culture-tteokbokki"
                   }
                 ],
-                "captionEn": "Joahaeyo says you like a food. The food takes eul or reul, as it does with meogeoyo."
+                "captionEn": "With joahaeyo, the food takes eul or reul. With joayo, from Volume 1, it takes i or ga."
               },
               {
                 "items": [
@@ -766,7 +766,7 @@
           ]
         }
       ],
-      "addedIn": 20261030
+      "addedIn": 20261105
     },
     {
       "id": "quest:stage3-life-v2-q3",
@@ -895,30 +895,6 @@
             {
               "id": "r2",
               "sentence": {
-                "ko": "나물을 넣어요.",
-                "romanization": "namureul neoeoyo",
-                "en": "I put in the seasoned vegetables."
-              },
-              "distractors": [],
-              "particle": {
-                "tile": 0,
-                "choices": [
-                  {
-                    "ko": "을",
-                    "romanization": "eul",
-                    "en": "object marker, after a final consonant"
-                  },
-                  {
-                    "ko": "를",
-                    "romanization": "reul",
-                    "en": "object marker, after a vowel"
-                  }
-                ]
-              }
-            },
-            {
-              "id": "r3",
-              "sentence": {
                 "ko": "고추장을 넣어요.",
                 "romanization": "gochujangeul neoeoyo",
                 "en": "I put in the red pepper paste."
@@ -941,7 +917,7 @@
               }
             },
             {
-              "id": "r4",
+              "id": "r3",
               "sentence": {
                 "ko": "그다음에 비벼요.",
                 "romanization": "geudaeume bibyeoyo",
@@ -957,7 +933,7 @@
               ]
             },
             {
-              "id": "r5",
+              "id": "r4",
               "sentence": {
                 "ko": "맛이 매워요.",
                 "romanization": "masi maewoyo",
@@ -971,6 +947,31 @@
                   "en": "go (in 'I go')"
                 }
               ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "비빔밥을 좋아해요.",
+                "romanization": "bibimbabeul joahaeyo",
+                "en": "I like bibimbap."
+              },
+              "pictureRef": "word:culture-bibimbap",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
             }
           ]
         },
@@ -1063,26 +1064,26 @@
             {
               "id": "a4",
               "sentence": {
-                "ko": "그다음에 ___.",
-                "romanization": "geudaeume ___",
-                "en": "Next, I mix it."
+                "ko": "___ 고추장을 넣어요.",
+                "romanization": "___ gochujangeul neoeoyo",
+                "en": "Next, I put in the red pepper paste."
               },
               "gapKind": "word",
               "tiles": [
                 {
-                  "ko": "비벼요",
-                  "romanization": "bibyeoyo",
-                  "en": "mix"
+                  "ko": "그다음에",
+                  "romanization": "geudaeume",
+                  "en": "next, after that"
                 },
                 {
-                  "ko": "와요",
-                  "romanization": "wayo",
-                  "en": "come"
+                  "ko": "먼저",
+                  "romanization": "meonjeo",
+                  "en": "first"
                 },
                 {
-                  "ko": "마셔요",
-                  "romanization": "masyeoyo",
-                  "en": "drink"
+                  "ko": "물",
+                  "romanization": "mul",
+                  "en": "water"
                 }
               ],
               "answerIndex": 0
@@ -1112,11 +1113,11 @@
             {
               "id": "c2",
               "sentence": {
-                "ko": "비빔밥을 좋아해요.",
-                "romanization": "bibimbabeul joahaeyo",
-                "en": "I like bibimbap."
+                "ko": "달걀을 넣어요.",
+                "romanization": "dalgyareul neoeoyo",
+                "en": "I put in an egg."
               },
-              "pictureRef": "word:culture-bibimbap",
+              "pictureRef": "word:food-egg",
               "distractors": [],
               "particle": {
                 "tile": 0,
@@ -1137,7 +1138,7 @@
           ]
         }
       ],
-      "addedIn": 20261030
+      "addedIn": 20261105
     }
   ],
   "culture": [
@@ -1165,7 +1166,7 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 나물 are plants and leaves people can eat, and that as a side dish they are boiled, stir-fried or left raw, then seasoned and tossed. National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, 한국의식주생활사전 entry 나물 (topic 7431, read through the site's own topic API, HTTP 200), 정의: a dish of plant ingredients, boiled, stir-fried or raw, seasoned and tossed, eaten with rice. Standard Korean Language Dictionary, 나물 「1」 (search results page, HTTP 200): the general word for grasses and tree leaves people can eat, with 고사리, 도라지, 두릅 and 냉이 as examples. English paraphrase; the locators quote the Korean. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again; each claim matched to a quoted phrase: plants and leaves people can eat (사람이 먹을 수 있는 풀이나 나뭇잎), boiled, stir-fried or raw (삶거나 볶거나 날것 상태로), seasoned and tossed (양념해서 버무린), a side dish (밥반찬). Finding applied: the author's first draft said greens, roots and leaves; the dictionary says grasses and leaves, so roots came out. The institution is named as of the access date (국립민속박물관, National Folk Museum of Korea). No origin, UNESCO or health claim. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text, sources and locators re-read against the fetched pages; no run of words is shared with a quoted source; the es and ko texts say the same and keep the one {ko:} token."
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 나물 are plants and leaves people can eat, and that as a side dish they are boiled, stir-fried or left raw, then seasoned and tossed. National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, 한국의식주생활사전 entry 나물 (topic 7431, read through the site's own topic API, HTTP 200), 정의: a dish of plant ingredients, boiled, stir-fried or raw, seasoned and tossed, eaten with rice. Standard Korean Language Dictionary, 나물 「1」 (search results page, HTTP 200): the general word for grasses and tree leaves people can eat, with 고사리, 도라지, 두릅 and 냉이 as examples. English paraphrase; the locators quote the Korean. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again; each claim matched to a quoted phrase: plants and leaves people can eat (사람이 먹을 수 있는 풀이나 나뭇잎), boiled, stir-fried or raw (삶거나 볶거나 날것 상태로), seasoned and tossed (양념해서 버무린), a side dish (밥반찬). Finding applied: the author's first draft said greens, roots and leaves; the dictionary says grasses and leaves, so roots came out. The institution is named as of the access date (국립민속박물관, National Folk Museum of Korea). No origin, UNESCO or health claim. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text, sources and locators re-read against the fetched pages; the English shares no run of words with a quoted source, and the ko text says it in its own words (reworded after the independent review, 2026-10-31); the es and ko texts say the same and keep the one {ko:} token."
       }
     },
     {
@@ -1192,7 +1193,7 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 비빔밥 is rice mixed with vegetables, 나물, meat and seasoning; that at home it is often mixed before it is put into the bowls; and that in a restaurant the toppings are set on the rice and each person mixes their own. National Folk Museum of Korea, 한류문화사전 entry 비빔밥 (topic 12006, HTTP 200): 정의 lists 채소·나물·반찬·고기·양념 mixed into rice; 내용 names two ways, mixing first and topping the bowls (the home way) and setting the ingredients on the rice for the eater to mix (the way the city restaurants of the 1900s served it), and calls the first 가정식 and the second 음식점 판매용. Standard Korean Language Dictionary, 비빔-밥 (HTTP 200): rice eaten mixed with meat or 나물 and seasonings. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again: confirmed. 'Often' keeps the home sentence from reading as a rule for every home; the restaurant sentence restates 음식점 판매용 and names no restaurant, city or brand (the entry's Jeonju, airline and celebrity passages are left out on purpose). Named as of the access date. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): re-read; no copied run of words; the es and ko texts keep both {ko:} tokens and the hedge (muchas veces; 때가 많아요)."
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 비빔밥 is rice mixed with vegetables, 나물, meat and seasoning; that at home it is often mixed before it is put into the bowls; and that in a restaurant the toppings are set on the rice and each person mixes their own. National Folk Museum of Korea, 한류문화사전 entry 비빔밥 (topic 12006, HTTP 200): 정의 lists 채소·나물·반찬·고기·양념 mixed into rice; 내용 names two ways, mixing first and topping the bowls (the home way) and setting the ingredients on the rice for the eater to mix (the way the city restaurants of the 1900s served it), and calls the first 가정식 and the second 음식점 판매용. Standard Korean Language Dictionary, 비빔-밥 (HTTP 200): rice eaten mixed with meat or 나물 and seasonings. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again: confirmed. 'Often' keeps the home sentence from reading as a rule for every home; the restaurant sentence restates 음식점 판매용 and names no restaurant, city or brand (the entry's Jeonju, airline and celebrity passages are left out on purpose). Named as of the access date. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): re-read; the English copies no run of words, and the ko text says it in its own words (reworded after the independent review, 2026-10-31); the es and ko texts keep both {ko:} tokens and the hedge (muchas veces; 때가 많아요)."
       }
     },
     {
@@ -1219,7 +1220,7 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that the first known written recipe for 비빔밥 is in a cookbook handwritten in Hangul in the late 1800s, and that it mixes rice with stir-fried meat, 나물 and sesame oil, then lays pieces of fried egg on top. National Folk Museum of Korea, 한국의식주생활사전 entry 비빔밥 (topic 7703, HTTP 200), 내용: the recipe first appears in 『시의전서』, a Hangul manuscript written around the late 19th century; it mixes the rice with stir-fried meat, 간납, several 나물 and crushed 튀각, with sesame salt and plenty of sesame oil, and lays fried egg cut into pieces on top. The 한류문화사전 entry (topic 12006) also dates the recipes it reads to cookbooks of the late 19th and early 20th centuries. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both entries fetched again: confirmed. 'First known' restates 처음으로 나온다 (first appears) without claiming the dish began then; 'handwritten' restates 필사본. The note does not name the book, so no title is romanized; it lists three of the ingredients and says nothing of the others. Named as of the access date. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): re-read; no copied run of words; es and ko keep the two {ko:} tokens and the late-1800s date (a finales del siglo XIX; 1800년대 말)."
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that the first known written recipe for 비빔밥 is in a cookbook handwritten in Hangul in the late 1800s, and that it mixes rice with stir-fried meat, 나물 and sesame oil, then lays pieces of fried egg on top. National Folk Museum of Korea, 한국의식주생활사전 entry 비빔밥 (topic 7703, HTTP 200), 내용: the recipe first appears in 『시의전서』, a Hangul manuscript written around the late 19th century; it mixes the rice with stir-fried meat, 간납, several 나물 and crushed 튀각, with sesame salt and plenty of sesame oil, and lays fried egg cut into pieces on top. The 한류문화사전 entry (topic 12006) also dates the recipes it reads to cookbooks of the late 19th and early 20th centuries. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both entries fetched again: confirmed. 'First known' restates 처음으로 나온다 (first appears) without claiming the dish began then; 'handwritten' restates 필사본. The note does not name the book, so no title is romanized; it lists three of the ingredients and says nothing of the others. Named as of the access date. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): re-read; the English copies no run of words; es and ko keep the two {ko:} tokens and the late-1800s date (a finales del siglo XIX; 1800년대 말)."
       }
     }
   ],
@@ -1229,18 +1230,18 @@
     "reviewedBy": "MAR",
     "reviewedAt": "2026-10-30",
     "notes": [
-      "MAR row CM-43 S3 (F-CURR-002 section 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass; the three checkers ran as separate lenses in the authoring session, no native-speaker or expert review is claimed).",
-      "Scope: Volume 2 of Food & Daily Life at Stage 3: taste (맛이 ___ with 달아요 and 매워요, beside Volume 1's 맛있어요), preference and request (김밥을 좋아해요 and the frame ___ 주세요) and the steps of bibimbap in order (___을/를 넣어요, 먼저, 그다음에 비벼요). One new pattern a quest (U-3).",
+      "MAR row CM-43 S3 (F-CURR-002 section 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass; the three checkers ran as separate lenses in the authoring session, and an independent review agent then checked the content and the es and ko strings in the PR review stage, as the separate checker pass; no native-speaker or expert review is claimed).",
+      "Scope: Volume 2 of Food & Daily Life at Stage 3: taste (맛이 ___ with 달아요 and 매워요, beside Volume 1's 맛있어요), preference and request (김밥을 좋아해요 and the frame ___ 주세요) and the steps of bibimbap in order (___을/를 넣어요, 먼저, 그다음에 비벼요). One new pattern a quest (U-3). Culture: no UNESCO, designation or origin claim; no real person, restaurant, city, brand or price; no age wording.",
       "Language: 해요체 with sentence marks; 물 주세요 and 김밥 주세요 drop the particle, as a request does; 그다음 is one word (Standard Korean Language Dictionary 그-다음), so 그다음에; particle rounds test 이/가 and 을/를 (떡볶이가, 라면이, 김밥을, 나물을, 고추장을, 비빔밥을); romanization by the converter (masi darayo, joahaeyo, neoeoyo, geudaeume bibyeoyo).",
       "Language (cont.): Every word-gap Cloze keeps tiles that are grammatical but wrong for the meaning line (맛이 매워요 against It tastes sweet, 물 마셔요 against Water, please), read by its meaning, as in Volume 1.",
-      "Learning design: sound-change flags for the device voice: 맛이 [마시], 맛있어요 [마시써요] (also [마디써요], 표준 발음법 제15항), 달아요 [다라요], 좋아해요 [조아해요], 넣어요 [너어요], 떡볶이 [떡뽀끼], 김밥을 [김바블], 달걀을 [달갸를]; none of them is in Dictation, which asks 빵 and 떡 only (one taught spelling each, said as written). Heard rounds (q2 Listen & Pick) answer with pictures, so no option spelling is told apart by ear.",
-      "Learning design (cont.): Sentence Builder as sequence: q3's five Practice rounds walk the recipe in order (rice first, then 나물, then 고추장, then mix, then the taste).",
+      "Learning design: hasSoundChange flags 넣어요 [너어요], 좋아해요 [조아해요] and 떡볶이 [떡뽀끼]; liaison is not flagged, so 맛이 [마시], 맛있어요 [마시써요], 달아요 [다라요], 김밥을 [김바블] and 달걀을 [달갸를] are kept out of in-quest Dictation by authoring only (review may still offer 달아요, as the repo liaison policy allows). Dictation asks 빵 and 떡 only; q2 heard rounds answer with pictures.",
+      "Learning design (cont.): Sentence Builder as sequence: q3 Practice walks the recipe in order (rice first, then 고추장, then mix, then the taste, then I like bibimbap; 나물 is put in by Discover and Apply a2), and the order is tested, not only shown: Apply a4 gaps the step word (___ 고추장을 넣어요 against Next, with 그다음에 and 먼저 as tiles).",
       "Learning design (cont.): Triples q1 order-it / cloze-pick / type-hangul, q2 order-it / listen-pick / cloze-pick, q3 order-it / cloze-pick / order-it; none equals a Volume 1 triple (every Volume 1 Apply is Pic-Word Match) or its neighbour; every Practice is a Sentence Builder, so each can scaffold (CM-24).",
-      "Learning design (cont.): Practice and Check recycle 57, 50 and 43 in 100 (lesson-recycle); new units 3 a quest. Finding applied: q2 and q3 first recycled 33 in 100; q2 Practice r5 became 떡볶이가 매워요 and q3 Check c1 밥이 뜨거워요 (Volume 1), so both are near the 40 in 100 of section 5.1.",
+      "Learning design (cont.): Practice and Check recycle 57, 50 and 43 in 100 (lesson-recycle); new units 3 a quest. Findings applied: q2 and q3 first recycled 33 in 100, so q2 Practice r5 became 떡볶이가 매워요 and q3 Check c1 밥이 뜨거워요 (Volume 1); when the independent review moved q3 Check c2 to the new 달걀을 넣어요, q3 Practice r5 took q2 비빔밥을 좋아해요 in place of 나물을 넣어요.",
       "Culture and facts: n1 (나물), n2 (two ways to serve 비빔밥) and n3 (the first known written recipe, a Hangul manuscript of the late 1800s) each matched phrase by phrase to the National Folk Museum of Korea's Encyclopedia of Korean Folk Culture (한국의식주생활사전, 한류문화사전) and the Standard Korean Language Dictionary, named as of the access date.",
-      "Culture and facts (cont.): no UNESCO, designation or origin claim; no real person, restaurant, city, brand or price; no age wording.",
       "Reviser: q2 first had two frames (U-3 allows one): ___ 주세요 stays the frame and 좋아해요 is taught by two sentences with a caption; Dictation asks 빵, not 김치, whose meaning kimchi spells its sound; n1 says plants and leaves; the q3 r1 distractor is 와요, which cannot follow 밥을. Third pass: validate-content, lesson lint, U-rules and overlay rules clean.",
-      "Translation (es, ko): es keeps the Volume 1 wording (marca de objeto, después de consonante final; pastel de arroz; fideos instantáneos) and the cell's own picture labels; ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English."
+      "Translation (es, ko): es keeps the Volume 1 wording (marca de objeto, después de consonante final; pastel de arroz; fideos instantáneos) and the cell's own picture labels; ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English.",
+      "Independent review (PR stage, 2026-10-31), applied: q3 Check c2 is 달걀을 넣어요, so it asks the q3 frame; the q2 caption sets joahaeyo (eul, reul) beside Volume 1 joayo (i, ga); Apply a4 tests the recipe order; es and ko note wording. Kept: lex:darayo and lex:maewoyo beside Stage 4 pat:darayo and pat:maewoyo, as the extractor does for five pairs (an extractor follow-up)."
     ]
   },
   "contentVer": 1
