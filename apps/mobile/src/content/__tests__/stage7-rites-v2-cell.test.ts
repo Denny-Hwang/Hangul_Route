@@ -33,6 +33,10 @@ import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 const read = (rel: string): unknown => JSON.parse(readFileSync(new URL(`../../../../../${rel}`, import.meta.url), 'utf8'));
 const cell: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/rites.v2.json'));
 const v1: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/rites.json'));
+// CM-43 S7, the Volume 2 row this one is stacked on: its stamps are the catalogue this cell joins.
+const lifeV2: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/life.v2.json'));
+const koOverlay = read('content/i18n/ko/lessons-stage7-rites-v2.json') as { entries: Record<string, Record<string, string>> };
+const esOverlay = read('content/i18n/es/lessons-stage7-rites-v2.json') as { entries: Record<string, Record<string, string>> };
 
 const scopeOf = (quest: LessonQuest, kind: string): LessonScope | undefined => {
   const ref = quest.steps.find((s) => s.kind === kind)?.minigameRef;
@@ -53,6 +57,18 @@ const koStrings = (value: unknown, out: string[] = []): string[] => {
   return out;
 };
 
+/** Every English string of the cell's quests: `en` glosses and the `...En` copy fields. */
+const enStrings = (value: unknown, out: string[] = []): string[] => {
+  if (Array.isArray(value)) for (const v of value) enStrings(v, out);
+  else if (value !== null && typeof value === 'object') {
+    for (const [key, v] of Object.entries(value)) {
+      if ((key === 'en' || key.endsWith('En')) && typeof v === 'string') out.push(v);
+      else enStrings(v, out);
+    }
+  }
+  return out;
+};
+
 describe('My New Year Card, Stage 7 Holidays & Traditions Volume 2 (F-CURR-002 row CM-45 S7)', () => {
   it('is the Volume 2 of the Stage 7 Holidays & Traditions cell: three quests, ready with both MAR sign-offs, stamped above the catalogue it joined', () => {
     expect(cell.id).toBe('episode:stage7-rites-v2');
@@ -61,7 +77,8 @@ describe('My New Year Card, Stage 7 Holidays & Traditions Volume 2 (F-CURR-002 r
     expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage7-rites-v2-q1', 'quest:stage7-rites-v2-q2', 'quest:stage7-rites-v2-q3']);
-    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(20261028);
+    const before = Math.max(...lifeV2.quests.map((q) => q.addedIn ?? 0));
+    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(before);
     // Row CM-23: one card per upper cell, already Volume 1's (card:saengil); a Volume 2 gives none.
     expect(v1.rewardCardIds).toEqual(['card:saengil']);
     expect(cell.rewardCardIds).toEqual([]);
@@ -129,6 +146,10 @@ describe('My New Year Card, Stage 7 Holidays & Traditions Volume 2 (F-CURR-002 r
     expect(lines.some((l) => l.includes('선생님께'))).toBe(true);
     expect(lines.some((l) => l.includes('호야에게'))).toBe(true);
     for (const l of lines) expect(/할머니에게|선생님에게|호야께/.test(l), l).toBe(false);
+    // The ko overlay keeps the rule its glosses teach: no honorific receiver (분, 어머니, 할머니, 선생님) before 에게.
+    const koTexts = Object.values(koOverlay.entries).flatMap((entry) => Object.values(entry));
+    expect(koTexts.length).toBeGreaterThan(100);
+    for (const t of koTexts) expect(/(분|어머니|할머니|선생님)에게/.test(t), t).toBe(false);
     // The q1 Check offers no second right answer: the gap before 선생님 holds 께 and no 에게, the gap before 호야 에게 and no 께.
     const check = scopeOf(cell.quests[0]!, 'check')!;
     expect(check.kind).toBe('cloze-pick');
@@ -155,7 +176,7 @@ describe('the My Story chain of q3 Apply (§7.1 F8, §6.6, rows CM-38 and CM-45 
   it("is the cell's only chain, three word-bank frames that each parse as a My Story frame: who the card is for with the New Year wish, a line of news, a holiday wish", () => {
     expect(chainOf(cell)).toHaveLength(1);
     expect(chain!.ref).toBe('minigame:s7-rites-v2-q3-apply');
-    expect(chain!.frames.map((f) => f.frame.ko)).toEqual(['___, 새해 복 많이 받으세요.', '설날에 ___을/를 먹었어요.', '___ 잘 보내세요.']);
+    expect(chain!.frames.map((f) => f.frame.ko)).toEqual(['___, 새해 복 많이 받으세요.', '설날에 ___을/를 먹어요.', '___ 잘 보내세요.']);
     for (const frame of chain!.frames) {
       expect(MyStoryFrameSchema.safeParse(frame).success, frame.id).toBe(true);
       expect(frame.freeEntry, frame.id).toBe(false);
@@ -166,11 +187,21 @@ describe('the My Story chain of q3 Apply (§7.1 F8, §6.6, rows CM-38 and CM-45 
   it('the receiver is chosen from a word bank: Hoya\'s grandmother, the friend Hoya or a teacher (§5.4 S7), and every frame suits all three', () => {
     expect(chain!.frames[0]!.slots[0]!.bank.map((w) => w.ko)).toEqual(['할머니', '호야', '선생님']);
     expect(cell.subtitleEn).toMatch(/Hoya's grandmother/);
+    // §6.6: the cast is Hoya's family, never the learner's own, so 할머니 reads as Hoya's grandma in every locale's bank.
+    const grandma = chain!.frames[0]!.slots[0]!.bank[0]!;
+    expect(grandma.en).toBe("Hoya's grandma");
+    const bankKey = 'myStory.frames.f1.slots.who.bank.halmeoni.gloss';
+    expect(esOverlay.entries[chain!.ref]![bankKey]).toBe('abuela de Hoya');
+    expect(koOverlay.entries[chain!.ref]![bankKey]).toBe('호야의 할머니');
+    // Every English line that names her (prompts, glosses, examples) says whose grandma she is.
+    const enGrandma = enStrings(cell.quests).filter((l) => /grandma/i.test(l));
+    expect(enGrandma.length).toBeGreaterThanOrEqual(6);
+    for (const line of enGrandma) expect(line, line).toMatch(/Hoya's grandma/i);
     // The chain is one line of frames, so no later frame can follow the pick: a wish to the receiver ends in the
-    // respectful -(으)세요 (받으세요, 보내세요), which suits an elder, a teacher and a friend alike (NIKL 언어 예절), and the
-    // writer's own news is plain polite 해요체 (먹었어요). No frame puts the receiver after a verb that would need its
-    // humble form for an elder (만나요 for 뵈어요, the language lens's finding).
-    expect(chain!.frames.map((f) => /(받으세요|보내세요|먹었어요)\.$/.test(f.frame.ko))).toEqual([true, true, true]);
+    // polite -(으)세요 (받으세요, 보내세요), safe to write to anyone (a learning-design choice; the Discover notes add that a
+    // close friend also hears the plain form), and the line about the writer's holiday is plain polite 해요체 (먹어요).
+    // No frame puts the receiver after a verb that would need its humble form for an elder (만나요 for 뵈어요).
+    expect(chain!.frames.map((f) => /(받으세요|보내세요|먹어요)\.$/.test(f.frame.ko))).toEqual([true, true, true]);
     for (const frame of chain!.frames) expect(/만나요|줘요|있어요/.test(frame.frame.ko), frame.id).toBe(false);
   });
 
@@ -227,5 +258,31 @@ describe('the My Story chain of q3 Apply (§7.1 F8, §6.6, rows CM-38 and CM-45 
       }
     }
     expect(lines).toBe(3 * 9);
+  });
+
+  it('the whole card holds together for every combination of picks, in en, es and ko: a New Year card written before Seollal, then a wish for it', () => {
+    const LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
+    const module = LESSON_STAGE_MODULES[7];
+    const scope = module.LESSON_SCOPES[chain!.ref]!;
+    // The Korean: frame 2 is present tense (the coming Seollal), and frame 3 wishes only Seollal, the holiday or the
+    // weekend, so no card reports Seollal as past and then wishes for it, or wishes a Chuseok in a New Year card.
+    expect(chain!.frames[1]!.frame.ko).not.toMatch(/었|았/);
+    expect(chain!.frames[2]!.slots[0]!.bank.map((w) => w.ko)).toEqual(['설날', '명절', '주말']);
+    let cards = 0;
+    for (const locale of LOCALES) {
+      const [f1, f2, f3] = localizeScope(scope, chain!.ref, locale, module.LESSON_SCOPE_OVERLAYS).myStory?.frames ?? [];
+      for (const a of f1!.slots[0]!.bank) {
+        for (const b of f2!.slots[0]!.bank) {
+          for (const c of f3!.slots[0]!.bank) {
+            const card = [fillGloss(f1!.frame.en, [a.en]), fillGloss(f2!.frame.en, [b.en]), fillGloss(f3!.frame.en, [c.en])].join(' ');
+            cards += 1;
+            expect(card, `${locale}: ${card}`).not.toContain('___');
+            expect(/\b(ate|com[ií])\b|먹은|먹었/.test(card), `${locale}: ${card}`).toBe(false);
+            expect(/Chuseok|cosecha|harvest|가을 보름/i.test(card), `${locale}: ${card}`).toBe(false);
+          }
+        }
+      }
+    }
+    expect(cards).toBe(3 * 27);
   });
 });
