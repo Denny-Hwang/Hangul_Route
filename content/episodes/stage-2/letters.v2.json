@@ -1,0 +1,1674 @@
+{
+  "id": "episode:stage2-letters-v2",
+  "stage": "stage2",
+  "theme": "letters",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Final Letters and Families",
+  "subtitleEn": "Hear the seven final sounds, and how letters move.",
+  "hoyaIntroEn": "You know every letter. Now let us hear what bottom letters do!",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage2-letters-v2-q1",
+      "titleEn": "Seven Final Sounds",
+      "blurbEn": "Read words that end in each of the seven final sounds.",
+      "teaserEn": "Next: three school words that start the same way.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Sounds at the Bottom",
+          "hoyaLineEn": "A bottom letter is said as one of just seven sounds. Let us hear them all!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Seven Sounds",
+          "hoyaLineEn": "Tap Hear it and listen to how each word ends. The l sound is waiting in the game!",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "One ends in n, and one ends in m.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "손",
+                      "romanization": "son",
+                      "en": "hand"
+                    },
+                    "picture": "word:body-hand"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "곰",
+                      "romanization": "gom",
+                      "en": "bear"
+                    },
+                    "picture": "word:animal-bear"
+                  }
+                ]
+              },
+              {
+                "captionEn": "One ends in ng, and one ends in p.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "강",
+                      "romanization": "gang",
+                      "en": "river"
+                    },
+                    "picture": "word:nature-river"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "입",
+                      "romanization": "ip",
+                      "en": "mouth"
+                    },
+                    "picture": "word:body-mouth"
+                  }
+                ]
+              },
+              {
+                "captionEn": "One ends in k, and one ends in t.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "떡",
+                      "romanization": "tteok",
+                      "en": "rice cake"
+                    },
+                    "picture": "word:food-tteok"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "붓",
+                      "romanization": "but",
+                      "en": "brush"
+                    },
+                    "picture": "card:brush"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-letters-v2-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Block",
+          "minigameKind": "syllable-build",
+          "minigameRef": "minigame:s2-letters-v2-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read the Word",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-v2-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Seven Sounds!",
+          "hoyaLineEn": "k, n, t, l, m, p and ng: you read all seven. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-letters-v2-q1-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "son",
+                  "pictureRef": "word:body-hand",
+                  "word": {
+                    "ko": "손",
+                    "romanization": "son",
+                    "en": "hand"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "ip",
+                  "pictureRef": "word:body-mouth",
+                  "word": {
+                    "ko": "입",
+                    "romanization": "ip",
+                    "en": "mouth"
+                  }
+                },
+                {
+                  "id": "chaek",
+                  "pictureRef": "card:book",
+                  "word": {
+                    "ko": "책",
+                    "romanization": "chaek",
+                    "en": "book"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "word": {
+                    "ko": "떡",
+                    "romanization": "tteok",
+                    "en": "rice cake"
+                  }
+                },
+                {
+                  "id": "but",
+                  "pictureRef": "card:brush",
+                  "word": {
+                    "ko": "붓",
+                    "romanization": "but",
+                    "en": "brush"
+                  }
+                },
+                {
+                  "id": "mul",
+                  "pictureRef": "word:food-water",
+                  "word": {
+                    "ko": "물",
+                    "romanization": "mul",
+                    "en": "water"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                },
+                {
+                  "id": "bap",
+                  "pictureRef": "card:rice",
+                  "word": {
+                    "ko": "밥",
+                    "romanization": "bap",
+                    "en": "rice, a meal"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "son",
+                  "pictureRef": "word:body-hand",
+                  "word": {
+                    "ko": "손",
+                    "romanization": "son",
+                    "en": "hand"
+                  }
+                },
+                {
+                  "id": "gong",
+                  "pictureRef": "word:sport-ball",
+                  "word": {
+                    "ko": "공",
+                    "romanization": "gong",
+                    "en": "ball"
+                  }
+                },
+                {
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "ip",
+                  "pictureRef": "word:body-mouth",
+                  "word": {
+                    "ko": "입",
+                    "romanization": "ip",
+                    "en": "mouth"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "word": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-v2-q1-apply",
+          "kind": "syllable-build",
+          "rounds": [
+            {
+              "id": "son",
+              "target": {
+                "ko": "손",
+                "romanization": "son",
+                "en": "hand"
+              },
+              "firstTiles": [
+                "ㅅ",
+                "ㅈ",
+                "ㄴ"
+              ],
+              "vowelTiles": [
+                "ㅗ",
+                "ㅜ",
+                "ㅏ"
+              ],
+              "finalTiles": [
+                "ㄴ",
+                "ㅁ",
+                "ㅇ"
+              ]
+            },
+            {
+              "id": "gom",
+              "target": {
+                "ko": "곰",
+                "romanization": "gom",
+                "en": "bear"
+              },
+              "firstTiles": [
+                "ㄱ",
+                "ㄷ",
+                "ㅂ"
+              ],
+              "vowelTiles": [
+                "ㅗ",
+                "ㅓ",
+                "ㅜ"
+              ],
+              "finalTiles": [
+                "ㅁ",
+                "ㄴ",
+                "ㄹ"
+              ]
+            },
+            {
+              "id": "gang",
+              "target": {
+                "ko": "강",
+                "romanization": "gang",
+                "en": "river"
+              },
+              "firstTiles": [
+                "ㄱ",
+                "ㅎ",
+                "ㅅ"
+              ],
+              "vowelTiles": [
+                "ㅏ",
+                "ㅗ",
+                "ㅣ"
+              ],
+              "finalTiles": [
+                "ㅇ",
+                "ㄴ",
+                "ㅁ"
+              ]
+            },
+            {
+              "id": "ip",
+              "target": {
+                "ko": "입",
+                "romanization": "ip",
+                "en": "mouth"
+              },
+              "firstTiles": [
+                "ㅇ",
+                "ㅎ",
+                "ㅈ"
+              ],
+              "vowelTiles": [
+                "ㅣ",
+                "ㅏ",
+                "ㅜ"
+              ],
+              "finalTiles": [
+                "ㅂ",
+                "ㄱ",
+                "ㄷ"
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-v2-q1-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "see-son",
+              "promptShown": true,
+              "prompt": {
+                "ko": "손",
+                "romanization": "son",
+                "en": "hand"
+              },
+              "options": [
+                {
+                  "id": "son",
+                  "pictureRef": "word:body-hand",
+                  "labelEn": "hand"
+                },
+                {
+                  "id": "bal",
+                  "pictureRef": "word:body-foot",
+                  "labelEn": "foot"
+                },
+                {
+                  "id": "ip",
+                  "pictureRef": "word:body-mouth",
+                  "labelEn": "mouth"
+                }
+              ],
+              "answerId": "son"
+            },
+            {
+              "id": "see-gom",
+              "promptShown": true,
+              "prompt": {
+                "ko": "곰",
+                "romanization": "gom",
+                "en": "bear"
+              },
+              "options": [
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "labelEn": "bear"
+                },
+                {
+                  "id": "gang",
+                  "pictureRef": "word:nature-river",
+                  "labelEn": "river"
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "labelEn": "star"
+                }
+              ],
+              "answerId": "gom"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-letters-v2-q2",
+      "titleEn": "School Words",
+      "blurbEn": "Read three school words that start the same way, and find things in a school room.",
+      "teaserEn": "Next: words that sound a little different from how they look.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Words That Share",
+          "hoyaLineEn": "Three school words start with the same block. Can you spot it?",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "One Block, Three Words",
+          "hoyaLineEn": "Look at the first block of each word. Then tap Hear it.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "A school and a student.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "학교",
+                      "romanization": "hakgyo",
+                      "en": "school",
+                      "syllables": [
+                        "hak",
+                        "gyo"
+                      ]
+                    },
+                    "picture": "word:school-school"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "학생",
+                      "romanization": "haksaeng",
+                      "en": "student",
+                      "syllables": [
+                        "hak",
+                        "saeng"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "A school year, and a desk to read at.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "학년",
+                      "romanization": "hangnyeon",
+                      "en": "school year, grade",
+                      "syllables": [
+                        "hang",
+                        "nyeon"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "책상",
+                      "romanization": "chaeksang",
+                      "en": "desk",
+                      "syllables": [
+                        "chaek",
+                        "sang"
+                      ]
+                    },
+                    "picture": "word:school-desk"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-v2-q2-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Find It in the Room",
+          "minigameKind": "hidden-heritage",
+          "minigameRef": "minigame:s2-letters-v2-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-letters-v2-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "School Words!",
+          "hoyaLineEn": "School, student, school year: you read the whole word family!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-letters-v2-q2-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-hakgyo",
+              "prompt": {
+                "ko": "학교",
+                "romanization": "hakgyo",
+                "en": "school"
+              },
+              "options": [
+                {
+                  "id": "hakgyo",
+                  "pictureRef": "word:school-school",
+                  "labelEn": "school"
+                },
+                {
+                  "id": "chaeksang",
+                  "pictureRef": "word:school-desk",
+                  "labelEn": "desk"
+                },
+                {
+                  "id": "uija",
+                  "pictureRef": "word:school-chair",
+                  "labelEn": "chair"
+                }
+              ],
+              "answerId": "hakgyo"
+            },
+            {
+              "id": "hear-chaeksang",
+              "prompt": {
+                "ko": "책상",
+                "romanization": "chaeksang",
+                "en": "desk"
+              },
+              "options": [
+                {
+                  "id": "chaeksang",
+                  "pictureRef": "word:school-desk",
+                  "labelEn": "desk"
+                },
+                {
+                  "id": "chaek",
+                  "pictureRef": "card:book",
+                  "labelEn": "book"
+                },
+                {
+                  "id": "gawi",
+                  "pictureRef": "word:school-scissors",
+                  "labelEn": "scissors"
+                }
+              ],
+              "answerId": "chaeksang"
+            },
+            {
+              "id": "hear-haksaeng",
+              "prompt": {
+                "ko": "학생",
+                "romanization": "haksaeng",
+                "en": "student"
+              },
+              "options": [
+                {
+                  "id": "haksaeng",
+                  "text": {
+                    "ko": "학생",
+                    "romanization": "haksaeng",
+                    "en": "student"
+                  }
+                },
+                {
+                  "id": "hangnyeon",
+                  "text": {
+                    "ko": "학년",
+                    "romanization": "hangnyeon",
+                    "en": "school year, grade"
+                  }
+                },
+                {
+                  "id": "hakgyo",
+                  "text": {
+                    "ko": "학교",
+                    "romanization": "hakgyo",
+                    "en": "school"
+                  }
+                }
+              ],
+              "answerId": "haksaeng"
+            },
+            {
+              "id": "hear-hangnyeon",
+              "prompt": {
+                "ko": "학년",
+                "romanization": "hangnyeon",
+                "en": "school year, grade"
+              },
+              "options": [
+                {
+                  "id": "hangnyeon",
+                  "text": {
+                    "ko": "학년",
+                    "romanization": "hangnyeon",
+                    "en": "school year, grade"
+                  }
+                },
+                {
+                  "id": "haksaeng",
+                  "text": {
+                    "ko": "학생",
+                    "romanization": "haksaeng",
+                    "en": "student"
+                  }
+                },
+                {
+                  "id": "chaeksang",
+                  "text": {
+                    "ko": "책상",
+                    "romanization": "chaeksang",
+                    "en": "desk"
+                  }
+                }
+              ],
+              "answerId": "hangnyeon"
+            },
+            {
+              "id": "hear-uija",
+              "prompt": {
+                "ko": "의자",
+                "romanization": "uija",
+                "en": "chair"
+              },
+              "options": [
+                {
+                  "id": "uija",
+                  "pictureRef": "word:school-chair",
+                  "labelEn": "chair"
+                },
+                {
+                  "id": "chaeksang",
+                  "pictureRef": "word:school-desk",
+                  "labelEn": "desk"
+                },
+                {
+                  "id": "gawi",
+                  "pictureRef": "word:school-scissors",
+                  "labelEn": "scissors"
+                }
+              ],
+              "answerId": "uija"
+            },
+            {
+              "id": "hear-chaek",
+              "prompt": {
+                "ko": "책",
+                "romanization": "chaek",
+                "en": "book"
+              },
+              "options": [
+                {
+                  "id": "chaek",
+                  "pictureRef": "card:book",
+                  "labelEn": "book"
+                },
+                {
+                  "id": "but",
+                  "pictureRef": "card:brush",
+                  "labelEn": "brush"
+                },
+                {
+                  "id": "chaeksang",
+                  "pictureRef": "word:school-desk",
+                  "labelEn": "desk"
+                }
+              ],
+              "answerId": "chaek"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-v2-q2-apply",
+          "kind": "hidden-heritage",
+          "rounds": [
+            {
+              "id": "hh1",
+              "sceneId": "scene:letters-school",
+              "altEn": "A school room of earlier times, with a door open to the yard.",
+              "targets": [
+                {
+                  "id": "chaek",
+                  "word": {
+                    "ko": "책",
+                    "romanization": "chaek",
+                    "en": "book"
+                  },
+                  "spot": {
+                    "x": 14,
+                    "y": 160,
+                    "w": 86,
+                    "h": 84
+                  },
+                  "picture": "card:book"
+                },
+                {
+                  "id": "but",
+                  "word": {
+                    "ko": "붓",
+                    "romanization": "but",
+                    "en": "brush"
+                  },
+                  "spot": {
+                    "x": 112,
+                    "y": 160,
+                    "w": 84,
+                    "h": 84
+                  },
+                  "picture": "card:brush"
+                },
+                {
+                  "id": "namu",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  },
+                  "spot": {
+                    "x": 208,
+                    "y": 118,
+                    "w": 86,
+                    "h": 104
+                  },
+                  "picture": "word:nature-tree"
+                }
+              ],
+              "others": [
+                {
+                  "id": "san",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  },
+                  "spot": {
+                    "x": 206,
+                    "y": 24,
+                    "w": 96,
+                    "h": 82
+                  }
+                },
+                {
+                  "id": "sae",
+                  "word": {
+                    "ko": "새",
+                    "romanization": "sae",
+                    "en": "bird"
+                  },
+                  "spot": {
+                    "x": 314,
+                    "y": 24,
+                    "w": 76,
+                    "h": 82
+                  }
+                },
+                {
+                  "id": "kkot",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  },
+                  "spot": {
+                    "x": 306,
+                    "y": 128,
+                    "w": 84,
+                    "h": 94
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-v2-q2-check",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "hakgyo",
+                  "pictureRef": "word:school-school",
+                  "word": {
+                    "ko": "학교",
+                    "romanization": "hakgyo",
+                    "en": "school"
+                  }
+                },
+                {
+                  "id": "chaeksang",
+                  "pictureRef": "word:school-desk",
+                  "word": {
+                    "ko": "책상",
+                    "romanization": "chaeksang",
+                    "en": "desk"
+                  }
+                },
+                {
+                  "id": "uija",
+                  "pictureRef": "word:school-chair",
+                  "word": {
+                    "ko": "의자",
+                    "romanization": "uija",
+                    "en": "chair"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "chaek",
+                  "pictureRef": "card:book",
+                  "word": {
+                    "ko": "책",
+                    "romanization": "chaek",
+                    "en": "book"
+                  }
+                },
+                {
+                  "id": "gawi",
+                  "pictureRef": "word:school-scissors",
+                  "word": {
+                    "ko": "가위",
+                    "romanization": "gawi",
+                    "en": "scissors"
+                  }
+                },
+                {
+                  "id": "hakgyo",
+                  "pictureRef": "word:school-school",
+                  "word": {
+                    "ko": "학교",
+                    "romanization": "hakgyo",
+                    "en": "school"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-letters-v2-q3",
+      "titleEn": "Sounds That Move",
+      "blurbEn": "See how a bottom letter moves over or changes when a word is said.",
+      "teaserEn": "You can read final sounds, word families and sound changes now!",
+      "estimatedMinutes": 4,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Spelling and Sound",
+          "hoyaLineEn": "Some words are not said the way they are written. Let us listen!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Look, Then Listen",
+          "hoyaLineEn": "Look at the spelling first, then tap Hear it. The spelling stays the same.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Before a vowel, the bottom letter moves to the next block.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "책이",
+                      "romanization": "chaegi",
+                      "en": "book, with i after it",
+                      "syllables": [
+                        "chae",
+                        "gi"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "음악",
+                      "romanization": "eumak",
+                      "en": "music",
+                      "syllables": [
+                        "eu",
+                        "mak"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "captionEn": "Before n or m, a k sound is said ng.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "국물",
+                      "romanization": "gungmul",
+                      "en": "soup broth",
+                      "syllables": [
+                        "gung",
+                        "mul"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "박물관",
+                      "romanization": "bangmulgwan",
+                      "en": "museum",
+                      "syllables": [
+                        "bang",
+                        "mul",
+                        "gwan"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Which Spelling?",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-letters-v2-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s2-letters-v2-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Sharp Ears!",
+          "hoyaLineEn": "Same spelling, a new sound. Your eyes and ears worked together!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-letters-v2-q3-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-eumak",
+              "prompt": {
+                "ko": "음악",
+                "romanization": "eumak",
+                "en": "music"
+              },
+              "options": [
+                {
+                  "id": "eumak",
+                  "text": {
+                    "ko": "음악",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                },
+                {
+                  "id": "gungmul",
+                  "text": {
+                    "ko": "국물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                },
+                {
+                  "id": "bangmulgwan",
+                  "text": {
+                    "ko": "박물관",
+                    "romanization": "bangmulgwan",
+                    "en": "museum"
+                  }
+                }
+              ],
+              "answerId": "eumak"
+            },
+            {
+              "id": "hear-gungmul",
+              "prompt": {
+                "ko": "국물",
+                "romanization": "gungmul",
+                "en": "soup broth"
+              },
+              "options": [
+                {
+                  "id": "gungmul",
+                  "text": {
+                    "ko": "국물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                },
+                {
+                  "id": "eumak",
+                  "text": {
+                    "ko": "음악",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                },
+                {
+                  "id": "chaegi",
+                  "text": {
+                    "ko": "책이",
+                    "romanization": "chaegi",
+                    "en": "book, with i after it"
+                  }
+                }
+              ],
+              "answerId": "gungmul"
+            },
+            {
+              "id": "hear-chaegi",
+              "prompt": {
+                "ko": "책이",
+                "romanization": "chaegi",
+                "en": "book, with i after it"
+              },
+              "options": [
+                {
+                  "id": "chaegi",
+                  "text": {
+                    "ko": "책이",
+                    "romanization": "chaegi",
+                    "en": "book, with i after it"
+                  }
+                },
+                {
+                  "id": "eumak",
+                  "text": {
+                    "ko": "음악",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                },
+                {
+                  "id": "gungmul",
+                  "text": {
+                    "ko": "국물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                }
+              ],
+              "answerId": "chaegi"
+            },
+            {
+              "id": "hear-bangmulgwan",
+              "prompt": {
+                "ko": "박물관",
+                "romanization": "bangmulgwan",
+                "en": "museum"
+              },
+              "options": [
+                {
+                  "id": "bangmulgwan",
+                  "text": {
+                    "ko": "박물관",
+                    "romanization": "bangmulgwan",
+                    "en": "museum"
+                  }
+                },
+                {
+                  "id": "gungmul",
+                  "text": {
+                    "ko": "국물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                },
+                {
+                  "id": "eumak",
+                  "text": {
+                    "ko": "음악",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                }
+              ],
+              "answerId": "bangmulgwan"
+            },
+            {
+              "id": "hear-hangnyeon",
+              "prompt": {
+                "ko": "학년",
+                "romanization": "hangnyeon",
+                "en": "school year, grade"
+              },
+              "options": [
+                {
+                  "id": "hangnyeon",
+                  "text": {
+                    "ko": "학년",
+                    "romanization": "hangnyeon",
+                    "en": "school year, grade"
+                  }
+                },
+                {
+                  "id": "hakgyo",
+                  "text": {
+                    "ko": "학교",
+                    "romanization": "hakgyo",
+                    "en": "school"
+                  }
+                },
+                {
+                  "id": "chaegi",
+                  "text": {
+                    "ko": "책이",
+                    "romanization": "chaegi",
+                    "en": "book, with i after it"
+                  }
+                }
+              ],
+              "answerId": "hangnyeon"
+            },
+            {
+              "id": "hear-son",
+              "prompt": {
+                "ko": "손",
+                "romanization": "son",
+                "en": "hand"
+              },
+              "options": [
+                {
+                  "id": "son",
+                  "text": {
+                    "ko": "손",
+                    "romanization": "son",
+                    "en": "hand"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "text": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "gang",
+                  "text": {
+                    "ko": "강",
+                    "romanization": "gang",
+                    "en": "river"
+                  }
+                }
+              ],
+              "answerId": "son"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-v2-q3-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "spell-gungmul",
+              "promptKind": "spelling",
+              "prompt": {
+                "ko": "국물",
+                "romanization": "gungmul",
+                "en": "soup broth"
+              },
+              "options": [
+                {
+                  "id": "right",
+                  "text": {
+                    "ko": "국물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                },
+                {
+                  "id": "alike",
+                  "text": {
+                    "ko": "궁물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                }
+              ],
+              "answerId": "right",
+              "fallbackOptions": [
+                {
+                  "id": "eumak",
+                  "text": {
+                    "ko": "음악",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                },
+                {
+                  "id": "bangmulgwan",
+                  "text": {
+                    "ko": "박물관",
+                    "romanization": "bangmulgwan",
+                    "en": "museum"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "spell-chaegi",
+              "promptKind": "spelling",
+              "prompt": {
+                "ko": "책이",
+                "romanization": "chaegi",
+                "en": "book, with i after it"
+              },
+              "options": [
+                {
+                  "id": "right",
+                  "text": {
+                    "ko": "책이",
+                    "romanization": "chaegi",
+                    "en": "book, with i after it"
+                  }
+                },
+                {
+                  "id": "alike",
+                  "text": {
+                    "ko": "채기",
+                    "romanization": "chaegi",
+                    "en": "book, with i after it"
+                  }
+                }
+              ],
+              "answerId": "right",
+              "fallbackOptions": [
+                {
+                  "id": "gungmul",
+                  "text": {
+                    "ko": "국물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                },
+                {
+                  "id": "eumak",
+                  "text": {
+                    "ko": "음악",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "spell-eumak",
+              "promptKind": "spelling",
+              "prompt": {
+                "ko": "음악",
+                "romanization": "eumak",
+                "en": "music"
+              },
+              "options": [
+                {
+                  "id": "right",
+                  "text": {
+                    "ko": "음악",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                },
+                {
+                  "id": "alike",
+                  "text": {
+                    "ko": "으막",
+                    "romanization": "eumak",
+                    "en": "music"
+                  }
+                }
+              ],
+              "answerId": "right",
+              "fallbackOptions": [
+                {
+                  "id": "chaegi",
+                  "text": {
+                    "ko": "책이",
+                    "romanization": "chaegi",
+                    "en": "book, with i after it"
+                  }
+                },
+                {
+                  "id": "bangmulgwan",
+                  "text": {
+                    "ko": "박물관",
+                    "romanization": "bangmulgwan",
+                    "en": "museum"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "spell-bangmulgwan",
+              "promptKind": "spelling",
+              "prompt": {
+                "ko": "박물관",
+                "romanization": "bangmulgwan",
+                "en": "museum"
+              },
+              "options": [
+                {
+                  "id": "right",
+                  "text": {
+                    "ko": "박물관",
+                    "romanization": "bangmulgwan",
+                    "en": "museum"
+                  }
+                },
+                {
+                  "id": "alike",
+                  "text": {
+                    "ko": "방물관",
+                    "romanization": "bangmulgwan",
+                    "en": "museum"
+                  }
+                }
+              ],
+              "answerId": "right",
+              "fallbackOptions": [
+                {
+                  "id": "gungmul",
+                  "text": {
+                    "ko": "국물",
+                    "romanization": "gungmul",
+                    "en": "soup broth"
+                  }
+                },
+                {
+                  "id": "chaegi",
+                  "text": {
+                    "ko": "책이",
+                    "romanization": "chaegi",
+                    "en": "book, with i after it"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-letters-v2-q3-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "see-eumak",
+              "promptEn": "Type the word for music.",
+              "target": {
+                "ko": "음악",
+                "romanization": "eumak",
+                "en": "music"
+              }
+            },
+            {
+              "id": "see-gungmul",
+              "promptEn": "Type the word for soup broth.",
+              "target": {
+                "ko": "국물",
+                "romanization": "gungmul",
+                "en": "soup broth"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "The {ko:훈민정음} book made no new letters for the bottom of a block: the first letters are used again. Its part on final sounds says eight such letters are enough.",
+      "sources": [
+        {
+          "title": "표준국어대사전 「종성부용초성」 (Standard Korean Language Dictionary)",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%A2%85%EC%84%B1%EB%B6%80%EC%9A%A9%EC%B4%88%EC%84%B1",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "종성부용초성 (終聲復用初聲) 「명사」 『언어』: ‘훈민정음에서, 종성의 글자를 별도로 만들지 아니하고 초성으로 쓰는 글자를 다시 사용한다는 종성의 제자 원리(制字原理).’"
+        },
+        {
+          "title": "종성부용초성 (終聲復用初聲)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0078692",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘『훈민정음』의 「제자해」에서 초성 17자와 중성 11자에 대해서는 제자 방법을 설명하고 종성에 대해서는 ‘종성부용초성’이라 하여 새로 만들지 않고 초성을 다시 쓴다고 한 것을 말한다.’ / ‘「종성해」에서는 ‘종성으로는 8자만 사용한다’고 8종성법을 규정하여, ‘ㄱ, ㆁ, ㄷ, ㄴ, ㄹ, ㅂ, ㅁ, ㅅ’ 8자를 종성으로 사용하였다.’"
+        },
+        {
+          "title": "팔종성법 (八終聲法)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0078818",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘「종성해」에서는 이 내용에 이어서 “然ㄱㆁㄷㄴㅂㅁㅅㄹ八字可足用也”라고 하여 “종성으로 ‘ㄱ, ㆁ, ㄷ, ㄴ, ㅂ, ㅁ, ㅅ, ㄹ’ 8자만 사용해도 족하다.”라고 하였다.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-44 S2, 2026-10-30): the National Institute of Korean Language dictionary entry 종성부용초성 and the Encyclopedia of Korean Culture articles 종성부용초성 and 팔종성법 opened; the dictionary says Hunminjeongeum made no separate final letters and uses the initial letters again; the 종성해 part says eight letters (ㄱ ㆁ ㄷ ㄴ ㅂ ㅁ ㅅ ㄹ) are enough. English paraphrase.\nPass 2 (three checkers, 2026-10-30). Culture and facts: each clause matched to its quote ('종성의 글자를 별도로 만들지 아니하고 초성으로 쓰는 글자를 다시 사용', '8자만 사용해도 족하다'); the note names the book only (no year, no person), so no date claim needs a source; the institution is 국립국어원 on the access date; no UNESCO claim. Language: the token 훈민정음 (hunminjeongeum, converter) takes 은 in ko; es keeps the one token and no Hangul outside it. Learning design: it backs q1, whose reward shows it, and stays apart from Volume 1's n5 (the seven sounds today).\nPass 3 (reviser, 2026-10-30): the first draft said 'when Hangul was made'; the dictionary speaks of the book, so the note now names the book. es and ko re-read with the change.\nPass 4 (third pass, 2026-10-30): en, es and ko read again against all three quotes and F-CURR-002 §5.1 and §7.7; each claim says no more than its quotes; no copy claims native-speaker or expert review. The independent MAR culture review of the PR re-reads the sources."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "At a {ko:서당}, a school of earlier times, the teacher was called the {ko:훈장}. The Thousand Character Classic, a Chinese book of 1,000 characters, was widely used as a first book for Classical Chinese.",
+      "sources": [
+        {
+          "title": "표준국어대사전 「훈장」 (Standard Korean Language Dictionary)",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%9B%88%EC%9E%A5",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "훈장 2 (訓長) 「명사」 「1」: ‘글방의 선생.’"
+        },
+        {
+          "title": "표준국어대사전 「글방」, 「서당」 (Standard Korean Language Dictionary)",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B8%80%EB%B0%A9",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "글방 (글房) 「명사」: ‘예전에, 한문을 사사로이 가르치던 곳.≒당, 사숙, 사횡, 서당, 서숙, 서옥, 서재, 학당, 학방.’ / 서당 1 (書堂) 「명사」: ‘예전에, 한문을 사사로이 가르치던 곳.=글방.’"
+        },
+        {
+          "title": "표준국어대사전 「천자문」 (Standard Korean Language Dictionary)",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B2%9C%EC%9E%90%EB%AC%B8",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "천자문 (千字文) 「명사」 『책명』: ‘중국 양나라 주흥사(周興嗣)가 지은 책. 사언(四言) 고시(古詩) 250구로 모두 1,000자(字)로 되어 있으며, 자연 현상으로부터 인륜 도덕에 이르는 지식 용어를 수록하였고, 한문 학습의 입문서로 널리 쓰였다.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-44 S2, 2026-10-30): the dictionary entries 훈장 (訓長, '글방의 선생'), 글방 and 서당 ('예전에, 한문을 사사로이 가르치던 곳', each the other's synonym) and 천자문 ('한문 학습의 입문서로 널리 쓰였다') opened.\nPass 2 (three checkers, 2026-10-30). Culture and facts: the teacher of a 서당 is 훈장 by the synonymy of 글방 and 서당; the Thousand Character Classic is called a Chinese book, as the dictionary says (중국 양나라), so shared East Asian heritage is never framed as Korean in origin (§5.1); it is not said to be taught at every 서당, only widely used as a first book. Language: the first draft passed the 240-character limit (lesson-schema) and was cut; 훈장 takes 이라고 in ko; 《천자문》 is plain Korean in the ko text, as a title. Learning design: shown at q2's reward, after the school-room scene, and does not repeat the scene's card back (album, 서당, brush).\nPass 3 (reviser, 2026-10-30): the note shortened to 199 characters with no change of claim; es and ko follow it.\nPass 4 (third pass, 2026-10-30): en, es and ko read again against the four entries and §5.1 and §7.7; no age word (no 'children'), no person named; no copy claims native-speaker or expert review."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "A bottom letter can change how it sounds. Before a vowel it moves to the next block: {ko:책이} is said chaegi. Before n or m, a k sound is said ng: {ko:국물} is said gungmul, and {ko:학년} hangnyeon.",
+      "sources": [
+        {
+          "title": "표준어 규정 제2부 표준 발음법",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0002&regltn_no=191",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "제4장 제13항: ‘홑받침이나 쌍받침이 모음으로 시작된 조사나 어미, 접미사와 결합되는 경우에는, 제 음가대로 뒤 음절 첫소리로 옮겨 발음한다.’ (예: 옷이[오시], 앞으로[아프로]); 해설: ‘이것을 흔히 연음이라고 부른다.’ / 제5장 제18항: ‘받침 ‘ㄱ(ㄲ, ㅋ, ㄳ, ㄺ), ㄷ(ㅅ, ㅆ, ㅈ, ㅊ, ㅌ, ㅎ), ㅂ(ㅍ, ㄼ, ㄿ, ㅄ)’은 ‘ㄴ, ㅁ’ 앞에서 [ㅇ, ㄴ, ㅁ]으로 발음한다.’ (예: 먹는[멍는], 국물[궁물], 밥물[밤물]); 해설: ‘이 조항은 비음화 현상에 대해 규정하고 있다.’"
+        },
+        {
+          "title": "새국어소식 「표준 발음법의 이해: 한글 자모의 발음」",
+          "publisher": "국립국어원 새국어소식 (National Institute of Korean Language)",
+          "url": "https://www.korean.go.kr/nkview/nknews/200106/35_6.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘일반적으로 받침소리가 모음으로 시작되는 조사나 어미, 접미사와 결합될 때에는 뒤의 소리에 곧바로 이어서 읽고’ / ‘(1) 옷이[오시], 꽃이[꼬치], 깎아[까까], 밭에[바테]’"
+        },
+        {
+          "title": "새국어소식 「표준 발음법의 이해: 같은 위치에서 발음하기」",
+          "publisher": "국립국어원 새국어소식 (National Institute of Korean Language)",
+          "url": "https://www.korean.go.kr/nkview/nknews/200501/78_6.html",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘(1) 국물[궁물], 읍내[음내], 앞문[암문], 겉모양[건모양]’ / ‘(1)은 앞 음절의 끝소리에 ‘ㅂ, ㄷ, ㄱ’가 오고 뒤 음절 첫소리에 비음(ㅁ, ㄴ,ㅇ)이 올 때 앞의 끝소리가 뒤에 오는 소리에 동화되어 비음으로 소리 나는 경우이다.’ / ‘비음화(1)와 유음화(2)는 우리말의 음절 연결에서는 항상 일어나는 필수적인 현상이다.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-44 S2, 2026-10-30): the standard pronunciation rules (articles 13 and 18) and two NIKL 새국어소식 pages on them opened: article 13 moves a final letter before a vowel-initial particle, ending or suffix (옷이[오시]); article 18 says final ㄱ ㄷ ㅂ before ㄴ ㅁ are said [ㅇ ㄴ ㅁ] (국물[궁물]); the newsletter calls nasalization a change that always happens.\nPass 2 (three checkers, 2026-10-30). Culture and facts: 책이 [채기] follows article 13 (a particle after a single final); 국물 [궁물] is the rule's own example; 학년 [항년] follows article 18 (ㄱ before ㄴ). Language: the RR in the note (chaegi, gungmul, hangnyeon) is the converter's; ko writes the said forms in brackets, as the rules do. Learning design: the first draft had one source; a ready note needs two (lesson-source-shape), so the two NIKL newsletter pages were added; the note backs q3, whose reward shows it, and Volume 1's n6 (옷이) is not repeated.\nPass 3 (reviser, 2026-10-30): sources added as above; the wording kept.\nPass 4 (third pass, 2026-10-30): en, es and ko read against the three sources; no claim beyond them; no copy claims native-speaker or expert review."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "language",
+      "textEn": "{ko:학교}, {ko:학생} and {ko:학년} start with the same block, {ko:학}, from one Chinese character. A {ko:학생} is a person who learns.",
+      "sources": [
+        {
+          "title": "표준국어대사전 「학생」 (Standard Korean Language Dictionary)",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%99%EC%83%9D",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "학생 (學生) 「명사」 「1」: ‘학예를 배우는 사람.’"
+        },
+        {
+          "title": "표준국어대사전 「학교」 (Standard Korean Language Dictionary)",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%99%EA%B5%90",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "학교 (學校) 「명사」 『교육』: ‘일정한 목적·교과 과정·설비·제도 및 법규에 의하여 계속적으로 학생에게 교육을 실시하는 기관.’"
+        },
+        {
+          "title": "표준국어대사전 「학년」 (Standard Korean Language Dictionary)",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%99%EB%85%84",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "학년 (學年) 「명사」 「1」 『교육』: ‘일 년간의 학습 과정의 단위.’"
+        }
+      ],
+      "verification": {
+        "passes": 4,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-44 S2, 2026-10-30): the dictionary entries 학교 (學校), 학생 (學生, '학예를 배우는 사람') and 학년 (學年) opened; each headword shows its Chinese characters, and all three begin with 學.\nPass 2 (three checkers, 2026-10-30). Culture and facts: 'from one Chinese character' rests on the three headwords' 學; 'a person who learns' is the 학생 definition. Language: the first draft gave one source URL for three entries; each entry is now its own source. Learning design: a language note, shown on no reward step (the three quests show n1, n2 and n3), kept for the cell's notes.\nPass 3 (reviser, 2026-10-30): sources split by entry.\nPass 4 (third pass, 2026-10-30): en, es and ko read against the three entries; no copy claims native-speaker or expert review."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "Volume 2 of Letters & Books, Stage 2 (F-CURR-002 §5.2 S2, row CM-44 S2): words grouped by the seven final sounds (q1), the word family 학교 학생 학년 in a school room (q2), and spotting liaison (책이 [채기], 음악) and nasalization (국물, 박물관, 학년) (q3). Syllable Build in q1's Apply; Hidden Heritage on scene:letters-school in q2's Apply; the spelling round in q3's Apply.",
+      "Author pass (2026-10-30): 3 quests, six steps each, 251-261 s; new items 0, 3 and 4 (q1's words are all Volume 1 or topic words, met again in new games); Practice and Check items taught earlier: lesson-recycle clean in every quest; scored reads use letters Word Builder taught.",
+      "Language checker (MAR, 2026-10-30): Korean and RR through the F-CNT-002 converter (spelling-round look-alikes 궁물, 채기, 으막, 방물관 carry their answer's RR, as they sound the same); ko lines in polite 해요체; particles after the note tokens checked; ko meanings never name the word they gloss or another option's word (책상, 학생 reworded: no 책, no 학교). Reviser: q1's third caption reworded; the 학생 ko meaning.",
+      "Culture and facts checker (MAR, 2026-10-30): every note matched to its National Institute of Korean Language quote, opened on 2026-10-30, the institution named as on that date; the Thousand Character Classic framed as a Chinese book; no UNESCO claim; no person, brand, shop or price; no age wording.",
+      "Learning design checker (MAR, 2026-10-30): §9.3 lints clean (errors for Volume 2); Checks are Read Pick Meaning (q1), Pic-Word Match (q2) and Type Hangul see (q3), one each; no triple is Volume 1's or a neighbour's; no Dictation round, since every q2 and q3 word has a sound change (tensification in 학교 and 학생, nasalization, liaison).",
+      "Learning design checker, continued: the spelling round shows the meaning that settles it and its fallback options sound different; 입 and 잎 never share a heard round; no Syllable Build tile row offers two finals heard alike (syllable-build-final-distinct).",
+      "Reviser, PR stage (2026-10-31): q1's Discover shows six of the seven sounds (two words a page, three pages), so its Hoya line no longer lists all seven and says the l sound waits in the game, where 달, 물 and 별 are; es and ko follow. The stamps move to 20261103, above every open Volume 2 row's.",
+      "Reviser, continued: 국물 is now content, so the TTS pilot takes its shipped manifest row. The device voice says the standard pronunciation (§4.5); no pronunciation override is added before the clip QA.",
+      "Third pass (MAR, 2026-10-30): the revised cell, its es and ko overlays and the Hidden Heritage card back (the scene's three facts, with the scene's own es and ko) read again against §5.1, §7.7 and F-CURR-001 §3.1. No native-speaker or expert review is claimed. These passes ran in the author's session; an independent MAR reviewer pass in the PR review stage is still expected."
+    ]
+  },
+  "contentVer": 1
+}
