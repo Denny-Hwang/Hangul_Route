@@ -132,6 +132,8 @@ export interface OutgoingMoveView {
   to: { spaceId: string; name: string };
   /** The learner while still in this class (the roster's name); null once moved or ended. */
   learner: { name: string; avatar: string } | null;
+  /** [GX-W] The learner's id while the move waits (the source class already lists the learner); null once moved or ended. */
+  learnerId: string | null;
   createdAt: string;
   expiresAt: string;
   at: string | null;
@@ -172,6 +174,7 @@ function outgoingView(m: StoredClassMove, look: Lookups): OutgoingMoveView {
     status: viewStatus(m),
     to: { spaceId: m.destSpaceId, name: look.spaces.get(m.destSpaceId)?.name ?? '' },
     learner: m.status === 'requested' && learner && source ? { name: rosterName(source, learner.displayName), avatar: learner.avatar } : null,
+    learnerId: m.status === 'requested' ? m.learnerId : null,
     createdAt: m.createdAt,
     expiresAt: m.expiresAt,
     at: at(m),

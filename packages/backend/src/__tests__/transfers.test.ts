@@ -548,9 +548,10 @@ describe('list and views', () => {
     expect(text).not.toContain('Suni');
     expect(text).not.toContain(SUNI);
     expect(text).not.toContain('Sunday Class A');
-    // a learner-side request without "introduce" does not name the destination to the source
+    // a learner-side request without "introduce" does not name the destination to the source; the source, which
+    // already lists the learner, gets its id while the request is open ([GX-W] GX-OD-2, amends section 4.2)
     const [srcCard] = requestsOf(await list(A, 'teacher-a'));
-    expect(srcCard).toMatchObject({ role: 'source', initiator: 'learner_side', learnerId: null, destination: null, learner: { name: 'Suni Kim' } });
+    expect(srcCard).toMatchObject({ role: 'source', initiator: 'learner_side', learnerId: SUNI, destination: null, learner: { name: 'Suni Kim' } });
   });
 
   it('introduce names the source to the destination and the destination to the source', async () => {
