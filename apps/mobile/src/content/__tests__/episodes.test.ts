@@ -73,9 +73,11 @@ describe('gridEpisodes / shelfEpisodes', () => {
     for (const e of shelfEpisodes(episodesAll)) expect(storyEpisodes).toContain(e);
   });
 
-  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
+  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest of a first volume', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    // F-CURR-002 row CM-40: a later volume's quests are kept and synced (`questsAll`) but add no count to Home.
+    const laterQuestIds = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q) && !laterQuestIds.has(q.id));
     expect(handWritten.length).toBeGreaterThan(0);
     for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
   });
@@ -103,10 +105,16 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); no Volume 2 ships yet', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); the later volumes stay off the route list', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes).toEqual([]);
-    expect(episodesWithVolumes).toEqual(episodesAll);
+    // Holidays & Traditions, Stage 2 ships a Volume 2 (row CM-45 S2).
+    expect(volumeEpisodes.map((e) => e.id)).toContain('episode:stage2-rites-v2');
+    for (const episode of volumeEpisodes) {
+      expect(episode.volume, episode.id).toBe(2);
+      expect(episodesAll.some((e) => e.id === episode.id), episode.id).toBe(false);
+      expect(episodesAll.some((e) => e.stage === episode.stage && e.theme === episode.theme && (e.volume ?? 1) === 1), episode.id).toBe(true);
+    }
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {

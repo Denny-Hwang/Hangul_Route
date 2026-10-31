@@ -19,7 +19,7 @@ import { FREE_VOCAB_TOPIC_IDS } from '../../logic/content-access';
 import { bookEpisodes } from '../books';
 import { questTeaches } from '../../logic/stage1/curriculum';
 import { discoverQuest } from '../../logic/stage1/__tests__/fixtures';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { jamoAll, jamoWordBuilder } from '../jamo';
 import { questsAll } from '../quests';
 import { storiesAll, storyQuests } from '../stories';
@@ -48,18 +48,27 @@ const isShelf = (episode: Episode): boolean => episode.placement === 'shelf';
 const gridEpisodes = episodesAll.filter((episode) => !isShelf(episode));
 /** A cell's first volume is the cell (F-CURR-002 row CM-40); a later volume is one of its `episodeIds`. */
 const cellEpisodes = gridEpisodes.filter((episode) => (episode.volume ?? 1) === 1);
-const laterVolumes = gridEpisodes.filter((episode) => (episode.volume ?? 1) > 1);
+/** The grid episodes with every shipped later volume (row CM-40 part 2 keeps those out of `episodesAll`, the route's list). */
+const gridWithVolumes = episodesWithVolumes.filter((episode) => !isShelf(episode));
+const laterVolumes = gridWithVolumes.filter((episode) => (episode.volume ?? 1) > 1);
 /** The cell's grid episodes in the bundle, by volume: what its `episodeIds` lists. */
 const episodeIdsOf = (episode: Episode): string[] =>
-  gridEpisodes
+  gridWithVolumes
     .filter((e) => e.stage === episode.stage && e.theme === episode.theme)
     .sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1))
     .map((e) => e.id);
 const storyQuestIds = new Set(storyQuests.map((quest) => quest.id));
 const lessonQuests = questsAll.filter((quest) => !storyQuestIds.has(quest.id));
-const episodeOfQuest = (questId: string): Episode | undefined => episodesAll.find((e) => e.questIds.includes(questId));
+const episodeOfQuest = (questId: string): Episode | undefined => episodesWithVolumes.find((e) => e.questIds.includes(questId));
 
-const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds' | 'optionalQuestIds' | 'episodeIds'> => ({
+/** A cell's later volumes as the catalogue describes them (row CM-40 part 2): each one's title, minutes and quests. */
+const volumesOf = (episode: Episode): NonNullable<CatalogCell['volumes']> =>
+  laterVolumes
+    .filter((e) => e.stage === episode.stage && e.theme === episode.theme)
+    .sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1))
+    .map((e) => ({ episodeId: e.id, title: e.titleEn, minutes: e.estimatedMinutes, questIds: e.questIds }));
+
+const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds' | 'optionalQuestIds' | 'episodeIds' | 'volumes'> => ({
   stage: episode.stage,
   theme: episode.theme,
   episodeId: episode.id,
@@ -70,6 +79,7 @@ const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episod
   ...(episode.optionalQuestIds === undefined ? {} : { optionalQuestIds: episode.optionalQuestIds }),
   // F-CURR-002 row CM-40: the cell's episodes by volume, its first volume alone until a Volume 2 ships.
   episodeIds: episodeIdsOf(episode),
+  ...(volumesOf(episode).length === 0 ? {} : { volumes: volumesOf(episode) }),
 });
 
 describe('cells and the bundle episodes', () => {
