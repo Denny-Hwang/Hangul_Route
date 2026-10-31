@@ -1063,4 +1063,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parentHome.classLine.many': [[2]],
   'console.transfer.familyNeedsYou': [[1], [2]],
   'console.transfer.endsOn': [['Nov 9']],
+  // AMENDMENTS-GROWNUP-UX GX-2: the attention banner's counts (1 and many) and the re-link pop-up's name and minutes.
+  'console.attention.title': [[1], [3], [12]],
+  'console.attention.devices': [[1], [3]],
+  'console.attention.moves': [[1], [3]],
+  'console.relinkPopup.title': [['Jaehan']],
+  'console.relinkPopup.closes': [[1], [8]],
 };

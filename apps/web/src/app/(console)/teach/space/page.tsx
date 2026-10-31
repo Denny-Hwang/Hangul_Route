@@ -19,14 +19,18 @@ import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
 import { useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { AskingToJoin, DecidedLine, ReasonLine, RelinkAnswer, StatusChip, actionCardStyle, useDecided } from '@/components/console/LearnerStatusParts';
+import { ATTENTION_HASH, AttentionBanner, ReviewSheet, sheetKey, useTitleCount, type SheetDevice, type SheetFamilyMove, type SheetOutgoing } from '@/components/console/AttentionParts';
+import { RelinkPopup, useRelinkPopup } from '@/components/console/RelinkPopup';
+import { MoveButton } from '@/components/console/TransferParts';
+import { directClassIds } from '@/lib/console/transfer-requests';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
-import type { ConsoleApi, PlanView, RelinkView, Roster, RosterLearner, SpaceListItem, TransferView } from '@/lib/console/api';
+import type { ConsoleApi, PlanView, RelinkView, Roster, RosterLearner, SpaceListItem, TransferSourceView, TransferView } from '@/lib/console/api';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import type { ClassMoveLists } from '@/lib/console/class-moves';
-import { attentionModel, rosterOrder, statusWords, type LearnerStatus } from '@/lib/console/learner-status';
+import { attentionModel, rosterOrder, statusWords, type AttentionModel, type LearnerStatus } from '@/lib/console/learner-status';
 import { CLASS_RELINK_GAP_MS, CLASS_RELINK_REFRESH_MS } from '@/lib/console/visible-refresh';
 import { appUrl, contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { rosterJoinLink } from '@/lib/console/join-link';
@@ -184,6 +188,38 @@ function SpaceInner(): JSX.Element {
   );
   const rename = useSpaceRename({ api, spaceId, name: roster?.space.name ?? '', onName: setName, announce });
 
+  // GX-1: one status per learner, the learners asking to join and the counts (`learner-status.ts`). Re-links count
+  // whatever CLASS_TRANSFER says; the move reads are null while class moves are hidden.
+  const attention: AttentionModel | null =
+    roster && roster.space.kind !== 'school'
+      ? attentionModel({
+          kind: roster.space.kind,
+          roster: roster.learners,
+          relinks: relinkList,
+          transfers: movesAsked ? transferList : null,
+          classMoves: movesAsked && roster.space.kind === 'class' ? classMoveLists : null,
+          now,
+        })
+      : null;
+  const waiting = attention?.totals.all ?? 0;
+
+  // GX-2 (sections 5.1 to 5.4): the review sheet (opened by the banner, an action chip at its item, or `#attention` on
+  // load), the re-link pop-up (the class page only; the family roster gets the re-link bar of GX-5) and the tab title's
+  // count. The pop-up waits while the sheet or a confirm step is open.
+  // `#attention` (the teacher home's link) opens the sheet as soon as the roster is drawn: decided at the first client
+  // render, so the pop-up never opens over it. The sheet draws only once the roster is read (no markup before that).
+  const [sheet, setSheet] = useState<{ focus: string | null } | null>(() => (typeof window !== 'undefined' && window.location?.hash === ATTENTION_HASH ? { focus: null } : null));
+  const openSheet = useCallback((focus: string | null = null) => setSheet({ focus }), []);
+  const openSheetTop = useCallback(() => setSheet({ focus: null }), []);
+  const popupOn = !!api && roster?.space.kind === 'class' && error !== 'forbidden' && error !== 'gone';
+  const popup = useRelinkPopup({
+    relinks: relinkList,
+    blocked: sheet !== null || confirmSheet !== null,
+    enabled: popupOn,
+    listed: sheet !== null && relinkList ? relinkList.filter((r) => r.status === 'pending').map((r) => r.id) : [],
+  });
+  useTitleCount(waiting, locale);
+
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.
   if (roster?.space.kind === 'school' && api) return <SchoolAdmin api={api} spaceId={spaceId} onSignOut={signOut} accountId={session.accountId} />;
@@ -230,18 +266,6 @@ function SpaceInner(): JSX.Element {
   // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
   const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
   // Notes (F-FEEDBACK-001 FB-11a, section 6.13 item 3): the roster header's Notes and each card's Send a note, by flag.
-  // GX-1: one status per learner, the learners asking to join and the counts (`learner-status.ts`). Re-links count
-  // whatever CLASS_TRANSFER says; the move reads are null while class moves are hidden.
-  const attention = roster
-    ? attentionModel({
-        kind: roster.space.kind,
-        roster: roster.learners,
-        relinks: relinkList,
-        transfers: movesAsked ? transferList : null,
-        classMoves: movesAsked && roster.space.kind === 'class' ? classMoveLists : null,
-        now,
-      })
-    : null;
   const ordered = roster && attention ? rosterOrder(roster.learners, attention.byLearner, decided.pinned, lastOrder.current) : [];
   lastOrder.current = ordered.map((l) => l.id);
   const relinksWaiting = attention?.totals.relinks ?? 0;
@@ -250,6 +274,30 @@ function SpaceInner(): JSX.Element {
     decided.note(learnerId, text);
     announce(text);
     void readRelinks();
+  };
+  // GX-2 section 5.2: what the review sheet lists. New devices from the re-link read (the avatar from the roster row);
+  // moves out of this class by view (matched to a card or not); a family's moves that wait for its OK.
+  const learnerById = new Map((roster?.learners ?? []).map((l) => [l.id, l]));
+  const sheetDevices: SheetDevice[] = (relinkList ?? [])
+    .filter((r) => r.status === 'pending' && Date.parse(r.expiresAt) > now.getTime())
+    .sort((a, b) => Date.parse(a.expiresAt) - Date.parse(b.expiresAt))
+    .map((r) => ({ id: r.id, learnerId: r.learnerId, name: r.learnerName, avatar: learnerById.get(r.learnerId)?.avatar ?? null, expiresAt: r.expiresAt }));
+  const sourceViews = new Map((movesAsked ? (transferList ?? []) : []).filter((v): v is TransferSourceView => v.role === 'source').map((v) => [v.id, v]));
+  const sheetOutgoing: SheetOutgoing[] = (attention?.outgoing ?? []).map((item) => ({ item, view: sourceViews.get(item.id) ?? null }));
+  const sheetFamily: SheetFamilyMove[] =
+    roster?.space.kind === 'family' && movesAsked
+      ? (transferList ?? []).flatMap((v) =>
+          // Counted by `pendingCount` either way; listed only with the learner it names (a view this bundle can read).
+          v.role === 'learner_side' && v.status === 'requested' && v.learnerState === 'pending' && v.learner?.id
+            ? [{ id: v.id, learnerId: v.learner.id, name: v.learner.name, avatar: learnerById.get(v.learner.id)?.avatar ?? null, to: v.to?.name ?? null, href: ROUTES.spaceTransfers(spaceId, 'family') }]
+            : [],
+        )
+      : [];
+  /** An action chip's tap (section 4): the pop-up for a re-link; the sheet at the item for a move. */
+  const activate = (status: LearnerStatus): void => {
+    if (status.kind === 'relink' && status.relink && popupOn) popup.openFor(status.relink.id);
+    else if (status.kind === 'relink' && status.relink) openSheet(sheetKey.device(status.relink.id));
+    else if (status.kind === 'move_yours' && status.move) openSheet(roster?.space.kind === 'family' ? sheetKey.family(status.move.id) : sheetKey.outgoing(status.move.id));
   };
   const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, role: spaces?.find((item) => item.space.id === spaceId)?.role ?? null, spaceId, kind: roster.space.kind }) : null;
 
@@ -277,6 +325,43 @@ function SpaceInner(): JSX.Element {
             {roster.space.kind === 'family' ? c.spaceCounts.learners(roster.learners.length) : c.spaceCounts.students(roster.learners.length)}
           </p>
         </div>
+      ) : null}
+      {roster && attention ? <AttentionBanner relinks={attention.totals.relinks} moves={attention.totals.moves} onReview={openSheetTop} /> : null}
+      {roster && attention && api && sheet ? (
+        <ReviewSheet
+          spaceId={spaceId}
+          api={api}
+          online={online}
+          readOnly={roster.space.archivedAt !== null}
+          devices={sheetDevices}
+          incoming={roster.space.kind === 'class' ? attention.incoming : []}
+          outgoing={sheetOutgoing}
+          familyMoves={sheetFamily}
+          direct={directClassIds(spaces)}
+          focusKey={sheet.focus}
+          now={now}
+          onClose={() => setSheet(null)}
+          onDecided={({ learnerId, text }) => {
+            if (learnerId && learnerById.has(learnerId)) decided.note(learnerId, text);
+            void readRelinks();
+            void load(true);
+          }}
+        />
+      ) : null}
+      {popup.pick && api ? (
+        <RelinkPopup
+          key={popup.pick.request.id + (popup.pick.reminder ? ':again' : '')}
+          pick={popup.pick}
+          now={now}
+          api={api}
+          spaceId={spaceId}
+          online={online}
+          onLater={popup.close}
+          onResult={(learnerId, text) => {
+            popup.close();
+            afterDecision(learnerId, text);
+          }}
+        />
       ) : null}
       {error ? (
         <div style={panelStyle}>
@@ -390,6 +475,7 @@ function SpaceInner(): JSX.Element {
                 if (text) announce(text);
                 void load(true);
               }}
+              onOpenItem={(key) => openSheet(key)}
             />
           ) : null}
 
@@ -411,6 +497,7 @@ function SpaceInner(): JSX.Element {
                       kind={roster.space.kind}
                       online={online}
                       onDecided={(text) => afterDecision(l.id, text)}
+                      onActivate={activate}
                     />
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm), marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
@@ -477,6 +564,7 @@ function LearnerCardHead({
   kind,
   online,
   onDecided,
+  onActivate,
 }: {
   learner: RosterLearner;
   index: number;
@@ -489,6 +577,8 @@ function LearnerCardHead({
   kind: Roster['space']['kind'];
   online: boolean;
   onDecided: (text: string) => void;
+  /** GX-2: the action chip opens the decision for its item (the pop-up for a re-link, the sheet at a move). */
+  onActivate: (status: LearnerStatus) => void;
 }): JSX.Element {
   const { messages } = useConsoleLocale();
   const c = messages.console;
@@ -497,14 +587,17 @@ function LearnerCardHead({
   const nameId = `roster-learner-${index}`;
   const reasonId = `roster-reason-${index}`;
   const level = levelPillLabel(learner.ageGroup, locale);
-  const reviewHref = status?.kind === 'move_yours' ? ROUTES.spaceTransfers(spaceId, kind) : null;
+  // A move out of a class opens the review sheet at its item (GX-2); a family's move goes to the family's moves page,
+  // where its consent sheet is.
+  const reviewHref = status?.kind === 'move_yours' && kind === 'family' ? ROUTES.spaceTransfers(spaceId, kind) : null;
+  const reviewInSheet = status?.kind === 'move_yours' && kind === 'class';
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
         <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
           <AvatarChip avatar={learner.avatar} />
           <strong id={nameId}>{learner.displayName}</strong>
-          {words ? <StatusChip words={words} onActivate={() => answerRow.current?.querySelector<HTMLElement>('button, a')?.focus()} /> : null}
+          {words && status ? <StatusChip words={words} onActivate={() => onActivate(status)} /> : null}
         </span>
         {level ? (
           <span style={{ flexShrink: 0, fontSize: rem(typography.size.caption), color: colors.text.muted, padding: `${spacing.xxs}px ${spacing.sm}px`, backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}>{level}</span>
@@ -514,6 +607,13 @@ function LearnerCardHead({
       {decidedLine ? <DecidedLine text={decidedLine} /> : null}
       {words && status?.kind === 'relink' && api ? (
         <RelinkAnswer api={api} spaceId={spaceId} status={status} learnerName={learner.displayName} describedBy={words.reason ? `${nameId} ${reasonId}` : nameId} online={online} rowRef={answerRow} onResult={onDecided} />
+      ) : null}
+      {words && reviewInSheet && status ? (
+        <div ref={answerRow} style={{ marginTop: spacing.sm }}>
+          <MoveButton primary describedBy={words.reason ? `${nameId} ${reasonId}` : nameId} onClick={() => onActivate(status)} testId="move-review">
+            {c.status.review.cta}
+          </MoveButton>
+        </div>
       ) : null}
       {words && reviewHref ? (
         <div ref={answerRow} style={{ marginTop: spacing.sm }}>

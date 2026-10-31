@@ -249,6 +249,7 @@ export function AskingToJoin({
   online,
   readOnly,
   onDecided,
+  onOpenItem,
 }: {
   items: readonly IncomingItem[];
   api: IncomingApi;
@@ -257,6 +258,8 @@ export function AskingToJoin({
   readOnly: boolean;
   /** After an answer (or an answer that found the ask gone): the page reads again and says `text` in its polite region. */
   onDecided: (text: string | null) => void;
+  /** GX-2: the action chip's tap opens the review sheet at this item (`incomingKey`); without it the chip focuses Accept. */
+  onOpenItem?: (key: string) => void;
 }): JSX.Element | null {
   const { messages } = useConsoleLocale();
   const headingId = useId();
@@ -281,6 +284,7 @@ export function AskingToJoin({
               headingRef.current?.focus();
               onDecided(text);
             }}
+            {...(onOpenItem ? { onOpenItem: () => onOpenItem(incomingKey(item)) } : {})}
           />
         ))}
       </div>
@@ -288,13 +292,22 @@ export function AskingToJoin({
   );
 }
 
-function IncomingCard({
+/** The review sheet's and the chip's key of an item asking to join (GX-2): its source and its opaque id, never a name. */
+export const incomingKey = (item: Pick<IncomingItem, 'source' | 'id'>): string => `incoming:${item.source}:${item.id}`;
+
+/**
+ * One learner asking to join: on the class page under *Asking to join this class*, and in the review sheet (GX-2) with
+ * `chip: false` (the sheet's title already says what every row needs).
+ */
+export function IncomingCard({
   item,
   api,
   spaceId,
   online,
   readOnly,
   onDecided,
+  onOpenItem,
+  chip = true,
 }: {
   item: IncomingItem;
   api: IncomingApi;
@@ -302,6 +315,8 @@ function IncomingCard({
   online: boolean;
   readOnly: boolean;
   onDecided: (text: string | null) => void;
+  onOpenItem?: () => void;
+  chip?: boolean;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -346,14 +361,14 @@ function IncomingCard({
   const off = !online;
 
   return (
-    <article style={cardStyle} aria-labelledby={nameId} data-testid="incoming-card" data-source={item.source}>
+    <article style={cardStyle} aria-labelledby={nameId} data-testid="incoming-card" data-source={item.source} data-sheet-key={incomingKey(item)} tabIndex={-1}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
         <span style={{ ...headRow, minWidth: 0 }}>
           {item.avatar ? <AvatarChip avatar={item.avatar} /> : null}
           <strong id={nameId} style={{ fontSize: rem(typography.size.bodyLg), letterSpacing: typography.tracking.wide }}>
             {item.alias}
           </strong>
-          <StatusChip words={words} onActivate={() => acceptRef.current?.querySelector('button')?.focus()} testId="incoming-status" />
+          {chip ? <StatusChip words={words} onActivate={onOpenItem ?? (() => acceptRef.current?.querySelector('button')?.focus())} testId="incoming-status" /> : null}
         </span>
         {level ? <span style={levelPill}>{level}</span> : null}
       </div>
