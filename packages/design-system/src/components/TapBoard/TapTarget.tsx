@@ -10,7 +10,7 @@ import { usePressGuard } from './use-press-guard';
 
 /**
  * One answer inside a `TapBoard` (docs/specs/AMENDMENTS-TOUCH.md section 4.2): a focusable `button` whose touches the
- * board decides. Its `onPress` is the click path of rule 8 (keyboard Enter or Space, a screen reader, switch access, a
+ * board decides. Its `onPress` is the click path of rule 9 (keyboard Enter or Space, a screen reader, switch access, a
  * mouse the board did not see), which goes through the same rules and lock. On the web it is `touch-action: pinch-zoom`,
  * so a touch that starts on it never becomes a browser pan (KT-D3). Outside a board it is a plain `Pressable` with the
  * press guard, so a design-system component can use it everywhere.

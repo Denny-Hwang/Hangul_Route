@@ -28,6 +28,9 @@ import {
  *
  * - It owns the responder by capture, and only for a touch the model claims (`claimsTouch`): every other touch falls
  *   through to whatever is under it, and the `Pressable` inside a target never gets the touch.
+ * - It blocks the native responder on grant (a native ScrollView cannot take a graze from it; the board scrolls itself,
+ *   rule 5), and on the web it prevents the default of the `touchend` of a touch it claimed, so the browser sends no
+ *   `click` for it to another board or a control nearby (rule 9; the echo window stays as the backstop).
  * - It commits on `onResponderEnd` for the owning finger (`onResponderRelease` waits for every finger).
  * - It refuses a termination request for a responder transfer and for `contextmenu` (a long hold must not end the
  *   tap), and accepts one for `scroll` (unless it is the scroll the board is driving) and `selectionchange`; a
@@ -45,6 +48,8 @@ export interface TapResponderTouch {
 export interface TapResponderEvent {
   /** When the input happened (the web: the DOM event's `timeStamp`, on the clock of `performance.now()`). */
   timeStamp?: number;
+  /** The web: the DOM event's `preventDefault` (react-native-web forwards it). */
+  preventDefault?: () => void;
   nativeEvent: TapResponderTouch & {
     changedTouches?: readonly TapResponderTouch[];
     /** The web DOM event type (`touchstart`, `scroll`, `contextmenu`, ...). */
@@ -113,7 +118,8 @@ export interface TapBoardHost {
 export interface TapBoardHandlers {
   onStartShouldSetResponderCapture(event: TapResponderEvent): boolean;
   onStartShouldSetResponder(): boolean;
-  onResponderGrant(event: TapResponderEvent): void;
+  /** Returns true: on native that blocks the native responder (a ScrollView), so only the board decides the touch. */
+  onResponderGrant(event: TapResponderEvent): boolean;
   onResponderStart(event: TapResponderEvent): void;
   onResponderMove(event: TapResponderEvent): void;
   onResponderEnd(event: TapResponderEvent): void;
@@ -176,6 +182,8 @@ export function createTapBoardController(host: TapBoardHost, initial: TapControl
   let driven: Array<{ offset: number; at: number }> = [];
   const entries = new Map<string, TapTargetEntry>();
   const controls = new Map<string, TapControlEntry>();
+  /** The fingers the board claimed at their down (rule 2): the web drops the browser's click for each at its end. */
+  const claimed = new Set<string>();
 
   /** Every target with its rectangle now; a click also takes targets it cannot measure (it needs no rectangle). */
   function snapshot(forClick = false): { targets: TapTargetSnapshot[]; nodes: Map<unknown, string> } {
@@ -260,8 +268,9 @@ export function createTapBoardController(host: TapBoardHost, initial: TapControl
   }
 
   function apply(event: TapEvent): void {
-    // Rule 10: the app clock holds the `board` lock (a board that mounts during it starts locked).
-    const app = host.appLock();
+    // Rule 10: the app clock holds the `board` lock (a board that mounts during it starts locked). The keyboard
+    // (`each`) neither reads nor sets it (KT-D7): a guarded press elsewhere never drops a keystroke.
+    const app = config.multiTouch === 'each' ? null : host.appLock();
     if (app !== null) state = { ...state, boardLockedUntil: Math.max(state.boardLockedUntil, app.until()) };
     const scroller = driveable();
     const out = tapStep(state, event, {
@@ -286,15 +295,26 @@ export function createTapBoardController(host: TapBoardHost, initial: TapControl
   function each(event: TapResponderEvent, type: 'down' | 'move' | 'up'): void {
     const { targets, nodes } = snapshot();
     const at = host.timeOf(event.timeStamp);
+    let ownEnd = false;
     for (const touch of touchesOf(event)) {
       const base = { touchId: touchKey(touch), point: pointOf(touch), at, targets };
       if (type === 'down') {
         const hit = host.hitAt(touch.target, nodes);
-        apply({ type, ...base, controls: controlRects(), ...(hit === undefined ? {} : { hit }) });
+        const rects = controlRects();
+        if (claimsTouch(base.point, targets, hit, rects)) claimed.add(base.touchId);
+        apply({ type, ...base, controls: rects, ...(hit === undefined ? {} : { hit }) });
       } else {
+        if (type === 'up' && claimed.delete(base.touchId)) ownEnd = true;
         apply({ type, ...base });
       }
     }
+    // The web: the board decided this touch, so the browser must not send its click anywhere (rule 9).
+    if (ownEnd && event.nativeEvent.type === 'touchend') event.preventDefault?.();
+  }
+
+  function cancel(): void {
+    claimed.clear();
+    apply({ type: 'cancel', at: host.now() });
   }
 
   function remeasureAll(): void {
@@ -315,16 +335,21 @@ export function createTapBoardController(host: TapBoardHost, initial: TapControl
       return claimed;
     },
     onStartShouldSetResponder: () => false,
-    // Both platforms send onResponderStart for the granting touch too; the model ignores the repeat.
-    onResponderGrant: (event) => each(event, 'down'),
+    // Both platforms send onResponderStart for the granting touch too; the model ignores the repeat. `true` blocks the
+    // native responder, so a native ScrollView never takes a graze from the board (the board scrolls it itself, rule 5).
+    onResponderGrant: (event) => {
+      each(event, 'down');
+      return true;
+    },
     onResponderStart: (event) => each(event, 'down'),
     onResponderMove: (event) => each(event, 'move'),
     onResponderEnd: (event) => each(event, 'up'),
     onResponderRelease: () => {
       // Every finger is up: a finger whose end the board missed must not hold it.
-      if (state.touches.length > 0) apply({ type: 'cancel', at: host.now() });
+      if (state.touches.length > 0) cancel();
+      claimed.clear();
     },
-    onResponderTerminate: () => apply({ type: 'cancel', at: host.now() }),
+    onResponderTerminate: cancel,
     onResponderTerminationRequest: (event) => {
       const native = event.nativeEvent;
       if (native.type === 'selectionchange') return true;

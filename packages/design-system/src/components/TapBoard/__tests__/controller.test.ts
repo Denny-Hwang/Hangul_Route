@@ -255,6 +255,52 @@ describe('TapBoard controller: the gesture', () => {
   });
 });
 
+describe('TapBoard controller: the platform default of a claimed touch', () => {
+  const withDefault = (e: TapResponderEvent, log: string[]): TapResponderEvent => ({ ...e, preventDefault: () => log.push(e.nativeEvent.type ?? '') });
+
+  it('native: the grant blocks the native responder (a ScrollView cannot take the graze)', () => {
+    const h = harness();
+    h.add('A', A_RECT);
+    expect(h.board.handlers.onResponderGrant(ev(1, 48, 48))).toBe(true);
+  });
+
+  it('web: the touchend of a claimed touch is prevented, so the browser sends no click elsewhere; a touch it did not claim keeps its click', () => {
+    const h = harness();
+    h.add('A', A_RECT);
+    h.add('B', B_RECT);
+    const log: string[] = [];
+    // A tie in the gap: claimed, commits nothing, and its click must not reach a target through the browser's adjustment.
+    h.board.handlers.onResponderGrant(ev(1, 102, 48));
+    h.board.handlers.onResponderStart(ev(1, 102, 48));
+    h.board.handlers.onResponderEnd(withDefault(ev(1, 102, 48, null, 'touchend'), log));
+    h.board.handlers.onResponderRelease(ev(1, 102, 48, null, 'touchend'));
+    expect(h.commits).toEqual([]);
+    expect(log).toEqual(['touchend']);
+    // A second finger on nothing the board claims (a margin) keeps its default; the claimed finger's end does not.
+    h.board.handlers.onResponderStart(ev(2, 48, 48));
+    h.board.handlers.onResponderStart(ev(3, 48, 400));
+    h.board.handlers.onResponderEnd(withDefault(ev(3, 48, 400, null, 'touchend'), log));
+    expect(log).toEqual(['touchend']);
+    h.board.handlers.onResponderEnd(withDefault(ev(2, 48, 48, null, 'touchend'), log));
+    expect(log).toEqual(['touchend', 'touchend']);
+    // A mouse release is never prevented (its click is the board's echo, rule 9).
+    h.board.handlers.onResponderRelease(ev(2, 48, 48, null, 'touchend'));
+    h.board.handlers.onResponderStart({ nativeEvent: { pageX: 48, pageY: 48, type: 'mousedown' } });
+    h.board.handlers.onResponderEnd(withDefault({ nativeEvent: { pageX: 48, pageY: 48, type: 'mouseup' } }, log));
+    expect(log).toEqual(['touchend', 'touchend']);
+  });
+
+  it('a terminated touch is forgotten: a later finger with the same id that the board did not claim keeps its default', () => {
+    const h = harness();
+    h.add('A', A_RECT);
+    const log: string[] = [];
+    h.board.handlers.onResponderStart(ev(1, 48, 48));
+    h.board.handlers.onResponderTerminate();
+    h.board.handlers.onResponderEnd(withDefault(ev(1, 48, 48, null, 'touchend'), log));
+    expect(log).toEqual([]);
+  });
+});
+
 describe('TapBoard controller: termination requests (rule 7)', () => {
   it('refuses a responder transfer (another view wants a touch) and a contextmenu', () => {
     const h = harness();
@@ -479,7 +525,20 @@ describe('TapBoard controller: clicks and locks', () => {
     expect(until).toBe(900);
   });
 
-  it('configure switches the rules for the next event; dispose stops the timers', () => {
+  it('the keyboard (each) neither reads nor sets the app lock (KT-D7): a guarded press elsewhere drops no keystroke', () => {
+    let until = 1000;
+    const app: TapAppLock = { until: () => until, extendTo: (at) => (until = Math.max(until, at)) };
+    const h = harness({ lock: 'target', multiTouch: 'each', disabled: false, scroll: 'none' }, { app });
+    h.add('ㄱ', A_RECT, { lockMs: 120 });
+    h.clock.now = 100;
+    h.board.handlers.onResponderStart(ev(1, 48, 48));
+    h.board.handlers.onResponderEnd(ev(1, 48, 48, null, 'touchend'));
+    expect(h.commits).toEqual(['ㄱ']);
+    h.board.lock(900);
+    expect(until).toBe(1000);
+  });
+
+    it('configure switches the rules for the next event; dispose stops the timers', () => {
     const h = harness();
     h.add('A', A_RECT);
     h.board.configure({ ...BOARD, disabled: true });
