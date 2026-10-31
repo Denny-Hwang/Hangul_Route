@@ -1,4 +1,4 @@
-Status: ready (spec, wireframes and mocks pass GX-0; amends F-SPACE-002 §4.2 and §4.8, `AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md` §5 (TV-D5 surface), F-APP-001 §3.8, F-TCH-001 §10.1 and F-CONSOLE-001 §3.4; implementation rows in section 13, GX-1 first)
+Status: ready (spec, wireframes and mocks pass GX-0; amends F-SPACE-002 §4.2 and §4.8, `AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md` §5 (TV-D5 surface), F-APP-001 §3.8, F-TCH-001 §10.1 and F-CONSOLE-001 §3.4; implementation rows in section 13, GX-1 first; GX-5b owner-blocked on GX-OD-3; revised after the PR #917 review, section 17)
 
 # Amendment: approvals you cannot miss, a status next to every learner's name, and the grown-up UX pass of 2026-10-31
 
@@ -16,11 +16,11 @@ Status: ready (spec, wireframes and mocks pass GX-0; amends F-SPACE-002 §4.2 an
 
 | # | Problem found | Change |
 |---|---|---|
-| 1 | **The only sign of a waiting approval is a count inside one of nine equal pills.** "다시 연결 요청 1개" is the 7th pill of the class page's tool row (`app/(console)/teach/space/page.tsx:291-320`, owner screenshot 2); "기다리는 반 이동 N건" is another. Nothing appears next to the learner the request is about, nothing on the teacher home for a re-link, nothing in the nav. | A **status chip next to every learner's name** (section 4): amber **Needs your OK** (승인 대기) with the reason and inline **Approve / Deny** for a new device; the quiet **In class** (참여 중) chip otherwise, the owner's "On board". An **attention banner** at the top of the class page with one **Review now** sheet (section 5). |
-| 2 | **The most urgent request is the slowest to show.** A re-link closes after 10 minutes (`RELINK_WINDOW_MS`, `packages/content-schema/src/schemas/relink.ts:9`) but the class page re-reads it every 90 s (`VISIBLE_POLL_MS`, `lib/console/visible-refresh.ts:16`) and the teacher must tap home, class, pill, Approve. | A **pop-up for a new re-link only** (section 5.3), a 10 s poll while one is waiting, and 1 tap from the class page (2 from home). Moves, which stay open 14 days, get the chip and the banner, never a pop-up. |
-| 3 | **The move count is wrong and stale.** `useMovesWaiting` counts only `transferRequests` (`components/console/MovesEntry.tsx:26-43`), so a teacher move into the class (TV-D8, `GET /class-moves` `incoming`) is never counted (the moves page showed 2 or 3 cards under a badge of 1 or 2); it reads once on mount and never again. | One count of **everything that needs this class's answer** (re-links + family-started transfers + teacher moves), refreshed with the page's poll and on roster changes (section 3.4). |
-| 4 | **The family never sees its own approvals.** A move waiting for the family's OK is the last of five grey pills under every child card (`app/(console)/parent/page.tsx:451-455`), a child's re-link never shows on `/parent`, and the class-scope card (17 lines, `FamilyClassCards.tsx:89-140`) pushes every child off the first phone screen. | A **Needs you** strip under the family heading, a status chip and a class line on each child card, the class-scope text in a sheet opened from the strip (section 7). |
-| 5 | **Joining is not approved today.** `POST /api/spaces/:id/join` takes a seat at once (`packages/backend/src/routes/spaces.ts:401-470`); what the owner saw as "approval" is a re-link (a known learner on a new device) or a move. | No join approval is added (default of GX-OD-4, section 15); a learner who joined in the last 7 days shows **New** (새로 참여) instead of looking like a stale learner. |
+| 1 | **The only sign of a waiting approval is a count inside one of nine equal pills.** "다시 연결 요청 1개" is the 7th pill of the class page's tool row (`app/(console)/teach/space/page.tsx:291-320`, owner screenshot 2); "기다리는 반 이동 N건" is another. Nothing appears next to the learner the request is about, nothing on the teacher home for a re-link, nothing in the nav. | A **status chip next to every learner's name** (section 4): amber **Needs your OK** (승인 대기) with the reason and inline **Approve / Deny** for a new device; the quiet **In class** (참여 중) chip otherwise, the owner's "On board". A learner **asking to join** (a move into the class) gets its own card at the top of the roster with the same chip and inline **Accept / Not now**. An **attention banner** at the top of the class page with one **Review now** sheet (section 5). |
+| 2 | **The most urgent request is the slowest to show.** A re-link closes after 10 minutes (`RELINK_WINDOW_MS`, `packages/content-schema/src/schemas/relink.ts:9`) but the class page re-reads it every 90 s (`VISIBLE_POLL_MS`, `lib/console/visible-refresh.ts:16`) and the teacher must tap home, class, pill, Approve. | A **pop-up for a new re-link only** (section 5.3) with one reminder at 2 minutes left, a re-link-only read every 20 s on the class page, a **re-link bar on every other console page** of the persona (section 5.5), and 1 tap from the class page (2 from anywhere else). Moves, which stay open 14 days, get the chip and the banner, never a pop-up. |
+| 3 | **The move count is wrong and stale.** `useMovesWaiting` counts only `transferRequests` (`components/console/MovesEntry.tsx:26-43`), so a teacher move into the class (TV-D8, `GET /class-moves` `incoming`) is never counted (the moves page showed 2 or 3 cards under a badge of 1 or 2); it reads once on mount and never again. | One count of **everything that needs this class's answer** (re-links + transfers whose own step waits + teacher moves into the class), refreshed with the page's poll and on roster changes (section 3.4). |
+| 4 | **The family never sees its own approvals.** A move waiting for the family's OK is the last of five grey pills under every child card (`app/(console)/parent/page.tsx:451-455`), a child's re-link never shows on `/parent`, and the class-scope card (17 lines, `FamilyClassCards.tsx:89-140`) pushes every child off the first phone screen. | A compact **Needs you** strip under the family heading (the first child stays on the first phone screen), a status chip and a class line on each child card, the move notice inside its child's card; the class-scope text in a sheet is proposed and waits for the owner (GX-OD-3, section 7). |
+| 5 | **Joining is not approved today.** `POST /api/spaces/:id/join` takes a seat at once (`packages/backend/src/routes/spaces.ts:401-470`); what the owner saw as "approval" is a re-link (a known learner on a new device) or a move. | No join approval is added (default of GX-OD-4, section 15); a learner who joined in the last 7 days and has shared no practice yet (`summary === null`) shows **New** (새로 참여) instead of looking like a stale learner. |
 | 6 | **The grown-up UX pass** (owner: "propose and carry out"): uneven buttons (the round "쪽지"), English stage titles in ko and es, "N haven't synced in a week" counting a learner who joined today, "1단계 기준: –", "다음 동기화를 기다리는 중" on learners who synced today, two "incoming" lists with opposite button order, the report's actions above its title, a phone nav that wraps, no error page. | Thirteen ranked improvements with exact copy (sections 8 to 10), rows GX-6 to GX-14. |
 
 ## 1. What was measured
@@ -34,7 +34,10 @@ Three read-only audits on detached worktrees of `origin/main` `1bfda3fc8` (no co
 Code facts each change rests on (checked at `1bfda3fc8`):
 - the class page keeps only the length of the re-link list it already reads (`setPendingRelinks(relinks.data.length)`, `teach/space/page.tsx:111`), though every `RelinkView` carries `learnerId` and `learnerName`; each roster row carries `scope: 'base' | 'full'` (TV) and `joinedAt`, unused on the card;
 - the card header holds only the name and the level pill (`teach/space/page.tsx:327-337`);
-- the outgoing class-move view carries no `learnerId` (`packages/backend/src/routes/class-moves.ts:166-179`), and the source view of a family-started transfer carries one only "on a request this class started" (`lib/console/api.ts:644-653`), so neither can be matched to a roster card except by name;
+- the outgoing class-move view carries no `learnerId` (`packages/backend/src/routes/class-moves.ts:166-179`), and the source view of a transfer carries one only on a request this class started (`initiator === 'source'`, `packages/backend/src/lib/transfer-views.ts:346`; `lib/console/api.ts:644-653`), so neither can be matched to a roster card except by name. A class-started request is created with the source step already `consented`, so **the source class's own step waits only on family-started requests, which carry no `learnerId`**: before GX-W the "move out needs your answer" state can be counted and listed, never matched to a card;
+- the class-move views' wire status is `'waiting' | 'moved' | 'ended'` (`routes/class-moves.ts:126` maps the stored `requested` to `waiting`; `lib/console/class-moves.ts:11`); `requested` is only the D1 status;
+- a class transfer view carries `scheduledFor` (`lib/console/api.ts:633`), a family's learner-side view carries `executeAfter` (`:692`);
+- re-links, transfers and class moves are expired lazily, on read (`expireIfDue` in `routes/relink.ts`; the transfer and class-move routes settle on read);
 - `TeacherMovesSection`'s `live` ref is set false by the StrictMode double mount and never set true again (`components/console/TeacherMovesSection.tsx:66-72`): the section never renders under `next dev` (production is fine, dev QA and dev e2e miss it);
 - `TeacherMovesSection` orders **Not now | Accept** (`:170-176`), `ClassTransferParts` orders **Accept | Not now** (`:300`);
 - there is no web push, no `expo-notifications` and no mail sender in the repo; the settings page says email on join "opens later".
@@ -44,12 +47,12 @@ Code facts each change rests on (checked at `1bfda3fc8`):
 | # | Decision | Why |
 |---|---|---|
 | GX-D1 | **One learner status model.** A pure function `learnerStatus(input)` in `lib/console/learner-status.ts` turns the roster, the re-link list, the transfer list and the class-move list (or, once GX-W is deployed, the roster's own `pending` field) into **one status per learner**, the incoming items and the totals. The class roster, the review sheet, the settings rows, the home badges and the parent home all read it, so a learner never shows two different states on two screens. | The same fact is drawn today by five components with three counting rules. |
-| GX-D2 | **A chip next to every learner's name, always with text.** One chip per learner, the highest-priority state wins (section 3.2). Action states are amber buttons labelled **Needs your OK** (승인 대기, the owner's word); the default state is a quiet **In class** (참여 중) chip on class rosters (GX-OD-1: shown, as the owner asked). Family rosters show no default chip. Colour is never the only cue. | The owner's request, word for word: a button next to the name, or a membership status like "On board". |
+| GX-D2 | **A chip next to every learner's name, always with text.** One chip per learner, the highest-priority state wins (section 3.2). Action states are amber buttons labelled **Needs your OK** (승인 대기, the owner's word): a tap opens the decision for that item (the pop-up for a re-link, the review sheet at the item for a move); the card also keeps the inline buttons for a one-tap answer. A learner asking to join gets its own card with the same chip at the top of the roster (section 4.1). The default state is a quiet **In class** (참여 중) chip on class rosters (GX-OD-1: shown, as the owner asked). Family rosters show no default chip. Amber means "your action" only; colour is never the only cue. | The owner's request, word for word: a button next to the name, or a membership status like "On board", for a learner joining or moving into the class too. |
 | GX-D3 | **An attention banner and one review sheet.** When anything needs this class's answer, a banner sits under the class title, above everything else: "{n} requests need your OK · {r} new device · {m} class move" with **Review now**. The sheet lists every waiting item with its own action (Approve / Deny for a device, Accept / Not now for a move into the class, Review for a move out). `role="status"`, never auto-dismissed, gone when the count is 0. | One place to clear everything in one or two taps, the pattern of an inbox badge plus a triage sheet. |
-| GX-D4 | **A pop-up for a new re-link only.** When a poll finds a re-link id this tab has not shown, an `alertdialog` opens (Approve / Deny / Later), once per id per tab session. Moves (open 14 days) never open a pop-up. | A re-link closes in 10 minutes and the learner is waiting at the device; a move is not urgent, and a modal for it would interrupt a teacher who is presenting. |
-| GX-D5 | **Count everything that waits, and keep counting.** The count of a space = its pending re-links + its transfers whose own step waits (`pendingCount`) + its incoming teacher moves with status `requested` (`kind: 'accept'`). It refreshes with the page's visible poll, on `useRosterChanges` and after any decision; re-links poll every `RELINK_REFRESH_MS` (10 s) while at least one is pending and the tab is visible. | Fixes the uncounted teacher move (section 0 item 3) and the read-once count. |
-| GX-D6 | **Home and nav carry counts, never names.** Each class row on the teacher home gets an amber **{n} need your OK** chip linking to the class page's sheet (`#attention`); the **Classes** tab (and **Home** for a parent) gets a dot with a count in its accessible name; the tab title gets a "({n}) " prefix. | F-CONSOLE-001 §3.4: the home shows counts, not learners. Names stay off the home, the nav and the title. |
-| GX-D7 | **The family's approvals come first.** A **Needs you** strip directly under the family heading lists the family's waiting items (a move that needs its OK, a child's re-link, a class-scope update to read), each with one primary action; each child card gets a chip and a class line ("In: Sunday Class A"). The class-scope text opens in a sheet from the strip, verbatim and with its list always open (GX-OD-3). | The parent's approvals were the last thing on the page or missing. |
+| GX-D4 | **A pop-up for a new re-link, and a re-link bar everywhere else.** On the class page (and the parent home), when a poll finds a re-link id this tab has not shown, an `alertdialog` opens (Approve / Deny / Later), once per id per tab session, and once more at 2 minutes left if it was put off with Later. On every other console page of the teacher and parent personas (not lecture mode, not the presenter) the AdultFrame shows a re-link bar with **Review** while any re-link waits (section 5.5). Moves (open 14 days) never open a pop-up or the bar. | A re-link closes in 10 minutes and the learner is waiting at the device, so it must reach the grown-up on any page; a move is not urgent, and a modal for it would interrupt a teacher who is presenting. |
+| GX-D5 | **Count everything that waits, and keep counting.** The count of a class = its pending re-links + its transfers whose own step waits (`pendingCount(views)`, every role) + its incoming teacher moves with wire status `'waiting'` and `kind: 'accept'`. Re-links count whatever `CLASS_TRANSFER` says; only the move parts follow the flag (`useTransfersShown`). The count refreshes on `useRosterChanges`, after any decision and on focus; how often it polls is section 5.4 (a re-link-only read every `RELINK_REFRESH_MS`, 20 s, on the class page while visible). | Fixes the uncounted teacher move (section 0 item 3) and the read-once count. |
+| GX-D6 | **Home and nav carry counts, never learner names.** Each class row on the teacher home gets an amber **{n} need your OK** chip linking to the class page's sheet (`#attention`); the **Classes** tab (and **Home** for a parent) shows the number on screen ("Classes 2", "반 2") with the meaning in its accessible name; the tab title gets a "({n}) " prefix. | F-CONSOLE-001 §3.4: the home shows counts, not learners. A dot alone is the subtlety the owner complained about; a short number does not break the tab row. |
+| GX-D7 | **The family's approvals come first, and the children stay on the first screen.** A compact **Needs you** strip directly under the family heading lists the family's waiting items (a move that needs its OK, a child's re-link, a class-scope update to read), one line each with its button inline; with more than 2 items the soonest-closing one keeps its row and the rest fold into one "{n} more things need you · See all" row. Each child card gets a status chip (text, not a second button) and a class line ("In: Sunday Class A"). The class-scope text stays the shipped card until the owner answers GX-OD-3 (owner-blocked row GX-5b). | The parent's approvals were the last thing on the page or missing; three full-height rows would push the first child off a phone screen again. |
 | GX-D8 | **No new channel.** No push, email or SMS (GX-OD-5). Everything here is in the console. | No sender exists; a new channel is the owner's call. |
 | GX-D9 | **No join approval mode.** Joining with a code stays instant (GX-OD-4). A learner who joined in the last 7 days and never synced shows **New**. The section 15 entry sketches what a "teacher approves joins" mode would need if the owner asks for it. | Today no join waits for anyone; adding a waiting state touches seats, the learner app and F-SPACE-001. |
 | GX-D10 | **Privacy stays as it is.** A learner coming into a class shows initials, picture and level only until accepted (F-SPACE-002 T8, TV-D8); the source class's own learners are matched by id (GX-W adds the id where it is missing, GX-OD-2). | The source class already has the learner on its roster; T8 limits only the destination. |
@@ -62,10 +65,10 @@ Code facts each change rests on (checked at `1bfda3fc8`):
 ```ts
 export type LearnerStatusKind =
   | 'relink'        // a re-link request for this learner is pending in this space (action)
-  | 'move_yours'    // a move of this learner out of this space waits for this space's answer (action)
+  | 'move_yours'    // a move of this learner out of this space waits for this space's answer (action; needs GX-W, section 3.3)
   | 'move_others'   // a move of this learner is open and waits for someone else
   | 'move_room'     // a move was agreed but the destination has no seat yet
-  | 'move_scheduled'// a move is agreed and runs on a date (family-started cooling-off)
+  | 'move_scheduled'// a move is agreed and runs on a date
   | 'new'           // joined this space in the last 7 days and no summary yet
   | 'in_class'      // a member; nothing waits (class and school spaces only)
   | 'none';         // family spaces: no default chip
@@ -75,7 +78,7 @@ export interface LearnerStatus {
   kind: LearnerStatusKind;
   action: boolean;                       // relink and move_yours only
   relink?: { id: string; expiresAt: string };
-  move?: { source: 'transfer' | 'teacher'; id: string; to: string | null; on: string | null };
+  move?: { source: 'transfer' | 'teacher'; id: string; to: string | null; on: string | null; expiresAt: string | null };
   scopeBase: boolean;                    // roster row scope === 'base' (a muted line, never a chip; TV-D3)
 }
 
@@ -86,46 +89,61 @@ export interface IncomingItem {          // a learner asking to join this space 
   avatar: string | null;
   level: string | null;
   from: string | null;                   // the source class name (TV-D8) or null for a family
-  expiresAt: string;
+  expiresAt: string | null;              // a teacher-move view carries none
+}
+
+export interface OutgoingItem {          // a move out of this space that waits for this space's answer
+  source: 'transfer';
+  id: string;
+  learnerId: string | null;              // null before GX-W on a family-started request (section 3.3)
+  name: string | null;                   // the view's own learner name (the source class already lists the learner)
+  avatar: string | null;
+  to: string | null;
+  expiresAt: string | null;
 }
 
 export interface AttentionModel {
   byLearner: Record<string, LearnerStatus>;
   incoming: IncomingItem[];
-  totals: { relinks: number; moves: number; all: number };   // moves = move_yours + incoming
+  outgoing: OutgoingItem[];              // every move_yours item, matched to a card or not
+  totals: { relinks: number; moves: number; all: number };
 }
 
 export function attentionModel(input: {
   kind: 'class' | 'family' | 'school';
   roster: readonly RosterLearner[];       // with scope, joinedAt, summary and, after GX-W, pending
   relinks: readonly RelinkView[] | null;  // null = not read (older Worker or failed read)
-  transfers: readonly TransferView[] | null;
-  classMoves: ClassMovesView | null;
+  transfers: readonly TransferView[] | null;   // null also while class moves are hidden (useTransfersShown)
+  classMoves: ClassMovesView | null;           // the same
   now: Date;
 }): AttentionModel;
 ```
 
 ### 3.2 Priority (one chip per learner)
 
-`relink` > `move_yours` > `move_room` > `move_scheduled` > `move_others` > `new` > `in_class` (or `none` in a family). An expired re-link (its `expiresAt` passed) is dropped before ranking; a move in `executed`, `declined`, `cancelled` or `expired` is not a status (the learner leaves the roster or stays as `in_class`). `scopeBase` is never a chip: it adds the muted line "Words and more show once the family has read the update." (`console.reportScope.baseScope`, shipped) under the card's header.
+`relink` > `move_yours` > `move_room` > `move_scheduled` > `move_others` > `new` > `in_class` (or `none` in a family). An expired re-link (its `expiresAt` passed) is dropped before ranking; a move whose view status is not open (`moved` / `ended`, or a transfer `executed`, `declined`, `cancelled`, `expired`) is not a status (the learner leaves the roster or stays as `in_class`). `scopeBase` is never a chip: it adds the muted line "Words and more show once the family has read the update." (`console.reportScope.baseScope`, shipped) under the card's header.
 
 ### 3.3 Where each state comes from
 
 | Kind | Before GX-W (client reads, all shipped) | After GX-W (one roster read) |
 |---|---|---|
 | `relink` | `GET /:id/relink-requests`, `learnerId`, `expiresAt` | `learners[].pending.relink` |
-| `move_yours` | `GET /:id/transfer-requests`, role `source`, own step `waiting`, with `learnerId` (class-started requests only) | `learners[].pending.move` with `step: 'yours'` |
-| `move_others` | the same, own step done, others waiting; `GET /:id/class-moves` `outgoing` `requested` cannot be matched (no `learnerId`) and is not shown until GX-W | `step: 'others'` |
-| `move_room` | transfer `blockReason` present | `step: 'room'` |
-| `move_scheduled` | transfer `executeAfter` in the future | `step: 'scheduled'`, `on` |
-| `new` | roster `joinedAt` within 7 × 24 h of `now` and `summary === null` | same |
-| incoming | transfers with role `destination` and own step `waiting`; `class-moves` `incoming` with status `requested` | roster `incoming` count; items still from those two reads (the sheet needs them) |
+| `move_yours` | **never a chip**: the source class's own step waits only on family-started requests, whose source view carries `learnerId: null` (section 1). Each such view is still an `OutgoingItem` (name and avatar from the view), counted and listed in the sheet's "Moves out of this class" | `learners[].pending.move` with `step: 'yours'` (and the source view's `learnerId`, GX-W) |
+| `move_others` | a transfer with role `source`, `learnerId` present (class-started), own step done, others waiting; an outgoing class move (`status === 'waiting'`) cannot be matched (no `learnerId`) and is not shown until GX-W | `step: 'others'` |
+| `move_room` | the same transfer with `blockReason` present | `step: 'room'` |
+| `move_scheduled` | the same transfer with `scheduledFor` in the future (class views; a family's learner-side view uses `executeAfter`) | `step: 'scheduled'`, `on` |
+| `new` | roster `joinedAt` within 7 × 24 h of `now` and `summary === null` (nothing synced yet; a learner joins only from the app, so "never opened the app" is not true) | same |
+| incoming | transfers with role `destination` and own step `waiting`; `class-moves` `incoming` with `status === 'waiting' && kind === 'accept'` | roster `incoming` count; items still from those two reads (the cards and the sheet need them) |
 
-A read that fails or returns an unknown shape contributes nothing (never a guess, the `MovesEntry` rule). The model never matches by name.
+A read that fails, returns an unknown shape or is skipped (class moves hidden by `useTransfersShown` or the transfer lock) contributes nothing (never a guess, the `MovesEntry` rule). The model never matches by name. GX-1 therefore shows the `relink`, `new`, `in_class` chips and the class-started move states; `move_yours` chips appear once GX-W is deployed (GX-1 reads `pending` when present, so no second client row is needed).
 
 ### 3.4 Counts (GX-D5)
 
-`totals.all = relinks + move_yours + incoming`, and `useApprovalsWaiting(api, spaceIds, refreshKey)` (rename of `useMovesWaiting`, same file; the old name stays as an alias until no caller uses it) returns per space `{ relinks, moves, all }`. With GX-W deployed it reads `GET /api/spaces` `items[].attention` and asks nothing else; without it, it reads the three lists per space as today (bounded: the home already lists every space). `refreshKey` changes on the page's visible poll, on `useRosterChanges` and after each decision.
+- `totals.relinks` = pending, unexpired re-links of the space. **Counted whatever `CLASS_TRANSFER` says.**
+- `totals.moves` = `pendingCount(transfers)` (every view whose own step waits, matched to a card or not) + incoming class moves (`status === 'waiting' && kind === 'accept'`). Never computed from matched learners, so an unmatched family-started move out is still counted. 0 while class moves are hidden.
+- `totals.all` = `relinks + moves`.
+
+`useApprovalsWaiting(api, spaceIds, refreshKey)` (rename of `useMovesWaiting`, same file; the old name stays as an alias until no caller uses it) returns per space `{ relinks, moves, all }`. The re-link part runs even when `useTransfersShown()` is false; only the move reads are gated. With GX-W deployed it reads `GET /api/spaces` `items[].attention` and asks nothing else; without it, it reads the lists per space **once on mount, on focus and after a decision** (`refreshKey`), never on a timer (section 5.4), so a school admin with 60 classes does not send 180 requests every 90 s.
 
 ## 4. The status chip (GX-D2; class roster, family roster, settings rows)
 
@@ -133,20 +151,25 @@ A read that fails or returns an unknown shape contributes nothing (never a guess
 
 | Kind | Chip (en / es / ko) | Reason line (en / es / ko) | Card actions | Style |
 |---|---|---|---|---|
-| `relink` | Needs your OK / Por aprobar / 승인 대기 | New device · {m} min left / Dispositivo nuevo · quedan {m} min / 새 기기 · {m}분 남음 | **Approve** (primary) · **Deny**, inline (`api.decideRelink`; result line `console.relink.approved` / `.denied`) | amber button chip; the card gets a `borderWidth.base` `feedback.nudge` border and moves to the top of the list |
-| `move_yours` | Needs your OK / Por aprobar / 승인 대기 | Class move: {class} / Cambio de clase: {class} / 반 이동: {class} | **Review** opens the review sheet at this item | amber button chip, card border as above, card to the top |
-| `move_room` | Waiting for a seat / Esperando lugar / 자리 기다리는 중 | — | none | amber outline (no fill) |
-| `move_scheduled` | Moving {date} / Se cambia el {date} / 이동 예정 · {date} | — | none | `feedback.infoLight` |
+| `relink` | Needs your OK / Por aprobar / 승인 대기 | New device · {m} min left / Dispositivo nuevo · quedan {m} min / 새 기기 · {m}분 남음 | **Approve** (primary) · **Deny**, inline (`api.decideRelink`; result line `console.relink.approved` / `.denied`) | action chip; the card gets a `borderWidth.base` `feedback.nudge` border and moves to the top of the list |
+| `move_yours` | Needs your OK / Por aprobar / 승인 대기 | Class move: {class} / Cambio de clase: {class} / 반 이동: {class} | **Review** (primary) opens the review sheet at this item | action chip, card border and order as above |
+| `move_room` | Waiting for a seat / Esperando un lugar / 자리 기다리는 중 | — | none | `surface.sunken` (not amber: nothing for this teacher to do) |
+| `move_scheduled` | Moving {date} / Cambia de clase el {date} / 이동 예정 · {date} | — | none | `feedback.infoLight` |
 | `move_others` | Move waiting / Cambio en espera / 이동 대기 중 | Waiting for: {class} / Esperando a: {class} / 기다리는 반: {class} | none | `surface.sunken` |
-| `new` | New / Nueva llegada / 새로 참여 | Hasn't opened the app yet / Aún no abre la app / 아직 앱을 열지 않았어요 | none | `feedback.infoLight` |
+| `new` | New / Nueva llegada / 새로 참여 | No practice shared yet / Aún sin práctica registrada / 아직 연습 기록이 없어요 | none | `feedback.infoLight` |
 | `in_class` | In class / En la clase / 참여 중 | — | none | `feedback.successLight` with an 8 px `feedback.success` dot, text `text.primary` |
 
 Rules:
+- **Amber is "your action" only.** A `feedback.nudge` fill, border or dot appears on the action states (`relink`, `move_yours`, incoming) and nowhere else on the roster.
 - `{m}` is whole minutes, rounded up, at least 1; the chip re-renders each minute (no seconds). At 0 the item drops on the next poll; an Approve that answers `409 expired` shows the shipped expired line and removes the chip.
-- `{class}` is a class name the viewer may read (the source teacher chose the destination, TV-D8; a family's own classes); with none, the line is omitted.
-- An action chip is a `<button>` (≥ `touchTarget.min` tall, the console floor) whose accessible name is "{chip}: {reason}" and `aria-describedby` = the name id (the existing card pattern); a status chip is a `<span>` inside the heading's text, read with the name.
-- Ordering: action cards first (newest request first), then the shipped "recent activity first" order (class) or join order (family, GX-8). This is ordering by what needs the teacher, never by a score.
+- `{class}` is a class name the viewer may read (the source teacher chose the destination, TV-D8; a family-started request with no introduction carries none; a family's own classes); with none, the line is omitted.
+- **An action chip is a `<button>`** (≥ `touchTarget.min` tall) whose accessible name is "{chip}: {reason}" (`aria-label`, e.g. "Needs your OK: New device · 8 min left"). Its tap opens the decision for that item: the re-link pop-up (section 5.3) for `relink`, the review sheet scrolled to the item for `move_yours` and incoming. The inline buttons stay for the one-tap answer; each has `aria-describedby` = the name id and the reason line's id, so "Approve" is read with whose request it is. A status chip is a `<span>` inside the heading's text, read with the name.
+- **Ordering.** Action cards first, by soonest `expiresAt` (a re-link, closing in minutes, before a move; a missing `expiresAt` last, then oldest request first); then the shipped "recent activity first" order (class) or join order (family, GX-8). A decided card keeps its place with its result line for 5 s (or until the next poll, whichever is later), then re-sorts, so the list never jumps under the teacher's thumb. This is ordering by what needs the teacher, never by a score.
 - Never red, never "late", "behind" or "missing". Text is always `text.primary`; amber is a fill, border or dot only.
+
+### 4.1 Learners asking to join (class roster, top)
+
+Above the roster heading, under its own heading **Asking to join this class** (이 반에 들어오려는 학생 / Quieren unirse a esta clase), one card per incoming item (`attention.incoming`, both sources): the avatar chip, the initials only, the level pill (T8 holds until accepted), the **Needs your OK** action chip, the line "From {class}" (보낸 반: {class} / Viene de {class}) when the source class is known, and **Accept** (primary, first) · **Not now** inline (the shipped teacher-move or transfer decision; Not now on a transfer keeps the shipped reason step). The card has the action border. On Accept the card leaves and the learner appears on the roster as **New** after the reread. The group is absent when nothing is incoming, and it shows on an empty class too. The review sheet still lists the same items so everything can be cleared in one place.
 
 ## 5. Attention banner, review sheet and the re-link pop-up (GX-D3, GX-D4)
 
@@ -158,64 +181,91 @@ Rules:
 ```
 - `role="status"`, `aria-live="polite"`; background `feedback.nudgeLight`, inline-start bar `borderWidth.thick` `feedback.nudge` (the `TeacherMovesSection` nudge pattern), text `text.primary`, **Review now** a primary button ≥ `touchTarget.min`.
 - Shown only when `totals.all > 0`; the second line lists only the non-zero parts.
+- **Its text changes only when a count changes** (the component keeps the last rendered counts and re-renders the region only on a difference), so a 20 s poll does not repeat the announcement.
 - `#attention` in the URL opens the sheet on load (the home's link, GX-3); the hash carries no id.
 
 ### 5.2 Review sheet
 
 A bottom sheet on a phone, a centred dialog from 45em (the `ConfirmSheet` frame: focus trap, Esc closes, focus returns to the opener, the page behind is inert). Title **Needs your OK** (승인 대기 / Espera tu aprobación). Sections, each only when non-empty:
 1. **New devices** — one row per re-link: avatar chip, name, "New device · {m} min left", **Approve** / **Deny**.
-2. **Asking to join this class** (이 반에 들어오려는 학생 / Quieren unirse a esta clase) — one row per incoming item: avatar, initials, level, "From {class}" (보낸 반: {class} / Viene de {class}), **Accept** (primary, first) / **Not now**. Not now on a transfer keeps the shipped reason step. This one list replaces the two lists of the moves page (section 0 item 6) in the sheet; the moves page itself is unified in GX-2 (one heading, primary first in both components).
-3. **Moves out of this class** — one row per `move_yours`: name, "Class move: {class}", **Review** opens the shipped consent card (Agree / Not now) inside the sheet.
+2. **Asking to join this class** (이 반에 들어오려는 학생 / Quieren unirse a esta clase) — one row per incoming item: avatar, initials, level, "From {class}", **Accept** (primary, first) / **Not now**. This one list replaces the two lists of the moves page (section 0 item 6) in the sheet; the moves page itself is unified in GX-2 (one heading, primary first in both components).
+3. **Moves out of this class** (이 반에서 나가는 이동 / Salidas de esta clase) — one row per `attention.outgoing` item, matched to a card or not (name and avatar from the view): "Class move: {class}" when the destination is known, **Review** (primary) opens the shipped consent card (Agree / Not now) inside the sheet.
 
-After each decision the row shows its result line for 5 s and leaves; the count, banner and chips update at once (optimistic, then the reread). Empty: "Nothing is waiting." (기다리는 요청이 없어요. / No hay nada pendiente.) and the sheet closes itself after 2 s only if it was opened from the banner.
+Rows are ordered as the cards (section 4). After each decision the row shows its result line for 5 s and then leaves; the result is also written to a **polite live region inside the sheet** (`role="status"`, visually hidden), so a screen-reader user hears it although the row goes away. The count, banner and chips update at once (optimistic, then the reread). When the last item clears, the sheet **stays open** on its empty state, "Nothing is waiting." (기다리는 요청이 없어요. / No hay nada pendiente.), with focus on **Close**; it never closes itself.
 
 ### 5.3 Re-link pop-up (class page; parent home after GX-5)
 
-- Trigger: a pending re-link id not in this tab's shown set (`sessionStorage` through the console's safe-storage wrapper, key `hr:console:relinkShown`, ids only), while the page is visible and no other dialog is open. One at a time, newest first.
+- Trigger: a pending re-link id not in this tab's shown set (`sessionStorage` through the console's safe-storage wrapper, key `hr:console:relinkShown`, ids only), while the page is visible and no other dialog is open. One at a time, soonest-closing first. The action chip of a `relink` card opens the same pop-up for its request at any time.
+- **Reminder.** A request put off with **Later** opens the pop-up once more when it has `RELINK_REMIND_MS` (2 minutes) or less left, with the same title and "This request closes in {m} min." (ids in a second set, `hr:console:relinkReminded`). Never a third time.
 - `role="alertdialog"`, `aria-labelledby` the title, focus on the title; Esc = **Later**.
 - Title: "New device request: {name}" / "Solicitud de dispositivo nuevo: {name}" / "새 기기 연결 요청: {name}". Body: the shipped `relinkApproveHint` and "This request closes in {m} min." / "Esta solicitud se cierra en {m} min." / "{m}분 뒤에 이 요청이 닫혀요.".
 - Buttons: **Approve** (primary) · **Deny** · **Later** (Más tarde / 나중에). Later only closes; the chip and banner stay.
-- Never on the lecture-mode or presenter pages (they are other routes; the pop-up lives in the class page and the parent home only).
+- Never on the lecture-mode or presenter pages (they are other routes; the pop-up lives in the class page and the parent home only; every other page has the bar of section 5.5).
 
 ### 5.4 Polling
 
 | Page | Re-links | Moves and counts |
 |---|---|---|
-| Class page | every `RELINK_REFRESH_MS` (10 s) while ≥ 1 pending and visible, else with the 90 s visible poll | with the 90 s poll, on `useRosterChanges`, after each decision |
-| Teacher home, school page | counts only, 90 s visible poll | same |
-| Parent home | every 20 s while ≥ 1 pending and visible, else 90 s | 90 s, on focus |
+| Class page | a **re-link-only read** (`api.relinkRequests(spaceId)`, not the page's `load()` of five calls) every `RELINK_REFRESH_MS` (20 s) while the tab is visible, whether or not one is pending; also on focus and on `visibilitychange` to visible | with the shipped 90 s visible poll, on `useRosterChanges`, after each decision |
+| Every other teacher or parent console page (AdultFrame, not lecture or presenter) | with GX-W: `GET /api/spaces` `attention` every `ATTENTION_POLL_MS` (30 s) while visible, on focus and on visible; without GX-W: none (the bar of section 5.5 needs `attention`) | the same `attention` read (home chips, school page counts, nav count); without GX-W: per-space lists once on mount, on focus and after a decision, never on a timer |
+| Parent home | the family's re-link read every 20 s while visible, on focus | the quiet `load(true)`: 90 s visible poll and focus |
 
-`document.title` gets "({n}) " in front while `totals.all > 0` on these pages (a count only, never a name).
+`document.title` gets "({n}) " in front while the page's total is above 0 (a count only, never a name). A test pins the number of calls per poll on each page.
+
+### 5.5 Re-link bar (AdultFrame; GX-3 for teachers, GX-5 for parents)
+
+While `attention` reports a pending re-link in any space of the persona, every console page of that persona except the class page, the parent home (they have the banner, the strip and the pop-up), lecture mode and the presenter shows a bar at the top of the main area, under the nav:
+
+```
+| [!] A new device needs your OK · Sunday Class A   [ Review ] |
+|     8 min left                                               |
+```
+- One re-link: "A new device needs your OK · {space}" (Un dispositivo nuevo espera tu aprobación · {space} / 새 기기 승인 대기 · {space}), the second line "{m} min left" from `attention.relinkExpiresAt` (the soonest); **Review** goes to that space's page with `#attention` (a class) or to `/parent` (a family).
+- Two or more: "{n} new devices need your OK" (1 form: the one-space line) / "{n} dispositivos nuevos esperan tu aprobación" / "새 기기 승인 대기 {n}건"; **Review** goes to the space with the soonest one.
+- `role="status"` (announced once when it appears; its text changes only with the count), `feedback.nudgeLight` with the inline-start amber bar, **Review** ≥ `touchTarget.min`. Not dismissible: it leaves when nothing is pending. A space name is on screen only (never in the URL or the title; the link uses the shipped `?id=` route, an opaque id).
 
 ## 6. Home, school and nav badges (GX-D6)
 
-- **Teacher home** (`teach/home/page.tsx`, class rows): an amber chip **{n} need your OK** (승인 대기 {n} / {n} por aprobar) after the class name, linking to `ROUTES.space(id)#attention`. Replaces the separate "class moves waiting" pill on the row.
-- **School page** (`SchoolAdmin.tsx`): each class link's count uses the same `all` (teacher moves included).
-- **Nav** (`AdultFrame.tsx`, `lib/console/shell-nav.ts`): a `feedback.nudge` dot (8 px, `radii.circle`) on **Classes** (teacher) and **Home** (parent) when the persona's total is above 0; accessible name "Classes, {n} need your OK" (반, 승인 대기 {n} / Clases, {n} por aprobar) and "Home, {n} to check" (홈, 확인할 일 {n}개 / Inicio, {n} por revisar). The dot is not a number on screen (the label carries it), so the tab row's width does not change.
+- **Teacher home** (`teach/home/page.tsx`, class rows): an amber chip **{n} need your OK** (1 form "1 needs your OK"; 승인 대기 {n}건 / {n} por aprobar) after the class name, linking to `ROUTES.space(id)#attention`. Replaces the separate "class moves waiting" pill on the row.
+- **School page** (`SchoolAdmin.tsx`): each class link's count uses the same `all` (teacher moves and re-links included).
+- **Nav** (`AdultFrame.tsx`, `lib/console/shell-nav.ts`): the **Classes** (teacher) and **Home** (parent) tab shows the persona's total **as a number on screen**, a small `feedback.nudge` pill after the label ("Classes 2", "반 2"), when the total is above 0; the visible number is `aria-hidden` and the tab's accessible name carries the meaning: "Classes, {n} need your OK" (1 form "Classes, 1 needs your OK"; 반, 승인 대기 {n}건 / Clases, {n} por aprobar) and "Home, {n} to check" (홈, 확인할 일 {n}건 / Inicio, {n} por revisar). A one- or two-digit pill does not wrap the tab row (measured at 360 in the mocks); above 99 it reads "99+".
+- **Per-persona totals.** Teacher: the sum of `all` over the classes the teacher can act on. Parent: section 7.4.
 
 ## 7. Parent side (GX-D7)
 
 ### 7.1 Needs you strip (`/parent`, under `FamilyHeading`, before every card)
 
-`role="region"` with the title as its name; one row per item, newest first; amber inline-start bar; each row: the child's avatar chip, one sentence, one primary button.
+`role="region"` with the title as its name; amber inline-start bar per row. **Each row is compact**: avatar chip, one sentence (a second short line only for a time or a date), and its button(s) inline, wrapping under the text only when the row is narrower than the text plus buttons. Rows are ordered by soonest `expiresAt` (a re-link first), then oldest first.
+
+**Fold rule.** With 1 or 2 items every item has its row. With 3 or more, the soonest-closing item keeps its row and the rest fold into one row: "{n} more things need you" (1 form "1 more thing needs you"; {n} cosas más por revisar / 확인할 일 {n}건 더) with **See all** (Ver todo / 모두 보기), which opens the items in the review-sheet frame of section 5.2 (title "Needs you", one row per item with the actions below). Goal, measured on the mocks at 360 x 740 with three items and a move notice: the first child's name and week line are on the first screen.
 
 | Item | Source | Sentence (en / es / ko) | Button |
 |---|---|---|---|
-| Move needs the family's OK | `transferRequests(familyId)` role `learner_side`, own step `waiting` | A class move for {name} needs your OK. / Un cambio de clase de {name} espera tu permiso. / {name}의 반 이동에 승인이 필요해요. · second line: New class: {to} · Ends in {n} days / Clase nueva: {to} · Termina en {n} días / 옮길 반: {to} · {n}일 뒤 마감 | **Review** (Revisar / 확인하기) opens the shipped consent sheet directly (2 taps, was 3-4) |
+| Move needs the family's OK | `transferRequests(familyId)` role `learner_side`, own step `waiting` | A class move for {name} needs your OK. / Un cambio de clase de {name} espera tu aprobación. / {name}의 반 이동에 승인이 필요해요. · second line: New class: {to} · Ends in {n} days / Clase nueva: {to} · Termina en {n} días / 옮길 반: {to} · {n}일 뒤 마감 | **Review** (Revisar / 확인하기) opens the shipped consent sheet directly (2 taps, was 3-4) |
 | A child's re-link | `relinkRequests(familyId)` | {name} wants to continue on a new device. / {name} quiere seguir en un dispositivo nuevo. / 새 기기에서 이어서 하려는 요청: {name} · second line: {m} min left / Quedan {m} min / {m}분 남음 | **Approve** · **Deny** inline |
-| Class-scope update | `classScope(familyId).learners[].needed` | Read what {name}'s teachers can see. / Lee qué pueden ver los docentes de {name}. / {name}의 선생님이 보는 정보를 확인해 주세요. | **Read and OK** (Leer y aceptar / 읽고 확인) opens the class-scope sheet (7.3) |
+| Class-scope update | `classScope(familyId).learners[].needed` | Read what {name}'s teachers can see. / Lee qué pueden ver los docentes de {name}. / {name}의 선생님이 보는 정보를 확인해 주세요. | **Read and OK** (Leer y aceptar / 읽고 확인): until GX-OD-3 is answered it scrolls to and focuses the shipped class-scope card; after, it opens the sheet of 7.3 |
 
-The move notice of TV-D10 stays the shipped card, placed right under the strip. All three reads join the page's quiet `load(true)` (90 s visible poll and focus), so a new item appears without a reload.
+The TV-D10 move notice ("{name} moved to a new class: {to}.", shipped) moves from its own card under the heading into the card of the child it is about, after the child's lines and before the buttons (same text, same **OK**, same seen write). All three reads join the page's quiet `load(true)` (90 s visible poll and focus), so a new item appears without a reload; the re-link read also runs every 20 s while visible (section 5.4).
 
 ### 7.2 Child card: status chip and class line
 
-Right of the child's name (`parent/page.tsx` `card()` h3), one chip by the same priority: **Move: your OK needed** (Cambio: falta tu permiso / 반 이동 승인 대기), **New device asking** (Dispositivo nuevo pide entrar / 새 기기 연결 요청), **Class info to read** (Aviso de clase por leer / 반 안내 확인 필요), **Moving {date}** (Se cambia el {date} / {date} 반 이동 예정); an action chip is a button that runs the strip's action. Under the name, a class line from `TransferList.options[].classes` (already read for the family): "In: {class}" (En: {class} / 소속: {class}), with two or more "In {n} classes" (En {n} clases / 소속 반 {n}곳) and the names in a second line, with none "Family only" (Solo en familia / 가족 학습만). The family's waiting-moves pill leaves the bottom row; the strip replaces it (its family wording, `console.transfer.familyNeedsYou(n)`: "{n} class move(s) need your OK" / "{n} cambio(s) de clase espera(n) tu respuesta" / "확인할 반 이동 {n}건", stays as the strip's heading count on the family transfers page).
+Right of the child's name (`parent/page.tsx` `card()` h3), one chip by the same priority, **a status `<span>`, not a button** (the strip owns the action; the card keeps its shipped border, no amber border): **Class move · needs your OK** (Cambio de clase · por aprobar / 반 이동 · 승인 대기), **New device · needs your OK** (Dispositivo nuevo · por aprobar / 새 기기 · 승인 대기), **Class info to read** (Aviso de clase por leer / 반 안내 확인 필요), **Moving {date}** (Cambia de clase el {date} / 이동 예정 · {date}). The three action chips have the `feedback.nudgeLight` fill (the family's action); **Moving** has `feedback.infoLight`.
 
-### 7.3 Class-scope sheet (amends TV-D5's surface)
+**Class line.** Under the name, from `TransferList.options[].classes` of the family's `transferRequests(familyId)` read: GX-4 keeps the `options` that `useMovesWaiting` reads and discards today (a `familyOptions` state on `/parent`, filled by the same read in the quiet load). "In: {class}" (En: {class} / 소속: {class}); with two or more "In {n} classes" (En {n} clases / 소속 반 {n}곳) and the names in a second line; with none "Family only" (Solo en familia / 반 없이 가족 학습). **When the read is skipped (class moves hidden by `useTransfersShown` or the transfer lock), fails or returns an unknown shape, the class line is omitted** (never "Family only" on a guess).
 
-The class-scope text (`CLASS_SCOPE_TEXT`, content-schema) moves from an always-shown card on the home into a sheet opened from the strip or the chip. The text is unchanged and shown in full, with its list always open inside the sheet; **OK** writes the acknowledgement as today; the sheet cannot be closed by a backdrop tap while unread (Close is a button). `CLASS_SCOPE_TEXT_VERSION` does not change (no word changes). GX-OD-3 records this; until the owner answers, the default applies.
+The family's waiting-moves pill leaves the bottom row; the strip replaces it (its family wording, `console.transfer.familyNeedsYou(n)`: "{n} class move(s) need your OK" / "{n} cambio(s) de clase espera(n) tu aprobación" / "확인할 반 이동 {n}건", is the heading count on the family transfers page).
 
-### 7.4 Family transfers page step word (Fix D)
+### 7.3 Class-scope sheet (amends TV-D5's surface; **owner-blocked**, row GX-5b)
+
+Proposed: the class-scope text (`CLASS_SCOPE_TEXT`, content-schema) moves from an always-shown card on the home into a sheet opened from the strip or the chip. The text is unchanged and shown in full, with its list always open inside the sheet; **OK** writes the acknowledgement as today; the sheet cannot be closed by a backdrop tap while unread (Close is a button). `CLASS_SCOPE_TEXT_VERSION` does not change (no word changes). Because this changes a consent surface, it **does not ship on a default**: GX-OD-3 is owner-blocked and the shipped card stays where it is until the owner answers (the strip row scrolls to it).
+
+### 7.4 Parent counts
+
+- **Home tab number and `document.title` on `/parent`** = the family's pending re-links + its learner-side moves whose family step waits (`learnerState` pending, role `learner_side`) + its children with a class-scope update `needed`.
+- With GX-W, the re-links and moves come from `attention` of the family space (section 12); the class-scope part from the shipped `classScope(familyId)` read of the quiet load (once on mount and on focus on other parent pages).
+- The re-link bar (5.5) uses the re-link part only.
+
+### 7.5 Family transfers page step word (Fix D)
 
 When `view.role === 'learner_side'`, the learner slot's step word reads "Your answer needed" (Falta tu respuesta / 내 답을 기다려요) instead of "Family waiting", and the card shows "Ends {date}" (Termina el {date} / {date} 마감).
 
@@ -243,7 +293,7 @@ When `view.role === 'learner_side'`, the learner slot's step word reads "Your an
 
 | Rank | Problem (evidence) | Change | Row |
 |---|---|---|---|
-| P1 | Approvals last or missing (section 0 item 4) | Section 7 | GX-4, GX-5 |
+| P1 | Approvals last or missing (section 0 item 4) | Section 7 | GX-4, GX-5 (GX-5b owner-blocked) |
 | P2 | A child card carries two facts; "Last active not yet" is not English | Line 1 "Practiced {d} of the last 7 days · {m} min" with the report's 7-day squares (fill only); line 2 "Next: {quest}" from `report-view.ts`'s next resolver; a child who never started: "Not started yet. Open the app on {name}'s device." with **Open the app on this device**; quiet 7+ days: "A 5-minute quest is a good restart." | GX-11 |
 | P3 | With 2+ children on a phone, the Lecture mode card sits between child 1 and child 2 (`lectureCardSlot` `afterFirstRow`) | 2+ learners below 70em: `afterMain`; the strip outranks Lecture mode in the 70em side column | GX-11 |
 | P4 | Family roster titled "Most recent activity first" (backend sorts by `lastActiveAt`), contradicting the home's join order; "학생" for family members; "Stage 1 anchor"; sync jargon; "Joined: Tue" | Family roster in join order, heading "Learners" (우리 가족 학습자 / Quienes aprenden); kind-aware practiced line; "Joined Oct 14" via `formatDate` | GX-8 |
@@ -262,53 +312,61 @@ Korean rule applied throughout: no particle whose form depends on the final cons
 
 ### 10.1 New keys of GX-1 to GX-5 (namespace `console`)
 
+**One action wording per locale** (review of PR #917): en **Needs your OK**, es **Por aprobar** (a chip or count) / **Espera(n) tu aprobación** (a sentence or title), ko **승인 대기**. Every status and count that asks the grown-up to decide is built from it, on the teacher and the parent side alike. One date order for a scheduled move: en "Moving {date}", es "Cambia de clase el {date}", ko "이동 예정 · {date}". Korean counts take the counter 건 ("새 기기 1건 · 반 이동 2건"). Plural keys go through `plural.ts` (en and es one / other; ko one form).
+
 | Key | en | es | ko |
 |---|---|---|---|
 | `status.inClass` | In class | En la clase | 참여 중 |
 | `status.needsOk` | Needs your OK | Por aprobar | 승인 대기 |
+| `status.chipName(chip, reason)` | {chip}: {reason} | {chip}: {reason} | {chip}: {reason} |
 | `status.newDevice(m)` | New device · {m} min left | Dispositivo nuevo · quedan {m} min | 새 기기 · {m}분 남음 |
 | `status.moveTo(class)` | Class move: {class} | Cambio de clase: {class} | 반 이동: {class} |
 | `status.moveWaiting` | Move waiting | Cambio en espera | 이동 대기 중 |
 | `status.waitingFor(class)` | Waiting for: {class} | Esperando a: {class} | 기다리는 반: {class} |
-| `status.moving(date)` | Moving {date} | Se cambia el {date} | 이동 예정 · {date} |
-| `status.waitingSeat` | Waiting for a seat | Esperando lugar | 자리 기다리는 중 |
+| `status.moving(date)` | Moving {date} | Cambia de clase el {date} | 이동 예정 · {date} |
+| `status.waitingSeat` | Waiting for a seat | Esperando un lugar | 자리 기다리는 중 |
 | `status.new` | New | Nueva llegada | 새로 참여 |
-| `status.notOpened` | Hasn't opened the app yet | Aún no abre la app | 아직 앱을 열지 않았어요 |
+| `status.noPractice` | No practice shared yet | Aún sin práctica registrada | 아직 연습 기록이 없어요 |
+| `status.minutesLeft(m)` | {m} min left | Quedan {m} min | {m}분 남음 |
 | `status.review` | Review | Revisar | 확인하기 |
 | `attention.title(n)` | 1 request needs your OK / {n} requests need your OK | 1 solicitud espera tu aprobación / {n} solicitudes esperan tu aprobación | 승인을 기다리는 요청 {n}건 |
-| `attention.devices(n)` | 1 new device / {n} new devices | 1 dispositivo nuevo / {n} dispositivos nuevos | 새 기기 {n} |
-| `attention.moves(n)` | 1 class move / {n} class moves | 1 cambio de clase / {n} cambios de clase | 반 이동 {n} |
+| `attention.devices(n)` | 1 new device / {n} new devices | 1 dispositivo nuevo / {n} dispositivos nuevos | 새 기기 {n}건 |
+| `attention.moves(n)` | 1 class move / {n} class moves | 1 cambio de clase / {n} cambios de clase | 반 이동 {n}건 |
 | `attention.cta` | Review now | Revisar ahora | 지금 확인 |
 | `attention.sheetTitle` | Needs your OK | Espera tu aprobación | 승인 대기 |
 | `attention.devicesHeading` | New devices | Dispositivos nuevos | 새 기기 |
 | `attention.incomingHeading` | Asking to join this class | Quieren unirse a esta clase | 이 반에 들어오려는 학생 |
-| `attention.outgoingHeading` | Moves out of this class | Cambios fuera de esta clase | 이 반에서 나가는 이동 |
+| `attention.outgoingHeading` | Moves out of this class | Salidas de esta clase | 이 반에서 나가는 이동 |
 | `attention.from(class)` | From {class} | Viene de {class} | 보낸 반: {class} |
 | `attention.empty` | Nothing is waiting. | No hay nada pendiente. | 기다리는 요청이 없어요. |
 | `relinkPopup.title(name)` | New device request: {name} | Solicitud de dispositivo nuevo: {name} | 새 기기 연결 요청: {name} |
 | `relinkPopup.closes(m)` | This request closes in {m} min. | Esta solicitud se cierra en {m} min. | {m}분 뒤에 이 요청이 닫혀요. |
 | `relinkPopup.later` | Later | Más tarde | 나중에 |
-| `home.attention(n)` | {n} need your OK | {n} por aprobar | 승인 대기 {n} |
-| `shell.navAttention.classes(n)` | Classes, {n} need your OK | Clases, {n} por aprobar | 반, 승인 대기 {n} |
-| `shell.navAttention.home(n)` | Home, {n} to check | Inicio, {n} por revisar | 홈, 확인할 일 {n}개 |
+| `relinkBar.one(space)` | A new device needs your OK · {space} | Un dispositivo nuevo espera tu aprobación · {space} | 새 기기 승인 대기 · {space} |
+| `relinkBar.many(n)` | {n} new devices need your OK | {n} dispositivos nuevos esperan tu aprobación | 새 기기 승인 대기 {n}건 |
+| `home.attention(n)` | 1 needs your OK / {n} need your OK | 1 por aprobar / {n} por aprobar | 승인 대기 {n}건 |
+| `shell.navAttention.classes(n)` | Classes, 1 needs your OK / Classes, {n} need your OK | Clases, 1 por aprobar / Clases, {n} por aprobar | 반, 승인 대기 {n}건 |
+| `shell.navAttention.home(n)` | Home, 1 to check / Home, {n} to check | Inicio, 1 por revisar / Inicio, {n} por revisar | 홈, 확인할 일 {n}건 |
 | `parentHome.needsYou.title` | Needs you | Necesita tu respuesta | 확인이 필요해요 |
-| `parentHome.needsYou.move(name)` | A class move for {name} needs your OK. | Un cambio de clase de {name} espera tu permiso. | {name}의 반 이동에 승인이 필요해요. |
+| `parentHome.needsYou.move(name)` | A class move for {name} needs your OK. | Un cambio de clase de {name} espera tu aprobación. | {name}의 반 이동에 승인이 필요해요. |
 | `parentHome.needsYou.moveMeta(to, n)` | New class: {to} · Ends in {n} days | Clase nueva: {to} · Termina en {n} días | 옮길 반: {to} · {n}일 뒤 마감 |
 | `parentHome.needsYou.relink(name)` | {name} wants to continue on a new device. | {name} quiere seguir en un dispositivo nuevo. | 새 기기에서 이어서 하려는 요청: {name} |
-| `parentHome.needsYou.minutesLeft(m)` | {m} min left | Quedan {m} min | {m}분 남음 |
 | `parentHome.needsYou.scope(name)` | Read what {name}'s teachers can see. | Lee qué pueden ver los docentes de {name}. | {name}의 선생님이 보는 정보를 확인해 주세요. |
 | `parentHome.needsYou.readOk` | Read and OK | Leer y aceptar | 읽고 확인 |
-| `parentHome.status.move` | Move: your OK needed | Cambio: falta tu permiso | 반 이동 승인 대기 |
-| `parentHome.status.relink` | New device asking | Dispositivo nuevo pide entrar | 새 기기 연결 요청 |
+| `parentHome.needsYou.more(n)` | 1 more thing needs you / {n} more things need you | 1 cosa más por revisar / {n} cosas más por revisar | 확인할 일 {n}건 더 |
+| `parentHome.needsYou.seeAll` | See all | Ver todo | 모두 보기 |
+| `parentHome.status.move` | Class move · needs your OK | Cambio de clase · por aprobar | 반 이동 · 승인 대기 |
+| `parentHome.status.relink` | New device · needs your OK | Dispositivo nuevo · por aprobar | 새 기기 · 승인 대기 |
 | `parentHome.status.scope` | Class info to read | Aviso de clase por leer | 반 안내 확인 필요 |
-| `parentHome.status.moving(date)` | Moving {date} | Se cambia el {date} | {date} 반 이동 예정 |
 | `parentHome.classLine.one(class)` | In: {class} | En: {class} | 소속: {class} |
 | `parentHome.classLine.many(n)` | In {n} classes | En {n} clases | 소속 반 {n}곳 |
-| `parentHome.classLine.none` | Family only | Solo en familia | 가족 학습만 |
-| `transfer.familyNeedsYou(n)` | 1 class move needs your OK / {n} class moves need your OK | 1 cambio de clase espera tu respuesta / {n} cambios de clase esperan tu respuesta | 확인할 반 이동 {n}건 |
+| `parentHome.classLine.none` | Family only | Solo en familia | 반 없이 가족 학습 |
+| `transfer.familyNeedsYou(n)` | 1 class move needs your OK / {n} class moves need your OK | 1 cambio de clase espera tu aprobación / {n} cambios de clase esperan tu aprobación | 확인할 반 이동 {n}건 |
 | `transfer.step.yourAnswer` | Your answer needed | Falta tu respuesta | 내 답을 기다려요 |
 | `transfer.endsOn(date)` | Ends {date} | Termina el {date} | {date} 마감 |
 | `settings.moveOpen` | A move is already open. | Ya hay un cambio abierto. | 이미 진행 중인 이동이 있어요. |
+
+The parent's **Moving {date}** chip reuses `status.moving(date)`; the minutes line of the strip and the bar reuses `status.minutesLeft(m)`. These drafts go to the es and ko reviewers of each row's MAR with this consistency rule attached.
 
 ### 10.2 Changed and new keys of GX-7 to GX-14
 
@@ -362,18 +420,18 @@ The en values are the shipped `STAGE_TITLES`; the row reads them, the test asser
 
 ## 11. Accessibility, privacy, anti-shame, telemetry
 
-- **Accessibility.** Every chip has text; colour is never the only cue (WCAG 1.4.1); amber is a fill, border or dot with `text.primary` text (contrast of `text.primary` on `nudgeLight` and `infoLight` is above 12:1). Action chips and every button are at least `touchTarget.min` tall. The banner is a polite live region; the pop-up is an `alertdialog` with focus on its title, Esc = Later, focus returned to where it was. The countdown updates once a minute and is not live-announced (only the banner is). The nav dot's count lives in the tab's accessible name. All of it holds at 320 px with the Largest text size and at 200 % browser text (the DN fit rule).
-- **Privacy.** Incoming learners show initials, picture and level until accepted (T8). The home, the nav and the title carry counts only. `#attention` carries no id. The pop-up's shown set holds request ids only, in `sessionStorage`. No name reaches a URL or an event. GX-W's new fields are read under the same access checks as the roster (`learner.transfer` or roster read on the space) and add no field to any family or learner view beyond its own learners.
-- **Anti-shame.** No chip says late, behind or missing; **New** describes a join, not a lack; the ordering puts what needs the grown-up first and is never by score; no counts of declined moves; no actor on an ended move (TV).
+- **Accessibility.** Every chip has text; colour is never the only cue (WCAG 1.4.1); amber is a fill, border or dot with `text.primary` text (contrast of `text.primary` on `nudgeLight` and `infoLight` is above 12:1). Action chips and every button are at least `touchTarget.min` tall; an action chip's name is "{chip}: {reason}" and the inline buttons are described by the name and the reason. The banner is a polite live region whose text changes only when a count changes; the review sheet's results go to its own polite region, and the sheet never closes or moves focus by itself (WCAG 3.2, 2.2.1); the pop-up is an `alertdialog` with focus on its title, Esc = Later, focus returned to where it was. The countdown updates once a minute and is not live-announced. The nav's visible number is `aria-hidden` and the tab's accessible name carries the count and its meaning. All of it holds at 320 px with the Largest text size and at 200 % browser text (the DN fit rule).
+- **Privacy.** Incoming learners show initials, picture and level until accepted (T8). The home, the nav and the title carry counts only; the re-link bar shows a class or family name on screen, never a learner's name, and its link carries the shipped opaque space id only. `#attention` carries no id. The pop-up's shown set holds request ids only, in `sessionStorage`. No name reaches a URL or an event. GX-W's new fields are read under the same access checks as the roster (`learner.transfer` or roster read on the space) and add no field to any family or learner view beyond its own learners.
+- **Anti-shame.** No chip says late, behind or missing; **New** describes a join, not a lack, and its reason line says what is true ("No practice shared yet"); the ordering puts what needs the grown-up first and is never by score; no counts of declined moves; no actor on an ended move (TV).
 - **Telemetry.** None added. The Worker's existing `space.move.*` and re-link records are enough; a success measure for this amendment is the share of re-links approved before expiry, readable from the D1 rows already kept.
 
 ## 12. Data and API (GX-W, additive, Worker first)
 
 | Route | Addition | Rule |
 |---|---|---|
-| `GET /api/spaces/:id/roster` | `learners[].pending?: { relink?: { id, expiresAt }, move?: { source: 'transfer' \| 'teacher', id, step: 'yours' \| 'others' \| 'room' \| 'scheduled', to: string \| null, on: string \| null } }`; top-level `incoming?: number` | Built from the same rows the three list routes read, with the same expiry settle; `to` only where the viewer may read the class name (TV-D8); computed set-based for the whole roster (one query per source table, `IN` chunks of 100) |
-| `GET /api/spaces` | `items[].attention?: { relinks: number, moves: number }` | Counts only; only for spaces where the caller may act (`learner.transfer` or relink approval); grouped `COUNT … GROUP BY space_id` over the caller's spaces, so a school admin with 60 classes stays inside the statement budget (test) |
-| `GET /:id/class-moves` (class) | `outgoing[].learnerId` while `status = 'requested'` | the source class already lists the learner |
+| `GET /api/spaces/:id/roster` | `learners[].pending?: { relink?: { id, expiresAt }, move?: { source: 'transfer' \| 'teacher', id, step: 'yours' \| 'others' \| 'room' \| 'scheduled', to: string \| null, on: string \| null, expiresAt: string \| null } }`; top-level `incoming?: number` | Built from the same rows the three list routes read. **The settle-on-read (expiry, executed transfers) runs before `membersOf`**, so an executed transfer is never listed both as a member and as pending. `to` only where the viewer may read the class name (TV-D8). **Each subfield is gated on the action that can decide it**: `pending.relink` needs `roster.manage` on the space; `pending.move` needs `learner.transfer` (class) or `snapshot.read` (family); `incoming` needs `learner.transfer`. The roster route itself still needs only `summary.read`, so a viewer without those actions gets no `pending`. Computed set-based for the whole roster (one query per source table, `IN` chunks of 100). |
+| `GET /api/spaces` | `items[].attention?: { relinks: number, moves: number, relinkExpiresAt: string \| null }` | Counts only (plus the soonest re-link expiry for the bar's minutes). **Read-only and expiry-safe: every count filters `expires_at > now` (re-links, transfers, class moves) and never writes**, so a past-expiry row not yet settled is not counted and `attention` equals what the list routes return after their settle. `relinks` is present where the caller has `roster.manage`; `moves` where it has `learner.transfer` (class) or `snapshot.read` (family), else 0. **`moves` per space kind**: a class = transfers whose source or destination step waits for this class + incoming class moves `requested` with `kind = 'accept'`; a family = learner-side transfers whose family step waits (`learner_state` pending). Grouped `COUNT … GROUP BY space_id` over the caller's spaces, so a school admin with 60 classes stays inside the statement budget (test). |
+| `GET /:id/class-moves` (class) | `outgoing[].learnerId` while the stored status is `requested` (wire `waiting`) | the source class already lists the learner |
 | `GET /:id/transfer-requests` (class, role `source`) | `learnerId` on every open request, family-started included (GX-OD-2; amends F-SPACE-002 §4.2) | the source class already lists the learner; the destination view is unchanged (T8) |
 
 Schemas are lenient on the client (`.catch` defaults): a console that meets an older Worker falls back to its own reads (section 3.3). No migration; no new table, index or column.
@@ -383,12 +441,13 @@ Schemas are lenient on the client (`.catch` defaults): a console that meets an o
 | Row | Content | Size | Depends on |
 |---|---|---|---|
 | **GX-0** (this PR) | `docs(specs,design)`: this amendment; wireframes `console/approvals.md`, `parent/needs-you.md`; mocks `design/screens/approvals/`; pointer lines in F-SPACE-002, the TV amendment, F-APP-001, F-TCH-001, F-CONSOLE-001 and the specs README | M | — |
-| **GX-1** (owner's request, first) | `feat(web,i18n)`: `lib/console/learner-status.ts` (section 3, reads `pending` when present); the chip and reason line on the class and family roster cards; inline Approve / Deny for re-links; action cards first; `useApprovalsWaiting` (teacher moves counted, `refreshKey`); re-link poll 10 s while pending; `console.status.*` | M | GX-0 |
-| **GX-W** | `feat(backend,content-schema)`: section 12 (roster `pending` and `incoming`, spaces `attention`, `learnerId` on open outgoing class moves and on family-started source transfer views); statement-budget test; memory and sqlite adapters | M | GX-0 |
-| **GX-2** | `feat(web,i18n)`: attention banner, review sheet (`components/console/AttentionParts.tsx`), re-link pop-up (`RelinkPopup.tsx`), `#attention`, the "(n) " title prefix; one incoming list with primary-first buttons on the moves page (`TeacherMovesSection.tsx`, `ClassTransferParts.tsx`); the `live` ref fix (set true in the effect body); `console.attention.*`, `console.relinkPopup.*` | M | GX-1 |
-| **GX-3** | `feat(web,i18n)`: teacher home row chip linking to `#attention`; the school page's counts include teacher moves; nav dot and accessible name (`AdultFrame.tsx`, `shell-nav.ts`); reads `attention` from GX-W when present, else per-space reads | S | GX-1 |
-| **GX-4** | `feat(web,i18n)`: parent Needs you strip (`components/console/FamilyNeedsYou.tsx`, `needsYou(view)` in `lib/console/parent-home.ts`), child chip and class line, inline re-link, consent sheet opened directly, the family pill leaves the bottom row; the three reads in the quiet load; Fix D step word and end date | M | GX-1 |
-| **GX-5** | `feat(web,i18n)`: class-scope sheet from the strip and chip (text unchanged, list open, version unchanged); re-link pop-up on the parent home (20 s poll while pending); the parent Home nav dot | S | GX-4, GX-2 |
+| **GX-1** (owner's request, first) | `feat(web,i18n)`: `lib/console/learner-status.ts` (section 3; reads `pending` when present, so the `move_yours` chip lights up once GX-W is deployed); the chip and reason line on the class and family roster cards; the "Asking to join this class" cards with inline Accept / Not now (section 4.1); inline Approve / Deny for re-links; action cards first by soonest expiry; `useApprovalsWaiting` (teacher moves counted, re-links counted whatever `CLASS_TRANSFER` says, `refreshKey`, no timer without `attention`); the class page's re-link-only read every 20 s while visible; `console.status.*`, `console.attention.incomingHeading`, `.from` | M | GX-0 |
+| **GX-W** | `feat(backend,content-schema)`: section 12 (roster `pending` and `incoming` with per-field gates and settle before `membersOf`, spaces `attention` with expiry filter and `relinkExpiresAt`, `learnerId` on open outgoing class moves and on family-started source transfer views); statement-budget test; memory and sqlite adapters | M | GX-0 |
+| **GX-2** | `feat(web,i18n)`: attention banner, review sheet (`components/console/AttentionParts.tsx`, outgoing rows by view), re-link pop-up (`RelinkPopup.tsx`) with the 2-minute reminder, the action chip opening the pop-up or the sheet at the item, `#attention`, the "(n) " title prefix; one incoming list with primary-first buttons on the moves page (`TeacherMovesSection.tsx`, `ClassTransferParts.tsx`); the `live` ref fix (set true in the effect body); `console.attention.*`, `console.relinkPopup.*` | M | GX-1 |
+| **GX-3** | `feat(web,i18n)`: teacher home row chip linking to `#attention`; the school page's counts include teacher moves and re-links; nav count on screen and accessible name (`AdultFrame.tsx`, `shell-nav.ts`); the teacher re-link bar on every other console page (section 5.5) and the 30 s `attention` poll; `console.relinkBar.*`, `console.home.attention`, `console.shell.navAttention.*` | S | GX-1, GX-W |
+| **GX-4** | `feat(web,i18n)`: parent Needs you strip (`components/console/FamilyNeedsYou.tsx`, `needsYou(view)` in `lib/console/parent-home.ts`) with compact rows and the fold rule, child status chip and class line (`familyOptions` kept from the transfer read; omitted when unread), inline re-link, consent sheet opened directly, the move notice inside its child's card, the family pill leaves the bottom row; the three reads in the quiet load; Fix D step word and end date | M | GX-1 |
+| **GX-5** | `feat(web,i18n)`: re-link pop-up on the parent home (20 s re-link read while visible, the reminder); the parent Home nav count and the parent re-link bar on the other parent pages | S | GX-4, GX-2, GX-3 |
+| **GX-5b** (owner-blocked: GX-OD-3) | `feat(web,i18n)`: class-scope sheet from the strip and chip (text unchanged, list open, version unchanged); until the owner answers, the shipped card stays and the strip row scrolls to it | S | GX-5, owner answer GX-OD-3 |
 | **GX-6** | `fix(web)`: button system (T2): `buttonBase` minimums, the overrides removed, Remove in the danger tone; a scan test that no console file sets `minHeight` on a `Button` | M | GX-0 |
 | **GX-7** | `feat(web,i18n)`: class page order, action bar with More, invite disclosure, compact roster card, empty-class checklist (T3-T5) | M | GX-2, GX-6 |
 | **GX-8** | `fix(web,i18n)`: T7, T8, T9 (with the planProgress check), T10, T15, P4 (family join order, heading, practiced wording, dated join) | M | GX-0 |
@@ -399,21 +458,22 @@ Schemas are lenient on the client (`.catch` defaults): a console that meets an o
 | **GX-13** | `fix(web,i18n)`: learner report order, print hint, minutes unit, next-open dedupe, classes line (T13) | S | GX-0 |
 | **GX-14** | `fix(web,i18n)`: phone nav one row (P6), `error.tsx` (P5), PIN card CTA (P9), lecture minutes line (T14) | S | GX-6 |
 
-**Order.** GX-1 first (the owner's request); GX-W in parallel (Worker first; GX-1 works without it). Then GX-2, GX-3 and GX-4 in parallel; GX-5 after GX-4 and GX-2. GX-6, GX-8, GX-9 and GX-13 can run at any time after GX-0; GX-7 after GX-2 and GX-6; GX-10 after GX-1 and GX-6; GX-11 after GX-4; GX-12 and GX-14 after GX-6. **Total:** 16 rows (GX-0 included), one Worker deploy (GX-W), no migration.
+**Order.** GX-1 first (the owner's request); GX-W in parallel (Worker first; GX-1 works without it and shows the move-out chips once it is deployed). Then GX-2 and GX-4 in parallel, GX-3 once GX-W is deployed; GX-5 after GX-4, GX-2 and GX-3; GX-5b only after the owner answers GX-OD-3. GX-6, GX-8, GX-9 and GX-13 can run at any time after GX-0; GX-7 after GX-2 and GX-6; GX-10 after GX-1 and GX-6; GX-11 after GX-4; GX-12 and GX-14 after GX-6. **Total:** 17 rows (GX-0 included; 1 owner-blocked), one Worker deploy (GX-W), no migration.
 
 ## 14. Tests (per row; e2e at 360 x 740 and 1280 x 800, each in ko, en and es)
 
 | File | Row | Asserts |
 |---|---|---|
-| `apps/web/src/lib/console/__tests__/learner-status.test.ts` | GX-1 | every kind of section 3.2 from fixtures; priority order; an expired re-link dropped; never a name match (two learners with one name and one re-link: only the id's card gets it); `pending` preferred when present, the three reads when absent; a failed read adds nothing; `new` only within 7 days and with no summary; family rosters get `none`, not `in_class`; totals |
-| `apps/web/src/components/console/__tests__/status-chip.test.tsx` | GX-1 | text for every kind in en, es and ko; action chip is a button ≥ `touchTarget.min` with name "{chip}: {reason}" and `aria-describedby`; no `feedback.danger` and no colour literal (token scan); minute countdown rounding |
-| `apps/web/src/components/console/__tests__/moves-entry.test.tsx` (extend) | GX-1, GX-3 | a teacher move counted; `refreshKey` rereads; `attention` used when present, three reads otherwise |
-| `apps/web/e2e/grownup-status.spec.ts` (new, mocked API, the `class-moves.spec.ts` pattern) | GX-1 | the class page shows Needs your OK beside the re-link learner and In class beside the others; Approve inline removes the chip; New on a learner joined today; ko / en / es at 360 and 1280; no sideways scroll at 360 |
-| `packages/backend/src/__tests__/grownup-attention.test.ts` (new), `db-contract.test.ts` (extend) | GX-W | `pending` per learner for each step; `incoming`; `attention` counts equal the client rule on the same fixtures; only spaces the caller may act on; no field leaks a destination's learner name or id before acceptance; statement budget for a school admin with 60 classes; memory and sqlite |
-| `apps/web/src/components/console/__tests__/attention-parts.test.tsx`, `relink-popup.test.tsx` | GX-2 | banner role and text; sheet sections only when non-empty; Accept first in both incoming components; pop-up once per id per session, Esc = Later, focus return; not shown while another dialog is open; title prefix count only |
-| `apps/web/e2e/grownup-attention.spec.ts` (new) | GX-2, GX-3 | home chip → class page sheet open (`#attention`) → approve a device and accept a move in 2 taps; a new re-link during the visit opens the pop-up within 10 s; nav dot name; ko / en / es at 360 and 1280 |
-| `apps/web/src/lib/console/__tests__/parent-home.test.ts` (extend), `family-needs-you.test.tsx` | GX-4, GX-5 | `needsYou` builder for the three item kinds; chip priority; class line one / many / none; quiet load rereads; scope sheet shows every `CLASS_SCOPE_TEXT` line with the list open and writes the ack |
-| `apps/web/e2e/class-moves.spec.ts` (extend) | GX-4, GX-5 | strip above the first child at 360; consent in 2 taps; re-link approved inline; ko / en / es |
+| `apps/web/src/lib/console/__tests__/learner-status.test.ts` | GX-1 | every kind of section 3.2 from fixtures; priority order; an expired re-link dropped; never a name match (two learners with one name and one re-link: only the id's card gets it); `pending` preferred when present, the three reads when absent; a failed or skipped read adds nothing; **a family-started source view with `learnerId: null` is counted in `totals.moves` and listed in `outgoing`, and gives no chip**; **class moves read by wire status `waiting`** (a `requested` fixture is rejected by the client schema); `move_scheduled` from `scheduledFor` (class) and `executeAfter` (family); `new` only within 7 days and with no summary; family rosters get `none`, not `in_class`; totals; action order by soonest `expiresAt` |
+| `apps/web/src/components/console/__tests__/status-chip.test.tsx` | GX-1, GX-2 | text for every kind in en, es and ko; the action chip is a button ≥ `touchTarget.min` with the name "{chip}: {reason}" whose tap opens the pop-up (`relink`) or the sheet at the item (`move_yours`, incoming); inline buttons described by the name and reason ids; `move_room` and `move_others` carry no `feedback.nudge` (amber only on actions); no `feedback.danger` and no colour literal (token scan); minute countdown rounding; a decided card keeps its place for 5 s, then re-sorts |
+| `apps/web/src/components/console/__tests__/moves-entry.test.tsx` (extend) | GX-1, GX-3 | a teacher move counted; **transfers flag off with one pending re-link: the count is 1 (home chip and nav show 1)**; `refreshKey` rereads; `attention` used when present, the lists otherwise; **without `attention` no timer: the number of calls after 10 minutes visible equals the mount read** |
+| `apps/web/e2e/grownup-status.spec.ts` (new, mocked API, the `class-moves.spec.ts` pattern) | GX-1 | the class page shows Needs your OK beside the re-link learner and In class beside the others; an incoming card with initials, Needs your OK and Accept first above the roster; Approve inline removes the chip; New with "No practice shared yet" on a learner joined today; a new re-link appears within one 20 s re-link read with no pending one before; ko / en / es at 360 and 1280; no sideways scroll at 360 |
+| `packages/backend/src/__tests__/grownup-attention.test.ts` (new), `db-contract.test.ts` (extend) | GX-W | `pending` per learner for each step; `incoming`; each `pending` subfield absent without its action (`roster.manage`, `learner.transfer`, `snapshot.read`); an executed-on-read transfer listed as a member only; `attention` counts equal the client rule on the same fixtures, per space kind; **a past-expiry pending re-link and an expired requested move are not counted, `attention` writes nothing and equals the list routes after settle**; only spaces the caller may act on; no field leaks a destination's learner name or id before acceptance; statement budget for a school admin with 60 classes; memory and sqlite |
+| `apps/web/src/components/console/__tests__/attention-parts.test.tsx`, `relink-popup.test.tsx` | GX-2 | banner role and text, re-rendered only when a count changes; sheet sections only when non-empty; outgoing rows by view (an unmatched one included); results in the sheet's live region; the sheet stays open on its empty state with focus on Close; Accept first in both incoming components; pop-up once per id per session, once more at 2 minutes left after Later and never a third time, Esc = Later, focus return; not shown while another dialog is open; title prefix count only; the class page's 20 s read calls `relinkRequests` only |
+| `apps/web/e2e/grownup-attention.spec.ts` (new) | GX-2, GX-3 | home chip → class page sheet open (`#attention`) → approve a device and accept a move in 2 taps; with nothing pending at load, a new re-link opens the pop-up within one re-link read (20 s, fake clock); the re-link bar on the Lessons page with GX-W `attention` mocked, Review → the class sheet; nav count on screen and its accessible name; ko / en / es at 360 and 1280 |
+| `apps/web/src/lib/console/__tests__/parent-home.test.ts` (extend), `family-needs-you.test.tsx` | GX-4, GX-5 | `needsYou` builder for the three item kinds; order by soonest expiry; fold rule (2 rows; 3 items: the soonest row plus "2 more things need you"); chip priority, chips are spans; class line one / many / none, **omitted when the transfer read is skipped or failed**; the move notice in its child's card; quiet load rereads; the parent count of section 7.4 |
+| `apps/web/e2e/class-moves.spec.ts` (extend) | GX-4, GX-5 | strip above the first child at 360; **with three items and a notice, the first child's name and week line inside 360 x 740**; consent in 2 taps; re-link approved inline; ko / en / es |
+| `family-scope-sheet.test.tsx` | GX-5b | the sheet shows every `CLASS_SCOPE_TEXT` line with the list open, cannot close by backdrop while unread, and writes the ack |
 | `apps/web/src/components/console/__tests__/button-size.test.tsx`, source scan | GX-6 | every `Button` and link-button ≥ `touchTarget.min` tall and wide; no per-call `minHeight` left |
 | render tests of the class page and card (extend), `apps/web/e2e/class-page-order.spec.ts` (new) | GX-7 | order of section 8 T3; invite disclosure collapsed with learners, open when empty; card lines; checklist on an empty class; 360 and 1280, three locales |
 | `rollup.test.ts`, `plans.test.ts`, `curriculum.test.ts` (extend) | GX-8 | new joiners not counted; anchor hidden when null; the two plan states; family join order and wording |
@@ -431,21 +491,22 @@ Schemas are lenient on the client (`.catch` defaults): a console that meets an o
 |---|---|---|
 | GX-OD-1 | Show **In class** on every class roster card, or only non-default states? | **Shown**, quietly (the owner's "On board"). |
 | GX-OD-2 | May the source class see the `learnerId` of an open family-started transfer? | **Yes** (the source class already lists the learner); amends F-SPACE-002 §4.2. |
-| GX-OD-3 | May the class-scope text move from an always-shown home card into a sheet opened from Needs you? | **Yes**, text verbatim and list always open inside the sheet; amends TV-D5's surface. |
-| GX-OD-4 | Add a "teacher approves joins" class setting? | **No**; joins stay instant and a new joiner shows **New**. If wanted later: a `pending` membership state that holds no seat until approved, a learner-app waiting screen, an F-SPACE-001 amendment and a migration; it would reuse this chip and sheet. |
+| GX-OD-3 | May the class-scope text move from an always-shown home card into a sheet opened from Needs you? | **Owner-blocked, no default applied** (it changes a consent surface). Until answered the shipped card stays and the strip row scrolls to it; row GX-5b waits. Proposed: text verbatim, list always open inside the sheet. |
+| GX-OD-4 | Add a "teacher approves joins" class setting? (The owner's request says "when a learner joins a class or is moved and the teacher has to approve": today a join with the class code takes a seat at once; what needs the teacher is a re-link, a known learner on a new device, shown as 새 기기, or a move.) | **No**; joins stay instant and a new joiner shows **New**. If wanted later: a `pending` membership state that holds no seat until approved, a learner-app waiting screen, an F-SPACE-001 amendment and a migration; it would reuse this chip and sheet. |
 | GX-OD-5 | Email or push for waiting approvals? | **None** (no channel exists). |
-| GX-OD-6 | Re-link pop-up on or off? | **On**, once per request per tab session, re-links only. |
+| GX-OD-6 | Re-link pop-up on or off? | **On**, once per request per tab session plus one reminder at 2 minutes left after Later, re-links only; the re-link bar on the persona's other console pages. |
 | GX-OD-7 | Stage titles translated in ko and es? | **Yes**, the section 10.3 drafts after the MAR heritage check. |
 | GX-OD-8 | Change the ko register of the class-scope and billing texts? | **No** (legal and pricing text keeps 합니다체; a change would ask every family again). |
 
 ## 16. Edits to the amended specs (pointer lines in this PR; text in the rows named)
 
 - **F-SPACE-002**: §4.2 source view `learnerId` on family-started requests (GX-W); §4.8 entry points and home badge become the attention chip and count of section 6 (GX-1, GX-3).
-- **`AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md`**: §5 console family surface: the class-scope card opens as a sheet from Needs you (GX-5); TV-D8's incoming list merges into the review sheet's "Asking to join this class" (GX-2); outgoing views carry `learnerId` while requested (GX-W).
-- **F-APP-001**: §3.8 nav: the attention dot (GX-3, GX-5); one nav row on phones (GX-14).
-- **F-TCH-001**: §10.1 re-link: the chip, inline approval, pop-up and 10 s poll (GX-1, GX-2, GX-12).
+- **`AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md`**: §5 console family surface: the class-scope card may open as a sheet from Needs you (GX-5b, owner-blocked on GX-OD-3); TV-D8's incoming list shows as "Asking to join this class" cards on the roster and in the review sheet (GX-1, GX-2); TV-D10's notice sits in its child's card (GX-4); outgoing views carry `learnerId` while requested (GX-W).
+- **F-APP-001**: §3.8 nav: the count on the Classes / Home tab and the re-link bar (GX-3, GX-5); one nav row on phones (GX-14).
+- **F-TCH-001**: §10.1 re-link: the chip, inline approval, pop-up with one reminder, the 20 s re-link read on the class page and the re-link bar elsewhere (GX-1, GX-2, GX-3, GX-12).
 - **F-CONSOLE-001**: §3.4 home counts include re-links and teacher moves (GX-3).
 
 ## 17. Review log
 
 - 2026-10-31, GX-0 (this PR): measured on `1bfda3fc8` (section 1) through three read-only audits (approvals; teacher console, 96 screenshots; parent console, 12 pages × 3 locales × 2 widths); every `file:line` above re-read at that commit. Korean drafts rewritten to the F-I18N-001 §3.10 rule (no particle on a variable: the audits' "{name}이(가)", "{to}(으)로" forms are replaced by colon forms or the possessive 의, which never changes form); "퀘스트" kept over "레슨" (glossary). Multi-agent review of this PR to follow (design, accessibility, privacy and child safety, anti-shame copy, Spanish, Korean).
+- 2026-10-31, GX-0 review fixes (PR #917, two independent reviews): one state per learner (the mocks' move-out learner is now the `move_yours` action card, matching the sheet and the banner count); a card per learner **asking to join** at the top of the roster (section 4.1), the owner's literal ask; `move_yours` is a chip only with GX-W (family-started source views carry no `learnerId`) and `totals.moves` comes from `pendingCount` + incoming, never from matched learners; class-move wire status `waiting`, not `requested`; `scheduledFor` for class views; `attention` counts filter unexpired rows and never write, roster settle runs before `membersOf`, `pending` subfields gated per action, `attention.moves` defined per space kind and the parent count defined (7.4); re-links counted whatever `CLASS_TRANSFER` says; a 20 s re-link-only read on the class page, a re-link bar on every other console page (5.5) and a 2-minute reminder; no per-space timer before GX-W; a visible count on the nav tab; amber only on action states (`move_room` now sunken); plural pairs for the home and nav counts; one action wording per locale and the es / ko copy fixes (10.1); `new`'s reason line "No practice shared yet"; the action chip's tap defined; action order by soonest expiry with no jump after a decision; the sheet never closes itself, results in a live region, the banner re-renders only on a count change; the parent strip compact with a fold rule and child chips as text, the move notice inside its child's card (first child's name and week line inside 360 x 740, measured: name at 516 px en / es, 495 ko; week line ends at 638, 659, 582); the class line omitted when its read is skipped; GX-OD-3 owner-blocked (row GX-5b). Mocks and shots regenerated.

@@ -43,7 +43,10 @@
 .gx-chip-in::before { content: ""; width: var(--status-dot); height: var(--status-dot); border-radius: var(--radii-circle); background: var(--colors-feedback-success); }
 .gx-chip-info { background: var(--colors-feedback-infoLight); }
 .gx-chip-quiet { background: var(--colors-surface-sunken); }
-.gx-chip-room { background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-feedback-nudge); }
+/* move_room is not an action: quiet like move_others. Amber (fill, border, dot) is kept for the action states only. */
+.gx-chip-room { background: var(--colors-surface-sunken); }
+/* the parent child card's status: amber fill (the family's action), but a span, no border; the strip owns the button */
+.gx-chip-need { background: var(--colors-feedback-nudgeLight); }
 /* action chip: a button, at least touchTarget.min tall */
 .gx-chip-action { min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); border: var(--border-width-base) solid var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); font-weight: var(--weight-bold); cursor: pointer; font-size: var(--size-bodySm); }
 .gx-chip-action::before { content: ""; width: var(--status-dot); height: var(--status-dot); border-radius: var(--radii-circle); background: var(--colors-feedback-nudge); }
@@ -71,15 +74,18 @@
 .gx-row { background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); padding: var(--spacing-lg); display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
 .gx-row .grow { flex: 1 1 12rem; display: flex; flex-direction: column; gap: var(--spacing-xs); }
 .gx-name { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); }
-.nav-item .dot { width: var(--status-dot); height: var(--status-dot); border-radius: var(--radii-circle); background: var(--colors-feedback-nudge); margin-inline-start: var(--spacing-xs); outline: var(--border-width-thin) solid var(--colors-text-primary); }
+.nav-item .count { display: inline-flex; align-items: center; justify-content: center; min-width: var(--spacing-lg); padding: 0 var(--spacing-xs); margin-inline-start: var(--spacing-xs); border-radius: var(--radii-pill); background: var(--colors-feedback-nudge); color: var(--colors-text-primary); font-size: var(--size-bodySm); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+
+/* ---------------------------------------------------------------- the frame's re-link bar (every console page but the class page, parent home, lecture, presenter) */
+.relink-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-lg); padding: var(--spacing-md) var(--spacing-lg); background: var(--colors-feedback-nudgeLight); border-inline-start: var(--border-width-thick) solid var(--colors-feedback-nudge); border-radius: var(--radii-md); }
+.relink-bar > div { flex: 1 1 12rem; }
 
 /* ---------------------------------------------------------------- parent strip */
 .needs-you { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 .needs-you h2 { font-size: var(--size-bodyLg); }
-.need { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm) var(--spacing-md); padding: var(--spacing-md) var(--spacing-lg); background: var(--colors-feedback-nudgeLight); border-inline-start: var(--border-width-thick) solid var(--colors-feedback-nudge); border-radius: var(--radii-md); }
-.need .grow { flex: 1 1 14rem; display: flex; gap: var(--spacing-sm); align-items: flex-start; }
-.need .text { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
-.need .actions { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+.need { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs) var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); background: var(--colors-feedback-nudgeLight); border-inline-start: var(--border-width-thick) solid var(--colors-feedback-nudge); border-radius: var(--radii-md); }
+.need .text { flex: 1 1 9rem; display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.need .actions { display: flex; flex-wrap: nowrap; gap: var(--spacing-sm); margin-inline-start: auto; }
 .notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-md) var(--spacing-lg); background: var(--colors-feedback-infoLight); border-radius: var(--radii-md); }
 .squares { display: flex; gap: var(--spacing-xs); }
 .squares span { width: var(--spacing-lg); height: var(--spacing-lg); border-radius: var(--radii-sm); border: var(--border-width-thin) solid var(--colors-border-strong); background: var(--colors-surface-paper); }
