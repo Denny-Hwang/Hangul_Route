@@ -1043,4 +1043,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // AMENDMENTS-GROWNUP-UX row GX-8: the family practiced line, the dated join, the plan readout's not-started count, the class report's no-practice band.
+  'console.space.week.practicedFamily': [[1, 3], [0, 1]],
+  'console.space.joinedOn': [['Oct 14']],
+  'console.plan.readout.notStarted': [[4]],
+  'report.class.didntPractice': [[1], [9]],
 };

@@ -359,9 +359,15 @@ export const consoleMsgs = {
     week: {
       title: 'This week',
       practiced: (practiced: number, students: number) => `${practiced} of ${students} practiced this week`,
-      anchor: (accuracy: string) => `Stage 1 anchor: ${accuracy}`,
+      /** GX-8 T8: shown only while some learner has a Stage 1 first-try figure (`weekLines` hides it otherwise). */
+      anchor: (accuracy: string) => `Stage 1 first-try answers: ${accuracy}`,
       revisit: (jamo: string) => `Jamo to revisit together: ${jamo}`,
-      notSynced: (count: number) => plural('en', count, { one: `${count} hasn't synced in a week`, other: `${count} haven't synced in a week` }),
+      /** GX-8 T7: learners who joined under a week ago are not counted (`classRollup`). */
+      notSynced: (count: number) =>
+        plural('en', count, { one: `${count} hasn't opened the app in over a week`, other: `${count} haven't opened the app in over a week` }),
+      /** GX-8 P4: a family's practiced line speaks of learners, never students. */
+      practicedFamily: (practiced: number, learners: number) =>
+        plural('en', learners, { one: `${practiced} of ${learners} learner practiced this week`, other: `${practiced} of ${learners} learners practiced this week` }),
       /** F-VOC-005 P-4: up to three words most often on the students' lists, never a ranking of students. The page fills the words. */
       wordsRevisit: (words: string) => `Words to revisit together: ${words}`,
     },
@@ -374,6 +380,10 @@ export const consoleMsgs = {
     settings: { cta: 'Settings' },
     studentsLabel: 'Students',
     recentFirst: 'Most recent activity first',
+    /** GX-8 P4: a family roster's heading (it keeps join order, so it never says "most recent activity first"). */
+    rosterHeadingFamily: 'Learners',
+    /** GX-8 P4: a family card's join day, a date from `formatDate` ("Oct 14"). */
+    joinedOn: (date: string) => `Joined ${date}`,
     /**
      * One student card; the day words come from `relativeDay`, the readout from `readoutLine`
      * (`plan.readout`). `revisit` takes taught Korean, rendered by the page through `aroundSlot`
@@ -381,8 +391,11 @@ export const consoleMsgs = {
      */
     learner: {
       lastActive: (when: string) => `Last active ${when}`,
+      /** GX-8 T10: the stage named, "of" rather than a slash. */
       questsCards: (done: number, total: number, cards: number) =>
-        plural('en', cards, { one: `Quests ${done} / ${total} · ${cards} card`, other: `Quests ${done} / ${total} · ${cards} cards` }),
+        plural('en', cards, { one: `Stage 1 quests: ${done} of ${total} · ${cards} card`, other: `Stage 1 quests: ${done} of ${total} · ${cards} cards` }),
+      /** GX-8 T10: no quest finished yet but minutes this week, instead of "0 of 15". */
+      firstQuest: 'Working on the first quest',
       minutesThisWeek: (minutes: number) => `${minutes} min this week`,
       revisit: (jamo: string) => `Revisit: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
@@ -521,7 +534,10 @@ export const consoleMsgs = {
     noMembers: { family: 'No learners yet.', class: 'No students yet.', school: 'No members yet.' },
     /** One learner's progress on the plan (`readoutLine`); counts only, never a ranking. */
     readout: {
-      waiting: 'waiting for the next sync',
+      /** GX-8 T9: no progress for the plan, and the device last synced before it was published (or never). */
+      notDelivered: 'Gets this plan next time the app opens',
+      /** GX-8 T9: no progress for the plan although the device synced after it was published; `total` is the plan's length. */
+      notStarted: (total: number) => `Not started yet (0 / ${total})`,
       progress: (done: number, total: number) => `${done} / ${total}`,
       withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${notReady} not ready yet`,
     },
@@ -934,7 +950,6 @@ export const consoleMsgs = {
       line: (done: number, total: number, planned: number) => `${done} / ${total} so far · ${planned} planned`,
       lineNotReady: (done: number, total: number, planned: number, notReady: number) =>
         `${done} / ${total} so far · ${planned} planned · ${notReady} not ready yet`,
-      waiting: 'waiting for the next sync',
       repace: { cta: 'Re-pace from today' },
       repaceHint: 'Keeps what is done and lays the rest from the next session.',
       repaceAsk: (date: string) => `Re-pace from today? What is done stays done. The rest moves to the next sessions, from ${date}.`,

@@ -52,37 +52,59 @@ export function planStatusLabel(plan: PlanLike, locale: UiLocale = DEFAULT_LOCAL
   return status.published(formatDate(locale, plan.publishedAt, 'monthDay', { utc: true }));
 }
 
+/**
+ * Where one learner stands on a plan (GX-8 T9). `progress`: the summary carries the plan. Without it, `notDelivered`
+ * while the device last synced before the plan was published (or never), else `notStarted`. A device sends its
+ * summary before it reads the plan inbox and sends the plan's progress on the next sync (30 s later, or the next time
+ * the app opens), so a learner who synced after publishing can still read `notStarted` for a while: true, since
+ * nothing of the plan is done.
+ */
+export type ReadoutState = 'progress' | 'notDelivered' | 'notStarted';
+
 export interface ReadoutRow {
   learnerId: string;
   name: string;
   done: number;
+  /** The device's count for the plan; for `notStarted`, the plan's length. */
   total: number;
   notReady: number;
-  /** False until the learner's device synced after the plan was published. */
-  synced: boolean;
+  state: ReadoutState;
   lastActiveAt: string;
 }
 
+/** The plan fields a readout reads: its id, when it was published, and its length. */
+export type ReadoutPlan = { id: string; publishedAt: string | null; items: readonly unknown[] };
+
 /** Per-learner progress for one plan, in roster order (most recent activity first — not a ranking). */
-export function planReadout(planId: string, learners: readonly RosterLearner[]): ReadoutRow[] {
+export function planReadout(plan: ReadoutPlan, learners: readonly RosterLearner[]): ReadoutRow[] {
   return learners.map((l) => {
-    const progress = l.summary?.planProgress[planId];
+    const progress = l.summary?.planProgress[plan.id];
+    const state: ReadoutState = progress ? 'progress' : syncedAfter(l.lastSyncedAt, plan.publishedAt) ? 'notStarted' : 'notDelivered';
     return {
       learnerId: l.id,
       name: l.displayName,
       done: progress?.done ?? 0,
-      total: progress?.total ?? 0,
+      total: progress?.total ?? (state === 'notStarted' ? plan.items.length : 0),
       notReady: progress?.notReady ?? 0,
-      synced: !!progress,
+      state,
       lastActiveAt: l.lastActiveAt,
     };
   });
 }
 
-/** "2 / 3" · "0 / 2 · 1 not ready yet" · "waiting for the next sync", in `locale`. */
+/** Whether the device's last sync came after the plan was published; a draft, a missing or an unreadable time: no. */
+function syncedAfter(lastSyncedAt: string | null, publishedAt: string | null): boolean {
+  if (!lastSyncedAt || !publishedAt) return false;
+  const synced = Date.parse(lastSyncedAt);
+  const published = Date.parse(publishedAt);
+  return !Number.isNaN(synced) && !Number.isNaN(published) && synced > published;
+}
+
+/** "2 / 3" · "0 / 2 · 1 not ready yet" · "Gets this plan next time the app opens" · "Not started yet (0 / 4)", in `locale`. */
 export function readoutLine(row: ReadoutRow, locale: UiLocale = DEFAULT_LOCALE): string {
   const words = getMessages(locale).console.plan.readout;
-  if (!row.synced) return words.waiting;
+  if (row.state === 'notDelivered') return words.notDelivered;
+  if (row.state === 'notStarted') return words.notStarted(row.total);
   return row.notReady > 0 ? words.withNotReady(row.done, row.total, row.notReady) : words.progress(row.done, row.total);
 }
 

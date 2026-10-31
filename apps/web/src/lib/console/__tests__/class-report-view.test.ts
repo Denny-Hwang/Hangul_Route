@@ -121,7 +121,7 @@ describe('the week class report (behaviour 5 words)', () => {
       heading: 'This period',
       noneYet: null,
       afterUpdate: null,
-      bands: { heading: 'Days practiced', rows: ['Not yet: 3', '1 to 2 days: 3', '3 to 4 days: 3', '5 to 7 days: 1'] },
+      bands: { heading: 'Days practiced', rows: ["Didn't practice: 3", '1 to 2 days: 3', '3 to 4 days: 3', '5 to 7 days: 1'] },
       notSaved: '1 learner has nothing saved for this period yet.',
       time: { heading: 'Time', total: 'Total time: 212 minutes', up: 'More than last week', median: 'Typical time for those who practiced: 24 minutes' },
     });
@@ -164,7 +164,7 @@ describe('periods, steps and states', () => {
     const day: ClassReport = { ...REPORT, period: 'day', headline: { code: 'class_practiced', practiced: 3, learners: 12 }, practice: { dayBands: [{ band: 'practiced', learners: 3 }, { band: 'not_yet', learners: 8 }], notSaved: 0 } };
     const v = view({ data: body(day), query: { period: 'day', at: null } });
     expect(v.headline).toEqual({ text: '3 of 12 learners practiced today.', up: null, note: null });
-    expect(v.thisPeriod?.bands?.rows).toEqual(['Practiced: 3', 'Not yet: 8']);
+    expect(v.thisPeriod?.bands?.rows).toEqual(['Practiced: 3', "Didn't practice: 8"]);
     expect(v.thisPeriod?.notSaved).toBeNull();
     expect(v.stepper).toEqual({ range: 'Oct 15', prev: { href: '/teach/space/report?id=space%3Asunflower&period=day&at=2026-10-14', label: 'Yesterday', name: 'Show yesterday' }, next: null });
     const back = view({ data: body(day, { at: '2026-10-13' }), query: { period: 'day', at: '2026-10-13' } });
@@ -172,10 +172,21 @@ describe('periods, steps and states', () => {
     expect(back.stepper?.next?.href).toBe('/teach/space/report?id=space%3Asunflower&period=day&at=2026-10-14');
   });
 
+  // GX-8 T15 (AMENDMENTS-GROWNUP-UX section 8): "Days practiced · Not yet: 9" read as unclear; the empty band says what it counts.
+  it('the no-practice band reads "Didn\'t practice: n" in every locale, whatever the period', () => {
+    const day: ClassReport = { ...REPORT, period: 'day', practice: { dayBands: [{ band: 'practiced', learners: 3 }, { band: 'not_yet', learners: 9 }], notSaved: 0 } };
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const r = getMessages(locale).report.class;
+      expect(view({ locale }).thisPeriod?.bands?.rows[0]).toBe(r.didntPractice(3));
+      expect(view({ locale, data: body(day), query: { period: 'day', at: null } }).thisPeriod?.bands?.rows[1]).toBe(r.didntPractice(9));
+    }
+    expect(getMessages('ko').report.class.didntPractice(9)).toBe('연습하지 않은 학생: 9명');
+  });
+
   it('This month: the month bands, the month in the stepper, a month back', () => {
     const month: ClassReport = { ...REPORT, period: 'month', practice: { dayBands: [{ band: '0', learners: 2 }, { band: '1-4', learners: 4 }, { band: '5-9', learners: 3 }, { band: '10+', learners: 2 }], notSaved: 0 } };
     const v = view({ data: body(month), query: { period: 'month', at: null } });
-    expect(v.thisPeriod?.bands?.rows).toEqual(['Not yet: 2', '1 to 4 days: 4', '5 to 9 days: 3', '10 days or more: 2']);
+    expect(v.thisPeriod?.bands?.rows).toEqual(["Didn't practice: 2", '1 to 4 days: 4', '5 to 9 days: 3', '10 days or more: 2']);
     expect(v.stepper).toEqual({ range: 'October 2026', prev: { href: '/teach/space/report?id=space%3Asunflower&period=month&at=2026-09-01', label: 'Last month', name: 'Show last month' }, next: null });
     expect(v.headline?.up).toBe('More than all of last month');
     const back = view({ data: body(month, { at: '2026-08-01' }), query: { period: 'month', at: '2026-08-01' } });

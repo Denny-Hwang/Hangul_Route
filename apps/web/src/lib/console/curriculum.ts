@@ -812,10 +812,13 @@ export function statsText(stats: Pick<CurriculumStats, 'readyItems' | 'minutesPl
   return getMessages(locale).console.curriculum.preview.stats(stats.readyItems, minutes, StageKeySchema.options.indexOf(stats.endsAtStage) + 1);
 }
 
-/** A learner's line on a route readout: "4 / 6 so far · 36 planned" (`total` is what the device has scheduled so far). */
+/** A learner's line on a route readout: "4 / 6 so far · 36 planned" (`total` is what the device has scheduled so far), or GX-8's two states. */
 export function readoutLine(row: ReadoutRow, planned: number, locale: UiLocale = DEFAULT_LOCALE): string {
   const words = getMessages(locale).console.curriculum.readout;
-  if (!row.synced) return words.waiting;
+  // GX-8 T9: the plan readout's two words for a learner with no progress yet; "not started" counts the planned length.
+  const plan = getMessages(locale).console.plan.readout;
+  if (row.state === 'notDelivered') return plan.notDelivered;
+  if (row.state === 'notStarted') return plan.notStarted(planned);
   return row.notReady > 0 ? words.lineNotReady(row.done, row.total, planned, row.notReady) : words.line(row.done, row.total, planned);
 }
 

@@ -274,10 +274,11 @@ export const consoleMsgs = {
     week: {
       title: 'Esta semana',
       practiced: (practiced: number, students: number) => `${practiced} de ${students} ${plural('es', practiced, { one: 'practicó', other: 'practicaron' })} esta semana`,
-      anchor: (accuracy: string) => `Clave de la Etapa 1: ${accuracy}`,
+      anchor: (accuracy: string) => `Etapa 1, aciertos al primer intento: ${accuracy}`,
       revisit: (jamo: string) => `Jamo para repasar en grupo: ${jamo}`,
       notSynced: (count: number) =>
-        plural('es', count, { one: `${count} no sincroniza desde hace una semana`, other: `${count} no sincronizan desde hace una semana` }),
+        plural('es', count, { one: `${count} no abre la app desde hace más de una semana`, other: `${count} no abren la app desde hace más de una semana` }),
+      practicedFamily: (practiced: number, learners: number) => `${practiced} de ${learners} ${plural('es', practiced, { one: 'practicó', other: 'practicaron' })} esta semana`,
       wordsRevisit: (words: string) => `Palabras para repasar en grupo: ${words}`,
     },
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
@@ -288,10 +289,13 @@ export const consoleMsgs = {
     settings: { cta: 'Ajustes' },
     studentsLabel: 'Estudiantes',
     recentFirst: 'Primero la actividad más reciente',
+    rosterHeadingFamily: 'Quienes aprenden',
+    joinedOn: (date: string) => `Se unió el ${date}`,
     learner: {
       lastActive: (when: string) => `Última actividad: ${when}`,
       questsCards: (done: number, total: number, cards: number) =>
-        plural('es', cards, { one: `Misiones ${done} / ${total} · ${cards} tarjeta`, other: `Misiones ${done} / ${total} · ${cards} tarjetas` }),
+        plural('es', cards, { one: `Misiones de la Etapa 1: ${done} de ${total} · ${cards} tarjeta`, other: `Misiones de la Etapa 1: ${done} de ${total} · ${cards} tarjetas` }),
+      firstQuest: 'En la primera misión',
       minutesThisWeek: (minutes: number) => `${minutes} min esta semana`,
       revisit: (jamo: string) => `Repasar: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
@@ -397,7 +401,8 @@ export const consoleMsgs = {
     progressTitle: 'Progreso',
     noMembers: { family: 'Aún no hay estudiantes.', class: 'Aún no hay estudiantes.', school: 'Aún no hay miembros.' },
     readout: {
-      waiting: 'esperando la próxima sincronización',
+      notDelivered: 'Recibe este plan al abrir la app',
+      notStarted: (total: number) => `Aún sin empezar (0 / ${total})`,
       progress: (done: number, total: number) => `${done} / ${total}`,
       withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
     },
@@ -750,7 +755,6 @@ export const consoleMsgs = {
       line: (done: number, total: number, planned: number) => `${done} / ${total} hasta ahora · ${plural('es', planned, { one: `${planned} planeado`, other: `${planned} planeados` })}`,
       lineNotReady: (done: number, total: number, planned: number, notReady: number) =>
         `${done} / ${total} hasta ahora · ${plural('es', planned, { one: `${planned} planeado`, other: `${planned} planeados` })} · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
-      waiting: 'esperando la próxima sincronización',
       repace: { cta: 'Reajustar desde hoy' },
       repaceHint: 'Mantiene lo hecho y ordena el resto desde la próxima sesión.',
       repaceAsk: (date: string) => `¿Reajustar el ritmo desde hoy? Lo hecho sigue hecho. El resto pasa a las próximas sesiones, desde el ${date}.`,
