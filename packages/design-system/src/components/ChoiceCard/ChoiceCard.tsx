@@ -112,13 +112,14 @@ export function ChoiceCard({
       pressableRef={pressableRef}
       testID={testID}
       onCommit={() => onPress?.()}
-      // An answered (or disabled) card takes no tap but stays a focusable button with today's accessible state.
-      inactive={!look.interactive}
+      // An answered (or disabled) card, or one with no handler, takes no tap (and sets no lock) but stays a focusable
+      // button with today's accessible state.
+      inactive={!look.interactive || onPress === undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: look.disabled, selected: look.selected }}
       style={{ alignSelf: 'stretch' }}
     >
-      {({ pressed }) => content(pressed && look.interactive ? press : null)}
+      {({ pressed }) => content(pressed && look.interactive && onPress !== undefined ? press : null)}
     </TapTarget>
   );
 }

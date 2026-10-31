@@ -136,7 +136,8 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
     expect(target({ state: 'correct', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: false, selected: true } });
     expect(target({ state: 'wrong', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: false, selected: true } });
     expect(target({ state: 'disabled', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: true, selected: false } });
-    // A card with no handler commits nothing (and does not throw).
+    // A card with no handler is inactive too (no commit, no lock) and commits nothing if asked.
+    expect(target({ state: 'idle' }).props.inactive).toBe(true);
     (target({ state: 'idle' }).props.onCommit as () => void)();
     expect(presses).toHaveLength(2);
     // TapTarget never disables an answered card's Pressable, so it keeps its focus (Story Order moves focus to one).
@@ -146,7 +147,7 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
   it('pressed: a thick border.shape outline and a 0.97 shrink on the drawn box, never the focus-blue hint ring', () => {
     motion.reduced = false;
     for (const state of ['idle', 'hint'] as const) {
-      const style = body({ state, label: 'apple' }, true).props.style as Props;
+      const style = body({ state, label: 'apple', onPress: () => undefined }, true).props.style as Props;
       expect(style.borderColor).toBe(colors.border.shape);
       expect(style.borderColor).not.toBe(colors.border.focus);
       expect(style.borderWidth).toBe(borderWidth.thick);
@@ -156,15 +157,15 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
 
   it('pressed: the thicker outline comes off the padding, so the card keeps its size (no layout shift); hint is already thick', () => {
     const rest = body({ state: 'idle', label: 'apple' }).props.style as Props;
-    const down = body({ state: 'idle', label: 'apple' }, true).props.style as Props;
+    const down = body({ state: 'idle', label: 'apple', onPress: () => undefined }, true).props.style as Props;
     expect((down.paddingVertical as number) + (down.borderWidth as number)).toBe((rest.paddingVertical as number) + (rest.borderWidth as number));
     expect((down.paddingHorizontal as number) + (down.borderWidth as number)).toBe((rest.paddingHorizontal as number) + (rest.borderWidth as number));
-    expect(body({ state: 'hint', label: 'apple' }, true).props.style).toMatchObject({ paddingVertical: spacing.md, paddingHorizontal: spacing.lg });
+    expect(body({ state: 'hint', label: 'apple', onPress: () => undefined }, true).props.style).toMatchObject({ paddingVertical: spacing.md, paddingHorizontal: spacing.lg });
   });
 
   it('pressed under reduced motion: the outline alone, no shrink', () => {
     motion.reduced = true;
-    const style = body({ state: 'idle', label: 'apple' }, true).props.style as Props;
+    const style = body({ state: 'idle', label: 'apple', onPress: () => undefined }, true).props.style as Props;
     expect(style.borderColor).toBe(colors.border.shape);
     expect(style.borderWidth).toBe(borderWidth.thick);
     expect(style.transform).toBeUndefined();
