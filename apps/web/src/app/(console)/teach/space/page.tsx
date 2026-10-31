@@ -32,7 +32,7 @@ import { rosterNotesLinks } from '@/lib/console/notes-page';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { rosterReportLink } from '@/lib/console/report-view';
 import { rosterClassReportLink } from '@/lib/console/class-report-view';
-import { capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '@/lib/console/rollup';
+import { capState, classRollup, codeExpiry, familyCountLine, joinedLine, questsLine, relativeDay, rosterHeading, rosterOrder, seatLine, weekLines } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
 import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
@@ -170,6 +170,10 @@ function SpaceInner(): JSX.Element {
   };
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
+  // GX-8 (T7, T8, P4): the roll-up's kind-aware lines; the anchor line hides while nobody has one.
+  const week = roster && rollup ? weekLines(roster.space.kind, rollup, locale) : null;
+  // GX-8 P4: a family's cards in the order its learners joined (as on the family home); a class keeps recent activity first.
+  const cards = roster ? rosterOrder(roster.space.kind, roster.learners) : [];
   // The class join link and its QR code (owner decision 2026-10-17): a class with a code only, the code alone in the fragment.
   const joinLink = roster ? rosterJoinLink({ kind: roster.space.kind, code: roster.joinCode, origin: appUrl() }) : null;
   // [SA] section 3.4: the count against the roster's own cap (`seats`), not the free cap.
@@ -179,7 +183,7 @@ function SpaceInner(): JSX.Element {
   // The newest plan for everyone: a plan for one learner (a suggested start) never takes over the roster.
   const latestPlan = rosterPlan(plans);
   const lecture = lectureModeEnabled() && canComposeIn(spaces, spaceId);
-  const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
+  const readout = latestPlan && roster ? new Map(planReadout(latestPlan, roster.learners).map((r) => [r.learnerId, r])) : null;
   // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
   const weekRevisit = aroundSlot(c.space.week.revisit);
   const learnerRevisit = aroundSlot(c.space.learner.revisit);
@@ -259,12 +263,12 @@ function SpaceInner(): JSX.Element {
             </Notice>
           ) : null}
 
-          {rollup && !empty ? (
+          {rollup && week && !empty ? (
             <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title}>
               <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
-                <li>{c.space.week.practiced(rollup.practicedThisWeek, rollup.students)}</li>
-                <li>{c.space.week.anchor(percent(rollup.anchorAccuracy))}</li>
+                <li>{week.practiced}</li>
+                {week.anchor ? <li data-testid="week-anchor">{week.anchor}</li> : null}
                 {rollup.revisit.length ? (
                   <li>
                     {weekRevisit.before}
@@ -282,7 +286,7 @@ function SpaceInner(): JSX.Element {
                   </li>
                 ) : null}
                 <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
-                {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
+                {week.notSynced ? <li data-testid="week-not-synced">{week.notSynced}</li> : null}
               </ul>
               <ClassReportLink spaceId={spaceId} kind={roster.space.kind} locale={locale} />
             </section>
@@ -320,10 +324,10 @@ function SpaceInner(): JSX.Element {
           </div>
 
           {!empty ? (
-            <section aria-label={c.space.studentsLabel}>
-              <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.recentFirst}</h2>
+            <section aria-label={roster.space.kind === 'family' ? c.space.rosterHeadingFamily : c.space.studentsLabel}>
+              <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }} data-testid="roster-heading">{rosterHeading(roster.space.kind, locale)}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
-                {roster.learners.map((l, index) => (
+                {cards.map((l, index) => (
                   <article key={l.id} style={panelStyle} data-testid="student-card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
@@ -341,7 +345,7 @@ function SpaceInner(): JSX.Element {
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
                         <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
                         <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />
-                        <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
+                        <div data-testid="quests-line">{questsLine(l.summary, locale)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
                         <JourneyStrip kind={roster.space.kind} summary={l.summary} />
                         {l.summary.needsPractice.length ? (
@@ -367,7 +371,10 @@ function SpaceInner(): JSX.Element {
                       </div>
                     ) : (
                       <Muted>
-                        {c.notSyncedYet} · {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}
+                        {/* GX-8 P4: a family card leads with its dated join ("Joined Oct 14 · not synced yet"). */}
+                        {roster.space.kind === 'family'
+                          ? `${joinedLine('family', l.joinedAt, now, locale)} · ${c.notSyncedYet}`
+                          : `${c.notSyncedYet} · ${joinedLine(roster.space.kind, l.joinedAt, now, locale)}`}
                       </Muted>
                     )}
                     <SeeReport spaceId={spaceId} kind={roster.space.kind} learnerId={l.id} locale={locale} />

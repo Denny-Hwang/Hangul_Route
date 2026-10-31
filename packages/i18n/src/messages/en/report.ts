@@ -349,15 +349,16 @@ export const report = {
     milestones: (when: string) => `Stage milestones ${when}`,
     /** `count`: the learners who finished the stage in the window (events, never a standing count, OD-4). */
     milestone: (n: number, stage: string, count: number) => `Stage ${n}: ${stage}, finished by ${learnerCount(count)}`,
-    /** Day bands (section 3.7): `none` is the `0` band, never highlighted; `practiced` is the `day` band. */
+    /** Day bands (section 3.7): `practiced` is the `day` band; the `0` band is `didntPractice`, never highlighted. */
     band: {
-      none: 'Not yet',
       practiced: 'Practiced',
       range: (from: number, to: number) => `${from} to ${to} days`,
       atLeast: (from: number) => `${from} days or more`,
     },
     /** A band or a strand status with its number of learners. */
     count: (label: string, count: number) => `${label}: ${count}`,
+    /** GX-8 T15: the `0` (and `not_yet`) band with its number of learners, in place of "Not yet: n". */
+    didntPractice: (count: number) => `Didn't practice: ${count}`,
     minutesTotal: (minutes: number) => `Total time: ${minuteCount(minutes)}`,
     medianMinutes: (minutes: number) => `Typical time for those who practiced: ${minuteCount(minutes)}`,
     planLesson: 'Plan a lesson',

@@ -72,29 +72,67 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
   });
 
   it('reads out per-learner progress in roster order without ranking', () => {
-    const learner = (id: string, progress: { done: number; total: number; notReady: number } | null): RosterLearner => ({
+    const learner = (id: string, progress: { done: number; total: number; notReady: number } | null, lastSyncedAt: string | null = null): RosterLearner => ({
       id,
       displayName: id,
       ageGroup: '5-7',
       avatar: 'hoya-orange',
       joinedAt: 't',
       lastActiveAt: 't',
-      lastSyncedAt: null,
+      lastSyncedAt,
       summary: progress
         ? { lastActiveAt: 't', streakDays: 0, stage1: { questsDone: 0, questsTotal: 11, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 0, jamoRecognized: [], needsPractice: [], planProgress: { 'plan:w3': progress } }
         : null,
     });
-    const rows = planReadout('plan:w3', [learner('minho', { done: 2, total: 3, notReady: 0 }), learner('suji', { done: 0, total: 2, notReady: 1 }), learner('new', null)]);
+    const rows = planReadout(PLAN, [learner('minho', { done: 2, total: 3, notReady: 0 }), learner('suji', { done: 0, total: 2, notReady: 1 }), learner('new', null)]);
     expect(rows.map((r) => r.name)).toEqual(['minho', 'suji', 'new']);
     expect(readoutLine(rows[0] as ReadoutRowT)).toBe('2 / 3');
     expect(readoutLine(rows[1] as ReadoutRowT)).toBe('0 / 2 · 1 not ready yet');
-    expect(readoutLine(rows[2] as ReadoutRowT)).toBe('waiting for the next sync');
+    expect(readoutLine(rows[2] as ReadoutRowT)).toBe('Gets this plan next time the app opens');
     for (const locale of ['en', 'es', 'ko'] as const) {
       const words = getMessages(locale).console.plan.readout;
       expect(readoutLine(rows[0] as ReadoutRowT, locale)).toBe(words.progress(2, 3));
       expect(readoutLine(rows[1] as ReadoutRowT, locale)).toBe(words.withNotReady(0, 2, 1));
-      expect(readoutLine(rows[2] as ReadoutRowT, locale)).toBe(words.waiting);
+      expect(readoutLine(rows[2] as ReadoutRowT, locale)).toBe(words.notDelivered);
     }
+  });
+
+  // GX-8 T9 (AMENDMENTS-GROWNUP-UX section 8): "waiting for the next sync" said nothing true about a learner who synced today.
+  describe('a learner with no progress for the plan (GX-8 T9)', () => {
+    const synced = (id: string, lastSyncedAt: string | null, planProgress: Record<string, { done: number; total: number; notReady: number }> = {}): RosterLearner => ({
+      id,
+      displayName: id,
+      ageGroup: '5-7',
+      avatar: 'hoya-orange',
+      joinedAt: '2026-09-01T00:00:00.000Z',
+      lastActiveAt: '2026-09-21T00:00:00.000Z',
+      lastSyncedAt,
+      summary: { lastActiveAt: '2026-09-21T00:00:00.000Z', streakDays: 0, stage1: { questsDone: 0, questsTotal: 11, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 2, jamoRecognized: [], needsPractice: [], planProgress },
+    });
+
+    it('synced before the plan was published (or never): the plan reaches the device next time the app opens', () => {
+      const rows = planReadout(PLAN, [synced('before', '2026-09-20T09:59:59.000Z'), synced('never', null), synced('same', PLAN.publishedAt)]);
+      expect(rows.map((r) => r.state)).toEqual(['notDelivered', 'notDelivered', 'notDelivered']);
+      for (const row of rows) expect(readoutLine(row, 'en')).toBe('Gets this plan next time the app opens');
+    });
+
+    it('synced after the plan was published: not started yet, against the plan length', () => {
+      const rows = planReadout(PLAN, [synced('after', '2026-09-21T08:00:00.000Z')]);
+      expect(rows[0]).toMatchObject({ state: 'notStarted', done: 0, total: 4 });
+      expect(readoutLine(rows[0] as ReadoutRowT, 'en')).toBe('Not started yet (0 / 4)');
+      for (const locale of ['en', 'es', 'ko'] as const) expect(readoutLine(rows[0] as ReadoutRowT, locale)).toBe(getMessages(locale).console.plan.readout.notStarted(4));
+    });
+
+    it('progress on the plan wins over every sync time, and another plan\'s progress is not this plan\'s', () => {
+      const rows = planReadout(PLAN, [synced('done', null, { 'plan:w3': { done: 1, total: 4, notReady: 0 } }), synced('other', '2026-09-21T08:00:00.000Z', { 'plan:w2': { done: 3, total: 3, notReady: 0 } })]);
+      expect(rows.map((r) => r.state)).toEqual(['progress', 'notStarted']);
+      expect(readoutLine(rows[0] as ReadoutRowT, 'en')).toBe('1 / 4');
+    });
+
+    it('a draft (no publish time) or an unreadable sync time never claims the plan arrived', () => {
+      expect(planReadout({ ...PLAN, publishedAt: null }, [synced('a', '2026-09-21T08:00:00.000Z')])[0]?.state).toBe('notDelivered');
+      expect(planReadout(PLAN, [synced('a', 'not a date')])[0]?.state).toBe('notDelivered');
+    });
   });
 
   it('moves items within bounds only', () => {
@@ -108,6 +146,18 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
 });
 
 type ReadoutRowT = ReturnType<typeof planReadout>[number];
+
+/** The published plan the readout cases read: four items, published on 20 September at 10:00 UTC. */
+const PLAN = {
+  id: 'plan:w3',
+  publishedAt: '2026-09-20T10:00:00.000Z',
+  items: [
+    { kind: 'quest' as const, id: 'a' },
+    { kind: 'quest' as const, id: 'b' },
+    { kind: 'quest' as const, id: 'c' },
+    { kind: 'quest' as const, id: 'd' },
+  ],
+};
 
 describe('plan page words (F-I18N-001 PR 10b)', () => {
   const PSEUDO = 'en-XA' as UiLocale;
@@ -163,8 +213,9 @@ describe('plan page words (F-I18N-001 PR 10b)', () => {
     expect(planSummary(1, null, 'class', PSEUDO)).toMatch(bracketed);
     expect(planSummary(1, 3, 'class', PSEUDO)).toMatch(bracketed);
     expect(planEveryone('class', PSEUDO)).toMatch(bracketed);
-    const row = { learnerId: 'a', name: 'a', done: 0, total: 2, notReady: 1, synced: true, lastActiveAt: 't' };
+    const row = { learnerId: 'a', name: 'a', done: 0, total: 2, notReady: 1, state: 'progress' as const, lastActiveAt: 't' };
     expect(readoutLine(row, PSEUDO)).toMatch(bracketed);
-    expect(readoutLine({ ...row, synced: false }, PSEUDO)).toMatch(bracketed);
+    expect(readoutLine({ ...row, state: 'notDelivered' }, PSEUDO)).toMatch(bracketed);
+    expect(readoutLine({ ...row, state: 'notStarted' }, PSEUDO)).toMatch(bracketed);
   });
 });

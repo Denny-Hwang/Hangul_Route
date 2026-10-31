@@ -133,10 +133,13 @@ describe('space page (teach/space/page.tsx)', () => {
   it('words the weekly roll-up as whole sentences', () => {
     expect(s.week.title).toBe('This week');
     expect(s.week.practiced(1, 3)).toBe('1 of 3 practiced this week');
-    expect(s.week.anchor('82%')).toBe('Stage 1 anchor: 82%');
+    // GX-8 (AMENDMENTS-GROWNUP-UX section 8 T7, T8; section 9 P4): first-try answers, opening the app, a family's learners.
+    expect(s.week.anchor('82%')).toBe('Stage 1 first-try answers: 82%');
     expect(s.week.revisit('a · b')).toBe('Jamo to revisit together: a · b');
-    expect(s.week.notSynced(1)).toBe("1 hasn't synced in a week");
-    expect(s.week.notSynced(2)).toBe("2 haven't synced in a week");
+    expect(s.week.notSynced(1)).toBe("1 hasn't opened the app in over a week");
+    expect(s.week.notSynced(2)).toBe("2 haven't opened the app in over a week");
+    expect(s.week.practicedFamily(1, 3)).toBe('1 of 3 learners practiced this week');
+    expect(s.week.practicedFamily(1, 1)).toBe('1 of 1 learner practiced this week');
   });
 
   it('keeps the action row, with a plural for pending re-link requests', () => {
@@ -150,10 +153,14 @@ describe('space page (teach/space/page.tsx)', () => {
   it('keeps the student cards', () => {
     expect(s.studentsLabel).toBe('Students');
     expect(s.recentFirst).toBe('Most recent activity first');
+    expect(s.rosterHeadingFamily).toBe('Learners');
+    expect(s.joinedOn('Oct 14')).toBe('Joined Oct 14');
     expect(s.learner.lastActive('yesterday')).toBe('Last active yesterday');
-    expect(s.learner.questsCards(3, 24, 1)).toBe('Quests 3 / 24 · 1 card');
-    expect(s.learner.questsCards(3, 24, 2)).toBe('Quests 3 / 24 · 2 cards');
-    expect(s.learner.questsCards(0, 24, 0)).toBe('Quests 0 / 24 · 0 cards');
+    // GX-8 T10: the stage named; a learner on the first quest with minutes this week reads `firstQuest`.
+    expect(s.learner.questsCards(3, 24, 1)).toBe('Stage 1 quests: 3 of 24 · 1 card');
+    expect(s.learner.questsCards(3, 24, 2)).toBe('Stage 1 quests: 3 of 24 · 2 cards');
+    expect(s.learner.questsCards(0, 24, 0)).toBe('Stage 1 quests: 0 of 24 · 0 cards');
+    expect(s.learner.firstQuest).toBe('Working on the first quest');
     expect(s.learner.minutesThisWeek(14)).toBe('14 min this week');
     expect(s.learner.revisit('a · b')).toBe('Revisit: a · b');
     expect(s.learner.planReadout('Week 1', '1 / 3')).toBe('Week 1: 1 / 3');
@@ -266,7 +273,8 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['console.space.title.class', (m, n) => m.console.space.title.class('Class A', n)],
   ['console.space.title.school', (m, n) => m.console.space.title.school('Seoul school', n)],
   ['console.space.week.notSynced', (m, n) => m.console.space.week.notSynced(n)],
-  ['console.space.learner.questsCards', (m, n) => m.console.space.learner.questsCards(7, 24, n)],
+  // The row's first digit is the stage ("Stage 1", "Etapa 1", "1단계"): masked, so the count is the only "1" / "2" left.
+  ['console.space.learner.questsCards', (m, n) => m.console.space.learner.questsCards(7, 24, n).replace(/^(\D*)1/, '$1#')],
   ['console.planCounts.items', (m, n) => m.console.planCounts.items(n)],
   ['console.planCounts.targets (family)', (m, n) => m.console.planCounts.targets('family', n)],
   ['console.planCounts.targets (class)', (m, n) => m.console.planCounts.targets('class', n)],
@@ -318,10 +326,12 @@ describe('Spanish console counts, n = 1 and n = 2 (F-I18N-001 PR 15)', () => {
     [es.space.title.family('Familia Kim', 1), 'Familia Kim · 1 estudiante'],
     [es.space.title.family('Familia Kim', 2), 'Familia Kim · 2 estudiantes'],
     [es.space.title.school('Escuela Seúl', 1), 'Escuela Seúl · 1 miembro'],
-    [es.space.week.notSynced(1), '1 no sincroniza desde hace una semana'],
-    [es.space.week.notSynced(2), '2 no sincronizan desde hace una semana'],
-    [es.space.learner.questsCards(7, 24, 1), 'Misiones 7 / 24 · 1 tarjeta'],
-    [es.space.learner.questsCards(7, 24, 2), 'Misiones 7 / 24 · 2 tarjetas'],
+    [es.space.week.notSynced(1), '1 no abre la app desde hace más de una semana'],
+    [es.space.week.notSynced(2), '2 no abren la app desde hace más de una semana'],
+    [es.space.week.practicedFamily(1, 3), '1 de 3 practicó esta semana'],
+    [es.space.week.practicedFamily(2, 3), '2 de 3 practicaron esta semana'],
+    [es.space.learner.questsCards(7, 24, 1), 'Misiones de la Etapa 1: 7 de 24 · 1 tarjeta'],
+    [es.space.learner.questsCards(7, 24, 2), 'Misiones de la Etapa 1: 7 de 24 · 2 tarjetas'],
     [es.planCounts.items(1), '1 elemento'],
     [es.planCounts.items(2), '2 elementos'],
     [es.planCounts.targets('school', 2), '2 miembros'],
@@ -356,10 +366,11 @@ describe('Korean console counts, n = 1 and n = 2 (F-I18N-001 PR 16)', () => {
     [ko.space.title.family('Kim family', 1), 'Kim family · 학습자 1명'],
     [ko.space.title.family('Kim family', 2), 'Kim family · 학습자 2명'],
     [ko.space.title.school('Seoul School', 1), 'Seoul School · 구성원 1명'],
-    [ko.space.week.notSynced(1), '1명은 일주일 동안 동기화하지 않았어요'],
-    [ko.space.week.notSynced(2), '2명은 일주일 동안 동기화하지 않았어요'],
-    [ko.space.learner.questsCards(7, 24, 1), '퀘스트 7 / 24 · 카드 1장'],
-    [ko.space.learner.questsCards(7, 24, 2), '퀘스트 7 / 24 · 카드 2장'],
+    [ko.space.week.notSynced(1), '1명은 일주일 넘게 앱을 열지 않았어요'],
+    [ko.space.week.notSynced(2), '2명은 일주일 넘게 앱을 열지 않았어요'],
+    [ko.space.week.practicedFamily(1, 3), '이번 주 연습한 학습자: 1명 / 3명'],
+    [ko.space.learner.questsCards(7, 24, 1), '1단계 퀘스트 7/24 · 카드 1장'],
+    [ko.space.learner.questsCards(7, 24, 2), '1단계 퀘스트 7/24 · 카드 2장'],
     [ko.planCounts.items(1), '항목 1개'],
     [ko.planCounts.items(2), '항목 2개'],
     [ko.planCounts.targets('school', 2), '구성원 2명'],

@@ -269,12 +269,12 @@ export const report = {
     milestones: (when: string) => `Logros de etapa ${when}`,
     milestone: (n: number, stage: string, count: number) => `Etapa ${n}: ${stage}, terminada por ${learnerCount(count)}`,
     band: {
-      none: 'Aún no',
       practiced: 'Con práctica',
       range: (from: number, to: number) => `${from} a ${to} días`,
       atLeast: (from: number) => `${from} días o más`,
     },
     count: (label: string, count: number) => `${label}: ${count}`,
+    didntPractice: (count: number) => `No practicaron: ${count}`,
     minutesTotal: (minutes: number) => `Tiempo total: ${minuteCount(minutes)}`,
     medianMinutes: (minutes: number) => `Tiempo típico de quienes practicaron: ${minuteCount(minutes)}`,
     planLesson: 'Planear una clase',

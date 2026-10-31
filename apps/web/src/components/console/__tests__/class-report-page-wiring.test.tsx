@@ -140,7 +140,7 @@ describe('the class report page (RP-8)', () => {
     expect(h1s(root)).toEqual([en.report.title.class('Sunflower')]);
     expect(fakeDocument.title).toBe('Report - Hangul Route');
     expect(textOf(byTestId(root, 'report-headline')[0] as ReactTestInstance)).toBe('2 of 12 learners practiced this week.');
-    expect(byTestId(root, 'class-bands')[0]?.findAll((n) => n.type === 'li').map(textOf)).toEqual(['Not yet: 9', '1 to 2 days: 2', '3 to 4 days: 0', '5 to 7 days: 0']);
+    expect(byTestId(root, 'class-bands')[0]?.findAll((n) => n.type === 'li').map(textOf)).toEqual(["Didn't practice: 9", '1 to 2 days: 2', '3 to 4 days: 0', '5 to 7 days: 0']);
     expect(byTestId(root, 'class-letters-new')[0]?.findAll((n) => n.props.lang === 'ko').map(textOf)).toEqual(['ㅂ']);
     expect(textOf(root)).not.toMatch(/profile:|Mina/);
     expect(byTestId(root, 'report-print')[0]?.props.disabled).toBe(false);
