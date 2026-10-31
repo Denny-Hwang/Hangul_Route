@@ -159,6 +159,9 @@ describe('attentionModel: one status per learner (section 3.2)', () => {
     // A re-link outranks every move; a seat wait outranks a scheduled move.
     const both = model({ roster, relinks: [relink('profile:suji')], transfers: [source({ ...started, status: 'approved', blockReason: 'cap_class' })] }).byLearner['profile:suji'];
     expect(both?.kind).toBe('relink');
+    // GX-10: the move under the re-link is still open (the settings row's Move stays off).
+    expect(both?.moveOpen).toBe(true);
+    expect(model({ roster, relinks: [relink('profile:suji')] }).byLearner['profile:suji']?.moveOpen).toBeUndefined();
     const two = model({ roster, transfers: [source({ ...started, id: 't1', status: 'approved', scheduledFor: day(3) }), source({ ...started, id: 't2', status: 'approved', blockReason: 'cap_class' })] }).byLearner['profile:suji'];
     expect(two?.kind).toBe('move_room');
     // An approved move with no date and no block still reads as a move waiting.
@@ -188,6 +191,10 @@ describe('attentionModel: one status per learner (section 3.2)', () => {
     const roster = [learner('profile:mina')];
     expect(model({ kind: 'family', roster, transfers: [family()] }).byLearner['profile:mina']).toMatchObject({ kind: 'move_yours', action: true, move: { to: 'Saturday Class B' } });
     expect(model({ kind: 'family', roster, transfers: [family({ learnerState: 'consented' })] }).byLearner['profile:mina']?.kind).toBe('move_others');
+    // A self-managed learner answers on their own device: the family cannot fill the slot, so no action chip (section 7.1).
+    for (const learnerRoute of ['device', 'none'] as const) {
+      expect(model({ kind: 'family', roster, transfers: [family({ learnerRoute })] }).byLearner['profile:mina']).toMatchObject({ kind: 'move_others', action: false });
+    }
     expect(model({ kind: 'family', roster, transfers: [family({ status: 'approved', learnerState: 'consented', executeAfter: day(2) })] }).byLearner['profile:mina']).toMatchObject({ kind: 'move_scheduled', move: { on: day(2) } });
     expect(model({ kind: 'family', roster, transfers: [family({ status: 'approved', learnerState: 'consented', blockReason: 'cap_learner' })] }).byLearner['profile:mina']?.kind).toBe('move_room');
     expect(model({ kind: 'family', roster, transfers: [family()] }).totals.moves).toBe(1);

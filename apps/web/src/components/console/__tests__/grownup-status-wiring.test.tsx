@@ -97,6 +97,8 @@ const familyMove = {
   executeAfter: null,
   createdAt: '2026-10-29T12:00:00.000Z',
   expiresAt: '2026-11-12T12:00:00.000Z',
+  // The family answers for the learner (section 7.1): only then is the move theirs to OK.
+  learnerRoute: 'caregiver',
 };
 
 const state = {

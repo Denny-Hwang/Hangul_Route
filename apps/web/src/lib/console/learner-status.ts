@@ -41,6 +41,11 @@ export interface LearnerStatus {
   move?: LearnerMove;
   /** The roster row's `scope === 'base'` (TV-D3): a muted line under the card's header, never a chip. */
   scopeBase: boolean;
+  /**
+   * GX-10 (T11): a move of this learner is open, whichever chip won (a re-link outranks every move, yet the move is still
+   * open). Present only when true. The settings row turns Move off on it, never on the top chip alone.
+   */
+  moveOpen?: true;
 }
 
 /** A learner asking to join this space (not on the roster yet): initials, picture and level only until accepted (T8). */
@@ -157,7 +162,9 @@ function listCandidates(input: AttentionInput): Map<string, Candidate[]> {
       else add(learnerId, move('move_others'));
       continue;
     }
-    const yours = view.role === 'source' ? view.steps?.source === 'waiting' : view.learnerState === 'pending';
+    // A family answers the learner slot only when it is the caregiver route (section 7.1); a self-managed learner's
+    // move waits on the learner, so the family sees the quiet "Move waiting" chip, never an action it cannot take.
+    const yours = view.role === 'source' ? view.steps?.source === 'waiting' : view.learnerState === 'pending' && view.learnerRoute === 'caregiver';
     add(learnerId, move(yours ? 'move_yours' : 'move_others'));
   }
   // An outgoing class move carries a learner id only from GX-W on (while the stored status is `requested`).
@@ -195,6 +202,7 @@ export function attentionModel(input: AttentionInput): AttentionModel {
       ...(top.relink ? { relink: top.relink } : {}),
       ...(top.move ? { move: top.move } : {}),
       scopeBase: learner.scope === 'base',
+      ...(candidates.some((c) => c.move !== undefined) ? { moveOpen: true as const } : {}),
     };
   }
 
