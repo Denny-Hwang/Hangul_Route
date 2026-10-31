@@ -226,7 +226,7 @@ describe('a later volume is no lecture route quest (row CM-40)', () => {
   it('no class position and no preset lands on a Volume 2 quest', () => {
     for (const stage of ['stage2', 'stage4'] as const) {
       for (let reached = 0; reached < 40; reached += 1) {
-        const at = classPosition([{ journey: { v: 1, here: stage, stages: [{ stage, done: reached, known: 0 }] } }], catalog);
+        const at = classPosition([{ journey: { v: 1, here: stage, stages: [{ stage, done: reached, known: 0, state: 'open', total: 40 }] } }], catalog);
         if (at !== null) expect(later.has(at.questId), `${stage} at ${reached}`).toBe(false);
       }
       const preset = resolvePreset('by-stage', 60, { catalog, stage });
