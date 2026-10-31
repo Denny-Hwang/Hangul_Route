@@ -8,7 +8,7 @@
       "hoyaIntro": "¡Tteokbokki y gimbap! Vamos a pedir en el local de comidas.",
       "culture.n1.text": "Un {ko:분식집} es un local de comidas: vende platos sencillos como fideos, pan y empanadillas. La palabra {ko:분식} significa comida hecha con harina o algo parecido.",
       "culture.n2.text": "El {ko:떡볶이} es pastel de arroz en barra, cortado en trozos y salteado con verduras y una salsa. La salsa puede ser de soja o de pasta de chile rojo.",
-      "culture.n3.text": "Algunas personas dicen {ko:잘 먹겠습니다} («comeré bien») en la mesa, antes de tomar la cuchara. Ninguna norma decide si decirlo está bien o mal."
+      "culture.n3.text": "Algunas personas dicen {ko:잘 먹겠습니다} («comeré bien») justo antes de empezar a comer. Ninguna norma decide si decirlo está bien o mal."
     },
     "quest:stage4-life-v2-q1": {
       "title": "¿Qué le sirvo?",
@@ -83,22 +83,22 @@
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "Sí, comí bien. (se dice después de comer)"
     },
     "minigame:s4-life-v2-q1-apply": {
-      "clozePick.rounds.a1.sentence.gloss": "Tteokbokki, por favor.",
+      "clozePick.rounds.a1.sentence.gloss": "¿Qué tal está el kimchi?",
       "clozePick.rounds.a2.sentence.gloss": "¿Qué le sirvo?",
       "clozePick.rounds.a3.sentence.gloss": "¿Quiere un poco de agua?",
       "clozePick.rounds.a4.sentence.gloss": "¿Qué tal sabe?",
-      "clozePick.rounds.a1.tiles.ramyeon.gloss": "fideos instantáneos",
-      "clozePick.rounds.a1.tiles.tteokbokki.gloss": "pastelitos de arroz salteados",
-      "clozePick.rounds.a1.tiles.gimbap.gloss": "rollo de arroz con alga",
+      "clozePick.rounds.a1.tiles.i.gloss": "marcador de sujeto (tras consonante final)",
+      "clozePick.rounds.a1.tiles.ga.gloss": "marcador de sujeto (tras vocal)",
+      "clozePick.rounds.a1.tiles.reul.gloss": "marcador de objeto (tras vocal)",
       "clozePick.rounds.a2.tiles.deurilkkayo.gloss": "¿se lo traigo?",
       "clozePick.rounds.a2.tiles.juseyo.gloss": "por favor, deme",
       "clozePick.rounds.a2.tiles.maewoyo.gloss": "pica",
       "clozePick.rounds.a3.tiles.maewoyo.gloss": "pica",
       "clozePick.rounds.a3.tiles.gamsahamnida.gloss": "gracias",
       "clozePick.rounds.a3.tiles.deurilkkayo.gloss": "¿se lo traigo?",
-      "clozePick.rounds.a4.tiles.juseyo.gloss": "por favor, deme",
-      "clozePick.rounds.a4.tiles.eottaeyo.gloss": "qué tal",
-      "clozePick.rounds.a4.tiles.deurilkkayo.gloss": "¿se lo traigo?"
+      "clozePick.rounds.a4.tiles.i.gloss": "marcador de sujeto (tras consonante final)",
+      "clozePick.rounds.a4.tiles.ga.gloss": "marcador de sujeto (tras vocal)",
+      "clozePick.rounds.a4.tiles.reul.gloss": "marcador de objeto (tras vocal)"
     },
     "minigame:s4-life-v2-q1-check": {
       "dialogue.0.npc": "¿Qué le sirvo?",
@@ -189,13 +189,13 @@
       "rolePlay.scene.nodes.t4.replies.thanks.text.gloss": "Gracias.",
       "rolePlay.scene.nodes.t4.replies.how-much.text.gloss": "¿Cuánto cuesta?",
       "rolePlay.scene.nodes.t1.replies.price.why": "Eso dice un precio. El mesero pregunta qué quieres.",
-      "rolePlay.scene.nodes.t2a.replies.tasty.why": "Todavía no has comido. Pregunta cuánto cuesta.",
+      "rolePlay.scene.nodes.t2a.replies.tasty.why": "Eso dice qué tal sabe. Pregunta cuánto cuesta.",
       "rolePlay.scene.nodes.t2a.replies.bye.why": "Eso es una despedida. Primero pregunta el precio.",
       "rolePlay.scene.nodes.t3a.replies.mwo.why": "Esa es la pregunta del mesero. Da el dinero: aquí tiene.",
       "rolePlay.scene.nodes.t3a.replies.not-spicy.why": "Eso habla del picante. El mesero te dijo el precio.",
       "rolePlay.scene.nodes.t2b.replies.ate.why": "Todavía no has comido. Pregunta cuánto cuesta.",
       "rolePlay.scene.nodes.t2b.replies.bye.why": "Eso es una despedida. Primero pregunta el precio.",
-      "rolePlay.scene.nodes.t3b.replies.tasty.why": "Todavía no has comido. El mesero te dijo el precio: paga.",
+      "rolePlay.scene.nodes.t3b.replies.tasty.why": "Eso dice qué tal sabe. El mesero te dijo el precio: paga.",
       "rolePlay.scene.nodes.t3b.replies.mwo.why": "Esa es la pregunta del mesero. Da el dinero: aquí tiene.",
       "rolePlay.scene.nodes.t4.replies.price.why": "Eso dice un precio. El mesero pregunta si quieres agua.",
       "rolePlay.scene.nodes.t4.replies.how-much.why": "Ya pagaste. El mesero te ofrece agua.",

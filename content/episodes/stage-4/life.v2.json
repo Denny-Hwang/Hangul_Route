@@ -317,29 +317,31 @@
           "rounds": [
             {
               "id": "a1",
+              "gapKind": "particle",
               "sentence": {
-                "ko": "___ 주세요.",
-                "romanization": "___ juseyo",
-                "en": "Tteokbokki, please."
+                "ko": "김치___ 어때요?",
+                "romanization": "gimchi___ eottaeyo",
+                "en": "How is the kimchi?"
               },
               "tiles": [
                 {
-                  "ko": "라면",
-                  "romanization": "ramyeon",
-                  "en": "instant noodles"
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
                 },
                 {
-                  "ko": "떡볶이",
-                  "romanization": "tteokbokki",
-                  "en": "stir-fried rice cakes"
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
                 },
                 {
-                  "ko": "김밥",
-                  "romanization": "gimbap",
-                  "en": "seaweed rice roll"
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
                 }
               ],
-              "answerIndex": 1
+              "answerIndex": 1,
+              "filledRomanization": "gimchiga eottaeyo"
             },
             {
               "id": "a2",
@@ -395,29 +397,31 @@
             },
             {
               "id": "a4",
+              "gapKind": "particle",
               "sentence": {
-                "ko": "맛이 ___?",
-                "romanization": "masi ___",
+                "ko": "맛___ 어때요?",
+                "romanization": "mat___ eottaeyo",
                 "en": "How does it taste?"
               },
               "tiles": [
                 {
-                  "ko": "주세요",
-                  "romanization": "juseyo",
-                  "en": "please give me"
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker (after a final consonant)"
                 },
                 {
-                  "ko": "어때요",
-                  "romanization": "eottaeyo",
-                  "en": "how is it"
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker (after a vowel)"
                 },
                 {
-                  "ko": "드릴까요",
-                  "romanization": "deurilkkayo",
-                  "en": "shall I get you"
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
                 }
               ],
-              "answerIndex": 1
+              "answerIndex": 0,
+              "filledRomanization": "masi eottaeyo"
             }
           ]
         },
@@ -722,7 +726,7 @@
                       "en": "It is tasty."
                     },
                     "kind": "lessNatural",
-                    "whyEn": "You have not eaten yet. Ask how much it is."
+                    "whyEn": "That tells how it tastes. Ask how much it is."
                   },
                   {
                     "id": "bye",
@@ -842,7 +846,7 @@
                       "en": "It is tasty."
                     },
                     "kind": "lessNatural",
-                    "whyEn": "You have not eaten yet. The server told you the price, so pay."
+                    "whyEn": "That tells how it tastes. The server told you the price, so pay."
                   },
                   {
                     "id": "mwo",
@@ -1588,7 +1592,7 @@
     {
       "id": "n3",
       "kind": "culture",
-      "textEn": "Some people say {ko:잘 먹겠습니다} (I will eat well) at the table, before they pick up the spoon. No rule settles whether saying it is right or wrong.",
+      "textEn": "Some people say {ko:잘 먹겠습니다} (I will eat well) just before they start a meal. No rule settles whether saying it is right or wrong.",
       "sources": [
         {
           "title": "Online Ganada question and answer on the meal phrase, titled 잘먹겠습니다",
@@ -1609,7 +1613,7 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-30): both pages opened. The newspaper's lead calls the phrase what is said at a laid table before lifting the spoon, used often by some people (사람에 따라서), and reports views that differ on when it fits; the NIKL Online Ganada answer of 2026-01-13 says no rule governs it, so right or wrong is hard to say, and finds no clear ground to call it wrong. These are the two sources the Stage 6 Food note n2 cites for the same phrase; this note keeps its hedge.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read and the quotes found. 'Some people' (not 'many' or 'Koreans'), 'before they pick up the spoon' (숟가락을 들기 전) and 'No rule settles' (규정으로 정해 놓은 것은 없습니다) say no more than the sources. No claim about origin, about who pays, about the after-meal phrase or about everyone. The cell models 잘 먹었습니다 after the meal in its dialogues only, as one polite reply to the server's question; the note claims nothing about it. Institution name as of the access date: 국립국어원 (unchanged); the newspaper is a second source, the allowlisted one is first.\nreviser (2026-10-30): no change.\npass 3 (third pass, 2026-10-30): {ko:잘 먹겠습니다} romanizes as jal meokgetseumnida with the converter; es and ko keep 'some people' and the no-rule hedge. Outcome: confirmed."
+        "notes": "pass 1 (author sourcing, 2026-10-30): both pages opened. The newspaper's lead calls the phrase what is said at a laid table before lifting the spoon, used often by some people (사람에 따라서), and reports views that differ on when it fits; the NIKL Online Ganada answer of 2026-01-13 says no rule governs it, so right or wrong is hard to say, and finds no clear ground to call it wrong. These are the two sources the Stage 6 Food note n2 cites for the same phrase; this note keeps its hedge.\npass 2 (MAR culture and facts, 2026-10-30): both pages re-read and the quotes found. 'Some people' (not 'many' or 'Koreans'), 'before they pick up the spoon' (숟가락을 들기 전; reworded by the fix-stage reviser below) and 'No rule settles' (규정으로 정해 놓은 것은 없습니다) say no more than the sources. No claim about origin, about who pays, about the after-meal phrase or about everyone. The cell models 잘 먹었습니다 after the meal in its dialogues only, as one polite reply to the server's question; the note claims nothing about it. Institution name as of the access date: 국립국어원 (unchanged); the newspaper is a second source, the allowlisted one is first.\nreviser (2026-10-30): no change.\npass 3 (third pass, 2026-10-30): {ko:잘 먹겠습니다} romanizes as jal meokgetseumnida with the converter; es and ko keep 'some people' and the no-rule hedge. Outcome: confirmed.\nfix-stage reviser (2026-10-31, after the independent PR review): 'at the table, before they pick up the spoon' became 'just before they start a meal', the wording of the Stage 6 Food note n2. The spoon detail rested only on the newspaper's lead, which is not an allowlisted institution; the allowlisted NIKL answer supports the no-rule hedge, and the note now claims nothing more specific than that people say it before a meal. es and ko changed to match."
       }
     }
   ],
@@ -1619,7 +1623,7 @@
     "reviewedBy": "MAR",
     "reviewedAt": "2026-10-30",
     "notes": [
-      "MAR (F-CURR-002 section 9.2, 2026-10-30): author, three checker passes (language with the F-CNT-002 converter and polite register; culture and facts against each source; learning design), a reviser and a third pass. The passes ran one after another in the authoring session, which had no tool to start separate reviewer agents. No native-speaker or expert review is claimed.",
+      "MAR (F-CURR-002 section 9.2, 2026-10-30): author, three checker passes (language with the F-CNT-002 converter and polite register; culture and facts against each source; learning design), a reviser and a third pass, run one after another in the authoring session, which had no tool to start separate reviewer agents. No native-speaker or expert review is claimed.",
       "Language: the server speaks polite 해요체 with the humble offer 드릴까요 and the honorific 드세요 / 드셨어요; Hoya answers in 해요체 and uses the set phrases in 합쇼체 (감사합니다, 잘 먹겠습니다, 잘 먹었습니다). Every romanization matches the converter.",
       "Language findings fixed by the reviser: q1 Practice t1 offered 김밥 주세요, and the server then asks 매워요? (gimbap is seldom spicy), so the second order is 라면 주세요; 드세요 and 드셨어요 are glossed 'said to show respect', not 'polite'; why lines hold no Korean tokens, so es holds no Hangul; es 'Que aproveche' is 'Buen provecho'; the q3 reward 'Well Said!' is 'You Read the Phrases!'.",
       "Culture and facts: three notes, each with two sources and NIKL first (표준국어대사전 분식집 and 분식4; 떡볶이 and 가래떡; Online Ganada on 잘먹겠습니다 with the Seoul Shinmun article second, the pair of the Stage 6 Food note n2). Fixed: n1 'a small restaurant' became 'a place' (the definition does not say small); n2 dropped 'so not every kind is spicy', an inference.",
@@ -1628,7 +1632,9 @@
       "Learning design (cont.): lesson-recycle 6 of 11, 5 of 12 and 2 of 6 Practice and Check items from earlier quests (Volume 1's 맛이 어때요, 맛있어요, 매워요, 안 매워요; Stage 3's 김치가 / 김밥이 맛있어요; Stage 4 Letters' 감사합니다). The retired pat:samcheon-wonieyo and pat:icheon-wonieyo are not taught again: the q2 Check builds 떡볶이 얼마예요? and 여기 있어요.",
       "Learning design (cont.): triples Role Play / Cloze Pick / Tap to Respond, Role Play / Tap to Respond / Sentence Builder, Sentence Builder / Role Play / Cloze Pick; none is a Volume 1 triple and the three Checks differ. Every Role Play scene has 4 turns on every way (q1 4 ways, q2 2, q3 2) and every way ends on its closing line; off, each plays Tap to Respond on its main path.",
       "Learning design (cont.): no Dictation. Sound changes are heard, never typed: 떡볶이 [떡뽀끼], 감사합니다 [감사함니다], 맛있게 [마싣께], 먹겠습니다 [먹껟씀니다]. 먹겠습니다 and 먹었습니다 do not sound alike, and no heard round offers a same-sounding pair.",
-      "Third pass (2026-10-30): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (built-in pct 0)."
+      "Third pass (2026-10-30): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (built-in pct 0). Independent checker pass (2026-10-31): the PR review by two separate reviewer agents; the fix stage below applied its findings, and it passed the es and ko strings.",
+      "Fix stage, load (2026-10-31): counting every section 4.2 item, q1 taught 10 new review items, over the section 9.3 cap of 8. Its Apply now asks the subject particle of 김치가 어때요? and 맛이 어때요? (Volume 1 sentences), so q1 first teaches 8: 2 Discover exchanges, 2 Role Play exchanges, 뭐 드릴까요 and 물 드릴까요 with 드릴까요, and the Check's 김밥 주세요.",
+      "Fix stage (2026-10-31): n3 says 'just before they start a meal', the Stage 6 n2 wording; q2's 맛있어요 nudges rest on the price, not 'not eaten yet'. ko: the q1 titles keep the server's view (무엇을 드릴까요?, 무엇을 드시겠어요?), captions name their part ('드릴까요', '먹겠'의 '겠'), n1 says 밀가루 같은 것으로. es and ko follow every English change."
     ]
   },
   "contentVer": 1

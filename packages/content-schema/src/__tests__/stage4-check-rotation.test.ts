@@ -5,6 +5,7 @@ import { PRODUCE_KINDS, READ_MEANING_KINDS, lintCurriculum, lintLessonCell } fro
 import { normalizeKo } from '../lesson-lint-items';
 import { rolePlayIssues } from '../role-play-rules';
 import { Stage1TableSchema, reviewItemsOf } from '../review-items/build';
+import { lessonOccurrences } from '../review-items/extract';
 import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from '../review-items/sources';
 import { StableIdSnapshotSchema } from '../review-items/stable-ids';
 import { LessonCellSchema, type LessonCell, type LessonQuest, type LessonScope } from '../schemas/lesson';
@@ -75,8 +76,9 @@ const repeated = (list: readonly string[]): string[] => list.filter((x, i) => li
 
 describe('Stage 4 Check rotation (F-CURR-002 section 7.1, row CM-3A S4)', () => {
   it('every section 9.3 rule passes with zero findings for Stage 4, the frozen ids included', () => {
-    // Today, so a source accessed on a later content row's day (Volume 2, row CM-43 S4) is not in the future.
-    const findings = lintCurriculum(tree, { today: new Date().toISOString().slice(0, 10) }).filter(
+    // A fixed day on or after the newest source access date (Volume 2, row CM-43 S4: 2026-10-30), so the run does not
+    // hang on the clock.
+    const findings = lintCurriculum(tree, { today: '2026-10-30' }).filter(
       (f) => f.file.startsWith('content/episodes/stage-4/') || (f.rule === 'items-stable-id' && f.file === REVIEW_SNAPSHOT_FILE),
     );
     expect(findings.map((f) => `${f.rule} ${f.severity} ${f.file} ${f.path}: ${f.message}`)).toEqual([]);
@@ -179,13 +181,33 @@ describe('Stage 4 review-item ids (F-CURR-002 section 4.2, row CM-3A S4)', () =>
     expect(volume1.length).toBeLessThanOrEqual(123);
   });
 
-  it('keeps the Volume 2 load: Stage 4 Food Volume 2 first teaches no more items than the largest Volume 1 Stage 4 cell (30), re-asking Volume 1 for the rest (row CM-43 S4)', () => {
+  it('keeps the Volume 2 load: each Stage 4 Food Volume 2 quest\'s first-taught review items, every section 4.2 item counted (section 9.3, row CM-43 S4)', () => {
     const firstCell = (cells: readonly string[]): string | undefined => cells.find((c) => c.startsWith('episode:'));
     const food2 = built.items.filter((i) => firstCell(i.cells) === 'episode:stage4-life-v2');
     // The engine shows an item whose only source is Volume 2 only with `volumes` on (row CM-13), so the Volume 1 load
     // above, which the 60-day simulation holds, is unchanged.
     expect(food2.length).toBeGreaterThan(0);
-    expect(food2.length).toBeLessThanOrEqual(30);
+    // Every Discover item and every scored round's answer counts (section 4.2), not the Discover items alone: each new
+    // item is placed in the first quest that asks it.
+    const source = lessonSourcesOfTree(tree).find((s) => s.file === 'content/episodes/stage-4/life.v2.json');
+    if (source === undefined) throw new Error('no Stage 4 Food Volume 2 source');
+    const occurrences = lessonOccurrences(source, Stage1TableSchema.parse(tree.get(REVIEW_STAGE1_FILE)).symbols);
+    const questOf = (item: (typeof food2)[number]): number => {
+      const first = occurrences.find(
+        (o) => normalizeKo(o.ko) === normalizeKo(item.ko) && normalizeKo(o.reply?.ko ?? '') === normalizeKo(item.reply?.ko ?? ''),
+      );
+      return Number(/quests\[(\d+)\]/.exec(first?.at ?? '')?.[1] ?? -1);
+    };
+    const count = (items: typeof food2): number[] => [0, 1, 2].map((q) => items.filter((i) => questOf(i) === q).length);
+    // Taught by no other cell: q1 8 and q3 7; q2 9, its 8 newly frozen ids and exc:samcheon-wonieyo, a frozen id no
+    // other cell teaches any more.
+    const own = food2.filter((i) => i.cells.every((c) => c === 'episode:stage4-life-v2'));
+    expect(count(own)).toEqual([8, 9, 7]);
+    // First met on the route here, Stage 6 Food's items included (a Stage 4 learner meets 여기 있어요 and its thanks here
+    // first): q2 is 10. The reading of the section 9.3 cap for such items is an open item for the owner in the CM-43 S4
+    // decision record; q1 is within 8 on every reading.
+    expect(count(food2)).toEqual([8, 10, 8]);
+    expect(food2.every((i) => questOf(i) >= 0)).toBe(true);
   });
 
   it('a removed item is retired: in no row, kept in the retired table for reports', () => {
