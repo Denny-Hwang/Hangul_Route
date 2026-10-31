@@ -9,7 +9,8 @@ import type { MinigameScope } from './minigame-config';
  * runs the effects it asks for (the test lanes cannot render components, §5).
  *
  * Rules in one place: pairing is tap-tap in either order (no drag); a tap on
- * the selected tile clears it; a wrong pair ambers the SECOND tile for 600 ms
+ * the selected tile keeps it selected (a bounce never un-selects,
+ * AMENDMENTS-TOUCH 6.1); a wrong pair ambers the SECOND tile for 600 ms
  * and leaves the first selected, and is scored against the FIRST-selected
  * tile's pair (key `b<board>:<pairId>`, so a miss and the later match share one
  * key and the run store keeps the later answer as a retry); after a pair's
@@ -114,12 +115,14 @@ function selectStep(state: PicWordFlowState, event: Extract<FlowEvent, { type: '
   if (state.status !== 'playing' || state.matched.includes(event.pairId)) return unchanged(state);
   const first = state.selected;
 
-  // First tile, a tile on the same side, or the selected tile again: no pair is attempted.
+  // The selected tile again changes nothing: a child's bounce or a double tap never un-selects (AMENDMENTS-TOUCH 6.1).
+  if (first !== null && first.side === event.side && first.pairId === event.pairId) return unchanged(state);
+
+  // First tile, or another tile on the same side: the selection moves, no pair is attempted.
   if (first === null || first.side === event.side) {
-    const cleared = first !== null && first.pairId === event.pairId;
     const dropped = withoutFlash(state);
     return {
-      state: { ...dropped.state, selected: cleared ? null : { side: event.side, pairId: event.pairId } },
+      state: { ...dropped.state, selected: { side: event.side, pairId: event.pairId } },
       effects: dropped.effects,
     };
   }
