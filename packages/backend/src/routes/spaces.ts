@@ -15,7 +15,8 @@ import { Hono, type Context } from 'hono';
 import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
-import { can, type Action, type Actor } from '../lib/can';
+import { allowedOnSpace, can, type Action, type Actor } from '../lib/can';
+import { rosterAttention, rosterGates, spacesAttention } from '../lib/attention';
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { learnerCapOf, schoolUsage } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
@@ -24,7 +25,7 @@ import { learnerReadScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
 import { lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
 import { standingMoveOut, waitingMoveInto } from '../lib/moves';
-import type { TransferEnv } from '../lib/transfer';
+import { classTransferEnabled, type TransferEnv } from '../lib/transfer';
 import { recordServerEvent } from '../lib/server-events';
 import { id, spaceEventId, type Account } from '../store';
 
@@ -152,21 +153,28 @@ spacesRoutes.get('/', async (c) => {
     if (space) rows.push({ m, space });
   }
   rows.sort((a, b) => b.space.createdAt.localeCompare(a.space.createdAt));
-  const spaces = [];
+  const listed = [];
   for (const { m, space } of rows) {
     const members = await db.membersOf(space.id);
-    const manage = can(actor, 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) });
-    spaces.push({
+    const allowed = actor.kind === 'account' ? allowedOnSpace(actor, await spaceContext(db, space)) : new Set<Action>();
+    listed.push({ m, space, members, allowed, classes: (await db.childSpaces(space.id)).length });
+  }
+  // [GX-W] AMENDMENTS-GROWNUP-UX section 12: what waits for this grown-up, counts only, read once for every space.
+  const attention = await spacesAttention(db, listed, now, c.env);
+  const spaces = listed.map(({ m, space, members, allowed, classes }) => {
+    const waiting = attention.get(space.id);
+    return {
       space: publicSpace(space),
       role: m.role,
       counts: {
         learners: members.filter((x) => x.memberKind === 'learner').length,
         accounts: members.filter((x) => x.memberKind === 'account').length,
-        classes: (await db.childSpaces(space.id)).length,
+        classes,
       },
-      ...(manage ? liveCode(space, now) : { joinCode: null, joinCodeExpiresAt: null }),
-    });
-  }
+      ...(allowed.has('space.manage') ? liveCode(space, now) : { joinCode: null, joinCodeExpiresAt: null }),
+      ...(waiting ? { attention: waiting } : {}),
+    };
+  });
   return ok(c, { spaces });
 });
 
@@ -559,10 +567,16 @@ spacesRoutes.get('/:id/roster', async (c) => {
   const account = await requireCan(c, db, space, 'summary.read');
   if (!('id' in account)) return account;
   const now = new Date();
+  const actor = await accountActor(db, account);
+  const ctx = await spaceContext(db, space);
+  const allowed = actor.kind === 'account' ? allowedOnSpace(actor, ctx) : new Set<Action>();
+  // [GX-W] AMENDMENTS-GROWNUP-UX section 12: the rows behind `pending` and `incoming` are settled before the members are
+  // read, so a move executed on this read lists its learner as a member only. Each field needs the action that decides it.
+  const gates = rosterGates(space.kind, allowed, classTransferEnabled(c.env));
+  const { members, pending, incoming } = await rosterAttention(db, space, gates, now, c.env, () => db.membersOf(space.id));
   // planProgress is filtered to this space's own plans (archived ones included): F-SPACE-002 T-1a.
   const planIds = new Set((await db.plansOf(space.id)).map((p) => p.id));
   const learners = [];
-  const members = await db.membersOf(space.id);
   // [TV] each learner's scope, read once for the whole roster (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2)
   const scopes = await learnerReadScopes(db, space.kind, members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId), c.env);
   for (const m of members) {
@@ -584,14 +598,13 @@ spacesRoutes.get('/:id/roster', async (c) => {
       summary: rosterSummary(snapshot?.summary, planIds, space.kind, { joinedAt: m.joinedAt, scope: scopes.get(learner.id)?.scope, memory: scopes.get(learner.id)?.memory }),
       lastSyncedAt: snapshot?.updatedAt ?? null,
       scope: scopes.get(learner.id)?.scope ?? 'base',
+      ...(pending.has(learner.id) ? { pending: pending.get(learner.id) } : {}),
     });
   }
   learners.sort((a, b) => b.lastActiveAt.localeCompare(a.lastActiveAt));
-  const actor = await accountActor(db, account);
-  const ctx = await spaceContext(db, space);
-  const manage = can(actor, 'space.manage', { kind: 'space', ctx });
+  const manage = allowed.has('space.manage');
   // [SA] section 3.6 and 5.3: the seat counts the console shows, and whether this grown-up may rename the space.
-  const canRename = can(actor, 'space.rename', { kind: 'space', ctx });
+  const canRename = allowed.has('space.rename');
   return ok(c, {
     space: publicSpace(space),
     learners,
@@ -599,6 +612,7 @@ spacesRoutes.get('/:id/roster', async (c) => {
     seats: await rosterSeats(db, space, members.filter((m) => m.memberKind === 'learner').length, now),
     canRename,
     openMoves: canRename ? await hasOpenMoves(db, space.id) : false,
+    ...(incoming === null ? {} : { incoming }),
   });
 });
 
