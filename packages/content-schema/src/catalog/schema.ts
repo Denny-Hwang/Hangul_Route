@@ -17,11 +17,25 @@ export const CatalogCellSchema = z.object({
   title: z.string(),
   status: EpisodeStatusSchema,
   minutes: z.number().int(),
+  /** The quests of the cell's first volume (`episodeId`), in cell order: what its route day and its Done read. */
   questIds: z.array(z.string()),
   /** The episode's `optionalQuestIds` (F-CURR-002 section 4.2): listed and played, never needed for the cell to be done. */
   optionalQuestIds: z.array(z.string()).optional(),
+  /**
+   * The cell's shipped grid episodes, ordered by volume (F-CURR-002 §6.2 and F-STORY-005 PR 5.8, row CM-40):
+   * `episodeId` first, then `<episodeId>-v2`. A later volume's quests are catalogue quests whose `episodeId` is its own
+   * id; it adds no route day. Absent reads as `[episodeId]` (`cellEpisodeIds`), so a catalogue stored before CM-40
+   * still parses; the assembled catalogue fills it on every cell.
+   */
+  episodeIds: z.array(z.string()).optional(),
 });
 export type CatalogCell = z.infer<typeof CatalogCellSchema>;
+
+/** A cell's grid episodes ordered by volume: `episodeIds`, or the first volume alone when a catalogue has none. */
+export const cellEpisodeIds = (cell: Pick<CatalogCell, 'episodeId' | 'episodeIds'>): readonly string[] => cell.episodeIds ?? [cell.episodeId];
+
+/** The id of volume `volume` of the cell whose first volume is `episodeId` (`episode:stage2-life`, 2 -> `episode:stage2-life-v2`). */
+export const volumeEpisodeId = (episodeId: string, volume: number): string => (volume <= 1 ? episodeId : `${episodeId}-v${volume}`);
 
 export const CatalogQuestSchema = z.object({
   id: z.string(),
@@ -114,6 +128,11 @@ export const CatalogSchema = z
       if (seenCells.has(key)) fail(`Two cells share the cell ${key}`);
       seenCells.add(key);
       if (cell.episodeId !== `episode:${key}`) fail(`Cell ${key} must have the episode id episode:${key}`);
+      // Row CM-40: the first volume first, then each later volume by number (`<episodeId>-v2`).
+      const volumes = cellEpisodeIds(cell);
+      if (volumes.some((id, i) => id !== volumeEpisodeId(cell.episodeId, i + 1))) {
+        fail(`Cell ${key} must list its episodes by volume: ${cell.episodeId}, then ${volumeEpisodeId(cell.episodeId, 2)}`);
+      }
     }
 
     // Unique ids inside each list.
@@ -124,6 +143,8 @@ export const CatalogSchema = z
 
     const questById = new Map(catalog.quests.map((q) => [q.id, q]));
     const cellByEpisode = new Map(catalog.cells.map((c) => [c.episodeId, c]));
+    // A later volume's episode (row CM-40) -> its cell.
+    const cellOfLaterVolume = new Map(catalog.cells.flatMap((c) => cellEpisodeIds(c).slice(1).map((id) => [id, c] as const)));
 
     // Cells only list lesson quests that belong to them.
     for (const cell of catalog.cells) {
@@ -139,12 +160,15 @@ export const CatalogSchema = z
 
     // Lesson quests sit in a cell that lists them, with the cell's stage and theme.
     for (const quest of catalog.quests.filter((q) => q.kind === 'lesson')) {
-      const cell = cellByEpisode.get(quest.episodeId);
+      const later = cellOfLaterVolume.get(quest.episodeId);
+      const cell = cellByEpisode.get(quest.episodeId) ?? later;
       if (cell === undefined) {
         fail(`Lesson quest ${quest.id} names the unknown cell ${quest.episodeId}`);
         continue;
       }
-      if (!cell.questIds.includes(quest.id)) fail(`Lesson quest ${quest.id} is not listed by its cell`);
+      // A later volume's quests sit on its own episode, never in the first volume's list.
+      if (later === undefined && !cell.questIds.includes(quest.id)) fail(`Lesson quest ${quest.id} is not listed by its cell`);
+      if (later !== undefined && cell.questIds.includes(quest.id)) fail(`Lesson quest ${quest.id} of ${quest.episodeId} is listed by the first volume`);
       if (quest.stage !== cell.stage || quest.theme !== cell.theme) {
         fail(`Quest ${quest.id} must carry the stage and theme of its cell`);
       }

@@ -49,6 +49,23 @@ describe('lessonChunkProblems', () => {
     expect(isStartBundle(bundles[1].url)).toBe(false);
   });
 
+  it('checks the headers chunks and a Volume 2 body chunk like any other (F-CURR-002 row CM-40)', () => {
+    const manifest = [
+      { name: 'lessons-cell-stage2-rites', hash: '0123456789abcdef' },
+      { name: 'lessons-cell-stage2-rites-v2', hash: '1123456789abcdef' },
+      { name: 'lessons-headers-en', hash: '2123456789abcdef' },
+    ];
+    const start = { url: START, text: `var m={"a":"0123456789abcdef","b":"1123456789abcdef"},h={"en":"2123456789abcdef"};` };
+    const bundles = [start, ...manifest.map((m) => chunk(m.name, m.hash))];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    // Volume 1's bundle is never taken for Volume 2's (the md5 suffix ends the name).
+    expect(lessonChunkUrls(manifest.slice(0, 1), bundles)).toEqual([bundles[1].url]);
+    const missing = bundles.filter((b) => !b.url.includes('lessons-headers-en'));
+    expect(lessonChunkProblems({ manifest, bundles: missing, precached: all(missing) })).toEqual(['lessons-headers-en has no web bundle: the chunk is missing from the build']);
+    const pulledIn = [{ url: START, text: `${start.text}e.CHUNK_HASH="2123456789abcdef";` }, ...bundles.slice(1)];
+    expect(lessonChunkProblems({ manifest, bundles: pulledIn, precached: all(pulledIn) })).toContain(`lessons-headers-en is in the start bundle ${START}: a static import pulled the chunk in`);
+  });
+
   it('fails a chunk missing from the build, and one missing from the precache (the clip gaps mechanism)', () => {
     const bundles = sound().filter((b) => !b.url.includes('lessons-titles-es'));
     expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual(['lessons-titles-es has no web bundle: the chunk is missing from the build']);

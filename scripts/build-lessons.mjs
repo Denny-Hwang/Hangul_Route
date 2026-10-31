@@ -4,22 +4,28 @@
 //
 // Reads the upper-stage lesson cells, content/episodes/stage-<n>/<theme>.json for
 // n in 2, 3, 4, 6, 7 (Stage 1 is hand-written TypeScript, Stage 5 holds the story
-// books), drops `status: "draft"` cells (they stay "Coming later"), reads the es / ko
-// glosses of content/i18n/<locale>/lessons-stage<n>-<theme>.json and writes, under
-// apps/mobile/src/content/__generated__/:
+// books), and beside each its Volume 2, <theme>.v2.json (F-CURR-002 §5.1 and §6.2, row CM-40),
+// drops `status: "draft"` cells (they stay "Coming later"), reads the es / ko glosses of
+// content/i18n/<locale>/lessons-stage<n>-<theme>.json (lessons-stage<n>-<theme>-v2.json for a
+// Volume 2) and writes, under apps/mobile/src/content/__generated__/:
 //
 //   lessons-index.ts                                  the manifest (imported at start)
-//       LESSON_EPISODES        Episode[]               one shipped grid episode per ready cell
-//       LESSON_QUESTS          LessonQuestHeader[]     its quests: ids, English titles, blurbs, minutes, cards (no steps)
+//       LESSON_EPISODES        LessonManifestEpisode[] one shipped grid episode per ready cell and volume, no display lines
+//       LESSON_QUESTS          LessonQuestHeader[]     its quests: ids, English titles, minutes, cards (no steps, no blurbs)
 //       LESSON_TEACHES         Record<quest, jamo[]>   the jamo ids each quest's Discover step teaches (only quests that teach)
-//       LESSON_CELL_CHUNKS     Record<episode, hash>   the hash of each cell's body chunk
-//       LESSON_TITLE_CHUNKS    Record<locale, hash>    the hash of each locale's title chunk
-//       loadLessonCell / loadLessonTitles             one literal `import()` per chunk
-//   lesson-chunks/lessons-cell-stage<n>-<theme>.ts    one body chunk per ready cell (on demand)
+//       LESSON_CELL_CHUNKS     Record<episode, hash>   the hash of each cell's (and volume's) body chunk
+//       LESSON_TITLE_CHUNKS    Record<locale, hash>    the hash of each overlay locale's title chunk
+//       LESSON_HEADER_CHUNKS   Record<locale, hash>    the hash of each UI locale's headers chunk (row CM-40)
+//       loadLessonCell / loadLessonTitles / loadLessonHeaders   one literal `import()` per chunk
+//   lesson-chunks/lessons-cell-stage<n>-<theme>[-v2].ts   one body chunk per ready cell and volume (on demand)
 //       CHUNK_HASH, LESSON_STEPS (by quest id), LESSON_SCOPES (by minigame ref),
 //       LESSON_OVERLAYS (es / ko of the steps and the minigame entities)
 //   lesson-chunks/lessons-titles-<locale>.ts          one title chunk per overlay locale (active locale only)
-//       CHUNK_HASH, LESSON_TITLE_OVERLAYS (the episode and quest titles, subtitles, intros, blurbs, teasers)
+//       CHUNK_HASH, LESSON_TITLE_OVERLAYS (the episode and quest titles)
+//   lesson-chunks/lessons-headers-<locale>.ts         one headers chunk per UI locale, English included (row CM-40),
+//                                                     loaded before the first screen as the title chunk is
+//       CHUNK_HASH, LESSON_EPISODE_HEADERS and LESSON_QUEST_HEADERS (English: an episode's subtitle, Hoya intro and
+//       reward cards, a quest's blurb and teaser), LESSON_HEADER_OVERLAYS (es / ko: their glosses)
 //
 // and the catalogue rows that come from content/ (F-CURR-002 §9.1, row CM-6), under
 // packages/content-schema/src/catalog/:
@@ -99,7 +105,8 @@ export const CHUNK_DIR = "lesson-chunks";
 export const BUDGET = Object.freeze({
   perQuestRawAvg: 9_000, // average per quest in a cell (S4-1 raise, measured Stage 4 cells 24.1-25.8 KB for three): 54 KB for six, 27 KB for three
   manifestRaw: 60_000, // F-CURR-002 CM-5: the start-loaded lessons-index.ts (372,236 B before the split)
-  titleChunkRaw: 30_000, // F-CURR-002 CM-5: one locale's title chunk
+  titleChunkRaw: 30_000, // F-CURR-002 CM-5: one locale's title chunk (titles only since CM-40: es 6,133 B, ko 6,324 B on Volume 1)
+  headersChunkRaw: 40_000, // F-CURR-002 CM-40: one locale's headers chunk (the display lines; Volume 1: en 15,095, es 14,800, ko 15,751 B; about 31 KB projected with Volume 2)
   cellChunkRaw: 90_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (largest at CM-5: stage2-letters, 61,381 B for six quests)
   cellChunkGzip: 16_000, // F-CURR-002 CM-5: the same, gzip (largest at CM-5: stage2-letters, 11,070 B)
   stageRaw: 220_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000 for the stage module)
@@ -277,15 +284,36 @@ export const isSignedOff = (review) =>
 
 const PICK_QUEST = ["id", "titleEn", "blurbEn", "teaserEn", "estimatedMinutes", "steps", "rewardCardId"];
 
+/**
+ * A cell file's name -> its theme and volume (F-CURR-002 §6.2, row CM-40): `<theme>.json` is Volume 1 and
+ * `<theme>.v2.json` the cell's Volume 2, beside it; a cell holds two volumes at most (`MAX_EPISODES_PER_CELL`), so
+ * any other name is not a cell file. Null for a name that is not one.
+ */
+export function cellFileName(name) {
+  const m = /^([a-z]+)(?:\.v([0-9]+))?\.json$/.exec(name);
+  if (m === null || !THEMES.includes(m[1])) return null;
+  const volume = m[2] === undefined ? 1 : Number(m[2]);
+  return volume === 2 ? { theme: m[1], volume } : m[2] === undefined ? { theme: m[1], volume: 1 } : null;
+}
+
+/** The part of a cell's ids after the stage: `<theme>`, or `<theme>-v2` for its Volume 2 (`episode:stage2-life-v2`). */
+export const cellKey = (theme, volume) => (volume === 1 ? theme : `${theme}-v${volume}`);
+
 /** One parsed cell file -> its episode, quests and scopes; throws ContentError on what it cannot emit. */
 export function shapeCell(cell, rel) {
   if (!isObject(cell)) throw new ContentError("a lesson cell is an object", rel);
   const stageNo = Number(/stage-(\d)\//.exec(rel)?.[1]);
-  const theme = rel.split("/").pop().replace(/\.json$/, "");
+  const file = cellFileName(rel.split("/").pop());
+  if (file === null) throw new ContentError(`a lesson cell file is named after its theme (${THEMES.join(", ")}): <theme>.json, or <theme>.v2.json for its Volume 2`, rel);
+  const { theme, volume } = file;
   const stage = `stage${stageNo}`;
-  const id = `episode:${stage}-${theme}`;
-  if (cell.id !== id) throw new ContentError(`id must be ${id} (the file's stage and theme)`, rel);
+  const own = cellKey(theme, volume);
+  const id = `episode:${stage}-${own}`;
+  if (cell.id !== id) throw new ContentError(`id must be ${id} (the file's stage, theme and volume)`, rel);
   if (cell.stage !== stage || cell.theme !== theme) throw new ContentError(`stage and theme must be ${stage} and ${theme}`, rel);
+  if ((cell.volume ?? 1) !== volume) {
+    throw new ContentError(volume === 1 ? "a Volume 1 cell states no volume (Volume 2 is <theme>.v2.json)" : `a ${theme}.v${volume}.json cell has volume ${volume}`, rel);
+  }
   if (cell.status !== "draft" && cell.status !== "ready") throw new ContentError('status must be "draft" or "ready"', rel);
   if (cell.status === "ready" && !isSignedOff(cell.review)) {
     throw new ContentError(
@@ -299,13 +327,13 @@ export function shapeCell(cell, rel) {
   const shapedQuests = quests.map((quest, qi) => {
     const where = `${rel} quests[${qi}]`;
     if (!isObject(quest)) throw new ContentError("a quest is an object", where);
-    const questId = `quest:${stage}-${theme}-q${qi + 1}`;
+    const questId = `quest:${stage}-${own}-q${qi + 1}`;
     if (quest.id !== questId) throw new ContentError(`id must be ${questId}`, where);
     if (quest.addedIn !== undefined) stamps[questId] = addedInStamp(quest.addedIn, where);
     const steps = need(quest, "steps", where, "array");
     for (const scope of need(quest, "scopes", where, "array")) {
       const ref = need(scope, "ref", where);
-      if (!ref.startsWith(`minigame:s${stageNo}-${theme}-q${qi + 1}-`)) throw new ContentError(`scope ${ref} is not named after ${questId}`, where);
+      if (!ref.startsWith(`minigame:s${stageNo}-${own}-q${qi + 1}-`)) throw new ContentError(`scope ${ref} is not named after ${questId}`, where);
       if (scopes[ref] !== undefined) throw new ContentError(`scope ${ref} is listed twice`, where);
       scopes[ref] = runtimeScope(scope, `${where} ${ref}`);
     }
@@ -330,8 +358,10 @@ export function shapeCell(cell, rel) {
     estimatedMinutes: Math.max(3, Math.round(seconds / 60)),
     pillarTags: need(cell, "pillarTags", rel, "array"),
     status: "shipped",
+    // Row CM-40: a Volume 2 episode says so (`EpisodeSchema` ties it to the -v2 id); Volume 1 keeps the default.
+    ...(volume === 1 ? {} : { volume }),
   };
-  return { status: cell.status, stageNo, episode, quests: shapedQuests, scopes, stamps, notes: questNotes(cell, shapedQuests, rel), file: rel };
+  return { status: cell.status, stageNo, volume, episode, quests: shapedQuests, scopes, stamps, notes: questNotes(cell, shapedQuests, rel), file: rel };
 }
 
 /** The kinds of note a quest's Did you know? tip draws from, in this order (F-CURR-002 §5.7, row CM-3C). */
@@ -393,17 +423,28 @@ export function cellOverlays(shaped, files) {
 
 const sortedKeys = (obj) => Object.fromEntries(Object.keys(obj).sort().map((k) => [k, obj[k]]));
 
-// ---- chunks (F-CURR-002 §10, row CM-5) -----------------------------------------------------
+// ---- chunks (F-CURR-002 §10, rows CM-5 and CM-40) ----------------------------------------------
 
-/** The quest fields the start-loaded manifest keeps; `steps` goes to the cell's body chunk. */
-const QUEST_HEADER = PICK_QUEST.filter((k) => k !== "steps");
+/**
+ * The display lines (F-CURR-002 §10 decision record "Manifest fields", row CM-40): an episode's subtitle, Hoya intro
+ * and reward cards and a quest's blurb and teaser. They leave the start-loaded manifest for one precached "lesson
+ * headers" chunk per locale, English included, which the app loads before its first screen as it loads the titles.
+ */
+export const EPISODE_LINES = Object.freeze(["subtitleEn", "hoyaIntroEn", "rewardCardIds"]);
+export const QUEST_LINES = Object.freeze(["blurbEn", "teaserEn"]);
+/** The locales of the headers chunks: English (the lines themselves) and each overlay locale (their glosses). */
+export const HEADER_LOCALES = Object.freeze(["en", ...OVERLAY_LOCALES]);
+
+/** The quest fields the start-loaded manifest keeps: no steps (the cell's body chunk), no display lines (the headers). */
+const QUEST_HEADER = PICK_QUEST.filter((k) => k !== "steps" && !QUEST_LINES.includes(k));
 
 /**
  * A field of the body chunk: a quest's `steps.<stepId>....`, a game's glosses and a cell's notes (`culture.<noteId>.text`,
- * row CM-3C); every other episode or quest field is a title.
+ * row CM-3C); every other episode or quest field is a title (`title`) or a display line (the headers chunk).
  */
 const isBodyField = (id, field) =>
   overlayPrefix(id) === "minigame" || field.startsWith("steps.") || (overlayPrefix(id) === "episode" && field.startsWith("culture."));
+const isTitleField = (field) => field === "title";
 
 /**
  * The jamo ids a quest's Discover step introduces, in page order: `questTeaches`
@@ -424,31 +465,42 @@ export function discoverJamo(steps) {
 /** The content hash a chunk module carries (`CHUNK_HASH`) and the manifest names: sha256 of its data literal, 16 hex. */
 export const chunkHash = (text) => createHash("sha256").update(text, "utf8").digest("hex").slice(0, 16);
 
-/** `episode:stage2-letters` -> `lessons-cell-stage2-letters` (the file, and the name of its web bundle). */
+/**
+ * `episode:stage2-letters` -> `lessons-cell-stage2-letters` (the file, and the name of its web bundle); a Volume 2
+ * episode has a chunk of its own, `lessons-cell-stage2-letters-v2` (row CM-40: one chunk per cell and volume).
+ */
 export const cellChunkName = (episodeId) => `lessons-cell-${episodeId.replace(/^episode:/, "")}`;
 export const titleChunkName = (locale) => `lessons-titles-${locale}`;
+export const headersChunkName = (locale) => `lessons-headers-${locale}`;
 
 const emptyOverlays = () => Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, {}]));
 const overlaysLiteral = (o) => literal(Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, sortedKeys(o[l])])));
+const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== undefined).map((k) => [k, obj[k]]));
+const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 
 /**
  * Pure: ready shaped cells -> what each chunk holds and its hash.
- *   manifest  the episodes and the quest headers (no steps), English only
- *   cells     one body per cell: steps by quest id, scopes by ref, the es / ko glosses of both, and each
+ *   manifest  the episodes and the quest headers, English, without steps or display lines
+ *   cells     one body per cell and volume: steps by quest id, scopes by ref, the es / ko glosses of both, and each
  *             quest's Did you know? note (row CM-3C)
- *   titles    one table per locale: the episode and quest titles, subtitles, intros, blurbs, teasers
+ *   titles    one table per overlay locale: the episode and quest titles
+ *   headers   one per locale (row CM-40): English holds the display lines by episode and quest id; es and ko their glosses
  */
 export function planChunks(cells) {
   const ready = cells.filter((c) => c.status === "ready");
   const titles = emptyOverlays();
+  const lines = emptyOverlays();
   const cellChunks = ready.map((cell) => {
     const overlays = emptyOverlays();
     for (const locale of OVERLAY_LOCALES) {
       for (const [id, entry] of Object.entries(cell.overlays[locale])) {
-        const body = Object.entries(entry).filter(([field]) => isBodyField(id, field));
-        const title = Object.entries(entry).filter(([field]) => !isBodyField(id, field));
+        const fields = Object.entries(entry);
+        const body = fields.filter(([field]) => isBodyField(id, field));
+        const title = fields.filter(([field]) => !isBodyField(id, field) && isTitleField(field));
+        const line = fields.filter(([field]) => !isBodyField(id, field) && !isTitleField(field));
         if (body.length > 0) overlays[locale][id] = Object.fromEntries(body);
         if (title.length > 0) titles[locale][id] = Object.fromEntries(title);
+        if (line.length > 0) lines[locale][id] = Object.fromEntries(line);
       }
     }
     const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, q.steps])));
@@ -467,19 +519,31 @@ export function planChunks(cells) {
     const table = literal(sortedKeys(titles[locale]));
     return { locale, name: titleChunkName(locale), hash: chunkHash(table), literal: table };
   });
+  const englishLines = {
+    episodes: literal(Object.fromEntries(ready.map((c) => [c.episode.id, pick(c.episode, EPISODE_LINES)]))),
+    quests: literal(Object.fromEntries(ready.flatMap((c) => c.quests.map((q) => [q.id, pick(q, QUEST_LINES)])).filter(([, l]) => Object.keys(l).length > 0))),
+  };
+  const headerChunks = HEADER_LOCALES.map((locale) => {
+    const literals =
+      locale === "en"
+        ? { ...englishLines, overlays: "{}" }
+        : { episodes: "{}", quests: "{}", overlays: literal(sortedKeys(lines[locale])) };
+    return { locale, name: headersChunkName(locale), hash: chunkHash(literals.episodes + literals.quests + literals.overlays), literals };
+  });
   return {
-    episodes: ready.map((c) => c.episode),
-    quests: ready.flatMap((c) => c.quests.map((q) => Object.fromEntries(QUEST_HEADER.filter((k) => q[k] !== undefined).map((k) => [k, q[k]])))),
+    episodes: ready.map((c) => omit(c.episode, EPISODE_LINES)),
+    quests: ready.flatMap((c) => c.quests.map((q) => pick(q, QUEST_HEADER))),
     teaches: Object.fromEntries(ready.flatMap((c) => c.quests.map((q) => [q.id, discoverJamo(q.steps)]).filter(([, ids]) => ids.length > 0))),
     cells: cellChunks,
     titles: titleChunks,
+    headers: headerChunks,
   };
 }
 
 /** Pure: the chunk names and hashes the manifest lists (pwa-postbuild.mjs checks the web bundles against them). */
 export function chunkManifest(cells) {
   const plan = planChunks(cells);
-  return [...plan.cells, ...plan.titles].map(({ name, hash }) => ({ name, hash }));
+  return [...plan.cells, ...plan.titles, ...plan.headers].map(({ name, hash }) => ({ name, hash }));
 }
 
 const q = (s) => JSON.stringify(s);
@@ -489,27 +553,31 @@ export function buildModules(cells) {
   const plan = planChunks(cells);
   const cellCases = plan.cells.map((c) => `    case ${q(c.id)}:\n      return import('./${CHUNK_DIR}/${c.name}');\n`).join("");
   const titleCases = plan.titles.map((t) => `    case ${q(t.locale)}:\n      return import('./${CHUNK_DIR}/${t.name}');\n`).join("");
+  const headerCases = plan.headers.map((h) => `    case ${q(h.locale)}:\n      return import('./${CHUNK_DIR}/${h.name}');\n`).join("");
   const modules = {
     "lessons-index.ts":
       GENERATED_HEADER +
-      "import type { Episode, OverlayLocale } from '@hangul-route/content-schema';\n" +
-      "import type { LessonCellChunk, LessonQuestHeader, LessonTitleChunk } from '../../logic/lessons/lesson-store';\n\n" +
+      "import type { OverlayLocale, UiLocale } from '@hangul-route/content-schema';\n" +
+      "import type { LessonCellChunk, LessonHeaderChunk, LessonManifestEpisode, LessonQuestHeader, LessonTitleChunk } from '../../logic/lessons/lesson-store';\n\n" +
       "/**\n" +
-      " * The start-loaded lesson manifest (F-CURR-002 §10, row CM-5): the shipped upper-stage cells and their\n" +
-      " * quests, English headers only. Each cell's steps, scopes and glosses are one content-hashed chunk, and\n" +
-      " * the es / ko titles one chunk per locale, reached only through the literal `import()`s below: Metro\n" +
-      " * emits each as its own web bundle (precached by the service worker, loaded on demand) and keeps them\n" +
-      " * in the one native bundle.\n" +
+      " * The start-loaded lesson manifest (F-CURR-002 §10, rows CM-5 and CM-40): the shipped upper-stage cells of every\n" +
+      " * volume and their quests, English ids, titles and minutes only. Each cell's (and volume's) steps, scopes and glosses\n" +
+      " * are one content-hashed chunk, the es / ko titles one chunk per locale, and the display lines (an episode's subtitle,\n" +
+      " * Hoya intro and reward cards, a quest's blurb and teaser) one headers chunk per locale, English included, all\n" +
+      " * reached only through the literal `import()`s below: Metro emits each as its own web bundle (precached by the\n" +
+      " * service worker, loaded on demand) and keeps them in the one native bundle.\n" +
       " */\n" +
-      `export const LESSON_EPISODES: Episode[] = ${literal(plan.episodes)};\n\n` +
+      `export const LESSON_EPISODES: LessonManifestEpisode[] = ${literal(plan.episodes)};\n\n` +
       `export const LESSON_QUESTS: LessonQuestHeader[] = ${literal(plan.quests)};\n\n` +
       "/** The jamo ids each lesson quest's Discover step teaches, in page order (only the quests that teach some): read before any chunk loads. */\n" +
       `export const LESSON_TEACHES: Readonly<Record<string, readonly string[]>> = ${literal(plan.teaches)};\n\n` +
-      "/** Each cell's body chunk by episode id: the hash its module carries as `CHUNK_HASH`. */\n" +
+      "/** Each cell's (and volume's) body chunk by episode id: the hash its module carries as `CHUNK_HASH`. */\n" +
       `export const LESSON_CELL_CHUNKS: Readonly<Record<string, string>> = ${literal(Object.fromEntries(plan.cells.map((c) => [c.id, c.hash])))};\n\n` +
       "/** The title chunk of each overlay locale: the hash its module carries as `CHUNK_HASH`. */\n" +
       `export const LESSON_TITLE_CHUNKS: Readonly<Record<OverlayLocale, string>> = ${literal(Object.fromEntries(plan.titles.map((t) => [t.locale, t.hash])))};\n\n` +
-      "/** The body chunk of a shipped cell; undefined for any other id. One literal `import()` per chunk (Metro resolves only literals). */\n" +
+      "/** The headers chunk of each UI locale (row CM-40): the hash its module carries as `CHUNK_HASH`. */\n" +
+      `export const LESSON_HEADER_CHUNKS: Readonly<Record<UiLocale, string>> = ${literal(Object.fromEntries(plan.headers.map((h) => [h.locale, h.hash])))};\n\n` +
+      "/** The body chunk of a shipped cell or volume; undefined for any other id. One literal `import()` per chunk (Metro resolves only literals). */\n" +
       "export function loadLessonCell(cellId: string): Promise<LessonCellChunk> | undefined {\n" +
       "  switch (cellId) {\n" +
       cellCases +
@@ -521,6 +589,12 @@ export function buildModules(cells) {
       "export function loadLessonTitles(locale: OverlayLocale): Promise<LessonTitleChunk> {\n" +
       "  switch (locale) {\n" +
       titleCases +
+      "  }\n" +
+      "}\n\n" +
+      "/** The headers chunk of a UI locale: English holds the display lines, es and ko their glosses (row CM-40). */\n" +
+      "export function loadLessonHeaders(locale: UiLocale): Promise<LessonHeaderChunk> {\n" +
+      "  switch (locale) {\n" +
+      headerCases +
       "  }\n" +
       "}\n",
   };
@@ -543,6 +617,15 @@ export function buildModules(cells) {
       `/** The ${t.locale} titles of the lesson cells and quests (F-CURR-002 §10): loaded for the active UI locale only, through \`loadLessonTitles\`. */\n` +
       `export const CHUNK_HASH = ${q(t.hash)};\n\n` +
       `export const LESSON_TITLE_OVERLAYS: LessonTitleChunk['LESSON_TITLE_OVERLAYS'] = ${t.literal};\n`;
+  }
+  for (const h of plan.headers) {
+    modules[`${CHUNK_DIR}/${h.name}.ts`] =
+      chunkHeader("LessonHeaderChunk") +
+      `/** The ${h.locale} display lines of the lesson cells and quests (F-CURR-002 §10, row CM-40): loaded before the first screen, through \`loadLessonHeaders\`. */\n` +
+      `export const CHUNK_HASH = ${q(h.hash)};\n\n` +
+      `export const LESSON_EPISODE_HEADERS: LessonHeaderChunk['LESSON_EPISODE_HEADERS'] = ${h.literals.episodes};\n\n` +
+      `export const LESSON_QUEST_HEADERS: LessonHeaderChunk['LESSON_QUEST_HEADERS'] = ${h.literals.quests};\n\n` +
+      `export const LESSON_HEADER_OVERLAYS: LessonHeaderChunk['LESSON_HEADER_OVERLAYS'] = ${h.literals.overlays};\n`;
   }
   return modules;
 }
@@ -674,9 +757,14 @@ export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new
   const lessonCells = [];
   const lessonQuests = [];
   const stamps = [];
-  const sortedCells = [...cells].sort((a, b) => a.stageNo - b.stageNo || THEMES.indexOf(a.episode.theme) - THEMES.indexOf(b.episode.theme));
+  const sortedCells = [...cells].sort(
+    (a, b) => a.stageNo - b.stageNo || THEMES.indexOf(a.episode.theme) - THEMES.indexOf(b.episode.theme) || (a.volume ?? 1) - (b.volume ?? 1),
+  );
   for (const cell of sortedCells) {
     const { episode } = cell;
+    const volume = cell.volume ?? 1;
+    // Row CM-40: a draft Volume 2 is simply not shipped (its cell keeps its Volume 1); there is no "Coming soon" row for it.
+    if (cell.status !== "ready" && volume !== 1) continue;
     if (cell.status !== "ready") {
       // A draft cell stays the bundle's "Coming soon" placeholder (`makePreviewEpisode`: 10 minutes, no quests).
       lessonCells.push({ stage: episode.stage, theme: episode.theme, episodeId: episode.id, title: episode.titleEn, status: "preview", minutes: 10, questIds: [] });
@@ -690,6 +778,7 @@ export function catalogueOf({ cells, stories = [], topics = [], symbolKeys = new
       status: "shipped",
       minutes: episode.estimatedMinutes,
       questIds: episode.questIds,
+      ...(volume === 1 ? {} : { volume }),
     });
     for (const quest of cell.quests) {
       lessonQuests.push({
@@ -738,14 +827,18 @@ export function cellRowsOf(model) {
   }
   return model.cells.map((cell) => {
     const quests = byCell.get(cell.episodeId);
-    const ids = quests.map((_, i) => `quest:${cell.stage}-${cell.theme}-q${i + 1}`);
+    const volume = cell.volume ?? 1;
+    const own = `${cell.stage}-${cellKey(cell.theme, volume)}`;
+    const ids = quests.map((_, i) => `quest:${own}-q${i + 1}`);
     const fits =
-      cell.episodeId === `episode:${cell.stage}-${cell.theme}` &&
+      cell.episodeId === `episode:${own}` &&
       cell.questIds.length === ids.length &&
       cell.questIds.every((id, i) => id === ids[i]) &&
       quests.every((q, i) => q.id === ids[i] && q.stage === cell.stage && q.theme === cell.theme && q.kind === "lesson");
     if (!fits) throw new Error(`catalogue cell ${cell.episodeId} does not fit a compact row (ids by position, one cell)`);
-    return [cell.stage, cell.theme, cell.title, cell.status, cell.minutes, quests.map((q) => [q.title, q.minutes, q.teaches])];
+    const row = [cell.stage, cell.theme, cell.title, cell.status, cell.minutes, quests.map((q) => [q.title, q.minutes, q.teaches])];
+    // A Volume 2 row ends with its volume (row CM-40); a Volume 1 row is what it was.
+    return volume === 1 ? row : [...row, volume];
   });
 }
 
@@ -768,7 +861,8 @@ export function renderCatalogue(model) {
     ";\n\n" +
     "/**\n" +
     " * One row per upper-stage cell file (stages 2, 3, 4, 6 and 7), in grid order:\n" +
-    " * [stage, theme, title, status, minutes, quests], a quest being [title, minutes, teaches].\n" +
+    " * [stage, theme, title, status, minutes, quests], a quest being [title, minutes, teaches]; a cell's\n" +
+    " * shipped Volume 2 follows its Volume 1 with its volume last (F-CURR-002 row CM-40).\n" +
     " * Compact for the start bundle; expandCellRows (./assemble.ts) gives the ids, cells and kinds.\n" +
     " */\n" +
     `export const GENERATED_LESSON_CELL_ROWS: GeneratedCellRow[] = ${rows(cellRowsOf(model))};\n\n` +
@@ -910,6 +1004,9 @@ export function checkBudget({ perCell, perModule, perStage = [], total }) {
     if (m.name.startsWith(`${CHUNK_DIR}/lessons-titles-`) && m.raw > BUDGET.titleChunkRaw) {
       problems.push(`${m.name} is ${m.raw} B raw, over the title chunk ceiling of ${BUDGET.titleChunkRaw} B`);
     }
+    if (m.name.startsWith(`${CHUNK_DIR}/lessons-headers-`) && m.raw > BUDGET.headersChunkRaw) {
+      problems.push(`${m.name} is ${m.raw} B raw, over the headers chunk ceiling of ${BUDGET.headersChunkRaw} B`);
+    }
     if (m.name.startsWith(`${CHUNK_DIR}/lessons-cell-`)) {
       if (m.raw > BUDGET.cellChunkRaw) problems.push(`${m.name} is ${m.raw} B raw, over the cell chunk ceiling of ${BUDGET.cellChunkRaw} B`);
       if (m.gzip > BUDGET.cellChunkGzip) problems.push(`${m.name} is ${m.gzip} B gzip, over the cell chunk ceiling of ${BUDGET.cellChunkGzip} B`);
@@ -937,7 +1034,18 @@ function readJson(root, full) {
   }
 }
 
-/** Every cell file, shaped, with its overlays; a file that is not a theme name fails. */
+/**
+ * The overlay file of a cell's glosses in one locale (F-CURR-001 §3.10; row CM-40 names Volume 2's):
+ * `content/i18n/<locale>/lessons-stage<n>-<theme>.json`, and `lessons-stage<n>-<theme>-v2.json` for the cell's Volume 2
+ * (its file name is its episode id's, as Volume 1's is). scripts/build-overlays.mjs leaves both to this generator.
+ */
+export const cellOverlayFile = (locale, stageNo, theme, volume = 1) => join("content", "i18n", locale, `lessons-stage${stageNo}-${cellKey(theme, volume)}.json`);
+
+/**
+ * Every cell file, shaped, with its overlays; a file that is not a cell name fails. A stage's cells come in grid theme
+ * order, each Volume 1 before its Volume 2 (row CM-40), and a ready Volume 2 needs its cell's Volume 1 ready beside it:
+ * it is the second episode of a shipped cell, never a cell of its own.
+ */
 export function readCells(root) {
   const cells = [];
   for (const n of LESSON_STAGES) {
@@ -946,21 +1054,30 @@ export function readCells(root) {
     // Grid theme order (letters, life, rites, nature, crafts), not file-name order: the app's quest cursor
     // walks a stage's generated cells in this order, so a stage starts at its letters cell (F-CURR-001 T-2).
     const rank = (f) => {
-      const i = THEMES.indexOf(f.replace(/\.json$/, ""));
-      return i === -1 ? THEMES.length : i;
+      const file = cellFileName(f);
+      return file === null ? THEMES.length * 10 : THEMES.indexOf(file.theme) * 10 + file.volume;
     };
     const names = readdirSync(dir).filter((f) => f.endsWith(".json")).sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0));
+    const stageCells = [];
     for (const name of names) {
-      const theme = name.replace(/\.json$/, "");
       const { rel, json } = readJson(root, join(dir, name));
-      if (!THEMES.includes(theme)) throw new ContentError(`a lesson cell file is named after its theme (${THEMES.join(", ")})`, rel);
+      const file = cellFileName(name);
+      if (file === null) throw new ContentError(`a lesson cell file is named after its theme (${THEMES.join(", ")}): <theme>.json, or <theme>.v2.json for its Volume 2`, rel);
       const shaped = shapeCell(json, rel);
       const files = OVERLAY_LOCALES.flatMap((locale) => {
-        const full = join(root, "content", "i18n", locale, `lessons-stage${n}-${theme}.json`);
+        const full = join(root, cellOverlayFile(locale, n, file.theme, file.volume));
         return existsSync(full) ? [{ ...readJson(root, full), locale }] : [];
       });
-      cells.push({ ...shaped, overlays: cellOverlays(shaped, files) });
+      stageCells.push({ ...shaped, overlays: cellOverlays(shaped, files) });
     }
+    for (const cell of stageCells) {
+      if (cell.volume === 1 || cell.status !== "ready") continue;
+      const first = stageCells.find((c) => c.volume === 1 && c.episode.theme === cell.episode.theme);
+      if (first?.status !== "ready") {
+        throw new ContentError(`a ready Volume 2 needs its cell's Volume 1 ready: content/episodes/stage-${n}/${cell.episode.theme}.json`, cell.file);
+      }
+    }
+    cells.push(...stageCells);
   }
   return cells;
 }
@@ -1029,6 +1146,7 @@ export async function main(argv, root) {
     process.stdout.write(`  total  ${report.total.raw} B raw  ${report.total.gzip} B gzip\n`);
     process.stdout.write(
       `Budget: ${BUDGET.perQuestRawAvg} B raw per quest (cell average), ${BUDGET.manifestRaw} B raw for the manifest, ${BUDGET.titleChunkRaw} B raw per title chunk, ` +
+        `${BUDGET.headersChunkRaw} B raw per headers chunk, ` +
         `${BUDGET.cellChunkRaw} B raw and ${BUDGET.cellChunkGzip} B gzip per cell chunk, ` +
         `${BUDGET.stageRaw} B raw and ${BUDGET.stageGzip} B gzip per stage, ${BUDGET.totalRaw} B raw and ${BUDGET.totalGzip} B gzip in total\n`,
     );
