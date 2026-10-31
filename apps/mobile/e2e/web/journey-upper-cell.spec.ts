@@ -1291,6 +1291,25 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     }
   }
 
+  // F-CURR-002 row CM-43 S4, the launch state: with the default flags (`volumes` at built-in pct 0) a later volume's cell
+  // page shows no Volumes tabs and none of the later volume's titles, so Volume 2 ships dark.
+  for (const episode of LATER_VOLUMES) {
+    const stage = Number(episode.stage.replace('stage', ''));
+    test(`${episode.id} (320): with the default flags its cell's page shows Volume 1 alone`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.setViewportSize({ width: 320, height: 800 });
+      await openJourney(page);
+      await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: true }).click();
+      await expect(page.getByTestId(`episode-quest-${episode.id.replace('episode:', 'quest:').replace(/-v[0-9]+$/, '')}-q1`)).toBeVisible();
+      await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+      await expect(page.getByText(episode.titleEn)).toHaveCount(0);
+      await expect(page.getByTestId(`episode-quest-${episode.id.replace('episode:', 'quest:')}-q1`)).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+      expect(errors).toEqual([]);
+    });
+  }
+
   // F-CURR-002 row CM-43 S4: Snack Bar Talk q1 at 320 px with `volumes` and `game.role-play` on (both ship at built-in
   // pct 0, so the stored remote copy turns them on, as a ramp would): the snack bar Role Play takes a less natural reply in
   // amber without sending it, then plays a way of natural replies to its closing line. Read and tap only, no speaking UI.

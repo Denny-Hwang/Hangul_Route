@@ -2,7 +2,10 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { LessonCellSchema, isRolePlayEnd, type LessonCell, type LessonQuest, type LessonScope, type RolePlayScene } from '@hangul-route/content-schema';
 import { allowlistedInstitution, lintCurriculum, practiceCheckItems, rolePlayPaths } from '@hangul-route/content-schema/lint';
 import { describe, expect, it } from 'vitest';
+import { currBuiltInPct } from '../../config/flags';
+import { cellVolumes, volumePageEpisode } from '../../logic/episode/volumes';
 import { playedScope, rolePlayMainPath } from '../../logic/role-play/fallback';
+import { episodeById } from '../episodes';
 import { startRolePlay, stepRolePlay, type RpState } from '../../logic/role-play/reducer';
 import { ALL_LESSON_SCOPES } from './helpers/lesson-stages';
 
@@ -149,5 +152,24 @@ describe('Stage 4 Food & Daily Life, Volume 2: Snack Bar Talk (row CM-43 S4)', (
       expect(note.verification?.passes, note.id).toBeGreaterThanOrEqual(3);
     }
     expect(cell.review).toMatchObject({ reviewedBy: 'MAR' });
+  });
+});
+
+describe('Snack Bar Talk at its launch state: `volumes` off (row CM-43 S4)', () => {
+  it('ships dark: `volumes` is built in at 0 percent', () => {
+    expect(currBuiltInPct('volumes')).toBe(0);
+  });
+
+  it('with `volumes` off the Stage 4 Food page shows Volume 1 alone, and the Volume 2 id opens Volume 1', () => {
+    const v2 = episodeById('episode:stage4-life-v2');
+    expect(v2?.id).toBe('episode:stage4-life-v2');
+    expect(cellVolumes({ stage: 'stage4', theme: 'life' }, false).map((e) => e.id)).toEqual(['episode:stage4-life']);
+    expect(volumePageEpisode(v2, false)?.id).toBe('episode:stage4-life');
+  });
+
+  it('with `volumes` on the page lists both volumes and the Volume 2 id opens Volume 2', () => {
+    const v2 = episodeById('episode:stage4-life-v2');
+    expect(cellVolumes({ stage: 'stage4', theme: 'life' }, true).map((e) => e.id)).toEqual(['episode:stage4-life', 'episode:stage4-life-v2']);
+    expect(volumePageEpisode(v2, true)?.id).toBe('episode:stage4-life-v2');
   });
 });
