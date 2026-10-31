@@ -122,6 +122,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.transfer.familyNeedsYou': '"2 cambios de clase esperan tu aprobación" (40) against "2 class moves need your OK" (26), one letter over: the one action wording of section 10.1 ("espera(n) tu aprobación" in a sentence); a heading line on the family moves page, which wraps',
   'console.transfer.endsOn': '"Termina el {date}" against "Ends {date}", one letter over at a short date: Spanish needs the article before a date (the same date order as "Cambia de clase el {date}"); a card line that wraps',
   'console.parentHome.needsYou.title': '"Necesita tu respuesta" (21) against "Needs you" (9): Spanish needs the verb and its object ("Te necesita" would read as a person needing the parent); a heading on its own line above the strip, which wraps',
+  // AMENDMENTS-GROWNUP-UX GX-3 (section 5.5, the one action wording of section 10.1): the re-link bar's sentence.
+  'console.relinkBar.many': '"{n} dispositivos nuevos esperan tu aprobación" against "{n} new devices need your OK": "esperan tu aprobación" is the one full-sentence form of "needs your OK" in Spanish (section 10.1); the bar\'s line wraps at any width',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
