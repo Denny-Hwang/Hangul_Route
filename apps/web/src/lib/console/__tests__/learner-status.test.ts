@@ -223,11 +223,27 @@ describe('attentionModel: the roster pending field (GX-W) is preferred when pres
     expect(m.totals.relinks).toBe(1);
   });
 
-  it('a row with pending ignores the lists for that learner; a row without it falls back to them', () => {
+  it('a row with pending ignores the move lists for that learner; a row without it falls back to them', () => {
     const roster = [learner('profile:a', { pending: {} }), learner('profile:b')];
-    const m = model({ roster, relinks: [relink('profile:a'), relink('profile:b')] });
+    const moving = (learnerId: string, id: string) => source({ id, learnerId, steps: { learner: 'yes', source: 'waiting', destination: 'waiting' } });
+    const m = model({ roster, transfers: [moving('profile:a', 't1'), moving('profile:b', 't2')] });
     expect(m.byLearner['profile:a']?.kind).toBe('in_class');
-    expect(m.byLearner['profile:b']?.kind).toBe('relink');
+    expect(m.byLearner['profile:b']?.kind).toBe('move_yours');
+  });
+
+  it('a re-link list that was read wins over the row: an answered re-link never comes back, a new one shows at once', () => {
+    // The row (read up to 90 s ago) still carries relink:a, answered since; the 20 s list read no longer has it.
+    const answered = model({ roster: [learner('profile:a', { pending: { relink: { id: 'relink:a', expiresAt: min(5) } } })], relinks: [] });
+    expect(answered.byLearner['profile:a']).toMatchObject({ kind: 'in_class', action: false });
+    expect(answered.totals.relinks).toBe(0);
+    // A new device the list read found, while the row has no relink yet.
+    const fresh = model({ roster: [learner('profile:b', { pending: {} })], relinks: [relink('profile:b')] });
+    expect(fresh.byLearner['profile:b']).toMatchObject({ kind: 'relink', action: true, relink: { id: 'relink:b' } });
+    expect(fresh.totals.relinks).toBe(1);
+    // The row's move still counts next to the list's re-link (the higher rank wins).
+    const both = model({ roster: [learner('profile:c', { pending: { move: { source: 'transfer', id: 't', step: 'scheduled', to: null, on: day(2), expiresAt: null } } })], relinks: [relink('profile:c')] });
+    expect(both.byLearner['profile:c']?.kind).toBe('relink');
+    expect(model({ roster: [learner('profile:c', { pending: { move: { source: 'transfer', id: 't', step: 'scheduled', to: null, on: day(2), expiresAt: null } } })], relinks: [] }).byLearner['profile:c']?.kind).toBe('move_scheduled');
   });
 
   it('readPending is lenient: unknown shapes are no state; no field reads as null', () => {
@@ -330,7 +346,7 @@ describe('statusWords (section 4 table)', () => {
     expect(statusWords(s({ kind: 'move_yours', action: true, move: { source: 'transfer', id: 't', to: 'Evening Class D', on: null, expiresAt: null } }), NOW, 'en')).toEqual({ chip: 'Needs your OK', reason: 'Class move: Evening Class D', tone: 'action' });
     expect(statusWords(s({ kind: 'move_yours', action: true, move: { source: 'transfer', id: 't', to: null, on: null, expiresAt: null } }), NOW, 'en')?.reason).toBeNull();
     expect(statusWords(s({ kind: 'move_room' }), NOW, 'en')).toEqual({ chip: 'Waiting for a seat', reason: null, tone: 'quiet' });
-    expect(statusWords(s({ kind: 'move_scheduled', move: { source: 'transfer', id: 't', to: null, on: '2026-11-03T00:00:00.000Z', expiresAt: null } }), NOW, 'en')).toEqual({ chip: 'Moving Nov 3', reason: null, tone: 'info' });
+    expect(statusWords(s({ kind: 'move_scheduled', move: { source: 'transfer', id: 't', to: null, on: '2026-11-03T12:00:00.000Z', expiresAt: null } }), NOW, 'en')).toEqual({ chip: 'Moving Nov 3', reason: null, tone: 'info' });
     expect(statusWords(s({ kind: 'move_scheduled' }), NOW, 'en')).toEqual({ chip: 'Move waiting', reason: null, tone: 'quiet' });
     expect(statusWords(s({ kind: 'move_others', move: { source: 'transfer', id: 't', to: 'Class D', on: null, expiresAt: null } }), NOW, 'en')).toEqual({ chip: 'Move waiting', reason: 'Waiting for: Class D', tone: 'quiet' });
     expect(statusWords(s({ kind: 'move_others' }), NOW, 'en')?.reason).toBeNull();
