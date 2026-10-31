@@ -24,6 +24,7 @@ vi.mock('react', async (importOriginal) => {
     useRef: <T,>(v: T) => ({ current: v }),
     useCallback: <T,>(fn: T): T => fn,
     useMemo: <T,>(fn: () => T): T => fn(),
+    useEffect: (): void => undefined,
   };
   return { ...actual, ...stubs, default: { ...actual, ...stubs } };
 });

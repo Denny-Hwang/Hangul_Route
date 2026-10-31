@@ -24,3 +24,26 @@ export function useScreenFit(): ScreenFit {
 export function contentFits(contentHeight: number, viewportHeight: number): boolean {
   return viewportHeight > 0 && contentHeight <= viewportHeight + 1;
 }
+
+interface ScrollNode {
+  scrollHeight: number;
+  clientHeight: number;
+  children?: ArrayLike<unknown>;
+}
+
+type ResizeObserverLike = new (cb: () => void) => { observe(target: unknown): void; disconnect(): void };
+
+/**
+ * The web fit, read from the DOM: the scroll node fits when its content is no taller than it. Observed on the scroll
+ * node (the window, rotation) and its content (text size, content that grows). Returns the stop, or `null` where the
+ * browser has no ResizeObserver (the board then keeps the vertical pan, the safe side).
+ */
+export function observeWebFit(node: ScrollNode | null | undefined, onFit: (fits: boolean) => void, Observer: ResizeObserverLike | undefined): (() => void) | null {
+  if (node === null || node === undefined || typeof Observer !== 'function') return null;
+  const check = (): void => onFit(contentFits(node.scrollHeight, node.clientHeight));
+  const observer = new Observer(check);
+  observer.observe(node);
+  for (const child of Array.from(node.children ?? [])) observer.observe(child);
+  check();
+  return () => observer.disconnect();
+}

@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, ViewStyle } from 'react-native';
@@ -7,7 +7,7 @@ import { ALL_SCREEN_EDGES, NO_INSETS, screenFrame } from '../../layout';
 import { colors } from '../../tokens';
 import { useLayoutClass } from '../Layout';
 import { ScreenHeaderSlotContext } from '../ScreenHeader/slot';
-import { ScreenFitContext, contentFits, type ScreenFit } from './fit';
+import { ScreenFitContext, contentFits, observeWebFit, type ScreenFit } from './fit';
 import type { ScreenProps } from './types';
 
 const toneBg = {
@@ -73,6 +73,14 @@ export function Screen({
   const fit = useMemo<ScreenFit>(() => ({ fits, scrollY: () => offset.current }), [fits]);
   const native = Platform.OS !== 'web';
   const manipulation = native ? {} : MANIPULATION;
+  // The web reads the fit from the DOM (react-native-web's ScrollView node), so the screen adds no layout callback.
+  const scrollRef = useRef<unknown>(null);
+  useEffect(() => {
+    if (native || !scrollable) return undefined;
+    const node = (scrollRef.current as { getScrollableNode?: () => unknown } | null)?.getScrollableNode?.();
+    const Observer = (globalThis as { ResizeObserver?: Parameters<typeof observeWebFit>[2] }).ResizeObserver;
+    return observeWebFit(node as Parameters<typeof observeWebFit>[0], setMeasuredFits, Observer) ?? undefined;
+  }, [native, scrollable]);
 
   // The cap sits INSIDE the padded container so insets and gutter stay outside it
   // and the background stays full-bleed.
@@ -94,11 +102,13 @@ export function Screen({
       // flexGrow keeps short content full-height so bottom-pinned CTAs stay put.
       contentContainerStyle={{ flexGrow: 1, ...frame.body }}
       keyboardShouldPersistTaps="handled"
-      onLayout={onLayout}
-      onContentSizeChange={onContentSizeChange}
-      // Native: a screen that fits cannot scroll, so a short drag on a board never becomes a scroll (R6); the offset
-      // lets a board move a rectangle it measured before a scroll. The web scrolls as the browser decides.
-      {...(native ? { scrollEnabled: !fits, onScroll, scrollEventThrottle: 16 } : {})}
+      ref={(v: unknown) => {
+        scrollRef.current = v;
+      }}
+      // Native: measured from the layout and the content size; a screen that fits cannot scroll, so a short drag on a
+      // board never becomes a scroll (R6); the offset lets a board move a rectangle it measured before a scroll. The
+      // web scrolls as the browser decides.
+      {...(native ? { onLayout, onContentSizeChange, scrollEnabled: !fits, onScroll, scrollEventThrottle: 16 } : {})}
     >
       {content}
     </ScrollView>
