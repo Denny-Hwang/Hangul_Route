@@ -51,10 +51,20 @@ function Dot({ color }: { color: string }): JSX.Element {
 
 /**
  * One chip. An action chip is a button at least `touchTarget.min` tall whose accessible name is "{chip}: {reason}"; its
- * tap opens the decision for that item (`onActivate`). Every other chip is a span read with the name.
+ * tap opens the decision for that item (`onActivate`). An action chip with nothing to open (an archived class, no
+ * answer drawn) keeps its amber look as a span, never a button that does nothing. Every other chip is a span read with
+ * the name.
  */
 export function StatusChip({ words, onActivate, testId = 'learner-status' }: { words: StatusWords; onActivate?: () => void; testId?: string }): JSX.Element {
   const { messages } = useConsoleLocale();
+  if (words.tone === 'action' && !onActivate) {
+    return (
+      <span data-testid={testId} data-tone="action" style={{ ...chipBase, border: `${borderWidth.base}px solid ${colors.feedback.nudge}`, backgroundColor: TONE_FILL.action, fontWeight: typography.weight.bold }}>
+        <Dot color={colors.feedback.nudge} />
+        {words.chip}
+      </span>
+    );
+  }
   if (words.tone === 'action') {
     return (
       <button
@@ -93,6 +103,17 @@ export function ReasonLine({ id, text }: { id: string; text: string }): JSX.Elem
       {text}
     </p>
   );
+}
+
+/**
+ * The action chip's tap until GX-2's pop-up: the answers scroll into view and the first one takes focus, so the tap
+ * always shows where the answer is (a pointer tap draws no focus ring on its own).
+ */
+export function revealAnswers(row: HTMLElement | null): void {
+  const first = row?.querySelector<HTMLElement>('button, a');
+  if (!row || !first) return;
+  if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  first.focus();
 }
 
 /** The card style of a learner whose state needs the grown-up's answer: the amber border. */
@@ -141,9 +162,19 @@ export function useDecided(): {
 export type RelinkApi = Pick<ConsoleApi, 'decideRelink'>;
 
 /**
+ * Whether a decide answer closed the request: it was answered, or it closed meanwhile (409, except a learner who left
+ * the class; 404). A network error or a 5xx leaves it open, so the answers stay.
+ */
+export function relinkSettled(result: ApiResult<unknown>): boolean {
+  if (result.ok) return true;
+  return (result.status === 409 && result.code !== 'not_a_member') || result.status === 404;
+}
+
+/**
  * A re-link card's inline **Approve** (primary) and **Deny** (`api.decideRelink`). Each is described by the learner's name
- * and the reason line, so "Approve" is read with whose request it is. The result goes to `onResult` (the card's line and
- * the page's polite region); the page reads again after.
+ * and the reason line, so "Approve" is read with whose request it is. The result goes to `onResult` (the page's polite
+ * region; when `settled`, also the card's result line and a read again). A failure that leaves the request open keeps
+ * the answers and shows its line under them, so the grown-up can try again while the minutes run.
  */
 export function RelinkAnswer({
   api,
@@ -163,32 +194,46 @@ export function RelinkAnswer({
   online: boolean;
   /** The row of answers: the action chip's tap moves focus to its first button (GX-2 opens the pop-up instead). */
   rowRef?: RefObject<HTMLDivElement>;
-  onResult: (text: string) => void;
+  onResult: (text: string, settled: boolean) => void;
 }): JSX.Element | null {
   const { messages, locale } = useConsoleLocale();
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const request = status.relink;
   if (!request) return null;
   const t = messages.console.relink;
   const decide = async (approve: boolean): Promise<void> => {
     if (busy) return;
     setBusy(true);
+    setFailed(null);
     const result = await api.decideRelink(spaceId, request.id, approve);
     setBusy(false);
     if (result.ok) {
       announceRosterChange();
-      onResult(relinkNoteText({ kind: approve ? 'approved' : 'denied', name: learnerName }, locale));
-    } else onResult(relinkNoteText({ kind: 'decideFailed', result }, locale));
+      onResult(relinkNoteText({ kind: approve ? 'approved' : 'denied', name: learnerName }, locale), true);
+      return;
+    }
+    const text = relinkNoteText({ kind: 'decideFailed', result }, locale);
+    const settled = relinkSettled(result);
+    if (!settled) setFailed(text);
+    onResult(text, settled);
   };
   return (
-    <div style={actionsRow} data-testid="relink-answer" ref={rowRef}>
-      <MoveButton primary waiting={busy} disabled={!online} describedBy={describedBy} onClick={() => void decide(true)} testId="relink-approve-inline">
-        {t.approve.cta}
-      </MoveButton>
-      <MoveButton waiting={busy} disabled={!online} describedBy={describedBy} onClick={() => void decide(false)} testId="relink-deny-inline">
-        {t.deny.cta}
-      </MoveButton>
-    </div>
+    <>
+      <div style={actionsRow} data-testid="relink-answer" ref={rowRef}>
+        <MoveButton primary waiting={busy} disabled={!online} describedBy={describedBy} onClick={() => void decide(true)} testId="relink-approve-inline">
+          {t.approve.cta}
+        </MoveButton>
+        <MoveButton waiting={busy} disabled={!online} describedBy={describedBy} onClick={() => void decide(false)} testId="relink-deny-inline">
+          {t.deny.cta}
+        </MoveButton>
+      </div>
+      {failed ? (
+        <p style={resultLine} data-testid="relink-answer-failed">
+          {failed}
+        </p>
+      ) : null}
+    </>
   );
 }
 
@@ -236,6 +281,7 @@ export function AskingToJoin({
   online,
   readOnly,
   onDecided,
+  onEmptied,
   onOpenItem,
 }: {
   items: readonly IncomingItem[];
@@ -245,12 +291,20 @@ export function AskingToJoin({
   readOnly: boolean;
   /** After an answer (or an answer that found the ask gone): the page reads again and says `text` in its polite region. */
   onDecided: (text: string | null) => void;
-  /** GX-2: the action chip's tap opens the review sheet at this item (`incomingKey`); without it the chip focuses Accept. */
+  /** The last card answered emptied the group (its heading goes too): the page moves focus on, never to the page's top. */
+  onEmptied?: () => void;
+  /** GX-2: the action chip's tap opens the review sheet at this item (`incomingKey`); without it the chip reveals Accept. */
   onOpenItem?: (key: string) => void;
 }): JSX.Element | null {
   const { messages } = useConsoleLocale();
   const headingId = useId();
   const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const answered = useRef(false);
+  useEffect(() => {
+    if (items.length > 0 || !answered.current) return;
+    answered.current = false;
+    onEmptied?.();
+  }, [items.length, onEmptied]);
   if (items.length === 0) return null;
   return (
     <section aria-labelledby={headingId} data-testid="asking-to-join" style={{ marginBottom: spacing.lg }}>
@@ -268,6 +322,7 @@ export function AskingToJoin({
             readOnly={readOnly}
             onDecided={(text) => {
               // The card leaves on the reread: focus goes to the group's heading, never lost to the page's top.
+              answered.current = true;
               headingRef.current?.focus();
               onDecided(text);
             }}
@@ -355,7 +410,7 @@ export function IncomingCard({
           <strong id={nameId} style={{ fontSize: rem(typography.size.bodyLg), letterSpacing: typography.tracking.wide }}>
             {item.alias}
           </strong>
-          {chip ? <StatusChip words={words} onActivate={onOpenItem ?? (() => acceptRef.current?.querySelector('button')?.focus())} testId="incoming-status" /> : null}
+          {chip ? <StatusChip words={words} onActivate={readOnly ? undefined : (onOpenItem ?? (() => revealAnswers(acceptRef.current)))} testId="incoming-status" /> : null}
         </span>
         {level ? <span style={levelPill}>{level}</span> : null}
       </div>

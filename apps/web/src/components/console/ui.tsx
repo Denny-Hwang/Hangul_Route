@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { CSSProperties, ReactNode } from 'react';
 import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
@@ -26,13 +26,19 @@ export const buttonBase: CSSProperties = {
   cursor: 'pointer',
 };
 
-export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
+/**
+ * `nudge`: a secondary action that waits for the grown-up (a count of requests to answer): the amber fill and border of
+ * `Notice tone="nudge"`, text `text.primary` (AMENDMENTS-GROWNUP-UX section 4; never the danger colour).
+ */
+export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger' | 'nudge'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
   const toneStyle: CSSProperties =
     tone === 'primary'
       ? { backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderColor: colors.brand.primary }
       : tone === 'danger'
         ? { color: colors.feedback.danger, borderColor: colors.feedback.danger }
-        : {};
+        : tone === 'nudge'
+          ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` }
+          : {};
   return (
     <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}
