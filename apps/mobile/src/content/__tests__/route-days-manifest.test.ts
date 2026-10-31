@@ -33,9 +33,11 @@ describe('route days from the manifest', () => {
     expect(routeDaysOf(CATALOG).map((day) => [day.episodeId, day.minutes, [...day.questIds]])).toEqual(manifestDays.map(([id, minutes, quests]) => [id, minutes, [...quests]]));
   });
 
-  it('every cell of the generated lesson manifest is a route day', () => {
+  it('every cell of the generated lesson manifest is a route day, and a later volume is none (row CM-40)', () => {
     const days = new Set(routeDaysOf(CATALOG).map((day) => day.episodeId));
-    for (const episode of LESSON_EPISODES) expect(days.has(episode.id), episode.id).toBe(true);
+    for (const episode of LESSON_EPISODES) expect(days.has(episode.id), episode.id).toBe((episode.volume ?? 1) === 1);
+    // Row CM-45 S6: Stage 6 Holidays Volume 2 is in the manifest but adds no route day.
+    expect(LESSON_EPISODES.filter((e) => (e.volume ?? 1) > 1).map((e) => e.id)).toEqual(['episode:stage6-rites-v2']);
   });
 
   it('numbers the days from 1 with no gap', () => {

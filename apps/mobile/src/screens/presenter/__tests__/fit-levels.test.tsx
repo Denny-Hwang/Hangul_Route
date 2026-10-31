@@ -147,10 +147,12 @@ describe('RealiaSheetStage tight: the same lines at the same width, less room ar
   const draw = (slide: RealiaQuestionBody, tight: boolean): Promise<ReactTestRenderer> =>
     render(atOneUnit(<RealiaSheetStage sheet={slide.prompt.sheet} rom width={512} answer={{ entryId: slide.prompt.answerEntryId, shown: false }} tight={tight} />));
 
-  it('the shipped Stage 6 realia questions carry the four G-2 sheets and the two CM-47 kinds of the re-kinded stand-ins, none plain', () => {
-    // Row CM-47: the departure board and the trip plan are timetables, the order slip a receipt.
-    expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt']));
-    expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'plain']));
+  it('the shipped Stage 6 realia questions carry the four G-2 sheets, the two CM-47 kinds of the re-kinded stand-ins and the Volume 2 calendar and poster, none plain', () => {
+    // Row CM-47: the departure board and the trip plan are timetables, the order slip a receipt; row CM-45 S6: the
+    // Stage 6 Holidays Volume 2 adds a calendar page and a poster (its timetable and ticket are kinds already shipped).
+    const kinds = ['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'calendar', 'poster'];
+    expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(kinds));
+    expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set([...kinds, 'plain']));
   });
 
   it('a menu: the dressing strip at spacing.sm, not spacing.xl', async () => {

@@ -98,6 +98,10 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage6-letters-q2',
       'quest:stage6-life-q2',
       'quest:stage6-rites-q2',
+      // Row CM-45 S6: the Stage 6 Holidays Volume 2 Applies (q1, the calendar; q2, the timetable) and Check (q3, the ticket).
+      'quest:stage6-rites-v2-q1',
+      'quest:stage6-rites-v2-q2',
+      'quest:stage6-rites-v2-q3',
     ]);
   });
 });
