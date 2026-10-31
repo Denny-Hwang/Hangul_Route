@@ -139,11 +139,11 @@ describe('space page (teach/space/page.tsx)', () => {
     expect(s.week.notSynced(2)).toBe("2 haven't synced in a week");
   });
 
-  it('keeps the action row, with a plural for pending re-link requests', () => {
+  it('keeps the action row, with a plural for pending new device requests (GX-12: one name with the status chip)', () => {
     expect(s.openPlan.label('Week 1')).toBe('Plan: Week 1');
-    expect(s.relinkRequests.cta).toBe('Re-link requests');
-    expect(s.relinkPending.cta(1)).toBe('1 re-link request');
-    expect(s.relinkPending.cta(2)).toBe('2 re-link requests');
+    expect(s.relinkRequests.cta).toBe('New device requests');
+    expect(s.relinkPending.cta(1)).toBe('1 new device request');
+    expect(s.relinkPending.cta(2)).toBe('2 new device requests');
     expect(s.settings.cta).toBe('Settings');
   });
 
@@ -176,19 +176,21 @@ describe('relink page (teach/space/relink/page.tsx, relink.ts)', () => {
   const r = c.relink;
 
   it('keeps the title, the back link and the notes', () => {
-    expect(r.title).toBe('Re-link requests');
-    expect(r.titleFor('Kim family')).toBe('Kim family · re-link requests');
+    expect(r.title).toBe('New device requests');
+    expect(r.titleFor('Kim family')).toBe('Kim family · new device requests');
     expect(r.back('Kim family')).toBe('Back to Kim family');
     expect(r.back(null)).toBe('Back to the space');
     expect(r.approved('Mina')).toBe('Mina can open their new device now.');
     expect(r.denied('Mina')).toBe('Closed. Mina\'s device will say "ask your teacher".');
+    expect(r.deniedFamily('Mina')).toBe('Closed. Mina\'s device will say "ask your grown-up".');
     expect(r.issueAsk('Mina')).toBe('Issue a new rescue code for Mina?');
     expect(r.issueFailed).toBe("Couldn't issue a code right now.");
   });
 
   it('keeps the request card', () => {
-    expect(r.askingToBe('Mina')).toBe('Someone is asking to be Mina');
+    expect(r.askingToBe('Mina')).toBe('Mina · on a new device');
     expect(r.device).toBe('device');
+    expect(r.platform).toEqual({ ios: 'iPhone or iPad', android: 'Android', web: 'Web' });
     expect(r.approve.cta).toBe('Approve');
     expect(r.deny.cta).toBe('Deny');
   });
@@ -207,6 +209,10 @@ describe('relink page (teach/space/relink/page.tsx, relink.ts)', () => {
     expect(r.expiresIn(9)).toBe('expires in 9 min');
     expect(r.askedJustNow).toBe('asked just now');
     expect(r.askedAgo(2)).toBe('asked 2 min ago');
+    expect(r.askedHoursAgo(1)).toBe('asked 1 hour ago');
+    expect(r.askedHoursAgo(4)).toBe('asked 4 hours ago');
+    expect(r.askedDaysAgo(1)).toBe('asked 1 day ago');
+    expect(r.askedDaysAgo(3)).toBe('asked 3 days ago');
     expect(r.closed).toBe('This request already closed — the learner can ask again.');
     expect(r.failed).toBe("Didn't go through. Try again.");
   });

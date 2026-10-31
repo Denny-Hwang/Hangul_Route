@@ -47,6 +47,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'landing.captures.caption.home': '"Pantalla de inicio", one letter over, a caption under its capture that wraps (AMENDMENTS-SITE-NEWUSER §3.4)',
   'console.saveDraft': '"Guardar borrador", one letter over; the button wraps',
   'console.relink.device': 'the one word "dispositivo" (11) against "device" (6)',
+  // AMENDMENTS-GROWNUP-UX GX-12 (section 10.2): the glossary's one name for a re-link, "dispositivo nuevo".
+  'console.relink.title': '"Solicitudes de dispositivo nuevo" (32) against "New device requests" (19): Spanish needs "de" and puts the adjective after the noun; the page title wraps',
   'learner.library.toFind.next': 'the standard Spanish word "Siguiente" (9) against "Next" (4), with its noun ("Siguiente tarjeta"); a label above the card that wraps',
   'report.scope.allDevices': 'the plural "dispositivos" (12) against "devices" (7) needs its article ("Todos los dispositivos"); a caption under a heading that wraps',
   'console.planCounts.items': '"1 elemento" against "1 item": the Spanish noun is longer; the count line wraps',
