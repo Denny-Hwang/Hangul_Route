@@ -54,10 +54,43 @@ const OPTIONS = [
   { learnerId: 'profile:mina', name: 'Mina', classes: [], selfManaged: false, blockTeacherRequests: false },
 ];
 
+// GX-10 review: a family with chips. Jaehan has a new device (Needs your OK), Yuhan has a class move the family answers
+// for (learnerRoute caregiver: Needs your OK, Move off), Mina manages her own account (learnerRoute device: the quiet
+// Move waiting, never an action the family cannot take).
+const learnerSide = (id: string, learnerId: string, name: string, learnerRoute: 'caregiver' | 'device') => ({
+  id,
+  role: 'learner_side',
+  status: 'requested',
+  initiator: 'source',
+  learner: { id: learnerId, name },
+  from: { spaceId: 'space:a', name: 'Sunday Class A' },
+  to: { spaceId: 'space:d', name: 'Evening Class D', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 8 },
+  learnerState: 'pending',
+  sourceState: 'yes',
+  destinationState: 'waiting',
+  introduce: false,
+  premiumChange: 'none',
+  destinationConsentMode: 'parent',
+  relinkAffected: false,
+  sourcePlansAffected: false,
+  visibleToday: [],
+  blockReason: null,
+  executeAfter: null,
+  createdAt: at(-60),
+  expiresAt: at(60 * 24 * 12),
+  executedAt: null,
+  endedAt: null,
+  learnerRoute,
+  endedFrom: null,
+  termsDigest: 'a'.repeat(64),
+});
+const FAMILY_MOVES = [learnerSide('transfer:yuhan', 'profile:yuhan', 'Yuhan', 'caregiver'), learnerSide('transfer:mina', 'profile:mina', 'Mina', 'device')];
+const CHIP_OPTIONS = OPTIONS.map((o) => (o.learnerId === 'profile:mina' ? { ...o, classes: [{ spaceId: 'space:a', name: 'Sunday Class A' }], selfManaged: true } : o));
+
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
 const json = (route: Route, data: unknown) => route.fulfill({ status: 200, contentType: 'application/json', headers: CORS, body: JSON.stringify({ data }) });
 
-async function mockSettings(page: Page, kind: 'class' | 'family', locale: string): Promise<string[]> {
+async function mockSettings(page: Page, kind: 'class' | 'family', locale: string, chips = false): Promise<string[]> {
   const mine = kind === 'class' ? CLASS : FAMILY;
   const paths: string[] = [];
   await page.clock.install({ time: NOW });
@@ -87,9 +120,9 @@ async function mockSettings(page: Page, kind: 'class' | 'family', locale: string
         ],
       });
     }
-    if (path.endsWith('/relink-requests')) return json(route, { requests: kind === 'class' ? [RELINK] : [] });
+    if (path.endsWith('/relink-requests')) return json(route, { requests: kind === 'class' || chips ? [RELINK] : [] });
     if (path.endsWith('/class-moves')) return json(route, kind === 'family' ? { notices: [] } : { outgoing: [], incoming: [] });
-    if (path.endsWith('/transfer-requests')) return json(route, kind === 'class' ? { requests: [MOVE_OUT] } : { requests: [], options: OPTIONS });
+    if (path.endsWith('/transfer-requests')) return json(route, kind === 'class' ? { requests: [MOVE_OUT] } : chips ? { requests: FAMILY_MOVES, options: CHIP_OPTIONS } : { requests: [], options: OPTIONS });
     return json(route, { plans: [], requests: [], entitlements: [] });
   });
   return paths;
@@ -162,6 +195,36 @@ for (const { locale, browser } of LOCALES) {
         await expect(page.getByTestId('invite-grown-up-status')).toHaveText(c.joinCode.copied.cta);
         expect(await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied)).toEqual(['K7PM4Q']);
         await page.screenshot({ path: test.info().outputPath(`settings-rows-family-${locale}-${label}.png`), fullPage: true });
+        if (label === '360') await noSidewaysScroll(page);
+      });
+
+      test(`${label}: family rows with chips: Needs your OK only for what the family answers, first in the list`, async ({ page }) => {
+        await page.setViewportSize(size);
+        await mockSettings(page, 'family', locale, true);
+        await page.goto('/parent/space/settings?id=space%3Akim');
+        await expect(page.locator('html')).toHaveAttribute('lang', locale);
+        const jaehan = row(page, 'Jaehan');
+        await expect(jaehan.getByRole('button', { name: c.status.chipName(c.status.needsOk, c.status.newDevice(8)) })).toBeVisible();
+        const yuhan = row(page, 'Yuhan');
+        await expect(yuhan.getByRole('button', { name: new RegExp(`^${c.status.needsOk}`) })).toBeVisible();
+        await expect(yuhan.getByTestId('move-row')).toHaveAttribute('aria-disabled', 'true');
+        await expect(yuhan.getByText(c.settings.moveOpen, { exact: true })).toBeVisible();
+        // Mina answers on her own device: the quiet chip, no action.
+        const mina = row(page, 'Mina');
+        await expect(mina.getByText(c.status.moveWaiting, { exact: true })).toBeVisible();
+        await expect(mina.getByRole('button', { name: new RegExp(`^${c.status.needsOk}`) })).toHaveCount(0);
+        // The rows that need an answer come first and carry the action edge.
+        const order = await page.getByTestId('settings-learner-row').locator('strong').allTextContents();
+        expect(order.slice(2)).toEqual(['Mina']);
+        await expect(page.locator('[data-testid="settings-learner-row"][data-action="true"]')).toHaveCount(2);
+        // The reason sits under the Move it explains, never wider than it.
+        const moveBox = await yuhan.getByTestId('move-row').boundingBox();
+        const reasonBox = await yuhan.getByTestId('move-row-reason').boundingBox();
+        expect(Math.round(reasonBox?.x ?? -1)).toBe(Math.round(moveBox?.x ?? 0));
+        expect(reasonBox?.y ?? 0).toBeGreaterThan(moveBox?.y ?? 0);
+        expect(Math.round(reasonBox?.width ?? 999)).toBeLessThanOrEqual(Math.round(moveBox?.width ?? 0));
+        await page.getByRole('heading', { name: c.settings.learners.title.family }).scrollIntoViewIfNeeded();
+        await page.screenshot({ path: test.info().outputPath(`settings-rows-family-chips-${locale}-${label}.png`), fullPage: true });
         if (label === '360') await noSidewaysScroll(page);
       });
     }
