@@ -8,7 +8,7 @@
       "hoyaIntro": "Ya conoces todas las letras. ¡Ahora escuchemos qué hacen las letras de abajo!",
       "culture.n1.text": "El libro {ko:훈민정음} no creó letras nuevas para la parte de abajo de un bloque: se usan otra vez las letras iniciales. Su parte sobre los sonidos finales dice que bastan ocho de esas letras.",
       "culture.n2.text": "En un {ko:서당}, una escuela de otros tiempos, al maestro se le llamaba {ko:훈장}. El Clásico de los mil caracteres, un libro chino de 1000 caracteres, se usaba mucho como primer libro para el chino clásico.",
-      "culture.n3.text": "Una letra de abajo puede cambiar de sonido. Antes de una vocal pasa al bloque siguiente: {ko:책이} se dice chaegi. Antes de n o m, un sonido k se dice ng: {ko:국물} se dice gungmul, y {ko:학년}, hangnyeon.",
+      "culture.n3.text": "Una letra de abajo puede cambiar de sonido. Antes de una partícula o terminación con vocal inicial, pasa al bloque siguiente: {ko:책이} se dice chaegi. Antes de n o m, un sonido k se dice ng: {ko:국물} se dice gungmul, y {ko:학년}, hangnyeon.",
       "culture.n4.text": "{ko:학교}, {ko:학생} y {ko:학년} empiezan con el mismo bloque, {ko:학}, que viene de un mismo carácter chino. Un {ko:학생} es una persona que aprende."
     },
     "quest:stage2-letters-v2-q1": {
@@ -88,7 +88,10 @@
       "steps.s2.discover.pages.0.items.0.word.gloss": "escuela",
       "steps.s2.discover.pages.0.items.1.word.gloss": "estudiante",
       "steps.s2.discover.pages.1.items.0.word.gloss": "año escolar, curso",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "escritorio"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "escritorio",
+      "steps.s2.discover.pages.2.caption": "Dos vocales que viste en el volumen 1. Escúchalas otra vez.",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "perro",
+      "steps.s2.discover.pages.2.items.1.example.gloss": "silla"
     },
     "minigame:s2-letters-v2-q2-practice": {
       "listenPick.rounds.hear-hakgyo.prompt": "escuela",
@@ -145,7 +148,9 @@
       "steps.s2.discover.pages.0.items.0.word.gloss": "libro, con i detrás",
       "steps.s2.discover.pages.0.items.1.word.gloss": "música",
       "steps.s2.discover.pages.1.items.0.word.gloss": "caldo",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "museo"
+      "steps.s2.discover.pages.1.items.1.word.gloss": "museo",
+      "steps.s2.discover.pages.2.caption": "Una vocal que viste en el volumen 1. Escúchala otra vez.",
+      "steps.s2.discover.pages.2.items.0.example.gloss": "manzana"
     },
     "minigame:s2-letters-v2-q3-practice": {
       "listenPick.rounds.hear-eumak.prompt": "música",

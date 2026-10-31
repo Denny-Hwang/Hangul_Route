@@ -1,12 +1,14 @@
-import { ListenPickRoundSchema, LessonScopeSchema, PicWordRoundSchema, isSpellingRound, type MinigameKind } from '@hangul-route/content-schema';
+import { ListenPickRoundSchema, LessonScopeSchema, PicWordRoundSchema, isSpellingRound, typeHangulMode, type MinigameKind } from '@hangul-route/content-schema';
+import { decodeReviewItems } from '@hangul-route/content-schema/review-items';
 import { describe, expect, it } from 'vitest';
 import { localizeScope } from '../../logic/content-locale';
-import { applyGameSwitches, needsDictationChunk } from '../../logic/game-switches';
+import { applyGameSwitches, DICTATION_SWITCH, needsDictationChunk, SPELLING_SWITCH } from '../../logic/game-switches';
 import { picWordFallback } from '../../logic/hidden-heritage-fallback';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
 import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { soundKeyOf } from '../../logic/syllable-build/pool';
-import { syllableBuildToListenPick } from '../../logic/syllable-build/fallback';
+import { fallbackScope } from '../../logic/syllable-build/fallback';
+import * as reviewChunk from '../__generated__/review-item-chunks/review-items';
 import { volumeEpisodes } from '../episodes';
 import { questsAll } from '../quests';
 import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
@@ -27,14 +29,26 @@ const steps = QUESTS.flatMap((quest) =>
   }),
 );
 
-/** The scope a step plays with every `game.<kind>` switch off. */
-function switchedOff(scope: MinigameScope): MinigameScope {
-  if (scope.kind === 'syllable-build') {
-    return { kind: 'listen-pick', listenPick: { rounds: (scope.syllableBuild?.rounds ?? []).map((r) => syllableBuildToListenPick(r)) } };
-  }
-  if (scope.kind === 'hidden-heritage') return picWordFallback(scope);
-  return applyGameSwitches(scope, () => false);
+/** The four `game.<kind>` switches the cell's steps read. */
+const SWITCHES = ['game.syllable-build', 'game.hidden-heritage', SPELLING_SWITCH, DICTATION_SWITCH] as const;
+type CellSwitch = (typeof SWITCHES)[number];
+
+/**
+ * The scope a step plays, through the app's own off paths: `SyllableBuildStepBody` plays `fallbackScope` (a seed per
+ * round), `HiddenHeritageStep` plays `picWordFallback`, and the Listen & Pick and Type Hangul steps play
+ * `applyGameSwitches` (the spelling round and Dictation).
+ */
+function played(scope: MinigameScope, on: (flag: CellSwitch) => boolean): MinigameScope {
+  if (scope.kind === 'syllable-build') return on('game.syllable-build') ? scope : fallbackScope(scope);
+  if (scope.kind === 'hidden-heritage') return on('game.hidden-heritage') ? scope : picWordFallback(scope);
+  return applyGameSwitches(scope, (flag) => on(flag as CellSwitch));
 }
+
+/** The scope a step plays with every `game.<kind>` switch off. */
+const switchedOff = (scope: MinigameScope): MinigameScope => played(scope, () => false);
+
+/** The cell's review items as the app decodes them (row CM-44 S2: Volume 2's items). */
+const ITEMS = decodeReviewItems(reviewChunk);
 
 describe('Letters & Books Volume 2, Stage 2 (row CM-44 S2)', () => {
   it('ships three quests of six steps on its own Volume 2 episode', () => {
@@ -90,9 +104,13 @@ describe('Letters & Books Volume 2, Stage 2 (row CM-44 S2)', () => {
   });
 
   it('Syllable Build off: Listen & Pick on the built block, the target among blocks that never sound alike', () => {
-    const build = steps.find((s) => s.kind === 'syllable-build')!.scope.syllableBuild!.rounds;
-    for (const round of build) {
-      const pick = syllableBuildToListenPick(round);
+    const scope = steps.find((s) => s.kind === 'syllable-build')!.scope;
+    const build = scope.syllableBuild!.rounds;
+    // The app's off path (SyllableBuildStepBody): fallbackScope, a seed per round.
+    const picks = fallbackScope(scope).listenPick!.rounds;
+    expect(picks).toHaveLength(build.length);
+    for (const [i, round] of build.entries()) {
+      const pick = picks[i]!;
       const options = pick.options.map((o) => o.text!.ko);
       expect(options[0], round.id).toBe(round.target.ko);
       expect(options.length, round.id).toBeGreaterThanOrEqual(3);
@@ -109,7 +127,61 @@ describe('Letters & Books Volume 2, Stage 2 (row CM-44 S2)', () => {
       const lookAlike = before.options.find((o) => o.id !== before.answerId)!.text!.ko;
       expect(r.options.map((o) => o.text?.ko), r.id).not.toContain(lookAlike);
       expect(r.options[0]?.id, r.id).toBe(before.answerId);
+      // The romanization is the pronunciation (F-CNT-002 converter), so options that sound alike share it (책이 and 채기
+      // are both chaegi): every option left has its own.
+      const sounds = r.options.map((o) => o.text!.romanization);
+      expect(new Set(sounds).size, r.id).toBe(sounds.length);
     }
+  });
+
+  it('every quest with each game switch off, one at a time, plays shipped kinds whose rounds parse', () => {
+    for (const off of SWITCHES) {
+      const on = (flag: CellSwitch): boolean => flag !== off;
+      for (const { at, scope } of steps) {
+        const now = played(scope, on);
+        const where = `${off} off: ${at}`;
+        expect(PLAYABLE_KINDS, where).toContain(now.kind);
+        if (off === 'game.syllable-build') expect(now.kind, where).not.toBe('syllable-build');
+        if (off === 'game.hidden-heritage') expect(now.kind, where).not.toBe('hidden-heritage');
+        if (off === SPELLING_SWITCH) expect((now.listenPick?.rounds ?? []).some(isSpellingRound), where).toBe(false);
+        if (off === DICTATION_SWITCH) expect((now.typeHangul?.rounds ?? []).some((r) => typeHangulMode(r) === 'hear'), where).toBe(false);
+        if (scope.kind !== 'syllable-build') for (const r of now.listenPick?.rounds ?? []) expect(ListenPickRoundSchema.safeParse(r).success, `${where} ${r.id}`).toBe(true);
+        for (const b of now.picWord?.boards ?? []) expect(PicWordRoundSchema.safeParse(b).success, where).toBe(true);
+      }
+    }
+  });
+
+  it('every word with a sound change keeps hear-pick and stays out of Dictation (section 4.2), liaison included', () => {
+    // 책이 [채기] and 음악 [으막] (liaison) carry `soundChange: true` on their Discover word, since the converter reads liaison
+    // as no change; 국물, 박물관 and 학년 (nasalization) and 학교 and 학생 (tensification) are read by the converter.
+    const words = ['책이', '음악', '국물', '박물관', '학년', '학교', '학생'];
+    for (const ko of words) {
+      const item = ITEMS.find((i) => i.kind === 'lex' && i.ko === ko);
+      expect(item, ko).toBeDefined();
+      expect(item!.soundChange, ko).toBe(true);
+      expect(item!.formats, ko).not.toContain('dictation');
+    }
+    // No q2 or q3 step asks one of them by ear in Type Hangul.
+    for (const { at, scope } of steps) for (const r of scope.typeHangul?.rounds ?? []) expect(typeHangulMode(r), `${at} ${r.id}`).toBe('see');
+  });
+
+  it('ko: a typed word or a spelling round never shows a block of its answer in its prompt or meaning', () => {
+    const overlays = LESSON_STAGE_MODULES[2].LESSON_SCOPE_OVERLAYS;
+    const leaks: string[] = [];
+    const check = (where: string, answer: string, shown: readonly string[]): void => {
+      const blocks = [...answer].filter((c) => /[가-힣]/.test(c));
+      for (const text of shown) for (const b of blocks) if (text.includes(b)) leaks.push(`${where}: ${b} in ${text}`);
+    };
+    for (const { at, scope } of steps) {
+      const ref = QUESTS.flatMap((q) => q.steps).find((st) => st.minigameRef !== undefined && scopeFor(st.minigameRef) === scope)?.minigameRef;
+      const ko = ref === undefined ? undefined : localizeScope(scope, ref, 'ko', overlays);
+      for (const r of ko?.typeHangul?.rounds ?? []) check(`${at} ${r.id}`, scope.typeHangul!.rounds.find((x) => x.id === r.id)!.target.ko, [r.promptEn, r.target.en]);
+      for (const r of (ko?.listenPick?.rounds ?? []).filter(isSpellingRound)) {
+        const answer = r.options.find((o) => o.id === r.answerId)!.text!.ko;
+        check(`${at} ${r.id}`, answer, [r.prompt.en]);
+      }
+    }
+    expect(leaks).toEqual([]);
   });
 
   it('Hidden Heritage off: one Pic-Word Match board of the three targets, each with its own picture', () => {

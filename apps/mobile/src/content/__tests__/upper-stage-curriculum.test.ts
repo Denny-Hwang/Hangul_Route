@@ -542,11 +542,12 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   });
 
   it('U-4 decodable scored reading in Stage 2: Stage 1 symbols, plus in Word Builder the symbols it taught by then', () => {
-    // Letters Volume 2 (row CM-44 S2) follows its Volume 1, Word Builder (a cell opens its first volume not complete,
-    // and the lint's route reads a Volume 2 after its stage's Volume 1 cells), so it reads every symbol Word Builder taught.
-    const wordBuilderKeys = (wordBuilder?.quests ?? []).flatMap(discoverSymbols).map(keyOf);
+    // Letters Volume 2 (row CM-44 S2) assumes nothing from Word Builder: with `volumes` on, its page's Vol 2 tab opens
+    // it before Volume 1 is complete (the curriculum stays unlocked). So it reads Stage 1 symbols and the symbols its own
+    // Discover shows, and its Pic-Word tiles (which carry their romanization) are exposure, as in every other Stage 2 cell.
     for (const cell of stage2) {
-      const taught = new Set([...STAGE1_KEYS, ...(cell.theme === 'letters' && cell.volume === 2 ? wordBuilderKeys : [])]);
+      const taught = new Set(STAGE1_KEYS);
+      const decodes = cell.theme === 'letters' && (cell.volume ?? 1) === 1;
       for (const quest of cell.quests) {
         // Only Word Builder adds symbols; the other Stage 2 cells never read one (a plan orders themes freely).
         if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
@@ -554,9 +555,10 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
         // Card Match tile carries its romanization and a Listen & Pick prompt is heard (Playground Words S2-3,
         // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter, and from
         // row CM-3A S2 the Read Pick Meaning prompts and the Dictation words.
-        const scored =
-          cell.theme === 'letters'
-            ? quest
+        const scored = decodes
+          ? quest
+          : cell.theme === 'letters'
+            ? ({ ...quest, scopes: quest.scopes.filter((sc) => sc.kind !== 'pic-word-match' && sc.kind !== 'card-match') } as LessonQuest)
             : ({
                 ...quest,
                 scopes: quest.scopes.flatMap((sc): LessonScope[] =>
