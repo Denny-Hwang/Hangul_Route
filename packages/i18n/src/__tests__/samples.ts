@@ -1052,4 +1052,15 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.status.moving': [['Nov 3']],
   'console.status.minutesLeft': [[1], [8]],
   'console.attention.from': [['Class B']],
+  // AMENDMENTS-GROWNUP-UX GX-4: the family's Needs you rows (a learner's name, the new class and whole days left, 1 and
+  // many), the fold count (1 and many), the class line (a class name; a count), the family page's count and the end date.
+  'console.parentHome.needsYou.move': [['Jun']],
+  'console.parentHome.needsYou.moveMeta': [['Evening Class D', 1], ['Evening Class D', 9]],
+  'console.parentHome.needsYou.relink': [['Mina']],
+  'console.parentHome.needsYou.scope': [['Sora']],
+  'console.parentHome.needsYou.more': [[1], [2]],
+  'console.parentHome.classLine.one': [['Evening Class D']],
+  'console.parentHome.classLine.many': [[2]],
+  'console.transfer.familyNeedsYou': [[1], [2]],
+  'console.transfer.endsOn': [['Nov 9']],
 };

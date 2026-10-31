@@ -1437,6 +1437,34 @@ export const consoleMsgs = {
     askOwner: 'Ask the family owner for a family code.',
     /** The clipboard refused: the code is still on screen. */
     copyFailed: "Couldn't copy. The code is on the screen.",
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-4 (section 7.1): the family's **Needs you** strip under the family heading, one compact row
+     * per thing only the family can answer, soonest-closing first; with 3 or more, the first keeps its row and the rest
+     * fold into `more`. One action wording per locale (section 10.1). `{name}` is a learner's roster name.
+     */
+    needsYou: {
+      title: 'Needs you',
+      move: (name: string) => `A class move for ${name} needs your OK.`,
+      /** The move row's second line: the new class and the whole days until the request ends. */
+      moveMeta: (to: string, days: number) => `New class: ${to} · ${plural('en', days, { one: `Ends in ${days} day`, other: `Ends in ${days} days` })}`,
+      relink: (name: string) => `${name} wants to continue on a new device.`,
+      scope: (name: string) => `Read what ${name}'s teachers can see.`,
+      readOk: { cta: 'Read and OK' },
+      more: (n: number) => plural('en', n, { one: `${n} more thing needs you`, other: `${n} more things need you` }),
+      seeAll: { cta: 'See all' },
+    },
+    /** GX-4 section 7.2: the child card's status chip, text only (the strip owns the buttons). */
+    status: {
+      move: 'Class move · needs your OK',
+      relink: 'New device · needs your OK',
+      scope: 'Class info to read',
+    },
+    /** GX-4 section 7.2: which classes the child is in, from the family's class-move read (omitted when that read is skipped). */
+    classLine: {
+      one: (className: string) => `In: ${className}`,
+      many: (n: number) => `In ${n} classes`,
+      none: 'Family only',
+    },
   },
   /**
    * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; Appendix B
@@ -1603,6 +1631,10 @@ export const consoleMsgs = {
     /** The roster button (permanent, as Re-link's) and the home and school-row counts; a count of 0 shows `entry.cta`. */
     entry: { cta: 'Class moves' },
     waiting: (n: number) => plural('en', n, { one: `${n} class move waiting`, other: `${n} class moves waiting` }),
+    /** GX-4 (section 7.2): the family page's count of moves that wait for the family's own answer. */
+    familyNeedsYou: (n: number) => plural('en', n, { one: `${n} class move needs your OK`, other: `${n} class moves need your OK` }),
+    /** GX-4 Fix D (section 7.5): when an open request ends; the date arrives formatted (`monthDay`). */
+    endsOn: (date: string) => `Ends ${date}`,
     /** A school row's link to one child class (counts only). */
     schoolRow: (className: string, n: number) => `${className}: ${plural('en', n, { one: `${n} class move waiting`, other: `${n} class moves waiting` })}`,
     back: (space: string) => `Back to ${space}`,
@@ -1623,6 +1655,8 @@ export const consoleMsgs = {
       saidYes: 'said yes',
       youSaidYes: 'you said yes',
       waiting: 'waiting',
+      /** GX-4 Fix D (section 7.5): the family's own step on its page, while it waits for the family. */
+      yourAnswer: 'your answer needed',
     },
     /** Card meta: when it was asked; `days` is whole days since the request (0 = today). */
     meta: {

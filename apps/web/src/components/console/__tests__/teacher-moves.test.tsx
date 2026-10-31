@@ -17,7 +17,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => 'en', useSetLocale: () => () => undefined };
 });
 
-import { FamilyClassCards, type FamilyClassCardsApi } from '@/components/console/FamilyClassCards';
+import { FamilyClassCards, MoveNotice, scopeCardDomId, type FamilyClassCardsApi, type MoveNoticeApi } from '@/components/console/FamilyClassCards';
 import { ReportScopeBlock } from '@/components/console/ReportScopeBlock';
 import { MOVE_LOCK_MS, TeacherMoveSheet, type TeacherMoveApi } from '@/components/console/TeacherMoveSheet';
 import { TeacherMovesSection, type TeacherMovesApi } from '@/components/console/TeacherMovesSection';
@@ -350,50 +350,70 @@ describe('TeacherMovesSection (screen 2)', () => {
   });
 });
 
-describe('FamilyClassCards (screen 4)', () => {
-  function api(over: Partial<Record<keyof FamilyClassCardsApi, unknown>> = {}) {
+describe('FamilyClassCards (screen 4) and the move notice in its child card (GX-4)', () => {
+  const scope = (needed = true) => ({ current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:mina', name: 'Mina', needed }, { learnerId: 'profile:jun', name: 'Jun', needed: false }] });
+  function api(over: Partial<Record<keyof FamilyClassCardsApi | 'markMoveSeen', unknown>> = {}) {
     return {
-      classScope: vi.fn(async () => ok({ current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:mina', name: 'Mina', needed: true }, { learnerId: 'profile:jun', name: 'Jun', needed: false }] })),
       acknowledgeClassScope: vi.fn(async () => ok({ version: 'class-scope-2026-10', ackedAt: 't' })),
-      moveNotices: vi.fn(async () => ok([{ id: 'move:1', learnerId: 'profile:mina', learnerName: 'Mina', to: { spaceId: 'space:d', name: 'Evening Class D' }, executedAt: 't' }])),
       markMoveSeen: vi.fn(async () => ok({ seen: true })),
       ...over,
-    } as unknown as FamilyClassCardsApi & Record<string, ReturnType<typeof vi.fn>>;
+    } as unknown as FamilyClassCardsApi & MoveNoticeApi & Record<string, ReturnType<typeof vi.fn>>;
   }
 
   it('one update card per learner who needs it: every line and every item, names filled in; OK acknowledges', async () => {
     const a = api();
-    await render(<FamilyClassCards familyId="space:f" api={a} movesShown />);
+    const onScope = vi.fn();
+    await render(<FamilyClassCards familyId="space:f" api={a} scope={scope()} onScope={onScope} onStale={() => undefined} />);
     const cards = byTestId('class-scope-card');
     expect(cards).toHaveLength(1);
+    // The strip's Read and OK scrolls to and focuses this card (GX-4, until the owner answers GX-OD-3).
+    expect((cards[0] as ReactTestInstance).props.id).toBe(scopeCardDomId('space:f', 'profile:mina'));
+    expect((cards[0] as ReactTestInstance).props.tabIndex).toBe(-1);
     const words = text(cards[0] as ReactTestInstance);
     expect(words).toContain(en.classScope.title('Mina'));
     for (const line of Object.values(CLASS_SCOPE_TEXT.en.lines)) expect(words).toContain(line.split('{learner}').join('Mina'));
     for (const item of classScopeItems('en')) expect(words).toContain(item.text.split('{learner}').join('Mina'));
     await click('class-scope-ok');
     expect(a.acknowledgeClassScope).toHaveBeenCalledWith('space:f', 'profile:mina', 'class-scope-2026-10');
-    expect(byTestId('class-scope-card')).toHaveLength(0);
+    expect(onScope).toHaveBeenCalledWith({ current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:mina', name: 'Mina', needed: false }, { learnerId: 'profile:jun', name: 'Jun', needed: false }] });
   });
 
-  it('the move notice says where the learner went, until OK', async () => {
-    const a = api();
-    await render(<FamilyClassCards familyId="space:f" api={a} movesShown />);
-    expect(text(one('move-notice'))).toContain(en.classScope.notice('Mina', 'Evening Class D'));
-    await click('move-notice-ok');
-    expect(a.markMoveSeen).toHaveBeenCalledWith('space:f', 'move:1');
-    expect(byTestId('move-notice')).toHaveLength(0);
-  });
-
-  it('reads no notices while moves are off, draws nothing with nothing to say, and says when OK did not save', async () => {
-    const quiet = api({ classScope: vi.fn(async () => ok({ current: 'class-scope-2026-10', learners: [] })) });
-    await render(<FamilyClassCards familyId="space:f" api={quiet} movesShown={false} />);
-    expect(quiet.moveNotices).not.toHaveBeenCalled();
+  it('draws nothing with nothing to read (or before the read answers), and says when OK did not save', async () => {
+    await render(<FamilyClassCards familyId="space:f" api={api()} scope={scope(false)} onScope={() => undefined} onStale={() => undefined} />);
+    expect(byTestId('family-class-cards')).toHaveLength(0);
+    act(() => renderer?.unmount());
+    await render(<FamilyClassCards familyId="space:f" api={api()} scope={null} onScope={() => undefined} onStale={() => undefined} />);
     expect(byTestId('family-class-cards')).toHaveLength(0);
     act(() => renderer?.unmount());
     const failing = api({ acknowledgeClassScope: vi.fn(async () => fail('network', -1)) });
-    await render(<FamilyClassCards familyId="space:f" api={failing} movesShown={false} />);
+    await render(<FamilyClassCards familyId="space:f" api={failing} scope={scope()} onScope={() => undefined} onStale={() => undefined} />);
     await click('class-scope-ok');
     expect(text(one('class-scope-card'))).toContain(en.classScope.failed);
+  });
+
+  it('a stale version asks the page to read again', async () => {
+    const onStale = vi.fn();
+    const stale = api({ acknowledgeClassScope: vi.fn(async () => fail('class_scope_stale')) });
+    await render(<FamilyClassCards familyId="space:f" api={stale} scope={scope()} onScope={() => undefined} onStale={onStale} />);
+    await click('class-scope-ok');
+    expect(onStale).toHaveBeenCalledTimes(1);
+  });
+
+  it('the move notice says where the learner went, until OK (same text, same OK, same seen write)', async () => {
+    const a = api();
+    const onSeen = vi.fn();
+    const notice = { id: 'move:1', learnerId: 'profile:mina', learnerName: 'Mina', to: { spaceId: 'space:d', name: 'Evening Class D' }, executedAt: 't' };
+    await render(<MoveNotice familyId="space:f" notice={notice} api={a} onSeen={onSeen} />);
+    expect(text(one('move-notice'))).toContain(en.classScope.notice('Mina', 'Evening Class D'));
+    await click('move-notice-ok');
+    expect(a.markMoveSeen).toHaveBeenCalledWith('space:f', 'move:1');
+    expect(onSeen).toHaveBeenCalledWith('move:1');
+    act(() => renderer?.unmount());
+    const failing = api({ markMoveSeen: vi.fn(async () => fail('network', -1)) });
+    await render(<MoveNotice familyId="space:f" notice={notice} api={failing} onSeen={onSeen} />);
+    await click('move-notice-ok');
+    expect(text(one('move-notice'))).toContain(en.classScope.failed);
+    expect(onSeen).toHaveBeenCalledTimes(1);
   });
 });
 

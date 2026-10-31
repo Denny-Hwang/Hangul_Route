@@ -86,6 +86,19 @@ export function StatusChip({ words, onActivate, testId = 'learner-status' }: { w
   );
 }
 
+/**
+ * A chip that is only text (GX-4 section 7.2, the child card on the family home): a `<span>` read with the name, never a
+ * button (the Needs you strip owns the actions). `action` is the family's own action, in the amber light fill (no border,
+ * no dot: the card keeps its shipped border); `info` a dated move.
+ */
+export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info'; testId?: string }): JSX.Element {
+  return (
+    <span data-testid={testId} data-tone={tone} style={{ ...chipBase, whiteSpace: 'normal', backgroundColor: TONE_FILL[tone] }}>
+      {text}
+    </span>
+  );
+}
+
 /** The reason line under a card's header; `id` lets the inline answers name whose request it is. */
 export function ReasonLine({ id, text }: { id: string; text: string }): JSX.Element {
   return (

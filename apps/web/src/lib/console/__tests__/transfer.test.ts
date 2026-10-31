@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { getMessages, LOCALES } from '@hangul-route/i18n';
+import { formatDate, getMessages, LOCALES } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { ApiResult, TransferDestinationView, TransferLearnerSideView, TransferSourceView, TransferView } from '../api';
 import { isCaregiverSafe } from '../banned-text';
@@ -18,7 +18,9 @@ import {
   startError,
   startErrorText,
   statusLine,
+  stepDone,
   stepWord,
+  endsLine,
 } from '../transfer';
 import { noteTransferResult, resetTransferLockForTests, subscribeTransferLock, transfersLockedThisSession, transfersShown } from '../transfer-lock';
 
@@ -124,9 +126,30 @@ describe('class-move helpers (F-SPACE-002 section 4.8, T-6a)', () => {
       expect(slotLabel('learner', v)).toBe('Family');
       expect(slotLabel('source', v)).toBe('Sunday Class A');
       expect(slotLabel('destination', v)).toBe('Saturday Class B');
-      expect(stepWord('learner', v)).toBe('waiting');
+      // GX-4 Fix D (AMENDMENTS-GROWNUP-UX section 7.5): the family's own waiting step asks for its answer.
+      expect(stepWord('learner', v)).toBe('your answer needed');
+      expect(stepWord('learner', v, 'es')).toBe('falta tu respuesta');
+      expect(stepWord('learner', v, 'ko')).toBe('내 답을 기다려요');
+      expect(stepDone('learner', v)).toBe(false);
       expect(stepWord('source', v)).toBe('said yes');
+      expect(stepDone('source', v)).toBe(true);
+      expect(stepWord('destination', v)).toBe('waiting');
+      expect(stepDone('destination', v)).toBe(false);
       expect(stepWord('learner', family({ learnerState: 'consented' }))).toBe('said yes');
+      expect(stepDone('learner', family({ learnerState: 'consented' }))).toBe(true);
+    });
+
+    it('a class page keeps "waiting" for the family step (Fix D is the family page only)', () => {
+      expect(stepWord('learner', source({ steps: { learner: 'waiting', source: 'yes', destination: 'waiting' } }))).toBe('waiting');
+    });
+
+    it('Fix D: an open family request shows when it ends, a closed one does not', () => {
+      expect(endsLine(family(), 'en')).toBe('Ends Oct 25');
+      expect(endsLine(family(), 'es')).toBe(`Termina el ${formatDate('es', '2026-10-25T12:00:00.000Z', 'monthDay')}`);
+      expect(endsLine(family(), 'ko')).toBe(`${formatDate('ko', '2026-10-25T12:00:00.000Z', 'monthDay')} 마감`);
+      expect(endsLine(family({ status: 'approved' }), 'en')).toBeNull();
+      expect(endsLine(family({ status: 'ended' }), 'en')).toBeNull();
+      expect(endsLine(family({ expiresAt: 'not a date' }), 'en')).toBeNull();
     });
 
     it('an ended request has no steps to word', () => {
