@@ -7,5 +7,6 @@ export { TapLockContext, TapLockProvider } from './TapLockProvider';
 export type { TapLockClock } from './TapLockProvider';
 export { useTapLock } from './use-tap-lock';
 export { usePressGuard } from './use-press-guard';
+export { usePressLook } from './use-press-look';
 export type { TapScrollerLike } from './controller';
 export type { PressGuard, PressGuardOptions, TapBoardProps, TapControlProps, TapLock, TapLook, TapScrollerProps, TapTargetProps } from './types';
