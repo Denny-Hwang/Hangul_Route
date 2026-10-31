@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   CLICK_ECHO_MS,
+  FLING_DECAY,
+  FLING_FRAME_MS,
+  FLING_MIN_VELOCITY,
+  FLING_WINDOW_MS,
   GAP_REACH,
   INITIAL_TAP_STATE,
   KEY_BOUNCE_MS,
@@ -11,11 +15,14 @@ import {
   boardTouchAction,
   claimTarget,
   claimsTouch,
+  flingStep,
+  hasLivePress,
   isTargetLocked,
   pressGuardAllows,
   pressedTargets,
   rectDistance,
   tapStep,
+  targetTouchAction,
   type TapBoardConfig,
   type TapEvent,
   type TapModelState,
@@ -34,25 +41,32 @@ const A: TapTargetSnapshot = { id: 'A', rect: { x: 0, y: 0, width: 96, height: 9
 const B: TapTargetSnapshot = { id: 'B', rect: { x: 108, y: 0, width: 96, height: 96 } };
 const TARGETS = [A, B];
 
-const FIRST_BOARD: TapBoardConfig = { lock: 'board', multiTouch: 'first', disabled: false };
-const FIRST_TARGET: TapBoardConfig = { lock: 'target', multiTouch: 'first', disabled: false };
+const FIRST_BOARD: TapBoardConfig = { lock: 'board', multiTouch: 'latest', disabled: false };
+const FIRST_TARGET: TapBoardConfig = { lock: 'target', multiTouch: 'latest', disabled: false };
 const KEYS: TapBoardConfig = { lock: 'target', multiTouch: 'each', disabled: false };
 
 interface Run {
   state: TapModelState;
   commits: string[];
+  /** Every scroll the board asked for, and the fling at the end, if any. */
+  scrolls: number[];
+  fling: number | null;
 }
 
 /** Runs events in order and gathers every commit. */
 function run(config: TapBoardConfig, events: TapEvent[], from: TapModelState = INITIAL_TAP_STATE): Run {
   let state = from;
   const commits: string[] = [];
+  const scrolls: number[] = [];
+  let fling: number | null = null;
   for (const event of events) {
     const out = tapStep(state, event, config);
     state = out.state;
     commits.push(...out.commits);
+    if (out.scrollBy !== 0) scrolls.push(out.scrollBy);
+    if (out.fling !== null) fling = out.fling;
   }
-  return { state, commits };
+  return { state, commits, scrolls, fling };
 }
 
 const down = (touchId: string, x: number, y: number, at: number, targets = TARGETS): TapEvent => ({ type: 'down', touchId, point: { x, y }, at, targets });
@@ -74,6 +88,10 @@ describe('constants (section 3.1)', () => {
     expect(CLICK_ECHO_MS).toBe(700);
     expect(KEY_BOUNCE_MS).toBe(motion.duration.fast);
     expect(KEY_BOUNCE_MS).toBe(120);
+  });
+
+  it('the fling: 0.95 per 16 ms frame, stops under 0.05 px/ms, velocity over the last 100 ms', () => {
+    expect([FLING_DECAY, FLING_FRAME_MS, FLING_MIN_VELOCITY, FLING_WINDOW_MS]).toEqual([0.95, 16, 0.05, 100]);
   });
 });
 
@@ -116,7 +134,6 @@ describe('claimTarget (rules 1 and 2)', () => {
     expect(claimsTouch({ x: 100, y: 48 }, TARGETS)).toBe(true);
     expect(claimsTouch({ x: 48, y: 96 + GAP_REACH + 1 }, TARGETS)).toBe(false);
     expect(claimsTouch({ x: 100, y: 48 }, TARGETS, { kind: 'control' })).toBe(false);
-    expect(claimsTouch({ x: 0, y: 0 }, TARGETS, { kind: 'target', id: 'B' })).toBe(true);
     const tie = run(FIRST_TARGET, [...tap('1', 102, 48, 0), { type: 'click', targetId: 'B', at: 90, targets: TARGETS }]);
     expect(tie.commits).toEqual([]);
   });
@@ -128,16 +145,29 @@ describe('claimTarget (rules 1 and 2)', () => {
     expect(claimTarget({ x: 0, y: 0 }, [])).toBeNull();
   });
 
-  it('another control is never claimed, even within GAP_REACH; a target found by the host wins', () => {
+  it('another control the host found is never claimed, even within GAP_REACH', () => {
     expect(claimTarget({ x: 100, y: 48 }, TARGETS, { kind: 'control' })).toBeNull();
     expect(claimTarget({ x: 10, y: 10 }, TARGETS, { kind: 'control' })).toBeNull();
-    expect(claimTarget({ x: 100, y: 48 }, TARGETS, { kind: 'target', id: 'B' })).toBe('B');
-    // A host hit on a target that is not registered falls back to the rectangles.
-    expect(claimTarget({ x: 10, y: 10 }, TARGETS, { kind: 'target', id: 'gone' })).toBe('A');
+  });
+
+  it('T20: a speaker registered through TapControl 6 px from A is never claimed', () => {
+    const speaker = { x: 102, y: 0, width: 4, height: 40 };
+    expect(claimsTouch({ x: 104, y: 20 }, TARGETS, undefined, [speaker])).toBe(false);
+    // Beside the speaker, the gap still fills.
+    expect(claimTarget({ x: 100, y: 60 }, TARGETS, undefined, [speaker])).toBe('A');
+  });
+
+  it('T18: a take-back target (gapFill false) is reached only from inside its own rectangle', () => {
+    const z: TapTargetSnapshot = { id: 'Z', rect: { x: 104, y: 0, width: 96, height: 96 }, gapFill: false };
+    // 3 px from Z, 5 px from A: A.
+    expect(claimTarget({ x: 101, y: 48 }, [A, z])).toBe('A');
+    // 3 px from Z with A out of reach: nothing.
+    expect(claimsTouch({ x: 101, y: 48 }, [z])).toBe(false);
+    expect(claimTarget({ x: 110, y: 48 }, [A, z])).toBe('Z');
   });
 });
 
-describe('the forgiving tap (rules 3 to 6)', () => {
+describe('the forgiving tap (rules 3, 4, 6, 7)', () => {
   it('T1: down on A, 24 px down, lift: A commits once', () => {
     const out = run(FIRST_BOARD, [down('1', 48, 48, 0), move('1', 48, 60, 20), move('1', 48, 72, 40), up('1', 48, 72, 80)]);
     expect(out.commits).toEqual(['A']);
@@ -174,9 +204,8 @@ describe('the forgiving tap (rules 3 to 6)', () => {
     expect(out.state.presses).toEqual([]);
   });
 
-  it('on a first-finger board the target never changes during a touch', () => {
-    const out = run(FIRST_BOARD, [down('1', 90, 48, 0), move('1', 115, 48, 30), up('1', 115, 48, 60)]);
-    // 25 px of travel: still A, released over B.
+  it('the target never changes during a touch (but the keyboard\'s): released in the gap nearer B, A commits', () => {
+    const out = run(FIRST_BOARD, [down('1', 90, 48, 0), move('1', 104, 48, 30), up('1', 104, 48, 60)]);
     expect(out.commits).toEqual(['A']);
   });
 
@@ -208,7 +237,7 @@ describe('the forgiving tap (rules 3 to 6)', () => {
   });
 });
 
-describe('locks (rule 9, KT-D5)', () => {
+describe('locks (rule 10, KT-D5)', () => {
   it('T6: board scope, taps on A at 0 and 150 ms: one commit', () => {
     expect(run(FIRST_BOARD, [...tap('1', 48, 48, 0), ...tap('2', 48, 48, 150)]).commits).toEqual(['A']);
   });
@@ -260,27 +289,49 @@ describe('locks (rule 9, KT-D5)', () => {
   });
 });
 
-describe('fingers (rule 7, KT-D4)', () => {
-  it('T9: finger 1 on A, finger 2 on B 40 ms later, 1 lifts, 2 lifts: A commits, B does not', () => {
-    const out = run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 150, 48, 40), up('1', 48, 48, 80), up('2', 150, 48, 120)]);
-    expect(out.commits).toEqual(['A']);
+describe('fingers (rule 8, KT-D4)', () => {
+  it('T9: finger 1 on A, finger 2 on B 40 ms later, 1 lifts, 2 lifts: B commits once, A never', () => {
+    const two = run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 150, 48, 40)]);
+    expect([...pressedTargets(two.state)]).toEqual(['B']);
+    const out = run(FIRST_TARGET, [up('1', 48, 48, 80), up('2', 150, 48, 120)], two.state);
+    expect(out.commits).toEqual(['B']);
   });
 
-  it('a second finger shows no press look and cancels nothing; the board ignores it until it lifts', () => {
-    const two = run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 150, 48, 40)]);
-    expect([...pressedTargets(two.state)]).toEqual(['A']);
-    const firstUp = run(FIRST_TARGET, [up('1', 48, 48, 80)], two.state);
-    // Finger 2 is still down and still ignored; a third finger is ignored too while it stays.
-    const third = run(FIRST_TARGET, [down('3', 150, 48, 600), up('3', 150, 48, 650)], firstUp.state);
-    expect(third.commits).toEqual([]);
-    const after = run(FIRST_TARGET, [up('2', 150, 48, 700), ...tap('4', 150, 48, 800)], third.state);
-    expect(after.commits).toEqual(['B']);
+  it('T9b: a thumb resting on A for 3 s never blocks a tap on B, and its lift answers nothing', () => {
+    const out = run(FIRST_TARGET, [down('1', 48, 48, 0), ...tap('2', 150, 48, 1000), up('1', 48, 48, 3000)]);
+    expect(out.commits).toEqual(['B']);
+    expect(out.state.touches).toEqual([]);
+  });
+
+  it('T9c: a second finger on an empty margin changes nothing; the first commits', () => {
+    const out = run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 400, 400, 20), up('2', 400, 400, 60), up('1', 48, 48, 100)]);
+    expect(out.commits).toEqual(['A']);
   });
 
   it('a repeated down for a finger already down is ignored', () => {
     const out = run(FIRST_BOARD, [down('1', 48, 48, 0), down('1', 48, 48, 5), up('1', 48, 48, 50)]);
     expect(out.commits).toEqual(['A']);
     expect(out.state.touches).toEqual([]);
+  });
+});
+
+describe('a slide onto a neighbour (rule 4, T17)', () => {
+  // A and C 8 px apart.
+  const C: TapTargetSnapshot = { id: 'C', rect: { x: 104, y: 0, width: 96, height: 96 } };
+
+  it('T17: down near A\'s edge, 25 px into C, lift over C: nothing commits; the press look went off on entering C', () => {
+    const into = run(FIRST_BOARD, [down('1', 90, 48, 0, [A, C]), move('1', 115, 48, 30, [A, C])]);
+    expect(pressedTargets(into.state).size).toBe(0);
+    expect(run(FIRST_BOARD, [up('1', 115, 48, 60, [A, C])], into.state).commits).toEqual([]);
+  });
+
+  it('over the gap band of a neighbour (not its rectangle) the touch is still inside', () => {
+    expect(run(FIRST_BOARD, [down('1', 90, 48, 0, [A, C]), up('1', 101, 48, 40, [A, C])]).commits).toEqual(['A']);
+  });
+
+  it('a disabled neighbour does not count as a neighbour', () => {
+    const off = { ...C, disabled: true };
+    expect(run(FIRST_BOARD, [down('1', 90, 48, 0, [A, off]), up('1', 110, 48, 40, [A, off])]).commits).toEqual(['A']);
   });
 });
 
@@ -328,7 +379,7 @@ describe('the keyboard: each finger on its own (KT-D7, section 6.7)', () => {
   });
 });
 
-describe('click echo and the click path (rule 8)', () => {
+describe('click echo and the click path (rule 9)', () => {
   const click = (targetId: string, at: number, targets = TARGETS): TapEvent => ({ type: 'click', targetId, at, targets });
 
   it('T12: a touch commit, then the browser click on A 30 ms later: one commit', () => {
@@ -372,34 +423,107 @@ describe('disabled (rule 3, T16)', () => {
   });
 });
 
-describe('scrolling boards (T14, T15)', () => {
-  it('T14: a 20 px horizontal graze on A commits (the browser does not pan sideways on a pan-y board)', () => {
-    expect(run(FIRST_BOARD, [down('1', 48, 48, 0), move('1', 58, 48, 20), move('1', 68, 48, 40), up('1', 68, 48, 60)]).commits).toEqual(['A']);
+describe('a board that can scroll drives its scroller (rule 5, T14, T15)', () => {
+  const SCROLLING: TapBoardConfig = { ...FIRST_BOARD, scroller: { axis: 'y', canScroll: true } };
+
+  it('T14: a 20 px horizontal graze on A commits', () => {
+    expect(run(SCROLLING, [down('1', 48, 48, 0), move('1', 58, 48, 20), move('1', 68, 48, 40), up('1', 68, 48, 60)]).commits).toEqual(['A']);
   });
 
-  it('T15: a 40 px vertical drag that becomes a scroll cancels: nothing commits and nothing changes', () => {
-    const out = run(FIRST_BOARD, [down('1', 48, 48, 0), move('1', 48, 64, 20), { type: 'cancel', at: 30 }, up('1', 48, 88, 60)]);
+  it('T15: 16, 24 and 32 px vertical grazes on A commit each time, and nothing scrolls', () => {
+    for (const d of [16, 24, 32]) {
+      const out = run(SCROLLING, [down('1', 48, 48, 0), move('1', 48, 48 + d / 2, 20), move('1', 48, 48 + d, 40), up('1', 48, 48 + d, 60)]);
+      expect(out.commits, `${d}`).toEqual(['A']);
+      expect(out.scrolls, `${d}`).toEqual([]);
+    }
+  });
+
+  it('T15b: a 72 px vertical drag from A scrolls the content 40 px with the finger; nothing commits or shows', () => {
+    const drag = run(SCROLLING, [down('1', 48, 80, 0), move('1', 48, 60, 16), move('1', 48, 40, 32), move('1', 48, 8, 48)]);
+    expect(pressedTargets(drag.state).size).toBe(0);
+    const out = run(SCROLLING, [up('1', 48, 8, 64)], drag.state);
+    // An upward drag moves the offset down the page: the content follows the finger.
+    expect([...drag.scrolls, ...out.scrolls].reduce((a, b) => a + b, 0)).toBe(40);
+    expect(out.commits).toEqual([]);
+    expect(out.fling).toBeGreaterThan(0);
+  });
+
+  it('the turn is for good: coming back within 32 px still commits nothing', () => {
+    const out = run(SCROLLING, [down('1', 48, 48, 0), move('1', 48, 100, 30), move('1', 48, 50, 60), up('1', 48, 50, 90)]);
+    expect(out.commits).toEqual([]);
+    expect(out.scrolls).toEqual([-20, 50]);
+  });
+
+  it('a drag along the other axis never scrolls; a slow release does not fling', () => {
+    const sideways = run(SCROLLING, [down('1', 48, 48, 0), move('1', 120, 48, 30), up('1', 120, 48, 60)]);
+    expect(sideways.scrolls).toEqual([]);
+    const slow = run(SCROLLING, [down('1', 48, 80, 0), move('1', 48, 40, 100), move('1', 48, 38, 400), up('1', 48, 38, 500)]);
+    expect(slow.fling).toBeNull();
+  });
+
+  it('a release that crosses the line in one jump still scrolls and does not commit', () => {
+    const out = run(SCROLLING, [down('1', 48, 48, 0), up('1', 48, 108, 40)]);
+    expect(out.commits).toEqual([]);
+    expect(out.scrolls).toEqual([-28]);
+  });
+
+  it('only a touch that went down on the target itself drives: a gap-filled touch is left to the browser pan', () => {
+    const out = run(SCROLLING, [down('1', 100, 48, 0), move('1', 100, 120, 30), up('1', 100, 120, 60)]);
+    expect(out.scrolls).toEqual([]);
+    expect(out.commits).toEqual([]);
+  });
+
+  it('a board that cannot scroll (it fits, or no scroller) keeps the tap model: 40 px down ends inside reach', () => {
+    const fits: TapBoardConfig = { ...FIRST_BOARD, scroller: { axis: 'y', canScroll: false } };
+    expect(run(fits, [down('1', 48, 76, 0), up('1', 48, 116, 40)]).commits).toEqual(['A']);
+  });
+
+  it('a horizontal scroller follows x', () => {
+    const x: TapBoardConfig = { ...FIRST_BOARD, scroller: { axis: 'x', canScroll: true } };
+    expect(run(x, [down('1', 48, 48, 0), move('1', 0, 48, 30), up('1', 0, 48, 60)]).scrolls).toEqual([16]);
+  });
+
+  it('T15c: a scroll the board did not drive cancels a live press (the host sends cancel): no commit, no look', () => {
+    const pressed = run(SCROLLING, [down('1', 48, 48, 0)]);
+    expect(hasLivePress(pressed.state)).toBe(true);
+    const out = run(SCROLLING, [{ type: 'cancel', at: 20 }, up('1', 48, 48, 60)], pressed.state);
     expect(out.commits).toEqual([]);
     expect(out.state).toEqual(INITIAL_TAP_STATE);
+    const scrolling = run(SCROLLING, [down('1', 48, 48, 0), move('1', 48, 120, 30)]);
+    expect(hasLivePress(scrolling.state)).toBe(false);
+  });
+
+  it('a later finger on a target ends a scroll and is a normal touch', () => {
+    const out = run(SCROLLING, [down('1', 48, 48, 0), move('1', 48, 120, 30), ...tap('2', 150, 48, 100), up('1', 48, 120, 300)]);
+    expect(out.commits).toEqual(['B']);
   });
 });
 
-describe('boardTouchAction (KT-D3)', () => {
-  it('auto: pinch-zoom when the screen fits, else pan-y pinch-zoom', () => {
-    expect(boardTouchAction('auto', true, true)).toBe('pinch-zoom');
-    expect(boardTouchAction('auto', false, true)).toBe('pan-y pinch-zoom');
+describe('flingStep', () => {
+  it('moves by velocity times a frame and decays, then stops under the floor', () => {
+    expect(flingStep(1)).toEqual({ delta: 16, next: 0.95 });
+    expect(flingStep(-0.5)).toEqual({ delta: -8, next: -0.475 });
+    expect(flingStep(0.049)).toBeNull();
+  });
+});
+
+describe('touch-action (KT-D3)', () => {
+  it('a board pans along its scroller only while it can scroll; otherwise pinch-zoom', () => {
+    expect(boardTouchAction({ axis: 'y', canScroll: true }, true)).toBe('pan-y pinch-zoom');
+    expect(boardTouchAction({ axis: 'x', canScroll: true }, true)).toBe('pan-x pinch-zoom');
+    expect(boardTouchAction({ axis: 'y', canScroll: false }, true)).toBe('pinch-zoom');
+    expect(boardTouchAction(null, true)).toBe('pinch-zoom');
   });
 
-  it('x: pan-x pinch-zoom; none: pinch-zoom', () => {
-    expect(boardTouchAction('x', false, true)).toBe('pan-x pinch-zoom');
-    expect(boardTouchAction('none', false, true)).toBe('pinch-zoom');
+  it('a browser without pinch-zoom drops the keyword (U1)', () => {
+    expect(boardTouchAction({ axis: 'y', canScroll: false }, false)).toBe('none');
+    expect(boardTouchAction({ axis: 'y', canScroll: true }, false)).toBe('pan-y');
+    expect(boardTouchAction({ axis: 'x', canScroll: true }, false)).toBe('pan-x');
   });
 
-  it('a browser without pinch-zoom: a fitting board falls back to none; a panning one drops the zoom keyword', () => {
-    expect(boardTouchAction('auto', true, false)).toBe('none');
-    expect(boardTouchAction('none', false, false)).toBe('none');
-    expect(boardTouchAction('auto', false, false)).toBe('pan-y');
-    expect(boardTouchAction('x', true, false)).toBe('pan-x');
+  it('a target never pans', () => {
+    expect(targetTouchAction(true)).toBe('pinch-zoom');
+    expect(targetTouchAction(false)).toBe('none');
   });
 });
 
