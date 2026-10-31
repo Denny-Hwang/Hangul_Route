@@ -112,6 +112,7 @@ export const consoleMsgs = {
     nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트', lecture: '강의 모드' },
     navAttention: {
       classes: (n: number) => `반, 승인 대기 ${n}건`,
+      home: (n: number) => `홈, 확인할 일 ${n}건`,
     },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
   },

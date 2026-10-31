@@ -193,11 +193,14 @@ export const consoleMsgs = {
       lecture: 'Lecture mode',
     },
     /**
-     * AMENDMENTS-GROWNUP-UX GX-3 (section 6, GX-D6): the accessible name of the Classes tab while requests wait. The tab
-     * shows the number on screen (`aria-hidden`); this name says what it counts. Counts only, never a learner's name.
+     * AMENDMENTS-GROWNUP-UX GX-3 and GX-5 (section 6, GX-D6): the accessible name of the Classes (teacher) or Home (parent)
+     * tab while requests wait. The tab shows the number on screen (`aria-hidden`); this name says what it counts. Counts
+     * only, never a learner's name.
      */
     navAttention: {
       classes: (n: number) => plural('en', n, { one: `Classes, ${n} needs your OK`, other: `Classes, ${n} need your OK` }),
+      /** GX-5 (section 7.4): the parent's Home tab; "to check" reads the same for 1 and many. */
+      home: (n: number) => `Home, ${n} to check`,
     },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },

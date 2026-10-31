@@ -65,6 +65,7 @@ const answers = {
   spaces: [] as SpaceListItem[],
   schools: {} as Record<string, Result>,
   schoolViews: {} as Record<string, Result>,
+  scope: {} as Record<string, Result>,
 };
 function fakeApi(): Record<string, (...args: string[]) => Promise<unknown>> {
   return {
@@ -81,6 +82,10 @@ function fakeApi(): Record<string, (...args: string[]) => Promise<unknown>> {
       return answers.schoolViews[id] ?? { ok: false, error: 'not_found', status: 404 };
     },
     roster: async () => ({ ok: false, error: 'not_found', status: 404 }),
+    classScope: async (id: string) => {
+      calls.push({ name: 'classScope', id });
+      return answers.scope[id] ?? { ok: false, error: 'not_found', status: 404 };
+    },
   };
 }
 
@@ -97,9 +102,10 @@ const fakeDocument = {
   },
 };
 
-function env(pathname = '/teach/home'): AdultFrameEnvironment {
+function env(path = '/teach/home'): AdultFrameEnvironment {
+  const [pathname, query] = path.split('?') as [string, string | undefined];
   return {
-    location: () => ({ origin: 'https://app.hangulroute.com', pathname, search: '' }),
+    location: () => ({ origin: 'https://app.hangulroute.com', pathname, search: query ? `?${query}` : '' }),
     readLastPersona: async () => 'teacher',
     writeLastPersona: () => undefined,
     clearGrownUpTab: () => undefined,
@@ -130,6 +136,7 @@ beforeEach(() => {
   answers.spaces = [];
   answers.schools = {};
   answers.schoolViews = {};
+  answers.scope = {};
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -142,10 +149,10 @@ afterEach(() => {
   resetTransferLockForTests();
 });
 
-async function render(spaces: SpaceListItem[], options: { pathname?: string; attentionHere?: boolean; children?: ReactNode } = {}): Promise<ReactTestRenderer> {
+async function render(spaces: SpaceListItem[], options: { pathname?: string; attentionHere?: boolean; attentionTotal?: number; children?: ReactNode } = {}): Promise<ReactTestRenderer> {
   await act(async () => {
     mounted = create(
-      <AdultFrame env={env(options.pathname)} spaces={spaces} attentionHere={options.attentionHere}>
+      <AdultFrame env={env(options.pathname)} spaces={spaces} attentionHere={options.attentionHere} attentionTotal={options.attentionTotal}>
         {options.children ?? <p>page</p>}
       </AdultFrame>,
     );
@@ -254,7 +261,7 @@ describe('the re-link bar (section 5.5)', () => {
     expect(byTestId(r, 'relink-bar')).toHaveLength(0);
   });
 
-  it('is not drawn on the class page (it has its own), nor on a lecture page, nor for the family persona', async () => {
+  it('is not drawn on the class page (it has its own), nor on a lecture page, nor on the family home (GX-5: its pop-up)', async () => {
     const spaces = [item('c1', 'class', 'owner', 'Sunday Class A', att(1, 0, at(8)))];
     let r = await render(spaces, { attentionHere: true, pathname: '/teach/space' });
     expect(byTestId(r, 'relink-bar')).toHaveLength(0);
@@ -265,9 +272,10 @@ describe('the re-link bar (section 5.5)', () => {
     r = await render(spaces, { pathname: '/teach/space/lecture' });
     expect(byTestId(r, 'relink-bar')).toHaveLength(0);
     act(() => mounted?.unmount());
-    r = await render([item('f1', 'family', 'owner', 'Kim family', att(1, 0, at(8)))], { pathname: '/parent' });
+    r = await render([item('f1', 'family', 'owner', 'Kim family', att(1, 0, at(8)))], { pathname: '/parent', attentionHere: true, attentionTotal: 1 });
     expect(byTestId(r, 'relink-bar')).toHaveLength(0);
-    expect(byTestId(r, 'nav-count')).toHaveLength(0);
+    // The family home counts its own (the strip's items) and hands the number to the tab.
+    expect(textOf(one(r, 'nav-count'))).toBe('1');
   });
 });
 
@@ -390,6 +398,117 @@ describe('the page\'s counts before GX-W (fallbacks)', () => {
     const link = one(r, 'school-moves-c9');
     expect(link.props.href).toBe('/teach/space/transfers?id=c9');
     expect(textOf(link)).toBe(en.transfer.schoolRow('Class Nine', 2));
+  });
+});
+
+const fireVisible = async (): Promise<void> => {
+  await act(async () => {
+    for (const l of [...listeners]) l();
+  });
+  await act(async () => {
+    await Promise.resolve();
+  });
+};
+const scopeOf = (needed: boolean[]) => ({ ok: true as const, data: { current: 'class-scope-2026-10', learners: needed.map((n, i) => ({ learnerId: `profile:${i}`, name: `Child ${i}`, needed: n })) } });
+
+describe('the parent persona (GX-5, sections 5.5 and 7.4)', () => {
+  const family = (attention?: unknown, name = 'Kim family', id = 'f1') => item(id, 'family', 'owner', name, attention);
+
+  it('a parent page: the Home tab number (re-links + answerable moves + class-scope updates), its name, and the title', async () => {
+    answers.scope.f1 = scopeOf([true, false]);
+    const r = await render([family(att(1, 1, at(6)))], { pathname: '/parent/space/settings?id=f1' });
+    const tab = one(r, 'nav-home');
+    expect(tab.props['aria-label']).toBe('Home, 3 to check');
+    const number = one(r, 'nav-count');
+    expect(textOf(number)).toBe('3');
+    expect(number.props['aria-hidden']).toBe('true');
+    expect(fakeDocument.title).toBe('(3) Classes · Hangul Route');
+    expect(byTestId(r, 'nav-classes')).toHaveLength(0);
+  });
+
+  it('one thing to check: the singular name; nothing: no number and the plain name', async () => {
+    let r = await render([family(att(0, 1))], { pathname: '/parent/space/settings?id=f1' });
+    expect(one(r, 'nav-home').props['aria-label']).toBe('Home, 1 to check');
+    act(() => mounted?.unmount());
+    r = await render([family(att(0, 0))], { pathname: '/parent/space/settings?id=f1' });
+    expect(one(r, 'nav-home').props['aria-label']).toBeUndefined();
+    expect(byTestId(r, 'nav-count')).toHaveLength(0);
+    expect(fakeDocument.title).toBe('Classes · Hangul Route');
+  });
+
+  it('the parent re-link bar: the family name, the minutes left, and Review to the family home (never approves here)', async () => {
+    const r = await render([family(att(1, 0, at(4.5)))], { pathname: '/parent/space/settings?id=f1' });
+    expect(textOf(one(r, 'relink-bar-text'))).toBe('A new device needs your OK · Kim family');
+    expect(textOf(one(r, 'relink-bar-minutes'))).toBe('5 min left');
+    expect(one(r, 'relink-bar-review').props.href).toBe('/parent');
+    expect(one(r, 'relink-bar').findAll((n) => n.type === 'button')).toHaveLength(0);
+  });
+
+  it('two families with a new device each: the count, and Review to the family home', async () => {
+    const r = await render([family(att(1, 0, at(9))), family(att(1, 0, at(3)), 'Lee family', 'f2')], { pathname: '/parent/learner' });
+    expect(textOf(one(r, 'relink-bar-text'))).toBe('2 new devices need your OK');
+    expect(one(r, 'relink-bar-review').props.href).toBe('/parent');
+  });
+
+  it('a move or a class-scope update alone never draws the bar; the class-scope read failing adds nothing', async () => {
+    answers.scope.f1 = { ok: false, error: 'network', status: -1 };
+    const r = await render([family(att(0, 2))], { pathname: '/parent/space/settings?id=f1' });
+    expect(byTestId(r, 'relink-bar')).toHaveLength(0);
+    expect(textOf(one(r, 'nav-count'))).toBe('2');
+  });
+
+  it('the family home draws its own (pop-up and strip): the page\'s number on the tab and the title, no bar, no frame reads', async () => {
+    const r = await render([family(att(1, 0, at(6)))], { pathname: '/parent', attentionHere: true, attentionTotal: 2 });
+    expect(byTestId(r, 'relink-bar')).toHaveLength(0);
+    expect(textOf(one(r, 'nav-count'))).toBe('2');
+    expect(one(r, 'nav-home').props['aria-label']).toBe('Home, 2 to check');
+    expect(fakeDocument.title).toBe('(2) Classes · Hangul Route');
+    await advance(10 * 60_000);
+    expect(calls).toEqual([]);
+  });
+
+  it('reads: the class scope once per live family on mount and again on focus, the spaces list every 30 s while in view', async () => {
+    answers.scope.f1 = scopeOf([false]);
+    answers.spaces = [family(att(0, 0))];
+    const archived = { ...family(att(1, 0, at(3)), 'Old family', 'f9'), space: { ...family(undefined, 'Old family', 'f9').space, archivedAt: '2026-10-02T00:00:00Z' } };
+    const r = await render([family(att(1, 0, at(6))), archived], { pathname: '/parent/space/settings?id=f1' });
+    expect(calls).toEqual([{ name: 'classScope', id: 'f1' }]);
+    expect(byTestId(r, 'relink-bar')).toHaveLength(1);
+    await advance(ATTENTION_POLL_MS);
+    expect(count('listSpaces')).toBe(1);
+    expect(count('classScope')).toBe(1);
+    expect(byTestId(r, 'relink-bar')).toHaveLength(0);
+    await advance(ATTENTION_POLL_MS + 1);
+    await fireVisible();
+    expect(count('classScope')).toBe(2);
+  });
+
+  it('without GX-W nothing is drawn and nothing is read on a parent page', async () => {
+    const r = await render([family()], { pathname: '/parent/space/settings?id=f1' });
+    await advance(10 * 60_000);
+    expect(calls).toEqual([]);
+    expect(byTestId(r, 'nav-count')).toHaveLength(0);
+    expect(byTestId(r, 'relink-bar')).toHaveLength(0);
+  });
+
+  it('not on a lecture page', async () => {
+    const r = await render([family(att(1, 0, at(6)))], { pathname: '/parent/space/lecture?id=f1' });
+    expect(byTestId(r, 'relink-bar')).toHaveLength(0);
+    expect(byTestId(r, 'nav-count')).toHaveLength(0);
+  });
+
+  it('in Korean and Spanish', async () => {
+    view.locale = 'ko';
+    let r = await render([family(att(1, 1, at(8)), '김씨 가족')], { pathname: '/parent/space/settings?id=f1' });
+    expect(one(r, 'nav-home').props['aria-label']).toBe('홈, 확인할 일 2건');
+    expect(textOf(one(r, 'relink-bar-text'))).toBe('새 기기 승인 대기 · 김씨 가족');
+    act(() => mounted?.unmount());
+    view.locale = 'es';
+    r = await render([family(att(0, 1), 'Familia Kim')], { pathname: '/parent/space/settings?id=f1' });
+    expect(one(r, 'nav-home').props['aria-label']).toBe('Inicio, 1 por revisar');
+    act(() => mounted?.unmount());
+    r = await render([family(att(2, 1, at(8)), 'Familia Kim')], { pathname: '/parent/space/settings?id=f1' });
+    expect(one(r, 'nav-home').props['aria-label']).toBe('Inicio, 3 por revisar');
   });
 });
 

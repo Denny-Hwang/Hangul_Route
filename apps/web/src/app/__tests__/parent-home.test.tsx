@@ -41,10 +41,11 @@ vi.mock('@/lib/console/join-handoff', () => ({
 }));
 
 // The frame has its own tests (adult-frame.test.tsx); here it records the spaces the page hands it.
-const frame = vi.hoisted(() => ({ spaces: [] as unknown[] }));
+const frame = vi.hoisted(() => ({ spaces: [] as unknown[], counts: [] as Array<{ attentionHere?: boolean; attentionTotal?: number }> }));
 vi.mock('@/components/console/AdultFrame', () => ({
-  AdultFrame: ({ children, spaces }: { children: ReactNode; spaces?: unknown }) => {
+  AdultFrame: ({ children, spaces, attentionHere, attentionTotal }: { children: ReactNode; spaces?: unknown; attentionHere?: boolean; attentionTotal?: number }) => {
     frame.spaces.push(spaces);
+    frame.counts.push({ attentionHere, attentionTotal });
     return <main>{children}</main>;
   },
 }));
@@ -168,6 +169,7 @@ beforeEach(() => {
   shellWrites.personas = [];
   handoff.calls = [];
   frame.spaces = [];
+  frame.counts = [];
   data.rosters = {};
   data.rosterCalls = [];
   data.regenerated = [];
@@ -629,10 +631,16 @@ describe('the family home: Needs you, child chips and class lines (GX-4)', () =>
     // The re-link read runs whatever CLASS_TRANSFER says; the class-move reads do not (the flag is off here).
     expect(data.calls).toContain('relinks:sp_f');
     expect(data.calls.some((c) => c.startsWith('transfers:') || c.startsWith('notices:'))).toBe(false);
-    // Approve inline, then the family is read again and the row leaves.
+    // GX-5: the pop-up opened on its own for the new request; Later closes it, and the strip's Approve opens it again
+    // (GX-D12: never approved without the hint). Its Approve answers, then the family is read again and the row leaves.
+    await act(async () => (byTestId(r, 'relink-popup-later')[0] as ReactTestInstance).props.onClick());
+    expect(byTestId(r, 'relink-popup')).toHaveLength(0);
     await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    expect(data.calls).not.toContain('decide:sp_f:relink:1:true');
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
     await act(async () => undefined);
     expect(data.calls).toContain('decide:sp_f:relink:1:true');
+    expect(byTestId(r, 'relink-popup')).toHaveLength(0);
     expect(data.calls.filter((c) => c === 'relinks:sp_f')).toHaveLength(2);
     expect(byTestId(r, 'needs-you')).toHaveLength(0);
     expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.approved('Mina'));
@@ -717,6 +725,164 @@ describe('the family home: Needs you, child chips and class lines (GX-4)', () =>
     data.relinks = { ok: true, data: [pendingRelink] };
     const r = await render([archived]);
     expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(data.calls).toEqual([]);
+  });
+});
+
+describe('the family home: the re-link pop-up, the 20 s re-link read and the tab count (GX-5)', () => {
+  const ana = learner('profile:mina', 'Mina', '2026-09-05T00:00:00Z', 15);
+  const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
+  const NOW = new Date('2026-10-12T12:00:00Z');
+  const at = (minutes: number): string => new Date(NOW.getTime() + minutes * 60_000).toISOString();
+  const request = (over: Record<string, unknown> = {}) => ({ id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: at(-3), expiresAt: at(7), status: 'pending', ...over });
+  const listeners = new Map<string, Set<() => void>>();
+  const fakeDocument = {
+    visibilityState: 'visible',
+    activeElement: null,
+    body: null,
+    getElementById: () => null,
+    addEventListener: (type: string, l: () => void) => {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type)?.add(l);
+    },
+    removeEventListener: (type: string, l: () => void) => listeners.get(type)?.delete(l),
+  };
+  beforeEach(() => {
+    // The suite fakes the clock only; these cases also run the 20 s and 90 s timers.
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(NOW);
+    vi.stubGlobal('document', fakeDocument);
+    listeners.clear();
+    data.rosters = { sp_f: roster(family, [ana, jun]) };
+  });
+  afterEach(() => {
+    act(() => mounted?.unmount());
+    mounted = null;
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+  const advance = async (ms: number): Promise<void> => {
+    await act(async () => {
+      vi.advanceTimersByTime(ms);
+    });
+    await act(async () => undefined);
+  };
+  const popup = (r: ReactTestRenderer): ReactTestInstance[] => byTestId(r, 'relink-popup');
+  const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
+    await act(async () => (byTestId(r, id)[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+  };
+
+  it('a new device request opens the pop-up on its own: an alertdialog with its title, the shipped hint and the minutes left', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    expect(popup(r)).toHaveLength(1);
+    const dialog = popup(r)[0] as ReactTestInstance;
+    expect(dialog.props.role).toBe('alertdialog');
+    expect(textOf(dialog)).toContain(en.console.relinkPopup.title('Mina'));
+    expect(textOf(dialog)).toContain(en.console.relinkApproveHint);
+    expect(textOf(dialog)).toContain(en.console.relinkPopup.closes(7));
+    // The strip and the chip stay under it.
+    expect(byTestId(r, 'needs-you')).toHaveLength(1);
+  });
+
+  it('Approve answers for the family; the result is said by the strip, the family is read again and the request leaves', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-approve');
+    expect(data.calls).toContain('decide:sp_f:relink:1:true');
+    expect(popup(r)).toHaveLength(0);
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.approved('Mina'));
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+  });
+
+  it('Deny in the pop-up closes the request too, in one tap', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-deny');
+    expect(data.calls).toContain('decide:sp_f:relink:1:false');
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.denied('Mina'));
+  });
+
+  it('every 20 s in view the page reads the re-links alone (one call per live family, nothing else)', async () => {
+    const lee = item('sp_l', 'family', 'caregiver', 'Lee family');
+    data.rosters = { sp_f: roster(family, [ana]), sp_l: roster(lee, [jun]) };
+    await render([family, lee]);
+    data.calls = [];
+    data.rosterCalls = [];
+    await advance(20_000);
+    expect([...data.calls].sort()).toEqual(['relinks:sp_f', 'relinks:sp_l']);
+    expect(data.rosterCalls).toEqual([]);
+    await advance(20_000);
+    expect(data.calls.filter((c) => c.startsWith('relinks:'))).toHaveLength(4);
+  });
+
+  it('with nothing pending at load, a new request opens the pop-up within one 20 s read', async () => {
+    const r = await render([family]);
+    expect(popup(r)).toHaveLength(0);
+    data.relinks = { ok: true, data: [request({ requestedAt: at(0), expiresAt: at(10) })] };
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(1);
+  });
+
+  it('Later closes it once; it opens once more at 2 minutes left (the reminder), and never a third time', async () => {
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-later');
+    expect(popup(r)).toHaveLength(0);
+    // The strip's row and the chip stay.
+    expect(byTestId(r, 'needs-you-row')).toHaveLength(1);
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(0);
+    // 7 min left at load: the reminder opens on the first read with 2 minutes or less left.
+    await advance(4 * 60_000 + 40_000);
+    expect(popup(r)).toHaveLength(1);
+    expect((popup(r)[0] as ReactTestInstance).props['data-reminder']).toBe('true');
+    expect(textOf(popup(r)[0] as ReactTestInstance)).toContain(en.console.relinkPopup.closes(2));
+    await tap(r, 'relink-popup-later');
+    await advance(60_000);
+    expect(popup(r)).toHaveLength(0);
+  });
+
+  it('waits while See all is open, then opens', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    data.scope = { ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:jun', name: 'Jun', needed: true }] } };
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    await tap(r, 'relink-popup-later');
+    data.relinks = { ok: true, data: [request(), request({ id: 'relink:2', learnerId: 'profile:jun', learnerName: 'Jun', expiresAt: at(9) })] };
+    await advance(20_000);
+    // Three items fold: See all opens the sheet; a new request then waits for it.
+    expect(popup(r)).toHaveLength(1);
+    await tap(r, 'relink-popup-later');
+    data.relinks = { ok: true, data: [request(), request({ id: 'relink:2', learnerId: 'profile:jun', learnerName: 'Jun', expiresAt: at(9) }), request({ id: 'relink:3', expiresAt: at(9.5) })] };
+    await tap(r, 'needs-you-see-all');
+    expect(byTestId(r, 'needs-you-sheet')).toHaveLength(1);
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(0);
+    await act(async () => r.root.find((n) => n.props.className === 'hr-move-scrim').props.onClick());
+    await act(async () => undefined);
+    expect(popup(r)).toHaveLength(1);
+  });
+
+  it('the Home tab and the title: the frame gets this page\'s count (re-links + answerable moves + class-scope updates) and reads none of its own', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    data.scope = { ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:jun', name: 'Jun', needed: true }] } };
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([family]);
+    expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 2 });
+    await tap(r, 'relink-popup-approve');
+    expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 1 });
+  });
+
+  it('an archived family: no pop-up and no 20 s read', async () => {
+    const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [ana]) };
+    data.relinks = { ok: true, data: [request()] };
+    const r = await render([archived]);
+    await advance(20_000);
+    expect(popup(r)).toHaveLength(0);
     expect(data.calls).toEqual([]);
   });
 });

@@ -23,7 +23,9 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
  * the first keeps its row and the rest fold into "{n} more things need you · See all", which lists them all in a sheet, so
  * the first child stays on the first phone screen.
  *
- * - A re-link: **Approve** · **Deny** inline (`decideRelink`); the result goes to a polite region that outlives the row.
+ * - A re-link: **Approve** opens the re-link pop-up (GX-D12, GX-5: the page's `RelinkPopup`, with the shipped safety hint;
+ *   a re-link is never approved without it) · **Deny** inline (`decideRelink`, one tap). Every result goes to a polite
+ *   region that outlives the row; the pop-up's arrives through `result`.
  * - A move: **Review** opens the shipped consent sheet directly (2 taps; was 3 to 4 through the moves page).
  * - A class-scope update: **Read and OK** hands the learner to the page, which scrolls to and focuses the shipped card
  *   (until the owner answers GX-OD-3; row GX-5b may open a sheet instead).
@@ -61,6 +63,9 @@ export function FamilyNeedsYou({
   now,
   onChanged,
   onReadScope,
+  onApproveRelink,
+  onDialog,
+  result: popupResult = null,
 }: {
   familyId: string;
   familyName: string;
@@ -77,6 +82,12 @@ export function FamilyNeedsYou({
   onChanged: () => Promise<void>;
   /** Read and OK: the page scrolls to and focuses that learner's class-scope card. */
   onReadScope: (learnerId: string) => void;
+  /** A re-link's Approve: the page opens its pop-up for that request (GX-D12). */
+  onApproveRelink: (requestId: string) => void;
+  /** While See all or a consent sheet is open (true) and after (false): the page's pop-up waits for it. */
+  onDialog?: (open: boolean) => void;
+  /** The pop-up's answer, said here (a new `key` says it again). */
+  result?: { key: number; text: string } | null;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -99,12 +110,28 @@ export function FamilyNeedsYou({
     [],
   );
 
+  // One dialog at a time: the page's re-link pop-up waits while See all or the consent sheet is open.
+  const dialogOpen = allOpen || reviewing !== null;
+  const latestDialog = useRef(onDialog);
+  latestDialog.current = onDialog;
+  useEffect(() => {
+    latestDialog.current?.(dialogOpen);
+  }, [dialogOpen]);
+  useEffect(() => () => latestDialog.current?.(false), []);
+
   /** The result line: said once by the polite region and shown for `DECIDED_HOLD_MS`, as on the class page. */
   const say = (text: string | null): void => {
     if (noteTimer.current) clearTimeout(noteTimer.current);
     setNote(text);
     if (text) noteTimer.current = setTimeout(() => setNote(null), DECIDED_HOLD_MS);
   };
+
+  // The pop-up's answer for a re-link of this family (Approve or Deny there): said like the strip's own.
+  const resultKey = popupResult?.key ?? null;
+  useEffect(() => {
+    if (popupResult) say(popupResult.text);
+    // A new key is a new answer; the same text twice is said twice.
+  }, [resultKey]);
 
   const failureText = (result: ApiResult<unknown>): string | null => {
     const f = familyFailure(result);
@@ -203,7 +230,17 @@ export function FamilyNeedsYou({
         <div className="hr-ny-actions">
           {item.kind === 'relink' ? (
             <>
-              <MoveButton primary waiting={waiting} disabled={off} describedBy={describedBy} onClick={() => void decideRelink(item, true)} testId="needs-you-approve">
+              <MoveButton
+                primary
+                waiting={waiting}
+                disabled={off}
+                describedBy={describedBy}
+                onClick={() => {
+                  setAllOpen(false);
+                  onApproveRelink(item.id);
+                }}
+                testId="needs-you-approve"
+              >
                 {c.relink.approve.cta}
               </MoveButton>
               <MoveButton waiting={waiting} disabled={off} describedBy={describedBy} onClick={() => void decideRelink(item, false)} testId="needs-you-deny">

@@ -1,12 +1,12 @@
 'use client';
 
-import type { ClassAttention } from '@hangul-route/content-schema';
+import type { AdultPersona, ClassAttention } from '@hangul-route/content-schema';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useTransfersShown } from '@/components/console/TransferParts';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { ConsoleApi, SpaceListItem } from '@/lib/console/api';
-import { ATTENTION_GAP_MS, ATTENTION_POLL_MS, adminSchoolIds, attentionDeployed, teacherAttention, titleWithCount, type PersonaAttention } from '@/lib/console/persona-attention';
+import { ATTENTION_GAP_MS, ATTENTION_POLL_MS, adminSchoolIds, attentionDeployed, parentAttention, scopeNeeded, teacherAttention, titleWithCount, type PersonaAttention } from '@/lib/console/persona-attention';
 
 /**
  * The teacher's waiting counts for the adult frame (AMENDMENTS-GROWNUP-UX GX-3, sections 5.4, 5.5 and 6): the frame
@@ -18,13 +18,19 @@ import { ATTENTION_GAP_MS, ATTENTION_POLL_MS, adminSchoolIds, attentionDeployed,
  * into view (`poll`); a school owner's or admin's `GET /:id/attention` with each of those reads; a school's own class
  * names once per tab, only when one of its classes waits and the list cannot name it. With an older Worker nothing is
  * read and nothing is drawn (never a guess, never a timer). A failed read in the background keeps what is drawn.
+ *
+ * The parent persona (GX-5, sections 5.4 and 7.4): the same spaces list and 30 s read for the families' `attention`, and
+ * each live family's `classScope` once on mount and again on focus or when the tab comes back into view (never on the
+ * 30 s timer): the Home tab's number and the parent re-link bar. No school read.
  */
 
-export type AttentionApi = Pick<ConsoleApi, 'listSpaces' | 'schoolAttention' | 'school'>;
+export type AttentionApi = Pick<ConsoleApi, 'listSpaces' | 'schoolAttention' | 'school' | 'classScope'>;
 
 export interface PersonaAttentionOptions {
-  /** The teacher persona's frame with its spaces list (not a lecture page). */
+  /** A persona frame with its spaces list (not a lecture page). */
   enabled: boolean;
+  /** Whose counts: the teacher's classes and schools, or the parent's families (GX-5). */
+  persona?: AdultPersona;
   /** Read again every 30 s while in view; off on the class page, which reads its own every 20 s (section 5.4). */
   poll: boolean;
 }
@@ -54,16 +60,29 @@ export function usePersonaAttention(api: AttentionApi | null, list: readonly Spa
   const [polled, setPolled] = useState<{ from: readonly SpaceListItem[] | null; spaces: readonly SpaceListItem[] } | null>(null);
   const [schools, setSchools] = useState<Record<string, ClassAttention[] | null>>({});
   const [names, setNames] = useState<Record<string, string>>({});
+  const [scope, setScope] = useState<Record<string, number | null>>({});
   const [tick, setTick] = useState(0);
+  const [scopeTick, setScopeTick] = useState(0);
+  const persona = options.persona ?? 'teacher';
+  const parent = persona === 'parent';
   // A poll's answer stands until the page hands the frame a newer list of its own.
   const current = polled && polled.from === list ? polled.spaces : list;
   const live = options.enabled && !!api && !!current;
-  const deployed = live && !!current && attentionDeployed(current);
-  const schoolKey = deployed && current ? adminSchoolIds(current).join('\n') : '';
+  const deployed = live && !!current && attentionDeployed(current, persona);
+  const schoolKey = deployed && current && !parent ? adminSchoolIds(current).join('\n') : '';
+  const familyKey =
+    deployed && current && parent
+      ? current
+          .filter((item) => item.space.kind === 'family' && !item.space.archivedAt)
+          .map((item) => item.space.id)
+          .join('\n')
+      : '';
 
   const again = (): void => setTick((n) => n + 1);
   useVisibleRefresh(again, deployed && options.poll, { pollMs: ATTENTION_POLL_MS, gapMs: ATTENTION_GAP_MS });
   useRosterChanges(again, deployed);
+  // GX-5: the class-scope part on focus and when the tab comes back into view only (section 7.4).
+  useVisibleRefresh(() => setScopeTick((n) => n + 1), familyKey !== '' && options.poll);
 
   useEffect(() => {
     if (tick === 0 || !api || !deployed) return undefined;
@@ -94,7 +113,27 @@ export function usePersonaAttention(api: AttentionApi | null, list: readonly Spa
     };
   }, [api, schoolKey, tick]);
 
-  const view = useMemo(() => (live && current ? teacherAttention({ spaces: current, schools, movesShown: shown }) : null), [live, current, schools, shown]);
+  useEffect(() => {
+    if (!api || familyKey === '') {
+      setScope((prev) => (Object.keys(prev).length === 0 ? prev : {}));
+      return undefined;
+    }
+    let alive = true;
+    const ids = familyKey.split('\n');
+    void Promise.all(ids.map(async (id) => [id, await quietly(() => api.classScope(id))] as const)).then((answers) => {
+      if (!alive) return;
+      // A failed read keeps the last good count for that family (a background read never removes a number on a blip).
+      setScope((prev) => Object.fromEntries(answers.map(([id, result]) => [id, result?.ok ? scopeNeeded(result.data) : (prev[id] ?? null)])));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [api, familyKey, scopeTick]);
+
+  const view = useMemo(
+    () => (!live || !current ? null : parent ? parentAttention({ spaces: current, scope, movesShown: shown }) : teacherAttention({ spaces: current, schools, movesShown: shown })),
+    [live, current, schools, scope, shown, parent],
+  );
 
   // A school class that waits and that the list cannot name (the admin is not a member): its school's names, once.
   const unnamed = view
@@ -117,7 +156,7 @@ export function usePersonaAttention(api: AttentionApi | null, list: readonly Spa
   return useMemo(() => (view ? { ...view, names: { ...names, ...view.names } } : null), [view, names]);
 }
 
-/** The frame's counts for the page inside it; null outside a teacher frame or before GX-W. */
+/** The frame's counts for the page inside it; null outside a persona frame or before GX-W. */
 export const FrameAttentionContext = createContext<PersonaAttention | null>(null);
 
 export function useFrameAttention(): PersonaAttention | null {

@@ -61,6 +61,10 @@ import { rem } from '@/lib/console/rem';
  *   page (`attentionHere`) and lecture mode shows the re-link bar while a new device waits. Those pages read the counts
  *   again every 30 s while in view (`usePersonaAttention`); the class page reads its own. The counts reach the page
  *   through `FrameAttentionContext`. Counts and class names only, never a learner's name.
+ * - [GX-5] The parent persona the same way (sections 5.5 and 7.4): the Home tab's number (the families' re-links, the
+ *   moves the family can answer and the class-scope updates to read), the title count, and the re-link bar with the family
+ *   name on every parent page but the family home, the family roster and lecture mode; its Review opens the family home.
+ *   The family home passes `attentionTotal` (its Needs you items), so the tab and the title match its strip.
  */
 
 /** Everything the frame touches in the browser, injectable for tests. */
@@ -275,6 +279,7 @@ export function AdultFrame({
   spaces,
   env,
   attentionHere,
+  attentionTotal,
 }: {
   children: ReactNode;
   /** The page's context line (a space or a page name), shown at the top of the content. */
@@ -290,6 +295,11 @@ export function AdultFrame({
    * then draws no re-link bar, sets no title count and does not read the counts again on a timer.
    */
   attentionHere?: boolean;
+  /**
+   * [GX-5] The page's own count of what waits (the family home: its Needs you items, section 7.4): the frame shows it on
+   * the persona's tab and in the tab title, and reads no counts of its own.
+   */
+  attentionTotal?: number;
 }): JSX.Element {
   const { api, m, locale, signOut } = useConsole();
   const auth = useConsoleAuth();
@@ -378,11 +388,17 @@ export function AdultFrame({
   const navPersona = list ? active.persona : fallbackPersona(last, null);
   const items: NavEntry[] = failed ? [] : navItemsFor({ persona: navPersona, spaces: list ?? [], soloLearner: solo, flags });
   const current = list ? currentNavItem(pathname, active.persona, active.resolved, flags.lecture) : currentNavItem(pathname, navPersona, false, flags.lecture);
-  // [GX-3] The teacher's waiting counts: the Classes tab's number, the re-link bar and the page's chips.
-  const teacherFrame = !!list && active.persona === 'teacher' && !isLecturePage(pathname);
-  const attention = usePersonaAttention(api, list, { enabled: teacherFrame, poll: !attentionHere });
-  const waitingTotal = attention?.total ?? 0;
-  useTitleCount(waitingTotal, teacherFrame && !attentionHere);
+  // [GX-3] The teacher's waiting counts: the Classes tab's number, the re-link bar and the page's chips. [GX-5] The
+  // parent's: the Home tab's number and the parent re-link bar; the family home hands the frame its own count instead.
+  const personaFrame = !!list && !isLecturePage(pathname);
+  const ownCount = personaFrame && attentionTotal !== undefined;
+  const attention = usePersonaAttention(api, list, { enabled: personaFrame && !ownCount, persona: active.persona, poll: !attentionHere });
+  const waitingTotal = ownCount ? Math.max(0, attentionTotal) : (attention?.total ?? 0);
+  useTitleCount(waitingTotal, personaFrame && (!attentionHere || ownCount));
+  // The tab that carries the number: Classes for the teacher, Home for the parent.
+  const countTab: NavEntry['id'] = active.persona === 'parent' ? 'home' : 'classes';
+  const tabName = (id: NavEntry['id']): string | undefined =>
+    id !== countTab || waitingTotal <= 0 ? undefined : id === 'home' ? shell.navAttention.home(waitingTotal) : shell.navAttention.classes(waitingTotal);
   const withSwitch = !!list && showPersonaSwitch(held);
   const rowRef = useRef<HTMLUListElement | null>(null);
   const currentShown = items.some((entry) => entry.id === current);
@@ -468,11 +484,11 @@ export function AdultFrame({
                       href={entry.target.href}
                       onClick={entry.id === 'lecture' ? toFragment(entry) : undefined}
                       aria-current={current === entry.id ? 'page' : undefined}
-                      aria-label={entry.id === 'classes' && waitingTotal > 0 ? shell.navAttention.classes(waitingTotal) : undefined}
+                      aria-label={tabName(entry.id)}
                       data-testid={`nav-${entry.id}`}
                     >
                       {shell.nav[entry.labelKey]}
-                      {entry.id === 'classes' && waitingTotal > 0 ? (
+                      {entry.id === countTab && waitingTotal > 0 ? (
                         <span className="hr-frame-count" aria-hidden="true" data-testid="nav-count">
                           {navCountText(waitingTotal)}
                         </span>
