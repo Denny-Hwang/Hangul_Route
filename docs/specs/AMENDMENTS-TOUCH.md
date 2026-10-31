@@ -245,8 +245,10 @@ Props: `onCommit: () => void`, `disabled?`, `accessibilityLabel` (required), `ac
 
 ### 6.4 Placement (`logic/placement/flow.ts`, `ItemScreen.tsx`)
 
-- The flow ignores an `answer` or `notSure` event for an item that already has an answer (a pure guard keyed by item id, unit-tested), so a bounce can never answer the next item, whatever the screen does.
-- The choices and Not sure are one `board` board; `choose()` returns early once the current item is answered.
+- The flow ignores an `answer` or `notSure` event for an item that already has an answer (a pure guard keyed by item id, unit-tested). This guard alone does not stop a physical bounce: in Standard and Deep the next item is current at once, and its handlers belong to an item that has no answer yet.
+- **The lock outlives the item.** `ItemScreen` keys `ItemView` by question id and response count (`ItemScreen.tsx:76`), so the choices remount after every answer and a board inside `ItemView` would start unlocked. `ItemScreen` (not the keyed `ItemView`) therefore owns the answer lock: a ref holding the time of the last `answer` or `notSure` it applied. `ItemView`'s `choose()` and `notSure()` return early while `now` is within `TAP_LOCK_MS` of it, and the new item's board starts locked for the rest of that window (a child inside the board calls `lock(remaining)` from `useTapLock()` on mount), so no press look shows on a choice that cannot be tapped.
+- The choices and Not sure are one `board` board; `choose()` also returns early once the current item is answered.
+- Tests: the flow guard (unit); a render test of `ItemScreen` in Standard mode where two taps 150 ms apart land on the first item's choice and then on the next item's choice at the same place give one `answer` and one `placement.item_answered`, and a tap 450 ms later on the next item counts; the F6 e2e does the same with real touches across the transition.
 
 ### 6.5 Build a Letter (`BuildLetterGame.tsx`)
 
@@ -319,6 +321,7 @@ None. Card Match accepting either side first needs no instruction change (its he
 | `screens/minigames/__tests__/CardMatchGame.test.tsx` | fake timers: the stale flash does not clear a new pick (F3); either side first; unmount clears both timers; 64 floor |
 | `logic/sentence-builder/__tests__/reducer.test.ts` | the window is `TAP_LOCK_MS`; return lock |
 | `logic/placement/__tests__/flow.test.ts` | a second answer for an answered item is ignored (F6) |
+| `screens/placement/__tests__/ItemScreen.test.tsx` | the answer lock survives the keyed `ItemView` remount: two taps 150 ms apart across the transition give one answer; a tap after `TAP_LOCK_MS` counts (F6) |
 | `logic/__tests__/hidden-heritage-flow.test.ts` | `spotHitRects` (6.6) |
 | `logic/__tests__/trace-evaluator.test.ts` and the Trace screen tests | non-activated touch re-arms; no ink; `maxPointers(1)` |
 | `logic/lecture/__tests__/stage-gesture.test.ts` | `TAP_SLOP` = `spacing.xl` |
@@ -331,7 +334,7 @@ None. Card Match accepting either side first needs no instruction change (its he
 - **Bounce**: two taps 60, 150 and 300 ms apart give one commit.
 - **Two fingers**: the first commits, the second does nothing.
 - **Hold** 900 ms commits.
-- **Regressions**: F1 (Pic-Word graze selects), F2 (bounce stays selected), F3 (Card Match next pick stays selected after 700 ms), F4 (Story Sequence bounce: no miss line), F5 (Sentence Builder bounce at 100 and 200 ms: no miss, no skip), F6 (placement: one `placement.item_answered`), F7 (keyboard rollover types two letters; 18 px slide types the key), F8 (Hidden Heritage hit areas at least 64 at 320 px), R3 (bounce on a locked wrong tile: one miss).
+- **Regressions**: F1 (Pic-Word graze selects), F2 (bounce stays selected), F3 (Card Match next pick stays selected after 700 ms), F4 (Story Sequence bounce: no miss line), F5 (Sentence Builder bounce at 100 and 200 ms: no miss, no skip), F6 (placement: two real taps 150 ms apart across the item transition give one `placement.item_answered`), F7 (keyboard rollover types two letters; 18 px slide types the key), F8 (Hidden Heritage hit areas at least 64 at 320 px), R3 (bounce on a locked wrong tile: one miss).
 - **Target ratchet**: `e2e/web/target-size.spec.ts` and `target-audit.ts` extend to every game screen at 320 px with the largest text; the check uses each board's hit rectangles where they differ from the drawn box (Hidden Heritage).
 - **Fit audit** (report only, no failure): which game screens fit at 320 x 640 at default and largest text, for follow-up layout work.
 - WebKit (`E2E_WEBKIT=1`, iPhone 13): the graze, bounce and two-finger cases once, for U1.
@@ -374,3 +377,4 @@ None. Card Match accepting either side first needs no instruction change (its he
 ## 14. Review log
 
 - 2026-10-31, author pass against `1bfda3fc8`: confirmed in code every `file:line` the audit gave for F2, F3, F6, R1, R2 and R3, the web-dead `hitSlop` list (RN-web 0.19.13 forwards no `hitSlop`; `PressResponder.js` commits from `onClick` only), the 15 px RNGH web slop, the `Screen` default and the postbuild `touch-action`. Added to the audit: Odd One Out shares R3 (Culture Quiz and Tap Respond already disable a locked wrong answer); Trace's `onBegin` leaves a one-point stroke when the pan never activates; Build a Letter accepts and then wipes taps during the 900 ms reset; DS Button has no double-fire guard (R8); ChoiceCard's press colour equals the `hint` border, which is why a press reads as a state.
+- 2026-10-31, review on PR #930: in Standard and Deep the keyed `ItemView` (`ItemScreen.tsx:76`) remounts after every answer, so a board lock inside it would reset exactly when a bounce arrives, and the answered-item guard does not stop a tap on the next item. Section 6.4 now puts the lock in `ItemScreen` and seeds the new item's board from it; sections 11.1 and 11.2 test two real taps across the transition.
