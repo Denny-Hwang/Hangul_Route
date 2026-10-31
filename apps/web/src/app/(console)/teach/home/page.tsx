@@ -8,10 +8,12 @@ import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { LectureModeCard } from '@/components/console/LectureModeCard';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
-import { useMovesWaiting, useSchoolMoveLinks } from '@/components/console/MovesEntry';
+import { AttentionCountChip, SchoolAttentionLinks } from '@/components/console/AttentionCounts';
+import { useApprovalsWaiting, useSchoolMoveLinks } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import type { SpaceListItem } from '@/lib/console/api';
 import { appUrl, browseEntryShown, lectureModeEnabled, reportsEnabled, notesEnabled } from '@/lib/console/config';
+import { attentionDeployed } from '@/lib/console/persona-attention';
 import { personaHome } from '@/lib/console/personas';
 import { ROUTES, statusLine } from '@/lib/console/routing';
 import { writeLastPersona } from '@/lib/console/shell-store';
@@ -23,9 +25,14 @@ import { headRem, rem } from '@/lib/console/rem';
  * design/screens/app-shell/teacher-home.md, wireframe design/wireframes/shell/teacher-home.md).
  * Classes, then the School group; each class row's Class report and Notes by flag; + New class;
  * Lessons; the no-class state and the quiet cross-link. Counts only: no names of learners, no
- * percentages, no ranking (F-CONSOLE-001 section 3.4). Class moves (F-SPACE-002 T-6b, requests-page.md "Entry
- * points"): a class row's link line gains "N class moves waiting" and a school row one link per child class with a
- * waiting move, each to that class's requests page; nothing while class moves are off.
+ * percentages, no ranking (F-CONSOLE-001 section 3.4). [GX-3] AMENDMENTS-GROWNUP-UX section 6 (mock
+ * `design/screens/approvals/mock/home-{lc}.html`): a class row gets the amber "{n} need your OK" chip after its name,
+ * to the class page's review (`#attention`), counting its re-links (whatever CLASS_TRANSFER says) and the moves that wait
+ * for it, teacher moves included; it replaces the row's "N class moves waiting" pill. A school row gets one link per
+ * child class with requests waiting, from the school's `attention` read (GX-W); before GX-W the shipped T-6b links stay
+ * (waiting moves, to the class's requests page). The counts come from the frame (`FrameAttentionContext`, read again
+ * every 30 s while in view) once the Worker sends `attention`, else from the per-class lists once, on focus and when a
+ * roster changes (`useApprovalsWaiting`, never on a timer).
  *
  * Lecture mode (AMENDMENTS-LECTURE-V2 E1, LV-5; design/screens/app-shell/lecture-card.md): the card first in the
  * content column, above Classes, at every width, from the first paint (Start waits for the spaces list); in the
@@ -77,8 +84,12 @@ export default function HomePage(): JSX.Element {
   const [items, setItems] = useState<SpaceListItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   const homeView = items ? teacherHomeView(items) : null;
-  const moves = useMovesWaiting(api, homeView?.classRows.map((item) => item.space.id) ?? []);
-  const schoolMoves = useSchoolMoveLinks(api, homeView?.schoolRows.map((item) => item.space.id) ?? []);
+  // [GX-3] A class row's count: its re-links and its moves (teacher moves included). With GX-W's `attention` on the list
+  // nothing more is asked here (the frame keeps it fresh); before it, the per-class lists, never on a timer.
+  const deployed = !!items && attentionDeployed(items);
+  const listAttention = items && deployed ? Object.fromEntries(items.map((item) => [item.space.id, item.attention])) : undefined;
+  const moves = useApprovalsWaiting(api, homeView?.classRows.map((item) => item.space.id) ?? [], 0, listAttention ? { attention: listAttention } : {});
+  const schoolMoves = useSchoolMoveLinks(api, deployed ? [] : (homeView?.schoolRows.map((item) => item.space.id) ?? []));
   // [OA] Row OA-4b: read once, on the first render in the browser.
   const [schoolFocus] = useState(() => typeof window !== 'undefined' && wantsSchoolFocus(new URLSearchParams(window.location.search)));
   const focusDone = useRef(false);
@@ -124,7 +135,7 @@ export default function HomePage(): JSX.Element {
   const row = (item: SpaceListItem): JSX.Element => {
     const archived = !!item.space.archivedAt;
     const links = classRowLinks(item, flags);
-    const waiting = moves[item.space.id] ?? 0;
+    const waiting = moves[item.space.id]?.all;
     const schoolLinks = schoolMoves[item.space.id] ?? [];
     return (
       <article
@@ -143,18 +154,21 @@ export default function HomePage(): JSX.Element {
         }}
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
-          <div>
-            <p style={{ margin: 0, fontWeight: typography.weight.bold, overflowWrap: 'anywhere', color: archived ? colors.text.secondary : colors.text.primary }}>
-              {item.space.name}
-              {archived ? <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}> {c.home.archived}</span> : null}
-            </p>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.sm, rowGap: spacing.xs }}>
+              <p style={{ margin: 0, fontWeight: typography.weight.bold, overflowWrap: 'anywhere', color: archived ? colors.text.secondary : colors.text.primary }}>
+                {item.space.name}
+                {archived ? <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}> {c.home.archived}</span> : null}
+              </p>
+              {item.space.kind === 'class' && !archived ? <AttentionCountChip spaceId={item.space.id} fallback={waiting} /> : null}
+            </div>
             <p style={{ margin: 0, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }}>{statusLine(item, locale)}</p>
           </div>
           <Link href={ROUTES.space(item.space.id, item.space.kind)} style={smallButton}>
             {c.home.open.cta}
           </Link>
         </div>
-        {links.length > 0 || waiting > 0 ? (
+        {links.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, paddingTop: spacing.sm, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
             {links.map((link) =>
               link === 'classReport' ? (
@@ -167,22 +181,9 @@ export default function HomePage(): JSX.Element {
                 </Link>
               ),
             )}
-            {waiting > 0 ? (
-              <Link href={ROUTES.spaceTransfers(item.space.id, 'class')} style={smallButton} data-testid={`class-moves-${item.space.id}`}>
-                {c.transfer.waiting(waiting)}
-              </Link>
-            ) : null}
           </div>
         ) : null}
-        {schoolLinks.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm, paddingTop: spacing.sm, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` }}>
-            {schoolLinks.map((link) => (
-              <Link key={link.spaceId} href={ROUTES.spaceTransfers(link.spaceId, 'class')} style={smallButton} data-testid={`school-moves-${link.spaceId}`}>
-                {c.transfer.schoolRow(link.name, link.waiting)}
-              </Link>
-            ))}
-          </div>
-        ) : null}
+        {item.space.kind === 'school' ? <SchoolAttentionLinks schoolId={item.space.id} fallback={schoolLinks} /> : null}
       </article>
     );
   };

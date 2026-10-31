@@ -149,6 +149,9 @@ export const consoleMsgs = {
       classReports: 'Informes de clase',
       lecture: 'Modo proyección',
     },
+    navAttention: {
+      classes: (n: number) => `Clases, ${n} por aprobar`,
+    },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
   pageBack: {
@@ -241,6 +244,8 @@ export const consoleMsgs = {
     lessons: 'Lecciones',
     noClass: { title: 'Aún no tienes una clase.', setUp: 'Crear una clase', goFamily: 'Ir a Familia' },
     cross: { addFamily: '¿También aprenden en casa? Crea un espacio familiar', toFamily: 'Tu familia está en Familia' },
+    attention: (n: number) => `${n} por aprobar`,
+    schoolClassAttention: (className: string, n: number) => `${className}: ${n} por aprobar`,
   },
   space: {
     loading: 'Cargando…',
@@ -1832,5 +1837,28 @@ export const consoleMsgs = {
     firstSignIn: 'Esto funciona después de abrir aquí las páginas para adultos con el PIN. En la app, usa el código de rescate o la espera de 24 horas.',
     noPin: 'Este dispositivo no tiene un PIN de adultos que restablecer.',
     unavailable: 'Esto no está disponible ahora. Usa Olvidé el PIN en la app.',
+  },
+  status: {
+    inClass: 'En la clase',
+    needsOk: 'Por aprobar',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => plural('es', minutes, { one: `Dispositivo nuevo · queda ${minutes} min`, other: `Dispositivo nuevo · quedan ${minutes} min` }),
+    moveTo: (className: string) => `Cambio de clase: ${className}`,
+    moveWaiting: 'Cambio en espera',
+    waitingFor: (className: string) => `Esperando a: ${className}`,
+    moving: (date: string) => `Cambia de clase el ${date}`,
+    waitingSeat: 'Esperando un lugar',
+    new: 'Nueva llegada',
+    noPractice: 'Aún sin práctica registrada',
+    minutesLeft: (minutes: number) => plural('es', minutes, { one: `Queda ${minutes} min`, other: `Quedan ${minutes} min` }),
+    review: { cta: 'Revisar' },
+  },
+  attention: {
+    incomingHeading: 'Quieren unirse a esta clase',
+    from: (className: string) => `Viene de ${className}`,
+  },
+  relinkBar: {
+    one: (space: string) => `Un dispositivo nuevo espera tu aprobación · ${space}`,
+    many: (n: number) => plural('es', n, { one: `${n} dispositivo nuevo espera tu aprobación`, other: `${n} dispositivos nuevos esperan tu aprobación` }),
   },
 } satisfies DeepPartial<Messages['console']>;

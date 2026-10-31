@@ -1043,4 +1043,20 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
+  // name, a formatted date) and the asking-to-join card's source class.
+  'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],
+  'console.status.newDevice': [[1], [8]],
+  'console.status.moveTo': [['Evening Class D']],
+  'console.status.waitingFor': [['Evening Class D']],
+  'console.status.moving': [['Nov 3']],
+  'console.status.minutesLeft': [[1], [8]],
+  'console.attention.from': [['Class B']],
+  // AMENDMENTS-GROWNUP-UX GX-3: the home row chip and the Classes tab name (1 and many), a school row's class link, and
+  // the re-link bar (a class name; two or more devices).
+  'console.home.attention': [[1], [3]],
+  'console.home.schoolClassAttention': [['Class B', 1], ['Class B', 2]],
+  'console.shell.navAttention.classes': [[1], [3]],
+  'console.relinkBar.one': [['Sunday Class A']],
+  'console.relinkBar.many': [[2], [5]],
 };

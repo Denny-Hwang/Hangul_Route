@@ -30,7 +30,8 @@ export function useTransfersShown(): boolean {
 export function useOnline(): boolean {
   const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine !== false));
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    // A page without a real window (the static export's server pass, a test stub) has no online state to watch.
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return undefined;
     const on = (): void => setOnline(true);
     const off = (): void => setOnline(false);
     window.addEventListener('online', on);

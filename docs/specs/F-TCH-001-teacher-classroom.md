@@ -5,6 +5,8 @@
 **Owner**: solo dev
 **Rollout**: Phase 2 (post-MVP). MVP placeholder only — Profile role enum reserves `teacher` and `co-parent`, no UI ships.
 
+> **Amended 2026-10-31 by `AMENDMENTS-GROWNUP-UX.md` [GX]** (§10.1 re-link): a waiting re-link shows as **Needs your OK** next to the learner's name with inline Deny and an Approve that opens the confirm pop-up carrying the shipped safety hint, the platform and the request time, a pop-up for a new request with one reminder at 2 minutes left, a re-link-only read every 20 s on the class page and a re-link bar on the other console pages (rows GX-1, GX-2, GX-3); the re-link page's copy and controls are revised (row GX-12).
+
 Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §3, and `02-core-feature-spec §6` (Classroom).
 
 ---

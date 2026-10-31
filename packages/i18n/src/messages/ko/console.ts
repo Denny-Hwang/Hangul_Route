@@ -110,6 +110,9 @@ export const consoleMsgs = {
     terms: '이용약관',
     persona: { parent: '가족', teacher: '선생님' },
     nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트', lecture: '강의 모드' },
+    navAttention: {
+      classes: (n: number) => `반, 승인 대기 ${n}건`,
+    },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
   },
   pageBack: {
@@ -202,6 +205,8 @@ export const consoleMsgs = {
     lessons: '레슨',
     noClass: { title: '아직 반이 없어요.', setUp: '반 만들기', goFamily: '가족으로 가기' },
     cross: { addFamily: '집에서도 배우나요? 가족 공간 만들기', toFamily: '내 가족은 가족 메뉴에 있어요' },
+    attention: (n: number) => `승인 대기 ${n}건`,
+    schoolClassAttention: (className: string, n: number) => `${className}: 승인 대기 ${n}건`,
   },
   space: {
     loading: '불러오는 중…',
@@ -1730,5 +1735,28 @@ export const consoleMsgs = {
     firstSignIn: '어른이 이 기기에서 PIN으로 어른용 페이지를 연 적이 있어야 쓸 수 있어요. 앱에서 복구 코드나 24시간 기다리기를 써 주세요.',
     noPin: '이 기기에는 다시 만들 어른용 PIN이 없어요.',
     unavailable: "지금은 쓸 수 없어요. 앱의 'PIN을 잊었나요?'를 써 주세요.",
+  },
+  status: {
+    inClass: '참여 중',
+    needsOk: '승인 대기',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `새 기기 · ${minutes}분 남음`,
+    moveTo: (className: string) => `반 이동: ${className}`,
+    moveWaiting: '이동 대기 중',
+    waitingFor: (className: string) => `기다리는 반: ${className}`,
+    moving: (date: string) => `이동 예정 · ${date}`,
+    waitingSeat: '자리 기다리는 중',
+    new: '새로 참여',
+    noPractice: '아직 연습 기록이 없어요',
+    minutesLeft: (minutes: number) => `${minutes}분 남음`,
+    review: { cta: '확인하기' },
+  },
+  attention: {
+    incomingHeading: '이 반에 들어오려는 학생',
+    from: (className: string) => `보낸 반: ${className}`,
+  },
+  relinkBar: {
+    one: (space: string) => `새 기기 승인 대기 · ${space}`,
+    many: (n: number) => `새 기기 승인 대기 ${n}건`,
   },
 } satisfies DeepPartial<Messages['console']>;

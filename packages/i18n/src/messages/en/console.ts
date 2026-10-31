@@ -192,6 +192,13 @@ export const consoleMsgs = {
       /** Lecture mode for both personas, after Lessons (AMENDMENTS-LECTURE-V2 E3, LV-5); the one name of LV-D2. */
       lecture: 'Lecture mode',
     },
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-3 (section 6, GX-D6): the accessible name of the Classes tab while requests wait. The tab
+     * shows the number on screen (`aria-hidden`); this name says what it counts. Counts only, never a learner's name.
+     */
+    navAttention: {
+      classes: (n: number) => plural('en', n, { one: `Classes, ${n} needs your OK`, other: `Classes, ${n} need your OK` }),
+    },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /**
@@ -313,6 +320,13 @@ export const consoleMsgs = {
     noClass: { title: "You don't have a class yet.", setUp: 'Set up a class', goFamily: 'Go to Family' },
     /** The quiet cross-link at the bottom: set up the other persona, or switch to it. */
     cross: { addFamily: 'Learning at home too? Set up a family space', toFamily: 'Your family is under Family' },
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-3 (section 6): a class row's chip after the class name, to the class page's review
+     * (`#attention`): its re-links and the moves that wait for it. Replaces the row's "class moves waiting" pill.
+     */
+    attention: (n: number) => plural('en', n, { one: `${n} needs your OK`, other: `${n} need your OK` }),
+    /** GX-3: a school row's link to one of its classes with requests waiting (counts only). */
+    schoolClassAttention: (className: string, n: number) => `${className}: ${plural('en', n, { one: `${n} needs your OK`, other: `${n} need your OK` })}`,
   },
   /** A class or family roster (`/teach/space`). */
   space: {
@@ -2282,5 +2296,41 @@ export const consoleMsgs = {
     firstSignIn: 'This works after a grown-up has opened the grown-up pages here with the PIN. In the app, use the Rescue Code or the 24-hour wait.',
     noPin: 'This device has no grown-up PIN to reset.',
     unavailable: "This isn't available right now. Use Forgot PIN? in the app.",
+  },
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-1 (section 4, owner request 2026-10-31): the status chip next to every learner's name on a
+   * class or family roster, and its one reason line. One action wording per locale (section 10.1): every state that asks
+   * the grown-up to decide reads `needsOk`. No state says late, behind or missing; `new` describes a join, not a lack.
+   */
+  status: {
+    inClass: 'In class',
+    needsOk: 'Needs your OK',
+    /** An action chip's accessible name: the chip, then its reason line. */
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `New device · ${minutes} min left`,
+    moveTo: (className: string) => `Class move: ${className}`,
+    moveWaiting: 'Move waiting',
+    waitingFor: (className: string) => `Waiting for: ${className}`,
+    /** The date arrives formatted (`formatDate`, `monthDay`). */
+    moving: (date: string) => `Moving ${date}`,
+    waitingSeat: 'Waiting for a seat',
+    new: 'New',
+    noPractice: 'No practice shared yet',
+    minutesLeft: (minutes: number) => `${minutes} min left`,
+    review: { cta: 'Review' },
+  },
+  /** GX-1 section 4.1: learners asking to join this class (initials, picture and level only until accepted, T8). */
+  attention: {
+    incomingHeading: 'Asking to join this class',
+    from: (className: string) => `From ${className}`,
+  },
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-3 (section 5.5): the bar at the top of every other teacher console page while a new device
+   * waits (a re-link closes in 10 minutes). A class name on screen only, never a learner's name; the minutes line reuses
+   * `status.minutesLeft` and the button `status.review`.
+   */
+  relinkBar: {
+    one: (space: string) => `A new device needs your OK · ${space}`,
+    many: (n: number) => plural('en', n, { one: `${n} new device needs your OK`, other: `${n} new devices need your OK` }),
   },
 } as const;

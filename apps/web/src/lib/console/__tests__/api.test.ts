@@ -155,6 +155,19 @@ describe('console api — school (F-SCHOOL-001)', () => {
     expect(await api.addMember('space:c', 'x')).toEqual({ ok: false, error: 'invalid', status: 422, code: 'not_in_school' });
     expect(fetchImpl.mock.calls[1]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/members');
   });
+
+  it('[GX-W] reads a school\'s waiting counts per class leniently: a broken row is dropped, a broken answer is a failed read', async () => {
+    const row = { spaceId: 'space:c', relinks: 1, moves: 2, relinkExpiresAt: '2026-10-31T12:08:00.000Z' };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { classes: [row, { spaceId: 'space:d', relinks: -1, moves: 0, relinkExpiresAt: null }] } }))
+      .mockResolvedValueOnce(json(200, { data: { classes: 'none' } }))
+      .mockResolvedValueOnce(json(404, {}));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.schoolAttention('space:s')).toEqual({ ok: true, data: [row] });
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/spaces/space%3As/attention');
+    expect(await api.schoolAttention('space:s')).toEqual({ ok: false, error: 'unknown', status: 200 });
+    expect(await api.schoolAttention('space:s')).toEqual({ ok: false, error: 'not_found', status: 404 });
+  });
 });
 
 describe('console api — token provider (F-AUTH-002)', () => {
