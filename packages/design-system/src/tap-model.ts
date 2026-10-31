@@ -4,8 +4,9 @@ import { motion, spacing } from './tokens';
  * The forgiving tap (docs/specs/AMENDMENTS-TOUCH.md section 3, KT-D1 to KT-D7; design/components/TapBoard/spec.md):
  * the pure model a `TapBoard` runs for every learner answer. An answer commits when the finger lifts, decided here and
  * not by the browser's `click`: a finger that slid a little still counts, a touch in the gap between tiles goes to the
- * nearest tile, a bounce never counts twice, the latest finger on an answer wins over a resting thumb, a drag on a
- * board that can scroll turns into a scroll the board drives, and a touch that does not count never looks chosen.
+ * nearest tile, a bounce never counts twice, the latest finger on an answer wins over a resting thumb (and a palm that
+ * lands after a tap and stays down never answers for it), a drag on a board that can scroll turns into a scroll the
+ * board drives, and a touch that does not count never looks chosen.
  *
  * No React and no react-native: `TapBoard` feeds it touch events with the targets' rectangles read at that moment, and
  * paints what `pressedTargets` returns. Points and rectangles share one space (page pixels on the web, window points
@@ -18,12 +19,22 @@ export const TAP_TRAVEL = spacing.xxl;
 export const RELEASE_REACH = spacing.xl;
 /** A touch in a gap goes to the nearest target within this distance (`spacing.lg`, 16). */
 export const GAP_REACH = spacing.lg;
+/**
+ * A finger counts as over a neighbour (rule 4) only once it is more than this far inside the neighbour's own rectangle
+ * (`spacing.sm`, 8): a graze from near an edge that just touches the next tile still counts for the tile it started on.
+ */
+export const NEIGHBOUR_DEPTH = spacing.sm;
 /** After a commit, taps in the lock's scope are swallowed: a child's bounce is 60 to 300 ms. An input timing, not a style. */
 export const TAP_LOCK_MS = 400;
 /** The browser's `click` after a release the board already handled is dropped within this. An input timing. */
 export const CLICK_ECHO_MS = 700;
 /** Keyboard: a repeat on the same key (letter, Delete, Space) within this is a bounce (`motion.duration.fast`, 120). */
 export const KEY_BOUNCE_MS = motion.duration.fast;
+/**
+ * Rule 8: a finger that took the board from an earlier finger, and is still down this long after its own down when it
+ * lifts, while that earlier finger already lifted, is a resting palm, not a tap: its lift commits nothing. An input timing.
+ */
+export const PALM_HOLD_MS = 1500;
 /** A board-driven fling keeps this much of its velocity every `FLING_FRAME_MS` (rule 5). An input timing. */
 export const FLING_DECAY = 0.95;
 /** One fling frame. */
@@ -94,8 +105,10 @@ export interface TapPress {
   inside: boolean;
   /** The target was enabled and unlocked when the finger took it (rule 3). */
   live: boolean;
-  /** The finger went down inside the target's own rectangle (not in the gap band): only such a touch drives a scroll. */
-  onTarget: boolean;
+  /** When the finger went down. */
+  downAt: number;
+  /** A finger that was down before this one (and so lost the board to it) lifted while this one was down (rule 8). */
+  earlierLifted: boolean;
   /** The touch turned into a board-driven scroll (rule 5): never commits. */
   scrolling: boolean;
   /** The finger's coordinate along the scroller's axis that the content last followed. */
@@ -143,6 +156,11 @@ export interface TapStepResult {
   scrollBy: number;
   /** A release that ends a board-driven scroll: the offset velocity in px/ms to fling with, or null. */
   fling: number | null;
+}
+
+/** How far a point is inside a rectangle: the distance to its nearest edge, 0 on the edge or outside. */
+function rectDepth(point: TapPoint, rect: TapRect): number {
+  return Math.max(0, Math.min(point.x - rect.x, rect.x + rect.width - point.x, point.y - rect.y, rect.y + rect.height - point.y));
 }
 
 /** The straight distance from a point to a rectangle: 0 inside or on the edge. */
@@ -252,11 +270,14 @@ function usable(state: TapModelState, config: TapBoardConfig, target: TapTargetS
   return target !== undefined && !config.disabled && target.disabled !== true && !isTargetLocked(state, target.id, at);
 }
 
-/** Rule 4: within reach of the down target's rectangle, or within travel of the down point, and not over a neighbour. */
+/**
+ * Rule 4: within reach of the down target's rectangle, or within travel of the down point, and not over a neighbour
+ * (more than `NEIGHBOUR_DEPTH` inside another enabled target's own rectangle).
+ */
 function isInside(press: TapPress, point: TapPoint, targets: readonly TapTargetSnapshot[]): boolean {
   const target = find(targets, press.targetId);
   if (target === undefined) return false;
-  if (targets.some((t) => t.id !== target.id && t.disabled !== true && rectDistance(point, t.rect) === 0)) return false;
+  if (targets.some((t) => t.id !== target.id && t.disabled !== true && rectDepth(point, t.rect) > NEIGHBOUR_DEPTH)) return false;
   const travel = Math.hypot(point.x - press.down.x, point.y - press.down.y);
   return travel <= TAP_TRAVEL || rectDistance(point, target.rect) <= RELEASE_REACH;
 }
@@ -286,7 +307,8 @@ function newPress(state: TapModelState, config: TapBoardConfig, touchId: string,
     down: point,
     inside: targetId !== null,
     live: usable(state, config, target, at),
-    onTarget: target !== undefined && rectDistance(point, target.rect) === 0,
+    downAt: at,
+    earlierLifted: false,
     scrolling: false,
     scrollFrom: coord,
     samples: [{ at, coord }],
@@ -303,12 +325,12 @@ function moveTo(state: TapModelState, config: TapBoardConfig, press: TapPress, p
 const result = (state: TapModelState, more: Partial<Omit<TapStepResult, 'state'>> = {}): TapStepResult => ({ state, commits: [], scrollBy: 0, fling: null, ...more });
 
 /**
- * Rule 5 on a move: once the travel along the scroller's axis passes `TAP_TRAVEL`, a touch that went down on a target
- * becomes a scroll for good, and the content follows the finger beyond that point.
+ * Rule 5 on a move: once the travel along the scroller's axis passes `TAP_TRAVEL`, a touch the board took (on a target,
+ * or in the gap band around one) becomes a scroll for good, and the content follows the finger beyond that point.
  */
 function scrollMove(press: TapPress, config: TapBoardConfig, point: TapPoint, at: number): { press: TapPress; scrollBy: number } | null {
   const scroller = config.scroller;
-  if (scroller === null || scroller === undefined || !press.onTarget || (!press.scrolling && !scroller.canScroll)) return null;
+  if (scroller === null || scroller === undefined || (!press.scrolling && !scroller.canScroll)) return null;
   const coord = coordOf(point, scroller.axis);
   const samples = [...press.samples, { at, coord }].filter((s) => at - s.at <= FLING_WINDOW_MS);
   if (press.scrolling) return { press: { ...press, scrollFrom: coord, samples }, scrollBy: press.scrollFrom - coord };
@@ -356,8 +378,13 @@ export function tapStep(state: TapModelState, event: TapEvent, config: TapBoardC
       if (!state.touches.includes(event.touchId)) return result(state);
       const touches = state.touches.filter((t) => t !== event.touchId);
       const press = state.presses.find((p) => p.touchId === event.touchId);
-      // A resting or ignored finger: its lift does nothing.
-      if (press === undefined) return result({ ...state, touches });
+      if (press === undefined) {
+        // A resting or ignored finger: its lift commits nothing. A finger that holds the board and went down after this
+        // one notes it (rule 8): if it is then held past `PALM_HOLD_MS`, it is a palm that took the board from a tap.
+        const order = state.touches.indexOf(event.touchId);
+        const presses = config.multiTouch === 'each' ? state.presses : state.presses.map((p) => (state.touches.indexOf(p.touchId) > order ? { ...p, earlierLifted: true } : p));
+        return result({ ...state, touches, presses });
+      }
       const released: TapModelState = { ...state, touches, presses: state.presses.filter((p) => p !== press), lastReleaseAt: event.at };
       if (config.multiTouch !== 'each') {
         const scrolled = scrollMove(press, config, event.point, event.at);
@@ -365,8 +392,10 @@ export function tapStep(state: TapModelState, event: TapEvent, config: TapBoardC
       }
       const final = config.multiTouch === 'each' ? moveTo(state, config, press, event.point, event.at, event.targets) : { ...press, inside: isInside(press, event.point, event.targets) };
       const target = find(event.targets, final.targetId);
-      // Rule 6: commit once, inside, on a target that took the finger and is still free now.
-      if (target === undefined || !final.inside || !final.live || !usable(state, config, target, event.at)) return result(released);
+      // Rule 6: commit once, inside, never after a scroll, on a target that took the finger and is still free now. Rule 8:
+      // not a palm that took the board from a tap and stayed down.
+      const palm = final.earlierLifted && event.at - final.downAt >= PALM_HOLD_MS;
+      if (target === undefined || !final.inside || final.scrolling || palm || !final.live || !usable(state, config, target, event.at)) return result(released);
       return result(locked(released, config, target, event.at), { commits: [target.id] });
     }
     case 'cancel':
