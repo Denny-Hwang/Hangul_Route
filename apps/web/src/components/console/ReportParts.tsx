@@ -59,7 +59,6 @@ const WIDE = '45em'; // the adult frame's phone / wide switch (F-APP-001 section
 const TWO_COLUMNS = '60em'; // the report body's two columns
 const PERIOD_TAB_MIN = '4.5rem';
 const FIGURE_MIN = '7rem';
-const PRINT_HINT_MIN = '8rem';
 const PRINT_HINT_MAX = '14rem';
 const DETAIL_COLUMN_MIN = '22rem';
 const INSIGHT_TEXT_MIN = '14rem';
@@ -88,7 +87,9 @@ export const REPORT_CSS = `
 .hr-report-hidden{position:absolute;width:${px(borderWidth.thin)};height:${px(borderWidth.thin)};margin:-${px(borderWidth.thin)};padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .hr-report-top{display:flex;flex-direction:column;align-items:flex-start;gap:${rem(spacing.xs)}}
 .hr-report-buttons{display:flex;flex-wrap:wrap;align-items:center;column-gap:${rem(spacing.xs)};row-gap:${rem(spacing.xxs)}}
-.hr-report-hint{flex:1 1 ${PRINT_HINT_MIN};font-size:${rem(typography.size.caption)};color:${colors.text.muted};line-height:${typography.leading.tight}}
+.hr-report-action-group{display:flex;flex-direction:column;align-items:flex-start}
+.hr-report-hint:not(:empty){margin-top:${rem(spacing.xxs)}}
+.hr-report-hint{font-size:${rem(typography.size.caption)};color:${colors.text.muted};line-height:${typography.leading.tight}}
 .hr-report-link-button{display:inline-flex;align-items:center;justify-content:center;min-height:${px(touchTarget.min)};padding:${rem(spacing.sm)} ${rem(spacing.lg)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none;cursor:pointer}
 .hr-report-link-button:disabled{background:${colors.surface.sunken};color:${colors.text.muted};cursor:default}
 .hr-report-ghost{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};padding:${rem(spacing.xs)} ${rem(spacing.lg)};border-radius:${px(radii.pill)};background:${colors.brand.primaryLight};color:${colors.brand.primaryDark};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};text-decoration:none}
@@ -202,7 +203,9 @@ export const REPORT_CSS = `
 }
 @media (min-width:${WIDE}){
 .hr-report-top{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:${rem(spacing.sm)}}
-.hr-report-buttons{justify-content:flex-end;column-gap:${rem(spacing.sm)}}
+.hr-report-buttons{column-gap:${rem(spacing.sm)}}
+.hr-report-top .hr-report-action-group{align-items:flex-end}
+.hr-report-top .hr-report-buttons{justify-content:flex-end}
 .hr-report-hint{max-width:${PRINT_HINT_MAX}}
 }
 @media (min-width:${TWO_COLUMNS}){
@@ -223,17 +226,42 @@ export function ReportBack({ link }: { link: ReportLink }): JSX.Element {
 }
 
 /**
- * The header: the back link, then (row 2 on a phone) **Print or save as PDF** with its hint, which it names with
- * `aria-describedby`. Print is disabled while the report loads; a cached report shown with a failed later load stays printable.
- * **Send a note** (F-FEEDBACK-001 FB-11b; F-REPORT-001 section 3.6) leads the second row when `sendNote` holds its
- * address: a ghost pill with the `note` glyph, never in an insight line.
+ * The class report's header: the back link, then (row 2 on a phone) the report's actions (`ReportActions`). The learner
+ * report draws the back link and its actions apart, the actions under the title and its status lines (GX-13).
  */
 export function ReportHeader({ back, printDisabled, onPrint, sendNote = null }: { back: ReportLink; printDisabled: boolean; onPrint: () => void; sendNote?: string | null }): JSX.Element {
-  const m = useMessages();
-  const p = m.report.print;
   return (
     <div className="hr-report-top hr-report-actions">
       <ReportBack link={back} />
+      <ReportActions printDisabled={printDisabled} onPrint={onPrint} sendNote={sendNote} />
+    </div>
+  );
+}
+
+/** Runs `print` after the browser has painted, so a line drawn by the same click shows before the print dialog. */
+function afterPaint(print: () => void): void {
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => setTimeout(print, 0));
+  else setTimeout(print, 0);
+}
+
+/**
+ * The report's actions: **Send a note** (F-FEEDBACK-001 FB-11b; F-REPORT-001 section 3.6) when `sendNote` holds its
+ * address, a ghost pill with the `note` glyph, never in an insight line; then **Print or save as PDF**. Print is
+ * disabled while the report loads; a cached report shown with a failed later load stays printable. The print hint
+ * ("Turn off headers and footers in the print dialog.") shows only once Print is pressed (AMENDMENTS-GROWNUP-UX GX-13,
+ * T13): drawn first, in a polite status line that Print then names with `aria-describedby`, and the dialog opens after
+ * the paint.
+ */
+export function ReportActions({ printDisabled, onPrint, sendNote = null }: { printDisabled: boolean; onPrint: () => void; sendNote?: string | null }): JSX.Element {
+  const m = useMessages();
+  const p = m.report.print;
+  const [hinted, setHinted] = useState(false);
+  const print = (): void => {
+    setHinted(true);
+    afterPaint(onPrint);
+  };
+  return (
+    <div className="hr-report-action-group hr-report-actions" data-testid="report-actions">
       <div className="hr-report-buttons">
         {sendNote ? (
           <Link className="hr-report-ghost hr-report-send-note" href={sendNote} data-testid="report-send-note">
@@ -241,13 +269,13 @@ export function ReportHeader({ back, printDisabled, onPrint, sendNote = null }: 
             <span>{m.report.action.sendNote}</span>
           </Link>
         ) : null}
-        <button type="button" className="hr-report-link-button" aria-describedby={PRINT_HINT_ID} disabled={printDisabled} onClick={onPrint} data-testid="report-print">
+        <button type="button" className="hr-report-link-button" aria-describedby={hinted ? PRINT_HINT_ID : undefined} disabled={printDisabled} onClick={print} data-testid="report-print">
           {p.button}
         </button>
-        <p className="hr-report-hint" id={PRINT_HINT_ID}>
-          {p.hint}
-        </p>
       </div>
+      <p className="hr-report-hint" id={PRINT_HINT_ID} role="status" data-testid="report-print-hint">
+        {hinted ? p.hint : ''}
+      </p>
     </div>
   );
 }
@@ -301,11 +329,12 @@ export function ReportTitle({ title, avatar }: { title: string | null; avatar: s
 
 /**
  * At a glance: LR-D's region (`console.learningRoute.section`) holding "Now on", the goal line (the flag only for a goal
- * or a plan) and **Open Learning Route** when that page is on the build; then "Last practice" outside it.
+ * or a plan) and **Open Learning Route** when that page is on the build; then "Last practice" and, when the family's
+ * transfer read lists them, the learner's classes (GX-13) outside it.
  */
 export function ReportGlanceBlock({ glance }: { glance: ReportGlance }): JSX.Element | null {
   const hasRegion = glance.nowOn !== null || glance.goal !== null || glance.route !== null;
-  if (!hasRegion && glance.lastPractice === null) return null;
+  if (!hasRegion && glance.lastPractice === null && glance.classes === null) return null;
   return (
     <>
       {hasRegion ? (
@@ -325,6 +354,11 @@ export function ReportGlanceBlock({ glance }: { glance: ReportGlance }): JSX.Ele
         </section>
       ) : null}
       {glance.lastPractice ? <p className="hr-report-muted">{glance.lastPractice}</p> : null}
+      {glance.classes ? (
+        <p className="hr-report-muted" data-testid="report-classes">
+          {glance.classes}
+        </p>
+      ) : null}
     </>
   );
 }
@@ -774,7 +808,7 @@ export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPerio
           {block.figures.map((figure) => (
             <div key={figure.key} className="hr-report-figure" data-testid={`report-figure-${figure.key}`}>
               <dt>{figure.label}</dt>
-              <dd className="hr-report-figure-value">{figure.count}</dd>
+              <dd className="hr-report-figure-value">{figure.value}</dd>
               {figure.up ? <dd className="hr-report-figure-up">{figure.up}</dd> : null}
             </div>
           ))}

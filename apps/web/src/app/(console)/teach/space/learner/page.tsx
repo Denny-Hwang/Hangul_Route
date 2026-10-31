@@ -7,11 +7,11 @@ import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import {
   REPORT_CSS,
   REPORT_PANEL_ID,
+  ReportActions,
   ReportBack,
   ReportBody,
   ReportControls,
   ReportGlanceBlock,
-  ReportHeader,
   ReportSkeleton,
   ReportStateBlock,
   ReportTitle,
@@ -19,6 +19,7 @@ import {
   reportTabId,
 } from '@/components/console/ReportParts';
 import { ReportScopeBlock } from '@/components/console/ReportScopeBlock';
+import { useTransfersShown } from '@/components/console/TransferParts';
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
@@ -44,6 +45,10 @@ import { stageTitle } from '@/lib/console/stage-titles';
  * so each period or step refetches), the account's spaces once (the viewer's role decides the archived sentence and
  * the plan actions, `reportViewerRights`) and, with the Learning Route on, the roster and the plans once for the goal
  * line. Shown only while `reportsEnabled(locale)`; otherwise "Reports are not available yet." with the back link.
+ *
+ * Order (AMENDMENTS-GROWNUP-UX GX-13, T13): the back link, the `h1` with its glance, the status lines, then the
+ * actions (Send a note, Print), then the tabs. A family report also reads the family's moves once (`transferRequests`
+ * `options`, only while class moves are shown) for the learner's classes line; a skipped or failed read draws no line.
  *
  * Loading (design, decisions): the first load draws the heading, the tab row disabled and a busy panel; a later period
  * or step keeps the cached report's controls enabled and marks only the panel busy, so focus stays on the control
@@ -107,6 +112,30 @@ function LearnerReportInner(): JSX.Element {
       live = false;
     };
   }, [api]);
+
+  // The classes line (GX-13): a family report only, from the family's transfer options. Keyed by space and learner, so
+  // a line never outlives the learner it names; a failed read, an unknown shape or switched-off moves leave it out.
+  const movesShown = useTransfersShown();
+  // The space of the last answer, or the cached one while a period or a step reloads (no second read per step).
+  const loadedSpace = (load !== null && load.key === key && load.result.ok ? load.result.data.space : null) ?? REPORT_CACHE.get(key)?.space ?? null;
+  const familyId = loadedSpace?.kind === 'family' ? loadedSpace.id : null;
+  const [classes, setClasses] = useState<{ key: string; names: string[] } | null>(null);
+  useEffect(() => {
+    if (!api || !enabled || !movesShown || familyId === null || !learnerId) return undefined;
+    let live = true;
+    const at = `${familyId}|${learnerId}`;
+    void api.transferRequests(familyId).then(
+      (result) => {
+        if (!live || !result.ok) return;
+        const option = Array.isArray(result.data.options) ? result.data.options.find((o) => o.learnerId === learnerId) : undefined;
+        if (option) setClasses({ key: at, names: option.classes.map((c) => c.name) });
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [api, enabled, movesShown, familyId, learnerId]);
 
   // Browse links (RP-13): read after mount, so the static export and the first client render agree (both draw none).
   const [browseOn, setBrowseOn] = useState(false);
@@ -228,8 +257,11 @@ function LearnerReportInner(): JSX.Element {
   if (screen.kind === 'loading') {
     return frame(
       <>
-        <ReportHeader back={screen.back} printDisabled onPrint={() => undefined} />
+        <div className="hr-report-actions">
+          <ReportBack link={screen.back} />
+        </div>
         <ReportTitle title={null} avatar={null} />
+        <ReportActions printDisabled onPrint={() => undefined} />
         <ReportControls
           tabs={loadingTabs(period, m.report.period)}
           tabsLabel={m.a11y.report.periods}
@@ -249,7 +281,8 @@ function LearnerReportInner(): JSX.Element {
     );
   }
 
-  const view = learnerReportView({ data: screen.data, query, now: new Date(), role, stageTitle, learningRoute: routeOn, goal, locale });
+  const classNames = movesShown && classes !== null && classes.key === `${screen.data.space.id}|${screen.data.learner.id}` ? classes.names : null;
+  const view = learnerReportView({ data: screen.data, query, now: new Date(), role, stageTitle, learningRoute: routeOn, goal, classes: classNames, locale });
   if (view === null) {
     // A space kind with no learner report (a school): the same words as any report this viewer cannot open.
     return frame(
@@ -285,12 +318,16 @@ function LearnerReportInner(): JSX.Element {
   );
   return frame(
     <>
-      <ReportHeader back={view.back} printDisabled={busy || error !== null} onPrint={() => window.print()} sendNote={noteLink} />
+      {/* Screen only, like the actions: the printed report starts at its h1 (RP-7b). */}
+      <div className="hr-report-actions">
+        <ReportBack link={view.back} />
+      </div>
       <div className="hr-report-glance">
         <ReportTitle title={view.title} avatar={screen.data.learner.avatar} />
         {view.glance ? <ReportGlanceBlock glance={view.glance} /> : null}
       </div>
       <ReportStateBlock lines={lines} error={error} onRetry={retry} />
+      <ReportActions printDisabled={busy || error !== null} onPrint={() => window.print()} sendNote={noteLink} />
       {view.tabs ? (
         <>
           <ReportControls

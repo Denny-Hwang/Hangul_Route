@@ -1043,4 +1043,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // AMENDMENTS-GROWNUP-UX GX-13: the report's minutes tile and the learner's classes line.
+  'report.minutesTile': [[1], [36]],
+  'report.classesLine': [[['Sunflower']], [['Sunflower', 'Saturday B']]],
 };

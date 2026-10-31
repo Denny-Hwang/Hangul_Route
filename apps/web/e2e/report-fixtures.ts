@@ -126,6 +126,8 @@ export interface ReportMock {
   hold?: boolean;
   /** The space's plans (RP-10, the plan builder after Add to a plan); none by default. */
   plans?: unknown[];
+  /** The family's transfer `options` (the learner's live classes, GX-13's classes line); none by default. */
+  options?: unknown[];
 }
 
 export const spaceId = (kind: Kind): string => (kind === 'class' ? 'space:sunflower' : 'space:kim-family');
@@ -187,6 +189,7 @@ export async function mockReport(page: Page, first: ReportMock, later: ReportMoc
       return json(route, 200, { spaces: [{ space, role: first.role ?? 'owner', counts: { learners: 1, accounts: 1, classes: 0 } }] });
     }
     if (/\/plans$/.test(url.pathname) && request.method() === 'GET') return json(route, 200, { plans: first.plans ?? [] });
+    if (/\/transfer-requests$/.test(url.pathname) && request.method() === 'GET' && first.options) return json(route, 200, { requests: [], options: first.options });
     return json(route, 200, { plans: [], requests: [], entitlements: [] });
   });
   return {

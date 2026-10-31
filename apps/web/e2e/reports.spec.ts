@@ -663,3 +663,69 @@ test.describe('the family report at /parent/learner and the report nav items (RP
     await expect(page.getByTestId('nav-classReports')).toHaveAttribute('aria-current', 'page');
   });
 });
+
+/**
+ * AMENDMENTS-GROWNUP-UX GX-13 (T13): the learner report reads top down (back link, the h1 and its status lines, then
+ * the actions), the print hint shows only once Print is pressed, the minutes tile has its unit, and a family report
+ * names the learner's classes. ko / en / es at 360 x 740 and 1280 x 800; screenshots go to the test output folder.
+ */
+test.describe('the learner report order, print hint, minutes unit and classes line (GX-13)', () => {
+  test.skip(!FULL, 'needs the export built against the mocked report API (REPORTS_E2E=1)');
+
+  const WORDS = {
+    en: { minutes: '36 min', classes: 'Classes: Sunflower, Saturday B', hint: 'Turn off headers and footers in the print dialog.' },
+    es: { minutes: '36 min', classes: 'Clases: Sunflower, Saturday B', hint: 'Desactiva encabezados y pies de página al imprimir.' },
+    ko: { minutes: '36분', classes: '소속 반: Sunflower, Saturday B', hint: '인쇄 창에서 머리글과 바닥글을 꺼 주세요.' },
+  } as const;
+  const OPTIONS = [
+    {
+      learnerId: 'profile:mina',
+      name: 'Mina',
+      classes: [
+        { spaceId: 'space:sunflower', name: 'Sunflower' },
+        { spaceId: 'space:sat', name: 'Saturday B' },
+      ],
+      selfManaged: false,
+      blockTeacherRequests: false,
+    },
+  ];
+
+  for (const locale of ['ko', 'en', 'es'] as const) {
+    for (const viewport of [
+      { width: 360, height: 740 },
+      { width: 1280, height: 800 },
+    ]) {
+      test(`${locale} at ${viewport.width}: h1, status, then actions; the hint after Print; "${WORDS[locale].minutes}"; the classes line`, async ({ page }, testInfo) => {
+        await page.setViewportSize(viewport);
+        await page.addInitScript((value) => {
+          window.localStorage.setItem('hr:console:uiLocale', value);
+          (window as unknown as { __printed: number }).__printed = 0;
+          window.print = () => {
+            (window as unknown as { __printed: number }).__printed += 1;
+          };
+        }, locale);
+        await mockReport(page, { kind: 'family', options: OPTIONS });
+        await page.goto(reportUrl('family', 'period=week&from=home'));
+        await expect(headline(page)).toBeVisible();
+        const top = async (id: string): Promise<number> => (await page.getByTestId(id).boundingBox())?.y ?? -1;
+        const h1 = (await page.getByRole('heading', { level: 1 }).boundingBox())?.y ?? -1;
+        expect(await top('report-back')).toBeLessThan(h1);
+        expect(h1).toBeLessThan(await top('report-classes'));
+        expect(await top('report-classes')).toBeLessThan(await top('report-print'));
+        expect(await top('report-print')).toBeLessThan(await top('report-tab-week'));
+        await expect(page.getByTestId('report-classes')).toHaveText(WORDS[locale].classes);
+        await expect(page.getByTestId('report-figure-minutes').locator('dd').first()).toHaveText(WORDS[locale].minutes);
+        await expect(page.getByTestId('report-goal')).toHaveCount(0);
+        await expect(page.getByTestId('report-print-hint')).toHaveText('');
+        await noSidewaysScroll(page);
+        await page.screenshot({ path: testInfo.outputPath(`gx13-${locale}-${viewport.width}-before.png`), fullPage: true });
+        await page.getByTestId('report-print').click();
+        await expect(page.getByTestId('report-print-hint')).toHaveText(WORDS[locale].hint);
+        await expect(page.getByTestId('report-print')).toHaveAttribute('aria-describedby', 'hr-report-print-hint');
+        await expect.poll(() => page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(1);
+        await noSidewaysScroll(page);
+        await page.screenshot({ path: testInfo.outputPath(`gx13-${locale}-${viewport.width}-after-print.png`), fullPage: true });
+      });
+    }
+  }
+});
