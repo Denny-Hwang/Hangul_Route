@@ -568,12 +568,19 @@ export type ClozeGapKind = z.infer<typeof ClozeGapKindSchema>;
  * particle links to the word before it: `mul___` with `eul` reads `mureul`); a particle gap needs it.
  * Tiles show Korean and romanization only; their `en` is the content gloss every Korean item carries.
  */
+/**
+ * A Cloze Pick tile: taught Korean, and `soundChange: true` when its standard pronunciation differs from the spelling in a
+ * way `hasSoundChange` does not model (할게 [할께], tensification after the -ㄹ ending; row CM-42 S4 review fix), so the
+ * review item it teaches is never offered as Dictation (F-CURR-002 section 4.5). The game itself ignores the flag.
+ */
+export const ClozePickTileSchema = KoTextShape.extend({ soundChange: z.literal(true).optional() }).superRefine(refineKoText);
+
 export const ClozePickRoundSchema = z
   .object({
     id: z.string().min(1),
     sentence: KoTextSchema,
     gapKind: ClozeGapKindSchema.default('word'),
-    tiles: z.array(KoTextSchema).min(3).max(4),
+    tiles: z.array(ClozePickTileSchema).min(3).max(4),
     answerIndex: z.number().int().min(0),
     filledRomanization: z.string().trim().min(1).optional(),
   })
