@@ -37,7 +37,7 @@ import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { describeStrokeOrder, pointsToPathD } from '../../logic/stroke-diagram';
 import { TRACE_IDLE_MS, idleOnTouch, type TraceEvaluator } from '../../logic/trace-evaluator';
-import { NO_TRACE_POINTERS, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
+import { NO_TRACE_POINTERS, type CanvasPoint, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
 import { traceCanvasMax, traceLayoutMode, traceScreenWidth, traceSidePanelWidth } from '../../logic/trace-layout';
 import { BLOCK_VIEWBOX, type PlacedLetter } from '../../logic/trace-word/block-strokes';
 import { createTraceWordGate, everyLetterInked, scoreTraceUnit } from '../../logic/trace-word/evaluate';
@@ -306,12 +306,12 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
       })
     : null;
   const size = canvases?.size ?? 0;
-  const toViewBox = (x: number, y: number): JamoStrokePoint => ({ x: (x * BLOCK_VIEWBOX) / size, y: (y * BLOCK_VIEWBOX) / size });
+  const toViewBox = ({ x, y }: CanvasPoint): JamoStrokePoint => ({ x: (x * BLOCK_VIEWBOX) / size, y: (y * BLOCK_VIEWBOX) / size });
 
   // One finger draws; a dot or a resting palm leaves no ink (AMENDMENTS-TOUCH 6.8, logic/trace-pointers).
   const onTouchEffect = (effect: TraceTouchEffect): void => {
-    if (effect.kind === 'start') beginStroke(toViewBox(effect.from.x, effect.from.y), toViewBox(effect.to.x, effect.to.y));
-    else if (effect.kind === 'point') appendPoint(toViewBox(effect.at.x, effect.at.y));
+    if (effect.kind === 'start') beginStroke(toViewBox(effect.from), toViewBox(effect.to));
+    else if (effect.kind === 'point') appendPoint(toViewBox(effect.at));
     if (stateRef.current.phase !== 'drawing') return;
     // A drifting palm had the stroke; the finger took it: the palm's few points go. In the drawing phase
     // the last stroke is the owner's: every phase change clears the canvas before drawing resumes.

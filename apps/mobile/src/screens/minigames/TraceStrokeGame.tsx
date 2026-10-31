@@ -39,7 +39,7 @@ import {
   traceSidePanelWidth,
 } from '../../logic/trace-layout';
 import { TRACE_IDLE_MS, createTraceEvaluator, idleOnTouch, type TraceEvaluator } from '../../logic/trace-evaluator';
-import { NO_TRACE_POINTERS, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
+import { NO_TRACE_POINTERS, type CanvasPoint, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
 import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
 import { tracePanGesture } from '../../components/trace-pan';
@@ -241,27 +241,24 @@ export function TraceStrokeGame({
   };
   evaluateRef.current = evaluate;
 
-  const toViewBoxPoint = (x: number, y: number): JamoStrokePoint => {
+  const toViewBoxPoint = ({ x, y }: CanvasPoint): JamoStrokePoint => {
     const scale = VIEWBOX / canvasSize;
     return { x: x * scale, y: y * scale };
   };
 
+  // The point ends the last stroke; on a canvas cleared under a finger still drawing (a retry, a new
+  // letter), it starts a new one, so the finger draws on from here.
   const appendStrokePoint = (point: JamoStrokePoint): void => {
     const prev = strokesRef.current;
-    // The canvas was cleared under a finger still drawing (a retry, a new letter): it draws on from here.
-    if (prev.length === 0) return setStrokes([[point]]);
-    const next = [...prev];
-    const last = next[next.length - 1]!;
-    next[next.length - 1] = [...last, point];
-    setStrokes(next);
+    setStrokes([...prev.slice(0, -1), [...(prev[prev.length - 1] ?? []), point]]);
   };
 
   // One finger draws; a dot or a resting palm leaves no ink (AMENDMENTS-TOUCH 6.8, logic/trace-pointers).
   const onTouchEffect = (effect: TraceTouchEffect): void => {
     if (effect.kind === 'start') {
-      setStrokes([...strokesRef.current, [toViewBoxPoint(effect.from.x, effect.from.y), toViewBoxPoint(effect.to.x, effect.to.y)]]);
+      setStrokes([...strokesRef.current, [toViewBoxPoint(effect.from), toViewBoxPoint(effect.to)]]);
     } else if (effect.kind === 'point') {
-      appendStrokePoint(toViewBoxPoint(effect.at.x, effect.at.y));
+      appendStrokePoint(toViewBoxPoint(effect.at));
     } else if (effect.kind === 'drop') {
       // A drifting palm had the stroke; the finger took it: the palm's few points go. While a finger owns
       // the stroke the last stroke is its own (a cleared canvas only gets ink from that finger).

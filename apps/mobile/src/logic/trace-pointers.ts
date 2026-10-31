@@ -68,11 +68,7 @@ export interface TraceTouchStep {
 export const NO_TRACE_POINTERS: TracePointers = { pointers: new Map(), owner: null, ownerFar: 0 };
 
 /** A stroke is being drawn, or a finger is down that may still start one. */
-function busy(state: TracePointers): boolean {
-  if (state.owner !== null) return true;
-  for (const p of state.pointers.values()) if (!p.resting) return true;
-  return false;
-}
+const busy = (state: TracePointers): boolean => state.owner !== null || [...state.pointers.values()].some((p) => !p.resting);
 
 const at = (t: TouchPoint): CanvasPoint => ({ x: t.x, y: t.y });
 
@@ -143,7 +139,6 @@ export function traceTouchesUp(state: TracePointers, touches: readonly TouchPoin
  * the owner first. A lift that already came through `traceTouchesUp` is not repeated.
  */
 export function traceTouchesEnd(state: TracePointers): TraceTouchStep {
-  if (state.pointers.size === 0) return { state: NO_TRACE_POINTERS, effects: [] };
   // The owner first (-1 with none: no pointer); its second listing is skipped (a lifted pointer is gone).
   const ids = [state.owner ?? -1, ...state.pointers.keys()];
   const out = traceTouchesUp(
