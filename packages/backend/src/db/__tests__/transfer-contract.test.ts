@@ -758,6 +758,15 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect(await db.openTransfersOfSpaces([], 'source')).toEqual([]);
       });
 
+      it('[GX-W] openTransfersOfLearners reads the open requests of a set of learners, newest first, set-based', async () => {
+        await three();
+        await db.cancelTransfer('transfer:0002', 'cancelled_initiator', 'family', at(HOUR));
+        expect((await db.openTransfersOfLearners([LEARNER, 'profile:two', 'profile:three'])).map((t) => t.id)).toEqual(['transfer:0003', 'transfer:0001']);
+        expect((await db.openTransfersOfLearners(['profile:two'])).map((t) => t.id)).toEqual([]);
+        expect((await db.openTransfersOfLearners([LEARNER, LEARNER])).map((t) => t.id)).toEqual(['transfer:0001']);
+        expect(await db.openTransfersOfLearners([])).toEqual([]);
+      });
+
       it('transferEvents lists oldest first; addTransferEvent keeps codes and counts', async () => {
         await db.createTransfer(learnerSideRow(), created);
         await db.addTransferEvent({ transferId: ID, at: iso(HOUR), actorKind: 'account', actorRef: 'teacher-a', event: 'consented', slot: 'source', detail: { via: 'owner' } });

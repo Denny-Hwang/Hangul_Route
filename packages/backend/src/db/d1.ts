@@ -957,6 +957,14 @@ export class D1Db implements Db {
   relinksOf(spaceId: string): Promise<StoredRelink[]> {
     return this.many('SELECT * FROM relink_requests WHERE space_id = ? ORDER BY requested_at', [spaceId], toRelink);
   }
+  pendingRelinksOfSpaces(spaceIds: readonly string[], now: Date): Promise<StoredRelink[]> {
+    if (spaceIds.length === 0) return Promise.resolve([]);
+    return this.many(
+      "SELECT * FROM relink_requests WHERE space_id IN (SELECT value FROM json_each(?)) AND status = 'pending' AND expires_at > ? ORDER BY requested_at",
+      [JSON.stringify([...new Set(spaceIds)]), now.toISOString()],
+      toRelink,
+    );
+  }
 
   entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]> {
     return this.many('SELECT * FROM entitlements WHERE subject_kind = ? AND subject_id = ? ORDER BY plan_key', [subjectKind, subjectId], toEntitlement);
@@ -1292,6 +1300,15 @@ export class D1Db implements Db {
   }
   openTransferOf(learnerId: string): Promise<StoredTransfer | null> {
     return this.one(`SELECT * FROM transfer_requests WHERE learner_id = ? AND ${OPEN} LIMIT 1`, [learnerId], toTransfer);
+  }
+  async openTransfersOfLearners(learnerIds: readonly string[]): Promise<StoredTransfer[]> {
+    const unique = [...new Set(learnerIds)];
+    const out: StoredTransfer[] = [];
+    for (let i = 0; i < unique.length; i += IN_CHUNK) {
+      const chunk = unique.slice(i, i + IN_CHUNK);
+      out.push(...(await this.many(`SELECT * FROM transfer_requests WHERE learner_id IN (${chunk.map(() => '?').join(', ')}) AND ${OPEN}`, chunk, toTransfer)));
+    }
+    return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
   }
   lastLearnerRefusal(learnerId: string, since: Date): Promise<StoredTransfer | null> {
     return this.one(
@@ -1633,6 +1650,16 @@ export class D1Db implements Db {
   }
   openClassMoveOf(learnerId: string): Promise<StoredClassMove | null> {
     return this.one("SELECT * FROM class_moves WHERE learner_id = ? AND status = 'requested' LIMIT 1", [learnerId], toClassMove);
+  }
+  async openClassMovesOfSpaces(spaceIds: readonly string[], role: 'source' | 'destination'): Promise<StoredClassMove[]> {
+    const column = role === 'source' ? 'source_space_id' : 'dest_space_id';
+    const unique = [...new Set(spaceIds)];
+    const out: StoredClassMove[] = [];
+    for (let i = 0; i < unique.length; i += IN_CHUNK) {
+      const chunk = unique.slice(i, i + IN_CHUNK);
+      out.push(...(await this.many(`SELECT * FROM class_moves WHERE ${column} IN (${chunk.map(() => '?').join(', ')}) AND status = 'requested'`, chunk, toClassMove)));
+    }
+    return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
   }
   async executedClassMovesOf(learnerIds: readonly string[], since: Date): Promise<StoredClassMove[]> {
     const unique = [...new Set(learnerIds)];
