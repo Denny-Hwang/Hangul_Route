@@ -4,7 +4,7 @@ import type { CDPSession, Page } from '@playwright/test';
  * Real touches for the web e2e (docs/specs/AMENDMENTS-TOUCH.md section 11.2), through the DevTools protocol's
  * `Input.dispatchTouchEvent`: unlike Playwright's `tap()` (a touch with no movement), a finger here can go down, slide,
  * hold and lift, and two fingers can overlap, as a child's do. Points are CSS pixels in the viewport (the coordinates
- * of `boundingBox()`). Each event lists every finger still on the screen, as the protocol asks.
+ * of `boundingBox()`). A start or a move lists every finger on the screen; an end lists only the finger that lifts.
  */
 
 export interface TouchPoint {
@@ -42,9 +42,14 @@ export class Touchscreen {
     await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: this.points() });
   }
 
+  /**
+   * Lifts one finger. Chrome releases the points a `touchEnd` lists (and every point when it lists none), so the event
+   * names only the finger that lifts; the others stay down.
+   */
   async end(id: number): Promise<void> {
+    const at = this.down.get(id);
     this.down.delete(id);
-    await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: this.points() });
+    await this.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: at === undefined ? [] : [{ id, x: at.x, y: at.y }] });
   }
 
   /** One finger: down at `from`, slide by (dx, dy) in `steps` moves of `stepMs`, hold `holdMs`, lift. */
