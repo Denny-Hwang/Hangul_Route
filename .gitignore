@@ -87,6 +87,7 @@ packages/content-schema/src/i18n-overlays.generated.ts
 packages/content-schema/src/i18n-overlays-es.generated.ts
 packages/content-schema/src/i18n-overlays-ko.generated.ts
 apps/mobile/src/content/__generated__/stories-index.ts
+apps/mobile/src/content/__generated__/stories-shelf.ts
 apps/mobile/src/content/__generated__/story-chunks/
 apps/mobile/src/content/__generated__/lessons-index.ts
 apps/mobile/src/content/__generated__/lesson-chunks/

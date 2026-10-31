@@ -161,7 +161,8 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'content/audio/', reason: 'clip generation data (AMENDMENTS-AUDIO-CLIPS AC-2): the TTS manifest and the pronunciation overrides, generated from or keyed by the class A content; no romanization of their own, never shown (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.
-  { path: 'apps/mobile/src/content/__generated__/stories-index.ts', reason: 'the story shelf, generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs (F-CURR-002 CM-8)' },
+  { path: 'apps/mobile/src/content/__generated__/stories-index.ts', reason: 'the story loaders, generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs (F-CURR-002 CM-8)' },
+  { path: 'apps/mobile/src/content/__generated__/stories-shelf.ts', reason: 'the story shelf chunk, generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs (F-CURR-002 CM-8b)' },
   { path: 'apps/mobile/src/content/__generated__/story-chunks/', reason: 'one body chunk per story, generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs (F-CURR-002 CM-8)' },
   { path: 'apps/mobile/src/content/__generated__/vocab.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/web/src/data/vocab-catalog.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },

@@ -15,7 +15,7 @@
 //   build-vocab.mjs              content/vocab, content/i18n           -> vocab.ts, vocab-catalog.ts
 //   build-placement-bank.mjs     content/placement                      -> placement.generated.ts
 //   build-overlays.mjs           content/i18n                           -> i18n-overlays.generated.ts, i18n-overlays-<locale>.generated.ts
-//   build-stories.mjs            content/stories                        -> stories-index.ts, story-chunks/
+//   build-stories.mjs            content/stories                        -> stories-index.ts, stories-shelf.ts, story-chunks/
 //   build-lessons.mjs            content/episodes, stories, vocab, i18n -> lessons-index.ts, lesson-chunks/,
 //                                                                          catalog.generated.ts
 //   build-lecture-catalogue.mjs  content/stories, vocab, i18n           -> lecture-catalogue.generated.ts,
@@ -59,7 +59,14 @@ export const GENERATORS = Object.freeze([
       "packages/content-schema/src/i18n-overlays-ko.generated.ts",
     ],
   },
-  { script: "build-stories.mjs", outputs: ["apps/mobile/src/content/__generated__/stories-index.ts", "apps/mobile/src/content/__generated__/story-chunks"] },
+  {
+    script: "build-stories.mjs",
+    outputs: [
+      "apps/mobile/src/content/__generated__/stories-index.ts",
+      "apps/mobile/src/content/__generated__/stories-shelf.ts",
+      "apps/mobile/src/content/__generated__/story-chunks",
+    ],
+  },
   {
     script: "build-lessons.mjs",
     outputs: [
