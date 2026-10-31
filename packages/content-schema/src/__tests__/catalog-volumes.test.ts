@@ -11,6 +11,7 @@ import {
   freeRouteQuestIds,
   gridLessonIds,
   groupOfKey,
+  isStartable,
   learnerPosition,
   placedOutGrowth,
   presetBlockMinutes,
@@ -122,6 +123,15 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     }
     const next = resolvePreset('next-lesson', 30, { catalog, shown: { questIds: ['quest:stage7-crafts-q2'], storyIds: [] } }).blocks;
     expect(questIdsOfBlocks(next, catalog).filter((id) => later.has(id))).toEqual([]);
+  });
+
+  it('marks a later volume’s quests on the route, and no start lands on one (row CM-42 S6 review)', () => {
+    const route = routeCatalogOf(CATALOG).quests;
+    const marked = route.filter((q) => q.laterVolume === true).map((q) => q.id);
+    const shipped = CATALOG.quests.filter((q) => SHIPPED_V2.includes(q.episodeId)).map((q) => q.id);
+    expect(marked.sort()).toEqual(shipped.sort());
+    expect(marked.length).toBeGreaterThan(0);
+    for (const q of route) expect(isStartable(q), q.id).toBe(q.grid && q.playable && !marked.includes(q.id));
   });
 
   it('refuses episodes out of volume order and a later volume’s quest in the first volume’s list', () => {

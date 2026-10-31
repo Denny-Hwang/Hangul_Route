@@ -3,6 +3,7 @@ import {
   StageKeySchema,
   gatePassed,
   inRouteOrder,
+  isStartable,
   modeOf,
   rowsPassed,
   type ASSESSMENT_FORMATS,
@@ -124,7 +125,7 @@ function routeCards(input: ResultViewInput): ResultView['cards'] {
   const start = input.after.startQuestId;
   if (start === null) return { startHere: null, next: [], laterStage: null };
   const placedOut = new Set(input.after.placedOutQuestIds);
-  const route = inRouteOrder(input.catalog).filter((quest) => quest.grid && quest.playable);
+  const route = inRouteOrder(input.catalog).filter(isStartable);
   const at = route.findIndex((quest) => quest.id === start);
   const next = route
     .slice(at + 1)

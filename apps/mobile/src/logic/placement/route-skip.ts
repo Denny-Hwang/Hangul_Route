@@ -29,6 +29,7 @@ export function appRouteCatalog(quests: readonly Quest[], episodes: readonly Epi
           teaches: [],
           playable: playable.has(episode.id),
           grid: grid.has(episode.id),
+          ...((episode.volume ?? 1) >= 2 ? { laterVolume: true } : {}),
         },
       ];
     }),

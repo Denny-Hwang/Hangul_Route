@@ -23,7 +23,16 @@ export interface RouteQuest {
   teaches: readonly string[];
   playable: boolean;
   grid: boolean;
+  /**
+   * A quest of a cell's later volume (F-CURR-002 row CM-40). It is placed out like a grid quest, but it is off the
+   * route: it adds no route day, so it is never a start, a "next" card or a parent's start choice.
+   */
+  laterVolume?: boolean;
 }
+
+/** A quest a start can land on: a playable grid quest that is not in a cell's later volume (row CM-40). */
+export const isStartable = (quest: RouteQuest): boolean => quest.grid && quest.playable && quest.laterVolume !== true;
+
 export interface RouteCatalog {
   quests: readonly RouteQuest[];
 }
@@ -115,7 +124,7 @@ interface SeedInput {
 const buildSeed = (input: SeedInput, catalog: RouteCatalog, opts: RouteOptions): RouteSeed => {
   const placedOut = new Set(input.placedOut);
   const remaining = inRouteOrder(catalog).filter(
-    (quest) => quest.grid && quest.playable && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
+    (quest) => isStartable(quest) && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
   );
   const start = remaining.find((quest) => opts.isEntitled(quest.stage)) ?? null;
   let needsStage: StageKey | null = null;
