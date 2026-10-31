@@ -1,22 +1,22 @@
 import type { Episode, HeldStoryCard, Quest, Story, StoryLevel } from '@hangul-route/content-schema';
-import * as generated from './__generated__/stories-index';
-import { HELD_STORY_CARDS, STORY_SHELF, loadStoryBody } from './__generated__/stories-index';
-import { createStoryStore, shelfLevelOf, storiesOverStore, storyTierLevels, type StoryBody } from '../logic/story/story-chunk-store';
+import { loadStoryBody } from './__generated__/stories-index';
+import { storyShelf } from './story-shelf';
+import { createStoryStore, shelfLevelOf, storiesOverStore, storyTierLevels } from '../logic/story/story-chunk-store';
 import { storyQuestSkeleton } from './story-skeleton';
 import { abandonPendingChunk } from '../platform/lesson-chunk-abandon';
 
 /**
- * The only reader of the generated story modules (F-STORY-001 §3.9, F-CURR-002 §10 row CM-8):
+ * The only reader of the generated story modules (F-STORY-001 §3.9, F-CURR-002 §10 rows CM-8 and CM-8b):
  * `episodes.ts` and `quests.ts` take `storyEpisodes` / `storyQuests` from here. The shelf (each
- * story without its body) loads at start; a story's body (tiers, scenes, art, facts, keywords,
- * summary) loads on demand from its content-hashed chunk. `storyContent` is the store the screens
- * wait on (`screens/story-content.tsx`).
+ * story without its body) is in before this module runs (`story-shelf.ts`; on the web `index.ts` loads
+ * its chunk first); a story's body (tiers, scenes, art, facts, keywords, summary) loads on demand from
+ * its content-hashed chunk. `storyContent` is the store the screens wait on (`screens/story-content.tsx`).
  */
 
-const extras = generated as unknown as { STORY_INLINE_BODIES?: Readonly<Record<string, StoryBody>>; STORY_FIXTURE_IDS?: readonly string[] };
+const { STORY_SHELF, HELD_STORY_CARDS, STORY_INLINE_BODIES, STORY_FIXTURE_IDS } = storyShelf();
 
 export const storyContent = createStoryStore(
-  { entries: STORY_SHELF, inline: extras.STORY_INLINE_BODIES ?? {} },
+  { entries: STORY_SHELF, inline: STORY_INLINE_BODIES ?? {} },
   loadStoryBody,
   {
     // A chunk comes from the precache in a frame or two; a request that hangs fails into the retry path,
@@ -82,7 +82,7 @@ export const heldStoryCards: HeldStoryCard[] = HELD_STORY_CARDS;
  * Ids of the test fixtures in an e2e build (`build-stories.mjs --include-fixtures`, F-STORY-002 §5).
  * The export exists only in that build, so a real build reads an empty list.
  */
-export const storyFixtureIds: readonly string[] = extras.STORY_FIXTURE_IDS ?? [];
+export const storyFixtureIds: readonly string[] = STORY_FIXTURE_IDS ?? [];
 
 export function storyById(id: string): Story | undefined {
   return byId.get(id);

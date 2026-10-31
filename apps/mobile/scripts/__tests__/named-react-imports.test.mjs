@@ -38,10 +38,11 @@ const DEFAULT_WITH_NAMED_ALLOWED = new Set(['react-native-reanimated']);
 
 /**
  * Modules an app source may still read through `import * as`:
- * - the generated story index (`content/stories.ts`), whose optional exports are read off the namespace;
+ * - the generated story shelf (`content/story-shelf.ts`, native and tests only: the web build reads `story-shelf.web.ts`),
+ *   whose optional exports (the e2e build's) are read off the namespace;
  * - expo-speech (`platform/audio.ts`, native only), handed whole to the audio adapter as its `NativeSpeechApi` port.
  */
-const NAMESPACE_ALLOWED = new Set(['./__generated__/stories-index', 'expo-speech']);
+const NAMESPACE_ALLOWED = new Set(['./__generated__/stories-shelf', 'expo-speech']);
 
 const isTestPath = (path) => /(^|\/)(__tests__|test-support)(\/|$)|\.test\.[cm]?[jt]sx?$/.test(path);
 
@@ -111,7 +112,7 @@ describe('the app imports React by name (no wildcard interop helper per module)'
     expect(wildcardImports("import Svg, { type SvgProps } from 'react-native-svg';")).toEqual([]);
     expect(wildcardImports("import Animated, { useSharedValue } from 'react-native-reanimated';")).toEqual([]);
     expect(wildcardImports("import type * as Types from 'expo-crypto';")).toEqual([]);
-    expect(wildcardImports("import * as generated from './__generated__/stories-index';")).toEqual([]);
+    expect(wildcardImports("import * as generated from './__generated__/stories-shelf';")).toEqual([]);
     expect(wildcardImports("import * as Speech from 'expo-speech';")).toEqual([]);
   });
 

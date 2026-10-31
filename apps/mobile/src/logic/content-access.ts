@@ -1,5 +1,5 @@
-import { CATALOG, freeRouteQuestIds, gridLessonIds } from '@hangul-route/content-schema';
-import { storiesAll } from '../content/stories';
+import { CATALOG, freeRouteQuestIds, gridLessonIds, type Story } from '@hangul-route/content-schema';
+import { storyShelf } from '../content/story-shelf';
 import type { Tier } from './entitlement';
 
 /**
@@ -42,7 +42,9 @@ function defaultRegistry(): FreeContentRegistry {
   cachedRegistry ??= {
     stages: new Set(FREE_STAGE_KEYS),
     vocabTopics: new Set(FREE_VOCAB_TOPIC_IDS),
-    samplerStories: new Set(storiesAll.filter((s) => s.shelf?.sampler === true).map((s) => s.id)),
+    // The shelf, not the stories derived from it (`content/stories.ts`): the web boot reaches this module before the
+    // shelf chunk is in (F-CURR-002 §10, row CM-8b), and the registry is first read once it is.
+    samplerStories: new Set(storyShelf().STORY_SHELF.filter((s) => s.shelf?.sampler === true).map((s) => s.id)),
     freeQuests: freeRouteQuestIds(CATALOG),
     gridLessons: gridLessonIds(CATALOG),
   };
@@ -55,7 +57,7 @@ function defaultRegistry(): FreeContentRegistry {
  * bundle it shows (F-BROWSE-001 section 4.13), so its story rule and its
  * story list never disagree.
  */
-export function freeContentRegistryFor(stories: readonly Pick<(typeof storiesAll)[number], 'id' | 'shelf'>[]): FreeContentRegistry {
+export function freeContentRegistryFor(stories: readonly Pick<Story, 'id' | 'shelf'>[]): FreeContentRegistry {
   return { ...defaultRegistry(), samplerStories: new Set(stories.filter((s) => s.shelf?.sampler === true).map((s) => s.id)) };
 }
 

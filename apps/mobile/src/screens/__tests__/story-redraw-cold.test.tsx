@@ -21,7 +21,8 @@ const cold = vi.hoisted(() => ({
 
 vi.mock('../../content/stories', async (importOriginal) => {
   const real = await importOriginal<typeof import('../../content/stories')>();
-  const { STORY_SHELF, loadStoryBody } = await import('../../content/__generated__/stories-index');
+  const { loadStoryBody } = await import('../../content/__generated__/stories-index');
+  const { STORY_SHELF } = await import('../../content/__generated__/stories-shelf');
   const { createStoryStore, storiesOverStore } = await import('../../logic/story/story-chunk-store');
   const store = createStoryStore({ entries: STORY_SHELF }, (id) =>
     loadStoryBody(id) === undefined
@@ -43,7 +44,8 @@ vi.mock('@react-navigation/native', async () => {
   };
 });
 
-const { STORY_SHELF, loadStoryBody } = await import('../../content/__generated__/stories-index');
+const { loadStoryBody } = await import('../../content/__generated__/stories-index');
+const { STORY_SHELF } = await import('../../content/__generated__/stories-shelf');
 const { episodesAll } = await import('../../content/episodes');
 const { storyEpisodeEntries } = await import('../../logic/story/story-episode');
 const { defaultStoryIndex } = await import('../../logic/story/story-index');
