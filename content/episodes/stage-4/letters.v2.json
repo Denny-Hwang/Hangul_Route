@@ -84,7 +84,7 @@
                         "line": {
                           "ko": "책 여기 있어요.",
                           "romanization": "chaek yeogi isseoyo",
-                          "en": "Here is your book."
+                          "en": "Here is the book."
                         }
                       }
                     ]
@@ -229,7 +229,7 @@
                 "line": {
                   "ko": "책 여기 있어요.",
                   "romanization": "chaek yeogi isseoyo",
-                  "en": "Here is your book."
+                  "en": "Here is the book."
                 },
                 "replies": [
                   {
@@ -260,7 +260,7 @@
                       "en": "I'd like to borrow this book, please."
                     },
                     "kind": "lessNatural",
-                    "whyEn": "You asked for it already. The librarian is giving you the book now."
+                    "whyEn": "The librarian is already giving you the book, so thank the librarian."
                   }
                 ]
               },
@@ -349,7 +349,7 @@
                   "caption": {
                     "ko": "책 여기 있어요.",
                     "romanization": "chaek yeogi isseoyo",
-                    "en": "Here is your book."
+                    "en": "Here is the book."
                   }
                 }
               ]
@@ -402,7 +402,7 @@
               "line": {
                 "ko": "책 여기 있어요.",
                 "romanization": "chaek yeogi isseoyo",
-                "en": "Here is your book."
+                "en": "Here is the book."
               },
               "replies": [
                 {
@@ -602,7 +602,7 @@
                     "text": {
                       "ko": "책 여기 있어요.",
                       "romanization": "chaek yeogi isseoyo",
-                      "en": "Here is your book."
+                      "en": "Here is the book."
                     },
                     "kind": "lessNatural",
                     "whyEn": "That hands over a book. Greet the librarian and ask where the picture books are."
@@ -828,7 +828,7 @@
                   "text": {
                     "ko": "책 여기 있어요.",
                     "romanization": "chaek yeogi isseoyo",
-                    "en": "Here is your book."
+                    "en": "Here is the book."
                   },
                   "correct": false
                 },
@@ -1170,7 +1170,7 @@
                 "line": {
                   "ko": "책 여기 있어요.",
                   "romanization": "chaek yeogi isseoyo",
-                  "en": "Here is your book."
+                  "en": "Here is the book."
                 },
                 "replies": [
                   {
@@ -1406,7 +1406,7 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "Hangeul Day began in 1926 as {ko:가갸날} (Gagyanal). The name seems to come from {ko:가} and {ko:갸}, the first two syllables of the old letter chart. Since 1928 it has been called Hangeul Day.",
+      "textEn": "Hangul Day began in 1926 as {ko:가갸날} (Gagyanal). The name seems to come from {ko:가} and {ko:갸}, the first two syllables of the old letter chart. Since 1928 it has been called Hangul Day.",
       "sources": [
         {
           "title": "한글날이 10월 9일인 이유는? (한박웃음 2018년 10월 제63호)",
@@ -1434,13 +1434,13 @@
         "passes": 3,
         "checkedAt": "2026-10-30",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that Hangeul Day began in 1926 as 가갸날, that the name seems to come from the first two syllables of the letter chart (반절표), and that it has been called 한글날 since 1928. The National Hangeul Museum article gives the 1926 celebration, the probable source of the name (its own hedge, 보인다, kept as seems to) and the 1928 renaming; the NIKL dictionary entries 가갸날 and 반절표 give the first name of Hangeul Day and the chart order 가, 갸. All three sources resolved on 2026-10-30.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): the three claims matched to the Museum article (1926 가갸날, the 보인다 hedge kept as seems to, 1928 renaming) and to the NIKL entries 가갸날 and 반절표 (chart order 가, 갸). National Hangeul Museum first, on the section 6.6 allowlist under its name as of the access date. New against the Volume 1 notes, which do not name 가갸날. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed."
+        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that Hangeul Day began in 1926 as 가갸날, that the name seems to come from the first two syllables of the letter chart (반절표), and that it has been called 한글날 since 1928. The National Hangeul Museum article gives the 1926 celebration, the probable source of the name (its own hedge, 보인다, kept as seems to) and the 1928 renaming; the NIKL dictionary entries 가갸날 and 반절표 give the first name of Hangeul Day and the chart order 가, 갸. All three sources resolved on 2026-10-30.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): the three claims matched to the Museum article (1926 가갸날, the 보인다 hedge kept as seems to, 1928 renaming) and to the NIKL entries 가갸날 and 반절표 (chart order 가, 갸). National Hangeul Museum first, on the section 6.6 allowlist under its name as of the access date. New against the Volume 1 notes, which do not name 가갸날. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed.\nPR review (MAR, 2026-10-31): the English name reads Hangul Day in en and es (F-CNT-002 C5, the established English name); the National Hangeul Museum keeps its own name. No fact changed."
       }
     },
     {
       "id": "n2",
       "kind": "culture",
-      "textEn": "Why 9 October? The 1446 book says it was published in the first ten days of the ninth month of the old calendar. The last of those days falls on 9 October today.",
+      "textEn": "Why 9 October? The 1446 book Hunminjeongeum says it was published in the first ten days of the ninth month of the old calendar. In today's calendar, the last of those days is 9 October.",
       "sources": [
         {
           "title": "한글날이 10월 9일인 이유는? (한박웃음 2018년 10월 제63호)",
@@ -1458,10 +1458,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
-        "checkedAt": "2026-10-30",
+        "passes": 4,
+        "checkedAt": "2026-10-31",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that the 1446 book (the Hunminjeongeum Haerye) records that it was finished early in the ninth month, that this means the first ten days, and that the last of them, the 10th, falls on 9 October in the solar calendar. The National Hangeul Museum article states all three (9월 상한, 1일에서 10일, 음력 9월 10일을 양력으로 환산한 10월 9일); the NIKL dictionary entry 상순 (≒상한) gives the first ten days of a month. Both sources resolved on 2026-10-30. The Volume 1 notes say only that Hangeul Day is on 9 October; this note adds why.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): matched to the Museum article (간행 시점 1446년 9월 상한; 상한 = 1일에서 10일; 음력 9월 10일 → 10월 9일) and the NIKL entry 상순 1 (≒상한). Finding (nit): 'finished' was looser than 간행. Reviser: 'published' in en, es and ko; the third pass then trimmed a repeated 책 in the ko text. Volume 1 says only that Hangeul Day is on 9 October; this note adds why. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed."
+        "notes": "pass 1 (author sourcing, 2026-10-30): the claims are that the 1446 book (the Hunminjeongeum Haerye) records that it was finished early in the ninth month, that this means the first ten days, and that the last of them, the 10th, falls on 9 October in the solar calendar. The National Hangeul Museum article states all three (9월 상한, 1일에서 10일, 음력 9월 10일을 양력으로 환산한 10월 9일); the NIKL dictionary entry 상순 (≒상한) gives the first ten days of a month. Both sources resolved on 2026-10-30. The Volume 1 notes say only that Hangeul Day is on 9 October; this note adds why.\npass 2 (MAR culture and facts, independent checker, 2026-10-30): matched to the Museum article (간행 시점 1446년 9월 상한; 상한 = 1일에서 10일; 음력 9월 10일 → 10월 9일) and the NIKL entry 상순 1 (≒상한). Finding (nit): 'finished' was looser than 간행. Reviser: 'published' in en, es and ko; the third pass then trimmed a repeated 책 in the ko text. Volume 1 says only that Hangeul Day is on 9 October; this note adds why. Verdict: pass.\npass 3 (MAR third pass, independent of the author and the checkers, 2026-10-30): the note re-read against both source texts and in en, es and ko after the revisions; quotes on the pages; no UNESCO claim, no native-speaker or expert claim. Outcome: confirmed.\npass 4 (MAR revision from the PR review, an independent reviewer, 2026-10-31): en and es read as if the lunar date falls on 9 October every year. Revised in en and es to 'In today's calendar, the last of those days is 9 October', as the Museum article converts 음력 9월 10일 of 1446 to 10월 9일 (ko already said so). The book is now named: Hunminjeongeum (ko 훈민정음), the 1446 book the article dates. Outcome: confirmed."
       }
     },
     {
@@ -1561,7 +1561,9 @@
       "Learning design: at most 4 new Discover lines a quest (lesson-new-load); lesson-recycle 37.5% or more of each quest's Practice and Check items come from earlier quests (Volume 1 S2 to S4 and this cell); no Dictation; no wrong option is also right.",
       "Learning design (cont.): triples Role Play / Story Order / Tap to Respond, Role Play / Tap to Respond / Cloze Pick, Role Play / Cloze Pick / Sentence Builder; none is a Volume 1 triple and the three Checks differ. Every Role Play path has 4 turns and ends on its closing; off, each plays Tap to Respond. Fixed: the quest 2 closing reads 'You asked where everything is, and found it!'.",
       "Third pass (2026-10-30): every first-round revision landed. Fixed on 2026-10-31: the es shop partner and its gloss without gender; three quest 3 English lines say 'a book about Hangul'; status stayed draft until this record; ko n2 drops a repeated 책.",
-      "Third pass (cont.): declined keeping only one natural reply at quest 1 turn 1: the learner stands at the desk with the book, so 도서관 카드 있어요? follows either 안녕하세요! reply, and that line recycles a Volume 1 item. validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (pct 0)."
+      "Third pass (cont.): declined keeping only one natural reply at quest 1 turn 1: the learner stands at the desk with the book, so 도서관 카드 있어요? follows either 안녕하세요! reply, and that line recycles a Volume 1 item. validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (pct 0).",
+      "PR review (MAR, 2026-10-31): a line taught with two good replies (책 여기 있어요, 저기 있어요, 호야, 안녕하세요!) no longer offers the other good reply as a wrong option in a review round (engine fix, tested). The shared line 책 여기 있어요 reads 'Here is the book.' (es 'Aquí está el libro.'), right at the library and the bookshop.",
+      "PR review (cont.): q1 turn 3 'again' reason holds on both ways ('The librarian is already giving you the book, so thank the librarian.'); n2 en and es say 'In today's calendar' and name Hunminjeongeum; Hangul Day per F-CNT-002 C5; es 'el hangul', '¡Cuántos estantes!'; ko 저는, 회원증. Most wording is the reviewer's own fix; the rest follows its findings."
     ]
   },
   "contentVer": 1

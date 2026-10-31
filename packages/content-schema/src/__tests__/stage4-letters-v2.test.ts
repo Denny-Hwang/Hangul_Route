@@ -49,7 +49,10 @@ const triple = (q: LessonQuest): string => (['practice', 'apply', 'check'] as co
 
 describe('Letters Volume 2, Stage 4 (row CM-44 S4)', () => {
   it('is the second volume of the shipped Read Along cell, three quests, ids with -v2', () => {
-    expect([V2.id, V2.volume, V2.stage, V2.theme, V1.status]).toEqual(['episode:stage4-letters-v2', 2, 'stage4', 'letters', 'ready']);
+    expect([V2.id, V2.volume, V2.stage, V2.theme, V2.status]).toEqual(['episode:stage4-letters-v2', 2, 'stage4', 'letters', 'ready']);
+    // Ready only with its MAR record (section 9.2): reviewed by MAR, and every note through at least three passes.
+    expect(V2.review.reviewedBy).toBe('MAR');
+    for (const note of V2.culture) expect(note.verification.passes, note.id).toBeGreaterThanOrEqual(3);
     expect(V2.quests.map((q) => q.id)).toEqual(['quest:stage4-letters-v2-q1', 'quest:stage4-letters-v2-q2', 'quest:stage4-letters-v2-q3']);
   });
 
@@ -87,7 +90,7 @@ describe('Letters Volume 2, Stage 4 (row CM-44 S4)', () => {
     }
   });
 
-  it('adds Hunminjeongeum and Hangeul Day facts that Volume 1 does not already state (section 5.2 S4)', () => {
+  it('adds Hunminjeongeum and Hangul Day facts that Volume 1 does not already state (section 5.2 S4)', () => {
     const v1Text = V1.culture.map((n) => n.textEn);
     const culture = V2.culture.filter((n) => n.kind === 'culture');
     for (const note of culture) expect(v1Text, note.id).not.toContain(note.textEn);
@@ -96,6 +99,21 @@ describe('Letters Volume 2, Stage 4 (row CM-44 S4)', () => {
     const all = culture.map((n) => n.textEn).join(' ');
     for (const fact of ['1926', '1928', '9 October', '28', '24']) expect(all, fact).toContain(fact);
     expect(all).not.toMatch(/1997|Memory of the World/);
+    // Each note's key facts are new: none of them is in a Volume 1 note, however a note is worded.
+    const v1All = v1Text.join(' ');
+    const KEY_FACTS: Readonly<Record<string, readonly RegExp[]>> = {
+      n1: [/\b1926\b/, /\b1928\b/, /가갸날/],
+      n2: [/first ten days/, /ninth month/],
+      n3: [/\b28\b/, /\b24\b/],
+      n4: [/사서/, /빌리다/],
+      n5: [/서점/, /책방/],
+    };
+    expect(V2.culture.map((n) => n.id).sort()).toEqual(Object.keys(KEY_FACTS).sort());
+    for (const note of V2.culture)
+      for (const fact of KEY_FACTS[note.id] ?? []) {
+        expect(note.textEn, `${note.id} ${fact}`).toMatch(fact);
+        expect(v1All, `${note.id} ${fact}`).not.toMatch(fact);
+      }
   });
 
   it('names no brand, no real person but King Sejong, and no shop or library by name', () => {
