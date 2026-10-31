@@ -648,6 +648,13 @@ describe('learnerPosition (N3)', () => {
     expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, position }))).toBe('stage1-life-q3 · stage1-rites-q1 · air-write 2');
   });
 
+  it('never steps into a cell\'s later volume: a Volume 2 is off the route (F-CURR-002 row CM-40, CM-44 S6)', () => {
+    expect(CATALOG.quests.some((q) => q.id === 'quest:stage6-letters-v2-q1')).toBe(true);
+    expect(learnerPosition('quest:stage6-letters-v2-q1', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    const stage6 = resolvePreset('by-stage', 120, { catalog: CATALOG, stage: 'stage6' });
+    expect(outline(stage6).includes('-v2-')).toBe(false);
+  });
+
   it('none done: the first route quest; no routeNext quest reads the same; the last route quest done: null (the fallback)', () => {
     expect(learnerPosition('quest:homework-x', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
     expect(learnerPosition(null, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });

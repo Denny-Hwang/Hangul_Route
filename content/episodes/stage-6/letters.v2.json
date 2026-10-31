@@ -1,0 +1,1755 @@
+{
+  "id": "episode:stage6-letters-v2",
+  "stage": "stage6",
+  "theme": "letters",
+  "volume": 2,
+  "status": "ready",
+  "titleEn": "Library Day",
+  "subtitleEn": "Read a library card, a book, a poster and a subway board.",
+  "hoyaIntroEn": "It's library day! Let's read everything we see on the way.",
+  "order": 1,
+  "pillarTags": [
+    "A1"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage6-letters-v2-q1",
+      "titleEn": "Library Card",
+      "blurbEn": "Read a library card and the cover of a book.",
+      "teaserEn": "Next: read a poster for Hangeul Day.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261106,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Library Card",
+          "hoyaLineEn": "A new library card! Let's read what it says.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Card and Book",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-letters-v2-q1-card",
+                    "keyWords": [
+                      {
+                        "ko": "도서관",
+                        "romanization": "doseogwan",
+                        "en": "library"
+                      },
+                      {
+                        "ko": "여는 시간",
+                        "romanization": "yeoneun sigan",
+                        "en": "opening time"
+                      },
+                      {
+                        "ko": "쉬는 날",
+                        "romanization": "swineun nal",
+                        "en": "closed day"
+                      },
+                      {
+                        "ko": "월요일",
+                        "romanization": "woryoil",
+                        "en": "Monday"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "The card shows your name, how many books and when it opens. {ko:권} counts books."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-letters-v2-q1-book",
+                    "keyWords": [
+                      {
+                        "ko": "글",
+                        "romanization": "geul",
+                        "en": "words"
+                      },
+                      {
+                        "ko": "그림",
+                        "romanization": "geurim",
+                        "en": "pictures"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A book cover shows who wrote the words and who drew the pictures."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "도서관에서 책을 읽어요.",
+                      "romanization": "doseogwaneseo chaegeul ilgeoyo",
+                      "en": "I read a book at the library."
+                    }
+                  }
+                ],
+                "captionEn": "Now say what you do at the library."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Card",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-letters-v2-q1-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Read the Book Cover",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-letters-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s6-letters-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Card Reader!",
+          "hoyaLineEn": "You read a library card and a book cover. Happy reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-letters-v2-q1-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-letters-v2-q1-card",
+            "kind": "ticket",
+            "title": {
+              "ko": "도서관 카드",
+              "romanization": "doseogwan kadeu",
+              "en": "library card"
+            },
+            "entries": [
+              {
+                "id": "name",
+                "text": {
+                  "ko": "이름",
+                  "romanization": "ireum",
+                  "en": "name"
+                },
+                "value": {
+                  "ko": "호야",
+                  "romanization": "Hoya",
+                  "en": "Hoya"
+                }
+              },
+              {
+                "id": "books",
+                "text": {
+                  "ko": "책",
+                  "romanization": "chaek",
+                  "en": "book"
+                },
+                "value": {
+                  "ko": "다섯 권",
+                  "romanization": "daseot gwon",
+                  "en": "five books"
+                }
+              },
+              {
+                "id": "open",
+                "text": {
+                  "ko": "여는 시간",
+                  "romanization": "yeoneun sigan",
+                  "en": "opening time"
+                },
+                "value": {
+                  "ko": "아홉 시",
+                  "romanization": "ahop si",
+                  "en": "nine o'clock"
+                }
+              },
+              {
+                "id": "closed",
+                "text": {
+                  "ko": "쉬는 날",
+                  "romanization": "swineun nal",
+                  "en": "closed day"
+                },
+                "value": {
+                  "ko": "월요일",
+                  "romanization": "woryoil",
+                  "en": "Monday"
+                }
+              }
+            ],
+            "altEn": "A library card: the name on it, how many books, the opening time and the closed day"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Whose card is this?",
+              "key": {
+                "ko": "이름",
+                "romanization": "ireum",
+                "en": "name"
+              },
+              "options": [
+                {
+                  "id": "mina",
+                  "text": {
+                    "ko": "미나",
+                    "romanization": "Mina",
+                    "en": "Mina"
+                  }
+                },
+                {
+                  "id": "hoya",
+                  "text": {
+                    "ko": "호야",
+                    "romanization": "Hoya",
+                    "en": "Hoya"
+                  }
+                },
+                {
+                  "id": "chingu",
+                  "text": {
+                    "ko": "친구",
+                    "romanization": "chingu",
+                    "en": "friend"
+                  }
+                }
+              ],
+              "answerId": "hoya",
+              "answerEntryId": "name"
+            },
+            {
+              "id": "r2",
+              "questionEn": "How many books can you take home?",
+              "key": {
+                "ko": "책",
+                "romanization": "chaek",
+                "en": "book"
+              },
+              "options": [
+                {
+                  "id": "three",
+                  "figure": "3"
+                },
+                {
+                  "id": "five",
+                  "figure": "5"
+                },
+                {
+                  "id": "nine",
+                  "figure": "9"
+                }
+              ],
+              "answerId": "five",
+              "answerEntryId": "books"
+            },
+            {
+              "id": "r3",
+              "questionEn": "What time does it open?",
+              "key": {
+                "ko": "여는 시간",
+                "romanization": "yeoneun sigan",
+                "en": "opening time"
+              },
+              "options": [
+                {
+                  "id": "nine",
+                  "figure": "9:00"
+                },
+                {
+                  "id": "ten",
+                  "figure": "10:00"
+                },
+                {
+                  "id": "two",
+                  "figure": "2:00"
+                }
+              ],
+              "answerId": "nine",
+              "answerEntryId": "open"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which day is it closed?",
+              "key": {
+                "ko": "쉬는 날",
+                "romanization": "swineun nal",
+                "en": "closed day"
+              },
+              "options": [
+                {
+                  "id": "suyoil",
+                  "text": {
+                    "ko": "수요일",
+                    "romanization": "suyoil",
+                    "en": "Wednesday"
+                  }
+                },
+                {
+                  "id": "geumyoil",
+                  "text": {
+                    "ko": "금요일",
+                    "romanization": "geumyoil",
+                    "en": "Friday"
+                  }
+                },
+                {
+                  "id": "woryoil",
+                  "text": {
+                    "ko": "월요일",
+                    "romanization": "woryoil",
+                    "en": "Monday"
+                  }
+                }
+              ],
+              "answerId": "woryoil",
+              "answerEntryId": "closed"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "글은 ___가 썼어요.",
+                "romanization": "geureun ___ga sseosseoyo",
+                "en": "___ wrote the words."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "호야",
+                  "romanization": "Hoya",
+                  "en": "Hoya"
+                },
+                {
+                  "ko": "미나",
+                  "romanization": "Mina",
+                  "en": "Mina"
+                },
+                {
+                  "ko": "친구",
+                  "romanization": "chingu",
+                  "en": "friend"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "그림은 ___가 그렸어요.",
+                "romanization": "geurimeun ___ga geuryeosseoyo",
+                "en": "___ drew the pictures."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "미나",
+                  "romanization": "Mina",
+                  "en": "Mina"
+                },
+                {
+                  "ko": "친구",
+                  "romanization": "chingu",
+                  "en": "friend"
+                },
+                {
+                  "ko": "호야",
+                  "romanization": "Hoya",
+                  "en": "Hoya"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "도서관에서 책을 ___.",
+                "romanization": "doseogwaneseo chaegeul ___",
+                "en": "I read a book at the library."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "읽어요",
+                  "romanization": "ilgeoyo",
+                  "en": "read"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-letters-v2-q1-book",
+            "kind": "poster",
+            "title": {
+              "ko": "한글 이야기",
+              "romanization": "hangeul iyagi",
+              "en": "A Hangul Story"
+            },
+            "entries": [
+              {
+                "id": "words",
+                "text": {
+                  "ko": "글",
+                  "romanization": "geul",
+                  "en": "words"
+                },
+                "value": {
+                  "ko": "미나",
+                  "romanization": "Mina",
+                  "en": "Mina"
+                }
+              },
+              {
+                "id": "pictures",
+                "text": {
+                  "ko": "그림",
+                  "romanization": "geurim",
+                  "en": "pictures"
+                },
+                "value": {
+                  "ko": "호야",
+                  "romanization": "Hoya",
+                  "en": "Hoya"
+                }
+              }
+            ],
+            "altEn": "A book cover: the title, who wrote the words and who drew the pictures"
+          }
+        },
+        {
+          "ref": "minigame:s6-letters-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptEn": "Type the word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "도서관",
+                "romanization": "doseogwan",
+                "en": "library"
+              }
+            },
+            {
+              "id": "c2",
+              "promptEn": "Type the word you hear.",
+              "mode": "hear",
+              "target": {
+                "ko": "책",
+                "romanization": "chaek",
+                "en": "book"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-letters-v2-q2",
+      "titleEn": "Hangeul Day Poster",
+      "blurbEn": "Read the day, the place and the time on a poster.",
+      "teaserEn": "Next: read a board on the subway.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261106,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Hangeul Day Poster",
+          "hoyaLineEn": "A poster for Hangeul Day! Let's find out what is on, and where.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Read the Poster",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-letters-v2-q2-poster",
+                    "keyWords": [
+                      {
+                        "ko": "한글날",
+                        "romanization": "hangeullal",
+                        "en": "Hangeul Day"
+                      },
+                      {
+                        "ko": "시월 구일",
+                        "romanization": "siwol guil",
+                        "en": "October 9"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hangeul Day is on 9 October. The tenth month is said {ko:시월}, not {ko:십월}."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-letters-v2-q2-poster",
+                    "keyWords": [
+                      {
+                        "ko": "한글로 이름 쓰기",
+                        "romanization": "hangeullo ireum sseugi",
+                        "en": "writing your name in Hangul"
+                      },
+                      {
+                        "ko": "장소",
+                        "romanization": "jangso",
+                        "en": "place"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "A poster says what is on, the place and the time."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "한글날은 시월 구일이에요.",
+                      "romanization": "hangeullareun siwol guirieyo",
+                      "en": "Hangeul Day is on October 9."
+                    }
+                  }
+                ],
+                "captionEn": "Now say the day in a sentence."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Poster",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-letters-v2-q2-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s6-letters-v2-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-letters-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Poster Reader!",
+          "hoyaLineEn": "You read the whole poster. See you on Hangeul Day!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-letters-v2-q2-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-letters-v2-q2-poster",
+            "kind": "poster",
+            "entries": [
+              {
+                "id": "day",
+                "text": {
+                  "ko": "한글날",
+                  "romanization": "hangeullal",
+                  "en": "Hangeul Day"
+                },
+                "value": {
+                  "ko": "시월 구일",
+                  "romanization": "siwol guil",
+                  "en": "October 9"
+                }
+              },
+              {
+                "id": "what",
+                "text": {
+                  "ko": "한글로 이름 쓰기",
+                  "romanization": "hangeullo ireum sseugi",
+                  "en": "writing your name in Hangul"
+                }
+              },
+              {
+                "id": "place",
+                "text": {
+                  "ko": "장소",
+                  "romanization": "jangso",
+                  "en": "place"
+                },
+                "value": {
+                  "ko": "도서관",
+                  "romanization": "doseogwan",
+                  "en": "library"
+                }
+              },
+              {
+                "id": "time",
+                "text": {
+                  "ko": "시간",
+                  "romanization": "sigan",
+                  "en": "time"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "two o'clock"
+                }
+              }
+            ],
+            "altEn": "A Hangeul Day poster: the date, writing names in Hangul, the place and the time"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "What day is the poster for?",
+              "options": [
+                {
+                  "id": "seollal",
+                  "text": {
+                    "ko": "설날",
+                    "romanization": "seollal",
+                    "en": "Lunar New Year's Day"
+                  }
+                },
+                {
+                  "id": "hangeullal",
+                  "text": {
+                    "ko": "한글날",
+                    "romanization": "hangeullal",
+                    "en": "Hangeul Day"
+                  }
+                },
+                {
+                  "id": "chuseok",
+                  "text": {
+                    "ko": "추석",
+                    "romanization": "chuseok",
+                    "en": "Chuseok, the harvest festival"
+                  }
+                }
+              ],
+              "answerId": "hangeullal",
+              "answerEntryId": "day"
+            },
+            {
+              "id": "r2",
+              "questionEn": "What can you do there?",
+              "options": [
+                {
+                  "id": "yunnori",
+                  "text": {
+                    "ko": "윷놀이",
+                    "romanization": "yunnori",
+                    "en": "yut, the stick-throwing board game"
+                  }
+                },
+                {
+                  "id": "julleomgi",
+                  "text": {
+                    "ko": "줄넘기",
+                    "romanization": "julleomgi",
+                    "en": "jump rope"
+                  }
+                },
+                {
+                  "id": "ireum",
+                  "text": {
+                    "ko": "한글로 이름 쓰기",
+                    "romanization": "hangeullo ireum sseugi",
+                    "en": "writing your name in Hangul"
+                  }
+                }
+              ],
+              "answerId": "ireum",
+              "answerEntryId": "what"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Where is it?",
+              "key": {
+                "ko": "장소",
+                "romanization": "jangso",
+                "en": "place"
+              },
+              "options": [
+                {
+                  "id": "doseogwan",
+                  "text": {
+                    "ko": "도서관",
+                    "romanization": "doseogwan",
+                    "en": "library"
+                  }
+                },
+                {
+                  "id": "hakgyo",
+                  "text": {
+                    "ko": "학교",
+                    "romanization": "hakgyo",
+                    "en": "school"
+                  }
+                },
+                {
+                  "id": "gongwon",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "park"
+                  }
+                }
+              ],
+              "answerId": "doseogwan",
+              "answerEntryId": "place"
+            },
+            {
+              "id": "r4",
+              "questionEn": "What do you write there?",
+              "options": [
+                {
+                  "id": "geurim",
+                  "text": {
+                    "ko": "그림",
+                    "romanization": "geurim",
+                    "en": "pictures"
+                  }
+                },
+                {
+                  "id": "ireum",
+                  "text": {
+                    "ko": "이름",
+                    "romanization": "ireum",
+                    "en": "name"
+                  }
+                },
+                {
+                  "id": "chaek",
+                  "text": {
+                    "ko": "책",
+                    "romanization": "chaek",
+                    "en": "book"
+                  }
+                }
+              ],
+              "answerId": "ireum",
+              "answerEntryId": "what"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-v2-q2-apply",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "한글날은 시월 구일이에요.",
+                "romanization": "hangeullareun siwol guirieyo",
+                "en": "Hangeul Day is on October 9."
+              },
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "는",
+                    "romanization": "neun",
+                    "en": "topic marker, after a vowel"
+                  },
+                  {
+                    "ko": "은",
+                    "romanization": "eun",
+                    "en": "topic marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "도서관에서 이름을 써요.",
+                "romanization": "doseogwaneseo ireumeul sseoyo",
+                "en": "We write names at the library."
+              },
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "한글로 이름을 써요.",
+                "romanization": "hangeullo ireumeul sseoyo",
+                "en": "I write my name in Hangul."
+              },
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                }
+              ]
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "두 시에 도서관에 가요.",
+                "romanization": "du sie doseogwane gayo",
+                "en": "I go to the library at two o'clock."
+              },
+              "distractors": [
+                {
+                  "ko": "학교에",
+                  "romanization": "hakgyoe",
+                  "en": "to school"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-v2-q2-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "한글날은 ___이에요.",
+                "romanization": "hangeullareun ___ieyo",
+                "en": "Hangeul Day is on ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "시월 삼일",
+                  "romanization": "siwol samil",
+                  "en": "October 3"
+                },
+                {
+                  "ko": "시월 십일",
+                  "romanization": "siwol sibil",
+                  "en": "October 10"
+                },
+                {
+                  "ko": "시월 구일",
+                  "romanization": "siwol guil",
+                  "en": "October 9"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "___에 도서관에 가요.",
+                "romanization": "___e doseogwane gayo",
+                "en": "I go to the library at ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "two o'clock"
+                },
+                {
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "three o'clock"
+                },
+                {
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "one o'clock"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-letters-v2-q2-poster",
+            "kind": "poster",
+            "entries": [
+              {
+                "id": "day",
+                "text": {
+                  "ko": "한글날",
+                  "romanization": "hangeullal",
+                  "en": "Hangeul Day"
+                },
+                "value": {
+                  "ko": "시월 구일",
+                  "romanization": "siwol guil",
+                  "en": "October 9"
+                }
+              },
+              {
+                "id": "what",
+                "text": {
+                  "ko": "한글로 이름 쓰기",
+                  "romanization": "hangeullo ireum sseugi",
+                  "en": "writing your name in Hangul"
+                }
+              },
+              {
+                "id": "place",
+                "text": {
+                  "ko": "장소",
+                  "romanization": "jangso",
+                  "en": "place"
+                },
+                "value": {
+                  "ko": "도서관",
+                  "romanization": "doseogwan",
+                  "en": "library"
+                }
+              },
+              {
+                "id": "time",
+                "text": {
+                  "ko": "시간",
+                  "romanization": "sigan",
+                  "en": "time"
+                },
+                "value": {
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "two o'clock"
+                }
+              }
+            ],
+            "altEn": "A Hangeul Day poster: the date, writing names in Hangul, the place and the time"
+          }
+        }
+      ]
+    },
+    {
+      "id": "quest:stage6-letters-v2-q3",
+      "titleEn": "Subway Board",
+      "blurbEn": "Read a subway board: this stop, the next stop and the way out.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261106,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Subway Board",
+          "hoyaLineEn": "We are on the subway. Let's read the board and find our stop!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Stops and Exits",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-letters-v2-q3-board",
+                    "keyWords": [
+                      {
+                        "ko": "지하철",
+                        "romanization": "jihacheol",
+                        "en": "subway"
+                      },
+                      {
+                        "ko": "이번 역",
+                        "romanization": "ibeon yeok",
+                        "en": "this stop"
+                      },
+                      {
+                        "ko": "다음 역",
+                        "romanization": "daeum yeok",
+                        "en": "next stop"
+                      },
+                      {
+                        "ko": "이전 역",
+                        "romanization": "ijeon yeok",
+                        "en": "stop before"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "On the subway, {ko:이번 역} is this stop and {ko:다음 역} is the next one."
+              },
+              {
+                "items": [
+                  {
+                    "type": "realia",
+                    "realiaRef": "realia:s6-letters-v2-q3-board",
+                    "keyWords": [
+                      {
+                        "ko": "시청",
+                        "romanization": "sicheong",
+                        "en": "City Hall"
+                      },
+                      {
+                        "ko": "시장",
+                        "romanization": "sijang",
+                        "en": "Market"
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Read station names one block at a time: {ko:시청} and {ko:시장} differ in one block."
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "이번 역은 시청이에요.",
+                      "romanization": "ibeon yeogeun sicheongieyo",
+                      "en": "This stop is City Hall."
+                    }
+                  }
+                ],
+                "captionEn": "Now say which stop this is."
+              }
+            ]
+          },
+          "durationSeconds": 70
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Read the Board",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-letters-v2-q3-practice",
+          "durationSeconds": 100
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s6-letters-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "realia-read",
+          "minigameRef": "minigame:s6-letters-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Subway Reader!",
+          "hoyaLineEn": "You read the board and found the way out. Great ride!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s6-letters-v2-q3-practice",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-letters-v2-q3-board",
+            "kind": "timetable",
+            "title": {
+              "ko": "지하철",
+              "romanization": "jihacheol",
+              "en": "subway"
+            },
+            "entries": [
+              {
+                "id": "before",
+                "text": {
+                  "ko": "시장",
+                  "romanization": "sijang",
+                  "en": "Market"
+                },
+                "value": {
+                  "ko": "이전 역",
+                  "romanization": "ijeon yeok",
+                  "en": "stop before"
+                }
+              },
+              {
+                "id": "this",
+                "text": {
+                  "ko": "시청",
+                  "romanization": "sicheong",
+                  "en": "City Hall"
+                },
+                "value": {
+                  "ko": "이번 역",
+                  "romanization": "ibeon yeok",
+                  "en": "this stop"
+                }
+              },
+              {
+                "id": "next",
+                "text": {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "Park"
+                },
+                "value": {
+                  "ko": "다음 역",
+                  "romanization": "daeum yeok",
+                  "en": "next stop"
+                }
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "value": {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "value": {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                }
+              }
+            ],
+            "altEn": "A subway board: the stop before, this stop and the next one, and which side the exit and the restroom are on"
+          },
+          "rounds": [
+            {
+              "id": "r1",
+              "questionEn": "Which stop is this?",
+              "key": {
+                "ko": "이번 역",
+                "romanization": "ibeon yeok",
+                "en": "this stop"
+              },
+              "options": [
+                {
+                  "id": "sijang",
+                  "text": {
+                    "ko": "시장",
+                    "romanization": "sijang",
+                    "en": "Market"
+                  }
+                },
+                {
+                  "id": "sicheong",
+                  "text": {
+                    "ko": "시청",
+                    "romanization": "sicheong",
+                    "en": "City Hall"
+                  }
+                },
+                {
+                  "id": "gongwon",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "Park"
+                  }
+                }
+              ],
+              "answerId": "sicheong",
+              "answerEntryId": "this"
+            },
+            {
+              "id": "r2",
+              "questionEn": "What is the next stop?",
+              "key": {
+                "ko": "다음 역",
+                "romanization": "daeum yeok",
+                "en": "next stop"
+              },
+              "options": [
+                {
+                  "id": "sicheong",
+                  "text": {
+                    "ko": "시청",
+                    "romanization": "sicheong",
+                    "en": "City Hall"
+                  }
+                },
+                {
+                  "id": "gongwon",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "Park"
+                  }
+                },
+                {
+                  "id": "sijang",
+                  "text": {
+                    "ko": "시장",
+                    "romanization": "sijang",
+                    "en": "Market"
+                  }
+                }
+              ],
+              "answerId": "gongwon",
+              "answerEntryId": "next"
+            },
+            {
+              "id": "r3",
+              "questionEn": "Which way is the exit?",
+              "key": {
+                "ko": "출구",
+                "romanization": "chulgu",
+                "en": "exit"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oenjjok",
+              "answerEntryId": "exit"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which way is the restroom?",
+              "key": {
+                "ko": "화장실",
+                "romanization": "hwajangsil",
+                "en": "restroom"
+              },
+              "options": [
+                {
+                  "id": "oenjjok",
+                  "text": {
+                    "ko": "왼쪽",
+                    "romanization": "oenjjok",
+                    "en": "left"
+                  }
+                },
+                {
+                  "id": "oreunjjok",
+                  "text": {
+                    "ko": "오른쪽",
+                    "romanization": "oreunjjok",
+                    "en": "right"
+                  }
+                }
+              ],
+              "answerId": "oreunjjok",
+              "answerEntryId": "restroom"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s6-letters-v2-q3-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "이번 역은 ___이에요.",
+                "romanization": "ibeon yeogeun ___ieyo",
+                "en": "This stop is ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "시장",
+                  "romanization": "sijang",
+                  "en": "Market"
+                },
+                {
+                  "ko": "시청",
+                  "romanization": "sicheong",
+                  "en": "City Hall"
+                },
+                {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "Park"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "다음 역은 ___이에요.",
+                "romanization": "daeum yeogeun ___ieyo",
+                "en": "The next stop is ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "Park"
+                },
+                {
+                  "ko": "시장",
+                  "romanization": "sijang",
+                  "en": "Market"
+                },
+                {
+                  "ko": "시청",
+                  "romanization": "sicheong",
+                  "en": "City Hall"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "출구는 ___에 있어요.",
+                "romanization": "chulguneun ___e isseoyo",
+                "en": "The exit is on the ___."
+              },
+              "gapKind": "value",
+              "tiles": [
+                {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                },
+                {
+                  "ko": "앞",
+                  "romanization": "ap",
+                  "en": "front"
+                },
+                {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
+              ],
+              "answerIndex": 2
+            }
+          ],
+          "realia": {
+            "ref": "realia:s6-letters-v2-q3-board",
+            "kind": "timetable",
+            "title": {
+              "ko": "지하철",
+              "romanization": "jihacheol",
+              "en": "subway"
+            },
+            "entries": [
+              {
+                "id": "before",
+                "text": {
+                  "ko": "시장",
+                  "romanization": "sijang",
+                  "en": "Market"
+                },
+                "value": {
+                  "ko": "이전 역",
+                  "romanization": "ijeon yeok",
+                  "en": "stop before"
+                }
+              },
+              {
+                "id": "this",
+                "text": {
+                  "ko": "시청",
+                  "romanization": "sicheong",
+                  "en": "City Hall"
+                },
+                "value": {
+                  "ko": "이번 역",
+                  "romanization": "ibeon yeok",
+                  "en": "this stop"
+                }
+              },
+              {
+                "id": "next",
+                "text": {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "Park"
+                },
+                "value": {
+                  "ko": "다음 역",
+                  "romanization": "daeum yeok",
+                  "en": "next stop"
+                }
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "value": {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "value": {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                }
+              }
+            ],
+            "altEn": "A subway board: the stop before, this stop and the next one, and which side the exit and the restroom are on"
+          }
+        },
+        {
+          "ref": "minigame:s6-letters-v2-q3-check",
+          "kind": "realia-read",
+          "realia": {
+            "ref": "realia:s6-letters-v2-q3-board",
+            "kind": "timetable",
+            "title": {
+              "ko": "지하철",
+              "romanization": "jihacheol",
+              "en": "subway"
+            },
+            "entries": [
+              {
+                "id": "before",
+                "text": {
+                  "ko": "시장",
+                  "romanization": "sijang",
+                  "en": "Market"
+                },
+                "value": {
+                  "ko": "이전 역",
+                  "romanization": "ijeon yeok",
+                  "en": "stop before"
+                }
+              },
+              {
+                "id": "this",
+                "text": {
+                  "ko": "시청",
+                  "romanization": "sicheong",
+                  "en": "City Hall"
+                },
+                "value": {
+                  "ko": "이번 역",
+                  "romanization": "ibeon yeok",
+                  "en": "this stop"
+                }
+              },
+              {
+                "id": "next",
+                "text": {
+                  "ko": "공원",
+                  "romanization": "gongwon",
+                  "en": "Park"
+                },
+                "value": {
+                  "ko": "다음 역",
+                  "romanization": "daeum yeok",
+                  "en": "next stop"
+                }
+              },
+              {
+                "id": "exit",
+                "text": {
+                  "ko": "출구",
+                  "romanization": "chulgu",
+                  "en": "exit"
+                },
+                "value": {
+                  "ko": "왼쪽",
+                  "romanization": "oenjjok",
+                  "en": "left"
+                }
+              },
+              {
+                "id": "restroom",
+                "text": {
+                  "ko": "화장실",
+                  "romanization": "hwajangsil",
+                  "en": "restroom"
+                },
+                "value": {
+                  "ko": "오른쪽",
+                  "romanization": "oreunjjok",
+                  "en": "right"
+                }
+              }
+            ],
+            "altEn": "A subway board: the stop before, this stop and the next one, and which side the exit and the restroom are on"
+          },
+          "rounds": [
+            {
+              "id": "c1",
+              "questionEn": "Which stop came before this one?",
+              "key": {
+                "ko": "이전 역",
+                "romanization": "ijeon yeok",
+                "en": "stop before"
+              },
+              "options": [
+                {
+                  "id": "sicheong",
+                  "text": {
+                    "ko": "시청",
+                    "romanization": "sicheong",
+                    "en": "City Hall"
+                  }
+                },
+                {
+                  "id": "gongwon",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "Park"
+                  }
+                },
+                {
+                  "id": "sijang",
+                  "text": {
+                    "ko": "시장",
+                    "romanization": "sijang",
+                    "en": "Market"
+                  }
+                }
+              ],
+              "answerId": "sijang",
+              "answerEntryId": "before"
+            },
+            {
+              "id": "c2",
+              "questionEn": "What is on the left?",
+              "key": {
+                "ko": "왼쪽",
+                "romanization": "oenjjok",
+                "en": "left"
+              },
+              "options": [
+                {
+                  "id": "hwajangsil",
+                  "text": {
+                    "ko": "화장실",
+                    "romanization": "hwajangsil",
+                    "en": "restroom"
+                  }
+                },
+                {
+                  "id": "chulgu",
+                  "text": {
+                    "ko": "출구",
+                    "romanization": "chulgu",
+                    "en": "exit"
+                  }
+                },
+                {
+                  "id": "gongwon",
+                  "text": {
+                    "ko": "공원",
+                    "romanization": "gongwon",
+                    "en": "Park"
+                  }
+                }
+              ],
+              "answerId": "chulgu",
+              "answerEntryId": "exit"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Hangeul Day is one of South Korea's five national days, {ko:국경일}, along with 1 March, 17 July, 15 August and 3 October. A law passed in 2005 made it one.",
+      "sources": [
+        {
+          "title": "한글날이 10월 9일인 이유는? (Why is Hangeul Day on 9 October?), 한박웃음 October 2018, no. 63",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "Section on Hangeul Day after 1945: ‘현재 한글날(10월 9일)은 삼일절(3월 1일), 제헌절(7월 17일), 광복절(8월 15일), 개천절(10월 3일)과 더불어 우리나라의 5대 국경일 중 하나로 지정되어 있다.’ / ‘결국 2005년 국경일에 관한 법률이 개정됨으로써 한글날은 국경일로 자리매김하게 되었고’ / timeline: ‘2005년 12월 법정 국경일 지정(2006년부터 적용)’"
+        },
+        {
+          "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 ‘가갸날’에서 2016년의 ‘한글날’까지 (Hangeul Day yesterday, today and tomorrow), 새소식, 2016-10-07",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/news/newsDetail.do?bbs_id=1&bbs_no=777",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "List ‘한글날 기원 및 공휴일 지정 관련’: ‘2005년: 국경일로 격상(국경일에 관한 법률 일부개정)되었으나, 공휴일에서 제외(관공서의 공휴일에 관한 규정 제2조)’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-44 S6 revision, 2026-10-31): both National Hangeul Museum pages fetched 2026-10-31. The webzine names Hangeul Day one of the five 국경일 with 삼일절 (1 March), 제헌절 (17 July), 광복절 (15 August) and 개천절 (3 October), and says the 2005 amendment of 국경일에 관한 법률 made it a 국경일 (timeline: December 2005, applied from 2006); the 2016 notice gives 2005 as the year it became a 국경일. Replaces the earlier n1 (why 9 October), which Stage 4 Letters Volume 2 (row CM-44 S4) carries; the section 5.2 S4 row owns the Hangeul Day date notes. Used in: the q1 Did you know? tip, before the q2 Hangeul Day poster.\npass 2 (MAR culture and facts, 2026-10-31): each quote found word for word on the access date. 'South Korea's' renders 우리나라 in a South Korean institution's text; the four other days are named by date only, so no holiday name needs a gloss; 'A law passed in 2005' keeps to the amendment year both pages give and claims nothing about the day it took effect. Institution named as on the access date (국립한글박물관). No copied English wording. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): re-read against both pages and against every Letters note of Stages 2 to 7 (Volume 1, and the open S3 and S4 Volume 2 rows): no other note names 국경일 or the 2005 law. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "In 1946, 500 years after the letters were first shared, Hangeul Day was a day off for the first time. From 1991 it was no longer a day off, and since 2013 it has been one again.",
+      "sources": [
+        {
+          "title": "한글날이 10월 9일인 이유는? (Why is Hangeul Day on 9 October?), 한박웃음 October 2018, no. 63",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/webzine/201810/sub1_1.html",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘이듬해인 1946년에는 훈민정음 반포 500돌을 기념하여 한글날이 임시 공휴일로 지정되었고’ / ‘1990년 공휴일이 많아 경제 활동에 어려움이 있다는 이유로 공휴일에서 제외하는 일이 벌어졌다.’ / timeline: ‘1946년 10월 임시 공휴일 지정(미군정청)’, ‘1990년 11월 법정 공휴일 제외(1991년부터 적용)’, ‘2012년 11월 법정 공휴일 재지정(2013년부터 적용)’"
+        },
+        {
+          "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 ‘가갸날’에서 2016년의 ‘한글날’까지 (Hangeul Day yesterday, today and tomorrow), 새소식, 2016-10-07",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/news/newsDetail.do?bbs_id=1&bbs_no=777",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "List ‘한글날 기원 및 공휴일 지정 관련’: ‘1946년: 10월 9일 한글날 공휴일로 지정(한글 반포 500돌 기념)’ / ‘1990년: 한글날 공휴일에서 제외’ / ‘2012년: 공휴일로 재지정 결정, 2013년 한글날부터 공휴일 적용’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-44 S6 revision, 2026-10-31): both National Hangeul Museum pages fetched 2026-10-31. Both give 1946 as the first year Hangeul Day was a 공휴일, for the 500th year of the 1446 반포; the webzine's timeline gives the removal as decided in November 1990 and applied from 1991, and the return as decided in November 2012 and applied from 2013. Replaces the earlier n2 (가갸날, 1926 and 1928), which Stage 4 Letters Volume 2 (row CM-44 S4) carries. Used in: the q2 Did you know? tip (the Hangeul Day poster).\npass 2 (MAR culture and facts, 2026-10-31): each quote found word for word. 'a day off' renders 공휴일 for any-age readers and recycles q1's 쉬는 날 in the ko text; 1946 was a 임시 공휴일 (a one-off day off), and the note says only that it was a day off 'for the first time', which both pages support; 'From 1991' follows the webzine's 적용 year, not the 1990 decision. Institution named as on the access date. No copied English wording. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): re-read against both pages; it claims nothing about why the day was removed, so the 1990 reason (economic activity) stays out of a children's tip; no other Letters note names these years. Outcome: pass, no change."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "Since 2000, the national rules for writing Korean in Roman letters follow how a word is said, not each letter: {ko:신라} is said with a double l, so it is written Silla. The romanization in this app follows these rules.",
+      "sources": [
+        {
+          "title": "국어의 로마자 표기법, 한국어 어문 규범: the Romanization of Korean, current text",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0004",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "Versions listed: ‘[시행 2014. 12. 5.] 문화체육관광부 고시 제2014-42호’ and ‘[시행 2000. 7. 7.] 문화관광부 고시 제2000-8호(2000. 7. 7.)’. 제1장 제1항: ‘국어의 로마자 표기는 국어의 표준 발음법에 따라 적는 것을 원칙으로 한다.’ 제3장 제1항, 예시: ‘신라 [실라] Silla’"
+        },
+        {
+          "title": "'국어의 로마자 표기법' 규정(2000년 7월 7일 개정) (The Romanization of Korean, as revised on 7 July 2000), 공지 사항, 2000-07-22",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://www.korean.go.kr/front/board/boardStandardView.do?board_id=4&mn_id=182&b_seq=57",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘제1장 표기의 기본 원칙 제1항 국어의 로마자 표기는 국어의 표준 발음법에 따라 적는 것을 원칙으로 한다.’ 제3장 제1항 (보기): ‘신라[실라] Silla’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, CM-44 S6, 2026-10-30): both NIKL pages fetched 2026-10-30, HTTP 200. The current 국어의 로마자 표기법 page lists the 2014 version and the version in force from 7 July 2000 (문화관광부 고시 제2000-8호); its 제1장 제1항 says Korean is romanized by the standard pronunciation, and 제3장 제1항 gives 신라 [실라] Silla. The NIKL notice of 2000-07-22 gives the 2000 text with the same article and example. Used in: the q3 Did you know? tip.\npass 2 (MAR language, with F-CNT-002, 2026-10-30): 'follow how a word is said, not each letter' is 제1항; 'Silla' is the rule's own example and the converter's output for 신라. The last line holds: the app's romanization is the F-CNT-002 Revised Romanization converter. Kind language (a note on the writing system, not a custom). No copied English wording. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-30): the note says nothing about signs or stations (no source here does), so the subway board stays a drawn generic board and the tip only explains the romanization the learner sees. Outcome: pass, no change."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "Volume 2 MAR (row CM-44 S6, F-CURR-002 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass). The checker passes ran one after another in the authoring session, each against its own checklist. No native-speaker or expert review is claimed; native-reviewed is the schema's name for the language gate.",
+      "Language pass: spelling, spacing and 해요체 line by line; particles by the last sound (한글날은, 이름을, 출구는, 화장실은; 시청이에요, 공원이에요; 미나가, 호야가); 시월 for 10월 (한글 맞춤법 제52항, 속음 시월(十月)); every romanization is the F-CNT-002 converter's, names capitalized (Hoya, Mina). The Cloze tiles of each gap share the same last sound, so no particle gives a tile away.",
+      "Culture and facts pass: n1 and n2 as first written (why 9 October; 가갸날 in 1926) on the National Hangeul Museum and NIKL pages; n3 (romanization by pronunciation since 2000, 신라 Silla) on two NIKL pages. Applied: n1 'says it was published' for the museum's 간행 시점. None repeats a Volume 1 note.",
+      "Culture and facts pass (cont.): the library card, the book cover, the poster and the subway board are drawn and generic: no library, publisher, organiser, operator, line, logo or brand; 시청, 시장 and 공원 are common place nouns as stop names; the book is 'A Hangul Story' by Mina and Hoya, the cast; hours and counts are practice values; no line claims anything about real cards, posters or stations.",
+      "Learning design pass: 3 quests; new items 7, 5 and 7 (at most 8); Practice and Check items from earlier quests 3 of 7, 2 of 5 and 5 of 10 (lesson-recycle at least 30 in 100; 책, 이름, 호야, 도서관, 공원, 출구, 왼쪽, 오른쪽, 화장실 recycled); Checks Dictation (도서관, 책), Cloze Pick on the poster's values and Realia Read on the board, one of each.",
+      "Learning design pass (cont.): triples RR/CP/TH, RR/OI/CP, RR/CP/RR differ from Volume 1's (RR/TH/RR, RR/TH/CP, RR/TH/TH) and each other; each Check asks what Practice did not (q2 the date and the time; q3 the stop before and what is on the left). Applied: the q2 c1 tile 구월 십일 (the lunar date in the first n1) became 시월 십일.",
+      "Learning design pass (cont.): device voice: 읽어요 [일거요], 월요일 [워료일], 다섯 권 [다섣꿘], 한글날 [한글랄] and 시월 구일 [시월구일] change or link in speech, so none is in Dictation; 도서관 and 책 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0.",
+      "Realia kinds: the Hangeul Day poster and the book cover are poster (CM-47); the library card is ticket, a stand-in whose band shows a small train (no card kind exists; the alt text says library card); the subway board is timetable, whose clock the CM-47 art notes give for a timetable or a station board, since the sign kind draws a mountain trail.",
+      "Reviser: applied the fixes above (n1 wording, the q2 c1 tile). Third pass: no change.",
+      "Independent pass (row CM-44 S6, 2026-10-31): a later session than the authoring one, run against the language, culture and facts and learning design checklists. No native-speaker or expert review is claimed.",
+      "Independent pass, culture: the first n1 (why 9 October) and n2 (가갸날, 1926 and 1928) repeated the Hangeul Day notes of Stage 4 Letters Volume 2 (row CM-44 S4, whose section 5.2 row owns them). Fixed: new National Hangeul Museum notes, n1 Hangeul Day as one of the five 국경일 (law of 2005), n2 its years as a day off (1946, off from 1991, again since 2013).",
+      "Independent pass, learning design: the cell intro said 'Hangeul Day is coming!', wrong for most of the year; it now says 'It's library day!' in en, es and ko. Checked with no change: particles and 해요체, F-CNT-002 romanizations, the Cloze tiles' shared last sounds, the Dictation words, and no brand, operator or real line on any sheet."
+    ]
+  },
+  "contentVer": 1
+}
