@@ -367,7 +367,7 @@
     },
     {
       "id": "quest:stage3-letters-v2-q2",
-      "titleEn": "Letters for Everyone",
+      "titleEn": "Letters for the People",
       "blurbEn": "Learn why Hangul was made, and say what you learn.",
       "teaserEn": "Next: a visit to the library.",
       "estimatedMinutes": 5,
@@ -985,8 +985,8 @@
             {
               "id": "a1",
               "prompt": {
-                "ko": "책을 읽어요.",
-                "romanization": "chaegeul ilgeoyo",
+                "ko": "책을 봐요.",
+                "romanization": "chaegeul bwayo",
                 "en": "I read a book."
               },
               "options": [
@@ -1302,10 +1302,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
-        "checkedAt": "2026-10-30",
+        "passes": 4,
+        "checkedAt": "2026-10-31",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 책을 봐요 and 책을 읽어요 both say I read a book, and that 읽어요 is said [일거요] because the second letter of a double final moves to the next syllable before a vowel. Standard Korean Language Dictionary 보다1 「3」 (the entry body, HTTP 200): to read a book or a newspaper, with 책을 보는 as its example. NIKL Saegugeosaenghwal 6-2 (1996), Q&A: by standard pronunciation article 14 a double final before a vowel-initial ending moves only its second letter to the next syllable (흙을 [흘글], the same ㄺ). Line 2 (passes: 2, MAR language and learning-design checker, 2026-10-30): 읽 [일] + 어요 gives [일거요]; the converter romanizes 읽어요 ilgeoyo. The double final ㄺ is not a symbol the route has taught for reading (F-CURR-001 section 3.1 rule 6), so 읽어요 is a theme sentence here: shown in Discover with Hear it and heard in a picture round, never in a scored read and never in Dictation. Line 3 (passes: 3, third pass, 2026-10-30): unchanged; no wording copied."
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 책을 봐요 and 책을 읽어요 both say I read a book, and that 읽어요 is said [일거요] because the second letter of a double final moves to the next syllable before a vowel. Standard Korean Language Dictionary 보다1 「3」 (the entry body, HTTP 200): to read a book or a newspaper, with 책을 보는 as its example. NIKL Saegugeosaenghwal 6-2 (1996), Q&A: by standard pronunciation article 14 a double final before a vowel-initial ending moves only its second letter to the next syllable (흙을 [흘글], the same ㄺ). Line 2 (passes: 2, MAR language and learning-design checker, 2026-10-30): 읽 [일] + 어요 gives [일거요]; the converter romanizes 읽어요 ilgeoyo. The double final ㄺ is not a symbol the route has taught for reading (F-CURR-001 section 3.1 rule 6), so 읽어요 is a theme sentence here: shown in Discover with Hear it, never in a scored round and never in Dictation. Line 3 (passes: 3, third pass, 2026-10-30): unchanged; no wording copied. Line 4 (passes: 4, independent review, 2026-10-31): the q3 picture round now asks 책을 봐요, so 책을 읽어요 is on the Discover page only; the note's text is unchanged and still matches both sources."
       }
     }
   ],
@@ -1316,14 +1316,17 @@
     "reviewedAt": "2026-10-30",
     "notes": [
       "MAR row CM-44 S3 (F-CURR-002 section 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass; the three checkers ran as separate lenses in the authoring session). Volume 2 of Letters & Books at Stage 3: classroom and library sentences and why Hangul was made. No native-speaker or expert review is claimed.",
-      "Content: q1 In the Classroom (___을/를 써요: 이름을 써요, 한글을 써요, 공책에 써요), q2 Letters for Everyone (___을/를 배워요: 한글을 배워요, 글자를 배워요, 친구하고 한글을 배워요), q3 At the Library (___에서 책을 봐요: 도서관에서, 교실에서, 집에서). One new pattern a quest; new words q1 써요, 이름, 공책, 교실; q2 배워요, 글자; q3 도서관, 에서 and the theme sentence 책을 읽어요.",
+      "Content: q1 In the Classroom (___을/를 써요: 이름을 써요, 한글을 써요, 공책에 써요), q2 Letters for the People (___을/를 배워요: 한글을 배워요, 글자를 배워요, 친구하고 한글을 배워요), q3 At the Library (___에서 책을 봐요: 도서관에서, 교실에서, 집에서). One new pattern a quest; new words q1 써요, 이름, 공책, 교실; q2 배워요, 글자; q3 도서관, 에서 and the theme sentence 책을 읽어요.",
       "Language: 해요체 with sentence marks; 을/를, 이/가, 이에요/예요 rounds test the batchim rule (이름을, 글자를, 한글을, 연필이에요); 에서 for where something is done beside 에 for where you go (n3); romanization by the converter (ireumeul sseoyo, geuljareul baewoyo, doseogwaneseo chaegeul bwayo). Every word gap keeps grammatical wrong tiles read by the meaning line, as in Volume 1.",
-      "Language (cont.): 책을 읽어요 is the row's library sentence; its 읽 has the double final ㄺ, which no route has taught for reading (F-CURR-001 section 3.1 rule 6, the Volume 1 없어요 precedent), so it is a theme sentence: Discover with Hear it and the q3 picture round, never a tile, gap or text option. 책을 봐요 (보다1 「3」, to read a book) carries the scored reading; n4 says both mean I read a book.",
+      "Language (cont.): 책을 읽어요 is the row's library sentence; its 읽 has the double final ㄺ, which no route has taught for reading (F-CURR-001 section 3.1 rule 6, the Volume 1 없어요 precedent), so it is a theme sentence on the q3 Discover page with Hear it only: never in a scored round, so it is never a met review item and no review asks it as text, tiles or a gap.",
+      "Language (cont.): 책을 봐요 (보다1 「3」, to read a book) carries every scored round, the q3 picture round included; n4 says both mean I read a book.",
       "Learning design: liaison is heard, never typed: 이름을 [이르믈], 한글을 [한그를], 공책에 [공채게], 교실에 [교시레], 도서관에서 [도서과네서], 읽어요 [일거요] (n4). 글자 is said [글짜] (tensification) and 써요 is a homograph (write; also use, wear, bitter), so neither is a Dictation target; 써요 is taught only with an object or a place. Dictation asks 공책 and 가방, said as written, with no taught homophone.",
       "Learning design (cont.): triples q1 order-it / cloze-pick / type-hangul, q2 order-it / cloze-pick / cloze-pick, q3 order-it / listen-pick / listen-pick (a Read Pick Meaning Check); none is a Volume 1 triple and adjacent quests differ. Every Practice is a Sentence Builder, so each can scaffold (U-11). No Check repeats an Apply sentence. Recycle (lesson-recycle) 43, 50 and 50 in 100.",
       "Culture and facts: n1 (28 letters at first; 24 basic letters today) and n2 (why Sejong made the letters) cite the National Hangeul Museum first, then NIKL; n2 adds the Sejong Annals preface. They say what the sources say and no more: no 'easiest' or 'scientific' claim, no dates (Stage 4 Letters carries 1443, 1446 and Hangeul Day). Names as of 2026-10-30.",
       "Reviser: q1 and q3 swapped so each quest's reward tip fits it (q1 shows n1, q2 n2, q3 the 에서 note n3); n2 'so that everyone could read' became 'ordinary people could learn easily', the sources' words; the q3 Check options name an activity, not a bare noun. Third pass: validate-content, the lesson lint, the U-rules and the overlay rules clean.",
-      "Translation (es, ko): es keeps the Volume 1 wording (marca de objeto, tras consonante final) and no gendered agreement for the learner; ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English. Behind volumes (built-in pct 0): the row merges dark."
+      "Translation (es, ko): es keeps the Volume 1 wording (marca de objeto, tras consonante final) and no gendered agreement for the learner; ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English. Behind volumes (built-in pct 0): the row merges dark.",
+      "Independent review (passes: 4, a separate reviewer agent after the PR opened, 2026-10-31): the q3 Apply's heard picture round a1 asked 책을 읽어요, which made it a met review item (read, cloze and sentence-builder formats); a1 now asks 책을 봐요 with the same pictures, so 책을 읽어요 stays on the Discover page only.",
+      "Independent review (cont.): q2 is retitled Letters for the People (es Letras para el pueblo, ko 백성을 위한 글자), the sources' framing. ko: 한글 is glossed 한국의 글자, the shipped gloss, not 우리 글자; the q3 Check's write label is 노트 필기하기 (no syllable shared with either prompt). es: the reward titles praise a finished quest."
     ]
   },
   "contentVer": 1

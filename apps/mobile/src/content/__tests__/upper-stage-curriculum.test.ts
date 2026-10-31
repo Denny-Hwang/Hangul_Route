@@ -1003,9 +1003,13 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     expect(left).toEqual([]);
     // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    // 78 Volume 1 quests, plus each shipped Volume 2 quest (row CM-44 S3: three), all scaffolding but those three.
-    expect(QUESTS.length).toBeGreaterThanOrEqual(81);
-    expect(scaffolding.size).toBe(QUESTS.length - 3);
+    // 78 Volume 1 quests, plus three per shipped later volume (F-CURR-002 section 5.1: each Volume 2 cell has three
+    // quests; row CM-44 S3 ships Stage 3 Letters & Books Volume 2), all scaffolding but those three.
+    const later = READY.filter(({ cell }) => (cell.volume ?? 1) > 1);
+    expect(later.map(({ cell }) => cell.id)).toContain('episode:stage3-letters-v2');
+    for (const { cell } of later) expect(cell.quests.map((q) => q.id), cell.id).toEqual([1, 2, 3].map((n) => `${cell.id.replace('episode:', 'quest:')}-q${n}`));
+    expect(QUESTS.filter((q) => !/-v[0-9]+-q[0-9]+$/.test(q.id))).toHaveLength(78);
+    expect([QUESTS.length, scaffolding.size]).toEqual([78 + 3 * later.length, 75 + 3 * later.length]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {

@@ -70,7 +70,7 @@
       "typeHangul.rounds.d2.target.gloss": "mochila"
     },
     "quest:stage3-letters-v2-q2": {
-      "title": "Letras para todo el mundo",
+      "title": "Letras para el pueblo",
       "blurb": "Descubre por qué se creó el hangul y di qué aprendes.",
       "teaser": "Siguiente: una visita a la biblioteca.",
       "steps.s1.title": "¿Por qué el hangul?",
@@ -78,7 +78,7 @@
       "steps.s3.title": "Arma la oración",
       "steps.s4.title": "Completa el hueco",
       "steps.s5.title": "Dos preguntas rápidas",
-      "steps.s6.title": "¡A aprender hangul!",
+      "steps.s6.title": "¡Ya aprendes hangul!",
       "steps.s1.hoyaLine": "Hace mucho tiempo, el rey Sejong creó letras nuevas para el pueblo. ¡Vamos a aprenderlas!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada frase por tu cuenta.",
       "steps.s6.hoyaLine": "Ya sabes por qué se creó el hangul. ¡Genial!",
@@ -140,7 +140,7 @@
       "steps.s3.title": "Arma la oración",
       "steps.s4.title": "Escucha y elige",
       "steps.s5.title": "Dos preguntas rápidas",
-      "steps.s6.title": "¡A leer en la biblioteca!",
+      "steps.s6.title": "¡Gran lectura en la biblioteca!",
       "steps.s1.hoyaLine": "Shh, estamos en la biblioteca. ¡Busquemos un buen libro!",
       "steps.s2.hoyaLine": "Toca Escuchar y luego lee cada frase por tu cuenta.",
       "steps.s6.hoyaLine": "Ya sabes decir dónde lees y escribes. ¡Feliz lectura!",

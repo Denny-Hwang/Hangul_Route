@@ -1264,6 +1264,21 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   // page's Vol 2 tab opens the later volume, whose first quest plays its first game. It adds no Learning Route day.
   for (const episode of LATER_VOLUMES) {
     const stage = Number(episode.stage.replace('stage', ''));
+    // At launch state (`volumes` at its built-in pct 0, no stored remote copy) the shipped later volume stays dark: the
+    // cell opens its Volume 1 page with no Volumes tabs (F-CURR-002 section 12.2; row CM-44 S3 merges dark).
+    test(`${episode.id} (320): with volumes at launch state its cell shows Volume 1 and no Volumes tabs`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.setViewportSize({ width: 320, height: 800 });
+      await openJourney(page);
+      await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: true }).click();
+      const first = LESSON_EPISODES.find((e) => e.stage === episode.stage && e.theme === episode.theme && (e.volume ?? 1) === 1)!;
+      await expect(page.getByText(first.titleEn).first()).toBeVisible();
+      await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+      await expect(page.getByText(episode.titleEn)).toHaveCount(0);
+      await expectNoHorizontalOverflow(page);
+      expect(errors).toEqual([]);
+    });
     for (const [label, size] of [
       ['320', { width: 320, height: 800 }],
       ['wide', { width: 1280, height: 900 }],

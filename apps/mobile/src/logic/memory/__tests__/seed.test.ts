@@ -126,6 +126,11 @@ describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', ()
 
   it('holds every lesson quest of the catalogue', () => {
     expect(LESSON_QUESTS.filter((q) => !/-v[0-9]+-q[0-9]+$/.test(q.id))).toHaveLength(108);
+    // Three quests per shipped later volume (F-CURR-002 section 5.1), Stage 3 Letters & Books Volume 2 among them (CM-44 S3).
+    const later = LESSON_QUESTS.filter((q) => /-v[0-9]+-q[0-9]+$/.test(q.id));
+    expect(later.map((q) => q.id)).toEqual(expect.arrayContaining(['quest:stage3-letters-v2-q1', 'quest:stage3-letters-v2-q2', 'quest:stage3-letters-v2-q3']));
+    expect(later.length % 3).toBe(0);
+    expect(LESSON_QUESTS).toHaveLength(108 + later.length);
     expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(LESSON_QUESTS.length);
   });
 
@@ -146,6 +151,7 @@ describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', ()
   it('orders by the most recent quest first, then the stage: the last cell finished falls due first', () => {
     // The quest finished last in the fixture (a later volume's, once one ships: F-CURR-002 row CM-40).
     const lastQuest = LESSON_QUESTS.at(-1);
+    expect(lastQuest?.id).toMatch(/-v[0-9]+-q3$/);
     const firstDay = [...seed.states.entries()].filter(([, s]) => s.state.d === addDays(SEED_DAY, 1)).map(([id]) => id);
     const lastCellItems = ITEMS.filter((i) => [...i.cells, ...i.asked].includes(lastQuest?.episodeId ?? '')).map((i) => i.id);
     expect(firstDay.some((id) => lastCellItems.includes(id))).toBe(true);
