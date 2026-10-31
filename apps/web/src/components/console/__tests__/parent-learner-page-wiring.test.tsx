@@ -136,6 +136,8 @@ const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => r
 const h1s = (root: ReactTestInstance): string[] => root.findAll((n) => n.type === 'h1').map(textOf);
 const named = (name: string): unknown[][] => calls.filter((c) => c.name === name).map((c) => c.args);
 const rows = (root: ReactTestInstance): ReactTestInstance[] => (byTestId(root, 'report-chooser')[0]?.findAll((n) => n.type === 'a') ?? []);
+/** A chooser row's name, without the GX-11 line under it. */
+const nameOf = (a: ReactTestInstance): string => textOf(byTestId(a, 'report-chooser-name')[0] as ReactTestInstance);
 
 describe('/parent/learner with a learner: the learner report (RP-7c)', () => {
   it('is the same learner report, back to the parent home from the parent home card', async () => {
@@ -160,12 +162,14 @@ describe('/parent/learner without a learner: the parent chooser (RP-7c)', () => 
     expect(named('getLearnerReport')).toEqual([]);
     expect(named('roster').map((args) => args[0])).toEqual(['space:a', 'space:b']);
     expect(h1s(root)).toEqual([en.report.chooser.learner]);
-    expect(rows(root).map((a) => [a.props.href, textOf(a)])).toEqual([
+    expect(rows(root).map((a) => [a.props.href, nameOf(a)])).toEqual([
       ['/parent/learner?id=space%3Aa&learner=profile%3A1&period=week&from=nav', 'Name profile:1'],
       ['/parent/learner?id=space%3Aa&learner=profile%3A2&period=week&from=nav', 'Name profile:2'],
       ['/parent/learner?id=space%3Ab&learner=profile%3A3&period=week&from=nav', 'Name profile:3'],
     ]);
-    expect(textOf(byTestId(root, 'report-chooser')[0] as ReactTestInstance)).not.toMatch(/90|minutes/i);
+    // AMENDMENTS-GROWNUP-UX GX-11 (P10): the child card's first line under each name; these summaries hold no practice
+    // yet, so each says so. The order stays the join order whatever the minutes (never a ranking).
+    expect(rows(root).map((a) => textOf(byTestId(a, 'report-chooser-line')[0] as ReactTestInstance))).toEqual(Array(3).fill(en.console.parentHome.lastActive.notStarted));
     expect(nav.replaced).toEqual([]);
     expect(fakeDocument.title).toBe('Report - Hangul Route');
     expect(byTestId(root, 'report-back')[0]?.props.href).toBe('/parent');
@@ -231,7 +235,7 @@ describe('/parent/learner without a learner: the parent chooser (RP-7c)', () => 
   it('a family whose roster failed: the others stay, with the error and Try again under them, which reads again', async () => {
     responses.rosters = { 'space:a': DEFAULT_ROSTERS['space:a'] as () => Result };
     const root = await page();
-    expect(rows(root).map((a) => textOf(a))).toEqual(['Name profile:1', 'Name profile:2']);
+    expect(rows(root).map(nameOf)).toEqual(['Name profile:1', 'Name profile:2']);
     expect(textOf(byTestId(root, 'report-error-line')[0] as ReactTestInstance)).toBe(en.report.state.error);
     expect(nav.replaced).toEqual([]);
     responses.rosters = { ...DEFAULT_ROSTERS };
@@ -244,7 +248,7 @@ describe('/parent/learner without a learner: the parent chooser (RP-7c)', () => 
     responses.rosters = { 'space:b': DEFAULT_ROSTERS['space:b'] as () => Result };
     const root = await page();
     expect(nav.replaced).toEqual([]);
-    expect(rows(root).map((a) => textOf(a))).toEqual(['Name profile:3']);
+    expect(rows(root).map(nameOf)).toEqual(['Name profile:3']);
     expect(byTestId(root, 'report-retry')).toHaveLength(1);
   });
 

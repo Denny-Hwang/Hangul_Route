@@ -1465,6 +1465,17 @@ export const consoleMsgs = {
       many: (n: number) => `In ${n} classes`,
       none: 'Family only',
     },
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-11 (section 9 P2, P10): a child card's week line (with the report's 7-day squares beside
+     * it, fill only) and its next quest; a child who never started; a child quiet for 7 days or more. `{name}` is a
+     * learner's roster name, `{title}` a quest title in the console's language. The report chooser reads the same line.
+     */
+    week: (days: number, minutes: number) => `Practiced ${days} of the last 7 days · ${minutes} min`,
+    next: (title: string) => `Next: ${title}`,
+    notStarted: (name: string) => `Not started yet. Open the app on ${name}'s device.`,
+    restart: 'A 5-minute quest is a good restart.',
+    /** The report chooser's line under the name of a child who never started. */
+    lastActive: { notStarted: 'Not started yet' },
   },
   /**
    * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; Appendix B

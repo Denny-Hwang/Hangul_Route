@@ -1,5 +1,6 @@
+import { DEFAULT_LOCALE, type UiLocale } from '@hangul-route/i18n';
 import type { RosterLearner, SpaceListItem } from './api';
-import { joinOrder, parentHomeView } from './parent-home';
+import { childWeek, childWeekLines, joinOrder, parentHomeView } from './parent-home';
 import { ROUTES } from './routing';
 
 /**
@@ -15,6 +16,8 @@ export interface ParentChooserRow {
   href: string;
   name: string;
   avatar: string;
+  /** AMENDMENTS-GROWNUP-UX GX-11 (P10): the child card's first line under the name ("Practiced 4 of the last 7 days · 36 min"). */
+  line: string;
 }
 
 /** The family spaces held as owner or caregiver, in the family home's order (live first, oldest first). */
@@ -23,14 +26,20 @@ export function parentChooserFamilies(spaces: readonly SpaceListItem[]): SpaceLi
   return view.state === 'families' ? view.families : [];
 }
 
-/** One row per learner of each family whose roster loaded (`rosters` by space id), family by family. */
-export function parentChooserRows(families: readonly SpaceListItem[], rosters: ReadonlyMap<string, readonly RosterLearner[]>): ParentChooserRow[] {
+/** One row per learner of each family whose roster loaded (`rosters` by space id), family by family, in `locale`. */
+export function parentChooserRows(
+  families: readonly SpaceListItem[],
+  rosters: ReadonlyMap<string, readonly RosterLearner[]>,
+  now: Date,
+  locale: UiLocale = DEFAULT_LOCALE,
+): ParentChooserRow[] {
   return families.flatMap((family) =>
     joinOrder(rosters.get(family.space.id) ?? []).map((learner) => ({
       key: `${family.space.id}/${learner.id}`,
       href: ROUTES.learnerReport({ spaceId: family.space.id, learnerId: learner.id, kind: 'family', from: 'nav' }),
       name: learner.displayName,
       avatar: learner.avatar,
+      line: childWeekLines(childWeek(learner, now, locale), learner.displayName, now, locale).chooser,
     })),
   );
 }

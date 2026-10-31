@@ -3,9 +3,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { RelinkView, RosterLearner, SpaceListItem, TransferLearnerSideView, TransferList } from '../api';
 import { isCaregiverSafe } from '../banned-text';
+import { catalogTitle } from '@/data/catalog';
 import {
   childChipWords,
   childStatus,
+  childWeek,
+  childWeekLines,
   classLine,
   classLineWords,
   familyActionLinks,
@@ -215,10 +218,16 @@ describe('lectureCardSlot (lecture-card.md "Placement")', () => {
     expect(lectureCardSlot(true, 0)).toBe('side');
   });
 
-  it('below 70em: after the first row of learner cards, or at the end of the main column with no card to follow', () => {
+  it('below 70em: after the one learner card, or at the end of the main column with no card to follow', () => {
     expect(lectureCardSlot(false, 1)).toBe('afterFirstRow');
-    expect(lectureCardSlot(false, 3)).toBe('afterFirstRow');
     expect(lectureCardSlot(false, 0)).toBe('afterMain');
+  });
+
+  it('GX-11 (P3): below 70em with 2 or more learners, after the last child (never between child 1 and child 2)', () => {
+    expect(lectureCardSlot(false, 2)).toBe('afterMain');
+    expect(lectureCardSlot(false, 3)).toBe('afterMain');
+    // From 70em the side column keeps it whatever the count.
+    expect(lectureCardSlot(true, 3)).toBe('side');
   });
 });
 
@@ -515,5 +524,110 @@ describe('GX-4 copy rules', () => {
   it('parent-home.ts stays pure: no React, no fetch, no storage', () => {
     const source = readFileSync(new URL('../parent-home.ts', import.meta.url), 'utf8');
     expect(source).not.toMatch(/from 'react'|fetch\(|localStorage|sessionStorage/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AMENDMENTS-GROWNUP-UX GX-11 (section 9 P2; wireframe design/wireframes/parent/needs-you.md, mock
+// design/screens/approvals/mock/parent-*.html): the child card's week line with the report's 7-day squares (fill only),
+// the next quest from the report's resolver, the never-started line and the restart line.
+
+const NOW = new Date('2026-10-31T12:00:00Z');
+const day = (d: string, min: number) => ({ d, min, q: 0, c: 0, w: 0, j: [] as string[] });
+const activity = (days: ReturnType<typeof day>[], over: Record<string, unknown> = {}) => ({
+  v: 1,
+  tz: 0,
+  asOf: '2026-10-31',
+  days,
+  months: [],
+  total: { since: '2026-09-01', min: 300, q: 4, c: 2, w: 0, days: 12 },
+  milestones: [],
+  ...over,
+});
+function kid(summary: unknown, over: Partial<RosterLearner> = {}): RosterLearner {
+  return {
+    id: 'profile:mina',
+    displayName: 'Mina',
+    ageGroup: '5-7',
+    avatar: 'cub',
+    joinedAt: '2026-09-01T00:00:00Z',
+    lastActiveAt: '2026-10-30T08:00:00Z',
+    lastSyncedAt: '2026-10-31T08:00:00Z',
+    summary: summary as RosterLearner['summary'],
+    ...over,
+  } as RosterLearner;
+}
+const STEADY = { lastActiveAt: '2026-10-30T08:00:00Z', minutesLast7d: 36, stage1: { questsDone: 4, questsTotal: 15, anchorAccuracy: null }, cardsUnlocked: 2 };
+
+describe('childWeek (GX-11, P2)', () => {
+  it('practiced days of the last 7 with their minutes and the 7 squares, oldest first, filled only on a practiced day', () => {
+    const summary = { ...STEADY, activity: activity([day('2026-10-20', 9), day('2026-10-25', 10), day('2026-10-26', 8), day('2026-10-28', 12), day('2026-10-29', 6)]) };
+    expect(childWeek(kid(summary), NOW)).toEqual({ kind: 'week', days: 4, minutes: 36, squares: [true, true, false, true, true, false, false], next: null });
+  });
+
+  it('the next quest from the report resolver, in the console language; none at the free-lessons end or for an unknown quest', () => {
+    const next = (value: unknown) => ({ ...STEADY, activity: activity([day('2026-10-30', 5)], { next: value }) });
+    const quest = 'quest:stage1-letters-q1';
+    expect(childWeek(kid(next({ q: quest, plan: false })), NOW)).toMatchObject({ kind: 'week', next: catalogTitle(quest, 'en') });
+    expect(childWeek(kid(next({ q: quest, plan: true })), NOW, 'ko')).toMatchObject({ next: catalogTitle(quest, 'ko') });
+    expect(childWeek(kid(next({ end: true })), NOW)).toMatchObject({ next: null });
+    expect(childWeek(kid(next({ q: 'quest:stage9-new-q1', plan: false })), NOW)).toMatchObject({ next: null });
+  });
+
+  it('never started: no summary yet, or a summary with no practice day at all', () => {
+    expect(childWeek(kid(null), NOW)).toEqual({ kind: 'notStarted' });
+    expect(childWeek(kid({ ...STEADY, activity: activity([], { total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 } }) }), NOW)).toEqual({ kind: 'notStarted' });
+    expect(childWeek(kid({ lastActiveAt: '', minutesLast7d: 0, stage1: { questsDone: 0, questsTotal: 15, anchorAccuracy: null }, cardsUnlocked: 0 }), NOW)).toEqual({ kind: 'notStarted' });
+  });
+
+  it('quiet for the last 7 days: the restart line instead of a zero (anti-shame), with the next quest when known', () => {
+    const summary = { ...STEADY, activity: activity([day('2026-10-10', 12)], { asOf: '2026-10-12', next: { q: 'quest:stage1-letters-q1', plan: false } }) };
+    expect(childWeek(kid(summary), NOW)).toEqual({ kind: 'restart', next: catalogTitle('quest:stage1-letters-q1', 'en') });
+  });
+
+  it('an older app with no day-by-day data: the shipped last-active and minutes lines, never a guessed day count', () => {
+    expect(childWeek(kid(STEADY), NOW)).toEqual({ kind: 'legacy', lastActiveAt: '2026-10-30T08:00:00Z', minutes: 36 });
+  });
+
+  it('a malformed activity block is dropped, never fatal: the summary reads as an older app', () => {
+    expect(childWeek(kid({ ...STEADY, activity: { v: 2 } }), NOW)).toMatchObject({ kind: 'legacy' });
+    expect(childWeek(kid('not a summary'), NOW)).toEqual({ kind: 'notStarted' });
+  });
+});
+
+describe('childWeekLines (GX-11, P2 and P10)', () => {
+  const quest = catalogTitle('quest:stage1-letters-q1', 'en');
+  it('the week line, then Next; the first line alone is the report chooser line', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const p = getMessages(locale).console.parentHome;
+      const lines = childWeekLines({ kind: 'week', days: 4, minutes: 36, squares: [], next: 'Q' }, 'Mina', NOW, locale);
+      expect(lines).toEqual({ first: p.week(4, 36), next: p.next('Q'), chooser: p.week(4, 36) });
+    }
+    expect(childWeekLines({ kind: 'week', days: 1, minutes: 5, squares: [], next: null }, 'Mina', NOW, 'en')).toEqual({ first: 'Practiced 1 of the last 7 days · 5 min', next: null, chooser: 'Practiced 1 of the last 7 days · 5 min' });
+  });
+
+  it('never started and quiet: their own lines, in each locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const p = getMessages(locale).console.parentHome;
+      expect(childWeekLines({ kind: 'notStarted' }, 'Sora', NOW, locale)).toEqual({ first: p.notStarted('Sora'), next: null, chooser: p.lastActive.notStarted });
+      expect(childWeekLines({ kind: 'restart', next: quest }, 'Jun', NOW, locale)).toEqual({ first: p.restart, next: p.next(quest), chooser: p.restart });
+    }
+  });
+
+  it('an older app: last active and minutes, the chooser reads the minutes', () => {
+    const p = getMessages('en').console.parentHome;
+    expect(childWeekLines({ kind: 'legacy', lastActiveAt: '2026-10-31T08:00:00Z', minutes: 36 }, 'Mina', NOW, 'en')).toEqual({
+      first: `${getMessages('en').console.space.learner.lastActive('today')}`,
+      second: p.minutes7d(36),
+      next: null,
+      chooser: p.minutes7d(36),
+    });
+  });
+
+  it('every line is caregiver-safe in every locale (no banned word, no ranking)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const p = getMessages(locale).console.parentHome;
+      for (const text of [p.week(0, 0), p.week(7, 120), p.next('Q'), p.notStarted('Sora'), p.restart, p.lastActive.notStarted]) expect(isCaregiverSafe(text, locale)).toBe(true);
+    }
   });
 });
