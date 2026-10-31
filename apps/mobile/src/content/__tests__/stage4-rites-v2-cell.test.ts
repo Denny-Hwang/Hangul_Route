@@ -62,7 +62,11 @@ describe('Stage 4 Holidays & Traditions, Volume 2: Seollal Visit (row CM-45 S4)'
   it('is the second volume of its cell, ready, with three quests stamped after main', () => {
     expect(cell).toMatchObject({ id: 'episode:stage4-rites-v2', stage: 'stage4', theme: 'rites', volume: 2, status: 'ready' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage4-rites-v2-q1', 'quest:stage4-rites-v2-q2', 'quest:stage4-rites-v2-q3']);
-    for (const q of cell.quests) expect(q.addedIn, q.id).toBe(20261031);
+    // Above the catalogue version of the main this row was cut from (20261028). The order against main and the sibling
+    // rows is `scripts/check-added-in.mjs` and stamp-order's to keep, so a merge-time bump stays a one-field edit.
+    const stamps = new Set(cell.quests.map((q) => q.addedIn));
+    expect(stamps.size).toBe(1);
+    for (const q of cell.quests) expect(q.addedIn, q.id).toBeGreaterThan(20261028);
   });
 
   it('plays Practice / Apply / Check triples that differ from Volume 1 and from each other, with three different Checks', () => {
@@ -134,6 +138,44 @@ describe('Stage 4 Holidays & Traditions, Volume 2: Seollal Visit (row CM-45 S4)'
     if (opening === undefined || !('replies' in opening)) throw new Error('the scene opens on a turn');
     expect(opening.line.ko).toBe('새해 복 많이 받아라.');
     expect(opening.replies.filter((r) => r.kind === 'natural').map((r) => r.text.ko)).toEqual(['감사합니다. 할머니도 새해 복 많이 받으세요.', '감사합니다.']);
+  });
+
+  it('each Role Play closing claims only what every way to it did: q1’s “thanks” way never returns the wish, so no closing says so', () => {
+    const overlays = (locale: 'es' | 'ko') => (read(`content/i18n/${locale}/lessons-stage4-rites-v2.json`) as { entries: Record<string, Record<string, string>> }).entries;
+    const es = overlays('es');
+    const ko = overlays('ko');
+    /** Every way through a scene as the Korean of the natural replies tapped on it. */
+    const ways = (scene: RolePlayScene): string[][] => {
+      const out: string[][] = [];
+      const walk = (id: string, said: string[]): void => {
+        const node = scene.nodes.find((n) => n.id === id);
+        if (node === undefined || !('replies' in node)) {
+          out.push(said);
+          return;
+        }
+        for (const r of node.replies) if (r.kind === 'natural' && r.next !== undefined) walk(r.next, [...said, r.text.ko]);
+      };
+      walk(scene.start, []);
+      return out;
+    };
+    const returnsWish = (said: readonly string[]): boolean => said.some((ko) => /도 새해 복 많이 받으세요/.test(ko));
+    const claimsWish = { en: /wish(ed)? (her|him|them) (well|back)|returned|too\b/i, es: /también|devolviste|deseaste/i, ko: /께도|인사를 드렸|돌려/ };
+    for (const [ref, scene] of scenes) {
+      const all = ways(scene);
+      expect(all.length, ref).toBeGreaterThan(0);
+      // Every way thanks the elder, so every closing may say so.
+      for (const said of all) expect(said.some((t) => t.startsWith('감사합니다')), `${ref} ${said.join(' / ')}`).toBe(true);
+      if (all.every(returnsWish)) continue;
+      const end = scene.nodes.find((n) => isRolePlayEnd(n));
+      if (end === undefined || !isRolePlayEnd(end)) throw new Error(`${ref} has an end`);
+      expect(end.closingEn, `${ref} en`).not.toMatch(claimsWish.en);
+      expect(es[ref]?.['rolePlay.scene.nodes.end.closing'], `${ref} es`).not.toMatch(claimsWish.es);
+      expect(ko[ref]?.['rolePlay.scene.nodes.end.closing'], `${ref} ko`).not.toMatch(claimsWish.ko);
+    }
+    // q1 has both ways: the wish returned (감사합니다. 할머니도 새해 복 많이 받으세요.) and thanks alone (감사합니다.).
+    const [, q1Scene] = scenes[0] ?? [];
+    if (q1Scene === undefined) throw new Error('q1 has a scene');
+    expect(ways(q1Scene).map(returnsWish).sort()).toEqual([false, true]);
   });
 
   it('the greeting pick by occasion: 계세요 for the one who stays, 가세요 for the one who leaves, never the other way round', () => {

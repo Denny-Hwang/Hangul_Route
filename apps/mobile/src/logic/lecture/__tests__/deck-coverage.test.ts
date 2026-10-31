@@ -18,7 +18,7 @@ import {
   type ThemeKey,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, gridEpisodes } from '../../../content';
+import { episodesAll, episodesWithVolumes, gridEpisodes } from '../../../content';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { questsAll } from '../../../content/quests';
 import { storiesAll } from '../../../content/stories';
@@ -523,5 +523,58 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     // 23 practice and apply steps holding 105, 15 Stage 7 Checks holding 30); LV-S4 the last 33 (114 rounds: type-hangul 21 / 73,
     // write-frame 7 / 21, trace-word 5 / 20).
     expect({ slides: upper.reduce((n, [, row]) => n + row.slides, 0), steps, rounds, flat }).toEqual({ slides: 969, steps: 0, rounds: 0, flat: 0 });
+  });
+});
+
+/**
+ * F-CURR-002 row CM-40: a cell's later volume is off the grid walk above (`gridEpisodes` reads Volume 1), so the shipped
+ * Volume 2 cells get the same walk here, keyed `<stage>:<theme>:v<k>`. No step is skipped, no word card repeats, no Discover
+ * item is flattened, and each cell builds at least its committed question slides, with `game.role-play` off (the main
+ * path's reply slides) and on (one Role Play slide per main-path turn).
+ */
+const BASELINE_LATER_VOLUMES: Readonly<Record<string, { quests: number; quiz: number; quizRolePlayOn: number; rolePlaySlides: number }>> = {
+  // Row CM-45 S4, Seollal Visit: three Role Plays of four turns (q1 and q3 Practice, q2 Apply), two Tap to Respond
+  // games, Cloze Pick and Sentence Builder: 16 question slides, plus 12 reply slides with game.role-play off.
+  'stage4:rites:v2': { quests: 3, quiz: 28, quizRolePlayOn: 16, rolePlaySlides: 12 },
+};
+
+describe('deck coverage of the later volumes (F-CURR-002 row CM-40, CM-45 S4)', () => {
+  const bundle = lectureBundle('en');
+  const later = new Map<string, Episode[]>();
+  for (const episode of episodesWithVolumes) {
+    if ((episode.volume ?? 1) < 2 || episode.status === 'preview' || episode.questIds.length === 0) continue;
+    const key = `${episode.stage}:${episode.theme}:v${episode.volume}`;
+    later.set(key, [...(later.get(key) ?? []), episode]);
+  }
+  const expand = (episode: Episode, rolePlay: boolean) =>
+    expandDeck(
+      LectureDeckSchema.parse({ v: 1, id: 'lecture:coverage', title: 'Coverage', createdAt: '2026-10-15T00:00:00Z', seed: 1, blocks: [{ kind: 'episode', id: episode.id }] }),
+      bundle,
+      { canPlayKorean: true },
+      { rolePlay },
+    );
+
+  it('walks every shipped later volume, and no other', () => {
+    expect([...later.keys()].sort()).toEqual(Object.keys(BASELINE_LATER_VOLUMES).sort());
+  });
+
+  it.each(Object.keys(BASELINE_LATER_VOLUMES))('%s: no step skipped, one card per word, nothing flattened, no fewer question slides than the table', (key) => {
+    const row = measure(later.get(key) ?? [], bundle);
+    const base = BASELINE_LATER_VOLUMES[key]!;
+    expect(row.quests).toBe(base.quests);
+    expect(row.skipped).toEqual({});
+    expect(row.flattened).toEqual({});
+    expect(row.repeatedWordCards).toBe(0);
+    expect(row.quiz).toBeGreaterThanOrEqual(base.quiz);
+    for (const episode of later.get(key) ?? []) {
+      for (const rolePlay of [false, true]) {
+        const expanded = expand(episode, rolePlay);
+        expect(expanded.skipped, `${episode.id} role-play ${rolePlay ? 'on' : 'off'}`).toEqual([]);
+        for (const s of expanded.slides) expect(s.key.length, s.key).toBeLessThanOrEqual(256);
+      }
+      const on = expand(episode, true);
+      expect(on.slides.filter((s) => s.kind === 'quiz').length, `${episode.id} quiz, role-play on`).toBeGreaterThanOrEqual(base.quizRolePlayOn);
+      expect(on.slides.filter((s) => s.kind === 'role-play').length, `${episode.id} role-play slides`).toBe(base.rolePlaySlides);
+    }
   });
 });
