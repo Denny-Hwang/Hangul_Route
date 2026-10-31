@@ -205,9 +205,11 @@ describe('trace pointers: one finger draws (AMENDMENTS-TOUCH 6.8)', () => {
     expect(effects).toEqual([{ kind: 'hold' }, { kind: 'start', from: { x: 10, y: 10 }, to: { x: 20, y: 10 } }]);
   });
 
-  it('a move that changes nothing returns the same state', () => {
+  it('a move under the activation distance changes nothing', () => {
     const s = run([down(0, 10, 10)]).state;
-    expect(traceTouchesMove(s, [{ id: 0, x: 11, y: 10 }], MIN, HANDOVER).state).toBe(s);
+    const step = traceTouchesMove(s, [{ id: 0, x: 11, y: 10 }], MIN, HANDOVER);
+    expect(step.state).toEqual(s);
+    expect(step.effects).toEqual([]);
   });
 
   describe('traceTouchesEnd: the gesture finished (cancelled, or the lifts never came)', () => {

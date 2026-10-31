@@ -96,8 +96,6 @@ export function TraceStrokeGame({
   const strokesRef = useRef<JamoStrokePoint[][]>([]);
   // Which finger draws (AMENDMENTS-TOUCH 6.8): the fingers on the canvas, by pointer id.
   const pointersRef = useRef<TracePointers>(NO_TRACE_POINTERS);
-  // The last stroke is the drawing finger's own, still being drawn (cleared when the canvas is).
-  const liveStrokeRef = useRef(false);
   const [feedback, setFeedback] = useState<Feedback>('idle');
   // The letter's sound: the letter is the heading, so the panel only says why it is silent (F-AUDIO-004 A-5b).
   const sound = usePromptSlot({ source: TRACE_STROKE_AUDIO_SOURCE, textOnScreen: true });
@@ -152,7 +150,6 @@ export function TraceStrokeGame({
   useEffect(() => {
     gateRef.current?.nextRound();
     strokesRef.current = [];
-    liveStrokeRef.current = false;
     setStrokesState([]);
     setFeedback('idle');
     setOrderCorrect(null);
@@ -177,7 +174,6 @@ export function TraceStrokeGame({
 
   const setStrokes = (next: JamoStrokePoint[][]): void => {
     strokesRef.current = next;
-    if (next.length === 0) liveStrokeRef.current = false;
     setStrokesState(next);
   };
 
@@ -253,11 +249,7 @@ export function TraceStrokeGame({
   const appendStrokePoint = (point: JamoStrokePoint): void => {
     const prev = strokesRef.current;
     // The canvas was cleared under a finger still drawing (a retry, a new letter): it draws on from here.
-    if (!liveStrokeRef.current) {
-      setStrokes([...prev, [point]]);
-      liveStrokeRef.current = true;
-      return;
-    }
+    if (prev.length === 0) return setStrokes([[point]]);
     const next = [...prev];
     const last = next[next.length - 1]!;
     next[next.length - 1] = [...last, point];
@@ -268,15 +260,12 @@ export function TraceStrokeGame({
   const onTouchEffect = (effect: TraceTouchEffect): void => {
     if (effect.kind === 'start') {
       setStrokes([...strokesRef.current, [toViewBoxPoint(effect.from.x, effect.from.y), toViewBoxPoint(effect.to.x, effect.to.y)]]);
-      liveStrokeRef.current = true;
     } else if (effect.kind === 'point') {
       appendStrokePoint(toViewBoxPoint(effect.at.x, effect.at.y));
     } else if (effect.kind === 'drop') {
-      // A drifting palm had the stroke; the finger took it: the palm's few points go.
-      if (liveStrokeRef.current) setStrokes(strokesRef.current.slice(0, -1));
-      liveStrokeRef.current = false;
-    } else if (effect.kind === 'end') {
-      liveStrokeRef.current = false;
+      // A drifting palm had the stroke; the finger took it: the palm's few points go. While a finger owns
+      // the stroke the last stroke is its own (a cleared canvas only gets ink from that finger).
+      setStrokes(strokesRef.current.slice(0, -1));
     }
     idleOnTouch(gateRef.current, effect.kind, strokesRef.current.length > 0);
   };

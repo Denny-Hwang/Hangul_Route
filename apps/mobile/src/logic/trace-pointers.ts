@@ -79,7 +79,7 @@ const at = (t: TouchPoint): CanvasPoint => ({ x: t.x, y: t.y });
 export function traceTouchesDown(state: TracePointers, touches: readonly TouchPoint[]): TraceTouchStep {
   const pointers = new Map(state.pointers);
   for (const t of touches) if (!pointers.has(t.id)) pointers.set(t.id, { start: at(t), resting: false });
-  const next: TracePointers = { pointers, owner: state.owner, ownerFar: state.ownerFar };
+  const next: TracePointers = { ...state, pointers };
   return { state: next, effects: !busy(state) && busy(next) ? [{ kind: 'hold' }] : [] };
 }
 
@@ -103,23 +103,19 @@ export function traceTouchesMove(
     if (t.id === owner) {
       ownerFar = Math.max(ownerFar, travel);
       effects.push({ kind: 'point', at: at(t) });
-    } else if (owner === null && travel >= minDistance) {
+    } else if (travel >= minDistance && travel > ownerFar && (owner === null || ownerFar < handoverWithin)) {
+      // No owner yet (its travel is 0), or a drifting palm took the stroke before the drawing finger
+      // moved: the finger takes it, and the palm rests.
+      if (owner !== null) {
+        pointers = new Map(pointers).set(owner, { start: pointers.get(owner)!.start, resting: true });
+        effects.push({ kind: 'drop' });
+      }
       owner = t.id;
       ownerFar = travel;
       effects.push({ kind: 'start', from: p.start, to: at(t) });
-    } else if (owner !== null && travel >= minDistance && travel > ownerFar && ownerFar < handoverWithin) {
-      // A drifting palm took the stroke before the drawing finger moved: the finger takes it back.
-      const old = pointers.get(owner);
-      const handed = new Map(pointers);
-      if (old) handed.set(owner, { start: old.start, resting: true });
-      pointers = handed;
-      owner = t.id;
-      ownerFar = travel;
-      effects.push({ kind: 'drop' }, { kind: 'start', from: p.start, to: at(t) });
     }
   }
-  const same = owner === state.owner && ownerFar === state.ownerFar && pointers === state.pointers;
-  return { state: same ? state : { pointers, owner, ownerFar }, effects };
+  return { state: { pointers, owner, ownerFar }, effects };
 }
 
 export function traceTouchesUp(state: TracePointers, touches: readonly TouchPoint[]): TraceTouchStep {
@@ -148,7 +144,8 @@ export function traceTouchesUp(state: TracePointers, touches: readonly TouchPoin
  */
 export function traceTouchesEnd(state: TracePointers): TraceTouchStep {
   if (state.pointers.size === 0) return { state: NO_TRACE_POINTERS, effects: [] };
-  const ids = [...state.pointers.keys()].sort((a, b) => Number(b === state.owner) - Number(a === state.owner));
+  // The owner first (-1 with none: no pointer); its second listing is skipped (a lifted pointer is gone).
+  const ids = [state.owner ?? -1, ...state.pointers.keys()];
   const out = traceTouchesUp(
     state,
     ids.map((id) => ({ id, x: 0, y: 0 })),
