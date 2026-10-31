@@ -149,7 +149,9 @@ export function checkFrameRomanization(ko: string, given: string, ctx?: CheckCon
   if (koParts.length !== romParts.length) {
     return [issue('romanization-mismatch', `${ko}: ${koParts.length - 1} slot(s), the romanization has ${romParts.length - 1}`, ko, given)];
   }
-  return koParts.flatMap((part, i) => (/[가-힣]/.test(part) ? checkRomanization(part.trim(), (romParts[i] as string).trim(), ctx) : []));
+  // The punctuation right after a slot (the comma of a vocative, `___, 새해 복 많이 받으세요`) belongs to the slot, not to a word.
+  const piece = (part: string): string => part.trim().replace(/^[.,!?~·…]+\s*/, '');
+  return koParts.flatMap((part, i) => (/[가-힣]/.test(part) ? checkRomanization(piece(part), (romParts[i] as string).trim(), ctx) : []));
 }
 
 function isAllowed(ko: string, given: string, ctx: CheckContext | undefined): boolean {
