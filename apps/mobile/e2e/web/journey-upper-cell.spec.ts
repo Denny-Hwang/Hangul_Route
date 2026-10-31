@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { keysFor, type ThemeKey } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
@@ -1189,8 +1191,16 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
-/** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+/**
+ * A later volume (F-CURR-002 CM-40, `volume` 2 and up) is not a cell of the grid: the cell button opens its
+ * Volume 1, and the later volume opens only behind `volumes` (built-in pct 0) once Volume 1 is done. Each later
+ * volume has its own `journey-volume*.spec.ts` that turns `volumes` on, so this generic path covers Volume 1 only.
+ */
+const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+const LATER_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) > 1);
+
+/** One test per cell (Volume 1) of the lesson manifest, with its deep play when it has one. */
+const CELLS: readonly UpperCell[] = FIRST_VOLUMES.map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1217,9 +1227,19 @@ async function openJourney(page: Page): Promise<void> {
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
-    const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
+    expect(CELLS.map((c) => c.episodeId)).toEqual(FIRST_VOLUMES.map((e) => e.id));
+    const shipped = new Set(FIRST_VOLUMES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
+  });
+
+  test('every later volume of the lesson manifest has its own journey-volume spec (it is not in the generic cell loop)', () => {
+    const volumeSpecs = readdirSync(__dirname)
+      .filter((name) => /^journey-volume.*\.spec\.ts$/.test(name))
+      .map((name) => readFileSync(join(__dirname, name), 'utf8'))
+      .join('\n');
+    for (const episode of LATER_VOLUMES) {
+      expect(volumeSpecs.includes(`'${episode.titleEn}'`), `${episode.id} (volume ${episode.volume}, "${episode.titleEn}") has no journey-volume*.spec.ts`).toBe(true);
+    }
   });
 
   // Every shipped cell has a deep play today, so the generic path a new cell takes (openFirstQuest, then its

@@ -29,7 +29,7 @@ import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { scopeFor } from '../../logic/minigame-config';
@@ -157,7 +157,8 @@ export function missingGlosses(entities: ReadonlyArray<readonly [string, object]
 
 describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
   it('every file parses as a LessonCell and sits in its stage folder', () => {
-    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}.json`);
+    // A Volume 2 cell is `<theme>.v2.json` beside its Volume 1 (F-CURR-002 row CM-40).
+    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}${cell.volume === undefined ? '' : `.v${cell.volume}`}.json`);
   });
 
   it('the generated index holds exactly the ready cells (a draft stays "Coming later")', () => {
@@ -184,8 +185,10 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
 
   it('a ready cell replaces its placeholder in the bundle, and its quests and scopes are shipped', () => {
     for (const { cell } of READY) {
-      const episode = episodesAll.filter((e) => e.id === cell.id);
+      // A Volume 2 ships beside the route (`episodesWithVolumes`, F-CURR-002 row CM-40), never in `episodesAll`.
+      const episode = episodesWithVolumes.filter((e) => e.id === cell.id);
       expect(episode.map((e) => e.status), cell.id).toEqual(['shipped']);
+      expect(episodesAll.some((e) => e.id === cell.id), cell.id).toBe(cell.volume === undefined);
       for (const quest of cell.quests) {
         expect(questsAll.some((q) => q.id === quest.id), quest.id).toBe(true);
         for (const scope of quest.scopes) expect(ALL_LESSON_SCOPES[scope.ref]?.kind, scope.ref).toBe(scope.kind);
@@ -951,7 +954,7 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
   const scaffolding = new Set<string>();
   const shortened = new Map<string, [MinigameScope, MinigameScope]>();
   it('runs over every shipped lesson quest', () => {
-    expect(QUESTS.length).toBeGreaterThanOrEqual(78);
+    expect(QUESTS.length).toBeGreaterThanOrEqual(84);
   });
 
   for (const quest of QUESTS) {
@@ -1000,9 +1003,11 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 81 of 84 shipped Practices scaffold.
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([78, 75]);
+    // Row CM-41 S7 adds the three quests of Stage 7 Nature Volume 2, each of whose Practices scaffolds.
+    // Row CM-42 S7 adds the three quests of Stage 7 Play & Crafts Volume 2, each of whose Practices scaffolds.
+    expect([QUESTS.length, scaffolding.size]).toEqual([84, 81]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
