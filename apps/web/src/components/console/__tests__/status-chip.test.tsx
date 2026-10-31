@@ -93,28 +93,28 @@ describe('StatusChip', () => {
 describe('useDecided', () => {
   it('holds a decided line for 5 s, pinning the card, then lets it go', () => {
     vi.useFakeTimers();
-    let view: ReturnType<typeof useDecided> | null = null;
+    const box: { view: ReturnType<typeof useDecided> | null } = { view: null };
     function Probe(): null {
-      view = useDecided();
+      box.view = useDecided();
       return null;
     }
     let r: ReturnType<typeof create> | null = null;
     act(() => {
       r = create(<Probe />);
     });
-    act(() => view?.note('profile:a', 'Done'));
-    expect(view?.lines).toEqual({ 'profile:a': 'Done' });
-    expect([...(view?.pinned ?? [])]).toEqual(['profile:a']);
-    act(() => view?.note('profile:a', 'Done again'));
+    act(() => box.view?.note('profile:a', 'Done'));
+    expect(box.view?.lines).toEqual({ 'profile:a': 'Done' });
+    expect([...(box.view?.pinned ?? [])]).toEqual(['profile:a']);
+    act(() => box.view?.note('profile:a', 'Done again'));
     act(() => {
       vi.advanceTimersByTime(DECIDED_HOLD_MS - 1);
     });
-    expect(view?.lines).toEqual({ 'profile:a': 'Done again' });
+    expect(box.view?.lines).toEqual({ 'profile:a': 'Done again' });
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    expect(view?.lines).toEqual({});
-    act(() => view?.note('profile:b', 'Later'));
+    expect(box.view?.lines).toEqual({});
+    act(() => box.view?.note('profile:b', 'Later'));
     act(() => (r as unknown as ReturnType<typeof create>).unmount());
     vi.useRealTimers();
   });

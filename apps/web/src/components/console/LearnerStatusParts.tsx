@@ -214,7 +214,7 @@ const cardStyle: CSSProperties = {
 };
 const headRow: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm };
 const levelPill: CSSProperties = {
-  marginInlineStart: 'auto',
+  flexShrink: 0,
   fontSize: rem(typography.size.caption),
   color: colors.text.secondary,
   padding: `${spacing.xxs}px ${spacing.sm}px`,
@@ -334,12 +334,14 @@ function IncomingCard({
 
   return (
     <article style={cardStyle} aria-labelledby={nameId} data-testid="incoming-card" data-source={item.source}>
-      <div style={headRow}>
-        {item.avatar ? <AvatarChip avatar={item.avatar} /> : null}
-        <strong id={nameId} style={{ fontSize: rem(typography.size.bodyLg), letterSpacing: typography.tracking.wide }}>
-          {item.alias}
-        </strong>
-        <StatusChip words={words} onActivate={() => acceptRef.current?.querySelector('button')?.focus()} testId="incoming-status" />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
+        <span style={{ ...headRow, minWidth: 0 }}>
+          {item.avatar ? <AvatarChip avatar={item.avatar} /> : null}
+          <strong id={nameId} style={{ fontSize: rem(typography.size.bodyLg), letterSpacing: typography.tracking.wide }}>
+            {item.alias}
+          </strong>
+          <StatusChip words={words} onActivate={() => acceptRef.current?.querySelector('button')?.focus()} testId="incoming-status" />
+        </span>
         {level ? <span style={levelPill}>{level}</span> : null}
       </div>
       {from ? <ReasonLine id={reasonId} text={from} /> : null}
