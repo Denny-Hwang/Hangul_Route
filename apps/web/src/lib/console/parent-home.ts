@@ -5,6 +5,7 @@ import { minutesShown } from './learner-status';
 import { lectureCardView, type LectureCardView } from './lecture-entry';
 import { heldPersonas } from './personas';
 import { ROUTES } from './routing';
+import { familyMustAnswer } from './transfer';
 
 /**
  * What the family home `/parent` draws (F-APP-001 A-5b, section 3.8; design/screens/app-shell/parent-home.md).
@@ -153,9 +154,9 @@ function sideViews(transfers: TransferList | null): TransferLearnerSideView[] {
   return (transfers?.requests ?? []).filter((v): v is TransferLearnerSideView => v.role === 'learner_side');
 }
 
-/** An open request whose family step waits (`learnerState` pending) and has not run out. */
+/** An open request whose family step waits for this family (`familyMustAnswer`: the caregiver route) and has not run out. */
 function familyStepWaits(view: TransferLearnerSideView, now: Date): boolean {
-  return view.status === 'requested' && view.learnerState === 'pending' && later(view.expiresAt, now);
+  return familyMustAnswer(view) && later(view.expiresAt, now);
 }
 
 /**

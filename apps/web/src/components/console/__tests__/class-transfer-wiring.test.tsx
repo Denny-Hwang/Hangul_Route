@@ -287,7 +287,7 @@ describe('the roster chip (beside Re-link requests)', () => {
   it('a family roster button carries the count too (singular)', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.kind = 'family';
-    state.requests['space:a'] = [{ id: 'f', role: 'learner_side', status: 'requested', learnerState: 'pending' } as unknown as TransferView];
+    state.requests['space:a'] = [{ id: 'f', role: 'learner_side', status: 'requested', learnerState: 'pending', learnerRoute: 'caregiver' } as unknown as TransferView];
     const root = await render(<SpacePage />);
     expect(byTestId(root, 'class-moves')).toEqual([]);
     expect(textOf(byTestId(root, 'family-moves')[0] as ReactTestInstance)).toBe(t.waiting(1));
@@ -355,6 +355,7 @@ describe('the home badges', () => {
         role: 'learner_side',
         status: 'requested',
         learnerState: 'pending',
+        learnerRoute: 'caregiver',
         learner: { id: 'profile:jun', name: 'Jun' },
         to: { spaceId: 'space:d', name: 'Evening Class D' },
         createdAt: '2026-10-11T12:00:00.000Z',

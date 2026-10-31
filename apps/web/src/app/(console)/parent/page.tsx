@@ -235,16 +235,25 @@ export default function ParentHomePage(): JSX.Element {
   // GX-4: what waits for the family (section 7.1). The class-move reads follow the flag and the transfer lock
   // (`useTransfersShown`): skipped, they are null, so no move row, no move chip and no class line (never a guess). A read
   // that fails keeps what the last good read drew (a background read never removes a row on a network blip); expiry is
-  // checked again at every render, so a re-link past its end still leaves.
+  // checked again at every render, so a re-link past its end still leaves. Each read takes a number per family and only the
+  // newest one started may draw, so a background read that ends after an answer's read never puts a decided row back. While
+  // the strip's consent sheet is open the background reads of that family wait (as on the family moves page); a read after
+  // an answer (`force`) still runs.
+  const asksSeq = useRef<Record<string, number>>({});
+  const asksHeld = useRef<Set<string>>(new Set());
   const loadAsks = useCallback(
-    async (spaceId: string): Promise<void> => {
+    async (spaceId: string, force = false): Promise<void> => {
       if (!api) return;
+      if (!force && asksHeld.current.has(spaceId)) return;
+      const call = (asksSeq.current[spaceId] ?? 0) + 1;
+      asksSeq.current[spaceId] = call;
       const [relinks, transfers, scope, notices] = await Promise.all([
         quietly(() => api.relinkRequests(spaceId)),
         movesShown ? quietly(() => api.transferRequests(spaceId)) : null,
         quietly(() => api.classScope(spaceId)),
         movesShown ? quietly(() => api.moveNotices(spaceId)) : null,
       ]);
+      if (call !== asksSeq.current[spaceId]) return;
       setAsks((prev) => {
         const old = prev[spaceId];
         return {
@@ -632,11 +641,15 @@ export default function ParentHomePage(): JSX.Element {
               api={api}
               online={online}
               now={now}
-              onChanged={() => Promise.all([loadAsks(id), loadRoster(id, family.role, true)]).then(() => undefined)}
+              onChanged={() => Promise.all([loadAsks(id, true), loadRoster(id, family.role, true)]).then(() => undefined)}
               onReadScope={(learnerId) => readScope(id, learnerId)}
               onApproveRelink={popup.openFor}
               onDialog={(open) => onStripDialog(id, open)}
               result={popupResults[id] ?? null}
+              onReviewing={(open) => {
+                if (open) asksHeld.current.add(id);
+                else asksHeld.current.delete(id);
+              }}
             />
           ) : null}
           {api && !archived ? (
@@ -645,7 +658,7 @@ export default function ParentHomePage(): JSX.Element {
               api={api}
               scope={asks[id]?.scope ?? null}
               onScope={(next) => setAsks((prev) => (prev[id] ? { ...prev, [id]: { ...(prev[id] as FamilyAsks), scope: next } } : prev))}
-              onStale={() => void loadAsks(id)}
+              onStale={() => void loadAsks(id, true)}
             />
           ) : null}
           {entry.state === 'loading' ? (
