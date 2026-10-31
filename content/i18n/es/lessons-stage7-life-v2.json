@@ -56,7 +56,7 @@
       "orderIt.rounds.r4.particle.choices.yeyo.gloss": "es (después de una vocal)"
     },
     "minigame:s7-life-v2-q1-check": {
-      "clozePick.rounds.c1.sentence.gloss": "Mi comida favorita es el bibimbap.",
+      "clozePick.rounds.c1.sentence.gloss": "Mi comida favorita es el arroz mezclado.",
       "clozePick.rounds.c1.tiles.gimbap.gloss": "rollos de arroz con alga",
       "clozePick.rounds.c1.tiles.bibimbap.gloss": "arroz mezclado",
       "clozePick.rounds.c1.tiles.ramyeon.gloss": "fideos instantáneos",
@@ -83,6 +83,8 @@
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Primero, echa las verduras aliñadas en el arroz.",
       "steps.s2.discover.pages.2.caption": "Primero esto, luego aquello: una receta va paso a paso.",
       "steps.s2.discover.pages.2.items.0.sentence.gloss": "Luego, mézclalo.",
+      "steps.s2.discover.pages.2.items.1.note": "El último paso de una receta: cuando ya está mezclado, cómelo.",
+      "steps.s2.discover.pages.2.items.1.word.gloss": "cómelo",
       "steps.s3.title": "Traza las palabras",
       "steps.s4.title": "Escribe los pasos",
       "steps.s5.title": "Dos preguntas rápidas",
@@ -96,7 +98,7 @@
       "traceWord.rounds.w4.word.gloss": "kimchi"
     },
     "minigame:s7-life-v2-q2-apply": {
-      "typeHangul.rounds.y1.prompt": "Escribe la palabra para echarlo dentro.",
+      "typeHangul.rounds.y1.prompt": "Escribe la palabra que significa «échalo dentro».",
       "typeHangul.rounds.y1.target.gloss": "échalo",
       "typeHangul.rounds.y2.prompt": "Escribe: Echa las verduras aliñadas.",
       "typeHangul.rounds.y2.target.gloss": "echa las verduras aliñadas",
