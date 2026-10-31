@@ -96,7 +96,7 @@ No new token. `disabled` uses `surface.sunken` (the existing Tile convention) so
 ## Accessibility
 
 - One accessible element: `accessibilityRole="button"`, `accessibilityLabel` from the caller, `accessibilityState={{ disabled, selected }}` from `choiceCardStyle`. It is drawn through `TapTarget` (`design/components/TapBoard/spec.md`): an answered or `disabled` card is `inactive` there (a board claims a touch on it and commits nothing), and it stays a focusable button with the same accessible state, so a screen can still move focus to it.
-- Taps: inside a `TapBoard` the board decides (commit on release, 24 px reach, 32 px travel, gap fill to the nearest card, the 400 ms lock); outside one the card is a plain button whose press is guarded against a bounce (`usePressGuard`: a repeat within 400 ms and a press during the app-level tap lock are dropped).
+- Taps: inside a `TapBoard` the board decides (commit on release, 24 px reach, 32 px travel, gap fill to the nearest card, the 400 ms lock); outside one the card is a plain button whose press is guarded against a finger's bounce (`usePressGuard`: a finger's repeat within 400 ms and a finger's press during the app-level tap lock are dropped; a mouse, keyboard or screen-reader press runs). A card with no `onPress` is inactive too.
 - The Korean block inside is not a separate stop (the card is one element); the caller's label names it.
 - Colour is never the only cue (see deviation notes): mark, ring and the accessible name.
 - Touch target: whole card >= `touchTarget.child` (80), full row width is tappable. No `hitSlop` (react-native-web dropped it, so it never reached the web); inside a `TapBoard` the board's gap fill (`spacing.lg`, 16) reaches the card from the gap around it on every platform.

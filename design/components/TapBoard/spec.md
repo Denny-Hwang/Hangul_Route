@@ -45,7 +45,7 @@ Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board 
 
 `TapLockProvider` is mounted once in the app root, above the navigator. `useTapLock(): { locked: boolean; lock(ms: number): void }` reads the app-level lock from any component, inside a board or not (Sentence Builder's Skip, Placement's item screen), or extends it (a slide-back or reset animation).
 
-`usePressGuard(options?: { setsLock?: boolean }): (fn) => () => void` wraps an `onPress` so a second call of the same control within `TAP_LOCK_MS` is dropped and a call while the app lock is on is dropped; by default a press that runs also sets the app lock (Button, Home cards, the tab bar); a control that moves nothing (a speaker) passes `setsLock: false`.
+`usePressGuard(options?: { setsLock?: boolean }): (fn) => () => void` wraps an `onPress` so a second call of the same control within `TAP_LOCK_MS` is dropped and a call while the app lock is on is dropped; by default a press that runs also sets the app lock (Button, Home cards, the tab bar); a control that moves nothing (a speaker) passes `setsLock: false`. A bounce is a finger's, so the guard reads only a finger's or a pen's press (KT-2, `pressIsTouch` in `host.ts`): on the web the click's `pointerType` (empty for the keyboard), or for a click with none (Safari) the last `pointerdown` under a second ago; on native every press is a finger. A mouse click, keyboard Enter or Space and a screen reader's activate run at once and set no lock.
 
 ## States
 
@@ -89,7 +89,7 @@ The press look is never `border.focus` (the focus ring and ChoiceCard's `hint`),
 
 `pressLook(reducedMotion)` (`packages/design-system/src/press-look.ts`, pure) returns the outline and the shrink; `usePressLook()` reads the platform's reduced-motion setting through one app-wide `AccessibilityInfo` subscription. ChoiceCard and Tile paint it on their drawn box inside the `TapTarget`, never on the hit area: ChoiceCard replaces its `border.focus` press border, Tile replaces its 1.04 grow. Both lose their web-dead `hitSlop`.
 
-`Button` shows its pressed fill without react-native-web's 50 ms `delayPressIn` and runs its `onPress` through `usePressGuard()` (a bounce within `TAP_LOCK_MS` runs once, a press during the app lock is dropped, a press that runs sets the lock). Its `hitSlop` stays (native only; the web size is already at least `touchTarget.min`).
+`Button` shows its pressed fill without react-native-web's 50 ms `delayPressIn` and runs its `onPress` through `usePressGuard()` (a finger's bounce within `TAP_LOCK_MS` runs once, a finger's press during the app lock is dropped, a finger's press that runs sets the lock), and is at least `touchTarget.min` wide as well as tall. Its `hitSlop` stays (native only; the web size is already at least `touchTarget.min`).
 
 ## Where it appears
 
