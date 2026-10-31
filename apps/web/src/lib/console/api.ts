@@ -105,6 +105,11 @@ export interface RosterLearner {
   lastSyncedAt: string | null;
   /** [TV] Which projection the row carries (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2); absent from an older Worker. */
   scope?: 'base' | 'full';
+  /**
+   * [GX-W] What waits about this learner for this viewer (AMENDMENTS-GROWNUP-UX section 12); absent from an older Worker.
+   * Read leniently by `learner-status.ts` (`readPending`), so it stays `unknown` here.
+   */
+  pending?: unknown;
 }
 
 /**

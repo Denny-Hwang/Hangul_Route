@@ -8,7 +8,7 @@ import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
 import { LectureModeCard } from '@/components/console/LectureModeCard';
 import { Button, Muted, Notice, buttonBase, panelStyle } from '@/components/console/ui';
-import { useMovesWaiting, useSchoolMoveLinks } from '@/components/console/MovesEntry';
+import { useApprovalsWaiting, useSchoolMoveLinks } from '@/components/console/MovesEntry';
 import { useConsole } from '@/components/console/use-console';
 import type { SpaceListItem } from '@/lib/console/api';
 import { appUrl, browseEntryShown, lectureModeEnabled, reportsEnabled, notesEnabled } from '@/lib/console/config';
@@ -77,7 +77,9 @@ export default function HomePage(): JSX.Element {
   const [items, setItems] = useState<SpaceListItem[] | null>(null);
   const [failed, setFailed] = useState(false);
   const homeView = items ? teacherHomeView(items) : null;
-  const moves = useMovesWaiting(api, homeView?.classRows.map((item) => item.space.id) ?? []);
+  // GX-1: a class row's count includes the teacher moves into the class (they were not counted before). The re-link part
+  // joins the row's chip in GX-3, so it is not asked here yet.
+  const moves = useApprovalsWaiting(api, homeView?.classRows.map((item) => item.space.id) ?? [], 0, { relinks: false });
   const schoolMoves = useSchoolMoveLinks(api, homeView?.schoolRows.map((item) => item.space.id) ?? []);
   // [OA] Row OA-4b: read once, on the first render in the browser.
   const [schoolFocus] = useState(() => typeof window !== 'undefined' && wantsSchoolFocus(new URLSearchParams(window.location.search)));
@@ -124,7 +126,7 @@ export default function HomePage(): JSX.Element {
   const row = (item: SpaceListItem): JSX.Element => {
     const archived = !!item.space.archivedAt;
     const links = classRowLinks(item, flags);
-    const waiting = moves[item.space.id] ?? 0;
+    const waiting = moves[item.space.id]?.moves ?? 0;
     const schoolLinks = schoolMoves[item.space.id] ?? [];
     return (
       <article

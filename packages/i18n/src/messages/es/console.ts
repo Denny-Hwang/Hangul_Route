@@ -1833,4 +1833,23 @@ export const consoleMsgs = {
     noPin: 'Este dispositivo no tiene un PIN de adultos que restablecer.',
     unavailable: 'Esto no está disponible ahora. Usa Olvidé el PIN en la app.',
   },
+  status: {
+    inClass: 'En la clase',
+    needsOk: 'Por aprobar',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => plural('es', minutes, { one: `Dispositivo nuevo · queda ${minutes} min`, other: `Dispositivo nuevo · quedan ${minutes} min` }),
+    moveTo: (className: string) => `Cambio de clase: ${className}`,
+    moveWaiting: 'Cambio en espera',
+    waitingFor: (className: string) => `Esperando a: ${className}`,
+    moving: (date: string) => `Cambia de clase el ${date}`,
+    waitingSeat: 'Esperando un lugar',
+    new: 'Nueva llegada',
+    noPractice: 'Aún sin práctica registrada',
+    minutesLeft: (minutes: number) => plural('es', minutes, { one: `Queda ${minutes} min`, other: `Quedan ${minutes} min` }),
+    review: { cta: 'Revisar' },
+  },
+  attention: {
+    incomingHeading: 'Quieren unirse a esta clase',
+    from: (className: string) => `Viene de ${className}`,
+  },
 } satisfies DeepPartial<Messages['console']>;
