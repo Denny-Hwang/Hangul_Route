@@ -296,7 +296,11 @@ describe('golden: the default curriculum for an unlicensed space is the free pla
       const draft = generateCurriculum(params, catalog);
       const scheduledLessons = draft.items.map((item) => item.id).filter((id) => grid.has(id));
       expect(sorted(scheduledLessons)).toEqual(sorted(free));
-      expect(sorted(draft.locked)).toEqual(sorted([...grid].filter((id) => !free.has(id))));
+      // A cell's later volume (F-CURR-002 rows CM-40, CM-44 S2) is a grid lesson off the route days: never in a plan,
+      // so never one of its locked lessons either.
+      const routeLessons = routeDaysOf(catalog).flatMap((day) => day.questIds);
+      expect(sorted(draft.locked)).toEqual(sorted(routeLessons.filter((id) => !free.has(id))));
+      expect(sorted([...grid].filter((id) => !routeLessons.includes(id))).every((id) => /-v[0-9]+-q[0-9]+$/.test(id))).toBe(true);
       // With every stage unlocked, the same plan holds lessons past the free plan.
       const licensed = generateCurriculum({ ...params, unlockedStages: ALL_STAGES }, catalog);
       expect(licensed.items.some((item) => grid.has(item.id) && !free.has(item.id))).toBe(true);
