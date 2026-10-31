@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { SEED_PER_DAY, deriveSeed } from '../../memory/seed';
 import { applyAnswer, type DayFacts } from '../../memory/spacing';
 import { addDays, daysBetween } from '../../vocab/srs';
-import { INDEX, ITEMS, RETIRED, finished, utcDay } from '../../memory/__tests__/fixtures';
+import { INDEX, ITEMS, LESSON_QUESTS, RETIRED, finished, utcDay } from '../../memory/__tests__/fixtures';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import { DAILY_REVIEW_DUE_CAP, DAILY_REVIEW_SIZE, REVIEW_FIRST_FACTOR, buildDailyReview, dueCount, withSentenceCredit, wordsInside } from '../engine';
 import { DEFAULT_KNOBS, START_DAY, Sim, questPlans, scenarioA, scenarioB } from './simulate';
@@ -115,10 +115,10 @@ describe('S-b: two quests a day; on review-first days the Daily Review and Keep 
   });
 });
 
-describe('S-c: a learner with all 107 quests done, seeded, then S-a', () => {
+describe('S-c: a learner with every first-volume quest done (108), seeded, then S-a', () => {
   const seededAt = '2026-11-01T08:00:00.000Z';
   const seedDay = '2026-11-01';
-  const seed = deriveSeed({ snapshot: finished(107), items: ITEMS, retired: RETIRED, quests: CATALOG.quests, cells: CATALOG.cells, seededAt, dayOf: utcDay });
+  const seed = deriveSeed({ snapshot: finished(LESSON_QUESTS.length), items: ITEMS, retired: RETIRED, quests: CATALOG.quests, cells: CATALOG.cells, seededAt, dayOf: utcDay });
 
   it('every seeded item has a due day, no day has more than 15 seeded due, and the spread ends by day 62', () => {
     expect(seed.count).toBeGreaterThan(500);

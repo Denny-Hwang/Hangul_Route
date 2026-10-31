@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { addDays, daysBetween } from '../../vocab/srs';
 import { cellOfEpisode } from '../resolve';
 import { SEED_PER_DAY, deriveSeed, seedInputKey, seedSnapshot, type SeedInput } from '../seed';
-import { ITEMS, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, utcDay } from './fixtures';
+import { ITEMS, LATER_VOLUMES, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, utcDay } from './fixtures';
 
 /**
  * F-CURR-002 section 4.8, steps 1-6 (row CM-12): the one-time seeding, at the five historical
- * snapshot points and for a learner with every lesson quest done (107, 108 with the Stage 1 addition of row CM-33, and 111
- * with Play Volume 2, S6 of row CM-42).
+ * snapshot points and for a learner with every lesson quest done (107, and 108 with the Stage 1 addition of row CM-33). A
+ * cell's later volume (row CM-40) is not in the fixture while `volumes` is off (row CM-42 S6: Play Volume 2 ships dark).
  */
 
 const SEEDED_AT = '2026-10-22T08:00:00.000Z';
@@ -120,13 +120,13 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 111 quests since row CM-42)', () => {
-  const snap = finished(111);
+describe('the all-quests fixture (scenario S-c; 108 first-volume quests since row CM-33)', () => {
+  const snap = finished(108);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(111);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(111);
+    expect(LESSON_QUESTS).toHaveLength(108);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {
@@ -137,14 +137,14 @@ describe('the all-quests fixture (scenario S-c; 111 quests since row CM-42)', ()
     expect(days.size).toBe(seed.spreadDays);
     const last = [...days.keys()].sort().at(-1) as string;
     expect(daysBetween(SEED_DAY, last)).toBe(seed.spreadDays);
-    // Every taught lesson item that is not a topic word or retired is seeded.
-    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && [...i.cells, ...i.asked].some((c) => c.startsWith('episode:')));
+    // Every taught lesson item of a first volume that is not a topic word or retired is seeded.
+    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && [...i.cells, ...i.asked].some((c) => c.startsWith('episode:') && !LATER_VOLUMES.has(c)));
     expect(seed.count).toBe(expected.length);
     expect(seed.spreadDays).toBeLessThanOrEqual(62);
   });
 
   it('orders by the most recent quest first, then the stage: the last cell finished falls due first', () => {
-    // The last quest finished (the fixture finishes them in catalogue order; row CM-42's Volume 2 quests come last).
+    // The last quest finished (the fixture finishes the first volumes in catalogue order).
     const lastQuest = LESSON_QUESTS[LESSON_QUESTS.length - 1];
     const firstDay = [...seed.states.entries()].filter(([, s]) => s.state.d === addDays(SEED_DAY, 1)).map(([id]) => id);
     const lastCellItems = ITEMS.filter((i) => [...i.cells, ...i.asked].includes(lastQuest?.episodeId ?? '')).map((i) => i.id);
