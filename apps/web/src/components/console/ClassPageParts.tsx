@@ -34,9 +34,11 @@ function Chevron({ open }: { open: boolean }): JSX.Element {
 /**
  * T3: the bar keeps the everyday buttons in view (`bar`, the plan first as the primary) and folds the rest (`more`)
  * under **More**, a disclosure button (`aria-expanded`, `aria-controls`), not a menu: the folded buttons show in a row
- * right under the bar, in the reading order, so a keyboard or a screen reader reaches them next.
+ * right under the bar, in the reading order, so a keyboard or a screen reader reaches them next. `nudge`: a folded
+ * entry carries a waiting count (new devices, class moves), so More takes the amber nudge look of those entries (the
+ * GX-1 review rule; the banner says in words what waits, the colour is never the only cue).
  */
-export function ClassActionBar({ bar, more }: { bar: ReactNode[]; more: ReactNode[] }): JSX.Element {
+export function ClassActionBar({ bar, more, nudge = false }: { bar: ReactNode[]; more: ReactNode[]; nudge?: boolean }): JSX.Element {
   const { messages } = useConsoleLocale();
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -52,7 +54,8 @@ export function ClassActionBar({ bar, more }: { bar: ReactNode[]; more: ReactNod
             aria-expanded={open}
             aria-controls={panelId}
             onClick={() => setOpen((was) => !was)}
-            style={{ ...buttonBase, gap: spacing.xs }}
+            data-nudge={nudge ? 'true' : undefined}
+            style={{ ...buttonBase, gap: spacing.xs, ...(nudge ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` } : {}) }}
           >
             {messages.console.space.more}
             <Chevron open={open} />

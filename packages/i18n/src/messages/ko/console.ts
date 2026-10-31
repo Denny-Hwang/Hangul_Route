@@ -1767,7 +1767,7 @@ export const consoleMsgs = {
   },
   relinkPopup: {
     title: (name: string) => `새 기기 연결 요청: ${name}`,
-    closes: (minutes: number) => `${minutes}분 뒤에 이 요청이 닫혀요.`,
+    closes: (minutes: number) => `${minutes}분 뒤에 이 요청이 마감돼요.`,
     later: { cta: '나중에' },
   },
 } satisfies DeepPartial<Messages['console']>;

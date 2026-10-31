@@ -100,6 +100,9 @@ const api = {
     calls.push('relinkRequests');
     return ok([]);
   },
+  // GX-1: the class page also reads the class's move lists (only while class moves are shown).
+  transferRequests: async () => ok({ requests: [] }),
+  classMoves: async () => ok({ outgoing: [], incoming: [] }),
   listSpaces: async () => {
     calls.push('listSpaces');
     return ok([{ space: SPACE, role, counts: { learners: 1, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }]);

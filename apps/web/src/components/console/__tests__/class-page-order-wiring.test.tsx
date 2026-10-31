@@ -154,7 +154,7 @@ describe('a class with learners (T3)', () => {
     // Class report left This week for the bar.
     expect(byTestId('class-report-link', one('this-week'))).toHaveLength(0);
     await press(one('class-more-toggle'));
-    expect(controlsIn(one('class-more'))).toEqual(['roster-notes', 'relink-entry', 'class-moves', 'space-settings']);
+    expect(controlsIn(one('class-more'))).toEqual(['roster-notes', 'relink-requests', 'class-moves', 'space-settings']);
   });
 
   it('Invite students is collapsed: its button carries the code; a tap shows the code at display size with Copy and Regenerate', async () => {

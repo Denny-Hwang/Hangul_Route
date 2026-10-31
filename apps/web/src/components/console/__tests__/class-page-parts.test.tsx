@@ -1,5 +1,5 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import { touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { colors, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { act, create, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ClassActionBar, FirstRunCard, InviteDisclosure } from '@/components/console/ClassPageParts';
@@ -56,6 +56,15 @@ describe('ClassActionBar (T3)', () => {
     const toggle = byTestId(create(<ClassActionBar bar={bar} more={more} />).root, 'class-more-toggle')[0] as ReactTestInstance;
     expect(toggle.props.style.minHeight).toBe(touchTarget.min);
     expect(toggle.props.style.minWidth).toBe(touchTarget.child);
+  });
+
+  it('nudge: More takes the amber look of a waiting count (fill and border), never the danger colour; plain otherwise', () => {
+    const nudged = byTestId(create(<ClassActionBar bar={bar} more={more} nudge />).root, 'class-more-toggle')[0] as ReactTestInstance;
+    expect(nudged.props.style.backgroundColor).toBe(colors.feedback.nudgeLight);
+    expect(nudged.props.style.border).toContain(colors.feedback.nudge);
+    expect(JSON.stringify(nudged.props.style)).not.toContain(colors.feedback.danger);
+    const plain = byTestId(create(<ClassActionBar bar={bar} more={more} />).root, 'class-more-toggle')[0] as ReactTestInstance;
+    expect(String(plain.props.style.border)).not.toContain(colors.feedback.nudge);
   });
 
   it('with nothing to fold, no More button', () => {

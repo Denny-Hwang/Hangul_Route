@@ -98,6 +98,7 @@ describe('AttentionBanner (section 5.1)', () => {
   it('is gone at 0, amber bar and fill only, text in text.primary, never the danger colour', async () => {
     await banner(0, 0);
     expect(byTestId('attention-banner')).toEqual([]);
+    expect(byTestId('attention-review-now')).toEqual([]);
     act(() => renderer?.unmount());
     await banner(2, 0);
     const style = (byTestId('attention-banner')[0] as ReactTestInstance).props.style;
@@ -105,6 +106,20 @@ describe('AttentionBanner (section 5.1)', () => {
     expect(style.borderInlineStart).toContain(colors.feedback.nudge);
     expect(style.color).toBe(colors.text.primary);
     expect(JSON.stringify(style)).not.toContain(colors.feedback.danger);
+  });
+
+  it('keeps its status region mounted (empty) at 0, so the first request after none is announced into it', async () => {
+    await act(async () => {
+      renderer = create(<AttentionBanner relinks={0} moves={0} onReview={() => undefined} />);
+    });
+    const idle = root().find((n) => n.props.role === 'status');
+    expect(idle.props['aria-live']).toBe('polite');
+    expect(textOf(idle)).toBe('');
+    await act(async () => renderer?.update(<AttentionBanner relinks={1} moves={0} onReview={() => undefined} />));
+    // The same region instance now holds the words (not a new region inserted with them).
+    expect(root().find((n) => n.props.role === 'status')).toBe(idle);
+    expect(textOf(idle)).toBe('1 request needs your OK1 new device');
+    expect(byTestId('attention-banner')).toHaveLength(1);
   });
 
   it('re-renders only when a count changes (a 20 s read does not repeat the announcement)', () => {
@@ -260,6 +275,35 @@ describe('ReviewSheet (section 5.2)', () => {
       vi.advanceTimersByTime(DECIDED_HOLD_MS);
     });
     expect(byTestId('sheet-row-decided')).toEqual([]);
+  });
+
+  it('a failed device answer that leaves the request open shows its line on the row and keeps Approve / Deny', async () => {
+    const failing = { ...api(), decideRelink: vi.fn(async () => ({ ok: false as const, status: 503, error: 'unavailable' })) };
+    const p = await open(props({ api: failing as never, incoming: [], outgoing: [] }));
+    await press(byTestId('sheet-device-approve')[0] as ReactTestInstance);
+    const row = byTestId('sheet-device-row')[0] as ReactTestInstance;
+    expect(byTestId('sheet-device-failed')).toHaveLength(1);
+    expect(textOf(row)).toContain(textOf(byTestId('sheet-device-failed')[0] as ReactTestInstance));
+    expect(byTestId('sheet-device-approve')).toHaveLength(1);
+    expect(byTestId('sheet-row-decided')).toEqual([]);
+    expect(textOf(byTestId('attention-sheet-said')[0] as ReactTestInstance)).toBe(textOf(byTestId('sheet-device-failed')[0] as ReactTestInstance));
+    expect(p.onDecided).not.toHaveBeenCalled();
+  });
+
+  it('a consent answer the page must handle (session ended) shows its words on the row and says them', async () => {
+    const signedOut = { ...api(), approveTransfer: vi.fn(async () => ({ ok: false as const, status: 401, error: 'unauthorized' })) };
+    await open(props({ api: signedOut as never, devices: [], incoming: [] }));
+    await press(byTestId('sheet-outgoing-review')[0] as ReactTestInstance);
+    await press(byTestId('move-agree')[0] as ReactTestInstance);
+    const line = byTestId('sheet-outgoing-state')[0] as ReactTestInstance;
+    expect(textOf(line)).toBe('Please sign in again.');
+    expect(textOf(byTestId('attention-sheet-said')[0] as ReactTestInstance)).toBe('Please sign in again.');
+  });
+
+  it('Close is a pill: the move buttons\' side padding, so a two-letter label never draws as a circle', async () => {
+    await open(props());
+    const style = (byTestId('attention-sheet-close')[0] as ReactTestInstance).props.style;
+    expect(style.padding).toBe('8px 24px');
   });
 
   it('when the last item clears the sheet stays open on "Nothing is waiting." with focus on Close; it never closes itself', async () => {

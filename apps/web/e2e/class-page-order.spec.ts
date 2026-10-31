@@ -138,7 +138,7 @@ for (const { locale, browser } of LOCALES) {
 
         await more.click();
         await expect(more).toHaveAttribute('aria-expanded', 'true');
-        await expect(page.getByTestId('class-more').getByTestId('relink-entry')).toBeVisible();
+        await expect(page.getByTestId('class-more').getByTestId('relink-requests')).toBeVisible();
         await expect(page.getByTestId('class-more').getByTestId('class-moves')).toBeVisible();
         await expect(page.getByTestId('class-more').getByTestId('space-settings')).toHaveText(c.space.settings.cta);
         // Every button in the bar and under More is at least the touch target tall (GX-6).
@@ -175,7 +175,7 @@ for (const { locale, browser } of LOCALES) {
         await page.getByTestId('class-more-toggle').click();
         await expect(page.getByTestId('class-more').locator('[data-testid]')).toHaveCount(1);
         await expect(page.getByTestId('space-settings')).toBeVisible();
-        await expect(page.getByTestId('relink-entry')).toHaveCount(0);
+        await expect(page.getByTestId('relink-requests')).toHaveCount(0);
         await expect(page.getByTestId('class-moves')).toHaveCount(0);
         if (label === '360') await noSidewaysScroll(page);
         await page.screenshot({ path: test.info().outputPath(`class-page-empty-${locale}-${label}.png`), fullPage: true });
