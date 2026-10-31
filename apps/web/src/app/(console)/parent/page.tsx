@@ -7,7 +7,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSPr
 import { AvatarChip } from '@/components/AvatarChip';
 import { BrowseLink } from '@/components/console/BrowseLink';
 import { AdultFrame, type FrameSpaces } from '@/components/console/AdultFrame';
-import { FamilyClassCards, MoveNotice, scopeCardDomId } from '@/components/console/FamilyClassCards';
+import { FamilyClassCards, FamilyScopeSheet, MoveNotice, scopeCardDomId } from '@/components/console/FamilyClassCards';
 import { FamilyNeedsYou } from '@/components/console/FamilyNeedsYou';
 import { RelinkPopup, useRelinkPopup } from '@/components/console/RelinkPopup';
 import { TextChip } from '@/components/console/LearnerStatusParts';
@@ -18,7 +18,7 @@ import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { EntitlementView, PlanView, RelinkView, Roster, RosterLearner, SpaceListItem, TransferLearnerSideView } from '@/lib/console/api';
-import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { appUrl, browseEntryShown, contentGatingEnabled, familyScopeSheetEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { spaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { openAppWithJoinCode } from '@/lib/console/join-handoff';
@@ -80,6 +80,11 @@ import { CLASS_RELINK_GAP_MS, CLASS_RELINK_REFRESH_MS } from '@/lib/console/visi
  * family's re-links alone every 20 s while in view (a request closes in 10 minutes while the child waits at the device).
  * The frame's Home tab and the tab title carry this page's count of Needs you items (section 7.4).
  *
+ * The class-scope sheet (GX-5b, section 7.3; owner-blocked on GX-OD-3, so behind `familyScopeSheetEnabled()`, off by
+ * default): on, the page draws no class-scope card; the strip's Read and OK and the child's Class info to read chip open
+ * the same text in a sheet (`FamilyScopeSheet`), the pop-up waits while it is open, and its OK is said in the family's
+ * strip region ("Saved."). Off, the shipped card stays under the strip and Read and OK scrolls to it.
+ *
  * Lecture mode (AMENDMENTS-LECTURE-V2 E2, LV-5; design/screens/app-shell/lecture-card.md "Placement"): one card, in
  * the first family's section. From 70em first in its side column, above the family actions (outside their
  * landmark); below 70em in the card grid right after the last card of its first row (one column below 45em: directly
@@ -87,6 +92,9 @@ import { CLASS_RELINK_GAP_MS, CLASS_RELINK_REFRESH_MS } from '@/lib/console/visi
  * itself so the reading and focus order is the order on screen; with no learner card, at the end of the family's
  * main column. With no family, after the "no family yet" panel. Nothing while `lectureModeEnabled()` is off.
  */
+
+/** The DOM id of a child's card on the family home (focus lands there when the class-scope sheet closes after OK; an id, never in a URL). */
+const childCardDomId = (familyId: string, learnerId: string): string => `child-${familyId}-${learnerId}`;
 
 /** Background reads of the family list that may fail in a row before they stop (a signed-out answer stops them at once). */
 const QUIET_FAILURES_BEFORE_STOP = 3;
@@ -192,6 +200,9 @@ export default function ParentHomePage(): JSX.Element {
   const [stripDialogs, setStripDialogs] = useState<Record<string, boolean>>({});
   const [popupResults, setPopupResults] = useState<Record<string, { key: number; text: string }>>({});
   const resultSeq = useRef(0);
+  // GX-5b: the class-scope sheet (off until the owner answers GX-OD-3) and which learner it is open for.
+  const scopeSheet = familyScopeSheetEnabled();
+  const [scopeOpen, setScopeOpen] = useState<{ familyId: string; learnerId: string } | null>(null);
   // The Lecture mode card's slot follows the 70em switch of the page's own CSS (lecture-card.md "Placement").
   const wideHome = useMinWidth(FULL);
   // The first family's card grid (or the loading one), measured: below 70em the card follows the last card of its first row.
@@ -343,9 +354,16 @@ export default function ParentHomePage(): JSX.Element {
   }, [asks, liveKey]);
   const popup = useRelinkPopup({
     relinks: relinkPool.list,
-    blocked: Object.values(stripDialogs).some(Boolean),
+    blocked: scopeOpen !== null || Object.values(stripDialogs).some(Boolean),
     enabled: !!api && liveKey !== '',
   });
+  // GX-5b: a sheet whose learner the family's class-scope read no longer lists (left the family meanwhile) closes, so
+  // the pop-up never waits on a sheet that draws nothing.
+  useEffect(() => {
+    if (!scopeOpen) return;
+    const scope = asks[scopeOpen.familyId]?.scope;
+    if (scope && !scope.learners.some((l) => l.learnerId === scopeOpen.learnerId)) setScopeOpen(null);
+  }, [asks, scopeOpen]);
   const onStripDialog = useCallback((familyId: string, open: boolean) => setStripDialogs((prev) => (!!prev[familyId] === open ? prev : { ...prev, [familyId]: open })), []);
 
   // [SA] The inline rename of a family (AMENDMENTS-SEATS-ADMINS section 5.3): the heading, the actions' label and the
@@ -497,11 +515,20 @@ export default function ParentHomePage(): JSX.Element {
     const line = familyAsks ? classLine(learner.id, familyAsks.transfers) : null;
     const notice = familyAsks && api ? noticeFor(learner.id, familyAsks.notices) : null;
     return (
-      <article key={learner.id} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
+      <article key={learner.id} id={childCardDomId(familyId, learner.id)} tabIndex={scopeSheet ? -1 : undefined} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
           <AvatarChip avatar={learner.avatar} />
           <h3 style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold, overflowWrap: 'anywhere' }}>{learner.displayName}</h3>
-          {chip ? <TextChip text={chip.text} tone={chip.tone} /> : null}
+          {chip && scopeSheet && status?.kind === 'scope' ? (
+            <TextChip
+              text={chip.text}
+              tone={chip.tone}
+              label={c.status.chipName(chip.text, p.needsYou.scope(learner.displayName))}
+              onActivate={() => setScopeOpen({ familyId, learnerId: learner.id })}
+            />
+          ) : chip ? (
+            <TextChip text={chip.text} tone={chip.tone} />
+          ) : null}
         </div>
         {line ? (
           <div style={facts} data-testid="child-class-line">
@@ -544,8 +571,15 @@ export default function ParentHomePage(): JSX.Element {
     );
   };
 
-  /** Read and OK (GX-4, until GX-OD-3): bring the shipped class-scope card into view and move focus to it. */
+  /**
+   * Read and OK: with the class-scope sheet on (GX-5b), open it for that learner; off (GX-4, until GX-OD-3), bring the
+   * shipped class-scope card into view and move focus to it.
+   */
   const readScope = (familyId: string, learnerId: string): void => {
+    if (scopeSheet) {
+      setScopeOpen({ familyId, learnerId });
+      return;
+    }
     const target = typeof document === 'undefined' ? null : (document.getElementById(scopeCardDomId(familyId, learnerId)) as HTMLElement | null);
     target?.scrollIntoView?.({ block: 'start' });
     target?.focus?.({ preventScroll: true });
@@ -639,7 +673,7 @@ export default function ParentHomePage(): JSX.Element {
               result={popupResults[id] ?? null}
             />
           ) : null}
-          {api && !archived ? (
+          {api && !archived && !scopeSheet ? (
             <FamilyClassCards
               familyId={id}
               api={api}
@@ -766,6 +800,32 @@ export default function ParentHomePage(): JSX.Element {
           <h1 className="hr-ph-hidden">{p.title}</h1>
           {view.families.map((family, index) => familySection(family, index === view.families.length - 1, crossLink))}
         </div>
+      ) : null}
+      {scopeOpen && api ? (
+        <FamilyScopeSheet
+          key={`${scopeOpen.familyId}:${scopeOpen.learnerId}`}
+          familyId={scopeOpen.familyId}
+          learnerId={scopeOpen.learnerId}
+          api={api}
+          scope={asks[scopeOpen.familyId]?.scope ?? null}
+          onScope={(next) => {
+            const id = scopeOpen.familyId;
+            setAsks((prev) => (prev[id] ? { ...prev, [id]: { ...(prev[id] as FamilyAsks), scope: next } } : prev));
+          }}
+          onStale={() => void loadAsks(scopeOpen.familyId)}
+          onClose={() => setScopeOpen(null)}
+          onDone={() => {
+            const id = scopeOpen.familyId;
+            setScopeOpen(null);
+            resultSeq.current += 1;
+            const key = resultSeq.current;
+            setPopupResults((prev) => ({ ...prev, [id]: { key, text: c.settings.notes.saved } }));
+          }}
+          fallbackFocus={() => {
+            const target = typeof document === 'undefined' ? null : (document.getElementById(childCardDomId(scopeOpen.familyId, scopeOpen.learnerId)) as HTMLElement | null);
+            target?.focus?.({ preventScroll: true });
+          }}
+        />
       ) : null}
       {popup.pick && api && popupFamily ? (
         <RelinkPopup

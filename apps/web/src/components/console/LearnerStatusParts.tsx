@@ -90,8 +90,47 @@ export function StatusChip({ words, onActivate, testId = 'learner-status' }: { w
  * A chip that is only text (GX-4 section 7.2, the child card on the family home): a `<span>` read with the name, never a
  * button (the Needs you strip owns the actions). `action` is the family's own action, in the amber light fill (no border,
  * no dot: the card keeps its shipped border); `info` a dated move.
+ *
+ * With `onActivate` (only the **Class info to read** chip, with the class-scope sheet on: AMENDMENTS-GROWNUP-UX row
+ * GX-5b) it is a button at least `touchTarget.min` tall, with the amber border of an action chip, named `label`
+ * ("{chip}: {reason}"), that opens the class-scope sheet.
  */
-export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info'; testId?: string }): JSX.Element {
+export function TextChip({
+  text,
+  tone,
+  testId = 'child-status',
+  onActivate,
+  label,
+}: {
+  text: string;
+  tone: 'action' | 'info';
+  testId?: string;
+  onActivate?: () => void;
+  label?: string;
+}): JSX.Element {
+  if (onActivate) {
+    return (
+      <button
+        type="button"
+        data-testid={testId}
+        data-tone={tone}
+        aria-label={label}
+        onClick={onActivate}
+        style={{
+          ...chipBase,
+          whiteSpace: 'normal',
+          minHeight: touchTarget.min,
+          padding: `${spacing.sm}px ${spacing.lg}px`,
+          border: `${borderWidth.base}px solid ${colors.feedback.nudge}`,
+          backgroundColor: TONE_FILL[tone],
+          fontFamily: 'inherit',
+          cursor: 'pointer',
+        }}
+      >
+        {text}
+      </button>
+    );
+  }
   return (
     <span data-testid={testId} data-tone={tone} style={{ ...chipBase, whiteSpace: 'normal', backgroundColor: TONE_FILL[tone] }}>
       {text}

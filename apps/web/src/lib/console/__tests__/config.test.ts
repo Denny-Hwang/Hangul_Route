@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, browseEnabled, browseEntryShown, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, browseEnabled, browseEntryShown, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, familyScopeSheetEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -215,5 +215,27 @@ describe('browseEnabled and browseEntryShown (F-BROWSE-001 section 5.4; F-APP-00
     expect(browseEntryShown('https://app.hangulroute.com', {})).toBe(true);
     expect(browseEntryShown('https://hangulroute.com', {})).toBe(false);
     expect(browseEntryShown('https://app.hangulroute.com', { NEXT_PUBLIC_BROWSE: 'false' })).toBe(false);
+  });
+});
+
+/** AMENDMENTS-GROWNUP-UX row GX-5b: the class-scope sheet moves a consent surface, so it is off until the owner answers GX-OD-3. */
+describe('familyScopeSheetEnabled', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('is off by default (GX-OD-3 is owner-blocked; no default applied)', () => {
+    expect(familyScopeSheetEnabled({})).toBe(false);
+    for (const raw of ['', ' ', 'maybe', 'shown']) expect(familyScopeSheetEnabled({ NEXT_PUBLIC_FAMILY_SCOPE_SHEET: raw })).toBe(false);
+  });
+
+  it('only an explicit on value turns it on; off values, case and spaces ignored, keep it off', () => {
+    for (const raw of ['true', '1', 'on', 'yes', 'enabled', ' TRUE ', 'On', 'Enabled\n']) expect(familyScopeSheetEnabled({ NEXT_PUBLIC_FAMILY_SCOPE_SHEET: raw })).toBe(true);
+    for (const raw of ['false', '0', 'off', 'no', 'disabled', ' OFF ']) expect(familyScopeSheetEnabled({ NEXT_PUBLIC_FAMILY_SCOPE_SHEET: raw })).toBe(false);
+  });
+
+  it('reads the build value through buildEnv()', () => {
+    vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', undefined);
+    expect(familyScopeSheetEnabled()).toBe(false);
+    vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', 'on');
+    expect(familyScopeSheetEnabled()).toBe(true);
   });
 });

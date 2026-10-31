@@ -87,7 +87,10 @@ vi.mock('@/components/console/use-console', async () => {
       if (data.scopeThrows) throw new Error('network');
       return data.scope ?? { ok: true, data: { current: 'class-scope-2026-10', learners: [] } };
     },
-    acknowledgeClassScope: async () => ({ ok: true, data: { version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' } }),
+    acknowledgeClassScope: async (id: string, learnerId: string, version: string) => {
+      data.calls.push(`ack:${id}:${learnerId}:${version}`);
+      return { ok: true, data: { version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' } };
+    },
     moveNotices: async (id: string) => {
       data.calls.push(`notices:${id}`);
       return data.notices ?? { ok: true, data: [] };
@@ -884,5 +887,118 @@ describe('the family home: the re-link pop-up, the 20 s re-link read and the tab
     await advance(20_000);
     expect(popup(r)).toHaveLength(0);
     expect(data.calls).toEqual([]);
+  });
+});
+
+describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-3)', () => {
+  const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
+  const scopeFor = (learnerId: string, name: string) => ({ ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId, name, needed: true }] } });
+  const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
+  const chipOf = (r: ReactTestRenderer, name: string): ReactTestInstance => card(r, name).find((n) => n.props['data-testid'] === 'child-status' && typeof n.type === 'string');
+  const tap = async (node: ReactTestInstance): Promise<void> => {
+    await act(async () => node.props.onClick());
+    await act(async () => undefined);
+  };
+  const focusTarget = { scrollIntoView: vi.fn(), focus: vi.fn() };
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    focusTarget.scrollIntoView.mockClear();
+    focusTarget.focus.mockClear();
+    vi.stubGlobal('document', { getElementById: vi.fn(() => focusTarget), activeElement: null, visibilityState: 'visible', addEventListener: () => undefined, removeEventListener: () => undefined });
+    data.rosters = { sp_f: roster(family, [mina, jun]) };
+    data.scope = scopeFor('profile:jun', 'Jun');
+  });
+  afterEach(() => {
+    // Unmount while the stand-in document is still there (the pop-up's cleanup reads it).
+    act(() => mounted?.unmount());
+    mounted = null;
+    vi.unstubAllGlobals();
+  });
+
+  it('off by default: the shipped card stays under the strip, the chip is text, and no sheet opens', async () => {
+    const r = await render([family]);
+    expect(byTestId(r, 'class-scope-card')).toHaveLength(1);
+    expect(chipOf(r, 'Jun').type).toBe('span');
+    await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+    expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+    expect(focusTarget.scrollIntoView).toHaveBeenCalled();
+  });
+
+  describe('with NEXT_PUBLIC_FAMILY_SCOPE_SHEET on', () => {
+    beforeEach(() => {
+      vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', 'on');
+    });
+
+    it('the home draws no class-scope card, so the children follow the strip; the strip still lists the update', async () => {
+      const r = await render([family]);
+      expect(byTestId(r, 'class-scope-card')).toHaveLength(0);
+      expect(byTestId(r, 'family-class-cards')).toHaveLength(0);
+      const order = r.root.findAll((n) => typeof n.type === 'string' && ['needs-you', 'learner-card'].includes(n.props['data-testid'] as string)).map((n) => n.props['data-testid'] as string);
+      expect(order).toEqual(['needs-you', 'learner-card', 'learner-card']);
+      expect(textOf(byTestId(r, 'needs-you')[0] as ReactTestInstance)).toContain(p.needsYou.scope('Jun'));
+      // The count is unchanged: one class-scope update.
+      expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 1 });
+    });
+
+    it('Read and OK opens the sheet (no scroll); OK writes the acknowledgement, the sheet closes, the row and the chip leave and "Saved." is said', async () => {
+      const r = await render([family]);
+      await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+      expect(focusTarget.scrollIntoView).not.toHaveBeenCalled();
+      const sheet = byTestId(r, 'class-scope-sheet');
+      expect(sheet).toHaveLength(1);
+      expect(textOf(r.root.find((n) => n.type === 'h2' && textOf(n) === en.console.classScope.title('Jun')))).toBe(en.console.classScope.title('Jun'));
+      await tap(byTestId(r, 'class-scope-ok')[0] as ReactTestInstance);
+      expect(data.calls).toContain('ack:sp_f:profile:jun:class-scope-2026-10');
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+      expect(byTestId(r, 'needs-you')).toHaveLength(0);
+      expect(card(r, 'Jun').findAll((n) => n.props['data-testid'] === 'child-status')).toHaveLength(0);
+      expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.settings.notes.saved);
+      expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 0 });
+    });
+
+    it("the child's Class info to read chip is a button named with its reason; it opens the same sheet", async () => {
+      const r = await render([family]);
+      const chip = chipOf(r, 'Jun');
+      expect(chip.type).toBe('button');
+      expect(textOf(chip)).toBe(p.status.scope);
+      expect(chip.props['aria-label']).toBe(en.console.status.chipName(p.status.scope, p.needsYou.scope('Jun')));
+      await tap(chip);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      // Close (a button) closes it unread: nothing is written and the row stays.
+      const close = r.root.find((n) => n.type === 'button' && n.props['aria-label'] === en.console.transfer.a11y.close);
+      await tap(close);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+      expect(data.calls.some((c) => c.startsWith('ack:'))).toBe(false);
+      expect(byTestId(r, 'needs-you-read')).toHaveLength(1);
+    });
+
+    it('the other chips stay text: a re-link chip is never a button', async () => {
+      data.relinks = { ok: true, data: [{ id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: '2026-10-12T11:57:00Z', expiresAt: '2026-10-12T12:07:00Z', status: 'pending' }] };
+      const r = await render([family]);
+      expect(chipOf(r, 'Mina').type).toBe('span');
+      expect(textOf(chipOf(r, 'Mina'))).toBe(p.status.relink);
+    });
+
+    it('the re-link pop-up waits while the sheet is open, then opens', async () => {
+      vi.useRealTimers();
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+      vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
+      const r = await render([family]);
+      await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      data.relinks = { ok: true, data: [{ id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: '2026-10-12T11:57:00Z', expiresAt: '2026-10-12T12:07:00Z', status: 'pending' }] };
+      // The 20 s re-link read finds a new request: the pop-up holds while the sheet is open.
+      await act(async () => {
+        vi.advanceTimersByTime(20_000);
+      });
+      await act(async () => undefined);
+      expect(byTestId(r, 'needs-you-approve')).toHaveLength(1);
+      expect(byTestId(r, 'relink-popup')).toHaveLength(0);
+      // A backdrop tap does nothing while unread; Close closes it, and then the pop-up opens.
+      await act(async () => r.root.find((n) => n.props.className === 'hr-move-scrim').props.onClick?.());
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      await tap(r.root.find((n) => n.type === 'button' && n.props['aria-label'] === en.console.transfer.a11y.close));
+      expect(byTestId(r, 'relink-popup')).toHaveLength(1);
+    });
   });
 });
