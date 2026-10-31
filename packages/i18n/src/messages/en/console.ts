@@ -192,6 +192,13 @@ export const consoleMsgs = {
       /** Lecture mode for both personas, after Lessons (AMENDMENTS-LECTURE-V2 E3, LV-5); the one name of LV-D2. */
       lecture: 'Lecture mode',
     },
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-3 (section 6, GX-D6): the accessible name of the Classes tab while requests wait. The tab
+     * shows the number on screen (`aria-hidden`); this name says what it counts. Counts only, never a learner's name.
+     */
+    navAttention: {
+      classes: (n: number) => plural('en', n, { one: `Classes, ${n} needs your OK`, other: `Classes, ${n} need your OK` }),
+    },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
   /**
@@ -313,6 +320,13 @@ export const consoleMsgs = {
     noClass: { title: "You don't have a class yet.", setUp: 'Set up a class', goFamily: 'Go to Family' },
     /** The quiet cross-link at the bottom: set up the other persona, or switch to it. */
     cross: { addFamily: 'Learning at home too? Set up a family space', toFamily: 'Your family is under Family' },
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-3 (section 6): a class row's chip after the class name, to the class page's review
+     * (`#attention`): its re-links and the moves that wait for it. Replaces the row's "class moves waiting" pill.
+     */
+    attention: (n: number) => plural('en', n, { one: `${n} needs your OK`, other: `${n} need your OK` }),
+    /** GX-3: a school row's link to one of its classes with requests waiting (counts only). */
+    schoolClassAttention: (className: string, n: number) => `${className}: ${plural('en', n, { one: `${n} needs your OK`, other: `${n} need your OK` })}`,
   },
   /** A class or family roster (`/teach/space`). */
   space: {
@@ -2309,5 +2323,14 @@ export const consoleMsgs = {
   attention: {
     incomingHeading: 'Asking to join this class',
     from: (className: string) => `From ${className}`,
+  },
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-3 (section 5.5): the bar at the top of every other teacher console page while a new device
+   * waits (a re-link closes in 10 minutes). A class name on screen only, never a learner's name; the minutes line reuses
+   * `status.minutesLeft` and the button `status.review`.
+   */
+  relinkBar: {
+    one: (space: string) => `A new device needs your OK · ${space}`,
+    many: (n: number) => plural('en', n, { one: `${n} new device needs your OK`, other: `${n} new devices need your OK` }),
   },
 } as const;

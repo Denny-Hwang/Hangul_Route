@@ -114,6 +114,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   // AMENDMENTS-GROWNUP-UX GX-1 (section 10.1, the one date order of the PR #917 review): status chips beside a learner's name.
   'console.status.moving': '"Cambia de clase el {date}" against "Moving {date}": Spanish needs the verb phrase and its article before a date; a chip that wraps under the name on a phone',
   'console.status.new': '"Nueva llegada" (13) against "New" (3): a bare "Nuevo/Nueva" would take the learner\'s gender; the noun keeps the chip neutral, and it wraps under the name on a phone',
+  // AMENDMENTS-GROWNUP-UX GX-3 (section 5.5, the one action wording of section 10.1): the re-link bar's sentence.
+  'console.relinkBar.many': '"{n} dispositivos nuevos esperan tu aprobación" against "{n} new devices need your OK": "esperan tu aprobación" is the one full-sentence form of "needs your OK" in Spanish (section 10.1); the bar\'s line wraps at any width',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

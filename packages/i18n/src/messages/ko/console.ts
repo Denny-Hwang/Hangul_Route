@@ -110,6 +110,9 @@ export const consoleMsgs = {
     terms: '이용약관',
     persona: { parent: '가족', teacher: '선생님' },
     nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트', lecture: '강의 모드' },
+    navAttention: {
+      classes: (n: number) => `반, 승인 대기 ${n}건`,
+    },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
   },
   pageBack: {
@@ -202,6 +205,8 @@ export const consoleMsgs = {
     lessons: '레슨',
     noClass: { title: '아직 반이 없어요.', setUp: '반 만들기', goFamily: '가족으로 가기' },
     cross: { addFamily: '집에서도 배우나요? 가족 공간 만들기', toFamily: '내 가족은 가족 메뉴에 있어요' },
+    attention: (n: number) => `승인 대기 ${n}건`,
+    schoolClassAttention: (className: string, n: number) => `${className}: 승인 대기 ${n}건`,
   },
   space: {
     loading: '불러오는 중…',
@@ -1749,5 +1754,9 @@ export const consoleMsgs = {
   attention: {
     incomingHeading: '이 반에 들어오려는 학생',
     from: (className: string) => `보낸 반: ${className}`,
+  },
+  relinkBar: {
+    one: (space: string) => `새 기기 승인 대기 · ${space}`,
+    many: (n: number) => `새 기기 승인 대기 ${n}건`,
   },
 } satisfies DeepPartial<Messages['console']>;
