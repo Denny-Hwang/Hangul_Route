@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG,
+  CATALOG_QUEST_ADDITIONS,
   CATALOG_VERSION,
   CatalogSchema,
   LectureBlockSchema,
@@ -13,6 +14,7 @@ import {
   groupOfKey,
   learnerPosition,
   placedOutGrowth,
+  planCatalogStale,
   presetBlockMinutes,
   questIdsOfBlocks,
   questIdsAtVersion,
@@ -66,6 +68,8 @@ function withVolumes(rows = V2): Catalog {
     topicMinutes: 5,
   });
 }
+/** The shipped quest additions by version (the history the growth rule reads). */
+const CATALOG_QUEST_ADDITIONS_OF_SHIPPED = (): Record<number, readonly string[]> => ({ ...CATALOG_QUEST_ADDITIONS });
 const NATURE_V2 = ['quest:stage2-nature-v2-q1', 'quest:stage2-nature-v2-q2', 'quest:stage2-nature-v2-q3'];
 const CRAFTS4_V2 = ['quest:stage4-crafts-v2-q1', 'quest:stage4-crafts-v2-q2', 'quest:stage4-crafts-v2-q3'];
 
@@ -183,6 +187,31 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, CATALOG_VERSION, route, new Set(), history)).toEqual(NATURE_V2);
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, CATALOG_VERSION, route, new Set([NATURE_V2[1] as string]), history)).toEqual([NATURE_V2[0], NATURE_V2[2]]);
     expect(placedOutGrowth({ stage: 'stage3', band: 0 }, stamp, route, new Set(), history)).toEqual([]);
+  });
+
+  it('a plan made before a catalogue that added only later volumes is not stale: a refresh would add nothing (row CM-43 S4)', () => {
+    const stamp = 20261201;
+    const catalog = { ...withVolumes(), version: stamp };
+    const onlyVolumes = { ...CATALOG_QUEST_ADDITIONS_OF_SHIPPED(), [stamp]: [...NATURE_V2, ...CRAFTS4_V2] };
+    expect(planCatalogStale(CATALOG_VERSION, catalog, onlyVolumes)).toBe(false);
+    // A Volume 1 quest in the same stamp makes the plan stale again.
+    expect(planCatalogStale(CATALOG_VERSION, catalog, { ...onlyVolumes, [stamp]: [...NATURE_V2, 'quest:stage1-crafts-q9'] })).toBe(true);
+    // Older only, and a version with no listed additions still counts as newer.
+    expect(planCatalogStale(stamp, catalog, onlyVolumes)).toBe(false);
+    expect(planCatalogStale(CATALOG_VERSION, catalog, CATALOG_QUEST_ADDITIONS_OF_SHIPPED())).toBe(true);
+  });
+
+  it('the shipped Stage 4 Food Volume 2 stamp leaves a plan made just before it current', () => {
+    const stamps = Object.entries(CATALOG_QUEST_ADDITIONS_OF_SHIPPED())
+      .filter(([, ids]) => ids.length > 0 && ids.every((id) => SHIPPED_V2_QUESTS.includes(id)))
+      .map(([v]) => Number(v));
+    expect(stamps.length).toBeGreaterThan(0);
+    const before = Math.min(...stamps) - 1;
+    const laterRoute = Object.entries(CATALOG_QUEST_ADDITIONS_OF_SHIPPED()).some(
+      ([v, ids]) => Number(v) > before && ids.some((id) => !SHIPPED_V2_QUESTS.includes(id)),
+    );
+    expect(planCatalogStale(before, CATALOG)).toBe(laterRoute);
+    expect(planCatalogStale(CATALOG.version, CATALOG)).toBe(false);
   });
 });
 
