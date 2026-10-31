@@ -403,6 +403,16 @@ describe('TeacherMovesSection: one incoming list, Accept first (AMENDMENTS-GROWN
     expect(one('teacher-move-outgoing')).toBeDefined();
     expect(seen[seen.length - 1]).toBe(2);
   });
+
+  it('with the asks drawn elsewhere and nothing sent or done, the section is left out (no empty block above the cards)', async () => {
+    const a = api({ outgoing: [], incoming: [incoming()] });
+    function Page(): JSX.Element {
+      const moves = useTeacherMoves({ spaceId: 'space:b', api: a, online: true, refreshMs: 60_000, onPageState: () => undefined });
+      return <TeacherMovesSection spaceId="space:b" api={a} online readOnly={false} refreshMs={60_000} onPageState={() => undefined} moves={moves} incomingHere={false} />;
+    }
+    await render(<Page />);
+    expect((renderer as ReactTestRenderer).root.findAll((n) => n.props['data-testid'] === 'teacher-moves')).toHaveLength(0);
+  });
 });
 
 describe('FamilyClassCards (screen 4) and the move notice in its child card (GX-4)', () => {

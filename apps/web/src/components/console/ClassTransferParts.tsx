@@ -525,7 +525,17 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
   };
 
   if (views === null) {
+    // Another teacher's asks (read on their own) never wait on this read: while it loads or after it failed, they are
+    // still drawn under *Joining this class*, so a failed transfer read never hides an ask that can be answered.
     return (
+      <>
+      {joiningLeadCount > 0 ? (
+        <div style={{ maxWidth: layout.maxWidth.reading }}>
+          <Group title={t.groups.joining} empty={false}>
+            {joiningLead}
+          </Group>
+        </div>
+      ) : null}
       <div aria-busy={loadFailed ? 'false' : 'true'} data-testid="class-moves-loading">
         {loadFailed ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.sm }}>
@@ -543,6 +553,7 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
           ))
         )}
       </div>
+      </>
     );
   }
 
