@@ -71,9 +71,10 @@ export const REALIA_KIND_FIXTURES = {
     { id: 'three', text: k('세 시', 'se si', '3:00') },
   ], answerId: 'two', answerEntryId: 'busan' }),
   map: realiaScope('map', 'A park map with the entrance, a lake and the summit', k('공원 지도', 'gongwon jido', 'park map'), [
-    { id: 'entrance', text: k('입구', 'ipgu', 'entrance'), dir: 'left' },
+    // A map's legend draws no arrow, so a place shows its way in its value (CM-47 rule; realiaReadIssues, row CM-41 S6).
+    { id: 'entrance', text: k('입구', 'ipgu', 'entrance'), value: k('왼쪽', 'oenjjok', 'left') },
     { id: 'lake', text: k('호수', 'hosu', 'lake'), value: k('500m', 'obaek miteo', '500 m') },
-    { id: 'summit', text: k('정상', 'jeongsang', 'summit'), dir: 'right' },
+    { id: 'summit', text: k('정상', 'jeongsang', 'summit'), value: k('오른쪽', 'oreunjjok', 'right') },
   ], { id: 'q1', questionEn: 'Which way is the summit?', key: k('정상', 'jeongsang', 'summit'), options: [
     { id: 'left', text: k('왼쪽', 'oenjjok', 'left') },
     { id: 'right', text: k('오른쪽', 'oreunjjok', 'right') },
