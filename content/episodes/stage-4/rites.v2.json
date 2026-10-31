@@ -1,0 +1,1613 @@
+{
+  "id": "episode:stage4-rites-v2",
+  "stage": "stage4",
+  "theme": "rites",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Seollal Visit",
+  "subtitleEn": "Bow to Grandma and Grandpa, thank them and say goodbye.",
+  "hoyaIntroEn": "It is Seollal! Let us visit Grandma and Grandpa.",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage4-rites-v2-q1",
+      "titleEn": "The New Year Bow",
+      "blurbEn": "Bow to Grandma on Seollal, thank her and wish her well.",
+      "teaserEn": "Next: answer Grandpa politely.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Seollal Morning",
+          "hoyaLineEn": "It is Seollal morning! Hoya bows to Grandma first. Let us read what they say.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "After the Bow",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Grandma",
+                        "line": {
+                          "ko": "새해 복 많이 받아라.",
+                          "romanization": "saehae bok mani badara",
+                          "en": "Have a happy New Year."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "할머니도 새해 복 많이 받으세요.",
+                          "romanization": "halmeonido saehae bok mani badeuseyo",
+                          "en": "Happy New Year to you too, Grandma."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "After the bow, Grandma speaks first. Hoya wishes her the same: do means too."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Grandma",
+                        "line": {
+                          "ko": "여기 세뱃돈이야.",
+                          "romanization": "yeogi sebaetdoniya",
+                          "en": "Here is your New Year money."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "감사합니다.",
+                          "romanization": "gamsahamnida",
+                          "en": "Thank you."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Grandma speaks to Hoya in plain speech. Hoya thanks an elder politely."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Bow and Thank",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-rites-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-rites-v2-q1-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-rites-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Happy Seollal!",
+          "hoyaLineEn": "You thanked Grandma and returned her wish. Wonderful reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-rites-v2-q1-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "세배",
+              "romanization": "sebae",
+              "en": "the New Year bow"
+            },
+            "partner": {
+              "ko": "할머니",
+              "romanization": "halmeoni",
+              "en": "grandma"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "새해 복 많이 받아라.",
+                  "romanization": "saehae bok mani badara",
+                  "en": "Have a happy New Year."
+                },
+                "replies": [
+                  {
+                    "id": "wish-back",
+                    "text": {
+                      "ko": "감사합니다. 할머니도 새해 복 많이 받으세요.",
+                      "romanization": "gamsahamnida halmeonido saehae bok mani badeuseyo",
+                      "en": "Thank you. Happy New Year to you too, Grandma."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Grandma has just wished you a happy New Year, so thank her."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "여기 세뱃돈이야.",
+                  "romanization": "yeogi sebaetdoniya",
+                  "en": "Here is your New Year money."
+                },
+                "replies": [
+                  {
+                    "id": "wish",
+                    "text": {
+                      "ko": "새해 복 많이 받아라.",
+                      "romanization": "saehae bok mani badara",
+                      "en": "Have a happy New Year."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is the wish an elder gives a younger person. Grandma is giving you New Year money, so thank her."
+                  },
+                  {
+                    "id": "thanks-grandma",
+                    "text": {
+                      "ko": "감사합니다, 할머니.",
+                      "romanization": "gamsahamnida halmeoni",
+                      "en": "Thank you, Grandma."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "meet",
+                    "text": {
+                      "ko": "만나서 반가워요.",
+                      "romanization": "mannaseo bangawoyo",
+                      "en": "Nice to meet you."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is for meeting someone for the first time. Thank Grandma for the New Year money."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "떡국 먹자.",
+                  "romanization": "tteokguk meokja",
+                  "en": "Let us eat tteokguk."
+                },
+                "replies": [
+                  {
+                    "id": "bow",
+                    "text": {
+                      "ko": "세배를 해요.",
+                      "romanization": "sebaereul haeyo",
+                      "en": "I do the New Year bow."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you bow. Grandma is asking you to eat tteokguk together."
+                  },
+                  {
+                    "id": "money",
+                    "text": {
+                      "ko": "여기 세뱃돈이야.",
+                      "romanization": "yeogi sebaetdoniya",
+                      "en": "Here is your New Year money."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is what Grandma said with the New Year money. She is asking you to eat tteokguk."
+                  },
+                  {
+                    "id": "sounds-good",
+                    "text": {
+                      "ko": "네, 좋아요.",
+                      "romanization": "ne joayo",
+                      "en": "Yes, that sounds good."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "맛있어?",
+                  "romanization": "masisseo",
+                  "en": "Is it tasty?"
+                },
+                "replies": [
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "네, 맛있어요.",
+                      "romanization": "ne masisseoyo",
+                      "en": "Yes, it is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "well",
+                    "text": {
+                      "ko": "네, 잘 지냈어요.",
+                      "romanization": "ne jal jinaesseoyo",
+                      "en": "Yes, I have been well."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you have been well. Grandma asks if the tteokguk is tasty."
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Grandma asks if the tteokguk is tasty."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "Grandma gave you her New Year wish, and you thanked her and wished her well too. Happy Seollal!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-rites-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "할머니도 새해 복 많이 ___.",
+                "romanization": "halmeonido saehae bok mani ___",
+                "en": "Happy New Year to you too, Grandma. (Hoya to Grandma)"
+              },
+              "tiles": [
+                {
+                  "ko": "받아라",
+                  "romanization": "badara",
+                  "en": "receive (plain speech)"
+                },
+                {
+                  "ko": "받으세요",
+                  "romanization": "badeuseyo",
+                  "en": "please receive (polite)"
+                },
+                {
+                  "ko": "먹자",
+                  "romanization": "meokja",
+                  "en": "let us eat"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "여기 ___이야.",
+                "romanization": "yeogi ___iya",
+                "en": "Here is your New Year money."
+              },
+              "tiles": [
+                {
+                  "ko": "세뱃돈",
+                  "romanization": "sebaetdon",
+                  "en": "New Year money"
+                },
+                {
+                  "ko": "떡국",
+                  "romanization": "tteokguk",
+                  "en": "rice cake soup"
+                },
+                {
+                  "ko": "세배",
+                  "romanization": "sebae",
+                  "en": "the New Year bow"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "새해 복 많이 ___.",
+                "romanization": "saehae bok mani ___",
+                "en": "Have a happy New Year. (Grandma to Hoya, in plain speech)"
+              },
+              "tiles": [
+                {
+                  "ko": "주세요",
+                  "romanization": "juseyo",
+                  "en": "please give me"
+                },
+                {
+                  "ko": "받아라",
+                  "romanization": "badara",
+                  "en": "receive (plain speech)"
+                },
+                {
+                  "ko": "먹자",
+                  "romanization": "meokja",
+                  "en": "let us eat"
+                }
+              ],
+              "answerIndex": 1
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "감사합니다, ___.",
+                "romanization": "gamsahamnida ___",
+                "en": "Thank you, Grandma."
+              },
+              "tiles": [
+                {
+                  "ko": "떡국",
+                  "romanization": "tteokguk",
+                  "en": "rice cake soup"
+                },
+                {
+                  "ko": "할머니",
+                  "romanization": "halmeoni",
+                  "en": "grandma"
+                },
+                {
+                  "ko": "세배",
+                  "romanization": "sebae",
+                  "en": "the New Year bow"
+                }
+              ],
+              "answerIndex": 1
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-v2-q1-check",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "호야, 새해 복 많이 받으세요!",
+                "romanization": "hoya saehae bok mani badeuseyo",
+                "en": "Happy New Year, Hoya!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "새해 복 많이 받아라.",
+                    "romanization": "saehae bok mani badara",
+                    "en": "Have a happy New Year."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+                    "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+                    "en": "Thank you. Happy New Year to you too, Mina!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Grandma",
+              "line": {
+                "ko": "새해 복 많이 받아라.",
+                "romanization": "saehae bok mani badara",
+                "en": "Have a happy New Year."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "만나서 반가워요.",
+                    "romanization": "mannaseo bangawoyo",
+                    "en": "Nice to meet you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "새해 복 많이 받아라.",
+                    "romanization": "saehae bok mani badara",
+                    "en": "Have a happy New Year."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "할머니도 새해 복 많이 받으세요.",
+                    "romanization": "halmeonido saehae bok mani badeuseyo",
+                    "en": "Happy New Year to you too, Grandma."
+                  },
+                  "correct": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-rites-v2-q2",
+      "titleEn": "Kind Words from Grandpa",
+      "blurbEn": "Answer Grandpa politely and thank him for his New Year wish.",
+      "teaserEn": "Next: say goodbye the right way.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Grandpa Says Hello",
+          "hoyaLineEn": "Grandpa is here too! Let us read how Hoya answers him.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Polite Answers",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Grandpa",
+                        "line": {
+                          "ko": "호야, 잘 지냈니?",
+                          "romanization": "hoya jal jinaenni",
+                          "en": "Hoya, have you been well?"
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "네, 잘 지냈어요. 할아버지도 잘 지내셨어요?",
+                          "romanization": "ne jal jinaesseoyo harabeojido jal jinaesyeosseoyo",
+                          "en": "Yes, I have been well. Have you been well too, Grandpa?"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya answers with the polite yo, then asks about Grandpa with si, to show respect."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Grandpa",
+                        "line": {
+                          "ko": "올해 소원 성취해라.",
+                          "romanization": "olhae sowon seongchwihaera",
+                          "en": "May your wishes come true this year."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "감사합니다.",
+                          "romanization": "gamsahamnida",
+                          "en": "Thank you."
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "New Year’s kind words are called deokdam. Grandpa hopes that Hoya’s wishes come true."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Pick the Reply",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-rites-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Talk with Grandpa",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-rites-v2-q2-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s4-rites-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Well Answered!",
+          "hoyaLineEn": "You answered Grandpa politely. Great reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-rites-v2-q2-practice",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Grandpa",
+              "line": {
+                "ko": "호야, 잘 지냈니?",
+                "romanization": "hoya jal jinaenni",
+                "en": "Hoya, have you been well?"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "네, 잘 지냈다.",
+                    "romanization": "ne jal jinaetda",
+                    "en": "Yes, I have been well. (plain speech)"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "네, 잘 지냈어요.",
+                    "romanization": "ne jal jinaesseoyo",
+                    "en": "Yes, I have been well."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "잘 가요.",
+                    "romanization": "jal gayo",
+                    "en": "Goodbye."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Grandpa",
+              "line": {
+                "ko": "올해 소원 성취해라.",
+                "romanization": "olhae sowon seongchwihaera",
+                "en": "May your wishes come true this year."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "올해 소원 성취해라.",
+                    "romanization": "olhae sowon seongchwihaera",
+                    "en": "May your wishes come true this year."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Grandma",
+              "line": {
+                "ko": "새해 복 많이 받아라.",
+                "romanization": "saehae bok mani badara",
+                "en": "Have a happy New Year."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "만나서 반가워요.",
+                    "romanization": "mannaseo bangawoyo",
+                    "en": "Nice to meet you."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "새해 복 많이 받아라.",
+                    "romanization": "saehae bok mani badara",
+                    "en": "Have a happy New Year."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "할머니도 새해 복 많이 받으세요.",
+                    "romanization": "halmeonido saehae bok mani badeuseyo",
+                    "en": "Happy New Year to you too, Grandma."
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Grandma",
+              "line": {
+                "ko": "여기 세뱃돈이야.",
+                "romanization": "yeogi sebaetdoniya",
+                "en": "Here is your New Year money."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "떡국 먹자.",
+                    "romanization": "tteokguk meokja",
+                    "en": "Let us eat tteokguk."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "감사합니다.",
+                    "romanization": "gamsahamnida",
+                    "en": "Thank you."
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "네, 잘 지냈다.",
+                    "romanization": "ne jal jinaetda",
+                    "en": "Yes, I have been well. (plain speech)"
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-v2-q2-apply",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "설날",
+              "romanization": "seollal",
+              "en": "Seollal"
+            },
+            "partner": {
+              "ko": "할아버지",
+              "romanization": "harabeoji",
+              "en": "grandpa"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "호야, 잘 지냈니?",
+                  "romanization": "hoya jal jinaenni",
+                  "en": "Hoya, have you been well?"
+                },
+                "replies": [
+                  {
+                    "id": "plain",
+                    "text": {
+                      "ko": "네, 잘 지냈다.",
+                      "romanization": "ne jal jinaetda",
+                      "en": "Yes, I have been well. (plain speech)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is plain speech, the way Grandpa talks to you. Answer an elder with the polite ending."
+                  },
+                  {
+                    "id": "well-ask",
+                    "text": {
+                      "ko": "네, 잘 지냈어요. 할아버지도 잘 지내셨어요?",
+                      "romanization": "ne jal jinaesseoyo harabeojido jal jinaesyeosseoyo",
+                      "en": "Yes, I have been well. Have you been well too, Grandpa?"
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "meet",
+                    "text": {
+                      "ko": "만나서 반가워요.",
+                      "romanization": "mannaseo bangawoyo",
+                      "en": "Nice to meet you."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is for meeting someone for the first time. Grandpa asks how you have been."
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "그래, 잘 지냈다. 올해 소원 성취해라.",
+                  "romanization": "geurae jal jinaetda olhae sowon seongchwihaera",
+                  "en": "Yes, I have been well. May your wishes come true this year."
+                },
+                "replies": [
+                  {
+                    "id": "wish-back",
+                    "text": {
+                      "ko": "감사합니다. 할아버지도 새해 복 많이 받으세요.",
+                      "romanization": "gamsahamnida harabeojido saehae bok mani badeuseyo",
+                      "en": "Thank you. Happy New Year to you too, Grandpa."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "wish",
+                    "text": {
+                      "ko": "올해 소원 성취해라.",
+                      "romanization": "olhae sowon seongchwihaera",
+                      "en": "May your wishes come true this year."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is Grandpa’s own wish for you. Thank him for his kind words."
+                  },
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "떡국 먹자.",
+                  "romanization": "tteokguk meokja",
+                  "en": "Let us eat tteokguk."
+                },
+                "replies": [
+                  {
+                    "id": "sounds-good",
+                    "text": {
+                      "ko": "네, 좋아요.",
+                      "romanization": "ne joayo",
+                      "en": "Yes, that sounds good."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  },
+                  {
+                    "id": "well",
+                    "text": {
+                      "ko": "네, 잘 지냈어요.",
+                      "romanization": "ne jal jinaesseoyo",
+                      "en": "Yes, I have been well."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says you have been well. Grandpa is asking you to eat tteokguk."
+                  },
+                  {
+                    "id": "bye",
+                    "text": {
+                      "ko": "잘 가요.",
+                      "romanization": "jal gayo",
+                      "en": "Goodbye."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Grandpa is asking you to eat tteokguk together."
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "맛있어?",
+                  "romanization": "masisseo",
+                  "en": "Is it tasty?"
+                },
+                "replies": [
+                  {
+                    "id": "plain",
+                    "text": {
+                      "ko": "네, 맛있어.",
+                      "romanization": "ne masisseo",
+                      "en": "Yes, it is tasty. (plain speech)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is plain speech. Answer Grandpa with the polite ending."
+                  },
+                  {
+                    "id": "money",
+                    "text": {
+                      "ko": "여기 세뱃돈이야.",
+                      "romanization": "yeogi sebaetdoniya",
+                      "en": "Here is your New Year money."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is what Grandma said with the New Year money. Grandpa asks if the tteokguk is tasty."
+                  },
+                  {
+                    "id": "tasty",
+                    "text": {
+                      "ko": "네, 맛있어요.",
+                      "romanization": "ne masisseoyo",
+                      "en": "Yes, it is tasty."
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You answered Grandpa politely and thanked him for his kind words. What a warm Seollal!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-rites-v2-q2-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "할아버지도 잘 지내셨어요?",
+                "romanization": "harabeojido jal jinaesyeosseoyo",
+                "en": "Have you been well too, Grandpa?"
+              },
+              "distractors": [
+                {
+                  "ko": "지냈니",
+                  "romanization": "jinaenni",
+                  "en": "have you been (plain speech)"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "할머니도 새해 복 많이 받으세요.",
+                "romanization": "halmeonido saehae bok mani badeuseyo",
+                "en": "Happy New Year to you too, Grandma."
+              },
+              "distractors": [
+                {
+                  "ko": "받아라",
+                  "romanization": "badara",
+                  "en": "receive (plain speech)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage4-rites-v2-q3",
+      "titleEn": "Time to Go",
+      "blurbEn": "Say goodbye the right way: who leaves and who stays.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261031,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Going Home",
+          "hoyaLineEn": "The visit is ending. Let us read how to say goodbye.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Who Leaves, Who Stays",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Grandma",
+                        "line": {
+                          "ko": "잘 가라.",
+                          "romanization": "jal gara",
+                          "en": "Go well."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "할머니, 안녕히 계세요.",
+                          "romanization": "halmeoni annyeonghi gyeseyo",
+                          "en": "Goodbye, Grandma. (Stay well.)"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Hoya leaves, so he says gyeseyo, stay well, to Grandma, who stays."
+              },
+              {
+                "items": [
+                  {
+                    "type": "exchange",
+                    "lines": [
+                      {
+                        "speaker": "a",
+                        "speakerEn": "Grandma",
+                        "line": {
+                          "ko": "잘 있어라.",
+                          "romanization": "jal isseora",
+                          "en": "Stay well."
+                        }
+                      },
+                      {
+                        "speaker": "b",
+                        "speakerEn": "Hoya",
+                        "line": {
+                          "ko": "할머니, 안녕히 가세요.",
+                          "romanization": "halmeoni annyeonghi gaseyo",
+                          "en": "Goodbye, Grandma. (Go well.)"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "captionEn": "Now Grandma is the one leaving, so Hoya says gaseyo, go well."
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Say Goodbye",
+          "minigameKind": "role-play",
+          "minigameRef": "minigame:s4-rites-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Pick the Greeting",
+          "minigameKind": "tap-respond",
+          "minigameRef": "minigame:s4-rites-v2-q3-apply",
+          "durationSeconds": 80
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s4-rites-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Goodbye, Grandma!",
+          "hoyaLineEn": "You picked the right greeting every time. Great reading!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s4-rites-v2-q3-practice",
+          "kind": "role-play",
+          "scene": {
+            "title": {
+              "ko": "설날",
+              "romanization": "seollal",
+              "en": "Seollal"
+            },
+            "partner": {
+              "ko": "할머니",
+              "romanization": "halmeoni",
+              "en": "grandma"
+            },
+            "start": "t1",
+            "nodes": [
+              {
+                "id": "t1",
+                "line": {
+                  "ko": "새해 복 많이 받아라.",
+                  "romanization": "saehae bok mani badara",
+                  "en": "Have a happy New Year."
+                },
+                "replies": [
+                  {
+                    "id": "thanks",
+                    "text": {
+                      "ko": "감사합니다.",
+                      "romanization": "gamsahamnida",
+                      "en": "Thank you."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  },
+                  {
+                    "id": "stay",
+                    "text": {
+                      "ko": "할머니, 안녕히 계세요.",
+                      "romanization": "halmeoni annyeonghi gyeseyo",
+                      "en": "Goodbye, Grandma. (Stay well.)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye, for when you leave. Grandma has just wished you a happy New Year."
+                  },
+                  {
+                    "id": "wish-back",
+                    "text": {
+                      "ko": "감사합니다. 할머니도 새해 복 많이 받으세요.",
+                      "romanization": "gamsahamnida halmeonido saehae bok mani badeuseyo",
+                      "en": "Thank you. Happy New Year to you too, Grandma."
+                    },
+                    "kind": "natural",
+                    "next": "t2"
+                  }
+                ]
+              },
+              {
+                "id": "t2",
+                "line": {
+                  "ko": "호야, 잘 지냈니?",
+                  "romanization": "hoya jal jinaenni",
+                  "en": "Hoya, have you been well?"
+                },
+                "replies": [
+                  {
+                    "id": "well",
+                    "text": {
+                      "ko": "네, 잘 지냈어요.",
+                      "romanization": "ne jal jinaesseoyo",
+                      "en": "Yes, I have been well."
+                    },
+                    "kind": "natural",
+                    "next": "t3"
+                  },
+                  {
+                    "id": "plain",
+                    "text": {
+                      "ko": "네, 잘 지냈다.",
+                      "romanization": "ne jal jinaetda",
+                      "en": "Yes, I have been well. (plain speech)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is plain speech. Answer Grandma with the polite ending."
+                  },
+                  {
+                    "id": "go",
+                    "text": {
+                      "ko": "할머니, 안녕히 가세요.",
+                      "romanization": "halmeoni annyeonghi gaseyo",
+                      "en": "Goodbye, Grandma. (Go well.)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That says goodbye to someone who is leaving. Grandma asks how you have been."
+                  }
+                ]
+              },
+              {
+                "id": "t3",
+                "line": {
+                  "ko": "여기 세뱃돈이야.",
+                  "romanization": "yeogi sebaetdoniya",
+                  "en": "Here is your New Year money."
+                },
+                "replies": [
+                  {
+                    "id": "eat",
+                    "text": {
+                      "ko": "떡국 먹자.",
+                      "romanization": "tteokguk meokja",
+                      "en": "Let us eat tteokguk."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is what Grandma said about tteokguk. She is giving you New Year money, so thank her."
+                  },
+                  {
+                    "id": "stay",
+                    "text": {
+                      "ko": "할머니, 안녕히 계세요.",
+                      "romanization": "halmeoni annyeonghi gyeseyo",
+                      "en": "Goodbye, Grandma. (Stay well.)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is a goodbye. Grandma is giving you New Year money, so thank her."
+                  },
+                  {
+                    "id": "thanks-grandma",
+                    "text": {
+                      "ko": "감사합니다, 할머니.",
+                      "romanization": "gamsahamnida halmeoni",
+                      "en": "Thank you, Grandma."
+                    },
+                    "kind": "natural",
+                    "next": "t4"
+                  }
+                ]
+              },
+              {
+                "id": "t4",
+                "line": {
+                  "ko": "잘 가라.",
+                  "romanization": "jal gara",
+                  "en": "Go well."
+                },
+                "replies": [
+                  {
+                    "id": "go",
+                    "text": {
+                      "ko": "할머니, 안녕히 가세요.",
+                      "romanization": "halmeoni annyeonghi gaseyo",
+                      "en": "Goodbye, Grandma. (Go well.)"
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is for someone who is leaving. You are the one leaving, and Grandma stays."
+                  },
+                  {
+                    "id": "stay",
+                    "text": {
+                      "ko": "할머니, 안녕히 계세요.",
+                      "romanization": "halmeoni annyeonghi gyeseyo",
+                      "en": "Goodbye, Grandma. (Stay well.)"
+                    },
+                    "kind": "natural",
+                    "next": "end"
+                  },
+                  {
+                    "id": "wish",
+                    "text": {
+                      "ko": "새해 복 많이 받아라.",
+                      "romanization": "saehae bok mani badara",
+                      "en": "Have a happy New Year."
+                    },
+                    "kind": "lessNatural",
+                    "whyEn": "That is the wish an elder gives a younger person. Say a polite goodbye to Grandma."
+                  }
+                ]
+              },
+              {
+                "id": "end",
+                "end": true,
+                "closingEn": "You thanked Grandma and said a polite goodbye as you left. See you next Seollal!"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "minigame:s4-rites-v2-q3-apply",
+          "kind": "tap-respond",
+          "turns": [
+            {
+              "speakerEn": "Grandma",
+              "line": {
+                "ko": "잘 가라.",
+                "romanization": "jal gara",
+                "en": "Go well."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "할머니, 안녕히 가세요.",
+                    "romanization": "halmeoni annyeonghi gaseyo",
+                    "en": "Goodbye, Grandma. (Go well.)"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "할머니, 안녕히 계세요.",
+                    "romanization": "halmeoni annyeonghi gyeseyo",
+                    "en": "Goodbye, Grandma. (Stay well.)"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "만나서 반가워요.",
+                    "romanization": "mannaseo bangawoyo",
+                    "en": "Nice to meet you."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Teacher",
+              "line": {
+                "ko": "호야, 잘 가요.",
+                "romanization": "hoya jal gayo",
+                "en": "Goodbye, Hoya. (Go well.)"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "선생님, 안녕히 계세요.",
+                    "romanization": "seonsaengnim annyeonghi gyeseyo",
+                    "en": "Goodbye, teacher. (Stay well.)"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "새해 복 많이 받아라.",
+                    "romanization": "saehae bok mani badara",
+                    "en": "Have a happy New Year."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "저는 호야예요.",
+                    "romanization": "jeoneun hoyayeyo",
+                    "en": "I am Hoya."
+                  },
+                  "correct": false
+                }
+              ]
+            },
+            {
+              "speakerEn": "Grandma",
+              "line": {
+                "ko": "잘 있어라.",
+                "romanization": "jal isseora",
+                "en": "Stay well."
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "여기 세뱃돈이야.",
+                    "romanization": "yeogi sebaetdoniya",
+                    "en": "Here is your New Year money."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "할머니, 안녕히 계세요.",
+                    "romanization": "halmeoni annyeonghi gyeseyo",
+                    "en": "Goodbye, Grandma. (Stay well.)"
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "할머니, 안녕히 가세요.",
+                    "romanization": "halmeoni annyeonghi gaseyo",
+                    "en": "Goodbye, Grandma. (Go well.)"
+                  },
+                  "correct": true
+                }
+              ]
+            },
+            {
+              "speakerEn": "Mina",
+              "line": {
+                "ko": "호야, 새해 복 많이 받으세요!",
+                "romanization": "hoya saehae bok mani badeuseyo",
+                "en": "Happy New Year, Hoya!"
+              },
+              "replies": [
+                {
+                  "id": "r1",
+                  "text": {
+                    "ko": "잘 가라.",
+                    "romanization": "jal gara",
+                    "en": "Go well."
+                  },
+                  "correct": false
+                },
+                {
+                  "id": "r2",
+                  "text": {
+                    "ko": "고마워요. 미나도 새해 복 많이 받으세요!",
+                    "romanization": "gomawoyo minado saehae bok mani badeuseyo",
+                    "en": "Thank you. Happy New Year to you too, Mina!"
+                  },
+                  "correct": true
+                },
+                {
+                  "id": "r3",
+                  "text": {
+                    "ko": "선생님, 안녕히 계세요.",
+                    "romanization": "seonsaengnim annyeonghi gyeseyo",
+                    "en": "Goodbye, teacher. (Stay well.)"
+                  },
+                  "correct": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s4-rites-v2-q3-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "할머니, 안녕히 ___.",
+                "romanization": "halmeoni annyeonghi ___",
+                "en": "Goodbye, Grandma. (Stay well.)"
+              },
+              "tiles": [
+                {
+                  "ko": "가세요",
+                  "romanization": "gaseyo",
+                  "en": "go well"
+                },
+                {
+                  "ko": "받아라",
+                  "romanization": "badara",
+                  "en": "receive (plain speech)"
+                },
+                {
+                  "ko": "계세요",
+                  "romanization": "gyeseyo",
+                  "en": "stay well"
+                }
+              ],
+              "answerIndex": 2
+            },
+            {
+              "id": "c2",
+              "gapKind": "particle",
+              "sentence": {
+                "ko": "할머니___ 새해 복 많이 받으세요.",
+                "romanization": "halmeoni___ saehae bok mani badeuseyo",
+                "en": "Happy New Year to you too, Grandma."
+              },
+              "tiles": [
+                {
+                  "ko": "도",
+                  "romanization": "do",
+                  "en": "too"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker (after a vowel)"
+                },
+                {
+                  "ko": "는",
+                  "romanization": "neun",
+                  "en": "topic marker (after a vowel)"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "halmeonido saehae bok mani badeuseyo"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:세배} is the New Year bow to the elders of the family, starting with the eldest. The elders answer with kind words for the year ahead, and may give children a little money, called {ko:세뱃돈}.",
+      "sources": [
+        {
+          "title": "세배, an entry of the Encyclopedia of Korean Seasonal Customs (한국세시풍속사전, 정월)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/4273",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘설날 아침(元旦), 집안 어른들께 큰절로 인사드리는 것.’ 내용: ‘설날의 차례가 끝나면 집안의 어른들께 웃어른부터 순서대로 절을 하고 새해 첫 인사를 드린다.’ / ‘어른들은 손아랫사람들에게 “새해는 소원성취하게.” 하는 등 처지와 환경에 알맞은 말을 한다. 이것을 덕담이라고 한다.’ / ‘아이들에게는 술을 주지 않고 약간의 돈 또는 떡과 과실을 준다.’"
+        },
+        {
+          "title": "세뱃돈 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EC%84%B8%EB%B1%83%EB%8F%88",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "표제어 ‘세뱃-돈(歲拜돈)’ 「명사」: ‘세뱃값으로 주는 돈.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-31): the Folk Museum entry 세배 (topic 4273, the Encyclopedia of Korean Seasonal Customs) read through its API view of the same page: it defines 세배 as the deep bow to the family's elders on Seollal morning, says the bows go to the elders in order from the eldest (웃어른부터 순서대로), that the elders answer with words that fit each person (덕담), and that children are given a little money or rice cake and fruit. The stdict page defines 세뱃돈 as the money given for the bow. The note says 'may give' and 'a little money', no more: it names no amount, no rule and no region.\npass 2 (MAR culture and facts, 2026-10-31): both pages re-read and the quoted words found. 'Starting with the eldest' paraphrases 웃어른부터 순서대로; 'kind words for the year ahead' is the note's word for 덕담, which the entry describes as words that fit the person's situation, and the stdict entry for 덕담 (남이 잘되기를 비는 말, 주로 새해에) backs 'for the year ahead'. The entry also says the bow follows the memorial rite (차례); the note leaves that out, as the cell does not teach the rite. The entry and the National Institute of Korean Language column on New Year etiquette (Volume 1 note n1) differ on whether words are said with the bow; the note and the cell take no side: the cell shows no line during the bow and has the elder speak first. Institution names as of the access date: 국립민속박물관 and 국립국어원 (unchanged). No group named as a whole, no real person, brand or price.\nreviser (2026-10-31): 'the deep bow' became 'the New Year bow' (the stage's word); 'give children money' became 'may give children a little money', as the entry says 약간의 돈 and offers rice cake or fruit as well.\npass 3 (third pass after revision, 2026-10-31): {ko:세배} and {ko:세뱃돈} romanize as sebae and sebaetdon with the converter; the es and ko glosses say the same and add nothing. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:덕담} are kind words wishing someone well, said mostly at the New Year. An elder fits them to the person, for example wishing that their wishes come true.",
+      "sources": [
+        {
+          "title": "덕담, an entry of the Encyclopedia of Korean Seasonal Customs (한국세시풍속사전, 정월)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3593",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "정의: ‘새해를 맞이하여 어른·친구·아랫사람에게 해주는 인사말.’ 내용: ‘주로 한 해 동안의 일들이 잘 되기를 기원하는 것인데 상대의 형편에 따라 말한다. 예컨대 생자(生子)·득관(得官)·치부(致富)·건강 축원·소원 성취 등에 대한 축하를 미리 함으로써’"
+        },
+        {
+          "title": "덕담 (표준국어대사전 검색 결과)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%8D%95%EB%8B%B4",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "표제어 ‘덕담(德談)’ 「명사」: ‘남이 잘되기를 비는 말. 주로 새해에 많이 나누는 말이다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-31): stdict defines 덕담 as words that wish someone well, shared mostly at the New Year; the Folk Museum entry 덕담 (topic 3593) says it is a greeting for the new year, fitted to the other person's situation, and lists wishes such as 소원 성취 among its examples. The cell's Grandpa line 올해 소원 성취해라 is that example in plain speech to a child (the 세배 entry also gives ‘새해는 소원성취하게’).\npass 2 (MAR culture and facts, 2026-10-31): both pages re-read and the quoted words found. 'Mostly at the New Year' is 주로 새해에; 'fits them to the person' is 상대의 형편에 따라. The entry's other examples (a child's birth, an official post, wealth) and its note on past-tense wishes are left out: the note claims only what the cell shows. The entry says 덕담 goes to elders, friends and younger people alike, so the note does not say only elders say it; it says an elder fits them to the person, as in the cell. Institution names as of the access date: 국립민속박물관 and 국립국어원 (unchanged).\nreviser (2026-10-31): 'elders' blessing' became 'kind words wishing someone well', since the dictionary does not limit 덕담 to elders.\npass 3 (third pass after revision, 2026-10-31): {ko:덕담} romanizes as deokdam with the converter, as the q2 Discover caption spells it; es and ko keep 'mostly' and 'for example'. Outcome: confirmed."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "language",
+      "textEn": "The National Institute of Korean Language gives {ko:새해 복 많이 받으십시오} as the standard New Year greeting, one you can say to anyone. {ko:새해 복 많이 받으세요} works too, and to a younger person an elder may say {ko:새해 복 많이 받아라}.",
+      "sources": [
+        {
+          "title": "Online Ganada question and answer on 새해 복 많이 받으십시오 and 받으세요, quoting 『표준 언어 예절』 (2011)",
+          "publisher": "국립국어원 (National Institute of Korean Language), 온라인가나다 (Online Ganada)",
+          "url": "https://korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=&pageIndex=1&qna_seq=327495&searchCondition=&searchKeyword=",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "Answer of 2026-02-21, quoting 『표준 언어 예절』, 특정한 때의 인사말, 연말연시: ‘신년 인사의 표준은 ‘새해 복 많이 받으십시오.’이다. ‘새해 복 많이 받으십시오.’는 직장, 학교, 이웃 등 누구에게나 쓸 수 있는 신년 인사의 정형으로 굳어졌다.’ The quotation goes on to say that, by the listener, ‘새해 복 많이 받으세요.’, ‘새해 복 많이 받게.’ and ‘새해 복 많이 받아라.’ can also be used; the answer finds both 받으십시오 and 받으세요 usable to an elder."
+        },
+        {
+          "title": "송년과 신년의 언어 예절, a column by 허철구 on New Year language etiquette",
+          "publisher": "국립국어원 (National Institute of Korean Language), 새국어소식, 언어 예절 column",
+          "url": "https://www.korean.go.kr/nkview/news/91/news6_2.htm",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘그 인사말로는 “과세 안녕하십니까?”나 “새해 복 많이 받으십시오” 정도가 좋고’ (greetings to elders); ‘“새해 복 많이 받게”나 “소원 성취하게” 정도가 정형이라 할 만하다’ (elders' words after the bow); ‘세배는 절하는 자체가 인사이므로 아무 말이 필요 없으며 그저 어른의 덕담을 기다리면 된다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-10-31): the Online Ganada answer of 2026-02-21 quotes the 연말연시 section of 『표준 언어 예절』 (NIKL, 2011): the standard New Year greeting is 새해 복 많이 받으십시오, usable with anyone at work, school or among neighbours, and by the listener 받으세요, 받게 and 받아라 are used too; the answer says both 받으십시오 and 받으세요 can be said to an elder. The NIKL column gives 새해 복 많이 받으십시오 as a greeting to elders and 새해 복 많이 받게 and 소원 성취하게 as elders' words, and says the bow is itself the greeting, after which the younger person waits for the elder's words. The 2011 book's own PDF (NIKL report 771) was downloaded, but its text layer does not extract, so the book is cited through NIKL's own quotation of it.\npass 2 (MAR culture and facts, 2026-10-31): both pages re-read and the quoted words found. 'Standard' and 'to anyone' are 표준 and 누구에게나; 'works too' covers 받으세요 as the answer does; 'to a younger person an elder may say 받아라' is the quotation's 'by the listener' list read with its 해라체 form, which the cell gives only to Grandma. The cell follows the column's order: the elder speaks first, then Hoya thanks and returns the wish, never during the bow. The cell teaches 받으세요 (its 해요체 register, as Volume 1 does) and shows 받으십시오 only in this note. Institution name as of the access date: 국립국어원 (unchanged).\nreviser (2026-10-31): 'the correct greeting' became 'the standard New Year greeting', the source's word; 'children' became 'a younger person'.\npass 3 (third pass after revision, 2026-10-31): the three {ko:} tokens romanize with the converter (saehae bok mani badeusipsio, badeuseyo, badara); es and ko keep 'standard' and 'may'. Outcome: confirmed."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "MAR (F-CURR-002 section 9.2, 2026-10-31): author, three checker passes (language with the F-CNT-002 converter, honorific register and kinship terms; culture and facts against each source; learning design), a reviser and a third pass. The passes ran one after another in the authoring session, which had no tool to start separate reviewer agents. No native-speaker or expert review is claimed.",
+      "Language: Hoya speaks to Grandma, Grandpa and the teacher in polite 해요체 with the set phrase 감사합니다, and honours Grandpa as the subject with -시- (지내셨어요). Grandma and Grandpa speak to their grandchild in plain 해라체 (받아라, 지냈니, 지냈다, 성취해라, 먹자, 가라, 있어라); the teacher keeps Volume 1's 해요체 (잘 가요). Every romanization is the converter's.",
+      "Language (cont.): kinship and address follow 「표준 언어 예절」 (NIKL, 2011): Hoya calls his grandparents 할머니 and 할아버지, never by name. 계세요 is said to the one who stays and 가세요 to the one who leaves; each Cloze round on them is settled by its meaning (stay well, go well).",
+      "Language findings fixed by the reviser: Hoya never speaks before Grandma's wish (the elder speaks first after the bow, NIKL column); 건강하세요 and 오래오래 사세요 are not used (the column asks for care with health wishes); plain-speech replies (잘 지냈다, 맛있어) are less natural replies with a why line, never a right answer; Cloze glosses in ko no longer name the answer.",
+      "Culture and facts: three notes, each with two sources and an allowlisted one first (National Folk Museum of Korea, 한국세시풍속사전 세배 and 덕담; NIKL 표준국어대사전 세뱃돈 and 덕담; NIKL Online Ganada quoting 「표준 언어 예절」 연말연시, and the NIKL column by 허철구). Institution names as of 2026-10-31.",
+      "Culture and facts (cont.): no line is said during the bow, no amount of money is named and no memorial rite is shown (차례 is Stage 2's reading word, OD-9); the Folk Museum entry and the NIKL column differ on words during the bow, and the cell takes no side. The cast is Hoya's grandparents, with Volume 1's teacher and Mina in the greeting picks; no step asks about the learner's own family.",
+      "Learning design: one new point a quest (the elder speaks first and Hoya returns the wish with 도; the subject honorific -시- against plain speech; 계세요 for the one who stays against 가세요 for the one who leaves). Discover shows two exchanges a quest, four new lines each (U-3's Stage 4 cap). lesson-recycle 4 of 12, 5 of 8 and 8 of 11 Practice and Check items from earlier quests.",
+      "Learning design (cont.): the recycled items are Volume 1's New Year exchange with Mina (호야, 새해 복 많이 받으세요 / 고마워요. 미나도 …) and 네, 잘 지냈어요; Stage 4's 감사합니다 (Letters, Food) and 네, 좋아요 (Play, Nature); and, in q2 and q3, this cell's q1 and q2 lines.",
+      "Learning design (cont.): triples Role Play / Cloze Pick / Tap to Respond, Tap to Respond / Role Play / Sentence Builder, Role Play / Tap to Respond / Cloze Pick; none is a Volume 1 triple (Volume 1 opens every quest with Story Sequence) and the three Checks differ. The greeting pick by occasion is Tap to Respond: q1's Check and q3's Apply.",
+      "Learning design (cont.): every Role Play scene has 4 turns on every way (2 ways each) and every way ends on its closing line; off, each plays Tap to Respond on its main path. No Dictation. Sound changes are heard, never typed: 감사합니다 [감사함니다], 떡국 [떡꾹], 맛있어요 [마시써요], 세뱃돈 [세배똔]. 계세요 and 가세요 do not sound alike.",
+      "Third pass (2026-10-31): the reviser's changes re-read in en, es and ko; validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. No real person, brand, price or age wording. Outcome: ready, behind volumes (built-in pct 0)."
+    ]
+  },
+  "contentVer": 1
+}
