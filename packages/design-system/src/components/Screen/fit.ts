@@ -1,23 +1,33 @@
 import { createContext, useContext } from 'react';
 
 /**
- * Whether a `Screen`'s content fits its window (docs/specs/AMENDMENTS-TOUCH.md KT-D3, section 5). A `TapBoard` reads it
- * to choose its web `touch-action`: a board on a screen that fits stops the browser from panning, so a graze is never
- * cancelled; on a screen that scrolls the vertical pan stays. `scrollY` is the screen's scroll offset now (native only,
- * 0 on the web), so a board on the old native architecture can move a rectangle it measured before a scroll.
+ * Whether a `Screen`'s content fits its window (docs/specs/AMENDMENTS-TOUCH.md KT-D3, section 5), and where its boards
+ * register. A board reads `fits` to re-measure on native when it changes; a `Screen` turns native scrolling off only
+ * while it fits and holds a registered board (and no text field is focused), so a form is never locked.
  */
 export interface ScreenFit {
   fits: boolean;
-  scrollY(): number;
+  /** A mounted `TapBoard` registers; returns its unregister. */
+  registerBoard(): () => void;
 }
 
-const NOT_KNOWN: ScreenFit = { fits: false, scrollY: () => 0 };
+const NO_SCREEN: ScreenFit = { fits: false, registerBoard: () => () => undefined };
 
-/** Outside any `Screen` a board assumes the page may scroll: the vertical pan stays. */
-export const ScreenFitContext = createContext<ScreenFit>(NOT_KNOWN);
+/** Outside any `Screen` a board assumes the page may scroll. */
+export const ScreenFitContext = createContext<ScreenFit>(NO_SCREEN);
 
 export function useScreenFit(): ScreenFit {
   return useContext(ScreenFitContext);
+}
+
+/** Native `scrollEnabled` (section 5): off only while the screen fits, holds a board and has no focused text field. */
+export function nativeScrollEnabled(fits: boolean, boards: number, typing: boolean): boolean {
+  return !(fits && boards > 0 && !typing);
+}
+
+/** The offset after scrolling by `delta`, kept inside the content (0 to content minus viewport). */
+export function clampOffset(offset: number, delta: number, content: number, viewport: number): number {
+  return Math.min(Math.max(0, offset + delta), Math.max(0, content - viewport));
 }
 
 /** Content fits when it is no taller than the viewport, give or take a pixel of rounding. */

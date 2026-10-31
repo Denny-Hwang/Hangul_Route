@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createNativeRects, stampedClock, webHitAt, webRect } from '../host';
+import { createNativeRects, stampedClock, supportsPinchZoom, tapNow, webHitAt, webRect } from '../host';
 
 /**
  * How a board reads each platform (docs/specs/AMENDMENTS-TOUCH.md section 3.2 rules 1 and 2): the web walks the DOM from
  * the touched element to the board (any control other than a target met first is never claimed) and
- * reads page rectangles; native reads window rectangles, keeping the last answer for the old architecture.
+ * reads page rectangles; native reads window rectangles from a cache, refreshed on demand.
  */
 
 interface FakeEl {
@@ -60,25 +60,64 @@ describe('webRect', () => {
 });
 
 describe('createNativeRects', () => {
-  it('uses an answer that comes at once (the new architecture)', () => {
-    const read = createNativeRects(() => 0);
-    const node = { measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => cb(1, 2, 3, 4) };
-    expect(read(node, 'A')).toEqual({ x: 1, y: 2, width: 3, height: 4 });
+  it('reads a synchronous answer at once (the new architecture) and keeps it', () => {
+    const rects = createNativeRects();
+    let calls = 0;
+    const node = {
+      measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => {
+        calls += 1;
+        cb(1, 2, 3, 4);
+      },
+    };
+    expect(rects.read(node, 'A')).toEqual({ x: 1, y: 2, width: 3, height: 4 });
+    expect(rects.read(node, 'A')).toEqual({ x: 1, y: 2, width: 3, height: 4 });
+    expect(calls).toBe(1);
   });
 
-  it('an answer that comes later is kept and moved by the scroll since (the old architecture)', () => {
-    let scrollY = 0;
+  it('a later answer (the old architecture) fills the cache for the next touch; remeasure refreshes a stale one', () => {
+    const rects = createNativeRects();
     const pending: Array<() => void> = [];
-    const read = createNativeRects(() => scrollY);
-    const node = { measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => pending.push(() => cb(0, 500, 96, 96)) };
-    expect(read(node, 'A')).toBeNull();
+    let y = 500;
+    const node = { measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => pending.push(() => cb(0, y, 96, 96)) };
+    expect(rects.read(node, 'A')).toBeNull();
     pending.shift()!();
-    scrollY = 120;
-    expect(read(node, 'A')).toEqual({ x: 0, y: 380, width: 96, height: 96 });
+    expect(rects.read(node, 'A')).toEqual({ x: 0, y: 500, width: 96, height: 96 });
+    // The screen scrolled 120: the cache is stale until the remeasure answers.
+    y = 380;
+    rects.remeasure(node, 'A');
+    expect(rects.read(node, 'A')!.y).toBe(500);
+    pending.shift()!();
+    expect(rects.read(node, 'A')!.y).toBe(380);
   });
 
-  it('a node that cannot measure reads as none until it has an answer', () => {
-    expect(createNativeRects(() => 0)({}, 'A')).toBeNull();
+  it('a node that cannot measure reads as none', () => {
+    const rects = createNativeRects();
+    expect(rects.read({}, 'A')).toBeNull();
+    rects.remeasure(null, 'A');
+    expect(rects.read(null, 'A')).toBeNull();
+  });
+});
+
+describe('tapNow and supportsPinchZoom', () => {
+  it('the web clock is performance.now(); without a document, the wall clock', () => {
+    const g = globalThis as { document?: unknown };
+    const had = 'document' in g;
+    g.document = {};
+    const perf = performance.now();
+    expect(Math.abs(tapNow() - perf)).toBeLessThan(1000);
+    delete g.document;
+    expect(Math.abs(tapNow() - Date.now())).toBeLessThan(1000);
+    if (had) g.document = {};
+  });
+
+  it('reads CSS.supports for touch-action: pinch-zoom', () => {
+    const g = globalThis as { CSS?: unknown };
+    g.CSS = { supports: (p: string, v: string) => p === 'touch-action' && v === 'pinch-zoom' };
+    expect(supportsPinchZoom()).toBe(true);
+    g.CSS = { supports: () => false };
+    expect(supportsPinchZoom()).toBe(false);
+    delete g.CSS;
+    expect(supportsPinchZoom()).toBe(false);
   });
 });
 

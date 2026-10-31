@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import type { ViewProps, ViewStyle } from 'react-native';
@@ -6,72 +6,103 @@ import { boardTouchAction } from '../../tap-model';
 import { useScreenFit } from '../Screen/fit';
 import { TapBoardContext, type TapBoardContextValue } from './context';
 import { createTapBoardController, type TapBoardController } from './controller';
-import { createNativeRects, stampedClock, webHitAt, webRect } from './host';
+import { createNativeRects, stampedClock, supportsPinchZoom, tapNow, webHitAt, webRect } from './host';
+import { useTapScroller } from './scroller';
+import { TapLockContext } from './TapLockProvider';
 import type { TapBoardProps } from './types';
 
 /**
- * An answer area that owns its touches (docs/specs/AMENDMENTS-TOUCH.md sections 3 and 4.1; design/components/TapBoard/
+ * An answer area that owns its touches (docs/specs/AMENDMENTS-TOUCH.md sections 3 to 5; design/components/TapBoard/
  * spec.md): its `TapTarget`s commit when the finger lifts, a graze within reach or travel still counts, a touch in a gap
- * goes to the nearest target, a second finger and a bounce never count twice, and only a touch that will count shows
- * the press look. The rules are `tap-model.ts`; the responder is `controller.ts`; this component wires the platform in.
+ * goes to the nearest target, the latest finger on an answer wins, a bounce never counts twice, a drag past
+ * `TAP_TRAVEL` scrolls the page the board sits in, and only a touch that will count shows the press look. The rules
+ * are `tap-model.ts`; the responder is `controller.ts`; this component wires the platform in.
  */
 
 const NONE: ReadonlySet<string> = new Set();
-
-/** `touch-action: pinch-zoom` is newer than `none` (older iOS Safari lacks it): assumption U1. */
-function supportsPinchZoom(): boolean {
-  const css = (globalThis as { CSS?: { supports?: (property: string, value: string) => boolean } }).CSS;
-  return typeof css?.supports === 'function' && css.supports('touch-action', 'pinch-zoom');
-}
-
-/** The web's input clock: `performance.now()`, the clock of DOM event time stamps. */
-function webNow(): number {
-  const perf = (globalThis as { performance?: { now?: () => number } }).performance;
-  return typeof perf?.now === 'function' ? perf.now() : Date.now();
-}
+/** Native: after the last scroll event of a scroll (a drag or a momentum), measure the targets again. */
+const SETTLE_MS = 100;
 
 function windowScroll(): { x: number; y: number } {
   const w = (globalThis as { window?: { scrollX?: number; scrollY?: number } }).window;
   return { x: w?.scrollX ?? 0, y: w?.scrollY ?? 0 };
 }
 
-export function TapBoard({ lock, scroll = 'auto', multiTouch = 'first', disabled = false, testID, children }: TapBoardProps): ReactElement {
+export function TapBoard({ lock, scroll = 'auto', multiTouch = 'latest', disabled = false, testID, children }: TapBoardProps): ReactElement {
   const fit = useScreenFit();
+  const scroller = useTapScroller();
+  const app = useContext(TapLockContext);
   const web = Platform.OS === 'web';
   const node = useRef<unknown>(null);
-  const fitNow = useRef(fit);
-  fitNow.current = fit;
+  // Read by the controller at each event, so it always sees the current scroller and app lock.
+  const live = useRef({ scroller, app });
+  live.current = { scroller, app };
   const [pressed, setPressed] = useState<ReadonlySet<string>>(NONE);
   const [locked, setLocked] = useState(false);
   const controllerRef = useRef<TapBoardController | null>(null);
   if (controllerRef.current === null) {
-    const nativeRects = createNativeRects(() => fitNow.current.scrollY());
-    // The web runs on the clock of its events' time stamps; native on the wall clock (its stamps are on another one).
-    const now = web ? webNow : Date.now;
+    const nativeRects = createNativeRects();
     controllerRef.current = createTapBoardController(
       {
-        now,
-        timeOf: web ? stampedClock(now) : () => now(),
-        rectOf: web ? (target) => webRect(target, windowScroll()) : nativeRects,
+        now: tapNow,
+        // The web reads inputs at their DOM time stamps; native on the board clock (its stamps are on another one).
+        timeOf: web ? stampedClock(tapNow) : () => tapNow(),
+        rectOf: web ? (target) => webRect(target, windowScroll()) : nativeRects.read,
+        ...(web ? {} : { remeasure: nativeRects.remeasure }),
         hitAt: web ? (target, nodes) => webHitAt(target, nodes, node.current) : () => undefined,
+        appLock: () => live.current.app,
+        scroller: () => live.current.scroller,
         onPressedChange: setPressed,
         onLockChange: setLocked,
         setTimer: (fn, ms) => setTimeout(fn, ms),
         clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
       },
-      { lock, multiTouch, disabled },
+      { lock, multiTouch, disabled, scroll },
     );
   }
   const controller = controllerRef.current;
-  controller.configure({ lock, multiTouch, disabled });
+  controller.configure({ lock, multiTouch, disabled, scroll });
   useEffect(() => () => controller.dispose(), [controller]);
+  // Native `scrollEnabled` is opt-in: a Screen turns it off only while it fits and holds a board (section 5).
+  const registerBoard = fit.registerBoard;
+  useEffect(() => registerBoard(), [registerBoard]);
+  // A scroll the board did not drive cancels a live press (rule 7); on native, a scroll that settles re-measures.
+  useEffect(() => {
+    if (scroller === null) return undefined;
+    let settle: ReturnType<typeof setTimeout> | null = null;
+    const stopCancel = controller.attachScroller(scroller);
+    const stopMeasure = web
+      ? () => undefined
+      : scroller.onScroll(() => {
+          if (settle !== null) clearTimeout(settle);
+          settle = setTimeout(() => controller.remeasure(), SETTLE_MS);
+        });
+    return () => {
+      stopCancel();
+      stopMeasure();
+      if (settle !== null) clearTimeout(settle);
+    };
+  }, [controller, scroller, web]);
+  // Native: a fit change moves things without a layout the targets hear of.
+  useEffect(() => {
+    if (!web) controller.remeasure();
+  }, [controller, fit.fits, web]);
 
   const value = useMemo<TapBoardContextValue>(
-    () => ({ register: controller.register, click: controller.click, lock: controller.lock, locked, pressed }),
+    () => ({
+      register: controller.register,
+      registerControl: controller.registerControl,
+      click: controller.click,
+      lock: controller.lock,
+      remeasure: controller.remeasure,
+      locked,
+      pressed,
+    }),
     [controller, locked, pressed],
   );
-  // Web only: a board that must not pan stops the browser from cancelling a graze (KT-D3). Not a native style.
-  const style = web ? ({ touchAction: boardTouchAction(scroll, fit.fits, supportsPinchZoom()) } as unknown as ViewStyle) : undefined;
+  // Web only: the board pans along its scroller only while it can scroll (KT-D3). Not a native style.
+  const scrollState = scroller === null ? null : { axis: scroller.axis, canScroll: scroller.canScroll };
+  const style = web ? ({ touchAction: boardTouchAction(scrollState, supportsPinchZoom()) } as unknown as ViewStyle) : undefined;
   // The responder events of both platforms carry what the controller reads (`changedTouches`, `pageX`, `pageY`).
   const responder = controller.handlers as unknown as ViewProps;
 
@@ -83,6 +114,7 @@ export function TapBoard({ lock, scroll = 'auto', multiTouch = 'first', disabled
         }}
         testID={testID}
         style={style}
+        onLayout={web ? undefined : () => controller.remeasure()}
         {...responder}
       >
         {children}

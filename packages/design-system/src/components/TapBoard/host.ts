@@ -54,28 +54,41 @@ interface MeasurableNode {
   measureInWindow?: (cb: (x: number, y: number, width: number, height: number) => void) => void;
 }
 
+export interface NativeRects {
+  /** The cached rectangle (rule 1: the capture call is synchronous, `measureInWindow` is not on the old architecture). */
+  read(node: unknown, id: string): TapRect | null;
+  /** Measures again; the answer lands in the cache (at once on the new architecture, later on the old one). */
+  remeasure(node: unknown, id: string): void;
+}
+
 /**
- * The native rectangle in window points. `measureInWindow` answers at once on the new architecture and later on the
- * old one, so each answer is kept with the screen's scroll offset at that moment, and a touch that comes before the
- * next answer reads the kept rectangle moved by how far the screen has scrolled since.
+ * The native rectangles in window points: a cache each target fills on its layout, refreshed after its scroller's
+ * scroll or momentum ends and after a `Screen` fit change (docs/specs/AMENDMENTS-TOUCH.md section 3.2 rule 1). A
+ * target with no answer yet is measured at once and used if the answer comes synchronously.
  */
-export function createNativeRects(scrollY: () => number): (node: unknown, id: string) => TapRect | null {
-  const kept = new Map<string, { rect: TapRect; scrollY: number }>();
-  return (node, id) => {
-    const measure = (node as MeasurableNode | null)?.measureInWindow;
-    let fresh: TapRect | null = null;
-    if (typeof measure === 'function') {
-      measure.call(node, (x, y, width, height) => {
-        const rect = { x, y, width, height };
-        kept.set(id, { rect, scrollY: scrollY() });
-        fresh = rect;
-      });
-    }
-    if (fresh !== null) return fresh;
-    const last = kept.get(id);
-    if (last === undefined) return null;
-    return { ...last.rect, y: last.rect.y - (scrollY() - last.scrollY) };
+export function createNativeRects(): NativeRects {
+  const kept = new Map<string, TapRect>();
+  const remeasure = (node: unknown, id: string): void => {
+    const measure = (node as MeasurableNode | null | undefined)?.measureInWindow;
+    if (typeof measure !== 'function') return;
+    measure.call(node, (x, y, width, height) => {
+      kept.set(id, { x, y, width, height });
+    });
   };
+  return {
+    read: (node, id) => {
+      if (!kept.has(id)) remeasure(node, id);
+      return kept.get(id) ?? null;
+    },
+    remeasure,
+  };
+}
+
+/** The clock of every board and of the app lock: on the web `performance.now()`, the clock of DOM event stamps. */
+export function tapNow(): number {
+  const perf = (globalThis as { performance?: { now?: () => number } }).performance;
+  const web = (globalThis as { document?: unknown }).document !== undefined;
+  return web && typeof perf?.now === 'function' ? perf.now() : Date.now();
 }
 
 /** An event time stamp further than this from now is on another clock (or junk): use now instead. */
@@ -91,4 +104,10 @@ export function stampedClock(now: () => number): (stamp: unknown) => number {
     const at = now();
     return typeof stamp === 'number' && Number.isFinite(stamp) && Math.abs(at - stamp) < SAME_CLOCK_MS ? Math.min(stamp, at) : at;
   };
+}
+
+/** `touch-action: pinch-zoom` is newer than `none` (older iOS Safari lacks it): assumption U1. */
+export function supportsPinchZoom(): boolean {
+  const css = (globalThis as { CSS?: { supports?: (property: string, value: string) => boolean } }).CSS;
+  return typeof css?.supports === 'function' && css.supports('touch-action', 'pinch-zoom');
 }
