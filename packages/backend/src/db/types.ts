@@ -355,6 +355,8 @@ export interface Db {
   /** Bounded purge of counter rows older than `before`. */
   purgeRateHits(before: Date, limit: number): Promise<number>;
   getTransferPrefs(learnerId: string): Promise<TransferPrefs>;
+  /** [GX-W] Which of these learners manage their own classes (`self_managed`), set-based in one statement. */
+  selfManagedLearners(learnerIds: readonly string[]): Promise<string[]>;
   /** Upsert touching only `which`. */
   setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void>;
 

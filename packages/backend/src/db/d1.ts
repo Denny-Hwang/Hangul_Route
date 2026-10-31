@@ -1392,6 +1392,15 @@ export class D1Db implements Db {
     const prefs = await this.one('SELECT * FROM learner_transfer_prefs WHERE learner_id = ?', [learnerId], (r): TransferPrefs => ({ selfManaged: bool(r.self_managed), blockTeacherRequests: bool(r.block_teacher_requests), updatedAt: nstr(r.updated_at) }));
     return prefs ?? { selfManaged: false, blockTeacherRequests: false, updatedAt: null };
   }
+  async selfManagedLearners(learnerIds: readonly string[]): Promise<string[]> {
+    if (learnerIds.length === 0) return [];
+    const rows = await this.many(
+      'SELECT learner_id FROM learner_transfer_prefs WHERE self_managed = 1 AND learner_id IN (SELECT value FROM json_each(?))',
+      [JSON.stringify([...new Set(learnerIds)])],
+      (r) => str(r.learner_id),
+    );
+    return rows;
+  }
   async setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void> {
     assertTransferPrefKey(which);
     const column = PREF_COLUMN[which];

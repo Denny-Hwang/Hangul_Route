@@ -16,7 +16,7 @@ import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { allowedOnSpace, can, type Action, type Actor } from '../lib/can';
-import { rosterAttention, rosterGates, spacesAttention } from '../lib/attention';
+import { rosterAttention, rosterGates, schoolAttention, spacesAttention } from '../lib/attention';
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { learnerCapOf, schoolUsage } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
@@ -614,6 +614,22 @@ spacesRoutes.get('/:id/roster', async (c) => {
     openMoves: canRename ? await hasOpenMoves(db, space.id) : false,
     ...(incoming === null ? {} : { incoming }),
   });
+});
+
+/**
+ * [GX-W] AMENDMENTS-GROWNUP-UX section 12: a school's waiting counts per live child class, for the school's owner and
+ * admins (they act on its classes through the cascade without being members, so `GET /api/spaces` does not list
+ * them). Counts only, read-only, a constant number of statements. Anyone else, and any other space, answers 404.
+ */
+spacesRoutes.get('/:id/attention', async (c) => {
+  const account = await requireAccount(c);
+  if (!('id' in account)) return account;
+  const db = dbFor(c);
+  const space = await db.getSpace(c.req.param('id'));
+  if (!space || space.kind !== 'school' || space.archivedAt || !can(await accountActor(db, account), 'roster.manage', { kind: 'space', ctx: { space, parent: null } })) {
+    return fail(c, 'not_found', 'Space not found', 404);
+  }
+  return ok(c, { classes: await schoolAttention(db, space, new Date(), c.env) });
 });
 
 /**

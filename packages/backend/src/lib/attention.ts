@@ -1,4 +1,4 @@
-import type { Membership, PendingMoveStep, RosterPending, RosterPendingMove, Space, SpaceAttention, SpaceKind } from '@hangul-route/content-schema';
+import type { ClassAttention, Membership, PendingMoveStep, RosterPending, RosterPendingMove, Space, SpaceAttention, SpaceKind } from '@hangul-route/content-schema';
 import type { Db, StoredClassMove, StoredRelink, StoredTransfer } from '../db';
 import { isOpenTransfer } from '../db/transfer-rules';
 import type { Action } from './can';
@@ -12,14 +12,17 @@ import { classTransferEnabled, settle, type TransferEnv } from './transfer';
  * - The roster (`GET /:id/roster`) gets `learners[].pending` and, on a class, `incoming`. It settles the rows it reads
  *   first (expiry, executed or ended moves) and only then reads the members, so a move executed on this read lists the
  *   learner as a member and never also as pending. Each field is gated on the action that can decide it.
- * - The spaces list (`GET /api/spaces`) gets `attention`, counts only. It never writes: every count filters what a
- *   list route's settle would end (past the window, learner left the source, destination archived), so a past-expiry
- *   row that no one has settled yet is not counted and the counts equal what the list routes show after their settle.
- *   Set-based over every space of the caller (a school counts its live classes), so a school admin with 60 classes
- *   stays inside the D1 statement budget.
+ * - The spaces list (`GET /api/spaces`) gets `attention` on each space of the caller, and a school's
+ *   `GET /:id/attention` gives the same for every live child class (a school admin acts on them through the cascade
+ *   without being a member). Counts only, and they never write: every count filters what a list route's settle would
+ *   end (past the window, learner left the source, destination archived), so a past-expiry row that no one has
+ *   settled yet is not counted and the counts equal what the list routes show after their settle. Set-based, so a
+ *   school admin with 60 classes stays inside the D1 statement budget.
  *
  * The counting rule is the console's (`pendingCount`, section 3.4): a class move counts where its own step waits; a
- * teacher move counts at the destination while it waits for its acceptance.
+ * teacher move counts at the destination while it waits for its acceptance. T8: a destination counts a transfer only
+ * once it may see it (the learner side said yes). A family counts a move only when it can answer it (the learner does
+ * not manage their own classes: `learnerRoute === 'caregiver'`).
  */
 
 /** Which roster fields this reader may see. */
@@ -44,14 +47,17 @@ const destinationStepWaits = (t: StoredTransfer): boolean => t.status === 'reque
 /** A teacher move that waits for the destination's acceptance (TV-D8). */
 const asksDestination = (m: StoredClassMove): boolean => m.status === 'requested' && m.kind === 'accept';
 
-/** Where an open request stands for `side` (the source class, or the learner's family). */
-function transferStep(t: StoredTransfer, side: 'source' | 'learner'): PendingMoveStep {
+/** A request whose family step waits and that the family can answer (the learner does not manage their own classes). */
+const familyStepWaits = (t: StoredTransfer, selfManaged: ReadonlySet<string>): boolean => t.status === 'requested' && t.learner.state === 'pending' && !selfManaged.has(t.learnerId);
+
+/** Where an open request stands for `side` (the source class, or the learner's family); `answerable` is false for a self-managed learner's family. */
+function transferStep(t: StoredTransfer, side: 'source' | 'learner', answerable: boolean): PendingMoveStep {
   if (t.status === 'approved') return t.blockReason ? 'room' : 'scheduled';
-  return (side === 'source' ? t.source.state : t.learner.state) === 'pending' ? 'yours' : 'others';
+  return answerable && (side === 'source' ? t.source.state : t.learner.state) === 'pending' ? 'yours' : 'others';
 }
 
-function transferPending(t: StoredTransfer, side: 'source' | 'learner', to: string | null): RosterPendingMove {
-  const step = transferStep(t, side);
+function transferPending(t: StoredTransfer, side: 'source' | 'learner', to: string | null, answerable = true): RosterPendingMove {
+  const step = transferStep(t, side, answerable);
   return { source: 'transfer', id: t.id, step, to, on: step === 'scheduled' ? t.executeAfter : null, expiresAt: t.expiresAt };
 }
 
@@ -106,7 +112,11 @@ export async function rosterAttention(db: Db, space: Space, gates: RosterGates, 
   const members = await readMembers();
   const learnerIds = new Set(members.filter((m) => m.memberKind === 'learner').map((m) => m.memberId));
   let familyTransfers: StoredTransfer[] = [];
-  if (space.kind === 'family' && gates.move && learnerIds.size > 0) familyTransfers = await settleTransfers(db, await db.openTransfersOfLearners([...learnerIds]), now, env);
+  let selfManaged = new Set<string>();
+  if (space.kind === 'family' && gates.move && learnerIds.size > 0) {
+    familyTransfers = await settleTransfers(db, await db.openTransfersOfLearners([...learnerIds]), now, env);
+    if (familyTransfers.length > 0) selfManaged = new Set(await db.selfManagedLearners(familyTransfers.map((t) => t.learnerId)));
+  }
 
   const destIds = [...new Set([...transfersOut, ...familyTransfers].map((t) => t.destSpaceId).concat(movesOut.map((m) => m.destSpaceId)))];
   const names = new Map((destIds.length ? await db.getSpaces(destIds) : []).map((s) => [s.id, s.name]));
@@ -135,7 +145,8 @@ export async function rosterAttention(db: Db, space: Space, gates: RosterGates, 
     }
     for (const t of familyTransfers) {
       const p = entry(t.learnerId);
-      if (p && !p.move) p.move = transferPending(t, 'learner', names.get(t.destSpaceId) ?? null);
+      // A self-managed learner answers for themselves: the family's own step does not wait on the family.
+      if (p && !p.move) p.move = transferPending(t, 'learner', names.get(t.destSpaceId) ?? null, !selfManaged.has(t.learnerId));
     }
   }
   for (const [learnerId, p] of pending) if (!p.relink && !p.move) pending.delete(learnerId);
@@ -149,46 +160,23 @@ export interface AttentionItem {
   allowed: ReadonlySet<Action>;
 }
 
-interface Counter {
-  relinkSpaces: Set<string>;
-  moveClasses: Set<string>;
-  moveFamily: boolean;
+/** One space to count, and what this caller may count there. */
+interface Target {
+  id: string;
+  relinks: boolean;
+  classMoves: boolean;
+  familyMoves: boolean;
 }
 
 /**
- * `attention` per space of the caller (section 12): `relinks` where it holds `roster.manage`, `moves` where it holds
- * `learner.transfer` (a class) or `snapshot.read` (a family) while moves are on, else 0; a school counts its live
- * classes for an owner or admin (the cascade gives both actions there). Archived spaces, and spaces where the caller
- * may decide nothing, get none. Read-only; a constant number of statements whatever the number of spaces.
+ * The counts of every target in a constant number of statements (each read covers all targets): re-links pending and
+ * inside their window; class moves by the console's rule with T8; a family's moves it can answer. Read-only.
  */
-export async function spacesAttention(db: Db, items: readonly AttentionItem[], now: Date, env: TransferEnv | undefined): Promise<Map<string, SpaceAttention>> {
-  const movesOn = classTransferEnabled(env);
+async function attentionCounts(db: Db, targets: readonly Target[], now: Date): Promise<Map<string, SpaceAttention>> {
   const at = now.toISOString();
-  const counters = new Map<string, Counter>();
-  const schools = items.filter((i) => i.space.kind === 'school' && !i.space.archivedAt && i.allowed.has('roster.manage')).map((i) => i.space.id);
-  const children = schools.length ? (await db.childSpacesOfSpaces(schools)).filter((s) => s.kind === 'class' && !s.archivedAt) : [];
-  for (const { space, allowed } of items) {
-    if (space.archivedAt) continue;
-    if (space.kind === 'school') {
-      if (!allowed.has('roster.manage')) continue;
-      const own = children.filter((s) => s.parentSpaceId === space.id).map((s) => s.id);
-      counters.set(space.id, { relinkSpaces: new Set(own), moveClasses: new Set(movesOn ? own : []), moveFamily: false });
-      continue;
-    }
-    const relink = allowed.has('roster.manage');
-    const moves = movesOn && allowed.has(space.kind === 'class' ? 'learner.transfer' : 'snapshot.read');
-    if (!relink && !moves) continue;
-    counters.set(space.id, {
-      relinkSpaces: new Set(relink ? [space.id] : []),
-      moveClasses: new Set(moves && space.kind === 'class' ? [space.id] : []),
-      moveFamily: moves && space.kind === 'family',
-    });
-  }
-  const all = [...counters.values()];
-  const relinkIds = [...new Set(all.flatMap((c) => [...c.relinkSpaces]))];
-  const classIds = [...new Set(all.flatMap((c) => [...c.moveClasses]))];
-  const familyIds = [...counters.entries()].filter(([, c]) => c.moveFamily).map(([id]) => id);
-
+  const relinkIds = targets.filter((t) => t.relinks).map((t) => t.id);
+  const classIds = targets.filter((t) => t.classMoves).map((t) => t.id);
+  const familyIds = targets.filter((t) => t.familyMoves).map((t) => t.id);
   const [relinks, outT, inT, inM, familyMembers] = await Promise.all([
     relinkIds.length ? db.pendingRelinksOfSpaces(relinkIds, now) : Promise.resolve([]),
     classIds.length ? db.openTransfersOfSpaces(classIds, 'source') : Promise.resolve([]),
@@ -198,12 +186,12 @@ export async function spacesAttention(db: Db, items: readonly AttentionItem[], n
   ]);
   const familyLearners = familyMembers.filter((m) => m.memberKind === 'learner');
   const familyT = familyLearners.length ? await db.openTransfersOfLearners([...new Set(familyLearners.map((m) => m.memberId))]) : [];
+  const selfManaged = new Set(familyT.length ? await db.selfManagedLearners(familyT.map((t) => t.learnerId)) : []);
 
   // What a settle would end, read without writing: the destination archived or gone, the learner gone from the source.
   const rows: Array<{ learnerId: string; sourceSpaceId: string; destSpaceId: string }> = [...outT, ...inT, ...inM, ...familyT];
-  const sourceIds = [...new Set(rows.map((r) => r.sourceSpaceId))];
   const [spaces, sourceMembers] = rows.length
-    ? await Promise.all([db.getSpaces([...new Set(rows.map((r) => r.destSpaceId))]), db.membersOfSpaces(sourceIds)])
+    ? await Promise.all([db.getSpaces([...new Set(rows.map((r) => r.destSpaceId))]), db.membersOfSpaces([...new Set(rows.map((r) => r.sourceSpaceId))])])
     : [[], []];
   const liveDest = new Set(spaces.filter((s) => !s.archivedAt).map((s) => s.id));
   const inSource = new Set(sourceMembers.filter((m) => m.memberKind === 'learner').map((m) => `${m.spaceId}\n${m.memberId}`));
@@ -216,17 +204,53 @@ export async function spacesAttention(db: Db, items: readonly AttentionItem[], n
   for (const t of outT) if (t.status === 'requested' && t.source.state === 'pending' && live(t)) bump(t.sourceSpaceId);
   for (const t of inT) if (destinationStepWaits(t) && live(t)) bump(t.destSpaceId);
   for (const m of inM) if (asksDestination(m) && live(m)) bump(m.destSpaceId);
-  const familyWaiting = (familyId: string): number => {
+  for (const familyId of familyIds) {
     const ids = new Set(familyLearners.filter((m) => m.spaceId === familyId).map((m) => m.memberId));
-    return familyT.filter((t) => ids.has(t.learnerId) && t.status === 'requested' && t.learner.state === 'pending' && live(t)).length;
-  };
+    for (const t of familyT) if (ids.has(t.learnerId) && familyStepWaits(t, selfManaged) && live(t)) bump(familyId);
+  }
 
   const out = new Map<string, SpaceAttention>();
-  for (const [spaceId, c] of counters) {
-    const mine = relinks.filter((r) => c.relinkSpaces.has(r.spaceId));
-    const moves = [...c.moveClasses].reduce((n, id) => n + (waitingAt.get(id) ?? 0), 0) + (c.moveFamily ? familyWaiting(spaceId) : 0);
-    const soonest = mine.map((r) => r.expiresAt).sort()[0] ?? null;
-    out.set(spaceId, { relinks: mine.length, moves, relinkExpiresAt: soonest });
+  for (const target of targets) {
+    const mine = target.relinks ? relinks.filter((r) => r.spaceId === target.id) : [];
+    const moves = target.classMoves || target.familyMoves ? waitingAt.get(target.id) ?? 0 : 0;
+    out.set(target.id, { relinks: mine.length, moves, relinkExpiresAt: mine.map((r) => r.expiresAt).sort()[0] ?? null });
   }
   return out;
+}
+
+/**
+ * `spaces[].attention` (section 12): on each live space of the caller, `relinks` where it holds `roster.manage`,
+ * `moves` where it holds `learner.transfer` (a class) or `snapshot.read` (a family) while moves are on, else 0.
+ * Absent on an archived space and where the caller may decide nothing (a school `teacher`). A school's row counts the
+ * school space itself; its classes come from `schoolAttention`, so a persona total counts each class once.
+ */
+export async function spacesAttention(db: Db, items: readonly AttentionItem[], now: Date, env: TransferEnv | undefined): Promise<Map<string, SpaceAttention>> {
+  const movesOn = classTransferEnabled(env);
+  const targets: Target[] = [];
+  for (const { space, allowed } of items) {
+    if (space.archivedAt) continue;
+    const target: Target = {
+      id: space.id,
+      relinks: allowed.has('roster.manage'),
+      classMoves: movesOn && space.kind === 'class' && allowed.has('learner.transfer'),
+      familyMoves: movesOn && space.kind === 'family' && allowed.has('snapshot.read'),
+    };
+    if (target.relinks || target.classMoves || target.familyMoves) targets.push(target);
+  }
+  return attentionCounts(db, targets, now);
+}
+
+/**
+ * A school's `GET /:id/attention` (section 12): the counts of every live child class, in the order the school lists
+ * them, for a caller whose school role cascades `roster.manage` and `learner.transfer` to its classes.
+ */
+export async function schoolAttention(db: Db, school: Space, now: Date, env: TransferEnv | undefined): Promise<ClassAttention[]> {
+  const movesOn = classTransferEnabled(env);
+  const classes = (await db.childSpaces(school.id)).filter((s) => s.kind === 'class' && !s.archivedAt);
+  const counts = await attentionCounts(
+    db,
+    classes.map((s) => ({ id: s.id, relinks: true, classMoves: movesOn, familyMoves: false })),
+    now,
+  );
+  return classes.map((s) => ({ spaceId: s.id, ...(counts.get(s.id) as SpaceAttention) }));
 }

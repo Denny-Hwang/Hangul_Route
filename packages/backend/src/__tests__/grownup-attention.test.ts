@@ -303,18 +303,27 @@ describe('GET /api/spaces attention', () => {
     expect(attentionOf(await spaces('teacher-b', LOCKED), B)).toEqual({ relinks: 1, moves: 0, relinkExpiresAt: ahead(5 * 60_000) });
   });
 
-  it('a school counts its live classes for its owner and admins, and nothing for a school teacher', async () => {
-    await db.putSpace(space(SCHOOL, 'school', 'admin', { name: 'Hangul School' }));
-    await member(SCHOOL, 'account', 'admin', 'owner');
-    await member(SCHOOL, 'account', 'teacher-c', 'teacher');
-    await db.putSpace({ ...(await db.getSpace(A))!, parentSpaceId: SCHOOL });
-    await db.putSpace({ ...(await db.getSpace(B))!, parentSpaceId: SCHOOL });
-    await db.putSpace(space('space:class-gone', 'class', 'admin', { parentSpaceId: SCHOOL, archivedAt: OLD }));
-    await db.putRelink(relink('relink:a', A, SUNI, ahead(5 * 60_000)));
-    await db.putRelink(relink('relink:gone', 'space:class-gone', SUNI, ahead(2 * 60_000)));
-    await askB();
-    expect(attentionOf(await spaces('admin'), SCHOOL)).toEqual({ relinks: 1, moves: 1, relinkExpiresAt: ahead(5 * 60_000) });
+  it("a school's own row counts the school space only (its classes come from the school's attention read); a school teacher gets none", async () => {
+    await schoolWorld();
+    expect(attentionOf(await spaces('admin'), SCHOOL)).toEqual({ relinks: 0, moves: 0, relinkExpiresAt: null });
     expect(attentionOf(await spaces('teacher-c'), SCHOOL)).toBeUndefined();
+  });
+
+  it('T8: a class-started request whose learner step waits counts 0 for the destination (attention, incoming, list)', async () => {
+    await create(A, 'teacher-a', classCreate());
+    expect(attentionOf(await spaces('teacher-b'), B)).toEqual({ relinks: 0, moves: 0, relinkExpiresAt: null });
+    expect((await roster(B, 'teacher-b')).body.data).toMatchObject({ incoming: 0 });
+    expect(requestsOf(await list(B, 'teacher-b'))).toEqual([]);
+  });
+
+  it('a move of a self-managed learner counts 0 for the family, and reads as waiting for others on its roster', async () => {
+    // asked before the learner took over their own classes: the family can no longer answer it (learnerRoute 'none')
+    expect((await create(A, 'teacher-a', classCreate())).status).toBe(201);
+    expect(attentionOf(await spaces('mom'), FAMILY)?.moves).toBe(1);
+    await db.setTransferPref(SUNI, 'selfManaged', true, NOW);
+    expect(requestsOf(await list(FAMILY, 'mom'))[0]).toMatchObject({ learnerState: 'pending', learnerRoute: 'none' });
+    expect(attentionOf(await spaces('mom'), FAMILY)?.moves).toBe(0);
+    expect(rowOf(await roster(FAMILY, 'mom'), SUNI)?.pending?.move).toMatchObject({ step: 'others' });
   });
 
   it('leaves attention off an archived space', async () => {
@@ -331,8 +340,58 @@ describe('GET /api/spaces attention', () => {
   });
 });
 
-describe('statement budget of GET /api/spaces with attention (Workers Free: 50 a request)', () => {
-  async function prepared(classes: number): Promise<number> {
+/** The school above classes A and B (and an archived class C under it): admin owns it, teacher-c teaches in it. */
+async function schoolWorld(): Promise<void> {
+  await db.putSpace(space(SCHOOL, 'school', 'admin', { name: 'Hangul School' }));
+  await member(SCHOOL, 'account', 'admin', 'owner');
+  await member(SCHOOL, 'account', 'teacher-c', 'teacher');
+  await db.putSpace({ ...(await db.getSpace(A))!, parentSpaceId: SCHOOL });
+  await db.putSpace({ ...(await db.getSpace(B))!, parentSpaceId: SCHOOL });
+  await db.putSpace(space('space:class-gone', 'class', 'admin', { parentSpaceId: SCHOOL, archivedAt: OLD }));
+}
+
+describe("a school's GET /:id/attention", () => {
+  it('gives every live child class to the school owner, who is a member of none of them', async () => {
+    await schoolWorld();
+    await db.putRelink(relink('relink:a', A, SUNI, ahead(5 * 60_000)));
+    await db.putRelink(relink('relink:gone', 'space:class-gone', SUNI, ahead(2 * 60_000)));
+    await askB();
+    const r = await get(`/api/spaces/${SCHOOL}/attention`, 'admin');
+    expect(r.status).toBe(200);
+    const classes = (r.body.data as { classes: Array<{ spaceId: string }> }).classes;
+    expect([...classes].sort((x, y) => x.spaceId.localeCompare(y.spaceId))).toEqual([
+      { spaceId: A, relinks: 1, moves: 0, relinkExpiresAt: ahead(5 * 60_000) },
+      { spaceId: B, relinks: 0, moves: 1, relinkExpiresAt: null },
+    ]);
+    // the same counts as each class's own row for its teacher
+    expect(attentionOf(await spaces('teacher-b'), B)).toEqual({ relinks: 0, moves: 1, relinkExpiresAt: null });
+    expect(JSON.stringify(r.body)).not.toMatch(/Suni|profile:/);
+  });
+
+  it('counts moves 0 while class moves are locked, re-links still', async () => {
+    await schoolWorld();
+    await db.putRelink(relink('relink:a', A, SUNI, ahead(5 * 60_000)));
+    await askB();
+    const classes = ((await get(`/api/spaces/${SCHOOL}/attention`, 'admin', LOCKED)).body.data as { classes: Array<{ spaceId: string; moves: number; relinks: number }> }).classes;
+    expect(classes.map((x) => [x.spaceId, x.relinks, x.moves]).sort()).toEqual([
+      [A, 1, 0],
+      [B, 0, 0],
+    ]);
+  });
+
+  it('answers 404 to anyone else, and for a space that is not a live school', async () => {
+    await schoolWorld();
+    for (const user of ['teacher-c', 'teacher-a', 'mom', 'stranger']) expect((await get(`/api/spaces/${SCHOOL}/attention`, user)).status, user).toBe(404);
+    expect((await get(`/api/spaces/${A}/attention`, 'teacher-a')).status).toBe(404);
+    expect((await get('/api/spaces/space:none/attention', 'admin')).status).toBe(404);
+    await db.putSpace({ ...(await db.getSpace(SCHOOL))!, archivedAt: OLD });
+    expect((await get(`/api/spaces/${SCHOOL}/attention`, 'admin')).status).toBe(404);
+    expect((await call('GET', `/api/spaces/${SCHOOL}/attention`, { 'content-type': 'application/json' })).status).toBe(401);
+  });
+});
+
+describe('statement budget of the attention reads (Workers Free: 50 a request)', () => {
+  async function prepared(classes: number, path: string): Promise<number> {
     const { openSqliteD1 } = await import('./helpers/sqlite');
     const { D1Db } = await import('../db/d1');
     const { setFallbackDb, fallbackDb } = await import('../db');
@@ -370,10 +429,14 @@ describe('statement budget of GET /api/spaces with attention (Workers Free: 50 a
       }
       await spaces('admin'); // the first-sign-in upsert is not part of the budget
       counting = true;
-      const r = await spaces('admin');
+      const r = await get(path, 'admin');
       counting = false;
       expect(r.status).toBe(200);
-      expect(attentionOf(r, SCHOOL)).toEqual({ relinks: classes, moves: classes, relinkExpiresAt: ahead(5 * 60_000) });
+      if (path.endsWith('/attention')) {
+        const rows = (r.body.data as { classes: Array<{ relinks: number; moves: number }> }).classes;
+        expect(rows).toHaveLength(classes);
+        expect(rows.every((x) => x.relinks === 1 && x.moves === 1)).toBe(true);
+      }
       return count;
     } finally {
       setFallbackDb(before);
@@ -381,10 +444,17 @@ describe('statement budget of GET /api/spaces with attention (Workers Free: 50 a
     }
   }
 
-  it('a school admin with 60 busy classes prepares as many statements as one with 1, well under 50', async () => {
-    const one = await prepared(1);
-    const sixty = await prepared(60);
+  it("a school's attention with 60 busy classes prepares as many statements as with 1, well under 50", async () => {
+    const one = await prepared(1, `/api/spaces/${SCHOOL}/attention`);
+    const sixty = await prepared(60, `/api/spaces/${SCHOOL}/attention`);
     expect(sixty).toBe(one);
-    expect(sixty).toBeLessThanOrEqual(20);
+    expect(sixty).toBeLessThanOrEqual(15);
+  });
+
+  it("the school admin's spaces list stays flat too", async () => {
+    const one = await prepared(1, '/api/spaces');
+    const sixty = await prepared(60, '/api/spaces');
+    expect(sixty).toBe(one);
+    expect(sixty).toBeLessThanOrEqual(15);
   });
 });

@@ -758,6 +758,17 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect(await db.openTransfersOfSpaces([], 'source')).toEqual([]);
       });
 
+      it('[GX-W] selfManagedLearners names the learners who manage their own classes, set-based', async () => {
+        await db.putLearner(learner('profile:two'));
+        await db.putLearner(learner('profile:three'));
+        await db.setTransferPref(LEARNER, 'selfManaged', true, at(HOUR));
+        await db.setTransferPref('profile:two', 'blockTeacherRequests', true, at(HOUR));
+        await db.setTransferPref('profile:three', 'selfManaged', true, at(HOUR));
+        await db.setTransferPref('profile:three', 'selfManaged', false, at(2 * HOUR));
+        expect(await db.selfManagedLearners([LEARNER, 'profile:two', 'profile:three', LEARNER])).toEqual([LEARNER]);
+        expect(await db.selfManagedLearners([])).toEqual([]);
+      });
+
       it('[GX-W] openTransfersOfLearners reads the open requests of a set of learners, newest first, set-based', async () => {
         await three();
         await db.cancelTransfer('transfer:0002', 'cancelled_initiator', 'family', at(HOUR));

@@ -793,6 +793,9 @@ export class MemoryDb implements Db {
   async getTransferPrefs(learnerId: string): Promise<TransferPrefs> {
     return clone(this.transferPrefs.get(learnerId) ?? { selfManaged: false, blockTeacherRequests: false, updatedAt: null });
   }
+  async selfManagedLearners(learnerIds: readonly string[]): Promise<string[]> {
+    return [...new Set(learnerIds)].filter((id) => this.transferPrefs.get(id)?.selfManaged === true);
+  }
   async setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void> {
     assertTransferPrefKey(which);
     if (!this.learners.has(learnerId)) throw new Error('FOREIGN KEY constraint failed: learner_transfer_prefs.learner_id');
