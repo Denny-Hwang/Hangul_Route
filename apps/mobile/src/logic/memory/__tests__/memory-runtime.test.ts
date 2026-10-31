@@ -671,9 +671,10 @@ describe('mastery: levels latched into cellBest, Ready to refresh, New volume an
     expect((await d.rt.mastery('p1', MASTERY_OFF))?.refresh).toEqual([]);
   });
 
-  it('New volume only with volumes on (this build ships no later volume: none)', async () => {
+  it('New volume only with volumes on: the finished cell offers its shipped Volume 2 (row CM-43 S3, Tastes and Recipes)', async () => {
     const d = await learner();
-    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, volumesOn: true }))?.newVolume).toEqual([]);
+    expect((await d.rt.mastery('p1', { ...MASTERY_OFF, volumesOn: true }))?.newVolume).toEqual([CELL]);
+    expect((await d.rt.mastery('p1', MASTERY_OFF))?.newVolume).toEqual([]);
   });
 
   it('Words known: the first read sets the baseline quietly; the Results read that crosses 100 celebrates it once', async () => {

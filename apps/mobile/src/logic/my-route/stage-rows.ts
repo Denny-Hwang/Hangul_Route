@@ -75,7 +75,8 @@ export function isDerivedComplete(
  * `taste` stage, so `explored` can be reached.
  */
 export function allPlayableDone(stage: StageKey, gridEpisodes: readonly Episode[], snapshot: Pick<ProgressSnapshot, 'quests'>): boolean {
-  const playable = playableEpisodes(gridEpisodes.filter((e) => e.stage === stage));
+  // The stage's cells, by their first volumes (F-CURR-002 row CM-40), as its completion reads them.
+  const playable = playableEpisodes(gridEpisodes.filter((e) => e.stage === stage && (e.volume ?? 1) === 1));
   if (playable.length === 0) return false;
   const completed = new Set(completionState(stage, gridEpisodes, snapshot).completedEpisodeIds);
   return playable.every((e) => completed.has(e.id));
