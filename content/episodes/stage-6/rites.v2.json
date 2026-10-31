@@ -81,7 +81,7 @@
                   {
                     "type": "sentence",
                     "sentence": {
-                      "ko": "추석은 9월 25일이에요.",
+                      "ko": "추석은 구월 이십오일이에요.",
                       "romanization": "chuseogeun guwol isiboirieyo",
                       "en": "Chuseok is on September 25."
                     }
@@ -141,7 +141,7 @@
             "ref": "realia:s6-rites-v2-q1-calendar",
             "kind": "calendar",
             "title": {
-              "ko": "9월",
+              "ko": "구월",
               "romanization": "guwol",
               "en": "September"
             },
@@ -149,7 +149,7 @@
               {
                 "id": "d7",
                 "text": {
-                  "ko": "7일",
+                  "ko": "칠일",
                   "romanization": "chiril",
                   "en": "the 7th"
                 },
@@ -162,20 +162,20 @@
               {
                 "id": "d11",
                 "text": {
-                  "ko": "11일",
+                  "ko": "십일일",
                   "romanization": "sibiril",
                   "en": "the 11th"
                 },
                 "value": {
-                  "ko": "음력 8월 1일",
-                  "romanization": "eumnyeok parwol iril",
+                  "ko": "음력 팔월 초하루",
+                  "romanization": "eumnyeok parwol choharu",
                   "en": "the 1st day of the 8th lunar month"
                 }
               },
               {
                 "id": "d23",
                 "text": {
-                  "ko": "23일",
+                  "ko": "이십삼일",
                   "romanization": "isipsamil",
                   "en": "the 23rd"
                 },
@@ -188,14 +188,14 @@
               {
                 "id": "d25",
                 "text": {
-                  "ko": "25일",
+                  "ko": "이십오일",
                   "romanization": "isiboil",
                   "en": "the 25th"
                 },
                 "value": {
-                  "ko": "추석 (음력 8월 15일)",
-                  "romanization": "chuseok eumnyeok parwol siboil",
-                  "en": "Chuseok (the 15th day of the 8th lunar month)"
+                  "ko": "추석, 음력 팔월 보름",
+                  "romanization": "chuseok eumnyeok parwol boreum",
+                  "en": "the autumn harvest festival, on the 15th day of the 8th lunar month"
                 }
               }
             ],
@@ -231,7 +231,7 @@
               "id": "r2",
               "questionEn": "What is on this day?",
               "key": {
-                "ko": "23일",
+                "ko": "이십삼일",
                 "romanization": "isipsamil",
                 "en": "the 23rd"
               },
@@ -296,25 +296,25 @@
                 {
                   "id": "lunar-8-1",
                   "text": {
-                    "ko": "음력 8월 1일",
-                    "romanization": "eumnyeok parwol iril",
+                    "ko": "음력 팔월 초하루",
+                    "romanization": "eumnyeok parwol choharu",
                     "en": "the 1st day of the 8th lunar month"
                   }
                 },
                 {
                   "id": "lunar-8-15",
                   "text": {
-                    "ko": "음력 8월 15일",
-                    "romanization": "eumnyeok parwol siboil",
+                    "ko": "음력 팔월 보름",
+                    "romanization": "eumnyeok parwol boreum",
                     "en": "the 15th day of the 8th lunar month"
                   }
                 },
                 {
-                  "id": "lunar-1-1",
+                  "id": "lunar-7-15",
                   "text": {
-                    "ko": "음력 1월 1일",
-                    "romanization": "eumnyeok irwol iril",
-                    "en": "the 1st day of the 1st lunar month"
+                    "ko": "음력 칠월 보름",
+                    "romanization": "eumnyeok chirwol boreum",
+                    "en": "the 15th day of the 7th lunar month"
                   }
                 }
               ],
@@ -330,34 +330,34 @@
             {
               "id": "a1",
               "sentence": {
-                "ko": "추석은 9월 ___이에요.",
+                "ko": "추석은 구월 ___이에요.",
                 "romanization": "chuseogeun guwol ___ieyo",
                 "en": "Chuseok is on September ___."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "5일",
-                  "romanization": "oil",
-                  "en": "the 5th"
-                },
-                {
-                  "ko": "15일",
+                  "ko": "십오일",
                   "romanization": "siboil",
                   "en": "the 15th"
                 },
                 {
-                  "ko": "25일",
+                  "ko": "이십오일",
                   "romanization": "isiboil",
                   "en": "the 25th"
+                },
+                {
+                  "ko": "삼십일",
+                  "romanization": "samsibil",
+                  "en": "the 30th"
                 }
               ],
-              "answerIndex": 2
+              "answerIndex": 1
             },
             {
               "id": "a2",
               "sentence": {
-                "ko": "9월 23일은 ___이에요.",
+                "ko": "구월 이십삼일은 ___이에요.",
                 "romanization": "guwol isipsamireun ___ieyo",
                 "en": "September 23 is ___."
               },
@@ -384,24 +384,24 @@
             {
               "id": "a3",
               "sentence": {
-                "ko": "음력 8월 1일은 9월 ___이에요.",
-                "romanization": "eumnyeok parwol irireun guwol ___ieyo",
+                "ko": "음력 팔월 초하루는 구월 ___이에요.",
+                "romanization": "eumnyeok parwol choharuneun guwol ___ieyo",
                 "en": "The 1st day of the 8th lunar month is September ___."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "1일",
+                  "ko": "일일",
                   "romanization": "iril",
                   "en": "the 1st"
                 },
                 {
-                  "ko": "11일",
+                  "ko": "십일일",
                   "romanization": "sibiril",
                   "en": "the 11th"
                 },
                 {
-                  "ko": "21일",
+                  "ko": "이십일일",
                   "romanization": "isibiril",
                   "en": "the 21st"
                 }
@@ -413,7 +413,7 @@
             "ref": "realia:s6-rites-v2-q1-calendar",
             "kind": "calendar",
             "title": {
-              "ko": "9월",
+              "ko": "구월",
               "romanization": "guwol",
               "en": "September"
             },
@@ -421,7 +421,7 @@
               {
                 "id": "d7",
                 "text": {
-                  "ko": "7일",
+                  "ko": "칠일",
                   "romanization": "chiril",
                   "en": "the 7th"
                 },
@@ -434,20 +434,20 @@
               {
                 "id": "d11",
                 "text": {
-                  "ko": "11일",
+                  "ko": "십일일",
                   "romanization": "sibiril",
                   "en": "the 11th"
                 },
                 "value": {
-                  "ko": "음력 8월 1일",
-                  "romanization": "eumnyeok parwol iril",
+                  "ko": "음력 팔월 초하루",
+                  "romanization": "eumnyeok parwol choharu",
                   "en": "the 1st day of the 8th lunar month"
                 }
               },
               {
                 "id": "d23",
                 "text": {
-                  "ko": "23일",
+                  "ko": "이십삼일",
                   "romanization": "isipsamil",
                   "en": "the 23rd"
                 },
@@ -460,14 +460,14 @@
               {
                 "id": "d25",
                 "text": {
-                  "ko": "25일",
+                  "ko": "이십오일",
                   "romanization": "isiboil",
                   "en": "the 25th"
                 },
                 "value": {
-                  "ko": "추석 (음력 8월 15일)",
-                  "romanization": "chuseok eumnyeok parwol siboil",
-                  "en": "Chuseok (the 15th day of the 8th lunar month)"
+                  "ko": "추석, 음력 팔월 보름",
+                  "romanization": "chuseok eumnyeok parwol boreum",
+                  "en": "the autumn harvest festival, on the 15th day of the 8th lunar month"
                 }
               }
             ],
@@ -640,7 +640,7 @@
               {
                 "id": "date",
                 "text": {
-                  "ko": "9월 25일",
+                  "ko": "구월 이십오일",
                   "romanization": "guwol isiboil",
                   "en": "September 25"
                 }
@@ -660,9 +660,17 @@
                   "romanization": "ohu han si",
                   "en": "1 p.m."
                 }
+              },
+              {
+                "id": "games",
+                "text": {
+                  "ko": "윷놀이, 강강술래",
+                  "romanization": "yunnori ganggangsullae",
+                  "en": "yut and the Ganggangsullae dance"
+                }
               }
             ],
-            "altEn": "A poster for a Chuseok festival: September 25, at the village park, at 1 p.m."
+            "altEn": "A poster for a Chuseok festival: September 25, at the village park, at 1 p.m., with yut and the Ganggangsullae dance"
           },
           "rounds": [
             {
@@ -704,7 +712,7 @@
                 {
                   "id": "sep-23",
                   "text": {
-                    "ko": "9월 23일",
+                    "ko": "구월 이십삼일",
                     "romanization": "guwol isipsamil",
                     "en": "September 23"
                   }
@@ -712,7 +720,7 @@
                 {
                   "id": "sep-25",
                   "text": {
-                    "ko": "9월 25일",
+                    "ko": "구월 이십오일",
                     "romanization": "guwol isiboil",
                     "en": "September 25"
                   }
@@ -720,7 +728,7 @@
                 {
                   "id": "sep-11",
                   "text": {
-                    "ko": "9월 11일",
+                    "ko": "구월 십일일",
                     "romanization": "guwol sibiril",
                     "en": "September 11"
                   }
@@ -760,6 +768,38 @@
               ],
               "answerId": "ohu-han-si",
               "answerEntryId": "time"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which game is at the festival?",
+              "options": [
+                {
+                  "id": "jegichagi",
+                  "text": {
+                    "ko": "제기차기",
+                    "romanization": "jegichagi",
+                    "en": "jegi kicking"
+                  }
+                },
+                {
+                  "id": "yunnori",
+                  "text": {
+                    "ko": "윷놀이",
+                    "romanization": "yunnori",
+                    "en": "yut, the stick-throwing board game"
+                  }
+                },
+                {
+                  "id": "yeonnalligi",
+                  "text": {
+                    "ko": "연날리기",
+                    "romanization": "yeonnalligi",
+                    "en": "kite flying"
+                  }
+                }
+              ],
+              "answerId": "yunnori",
+              "answerEntryId": "games"
             }
           ]
         },
@@ -1181,7 +1221,7 @@
                   "en": "date"
                 },
                 "value": {
-                  "ko": "9월 24일",
+                  "ko": "구월 이십사일",
                   "romanization": "guwol isipsail",
                   "en": "September 24"
                 }
@@ -1233,7 +1273,7 @@
                   "en": "seat"
                 },
                 "value": {
-                  "ko": "12번",
+                  "ko": "십이번",
                   "romanization": "sibibeon",
                   "en": "number 12"
                 }
@@ -1254,7 +1294,7 @@
                 {
                   "id": "sep-24",
                   "text": {
-                    "ko": "9월 24일",
+                    "ko": "구월 이십사일",
                     "romanization": "guwol isipsail",
                     "en": "September 24"
                   }
@@ -1262,17 +1302,17 @@
                 {
                   "id": "sep-25",
                   "text": {
-                    "ko": "9월 25일",
+                    "ko": "구월 이십오일",
                     "romanization": "guwol isiboil",
                     "en": "September 25"
                   }
                 },
                 {
-                  "id": "sep-26",
+                  "id": "sep-23",
                   "text": {
-                    "ko": "9월 26일",
-                    "romanization": "guwol isimnyugil",
-                    "en": "September 26"
+                    "ko": "구월 이십삼일",
+                    "romanization": "guwol isipsamil",
+                    "en": "September 23"
                   }
                 }
               ],
@@ -1318,35 +1358,72 @@
             },
             {
               "id": "r3",
-              "questionEn": "What time does the train leave?",
+              "questionEn": "Where does the train leave from?",
+              "key": {
+                "ko": "출발",
+                "romanization": "chulbal",
+                "en": "departure"
+              },
               "options": [
                 {
-                  "id": "han-si",
+                  "id": "daejeon",
                   "text": {
-                    "ko": "한 시",
-                    "romanization": "han si",
-                    "en": "1:00"
+                    "ko": "대전",
+                    "romanization": "Daejeon",
+                    "en": "Daejeon (a city)"
                   }
                 },
                 {
-                  "id": "du-si",
+                  "id": "seoul",
                   "text": {
-                    "ko": "두 시",
-                    "romanization": "du si",
-                    "en": "2:00"
+                    "ko": "서울",
+                    "romanization": "Seoul",
+                    "en": "Seoul (a city)"
                   }
                 },
                 {
-                  "id": "se-si",
+                  "id": "busan",
                   "text": {
-                    "ko": "세 시",
-                    "romanization": "se si",
-                    "en": "3:00"
+                    "ko": "부산",
+                    "romanization": "Busan",
+                    "en": "Busan (a city)"
                   }
                 }
               ],
-              "answerId": "du-si",
-              "answerEntryId": "time"
+              "answerId": "seoul",
+              "answerEntryId": "dep"
+            },
+            {
+              "id": "r4",
+              "questionEn": "Which line gives the seat?",
+              "options": [
+                {
+                  "id": "naljja",
+                  "text": {
+                    "ko": "날짜",
+                    "romanization": "naljja",
+                    "en": "date"
+                  }
+                },
+                {
+                  "id": "dochak",
+                  "text": {
+                    "ko": "도착",
+                    "romanization": "dochak",
+                    "en": "arrival"
+                  }
+                },
+                {
+                  "id": "jwaseok",
+                  "text": {
+                    "ko": "좌석",
+                    "romanization": "jwaseok",
+                    "en": "seat"
+                  }
+                }
+              ],
+              "answerId": "jwaseok",
+              "answerEntryId": "seat"
             }
           ]
         },
@@ -1411,7 +1488,7 @@
                 {
                   "id": "r2",
                   "text": {
-                    "ko": "9월 24일이요.",
+                    "ko": "구월 이십사일이요.",
                     "romanization": "guwol isipsairiyo",
                     "en": "On September 24."
                   },
@@ -1448,7 +1525,7 @@
                 {
                   "id": "r2",
                   "text": {
-                    "ko": "9월 24일이요.",
+                    "ko": "구월 이십사일이요.",
                     "romanization": "guwol isipsairiyo",
                     "en": "On September 24."
                   },
@@ -1511,26 +1588,26 @@
             {
               "id": "c1",
               "sentence": {
-                "ko": "기차는 ___에서 출발해요.",
-                "romanization": "gichaneun ___eseo chulbalhaeyo",
-                "en": "The train leaves from ___."
+                "ko": "기차는 ___에 출발해요.",
+                "romanization": "gichaneun ___e chulbalhaeyo",
+                "en": "The train leaves at ___."
               },
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "부산",
-                  "romanization": "Busan",
-                  "en": "Busan (a city)"
+                  "ko": "한 시",
+                  "romanization": "han si",
+                  "en": "1:00"
                 },
                 {
-                  "ko": "서울",
-                  "romanization": "Seoul",
-                  "en": "Seoul (a city)"
+                  "ko": "두 시",
+                  "romanization": "du si",
+                  "en": "2:00"
                 },
                 {
-                  "ko": "대구",
-                  "romanization": "Daegu",
-                  "en": "Daegu (a city)"
+                  "ko": "세 시",
+                  "romanization": "se si",
+                  "en": "3:00"
                 }
               ],
               "answerIndex": 1
@@ -1545,17 +1622,17 @@
               "gapKind": "value",
               "tiles": [
                 {
-                  "ko": "2번",
-                  "romanization": "ibeon",
-                  "en": "number 2"
+                  "ko": "십번",
+                  "romanization": "sipbeon",
+                  "en": "number 10"
                 },
                 {
-                  "ko": "12번",
+                  "ko": "십이번",
                   "romanization": "sibibeon",
                   "en": "number 12"
                 },
                 {
-                  "ko": "21번",
+                  "ko": "이십일번",
                   "romanization": "isibilbeon",
                   "en": "number 21"
                 }
@@ -1580,7 +1657,7 @@
                   "en": "date"
                 },
                 "value": {
-                  "ko": "9월 24일",
+                  "ko": "구월 이십사일",
                   "romanization": "guwol isipsail",
                   "en": "September 24"
                 }
@@ -1632,7 +1709,7 @@
                   "en": "seat"
                 },
                 "value": {
-                  "ko": "12번",
+                  "ko": "십이번",
                   "romanization": "sibibeon",
                   "en": "number 12"
                 }
@@ -1737,7 +1814,7 @@
         "passes": 3,
         "checkedAt": "2026-10-31",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, CM-45 S6, 2026-10-31): Hangul Orthography article 52 and the dictionary entries 유월 1 and 시월 1 read on 2026-10-31. 'Months are a number with 월' = the entries define 유월 and 시월 as the sixth and tenth of the twelve months (六月, 十月); 'June is 유월, not 육월, and October is 시월, not 십월' = article 52 lists 유월(六月) and 시월(十月) as the 속음 written as said, beside 오륙십 and 십일 in the 본음. 'September is 구월' follows the same pattern with no change. Used in: q3 (the ticket's date 9월 24일, the window's 9월 24일이요) and the q3 Did you know? tip; q1 and q2 read 9월 too.\npass 2 (MAR language, 2026-10-31): both pages re-read; the quotes match. The note teaches the reading only and makes no claim about history; 육월 and 십월 appear as the forms not used, inside {ko:} tokens, and no round asks them. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): the institution is named as on the access date (국립국어원). Outcome: pass, no change."
+        "notes": "pass 1 (author sourcing, CM-45 S6, 2026-10-31): Hangul Orthography article 52 and the dictionary entries 유월 1 and 시월 1 read on 2026-10-31. 'Months are a number with 월' = the entries define 유월 and 시월 as the sixth and tenth of the twelve months (六月, 十月); 'June is 유월, not 육월, and October is 시월, not 십월' = article 52 lists 유월(六月) and 시월(十月) as the 속음 written as said, beside 오륙십 and 십일 in the 본음. 'September is 구월' follows the same pattern with no change. Used in: q3 (the ticket's date 구월 이십사일, the window's 구월 이십사일이요) and the q3 Did you know? tip; q1 and q2 read 구월 too.\npass 2 (MAR language, 2026-10-31): both pages re-read; the quotes match. The note teaches the reading only and makes no claim about history; 육월 and 십월 appear as the forms not used, inside {ko:} tokens, and no round asks them. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): the institution is named as on the access date (국립국어원). Outcome: pass, no change."
       }
     }
   ],
@@ -1748,13 +1825,13 @@
     "reviewedAt": "2026-10-31",
     "notes": [
       "Volume 2 MAR (row CM-45 S6, F-CURR-002 9.2, 2026-10-31; passes: author, language, culture and facts, learning design, reviser, third pass). No native-speaker or expert review is claimed; language: native-reviewed is the schema's name for the signed-off language gate.",
-      "Language pass: spelling, spacing, particles and 해요체 line by line (추석은 9월 25일이에요; 9월 23일은 ___이에요 with consonant-final tiles; ___는 일곱 시에 해요 with vowel-final tiles; 9월 24일이요); romanization is the F-CNT-002 converter's, and the dates and seat numbers written in digits were read by hand (25일 isiboil, 26일 isimnyugil, 12번 sibibeon, 8월 parwol).",
-      "Language pass (cont.): Applied: the clerk asks 몇 시 기차로 드릴까요? (not 몇 시 기차요?); the gloss of 강강술래 no longer opens with its romanization (a Chuseok circle dance); the calendar's alt text says lunar month 8 begins on the 11th, not 8/1 read aloud; the poster's Practice step is Find It on the Poster, not a second Read the Poster.",
+      "Language pass: spelling, spacing, particles and 해요체 line by line (추석은 구월 이십오일이에요; 구월 이십삼일은 ___이에요 with consonant-final tiles; ___는 일곱 시에 해요 with vowel-final tiles; 구월 이십사일이요); every romanization is the F-CNT-002 converter's (이십오일 isiboil, 십이번 sibibeon, 음력 팔월 초하루 eumnyeok parwol choharu).",
+      "Language pass (cont.): Applied: dates, the seat and the lunar dates are written in Hangul (구월 이십오일, 십이번, 음력 팔월 보름), as Volume 1 writes its hours, so the converter checks each; the clerk asks 몇 시 기차로 드릴까요?; the 강강술래 gloss no longer opens with its romanization; the calendar's alt text says lunar month 8 begins on the 11th, not 8/1 read aloud.",
       "Culture and facts pass: n1 (Chuseok is lunar 8/15, 25 September in 2026; the calendar came to Korea mainly from China) on KASI's 2026 calendar data, the NFMK seasonal-customs entry 추석, the NIKL entry 음력 and the AKS entry 역법; n2 (Ganggangsullae, inscribed 2009) on the NFMK entry and UNESCO; n3 (유월 and 시월) on Hangul Orthography article 52 and the NIKL entries.",
       "Culture and facts pass (cont.): every calendar day is KASI's (백로 9/7, lunar month 8 from 9/11, 추분 9/23, 추석 9/25, holiday 9/24-26), and the ticket's 24 September is the day before Chuseok; the poster, timetable and ticket are drawn and generic (no organiser, park, operator, line or train number); the lunar calendar is never called Korean in origin; suits any age.",
-      "Learning design pass: 3 quests; new items per quest 5, 7 and 4 (at most 8); Practice and Check items from earlier quests 2 of 5, 3 of 7 and 3 of 5 (8 of 17 in all), with the Volume 1 words 추석, 송편, 윷놀이, 도착, 대구 and the hours in new contexts; Checks Type Hangul (Dictation), Realia Read (the timetable) and Cloze Pick (ticket values), one of each.",
-      "Learning design pass (cont.): triples RR/CP/TH, RR/CP/RR, RR/TR/CP differ from Volume 1's (RR/TH/RR, RR/TH/CP, RR/TH/TH) and adjacent quests differ. Applied: q3's Check asked the date and time its Practice had asked; it now reads the departure and the seat, and the seat round left Practice. Each Check reads its own quest's card or words.",
-      "Learning design pass (cont.): device voice: the Dictation targets 추석 and 송편 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0; dates and seats read Sino-Korean (9월 구월, 24일 이십사일, 12번 십이 번) and the hours native (일곱 시), as the voice reads them; no number is dictated.",
+      "Learning design pass: 3 quests; Discover words per quest within the Stage 6 cap of 6 (U-3) and at most 8 new items (lesson-new-load); Practice and Check items from earlier quests at least 30 in 100 in each quest, with the Volume 1 words 추석, 송편, 윷놀이, 출발, 도착, 서울, 대구 and the hours in new contexts; Checks Type Hangul (Dictation), Realia Read (the timetable) and Cloze Pick (ticket values), one of each.",
+      "Learning design pass (cont.): triples RR/CP/TH, RR/CP/RR, RR/TR/CP differ from Volume 1's (RR/TH/RR, RR/TH/CP, RR/TH/TH) and adjacent quests differ. Applied: every Practice has four rounds (U-1: the poster's games line, the ticket's departure and its seat line); q3's Check asked the date its Practice had asked and now reads the time and the seat. Each Check reads its own quest's card or words.",
+      "Learning design pass (cont.): device voice: the Dictation targets 추석 and 송편 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0; dates and seats are Sino-Korean (구월, 이십사일, 십이번) and hours native (일곱 시), written as said; 보름 and 초하루 name the lunar 15th and 1st as the NFMK entry does; no number is dictated.",
       "Reviser: applied the fixes above. Third pass: no change. The checker passes ran in one authoring session as separate passes against the checklists of 9.2 and 9.3."
     ]
   },

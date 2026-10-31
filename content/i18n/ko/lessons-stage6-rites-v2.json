@@ -88,7 +88,7 @@
       "realiaRead.realia.entries.d7.value.gloss": "이십사절기의 하나로, 흰 이슬이 내린다는 때",
       "realiaRead.realia.entries.d11.value.gloss": "음력으로 여덟째 달의 첫날",
       "realiaRead.realia.entries.d23.value.gloss": "이십사절기의 하나로, 낮과 밤의 길이가 같아지는 날",
-      "realiaRead.realia.entries.d25.value.gloss": "가을 수확을 기뻐하는 명절 (음력으로 여덟째 달의 보름날)",
+      "realiaRead.realia.entries.d25.value.gloss": "가을 수확을 기뻐하는 명절, 음력으로 여덟째 달의 보름날",
       "realiaRead.rounds.r1.question": "며칠이에요?",
       "realiaRead.rounds.r2.question": "이날은 무슨 날이에요?",
       "realiaRead.rounds.r3.question": "음력 여덟째 달의 첫날은 며칠이에요?",
@@ -98,15 +98,15 @@
       "realiaRead.rounds.r2.options.chuseok.text.gloss": "가을에 한 해 수확을 기뻐하는 명절",
       "realiaRead.rounds.r4.options.lunar-8-1.text.gloss": "음력으로 여덟째 달의 첫날",
       "realiaRead.rounds.r4.options.lunar-8-15.text.gloss": "음력으로 여덟째 달의 보름날",
-      "realiaRead.rounds.r4.options.lunar-1-1.text.gloss": "음력으로 첫째 달의 첫날"
+      "realiaRead.rounds.r4.options.lunar-7-15.text.gloss": "음력으로 일곱째 달의 보름날"
     },
     "minigame:s6-rites-v2-q1-apply": {
       "clozePick.rounds.a1.sentence.gloss": "가을 명절이 구월 ___이라는 말",
       "clozePick.rounds.a2.sentence.gloss": "구월 스물셋째 날이 ___이라는 말",
       "clozePick.rounds.a3.sentence.gloss": "음력 여덟째 달의 첫날이 구월 ___이라는 말",
-      "clozePick.rounds.a1.tiles.oil.gloss": "그달의 다섯째 날",
       "clozePick.rounds.a1.tiles.siboil.gloss": "그달의 열다섯째 날",
       "clozePick.rounds.a1.tiles.isiboil.gloss": "그달의 스물다섯째 날",
+      "clozePick.rounds.a1.tiles.samsibil.gloss": "그달의 서른째 날",
       "clozePick.rounds.a2.tiles.seollal.gloss": "음력으로 새해 첫날",
       "clozePick.rounds.a2.tiles.chubun.gloss": "이십사절기의 하나로, 낮과 밤의 길이가 같아지는 날",
       "clozePick.rounds.a2.tiles.chuseok.gloss": "가을에 한 해 수확을 기뻐하는 명절",
@@ -122,7 +122,7 @@
       "clozePick.realia.entries.d7.value.gloss": "이십사절기의 하나로, 흰 이슬이 내린다는 때",
       "clozePick.realia.entries.d11.value.gloss": "음력으로 여덟째 달의 첫날",
       "clozePick.realia.entries.d23.value.gloss": "이십사절기의 하나로, 낮과 밤의 길이가 같아지는 날",
-      "clozePick.realia.entries.d25.value.gloss": "가을 수확을 기뻐하는 명절 (음력으로 여덟째 달의 보름날)"
+      "clozePick.realia.entries.d25.value.gloss": "가을 수확을 기뻐하는 명절, 음력으로 여덟째 달의 보름날"
     },
     "minigame:s6-rites-v2-q1-check": {
       "typeHangul.rounds.c1.prompt": "들리는 명절 낱말을 써 봐요.",
@@ -131,14 +131,16 @@
       "typeHangul.rounds.c2.target.gloss": "반달 모양으로 빚어 솔잎을 깔고 찐 떡"
     },
     "minigame:s6-rites-v2-q2-practice": {
-      "realiaRead.realia.alt": "추석 축제 포스터: 9월 25일, 마을 공원, 오후 1시",
+      "realiaRead.realia.alt": "추석 축제 포스터: 9월 25일, 마을 공원, 오후 1시, 윷놀이와 강강술래",
       "realiaRead.realia.title.gloss": "가을 수확 명절에 여는 잔치",
       "realiaRead.realia.entries.date.text.gloss": "구월의 스물다섯째 날",
       "realiaRead.realia.entries.place.text.gloss": "동네 사람들이 쉬는 공원",
       "realiaRead.realia.entries.time.text.gloss": "오후 1시",
+      "realiaRead.realia.entries.games.text.gloss": "막대 던지기 놀이와 손잡고 도는 춤",
       "realiaRead.rounds.r1.question": "축제는 어디에서 해요?",
       "realiaRead.rounds.r2.question": "축제는 며칠이에요?",
       "realiaRead.rounds.r3.question": "몇 시에 시작해요?",
+      "realiaRead.rounds.r4.question": "축제에서 하는 놀이는 뭐예요?",
       "realiaRead.rounds.r1.options.gichayeok.text.gloss": "기차를 타고 내리는 곳",
       "realiaRead.rounds.r1.options.maeul-gongwon.text.gloss": "동네 사람들이 쉬는 공원",
       "realiaRead.rounds.r1.options.halmeoni-daek.text.gloss": "할머니가 사시는 집",
@@ -147,7 +149,10 @@
       "realiaRead.rounds.r2.options.sep-11.text.gloss": "구월의 열한째 날",
       "realiaRead.rounds.r3.options.ohu-han-si.text.gloss": "오후 1시",
       "realiaRead.rounds.r3.options.ohu-se-si.text.gloss": "오후 3시",
-      "realiaRead.rounds.r3.options.ohu-daseot-si.text.gloss": "오후 5시"
+      "realiaRead.rounds.r3.options.ohu-daseot-si.text.gloss": "오후 5시",
+      "realiaRead.rounds.r4.options.jegichagi.text.gloss": "발로 제기를 차올리는 놀이",
+      "realiaRead.rounds.r4.options.yunnori.text.gloss": "막대 네 개를 던져 말을 옮기는 놀이",
+      "realiaRead.rounds.r4.options.yeonnalligi.text.gloss": "바람에 연을 띄우는 놀이"
     },
     "minigame:s6-rites-v2-q2-apply": {
       "clozePick.rounds.a1.sentence.gloss": "윷을 던지며 노는 놀이를 ___에 한다는 말",
@@ -204,16 +209,20 @@
       "realiaRead.realia.entries.seat.value.gloss": "열두째 번호",
       "realiaRead.rounds.r1.question": "기차는 며칠에 타요?",
       "realiaRead.rounds.r2.question": "기차는 어디에 닿아요?",
-      "realiaRead.rounds.r3.question": "기차는 몇 시에 떠나요?",
+      "realiaRead.rounds.r3.question": "기차는 어디에서 떠나요?",
+      "realiaRead.rounds.r4.question": "어느 줄에 자리가 적혀 있어요?",
       "realiaRead.rounds.r1.options.sep-24.text.gloss": "구월의 스물넷째 날",
       "realiaRead.rounds.r1.options.sep-25.text.gloss": "구월의 스물다섯째 날",
-      "realiaRead.rounds.r1.options.sep-26.text.gloss": "구월의 스물여섯째 날",
+      "realiaRead.rounds.r1.options.sep-23.text.gloss": "구월의 스물셋째 날",
       "realiaRead.rounds.r2.options.seoul.text.gloss": "대한민국의 수도",
       "realiaRead.rounds.r2.options.busan.text.gloss": "대한민국 남동쪽 바닷가의 큰 도시",
       "realiaRead.rounds.r2.options.daegu.text.gloss": "대한민국 남동쪽 내륙의 큰 도시",
-      "realiaRead.rounds.r3.options.han-si.text.gloss": "1시",
-      "realiaRead.rounds.r3.options.du-si.text.gloss": "2시",
-      "realiaRead.rounds.r3.options.se-si.text.gloss": "3시"
+      "realiaRead.rounds.r3.options.daejeon.text.gloss": "대한민국 가운데쯤에 있는 도시",
+      "realiaRead.rounds.r3.options.seoul.text.gloss": "대한민국의 수도",
+      "realiaRead.rounds.r3.options.busan.text.gloss": "대한민국 남동쪽 바닷가의 큰 도시",
+      "realiaRead.rounds.r4.options.naljja.text.gloss": "어느 달 어느 날인지 나타내는 것",
+      "realiaRead.rounds.r4.options.dochak.text.gloss": "목적지에 다다름",
+      "realiaRead.rounds.r4.options.jwaseok.text.gloss": "앉는 자리"
     },
     "minigame:s6-rites-v2-q3-apply": {
       "dialogue.0.npc": "어디에 가는지 묻는 말",
@@ -234,12 +243,12 @@
       "dialogue.3.options.du-si-gichayo.gloss": "2시에 떠나는 기차라고 대답하는 말"
     },
     "minigame:s6-rites-v2-q3-check": {
-      "clozePick.rounds.c1.sentence.gloss": "기차가 ___에서 떠난다는 말",
+      "clozePick.rounds.c1.sentence.gloss": "기차가 ___에 떠난다는 말",
       "clozePick.rounds.c2.sentence.gloss": "앉을 자리가 ___이라는 말",
-      "clozePick.rounds.c1.tiles.busan.gloss": "대한민국 남동쪽 바닷가의 큰 도시",
-      "clozePick.rounds.c1.tiles.seoul.gloss": "대한민국의 수도",
-      "clozePick.rounds.c1.tiles.daegu.gloss": "대한민국 남동쪽 내륙의 큰 도시",
-      "clozePick.rounds.c2.tiles.ibeon.gloss": "둘째 번호",
+      "clozePick.rounds.c1.tiles.han-si.gloss": "1시",
+      "clozePick.rounds.c1.tiles.du-si.gloss": "2시",
+      "clozePick.rounds.c1.tiles.se-si.gloss": "3시",
+      "clozePick.rounds.c2.tiles.sipbeon.gloss": "열째 번호",
       "clozePick.rounds.c2.tiles.sibibeon.gloss": "열두째 번호",
       "clozePick.rounds.c2.tiles.isibilbeon.gloss": "스물한째 번호",
       "clozePick.realia.alt": "기차표: 9월 24일, 서울에서 2시에 떠나 대구에 닿는 기차, 12번 자리",
