@@ -131,6 +131,58 @@ describe('Card Match: a stale wrong-flash timer (F3)', () => {
   });
 });
 
+describe('Card Match: taps during the wrong flash (review #934)', () => {
+  it('a bounce on the amber card of a miss is not a second miss', async () => {
+    const r = await play();
+    await tap(r, 'ko', GEUNE);
+    await tap(r, 'en', MORAE);
+    await wait(120);
+    await tap(r, 'en', MORAE);
+    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([['pair-0', false]]);
+    expect(selected(r, 'en', MORAE)).toBe(false);
+    expect(selected(r, 'ko', GEUNE)).toBe(true);
+  });
+
+  it('a bounce on the amber Korean card (meaning first) is not a second miss and does not replay the word', async () => {
+    const r = await play();
+    await tap(r, 'en', MORAE);
+    await tap(r, 'ko', GEUNE);
+    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
+    await wait(120);
+    await tap(r, 'ko', GEUNE);
+    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([['pair-0', false]]);
+    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
+  });
+
+  it('the amber card counts again once the flash is over', async () => {
+    const r = await play();
+    await tap(r, 'ko', GEUNE);
+    await tap(r, 'en', MORAE);
+    await wait(600);
+    await tap(r, 'ko', GEUNE);
+    await tap(r, 'en', MORAE);
+    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([
+      ['pair-0', false],
+      ['pair-0', false],
+    ]);
+  });
+
+  it('re-tapping the pick that missed during the flash keeps it selected after the flash, ready to pair', async () => {
+    const r = await play();
+    await tap(r, 'ko', GEUNE);
+    await tap(r, 'en', MORAE);
+    await wait(300);
+    await tap(r, 'ko', GEUNE);
+    await wait(400);
+    expect(selected(r, 'ko', GEUNE)).toBe(true);
+    await tap(r, 'en', GEUNE);
+    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([
+      ['pair-0', false],
+      ['pair-0', true],
+    ]);
+  });
+});
+
 describe('Card Match: either side first', () => {
   it('a meaning tapped first is selected, and the Korean card then makes the pair under the Korean key', async () => {
     const r = await play();

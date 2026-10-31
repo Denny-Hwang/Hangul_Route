@@ -117,6 +117,8 @@ function selectStep(state: PicWordFlowState, event: Extract<FlowEvent, { type: '
 
   // The selected tile again changes nothing: a child's bounce or a double tap never un-selects (AMENDMENTS-TOUCH 6.1).
   if (first !== null && first.side === event.side && first.pairId === event.pairId) return unchanged(state);
+  // The amber tile of the miss just made, while it still shows: a bounce on it is not a second miss (AMENDMENTS-TOUCH 6.1).
+  if (state.flash !== null && state.flash.side === event.side && state.flash.pairId === event.pairId) return unchanged(state);
 
   // First tile, or another tile on the same side: the selection moves, no pair is attempted.
   if (first === null || first.side === event.side) {

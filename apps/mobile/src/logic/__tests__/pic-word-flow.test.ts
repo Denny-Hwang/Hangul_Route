@@ -249,6 +249,22 @@ describe('a wrong pair', () => {
     expect(hintTarget(other)).toBeNull();
   });
 
+  // Review #934: a bounce on the amber (second) tile of a miss is the same tap, not a second miss.
+  it('ignores a tap on the amber tile while its flash shows: one miss, one nudge, no early ring', () => {
+    const missed = run(fresh(), [pic('bap'), word('san')]).state;
+    const out = stepFlow(missed, word('san'));
+    expect(out).toEqual({ state: missed, effects: [] });
+    expect(out.state.missCounts).toEqual({ bap: 1 });
+    expect(hintTarget(out.state)).toBeNull();
+  });
+
+  it('counts the same wrong tile again once its flash has cleared', () => {
+    const cleared = stepFlow(run(fresh(), [pic('bap'), word('san')]).state, { type: 'clear-flash' }).state;
+    const out = stepFlow(cleared, word('san'));
+    expect(out.state.missCounts).toEqual({ bap: 2 });
+    expect(out.effects).toContainEqual({ type: 'answer', roundKey: 'b0:bap', correct: false, pairId: 'bap' });
+  });
+
   it('keeps the ring when the selected tile is tapped again (the selection stays, AMENDMENTS-TOUCH 6.1)', () => {
     const missedTwice = run(fresh(), [pic('bap'), word('san'), word('hanbok')]).state;
     const again = stepFlow(missedTwice, pic('bap')).state;

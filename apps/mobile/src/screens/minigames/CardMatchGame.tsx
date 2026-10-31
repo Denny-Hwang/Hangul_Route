@@ -45,7 +45,8 @@ interface Props {
  * Touch (AMENDMENTS-TOUCH 6.2, row KT-4a): either side may be picked first; a tap on the same side moves the
  * pick, a tap on the selected card keeps it, a tap on the other side tries the pair. A pair is scored under its
  * Korean card, whichever side came first. The wrong flash's timer is kept in a ref, cleared by any new pick and on
- * unmount, and when it fires it lets go only of the pick that missed, so it never un-selects the next pick.
+ * unmount, and when it fires it lets go only of the pick that missed (unless the child re-tapped it), so it never
+ * un-selects the next pick. A bounce on the amber card of a miss, while it shows, is not a second miss.
  */
 
 type CardSide = 'ko' | 'en';
@@ -93,6 +94,8 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
   const [matched, setMatched] = useState<Set<number>>(new Set());
   const [wrongFlash, setWrongFlash] = useState<{ ko: number; en: number } | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The pick the running flash lets go of when it ends; a re-tap on that pick keeps it (sets this to null).
+  const flashRelease = useRef<CardPick | null>(null);
   const finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // F-LAYOUT-001 §3.6: the cards grow with the window (their padding scales; the words keep their type size).
   const cardPadding = useMediaSize(spacing.md);
@@ -126,6 +129,8 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
     () => () => {
       if (flashTimer.current !== null) clearTimeout(flashTimer.current);
       if (finishTimer.current !== null) clearTimeout(finishTimer.current);
+      flashTimer.current = null;
+      finishTimer.current = null;
     },
     [],
   );
@@ -133,14 +138,23 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
   const stopFlash = (): void => {
     if (flashTimer.current !== null) clearTimeout(flashTimer.current);
     flashTimer.current = null;
+    flashRelease.current = null;
     setWrongFlash(null);
   };
 
   const pick = (card: CardPick): void => {
     if (matched.has(card.idx)) return;
+    // The amber card of the miss just made, while it still shows: a bounce on it is not a second miss.
+    if (flashTimer.current !== null && wrongFlash !== null && !samePick(selected, card) && wrongFlash[card.side] === card.idx) {
+      return;
+    }
     if (card.side === 'ko') hear(card.idx);
-    // The selected card again: a bounce or a double tap keeps the pick (and a running flash) as it is.
-    if (samePick(selected, card)) return;
+    // The selected card again: a bounce or a double tap keeps the pick and a running flash; during the flash it
+    // also keeps the pick that missed past the flash, so a child who re-taps it to try again is not let go.
+    if (samePick(selected, card)) {
+      flashRelease.current = null;
+      return;
+    }
     stopFlash();
     if (selected === null || selected.side === card.side) {
       setSelected(card);
@@ -158,11 +172,13 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
     nudge();
     answerRound(pairRoundKey(koIdx), false, askedPair(pairs, koIdx));
     setWrongFlash({ ko: koIdx, en: enIdx });
-    const missed = selected;
+    flashRelease.current = selected;
     flashTimer.current = setTimeout(() => {
+      const missed = flashRelease.current;
       flashTimer.current = null;
+      flashRelease.current = null;
       setWrongFlash(null);
-      setSelected((current) => (current !== null && samePick(missed, current) ? null : current));
+      setSelected((current) => (current !== null && missed !== null && samePick(missed, current) ? null : current));
     }, WRONG_FLASH_MS);
   };
 
