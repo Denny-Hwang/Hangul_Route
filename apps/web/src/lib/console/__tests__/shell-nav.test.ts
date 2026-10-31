@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { ADULT_NAV, currentNavItem, navFlags, navItemsFor, ownFamilySpaces, revealScrollLeft, samePageFragment, soloFamilyLearnerSpace, type NavContext } from '../shell-nav';
+import { ADULT_NAV, currentNavItem, navFlags, navItemsFor, ownFamilySpaces, revealScrollLeft, rowHiddenEdges, samePageFragment, soloFamilyLearnerSpace, type NavContext } from '../shell-nav';
 
 /** F-APP-001 A-5a, section 3.8: the adult navigation registry, its predicates and its targets. */
 function item(id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'], learners = 1, over: { archivedAt?: string; createdAt?: string } = {}): SpaceListItem {
@@ -308,5 +308,22 @@ describe('currentNavItem', () => {
     expect(currentNavItem('/teach/space', 'teacher', false)).toBeNull();
     expect(currentNavItem('/start', 'teacher', true)).toBeNull();
     expect(currentNavItem('/teach/billing', 'teacher', false)).toBe('billing');
+  });
+});
+
+describe('rowHiddenEdges (GX-14, P6: the one-row tab bar fades an edge only while tabs are hidden past it)', () => {
+  it('a row that fits hides nothing', () => {
+    expect(rowHiddenEdges({ scrollLeft: 0, clientWidth: 328, scrollWidth: 328 })).toEqual({ start: false, end: false });
+  });
+
+  it('a row with tabs past the end: the end only, until it is scrolled to the end', () => {
+    expect(rowHiddenEdges({ scrollLeft: 0, clientWidth: 328, scrollWidth: 420 })).toEqual({ start: false, end: true });
+    expect(rowHiddenEdges({ scrollLeft: 40, clientWidth: 328, scrollWidth: 420 })).toEqual({ start: true, end: true });
+    expect(rowHiddenEdges({ scrollLeft: 92, clientWidth: 328, scrollWidth: 420 })).toEqual({ start: true, end: false });
+  });
+
+  it('ignores sub-pixel rounding (a zoomed page reports fractions)', () => {
+    expect(rowHiddenEdges({ scrollLeft: 0.4, clientWidth: 328, scrollWidth: 328.6 })).toEqual({ start: false, end: false });
+    expect(rowHiddenEdges({ scrollLeft: 91.5, clientWidth: 328, scrollWidth: 420 })).toEqual({ start: true, end: false });
   });
 });

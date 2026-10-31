@@ -20,7 +20,7 @@ describe('console OA-3 strings (section 17.5)', () => {
     expect(en.pinOwner.done).toBe('Done. This account can reset the PIN here.');
     expect(en.pinOwner.notNow).toBe('Not now');
     expect(en.pinPrompt.body).toBe('Set a grown-up PIN in the app so only grown-ups open these pages.');
-    expect(en.pinPrompt.cta).toBe('Open the app');
+    expect(en.pinPrompt.cta).toBe('Set the PIN in the app');
   });
 
   it('Spanish and Korean as section 17.5 gives them (OA-0b length budgets: the shorter es passkey button)', () => {

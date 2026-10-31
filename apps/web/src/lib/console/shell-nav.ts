@@ -191,3 +191,12 @@ export function revealScrollLeft(row: { scrollLeft: number; width: number }, ite
   if (item.left < row.scrollLeft || item.width > row.width) return item.left;
   return end - row.width;
 }
+
+/**
+ * Which ends of the one-row tab bar have tabs hidden past them (AMENDMENTS-GROWNUP-UX GX-14, P6): the row draws an edge
+ * fade there, so a cut-off last tab reads as "more this way", and none when everything shows. A pixel of slack absorbs
+ * the fractions a zoomed page reports.
+ */
+export function rowHiddenEdges(row: { scrollLeft: number; clientWidth: number; scrollWidth: number }): { start: boolean; end: boolean } {
+  return { start: row.scrollLeft > 1, end: row.scrollWidth - (row.scrollLeft + row.clientWidth) > 1 };
+}

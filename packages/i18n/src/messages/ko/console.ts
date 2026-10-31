@@ -19,6 +19,7 @@ export const consoleMsgs = {
   clerkPending: '이 버전에는 아직 로그인이 설정되어 있지 않아요. 학습자 앱은 계정 없이도 돼요.',
   cantReach: '지금은 콘솔에 연결할 수 없어요.',
   tryAgain: '다시 해 보기',
+  errorPage: { title: '이 화면을 여는 중에 문제가 생겼어요.' },
   noSpaces: '아직 속한 공간이 없어요.',
   createSpace: '공간 만들기',
   writeOnBoard: '칠판에 적어 주세요. 학생은 프로필 → 반과 가족 → 반에 참여하기에서 들어와요.',
@@ -785,6 +786,7 @@ export const consoleMsgs = {
       opensTab: '새 탭에서 열려요',
     },
     presentPlan: { cta: '이 계획 발표하기' },
+    minutesOf: (minutes: number, length: number) => `약 ${minutes}분 (${length}분 중)`,
     revisitChip: { cta: '함께 다시 보기' },
     source: {
       title: '자료',
@@ -1721,7 +1723,7 @@ export const consoleMsgs = {
   },
   pinPrompt: {
     body: '어른만 이 페이지를 열 수 있게 앱에서 어른용 PIN을 만들어요.',
-    cta: '앱 열기',
+    cta: '앱에서 PIN 만들기',
   },
   pinReset: {
     title: '새 어른용 PIN',
