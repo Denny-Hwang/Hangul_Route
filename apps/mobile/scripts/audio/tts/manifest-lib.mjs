@@ -172,8 +172,15 @@ function jamoRows(voices, overrides, normalization) {
 }
 
 /**
+ * A cell's later volume (`<theme>.v<n>.json`, F-CURR-002 rows CM-40 and CM-44 S2): dark until `volumes` ramps, so it
+ * never moves a row that live content already says. Its text picks the row's pack only when no other source says it.
+ */
+const LATER_VOLUME_SOURCE = /^content\/episodes\/stage-\d+\/[a-z0-9-]+\.v\d+\.json$/;
+
+/**
  * The say rows: occurrences grouped by spoken text, each text once, in the first pack (AC-B6 order) that uses it.
- * A text owned by `vocab` keeps the clip path of its vocabulary record (`audio/vocab/<slug>.mp3`).
+ * A text owned by `vocab` keeps the clip path of its vocabulary record (`audio/vocab/<slug>.mp3`). A later volume's
+ * occurrence counts toward the pack only for a text no other source says (`LATER_VOLUME_SOURCE`).
  */
 function sayRows(occurrences, overrides, normalization) {
   const byText = new Map();
@@ -193,7 +200,8 @@ function sayRows(occurrences, overrides, normalization) {
   const rows = [];
   const vocabRefShared = [];
   for (const { text, occurrences: occs } of byText.values()) {
-    const pack = occs.map((o) => o.pack).reduce((a, b) => (packIndex(b) < packIndex(a) ? b : a));
+    const live = occs.filter((o) => !LATER_VOLUME_SOURCE.test(o.source));
+    const pack = (live.length > 0 ? live : occs).map((o) => o.pack).reduce((a, b) => (packIndex(b) < packIndex(a) ? b : a));
     const recordRefs = uniqueSorted(occs.filter((o) => o.pack === 'vocab' && pack === 'vocab' && typeof o.audioRef === 'string').map((o) => o.audioRef));
     if (recordRefs.length > 1) {
       throw new Error(`"${text}": vocabulary records ${recordRefs.join(', ')} say the same text; one clip serves them, so give them one audioRef`);
