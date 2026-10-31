@@ -35,6 +35,7 @@ export const consoleMsgs = {
   clerkPending: 'Esta versión aún no tiene inicio de sesión. La app de estudiantes funciona sin cuenta.',
   cantReach: 'Ahora no se puede llegar a la consola.',
   tryAgain: 'Reintentar',
+  errorPage: { title: 'Algo salió mal en esta página.' },
   noSpaces: 'Aún no estás en ningún espacio.',
   createSpace: 'Crear un espacio',
   writeOnBoard: 'Escríbelo en la pizarra. Los estudiantes se unen desde Perfil → Clases y familia → Unirme a una clase.',
@@ -864,6 +865,7 @@ export const consoleMsgs = {
       opensTab: 'Se abre en una pestaña nueva',
     },
     presentPlan: { cta: 'Presentar este plan' },
+    minutesOf: (minutes: number, length: number) => `cerca de ${minutes} min (de ${length})`,
     revisitChip: { cta: 'Repasar en grupo' },
     source: {
       title: 'Fuente',
@@ -1823,7 +1825,7 @@ export const consoleMsgs = {
   },
   pinPrompt: {
     body: 'Crea un PIN de adultos en la app para que solo los adultos abran estas páginas.',
-    cta: 'Abrir la app',
+    cta: 'Crear el PIN en la app',
   },
   pinReset: {
     title: 'PIN de adultos nuevo',

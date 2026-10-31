@@ -50,6 +50,11 @@ export const consoleMsgs = {
   clerkPending: 'Sign-in is not set up on this build yet. The learner app works without an account.',
   cantReach: "Can't reach the console right now.",
   tryAgain: 'Try again',
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-14 (P5): `app/(console)/error.tsx`, shown in the console's language when a page fails to
+   * draw, in place of the framework's white English page. Its one button is `tryAgain`. Blames nobody, names nothing.
+   */
+  errorPage: { title: 'Something went wrong on this page.' },
   noSpaces: "You're not in any space yet.",
   createSpace: 'Create a space',
   writeOnBoard: 'Write it on the board. Students join from Profile → Classes & family → Join a class.',
@@ -1096,6 +1101,11 @@ export const consoleMsgs = {
       opensTab: 'Opens in a new tab',
     },
     presentPlan: { cta: 'Present this plan' },
+    /**
+     * GX-14 (T14): the open ready-made card's one minutes line when what it holds is not the length it was built for
+     * ("about 14 min (of 20)"), in place of the length and the content minutes shown apart. Starts with `outline.about`.
+     */
+    minutesOf: (minutes: number, length: number) => `about ${minutes} min (of ${length})`,
     revisitChip: { cta: 'Revisit together' },
     source: {
       title: 'Source',
@@ -2269,7 +2279,8 @@ export const consoleMsgs = {
   /** [OA] Section 7.6: the set-a-PIN card on a `nopin` browser, once per browser. */
   pinPrompt: {
     body: 'Set a grown-up PIN in the app so only grown-ups open these pages.',
-    cta: 'Open the app',
+    /** GX-14 (P9): says what the app is opened for. */
+    cta: 'Set the PIN in the app',
   },
   /**
    * [OA] Section 8.5 (row OA-6): `/account/pin-reset`, the sign-in reset page behind the lock. One title in every state;

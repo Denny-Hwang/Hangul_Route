@@ -1,3 +1,4 @@
+import { colors } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
@@ -433,12 +434,27 @@ describe('the phone layout and the footer (section 3.8)', () => {
     expect(css).toMatch(/@media \(min-width:70em\)\{[\s\S]*\.hr-frame-name\{position:static/);
   });
 
-  it('the phone nav wraps to a second row instead of scrolling sideways (mock: no sideways scroll at 320 and 375)', async () => {
+  it('GX-14 (P6): the nav is one row that scrolls inside itself, with an edge fade only while tabs are hidden past it', async () => {
     const r = await render(fakeEnv(), [klass]);
     const css = String(r.root.findByType('style').children[0]);
-    expect(css).toMatch(/\.hr-frame-list\{[^}]*flex-wrap:wrap/);
-    expect(css).not.toMatch(/overflow-x:auto/);
-    expect(css).not.toMatch(/scrollbar-width:none/);
+    // One row at every width: never a second row ("Billing" alone on row 2 in en and es); the row, not the page, scrolls.
+    expect(css).toMatch(/\.hr-frame-list\{[^}]*flex-wrap:nowrap/);
+    expect(css).toMatch(/\.hr-frame-list\{[^}]*overflow-x:auto/);
+    expect(css).not.toMatch(/\.hr-frame-list\{[^}]*flex-wrap:wrap/);
+    // The phone row hides its scrollbar; the fade says "more this way" instead (app-shell D3, the GX-0 360 mocks).
+    expect(css).toMatch(/@media \(max-width:44\.99em\)\{[\s\S]*\.hr-frame-list\{scrollbar-width:none\}/);
+    // The fades are drawn in the bar's own paper colour and never catch a tap.
+    expect(css).toMatch(/\.hr-frame-row::before,\.hr-frame-row::after\{[^}]*pointer-events:none/);
+    expect(css).toContain(`.hr-frame-row[data-more-end="true"]::after{opacity:1}`);
+    expect(css).toContain(`.hr-frame-row[data-more-start="true"]::before{opacity:1}`);
+    expect(css).toContain(`linear-gradient(to left,${colors.surface.paper},transparent)`);
+    // The list sits in the row; with nothing measured (no layout here) no fade shows.
+    const row = byTestId(r, 'frame-nav-row')[0];
+    expect(row?.props.className).toBe('hr-frame-row');
+    expect(row?.props['data-more-end']).toBe('false');
+    expect(row?.props['data-more-start']).toBe('false');
+    expect(row?.props['aria-hidden']).toBeUndefined();
+    expect(row?.findAll((n) => n.type === 'ul')).toHaveLength(1);
   });
 
   it('Sign out from either place runs the console sign-out', async () => {

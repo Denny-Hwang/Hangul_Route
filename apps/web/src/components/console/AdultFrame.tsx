@@ -13,7 +13,7 @@ import { deviceUsesOf } from '@/lib/console/one-account';
 import { activePersona, fallbackPersona, heldPersonas, homeToRecord, pageArea, personaHome, showPersonaSwitch } from '@/lib/console/personas';
 import { ROUTES } from '@/lib/console/routing';
 import { readLastPersona, writeDeviceUses, writeLastPersona } from '@/lib/console/shell-store';
-import { currentNavItem, navFlags, navItemsFor, revealScrollLeft, samePageFragment, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
+import { currentNavItem, navFlags, navItemsFor, revealScrollLeft, rowHiddenEdges, samePageFragment, soloFamilyLearnerSpace, type NavEntry, type SoloLearner } from '@/lib/console/shell-nav';
 import { clearGrownUpTab } from '@/lib/console/unlock';
 import { browserStorage, type KeyValueStorage } from '@/lib/i18n/safe-storage';
 import { useConsoleAuth } from './auth-context';
@@ -41,7 +41,9 @@ import { rem } from '@/lib/console/rem';
  *   the top left, above the page's context line and its h1.
  * - The active persona comes from the page: its own on a home, the kind of the page's space on a
  *   space page under either prefix (looked up in the spaces list the frame reads), never the path.
- * - The navigation is `ADULT_NAV` filtered by the active persona and the sibling predicates. When the tab row scrolls
+ * - The navigation is `ADULT_NAV` filtered by the active persona and the sibling predicates, in one tab row at every
+ *   width that scrolls inside itself (AMENDMENTS-GROWNUP-UX GX-14, P6; app-shell D3), never a second row: an end with
+ *   tabs hidden past it fades into the bar (the phone row hides its scrollbar). When the tab row scrolls
  *   sideways it shows its current item on load (AMENDMENTS-LECTURE-V2 E3, LV-5), moving the row only. An item whose
  *   target is a part of the page already open (Lecture mode's `/parent#lecture-mode` on `/parent`) moves there itself:
  *   the fragment is set and the page's card takes focus. A tab keeps its label on one line (it is never narrower than
@@ -124,6 +126,8 @@ export function resetFrameMemory(): void {
 /** The phone / wide switch (45em = `layout.maxWidth.reading`) and the step where the brand name joins (70em = `layout.maxWidth.full`). */
 const WIDE = `${layout.maxWidth.reading / 16}em`;
 const FULL = `${layout.maxWidth.full / 16}em`;
+/** Just under WIDE: the phone rules with no wide counterpart (the tab row's hidden scrollbar; its fades say "more"). */
+const PHONE_MAX = `${layout.maxWidth.reading / 16 - 0.01}em`;
 
 /** Layout rules that change at a breakpoint live here (inline styles would beat them); every value is a token. */
 const FRAME_CSS = `
@@ -144,7 +148,13 @@ const FRAME_CSS = `
 .hr-frame-exit{display:inline-flex;align-items:center;gap:${spacing.xs}px;min-height:${touchTarget.min}px;min-width:0;max-width:100%;box-sizing:border-box;padding:${spacing.xs}px ${spacing.sm}px ${spacing.xs}px ${spacing.md}px;border-radius:${radii.pill}px;border:${borderWidth.thin}px solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};text-align:left;overflow-wrap:anywhere;cursor:pointer}
 .hr-frame-exit svg{flex:none}
 .hr-frame-wide{display:none}
-.hr-frame-list{display:flex;flex-wrap:wrap;list-style:none;margin:0;padding:0}
+.hr-frame-row{position:relative}
+.hr-frame-row::before,.hr-frame-row::after{content:"";position:absolute;top:0;bottom:0;width:${spacing.xxl}px;opacity:0;pointer-events:none}
+.hr-frame-row::before{left:0;background:linear-gradient(to right,${colors.surface.paper},transparent)}
+.hr-frame-row::after{right:0;background:linear-gradient(to left,${colors.surface.paper},transparent)}
+.hr-frame-row[data-more-start="true"]::before{opacity:1}
+.hr-frame-row[data-more-end="true"]::after{opacity:1}
+.hr-frame-list{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;list-style:none;margin:0;padding:0}
 .hr-frame-list li{flex:1 0 ${touchTarget.min}px;display:flex;min-width:fit-content;max-width:100%}
 .hr-frame-item{flex:1;display:inline-flex;align-items:center;justify-content:center;min-height:${touchTarget.min}px;padding:0 ${spacing.xs}px;border:none;border-bottom:${borderWidth.thick}px solid transparent;background:transparent;color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.semibold};text-align:center;text-decoration:none;overflow-wrap:anywhere;cursor:pointer}
 .hr-frame-item[aria-current="page"]{color:${colors.text.primary};font-weight:${typography.weight.bold};border-bottom-color:${colors.brand.primary}}
@@ -166,6 +176,10 @@ const FRAME_CSS = `
 .hr-frame-list li{flex:none}
 .hr-frame-item{padding:0 ${spacing.md}px}
 .hr-frame-tools{display:none}
+}
+@media (max-width:${PHONE_MAX}){
+.hr-frame-list{scrollbar-width:none}
+.hr-frame-list::-webkit-scrollbar{display:none}
 }
 ${PAGE_BACK_CSS}
 @media (min-width:${FULL}){
@@ -364,6 +378,8 @@ export function AdultFrame({
   const withSwitch = !!list && showPersonaSwitch(held);
   const rowRef = useRef<HTMLUListElement | null>(null);
   const currentShown = items.some((entry) => entry.id === current);
+  // The row's tabs and their language: when either changes, the row is measured again (the spaces read can add tabs).
+  const rowKey = `${locale}|${items.map((entry) => entry.id).join(',')}`;
   // A tab row that scrolls sideways shows its current item (the family row's fifth and sixth items start off-screen
   // on a phone): only the row moves, never the page, with no smooth motion.
   useEffect(() => {
@@ -374,7 +390,29 @@ export function AdultFrame({
     const itemBox = item.getBoundingClientRect();
     const left = revealScrollLeft({ scrollLeft: row.scrollLeft, width: row.clientWidth }, { left: itemBox.left - rowBox.left + row.scrollLeft, width: itemBox.width });
     if (left !== null) row.scrollLeft = left;
-  }, [current, currentShown]);
+  }, [current, currentShown, rowKey]);
+  // The one-row bar (GX-14, P6) fades the edge that has tabs hidden past it, measured again when the row scrolls or
+  // changes size (a rotation, the Display sheet's text size) and when its tabs or their language change.
+  const [hidden, setHidden] = useState<{ start: boolean; end: boolean }>({ start: false, end: false });
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return undefined;
+    const measure = (): void => {
+      const next = rowHiddenEdges(row);
+      setHidden((was) => (was.start === next.start && was.end === next.end ? was : next));
+    };
+    measure();
+    row.addEventListener('scroll', measure, { passive: true });
+    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    if (resize) {
+      resize.observe(row);
+      for (const tab of Array.from(row.children)) resize.observe(tab);
+    }
+    return () => {
+      row.removeEventListener('scroll', measure);
+      resize?.disconnect();
+    };
+  }, [rowKey]);
   // A target inside the page already open: set its fragment here instead of a client navigation that would only scroll.
   const toFragment = (entry: NavEntry) => (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -433,27 +471,29 @@ export function AdultFrame({
         </div>
         {items.length > 0 ? (
           <nav className="hr-frame-nav" aria-label={names[navPersona]} data-testid="frame-nav">
-            <ul className="hr-frame-list" ref={rowRef}>
-              {items.map((entry) => (
-                <li key={entry.id}>
-                  {entry.target.document ? (
-                    <a className="hr-frame-item" href={entry.target.href} onClick={entry.id === 'lessons' ? lessons.onClick : undefined} aria-busy={entry.id === 'lessons' && lessons.checking ? true : undefined} data-testid={`nav-${entry.id}`}>
-                      {shell.nav[entry.labelKey]}
-                    </a>
-                  ) : (
-                    <Link
-                      className="hr-frame-item"
-                      href={entry.target.href}
-                      onClick={entry.id === 'lecture' ? toFragment(entry) : undefined}
-                      aria-current={current === entry.id ? 'page' : undefined}
-                      data-testid={`nav-${entry.id}`}
-                    >
-                      {shell.nav[entry.labelKey]}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <div className="hr-frame-row" data-more-start={String(hidden.start)} data-more-end={String(hidden.end)} data-testid="frame-nav-row">
+              <ul className="hr-frame-list" ref={rowRef}>
+                {items.map((entry) => (
+                  <li key={entry.id}>
+                    {entry.target.document ? (
+                      <a className="hr-frame-item" href={entry.target.href} onClick={entry.id === 'lessons' ? lessons.onClick : undefined} aria-busy={entry.id === 'lessons' && lessons.checking ? true : undefined} data-testid={`nav-${entry.id}`}>
+                        {shell.nav[entry.labelKey]}
+                      </a>
+                    ) : (
+                      <Link
+                        className="hr-frame-item"
+                        href={entry.target.href}
+                        onClick={entry.id === 'lecture' ? toFragment(entry) : undefined}
+                        aria-current={current === entry.id ? 'page' : undefined}
+                        data-testid={`nav-${entry.id}`}
+                      >
+                        {shell.nav[entry.labelKey]}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
             {items.some((entry) => entry.id === 'lessons') ? <BrowseNoticeLine opener={lessons} testId="frame-lessons" /> : null}
           </nav>
         ) : null}
