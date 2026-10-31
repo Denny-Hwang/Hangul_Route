@@ -106,13 +106,13 @@
     },
     "minigame:s7-letters-v2-q2-check": {
       "writeFrame.rounds.w1.frame.gloss": "Hoy escribí ___.",
-      "writeFrame.rounds.w2.frame.gloss": "Le escribí una carta a ___.",
+      "writeFrame.rounds.w2.frame.gloss": "Hoy escribí ___.",
+      "writeFrame.rounds.w2.slots.what.bank.hangeul.gloss": "letras hangul",
+      "writeFrame.rounds.w2.slots.what.bank.ireum.gloss": "mi nombre",
+      "writeFrame.rounds.w2.slots.what.bank.ilgi.gloss": "una página de diario",
       "writeFrame.rounds.w1.slots.what.bank.pyeonji.gloss": "una carta",
       "writeFrame.rounds.w1.slots.what.bank.ilgi.gloss": "una página de diario",
-      "writeFrame.rounds.w1.slots.what.bank.ireum.gloss": "mi nombre",
-      "writeFrame.rounds.w2.slots.who.bank.chingu.gloss": "un amigo o una amiga",
-      "writeFrame.rounds.w2.slots.who.bank.mina.gloss": "Mina",
-      "writeFrame.rounds.w2.slots.who.bank.hoya.gloss": "Hoya"
+      "writeFrame.rounds.w1.slots.what.bank.ireum.gloss": "mi nombre"
     },
     "quest:stage7-letters-v2-q3": {
       "title": "Mi postal",
@@ -145,7 +145,7 @@
     },
     "minigame:s7-letters-v2-q3-apply": {
       "myStory.frames.f1.frame.gloss": "Para ___.",
-      "myStory.frames.f2.frame.gloss": "Hoy voy a ___.",
+      "myStory.frames.f2.frame.gloss": "Hoy voy hacia ___.",
       "myStory.frames.f3.frame.gloss": "Nos vemos en ___.",
       "myStory.frames.f1.slots.who.bank.chingu.gloss": "un amigo o una amiga",
       "myStory.frames.f1.slots.who.bank.mina.gloss": "Mina",
@@ -161,7 +161,7 @@
     "minigame:s7-letters-v2-q3-check": {
       "orderIt.rounds.c1.sentence.gloss": "Hoy voy al mar.",
       "orderIt.rounds.c2.sentence.gloss": "Nos vemos en la escuela.",
-      "orderIt.rounds.c1.distractors.mannayo.gloss": "vernos",
+      "orderIt.rounds.c1.distractors.mannayo.gloss": "verse",
       "orderIt.rounds.c2.distractors.pyeonji.gloss": "carta"
     }
   }

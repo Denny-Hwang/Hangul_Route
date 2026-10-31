@@ -19,7 +19,7 @@
       "blurbEn": "Start a letter: who it is for, and how they have been.",
       "teaserEn": "Next: write one line about your day.",
       "estimatedMinutes": 5,
-      "addedIn": 20261031,
+      "addedIn": 20261102,
       "steps": [
         {
           "id": "s1",
@@ -314,7 +314,7 @@
       "blurbEn": "Write one line about your day, the way a diary does.",
       "teaserEn": "Next: write a postcard of your own.",
       "estimatedMinutes": 5,
-      "addedIn": 20261031,
+      "addedIn": 20261102,
       "steps": [
         {
           "id": "s1",
@@ -577,28 +577,28 @@
             {
               "id": "w2",
               "frame": {
-                "ko": "___에게 편지를 썼어요.",
-                "romanization": "___ege pyeonjireul sseosseoyo",
-                "en": "I wrote a letter to ___."
+                "ko": "오늘 ___을/를 썼어요.",
+                "romanization": "oneul ___eul/reul sseosseoyo",
+                "en": "Today I wrote ___."
               },
               "slots": [
                 {
-                  "id": "who",
+                  "id": "what",
                   "bank": [
                     {
-                      "ko": "친구",
-                      "romanization": "chingu",
-                      "en": "a friend"
+                      "ko": "한글",
+                      "romanization": "hangeul",
+                      "en": "Hangul"
                     },
                     {
-                      "ko": "미나",
-                      "romanization": "mina",
-                      "en": "Mina"
+                      "ko": "이름",
+                      "romanization": "ireum",
+                      "en": "my name"
                     },
                     {
-                      "ko": "호야",
-                      "romanization": "hoya",
-                      "en": "Hoya"
+                      "ko": "일기",
+                      "romanization": "ilgi",
+                      "en": "a diary entry"
                     }
                   ]
                 }
@@ -615,7 +615,7 @@
       "titleEn": "My Postcard",
       "blurbEn": "Write a postcard of your own, from a word bank.",
       "estimatedMinutes": 5,
-      "addedIn": 20261031,
+      "addedIn": 20261102,
       "steps": [
         {
           "id": "s1",
@@ -876,7 +876,7 @@
                 {
                   "ko": "만나요",
                   "romanization": "mannayo",
-                  "en": "let's meet"
+                  "en": "meet"
                 }
               ]
             },

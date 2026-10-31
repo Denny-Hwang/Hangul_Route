@@ -33,6 +33,8 @@ import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 const read = (rel: string): unknown => JSON.parse(readFileSync(new URL(`../../../../../${rel}`, import.meta.url), 'utf8'));
 const cell: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/letters.v2.json'));
 const v1: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/letters.json'));
+// The stacked Volume 2 cells this one joins after (rows CM-41 to CM-43 S7): its stamp sits above all of theirs.
+const earlierV2: LessonCell[] = ['nature', 'crafts', 'life'].map((t) => LessonCellSchema.parse(read(`content/episodes/stage-7/${t}.v2.json`)));
 
 const scopeOf = (quest: LessonQuest, kind: string): LessonScope | undefined => {
   const ref = quest.steps.find((s) => s.kind === kind)?.minigameRef;
@@ -50,8 +52,9 @@ describe('My Postcard, Stage 7 Letters & Books Volume 2 (F-CURR-002 row CM-44 S7
     expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage7-letters-v2-q1', 'quest:stage7-letters-v2-q2', 'quest:stage7-letters-v2-q3']);
-    // Main's catalogue version was 20261028 and the stacked Volume 2 cells stamp 20261030 (rows CM-41 to CM-43 S7).
-    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(20261030);
+    // Main's catalogue version was 20261028; the stacked Volume 2 cells stamp 20261030 to 20261101 (rows CM-41 to CM-43 S7).
+    const before = Math.max(...earlierV2.flatMap((c) => c.quests.map((q) => q.addedIn ?? 0)));
+    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(before);
     // Row CM-23: one card per upper cell, already Volume 1's (card:ireum); a Volume 2 gives none.
     expect(v1.rewardCardIds).toEqual(['card:ireum']);
     expect(cell.rewardCardIds).toEqual([]);
@@ -126,6 +129,16 @@ describe('My Postcard, Stage 7 Letters & Books Volume 2 (F-CURR-002 row CM-44 S7
     expect(trace.rounds.map((r) => r.word.ko)).toEqual(['일기', '편지', '붓', '한글']);
   });
 
+  it('every Write Frame Check asks a frame this cell has already shown on a Discover page (review of PR #919)', () => {
+    const shown = new Set<string>();
+    for (const quest of cell.quests) {
+      for (const item of quest.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items)) if (item.type === 'pattern') shown.add(item.frame.ko);
+      const check = scopeOf(quest, 'check')!;
+      if (check.kind !== 'write-frame') continue;
+      for (const round of check.rounds) expect(shown.has(round.frame.ko), `${quest.id} ${round.id}: ${round.frame.ko}`).toBe(true);
+    }
+  });
+
   it('asks nothing by ear (no Dictation round)', () => {
     for (const quest of cell.quests) {
       for (const scope of quest.scopes) {
@@ -187,7 +200,7 @@ describe('the My Story chain of q3 Apply (§7.1 F8, §6.6, rows CM-38 and CM-44 
     expect(played.writeFrame?.rounds[0]!.slots[0]!.bank.map((w) => w.ko)).toEqual(['친구', '미나', '호야']);
   });
 
-  it('the composed line reads as one clean line for every pick, in en, es and ko (no blank left, no word twice in a row)', () => {
+  it('the composed line reads as one clean line for every pick, in en, es and ko (no blank left, no word twice in a row, no uncontracted a el or de el)', () => {
     const LOCALES: readonly UiLocale[] = ['en', 'es', 'ko'];
     const module = LESSON_STAGE_MODULES[7];
     const scope = module.LESSON_SCOPES[chain!.ref]!;
@@ -203,6 +216,9 @@ describe('the My Story chain of q3 Apply (§7.1 F8, §6.6, rows CM-38 and CM-44 
           const words = line.split(/[\s,.:]+/).filter(Boolean);
           expect(words.some((w, i) => i > 0 && w === words[i - 1]), `${locale} ${frame.id}: ${line}`).toBe(false);
           if (locale === 'ko') expect(word.en.length, word.en).toBeLessThanOrEqual(20);
+          // Review of PR #919: Spanish contracts a + el and de + el ("voy al mar"), so a frame that ends in a or de
+          // before a bank word with el reads wrong on the My page.
+          if (locale === 'es') expect(line, `${locale} ${frame.id}`).not.toMatch(/(^|\s)(a|de) el\s/i);
         }
       }
     }

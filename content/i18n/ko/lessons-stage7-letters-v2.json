@@ -8,7 +8,7 @@
       "hoyaIntro": "친구에게 엽서를 쓰고, 오늘 하루를 한 줄로 써 봐요!",
       "culture.n1.text": "지금까지 찾은 한글 편지 가운데 가장 오래된 것은 1490년대에 쓴 것으로 보여요. 집에서 멀리 떨어져 군관으로 일하던 나신걸이 아내에게 쓴 편지예요.",
       "culture.n2.text": "{ko:궁체}는 조선 궁궐의 궁녀들이 붓으로 쓰던 한글 글씨체예요. 선이 맑고 곧아요. 근현대에는 학교 교과서도 주로 이 글씨체로 한글 붓글씨를 가르쳤어요.",
-      "culture.n3.text": "존중하는 마음을 나타낼 때, 예를 들어 선생님에게 편지를 쓸 때는 {ko:께}를 {ko:에게} 대신 써요. {ko:선생님께}처럼요."
+      "culture.n3.text": "선생님처럼 높여야 하는 분께 편지를 쓸 때는 {ko:에게} 대신 {ko:께}를 써요. {ko:선생님께}처럼요."
     },
     "quest:stage7-letters-v2-q1": {
       "title": "호야에게 쓰는 편지",
@@ -106,13 +106,13 @@
     },
     "minigame:s7-letters-v2-q2-check": {
       "writeFrame.rounds.w1.frame.gloss": "이날 적은 것: ___",
-      "writeFrame.rounds.w2.frame.gloss": "글을 받을 사람: ___",
+      "writeFrame.rounds.w2.frame.gloss": "이날 적은 것: ___",
+      "writeFrame.rounds.w2.slots.what.bank.hangeul.gloss": "한국어를 적는 문자",
+      "writeFrame.rounds.w2.slots.what.bank.ireum.gloss": "나를 부르는 말",
+      "writeFrame.rounds.w2.slots.what.bank.ilgi.gloss": "하루 일을 적은 글",
       "writeFrame.rounds.w1.slots.what.bank.pyeonji.gloss": "누군가에게 보내는 글",
       "writeFrame.rounds.w1.slots.what.bank.ilgi.gloss": "하루 일을 적은 글",
-      "writeFrame.rounds.w1.slots.what.bank.ireum.gloss": "나를 부르는 말",
-      "writeFrame.rounds.w2.slots.who.bank.chingu.gloss": "가깝게 지내는 사람",
-      "writeFrame.rounds.w2.slots.who.bank.mina.gloss": "미나라는 이름",
-      "writeFrame.rounds.w2.slots.who.bank.hoya.gloss": "호야라는 이름"
+      "writeFrame.rounds.w1.slots.what.bank.ireum.gloss": "나를 부르는 말"
     },
     "quest:stage7-letters-v2-q3": {
       "title": "나만의 엽서",
@@ -126,7 +126,7 @@
       "steps.s1.hoyaLine": "이제 나만의 엽서를 써 봐요. 어떤 낱말을 골라도 좋아요!",
       "steps.s6.hoyaLine": "나만의 엽서를 한국어로 썼어요!",
       "steps.s2.discover.pages.0.caption": "엽서를 마무리하는 틀이에요.",
-      "steps.s2.discover.pages.1.caption": "가운데에는 소식을 써요. 이날 어디로 가는지요.",
+      "steps.s2.discover.pages.1.caption": "가운데에는 소식을 써요. 오늘 어디에 가는지요.",
       "steps.s2.discover.pages.0.items.0.note": "{ko:만나요}는 서로 얼굴을 본다는 뜻이에요. 장소 뒤에 {ko:에서}를 붙이면 어디인지 알려 줘요. 엽서 끝에 어디서 볼지 적을 수 있어요.",
       "steps.s2.discover.pages.1.items.0.sentence.gloss": "이날 넓고 짠 물이 있는 곳으로 향한다는 말",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "서로 볼 곳: ___",
@@ -153,15 +153,15 @@
       "myStory.frames.f2.slots.place.bank.bada.gloss": "넓고 짠 물",
       "myStory.frames.f2.slots.place.bank.san.gloss": "높이 솟은 땅",
       "myStory.frames.f2.slots.place.bank.gang.gloss": "흐르는 큰 물줄기",
-      "myStory.frames.f2.slots.place.bank.gongwon.gloss": "누구나 쉬어 가는 녹지",
+      "myStory.frames.f2.slots.place.bank.gongwon.gloss": "나무와 산책길이 있어 쉬거나 노는 곳",
       "myStory.frames.f3.slots.place.bank.hakgyo.gloss": "배우러 다니는 곳",
       "myStory.frames.f3.slots.place.bank.gichayeok.gloss": "기차를 타고 내리는 곳",
-      "myStory.frames.f3.slots.place.bank.gongwon.gloss": "누구나 쉬어 가는 녹지"
+      "myStory.frames.f3.slots.place.bank.gongwon.gloss": "나무와 산책길이 있어 쉬거나 노는 곳"
     },
     "minigame:s7-letters-v2-q3-check": {
       "orderIt.rounds.c1.sentence.gloss": "이날 넓고 짠 물이 있는 곳으로 향한다는 말",
       "orderIt.rounds.c2.sentence.gloss": "배우러 다니는 곳에서 보자는 말",
-      "orderIt.rounds.c1.distractors.mannayo.gloss": "서로 얼굴을 보자는 말",
+      "orderIt.rounds.c1.distractors.mannayo.gloss": "서로 얼굴을 본다는 말",
       "orderIt.rounds.c2.distractors.pyeonji.gloss": "누군가에게 적어 보내는 글"
     }
   }
