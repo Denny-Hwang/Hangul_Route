@@ -116,7 +116,8 @@ test.describe('Letters Volume 2, Stage 6, at launch state (F-CURR-002 row CM-44 
     for (const word of ['도서관', '책']) {
       await expect(page.getByTestId('type-hangul-prompt')).toContainText(word, { timeout: 5_000 });
       await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
-      // The word card shows above the field (its meaning line runs under the field at 320 px: see the PR's follow-up).
+      // The word card shows above the field. Its meaning line runs under the field at 320 px (issue #947, a ramp
+      // precondition for `volumes`): when #947 lands, raise this to ratio 1 and add a 320 x 640 case.
       await expect(page.getByTestId('type-hangul-prompt')).toBeInViewport({ ratio: 0.8 });
       if (word === '도서관') {
         await expectNoHorizontalOverflow(page);
