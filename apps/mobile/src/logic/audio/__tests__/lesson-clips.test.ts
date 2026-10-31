@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { clipUnitsOf } from '../../../../scripts/audio/lib.mjs';
-import { episodesAll } from '../../../content/episodes';
+import { episodesAll, episodesWithVolumes } from '../../../content/episodes';
 import { questsAll } from '../../../content/quests';
 import { vocabTopics } from '../../../content/vocab';
 import { ALL_CLIP_PACKS, clipScopeOfEpisode, lessonClipPlan, type ClipPlanEpisode, type ClipPlanQuest } from '../lesson-clips';
@@ -79,8 +79,9 @@ describe('logic/audio/lesson-clips', () => {
   const ownUnits = (questId: string): string[] => {
     const quest = questsAll.find((q) => q.id === questId);
     if (quest === undefined) return [];
-    const episode = episodesAll.find((e) => e.questIds.includes(questId));
-    return lessonClipPlan({ questId, episodeId: episode?.id, quests: [quest], episodes: episodesAll }).units;
+    // As platform/clip-packs-chunk.ts plans it: over every volume (a Volume 2 quest opens under its own episode, row CM-40).
+    const episode = episodesWithVolumes.find((e) => e.questIds.includes(questId));
+    return lessonClipPlan({ questId, episodeId: episode?.id, quests: [quest], episodes: episodesWithVolumes }).units;
   };
 
   it('every shipped quest\'s own plan reaches at least one warm unit of the real clip manifest (books included)', () => {
