@@ -1081,7 +1081,7 @@ export const consoleMsgs = {
             other: `${n} estudiantes ya están en ${cap} clases. Antes de desarchivar, mueve o quita a esos estudiantes.`,
           }),
     /** AMENDMENTS-GROWNUP-UX GX-10 (T11, P7). */
-    moveOpen: 'Ya hay un cambio abierto.',
+    moveOpen: 'Ya hay un cambio de clase en curso.',
     inviteGrownUp: { cta: 'Invitar a otro adulto' },
     inviteGrownUpLine: (code: string) => `La otra persona inicia sesión y escribe este código: ${code}`,
   },

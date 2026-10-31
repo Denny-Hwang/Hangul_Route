@@ -997,7 +997,7 @@ export const consoleMsgs = {
     /** AMENDMENTS-GROWNUP-UX GX-10 (T11, P7). */
     moveOpen: '이미 진행 중인 이동이 있어요.',
     inviteGrownUp: { cta: '다른 어른 초대하기' },
-    inviteGrownUpLine: (code: string) => `로그인한 뒤 이 코드를 입력하면 돼요: ${code}`,
+    inviteGrownUpLine: (code: string) => `초대받은 어른이 로그인한 뒤 이 코드를 입력하면 돼요: ${code}`,
   },
   school: {
     title: '학교',
