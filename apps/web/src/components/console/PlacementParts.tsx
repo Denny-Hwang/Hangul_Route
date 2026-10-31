@@ -46,7 +46,7 @@ export function StartingSpot({
         href={suggestStartHref(spaceId, learnerId, kind)}
         data-testid="suggest-start"
         aria-label={messages.console.placement.suggest.label(learnerName.trim())}
-        style={{ ...buttonBase, display: 'inline-block', textDecoration: 'none' }}
+        style={buttonBase}
       >
         {messages.console.placement.suggest.cta}
       </Link>

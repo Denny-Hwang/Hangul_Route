@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { CSSProperties, ReactNode } from 'react';
 import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
@@ -14,8 +14,21 @@ export const panelStyle: CSSProperties = {
   border: `1px solid ${colors.border.subtle}`,
 };
 
-/** The console button look; also used by a link that navigates (one interactive element, not a button inside a link). */
+/**
+ * The console button look; also used by a link that navigates (one interactive element, not a button inside a link).
+ * It owns the size (AMENDMENTS-GROWNUP-UX GX-D11, row GX-6): never shorter than `touchTarget.min`, never narrower than
+ * `touchTarget.child`, the label centred, so a short label never turns into a circle and no row mixes heights. A spread
+ * of it sets no size or box of its own (`button-size.test.tsx` scans the console for that).
+ */
 export const buttonBase: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxSizing: 'border-box',
+  minHeight: touchTarget.min,
+  minWidth: touchTarget.child,
+  textAlign: 'center',
+  textDecoration: 'none',
   padding: `${spacing.sm}px ${spacing.lg}px`,
   borderRadius: radii.pill,
   fontWeight: typography.weight.bold,

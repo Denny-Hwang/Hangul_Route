@@ -73,7 +73,7 @@ const ADMINS_CSS = `
 .hr-adm-btn:focus-visible,.hr-adm-history>summary:focus-visible{outline:${borderWidth.thick}px solid ${colors.border.focus};outline-offset:${borderWidth.base}px}
 `;
 
-const control: CSSProperties = { ...buttonBase, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: touchTarget.min, minWidth: touchTarget.min, boxSizing: 'border-box', flex: 'none', fontSize: rem(typography.size.body) };
+const control: CSSProperties = { ...buttonBase, flex: 'none', fontSize: rem(typography.size.body) };
 const primary: CSSProperties = { ...control, backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
 
 function Btn({
