@@ -31,6 +31,8 @@ import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 const read = (rel: string): unknown => JSON.parse(readFileSync(new URL(`../../../../../${rel}`, import.meta.url), 'utf8'));
 const cell: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/crafts.v2.json'));
 const v1: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/crafts.json'));
+/** The Volume 2 cell that lands before this one (CM-41 S7): this cell's stamps sit above it (scripts/check-added-in.mjs). */
+const natureV2: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/nature.v2.json'));
 
 const scopeOf = (quest: LessonQuest, kind: string): LessonScope | undefined => {
   const ref = quest.steps.find((s) => s.kind === kind)?.minigameRef;
@@ -58,7 +60,8 @@ describe('My Own Game, Stage 7 Play & Crafts Volume 2 (F-CURR-002 row CM-42 S7)'
     expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage7-crafts-v2-q1', 'quest:stage7-crafts-v2-q2', 'quest:stage7-crafts-v2-q3']);
-    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(20261028);
+    const before = Math.max(...natureV2.quests.map((q) => q.addedIn ?? 0));
+    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(before);
     // Row CM-23: one card per upper cell, already Volume 1's (card:bihaenggi); a Volume 2 gives none.
     expect(v1.rewardCardIds).toEqual(['card:bihaenggi']);
     expect(cell.rewardCardIds).toEqual([]);
@@ -80,6 +83,13 @@ describe('My Own Game, Stage 7 Play & Crafts Volume 2 (F-CURR-002 row CM-42 S7)'
       expect(scopeRoundCount(check)).toBe(CHECK_ROUNDS);
       expect(PRODUCE_KINDS.has(check.kind), check.ref).toBe(true);
     }
+  });
+
+  it('F-CURR-001 §3.1 rule 4: the q3 Check asks q3\'s own frame, ___하는 법 ("how to play ~"), not only q2\'s rules', () => {
+    const q3 = cell.quests[2]!;
+    const discover = q3.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items);
+    expect(discover.some((i) => i.type === 'pattern' && i.frame.ko === '___하는 법')).toBe(true);
+    expect(koOf(scopeOf(q3, 'check')).some((ko) => /하는 법$/.test(ko))).toBe(true);
   });
 
   it('§5.1 and §9.3: the curriculum lint reports nothing for the cell (recycle, new load, check variety, culture coverage and sources, dictation, review copy)', () => {
