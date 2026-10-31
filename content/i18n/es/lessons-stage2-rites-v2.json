@@ -5,11 +5,11 @@
     "episode:stage2-rites-v2": {
       "title": "Fiestas a lo largo del año",
       "subtitle": "Comidas de fiesta, Dano, Dongji y un primer cumpleaños",
-      "hoyaIntro": "¡Arroz de cinco granos, columpios y gachas de frijol rojo! Leamos palabras de las fiestas del año.",
+      "hoyaIntro": "¡Arroz de cinco granos, Dano y gachas de frijol rojo! Leamos palabras de las fiestas del año.",
       "culture.n1.text": "{ko:대보름} es la primera luna llena del año lunar. Ese día se come {ko:오곡밥}, arroz cocido con cinco granos que cambian según la región, y temprano por la mañana se parten con los dientes frutos secos llamados {ko:부럼} para tener dientes fuertes y prevenir los forúnculos.",
       "culture.n2.text": "{ko:차례} es un breve rito en memoria de los antepasados que se hace la mañana de una fiesta, hoy sobre todo en Seollal y Chuseok; en Seollal se pone un tazón de {ko:떡국}. La mesa y la forma del rito cambian según la región y la familia.",
       "culture.n3.text": "En un {ko:돌잔치}, la fiesta del primer cumpleaños, se ponen hilo, fideos, grano y dinero, y lo que el bebé toma, el {ko:돌잡이}, se lee como una pista sobre su futuro: el hilo o los fideos, una vida larga. Antiguos libros chinos recogen una costumbre parecida.",
-      "culture.n4.text": "{ko:단오} es el quinto día del quinto mes lunar; en la época Joseon, columpiarse en el {ko:그네} era uno de sus juegos más populares. La UNESCO proclamó el Gangneung Danoje festival en 2005 y lo inscribió en 2008.",
+      "culture.n4.text": "{ko:단오} es el quinto día del quinto mes lunar; en la época Joseon, columpiarse en el {ko:그네} era uno de sus juegos populares. La UNESCO proclamó el festival Danoje de Gangneung en 2005 y lo inscribió en 2008.",
       "culture.n5.text": "{ko:동지}, el solsticio de invierno, tiene la noche más larga del año. Es uno de los 24 términos solares de un calendario compartido en Asia oriental. Su comida son las gachas de frijol rojo, {ko:팥죽}, un plato que también recoge un antiguo libro chino de costumbres."
     },
     "quest:stage2-rites-v2-q1": {
@@ -122,7 +122,7 @@
     },
     "minigame:s2-rites-v2-q2-apply": {
       "cardPairs.dano.gloss": "la fiesta del quinto día del quinto mes lunar",
-      "cardPairs.dongji.gloss": "el día con la noche más larga",
+      "cardPairs.dongji.gloss": "el solsticio de invierno",
       "cardPairs.patjuk.gloss": "gachas de frijol rojo",
       "cardPairs.charye.gloss": "un rito en memoria de los antepasados en una fiesta"
     },
@@ -131,7 +131,7 @@
       "picWord.boards.0.pairs.boreumdal.word.gloss": "luna llena",
       "picWord.boards.0.pairs.yeon.word.gloss": "cometa",
       "picWord.boards.1.pairs.hanbok.word.gloss": "ropa tradicional coreana",
-      "picWord.boards.1.pairs.songpyeon.word.gloss": "masa de arroz en media luna",
+      "picWord.boards.1.pairs.bap.word.gloss": "arroz cocido",
       "picWord.boards.1.pairs.tteokguk.word.gloss": "sopa de masa de arroz"
     },
     "quest:stage2-rites-v2-q3": {

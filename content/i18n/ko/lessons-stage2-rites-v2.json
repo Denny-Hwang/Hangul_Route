@@ -5,7 +5,7 @@
     "episode:stage2-rites-v2": {
       "title": "일 년의 명절",
       "subtitle": "명절 음식, 단오, 동지, 그리고 첫 생일",
-      "hoyaIntro": "오곡밥, 그네, 팥죽! 일 년의 명절 낱말을 읽어 봐요!",
+      "hoyaIntro": "오곡밥, 단오, 팥죽! 일 년의 명절 낱말을 읽어 봐요!",
       "culture.n1.text": "{ko:대보름}은 음력 새해의 첫 보름달이 뜨는 날이에요. 이날에는 다섯 가지 곡식을 넣어 지은 {ko:오곡밥}을 먹는데, 넣는 곡식은 지역마다 달라요. 이른 아침에는 이를 튼튼히 하고 부스럼을 막으려고 {ko:부럼}이라는 견과류를 깨물어요.",
       "culture.n2.text": "{ko:차례}는 명절 아침에 조상을 기리며 간단히 지내는 의례로, 오늘날에는 주로 설날과 추석에 이어져 와요. 설날에는 {ko:떡국}을 올려요. 상을 차리는 법과 의례를 지내는 방식은 지역과 집안마다 달라요.",
       "culture.n3.text": "첫 생일 잔치인 {ko:돌잔치}에서는 실, 국수, 곡식, 돈 같은 물건을 늘어놓고, 아기가 무엇을 집는지 보는 {ko:돌잡이}로 앞날을 짐작해 봐요. 실이나 국수는 오래 사는 삶을 뜻해요. 옛 중국 책에도 비슷한 풍속이 적혀 있어요.",
@@ -93,7 +93,7 @@
       "steps.s2.discover.pages.0.items.0.word.gloss": "음력 5월 5일의 명절",
       "steps.s2.discover.pages.0.items.1.word.gloss": "추석에 빚는 반달 모양 떡",
       "steps.s2.discover.pages.1.items.0.word.gloss": "일 년 중 밤이 가장 긴 날",
-      "steps.s2.discover.pages.1.items.1.word.gloss": "팥을 삶아 쌀과 함께 끓인 붉은 죽",
+      "steps.s2.discover.pages.1.items.1.word.gloss": "붉은 콩을 끓여 만든 걸쭉한 음식",
       "steps.s2.discover.pages.2.items.0.word.gloss": "명절 아침에 조상을 기리는 간단한 의례",
       "steps.s2.discover.pages.0.items.0.note": "음력 5월 5일, 여름 명절이에요.",
       "steps.s2.discover.pages.1.items.0.note": "일 년 중 밤이 가장 긴 날이에요.",
@@ -122,8 +122,8 @@
     },
     "minigame:s2-rites-v2-q2-apply": {
       "cardPairs.dano.gloss": "음력 5월 5일의 명절",
-      "cardPairs.dongji.gloss": "밤이 가장 긴 날",
-      "cardPairs.patjuk.gloss": "팥을 삶아 쌀과 함께 끓인 붉은 죽",
+      "cardPairs.dongji.gloss": "일 년 중 밤이 가장 긴 날",
+      "cardPairs.patjuk.gloss": "붉은 콩을 끓여 만든 걸쭉한 음식",
       "cardPairs.charye.gloss": "명절 아침에 조상을 기리는 간단한 의례"
     },
     "minigame:s2-rites-v2-q2-check": {
@@ -131,7 +131,7 @@
       "picWord.boards.0.pairs.boreumdal.word.gloss": "음력 15일 밤에 뜨는 크고 둥근 달",
       "picWord.boards.0.pairs.yeon.word.gloss": "바람에 날리는 종이 장난감",
       "picWord.boards.1.pairs.hanbok.word.gloss": "한국의 전통 옷",
-      "picWord.boards.1.pairs.songpyeon.word.gloss": "추석에 빚는 반달 모양 떡",
+      "picWord.boards.1.pairs.bap.word.gloss": "쌀로 지어 먹는 음식",
       "picWord.boards.1.pairs.tteokguk.word.gloss": "설날에 먹는, 떡을 넣은 국"
     },
     "quest:stage2-rites-v2-q3": {

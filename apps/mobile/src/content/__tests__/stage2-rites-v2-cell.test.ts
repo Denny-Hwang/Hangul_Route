@@ -129,6 +129,37 @@ describe('Holidays Volume 2, Stage 2 (row CM-45 S2)', () => {
     }
   });
 
+  it('a Check asks a word new to the volume unless it is a picture Check and no new word of its quest has a picture (the recorded exception)', () => {
+    const route = new Set(STAGE2_VOLUME1.flatMap((c) => [...taughtBy(c)]));
+    const fresh = (q: LessonQuest): string[] => discoverWords(q).filter((w) => !route.has(w));
+    const pictured = new Set(
+      CELL.quests.flatMap((q) => q.steps.flatMap((s) => s.discover?.pages ?? []).flatMap((p) => p.items).flatMap((i) => (i.type === 'word' && i.picture !== undefined ? [i.word.ko] : []))),
+    );
+    const exceptions: string[] = [];
+    for (const q of CELL.quests) {
+      const check = scopeOf(q, 'check');
+      if (asked(check).some((ko) => !route.has(ko))) continue;
+      // A Stage 2 Check is Read Pick Meaning, Pic-Word Match or Dictation (checkKindsFor, and one of each in a three-quest
+      // Volume 2 under the 40 in 100 share). The first two show the meaning as a drawn picture, so they can only ask a
+      // word that has one; none of this quest's new words does. Drawing one ends the exception, and this test with it.
+      expect(['listen-pick', 'pic-word-match'], q.id).toContain(check.kind);
+      for (const ko of fresh(q)) expect(pictured.has(ko), `${q.id} ${ko} has a picture: ask it in the Check`).toBe(false);
+      exceptions.push(q.id);
+    }
+    expect(exceptions).toEqual(['quest:stage2-rites-v2-q1', 'quest:stage2-rites-v2-q2']);
+    // The Dictation Check asks the quest's own new word (실) and quest 2's 동지, spaced into the next quest.
+    expect(asked(scopeOf(CELL.quests[2]!, 'check')).filter((ko) => !route.has(ko))).toEqual(['실', '동지']);
+  });
+
+  it('a Pic-Word Match Check never puts one word on two boards', () => {
+    for (const q of CELL.quests) {
+      const check = scopeOf(q, 'check');
+      if (check.kind !== 'pic-word-match') continue;
+      const words = check.boards.flatMap((b) => b.pairs.map((p) => p.word.ko));
+      expect(new Set(words).size, q.id).toBe(words.length);
+    }
+  });
+
   it('U-4: every scored read, every Syllable Build tile and every Dictation answer uses Stage 1 symbols only', () => {
     for (const q of CELL.quests) {
       for (const scope of q.scopes) {
