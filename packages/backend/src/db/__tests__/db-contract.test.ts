@@ -269,6 +269,23 @@ function contract(name: string, make: () => Db): void {
       expect(await db.getRelink('relink:nope')).toBeNull();
     });
 
+    it('[GX-W] pendingRelinksOfSpaces: pending and inside the window only, across spaces, read-only', async () => {
+      await db.putAccount({ id: 't', email: null, displayName: null, consent: null, createdAt: T });
+      for (const id of ['space:c', 'space:d', 'space:e']) await db.putSpace(space(id, 'class', 't'));
+      await db.putLearner({ id: 'profile:a', displayName: 'A', ageGroup: '8-9', avatar: 'x', recoveryHash: null, createdAt: T, lastActiveAt: T });
+      const now = new Date('2026-10-07T00:05:00.000Z');
+      const req = (id: string, spaceId: string, expiresAt: string, status: 'pending' | 'approved' = 'pending') => ({ id, spaceId, learnerId: 'profile:a', deviceId: `device-${id.slice(7)}`, platform: null, requestedAt: T, expiresAt, status, decidedAt: null, secret: null });
+      await db.putRelink(req('relink:1', 'space:c', '2026-10-07T00:10:00.000Z'));
+      await db.putRelink(req('relink:2', 'space:d', '2026-10-07T00:06:00.000Z'));
+      await db.putRelink(req('relink:3', 'space:d', '2026-10-07T00:05:00.000Z')); // closes exactly now: not counted
+      await db.putRelink(req('relink:4', 'space:d', '2026-10-07T00:10:00.000Z', 'approved'));
+      await db.putRelink(req('relink:5', 'space:e', '2026-10-07T00:10:00.000Z'));
+      expect((await db.pendingRelinksOfSpaces(['space:c', 'space:d'], now)).map((r) => r.id).sort()).toEqual(['relink:1', 'relink:2']);
+      expect(await db.pendingRelinksOfSpaces([], now)).toEqual([]);
+      // nothing was written: the past-window row is still pending as stored
+      expect((await db.getRelink('relink:3'))?.status).toBe('pending');
+    });
+
     it('entitlements: one row per subject + plan, refs kept unless replaced, promoCode kept', async () => {
       const now = new Date(T);
       const first = await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:f', planKey: 'family_lifetime', status: 'active', provider: 'stripe', customerRef: 'cus_1', providerRef: 'pi_1', promoCode: 'HOYA20' }, now);

@@ -7,6 +7,7 @@ import { can } from '../lib/can';
 import { hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { publicLearner } from '../lib/learners';
 import { isJoinCodeLive } from '../lib/join-code';
+import { expireIfDue, liveRelinks } from '../lib/relinks';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { id, type Account } from '../store';
 import { rosterName } from './spaces';
@@ -21,26 +22,9 @@ export const relinkRoutes = new Hono();
 export const RELINK_LIMIT = 10;
 export const relinkLimiter = createRateLimiter(RELINK_LIMIT, 60 * 60 * 1000);
 
-/** Marks a pending request expired once its window passed; returns whether it changed. */
-function expireIfDue(req: StoredRelink, now: Date): boolean {
-  if (req.status === 'pending' && Date.parse(req.expiresAt) <= now.getTime()) {
-    req.status = 'expired';
-    req.decidedAt = now.toISOString();
-    return true;
-  }
-  return false;
-}
-
 function publicRequest(req: StoredRelink): RelinkRequest {
   const { secret: _secret, ...rest } = req;
   return rest;
-}
-
-/** Loads a space's requests, persisting any that expired meanwhile. */
-async function liveRelinks(db: Db, spaceId: string, now: Date): Promise<StoredRelink[]> {
-  const rows = await db.relinksOf(spaceId);
-  for (const r of rows) if (expireIfDue(r, now)) await db.putRelink(r);
-  return rows;
 }
 
 async function requireManager(c: Context, db: Db, spaceId: string): Promise<Response | { account: Account; space: Space }> {
