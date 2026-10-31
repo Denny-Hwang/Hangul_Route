@@ -34,8 +34,9 @@ type E2eWindow = Window & {
   __hrHiddenHeritageE2E?: { open(p: { missing?: boolean; sceneId?: string }): void; log(): { answers: Array<{ key: string; correct: boolean }>; completed: number } };
 };
 
-async function open(page: Page, gameOn: boolean): Promise<void> {
+async function open(page: Page, gameOn: boolean, settings?: { uiLocale: 'en' | 'ko'; textSize?: 'largest' }): Promise<void> {
   await page.goto('/');
+  if (settings) await seedStored(page, 'device:settings', { uiLocaleAt: '2026-10-17T09:00:00.000Z', ...settings });
   await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 86_400, flags: { 'game.hidden-heritage': { on: gameOn, pct: gameOn ? 100 : 0 } } });
   await page.reload();
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrHiddenHeritageE2E), undefined, { timeout: 10_000 });
@@ -106,6 +107,28 @@ test.describe('Hidden Heritage, the four seasons (F-CURR-002 CM-37 part 3)', () 
       expect(answers.map((a) => a.correct)).toEqual([false, true, true, true, true]);
     });
   }
+
+  test('at 320, Largest text in the ko UI: the card back shows each fact in Korean from the locale chunk, and nothing scrolls sideways', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, true, { uiLocale: 'ko', textSize: 'largest' });
+    await expect(page.getByTestId('hh-scene')).toBeVisible();
+    for (let i = 0; i < 4; i += 1) {
+      const ko = await asked(page);
+      await page.getByTestId(`hh-spot-${TARGETS[ko]!.id}`).click();
+      await expect.poll(async () => (await log(page)).answers.length).toBe(i + 1);
+      if (i < 3) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
+    }
+    const back = page.getByTestId('hh-card-back');
+    await back.scrollIntoViewIfNeeded();
+    // The scene's own ko claims (content/i18n/ko/hidden-heritage.json), read through the ko locale chunk at run time.
+    await expect(back.getByTestId('hh-card-back-f1')).toContainText('네 계절이 뚜렷해요');
+    await expect(back.getByTestId('hh-card-back-f6')).toContainText('원나라와 명나라');
+    for (const id of ['f1', 'f2', 'f3', 'f4', 'f5', 'f6']) await expect(back.getByTestId(`hh-card-back-${id}`)).toBeVisible();
+    expect(await back.innerText()).not.toMatch(/https?:|www\./);
+    expect(await page.locator('body').innerText()).not.toMatch(SHAME);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'hidden-heritage-seasons-card-back-ko-largest-320');
+  });
 
   test('at 320, game.hidden-heritage off (the launch state): Pic-Word Match on 바람, 비, 까치 and 산 from their own pictures', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });

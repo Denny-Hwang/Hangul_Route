@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { en } from '@hangul-route/i18n';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
@@ -149,4 +149,48 @@ describe('the shipped Hidden Heritage step (Nature & Animals Volume 2, quest 2 A
     const r = await draw();
     expect(r.root.findAll((n) => n.props.testID === 'hh-card-back')).toHaveLength(0);
   });
+});
+
+/**
+ * The §17 Phase 4 copy rule over every shipped placement: a cell's `minigame:` overlay carries the placed scene's es and
+ * ko `round.*` entries word for word (so a later scene edit cannot drift from the cell), and the scene has an es and ko
+ * claim for every fact its card back shows (so no locale silently falls back to English).
+ */
+describe('every shipped Hidden Heritage placement, in es and ko', () => {
+  const lessonOverlay = (locale: 'es' | 'ko', ref: string): Record<string, string> | undefined => {
+    const dir = new URL(`../../../../../../content/i18n/${locale}/`, import.meta.url);
+    for (const file of readdirSync(dir).filter((f) => f.startsWith('lessons-') && f.endsWith('.json'))) {
+      const table = (JSON.parse(readFileSync(new URL(file, dir), 'utf8')) as { entries: Record<string, Record<string, string>> }).entries[ref];
+      if (table) return table;
+    }
+    return undefined;
+  };
+  const placements = Object.entries(ALL_LESSON_SCOPES).flatMap(([ref, scope]) =>
+    (scope as MinigameScope).kind === 'hidden-heritage' ? (scope as MinigameScope).hiddenHeritage!.rounds.map((round) => ({ ref, round })) : [],
+  );
+
+  it('finds at least the Nature & Animals Volume 2 placement', () => {
+    expect(placements.map((p) => p.ref)).toContain(REF);
+  });
+
+  for (const locale of ['es', 'ko'] as const) {
+    it(`${locale}: each placement's round entries equal the scene's round entries, and every fact has a claim`, async () => {
+      for (const { ref, round } of placements) {
+        const scene = await scenes.loadScene(round.sceneId);
+        expect(scene, round.sceneId).not.toBeNull();
+        const table = (JSON.parse(readFileSync(new URL(`../../../../../../content/i18n/${locale}/hidden-heritage.json`, import.meta.url), 'utf8')) as {
+          entries: Record<string, Record<string, string>>;
+        }).entries[round.sceneId];
+        expect(table, `${locale} ${round.sceneId}`).toBeDefined();
+        const cell = lessonOverlay(locale, ref) ?? {};
+        const roundKeys = Object.keys(table!).filter((k) => k.startsWith('round.'));
+        expect(roundKeys.length, `${locale} ${round.sceneId}`).toBeGreaterThan(0);
+        for (const key of roundKeys) {
+          const path = key.slice('round.'.length);
+          expect(cell[`hiddenHeritage.rounds.${round.id}.${path}`], `${locale} ${ref} ${path}`).toBe(table![key]);
+        }
+        for (const fact of scene!.note.facts) expect(table![`note.facts.${fact.id}.claim`], `${locale} ${round.sceneId} ${fact.id}`).toBeTruthy();
+      }
+    });
+  }
 });
