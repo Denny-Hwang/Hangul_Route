@@ -447,6 +447,8 @@ The en values are the shipped `STAGE_TITLES` (`lib/console/stage-titles.ts`), eq
 
 Schemas are lenient on the client (`.catch` defaults): a console that meets an older Worker falls back to its own reads (section 3.3). No migration; no new table, index or column.
 
+As built in GX-W: the list's items are `spaces[]` (the shipped `GET /api/spaces` shape), so the field is `spaces[].attention`; it is present on a live space where the caller holds `roster.manage`, or the move action of its kind while `CLASS_TRANSFER` is on, and absent otherwise (an archived space, a school `teacher`). A **school**'s `attention` sums its live classes for the school's owner and admins (the cascade gives them `roster.manage` and `learner.transfer` there), so a persona total (section 6) counts a class once: from its school's row or from its own row, never both. Besides the expiry filter, a move whose learner already left the source class or whose destination is archived is not counted (what the list routes' settle ends). The wire schemas and lenient readers are `RosterPendingSchema` / `readRosterPending`, `readRosterIncoming` and `SpaceAttentionSchema` / `readSpaceAttention` in `packages/content-schema/src/schemas/attention.ts`. Without `CLASS_TRANSFER`, the roster sends no `pending.move` and no `incoming`.
+
 ## 13. Rows (implementation PRs; every UI row adds en, es and ko, links its GX-0 mock and attaches 360 and 1280 screenshots)
 
 | Row | Content | Size | Depends on |
