@@ -32,6 +32,7 @@ import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 const read = (rel: string): unknown => JSON.parse(readFileSync(new URL(`../../../../../${rel}`, import.meta.url), 'utf8'));
 const cell: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/life.v2.json'));
 const v1: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/life.json'));
+const craftsV2: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/crafts.v2.json'));
 
 const scopeOf = (quest: LessonQuest, kind: string): LessonScope | undefined => {
   const ref = quest.steps.find((s) => s.kind === kind)?.minigameRef;
@@ -48,7 +49,8 @@ describe('My Favorite Food, Stage 7 Food & Daily Life Volume 2 (F-CURR-002 row C
     expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage7-life-v2-q1', 'quest:stage7-life-v2-q2', 'quest:stage7-life-v2-q3']);
-    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(20261028);
+    const before = Math.max(...craftsV2.quests.map((q) => q.addedIn ?? 0));
+    for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(before);
     // Row CM-23: one card per upper cell, already Volume 1's (card:achim); a Volume 2 gives none.
     expect(v1.rewardCardIds).toEqual(['card:achim']);
     expect(cell.rewardCardIds).toEqual([]);

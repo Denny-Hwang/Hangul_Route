@@ -19,7 +19,7 @@
       "blurbEn": "Write about a food you like, or a food Hoya likes.",
       "teaserEn": "Next: write the steps to make bibimbap.",
       "estimatedMinutes": 5,
-      "addedIn": 20261030,
+      "addedIn": 20261101,
       "steps": [
         {
           "id": "s1",
@@ -271,7 +271,7 @@
               "sentence": {
                 "ko": "제가 좋아하는 음식은 ___이에요.",
                 "romanization": "jega joahaneun eumsigeun ___ieyo",
-                "en": "My favorite food is bibimbap."
+                "en": "My favorite food is mixed rice."
               },
               "tiles": [
                 {
@@ -330,7 +330,7 @@
       "blurbEn": "Write the steps to make bibimbap: put it in, then mix.",
       "teaserEn": "Next: write a recipe of your own.",
       "estimatedMinutes": 5,
-      "addedIn": 20261030,
+      "addedIn": 20261101,
       "steps": [
         {
           "id": "s1",
@@ -404,6 +404,15 @@
                       "en": "Then, mix it."
                     },
                     "picture": "word:culture-bibimbap"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "먹어요",
+                      "romanization": "meogeoyo",
+                      "en": "eat it"
+                    },
+                    "noteEn": "The last step of a recipe: once it is mixed, eat it."
                   }
                 ],
                 "captionEn": "First this, then that: a recipe goes step by step."
@@ -614,7 +623,7 @@
       "titleEn": "My Own Recipe",
       "blurbEn": "Write a recipe of your own, from a word bank.",
       "estimatedMinutes": 5,
-      "addedIn": 20261030,
+      "addedIn": 20261101,
       "steps": [
         {
           "id": "s1",
@@ -1018,7 +1027,9 @@
       "Culture and facts lens (MAR, 2026-10-30): n1 (반상 named by plates of side dishes, 3 to 12; 삼첩반상) against stdict and AKS; n2 (spoon and chopsticks not held in one hand at once; the spoon is put down) against NFM and AKS, worded so it never picks between the two places the sources give; n3 (수저) against stdict and AKS. All new beside Volume 1's notes; names as of the access date; no brand.",
       "Learning design lens (MAR, 2026-10-30): curriculum lint clean; one new frame a quest and at most 3 new words (Stage 7 cap); lesson-recycle 30 in 100 or more in every quest (비빔밥, 떡볶이, 김밥, 밥, 나물, 달걀, 김치, 맛있어요, 먼저, 그다음에, 잘라요 and the cell's earlier steps); no Dictation round; the Checks ask only what the quest has shown.",
       "My Story lens (MAR, 2026-10-30, §6.6): one neutral option per bank, never first (비빔밥, the lesson's own dish; 밥; 먹어요); no frame asks about family, feelings, home or school; with game.my-story off the step plays frame 1 alone, which reads well (오늘은 김밥을 만들어요); frames 2-3 and their words are the q2 Check, so the switch-off path teaches them.",
-      "Reviser and third pass (MAR, 2026-10-30): the lens fixes applied; every rule test, overlay check and the 320 px play re-run clean on the final text."
+      "Reviser and third pass (MAR, 2026-10-30): the lens fixes applied; every rule test, overlay check and the 320 px play re-run clean on the final text.",
+      "Review fix stage (MAR, 2026-10-31): 먹어요 is now a q2 Discover word card (page 3, after 그다음에 비벼요), so the q2 Check and the q3 bank that offer it ask only what the quest has shown; q2 teaches 넣어요, 비벼요 and 먹어요 (the Stage 7 cap of 3). The q1 Cloze Pick meaning line reads 'mixed rice', not the dish's romanized name, so the gap is read in Hangul.",
+      "Review fix stage, overlays (MAR, 2026-10-31): ko: 넣어요 is glossed 안에 들어가게 하다 (담다 is for a container), the step title is 재료 더하기, 오늘은 reads 오늘 in the glosses, and n3 is reworded from the dictionary line. es: the y1 prompt reads «échalo dentro». Quests restamped 20261101 above CM-42 S7's 20261031."
     ]
   },
   "contentVer": 1
