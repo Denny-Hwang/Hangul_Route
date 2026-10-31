@@ -1086,7 +1086,7 @@ export const consoleMsgs = {
     week: (days: number, minutes: number) => `최근 7일 중 ${days}일 연습 · ${minutes}분`,
     next: (title: string) => `다음: ${title}`,
     notStarted: (name: string) => `아직 시작 전이에요. ${name}의 기기에서 앱을 열어 주세요.`,
-    restart: '5분짜리 퀘스트로 다시 시작해 봐요.',
+    restart: '5분 퀘스트로 다시 시작하기 좋아요.',
     lastActive: { notStarted: '아직 시작 전' },
   },
   journey: {

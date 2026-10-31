@@ -814,6 +814,15 @@ describe('the family home: the child card week, next and lecture slot (GX-11)', 
     expect(handoff.calls).toEqual([]);
   });
 
+  it('a child who never started, in an archived family: the plain not-started words, no Open the app (the family cannot act)', async () => {
+    const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [never]) };
+    const r = await render([archived]);
+    const sora = card(r, 'Sora');
+    expect(textOf(within(sora, 'child-week-line')[0] as ReactTestInstance)).toBe(p.lastActive.notStarted);
+    expect(within(sora, 'child-open-app')).toHaveLength(0);
+  });
+
   it('a child quiet for 7 days: the restart line, never "0 of the last 7 days", and no squares', async () => {
     data.rosters = { sp_f: roster(family, [quiet]) };
     const r = await render([family]);

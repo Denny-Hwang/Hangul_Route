@@ -43,7 +43,8 @@ const activity = (days: ReturnType<typeof day>[], over: Record<string, unknown> 
 });
 const stage1 = { questsDone: 6, questsTotal: 15, anchorAccuracy: null };
 const kid = (id: string, name: string, joinedAt: string, summary: unknown) => ({ id, displayName: name, ageGroup: 'starter', avatar: 'hoya-orange', joinedAt, lastActiveAt: at(-60 * 20), lastSyncedAt: at(-60 * 20), summary });
-// Mina practiced 4 of the last 7 days (Oct 25 to 31) for 36 min and has a next quest; Jun last practiced on Oct 12; Sora never started.
+// Mina practiced 4 of the last 7 days (Oct 25 to 31) for 36 min and has a next quest; Jun last practiced on Oct 12 (saved
+// today, so quiet, not stale); Sora never started.
 const MINA = kid('profile:mina', 'Mina', '2026-09-02T00:00:00.000Z', {
   lastActiveAt: at(-60 * 20),
   minutesLast7d: 36,
@@ -51,7 +52,7 @@ const MINA = kid('profile:mina', 'Mina', '2026-09-02T00:00:00.000Z', {
   cardsUnlocked: 3,
   activity: activity([day('2026-10-20', 9), day('2026-10-25', 10), day('2026-10-26', 8), day('2026-10-28', 12), day('2026-10-30', 6)], { next: { q: 'quest:stage1-letters-q1', plan: false } }),
 });
-const JUN = kid('profile:jun', 'Jun', '2026-09-03T00:00:00.000Z', { lastActiveAt: '2026-10-12T08:00:00.000Z', minutesLast7d: 0, stage1, cardsUnlocked: 1, activity: activity([day('2026-10-12', 15)], { asOf: '2026-10-12' }) });
+const JUN = kid('profile:jun', 'Jun', '2026-09-03T00:00:00.000Z', { lastActiveAt: '2026-10-12T08:00:00.000Z', minutesLast7d: 0, stage1, cardsUnlocked: 1, activity: activity([day('2026-10-12', 15)]) });
 const SORA = kid('profile:sora', 'Sora', '2026-09-04T00:00:00.000Z', null);
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
@@ -136,10 +137,13 @@ for (const { locale, browser } of LOCALES) {
           expect(card?.y ?? 0).toBeGreaterThan((last?.y ?? 0) + (last?.height ?? 0) - 1);
           await noSidewaysScroll(page);
         } else {
-          // From 70em the card is first in the side column, right of the children.
+          // From 70em the card is in the side column, right of the children; with the strip waiting (Mina's re-link), below
+          // the family actions, so the strip with Approve and Deny is what the parent sees first (GX-11 review).
           const first = await page.getByTestId('learner-card').first().boundingBox();
           const card = await lecture.boundingBox();
           expect(card?.x ?? 0).toBeGreaterThan((first?.x ?? 0) + (first?.width ?? 0));
+          const aside = await page.getByRole('complementary', { name: p.actionsFor('Kim family') }).boundingBox();
+          expect(card?.y ?? 0).toBeGreaterThan((aside?.y ?? 0) + (aside?.height ?? 0) - 1);
         }
         await page.screenshot({ path: test.info().outputPath(`family-week-${locale}-${label}.png`), fullPage: true });
       });

@@ -1176,7 +1176,7 @@ export const consoleMsgs = {
       many: (n: number) => `En ${n} clases`,
       none: 'Solo en familia',
     },
-    week: (days: number, minutes: number) => `Practicó ${days} de los últimos 7 días · ${minutes} min`,
+    week: (days: number, minutes: number) => `Practicó ${days} de los últimos 7 días · ${minutes}\u00a0min`,
     next: (title: string) => `Siguiente: ${title}`,
     notStarted: (name: string) => `Aún no empieza. Abre la app en el dispositivo de ${name}.`,
     restart: 'Una misión de 5 minutos es ideal para retomar.',

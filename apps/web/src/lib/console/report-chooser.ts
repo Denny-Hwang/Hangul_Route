@@ -16,7 +16,10 @@ export interface ParentChooserRow {
   href: string;
   name: string;
   avatar: string;
-  /** AMENDMENTS-GROWNUP-UX GX-11 (P10): the child card's first line under the name ("Practiced 4 of the last 7 days · 36 min"). */
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-11 (P10): the child's week line under the name ("Practiced 4 of the last 7 days · 36 min"),
+   * the card's first line; for an older app, the minutes line instead of its last-active line.
+   */
   line: string;
 }
 

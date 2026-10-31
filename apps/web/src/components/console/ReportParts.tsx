@@ -185,6 +185,7 @@ export const REPORT_CSS = `
 .hr-report-chooser a:focus-visible{${focusRing}}
 .hr-report-chooser a>span:not(.hr-report-chip){flex:1;min-width:0;overflow-wrap:anywhere}
 .hr-report-chooser-text{display:flex;flex-direction:column;gap:${rem(spacing.xxs)};padding-block:${rem(spacing.xs)}}
+.hr-report-chooser-sep{position:absolute;width:${px(borderWidth.thin)};height:${px(borderWidth.thin)};overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .hr-report-chooser-line{font-size:${rem(typography.size.bodySm)};font-weight:${typography.weight.regular};color:${colors.text.secondary}}
 .hr-report-skeleton{height:${rem(spacing.xxxl)};border-radius:${px(radii.md)};background:${colors.surface.sunken}}
 .hr-report-skeleton-tall{height:calc(3 * ${rem(spacing.xxxl)})}
@@ -262,10 +263,9 @@ function TitleChip({ avatar }: { avatar: string | null }): JSX.Element {
 /**
  * The parent chooser (RP-7c; design `learner-report.md`, States): `report.chooser.learner` as the `h1`, one row per
  * learner (avatar chip, name, `arrow-right`), at least `touchTarget.min` tall, in the order given, never a figure.
- */
-/**
- * The parent chooser: one link per learner, the name and (AMENDMENTS-GROWNUP-UX GX-11, P10) the child card's first line
- * under it, so the row says how the week went before it is opened; the rows keep the family home's order.
+ * AMENDMENTS-GROWNUP-UX GX-11 (P10): the child's week line under the name (`childWeekLines(...).chooser`: the card's
+ * first line, except for an older app, where it is the minutes line, the one figure that app sends), so the row says
+ * how the week went before it is opened. A visually hidden ", " keeps the name and the line apart in the link's name.
  */
 export function ReportChooser({ title, rows }: { title: string; rows: readonly { key: string; href: string; name: string; avatar: string; line?: string }[] }): JSX.Element {
   return (
@@ -278,6 +278,7 @@ export function ReportChooser({ title, rows }: { title: string; rows: readonly {
               <TitleChip avatar={row.avatar} />
               <span className="hr-report-chooser-text">
                 <span data-testid="report-chooser-name">{row.name}</span>
+                {row.line ? <span className="hr-report-chooser-sep">, </span> : null}
                 {row.line ? (
                   <span className="hr-report-chooser-line" data-testid="report-chooser-line">
                     {row.line}

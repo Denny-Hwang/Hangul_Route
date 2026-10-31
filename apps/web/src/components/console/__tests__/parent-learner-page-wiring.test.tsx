@@ -167,9 +167,11 @@ describe('/parent/learner without a learner: the parent chooser (RP-7c)', () => 
       ['/parent/learner?id=space%3Aa&learner=profile%3A2&period=week&from=nav', 'Name profile:2'],
       ['/parent/learner?id=space%3Ab&learner=profile%3A3&period=week&from=nav', 'Name profile:3'],
     ]);
-    // AMENDMENTS-GROWNUP-UX GX-11 (P10): the child card's first line under each name; these summaries hold no practice
-    // yet, so each says so. The order stays the join order whatever the minutes (never a ranking).
-    expect(rows(root).map((a) => textOf(byTestId(a, 'report-chooser-line')[0] as ReactTestInstance))).toEqual(Array(3).fill(en.console.parentHome.lastActive.notStarted));
+    // AMENDMENTS-GROWNUP-UX GX-11 (P10): the child's week line under each name. These rows carry only minutes (an older
+    // summary): with minutes, the minutes line; with none, not started. The order stays the join order whatever the
+    // minutes (never a ranking).
+    const p = en.console.parentHome;
+    expect(rows(root).map((a) => textOf(byTestId(a, 'report-chooser-line')[0] as ReactTestInstance))).toEqual([p.lastActive.notStarted, p.minutes7d(90), p.minutes7d(10)]);
     expect(nav.replaced).toEqual([]);
     expect(fakeDocument.title).toBe('Report - Hangul Route');
     expect(byTestId(root, 'report-back')[0]?.props.href).toBe('/parent');

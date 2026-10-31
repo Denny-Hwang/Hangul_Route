@@ -5,7 +5,7 @@ import type { ClassScopeState, MoveNotice } from './class-moves';
 import { minutesShown } from './learner-status';
 import { lectureCardView, type LectureCardView } from './lecture-entry';
 import { heldPersonas } from './personas';
-import { reportNextQuest } from './report-view';
+import { reportDayText, reportNextQuest } from './report-view';
 import { relativeDay } from './rollup';
 import { ROUTES } from './routing';
 import { familyMustAnswer } from './transfer';
@@ -104,10 +104,15 @@ export function familyLectureCard(items: readonly SpaceListItem[] | 'failed' | n
  * the end of the family's main column, after the last child, so the card never sits between child 1 and child 2;
  * with no card to follow (no learner yet, a roster that did not load), there too.
  */
-export type LectureSlot = 'side' | 'afterFirstRow' | 'afterMain';
+export type LectureSlot = 'side' | 'sideAfter' | 'afterFirstRow' | 'afterMain';
 
-export function lectureCardSlot(wide: boolean, cards: number): LectureSlot {
-  if (wide) return 'side';
+/**
+ * `waiting`: the family's Needs you items. From 70em, while any wait (GX-11 review), the card goes after the family
+ * actions in the side column ('sideAfter'), so the strip with Approve and Deny is what a parent sees first, not the
+ * Lecture mode card level with the family's heading.
+ */
+export function lectureCardSlot(wide: boolean, cards: number, waiting = 0): LectureSlot {
+  if (wide) return waiting > 0 ? 'sideAfter' : 'side';
   return cards === 1 ? 'afterFirstRow' : 'afterMain';
 }
 
@@ -273,15 +278,24 @@ export type ChildWeek =
   | { kind: 'week'; days: number; minutes: number; squares: boolean[]; next: string | null }
   /** Quiet for the last 7 days: the restart line (never a zero), with the next quest when known. */
   | { kind: 'restart'; next: string | null }
+  /**
+   * Not saved for more than 7 days (the report's `stale`): the report's own "Last saved {date}." line, never a count or
+   * a restart nudge for days this page cannot see (the child may have practised offline).
+   */
+  | { kind: 'stale'; lastSaved: string; next: string | null }
   /** An older app with no day-by-day data: the shipped last-active and minutes lines. */
   | { kind: 'legacy'; lastActiveAt: string; minutes: number | null };
 
 export function childWeek(learner: RosterLearner, now: Date, locale: UiLocale = DEFAULT_LOCALE, catalog: Catalog = CATALOG): ChildWeek {
   const summary = learner.summary === null ? null : reportSummaryOf(learner.summary);
   const report = learnerReport({ summary, viewer: 'family', voice: 'third', period: 'week', now, catalog, lastSyncedAt: learner.lastSyncedAt });
-  if (summary === null || report.state === 'no_data' || report.state === 'empty') return { kind: 'notStarted' };
-  if (report.state === 'legacy' || report.figures === null) return { kind: 'legacy', lastActiveAt: summary.lastActiveAt || learner.lastActiveAt, minutes: summary.minutesLast7d ?? null };
+  const legacy = (): ChildWeek => ({ kind: 'legacy', lastActiveAt: summary?.lastActiveAt || learner.lastActiveAt, minutes: summary?.minutesLast7d ?? null });
+  if (summary === null || report.state === 'no_data') return { kind: 'notStarted' };
+  // A row with minutes but none of the report's progress fields (an older summary) has practised: never "Not started".
+  if (report.state === 'empty') return !summary.activity && (summary.minutesLast7d ?? 0) > 0 ? legacy() : { kind: 'notStarted' };
+  if (report.state === 'legacy' || report.figures === null) return legacy();
   const next = reportNextQuest(summary, locale, catalog)?.title ?? null;
+  if (report.stale) return { kind: 'stale', lastSaved: report.stale.lastSaved, next };
   const days = report.figures.days.count;
   if (days === 0) return { kind: 'restart', next };
   const squares = (report.calendar ?? []).map((cell) => cell.kind === 'practiced');
@@ -301,6 +315,10 @@ export function childWeekLines(week: ChildWeek, name: string, now: Date, locale:
       return { first: p.notStarted(name), next: null, chooser: p.lastActive.notStarted };
     case 'restart':
       return { first: p.restart, next, chooser: p.restart };
+    case 'stale': {
+      const line = getMessages(locale).report.state.stale(reportDayText(week.lastSaved, now.toISOString().slice(0, 10), locale));
+      return { first: line, next, chooser: line };
+    }
     case 'week': {
       const line = p.week(week.days, week.minutes);
       return { first: line, next, chooser: line };

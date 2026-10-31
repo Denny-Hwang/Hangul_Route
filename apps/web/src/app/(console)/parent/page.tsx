@@ -487,7 +487,7 @@ export default function ParentHomePage(): JSX.Element {
           </div>
         ) : null}
         <div style={facts} data-testid="child-week">
-          <span data-testid="child-week-line">{weekWords.first}</span>
+          <span data-testid="child-week-line">{week.kind === 'notStarted' && !startHere ? p.lastActive.notStarted : weekWords.first}</span>
           {weekWords.second ? <span>{weekWords.second}</span> : null}
         </div>
         {week.kind === 'week' ? (
@@ -558,7 +558,8 @@ export default function ParentHomePage(): JSX.Element {
     const expanded = openPanel === id && !archived;
     const canAdd = entry.state === 'ready' && !empty && !archived;
     // The one Lecture mode card goes in the first family's section (lecture-card.md "Placement").
-    const lectureSlot = lectureView && family === firstFamily ? lectureCardSlot(wideHome, entry.state === 'loading' ? 2 : learners.length) : null;
+    const waiting = api && !archived && asks[id] ? needsYou(asks[id] as FamilyAsks, now).length : 0;
+    const lectureSlot = lectureView && family === firstFamily ? lectureCardSlot(wideHome, entry.state === 'loading' ? 2 : learners.length, waiting) : null;
     const first = family === firstFamily;
     const after = (slot: 'afterMain'): JSX.Element | null => (lectureSlot === slot ? lectureCard : null);
     const actions = (
@@ -683,10 +684,11 @@ export default function ParentHomePage(): JSX.Element {
           ) : null}
           {after('afterMain')}
         </div>
-        {lectureSlot === 'side' ? (
+        {lectureSlot === 'side' || lectureSlot === 'sideAfter' ? (
           <div className="hr-ph-side">
-            {lectureCard}
+            {lectureSlot === 'side' ? <Fragment key="lecture-mode">{lectureCard}</Fragment> : null}
             {side}
+            {lectureSlot === 'sideAfter' ? <Fragment key="lecture-mode">{lectureCard}</Fragment> : null}
           </div>
         ) : (
           side

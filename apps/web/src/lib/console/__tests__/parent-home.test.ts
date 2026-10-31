@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { RelinkView, RosterLearner, SpaceListItem, TransferLearnerSideView, TransferList } from '../api';
 import { isCaregiverSafe } from '../banned-text';
 import { catalogTitle } from '@/data/catalog';
+import { reportDayText } from '../report-view';
 import {
   childChipWords,
   childStatus,
@@ -228,6 +229,15 @@ describe('lectureCardSlot (lecture-card.md "Placement")', () => {
     expect(lectureCardSlot(false, 3)).toBe('afterMain');
     // From 70em the side column keeps it whatever the count.
     expect(lectureCardSlot(true, 3)).toBe('side');
+  });
+
+  it('GX-11 review: from 70em, while the Needs you strip has items, after the family actions (the strip is seen first)', () => {
+    expect(lectureCardSlot(true, 2, 1)).toBe('sideAfter');
+    expect(lectureCardSlot(true, 0, 3)).toBe('sideAfter');
+    expect(lectureCardSlot(true, 2, 0)).toBe('side');
+    // Below 70em the strip already comes first in the one column.
+    expect(lectureCardSlot(false, 2, 1)).toBe('afterMain');
+    expect(lectureCardSlot(false, 1, 1)).toBe('afterFirstRow');
   });
 });
 
@@ -589,8 +599,23 @@ describe('childWeek (GX-11, P2)', () => {
   });
 
   it('quiet for the last 7 days: the restart line instead of a zero (anti-shame), with the next quest when known', () => {
-    const summary = { ...STEADY, activity: activity([day('2026-10-10', 12)], { asOf: '2026-10-12', next: { q: 'quest:stage1-letters-q1', plan: false } }) };
+    const summary = { ...STEADY, activity: activity([day('2026-10-10', 12)], { next: { q: 'quest:stage1-letters-q1', plan: false } }) };
     expect(childWeek(kid(summary), NOW)).toEqual({ kind: 'restart', next: catalogTitle('quest:stage1-letters-q1', 'en') });
+  });
+
+  it('not saved for more than 7 days: the last saved day, never a count or a restart nudge for days the page cannot see', () => {
+    const next = { q: 'quest:stage1-letters-q1', plan: false };
+    // The device's last saved day is Oct 12 (its activity), though the server row synced today.
+    const byAsOf = { ...STEADY, activity: activity([day('2026-10-10', 12)], { asOf: '2026-10-12', next }) };
+    expect(childWeek(kid(byAsOf), NOW)).toEqual({ kind: 'stale', lastSaved: '2026-10-12', next: catalogTitle(next.q, 'en') });
+    // A practised week, but the last sync was 9 days ago.
+    const bySync = { ...STEADY, activity: activity([day('2026-10-21', 12)], { asOf: '2026-10-22' }) };
+    expect(childWeek(kid(bySync, { lastSyncedAt: '2026-10-22T08:00:00Z' }), NOW)).toMatchObject({ kind: 'stale', lastSaved: '2026-10-22' });
+  });
+
+  it('a row with minutes but none of the progress fields reads as an older app, never as not started', () => {
+    expect(childWeek(kid({ minutesLast7d: 42 }, { lastActiveAt: '2026-10-12T08:00:00Z' }), NOW)).toEqual({ kind: 'legacy', lastActiveAt: '2026-10-12T08:00:00Z', minutes: 42 });
+    expect(childWeek(kid({ minutesLast7d: 0 }), NOW)).toEqual({ kind: 'notStarted' });
   });
 
   it('an older app with no day-by-day data: the shipped last-active and minutes lines, never a guessed day count', () => {
@@ -611,7 +636,7 @@ describe('childWeekLines (GX-11, P2 and P10)', () => {
       const lines = childWeekLines({ kind: 'week', days: 4, minutes: 36, squares: [], next: 'Q' }, 'Mina', NOW, locale);
       expect(lines).toEqual({ first: p.week(4, 36), next: p.next('Q'), chooser: p.week(4, 36) });
     }
-    expect(childWeekLines({ kind: 'week', days: 1, minutes: 5, squares: [], next: null }, 'Mina', NOW, 'en')).toEqual({ first: 'Practiced 1 of the last 7 days · 5 min', next: null, chooser: 'Practiced 1 of the last 7 days · 5 min' });
+    expect(childWeekLines({ kind: 'week', days: 1, minutes: 5, squares: [], next: null }, 'Mina', NOW, 'en')).toEqual({ first: 'Practiced 1 of the last 7 days · 5\u00a0min', next: null, chooser: 'Practiced 1 of the last 7 days · 5\u00a0min' });
   });
 
   it('never started and quiet: their own lines, in each locale', () => {
@@ -620,6 +645,15 @@ describe('childWeekLines (GX-11, P2 and P10)', () => {
       expect(childWeekLines({ kind: 'notStarted' }, 'Sora', NOW, locale)).toEqual({ first: p.notStarted('Sora'), next: null, chooser: p.lastActive.notStarted });
       expect(childWeekLines({ kind: 'restart', next: quest }, 'Jun', NOW, locale)).toEqual({ first: p.restart, next: p.next(quest), chooser: p.restart });
     }
+  });
+
+  it('not saved for more than 7 days: the report\'s own last-saved line, on the card and in the chooser, in each locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const line = getMessages(locale).report.state.stale(reportDayText('2026-10-12', '2026-10-31', locale));
+      const p = getMessages(locale).console.parentHome;
+      expect(childWeekLines({ kind: 'stale', lastSaved: '2026-10-12', next: 'Q' }, 'Jun', NOW, locale)).toEqual({ first: line, next: p.next('Q'), chooser: line });
+    }
+    expect(childWeekLines({ kind: 'stale', lastSaved: '2026-10-12', next: null }, 'Jun', NOW, 'en').first).toBe('Last saved Oct 12.');
   });
 
   it('an older app: last active and minutes, the chooser reads the minutes', () => {

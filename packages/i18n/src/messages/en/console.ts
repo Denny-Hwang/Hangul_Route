@@ -1470,7 +1470,7 @@ export const consoleMsgs = {
      * it, fill only) and its next quest; a child who never started; a child quiet for 7 days or more. `{name}` is a
      * learner's roster name, `{title}` a quest title in the console's language. The report chooser reads the same line.
      */
-    week: (days: number, minutes: number) => `Practiced ${days} of the last 7 days · ${minutes} min`,
+    week: (days: number, minutes: number) => `Practiced ${days} of the last 7 days · ${minutes}\u00a0min`,
     next: (title: string) => `Next: ${title}`,
     notStarted: (name: string) => `Not started yet. Open the app on ${name}'s device.`,
     restart: 'A 5-minute quest is a good restart.',
