@@ -279,7 +279,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         ...(routeInput ? { route: routeInput } : {}),
         ...(planBefore.current ? { planBefore: planBefore.current } : {}),
       }),
-    [snapshot, questId, total, tier, questOpen, locale, routeInput],
+    // A lesson quest's teaser and blurb come with the headers chunk (F-CURR-002 row CM-40): `titles` bumps when it lands.
+    [snapshot, questId, total, tier, questOpen, locale, routeInput, titles],
   );
 
   // `route.offplan_finished` once per results visit, for a first completion of an off-plan quest (section 3.12).
@@ -334,7 +335,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         return card && localizeCard(card, locale);
       })
       .filter((c): c is HeritageCard => Boolean(c));
-  }, [freeEnd, snapshot, locale]);
+    // A lesson episode's reward cards come with the headers chunk (F-CURR-002 row CM-40).
+  }, [freeEnd, snapshot, locale, titles]);
   const memberships = useMembershipStore((s) => (profileId ? s.byLearner[profileId] : undefined));
   const { audience } = useAudience();
   const ask = askFor(audience, isClassOnly(memberships ?? []), messages.learner.access);
