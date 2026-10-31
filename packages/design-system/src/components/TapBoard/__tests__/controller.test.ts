@@ -22,6 +22,7 @@ function harness(config: Parameters<typeof createTapBoardController>[1] = { lock
   const lockLog: boolean[] = [];
   const host: TapBoardHost = {
     now: () => clock.now,
+    timeOf: (stamp) => (typeof stamp === 'number' ? stamp : clock.now),
     rectOf: (node) => rects.get(node as Node) ?? null,
     hitAt: (target, nodes): TapHit | undefined => {
       if (controls.has(target)) return { kind: 'control' };
@@ -77,7 +78,8 @@ describe('TapBoard controller: the capture responder', () => {
     const capture = h.board.handlers.onStartShouldSetResponderCapture;
     expect(capture(ev(1, 48, 48, a))).toBe(true);
     expect(capture(ev(1, 100, 48))).toBe(true);
-    expect(capture(ev(1, 102, 48))).toBe(false);
+    // A tie in the gap is taken (nobody's), so the browser's click cannot pick a target for it.
+    expect(capture(ev(1, 102, 48))).toBe(true);
     expect(capture(ev(1, 48, 300))).toBe(false);
     expect(h.board.handlers.onStartShouldSetResponder()).toBe(false);
   });
@@ -236,6 +238,20 @@ describe('TapBoard controller: clicks and locks', () => {
     h.board.click('B');
     expect(h.commits).toEqual(['A', 'B']);
     h.board.click('nobody');
+    expect(h.commits).toEqual(['A', 'B']);
+  });
+
+  it('times come from the events\' own stamps: a click handled late but sent 30 ms after the release is its echo', () => {
+    const h = harness({ lock: 'target', multiTouch: 'first', disabled: false });
+    h.add('A', A_RECT);
+    h.add('B', B_RECT);
+    h.board.handlers.onResponderStart({ ...ev(1, 48, 48), timeStamp: 1000 });
+    h.board.handlers.onResponderEnd({ ...ev(1, 48, 48, null, 'touchend'), timeStamp: 1060 });
+    // The page was busy: the click is handled 900 ms later, but the browser sent it 30 ms after the release.
+    h.advance(2000);
+    h.board.click('B', 1090);
+    expect(h.commits).toEqual(['A']);
+    h.board.click('B');
     expect(h.commits).toEqual(['A', 'B']);
   });
 

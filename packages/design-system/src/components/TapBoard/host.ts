@@ -23,15 +23,15 @@ function isControl(el: DomLike): boolean {
 }
 
 /**
- * The web hit test: walk up from the touched element to the board. A target's own node is that target; any other
- * control met first (a speaker or a hint button inside the board, or inside a card) is a control; nothing is left to
- * the rectangles and the gap fill.
+ * The web hit test, for rule 2 only: walk up from the touched element to the board. Another control met first (a
+ * speaker or a hint button inside the board, or inside a card) is a control, never claimed. A target's own node, or
+ * plain layout, leaves the touch to the rectangles: the browser may already have moved a touch in a gap onto a nearby
+ * element (its own touch adjustment), and rule 1 decides by the rectangles, not by that guess.
  */
 export function webHitAt(eventTarget: unknown, nodes: ReadonlyMap<unknown, string>, board: unknown): TapHit | undefined {
   let el = (eventTarget ?? null) as DomLike | null;
   while (el !== null && el !== board) {
-    const id = nodes.get(el);
-    if (id !== undefined) return { kind: 'target', id };
+    if (nodes.has(el)) return undefined;
     if (isControl(el)) return { kind: 'control' };
     el = el.parentElement ?? null;
   }
@@ -75,5 +75,20 @@ export function createNativeRects(scrollY: () => number): (node: unknown, id: st
     const last = kept.get(id);
     if (last === undefined) return null;
     return { ...last.rect, y: last.rect.y - (scrollY() - last.scrollY) };
+  };
+}
+
+/** An event time stamp further than this from now is on another clock (or junk): use now instead. */
+const SAME_CLOCK_MS = 60_000;
+
+/**
+ * The web reads an event's time from its `timeStamp` (the clock of `performance.now()`), so the time between a release
+ * and the browser's click is the time between the two inputs, not between two busy moments of the page that handled
+ * them. A stamp that is missing, or not on that clock, reads as now.
+ */
+export function stampedClock(now: () => number): (stamp: unknown) => number {
+  return (stamp) => {
+    const at = now();
+    return typeof stamp === 'number' && Number.isFinite(stamp) && Math.abs(at - stamp) < SAME_CLOCK_MS ? Math.min(stamp, at) : at;
   };
 }

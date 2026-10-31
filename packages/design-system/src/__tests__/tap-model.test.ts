@@ -10,6 +10,7 @@ import {
   boardLockRemaining,
   boardTouchAction,
   claimTarget,
+  claimsTouch,
   isTargetLocked,
   pressGuardAllows,
   pressedTargets,
@@ -108,6 +109,16 @@ describe('claimTarget (rules 1 and 2)', () => {
     const three = [at('far', 10), at('mid', 9.2), at('near', 8.5)];
     expect(claimTarget({ x: 0, y: 0 }, three)).toBeNull();
     expect(claimTarget({ x: 0, y: 0 }, [at('far', 10), at('near', 8.5)])).toBe('near');
+  });
+
+  it('the board still takes a tie (it commits nothing), but never a point near no target or on a control', () => {
+    expect(claimsTouch({ x: 102, y: 48 }, TARGETS)).toBe(true);
+    expect(claimsTouch({ x: 100, y: 48 }, TARGETS)).toBe(true);
+    expect(claimsTouch({ x: 48, y: 96 + GAP_REACH + 1 }, TARGETS)).toBe(false);
+    expect(claimsTouch({ x: 100, y: 48 }, TARGETS, { kind: 'control' })).toBe(false);
+    expect(claimsTouch({ x: 0, y: 0 }, TARGETS, { kind: 'target', id: 'B' })).toBe(true);
+    const tie = run(FIRST_TARGET, [...tap('1', 102, 48, 0), { type: 'click', targetId: 'B', at: 90, targets: TARGETS }]);
+    expect(tie.commits).toEqual([]);
   });
 
   it('a point farther than GAP_REACH from every target falls through', () => {

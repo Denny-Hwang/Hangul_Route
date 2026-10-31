@@ -6,7 +6,7 @@ import { boardTouchAction } from '../../tap-model';
 import { useScreenFit } from '../Screen/fit';
 import { TapBoardContext, type TapBoardContextValue } from './context';
 import { createTapBoardController, type TapBoardController } from './controller';
-import { createNativeRects, webHitAt, webRect } from './host';
+import { createNativeRects, stampedClock, webHitAt, webRect } from './host';
 import type { TapBoardProps } from './types';
 
 /**
@@ -22,6 +22,12 @@ const NONE: ReadonlySet<string> = new Set();
 function supportsPinchZoom(): boolean {
   const css = (globalThis as { CSS?: { supports?: (property: string, value: string) => boolean } }).CSS;
   return typeof css?.supports === 'function' && css.supports('touch-action', 'pinch-zoom');
+}
+
+/** The web's input clock: `performance.now()`, the clock of DOM event time stamps. */
+function webNow(): number {
+  const perf = (globalThis as { performance?: { now?: () => number } }).performance;
+  return typeof perf?.now === 'function' ? perf.now() : Date.now();
 }
 
 function windowScroll(): { x: number; y: number } {
@@ -40,9 +46,12 @@ export function TapBoard({ lock, scroll = 'auto', multiTouch = 'first', disabled
   const controllerRef = useRef<TapBoardController | null>(null);
   if (controllerRef.current === null) {
     const nativeRects = createNativeRects(() => fitNow.current.scrollY());
+    // The web runs on the clock of its events' time stamps; native on the wall clock (its stamps are on another one).
+    const now = web ? webNow : Date.now;
     controllerRef.current = createTapBoardController(
       {
-        now: () => Date.now(),
+        now,
+        timeOf: web ? stampedClock(now) : () => now(),
         rectOf: web ? (target) => webRect(target, windowScroll()) : nativeRects,
         hitAt: web ? (target, nodes) => webHitAt(target, nodes, node.current) : () => undefined,
         onPressedChange: setPressed,

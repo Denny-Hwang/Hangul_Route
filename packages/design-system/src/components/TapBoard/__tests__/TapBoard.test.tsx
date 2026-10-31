@@ -124,7 +124,8 @@ describe('TapBoard: the responder and the context', () => {
   });
 
   it('a commit locks a board board; the published lock clears after TAP_LOCK_MS; unmount stops the timer', () => {
-    vi.useFakeTimers();
+    // The web board runs on performance.now(), the clock of DOM event stamps.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
     const { provider } = renderBoard();
     const value = provider.props.value as TapBoardContextValue;
     const commits: string[] = [];
@@ -168,15 +169,20 @@ describe('TapBoard: the responder and the context', () => {
 });
 
 describe('TapTarget inside a board', () => {
+  const stamps: unknown[] = [];
   function inBoard(pressed: string[] = []): { value: TapBoardContextValue; clicks: string[]; registered: Map<string, unknown> } {
     const clicks: string[] = [];
+    stamps.length = 0;
     const registered = new Map<string, unknown>();
     const value: TapBoardContextValue = {
       register: (id, entry) => {
         registered.set(id, entry);
         return () => registered.delete(id);
       },
-      click: (id) => clicks.push(id),
+      click: (id, stamp) => {
+        clicks.push(id);
+        stamps.push(stamp);
+      },
       lock: () => undefined,
       locked: false,
       pressed: new Set(pressed),
@@ -194,8 +200,9 @@ describe('TapTarget inside a board', () => {
     expect(el.props.accessibilityState).toEqual({ selected: true, disabled: false });
     expect(el.props.testID).toBe('tile-0');
     expect(el.props.delayPressIn).toBe(0);
-    (el.props.onPress as () => void)();
+    (el.props.onPress as (e?: unknown) => void)({ timeStamp: 1234 });
     expect(clicks).toEqual([':t1:']);
+    expect(stamps).toEqual([1234]);
   });
 
   it('paints the board\'s press look, not the Pressable\'s', () => {

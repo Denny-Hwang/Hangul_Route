@@ -1,7 +1,7 @@
 import {
   INITIAL_TAP_STATE,
   boardLockRemaining,
-  claimTarget,
+  claimsTouch,
   pressedTargets,
   tapStep,
   type TapBoardConfig,
@@ -19,8 +19,8 @@ import {
  * at each event through its host, calls a target's commit, and tells the board what to paint (the pressed targets, the
  * board lock). No React here, so the rules are tested without a renderer.
  *
- * - It owns the responder by capture, and only for a touch the model claims (rules 1 and 2): every other touch falls
- *   through to whatever is under it, and the `Pressable` inside a target never gets the touch.
+ * - It owns the responder by capture, and only for a touch the model claims (rules 1 and 2, `claimsTouch`): every
+ *   other touch falls through to whatever is under it, and the `Pressable` inside a target never gets the touch.
  * - It commits on `onResponderEnd` for the owning finger (`onResponderRelease` waits for every finger).
  * - It refuses a termination request while a finger is down, except a scroll's; a termination is a cancel (rule 6).
  */
@@ -34,6 +34,8 @@ export interface TapResponderTouch {
 }
 
 export interface TapResponderEvent {
+  /** When the input happened (the web: the DOM event's `timeStamp`, on the clock of `performance.now()`). */
+  timeStamp?: number;
   nativeEvent: TapResponderTouch & {
     changedTouches?: readonly TapResponderTouch[];
     /** The web DOM event type (`touchstart`, `scroll`, ...). */
@@ -56,6 +58,12 @@ export interface TapTargetEntry {
 /** The platform side: the clock, rectangles, the hit test and timers, and where the paint goes. */
 export interface TapBoardHost {
   now(): number;
+  /**
+   * The time of an input event on the `now()` clock: its own time stamp where the platform gives one on that clock (the
+   * web), so a click the browser sent right after a release still reads as its echo when the page was too busy to
+   * handle it at once; otherwise `now()`.
+   */
+  timeOf(stamp: unknown): number;
   /** The node's rectangle now, in the space of the touches' `pageX` and `pageY`; null when it cannot be read. */
   rectOf(node: unknown, id: string): TapRect | null;
   /** What is under the finger before any rectangle test (the DOM on the web); undefined when the host cannot tell. */
@@ -83,8 +91,8 @@ export interface TapBoardController {
   configure(config: TapBoardConfig): void;
   /** Adds (or replaces) a target; returns its unregister. */
   register(id: string, entry: TapTargetEntry): () => void;
-  /** A click that reached a target's `Pressable` (rule 8). */
-  click(id: string): void;
+  /** A click that reached a target's `Pressable` (rule 8), with its event's time stamp when it has one. */
+  click(id: string, stamp?: unknown): void;
   /** Extends the board lock by `ms` from now (rule 9). */
   lock(ms: number): void;
   isLocked(): boolean;
@@ -157,8 +165,8 @@ export function createTapBoardController(host: TapBoardHost, initial: TapBoardCo
 
   function each(event: TapResponderEvent, type: 'down' | 'move' | 'up'): void {
     const { targets, nodes } = snapshot();
+    const at = host.timeOf(event.timeStamp);
     for (const touch of touchesOf(event)) {
-      const at = host.now();
       const base = { touchId: touchKey(touch), point: pointOf(touch), at, targets };
       if (type === 'down') {
         const hit = host.hitAt(touch.target, nodes);
@@ -173,7 +181,7 @@ export function createTapBoardController(host: TapBoardHost, initial: TapBoardCo
     onStartShouldSetResponderCapture: (event) => {
       const touch = touchesOf(event)[0]!;
       const { targets, nodes } = snapshot();
-      return claimTarget(pointOf(touch), targets, host.hitAt(touch.target, nodes)) !== null;
+      return claimsTouch(pointOf(touch), targets, host.hitAt(touch.target, nodes));
     },
     onStartShouldSetResponder: () => false,
     // Both platforms send onResponderStart for the granting touch too; the model ignores the repeat.
@@ -204,7 +212,7 @@ export function createTapBoardController(host: TapBoardHost, initial: TapBoardCo
         if (entries.get(id) === entry) entries.delete(id);
       };
     },
-    click: (id) => apply({ type: 'click', targetId: id, at: host.now(), targets: snapshot(true).targets }),
+    click: (id, stamp) => apply({ type: 'click', targetId: id, at: host.timeOf(stamp), targets: snapshot(true).targets }),
     lock: (ms) => apply({ type: 'lock', ms, at: host.now() }),
     isLocked: () => boardLockRemaining(state, host.now()) > 0,
     dispose: () => {

@@ -120,24 +120,44 @@ export function rectDistance(point: TapPoint, rect: TapRect): number {
   return Math.hypot(dx, dy);
 }
 
-/**
- * Rules 1 and 2: the target a touch at `point` goes to, or `null` (the touch falls through to whatever is under it).
- * A target the host found under the finger wins; another control is never claimed; then a target whose rectangle holds
- * the point; then the nearest target within `GAP_REACH`, unless another is within `TIE_PX` of the same distance.
- */
-export function claimTarget(point: TapPoint, targets: readonly TapTargetSnapshot[], hit?: TapHit): string | null {
-  if (hit?.kind === 'control') return null;
-  if (hit?.kind === 'target' && targets.some((t) => t.id === hit.id)) return hit.id;
+interface Claim {
+  /** The board takes the touch, so nothing under it fires and its browser click is the board's echo. */
+  claimed: boolean;
+  /** The target it goes to; `null` for a tie (a claimed touch that is nobody's). */
+  id: string | null;
+}
+
+function claim(point: TapPoint, targets: readonly TapTargetSnapshot[], hit?: TapHit): Claim {
+  if (hit?.kind === 'control') return { claimed: false, id: null };
+  if (hit?.kind === 'target' && targets.some((t) => t.id === hit.id)) return { claimed: true, id: hit.id };
   const near: Array<{ id: string; distance: number }> = [];
   for (const target of targets) {
     const distance = rectDistance(point, target.rect);
-    if (distance === 0) return target.id;
+    if (distance === 0) return { claimed: true, id: target.id };
     if (distance <= GAP_REACH) near.push({ id: target.id, distance });
   }
-  if (near.length === 0) return null;
+  if (near.length === 0) return { claimed: false, id: null };
   const nearest = Math.min(...near.map((n) => n.distance));
   const closest = near.filter((n) => n.distance - nearest <= TIE_PX);
-  return closest.length === 1 ? closest[0]!.id : null;
+  return { claimed: true, id: closest.length === 1 ? closest[0]!.id : null };
+}
+
+/**
+ * Rules 1 and 2: the target a touch at `point` goes to, or `null`. A target the host found under the finger wins;
+ * another control is never claimed; then a target whose rectangle holds the point; then the nearest target within
+ * `GAP_REACH`, unless another is within `TIE_PX` of the same distance (a tie is nobody's).
+ */
+export function claimTarget(point: TapPoint, targets: readonly TapTargetSnapshot[], hit?: TapHit): string | null {
+  return claim(point, targets, hit).id;
+}
+
+/**
+ * Whether the board takes a touch at `point`: every touch that goes to a target, and a tie in a gap, which the board
+ * takes so that it commits nothing (the browser would otherwise send its click to whichever target its own touch
+ * adjustment picks). A touch near no target, or on another control, falls through to whatever is under it.
+ */
+export function claimsTouch(point: TapPoint, targets: readonly TapTargetSnapshot[], hit?: TapHit): boolean {
+  return claim(point, targets, hit).claimed;
 }
 
 export function isTargetLocked(state: TapModelState, id: string, at: number): boolean {

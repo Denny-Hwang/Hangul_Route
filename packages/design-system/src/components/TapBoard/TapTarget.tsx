@@ -55,7 +55,7 @@ export function TapTarget({ onCommit, disabled = false, accessibilityLabel, acce
   }
   const look: TapLook = { pressed: board.pressed.has(id) };
   return (
-    <Pressable {...shared} onPress={() => board.click(id)} style={resolveStyle(style, look)}>
+    <Pressable {...shared} onPress={(event) => board.click(id, (event as { timeStamp?: unknown } | undefined)?.timeStamp)} style={resolveStyle(style, look)}>
       {children(look)}
     </Pressable>
   );

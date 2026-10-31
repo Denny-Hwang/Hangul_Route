@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createNativeRects, webHitAt, webRect } from '../host';
+import { createNativeRects, stampedClock, webHitAt, webRect } from '../host';
 
 /**
  * How a board reads each platform (docs/specs/AMENDMENTS-TOUCH.md section 3.2 rules 1 and 2): the web walks the DOM from
- * the touched element to the board (a target's node is that target; any other control met first is never claimed) and
+ * the touched element to the board (any control other than a target met first is never claimed) and
  * reads page rectangles; native reads window rectangles, keeping the last answer for the old architecture.
  */
 
@@ -28,9 +28,9 @@ describe('webHitAt', () => {
   const link = el('A', row);
   const nodes = new Map<unknown, string>([[target, 'A']]);
 
-  it('a touch on a target or anything inside it is that target', () => {
-    expect(webHitAt(target, nodes, board)).toEqual({ kind: 'target', id: 'A' });
-    expect(webHitAt(label, nodes, board)).toEqual({ kind: 'target', id: 'A' });
+  it('a touch on a target or anything inside it is left to the rectangles (the browser may have moved it there)', () => {
+    expect(webHitAt(target, nodes, board)).toBeUndefined();
+    expect(webHitAt(label, nodes, board)).toBeUndefined();
   });
 
   it('a touch on another control (by role or by tag) is a control', () => {
@@ -79,5 +79,20 @@ describe('createNativeRects', () => {
 
   it('a node that cannot measure reads as none until it has an answer', () => {
     expect(createNativeRects(() => 0)({}, 'A')).toBeNull();
+  });
+});
+
+describe('stampedClock', () => {
+  it('reads an event at its own stamp when it is on the clock, never later than now', () => {
+    const at = stampedClock(() => 5000);
+    expect(at(4200)).toBe(4200);
+    expect(at(5001)).toBe(5000);
+  });
+
+  it('a missing stamp, or one on another clock, reads as now', () => {
+    const at = stampedClock(() => 5000);
+    expect(at(undefined)).toBe(5000);
+    expect(at(Number.NaN)).toBe(5000);
+    expect(at(1_793_473_374_936)).toBe(5000);
   });
 });
