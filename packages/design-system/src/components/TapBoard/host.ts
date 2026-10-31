@@ -111,3 +111,41 @@ export function supportsPinchZoom(): boolean {
   const css = (globalThis as { CSS?: { supports?: (property: string, value: string) => boolean } }).CSS;
   return typeof css?.supports === 'function' && css.supports('touch-action', 'pinch-zoom');
 }
+
+/** A click with no pointer type of its own counts as a finger when a touch went down this recently (ms). */
+const RECENT_TOUCH_MS = 1000;
+
+interface PointerDocument {
+  addEventListener?: (type: string, listener: (event: { pointerType?: unknown }) => void, capture?: boolean) => void;
+}
+
+/** The last pointer that went down on each page, for a click that carries no `pointerType` (Safari's MouseEvent). */
+const lastDown = new WeakMap<object, { finger: boolean; at: number }>();
+
+function watchPointers(doc: object): void {
+  if (lastDown.has(doc)) return;
+  lastDown.set(doc, { finger: false, at: Number.NEGATIVE_INFINITY });
+  (doc as PointerDocument).addEventListener?.(
+    'pointerdown',
+    (event) => {
+      lastDown.set(doc, { finger: event.pointerType === 'touch' || event.pointerType === 'pen', at: tapNow() });
+    },
+    true,
+  );
+}
+
+/**
+ * Was this press a finger (or a pen)? The press guard (KT-2, AMENDMENTS-TOUCH section 4.4) drops a bounce, and a bounce
+ * is a finger's: a mouse click, keyboard Enter or Space, and a screen reader's activate are deliberate and pass. Native:
+ * every press is a finger. Web: the click's `pointerType` (an empty one is the keyboard); a click with none (Safari's
+ * MouseEvent) is a finger when the last pointer down on the page, under a second ago, was a touch or a pen.
+ */
+export function pressIsTouch(event: unknown): boolean {
+  const doc = (globalThis as { document?: unknown }).document;
+  if (doc === undefined || doc === null || typeof doc !== 'object') return true;
+  watchPointers(doc);
+  const type = (event as { nativeEvent?: { pointerType?: unknown } } | undefined)?.nativeEvent?.pointerType;
+  if (typeof type === 'string') return type === 'touch' || type === 'pen';
+  const last = lastDown.get(doc);
+  return last !== undefined && last.finger && tapNow() - last.at < RECENT_TOUCH_MS;
+}

@@ -558,4 +558,25 @@ describe('useTapLock and usePressGuard', () => {
     speaker(() => calls.push('speaker again'))();
     expect(calls).toEqual(['speaker', 'next']);
   });
+
+  it('a mouse, keyboard or screen-reader press (web) is deliberate: it always runs and sets no lock; a touch is guarded', () => {
+    const listeners = new Map<string, (e: { pointerType?: string }) => void>();
+    (globalThis as { document?: unknown }).document = { addEventListener: (t: string, fn: (e: { pointerType?: string }) => void) => listeners.set(t, fn) };
+    try {
+      const app = { until: () => Number.POSITIVE_INFINITY, extendTo: () => undefined, lock: vi.fn(), locked: true };
+      ctx.app = app;
+      syncContexts();
+      hooks.at = 0;
+      const runs: string[] = [];
+      const guarded = usePressGuard()((kind: { nativeEvent: { pointerType: string } }) => runs.push(kind.nativeEvent.pointerType));
+      guarded({ nativeEvent: { pointerType: 'mouse' } });
+      guarded({ nativeEvent: { pointerType: 'mouse' } });
+      guarded({ nativeEvent: { pointerType: '' } });
+      guarded({ nativeEvent: { pointerType: 'touch' } });
+      expect(runs).toEqual(['mouse', 'mouse', '']);
+      expect(app.lock).not.toHaveBeenCalled();
+    } finally {
+      delete (globalThis as { document?: unknown }).document;
+    }
+  });
 });
