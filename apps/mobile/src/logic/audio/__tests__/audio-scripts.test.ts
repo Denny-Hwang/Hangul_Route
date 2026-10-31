@@ -408,6 +408,8 @@ describe('scripts/audio/lib: the per-pack map chunks (AC-B6, bundle size)', () =
     // A cell's Volume 2 file warms under its own episode id (F-CURR-002 row CM-40).
     expect(clipUnitOfSource('content/episodes/stage-4/crafts.v2.json')).toBe('episode:stage4-crafts-v2');
     expect(clipUnitOfSource('content/episodes/stage-4/crafts.v1.json')).toBeNull();
+    // The first shipped Volume 2 (row CM-41 S6) warms with its own episode.
+    expect(clipUnitOfSource('content/episodes/stage-6/nature.v2.json')).toBe('episode:stage6-nature-v2');
     expect(clipUnitOfSource('content/stories/hangeul-day.json')).toBe('story:hangeul-day');
     expect(clipUnitOfSource('content/placement/sentences.json')).toBe('placement');
     expect(clipUnitOfSource('content/vocab/family.json')).toBe('topic:family');
