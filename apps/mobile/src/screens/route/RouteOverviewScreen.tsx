@@ -1,5 +1,5 @@
 import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
-import { CATALOG } from '@hangul-route/content-schema';
+import { CATALOG, routeCatalogVersion } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -19,6 +19,9 @@ import { CheckInCard, useCheckInOffer, useShownOffer } from './CheckInCard';
 import { PlanWeekCard } from './parts';
 import { usePlanChangesOpen } from './use-plan-gate';
 import { useToday } from './use-today';
+
+/** The version a plan is compared against: a release that adds only a later volume (off the route) is not new lessons. */
+const ROUTE_VERSION = routeCatalogVersion(CATALOG);
 
 /**
  * "Your weekly plan" (F-PLAN-002 section 3.9, wireframe console/curriculum-planner.md G3 as
@@ -93,8 +96,9 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
   const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
-  // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong).
-  const stale = active !== null && active.meta.catalogVersion < CATALOG.version;
+  // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong). A later volume
+  // never joins a route, so only a release that adds a route quest makes a plan stale (F-CURR-002 row CM-40, review of #922).
+  const stale = active !== null && active.meta.catalogVersion < ROUTE_VERSION;
 
   const leave = (): void => {
     if (navigation.canGoBack()) navigation.goBack();

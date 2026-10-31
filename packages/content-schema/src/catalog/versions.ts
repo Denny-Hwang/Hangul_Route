@@ -3,6 +3,7 @@ import { questsPlacedOutAtLevel } from '../placement/level-map';
 import type { RouteCatalog } from '../placement/route-seed';
 import { GENERATED_QUEST_ADDITIONS } from './catalog.generated';
 import { CATALOG_VERSION } from './data';
+import { cellEpisodeIds, type Catalog } from './schema';
 
 /**
  * The catalogue-growth rule (F-CURR-001 §3.13, row C-2). A stored placement
@@ -189,4 +190,37 @@ export function placedOutGrowth(
   if (at >= history.version) return [];
   const known = history.idsAt(at);
   return questsPlacedOutAtLevel(level, catalog).filter((id) => !known.has(id) && !completed.has(id));
+}
+
+/**
+ * The quest ids of every cell's later volumes (F-CURR-002 row CM-40): catalogue quests that no route, plan or route day
+ * holds, opened only from the cell's Vol tabs while `volumes` is on.
+ */
+export function laterVolumeQuestIds(catalog: Pick<Catalog, 'cells' | 'quests'>): ReadonlySet<string> {
+  const later = new Set(catalog.cells.flatMap((cell) => cellEpisodeIds(cell).slice(1)));
+  return new Set(catalog.quests.filter((q) => later.has(q.episodeId)).map((q) => q.id));
+}
+
+/**
+ * The catalogue version a plan is compared against for "new lessons" (review of #922): the catalogue's version, stepped
+ * back past every newest stamp that added only later-volume quests. A later volume is never on a route, so a release
+ * that adds only one leaves every plan as it was (moving the plan along would add nothing); a stamp with any other quest,
+ * or a version no stamp lists, counts. `CATALOG_VERSION` itself is unchanged (the placed-out growth rule reads it).
+ */
+export function routeCatalogVersion(
+  catalog: Pick<Catalog, 'cells' | 'quests' | 'version'>,
+  additions: Readonly<Record<number, readonly string[]>> = CATALOG_QUEST_ADDITIONS,
+): number {
+  const later = laterVolumeQuestIds(catalog);
+  const stamps = Object.keys(additions)
+    .map(Number)
+    .filter((v) => v < catalog.version)
+    .sort((a, b) => b - a);
+  let version = catalog.version;
+  for (const next of stamps) {
+    const added = additions[version];
+    if (added === undefined || added.length === 0 || !added.every((id) => later.has(id))) break;
+    version = next;
+  }
+  return version;
 }

@@ -11,6 +11,7 @@ import {
   freeRouteQuestIds,
   gridLessonIds,
   groupOfKey,
+  laterVolumeQuestIds,
   learnerPosition,
   placedOutGrowth,
   presetBlockMinutes,
@@ -19,6 +20,7 @@ import {
   questsPlacedOutAtLevel,
   resolvePreset,
   routeCatalogOf,
+  routeCatalogVersion,
   routeDaysOf,
   selectionBlocks,
   volumeEpisodeId,
@@ -87,18 +89,22 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
   });
 
   it('lists each cell’s episodes by volume: every shipped cell holds its first volume, and Stage 2 Holidays its Volume 2 too', () => {
-    expect(SHIPPED.volumes.map((v) => v.episodeId)).toEqual(['episode:stage2-rites-v2']);
-    for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual(cell.episodeId === 'episode:stage2-rites' ? [cell.episodeId, 'episode:stage2-rites-v2'] : [cell.episodeId]);
+    // Each shipped Volume 2 joins its own cell; a sibling Volume 2 row adds its cell without touching this test.
+    expect(SHIPPED.volumes.map((v) => v.episodeId)).toContain('episode:stage2-rites-v2');
+    const shippedOf = (episodeId: string): string[] => SHIPPED.volumes.filter((v) => v.episodeId === `${episodeId}-v2`).map((v) => v.episodeId);
+    for (const cell of CATALOG.cells) expect(cell.episodeIds, cell.episodeId).toEqual([cell.episodeId, ...shippedOf(cell.episodeId)]);
     const catalog = withVolumes();
     expect(CatalogSchema.safeParse(catalog).success).toBe(true);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.episodeIds).toEqual(['episode:stage2-nature', 'episode:stage2-nature-v2']);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.volumes).toEqual([{ episodeId: 'episode:stage2-nature-v2', title: 'Outdoor Words', minutes: 13, questIds: NATURE_V2 }]);
-    for (const cell of CATALOG.cells) if (cell.episodeId !== 'episode:stage2-rites') expect(cell.volumes, cell.episodeId).toBeUndefined();
+    for (const cell of CATALOG.cells) if (shippedOf(cell.episodeId).length === 0) expect(cell.volumes, cell.episodeId).toBeUndefined();
     expect(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-rites')?.volumes?.map((v) => v.questIds)).toEqual([RITES2_V2]);
     expect(cellEpisodeIds({ episodeId: 'episode:stage3-life' })).toEqual(['episode:stage3-life']);
     // The first volume's quests stay the cell's list; the later volume's follow every first volume's, in grid order.
     const lessons = catalog.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...RITES2_V2, ...NATURE_V2, ...CRAFTS4_V2]);
+    const shippedLater = CATALOG.quests.filter((q) => q.kind === 'lesson' && SHIPPED.volumes.some((v) => v.episodeId === q.episodeId)).map((q) => q.id);
+    expect(shippedLater).toEqual(expect.arrayContaining(RITES2_V2));
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...shippedLater, ...NATURE_V2, ...CRAFTS4_V2]);
     expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-nature')?.questIds);
   });
 
@@ -249,6 +255,38 @@ describe('a later volume is no lecture route quest (row CM-40)', () => {
       const preset = resolvePreset('by-stage', 60, { catalog, stage });
       expect(preset.blocks.some((b) => b.kind === 'quest')).toBe(true);
       expect(preset.blocks.some((b) => b.kind === 'quest' && later.has(b.id))).toBe(false);
+    }
+  });
+});
+
+describe('the route version: a release that adds only a later volume is no new lessons (review of #922)', () => {
+  const catalog = withVolumes();
+  const later = laterVolumeQuestIds(catalog);
+  const [v2] = [...later];
+  const v1 = 'quest:stage2-nature-q1';
+
+  it('lists the later volumes\' quests, and only those', () => {
+    expect([...later]).toEqual(expect.arrayContaining([...NATURE_V2, ...CRAFTS4_V2]));
+    for (const id of later) expect(catalog.quests.find((q) => q.id === id)?.episodeId, id).toMatch(/-v[2-9]$/);
+    expect(later.has(v1)).toBe(false);
+  });
+
+  it('steps back past every newest stamp that added only later-volume quests, and stops at any other', () => {
+    const at = (version: number, additions: Record<number, string[]>): number => routeCatalogVersion({ ...catalog, version }, additions);
+    expect(at(30, { 10: [v1], 20: [v2 as string], 30: [NATURE_V2[1] as string] })).toBe(10);
+    expect(at(30, { 10: [v1], 20: [v2 as string, v1], 30: [NATURE_V2[1] as string] })).toBe(20);
+    expect(at(30, { 10: [v1], 20: [v2 as string], 30: [v1] })).toBe(30);
+    // A version no stamp lists (a test's or a newer build's) counts as it is.
+    expect(at(31, { 10: [v1], 20: [v2 as string] })).toBe(31);
+    expect(at(10, { 10: [v1] })).toBe(10);
+  });
+
+  it('the shipped catalogue: never above its version, and no stamp above it adds a route quest', () => {
+    const version = routeCatalogVersion(CATALOG);
+    expect(version).toBeLessThanOrEqual(CATALOG.version);
+    const shippedLater = laterVolumeQuestIds(CATALOG);
+    for (const id of CATALOG.quests.map((q) => q.id).filter((id) => !shippedLater.has(id))) {
+      expect(questIdsAtVersion(version).has(id), id).toBe(true);
     }
   });
 });

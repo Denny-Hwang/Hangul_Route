@@ -19,6 +19,7 @@ import {
   questsPlacedOutAtLevel,
   regenerateFrom,
   routeCatalogOf,
+  routeCatalogVersion,
   themeOrderFor,
   toMeta,
   toPlanItems,
@@ -924,9 +925,13 @@ export function weeksToFit(plan: RepaceInput, today: string, source: Catalog = C
   return null;
 }
 
-/** A route made from an older catalogue than this build's: the readout offers **Refresh route** (a `shift` on the current catalogue; it adds no lessons). */
+/**
+ * A route made from an older catalogue than this build's: the readout offers **Refresh route** (a `shift` on the current
+ * catalogue; it adds no lessons). A release that adds only a cell's later volume does not count: no route holds one
+ * (F-CURR-002 row CM-40, review of #922).
+ */
 export function isStaleCatalog(meta: CurriculumMeta, source: Catalog = CATALOG): boolean {
-  return meta.catalogVersion < source.version;
+  return meta.catalogVersion < routeCatalogVersion(source);
 }
 
 export interface DraftPlanBody {

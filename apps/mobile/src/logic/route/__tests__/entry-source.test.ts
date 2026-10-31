@@ -130,7 +130,9 @@ describe('every learner-facing weekly plan entry reads routeEnabledFor(locale) (
 describe('the overview offers Refresh route only for an older catalogue (F-STORY-005 PR 5.6)', () => {
   it('a route saved on a newer catalogue (another device on a newer build) is not stale', () => {
     const overview = src('screens/route/RouteOverviewScreen.tsx');
-    expect(overview).toContain('active.meta.catalogVersion < CATALOG.version');
-    expect(overview).not.toContain('active.meta.catalogVersion !== CATALOG.version');
+    // Compared with the route version: a release that adds only a later volume is not new lessons (review of #922).
+    expect(overview).toContain('active.meta.catalogVersion < ROUTE_VERSION');
+    expect(overview).toContain('const ROUTE_VERSION = routeCatalogVersion(CATALOG);');
+    expect(overview).not.toContain('active.meta.catalogVersion !== ');
   });
 });

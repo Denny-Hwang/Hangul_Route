@@ -1,5 +1,6 @@
 import {
   CATALOG,
+  routeCatalogVersion,
   CurriculumParamsSchema,
   PACES,
   StageKeySchema,
@@ -577,6 +578,14 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog(plan.meta)).toBe(false);
     expect(isStaleCatalog({ ...plan.meta, catalogVersion: 0 })).toBe(true);
     expect(isStaleCatalog(plan.meta, { ...CATALOG, version: CATALOG.version + 1 })).toBe(true);
+  });
+
+  it('reads the route version: a release that adds only a later volume leaves a route as it was (review of #922)', () => {
+    const plan = classPlan();
+    const routeVersion = routeCatalogVersion(CATALOG);
+    expect(routeVersion).toBeLessThanOrEqual(CATALOG.version);
+    expect(isStaleCatalog({ ...plan.meta, catalogVersion: routeVersion })).toBe(false);
+    expect(isStaleCatalog({ ...plan.meta, catalogVersion: routeVersion - 1 })).toBe(true);
   });
 
   /** The catalogue every route saved before F-QUEST-002 Q-6a was made from: version 1, no lesson teaches anything. */
