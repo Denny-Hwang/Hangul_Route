@@ -38,7 +38,7 @@ import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRena
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { classGoalLine } from '@/lib/console/class-goal-line';
-import { stageTitle } from '@/lib/console/stage-titles';
+import { stageTitleIn } from '@/lib/console/stage-titles';
 import { dateKey, livePublished, planReaches, planReadout, readoutLine, rosterPlan } from '@/lib/console/plans';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom, spaceKindOfPath } from '@/lib/console/routing';
 import { spacePageBack } from '@/lib/console/page-back';
@@ -189,7 +189,7 @@ function SpaceInner(): JSX.Element {
   const livePlans = gating ? livePublished(plans) : [];
   const today = dateKey(now);
   // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
-  const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
+  const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle: stageTitleIn(locale), locale }) : null;
   // Notes (F-FEEDBACK-001 FB-11a, section 6.13 item 3): the roster header's Notes and each card's Send a note, by flag.
   const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, role: spaces?.find((item) => item.space.id === spaceId)?.role ?? null, spaceId, kind: roster.space.kind }) : null;
 

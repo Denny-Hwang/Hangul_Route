@@ -1241,6 +1241,16 @@ export const consoleMsgs = {
     knownLine: (known: number) => `${known} ${plural('es', known, { one: 'dominada', other: 'dominadas' })} según la prueba de nivel`,
     stageRow: (n: number, title: string, state: string) => `${n}. ${title} · ${state}`,
   },
+  /** GX-9 (AMENDMENTS-GROWNUP-UX section 10.3): each title stands after "Etapa {n}:" or "·", so no article agrees with it. */
+  stageTitles: {
+    stage1: 'Hangul',
+    stage2: 'Palabras',
+    stage3: 'Oraciones',
+    stage4: 'Diálogo',
+    stage5: 'Cuentos',
+    stage6: 'Vida real',
+    stage7: 'Con tus palabras',
+  },
   notes: {
     sendNote: { cta: 'Enviar una nota' },
     newNote: { cta: 'Nueva nota' },

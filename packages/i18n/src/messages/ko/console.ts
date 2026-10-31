@@ -1115,7 +1115,7 @@ export const consoleMsgs = {
     section: '학습 루트',
     stagesTitle: '단계',
     back: { report: '리포트로 돌아가기', class: '반으로 돌아가기', family: '가족으로 돌아가기', space: '돌아가기' },
-    now: (name: string, n: number, title: string) => `${name}: 지금 ${n}단계, ${title}에 있어요.`,
+    now: (name: string, n: number, title: string) => `${name}의 현재 단계: ${n}단계 · ${title}`,
     learnerGoal: (name: string, n: number, title: string) => `${name}의 목표: ${n}단계 · ${title}`,
     fromLead: {
       class: '반의 주간 계획에서',
@@ -1143,6 +1143,16 @@ export const consoleMsgs = {
     notFound: '이 공간에서 이 학습자를 찾을 수 없어요.',
     knownLine: (known: number) => `수준 확인으로 ${known}개 알고 있음`,
     stageRow: (n: number, title: string, state: string) => `${n}. ${title} · ${state}`,
+  },
+  /** GX-9 (AMENDMENTS-GROWNUP-UX section 10.3): 낱말 is the F-I18N-001 glossary word; the titles stand after a "·" or a colon, never before a particle. */
+  stageTitles: {
+    stage1: '한글',
+    stage2: '낱말',
+    stage3: '문장',
+    stage4: '대화',
+    stage5: '이야기',
+    stage6: '실생활',
+    stage7: '내 말로',
   },
   /** The adult nav item of F-FEEDBACK-001 (FB-5b) lives in `shell.nav.notes` above. */
   notes: {

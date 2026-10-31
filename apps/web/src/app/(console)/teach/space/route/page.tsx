@@ -12,7 +12,7 @@ import { learningRouteEnabled } from '@/lib/console/config';
 import { learningRouteView } from '@/lib/console/learning-route-view';
 import { dateKey } from '@/lib/console/plans';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom, spaceKindOfPath } from '@/lib/console/routing';
-import { stageTitle } from '@/lib/console/stage-titles';
+import { stageTitleIn } from '@/lib/console/stage-titles';
 
 /**
  * One learner's Learning Route in the adult shell (AMENDMENTS-ROUTE-LEARNING-ROUTE section 6.1,
@@ -69,7 +69,7 @@ function LearningRouteInner(): JSX.Element {
         learnerId,
         plans: data.plans,
         today: dateKey(new Date()),
-        stageTitle,
+        stageTitle: stageTitleIn(locale),
         locale,
       })
     : null;

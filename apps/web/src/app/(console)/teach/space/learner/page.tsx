@@ -31,7 +31,7 @@ import { dateKey } from '@/lib/console/plans';
 import { learnerReportView, reportBackLink, reportBrowseStage, reportCacheKey, reportQueryOf, reportScreenOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
 import { spaceKindOfPath } from '@/lib/console/routing';
 import { signedOutTarget } from '@/lib/console/signin-flow';
-import { stageTitle } from '@/lib/console/stage-titles';
+import { stageTitleIn } from '@/lib/console/stage-titles';
 
 /**
  * One learner's report (F-REPORT-001 RP-7a2, sections 3.1, 3.5, 3.6, 3.12 and 3.14; screen spec
@@ -122,7 +122,7 @@ function LearnerReportInner(): JSX.Element {
     let live = true;
     void Promise.all([api.roster(spaceId), api.listPlans(spaceId)]).then(([roster, plans]) => {
       if (!live || !roster.ok || !plans.ok) return;
-      const lr = learningRouteView({ space: roster.data.space, learners: roster.data.learners, learnerId, plans: plans.data, today: dateKey(new Date()), stageTitle, locale });
+      const lr = learningRouteView({ space: roster.data.space, learners: roster.data.learners, learnerId, plans: plans.data, today: dateKey(new Date()), stageTitle: stageTitleIn(locale), locale });
       setGoal(lr?.status === 'ready' ? lr.card.goal : null);
     });
     return () => {
@@ -249,7 +249,7 @@ function LearnerReportInner(): JSX.Element {
     );
   }
 
-  const view = learnerReportView({ data: screen.data, query, now: new Date(), role, stageTitle, learningRoute: routeOn, goal, locale });
+  const view = learnerReportView({ data: screen.data, query, now: new Date(), role, stageTitle: stageTitleIn(locale), learningRoute: routeOn, goal, locale });
   if (view === null) {
     // A space kind with no learner report (a school): the same words as any report this viewer cannot open.
     return frame(

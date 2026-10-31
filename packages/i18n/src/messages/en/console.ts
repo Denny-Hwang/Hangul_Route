@@ -1587,6 +1587,20 @@ export const consoleMsgs = {
     stageRow: (n: number, title: string, state: string) => `${n}. ${title} · ${state}`,
   },
   /**
+   * AMENDMENTS-GROWNUP-UX section 10.3 (GX-9, GX-OD-7): the seven stage titles in the viewer's language, the `title`
+   * every "Stage {n} · {title}" line above reads. English is the shipped list, unchanged, and must equal the learner
+   * app's `titleEn` (`apps/mobile/src/content/stages.ts`; `apps/web/src/lib/console/__tests__/stage-titles.test.ts`).
+   */
+  stageTitles: {
+    stage1: 'Hangul',
+    stage2: 'Words',
+    stage3: 'Sentences',
+    stage4: 'Dialogue',
+    stage5: 'Stories',
+    stage6: 'Real-use',
+    stage7: 'Self-expression',
+  },
+  /**
    * Class moves (F-SPACE-002 section 4.8, PR T-6a; mockups `design/screens/transfer/`, T-0b #472). "Move" is the
    * user-facing word everywhere; `transfer` stays the internal name. The class pages say "student" through
    * `memberNoun` (`memberNounSingular`), the family page says "learner". No card ever names who said no: every
