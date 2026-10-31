@@ -102,6 +102,14 @@ describe('claimTarget (rules 1 and 2)', () => {
     expect(claimTarget({ x: 102.5, y: 48 }, TARGETS)).toBeNull();
   });
 
+  it('a tie is judged against the nearest target, whatever the order', () => {
+    // Three targets around a gap at (0, 0): 10, 9.2 and 8.5 px away. The two nearest are within 1 px: nobody's.
+    const at = (id: string, d: number): TapTargetSnapshot => ({ id, rect: { x: d, y: -5, width: 10, height: 10 } });
+    const three = [at('far', 10), at('mid', 9.2), at('near', 8.5)];
+    expect(claimTarget({ x: 0, y: 0 }, three)).toBeNull();
+    expect(claimTarget({ x: 0, y: 0 }, [at('far', 10), at('near', 8.5)])).toBe('near');
+  });
+
   it('a point farther than GAP_REACH from every target falls through', () => {
     expect(claimTarget({ x: 48, y: 96 + GAP_REACH }, TARGETS)).toBe('A');
     expect(claimTarget({ x: 48, y: 96 + GAP_REACH + 1 }, TARGETS)).toBeNull();
@@ -280,6 +288,10 @@ describe('the keyboard: each finger on its own (KT-D7, section 6.7)', () => {
     const slid = run(KEYS, [down('1', 32, 32, 0, keys), move('1', 82, 32, 30, keys)]);
     expect([...pressedTargets(slid.state)]).toEqual(['ㄴ']);
     expect(run(KEYS, [up('1', 82, 32, 60, keys)], slid.state).commits).toEqual(['ㄴ']);
+  });
+
+  it('a release over a neighbour with no move before it types the neighbour', () => {
+    expect(run(KEYS, [down('1', 32, 32, 0, keys), up('1', 70, 32, 40, keys)]).commits).toEqual(['ㄴ']);
   });
 
   it('a release off the keyboard types nothing', () => {
