@@ -135,6 +135,15 @@ for (const locale of ['en', 'es', 'ko'] as const) {
       expect(moved).toEqual(['profile:mina']);
       expect(textOf(rowOf(root, 'Mina'))).not.toContain(c.settings.moveOpen);
     });
+
+    it('a move hidden under a higher chip (a re-link) still turns Move off', () => {
+      view.locale = locale;
+      const statuses = { ...STATUSES, 'profile:jaehan': { ...STATUSES['profile:jaehan'], moveOpen: true } as LearnerStatus };
+      const root = render(<SettingsSections {...props('class', { statuses })} />);
+      const move = moveOf(rowOf(root, 'Jaehan'));
+      expect(move.props['aria-disabled']).toBe(true);
+      expect(textOf(byId(root, move.props['aria-describedby'] as string))).toBe(c.settings.moveOpen);
+    });
   });
 }
 
@@ -219,6 +228,13 @@ describe('Invite another grown-up (P7)', () => {
     const root = render(<SettingsSections {...props('family')} />);
     await act(async () => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'invite-grown-up').props.onClick());
     expect(textOf(root.find((n) => n.props['data-testid'] === 'invite-grown-up-status'))).toBe(getMessages('en').console.parentHome.copyFailed);
+  });
+
+  it('an expired family code: the shipped line, no button (never a dead code to copy)', () => {
+    const p = props('family');
+    const root = render(<SettingsSections {...{ ...p, roster: { ...p.roster, joinCodeExpiresAt: '2026-10-30T00:00:00.000Z' } }} />);
+    expect(root.findAll((n) => n.props['data-testid'] === 'invite-grown-up')).toHaveLength(0);
+    expect(textOf(root)).toContain(getMessages('en').console.settings.grownUps.invite.family);
   });
 
   it('no code, an archived family, a class or a school: the shipped line, no button', () => {

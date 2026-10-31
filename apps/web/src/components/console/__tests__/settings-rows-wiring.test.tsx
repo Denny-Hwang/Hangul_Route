@@ -142,6 +142,11 @@ describe('class settings rows (T11)', () => {
     act(() => chip.props.onClick());
     expect(nav.pushed).toEqual(['/teach/space/relink?id=space%3Aa']);
     expect(textOf(rowOf(root, 'Mina'))).toContain(c.status.inClass);
+    // The learner who needs an answer comes first (the roster's order) and carries the action edge.
+    const order = root.findAll((n) => n.type === 'div' && n.props['data-testid'] === 'settings-learner-row').map((r) => r.findAll((n) => n.type === 'strong').map(textOf)[0]);
+    expect(order).toEqual(['Jaehan', 'Mina']);
+    expect(jaehan.props['data-action']).toBe('true');
+    expect(rowOf(root, 'Mina').props['data-action']).toBeUndefined();
     // Ids only in the address, never a name.
     for (const href of nav.pushed) expect(href).not.toMatch(/Jaehan|Mina/);
   });
@@ -203,6 +208,52 @@ describe('family settings rows (P7)', () => {
     expect(root.findAll((n) => n.type === 'button' && n.props['data-testid'] === 'invite-grown-up')).toHaveLength(1);
     // A family reads no class-move list of its own here.
     expect(state.calls).not.toContain('classMoves');
+  });
+
+  it('a learner-side move: Needs your OK only when the family answers for the learner (learnerRoute caregiver)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.kind = 'family';
+    const view = (learnerRoute: string) => ({
+      id: 'transfer:f1',
+      role: 'learner_side',
+      status: 'requested',
+      initiator: 'source',
+      learner: { id: 'profile:mina', name: 'Mina' },
+      from: { spaceId: 'space:c1', name: 'Sunday Class A' },
+      to: { spaceId: 'space:c2', name: 'Evening Class D', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 8 },
+      learnerState: 'pending',
+      sourceState: 'yes',
+      destinationState: 'waiting',
+      introduce: false,
+      premiumChange: 'none',
+      destinationConsentMode: 'parent',
+      relinkAffected: false,
+      sourcePlansAffected: false,
+      visibleToday: [],
+      blockReason: null,
+      executeAfter: null,
+      createdAt: at(-60),
+      expiresAt: at(60 * 24 * 12),
+      executedAt: null,
+      endedAt: null,
+      learnerRoute,
+      endedFrom: null,
+      termsDigest: 'a'.repeat(64),
+    });
+    const options = [{ learnerId: 'profile:mina', name: 'Mina', classes: [{ spaceId: 'space:c1', name: 'Sunday Class A' }], selfManaged: false, blockTeacherRequests: false }];
+    state.transfers = { ok: true, data: { requests: [view('caregiver')], options } };
+    let root = await renderPage();
+    expect(rowOf(root, 'Mina').findAll((n) => n.type === 'button' && n.props['data-testid'] === 'learner-status')).toHaveLength(1);
+    act(() => renderer?.unmount());
+    renderer = null;
+    // A self-managed learner answers on their own device: the quiet "Move waiting", never an action the family cannot take.
+    state.transfers = { ok: true, data: { requests: [view('device')], options: [{ ...options[0], selfManaged: true }] } };
+    root = await renderPage();
+    const mina = rowOf(root, 'Mina');
+    expect(mina.findAll((n) => n.type === 'button' && n.props['data-testid'] === 'learner-status')).toHaveLength(0);
+    expect(textOf(mina)).toContain(c.status.moveWaiting);
+    expect(textOf(mina)).not.toContain(c.status.needsOk);
+    expect(mina.props['data-action']).toBeUndefined();
   });
 
   it('the class line is left out when the classes read fails', async () => {

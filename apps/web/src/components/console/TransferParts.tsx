@@ -453,7 +453,8 @@ export function StartMoveSheet({ spaceId, learner, api, online, onClose, onSent,
 /**
  * AMENDMENTS-GROWNUP-UX GX-10 (T11, P7): the row's Move is drawn in the console button look (`buttonBase`), the same size
  * and box as the row's Remove. `blocked` is the reason it is off (a move of this learner is already open): it is then
- * `aria-disabled` (still focusable, so a keyboard user hears why) with the reason beside it; offline it says so as shipped.
+ * `aria-disabled` (still focusable, so a keyboard user hears why) with the reason right under it; offline it says so as
+ * shipped.
  */
 export function MoveRowAction({ name, online, onMove, family, blocked }: { name: string; online: boolean; onMove: () => void; family?: boolean; blocked?: string | null }): JSX.Element {
   const { messages } = useConsoleLocale();
@@ -461,7 +462,10 @@ export function MoveRowAction({ name, online, onMove, family, blocked }: { name:
   const helpId = useId();
   const reason = blocked ?? (online ? null : t.states.offline);
   return (
-    <>
+    // Move and its reason are one column, so the reason sits right under the Move it explains (also when a narrow row
+    // wraps Remove onto its own line). The reason takes the column's width without setting it (`width: 0` with
+    // `minWidth: 100%`): a long reason wraps under Move and never pushes the row's buttons out of line with the others.
+    <span data-testid="move-row-group" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.xxs, maxWidth: '100%' }}>
       <button
         type="button"
         aria-label={family ? t.a11y.moveRowFamily(name) : t.a11y.moveRow(name)}
@@ -474,11 +478,10 @@ export function MoveRowAction({ name, online, onMove, family, blocked }: { name:
         {family ? t.start.move.family.cta : t.start.move.class.cta}
       </button>
       {reason ? (
-        // `order: 1`: the reason takes its own line after the row's buttons, so Move and Remove stay side by side.
-        <span id={helpId} data-testid="move-row-reason" style={{ order: 1, flexBasis: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary }}>
+        <span id={helpId} data-testid="move-row-reason" style={{ width: 0, minWidth: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary, overflowWrap: 'anywhere' }}>
           {reason}
         </span>
       ) : null}
-    </>
+    </span>
   );
 }

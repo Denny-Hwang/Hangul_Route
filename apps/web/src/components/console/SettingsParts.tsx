@@ -6,7 +6,7 @@ import { ReasonLine, StatusChip } from '@/components/console/LearnerStatusParts'
 import { MoveRowAction } from '@/components/console/TransferParts';
 import { Button, Field, Muted, panelStyle } from '@/components/console/ui';
 import type { MemberView, Roster } from '@/lib/console/api';
-import { statusWords, type LearnerStatus, type LearnerStatusKind } from '@/lib/console/learner-status';
+import { rosterOrder, statusWords, type LearnerStatus, type LearnerStatusKind } from '@/lib/console/learner-status';
 import { canDeleteLearnerData } from '@/lib/console/relink';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
@@ -114,6 +114,12 @@ export function SettingsSections({
   const adults = members.filter((m) => m.memberKind === 'account');
   const mayDelete = canDeleteLearnerData(space.kind, space.settings.consentMode);
   const deleteCandidate = learners.find((l) => l.memberId === deleteTarget);
+  // GX-10 (section 4 "Ordering", owner request 2026-10-31): a learner whose grown-up must answer comes first (soonest
+  // expiry first), as on the class roster, so a "Needs your OK" is never below the fold of a long class; the rest keep
+  // their order.
+  const learnerRows = statuses ? rosterOrder(learners.map((l) => ({ id: l.memberId, l })), statuses).map((r) => r.l) : learners;
+  // Invite another grown-up copies only a live code: an expired one falls back to the shipped line.
+  const codeLive = !!roster.joinCode && !(roster.joinCodeExpiresAt && Date.parse(roster.joinCodeExpiresAt) <= now.getTime());
 
   return (
     <>
@@ -182,20 +188,33 @@ export function SettingsSections({
             ) : null}
           </div>
         ))}
-        {space.kind === 'family' && roster.joinCode && !archived ? <InviteGrownUp code={roster.joinCode} /> : <Muted>{s.grownUps.invite[space.kind]}</Muted>}
+        {space.kind === 'family' && roster.joinCode && codeLive && !archived ? <InviteGrownUp code={roster.joinCode} /> : <Muted>{s.grownUps.invite[space.kind]}</Muted>}
       </section>
 
       <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={s.learners.label}>
         <h2 style={h2Style}>{s.learners.title[space.kind]}</h2>
         {learners.length === 0 ? <Muted>{s.learners.none}</Muted> : null}
-        {learners.map((l, index) => {
+        {learnerRows.map((l, index) => {
           const status = statuses?.[l.memberId];
           const words = status && space.kind !== 'school' ? statusWords(status, now, locale) : null;
           const reasonId = `settings-reason-${index}`;
-          const moveOpen = status ? MOVE_OPEN.has(status.kind) : false;
+          // Any open move turns Move off, also one hidden under a higher chip (a re-link outranks every move).
+          const moveOpen = status ? status.moveOpen === true || MOVE_OPEN.has(status.kind) : false;
           const classes = space.kind === 'family' ? familyClasses?.get(l.memberId) : undefined;
           return (
-            <div key={l.memberId} data-testid="settings-learner-row" data-status={status?.kind} style={{ ...rowStyle, flexWrap: 'wrap', borderTop: index > 0 ? `${borderWidth.thin}px solid ${colors.border.subtle}` : undefined }}>
+            <div
+              key={l.memberId}
+              data-testid="settings-learner-row"
+              data-status={status?.kind}
+              data-action={status?.action ? 'true' : undefined}
+              style={{
+                ...rowStyle,
+                flexWrap: 'wrap',
+                borderTop: index > 0 ? `${borderWidth.thin}px solid ${colors.border.subtle}` : undefined,
+                // A row that needs the grown-up's answer carries the action card's nudge edge (GX-1), beside its amber chip.
+                ...(status?.action ? { borderLeft: `${borderWidth.base}px solid ${colors.feedback.nudge}`, paddingLeft: spacing.sm } : {}),
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xxs, minWidth: 0, flex: '1 1 12em' }}>
                 <span data-testid="settings-learner-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
                   <strong style={{ overflowWrap: 'anywhere' }}>{l.name}</strong>

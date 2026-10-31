@@ -16,6 +16,7 @@ import { useConsole } from '@/components/console/use-console';
 import { useNotesApi } from '@/components/console/use-notes-api';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
+import { CLASS_RELINK_GAP_MS, CLASS_RELINK_REFRESH_MS } from '@/lib/console/visible-refresh';
 import { unarchiveOverCap, type ApiResult, type MemberView, type RelinkView, type Roster, type TransferOption, type TransferView } from '@/lib/console/api';
 import type { ClassMoveLists } from '@/lib/console/class-moves';
 import { attentionModel, type LearnerStatus } from '@/lib/console/learner-status';
@@ -154,6 +155,19 @@ function SettingsInner(): JSX.Element {
   // into view (no slow poll: a settings page is not a classroom screen) and when another console tab changed a roster.
   useVisibleRefresh(() => void load(true), !!api && !error);
   useRosterChanges(() => void load(true), !!api && !error);
+
+  // GX-10 (section 4, as the class roster, GX-1 section 5.4): the re-link-only read every 20 s while the tab is in view.
+  // A re-link closes in 10 minutes while the learner waits at the device, so a new one shows, "N min left" counts down
+  // (each read draws the row again with a fresh `now`) and an expired one drops its "Needs your OK".
+  const readRelinks = useCallback(async (): Promise<void> => {
+    if (!api) return;
+    const r = await Promise.resolve()
+      .then(() => api.relinkRequests(spaceId))
+      .catch(() => null);
+    if (r?.ok) setRelinkList(r.data);
+  }, [api, spaceId]);
+  const relinkWatch = !!api && !error && (roster?.space.kind === 'class' || roster?.space.kind === 'family');
+  useVisibleRefresh(() => void readRelinks(), relinkWatch, { pollMs: CLASS_RELINK_REFRESH_MS, gapMs: CLASS_RELINK_GAP_MS });
 
   // [SA] The Name block (AMENDMENTS-SEATS-ADMINS section 5.3): the title and the Back label read the new name at once.
   const { announce, region: renameLive } = useAnnouncer();
@@ -365,17 +379,22 @@ function SettingsInner(): JSX.Element {
                 online={online}
                 preselect={{ learnerId: moving.memberId }}
                 answersHidden={false}
+                // Every way out reads the lists again (as the class sheet does), so the row's "Move waiting" chip and its
+                // Move turned off show at once after the grown-up's own request.
                 onCreated={() => {
                   setMoving(null);
                   setMoveNote('sent');
+                  void load(true);
                 }}
                 onPageState={(state) => {
                   setMoving(null);
                   setMoveNote(state);
+                  void load(true);
                 }}
                 onNotice={(notice) => {
                   setMoving(null);
                   setMoveNote(notice);
+                  void load(true);
                 }}
               />
             </TransferSheet>
