@@ -1,4 +1,4 @@
-import { colors } from '@hangul-route/design-system/tokens';
+import { colors, typography } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
@@ -7,6 +7,7 @@ import { catalogTitle } from '@/data/catalog';
 import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { findBannedWord } from '@/lib/console/banned-text';
 import { codeExpiry } from '@/lib/console/rollup';
+import { VISIBLE_POLL_MS } from '@/lib/console/visible-refresh';
 
 /**
  * F-APP-001 A-5b, section 3.8 (design/screens/app-shell/parent-home.md): the family home. Cards in
@@ -1284,6 +1285,9 @@ describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-
       expect(card(r, 'Jun').findAll((n) => n.props['data-testid'] === 'child-status')).toHaveLength(0);
       expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.settings.notes.saved);
       expect(frame.counts[frame.counts.length - 1]).toEqual({ attentionHere: true, attentionTotal: 0 });
+      // The opener (the strip row) left the page: focus goes to Jun's card, brought into view first (it can sit far below the strip).
+      expect(focusTarget.scrollIntoView).toHaveBeenCalledWith({ block: 'center' });
+      expect(focusTarget.focus).toHaveBeenCalledWith({ preventScroll: true });
     });
 
     it("the child's Class info to read chip is a button named with its reason; it opens the same sheet", async () => {
@@ -1291,6 +1295,9 @@ describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-
       const chip = chipOf(r, 'Jun');
       expect(chip.type).toBe('button');
       expect(textOf(chip)).toBe(p.status.scope);
+      // The action-chip look of the class page's StatusChip: an amber dot (hidden from the name) and bold text.
+      expect(chip.findAll((n) => n.type === 'span' && n.props['aria-hidden'] === true)).toHaveLength(1);
+      expect(chip.props.style.fontWeight).toBe(typography.weight.bold);
       expect(chip.props['aria-label']).toBe(en.console.status.chipName(p.status.scope, p.needsYou.scope('Jun')));
       await tap(chip);
       expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
@@ -1300,6 +1307,24 @@ describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-
       expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
       expect(data.calls.some((c) => c.startsWith('ack:'))).toBe(false);
       expect(byTestId(r, 'needs-you-read')).toHaveLength(1);
+    });
+
+    it('a background read that shows the family archived closes the open sheet (its last scope read is kept, the family list decides)', async () => {
+      vi.useRealTimers();
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
+      vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
+      const r = await render([family]);
+      await tap(byTestId(r, 'needs-you-read')[0] as ReactTestInstance);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(1);
+      const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-12T12:00:30Z' } };
+      data.rosters = { sp_f: roster(archived, [mina, jun]) };
+      data.list = { ok: true, data: [archived] };
+      await act(async () => {
+        vi.advanceTimersByTime(VISIBLE_POLL_MS);
+      });
+      await act(async () => undefined);
+      expect(byTestId(r, 'class-scope-sheet')).toHaveLength(0);
+      expect(data.calls.some((c) => c.startsWith('ack:'))).toBe(false);
     });
 
     it('the other chips stay text: a re-link chip is never a button', async () => {
