@@ -539,6 +539,21 @@ describe('AMENDMENTS-GROWNUP-UX GX-13: the classes line on a family report', () 
     expect(byTestId(root, 'report-classes')).toHaveLength(0);
   });
 
+  it('skips a class item with no name (or a null item) and never throws on it', async () => {
+    nav.query = 'id=space%3Akim-family&learner=profile%3Amina&period=week&from=home';
+    responses.report = family;
+    const malformed = [null, { spaceId: 'space:x' }, { spaceId: 'space:y', name: '' }, { spaceId: 'space:sunflower', name: 'Sunflower' }];
+    responses.transfers = () => options(malformed as unknown as { spaceId: string; name: string }[]);
+    let root = await page();
+    expect(textOf(byTestId(root, 'report-classes')[0] as ReactTestInstance)).toBe('Classes: Sunflower');
+    act(() => mounted?.unmount());
+    mounted = null;
+    // Only malformed items: nothing named, so no line (never "Classes: " with nothing after it).
+    responses.transfers = () => options([null, { spaceId: 'space:x' }] as unknown as { spaceId: string; name: string }[]);
+    root = await page();
+    expect(byTestId(root, 'report-classes')).toHaveLength(0);
+  });
+
   it("a class report never reads the family's moves and draws no classes line", async () => {
     responses.transfers = () => options([{ spaceId: 'space:sunflower', name: 'Sunflower' }]);
     const root = await page();

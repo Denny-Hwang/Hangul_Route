@@ -206,7 +206,7 @@ export const REPORT_CSS = `
 .hr-report-buttons{column-gap:${rem(spacing.sm)}}
 .hr-report-top .hr-report-action-group{align-items:flex-end}
 .hr-report-top .hr-report-buttons{justify-content:flex-end}
-.hr-report-hint{max-width:${PRINT_HINT_MAX}}
+.hr-report-top .hr-report-hint{max-width:${PRINT_HINT_MAX}}
 }
 @media (min-width:${TWO_COLUMNS}){
 .hr-report-body{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);column-gap:${rem(spacing.xxl)};row-gap:${rem(spacing.xl)};align-items:start}

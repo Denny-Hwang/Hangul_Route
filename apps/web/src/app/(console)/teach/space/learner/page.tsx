@@ -127,8 +127,10 @@ function LearnerReportInner(): JSX.Element {
     void api.transferRequests(familyId).then(
       (result) => {
         if (!live || !result.ok) return;
-        const option = Array.isArray(result.data.options) ? result.data.options.find((o) => o.learnerId === learnerId) : undefined;
-        if (option) setClasses({ key: at, names: option.classes.map((c) => c.name) });
+        const option = Array.isArray(result.data.options) ? result.data.options.find((o) => o?.learnerId === learnerId) : undefined;
+        // Only named classes count: a malformed item (no name, or null) is skipped, never drawn as an empty name.
+        const names = Array.isArray(option?.classes) ? option.classes.flatMap((c) => (typeof c?.name === 'string' && c.name ? [c.name] : [])) : [];
+        if (option) setClasses({ key: at, names });
       },
       () => undefined,
     );
