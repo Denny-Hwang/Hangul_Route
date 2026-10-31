@@ -139,7 +139,8 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108);
+    // + the Holidays Volume 2 of Stage 2 (F-CURR-002 row CM-45 S2): +3 lesson quests, on its own episode.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(111);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
@@ -547,6 +548,10 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q1',
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
+      // A cell's later volume follows every first volume (F-CURR-002 row CM-40); row CM-45 S2 ships one.
+      'quest:stage2-rites-v2-q1',
+      'quest:stage2-rites-v2-q2',
+      'quest:stage2-rites-v2-q3',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);

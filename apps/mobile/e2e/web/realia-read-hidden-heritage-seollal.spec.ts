@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
+import { SEOLLAL_ROOM_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/seollal-room';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { seedStored } from './helpers';
@@ -10,9 +11,11 @@ import { expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-CURR-002 row CM-37 part 2: the Holidays & Traditions Hidden Heritage scene, a hanok room on Seollal morning
- * (packages/design-system/src/scene-art/hidden-heritage/seollal-room.ts), played through the CM-36 step. No lesson cell
- * plays it until the Holidays Volume 2 cell ships, so the suite opens its reference round through
- * `window.__hrHiddenHeritageE2E.open({ sceneId })`, which exists only in the fixture bundle (served from dist-e2e/):
+ * (packages/design-system/src/scene-art/hidden-heritage/seollal-room.ts), played through the CM-36 step. The Holidays
+ * Volume 2 cell (row CM-45 S2) plays it as the Apply of its quest 1, behind `volumes`; this suite opens the step on the
+ * scene's reference round, the round that quest plays, through `window.__hrHiddenHeritageE2E.open({ sceneId })`, which
+ * exists only in the fixture bundle (served from dist-e2e/), and reads the step's card back (every fact of the scene's
+ * note) on the end panel:
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage-seollal
@@ -110,6 +113,16 @@ test.describe('Hidden Heritage, the Seollal room (F-CURR-002 CM-37)', () => {
         }
         await expect(page.getByText('You found them all')).toBeVisible();
         for (const t of Object.values(TARGETS)) await expect(page.getByTestId('hh-end').getByText(t.meaning, { exact: true })).toBeVisible();
+        // F-CURR-002 row CM-45 S2: the step's card back under the found words, every fact of the scene with its source.
+        const back = page.getByTestId('hh-card-back');
+        await expect(back.getByRole('heading', { name: 'Did you know?' })).toBeVisible();
+        for (const fact of SEOLLAL_ROOM_SCENE.note.facts) {
+          await expect(page.getByTestId(`hh-fact-${fact.id}-text`)).toHaveText(fact.claimEn);
+          await expect(page.getByTestId(`hh-fact-${fact.id}-source`)).toContainText(`Source: ${fact.sources[0]!.institution}`);
+        }
+        expect(await back.innerText()).not.toMatch(/https?:|folkency|heritage\.go\.kr|kasi\.re\.kr/);
+        await back.scrollIntoViewIfNeeded();
+        await shot(page, `hidden-heritage-seollal-card-back-${size.name}`);
         await expectNoHorizontalOverflow(page);
         await shot(page, `hidden-heritage-seollal-end-${size.name}`);
         expect((await log(page)).answers.map((a) => a.correct)).toEqual([false, true, true, true]);

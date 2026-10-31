@@ -4,8 +4,9 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
+import { expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton): on the release bundle, offline-capable, a shipped
@@ -1189,8 +1190,11 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
+/** The first volume of every cell: what the grid opens (a later volume opens from its cell's Vol tabs, below). */
+const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+
 /** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+const CELLS: readonly UpperCell[] = FIRST_VOLUMES.map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1217,7 +1221,7 @@ async function openJourney(page: Page): Promise<void> {
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
+    expect(CELLS.map((c) => c.episodeId)).toEqual(FIRST_VOLUMES.map((e) => e.id));
     const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
   });
@@ -1251,6 +1255,53 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  // F-CURR-002 row CM-45 S2: a shipped Volume 2, Holidays & Traditions of Stage 2. `volumes` is at built-in pct 0 (the row
+  // merges dark), so with it off the cell opens Volume 1 with no Vol tabs; turned on through the stored remote copy, as a
+  // ramp would, the cell's page offers Vol 2, which opens its own page, and its first quest plays from its own chunk.
+  for (const [label, size] of [
+    ['320', { width: 320, height: 720 }],
+    ['wide', { width: 1280, height: 900 }],
+  ] as const) {
+    test(`episode:stage2-rites-v2 (${label}): with volumes on, Vol 2 opens the Holidays Volume 2 and its first quest's first game mounts`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.setViewportSize(size);
+      await openJourney(page);
+      await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { volumes: { on: true, pct: 100 } } } });
+      await page.reload();
+      const guide = page.getByTestId('install-guide');
+      await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+      if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+      await page.getByText('Journey', { exact: true }).last().click();
+      await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+      const cell = page.getByRole('button', { name: journeyCellName(2, THEME_LABEL.rites), exact: true });
+      // Volume 1 is not done yet, so the cell opens it (the open rule) and says so.
+      await expect(cell).toHaveAccessibleName(/Opens Volume 1\.$/);
+      await cell.click();
+      await expect(page.getByText('Holiday Words').first()).toBeVisible();
+      const tabs = page.getByRole('tablist', { name: 'Volumes' });
+      await tabs.getByRole('tab', { name: 'Volume 2' }).click();
+      await expect(page.getByText('Holidays Through the Year').first()).toBeVisible();
+      await expect(page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+      await expect(page.getByText('From Seollal to the Full Moon').first()).toBeVisible();
+      if (label === '320') await expectNoHorizontalOverflow(page);
+      await shot(page, `cm45-s2-rites-v2-page-${label}`);
+      await openFirstQuest(page);
+      if (label === '320') await expectNoHorizontalOverflow(page);
+      await shot(page, `cm45-s2-rites-v2-q1-practice-${label}`);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test('episode:stage2-rites-v2 with volumes off (the launch state): the Holidays cell opens Volume 1 and its page has no Vol tabs', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourney(page);
+    await page.getByRole('button', { name: journeyCellName(2, THEME_LABEL.rites), exact: true }).click();
+    await expect(page.getByText('Holiday Words').first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+    await expect(page.getByText('Holidays Through the Year')).toHaveCount(0);
+  });
 
   // F-CURR-002 row CM-3A S3: a Stage 3 Dictation Check at launch state. `game.type-hangul-hear` is dark (built-in
   // pct 0), so the Check's hear rounds play as Type Hangul see rounds on the in-app keyboard, and the quest finishes.

@@ -79,9 +79,10 @@ describe('catalogue parity with the last hand-kept catalogue (version 32)', () =
     }
   });
 
-  it('orders the lesson quests by route (cell by cell), then the story quests in shelf order', () => {
+  it('orders the lesson quests by route (cell by cell), then the later volumes in grid order, then the story quests in shelf order', () => {
     const lessons = CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual(CATALOG.cells.flatMap((c) => c.questIds));
+    // F-CURR-002 row CM-40: a cell's later volume follows every first volume, off the route.
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds))]);
     expect(CATALOG.quests.filter((q) => q.kind === 'story').map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 });
