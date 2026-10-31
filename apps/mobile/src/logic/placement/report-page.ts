@@ -127,7 +127,8 @@ export function startChoices(
 ): StartChoice[] {
   const placedOut = new Set(seed.placedOutQuestIds);
   return inRouteOrder(catalog)
-    .filter((quest) => quest.grid && quest.playable && isEntitled(quest.stage))
+    // The route is each cell's first volume (F-CURR-002 row CM-40): a later volume is opened from its cell's Vol tab.
+    .filter((quest) => quest.grid && quest.playable && quest.laterVolume !== true && isEntitled(quest.stage))
     .map((quest) => ({
       questId: quest.id,
       state:

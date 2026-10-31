@@ -74,7 +74,8 @@ export function startingSpotChanged(summary: PlacementOf, locale: UiLocale = DEF
 export function suggestedStartQuestId(level: PlacementLevel | null, source: Catalog = CATALOG): string | null {
   const route = routeCatalogOf(source);
   const placedOut = new Set(level ? questsPlacedOutAtLevel(level, route) : []);
-  return route.quests.find((quest) => quest.grid && quest.playable && !placedOut.has(quest.id))?.id ?? null;
+  // The route is each cell's first volume (F-CURR-002 row CM-40): a later volume never opens a plan.
+  return route.quests.find((quest) => quest.grid && quest.playable && quest.laterVolume !== true && !placedOut.has(quest.id))?.id ?? null;
 }
 
 export interface SuggestedStart {

@@ -23,6 +23,12 @@ export interface RouteQuest {
   teaches: readonly string[];
   playable: boolean;
   grid: boolean;
+  /**
+   * A quest of a cell's later volume (F-CURR-002 row CM-40): a level below its stage places it out like the first
+   * volume's, but the route is each cell's first volume, so it is never a route start, a next card or a start choice.
+   * Absent on a first volume's quest and on a story quest.
+   */
+  laterVolume?: true;
 }
 export interface RouteCatalog {
   quests: readonly RouteQuest[];
@@ -115,7 +121,7 @@ interface SeedInput {
 const buildSeed = (input: SeedInput, catalog: RouteCatalog, opts: RouteOptions): RouteSeed => {
   const placedOut = new Set(input.placedOut);
   const remaining = inRouteOrder(catalog).filter(
-    (quest) => quest.grid && quest.playable && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
+    (quest) => quest.grid && quest.playable && quest.laterVolume !== true && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
   );
   const start = remaining.find((quest) => opts.isEntitled(quest.stage)) ?? null;
   let needsStage: StageKey | null = null;
