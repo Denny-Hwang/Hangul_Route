@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { CLASS_SCOPE_TEXT, CLASS_SCOPE_TEXT_VERSION } from '@hangul-route/content-schema';
+import { CLASS_SCOPE_TEXT, CLASS_SCOPE_TEXT_VERSION, classScopeItems } from '@hangul-route/content-schema';
 import { en, getMessages, type UiLocale } from '@hangul-route/i18n';
 
 /**
@@ -14,8 +14,17 @@ import { en, getMessages, type UiLocale } from '@hangul-route/i18n';
  *
  * Like notes.spec.ts and reports.spec.ts, no CI lane runs it yet (a lane is a workflow change); each PR runs that build
  * and suite locally.
+ *
+ * GX-5b (the class-scope sheet, owner-blocked on GX-OD-3, off by default): its cases need a second export with the
+ * sheet on, and run instead of the two shipped-card cases:
+ *
+ *   NEXT_PUBLIC_API_BASE_URL=https://api.moves-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true NEXT_PUBLIC_CLASS_TRANSFER=enabled NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on pnpm --filter @hangul-route/web build
+ *   CLASS_MOVES_E2E=1 FAMILY_SCOPE_SHEET_E2E=1 pnpm --filter @hangul-route/web exec playwright test class-moves.spec
  */
 test.skip(process.env.CLASS_MOVES_E2E !== '1', 'needs the export built against the mocked API (CLASS_MOVES_E2E=1)');
+
+/** The export was built with `NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on` (GX-5b): no class-scope card on the family home. */
+const SCOPE_SHEET = process.env.FAMILY_SCOPE_SHEET_E2E === '1';
 
 const API = 'https://api.moves-e2e.test';
 const SESSION_KEY = 'hr:console:session';
@@ -186,6 +195,7 @@ test.describe('the receiving class accepts (TV-D8)', () => {
 
 test.describe('the family reads the class-scope update and the move notice (TV-D5, TV-D10)', () => {
   test('the parent home shows both cards; OK on each records it and the card goes', async ({ page }) => {
+    test.skip(SCOPE_SHEET, 'the shipped card is not drawn with the class-scope sheet on (GX-5b)');
     const calls = await mockConsole(page, 'family');
     await page.goto('/parent');
     const update = page.getByTestId('class-scope-card');
@@ -503,6 +513,7 @@ test.describe('en: answering from Needs you (GX-4)', () => {
   });
 
   test('Read and OK brings the shipped class-scope card into view and focuses it (GX-OD-3 open)', async ({ page }) => {
+    test.skip(SCOPE_SHEET, 'the shipped card is not drawn with the class-scope sheet on (GX-5b)');
     await page.setViewportSize({ width: 360, height: 740 });
     await mockFamily(page, { relinks: [], moves: [], scopeNeeded: ['profile:jun'], notice: false });
     await page.goto('/parent');
@@ -626,5 +637,108 @@ test.describe('en: the family home reads its re-links every 20 s (GX-5)', () => 
     await expect(page.getByTestId('needs-you-result')).toHaveText(c.relink.approved('Sora'));
     expect(mock.calls.some((call) => call.method === 'POST' && call.path === '/api/spaces/space:kim/relink-requests/relink:sora/approve')).toBe(true);
     for (const call of mock.calls) expect(call.path).not.toMatch(/Mina|Jun|Sora/);
+  });
+});
+
+// AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b (owner-blocked on GX-OD-3, so behind NEXT_PUBLIC_FAMILY_SCOPE_SHEET, off by
+// default; owner request 2026-10-31: "make what needs the grown-up obvious"): the class-scope text moves from an
+// always-shown card into a sheet opened from the strip's Read and OK or the child's Class info to read chip. With three
+// items including an unread class-scope update, the first child's name and lines stay on the first 360 x 740 screen; the
+// sheet shows the text verbatim with its list open, ignores a backdrop tap while unread, and OK writes the shipped
+// acknowledgement. ko, en and es at 360 x 740 and 1280 x 800.
+
+for (const { locale, browser } of GX_LOCALES) {
+  const c = getMessages(locale).console;
+  const p = c.parentHome;
+  const fill = (text: string, name: string): string => text.split('{learner}').join(name);
+  test.describe(`${locale}: the class-scope sheet (GX-5b)`, () => {
+    test.skip(!SCOPE_SHEET, 'needs the export built with NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on (FAMILY_SCOPE_SHEET_E2E=1)');
+    test.use({ locale: browser });
+    for (const { label, size } of GX_VIEWPORTS) {
+      test(`${label}: no card on the home, the first child on the first screen; the chip opens the sheet, OK records it`, async ({ page }) => {
+        await page.setViewportSize(size);
+        const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], scopeNeeded: ['profile:sora'], shown: ['relink:mina'] });
+        await page.goto('/parent');
+        const strip = page.getByRole('region', { name: p.needsYou.title });
+        await expect(strip.getByTestId('needs-you-more')).toContainText(p.needsYou.more(2));
+        await expect(page.getByTestId('class-scope-card')).toHaveCount(0);
+        // Three items including an unread class-scope update: the first child's name is on the first screen (the GX-4
+        // check, which before GX-5b held only without an unread update). Where the class line ends is recorded.
+        const mina = kidCard(page, 'Mina');
+        const nameBox = await mina.getByRole('heading', { name: 'Mina', exact: true }).boundingBox();
+        const lineBox = await mina.getByTestId('child-class-line').boundingBox();
+        expect((nameBox?.y ?? 0) + (nameBox?.height ?? 0)).toBeLessThanOrEqual(size.height);
+        test.info().annotations.push({ type: 'first-screen', description: `${locale} ${label}: name ends ${Math.round((nameBox?.y ?? 0) + (nameBox?.height ?? 0))}, class line ends ${Math.round((lineBox?.y ?? 0) + (lineBox?.height ?? 0))}` });
+        await page.screenshot({ path: test.info().outputPath(`scope-sheet-home-${locale}-${label}.png`) });
+        // Sora's chip is a button named with its reason; the other chips stay text.
+        const sora = kidCard(page, 'Sora');
+        const chip = sora.getByRole('button', { name: c.status.chipName(p.status.scope, p.needsYou.scope('Sora')) });
+        await expect(chip).toHaveText(p.status.scope);
+        const chipBox = await chip.boundingBox();
+        expect(chipBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+        await expect(mina.getByRole('button', { name: p.status.relink })).toHaveCount(0);
+        await chip.click();
+        const sheet = page.getByRole('dialog', { name: c.classScope.title('Sora') });
+        await expect(sheet).toBeVisible();
+        await expect(sheet.getByRole('heading', { name: c.classScope.title('Sora') })).toBeFocused();
+        const text = CLASS_SCOPE_TEXT[locale];
+        for (const id of ['intro', 'sees_all', 'moves', 'keeps', 'leave', 'until'] as const) await expect(sheet).toContainText(fill(text.lines[id], 'Sora'));
+        await expect(sheet).toContainText(text.lines.list);
+        await expect(sheet.getByRole('listitem')).toHaveCount(classScopeItems(locale).length);
+        await page.screenshot({ path: test.info().outputPath(`scope-sheet-${locale}-${label}.png`) });
+        // While unread a tap on the backdrop (drawn from 45em) does nothing.
+        if (size.width >= 720) {
+          await page.mouse.click(8, size.height - 8);
+          await expect(sheet).toBeVisible();
+        }
+        expect(mock.calls.some((call) => call.method === 'POST')).toBe(false);
+        await sheet.getByTestId('class-scope-ok').scrollIntoViewIfNeeded();
+        await sheet.getByRole('button', { name: getMessages(locale).common.buttons.ok, exact: true }).click();
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await expect(page.getByTestId('needs-you-result')).toHaveText(c.settings.notes.saved);
+        await expect(sora.getByTestId('child-status')).toHaveCount(0);
+        await expect(sora).toBeFocused();
+        const ack = mock.calls.find((call) => call.method === 'POST' && call.path === '/api/spaces/space:kim/learners/profile:sora/class-scope');
+        expect(ack?.body).toEqual({ version: 'class-scope-2026-10', shown: CLASS_SCOPE_TEXT_VERSION });
+        for (const call of mock.calls) expect(call.path).not.toMatch(/Mina|Jun|Sora/);
+        if (label === '360') await noSidewaysScroll(page);
+      });
+    }
+  });
+}
+
+test.describe('en: Read and OK opens the class-scope sheet (GX-5b)', () => {
+  test.skip(!SCOPE_SHEET, 'needs the export built with NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on (FAMILY_SCOPE_SHEET_E2E=1)');
+  const c = en.console;
+  const p = c.parentHome;
+
+  test('from the strip row and from See all; Close leaves it unread and gives focus back', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    const mock = await mockFamily(page, { relinks: [], moves: [], scopeNeeded: ['profile:jun'], notice: false });
+    await page.goto('/parent');
+    const strip = page.getByRole('region', { name: p.needsYou.title });
+    const read = strip.getByRole('button', { name: p.needsYou.readOk.cta });
+    await read.click();
+    const sheet = page.getByRole('dialog', { name: c.classScope.title('Jun') });
+    await expect(sheet).toBeVisible();
+    await sheet.getByRole('button', { name: c.transfer.a11y.close }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(read).toBeFocused();
+    expect(mock.calls.some((call) => call.method === 'POST')).toBe(false);
+    await read.click();
+    await page.getByRole('dialog').getByRole('button', { name: en.common.buttons.ok, exact: true }).click();
+    await expect(page.getByRole('region', { name: p.needsYou.title })).toHaveCount(0);
+    await expect(page.getByTestId('class-scope-card')).toHaveCount(0);
+  });
+
+  test('from inside See all, the See all sheet gives way to the class-scope sheet', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], scopeNeeded: ['profile:sora'], shown: ['relink:mina'] });
+    await page.goto('/parent');
+    await page.getByRole('region', { name: p.needsYou.title }).getByRole('button', { name: p.needsYou.seeAll.cta }).click();
+    const all = page.getByTestId('needs-you-sheet');
+    await all.getByRole('button', { name: p.needsYou.readOk.cta }).click();
+    await expect(page.getByTestId('needs-you-sheet')).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: c.classScope.title('Sora') })).toBeVisible();
   });
 });
