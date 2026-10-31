@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class page with the quiet move states and nothing waiting (GX-0 mock)</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="approvals.css">
+</head>
+<body>
+<!-- Design mock (owner request 2026-10-31, design pass GX-0 v2 after the PR #917 review: docs/specs/AMENDMENTS-GROWNUP-UX.md), not shipped code. Strings are the section 10 drafts; names and class names are sample data. The class page shows the state once GX-W is deployed (the move chips need the roster's pending field); its move out has no destination name, the usual case (status.moveOut). Every re-link Approve opens the pop-up (GX-D12). The parent home's three items are Mina's re-link and two class moves for Jun (one per class), with no unread class-scope update (until GX-5b the shipped class-scope card would sit under the strip). -->
+<div class="frame"><header class="frame-top"><div class="frame-bar"><a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a><span class="persona-text">선생님</span><a class="way-back" href="#"><span>학습 앱</span></a></div><nav class="frame-nav"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">반</a></li><li><a class="nav-item" href="#">레슨</a></li><li><a class="nav-item" href="#">강의 모드</a></li><li><a class="nav-item" href="#">결제</a></li></ul></nav></header><main class="frame-main" id="content">
+<a class="page-back text-link" href="#">반 목록으로</a>
+<div class="page-head"><h1>일요일 반 A</h1><span class="secondary">학생 4명</span></div>
+<div class="stack-lg">
+<section class="panel stack"><h2 class="section-title">이번 주</h2><p class="line">이번 주 학생 4명 중 3명이 연습했어요</p><div class="row-wrap"><a class="btn btn-primary btn-small" href="#">계획: 루트 · 26주</a><a class="btn btn-small" href="#">더 보기</a></div></section>
+<section class="stack" aria-labelledby="stu"><h2 class="section-title" id="stu">학생</h2>
+<article class="student"><div class="student-head"><span class="avatar a1" aria-hidden="true"></span><strong class="student-name">하나</strong><span class="gx-chip gx-chip-room">자리 기다리는 중</span><span class="level">술술 읽어요</span></div><p class="line">연습: 목 · 이번 주 2분</p></article>
+<article class="student"><div class="student-head"><span class="avatar a2" aria-hidden="true"></span><strong class="student-name">다미</strong><span class="gx-chip gx-chip-info">이동 예정 · 11월 9일</span><span class="level">조금 읽어요</span></div><p class="line">연습: 목 · 이번 주 2분</p></article>
+<article class="student"><div class="student-head"><span class="avatar a3" aria-hidden="true"></span><strong class="student-name">준호</strong><span class="gx-chip gx-chip-quiet">이동 대기 중</span><span class="level">조금 읽어요</span></div><p class="reason">기다리는 반: 저녁 반 D</p><p class="line">연습: 목 · 이번 주 2분</p></article>
+<article class="student"><div class="student-head"><span class="avatar a4" aria-hidden="true"></span><strong class="student-name">유한</strong><span class="gx-chip gx-chip-in">참여 중</span><span class="level">술술 읽어요</span></div><p class="line">연습: 목 · 이번 주 2분</p><div class="card-row"><a class="btn" href="#">리포트 보기</a><a class="btn" href="#">쪽지 보내기</a></div></article>
+</section>
+</div></main></div>
+</body>
+</html>

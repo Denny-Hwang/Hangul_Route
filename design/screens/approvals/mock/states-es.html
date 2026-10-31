@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class page with the quiet move states and nothing waiting (GX-0 mock)</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="approvals.css">
+</head>
+<body>
+<!-- Design mock (owner request 2026-10-31, design pass GX-0 v2 after the PR #917 review: docs/specs/AMENDMENTS-GROWNUP-UX.md), not shipped code. Strings are the section 10 drafts; names and class names are sample data. The class page shows the state once GX-W is deployed (the move chips need the roster's pending field); its move out has no destination name, the usual case (status.moveOut). Every re-link Approve opens the pop-up (GX-D12). The parent home's three items are Mina's re-link and two class moves for Jun (one per class), with no unread class-scope update (until GX-5b the shipped class-scope card would sit under the strip). -->
+<div class="frame"><header class="frame-top"><div class="frame-bar"><a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a><span class="persona-text">Docente</span><a class="way-back" href="#"><span>App de estudiante</span></a></div><nav class="frame-nav"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page">Clases</a></li><li><a class="nav-item" href="#">Lecciones</a></li><li><a class="nav-item" href="#">Modo proyección</a></li><li><a class="nav-item" href="#">Facturación</a></li></ul></nav></header><main class="frame-main" id="content">
+<a class="page-back text-link" href="#">Volver a Clases</a>
+<div class="page-head"><h1>Clase del domingo A</h1><span class="secondary">4 estudiantes</span></div>
+<div class="stack-lg">
+<section class="panel stack"><h2 class="section-title">Esta semana</h2><p class="line">3 de 4 practicaron esta semana</p><div class="row-wrap"><a class="btn btn-primary btn-small" href="#">Plan: Ruta · 26 sem</a><a class="btn btn-small" href="#">Más</a></div></section>
+<section class="stack" aria-labelledby="stu"><h2 class="section-title" id="stu">Estudiantes</h2>
+<article class="student"><div class="student-head"><span class="avatar a1" aria-hidden="true"></span><strong class="student-name">Hana</strong><span class="gx-chip gx-chip-room">Esperando un lugar</span><span class="level">Lee bien</span></div><p class="line">Practicó el jue · 2 min esta semana</p></article>
+<article class="student"><div class="student-head"><span class="avatar a2" aria-hidden="true"></span><strong class="student-name">Dami</strong><span class="gx-chip gx-chip-info">Cambia de clase el 9 nov</span><span class="level">Lee un poco</span></div><p class="line">Practicó el jue · 2 min esta semana</p></article>
+<article class="student"><div class="student-head"><span class="avatar a3" aria-hidden="true"></span><strong class="student-name">Joon</strong><span class="gx-chip gx-chip-quiet">Cambio en espera</span><span class="level">Lee un poco</span></div><p class="reason">Esperando a: Clase de la tarde D</p><p class="line">Practicó el jue · 2 min esta semana</p></article>
+<article class="student"><div class="student-head"><span class="avatar a4" aria-hidden="true"></span><strong class="student-name">Yuhan</strong><span class="gx-chip gx-chip-in">En la clase</span><span class="level">Lee bien</span></div><p class="line">Practicó el jue · 2 min esta semana</p><div class="card-row"><a class="btn" href="#">Informe</a><a class="btn" href="#">Nota</a></div></article>
+</section>
+</div></main></div>
+</body>
+</html>
