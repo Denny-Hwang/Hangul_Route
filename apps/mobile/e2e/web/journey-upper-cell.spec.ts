@@ -6,6 +6,7 @@ import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton): on the release bundle, offline-capable, a shipped
@@ -1228,13 +1229,17 @@ const CELLS: readonly UpperCell[] = LESSON_EPISODES.filter((episode) => (episode
   };
 });
 
-async function openJourney(page: Page, flags?: Record<string, { on: boolean; pct: number }>): Promise<void> {
+async function openJourney(page: Page, flags?: Record<string, { on: boolean; pct: number }>, textSize?: 'largest'): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
-  // A stored remote copy turns a dark switch on for this learner, as a ramp would (F-CURR-002 §12.2).
-  if (flags !== undefined) await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags } });
+  // A stored remote copy turns a dark switch on for this learner, as a ramp would (F-CURR-002 §12.2); the device's
+  // text size (Largest is 150%) is stored beside it.
+  const stored: Record<string, unknown> = {};
+  if (flags !== undefined) stored['remote-config'] = { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags };
+  if (textSize !== undefined) stored['device:settings'] = { uiLocale: 'en', textSize, uiLocaleAt: '2026-10-16T09:00:00.000Z' };
+  if (Object.keys(stored).length > 0) await seedStoredAll(page, stored);
   await page.goto('/');
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
@@ -1315,6 +1320,63 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: true }).click();
       await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
       await expect(page.getByText(episode.titleEn)).toHaveCount(0);
+    });
+  }
+
+  // F-CURR-002 row CM-41 S4: Stage 4 Nature Volume 2's q2 and q3 at launch state, at 320 px and the Largest text size
+  // (150%). Every `game.<kind>` switch is dark (built-in pct 0), so the Role Play Practice plays Tap to Respond on its main
+  // path and the q3 Story Order (captions only) plays Story Sequence on the same cards; Realia Read, the Tap to Respond
+  // Check and the Sentence Builder Check are shipped kinds. Each quest plays to its reward with no page error.
+  const NATURE_V2_LATER: ReadonlyArray<readonly [quest: string, play: (page: Page) => Promise<void>]> = [
+    [
+      'quest:stage4-nature-v2-q2',
+      async (page) => {
+        await page.getByRole('button', { name: 'Play minigame' }).click();
+        await expectTextFits(page, 'q2 Role Play as Tap to Respond at Largest');
+        await shot(page, 's4-nature-v2-q2-role-play-fallback-largest-320');
+        await replyTurns(page, ['설악산에 가요.', '추워요!', '네, 좋아요!', '네, 갈 거예요.']);
+        await page.getByRole('button', { name: 'Play minigame' }).click();
+        await shot(page, 's4-nature-v2-q2-park-card-largest-320');
+        await pickRealia(page, ['sun', 'seoraksan', 'rain', 'jirisan']);
+        // The Check is Tap to Respond on the park talk.
+        await page.getByRole('button', { name: 'Go', exact: true }).click();
+        await replyTurns(page, ['지리산에 가요.', '추워요!'], 'finish');
+      },
+    ],
+    [
+      'quest:stage4-nature-v2-q3',
+      async (page) => {
+        await page.getByRole('button', { name: 'Play minigame' }).click();
+        await replyTurns(page, ['설악산에 가요.', '비가 올 거예요.', '네, 가져가요!', '네, 좋아요!']);
+        await page.getByRole('button', { name: 'Play minigame' }).click();
+        await expectTextFits(page, 'q3 Story Order as Story Sequence at Largest');
+        await shot(page, 's4-nature-v2-q3-story-sequence-largest-320');
+        await orderLines(page, ['ask', 'rain', 'umbrella', 'water']);
+        // The Check is Sentence Builder: a built question, then the 을 / 를 choice after 우산.
+        await buildCheck(page, [['내일, naeil', '설악산에, seoraksane', '갈까요, galkkayo'], ['을, eul']]);
+      },
+    ],
+  ];
+  for (const [questId, play] of NATURE_V2_LATER) {
+    test(`episode:stage4-nature-v2 ${questId.slice(-2)} (320, Largest text): plays to the reward with every game switch dark`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
+      await page.setViewportSize({ width: 320, height: 720 });
+      await openJourney(page, { volumes: { on: true, pct: 100 } }, 'largest');
+      await page.getByRole('button', { name: journeyCellName(4, THEME_LABEL.nature), exact: true }).click();
+      await page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' }).click();
+      await page.getByTestId(`episode-quest-${questId}`).getByRole('button', { name: 'Start' }).click();
+      const anyway = page.getByRole('button', { name: 'Play anyway' });
+      await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+      if (await anyway.isVisible()) await anyway.click();
+      await expect(headerClose(page)).toBeVisible();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
+      await play(page);
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+      await expectTextFits(page, `${questId} reward at Largest`);
+      await shot(page, `s4-nature-v2-${questId.slice(-2)}-reward-largest-320`);
+      expect(errors).toEqual([]);
     });
   }
 
