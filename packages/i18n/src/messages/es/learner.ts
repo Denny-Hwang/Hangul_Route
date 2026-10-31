@@ -410,6 +410,11 @@ export const learner = {
       startThere: { cta: 'Empezar por ahí' },
       playAnyway: { cta: 'Jugar igual' },
     },
+    volumes: {
+      label: 'Volúmenes',
+      tab: (n: number) => `Vol. ${n}`,
+      tabA11y: (n: number) => `Volumen ${n}`,
+    },
   },
 
   results: {

@@ -26,6 +26,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'korean.go.kr',
   'media.unesco.org',
   'news.sbs.co.kr',
+  'opendict.korean.go.kr', // F-CURR-002 CM-44 S7 (Urimalsaem, the National Institute of Korean Language's open dictionary)
   'science.kma.go.kr',
   'shfestival.com',
   'sillok.history.go.kr',
@@ -40,6 +41,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'www.heritage.go.kr',
   'www.khan.co.kr',
   'www.khs.go.kr',
+  'www.kma.go.kr', // F-CURR-002 CM-41 S7 (Korea Meteorological Administration press releases)
   'www.knps.or.kr',
   'www.korea.kr',
   'www.korean.go.kr',
