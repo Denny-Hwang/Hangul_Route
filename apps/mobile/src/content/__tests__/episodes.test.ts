@@ -109,11 +109,19 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
     // The lesson Volume 2 cells (rows CM-41..CM-45), then the Stage 5 books 2 and their tales' shelf episodes (row CM-46).
     const lessonV2 = volumeEpisodes.filter((e) => e.placement !== 'shelf' && e.stage !== 'stage5');
-    expect(lessonV2).toHaveLength(15);
+    expect(lessonV2).toHaveLength(23);
     for (const e of lessonV2) expect([e.id, e.volume]).toEqual([`episode:${e.stage}-${e.theme}-v2`, 2]);
-    expect(volumeEpisodes.filter((e) => e.stage === 'stage5' && e.placement !== 'shelf').map((e) => e.id)).toEqual(['episode:stage5-nature-v2', 'episode:stage5-crafts-v2']);
+    expect(volumeEpisodes.filter((e) => e.stage === 'stage5' && e.placement !== 'shelf').map((e) => e.id)).toEqual(['episode:stage5-letters-v2', 'episode:stage5-life-v2', 'episode:stage5-nature-v2', 'episode:stage5-crafts-v2']);
     expect(volumeEpisodes.filter((e) => e.placement === 'shelf').map((e) => e.id).sort()).toEqual(
-      ['hahoe-mask-dance', 'hanji-korean-paper', 'jeju-volcanic-island', 'jirisan-national-park', 'suncheon-bay-wetland'].map((slug) => `episode:shelf-${slug}`),
+      [
+        'hahoe-mask-dance',
+        'hanji-korean-paper',
+        'jang-fermented-sauces',
+        'jeju-volcanic-island',
+        'jirisan-national-park',
+        'suncheon-bay-wetland',
+        'tteok-through-the-seasons',
+      ].map((slug) => `episode:shelf-${slug}`),
     );
     expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
     expect(episodesAll.some((e) => volumeOf(e) > 1)).toBe(false);
@@ -175,6 +183,7 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
       'episode:stage5-letters',
       'episode:stage5-letters-v2',
       'episode:stage5-life',
+      'episode:stage5-life-v2',
       'episode:stage5-rites',
       'episode:stage5-nature',
       'episode:stage5-nature-v2',

@@ -26,6 +26,8 @@ describe('Stage 5 books (books.ts)', () => {
       // F-CURR-002 row CM-46: the eight read-tier stories of row CM-46a; the two new tales join with their review sign-off.
       ['episode:stage5-letters-v2', 1, 'Books, Records and Letters', ['story:tripitaka-koreana', 'story:jikji-metal-type', 'story:sillok-royal-historians', 'story:sillok-mountain-archives', 'story:nanjung-ilgi', 'story:seungjeongwon-ilgi-every-day', 'story:ilseongnok-daily-reflection', 'story:joseon-records-today']],
       ['episode:stage5-life', 2, 'Family Stories', ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam']],
+      // F-CURR-002 row CM-46: the Food cell's book 2, its two new tales.
+      ['episode:stage5-life-v2', 2, 'Jang and Rice Cakes', ['story:jang-fermented-sauces', 'story:tteok-through-the-seasons']],
       ['episode:stage5-rites', 3, 'Festival Tales', ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae']],
       ['episode:stage5-nature', 4, 'Nature Tales', ['story:sun-and-moon', 'story:angbuilgu-sundial']],
       // F-CURR-002 row CM-46: the Nature cell's book 2, its three new tales.
@@ -40,6 +42,7 @@ describe('Stage 5 books (books.ts)', () => {
       'episode:stage5-letters': ['A1'],
       'episode:stage5-letters-v2': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
+      'episode:stage5-life-v2': ['B1', 'B5'],
       'episode:stage5-rites': ['B5'],
       'episode:stage5-nature': ['D5', 'E5'],
       'episode:stage5-nature-v2': ['D2'],
@@ -82,9 +85,19 @@ describe('Stage 5 books (books.ts)', () => {
         expect(s.shelf).toBeDefined();
         // A book 2 tale's shelf twin is Volume 2 content too (row CM-46): with the later volumes, not on the route.
         expect(episodesWithVolumes.some((e) => e.placement === 'shelf' && e.id === `episode:shelf-${id.replace(/^story:/, '')}`)).toBe(true);
-        // Both review passes of the read tier are on record.
-        expect(s.verification.notes).toMatch(/MAR \d{4}-\d{2}-\d{2} language review of the read tier/);
-        expect(s.verification.notes).toMatch(/MAR \d{4}-\d{2}-\d{2} culture review of the read tier/);
+        // Both review passes of the read tier are on record: as two named reviews (the book 1 stories and the new book 2
+        // tales), or as the one multi-agent pass of row CM-46a (#941) whose parallel checkers were the language and the
+        // culture and facts lenses (the read-tier stories of the Letters book 2, F-CURR-002 row CM-46). The record is
+        // read as written, never added to.
+        const notes = s.verification.notes ?? '';
+        const named =
+          /MAR \d{4}-\d{2}-\d{2} language review of the read tier/.test(notes) &&
+          /MAR \d{4}-\d{2}-\d{2} culture review of the read tier/.test(notes);
+        const readTierPass =
+          /MAR \d{4}-\d{2}-\d{2} read tier \(F-CURR-002 CM-46a\): author, then three parallel checkers \(language [^;]*; culture and facts [^;]*; learning design [^)]*\), reviser, third pass/.test(
+            notes,
+          );
+        expect(named || readTierPass, `${id}: the read tier's language and culture reviews are on record`).toBe(true);
       }
     }
   });
@@ -287,14 +300,20 @@ describe('the Play book 2 (row CM-46)', () => {
   });
 
   it('names only its new tales as Volume 2 stories, so a shipped book 1 or shelf story never hides', () => {
-    // The Nature book 2 (row CM-46 Nature) and the Play book 2, in book order.
+    // The new tales of the Letters (waiting for their sign-off), Food, Nature and Play books 2, sorted; the Letters book
+    // 2's read-tier stories are shelf stories and never here.
     expect([...VOLUME_TWO_STORY_IDS]).toEqual([
+      'story:eongan-letters',
+      'story:hahoe-mask-dance',
+      'story:hangul-name',
+      'story:hanji-korean-paper',
+      'story:jang-fermented-sauces',
       'story:jeju-volcanic-island',
       'story:jirisan-national-park',
       'story:suncheon-bay-wetland',
-      'story:hahoe-mask-dance',
-      'story:hanji-korean-paper',
+      'story:tteok-through-the-seasons',
     ]);
+    expect(storyCellVolume('story:tripitaka-koreana')).toBeUndefined();
     expect(storyCellVolume('story:hahoe-mask-dance')).toBe(2);
     expect(storyCellVolume('story:janggyeong-panjeon')).toBeUndefined();
     expect(storyCellVolume('story:cheugugi-rain-gauge')).toBeUndefined();

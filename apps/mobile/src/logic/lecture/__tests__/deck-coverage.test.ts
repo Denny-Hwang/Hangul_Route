@@ -615,8 +615,8 @@ describe('deck coverage of the later volumes (F-CURR-002 row CM-40, CM-45 S4)', 
     );
 
   it('walks every shipped later volume: the table names a floor for some of them', () => {
-    // The lesson Volume 2 cells of rows CM-41..CM-45 and the two Stage 5 books 2 of row CM-46.
-    expect(later.size).toBe(17);
+    // The 23 lesson Volume 2 cells of rows CM-41..CM-45 and the four Stage 5 books 2 of row CM-46.
+    expect(later.size).toBe(27);
     for (const key of Object.keys(BASELINE_LATER_VOLUMES)) expect([...later.keys()], key).toContain(key);
   });
 

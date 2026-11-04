@@ -33,12 +33,17 @@ import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 const read = (rel: string): unknown => JSON.parse(readFileSync(new URL(`../../../../../${rel}`, import.meta.url), 'utf8'));
 const cell: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/rites.v2.json'));
 const v1: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/rites.json'));
-/** The largest `addedIn` stamp of every other lesson cell file: the catalogue this cell joins. */
+/**
+ * The largest `addedIn` stamp of every Volume 1 lesson cell and of the Stage 7 Volume 2 cells this one was stamped above
+ * (Nature, Play & Crafts, Food & Daily Life: rows CM-41 S7 to CM-43 S7). The Volume 2 rows of other stages were authored
+ * beside it and carry their own dates (the integration of rows CM-41 to CM-46 merges them all).
+ */
 const otherStamps = (): number => {
   let max = 0;
   for (const n of [2, 3, 4, 6, 7]) {
     for (const f of readdirSync(new URL(`../../../../../content/episodes/stage-${n}/`, import.meta.url)).filter((x) => x.endsWith('.json'))) {
-      if (n === 7 && f === 'rites.v2.json') continue;
+      const later = /\.v\d+\.json$/.test(f);
+      if (later && !(n === 7 && ['nature.v2.json', 'crafts.v2.json', 'life.v2.json'].includes(f))) continue;
       const other = read(`content/episodes/stage-${n}/${f}`) as { quests?: { addedIn?: number }[] };
       for (const q of other.quests ?? []) max = Math.max(max, q.addedIn ?? 0);
     }

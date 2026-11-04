@@ -150,8 +150,8 @@ describe('RealiaSheetStage tight: the same lines at the same width, less room ar
   it('the shipped Stage 6 realia questions carry the four G-2 sheets, the two CM-47 kinds of the re-kinded stand-ins and the Volume 2 forecast and map, none plain', () => {
     // Row CM-47: the departure board and the trip plan are timetables, the order slip a receipt; row CM-41 S6: the
     // Stage 6 Nature Volume 2 weather card is a forecast and its park map a map; the other Stage 6 Volume 2 cells (rows
-    // CM-42 S6, CM-44 S6, CM-45 S6) add the calendar, label and poster kinds.
-    const kinds = ['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'forecast', 'map', 'calendar', 'label', 'poster'];
+    // CM-42 S6, CM-43 S6, CM-44 S6, CM-45 S6) add the calendar, recipe, label and poster kinds.
+    const kinds = ['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'forecast', 'map', 'calendar', 'recipe', 'label', 'poster'];
     expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(kinds));
     expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set([...kinds, 'plain']));
   });

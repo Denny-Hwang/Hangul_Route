@@ -28,7 +28,7 @@ describe('culture notes (row CM-3C)', () => {
     expect(cells.filter((c) => c.cell.volume === undefined)).toHaveLength(25);
     // Every Volume 2 file the content rows CM-41..CM-45 ship, each beside its Volume 1.
     const v2 = cells.filter((c) => c.cell.volume === 2).map((c) => c.file);
-    expect(v2).toHaveLength(15);
+    expect(v2).toHaveLength(23);
     for (const file of v2) expect(raw.has(file.replace('.v2.json', '.json')), file).toBe(true);
   });
 

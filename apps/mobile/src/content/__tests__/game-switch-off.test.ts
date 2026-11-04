@@ -85,7 +85,14 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     // Food & Daily Life Volume 2 has its own check below; Holidays Volume 2 (row CM-45 S3) plays Cloze Pick in each quest too (q1 twice).
     expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-life-v2-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
+      // Rows CM-42 S3 (Play Volume 2, each quest) and CM-44 S3 (Letters Volume 2: q1, and q2 twice).
+      'quest:stage3-crafts-v2-q1',
+      'quest:stage3-crafts-v2-q2',
+      'quest:stage3-crafts-v2-q3',
       'quest:stage3-letters-q1',
+      'quest:stage3-letters-v2-q1',
+      'quest:stage3-letters-v2-q2',
+      'quest:stage3-letters-v2-q2',
       'quest:stage3-life-q1',
       'quest:stage3-life-q3',
       'quest:stage3-nature-q1',
@@ -129,6 +136,9 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage6-letters-v2-q2',
       'quest:stage6-letters-v2-q3',
       'quest:stage6-life-q2',
+      // Food Volume 2, S6 (row CM-43 S6): q1 and q3.
+      'quest:stage6-life-v2-q1',
+      'quest:stage6-life-v2-q3',
       // Row CM-41 S6: the Stage 6 Nature Volume 2 Apply (q1, the weather card) and Check (q2, the trail sign).
       'quest:stage6-nature-v2-q1',
       'quest:stage6-nature-v2-q2',
