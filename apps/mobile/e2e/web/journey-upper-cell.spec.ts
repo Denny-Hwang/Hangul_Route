@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { keysFor, type ThemeKey } from '@hangul-route/content-schema';
 import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
@@ -1197,6 +1199,7 @@ async function openFirstQuest(page: Page): Promise<void> {
  * page behind `volumes` (built-in pct 0), and each has its own smoke (Stage 2 Nature: nature-volume2.spec).
  */
 const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+const LATER_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) > 1);
 
 /** One test per cell of the lesson manifest (its first volume), with its deep play when it has one. */
 const CELLS: readonly UpperCell[] = FIRST_VOLUMES.map((episode) => {
@@ -1255,6 +1258,19 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
     // Every later volume of the manifest has its deep play below (row CM-41 S4 ships the first, Stage 4 Nature).
     for (const episode of LATER_VOLUMES) expect(LATER_PLAYS[episode.id], `${episode.id} has no deep play`).toBeDefined();
+  });
+
+  test('every later volume of the lesson manifest has its own journey-volume spec that opens it (it is not in the generic cell loop)', () => {
+    const volumeSpecs = readdirSync(__dirname)
+      .filter((name) => /^journey-volume.*\.spec\.ts$/.test(name))
+      .map((name) => readFileSync(join(__dirname, name), 'utf8'))
+      .join('\n');
+    for (const episode of LATER_VOLUMES) {
+      // A positive check on the volume's own open marker, so a spec that names the volume only to assert it is
+      // absent does not count as coverage.
+      const marker = `getByTestId('journey-volumes-${episode.stage}-${episode.theme}-${episode.volume}-open')).toHaveCount(1)`;
+      expect(volumeSpecs.includes(marker), `${episode.id} (volume ${episode.volume}) has no journey-volume*.spec.ts that shows its open marker`).toBe(true);
+    }
   });
 
   // Every shipped cell has a deep play today, so the generic path a new cell takes (openFirstQuest, then its
