@@ -303,8 +303,12 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // Close is the route's ScreenHeader (AMENDMENTS-DISPLAY-NAV section 7.1): every back while a step shows (the
   // header's Close, the browser and the phone back through the history bridge, a swipe) asks first, as Close always
   // did; Leave in the sheet runs the ports' leave (a replace or a navigate, never held here), Keep playing stays.
+  // On the reward step every game is done, so a Close or a back there finishes the run as See results does (F-QUEST-002
+  // amendment NB-1, F-TCH-004 section 3.5 amendment NB-1): a quest played to its end is never discarded as left. The
+  // All lessons preview records nothing and keeps asking its own question.
   const askLeave = (): void => {
     if (onAskLeave) onAskLeave();
+    else if (onReward) finishQuest();
     else confirmQuit();
   };
   useRouteBackGuard(() => {
