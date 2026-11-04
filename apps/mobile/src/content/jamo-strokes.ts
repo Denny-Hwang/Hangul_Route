@@ -34,10 +34,10 @@ const p = (x: number, y: number): JamoStrokePoint => ({ x, y });
  * invisible at any canvas size, and a multiple of 4 puts a point exactly on
  * the top, left, bottom and right of the loop.
  */
-export const LOOP_SEGMENTS = 64;
+const LOOP_SEGMENTS = 64;
 
 /** Two decimals keep the SVG path data short; far below a pixel at any size. */
-const round2 = (v: number): number => Math.round(v * 100) / 100 + 0;
+const round2 = (v: number): number => +v.toFixed(2);
 
 /**
  * A closed loop round centre (cx, cy) with radii rx, ry: it starts at the top
@@ -50,7 +50,7 @@ function loop(cx: number, cy: number, rx: number, ry: number): JamoStrokePoint[]
     const t = (2 * Math.PI * i) / LOOP_SEGMENTS;
     points.push(p(round2(cx - rx * Math.sin(t)), round2(cy - ry * Math.cos(t))));
   }
-  points.push({ ...points[0]! });
+  points.push(points[0]!);
   return points;
 }
 

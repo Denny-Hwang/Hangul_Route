@@ -270,6 +270,40 @@ describe('inkPathD', () => {
     return worst;
   }
 
+  it('a loop that ends where it began closes smoothly, with no point where the ends meet', () => {
+    const samples = Array.from({ length: 13 }, (_, i) => {
+      const t = (2 * Math.PI * i) / 12;
+      return { x: 100 - 60 * Math.sin(t), y: 95 - 60 * Math.cos(t) };
+    });
+    const d = inkPathD(samples);
+    expect(d.endsWith(' Z')).toBe(true);
+    // Every finger sample still shapes the ink: each is a curve's control point.
+    const controls = [...d.matchAll(/Q (-?[\d.e-]+) (-?[\d.e-]+)/g)].map((m) => ({ x: Number(m[1]), y: Number(m[2]) }));
+    expect(controls).toHaveLength(12);
+    samples.slice(0, 12).forEach((q, i) => {
+      expect(controls[i]!.x).toBeCloseTo(q.x);
+      expect(controls[i]!.y).toBeCloseTo(q.y);
+    });
+    // Where the path closes, it leaves the start the way it arrives: the start is the midpoint
+    // between the last and first sample, on the line from one control to the next.
+    const start = d.match(/^M (-?[\d.e-]+) (-?[\d.e-]+)/)!;
+    expect(Number(start[1])).toBeCloseTo((samples[11]!.x + samples[0]!.x) / 2);
+    expect(Number(start[2])).toBeCloseTo((samples[11]!.y + samples[0]!.y) / 2);
+    expect(sharpestTurn(d)).toBeLessThan(0.5);
+  });
+
+  it('a stroke that stops just short of its start stays open', () => {
+    const d = inkPathD([
+      { x: 0, y: 0 },
+      { x: 20, y: 0 },
+      { x: 20, y: 20 },
+      { x: 0, y: 20 },
+      { x: 0, y: 5 },
+    ]);
+    expect(d.startsWith('M 0 0')).toBe(true);
+    expect(d.endsWith('L 0 5')).toBe(true);
+  });
+
   it('a quick circle (12 samples) has no corner, where straight joins turn 30 degrees', () => {
     const samples = Array.from({ length: 13 }, (_, i) => {
       const t = (2 * Math.PI * i) / 12;

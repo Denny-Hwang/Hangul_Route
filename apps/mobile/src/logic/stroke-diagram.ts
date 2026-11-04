@@ -47,21 +47,25 @@ export function pointsToPathD(points: readonly JamoStrokePoint[]): string {
  * The learner's ink as SVG path data (NB-3). The finger's samples are joined
  * by quadratic curves through the midpoints between them (each sample is the
  * control point), so a quick circle with few samples still turns smoothly
- * instead of showing corners. The path starts on the first sample and ends on
- * the last, so the ink never looks shorter than what was drawn. Guides keep
- * `pointsToPathD`: their corners (ㄱ, ㅁ) are meant to be sharp.
+ * instead of showing corners. An open stroke starts on the first sample and
+ * ends on the last, so the ink never looks shorter than what was drawn; a
+ * stroke that ends within 1 viewBox unit of where it began is a loop, and
+ * closes with no point where the ends meet. Guides keep `pointsToPathD`:
+ * their corners (ㄱ, ㅁ) are meant to be sharp.
  */
 export function inkPathD(points: readonly JamoStrokePoint[]): string {
-  if (points.length < 3) return pointsToPathD(points);
-  const at = (q: JamoStrokePoint): string => `${q.x} ${q.y}`;
-  const parts = [`M ${at(points[0]!)}`];
-  for (let i = 1; i < points.length - 1; i++) {
-    const c = points[i]!;
-    const n = points[i + 1]!;
-    parts.push(`Q ${at(c)} ${at({ x: (c.x + n.x) / 2, y: (c.y + n.y) / 2 })}`);
-  }
-  parts.push(`L ${at(points[points.length - 1]!)}`);
-  return parts.join(' ');
+  const n = points.length;
+  const first = points[0]!;
+  const last = points[n - 1]!;
+  if (n < 3) return pointsToPathD(points);
+  const closed = Math.hypot(last.x - first.x, last.y - first.y) <= 1;
+  // A loop also curves through its first sample: lead in from the one before its repeated end.
+  const s = closed ? [points[n - 2]!, ...points] : points;
+  const at = (q: JamoStrokePoint): string => q.x + ' ' + q.y;
+  const mid = (i: number): string => (s[i]!.x + s[i + 1]!.x) / 2 + ' ' + (s[i]!.y + s[i + 1]!.y) / 2;
+  let d = 'M ' + (closed ? mid(0) : at(first));
+  for (let i = 1; i < s.length - 1; i++) d += ` Q ${at(s[i]!)} ${mid(i)}`;
+  return d + (closed ? ' Z' : ' L ' + at(last));
 }
 
 function strokeLength(stroke: readonly JamoStrokePoint[]): number {

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { LOOP_SEGMENTS, strokesForJamo, type JamoStrokePoint } from '../jamo-strokes';
+import { strokesForJamo, type JamoStrokePoint } from '../jamo-strokes';
+
+/** jamo-strokes `LOOP_SEGMENTS` (not exported: it ships in the start bundle). */
+const LOOP_SEGMENTS = 64;
 import { scoreTrace, DEFAULT_PASS_THRESHOLD } from '../../logic/stroke-scoring';
 
 /**
@@ -69,7 +72,6 @@ function ring(cx: number, cy: number, rx: number, ry: number, turns = 1, wobble 
 describe('jamo loops are round (NB-3)', () => {
   it.each(LOOPS)('$jamoId loop has at least LOOP_SEGMENTS chords, closed at the top', (loop) => {
     const pts = loopOf(loop);
-    expect(LOOP_SEGMENTS).toBeGreaterThanOrEqual(48);
     expect(pts.length).toBe(LOOP_SEGMENTS + 1);
     expect(pts[0]).toEqual(pts[pts.length - 1]);
   });

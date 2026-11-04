@@ -5,7 +5,7 @@ import { Finger, VIEWBOX, canvasBox, lastInk, type Point } from './trace-fingers
 /**
  * NB-3: the ㅇ circle (and ㅎ's) drew as an octagon. The guide loops are now sampled from a true
  * circle / ellipse (64 chords) and the learner's ink is smoothed through the finger's samples, so a
- * quick circle has no corners. Checked on Trace a Word with 호야 (ㅎ's loop and ㅇ), at 320 px and on
+ * quick circle has no corners. Checked on Trace a Word with 호야 (the 호 block, ㅎ's ring), at 320 px and on
  * a tablet, with a screenshot of each for review.
  *
  * Needs the fixture bundle (the `__hrTraceWordE2E` hook); the fixture e2e run selects it through its
@@ -49,25 +49,27 @@ for (const vp of [
     test.skip(!FIXTURE_BUILD, 'needs the fixture build (STORY_FIXTURES=1, dist-e2e/)');
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test('ㅎ and ㅇ guides are drawn round, and a quick circle of ink has no corners', async ({ page }, info) => {
+    test('the ㅎ ring guide is drawn round, and a quick loop of ink has no corners', async ({ page }, info) => {
       await openHoya(page);
-      // The two loops (ㅎ's ring and ㅇ) are the only guides with a full loop's worth of chords.
+      // The canvas shows one block at a time: 호 first. Its ㅎ ring is the only guide with a full loop's
+      // worth of chords (the bar, the tick and ㅗ are straight).
       const loops = (await segmentsPerPath(page)).filter((n) => n >= LOOP_SEGMENTS);
-      expect(loops, 'two round guide loops').toHaveLength(2);
+      expect(loops, 'ㅎ ring is drawn round').toHaveLength(1);
 
-      // A quick circle over ㅇ: only 12 finger samples, the way a fast finger reports them.
+      // A quick loop over ㅎ's ring: only 12 finger samples, the way a fast finger reports them.
       const box = await canvasBox(page, WORD_CANVAS);
       const blocks = (await page.evaluate((w) => (window as E2eWindow).__hrTraceWordE2E!.blocks(w), '호야'))!;
-      const ieung = blocks[1]!.letters[0]![0]!;
-      const xs = ieung.map((p) => p.x);
-      const ys = ieung.map((p) => p.y);
+      const ring = blocks[0]!.letters[0]![2]!;
+      const xs = ring.map((p) => p.x);
+      const ys = ring.map((p) => p.y);
       const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
       const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-      const r = (Math.max(...xs) - Math.min(...xs)) / 2;
+      const rx = (Math.max(...xs) - Math.min(...xs)) / 2;
+      const ry = (Math.max(...ys) - Math.min(...ys)) / 2;
       const at = (p: Point): Point => ({ x: box.x + (p.x * box.width) / VIEWBOX, y: box.y + (p.y * box.height) / VIEWBOX });
       const samples = Array.from({ length: 13 }, (_, i) => {
         const t = (2 * Math.PI * i) / 12;
-        return at({ x: cx - r * Math.sin(t), y: cy - r * Math.cos(t) });
+        return at({ x: cx - rx * Math.sin(t), y: cy - ry * Math.cos(t) });
       });
       const finger = await Finger.on(page);
       await finger.down([samples[0]!]);
@@ -76,11 +78,16 @@ for (const vp of [
 
       await expect
         .poll(async () => (await page.locator(`${WORD_CANVAS} path`).last().getAttribute('d')) ?? '', { message: 'the ink is smoothed' })
-        .toMatch(/ Q /);
-      // Still every finger sample, from where it landed to where it lifted.
+        .toMatch(/ Q .* Z$/);
+      // The loop ended where it began, so it closes with no point; every finger sample still shapes it
+      // and lies on the ring it was drawn round.
       const ink = await lastInk(page, WORD_CANVAS);
-      expect(ink.length).toBeGreaterThanOrEqual(3);
-      expect(Math.hypot(ink[0]!.x - samples[0]!.x, ink[0]!.y - samples[0]!.y)).toBeLessThan(2);
+      expect(ink.length).toBeGreaterThanOrEqual(10);
+      const centre = at({ x: cx, y: cy });
+      const radii = { x: (rx * box.width) / VIEWBOX, y: (ry * box.height) / VIEWBOX };
+      for (const q of ink.slice(1)) {
+        expect(Math.abs(Math.hypot((q.x - centre.x) / radii.x, (q.y - centre.y) / radii.y) - 1)).toBeLessThan(0.05);
+      }
 
       await page.locator(WORD_CANVAS).screenshot({ path: info.outputPath(`nb-3-round-loops-${vp.width}.png`) });
     });
