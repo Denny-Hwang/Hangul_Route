@@ -713,11 +713,11 @@ describe('the review-item chunk of row CM-10 (the same checks, its own budget li
     expect(precacheBudgetProblems({ ...report, reviewItemChunks: { count: 1, raw: 100, gzip: 40, largest: { url: 'x', raw: 100 } } }, lines)).toEqual([]);
   });
 
-  it('the lines on the built bundle are the lines of scripts/build-review-items.mjs, the §10 ceiling (150,000 B raw / 30,000 B gzip)', async () => {
+  it('the lines on the built bundle are the lines of scripts/build-review-items.mjs, the §10 ceiling (170,000 B raw / 37,000 B gzip since the Volume 2 integration)', async () => {
     const { BUDGET } = await import('../../../../scripts/build-review-items.mjs');
     expect(PRECACHE_BUDGET.reviewItemsRaw).toBe(BUDGET.raw);
     expect(PRECACHE_BUDGET.reviewItemsGzip).toBe(BUDGET.gzip);
-    expect(BUDGET).toEqual({ raw: 150_000, gzip: 30_000 });
+    expect(BUDGET).toEqual({ raw: 170_000, gzip: 37_000 });
   });
 });
 

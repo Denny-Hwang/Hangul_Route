@@ -240,6 +240,7 @@ describe('the simulated route is each cell’s first volume (F-CURR-002 row CM-4
     const withVolumes = questPlans(undefined, true).map((p) => p.questId);
     expect(withVolumes.slice(0, route.length)).toEqual(route);
     expect(withVolumes.slice(route.length)).toContain('quest:stage4-nature-v2-q1');
-    expect(withVolumes.slice(route.length).every((id) => /-v[0-9]+-q[0-9]+$/.test(id))).toBe(true);
+    // A lesson Volume 2's quests and the Stage 5 books 2's read quests (row CM-46).
+    expect(withVolumes.slice(route.length).every((id) => /-v[0-9]+-q[0-9]+$/.test(id) || /^quest:story-[a-z0-9-]+-read$/.test(id))).toBe(true);
   });
 });

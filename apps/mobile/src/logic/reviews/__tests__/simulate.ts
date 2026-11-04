@@ -82,7 +82,9 @@ const FIRST_VOLUMES: ReadonlySet<string> = new Set(CATALOG.cells.map((c) => c.ep
  * optional scenario of a learner with `volumes` on who opens every Volume 2 from its tab once the route is done).
  */
 export function questPlans(items: readonly ReviewItem[] = INDEX.items, volumesOn = false): QuestPlan[] {
-  const route = LESSON_QUESTS.filter((q) => volumesOn || FIRST_VOLUMES.has(q.episodeId));
+  // The memory fixture holds the first volumes (LESSON_QUESTS); with `volumesOn` the catalogue's later volumes follow.
+  const later = CATALOG.quests.filter((q) => q.kind === 'lesson' && !FIRST_VOLUMES.has(q.episodeId) && !LESSON_QUESTS.includes(q));
+  const route = [...LESSON_QUESTS.filter((q) => FIRST_VOLUMES.has(q.episodeId)), ...(volumesOn ? later : [])];
   const firstCell = (item: ReviewItem): string | undefined => item.cells.find((c) => c.startsWith('episode:'));
   const byCell = new Map<string, string[]>();
   for (const item of items) {

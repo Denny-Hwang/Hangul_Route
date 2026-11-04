@@ -40,7 +40,10 @@ describe('a Volume 2 quest is never a start (row CM-40, CM-42 S6 review)', () =>
 
   it('marks the shipped Volume 2 quests as a later volume, and only those', () => {
     expect(later).toEqual(expect.arrayContaining(['quest:stage6-crafts-v2-q1', 'quest:stage6-crafts-v2-q2', 'quest:stage6-crafts-v2-q3']));
-    for (const id of later) expect(id).toMatch(/-v\d+-q\d+$/);
+    // A lesson Volume 2's quests, or a Stage 5 book 2's read quests (row CM-46).
+    const book2 = new Set(episodesWithVolumes.filter((e) => e.stage === 'stage5' && (e.volume ?? 1) > 1).flatMap((e) => e.questIds));
+    for (const id of later) expect(/-v\d+-q\d+$/.test(id) || book2.has(id), id).toBe(true);
+    expect(book2.size).toBeGreaterThan(0);
   });
 
   it("leaves them out of a parent's 'Choose a different start' list", () => {

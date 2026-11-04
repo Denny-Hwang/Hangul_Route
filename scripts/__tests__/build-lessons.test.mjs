@@ -511,7 +511,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(over[3], /lessons-cell-stage2-rites\.ts is 999999 B raw, over the cell chunk ceiling of 90000 B/);
     assert.match(over[4], /lessons-cell-stage2-rites\.ts is 999999 B gzip, over the cell chunk ceiling of 16000 B/);
     assert.match(over[5], /lessons-headers-en\.ts is 40001 B raw, over the headers chunk ceiling of 40000 B/);
-    assert.match(over[6], /the Stage 2 game content is 220001 B raw/);
+    assert.match(over[6], /the Stage 2 game content is 340001 B raw/);
     assert.deepEqual(BUDGET, {
       perQuestRawAvg: 9_000,
       manifestRaw: 60_000,
@@ -519,10 +519,10 @@ describe("build-lessons.mjs: --check and --report", () => {
       headersChunkRaw: 40_000,
       cellChunkRaw: 90_000,
       cellChunkGzip: 16_000,
-      stageRaw: 220_000,
-      stageGzip: 40_000,
-      totalRaw: 1_400_000,
-      totalGzip: 210_000,
+      stageRaw: 340_000,
+      stageGzip: 44_000,
+      totalRaw: 2_000_000,
+      totalGzip: 340_000,
     });
     // A cell chunk at its line passes it.
     assert.deepEqual(checkBudget({ perCell: [], perModule: [{ name: "lesson-chunks/lessons-cell-stage2-rites.ts", raw: BUDGET.cellChunkRaw, gzip: BUDGET.cellChunkGzip }], total: { raw: 0, gzip: 0 } }), []);

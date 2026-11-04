@@ -2627,8 +2627,9 @@ describe('expandDeck: write together (AMENDMENTS-LECTURE-V2 sections 5.1 to 5.3,
       }
     }
     // 73 Type Hangul rounds, and the Dictation rounds of the Checks: 14 in Stage 2 (row CM-3A S2), 8 in Stage 3 (row CM-3A
-    // S3), 8 in Stage 6 (row CM-3A S6) and 2 in Stage 2 Nature Volume 2 (row CM-41 S2), in three languages.
-    expect(typeSlides).toBe(105 * 3);
+    // S3), 8 in Stage 6 (row CM-3A S6), and 34 Type Hangul and Dictation rounds of the Volume 2 cells (rows CM-41..CM-45), in
+    // three languages.
+    expect(typeSlides).toBe(137 * 3);
   });
 
   it('type: the prompt and its picture, then the target with its romanization, meaning and sound', () => {
