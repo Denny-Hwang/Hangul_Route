@@ -1,0 +1,1100 @@
+{
+  "v": 1,
+  "id": "story:jirisan-national-park",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261105,
+  "title": {
+    "ko": "우리나라 첫 국립공원, 지리산",
+    "romanization": "Urinara cheot gungnipgongwon, Jirisan",
+    "en": "Jirisan, Korea's First National Park"
+  },
+  "summaryEn": "Hoya visits Jirisan, the first national park of Korea, sees its many peaks and learns how people brought the Asiatic black bear back to the mountain so that people and wild animals can live together.",
+  "hoyaIntroEn": "Korea's very first national park is a huge mountain. Let's go to Jirisan!",
+  "hoyaOutroEn": "Many peaks, black bears and a plant found only in Korea. Jirisan is full of life!",
+  "theme": "nature",
+  "kind": "site",
+  "recommendedStage": 3,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Read and recognize 국립공원 (gungnipgongwon, national park), 산 (san, mountain), 봉우리 (bonguri, peak) and 곰 (gom, bear).",
+    "Know that Jirisan was designated Korea's first national park in 1967.",
+    "Know that the Korea National Park Service is bringing the Asiatic black bear back to Jirisan, for the whole of its nature."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage and nature facts, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-04"
+  },
+  "keywords": [
+    {
+      "id": "gungnipgongwon",
+      "ko": "국립공원",
+      "romanization": "gungnipgongwon",
+      "en": "national park",
+      "kind": "term"
+    },
+    {
+      "id": "san",
+      "ko": "산",
+      "romanization": "san",
+      "en": "mountain",
+      "kind": "word"
+    },
+    {
+      "id": "bonguri",
+      "ko": "봉우리",
+      "romanization": "bonguri",
+      "en": "mountain peak",
+      "kind": "word"
+    },
+    {
+      "id": "gom",
+      "ko": "곰",
+      "romanization": "gom",
+      "en": "bear",
+      "kind": "word"
+    },
+    {
+      "id": "dongmul",
+      "ko": "동물",
+      "romanization": "dongmul",
+      "en": "animal",
+      "kind": "word"
+    },
+    {
+      "id": "hieori",
+      "ko": "히어리",
+      "romanization": "hieori",
+      "en": "a plant found only in Korea",
+      "kind": "term"
+    },
+    {
+      "id": "jirisan",
+      "ko": "지리산",
+      "romanization": "Jirisan",
+      "en": "a big mountain in the south of Korea",
+      "kind": "word"
+    },
+    {
+      "id": "urinara",
+      "ko": "우리나라",
+      "romanization": "urinara",
+      "en": "our country, Korea",
+      "kind": "word"
+    },
+    {
+      "id": "cheot",
+      "ko": "첫",
+      "romanization": "cheot",
+      "en": "first",
+      "kind": "word"
+    },
+    {
+      "id": "manayo",
+      "ko": "많아요",
+      "romanization": "manayo",
+      "en": "there are many",
+      "kind": "word"
+    },
+    {
+      "id": "gajang",
+      "ko": "가장",
+      "romanization": "gajang",
+      "en": "most",
+      "kind": "word"
+    },
+    {
+      "id": "nopeun",
+      "ko": "높은",
+      "romanization": "nopeun",
+      "en": "high",
+      "kind": "word"
+    },
+    {
+      "id": "cheonwangbong",
+      "ko": "천왕봉",
+      "romanization": "Cheonwangbong",
+      "en": "the highest peak of Jirisan",
+      "kind": "word"
+    },
+    {
+      "id": "bandalgaseumgom",
+      "ko": "반달가슴곰",
+      "romanization": "bandalgaseumgom",
+      "en": "Asiatic black bear",
+      "kind": "word"
+    },
+    {
+      "id": "sarayo",
+      "ko": "살아요",
+      "romanization": "sarayo",
+      "en": "live",
+      "kind": "word"
+    },
+    {
+      "id": "saramdeul",
+      "ko": "사람들",
+      "romanization": "saramdeul",
+      "en": "people",
+      "kind": "word"
+    },
+    {
+      "id": "saram",
+      "ko": "사람",
+      "romanization": "saram",
+      "en": "person, people",
+      "kind": "word"
+    },
+    {
+      "id": "pureo",
+      "ko": "풀어",
+      "romanization": "pureo",
+      "en": "set free (and)",
+      "kind": "word"
+    },
+    {
+      "id": "jueosseoyo",
+      "ko": "주었어요",
+      "romanization": "jueosseoyo",
+      "en": "did for someone",
+      "kind": "word"
+    },
+    {
+      "id": "hamkke",
+      "ko": "함께",
+      "romanization": "hamkke",
+      "en": "together",
+      "kind": "word"
+    },
+    {
+      "id": "saneun",
+      "ko": "사는",
+      "romanization": "saneun",
+      "en": "living",
+      "kind": "word"
+    },
+    {
+      "id": "got",
+      "ko": "곳",
+      "romanization": "got",
+      "en": "place",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureoyo",
+      "ko": "만들어요",
+      "romanization": "mandeureoyo",
+      "en": "make",
+      "kind": "word"
+    },
+    {
+      "id": "dasi",
+      "ko": "다시",
+      "romanization": "dasi",
+      "en": "again",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [
+    {
+      "id": "cn-hieori",
+      "titleEn": "A plant found only in Korea",
+      "bodyEn": "Hieori grows naturally only in Korea. Together with the Asiatic black bear, it is a flagship species, a living symbol, of Jirisan National Park.",
+      "term": {
+        "ko": "히어리",
+        "romanization": "hieori",
+        "en": "a plant found only in Korea"
+      },
+      "factIds": [
+        "f7"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya reads a sign at the foot of a big mountain. \"A national park is {kw:gungnipgongwon},\" he says. \"Jirisan became Korea's first national park in 1967!\"",
+          "captionEn": "Korea's first national park",
+          "keyword": {
+            "id": "gungnipgongwon",
+            "ko": "국립공원",
+            "romanization": "gungnipgongwon",
+            "en": "national park",
+            "kind": "term"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya reading a park signpost below wide mountain ridges.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:signpost",
+                "x": 110,
+                "y": 292,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 240,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya reads a wooden signpost at the foot of tall green mountains."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Jirisan is a huge mountain, {kw:san}. Its national park stretches across three provinces, and it is the largest mountain national park in Korea.",
+          "captionEn": "A huge mountain park",
+          "keyword": {
+            "id": "san",
+            "ko": "산",
+            "romanization": "san",
+            "en": "mountain",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 70,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 250,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya cheers beside a pine tree, mountain ridges rolling far behind him."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "So many peaks, {kw:bonguri}! They spread out like a folding screen, with valleys between the ridges. The main peak, Cheonwangbong, is the second-highest peak in South Korea.",
+          "captionEn": "Peaks like a folding screen",
+          "keyword": {
+            "id": "bonguri",
+            "ko": "봉우리",
+            "romanization": "bonguri",
+            "en": "mountain peak",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "hoya:thinking",
+                "x": 200,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands by a stream in a valley, peaks rising on both sides."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Jirisan is home to the Asiatic black bear, {kw:gom}. These bears had become very rare there, and they were in danger of disappearing.",
+          "captionEn": "The black bears of Jirisan",
+          "keyword": {
+            "id": "gom",
+            "ko": "곰",
+            "romanization": "gom",
+            "en": "bear",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 300,
+                "y": 292,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 140,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya looks thoughtful among the pines of a quiet mountain."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "So a project to bring the bears back began in Jirisan National Park. Bears of the same kind came from Russia, North Korea and northeast China, and were set free in the mountain.",
+          "captionEn": "Bringing the bears back",
+          "line": {
+            "ko": "곰이 다시 지리산에 살아요.",
+            "romanization": "Gomi dasi Jirisane sarayo.",
+            "en": "Bears live in Jirisan again.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4",
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 320,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 160,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya waves toward the forest by a mountain stream."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "The park service says this is not about one kind of bear only. It is about bringing back the whole of Jirisan's nature, so people and wild animals, {kw:dongmul}, can live together.",
+          "captionEn": "People and animals together",
+          "keyword": {
+            "id": "dongmul",
+            "ko": "동물",
+            "romanization": "dongmul",
+            "en": "animal",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 90,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 230,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands in a green valley under a leafy tree."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Jirisan National Park has living symbols: the Asiatic black bear and a plant called {kw:hieori}, which grows naturally only in Korea. Hoya smiles. \"A bear and a plant, both from Jirisan!\"",
+          "captionEn": "Symbols of Jirisan",
+          "keyword": {
+            "id": "hieori",
+            "ko": "히어리",
+            "romanization": "hieori",
+            "en": "a plant found only in Korea",
+            "kind": "term"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 300,
+                "y": 292,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 160,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya cheers in the mountains next to a small tree."
+          },
+          "cultureNoteId": "cn-hieori"
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What is special about Jirisan?",
+          "options": [
+            {
+              "id": "a",
+              "en": "It is an island",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "It was Korea's first national park",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "It is a city",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Jirisan became Korea's first national park in 1967.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Why did people bring bears to Jirisan?",
+          "options": [
+            {
+              "id": "a",
+              "en": "To make a zoo",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "To teach bears tricks",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "The bears there were in danger of disappearing",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Only a few bears were left in Jirisan, so a project began to bring the bears back.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What is the bear project for, in the end?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The whole of Jirisan's nature, for people and animals",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "More visitors to the park",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Bigger bears",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "The project brings back Jirisan's nature, so people and wild animals can live together.",
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "gungnipgongwon",
+        "san",
+        "bonguri",
+        "gom"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Jirisan is Korea's first {kw:gungnipgongwon}.",
+          "captionEn": "The first national park",
+          "line": {
+            "ko": "지리산은 우리나라 첫 국립공원이에요.",
+            "romanization": "Jirisaneun urinara cheot gungnipgongwonieyo.",
+            "en": "Jirisan is Korea's first national park.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:signpost",
+                "x": 110,
+                "y": 292,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 240,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya reads a wooden signpost at the foot of tall green mountains."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Jirisan has many peaks, {kw:bonguri}.",
+          "captionEn": "Many peaks",
+          "line": {
+            "ko": "지리산에 봉우리가 많아요.",
+            "romanization": "Jirisane bonguriga manayo.",
+            "en": "Jirisan has many peaks.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "hoya:thinking",
+                "x": 200,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands by a stream in a valley, peaks rising on both sides."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "The highest peak of Jirisan is Cheonwangbong.",
+          "captionEn": "The highest peak",
+          "line": {
+            "ko": "가장 높은 봉우리는 천왕봉이에요.",
+            "romanization": "Gajang nopeun bongurineun Cheonwangbongieyo.",
+            "en": "The highest peak is Cheonwangbong.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya cheers below the highest peak of a long ridge."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Black bears, {kw:gom}, live in Jirisan.",
+          "captionEn": "Bears live here",
+          "line": {
+            "ko": "반달가슴곰은 지리산에 살아요.",
+            "romanization": "Bandalgaseumgomeun Jirisane sarayo.",
+            "en": "Asiatic black bears live in Jirisan.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 300,
+                "y": 292,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 140,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya looks thoughtful among the pines of a quiet mountain."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "People set bears free in Jirisan.",
+          "captionEn": "Bears set free",
+          "line": {
+            "ko": "사람들이 곰을 지리산에 풀어 주었어요.",
+            "romanization": "Saramdeuri gomeul Jirisane pureo jueosseoyo.",
+            "en": "People set bears free in Jirisan.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 320,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 160,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya waves toward the forest by a mountain stream."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "People and animals, {kw:dongmul}, live together.",
+          "captionEn": "Living together",
+          "line": {
+            "ko": "사람과 동물이 함께 사는 곳을 만들어요.",
+            "romanization": "Saramgwa dongmuri hamkke saneun goseul mandeureoyo.",
+            "en": "They make a place where people and animals live together.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 90,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 230,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands in a green valley under a leafy tree."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "곰",
+            "romanization": "gom",
+            "en": "bear"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Mountain",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Bear",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Animal",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Park",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Gom means bear. Black bears live in Jirisan.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "봉우리",
+            "romanization": "bonguri",
+            "en": "mountain peak"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Valley",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Animal",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Island",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Mountain peak",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Bonguri means a mountain peak. Jirisan has many peaks.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what did people do for the bears?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Set bears free in Jirisan",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Took the bears to the sea",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Built a bear house in a city",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Moved the bears out of Jirisan",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Bears of the same kind were brought in and set free in Jirisan.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "dongmul"
+      ],
+      "grammarFocusEn": "-e salayo (live in ...); -a/-eo jueosseoyo (did ... for someone): pureo jueosseoyo",
+      "storyOrder": {
+        "kind": "story-order",
+        "rounds": [
+          {
+            "id": "bears",
+            "captionsOnly": true,
+            "captionsSettleOrder": true,
+            "panels": [
+              {
+                "id": "p1",
+                "caption": {
+                  "ko": "먼저 지리산에 곰이 아주 적었어요.",
+                  "romanization": "Meonjeo Jirisane gomi aju jeogeosseoyo.",
+                  "en": "First, very few bears were left in Jirisan."
+                }
+              },
+              {
+                "id": "p2",
+                "caption": {
+                  "ko": "그다음에 다른 곳에서 곰을 데려왔어요.",
+                  "romanization": "Geudaeume dareun goseseo gomeul deryeowasseoyo.",
+                  "en": "Next, people brought bears from other places."
+                }
+              },
+              {
+                "id": "p3",
+                "caption": {
+                  "ko": "곰을 지리산에 풀어 주었어요.",
+                  "romanization": "Gomeul Jirisane pureo jueosseoyo.",
+                  "en": "They set the bears free in Jirisan."
+                }
+              },
+              {
+                "id": "p4",
+                "caption": {
+                  "ko": "마지막에 사람과 곰이 함께 살아요.",
+                  "romanization": "Majimage saramgwa gomi hamkke sarayo.",
+                  "en": "Last, people and bears live together."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "coverSceneId": "s1",
+  "shelf": {
+    "category": "culture",
+    "order": 26,
+    "sampler": false,
+    "minutes": 5
+  },
+  "pillarTags": [
+    "D2"
+  ],
+  "topicTags": [
+    "jirisan",
+    "national-park",
+    "asiatic-black-bear",
+    "species-restoration"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jirisan was designated as the first national park of the Republic of Korea on 29 December 1967.",
+      "claimKo": "지리산은 1967년 12월 29일 대한민국 최초의 국립공원으로 지정되었다.",
+      "sources": [
+        {
+          "title": "지리산국립공원",
+          "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+          "url": "https://www.knps.or.kr/front/portal/visit/visitCourseMain.do?parkId=120100&menuNo=7020093",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"1967년 최초의 국립공원으로 지정된 지리산은\""
+        },
+        {
+          "title": "지리산 국립공원",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"1967년 12월 29일 대한민국 최초의 국립공원으로 지정되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jirisan National Park stretches across three provinces and is the largest of Korea's mountain national parks.",
+      "claimKo": "지리산국립공원은 3개 도에 걸쳐 있으며 가장 넓은 면적을 지닌 산악형 국립공원이다.",
+      "sources": [
+        {
+          "title": "지리산국립공원",
+          "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+          "url": "https://www.knps.or.kr/front/portal/visit/visitCourseMain.do?parkId=120100&menuNo=7020093",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"1967년 최초의 국립공원으로 지정된 지리산은 경남의 하동, 함양, 산청, 전남의 구례, 전북의 남원 등 3개 도, 5개 시군에 걸쳐 483.022㎢의 가장 넓은 면적을 지닌 산악형 국립공원이다.\""
+        },
+        {
+          "title": "지리산 국립공원",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"3개 도에 걸쳐 자리한 지리산은\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Countless peaks of Jirisan spread out like a folding screen, with valleys between its ridges; its main peak, Cheonwangbong, is the second-highest peak in South Korea.",
+      "claimKo": "지리산의 수많은 봉우리는 병풍처럼 펼쳐져 있고 능선 사이로 계곡이 있다. 주봉인 천왕봉은 우리나라에서 두 번째로 높은 봉우리이다.",
+      "sources": [
+        {
+          "title": "지리산국립공원",
+          "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+          "url": "https://www.knps.or.kr/front/portal/visit/visitCourseMain.do?parkId=120100&menuNo=7020093",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"셀 수 없이 많은 봉우리가 천왕봉(1,915m), 반야봉(1,732m), 노고단(1,507m)을 중심으로 병풍처럼 펼쳐져 있으며, 20여 개의 능선 사이로 계곡들이 자리하고 있다.\""
+        },
+        {
+          "title": "지리산 국립공원",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"주봉인 천왕봉(1,915m)\" … \"우리나라 제2의 고봉인 천왕봉\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Asiatic black bear, which once lived across the Korean Peninsula, became endangered, and only a few were left in Jirisan; so a project to restore the bears began in Jirisan National Park.",
+      "claimKo": "한반도 전역에 살던 반달가슴곰은 멸종위기에 처했고 지리산에는 몇 마리만 남아 있었다. 그래서 지리산국립공원에서 반달가슴곰 복원사업이 시작되었다.",
+      "sources": [
+        {
+          "title": "반달가슴곰 (생태계복원)",
+          "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020028",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한반도 전역에 서식하던 반달가슴곰은 서식지 파괴, 보신문화, 밀렵 등으로 멸종위기에 처해 있으며 2004년 지리산국립공원에서 복원사업이 시작되었습니다.\" … \"지리산에 남아있는 5마리정도의 반달가슴곰을 그대로 둘경우 멸종될 위험이 있어 외부로 부터 증식·복원을 추진하게 됨\""
+        },
+        {
+          "title": "지리산에서 자라나는 복원의 희망, 반달가슴곰 (월간 국가유산사랑)",
+          "publisher": "국가유산청 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=6113&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"극소수만 서식하고 있는 야생 곰의 멸종을 막기 위해\" … \"지리산 야생 반달가슴곰의 개체 수는 5마리 정도로 추정하고 있으며\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "For the project, Asiatic black bears of the same lineage as the Korean Peninsula's bears, from Russia (Primorye), North Korea and northeast China, were brought in and released.",
+      "claimKo": "복원을 위해 한반도 반달가슴곰과 같은 계통인 러시아(연해주), 북한, 중국 북동부의 반달가슴곰을 들여와 풀어 주었다.",
+      "sources": [
+        {
+          "title": "반달가슴곰 (생태계복원)",
+          "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020028",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한반도 아종과 동일 계통군인 러시아(연해주), 북한, 중국 북동부에 서식하는 반달가슴곰을 도입‧방사\""
+        },
+        {
+          "title": "지리산에서 자라나는 복원의 희망, 반달가슴곰 (월간 국가유산사랑)",
+          "publisher": "국가유산청 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=6113&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"2004년에 우리나라 토종 반달가슴곰과 유전자가 같은 러시아 연해주의 반달가슴곰 6마리를 도입•방사하면서 본격적인 복원사업이 시작되어\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Korea National Park Service describes the bear restoration as restoring the whole ecosystem of Jirisan, not one species, to make a place where people and wild animals live together.",
+      "claimKo": "국립공원공단은 반달가슴곰 복원사업이 곰 한 종이 아니라 지리산 전체 생태계를 복원하여 사람과 야생동물이 함께 사는 환경을 만드는 사업이라고 설명한다.",
+      "sources": [
+        {
+          "title": "반달가슴곰 (생태계복원)",
+          "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020028",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"지리산의 반달가슴곰 복원사업은 곰 한 종을 복원하는 것이 아니라 지리산 전체 생태계를 복원하는 사업으로 인간과 야생동물이 공존하는 환경을 만드는 것입니다.\""
+        },
+        {
+          "title": "지리산에서 자라나는 복원의 희망, 반달가슴곰 (월간 국가유산사랑)",
+          "publisher": "국가유산청 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=6113&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"단순하게 멸종위기에 처한 한 종을 복원하는 사업이 아니다.\" … \"인간과 자연이 공존하는 방법을 찾는 것이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The flagship species of Jirisan National Park are the Asiatic black bear and hieori (winter hazel), a plant found naturally only in Korea.",
+      "claimKo": "지리산 국립공원의 깃대종은 반달가슴곰과 히어리이며, 히어리는 한국 특산식물이다.",
+      "sources": [
+        {
+          "title": "지리산 국립공원",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"국립공원의 생태를 대표하는 깃대종\" … \"반달가슴곰과 히어리이다.\" … \"히어리는 한국 특산식물로\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국립공원공단(지리산국립공원, 반달가슴곰); 한국민족문화대백과사전(지리산 국립공원)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Sources opened and quoted on 2026-11-04; every quoted Korean passage was re-checked by script against the fetched page text (whitespace ignored). MAR (F-CURR-002 §9.2): pass 0 author; pass 1 three checkers, each on its own lens: language (Korean lines, glosses, F-CNT-002 romanization machine-checked against the RR converter), culture and facts (every sentence against its cited facts, §5.1 conventions: UNESCO status only under the inscribed name, institution names as of the access date, no shared heritage framed as Korean in origin), learning design (Stage 5 level, Story Order rounds settled by their captions, check answer positions); pass 2 reviser; pass 3 third check of the revised file. Reviser changes: the read tier says 가장 높은 봉우리 (highest, from f3) instead of 가장 큰; f4 to f6 gained the Korea Heritage Service article as the authoritative source next to the Korea National Park Service pages. MAR 2026-11-04 language review of the read tier and the listen tier; MAR 2026-11-04 culture review of the read tier and the listen tier; findings and outcomes in the PR."
+  },
+  "authorNotes": "The causes of the bears' decline (habitat loss, poaching, the colonial-era hunts the KHS article reports) are not narrated; the story says only that the bears became very rare (non-graphic). The 2004 start year is left out of narration. Areas differ by source (483.022 km2 in KNPS and encykorea, about 471 km2 in the 2011 KHS article), so no area is given. Institutions as of 2026-11-04: the Korea National Park Service is listed among the 산하기관 of the Ministry of Climate, Energy and Environment (mcee.go.kr, 외청·소속기관·산하공공기관).",
+  "errata": []
+}

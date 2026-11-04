@@ -1,0 +1,1053 @@
+{
+  "v": 1,
+  "id": "story:jeju-volcanic-island",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261105,
+  "title": {
+    "ko": "화산이 만든 섬, 제주",
+    "romanization": "Hwasani mandeun seom, Jeju",
+    "en": "Jeju, the Island Volcanoes Made"
+  },
+  "summaryEn": "Hoya visits Jeju, an island made by volcanoes. He looks up at Hallasan, sees the sunrise peak Seongsan Ilchulbong and learns about the long lava tubes under the ground, together a UNESCO World Heritage site since 2007.",
+  "hoyaIntroEn": "An island made by volcanoes? Let's visit Jeju and find out!",
+  "hoyaOutroEn": "Volcanoes made Jeju's mountain, its small hills and its long caves. Amazing, right?",
+  "theme": "nature",
+  "kind": "site",
+  "recommendedStage": 3,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Read and recognize 섬 (seom, island), 화산 (hwasan, volcano), 산 (san, mountain) and 동굴 (donggul, cave).",
+    "Know that Jeju Island was made by volcanic activity, and that Hallasan is the highest mountain in South Korea.",
+    "Know that lava from Geomunoreum made a system of lava tubes, and that Manjanggul is its largest.",
+    "Know that Hallasan, Seongsan Ilchulbong and the Geomunoreum lava tubes were inscribed together in 2007 as Jeju Volcanic Island and Lava Tubes."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage and nature facts, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-04"
+  },
+  "keywords": [
+    {
+      "id": "seom",
+      "ko": "섬",
+      "romanization": "seom",
+      "en": "island",
+      "kind": "word"
+    },
+    {
+      "id": "hwasan",
+      "ko": "화산",
+      "romanization": "hwasan",
+      "en": "volcano",
+      "kind": "word"
+    },
+    {
+      "id": "san",
+      "ko": "산",
+      "romanization": "san",
+      "en": "mountain",
+      "kind": "word"
+    },
+    {
+      "id": "oreum",
+      "ko": "오름",
+      "romanization": "oreum",
+      "en": "small volcanic hill (a Jeju word)",
+      "kind": "word"
+    },
+    {
+      "id": "yongam",
+      "ko": "용암",
+      "romanization": "yongam",
+      "en": "lava",
+      "kind": "word"
+    },
+    {
+      "id": "donggul",
+      "ko": "동굴",
+      "romanization": "donggul",
+      "en": "cave",
+      "kind": "word"
+    },
+    {
+      "id": "segyeyusan",
+      "ko": "세계유산",
+      "romanization": "segyeyusan",
+      "en": "World Heritage",
+      "kind": "term"
+    },
+    {
+      "id": "jejudo",
+      "ko": "제주도",
+      "romanization": "Jejudo",
+      "en": "Jeju Island",
+      "kind": "word"
+    },
+    {
+      "id": "mandeun",
+      "ko": "만든",
+      "romanization": "mandeun",
+      "en": "made",
+      "kind": "word"
+    },
+    {
+      "id": "hallasan",
+      "ko": "한라산",
+      "romanization": "Hallasan",
+      "en": "the mountain at the centre of Jeju",
+      "kind": "word"
+    },
+    {
+      "id": "namhan",
+      "ko": "남한",
+      "romanization": "namhan",
+      "en": "South Korea",
+      "kind": "word"
+    },
+    {
+      "id": "gajang",
+      "ko": "가장",
+      "romanization": "gajang",
+      "en": "most",
+      "kind": "word"
+    },
+    {
+      "id": "nopeun",
+      "ko": "높은",
+      "romanization": "nopeun",
+      "en": "high",
+      "kind": "word"
+    },
+    {
+      "id": "manayo",
+      "ko": "많아요",
+      "romanization": "manayo",
+      "en": "there are many",
+      "kind": "word"
+    },
+    {
+      "id": "seongsanilchulbong",
+      "ko": "성산일출봉",
+      "romanization": "Seongsanilchulbong",
+      "en": "the sunrise peak on the coast of Jeju",
+      "kind": "word"
+    },
+    {
+      "id": "saenggyeosseoyo",
+      "ko": "생겼어요",
+      "romanization": "saenggyeosseoyo",
+      "en": "formed",
+      "kind": "word"
+    },
+    {
+      "id": "heulleoseo",
+      "ko": "흘러서",
+      "romanization": "heulleoseo",
+      "en": "flowed, and so",
+      "kind": "word"
+    },
+    {
+      "id": "gin",
+      "ko": "긴",
+      "romanization": "gin",
+      "en": "long",
+      "kind": "word"
+    },
+    {
+      "id": "igot",
+      "ko": "이곳",
+      "romanization": "igot",
+      "en": "this place",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [
+    {
+      "id": "cn-oreum",
+      "titleEn": "Oreum, the small hills of Jeju",
+      "bodyEn": "People on Jeju call the island's many small volcanic hills oreum. Seongsan Ilchulbong, the sunrise oreum by the sea, is one of them.",
+      "term": {
+        "ko": "오름",
+        "romanization": "oreum",
+        "en": "small volcanic hill (a Jeju word)"
+      },
+      "factIds": [
+        "f4",
+        "f5"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya stands on a beach and looks out at the sea. \"In Korean, an island is {kw:seom},\" he says. \"I am on Jeju, a big island that volcanoes made!\"",
+          "captionEn": "Hoya on the shore of Jeju",
+          "keyword": {
+            "id": "seom",
+            "ko": "섬",
+            "romanization": "seom",
+            "en": "island",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya on a Jeju beach, the sea behind him.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya waves on a sandy shore, the blue sea behind him."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "A volcano, {kw:hwasan}, is a mountain where hot melted rock comes out of the ground. On Jeju, volcanoes were active for a very long time, and that is how the island was made.",
+          "captionEn": "Volcanoes made Jeju",
+          "keyword": {
+            "id": "hwasan",
+            "ko": "화산",
+            "romanization": "hwasan",
+            "en": "volcano",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 120,
+                "s": 0.8
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 300,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya thinks at the foot of the mountains, a warm glow above a peak."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Hoya looks up at Hallasan. In Korean, a mountain is {kw:san}. Hallasan is the highest mountain in South Korea, and a volcano made it, too.",
+          "captionEn": "Hallasan, the highest mountain",
+          "keyword": {
+            "id": "san",
+            "ko": "산",
+            "romanization": "san",
+            "en": "mountain",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "hoya:cheering",
+                "x": 120,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya cheers below a tall mountain with a wide, gentle top."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Jeju has many small volcanic hills. People on Jeju call them {kw:oreum}. One of them, Seongsan Ilchulbong, rose from the shallow sea, and its name is about the sunrise.",
+          "captionEn": "Seongsan Ilchulbong and the sunrise",
+          "keyword": {
+            "id": "oreum",
+            "ko": "오름",
+            "romanization": "oreum",
+            "en": "small volcanic hill (a Jeju word)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4",
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 320,
+                "y": 110,
+                "s": 0.7
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 140,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands on the shore at sunrise, a bright sun rising over the sea."
+          },
+          "cultureNoteId": "cn-oreum"
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Hot melted rock that flows out of a volcano is lava, {kw:yongam}. Long ago, lava flowed from a volcanic hill called Geomunoreum toward the sea.",
+          "captionEn": "Lava flows toward the sea",
+          "keyword": {
+            "id": "yongam",
+            "ko": "용암",
+            "romanization": "yongam",
+            "en": "lava",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 90,
+                "y": 150,
+                "s": 0.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 260,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya imagines lava from a far hill flowing across the fields toward the sea."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "As the lava flowed, long tunnels formed under the ground: lava tubes. A cave is {kw:donggul}. Manjanggul is the biggest lava tube of the Geomunoreum group.",
+          "captionEn": "Long caves under the ground",
+          "keyword": {
+            "id": "donggul",
+            "ko": "동굴",
+            "romanization": "donggul",
+            "en": "cave",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6",
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 200,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya reads about caves at dusk beside a rocky stream."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In Yongcheon and Dangcheomul, caves near the coast, limestone shapes grow that are rare in lava tubes. In 2007, Hallasan, Seongsan Ilchulbong and these lava tubes became UNESCO World Heritage, {kw:segyeyusan}.",
+          "captionEn": "Jeju becomes World Heritage",
+          "keyword": {
+            "id": "segyeyusan",
+            "ko": "세계유산",
+            "romanization": "segyeyusan",
+            "en": "World Heritage",
+            "kind": "term"
+          },
+          "factIds": [
+            "f8",
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 140,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya cheers on the shore under a bright glow."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What made Jeju Island?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Volcanoes",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "A big river",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Ice",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "People",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Jeju Island was made by volcanic activity over a very long time.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What is special about Hallasan?",
+          "options": [
+            {
+              "id": "a",
+              "en": "It is a long cave",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "It is the highest mountain in South Korea",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "It is a small island",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Hallasan is the highest mountain in South Korea, and a volcano made it.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What did the lava from Geomunoreum leave under the ground?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A river of water",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A field of rice",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Long lava tubes",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Lava from Geomunoreum made a system of lava tubes; Manjanggul is the largest.",
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "seom",
+        "hwasan",
+        "san",
+        "donggul"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "An island, {kw:seom}, made by a volcano, {kw:hwasan}: that is Jeju.",
+          "captionEn": "An island volcanoes made",
+          "line": {
+            "ko": "제주도는 화산이 만든 섬이에요.",
+            "romanization": "Jejudoneun hwasani mandeun seomieyo.",
+            "en": "Jeju Island is an island that volcanoes made.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya waves on a sandy shore, the blue sea behind him."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Hallasan is the highest {kw:san} in South Korea.",
+          "captionEn": "The highest mountain",
+          "line": {
+            "ko": "한라산은 남한에서 가장 높은 산이에요.",
+            "romanization": "Hallasaneun namhaneseo gajang nopeun sanieyo.",
+            "en": "Hallasan is the highest mountain in South Korea.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "hoya:cheering",
+                "x": 120,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya cheers below a tall mountain with a wide, gentle top."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Jeju has many small volcanic hills, {kw:oreum}.",
+          "captionEn": "Many small hills",
+          "line": {
+            "ko": "제주도에 오름이 많아요.",
+            "romanization": "Jejudoe oreumi manayo.",
+            "en": "Jeju has many oreum.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "hoya:idle",
+                "x": 200,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands in the fields, low round hills behind him."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Seongsan Ilchulbong rose from the shallow sea.",
+          "captionEn": "A peak from the sea",
+          "line": {
+            "ko": "성산일출봉은 바다에서 생겼어요.",
+            "romanization": "Seongsanilchulbongeun badaeseo saenggyeosseoyo.",
+            "en": "Seongsan Ilchulbong formed in the sea.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 320,
+                "y": 110,
+                "s": 0.7
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 140,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands on the shore at sunrise, a bright sun rising over the sea."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Lava, {kw:yongam}, flowed, and long caves, {kw:donggul}, formed.",
+          "captionEn": "Lava makes long caves",
+          "line": {
+            "ko": "용암이 흘러서 긴 동굴이 생겼어요.",
+            "romanization": "Yongami heulleoseo gin dongguri saenggyeosseoyo.",
+            "en": "Lava flowed, and long caves formed.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 200,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya reads about caves at dusk beside a rocky stream."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Jeju's volcanic island and lava tubes are {kw:segyeyusan}.",
+          "captionEn": "World Heritage",
+          "line": {
+            "ko": "이곳은 세계유산이에요.",
+            "romanization": "Igoseun segyeyusanieyo.",
+            "en": "This place is World Heritage.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 140,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya cheers on the shore under a bright glow."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "섬",
+            "romanization": "seom",
+            "en": "island"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Mountain",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Cave",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Island",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Sea",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Seom means island. Jeju is an island that volcanoes made.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "동굴",
+            "romanization": "donggul",
+            "en": "cave"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Cave",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Volcano",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Lava",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Mountain",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Donggul means cave. Flowing lava made long caves.",
+          "factIds": [
+            "f6"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, where did Seongsan Ilchulbong form?",
+          "options": [
+            {
+              "id": "a",
+              "en": "On a high mountain",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "In a long cave",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "In a river",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "In the sea",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Seongsan Ilchulbong formed in an eruption in shallow sea water.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s2",
+        "s5",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "oreum",
+        "yongam"
+      ],
+      "grammarFocusEn": "-eseo (in, from): namhaneseo, badaeseo; -aseo/-eoseo (and so): heulleoseo",
+      "storyOrder": {
+        "kind": "story-order",
+        "rounds": [
+          {
+            "id": "lava",
+            "captionsOnly": true,
+            "captionsSettleOrder": true,
+            "panels": [
+              {
+                "id": "p1",
+                "caption": {
+                  "ko": "먼저 화산에서 용암이 나왔어요.",
+                  "romanization": "Meonjeo hwasaneseo yongami nawasseoyo.",
+                  "en": "First, lava came out of a volcano."
+                }
+              },
+              {
+                "id": "p2",
+                "caption": {
+                  "ko": "그다음에 용암이 바다 쪽으로 흘렀어요.",
+                  "romanization": "Geudaeume yongami bada jjogeuro heulleosseoyo.",
+                  "en": "Next, the lava flowed toward the sea."
+                }
+              },
+              {
+                "id": "p3",
+                "caption": {
+                  "ko": "용암이 흐른 곳에 긴 동굴이 생겼어요.",
+                  "romanization": "Yongami heureun gose gin dongguri saenggyeosseoyo.",
+                  "en": "Long caves formed where the lava flowed."
+                }
+              },
+              {
+                "id": "p4",
+                "caption": {
+                  "ko": "마지막에 이곳이 세계유산이 되었어요.",
+                  "romanization": "Majimage igosi segyeyusani doeeosseoyo.",
+                  "en": "Last, this place became World Heritage."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "coverSceneId": "s1",
+  "shelf": {
+    "category": "culture",
+    "order": 25,
+    "sampler": false,
+    "minutes": 5
+  },
+  "pillarTags": [
+    "D2"
+  ],
+  "topicTags": [
+    "jeju-volcanic-island",
+    "lava-tubes",
+    "hallasan",
+    "seongsan-ilchulbong",
+    "geomunoreum"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jeju Island was made by volcanic activity that went on over a very long time, into historical times.",
+      "claimKo": "제주도는 아주 오랜 옛날부터 역사시대에 걸쳐 일어난 화산활동으로 만들어졌다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"제주도는 약 180만년 전부터 역사시대에 걸쳐 일어난 화산활동으로 만들어졌다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In 2007 Hallasan, Seongsan Ilchulbong and the Geomunoreum lava tube system were inscribed together on the UNESCO World Heritage List as a natural site under the name \"Jeju Volcanic Island and Lava Tubes\".",
+      "claimKo": "2007년 한라산, 성산일출봉, 거문오름 용암동굴계가 '제주 화산섬과 용암동굴(Jeju Volcanic Island and Lava Tubes)'이라는 이름으로 함께 유네스코 세계자연유산에 등재되었다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"세계유산으로 지정된 지역은 한라산, 성산일출봉, 거문오름용암동굴계 등 3개이다.\" … \"2007.6.27(수)일, 뉴질랜드 크라이스트처치에서 열린 제31차 세계유산위원회에서 제주화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)이라는 이름으로 세계자연유산으로 등재되었다.\""
+        },
+        {
+          "title": "제주 선흘리 거문오름",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0068777",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"거문오름 용암 동굴계는 2007년 유네스코 세계자연유산으로 등재되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Hallasan is the highest mountain in South Korea; it is a shield volcano made by volcanic activity.",
+      "claimKo": "한라산은 남한에서 가장 높은 산으로, 화산활동으로 만들어진 순상(방패 모양) 화산이다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한라산은 남한에서 가장 높은 산으로서 화산활동에 의해 생성된 순상(방패모양)화산체이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jeju has many small volcanic cones, which are called oreum in the Jeju dialect; Seongsan Ilchulbong is one of them.",
+      "claimKo": "제주도에는 작은 화산체가 많고, 제주 방언으로 이를 오름이라고 한다. 성산일출봉도 그중 하나이다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"성산일출봉은 제주도에 분포하는 360개의 단성화산체(cinder cones:제주방언으로는 오름이라 함)중의 하나이며\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Seongsan Ilchulbong was formed by a volcanic eruption under shallow sea water; it is also called the sunrise oreum.",
+      "claimKo": "성산일출봉은 얕은 바다 밑에서 일어난 화산 분출로 만들어졌으며, 해뜨는 오름이라고도 불린다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"해뜨는 오름으로도 불리는 성산일출봉은 약 12만년에서 5만년 전에 얕은 수심의 해저에서 화산분출에 의해 형성된 전형적인 수성화산이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Lava that erupted from Geomunoreum flowed northeast to the coast at Woljeong, and along its way it formed many lava tubes: the Geomunoreum lava tube system.",
+      "claimKo": "거문오름에서 분출한 용암이 북동쪽 월정 해안까지 흘러가면서 여러 용암동굴이 만들어졌다. 이것이 거문오름 용암동굴계이다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"거문오름용암동굴계는 지금으로부터 약 10~30만년 전에 거문오름에서 분출된 용암으로부터 만들어진 여러 개의 용암동굴이며\""
+        },
+        {
+          "title": "제주 선흘리 거문오름",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0068777",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"거문오름에서 10만~30만 년 전 분출한 현무암질 용암류는 북동 방향으로 흘러 월정 해안까지 도달했으며, 이 과정에서 용암 수로를 따라 다수의 용암 동굴계가 형성되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Manjanggul is the largest lava tube of the Geomunoreum lava tube system.",
+      "claimKo": "만장굴은 거문오름 용암동굴계에서 가장 규모가 큰 용암동굴이다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"거문오름용암동굴계에서 가장 규모가 큰 용암동굴은 만장굴로서 이 동굴의 길이와 규모는 세계적이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Yongcheon Cave and Dangcheomul Cave, in the low coastal land of Jeju, hold limestone cave formations that are rarely seen inside lava tubes.",
+      "claimKo": "제주도 해안 저지대의 용천동굴과 당처물동굴 안에는 용암동굴에서 흔히 볼 수 없는 석회질 동굴생성물이 자라고 있다.",
+      "sources": [
+        {
+          "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"세계적인 경관과 가치를 가지고 있는 또 다른 동굴은 제주도 해안 저지대의 용천동굴과 당처물동굴이다.\" … \"이들 동굴 내에는 용암동굴 내에서는 흔히 볼수 없는 석회질 동굴생성물이 성장하고 있으며\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털(제주 화산섬과 용암동굴); 한국민족문화대백과사전(제주 선흘리 거문오름)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Sources opened and quoted on 2026-11-04; every quoted Korean passage was re-checked by script against the fetched page text (whitespace ignored). MAR (F-CURR-002 §9.2): pass 0 author; pass 1 three checkers, each on its own lens: language (Korean lines, glosses, F-CNT-002 romanization machine-checked against the RR converter), culture and facts (every sentence against its cited facts, §5.1 conventions: UNESCO status only under the inscribed name, institution names as of the access date, no shared heritage framed as Korean in origin), learning design (Stage 5 level, Story Order rounds settled by their captions, check answer positions); pass 2 reviser; pass 3 third check of the revised file. Reviser changes: s7 lost the unsourced 'white' of the limestone formations and names the three inscribed areas; the Story Order's last caption gained its subject (이곳이). MAR 2026-11-04 language review of the read tier and the listen tier; MAR 2026-11-04 culture review of the read tier and the listen tier; findings and outcomes in the PR."
+  },
+  "authorNotes": "UNESCO: inscribed in 2007 as \"Jeju Volcanic Island and Lava Tubes\" (the Korea Heritage Service portal gives the English name); whc.unesco.org answered 403 to the authoring session, so the portal and encykorea carry the inscription, and no other UNESCO status (geopark, biosphere reserve) is claimed. Ages in years (about 1.8 million; 100,000 to 300,000; 120,000 to 50,000) stay out of the narration. 'Highest in South Korea' follows the portal's 남한. The definition of a volcano in s2 and s5 is plain wording, not a claim about Jeju.",
+  "errata": []
+}

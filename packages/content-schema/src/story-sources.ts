@@ -4,8 +4,9 @@
  * `AUTHORITATIVE_HOST_SUFFIXES` is the research brief's preferred list: every
  * fact needs at least one source on one of them. `SOURCE_HOST_ALLOWLIST` is
  * the 31 hosts of the research set plus the Korea National Park Service
- * (F-CURR-001 S6-4) and the Institute for the Translation of Korean Classics
- * database (Ilseongnok); a host outside it is only a warning
+ * (F-CURR-001 S6-4), the Institute for the Translation of Korean Classics
+ * database (Ilseongnok), and the National Institute of Ecology and Suncheon City's
+ * Suncheon Bay wetland site (F-CURR-002 row CM-46, §6.6); a host outside it is only a warning
  * (`source-host-unlisted`), and adding a host is a one-line, reviewed PR.
  */
 export const AUTHORITATIVE_HOST_SUFFIXES = [
@@ -26,6 +27,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'korean.go.kr',
   'media.unesco.org',
   'news.sbs.co.kr',
+  'scbay.suncheon.go.kr',
   'science.kma.go.kr',
   'shfestival.com',
   'sillok.history.go.kr',
@@ -47,6 +49,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'www.mcst.go.kr',
   'www.museum.go.kr',
   'www.nfm.go.kr',
+  'www.nie.re.kr',
   'www.seoul.co.kr',
   'www.suwon.go.kr',
   'www.unesco.org',
