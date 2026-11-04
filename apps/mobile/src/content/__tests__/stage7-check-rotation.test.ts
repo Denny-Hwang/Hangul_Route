@@ -19,8 +19,10 @@ import { scopeFor } from '../../logic/minigame-config';
  */
 
 const DIR = new URL('../../../../../content/episodes/stage-7/', import.meta.url);
+// Volume 1 only (`<theme>.json`): a Volume 2 cell (`<theme>.v2.json`, row CM-41) is held to the same rotation by its own
+// cell test (stage7-nature-v2-cell.test.ts) and, per tier and stage, by the curriculum lint's lesson-check-variety.
 const CELLS: LessonCell[] = readdirSync(DIR)
-  .filter((f) => f.endsWith('.json'))
+  .filter((f) => f.endsWith('.json') && !/\.v\d+\.json$/.test(f))
   .sort()
   .map((f) => LessonCellSchema.parse(JSON.parse(readFileSync(new URL(f, DIR), 'utf8'))));
 const QUESTS: LessonQuest[] = CELLS.flatMap((c) => c.quests);

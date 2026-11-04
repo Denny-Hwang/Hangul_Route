@@ -1,0 +1,18 @@
+[
+  {
+    "cellId": "episode:stage5-nature",
+    "episodeId": "episode:stage5-nature-v2",
+    "volume": 2,
+    "title": "Island, Mountain and Wetland",
+    "minutes": 15,
+    "questIds": ["quest:story-jeju-volcanic-island-read", "quest:story-jirisan-national-park-read", "quest:story-suncheon-bay-wetland-read"]
+  },
+  {
+    "cellId": "episode:stage5-crafts",
+    "episodeId": "episode:stage5-crafts-v2",
+    "volume": 2,
+    "title": "Masks and Paper",
+    "minutes": 10,
+    "questIds": ["quest:story-hahoe-mask-dance-read", "quest:story-hanji-korean-paper-read"]
+  }
+]

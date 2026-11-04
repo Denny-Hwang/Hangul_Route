@@ -1,0 +1,1297 @@
+{
+  "id": "episode:stage3-rites-v2",
+  "stage": "stage3",
+  "theme": "rites",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Cards and Seasons",
+  "subtitleEn": "New Year wishes, holiday wishes and the solar terms.",
+  "hoyaIntroEn": "Let's write holiday wishes and learn two winter solar terms!",
+  "order": 3,
+  "pillarTags": [
+    "B5"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-rites-v2-q1",
+      "titleEn": "A New Year Card",
+      "blurbEn": "Write a New Year wish for someone.",
+      "teaserEn": "Next: wishes for Seollal and Chuseok.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Card Time",
+          "hoyaLineEn": "A new year is coming. Let's write a card with a New Year wish!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Happy New Year, ___!",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___, 새해 복 많이 받으세요.",
+                      "romanization": "___, saehae bok mani badeuseyo",
+                      "en": "Happy New Year, ___!"
+                    },
+                    "noteEn": "Say who the card is for, then the wish {ko:새해 복 많이 받으세요}. It wishes the other person a lot of good luck in the new year.",
+                    "examples": [
+                      {
+                        "ko": "할머니, 새해 복 많이 받으세요.",
+                        "romanization": "halmeoni saehae bok mani badeuseyo",
+                        "en": "Happy New Year, Grandma!"
+                      },
+                      {
+                        "ko": "선생님, 새해 복 많이 받으세요.",
+                        "romanization": "seonsaengnim saehae bok mani badeuseyo",
+                        "en": "Happy New Year, Teacher!"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "새해",
+                      "romanization": "saehae",
+                      "en": "new year"
+                    },
+                    "picture": "card:seollal"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "카드를 써요.",
+                      "romanization": "kadeureul sseoyo",
+                      "en": "I write a card."
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-rites-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-rites-v2-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-rites-v2-q1-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Card Writer!",
+          "hoyaLineEn": "You can write a New Year wish. What a kind card!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-rites-v2-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "할머니, 새해 복 많이 받으세요.",
+                "romanization": "halmeoni saehae bok mani badeuseyo",
+                "en": "Happy New Year, Grandma!"
+              },
+              "pictureRef": "word:family-grandma",
+              "distractors": []
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "선생님, 새해 복 많이 받으세요.",
+                "romanization": "seonsaengnim saehae bok mani badeuseyo",
+                "en": "Happy New Year, Teacher!"
+              },
+              "distractors": [
+                {
+                  "ko": "먹어요.",
+                  "romanization": "meogeoyo",
+                  "en": "eat (in 'I eat')"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "카드를 써요.",
+                "romanization": "kadeureul sseoyo",
+                "en": "I write a card."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  },
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "세배를 해요.",
+                "romanization": "sebaereul haeyo",
+                "en": "I do the New Year's bow."
+              },
+              "pictureRef": "card:sebae",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  },
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "할머니하고 할아버지가 있어요.",
+                "romanization": "halmeonihago harabeojiga isseoyo",
+                "en": "I have a grandma and a grandpa."
+              },
+              "distractors": [
+                {
+                  "ko": "써요.",
+                  "romanization": "sseoyo",
+                  "en": "write (in 'I write')"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "___, 새해 복 많이 받으세요.",
+                "romanization": "___, saehae bok mani badeuseyo",
+                "en": "Happy New Year, Teacher!"
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "선생님",
+                  "romanization": "seonsaengnim",
+                  "en": "teacher"
+                },
+                {
+                  "ko": "송편",
+                  "romanization": "songpyeon",
+                  "en": "half-moon rice cake"
+                },
+                {
+                  "ko": "보름달",
+                  "romanization": "boreumdal",
+                  "en": "full moon"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "세배___ 해요.",
+                "romanization": "sebae___ haeyo",
+                "en": "I do the New Year's bow."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "sebaereul haeyo"
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "새해 복 많이 ___.",
+                "romanization": "saehae bok mani ___",
+                "en": "Happy New Year!"
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "받으세요",
+                  "romanization": "badeuseyo",
+                  "en": "please receive"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "봐요",
+                  "romanization": "bwayo",
+                  "en": "look at, see"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "할머니, ___ 복 많이 받으세요.",
+                "romanization": "halmeoni ___ bok mani badeuseyo",
+                "en": "Happy New Year, Grandma!"
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "새해",
+                  "romanization": "saehae",
+                  "en": "new year"
+                },
+                {
+                  "ko": "한복",
+                  "romanization": "hanbok",
+                  "en": "traditional Korean clothes"
+                },
+                {
+                  "ko": "송편",
+                  "romanization": "songpyeon",
+                  "en": "half-moon rice cake"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-v2-q1-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "할머니하고 할아버지___ 있어요.",
+                "romanization": "halmeonihago harabeoji___ isseoyo",
+                "en": "I have a grandma and a grandpa."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "halmeonihago harabeojiga isseoyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "카드를 ___.",
+                "romanization": "kadeureul ___",
+                "en": "I write a card."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "써요",
+                  "romanization": "sseoyo",
+                  "en": "write"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "봐요",
+                  "romanization": "bwayo",
+                  "en": "look at, see"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-rites-v2-q2",
+      "titleEn": "Happy Holidays",
+      "blurbEn": "Wish someone a happy Seollal or Chuseok.",
+      "teaserEn": "Next: the solar terms of the year.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Holiday Wishes",
+          "hoyaLineEn": "Seollal and Chuseok are big holidays. Let's send a happy wish!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Have a Happy ___",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "즐거운 ___ 보내세요.",
+                      "romanization": "jeulgeoun ___ bonaeseyo",
+                      "en": "Have a happy ___."
+                    },
+                    "noteEn": "Put the holiday in the gap: {ko:즐거운} {ko:설날} {ko:보내세요}. It wishes someone a happy day.",
+                    "examples": [
+                      {
+                        "ko": "즐거운 설날 보내세요.",
+                        "romanization": "jeulgeoun seollal bonaeseyo",
+                        "en": "Have a happy Seollal."
+                      },
+                      {
+                        "ko": "즐거운 추석 보내세요.",
+                        "romanization": "jeulgeoun chuseok bonaeseyo",
+                        "en": "Have a happy Chuseok."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "즐거운 명절 보내세요.",
+                      "romanization": "jeulgeoun myeongjeol bonaeseyo",
+                      "en": "Have a happy holiday."
+                    },
+                    "picture": "card:chuseok"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "카드를 보내요.",
+                      "romanization": "kadeureul bonaeyo",
+                      "en": "I send a card."
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-rites-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-rites-v2-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s3-rites-v2-q2-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Happy Holidays!",
+          "hoyaLineEn": "You can wish someone a happy holiday. Wonderful!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-rites-v2-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "즐거운 설날 보내세요.",
+                "romanization": "jeulgeoun seollal bonaeseyo",
+                "en": "Have a happy Seollal."
+              },
+              "pictureRef": "card:seollal",
+              "distractors": [
+                {
+                  "ko": "먹어요.",
+                  "romanization": "meogeoyo",
+                  "en": "eat (in 'I eat')"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "즐거운 추석 보내세요.",
+                "romanization": "jeulgeoun chuseok bonaeseyo",
+                "en": "Have a happy Chuseok."
+              },
+              "pictureRef": "card:chuseok",
+              "distractors": [
+                {
+                  "ko": "봐요.",
+                  "romanization": "bwayo",
+                  "en": "look at, see (in 'I see')"
+                }
+              ]
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "카드를 보내요.",
+                "romanization": "kadeureul bonaeyo",
+                "en": "I send a card."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  },
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "선생님, 새해 복 많이 받으세요.",
+                "romanization": "seonsaengnim saehae bok mani badeuseyo",
+                "en": "Happy New Year, Teacher!"
+              },
+              "distractors": []
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "송편을 먹어요.",
+                "romanization": "songpyeoneul meogeoyo",
+                "en": "I eat songpyeon."
+              },
+              "pictureRef": "card:songpyeon",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-v2-q2-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "즐거운 ___ 보내세요.",
+                "romanization": "jeulgeoun ___ bonaeseyo",
+                "en": "Have a happy Chuseok."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "추석",
+                  "romanization": "chuseok",
+                  "en": "the autumn harvest holiday"
+                },
+                {
+                  "ko": "송편",
+                  "romanization": "songpyeon",
+                  "en": "half-moon rice cake"
+                },
+                {
+                  "ko": "한복",
+                  "romanization": "hanbok",
+                  "en": "traditional Korean clothes"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "즐거운 명절 ___.",
+                "romanization": "jeulgeoun myeongjeol ___",
+                "en": "Have a happy holiday."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "보내세요",
+                  "romanization": "bonaeseyo",
+                  "en": "have, spend (a day), politely"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "예뻐요",
+                  "romanization": "yeppeoyo",
+                  "en": "pretty"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "카드를 ___.",
+                "romanization": "kadeureul ___",
+                "en": "I send a card."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "보내요",
+                  "romanization": "bonaeyo",
+                  "en": "send"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "있어요",
+                  "romanization": "isseoyo",
+                  "en": "have, there is"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "할머니, 새해 복 많이 ___.",
+                "romanization": "halmeoni saehae bok mani ___",
+                "en": "Happy New Year, Grandma!"
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "받으세요",
+                  "romanization": "badeuseyo",
+                  "en": "please receive"
+                },
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat"
+                },
+                {
+                  "ko": "봐요",
+                  "romanization": "bwayo",
+                  "en": "look at, see"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-v2-q2-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "d1",
+              "promptEn": "Type the word for a card you send.",
+              "mode": "hear",
+              "target": {
+                "ko": "카드",
+                "romanization": "kadeu",
+                "en": "card"
+              }
+            },
+            {
+              "id": "d2",
+              "promptEn": "Type the word for the new year.",
+              "mode": "hear",
+              "target": {
+                "ko": "새해",
+                "romanization": "saehae",
+                "en": "new year"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage3-rites-v2-q3",
+      "titleEn": "The Solar Terms",
+      "blurbEn": "Say which solar term it is today.",
+      "estimatedMinutes": 5,
+      "addedIn": 20261103,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Days of the Sun",
+          "hoyaLineEn": "The year has 24 solar terms. Let's read about two winter ones!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Today Is ___",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "오늘은 ___이에요/예요.",
+                      "romanization": "oneureun ___ieyo/yeyo",
+                      "en": "Today is ___."
+                    },
+                    "noteEn": "Name the day, with {ko:이에요} after a final consonant or {ko:예요} after a vowel: {ko:입동이에요}, {ko:동지예요}.",
+                    "examples": [
+                      {
+                        "ko": "오늘은 입동이에요.",
+                        "romanization": "oneureun ipdongieyo",
+                        "en": "Today is Ipdong, the start of winter."
+                      },
+                      {
+                        "ko": "오늘은 동지예요.",
+                        "romanization": "oneureun dongjiyeyo",
+                        "en": "Today is Dongji."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "동지는 밤이 길어요.",
+                      "romanization": "dongjineun bami gireoyo",
+                      "en": "On Dongji, the night is long."
+                    },
+                    "picture": "word:nature-star"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-rites-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-rites-v2-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-rites-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Sun Watcher!",
+          "hoyaLineEn": "You can name two winter solar terms. Stay warm!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-rites-v2-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "오늘은 입동이에요.",
+                "romanization": "oneureun ipdongieyo",
+                "en": "Today is Ipdong, the start of winter."
+              },
+              "pictureRef": "word:nature-snow",
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  },
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "오늘은 동지예요.",
+                "romanization": "oneureun dongjiyeyo",
+                "en": "Today is Dongji."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 1,
+                "choices": [
+                  {
+                    "ko": "예요",
+                    "romanization": "yeyo",
+                    "en": "it is (after a vowel)"
+                  },
+                  {
+                    "ko": "이에요",
+                    "romanization": "ieyo",
+                    "en": "it is (after a final consonant)"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "동지는 밤이 길어요.",
+                "romanization": "dongjineun bami gireoyo",
+                "en": "On Dongji, the night is long."
+              },
+              "pictureRef": "word:nature-star",
+              "distractors": [
+                {
+                  "ko": "먹어요.",
+                  "romanization": "meogeoyo",
+                  "en": "eat (in 'I eat')"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "즐거운 추석 보내세요.",
+                "romanization": "jeulgeoun chuseok bonaeseyo",
+                "en": "Have a happy Chuseok."
+              },
+              "pictureRef": "card:chuseok",
+              "distractors": [
+                {
+                  "ko": "써요.",
+                  "romanization": "sseoyo",
+                  "en": "write (in 'I write')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "보름달을 봐요.",
+                "romanization": "boreumdareul bwayo",
+                "en": "I look at the full moon."
+              },
+              "pictureRef": "card:moon",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-v2-q3-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "오늘은 동지___.",
+                "romanization": "oneureun dongji___",
+                "en": "Today is Dongji."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "예요",
+                  "romanization": "yeyo",
+                  "en": "it is (after a vowel)"
+                },
+                {
+                  "ko": "이에요",
+                  "romanization": "ieyo",
+                  "en": "it is (after a final consonant)"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "oneureun dongjiyeyo"
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "밤___ 길어요.",
+                "romanization": "bam___ gireoyo",
+                "en": "The night is long."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                },
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                },
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "bami gireoyo"
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "오늘은 ___이에요.",
+                "romanization": "oneureun ___ieyo",
+                "en": "Today is Chuseok."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "추석",
+                  "romanization": "chuseok",
+                  "en": "the autumn harvest holiday"
+                },
+                {
+                  "ko": "송편",
+                  "romanization": "songpyeon",
+                  "en": "half-moon rice cake"
+                },
+                {
+                  "ko": "한복",
+                  "romanization": "hanbok",
+                  "en": "traditional Korean clothes"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "즐거운 ___ 보내세요.",
+                "romanization": "jeulgeoun ___ bonaeseyo",
+                "en": "Have a happy Seollal."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "설날",
+                  "romanization": "seollal",
+                  "en": "the Lunar New Year"
+                },
+                {
+                  "ko": "한복",
+                  "romanization": "hanbok",
+                  "en": "traditional Korean clothes"
+                },
+                {
+                  "ko": "떡",
+                  "romanization": "tteok",
+                  "en": "rice cake"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-rites-v2-q3-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "promptShown": true,
+              "prompt": {
+                "ko": "동지는 밤이 길어요.",
+                "romanization": "dongjineun bami gireoyo",
+                "en": "On Dongji, the night is long."
+              },
+              "options": [
+                {
+                  "id": "night",
+                  "pictureRef": "word:nature-star",
+                  "labelEn": "A long night"
+                },
+                {
+                  "id": "sun",
+                  "pictureRef": "word:nature-sun",
+                  "labelEn": "A sunny day"
+                },
+                {
+                  "id": "flower",
+                  "pictureRef": "word:nature-flower",
+                  "labelEn": "Spring flowers"
+                }
+              ],
+              "answerId": "night"
+            },
+            {
+              "id": "c2",
+              "promptShown": true,
+              "prompt": {
+                "ko": "오늘은 입동이에요.",
+                "romanization": "oneureun ipdongieyo",
+                "en": "Today is Ipdong, the start of winter."
+              },
+              "options": [
+                {
+                  "id": "winter",
+                  "pictureRef": "word:nature-snow",
+                  "labelEn": "Winter begins"
+                },
+                {
+                  "id": "spring",
+                  "pictureRef": "word:nature-flower",
+                  "labelEn": "Spring begins"
+                },
+                {
+                  "id": "moon",
+                  "pictureRef": "card:moon",
+                  "labelEn": "A full moon night"
+                }
+              ],
+              "answerId": "winter"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:새해 복 많이 받으세요} is a usual New Year greeting: it wishes the other person a lot of good luck in the new year. At the New Year's bow, the bow itself is the greeting, and the elders answer with kind wishes.",
+      "sources": [
+        {
+          "title": "송년과 신년의 언어 예절 (허철구)",
+          "publisher": "국립국어원 (National Institute of Korean Language), 새국어소식, 언어 예절 column",
+          "url": "https://www.korean.go.kr/nkview/news/91/news6_2.htm",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "“그 인사말로는 “과세 안녕하십니까?”나 “새해 복 많이 받으십시오” 정도가 좋고” / “세배는 절하는 자체가 인사이므로 아무 말이 필요 없으며 그저 어른의 덕담을 기다리면 된다.” / “절을 받는 사람은 절이 끝난 다음에 덕담을 하게 되는데, “새해 복 많이 받게”나 “소원 성취하게” 정도가 정형이라 할 만하다.”"
+        },
+        {
+          "title": "덕담(德談)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8D%95%EB%8B%B4",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘덕담(德談)’ 「명사」: “남이 잘되기를 비는 말. 주로 새해에 많이 나누는 말이다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-11-03",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-11-03): the claims are that 새해 복 많이 받으세요 is a usual New Year greeting, that it wishes the other person a lot of good luck in the new year, that at the New Year's bow the bow itself is the greeting, and that the elders answer with kind wishes. NIKL column 송년과 신년의 언어 예절 (허철구), fetched 2026-11-03: '새해 복 많이 받으십시오' named as a fitting greeting; 'the bow itself is the greeting, no words needed' (세배는 절하는 자체가 인사이므로 아무 말이 필요 없으며); after the bow the elder gives 덕담 ('새해 복 많이 받게'). stdict 덕담: 'words wishing that another does well, mostly exchanged at the New Year'. The cell's -세요 form is the 해요체 of the column's -십시오 form, the form Stage 4 Holidays already ships.\npass 2 (MAR culture and facts checker, 2026-11-03): both pages fetched again; every quoteOrLocator string found on the page. 'usual' rests on the column's 'fitting greeting' (정도가 좋고), not on a frequency claim; no claim that the greeting is old (Stage 4 cites encykorea that it is a modern one). The note never puts words in the learner's mouth during the bow, so q1's card sentences are wishes written or said, not words of the bow. Names as of the access date: 국립국어원.\npass 3 (MAR third pass after the reviser, 2026-11-03): the reviser kept 'kind wishes' for 덕담 (stdict); no run of words copied from a source; confirmed."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:설날} and {ko:추석} take their dates from the lunar calendar, Korea's traditional calendar. Seollal is the first day of the first lunar month, and Chuseok is the 15th day of the eighth lunar month.",
+      "sources": [
+        {
+          "title": "설날",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%A4%EB%82%A0",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘설날’ 「명사」: “우리나라 명절의 하나. 정월 초하룻날이다.”"
+        },
+        {
+          "title": "추석(秋夕)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B6%94%EC%84%9D",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘추석(秋夕)’ 「명사」: “우리나라 명절의 하나. 음력 팔월 보름날이다.”"
+        },
+        {
+          "title": "정월(正月)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%A0%95%EC%9B%94",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘정월(正月)’ 「명사」: “음력으로 한 해의 첫째 달.”"
+        },
+        {
+          "title": "음력(陰曆)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9D%8C%EB%A0%A5",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘음력(陰曆)’ 「명사」: “우리나라의 전통 역법.” / “현재에도 설, 추석과 같은 명절 등의 날짜를 정할 때 사용한다. 역법 분류상 태음 태양력에 해당하며,”"
+        },
+        {
+          "title": "명절(名節)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AA%85%EC%A0%88",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘명절(名節)’ 「명사」 「1」: “해마다 일정하게 지키어 즐기거나 기념하는 때. 우리나라에는 설날, 대보름날, 단오, 추석, 동짓날 따위가 있다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-11-03",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-11-03): the claims are that Seollal and Chuseok take their dates from the lunar calendar, that this is Korea's traditional calendar, that Seollal is the first day of the first lunar month and Chuseok the 15th day of the eighth lunar month. stdict 설날 (정월 초하룻날), 정월 (음력으로 한 해의 첫째 달), 추석 (음력 팔월 보름날), 음력 (우리나라의 전통 역법; 현재에도 설, 추석과 같은 명절 등의 날짜를 정할 때 사용한다), all fetched 2026-11-03. 명절 (설날, 추석 among the holidays) supports the q2 word 명절.\npass 2 (MAR culture and facts checker, 2026-11-03): the first draft said the lunar calendar 'follows the moon'; stdict 음력 says it is a lunisolar calendar (태음 태양력), so the reviser cut that clause and the note now says only what the entries say. 보름날 is the 15th day (stdict 보름). No claim about public holidays or how many days off.\npass 3 (MAR third pass after the reviser, 2026-11-03): the five entries re-read; confirmed. Names as of the access date: 국립국어원."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "The 24 solar terms divide the year by the sun's path, about 15 days apart. They are a calendar shared across East Asia. UNESCO inscribed \"The Twenty-Four Solar Terms\" for China in 2016.",
+      "sources": [
+        {
+          "title": "The Twenty-Four Solar Terms, knowledge in China of time and practices developed through observation of the sun's annual motion",
+          "publisher": "UNESCO Intangible Cultural Heritage",
+          "url": "https://ich.unesco.org/en/RL/the-twenty-four-solar-terms-knowledge-in-china-of-time-and-practices-developed-through-observation-of-the-sun-s-annual-motion-00647",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "State: China. “Inscribed in 2016 (11.COM) on the Representative List of the Intangible Cultural Heritage of Humanity” / “The ancient Chinese divided the sun's annual circular motion into 24 segments. Each segment was called a specific 'Solar Term'.”"
+        },
+        {
+          "title": "이십사절기(二十四節氣)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9D%B4%EC%8B%AD%EC%82%AC%EC%A0%88%EA%B8%B0",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘이십사-절기’ 「명사」: “태양의 황도(黃道)상의 위치에 따라서 정한 절기.” / “평기(平氣)로는 오 일을 일후(一候), 삼후(三候)를 일기(一氣), 일 년을 이십사기(二十四氣)로 하며,”"
+        },
+        {
+          "title": "2026년 달력자료: 24절기",
+          "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+          "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "24절기 표 (명칭, 월, 일, 시, 분): “입춘 2 4 5 2” / “춘분 3 20 23 46” / “입하 5 5 20 49” / “하지 6 21 17 25” / “추분 9 23 9 5” / “입동 11 7 18 52” / “동지 12 22 5 50”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-11-03",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-11-03): the claims are that the 24 solar terms divide the year by the sun's path, about 15 days apart, that they are a calendar shared across East Asia, and that UNESCO inscribed The Twenty-Four Solar Terms for China in 2016. UNESCO element page (fetched 2026-11-03): full name 'The Twenty-Four Solar Terms, knowledge in China of time and practices developed through observation of the sun's annual motion', State China, inscribed 2016 (11.COM) on the Representative List; 'The ancient Chinese divided the sun's annual circular motion into 24 segments.' stdict 이십사절기: set by the sun's place on the ecliptic; 5 days a 후, 3 후 a 기 (15 days); KASI 2026 calendar data: the terms of 2026 about 15 days apart (입동 7 Nov, 소설 22 Nov, 대설 7 Dec, 동지 22 Dec).\npass 2 (MAR culture and facts checker, 2026-11-03): §5.1 conventions: the status is claimed only for the inscribed element, under its UNESCO name (the short form 'The Twenty-Four Solar Terms', which opens the element name, with 'for China' as the State Party), as the row text of §5.4 S3 words it; 'inscribed 2016', no 'proclaimed' (none exists); the terms are never framed as Korean in origin, and the note says shared across East Asia, the framing §5.4 and §5.7 require. 'Shared across East Asia' is the spec's framing, used by the CM-48 weekly drops; KASI publishes the terms as the Korean calendar's own, and the UNESCO page says they began in China. Names as of the access date: UNESCO, 국립국어원, 한국천문연구원.\npass 3 (MAR third pass after the reviser, 2026-11-03): the reviser shortened the note under the 240-character line by using the short form of the element name; confirmed against the UNESCO page."
+      }
+    },
+    {
+      "id": "n4",
+      "kind": "culture",
+      "textEn": "{ko:입동}, the start of winter, falls around 7 November, and {ko:동지} around 22 December (in 2026, on those days). Dongji is the day with the longest night and the shortest day of the year. On Dongji, people eat red bean porridge, {ko:팥죽}.",
+      "sources": [
+        {
+          "title": "2026년 달력자료: 24절기",
+          "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+          "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "24절기 표 (명칭, 월, 일, 시, 분): “입동 11 7 18 52” / “동지 12 22 5 50”"
+        },
+        {
+          "title": "동지",
+          "publisher": "National Folk Museum of Korea (국립민속박물관) — 어린이박물관 어린이민속사전",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=103",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "“동지는 24절기 중 스물두 번째 절기로 일 년 중에서 밤이 가장 길고 낮이 가장 짧은 날입니다.” / “동지에는 ‘팥죽’을 만들어 먹고, ‘새해 달력’을 선물합니다.”"
+        },
+        {
+          "title": "입동(立冬)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9E%85%EB%8F%99",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘입동(立冬)’ 「명사」: “이십사절기의 하나. 상강(霜降)과 소설(小雪) 사이에 들며, 이때부터 겨울이 시작된다고 한다. 11월 8일경이다.”"
+        },
+        {
+          "title": "동지(冬至)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8F%99%EC%A7%80",
+          "accessed": "2026-11-03",
+          "quoteOrLocator": "표제어 ‘동지(冬至)’ 「명사」: “이십사절기의 하나. 대설(大雪)과 소한(小寒) 사이에 들며 태양이 동지점을 통과하는 때인 12월 22일이나 23일경이다. 북반구에서는 일 년 중 낮이 가장 짧고 밤이 가장 길다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-11-03",
+        "scope": "lesson",
+        "notes": "pass 1 (author sourcing, 2026-11-03): the claims are that in 2026 입동 falls on 7 November and 동지 on 22 December, that 입동 is the start of winter, that Dongji has the longest night and the shortest day of the year, and that people eat 팥죽 on Dongji. KASI 2026 calendar data (24절기 table, fetched 2026-11-03): 입동 11 7 18 52, 동지 12 22 5 50. National Folk Museum of Korea, children's folk dictionary 동지 (topic 103): 'the 22nd of the 24 solar terms, the day with the longest night and the shortest day of the year'; 'on Dongji people make and eat 팥죽'. stdict 입동: from this day winter is said to begin (시작된다고 한다); stdict 동지: in the northern hemisphere the shortest day and the longest night.\npass 2 (MAR culture and facts checker, 2026-11-03): dates are KASI's (Korea Standard Time), as the row asks; 'the start of winter' is the gloss, the hedge of stdict kept in the q3 Discover English (the start of winter as the term's name). No claim of a custom every family keeps. Names as of the access date: 한국천문연구원, 국립민속박물관, 국립국어원.\npass 3 (MAR third pass after the reviser, 2026-11-03): the reviser kept the year in the sentence so the dates are never read as fixed; confirmed.\nfix round 1 (PR review, 2026-11-03): the cell merges dark and may open after 2026, so the note now leads with the stable dates and keeps 2026 as the example year. 'around 7 November' rests on KASI's 2026 row (11 7) and stdict 입동 ('11월 8일경'); 'around 22 December' on KASI's 2026 row (12 22) and stdict 동지 ('12월 22일이나 23일경'); '(in 2026, on those days)' is KASI's 2026 table. The es and ko text say the same; the independent re-check is the PR's next review round."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-03",
+    "notes": [
+      "MAR row CM-45 S3 (F-CURR-002 section 9.2, 2026-11-03; passes: author, language, culture and facts, learning design, reviser, third pass; the three checkers ran as separate lenses in the authoring session). Volume 2 of Holidays & Traditions at Stage 3: New Year card and holiday wishes, and two winter solar terms with KASI dates. No native-speaker or expert review is claimed.",
+      "Content: q1 A New Year Card (___, 새해 복 많이 받으세요: 할머니, 선생님; 카드를 써요), q2 Happy Holidays (즐거운 ___ 보내세요: 설날, 추석, 명절; 카드를 보내요), q3 The Solar Terms (오늘은 ___이에요/예요: 입동이에요, 동지예요; 동지는 밤이 길어요). One new pattern a quest; new words q1 새해, 카드, 써요; q2 명절, 보내요; q3 입동, 동지, 밤, 길어요.",
+      "Language: 해요체 with sentence marks. 새해 복 많이 받으세요 is read as a set phrase (F-CURR-001 T-2): 많이 has the double final ㄶ, said [마니], and 복 많이 is said [봉마니] (nasalization); the romanization is the converter's 'saehae bok mani badeuseyo', the form Stage 4 and the seollal-new-year story ship, and the device voice is flagged to say [봉마니].",
+      "설날 is said [설랄], 입동이에요 [입똥이에요] (tensification); none of them is a Dictation target. 건강하세요 and 행복하세요 are left out: NIKL's New Year column asks for care with health wishes to elders, and both put an adjective in the imperative.",
+      "Language (cont.): every word gap keeps grammatical wrong tiles read by the meaning line, as in Volume 1 and the other Volume 2 cells (오늘은 송편이에요 is a sentence, but not the one the meaning asks for). 받으세요 is glossed 'please receive' and 보내세요 'have, spend (a day), politely'.",
+      "Culture and facts: n1 (the greeting; the bow is the greeting and the elders answer with kind wishes) cites NIKL's column and stdict 덕담; n2 (Seollal and Chuseok take their dates from the lunar calendar) cites stdict 설날, 정월, 추석, 음력, 명절; n3 (24 solar terms, about 15 days apart, shared across East Asia;",
+      "UNESCO inscribed The Twenty-Four Solar Terms for China in 2016) cites UNESCO, stdict 이십사절기 and KASI; n4 (2026 dates of 입동 and 동지, the longest night, 팥죽) cites KASI, the National Folk Museum of Korea and stdict. The KASI calendar host astro.kasi.re.kr joins SOURCE_HOST_ALLOWLIST in this row (one reviewed line; KASI is on the section 6.6 allowlist).",
+      "All pages fetched 2026-11-03; names as of that date.",
+      "Learning design: triples q1 order-it / cloze-pick / cloze-pick, q2 order-it / cloze-pick / type-hangul, q3 order-it / cloze-pick / listen-pick (a Read Pick Meaning Check); Volume 1 plays order-it / listen-pick / (order-it, type-hangul, cloze-pick), so no triple repeats it, and adjacent quests differ. Every Practice is a Sentence Builder (U-11 scaffold).",
+      "No Check repeats an Apply sentence. Dictation asks 카드 and 새해, each said as written with no taught homophone (dictation-unambiguous clean). Recycled Volume 1 sentences: 세배를 해요, 할머니하고 할아버지가 있어요, 송편을 먹어요, 보름달을 봐요; later quests recycle q1 and q2 sentences.",
+      "Reviser: n2 lost 'which follows the moon' (stdict 음력 says lunisolar); n3 shortened under the note length line with the element's short UNESCO name; the Seollal and Chuseok tile glosses no longer open with their romanization (gloss-repeats-romanization).",
+      "Third pass: validate-content clean (0 violations) with es and ko complete; no change."
+    ]
+  },
+  "contentVer": 1
+}

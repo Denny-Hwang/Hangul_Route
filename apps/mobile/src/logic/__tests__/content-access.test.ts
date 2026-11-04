@@ -30,7 +30,8 @@ const LESSON_IDS = new Set(CATALOG.quests.filter((q) => q.kind === 'lesson').map
 const lessonsOfReadyCells = (stage?: string): string[] =>
   CATALOG.cells
     .filter((c) => cellIsReady(c) && (stage === undefined || c.stage === stage))
-    .flatMap((c) => c.questIds.filter((id) => LESSON_IDS.has(id)));
+    // A cell's later volumes too (F-CURR-002 rows CM-40, CM-41 S2): grid lessons past the free plan.
+    .flatMap((c) => [...c.questIds, ...(c.volumes ?? []).flatMap((v) => v.questIds)].filter((id) => LESSON_IDS.has(id)));
 const STAGE1_LESSONS = lessonsOfReadyCells('stage1');
 const GRID_LESSONS = lessonsOfReadyCells();
 const LATER_LESSONS = GRID_LESSONS.filter((id) => !STAGE1_LESSONS.includes(id));
@@ -95,21 +96,28 @@ describe('isFreeContent (default registry)', () => {
     expect(isFreeContent('vocab-topic', 'family')).toBe(false);
   });
 
-  it('builds the story sampler from the bundle shelf.sampler flags', async () => {
+  it('builds the story sampler from the bundle shelf.sampler flags (the story shelf, F-CURR-002 row CM-8b)', async () => {
     vi.resetModules();
     const stub = (id: string, shelf?: { sampler: boolean }): Story => ({ id, shelf }) as unknown as Story;
-    vi.doMock('../../content/stories', () => ({
-      storiesAll: [
-        stub('story:in', { sampler: true }),
-        stub('story:out', { sampler: false }),
-        stub('story:no-shelf'),
-      ],
+    vi.doMock('../../content/story-shelf', () => ({
+      storyShelf: () => ({
+        CHUNK_HASH: 'h',
+        HELD_STORY_CARDS: [],
+        STORY_SHELF: [stub('story:in', { sampler: true }), stub('story:out', { sampler: false }), stub('story:no-shelf')],
+      }),
     }));
     const mod = await import('../content-access');
     expect(mod.isFreeContent('story', 'story:in')).toBe(true);
     expect(mod.isFreeContent('story', 'story:out')).toBe(false);
     expect(mod.isFreeContent('story', 'story:no-shelf')).toBe(false);
-    vi.doUnmock('../../content/stories');
+    vi.doUnmock('../../content/story-shelf');
+  });
+
+  it('the sampler set read from the shelf is the one the stories carry', async () => {
+    const { storiesAll } = await import('../../content/stories');
+    const sampler = storiesAll.filter((s) => s.shelf?.sampler === true).map((s) => s.id);
+    expect(sampler.length).toBeGreaterThan(0);
+    for (const s of storiesAll) expect(isFreeContent('story', s.id), s.id).toBe(sampler.includes(s.id));
   });
 
   it('opens every Stage 1 lesson and no later lesson: all of Stage 1 is free (OD-1)', () => {

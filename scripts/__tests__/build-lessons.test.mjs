@@ -13,7 +13,7 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-lessons.mjs");
 const OUT = join("apps", "mobile", "src", "content", "__generated__");
 
-const { BUDGET, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, discoverJamo, jamoOf, planChunks, runtimeScope, shapeCell, sizes } =
+const { BUDGET, BUILD_ONLY_FIELDS, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, discoverJamo, jamoOf, planChunks, runtimeScope, shapeCell, sizes, withoutBuildOnly } =
   await import(SCRIPT);
 
 const roots = [];
@@ -350,6 +350,8 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       ],
       // F-CURR-002 row CM-38: a chain plays one round per frame.
       [{ kind: "my-story", frames: [1, 2, 3] }, { kind: "my-story", rounds: 3, myStory: { frames: [1, 2, 3] } }],
+      // F-CURR-002 row CM-44 S2: Syllable Build plays one round per block (the app's `syllableBuild` scope).
+      [{ kind: "syllable-build", rounds: [1, 2, 3, 4] }, { kind: "syllable-build", rounds: 4, syllableBuild: { rounds: [1, 2, 3, 4] } }],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });
@@ -509,7 +511,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(over[3], /lessons-cell-stage2-rites\.ts is 999999 B raw, over the cell chunk ceiling of 90000 B/);
     assert.match(over[4], /lessons-cell-stage2-rites\.ts is 999999 B gzip, over the cell chunk ceiling of 16000 B/);
     assert.match(over[5], /lessons-headers-en\.ts is 40001 B raw, over the headers chunk ceiling of 40000 B/);
-    assert.match(over[6], /the Stage 2 game content is 220001 B raw/);
+    assert.match(over[6], /the Stage 2 game content is 340001 B raw/);
     assert.deepEqual(BUDGET, {
       perQuestRawAvg: 9_000,
       manifestRaw: 60_000,
@@ -517,10 +519,10 @@ describe("build-lessons.mjs: --check and --report", () => {
       headersChunkRaw: 40_000,
       cellChunkRaw: 90_000,
       cellChunkGzip: 16_000,
-      stageRaw: 220_000,
-      stageGzip: 40_000,
-      totalRaw: 1_400_000,
-      totalGzip: 210_000,
+      stageRaw: 340_000,
+      stageGzip: 44_000,
+      totalRaw: 2_000_000,
+      totalGzip: 340_000,
     });
     // A cell chunk at its line passes it.
     assert.deepEqual(checkBudget({ perCell: [], perModule: [{ name: "lesson-chunks/lessons-cell-stage2-rites.ts", raw: BUDGET.cellChunkRaw, gzip: BUDGET.cellChunkGzip }], total: { raw: 0, gzip: 0 } }), []);
@@ -710,6 +712,15 @@ describe("build-lessons.mjs --include-fixtures: the e2e Volume 2 (row CM-40)", (
     assert.equal(run(root).status, 0);
     assert.ok(!existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
     assert.equal(run(root, ["--include-fixtures", "--check"]).status, 2);
+  });
+
+  test("gives no fixture once the cell ships a Volume 2 of its own (row CM-41 S2): the shipped one is played", async () => {
+    const { fixtureCells } = await import(SCRIPT);
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/nature.json", cell("stage2", "nature", "ready", { order: 4, titleEn: "Outdoor Words" }));
+    assert.equal(fixtureCells(root).length, 1);
+    put(root, "content/episodes/stage-2/nature.v2.json", {});
+    assert.deepEqual(fixtureCells(root), []);
   });
 });
 
@@ -922,5 +933,19 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
     assert.equal(ci.status, 1, ci.stdout);
     assert.match(ci.stdout, /::error::addedIn stamp check: origin\/main does not resolve/);
     assert.equal(run(root, ["--check"], { GITHUB_ACTIONS: "true", HANGUL_ROUTE_STAMP_BASE: "none" }).status, 0);
+  });
+});
+
+describe("build-only fields (F-CURR-002 section 4.2, row CM-44 S2)", () => {
+  test("soundChange stays out of the lesson modules at any depth; everything else is kept as it was, in order", () => {
+    assert.deepEqual(BUILD_ONLY_FIELDS, ["soundChange"]);
+    const steps = [{ id: "s2", kind: "discover", discover: { pages: [{ items: [{ type: "word", word: { ko: "책이", romanization: "chaegi", en: "book", soundChange: true } }] }] } }];
+    const out = withoutBuildOnly(steps);
+    assert.deepEqual(out, [{ id: "s2", kind: "discover", discover: { pages: [{ items: [{ type: "word", word: { ko: "책이", romanization: "chaegi", en: "book" } }] }] } }]);
+    assert.deepEqual(Object.keys(out[0]), ["id", "kind", "discover"]);
+    assert.equal(steps[0].discover.pages[0].items[0].word.soundChange, true, "the content is not changed");
+    assert.deepEqual(withoutBuildOnly({ "minigame:x": { rounds: [{ id: "r", soundChange: true, target: { ko: "가" } }] } }), { "minigame:x": { rounds: [{ id: "r", target: { ko: "가" } }] } });
+    assert.equal(withoutBuildOnly(null), null);
+    assert.equal(withoutBuildOnly("가"), "가");
   });
 });

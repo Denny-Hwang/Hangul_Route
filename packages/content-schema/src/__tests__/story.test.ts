@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
@@ -599,5 +601,23 @@ describe('koTextExtend', () => {
     const parsed = schema.parse({ id: 'a', ko: '아버지', romanization: ' abeoji ', en: ' father ' });
     expect(parsed.romanization).toBe('abeoji');
     expect(parsed.en).toBe('father');
+  });
+});
+
+describe('a Story Order on a story tier (F-CURR-002 row CM-46)', () => {
+  // A shipped book 2 tale: its read tier carries one round.
+  const jeju = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../../../../content/stories/jeju-volcanic-island.json', import.meta.url)), 'utf8'),
+  ) as { tiers: { level: string; storyOrder?: { kind: string; rounds: unknown[] } }[] };
+  const round = jeju.tiers.find((t) => t.level === 'read')!.storyOrder!.rounds[0];
+  const withOrder = (level: string, rounds: unknown[]): unknown => ({
+    ...jeju,
+    tiers: jeju.tiers.map((t) => (t.level === level ? { ...t, storyOrder: { kind: 'story-order', rounds } } : t)),
+  });
+
+  it('holds the rounds to the read tier, each round id once', () => {
+    expect(() => parseStory(jeju)).not.toThrow();
+    expect(() => parseStory(withOrder('listen', [round]))).toThrow(/belongs to the read tier/);
+    expect(() => parseStory(withOrder('read', [round, round]))).toThrow(/round ids must be unique/);
   });
 });

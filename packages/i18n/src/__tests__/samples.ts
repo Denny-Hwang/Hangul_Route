@@ -1043,10 +1043,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
-  // F-CURR-002 row CM-40: a cell's volumes, Vol 1 and Vol 2 (two at most), and the cell's "Opens Volume 2" sentence.
-  'learner.episode.volumes.tab': [[1], [2]],
-  'learner.episode.volumes.tabA11y': [[1], [2]],
-  'a11y.journeyVolume': [[1], [2]],
   // F-TCH-004 row NB-1: a Recent row taught to the end, with its day label.
   'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
   // AMENDMENTS-GROWNUP-UX GX-14 (T14): the open ready-made card's minutes and the length it was built for.
@@ -1108,4 +1104,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
   'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
   'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
+  // F-CURR-002 row CM-40: a cell's volumes, Vol 1 and Vol 2 (two at most), and the cell's "Opens Volume 2" sentence.
+  'learner.episode.volumes.tab': [[1], [2]],
+  'learner.episode.volumes.tabA11y': [[1], [2]],
+  'a11y.journeyVolume': [[1], [2]],
 };

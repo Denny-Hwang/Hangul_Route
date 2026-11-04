@@ -12,8 +12,10 @@
 //
 // A story is listed only when it is `ready` and both language- and
 // culture-reviewed (the F-STORY-004 production gate, D14), so the console never
-// offers a story the presenter would skip as not ready. Stories come in title
-// order, topics in their `order`.
+// offers a story the presenter would skip as not ready. A book 2 tale (F-CURR-002
+// row CM-46, read from the catalogue's hand-volumes.json) is Volume 2 content and
+// is not listed until `volumes` opens (row CM-40's console rule). Stories come in
+// title order, topics in their `order`.
 //
 // F-PLAN-002's shared catalogue (`CATALOG` in @hangul-route/content-schema) has
 // landed and replaced the Stage 1 mirror: quest and episode titles and minutes,
@@ -99,14 +101,34 @@ export function isListedStory(story) {
   return story.state === "ready" && story.review?.language === "native-reviewed" && story.review?.culture === "culture-reviewed";
 }
 
-export function buildCatalogue({ stories, topicFiles, storiesInLecture = STORIES_IN_LECTURE }) {
+/** The hand-written later volumes of the catalogue (packages/content-schema/src/catalog/hand-volumes.json). */
+export const HAND_VOLUMES_REL = ["packages", "content-schema", "src", "catalog", "hand-volumes.json"];
+
+/**
+ * The stories a book 2 holds (F-CURR-002 row CM-46): the read quests (`quest:story-<slug>-read`) of the hand-written
+ * later volumes. They are Volume 2 content, so, like a cell's Volume 2 (row CM-40), the console does not offer them
+ * until `volumes` opens; the presenter still plays them inside a book 2 it was given.
+ */
+export function volumeTwoStoryIds(handVolumes) {
+  if (!Array.isArray(handVolumes)) throw new ContentError("hand-volumes.json holds an array of later volumes");
+  const ids = new Set();
+  for (const volume of handVolumes) {
+    for (const questId of Array.isArray(volume?.questIds) ? volume.questIds : []) {
+      const slug = /^quest:story-([a-z0-9]+(?:-[a-z0-9]+)*)-read$/.exec(questId)?.[1];
+      if (slug !== undefined) ids.add(`story:${slug}`);
+    }
+  }
+  return ids;
+}
+
+export function buildCatalogue({ stories, topicFiles, storiesInLecture = STORIES_IN_LECTURE, volumeTwoStories = new Set() }) {
   const listedStories = [];
   for (const { name, json } of stories) {
     if (!isObject(json)) throw new ContentError(`${name}: a story file must hold one JSON object`);
     const id = str(json, "id", name);
     const titleEn = str(json.title, "en", `${name}: title`);
     const minutes = num(json, "minutes", name);
-    if (storiesInLecture && isListedStory(json)) listedStories.push({ id, titleEn, minutes });
+    if (storiesInLecture && isListedStory(json) && !volumeTwoStories.has(id)) listedStories.push({ id, titleEn, minutes });
   }
   // An explicit "en": the output is not committed, so the runtime's default locale must not decide it.
   listedStories.sort((a, b) => a.titleEn.localeCompare(b.titleEn, "en") || a.id.localeCompare(b.id, "en"));
@@ -212,6 +234,13 @@ function readDir(root, rel, accept) {
 }
 
 /** Every `content/i18n/<locale>/*.json` file, the locale from its folder. */
+/** The book 2 tales, from the catalogue's hand-written later volumes; none when the file is absent (test roots). */
+function readVolumeTwoStories(root) {
+  const file = join(root, ...HAND_VOLUMES_REL);
+  if (!existsSync(file)) return new Set();
+  return volumeTwoStoryIds(JSON.parse(readFileSync(file, "utf8")));
+}
+
 function readOverlays(root) {
   const dir = join(root, "content", "i18n");
   if (!existsSync(dir)) return [];
@@ -240,6 +269,7 @@ export function main(argv, root) {
     const model = buildCatalogue({
       stories: readDir(root, ["content", "stories"], () => true),
       topicFiles: readDir(root, ["content", "vocab"], (name) => !name.startsWith("_")),
+      volumeTwoStories: readVolumeTwoStories(root),
     });
     const titles = buildTitles({ overlayFiles: readOverlays(root) });
     outputs = [

@@ -64,10 +64,12 @@ const paramsShape = {
   audience: z.enum(['class', 'family', 'self']),
   level: PlacementLevelSchema,
   /**
-   * The exact set from a placement result, or a level's coarse set; wins over `level`. At most 120
-   * (was 40): a stage6 or stage7 level places out every grid quest of Stages 1-6 as F-CURR-001 cells ship.
+   * The exact set from a placement result, or a level's coarse set; wins over `level`. At most 300
+   * (was 40, then 120): a stage6 or stage7 level places out every grid quest of Stages 1-6 as F-CURR-001 cells ship,
+   * and every later volume of those stages too (F-CURR-002 rows CM-40..CM-46: 140 at Stage 7 with the first fifteen
+   * Volume 2 cells and two books 2; 300 holds a second volume in every cell).
    */
-  placedOutQuestIds: z.array(z.string()).max(120).optional(),
+  placedOutQuestIds: z.array(z.string()).max(300).optional(),
   /** A single learner (family, self); empty for a class. Never stored in a plan (`toMeta`). */
   completedQuestIds: z.array(z.string()).max(400).default([]),
   startDate: DateKeySchema,

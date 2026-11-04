@@ -54,6 +54,7 @@ import { bookmarkClearedByResults } from '../../logic/story/resume';
 import { storyIdOfQuest } from '../../logic/story/story-ref';
 import { useStoriesLoaded } from '../story-content';
 import { defaultStoryIndex } from '../../logic/story/story-index';
+import { useStoryIndex } from '../story/use-story-index';
 import { nextStoryAfter, storyLockFor } from '../../logic/story/story-pick';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
@@ -367,6 +368,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   // after a reload. Which extras show is known from the shelf (the title and the levels), so they never shift in late.
   const questStoryId = quest === undefined ? null : storyIdOfQuest(quest);
   const storyChunks = useStoriesLoaded(questStoryId === null ? [] : [questStoryId]);
+  // A book 2 tale (row CM-46) walks its own book to Next story while `volumes` is on.
+  const storyIndex = useStoryIndex();
   const storyResults = useMemo(() => {
     const story = resultsStoryOf(
       quest,
@@ -381,10 +384,10 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
     );
     if (!story) return null;
     const next = nextStoryAfter(questId, {
-      entries: defaultStoryIndex(),
+      entries: storyIndex.entries,
       snapshot,
       bookmarks,
-      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll, isQuestOpen: questOpen }),
+      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: storyIndex.episodes, isQuestOpen: questOpen }),
     });
     const view = storyResultsExtras(
       {
@@ -400,7 +403,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
       messages.learner.story.results,
     );
     return { story, next, view };
-  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks, storyIndex.entries, storyIndex.episodes]);
 
   const goHome = (): void => {
     navigation.dispatch(

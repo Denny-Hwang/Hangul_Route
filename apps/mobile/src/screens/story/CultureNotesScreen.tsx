@@ -40,6 +40,7 @@ import {
 import { librarySectionTabs } from '../../logic/story/library-sections';
 import { shelfCopy } from '../../logic/story/shelf-copy';
 import { defaultStoryIndex } from '../../logic/story/story-index';
+import { useStoryIndex } from './use-story-index';
 import type { RootStackParamList } from '../../navigation/types';
 import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
@@ -114,7 +115,9 @@ function CultureNotesContent({
   // from its story's chunk (F-CURR-002 §10), so the list fills as each arrives.
   const noteChunks = useNoteStoriesLoaded();
   const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale, noteChunks]);
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), stories, snap), [stories, snap]);
+  // A book 2 tale's notes (row CM-46) count while `volumes` is on.
+  const { entries: storyIndex } = useStoryIndex();
+  const notes = useMemo(() => foundNotes(storyIndex, stories, snap), [storyIndex, stories, snap]);
   const view = useMemo(() => cultureNotesScreenView({ notes, storyId, noteId }), [notes, storyId, noteId]);
   const actions = useMemo(
     () => cultureNotesActions({ from, storyTimeOffered: librarySectionTabs({ entries: defaultStoryIndex() }).includes('story-time') }),

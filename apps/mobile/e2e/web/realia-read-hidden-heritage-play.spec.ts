@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { PLAY_COURTYARD_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/play-courtyard';
 import { expect, test } from './fixtures';
 import { seedStored } from './helpers';
 import { shot } from './shots';
@@ -6,8 +7,9 @@ import { expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-CURR-002 row CM-37 part 4: the Play & Crafts Hidden Heritage scene, a courtyard of the traditional games (§5.6 S2).
- * No lesson cell plays it until the Play Volume 2 cell ships, so this suite opens the step on the scene's reference
- * round through `window.__hrHiddenHeritageE2E` (fixture bundle only, served from dist-e2e/):
+ * The Play Volume 2 cell (row CM-42 S2) plays it as the Apply of its quest 1, behind `volumes`; this suite opens the step
+ * on the scene's reference round, the round that quest plays, through `window.__hrHiddenHeritageE2E` (fixture bundle
+ * only, served from dist-e2e/), and reads the step's card back (every fact of the scene's note) on the end panel:
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage-play
@@ -98,6 +100,16 @@ test.describe('Hidden Heritage, the Play courtyard (F-CURR-002 CM-37)', () => {
         }
         await expect(page.getByText('You found them all')).toBeVisible();
         for (const t of Object.values(TARGETS)) await expect(page.getByTestId('hh-end').getByText(t.meaning, { exact: true })).toBeVisible();
+        // F-CURR-002 row CM-42 S2: the step's card back under the found words, every fact of the scene with its source.
+        const back = page.getByTestId('hh-card-back');
+        await expect(back.getByRole('heading', { name: 'Did you know?' })).toBeVisible();
+        for (const fact of PLAY_COURTYARD_SCENE.note.facts) {
+          await expect(page.getByTestId(`hh-fact-${fact.id}-text`)).toHaveText(fact.claimEn);
+          await expect(page.getByTestId(`hh-fact-${fact.id}-source`)).toContainText(`Source: ${fact.sources[0]!.institution}`);
+        }
+        expect(await back.innerText()).not.toMatch(/https?:|folkency|heritage\.go\.kr/);
+        await back.scrollIntoViewIfNeeded();
+        await shot(page, `hidden-heritage-play-card-back-${size.name}`);
         await expectNoHorizontalOverflow(page);
         await shot(page, `hidden-heritage-play-end-${size.name}`);
         expect((await log(page)).answers.map((a) => a.correct)).toEqual([false, true, true, true, true]);

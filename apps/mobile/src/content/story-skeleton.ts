@@ -1,4 +1,5 @@
 import type { Quest, Story, StoryLevel } from '@hangul-route/content-schema';
+import { storyTierHasOrder } from '../logic/story/story-chunk-store';
 
 /**
  * The five-step story quest (F-STORY-003 §3.1) for one story at one level
@@ -41,7 +42,10 @@ export function storyQuestSkeleton(story: Story, level: StoryLevel): Quest {
   const code = LEVEL_CODES[level];
   const hoyaIntroEn = need(story, 'hoyaIntroEn');
   const hoyaOutroEn = need(story, 'hoyaOutroEn');
-  const ref = (step: 'read' | 'check' | 'seq'): string => `minigame:story-${step}-${code}-${slug}`;
+  const ref = (step: 'read' | 'check' | 'seq' | 'order'): string => `minigame:story-${step}-${code}-${slug}`;
+  // A book 2 tale's read tier carries a Story Order (F-CURR-002 §5.5 S5, row CM-46): its fourth step plays those
+  // rounds (`story-order`, behind `game.story-order`, else Story Sequence with text cards) instead of the picture order.
+  const ordered = storyTierHasOrder(story, level);
   const quest: Quest = {
     id: `quest:story-${slug}-${code}`,
     titleEn: story.title.en,
@@ -68,8 +72,8 @@ export function storyQuestSkeleton(story: Story, level: StoryLevel): Quest {
         id: 's4',
         kind: 'apply',
         titleEn: STORY_QUEST_COPY.seq,
-        minigameKind: 'story-sequence',
-        minigameRef: ref('seq'),
+        minigameKind: ordered ? 'story-order' : 'story-sequence',
+        minigameRef: ref(ordered ? 'order' : 'seq'),
         durationSeconds: STORY_STEP_SECONDS.seq,
       },
       { id: 's5', kind: 'reward', titleEn: STORY_QUEST_COPY.reward, hoyaLineEn: hoyaOutroEn, durationSeconds: STORY_STEP_SECONDS.reward },

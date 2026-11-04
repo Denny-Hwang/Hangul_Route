@@ -1,7 +1,9 @@
-import { questsPlacedOutAtLevel, type Episode, type Quest } from '@hangul-route/content-schema';
+import { questsPlacedOutAtLevel, seedRoute, type Episode, type Quest } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, questsAll } from '../../../content';
+import { episodesAll, episodesWithVolumes, questsAll } from '../../../content';
 import { placementRouteCatalog } from '../catalog';
+import { startChoices } from '../report-page';
+import { placementResult } from './fixtures';
 
 /**
  * Placement of a cell's Volume 2 in the app (F-CURR-002 §6.2 and row CM-40): the level check scores against the app's
@@ -28,5 +30,39 @@ describe('placement places out a Volume 2 quest of a stage below the level (row 
     for (const id of [...v2.questIds, 'quest:stage2-nature-q1']) expect(at3).toContain(id);
     const at2 = questsPlacedOutAtLevel({ stage: 'stage2', band: 2 }, catalog);
     for (const id of v2.questIds) expect(at2).not.toContain(id);
+  });
+});
+
+describe('a Volume 2 quest is never a start (row CM-40, CM-42 S6 review)', () => {
+  // The shipped bundle: Stage 6 Rules and Crafts ships a Volume 2 behind `volumes`.
+  const catalog = placementRouteCatalog(questsAll, episodesWithVolumes);
+  const later = catalog.quests.filter((q) => q.laterVolume === true).map((q) => q.id);
+
+  it('marks the shipped Volume 2 quests as a later volume, and only those', () => {
+    expect(later).toEqual(expect.arrayContaining(['quest:stage6-crafts-v2-q1', 'quest:stage6-crafts-v2-q2', 'quest:stage6-crafts-v2-q3']));
+    // A lesson Volume 2's quests, or a Stage 5 book 2's read quests (row CM-46).
+    const book2 = new Set(episodesWithVolumes.filter((e) => e.stage === 'stage5' && (e.volume ?? 1) > 1).flatMap((e) => e.questIds));
+    for (const id of later) expect(/-v\d+-q\d+$/.test(id) || book2.has(id), id).toBe(true);
+    expect(book2.size).toBeGreaterThan(0);
+  });
+
+  it("leaves them out of a parent's 'Choose a different start' list", () => {
+    const seed = seedRoute(placementResult({ level: { stage: 'stage1', band: 0 }, placedOutQuestIds: [] }), catalog, {
+      isEntitled: () => true,
+      completedQuestIds: new Set(),
+    });
+    const choices = startChoices(seed, catalog, new Set(), () => true).map((c) => c.questId);
+    expect(choices.length).toBeGreaterThan(0);
+    for (const id of later) expect(choices).not.toContain(id);
+  });
+
+  it('never seeds a start in a later volume, even when every first-volume quest is done', () => {
+    const done = new Set(catalog.quests.filter((q) => q.grid && q.laterVolume !== true).map((q) => q.id));
+    const seed = seedRoute(placementResult({ level: { stage: 'stage1', band: 0 }, placedOutQuestIds: [] }), catalog, {
+      isEntitled: () => true,
+      completedQuestIds: done,
+    });
+    expect(seed.startQuestId).toBeNull();
+    expect(seed.needsStage).toBeNull();
   });
 });

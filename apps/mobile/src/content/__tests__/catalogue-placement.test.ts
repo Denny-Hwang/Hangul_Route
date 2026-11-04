@@ -16,6 +16,7 @@ import {
 import { homeCellOf } from '../../logic/story/home-cell';
 import { buildStoryIndex, entriesForCell } from '../../logic/story/story-index';
 import { shelfEpisode, storyQuest } from '../../logic/story/__tests__/shelf-fixture';
+import { VOLUME_TWO_STORY_IDS } from '../books';
 import { cellKey, episodesAll, episodesFor, gridEpisodes } from '../episodes';
 import { questsAll } from '../quests';
 import { stages, themes } from '../stages';
@@ -130,10 +131,16 @@ const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
 /** F-STORY-004 §3.9: the intended free sampler. */
 const SAMPLER = ['seollal-new-year', 'hangeul-day', 'chuseok-ganggangsullae', 'sun-and-moon', 'sejong-new-letters', 'cheugugi-rain-gauge'];
 
+/**
+ * The story files of the §3.3 plan: every file but a book 2 tale (F-CURR-002 §5.6, row CM-46), which F-CURR-002 places
+ * in its book 2 (Volume 2, behind `volumes`), not on this table, and which shows in no home cell (its shelf episode is
+ * one of the later volumes).
+ */
 const storyFiles: Story[] = readdirSync(STORY_DIR)
   .filter((name) => name.endsWith('.json'))
   .sort()
-  .map((name) => parseStory(JSON.parse(readFileSync(join(STORY_DIR, name), 'utf8')) as unknown));
+  .map((name) => parseStory(JSON.parse(readFileSync(join(STORY_DIR, name), 'utf8')) as unknown))
+  .filter((story) => !VOLUME_TWO_STORY_IDS.has(story.id));
 
 interface ResearchEpisode {
   id: string;
@@ -246,7 +253,9 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
   it('keeps every shipped lesson the single grid episode of its cell (stories never take a cell)', () => {
     for (const key of lessonCells) {
       const [stage = '', theme = ''] = key.split(':');
-      expect(episodesFor(stage, theme).map((e) => e.format ?? 'lesson'), key).toEqual(['lesson']);
+      // A cell's later volume (F-CURR-002 rows CM-40, CM-41 S2) is a lesson too: the cell's own, never a story's.
+      expect(episodesFor(stage, theme, episodesAll).map((e) => e.format ?? 'lesson'), key).toEqual(['lesson']);
+      expect(new Set(episodesFor(stage, theme).map((e) => e.format ?? 'lesson')), key).toEqual(new Set(['lesson']));
     }
   });
 });
@@ -323,7 +332,8 @@ describe('home cells over the bundle', () => {
   it('bundles every non-draft story file, each equal to its file on the fields placement reads', () => {
     const published = storyFiles.filter((story) => story.state !== 'draft');
     expect(published.length).toBeGreaterThan(0);
-    expect(storiesAll.map((story) => story.id).sort()).toEqual(published.map((story) => story.id).sort());
+    const planStories = storiesAll.filter((story) => !VOLUME_TWO_STORY_IDS.has(story.id));
+    expect(planStories.map((story) => story.id).sort()).toEqual(published.map((story) => story.id).sort());
     const placementFields = (story: Story) => ({
       theme: story.theme,
       recommendedStage: story.recommendedStage,
@@ -331,7 +341,7 @@ describe('home cells over the bundle', () => {
       shelf: story.shelf,
       pillarTags: story.pillarTags,
     });
-    for (const story of storiesAll) {
+    for (const story of planStories) {
       const file = fileBySlug.get(slugOf(story));
       expect(file, story.id).toBeDefined();
       if (file) expect(placementFields(story), story.id).toEqual(placementFields(file));
@@ -372,7 +382,7 @@ describe('home cells over the bundle', () => {
     for (const stage of StageKeySchema.options) {
       for (const theme of ThemeKeySchema.options) {
         const expected = storiesAll
-          .filter((story) => story.shelf && homeKey(story) === `${stage}:${theme}`)
+          .filter((story) => story.shelf && !VOLUME_TWO_STORY_IDS.has(story.id) && homeKey(story) === `${stage}:${theme}`)
           .map((story) => story.id)
           .sort();
         expect(

@@ -29,6 +29,7 @@ const FIXTURES = join(
 );
 const OUT_REL = join("apps", "mobile", "src", "content", "__generated__");
 const GENERATED_REL = join(OUT_REL, "stories-index.ts");
+const SHELF_REL = join(OUT_REL, "stories-shelf.ts");
 const LEGACY_REL = join("apps", "mobile", "src", "content", "stories.generated.ts");
 
 const {
@@ -45,6 +46,7 @@ const {
   levelCode,
   offShelfStory,
   planChunks,
+  planShelf,
   readChunkManifest,
   shelfReview,
   sizes,
@@ -81,8 +83,14 @@ function putStory(root, story, file = `${story.id.replace("story:", "")}.json`) 
   writeFileSync(join(dir, file), JSON.stringify(story, null, 2));
 }
 
+/** The start-loaded index (the shelf's hash and the loaders). */
 function generatedOf(root, dir = join(root, OUT_REL)) {
   return readFileSync(join(dir, "stories-index.ts"), "utf8");
+}
+
+/** The shelf chunk (row CM-8b). */
+function shelfOf(root, dir = join(root, OUT_REL)) {
+  return readFileSync(join(dir, "stories-shelf.ts"), "utf8");
 }
 
 const grab = (source, name) => {
@@ -99,18 +107,21 @@ function chunkOf(dir, storyId) {
 
 /**
  * The generated modules read back: the shelf entries, each story put back together from its shelf
- * entry and its chunk (as `storiesOverStore` does), and the held cards.
+ * entry and its chunk (as `storiesOverStore` does), and the held cards. The index names the shelf's hash.
  */
 function evaluate(root, dir = join(root, OUT_REL)) {
-  const source = generatedOf(root, dir);
+  const index = generatedOf(root, dir);
+  const source = shelfOf(root, dir);
+  const hash = JSON.parse(source.match(/export const CHUNK_HASH = (".*?");/)[1]);
+  assert.equal(JSON.parse(index.match(/export const STORY_SHELF_HASH = (".*?");/)[1]), hash, "the index names the hash the shelf carries");
   const shelf = grab(source, "STORY_SHELF");
   const storiesAll = shelf.map((entry) => {
-    const { levels: _levels, cardKeyword: _cardKeyword, chunk, review: _review, ...rest } = entry;
+    const { levels: _levels, cardWord: _cardWord, chunk, review: _review, ...rest } = entry;
     const { hash, body } = chunkOf(dir, entry.id);
     assert.equal(hash, chunk, `${entry.id}: the shelf names the hash its chunk carries`);
     return { ...structuredClone(SHELF_DEFAULTS), ...rest, ...body };
   });
-  return { shelf, storiesAll, heldStoryCards: grab(source, "HELD_STORY_CARDS"), source };
+  return { shelf, storiesAll, heldStoryCards: grab(source, "HELD_STORY_CARDS"), source, index };
 }
 
 const chunkFiles = (root) => {
@@ -129,11 +140,17 @@ describe("build-stories.mjs: empty and fixture trees", () => {
     assert.equal(r.status, 0, r.stderr + r.stdout);
     const src = generatedOf(root);
     assert.ok(src.startsWith(GENERATED_HEADER));
-    assert.match(src, /import type \{ HeldStoryCard \} from '@hangul-route\/content-schema';/);
-    assert.match(src, /import type \{ StoryBodyChunk, StoryShelfEntry \} from '\.\.\/\.\.\/logic\/story\/story-chunk-store';/);
-    assert.match(src, /export const STORY_SHELF: StoryShelfEntry\[\] = \[\];/);
-    assert.match(src, /export const HELD_STORY_CARDS: HeldStoryCard\[\] = \[\];/);
+    assert.match(src, /import type \{ StoryBodyChunk, StoryShelfChunk \} from '\.\.\/\.\.\/logic\/story\/story-chunk-store';/);
+    assert.match(src, /export const STORY_SHELF_HASH = "[0-9a-f]{16}";/);
+    assert.match(src, /export function loadStoryShelf\(\): Promise<StoryShelfChunk> \{\n {2}return import\('\.\/stories-shelf'\);\n\}\n/);
     assert.match(src, /export function loadStoryBody\(storyId: string\): Promise<StoryBodyChunk> \| undefined \{\n {2}switch \(storyId\) \{\n {4}default:\n {6}return undefined;\n {2}\}\n\}\n$/);
+    const shelf = shelfOf(root);
+    assert.ok(shelf.startsWith(GENERATED_HEADER));
+    assert.match(shelf, /import type \{ HeldStoryCard \} from '@hangul-route\/content-schema';/);
+    assert.match(shelf, /import type \{ StoryShelfEntry \} from '\.\.\/\.\.\/logic\/story\/story-chunk-store';/);
+    assert.match(shelf, /export const STORY_SHELF: StoryShelfEntry\[\] = \[\];/);
+    assert.match(shelf, /export const HELD_STORY_CARDS: HeldStoryCard\[\] = \[\];\n$/);
+    assert.equal(JSON.parse(shelf.match(/export const CHUNK_HASH = (".*?");/)[1]), planShelf([], []).hash);
     assert.deepEqual(chunkFiles(root), []);
   });
 
@@ -143,6 +160,7 @@ describe("build-stories.mjs: empty and fixture trees", () => {
     const r = run(root);
     assert.equal(r.status, 0, r.stderr + r.stdout);
     assert.equal(generatedOf(root), buildModules({ stories: [] })["stories-index.ts"]);
+    assert.equal(shelfOf(root), buildModules({ stories: [] })["stories-shelf.ts"]);
   });
 
   test("non-JSON files and sub-directories (research/) are not read", () => {
@@ -264,17 +282,22 @@ describe("build-stories.mjs: the shelf and the chunks (F-CURR-002 CM-8)", () => 
     assert.equal(shelf.hoyaIntroEn, story.hoyaIntroEn);
     // The levels of the tiers and their scene counts, so the index and the books need no chunk.
     assert.deepEqual(shelf.levels, story.tiers.map((t) => ({ level: t.level, scenes: t.scenes.length })));
-    // The card's keyword, so a card's face needs no chunk.
-    assert.deepEqual(shelf.cardKeyword, story.keywords.find((k) => k.id === story.card.keywordId));
-    // The review gate in the shelf, the whole block in the body.
+    // The card's Korean word, so a card's face needs no chunk; the whole keyword is in the body (row CM-8b).
+    const cardKeyword = story.keywords.find((k) => k.id === story.card.keywordId);
+    assert.deepEqual(shelf.cardWord, { ko: cardKeyword.ko, romanization: cardKeyword.romanization });
+    assert.equal("cardKeyword" in shelf, false);
+    // The review gate in the shelf, the whole block (the advisory note too, row CM-8b) in the body.
     assert.deepEqual(shelf.review, {
       language: story.review.language,
       culture: story.review.culture,
       advisory: story.review.advisory,
-      advisoryNoteEn: story.review.advisoryNoteEn,
     });
     assert.equal("reviewedBy" in shelf.review, false);
+    assert.equal("advisoryNoteEn" in shelf.review, false);
     assert.deepEqual(body.review, story.review);
+    // The cover scene is read only with the tiers it names (row CM-8b).
+    assert.equal("coverSceneId" in shelf, false);
+    assert.equal(body.coverSceneId, story.coverSceneId);
     assert.equal(storyChunkName("story:hangul-day"), "story-hangul-day");
   });
 
@@ -291,11 +314,11 @@ describe("build-stories.mjs: the shelf and the chunks (F-CURR-002 CM-8)", () => 
       language: "native-reviewed",
       culture: "culture-reviewed",
     });
+    // The note is in the body (row CM-8b): only the reader, Sources and the presenter read it, after the chunk.
     assert.deepEqual(shelfReview({ language: "draft", culture: "draft", advisory: ["mild-peril"], advisoryNoteEn: "A tiger chases." }), {
       language: "draft",
       culture: "draft",
       advisory: ["mild-peril"],
-      advisoryNoteEn: "A tiger chases.",
     });
   });
 
@@ -312,7 +335,11 @@ describe("build-stories.mjs: the shelf and the chunks (F-CURR-002 CM-8)", () => 
       assert.equal(hash, c.hash);
       assert.equal(shelf.find((e) => e.id === c.id).chunk, hash);
     }
-    assert.deepEqual(chunkManifest([ready()]), [{ name: "story-hangul-day", hash: plan.chunks[0].hash }]);
+    // The shelf names each body's hash; the start-loaded index names the shelf's (row CM-8b).
+    assert.deepEqual(chunkManifest([ready()]), [
+      { name: "story-hangul-day", hash: plan.chunks[0].hash, namedBy: "stories-shelf" },
+      { name: "stories-shelf", hash: planShelf(planChunks([ready()]).entries).hash },
+    ]);
     // A story edit changes its own chunk's hash only.
     const edited = planChunks([ready({ contentVer: 9 }), ready({ id: "story:other", shelf: undefined })]);
     assert.notEqual(edited.chunks[0].hash, plan.chunks[0].hash);
@@ -357,9 +384,14 @@ describe("build-stories.mjs: the shelf and the chunks (F-CURR-002 CM-8)", () => 
   test("readChunkManifest lists the chunks of the ready stories of content/stories (pwa-postbuild reads it)", () => {
     const root = makeRoot();
     putStory(root, ready());
-    putStory(root, ready({ id: "story:draft-one", state: "draft" }));
+    putStory(root, ready({ id: "story:draft-one", state: "draft", card: undefined }));
     assert.deepEqual(readChunkManifest(root), chunkManifest([ready()]));
-    assert.deepEqual(readChunkManifest(makeRoot()), []);
+    assert.deepEqual(readChunkManifest(makeRoot()), [{ name: "stories-shelf", hash: planShelf([], []).hash }]);
+    // A held story (a draft with a card and a shelf block) keeps its card in the shelf, so it changes the shelf's hash.
+    const held = ready({ id: "story:held-one", state: "draft" });
+    putStory(root, held);
+    assert.deepEqual(readChunkManifest(root), chunkManifest([ready()], { held: heldStoryCards([held]) }));
+    assert.notDeepEqual(readChunkManifest(root).at(-1), chunkManifest([ready()]).at(-1));
   });
 });
 
@@ -654,9 +686,15 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     putStory(root, content);
     const r = run(root, ["--include-fixtures"]);
     assert.equal(r.status, 0, r.stderr + r.stdout);
-    const src = generatedOf(root);
+    const index = generatedOf(root);
+    const src = shelfOf(root);
     assert.ok(src.startsWith(GENERATED_HEADER));
     assert.match(src, /never commit/);
+    // The index names the fixture shelf's hash, which readChunkManifest gives for a fixture build (pwa-postbuild --story-fixtures).
+    const shelfHash = JSON.parse(src.match(/export const CHUNK_HASH = (".*?");/)[1]);
+    assert.equal(JSON.parse(index.match(/export const STORY_SHELF_HASH = (".*?");/)[1]), shelfHash);
+    assert.deepEqual(readChunkManifest(root, { fixtures: true }).at(-1), { name: "stories-shelf", hash: shelfHash });
+    assert.notEqual(readChunkManifest(root).at(-1).hash, shelfHash);
     // Content stays a typed shelf entry with its chunk; fixtures (input form) go through the schema at load time.
     assert.deepEqual(grab(src, "contentShelf").map((s) => s.id), ["story:zz-content"]);
     assert.deepEqual(chunkFiles(root), ["story-zz-content.ts"]);
@@ -668,8 +706,8 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     assert.match(src, /export const STORY_INLINE_BODIES: Readonly<Record<string, StoryBody>> = Object\.fromEntries/);
     assert.match(src, /export const STORY_FIXTURE_IDS: string\[\] = \["story:hangul-day"\];/);
     // The content story's chunk loads as in a release build; the fixtures have none.
-    assert.match(src, /case "story:zz-content":/);
-    assert.doesNotMatch(src, /case "story:hangul-day":/);
+    assert.match(index, /case "story:zz-content":/);
+    assert.doesNotMatch(index, /case "story:hangul-day":/);
     assert.match(r.stdout, /2 stories/);
     assert.match(r.stdout, /do not commit/i);
   });
@@ -680,7 +718,7 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     putStory(root, ready({ id: "story:zz-content", rewardCardIds: { listen: "card:story-zz-content" }, card: { titleEn: "Content", keywordId: "sejong", factId: "f1" } }));
     const r = run(root, ["--include-fixtures"]);
     assert.equal(r.status, 0, r.stderr + r.stdout);
-    const src = generatedOf(root);
+    const src = shelfOf(root);
     const [content] = grab(src, "contentShelf");
     assert.equal(content.id, "story:zz-content");
     assert.equal(content.shelf, undefined);
@@ -703,7 +741,7 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     assert.equal(check.status, 1);
     assert.equal(run(root).status, 0);
     assert.deepEqual(evaluate(root).storiesAll, []);
-    assert.doesNotMatch(generatedOf(root), /STORY_FIXTURE_IDS|STORY_INLINE_BODIES/);
+    assert.doesNotMatch(shelfOf(root), /STORY_FIXTURE_IDS|STORY_INLINE_BODIES/);
     assert.equal(run(root, ["--check"]).status, 0);
   });
 
@@ -747,6 +785,7 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     const r = run(root, ["--report"]);
     assert.equal(r.status, 0, r.stderr + r.stdout);
     assert.match(r.stdout, /story:hangul-day\s+chunk \d+ B raw\s+\d+ B gzip/);
+    assert.match(r.stdout, /stories-shelf\.ts \(shelf chunk, before the first screen\)\s+\d+ B raw\s+\d+ B gzip \(budget 40000 B\)/);
     assert.match(r.stdout, /stories-index\.ts \(start\)\s+\d+ B raw\s+\d+ B gzip/);
     assert.match(r.stdout, /manifest \(start: lessons-index\.ts \d+ B \+ stories-index\.ts\)\s+\d+ B raw \(budget 60000 B\)/);
     assert.match(r.stdout, /total\s+\d+ B raw\s+\d+ B gzip/);
@@ -796,7 +835,17 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     assert.equal(BUDGET.totalGzip, 510_000);
     assert.ok(BUDGET.totalGzip >= Math.ceil((220_524 * BUDGET.totalRaw) / 869_644));
     assert.equal(BUDGET.manifestRaw, 60_000);
+    // Row CM-8b: the shelf chunk, which the web app waits for before its first screen, like the lesson headers (40,000 B).
+    assert.equal(BUDGET.shelfRaw, 40_000);
     assert.equal(BUDGET.artRaw, 130_000);
+  });
+
+  test("checkBudget: the shelf chunk over its line fails, equal passes, absent is not checked", () => {
+    const base = { perStory: [], total: { raw: 1, gzip: 1 } };
+    assert.deepEqual(checkBudget({ ...base, shelf: { raw: BUDGET.shelfRaw } }), []);
+    const problems = checkBudget({ ...base, shelf: { raw: BUDGET.shelfRaw + 1 } });
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /story shelf chunk \(stories-shelf\.ts\) is \d+ B raw, over its ceiling of 40000 B/);
   });
 
   test("sizes: each chunk module, the shelf, the manifest with the lessons and the total of every story module", () => {
@@ -805,8 +854,10 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     const report = sizes(stories, modules, "x".repeat(10));
     assert.deepEqual(report.perStory.map((s) => s.id), ["story:b", "story:hangul-day"]);
     assert.equal(report.perStory[1].raw, Buffer.byteLength(modules["story-chunks/story-hangul-day.ts"]));
-    assert.equal(report.shelf.raw, Buffer.byteLength(modules["stories-index.ts"]));
-    assert.deepEqual(report.manifest, { raw: 10 + report.shelf.raw, lessons: 10 });
+    // Row CM-8b: the shelf is a chunk of its own; the start-loaded manifest counts the index (the loaders) only.
+    assert.equal(report.shelf.raw, Buffer.byteLength(modules["stories-shelf.ts"]));
+    assert.equal(report.index.raw, Buffer.byteLength(modules["stories-index.ts"]));
+    assert.deepEqual(report.manifest, { raw: 10 + report.index.raw, lessons: 10 });
     assert.equal(report.total.raw, Object.values(modules).reduce((n, m) => n + Buffer.byteLength(m), 0));
   });
 

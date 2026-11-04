@@ -135,6 +135,24 @@ describe('startChoices (the "Choose a different start" list)', () => {
   });
 });
 
+describe('startChoices leaves out a cell\'s later volume (F-CURR-002 row CM-41)', () => {
+  it('a Volume 2 quest is no start a grown-up can choose', () => {
+    const seed = {
+      level: { stage: 'stage1' as const, band: 0 as const },
+      oralStage: null,
+      startQuestId: 'quest:q1',
+      startEpisodeId: 'episode:e1',
+      placedOutQuestIds: [],
+      priorityTokens: [],
+      themeOrder: [],
+      beyondContent: false,
+      needsStage: null,
+    };
+    const withLater: RouteCatalog = { quests: [quest(1), quest(8, 'stage1', { laterVolume: true })] };
+    expect(startChoices(seed, withLater, new Set(), () => true)).toEqual([{ questId: 'quest:q1', state: 'start' }]);
+  });
+});
+
 describe('startingSpotRow (the dashboard row)', () => {
   it('is null without a result', () => {
     expect(startingSpotRow([])).toBeNull();

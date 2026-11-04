@@ -33,7 +33,20 @@ import {
   ALBUM_OPEN,
 } from './props/books';
 import { BEAD_CURTAIN, CEREMONY_GOODS, FEAST_TABLE, PALANQUIN, PROCESSION_ROW, SILK_BOLTS } from './props/festival';
-import { DUG_SOIL, FLAT_ROCK, FULL_MOON, GROUND_SHADOW, HERBS, HORSE, LEAFY_TREE, NIGHT_SKY, PINE_TREE, RAIN_CLOUD, SAND_RING } from './props/nature';
+import {
+  DUG_SOIL,
+  FLAT_ROCK,
+  FULL_MOON,
+  GROUND_SHADOW,
+  HERBS,
+  HOODED_CRANE,
+  HORSE,
+  LEAFY_TREE,
+  NIGHT_SKY,
+  PINE_TREE,
+  RAIN_CLOUD,
+  SAND_RING,
+} from './props/nature';
 import {
   ARCHIVE_SHELF,
   BLANK_SHEET,
@@ -296,6 +309,8 @@ export const LIBRARY: readonly ItemDef[] = [
   TIGER_TRICKSTER,
   SKY_ROPE,
   SORGHUM,
+  // F-CURR-002 row CM-46: the Nature book 2.
+  HOODED_CRANE,
 ];
 
 export const SCENE_ART_REGISTRY: Registry = Object.freeze({

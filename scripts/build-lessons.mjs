@@ -109,10 +109,13 @@ export const BUDGET = Object.freeze({
   headersChunkRaw: 40_000, // F-CURR-002 CM-40: one locale's headers chunk (the display lines; Volume 1: en 15,095, es 14,800, ko 15,751 B; about 31 KB projected with Volume 2)
   cellChunkRaw: 90_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (largest at CM-5: stage2-letters, 61,381 B for six quests)
   cellChunkGzip: 16_000, // F-CURR-002 CM-5: the same, gzip (largest at CM-5: stage2-letters, 11,070 B)
-  stageRaw: 220_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000 for the stage module)
-  stageGzip: 40_000, // F-CURR-002 CM-5 (OD-5): was 32,000
-  totalRaw: 1_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000)
-  totalGzip: 210_000, // F-CURR-002 CM-5 (OD-5): was 140,000
+  // The F-CURR-002 Volume 2 integration (rows CM-41..CM-45, fifteen Volume 2 cells) measures Stage 4 321,652 B raw,
+  // Stage 6 323,945 B raw / 40,720 B gzip, and in total 1,944,700 B raw / 328,240 B gzip: past the CM-5 lines, so each line
+  // is that measurement plus a rounding margin (OD-5: lazy and precached, no weight on start-up).
+  stageRaw: 340_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000, then 220,000)
+  stageGzip: 44_000, // F-CURR-002 CM-5 (OD-5): was 32,000, then 40,000
+  totalRaw: 2_000_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000, then 1,400,000)
+  totalGzip: 340_000, // F-CURR-002 CM-5 (OD-5): was 140,000, then 210,000
 });
 
 export class ContentError extends Error {
@@ -265,6 +268,9 @@ export function runtimeScope(scope, where) {
     // F-CURR-002 row CM-38: the chain's frames; off (`game.my-story`), the app plays the first in Write Frame.
     case "my-story":
       return { kind, rounds: scope.frames.length, myStory: { frames: scope.frames } };
+    // F-CURR-002 row CM-44 S2: one round per block; off (`game.syllable-build`), the app plays Listen & Pick on the block.
+    case "syllable-build":
+      return { kind, rounds: scope.rounds.length, syllableBuild: { rounds: scope.rounds } };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }
@@ -479,6 +485,20 @@ const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== und
 const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 
 /**
+ * Fields the content carries for the build only, never read by the app: `soundChange: true` marks a sound change the
+ * converter cannot see (liaison, F-CURR-002 section 4.2, row CM-44 S2) on a round or its Korean, and goes into the review
+ * items (`extract.ts`); the lesson modules leave it out, so their literals keep the runtime schema's shape.
+ */
+export const BUILD_ONLY_FIELDS = Object.freeze(["soundChange"]);
+
+/** Pure: the value with every `BUILD_ONLY_FIELDS` key removed, at any depth. */
+export function withoutBuildOnly(value) {
+  if (Array.isArray(value)) return value.map(withoutBuildOnly);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).filter(([k]) => !BUILD_ONLY_FIELDS.includes(k)).map(([k, v]) => [k, withoutBuildOnly(v)]));
+}
+
+/**
  * Pure: ready shaped cells -> what each chunk holds and its hash.
  *   manifest  the episodes and the quest headers, English, without steps or display lines
  *   cells     one body per cell and volume: steps by quest id, scopes by ref, the es / ko glosses of both, and each
@@ -503,8 +523,8 @@ export function planChunks(cells) {
         if (line.length > 0) lines[locale][id] = Object.fromEntries(line);
       }
     }
-    const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, q.steps])));
-    const scopes = literal(sortedKeys(cell.scopes));
+    const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, withoutBuildOnly(q.steps)])));
+    const scopes = literal(withoutBuildOnly(sortedKeys(cell.scopes)));
     const glosses = overlaysLiteral(overlays);
     const notes = literal(cell.notes ?? {});
     return {
@@ -1002,11 +1022,15 @@ export function readCellsWithFixtures(root) {
   return at === -1 ? [...cells, ...fixtures] : [...cells.slice(0, at + 1), ...fixtures, ...cells.slice(at + 1)];
 }
 
-/** The e2e fixture cell, shaped with its overlays, read from the Volume 1 file it copies; none when that file is absent. */
+/**
+ * The e2e fixture cell, shaped with its overlays, read from the Volume 1 file it copies; none when that file is absent,
+ * and none once the cell ships a Volume 2 of its own (row CM-41 S2, `nature.v2.json`): the shipped Volume 2 is then the
+ * one the e2e plays, so the bundle never holds two cells of one id.
+ */
 export function fixtureCells(root) {
   const { stageNo, theme } = FIXTURE_VOLUME2;
   const full = join(root, "content", "episodes", `stage-${stageNo}`, `${theme}.json`);
-  if (!existsSync(full)) return [];
+  if (!existsSync(full) || existsSync(join(root, "content", "episodes", `stage-${stageNo}`, `${theme}.v2.json`))) return [];
   const files = OVERLAY_LOCALES.flatMap((locale) => {
     const overlay = join(root, cellOverlayFile(locale, stageNo, theme));
     return existsSync(overlay) ? [{ ...readJson(root, overlay), locale }] : [];

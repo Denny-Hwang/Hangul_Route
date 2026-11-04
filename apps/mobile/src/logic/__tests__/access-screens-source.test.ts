@@ -69,7 +69,10 @@ describe('the quest player guard (section 3.6)', () => {
     const src = read('screens/quest/QuestPlayerScreen.tsx');
     expect(src).toMatch(/playerGuard\(questOpen, questId, episodeId\)/);
     expect(src).toMatch(/navigation\.replace\('EpisodeDetail', guard\)/);
-    expect(src).toMatch(/if \(!settled \|\| guard\) return null;/);
+    expect(src).toMatch(/if \(!settled \|\| guard \|\| \(laterVolume && volumesOn !== true\)\) return null;/);
+    // A later volume waits for `volumes` and, while it is off, shows its episode page (F-CURR-002 row CM-41 S2).
+    expect(src).toMatch(/isLaterVolumeQuest\(questId, episodeId\)/);
+    expect(src).toMatch(/if \(volumeClosed\) navigation\.replace\('EpisodeDetail', \{ episodeId, from: 'player' \}\)/);
     // A closed answer is checked again once the tier and memberships are read (never redirect an owned quest).
     expect(src).toMatch(/settledPlayerGuard\(\{ learnerId, questId, episodeId \}\)/);
   });

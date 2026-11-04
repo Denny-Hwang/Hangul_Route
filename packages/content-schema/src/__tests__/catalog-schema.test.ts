@@ -21,6 +21,7 @@ import {
 } from '..';
 import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
 import { STAGE1_15_QUESTS } from './fixtures/stage1-15';
+import { VOLUME_TWO_STORY_SLUGS } from '../catalog/data';
 
 const clone = (): Catalog => structuredClone(CATALOG);
 const issues = (catalog: unknown): string[] => {
@@ -139,10 +140,14 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108);
+    // + the fifteen Volume 2 cells of F-CURR-002 rows CM-41..CM-45 (3 lesson quests each): +45 lesson quests.
+    // + the Stage 5 books 2 of row CM-46 (Nature 3 and Play 2 read quests): +5 lesson quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(158);
   });
 
-  it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
+  it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode (a book 2 tale is listed in its book only, row CM-46)', () => {
+    expect([...VOLUME_TWO_STORY_SLUGS]).toEqual(['jeju-volcanic-island', 'jirisan-national-park', 'suncheon-bay-wetland', 'hahoe-mask-dance', 'hanji-korean-paper']);
+    for (const slug of VOLUME_TWO_STORY_SLUGS) expect(CATALOG.stories.some((s) => s.id === `story:${slug}`), slug).toBe(false);
     expect(CATALOG.stories).toHaveLength(24);
     expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(112);
     expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(24);
@@ -176,7 +181,7 @@ describe('the shipped catalogue data', () => {
     ]);
   });
 
-  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9)', () => {
+  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9), but not a book 2 tale (row CM-46)', () => {
     expect(CATALOG.stories).toHaveLength(24);
     expect(CATALOG.stories.every((s) => s.status === 'ready')).toBe(true);
   });
@@ -547,6 +552,58 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q1',
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
+      // A cell's later volume follows every first volume, in grid order (F-CURR-002 row CM-40): the Volume 2 content rows
+      // CM-41..CM-45 and the Stage 5 books 2 of row CM-46 (their read quests, Nature then Play).
+      'quest:stage2-letters-v2-q1',
+      'quest:stage2-letters-v2-q2',
+      'quest:stage2-letters-v2-q3',
+      'quest:stage2-nature-v2-q1',
+      'quest:stage2-nature-v2-q2',
+      'quest:stage2-nature-v2-q3',
+      'quest:stage2-crafts-v2-q1',
+      'quest:stage2-crafts-v2-q2',
+      'quest:stage2-crafts-v2-q3',
+      'quest:stage3-life-v2-q1',
+      'quest:stage3-life-v2-q2',
+      'quest:stage3-life-v2-q3',
+      'quest:stage3-rites-v2-q1',
+      'quest:stage3-rites-v2-q2',
+      'quest:stage3-rites-v2-q3',
+      'quest:stage3-nature-v2-q1',
+      'quest:stage3-nature-v2-q2',
+      'quest:stage3-nature-v2-q3',
+      'quest:stage4-life-v2-q1',
+      'quest:stage4-life-v2-q2',
+      'quest:stage4-life-v2-q3',
+      'quest:stage4-rites-v2-q1',
+      'quest:stage4-rites-v2-q2',
+      'quest:stage4-rites-v2-q3',
+      'quest:stage4-nature-v2-q1',
+      'quest:stage4-nature-v2-q2',
+      'quest:stage4-nature-v2-q3',
+      'quest:stage4-crafts-v2-q1',
+      'quest:stage4-crafts-v2-q2',
+      'quest:stage4-crafts-v2-q3',
+      'quest:story-jeju-volcanic-island-read',
+      'quest:story-jirisan-national-park-read',
+      'quest:story-suncheon-bay-wetland-read',
+      'quest:story-hahoe-mask-dance-read',
+      'quest:story-hanji-korean-paper-read',
+      'quest:stage6-letters-v2-q1',
+      'quest:stage6-letters-v2-q2',
+      'quest:stage6-letters-v2-q3',
+      'quest:stage6-rites-v2-q1',
+      'quest:stage6-rites-v2-q2',
+      'quest:stage6-rites-v2-q3',
+      'quest:stage6-nature-v2-q1',
+      'quest:stage6-nature-v2-q2',
+      'quest:stage6-nature-v2-q3',
+      'quest:stage6-crafts-v2-q1',
+      'quest:stage6-crafts-v2-q2',
+      'quest:stage6-crafts-v2-q3',
+      'quest:stage7-nature-v2-q1',
+      'quest:stage7-nature-v2-q2',
+      'quest:stage7-nature-v2-q3',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);

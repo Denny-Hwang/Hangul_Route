@@ -1,5 +1,5 @@
 import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
-import { CATALOG } from '@hangul-route/content-schema';
+import { CATALOG, planCatalogStale } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -94,7 +94,8 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
   const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
   // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong).
-  const stale = active !== null && active.meta.catalogVersion < CATALOG.version;
+  // A catalogue that added only later volumes (F-CURR-002 row CM-40) is not newer for a plan: a refresh adds nothing.
+  const stale = active !== null && planCatalogStale(active.meta.catalogVersion, CATALOG);
 
   const leave = (): void => {
     if (navigation.canGoBack()) navigation.goBack();

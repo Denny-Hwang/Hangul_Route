@@ -4,8 +4,9 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose, pastTapLock } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 
 /**
  * F-CURR-001 section 5 (row C-2 lands the skeleton): on the release bundle, offline-capable, a shipped
@@ -1191,8 +1192,14 @@ async function openFirstQuest(page: Page): Promise<void> {
   await expect(headerClose(page)).toBeVisible();
 }
 
-/** One test per cell of the lesson manifest, with its deep play when it has one. */
-const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
+/**
+ * The cells' first volumes. A later volume (F-CURR-002 row CM-40) is no grid entry of its own: it opens from its cell's
+ * page behind `volumes` (built-in pct 0), and each has its own smoke (Stage 2 Nature: nature-volume2.spec).
+ */
+const FIRST_VOLUMES = LESSON_EPISODES.filter((episode) => (episode.volume ?? 1) === 1);
+
+/** One test per cell of the lesson manifest (its first volume), with its deep play when it has one. */
+const CELLS: readonly UpperCell[] = FIRST_VOLUMES.map((episode) => {
   const stage = Number(episode.stage.replace('stage', ''));
   const play = PLAYS[episode.id];
   return {
@@ -1204,12 +1211,36 @@ const CELLS: readonly UpperCell[] = LESSON_EPISODES.map((episode) => {
   };
 });
 
-async function openJourney(page: Page): Promise<void> {
+async function openJourney(page: Page, flags?: Record<string, { on: boolean; pct: number }>, textSize?: 'largest'): Promise<void> {
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Dami' });
+  // A stored remote copy turns a dark switch on for this learner, as a ramp would (F-CURR-002 §12.2); the device's
+  // text size (Largest is 150%) is stored beside it.
+  const stored: Record<string, unknown> = {};
+  if (flags !== undefined) stored['remote-config'] = { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags };
+  if (textSize !== undefined) stored['device:settings'] = { uiLocale: 'en', textSize, uiLocaleAt: '2026-10-16T09:00:00.000Z' };
+  if (Object.keys(stored).length > 0) await seedStoredAll(page, stored);
+  await page.goto('/');
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+}
+
+/** The Journey of a new learner with the remote copy `flags` stored (a ramp's state), as the volumes specs set it. */
+async function openJourneyWith(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags } });
+  await page.reload();
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const guide = page.getByTestId('install-guide');
   await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
@@ -1219,9 +1250,11 @@ async function openJourney(page: Page): Promise<void> {
 
 test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   test('the cell list is the lesson manifest, and every deep play names a shipped cell', () => {
-    expect(CELLS.map((c) => c.episodeId)).toEqual(LESSON_EPISODES.map((e) => e.id));
+    expect(CELLS.map((c) => c.episodeId)).toEqual(FIRST_VOLUMES.map((e) => e.id));
     const shipped = new Set(LESSON_EPISODES.map((e) => e.id));
     for (const id of Object.keys(PLAYS)) expect(shipped.has(id), `${id} has a deep play but is not in the lesson manifest`).toBe(true);
+    // Every later volume of the manifest has its deep play below (row CM-41 S4 ships the first, Stage 4 Nature).
+    for (const episode of LATER_VOLUMES) expect(LATER_PLAYS[episode.id], `${episode.id} has no deep play`).toBeDefined();
   });
 
   // Every shipped cell has a deep play today, so the generic path a new cell takes (openFirstQuest, then its
@@ -1253,6 +1286,57 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  // F-CURR-002 row CM-41: Nature Volume 2, S3 (Weather Sentences) at its launch state. `volumes` is at built-in pct 0,
+  // so it is turned on through the stored remote copy, as a ramp would; `game.cloze-pick` stays dark, so its Cloze
+  // Pick Practice plays the Listen & Pick fallback in the text prompt mode (tile ids `<round>:t<n>`).
+  test('episode:stage3-nature-v2 q1 at 320 px: Vol 2 on the cell page, its Cloze Pick Practice as the fallback, to the reward', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourneyWith(page, { volumes: { on: true, pct: 100 } });
+    // Volume 1 is not done, so the cell opens it; the Vol 2 tab opens Weather Sentences.
+    await page.getByRole('button', { name: journeyCellName(3, THEME_LABEL.nature), exact: true }).click();
+    await expect(page.getByText('Animal Sentences').first()).toBeVisible();
+    const tabs = page.getByRole('tablist', { name: 'Volumes' });
+    await tabs.getByRole('tab', { name: 'Volume 2' }).click();
+    await expect(page.getByText('Weather Sentences').first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+    await shot(page, 'weather-sentences-page-320');
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(page.getByText('Weather Sentences').first()).toBeVisible();
+    await shot(page, 'weather-sentences-page-wide');
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.getByTestId('episode-quest-quest:stage3-nature-v2-q1').getByRole('button', { name: 'Start' }).click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await expect(headerClose(page)).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    // Discover: the pattern page (비가 와요, 눈이 와요), then the wind and cloud sentences.
+    await expect(page.getByText('비가 와요.').first()).toBeVisible();
+    await shot(page, 'weather-sentences-q1-discover-320');
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByTestId('listen-pick-text-prompt')).toBeVisible({ timeout: 5_000 });
+    await shot(page, 'weather-sentences-q1-cloze-fallback-320');
+    await pickByIds(page, ['r1:t0', 'r2:t0', 'r3:t0', 'r4:t0', 'r5:t0']);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await pickByIds(page, ['rain', 'snow', 'wind', 'a']);
+    // The Check is Sentence Builder: 비가 와요, then the particle of 바람이 불어요.
+    await buildCheck(page, [['비가, biga', '와요, wayo'], ['이, i']]);
+    await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    await shot(page, 'weather-sentences-q1-reward-320');
+    expect(errors).toEqual([]);
+  });
+
+  test('episode:stage3-nature-v2 with volumes off: the cell opens Volume 1 alone, with no Vol 2 tab', async ({ page }) => {
+    await openJourneyWith(page, {});
+    await page.getByRole('button', { name: journeyCellName(3, THEME_LABEL.nature), exact: true }).click();
+    await expect(page.getByText('Animal Sentences').first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+    await expect(page.getByText('Weather Sentences')).toHaveCount(0);
+  });
 
   // F-CURR-002 row CM-3A S3: a Stage 3 Dictation Check at launch state. `game.type-hangul-hear` is dark (built-in
   // pct 0), so the Check's hear rounds play as Type Hangul see rounds on the in-app keyboard, and the quest finishes.
@@ -1292,3 +1376,197 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     expect(errors).toEqual([]);
   });
 });
+
+/**
+ * F-CURR-002 row CM-41 S6: Stage 6 Nature Volume 2, "Weather & Park Map", at its launch state. `volumes` is at its
+ * built-in pct 0 (the row merges dark), so the Volume 2 case turns it on through the stored remote copy, as a ramp
+ * would; every `game.<kind>` stays at pct 0, so the Apply's Cloze Pick plays as Listen & Pick with a text prompt and the
+ * card above it, and the Dictation Check as Type Hangul see rounds. The realia sit beside the option cards at 320 px.
+ */
+const VOLUME2_PLAYS = new Map<string, (page: Page) => Promise<void>>([
+  [
+    'episode:stage6-nature-v2',
+    async (page) => {
+      await startFirstQuest(page);
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      // Practice: Realia Read on the forecast card (CM-47 kind `forecast`).
+      await expect(page.getByTestId('realia-read-question')).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `cm41-s6-q1-forecast-${page.viewportSize()?.width === 320 ? '320' : 'wide'}`);
+      await pickRealia(page, ['bi', 'oneul', 'nun', 'naeil']);
+      // Apply: Cloze Pick on the card's values, played as its Listen & Pick fallback with game.cloze-pick dark.
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expectNoHorizontalOverflow(page);
+      await shot(page, `cm41-s6-q1-cloze-fallback-${page.viewportSize()?.width === 320 ? '320' : 'wide'}`);
+      await pickByIds(page, ['a1:t2', 'a2:t2', 'a3:t1']);
+      // Check: Dictation of 비 and 눈, played as see rounds with game.type-hangul-hear dark.
+      await page.getByRole('button', { name: 'Go', exact: true }).click();
+      for (const word of ['비', '눈']) {
+        await expect(page.getByTestId('type-hangul-prompt')).toContainText(word, { timeout: 5_000 });
+        await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
+        await typeAnswer(page, word);
+      }
+      await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    },
+  ],
+]);
+
+/**
+ * A new learner whose stored remote copy holds `flags` (the `volumes` ramp), on the Journey; `extra` seeds more stored
+ * values in the same write (the device settings' text size, say).
+ */
+async function journeyWithFlags(page: Page, flags: Record<string, { on: boolean; pct: number }>, extra: Record<string, unknown> = {}): Promise<void> {
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Dami' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags }, ...extra });
+  await page.reload();
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await openJourneyTab(page);
+}
+
+/** The Journey tab, from Home or after leaving a cell's page. */
+async function openJourneyTab(page: Page): Promise<void> {
+  await page.getByText('Journey', { exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+}
+
+/** The cell's first volume: the episode a cell opens on while `volumes` is off. */
+const firstVolumeOf = (episode: (typeof LESSON_EPISODES)[number]) =>
+  FIRST_VOLUMES.find((e) => e.stage === episode.stage && e.theme === episode.theme);
+
+/** From the Journey: the later volume's cell, its Vol 2 tab, then quest `index`'s Start (a soft prerequisite may ask), up to its first game. */
+async function openVolumeQuest(page: Page, episode: (typeof LESSON_EPISODES)[number], index: number): Promise<void> {
+  const stage = Number(episode.stage.replace('stage', ''));
+  await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+  await page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' }).click();
+  await expect(page.getByText(episode.titleEn).first()).toBeVisible();
+  await page.getByTestId(`episode-quest-${episode.questIds[index]}`).getByRole('button', { name: 'Start', exact: true }).click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(headerClose(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+}
+
+/** Every line button of the Realia Read sheet `group` is on screen and inside a 320 column, and nothing scrolls sideways. */
+async function expectSheetFits320(page: Page, group: string): Promise<void> {
+  const sheet = page.getByRole('group', { name: group });
+  await expect(sheet).toBeVisible({ timeout: 10_000 });
+  const buttons = sheet.getByRole('button');
+  expect(await buttons.count()).toBeGreaterThan(0);
+  for (const button of await buttons.all()) {
+    await button.scrollIntoViewIfNeeded();
+    await expect(button).toBeVisible();
+    const box = (await button.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+  }
+  await expectNoHorizontalOverflow(page);
+}
+
+test.describe('Volume 2 cells (F-CURR-002 rows CM-40 and CM-41)', () => {
+  for (const [label, size] of [
+    ['320', { width: 320, height: 720 }],
+    ['wide', { width: 1280, height: 900 }],
+  ] as const) {
+    for (const episode of LATER_VOLUMES) {
+      test(`${label}: ${episode.id} opens from its cell's Vol 2 tab with volumes on, and its first quest plays to the reward`, async ({ page }) => {
+        const errors: string[] = [];
+        page.on('pageerror', (e) => errors.push(String(e)));
+        await page.setViewportSize(size);
+        await journeyWithFlags(page, { volumes: { on: true, pct: 100 } });
+        const stage = Number(episode.stage.replace('stage', ''));
+        await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+        const tabs = page.getByRole('tablist', { name: 'Volumes' });
+        await tabs.getByRole('tab', { name: 'Volume 2' }).click();
+        await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByText(episode.titleEn).first()).toBeVisible();
+        if (label === '320') await expectNoHorizontalOverflow(page);
+        await VOLUME2_PLAYS.get(episode.id)?.(page);
+        expect(errors).toEqual([]);
+      });
+    }
+  }
+
+  test('volumes off (launch state): the cell opens Volume 1 alone, with no Vol tabs and no Volume 2 title', async ({ page }) => {
+    await journeyWithFlags(page, {});
+    for (const [i, episode] of LATER_VOLUMES.entries()) {
+      if (i > 0) await openJourneyTab(page);
+      const stage = Number(episode.stage.replace('stage', ''));
+      await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+      // The cell's page is open on Volume 1 first, so the zero counts below are read on that page, not before it loads.
+      const first = firstVolumeOf(episode);
+      expect(first, `${episode.id} has a first volume`).toBeDefined();
+      await expect(page.getByText(first!.titleEn).first()).toBeVisible();
+      await expect(page.getByTestId(`episode-quest-${first!.questIds[0]}`)).toBeVisible();
+      await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+      await expect(page.getByText(episode.titleEn)).toHaveCount(0);
+      await page.goBack();
+    }
+  });
+});
+
+/**
+ * Row CM-41 S6 review fixes: the park map (kind `map`) draws no arrow, so each place shows its way as the line's value
+ * (주차장 ···· 왼쪽), and the q3 questions "Which way is ...?" are read off the sheet; q3 plays to the reward at 320.
+ * At the Largest text size each Volume 2 sheet (the forecast's 오늘 / 내일 / 모레 tiles, the 4-board trail sign with
+ * minutes, the 4-place map) keeps every line button inside the 320 column.
+ */
+test.describe('Stage 6 Nature Volume 2 sheets (F-CURR-002 row CM-41 S6)', () => {
+  test.use({ viewport: { width: 320, height: 720 } });
+  const episode = LESSON_EPISODES.find((e) => e.id === 'episode:stage6-nature-v2')!;
+
+  test('320: q3 shows the way to each place on the park map, and plays to the reward', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await journeyWithFlags(page, { volumes: { on: true, pct: 100 } });
+    await openVolumeQuest(page, episode, 2);
+    const map = page.getByRole('group', { name: 'Map, 4 lines' });
+    await expect(map).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('realia-read-sheet-kind-map')).toBeVisible({ timeout: 10_000 });
+    // The way is printed on the sheet, not only in the line's accessible name.
+    await expect(map.getByText('왼쪽', { exact: true })).toHaveCount(2);
+    await expect(map.getByText('오른쪽', { exact: true })).toHaveCount(2);
+    await expect(map.getByRole('button', { name: /^호수, hosu, 오른쪽, oreunjjok/ })).toBeVisible();
+    await expectSheetFits320(page, 'Map, 4 lines');
+    await shot(page, 'cm41-s6-q3-map-320');
+    await pickRealia(page, ['juchajang', 'oreunjjok', 'annaeso', 'oreunjjok']);
+    // Apply: Tap to Respond, the way to each place as the map shows it.
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await replyTurns(page, ['안녕하세요!', '왼쪽으로 가세요.', '오른쪽으로 가세요.', '오른쪽으로 가세요.'], 'check');
+    // Check: Realia Read on the same map.
+    await playRealiaCheck(page, ['a', 'b']);
+    await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  for (const [index, group, ko, lazyKind] of [
+    [0, 'Weather forecast, 3 lines', '모레', 'forecast'],
+    [1, 'Trail sign, 4 lines', '대피소', undefined],
+    [2, 'Map, 4 lines', '오른쪽', 'map'],
+  ] as const) {
+    test(`320 at the Largest text size: q${index + 1}'s sheet keeps every line button in the column`, async ({ page }) => {
+      await journeyWithFlags(page, { volumes: { on: true, pct: 100 } }, { 'device:settings': { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' } });
+      await openVolumeQuest(page, episode, index);
+      const sheet = page.getByRole('group', { name: group });
+      await expect(sheet).toBeVisible({ timeout: 10_000 });
+      // A CM-47 kind first draws as the plain sheet and redraws once its chunk is in: measure the kind's own layout.
+      if (lazyKind !== undefined) await expect(page.getByTestId(`realia-read-sheet-kind-${lazyKind}`)).toBeVisible({ timeout: 10_000 });
+      // bodyLg (20) x 1.5: the setting reached the sheet.
+      expect(await sheet.getByText(ko, { exact: true }).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(30);
+      await expectSheetFits320(page, group);
+      await shot(page, `cm41-s6-q${index + 1}-largest-320`);
+    });
+  }
+});
+
