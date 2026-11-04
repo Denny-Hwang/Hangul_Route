@@ -12,6 +12,7 @@
     "./review-items": "./src/review-items/review-item.ts",
     "./letter-names": "./src/hangul/letter-names.ts",
     "./memory": "./src/memory/memory-sync.ts",
+    "./week-drops": "./src/week-drops/week-drop.ts",
     "./match-shape": "./src/schemas/match-shape.ts",
     "./audio-packs": "./audio-packs.ts",
     "./learning-summary": "./src/schemas/learning-summary.ts",
