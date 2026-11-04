@@ -4,6 +4,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardChild, readStored, seedStored, unlockWithPin } from './helpers';
 import { shot } from './shots';
+import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
 
 /**
  * AMENDMENTS-ROUTE-CLASS-BLEND section 9.4 (row BL-8, BL-OD-7; wireframe design/wireframes/journey/route-class-blend.md
@@ -141,3 +142,38 @@ for (const size of [
     });
   });
 }
+
+test('320 px at the Largest text size (150%): every chip keeps its label, the rows wrap, no sideways scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.clock.setFixedTime(MONDAY + 24 * 3600 * 1000);
+  await onboardChild(page, { name: 'Mina', startJourney: false });
+  const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+  await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+  await seedBlendedPlan(page, profileId);
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await closeInstallGuide(page);
+
+  await page.getByRole('button', { name: en.a11y.profileEntry }).click();
+  const row = page.getByTestId('profile-practice-days');
+  await row.scrollIntoViewIfNeeded();
+  await row.click();
+  await expect(page.getByRole('heading', { name: words.practiceDays.title })).toBeVisible();
+  // The gated names at Largest: every chip still says "PIN required" to a screen reader.
+  const gated = (name: string): string => en.caregiver.audience.gated(name, true);
+  for (const day of ['Wednesday', 'Friday', 'Sunday']) await expect(page.getByRole('checkbox', { name: gated(en.a11y.route.blend.practiceDay(day)) })).toBeChecked();
+  await expect(page.getByRole('radio', { name: gated('3') })).toBeChecked();
+  const chips = await page.getByTestId(/^practice-days-(day|count)-/).all();
+  expect(chips.length).toBe(14);
+  for (const chip of chips) {
+    const box = await chip.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(64);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(64);
+    // Inside the window: the rows wrap rather than run off the side.
+    expect(box?.x ?? -1).toBeGreaterThanOrEqual(-0.5);
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(320.5);
+  }
+  await expectNoSidewaysScroll(page, 'practice days at Largest');
+  await expectNoClippedText(page, 'practice days at Largest');
+  await shot(page, 'route-blend-practice-days-320-largest');
+});
