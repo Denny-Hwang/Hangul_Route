@@ -79,7 +79,8 @@ describe('sessions and averages (section 6.1)', () => {
     const draft = generateCurriculum(plan({ keepAverage: true }, { daysOff }), CATALOG_2026_10);
     expect(draft.weeks).toHaveLength(28);
     expect(draft.stats.sessions).toBe(104);
-    expect(draft.stats.sessionsPerCalendarWeek).toBe(3.7);
+    // The average over the planned 26 weeks is met exactly (section 6.1).
+    expect(draft.stats.sessionsPerCalendarWeek).toBe(4);
     expect(draft.weeks.at(-1)?.startDate).toBe('2027-05-11');
     // The params keep the planned weeks: the extension is worked out again on every regeneration.
     expect(draft.params.weeks).toBe(26);
@@ -330,6 +331,105 @@ describe('re-pacing a blended plan keeps its history', () => {
     const later = addDays(today, 7);
     const next = regenerateFrom(stored, later, CATALOG_2026_10, { mode: 'shift' });
     expect(next.weeks[0]).toEqual(draft.weeks[0]);
+  });
+});
+
+/**
+ * What a class day taught and how many items each practice date holds. `shift` lays the plan's own future items in
+ * date order, so lessons inside one class day may come back in another order; the class days and the load stay.
+ */
+const layout = (d: CurriculumDraft): { taught: string[]; perDate: Record<string, number> } => ({
+  taught: d.items.map((item) => `${item.lectureDate ?? '-'} ${item.id}`).sort(),
+  perDate: d.items.reduce<Record<string, number>>((acc, item) => ({ ...acc, [item.targetDate!]: (acc[item.targetDate!] ?? 0) + 1 }), {}),
+});
+
+describe('re-pacing between a class day and its practice days (review fixes)', () => {
+  const draft = generateCurriculum(plan({}, { weeks: 12 }), CATALOG_2026_10);
+  const stored = { meta: toMeta(draft), items: toPlanItems(draft) };
+  // Thursday: Tuesday's class has taught its lessons; their practice dates are today and later.
+  const today = '2026-11-12';
+  const taughtBefore = stored.items.filter((item) => item.lectureDate! < today && item.targetDate! >= today);
+
+  it.each(['shift', 'requeue', 'reseed'] as const)('%s keeps the class date of a lesson already taught and plays it within two cycles', (mode) => {
+    expect(taughtBefore.length).toBeGreaterThan(0);
+    const done = stored.items.filter((item) => item.targetDate! < today).map((item) => item.id);
+    const next = regenerateFrom(stored, today, CATALOG_2026_10, {
+      mode,
+      completedQuestIds: done,
+      ...(mode === 'reseed' ? { paramsPatch: { goals: { focus: 'balanced' as const } } } : {}),
+    });
+    for (const item of stored.items.filter((entry) => entry.lectureDate! < today && !done.includes(entry.id))) {
+      const now = next.items.find((entry) => entry.id === item.id);
+      expect(now?.lectureDate).toBe(item.lectureDate);
+      // Tue class, practice Wed / Fri / Sun: two cycles end on the second Sunday after the class.
+      expect(now!.targetDate! >= today).toBe(true);
+      expect(now!.targetDate! <= addDays(item.lectureDate!, 12)).toBe(true);
+    }
+    // No later class day teaches them again.
+    expect(next.items.filter((entry) => entry.lectureDate! >= today).some((entry) => taughtBefore.some((t) => t.id === entry.id))).toBe(false);
+    expect(new Set(next.items.map((item) => item.id)).size).toBe(next.items.length);
+  });
+
+  it('shift with nothing changed lays the same plan again', () => {
+    const next = regenerateFrom(stored, today, CATALOG_2026_10, { mode: 'shift' });
+    expect(layout(next)).toEqual(layout(draft));
+    expect(next.weeks.map((week) => week.kind)).toEqual(draft.weeks.map((week) => week.kind));
+  });
+
+  it('shift at weeks 2, 4, 6 and 8 keeps the review and culture cycles where they were', () => {
+    const long = generateCurriculum(plan(), CATALOG_2026_10);
+    const kept = { meta: toMeta(long), items: toPlanItems(long) };
+    for (const week of [2, 4, 6, 8]) {
+      const at = addDays('2026-11-03', 7 * (week - 1) + 2);
+      const next = regenerateFrom(kept, at, CATALOG_2026_10, { mode: 'shift' });
+      expect(next.weeks.map((meta) => meta.kind)).toEqual(long.weeks.map((meta) => meta.kind));
+      expect(layout(next)).toEqual(layout(long));
+    }
+  });
+
+  it('split: cells opened by past classes stay opened, so practice-only lessons do not wait for a class', () => {
+    const split = generateCurriculum(plan({ mode: 'split' }, { weeks: 12 }), CATALOG_2026_10);
+    const next = regenerateFrom({ meta: toMeta(split), items: toPlanItems(split) }, today, CATALOG_2026_10, { mode: 'shift' });
+    expect(layout(next)).toEqual(layout(split));
+  });
+
+  it('keeps the Refresh entries dated before today', () => {
+    const later = '2026-12-01';
+    const before = (draft.refresh ?? []).filter((entry) => entry.date < later);
+    expect(before.length).toBeGreaterThan(0);
+    const next = regenerateFrom(stored, later, CATALOG_2026_10, { mode: 'shift' });
+    expect((next.refresh ?? []).filter((entry) => entry.date < later)).toEqual(before);
+    expect(next.refresh?.map((entry) => entry.date)).toEqual(draft.refresh?.map((entry) => entry.date));
+  });
+
+  it('counts the plan history towards the 260-item cap', () => {
+    const big = bigCatalog(60, 1);
+    const full = generateCurriculum(plan({ lecture: { days: ['mon', 'thu'], minutes: 30 } }, { weeks: 52, reviewEvery: 0 }), big);
+    expect(full.items).toHaveLength(CURRICULUM_MAX_ITEMS);
+    const store = { meta: toMeta(full), items: toPlanItems(full) };
+    const at = '2027-06-01';
+    const done = store.items.filter((item) => item.targetDate! < at).map((item) => item.id);
+    for (const mode of ['requeue', 'reseed', 'shift'] as const) {
+      const next = regenerateFrom(store, at, big, {
+        mode,
+        completedQuestIds: done,
+        ...(mode === 'reseed' ? { paramsPatch: { goals: { focus: 'balanced' as const } } } : {}),
+      });
+      expect(next.items.length).toBeLessThanOrEqual(CURRICULUM_MAX_ITEMS);
+      expect(toPlanItems(next)).toHaveLength(next.items.length);
+      if (mode !== 'shift') expect(codes(next)).toContain('item-cap');
+    }
+  });
+
+  it('requeue counts the weeks Keep the average added as sessions left', () => {
+    const kept = generateCurriculum(plan({ keepAverage: true }, { weeks: 4, reviewEvery: 0, daysOff: [{ from: '2026-11-10', to: '2026-11-16' }] }), CATALOG_2026_10);
+    expect(kept.weeks).toHaveLength(5);
+    const store = { meta: toMeta(kept), items: toPlanItems(kept) };
+    // Past the planned 4 weeks, inside the added one: a missed item still has somewhere to go.
+    const at = '2026-12-02';
+    const missed = store.items.filter((item) => item.targetDate! < at);
+    const next = regenerateFrom(store, at, CATALOG_2026_10, { mode: 'requeue', completedQuestIds: missed.slice(1).map((item) => item.id) });
+    expect(next.items.find((item) => item.id === missed[0]!.id)!.targetDate! >= at).toBe(true);
   });
 });
 
