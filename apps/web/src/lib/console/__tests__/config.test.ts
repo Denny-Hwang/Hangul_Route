@@ -218,23 +218,22 @@ describe('browseEnabled and browseEntryShown (F-BROWSE-001 section 5.4; F-APP-00
   });
 });
 
-/** AMENDMENTS-ROUTE-CLASS-BLEND section 14 (rows BL-4, BL-5; BL-10 flips it): class days and practice days on the console, default off. */
+/** AMENDMENTS-ROUTE-CLASS-BLEND section 14 and BL-OD-12 (rows BL-4, BL-5; BL-10 flipped it): on by default, a kill switch. */
 describe('routeBlendEnabled', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it('is off unless NEXT_PUBLIC_ROUTE_BLEND_ENABLED is "true" or "1"', () => {
-    expect(routeBlendEnabled({})).toBe(false);
-    expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: 'true' })).toBe(true);
-    expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: '1' })).toBe(true);
-    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
-    expect(routeBlendEnabled()).toBe(false);
+  it('is on unless NEXT_PUBLIC_ROUTE_BLEND_ENABLED is "false", "0", "off" or "disabled" (case and spaces ignored)', () => {
+    expect(routeBlendEnabled({})).toBe(true);
+    expect(routeBlendEnabled()).toBe(true);
+    for (const on of ['true', '1', 'enabled', 'TRUE', '', ' true', 'maybe']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: on }), on).toBe(true);
+    for (const off of ['false', '0', 'off', 'disabled', 'FALSE', ' false ', 'Off']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
   });
 
   it('reads the build value by its literal name', () => {
-    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', '1');
-    expect(buildEnv().NEXT_PUBLIC_ROUTE_BLEND_ENABLED).toBe('1');
-    expect(routeBlendEnabled()).toBe(true);
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
+    expect(buildEnv().NEXT_PUBLIC_ROUTE_BLEND_ENABLED).toBe('false');
+    expect(routeBlendEnabled()).toBe(false);
   });
 });

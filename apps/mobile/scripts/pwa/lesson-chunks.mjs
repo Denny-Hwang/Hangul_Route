@@ -156,6 +156,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // row, the PracticeDays route's door and the chunk loader, the derivation's learner-days hook and chip rules, the
   // snapshot write and merge, the English strings and TapTarget's role prop; the screen and `placePractice` are the
   // practice-days chunk. The line stays.
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-10 (the launch flip: `routeBlendEnabled` on by default, BL-OD-12), stacked on the
+  // BL-4, BL-8 (with BL-6 and BL-7) and BL-9 heads over main 49ee60bb4, measures 4,866,149 B raw / 1,305,086 B gzip
+  // (release `build:web --budget`): the flagged pieces were already in the start bundle, so the flip adds no code. The
+  // line stays.
   startBundleRaw: 4_875_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at

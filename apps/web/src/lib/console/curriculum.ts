@@ -106,8 +106,8 @@ export const PRACTICE_COUNT_CHOICES = [0, 1, 2, 3, 4, 5, 6, 7] as const;
 /** Class days a week the meeting block takes (`blend.lecture.days`, 1 to 5). */
 export const MAX_CLASS_DAYS = 5;
 
-/** The wizard's practice count before BL-10 (BL-OD-12): 0, a Class only plan. BL-10 makes it 3 when it flips the flag. */
-export const PRACTICE_PER_WEEK_DEFAULT = 0;
+/** The wizard's practice count (BL-OD-12): 3 since BL-10 flipped the flag, so the default class plan is a Class with practice plan. */
+export const PRACTICE_PER_WEEK_DEFAULT = 3;
 
 /** The practice length of a class plan (section 10.1); a Pictures-first class takes `PRACTICE_MINUTES_PICTURES_FIRST`. */
 export const PRACTICE_MINUTES_DEFAULT: MinuteChoice = 10;
@@ -227,7 +227,7 @@ export function defaultsFor(audience: WizardAudience, learners: readonly Planner
       ? learners.filter((l) => levelOrder(l.ageGroup) === 0).length * 2 > learners.length
       : picked !== undefined && levelOrder(picked.ageGroup) === 0;
   const start = audience === 'class' ? levelHint(learners) : picked ? levelFromSummary(picked.summary) : null;
-  // Section 10.1: a class also starts the meeting block (shown only with the flag on; a Class only plan until BL-10).
+  // Section 10.1: a class also starts the meeting block (shown only with the flag on; 3 practice days since BL-10).
   const meeting: Partial<WizardState> =
     audience === 'class'
       ? {

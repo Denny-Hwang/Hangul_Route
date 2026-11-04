@@ -116,7 +116,11 @@ async function click(root: ReactTestInstance, id: string): Promise<void> {
   });
 }
 
-/** Opens the wizard and walks to the preview with the given length preset. */
+/**
+ * Opens the wizard and walks to the preview with the given length preset. With class days and practice days on (the
+ * launch state since AMENDMENTS-ROUTE-CLASS-BLEND BL-10), step 2 asks for a class day first: Tuesday, with the default
+ * 3 practice days.
+ */
 async function preview(length: string): Promise<ReactTestInstance> {
   await act(async () => {
     mounted = create(<Page />, { createNodeMock: (element) => (element.type === 'h1' ? { focus } : null) });
@@ -124,6 +128,7 @@ async function preview(length: string): Promise<ReactTestInstance> {
   if (!mounted) throw new Error('not mounted');
   const root = mounted.root;
   await click(root, 'route-next');
+  if (byTestId(root, 'meeting-block').length > 0) await click(root, 'class-day-tue');
   await click(root, `length-${length}`);
   await click(root, 'route-next');
   await click(root, 'route-see');
@@ -149,8 +154,9 @@ describe('the curriculum wizard with the free-plan switch', () => {
     expect(calls).toEqual(expect.arrayContaining(['roster', 'entitlements', 'listSpaces']));
     const texts = warningTexts(root);
     expect(texts.some((t) => t.startsWith('The free plan covers Stage 1 (lessons in weeks 1 to ') && t.endsWith(en.access.openBilling.cta))).toBe(true);
-    // The 6-month plan's coming-soon placeholder is past Stage 1: it opens with the product once released, not on its date.
-    expect(texts).toContain(en.curriculum.freeDays.comingSoon(1, 1, en.access.product.class));
+    // The 6-month plan's coming-soon placeholders are past Stage 1: they open with the product once released, not on
+    // their dates. A class with practice days (1 class + 3 practice days a week) reaches 5 of them in 6 months.
+    expect(texts).toContain(en.curriculum.freeDays.comingSoon(5, 5, en.access.product.class));
     expect(texts.some((t) => t.includes('Premium'))).toBe(false);
     const [line] = byTestId(root, 'route-short-plan');
     if (!line) throw new Error('no short-plan line');
@@ -158,10 +164,11 @@ describe('the curriculum wizard with the free-plan switch', () => {
     focus.mockClear();
     await click(root, 'route-use-weeks');
     expect(focus).toHaveBeenCalled();
-    // The 12-week plan holds every lesson; its lessons end in week 11 and no shorter preset holds them all.
+    // The 12-week plan holds every lesson; with a class day and 3 practice days a week its lessons end in week 6, and no
+    // shorter preset holds them all.
     const [after] = byTestId(root, 'route-short-plan');
     if (!after) throw new Error('no short-plan line after');
-    expect(textOf(after)).toContain(en.curriculum.freeDays.shortPlan(11));
+    expect(textOf(after)).toContain(en.curriculum.freeDays.shortPlan(6));
     expect(byTestId(root, 'route-use-weeks')).toHaveLength(0);
   });
 

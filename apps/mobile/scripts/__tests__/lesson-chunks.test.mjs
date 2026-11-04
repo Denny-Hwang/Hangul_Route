@@ -587,9 +587,9 @@ describe('precacheReport and its budget lines', () => {
     // KT-2 (#949) on KT-1 and main 377d44291 measures 4,863,471 B (CI release build): the line stays.
     // The KT integration (KT-1, KT-10, KT-2, KT-3, KT-4a, KT-8, KT-9 on main 25e108b5e) measures 4,870,372 B: 4,875,000 B.
     // Row BL-8 (the learner's own practice days) on main a0906b64f with the KT integration, BL-7 and the reports chunk
-    // measures 4,859,564 B: the line stays.
+    // measures 4,859,564 B: the line stays. Row BL-10 (the launch flip) on the BL stack measures 4,866,149 B: it stays.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_875_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_859_564, 4_847_318]) {
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_859_564, 4_847_318, 4_866_149]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.

@@ -921,6 +921,7 @@ describe('the family home: a class with practice days (BL-9)', () => {
   });
 
   it("keeps GX-4's line and reads no plan with the flag off", async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
     data.plans = { ok: true, data: [familyPlan] };
     const r = await render([family]);
     expect(textOf(inCard(r, 'Mina', 'child-class-line')[0] as ReactTestInstance)).toBe(p.classLine.one('Evening Class D'));
