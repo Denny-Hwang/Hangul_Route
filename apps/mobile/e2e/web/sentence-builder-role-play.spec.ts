@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { keepSidewaysIfAsked, seedStored } from './helpers';
 import { shot } from './shots';
@@ -63,8 +64,13 @@ async function inside(inner: Locator, outer: Locator): Promise<boolean> {
   const [i, o] = [await box(inner), await box(outer)];
   return i.y >= o.y - 0.5 && i.y + i.height <= o.y + o.height + 0.5;
 }
-/** Send a reply and wait for the partner's next line (the reply is said for at least 900 ms first). */
+/**
+ * Send a reply and wait for the partner's next line (the reply is said for at least 900 ms first). The replies sit on a
+ * `board` board (AMENDMENTS-TOUCH KT-6): a tap within its answer lock (TAP_LOCK_MS) of the last answer is a bounce, so
+ * a deliberate tap comes after it.
+ */
 async function send(page: Page, id: string, next: string): Promise<void> {
+  await page.waitForTimeout(TAP_LOCK_MS + 50);
   await reply(page, id).click();
   await expect(page.getByTestId('role-play-partner-newest')).toContainText(next);
 }
@@ -116,7 +122,8 @@ test.describe('Role Play: read and tap (F-CURR-002 row CM-35)', () => {
     await reply(page, 'meal').click();
     await expect(page.getByTestId('role-play-why')).toContainText('That one is for the start of a meal. Try a greeting.');
     await expect(reply(page, 'meal')).toHaveAttribute('aria-label', 'Not this one: 잘 먹겠습니다!, jal meokgetseumnida');
-    await expect(reply(page, 'meal')).toHaveCSS('border-top-color', AMBER);
+    // The reply's drawn bubble (inside its TapTarget, AMENDMENTS-TOUCH KT-6) carries the amber border.
+    await expect(reply(page, 'meal').locator(':scope > div').first()).toHaveCSS('border-top-color', AMBER);
     await expect(page.getByTestId('role-play-me')).toHaveCount(0);
     await shot(page, 'role-play-320-nudge');
     await send(page, 'hello', '무슨 책을 찾아요?');
@@ -145,6 +152,7 @@ test.describe('Role Play: read and tap (F-CURR-002 row CM-35)', () => {
     await reply(page, 'go').click();
     await expect(page.getByTestId('role-play-why')).toContainText('안녕히 계세요');
     await expect(page.getByTestId('role-play-why')).toContainText('annyeonghi gyeseyo');
+    await page.waitForTimeout(TAP_LOCK_MS + 50);
     await reply(page, 'stay').click();
     await expect(page.getByTestId('role-play-end')).toBeVisible();
     await expect(page.getByText('You found your book!')).toBeVisible();
