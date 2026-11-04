@@ -184,7 +184,7 @@ const pillarOf = (tag: string): Pillar => tag.charAt(0) as Pillar;
 describe('placement table (F-STORY-005 §3.3) against the story files', () => {
   it('leaves out only stories added after the table, each with its addedIn stamp and topic tags', () => {
     const later = allStoryFiles.filter((story) => story.addedIn !== undefined);
-    expect(later.map(slugOf)).toEqual(['eongan-letters', 'hangul-name']);
+    expect(later.map(slugOf)).toEqual(['daeboreum-full-moon', 'eongan-letters', 'gyeonu-jingnyeo', 'hangul-name']);
     for (const story of later) expect(story.topicTags?.length, story.id).toBeGreaterThan(0);
   });
 

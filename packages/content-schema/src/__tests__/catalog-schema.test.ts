@@ -143,11 +143,11 @@ describe('the shipped catalogue data', () => {
     expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(116);
   });
 
-  // F-CURR-002 row CM-46 adds the two Letters book 2 tales (5 minutes each).
-  it('has 26 stories adding up to 122 minutes, each with a listen quest on its shelf episode', () => {
-    expect(CATALOG.stories).toHaveLength(26);
-    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(122);
-    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(26);
+  // F-CURR-002 row CM-46 adds the two Letters book 2 tales and the two Holidays book 2 tales (5 minutes each).
+  it('has 28 stories adding up to 132 minutes, each with a listen quest on its shelf episode', () => {
+    expect(CATALOG.stories).toHaveLength(28);
+    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(132);
+    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(28);
     for (const story of CATALOG.stories) {
       const slug = story.id.slice('story:'.length);
       expect(story.questId).toBe(`quest:story-${slug}-listen`);
@@ -160,9 +160,9 @@ describe('the shipped catalogue data', () => {
     }
   });
 
-  it('numbers the stories 1 to 26 (the CM-46 tales after the frozen 24, by addedIn and slug) and marks the six free samplers and the three anchors', () => {
-    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 26 }, (_, i) => i + 1));
-    expect(CATALOG.stories.slice(24).map((s) => s.id)).toEqual(['story:eongan-letters', 'story:hangul-name']);
+  it('numbers the stories 1 to 28 (the CM-46 tales after the frozen 24, by addedIn and slug) and marks the six free samplers and the three anchors', () => {
+    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 28 }, (_, i) => i + 1));
+    expect(CATALOG.stories.slice(24).map((s) => s.id)).toEqual(['story:daeboreum-full-moon', 'story:eongan-letters', 'story:gyeonu-jingnyeo', 'story:hangul-name']);
     expect(CATALOG.stories.filter((s) => s.sampler).map((s) => s.id)).toEqual([
       'story:sejong-new-letters',
       'story:hangeul-day',
@@ -180,8 +180,13 @@ describe('the shipped catalogue data', () => {
   });
 
   it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9); the CM-46 tales wait for theirs', () => {
-    expect(CATALOG.stories).toHaveLength(26);
-    expect(CATALOG.stories.filter((s) => s.status !== 'ready').map((s) => s.id)).toEqual(['story:eongan-letters', 'story:hangul-name']);
+    expect(CATALOG.stories).toHaveLength(28);
+    expect(CATALOG.stories.filter((s) => s.status !== 'ready').map((s) => s.id)).toEqual([
+      'story:daeboreum-full-moon',
+      'story:eongan-letters',
+      'story:gyeonu-jingnyeo',
+      'story:hangul-name',
+    ]);
   });
 
   it('has the 12 launch topics in order, the first four free, none with a quest yet', () => {
@@ -562,7 +567,7 @@ describe('routeCatalogOf', () => {
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);
-    expect(stories).toHaveLength(26);
+    expect(stories).toHaveLength(28);
     expect(stories.map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 
