@@ -112,7 +112,17 @@ export function ownPlanRestStep(i: { route: SelfRoute | null; resting: boolean; 
   return i.restingFor === i.route.id ? 'resume' : 'none';
 }
 
-/** The one-time "own plan back" line (BL-OD-5): shows after a resume until it is seen. */
-export function ownPlanBackShows(ui: { backAt?: string | undefined; backSeenAt?: string | undefined }): boolean {
-  return ui.backAt !== undefined && (ui.backSeenAt === undefined || ui.backSeenAt < ui.backAt);
+/** How long after a resume the "own plan back" line may still show: news, not history (7 days). */
+export const OWN_PLAN_BACK_FRESH_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * The one-time "own plan back" line (BL-OD-5): shows after a resume until it is seen. With `nowMs`, only while the
+ * resume is recent (`OWN_PLAN_BACK_FRESH_MS`), so a resume written while the switch was off (BL-6 writes `backAt`
+ * regardless) never surfaces weeks later when BL-10 turns the switch on.
+ */
+export function ownPlanBackShows(ui: { backAt?: string | undefined; backSeenAt?: string | undefined }, nowMs?: number): boolean {
+  if (ui.backAt === undefined || (ui.backSeenAt !== undefined && ui.backSeenAt >= ui.backAt)) return false;
+  if (nowMs === undefined) return true;
+  const at = Date.parse(ui.backAt);
+  return Number.isFinite(at) && nowMs - at <= OWN_PLAN_BACK_FRESH_MS;
 }
