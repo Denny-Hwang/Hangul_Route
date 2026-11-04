@@ -34,3 +34,6 @@ Each `*.final.json` carries `verification: { passes: 3, checked_at: "2026-10-10"
 
 ## Read tiers of the listen-only stories (F-CURR-002 row CM-46a, 2026-10-31)
 The ten stories that shipped with a listen tier only (`tripitaka-koreana`, `sillok-royal-historians`, `janggyeong-panjeon`, `jikji-metal-type`, `sillok-mountain-archives`, `nanjung-ilgi`, `seungjeongwon-ilgi-every-day`, `ilseongnok-daily-reflection`, `uigwe-royal-birthday`, `joseon-records-today`) gained a `read` tier that restates facts they already cite; no fact or source changed. `read-tiers.changes.md` lists every checker finding and its outcome, and `read-tiers.signoff.md` the third pass.
+
+## Letters book 2 tales (F-CURR-002 row CM-46, 2026-11-04)
+`eongan-letters` and `hangul-name` were authored straight from allowlisted public-institution pages (no cluster research file): each fact cites the page it restates, with the quote and the access date. `letters-book2.changes.md` lists the sources and the author decisions; the multi-agent review appends its findings there and writes `letters-book2.signoff.md` before the two stories are signed.
