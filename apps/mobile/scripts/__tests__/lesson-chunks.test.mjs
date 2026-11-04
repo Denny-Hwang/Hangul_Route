@@ -573,14 +573,12 @@ describe('precacheReport and its budget lines', () => {
     // The jamo voice and clips integration (JV-1 to JV-4, AC-1 to AC-4 and AC-6 together) measures 4,835,104 B on main
     // fe074758a (4,815,388 B; release build, Metro cache cleared), so the line is 4,840,000 B.
     // Row CM-48 (This week in Korea) measured 4,840,751 B on main 1bfda3fc8 (4,838,051 B), so the line is 4,845,000 B.
-    // Row BL-6 (class days and practice days on the device; the derivation is not flagged) measured 4,847,283 B over its
-    // base cf7a4e483 with BL-W and BL-1 (4,842,169 B), so the line is 4,850,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_850_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283]) {
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_845_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_847_283).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_835_104).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
