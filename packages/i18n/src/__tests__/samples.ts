@@ -1099,4 +1099,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
   'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
   'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
+  'console.curriculum.blend.family.classLine': [['Evening Class D', 'Tuesday', 3], ['Sunday Class A', 'Monday and Thursday', 1]],
+  'console.curriculum.blend.family.classHasPractice': [['Mina', 'Wednesday, Friday, and Sunday'], ['Jun', 'Saturday']],
+  'console.curriculum.blend.report.practiceWeek': [[1], [3], [7]],
 };
