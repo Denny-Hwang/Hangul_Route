@@ -4,7 +4,7 @@ import { storiesAll, storyContent } from '../content/stories';
 import { isStoryNewBuildError, type StoryStore } from '../logic/story/story-chunk-store';
 import { storyIdOfQuest } from '../logic/story/story-ref';
 import { isNewBuildAnswer, reloadForNewBuild } from '../platform/new-build-reload';
-import { LATER_STORY_IDS } from '../content/later-content';
+import { LATER_STORY_IDS, storyOpensOffline } from '../content/later-content';
 import type { ChunkState } from './lesson-content';
 
 /**
@@ -44,6 +44,11 @@ export interface StoryContentDeps {
   isNewBuildAnswer: (error: unknown) => Promise<boolean>;
   /** A tale only a book 2 holds (row CM-5B: not precached); none when omitted. */
   isLaterStory?: (storyId: string) => boolean;
+  /**
+   * The later tale's chunk is on the device (row CM-5B; always on native). A later tale with culture notes is loaded for
+   * its notes only then: its notes are found by playing it, which caches it, and no learner downloads one unasked.
+   */
+  laterOnDevice?: (storyId: string) => boolean;
 }
 
 export function storyContentBindings({
@@ -52,8 +57,11 @@ export function storyContentBindings({
   reloadForNewBuild: reload,
   isNewBuildAnswer: newBuildAnswer,
   isLaterStory = () => false,
+  laterOnDevice = () => true,
 }: StoryContentDeps) {
   const subscribe = store.subscribe;
+  /** The note stories to load now: every core one, and a later tale only once it is on the device. */
+  const noteIds = (): string[] => noteStoryIds.filter((id) => !isLaterStory(id) || laterOnDevice(id));
   /** True when a failed load means a newer build on the host: what the chunk said, else what its URL answers now. */
   const isNewer = async (error: unknown): Promise<boolean> => isStoryNewBuildError(error) || (await newBuildAnswer(error).catch(() => false));
 
@@ -135,7 +143,7 @@ export function storyContentBindings({
 
   /** Loads the chunks of the stories with culture notes (the Culture notes card and screen list their found notes). */
   function useNoteStoriesLoaded(): number {
-    return useStoriesLoaded(noteStoryIds);
+    return useStoriesLoaded(noteIds());
   }
 
   /**
@@ -144,16 +152,17 @@ export function storyContentBindings({
    * deep link. A chunk of a newer build reloads the page once instead.
    */
   function useNoteStoriesReady(): boolean {
-    const allIn = useSyncExternalStore(subscribe, () => noteStoryIds.every((id) => store.isStoryReady(id)));
+    const ids = noteIds();
+    const allIn = useSyncExternalStore(subscribe, () => ids.every((id) => store.isStoryReady(id)));
     // Book 2 tales whose chunk could not load (not a newer build): left out, never the crash screen (row CM-5B).
     const [skipped, setSkipped] = useState<ReadonlySet<string>>(() => new Set());
-    const inOrSkipped = allIn || noteStoryIds.every((id) => skipped.has(id) || store.isStoryReady(id));
+    const inOrSkipped = allIn || ids.every((id) => skipped.has(id) || store.isStoryReady(id));
     const [failed, setFailed] = useState<{ error: unknown } | null>(null);
     useEffect(() => {
       if (allIn) return undefined;
       let live = true;
-      void Promise.allSettled(noteStoryIds.map((id) => store.ensureStories([id]))).then(async (results) => {
-        const failures = noteStoryIds.flatMap((id, i) => {
+      void Promise.allSettled(ids.map((id) => store.ensureStories([id]))).then(async (results) => {
+        const failures = ids.flatMap((id, i) => {
           const r = results[i];
           return r?.status === 'rejected' ? [{ id, reason: r.reason as unknown }] : [];
         });
@@ -204,4 +213,5 @@ export const {
   reloadForNewBuild: () => reloadForNewBuild(),
   isNewBuildAnswer: (error) => isNewBuildAnswer(error),
   isLaterStory: (id) => LATER_STORY_IDS.has(id),
+  laterOnDevice: (id) => storyOpensOffline(id),
 });

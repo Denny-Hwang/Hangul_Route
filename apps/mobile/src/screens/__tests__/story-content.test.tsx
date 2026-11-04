@@ -60,7 +60,13 @@ const settle = async (): Promise<void> => {
 };
 
 function bindings(
-  over: { reload?: () => boolean; noteStoryIds?: readonly string[]; answer?: (error: unknown) => Promise<boolean>; isLaterStory?: (id: string) => boolean } = {},
+  over: {
+    reload?: () => boolean;
+    noteStoryIds?: readonly string[];
+    answer?: (error: unknown) => Promise<boolean>;
+    isLaterStory?: (id: string) => boolean;
+    laterOnDevice?: (id: string) => boolean;
+  } = {},
 ) {
   const cold = coldStore();
   const reload = vi.fn(over.reload ?? (() => false));
@@ -71,6 +77,7 @@ function bindings(
     reloadForNewBuild: reload,
     isNewBuildAnswer: answer,
     ...(over.isLaterStory === undefined ? {} : { isLaterStory: over.isLaterStory }),
+    ...(over.laterOnDevice === undefined ? {} : { laterOnDevice: over.laterOnDevice }),
   });
   return { ...cold, ...b, reload, answer };
 }
@@ -365,6 +372,26 @@ describe('useNoteStoriesReady (Culture notes)', () => {
     await settle();
     expect(byTestId(crashed.root, 'crash')).toHaveLength(1);
     errors.mockRestore();
+  });
+
+  it('never asks for a book 2 tale that is not on the device (row CM-5B: no later chunk loads unasked); one on the device loads', async () => {
+    const isLaterStory = (id: string): boolean => id === moon.id;
+    const off = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory, laterOnDevice: () => false });
+    const r = await render(<Notes hook={off.useNoteStoriesReady} />);
+    await act(async () => off.pending[sun.id]?.resolve(chunkOf(sun.id)));
+    await settle();
+    expect(off.asked).toEqual([sun.id]);
+    expect(byTestId(r.root, 'notes')).toHaveLength(1);
+    function Loaded({ hook }: { hook: () => number }): null {
+      hook();
+      return null;
+    }
+    const loadedOff = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory, laterOnDevice: () => false });
+    await render(<Loaded hook={loadedOff.useNoteStoriesLoaded} />);
+    expect(loadedOff.asked).toEqual([sun.id]);
+    const on = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory, laterOnDevice: (id) => id === moon.id });
+    await render(<Loaded hook={on.useNoteStoriesLoaded} />);
+    expect([...on.asked].sort()).toEqual([moon.id, sun.id].sort());
   });
 
   it('is ready at once when every note story is in', async () => {

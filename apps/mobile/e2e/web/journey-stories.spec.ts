@@ -375,8 +375,10 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
       await expect(page.getByTestId('journey-volumes-stage2-nature-1-done')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-nature-2-open')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-nature')).toHaveAttribute('aria-hidden', 'true');
-      // Only a cell with two volumes has dots (Stage 2 Food & Daily Life ships its Volume 2, row CM-43 S2; Play has none).
-      await expect(page.getByTestId('journey-volumes-stage2-crafts')).toHaveCount(0);
+      // Only a cell with two volumes has dots: Stage 2 Food & Daily Life and Play & Crafts ship their Volume 2 (rows CM-43
+      // S2, CM-42 S2); Holidays & Traditions has none.
+      await expect(page.getByTestId('journey-volumes-stage2-rites')).toHaveCount(0);
+      await expect(page.getByTestId('journey-volumes-stage2-crafts')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-life')).toHaveCount(1);
       if (label === '320') {
         // The dots never make a cell wider than its neighbours (54 dp at 320).
@@ -530,10 +532,11 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
     await context.setOffline(true);
     await page.goto('/');
     await playVolumeTwo(page);
-    // The card counts it: Stage 2 is saved (its one file is on the device), though nobody chose it.
+    // The card counts it: Stage 2 holds four Volume 2 cells, and the one opened is on the device, so Stage 2 is partly
+    // saved, though nobody chose it.
     await context.setOffline(false);
     await openGrownUpZone(page, 'Dami');
     await unlockWithPin(page);
-    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Saved on this device$/);
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Partly saved$/);
   });
 });
