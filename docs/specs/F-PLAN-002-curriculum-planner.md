@@ -369,6 +369,7 @@ Console copy is English in `messages/en/console.ts` (`console.curriculum.*`) and
 - Saved or shared templates and a `curriculum_templates` table (a later feature, roadmap section 6 step 5): the three presets and the wizard defaults are the templates for now.
 - Per-learner overrides in a class plan, push notifications, a worksheet PDF (F-TCH-003), the Journey 'Your Route' ribbon (owned by F-ROUTE-001: the My route page and its Home strip), holiday tables beyond Hangeul Day, Seollal and Chuseok (Dano and others need a verified lunar table).
 - Making class completion visible to the console beyond `planProgress` counts; mixing a class plan and a self-route into one list.
+  - *Amended 2026-11-03 by `AMENDMENTS-ROUTE-CLASS-BLEND.md` (BL-A1):* the two plans are still never mixed, but a class plan may now hold class days and practice days in one plan, and the learner's own weekly plan rests while such a plan is in force.
 - Changing `PLAN_MAX_ITEMS` for classic plans, the builder's weekly flow, or the 3-card Home budget.
 - Fixing the Home 'Stage 1 progress' bar (F-ROUTE-001 R-4b).
 
