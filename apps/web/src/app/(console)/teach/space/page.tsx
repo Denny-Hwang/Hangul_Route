@@ -229,12 +229,18 @@ function SpaceInner(): JSX.Element {
   const [sheet, setSheet] = useState<{ focus: string | null } | null>(() => (typeof window !== 'undefined' && window.location?.hash === ATTENTION_HASH ? { focus: null } : null));
   const openSheet = useCallback((focus: string | null = null) => setSheet({ focus }), []);
   const openSheetTop = useCallback(() => setSheet({ focus: null }), []);
-  // An archived class answers nothing here (the sheet and the cards are read-only too), so it gets no pop-up.
-  const popupOn = !!api && roster?.space.kind === 'class' && roster.space.archivedAt === null && error !== 'forbidden' && error !== 'gone';
+  // GX-D12: every re-link Approve and chip (a class or a family roster) opens the re-link dialog; it opens on its own on a
+  // class roster only (the family roster gets the re-link bar of GX-5). An archived class answers nothing here (the sheet
+  // and the cards are read-only too), so it gets no pop-up at all.
+  const popupOn = !!api && (roster?.space.kind === 'class' || roster?.space.kind === 'family') && roster.space.archivedAt === null && error !== 'forbidden' && error !== 'gone';
+  const popupSettled = useRef<string | null>(null);
+  // Each card's name, by learner: where focus goes after the dialog settles a card's request.
+  const nameEls = useRef(new Map<string, HTMLElement>());
   const popup = useRelinkPopup({
     relinks: relinkList,
     blocked: sheet !== null || confirmSheet !== null,
     enabled: popupOn,
+    auto: popupOn && roster?.space.kind === 'class',
     listed: sheet !== null && relinkList ? relinkList.filter((r) => r.status === 'pending').map((r) => r.id) : [],
   });
   useTitleCount(waiting, locale);
@@ -302,7 +308,7 @@ function SpaceInner(): JSX.Element {
   lastOrder.current = ordered.map((l) => l.id);
   const relinksWaiting = attention?.totals.relinks ?? 0;
   const movesWaiting = attention?.totals.moves ?? 0;
-  // A failure that leaves the request open is only said: the card keeps its chip and answers (RelinkAnswer shows the line).
+  // A failure that leaves the request open is only said: the card keeps its chip and answers (the dialog or Deny shows the line).
   const afterDecision = (learnerId: string, text: string, settled: boolean): void => {
     announce(text);
     if (!settled) return;
@@ -315,7 +321,7 @@ function SpaceInner(): JSX.Element {
   const sheetDevices: SheetDevice[] = (relinkList ?? [])
     .filter((r) => r.status === 'pending' && Date.parse(r.expiresAt) > now.getTime())
     .sort((a, b) => Date.parse(a.expiresAt) - Date.parse(b.expiresAt))
-    .map((r) => ({ id: r.id, learnerId: r.learnerId, name: r.learnerName, avatar: learnerById.get(r.learnerId)?.avatar ?? null, expiresAt: r.expiresAt }));
+    .map((r) => ({ id: r.id, learnerId: r.learnerId, name: r.learnerName, avatar: learnerById.get(r.learnerId)?.avatar ?? null, expiresAt: r.expiresAt, platform: r.platform, requestedAt: r.requestedAt }));
   const sourceViews = new Map((movesAsked ? (transferList ?? []) : []).filter((v): v is TransferSourceView => v.role === 'source').map((v) => [v.id, v]));
   const sheetOutgoing: SheetOutgoing[] = (attention?.outgoing ?? []).map((item) => ({ item, view: sourceViews.get(item.id) ?? null }));
   const sheetFamily: SheetFamilyMove[] =
@@ -387,15 +393,27 @@ function SpaceInner(): JSX.Element {
       {popup.pick && api ? (
         <RelinkPopup
           key={popup.pick.request.id + (popup.pick.reminder ? ':again' : '')}
-          pick={popup.pick}
-          now={now}
           api={api}
           spaceId={spaceId}
+          request={popup.pick.request}
+          learnerName={learnerById.get(popup.pick.request.learnerId)?.displayName ?? popup.pick.request.learnerName}
+          reminder={popup.pick.reminder}
+          now={now}
           online={online}
           onLater={popup.close}
-          onResult={(learnerId, text, settled) => {
-            if (settled) popup.close();
+          onResult={(text, settled) => {
+            const learnerId = popup.pick?.request.learnerId ?? '';
+            if (settled) {
+              popupSettled.current = learnerId;
+              popup.close();
+            }
             afterDecision(learnerId, text, settled);
+          }}
+          focusOnClose={() => {
+            // A settled answer replaces the card's buttons with its line: focus goes to the learner's name, which stays.
+            const settledFor = popupSettled.current;
+            popupSettled.current = null;
+            return settledFor ? (nameEls.current.get(settledFor) ?? null) : null;
           }}
         />
       ) : null}
@@ -545,6 +563,10 @@ function SpaceInner(): JSX.Element {
                       online={online}
                       onDecided={(text, settled) => afterDecision(l.id, text, settled)}
                       onActivate={activate}
+                      onNameRef={(el) => {
+                        if (el) nameEls.current.set(l.id, el);
+                        else nameEls.current.delete(l.id);
+                      }}
                     />
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm), marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
@@ -612,6 +634,7 @@ function LearnerCardHead({
   online,
   onDecided,
   onActivate,
+  onNameRef,
 }: {
   learner: RosterLearner;
   index: number;
@@ -626,11 +649,13 @@ function LearnerCardHead({
   onDecided: (text: string, settled: boolean) => void;
   /** GX-2: the action chip opens the decision for its item (the pop-up for a re-link, the sheet at a move). */
   onActivate: (status: LearnerStatus) => void;
+  /** The name element, for the page's re-link dialog to return focus to after it settles this card's request. */
+  onNameRef?: (el: HTMLElement | null) => void;
 }): JSX.Element {
   const { messages } = useConsoleLocale();
   const c = messages.console;
   const answerRow = useRef<HTMLDivElement>(null);
-  const nameRef = useRef<HTMLElement>(null);
+  const nameRef = useRef<HTMLElement | null>(null);
   const words = status && !decidedLine ? statusWords(status, now, locale) : null;
   const nameId = `roster-learner-${index}`;
   const reasonId = `roster-reason-${index}`;
@@ -641,6 +666,7 @@ function LearnerCardHead({
   const reviewInSheet = status?.kind === 'move_yours' && kind === 'class';
   const relinkAnswer = !!words && status?.kind === 'relink' && !!api;
   // The chip opens the decision (GX-2) only when the card draws an answer; otherwise it is the amber span, never a dead button.
+  // A re-link's chip and its Approve both open the page's re-link dialog (GX-D12: hint, platform, request time; never one tap).
   const activate = status && (relinkAnswer || (words && (reviewHref || reviewInSheet))) ? () => onActivate(status) : undefined;
   // A settled answer replaces the buttons with the result line: focus goes to the learner's name, which stays, so a
   // keyboard or screen-reader user keeps their place (the polite region says the result).
@@ -653,7 +679,14 @@ function LearnerCardHead({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
         <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
           <AvatarChip avatar={learner.avatar} />
-          <strong id={nameId} ref={nameRef} tabIndex={-1}>
+          <strong
+            id={nameId}
+            ref={(el) => {
+              nameRef.current = el;
+              onNameRef?.(el);
+            }}
+            tabIndex={-1}
+          >
             {learner.displayName}
           </strong>
           {words ? <StatusChip words={words} onActivate={activate} /> : null}
@@ -665,7 +698,17 @@ function LearnerCardHead({
       {words?.reason ? <ReasonLine id={reasonId} text={words.reason} /> : null}
       {decidedLine ? <DecidedLine text={decidedLine} /> : null}
       {relinkAnswer && words && status && api ? (
-        <RelinkAnswer api={api} spaceId={spaceId} status={status} learnerName={learner.displayName} describedBy={words.reason ? `${nameId} ${reasonId}` : nameId} online={online} rowRef={answerRow} onResult={answered} />
+        <RelinkAnswer
+          api={api}
+          spaceId={spaceId}
+          status={status}
+          learnerName={learner.displayName}
+          describedBy={words.reason ? `${nameId} ${reasonId}` : nameId}
+          online={online}
+          rowRef={answerRow}
+          onApprove={() => onActivate(status)}
+          onResult={answered}
+        />
       ) : null}
       {words && reviewInSheet && status ? (
         <div ref={answerRow} style={{ marginTop: spacing.sm }}>

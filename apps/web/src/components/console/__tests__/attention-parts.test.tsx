@@ -260,9 +260,25 @@ describe('ReviewSheet (section 5.2)', () => {
     expect(p.onDecided).toHaveBeenCalledWith({ learnerId: null, text: 'Class moves updated.' });
   });
 
+  it('Approve on a device opens the re-link dialog over the sheet (GX-D12); only its Approve decides; Later goes back to the sheet', async () => {
+    const p = await open(props());
+    await press(byTestId('sheet-device-approve')[0] as ReactTestInstance);
+    expect((p.api as unknown as ReturnType<typeof api>).decideRelink).not.toHaveBeenCalled();
+    const dialog = byTestId('relink-popup')[0] as ReactTestInstance;
+    expect(dialog.props.role).toBe('alertdialog');
+    expect(textOf(dialog)).toContain('New device request: Jaehan');
+    expect(textOf(byTestId('relink-popup-hint')[0] as ReactTestInstance)).toContain('Approve only if');
+    await press(byTestId('relink-popup-later')[0] as ReactTestInstance);
+    expect(byTestId('relink-popup')).toEqual([]);
+    expect(byTestId('attention-sheet')).toHaveLength(1);
+    expect(p.onClose).not.toHaveBeenCalled();
+  });
+
   it('a decided row keeps its result line 5 s and the sheet says it in its own polite region; the page reads again', async () => {
     const p = await open(props());
     await press(byTestId('sheet-device-approve')[0] as ReactTestInstance);
+    await press(byTestId('relink-popup-approve')[0] as ReactTestInstance);
+    expect(byTestId('relink-popup')).toEqual([]);
     expect((p.api as unknown as ReturnType<typeof api>).decideRelink).toHaveBeenCalledWith('space:a', 'relink:jaehan', true);
     expect(p.onDecided).toHaveBeenCalledWith({ learnerId: 'profile:jaehan', text: 'Jaehan can open their new device now.' });
     const said = byTestId('attention-sheet-said')[0] as ReactTestInstance;
@@ -277,10 +293,22 @@ describe('ReviewSheet (section 5.2)', () => {
     expect(byTestId('sheet-row-decided')).toEqual([]);
   });
 
-  it('a failed device answer that leaves the request open shows its line on the row and keeps Approve / Deny', async () => {
+  it('a failed dialog Approve that leaves the request open keeps the dialog with its line, and the sheet says it', async () => {
     const failing = { ...api(), decideRelink: vi.fn(async () => ({ ok: false as const, status: 503, error: 'unavailable' })) };
     const p = await open(props({ api: failing as never, incoming: [], outgoing: [] }));
     await press(byTestId('sheet-device-approve')[0] as ReactTestInstance);
+    await press(byTestId('relink-popup-approve')[0] as ReactTestInstance);
+    expect(byTestId('relink-popup-failed')).toHaveLength(1);
+    expect(byTestId('relink-popup-approve')).toHaveLength(1);
+    expect(textOf(byTestId('attention-sheet-said')[0] as ReactTestInstance)).toBe(textOf(byTestId('relink-popup-failed')[0] as ReactTestInstance));
+    expect(byTestId('sheet-row-decided')).toEqual([]);
+    expect(p.onDecided).not.toHaveBeenCalled();
+  });
+
+  it('a failed Deny that leaves the request open shows its line on the row and keeps Approve / Deny', async () => {
+    const failing = { ...api(), decideRelink: vi.fn(async () => ({ ok: false as const, status: 503, error: 'unavailable' })) };
+    const p = await open(props({ api: failing as never, incoming: [], outgoing: [] }));
+    await press(byTestId('sheet-device-deny')[0] as ReactTestInstance);
     const row = byTestId('sheet-device-row')[0] as ReactTestInstance;
     expect(byTestId('sheet-device-failed')).toHaveLength(1);
     expect(textOf(row)).toContain(textOf(byTestId('sheet-device-failed')[0] as ReactTestInstance));
@@ -308,7 +336,7 @@ describe('ReviewSheet (section 5.2)', () => {
 
   it('when the last item clears the sheet stays open on "Nothing is waiting." with focus on Close; it never closes itself', async () => {
     const p = await open(props({ incoming: [], outgoing: [] }));
-    await press(byTestId('sheet-device-approve')[0] as ReactTestInstance);
+    await press(byTestId('sheet-device-deny')[0] as ReactTestInstance);
     await act(async () => renderer?.update(<ReviewSheet {...p} incoming={[]} outgoing={[]} devices={[]} />));
     focused.length = 0;
     await act(async () => {
@@ -348,12 +376,12 @@ describe('ReviewSheet (section 5.2)', () => {
     lang.locale = 'ko';
     await open(props());
     const ko = textOf(byTestId('attention-sheet')[0] as ReactTestInstance);
-    for (const words of ['승인 대기', '새 기기', '이 반에 들어오려는 학생', '이 반에서 나가는 이동', '새 기기 · 8분 남음', '반 이동: Evening Class D', '닫기']) expect(ko).toContain(words);
+    for (const words of ['승인 대기', '새 기기', '이 반에 들어오려는 학생', '다른 반으로 옮기려는 학생', '새 기기 · 8분 남음', '반 이동: Evening Class D', '닫기']) expect(ko).toContain(words);
     act(() => renderer?.unmount());
     lang.locale = 'es';
     await open(props());
     const es = textOf(byTestId('attention-sheet')[0] as ReactTestInstance);
-    for (const words of ['Espera tu aprobación', 'Dispositivos nuevos', 'Quieren unirse a esta clase', 'Salidas de esta clase', 'Cambio de clase: Evening Class D']) expect(es).toContain(words);
+    for (const words of ['Por aprobar', 'Dispositivos nuevos', 'Quieren unirse a esta clase', 'Salidas de esta clase', 'Cambio de clase: Evening Class D']) expect(es).toContain(words);
   });
 
   it('tokens only: no colour literal and never the danger colour', () => {

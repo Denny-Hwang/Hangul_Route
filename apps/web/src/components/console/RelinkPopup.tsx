@@ -1,180 +1,168 @@
 'use client';
 
-import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { inertOthers, tabTarget } from '@/components/console/ConfirmSheet';
-import { MoveButton } from '@/components/console/TransferParts';
-import type { ConsoleApi, RelinkView } from '@/lib/console/api';
+import { CONFIRM_CSS, inertOthers, tabTarget } from '@/components/console/ConfirmSheet';
+import type { ApiResult, ConsoleApi, RelinkView } from '@/lib/console/api';
+import type { LearnerRelink } from '@/lib/console/learner-status';
 import { minutesShown } from '@/lib/console/learner-status';
-import { relinkNoteText } from '@/lib/console/relink';
-import { relinkSettled } from '@/components/console/LearnerStatusParts';
+import { platformLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
 import { RELINK_REMINDED_KEY, RELINK_REMIND_MS, RELINK_SHOWN_KEY, addId, nextRelinkPopup, popupStorage, readIds, type PopupPick } from '@/lib/console/relink-popup';
-import { rem } from '@/lib/console/rem';
 import { announceRosterChange } from '@/lib/console/roster-broadcast';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 
 /**
- * The re-link pop-up of the class page (AMENDMENTS-GROWNUP-UX GX-D4, section 5.3; wireframe `design/wireframes/console/
- * approvals.md` "re-link pop-up", mock `design/screens/approvals/mock/popup-*.html`; owner request 2026-10-31: "a pop-up or
- * a clearer alert"). An `alertdialog` named by its title, which takes focus: "New device request: {name}", the shipped
- * approve hint and "This request closes in {m} min."; **Approve** (primary), **Deny**, **Later**. Escape is Later; Tab
- * stays inside; the page behind is inert; focus goes back where it was. Re-links only: a move never opens it.
+ * The re-link decision dialog (AMENDMENTS-GROWNUP-UX section 5.3, GX-D12). Approving a re-link gives the new device a
+ * class-scoped credential for the learner, so no surface approves one in a single tap: a re-link's action chip and every
+ * re-link **Approve** open this dialog, which shows the platform, the request time and the shipped `relinkApproveHint`
+ * next to its own **Approve**. **Deny** answers here too; **Later** (and Escape, and the backdrop) only closes, so the
+ * chip stays. GX-1 opens it from the class page's card; GX-2 adds the sheet's Approve, its auto-open and the 2-minute
+ * reminder (`useRelinkPopup` below).
+ *
+ * The ConfirmSheet frame: `role="alertdialog"`, modal, the page behind `inert`, Tab kept inside, a bottom sheet on a
+ * phone and a centred dialog from 600 px. Focus starts on the title (the hint is read before any button) and goes, on
+ * close, where `focusOnClose` says (the learner's name after an answer that closed the request), else back to the opener.
  */
 
-export type RelinkPopupApi = Pick<ConsoleApi, 'decideRelink'>;
+export type RelinkDecideApi = Pick<ConsoleApi, 'decideRelink'>;
 
-const alphaHex = Math.round(shadows.modal.shadowOpacity * 255)
-  .toString(16)
-  .padStart(2, '0');
-const MODAL_SHADOW = `0 ${shadows.modal.shadowOffset.height}px ${shadows.modal.shadowRadius}px ${shadows.modal.shadowColor}${alphaHex}`;
+/**
+ * Whether a decide answer closed the request: it was answered, or it closed meanwhile (409, except a learner who left
+ * the class; 404). A network error or a 5xx leaves it open, so the answers stay.
+ */
+export function relinkSettled(result: ApiResult<unknown>): boolean {
+  if (result.ok) return true;
+  return (result.status === 409 && result.code !== 'not_a_member') || result.status === 404;
+}
 
-const POPUP_CSS = `
-.hr-relink-pop-scrim{position:fixed;inset:0;z-index:${z.modal};background:${colors.surface.overlay}}
-.hr-relink-pop{position:fixed;left:0;right:0;bottom:0;z-index:${z.modal};max-height:90vh;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:${rem(spacing.sm)};background:${colors.surface.paper};color:${colors.text.primary};border-radius:${radii.xl}px ${radii.xl}px 0 0;border-top:${borderWidth.thick}px solid ${colors.feedback.nudge};padding:${rem(spacing.xl)} ${layout.gutter.compact}px;box-shadow:${MODAL_SHADOW};text-align:left}
-.hr-relink-pop h2{margin:0;font-size:${rem(typography.size.prompt)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};overflow-wrap:anywhere}
-.hr-relink-pop p{margin:0;font-size:${rem(typography.size.body)};line-height:${typography.leading.normal};overflow-wrap:anywhere}
-.hr-relink-pop-actions{display:flex;flex-wrap:wrap;gap:${rem(spacing.sm)};margin-top:${rem(spacing.sm)}}
-.hr-relink-pop-actions>*{flex:1 1 ${rem(spacing.xxxl * 3)}}
-.hr-relink-pop-actions button{width:100%}
-.hr-relink-pop :focus-visible{outline:${borderWidth.thick}px solid ${colors.border.focus};outline-offset:${borderWidth.base}px}
-.hr-relink-pop h2:focus,.hr-relink-pop h2:focus-visible{outline:none}
-@media (min-width:45em){.hr-relink-pop{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:calc(100% - ${2 * layout.gutter.regular}px);max-width:${layout.maxWidth.reading}px;border-radius:${radii.xl}px;border-top:none;border-inline-start:${borderWidth.thick}px solid ${colors.feedback.nudge};padding:${rem(spacing.xl)} ${rem(spacing.xxl)}}}`;
+export interface RelinkPopupProps {
+  api: RelinkDecideApi;
+  spaceId: string;
+  request: LearnerRelink;
+  learnerName: string;
+  online: boolean;
+  now: Date;
+  /** Later, Escape or the backdrop: the dialog closes and the request stays open. */
+  onLater: () => void;
+  /** An answer came back: `settled` when it closed the request (the dialog then closes; the card shows the line). */
+  onResult: (text: string, settled: boolean) => void;
+  /** Where focus goes when the dialog leaves; the opener when this returns null or a node no longer on the page. */
+  focusOnClose?: () => HTMLElement | null;
+  /** GX-2: the second (and last) automatic showing, at 2 minutes left after Later (marked for tests and the shots). */
+  reminder?: boolean;
+}
+
+/**
+ * The title takes focus programmatically (so the hint is read first). A pop-up that opens from a poll has no click before
+ * it, so the browser would draw the focus ring round the heading; the heading is not a control, so it gets none (GX-2
+ * review). Buttons keep the shared `:focus-visible` ring.
+ */
+const POPUP_CSS = '.hr-relink-pop h2:focus,.hr-relink-pop h2:focus-visible{outline:none}';
 
 const TABBABLE = 'button:not([disabled])';
 
-export function RelinkPopup({
-  pick,
-  now,
-  api,
-  spaceId,
-  online,
-  onResult,
-  onLater,
-}: {
-  pick: PopupPick;
-  now: Date;
-  api: RelinkPopupApi;
-  spaceId: string;
-  online: boolean;
-  /**
-   * After Approve or Deny: the result line for the page's polite region. `settled` (answered, or closed meanwhile): the
-   * pop-up closes and the learner's card shows the line. Otherwise (offline, a 5xx) the pop-up stays with its line under
-   * the buttons, so the grown-up can try again while the minutes run.
-   */
-  onResult: (learnerId: string, text: string, settled: boolean) => void;
-  /** Later, Escape: the pop-up closes; the chip and the banner stay. */
-  onLater: () => void;
-}): JSX.Element {
+export function RelinkPopup({ api, spaceId, request, learnerName, online, now, onLater, onResult, focusOnClose, reminder }: RelinkPopupProps): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
   const id = useId();
   const titleId = `${id}-title`;
   const bodyId = `${id}-body`;
-  const box = useRef<HTMLDivElement | null>(null);
+  const sheet = useRef<HTMLDivElement | null>(null);
   const title = useRef<HTMLHeadingElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
-  const latestLater = useRef(onLater);
-  latestLater.current = onLater;
-  const request = pick.request;
+  const latest = useRef({ onLater, focusOnClose });
+  latest.current = { onLater, focusOnClose };
 
+  // Focus on the title, the page behind inert; on close focus goes where the card says, or back to the opener.
   useEffect(() => {
     const doc = typeof document === 'undefined' ? null : document;
     const opener = doc ? (doc.activeElement as HTMLElement | null) : null;
-    title.current?.focus?.();
-    const undoInert = inertOthers(box.current as Parameters<typeof inertOthers>[0], (doc?.body as Parameters<typeof inertOthers>[1] | undefined) ?? null);
+    title.current?.focus();
+    const undoInert = inertOthers(sheet.current, doc?.body ?? null);
     return () => {
       undoInert();
-      opener?.focus?.();
+      const target = latest.current.focusOnClose?.() ?? null;
+      const onPage = (node: HTMLElement | null): node is HTMLElement => !!node && (typeof node.isConnected !== 'boolean' || node.isConnected);
+      if (onPage(target)) target.focus();
+      else if (onPage(opener)) opener.focus?.();
     };
-    // One opening per request: the page draws a new pop-up (a new key) for the next one.
   }, []);
 
-  const keyAction = useCallback((event: { key: string; shiftKey: boolean; preventDefault: () => void }): void => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      latestLater.current();
-      return;
-    }
-    if (event.key !== 'Tab') return;
-    const items = Array.from(box.current?.querySelectorAll<HTMLElement>(TABBABLE) ?? []);
-    const active = typeof document === 'undefined' ? null : document.activeElement;
-    const inside = active !== null && !!box.current?.contains?.(active);
-    const next = inside ? tabTarget(items, active, event.shiftKey) : event.shiftKey ? (items[items.length - 1] ?? null) : (items[0] ?? null);
-    if (next === null) return;
-    event.preventDefault();
-    next.focus();
-  }, []);
+  // Escape is Later; Tab goes round the buttons, and from anywhere outside the dialog comes back into it.
   useEffect(() => {
     if (typeof document === 'undefined' || typeof document.addEventListener !== 'function') return undefined;
-    const onDocumentKey = (event: KeyboardEvent): void => {
+    const onKey = (event: KeyboardEvent): void => {
       if (event.defaultPrevented) return;
-      keyAction(event);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        latest.current.onLater();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = Array.from(sheet.current?.querySelectorAll<HTMLElement>(TABBABLE) ?? []);
+      const active = document.activeElement;
+      const inside = active !== null && items.includes(active as HTMLElement);
+      const next = inside || items.length === 0 ? tabTarget(items, active, event.shiftKey) : event.shiftKey ? items[items.length - 1]! : items[0]!;
+      if (next === null) return;
+      event.preventDefault();
+      next.focus();
     };
-    document.addEventListener('keydown', onDocumentKey);
-    return () => document.removeEventListener('keydown', onDocumentKey);
-  }, [keyAction]);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   const decide = async (approve: boolean): Promise<void> => {
-    if (busy) return;
+    if (busy || !online) return;
     setBusy(true);
     setFailed(null);
     const result = await api.decideRelink(spaceId, request.id, approve);
     setBusy(false);
     if (result.ok) {
       announceRosterChange();
-      onResult(request.learnerId, relinkNoteText({ kind: approve ? 'approved' : 'denied', name: request.learnerName }, locale), true);
+      onResult(relinkNoteText({ kind: approve ? 'approved' : 'denied', name: learnerName }, locale), true);
       return;
     }
     const text = relinkNoteText({ kind: 'decideFailed', result }, locale);
     const settled = relinkSettled(result);
+    // A failure that leaves the request open keeps the dialog and its buttons, with the line under them.
     if (!settled) setFailed(text);
-    onResult(request.learnerId, text, settled);
+    onResult(text, settled);
   };
+
+  const platform = platformLabel(request.platform, locale);
+  const meta = request.requestedAt ? c.relinkPopup.meta(platform, requestedLabel(request.requestedAt, now, locale)) : platform;
+  const off = busy || !online;
 
   return (
     <>
-      <style>{POPUP_CSS}</style>
-      <div className="hr-relink-pop-scrim" aria-hidden="true" data-testid="relink-popup-backdrop" />
-      <div ref={box} className="hr-relink-pop" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} onKeyDown={keyAction} data-testid="relink-popup" data-reminder={pick.reminder ? 'true' : undefined}>
+      <style>{CONFIRM_CSS + POPUP_CSS}</style>
+      <div className="hr-confirm-scrim" onClick={onLater} data-testid="relink-popup-backdrop" aria-hidden="true" />
+      <div ref={sheet} className="hr-confirm hr-relink-pop" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={`${bodyId}-meta ${bodyId}-hint ${bodyId}-closes`} data-testid="relink-popup" data-reminder={reminder ? 'true' : undefined}>
         <h2 id={titleId} ref={title} tabIndex={-1}>
-          {c.relinkPopup.title(request.learnerName)}
+          {c.relinkPopup.title(learnerName)}
         </h2>
-        <div id={bodyId} style={{ display: 'flex', flexDirection: 'column', gap: spacing.xs }}>
-          <p style={{ color: colors.text.secondary }}>{c.relinkApproveHint}</p>
-          <p style={{ fontWeight: typography.weight.bold }} data-testid="relink-popup-closes">
-            {c.relinkPopup.closes(minutesShown(request.expiresAt, now))}
-          </p>
-        </div>
+        <p id={`${bodyId}-meta`} data-testid="relink-popup-meta">
+          {meta}
+        </p>
+        <p id={`${bodyId}-hint`} data-testid="relink-popup-hint">
+          {c.relinkApproveHint}
+        </p>
+        <p id={`${bodyId}-closes`} data-testid="relink-popup-closes">
+          {c.relinkPopup.closes(minutesShown(request.expiresAt, now))}
+        </p>
         {failed ? (
-          <p style={{ fontWeight: typography.weight.semibold }} data-testid="relink-popup-failed">
+          <p role="status" data-testid="relink-popup-failed">
             {failed}
           </p>
         ) : null}
-        <div className="hr-relink-pop-actions">
-          <MoveButton primary waiting={busy} disabled={!online} onClick={() => void decide(true)} testId="relink-popup-approve">
+        <div className="hr-confirm-actions">
+          <button type="button" className="hr-confirm-button hr-confirm-ok" disabled={off} aria-busy={busy || undefined} onClick={() => void decide(true)} data-testid="relink-popup-approve">
             {c.relink.approve.cta}
-          </MoveButton>
-          <MoveButton waiting={busy} disabled={!online} onClick={() => void decide(false)} testId="relink-popup-deny">
+          </button>
+          <button type="button" className="hr-confirm-button hr-confirm-cancel" disabled={off} aria-busy={busy || undefined} onClick={() => void decide(false)} data-testid="relink-popup-deny">
             {c.relink.deny.cta}
-          </MoveButton>
-          <button
-            type="button"
-            onClick={onLater}
-            data-testid="relink-popup-later"
-            style={{
-              minHeight: touchTarget.min,
-              minWidth: touchTarget.min,
-              padding: `${spacing.sm}px ${spacing.lg}px`,
-              border: 'none',
-              borderRadius: radii.pill,
-              background: 'none',
-              color: colors.text.secondary,
-              fontSize: rem(typography.size.body),
-              fontWeight: typography.weight.bold,
-              cursor: 'pointer',
-            }}
-          >
+          </button>
+          <button type="button" className="hr-confirm-button hr-confirm-cancel" onClick={onLater} data-testid="relink-popup-later">
             {c.relinkPopup.later.cta}
           </button>
         </div>
@@ -193,11 +181,15 @@ export function useRelinkPopup({
   relinks,
   blocked,
   enabled,
+  auto = enabled,
   listed = [],
 }: {
   relinks: readonly RelinkView[] | null;
   blocked: boolean;
+  /** Whether the dialog may open at all here (`openFor`, the chip's and Approve's tap). */
   enabled: boolean;
+  /** Whether it also opens on its own (the class roster; GX-5 adds the parent home). */
+  auto?: boolean;
   /** Request ids the open review sheet lists: shown there, so they count as shown (no pop-up after the sheet closes). */
   listed?: readonly string[];
 }): {
@@ -243,7 +235,7 @@ export function useRelinkPopup({
       if (relinks !== null && !relinks.some((r) => r.id === pick.request.id && r.status === 'pending')) setPick(null);
       return;
     }
-    if (blocked) return;
+    if (blocked || !auto) return;
     if (typeof document !== 'undefined' && typeof document.visibilityState === 'string' && document.visibilityState !== 'visible') return;
     // Any other modal dialog open (the frame's display sheet, for one): no second dialog over it; the next read tries again.
     if (otherModalOpen()) return;
@@ -253,17 +245,18 @@ export function useRelinkPopup({
     mark(next, now);
     setPick(next);
     // `seen` and `mark` read refs and storage only.
-  }, [relinks, blocked, enabled, pick]);
+  }, [relinks, blocked, enabled, auto, pick]);
 
   const openFor = useCallback(
     (requestId: string) => {
+      if (!enabled) return;
       const request = relinks?.find((r) => r.id === requestId && r.status === 'pending');
       if (!request) return;
       const pickFor: PopupPick = { request, reminder: false };
       mark(pickFor, new Date());
       setPick(pickFor);
     },
-    [relinks],
+    [relinks, enabled],
   );
   const close = useCallback(() => setPick(null), []);
   return { pick, openFor, close };

@@ -92,7 +92,9 @@ describe('RelinkPopup', () => {
     await act(async () => {
       renderer = create(
         <RelinkPopup
-          pick={pick}
+          request={pick.request}
+          learnerName={pick.request.learnerName}
+          reminder={pick.reminder}
           now={NOW}
           api={{ decideRelink: decide } as never}
           spaceId="space:a"
@@ -100,8 +102,8 @@ describe('RelinkPopup', () => {
           onLater={() => {
             calls.later += 1;
           }}
-          onResult={(learnerId, text, settled) => {
-            calls.results.push([learnerId, text]);
+          onResult={(text, settled) => {
+            calls.results.push([pick.request.learnerId, text]);
             calls.settled.push(settled);
           }}
         />,
@@ -119,7 +121,9 @@ describe('RelinkPopup', () => {
     expect(dialog.props['aria-modal']).toBe('true');
     const title = root().find((n) => n.props.id === dialog.props['aria-labelledby']);
     expect(textOf(title)).toBe('New device request: Jaehan');
-    expect(textOf(root().find((n) => n.props.id === dialog.props['aria-describedby']))).toBe('Approve only if this learner is with you or you expect this device.This request closes in 8 min.');
+    // GX-1's dialog: the platform and request time, the hint and the minutes describe it.
+    const described = String(dialog.props['aria-describedby']).split(' ');
+    expect(described.map((id) => textOf(root().find((n) => n.props.id === id)))).toEqual(['iPhone or iPad · asked 1 min ago', 'Approve only if this learner is with you or you expect this device.', 'This request closes in 8 min.']);
     expect(focused[0]).toBe('h2');
     const buttons = dialog.findAll((n) => n.type === 'button').map((b) => b.props['data-testid']);
     expect(buttons).toEqual(['relink-popup-approve', 'relink-popup-deny', 'relink-popup-later']);
@@ -153,7 +157,8 @@ describe('RelinkPopup', () => {
   it('the focused title draws no focus ring (it opens without a click); the buttons keep theirs', () => {
     const source = readFileSync(new URL('../RelinkPopup.tsx', import.meta.url), 'utf8');
     expect(source).toContain('.hr-relink-pop h2:focus,.hr-relink-pop h2:focus-visible{outline:none}');
-    expect(source).toContain('.hr-relink-pop :focus-visible{outline:');
+    // The buttons keep the shared ConfirmSheet ring (`.hr-confirm :focus-visible`).
+    expect(source).toContain('<style>{CONFIRM_CSS + POPUP_CSS}</style>');
   });
 
   it('Escape and Later put it off; the page behind gets the key from anywhere', async () => {
@@ -304,7 +309,5 @@ describe('tokens', () => {
     const source = readFileSync(new URL('../RelinkPopup.tsx', import.meta.url), 'utf8');
     expect(source).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(/);
     expect(source).not.toContain('feedback.danger');
-    expect(source).toContain(`colors.feedback.nudge`);
-    expect(colors.feedback.nudge).toBeTruthy();
   });
 });

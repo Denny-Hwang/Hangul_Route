@@ -1,6 +1,6 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, relinkNoteText, requestedLabel } from '../relink';
+import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, platformLabel, relinkNoteText, requestedLabel } from '../relink';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 
@@ -79,5 +79,17 @@ describe('relink notes and labels follow the locale they are given (F-I18N-001 P
     expect(expiresLabel('garbage', now, PSEUDO)).toMatch(bracketed);
     expect(requestedLabel('2026-09-21T11:59:40.000Z', now, PSEUDO)).toMatch(bracketed);
     expect(requestedLabel('2026-09-21T11:57:10.000Z', now, PSEUDO)).toMatch(bracketed);
+  });
+});
+
+describe('platformLabel (AMENDMENTS-GROWNUP-UX section 5.3)', () => {
+  it('names the three known platforms in the UI language; anything else reads the shipped "device"', () => {
+    expect(platformLabel('ios', 'en')).toBe('iPhone or iPad');
+    expect(platformLabel(' iOS ', 'es')).toBe('iPhone o iPad');
+    expect(platformLabel('android', 'ko')).toBe('Android');
+    expect(platformLabel('web', 'ko')).toBe('웹');
+    expect(platformLabel('tablet', 'en')).toBe('device');
+    expect(platformLabel(null, 'es')).toBe(getMessages('es').console.relink.device);
+    expect(platformLabel(undefined)).toBe('device');
   });
 });
