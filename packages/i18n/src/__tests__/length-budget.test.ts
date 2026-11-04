@@ -130,7 +130,7 @@ const WIDER_BUDGET: Readonly<Record<string, { max: number; reason: string }>> = 
   // AMENDMENTS-ROUTE-CLASS-BLEND sections 14 and 19 (row BL-4; BL-D mock strings.js): the spec's wording keeps "to this plan".
   'console.curriculum.blend.readout.addPractice.cta': {
     max: 36,
-    reason: 'the spec and BL-D mock wording "Add practice days to this plan" (en 30, es 35, ko 14); a console readout button in a wrapping flex row (Button wraps its words, no nowrap), the only control on a Class only plan',
+    reason: 'the spec and BL-D mock wording "Add practice days to this plan" (en 30, es 35, ko 17); a console readout button in a wrapping flex row (Button wraps its words, no nowrap), the only control on a Class only plan',
   },
 };
 

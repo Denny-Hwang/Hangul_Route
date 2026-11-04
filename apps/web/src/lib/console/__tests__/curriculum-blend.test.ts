@@ -153,7 +153,7 @@ describe('the suggested practice days (section 6.3 via practiceDaysFor)', () => 
 
   it('words the line in Spanish and Korean with the glossary', () => {
     expect(practiceLine(['tue'], ['wed', 'fri', 'sun'], 'es')).toMatch(/^Práctica: /);
-    expect(practiceLine(['sat'], ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], 'es')).toBe('Práctica todos los días, también tras la clase de los sábados');
+    expect(practiceLine(['sat'], ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'], 'es')).toBe('Práctica todos los días, también después de la clase de los sábados');
     expect(practiceLine(['tue'], ['wed', 'fri', 'sun'], 'ko')).toMatch(/^연습: /);
   });
 });

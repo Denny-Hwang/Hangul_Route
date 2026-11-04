@@ -114,12 +114,12 @@ describe('console.curriculum.blend (BL-4)', () => {
     const ko = getMessages('ko').console.curriculum.blend;
     expect(es.practice.inline('3', '10')).toBe('3 veces por semana × 10 min cada vez');
     expect(ko.practice.inline('3', '10')).toBe('주 3회 × 한 번에 10분');
-    expect(es.practice.afterClass('sábado')).toBe('también tras la clase de los sábados');
-    expect(es.practice.afterClass('martes')).toBe('también tras la clase de los martes');
+    expect(es.practice.afterClass('sábado')).toBe('también después de la clase de los sábados');
+    expect(es.practice.afterClass('martes')).toBe('también después de la clase de los martes');
     expect(ko.readout.classDays(2, 23)).toBe('지금까지 수업: 23번 중 2번');
     expect(es.warn.itemCap(24)).toBe('Este plan se llena en la semana 24. Elige menos semanas, o elige «Practicar lo que enseñó la clase».');
     expect(es.readout.addPractice.cta).toBe('Añadir días de práctica a este plan');
-    expect(ko.readout.addPractice.cta).toBe('이 계획에 연습하는 날 더하기');
+    expect(ko.readout.addPractice.cta).toBe('이 계획에 연습하는 날 추가하기');
     expect(es.preview.header(8, 1, 30, 7, 10, es.preview.everyDay)).toMatch(/^Unas 8 sesiones por semana, los 7 días: /);
     expect(ko.preview.header(8, 1, 30, 7, 10, ko.preview.everyDay)).toMatch(/^한 주에 약 8번\(7일 모두\): /);
     for (const locale of LOCALES) {
