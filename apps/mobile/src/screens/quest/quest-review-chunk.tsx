@@ -22,6 +22,8 @@ import {
   touchTarget,
   useMediaSize,
   type ChoiceCardState,
+  NO_PRESS_DELAY,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -286,6 +288,9 @@ function instructionOf(round: PickRound, m: Messages): string {
 }
 
 function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProps): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
+  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
+  const guardSpeaker = usePressGuard({ setsLock: false });
   const m = useMessages();
   const a11y = m.a11y.minigame;
   const romanizationMode = useRomanizationMode();
@@ -365,7 +370,8 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
           <>
             <Pressable
               testID="quest-review-speaker"
-              onPress={hear}
+              onPress={guardSpeaker(hear)}
+              {...NO_PRESS_DELAY}
               accessibilityRole="button"
               accessibilityLabel={speakerLabel}
               hitSlop={spacing.md}

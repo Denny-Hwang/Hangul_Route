@@ -1,4 +1,4 @@
-import { Body, KoreanText, Progress, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, KoreanText, Progress, borderWidth, colors, radii, spacing, touchTarget, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
 import type { VocabTopic } from '@hangul-route/content-schema';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
@@ -58,10 +58,14 @@ export function TopicTile({
   hint?: string;
   testID?: string;
 }): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens once, a tap during the app-level tap lock is dropped, and an
+  // opening tap sets that lock, so the bounce cannot press what the next screen puts under the finger.
+  const guard = usePressGuard();
   return (
     <Pressable
       testID={testID}
-      onPress={onPress}
+      onPress={guard(onPress)}
+      {...NO_PRESS_DELAY}
       accessibilityRole="button"
       accessibilityLabel={view.accessibilityLabel}
       accessibilityHint={hint}

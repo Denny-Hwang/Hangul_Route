@@ -23,6 +23,8 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useTypeScale,
+  NO_PRESS_DELAY,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -81,6 +83,9 @@ export function LibraryScreen(): ReactElement {
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
   const titles = useLessonTitlesVersion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the group rows and the Next card row drop a bounce, wait for the app-level tap lock
+  // and set it, so a bounce cannot press the card that opens under the finger.
+  const guard = usePressGuard();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const markCardsSeen = useProgressStore((s) => s.markCardsSeen);
@@ -297,7 +302,8 @@ export function LibraryScreen(): ReactElement {
                     <View key={group.key}>
                       <Pressable
                         testID={`library-group-${group.key}`}
-                        onPress={() => setOpenGroup(open ? null : group.key)}
+                        onPress={guard(() => setOpenGroup(open ? null : group.key))}
+                        {...NO_PRESS_DELAY}
                         accessibilityRole="button"
                         accessibilityLabel={m.toFind.a11y(group.title)}
                         accessibilityState={{ expanded: open }}
@@ -394,20 +400,28 @@ export function LibraryScreen(): ReactElement {
 }
 
 function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): a guarded tap with no press delay. The pill keeps its size; the button around it is
+  // at least touchTarget.min each way, so the web hit area (react-native-web has no hitSlop) reaches 64 (audit UX-25).
+  const guard = usePressGuard();
   return (
     <Pressable
-      onPress={onPress}
+      onPress={guard(onPress)}
+      {...NO_PRESS_DELAY}
       accessibilityRole="button"
-      style={{
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-        borderRadius: radii.pill,
-        backgroundColor: active ? colors.brand.primary : colors.surface.paper,
-        borderWidth: 1,
-        borderColor: active ? colors.brand.primary : colors.border.subtle,
-      }}
+      style={{ minHeight: touchTarget.min, minWidth: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ color: active ? colors.text.inverse : colors.text.primary, fontWeight: '600' }}>{label}</Text>
+      <View
+        style={{
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.sm,
+          borderRadius: radii.pill,
+          backgroundColor: active ? colors.brand.primary : colors.surface.paper,
+          borderWidth: 1,
+          borderColor: active ? colors.brand.primary : colors.border.subtle,
+        }}
+      >
+        <Text {...KOREAN_LINE_BREAK} style={{ color: active ? colors.text.inverse : colors.text.primary, fontWeight: '600' }}>{label}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -442,9 +456,12 @@ function CardThumb({
   const card = localizeCard(source, useLocale());
   const messages = useMessages();
   const m = messages.learner.library;
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens the card once; an opening tap sets the app-level tap lock.
+  const guard = usePressGuard();
   return (
     <Pressable
-      onPress={onPress}
+      onPress={guard(onPress)}
+      {...NO_PRESS_DELAY}
       accessibilityRole="button"
       aria-selected={selected}
       accessibilityLabel={unlocked ? (isNew ? messages.a11y.newCard(card.titleEn) : card.titleEn) : messages.a11y.lockedCardHint(hint ?? '')}
@@ -519,10 +536,12 @@ function CardSilhouette({ size }: { size: number }): ReactElement {
 
 /** The one Next card hint of the Cards to find shelf: a silhouette, "Next card" and how to earn it. */
 function NextCardRow({ label, hint, a11yLabel, onPress }: { label: string; hint: string; a11yLabel: string; onPress: () => void }): ReactElement {
+  const guard = usePressGuard();
   return (
     <Pressable
       testID="library-next-card"
-      onPress={onPress}
+      onPress={guard(onPress)}
+      {...NO_PRESS_DELAY}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
       style={({ pressed }) => ({

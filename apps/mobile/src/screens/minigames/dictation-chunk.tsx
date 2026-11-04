@@ -15,6 +15,8 @@ import {
   typography,
   useMediaSize,
   useTypeScale,
+  NO_PRESS_DELAY,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -167,6 +169,9 @@ interface HearPromptProps {
 
 /** The hear prompt: the speaker, the meaning (and picture), and "Show how it sounds". Never the Korean before Done. */
 export function HearPrompt({ hear, round, compact, first, testID = 'dictation-prompt' }: HearPromptProps): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
+  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
+  const guardSpeaker = usePressGuard({ setsLock: false });
   const m = useMessages();
   const t = m.learner.minigame.typeHangul;
   const reduced = useReducedMotion();
@@ -189,7 +194,8 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
     <Animated.View style={first && !reduced ? pulseStyle : undefined}>
       <Pressable
         testID={`${testID}-speaker`}
-        onPress={hear.play}
+        onPress={guardSpeaker(hear.play)}
+        {...NO_PRESS_DELAY}
         disabled={holding}
         accessibilityRole="button"
         accessibilityLabel={speakerLabel}

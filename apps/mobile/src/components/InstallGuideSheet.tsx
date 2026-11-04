@@ -11,6 +11,8 @@ import {
   radii,
   spacing,
   touchTarget,
+  NO_PRESS_DELAY,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -51,6 +53,9 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): ReactEl
   const [copied, setCopied] = useState(false);
   const insets = useSafeAreaInsets();
   const [promptTick, setPromptTick] = useState(0);
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the close uncovers the screen under the guide, so it drops its own bounce, waits for
+  // the app-level tap lock and sets it.
+  const guard = usePressGuard();
 
   // The browser may hand us the install prompt after first paint.
   useEffect(() => {
@@ -117,7 +122,9 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): ReactEl
               <Caption tone="muted">{m.offline}</Caption>
             </View>
             <Pressable
-              onPress={dismiss}
+              onPress={guard(dismiss)}
+              {...NO_PRESS_DELAY}
+              // Native only (react-native-web drops it); the target is already at least touchTarget.min each way.
               hitSlop={spacing.sm}
               accessibilityRole="button"
               accessibilityLabel={messages.common.buttons.close}

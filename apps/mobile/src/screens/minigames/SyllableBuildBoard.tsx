@@ -16,6 +16,8 @@ import {
   typography,
   useMediaSize,
   useTypeScale,
+  NO_PRESS_DELAY,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -122,6 +124,9 @@ function tileColors(zone: SyllableZone, look: TileLook): { backgroundColor: stri
 }
 
 export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
+  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
+  const guardSpeaker = usePressGuard({ setsLock: false });
   const m = useMessages();
   const copy = m.learner.minigame.syllableBuild;
   const a11y = m.a11y.minigame.syllableBuild;
@@ -249,7 +254,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
         <View style={{ flexShrink: 1, gap: spacing.sm, minWidth: touchTarget.min }}>
           <Pressable
             testID={`${testID}-speaker`}
-            onPress={say}
+            onPress={guardSpeaker(say)}
+            {...NO_PRESS_DELAY}
             accessibilityRole="button"
             accessibilityLabel={speakerLabel}
             style={{

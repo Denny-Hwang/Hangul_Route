@@ -1,4 +1,4 @@
-import { Body, Icon, colors, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Icon, colors, spacing, touchTarget, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 
@@ -22,10 +22,13 @@ export function LinkButton({
   testID?: string;
   accessibilityHint?: string;
 }): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): a link opens once per bounce, waits for the app-level tap lock and sets it, as Button.
+  const guard = usePressGuard();
   return (
     <Pressable
       testID={testID}
-      onPress={onPress}
+      onPress={guard(onPress)}
+      {...NO_PRESS_DELAY}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}

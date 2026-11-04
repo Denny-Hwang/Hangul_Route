@@ -14,6 +14,8 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
+  NO_PRESS_DELAY,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -97,11 +99,15 @@ export function StoryTile({
   onPress: () => void;
   testID?: string;
 }): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens once, a tap during the app-level tap lock is dropped, and an
+  // opening tap sets that lock, so the bounce cannot press what the next screen puts under the finger.
+  const guard = usePressGuard();
   const coverWidth = storyTileCoverWidth(width, TILE_CHROME);
   return (
     <Pressable
       testID={testID}
-      onPress={onPress}
+      onPress={guard(onPress)}
+      {...NO_PRESS_DELAY}
       accessibilityRole="button"
       accessibilityLabel={view.accessibilityLabel}
       accessibilityHint={hint}

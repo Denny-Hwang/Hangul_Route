@@ -7,6 +7,7 @@ import {
   Hoya,
   HoyaBubble,
   Icon,
+  NO_PRESS_DELAY,
   Pill,
   Progress,
   Screen,
@@ -21,6 +22,7 @@ import {
   useEffectiveFontScale,
   useLayoutClass,
   useMediaSize,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -370,6 +372,9 @@ function CatchUpCard({
 
 export function HomeScreen(): ReactElement {
   const m = useMessages();
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the Homework card and the Profile entry drop a bounce, wait for the app-level tap
+  // lock and set it when they open, so a bounce cannot press what the next screen puts under the finger.
+  const guard = usePressGuard();
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
   const titles = useLessonTitlesVersion();
@@ -902,7 +907,8 @@ export function HomeScreen(): ReactElement {
         </>
       ) : null}
       <Pressable
-        onPress={() => navigation.navigate('Homework')}
+        onPress={guard(() => navigation.navigate('Homework'))}
+        {...NO_PRESS_DELAY}
         accessibilityRole="button"
         accessibilityLabel={m.a11y.openHomework}
       >
@@ -974,11 +980,12 @@ export function HomeScreen(): ReactElement {
             colour its avatar name says (not the Pillar theme), with a visible
             label — the only way to profiles, backup, classes and the grown-up zone. */}
         <Pressable
-          onPress={() => navigation.navigate('Profile')}
+          onPress={guard(() => navigation.navigate('Profile'))}
+          {...NO_PRESS_DELAY}
           accessibilityRole="button"
           accessibilityLabel={m.a11y.profileEntry}
-          hitSlop={spacing.xs}
-          style={{ alignItems: 'center', minWidth: touchTarget.min, gap: spacing.xxs }}
+          // The avatar and its word are the hit area, at least touchTarget.min each way (react-native-web drops hitSlop).
+          style={{ alignItems: 'center', justifyContent: 'center', minWidth: touchTarget.min, minHeight: touchTarget.min, gap: spacing.xxs }}
         >
           <ProfileAvatar avatar={profile?.avatar ?? DEFAULT_AVATAR} size={AVATAR_SIZE} ring />
           <Caption tone="secondary" weight="semibold">

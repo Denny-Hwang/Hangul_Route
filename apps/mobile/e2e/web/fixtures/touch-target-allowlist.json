@@ -1,29 +1,8 @@
 {
   "note": "F-LAYOUT-001 §3.8 touch-target ratchet (target-size.spec.ts). Controls measured under touchTarget.min (64) today, per window. Never add a line: a new small control fails the audit until it is at least 64 x 64. When a listed control is fixed, the audit fails until its line is removed, so this list only shrinks.",
   "offenders": {
-    "1180x820": [
-      "Library | button | All",
-      "Library | button | Food",
-      "Library | button | Holidays",
-      "Library | button | Letters",
-      "Library | button | Nature",
-      "Library | button | Play"
-    ],
-    "375x667": [
-      "Library | button | All",
-      "Library | button | Food",
-      "Library | button | Holidays",
-      "Library | button | Letters",
-      "Library | button | Nature",
-      "Library | button | Play"
-    ],
-    "768x1024": [
-      "Library | button | All",
-      "Library | button | Food",
-      "Library | button | Holidays",
-      "Library | button | Letters",
-      "Library | button | Nature",
-      "Library | button | Play"
-    ]
+    "1180x820": [],
+    "375x667": [],
+    "768x1024": []
   }
 }

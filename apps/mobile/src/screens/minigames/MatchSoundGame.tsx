@@ -14,6 +14,8 @@ import {
   touchTarget,
   useLayoutClass,
   useMediaSize,
+  NO_PRESS_DELAY,
+  usePressGuard,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -40,6 +42,9 @@ interface Props {
 }
 
 export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
+  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
+  const guardSpeaker = usePressGuard({ setsLock: false });
   const rounds = useMemo<MatchSoundRound[]>(
     () =>
       buildMatchSoundRounds({
@@ -170,7 +175,8 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
               <Pressable
-                onPress={() => void hear()}
+                onPress={guardSpeaker(() => void hear())}
+                {...NO_PRESS_DELAY}
                 accessibilityRole="button"
                 accessibilityLabel={view.speakerLabel}
                 testID="match-sound-speaker"
