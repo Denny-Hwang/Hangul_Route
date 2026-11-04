@@ -159,7 +159,7 @@ test.describe('Realia Read (F-CURR-001 G-2)', () => {
         ['forecast', 'Weather forecast, 3 lines', '화, hwa, 비, bi', 'rain'],
         ['calendar', 'Calendar, 2 lines', '9일, guil, 한글날, hangeullal', 'd9'],
         ['timetable', 'Timetable, 3 lines', '부산, busan, 두 시, du si', 'two'],
-        ['map', 'Map, 3 lines', '정상, jeongsang, to the right', 'right'],
+        ['map', 'Map, 3 lines', '정상, jeongsang, 오른쪽, oreunjjok', 'right'],
         ['poster', 'Poster, 3 lines', '도서관, doseogwan', 'library'],
       ] as const satisfies ReadonlyArray<readonly [AddedKind, string, string, string]>) {
         test(`a ${kind} draws its own layout from its chunk, with named line buttons, and its round plays (CM-47)`, async ({ page }) => {

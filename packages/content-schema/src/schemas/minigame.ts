@@ -410,9 +410,30 @@ export function realiaReadIssues(realia: Realia, rounds: readonly RealiaReadRoun
       out.push({ path: ['rounds', i, 'answerEntryId'], message: 'every round names its answer entry (answerEntryId)' });
     } else if (!ids.includes(round.answerEntryId)) {
       out.push({ path: ['rounds', i, 'answerEntryId'], message: `answerEntryId "${round.answerEntryId}" is not an entry of the realia` });
+    } else {
+      const issue = directionAnswerIssue(realia, round);
+      if (issue !== undefined) out.push({ path: ['rounds', i, 'answerId'], message: issue });
     }
   });
   return out;
+}
+
+/** The Korean direction words a Realia Read answer may be, and the `dir` a sign board draws for each. */
+const DIRECTION_WORDS: Readonly<Record<string, 'left' | 'right'>> = { 왼쪽: 'left', 오른쪽: 'right' };
+
+/**
+ * A direction answer (왼쪽 / 오른쪽) must be readable on the sheet (F-CURR-002 row CM-41 S6): only a sign's board
+ * draws `dir` (its arrow and side); every other kind, a map included, shows the direction as the line's text or value
+ * (the CM-47 rule "a map places its direction in its name"). Without it only a screen reader hears the answer.
+ */
+function directionAnswerIssue(realia: Realia, round: RealiaReadRound): string | undefined {
+  const answer = round.options.find((o) => o.id === round.answerId)?.text?.ko;
+  const dir = answer === undefined ? undefined : DIRECTION_WORDS[answer];
+  const entry = realia.entries.find((e) => e.id === round.answerEntryId);
+  if (dir === undefined || entry === undefined) return undefined;
+  if (realia.kind === 'sign' && entry.dir === dir) return undefined;
+  if (entry.text.ko.includes(answer as string) || entry.value?.ko.includes(answer as string)) return undefined;
+  return `the answer "${answer}" is a direction the sheet does not show: on a ${realia.kind ?? 'plain'} sheet the answer entry "${entry.id}" carries it as its text or value (only a sign's board draws dir)`;
 }
 
 /** Type Hangul: type a short word or phrase on the in-app keyboard; checked by syllable after Done (F-CURR-001 §3.7). */
