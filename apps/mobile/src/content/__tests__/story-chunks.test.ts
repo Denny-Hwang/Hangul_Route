@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Story } from '@hangul-route/content-schema';
+import { OVERLAYS } from '@hangul-route/content-schema/overlays';
+import { OVERLAYS_ES } from '@hangul-route/content-schema/overlays-es';
+import { OVERLAYS_KO } from '@hangul-route/content-schema/overlays-ko';
 import { describe, expect, it } from 'vitest';
 import * as index from '../__generated__/stories-index';
 import * as shelfChunk from '../__generated__/stories-shelf';
@@ -91,7 +94,8 @@ describe('the story shelf and its chunks', () => {
     for (const entry of shelfChunk.STORY_SHELF) {
       const mod = (await index.loadStoryBody(entry.id)) as StoryBodyChunk;
       expect(mod.CHUNK_HASH, entry.id).toBe(entry.chunk);
-      expect(Object.keys(mod).sort()).toEqual(['CHUNK_HASH', 'STORY_BODY']);
+      // STORY_OVERLAYS: the es / ko scene text (row CM-8b's overlay half), on a story that has any.
+      expect(Object.keys(mod).filter((k) => k !== 'STORY_OVERLAYS').sort()).toEqual(['CHUNK_HASH', 'STORY_BODY']);
       const bytes = Buffer.byteLength(read(`${CHUNKS}/${slug(entry.id)}.ts`));
       // F-CURR-002 §10: 70,000 B raw per story chunk.
       expect(bytes, entry.id).toBeLessThanOrEqual(script.BUDGET.perStoryRaw);
@@ -181,3 +185,30 @@ describe('the es / ko story overlays apply to a story read from its chunk', () =
     }
   });
 });
+
+describe('a story\'s es / ko scene text rides in its own chunk, not in the locale chunks (row CM-8b\'s overlay half)', () => {
+  const SCENE_TEXT = /^(?:tiers\.[^.]+\.)?scenes\.[^.]+\.(?:narration|caption|alt)$/;
+  it('each story chunk carries exactly the scene fields of its story; the locale tables carry none of them', async () => {
+    let withText = 0;
+    for (const entry of shelfChunk.STORY_SHELF) {
+      const chunk = (await index.loadStoryBody(entry.id)) as StoryBodyChunk;
+      for (const locale of ['es', 'ko'] as const) {
+        const full = OVERLAYS[locale][entry.id] ?? {};
+        const scene = Object.fromEntries(Object.entries(full).filter(([field]) => SCENE_TEXT.test(field)));
+        const inChunk = chunk.STORY_OVERLAYS?.[locale]?.[entry.id] ?? {};
+        expect(inChunk, `${entry.id} ${locale}`).toEqual(scene);
+        const table = (locale === 'es' ? OVERLAYS_ES : OVERLAYS_KO)[entry.id] ?? {};
+        expect(Object.keys(table).filter((field) => SCENE_TEXT.test(field)), `${entry.id} ${locale}`).toEqual([]);
+        // The locale chunk and the story chunk together are the whole entity.
+        expect({ ...table, ...inChunk }, `${entry.id} ${locale}`).toEqual(full);
+        if (Object.keys(inChunk).length > 0) withText += 1;
+      }
+    }
+    expect(withText).toBeGreaterThan(0);
+  });
+
+  it('the app lays a loaded chunk\'s scene text into the overlays (content/stories.ts)', () => {
+    expect(read('content/stories.ts')).toMatch(/installOverlays: \(overlays\) => \{[\s\S]*?installContentOverlay\(locale, table\)/);
+  });
+});
+

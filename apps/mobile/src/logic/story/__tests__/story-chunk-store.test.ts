@@ -129,6 +129,37 @@ describe('createStoryStore', () => {
     expect(inline.isStoryReady(other.id)).toBe(false);
   });
 
+  it('lays a chunk’s es / ko scene text into the overlays before its body is ready (row CM-8b’s overlay half)', async () => {
+    const sceneText = { ko: { [story.id]: { 'scenes.s1.narration': '한글날이에요.' } } };
+    const l = loader({ [story.id]: { CHUNK_HASH: 'h-hangul', STORY_BODY: body, STORY_OVERLAYS: sceneText }, [other.id]: { CHUNK_HASH: 'h-other', STORY_BODY: second.body } });
+    const readyAtInstall: boolean[] = [];
+    const store = createStoryStore({ entries }, l.load, {
+      installOverlays: () => {
+        readyAtInstall.push(store.isStoryReady(story.id));
+      },
+    });
+    const installed = vi.fn();
+    const watched = createStoryStore({ entries }, l.load, { installOverlays: installed });
+    const loading = Promise.all([store.ensureStories([story.id, other.id]), watched.ensureStories([story.id, other.id])]);
+    await l.flush();
+    await loading;
+    // Installed once, for the story that has scene text, while its body was not yet ready.
+    expect(readyAtInstall).toEqual([false]);
+    expect(installed).toHaveBeenCalledTimes(1);
+    expect(installed).toHaveBeenCalledWith(sceneText);
+    expect(store.isStoryReady(story.id)).toBe(true);
+  });
+
+  it('a chunk of another build installs no scene text', async () => {
+    const installed = vi.fn();
+    const l = loader({ [story.id]: { CHUNK_HASH: 'h-stale', STORY_BODY: body, STORY_OVERLAYS: { es: {} } } });
+    const store = createStoryStore({ entries }, l.load, { installOverlays: installed });
+    const loading = expect(store.ensureStories([story.id])).rejects.toBeInstanceOf(StoryChunkMismatch);
+    await l.flush();
+    await loading;
+    expect(installed).not.toHaveBeenCalled();
+  });
+
   it('unsubscribe stops notifications', async () => {
     const l = loader();
     const store = createStoryStore({ entries }, l.load);

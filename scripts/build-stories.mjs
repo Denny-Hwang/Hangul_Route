@@ -20,7 +20,10 @@
 //                                            a `shelf` block), so an owned card stays visible (F-STORY-006 §3.8)
 //   story-chunks/story-<slug>.ts         one body chunk per story (on demand)
 //       CHUNK_HASH, STORY_BODY (the fields of STORY_BODY_FIELDS: tiers with their scenes and art,
-//       facts, keywords, summary, verification, the cover scene, the whole review block, ...)
+//       facts, keywords, summary, verification, the cover scene, the whole review block, ...),
+//       STORY_OVERLAYS (when it has any: the es / ko text of its scenes, narration, caption and alt, which the
+//       learner PWA's locale chunks leave out; the app lays it into OVERLAYS when the chunk loads. Row CM-8b's
+//       overlay half, F-CURR-002 §10; `isStoryChunkField` of build-overlays.mjs)
 //
 // The shelf episodes and quests (F-STORY-001 §3.9 "derived, not hand-written") are derived from
 // the shelf in the app (`content/stories.ts`); `buildBundle` below is their reference and
@@ -64,6 +67,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 import { buildModules as buildLessonModules, chunkHash, readCells } from "./build-lessons.mjs";
+import { buildOverlays, readFiles as readOverlayFiles, storyChunkOverlays } from "./build-overlays.mjs";
 import { writeIfChanged } from "./write-if-changed.mjs";
 
 export const GENERATED_HEADER =
@@ -350,19 +354,25 @@ export function splitStory(story) {
   return { shelf, body };
 }
 
+/** No es / ko scene text (a build without content/i18n, the tests' default). */
+const NO_OVERLAYS = Object.freeze({ es: {}, ko: {} });
+
 /**
  * Pure: stories (sorted here) -> the shelf entries and one chunk per story, each with the hash of
  * its data literal (the `CHUNK_HASH` its module carries and its shelf entry names).
  */
-export function planChunks(stories) {
+export function planChunks(stories, overlays = NO_OVERLAYS) {
   const entries = [];
   const chunks = [];
   for (const story of [...stories].sort(byId)) {
     const { shelf, body } = splitStory(story);
-    const data = literal(body);
-    const hash = chunkHash(data);
+    const bodyLiteral = literal(body);
+    const sceneText = storyChunkOverlays(overlays, story.id);
+    const overlayLiteral = Object.keys(sceneText).length > 0 ? literal(sceneText) : undefined;
+    // The hash covers the scene text too, so a changed translation is a new chunk; a story without any keeps its hash.
+    const hash = chunkHash(overlayLiteral === undefined ? bodyLiteral : `${bodyLiteral}\n${overlayLiteral}`);
     entries.push({ ...shelf, chunk: hash });
-    chunks.push({ id: story.id, name: storyChunkName(story.id), hash, literal: data });
+    chunks.push({ id: story.id, name: storyChunkName(story.id), hash, literal: bodyLiteral, overlays: overlayLiteral });
   }
   return { entries, chunks };
 }
@@ -387,9 +397,9 @@ function planFixtureShelf(entries, fixtures, held = []) {
  * by the shelf chunk (`namedBy`: its hash is in the shelf, not in the start bundle), then the shelf chunk, whose hash
  * the start bundle names. `fixtures` (the ready story fixtures of an e2e build) changes the shelf alone.
  */
-export function chunkManifest(stories, { fixtures, held = [] } = {}) {
+export function chunkManifest(stories, { fixtures, held = [], overlays = NO_OVERLAYS } = {}) {
   const shelfStories = fixtures === undefined ? stories : stories.map(offShelfStory);
-  const plan = planChunks(shelfStories);
+  const plan = planChunks(shelfStories, overlays);
   const shelfHash =
     fixtures === undefined ? planShelf(plan.entries, held).hash : planFixtureShelf(plan.entries, [...fixtures].sort(byId), held).hash;
   return [...plan.chunks.map(({ name, hash }) => ({ name, hash, namedBy: SHELF_CHUNK })), { name: SHELF_CHUNK, hash: shelfHash }];
@@ -444,14 +454,15 @@ function chunkModules(chunks) {
       "import type { StoryBodyChunk } from '../../../logic/story/story-chunk-store';\n\n" +
       `/** The body of ${c.id} (F-CURR-002 §10): reached only through \`loadStoryBody\` in ../${INDEX_MODULE}, never imported statically. */\n` +
       `export const CHUNK_HASH = ${q(c.hash)};\n\n` +
-      `export const STORY_BODY: StoryBodyChunk['STORY_BODY'] = ${c.literal};\n`;
+      `export const STORY_BODY: StoryBodyChunk['STORY_BODY'] = ${c.literal};\n` +
+      (c.overlays === undefined ? "" : `\nexport const STORY_OVERLAYS: StoryBodyChunk['STORY_OVERLAYS'] = ${c.overlays};\n`);
   }
   return modules;
 }
 
 /** Pure: the stories that ship and the held cards -> the module sources by path under OUT_DIR. */
-export function buildModules({ stories, held = [] }) {
-  const plan = planChunks(stories);
+export function buildModules({ stories, held = [], overlays = NO_OVERLAYS }) {
+  const plan = planChunks(stories, overlays);
   const shelf = planShelf(plan.entries, held);
   return {
     [INDEX_MODULE]: indexModule(shelf.hash, plan.chunks),
@@ -473,8 +484,8 @@ export function buildModules({ stories, held = [] }) {
  * schema (`parseStory`, zod defaults) when the shelf chunk loads, and their bodies stay inline in it
  * (they have no chunk). Content stories keep their typed shelf entries and their chunks.
  */
-export function buildFixtureModules({ stories, fixtures, held = [] }) {
-  const plan = planChunks(stories);
+export function buildFixtureModules({ stories, fixtures, held = [], overlays = NO_OVERLAYS }) {
+  const plan = planChunks(stories, overlays);
   const sortedFixtures = [...fixtures].sort(byId);
   const shelf = planFixtureShelf(plan.entries, sortedFixtures, held);
   return {
@@ -690,7 +701,11 @@ function parseArgs(argv) {
 export function readChunkManifest(root, { fixtures = false } = {}) {
   const all = readStories(root);
   const stories = all.filter((s) => s.state === "ready");
-  return chunkManifest(stories, { held: heldStoryCards(all), ...(fixtures ? { fixtures: readFixtureStories(root) } : {}) });
+  return chunkManifest(stories, {
+    held: heldStoryCards(all),
+    overlays: buildOverlays(readOverlayFiles(root)),
+    ...(fixtures ? { fixtures: readFixtureStories(root) } : {}),
+  });
 }
 
 /** Every story file of content/stories as a content tree (`content/stories/<slug>.json` -> the story): the review-item source of row CM-10. */
@@ -766,7 +781,11 @@ export function main(argv, root) {
       fixtures = readFixtureStories(root);
       checkFixtureIds(stories, fixtures);
     }
-    bundle = { stories: opts.includeFixtures ? stories.map(offShelfStory) : stories, held: heldStoryCards(all) };
+    bundle = {
+      stories: opts.includeFixtures ? stories.map(offShelfStory) : stories,
+      held: heldStoryCards(all),
+      overlays: buildOverlays(readOverlayFiles(root)),
+    };
     // Derived here only to fail on a shelf story the app could not derive (no tier, no Hoya line).
     buildBundle([...bundle.stories, ...fixtures]);
     if (opts.report) lessonIndex = buildLessonModules(readCells(root))["lessons-index.ts"];

@@ -1,4 +1,5 @@
-import type { Episode, HeldStoryCard, Quest, Story, StoryLevel } from '@hangul-route/content-schema';
+import { OVERLAY_LOCALES, type Episode, type HeldStoryCard, type Quest, type Story, type StoryLevel } from '@hangul-route/content-schema';
+import { installContentOverlay } from '@hangul-route/content-schema/overlays';
 import { loadStoryBody } from './__generated__/stories-index';
 import { storyShelf } from './story-shelf';
 import { createStoryStore, shelfLevelOf, storiesOverStore, storyTierLevels } from '../logic/story/story-chunk-store';
@@ -24,6 +25,13 @@ export const storyContent = createStoryStore(
     timeoutMs: 15_000,
     abandon: (bundleName) => {
       abandonPendingChunk(bundleName);
+    },
+    // The story's es / ko scene text rides in its chunk, not in the locale chunks (row CM-8b's overlay half).
+    installOverlays: (overlays) => {
+      for (const locale of OVERLAY_LOCALES) {
+        const table = overlays[locale];
+        if (table !== undefined) installContentOverlay(locale, table);
+      }
     },
   },
 );
