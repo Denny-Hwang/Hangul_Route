@@ -119,7 +119,7 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   // AMENDMENTS-GROWNUP-UX GX-4 (section 10.1): the family's strip heading.
   'console.transfer.familyNeedsYou': '"2 cambios de clase esperan tu aprobación" (40) against "2 class moves need your OK" (26), one letter over: the one action wording of section 10.1 ("espera(n) tu aprobación" in a sentence); a heading line on the family moves page, which wraps',
   'console.transfer.endsOn': '"Termina el {date}" against "Ends {date}", one letter over at a short date: Spanish needs the article before a date (the same date order as "Cambia de clase el {date}"); a card line that wraps',
-  'console.parentHome.needsYou.title': '"Necesita tu respuesta" (21) against "Needs you" (9): Spanish needs the verb and its object ("Te necesita" would read as a person needing the parent); a heading on its own line above the strip, which wraps',
+  'console.parentHome.needsYou.title': '"Pendiente de tu respuesta" (25) against "Needs you" (9): the section 10.1 text of the GX-0 second review round ("Te necesita" would read as a person needing the parent); a heading on its own line above the strip, which wraps',
   // GX-1 (section 5.3): the re-link pop-up's put-off button; "Luego" reads as "then", so the two-word "Más tarde" is the one Spanish word for Later.
   'console.relinkPopup.later.cta': '"Más tarde" (9) against "Later" (5), one letter over the 8-character floor: a pop-up button drawn at its own width beside Approve and Deny, which wrap on a phone',
 };

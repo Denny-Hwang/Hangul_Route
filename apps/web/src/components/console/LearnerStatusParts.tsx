@@ -102,7 +102,7 @@ export function StatusChip({ words, onActivate, testId = 'learner-status' }: { w
  * button (the Needs you strip owns the actions). `action` is the family's own action, in the amber light fill (no border,
  * no dot: the card keeps its shipped border); `info` a dated move.
  */
-export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info'; testId?: string }): JSX.Element {
+export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info' | 'quiet'; testId?: string }): JSX.Element {
   return (
     <span data-testid={testId} data-tone={tone} style={{ ...chipBase, whiteSpace: 'normal', backgroundColor: TONE_FILL[tone] }}>
       {text}

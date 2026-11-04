@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { AvatarChip } from '@/components/AvatarChip';
 import { ConsentSheet, ReloadNotice, familyFailure, sheetFromView } from '@/components/console/FamilyTransferParts';
 import { DECIDED_HOLD_MS } from '@/components/console/LearnerStatusParts';
+import { RelinkPopup } from '@/components/console/RelinkPopup';
 import { MoveButton, TransferSheet } from '@/components/console/TransferParts';
 import type { ApiResult, ConsoleApi, TransferLearnerSideView } from '@/lib/console/api';
 import { foldNeedsYou, needsYouWords, type NeedsYouItem } from '@/lib/console/parent-home';
@@ -23,7 +24,9 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
  * the first keeps its row and the rest fold into "{n} more things need you · See all", which lists them all in a sheet, so
  * the first child stays on the first phone screen.
  *
- * - A re-link: **Approve** · **Deny** inline (`decideRelink`); the result goes to a polite region that outlives the row.
+ * - A re-link: **Deny** inline, one tap (`decideRelink`); **Approve** opens the re-link pop-up (`RelinkPopup`, GX-D12),
+ *   which shows the platform, the request time and the shipped safety hint beside its own Approve, because approving gives
+ *   the new device a class-scoped credential. The result goes to a polite region that outlives the row.
  * - A move: **Review** opens the shipped consent sheet directly (2 taps; was 3 to 4 through the moves page).
  * - A class-scope update: **Read and OK** hands the learner to the page, which scrolls to and focuses the shipped card
  *   (until the owner answers GX-OD-3; row GX-5b may open a sheet instead).
@@ -99,6 +102,9 @@ export function FamilyNeedsYou({
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Read and OK from the See all sheet: the card is focused once the sheet has closed and given focus back to its opener.
   const [scopeAfterClose, setScopeAfterClose] = useState<string | null>(null);
+  // The re-link whose Approve opened the pop-up (GX-D12); the See all sheet closes first, so one dialog is open at a time.
+  const [approving, setApproving] = useState<Extract<NeedsYouItem, { kind: 'relink' }> | null>(null);
+  const answeredRelink = useRef(false);
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const sheetListRef = useRef<HTMLDivElement | null>(null);
   const wasOpen = useRef(false);
@@ -246,7 +252,17 @@ export function FamilyNeedsYou({
         <div className="hr-ny-actions">
           {item.kind === 'relink' ? (
             <>
-              <MoveButton primary waiting={waiting} disabled={off} describedBy={describedBy} onClick={() => void decideRelink(item, true)} testId="needs-you-approve">
+              <MoveButton
+                primary
+                waiting={waiting}
+                disabled={off}
+                describedBy={describedBy}
+                onClick={() => {
+                  setAllOpen(false);
+                  setApproving(item);
+                }}
+                testId="needs-you-approve"
+              >
                 {c.relink.approve.cta}
               </MoveButton>
               <MoveButton waiting={waiting} disabled={off} describedBy={describedBy} onClick={() => void decideRelink(item, false)} testId="needs-you-deny">
@@ -331,6 +347,33 @@ export function FamilyNeedsYou({
             {items.length > 0 ? items.map((item, index) => row(item, 'sheet', index)) : <p style={{ margin: 0, color: colors.text.secondary }}>{t.empty}</p>}
           </div>
         </TransferSheet>
+      ) : null}
+      {approving ? (
+        <RelinkPopup
+          key={approving.id}
+          api={api}
+          spaceId={familyId}
+          request={{ id: approving.id, expiresAt: approving.expiresAt, platform: approving.platform, requestedAt: approving.at }}
+          learnerName={approving.name}
+          online={online}
+          now={now}
+          onLater={() => setApproving(null)}
+          onResult={(text, settled) => {
+            // A failure that leaves the request open stays in the pop-up, under its buttons.
+            if (!settled) return;
+            answeredRelink.current = true;
+            setApproving(null);
+            say(text);
+            void onChanged();
+          }}
+          // An answer closes the request and its row leaves: focus goes to the strip's heading. Later keeps the row, so focus
+          // goes back to its Approve (the pop-up's default).
+          focusOnClose={() => {
+            const answered = answeredRelink.current;
+            answeredRelink.current = false;
+            return answered ? headingRef.current : null;
+          }}
+        />
       ) : null}
       {reviewing && reviewed ? (
         <ConsentSheet

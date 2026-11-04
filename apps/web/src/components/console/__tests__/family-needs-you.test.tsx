@@ -138,7 +138,7 @@ async function renderStrip(state: FamilyAsks, opts: { api?: ReturnType<typeof ma
         onChanged={onChanged}
         onReadScope={onReadScope}
       />,
-      { createNodeMock: () => ({}) },
+      { createNodeMock: () => ({ focus: () => undefined }) },
     );
   });
   return { api, onChanged, onReadScope };
@@ -194,23 +194,46 @@ describe('FamilyNeedsYou: the strip', () => {
     expect(sheet.findAll((n) => n.props['data-testid'] === 'needs-you-row' && typeof n.type === 'string').map((r) => r.props['data-kind'])).toEqual(['relink', 'move', 'scope']);
   });
 
-  it('a re-link is answered inline: Approve and Deny by request id, the result in the polite region, the page reads again', async () => {
+  it('a re-link Approve never answers in one tap: it opens the re-link pop-up with the safety hint (GX-D12)', async () => {
     const { api, onChanged } = await renderStrip(asks({ relinks: [relink()] }));
+    expect(all('relink-popup')).toHaveLength(0);
     await click('needs-you-approve');
+    expect(api.decideRelink).not.toHaveBeenCalled();
+    const en = getMessages('en').console;
+    expect(text(one('relink-popup'))).toContain(en.relinkPopup.title('Mina'));
+    expect(text(one('relink-popup-hint'))).toBe(en.relinkApproveHint);
+    expect(text(one('relink-popup-closes'))).toBe(en.relinkPopup.closes(7));
+    // Approve inside the pop-up answers by request id; the pop-up closes, the result is said, the page reads again.
+    await click('relink-popup-approve');
     expect(api.decideRelink).toHaveBeenCalledWith('space:f', 'relink:1', true);
-    expect(text(one('needs-you-result')).trim()).toBe(getMessages('en').console.relink.approved('Mina'));
+    expect(all('relink-popup')).toHaveLength(0);
+    expect(text(one('needs-you-result')).trim()).toBe(en.relink.approved('Mina'));
     expect(onChanged).toHaveBeenCalledTimes(1);
-    await click('needs-you-deny');
-    expect(api.decideRelink).toHaveBeenLastCalledWith('space:f', 'relink:1', false);
   });
 
-  it('a failed answer keeps the row and says it did not go through', async () => {
-    const api = makeApi();
-    api.decideRelink.mockResolvedValueOnce({ ok: false, error: 'network', status: -1 });
-    await renderStrip(asks({ relinks: [relink()] }), { api });
+  it('Later closes the pop-up and answers nothing; Deny stays one tap in the row', async () => {
+    const { api } = await renderStrip(asks({ relinks: [relink()] }));
     await click('needs-you-approve');
+    await click('relink-popup-later');
+    expect(all('relink-popup')).toHaveLength(0);
+    expect(api.decideRelink).not.toHaveBeenCalled();
+    await click('needs-you-deny');
+    expect(api.decideRelink).toHaveBeenLastCalledWith('space:f', 'relink:1', false);
+    expect(text(one('needs-you-result')).trim()).toBe(getMessages('en').console.relink.denied('Mina'));
+  });
+
+  it('a failed answer keeps the row and says it did not go through (Deny in the row; Approve in the pop-up)', async () => {
+    const api = makeApi();
+    api.decideRelink.mockResolvedValue({ ok: false, error: 'network', status: -1 });
+    await renderStrip(asks({ relinks: [relink()] }), { api });
+    await click('needs-you-deny');
     expect(all('needs-you-row')).toHaveLength(1);
     expect(text(one('needs-you-result')).length).toBeGreaterThan(0);
+    // The pop-up keeps its buttons and shows the line under them while the request is still open.
+    await click('needs-you-approve');
+    await click('relink-popup-approve');
+    expect(all('relink-popup')).toHaveLength(1);
+    expect(text(one('relink-popup-failed')).length).toBeGreaterThan(0);
   });
 
   it('offline: the answers wait (disabled)', async () => {
@@ -358,9 +381,9 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
       renderer = create(strip(three(), { api }), { createNodeMock: world.createNodeMock });
     });
     await click('needs-you-see-all');
-    const approve = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-approve' && typeof n.type === 'string');
-    await act(async () => approve.props.onClick());
-    expect(text(one('needs-you-sheet-result')).trim()).toBe(getMessages('en').console.relink.approved('Mina'));
+    const deny = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-deny' && typeof n.type === 'string');
+    await act(async () => deny.props.onClick());
+    expect(text(one('needs-you-sheet-result')).trim()).toBe(getMessages('en').console.relink.denied('Mina'));
     expect(text(one('needs-you-result')).trim()).toBe('');
     // The page read again and the answered row left with its focused button: focus goes to the next row in the sheet.
     world.doc.activeElement = world.doc.body;
@@ -369,6 +392,19 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
     });
     expect(all('needs-you-sheet')).toHaveLength(1);
     expect(world.log[world.log.length - 1]).toBe('sheet-first-button');
+  });
+
+  it('Approve in the See all sheet closes the sheet and opens the re-link pop-up, so one dialog is open at a time', async () => {
+    const api = makeApi();
+    await act(async () => {
+      renderer = create(strip(three(), { api }), { createNodeMock: focusWorld().createNodeMock });
+    });
+    await click('needs-you-see-all');
+    const approve = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-approve' && typeof n.type === 'string');
+    await act(async () => approve.props.onClick());
+    expect(all('needs-you-sheet')).toHaveLength(0);
+    expect(all('relink-popup')).toHaveLength(1);
+    expect(api.decideRelink).not.toHaveBeenCalled();
   });
 
   it('closing the sheet after the See all row left moves focus to the strip heading, not the page', async () => {

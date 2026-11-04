@@ -351,12 +351,21 @@ describe('needsYou: what only the family can answer (GX-4, section 7.1)', () => 
     expect(needsYou({ relinks: null, transfers: null, scope: null, notices: [] }, NOW_GX)).toEqual([]);
   });
 
-  it('a move the family cannot answer (a self-managed learner: learnerRoute device or none) is no row and no chip', () => {
+  it('a move the family cannot answer (a self-managed learner: learnerRoute device or none) is no row, only the quiet Move waiting chip', () => {
     for (const learnerRoute of ['device', 'none'] as const) {
       const state = asks({ transfers: list([sideView({ learnerRoute })]) });
       expect(needsYou(state, NOW_GX)).toEqual([]);
-      expect(childStatus('profile:jun', state, NOW_GX)).toBeNull();
+      expect(childStatus('profile:jun', state, NOW_GX)).toEqual({ kind: 'moveWaiting' });
+      // Ended, decided or already answered by the learner: no chip.
+      expect(childStatus('profile:jun', asks({ transfers: list([sideView({ learnerRoute, expiresAt: '2026-10-30T12:00:00.000Z' })]) }), NOW_GX)).toBeNull();
+      expect(childStatus('profile:jun', asks({ transfers: list([sideView({ learnerRoute, status: 'ended' })]) }), NOW_GX)).toBeNull();
+      expect(childStatus('profile:jun', asks({ transfers: list([sideView({ learnerRoute, learnerState: 'consented' })]) }), NOW_GX)).toBeNull();
     }
+  });
+
+  it('a re-link row carries the platform the device sent, for the pop-up (null when none)', () => {
+    expect(needsYou(asks({ relinks: [relink({ platform: 'android' })] }), NOW_GX)[0]).toMatchObject({ kind: 'relink', platform: 'android' });
+    expect(needsYou(asks({ relinks: [relink({ platform: null })] }), NOW_GX)[0]).toMatchObject({ kind: 'relink', platform: null });
   });
 
   it('soonest-closing first (a re-link closes in minutes), then oldest first; an item with no end last', () => {
@@ -453,6 +462,9 @@ describe('childStatus and childChipWords: one chip per child, text only (section
     expect(childChipWords({ kind: 'relink' }, 'en')).toEqual({ text: 'New device · needs your OK', tone: 'action' });
     expect(childChipWords({ kind: 'scope' }, 'en')).toEqual({ text: 'Class info to read', tone: 'action' });
     expect(childChipWords({ kind: 'moving', on: '2026-11-03T12:00:00.000Z' }, 'en')).toEqual({ text: 'Moving Nov 3', tone: 'info' });
+    expect(childChipWords({ kind: 'moveWaiting' }, 'en')).toEqual({ text: 'Move waiting', tone: 'quiet' });
+    expect(childChipWords({ kind: 'moveWaiting' }, 'es').text).toBe('Cambio en espera');
+    expect(childChipWords({ kind: 'moveWaiting' }, 'ko').text).toBe('이동 대기 중');
     expect(childChipWords({ kind: 'move' }, 'es').text).toBe('Cambio de clase · por aprobar');
     expect(childChipWords({ kind: 'relink' }, 'ko').text).toBe('새 기기 · 승인 대기');
     expect(childChipWords({ kind: 'moving', on: '2026-11-03T12:00:00.000Z' }, 'ko').text).toBe(`이동 예정 · ${formatDate('ko', '2026-11-03T12:00:00.000Z', 'monthDay')}`);
