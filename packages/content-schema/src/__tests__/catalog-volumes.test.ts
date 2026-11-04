@@ -7,17 +7,16 @@ import {
   catalogEpisode,
   cellEpisodeIds,
   chooserGroups,
-  effectiveRoute,
   classPosition,
   effectiveRoute,
   inRouteOrder,
-  onTheRoute,
   freeRouteQuestIds,
   gridLessonIds,
   groupOfKey,
   isRouteStartQuest,
   learnerPosition,
   placedOutGrowth,
+  planCatalogStale,
   CATALOG_QUEST_ADDITIONS,
   presetBlockMinutes,
   questIdsOfBlocks,
@@ -41,7 +40,7 @@ import { makeResult } from './fixtures/placement-results';
  * Two volumes per cell in the catalogue (F-CURR-002 §5.1 and §6.2, F-STORY-005 PR 5.8, row CM-40): a cell's Volume 2
  * joins its `episodeIds`, its quests are catalogue quests on its own episode, a level below its stage places them out
  * like Volume 1's, and it adds no route day. These tests add fixture rows to the catalogue beside the shipped Volume 2
- * cells (rows CM-41..CM-45) and books 2 (row CM-46), on two cells that ship no Volume 2: Stage 2 Food & Daily Life and
+ * cells (rows CM-41..CM-45) and books 2 (row CM-46), on two cells that ship no Volume 2: Stage 2 Holidays & Traditions and
  * Stage 4 Letters & Books.
  */
 
@@ -51,7 +50,7 @@ const quests3 = [
   ['Snow Day', 4, []],
 ] as const;
 const V2_ROWS: GeneratedCellRow[] = [
-  ['stage2', 'life', 'Outdoor Words', 'shipped', 13, quests3, 2],
+  ['stage2', 'rites', 'Outdoor Words', 'shipped', 13, quests3, 2],
   ['stage4', 'letters', 'Playdate Talk', 'shipped', 13, quests3, 2],
 ];
 const V2 = expandCellRows(V2_ROWS);
@@ -77,7 +76,7 @@ function withVolumes(rows = V2): Catalog {
     topicMinutes: 5,
   });
 }
-const FIXTURE2_V2 = ['quest:stage2-life-v2-q1', 'quest:stage2-life-v2-q2', 'quest:stage2-life-v2-q3'];
+const FIXTURE2_V2 = ['quest:stage2-rites-v2-q1', 'quest:stage2-rites-v2-q2', 'quest:stage2-rites-v2-q3'];
 const FIXTURE4_V2 = ['quest:stage4-letters-v2-q1', 'quest:stage4-letters-v2-q2', 'quest:stage4-letters-v2-q3'];
 /** Every later-volume quest the shipped catalogue holds (each Volume 2 content row and each Stage 5 book 2). */
 const SHIPPED_LATER_QUESTS = CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds));
@@ -85,33 +84,33 @@ const SHIPPED_LATER_QUESTS = CATALOG.cells.flatMap((c) => (c.volumes ?? []).flat
 describe('the catalogue with two volumes per cell (row CM-40)', () => {
   it('expands a Volume 2 row into a later volume of its cell, quests named <cell>-v2-q<k> on its own episode', () => {
     expect(V2.cells).toEqual([]);
-    expect(V2.volumes[0]).toEqual({ cellId: 'episode:stage2-life', episodeId: 'episode:stage2-life-v2', volume: 2, title: 'Outdoor Words', minutes: 13, questIds: FIXTURE2_V2 });
+    expect(V2.volumes[0]).toEqual({ cellId: 'episode:stage2-rites', episodeId: 'episode:stage2-rites-v2', volume: 2, title: 'Outdoor Words', minutes: 13, questIds: FIXTURE2_V2 });
     expect(V2.quests[0]).toEqual({
-      id: 'quest:stage2-life-v2-q1',
-      episodeId: 'episode:stage2-life-v2',
+      id: 'quest:stage2-rites-v2-q1',
+      episodeId: 'episode:stage2-rites-v2',
       stage: 'stage2',
-      theme: 'life',
+      theme: 'rites',
       title: 'Rain and Sun',
       minutes: 4,
       teaches: [],
       kind: 'lesson',
     });
-    expect(volumeEpisodeId('episode:stage2-life', 1)).toBe('episode:stage2-life');
-    expect(volumeEpisodeId('episode:stage2-life', 2)).toBe('episode:stage2-life-v2');
+    expect(volumeEpisodeId('episode:stage2-rites', 1)).toBe('episode:stage2-rites');
+    expect(volumeEpisodeId('episode:stage2-rites', 2)).toBe('episode:stage2-rites-v2');
   });
 
   it('lists each cell’s episodes by volume, and every shipped cell holds its first volume, then its shipped Volume 2', () => {
     expect(SHIPPED_V2.length).toBeGreaterThan(0);
     for (const id of SHIPPED_V2) expect(id).toMatch(/^episode:stage[2-7]-[a-z]+-v2$/);
-    for (const id of ['episode:stage2-life-v2', 'episode:stage4-letters-v2']) expect(SHIPPED_V2, `${id} is the fixture's cell`).not.toContain(id);
+    for (const id of ['episode:stage2-rites-v2', 'episode:stage4-letters-v2']) expect(SHIPPED_V2, `${id} is the fixture's cell`).not.toContain(id);
     for (const cell of CATALOG.cells) {
       const v2 = `${cell.episodeId}-v2`;
       expect(cell.episodeIds, cell.episodeId).toEqual(SHIPPED_V2.includes(v2) ? [cell.episodeId, v2] : [cell.episodeId]);
     }
     const catalog = withVolumes();
     expect(CatalogSchema.safeParse(catalog).success).toBe(true);
-    expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-life')?.episodeIds).toEqual(['episode:stage2-life', 'episode:stage2-life-v2']);
-    expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-life')?.volumes).toEqual([{ episodeId: 'episode:stage2-life-v2', title: 'Outdoor Words', minutes: 13, questIds: FIXTURE2_V2 }]);
+    expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-rites')?.episodeIds).toEqual(['episode:stage2-rites', 'episode:stage2-rites-v2']);
+    expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-rites')?.volumes).toEqual([{ episodeId: 'episode:stage2-rites-v2', title: 'Outdoor Words', minutes: 13, questIds: FIXTURE2_V2 }]);
     for (const cell of CATALOG.cells) if (!SHIPPED_V2.includes(`${cell.episodeId}-v2`)) expect(cell.volumes, cell.episodeId).toBeUndefined();
     expect(cellEpisodeIds({ episodeId: 'episode:stage3-life' })).toEqual(['episode:stage3-life']);
     // The first volume's quests stay the cell's list; the later volume's follow every first volume's, in grid order.
@@ -123,7 +122,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const at = (id: string) => lessons.indexOf(id);
     expect(at(FIXTURE2_V2[2] as string)).toBeLessThan(at('quest:stage3-nature-v2-q1'));
     expect(at(FIXTURE4_V2[0] as string)).toBeGreaterThan(at('quest:stage3-nature-v2-q3'));
-    expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-life')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-life')?.questIds);
+    expect(catalog.cells.find((c) => c.episodeId === 'episode:stage2-rites')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-rites')?.questIds);
   });
 
   it('keeps a later volume off the lecture route: no preset and no class position reaches a Volume 2 quest (row CM-41)', () => {
@@ -142,17 +141,17 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
 
   it('refuses episodes out of volume order and a later volume’s quest in the first volume’s list', () => {
     const catalog = withVolumes();
-    const nature = catalog.cells.findIndex((c) => c.episodeId === 'episode:stage2-life');
+    const nature = catalog.cells.findIndex((c) => c.episodeId === 'episode:stage2-rites');
     const swapped = { ...catalog, cells: catalog.cells.map((c, i) => (i === nature ? { ...c, episodeIds: [...cellEpisodeIds(c)].reverse() } : c)) };
     expect(CatalogSchema.safeParse(swapped).success).toBe(false);
     const listed = { ...catalog, cells: catalog.cells.map((c, i) => (i === nature ? { ...c, questIds: [...c.questIds, FIXTURE2_V2[0] as string] } : c)) };
     expect(CatalogSchema.safeParse(listed).error?.issues.map((i) => i.message)).toContain(
-      'Lesson quest quest:stage2-life-v2-q1 of episode:stage2-life-v2 is listed by the first volume',
+      'Lesson quest quest:stage2-rites-v2-q1 of episode:stage2-rites-v2 is listed by the first volume',
     );
     const undescribed = { ...catalog, cells: catalog.cells.map((c, i) => (i === nature ? { ...c, volumes: [] } : c)) };
-    expect(CatalogSchema.safeParse(undescribed).error?.issues.map((i) => i.message)).toContain('Cell stage2-life must describe each later volume its episodeIds lists, in order');
+    expect(CatalogSchema.safeParse(undescribed).error?.issues.map((i) => i.message)).toContain('Cell stage2-rites must describe each later volume its episodeIds lists, in order');
     const orphan = { ...catalog, cells: catalog.cells.map((c, i) => (i === nature ? { ...c, episodeIds: [c.episodeId], volumes: undefined } : c)) };
-    expect(CatalogSchema.safeParse(orphan).error?.issues.map((i) => i.message)).toContain('Lesson quest quest:stage2-life-v2-q1 names the unknown cell episode:stage2-life-v2');
+    expect(CatalogSchema.safeParse(orphan).error?.issues.map((i) => i.message)).toContain('Lesson quest quest:stage2-rites-v2-q1 names the unknown cell episode:stage2-rites-v2');
   });
 
   it('leaves out a later volume of a cell that is not ready', () => {
@@ -160,7 +159,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const base = withVolumes(preview);
     const notReady = assembleCatalog({
       version: CATALOG_VERSION,
-      cells: base.cells.map((c) => (c.episodeId === 'episode:stage2-life' ? { ...c, status: 'preview' } : c)),
+      cells: base.cells.map((c) => (c.episodeId === 'episode:stage2-rites' ? { ...c, status: 'preview' } : c)),
       volumes: preview.volumes,
       lessonQuests: [...CATALOG.quests.filter((q) => q.kind === 'lesson'), ...preview.quests],
       stories: GENERATED_STORIES,
@@ -169,8 +168,8 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
       freeTopics: 4,
       topicMinutes: 5,
     });
-    expect(notReady.cells.find((c) => c.episodeId === 'episode:stage2-life')?.episodeIds).toEqual(['episode:stage2-life']);
-    expect(notReady.quests.some((q) => q.episodeId === 'episode:stage2-life-v2')).toBe(false);
+    expect(notReady.cells.find((c) => c.episodeId === 'episode:stage2-rites')?.episodeIds).toEqual(['episode:stage2-rites']);
+    expect(notReady.quests.some((q) => q.episodeId === 'episode:stage2-rites-v2')).toBe(false);
   });
 
   it('adds no route day: the route-day snapshot is the same with Volume 2 in the catalogue', () => {
@@ -178,24 +177,22 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     expect(freeRouteQuestIds(withVolumes())).toEqual(freeRouteQuestIds(CATALOG));
   });
 
-  it('a later volume never makes a saved plan stale: no plan holds its quests (F-CURR-002 row CM-46)', () => {
+  it('a later volume never makes a saved plan stale: no plan holds its quests (F-CURR-002 rows CM-40, CM-46)', () => {
     const next = CATALOG_VERSION + 1;
     const catalog = { ...withVolumes(), version: next };
-    const onPlans = planQuestIds(catalog);
-    for (const id of [...NATURE_V2, ...CRAFTS4_V2, ...LETTERS_BOOK2]) expect(onPlans.has(id), id).toBe(false);
-    // A history that stamps only later-volume quests at the new version keeps the plan version where it was.
-    const darkOnly = { ...CATALOG_QUEST_ADDITIONS, [next]: [...NATURE_V2, ...CRAFTS4_V2] };
-    expect(planCatalogVersion(catalog, darkOnly)).toBe(planCatalogVersion(CATALOG));
-    expect(isPlanCatalogStale(CATALOG_VERSION, catalog, darkOnly)).toBe(false);
-    expect(isPlanCatalogStale(planCatalogVersion(CATALOG), catalog, darkOnly)).toBe(false);
+    // A history that stamps only later-volume quests at the new version asks no plan to move.
+    const darkOnly = { ...CATALOG_QUEST_ADDITIONS, [next]: [...FIXTURE2_V2, ...FIXTURE4_V2] };
+    expect(planCatalogStale(CATALOG_VERSION, catalog, darkOnly)).toBe(false);
     // A first-volume lesson stamped at the new version does ask.
     const lesson = catalog.cells.find((c) => c.stage === 'stage2' && c.theme === 'nature')!.questIds[0]!;
-    expect(isPlanCatalogStale(CATALOG_VERSION, catalog, { ...darkOnly, [next]: [...NATURE_V2, lesson] })).toBe(true);
-    // The shipped Letters book 2 stamp is the catalogue's newest, and it is no plan's.
-    expect(planCatalogVersion(CATALOG)).toBeLessThan(CATALOG_VERSION);
+    expect(planCatalogStale(CATALOG_VERSION, catalog, { ...darkOnly, [next]: [...FIXTURE2_V2, lesson] })).toBe(true);
+    // The Letters book 2 (shelf stories' read quests) is a later volume too: its quests are no plan's.
+    const letters = CATALOG.cells.find((c) => c.episodeId === 'episode:stage5-letters')?.volumes ?? [];
+    expect(letters.map((v) => v.episodeId)).toEqual(['episode:stage5-letters-v2']);
+    expect(planCatalogStale(CATALOG_VERSION, catalog, { ...CATALOG_QUEST_ADDITIONS, [next]: [...(letters[0]?.questIds ?? [])] })).toBe(false);
     // Up to the hand-kept version 32 every bump still counts.
-    expect(isPlanCatalogStale(31, CATALOG)).toBe(true);
-    expect(isPlanCatalogStale(5, CATALOG)).toBe(true);
+    expect(planCatalogStale(31, CATALOG)).toBe(true);
+    expect(planCatalogStale(5, CATALOG)).toBe(true);
   });
 
   it('counts a later volume’s quests as grid lessons past the free plan, so the free plan never opens them', () => {
@@ -213,7 +210,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     for (const id of [...FIXTURE2_V2, ...FIXTURE4_V2]) {
       expect(at(id), id).toBeGreaterThan(lastFirstVolume);
       expect(at(id), id).toBeLessThan(firstStory);
-      expect(route[at(id)]).toMatchObject({ grid: true, playable: true, episodeId: id.includes('life') ? 'episode:stage2-life-v2' : 'episode:stage4-letters-v2' });
+      expect(route[at(id)]).toMatchObject({ grid: true, playable: true, episodeId: id.includes('stage2') ? 'episode:stage2-rites-v2' : 'episode:stage4-letters-v2' });
     }
     expect(route.map((q) => q.order)).toEqual(route.map((_, i) => i + 1));
   });
@@ -223,7 +220,7 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
     const at3 = questsPlacedOutAtLevel({ stage: 'stage3', band: 0 }, route);
     for (const id of FIXTURE2_V2) expect(at3).toContain(id);
     for (const id of FIXTURE4_V2) expect(at3).not.toContain(id);
-    expect(at3).toContain('quest:stage2-life-q1');
+    expect(at3).toContain('quest:stage2-rites-q1');
     const at5 = questsPlacedOutAtLevel({ stage: 'stage5', band: 0 }, route);
     for (const id of FIXTURE4_V2) expect(at5).toContain(id);
     const at2 = questsPlacedOutAtLevel({ stage: 'stage2', band: 0 }, route);
@@ -245,21 +242,21 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
 
 describe('the lecture deck and the chooser take a Volume 2 id (row CM-40)', () => {
   const catalog = withVolumes();
-  const V2_ID = 'episode:stage2-life-v2';
+  const V2_ID = 'episode:stage2-rites-v2';
 
   it('the deck schema and its link carry an episode block of a Volume 2', () => {
     expect(LectureBlockSchema.safeParse({ kind: 'episode', id: V2_ID }).success).toBe(true);
     expect(presetBlockMinutes({ kind: 'episode', id: V2_ID }, catalog)).toBe(13);
     expect(questIdsOfBlocks([{ kind: 'episode', id: V2_ID }], catalog)).toEqual(FIXTURE2_V2);
     expect(presetBlockMinutes({ kind: 'episode', id: V2_ID }, CATALOG)).toBe(0);
-    expect(catalogEpisode(catalog, 'episode:stage2-life')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-life')?.questIds);
+    expect(catalogEpisode(catalog, 'episode:stage2-rites')?.questIds).toEqual(CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-rites')?.questIds);
     expect(catalogEpisode(catalog, 'episode:nope')).toBeUndefined();
   });
 
   it('chooserGroups lists a Volume 2 as its own row after its cell only with `volumes`, keyed by its episode id', () => {
     const rowsOf = (volumes: boolean) => chooserGroups({ catalog, title: (id) => id, volumes }).find((g) => g.id === 'stage2')?.rows ?? [];
     const on = rowsOf(true);
-    const at = on.findIndex((r) => r.key === 'episode:stage2-life');
+    const at = on.findIndex((r) => r.key === 'episode:stage2-rites');
     expect(on[at + 1]).toMatchObject({ kind: 'episode', key: V2_ID, minutes: 13 });
     expect((on[at + 1] as ChooserEpisodeRow).lessons.map((l) => l.key)).toEqual(FIXTURE2_V2);
     expect(rowsOf(false).some((r) => r.key === V2_ID)).toBe(false);
@@ -302,7 +299,7 @@ describe('a later volume is no lecture route quest (row CM-40)', () => {
 
 describe('a later volume is no route start and no start choice (row CM-41)', () => {
   const route = routeCatalogOf(withVolumes());
-  const later = new Set([...NATURE_V2, ...CRAFTS4_V2, ...SHIPPED_LATER_QUESTS]);
+  const later = new Set([...FIXTURE2_V2, ...FIXTURE4_V2, ...SHIPPED_LATER_QUESTS]);
 
   it('marks every later-volume quest, and only those, as a grid quest that is no route start', () => {
     expect(route.quests.filter((q) => q.laterVolume === true).map((q) => q.id).sort()).toEqual([...later].sort());

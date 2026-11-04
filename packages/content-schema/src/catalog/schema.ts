@@ -241,9 +241,17 @@ export const cellIsReady = (cell: Pick<CatalogCell, 'status'>): boolean =>
 export const storyIsReady = (story: Pick<CatalogStory, 'status'>): boolean => story.status === 'ready';
 
 /**
+ * The stories of the frozen shelf table (`STORY_SHELF` in catalog/data.ts, the stories that shipped up to version 32):
+ * they hold shelf orders 1 to this number. A story added later takes the next order.
+ */
+export const FROZEN_SHELF_STORY_COUNT = 24;
+
+/**
  * The stories that only a cell's later volume holds (F-CURR-002 §4.3, §5.1, row CM-46): a Stage 5 book 2 tale, whose
- * read quest is in a later volume of its cell and in no first volume. They are Volume 2 content, behind the learner
- * switch `volumes`, so a surface that reads no learner switch (the presets, the console chooser) leaves them out.
+ * read quest is in a later volume of its cell and in no first volume, and that is a new tale (added after the frozen
+ * shelf). They are Volume 2 content, behind the learner switch `volumes`, so a surface that reads no learner switch
+ * (the presets, the console chooser) leaves them out. A shelf story that joined a book 2 through its read tier (the
+ * Letters book 2's, row CM-46a) stays a shelf story.
  */
 export function laterVolumeStoryIds(catalog: Pick<Catalog, 'cells' | 'stories'>): ReadonlySet<string> {
   const first = new Set(catalog.cells.flatMap((c) => c.questIds));
@@ -252,7 +260,7 @@ export function laterVolumeStoryIds(catalog: Pick<Catalog, 'cells' | 'stories'>)
     catalog.stories
       .filter((s) => {
         const read = `quest:story-${s.id.replace(/^story:/, '')}-read`;
-        return later.has(read) && !first.has(read);
+        return s.order > FROZEN_SHELF_STORY_COUNT && later.has(read) && !first.has(read);
       })
       .map((s) => s.id),
   );

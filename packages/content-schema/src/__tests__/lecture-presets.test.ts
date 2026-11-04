@@ -432,8 +432,14 @@ describe('story-time', () => {
   const laterVolume = laterVolumeStoryIds(CATALOG);
   const ready = CATALOG.stories.filter((st) => st.status === 'ready' && !laterVolume.has(st.id)).sort((x, y) => x.order - y.order);
 
-  it('leaves out the Food book 2 tales, which only a later volume holds (row CM-46)', () => {
-    expect([...laterVolume]).toEqual(['story:jang-fermented-sauces', 'story:tteok-through-the-seasons']);
+  it('leaves out the book 2 tales, which only a later volume holds (row CM-46)', () => {
+    // The shipped catalogue lists the Food, Nature and Play book 2 tales in their books only, so none is a catalogue
+    // story; the Letters book 2's read-tier stories stay shelf stories, offered as before.
+    expect([...laterVolume]).toEqual([]);
+    for (const id of ['story:jang-fermented-sauces', 'story:tteok-through-the-seasons', 'story:jeju-volcanic-island']) {
+      expect(CATALOG.stories.some((st) => st.id === id), id).toBe(false);
+    }
+    expect(ready.map((st) => st.id)).toContain('story:tripitaka-koreana');
     const all = resolvePreset('story-time', 30, { catalog: CATALOG, shown: { questIds: [], storyIds: ready.map((st) => st.id) } });
     for (const id of laterVolume) expect(all.blocks.some((bl) => bl.kind === 'story' && bl.storyId === id), id).toBe(false);
   });

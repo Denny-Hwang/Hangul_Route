@@ -8,6 +8,7 @@ import {
   CatalogStorySchema,
   CatalogTopicSchema,
   FESTIVAL_DATES,
+  FROZEN_SHELF_STORY_COUNT,
   ThemeKeySchema,
   VOCAB_TOPIC_KEYS,
   catalogStatusOfStory,
@@ -21,7 +22,7 @@ import {
 } from '..';
 import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
 import { STAGE1_15_QUESTS } from './fixtures/stage1-15';
-import { VOLUME_TWO_STORY_SLUGS } from '../catalog/data';
+import { STORY_SHELF, VOLUME_TWO_STORY_SLUGS } from '../catalog/data';
 
 const clone = (): Catalog => structuredClone(CATALOG);
 const issues = (catalog: unknown): string[] => {
@@ -140,17 +141,27 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    // + the nineteen Volume 2 cells of F-CURR-002 rows CM-41..CM-45 (3 lesson quests each): +57 lesson quests.
-    // + the Stage 5 books 2 of row CM-46 (Nature 3 and Play 2 read quests): +5 lesson quests.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(170);
+    // + the twenty-three Volume 2 cells of F-CURR-002 rows CM-41..CM-45 (3 lesson quests each): +69 lesson quests.
+    // + the Stage 5 books 2 of row CM-46 (Letters 8, Food 2, Nature 3 and Play 2 read quests): +15 lesson quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(192);
   });
 
-  it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode (a book 2 tale is listed in its book only, row CM-46)', () => {
-    expect([...VOLUME_TWO_STORY_SLUGS]).toEqual(['jeju-volcanic-island', 'jirisan-national-park', 'suncheon-bay-wetland', 'hahoe-mask-dance', 'hanji-korean-paper']);
+  // F-CURR-002 row CM-46 adds the two Letters book 2 tales (5 minutes each), listed as stories that wait for their
+  // sign-off; the Food, Nature and Play book 2 tales are listed in their book only.
+  it('has 26 stories adding up to 122 minutes, each with a listen quest on its shelf episode (a book 2 tale is listed in its book only, row CM-46)', () => {
+    expect([...VOLUME_TWO_STORY_SLUGS]).toEqual([
+      'jang-fermented-sauces',
+      'tteok-through-the-seasons',
+      'jeju-volcanic-island',
+      'jirisan-national-park',
+      'suncheon-bay-wetland',
+      'hahoe-mask-dance',
+      'hanji-korean-paper',
+    ]);
     for (const slug of VOLUME_TWO_STORY_SLUGS) expect(CATALOG.stories.some((s) => s.id === `story:${slug}`), slug).toBe(false);
-    expect(CATALOG.stories).toHaveLength(24);
-    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(112);
-    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(24);
+    expect(CATALOG.stories).toHaveLength(26);
+    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(122);
+    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(26);
     for (const story of CATALOG.stories) {
       const slug = story.id.slice('story:'.length);
       expect(story.questId).toBe(`quest:story-${slug}-listen`);
@@ -163,8 +174,10 @@ describe('the shipped catalogue data', () => {
     }
   });
 
-  it('numbers the stories 1 to 26 and marks the six free samplers and the three anchors', () => {
+  it('numbers the stories 1 to 26 (the CM-46 tales after the frozen 24, by addedIn and slug) and marks the six free samplers and the three anchors', () => {
     expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 26 }, (_, i) => i + 1));
+    expect(STORY_SHELF).toHaveLength(FROZEN_SHELF_STORY_COUNT);
+    expect(CATALOG.stories.slice(FROZEN_SHELF_STORY_COUNT).map((s) => s.id)).toEqual(['story:eongan-letters', 'story:hangul-name']);
     expect(CATALOG.stories.filter((s) => s.sampler).map((s) => s.id)).toEqual([
       'story:sejong-new-letters',
       'story:hangeul-day',
@@ -181,9 +194,9 @@ describe('the shipped catalogue data', () => {
     ]);
   });
 
-  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9), but not a book 2 tale (row CM-46)', () => {
-    expect(CATALOG.stories).toHaveLength(24);
-    expect(CATALOG.stories.every((s) => s.status === 'ready')).toBe(true);
+  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9); the CM-46 Letters tales wait for theirs', () => {
+    expect(CATALOG.stories).toHaveLength(26);
+    expect(CATALOG.stories.filter((s) => s.status !== 'ready').map((s) => s.id)).toEqual(['story:eongan-letters', 'story:hangul-name']);
   });
 
   it('has the 12 launch topics in order, the first four free, none with a quest yet', () => {
@@ -553,16 +566,22 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
       // A cell's later volume follows every first volume, in grid order (F-CURR-002 row CM-40): the Volume 2 content rows
-      // CM-41..CM-45 and the Stage 5 books 2 of row CM-46 (their read quests, Nature then Play).
+      // CM-41..CM-45 and the Stage 5 books 2 of row CM-46 (their read quests: Letters, Food, Nature, then Play).
       'quest:stage2-letters-v2-q1',
       'quest:stage2-letters-v2-q2',
       'quest:stage2-letters-v2-q3',
+      'quest:stage2-life-v2-q1',
+      'quest:stage2-life-v2-q2',
+      'quest:stage2-life-v2-q3',
       'quest:stage2-nature-v2-q1',
       'quest:stage2-nature-v2-q2',
       'quest:stage2-nature-v2-q3',
       'quest:stage2-crafts-v2-q1',
       'quest:stage2-crafts-v2-q2',
       'quest:stage2-crafts-v2-q3',
+      'quest:stage3-letters-v2-q1',
+      'quest:stage3-letters-v2-q2',
+      'quest:stage3-letters-v2-q3',
       'quest:stage3-life-v2-q1',
       'quest:stage3-life-v2-q2',
       'quest:stage3-life-v2-q3',
@@ -572,6 +591,9 @@ describe('routeCatalogOf', () => {
       'quest:stage3-nature-v2-q1',
       'quest:stage3-nature-v2-q2',
       'quest:stage3-nature-v2-q3',
+      'quest:stage3-crafts-v2-q1',
+      'quest:stage3-crafts-v2-q2',
+      'quest:stage3-crafts-v2-q3',
       'quest:stage4-life-v2-q1',
       'quest:stage4-life-v2-q2',
       'quest:stage4-life-v2-q3',
@@ -584,6 +606,16 @@ describe('routeCatalogOf', () => {
       'quest:stage4-crafts-v2-q1',
       'quest:stage4-crafts-v2-q2',
       'quest:stage4-crafts-v2-q3',
+      'quest:story-tripitaka-koreana-read',
+      'quest:story-jikji-metal-type-read',
+      'quest:story-sillok-royal-historians-read',
+      'quest:story-sillok-mountain-archives-read',
+      'quest:story-nanjung-ilgi-read',
+      'quest:story-seungjeongwon-ilgi-every-day-read',
+      'quest:story-ilseongnok-daily-reflection-read',
+      'quest:story-joseon-records-today-read',
+      'quest:story-jang-fermented-sauces-read',
+      'quest:story-tteok-through-the-seasons-read',
       'quest:story-jeju-volcanic-island-read',
       'quest:story-jirisan-national-park-read',
       'quest:story-suncheon-bay-wetland-read',
@@ -592,6 +624,9 @@ describe('routeCatalogOf', () => {
       'quest:stage6-letters-v2-q1',
       'quest:stage6-letters-v2-q2',
       'quest:stage6-letters-v2-q3',
+      'quest:stage6-life-v2-q1',
+      'quest:stage6-life-v2-q2',
+      'quest:stage6-life-v2-q3',
       'quest:stage6-rites-v2-q1',
       'quest:stage6-rites-v2-q2',
       'quest:stage6-rites-v2-q3',
