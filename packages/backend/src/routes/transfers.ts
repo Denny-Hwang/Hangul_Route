@@ -34,6 +34,7 @@ import { can, type AccountActor } from '../lib/can';
 import { isJoinCodeLive } from '../lib/join-code';
 import { createRateLimiter } from '../lib/rate-limit';
 import { ackFromTransferConsent } from '../lib/class-scope';
+import { classMeetingOf } from '../lib/class-meeting';
 import { classSeatCheck } from '../lib/seats';
 import {
   classTransferEnabled,
@@ -458,12 +459,17 @@ transferSpaceRoutes.get('/:id/transfer-requests', async (c) => {
     const deviceConsent = transferDeviceConsentEnabled(c.env);
     // Every row belongs to one of these learners, so each has its context.
     const contexts = new Map(perLearner.map((p) => [p.learnerId, { family: space, selfManaged: p.prefs.selfManaged, caregiverRoute: true, deviceConsent, now }]));
+    // AMENDMENTS-ROUTE-CLASS-BLEND row BL-9: how each live class meets (its plan with practice days), read once per class.
+    const today = now.toISOString().slice(0, 10);
+    const classPlans = new Map(await Promise.all([...liveClasses.keys()].map(async (id) => [id, await db.plansOf(id)] as const)));
     const options = perLearner.flatMap((p) => {
       const learner = learners.get(p.learnerId);
       if (!learner) return [];
       const classes = p.spaceIds.flatMap((id) => {
         const s = liveClasses.get(id);
-        return s ? [{ spaceId: s.id, name: s.name }] : [];
+        if (!s) return [];
+        const meeting = classMeetingOf(classPlans.get(id) ?? [], p.learnerId, today);
+        return [meeting ? { spaceId: s.id, name: s.name, meeting } : { spaceId: s.id, name: s.name }];
       });
       return [{ learnerId: p.learnerId, name: rosterName(space, learner.displayName), classes, selfManaged: p.prefs.selfManaged, blockTeacherRequests: p.prefs.blockTeacherRequests }];
     });

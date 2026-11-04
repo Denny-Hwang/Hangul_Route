@@ -1,5 +1,8 @@
 import {
   ACCEPTED_CONSENT_TEXT_VERSIONS,
+  CATALOG,
+  generateCurriculum,
+  toMeta,
   TRANSFER_CODE_FAILS_PER_DAY,
   TRANSFER_CODE_FAILS_PER_HOUR,
   TRANSFER_CONSENT_TEXT_VERSION,
@@ -574,6 +577,22 @@ describe('list and views', () => {
     });
     expect((await list(FAMILY, 'stranger')).status).toBe(404);
     expect((await list(FAMILY, 'teacher-a')).status).toBe(404);
+  });
+
+  it('a class with practice days adds how it meets to that class option, from its own plan (AMENDMENTS-ROUTE-CLASS-BLEND BL-9)', async () => {
+    const draft = generateCurriculum(
+      { audience: 'class', level: { stage: 'stage1', band: 0 }, startDate: '2026-10-13', weeks: 4, sessionsPerWeek: 4, sessionDays: ['tue', 'wed', 'fri', 'sun'], minutesPerSession: 10, unlockedStages: ['stage1'] },
+      CATALOG,
+    );
+    const plain = toMeta(draft);
+    const blend = { mode: 'overlap' as const, lecture: { days: ['tue' as const], minutes: 30 as const }, personal: { perWeek: 3, days: ['wed' as const, 'fri' as const, 'sun' as const], minutes: 10 as const }, classDaysOff: [], keepAverage: false };
+    const at = NOW.toISOString();
+    await db.putPlan({ id: 'plan:blend', spaceId: A, authorAccountId: 'teacher-a', title: 'Term', items: [], targetLearnerIds: null, publishedAt: at, archivedAt: null, createdAt: at, updatedAt: at, meta: { ...plain, generatorVersion: 2, params: { ...plain.params, blend } } });
+    const r = await list(FAMILY, 'dad');
+    const options = (r.body.data as { options: Array<{ learnerId: string; classes: unknown[] }> }).options;
+    expect(options.find((o) => o.learnerId === SUNI)?.classes).toEqual([{ spaceId: A, name: 'Sunday Class A', meeting: { classDays: ['tue'], perWeek: 3, practiceDays: ['wed', 'fri', 'sun'] } }]);
+    // The class's own list is unchanged: the meeting is a family read.
+    expect(JSON.stringify((await list(A, 'teacher-a')).body)).not.toContain('meeting');
   });
 
   it('a school sees counts of waiting moves per child class, nothing else', async () => {
