@@ -30,6 +30,7 @@ export interface RouteQuest {
    */
   laterVolume?: true;
 }
+
 export interface RouteCatalog {
   quests: readonly RouteQuest[];
 }

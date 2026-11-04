@@ -942,7 +942,26 @@
     "pat|내가 이겼어": "pat:naega-igyeosseo",
     "pat|내가 먼저 할게": "pat:naega-meonjeo-halge",
     "pat|누가 먼저 할래": "pat:nuga-meonjeo-hallae",
-    "pat|숨바꼭질 하자": "pat:sumbakkokjil-haja"
+    "pat|숨바꼭질 하자": "pat:sumbakkokjil-haja",
+    "lex|부채 만들기": "lex:buchae-mandeulgi",
+    "lex|도": "lex:do",
+    "lex|두 장": "lex:du-jang",
+    "lex|걸": "lex:geol",
+    "lex|장": "lex:jang",
+    "lex|제기 만들기": "lex:jegi-mandeulgi",
+    "lex|칸": "lex:kan",
+    "lex|모": "lex:mo",
+    "lex|풀": "lex:pul",
+    "lex|신청": "lex:sincheong",
+    "lex|연 만들기": "lex:yeon-mandeulgi",
+    "pat|도는 한 칸 가요": "pat:doneun-han-kan-gayo",
+    "pat|걸은 세 칸 가요": "pat:georeun-se-kan-gayo",
+    "pat|한지 두 장 주세요": "pat:hanji-du-jang-juseyo",
+    "pat|모는 다섯 칸 가요": "pat:moneun-daseot-kan-gayo",
+    "pat|연 만들기는 세 시예요": "pat:yeon-mandeulgineun-se-siyeyo",
+    "rea|realia:s6-crafts-v2-q1-rules": "rea:s6-crafts-v2-q1-rules",
+    "rea|realia:s6-crafts-v2-q2-fan-card": "rea:s6-crafts-v2-q2-fan-card",
+    "rea|realia:s6-crafts-v2-q3-signup": "rea:s6-crafts-v2-q3-signup"
   },
   "alias": {
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"
