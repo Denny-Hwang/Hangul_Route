@@ -149,7 +149,7 @@ export const caregiver = {
       problem: {
         network: 'No se pudo guardar. Revisa la conexión a internet y vuelve a intentarlo.',
         space: 'No hay espacio suficiente en este dispositivo. Quita algo y vuelve a intentarlo.',
-        notFile: 'La app tiene una actualización. Vuelve a cargar la página y vuelve a intentarlo.',
+        notFile: 'La app tiene una actualización. Recarga la página y vuelve a intentarlo.',
       },
     },
   },

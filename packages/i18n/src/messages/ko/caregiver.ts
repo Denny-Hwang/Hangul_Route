@@ -130,7 +130,7 @@ export const caregiver = {
     offline: {
       title: '오프라인 레슨',
       line: '1단계와 모든 단계의 1권은 항상 이 기기에 있어요. 다른 권은 여기서 저장하면 인터넷 없이 쓸 수 있어요.',
-      opened: '인터넷이 될 때 한 번 연 권도 오프라인용으로 남아요.',
+      opened: '인터넷에 연결되어 있을 때 한 번 연 권도 오프라인용으로 남아요.',
       stage: (n: number, title: string) => `${n}단계: ${title}`,
       size: (mb: string) => `약 ${mb}MB`,
       state: {
@@ -147,7 +147,7 @@ export const caregiver = {
       problem: {
         network: '저장하지 못했어요. 인터넷 연결을 확인하고 다시 해 보세요.',
         space: '이 기기에 공간이 부족해요. 다른 것을 지운 뒤 다시 해 보세요.',
-        notFile: '앱이 업데이트되었어요. 페이지를 새로 고친 뒤 다시 해 보세요.',
+        notFile: '앱에 새 버전이 있어요. 페이지를 새로 고친 뒤 다시 해 보세요.',
       },
     },
   },
