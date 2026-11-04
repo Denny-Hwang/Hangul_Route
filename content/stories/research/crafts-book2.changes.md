@@ -69,4 +69,15 @@ Every should-fix and must-fix above was applied as proposed. No fact was dropped
 
 ## Book 2 membership
 
-`episode:stage5-crafts-v2` (Masks and Paper) holds the two tales. janggyeong-panjeon (a crafts story with a CM-46a read tier) stays a shelf story: it reads with the printing and records stories of its research cluster, and a book quest needs both read-tier review passes on record (`books.test.ts`), which CM-46a recorded as one line. The choice is recorded in `apps/mobile/src/content/books.ts`.
+`episode:stage5-crafts-v2` (Masks and Paper) holds the two tales. janggyeong-panjeon (a crafts story with a CM-46a read tier) stays a shelf story: it reads with the printing and records stories of its research cluster (hangul-printing), not with masks and paper. The choice is recorded in `apps/mobile/src/content/books.ts`.
+
+## Fix round 1 (PR #973 review)
+
+The PR's independent MAR reviewer passed English and es and failed ko on two points; both were changed here and go back to an independent reviewer for the es and ko sign-off (the third pass in `crafts-book2.signoff.md` covers the text before this round).
+
+| Story | Where | Finding | Change | Severity |
+|---|---|---|---|---|
+| hahoe-mask-dance | ko s2, s3, s4, s7 | A `{kw:}` token shows the Korean keyword, so "{kw:X}, 곧 X" read the same word twice (마을, 곧 마을의 굿). | The token stands where the word stands: "{kw:maeul} 굿", "{kw:namu}를 깎아", "{kw:yangban} 탈은", "병산탈과 함께 {kw:gukbo}예요". | must-fix |
+| both | ko pick-meaning options (hahoe c2, r1, r2; hanji c1, r1, r2) | Some ko options held the target word (종이, 껍질, 써요, 떠요) or stood out as the only descriptive one, so a ko-UI learner could match the answer by its letters. | Every option is a descriptive gloss without the target, in CM-46a's style (e.g. 종이: "글을 쓰거나 무엇을 싸는 데 쓰는 얇은 것"). | must-fix |
+| hahoe-mask-dance | es s8, f8 | The UNESCO element name stood unquoted inside a Spanish sentence. | UNESCO's own Spanish title in quotes: «Talchum, danza teatral con máscaras en la República de Corea» (ich.unesco.org/es, read 2026-11-04). | should-fix |
+| hahoe-mask-dance | f8 UNESCO source | The locator held no words from the page. | Quoted from the element page, read 2026-11-04: "Inscribed in 2022 (17.COM) on the Representative List …", "Nomination file No. 01742". | should-fix |
