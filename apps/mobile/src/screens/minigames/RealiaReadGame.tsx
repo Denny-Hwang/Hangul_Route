@@ -14,6 +14,7 @@ import {
   touchTarget,
   useLayoutClass,
   useMediaSize,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -270,25 +271,28 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
                 />
               </View>
             ) : null}
-            <View testID="realia-read-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-              {round.options.map((option) => {
-                const view = realiaOptionView(round, option, state, context, a11y, m.a11y.koreanItem);
-                return (
-                  <View key={option.id} style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}>
-                    <ChoiceCard
-                      testID={`realia-read-option-${option.id}`}
-                      state={view.cardState}
-                      ko={view.ko}
-                      romanization={view.romanization}
-                      label={view.label}
-                      art={view.pictureRef !== undefined ? <PictureArt pictureRef={view.pictureRef} gloss={view.label ?? ''} size={pictureSize} /> : undefined}
-                      accessibilityLabel={view.accessibilityLabel}
-                      onPress={() => dispatch({ type: 'tap', optionId: option.id, answerId: round.answerId, at: Date.now() })}
-                    />
-                  </View>
-                );
-              })}
-            </View>
+            <TapBoard lock="board">
+              {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+              <View testID="realia-read-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+                {round.options.map((option) => {
+                  const view = realiaOptionView(round, option, state, context, a11y, m.a11y.koreanItem);
+                  return (
+                    <View key={option.id} style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}>
+                      <ChoiceCard
+                        testID={`realia-read-option-${option.id}`}
+                        state={view.cardState}
+                        ko={view.ko}
+                        romanization={view.romanization}
+                        label={view.label}
+                        art={view.pictureRef !== undefined ? <PictureArt pictureRef={view.pictureRef} gloss={view.label ?? ''} size={pictureSize} /> : undefined}
+                        accessibilityLabel={view.accessibilityLabel}
+                        onPress={() => dispatch({ type: 'tap', optionId: option.id, answerId: round.answerId, at: Date.now() })}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            </TapBoard>
             {soundPanel('options', 'realia-read-option-sound')}
           </View>
         }

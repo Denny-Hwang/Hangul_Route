@@ -124,7 +124,19 @@ export const PRECACHE_BUDGET = Object.freeze({
   // and route, the calendar key, the generated list of drop weeks with the chunk's hash and loader, the done mark's key and
   // removal, two route registrations and the English strings. The card, the pages, the drops and their review loader are
   // precached chunks. The line is the measurement plus a 4,249 B rounding margin.
-  startBundleRaw: 4_845_000,
+  // AMENDMENTS-TOUCH row KT-1 (PR #943) on main 1bfda3fc8 (4,838,051 B in CI) measures 4,860,944 B raw / 1,300,892 B gzip
+  // (release `build:web`, CI): +22,893 B, the forgiving tap model (`tap-model.ts`), the `TapBoard` family in the
+  // design-system barrel, `TapLockProvider` above the navigator and the `Screen` fit and scroller. Every learner answer
+  // area adopts it in KT-2 to KT-7, so it cannot be a lazy chunk. The line is the measurement plus a 5,056 B margin.
+  // Row KT-2 (PR #949: ChoiceCard, Tile and Button on TapTarget, the press look, the press guard), merged onto KT-1's
+  // head and main 377d44291 (CM-48 in it), measures 4,863,471 B raw / 1,302,136 B gzip (CI release build): the line
+  // stays, 2,529 B left for KT-3 to KT-9.
+  // The KT integration (integrate/kt-1103: KT-1, KT-10, KT-2, KT-3, KT-4a, KT-8 and KT-9 on main 25e108b5e, which adds
+  // NB-1 and NB-2) measures 4,870,372 B raw / 1,304,901 B gzip (release `build:web --budget`): 4,372 B over the line.
+  // Each row fit alone (KT-3 4,864,709 B, KT-9 4,865,262 B); together they cross it, with KT-4a's Card Match and
+  // KT-8's one-finger stroke ownership for Trace (`trace-pointers.ts`, `trace-pan.ts`) also in the start bundle, and
+  // NB-2 on main. The line is the measurement plus a 4,628 B margin.
+  startBundleRaw: 4_875_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

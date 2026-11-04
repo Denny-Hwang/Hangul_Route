@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { seedStored } from './helpers';
+import { seedStored, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -236,14 +236,15 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     expect(Math.abs(optA!.y - optB!.y)).toBeLessThanOrEqual(1);
     await expectNoHorizontalOverflow(page);
     await shot(page, 'spelling-320');
+    await pastTapLock(page);
     await page.getByTestId('listen-pick-option-b').click();
     await expect(page.getByText('Look at the meaning again.')).toBeVisible();
     expect(await page.locator('body').innerText()).not.toMatch(SHAME);
     await shot(page, 'spelling-320-miss');
-    // The miss is recorded, and the game's 50 ms touch window (LISTEN_PICK_TIMING) has passed, before the right tap:
-    // without shots (CI) the two clicks can land inside it, and the second is then dropped as a double touch.
+    // The miss is recorded, and the answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-3) has passed, before the right tap:
+    // without shots (CI) the two clicks can land inside it, and the second is then dropped as a bounce.
     await expect.poll(async () => (await log(page)).answers.length).toBe(1);
-    await page.waitForTimeout(100);
+    await pastTapLock(page);
     await page.getByTestId('listen-pick-option-a').click();
     await expect.poll(async () => (await log(page)).completes, { timeout: 5_000 }).toBe(1);
     expect((await log(page)).answers.map((a) => a.correct)).toEqual([false, true]);
@@ -259,6 +260,7 @@ test.describe('Dictation and the spelling round (F-CURR-002 CM-31)', () => {
     for (const id of ['a', 'c', 'd']) await expect(page.getByTestId(`listen-pick-option-${id}`)).toBeVisible();
     await expect(page.getByTestId('spelling-cue')).toHaveCount(0);
     await shot(page, 'spelling-320-switch-off');
+    await pastTapLock(page);
     await page.getByTestId('listen-pick-option-a').click();
     await expect.poll(async () => (await log(page)).completes, { timeout: 5_000 }).toBe(1);
   });

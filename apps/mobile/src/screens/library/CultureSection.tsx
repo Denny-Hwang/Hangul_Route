@@ -1,9 +1,9 @@
-import { Body, Heading, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Heading, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { storiesAll } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
@@ -42,7 +42,7 @@ export function CultureSection({ index }: { index: readonly StoryIndexEntry[] })
 
   return (
     <View testID="library-culture">
-      <Pressable
+      <GuardedPressable
         onPress={() => navigation.navigate('CultureNotes', undefined)}
         accessibilityRole="button"
         accessibilityLabel={card.accessibilityLabel}
@@ -79,7 +79,7 @@ export function CultureSection({ index }: { index: readonly StoryIndexEntry[] })
           ) : null}
         </View>
         <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
-      </Pressable>
+      </GuardedPressable>
       {hasTiles ? <Spacer size="lg" /> : null}
       <StoryShelf category="culture" index={index} hero={false} />
     </View>

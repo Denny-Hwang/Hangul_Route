@@ -1,3 +1,4 @@
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { describe, expect, it } from 'vitest';
 import type { VocabQuestion } from '../question-builder';
 import {
@@ -34,8 +35,9 @@ function play(mode: QuestionFlowMode, taps: ReadonlyArray<readonly [string, numb
 }
 
 describe('timing (F-VOC-004 §3.6, F-VOC-003 quick check)', () => {
-  it('600 ms after a right answer, 1000 ms after a miss, 700 ms in the check, a 50 ms touch window', () => {
-    expect(QUESTION_FLOW_TIMING).toEqual({ revealRightMs: 600, revealMissMs: 1_000, checkAdvanceMs: 700, touchWindowMs: 50 });
+  it('600 ms after a right answer, 1000 ms after a miss, 700 ms in the check, a bounce window of TAP_LOCK_MS less a 50 ms clock slack (AMENDMENTS-TOUCH KT-D5)', () => {
+    expect(QUESTION_FLOW_TIMING).toEqual({ revealRightMs: 600, revealMissMs: 1_000, checkAdvanceMs: 700, touchWindowMs: TAP_LOCK_MS - 50 });
+    expect(TAP_LOCK_MS).toBe(400);
   });
 });
 
@@ -65,7 +67,7 @@ describe("mode 'speed': one try, then the reveal (S5)", () => {
   it('every later tap is ignored', () => {
     const { effects } = play('speed', [
       ['vocab:bae', 100],
-      ['vocab:sagwa', 400],
+      ['vocab:sagwa', 500],
       ['vocab:podo', 900],
     ]);
     expect(effects.filter((e) => e.type === 'answer')).toHaveLength(1);
@@ -95,7 +97,7 @@ describe("mode 'check': try again until right (F-VOC-003 quick check, Listen & P
   it('a wrong tap locks that option, stays on the question and records a non-first answer next', () => {
     const { state, effects } = play('check', [
       ['vocab:bae', 100],
-      ['vocab:sagwa', 400],
+      ['vocab:sagwa', 500],
     ]);
     expect(state).toMatchObject({ status: 'resolved', chosenId: 'vocab:bae', wrongIds: ['vocab:bae'] });
     expect(effects).toEqual([
@@ -111,7 +113,7 @@ describe("mode 'check': try again until right (F-VOC-003 quick check, Listen & P
   it('a locked option cannot be tapped again', () => {
     const { effects, state } = play('check', [
       ['vocab:bae', 100],
-      ['vocab:bae', 400],
+      ['vocab:bae', 500],
     ]);
     expect(effects.filter((e) => e.type === 'answer')).toHaveLength(1);
     expect(state.status).toBe('asking');
@@ -123,7 +125,7 @@ describe("mode 'check': try again until right (F-VOC-003 quick check, Listen & P
   it('a second miss rings the right option', () => {
     const { state } = play('check', [
       ['vocab:bae', 100],
-      ['vocab:podo', 400],
+      ['vocab:podo', 500],
     ]);
     expect(optionState(QUESTION, 'vocab:sagwa', state, 'check', false)).toBe('hint');
     expect(optionState(QUESTION, 'vocab:ttalgi', state, 'check', false)).toBe('idle');
@@ -136,17 +138,25 @@ describe("mode 'check': try again until right (F-VOC-003 quick check, Listen & P
 });
 
 describe('both modes', () => {
-  it('drops a second touch inside 50 ms of an accepted one (F-001 §3.4)', () => {
-    const { effects } = play('check', [
-      ['vocab:bae', 100],
-      ['vocab:sagwa', 149],
-    ]);
-    expect(effects.filter((e) => e.type === 'answer')).toHaveLength(1);
+  it('drops a bounce inside the window of an accepted one (AMENDMENTS-TOUCH KT-D5; was 50 ms, F-001 §3.4)', () => {
+    for (const gap of [60, 150, QUESTION_FLOW_TIMING.touchWindowMs - 1]) {
+      const { effects } = play('check', [
+        ['vocab:bae', 100],
+        ['vocab:sagwa', 100 + gap],
+      ]);
+      expect(effects.filter((e) => e.type === 'answer')).toHaveLength(1);
+    }
     const later = play('check', [
       ['vocab:bae', 100],
-      ['vocab:sagwa', 150],
+      ['vocab:sagwa', 100 + TAP_LOCK_MS],
     ]);
     expect(later.effects.filter((e) => e.type === 'answer')).toHaveLength(2);
+    // A tap the board passed at 400 ms that reached the flow 5 ms early (the first handler ran late) still counts.
+    const skewed = play('check', [
+      ['vocab:bae', 100],
+      ['vocab:sagwa', 100 + TAP_LOCK_MS - 5],
+    ]);
+    expect(skewed.effects.filter((e) => e.type === 'answer')).toHaveLength(2);
   });
 
   it('ignores an id that is not an option', () => {

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
-import { colors, radii, shadows, spacing, typography } from '../../tokens';
+import { View } from 'react-native';
+import { colors, radii, shadows, spacing, touchTarget } from '../../tokens';
+import { GuardedPressable } from '../TapBoard/GuardedPressable';
 import { useTypeScale } from '../TextSize';
 import { hoyaDismissLabel } from '../../labels';
 import { Body, Caption, Heading } from '../Heading/Heading';
@@ -85,12 +86,23 @@ export function HoyaBubble({
         {ctaInline ? <View style={{ marginTop: spacing.sm }}>{ctaInline}</View> : null}
       </View>
       {onDismiss ? (
-        <Pressable
+        // AMENDMENTS-TOUCH 6.9 (row KT-9): guarded, and closing the bubble moves what is under it, so it sets the lock.
+        <GuardedPressable
           onPress={onDismiss}
           accessibilityRole="button"
           accessibilityLabel={hoyaDismissLabel(dismissLabel)}
-          hitSlop={spacing.md}
-          style={{ paddingHorizontal: spacing.xs, paddingVertical: spacing.xxs }}
+          // The hit area is the Pressable itself, at least touchTarget.min each way (react-native-web drops hitSlop). It
+          // reaches into the bubble's own top and right padding, so the × keeps its size and corner (KT-9, 6.9). It also
+          // takes back the row gap, so the message column loses as little width as it can at 320 px and large text.
+          style={{
+            minWidth: touchTarget.min,
+            minHeight: touchTarget.min,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: -spacing.lg,
+            marginRight: -spacing.lg,
+            marginLeft: -spacing.md,
+          }}
         >
           <Caption
             tone="muted"
@@ -99,7 +111,7 @@ export function HoyaBubble({
           >
             ×
           </Caption>
-        </Pressable>
+        </GuardedPressable>
       ) : null}
     </View>
   );
