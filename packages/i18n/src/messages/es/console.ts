@@ -828,6 +828,12 @@ export const consoleMsgs = {
             : `${plural('es', closed, { one: `1 de ellos va después de la Etapa 1 y se abre con ${product} cuando salga.`, other: `${closed} de ellos van después de la Etapa 1 y se abren con ${product} cuando salgan.` })} Los demás empiezan en sus fechas cuando salgan.`
         }`,
     },
+    blend: {
+      lecture: {
+        classDay: (weekday: string, n: number) => plural('es', n, { one: `Día de clase: ${weekday} · ${n} lección`, other: `Día de clase: ${weekday} · ${n} lecciones` }),
+        classLength: (minutes: number) => `Duración de la clase: ${minutes} min`,
+      },
+    },
   },
   placement: {
     startingSpot: (stage: number, band: string, date: string) => `Punto de partida: Etapa ${stage} · ${band} · ${date}`,
