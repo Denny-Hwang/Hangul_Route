@@ -1,3 +1,4 @@
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { getMessages } from '@hangul-route/i18n';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -220,7 +221,8 @@ describe('a hard Practice: one scaffold round before Apply', () => {
     const ringed = () => options().filter((o) => String(o.props['aria-label']).startsWith('Look here'));
     const other = options().find((o) => !String(o.props['aria-label']).startsWith('Look here'))!;
     await press(other);
-    await settle(60);
+    // Past the bounce window (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-D5): the next tap is a new one.
+    await settle(TAP_LOCK_MS);
     // Still ringed after the miss, under the same hint line ("nothing is ever taken away").
     expect(ringed()).toHaveLength(1);
     expect(screenTexts(r.root)).toContain(EN.learner.quest.adapt.scaffoldHint);

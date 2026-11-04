@@ -18,9 +18,10 @@ import {
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { type ComponentType, type ReactElement, type ReactNode, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { localizeEpisode } from '../logic/content-locale';
 import { stagePillLabel, stagePillState, themeGlyph } from '../logic/journey';
@@ -418,7 +419,7 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
   const opensVolume = volumeDots ? model.volumes.find((v) => v.episodeId === openId)?.volume : undefined;
 
   return (
-    <Pressable
+    <GuardedPressable
       onPress={press}
       disabled={disabled}
       accessibilityRole="button"
@@ -575,6 +576,6 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
         />
       ) : null}
       {next ? <NextMarker edge={edge} testID={`journey-next-${cell.stage}-${cell.theme}`} /> : null}
-    </Pressable>
+    </GuardedPressable>
   );
 }

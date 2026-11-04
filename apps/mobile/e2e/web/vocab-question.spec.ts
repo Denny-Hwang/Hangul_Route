@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { seedStored } from './helpers';
 import { shot } from './shots';
@@ -20,8 +21,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
-/** More than the view's 50 ms double-tap window between two deliberate taps. */
-const TAP_GAP_MS = 120;
+/** More than the answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-3) between two deliberate taps. */
+const TAP_GAP_MS = TAP_LOCK_MS + 50;
 /** Words and marks a learner never reads here (F-VOC-004 §3.6, §3.8). */
 const SHAME = /\b(wrong|fail\w*|missed|lost|lose)\b|%|\d\s*\/\s*\d/i;
 /** The status marks drawn on a card (design-system Icon glyphs): the Speed Round's dash, the quick check's try-another. */

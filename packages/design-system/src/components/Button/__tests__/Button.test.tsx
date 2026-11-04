@@ -1,6 +1,9 @@
 import { Children } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { TAP_LOCK_MS } from '../../../tap-model';
+import { TapBoardContext } from '../../TapBoard/context';
+import { TapTarget } from '../../TapBoard/TapTarget';
 import { Button } from '../Button';
 import type { ButtonProps } from '../types';
 
@@ -13,8 +16,12 @@ import type { ButtonProps } from '../types';
  * hint, or on native, renders no extra node and no `aria-describedby`.
  */
 const platform = vi.hoisted(() => ({ OS: 'web' }));
+/** The app-level tap lock a guarded press reads and sets (AMENDMENTS-TOUCH KT-D5); null: no provider. */
+const app = vi.hoisted(() => ({ clock: null as null | { until: () => number; lock: (ms: number) => void; extendTo: (at: number) => void; locked: boolean } }));
 /** The effects of the last call, kept so a test can run them after handing the Pressable its node. */
 const effects = vi.hoisted(() => [] as (() => void)[]);
+/** The board a Button sits in (AMENDMENTS-TOUCH row KT-3); `ctx` is set to `TapBoardContext` once it is imported. */
+const inBoard = vi.hoisted(() => ({ ctx: null as unknown, board: null as unknown }));
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: platform }));
 /** The chosen text size step's factor, read through `useTypeScale` (owner items 6 and 7). */
 const textSize = vi.hoisted(() => ({ factor: 1 }));
@@ -31,7 +38,9 @@ vi.mock('react', async (importOriginal) => {
     effects.push(fn);
   };
   const useCallback = <T,>(fn: T): T => fn;
-  const hooks = { useId, useRef, useEffect, useCallback };
+  // Button reads the board it sits in (null: none) and the app-level tap lock (through usePressGuard; null: no provider).
+  const useContext = (c: unknown): unknown => (c !== null && c === inBoard.ctx ? inBoard.board : app.clock);
+  const hooks = { useId, useRef, useEffect, useCallback, useContext };
   return { ...actual, ...hooks, default: { ...actual, ...hooks } };
 });
 
@@ -219,5 +228,130 @@ describe('Button label size follows the chosen text size (owner items 6 and 7)',
     expect(labelSize({ size: 'lg' })).toBe(30);
     expect(labelSize({ size: 'hero' })).toBe(33);
     textSize.factor = 1;
+  });
+});
+
+describe('Button press guard and no press delay (AMENDMENTS-TOUCH 4.4, R8, row KT-2)', () => {
+  afterEach(() => {
+    app.clock = null;
+    vi.useRealTimers();
+  });
+
+  it('shows its pressed look on the first touch frame (no 50 ms delayPressIn)', () => {
+    const el = pressable({});
+    expect(el.props.delayPressIn).toBe(0);
+    expect(el.props.unstable_pressDelay).toBe(0);
+  });
+
+  it('a bounce on the same button within TAP_LOCK_MS runs once; a press after it runs again', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000);
+    const onPress = vi.fn();
+    const press = pressable({ onPress }).props.onPress as () => void;
+    press();
+    vi.setSystemTime(1_150);
+    press();
+    expect(onPress).toHaveBeenCalledTimes(1);
+    vi.setSystemTime(1_000 + TAP_LOCK_MS);
+    press();
+    expect(onPress).toHaveBeenCalledTimes(2);
+  });
+
+  it('with the app lock on, a press is dropped; a press that runs sets the lock for TAP_LOCK_MS', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(5_000);
+    let until = 5_200;
+    const lock = vi.fn((ms: number) => {
+      until = Date.now() + ms;
+    });
+    app.clock = { until: () => until, lock, extendTo: () => undefined, locked: true };
+    const onPress = vi.fn();
+    const press = pressable({ onPress }).props.onPress as () => void;
+    press();
+    expect(onPress).not.toHaveBeenCalled();
+    expect(lock).not.toHaveBeenCalled();
+    vi.setSystemTime(5_200);
+    press();
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(lock).toHaveBeenCalledWith(TAP_LOCK_MS);
+  });
+
+  it('is at least touchTarget.min (64) wide as well as tall, so a one-glyph label still has a 64 hit area on the web', () => {
+    for (const size of ['sm', 'md', 'lg', 'hero'] as const) {
+      const style = (pressable({ size }).props.style as (s: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
+      expect(style.minWidth, size).toBe(64);
+      expect(style.minHeight as number, size).toBeGreaterThanOrEqual(64);
+    }
+  });
+
+  it('a disabled, soft-disabled or handler-less button has no handler at all, so a tap on it sets no lock', () => {
+    expect(pressable({ disabled: true }).props.onPress).toBeUndefined();
+    expect(pressable({ softDisabled: true }).props.onPress).toBeUndefined();
+    expect(pressable({ onPress: undefined }).props.onPress).toBeUndefined();
+  });
+
+  it('web: a mouse click runs at once and sets no lock; the second click of a double click is dropped', () => {
+    const g = globalThis as { document?: unknown };
+    const had = 'document' in g;
+    const saved = g.document;
+    g.document = { addEventListener: () => undefined };
+    try {
+      const lock = vi.fn();
+      app.clock = { until: () => 0, lock, extendTo: () => undefined, locked: false };
+      const onPress = vi.fn();
+      const press = pressable({ onPress }).props.onPress as (e: unknown) => void;
+      press({ nativeEvent: { pointerType: 'mouse', detail: 1 } });
+      press({ nativeEvent: { pointerType: 'mouse', detail: 2 } });
+      expect(onPress).toHaveBeenCalledTimes(1);
+      press({ nativeEvent: { pointerType: 'mouse', detail: 1 } });
+      press({ nativeEvent: { pointerType: '', detail: 0 } });
+      expect(onPress).toHaveBeenCalledTimes(3);
+      expect(lock).not.toHaveBeenCalled();
+    } finally {
+      if (had) g.document = saved;
+      else delete g.document;
+    }
+  });
+});
+
+describe('Button inside a TapBoard (AMENDMENTS-TOUCH section 6, row KT-3: Culture Quiz and Tap Respond answers)', () => {
+  inBoard.ctx = TapBoardContext;
+  const BOARD = { register: () => () => undefined, registerControl: () => () => undefined, click: () => undefined, lock: () => undefined, remeasure: () => undefined, locked: false, pressed: new Set<string>() };
+  afterEach(() => {
+    inBoard.board = null;
+  });
+
+  it('is one TapTarget of the board that commits onPress, with its label and testID, and its own look', () => {
+    inBoard.board = BOARD;
+    const presses: string[] = [];
+    const el = pressable({ label: 'Tteok', testID: 'answer-0', onPress: () => presses.push('tteok') });
+    expect(el.type).toBe(TapTarget);
+    expect(el.props).toMatchObject({ accessibilityLabel: 'Tteok', testID: 'answer-0', disabled: false, inactive: false, accessibilityState: { disabled: false } });
+    expect('hitSlop' in el.props).toBe(false);
+    (el.props.onCommit as () => void)();
+    expect(presses).toEqual(['tteok']);
+    const style = el.props.style as (look: { pressed: boolean }) => Props;
+    expect(style({ pressed: false }).minHeight).toBe(style({ pressed: true }).minHeight);
+    expect(style({ pressed: true }).backgroundColor).not.toBe(style({ pressed: false }).backgroundColor);
+  });
+
+  it('disabled (a locked miss): a disabled target the board still claims, drawn disabled with no pressed fill', () => {
+    inBoard.board = BOARD;
+    const el = pressable({ disabled: true, tone: 'nudge' });
+    expect(el.type).toBe(TapTarget);
+    expect(el.props.disabled).toBe(true);
+    expect(el.props.accessibilityState).toEqual({ disabled: true });
+    const style = el.props.style as (look: { pressed: boolean }) => Props;
+    expect(style({ pressed: true })).toEqual(style({ pressed: false }));
+  });
+
+  it('soft-disabled or with no handler: inactive (focusable, takes no tap)', () => {
+    inBoard.board = BOARD;
+    expect(pressable({ softDisabled: true }).props.inactive).toBe(true);
+    expect(pressable({ onPress: undefined }).props.inactive).toBe(true);
+  });
+
+  it('outside a board it stays the plain guarded Pressable', () => {
+    expect(pressable({}).type).toBe('Pressable');
   });
 });
