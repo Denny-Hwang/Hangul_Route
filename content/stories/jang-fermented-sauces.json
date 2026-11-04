@@ -1,0 +1,1246 @@
+{
+  "v": 1,
+  "id": "story:jang-fermented-sauces",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261104,
+  "title": {
+    "ko": "콩으로 만드는 장",
+    "romanization": "Kongeuro mandeuneun jang",
+    "en": "Making Jang: Sauces from Soybeans"
+  },
+  "summaryEn": "Hoya follows jang, Korea's fermented soybean sauces, from soybeans to meju, from meju in salt water to soy sauce and soybean paste, and learns why every home's jang tastes a little different.",
+  "hoyaIntroEn": "Soybeans, salt water and lots of waiting. Let's find out how jang is made!",
+  "hoyaOutroEn": "From soybeans to two sauces in one jar. Next time you taste soybean paste, say doenjang!",
+  "theme": "life",
+  "kind": "intangible",
+  "recommendedStage": 2,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Read and recognize 장 (jang, fermented sauce), 콩 (kong, soybean), 메주 (meju), 된장 (doenjang, soybean paste) and 간장 (ganjang, soy sauce).",
+    "Follow the main steps of making jang: soybeans become meju, meju goes into salt water, and two sauces come from one jar.",
+    "Know that soybean sauces are made across East Asia and that Korean jang-making has its own process.",
+    "Know that jang-making is a National Intangible Heritage of Korea (2018) and was inscribed by UNESCO in 2024."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-04"
+  },
+  "keywords": [
+    {
+      "id": "jang",
+      "ko": "장",
+      "romanization": "jang",
+      "en": "Korean fermented sauce",
+      "kind": "word"
+    },
+    {
+      "id": "kong",
+      "ko": "콩",
+      "romanization": "kong",
+      "en": "soybean; beans",
+      "kind": "word"
+    },
+    {
+      "id": "meju",
+      "ko": "메주",
+      "romanization": "meju",
+      "en": "a block of fermented soybeans",
+      "kind": "word"
+    },
+    {
+      "id": "sogeummul",
+      "ko": "소금물",
+      "romanization": "sogeummul",
+      "en": "salt water",
+      "kind": "word"
+    },
+    {
+      "id": "doenjang",
+      "ko": "된장",
+      "romanization": "doenjang",
+      "en": "soybean paste",
+      "kind": "word"
+    },
+    {
+      "id": "ganjang",
+      "ko": "간장",
+      "romanization": "ganjang",
+      "en": "soy sauce",
+      "kind": "word"
+    },
+    {
+      "id": "janggo",
+      "ko": "장고",
+      "romanization": "janggo",
+      "en": "a storehouse for jang",
+      "kind": "word"
+    },
+    {
+      "id": "jangmat",
+      "ko": "장맛",
+      "romanization": "jangmat",
+      "en": "the taste of jang",
+      "kind": "word"
+    },
+    {
+      "id": "gajok",
+      "ko": "가족",
+      "romanization": "gajok",
+      "en": "family",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureoyo",
+      "ko": "만들어요",
+      "romanization": "mandeureoyo",
+      "en": "make; makes",
+      "kind": "word"
+    },
+    {
+      "id": "damgayo",
+      "ko": "담가요",
+      "romanization": "damgayo",
+      "en": "put in to soak",
+      "kind": "word"
+    },
+    {
+      "id": "dallayo",
+      "ko": "달라요",
+      "romanization": "dallayo",
+      "en": "is different",
+      "kind": "word"
+    },
+    {
+      "id": "jipmada",
+      "ko": "집마다",
+      "romanization": "jimmada",
+      "en": "in every home",
+      "kind": "word"
+    },
+    {
+      "id": "jang-damgeugi",
+      "ko": "장 담그기",
+      "romanization": "jang damgeugi",
+      "en": "jang-making",
+      "kind": "term"
+    },
+    {
+      "id": "gukgamuhyeongyusan",
+      "ko": "국가무형유산",
+      "romanization": "gukgamuhyeongyusan",
+      "en": "National Intangible Heritage",
+      "kind": "term"
+    }
+  ],
+  "cultureNotes": [
+    {
+      "id": "cn-geumjul",
+      "titleEn": "A rope around the jar",
+      "bodyEn": "To keep jang tasting good, people tied a straw rope, geumjul, around the jars and floated charcoal or red peppers on the jang.",
+      "term": {
+        "ko": "금줄",
+        "romanization": "geumjul",
+        "en": "a straw rope hung to keep bad luck away"
+      },
+      "factIds": [
+        "f7"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya sniffs the air. \"Something smells rich and salty!\" It is {kw:jang}, Korea's fermented sauces: soy sauce, soybean paste and red chili paste. Many Korean dishes start with them.",
+          "captionEn": "Jang, sauces at the heart of Korean food",
+          "keyword": {
+            "id": "jang",
+            "ko": "장",
+            "romanization": "jang",
+            "en": "Korean fermented sauce",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 200,
+                "y": 272,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:soban",
+                "x": 76,
+                "y": 294,
+                "s": 1.2,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 336,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Hoya sits by a low table of side dishes, with brown earthenware jars of jang standing nearby."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Jang starts with soybeans, {kw:kong}. Sauces made from soybeans belong to many kitchens across East Asia. Korea has its own way: grow the beans, make meju, make the jang, separate it, then let it age.",
+          "captionEn": "It all starts with soybeans",
+          "keyword": {
+            "id": "kong",
+            "ko": "콩",
+            "romanization": "kong",
+            "en": "soybean; beans",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:rice-field",
+                "x": 200,
+                "y": 300,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:basket",
+                "x": 200,
+                "y": 292,
+                "s": 2.2,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 330,
+                "y": 294,
+                "s": 0.7
+              }
+            ],
+            "altEn": "A big basket of pale yellow soybeans sits by the field, and Hoya thinks about what they will become."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "First, the soybeans are boiled until soft, pounded and shaped into lumps. The lumps are left to ferment. Each one is called {kw:meju}.",
+          "captionEn": "Soybeans become meju",
+          "keyword": {
+            "id": "meju",
+            "ko": "메주",
+            "romanization": "meju",
+            "en": "a block of fermented soybeans",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 90,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:basket",
+                "x": 210,
+                "y": 292,
+                "s": 1.6,
+                "tint": "text.secondary"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 326,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Grandma shapes boiled, pounded soybeans into lumps of meju beside a basket, and Hoya waves hello."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Next comes jang-making itself: the meju goes into salt water, {kw:sogeummul}, and slowly ferments.",
+          "captionEn": "Meju goes into salt water",
+          "keyword": {
+            "id": "sogeummul",
+            "ko": "소금물",
+            "romanization": "sogeummul",
+            "en": "salt water",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 180,
+                "y": 272,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 300,
+                "y": 288,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 70,
+                "y": 296,
+                "s": 0.62
+              }
+            ],
+            "altEn": "A woman pours salt water over meju in big earthenware jars in the yard while Hoya watches."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "When it has ripened, the liquid is drawn off and boiled to become soy sauce, {kw:ganjang}. What stays behind becomes soybean paste, {kw:doenjang}. Two sauces from one jar!",
+          "captionEn": "Two sauces from one jar",
+          "keyword": {
+            "id": "ganjang",
+            "ko": "간장",
+            "romanization": "ganjang",
+            "en": "soy sauce",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 110,
+                "y": 292,
+                "s": 1.4,
+                "tint": "text.secondary"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 210,
+                "y": 294,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:soban",
+                "x": 310,
+                "y": 292,
+                "s": 1.4,
+                "tint": "feedback.nudge"
+              }
+            ],
+            "altEn": "Two tables: one with a dish of dark soy sauce and one with brown soybean paste, and Hoya cheers between them."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Jang mattered in the palace, too. The Joseon royal court kept a storehouse just for jang, {kw:janggo}, and a court lady called Janggo Mama made the jang and looked after it.",
+          "captionEn": "A palace storehouse for jang",
+          "keyword": {
+            "id": "janggo",
+            "ko": "장고",
+            "romanization": "janggo",
+            "en": "a storehouse for jang",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 200,
+                "y": 270,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 92,
+                "y": 264,
+                "s": 0.9,
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 330,
+                "y": 288,
+                "s": 1.0,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 40,
+                "y": 296,
+                "s": 0.55
+              }
+            ],
+            "altEn": "Rows of jang jars stand in a palace courtyard, cared for by a court lady in a long skirt, as Hoya looks on."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Every home's jang tastes a little different, {kw:jangmat}. Families keep old soy sauce and add it to new jang, year after year. To protect the taste, people floated charcoal or red peppers on it and tied a straw rope around the jars.",
+          "captionEn": "Every home has its own jang",
+          "keyword": {
+            "id": "jangmat",
+            "ko": "장맛",
+            "romanization": "jangmat",
+            "en": "the taste of jang",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6",
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 150,
+                "y": 268,
+                "s": 1.25
+              },
+              {
+                "ref": "prop:breeze",
+                "x": 280,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 320,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Earthenware jang jars with a straw rope tied around them sit in a sunny yard, and Hoya wonders how each home's jang tastes."
+          },
+          "cultureNoteId": "cn-geumjul"
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Families pass jang-making down, and schools and community groups help too. It became a National Intangible Heritage of Korea in 2018. In 2024, UNESCO inscribed Korea's knowledge, beliefs and practices of jang making.",
+          "captionEn": "Jang-making, a living heritage",
+          "keyword": {
+            "id": "gajok",
+            "ko": "가족",
+            "romanization": "gajok",
+            "en": "family",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8",
+            "f9",
+            "f10"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 200,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 200,
+                "y": 276,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 76,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 300,
+                "y": 292,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 368,
+                "y": 298,
+                "s": 0.56
+              }
+            ],
+            "altEn": "Grandma and a child make jang together beside the jars in warm light, and Hoya cheers."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What do people make first from boiled, pounded soybeans?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Rice cakes",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Meju",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Kimchi",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Boiled soybeans are pounded and shaped into lumps of meju, which are left to ferment.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Which two sauces come from the meju in the jar?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Red chili paste and vinegar",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Honey and sesame oil",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Soy sauce and soybean paste",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "The liquid becomes soy sauce, ganjang, and what stays behind becomes soybean paste, doenjang.",
+          "factIds": [
+            "f3",
+            "f4"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "who",
+          "promptEn": "Who made and looked after the jang in the Joseon palace?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A court lady called Janggo Mama",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "The king himself",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A royal painter",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "A court lady called Janggo Mama made the jang and looked after the palace storehouse for jang.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s3",
+        "s4",
+        "s5"
+      ],
+      "newKeywordIds": [
+        "jang",
+        "kong",
+        "meju",
+        "ganjang"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "{kw:jang} is the name for Korea's fermented soybean sauces, like soy sauce and soybean paste.",
+          "captionEn": "Jang, Korean sauces",
+          "line": {
+            "ko": "장은 콩으로 만들어요.",
+            "romanization": "Jangeun kongeuro mandeureoyo.",
+            "en": "Jang is made from soybeans.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1",
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 200,
+                "y": 272,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:soban",
+                "x": 76,
+                "y": 294,
+                "s": 1.2,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 336,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Hoya sits by a low table of side dishes, with brown earthenware jars of jang standing nearby."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Soybeans are boiled, pounded and shaped into lumps called {kw:meju}.",
+          "captionEn": "Soybeans become meju",
+          "line": {
+            "ko": "콩으로 메주를 만들어요.",
+            "romanization": "Kongeuro mejureul mandeureoyo.",
+            "en": "People make meju from soybeans.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 90,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:basket",
+                "x": 210,
+                "y": 292,
+                "s": 1.6,
+                "tint": "text.secondary"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 326,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Grandma shapes boiled, pounded soybeans into lumps of meju beside a basket, and Hoya waves hello."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The meju goes into salt water, {kw:sogeummul}, to ferment.",
+          "captionEn": "Meju in salt water",
+          "line": {
+            "ko": "메주를 소금물에 담가요.",
+            "romanization": "Mejureul sogeummure damgayo.",
+            "en": "People put meju in salt water.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 180,
+                "y": 272,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 300,
+                "y": 288,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 70,
+                "y": 296,
+                "s": 0.62
+              }
+            ],
+            "altEn": "A woman pours salt water over meju in big earthenware jars in the yard while Hoya watches."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "From one jar come two sauces: soy sauce, {kw:ganjang}, and soybean paste, {kw:doenjang}.",
+          "captionEn": "Two sauces",
+          "line": {
+            "ko": "된장과 간장을 만들어요.",
+            "romanization": "Doenjanggwa ganjangeul mandeureoyo.",
+            "en": "People make soybean paste and soy sauce.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 110,
+                "y": 292,
+                "s": 1.4,
+                "tint": "text.secondary"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 210,
+                "y": 294,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:soban",
+                "x": 310,
+                "y": 292,
+                "s": 1.4,
+                "tint": "feedback.nudge"
+              }
+            ],
+            "altEn": "Two tables: one with a dish of dark soy sauce and one with brown soybean paste, and Hoya cheers between them."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "The taste of jang, {kw:jangmat}, is a little different in every home.",
+          "captionEn": "Every home's jang",
+          "line": {
+            "ko": "장맛은 집마다 달라요.",
+            "romanization": "Jangmaseun jimmada dallayo.",
+            "en": "The taste of jang is different in every home.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 150,
+                "y": 268,
+                "s": 1.25
+              },
+              {
+                "ref": "prop:breeze",
+                "x": 280,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 320,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Earthenware jang jars with a straw rope tied around them sit in a sunny yard, and Hoya wonders how each home's jang tastes."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Jang-making is a National Intangible Heritage of Korea, and in 2024 UNESCO inscribed Korea's jang-making knowledge and practices.",
+          "captionEn": "A living heritage",
+          "line": {
+            "ko": "장 담그기는 국가무형유산이에요.",
+            "romanization": "Jang damgeugineun gukgamuhyeongyusanieyo.",
+            "en": "Jang-making is a National Intangible Heritage of Korea.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f9",
+            "f10"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 200,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:kimchi-jars",
+                "x": 200,
+                "y": 276,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 76,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 300,
+                "y": 292,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 368,
+                "y": 298,
+                "s": 0.56
+              }
+            ],
+            "altEn": "Grandma and a child make jang together beside the jars in warm light, and Hoya cheers."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "메주",
+            "romanization": "meju",
+            "en": "a block of fermented soybeans"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Salt",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Soy sauce",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A block of fermented soybeans",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Jar",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Meju is a block of fermented soybeans. People make it from boiled, pounded soybeans.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "소금물",
+            "romanization": "sogeummul",
+            "en": "salt water"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Salt water",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Soy sauce",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Rice",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Family",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Sogeummul means salt water. Meju goes into salt water to ferment.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "What is different in every home?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The color of the jars",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "The number of jars",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "The name of the sauce",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "The taste of the jang",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Jang varies from home to home, so the taste of jang is a little different in every home.",
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s3",
+        "s4",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "meju",
+        "sogeummul",
+        "doenjang",
+        "jangmat"
+      ],
+      "grammarFocusEn": "-euro (made from ...); -eul/-reul ... -e damgayo (put ... into ...)"
+    }
+  ],
+  "coverSceneId": "s1",
+  "shelf": {
+    "category": "culture",
+    "order": 23,
+    "sampler": false,
+    "minutes": 5
+  },
+  "pillarTags": [
+    "B1"
+  ],
+  "topicTags": [
+    "jang",
+    "jang-making",
+    "fermented-sauces",
+    "meju",
+    "soybean-sauce"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jang, fermented sauces like soy sauce, soybean paste and red chili paste, are the basis of the Korean diet.",
+      "claimKo": "장은 된장, 간장, 고추장과 같은 발효 장류로, 한국 식생활의 바탕을 이룬다.",
+      "sources": [
+        {
+          "title": "Knowledge, beliefs and practices related to jang making in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/knowledge-beliefs-and-practices-related-to-jang-making-in-the-republic-of-korea-01975",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"Jang are fermented sauces – such as soybean paste, soy sauce and red chili paste – that form the basis of the Korean diet.\""
+        },
+        {
+          "title": "Decision of the Intergovernmental Committee: 19.COM 7.B.3",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/decisions/19.COM/7.B.3",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Decision text, paragraph 1: \"Jang are fermented sauces – such as soybean paste, soy sauce and red chili paste – that form the basis of the Korean diet.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jang is food made with soybeans. Korea belongs to the soybean-sauce culture area (dujang munhwagwon) of East Asia; Korean jang-making developed its own process, from growing soybeans and making meju to making jang, separating it, and aging and fermenting it, which the Korea Heritage Service describes as distinct from the ways of China and Japan.",
+      "claimKo": "장은 콩을 사용하여 만든 식품이다. 두장(豆醬)문화권에 속한 우리나라의 장 담그기는 콩 재배, 메주 만들기, 장 만들기, 장 가르기, 숙성과 발효로 이어지는 과정을 발전시켜 중국이나 일본과 구별되는 독특한 장 제조법을 가지고 있다.",
+      "sources": [
+        {
+          "title": "국가무형유산 장 담그기 (Jang-making)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01370000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"‘장 담그기’는 콩을 사용하여 만든 식품인 장(醬) 그 자체의 효능을 넘어 … 두장(豆醬)문화권에 속한 우리나라에서는 … 콩 재배, 메주 만들기, 장 만들기, 장 가르기, 숙성과 발효 등으로 이어지는 과정을 발전시켜왔다는 점에서 중국이나 일본과 구별되는 독특한 장 제조법을 가지고 있다.\" (description read through the khs.go.kr open API SearchKindOpenapiDt.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ, as the portal page renders it with JavaScript)"
+        },
+        {
+          "title": "장 담그기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0076963",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"우리나라의 장 담그기는 콩 재배, 메주 만들기, 장 만들기, 장 가르기, 숙성과 발효 등으로 이어지는 과정을 발전시켜 왔다는 점에서 중국이나 일본과 구별되는 독특한 장 제조법을 가지고 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In Korean jang-making, two kinds of jang, doenjang (soybean paste) and ganjang (soy sauce), are made after the meju has fermented.",
+      "claimKo": "한국의 장 담그기에서는 메주를 띄우는 과정을 거친 후 된장과 간장 두 가지의 장을 만든다.",
+      "sources": [
+        {
+          "title": "국가무형유산 장 담그기 (Jang-making)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01370000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"메주를 띄우는 과정을 거친 후 된장과 간장 두 가지의 장을 만든다는 점 … 은 한국의 장 담그기가 갖는 특징이자 독창적인 대목이다.\" (description read through the khs.go.kr open API SearchKindOpenapiDt.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ, as the portal page renders it with JavaScript)"
+        },
+        {
+          "title": "장 담그기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0076963",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"메주를 띄우는 과정을 거친 후, 된장과 간장 두 가지의 장을 만든다는 점 … 등은 한국의 장 담그기가 갖는 특징이자 독창적인 부분이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "To make meju, soybeans are boiled until soft, pounded and shaped into lumps, which are left to ferment. Jang-making is soaking meju in salt water to ferment it; after it ripens, the liquid drawn off and boiled becomes ganjang and what is left becomes doenjang.",
+      "claimKo": "메주는 콩을 무르게 삶아 찧어 덩이로 만들어 띄운다. 장 담그기는 메주를 소금물에 담가 발효시켜 장을 만드는 일이며, 숙성시킨 뒤 액체를 퍼내어 달인 것이 간장이고 그 찌꺼기가 된장이 된다.",
+      "sources": [
+        {
+          "title": "장 담그기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0076963",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "정의: \"메주를 소금물에 담가 발효시켜 장을 만드는 일.\""
+        },
+        {
+          "title": "장(醬)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0048233",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "『증보산림경제』 동국장법 설명: \"콩을 무르도록 삶다 절구에 넣고 잘 찧어서 손으로 중간 크기의 수박만한 덩이를 만들고\" / \"메주를 소금물에 담그는 일을 침장(沈醬)이라 한다. … 침장을 하고 40∼50일간 숙성시켜 액체를 퍼내어 달인 것이 간장이고 그 찌꺼기가 된장이 된다.\" (only the process is used; this entry's views on where soybean sauces began are not used)"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Joseon royal court kept a separate storehouse for jang (janggo), and a court lady called Janggo Mama made and looked after the jang herself.",
+      "claimKo": "조선시대 왕실에서는 장을 따로 보관하는 장고(醬庫)를 두었으며, ‘장고마마’라 불리는 상궁이 직접 장을 담그고 관리하였다.",
+      "sources": [
+        {
+          "title": "국가무형유산 장 담그기 (Jang-making)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01370000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"조선시대 왕실에서는 장을 따로 보관하는 장고(醬庫)를 두었으며, ‘장고마마’라 불리는 상궁이 직접 장을 담그고 관리하는 등\" (description read through the khs.go.kr open API SearchKindOpenapiDt.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ, as the portal page renders it with JavaScript)"
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jang varies from one household to the next and is believed to carry each family's history; families reuse old seed soy sauce from earlier years over several years (gyeopjang), and some keep aged soy sauce for decades.",
+      "claimKo": "장은 집집마다 다르며 각 집안의 역사와 전통을 담고 있다고 여겨진다. 집안에 전해 내려온 오래된 간장(씨간장)을 이용해 수년 동안 겹장을 하며, 수십 년 묵은 간장을 보관하는 집도 있다.",
+      "sources": [
+        {
+          "title": "Knowledge, beliefs and practices related to jang making in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/knowledge-beliefs-and-practices-related-to-jang-making-in-the-republic-of-korea-01975",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"Jang sauces vary from one household to the next and are believed to embody each family's history and traditions … some families store aged soy sauce for decades\""
+        },
+        {
+          "title": "국가무형유산 장 담그기 (Jang-making)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01370000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"집안에 전해 내려온 오래된 간장을 이용해 수년 동안 겹장의 형식을 거친다는 점\" (description read through the khs.go.kr open API SearchKindOpenapiDt.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ, as the portal page renders it with JavaScript)"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "To keep the taste good, people chose a lucky day to make jang, floated charcoal or red peppers on it, and hung a straw rope (geumjul) on the jars to keep bad luck away.",
+      "claimKo": "맛있는 장을 만들기 위하여 길일을 택하여 장을 담그고, 장에 숯이나 고추를 띄우고, 장독에 금줄을 치는 등 부정을 막았다.",
+      "sources": [
+        {
+          "title": "장 담그기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0076963",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"맛있는 장을 만들기 위하여 길일을 택하여 장을 담그고, 나쁜 기운이 침범하여 장 맛을 버리지 않게 하기 위하여 장에 숯이나 고추를 띄우고, 장독에도 금줄을 치거나 버선본을 거꾸로 붙여 부정을 방지하였다.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jang-making is practised and passed down within families, and community groups, schools and universities also help pass it on; because households all over Korea still make jang, it is designated without any single holder or holding group.",
+      "claimKo": "장 담그기는 가정 안에서 행해지고 전승되며, 지역 공동체, 학교와 대학도 전승에 기여한다. 전국의 가정에서 지금도 전승되고 있어 특정 보유자나 보유단체를 인정하지 않는 공동체종목으로 지정되었다.",
+      "sources": [
+        {
+          "title": "Knowledge, beliefs and practices related to jang making in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/knowledge-beliefs-and-practices-related-to-jang-making-in-the-republic-of-korea-01975",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"Jang making is practised and transmitted within families … Community groups, schools and universities also contribute to the transmission of the practice.\""
+        },
+        {
+          "title": "국가무형유산 장 담그기 (Jang-making)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01370000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"우리나라 전역에서 각 가정을 중심으로 현재도 자연스럽게 전승되고 있는 생활관습이자 문화라는 점에서, 특정 보유자나 보유단체를 인정하지 않는 공동체종목으로 지정하였다.\" (description read through the khs.go.kr open API SearchKindOpenapiDt.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ, as the portal page renders it with JavaScript)"
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jang-making (jang damgeugi) was designated a National Intangible Heritage of Korea on 27 December 2018.",
+      "claimKo": "장 담그기는 2018년 12월 27일 국가무형유산(당시 국가무형문화재)으로 지정되었다.",
+      "sources": [
+        {
+          "title": "국가무형유산 장 담그기 (Jang-making)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01370000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "지정(등록)일 ccbaAsdt 20181227; 명칭 \"장 담그기\", 종목 국가무형유산 (description read through the khs.go.kr open API SearchKindOpenapiDt.do?ccbaKdcd=17&ccbaAsno=0001370000000&ccbaCtcd=ZZ, as the portal page renders it with JavaScript)"
+        },
+        {
+          "title": "장 담그기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0076963",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"2018년 12월 27일 국가무형문화재(현, 국가무형유산)로 지정되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f10",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In 2024 UNESCO inscribed \"Knowledge, beliefs and practices related to jang making in the Republic of Korea\" on the Representative List of the Intangible Cultural Heritage of Humanity.",
+      "claimKo": "2024년 유네스코는 ‘한국의 장 담그기 문화(Knowledge, beliefs and practices related to jang making in the Republic of Korea)’를 인류무형문화유산 대표목록에 등재하였다.",
+      "sources": [
+        {
+          "title": "Knowledge, beliefs and practices related to jang making in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/knowledge-beliefs-and-practices-related-to-jang-making-in-the-republic-of-korea-01975",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Element page, under its title: \"Inscribed in 2024 (19.COM) on the Representative List …\""
+        },
+        {
+          "title": "Decision of the Intergovernmental Committee: 19.COM 7.B.3",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/decisions/19.COM/7.B.3",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Decision 19.COM 7.B.3 (Asunción, 2024): the Committee \"Decides to inscribe\" the element, named as in the page title of the element page, on the Representative List"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: UNESCO Intangible Cultural Heritage; 국가유산청 국가유산포털(장 담그기); 한국민족문화대백과사전(장 담그기, 장)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Sources opened and quotes read on 2026-11-04: the UNESCO element page (ich.unesco.org RL 01975) and decision 19.COM 7.B.3, the Korea Heritage Service heritage portal page of 장 담그기 (description read through the khs.go.kr open API SearchKindOpenapiDt.do, as the page renders it with JavaScript; designation date 20181227), encykorea E0076963 (장 담그기) and E0048233 (장; process only). MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/life-book2.changes.md and the third pass in life-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text."
+  },
+  "authorNotes": "Shared heritage: soybean sauces are made across East Asia (the Korea Heritage Service places Korea in the soybean-sauce culture area, 두장문화권), so no sentence says jang began in Korea. encykorea E0048233 argues that soybean jang spread from Goguryeo lands to China and Japan; that view is not used, and the entry is cited only for how meju and the two sauces are made. UNESCO name: the element is written as UNESCO writes it, \"Knowledge, beliefs and practices related to jang making in the Republic of Korea\" (no hyphen in jang making), inscribed 2024 (19.COM); the narration says UNESCO inscribed Korea's knowledge, beliefs and practices of jang making, never that UNESCO inscribed jang or doenjang. The National Intangible Heritage is 장 담그기, designated 27 December 2018 as a community element with no holder. Left out: UNESCO's and the KHS's note that the practice centres on women of the household (narration says families); the Joseon-era book quotes (농가월령가, 산가요록) and their years; the ratio of meju, salt and water; the 40 to 50 days of ripening (encykorea) as numbers; the buseonbon paper sock charm. 장고 (janggo) is also a name of the hourglass drum; here it is glossed as the storehouse, as in the KHS text. The straw rope (geumjul) and charcoal or red peppers follow encykorea E0076963 only.",
+  "errata": []
+}

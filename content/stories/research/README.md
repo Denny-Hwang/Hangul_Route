@@ -34,3 +34,6 @@ Each `*.final.json` carries `verification: { passes: 3, checked_at: "2026-10-10"
 
 ## Read tiers of the listen-only stories (F-CURR-002 row CM-46a, 2026-10-31)
 The ten stories that shipped with a listen tier only (`tripitaka-koreana`, `sillok-royal-historians`, `janggyeong-panjeon`, `jikji-metal-type`, `sillok-mountain-archives`, `nanjung-ilgi`, `seungjeongwon-ilgi-every-day`, `ilseongnok-daily-reflection`, `uigwe-royal-birthday`, `joseon-records-today`) gained a `read` tier that restates facts they already cite; no fact or source changed. `read-tiers.changes.md` lists every checker finding and its outcome, and `read-tiers.signoff.md` the third pass.
+
+## Food book 2 (F-CURR-002 row CM-46, 2026-11-04)
+Two new tales for the Stage 5 Food cell's book 2 (`episode:stage5-life-v2`, Volume 2, behind `volumes`): `jang-fermented-sauces` (jang-making; UNESCO 2024, Korea Heritage Service) and `tteok-through-the-seasons` (seasonal rice cakes; National Folk Museum of Korea, encykorea). They were authored directly as story files (no cluster `.final.json`); every fact carries its quotes. `life-book2.changes.md` lists every checker finding and its outcome, and `life-book2.signoff.md` the third pass.
