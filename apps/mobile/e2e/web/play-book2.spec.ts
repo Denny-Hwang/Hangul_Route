@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, seedStoredAll } from './helpers';
 import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
 
 /**
@@ -15,7 +16,7 @@ const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const GATED_BUILD = process.env.E2E_CONTENT_GATING === '1';
 const PLAY_CELL = /^Stage 5 [^,]+, Play & Crafts/;
 
-async function openPlayCell(page: Page, volumes: boolean): Promise<void> {
+async function openPlayCell(page: Page, volumes: boolean, textSize?: 'largest'): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
@@ -23,7 +24,10 @@ async function openPlayCell(page: Page, volumes: boolean): Promise<void> {
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   if (volumes) {
-    await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { volumes: { on: true, pct: 100 } } } });
+    await seedStoredAll(page, {
+      'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { volumes: { on: true, pct: 100 } } },
+      ...(textSize ? { 'device:settings': { uiLocale: 'en', textSize, uiLocaleAt: '2026-10-16T09:00:00.000Z' } } : {}),
+    });
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
   }
@@ -64,5 +68,17 @@ test.describe('the Play book 2 (release build, F-CURR-002 CM-46)', () => {
     await expectNoHorizontalOverflow(page);
     await shot(page, 'play-book2-320');
     expect(errors).toEqual([]);
+  });
+
+  test('320 x 568 at the Largest text size: book 2 and its two tales fit, with no sideways scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await openPlayCell(page, true, 'largest');
+    await page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 2' }).click();
+    await expect(page.getByTestId('story-episode-title')).toHaveText('Masks and Paper');
+    for (const id of ['story:hahoe-mask-dance', 'story:hanji-korean-paper']) {
+      await page.getByTestId(`story-episode-row-${id}`).scrollIntoViewIfNeeded();
+      await expect(page.getByTestId(`story-episode-row-${id}`)).toBeVisible();
+    }
+    await expectTextFits(page, 'the Play book 2 at Largest');
   });
 });
