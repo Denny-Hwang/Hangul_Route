@@ -1084,7 +1084,9 @@ export const consoleMsgs = {
      * the wizard's meeting block (section 10.1), the preview header and cycle table (10.2), the readout lines and
      * controls (10.2, 14), and the blended plan's warnings (6.6). "Class day" and "practice day" are the UI words;
      * the code word "lecture" is never shown. Counts are scheduled sessions and class totals, never attendance and
-     * never one learner against another. Weekday names arrive in the console language.
+     * never one learner against another. Weekday names arrive in the console language. `lecture`: the lecture card's
+     * lines for a blended plan's class day (section 10.3, row BL-5), in place of the length chips; the length is
+     * changed in the plan, not on the card.
      */
     blend: {
       meeting: {
@@ -1156,6 +1158,10 @@ export const consoleMsgs = {
         itemCap: (week: number) => `This plan is full at week ${week}. Choose fewer weeks, or practice what class taught.`,
         practiceShort: "Practice days can't keep up with what class days could teach, so class days carry less. Add practice days, or make them longer.",
         classPaced: 'Some class days carry fewer lessons so learners can practice each one soon after.',
+      },
+      lecture: {
+        classDay: (weekday: string, n: number) => plural('en', n, { one: `Class day: ${weekday} · ${n} lesson`, other: `Class day: ${weekday} · ${n} lessons` }),
+        classLength: (minutes: number) => `Class length: ${minutes} min`,
       },
     },
   },

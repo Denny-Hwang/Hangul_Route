@@ -829,6 +829,10 @@ export const consoleMsgs = {
         practiceShort: '연습하는 날이 수업에서 배울 수 있는 만큼을 따라가지 못해서, 수업하는 날에 조금 덜 배워요. 연습하는 날을 늘리거나 더 길게 해 주세요.',
         classPaced: '수업하는 날 중 며칠은 레슨을 조금 덜 배워요. 학생들이 배운 레슨을 곧 하나씩 연습할 수 있게 하려고요.',
       },
+      lecture: {
+        classDay: (weekday: string, n: number) => `수업 날: ${weekday} · 레슨 ${n}개`,
+        classLength: (minutes: number) => `수업 길이: ${minutes}분`,
+      },
     },
   },
   placement: {

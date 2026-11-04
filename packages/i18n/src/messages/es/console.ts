@@ -911,6 +911,10 @@ export const consoleMsgs = {
         practiceShort: 'Los días de práctica no alcanzan para todo lo que podrían enseñar los días de clase, así que los días de clase tienen menos lecciones. Añade días de práctica, o hazlos más largos.',
         classPaced: 'Algunos días de clase llevan menos lecciones para que los estudiantes practiquen cada una poco después.',
       },
+      lecture: {
+        classDay: (weekday: string, n: number) => plural('es', n, { one: `Día de clase: ${weekday} · ${n} lección`, other: `Día de clase: ${weekday} · ${n} lecciones` }),
+        classLength: (minutes: number) => `Duración de la clase: ${minutes} min`,
+      },
     },
   },
   placement: {

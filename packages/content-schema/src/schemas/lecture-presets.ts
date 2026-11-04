@@ -39,6 +39,12 @@ import { VocabIdSchema } from './vocab';
 
 export type PresetMinutes = 10 | 20 | 30;
 
+/**
+ * A blended plan's class length (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3, row BL-5): the plan's
+ * `blend.lecture.minutes`. N1 presents a class day at this length through `fillOutline`; no chip offers it.
+ */
+export type ClassMinutes = 15 | 20 | 30 | 45 | 60;
+
 /** Section 4.1 "Default". */
 export const PRESET_DEFAULT_MINUTES: Readonly<Record<LecturePreset, PresetMinutes>> = {
   'next-lesson': 20,
@@ -92,8 +98,12 @@ export type PresetFallback = 'zero' | 'warm-up' | 'restart';
 export interface PresetContext {
   /** `CATALOG`; both apps already import it. */
   catalog: Catalog;
-  /** N1, W1 (console only): this week's plan outline (`planOutline`). */
-  plan?: { title: string; blocks: readonly LectureBlock[] } | null;
+  /**
+   * N1, W1 (console only): this week's plan outline (`planOutline`). `classMinutes` (AMENDMENTS-ROUTE-CLASS-BLEND
+   * section 10.3, row BL-5): set by the console only for a blended plan's class-day outline; then N1 keeps every
+   * outline block (`fillOutline`) at the class's real length instead of the chip's.
+   */
+  plan?: { title: string; blocks: readonly LectureBlock[]; classMinutes?: ClassMinutes } | null;
   /**
    * N1 (console only): whether the plan title may be the deck title. The console
    * passes `(t) => titleProblem(t, roster) === null`, which rejects roster names
@@ -119,8 +129,11 @@ export interface PresetContext {
 export interface ResolvedPreset {
   /** The preset that built the blocks: the asked one, or the one it fell back to. */
   preset: LecturePreset;
-  /** The length the blocks were built for (the asked one when the preset offers it, else its default). */
-  minutes: PresetMinutes;
+  /**
+   * The length the blocks were built for (the asked one when the preset offers it, else its default); N1 on a
+   * blended class day, the plan's `classMinutes` (section 10.3).
+   */
+  minutes: PresetMinutes | ClassMinutes;
   blocks: LectureBlock[];
   titleKey: PresetTitleKey;
   /** `titleKey: 'stage.chip'`. */
@@ -234,6 +247,33 @@ export function fillToLength(candidates: readonly LectureBlock[], minutes: numbe
   return taken;
 }
 
+/** The most lesson blocks `fillOutline` keeps: room is left for the review quiz and the closing activity. */
+export const OUTLINE_MAX_LESSON_BLOCKS = LECTURE_MAX_BLOCKS - 2;
+
+/**
+ * A blended class day at its real length (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3, row BL-5): **every** outline
+ * block in order, never a minutes stop (at most `OUTLINE_MAX_LESSON_BLOCKS`, never a `class-code`), then the review
+ * quiz and the closing activity by `fillToLength`'s rules and constants against `classMinutes`: with `review` and at
+ * least 5 minutes left, the 4-round quiz; with at least 2 minutes left, one activity (`air-write` when every lesson
+ * is Stage 1, else `copy-on-paper`) of `min(5, left)` minutes; with at most 28 lessons both always fit under
+ * `LECTURE_MAX_BLOCKS`. The generator packs a class day to fit its length, so the whole day is presented.
+ */
+export function fillOutline(outline: readonly LectureBlock[], classMinutes: ClassMinutes, review: boolean, catalog: Catalog): LectureBlock[] {
+  const taken: LectureBlock[] = outline.filter((b) => b.kind !== 'class-code').slice(0, OUTLINE_MAX_LESSON_BLOCKS);
+  const content = [...taken];
+  let running = presetMinutesOf(taken, catalog);
+  // At most 28 lessons, so the quiz and the activity always fit under `LECTURE_MAX_BLOCKS`.
+  if (review && classMinutes - running >= REVIEW_QUIZ_MIN_LEFT) {
+    taken.push(REVIEW_QUIZ);
+    running += presetBlockMinutes(REVIEW_QUIZ, catalog);
+  }
+  if (classMinutes - running >= ACTIVITY_MIN_LEFT) {
+    const preset = content.length > 0 && allStage1(content, catalog) ? 'air-write' : 'copy-on-paper';
+    taken.push({ kind: 'activity', preset, minutes: Math.min(ACTIVITY_MAX_MINUTES, classMinutes - running) });
+  }
+  return taken;
+}
+
 // ---- route helpers ------------------------------------------------------------------------------
 
 /** Route quests (section 4.2): lesson quests only, playable only, in route order. */
@@ -261,7 +301,7 @@ const questIdsOf = (values: readonly string[] | undefined): string[] =>
 
 // ---- the presets --------------------------------------------------------------------------------
 
-type Built = Omit<ResolvedPreset, 'minutes'>;
+type Built = Omit<ResolvedPreset, 'minutes'> & { classMinutes?: ClassMinutes };
 
 function hangulWeek1(minutes: PresetMinutes, ctx: PresetContext, fallback: PresetFallback | null): Built {
   const { catalog } = ctx;
@@ -307,10 +347,13 @@ function nextLesson(minutes: PresetMinutes, ctx: PresetContext): Built {
   const { catalog } = ctx;
   const planBlocks = (ctx.plan?.blocks ?? []).filter((b) => b.kind !== 'class-code');
   if (ctx.plan && planBlocks.length > 0) {
-    const blocks = fillToLength(planBlocks, minutes, true, catalog);
+    // A blended class day (section 10.3): the whole outline at the class's real length, never the chip's.
+    const classMinutes = ctx.plan.classMinutes;
+    const blocks = classMinutes !== undefined ? fillOutline(planBlocks, classMinutes, true, catalog) : fillToLength(planBlocks, minutes, true, catalog);
+    const length = classMinutes !== undefined ? { classMinutes } : {};
     const title = ctx.plan.title.trim();
-    if (isDeckTitle(title) && ctx.planTitleOk?.(title) === true) return { preset: 'next-lesson', blocks, titleKey: 'plan', planTitle: title, fallback: null };
-    return { preset: 'next-lesson', blocks, titleKey: 'next.title', fallback: null };
+    if (isDeckTitle(title) && ctx.planTitleOk?.(title) === true) return { preset: 'next-lesson', blocks, titleKey: 'plan', planTitle: title, fallback: null, ...length };
+    return { preset: 'next-lesson', blocks, titleKey: 'next.title', fallback: null, ...length };
   }
 
   const route = routeQuests(catalog);
@@ -423,7 +466,8 @@ export function resolvePreset(preset: LecturePreset, minutes: number, ctx: Prese
         return warmUp(ctx, null);
     }
   })();
-  return { ...built, minutes: built.preset === 'warm-up' ? PRESET_DEFAULT_MINUTES['warm-up'] : length };
+  const { classMinutes, ...rest } = built;
+  return { ...rest, minutes: classMinutes ?? (built.preset === 'warm-up' ? PRESET_DEFAULT_MINUTES['warm-up'] : length) };
 }
 
 // ---- N2: the class position ---------------------------------------------------------------------

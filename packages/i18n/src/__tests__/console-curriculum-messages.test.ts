@@ -128,3 +128,31 @@ describe('console.curriculum.blend (BL-4)', () => {
     }
   });
 });
+
+// AMENDMENTS-ROUTE-CLASS-BLEND section 10.3 (row BL-5): the lecture card's class-day lines. Counts and lengths only:
+// no learner, no comparison, no attendance word; every locale words both lines.
+describe('console.curriculum.blend.lecture (BL-5)', () => {
+  it('pins the English lines with plural counts', () => {
+    expect(c.blend.lecture.classDay('Tuesday', 3)).toBe('Class day: Tuesday · 3 lessons');
+    expect(c.blend.lecture.classDay('Thursday', 1)).toBe('Class day: Thursday · 1 lesson');
+    expect(c.blend.lecture.classLength(45)).toBe('Class length: 45 min');
+  });
+
+  it('es and ko word both lines and stay calm', () => {
+    const es = getMessages('es').console.curriculum.blend.lecture;
+    const ko = getMessages('ko').console.curriculum.blend.lecture;
+    expect(es.classDay('martes', 3)).toBe('Día de clase: martes · 3 lecciones');
+    expect(es.classDay('jueves', 1)).toBe('Día de clase: jueves · 1 lección');
+    expect(es.classLength(30)).toBe('Duración de la clase: 30 min');
+    expect(ko.classDay('화요일', 3)).toBe('수업 날: 화요일 · 레슨 3개');
+    expect(ko.classLength(60)).toBe('수업 길이: 60분');
+    for (const locale of LOCALES) {
+      const l = getMessages(locale).console.curriculum.blend.lecture;
+      for (const line of [l.classDay('X', 2), l.classDay('X', 1), l.classLength(15)]) {
+        expect(findBannedWord(line, locale, 'learner'), `${locale}: ${line}`).toBeNull();
+        expect(findBannedWord(line, locale, 'caregiver'), `${locale}: ${line}`).toBeNull();
+        expect(line).not.toMatch(/attend|absent|behind|rank|best|worst|asist|falt|출석|결석|등수/i);
+      }
+    }
+  });
+});
