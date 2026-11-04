@@ -4,7 +4,7 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose, pastTapLock } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose, pastTapLock, tapHangulKey } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -59,7 +59,7 @@ async function typeHangul(page: Page, n: number, total: number, text: string): P
   await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
   await expect(page.getByTestId('type-hangul-done')).toBeDisabled();
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT_KEYS[j] ?? j)])) {
-    await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+    await tapHangulKey(page, jamo === ' ' ? 'space' : jamo);
   }
   await page.getByTestId('type-hangul-done').click();
   await expect(page.getByText('You typed it!')).toBeVisible();
@@ -70,11 +70,11 @@ async function typeWords(page: Page, words: readonly string[]): Promise<void> {
   for (const [i, word] of words.entries()) {
     await expect(page.getByText(`${i + 1} / ${words.length}`)).toBeVisible({ timeout: 5_000 });
     for (const jamo of keysFor(word).flatMap((j) => [...(SPLIT[j] ?? j)])) {
-      if (jamo === ' ') await page.getByTestId('hangul-key-space').click();
+      if (jamo === ' ') await tapHangulKey(page, 'space');
       else if (SHIFTED[jamo]) {
-        await page.getByTestId('hangul-key-shift').click();
-        await page.getByTestId(`hangul-key-${SHIFTED[jamo]}`).click();
-      } else await page.getByTestId(`hangul-key-${jamo}`).click();
+        await tapHangulKey(page, 'shift');
+        await tapHangulKey(page, SHIFTED[jamo]);
+      } else await tapHangulKey(page, jamo);
     }
     await page.getByTestId('type-hangul-done').click();
     await expect(page.getByText('You typed it!')).toBeVisible();
@@ -151,15 +151,14 @@ async function pickClozeCheck(page: Page, answers: ReadonlyArray<readonly [round
  */
 async function typeRound(page: Page, n: number, total: number, text: string): Promise<void> {
   await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
-  const key = (id: string) => page.getByTestId(`hangul-key-${id}`);
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
     if (jamo === ' ') {
-      await key('space').click();
+      await tapHangulKey(page, 'space');
     } else if (SHIFTED[jamo]) {
-      await key('shift').click();
-      await key(SHIFTED[jamo]).click();
+      await tapHangulKey(page, 'shift');
+      await tapHangulKey(page, SHIFTED[jamo]);
     } else {
-      await key(jamo).click();
+      await tapHangulKey(page, jamo);
     }
   }
   await page.getByTestId('type-hangul-done').click();
@@ -239,7 +238,7 @@ async function expectCellOnRoute(page: Page, stage: number, title: string): Prom
 /** Type Hangul: tap the keys that type `text` (no tense or two-key letters in these targets), then Done. */
 async function typeAnswer(page: Page, text: string): Promise<void> {
   await expect(page.getByTestId('type-hangul-field')).toBeVisible();
-  for (const jamo of keysFor(text)) await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+  for (const jamo of keysFor(text)) await tapHangulKey(page, jamo === ' ' ? 'space' : jamo);
   await page.getByTestId('type-hangul-done').click();
   await expect(page.getByText('You typed it!')).toBeVisible();
 }
@@ -862,7 +861,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
       // Type Hangul on the in-app keyboard: 김밥, 라면, 비빔밥 (no shifted or two-key letter).
       for (const [i, word] of ['김밥', '라면', '비빔밥'].entries()) {
         await expect(page.getByText(`${i + 1} / 3`)).toBeVisible({ timeout: 5_000 });
-        for (const jamo of keysFor(word)) await page.getByTestId(`hangul-key-${jamo}`).click();
+        for (const jamo of keysFor(word)) await tapHangulKey(page, jamo);
         await page.getByTestId('type-hangul-done').click();
         await expect(page.getByText('You typed it!')).toBeVisible();
       }
@@ -1284,7 +1283,7 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
       await expect(page.getByTestId('type-hangul-prompt')).toContainText(word, { timeout: 5_000 });
       await expect(page.getByTestId('dictation-prompt-speaker')).toHaveCount(0);
       if (word === '한복') await shot(page, 's3-3-q2-dictation-check-see-320');
-      for (const jamo of keysFor(word)) await page.getByTestId(`hangul-key-${jamo}`).click();
+      for (const jamo of keysFor(word)) await tapHangulKey(page, jamo);
       await page.getByTestId('type-hangul-done').click();
       await expect(page.getByText('You typed it!')).toBeVisible();
     }

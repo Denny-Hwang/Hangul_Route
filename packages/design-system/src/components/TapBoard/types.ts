@@ -38,6 +38,8 @@ export interface TapTargetProps {
   accessibilityLabel: string;
   /** `disabled` is merged from the prop. */
   accessibilityState?: { selected?: boolean; disabled?: boolean; checked?: boolean };
+  /** A toggle's `aria-pressed` on the web (the keyboard's Shift); left off when undefined. */
+  ariaPressed?: boolean;
   /** The target lock after a commit on a `target` board (default `TAP_LOCK_MS`; the keyboard's keys: `KEY_BOUNCE_MS`). */
   lockMs?: number;
   /** `false` for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it (rule 2). */

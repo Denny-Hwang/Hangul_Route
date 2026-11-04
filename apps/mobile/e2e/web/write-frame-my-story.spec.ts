@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { keysFor } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
+import { tapHangulKey } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -47,7 +48,7 @@ async function open(page: Page, off: boolean | 'long' = false): Promise<void> {
 const log = (page: Page): Promise<Log> => page.evaluate(() => (window as E2eWindow).__hrWriteFrameE2E!.log());
 const events = (page: Page): Promise<TelemetryEvent[]> => page.evaluate(() => (window as E2eWindow).__hrWriteFrameE2E!.events());
 async function typeText(page: Page, text: string): Promise<void> {
-  for (const jamo of keysFor(text)) await page.getByTestId(`hangul-key-${jamo}`).click();
+  for (const jamo of keysFor(text)) await tapHangulKey(page, jamo);
 }
 async function box(page: Page, testId: string) {
   const b = await page.getByTestId(testId).first().boundingBox();

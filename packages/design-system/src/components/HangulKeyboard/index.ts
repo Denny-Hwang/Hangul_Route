@@ -6,7 +6,9 @@ export {
   keyFace,
   keyboardLayout,
   keyboardWidth,
+  keyLockMs,
+  keyStep,
   pressLetter,
 } from './layout';
-export type { KeyKind, KeyboardArrangement, KeyboardKey, KeyboardLayout } from './layout';
+export type { KeyKind, KeyOutput, KeyboardArrangement, KeyboardKey, KeyboardLayout } from './layout';
 export type { HangulKeyboardLabels, HangulKeyboardProps } from './types';
