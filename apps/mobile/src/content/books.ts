@@ -92,8 +92,8 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
    * The Play cell's book 2 (F-CURR-002 §5.6 S5, row CM-46): the two new tales, on the Volume 2 path behind `volumes`.
    * Editorial choice: janggyeong-panjeon, a crafts story whose read tier row CM-46a added, stays a shelf story and is not
    * in this book. It is the hall that keeps the Tripitaka woodblocks, so it reads with the printing and records stories
-   * (its research cluster is hangul-printing), and a book quest needs both review passes of its read tier on record
-   * (books.test.ts), which CM-46a recorded as one MAR line. The two tales are a book of its own size (BOOK_MIN_QUESTS).
+   * (its research cluster is hangul-printing), not with masks and paper. The two tales are a book of its own size
+   * (BOOK_MIN_QUESTS).
    */
   {
     id: 'episode:stage5-crafts-v2',
