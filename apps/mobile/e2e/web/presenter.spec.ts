@@ -239,16 +239,18 @@ test.describe('presenter at 1280 x 720', () => {
     await expect(page.getByText('Tap “Join a class” in Hangul Route and type this code.')).toBeVisible();
     await shot(page, 'presenter-end-1280x720');
 
-    // Next on the End slide does nothing but say how to finish, with focus on Exit.
+    // Next on the End slide (a key) never leaves: it says how to finish, with focus on Next, which
+    // reads Finish there (F-TCH-004 section 3.5 amendment NB-1).
     await page.keyboard.press('ArrowRight');
-    await expect(page.getByTestId('presenter-end-hint')).toHaveText('To finish, choose Exit.');
-    await expect(page.getByTestId('presenter-exit')).toBeFocused();
+    await expect(page.getByTestId('presenter-end-hint')).toHaveText('To finish, choose Finish.');
+    await expect(page.getByTestId('presenter-next')).toBeFocused();
+    await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Finish');
     expect(await counter(page)).toBe(`${total} / ${total}`);
 
-    // Esc opens the Exit confirm; Keep going closes it; Exit goes home.
+    // Esc opens the confirm, which offers Finish after the end; Keep going closes it; Finish goes home.
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('presenter-exit-dialog')).toBeVisible();
-    await expect(page.getByText("Nothing about anyone's progress changes.")).toBeVisible();
+    await expect(page.getByText('You reached the end of the lesson.')).toBeVisible();
     await shot(page, 'presenter-exit-1280x720');
     await page.getByTestId('presenter-keep-going').click();
     await expect(page.getByTestId('presenter-exit-dialog')).toHaveCount(0);

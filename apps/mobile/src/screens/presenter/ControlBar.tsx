@@ -73,6 +73,14 @@ import { usePresenterView } from './presenter-context';
 export interface ControlBarProps {
   hidden: boolean;
   revealNext: boolean;
+  /**
+   * The lesson is at its end (`atLessonEnd`, F-TCH-004 section 3.5 amendment 2026-11-03, row NB-1):
+   * Next reads Finish with the check glyph, on the docked bar, the phone bar and the rail; the
+   * presenter's `onNext` then finishes the lesson.
+   */
+  finish?: boolean;
+  /** Next / Finish, so Next on the End slide (a key or a clicker) can move focus to Finish. */
+  nextRef?: Ref<View>;
   muted: boolean;
   fullscreenSupported: boolean;
   fullscreen: boolean;
@@ -94,7 +102,7 @@ export interface ControlBarProps {
   onFocusWithin: (focused: boolean, pointer: boolean) => void;
   /** The docked band's height: it grows when the controls wrap (the stage letterboxes). */
   onBandHeight?: (height: number) => void;
-  /** The docked bar's Exit, or the compact bar's More (which holds Exit): Next on the End slide moves focus there. */
+  /** The docked bar's Exit, or the compact bar's More (which holds Exit). */
   exitRef?: Ref<View>;
   /** A phone window: the compact bar over the stage (default: docked). */
   compact?: boolean;
@@ -261,6 +269,21 @@ export function ControlBar(props: ControlBarProps): ReactElement {
 
 type BarParts = ControlBarProps & { opacity: Animated.Value; live: boolean; focus: FocusTracker };
 
+/** Next's label and glyph: Finish at the end (row NB-1), Reveal while the slide has builds left, else Next. */
+function nextFace(props: Pick<ControlBarProps, 'finish' | 'revealNext'>, m: { finish: { cta: string }; reveal: { cta: string } }, next: string): { label: string; icon: IconName } {
+  if (props.finish === true) return { label: m.finish.cta, icon: 'check' };
+  return { label: props.revealNext ? m.reveal.cta : next, icon: 'arrow-right' };
+}
+
+/** Sets a ref the bar holds and the one the presenter passed, so both point at the same control. */
+function bothRefs<T>(own: { current: T | null }, given: Ref<T> | undefined): (el: T | null) => void {
+  return (el) => {
+    own.current = el;
+    if (typeof given === 'function') given(el);
+    else if (given) (given as { current: T | null }).current = el;
+  };
+}
+
 function StatusChips({ chips, onTurnSoundOn, focus }: { chips: readonly StatusChip[]; onTurnSoundOn: () => void; focus: FocusTracker }): ReactElement | null {
   if (chips.length === 0) return null;
   return (
@@ -313,7 +336,7 @@ function DockedBar(props: BarParts): ReactElement {
   // control reports its own; a width is kept per set of labels and text size, so a tool More holds
   // keeps its last width, and only grows (Next and Reveal take turns), so the band never flips
   // between two builds of a slide.
-  const labelsKey = [m.prev.cta, m.reveal.cta, messages.common.buttons.next, m.exit.cta, m.fullscreen.cta, m.grid.cta, m.blank.cta, m.timer.cta, m.sound.cta, String(textScale.size.body)].join('\n');
+  const labelsKey = [m.prev.cta, m.reveal.cta, messages.common.buttons.next, m.finish.cta, m.exit.cta, m.fullscreen.cta, m.grid.cta, m.blank.cta, m.timer.cta, m.sound.cta, String(textScale.size.body)].join('\n');
   const [measured, setMeasured] = useState<Measured>({ key: labelsKey, sizes: {}, stale: {} });
   const sizes: Readonly<Record<string, number>> = { ...measured.stale, ...measured.sizes };
   const measure =
@@ -375,7 +398,7 @@ function DockedBar(props: BarParts): ReactElement {
       case 'next':
         return (
           <View key={slot} testID="presenter-nav-next" {...pin}>
-            <Ctl ref={nextRef} testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary nudge={props.nudge} onPress={props.onNext} focus={focus} onLayout={measure('next')} />
+            <Ctl ref={bothRefs(nextRef, props.nextRef)} testID="presenter-next" {...nextFace(props, m, messages.common.buttons.next)} primary nudge={props.nudge} onPress={props.onNext} focus={focus} onLayout={measure('next')} />
           </View>
         );
       case 'chips':
@@ -497,7 +520,7 @@ function CompactBar(props: BarParts): ReactElement {
           }}
         >
           <Ctl small testID="presenter-back" label={m.prev.cta} icon="arrow-left" onPress={props.onPrev} focus={focus} />
-          <Ctl small testID="presenter-next" label={props.revealNext ? m.reveal.cta : messages.common.buttons.next} icon="arrow-right" primary onPress={props.onNext} focus={focus} />
+          <Ctl ref={props.nextRef} small testID="presenter-next" {...nextFace(props, m, messages.common.buttons.next)} primary onPress={props.onNext} focus={focus} />
           <Ctl small testID="presenter-sound" label={m.sound.cta} icon={props.muted ? 'speaker-off' : 'speaker'} onPress={props.onSound} focus={focus} />
           <Ctl ref={props.exitRef} small testID="presenter-more" label={m.more.cta} popup="dialog" expanded={moreOpen} onPress={() => props.onMore?.(!moreOpen)} focus={focus} />
         </View>
@@ -599,7 +622,7 @@ interface RailWords {
   key: string;
   full: Readonly<Record<number, number>>;
   more: Readonly<Record<number, number>>;
-  /** Each full-rail label's height as drawn in the 84 px room (More, Next, Reveal, Previous, Sound). */
+  /** Each full-rail label's height as drawn in the 84 px room (More, Next, Reveal, Previous, Sound, Finish). */
   label: Readonly<Record<number, number>>;
 }
 
@@ -619,10 +642,10 @@ function PhoneRail(props: BarParts & { rail: RailSize }): ReactElement {
   const compact = props.rail === 'compact';
   const width = compact ? PHONE_RAIL_COMPACT : PHONE_RAIL;
 
-  // The label fallback (PN-0b N8): every word of every full-rail label (Next and Reveal both, so the
+  // The label fallback (PN-0b N8): every word of every full-rail label (Next, Reveal and Finish, so the
   // rail never flips between two builds of a slide) and More's own, measured at the chosen text size;
   // and each full-rail label as drawn in its 84 px room, for the height the buttons take.
-  const labels = [m.more.cta, messages.common.buttons.next, m.reveal.cta, m.prev.cta, m.sound.cta];
+  const labels = [m.more.cta, messages.common.buttons.next, m.reveal.cta, m.prev.cta, m.sound.cta, m.finish.cta];
   const fullWords = [...new Set(labels.flatMap(wordsOf))];
   const moreWords = wordsOf(m.more.cta);
   const key = [...labels, '|', ...moreWords, String(textScale.size.body)].join('\n');
@@ -643,7 +666,7 @@ function PhoneRail(props: BarParts & { rail: RailSize }): ReactElement {
   const complete =
     fullWords.every((_, i) => sizeOf(known.full[i])) && moreWords.every((_, i) => sizeOf(known.more[i])) && labels.every((_, i) => sizeOf(known.label[i]));
   const button = (i: number): number => railLabelButton(RAIL_BUTTON_PARTS, known.label[i] ?? 0);
-  const measuredHeights: RailHeights | null = complete ? { more: button(0), next: Math.max(button(1), button(2)), prev: button(3), sound: button(4) } : null;
+  const measuredHeights: RailHeights | null = complete ? { more: button(0), next: Math.max(button(1), button(2), button(5)), prev: button(3), sound: button(4) } : null;
   const heights = measuredHeights ?? props.railHeights ?? railHeightsEstimate(textScale.size.body);
   const onRailMeasure = props.onRailMeasure;
   const report = measuredHeights === null ? null : `${fit.full}|${measuredHeights.more}|${measuredHeights.next}|${measuredHeights.prev}|${measuredHeights.sound}`;
@@ -699,9 +722,9 @@ function PhoneRail(props: BarParts & { rail: RailSize }): ReactElement {
           </View>
           <View testID="presenter-rail-pair" style={{ flexShrink: 0, alignItems: 'center', gap: spacing.sm }}>
             <RailCtl
+              ref={props.nextRef}
               testID="presenter-next"
-              label={props.revealNext ? m.reveal.cta : messages.common.buttons.next}
-              icon="arrow-right"
+              {...nextFace(props, m, messages.common.buttons.next)}
               primary
               compact={compact}
               showLabel={!compact}
