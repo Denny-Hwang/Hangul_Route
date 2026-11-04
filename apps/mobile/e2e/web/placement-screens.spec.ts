@@ -76,6 +76,23 @@ async function voicedSpeech(page: Page): Promise<void> {
   });
 }
 
+/**
+ * No recorded clip ever loads (every `.mp3` fetch fails), so each prompt falls through to the voice. The fixture bundle
+ * carries clips for some letters (ㄱ ㄴ ㄷ ㄹ); a question drawn on one of them would play its clip even after the voice
+ * stops working, and the draw depends on the profile id and the start time, so a test about a prompt that cannot play
+ * must not leave the clips on.
+ */
+async function noClips(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const fetchOriginal = window.fetch.bind(window);
+    window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (/\.mp3(\?|$)/.test(url)) return Promise.reject(new TypeError('e2e: no clips'));
+      return fetchOriginal(input, init);
+    };
+  });
+}
+
 /** No speech engine at all: no instruction voice (Short is unavailable) and no voice for the warm-up. */
 async function noSpeechEngine(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -415,6 +432,7 @@ test.describe('level check screens (fixture bundle)', () => {
   });
   test('Short: a prompt that stops playing asks for a tap, then the sound pause; the skip is kept out of scoring', async ({ page }) => {
     await voicedSpeech(page);
+    await noClips(page);
     await page.setViewportSize({ width: 320, height: 568 });
     await onboard(page, 'Pictures first');
     await openCheck(page);
