@@ -874,7 +874,7 @@ describe('no output contains a roster string', () => {
 describe('fillOutline (BL-5)', () => {
   const q = (id: string): LectureBlock => ({ kind: 'quest', id: `quest:${id}` });
   const LENGTHS: readonly ClassMinutes[] = [15, 20, 30, 45, 60];
-  /** Eight 5-minute Stage 1 quests: 40 catalogue minutes, past every chip. */
+  /** Eight Stage 1 lessons (5, 5, 5, 4, 4, 4, 4 and 5 minutes): 36 catalogue minutes, past every chip. */
   const eight = ['letters-q1', 'letters-q2', 'letters-q3', 'life-q1', 'life-q2', 'life-q3', 'rites-q1', 'rites-q2'].map((id) => q(`stage1-${id}`));
 
   it.each(LENGTHS)('keeps every outline block in order at %i minutes', (minutes) => {
@@ -884,12 +884,12 @@ describe('fillOutline (BL-5)', () => {
   });
 
   it('a 45- and a 60-minute class day over 30 catalogue minutes keeps every lesson (fillToLength at 30 would cut)', () => {
-    const seven = eight.slice(0, 7); // 35 minutes
-    expect(presetMinutesOf(seven, CATALOG)).toBeGreaterThan(30);
+    const seven = eight.slice(0, 7);
+    expect([presetMinutesOf(seven, CATALOG), presetMinutesOf(eight, CATALOG)]).toEqual([31, 36]);
     expect(fillToLength(seven, 30, true, CATALOG).filter((b) => b.kind === 'quest')).toHaveLength(6);
-    // 45: 35 + quiz 4 = 39, 6 left: air-write 5.
+    // 45: 31 + quiz 4 = 35, 10 left: air-write 5.
     expect(fillOutline(seven, 45, true, CATALOG).map(short)).toEqual([...seven.map(short), 'quiz 4', 'air-write 5']);
-    // 60: 40 + quiz 4 = 44, 16 left: air-write 5.
+    // 60: 36 + quiz 4 = 40, 20 left: air-write 5.
     expect(fillOutline(eight, 60, true, CATALOG).map(short)).toEqual([...eight.map(short), 'quiz 4', 'air-write 5']);
   });
 
@@ -898,7 +898,7 @@ describe('fillOutline (BL-5)', () => {
     expect(fillOutline(two, 15, true, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'quiz 4']);
     expect(fillOutline(two, 20, true, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'quiz 4', 'air-write 5']);
     expect(fillOutline(two, 15, false, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'air-write 5']);
-    // 14 of 15: no quiz, no activity (1 left).
+    // 15 of 15: no quiz, no activity (nothing left).
     const three = [...two, { kind: 'quest', id: 'quest:stage1-letters-q3' } as LectureBlock];
     expect(fillOutline(three, 15, true, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'stage1-letters-q3']);
     // A day past its length keeps every lesson and adds nothing.

@@ -198,7 +198,9 @@ function LectureInner(): JSX.Element {
         // "Present this plan": Next lesson open, the plan's own blocks as the outline (section 4.6).
         const outline = planOutline(chosen, today);
         applyPreset('next-lesson', presetMinutes('next-lesson', {}), chip, context);
-        setBlocks(outline.blocks);
+        // A blended class day (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3) keeps the resolved deck: every lesson of the
+        // day, then the quiz and the activity at the class's real length.
+        if (context.classDay === null) setBlocks(outline.blocks);
         setOmitted(outline.omitted);
         setSource('plan');
       } else if (preselected === 'revisit' && revisitNow) {

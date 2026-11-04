@@ -545,7 +545,7 @@ describe('a blended class day on the Next lesson card (BL-5)', () => {
       weeks: [{ index: 1, startDate: '2026-10-12', kind: 'learn', focus: { episodeId: null, storyIds: [], festival: null }, extras: [] }],
       params: { blend: { mode: 'overlap', lecture: { days: ['thu'], minutes }, personal: { perWeek: 3, minutes: 10 } } },
     }) as unknown as PlanView['meta'];
-  // Seven 5-minute Stage 1 lessons on Thursday 2026-10-15 (35 catalogue minutes, past the 30 chip), and a practice item.
+  // Seven Stage 1 lessons on Thursday 2026-10-15 (31 catalogue minutes, past the 30 chip), and a practice item.
   const ids = ['letters-q1', 'letters-q2', 'letters-q3', 'life-q1', 'life-q2', 'life-q3', 'rites-q1'].map((s) => `quest:stage1-${s}`);
   const items: PlanView['items'] = [
     ...ids.map((id) => ({ kind: 'quest' as const, id, week: 1, lectureDate: '2026-10-15', targetDate: '2026-10-16' })),
