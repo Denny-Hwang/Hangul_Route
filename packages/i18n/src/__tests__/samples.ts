@@ -1059,6 +1059,20 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.route.blend.practiceAllBut': [['Monday'], ['Sunday']],
   'learner.route.blend.dayList': [[['Tuesday']], [['Monday', 'Thursday']], [['Wednesday', 'Friday', 'Sunday']]],
   'a11y.route.blend.practiceDay': [['Tuesday'], ['Sunday']],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-4: the meeting block, the preview header and cycle table, the readout (weekday names and dates arrive localized).
+  'console.curriculum.blend.practice.inline': [['3', '10'], ['1', '5']],
+  'console.curriculum.blend.practice.suggested': [['Wed, Fri, Sun'], ['Wed']],
+  'console.curriculum.blend.practice.afterClass': [['Tuesday'], ['Saturday']],
+  'console.curriculum.blend.practice.pickDays': [[3], [1]],
+  'console.curriculum.blend.preview.header': [[4, 1, 30, 3, 10, null], [8, 1, 30, 7, 10, 'on all 7 days'], [2, 1, 15, 1, 5, null], [5, 2, 45, 3, 10, null]],
+  'console.curriculum.blend.preview.perDay': [[3, 1], [1, 2]],
+  'console.curriculum.blend.preview.average': [[104, '4', null], [95, '4', '3.7'], [1, '1', null]],
+  'console.curriculum.blend.preview.start': [['Tue, Nov 10']],
+  'console.curriculum.blend.preview.endsOn': [['Tue, May 11']],
+  'console.curriculum.blend.readout.classDay': [['Tue, Nov 17']],
+  'console.curriculum.blend.readout.classDays': [[2, 23], [0, 1]],
+  'console.curriculum.blend.readout.moveAsk': [['Tue, Nov 17']],
+  'console.curriculum.blend.warn.itemCap': [[24]],
   // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
   // name, a formatted date) and the asking-to-join card's source class.
   'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],
