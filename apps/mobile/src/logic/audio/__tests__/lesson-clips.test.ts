@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { clipUnitsOf } from '../../../../scripts/audio/lib.mjs';
 import { episodesAll, episodesWithVolumes } from '../../../content/episodes';
 import { questsAll } from '../../../content/quests';
+import { storiesAll } from '../../../content/stories';
 import { vocabTopics } from '../../../content/vocab';
 import { ALL_CLIP_PACKS, clipScopeOfEpisode, lessonClipPlan, type ClipPlanEpisode, type ClipPlanQuest } from '../lesson-clips';
 
@@ -111,7 +112,14 @@ describe('logic/audio/lesson-clips', () => {
   it('every warm unit of the real manifest is reached by a lesson, the level check, a vocabulary topic or a card page', () => {
     const byLesson = new Set(questsAll.flatMap((q) => ownUnits(q.id)));
     const topics = new Set(vocabTopics.map((t) => `topic:${t.key}`));
-    const unreached = [...manifestUnits].filter((u) => !byLesson.has(u) && u !== 'placement' && !topics.has(u) && !/^card:[a-z0-9-]+$/.test(u));
+    // A story bundled before its review sign-off (a book 2 tale, F-CURR-002 row CM-46) has its clips in the manifest so
+    // they can be made ahead, but no lesson reaches them until a book lists it; every other story unit must be reached.
+    const unsigned = new Set(
+      storiesAll.filter((s) => s.review.language !== 'native-reviewed' || s.review.culture !== 'culture-reviewed' || s.shelf === undefined).map((s) => s.id),
+    );
+    const unreached = [...manifestUnits].filter(
+      (u) => !byLesson.has(u) && u !== 'placement' && !topics.has(u) && !/^card:[a-z0-9-]+$/.test(u) && !unsigned.has(u),
+    );
     expect(unreached).toEqual([]);
     // The Word Builder clips (`jamo-wb`) warm with the Word Builder cell (AC-B6): that cell's lessons reach it.
     expect(manifestUnits.has('episode:stage2-letters')).toBe(true);
