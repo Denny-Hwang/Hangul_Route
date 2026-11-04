@@ -139,6 +139,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
       'the Story Order e2e and unit-test rounds (F-CURR-002 row CM-34), reached only in the fixture build, never a learner; story-order-player.test.ts checks every caption against romanize() of rr.ts',
   },
   { path: 'apps/mobile/src/navigation/realia-read-e2e-fixture.ts', reason: 'F-CURR-001 G-2 test fixtures (the four D-2 realia), reached only in the e2e fixture build; realia-read-flow.test.ts checks their Hangul-only texts with checkRomanization' },
+  { path: 'apps/mobile/src/navigation/realia-kinds-e2e-fixture.ts', reason: 'F-CURR-002 CM-47 test fixtures (one realia per added kind), reached only in the e2e fixture build; realia-read-flow.test.ts checks their Hangul-only texts with checkRomanization' },
   { path: 'packages/i18n/src/banned-words.json', reason: 'Korean banned-word list for the UI-copy lint (F-I18N-001), not taught content' },
   { path: 'packages/i18n/src/audience.ts', reason: 'Korean kids-only-framing patterns for the audience guard (F-I18N-001 §3.8), not taught content' },
   { path: 'packages/i18n/src/banned.ts', reason: 'comments for the banned-word matcher (F-I18N-001)' },
