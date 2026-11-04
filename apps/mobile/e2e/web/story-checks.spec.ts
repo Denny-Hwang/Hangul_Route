@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose, pastTapLock } from './helpers';
 import { fullyVisible } from './story-reader-helpers';
 
 /**
@@ -62,6 +62,11 @@ async function onboard(page: Page): Promise<void> {
 
 const stepHeading = (page: Page, name: string): Locator => page.getByRole('heading', { name });
 const option = (page: Page, id: string): Locator => page.getByTestId(`story-check-option-${id}`);
+/** A deliberate tap on an option: the options are a TapBoard, so it waits out the answer lock of the one before (AMENDMENTS-TOUCH KT-3). */
+async function pick(page: Page, id: string): Promise<void> {
+  await pastTapLock(page);
+  await option(page, id).click();
+}
 const position = (page: Page): Locator => page.getByTestId('story-check-position');
 const nextButton = (page: Page): Locator => page.getByTestId('story-check-next');
 
@@ -97,8 +102,8 @@ async function openChecks(page: Page, settings?: LearnerSettings): Promise<void>
 
 /** Answer the current item (the given wrong taps first), check the explanation, and tap Next. */
 async function answer(page: Page, item: { right: string; explain: string }, wrong: string[] = []): Promise<void> {
-  for (const id of wrong) await option(page, id).click();
-  await option(page, item.right).click();
+  for (const id of wrong) await pick(page, id);
+  await pick(page, item.right);
   await expect(page.getByText(item.explain)).toBeVisible();
   await nextButton(page).click();
 }
@@ -151,7 +156,7 @@ test.describe('story check step (fixture bundle)', () => {
     await expect(page.getByText(C1.explain)).toHaveCount(0);
 
     // Right first: the check look in words, the explanation, the other cards disabled, Next waits.
-    await option(page, C1.right).click();
+    await pick(page, C1.right);
     await expect(page.getByTestId(`story-check-status-${C1.right}`)).toHaveText('Correct');
     await expect(page.getByText(C1.explain)).toBeVisible();
     await expect(option(page, C1.right)).toHaveAccessibleName(/Correct$/);
@@ -174,7 +179,7 @@ test.describe('story check step (fixture bundle)', () => {
     // No Korean voice on this device: the shared "Say it yourself" chip, and the text carries the item.
     await expect(page.getByTestId('story-check-say-it')).toHaveText('Say it yourself');
     await expect(target).not.toHaveAttribute('role', 'button'); // the chip replaces the Korean speaker
-    await option(page, C2.right).click();
+    await pick(page, C2.right);
     await expect(target).toContainText('Hangul Day'); // the gloss shows once the item resolves
     await expect(page.getByText(C2.explain)).toBeVisible();
     await nextButton(page).click();
@@ -209,7 +214,7 @@ test.describe('story check step (fixture bundle)', () => {
     await openChecks(page);
     const [first, second] = C1.wrong as [string, string];
 
-    await option(page, first).click();
+    await pick(page, first);
     await expect(page.getByTestId(`story-check-status-${first}`)).toHaveText('Try another');
     expect(await frameColor(option(page, first))).toBe(AMBER);
     expect(await frameColor(option(page, first))).not.toBe(RED);
@@ -223,11 +228,11 @@ test.describe('story check step (fixture bundle)', () => {
 
     // A locked card does nothing; a second wrong card rings the right one.
     await option(page, first).click({ force: true });
-    await option(page, second).click();
+    await pick(page, second);
     await expect(page.getByText('This one is worth a look.')).toBeVisible();
     await expect(option(page, C1.right)).toHaveAccessibleName(/This one is worth a look\.$/);
 
-    await option(page, C1.right).click();
+    await pick(page, C1.right);
     await expect(page.getByText(C1.explain)).toBeVisible();
     await nextButton(page).click();
     await answer(page, C2);
@@ -268,7 +273,7 @@ test.describe('story check step (fixture bundle)', () => {
     // The pill says "Question 1 of 3", not "one slash three"; the bar and the bare pill are hidden.
     await expect(page.getByTestId('story-check-position-group')).toHaveAccessibleName('Question 1 of 3');
     await expect(page.getByRole('group', { name: 'Question 1 of 3' })).toBeVisible();
-    await option(page, C1.wrong[0]!).click();
+    await pick(page, C1.wrong[0]!);
     // The status line is the visible cue; the card's name already ends with it.
     await expect(page.getByTestId(`story-check-status-${C1.wrong[0]!}`)).toHaveText('Try another');
     const hidden = await page
@@ -302,7 +307,7 @@ test.describe('story check step (fixture bundle)', () => {
     await answer(page, C1);
     await expect.poll(asked).toContain('What does ');
     // Read once per item: answering and waiting reads nothing more for this item.
-    await option(page, C2.right).click();
+    await pick(page, C2.right);
     const count = (await asked()).filter((t) => t === 'What does ').length;
     await page.waitForTimeout(1000);
     expect((await asked()).filter((t) => t === 'What does ').length).toBe(count);
@@ -333,7 +338,7 @@ test.describe('story check step (fixture bundle)', () => {
     await answer(page, C1);
     const target = page.getByTestId('story-check-target');
     await expect(target).not.toContainText('hangeullal');
-    await option(page, C2.right).click();
+    await pick(page, C2.right);
     await expect(target).toContainText('hangeullal');
     await expect(page.getByTestId('story-check-reveal')).toHaveCount(0);
   });
@@ -434,7 +439,7 @@ test.describe('story check step (fixture bundle)', () => {
     await openChecks(page);
     await answer(page, C1);
     await answer(page, C2);
-    await option(page, C3.right).click();
+    await pick(page, C3.right);
     await expect(page.getByText(C3.explain)).toBeVisible();
     // Whatever the last item was saying is cut when the recap opens (no Korean under the recap heading).
     const cancelsBefore = await page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0);
@@ -499,7 +504,7 @@ test.describe('story check step (fixture bundle)', () => {
 
     test('state changes are instant and nothing moves on by itself', async ({ page }) => {
       await openChecks(page);
-      await option(page, C1.right).click();
+      await pick(page, C1.right);
       await expect(page.getByTestId(`story-check-status-${C1.right}`)).toHaveText('Correct');
       await page.waitForTimeout(2500);
       await expect(position(page)).toHaveText('1 / 3');
@@ -549,7 +554,7 @@ test.describe('story check step (fixture bundle)', () => {
       const optionsBox = await page.getByTestId('story-check-options').boundingBox();
       expect(optionsBox?.width ?? 0).toBeLessThanOrEqual(720);
       await option(page, C1.right).scrollIntoViewIfNeeded();
-      await option(page, C1.right).click();
+      await pick(page, C1.right);
       const next = nextButton(page);
       await next.scrollIntoViewIfNeeded();
       await expect.poll(() => fullyVisible(page, next)).toBe(true);

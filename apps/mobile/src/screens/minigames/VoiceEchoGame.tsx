@@ -16,6 +16,7 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useTypeScale,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
@@ -81,7 +82,8 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
       <Spacer size="md" />
 
       <View style={{ alignItems: 'center' }}>
-        <Pressable
+        <GuardedPressable
+          setsLock={false}
           onPress={hear}
           accessibilityRole="button"
           accessibilityLabel={m.a11y.minigame.hear(targetRomanization ?? target)}
@@ -100,7 +102,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
           <Icon name="speaker" size={speakerIcon} />
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
           {targetRomanization ? <Caption tone="secondary">{targetRomanization}</Caption> : null}
-        </Pressable>
+        </GuardedPressable>
       </View>
       <Spacer size="sm" />
       <PromptPanel

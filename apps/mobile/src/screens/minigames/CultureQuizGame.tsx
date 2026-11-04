@@ -11,6 +11,7 @@ import {
   colors,
   spacing,
   useLayoutClass,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -140,24 +141,27 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
           </>
         }
         answers={
-          <View style={{ gap: spacing.md }}>
-            {round.options.map((opt) => {
-              const isWrongLocked = lockedWrong.includes(opt.en);
-              const showCorrect = feedback === 'correct' && opt.isAnswer;
-              const tone = showCorrect ? 'success' : isWrongLocked ? 'nudge' : 'secondary';
-              return (
-                <Button
-                  key={opt.en}
-                  label={opt.en}
-                  tone={tone}
-                  size="lg"
-                  fullWidth
-                  disabled={isWrongLocked}
-                  onPress={() => handleTap(opt.en, opt.isAnswer)}
-                />
-              );
-            })}
-          </View>
+          <TapBoard lock="board">
+            {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+            <View style={{ gap: spacing.md }}>
+              {round.options.map((opt) => {
+                const isWrongLocked = lockedWrong.includes(opt.en);
+                const showCorrect = feedback === 'correct' && opt.isAnswer;
+                const tone = showCorrect ? 'success' : isWrongLocked ? 'nudge' : 'secondary';
+                return (
+                  <Button
+                    key={opt.en}
+                    label={opt.en}
+                    tone={tone}
+                    size="lg"
+                    fullWidth
+                    disabled={isWrongLocked}
+                    onPress={() => handleTap(opt.en, opt.isAnswer)}
+                  />
+                );
+              })}
+            </View>
+          </TapBoard>
         }
         feedback={
           feedback === 'wrong' ? (

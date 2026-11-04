@@ -2,6 +2,8 @@ import type React from 'react';
 import { Platform } from 'react-native';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer, type TestRendererOptions } from 'react-test-renderer';
 import { vi } from 'vitest';
+import { TAP_LOCK_MS } from '@hangul-route/design-system';
+import { passTapLock as passClock } from './tap-clock';
 
 /**
  * Helpers for the screen render tests (vitest.render.config.ts, F-BILL-002 B-13). Screens render
@@ -114,10 +116,19 @@ export function buttonsNamed(root: ReactTestInstance, label: string): ReactTestI
   return hostNodes(root, (node) => node.props.role === 'button' && (node.props['aria-label'] === label || screenTexts(node).includes(label)));
 }
 
-/** A tap, as react-native-web's press responder receives a click. */
+/** Moves the render tests' tap clock past the press guard's lock (tap-clock.ts), for a test that taps through a host's own handler. */
+export function passTapLock(): void {
+  passClock(TAP_LOCK_MS);
+}
+
+/**
+ * A tap, as react-native-web's press responder receives a click. A deliberate tap: the tap clock first moves past the
+ * press guard's lock (tap-clock.ts), so pressing the same button twice in a test never reads as a bounce.
+ */
 export async function press(node: ReactTestInstance): Promise<void> {
   const onClick = node.props.onClick as ((event: unknown) => void) | undefined;
   if (onClick === undefined) throw new Error('not pressable');
+  passTapLock();
   // The press responder reads the element's role and tag (a disabled control ignores the click).
   const currentTarget = { getAttribute: (name: string): unknown => node.props[name] ?? null, tagName: String(node.type) };
   const event = { altKey: false, currentTarget, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined };

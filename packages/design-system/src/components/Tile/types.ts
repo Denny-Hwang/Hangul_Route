@@ -5,6 +5,11 @@ export interface TileProps {
   romanization?: string;
   onPress?: () => void;
   state?: TileState;
+  /**
+   * Takes no tap while keeping its state's look (AMENDMENTS-TOUCH R3, row KT-3: a locked wrong tile stays amber). Inside a
+   * `TapBoard` the board still claims a touch on it, so the touch reaches nothing else; it is announced as disabled.
+   */
+  disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
   /**
    * The tile's side when a screen scales it with the window (F-LAYOUT-001 LD4:

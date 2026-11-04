@@ -1099,4 +1099,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // AMENDMENTS-GROWNUP-UX GX-13: the report's minutes tile and the learner's classes line.
   'report.minutesTile': [[1], [36]],
   'report.classesLine': [[['Sunflower']], [['Sunflower', 'Saturday B']]],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
+  'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
+  'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
 };
