@@ -47,7 +47,7 @@ import {
   type TaleRowAction,
   type TaleRowView,
 } from '../../logic/story/story-episode';
-import { defaultStoryIndex, type StoryIndexEntry } from '../../logic/story/story-index';
+import type { StoryIndexEntry } from '../../logic/story/story-index';
 import { storyCoverVariant } from '../../logic/story/story-tile';
 import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
@@ -56,6 +56,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { CellLinkRow } from '../story/CellLinkRow';
 import { SpeakerButton } from '../story/ReaderParts';
+import { useStoryIndex } from '../story/use-story-index';
 import { CoverFallback } from '../library/StoryTile';
 import { useStoriesLoaded } from '../story-content';
 
@@ -136,7 +137,9 @@ export function StoryEpisodeDetail({
     // storyChunks: a localized copy reads the story's body once, so it is made again when a chunk arrives.
     [sourceEntries, locale, storyChunks],
   );
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), storiesAll, snap), [snap, storyChunks]);
+  // A book 2 tale's notes (row CM-46) count while `volumes` is on.
+  const { entries: storyIndex } = useStoryIndex();
+  const notes = useMemo(() => foundNotes(storyIndex, storiesAll, snap), [storyIndex, snap, storyChunks]);
   const stageDef = stageByKey(episode.stage);
   const themeDef = themeByKey(episode.theme);
   const view = useMemo(

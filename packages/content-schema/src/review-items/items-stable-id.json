@@ -1108,7 +1108,11 @@
     "rea|realia:s6-rites-v2-q1-calendar": "rea:s6-rites-v2-q1-calendar",
     "rea|realia:s6-rites-v2-q2-poster": "rea:s6-rites-v2-q2-poster",
     "rea|realia:s6-rites-v2-q2-timetable": "rea:s6-rites-v2-q2-timetable",
-    "rea|realia:s6-rites-v2-q3-ticket": "rea:s6-rites-v2-q3-ticket"
+    "rea|realia:s6-rites-v2-q3-ticket": "rea:s6-rites-v2-q3-ticket",
+    "lex|껍질": "lex:kkeopjil",
+    "lex|탈": "lex:tal",
+    "lex|떠요": "lex:tteoyo",
+    "lex|양반": "lex:yangban"
   },
   "alias": {
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"
