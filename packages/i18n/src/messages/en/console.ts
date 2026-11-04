@@ -1096,6 +1096,8 @@ export const consoleMsgs = {
        * and `{weekdays}` arrive as whole weekday names in the console language, already joined.
        */
       family: {
+        /** Whole weekday names as one phrase for a weekly habit, in the order given: "Wednesday, Friday, and Sunday". */
+        weekdayList: (names: string[]) => (names.length <= 2 ? names.join(' and ') : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1] ?? ''}`),
         classLine: (className: string, days: string, n: number) =>
           plural('en', n, { one: `In: ${className} · class on ${days}, practice ${n} time a week`, other: `In: ${className} · class on ${days}, practice ${n} times a week` }),
         classHasPractice: (name: string, weekdays: string) => `${name}'s class has practice days on ${weekdays}.`,

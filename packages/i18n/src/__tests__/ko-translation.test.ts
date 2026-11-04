@@ -230,6 +230,7 @@ const KO_ALL_ARGUMENTS: readonly string[] = [
   'report.step.range', // "from~to"
   'report.list', // items joined by ", "
   'learner.weeklyPlan.proposal.pickDayLabel', // "date (weekday)": both arrive formatted in Korean
+  'console.curriculum.blend.family.weekdayList', // weekday names joined by a middle dot (AMENDMENTS-ROUTE-CLASS-BLEND BL-9)
 ];
 
 /** 합니다체 on purpose: the legal notice and the plan terms and price lines (§3.10 style guide). */

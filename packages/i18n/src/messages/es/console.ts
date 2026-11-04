@@ -848,6 +848,10 @@ export const consoleMsgs = {
         classLength: (minutes: number) => `Duración de la clase: ${minutes} min`,
       },
       family: {
+        weekdayList: (names: string[]) => {
+          const plural = names.map((name) => name.replace(/^(sábado|domingo)$/u, '$1s'));
+          return plural.length <= 1 ? (plural[0] ?? '') : `${plural.slice(0, -1).join(', ')} y ${plural[plural.length - 1] ?? ''}`;
+        },
         classLine: (className: string, days: string, n: number) =>
           plural('es', n, { one: `En: ${className} · clase los ${days}, práctica ${n} vez por semana`, other: `En: ${className} · clase los ${days}, práctica ${n} veces por semana` }),
         classHasPractice: (name: string, weekdays: string) => `La clase de ${name} tiene días de práctica los ${weekdays}.`,

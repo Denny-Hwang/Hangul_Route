@@ -769,6 +769,7 @@ export const consoleMsgs = {
         classLength: (minutes: number) => `수업 길이: ${minutes}분`,
       },
       family: {
+        weekdayList: (names: string[]) => names.join('·'),
         classLine: (className: string, days: string, n: number) => `소속: ${className} · ${days} 수업, 주 ${n}회 연습`,
         classHasPractice: (name: string, weekdays: string) => `${name}의 반은 ${weekdays}에 연습해요.`,
         pause: '수업 기간에는 가족 주간 계획 잠시 멈추기',
