@@ -10,7 +10,7 @@ import type { HiddenHeritageScene } from './types';
  * Row CM-43 S2 (the Food Volume 2 cell that places it) added the rice cakes and the spoon and moved the kimchi to the
  * shelf, so its round has the four targets and four other things a Stage 2 Apply plays.
  *
- * Its chunk (this module: the setting, the six props, the layers, the reference round and the note) is held to
+ * Its chunk (this module: the setting, the eight props, the layers, the reference round and the note) is held to
  * 25,000 B (§10 ceilings table; `hidden-heritage.test.ts`). Eight colours, none of the ring or focus tokens.
  */
 

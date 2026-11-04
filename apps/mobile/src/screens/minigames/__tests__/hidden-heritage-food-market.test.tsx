@@ -45,6 +45,14 @@ function gameSwitch(on: boolean): void {
 
 const wait = (ms: number) => act(async () => new Promise<void>((resolve) => setTimeout(resolve, ms)));
 
+/** Polls every 20 ms until `done` holds (no fixed sleep, so a slow runner only waits longer); fails after `limitMs`. */
+async function waitUntil(done: () => boolean, limitMs = 5000): Promise<void> {
+  for (let waited = 0; !done(); waited += 20) {
+    if (waited >= limitMs) throw new Error('waitUntil: the condition did not hold in time');
+    await wait(20);
+  }
+}
+
 async function draw(locale: 'en' | 'es' | 'ko' = 'en'): Promise<ReactTestRenderer> {
   await act(async () => useLocaleStore.setState({ device: locale, detected: 'en' }));
   const scope = locale === 'en' ? SCOPE : localizeScope(SCOPE, REF, locale, LESSON_STAGE_MODULES[2].LESSON_SCOPE_OVERLAYS);
@@ -72,12 +80,15 @@ async function draw(locale: 'en' | 'es' | 'ko' = 'en'): Promise<ReactTestRendere
 /** Finds every asked word on its own spot, one after the other, until the end panel shows. */
 async function findAll(r: ReactTestRenderer): Promise<ReactTestInstance> {
   const targets = SCOPE.hiddenHeritage!.rounds[0]!.targets;
-  for (let i = 0; i < targets.length && r.root.findAll((n) => n.props.testID === 'hh-end').length === 0; i += 1) {
-    const ko = r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko as string;
+  const ended = (): boolean => r.root.findAll((n) => n.props.testID === 'hh-end').length > 0;
+  const asked = (): string | undefined => r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]?.props.ko as string | undefined;
+  for (let i = 0; i < targets.length && !ended(); i += 1) {
+    const ko = asked()!;
     const id = targets.find((t) => t.word.ko === ko)!.id;
     const spot = r.root.findAll((n) => n.type === Pressable && n.props.testID === `hh-spot-${id}`)[0]!;
     await act(async () => spot.props.onPress());
-    await wait(800);
+    // The next word is asked, or the end panel shows after the last one.
+    await waitUntil(() => ended() || (asked() !== undefined && asked() !== ko));
   }
   return r.root;
 }
@@ -165,17 +176,18 @@ describe('the shipped step (Food & Daily Life Volume 2, quest 3 Apply)', () => {
     expect(textOf(back)).not.toMatch(/https?:|www\./);
   });
 
-  it('es: the card back shows every fact in Spanish, and the spots are named by their Spanish meanings', async () => {
+  it.each(['es', 'ko'] as const)('%s: the card back shows every fact in the UI language, and the spots are named by their meanings in it', async (locale) => {
     gameSwitch(true);
-    const r = await draw('es');
-    const table = sceneOverlay('es');
+    const r = await draw(locale);
+    const table = sceneOverlay(locale);
     const labels = r.root.findAll((n) => n.type === Pressable && typeof n.props.testID === 'string' && n.props.testID.startsWith('hh-spot-')).map((n) => n.props.accessibilityLabel as string);
     expect(labels).toContain(table['round.targets.tteok.word.gloss']);
     expect(labels).toContain(table['round.others.sutgarak.word.gloss']);
     const root = await findAll(r);
     const back = root.findAll((n) => n.props.testID === 'hh-card-back')[0]!;
     for (const fact of FACTS) expect(textOf(back), fact.id).toContain(table[`note.facts.${fact.id}.claim`]);
-    expect(textOf(back)).toContain(getMessages('es').learner.cultureTip.title);
+    expect(textOf(back)).toContain(getMessages(locale).learner.cultureTip.title);
+    expect(textOf(back)).not.toMatch(/https?:|www\./);
   });
 
   it('with game.hidden-heritage off (the launch state), plays Pic-Word Match on the same four targets and their pictures', async () => {
