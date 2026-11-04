@@ -205,7 +205,7 @@ export function pickVoice(all, want, ctx): VoiceCandidate | null;  // rankVoices
 
 **Eligibility** (a voice failing any rule is excluded, not demoted):
 1. `normLang(v.lang)` equals the wanted tag (`ko-kr`) or starts with its language (`ko`); for `es-US` the chain is `es-us`, `es-mx`, `es-419`, then any `es-*`.
-2. For Korean only: the name is not one of the Apple novelty voices `Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley` (matched as a leading word of `name`, with or without the "(한국어(한국))" suffix). The list is a constant `KO_EXCLUDED_NAMES`; the test fixture is the real `say -v '?'` output above.
+2. (Amended 2026-11-03 by `AMENDMENTS-AUDIO-CLIPS.md` AC-B12, owner bug NB-2: the novelty exclusion now applies to every language, with the wider `NOVELTY_VOICE_NAMES` list and Eloquence ids, and English and Spanish have known-good names too.) For Korean only: the name is not one of the Apple novelty voices `Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley` (matched as a leading word of `name`, with or without the "(한국어(한국))" suffix). The list is a constant `KO_EXCLUDED_NAMES`; the test fixture is the real `say -v '?'` output above.
 3. `ctx.online === false` excludes every voice with `local === false`.
 
 **Score** (higher first; ties by `id` ascending so the result is deterministic): +100 known-good name (`/\b(Yuna|유나)\b/i`, `/Google\s*한국/`, `/Microsoft\b.*\b(SunHi|InJoon|Heami)\b/i`); +40 `premium`; +30 `enhanced`; +20 `isDefault`; +15 `local === true`; +5 exact `ko-KR` over a prefix match. Quality is read from the engine field where it exists and from the name otherwise (`(Premium)`, `(Enhanced)`, and their Korean localisations `프리미엄`, `향상됨`; iOS maps Premium to `Default` at `SpeechModule.swift:62`).
