@@ -7,7 +7,7 @@ import { LOCALES, LOCALE_META, formatDate, getMessages, type UiLocale } from '@h
 import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ClassCodeField, MoveButton, TransferSheet } from '@/components/console/TransferParts';
 import type { ApiResult, ConsoleApi, TransferLearnerSideView, TransferOption, TransferPreview, TransferView } from '@/lib/console/api';
-import { canCancel, daysSince, isOpenTransfer, slotLabel, startError, startErrorText, statusLine, stepWord, type StartError } from '@/lib/console/transfer';
+import { canCancel, daysSince, endsLine, isOpenTransfer, pendingCount, slotLabel, startError, startErrorText, statusLine, stepDone, stepWord, type StartError } from '@/lib/console/transfer';
 import { consentLines, consentRecord, identityLines, type ConsentLine, type ConsentSheetData } from '@/lib/console/transfer-consent';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
@@ -333,7 +333,7 @@ function Steps({ view }: { view: TransferLearnerSideView }): JSX.Element {
     <ul aria-label={messages.console.transfer.a11y.steps} style={{ listStyle: 'none', margin: `${spacing.sm}px 0`, padding: 0 }}>
       {(['learner', 'source', 'destination'] as const).map((slot) => {
         const word = stepWord(slot, view, locale);
-        const yes = word !== messages.console.transfer.steps.waiting;
+        const yes = stepDone(slot, view);
         return (
           <li key={slot} style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minHeight: spacing.xl }}>
             <IconSvg name={yes ? 'check' : 'dash'} size={20} color={yes ? colors.feedback.success : colors.text.muted} />
@@ -368,6 +368,8 @@ export function FamilyRequestCard({ view, now, busy, answersHidden, onReview, on
   const planned = view.status === 'approved' && !view.blockReason;
   const blocked = view.status === 'approved' && !!view.blockReason;
   const teacherStarted = view.initiator === 'source';
+  // GX-4 Fix D (AMENDMENTS-GROWNUP-UX section 7.5): an open request says when it ends.
+  const ends = endsLine(view, locale);
   return (
     <article style={{ ...panel, ...(moved ? { backgroundColor: colors.feedback.successLight } : {}) }} data-testid="family-move-card">
       <div style={{ ...rowStyle, justifyContent: 'space-between' }}>
@@ -380,6 +382,11 @@ export function FamilyRequestCard({ view, now, busy, answersHidden, onReview, on
         <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{t.a11y.to}</span>
         <span>{view.to.name}</span>
       </p>
+      {ends ? (
+        <p style={{ margin: `${spacing.xs}px 0`, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) }} data-testid="family-move-ends">
+          {ends}
+        </p>
+      ) : null}
       {!moved ? <Steps view={view} /> : null}
       {line && blocked ? (
         // The room block (requests-page.md "Room block"): plain text, never a live region; the bar is decoration.
@@ -817,6 +824,12 @@ export function FamilyMoves({ familyId, familyName, api, online, refreshMs, onPa
       {note === 'stale' ? <ReloadNotice /> : null}
       {note === 'sent' ? <p role="status" style={{ ...noticeStyle, backgroundColor: colors.feedback.successLight }}>{t.start.sent}</p> : null}
 
+      {pendingCount(requests) > 0 ? (
+        // GX-4 (section 7.2): the count of moves that wait for the family's own answer, as the family's heading line.
+        <p style={{ margin: `${spacing.md}px 0 0`, fontWeight: typography.weight.semibold }} data-testid="family-needs-you-count">
+          {t.familyNeedsYou(pendingCount(requests))}
+        </p>
+      ) : null}
       <h2 style={h2Style}>{t.groups.asked}</h2>
       {open.length === 0 ? <p style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary }}>{t.empty}</p> : null}
       {open.map((view) => (

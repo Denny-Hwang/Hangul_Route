@@ -304,6 +304,7 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'landing.brand.mark',
   'landing.footer.copyright',
   'learner.audio.voiceHelp.sections.android.title',
+  'console.relink.platform.android', // a re-link request's platform (GX-12)
   // Sample values in empty fields: a rescue code, a class code, an account id, addresses and a promo code.
   'caregiver.pin.reset.code.placeholder',
   'caregiver.join.code.placeholder',
@@ -324,7 +325,7 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'caregiver.join.who.refused',
   // AMENDMENTS-GROWNUP-UX GX-1: the status chip's accessible name, the chip and its reason line joined by ": ".
   'console.status.chipName',
-  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · ", and the product name Android.
+  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · " (the product name Android is
+  // listed above with GX-12).
   'console.relinkPopup.meta',
-  'console.relink.platform.android',
 ];

@@ -97,6 +97,19 @@ export function StatusChip({ words, onActivate, testId = 'learner-status' }: { w
   );
 }
 
+/**
+ * A chip that is only text (GX-4 section 7.2, the child card on the family home): a `<span>` read with the name, never a
+ * button (the Needs you strip owns the actions). `action` is the family's own action, in the amber light fill (no border,
+ * no dot: the card keeps its shipped border); `info` a dated move.
+ */
+export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info' | 'quiet'; testId?: string }): JSX.Element {
+  return (
+    <span data-testid={testId} data-tone={tone} style={{ ...chipBase, whiteSpace: 'normal', backgroundColor: TONE_FILL[tone] }}>
+      {text}
+    </span>
+  );
+}
+
 /** The reason line under a card's header; `id` lets the inline answers name whose request it is. */
 export function ReasonLine({ id, text }: { id: string; text: string }): JSX.Element {
   return (
@@ -281,6 +294,7 @@ export function AskingToJoin({
   readOnly,
   onDecided,
   onEmptied,
+  onOpenItem,
 }: {
   items: readonly IncomingItem[];
   api: IncomingApi;
@@ -291,6 +305,8 @@ export function AskingToJoin({
   onDecided: (text: string | null) => void;
   /** The last card answered emptied the group (its heading goes too): the page moves focus on, never to the page's top. */
   onEmptied?: () => void;
+  /** GX-2: the action chip's tap opens the review sheet at this item (`incomingKey`); without it the chip reveals Accept. */
+  onOpenItem?: (key: string) => void;
 }): JSX.Element | null {
   const { messages } = useConsoleLocale();
   const headingId = useId();
@@ -322,6 +338,7 @@ export function AskingToJoin({
               headingRef.current?.focus();
               onDecided(text);
             }}
+            {...(onOpenItem ? { onOpenItem: () => onOpenItem(incomingKey(item)) } : {})}
           />
         ))}
       </div>
@@ -329,13 +346,22 @@ export function AskingToJoin({
   );
 }
 
-function IncomingCard({
+/** The review sheet's and the chip's key of an item asking to join (GX-2): its source and its opaque id, never a name. */
+export const incomingKey = (item: Pick<IncomingItem, 'source' | 'id'>): string => `incoming:${item.source}:${item.id}`;
+
+/**
+ * One learner asking to join: on the class page under *Asking to join this class*, and in the review sheet (GX-2) with
+ * `chip: false` (the sheet's title already says what every row needs).
+ */
+export function IncomingCard({
   item,
   api,
   spaceId,
   online,
   readOnly,
   onDecided,
+  onOpenItem,
+  chip = true,
 }: {
   item: IncomingItem;
   api: IncomingApi;
@@ -343,6 +369,8 @@ function IncomingCard({
   online: boolean;
   readOnly: boolean;
   onDecided: (text: string | null) => void;
+  onOpenItem?: () => void;
+  chip?: boolean;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -387,14 +415,14 @@ function IncomingCard({
   const off = !online;
 
   return (
-    <article style={cardStyle} aria-labelledby={nameId} data-testid="incoming-card" data-source={item.source}>
+    <article style={cardStyle} aria-labelledby={nameId} data-testid="incoming-card" data-source={item.source} data-sheet-key={incomingKey(item)} tabIndex={-1}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
         <span style={{ ...headRow, minWidth: 0 }}>
           {item.avatar ? <AvatarChip avatar={item.avatar} /> : null}
           <strong id={nameId} style={{ fontSize: rem(typography.size.bodyLg), letterSpacing: typography.tracking.wide }}>
             {item.alias}
           </strong>
-          <StatusChip words={words} onActivate={readOnly ? undefined : () => revealAnswers(acceptRef.current)} testId="incoming-status" />
+          {chip ? <StatusChip words={words} onActivate={readOnly ? undefined : (onOpenItem ?? (() => revealAnswers(acceptRef.current)))} testId="incoming-status" /> : null}
         </span>
         {level ? <span style={levelPill}>{level}</span> : null}
       </div>

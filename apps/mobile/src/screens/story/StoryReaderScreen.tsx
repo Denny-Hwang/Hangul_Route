@@ -47,7 +47,8 @@ const NOTHING = (): void => undefined;
  * episode page). Done, Close and the back gesture return to where it came from.
  * On the learner stack it records practice time (F-REPORT-001 section 3.3.2)
  * in a learning session that keeps the local-day run (F-CURR-002 OD-14), and
- * reaching its end earns a story's daily-goal points (section 7.4, row CM-17).
+ * reaching its end page earns a story's daily-goal points (section 7.4, row CM-17), kept when Close or Back
+ * leaves the end page (row NB-1).
  * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
 export function StoryReaderScreen(props: Props): ReactElement {
@@ -79,16 +80,20 @@ function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, 
     );
   }, [navigation, onBack, onHome]);
   const leave = exits.back;
-  // The end reached (Done on the last scene, never Close) is a finished story: its points, once per reading.
+  // The end page reached is a finished story: its points, once per reading, whether the reader then leaves with
+  // Done, Close or the device back (F-TCH-004 section 3.5 amendment NB-1: reaching the end is never undone by leaving).
   const earned = useRef(false);
   const finish = onDone ?? leave;
-  const onFinish = useCallback((): void => {
+  const onReachEnd = useCallback((): void => {
     if (navigation && profileId && !earned.current) {
       earned.current = true;
       void recordActivityPointsLater(profileId, 'story');
     }
+  }, [navigation, profileId]);
+  const onFinish = useCallback((): void => {
+    onReachEnd();
     finish();
-  }, [finish, navigation, profileId]);
+  }, [finish, onReachEnd]);
 
   const openSources = useCallback(
     (from: 'reader' | 'end', index: number): void => {
@@ -118,6 +123,7 @@ function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, 
       onSceneChange={NOTHING}
       onAnswer={NOTHING}
       onFinish={onFinish}
+      onReachEnd={onReachEnd}
       onClose={leave}
       onOpenSources={openSources}
       onOpenCultureNote={openCultureNote}

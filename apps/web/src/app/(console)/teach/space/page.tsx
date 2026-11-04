@@ -18,16 +18,19 @@ import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
 import { useOnline, useTransfersShown } from '@/components/console/TransferParts';
-import { AskingToJoin, DecidedLine, ReasonLine, RelinkAnswer, StatusChip, actionCardStyle, revealAnswers, useDecided } from '@/components/console/LearnerStatusParts';
-import { RelinkPopup } from '@/components/console/RelinkPopup';
+import { AskingToJoin, DecidedLine, ReasonLine, RelinkAnswer, StatusChip, actionCardStyle, useDecided } from '@/components/console/LearnerStatusParts';
+import { ATTENTION_HASH, AttentionBanner, ReviewSheet, sheetKey, useTitleCount, type SheetDevice, type SheetFamilyMove, type SheetOutgoing } from '@/components/console/AttentionParts';
+import { RelinkPopup, useRelinkPopup } from '@/components/console/RelinkPopup';
+import { MoveButton } from '@/components/console/TransferParts';
+import { directClassIds } from '@/lib/console/transfer-requests';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useGrownUpLocation } from '@/components/console/grown-up-location';
-import type { ConsoleApi, PlanView, RelinkView, Roster, RosterLearner, SpaceListItem, TransferView } from '@/lib/console/api';
+import type { ConsoleApi, PlanView, RelinkView, Roster, RosterLearner, SpaceListItem, TransferSourceView, TransferView } from '@/lib/console/api';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import type { ClassMoveLists } from '@/lib/console/class-moves';
-import { attentionModel, rosterOrder, statusWords, type LearnerStatus } from '@/lib/console/learner-status';
+import { attentionModel, rosterOrder, statusWords, type AttentionModel, type LearnerStatus } from '@/lib/console/learner-status';
 import { CLASS_RELINK_GAP_MS, CLASS_RELINK_REFRESH_MS } from '@/lib/console/visible-refresh';
 import { appUrl, contentGatingEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { rosterJoinLink } from '@/lib/console/join-link';
@@ -37,7 +40,7 @@ import { rosterNotesLinks } from '@/lib/console/notes-page';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { rosterReportLink } from '@/lib/console/report-view';
 import { rosterClassReportLink } from '@/lib/console/class-report-view';
-import { capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '@/lib/console/rollup';
+import { capState, classRollup, codeExpiry, familyCountLine, joinedLine, questsLine, relativeDay, rosterHeading as rosterHeadingText, rosterOrder as joinOrderFor, seatLine, weekLines } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
 import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
@@ -203,7 +206,60 @@ function SpaceInner(): JSX.Element {
     (rosterHeading.current ?? spaceHead.current)?.focus();
   }, []);
 
-  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
+  // GX-1: one status per learner, the learners asking to join and the counts (`learner-status.ts`). Re-links count
+  // whatever CLASS_TRANSFER says; the move reads are null while class moves are hidden.
+  const attention: AttentionModel | null =
+    roster && roster.space.kind !== 'school'
+      ? attentionModel({
+          kind: roster.space.kind,
+          roster: roster.learners,
+          relinks: relinkList,
+          transfers: movesAsked ? transferList : null,
+          classMoves: movesAsked && roster.space.kind === 'class' ? classMoveLists : null,
+          now,
+        })
+      : null;
+  const waiting = attention?.totals.all ?? 0;
+
+  // GX-2 (sections 5.1 to 5.4): the review sheet (opened by the banner, an action chip at its item, or `#attention` on
+  // load), the re-link pop-up (the class page only; the family roster gets the re-link bar of GX-5) and the tab title's
+  // count. The pop-up waits while the sheet or a confirm step is open.
+  // `#attention` (the teacher home's link) opens the sheet as soon as the roster is drawn: decided at the first client
+  // render, so the pop-up never opens over it. The sheet draws only once the roster is read (no markup before that).
+  const [sheet, setSheet] = useState<{ focus: string | null } | null>(() => (typeof window !== 'undefined' && window.location?.hash === ATTENTION_HASH ? { focus: null } : null));
+  const openSheet = useCallback((focus: string | null = null) => setSheet({ focus }), []);
+  const openSheetTop = useCallback(() => setSheet({ focus: null }), []);
+  // GX-D12: every re-link Approve and chip (a class or a family roster) opens the re-link dialog; it opens on its own on a
+  // class roster only (the family roster gets the re-link bar of GX-5). An archived class answers nothing here (the sheet
+  // and the cards are read-only too), so it gets no pop-up at all.
+  const popupOn = !!api && (roster?.space.kind === 'class' || roster?.space.kind === 'family') && roster.space.archivedAt === null && error !== 'forbidden' && error !== 'gone';
+  const popupSettled = useRef<string | null>(null);
+  // Each card's name, by learner: where focus goes after the dialog settles a card's request.
+  const nameEls = useRef(new Map<string, HTMLElement>());
+  const popup = useRelinkPopup({
+    relinks: relinkList,
+    blocked: sheet !== null || confirmSheet !== null,
+    enabled: popupOn,
+    auto: popupOn && roster?.space.kind === 'class',
+    listed: sheet !== null && relinkList ? relinkList.filter((r) => r.status === 'pending').map((r) => r.id) : [],
+  });
+  useTitleCount(waiting, locale);
+  // The sheet's consent card offers "Agree for both classes" from the classes this account teaches itself: the roster
+  // reads them only behind some switches, so an open sheet reads them once when they are not there yet.
+  const spacesAsked = useRef(false);
+  useEffect(() => {
+    if (sheet === null || spaces !== null || !api || spacesAsked.current) return;
+    spacesAsked.current = true;
+    void Promise.resolve()
+      .then(() => api.listSpaces())
+      .then((list) => {
+        if (list.ok) setSpaces(list.data);
+      })
+      .catch(() => undefined);
+  }, [sheet, spaces, api]);
+
+  // [GX-3] The class page draws its own approvals (chips, asking-to-join cards, its 20 s re-link read): no frame bar.
+  if (!ready || !session) return <AdultFrame attentionHere>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.
   if (roster?.space.kind === 'school' && api) return <SchoolAdmin api={api} spaceId={spaceId} onSignOut={signOut} accountId={session.accountId} />;
 
@@ -228,6 +284,10 @@ function SpaceInner(): JSX.Element {
   };
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
+  // GX-8 (T7, T8, P4): the roll-up's kind-aware lines; the anchor line hides while nobody has one.
+  const week = roster && rollup ? weekLines(roster.space.kind, rollup, locale) : null;
+  // GX-8 P4: a family's cards in the order its learners joined (as on the family home); a class keeps recent activity first.
+  const cards = roster ? joinOrderFor(roster.space.kind, roster.learners) : [];
   // The class join link and its QR code (owner decision 2026-10-17): a class with a code only, the code alone in the fragment.
   const joinLink = roster ? rosterJoinLink({ kind: roster.space.kind, code: roster.joinCode, origin: appUrl() }) : null;
   // [SA] section 3.4: the count against the roster's own cap (`seats`), not the free cap.
@@ -237,7 +297,7 @@ function SpaceInner(): JSX.Element {
   // The newest plan for everyone: a plan for one learner (a suggested start) never takes over the roster.
   const latestPlan = rosterPlan(plans);
   const lecture = lectureModeEnabled() && canComposeIn(spaces, spaceId);
-  const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
+  const readout = latestPlan && roster ? new Map(planReadout(latestPlan, roster.learners).map((r) => [r.learnerId, r])) : null;
   // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
   const weekRevisit = aroundSlot(c.space.week.revisit);
   const learnerRevisit = aroundSlot(c.space.learner.revisit);
@@ -249,19 +309,7 @@ function SpaceInner(): JSX.Element {
   // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
   const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
   // Notes (F-FEEDBACK-001 FB-11a, section 6.13 item 3): the roster header's Notes and each card's Send a note, by flag.
-  // GX-1: one status per learner, the learners asking to join and the counts (`learner-status.ts`). Re-links count
-  // whatever CLASS_TRANSFER says; the move reads are null while class moves are hidden.
-  const attention = roster
-    ? attentionModel({
-        kind: roster.space.kind,
-        roster: roster.learners,
-        relinks: relinkList,
-        transfers: movesAsked ? transferList : null,
-        classMoves: movesAsked && roster.space.kind === 'class' ? classMoveLists : null,
-        now,
-      })
-    : null;
-  const ordered = roster && attention ? rosterOrder(roster.learners, attention.byLearner, decided.pinned, lastOrder.current) : [];
+  const ordered = roster && attention ? rosterOrder(cards, attention.byLearner, decided.pinned, lastOrder.current) : [];
   lastOrder.current = ordered.map((l) => l.id);
   const relinksWaiting = attention?.totals.relinks ?? 0;
   const movesWaiting = attention?.totals.moves ?? 0;
@@ -272,6 +320,30 @@ function SpaceInner(): JSX.Element {
     decided.note(learnerId, text);
     void readRelinks();
   };
+  // GX-2 section 5.2: what the review sheet lists. New devices from the re-link read (the avatar from the roster row);
+  // moves out of this class by view (matched to a card or not); a family's moves that wait for its OK.
+  const learnerById = new Map((roster?.learners ?? []).map((l) => [l.id, l]));
+  const sheetDevices: SheetDevice[] = (relinkList ?? [])
+    .filter((r) => r.status === 'pending' && Date.parse(r.expiresAt) > now.getTime())
+    .sort((a, b) => Date.parse(a.expiresAt) - Date.parse(b.expiresAt))
+    .map((r) => ({ id: r.id, learnerId: r.learnerId, name: r.learnerName, avatar: learnerById.get(r.learnerId)?.avatar ?? null, expiresAt: r.expiresAt, platform: r.platform, requestedAt: r.requestedAt }));
+  const sourceViews = new Map((movesAsked ? (transferList ?? []) : []).filter((v): v is TransferSourceView => v.role === 'source').map((v) => [v.id, v]));
+  const sheetOutgoing: SheetOutgoing[] = (attention?.outgoing ?? []).map((item) => ({ item, view: sourceViews.get(item.id) ?? null }));
+  const sheetFamily: SheetFamilyMove[] =
+    roster?.space.kind === 'family' && movesAsked
+      ? (transferList ?? []).flatMap((v) =>
+          // Counted by `pendingCount` either way; listed only with the learner it names (a view this bundle can read).
+          v.role === 'learner_side' && v.status === 'requested' && v.learnerState === 'pending' && v.learner?.id
+            ? [{ id: v.id, learnerId: v.learner.id, name: v.learner.name, avatar: learnerById.get(v.learner.id)?.avatar ?? null, to: v.to?.name ?? null, href: ROUTES.spaceTransfers(spaceId, 'family') }]
+            : [],
+        )
+      : [];
+  /** An action chip's tap (section 4): the pop-up for a re-link; the sheet at the item for a move. */
+  const activate = (status: LearnerStatus): void => {
+    if (status.kind === 'relink' && status.relink && popupOn) popup.openFor(status.relink.id);
+    else if (status.kind === 'relink' && status.relink) openSheet(sheetKey.device(status.relink.id));
+    else if (status.kind === 'move_yours' && status.move) openSheet(roster?.space.kind === 'family' ? sheetKey.family(status.move.id) : sheetKey.outgoing(status.move.id));
+  };
   // Action cards lead the roster, so its heading no longer says "most recent activity first" while any is there.
   const actionFirst = ordered.some((l) => attention?.byLearner[l.id]?.action === true);
   const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, role: spaces?.find((item) => item.space.id === spaceId)?.role ?? null, spaceId, kind: roster.space.kind }) : null;
@@ -279,6 +351,9 @@ function SpaceInner(): JSX.Element {
   return (
     <AdultFrame
       onSignOut={signOut}
+      attentionHere
+      // [GX-3] The frame reads its counts again when this page's own change, so the Classes tab's number follows a decision.
+      attentionKey={attention ? `${relinksWaiting}:${movesWaiting}` : undefined}
       back={spacePageBack(roster?.space.kind ?? pathKind, c)}
       title={roster ? undefined : c.space.loading}
     >
@@ -300,6 +375,55 @@ function SpaceInner(): JSX.Element {
             {roster.space.kind === 'family' ? c.spaceCounts.learners(roster.learners.length) : c.spaceCounts.students(roster.learners.length)}
           </p>
         </div>
+      ) : null}
+      {roster && attention ? <AttentionBanner relinks={attention.totals.relinks} moves={attention.totals.moves} onReview={openSheetTop} /> : null}
+      {roster && attention && api && sheet ? (
+        <ReviewSheet
+          spaceId={spaceId}
+          api={api}
+          online={online}
+          readOnly={roster.space.archivedAt !== null}
+          devices={sheetDevices}
+          incoming={roster.space.kind === 'class' ? attention.incoming : []}
+          outgoing={sheetOutgoing}
+          familyMoves={sheetFamily}
+          direct={directClassIds(spaces)}
+          focusKey={sheet.focus}
+          now={now}
+          onClose={() => setSheet(null)}
+          onDecided={({ learnerId, text }) => {
+            if (learnerId && learnerById.has(learnerId)) decided.note(learnerId, text);
+            void readRelinks();
+            void load(true);
+          }}
+        />
+      ) : null}
+      {popup.pick && api ? (
+        <RelinkPopup
+          key={popup.pick.request.id + (popup.pick.reminder ? ':again' : '')}
+          api={api}
+          spaceId={spaceId}
+          request={popup.pick.request}
+          learnerName={learnerById.get(popup.pick.request.learnerId)?.displayName ?? popup.pick.request.learnerName}
+          reminder={popup.pick.reminder}
+          now={now}
+          online={online}
+          onLater={popup.close}
+          onResult={(text, settled) => {
+            const learnerId = popup.pick?.request.learnerId ?? '';
+            if (settled) {
+              popupSettled.current = learnerId;
+              popup.close();
+            }
+            afterDecision(learnerId, text, settled);
+          }}
+          focusOnClose={() => {
+            // A settled answer replaces the card's buttons with its line: focus goes to the learner's name, which stays.
+            const settledFor = popupSettled.current;
+            popupSettled.current = null;
+            return settledFor ? (nameEls.current.get(settledFor) ?? null) : null;
+          }}
+        />
       ) : null}
       {error ? (
         <div style={panelStyle}>
@@ -323,6 +447,7 @@ function SpaceInner(): JSX.Element {
                 void load(true);
               }}
               onEmptied={focusAfterIncoming}
+              onOpenItem={(key) => openSheet(key)}
             />
           ) : null}
 
@@ -359,12 +484,12 @@ function SpaceInner(): JSX.Element {
             </Notice>
           ) : null}
 
-          {rollup && !empty ? (
+          {rollup && week && !empty ? (
             <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title}>
               <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
-                <li>{c.space.week.practiced(rollup.practicedThisWeek, rollup.students)}</li>
-                <li>{c.space.week.anchor(percent(rollup.anchorAccuracy))}</li>
+                <li>{week.practiced}</li>
+                {week.anchor ? <li data-testid="week-anchor">{week.anchor}</li> : null}
                 {rollup.revisit.length ? (
                   <li>
                     {weekRevisit.before}
@@ -382,7 +507,7 @@ function SpaceInner(): JSX.Element {
                   </li>
                 ) : null}
                 <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
-                {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
+                {week.notSynced ? <li data-testid="week-not-synced">{week.notSynced}</li> : null}
               </ul>
               <ClassReportLink spaceId={spaceId} kind={roster.space.kind} locale={locale} />
             </section>
@@ -400,6 +525,7 @@ function SpaceInner(): JSX.Element {
                 <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
               </Link>
             ) : null}
+            {/* A waiting request asks the grown-up to decide: the amber nudge tone (GX-1) and the action wording (review of PR #933). */}
             <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
               <Button tone={relinksWaiting > 0 ? 'nudge' : 'secondary'} testId="relink-requests">
                 {relinksWaiting > 0 ? c.space.relinkPending.cta(relinksWaiting) : c.space.relinkRequests.cta}
@@ -426,9 +552,9 @@ function SpaceInner(): JSX.Element {
           </div>
 
           {!empty ? (
-            <section aria-label={c.space.studentsLabel}>
+            <section aria-label={roster.space.kind === 'family' ? c.space.rosterHeadingFamily : c.space.studentsLabel}>
               <h2 ref={rosterHeading} tabIndex={-1} data-testid="roster-heading" style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>
-                {actionFirst ? c.space.studentsLabel : c.space.recentFirst}
+                {actionFirst && roster.space.kind !== 'family' ? c.space.studentsLabel : rosterHeadingText(roster.space.kind, locale)}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
                 {ordered.map((l, index) => (
@@ -445,13 +571,18 @@ function SpaceInner(): JSX.Element {
                       kind={roster.space.kind}
                       online={online}
                       onDecided={(text, settled) => afterDecision(l.id, text, settled)}
+                      onActivate={activate}
+                      onNameRef={(el) => {
+                        if (el) nameEls.current.set(l.id, el);
+                        else nameEls.current.delete(l.id);
+                      }}
                     />
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm), marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
                         <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
                         <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />
-                        <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
+                        <div data-testid="quests-line">{questsLine(l.summary, locale)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
                         <JourneyStrip kind={roster.space.kind} summary={l.summary} />
                         {l.summary.needsPractice.length ? (
@@ -475,9 +606,16 @@ function SpaceInner(): JSX.Element {
                         {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
                         <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
                       </div>
-                    ) : attention?.byLearner[l.id]?.kind === 'new' ? null : (
+                    ) : attention?.byLearner[l.id]?.kind === 'new' ? (
+                      // GX-1 x GX-8: a New card's reason line already says no practice is shared yet, so a class card adds
+                      // nothing; a family card still keeps GX-8 P4's dated join ("Joined Oct 14"), the case P4 targets.
+                      roster.space.kind === 'family' ? <Muted>{joinedLine('family', l.joinedAt, now, locale)}</Muted> : null
+                    ) : (
                       <Muted>
-                        {c.notSyncedYet} · {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}
+                        {/* GX-8 P4: a family card leads with its dated join ("Joined Oct 14 · not synced yet"). */}
+                        {roster.space.kind === 'family'
+                          ? `${joinedLine('family', l.joinedAt, now, locale)} · ${c.notSyncedYet}`
+                          : `${c.notSyncedYet} · ${joinedLine(roster.space.kind, l.joinedAt, now, locale)}`}
                       </Muted>
                     )}
                     <SeeReport spaceId={spaceId} kind={roster.space.kind} learnerId={l.id} locale={locale} />
@@ -511,6 +649,8 @@ function LearnerCardHead({
   kind,
   online,
   onDecided,
+  onActivate,
+  onNameRef,
 }: {
   learner: RosterLearner;
   index: number;
@@ -523,45 +663,46 @@ function LearnerCardHead({
   kind: Roster['space']['kind'];
   online: boolean;
   onDecided: (text: string, settled: boolean) => void;
+  /** GX-2: the action chip opens the decision for its item (the pop-up for a re-link, the sheet at a move). */
+  onActivate: (status: LearnerStatus) => void;
+  /** The name element, for the page's re-link dialog to return focus to after it settles this card's request. */
+  onNameRef?: (el: HTMLElement | null) => void;
 }): JSX.Element {
   const { messages } = useConsoleLocale();
   const c = messages.console;
   const answerRow = useRef<HTMLDivElement>(null);
-  const nameRef = useRef<HTMLElement>(null);
+  const nameRef = useRef<HTMLElement | null>(null);
   const words = status && !decidedLine ? statusWords(status, now, locale) : null;
   const nameId = `roster-learner-${index}`;
   const reasonId = `roster-reason-${index}`;
   const level = levelPillLabel(learner.ageGroup, locale);
-  const reviewHref = status?.kind === 'move_yours' ? ROUTES.spaceTransfers(spaceId, kind) : null;
+  // A move out of a class opens the review sheet at its item (GX-2); a family's move goes to the family's moves page,
+  // where its consent sheet is.
+  const reviewHref = status?.kind === 'move_yours' && kind === 'family' ? ROUTES.spaceTransfers(spaceId, kind) : null;
+  const reviewInSheet = status?.kind === 'move_yours' && kind === 'class';
   const relinkAnswer = !!words && status?.kind === 'relink' && !!api;
-  // GX-D12: a re-link's chip and its Approve open the re-link dialog (hint, platform, request time); never one tap.
-  const [popupFor, setPopupFor] = useState<string | null>(null);
-  const settledRef = useRef(false);
-  const openPopup = (): void => {
-    if (!status?.relink) return;
-    settledRef.current = false;
-    setPopupFor(status.relink.id);
-  };
-  // The chip opens the decision only when the card draws it; otherwise it is the amber span, never a dead button.
-  const activate = relinkAnswer ? openPopup : words && reviewHref ? () => revealAnswers(answerRow.current) : undefined;
+  // The chip opens the decision (GX-2) only when the card draws an answer; otherwise it is the amber span, never a dead button.
+  // A re-link's chip and its Approve both open the page's re-link dialog (GX-D12: hint, platform, request time; never one tap).
+  const activate = status && (relinkAnswer || (words && (reviewHref || reviewInSheet))) ? () => onActivate(status) : undefined;
   // A settled answer replaces the buttons with the result line: focus goes to the learner's name, which stays, so a
   // keyboard or screen-reader user keeps their place (the polite region says the result).
   const answered = (text: string, settled: boolean): void => {
-    if (settled) {
-      settledRef.current = true;
-      setPopupFor(null);
-      nameRef.current?.focus();
-    }
+    if (settled) nameRef.current?.focus();
     onDecided(text, settled);
   };
-  // The dialog shows only while its request is still this card's (a poll that finds it closed takes the dialog away).
-  const popupRequest = popupFor && relinkAnswer && status?.relink?.id === popupFor ? status.relink : null;
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
         <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
           <AvatarChip avatar={learner.avatar} />
-          <strong id={nameId} ref={nameRef} tabIndex={-1}>
+          <strong
+            id={nameId}
+            ref={(el) => {
+              nameRef.current = el;
+              onNameRef?.(el);
+            }}
+            tabIndex={-1}
+          >
             {learner.displayName}
           </strong>
           {words ? <StatusChip words={words} onActivate={activate} /> : null}
@@ -581,22 +722,16 @@ function LearnerCardHead({
           describedBy={words.reason ? `${nameId} ${reasonId}` : nameId}
           online={online}
           rowRef={answerRow}
-          onApprove={openPopup}
+          onApprove={() => onActivate(status)}
           onResult={answered}
         />
       ) : null}
-      {popupRequest && api ? (
-        <RelinkPopup
-          api={api}
-          spaceId={spaceId}
-          request={popupRequest}
-          learnerName={learner.displayName}
-          online={online}
-          now={now}
-          onLater={() => setPopupFor(null)}
-          onResult={answered}
-          focusOnClose={() => (settledRef.current ? nameRef.current : null)}
-        />
+      {words && reviewInSheet && status ? (
+        <div ref={answerRow} style={{ marginTop: spacing.sm }}>
+          <MoveButton primary describedBy={words.reason ? `${nameId} ${reasonId}` : nameId} onClick={() => onActivate(status)} testId="move-review">
+            {c.status.review.cta}
+          </MoveButton>
+        </div>
       ) : null}
       {words && reviewHref ? (
         <div ref={answerRow} style={{ marginTop: spacing.sm }}>
@@ -667,7 +802,7 @@ function ClassReportLink({ spaceId, kind, locale }: { spaceId: string; kind: Ros
 
 export default function SpacePage(): JSX.Element {
   return (
-    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
+    <Suspense fallback={<AdultFrame attentionHere>{null}</AdultFrame>}>
       <SpaceInner />
     </Suspense>
   );

@@ -150,8 +150,20 @@ const fakeDocument = {
     if (type === 'visibilitychange') listeners.delete(l);
   },
 };
+// GX-2's pop-up opens on its own for a request this tab has not shown (attention-wiring.test.tsx covers that). These GX-1
+// cases open the dialog from the card, so every request here starts as already shown and reminded.
+const session: Record<string, string> = {};
 const fakeWindow = {
   location: { pathname: '/teach/space', search: '', origin: 'https://app.hangulroute.com' },
+  sessionStorage: {
+    getItem: (k: string) => session[k] ?? null,
+    setItem: (k: string, v: string) => {
+      session[k] = v;
+    },
+    removeItem: (k: string) => {
+      delete session[k];
+    },
+  },
   addEventListener: () => undefined,
   removeEventListener: () => undefined,
 };
@@ -174,6 +186,9 @@ beforeEach(() => {
     member('profile:mina', 'Mina', { joinedAt: '2026-10-30T08:00:00.000Z', summary: null, lastSyncedAt: null }),
   ];
   state.relinks = [relinkFor('profile:jaehan', 'Jaehan')];
+  for (const key of Object.keys(session)) delete session[key];
+  session['hr:console:relinkShown'] = JSON.stringify(['relink:jaehan', 'relink:yuhan']);
+  session['hr:console:relinkReminded'] = JSON.stringify(['relink:jaehan', 'relink:yuhan']);
   state.transfers = [incomingTransfer];
   state.incoming = [teacherMoveIn];
   state.decide = ok({});
@@ -405,7 +420,7 @@ describe('the counts and the reads (sections 3.4, 5.4)', () => {
     await render();
     const text = textOf(root());
     expect(text).toContain('2 class moves waiting');
-    expect(text).toContain('1 re-link request');
+    expect(text).toContain('1 new device needs your OK');
   });
 
   it('reads its re-links alone every 20 s while the tab is in view, never the whole page', async () => {

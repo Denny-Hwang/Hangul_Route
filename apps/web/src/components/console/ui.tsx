@@ -40,6 +40,25 @@ export const buttonBase: CSSProperties = {
 };
 
 /**
+ * The console's pill select (the notes filter's look, AMENDMENTS-GROWNUP-UX T12): as tall as a button, never wider than
+ * its row, the label in the button type.
+ */
+export const selectBase: CSSProperties = {
+  minHeight: touchTarget.min,
+  maxWidth: '100%',
+  minWidth: 0,
+  boxSizing: 'border-box',
+  padding: `0 ${spacing.lg}px`,
+  borderRadius: radii.pill,
+  border: `${borderWidth.thin}px solid ${colors.border.strong}`,
+  backgroundColor: colors.surface.paper,
+  color: colors.text.primary,
+  fontFamily: 'inherit',
+  fontSize: rem(typography.size.bodySm),
+  fontWeight: typography.weight.bold,
+};
+
+/**
  * `dangerText` (AMENDMENTS-GROWNUP-UX GX-10, T11 and P7): the quieter look of a destructive action that sits beside a
  * main one on a row (Remove beside Move): the same size and box as every console button, no fill and no border, the
  * label underlined in the danger colour. It always runs behind the shipped confirm.
@@ -49,7 +68,7 @@ export const buttonBase: CSSProperties = {
  */
 export type ButtonTone = 'primary' | 'secondary' | 'danger' | 'dangerText' | 'nudge';
 
-export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: ButtonTone; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
+export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel, describedBy }: { children: ReactNode; tone?: ButtonTone; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string; describedBy?: string }): JSX.Element {
   const toneStyle: CSSProperties =
     tone === 'primary'
       ? { backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderColor: colors.brand.primary }
@@ -61,7 +80,7 @@ export function Button({ children, tone = 'secondary', disabled, onClick, type =
             ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` }
             : {};
   return (
-    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
+    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} aria-describedby={describedBy} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}
     </button>
   );

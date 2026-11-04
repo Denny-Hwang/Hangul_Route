@@ -173,6 +173,8 @@ const LITERALLY_SHARED: readonly string[] = [
   'console.lecture.outline.addQuiz.cta',
   'console.settings.grownUps.role.admin',
   'landing.footer.app',
+  'console.relink.platform.android', // the platform's name (GX-12)
+  'console.relink.platform.web', // the platform's name, the word Spanish uses as it is (GX-12)
   'landing.licenses.softwareTitle', // "Software", a word Spanish borrows (open-source notices, 2026-10-14)
   'landing.licenses.where.app', // "App", as landing.footer.app
   'learner.audio.voiceHelp.sections.android.title',
@@ -210,9 +212,7 @@ const LITERALLY_SHARED: readonly string[] = [
   'a11y.minigame.matchShape.originTile',
   // AMENDMENTS-GROWNUP-UX GX-1: the status chip's accessible name, the chip and its reason line joined by ": ".
   'console.status.chipName',
-  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · ", and two platform names that are
-  // the same word in Spanish.
+  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · " (the two platform names that are
+  // the same word in Spanish are listed above with GX-12).
   'console.relinkPopup.meta',
-  'console.relink.platform.android',
-  'console.relink.platform.web',
 ];
