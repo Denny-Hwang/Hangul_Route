@@ -14,6 +14,11 @@ export function offlineCacheSupported(): boolean {
   return false;
 }
 
+/** No service worker on native. */
+export function onWorkerChange(_fn: () => void): () => void {
+  return () => undefined;
+}
+
 export async function readOfflineIndex(_fresh = false): Promise<unknown> {
   return null;
 }

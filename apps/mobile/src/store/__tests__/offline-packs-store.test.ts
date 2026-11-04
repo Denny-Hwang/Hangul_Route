@@ -145,14 +145,14 @@ describe('offline packs store (row CM-5B)', () => {
   it('a new build: init drops an older build’s later chunks and saves a chosen stage again; offline it waits', async () => {
     const online = fakeDevice({}, { cached: [OLD, CLIP], chosen: ['stage2'], laterKeys: [OLD, V2] });
     const store = createOfflinePacksStore(online.deps);
-    await store.getState().init();
+    await store.getState().refresh();
     expect(online.deps.dropLaterUrls).toHaveBeenCalledWith([OLD]);
     expect(online.disk.has(V2)).toBe(true);
     expect(store.getState().rows()[0]?.state).toBe('saved');
 
     const offline = fakeDevice({ online: () => false }, { chosen: ['stage2'] });
     const quiet = createOfflinePacksStore(offline.deps);
-    await quiet.getState().init();
+    await quiet.getState().refresh();
     expect(offline.deps.saveFile).not.toHaveBeenCalled();
     expect(quiet.getState().rows()[0]?.state).toBe('notSaved');
   });
@@ -174,7 +174,7 @@ describe('offline packs store (row CM-5B)', () => {
   it('a choice stored for a stage the index no longer has is dropped; busy blocks a second action', async () => {
     const { deps } = fakeDevice({}, { chosen: ['stage7', 'stage5'] });
     const store = createOfflinePacksStore(deps);
-    await store.getState().init();
+    await store.getState().refresh();
     expect(store.getState().chosen).toEqual(['stage5']);
     const first = store.getState().save('stage2');
     await store.getState().save('stage5');
@@ -183,5 +183,77 @@ describe('offline packs store (row CM-5B)', () => {
     // The chosen Stage 5 tale topped up at init, then Stage 2's two files; the second save and the remove did nothing.
     expect(deps.saveFile).toHaveBeenCalledTimes(3);
     expect(store.getState().chosen).toEqual(['stage5', 'stage2']);
+  });
+
+  it('init resolves once the device is read, before any top-up download (nothing that waits on it waits on the network)', async () => {
+    let release = (): void => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const { deps, disk } = fakeDevice(
+      {
+        saveFile: vi.fn(async (f: OfflineFile) => {
+          await gate;
+          disk.add(f.url);
+        }),
+      },
+      { chosen: ['stage5'] },
+    );
+    const store = createOfflinePacksStore(deps);
+    await store.getState().init();
+    expect(store.getState().status).toBe('ready');
+    expect(disk.has(TALE)).toBe(false);
+    const topped = store.getState().refresh();
+    release();
+    await topped;
+    expect(disk.has(TALE)).toBe(true);
+  });
+
+  it('a page that started with no worker in control starts once one is (refresh), and an offline start tops up back online', async () => {
+    let controlled = false;
+    let online = false;
+    const { deps, disk } = fakeDevice({ supported: () => controlled, online: () => online }, { chosen: ['stage5'] });
+    const store = createOfflinePacksStore(deps);
+    await store.getState().init();
+    expect(store.getState().status).toBe('unsupported');
+    controlled = true;
+    await store.getState().refresh();
+    expect(store.getState().status).toBe('ready');
+    expect(disk.has(TALE)).toBe(false);
+    online = true;
+    await store.getState().refresh();
+    expect(disk.has(TALE)).toBe(true);
+    // Native never starts.
+    const native = createOfflinePacksStore(fakeDevice({ native: true }).deps);
+    await native.getState().refresh();
+    expect(native.getState().status).toBe('unsupported');
+  });
+
+  it('drops stale files once a page, never after a newer build’s files were saved ahead', async () => {
+    const { deps } = fakeDevice({}, { chosen: ['stage2'], laterKeys: [OLD] });
+    const store = createOfflinePacksStore(deps);
+    await store.getState().refresh();
+    await store.getState().refresh();
+    expect(deps.dropLaterUrls).toHaveBeenCalledTimes(1);
+    const ahead = fakeDevice({}, { cached: [V2, CLIP, OLD], chosen: ['stage2'] });
+    ahead.deps.laterCacheUrls = async () => [...ahead.disk];
+    const waiting = createOfflinePacksStore(ahead.deps);
+    await waiting.getState().init();
+    await waiting.getState().refreshForUpdate();
+    await waiting.getState().refresh();
+    expect(ahead.disk.has(V2_NEW)).toBe(true);
+    expect(ahead.disk.has(OLD)).toBe(false);
+  });
+
+  it('a save asks the browser to keep the site’s storage', async () => {
+    const persist = vi.fn(async () => true);
+    const store = createOfflinePacksStore(fakeDevice({ persist }).deps);
+    await store.getState().refresh();
+    await store.getState().save('stage5');
+    expect(persist).toHaveBeenCalledTimes(1);
+    const refused = createOfflinePacksStore(fakeDevice({ persist: async () => Promise.reject(new Error('no')) }).deps);
+    await refused.getState().refresh();
+    await refused.getState().save('stage5');
+    expect(refused.getState().rows()[1]?.state).toBe('saved');
   });
 });

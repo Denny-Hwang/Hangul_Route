@@ -82,9 +82,25 @@ describe('offline cache on the web (row CM-5B)', () => {
     expect(await laterCacheUrls()).toEqual([JS]);
     await dropLaterUrls([JS]);
     expect(await laterCacheUrls()).toEqual([]);
-    await saveFile({ url: '/a.mp3', bytes: 1, cache: 'hr-audio-say-v1' });
-    await removeFiles([{ url: '/a.mp3', bytes: 1, cache: 'hr-audio-say-v1' }]);
+    await saveFile({ url: '/a.mp3', bytes: 1, cache: 'hr-offline-audio-v1' });
+    expect([...(await cachedUrls(['/a.mp3']))]).toEqual(['/a.mp3']);
+    // An older build's saved clip is listed and dropped like a chunk.
+    expect(await laterCacheUrls()).toEqual(['/a.mp3']);
+    await dropLaterUrls(['/a.mp3']);
     expect((await cachedUrls(['/a.mp3'])).size).toBe(0);
+    await saveFile({ url: '/a.mp3', bytes: 1, cache: 'hr-offline-audio-v1' });
+    await removeFiles([{ url: '/a.mp3', bytes: 1, cache: 'hr-offline-audio-v1' }]);
+    expect((await cachedUrls(['/a.mp3'])).size).toBe(0);
+  });
+
+  it('counts a file as on the device only in a saved cache: a clip only in a bounded clip cache may be pushed out', async () => {
+    const c = fakeCaches();
+    vi.stubGlobal('caches', c.api);
+    vi.stubGlobal('fetch', async () => js());
+    await saveFile({ url: '/b.mp3', bytes: 1, cache: 'hr-audio-say-v1' });
+    expect((await cachedUrls(['/b.mp3'])).size).toBe(0);
+    // Reading never creates a saved cache.
+    expect([...c.stores.keys()]).toEqual(['hr-audio-say-v1']);
   });
 
   it('never keeps an HTML page or an error as the file, and names a full disk', async () => {

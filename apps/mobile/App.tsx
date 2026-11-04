@@ -34,6 +34,7 @@ import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
 import { contentScope } from './src/content/later-content';
 import { offlinePacks } from './src/store/offline-packs-store';
+import { onWorkerChange } from './src/platform/offline-cache';
 import { usePwaStore } from './src/store/pwa-store';
 import { startRemoteConfig } from './src/store/remote-config-store';
 import { wireUpperCards } from './src/store/upper-cards-wiring';
@@ -181,6 +182,8 @@ export default function App(): ReactElement {
       // A new build is waiting: the stages a grown-up saved for offline get its files now, before it applies (row CM-5B).
       if (event === 'update-ready') void offlinePacks.getState().refreshForUpdate();
       if (event === 'back-online') {
+        // Save for offline (row CM-5B): a page that started offline tops up the chosen stages now.
+        void offlinePacks.getState().refresh();
         void flushQueue();
         void useSyncStore.getState().syncAll();
         // Lesson chunks or titles that failed offline load now (F-CURR-002 §10); loaded ones are not asked again.
@@ -190,8 +193,11 @@ export default function App(): ReactElement {
         stopPrefetch = prefetchWhenIdle(prefetchContent);
       }
     });
+    // A first visit's service worker takes control after the page started: Save for offline can start then (row CM-5B).
+    const offWorker = onWorkerChange(() => void offlinePacks.getState().refresh());
     return () => {
       live = false;
+      offWorker();
       stopPrefetch();
       uninstallUnlock();
       unbindLevel();

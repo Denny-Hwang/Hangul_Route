@@ -18,7 +18,7 @@ import {
   laterTotals,
   offlinePacksIndex,
 } from '../pwa/offline-packs.mjs';
-import { REF_RUNTIME_CACHE, SAY_RUNTIME_CACHE } from '../audio/lib.mjs';
+import { OFFLINE_AUDIO_CACHE } from '../audio/lib.mjs';
 import { PRECACHE_BUDGET, md5 } from '../pwa/lesson-chunks.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -143,15 +143,15 @@ describe('offlinePacksIndex', () => {
   ];
   const index = offlinePacksIndex({ later, clips, packOf: (ref) => packs.get(ref) });
 
-  it('lists each stage with later content, its later chunks and its own audio pack, each file with its bytes and cache', () => {
+  it('lists each stage with later content, its later chunks and its own audio pack (in the saved-clip cache, no expiry), each file with its bytes and cache', () => {
     expect(index.version).toBe(OFFLINE_PACKS_VERSION);
     expect(index.stages.map((s) => s.stage)).toEqual(['stage2', 'stage5']);
     const [s2, s5] = index.stages;
     expect(s2.bytes).toBe(45_000);
     expect(s2.files).toEqual([
       { url: `/${later[0].url}`, bytes: 40_000, cache: LATER_CACHE },
-      { url: '/assets/assets/audio/dialogue/s2-hello.mp3', bytes: 2_000, cache: REF_RUNTIME_CACHE.cacheName },
-      { url: '/assets/assets/audio/say/0123456789abcdef.1a2b.mp3', bytes: 3_000, cache: SAY_RUNTIME_CACHE.cacheName },
+      { url: '/assets/assets/audio/dialogue/s2-hello.mp3', bytes: 2_000, cache: OFFLINE_AUDIO_CACHE },
+      { url: '/assets/assets/audio/say/0123456789abcdef.1a2b.mp3', bytes: 3_000, cache: OFFLINE_AUDIO_CACHE },
     ]);
     // Stage 3 has clips but no later chunk: nothing to save. jamo-s1 is precached; an image is no clip.
     expect(s5).toEqual({ stage: 'stage5', bytes: 45_000, files: [{ url: `/${later[1].url}`, bytes: 45_000, cache: LATER_CACHE }] });

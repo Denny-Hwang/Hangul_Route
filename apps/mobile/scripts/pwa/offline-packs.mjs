@@ -7,10 +7,12 @@
 // each stage's files, their bytes (the storage estimate) and the cache each one belongs in.
 // Pure: pwa-postbuild.mjs feeds it the manifests, the built bundles and the built clips.
 
-import { refOfBuiltClip, SAY_AUDIO_GROUP, REF_RUNTIME_CACHE, SAY_RUNTIME_CACHE } from '../audio/lib.mjs';
+import { refOfBuiltClip, OFFLINE_AUDIO_CACHE } from '../audio/lib.mjs';
 
 /** The runtime cache of the later chunks. Its name never changes with a build: the app saves into it, and a service worker update keeps it. */
 export const LATER_CACHE = 'hr-later-v1';
+/** The cache saved clips go in (no expiry; both clip rules read it), re-exported for the app's equality test. */
+export { OFFLINE_AUDIO_CACHE };
 /** The index the app reads (precached, at the site root). */
 export const OFFLINE_PACKS_FILE = 'offline-packs.json';
 /** The index's shape version; the app ignores an index of another version (an older or newer build). */
@@ -129,9 +131,6 @@ export function laterRuntimeCaching(later) {
   };
 }
 
-/** The runtime cache a built clip belongs in (the rules of audio/lib.mjs `audioRuntimeCaching`). */
-const clipCache = (ref) => (ref.startsWith(`audio/${SAY_AUDIO_GROUP}/`) ? SAY_RUNTIME_CACHE.cacheName : REF_RUNTIME_CACHE.cacheName);
-
 /**
  * The index the app reads (`offline-packs.json`): for each stage with later content, its files (the later chunks and
  * the clips of the stage's audio pack, `stage<n>`), each with its bytes and its cache, and the stage's total. A stage
@@ -151,7 +150,9 @@ export function offlinePacksIndex({ later, clips = [], packOf = () => undefined 
     const ref = refOfBuiltClip(clip.url);
     const pack = ref === null ? undefined : packOf(ref);
     if (ref === null || pack === undefined || !/^stage[1-7]$/.test(pack) || !stages.has(pack)) continue;
-    add(pack, { url: `/${clip.url.replace(/^\/+/, '')}`, bytes: clip.bytes, cache: clipCache(ref) });
+    // Saved clips go in a cache with no expiry, which both clip rules read (audio/lib.mjs `savedClipFallback`), so
+    // playing other clips never pushes a saved one out of the bounded runtime caches.
+    add(pack, { url: `/${clip.url.replace(/^\/+/, '')}`, bytes: clip.bytes, cache: OFFLINE_AUDIO_CACHE });
   }
   return {
     version: OFFLINE_PACKS_VERSION,

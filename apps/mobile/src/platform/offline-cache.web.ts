@@ -1,10 +1,12 @@
 import type { OfflineFile, SpaceEstimate } from '../logic/offline/offline-packs';
-import { LATER_CACHE } from '../logic/offline/offline-packs';
+import { SAVED_CACHES } from '../logic/offline/offline-packs';
 
 /**
  * Save for offline on the web (F-CURR-002 row CM-5B): Cache Storage through the page. The service worker reads the
- * same caches (its runtime rules for the later chunks, `hr-later-v1`, and for the clips), so a file put here plays
- * offline. The index (`/offline-packs.json`) is precached, so it reads offline too.
+ * same caches (its runtime rule for the later chunks, `hr-later-v1`, and its clip rules, which read the saved clips,
+ * `hr-offline-audio-v1`, on a miss), so a file put here plays offline. Neither cache expires, so a file counts as on
+ * the device only there: a clip that is only in a bounded clip cache may be pushed out, so Save copies it. The index
+ * (`/offline-packs.json`) is precached, so it reads offline too.
  */
 
 interface CacheLike {
@@ -21,7 +23,10 @@ interface CachesLike {
 interface Host {
   caches?: CachesLike;
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
-  navigator?: { serviceWorker?: { controller?: unknown }; storage?: { estimate?: () => Promise<{ quota?: number; usage?: number }> } };
+  navigator?: {
+    serviceWorker?: { controller?: unknown; addEventListener?: (type: 'controllerchange', fn: () => void) => void; removeEventListener?: (type: 'controllerchange', fn: () => void) => void };
+    storage?: { estimate?: () => Promise<{ quota?: number; usage?: number }> };
+  };
   location?: { origin?: string };
 }
 
@@ -43,6 +48,17 @@ export function offlineCacheSupported(): boolean {
 }
 
 /**
+ * Calls `fn` when a service worker takes control of the page (a first visit's worker after `clientsClaim`, or an
+ * update), so Save for offline can start on a page that opened before one was in control. Returns the unsubscribe.
+ */
+export function onWorkerChange(fn: () => void): () => void {
+  const sw = host().navigator?.serviceWorker;
+  if (typeof sw?.addEventListener !== 'function') return () => undefined;
+  sw.addEventListener('controllerchange', fn);
+  return () => sw.removeEventListener?.('controllerchange', fn);
+}
+
+/**
  * The index: the precached one (this build's), or with `fresh` the network's (a waiting service worker's build, so a
  * saved stage is topped up before the update applies). Null when it cannot be read.
  */
@@ -59,17 +75,37 @@ export async function readOfflineIndex(fresh = false): Promise<unknown> {
   }
 }
 
-/** Which of these URLs a cache holds. */
-export async function cachedUrls(urls: readonly string[]): Promise<Set<string>> {
+/** The saved caches that exist (opening one would create it). */
+async function savedCaches(): Promise<CacheLike[]> {
   const caches = host().caches;
+  if (caches === undefined) return [];
+  const out: CacheLike[] = [];
+  for (const name of SAVED_CACHES) {
+    try {
+      if (await caches.has(name)) out.push(await caches.open(name));
+    } catch {
+      // An unreadable cache holds nothing saved.
+    }
+  }
+  return out;
+}
+
+/** Which of these URLs a saved cache (no expiry) holds. */
+export async function cachedUrls(urls: readonly string[]): Promise<Set<string>> {
   const out = new Set<string>();
-  if (caches === undefined) return out;
+  const stores = await savedCaches();
+  if (stores.length === 0) return out;
   await Promise.all(
     urls.map(async (url) => {
-      try {
-        if ((await caches.match(url)) !== undefined) out.add(url);
-      } catch {
-        // An unreadable entry counts as not saved.
+      for (const store of stores) {
+        try {
+          if ((await store.match(url)) !== undefined) {
+            out.add(url);
+            return;
+          }
+        } catch {
+          // An unreadable entry counts as not saved.
+        }
       }
     }),
   );
@@ -124,22 +160,23 @@ export async function removeFiles(files: readonly OfflineFile[]): Promise<void> 
   );
 }
 
-/** Site-relative URLs the later cache holds (to drop an older build's chunks). */
+/** Site-relative URLs the saved caches hold (to drop an older build's chunks and clips). */
 export async function laterCacheUrls(): Promise<string[]> {
-  const h = host();
-  try {
-    if (h.caches === undefined || !(await h.caches.has(LATER_CACHE))) return [];
-    const keys = await (await h.caches.open(LATER_CACHE)).keys();
-    const origin = h.location?.origin ?? '';
-    return keys.map((k) => (origin !== '' && k.url.startsWith(origin) ? k.url.slice(origin.length) : new URL(k.url, 'http://x').pathname));
-  } catch {
-    return [];
+  const origin = host().location?.origin ?? '';
+  const out: string[] = [];
+  for (const store of await savedCaches()) {
+    try {
+      for (const k of await store.keys()) out.push(origin !== '' && k.url.startsWith(origin) ? k.url.slice(origin.length) : new URL(k.url, 'http://x').pathname);
+    } catch {
+      // An unreadable cache lists nothing.
+    }
   }
+  return [...new Set(out)];
 }
 
-/** Drops these later-cache URLs. */
+/** Drops these URLs from the saved caches. */
 export async function dropLaterUrls(urls: readonly string[]): Promise<void> {
-  await removeFiles(urls.map((url) => ({ url, bytes: 0, cache: LATER_CACHE })));
+  await removeFiles(SAVED_CACHES.flatMap((cache) => urls.map((url) => ({ url, bytes: 0, cache }))));
 }
 
 /** The browser's storage estimate for this site, when it gives one. */

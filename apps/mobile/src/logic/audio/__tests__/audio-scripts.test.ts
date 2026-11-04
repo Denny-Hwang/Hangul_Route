@@ -1,13 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AUDIO_PACKS, AUDIO_REF_PATTERN as SCHEMA_PATTERN, type Jamo } from '@hangul-route/content-schema';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { jamoAll, jamoWordBuilder } from '../../../content/jamo';
 import {
   AUDIO_REF_PATTERN,
   PRECACHED_AUDIO_PACKS,
   REF_RUNTIME_CACHE,
   SAY_RUNTIME_CACHE,
+  OFFLINE_AUDIO_CACHE,
+  savedClipFallback,
   audioPrecacheIgnores,
   clipPackMap,
   clipUnitOfSource,
@@ -287,15 +289,48 @@ describe('scripts/audio/lib: the PWA precache rules (AD10, AC-B6)', () => {
     expect(ignores.some((g) => g.includes('/giyeok.') || g.includes('/giyeok-name.'))).toBe(false);
   });
 
+  it('a clip saved for offline (row CM-5B) answers a miss in either bounded cache, before the network; a hit stays the hit', async () => {
+    expect(OFFLINE_AUDIO_CACHE).toBe('hr-offline-audio-v1');
+    // Serialized into sw.js, so the cache is named literally in its body.
+    expect(String(savedClipFallback.cachedResponseWillBeUsed)).toContain(`'${OFFLINE_AUDIO_CACHE}'`);
+    const saved = new Response('saved');
+    const opened: string[] = [];
+    const asked: string[] = [];
+    vi.stubGlobal('caches', {
+      open: async (name: string) => {
+        opened.push(name);
+        return {
+          match: async (url: string) => {
+            asked.push(url);
+            return url.endsWith('/kept.mp3') ? saved : undefined;
+          },
+        };
+      },
+    });
+    try {
+      const request = (path: string) => ({ url: `https://app.example${path}` }) as Request;
+      expect(await savedClipFallback.cachedResponseWillBeUsed({ cachedResponse: null, request: request('/audio/say/kept.mp3') })).toBe(saved);
+      expect(await savedClipFallback.cachedResponseWillBeUsed({ cachedResponse: null, request: request('/audio/say/other.mp3') })).toBeNull();
+      const hit = new Response('hit');
+      expect(await savedClipFallback.cachedResponseWillBeUsed({ cachedResponse: hit, request: request('/audio/say/kept.mp3') })).toBe(hit);
+      expect(new Set(opened)).toEqual(new Set([OFFLINE_AUDIO_CACHE]));
+      expect(asked).toEqual(['https://app.example/audio/say/kept.mp3', 'https://app.example/audio/say/other.mp3']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('the say clips get their own cache-first cache of 1,600, the record clips keep hr-audio-v1 and its 400', () => {
     const [say, refs] = audioRuntimeCaching();
     expect(SAY_RUNTIME_CACHE).toEqual({ cacheName: 'hr-audio-say-v1', maxEntries: 1600 });
     expect(REF_RUNTIME_CACHE).toEqual({ cacheName: 'hr-audio-v1', maxEntries: 400 });
     const audioOnly = { statuses: [200], headers: { 'content-type': 'audio/mpeg' } };
     expect(say?.handler).toBe('CacheFirst');
-    expect(say?.options).toEqual({ cacheName: 'hr-audio-say-v1', expiration: { maxEntries: 1600 }, cacheableResponse: audioOnly });
+    expect(say?.options).toEqual({ cacheName: 'hr-audio-say-v1', expiration: { maxEntries: 1600 }, cacheableResponse: audioOnly, plugins: [savedClipFallback] });
     expect(refs?.handler).toBe('CacheFirst');
-    expect(refs?.options).toEqual({ cacheName: 'hr-audio-v1', expiration: { maxEntries: 400 }, cacheableResponse: audioOnly });
+    expect(refs?.options).toEqual({ cacheName: 'hr-audio-v1', expiration: { maxEntries: 400 }, cacheableResponse: audioOnly, plugins: [savedClipFallback] });
+    // The plugins come after the expiration rule, so Workbox runs the expiration plugin first (key order).
+    expect(Object.keys(refs?.options ?? {}).at(-1)).toBe('plugins');
     const host = 'https://app.hangulroute.com/assets/assets/audio';
     expect(say?.urlPattern.test(`${host}/say/1098bbe54520ab2a.0d663d9a0166e1ebe46c80873605ae07.mp3`)).toBe(true);
     expect(say?.urlPattern.test(`${host}/say/1098bbe54520ab2a.mp3`)).toBe(true);

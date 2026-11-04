@@ -27,7 +27,7 @@ import {
   spaceEstimate,
 } from '../platform/offline-cache';
 import { isOnline } from '../platform/online';
-import { readJson, writeJson } from '../platform/storage';
+import { readJson, requestPersistence, writeJson } from '../platform/storage';
 
 /**
  * Save for offline (F-CURR-002 §10 item 4, row CM-5B; wireframe `design/wireframes/pwa/save-for-offline.md`). One per
@@ -35,7 +35,9 @@ import { readJson, writeJson } from '../platform/storage';
  * book 2 tale) are on the device, so a whole-catalogue screen loads only those offline and the lesson page can say,
  * calmly, that a later volume needs the internet the first time; and it saves or removes a stage for the grown-up card.
  * The stages a grown-up chose are kept (`device:offline-saved`) and topped up when a new build arrives, before it
- * applies (`refreshForUpdate`) and again once it runs (`init`), so a saved stage stays saved through an update.
+ * applies (`refreshForUpdate`) and again once it runs (`refresh`, started by `init` in the background and again when
+ * the connection or a worker in control arrives), so a saved stage stays saved through an update. `init` itself only
+ * reads what is on the device, so nothing that waits on it (the background content load) waits on a download.
  */
 
 export const CHOSEN_KEY = 'device:offline-saved';
@@ -65,8 +67,13 @@ export interface OfflinePacksState {
 }
 
 export interface OfflinePacksActions {
-  /** Reads the index and the caches; drops an older build's chunks and tops up the chosen stages when online. */
+  /** Reads the index and the caches (once a page); then starts `refresh` in the background. */
   init: () => Promise<void>;
+  /**
+   * Starts again a page that could not (no worker in control yet, a cache that failed), then, online, drops an older
+   * build's saved files and tops up the chosen stages. Run on start (by `init`), back online and when a worker takes control.
+   */
+  refresh: () => Promise<void>;
   /** Saves these stages (`all`: every stage of the index). */
   save: (which: StageKey | 'all') => Promise<void>;
   remove: (stage: StageKey) => Promise<void>;
@@ -90,6 +97,8 @@ export interface OfflinePacksDeps {
   online: () => boolean;
   readChosen: () => Promise<StageKey[] | null>;
   writeChosen: (stages: readonly StageKey[]) => Promise<void>;
+  /** Asks the browser to keep this site's storage under pressure (a save is a promise to keep it); none when omitted. */
+  persist?: () => Promise<boolean>;
 }
 
 const reasonOf = (error: unknown): SaveProblem => {
@@ -99,6 +108,22 @@ const reasonOf = (error: unknown): SaveProblem => {
 
 export function createOfflinePacksStore(deps: OfflinePacksDeps): StoreApi<OfflinePacksState & OfflinePacksActions> {
   let started: Promise<void> | null = null;
+  // Files being fetched now, by URL: a save and a background top-up that want the same file fetch it once.
+  const inFlight = new Map<string, Promise<void>>();
+  const saveOnce = (file: OfflineFile): Promise<void> => {
+    let pending = inFlight.get(file.url);
+    if (pending === undefined) {
+      pending = deps.saveFile(file).finally(() => {
+        inFlight.delete(file.url);
+      });
+      inFlight.set(file.url, pending);
+    }
+    return pending;
+  };
+  let syncing: Promise<void> | null = null;
+  // Stale files are dropped once a page, as it starts: later in its life a newer build may be on the way (its files
+  // saved ahead by `refreshForUpdate`, or its worker in control), and this build must not drop them as files it does not name.
+  let staleChecked = false;
 
   return createStore<OfflinePacksState & OfflinePacksActions>((set, get) => {
     const recount = async (index: OfflinePacksIndex): Promise<void> => {
@@ -114,7 +139,7 @@ export function createOfflinePacksStore(deps: OfflinePacksDeps): StoreApi<Offlin
           const file = files[next];
           next += 1;
           if (file === undefined) return;
-          await deps.saveFile(file);
+          await saveOnce(file);
           onBytes(file.bytes);
           if (index !== null && get().index === index) {
             const cached = new Set(get().cached);
@@ -143,6 +168,30 @@ export function createOfflinePacksStore(deps: OfflinePacksDeps): StoreApi<Offlin
       problem: null,
       space: null,
 
+      refresh: async () => {
+        // A page that could not start (no worker in control yet, a cache that failed) tries again; native never does.
+        if (get().status === 'unsupported' && !deps.native) started = null;
+        await get().init();
+        const index = get().index;
+        if (get().status !== 'ready' || index === null || !deps.online()) return;
+        syncing ??= (async () => {
+          // An older build's later chunks and saved clips: this build never asks for them again.
+          if (!staleChecked) {
+            staleChecked = true;
+            const stale = staleLaterUrls(await deps.laterCacheUrls(), index);
+            if (stale.length > 0) await deps.dropLaterUrls(stale).catch(() => undefined);
+          }
+          // A chosen stage whose files changed with this build (new content hashes) is saved again.
+          await topUp(index);
+          set({ space: await deps.spaceEstimate() });
+        })()
+          .catch(() => undefined)
+          .finally(() => {
+            syncing = null;
+          });
+        await syncing;
+      },
+
       init: () => {
         started ??= (async () => {
           if (deps.native || !deps.supported()) {
@@ -159,13 +208,8 @@ export function createOfflinePacksStore(deps: OfflinePacksDeps): StoreApi<Offlin
           set({ index, chosen: (chosen ?? []).filter((s) => index.stages.some((p) => p.stage === s)) });
           await recount(index);
           set({ status: 'ready' });
-          if (!deps.online()) return;
-          // An older build's later chunks: this build never asks for them again.
-          const stale = staleLaterUrls(await deps.laterCacheUrls(), index);
-          if (stale.length > 0) await deps.dropLaterUrls(stale).catch(() => undefined);
-          // A chosen stage whose files changed with this build (new content hashes) is saved again.
-          await topUp(index);
-          set({ space: await deps.spaceEstimate() });
+          // The stale drop and the top-up run in the background: a download never holds back what waits on init.
+          void get().refresh();
         })().catch(() => {
           set({ status: 'unsupported' });
         });
@@ -184,6 +228,8 @@ export function createOfflinePacksStore(deps: OfflinePacksDeps): StoreApi<Offlin
         }
         const chosen = [...new Set([...get().chosen, ...stages])];
         set({ busy: which, problem: null, chosen, progress: { done: 0, total } });
+        // A saved stage is a promise to keep it: ask the browser not to evict the site's storage under pressure.
+        void deps.persist?.().catch(() => false);
         await deps.writeChosen(chosen).catch(() => undefined);
         let done = 0;
         try {
@@ -214,6 +260,7 @@ export function createOfflinePacksStore(deps: OfflinePacksDeps): StoreApi<Offlin
         if (get().status !== 'ready' || get().chosen.length === 0 || !deps.online()) return;
         const next = parseOfflinePacks(await deps.readIndex(true));
         if (next === null) return;
+        staleChecked = true;
         const cached = await deps.cachedUrls(indexUrls(next));
         const files = filesToSave(next, get().chosen, cached);
         await saveAll(files, null, () => undefined).catch(() => undefined);
@@ -242,6 +289,7 @@ export const offlinePacks = createOfflinePacksStore({
   online: isOnline,
   readChosen: () => readJson<StageKey[]>(CHOSEN_KEY),
   writeChosen: (stages) => writeJson(CHOSEN_KEY, stages),
+  persist: () => requestPersistence(),
 });
 
 export function useOfflinePacks<T>(select: (s: OfflinePacksState & OfflinePacksActions) => T): T {

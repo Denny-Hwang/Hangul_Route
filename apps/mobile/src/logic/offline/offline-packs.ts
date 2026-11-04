@@ -10,6 +10,13 @@ import { StageKeySchema, type StageKey } from '@hangul-route/content-schema';
 
 /** The cache the later chunks live in (the service worker's runtime rule writes the same one). */
 export const LATER_CACHE = 'hr-later-v1';
+/**
+ * The cache saved clips live in (no expiry; the service worker's clip rules read it on a miss, scripts/audio/lib.mjs
+ * `savedClipFallback`), so playing other clips never pushes a saved one out of the bounded clip caches.
+ */
+export const OFFLINE_AUDIO_CACHE = 'hr-offline-audio-v1';
+/** The caches a saved file lives in: neither expires, and a service worker update keeps both. */
+export const SAVED_CACHES: readonly string[] = [LATER_CACHE, OFFLINE_AUDIO_CACHE];
 /** The shape version this build reads. */
 export const OFFLINE_PACKS_VERSION = 1;
 
@@ -121,7 +128,10 @@ export function availableChunks(index: OfflinePacksIndex, cached: ReadonlySet<st
   return out;
 }
 
-/** Entries of the later cache this build does not name (an older build's chunks): safe to drop once this build runs. */
+/**
+ * Entries of the saved caches (the later chunks' and the saved clips') this build does not name (an older build's
+ * chunks and clips): safe to drop once this build runs.
+ */
 export function staleLaterUrls(laterCacheUrls: readonly string[], index: OfflinePacksIndex): string[] {
   const current = new Set(indexUrls(index));
   return laterCacheUrls.filter((u) => !current.has(u));
