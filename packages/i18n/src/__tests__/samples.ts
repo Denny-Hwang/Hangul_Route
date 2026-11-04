@@ -1045,4 +1045,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
   // AMENDMENTS-GROWNUP-UX GX-14 (T14): the open ready-made card's minutes and the length it was built for.
   'console.lecture.minutesOf': [[14, 20], [9, 10], [1, 30]],
+  // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
+  'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
 };
