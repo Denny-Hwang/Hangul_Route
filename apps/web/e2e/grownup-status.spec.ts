@@ -4,7 +4,8 @@ import { STEADY } from './report-fixtures';
 
 /**
  * AMENDMENTS-GROWNUP-UX GX-1 (owner request 2026-10-31; section 14 `apps/web/e2e/grownup-status.spec.ts`): the class page
- * shows **Needs your OK** beside the learner whose new device waits, with the reason and inline Approve / Deny, the quiet
+ * shows **Needs your OK** beside the learner whose new device waits, with the reason and inline Approve (it opens the
+ * re-link pop-up with the safety hint, GX-D12) / Deny, the quiet
  * **In class** beside the others and **New** beside a learner who joined today; the learners asking to join (a transfer
  * and another teacher's move) get their own cards above the roster with Accept first; a new re-link appears within one
  * 20 s re-link read. ko, en and es at 360 x 740 and 1280 x 800, with no sideways scroll at 360. Over the static export
@@ -174,15 +175,41 @@ for (const { locale, browser } of LOCALES) {
 test.describe('en: answering where it is shown', () => {
   const c = getMessages('en').console;
 
-  test('Approve inline removes the chip and says so on the card', async ({ page }) => {
+  test('Approve on the card opens the pop-up with the hint, and its Approve removes the chip (GX-D12)', async ({ page }) => {
     const mock = await mockClass(page);
     await page.goto('/teach/space?id=space%3Aa');
     const jaehan = card(page, 'Jaehan');
     await jaehan.getByRole('button', { name: c.relink.approve.cta, exact: true }).click();
+    const popup = page.getByRole('alertdialog', { name: c.relinkPopup.title('Jaehan') });
+    await expect(popup).toBeVisible();
+    await expect(popup.getByText(c.relinkApproveHint)).toBeVisible();
+    await expect(popup.getByText(c.relinkPopup.meta(c.relink.platform.ios, c.relink.askedAgo(2)))).toBeVisible();
+    await expect(popup.getByText(c.relinkPopup.closes(8))).toBeVisible();
+    // Nothing was answered by the card's tap.
+    expect(mock.calls.some((call) => call.method === 'POST' && call.path.includes('/relink-requests/'))).toBe(false);
+    for (const size of [{ width: 360, height: 740 }, { width: 1280, height: 800 }]) {
+      await page.setViewportSize(size);
+      await page.screenshot({ path: test.info().outputPath(`grownup-status-popup-en-${size.width}.png`) });
+    }
+    await popup.getByRole('button', { name: c.relink.approve.cta, exact: true }).click();
+    await expect(popup).toHaveCount(0);
     await expect(jaehan.getByText(c.relink.approved('Jaehan'))).toBeVisible();
     await expect(jaehan.getByRole('button', { name: c.status.chipName(c.status.needsOk, c.status.newDevice(8)) })).toHaveCount(0);
     expect(mock.calls.some((call) => call.method === 'POST' && call.path === '/api/spaces/space:a/relink-requests/relink:jaehan/approve')).toBe(true);
     for (const call of mock.calls) expect(call.path).not.toMatch(/Jaehan|Yuhan|Mina/);
+  });
+
+  test('Later closes the pop-up and the request stays', async ({ page }) => {
+    const mock = await mockClass(page);
+    await page.goto('/teach/space?id=space%3Aa');
+    const jaehan = card(page, 'Jaehan');
+    await jaehan.getByRole('button', { name: c.status.chipName(c.status.needsOk, c.status.newDevice(8)) }).click();
+    const popup = page.getByRole('alertdialog', { name: c.relinkPopup.title('Jaehan') });
+    await expect(popup).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(popup).toHaveCount(0);
+    await expect(jaehan.getByRole('button', { name: c.status.chipName(c.status.needsOk, c.status.newDevice(8)) })).toBeVisible();
+    expect(mock.calls.some((call) => call.method === 'POST' && call.path.includes('/relink-requests/'))).toBe(false);
   });
 
   test("Accept on another teacher's move accepts it and the card leaves", async ({ page }) => {

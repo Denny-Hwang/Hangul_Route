@@ -26,6 +26,8 @@ export interface OutgoingMove {
   at: string | null;
   /** [GX-W] The learner's id while the move waits (AMENDMENTS-GROWNUP-UX section 12); absent from an older Worker. */
   learnerId?: string;
+  /** [GX-1] When the waiting move closes (AMENDMENTS-GROWNUP-UX section 4 "Ordering"); absent when the view has none. */
+  expiresAt?: string;
 }
 
 export interface IncomingMove {
@@ -37,6 +39,8 @@ export interface IncomingMove {
   learner: { alias: string; avatar: string; level: string } | { name: string; avatar: string } | null;
   createdAt: string;
   at: string | null;
+  /** [GX-1] When the waiting move closes (AMENDMENTS-GROWNUP-UX section 4 "Ordering"); absent when the view has none. */
+  expiresAt?: string;
 }
 
 export interface ClassMoveLists {
@@ -92,6 +96,7 @@ export function readOutgoing(v: Plain): OutgoingMove | null {
     createdAt: v.createdAt,
     at: str(v.at) ? v.at : null,
     ...(str(v.learnerId) ? { learnerId: v.learnerId } : {}),
+    ...(str(v.expiresAt) ? { expiresAt: v.expiresAt } : {}),
   };
 }
 
@@ -100,7 +105,7 @@ export function readIncoming(v: Plain): IncomingMove | null {
   let learner: IncomingMove['learner'] = null;
   if (isPlain(v.learner) && str(v.learner.alias) && str(v.learner.avatar) && str(v.learner.level)) learner = { alias: v.learner.alias, avatar: v.learner.avatar, level: v.learner.level };
   else learner = readNamed(v.learner);
-  return { id: v.id, kind: v.kind, status: v.status, from: { name: v.from.name }, learner, createdAt: v.createdAt, at: str(v.at) ? v.at : null };
+  return { id: v.id, kind: v.kind, status: v.status, from: { name: v.from.name }, learner, createdAt: v.createdAt, at: str(v.at) ? v.at : null, ...(str(v.expiresAt) ? { expiresAt: v.expiresAt } : {}) };
 }
 
 export function readMoveLists(data: unknown): ClassMoveLists {

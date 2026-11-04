@@ -42,7 +42,7 @@ const stepScope = (quest: LessonCell['quests'][number], kind: string): LessonSco
   quest.scopes.find((s) => s.ref === quest.steps.find((st) => st.kind === kind)?.minigameRef);
 const checks = cells.flatMap(({ cell }) => cell.quests.map((q) => stepScope(q, 'check') as LessonScope));
 
-/** The realia kinds row CM-47 adds; Stage 6 Volume 1 uses only the four shipped ones until then. */
+/** The realia kinds row CM-47 adds; of these, Stage 6 Volume 1 uses only the two its re-kinded stand-ins take. */
 const CM47_KINDS = ['recipe', 'receipt', 'label', 'forecast', 'calendar', 'timetable', 'map', 'poster'];
 
 describe('Stage 6 Check rotation (F-CURR-002 row CM-3A S6)', () => {
@@ -92,18 +92,22 @@ describe('Stage 6 Check rotation (F-CURR-002 row CM-3A S6)', () => {
     }
   });
 
-  it('section 5.7: every Stage 6 realia scope has a kind, a shipped one (CM-47 adds the new kinds)', () => {
+  it('section 5.7: every Stage 6 realia scope has a kind; the three stand-ins take their CM-47 kinds', () => {
     const realia = cells.flatMap(({ cell }) => cell.quests.flatMap((q) => q.scopes.flatMap((s) => ('realia' in s && s.realia ? [[s.ref, s.realia] as const] : []))));
     expect(realia.length).toBeGreaterThanOrEqual(15);
     for (const [ref, r] of realia) {
       expect(r.kind, `${ref} ${r.ref}`).toBeDefined();
       expect(REALIA_KINDS as readonly string[], ref).toContain(r.kind);
-      expect(CM47_KINDS, ref).not.toContain(r.kind);
     }
+    expect(REALIA_KINDS).toEqual(expect.arrayContaining(CM47_KINDS));
     const byRef = new Map(realia.map(([, r]) => [r.ref, r.kind]));
-    expect(byRef.get('realia:order-food-slip')).toBe('menu');
-    expect(byRef.get('realia:s6-rites-q2-board')).toBe('ticket');
-    expect(byRef.get('realia:s6-rites-q3-plan')).toBe('ticket');
+    // Row CM-47 re-kinds the stand-ins of the CM-3A S6 record: the departure board and the trip plan are timetables,
+    // the order slip a receipt; every other Volume 1 realia keeps one of the four G-2 kinds.
+    expect(byRef.get('realia:order-food-slip')).toBe('receipt');
+    expect(byRef.get('realia:s6-rites-q2-board')).toBe('timetable');
+    expect(byRef.get('realia:s6-rites-q3-plan')).toBe('timetable');
+    const others = realia.filter(([, r]) => !['realia:order-food-slip', 'realia:s6-rites-q2-board', 'realia:s6-rites-q3-plan'].includes(r.ref));
+    for (const [ref, r] of others) expect(CM47_KINDS, `${ref} ${r.ref}`).not.toContain(r.kind);
   });
 
   it('Role Play where it fits: the market stall Apply of crafts q3, on the turns of its Tap to Respond', () => {
