@@ -1,8 +1,10 @@
 import type { Locator, Page } from '@playwright/test';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { colors, touchTarget } from '@hangul-route/design-system/tokens';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { Touchscreen, pointIn } from './touch';
 
 /**
  * F-CURR-002 row CM-14 (sections 4.3, 4.5, 4.8, 7.7, 11.3, 12.2): the Daily Review from Today mission slot 3, Keep
@@ -85,6 +87,12 @@ const missColors = (target: Locator): Promise<string[]> =>
     });
   });
 
+/**
+ * The answers are a TapBoard (AMENDMENTS-TOUCH row KT-3): for `TAP_LOCK_MS` after an answer every answer waits, the
+ * next round's included (it opens 320 ms after a right answer), so a deliberate tap waits the lock out first.
+ */
+const pastLock = (page: Page): Promise<void> => page.waitForTimeout(TAP_LOCK_MS + 50);
+
 /** Answers the round on screen: right, or wrong first (amber, Hoya shows the answer) and then right. */
 async function answer(page: Page, how: 'right' | 'miss-then-right'): Promise<void> {
   const prompt = page.getByTestId('daily-review-prompt');
@@ -97,11 +105,13 @@ async function answer(page: Page, how: 'right' | 'miss-then-right'): Promise<voi
     const other = page.locator('[data-testid^="daily-review-option-"]').filter({ hasNot: page.locator(`[data-testid="daily-review-option-${word?.id}"]`) });
     const wrongs = await page.locator('[data-testid^="daily-review-option-"]').evaluateAll((els, rightId) => els.map((e) => e.getAttribute('data-testid')).filter((t) => t !== `daily-review-option-${rightId}`), word?.id);
     expect(other).toBeTruthy();
+    await pastLock(page);
     await page.getByTestId(wrongs[0] as string).click();
     await expect(page.getByTestId('daily-review-miss')).toBeVisible();
   }
   const dots = page.getByTestId('daily-review-dots');
   const before = await dots.getAttribute('aria-label');
+  await pastLock(page);
   await right.click();
   // The round moves on: the dots name the next round, or the session ends (the loading frame, then the result).
   await expect
@@ -181,6 +191,7 @@ test('Daily Review from slot 3: 10 read rounds, a miss in amber, then stars and 
   const wrongId = await page
     .locator('[data-testid^="daily-review-option-"]')
     .evaluateAll((els, r) => els.map((e) => e.getAttribute('data-testid')).find((t) => t !== `daily-review-option-${r}`), rightId);
+  await pastLock(page);
   await page.getByTestId(wrongId as string).click();
   await expect(page.getByTestId('daily-review-miss')).toBeVisible();
   await expect(page.getByTestId('daily-review-dot-filled')).toHaveCount(1);
@@ -189,6 +200,7 @@ test('Daily Review from slot 3: 10 read rounds, a miss in amber, then stars and 
   expect(await missColors(page.getByTestId(wrongId as string))).not.toContain(RED);
   expect(await missColors(page.getByTestId('daily-review-screen'))).not.toContain(RED);
   await shots(page, 'daily-review-miss');
+  await pastLock(page);
   await page.getByTestId(`daily-review-option-${rightId}`).click();
   await playRounds2(page, 9, 2);
 
@@ -286,6 +298,7 @@ test("the day's 20: two Daily Reviews stopped on their last round spend it; the 
     const wrongId = await page
       .locator('[data-testid^="daily-review-option-"]')
       .evaluateAll((els, r) => els.map((e) => e.getAttribute('data-testid')).find((t) => t !== `daily-review-option-${r}`), rightId);
+    await pastLock(page);
     await page.getByTestId(wrongId as string).click();
     await expect(page.getByTestId('daily-review-miss')).toBeVisible();
     await page.getByRole('button', { name: 'Stop the review' }).click();
@@ -351,4 +364,40 @@ test('offline: after one online visit the Daily Review plays with the network go
   await expect(page.getByTestId('daily-review-result')).toBeVisible();
   await context.setOffline(false);
   expect(errors).toEqual([]);
+});
+
+test('a bounce across the 320 ms advance gives the next round no answer; a later tap does (AMENDMENTS-TOUCH KT-3)', async ({ page }) => {
+  const id = await onboard(page);
+  await seed(page, id, 4);
+  await card(page).click();
+  await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 1');
+  const prompt = page.getByTestId('daily-review-prompt');
+  const ko = ((await prompt.innerText()).split('\n')[0] ?? '').trim();
+  const rightId = `daily-review-option-${byKo.get(ko)?.id}`;
+  await page.waitForTimeout(450);
+  const touch = await Touchscreen.of(page);
+  const at = await pointIn(page, rightId);
+  // The right answer, then a bounce at the same place once round 2 has opened (it opens 320 ms after the answer). The
+  // answer commits after `tappedAt`, so `bounceBound` is at least the real gap from the answer to the bounce's release.
+  const tappedAt = Date.now();
+  await touch.tap(at, 10);
+  await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 2');
+  const wait = 345 - (Date.now() - tappedAt);
+  if (wait > 0) await page.waitForTimeout(wait);
+  await touch.start({ id: 1, ...at });
+  await touch.end(1);
+  const bounceBound = Date.now() - tappedAt;
+  test.info().annotations.push({ type: 'bounce', description: `released at most ${bounceBound} ms after the answer (the lock is 400)` });
+  await page.waitForTimeout(200);
+  await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 2');
+  // Inside the lock (a slow machine can miss the window; then the case says nothing): round 2 has no answer.
+  if (bounceBound < 400) {
+    await expect(page.getByTestId('daily-review-dot-filled')).toHaveCount(1);
+    await expect(page.getByTestId('daily-review-miss')).toHaveCount(0);
+  }
+  // Past the lock, a deliberate tap there is round 2's first answer.
+  await touch.tap(at);
+  await expect
+    .poll(async () => (await page.getByTestId('daily-review-dot-filled').count()) === 2 || (await page.getByTestId('daily-review-miss').count()) > 0)
+    .toBe(true);
 });
