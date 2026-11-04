@@ -5,6 +5,9 @@ import {
   WEEKDAYS,
   addDays,
   generateCurriculum,
+  regenerateFrom,
+  toMeta,
+  toPlanItems,
   weekdayOf,
   type Catalog,
   type CatalogCell,
@@ -165,9 +168,12 @@ function checkAll(c: Case, params: CurriculumParamsInput, draft: CurriculumDraft
       expect(count).toBe(L + P - (week === 1 && firstHoldsPractice ? 1 : 0));
     }
   }
+  // Named exception (sections 5.3 and 6.2): a practice date before any class has taught a lesson has no cell to
+  // refresh, so it holds neither; the device offers Daily Review there.
   const firstTaught = draft.items.map((item) => item.lectureDate).filter((date): date is string => date !== undefined).sort()[0];
+  const nothingTaughtYet = (date: string): boolean => firstTaught === undefined || date <= firstTaught;
   for (const date of practice) {
-    if (firstTaught === undefined || date <= firstTaught) continue;
+    if (nothingTaughtYet(date)) continue;
     expect((items.get(date)?.length ?? 0) > 0 || refresh.has(date)).toBe(true);
   }
   for (const item of draft.items) if (item.lectureDate !== undefined) expect(item.targetDate! > item.lectureDate).toBe(true);
@@ -188,6 +194,18 @@ function checkAll(c: Case, params: CurriculumParamsInput, draft: CurriculumDraft
     }
   }
   expect(draft.warnings.some((warning) => warning.code === 'practice-short')).toBe(P < L);
+
+  // (2) G3 for every P >= L, as built (section 6.2): a learn class day held back below its floor is flagged. A held
+  // class day that teaches nothing while a later one teaches carries `class-paced` (review slots excepted).
+  if (P >= L) {
+    const taughtOn = new Set(draft.items.flatMap((item) => (item.lectureDate === undefined ? [] : [item.lectureDate])));
+    const lastTaught = [...taughtOn].sort().at(-1) ?? '';
+    const reviewSlot = (index: number): boolean => c.reviewEvery > 0 && (index + 1) % c.reviewEvery === 0;
+    const heldBack = cycles.some((cycle, index) => cycle.held && !reviewSlot(index) && !taughtOn.has(cycle.classDate) && cycle.classDate < lastTaught);
+    if (heldBack && !draft.warnings.some((warning) => warning.code === 'item-cap')) {
+      expect(draft.warnings.map((warning) => warning.code)).toContain('class-paced');
+    }
+  }
 
   // (4) Round robin: within a cycle, a practice day two or more items behind another is full.
   for (const cycle of cycles) {
@@ -234,7 +252,33 @@ describe('blended generator, properties (section 20)', () => {
         fc.pre(params !== undefined);
         checkAll(c, params as CurriculumParamsInput, generateCurriculum(params as CurriculumParamsInput, VARIED));
       }),
-      { numRuns: 200 },
+      // Seeded, so a counterexample reproduces; change the seed locally to explore.
+      { numRuns: 200, seed: 42 },
+    );
+  });
+
+  it('re-pacing keeps what earlier class days taught: same class date, no duplicate, at most 260 items', () => {
+    fc.assert(
+      fc.property(caseArb, fc.integer({ min: 1, max: 140 }), fc.constantFrom('shift' as const, 'requeue' as const), (c, offset, mode) => {
+        const params = paramsOf(c);
+        fc.pre(params !== undefined);
+        const draft = generateCurriculum(params as CurriculumParamsInput, VARIED);
+        const stored = { meta: toMeta(draft), items: toPlanItems(draft) };
+        const today = addDays((params as CurriculumParamsInput).startDate, offset);
+        const done = stored.items.filter((item) => item.targetDate! < today).map((item) => item.id);
+        const next = regenerateFrom(stored, today, VARIED, { mode, completedQuestIds: done });
+        const ids = next.items.map((item) => item.id);
+        expect(new Set(ids).size).toBe(ids.length);
+        expect(ids.length).toBeLessThanOrEqual(CURRICULUM_MAX_ITEMS);
+        for (const item of stored.items) {
+          if (item.lectureDate === undefined || item.lectureDate >= today) continue;
+          const now = next.items.find((entry) => entry.id === item.id);
+          // Placed again with its class date, or left over when no practice date is left on the route.
+          if (now !== undefined) expect(now.lectureDate).toBe(item.lectureDate);
+        }
+        expect((next.refresh ?? []).filter((entry) => entry.date < today)).toEqual((draft.refresh ?? []).filter((entry) => entry.date < today));
+      }),
+      { numRuns: 60, seed: 42 },
     );
   });
 
