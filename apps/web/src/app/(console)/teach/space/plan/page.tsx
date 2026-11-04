@@ -13,7 +13,7 @@ import { GroupedLessonPicker } from '@/components/console/GroupedLessonPicker';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
 import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
-import { contentGatingEnabled, lectureModeEnabled } from '@/lib/console/config';
+import { contentGatingEnabled, lectureModeEnabled, routeBlendEnabled } from '@/lib/console/config';
 import { canComposeIn } from '@/lib/console/lecture';
 import { applyToPlan, chooserKeys, consoleChooserGroups, planBarLine, planRoom, planSelection, planStages, planStagesNotice } from '@/lib/console/lesson-picker';
 import {
@@ -337,6 +337,7 @@ function PlanInner(): JSX.Element {
                 busy={busy}
                 onSave={(repaced) => saveRepaced(current, repaced)}
                 relativeDayOf={(iso) => relativeDay(iso, now, locale)}
+                blend={routeBlendEnabled() && current.meta.params.audience === 'class'}
               />
             ) : undefined
           }

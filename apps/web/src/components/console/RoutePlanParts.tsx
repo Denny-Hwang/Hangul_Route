@@ -4,6 +4,7 @@ import type { CurriculumMeta, PlanItem } from '@hangul-route/content-schema';
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { UiLocale } from '@hangul-route/i18n';
 import { useEffect, useRef, useState } from 'react';
+import { BlendControls, BlendThisWeek } from '@/components/console/BlendParts';
 import { ItemText, WeekHeading } from '@/components/console/CurriculumParts';
 import { DraftItemRow } from '@/components/console/PlanParts';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
@@ -173,6 +174,9 @@ type RepaceStep = { at: 'idle' } | { at: 'confirm'; result: RepaceResult; fit: n
  * collapsible list of all weeks, then Re-pace from today with a confirm that names the next
  * session and what no longer fits. `onSave` stores the re-paced items and meta on the same plan;
  * the page renders this with `key={plan.id}`, so an open confirm never outlives a plan switch.
+ * With `blend` (a class plan while `routeBlendEnabled()` is on, AMENDMENTS-ROUTE-CLASS-BLEND section 10.2, row BL-4)
+ * This week opens with the class day's lessons and the class lines, and Move this class day, Add practice days and
+ * Stop practice days sit under Re-pace.
  */
 export function RouteReadout({
   plan,
@@ -182,6 +186,7 @@ export function RouteReadout({
   busy,
   onSave,
   relativeDayOf,
+  blend = false,
 }: {
   plan: PlanView & { meta: CurriculumMeta };
   rows: readonly ReadoutRow[];
@@ -190,6 +195,7 @@ export function RouteReadout({
   busy: boolean;
   onSave: (result: RepaceResult) => Promise<boolean>;
   relativeDayOf: (iso: string) => string;
+  blend?: boolean;
 }): JSX.Element {
   const messages = useMessages().console;
   const c = messages.curriculum;
@@ -228,6 +234,7 @@ export function RouteReadout({
         <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.xs}px` }}>
           {where.status === 'in' ? c.readout.thisWeek(where.week.index) : where.status === 'before' ? c.readout.notStarted(dayText(where.startDate, locale)) : c.readout.ended}
         </h2>
+        {blend ? <BlendThisWeek plan={plan} today={today} locale={locale} /> : null}
         {thisWeek ? (
           <>
             <WeekHeading row={thisWeek} locale={locale} />
@@ -291,6 +298,7 @@ export function RouteReadout({
           </div>
         </div>
       )}
+      {blend ? <BlendControls plan={plan} today={today} locale={locale} busy={busy} onSave={onSave} /> : null}
     </div>
   );
 }

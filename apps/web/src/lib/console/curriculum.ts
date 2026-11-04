@@ -21,9 +21,11 @@ import {
   questsPlacedOutAtLevel,
   regenerateFrom,
   routeCatalogOf,
+  weekdayOf,
   themeOrderFor,
   toMeta,
   toPlanItems,
+  type BlendInput,
   type Catalog,
   type CurriculumDraft,
   type CurriculumItem,
@@ -96,6 +98,37 @@ export const MAX_DAYS_OFF = 12;
 
 export const FOCUS_CHOICES: readonly Focus[] = ['balanced', 'reading', 'words', 'culture'];
 
+/** Class lengths of the meeting block (AMENDMENTS-ROUTE-CLASS-BLEND section 10.1, BL-OD-13); default 30. */
+export const CLASS_LENGTH_CHOICES = [15, 20, 30, 45, 60] as const;
+export type ClassLengthChoice = (typeof CLASS_LENGTH_CHOICES)[number];
+
+/** Practice sessions a week (0 is today's Class only plan; 1 to 7, BL-OD-19). */
+export const PRACTICE_COUNT_CHOICES = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+
+/** Class days a week the meeting block takes (`blend.lecture.days`, 1 to 5). */
+export const MAX_CLASS_DAYS = 5;
+
+/** The wizard's practice count before BL-10 (BL-OD-12): 0, a Class only plan. BL-10 makes it 3 when it flips the flag. */
+export const PRACTICE_PER_WEEK_DEFAULT = 0;
+
+/** The practice length of a class plan (section 10.1); a Pictures-first class takes `PRACTICE_MINUTES_PICTURES_FIRST`. */
+export const PRACTICE_MINUTES_DEFAULT: MinuteChoice = 10;
+
+/**
+ * A Pictures-first class's practice length: 5 minutes (section 10.1, "10 minutes, 5 when pictures-first"). The spec
+ * also names `PICTURES_FIRST_MINUTES`, but that preset is a whole session's 10 minutes, so the practice row keeps the
+ * stated 5.
+ */
+export const PRACTICE_MINUTES_PICTURES_FIRST: MinuteChoice = 5;
+
+/** `practise what class taught` (BL-OD-1, preselected) or `class and practice cover different lessons`. */
+export type BlendMode = 'overlap' | 'split';
+
+/** A break of the wizard; `classOnly` is **Only the class is off** (`blend.classDaysOff`): practice goes on. */
+export interface WizardBreak extends DaysOff {
+  classOnly?: boolean | undefined;
+}
+
 export interface WizardState {
   audience: WizardAudience;
   /** Family only: the learner the route is for (null = everyone in the family). */
@@ -117,7 +150,7 @@ export interface WizardState {
   /** Optional weekdays; when any is chosen their count wins over `sessionsPerWeek`. */
   sessionDays: Weekday[];
   minutesPerSession: MinuteChoice;
-  daysOff: DaysOff[];
+  daysOff: WizardBreak[];
   focus: Focus;
   /** In priority order. */
   themes: ThemeKey[];
@@ -125,6 +158,19 @@ export interface WizardState {
   motivation?: Motivation | undefined;
   culturalAnchors: boolean;
   includeComingSoon: boolean;
+  /**
+   * The meeting block (AMENDMENTS-ROUTE-CLASS-BLEND section 10.1, row BL-4): a class only, read while
+   * `routeBlendEnabled()` is on. Class days and their length; practice sessions a week (0 = Class only) and their
+   * length; the teacher's own practice weekdays behind **Change days** (null = the suggested `practiceDaysFor`); the
+   * mode; **Keep the average when there are days off**.
+   */
+  lectureDays?: Weekday[] | undefined;
+  lectureMinutes?: ClassLengthChoice | undefined;
+  practicePerWeek?: number | undefined;
+  practiceMinutes?: MinuteChoice | undefined;
+  practiceDays?: Weekday[] | null | undefined;
+  blendMode?: BlendMode | undefined;
+  keepAverage?: boolean | undefined;
 }
 
 /** The summary fields the planner reads (section 3.8: placement first, Stage 1 counts as the fallback). */
@@ -183,6 +229,19 @@ export function defaultsFor(audience: WizardAudience, learners: readonly Planner
       ? learners.filter((l) => levelOrder(l.ageGroup) === 0).length * 2 > learners.length
       : picked !== undefined && levelOrder(picked.ageGroup) === 0;
   const start = audience === 'class' ? levelHint(learners) : picked ? levelFromSummary(picked.summary) : null;
+  // Section 10.1: a class also starts the meeting block (shown only with the flag on; a Class only plan until BL-10).
+  const meeting: Partial<WizardState> =
+    audience === 'class'
+      ? {
+          blendMode: 'overlap',
+          lectureDays: [],
+          lectureMinutes: 30,
+          practicePerWeek: PRACTICE_PER_WEEK_DEFAULT,
+          practiceMinutes: picturesFirst ? PRACTICE_MINUTES_PICTURES_FIRST : PRACTICE_MINUTES_DEFAULT,
+          practiceDays: null,
+          keepAverage: false,
+        }
+      : {};
   return {
     audience,
     learnerId: picked?.id ?? null,
@@ -199,6 +258,7 @@ export function defaultsFor(audience: WizardAudience, learners: readonly Planner
     themes: [],
     culturalAnchors: true,
     includeComingSoon: true,
+    ...meeting,
   };
 }
 
@@ -211,20 +271,69 @@ export function weeksOf(state: WizardState): number | null {
 
 const sessionsOf = (state: WizardState): number => (state.sessionDays.length > 0 ? state.sessionDays.length : state.sessionsPerWeek);
 
-/** Generator params for the wizard state; null until a valid length is chosen. */
-export function toParams(state: WizardState, unlockedStages: readonly StageKey[]): CurriculumParamsInput | null {
+/** The class's weekdays in week order, whatever order they were tapped in. */
+export const classDaysOf = (state: Pick<WizardState, 'lectureDays'>): Weekday[] => WEEKDAYS.filter((day) => (state.lectureDays ?? []).includes(day));
+
+/** Practice sessions a week of the meeting block (0 when unset). */
+export const practiceCountOf = (state: Pick<WizardState, 'practicePerWeek'>): number => state.practicePerWeek ?? 0;
+
+/** Whether the meeting block replaces the class-day and homework-day chips: a class, with `routeBlendEnabled()` on. */
+export const meetingShown = (state: Pick<WizardState, 'audience'>, blendOn: boolean): boolean => blendOn && state.audience === 'class';
+
+/** A Class only plan's minutes a session from the class length: the class length, at most 30 (the session chips' range). */
+export const classOnlyMinutes = (classMinutes: number): MinuteChoice => [...MINUTE_CHOICES].reverse().find((choice) => choice <= classMinutes) ?? MINUTE_CHOICES[0];
+
+/** The class dates inside the **Only the class is off** breaks (each a class weekday, the schema's rule); stops past 52. */
+function classDatesOff(state: WizardState, classDays: readonly Weekday[]): string[] {
+  const out = new Set<string>();
+  for (const range of state.daysOff) {
+    if (range.classOnly !== true || !isDateKey(range.from) || !isDateKey(range.to) || range.from > range.to) continue;
+    for (let date = range.from; date <= range.to && out.size <= 52; date = addDays(date, 1)) if (classDays.includes(weekdayOf(date))) out.add(date);
+  }
+  return [...out].sort();
+}
+
+/** The `blend` block of the meeting block (section 9.1), or null for a Class only plan (0 practice days). */
+export function blendOf(state: WizardState): BlendInput | null {
+  const perWeek = practiceCountOf(state);
+  if (state.audience !== 'class' || perWeek < 1) return null;
+  const classDays = classDaysOf(state);
+  const own = state.practiceDays ?? null;
+  return {
+    mode: state.blendMode ?? 'overlap',
+    lecture: { days: classDays, minutes: state.lectureMinutes ?? 30 },
+    personal: { perWeek, ...(own !== null ? { days: [...own] } : {}), minutes: state.practiceMinutes ?? PRACTICE_MINUTES_DEFAULT },
+    classDaysOff: classDatesOff(state, classDays),
+    keepAverage: state.keepAverage === true,
+  };
+}
+
+/**
+ * Generator params for the wizard state; null until a valid length is chosen. With the meeting block (`meeting`,
+ * `meetingShown`), a class's class days are its session days; with 1 or more practice days the params carry `blend`
+ * (AMENDMENTS-ROUTE-CLASS-BLEND section 9.1) and its breaks marked **Only the class is off** become
+ * `blend.classDaysOff`; with 0 it is today's Class only plan.
+ */
+export function toParams(state: WizardState, unlockedStages: readonly StageKey[], meeting = false): CurriculumParamsInput | null {
   const weeks = weeksOf(state);
   if (weeks === null) return null;
-  const days = WEEKDAYS.filter((day) => state.sessionDays.includes(day));
+  const classMeeting = meeting && state.audience === 'class';
+  const classDays = classDaysOf(state);
+  const blend = classMeeting ? blendOf(state) : null;
+  const days = classMeeting ? classDays : WEEKDAYS.filter((day) => state.sessionDays.includes(day));
+  const cadence = blend
+    ? { sessionsPerWeek: Math.min(7, classDays.length + blend.personal.perWeek), minutesPerSession: blend.personal.minutes }
+    : classMeeting
+      ? { sessionsPerWeek: Math.max(1, days.length), minutesPerSession: classOnlyMinutes(state.lectureMinutes ?? 30) }
+      : { sessionsPerWeek: sessionsOf(state), minutesPerSession: state.minutesPerSession };
   return {
     audience: state.audience,
     level: STARTING_LEVELS[state.start],
     startDate: state.startDate,
     weeks,
-    sessionsPerWeek: sessionsOf(state),
-    ...(days.length > 0 ? { sessionDays: days } : {}),
-    minutesPerSession: state.minutesPerSession,
-    daysOff: state.daysOff.map((range) => ({ ...range })),
+    ...cadence,
+    ...(days.length > 0 && !blend ? { sessionDays: days } : {}),
+    daysOff: state.daysOff.filter((range) => !(blend && range.classOnly === true)).map(({ from, to }) => ({ from, to })),
     goals: {
       focus: state.focus,
       ...(state.themes.length > 0 ? { themes: [...state.themes] } : {}),
@@ -234,13 +343,25 @@ export function toParams(state: WizardState, unlockedStages: readonly StageKey[]
     includeComingSoon: state.includeComingSoon,
     culturalAnchors: state.culturalAnchors,
     unlockedStages: [...unlockedStages],
+    ...(blend ? { blend } : {}),
   };
 }
 
-export type WizardProblem = 'no-length' | 'bad-weeks' | 'start-past' | 'break-missing' | 'break-reversed' | 'too-many-breaks' | 'too-many';
+export type WizardProblem = 'no-length' | 'bad-weeks' | 'start-past' | 'break-missing' | 'break-reversed' | 'too-many-breaks' | 'too-many' | 'no-class-day' | 'practice-days';
 
-/** Why step 2 cannot go on yet, or null. The wizard never accepts a start before today (section 3.11). */
-export function wizardProblem(state: WizardState, today: string): WizardProblem | null {
+/**
+ * Why the meeting block cannot go on yet (AMENDMENTS-ROUTE-CLASS-BLEND section 10.1), or null: no class day chosen, or
+ * the teacher's own practice weekdays (Change days) do not number the practice count.
+ */
+export function meetingProblem(state: WizardState): 'no-class-day' | 'practice-days' | null {
+  if (classDaysOf(state).length === 0) return 'no-class-day';
+  const own = state.practiceDays ?? null;
+  if (practiceCountOf(state) >= 1 && own !== null && own.length !== practiceCountOf(state)) return 'practice-days';
+  return null;
+}
+
+/** Why step 2 cannot go on yet, or null. The wizard never accepts a start before today (section 3.11). With the meeting block, its problems too. */
+export function wizardProblem(state: WizardState, today: string, meeting = false): WizardProblem | null {
   if (state.length === null) return 'no-length';
   const weeks = weeksOf(state);
   if (weeks === null) return 'bad-weeks';
@@ -248,6 +369,15 @@ export function wizardProblem(state: WizardState, today: string): WizardProblem 
   if (state.daysOff.some((range) => !isDateKey(range.from) || !isDateKey(range.to))) return 'break-missing';
   if (state.daysOff.some((range) => range.from > range.to)) return 'break-reversed';
   if (state.daysOff.length > MAX_DAYS_OFF) return 'too-many-breaks';
+  if (meeting && state.audience === 'class') {
+    const problem = meetingProblem(state);
+    if (problem !== null) return problem;
+    const blend = blendOf(state);
+    // Section 6.6: L + P sessions a week, at most 260 in all; at most 52 class days off.
+    if ((blend?.classDaysOff?.length ?? 0) > 52) return 'too-many-breaks';
+    const perWeek = classDaysOf(state).length + (blend ? blend.personal.perWeek : 0);
+    return weeks * perWeek > CURRICULUM_MAX_ITEMS ? 'too-many' : null;
+  }
   if (weeks * sessionsOf(state) > CURRICULUM_MAX_ITEMS) return 'too-many';
   return null;
 }
@@ -769,12 +899,10 @@ export function weekdayLabel(day: Weekday, locale: UiLocale = DEFAULT_LOCALE): s
 /** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the weeks that hold lessons. */
 export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWeek'> & Partial<Pick<FreeDaysView, 'comingSoonClosed'>>;
 
-/** A blended plan's warnings (AMENDMENTS-ROUTE-CLASS-BLEND section 6.6): row BL-4 words them; until then they show no line. */
-const UNWORDED_WARNING_CODES = ['item-cap', 'practice-short', 'class-paced'] as const;
-/** A warning the console has words for. */
-export type WordedWarning = CurriculumWarning & { code: Exclude<CurriculumWarning['code'], (typeof UNWORDED_WARNING_CODES)[number]> };
+/** A warning the console has words for: every code, since row BL-4 worded a blended plan's (AMENDMENTS-ROUTE-CLASS-BLEND section 6.6). */
+export type WordedWarning = CurriculumWarning;
 export function isWordedWarning(warning: CurriculumWarning): warning is WordedWarning {
-  return !(UNWORDED_WARNING_CODES as readonly string[]).includes(warning.code);
+  return warning.code.length > 0;
 }
 
 /**
@@ -787,6 +915,7 @@ export function isWordedWarning(warning: CurriculumWarning): warning is WordedWa
  */
 export function warningText(warning: WordedWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null, neutral = false): string {
   const words = getMessages(locale).console.curriculum.preview.warnings;
+  const blendWords = getMessages(locale).console.curriculum.blend.warn;
   const freeDays = getMessages(locale).console.curriculum.freeDays;
   const count = warning.count ?? 0;
   if (warning.code === 'premium-needed' && free) {
@@ -812,6 +941,12 @@ export function warningText(warning: WordedWarning, locale: UiLocale = DEFAULT_L
       return words.tooShort(count);
     case 'already-done-skipped':
       return words.alreadyDone(count);
+    case 'item-cap':
+      return blendWords.itemCap(warning.week ?? 1);
+    case 'practice-short':
+      return blendWords.practiceShort;
+    case 'class-paced':
+      return blendWords.classPaced;
   }
 }
 
@@ -895,6 +1030,15 @@ const withWeeks = (meta: CurriculumMeta, extraWeeks: number): CurriculumMeta =>
  */
 export function repacePlan(plan: RepaceInput, today: string, nowIso: string, extraWeeks = 0, source: Catalog = CATALOG): RepaceResult {
   const draft = regenerateFrom({ meta: withWeeks(plan.meta, extraWeeks), items: plan.items }, today, source, { mode: 'shift' });
+  return repaceResultOf(plan, draft, today, nowIso);
+}
+
+/**
+ * A re-laid plan as a save: the draft's items and meta on the same plan id, its horizon kept and `repacedAt` set, the
+ * next session and what no longer fits. Shared by Re-pace from today and a blended plan's Move this class day, Add
+ * practice days and Stop practice days (AMENDMENTS-ROUTE-CLASS-BLEND sections 10.2 and 14).
+ */
+export function repaceResultOf(plan: RepaceInput, draft: CurriculumDraft, today: string, nowIso: string): RepaceResult {
   const items = toPlanItems(draft);
   const meta: CurriculumMeta = { ...toMeta(draft), horizonDays: plan.meta.horizonDays, repacedAt: nowIso };
   // The generator counts ready lessons and stories only; a coming-soon placeholder that no longer fits is dropped too.
