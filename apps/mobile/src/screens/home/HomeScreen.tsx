@@ -120,6 +120,7 @@ import { TransferHomeLine } from '../transfer/TransferHomeLine';
 import { PinResetExpiredNotice } from '../parent/PinResetExpiredNotice';
 import { useGoalsChunk } from '../../store/goals-entry';
 import { useCurrFlag } from '../../store/remote-config-store';
+import { WeekDropHomeSlot } from '../week-drop/week-drop-entry';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -941,6 +942,10 @@ export function HomeScreen(): ReactElement {
   // after the mission cards; in two columns it heads the right column. Nothing with the flag off.
   const notesCard = (place: 'after' | 'top'): ReactElement | null => (flags.notesEnabled ? <NotesHomeCard gap={place} /> : null);
 
+  // F-CURR-002 row CM-48 (design/wireframes/home/this-week-in-korea.md A): this local week's drop, a secondary card after
+  // Today's cards (one column) or under the note card (two columns); nothing while `weeklyDrop` is off or the week has none.
+  const weekDropCard = <WeekDropHomeSlot profileId={profile?.id ?? null} today={localToday} />;
+
   // Regular and wide windows: two columns under the greeting; phones, short windows and a Home
   // with no mission cards: one column as always.
   const twoColumns = homeColumns(layoutClass, missions !== null) === 2;
@@ -1037,6 +1042,7 @@ export function HomeScreen(): ReactElement {
             </View>
             <View testID="home-side-column" style={{ flex: SIDE_FLEX, minWidth: 0 }}>
               {notesCard('top')}
+              {weekDropCard}
               {side}
             </View>
           </View>
@@ -1054,6 +1060,7 @@ export function HomeScreen(): ReactElement {
             </>
           ) : null}
           {notesCard('after')}
+          {weekDropCard}
           {quietCard ? (
             <>
               <Spacer size="lg" />

@@ -106,7 +106,10 @@ const LESSON_NOTE_FIELD = /^steps\.[^.]+\.discover\.pages\.[^.]+\.items\.[^.]+\.
 /** A lesson cell's own note (`culture[]`, F-CURR-002 row CM-3C), shown as the Did you know? tip: the same `{ko:}` rule. */
 const CELL_NOTE_FIELD = /^culture\.[^.]+\.text$/;
 const isLessonNote = (id, field) =>
-  (/^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field)) || (/^episode:stage[2-467]-/.test(id) && CELL_NOTE_FIELD.test(field));
+  (/^quest:stage[2-467]-/.test(id) && LESSON_NOTE_FIELD.test(field)) ||
+  (/^episode:stage[2-467]-/.test(id) && CELL_NOTE_FIELD.test(field)) ||
+  // F-CURR-002 row CM-48: a "This week in Korea" note, drawn with the same `{ko:}` tokens.
+  (/^week:/.test(id) && field === "note");
 const koTokenList = (text) => Array.from(text.matchAll(KO_TOKEN), (m) => m[1]).sort();
 /**
  * F-CURR-002 row CM-33: a Match Shape difference line of a Stage 1 scope names its two letters as `{ko:...}` tokens,
@@ -178,7 +181,8 @@ export function koParticleSlip(text) {
   const head = new RegExp(`(?<![가-힣])(${KO_GLOSS_HEAD_NOUNS.join("|")})가(?![가-힣])`).exec(text);
   return head === null ? null : `${head[1]}가`;
 }
-const isKoLessonOverlay = (rel) => /^content\/i18n\/ko\/lessons-[^/]+\.json$/.test(rel);
+// F-CURR-002 row CM-48: the "This week in Korea" overlays (weekly-*.json) take the same Korean copula and particle checks.
+const isKoLessonOverlay = (rel) => /^content\/i18n\/ko\/(?:lessons|weekly)-[^/]+\.json$/.test(rel);
 
 // ---- gloss-repeats-romanization (F-CNT-001 §3) ------------------------------------------
 
