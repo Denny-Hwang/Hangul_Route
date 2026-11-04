@@ -50,13 +50,14 @@ const NO_FACT_SCENE = 2; // "Look at the first consonant, {kw:jamo-g}." has no n
 
 describe('story-sources', () => {
   it('seeds the allow-list with the 31 hosts of the research set plus reviewed additions, sorted and unique', () => {
-    expect(SOURCE_HOST_ALLOWLIST).toHaveLength(39);
-    expect(new Set(SOURCE_HOST_ALLOWLIST).size).toBe(39);
+    expect(SOURCE_HOST_ALLOWLIST).toHaveLength(40);
+    expect(new Set(SOURCE_HOST_ALLOWLIST).size).toBe(40);
     expect([...SOURCE_HOST_ALLOWLIST]).toEqual([...SOURCE_HOST_ALLOWLIST].sort());
     expect(SOURCE_HOST_ALLOWLIST).toContain('www.heritage.go.kr');
     expect(SOURCE_HOST_ALLOWLIST).toContain('www.knps.or.kr'); // F-CURR-001 S6-4 (Korea National Park Service)
     // F-CURR-002 row CM-41 S2: the Korea Meteorological Administration and National Institute of Biological Resources.
     for (const host of ['species.nibr.go.kr', 'www.kma.go.kr', 'www.weather.go.kr']) expect(SOURCE_HOST_ALLOWLIST).toContain(host);
+    expect(SOURCE_HOST_ALLOWLIST).toContain('opendict.korean.go.kr'); // F-CURR-002 CM-44 S7 (Urimalsaem, National Institute of Korean Language)
     expect(SOURCE_HOST_ALLOWLIST).toContain('db.itkc.or.kr'); // Ilseongnok translation DB (Institute for the Translation of Korean Classics)
     // F-CURR-002 rows CM-45 S3 (KASI's calendar data) and CM-46 Nature (the Suncheon Bay wetland).
     for (const host of ['astro.kasi.re.kr', 'scbay.suncheon.go.kr', 'www.nie.re.kr']) expect(SOURCE_HOST_ALLOWLIST).toContain(host);

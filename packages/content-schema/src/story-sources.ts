@@ -31,6 +31,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'media.unesco.org',
   'news.sbs.co.kr',
   'scbay.suncheon.go.kr',
+  'opendict.korean.go.kr', // F-CURR-002 CM-44 S7 (Urimalsaem, the National Institute of Korean Language's open dictionary)
   'science.kma.go.kr',
   'shfestival.com',
   'sillok.history.go.kr',

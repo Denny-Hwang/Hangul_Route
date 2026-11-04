@@ -701,6 +701,7 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(stemOf('친구가', new Set())).toBe('친구');
     expect(stemOf('학교에', new Set())).toBe('학교');
     expect(stemOf('송편하고', new Set())).toBe('송편');
+    expect(stemOf('친구에게', new Set())).toBe('친구'); // F-CURR-002 row CM-44 S7: the letter frame ___에게
     expect(stemOf('책이에요', new Set())).toBe('책');
     expect(stemOf('학교예요', new Set())).toBe('학교');
     expect(stemOf('고양이', new Set(['고양이']))).toBe('고양이');
@@ -1004,7 +1005,7 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
   const scaffolding = new Set<string>();
   const shortened = new Map<string, [MinigameScope, MinigameScope]>();
   it('runs over every shipped lesson quest', () => {
-    expect(QUESTS.length).toBeGreaterThanOrEqual(87);
+    expect(QUESTS.length).toBeGreaterThanOrEqual(90);
   });
 
   for (const quest of QUESTS) {
@@ -1054,10 +1055,10 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 126 of 129 shipped Practices scaffold
-    // (the 51 Volume 2 quests of rows CM-41..CM-45 all do).
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 129 of 132 shipped Practices scaffold
+    // (the 54 Volume 2 quests of rows CM-41..CM-45 all do).
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([129, 126]);
+    expect([QUESTS.length, scaffolding.size]).toEqual([132, 129]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
