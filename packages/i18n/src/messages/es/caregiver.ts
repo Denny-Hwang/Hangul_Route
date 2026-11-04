@@ -129,6 +129,29 @@ export const caregiver = {
       preview: { cta: 'Ver las lecciones' },
       storageBlocked: 'Tu navegador bloqueó el almacenamiento de esta página. Aquí no se pueden abrir las lecciones.',
     },
+    offline: {
+      title: 'Lecciones sin conexión',
+      line: 'La etapa 1 y el primer volumen de cada etapa siempre están en este dispositivo. Guarda aquí los demás volúmenes para usarlos sin internet.',
+      opened: 'Un volumen que se abrió una vez con internet también se guarda para usarlo sin conexión.',
+      stage: (n: number, title: string) => `Etapa ${n}: ${title}`,
+      size: (mb: string) => `Unos ${mb} MB`,
+      state: {
+        saved: 'Guardado en este dispositivo',
+        partly: 'Guardado en parte',
+        notSaved: 'Aún no guardado',
+      },
+      save: { cta: 'Guardar' },
+      saveAll: { cta: 'Guardar todo' },
+      remove: { cta: 'Quitar' },
+      saving: (done: string, total: string) => `Guardando: ${done} de ${total} MB`,
+      space: (mb: string) => `Espacio libre para esta app: unos ${mb} MB`,
+      offlineNow: 'No tienes conexión. Para guardar hace falta internet.',
+      problem: {
+        network: 'No se pudo guardar. Revisa la conexión a internet y vuelve a intentarlo.',
+        space: 'No hay espacio suficiente en este dispositivo. Quita algo y vuelve a intentarlo.',
+        notFile: 'La app tiene una actualización. Vuelve a cargar la página y vuelve a intentarlo.',
+      },
+    },
   },
 
   plan: {

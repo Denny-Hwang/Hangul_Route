@@ -415,6 +415,10 @@ export const learner = {
       tab: (n: number) => `Vol. ${n}`,
       tabA11y: (n: number) => `Volumen ${n}`,
     },
+    later: {
+      line: 'Este volumen necesita internet la primera vez. Después también funciona sin conexión.',
+      start: 'Necesita internet',
+    },
   },
 
   results: {

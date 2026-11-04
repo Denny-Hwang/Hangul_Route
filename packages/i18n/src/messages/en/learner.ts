@@ -602,6 +602,14 @@ export const learner = {
       tab: (n: number) => `Vol ${n}`,
       tabA11y: (n: number) => `Volume ${n}`,
     },
+    /**
+     * A later volume that is not on the device, while offline (F-CURR-002 row CM-5B): one calm line on its page, and
+     * the words in place of each Start. It opens once the internet is back; nobody did anything wrong.
+     */
+    later: {
+      line: 'This volume needs the internet the first time. After that, it works offline too.',
+      start: 'Needs the internet',
+    },
   },
 
   results: {

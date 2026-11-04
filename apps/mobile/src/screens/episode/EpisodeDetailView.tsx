@@ -58,6 +58,7 @@ import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
 import { passGate } from '../../store/gate-telemetry';
 import { episodeIntro } from '../../logic/episode/intro';
+import { useLaterNeedsInternet } from './use-later-offline';
 import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
@@ -140,6 +141,16 @@ export function EpisodeDetailView({
   }, [episodeId, locale, titles, volumesOn]);
   // The cell's playable volumes, for "Vol 1" and "Vol 2" (none drawn for a cell of one).
   const volumes = useMemo(() => (episode ? cellVolumes(episode, volumesOn) : []), [episode, volumesOn]);
+  // F-CURR-002 row CM-5B: a later volume, offline and not on the device, needs the internet the first time.
+  const needsInternet = useLaterNeedsInternet(episode);
+  const laterLine = needsInternet ? (
+    <>
+      <Spacer size="md" />
+      <Card padding="md" tone="sunken" testID="episode-later-needs-internet">
+        <Body tone="secondary">{m.later.line}</Body>
+      </Card>
+    </>
+  ) : null;
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   // A quest's warm-up and Try these again start loading here, with their switches on (F-CURR-002 row CM-15).
@@ -253,7 +264,12 @@ export function EpisodeDetailView({
         onOpenCellStories={(stage, theme) => onOpenCellStories(stage, theme, 'story-pill')}
         cellStoryCount={cellStoryCount}
         onOpenCellStoriesRow={() => onOpenCellStories(episode.stage, episode.theme, 'lesson-row')}
-        volumeTabs={<VolumeTabs volumes={volumes} currentId={episode.id} onOpenVolume={onOpenVolume} />}
+        volumeTabs={
+          <>
+            <VolumeTabs volumes={volumes} currentId={episode.id} onOpenVolume={onOpenVolume} />
+            {laterLine}
+          </>
+        }
       />
     );
   }
@@ -320,6 +336,7 @@ export function EpisodeDetailView({
           {isPreview ? <Pill tone="neutral" label={m.comingSoon.pill} size="sm" /> : null}
         </View>
         {isPreview ? null : <VolumeTabs volumes={volumes} currentId={episode.id} onOpenVolume={onOpenVolume} />}
+        {isPreview ? null : laterLine}
 
         <Spacer size="md" />
         {/* The stage colour is an accent bar, not the text colour: stage1-4 are below 3:1 as text. */}
@@ -438,7 +455,18 @@ export function EpisodeDetailView({
                     </>
                   ) : null}
                   <Spacer size="md" />
-                  {action === 'closed' ? (
+                  {needsInternet && action !== 'closed' ? (
+                    // Words, never a disabled button (the closed row's pattern): it opens once the internet is back.
+                    <View
+                      testID="episode-quest-needs-internet"
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
+                    >
+                      <Pip state="later" context="stage" />
+                      <Body weight="semibold" tone="secondary">
+                        {m.later.start}
+                      </Body>
+                    </View>
+                  ) : action === 'closed' ? (
                     // Text, never a disabled button (RouteMarkers "Closed row"): the stage-row dotted pip and the words.
                     <View
                       testID="episode-quest-not-open"

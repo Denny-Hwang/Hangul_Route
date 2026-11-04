@@ -32,6 +32,8 @@ import { lessonContent } from './src/content/lessons';
 import { LOCALE_BOOT_GRACE_MS, localePacks } from './src/content/locale-packs';
 import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
+import { contentScope } from './src/content/later-content';
+import { offlinePacks } from './src/store/offline-packs-store';
 import { usePwaStore } from './src/store/pwa-store';
 import { startRemoteConfig } from './src/store/remote-config-store';
 import { wireUpperCards } from './src/store/upper-cards-wiring';
@@ -50,12 +52,20 @@ const queryClient = new QueryClient({
 const navigation = createNavigationContainerRef<RootStackParamList>();
 
 /**
- * Every lesson and story chunk (F-CURR-002 §10, rows CM-5 and CM-8) and every locale chunk (the language tiles,
+ * Every core lesson and story chunk (F-CURR-002 §10, rows CM-5 and CM-8) and every locale chunk (the language tiles,
  * a language change and the level check's test language then find theirs in); a failed one is left for the
- * screen that needs it.
+ * screen that needs it. A later volume (row CM-5B: a cell's Volume 2, a tale only a book 2 holds) loads here only
+ * once it is on the device (opened before, or its stage saved for offline), so no learner downloads one unasked.
  */
 const prefetchContent = async (): Promise<void> => {
-  await Promise.allSettled([lessonContent.ensureAll(), storyContent.ensureAll(), localePacks.ensureAll()]);
+  await offlinePacks.getState().init();
+  const scope = contentScope();
+  const later = scope.later(false);
+  await Promise.allSettled([
+    lessonContent.ensureCells([...scope.core.cells, ...later.cells]),
+    storyContent.ensureStories([...scope.core.stories, ...later.stories]),
+    localePacks.ensureAll(),
+  ]);
 };
 
 export default function App(): ReactElement {
@@ -168,6 +178,8 @@ export default function App(): ReactElement {
       }
     });
     const off = subscribePwa((event) => {
+      // A new build is waiting: the stages a grown-up saved for offline get its files now, before it applies (row CM-5B).
+      if (event === 'update-ready') void offlinePacks.getState().refreshForUpdate();
       if (event === 'back-online') {
         void flushQueue();
         void useSyncStore.getState().syncAll();

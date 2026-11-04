@@ -8,6 +8,7 @@ import { isNewBuildError, type LessonStore } from '../logic/lessons/lesson-store
 import { isStoryNewBuildError, type StoryStore } from '../logic/story/story-chunk-store';
 import { storyContent } from '../content/stories';
 import { localePacks } from '../content/locale-packs';
+import { contentScope, type ContentScope } from '../content/later-content';
 import { abandonPendingChunk } from '../platform/lesson-chunk-abandon';
 import { isNewBuildAnswer, reloadForNewBuild } from '../platform/new-build-reload';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
@@ -40,7 +41,13 @@ export interface LessonContentDeps {
   /** Asks a failed chunk's URL again: true when the host answers for a newer build (404, or its HTML page refused as a script). */
   isNewBuildAnswer: (error: unknown) => Promise<boolean>;
   /** The story chunks (row CM-8), which the grown-up roots also read in full; none when omitted (a lesson-only test). */
-  stories?: Pick<StoryStore, 'isAllReady' | 'ensureAll'>;
+  stories?: Pick<StoryStore, 'isAllReady' | 'ensureAll'> & Partial<Pick<StoryStore, 'ensureStories' | 'isStoryReady'>>;
+  /**
+   * Core and later chunks (row CM-5B): with a scope, the whole-catalogue screens load the core chunks (precached) and
+   * the later ones on the device (or every one while online, for the grown-up roots); a later chunk that fails never
+   * holds a root back. Without one, every chunk, as before.
+   */
+  scope?: ContentScope;
   /**
    * The locale chunks (`content/locale-packs.ts`): the grown-up roots draw in any UI locale (the presenter's
    * slides in the deck's), so they mount with every one in; a failed one keeps that locale's text in English.
@@ -112,6 +119,7 @@ export function lessonContentBindings({
   locales = NO_LOCALES,
   abandon,
   rootTimeoutMs = 15_000,
+  scope,
 }: LessonContentDeps) {
   const subscribe = store.subscribe;
   /** True when a failed load means a newer build on the host: what the chunk said, else what its URL answers now. */
@@ -146,8 +154,10 @@ export function lessonContentBindings({
   function useLessonContentVersion(): number {
     const version = useSyncExternalStore(subscribe, store.version);
     useEffect(() => {
-      // A chunk that cannot load leaves its quests out of the counts; the next screen visit tries again.
-      store.ensureAll().catch(() => undefined);
+      // A chunk that cannot load leaves its quests out of the counts; the next screen visit tries again. A later
+      // volume counts once it is on the device (row CM-5B): the learner's own Volume 2 quests were cached when played.
+      const cells = scope === undefined ? null : [...scope.core.cells, ...scope.later(false).cells];
+      (cells === null ? store.ensureAll() : store.ensureCells(cells)).catch(() => undefined);
     }, []);
     return version;
   }
@@ -183,7 +193,21 @@ export function lessonContentBindings({
   function withLessonContent<P extends object>(Root: ComponentType<P> | LazyRoot<P>): ComponentType<P> {
     const lazy = isLazyRoot(Root) ? Root : null;
     const eager = isLazyRoot(Root) ? null : Root;
-    const contentIn = (): boolean => store.isAllReady() && stories.isAllReady();
+    const contentIn = (): boolean =>
+      scope === undefined
+        ? store.isAllReady() && stories.isAllReady()
+        : scope.core.cells.every((id) => store.isCellReady(id)) && scope.core.stories.every((id) => stories.isStoryReady?.(id) ?? stories.isAllReady());
+    /** Core chunks (a failure is the crash screen) and the later ones this root may show (a failure leaves them out). */
+    const loadContent = (): { cells: Promise<void>; storyBodies: Promise<void>; later: Promise<void> } => {
+      if (scope === undefined) return { cells: store.ensureAll(), storyBodies: stories.ensureAll(), later: Promise.resolve() };
+      const later = scope.later(true);
+      const ensureStories = (ids: readonly string[]): Promise<void> => (stories.ensureStories === undefined ? stories.ensureAll() : stories.ensureStories(ids));
+      return {
+        cells: store.ensureCells(scope.core.cells),
+        storyBodies: ensureStories(scope.core.stories),
+        later: Promise.all([store.ensureCells(later.cells), ensureStories(later.stories)]).then(() => undefined),
+      };
+    };
     function LessonContentRoot(props: P): ReactElement {
       const [Loaded, setLoaded] = useState<ComponentType<P> | null>(() => eager ?? ((lazy === null ? undefined : loadedRoots.get(lazy)) as ComponentType<P> | undefined) ?? null);
       const [state, setState] = useState<'loading' | 'ready' | 'failed'>(() => (contentIn() && Loaded !== null ? 'ready' : 'loading'));
@@ -193,9 +217,12 @@ export function lessonContentBindings({
         // Titles that fail keep their English; a body chunk that fails would leave its quests (or its story's
         // tiers, and so its quests and episode) out of the catalogue; a root whose code fails cannot mount at all.
         const root = lazy === null ? Promise.resolve(eager) : loadRoot(lazy);
-        void Promise.allSettled([store.ensureAll(), stories.ensureAll(), store.ensureTitles(locale()), locales.ensureAll(), root]).then(
-          async ([cells, storyBodies, , , code]) => {
+        const content = loadContent();
+        void Promise.allSettled([content.cells, content.storyBodies, store.ensureTitles(locale()), locales.ensureAll(), root, content.later]).then(
+          async ([cells, storyBodies, , , code, later]) => {
             if (!live) return;
+            // A later volume that cannot load (offline and not saved) stays out of the root's lists; a newer build reloads.
+            if (later.status === 'rejected' && (isNewBuildError(later.reason) || isStoryNewBuildError(later.reason)) && reload()) return;
             const failure = [cells, storyBodies, code].find((r): r is PromiseRejectedResult => r.status === 'rejected');
             if (failure === undefined) {
               if (code.status === 'fulfilled' && code.value !== null) setLoaded(() => code.value);
@@ -232,4 +259,5 @@ export const { useLessonQuestReady, useLessonContentVersion, withLessonContent }
   abandon: (bundleName) => {
     abandonPendingChunk(bundleName);
   },
+  scope: contentScope(),
 });

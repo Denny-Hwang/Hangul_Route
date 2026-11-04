@@ -10,6 +10,7 @@ import { createLessonStore, LessonChunkMismatch, type LessonCellChunk, type Less
 import { buttonsNamed, byTestId, press, render, screenTexts } from '../../test-support/render';
 import { LESSON_WAITING_LINE_MS, lessonContentBindings } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
+import type { ContentScope } from '../../content/later-content';
 
 /**
  * The screens' side of the on-demand lesson chunks (F-CURR-002 §10, row CM-5) from a cold store. The
@@ -78,7 +79,13 @@ const settle = async (): Promise<void> => {
 };
 
 function bindings(
-  over: { reload?: () => boolean; answer?: (error: unknown) => Promise<boolean>; locales?: { ensureAll: () => Promise<void> }; rootTimeoutMs?: number } = {},
+  over: {
+    reload?: () => boolean;
+    answer?: (error: unknown) => Promise<boolean>;
+    locales?: { ensureAll: () => Promise<void> };
+    rootTimeoutMs?: number;
+    scope?: ContentScope;
+  } = {},
 ) {
   const cold = coldStore();
   const reload = vi.fn(over.reload ?? (() => false));
@@ -92,6 +99,7 @@ function bindings(
     abandon,
     ...(over.locales === undefined ? {} : { locales: over.locales }),
     ...(over.rootTimeoutMs === undefined ? {} : { rootTimeoutMs: over.rootTimeoutMs }),
+    ...(over.scope === undefined ? {} : { scope: over.scope }),
   });
   return { ...cold, ...b, reload, answer, abandon };
 }
@@ -412,5 +420,84 @@ describe('useLessonContentVersion (the screens that count over every quest)', ()
     await act(async () => t.pending['episode:stage3-life']?.reject(new Error('offline')));
     await settle();
     expect(new Set(seen).size).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * Row CM-5B: core and later chunks. Here Stage 3 Life stands for a later volume (a Volume 2 cell): with a scope, the
+ * whole-catalogue screens never wait on it offline, and a failed later chunk never holds a grown-up root back.
+ */
+describe('core and later chunks (row CM-5B)', () => {
+  const scopeWith = (state: { online: boolean; onDevice: boolean }): ContentScope => ({
+    core: { cells: ['episode:stage2-rites'], stories: [] },
+    later: (whenOnline) => ({ cells: (whenOnline && state.online) || state.onDevice ? ['episode:stage3-life'] : [], stories: [] }),
+  });
+  function Root(): ReactElement {
+    return <Text testID="root">root</Text>;
+  }
+
+  it('offline with the later volume not on the device: the root mounts on the core chunks alone', async () => {
+    const t = bindings({ scope: scopeWith({ online: false, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    expect(t.asked).toEqual(['episode:stage2-rites']);
+    await act(async () => t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites')));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+
+  it('online: the root loads the later volume too, and one that fails leaves it out instead of the crash screen', async () => {
+    const t = bindings({ scope: scopeWith({ online: true, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    expect(t.asked.sort()).toEqual(['episode:stage2-rites', 'episode:stage3-life']);
+    await act(async () => t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites')));
+    await act(async () => t.pending['episode:stage3-life']?.reject(new Error('offline')));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+    expect(t.reload).not.toHaveBeenCalled();
+  });
+
+  it('a later chunk of a newer build reloads the page', async () => {
+    const t = bindings({ reload: () => true, scope: scopeWith({ online: true, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    await act(async () => t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites')));
+    await act(async () => t.pending['episode:stage3-life']?.reject(new LessonChunkMismatch('episode:stage3-life', 'h-life', 'x')));
+    await settle();
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'root')).toHaveLength(0);
+  });
+
+  it('a core chunk that fails is still the crash screen', async () => {
+    const t = bindings({ scope: scopeWith({ online: false, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    await act(async () => t.pending['episode:stage2-rites']?.reject(new Error('offline')));
+    await settle();
+    expect(buttonsNamed(r.root, TRY_AGAIN)).toHaveLength(1);
+  });
+
+  it('mounts at once when the core chunks are in', async () => {
+    const t = bindings({ scope: scopeWith({ online: false, onDevice: false }) });
+    const loading = t.store.ensureCells(['episode:stage2-rites']);
+    t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites'));
+    await loading;
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+
+  it('the counting screens load the core chunks and a later one only once it is on the device', async () => {
+    const off = bindings({ scope: scopeWith({ online: true, onDevice: false }) });
+    function Counter({ hook }: { hook: () => number }): null {
+      hook();
+      return null;
+    }
+    await render(<Counter hook={off.useLessonContentVersion} />);
+    expect(off.asked).toEqual(['episode:stage2-rites']);
+    const kept = bindings({ scope: scopeWith({ online: false, onDevice: true }) });
+    await render(<Counter hook={kept.useLessonContentVersion} />);
+    expect(kept.asked.sort()).toEqual(['episode:stage2-rites', 'episode:stage3-life']);
   });
 });

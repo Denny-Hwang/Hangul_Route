@@ -397,6 +397,10 @@ export const learner = {
       tab: (n: number) => `${n}권`,
       tabA11y: (n: number) => `${n}권`,
     },
+    later: {
+      line: '이 권은 처음 한 번은 인터넷이 필요해요. 그다음부터는 오프라인에서도 돼요.',
+      start: '인터넷이 필요해요',
+    },
   },
 
   results: {

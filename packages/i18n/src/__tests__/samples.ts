@@ -1051,4 +1051,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
+  // F-CURR-002 row CM-5B: the Offline lessons card (sizes already formatted for the locale).
+  'caregiver.dashboard.offline.stage': [[2, 'Word'], [5, 'Story']],
+  'caregiver.dashboard.offline.size': [['0.4'], ['12.3']],
+  'caregiver.dashboard.offline.saving': [['0.1', '0.4'], ['6.5', '12.3']],
+  'caregiver.dashboard.offline.space': [['950.2'], ['12']],
 };
