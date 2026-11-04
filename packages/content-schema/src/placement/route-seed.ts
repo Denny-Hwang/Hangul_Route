@@ -125,6 +125,12 @@ interface SeedInput {
   motivation: Motivation | undefined;
 }
 
+/**
+ * A quest the route can start at or lead to (F-PLC-001 section 3.7): a playable grid quest of a cell's first volume. A
+ * later volume (F-CURR-002 row CM-40) is off the route, so a seed, an override or a 'next' card never names one.
+ */
+export const onTheRoute = (quest: RouteQuest): boolean => quest.grid && quest.playable && quest.laterVolume !== true;
+
 const buildSeed = (input: SeedInput, catalog: RouteCatalog, opts: RouteOptions): RouteSeed => {
   const placedOut = new Set(input.placedOut);
   const remaining = inRouteOrder(catalog).filter(
@@ -208,8 +214,15 @@ export const effectiveRoute = (
   }
 
   const override = overrideInForce(placements);
-  const grid = inRouteOrder(catalog).filter((quest) => quest.grid);
+  // The override's chosen start is a first-volume grid quest (a later volume is never a start, F-CURR-002 row CM-40). A
+  // later volume's quest sits with its own cell for the override: placed out when its cell's first volume is before the
+  // chosen start, put back otherwise, so an earlier start never leaves a later stage's Volume 2 placed out.
+  const grid = inRouteOrder(catalog).filter((quest) => quest.grid && quest.laterVolume !== true);
   const chosen = override === undefined ? -1 : grid.findIndex((quest) => quest.id === override.startQuestId);
+  const cellKey = (quest: RouteQuest): string => `${quest.stage}/${quest.theme}`;
+  const cellEnd = new Map<string, number>();
+  grid.forEach((quest, index) => cellEnd.set(cellKey(quest), index));
+  const laterVolumes = inRouteOrder(catalog).filter((quest) => quest.grid && quest.laterVolume === true);
   // Stage Jump Ahead (F-CURR-002 row CM-25, F-PLC-001 section 3.6 as amended): each jumped stage adds the grid quests of
   // the cells it marked (a cell shipped later in that stage is not one). The newer of a jump and a grown-up override
   // wins: a jump latched before the override in force is folded in before it, so the grown-up's put-back covers it; a
@@ -228,6 +241,11 @@ export const effectiveRoute = (
       if (index < chosen) placedOut.add(quest.id);
       else placedOut.delete(quest.id);
     });
+    for (const quest of laterVolumes) {
+      const end = cellEnd.get(cellKey(quest));
+      if (end !== undefined && end < chosen) placedOut.add(quest.id);
+      else placedOut.delete(quest.id);
+    }
   }
   foldJumps(false);
 
