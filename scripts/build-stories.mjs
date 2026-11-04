@@ -101,7 +101,10 @@ export const LEGACY_BUNDLE = join("apps", "mobile", "src", "content", "stories.g
  *   lesson headers chunk line of row CM-40 does.
  * pwa-postbuild.mjs holds the built story bundles to `perStoryRaw`, `totalRaw` and `totalGzip` too
  * (`PRECACHE_BUDGET` of apps/mobile/scripts/pwa/lesson-chunks.mjs, kept equal by its test).
- * - `artRaw`: the scene-art share (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
+ * - `artRaw`: the scene-art share (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`. The F-CURR-002
+ *   Volume 2 integration (integrate/cm-1105: the CM-46 books 2 add nine tales) measures 145,537 B raw over 449 scenes,
+ *   past the 130,000 B line, so the line is that measurement plus a rounding margin: 150,000 B. The art rides in the
+ *   lazy story chunks; a book 2 tale's chunk is a CM-5B later chunk, out of the learner precache.
  */
 export const BUDGET = Object.freeze({
   perStoryRaw: 70_000,
@@ -109,7 +112,7 @@ export const BUDGET = Object.freeze({
   totalGzip: 510_000,
   manifestRaw: 60_000,
   shelfRaw: 40_000,
-  artRaw: 130_000,
+  artRaw: 150_000,
 });
 
 /**
