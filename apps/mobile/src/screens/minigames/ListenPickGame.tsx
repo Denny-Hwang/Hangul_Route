@@ -21,12 +21,11 @@ import {
   layout,
   useLayoutClass,
   useMediaSize,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -119,9 +118,6 @@ interface Focusable {
 const SPELLING_SIDE_BY_SIDE_GLYPHS = 4;
 
 export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textPromptProp, spelling = null }: Props): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
-  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
-  const guardSpeaker = usePressGuard({ setsLock: false });
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(
     () => validRounds(scope).map((r, i) => shuffleOptions(spelling === null ? spellingPickToListenPick(r) : r, seed + i)),
@@ -370,13 +366,13 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
             {textContent ?? <View style={{ alignItems: 'center', gap: spacing.md }}>
               {spellingKit === null ? null : <spellingKit.SpellingCue round={round} />}
               <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
-                <Pressable
+                <GuardedPressable
+                  setsLock={false}
                   ref={(node) => {
                     speakerRef.current = node as unknown as Focusable | null;
                   }}
                   testID="listen-pick-speaker"
-                  onPress={guardSpeaker(hear)}
-                  {...NO_PRESS_DELAY}
+                  onPress={hear}
                   accessibilityRole="button"
                   accessibilityLabel={speakerLabel}
                   hitSlop={spacing.md}
@@ -392,7 +388,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                   }}
                 >
                   <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-                </Pressable>
+                </GuardedPressable>
               </Animated.View>
               {hearAgainShown ? (
                 <View style={{ alignSelf: 'center' }}>

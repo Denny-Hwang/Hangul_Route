@@ -1,6 +1,5 @@
-import { Caption, Icon, colors, spacing, touchTarget, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
+import { Caption, Icon, colors, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
-import { Pressable } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { canSwitchProfileFrom } from '../logic/profiles/session';
 import { useProfileStore } from '../store/profile-store';
@@ -19,15 +18,11 @@ const GLYPH = 32;
 export function WhoSwitchButton({ onPress }: { onPress: () => void }): ReactElement | null {
   const w = useMessages().learner.who;
   const profiles = useProfileStore((s) => s.profiles);
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens the chooser once; an opening tap sets the app-level tap lock, so the
-  // bounce cannot pick a person on the chooser that appears under the finger.
-  const guard = usePressGuard();
   if (!canSwitchProfileFrom('home') || !switchOffered(learnerProfiles(profiles).length)) return null;
   return (
-    <Pressable
+    <GuardedPressable
       testID="home-who-switch"
-      onPress={guard(onPress)}
-      {...NO_PRESS_DELAY}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={w.switch}
       accessibilityHint={w.title}
@@ -37,6 +32,6 @@ export function WhoSwitchButton({ onPress }: { onPress: () => void }): ReactElem
       <Caption tone="secondary" weight="semibold">
         {w.switch}
       </Caption>
-    </Pressable>
+    </GuardedPressable>
   );
 }

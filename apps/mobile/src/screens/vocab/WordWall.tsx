@@ -1,7 +1,7 @@
-import { KoreanText, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass, useEffectiveFontScale, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
+import { KoreanText, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass, useEffectiveFontScale, GuardedPressable } from '@hangul-route/design-system';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View, type LayoutChangeEvent } from 'react-native';
+import { View, type LayoutChangeEvent } from 'react-native';
 import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
 import { wallArtSize, wallColumns, type WallTileView } from '../../logic/vocab/topic-view';
 import { PictureArt } from '../minigames/PictureArt';
@@ -61,9 +61,6 @@ export function WordWall({
 }
 
 function WallTile({ tile, art, onOpen }: { tile: WallTileView; art: number; onOpen?: (id: string) => void }): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens once, a tap during the app-level tap lock is dropped, and an
-  // opening tap sets that lock, so the bounce cannot press what the next screen puts under the finger.
-  const guard = usePressGuard();
   const frame = {
     flexGrow: 1,
     minHeight: touchTarget.min,
@@ -112,15 +109,14 @@ function WallTile({ tile, art, onOpen }: { tile: WallTileView; art: number; onOp
   }
 
   return (
-    <Pressable
-      onPress={guard(() => onOpen(tile.id))}
-      {...NO_PRESS_DELAY}
+    <GuardedPressable
+      onPress={() => onOpen(tile.id)}
       accessibilityRole="button"
       accessibilityLabel={tile.accessibilityLabel}
       testID={`vocab-wall-${tile.id}`}
       style={({ pressed }) => ({ ...frame, borderColor: pressed ? colors.border.focus : 'transparent' })}
     >
       {body}
-    </Pressable>
+    </GuardedPressable>
   );
 }

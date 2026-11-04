@@ -73,7 +73,7 @@ No new token. If review prefers another chip colour, it goes through the design-
 |---|---|
 | default | chip + romanization + gloss |
 | romanization hidden | chip + gloss (no romanization line) |
-| pressable | adds the speaker icon next to the romanization (or under the chip when it is hidden); pressed scale 1.04 (its own press look; `Tile` moved to the AMENDMENTS-TOUCH 4.3 press look in KT-2, and this speaker's press handling is row KT-9's: `usePressGuard({ setsLock: false })` drops its own bounce and waits for the app-level tap lock without setting it, and `delayPressIn` is 0, AMENDMENTS-TOUCH 6.9) |
+| pressable | adds the speaker icon next to the romanization (or under the chip when it is hidden); pressed scale 1.04 (its own press look; `Tile` moved to the AMENDMENTS-TOUCH 4.3 press look in KT-2, and this speaker's press handling is row KT-9's: a `GuardedPressable` with `setsLock={false}` drops its own bounce and waits for the app-level tap lock without setting it, and `delayPressIn` is 0, AMENDMENTS-TOUCH 6.9) |
 | no gloss | chip + romanization only |
 | long gloss | wraps to more lines; chip never grows |
 

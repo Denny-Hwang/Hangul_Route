@@ -1,9 +1,9 @@
-import { Body, Heading, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
+import { Body, Heading, Icon, Spacer, borderWidth, colors, radii, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { storiesAll } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
@@ -39,15 +39,11 @@ export function CultureSection({ index }: { index: readonly StoryIndexEntry[] })
   const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale, noteChunks]);
   const card = useMemo(() => cultureNotesCard(foundNotes(index, stories, snap), copy), [index, stories, snap, copy]);
   const hasTiles = index.some((e) => e.placement === 'shelf' && e.category === 'culture');
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens once, a tap during the app-level tap lock is dropped, and an
-  // opening tap sets that lock, so the bounce cannot press what the next screen puts under the finger.
-  const guard = usePressGuard();
 
   return (
     <View testID="library-culture">
-      <Pressable
-        onPress={guard(() => navigation.navigate('CultureNotes', undefined))}
-        {...NO_PRESS_DELAY}
+      <GuardedPressable
+        onPress={() => navigation.navigate('CultureNotes', undefined)}
         accessibilityRole="button"
         accessibilityLabel={card.accessibilityLabel}
         testID="library-culture-notes"
@@ -83,7 +79,7 @@ export function CultureSection({ index }: { index: readonly StoryIndexEntry[] })
           ) : null}
         </View>
         <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
-      </Pressable>
+      </GuardedPressable>
       {hasTiles ? <Spacer size="lg" /> : null}
       <StoryShelf category="culture" index={index} hero={false} />
     </View>

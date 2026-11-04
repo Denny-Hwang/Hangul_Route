@@ -14,11 +14,10 @@ import {
   touchTarget,
   typography,
   KOREAN_LINE_BREAK,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { storyCoverVariant, storyTileCoverWidth, type StoryTileView } from '../../logic/story/story-tile';
 
 /** Padding inside a tile; the cover fills the rest of the tile's width. */
@@ -99,15 +98,11 @@ export function StoryTile({
   onPress: () => void;
   testID?: string;
 }): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens once, a tap during the app-level tap lock is dropped, and an
-  // opening tap sets that lock, so the bounce cannot press what the next screen puts under the finger.
-  const guard = usePressGuard();
   const coverWidth = storyTileCoverWidth(width, TILE_CHROME);
   return (
-    <Pressable
+    <GuardedPressable
       testID={testID}
-      onPress={guard(onPress)}
-      {...NO_PRESS_DELAY}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={view.accessibilityLabel}
       accessibilityHint={hint}
@@ -149,6 +144,6 @@ export function StoryTile({
         <Caption tone="muted">{view.minutesLine}</Caption>
         {inPlanLabel ? <RouteTag kind="inPlan" label={inPlanLabel} testID="story-tile-in-plan" /> : null}
       </View>
-    </Pressable>
+    </GuardedPressable>
   );
 }

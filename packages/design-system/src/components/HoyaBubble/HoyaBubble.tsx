@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { colors, radii, shadows, spacing, touchTarget } from '../../tokens';
-import { NO_PRESS_DELAY } from '../TapBoard/press-delay';
-import { usePressGuard } from '../TapBoard/use-press-guard';
+import { GuardedPressable } from '../TapBoard/GuardedPressable';
 import { useTypeScale } from '../TextSize';
 import { hoyaDismissLabel } from '../../labels';
 import { Body, Caption, Heading } from '../Heading/Heading';
@@ -43,9 +42,6 @@ export function HoyaBubble({
   testID,
 }: HoyaBubbleProps): ReactElement {
   const textScale = useTypeScale();
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the dismiss drops its own bounce and waits for the app-level tap lock; closing the
-  // bubble moves what is under it, so a press that runs sets that lock.
-  const guard = usePressGuard();
   useEffect(() => {
     if (!onDismiss || !autoDismissMs) return;
     const ms = Math.max(MIN_DISMISS_MS, autoDismissMs);
@@ -90,9 +86,9 @@ export function HoyaBubble({
         {ctaInline ? <View style={{ marginTop: spacing.sm }}>{ctaInline}</View> : null}
       </View>
       {onDismiss ? (
-        <Pressable
-          onPress={guard(onDismiss)}
-          {...NO_PRESS_DELAY}
+        // AMENDMENTS-TOUCH 6.9 (row KT-9): guarded, and closing the bubble moves what is under it, so it sets the lock.
+        <GuardedPressable
+          onPress={onDismiss}
           accessibilityRole="button"
           accessibilityLabel={hoyaDismissLabel(dismissLabel)}
           // The hit area is the Pressable itself, at least touchTarget.min each way (react-native-web drops hitSlop). It
@@ -113,7 +109,7 @@ export function HoyaBubble({
           >
             ×
           </Caption>
-        </Pressable>
+        </GuardedPressable>
       ) : null}
     </View>
   );

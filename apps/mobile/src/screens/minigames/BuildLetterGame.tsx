@@ -17,12 +17,11 @@ import {
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -47,9 +46,6 @@ interface Props {
 }
 
 export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
-  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
-  const guardSpeaker = usePressGuard({ setsLock: false });
   const m = useMessages();
   const copy = m.learner.minigame;
   const rounds = useMemo<BuildLetterRound[]>(
@@ -148,9 +144,9 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
       <Spacer size="md" />
 
       <View style={{ alignItems: 'center' }}>
-        <Pressable
-          onPress={guardSpeaker(hear)}
-          {...NO_PRESS_DELAY}
+        <GuardedPressable
+          setsLock={false}
+          onPress={hear}
           accessibilityRole="button"
           accessibilityLabel={m.a11y.minigame.hear(round.romanization)}
           testID="build-letter-speaker"
@@ -167,7 +163,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         >
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: targetGlyph, fontWeight: '800', color: colors.text.primary }}>{round.targetSyllable}</Text>
           <Caption tone="secondary">{round.romanization}</Caption>
-        </Pressable>
+        </GuardedPressable>
       </View>
       <Spacer size="sm" />
       <PromptPanel

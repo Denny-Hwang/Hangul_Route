@@ -15,12 +15,11 @@ import {
   useMediaSize,
   type HoyaTone,
   KOREAN_LINE_BREAK,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { AccessibilityInfo, Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Platform, Text, View, type LayoutChangeEvent } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { localizedGloss, vocabItem, vocabTopic } from '../../content/vocab';
@@ -125,9 +124,6 @@ export function VocabQuestionView({
   hoya = null,
   testID = 'vocab-question',
 }: VocabQuestionViewProps): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
-  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
-  const guardSpeaker = usePressGuard({ setsLock: false });
   const m = useMessages();
   const locale = useLocale();
   const say = m.a11y.vocab.question;
@@ -322,13 +318,13 @@ export function VocabQuestionView({
   const speakerButton = (size: 'small' | 'large'): ReactElement => {
     const side = size === 'large' ? bigSpeaker : touchTarget.min;
     return (
-      <Pressable
+      <GuardedPressable
+        setsLock={false}
         ref={(node) => {
           if (size === 'large') promptRef.current = node as unknown as View | null;
         }}
         testID={`${testID}-speaker`}
-        onPress={guardSpeaker(() => playPromptWord(key))}
-        {...NO_PRESS_DELAY}
+        onPress={() => playPromptWord(key)}
         accessibilityRole="button"
         accessibilityLabel={speakerLabel}
         hitSlop={spacing.sm}
@@ -344,7 +340,7 @@ export function VocabQuestionView({
         }}
       >
         <Icon name="speaker" size={size === 'large' ? bigSpeakerIcon : spacing.xl} color={colors.brand.secondaryDark} />
-      </Pressable>
+      </GuardedPressable>
     );
   };
 

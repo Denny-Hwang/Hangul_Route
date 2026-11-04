@@ -80,12 +80,16 @@ function openCount(source: string, index: number, tag: string): number {
   return open - closed;
 }
 
-/** Every raw `<Pressable` in one source file, in order; repeated names get ` #2`, ` #3`. */
+/**
+ * Every `<Pressable` and `<GuardedPressable` in one source file, in order; repeated names get ` #2`, ` #3`. A
+ * `GuardedPressable` (the KT-9 control) still commits on the browser's click, so it is counted with the raw ones: an
+ * answer belongs on a board either way.
+ */
 export function rawPressables(source: string): RawPressable[] {
   const found: RawPressable[] = [];
   const seen = new Map<string, number>();
   let n = 0;
-  for (const m of source.matchAll(/<Pressable\b/g)) {
+  for (const m of source.matchAll(/<(?:Guarded)?Pressable\b/g)) {
     n += 1;
     const start = m.index ?? 0;
     const tag = source.slice(start, openingTagEnd(source, start));

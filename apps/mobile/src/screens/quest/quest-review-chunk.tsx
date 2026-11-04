@@ -22,13 +22,12 @@ import {
   touchTarget,
   useMediaSize,
   type ChoiceCardState,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
@@ -288,9 +287,6 @@ function instructionOf(round: PickRound, m: Messages): string {
 }
 
 function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProps): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
-  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
-  const guardSpeaker = usePressGuard({ setsLock: false });
   const m = useMessages();
   const a11y = m.a11y.minigame;
   const romanizationMode = useRomanizationMode();
@@ -368,10 +364,10 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
       <View style={{ alignItems: 'center', gap: spacing.md }}>
         {heard ? (
           <>
-            <Pressable
+            <GuardedPressable
+              setsLock={false}
               testID="quest-review-speaker"
-              onPress={guardSpeaker(hear)}
-              {...NO_PRESS_DELAY}
+              onPress={hear}
               accessibilityRole="button"
               accessibilityLabel={speakerLabel}
               hitSlop={spacing.md}
@@ -387,7 +383,7 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
               }}
             >
               <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-            </Pressable>
+            </GuardedPressable>
             <Button label={m.learner.minigame.listenPick.hearAgain.cta} tone="secondary" size="md" onPress={hear} testID="quest-review-hear-again" />
             {round.cue?.pictureRef !== undefined ? <PictureArt pictureRef={round.cue.pictureRef} gloss={round.cue.gloss} size={pictureSize} /> : round.cue ? <Body weight="semibold">{round.cue.gloss}</Body> : null}
             {/* The fallback text when the sound is off, missing or failed (F-AUDIO-004 W2-W4), and the answer once it is over. */}

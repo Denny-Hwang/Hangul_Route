@@ -1,6 +1,6 @@
-import { Body, Button, Caption, Heading, Icon, Spacer, colors, radii, spacing, touchTarget, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
+import { Body, Button, Caption, Heading, Icon, Spacer, colors, radii, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { Modal, ScrollView, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { voiceHelpContent } from '../logic/audio/voice-help';
 
@@ -20,16 +20,11 @@ interface Props {
 export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }: Props): ReactElement {
   const m = useMessages();
   const help = voiceHelpContent(m.learner.audio.voiceHelp);
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): closing the sheet uncovers the game, so a close drops its own bounce, waits for the
-  // app-level tap lock and sets it: the bounce cannot answer on the board the sheet was covering.
-  const guard = usePressGuard();
-  const close = guard(onClose);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID={testID}>
-        <Pressable
-          onPress={close}
-          {...NO_PRESS_DELAY}
+        <GuardedPressable
+          onPress={onClose}
           accessibilityRole="button"
           accessibilityLabel={m.common.buttons.close}
           style={{ flex: 1 }}
@@ -49,9 +44,8 @@ export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }
             <View style={{ flex: 1 }}>
               <Heading level="prompt">{help.title}</Heading>
             </View>
-            <Pressable
-              onPress={close}
-              {...NO_PRESS_DELAY}
+            <GuardedPressable
+              onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={m.common.buttons.close}
               // Native only (react-native-web drops it); the target is already at least touchTarget.min each way.
@@ -59,7 +53,7 @@ export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }
               style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
             >
               <Icon name="close" size={22} color={colors.text.muted} />
-            </Pressable>
+            </GuardedPressable>
           </View>
           <Caption tone="muted">{help.note}</Caption>
           <Spacer size="md" />

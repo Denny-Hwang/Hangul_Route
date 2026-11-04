@@ -1,7 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
-import { Body, Caption, Heading, Spacer, borderWidth, colors, radii, spacing, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
+import { Body, Caption, Heading, Spacer, borderWidth, colors, radii, spacing, GuardedPressable } from '@hangul-route/design-system';
 import { useMemo, type ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { albumLegendCards, heritageCardsAll } from '../../content/heritage-cards';
 import { ALBUM_STAGES, ALBUM_THEMES } from '../../content/album-order';
@@ -31,9 +31,6 @@ export function AlbumsSection({ owned, onOpenCard }: { owned: ReadonlySet<string
   const m = messages.learner.library.albums;
   const locale = useLocale();
   const albums = useMemo(() => albumViews(UPPER_CELL_CARDS, heritageCardsAll, owned, ALBUM_THEMES, ALBUM_STAGES), [owned]);
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens once, a tap during the app-level tap lock is dropped, and an
-  // opening tap sets that lock, so the bounce cannot press what the next screen puts under the finger.
-  const guard = usePressGuard();
   return (
     <View testID="library-albums">
       <Spacer size="xl" />
@@ -79,11 +76,10 @@ export function AlbumsSection({ owned, onOpenCard }: { owned: ReadonlySet<string
                   {faces.map((source) => {
                     const card = localizeCard(source, locale);
                     return (
-                      <Pressable
+                      <GuardedPressable
                         key={card.id}
                         testID={`library-album-card-${card.id}`}
-                        onPress={guard(() => onOpenCard(source))}
-                        {...NO_PRESS_DELAY}
+                        onPress={() => onOpenCard(source)}
                         accessibilityRole="button"
                         accessibilityLabel={card.titleEn}
                         style={({ pressed }) => ({
@@ -95,7 +91,7 @@ export function AlbumsSection({ owned, onOpenCard }: { owned: ReadonlySet<string
                         })}
                       >
                         <CardArt card={card} size={THUMB} />
-                      </Pressable>
+                      </GuardedPressable>
                     );
                   })}
                 </View>

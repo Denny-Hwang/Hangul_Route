@@ -7,7 +7,6 @@ import {
   Hoya,
   HoyaBubble,
   Icon,
-  NO_PRESS_DELAY,
   Pill,
   Progress,
   Screen,
@@ -22,12 +21,12 @@ import {
   useEffectiveFontScale,
   useLayoutClass,
   useMediaSize,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
+import { AccessibilityInfo, Platform, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
@@ -372,9 +371,6 @@ function CatchUpCard({
 
 export function HomeScreen(): ReactElement {
   const m = useMessages();
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the Homework card and the Profile entry drop a bounce, wait for the app-level tap
-  // lock and set it when they open, so a bounce cannot press what the next screen puts under the finger.
-  const guard = usePressGuard();
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
   const titles = useLessonTitlesVersion();
@@ -906,9 +902,8 @@ export function HomeScreen(): ReactElement {
           <Spacer size="xl" />
         </>
       ) : null}
-      <Pressable
-        onPress={guard(() => navigation.navigate('Homework'))}
-        {...NO_PRESS_DELAY}
+      <GuardedPressable
+        onPress={() => navigation.navigate('Homework')}
         accessibilityRole="button"
         accessibilityLabel={m.a11y.openHomework}
       >
@@ -923,7 +918,7 @@ export function HomeScreen(): ReactElement {
             <Icon name="card" size={24} color={colors.text.muted} />
           </View>
         </Card>
-      </Pressable>
+      </GuardedPressable>
 
       <Spacer size="xl" />
       <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: learnedOn(snap?.sessions ?? [], localToday) })]} />
@@ -979,9 +974,8 @@ export function HomeScreen(): ReactElement {
         {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
             colour its avatar name says (not the Pillar theme), with a visible
             label — the only way to profiles, backup, classes and the grown-up zone. */}
-        <Pressable
-          onPress={guard(() => navigation.navigate('Profile'))}
-          {...NO_PRESS_DELAY}
+        <GuardedPressable
+          onPress={() => navigation.navigate('Profile')}
           accessibilityRole="button"
           accessibilityLabel={m.a11y.profileEntry}
           // The avatar and its word are the hit area, at least touchTarget.min each way (react-native-web drops hitSlop).
@@ -991,7 +985,7 @@ export function HomeScreen(): ReactElement {
           <Caption tone="secondary" weight="semibold">
             {m.learner.home.profileLabel}
           </Caption>
-        </Pressable>
+        </GuardedPressable>
         </View>
       </View>
 

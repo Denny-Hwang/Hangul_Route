@@ -1,8 +1,7 @@
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { colors, radii, shadows, spacing } from '../../tokens';
-import { NO_PRESS_DELAY } from '../TapBoard/press-delay';
-import { usePressGuard } from '../TapBoard/use-press-guard';
+import { GuardedPressable } from '../TapBoard/GuardedPressable';
 import type { CardPadding, CardProps } from './types';
 
 const padMap: Record<CardPadding, number> = {
@@ -31,11 +30,6 @@ export function Card({
   testID,
   style,
 }: CardProps): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a pressable card (a Home card, the route strip) is a learner non-game target. A
-  // bounce on it opens once, a press during the app-level tap lock is dropped, and an opening press sets that lock, so
-  // the bounce cannot press what the next screen puts under the finger. The hook runs for a static card too (hooks
-  // never change order); it is used only when there is a handler.
-  const guard = usePressGuard();
   const elevationStyle = elevation === 'flat' ? {} : shadows[elevation];
   const baseStyle = {
     backgroundColor: toneBg[tone],
@@ -46,9 +40,10 @@ export function Card({
 
   if (onPress) {
     return (
-      <Pressable
-        onPress={guard(onPress)}
-        {...NO_PRESS_DELAY}
+      // AMENDMENTS-TOUCH 6.9 (row KT-9): a pressable card (a Home card, the route strip) is a learner non-game target. A
+      // bounce on it opens once, a press during the app-level tap lock is dropped, and an opening press sets that lock.
+      <GuardedPressable
+        onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
@@ -60,7 +55,7 @@ export function Card({
         ]}
       >
         {children}
-      </Pressable>
+      </GuardedPressable>
     );
   }
   return (

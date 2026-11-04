@@ -1,7 +1,7 @@
-import { Body, KoreanText, Progress, borderWidth, colors, radii, spacing, touchTarget, NO_PRESS_DELAY, usePressGuard } from '@hangul-route/design-system';
+import { Body, KoreanText, Progress, borderWidth, colors, radii, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import type { VocabTopic } from '@hangul-route/content-schema';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import type { TopicTileView } from '../../logic/vocab/topic-view';
 import { PictureArt } from '../minigames/PictureArt';
 
@@ -58,14 +58,10 @@ export function TopicTile({
   hint?: string;
   testID?: string;
 }): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce opens once, a tap during the app-level tap lock is dropped, and an
-  // opening tap sets that lock, so the bounce cannot press what the next screen puts under the finger.
-  const guard = usePressGuard();
   return (
-    <Pressable
+    <GuardedPressable
       testID={testID}
-      onPress={guard(onPress)}
-      {...NO_PRESS_DELAY}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={view.accessibilityLabel}
       accessibilityHint={hint}
@@ -97,6 +93,6 @@ export function TopicTile({
       <Body weight="semibold" tone="secondary">
         {view.countLine}
       </Body>
-    </Pressable>
+    </GuardedPressable>
   );
 }

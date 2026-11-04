@@ -18,8 +18,7 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useEffectiveFontScale,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { EventArg, NavigationAction } from '@react-navigation/native';
@@ -380,9 +379,6 @@ function CardsPhase({
   /** The profile whose reading practice switch is offered, or `null` (no profile, or a preview: no switch). */
   readingPractice: { id: string } | null;
 }): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
-  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
-  const guardSpeaker = usePressGuard({ setsLock: false });
   const messages = useMessages();
   const copy = vocabCopyOf(messages).cards;
   const locale = useLocale();
@@ -530,13 +526,13 @@ function CardsPhase({
 
       <Spacer size="md" />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Pressable
+        <GuardedPressable
+          setsLock={false}
           testID="vocab-card-speaker"
-          onPress={guardSpeaker(() => {
+          onPress={() => {
             dispatch('hear');
             playWord();
-          })}
-          {...NO_PRESS_DELAY}
+          }}
           accessibilityRole="button"
           accessibilityLabel={slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : copy.hear}
           style={{
@@ -551,7 +547,7 @@ function CardsPhase({
           }}
         >
           <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-        </Pressable>
+        </GuardedPressable>
         <View {...HIDDEN} style={{ flexShrink: 1 }}>
           <Body>{copy.hear}</Body>
         </View>

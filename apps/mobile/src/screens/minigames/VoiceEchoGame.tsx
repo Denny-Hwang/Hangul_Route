@@ -16,8 +16,7 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useTypeScale,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
@@ -46,9 +45,6 @@ interface Props {
  * to listen, repeat aloud, and tap "I said it" — honor system.
  */
 export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement {
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing: it drops its own bounce and waits for
-  // the app-level tap lock, but a tap on it never sets that lock, so the answers stay live.
-  const guardSpeaker = usePressGuard({ setsLock: false });
   const textScale = useTypeScale();
   const m = useMessages();
   const copy = m.learner.minigame.voiceEcho;
@@ -86,9 +82,9 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
       <Spacer size="md" />
 
       <View style={{ alignItems: 'center' }}>
-        <Pressable
-          onPress={guardSpeaker(hear)}
-          {...NO_PRESS_DELAY}
+        <GuardedPressable
+          setsLock={false}
+          onPress={hear}
           accessibilityRole="button"
           accessibilityLabel={m.a11y.minigame.hear(targetRomanization ?? target)}
           testID="voice-echo-speaker"
@@ -106,7 +102,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
           <Icon name="speaker" size={speakerIcon} />
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
           {targetRomanization ? <Caption tone="secondary">{targetRomanization}</Caption> : null}
-        </Pressable>
+        </GuardedPressable>
       </View>
       <Spacer size="sm" />
       <PromptPanel

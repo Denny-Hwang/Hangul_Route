@@ -6,8 +6,8 @@ import { attributeValue, openingTagEnd, rawPressableRatchet, rawPressables, type
 
 /**
  * The KT-9 scan (docs/specs/AMENDMENTS-TOUCH.md section 6.9 and 11.1): no file under `screens/minigames/`,
- * `screens/quest/`, `screens/placement/` or `screens/vocab/` puts an answer `onPress` on a raw `Pressable` outside a
- * `TapBoard`. Every raw Pressable there is either a control on CONTROLS (a speaker, a reveal, a setting, a way out:
+ * `screens/quest/`, `screens/placement/` or `screens/vocab/` puts an answer `onPress` on a raw `Pressable` (or a
+ * `GuardedPressable`, which also commits on the browser's click) outside a `TapBoard`. Every one there is either a control on CONTROLS (a speaker, a reveal, a setting, a way out:
  * none of them answers) or an answer on PENDING, named with the row that moves it onto a board. A new raw Pressable
  * fails until it is a `TapTarget` in a board or, if it answers nothing, a listed control; a listed line that is no
  * longer found fails too, so PENDING only shrinks as KT-3, KT-4b, KT-5 and KT-6 land.
@@ -15,7 +15,7 @@ import { attributeValue, openingTagEnd, rawPressableRatchet, rawPressables, type
 const srcDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const FOLDERS = ['screens/minigames', 'screens/quest', 'screens/placement', 'screens/vocab'] as const;
 
-/** Raw Pressables that answer nothing; named by their `testID` (or `onPress`) as written. */
+/** Pressables and GuardedPressables that answer nothing; named by their `testID` (or `onPress`) as written. */
 const CONTROLS: Readonly<Record<string, readonly string[]>> = {
   'screens/minigames/BuildLetterGame.tsx': ['build-letter-speaker'],
   'screens/minigames/ListenPickGame.tsx': ['listen-pick-speaker'],
@@ -92,7 +92,7 @@ describe('no raw answer Pressable outside a TapBoard in the learner game folders
     if (list.length > 0) found.set(relative(srcDir, path).split(sep).join('/'), list);
   }
 
-  it('finds raw Pressables to check in each folder', () => {
+  it('finds Pressables to check in each folder', () => {
     for (const folder of FOLDERS) expect([...found.keys()].some((file) => file.startsWith(`${folder}/`)), folder).toBe(true);
   });
 
@@ -132,8 +132,9 @@ describe('raw Pressable scan rules', () => {
       '<Pressable style={{}} />',
       '<Pressable testID="a" />',
       '<PressableThing onPress={z} />',
+      '<GuardedPressable setsLock={false} testID="speaker" />',
     ].join('\n');
-    expect(rawPressables(src).map((p) => p.name)).toEqual(['a', 'y', '#3', 'a #2']);
+    expect(rawPressables(src).map((p) => p.name)).toEqual(['a', 'y', '#3', 'a #2', 'speaker']);
   });
 
   it('a Pressable inside an open TapBoard or TapControl is in a board; after it closes, or a self-closing one, it is not', () => {

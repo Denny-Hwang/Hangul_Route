@@ -11,12 +11,11 @@ import {
   radii,
   spacing,
   touchTarget,
-  NO_PRESS_DELAY,
-  usePressGuard,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
 import { overlayFrame } from '../logic/layout/overlay-frame';
@@ -53,9 +52,6 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): ReactEl
   const [copied, setCopied] = useState(false);
   const insets = useSafeAreaInsets();
   const [promptTick, setPromptTick] = useState(0);
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): the close uncovers the screen under the guide, so it drops its own bounce, waits for
-  // the app-level tap lock and sets it.
-  const guard = usePressGuard();
 
   // The browser may hand us the install prompt after first paint.
   useEffect(() => {
@@ -121,9 +117,8 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): ReactEl
               {copy.installGuideHelp ? <Caption tone="secondary">{copy.installGuideHelp}</Caption> : null}
               <Caption tone="muted">{m.offline}</Caption>
             </View>
-            <Pressable
-              onPress={guard(dismiss)}
-              {...NO_PRESS_DELAY}
+            <GuardedPressable
+              onPress={dismiss}
               // Native only (react-native-web drops it); the target is already at least touchTarget.min each way.
               hitSlop={spacing.sm}
               accessibilityRole="button"
@@ -131,7 +126,7 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): ReactEl
               style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
             >
               <Icon name="close" size={22} color={colors.text.muted} />
-            </Pressable>
+            </GuardedPressable>
           </View>
 
           <View style={{ marginTop: spacing.md }}>

@@ -17,12 +17,11 @@ import {
   spacing,
   typography,
   useMediaSize,
-  usePressGuard,
   KOREAN_LINE_BREAK,
-  NO_PRESS_DELAY,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { type ComponentType, type ReactElement, type ReactNode, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useLocale, useMessages } from '../i18n/use-messages';
 import { localizeEpisode } from '../logic/content-locale';
 import { stagePillLabel, stagePillState, themeGlyph } from '../logic/journey';
@@ -363,9 +362,6 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
   const newVolume = ringed && episodeId !== null && mastery.newVolume.has(episodeId);
   const edge = cell.selected ? borderWidth.thick : CELL_EDGE;
 
-  // AMENDMENTS-TOUCH 6.9 (row KT-9): a bounce on a cell opens it once, a tap during the app-level tap lock is dropped,
-  // and an opening tap sets that lock (the lesson page or the detail pane appears under the finger).
-  const guard = usePressGuard();
   const press = (): void => {
     if (disabled) return;
     if (storiesOnly) onOpenStories?.(cell.stage, cell.theme);
@@ -373,9 +369,8 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
   };
 
   return (
-    <Pressable
-      onPress={guard(press)}
-      {...NO_PRESS_DELAY}
+    <GuardedPressable
+      onPress={press}
       disabled={disabled}
       accessibilityRole="button"
       aria-selected={paneMode && !storiesOnly ? cell.selected : undefined}
@@ -530,6 +525,6 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
         />
       ) : null}
       {next ? <NextMarker edge={edge} testID={`journey-next-${cell.stage}-${cell.theme}`} /> : null}
-    </Pressable>
+    </GuardedPressable>
   );
 }
