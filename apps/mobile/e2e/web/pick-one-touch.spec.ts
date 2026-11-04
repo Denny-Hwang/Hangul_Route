@@ -18,7 +18,8 @@ import { Touchscreen, pointIn } from './touch';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
-const AFTER_LOCK = 450;
+/** Past the 400 ms lock, with room for a busy machine's slow event dispatch. */
+const AFTER_LOCK = 700;
 const ANSWERED = /^(Right answer|Not this one)/;
 
 async function startGuestQuest(page: Page): Promise<void> {

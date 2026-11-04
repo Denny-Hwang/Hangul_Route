@@ -4,7 +4,7 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, unlockWithPin, waitForNextListenPickRound, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -85,6 +85,7 @@ async function typeWords(page: Page, words: readonly string[]): Promise<void> {
 async function readRealia(page: Page, rounds: ReadonlyArray<readonly [question: string, optionId: string]>): Promise<void> {
   for (const [question, optionId] of rounds) {
     await expect(page.getByTestId('realia-read-question')).toHaveText(question, { timeout: 5_000 });
+    await pastTapLock(page);
     await page.getByTestId(`realia-read-option-${optionId}`).click();
   }
 }
@@ -854,6 +855,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['Which dish is mixed rice?', 'a'],
       ] as const) {
         await expect(page.getByTestId('realia-read-question')).toHaveText(question);
+        await pastTapLock(page);
         await page.getByTestId(`realia-read-option-${answer}`).click();
       }
       await page.getByRole('button', { name: 'Play minigame' }).click();
