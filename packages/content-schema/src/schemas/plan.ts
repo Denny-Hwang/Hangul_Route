@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { CurriculumMetaSchema, type CurriculumMeta } from '../curriculum/draft';
 import { CURRICULUM_MAX_ITEMS } from '../curriculum/presets';
-import { PlanItemSchema, type PlanItem } from './plan-item';
+import { PlanItemSchema, PlanItemShapeSchema, refinePlanItem, type PlanItem } from './plan-item';
 import { SpaceKindSchema } from './space';
 
-export { PlanItemSchema, type PlanItem };
+export { PlanItemSchema, PlanItemShapeSchema, refinePlanItem, type PlanItem };
 
 /**
  * Plans — F-PLAN-001. One row per space; learner devices derive their own

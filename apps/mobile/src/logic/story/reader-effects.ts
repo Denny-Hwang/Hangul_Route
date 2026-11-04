@@ -80,6 +80,16 @@ export function stepsForVoice(steps: readonly PlaySpec[], canPlayKorean: boolean
   return steps.filter((s) => (s.language ?? 'ko-KR') !== 'ko-KR');
 }
 
+/**
+ * Whether a scene's "Hear the story" button is shown (AMENDMENTS-AUDIO-CLIPS AC-B12, owner bug NB-2): only when
+ * something in it can be spoken well. A scene whose every step is Korean, on a device with no acceptable Korean
+ * voice and no clip, shows no play button rather than one that cannot play; its Korean stays on screen with
+ * romanization, and the prompt panel's text and "Say it yourself" chip are unchanged.
+ */
+export function sceneHearShown(steps: readonly PlaySpec[], canPlayKorean: boolean): boolean {
+  return stepsForVoice(steps, canPlayKorean).length > 0;
+}
+
 /** Whether a chain asks for any Korean: only such a chain reports to the Korean prompt slot (§3.4). */
 export function hasKoreanStep(steps: readonly PlaySpec[]): boolean {
   return steps.some((s) => (s.language ?? 'ko-KR') === 'ko-KR');
