@@ -57,7 +57,7 @@ function weekdayName(day: Weekday, locale: UiLocale): string {
 /**
  * Weekday names as one phrase for a weekly habit, in week order, by the locale's `weekdayList`: "Wednesday, Friday,
  * and Sunday"; "miércoles, viernes y domingos" (es takes the plural names after "los": only sábado and domingo change);
- * "수요일·금요일·일요일" (a middle dot), BL-D README findings 2 and 11.
+ * ko joins the names with a middle dot (see the unit test), BL-D README findings 2 and 11.
  */
 export function weekdayHabit(days: readonly Weekday[], locale: UiLocale = DEFAULT_LOCALE): string {
   const names = MONDAY_FIRST.filter((d) => days.includes(d)).map((d) => weekdayName(d, locale));
