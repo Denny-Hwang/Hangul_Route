@@ -1047,4 +1047,16 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
+  // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
+  // name, a formatted date) and the asking-to-join card's source class.
+  'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],
+  'console.status.newDevice': [[1], [8]],
+  'console.status.moveTo': [['Evening Class D']],
+  'console.status.waitingFor': [['Evening Class D']],
+  'console.status.moving': [['Nov 3']],
+  'console.status.minutesLeft': [[1], [8]],
+  'console.attention.from': [['Class B']],
+  'console.relinkPopup.title': [['Jaehan']],
+  'console.relinkPopup.closes': [[1], [8]],
+  'console.relinkPopup.meta': [['iPhone or iPad', 'asked 2 min ago']],
 };

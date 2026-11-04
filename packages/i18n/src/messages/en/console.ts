@@ -423,6 +423,8 @@ export const consoleMsgs = {
     askedAgo: (minutes: number) => `asked ${minutes} min ago`,
     closed: 'This request already closed — the learner can ask again.',
     failed: "Didn't go through. Try again.",
+    /** AMENDMENTS-GROWNUP-UX GX-1 (section 5.3): the platform a re-link request names; any other value reads `device`. */
+    platform: { ios: 'iPhone or iPad', android: 'Android', web: 'Web' },
   },
 
   /**
@@ -2282,5 +2284,45 @@ export const consoleMsgs = {
     firstSignIn: 'This works after a grown-up has opened the grown-up pages here with the PIN. In the app, use the Rescue Code or the 24-hour wait.',
     noPin: 'This device has no grown-up PIN to reset.',
     unavailable: "This isn't available right now. Use Forgot PIN? in the app.",
+  },
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-1 (section 4, owner request 2026-10-31): the status chip next to every learner's name on a
+   * class or family roster, and its one reason line. One action wording per locale (section 10.1): every state that asks
+   * the grown-up to decide reads `needsOk`. No state says late, behind or missing; `new` describes a join, not a lack.
+   */
+  status: {
+    inClass: 'In class',
+    needsOk: 'Needs your OK',
+    /** An action chip's accessible name: the chip, then its reason line. */
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => `New device · ${minutes} min left`,
+    moveTo: (className: string) => `Class move: ${className}`,
+    /** A move out of the class whose destination is not shared with this grown-up (a family-started request). */
+    moveOut: 'Moving to another class',
+    moveWaiting: 'Move waiting',
+    waitingFor: (className: string) => `Waiting for: ${className}`,
+    /** The date arrives formatted (`formatDate`, `monthDay`). */
+    moving: (date: string) => `Moving ${date}`,
+    waitingSeat: 'Waiting for a seat',
+    new: 'New',
+    noPractice: 'No practice shared yet',
+    minutesLeft: (minutes: number) => `${minutes} min left`,
+    review: { cta: 'Review' },
+  },
+  /** GX-1 section 4.1: learners asking to join this class (initials, picture and level only until accepted, T8). */
+  /**
+   * GX-1 (section 5.3, GX-D12): the re-link decision dialog, opened by a re-link's action chip and by every re-link Approve,
+   * so no re-link is approved without the shipped `relinkApproveHint`, the platform and the request time.
+   */
+  relinkPopup: {
+    title: (name: string) => `New device request: ${name}`,
+    closes: (minutes: number) => `This request closes in ${minutes} min.`,
+    later: { cta: 'Later' },
+    /** The platform (`relink.platform.*` or `relink.device`) and the request time (`relink.askedAgo` / `askedJustNow`). */
+    meta: (platform: string, asked: string) => `${platform} · ${asked}`,
+  },
+  attention: {
+    incomingHeading: 'Asking to join this class',
+    from: (className: string) => `From ${className}`,
   },
 } as const;

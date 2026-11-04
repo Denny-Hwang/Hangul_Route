@@ -325,6 +325,7 @@ export const consoleMsgs = {
     askedAgo: (minutes: number) => `pidió hace ${minutes} min`,
     closed: 'Esta solicitud ya se cerró: el estudiante puede pedir otra vez.',
     failed: 'No se realizó. Reintenta.',
+    platform: { ios: 'iPhone o iPad', android: 'Android', web: 'Web' },
   },
 
   docTitle: {
@@ -1832,5 +1833,31 @@ export const consoleMsgs = {
     firstSignIn: 'Esto funciona después de abrir aquí las páginas para adultos con el PIN. En la app, usa el código de rescate o la espera de 24 horas.',
     noPin: 'Este dispositivo no tiene un PIN de adultos que restablecer.',
     unavailable: 'Esto no está disponible ahora. Usa Olvidé el PIN en la app.',
+  },
+  status: {
+    inClass: 'En la clase',
+    needsOk: 'Por aprobar',
+    chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
+    newDevice: (minutes: number) => plural('es', minutes, { one: `Dispositivo nuevo · queda ${minutes} min`, other: `Dispositivo nuevo · quedan ${minutes} min` }),
+    moveTo: (className: string) => `Cambio de clase: ${className}`,
+    moveOut: 'Cambio a otra clase',
+    moveWaiting: 'Cambio en espera',
+    waitingFor: (className: string) => `Esperando a: ${className}`,
+    moving: (date: string) => `Cambia de clase el ${date}`,
+    waitingSeat: 'Esperando un lugar',
+    new: 'Nueva llegada',
+    noPractice: 'Aún sin práctica registrada',
+    minutesLeft: (minutes: number) => plural('es', minutes, { one: `Queda ${minutes} min`, other: `Quedan ${minutes} min` }),
+    review: { cta: 'Revisar' },
+  },
+  relinkPopup: {
+    title: (name: string) => `Solicitud de dispositivo nuevo: ${name}`,
+    closes: (minutes: number) => `Esta solicitud se cierra en ${minutes} min.`,
+    later: { cta: 'Más tarde' },
+    meta: (platform: string, asked: string) => `${platform} · ${asked}`,
+  },
+  attention: {
+    incomingHeading: 'Quieren unirse a esta clase',
+    from: (className: string) => `Viene de ${className}`,
   },
 } satisfies DeepPartial<Messages['console']>;
