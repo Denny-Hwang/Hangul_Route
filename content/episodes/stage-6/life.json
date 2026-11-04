@@ -722,7 +722,7 @@
               }
             ],
             "altEn": "An order slip on the table: one gimbap, two instant noodles, three milks and one egg.",
-            "kind": "menu"
+            "kind": "receipt"
           },
           "rounds": [
             {
@@ -1141,7 +1141,7 @@
               }
             ],
             "altEn": "An order slip on the table: one gimbap, two instant noodles, three milks and one egg.",
-            "kind": "menu"
+            "kind": "receipt"
           }
         }
       ]
