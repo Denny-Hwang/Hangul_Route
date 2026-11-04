@@ -1,7 +1,7 @@
 import { formatDate, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner } from '../api';
-import { CAP_WARNING_RATIO, capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '../rollup';
+import { CAP_WARNING_RATIO, capState, classRollup, codeExpiry, familyCountLine, joinedLine, percent, questsLine, relativeDay, rosterHeading, rosterOrder, seatLine, weekLines } from '../rollup';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 // relativeDay counts calendar days in the host time zone (describeRelativeDay reads local
@@ -224,5 +224,89 @@ describe('capState and seatLine from the roster seats (SA-3)', () => {
 
   it('a school has no roster cap line (the school page has its own)', () => {
     expect(seatLine('school', { used: 1, total: 1, warning: true, reached: true, over: false, free: false })).toBeNull();
+  });
+});
+
+// GX-8 (AMENDMENTS-GROWNUP-UX section 8 T7, T8, T10; section 9 P4).
+describe('grown-up roster readouts (GX-8)', () => {
+  const daysAgo = (days: number): string => new Date(now.getTime() - days * DAY_MS).toISOString();
+
+  it('T7: a learner who joined under a week ago is not counted as not opening the app', () => {
+    const roll = classRollup(
+      [
+        learner('today-none', { joinedAt: daysAgo(0) }, null),
+        learner('six-days-stale', { joinedAt: daysAgo(6) }, { lastActiveAt: daysAgo(10) }),
+        learner('eight-days-none', { joinedAt: daysAgo(8) }, null),
+        learner('month-stale', { joinedAt: daysAgo(30) }, { lastActiveAt: daysAgo(9) }),
+        learner('month-active', { joinedAt: daysAgo(30) }, { lastActiveAt: daysAgo(1) }),
+      ],
+      now,
+    );
+    expect(roll.notSynced).toBe(2);
+    expect(roll.students).toBe(5);
+  });
+
+  it('T8: the anchor line is hidden while nobody has one, and says "first-try answers" when shown', () => {
+    const none = classRollup([learner('a')], now);
+    expect(weekLines('class', none, 'en').anchor).toBeNull();
+    const some = classRollup([learner('a', {}, { stage1: { questsDone: 1, questsTotal: 11, anchorAccuracy: 0.75 } })], now);
+    expect(weekLines('class', some, 'en').anchor).toBe('Stage 1 first-try answers: 75%');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      expect(weekLines('class', none, locale).anchor).toBeNull();
+      expect(weekLines('class', some, locale).anchor).toBe(getMessages(locale).console.space.week.anchor('75%'));
+    }
+  });
+
+  it('T7 and P4: the practiced line is kind-aware, and the quiet line speaks of opening the app, not syncing', () => {
+    const roll = classRollup([learner('a'), learner('b', { joinedAt: daysAgo(20) }, null)], now);
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const w = getMessages(locale).console.space.week;
+      expect(weekLines('class', roll, locale).practiced).toBe(w.practiced(1, 2));
+      expect(weekLines('family', roll, locale).practiced).toBe(w.practicedFamily(1, 2));
+      expect(weekLines('class', roll, locale).notSynced).toBe(w.notSynced(1));
+      expect(weekLines('class', { ...roll, notSynced: 0 }, locale).notSynced).toBeNull();
+    }
+    expect(weekLines('family', roll, 'en').practiced).toBe('1 of 2 learners practiced this week');
+    expect(weekLines('class', roll, 'en').notSynced).toBe("1 hasn't opened the app in over a week");
+    expect(weekLines('class', { ...roll, notSynced: 3 }, 'en').notSynced).toBe("3 haven't opened the app in over a week");
+    for (const locale of ['en', 'es', 'ko'] as const) expect(weekLines('class', roll, locale).notSynced).not.toMatch(/sync|sincroniz|동기화/i);
+  });
+
+  it('T10: the quests line names Stage 1 and the cards; a learner on the first quest is not shown "0 of 15"', () => {
+    const summary = (questsDone: number, minutesLast7d: number, cardsUnlocked = 4) => ({ stage1: { questsDone, questsTotal: 15, anchorAccuracy: null }, cardsUnlocked, minutesLast7d });
+    expect(questsLine(summary(3, 10), 'en')).toBe('Stage 1 quests: 3 of 15 · 4 cards');
+    expect(questsLine(summary(3, 10, 1), 'en')).toBe('Stage 1 quests: 3 of 15 · 1 card');
+    expect(questsLine(summary(0, 2), 'en')).toBe('Working on the first quest');
+    // No practice this week and nothing done: the plain count, never a claim of work under way.
+    expect(questsLine(summary(0, 0, 0), 'en')).toBe('Stage 1 quests: 0 of 15 · 0 cards');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const l = getMessages(locale).console.space.learner;
+      expect(questsLine(summary(3, 10), locale)).toBe(l.questsCards(3, 15, 4));
+      expect(questsLine(summary(0, 2), locale)).toBe(l.firstQuest);
+    }
+  });
+
+  it('P4: a family roster keeps join order and its own heading; a class keeps the roster order', () => {
+    const rows = [learner('c', { joinedAt: '2026-09-03T00:00:00.000Z' }), learner('a', { joinedAt: '2026-09-01T00:00:00.000Z' }), learner('b', { joinedAt: '2026-09-01T00:00:00.000Z' })];
+    expect(rosterOrder('family', rows).map((l) => l.id)).toEqual(['a', 'b', 'c']);
+    expect(rosterOrder('class', rows).map((l) => l.id)).toEqual(['c', 'a', 'b']);
+    expect(rows.map((l) => l.id)).toEqual(['c', 'a', 'b']);
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const s = getMessages(locale).console.space;
+      expect(rosterHeading('family', locale)).toBe(s.rosterHeadingFamily);
+      expect(rosterHeading('class', locale)).toBe(s.recentFirst);
+    }
+    expect(rosterHeading('family', 'en')).toBe('Learners');
+    expect(rosterHeading('family', 'ko')).toBe('우리 가족 학습자');
+  });
+
+  it('P4: a family card says the date it joined; a class card keeps the relative day', () => {
+    const joinedAt = at(14, 9, 9);
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const s = getMessages(locale).console.space;
+      expect(joinedLine('family', joinedAt, localNow, locale)).toBe(s.joinedOn(formatDate(locale, joinedAt, 'monthDay')));
+      expect(joinedLine('class', joinedAt, localNow, locale)).toBe(s.learner.joined(relativeDay(joinedAt, localNow, locale)));
+    }
+    expect(joinedLine('family', joinedAt, localNow, 'en')).toBe('Joined Oct 14');
   });
 });

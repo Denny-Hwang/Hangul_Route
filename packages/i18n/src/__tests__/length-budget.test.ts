@@ -120,6 +120,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.status.new': '"Nueva llegada" (13) against "New" (3): a bare "Nuevo/Nueva" would take the learner\'s gender; the noun keeps the chip neutral, and it wraps under the name on a phone',
   // GX-1 (section 5.3): the re-link pop-up's put-off button; "Luego" reads as "then", so the two-word "Más tarde" is the one Spanish word for Later.
   'console.relinkPopup.later.cta': '"Más tarde" (9) against "Later" (5), one letter over the 8-character floor: a pop-up button drawn at its own width beside Approve and Deny, which wrap on a phone',
+  // AMENDMENTS-GROWNUP-UX row GX-8 (section 10.2): the family roster's heading.
+  'console.space.rosterHeadingFamily': '"Quienes aprenden" (16) against "Learners" (8): the gender-neutral form the console uses for family members (no "los aprendices"); an h2 over the cards that wraps',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

@@ -1065,4 +1065,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.relinkPopup.title': [['Jaehan']],
   'console.relinkPopup.closes': [[1], [8]],
   'console.relinkPopup.meta': [['iPhone or iPad', 'asked 2 min ago']],
+  // AMENDMENTS-GROWNUP-UX row GX-8: the family practiced line, the dated join, the plan readout's not-started count, the class report's no-practice band.
+  'console.space.week.practicedFamily': [[1, 3], [0, 1]],
+  'console.space.joinedOn': [['Oct 14']],
+  'console.plan.readout.notStarted': [[4]],
+  'report.class.didntPractice': [[1], [9]],
 };

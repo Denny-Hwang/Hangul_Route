@@ -441,12 +441,22 @@ describe('warnings and stats in plain words', () => {
 });
 
 describe('readout (section 3.8 step 6)', () => {
-  const row = { learnerId: 'a', name: 'Mina', done: 4, total: 6, notReady: 0, synced: true, lastActiveAt: '2026-10-18T00:00:00Z' };
+  const row = { learnerId: 'a', name: 'Mina', done: 4, total: 6, notReady: 0, state: 'progress' as const, lastActiveAt: '2026-10-18T00:00:00Z' };
 
   it('reads "so far" against the planned length', () => {
     expect(readoutLine(row, 36, 'en')).toBe('4 / 6 so far · 36 planned');
     expect(readoutLine({ ...row, notReady: 1 }, 36, 'en')).toBe('4 / 6 so far · 36 planned · 1 not ready yet');
-    expect(readoutLine({ ...row, synced: false }, 36, 'en')).toBe('waiting for the next sync');
+  });
+
+  // GX-8 T9: the two states of a learner with no progress for the route yet, never "waiting for the next sync".
+  it('says when the route reaches the device, or that it is not started yet against the planned length', () => {
+    expect(readoutLine({ ...row, state: 'notDelivered' }, 36, 'en')).toBe('Gets this plan next time the app opens');
+    expect(readoutLine({ ...row, state: 'notStarted', done: 0, total: 0 }, 36, 'en')).toBe('Not started yet (0 / 36)');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const words = getMessages(locale).console.plan.readout;
+      expect(readoutLine({ ...row, state: 'notDelivered' }, 36, locale)).toBe(words.notDelivered);
+      expect(readoutLine({ ...row, state: 'notStarted' }, 36, locale)).toBe(words.notStarted(36));
+    }
   });
 
   it('finds the week that holds today', () => {
