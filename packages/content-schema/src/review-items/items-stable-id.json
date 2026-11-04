@@ -825,7 +825,8 @@
     "lex|원숭이": "vocab:wonsungi",
     "lex|야구": "vocab:yagu",
     "lex|연필": "vocab:yeonpil",
-    "lex|윷놀이": "vocab:yunnori"
+    "lex|윷놀이": "vocab:yunnori",
+    "lex|반달가슴곰": "lex:bandalgaseumgom"
   },
   "alias": {
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"

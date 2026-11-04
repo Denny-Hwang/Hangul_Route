@@ -5,7 +5,8 @@
  * fact needs at least one source on one of them. `SOURCE_HOST_ALLOWLIST` is
  * the 31 hosts of the research set plus the Korea National Park Service
  * (F-CURR-001 S6-4) and the Institute for the Translation of Korean Classics
- * database (Ilseongnok); a host outside it is only a warning
+ * database (Ilseongnok), and the Korea Meteorological Administration and National Institute of Biological
+ * Resources hosts of the Nature Volume 2 notes (F-CURR-002 row CM-41 S2); a host outside it is only a warning
  * (`source-host-unlisted`), and adding a host is a one-line, reviewed PR.
  */
 export const AUTHORITATIVE_HOST_SUFFIXES = [
@@ -30,6 +31,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'shfestival.com',
   'sillok.history.go.kr',
   'sjw.history.go.kr',
+  'species.nibr.go.kr',
   'stdict.korean.go.kr',
   'theme.archives.go.kr',
   'treestory.forest.or.kr',
@@ -40,6 +42,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'www.heritage.go.kr',
   'www.khan.co.kr',
   'www.khs.go.kr',
+  'www.kma.go.kr',
   'www.knps.or.kr',
   'www.korea.kr',
   'www.korean.go.kr',
@@ -50,6 +53,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'www.seoul.co.kr',
   'www.suwon.go.kr',
   'www.unesco.org',
+  'www.weather.go.kr',
 ];
 
 /** True when `host` is the suffix's own domain or a subdomain of it (never `evilunesco.org`). */
