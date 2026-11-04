@@ -29,7 +29,7 @@ import {
   type ChooserEpisodeRow,
 } from '..';
 import { assembleCatalog, expandCellRows, type GeneratedCellRow } from '../catalog/assemble';
-import { GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
+import { GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
 import { STORY_SHELF } from '../catalog/data';
 import { makeResult } from './fixtures/placement-results';
 
