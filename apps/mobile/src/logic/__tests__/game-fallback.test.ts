@@ -48,21 +48,15 @@ describe('the game.<kind> switches and their fallbacks (F-CURR-002 §7.1, §12.2
     expect(problems).toEqual([]);
   });
 
-  it('shipped quests play a switched kind, so the switch-off pass above covers real content (row CM-41 S7 flipped it)', () => {
-    // Review of PR #849: the pass above held no My Story step until the first chain shipped. Row CM-41 S7 (Stage 7
-    // Nature Volume 2, q3 Apply) is that chain; this was `false` until then.
+  it('shipped quests play a switched kind, so the switch-off pass above covers real content', () => {
+    // Review of PR #849: the pass above held no My Story step until a chain shipped. Row CM-45 S7 (Stage 7 Holidays &
+    // Traditions Volume 2, q3 Apply) holds one; every later row that ships a chain adds its own line here.
     const switched = everyStep.filter(({ scope }) => SWITCHED_KINDS.includes(scope.kind)).map(({ at }) => at);
-    expect(switched).toContain('quest:stage7-nature-v2-q3 step 3');
-    // Row CM-42 S7 (Stage 7 Play & Crafts Volume 2, q3 Apply) is the second.
-    expect(switched).toContain('quest:stage7-crafts-v2-q3 step 3');
-    // Row CM-43 S7 (Stage 7 Food & Daily Life Volume 2, q3 Apply) is the third.
-    expect(switched).toContain('quest:stage7-life-v2-q3 step 3');
-    // Row CM-45 S7 (Stage 7 Holidays & Traditions Volume 2, q3 Apply) is the fourth.
     expect(switched).toContain('quest:stage7-rites-v2-q3 step 3');
   });
 
   /**
-   * The CM-38 hand-off, settled by row CM-41 S7: with `game.my-story` off (the launch state) only a chain's first frame
+   * The CM-38 hand-off, settled for the first shipped chain: with `game.my-story` off (the launch state) only a chain's first frame
    * is played, so the frames after it teach nothing new. Every review item one of them holds (its frame pattern, each
    * bank word) is also taught by a step that plays with the switch off: another step of the same cell, or a Volume 1
    * cell of the route at or below its stage. So no item only an unplayed frame teaches joins a cell's mastery

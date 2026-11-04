@@ -33,8 +33,18 @@ import { LESSON_STAGE_MODULES } from './helpers/lesson-stages';
 const read = (rel: string): unknown => JSON.parse(readFileSync(new URL(`../../../../../${rel}`, import.meta.url), 'utf8'));
 const cell: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/rites.v2.json'));
 const v1: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/rites.json'));
-// CM-43 S7, the Volume 2 row this one is stacked on: its stamps are the catalogue this cell joins.
-const lifeV2: LessonCell = LessonCellSchema.parse(read('content/episodes/stage-7/life.v2.json'));
+/** The largest `addedIn` stamp of every other lesson cell file: the catalogue this cell joins. */
+const otherStamps = (): number => {
+  let max = 0;
+  for (const n of [2, 3, 4, 6, 7]) {
+    for (const f of readdirSync(new URL(`../../../../../content/episodes/stage-${n}/`, import.meta.url)).filter((x) => x.endsWith('.json'))) {
+      if (n === 7 && f === 'rites.v2.json') continue;
+      const other = read(`content/episodes/stage-${n}/${f}`) as { quests?: { addedIn?: number }[] };
+      for (const q of other.quests ?? []) max = Math.max(max, q.addedIn ?? 0);
+    }
+  }
+  return max;
+};
 const koOverlay = read('content/i18n/ko/lessons-stage7-rites-v2.json') as { entries: Record<string, Record<string, string>> };
 const esOverlay = read('content/i18n/es/lessons-stage7-rites-v2.json') as { entries: Record<string, Record<string, string>> };
 
@@ -77,7 +87,7 @@ describe('My New Year Card, Stage 7 Holidays & Traditions Volume 2 (F-CURR-002 r
     expect(cell.status).toBe('ready');
     expect(cell.review).toMatchObject({ language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' });
     expect(cell.quests.map((q) => q.id)).toEqual(['quest:stage7-rites-v2-q1', 'quest:stage7-rites-v2-q2', 'quest:stage7-rites-v2-q3']);
-    const before = Math.max(...lifeV2.quests.map((q) => q.addedIn ?? 0));
+    const before = otherStamps();
     for (const quest of cell.quests) expect(quest.addedIn, quest.id).toBeGreaterThan(before);
     // Row CM-23: one card per upper cell, already Volume 1's (card:saengil); a Volume 2 gives none.
     expect(v1.rewardCardIds).toEqual(['card:saengil']);
