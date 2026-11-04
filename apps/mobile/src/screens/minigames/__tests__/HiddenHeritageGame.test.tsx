@@ -1,13 +1,14 @@
 import { HiddenHeritageRoundSchema } from '@hangul-route/content-schema';
-import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
+import { LayoutProvider, colors, layoutClassFor, touchTarget } from '@hangul-route/design-system';
 import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/food-market';
 import { Pressable, StyleSheet } from 'react-native';
-import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
+import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer, type TestRendererOptions } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { questsAll } from '../../../content';
 import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { scopeFor } from '../../../logic/minigame-config';
+import { spotHitRects } from '../../../logic/hidden-heritage-flow';
 import { useProfileStore } from '../../../store/profile-store';
 import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/remote-config-store';
 import { HiddenHeritageStep } from '../hidden-heritage-entry';
@@ -42,7 +43,7 @@ function gameSwitch(on: boolean): void {
   useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: 0, maxAgeS: 300, flags: { 'game.hidden-heritage': { on, pct: on ? 100 : 0 } } } });
 }
 
-async function draw(scope: MinigameScope = SCOPE, width = 320, contentWidth = 288): Promise<ReactTestInstance> {
+async function draw(scope: MinigameScope = SCOPE, width = 320, contentWidth = 288, options?: TestRendererOptions): Promise<ReactTestInstance> {
   let r!: ReactTestRenderer;
   await act(async () => {
     r = TestRenderer.create(
@@ -51,6 +52,7 @@ async function draw(scope: MinigameScope = SCOPE, width = 320, contentWidth = 28
           <HiddenHeritageStep scope={scope} host={host} />
         </RomanizationModeOverride>
       </LayoutProvider>,
+      options,
     );
   });
   mounted.push(r);
@@ -152,6 +154,44 @@ describe('with game.hidden-heritage on', () => {
     expect(root.findAll((n) => n.props.testID === 'hh-ring-found').length).toBeGreaterThan(0);
     expect(root.findAll((n) => n.props.testID === 'hh-slot-0' && n.props.accessibilityLabel === undefined).length).toBeGreaterThan(0);
     expect(completed).toBe(0);
+  });
+
+  it('a spot shows the press ring (border.shape, no fill) on its hit area while a finger that counts is down (R4)', async () => {
+    gameSwitch(true);
+    // The board reads each spot's rectangle on the web: the hit rectangles of the 288 dp scene.
+    const things = [...ROUND.targets, ...ROUND.others];
+    const hits = spotHitRects(
+      things.map((t) => t.spot),
+      288,
+      touchTarget.min,
+    );
+    const rectOf = new Map(things.map((t, i) => [`hh-spot-${t.id}`, hits[i]!]));
+    const root = await draw(SCOPE, 320, 288, {
+      createNodeMock: (el: { props: Record<string, unknown> }) => {
+        const r = rectOf.get(String(el.props['data-testid']));
+        return { addEventListener: () => undefined, removeEventListener: () => undefined, getBoundingClientRect: () => r ?? { left: -9e3, top: -9e3, width: 0, height: 0 } };
+      },
+    });
+    const board = root.findAll((n) => typeof n.props.onStartShouldSetResponderCapture === 'function' && typeof n.props.onResponderEnd === 'function')[0]!.props;
+    const target = rectOf.get('hh-spot-hangari')!;
+    const point = { identifier: 1, pageX: target.left + 2, pageY: target.top + 2, target: null };
+    const start = { nativeEvent: { ...point, changedTouches: [point], touches: [point], type: 'touchstart' } };
+    passTapLock();
+    expect(board.onStartShouldSetResponderCapture(start)).toBe(true);
+    await act(async () => {
+      board.onResponderGrant(start);
+      board.onResponderStart(start);
+    });
+    const ring = root.findAll((n) => n.props.testID === 'hh-press');
+    expect(ring.length).toBeGreaterThan(0);
+    const style = StyleSheet.flatten(ring[0]!.props.style) as { borderColor: string; backgroundColor?: string };
+    expect(style.borderColor).toBe(colors.border.shape);
+    expect(style.backgroundColor).toBeUndefined();
+    await act(async () => {
+      board.onResponderEnd({ nativeEvent: { ...point, changedTouches: [point], touches: [], type: 'touchend' } });
+    });
+    expect(root.findAll((n) => n.props.testID === 'hh-press')).toHaveLength(0);
+    expect(log).toEqual([[expect.stringMatching(/^w\d$/), false]]);
   });
 
   it('plays Pic-Word Match under a 256 dp scene (a split screen)', async () => {
