@@ -475,7 +475,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(r.stdout, /stage 3 game content {2}0 cells {2}0 B raw/);
     assert.match(r.stdout, /total {2}\d+ B raw {2}\d+ B gzip/);
     assert.match(r.stdout, /lesson-chunks\/lessons-headers-en\.ts {2}\d+ B raw/);
-    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 40000 B raw per headers chunk, 90000 B raw and 16000 B gzip per cell chunk, 220000 B raw and 40000 B gzip per stage, 1400000 B raw and 240000 B gzip in total/);
+    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 40000 B raw per headers chunk, 90000 B raw and 16000 B gzip per cell chunk, 380000 B raw and 48000 B gzip per stage, 2400000 B raw and 400000 B gzip in total/);
   });
 
   test("--report fails over budget; a draft is never measured", () => {
@@ -511,7 +511,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(over[3], /lessons-cell-stage2-rites\.ts is 999999 B raw, over the cell chunk ceiling of 90000 B/);
     assert.match(over[4], /lessons-cell-stage2-rites\.ts is 999999 B gzip, over the cell chunk ceiling of 16000 B/);
     assert.match(over[5], /lessons-headers-en\.ts is 40001 B raw, over the headers chunk ceiling of 40000 B/);
-    assert.match(over[6], /the Stage 2 game content is 340001 B raw/);
+    assert.match(over[6], /the Stage 2 game content is 380001 B raw/);
     assert.deepEqual(BUDGET, {
       perQuestRawAvg: 9_000,
       manifestRaw: 60_000,
@@ -519,10 +519,10 @@ describe("build-lessons.mjs: --check and --report", () => {
       headersChunkRaw: 40_000,
       cellChunkRaw: 90_000,
       cellChunkGzip: 16_000,
-      stageRaw: 340_000,
-      stageGzip: 44_000,
-      totalRaw: 2_000_000,
-      totalGzip: 340_000,
+      stageRaw: 380_000,
+      stageGzip: 48_000,
+      totalRaw: 2_400_000,
+      totalGzip: 400_000,
     });
     // A cell chunk at its line passes it.
     assert.deepEqual(checkBudget({ perCell: [], perModule: [{ name: "lesson-chunks/lessons-cell-stage2-rites.ts", raw: BUDGET.cellChunkRaw, gzip: BUDGET.cellChunkGzip }], total: { raw: 0, gzip: 0 } }), []);

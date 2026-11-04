@@ -109,13 +109,14 @@ export const BUDGET = Object.freeze({
   headersChunkRaw: 40_000, // F-CURR-002 CM-40: one locale's headers chunk (the display lines; Volume 1: en 15,095, es 14,800, ko 15,751 B; about 31 KB projected with Volume 2)
   cellChunkRaw: 90_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (largest at CM-5: stage2-letters, 61,381 B for six quests)
   cellChunkGzip: 16_000, // F-CURR-002 CM-5: the same, gzip (largest at CM-5: stage2-letters, 11,070 B)
-  // The F-CURR-002 Volume 2 integration (rows CM-41..CM-45, fifteen Volume 2 cells) measures Stage 4 321,652 B raw,
-  // Stage 6 323,945 B raw / 40,720 B gzip, and in total 1,944,700 B raw / 328,240 B gzip: past the CM-5 lines, so each line
-  // is that measurement plus a rounding margin (OD-5: lazy and precached, no weight on start-up).
-  stageRaw: 340_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000, then 220,000)
-  stageGzip: 44_000, // F-CURR-002 CM-5 (OD-5): was 32,000, then 40,000
-  totalRaw: 2_000_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000, then 1,400,000)
-  totalGzip: 340_000, // F-CURR-002 CM-5 (OD-5): was 140,000, then 210,000
+  // The F-CURR-002 Volume 2 integration (integrate/cm-1105: rows CM-41..CM-45, twenty-three Volume 2 cells, on CM-5B)
+  // measures Stage 6 361,807 B raw / 45,094 B gzip (the largest stage), and in total 2,284,376 B raw / 385,617 B gzip:
+  // past the CM-5 lines, so each line is that measurement plus a rounding margin. No weight on start-up (OD-5): the
+  // chunks are lazy, and since CM-5B a cell's Volume 2 is a later chunk, out of the learner precache.
+  stageRaw: 380_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000, then 220,000)
+  stageGzip: 48_000, // F-CURR-002 CM-5 (OD-5): was 32,000, then 40,000
+  totalRaw: 2_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000, then 1,400,000)
+  totalGzip: 400_000, // F-CURR-002 CM-5 (OD-5): was 140,000, then 210,000
 });
 
 export class ContentError extends Error {

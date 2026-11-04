@@ -737,7 +737,7 @@ describe('the review-item chunk of row CM-10 (the same checks, its own budget li
     const { BUDGET } = await import('../../../../scripts/build-review-items.mjs');
     expect(PRECACHE_BUDGET.reviewItemsRaw).toBe(BUDGET.raw);
     expect(PRECACHE_BUDGET.reviewItemsGzip).toBe(BUDGET.gzip);
-    expect(BUDGET).toEqual({ raw: 170_000, gzip: 37_000 });
+    expect(BUDGET).toEqual({ raw: 205_000, gzip: 41_000 });
   });
 });
 

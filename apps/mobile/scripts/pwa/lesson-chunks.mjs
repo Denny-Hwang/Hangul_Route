@@ -200,9 +200,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 19,597 B gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`); with CM-10's review
   // fixes (the Stage 1 Discover words) 733 items, 97,670 B raw / 20,024 B gzip as generated, 105,189 B raw /
   // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
-  // The F-CURR-002 Volume 2 integration (rows CM-40..CM-46) measures 158,112 B raw / 34,019 B gzip as generated.
-  reviewItemsRaw: 170_000,
-  reviewItemsGzip: 37_000,
+  // The F-CURR-002 Volume 2 integration (integrate/cm-1105, rows CM-40..CM-46 and CM-5B) measures 1,222 items,
+  // 181,677 B raw / 39,133 B gzip as generated and 197,401 B raw / 38,616 B gzip as built: one measured raise.
+  reviewItemsRaw: 205_000,
+  reviewItemsGzip: 41_000,
   // "This week in Korea" (F-CURR-002 §5.7, §10, row CM-48): the week drops, one content-hashed chunk of
   // scripts/build-week-drops.mjs, lazy and precached, held here on its built bundle and there on its module (`BUDGET`,
   // the same lines). Set at CM-48 from the first 13 drops (24,172 B raw / 6,662 B gzip as generated, 27,699 B raw / 6,491 B gzip as built); a year of drops is
