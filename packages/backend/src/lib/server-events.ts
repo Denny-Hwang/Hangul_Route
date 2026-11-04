@@ -22,6 +22,7 @@ import {
   OA_TELEMETRY_PAYLOADS,
   PlanKeySchema,
   REPORT_TELEMETRY_PAYLOAD,
+  ROUTE_BLEND_TELEMETRY_PAYLOADS,
   REPORT_TELEMETRY_PREFIX,
   SESSION_END_QUEST_FIELDS,
   SHELL_TELEMETRY_PAYLOADS,
@@ -302,6 +303,14 @@ const GUEST_EVENT_PREFIX = 'guest.';
 export const GUEST_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(GUEST_TELEMETRY_PAYLOADS);
 
 /**
+ * AMENDMENTS-ROUTE-CLASS-BLEND section 18 (TELEMETRY-NAMES-2 section T, row BL-W, Worker first):
+ * `route.practice_days_changed` keeps `days` (1 to 7) and `by`, `route.refresh_started` keeps `via`, and both are
+ * stored without a profile id. Any other key or value is dropped (a weekday list, a date, a plan or cell id), whatever
+ * a client sends. Checked beside `OA_PAYLOAD_RULES` in `keptEventFields`, before every prefix rule.
+ */
+export const ROUTE_BLEND_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(ROUTE_BLEND_TELEMETRY_PAYLOADS);
+
+/**
  * `audio.source_summary` (AMENDMENTS-AUDIO-CLIPS AC-B9): four whole counts and the app version, kept only when the
  * payload parses against its strict schema (an extra key, a fraction or a free-text version drops the whole payload),
  * and never a profile id, so the summary cannot link a device's audio to a learner. Worker first: this ships before
@@ -360,6 +369,7 @@ function sessionEndPayload(payload: Record<string, unknown> | undefined): Record
  * [OA] A section 15 name of AMENDMENTS-ONE-ACCOUNT-MANY-USERS keeps only its documented fields and never a profile id (`OA_PAYLOAD_RULES`).
  * [GU] So does a `guest.*` name of AMENDMENTS-GUEST-FIRST-LESSON section 12 (`GUEST_PAYLOAD_RULES`).
  * `audio.source_summary` (AMENDMENTS-AUDIO-CLIPS AC-B9) keeps its strict payload only, and never a profile id.
+ * A section 18 name of AMENDMENTS-ROUTE-CLASS-BLEND keeps only its documented fields and never a profile id (`ROUTE_BLEND_PAYLOAD_RULES`).
  */
 export function keptEventFields(
   name: TelemetryEventName,
@@ -367,6 +377,7 @@ export function keptEventFields(
   profileId: unknown,
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
   if (Object.hasOwn(OA_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(OA_PAYLOAD_RULES[name], payload) };
+  if (Object.hasOwn(ROUTE_BLEND_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(ROUTE_BLEND_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(GUEST_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(Object.hasOwn(GUEST_PAYLOAD_RULES, name) ? GUEST_PAYLOAD_RULES[name] : undefined, payload) };
   if (isCurrTelemetryName(name)) {
     const parsed = CURR_TELEMETRY_PAYLOADS[name].safeParse(payload);

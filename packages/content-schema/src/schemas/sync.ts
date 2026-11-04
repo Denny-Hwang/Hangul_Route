@@ -90,6 +90,15 @@ export const RouteGoalSummarySchema = z.object({
 export type RouteGoalSummary = z.infer<typeof RouteGoalSummarySchema>;
 
 /**
+ * The days this week the learner practised (AMENDMENTS-ROUTE-CLASS-BLEND section 11, row BL-W; BL-9 writes it): a
+ * count only, never which days. Family only: removed from every class and school roster, at every scope.
+ */
+export const PracticeWeekSummarySchema = z.object({
+  practicedDays: z.number().int().min(0).max(7),
+});
+export type PracticeWeekSummary = z.infer<typeof PracticeWeekSummarySchema>;
+
+/**
  * Word counts for caregivers and teachers (F-VOC-005 section 3.8): counts, a
  * first-try rate and up to three words to look at together. Never shown to the
  * learner; no response time and no per-question history.
@@ -193,6 +202,8 @@ export const ProgressSummarySchema = z.object({
    * its consent item.
    */
   memory: MemorySummarySchema.optional().catch(undefined),
+  /** Practice days this week (AMENDMENTS-ROUTE-CLASS-BLEND section 11); family only, like `selfRoute`. Malformed is dropped, never a 422. */
+  practiceWeek: PracticeWeekSummarySchema.optional().catch(undefined),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 

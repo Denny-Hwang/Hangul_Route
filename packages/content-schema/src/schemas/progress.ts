@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CurriculumMetaSchema } from '../curriculum/draft';
-import { daysBetween, isDateKey, weekdayOf } from '../curriculum/dates';
+import { WEEKDAYS, daysBetween, isDateKey, weekdayOf } from '../curriculum/dates';
 import { CURRICULUM_MAX_ITEMS } from '../curriculum/presets';
 import { PlacementResultSchema } from './placement';
 import { PlanItemSchema } from './plan-item';
@@ -71,6 +71,8 @@ export const HomeworkAssignmentSchema = z.object({
   targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   dueAt: z.string().optional(),
   completedAt: z.string().optional(),
+  /** True when the plan item has a `lectureDate`: class taught it first (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4; BL-6 writes it). */
+  fromClass: z.boolean().optional(),
 });
 export type HomeworkAssignment = z.infer<typeof HomeworkAssignmentSchema>;
 
@@ -316,6 +318,64 @@ export const SelfRouteSchema = z.object({
 });
 export type SelfRoute = z.infer<typeof SelfRouteSchema>;
 
+/** At most one entry per class plan in force (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4). */
+export const PRACTICE_DAYS_MAX = 3;
+
+/**
+ * One class plan's practice days as the learner picked them (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, BL-OD-7):
+ * 1 to 7 weekdays, none repeated, class days allowed. Re-dates the plan's practice items on the device only.
+ */
+export const PracticeDaysEntrySchema = z.object({
+  planId: z.string().min(1).max(ID_MAX),
+  days: z
+    .array(z.enum(WEEKDAYS))
+    .min(1)
+    .max(7)
+    .refine((days) => new Set(days).size === days.length),
+  updatedAt: IsoInstantSchema,
+});
+export type PracticeDaysEntry = z.infer<typeof PracticeDaysEntrySchema>;
+
+/**
+ * `snapshot.practiceDays` (row BL-W; BL-8 writes it): optional with no default and lenient on read, the F-CURR-002
+ * section 4.8 pattern. A malformed entry drops on its own, a second entry for one plan keeps the newest `updatedAt`,
+ * and at most `PRACTICE_DAYS_MAX` entries are kept (the newest). A value that is not a list reads as absent, so the
+ * Worker's preserve rule keeps the stored one. The merge rule is `mergePracticeDays` (`progress-merge.ts`).
+ */
+export const PracticeDaysSchema = z.unknown().transform((input): PracticeDaysEntry[] | undefined => {
+  if (!Array.isArray(input)) return undefined;
+  return newestPracticeDays(input.flatMap((entry) => {
+    const read = PracticeDaysEntrySchema.safeParse(entry);
+    return read.success ? [read.data] : [];
+  }));
+});
+
+/** One entry per plan, the newest `updatedAt` winning, at most `PRACTICE_DAYS_MAX` (the newest), in `planId` order. */
+export function newestPracticeDays(entries: readonly PracticeDaysEntry[]): PracticeDaysEntry[] {
+  const byPlan = new Map<string, PracticeDaysEntry>();
+  for (const entry of entries) {
+    const prev = byPlan.get(entry.planId);
+    if (prev === undefined || comparePracticeDays(entry, prev) > 0) byPlan.set(entry.planId, entry);
+  }
+  return [...byPlan.values()]
+    .sort((a, b) => comparePracticeDays(b, a))
+    .slice(0, PRACTICE_DAYS_MAX)
+    // Plan ids are unique here, so no two compare equal.
+    .sort((a, b) => (a.planId < b.planId ? -1 : 1))
+    .map((entry) => ({ planId: entry.planId, days: [...entry.days], updatedAt: entry.updatedAt }));
+}
+
+/** Newer `updatedAt` first (as instants); ties fall back to the text of the time, then of the days, so the order is total. */
+function comparePracticeDays(a: PracticeDaysEntry, b: PracticeDaysEntry): number {
+  const ta = Date.parse(a.updatedAt);
+  const tb = Date.parse(b.updatedAt);
+  if (ta !== tb) return ta < tb ? -1 : 1;
+  const text = (e: PracticeDaysEntry): string => `${e.updatedAt}|${e.days.join(',')}|${e.planId}`;
+  const sa = text(a);
+  const sb = text(b);
+  return sa < sb ? -1 : sa > sb ? 1 : 0;
+}
+
 export const ProgressSnapshotSchema = z.object({
   profileId: z.string(),
   updatedAt: z.string(),
@@ -401,6 +461,11 @@ export const ProgressSnapshotSchema = z.object({
    * up twice on any device or after a restore.
    */
   stageCeremonyAt: LatchRecordSchema,
+  /**
+   * The learner's practice days per class plan (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-W; BL-8 writes it).
+   * An absent key never erases a stored value; entries merge by plan, the newest `updatedAt` winning.
+   */
+  practiceDays: PracticeDaysSchema,
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to
