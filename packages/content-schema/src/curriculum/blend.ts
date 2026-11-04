@@ -16,6 +16,13 @@ export const CLASS_PACE = 1.5;
 /** A practice day with at least this much room left (or no lesson) gets a Refresh (section 6.4). */
 export const REFRESH_MIN_ROOM = 3;
 
+/** Upper bound on `cyclesOf` weeks: well above the params bound (52) plus weeks added for days off, so a bad input fails fast. */
+export const MAX_ROUTE_WEEKS = 260;
+
+function checkAmount(name: string, value: number): void {
+  if (!Number.isFinite(value) || value < 0) throw new RangeError(`${name}: a finite number from 0`);
+}
+
 /** `B_L = T_L - 4`: the class day's lesson minutes, at class pace, for a class of `classMinutes` (BL-OD-2). */
 export function classBudget(classMinutes: number): number {
   return classMinutes - CLASS_REVIEW_MINUTES;
@@ -133,10 +140,11 @@ export function cyclesOf(input: CyclesInput): ClassRoute {
   const { startDate, weeks, lectureDays } = input;
   checkClassDays(lectureDays);
   if (!isDateKey(startDate)) throw new RangeError(`start date: ${startDate} is not a real day`);
-  if (!Number.isInteger(weeks) || weeks < 1) throw new RangeError('weeks: a whole number from 1');
+  if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_ROUTE_WEEKS) throw new RangeError(`weeks: a whole number from 1 to ${MAX_ROUTE_WEEKS}`);
   const practice = input.practiceDays ?? (input.perWeek === undefined ? undefined : practiceDaysFor(lectureDays, input.perWeek));
   if (practice === undefined) throw new RangeError('practice days: give practiceDays or perWeek');
-  if (practice.length < 1 || new Set(practice).size !== practice.length) throw new RangeError('practice days: 1 to 7 distinct weekdays');
+  if (practice.length < 1 || practice.length > 7 || new Set(practice).size !== practice.length) throw new RangeError('practice days: 1 to 7 distinct weekdays');
+  for (const day of practice) if (!WEEKDAYS.includes(day)) throw new RangeError(`practice days: ${String(day)} is not a weekday`);
 
   let firstClassDate = startDate;
   while (!lectureDays.includes(weekdayOf(firstClassDate))) firstClassDate = addDays(firstClassDate, 1);
@@ -167,13 +175,18 @@ export interface PackItem {
 export interface PackClassOptions<T> {
   /** Cells opened by earlier class days; reopening one does not count against `C_max`. */
   openedBefore?: Iterable<string>;
-  /** Split mode (section 5.2): the packet's cell openers go first, then the rest, each in queue order. */
+  /**
+   * Split mode (section 5.2): the packet's cell openers go first (at most `C_max` new cells; an opener past `C_max` is
+   * skipped, not the end of the day), then the packet's other lessons in queue order while the budget allows. A lesson
+   * whose cell opener is in the queue but not taken waits for it. Pass one cycle's packet as the queue in this mode.
+   */
   isOpener?: (item: T) => boolean;
 }
 
 export interface PackedClass<T> {
+  /** In the order the class day plays them (in split mode, the openers first). */
   taken: T[];
-  /** What the class day did not take, in order (the queue's remainder). */
+  /** What the class day did not take, in queue order (the queue minus `taken`). */
   rest: T[];
   /** Class minutes of `taken` (`k x m` summed). */
   classMinutes: number;
@@ -184,27 +197,58 @@ export interface PackedClass<T> {
 /**
  * Class packing (section 6.2): take items in order while `running + k x m <= budget` and the new cells opened stay at
  * most `cMax`; the first item is always taken when the queue is not empty. A take-while: the first item that does not
- * fit ends the class day, so the queue's order holds.
+ * fit ends the class day, so the queue's order holds. In split mode (`isOpener`) only the budget ends the day; an item
+ * past `cMax`, or one whose cell opener was not taken, is skipped and stays in `rest`.
  */
 export function packClass<T extends PackItem>(queue: readonly T[], budget: number, k: number, cMax: number, opts: PackClassOptions<T> = {}): PackedClass<T> {
+  checkAmount('budget', budget);
+  checkAmount('class pace', k);
+  if (!Number.isInteger(cMax) || cMax < 0) throw new RangeError('new cells: a whole number from 0');
+  for (const item of queue) checkAmount('minutes', item.minutes);
   const { isOpener } = opts;
-  const ordered = isOpener ? [...queue.filter((item) => isOpener(item)), ...queue.filter((item) => !isOpener(item))] : [...queue];
   const opened = new Set(opts.openedBefore ?? []);
   const openedCells: string[] = [];
+  const taken: T[] = [];
   let classMinutes = 0;
-  let count = 0;
-  for (const item of ordered) {
-    const cost = k * item.minutes;
-    const opens = item.cellId !== undefined && !opened.has(item.cellId);
-    if (count > 0 && (classMinutes + cost > budget || (opens && openedCells.length + 1 > cMax))) break;
-    if (opens && item.cellId !== undefined) {
+  const take = (item: T): void => {
+    if (item.cellId !== undefined && !opened.has(item.cellId)) {
       opened.add(item.cellId);
       openedCells.push(item.cellId);
     }
-    classMinutes += cost;
-    count += 1;
+    classMinutes += k * item.minutes;
+    taken.push(item);
+  };
+  const overBudget = (item: T): boolean => taken.length > 0 && classMinutes + k * item.minutes > budget;
+  const overCells = (item: T): boolean =>
+    taken.length > 0 && item.cellId !== undefined && !opened.has(item.cellId) && openedCells.length + 1 > cMax;
+
+  if (!isOpener) {
+    for (const item of queue) {
+      if (overBudget(item) || overCells(item)) break;
+      take(item);
+    }
+    return { taken, rest: queue.slice(taken.length), classMinutes, openedCells };
   }
-  return { taken: ordered.slice(0, count), rest: ordered.slice(count), classMinutes, openedCells };
+
+  const openers = queue.filter((item) => isOpener(item));
+  let ended = false;
+  for (const item of openers) {
+    if (overBudget(item)) {
+      ended = true;
+      break;
+    }
+    if (!overCells(item)) take(item);
+  }
+  if (!ended) {
+    // Cells whose opener is in this queue but was not taken: their other lessons wait for it.
+    const waiting = new Set(openers.filter((item) => !taken.includes(item)).map((item) => item.cellId));
+    for (const item of queue) {
+      if (isOpener(item) || (item.cellId !== undefined && waiting.has(item.cellId)) || overCells(item)) continue;
+      if (overBudget(item)) break;
+      take(item);
+    }
+  }
+  return { taken, rest: queue.filter((item) => !taken.includes(item)), classMinutes, openedCells };
 }
 
 /** A cycle's items for its practice days, in the order they are dealt (section 6.2). */
@@ -236,10 +280,15 @@ export interface SpreadPractice<T> {
  * Practice packing (section 6.2): carried-over lessons, then this cycle's class lessons, then practice-only lessons,
  * dealt round robin over the practice dates in date order, so the days hold about the same number and each mixes an
  * earlier and a later lesson. A day takes an item only while its minutes are under `budget`, so it never goes over by
- * more than one item; the rest carries forward.
+ * more than one item; the rest carries forward. Days differ by at most one item unless the day with fewer is full
+ * (with mixed minutes, a long item can fill a day early; the budget rule wins over the even count).
  */
 export function spreadPractice<T extends PackItem>(cycleItems: CycleItems<T>, practiceDates: readonly string[], budget: number): SpreadPractice<T> {
+  checkAmount('budget', budget);
   const queue = [...(cycleItems.carried ?? []), ...(cycleItems.taught ?? []), ...(cycleItems.practiceOnly ?? [])];
+  for (const item of queue) checkAmount('minutes', item.minutes);
+  for (const date of practiceDates) if (!isDateKey(date)) throw new RangeError(`practice dates: ${date} is not a real day`);
+  if (new Set(practiceDates).size !== practiceDates.length) throw new RangeError('practice dates: a date is repeated');
   const days = [...practiceDates].sort().map((date) => ({ date, items: [] as T[], minutes: 0 }));
   let next = 0;
   let open = days.length > 0;

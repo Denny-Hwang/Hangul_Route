@@ -94,6 +94,34 @@ const expectTwoCycleBound = (draft: CurriculumDraft, from: string): void => {
 };
 
 /**
+ * G4 for the lessons a class day before `from` taught and no practice date before `from` played (carried in): each is
+ * played within the first two cycles, from its own, that hold a practice date on or after `from`.
+ */
+const expectCarriedInBound = (draft: CurriculumDraft, from: string): number => {
+  const p = draft.params;
+  const blend = p.blend!;
+  const practiceDays = blend.personal.days ?? practiceDaysFor(blend.lecture.days, blend.personal.perWeek);
+  const route = cyclesOf({ startDate: p.startDate, weeks: p.weeks, lectureDays: blend.lecture.days, practiceDays });
+  const off = (date: string): boolean => p.daysOff.some((range) => range.from <= date && date <= range.to);
+  let checked = 0;
+  for (const item of draft.items) {
+    if (item.lectureDate === undefined || item.lectureDate >= from || item.targetDate! < from) continue;
+    checked += 1;
+    const first = route.cycles.findIndex((cycle) => cycle.classDate === item.lectureDate);
+    expect(first).toBeGreaterThanOrEqual(0);
+    let seen = 0;
+    let found = false;
+    for (let i = first; i < route.cycles.length && seen < 2 && !found; i += 1) {
+      const dates = route.cycles[i]!.practiceDates.filter((date) => !off(date) && date >= from);
+      if (dates.length > 0) seen += 1;
+      found = dates.includes(item.targetDate!);
+    }
+    expect(found, `${item.id} taught ${item.lectureDate}, played ${item.targetDate}`).toBe(true);
+  }
+  return checked;
+};
+
+/**
  * BL-OD-4: a practice-only lesson dated on or after `from` has its cell's opener on a class day strictly before the
  * lesson's date (items before `from` may come from a class-only plan, which has no class dates).
  */
@@ -179,17 +207,34 @@ describe('Move this class day (section 10.2, BL-OD-8)', () => {
     expectOpenerInvariant(moved);
   });
 
-  it('a class day that has already gone by: its lessons not yet played move, its past items stay', () => {
-    const missed = '2026-12-01';
-    const later = '2026-12-03';
-    const moved = regenerateFrom(planOf(C), later, CATALOG_2026_10, { mode: 'shift', classDay: missed });
-    expect(before(moved.items, later)).toEqual(before(C.items, later));
+  it('a class day that has gone by is not moved (section 12.1: the teacher knows ahead); today\'s class day is', () => {
+    expect(() => regenerateFrom(planOf(C), '2026-12-03', CATALOG_2026_10, { mode: 'shift', classDay: '2026-12-01' })).toThrow(/has gone by/);
+    const moved = regenerateFrom(planOf(C), classDay, CATALOG_2026_10, { mode: 'shift', classDay });
+    expect(before(moved.items, classDay)).toEqual(before(C.items, classDay));
     expect(ids(moved.items)).toEqual(ids(C.items));
-    for (const item of moved.items) {
-      if (item.targetDate! >= later) expect(item.lectureDate === undefined || item.lectureDate !== missed).toBe(true);
+    expect(moved.items.some((item) => item.lectureDate === classDay)).toBe(false);
+  });
+
+  it('lessons taught before the freeze and not played yet keep their class day and the two-cycle bound', () => {
+    for (const draft of [C, D]) {
+      const moved = regenerateFrom(planOf(draft), today, CATALOG_2026_10, { mode: 'shift', classDay });
+      expectCarriedInBound(moved, classDay);
+      const plain = regenerateFrom(planOf(draft), '2026-12-02', CATALOG_2026_10, { mode: 'shift' });
+      expect(expectCarriedInBound(plain, '2026-12-02')).toBeGreaterThan(0);
     }
-    expectLectureBeforeTarget(moved);
-    expectTwoCycleBound(moved, later);
+  });
+
+  it('a route with no room left: the stories at the end of the queue drop and the preview warns (section 10.2)', () => {
+    const short = generateCurriculum({ ...blended(BLEND_C), weeks: 8 }, CATALOG_2026_10);
+    expect(short.warnings).toEqual([]);
+    const moved = regenerateFrom(planOf(short), '2026-11-09', CATALOG_2026_10, { mode: 'shift', classDay: '2026-11-10' });
+    const now = new Set(ids(moved.items));
+    const lost = ids(short.items).filter((id) => !now.has(id));
+    expect(lost.length).toBeGreaterThan(0);
+    // Lessons first: only stories, the queue's tail, are left out.
+    expect(lost.every((id) => id.startsWith('quest:story-'))).toBe(true);
+    expect(moved.warnings).toContainEqual({ code: 'fewer-sessions-than-units', count: lost.length });
+    expect(before(moved.items, '2026-11-10')).toEqual(before(short.items, '2026-11-10'));
   });
 
   it('moving the same class day twice changes nothing more', () => {
@@ -199,10 +244,13 @@ describe('Move this class day (section 10.2, BL-OD-8)', () => {
     expect(twice.params.blend?.classDaysOff).toEqual([classDay]);
   });
 
-  it('refuses a plan without class days and practice days, a day that is not a class day, and a day outside the route', () => {
+  it('refuses a plan without class days and practice days, a day that is not a class day of the route', () => {
     expect(() => regenerateFrom(planOf(ONLY), today, CATALOG_2026_10, { mode: 'shift', classDay })).toThrow(/class days and practice days/);
     expect(() => regenerateFrom(planOf(C), today, CATALOG_2026_10, { mode: 'shift', classDay: '2026-12-09' })).toThrow(/not a class day/);
-    expect(() => regenerateFrom(planOf(C), today, CATALOG_2026_10, { mode: 'shift', classDay: '2028-01-04' })).toThrow(/outside the route/);
+    expect(() => regenerateFrom(planOf(C), today, CATALOG_2026_10, { mode: 'shift', classDay: '2028-01-04' })).toThrow(/not a class day of this route/);
+    // A Tuesday just past the route's last class day (2027-04-27) is no class day of the route.
+    expect(() => regenerateFrom(planOf(C), today, CATALOG_2026_10, { mode: 'shift', classDay: '2027-05-04' })).toThrow(/not a class day of this route/);
+    expect(regenerateFrom(planOf(C), today, CATALOG_2026_10, { mode: 'shift', classDay: '2027-04-27' }).params.blend?.classDaysOff).toEqual(['2027-04-27']);
     expect(() => regenerateFrom(planOf(C), today, CATALOG_2026_10, { mode: 'shift', classDay: '2026-12-32' })).toThrow();
     expect(() => regenerateFrom(planOf(C), today, CATALOG_2026_10, { mode: 'requeue', classDay })).toThrow(/shift/);
   });
@@ -260,6 +308,15 @@ describe('Add practice days and Stop practice days (section 14)', () => {
     });
   }
 
+  it('the params override keeps the route: start, weeks, audience and level cannot change', () => {
+    const stored = storedOf(ONLY);
+    const shift = (params: typeof stored) => () => regenerateFrom(planOf(ONLY), today, CATALOG_2026_10, { mode: 'shift', params: { ...params, blend: BLEND_C } });
+    expect(shift({ ...stored, startDate: '2027-01-04' })).toThrow(/startDate cannot change/);
+    expect(shift({ ...stored, weeks: 30 })).toThrow(/weeks cannot change/);
+    expect(shift({ ...stored, audience: 'family' })).toThrow(/audience cannot change/);
+    expect(shift({ ...stored, level: { stage: 'stage2', band: 0 } })).toThrow(/level cannot change/);
+  });
+
   it('a params override with a class day moves that class day on the new plan', () => {
     const classDay = '2026-12-08';
     const added = regenerateFrom(planOf(ONLY), today, CATALOG_2026_10, { mode: 'shift', params: { ...storedOf(ONLY), blend: BLEND_C }, classDay });
@@ -303,15 +360,15 @@ describe('the class days before today are rebuilt from what they taught', () => 
   });
 });
 
-describe('property: Move this class day on any class day, from any day before it', () => {
+describe('property: Move this class day on any class day, from today or any day before it', () => {
   it('nothing done is moved or lost, lectureDate stays before targetDate, the opener invariant and the two-cycle bound hold', () => {
     const classDates = C.items.flatMap((item) => (item.lectureDate === undefined ? [] : [item.lectureDate]));
     const days = [...new Set(classDates)].sort();
     fc.assert(
-      fc.property(fc.constantFrom(C, D), fc.constantFrom(...days), fc.integer({ min: -3, max: 13 }), (draft, classDay, back) => {
+      fc.property(fc.constantFrom(C, D), fc.constantFrom(...days), fc.integer({ min: 0, max: 13 }), (draft, classDay, back) => {
         const today = addDays(classDay, -back);
         const moved = regenerateFrom(planOf(draft), today, CATALOG_2026_10, { mode: 'shift', classDay });
-        const frozen = classDay > today ? classDay : today;
+        const frozen = classDay;
         // The stored plan's items: a coming-soon cell carries its `Coming soon` note there (`toPlanItems`).
         expect(before(moved.items, frozen)).toEqual(before(toPlanItems(draft), frozen));
         expect(new Set(moved.items.map((item) => item.id)).size).toBe(moved.items.length);
@@ -320,6 +377,7 @@ describe('property: Move this class day on any class day, from any day before it
         expect(moved.items.some((item) => item.lectureDate === classDay && item.targetDate! >= frozen)).toBe(false);
         expectLectureBeforeTarget(moved);
         expectTwoCycleBound(moved, frozen);
+        expectCarriedInBound(moved, frozen);
         expectOpenerInvariant(moved);
       }),
       { numRuns: 40, seed: 42 },
