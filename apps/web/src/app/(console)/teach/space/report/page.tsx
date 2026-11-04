@@ -12,7 +12,7 @@ import { classChooserRows, classReportScreenOf, classReportView } from '@/lib/co
 import { lectureModeEnabled, reportsEnabled } from '@/lib/console/config';
 import { reportBackLink, reportCacheKey, reportQueryOf, type ReportStepButton, type ReportTab } from '@/lib/console/report-view';
 import { signedOutTarget } from '@/lib/console/signin-flow';
-import { stageTitle } from '@/lib/console/stage-titles';
+import { stageTitleIn } from '@/lib/console/stage-titles';
 
 /**
  * One class's statistics (F-REPORT-001 RP-8, sections 3.1, 3.7 and 3.14; screen spec
@@ -226,7 +226,7 @@ function ClassReportInner(): JSX.Element {
   }
 
   const { busy, error } = screen;
-  const view = classReportView({ data: screen.data, query: { period, at }, now: new Date(), role, lecture: lectureModeEnabled(), stageTitle, locale });
+  const view = classReportView({ data: screen.data, query: { period, at }, now: new Date(), role, lecture: lectureModeEnabled(), stageTitle: stageTitleIn(locale), locale });
   const selected = view.tabs?.find((tab) => tab.selected)?.period ?? period;
   return frame(
     <>

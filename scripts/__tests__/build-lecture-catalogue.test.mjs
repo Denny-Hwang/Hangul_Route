@@ -175,8 +175,8 @@ describe("catalogue titles (LV-3: the console's titles in the UI language)", () 
       ],
     });
     assert.deepEqual(titles, { ko: {} });
-    for (const id of ["episode:stage1-letters", "quest:story-hangeul-day-listen", "story:hangeul-day", "vocab-topic:k-culture"]) assert.ok(TITLE_ID_RE.test(id), id);
-    for (const id of ["episode:shelf-hangeul-day", "card:x", "topic:food", "quest:", "story:Bad"]) assert.ok(!TITLE_ID_RE.test(id), id);
+    for (const id of ["episode:stage1-letters", "quest:story-hangeul-day-listen", "story:hangeul-day", "vocab-topic:k-culture", "stage:stage1", "stage:stage7"]) assert.ok(TITLE_ID_RE.test(id), id);
+    for (const id of ["episode:shelf-hangeul-day", "card:x", "topic:food", "quest:", "story:Bad", "stage:stage8", "stage:stage1-letters"]) assert.ok(!TITLE_ID_RE.test(id), id);
   });
 
   test("fails on an overlay file it cannot read, a blank title and two different titles for one id", () => {
