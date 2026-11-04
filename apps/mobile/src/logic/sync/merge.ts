@@ -7,6 +7,7 @@ import {
   mergeEarliest,
   mergeGoals,
   mergeLatchRecord,
+  mergePracticeDays,
   mergeStreakBest,
   mergeStreakLocal,
   pruneDailyReviews,
@@ -469,6 +470,11 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     ...(local.selfRoute !== undefined || server.selfRoute !== undefined
       ? { selfRoute: mergeSelfRoute(local.selfRoute, server.selfRoute) }
       : {}),
+    // The learner's own practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-8): newest `updatedAt` per
+    // plan, at most 3, the Worker's rule; an absent key on either side never erases the other's.
+    ...(local.practiceDays !== undefined || server.practiceDays !== undefined
+      ? { practiceDays: mergePracticeDays(local.practiceDays, server.practiceDays) }
+      : {}),
     // Word progress (F-VOC-005): omitted when neither side has a slice.
     ...(vocab !== undefined ? { vocab } : {}),
     // Quest latch (F-REPORT-001): omitted only when neither side has the key.
@@ -580,8 +586,12 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
   const route = local.selfRoute ?? null;
   const theirRoute = server.selfRoute ?? null;
   const holdsRoute = route === null || (theirRoute !== null && theirRoute.id === route.id && compareInstant(theirRoute.updatedAt, route.updatedAt) >= 0);
+  // The learner's practice days are held when merging them into the server's changes nothing (BL-8).
+  const holdsPracticeDays =
+    local.practiceDays === undefined || JSON.stringify(mergePracticeDays(local.practiceDays, server.practiceDays)) === JSON.stringify(mergePracticeDays(server.practiceDays, server.practiceDays) ?? []);
   return (
     holdsRoute &&
+    holdsPracticeDays &&
     vocabCovered(local.vocab, server.vocab) &&
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every(cardHeld) &&
