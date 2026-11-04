@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { FestivalAnchorSchema } from '../catalog/schema';
 import { StageKeySchema } from '../schemas/heritage-card';
-import { PlanItemSchema } from '../schemas/plan-item';
+import { PlanItemShapeSchema, refinePlanItem } from '../schemas/plan-item';
 import { CurriculumParamsSchema, DateKeySchema, StoredCurriculumParamsSchema } from './params';
 import { HORIZON_DAYS } from './presets';
 
@@ -43,6 +43,10 @@ export const WARNING_CODES = [
   'fewer-sessions-than-units',
   'session-too-short',
   'already-done-skipped',
+  // AMENDMENTS-ROUTE-CLASS-BLEND section 6.6 (row BL-W; the blended generator, BL-2, writes them)
+  'item-cap',
+  'practice-short',
+  'class-paced',
 ] as const;
 export const WarningCodeSchema = z.enum(WARNING_CODES);
 export type WarningCode = z.infer<typeof WarningCodeSchema>;
@@ -54,7 +58,7 @@ export const CurriculumWarningSchema = z.object({
 });
 export type CurriculumWarning = z.infer<typeof CurriculumWarningSchema>;
 
-export const CurriculumItemSchema = PlanItemSchema.extend({ week: z.number().int() });
+export const CurriculumItemSchema = PlanItemShapeSchema.extend({ week: z.number().int() }).superRefine(refinePlanItem);
 export type CurriculumItem = z.infer<typeof CurriculumItemSchema>;
 
 const count = z.number().int().min(0);
@@ -78,6 +82,21 @@ export const CurriculumStatsSchema = z.object({
   vocabWeeks: count,
   /** The highest stage of a scheduled ready lesson (stories do not move it); the level's stage when none. */
   endsAtStage: StageKeySchema,
+  /**
+   * A blended plan only (AMENDMENTS-ROUTE-CLASS-BLEND section 6.1, row BL-2). `lecture`: class days held, lessons
+   * they teach and their class minutes at the class pace. `personal`: practice sessions, the items placed on them
+   * (every item of the plan), the Refresh days and the catalogue minutes placed.
+   */
+  byTrack: z
+    .object({
+      lecture: z.object({ sessions: count, items: count, minutesPlanned: count }),
+      personal: z.object({ sessions: count, items: count, refreshDays: count, minutesPlanned: count }),
+    })
+    .optional(),
+  /** A blended plan only: sessions per week with any session, one decimal (section 6.1). */
+  sessionsPerTeachingWeek: z.number().min(0).optional(),
+  /** A blended plan only: sessions over the route's calendar weeks, one decimal (section 6.1). */
+  sessionsPerCalendarWeek: z.number().min(0).optional(),
 });
 export type CurriculumStats = z.infer<typeof CurriculumStatsSchema>;
 
@@ -91,6 +110,11 @@ export const CurriculumDraftSchema = z.object({
   locked: z.array(z.string()),
   stats: CurriculumStatsSchema,
   warnings: z.array(CurriculumWarningSchema),
+  /** A blended plan only: its Refresh dates, stored as `CurriculumMeta.refresh` (row BL-2). */
+  refresh: z
+    .array(z.object({ date: DateKeySchema, cellIds: z.array(z.string()).min(1).max(6) }))
+    .max(364)
+    .optional(),
 });
 export type CurriculumDraft = z.infer<typeof CurriculumDraftSchema>;
 
@@ -103,5 +127,14 @@ export const CurriculumMetaSchema = z.object({
   weeks: z.array(WeekMetaSchema).max(52),
   horizonDays: z.number().int().min(1).max(28).default(HORIZON_DAYS),
   repacedAt: z.string().nullable(),
+  /**
+   * Refresh dates of a blended plan (AMENDMENTS-ROUTE-CLASS-BLEND sections 6.4 and 9.2, row BL-W): a practice date
+   * with room or no lesson, and the cells class taught in the previous one or two cycles, earliest first. Never plan
+   * items and never counted in `planProgress`; at most one entry per practice date.
+   */
+  refresh: z
+    .array(z.object({ date: DateKeySchema, cellIds: z.array(z.string()).min(1).max(6) }))
+    .max(364)
+    .optional(),
 });
 export type CurriculumMeta = z.infer<typeof CurriculumMetaSchema>;

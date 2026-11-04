@@ -232,7 +232,8 @@ describe('LearnerReportResponseSchema (section 3.8)', () => {
   it('reads exactly the roster allow-list (activity on it since RP-W2) plus the family self-route', () => {
     expect(TEACHER_VISIBLE_SUMMARY_KEYS).toContain('activity');
     // [TV] plus the full-scope words and Hangul Check (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER section 2), and the memory counts (F-CURR-002 CM-16)
-    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute', 'vocab', 'stage1Anchor', 'memory'].sort());
+    // AMENDMENTS-ROUTE-CLASS-BLEND section 11: the family practice week (rosterSummary sends it to a family only)
+    expect(Object.keys(ReportSummarySchema.shape).sort()).toEqual([...TEACHER_VISIBLE_SUMMARY_KEYS, 'selfRoute', 'vocab', 'stage1Anchor', 'memory', 'practiceWeek'].sort());
   });
 
   it('F-CURR-002 CM-16: carries the memory block when the Worker sends it, and drops a malformed one on its own', () => {
