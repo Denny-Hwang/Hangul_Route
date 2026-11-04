@@ -72,10 +72,21 @@ export function practiceDaysChangedEvent(days: readonly Weekday[], by: ChangedBy
 export type PracticePlacer = (source: DeriveSource, days: readonly Weekday[], from: string) => DeriveSource;
 
 let placer: PracticePlacer | null = null;
+const placerListeners = new Set<() => void>();
 
-/** Hands in the chunk's placer (or takes it away, in tests). */
+/** Hands in the chunk's placer (or takes it away, in tests), and tells every view that reads it (`subscribePlacer`). */
 export function setPracticePlacer(next: PracticePlacer | null): void {
   placer = next;
+  placerListeners.forEach((listener) => listener());
+}
+
+/**
+ * Called when the placer comes in or goes: a view that re-dates with `withLearnerDays` (Home's Refresh) recomputes
+ * then, even when the derivation that follows changes no homework and so writes no new snapshot.
+ */
+export function subscribePlacer(listener: () => void): () => void {
+  placerListeners.add(listener);
+  return () => void placerListeners.delete(listener);
 }
 
 /** Whether the placer is in (the chunk has loaded). */
