@@ -130,6 +130,12 @@ function matchChain(lang: string, want: SpeechLang): ChainEntry | null {
 const word = (alternatives: string): RegExp => new RegExp(`(^|[^A-Za-z0-9_])(${alternatives})($|[^A-Za-z0-9_])`, 'i');
 
 /**
+ * A Google TTS voice on native Android, where the name is the id (`en-us-x-sfg-local`, `ko-kr-x-ism-network`). Only
+ * the female variants are listed: Android flags no default, so without them the id tie-break could pick a male one.
+ */
+const ANDROID_ID = (tag: string, variants: string): RegExp => new RegExp(`^${tag}-x-(${variants})(-local|-network)?$`, 'i');
+
+/**
  * Known-good voices per language, best tier first (AC-B12). Korean prefers a natural female voice, the voice family
  * of the generated clips; a known male Korean voice ranks below every known female one but above any unknown voice.
  */
@@ -141,6 +147,7 @@ const KNOWN_GOOD: Readonly<Record<SpeechLang, readonly { bonus: number; test: (n
         word('Yuna|Sora|Suhyun').test(n) ||
         /유나|소라|수현/.test(n) ||
         /Google\s*한국/.test(n) ||
+        ANDROID_ID('ko-kr', 'ism|kob').test(n) ||
         /Microsoft\b.*\b(SunHi|Heami|SeoHyeon|JiMin|SoonBok|YuJin)\b/i.test(n),
     },
     { bonus: 100, test: (n) => word('Minsu|Jian').test(n) || /민수|지안/.test(n) || /Microsoft\b.*\b(InJoon|BongJin|GookMin|Hyunsu)\b/i.test(n) },
@@ -151,6 +158,7 @@ const KNOWN_GOOD: Readonly<Record<SpeechLang, readonly { bonus: number; test: (n
       test: (n) =>
         word('Samantha|Ava|Allison|Susan|Zoe|Nicky|Joelle').test(n) ||
         /Google US English/i.test(n) ||
+        ANDROID_ID('en-us', 'sfg|tpf|tpc|iob|iog').test(n) ||
         /Microsoft\b.*\b(Aria|Jenny|Ava|Emma|Michelle|Zira)\b/i.test(n),
     },
   ],
@@ -160,6 +168,7 @@ const KNOWN_GOOD: Readonly<Record<SpeechLang, readonly { bonus: number; test: (n
       test: (n) =>
         word('Paulina|M[oó]nica|Marisol|Ang[eé]lica').test(n) ||
         /Google espa[nñ]ol/i.test(n) ||
+        ANDROID_ID('es-us', 'sfb').test(n) ||
         /Microsoft\b.*\b(Paloma|Dalia|Sabina|Helena|Elvira)\b/i.test(n),
     },
   ],

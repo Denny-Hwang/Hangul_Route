@@ -286,6 +286,16 @@ describe('rankVoices: novelty voices (NB-2)', () => {
     }
   });
 
+  it('native Android (name = Google TTS id, no default) prefers the female variants, not the id tie-break', () => {
+    const android = (lang: string, ids: string[]) => ids.map((id) => v({ id, name: id, lang }));
+    const en = android('en-US', ['en-us-x-iol-local', 'en-us-x-iom-local', 'en-us-x-tpd-local', 'en-us-x-tpf-local']);
+    expect(pickVoice(en, 'en-US', { online: true })?.id).toBe('en-us-x-tpf-local');
+    const ko = android('ko-KR', ['ko-kr-x-koc-local', 'ko-kr-x-kod-local', 'ko-kr-x-kob-local']);
+    expect(pickVoice(ko, 'ko-KR', { online: true })?.id).toBe('ko-kr-x-kob-local');
+    const es = android('es-US', ['es-us-x-esc-local', 'es-us-x-esd-local', 'es-us-x-sfb-local']);
+    expect(pickVoice(es, 'es-US', { online: true })?.id).toBe('es-us-x-sfb-local');
+  });
+
   it('a known male Korean voice still beats an unknown premium one', () => {
     const other = v({ id: 'a', name: 'Mystery', quality: 'premium', isDefault: true });
     const minsu = v({ id: 'z', name: 'Minsu' });
