@@ -1730,6 +1730,7 @@ export const learner = {
         storageOff: 'Aquí no hay lecciones recientes. Las lecciones funcionan igual.',
         resume: { cta: 'Seguir' },
         startOver: { cta: 'Desde el inicio' },
+        finished: (day: string) => `Terminada: ${day}`,
       },
       quick: {
         consonants: 'Consonantes',
@@ -1789,6 +1790,7 @@ export const learner = {
       more: { cta: 'Más' },
       fullscreen: { cta: 'Pantalla completa' },
       exit: { cta: 'Salir' },
+      finish: { cta: 'Terminar' },
       noVoice: 'Aquí no hay voz coreana. ¡Dilo tú!',
       noSound: 'Esta diapositiva no tiene sonido.',
       soundFailed: 'El sonido no se reprodujo. ¡Dilo tú!',
@@ -1799,7 +1801,9 @@ export const learner = {
     exit: {
       title: '¿Salir de la lección?',
       line: 'No cambia el progreso de nadie.',
+      resumeLine: 'Lecciones recientes guarda esta diapositiva para que puedas seguir después.',
       keepGoing: { cta: 'Seguir' },
+      finish: { title: '¿Terminar la lección?', line: 'Llegaste al final de la lección.', cta: 'Terminar' },
     },
     grid: {
       kind: {
@@ -1864,7 +1868,7 @@ export const learner = {
         practice: 'Practica en casa con Hangul Route',
         codeTitle: 'Únete con este código',
         howToJoin: (cta: string) => `Toca «${cta}» en Hangul Route y escribe este código.`,
-        exitHint: 'Para terminar, elige Salir.',
+        exitHint: 'Para terminar, elige Terminar.',
       },
       sentence: { label: 'Oración' },
       pattern: { label: 'Patrón de oración' },
@@ -2232,5 +2236,11 @@ export const learner = {
     throwAgain: 'Otra tirada',
     pieceHome: '¡Una ficha llegó a la meta!',
     home: 'Meta',
+  },
+  weekDrop: {
+    heading: 'Esta semana en Corea',
+    practice: { cta: 'Practica las palabras' },
+    done: 'Listo por esta semana',
+    next: 'La semana que viene habrá uno nuevo.',
   },
 } satisfies DeepPartial<Messages['learner']>;
