@@ -129,7 +129,7 @@ describe('Pause and Resume the family weekly plan (BL-OD-6)', () => {
     // Family of two: Pause takes the family plan only (Jun's own plan does not reach Mina).
     const pause = familyPlanStep('mina', meeting, [family, junOwn], true, two);
     expect(pause).toEqual({ kind: 'pause', plans: [family] });
-    const pausedFamily = { ...family, targetLearnerIds: familyPlanSave(family, 'mina', two, 'pause').targetLearnerIds };
+    const pausedFamily = { ...family, targetLearnerIds: familyPlanSave(family, 'mina', two, 'pause').targetLearnerIds ?? null };
     expect(pausedFamily.targetLearnerIds).toEqual(['jun']);
     // Resume takes the plan paused here only: Jun's own plan keeps its targets.
     const resume = familyPlanStep('mina', meeting, [pausedFamily, junOwn], true, two, ['plan:fam']);
@@ -140,7 +140,7 @@ describe('Pause and Resume the family weekly plan (BL-OD-6)', () => {
     // Family of three with Jun's own plan: the same, by shape alone.
     const pause3 = familyPlanStep('mina', meeting, [family, junOwn], true, three);
     expect(pause3).toEqual({ kind: 'pause', plans: [family] });
-    const paused3 = { ...family, targetLearnerIds: familyPlanSave(family, 'mina', three, 'pause').targetLearnerIds };
+    const paused3 = { ...family, targetLearnerIds: familyPlanSave(family, 'mina', three, 'pause').targetLearnerIds ?? null };
     expect(familyPlanStep('mina', meeting, [paused3, junOwn], true, three)).toEqual({ kind: 'resume', plans: [paused3] });
   });
 
