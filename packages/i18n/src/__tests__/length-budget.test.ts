@@ -21,6 +21,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'a11y.hiddenHeritage.spotFound': 'read aloud as a spot\'s name, never drawn ("Ya encontraste: palillos"; no pronoun to agree with the meaning)',
   'a11y.hiddenHeritage.slotEmpty': 'read aloud as an empty slot\'s name, never drawn ("Aún sin encontrar")',
   'learner.hiddenHeritage.found': '"Lo hallado" (10) against "Found" (5): the neuter keeps the row free of a noun\'s gender; a caption before the slots that wraps',
+  // F-CURR-002 row CM-47: a realia sheet's group name, read aloud before its line count.
+  'a11y.minigame.realia.kind.label': 'read aloud as the sheet\'s group name, never drawn ("Etiqueta de alimento": a label on food, not a clothing tag)',
   'a11y.minigame.strokeOrder.direction.right': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la derecha")',
   'a11y.minigame.strokeOrder.direction.left': 'read aloud, never drawn; a Spanish direction needs "a la" ("a la izquierda")',
   'a11y.minigame.strokeOrder.direction.upLeft': 'read aloud, never drawn ("arriba a la izquierda")',
@@ -114,6 +116,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   // AMENDMENTS-GROWNUP-UX GX-1 (section 10.1, the one date order of the PR #917 review): status chips beside a learner's name.
   'console.status.moving': '"Cambia de clase el {date}" against "Moving {date}": Spanish needs the verb phrase and its article before a date; a chip that wraps under the name on a phone',
   'console.status.new': '"Nueva llegada" (13) against "New" (3): a bare "Nuevo/Nueva" would take the learner\'s gender; the noun keeps the chip neutral, and it wraps under the name on a phone',
+  // GX-1 (section 5.3): the re-link pop-up's put-off button; "Luego" reads as "then", so the two-word "Más tarde" is the one Spanish word for Later.
+  'console.relinkPopup.later.cta': '"Más tarde" (9) against "Later" (5), one letter over the 8-character floor: a pop-up button drawn at its own width beside Approve and Deny, which wrap on a phone',
   // AMENDMENTS-GROWNUP-UX GX-3 (section 5.5, the one action wording of section 10.1): the re-link bar's sentence.
   'console.relinkBar.many': '"{n} dispositivos nuevos esperan tu aprobación" against "{n} new devices need your OK": "esperan tu aprobación" is the one full-sentence form of "needs your OK" in Spanish (section 10.1); the bar\'s line wraps at any width',
 };

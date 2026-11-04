@@ -25,6 +25,19 @@ export function requestedLabel(requestedAt: string, now: Date, locale: UiLocale 
   return words.askedAgo(Math.floor(ms / MIN_MS));
 }
 
+const PLATFORMS = ['ios', 'android', 'web'] as const;
+
+/**
+ * The platform a re-link request names, as a grown-up reads it (AMENDMENTS-GROWNUP-UX section 5.3): "iPhone or iPad",
+ * "Android" or "Web"; any other value, or none, reads the shipped `relink.device`.
+ */
+export function platformLabel(platform: string | null | undefined, locale: UiLocale = DEFAULT_LOCALE): string {
+  const words = getMessages(locale).console.relink;
+  const key = (platform ?? '').trim().toLowerCase();
+  const known = PLATFORMS.find((p) => p === key);
+  return known ? words.platform[known] : words.device;
+}
+
 /** Who may delete a learner's data from this space (F-TCH-001 §10.3). */
 export function canDeleteLearnerData(kind: SpaceKind, consentMode: 'parent' | 'school'): boolean {
   if (kind === 'family') return true;

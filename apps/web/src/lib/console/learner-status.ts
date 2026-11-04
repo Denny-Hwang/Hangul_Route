@@ -32,12 +32,20 @@ export interface LearnerMove {
   expiresAt: string | null;
 }
 
+/** A pending re-link; `platform` and `requestedAt` come from the re-link list (the pop-up's meta line, GX-D12). */
+export interface LearnerRelink {
+  id: string;
+  expiresAt: string;
+  platform?: string | null;
+  requestedAt?: string | null;
+}
+
 export interface LearnerStatus {
   learnerId: string;
   kind: LearnerStatusKind;
   /** `relink` and `move_yours` only: the grown-up's answer is needed. */
   action: boolean;
-  relink?: { id: string; expiresAt: string };
+  relink?: LearnerRelink;
   move?: LearnerMove;
   /** The roster row's `scope === 'base'` (TV-D3): a muted line under the card's header, never a chip. */
   scopeBase: boolean;
@@ -142,7 +150,7 @@ function listCandidates(input: AttentionInput): Map<string, Candidate[]> {
   };
   for (const r of input.relinks ?? []) {
     if (r.status !== 'pending' || !future(r.expiresAt, input.now)) continue;
-    add(r.learnerId, { kind: 'relink', relink: { id: r.id, expiresAt: r.expiresAt } });
+    add(r.learnerId, { kind: 'relink', relink: { id: r.id, expiresAt: r.expiresAt, platform: r.platform, requestedAt: r.requestedAt } });
   }
   for (const view of input.transfers ?? []) {
     if (view.status !== 'requested' && view.status !== 'approved') continue;
@@ -163,7 +171,7 @@ function listCandidates(input: AttentionInput): Map<string, Candidate[]> {
   // An outgoing class move carries a learner id only from GX-W on (while the stored status is `requested`).
   for (const m of input.classMoves?.outgoing ?? []) {
     if (m.status !== 'waiting') continue;
-    add(m.learnerId, { kind: 'move_others', move: { source: 'teacher', id: m.id, to: m.to.name, on: null, expiresAt: null } });
+    add(m.learnerId, { kind: 'move_others', move: { source: 'teacher', id: m.id, to: m.to.name, on: null, expiresAt: m.expiresAt ?? null } });
   }
   return out;
 }
@@ -227,7 +235,7 @@ export function attentionModel(input: AttentionInput): AttentionModel {
     if (m.status !== 'waiting' || m.kind !== 'accept') continue;
     teacherMovesIn += 1;
     const alias = m.learner && 'alias' in m.learner ? m.learner : null;
-    incoming.push({ source: 'teacher', id: m.id, alias: alias?.alias ?? '', avatar: m.learner?.avatar ?? null, level: alias?.level ?? null, from: m.from.name, expiresAt: null, createdAt: m.createdAt });
+    incoming.push({ source: 'teacher', id: m.id, alias: alias?.alias ?? '', avatar: m.learner?.avatar ?? null, level: alias?.level ?? null, from: m.from.name, expiresAt: m.expiresAt ?? null, createdAt: m.createdAt });
   }
   incoming.sort(byExpiry);
   outgoing.sort(byExpiry);
@@ -315,7 +323,8 @@ export function statusWords(status: LearnerStatus, now: Date, locale: UiLocale =
     case 'relink':
       return { chip: t.needsOk, reason: status.relink ? t.newDevice(minutesShown(status.relink.expiresAt, now)) : null, tone: 'action' };
     case 'move_yours':
-      return { chip: t.needsOk, reason: to ? t.moveTo(to) : null, tone: 'action' };
+      // A family-started move rarely names its destination (F-SPACE-002 section 4.3 `introduce`): never without a reason.
+      return { chip: t.needsOk, reason: to ? t.moveTo(to) : t.moveOut, tone: 'action' };
     case 'move_room':
       return { chip: t.waitingSeat, reason: null, tone: 'quiet' };
     case 'move_scheduled': {
