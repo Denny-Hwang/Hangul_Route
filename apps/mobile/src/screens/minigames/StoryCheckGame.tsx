@@ -16,6 +16,7 @@ import {
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -379,41 +380,44 @@ export function StoryCheckGame({ scope, onFinish }: Props): ReactElement {
           ) : null}
 
           <Spacer size="lg" />
-          <View testID="story-check-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-            {item.options.map((option) => {
-              const card = optionCardView(item, option, state, { ...ctx, copy });
-              const art =
-                card.art !== undefined && supportedCardIds.includes(card.art) ? (
-                  <PictureArt pictureRef={card.art} gloss={card.label ?? ''} size={pictureSize} />
-                ) : undefined;
-              return (
-                <View
-                  key={option.id}
-                  style={{ ...cell, minWidth: touchTarget.hero, gap: spacing.xs }}
-                >
-                  <ChoiceCard
-                    testID={`story-check-option-${option.id}`}
-                    state={card.state}
-                    label={card.label}
-                    ko={card.ko}
-                    romanization={card.romanization}
-                    gloss={card.gloss}
-                    art={art}
-                    accessibilityLabel={card.accessibilityLabel}
-                    onPress={() => dispatch({ type: 'choose', optionId: option.id })}
-                  />
-                  {card.status ? (
-                    // The visible non-colour cue; the card's accessible name already ends with these words.
-                    <View {...a11yHidden}>
-                      <Body size="sm" weight="semibold" testID={`story-check-status-${option.id}`}>
-                        {card.status === 'correct' ? copy.correct : copy.tryAnother}
-                      </Body>
-                    </View>
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
+          <TapBoard lock="board">
+            {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+            <View testID="story-check-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+              {item.options.map((option) => {
+                const card = optionCardView(item, option, state, { ...ctx, copy });
+                const art =
+                  card.art !== undefined && supportedCardIds.includes(card.art) ? (
+                    <PictureArt pictureRef={card.art} gloss={card.label ?? ''} size={pictureSize} />
+                  ) : undefined;
+                return (
+                  <View
+                    key={option.id}
+                    style={{ ...cell, minWidth: touchTarget.hero, gap: spacing.xs }}
+                  >
+                    <ChoiceCard
+                      testID={`story-check-option-${option.id}`}
+                      state={card.state}
+                      label={card.label}
+                      ko={card.ko}
+                      romanization={card.romanization}
+                      gloss={card.gloss}
+                      art={art}
+                      accessibilityLabel={card.accessibilityLabel}
+                      onPress={() => dispatch({ type: 'choose', optionId: option.id })}
+                    />
+                    {card.status ? (
+                      // The visible non-colour cue; the card's accessible name already ends with these words.
+                      <View {...a11yHidden}>
+                        <Body size="sm" weight="semibold" testID={`story-check-status-${option.id}`}>
+                          {card.status === 'correct' ? copy.correct : copy.tryAnother}
+                        </Body>
+                      </View>
+                    ) : null}
+                  </View>
+                );
+              })}
+            </View>
+          </TapBoard>
 
           {/* A live region on the web only: native announces the outcome line itself (one announcement, no overlap). */}
           <View accessibilityLiveRegion={Platform.OS === 'web' ? 'polite' : 'none'}>

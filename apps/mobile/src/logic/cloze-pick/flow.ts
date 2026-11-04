@@ -11,7 +11,8 @@ import { LISTEN_PICK_TIMING, startFlow, stepFlow, type FlowEffect as ListenEffec
  *   the shell's pause. After it, Hear it replays the sentence as often as the learner likes.
  * - **A tile that does not fit** locks in the amber nudge; the gap stays empty. The first answer of a round is the
  *   scored one (the host keeps later ones as retries); the second miss rings the tile that fits (`hint`).
- * - Only the first touch in a 50 ms window counts (the Listen & Pick rule).
+ * - A touch inside `TAP_LOCK_MS` (400 ms) after an accepted one is a bounce and is dropped (the Listen & Pick rule,
+ *   AMENDMENTS-TOUCH KT-D5).
  */
 
 export type ClozeFlowState = ListenPickFlowState;

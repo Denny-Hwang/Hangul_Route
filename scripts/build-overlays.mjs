@@ -99,8 +99,11 @@ export function renderLocaleOverlays(model, locale) {
 
 const relOf = (root, file) => relative(root, file).split(sep).join("/");
 
-/** `lessons-stage<n>-<theme>.json`: a lesson cell's glosses, read by build-lessons.mjs (F-CURR-001 §3.10). */
-export const isLessonOverlay = (name) => /^lessons-stage\d-[a-z]+\.json$/.test(name);
+/**
+ * `lessons-stage<n>-<theme>.json`: a lesson cell's glosses, read by build-lessons.mjs (F-CURR-001 §3.10), and
+ * `lessons-stage<n>-<theme>-v2.json`, its Volume 2's (F-CURR-002 row CM-40, `cellOverlayFile` of build-lessons.mjs).
+ */
+export const isLessonOverlay = (name) => /^lessons-stage\d-[a-z]+(?:-v2)?\.json$/.test(name);
 /** `weekly-<monday>.json`: the "This week in Korea" drops' text, read by build-week-drops.mjs into their own chunk (F-CURR-002 row CM-48). */
 export const isWeekOverlay = (name) => /^weekly-\d{4}-\d{2}-\d{2}\.json$/.test(name);
 
