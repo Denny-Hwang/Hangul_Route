@@ -4,8 +4,10 @@ import type { SpeechLang } from '@hangul-route/content-schema';
  * Voice choice (F-AUDIO-004 §3.4, AD5). Pure: ranked, filtered, deterministic.
  *
  * A voice that fails an eligibility rule is excluded, never demoted: an
- * English voice must not read Hangul, and Apple's novelty ko_KR voices must
- * not be picked just because they come first in the list.
+ * English voice must not read Hangul, and Apple's novelty voices must not be
+ * picked in any language just because they come first in the list (NB-2: an
+ * English story narration was read by "Albert" or Eloquence "Eddy" on devices
+ * whose system language is Korean, where no English voice is flagged default).
  *
  * Hermes constraints: no `\p{}` classes and no look-behind. `\b` does not work
  * next to Hangul in a non-unicode regex (Hangul is a non-word character), so
@@ -37,7 +39,51 @@ export const KO_EXCLUDED_NAMES: readonly string[] = [
   'Shelley',
 ];
 
-const EXCLUDED_LOWER: ReadonlySet<string> = new Set(KO_EXCLUDED_NAMES.map((n) => n.toLowerCase()));
+/**
+ * Apple's novelty and legacy MacinTalk voices (`say -v '?'`, every language they ship in), hard-excluded for every
+ * language (AMENDMENTS-AUDIO-CLIPS AC-B12). Holds every `KO_EXCLUDED_NAMES` entry.
+ */
+export const NOVELTY_VOICE_NAMES: readonly string[] = [
+  ...KO_EXCLUDED_NAMES,
+  'Albert',
+  'Bad News',
+  'Bahh',
+  'Bells',
+  'Boing',
+  'Bubbles',
+  'Cellos',
+  'Deranged',
+  'Fred',
+  'Good News',
+  'Hysterical',
+  'Jester',
+  'Junior',
+  'Kathy',
+  'Organ',
+  'Pipe Organ',
+  'Princess',
+  'Ralph',
+  'Superstar',
+  'Trinoids',
+  'Whisper',
+  'Wobble',
+  'Zarvox',
+];
+
+const NOVELTY_LOWER: readonly string[] = NOVELTY_VOICE_NAMES.map((n) => n.toLowerCase());
+
+/** Apple's Eloquence engine (Eddy, Flo, Reed ... in every language): its voice ids carry this segment. */
+const ELOQUENCE_ID = /(^|[.:/])eloquence([.:/]|$)/i;
+
+/**
+ * A novelty voice: the name starts with a listed name as whole ASCII words ("Bad News (English (US))"), or the id
+ * names Apple's Eloquence engine (Safari and iOS report `com.apple.eloquence.<lang>.<Name>`).
+ */
+export function isNoveltyVoice(voice: Pick<VoiceCandidate, 'id' | 'name'>): boolean {
+  if (ELOQUENCE_ID.test(voice.id)) return true;
+  const name = voice.name.trim().toLowerCase();
+  return NOVELTY_LOWER.some((n) => name.startsWith(n) && !/[a-z0-9_]/.test(name.charAt(n.length)));
+}
 
 /** 'ko_KR' -> 'ko-kr'; trims and lower-cases. */
 export function normLang(raw: string): string {
@@ -80,17 +126,48 @@ function matchChain(lang: string, want: SpeechLang): ChainEntry | null {
   return null;
 }
 
-/** The first ASCII word of a voice name, lower-cased ("Eddy (한국어(한국))" gives "eddy"). */
-function leadingWord(name: string): string {
-  return name.trim().replace(/[^A-Za-z0-9_][\s\S]*$/, '').toLowerCase();
-}
+/** A whole ASCII word in a voice name (Hangul is a non-word character to a non-unicode regex). */
+const word = (alternatives: string): RegExp => new RegExp(`(^|[^A-Za-z0-9_])(${alternatives})($|[^A-Za-z0-9_])`, 'i');
 
-const YUNA_EN = /(^|[^A-Za-z0-9_])yuna($|[^A-Za-z0-9_])/i;
-const GOOGLE_KO = /Google\s*한국/;
-const MICROSOFT_KO = /Microsoft\b.*\b(SunHi|InJoon|Heami)\b/i;
+/**
+ * Known-good voices per language, best tier first (AC-B12). Korean prefers a natural female voice, the voice family
+ * of the generated clips; a known male Korean voice ranks below every known female one but above any unknown voice.
+ */
+const KNOWN_GOOD: Readonly<Record<SpeechLang, readonly { bonus: number; test: (name: string) => boolean }[]>> = {
+  'ko-KR': [
+    {
+      bonus: 200,
+      test: (n) =>
+        word('Yuna|Sora|Suhyun').test(n) ||
+        /유나|소라|수현/.test(n) ||
+        /Google\s*한국/.test(n) ||
+        /Microsoft\b.*\b(SunHi|Heami|SeoHyeon|JiMin|SoonBok|YuJin)\b/i.test(n),
+    },
+    { bonus: 100, test: (n) => word('Minsu|Jian').test(n) || /민수|지안/.test(n) || /Microsoft\b.*\b(InJoon|BongJin|GookMin|Hyunsu)\b/i.test(n) },
+  ],
+  'en-US': [
+    {
+      bonus: 100,
+      test: (n) =>
+        word('Samantha|Ava|Allison|Susan|Zoe|Nicky|Joelle').test(n) ||
+        /Google US English/i.test(n) ||
+        /Microsoft\b.*\b(Aria|Jenny|Ava|Emma|Michelle|Zira)\b/i.test(n),
+    },
+  ],
+  'es-US': [
+    {
+      bonus: 100,
+      test: (n) =>
+        word('Paulina|M[oó]nica|Marisol|Ang[eé]lica').test(n) ||
+        /Google espa[nñ]ol/i.test(n) ||
+        /Microsoft\b.*\b(Paloma|Dalia|Sabina|Helena|Elvira)\b/i.test(n),
+    },
+  ],
+};
 
-function isKnownGoodKorean(name: string): boolean {
-  return YUNA_EN.test(name) || name.includes('유나') || GOOGLE_KO.test(name) || MICROSOFT_KO.test(name);
+function knownGoodBonus(name: string, want: SpeechLang): number {
+  for (const tier of KNOWN_GOOD[want]) if (tier.test(name)) return tier.bonus;
+  return 0;
 }
 
 const QUALITY_RANK: Readonly<Record<VoiceQuality, number>> = { standard: 0, enhanced: 1, premium: 2 };
@@ -108,15 +185,15 @@ export function effectiveQuality(voice: VoiceCandidate): VoiceQuality {
 }
 
 /** The non-language eligibility rules (§3.4 rules 2 and 3). */
-function allowed(voice: VoiceCandidate, want: SpeechLang, ctx: { online: boolean }): boolean {
-  if (want === 'ko-KR' && EXCLUDED_LOWER.has(leadingWord(voice.name))) return false;
+function allowed(voice: VoiceCandidate, ctx: { online: boolean }): boolean {
+  if (isNoveltyVoice(voice)) return false;
   if (!ctx.online && voice.local === false) return false;
   return true;
 }
 
 function score(voice: VoiceCandidate, want: SpeechLang, languageBonus: number): number {
   let s = languageBonus;
-  if (want === 'ko-KR' && isKnownGoodKorean(voice.name)) s += 100;
+  s += knownGoodBonus(voice.name, want);
   const quality = effectiveQuality(voice);
   if (quality === 'premium') s += 40;
   else if (quality === 'enhanced') s += 30;
@@ -134,7 +211,7 @@ export function rankVoices(
   const scored: Array<{ voice: VoiceCandidate; s: number }> = [];
   for (const voice of all) {
     const entry = matchChain(voice.lang, want);
-    if (entry === null || !allowed(voice, want, ctx)) continue;
+    if (entry === null || !allowed(voice, ctx)) continue;
     scored.push({ voice, s: score(voice, want, entry.bonus) });
   }
   scored.sort((a, b) => b.s - a.s || (a.voice.id < b.voice.id ? -1 : a.voice.id > b.voice.id ? 1 : 0));

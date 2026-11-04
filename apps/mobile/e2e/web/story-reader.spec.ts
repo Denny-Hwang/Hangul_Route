@@ -338,6 +338,70 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(prompt.getByTestId('story-reader-prompt-help')).toBeVisible();
   });
 
+  test('NB-2: a Korean-language Mac reads the story with Samantha and Yuna, never a novelty voice', async ({ page }, info) => {
+    // Chrome on macOS with the system language set to Korean: voiceURI is the name, Yuna is the default and no
+    // English voice is. Before NB-2 the English narration went to the first voice by id: "Albert".
+    await page.addInitScript(() => {
+      const log: string[] = [];
+      (window as Window & { __voiceLog?: string[] }).__voiceLog = log;
+      const mk = (name: string, lang: string, isDefault = false) => ({ name, lang, voiceURI: name, localService: true, default: isDefault });
+      const novelty = ['Eddy', 'Flo', 'Grandma', 'Grandpa', 'Reed', 'Rocko', 'Sandy', 'Shelley'];
+      const voices = [
+        ...['Albert', 'Bad News', 'Bahh', 'Fred', 'Junior', 'Samantha', 'Zarvox', 'Whisper'].map((n) => mk(n, 'en-US')),
+        ...novelty.map((n) => mk(`${n} (English (US))`, 'en-US')),
+        ...novelty.map((n) => mk(`${n} (한국어(대한민국))`, 'ko-KR')),
+        mk('Yuna', 'ko-KR', true),
+      ];
+      class Utterance {
+        lang = '';
+        rate = 1;
+        pitch = 1;
+        volume = 1;
+        voice: { name: string } | null = null;
+        onstart: (() => void) | null = null;
+        onend: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor(public text: string) {}
+      }
+      Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
+      Object.defineProperty(window, 'speechSynthesis', {
+        configurable: true,
+        value: {
+          speaking: false,
+          pending: false,
+          paused: false,
+          speak: (u: Utterance) => {
+            if (u.volume !== 0) log.push(`${u.voice?.name ?? '(none)'}|${u.lang}|${u.text}`);
+            setTimeout(() => {
+              u.onstart?.();
+              u.onend?.();
+            }, 0);
+          },
+          cancel: () => undefined,
+          pause: () => undefined,
+          resume: () => undefined,
+          getVoices: () => voices,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        },
+      });
+    });
+    await onboard(page);
+    await openReader(page);
+    await expect(page.getByTestId('story-reader-hear-scene')).toBeVisible();
+    await page.getByTestId('story-reader-hear-scene').click();
+    const log = (): Promise<string[]> => page.evaluate(() => (window as Window & { __voiceLog?: string[] }).__voiceLog ?? []);
+    await expect.poll(log).toContainEqual(expect.stringContaining('wanted everyone to learn to read.'));
+    const spoken = (await log()).filter((l) => !l.endsWith('|'));
+    const voicesUsed = new Set(spoken.map((l) => l.split('|')[0]));
+    expect([...voicesUsed].sort()).toEqual(['Samantha', 'Yuna']);
+    for (const l of spoken) {
+      const [name, lang] = l.split('|');
+      expect(name).toBe(lang === 'ko-KR' ? 'Yuna' : 'Samantha');
+    }
+    await page.screenshot({ path: info.outputPath(`nb2-story-voice-${page.viewportSize()?.width ?? 0}.png`), fullPage: false });
+  });
+
   test('sound off: text only, and the panel offers Turn sound on', async ({ page }) => {
     await onboard(page);
     await seedStored(page, 'device:audio', { muted: true });

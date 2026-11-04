@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   KO_EXCLUDED_NAMES,
+  NOVELTY_VOICE_NAMES,
+  isNoveltyVoice,
   effectiveQuality,
   normLang,
   pickVoice,
@@ -195,14 +197,14 @@ describe('rankVoices: other languages', () => {
     expect(rankVoices(es, 'es-US', { online: true }).map((x) => x.id)).toEqual(['us', 'mx', '419', 'any']);
   });
 
-  it('en-US prefers en-us then any en-*; the Korean exclusion list does not apply', () => {
+  it('en-US prefers en-us then any en-*, and never a novelty voice', () => {
     const list = [
       v({ id: 'gb', name: 'Daniel', lang: 'en-GB' }),
       v({ id: 'us', name: 'Samantha', lang: 'en-US' }),
       v({ id: 'flo', name: 'Flo', lang: 'en-US' }),
       v({ id: 'ko', name: 'Yuna', lang: 'ko-KR' }),
     ];
-    expect(rankVoices(list, 'en-US', { online: true }).map((x) => x.id)).toEqual(['flo', 'us', 'gb']);
+    expect(rankVoices(list, 'en-US', { online: true }).map((x) => x.id)).toEqual(['us', 'gb']);
   });
 
   it('known-good Korean names give no bonus to other languages', () => {
@@ -211,5 +213,82 @@ describe('rankVoices: other languages', () => {
       v({ id: 'b', name: 'Other', lang: 'en-US', isDefault: true }),
     ];
     expect(rankVoices(list, 'en-US', { online: true })[0]?.id).toBe('b');
+  });
+});
+
+/**
+ * NB-2 (owner bug 2026-11-03): story narration read in "a bizarre male voice". On a device whose system language
+ * is Korean no English voice is flagged default, every local en-US voice scored the same, and the id tie-break chose
+ * the alphabetically first one: Chrome's voiceURI is the name, so "Albert" (an Apple novelty voice); Safari's is
+ * the bundle id, so "com.apple.eloquence.en-US.Eddy". Both are novelty voices.
+ */
+describe('rankVoices: novelty voices (NB-2)', () => {
+  /** The real macOS 14 en_US list from `say -v '?'` (Chrome on macOS: voiceURI = name, all local). */
+  const MAC_EN_NAMES = [
+    'Albert', 'Bad News', 'Bahh', 'Bells', 'Boing', 'Bubbles', 'Cellos', 'Eddy (English (US))', 'Flo (English (US))',
+    'Fred', 'Good News', 'Grandma (English (US))', 'Grandpa (English (US))', 'Jester', 'Junior', 'Kathy', 'Organ',
+    'Ralph', 'Reed (English (US))', 'Rocko (English (US))', 'Samantha', 'Sandy (English (US))', 'Shelley (English (US))',
+    'Superstar', 'Trinoids', 'Whisper', 'Wobble', 'Zarvox',
+  ];
+  const chromeMac = MAC_EN_NAMES.map((name) => v({ id: name, name, lang: 'en-US' }));
+
+  it('Chrome on a Korean-language Mac (no English default) picks Samantha, not Albert', () => {
+    expect(pickVoice(chromeMac, 'en-US', { online: true })?.name).toBe('Samantha');
+    expect(rankVoices(chromeMac, 'en-US', { online: true }).map((x) => x.name)).toEqual(['Samantha']);
+  });
+
+  it('Safari on iOS (voiceURI = bundle id) never picks an Eloquence voice, whatever its name', () => {
+    const list = [
+      v({ id: 'com.apple.eloquence.en-US.Eddy', name: 'Eddy', lang: 'en-US' }),
+      v({ id: 'com.apple.eloquence.en-US.Unknown', name: 'Someone', lang: 'en-US' }),
+      v({ id: 'com.apple.speech.synthesis.voice.Albert', name: 'Albert', lang: 'en-US' }),
+      v({ id: 'com.apple.voice.compact.en-US.Samantha', name: 'Samantha', lang: 'en-US' }),
+    ];
+    expect(rankVoices(list, 'en-US', { online: true }).map((x) => x.name)).toEqual(['Samantha']);
+  });
+
+  it('a novelty voice is excluded even when it is the default or the only voice', () => {
+    expect(rankVoices([v({ id: 'z', name: 'Zarvox', lang: 'en-US', isDefault: true })], 'en-US', { online: true })).toEqual([]);
+    expect(rankVoices([v({ id: 'b', name: 'Bad News', lang: 'es-US' })], 'es-US', { online: true })).toEqual([]);
+  });
+
+  it('matches multi-word novelty names whole, and only as the leading words', () => {
+    expect(isNoveltyVoice(v({ id: '1', name: 'Good News' }))).toBe(true);
+    expect(isNoveltyVoice(v({ id: '2', name: 'Bad News (English (US))' }))).toBe(true);
+    expect(isNoveltyVoice(v({ id: '3', name: 'Good' }))).toBe(false);
+    expect(isNoveltyVoice(v({ id: '4', name: 'Albertine' }))).toBe(false);
+    expect(isNoveltyVoice(v({ id: '5', name: 'Google Albert' }))).toBe(false);
+  });
+
+  it('the novelty list holds every Korean exclusion', () => {
+    const lower = new Set(NOVELTY_VOICE_NAMES.map((n) => n.toLowerCase()));
+    for (const name of KO_EXCLUDED_NAMES) expect(lower.has(name.toLowerCase())).toBe(true);
+  });
+
+  it.each([
+    ['en-US', 'Samantha'],
+    ['en-US', 'Google US English'],
+    ['en-US', 'Microsoft Aria Online (Natural) - English (United States)'],
+    ['es-US', 'Paulina'],
+    ['es-US', 'Mónica'],
+    ['es-US', 'Google español de Estados Unidos'],
+  ] as const)('%s: %s is a known-good voice and beats a premium unknown one', (lang, name) => {
+    const other = v({ id: 'a', name: 'Mystery', lang, quality: 'premium', isDefault: true });
+    const good = v({ id: 'z', name, lang, local: false });
+    expect(rankVoices([other, good], lang, { online: true })[0]?.id).toBe('z');
+  });
+
+  it('Korean prefers a known female voice (Yuna, Sora, Suhyun, Google, SunHi) over a known male one', () => {
+    for (const female of ['Yuna', 'Sora', 'Suhyun', '소라', 'Google 한국의', 'Microsoft SunHi Online (Natural) - Korean (Korea)']) {
+      const male = v({ id: 'a', name: 'Minsu', quality: 'premium', isDefault: true });
+      const good = v({ id: 'z', name: female, local: false });
+      expect(rankVoices([male, good], 'ko-KR', { online: true })[0]?.id).toBe('z');
+    }
+  });
+
+  it('a known male Korean voice still beats an unknown premium one', () => {
+    const other = v({ id: 'a', name: 'Mystery', quality: 'premium', isDefault: true });
+    const minsu = v({ id: 'z', name: 'Minsu' });
+    expect(rankVoices([other, minsu], 'ko-KR', { online: true })[0]?.id).toBe('z');
   });
 });
