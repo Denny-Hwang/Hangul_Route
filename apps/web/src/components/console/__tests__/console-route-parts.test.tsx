@@ -58,7 +58,7 @@ const plan = (over: Partial<PlanView>): PlanView => ({
   updatedAt: '2026-10-10T09:00:00.000Z',
   ...over,
 });
-const row = (over: Partial<ReadoutRow>): ReadoutRow => ({ learnerId: 'l:1', name: 'Mina', done: 1, total: 2, notReady: 0, synced: true, lastActiveAt: '2026-10-11T08:00:00.000Z', ...over });
+const row = (over: Partial<ReadoutRow>): ReadoutRow => ({ learnerId: 'l:1', name: 'Mina', done: 1, total: 2, notReady: 0, state: 'progress', lastActiveAt: '2026-10-11T08:00:00.000Z', ...over });
 
 const titles = [...CATALOG.cells.map((c) => c.title), ...CATALOG.quests.map((q) => q.title), ...CATALOG.stories.map((s) => s.title), ...CATALOG.topics.map((t) => t.title)];
 const days = Array.from({ length: 120 }, (_, k) => realFormatDate('en', addDays('2026-09-01', k), 'monthDay', { utc: true }));
@@ -95,7 +95,7 @@ const readout = (meta: CurriculumMeta, items: PlanItem[], today: string, rows: R
 describe('RouteReadout (section 3.8 step 6)', () => {
   it('shows This week with its items and each learner against the planned length, then All weeks and Re-pace', () => {
     const { meta, items } = route();
-    const html = readout(meta, items, '2026-10-26', [row({}), row({ learnerId: 'l:2', name: 'Jun', notReady: 1 }), row({ learnerId: 'l:3', synced: false })]);
+    const html = readout(meta, items, '2026-10-26', [row({}), row({ learnerId: 'l:2', name: 'Jun', notReady: 1 }), row({ learnerId: 'l:3', state: 'notDelivered' })]);
     expect(html).toContain('data-testid="route-this-week"');
     expect(html.match(/data-testid="readout-row"/g)).toHaveLength(3);
     expect(html).toContain('<details');
