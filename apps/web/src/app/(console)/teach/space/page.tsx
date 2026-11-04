@@ -44,7 +44,7 @@ import { rosterNotesLinks } from '@/lib/console/notes-page';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { rosterReportLink } from '@/lib/console/report-view';
 import { rosterClassReportLink } from '@/lib/console/class-report-view';
-import { capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '@/lib/console/rollup';
+import { capState, classRollup, codeExpiry, familyCountLine, joinedLine, questsLine, relativeDay, rosterHeading as rosterHeadingText, rosterOrder as joinOrderFor, seatLine, weekLines } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
 import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
@@ -264,7 +264,8 @@ function SpaceInner(): JSX.Element {
       .catch(() => undefined);
   }, [sheet, spaces, api]);
 
-  if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
+  // [GX-3] The class page draws its own approvals (chips, asking-to-join cards, its 20 s re-link read): no frame bar.
+  if (!ready || !session) return <AdultFrame attentionHere>{null}</AdultFrame>;
   // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.
   if (roster?.space.kind === 'school' && api) return <SchoolAdmin api={api} spaceId={spaceId} onSignOut={signOut} accountId={session.accountId} />;
 
@@ -289,6 +290,10 @@ function SpaceInner(): JSX.Element {
   };
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
+  // GX-8 (T7, T8, P4): the roll-up's kind-aware lines; the anchor line hides while nobody has one.
+  const week = roster && rollup ? weekLines(roster.space.kind, rollup, locale) : null;
+  // GX-8 P4: a family's cards in the order its learners joined (as on the family home); a class keeps recent activity first.
+  const cards = roster ? joinOrderFor(roster.space.kind, roster.learners) : [];
   // The class join link and its QR code (owner decision 2026-10-17): a class with a code only, the code alone in the fragment.
   const joinLink = roster ? rosterJoinLink({ kind: roster.space.kind, code: roster.joinCode, origin: appUrl() }) : null;
   // [SA] section 3.4: the count against the roster's own cap (`seats`), not the free cap.
@@ -298,7 +303,7 @@ function SpaceInner(): JSX.Element {
   // The newest plan for everyone: a plan for one learner (a suggested start) never takes over the roster.
   const latestPlan = rosterPlan(plans);
   const lecture = lectureModeEnabled() && canComposeIn(spaces, spaceId);
-  const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
+  const readout = latestPlan && roster ? new Map(planReadout(latestPlan, roster.learners).map((r) => [r.learnerId, r])) : null;
   // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
   const weekRevisit = aroundSlot(c.space.week.revisit);
   const learnerRevisit = aroundSlot(c.space.learner.revisit);
@@ -310,7 +315,7 @@ function SpaceInner(): JSX.Element {
   // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
   const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
   // Notes (F-FEEDBACK-001 FB-11a, section 6.13 item 3): the roster header's Notes and each card's Send a note, by flag.
-  const ordered = roster && attention ? rosterOrder(roster.learners, attention.byLearner, decided.pinned, lastOrder.current) : [];
+  const ordered = roster && attention ? rosterOrder(cards, attention.byLearner, decided.pinned, lastOrder.current) : [];
   lastOrder.current = ordered.map((l) => l.id);
   const relinksWaiting = attention?.totals.relinks ?? 0;
   const movesWaiting = attention?.totals.moves ?? 0;
@@ -469,6 +474,9 @@ function SpaceInner(): JSX.Element {
   return (
     <AdultFrame
       onSignOut={signOut}
+      attentionHere
+      // [GX-3] The frame reads its counts again when this page's own change, so the Classes tab's number follows a decision.
+      attentionKey={attention ? `${relinksWaiting}:${movesWaiting}` : undefined}
       back={spacePageBack(roster?.space.kind ?? pathKind, c)}
       title={roster ? undefined : c.space.loading}
     >
@@ -579,12 +587,12 @@ function SpaceInner(): JSX.Element {
 
           {classPage ? null : capNotice}
 
-          {rollup && !empty ? (
+          {rollup && week && !empty ? (
             <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title} data-testid="this-week">
               <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
-                <li>{c.space.week.practiced(rollup.practicedThisWeek, rollup.students)}</li>
-                <li>{c.space.week.anchor(percent(rollup.anchorAccuracy))}</li>
+                <li>{week.practiced}</li>
+                {week.anchor ? <li data-testid="week-anchor">{week.anchor}</li> : null}
                 {rollup.revisit.length ? (
                   <li>
                     {weekRevisit.before}
@@ -602,7 +610,7 @@ function SpaceInner(): JSX.Element {
                   </li>
                 ) : null}
                 <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
-                {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
+                {week.notSynced ? <li data-testid="week-not-synced">{week.notSynced}</li> : null}
               </ul>
             </section>
           ) : null}
@@ -630,17 +638,18 @@ function SpaceInner(): JSX.Element {
           )}
 
           {!empty ? (
-            <section aria-label={c.space.studentsLabel} style={{ marginBottom: spacing.lg }}>
+            <section aria-label={roster.space.kind === 'family' ? c.space.rosterHeadingFamily : c.space.studentsLabel} style={{ marginBottom: spacing.lg }}>
               <h2 ref={rosterHeading} tabIndex={-1} data-testid="roster-heading" style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>
-                {actionFirst ? c.space.studentsLabel : c.space.recentFirst}
+                {actionFirst && roster.space.kind !== 'family' ? c.space.studentsLabel : rosterHeadingText(roster.space.kind, locale)}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
                 {ordered.map((l, index) => {
                   const report = rosterReportLink({ spaceId, kind: roster.space.kind, learnerId: l.id, enabled: reportsEnabled(locale), locale });
                   const noteHref = notesLinks?.card(l.id) ?? null;
-                  const quests = l.summary ? c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked) : '';
-                  // The quests count is Stage 1's (`summary.stage1`). It joins "On Stage N" only on Stage 1; past it, a line of
-                  // its own names the stage ("Stage 1: Quests 15 / 15 · 5 cards"), so it never reads as the current stage's.
+                  // GX-8 (T10): the quests text names Stage 1 itself ("Stage 1 quests: 3 of 15 · 4 cards", or "Working on the first quest").
+                  const quests = l.summary ? questsLine(l.summary, locale) : '';
+                  // The quests count is Stage 1's (`summary.stage1`). It joins "On Stage N" only on Stage 1; past it, it takes a
+                  // line of its own (its words name Stage 1), so it never reads as the current stage's.
                   const strip = l.summary ? journeyStrip(roster.space.kind, l.summary.journey, locale) : null;
                   const hereOrder = strip?.segments.find((segment) => segment.here)?.order ?? null;
                   const questsJoin = hereOrder === null || hereOrder === 1;
@@ -672,7 +681,7 @@ function SpaceInner(): JSX.Element {
                           <div data-testid="practiced-line">{practicedLine(l.summary, now, locale)}</div>
                           {strip ? <JourneyStrip kind={roster.space.kind} summary={l.summary} variant="card" trailing={questsJoin ? quests : undefined} /> : null}
                           {strip === null ? <div data-testid="quests-line">{quests}</div> : null}
-                          {strip && !questsJoin ? <div data-testid="quests-line">{c.journey.stage(1, quests)}</div> : null}
+                          {strip && !questsJoin ? <div data-testid="quests-line">{quests}</div> : null}
                           {l.summary.needsPractice.length ? (
                             <div>
                               {learnerRevisit.before}
@@ -696,9 +705,16 @@ function SpaceInner(): JSX.Element {
                           {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
                           <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
                         </div>
-                      ) : attention?.byLearner[l.id]?.kind === 'new' ? null : (
+                      ) : attention?.byLearner[l.id]?.kind === 'new' ? (
+                        // GX-1 x GX-8: a New card's reason line already says no practice is shared yet, so a class card adds
+                        // nothing; a family card still keeps GX-8 P4's dated join ("Joined Oct 14"), the case P4 targets.
+                        roster.space.kind === 'family' ? <Muted>{joinedLine('family', l.joinedAt, now, locale)}</Muted> : null
+                      ) : (
                         <Muted>
-                          {c.notSyncedYet} · {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}
+                          {/* GX-8 P4: a family card leads with its dated join ("Joined Oct 14 · not synced yet"). */}
+                          {roster.space.kind === 'family'
+                            ? `${joinedLine('family', l.joinedAt, now, locale)} · ${c.notSyncedYet}`
+                            : `${c.notSyncedYet} · ${joinedLine(roster.space.kind, l.joinedAt, now, locale)}`}
                         </Muted>
                       )}
                       {report || noteHref || suggestShown ? (
@@ -866,7 +882,7 @@ function NotesLink({ href, testId, text, describedBy }: { href: string; testId: 
 
 export default function SpacePage(): JSX.Element {
   return (
-    <Suspense fallback={<AdultFrame>{null}</AdultFrame>}>
+    <Suspense fallback={<AdultFrame attentionHere>{null}</AdultFrame>}>
       <SpaceInner />
     </Suspense>
   );

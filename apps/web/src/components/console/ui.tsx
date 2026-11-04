@@ -40,10 +40,29 @@ export const buttonBase: CSSProperties = {
 };
 
 /**
+ * The console's pill select (the notes filter's look, AMENDMENTS-GROWNUP-UX T12): as tall as a button, never wider than
+ * its row, the label in the button type.
+ */
+export const selectBase: CSSProperties = {
+  minHeight: touchTarget.min,
+  maxWidth: '100%',
+  minWidth: 0,
+  boxSizing: 'border-box',
+  padding: `0 ${spacing.lg}px`,
+  borderRadius: radii.pill,
+  border: `${borderWidth.thin}px solid ${colors.border.strong}`,
+  backgroundColor: colors.surface.paper,
+  color: colors.text.primary,
+  fontFamily: 'inherit',
+  fontSize: rem(typography.size.bodySm),
+  fontWeight: typography.weight.bold,
+};
+
+/**
  * `nudge`: a secondary action that waits for the grown-up (a count of requests to answer): the amber fill and border of
  * `Notice tone="nudge"`, text `text.primary` (AMENDMENTS-GROWNUP-UX section 4; never the danger colour).
  */
-export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger' | 'nudge'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string }): JSX.Element {
+export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel, describedBy }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger' | 'nudge'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string; describedBy?: string }): JSX.Element {
   const toneStyle: CSSProperties =
     tone === 'primary'
       ? { backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderColor: colors.brand.primary }
@@ -53,7 +72,7 @@ export function Button({ children, tone = 'secondary', disabled, onClick, type =
           ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` }
           : {};
   return (
-    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
+    <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} aria-describedby={describedBy} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}
     </button>
   );

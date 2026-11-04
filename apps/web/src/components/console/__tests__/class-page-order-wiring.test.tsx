@@ -234,7 +234,8 @@ describe('the roster card (T4)', () => {
     const quests = c.space.learner.questsCards(15, 15, 5);
     expect(textOf(one('journey-strip', card))).not.toContain(quests);
     expect(textOf(one('journey-strip', card))).toContain(c.journey.onStage(2));
-    expect(textOf(one('quests-line', card))).toBe(c.journey.stage(1, quests));
+    // GX-8 (T10): the quests text names Stage 1 itself ("Stage 1 quests: 15 of 15 · 5 cards"), so it is not wrapped again.
+    expect(textOf(one('quests-line', card))).toBe(quests);
   });
 
   it('Suggest a different start sits in the card\'s one row of buttons, after See report and Send a note (GX-7 review)', async () => {

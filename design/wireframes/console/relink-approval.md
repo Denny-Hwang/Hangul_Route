@@ -43,6 +43,8 @@ Then: they see *which* learner name is being claimed and *when*, and approve or 
 +------------------------------------------------------------+
 ```
 
+> **GX-12 update (2026-10-31, AMENDMENTS-GROWNUP-UX section 8 T12, section 9 P8)** — the page and its class-page entry say **New device requests** (the glossary's one name with the status chip: "new device" / "dispositivo nuevo" / "새 기기 연결"). Each card reads, top down: **{name} · on a new device** (the name in bold, no "Someone is asking"), the platform's name and the request time ("iPhone or iPad · asked 2 min ago"; rolled up to hours and days past an hour), the countdown on its own line (once a minute, not announced), the shipped safety hint, then **Approve** (primary, described by the hint) and **Deny**, both the console's 64 px buttons, wrapping on a phone. The family's "Another way" heading is said once (the sentence under it drops its "Another way:" prefix) and the learner picker is the console's pill select. A family's Deny says the device will ask for a grown-up (`relink.deniedFamily`).
+
 > **SEC-4 update (2026-10-09)** — a Rescue Code opens the learner's whole snapshot, and class roles never hold `snapshot.read` (F-SPACE-001 §3.4). So the "Another way" re-issue is offered on **family** spaces only, and an approved class re-link binds a class-scoped device: identity, class and plans come back, not the cards (F-TCH-001 §10.1).
 
 - One request = one card; the newest first. Each card has exactly one primary CTA.

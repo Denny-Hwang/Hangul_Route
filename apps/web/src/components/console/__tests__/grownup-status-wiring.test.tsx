@@ -418,7 +418,7 @@ describe('the counts and the reads (sections 3.4, 5.4)', () => {
     await render();
     const text = textOf(byTestId('class-actions')[0] as ReactTestInstance);
     expect(text).toContain('2 class moves waiting');
-    expect(text).toContain('1 re-link request');
+    expect(text).toContain('1 new device needs your OK');
   });
 
   it('reads its re-links alone every 20 s while the tab is in view, never the whole page', async () => {
