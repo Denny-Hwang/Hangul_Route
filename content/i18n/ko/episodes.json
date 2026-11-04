@@ -46,6 +46,10 @@
     "episode:stage5-crafts": {
       "title": "공예 이야기",
       "hoyaIntro": "솜씨 좋은 장인과 옛이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
+    },
+    "episode:stage5-nature-v2": {
+      "title": "섬, 산, 그리고 습지",
+      "hoyaIntro": "우리나라의 섬과 산과 습지 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
     }
   }
 }

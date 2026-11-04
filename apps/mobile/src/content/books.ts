@@ -78,6 +78,19 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:sun-and-moon', 'story:angbuilgu-sundial'],
     pillarTags: ['D5', 'E5'],
   },
+  // F-CURR-002 §5.5 S5, row CM-46: the Nature cell's book 2, three new readers about Korea's nature (a volcanic island,
+  // the first national park and a wetland of migrating birds). Volume 2, so it shows only while `volumes` is on.
+  {
+    id: 'episode:stage5-nature-v2',
+    stage: 'stage5',
+    theme: 'nature',
+    order: 4,
+    titleEn: 'Island, Mountain and Wetland',
+    hoyaIntroEn: "Let's read stories of Korea's island, mountain and wetland in Korean, one short sentence at a time.",
+    storyIds: ['story:jeju-volcanic-island', 'story:jirisan-national-park', 'story:suncheon-bay-wetland'],
+    pillarTags: ['D2'],
+    volume: 2,
+  },
   {
     id: 'episode:stage5-crafts',
     stage: 'stage5',
@@ -182,3 +195,4 @@ export const bookEpisodes: Episode[] = built.map((b) => b.episode);
 
 /** The Read quests of every shipped book, in book order (`questsAll` appends them). */
 export const bookQuests: Quest[] = built.flatMap((b) => b.quests);
+

@@ -1,5 +1,5 @@
 import type { Episode } from '@hangul-route/content-schema';
-import { episodesFor, episodesWithVolumes, volumeOf, withVolumes } from '../../content/episodes';
+import { episodesFor, episodesWithVolumes, shownVolumeOf, withVolumes } from '../../content/episodes';
 import { isPlayable } from '../journey-cells';
 
 /**
@@ -10,9 +10,10 @@ import { isPlayable } from '../journey-cells';
 /**
  * The episode a cell's page shows for the asked id: that episode, except a later volume while `volumes` is off, which
  * shows its cell's first volume instead (an older link or back stack), so no Volume 2 entry point shows while it is off.
+ * A book 2 tale's shelf episode counts as a later volume (`shownVolumeOf`, F-CURR-002 row CM-46).
  */
 export function volumePageEpisode(asked: Episode | undefined, volumesOn: boolean, list: readonly Episode[] = episodesWithVolumes): Episode | undefined {
-  if (asked === undefined || volumesOn || volumeOf(asked) === 1) return asked;
+  if (asked === undefined || volumesOn || shownVolumeOf(asked) === 1) return asked;
   return episodesFor(asked.stage, asked.theme, withVolumes(false, list))[0] ?? asked;
 }
 

@@ -1112,7 +1112,11 @@
     "lex|껍질": "lex:kkeopjil",
     "lex|탈": "lex:tal",
     "lex|떠요": "lex:tteoyo",
-    "lex|양반": "lex:yangban"
+    "lex|양반": "lex:yangban",
+    "lex|봉우리": "lex:bonguri",
+    "lex|동굴": "lex:donggul",
+    "lex|갯벌": "lex:gaetbeol",
+    "lex|흑두루미": "lex:heukdurumi"
   },
   "alias": {
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"
