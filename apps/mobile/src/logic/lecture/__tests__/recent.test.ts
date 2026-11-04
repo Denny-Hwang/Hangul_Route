@@ -8,6 +8,7 @@ import {
   emptyRecent,
   forgetDeck,
   loadRecent,
+  markFinished,
   parseRecent,
   rememberDeck,
   saveRecent,
@@ -331,5 +332,47 @@ describe('boundedRecent: a boot read that never settles does not hold the home (
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/** F-TCH-004 section 3.12 amendment 2026-11-03 (row NB-1): a lesson taught to the end is recorded on its row. */
+describe('markFinished (NB-1)', () => {
+  const slideKey = 'quest:stage1-letters-q1/end';
+
+  it('records the finish time and drops the slide, so the row offers Start over, not Resume', () => {
+    let list = rememberDeck(emptyRecent(), deck(1), at(1));
+    list = rememberDeck(list, deck(2), at(2));
+    list = setLastSlide(list, 'lecture:deck001', slideKey);
+    const done = markFinished(list, 'lecture:deck001', at(9));
+    expect(done.items.find((i) => i.deck.id === 'lecture:deck001')).toEqual({ deck: deck(1), savedAt: at(1), finishedAt: at(9) });
+    // The other row is untouched, and the order stays.
+    expect(done.items.map((i) => i.deck.id)).toEqual(['lecture:deck002', 'lecture:deck001']);
+    expect(done.items[0]).toEqual(list.items[0]);
+  });
+
+  it('a bad time or an unknown deck changes nothing', () => {
+    const list = rememberDeck(emptyRecent(), deck(1), at(1));
+    expect(markFinished(list, 'lecture:deck001', 'yesterday')).toBe(list);
+    expect(markFinished(list, 'lecture:nope00', at(2))).toBe(list);
+  });
+
+  it('round-trips through storage, and a new Start of the deck clears it', () => {
+    const done = markFinished(rememberDeck(emptyRecent(), deck(1), at(1)), 'lecture:deck001', at(5));
+    expect(parseRecent(storedRecent(done))).toEqual(done);
+    const again = rememberDeck(done, deck(1), at(7));
+    expect(again.items[0]).toEqual({ deck: deck(1), savedAt: at(7) });
+  });
+
+  it('a finish time is the only new field: still nothing that could hold a label', () => {
+    const item = markFinished(rememberDeck(emptyRecent(), deck(1), at(1)), 'lecture:deck001', at(2)).items[0]!;
+    expect(Object.keys(item).sort()).toEqual(['deck', 'finishedAt', 'savedAt']);
+    expect(parseRecent({ v: 1, items: [{ ...item, finishedAt: 'Mina' }] }).items[0]).toEqual({ deck: deck(1), savedAt: at(1) });
+  });
+
+  it('a bad finish time drops only that field; a bad slide key beside a good finish time drops only the key', () => {
+    const base = { deck: deck(1), savedAt: at(1) };
+    expect(parseRecent({ v: 1, items: [{ ...base, lastSlideKey: slideKey, finishedAt: 'x' }] }).items[0]).toEqual({ ...base, lastSlideKey: slideKey });
+    expect(parseRecent({ v: 1, items: [{ ...base, lastSlideKey: '', finishedAt: at(3) }] }).items[0]).toEqual({ ...base, finishedAt: at(3) });
+    expect(parseRecent({ v: 1, items: [{ ...base, lastSlideKey: '', finishedAt: 'x' }] }).items[0]).toEqual(base);
   });
 });

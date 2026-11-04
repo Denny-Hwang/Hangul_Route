@@ -1,7 +1,7 @@
 import { JOIN_HANDOFF_KEY, JoinHandoffSchema, UNLOCK_SESSION_KEY, CONSOLE_SESSION_KEY } from '@hangul-route/content-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { KeyValueStorage } from '../../i18n/safe-storage';
-import { openAppWithJoinCode, writeJoinHandoff } from '../join-handoff';
+import { openAppWithJoinCode, openLearnerApp, writeJoinHandoff } from '../join-handoff';
 
 /**
  * F-APP-001 A-5b, section 3.8: "Open the app on this device" hands the family join code to the learner
@@ -89,5 +89,25 @@ describe('openAppWithJoinCode', () => {
     openAppWithJoinCode({ code: 'K7MPQ4', now: 9, locale: 'en' });
     expect(opened).toEqual(['/?lang=en']);
     expect(JSON.parse(store.data.get(JOIN_HANDOFF_KEY) ?? 'null')).toEqual({ v: 1, code: 'K7MPQ4', at: 9 });
+  });
+});
+
+describe('openLearnerApp (AMENDMENTS-GROWNUP-UX GX-11: a child card that never started)', () => {
+  it('writes no hand-off (the child already joined), clears the unlock and the console session, then opens "Who is using this?"', () => {
+    const store = memory();
+    store.data.set(UNLOCK_SESSION_KEY, '{}');
+    store.data.set(CONSOLE_SESSION_KEY, '{}');
+    const opened: string[] = [];
+    openLearnerApp({ locale: 'es', origin: 'https://app.hangulroute.com', storage: store, assign: (url) => opened.push(url) });
+    expect(store.data.has(JOIN_HANDOFF_KEY)).toBe(false);
+    expect(store.data.has(UNLOCK_SESSION_KEY)).toBe(false);
+    expect(store.data.has(CONSOLE_SESSION_KEY)).toBe(false);
+    expect(opened).toEqual(['/?lang=es&who=1']);
+  });
+
+  it('from the site origin opens the app host; blocked storage still opens the app', () => {
+    const opened: string[] = [];
+    openLearnerApp({ locale: 'ko', origin: 'https://hangulroute.com', storage: throwing, assign: (url) => opened.push(url) });
+    expect(opened).toEqual(['https://app.hangulroute.com/?lang=ko&who=1']);
   });
 });

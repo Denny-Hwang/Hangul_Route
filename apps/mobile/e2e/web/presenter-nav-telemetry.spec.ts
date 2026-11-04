@@ -186,8 +186,10 @@ for (const c of MATRIX) {
       await expect.poll(() => sent.filter((e) => e.name === 'lecture.complete').length).toBe(1);
 
       const payload = sent.find((e) => e.name === 'lecture.complete')!.payload;
-      expect(Object.keys(payload).sort()).toEqual(['minutes', 'reveals', 'slidesShown', ...NAV_KEYS].sort());
+      expect(Object.keys(payload).sort()).toEqual(['finished', 'minutes', 'reveals', 'slidesShown', ...NAV_KEYS].sort());
       expect(payload).toMatchObject({
+        // Left part way (F-TCH-004 section 3.5 amendment 2026-11-03, row NB-1).
+        finished: false,
         navLayout: c.layout,
         stepsButton: 2,
         stepsSwipe: 2,
