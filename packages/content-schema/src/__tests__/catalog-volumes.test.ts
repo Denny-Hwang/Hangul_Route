@@ -11,8 +11,12 @@ import {
   freeRouteQuestIds,
   gridLessonIds,
   groupOfKey,
+  isPlanCatalogStale,
+  planCatalogVersion,
+  planQuestIds,
   learnerPosition,
   placedOutGrowth,
+  CATALOG_QUEST_ADDITIONS,
   presetBlockMinutes,
   questIdsOfBlocks,
   questIdsAtVersion,
@@ -140,6 +144,26 @@ describe('the catalogue with two volumes per cell (row CM-40)', () => {
   it('adds no route day: the route-day snapshot is the same with Volume 2 in the catalogue', () => {
     expect(routeDaysOf(withVolumes())).toEqual(routeDaysOf(CATALOG));
     expect(freeRouteQuestIds(withVolumes())).toEqual(freeRouteQuestIds(CATALOG));
+  });
+
+  it('a later volume never makes a saved plan stale: no plan holds its quests (F-CURR-002 row CM-46)', () => {
+    const next = CATALOG_VERSION + 1;
+    const catalog = { ...withVolumes(), version: next };
+    const onPlans = planQuestIds(catalog);
+    for (const id of [...NATURE_V2, ...CRAFTS4_V2, ...LETTERS_BOOK2]) expect(onPlans.has(id), id).toBe(false);
+    // A history that stamps only later-volume quests at the new version keeps the plan version where it was.
+    const darkOnly = { ...CATALOG_QUEST_ADDITIONS, [next]: [...NATURE_V2, ...CRAFTS4_V2] };
+    expect(planCatalogVersion(catalog, darkOnly)).toBe(planCatalogVersion(CATALOG));
+    expect(isPlanCatalogStale(CATALOG_VERSION, catalog, darkOnly)).toBe(false);
+    expect(isPlanCatalogStale(planCatalogVersion(CATALOG), catalog, darkOnly)).toBe(false);
+    // A first-volume lesson stamped at the new version does ask.
+    const lesson = catalog.cells.find((c) => c.stage === 'stage2' && c.theme === 'nature')!.questIds[0]!;
+    expect(isPlanCatalogStale(CATALOG_VERSION, catalog, { ...darkOnly, [next]: [...NATURE_V2, lesson] })).toBe(true);
+    // The shipped Letters book 2 stamp is the catalogue's newest, and it is no plan's.
+    expect(planCatalogVersion(CATALOG)).toBeLessThan(CATALOG_VERSION);
+    // Up to the hand-kept version 32 every bump still counts.
+    expect(isPlanCatalogStale(31, CATALOG)).toBe(true);
+    expect(isPlanCatalogStale(5, CATALOG)).toBe(true);
   });
 
   it('counts a later volume’s quests as grid lessons past the free plan, so the free plan never opens them', () => {

@@ -3,6 +3,7 @@ import { questsPlacedOutAtLevel } from '../placement/level-map';
 import type { RouteCatalog } from '../placement/route-seed';
 import { GENERATED_QUEST_ADDITIONS } from './catalog.generated';
 import { CATALOG_VERSION } from './data';
+import { cellIsReady, storyIsReady, type Catalog } from './schema';
 
 /**
  * The catalogue-growth rule (F-CURR-001 §3.13, row C-2). A stored placement
@@ -189,4 +190,45 @@ export function placedOutGrowth(
   if (at >= history.version) return [];
   const known = history.idsAt(at);
   return questsPlacedOutAtLevel(level, catalog).filter((id) => !known.has(id) && !completed.has(id));
+}
+
+/**
+ * The quests a plan made today could hold: each ready cell's first volume (`questIds`, the route days) and each ready
+ * story's quest (`generate.ts` queues only these). A later volume (F-CURR-002 row CM-40: a lesson Volume 2, a Stage 5
+ * book 2) is off the route days, so no plan ever holds its quests.
+ */
+export function planQuestIds(catalog: Catalog): ReadonlySet<string> {
+  return new Set([
+    ...catalog.cells.filter(cellIsReady).flatMap((cell) => cell.questIds),
+    ...catalog.stories.filter(storyIsReady).map((story) => story.questId),
+  ]);
+}
+
+/**
+ * The catalogue version a saved plan is compared with to say "new lessons are here" (the app's route page) or offer
+ * **Refresh route** (the console, `isStaleCatalog`): the last version that added a quest a plan can hold. Up to the
+ * hand-kept version 32 every bump counts, as before; a dated stamp counts only when it added a `planQuestIds` quest, so
+ * a later volume that merges dark (its quests stamped, `volumes` at pct 0, row CM-46) never asks a learner or a
+ * teacher to move a plan that would gain nothing.
+ */
+export function planCatalogVersion(
+  catalog: Catalog,
+  additions: Readonly<Record<number, readonly string[]>> = CATALOG_QUEST_ADDITIONS,
+): number {
+  const onPlans = planQuestIds(catalog);
+  let version = Math.min(catalog.version, LAST_HAND_KEPT_CATALOG_VERSION);
+  for (const [stamp, ids] of Object.entries(additions)) {
+    const v = Number(stamp);
+    if (v > version && v <= catalog.version && ids.some((id) => onPlans.has(id))) version = v;
+  }
+  return version;
+}
+
+/** A plan saved at `storedAt` predates a quest it could hold (older only: a plan from a newer catalogue is not stale). */
+export function isPlanCatalogStale(
+  storedAt: number,
+  catalog: Catalog,
+  additions: Readonly<Record<number, readonly string[]>> = CATALOG_QUEST_ADDITIONS,
+): boolean {
+  return storedAt < planCatalogVersion(catalog, additions);
 }

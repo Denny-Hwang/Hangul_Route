@@ -95,6 +95,9 @@
       "checks.r3.options.c": "A su madre y a sus hijos",
       "checks.r3.options.d": "Al rey"
     },
+    "quest:story-eongan-letters-listen": {
+      "title": "Cartas en hangul para la familia"
+    },
     "story:hangul-name": {
       "title": "Cómo el hangul recibió su nombre",
       "summary": "Hoya descubre que el hangul tuvo antes otros nombres: Hunminjeongeum, eonmun y gungmun. El estudioso Ju Sigyeong parece ser el primero que lo llamó hangul, y después ese nombre se volvió de uso general.",
@@ -184,6 +187,9 @@
       "checks.r3.options.b": "Los sonidos correctos",
       "checks.r3.options.c": "Nuestro país",
       "checks.r3.options.d": "Una colección de palabras"
+    },
+    "quest:story-hangul-name-listen": {
+      "title": "Cómo el hangul recibió su nombre"
     },
     "episode:stage5-letters-v2": {
       "title": "Libros, registros y cartas",

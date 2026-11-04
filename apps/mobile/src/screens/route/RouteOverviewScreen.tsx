@@ -1,5 +1,5 @@
 import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
-import { CATALOG } from '@hangul-route/content-schema';
+import { CATALOG, isPlanCatalogStale } from '@hangul-route/content-schema';
 import { formatDate } from '@hangul-route/i18n';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -93,8 +93,9 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
   const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
-  // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong).
-  const stale = active !== null && active.meta.catalogVersion < CATALOG.version;
+  // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong). Only a quest a
+  // plan can hold counts: a later volume that merges dark (F-CURR-002 row CM-46) adds nothing to move the plan for.
+  const stale = active !== null && isPlanCatalogStale(active.meta.catalogVersion, CATALOG);
 
   const leave = (): void => {
     if (navigation.canGoBack()) navigation.goBack();

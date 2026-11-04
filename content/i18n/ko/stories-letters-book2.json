@@ -95,6 +95,9 @@
       "checks.r3.options.c": "어머니와 아이들",
       "checks.r3.options.d": "임금"
     },
+    "quest:story-eongan-letters-listen": {
+      "title": "조선 가족들이 주고받은 한글 편지"
+    },
     "story:hangul-name": {
       "title": "한글은 어떻게 이름을 얻었을까요?",
       "summary": "호야는 한글에게 다른 이름들이 먼저 있었다는 것을 알게 돼요. 훈민정음, 언문, 국문이에요. 학자 주시경이 처음으로 한글이라고 부른 것으로 보이고, 그 뒤로 이 이름이 널리 쓰였어요.",
@@ -184,6 +187,9 @@
       "checks.r3.options.b": "바른 소리",
       "checks.r3.options.c": "우리나라",
       "checks.r3.options.d": "말을 모은 것"
+    },
+    "quest:story-hangul-name-listen": {
+      "title": "한글은 어떻게 이름을 얻었을까요?"
     },
     "episode:stage5-letters-v2": {
       "title": "책과 기록과 편지",
