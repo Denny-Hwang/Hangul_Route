@@ -133,8 +133,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 8dfb8a43c; a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves text out
   // (CM-8b's story overlay split). Row CM-46a (the read tiers of the ten listen-only stories, about 45 KB of ko story
   // overlays) measures ko 1,001,146 B, es 588,515 B raw (release build, Metro cache cleared, on CM-8b's head), so the
-  // line is that measurement plus an 8,854 B rounding margin; the next story row (CM-46) moves the story narration
-  // overlays into the story chunks (CM-8b's overlay half) rather than raising it again.
+  // line is that measurement plus an 8,854 B rounding margin (CI measured ko 1,001,745 B after main 377d44291 was merged,
+  // 8,255 B under it); the next story row (CM-46) moves the story narration overlays into the story chunks (CM-8b's
+  // overlay half) rather than raising it again.
   localeChunkRaw: 1_010_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
   // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
