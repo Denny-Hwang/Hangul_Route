@@ -133,7 +133,7 @@ export function PracticeDaysScreen({ navigation, route }: Props): ReactElement {
                 ))}
               </View>
               <Spacer size="md" />
-              <View accessibilityRole="group" accessibilityLabel={words.title} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              <View role="group" aria-label={words.title} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
                 {CHIP_DAYS.map((day, i) => (
                   <Chip key={day} role="checkbox" label={gated(m.a11y.route.blend.practiceDay(dayName(day)))} on={view.days.includes(day)} testID={`practice-days-day-${day}`} onPress={() => change(toggleDay(view.days, day))}>
                     {view.classDays.includes(day) ? (

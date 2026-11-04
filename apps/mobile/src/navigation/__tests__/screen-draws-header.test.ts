@@ -57,6 +57,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/cell-check/cell-check-entry.tsx#CellCheckScreen': 'screens/cell-check/CellCheckScreen.tsx#CellCheckScreen',
   // Row CM-48: the This week in Korea chunk.
   'screens/week-drop/week-drop-entry.tsx#WeekDropScreen': 'screens/week-drop/WeekDropScreen.tsx#WeekDropScreen',
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days' chunk.
+  'screens/route/practice-days-entry.tsx#PracticeDaysScreen': 'screens/route/PracticeDaysScreen.tsx#PracticeDaysScreen',
   // Row CM-22: the Stage Check's chunk.
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',

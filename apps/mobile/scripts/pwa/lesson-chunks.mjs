@@ -142,7 +142,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (release `build:web`, CI): +22,893 B, the forgiving tap model (`tap-model.ts`), the `TapBoard` family in the
   // design-system barrel, `TapLockProvider` above the navigator and the `Screen` fit and scroller. Every learner answer
   // area adopts it in KT-2 to KT-7, so it cannot be a lazy chunk. The line is the measurement plus a 5,056 B margin.
-  startBundleRaw: 4_888_000,
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8 (the learner's own practice days, behind routeBlendEnabled), stacked on BL-7
+  // (#967) and KT-1 (#943): its base, BL-7 with KT-1 merged (df784d174), measures 4,883,692 B raw / 1,307,821 B gzip;
+  // the row measures 4,888,782 B raw / 1,309,498 B gzip (release `build:web`): +5,090 B. The start bundle gets the
+  // Profile row, the PracticeDays route's door and the chunk loader, the derivation's learner-days hook and chip rules
+  // (`logic/route/practice-days.ts`), the snapshot write and merge, the English strings and TapTarget's role prop; the
+  // screen and `placePractice` are the practice-days chunk (14.3 kB). The line is the measurement plus a 4,218 B margin.
+  startBundleRaw: 4_893_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

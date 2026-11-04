@@ -256,6 +256,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-48: This week in Korea's chunk, reached only through its door's literal import().
     expect(read('src/screens/week-drop/week-drop-chunk.tsx')).toContain(`export const WEEK_DROP_CHUNK = '${SCREEN_CHUNKS[15].marker}';`);
     expect(read('src/screens/week-drop/week-drop-entry.tsx')).toContain("import('./week-drop-chunk')");
+    // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the placer, reached only through the loader's literal import().
+    expect(read('src/screens/route/practice-days-chunk.tsx')).toContain(`export const PRACTICE_DAYS_CHUNK = '${SCREEN_CHUNKS[16].marker}';`);
+    expect(read('src/screens/route/practice-days-load.ts')).toContain("import('./practice-days-chunk')");
     expect(read('src/screens/minigames/my-story-entry.tsx')).toContain("import('./my-story-chunk')");
     // Row CM-47: the added realia layouts' chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/realia-kinds-chunk.tsx')).toContain(`export const REALIA_KINDS_CHUNK = '${SCREEN_CHUNKS[14].marker}';`);
@@ -406,6 +409,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'my-story-chunk has no web bundle: the chunk is missing from the build',
       'realia-kinds-chunk has no web bundle: the chunk is missing from the build',
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
+      'practice-days-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -574,12 +578,14 @@ describe('precacheReport and its budget lines', () => {
     // Row BL-7 (the learner's class days and practice days, behind routeBlendEnabled) measured 4,860,799 B over BL-6
     // at b55361104 (4,849,712 B), so the line is 4,865,000 B.
     // AMENDMENTS-TOUCH KT-1 (#943) measures 4,860,944 B (CI release build, +22,893 B over main 1bfda3fc8): 4,866,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_888_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_883_692]) {
+    // Row BL-8 (the learner's own practice days) measured 4,888,782 B over BL-7 with KT-1 (4,883,692 B), so the line is
+    // 4,893,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_893_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_883_692, 4_888_782]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_883_692).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_888_782).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
