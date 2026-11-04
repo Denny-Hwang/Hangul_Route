@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck, readStored, seedStored } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck, readStored, seedStored, pastTapLock } from './helpers';
 
 /**
  * F-CURR-002 section 4.5 (row CM-15) on the web PWA: the quest warm-up before a Stage 2+ quest's first step and
@@ -65,6 +65,8 @@ async function answerRounds(page: Page, doneId: string): Promise<number> {
     const count = await options.count();
     for (let i = 0; i < count; i += 1) {
       const option = options.nth(i);
+      // A deliberate answer waits out the answer lock of the one before (AMENDMENTS-TOUCH KT-3).
+      await pastTapLock(page);
       await option.click();
       const said = (await option.getAttribute('aria-label')) ?? '';
       if (said.startsWith('Right answer')) break;

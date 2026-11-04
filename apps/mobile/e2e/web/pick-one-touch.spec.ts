@@ -22,6 +22,20 @@ const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const AFTER_LOCK = 700;
 const ANSWERED = /^(Right answer|Not this one)/;
 
+/** The centre of an element once it is well on screen (a touch lands where the finger is, and a tall board can run off it). */
+async function at(page: Page, testId: string): Promise<{ x: number; y: number }> {
+  // Centred, so a 20 px graze stays on the screen (a touch dragged past the viewport's edge is not the graze we mean).
+  const inView = await page.getByTestId(testId).evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return r.top >= 40 && r.bottom <= window.innerHeight - 40;
+  });
+  if (!inView) {
+    await page.getByTestId(testId).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(100);
+  }
+  return pointIn(page, testId);
+}
+
 async function startGuestQuest(page: Page): Promise<void> {
   await page.goto('/?try=1');
   await expect(page.getByText('Hi from Hoya', { exact: true })).toBeVisible();
@@ -46,21 +60,20 @@ for (const size of [
       const right = page.getByTestId('listen-pick-option-jamo:eo');
       await expect(wrong).toBeVisible();
       await expect(right).toBeVisible();
-      // At 320 x 640 the options sit under the fold: bring them on screen (a touch lands where the finger is).
-      await page.getByTestId('listen-pick-options').scrollIntoViewIfNeeded();
       await page.waitForTimeout(AFTER_LOCK);
       const touch = await Touchscreen.of(page);
 
       // A miss, then 60 ms later a tap on the right card: the second is a bounce and answers nothing.
-      await touch.tap(await pointIn(page, 'listen-pick-option-jamo:a'));
+      await touch.tap(await at(page, 'listen-pick-option-jamo:a'));
       await page.waitForTimeout(60);
-      await touch.tap(await pointIn(page, 'listen-pick-option-jamo:eo'));
+      await touch.tap(await at(page, 'listen-pick-option-jamo:eo'));
       await expect(wrong).toHaveAttribute('aria-label', /^Not this one/);
-      await page.waitForTimeout(AFTER_LOCK);
+      // Past the lock, and past the miss's 800 ms replay, which can move the cards (the prompt panel's line).
+      await page.waitForTimeout(1_200);
       await expect(right).not.toHaveAttribute('aria-label', ANSWERED);
 
       // F1: a 20 px vertical graze on the right card, which the browser's click dropped, now answers it.
-      await touch.graze(await pointIn(page, 'listen-pick-option-jamo:eo'), 0, 20);
+      await touch.graze(await at(page, 'listen-pick-option-jamo:eo'), 0, 20);
       await expect(right).toHaveAttribute('aria-label', /^Right answer/);
     });
 
@@ -81,27 +94,26 @@ for (const size of [
       const texts = await tiles.allInnerTexts();
       const rightId = ids[texts.findIndex((t) => t.includes(letter!))]!;
       const wrongId = ids.find((id) => id !== rightId)!;
-      await shown(page, 'match-sound-tiles').scrollIntoViewIfNeeded();
       await page.waitForTimeout(AFTER_LOCK);
       const touch = await Touchscreen.of(page);
 
       // A miss, and a bounce on the same tile 60 ms later: one miss, one replay of the prompt.
       const missFrom = await saidCount(page);
-      await touch.tap(await pointIn(page, wrongId));
+      await touch.tap(await at(page, wrongId));
       await page.waitForTimeout(60);
-      await touch.tap(await pointIn(page, wrongId));
+      await touch.tap(await at(page, wrongId));
       await expect(shown(page, 'match-sound-bubble')).toBeVisible();
       await expect.poll(() => saidCount(page), { timeout: 3_000 }).toBe(missFrom + 1);
       // Locked: disabled, still amber, and a tap on it later is no second miss (no second replay).
       await expect(page.getByTestId(wrongId)).toHaveAttribute('aria-disabled', 'true');
       await page.waitForTimeout(AFTER_LOCK);
-      await touch.tap(await pointIn(page, wrongId));
+      await touch.tap(await at(page, wrongId));
       await page.waitForTimeout(1_500);
       expect(await saidCount(page)).toBe(missFrom + 1);
       expect((await said(page)).at(-1)?.text).toBe((await said(page)).at(missFrom - 1)?.text);
 
       // F1 on a tile: a 20 px vertical graze on the right one answers the round.
-      await touch.graze(await pointIn(page, rightId), 0, 20);
+      await touch.graze(await at(page, rightId), 0, 20);
       await expect(roundPill(page, 2)).toBeVisible();
     });
   });
