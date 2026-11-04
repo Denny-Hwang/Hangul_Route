@@ -45,6 +45,7 @@ import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { SpeakerButton } from './ReaderParts';
 import { Disclosure, SourcesHeading } from './SourcesParts';
 import { LessonWaiting } from '../lesson-content';
@@ -109,12 +110,14 @@ function CultureNotesContent({
   const locale = useLocale();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  // A book 2 tale's notes (F-CURR-002 row CM-46) are found from the index with the later volumes while `volumes` is on.
+  const volumesOn = useCurrFlag('volumes');
 
   // Note text in the UI language (F-CNT-002 overlay); the taught term never changes. A note's sources come
   // from its story's chunk (F-CURR-002 §10), so the list fills as each arrives.
   const noteChunks = useNoteStoriesLoaded();
   const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale, noteChunks]);
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), stories, snap), [stories, snap]);
+  const notes = useMemo(() => foundNotes(defaultStoryIndex({ volumes: volumesOn }), stories, snap), [stories, snap, volumesOn]);
   const view = useMemo(() => cultureNotesScreenView({ notes, storyId, noteId }), [notes, storyId, noteId]);
   const actions = useMemo(
     () => cultureNotesActions({ from, storyTimeOffered: librarySectionTabs({ entries: defaultStoryIndex() }).includes('story-time') }),

@@ -1,6 +1,8 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll } from '../../../content';
+import { shownVolumeOf } from '../../../content/episodes';
+import { storyEpisodes } from '../../../content/stories';
 import { cellVolumes, volumePageEpisode } from '../volumes';
 
 /** A cell's page and its volumes (F-CURR-002 row CM-40), with a fixture Volume 2 of Stage 2 Nature (none ships yet). */
@@ -14,6 +16,15 @@ describe('volumePageEpisode and cellVolumes', () => {
     expect(volumePageEpisode(v2, false, list)?.id).toBe(nature.id);
     expect(volumePageEpisode(nature, false, list)?.id).toBe(nature.id);
     expect(volumePageEpisode(undefined, true, list)).toBeUndefined();
+  });
+
+  it('treats a book 2 tale\'s shelf page as a later volume: shown while volumes is on, its cell\'s Volume 1 while off (row CM-46)', () => {
+    const shelf = storyEpisodes.find((e) => e.id === 'episode:shelf-jeju-volcanic-island') as Episode;
+    expect(shelf).toBeDefined();
+    expect(volumePageEpisode(shelf, true)?.id).toBe(shelf.id);
+    const shown = volumePageEpisode(shelf, false);
+    expect(shown?.id).not.toBe(shelf.id);
+    expect(shown && shownVolumeOf(shown)).toBe(1);
   });
 
   it('lists the cell\'s playable volumes in order only while volumes is on; a preview Volume 2 is not listed', () => {

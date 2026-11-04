@@ -5,6 +5,7 @@ import { storyNotesFound } from '../../logic/story/culture-notes-view';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { useNoteStoriesLoaded } from '../story-content';
 
 /**
@@ -19,5 +20,10 @@ export function useStoryNotesFound(storyId: string): boolean {
   const snap = useProgressStore((s) => (profileId ? s.byProfile[profileId] : undefined));
   // A note's sources come from its story's chunk (F-CURR-002 §10).
   const noteChunks = useNoteStoriesLoaded();
-  return useMemo(() => storyNotesFound(foundNotes(defaultStoryIndex(), storiesAll, snap), storyId), [snap, storyId, noteChunks]);
+  // A book 2 tale (F-CURR-002 row CM-46) is in the index with the later volumes, read while `volumes` is on.
+  const volumesOn = useCurrFlag('volumes');
+  return useMemo(
+    () => storyNotesFound(foundNotes(defaultStoryIndex({ volumes: volumesOn }), storiesAll, snap), storyId),
+    [snap, storyId, noteChunks, volumesOn],
+  );
 }

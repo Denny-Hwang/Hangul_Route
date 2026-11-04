@@ -53,6 +53,7 @@ import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { useStoryStore } from '../../store/story-store';
 import { CellLinkRow } from '../story/CellLinkRow';
 import { SpeakerButton } from '../story/ReaderParts';
@@ -136,7 +137,9 @@ export function StoryEpisodeDetail({
     // storyChunks: a localized copy reads the story's body once, so it is made again when a chunk arrives.
     [sourceEntries, locale, storyChunks],
   );
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), storiesAll, snap), [snap, storyChunks]);
+  // A book 2 tale's notes (F-CURR-002 row CM-46) count while `volumes` is on.
+  const volumesOn = useCurrFlag('volumes');
+  const notes = useMemo(() => foundNotes(defaultStoryIndex({ volumes: volumesOn }), storiesAll, snap), [snap, storyChunks, volumesOn]);
   const stageDef = stageByKey(episode.stage);
   const themeDef = themeByKey(episode.theme);
   const view = useMemo(

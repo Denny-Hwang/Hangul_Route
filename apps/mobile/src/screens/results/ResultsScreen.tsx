@@ -66,6 +66,7 @@ import { usePlanStore } from '../../store/plan-store';
 import { useActiveLearnerId } from '../../store/active-learner';
 import { useProfileStore } from '../../store/profile-store';
 import { awardWorldOf, useProgressStore } from '../../store/progress-store';
+import { useCurrFlag } from '../../store/remote-config-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
@@ -367,6 +368,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   // after a reload. Which extras show is known from the shelf (the title and the levels), so they never shift in late.
   const questStoryId = quest === undefined ? null : storyIdOfQuest(quest);
   const storyChunks = useStoriesLoaded(questStoryId === null ? [] : [questStoryId]);
+  // A book 2 tale (F-CURR-002 row CM-46) offers its next tale from the index with the later volumes while `volumes` is on.
+  const volumesOn = useCurrFlag('volumes');
   const storyResults = useMemo(() => {
     const story = resultsStoryOf(
       quest,
@@ -381,7 +384,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
     );
     if (!story) return null;
     const next = nextStoryAfter(questId, {
-      entries: defaultStoryIndex(),
+      entries: defaultStoryIndex({ volumes: volumesOn }),
       snapshot,
       bookmarks,
       isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll, isQuestOpen: questOpen }),
@@ -400,7 +403,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
       messages.learner.story.results,
     );
     return { story, next, view };
-  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks, volumesOn]);
 
   const goHome = (): void => {
     navigation.dispatch(
