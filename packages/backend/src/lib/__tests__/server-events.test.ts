@@ -325,6 +325,24 @@ describe('lecture events (AMENDMENTS-LECTURE-V2 section 11: codes and bounded co
       expect(keptEventFields('lecture.tool_used', { tool: 'timer', ...nav }, undefined).payload).toEqual({ tool: 'timer' });
     });
   });
+
+  describe('[NB-1] finished on lecture.complete (F-TCH-004 section 3.14 amendment 2026-11-03: a boolean only)', () => {
+    const complete = { slidesShown: 12, minutes: 25, reveals: 30, navLayout: 'rail' };
+
+    it('keeps finished true or false beside the other keys, with no profile id', () => {
+      for (const finished of [true, false]) {
+        expect(keptEventFields('lecture.complete', { ...complete, finished }, 'profile:a')).toEqual({ profileId: undefined, payload: { ...complete, finished } });
+      }
+    });
+
+    it('drops anything that is not a boolean, and keeps it off the other lecture names', () => {
+      for (const bad of ['true', 1, 0, null, 'yes', ['true'], { finished: true }]) {
+        expect(keptEventFields('lecture.complete', { ...complete, finished: bad }, undefined).payload).toEqual(complete);
+      }
+      expect(keptEventFields('lecture.start', { source: 'console', finished: true }, undefined).payload).toEqual({ source: 'console' });
+      expect(keptEventFields('lecture.complete', { finished: false }, undefined).payload).toEqual({ finished: false });
+    });
+  });
 });
 
 describe('[SA] seat and rename events (AMENDMENTS-SEATS-ADMINS section 8: codes only, no profile id)', () => {

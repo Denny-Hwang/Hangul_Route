@@ -355,7 +355,7 @@ const visuallyHidden = {
 
 /**
  * A non-blocking pill over the stage box: at the top for the portrait hint (section 3.8), at the
- * bottom, above the bar, for the End slide's "To finish, choose Exit." (slide-end.md). On a phone the
+ * bottom, above the bar, for the End slide's "To finish, choose Finish." (slide-end.md). On a phone the
  * End hint sits at the top too, clear of the floating bar.
  */
 export function StageHint({ text, bottom }: { text: string; bottom?: boolean }): ReactElement {
