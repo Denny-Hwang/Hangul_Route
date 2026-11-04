@@ -33,6 +33,13 @@ function routeEnd(meta: CurriculumMeta, classDays: readonly Weekday[]): string {
   return weeksEnd !== null && weeksEnd > cyclesEnd ? weeksEnd : cyclesEnd;
 }
 
+/** Whether a stored meta carries blend params at all (`meta.params.blend`), read without the full schema. */
+const hasBlendParams = (meta: unknown): boolean => {
+  if (typeof meta !== 'object' || meta === null) return false;
+  const params = (meta as { params?: unknown }).params;
+  return typeof params === 'object' && params !== null && typeof (params as { blend?: unknown }).blend === 'object' && (params as { blend?: unknown }).blend !== null;
+};
+
 /**
  * The meeting of the newest published, live plan with practice days of `plans` (one class's plans) that reaches
  * `learnerId` (the inbox's targeting rule) and whose route has not ended on `today` (a UTC day key). Null when there is
@@ -42,12 +49,14 @@ export function classMeetingOf(plans: readonly Plan[], learnerId: string, today:
   let best: { publishedAt: string; meeting: ClassMeeting } | null = null;
   for (const plan of plans) {
     if (!plan.publishedAt || plan.archivedAt || (plan.targetLearnerIds !== null && !plan.targetLearnerIds.includes(learnerId))) continue;
+    // Cheap checks before the parse: a family's background read runs this over every plan of every live class, and most
+    // plans are classic, unblended or older than the best one found.
+    if (!hasBlendParams(plan.meta) || (best !== null && best.publishedAt >= plan.publishedAt)) continue;
     const read = CurriculumMetaSchema.safeParse(plan.meta);
     if (!read.success) continue;
     const blend = read.data.params.blend;
     if (blend === undefined || blend.lecture.days.length === 0) continue;
     if (routeEnd(read.data, blend.lecture.days) < today) continue;
-    if (best !== null && best.publishedAt >= plan.publishedAt) continue;
     const practice = blend.personal.days ?? practiceDaysFor(blend.lecture.days, blend.personal.perWeek);
     best = {
       publishedAt: plan.publishedAt,

@@ -3,6 +3,7 @@ import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-
 import type { PlanSave, PlanView, TransferList } from './api';
 import { classLineWords, type ClassLine } from './parent-home';
 import { livePublished } from './plans';
+import { readItem, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
 
 /*
  * Class days and practice days in the family views (AMENDMENTS-ROUTE-CLASS-BLEND sections 8 and 11, BL-OD-6 and
@@ -11,9 +12,10 @@ import { livePublished } from './plans';
  *
  * - P1, the child card: GX-4's class line gains how the class meets ("In: {class} · class on {days}, practice {n} times a
  *   week"), on the same row; the class's own days, never the child's. With two or more classes the GX-4 line stays as
- *   it is (the wireframe's default). While a family weekly plan reaches the child, the card names the class's practice
- *   days and offers **Pause the family weekly plan while class runs** (the plan's `targetLearnerIds` leave the child out,
- *   an existing field, no new state); **Resume the family weekly plan** puts the child back.
+ *   it is (the wireframe's default). While a whole-family weekly plan reaches the child, the card names the class's
+ *   practice days and offers **Pause the family weekly plan while class runs** (the plan's `targetLearnerIds` leave the
+ *   child out, an existing field, no new server state); **Resume the family weekly plan** puts the child back. Plans made
+ *   for some of the children are never touched (`familyPlanStep`).
  * - P2, the grown-up report: "Practiced on {n} days this week" with a 7-mark strip that only fills. Never drawn at 0,
  *   never with a denominator, never for a class viewer, never for a week other than the learner's current one.
  */
@@ -73,31 +75,55 @@ export function classLineWithMeeting(line: ClassLine, meeting: ClassMeeting | nu
 
 /** What the card offers about the family weekly plan while the child's class has practice days (BL-OD-6). */
 export type FamilyPlanStep =
-  /** The family's live plans that reach the child: Pause leaves the child out of each. */
+  /** The family's live whole-family plans that reach the child: Pause leaves the child out of each. */
   | { kind: 'pause'; plans: PlanView[] }
-  /** The live plans that leave the child out: Resume puts the child back in each. */
+  /** The live plans paused for this child (every other family learner, not this one): Resume puts the child back. */
   | { kind: 'resume'; plans: PlanView[] };
 
-/** Live, published plans of a family reach a learner when they target everyone (`null`) or name the learner. */
-const reaches = (plan: Pick<PlanView, 'targetLearnerIds'>, learnerId: string): boolean => plan.targetLearnerIds === null || plan.targetLearnerIds.includes(learnerId);
+/** The plan's targets that are still family learners (a learner who left the family since never blocks a match). */
+const familyTargets = (targets: readonly string[], familyLearnerIds: readonly string[]): string[] => [...new Set(targets.filter((id) => familyLearnerIds.includes(id)))];
+
+const sameLearners = (a: readonly string[], b: readonly string[]): boolean => a.length === b.length && a.every((id) => b.includes(id));
 
 /**
- * Pause or Resume, or nothing: only with a class with practice days and a live family weekly plan. A plan that reaches
- * the child is paused; with none reaching the child, a live plan that names other children and leaves this one out is
- * resumed. Null without a meeting, without a live plan, or without the right to write plans.
+ * Pause or Resume, or nothing: only with a class with practice days, a live family weekly plan, the right to write plans
+ * and the family's learners read (the shapes below are told apart by them).
+ *
+ * - **Pause** takes the whole-family plans only: those for everyone (`null`), or naming every family learner (and so
+ *   this child) in a family of two or more. A plan made for some of the children, or for this child alone, is a grown-up's
+ *   choice for that child and is never touched.
+ * - **Resume** takes only plans of the shape Pause leaves: every other family learner and not this child. In a family of
+ *   two that shape is also "a plan made for the sibling alone", so there Resume takes only the plans this browser paused
+ *   for this child (`pausedHere`): a sibling's own plan is never pushed to this child. With no plan of that shape, no
+ *   Resume is offered.
  */
-export function familyPlanStep(learnerId: string, meeting: ClassMeeting | null, plans: readonly PlanView[] | undefined, canWrite: boolean): FamilyPlanStep | null {
-  if (meeting === null || plans === undefined || !canWrite) return null;
+export function familyPlanStep(
+  learnerId: string,
+  meeting: ClassMeeting | null,
+  plans: readonly PlanView[] | undefined,
+  canWrite: boolean,
+  familyLearnerIds: readonly string[],
+  pausedHere: readonly string[] = [],
+): FamilyPlanStep | null {
+  if (meeting === null || plans === undefined || !canWrite || !familyLearnerIds.includes(learnerId)) return null;
   const live = livePublished(plans);
-  const reaching = live.filter((p) => reaches(p, learnerId));
-  if (reaching.length > 0) return { kind: 'pause', plans: reaching };
-  const left = live.filter((p) => p.targetLearnerIds !== null && !p.targetLearnerIds.includes(learnerId));
-  return left.length > 0 ? { kind: 'resume', plans: left } : null;
+  const others = familyLearnerIds.filter((id) => id !== learnerId);
+  const wholeFamily = live.filter((p) => p.targetLearnerIds === null || (others.length > 0 && familyLearnerIds.every((id) => p.targetLearnerIds?.includes(id))));
+  if (wholeFamily.length > 0) return { kind: 'pause', plans: wholeFamily };
+  const paused = live.filter(
+    (p) =>
+      p.targetLearnerIds !== null &&
+      !p.targetLearnerIds.includes(learnerId) &&
+      sameLearners(familyTargets(p.targetLearnerIds, familyLearnerIds), others) &&
+      (others.length !== 1 || pausedHere.includes(p.id)),
+  );
+  return paused.length > 0 ? { kind: 'resume', plans: paused } : null;
 }
 
 /**
  * The save of one plan for a step: the same plan, items and meta (absent meta keeps the stored one), with the child left
- * out (`pause`) or put back (`resume`). Putting the last child back targets everyone again (`null`), as the plan was made.
+ * out (`pause`) or put back (`resume`). Resume only ever meets the shape Pause left (every other family learner), so
+ * putting the child back covers the whole family and targets everyone again (`null`), as a family weekly plan is made.
  */
 export function familyPlanSave(plan: PlanView, learnerId: string, familyLearnerIds: readonly string[], kind: FamilyPlanStep['kind']): PlanSave {
   const current = plan.targetLearnerIds ?? [...familyLearnerIds];
@@ -108,6 +134,48 @@ export function familyPlanSave(plan: PlanView, learnerId: string, familyLearnerI
     targets = familyLearnerIds.length > 0 && familyLearnerIds.every((id) => back.includes(id)) ? null : back;
   }
   return { id: plan.id, title: plan.title, items: plan.items, targetLearnerIds: targets, publish: true };
+}
+
+/**
+ * The plans this browser paused for one child, by family (the family-of-two case of `familyPlanStep`). Kept in local
+ * storage under one key, plan ids only (no names); unreadable storage reads as none, so Resume then simply is not offered
+ * in a family of two and the plan stays editable on its own page.
+ */
+const PAUSED_KEY = 'hr.console.familyPlanPaused';
+
+type PausedMap = Record<string, string[]>;
+
+const pausedKey = (familyId: string, learnerId: string): string => `${familyId}|${learnerId}`;
+
+function readPausedMap(storage: KeyValueStorage | null): PausedMap {
+  const raw = readItem(storage, PAUSED_KEY);
+  if (!raw) return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
+    const out: PausedMap = {};
+    for (const [key, ids] of Object.entries(parsed as Record<string, unknown>)) {
+      if (Array.isArray(ids) && ids.every((id) => typeof id === 'string')) out[key] = ids as string[];
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function pausedPlanIds(storage: KeyValueStorage | null, familyId: string, learnerId: string): string[] {
+  return readPausedMap(storage)[pausedKey(familyId, learnerId)] ?? [];
+}
+
+/** Adds (`pause`) or drops (`resume`) plan ids for one child; false when the storage refused. */
+export function rememberPausedPlans(storage: KeyValueStorage | null, familyId: string, learnerId: string, planIds: readonly string[], kind: FamilyPlanStep['kind']): boolean {
+  const map = readPausedMap(storage);
+  const key = pausedKey(familyId, learnerId);
+  const current = map[key] ?? [];
+  const next = kind === 'pause' ? [...new Set([...current, ...planIds])] : current.filter((id) => !planIds.includes(id));
+  if (next.length > 0) map[key] = next;
+  else delete map[key];
+  return writeItem(storage, PAUSED_KEY, JSON.stringify(map));
 }
 
 /** The card's line naming the class's practice days ("Mina's class has practice days on Wednesday, Friday, and Sunday."). */

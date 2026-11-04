@@ -9,7 +9,9 @@ import {
   familyPlanSave,
   familyPlanStep,
   meetingOf,
+  pausedPlanIds,
   practiceWeekView,
+  rememberPausedPlans,
   readMeeting,
   weekdayHabit,
   type ClassMeeting,
@@ -80,33 +82,91 @@ describe('the child card class line (P1)', () => {
 });
 
 describe('Pause and Resume the family weekly plan (BL-OD-6)', () => {
-  it('offers Pause for the live plans that reach the child, only with a class with practice days and the right to write', () => {
+  const two = ['mina', 'jun'];
+  const three = ['mina', 'jun', 'sora'];
+
+  it('offers Pause for the live whole-family plans only, with a class with practice days, the right to write and the roster read', () => {
     const everyone = plan();
     const named = plan({ id: 'plan:named', targetLearnerIds: ['mina', 'jun'], publishedAt: '2026-10-02T00:00:00.000Z' });
     const draft = plan({ id: 'plan:draft', publishedAt: null });
     const archived = plan({ id: 'plan:old', archivedAt: '2026-10-03T00:00:00.000Z' });
-    expect(familyPlanStep('mina', meeting, [everyone, named, draft, archived], true)).toEqual({ kind: 'pause', plans: [named, everyone] });
-    expect(familyPlanStep('mina', null, [everyone], true)).toBeNull();
-    expect(familyPlanStep('mina', meeting, undefined, true)).toBeNull();
-    expect(familyPlanStep('mina', meeting, [everyone], false)).toBeNull();
-    expect(familyPlanStep('mina', meeting, [draft, archived], true)).toBeNull();
+    expect(familyPlanStep('mina', meeting, [everyone, named, draft, archived], true, two)).toEqual({ kind: 'pause', plans: [named, everyone] });
+    expect(familyPlanStep('mina', null, [everyone], true, two)).toBeNull();
+    expect(familyPlanStep('mina', meeting, undefined, true, two)).toBeNull();
+    expect(familyPlanStep('mina', meeting, [everyone], false, two)).toBeNull();
+    expect(familyPlanStep('mina', meeting, [everyone], true, [])).toBeNull();
+    expect(familyPlanStep('mina', meeting, [draft, archived], true, two)).toBeNull();
   });
 
-  it('offers Resume when no live plan reaches the child and one leaves the child out', () => {
-    const paused = plan({ targetLearnerIds: ['jun'] });
-    expect(familyPlanStep('mina', meeting, [paused], true)).toEqual({ kind: 'resume', plans: [paused] });
-    expect(familyPlanStep('mina', meeting, [plan({ targetLearnerIds: [] })], true)?.kind).toBe('resume');
+  it("never pauses a plan made for this child alone or for some of the children", () => {
+    const minaOnly = plan({ id: 'plan:mina', targetLearnerIds: ['mina'] });
+    const some = plan({ id: 'plan:some', targetLearnerIds: ['mina', 'jun'] });
+    expect(familyPlanStep('mina', meeting, [minaOnly], true, two)).toBeNull();
+    expect(familyPlanStep('mina', meeting, [some], true, three)).toBeNull();
+    // A family of one: the plan for everyone pauses, the plan naming the child alone does not.
+    expect(familyPlanStep('mina', meeting, [minaOnly], true, ['mina'])).toBeNull();
+    expect(familyPlanStep('mina', meeting, [plan()], true, ['mina'])?.kind).toBe('pause');
   });
 
-  it('saves the same plan with the child left out, and back in; the last child back targets everyone again', () => {
+  it('offers Resume only for the shape Pause leaves; in a family of two only for the plans paused here', () => {
+    const paused3 = plan({ targetLearnerIds: ['sora', 'jun'] });
+    expect(familyPlanStep('mina', meeting, [paused3], true, three)).toEqual({ kind: 'resume', plans: [paused3] });
+    // A plan for one sibling of three is not a paused family plan.
+    expect(familyPlanStep('mina', meeting, [plan({ targetLearnerIds: ['jun'] })], true, three)).toBeNull();
+    // A learner who left the family since does not block the match.
+    expect(familyPlanStep('mina', meeting, [plan({ targetLearnerIds: ['jun', 'sora', 'gone'] })], true, three)?.kind).toBe('resume');
+    // Family of two: [jun] is also "Jun's own plan", so only the plans paused here resume.
+    const junShape = plan({ targetLearnerIds: ['jun'] });
+    expect(familyPlanStep('mina', meeting, [junShape], true, two)).toBeNull();
+    expect(familyPlanStep('mina', meeting, [junShape], true, two, ['plan:fam'])).toEqual({ kind: 'resume', plans: [junShape] });
+    // Family of one: the empty list is what Pause left.
+    expect(familyPlanStep('mina', meeting, [plan({ targetLearnerIds: [] })], true, ['mina'])?.kind).toBe('resume');
+  });
+
+  it("Pause then Resume changes the family plan only and never sends a sibling's own plan to the child", () => {
+    const family = plan();
+    const junOwn = plan({ id: 'plan:jun', targetLearnerIds: ['jun'], publishedAt: '2026-10-02T00:00:00.000Z' });
+    // Family of two: Pause takes the family plan only (Jun's own plan does not reach Mina).
+    const pause = familyPlanStep('mina', meeting, [family, junOwn], true, two);
+    expect(pause).toEqual({ kind: 'pause', plans: [family] });
+    const pausedFamily = { ...family, targetLearnerIds: familyPlanSave(family, 'mina', two, 'pause').targetLearnerIds };
+    expect(pausedFamily.targetLearnerIds).toEqual(['jun']);
+    // Resume takes the plan paused here only: Jun's own plan keeps its targets.
+    const resume = familyPlanStep('mina', meeting, [pausedFamily, junOwn], true, two, ['plan:fam']);
+    expect(resume).toEqual({ kind: 'resume', plans: [pausedFamily] });
+    expect(familyPlanSave(pausedFamily, 'mina', two, 'resume').targetLearnerIds).toBeNull();
+    // With nothing paused here, a sibling-only plan never offers Resume.
+    expect(familyPlanStep('mina', meeting, [junOwn], true, two)).toBeNull();
+    // Family of three with Jun's own plan: the same, by shape alone.
+    const pause3 = familyPlanStep('mina', meeting, [family, junOwn], true, three);
+    expect(pause3).toEqual({ kind: 'pause', plans: [family] });
+    const paused3 = { ...family, targetLearnerIds: familyPlanSave(family, 'mina', three, 'pause').targetLearnerIds };
+    expect(familyPlanStep('mina', meeting, [paused3, junOwn], true, three)).toEqual({ kind: 'resume', plans: [paused3] });
+  });
+
+  it('saves the same plan with the child left out, and back in; the whole family back targets everyone again', () => {
     const everyone = plan();
-    const pause = familyPlanSave(everyone, 'mina', ['mina', 'jun'], 'pause');
+    const pause = familyPlanSave(everyone, 'mina', two, 'pause');
     expect(pause).toEqual({ id: 'plan:fam', title: 'Our week', items: everyone.items, targetLearnerIds: ['jun'], publish: true });
     expect(pause).not.toHaveProperty('meta');
-    expect(familyPlanSave(plan({ targetLearnerIds: ['jun'] }), 'mina', ['mina', 'jun'], 'resume').targetLearnerIds).toBeNull();
-    expect(familyPlanSave(plan({ targetLearnerIds: ['jun'] }), 'mina', ['mina', 'jun', 'sora'], 'resume').targetLearnerIds).toEqual(['jun', 'mina']);
+    expect(familyPlanSave(plan({ targetLearnerIds: ['jun'] }), 'mina', two, 'resume').targetLearnerIds).toBeNull();
     expect(familyPlanSave(plan(), 'mina', ['mina'], 'pause').targetLearnerIds).toEqual([]);
     expect(familyPlanSave(plan({ targetLearnerIds: [] }), 'mina', ['mina'], 'resume').targetLearnerIds).toBeNull();
+  });
+
+  it('remembers the plans paused here per child, plan ids only, and reads broken storage as none', () => {
+    const store = new Map<string, string>();
+    const storage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) };
+    expect(pausedPlanIds(storage, 'space:fam', 'mina')).toEqual([]);
+    expect(rememberPausedPlans(storage, 'space:fam', 'mina', ['plan:fam'], 'pause')).toBe(true);
+    expect(pausedPlanIds(storage, 'space:fam', 'mina')).toEqual(['plan:fam']);
+    expect(pausedPlanIds(storage, 'space:fam', 'jun')).toEqual([]);
+    rememberPausedPlans(storage, 'space:fam', 'mina', ['plan:fam'], 'resume');
+    expect(pausedPlanIds(storage, 'space:fam', 'mina')).toEqual([]);
+    store.set('hr.console.familyPlanPaused', '{not json');
+    expect(pausedPlanIds(storage, 'space:fam', 'mina')).toEqual([]);
+    expect(pausedPlanIds(null, 'space:fam', 'mina')).toEqual([]);
+    expect(rememberPausedPlans(null, 'space:fam', 'mina', ['plan:fam'], 'pause')).toBe(false);
   });
 });
 

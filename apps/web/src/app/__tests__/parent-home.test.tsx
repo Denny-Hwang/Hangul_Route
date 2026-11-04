@@ -947,6 +947,44 @@ describe('the family home: a class with practice days (BL-9)', () => {
     expect(inCard(r, 'Mina', 'family-plan-pause')).toHaveLength(1);
   });
 
+  it("never offers Resume for a sibling's own plan, and leaves it as it is through Pause and Resume", async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    const junOwn = { ...familyPlan, id: 'plan:jun', title: 'Jun only', targetLearnerIds: ['profile:jun'], publishedAt: '2026-10-02T00:00:00Z' };
+    data.plans = { ok: true, data: [junOwn] };
+    let r = await render([family]);
+    expect(inCard(r, 'Mina', 'child-family-plan')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    data.plans = { ok: true, data: [familyPlan, junOwn] };
+    r = await render([family]);
+    await act(async () => (inCard(r, 'Mina', 'family-plan-pause')[0] as ReactTestInstance).props.onClick());
+    await act(async () => (inCard(r, 'Mina', 'family-plan-resume')[0] as ReactTestInstance).props.onClick());
+    expect(data.saved.map((s) => s.body.id)).toEqual(['plan:fam', 'plan:fam']);
+    const plansNow = (data.plans as { data: Array<{ id: string; targetLearnerIds: string[] | null }> }).data;
+    expect(plansNow.find((p) => p.id === 'plan:jun')?.targetLearnerIds).toEqual(['profile:jun']);
+    expect(plansNow.find((p) => p.id === 'plan:fam')?.targetLearnerIds).toBeNull();
+  });
+
+  it('reads the plans again before saving: a plan another grown-up already changed is not sent back', async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    data.plans = { ok: true, data: [familyPlan] };
+    const r = await render([family]);
+    const pause = inCard(r, 'Mina', 'family-plan-pause')[0] as ReactTestInstance;
+    // Another caregiver gave the plan to Jun alone after the card was drawn.
+    data.plans = { ok: true, data: [{ ...familyPlan, title: 'Edited', targetLearnerIds: ['profile:jun'] }] };
+    await act(async () => pause.props.onClick());
+    expect(data.saved).toEqual([]);
+    expect(inCard(r, 'Mina', 'family-plan-pause')).toHaveLength(0);
+  });
+
+  it('shows no meeting words and no Pause with the flag on while class moves are off (BL-10 turns both on)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    data.plans = { ok: true, data: [familyPlan] };
+    const r = await render([family]);
+    expect(byTestId(r, 'child-class-line')).toHaveLength(0);
+    expect(byTestId(r, 'child-family-plan')).toHaveLength(0);
+  });
+
   it('says so when the save fails, and offers nothing without a live family plan', async () => {
     vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
     data.plans = { ok: true, data: [familyPlan] };

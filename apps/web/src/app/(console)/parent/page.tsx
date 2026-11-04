@@ -18,7 +18,8 @@ import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem, TransferLearnerSideView } from '@/lib/console/api';
 import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled, routeBlendEnabled } from '@/lib/console/config';
-import { classHasPracticeLine, classLineWithMeeting, familyPlanSave, familyPlanStep, meetingOf, type FamilyPlanStep } from '@/lib/console/family-blend';
+import { browserStorage } from '@/lib/i18n/safe-storage';
+import { classHasPracticeLine, classLineWithMeeting, familyPlanSave, familyPlanStep, meetingOf, pausedPlanIds, rememberPausedPlans, type ClassMeeting, type FamilyPlanStep } from '@/lib/console/family-blend';
 import { spaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { openAppWithJoinCode, openLearnerApp } from '@/lib/console/join-handoff';
@@ -189,6 +190,8 @@ export default function ParentHomePage(): JSX.Element {
   // BL-9: the child whose family-plan Pause or Resume is saving, and the one whose save failed (one at a time).
   const [planBusy, setPlanBusy] = useState<string | null>(null);
   const [planFailed, setPlanFailed] = useState<string | null>(null);
+  // The plans paused here this session, by `familyId|learnerId` (local storage keeps them too, where it is offered).
+  const [pausedHere, setPausedHere] = useState<Record<string, string[]>>({});
   const homeView = items ? parentHomeView(items) : null;
   // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10), and
   // GX-4's Needs you: each live family's re-links, class moves, class-scope state and notices (absent until first read).
@@ -451,20 +454,38 @@ export default function ParentHomePage(): JSX.Element {
   };
 
   /**
-   * Pause or Resume the family weekly plan for one child (AMENDMENTS-ROUTE-CLASS-BLEND BL-OD-6, row BL-9): each live
-   * plan of the step saved with the child left out or put back, then the family's plans read again.
+   * Pause or Resume the family weekly plan for one child (AMENDMENTS-ROUTE-CLASS-BLEND BL-OD-6, row BL-9). The family's
+   * plans are read again right before the save and the step is worked out from that read, so a plan another caregiver
+   * changed since the card was drawn is never sent back as it was; a step that no longer applies saves nothing. Each plan
+   * of the step is saved with the child left out or put back, and the plans are read again after, so a save that stops
+   * part way shows the state it left (with the failed line).
    */
-  const changeFamilyPlan = async (familyId: string, learnerId: string, familyLearnerIds: string[], step: FamilyPlanStep): Promise<void> => {
+  const changeFamilyPlan = async (familyId: string, learnerId: string, familyLearnerIds: string[], meeting: ClassMeeting, kind: FamilyPlanStep['kind']): Promise<void> => {
     if (!api || planBusy) return;
     setPlanBusy(learnerId);
     setPlanFailed(null);
-    let ok = true;
-    for (const plan of step.plans) {
-      const saved = await api.savePlan(familyId, familyPlanSave(plan, learnerId, familyLearnerIds, step.kind)).catch(() => null);
-      if (!saved?.ok) {
-        ok = false;
-        break;
+    const storage = browserStorage('local');
+    const before = await api.listPlans(familyId).catch(() => null);
+    let ok = before?.ok === true;
+    const step = before?.ok ? familyPlanStep(learnerId, meeting, before.data, true, familyLearnerIds, [...pausedPlanIds(storage, familyId, learnerId), ...(pausedHere[`${familyId}|${learnerId}`] ?? [])]) : null;
+    const done: string[] = [];
+    if (step && step.kind === kind) {
+      for (const plan of step.plans) {
+        const saved = await api.savePlan(familyId, familyPlanSave(plan, learnerId, familyLearnerIds, kind)).catch(() => null);
+        if (!saved?.ok) {
+          ok = false;
+          break;
+        }
+        done.push(plan.id);
       }
+    }
+    if (done.length > 0) {
+      rememberPausedPlans(storage, familyId, learnerId, done, kind);
+      setPausedHere((prev) => {
+        const key = `${familyId}|${learnerId}`;
+        const current = prev[key] ?? [];
+        return { ...prev, [key]: kind === 'pause' ? [...new Set([...current, ...done])] : current.filter((id) => !done.includes(id)) };
+      });
     }
     const fresh = await api.listPlans(familyId).catch(() => null);
     if (fresh?.ok) setPlans((prev) => ({ ...prev, [familyId]: fresh.data }));
@@ -499,7 +520,8 @@ export default function ParentHomePage(): JSX.Element {
     const meeting = blendOn && familyAsks ? meetingOf(learner.id, familyAsks.transfers) : null;
     const familyRoster = rosters[familyId];
     const familyLearnerIds = familyRoster?.state === 'ready' ? familyRoster.roster.learners.map((l) => l.id) : [];
-    const planStep = !isArchivedFamily(family) && api ? familyPlanStep(learner.id, meeting, plans[familyId], planWriter(family.role)) : null;
+    const pausedIds = [...pausedPlanIds(browserStorage('local'), familyId, learner.id), ...(pausedHere[`${familyId}|${learner.id}`] ?? [])];
+    const planStep = !isArchivedFamily(family) && api ? familyPlanStep(learner.id, meeting, plans[familyId], planWriter(family.role), familyLearnerIds, pausedIds) : null;
     return (
       <article key={learner.id} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
@@ -531,7 +553,7 @@ export default function ParentHomePage(): JSX.Element {
           </p>
         ) : null}
         {planStep && meeting ? (
-          <div style={{ ...facts, gap: spacing.xs }} data-testid="child-family-plan">
+          <div style={{ ...facts, gap: spacing.xs }} data-testid="child-family-plan" aria-live="polite">
             <span>{classHasPracticeLine(learner.displayName, meeting, locale)}</span>
             <button
               type="button"
@@ -539,7 +561,7 @@ export default function ParentHomePage(): JSX.Element {
               data-testid={planStep.kind === 'pause' ? 'family-plan-pause' : 'family-plan-resume'}
               disabled={planBusy !== null}
               aria-busy={planBusy === learner.id}
-              onClick={() => void changeFamilyPlan(familyId, learner.id, familyLearnerIds, planStep)}
+              onClick={() => void changeFamilyPlan(familyId, learner.id, familyLearnerIds, meeting, planStep.kind)}
             >
               {planStep.kind === 'pause' ? c.curriculum.blend.family.pause : c.curriculum.blend.family.resume}
             </button>
