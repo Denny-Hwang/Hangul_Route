@@ -25,6 +25,7 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useTypeScale,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -478,43 +479,48 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
       </View>
 
       <Spacer size="lg" />
-      <View
-        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: CARD_METRICS.gap }}
-        onLayout={onGridLayout}
-        testID="story-sequence-cards"
-      >
-        {remaining.map((card) => {
-          const art = artById.get(card.id) ?? null;
-          const outcome = wrongFlash === card.id ? 'wrong' : hintId === card.id ? 'hint' : null;
-          const romanization = sequenceCardRomanization(card, romanizationMode, revealed.has(card.id));
-          return (
-            <View
-              key={card.id}
-              style={{ flexGrow: 1, flexBasis: CELL_BASIS[columns], minWidth: touchTarget.hero }}
-            >
-              <ChoiceCard
-                testID={`story-sequence-card-${card.id}`}
-                art={
-                  art && cardArtSize > 0 ? (
-                    <StoryScene
-                      art={art}
-                      width={cardArtSize}
-                      decorative
-                      testID={`story-sequence-card-art-${card.id}`}
-                    />
-                  ) : null
-                }
-                state={outcome ?? 'idle'}
-                ko={card.ko?.ko}
-                romanization={romanization}
-                label={card.caption}
-                accessibilityLabel={sequenceCardLabel(card, romanization, outcome, copy)}
-                onPress={() => dispatch({ type: 'tap', cardId: card.id })}
-              />
-            </View>
-          );
-        })}
-      </View>
+      {/* One board for the cards (AMENDMENTS-TOUCH section 6, row KT-5): a graze still counts, and a bounce never taps
+          the card that reflowed under the finger (F4). The lock is the app's, so it also covers the keyed round remount
+          of Story Order's fallback rounds (StoryOrderStep.tsx). */}
+      <TapBoard lock="board">
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: CARD_METRICS.gap }}
+          onLayout={onGridLayout}
+          testID="story-sequence-cards"
+        >
+          {remaining.map((card) => {
+            const art = artById.get(card.id) ?? null;
+            const outcome = wrongFlash === card.id ? 'wrong' : hintId === card.id ? 'hint' : null;
+            const romanization = sequenceCardRomanization(card, romanizationMode, revealed.has(card.id));
+            return (
+              <View
+                key={card.id}
+                style={{ flexGrow: 1, flexBasis: CELL_BASIS[columns], minWidth: touchTarget.hero }}
+              >
+                <ChoiceCard
+                  testID={`story-sequence-card-${card.id}`}
+                  art={
+                    art && cardArtSize > 0 ? (
+                      <StoryScene
+                        art={art}
+                        width={cardArtSize}
+                        decorative
+                        testID={`story-sequence-card-art-${card.id}`}
+                      />
+                    ) : null
+                  }
+                  state={outcome ?? 'idle'}
+                  ko={card.ko?.ko}
+                  romanization={romanization}
+                  label={card.caption}
+                  accessibilityLabel={sequenceCardLabel(card, romanization, outcome, copy)}
+                  onPress={() => dispatch({ type: 'tap', cardId: card.id })}
+                />
+              </View>
+            );
+          })}
+        </View>
+      </TapBoard>
 
       <Spacer size="lg" />
       <View accessibilityLiveRegion="polite">
