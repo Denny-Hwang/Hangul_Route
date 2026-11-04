@@ -8,6 +8,7 @@ import {
   Icon,
   KoreanText,
   Pill,
+  Pip,
   Screen,
   Spacer,
   StarRow,
@@ -19,7 +20,7 @@ import {
   touchTarget,
   useMediaSize,
 } from '@hangul-route/design-system';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -91,6 +92,13 @@ interface Props extends StoryEpisodeNavigation {
    * draws the row when it is above 0 (wireframe episode/detail-cell-stories-row D); a shelf page has 0.
    */
   cellStoryCount: number;
+  /** A Stage 5 cell's "Vol 1" / "Vol 2" tabs (F-CURR-002 row CM-40), under the pills; none for a cell of one book. */
+  volumeTabs?: ReactNode;
+  /**
+   * A book 2 tale that cannot open now (F-CURR-002 row CM-5B: offline, and neither loaded nor saved on this device):
+   * its row shows "Needs the internet" in place of its buttons, as a lesson page's quest rows do. None for a book 1.
+   */
+  taleNeedsInternet?: (storyId: string) => boolean;
 }
 
 /**
@@ -115,6 +123,8 @@ export function StoryEpisodeDetail({
   onOpenCellStories,
   cellStoryCount,
   onOpenCellStoriesRow,
+  volumeTabs,
+  taleNeedsInternet,
 }: Props): ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
@@ -229,6 +239,7 @@ export function StoryEpisodeDetail({
           <Pill tone="secondary" label={view.pills[1]} size="sm" />
           <Pill tone="neutral" label={view.pills[2]} size="sm" />
         </View>
+        {volumeTabs}
         {home && homeStage && homeTheme ? (
           <Pressable
             onPress={() => onOpenCellStories(home.stage, home.theme)}
@@ -281,6 +292,7 @@ export function StoryEpisodeDetail({
               onHearTitle={(title) => hearTitle(title, soundAtRow(row.entry.storyId))}
               soundPanel={soundPanel(soundAtRow(row.entry.storyId), `story-episode-row-sound-${row.entry.storyId}`)}
               onAction={(action) => runAction(row, action)}
+              needsInternet={taleNeedsInternet?.(row.entry.storyId) ?? false}
             />
           ))}
         </View>
@@ -419,6 +431,7 @@ function TaleRow({
   onHearTitle,
   soundPanel,
   onAction,
+  needsInternet,
 }: {
   row: TaleRowView;
   thumb: number;
@@ -427,6 +440,8 @@ function TaleRow({
   /** The page's status panel, drawn under this row's Korean title (shown when that title was tapped last). */
   soundPanel: ReactElement;
   onAction: (action: TaleRowAction) => void;
+  /** Offline and not on the device (row CM-5B): words in place of the buttons, never a disabled button. */
+  needsInternet: boolean;
 }): ReactElement {
   const messages = useMessages();
   const id = row.entry.storyId;
@@ -465,22 +480,35 @@ function TaleRow({
           </View>
         </View>
         <Spacer size="md" />
-        {/* Wraps under the titles on a narrow window or at large text; the primary stays the largest. */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          {row.actions.map((action) => (
-            <View key={action.mode} style={{ flexGrow: action.size === 'hero' ? 1 : 0, minWidth: action.size === 'hero' ? '60%' : undefined }}>
-              <Button
-                label={action.label}
-                accessibilityLabel={action.accessibilityLabel}
-                tone={action.tone}
-                size={action.size}
-                fullWidth={action.size === 'hero'}
-                onPress={() => onAction(action)}
-                testID={`story-episode-${action.mode}-${id}`}
-              />
-            </View>
-          ))}
-        </View>
+        {needsInternet ? (
+          // The lesson page's needs-the-internet row (row CM-5B): the dotted pip and the words; it opens once back online.
+          <View
+            testID={`story-episode-needs-internet-${id}`}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
+          >
+            <Pip state="later" context="stage" />
+            <Body weight="semibold" tone="secondary">
+              {messages.learner.episode.later.start}
+            </Body>
+          </View>
+        ) : (
+          // Wraps under the titles on a narrow window or at large text; the primary stays the largest.
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {row.actions.map((action) => (
+              <View key={action.mode} style={{ flexGrow: action.size === 'hero' ? 1 : 0, minWidth: action.size === 'hero' ? '60%' : undefined }}>
+                <Button
+                  label={action.label}
+                  accessibilityLabel={action.accessibilityLabel}
+                  tone={action.tone}
+                  size={action.size}
+                  fullWidth={action.size === 'hero'}
+                  onPress={() => onAction(action)}
+                  testID={`story-episode-${action.mode}-${id}`}
+                />
+              </View>
+            ))}
+          </View>
+        )}
       </Card>
     </View>
   );

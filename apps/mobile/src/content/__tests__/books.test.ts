@@ -8,7 +8,7 @@ import {
   type Story,
 } from '@hangul-route/content-schema';
 import { BOOK_DEFINITIONS, bookEpisodes, bookQuests, buildBook } from '../books';
-import { episodesAll, episodeById } from '../episodes';
+import { episodesAll, episodeById, episodesFor } from '../episodes';
 import { questsAll } from '../quests';
 import { storiesAll, storyById, storyQuests } from '../stories';
 import { completeStages, stagesToLatch, withStageLatches } from '../../logic/my-route/latch';
@@ -95,6 +95,17 @@ describe('buildBook: content trouble never breaks the app (F-STORY-001 §3.7 hol
     for (const definition of BOOK_DEFINITIONS) {
       expect(buildBook(definition, lookup)?.episode, definition.id).toEqual(bookEpisodes.find((e) => e.id === definition.id));
     }
+  });
+
+  it('builds a book 2 on the Volume 2 path: episode:stage5-<theme>-v2, volume 2, after book 1 in its cell (F-CURR-002 row CM-40)', () => {
+    const nature = BOOK_DEFINITIONS.find((d) => d.id === 'episode:stage5-nature')!;
+    const book2 = buildBook({ ...rites, id: 'episode:stage5-rites-v2', volume: 2, storyIds: nature.storyIds }, lookup)?.episode;
+    expect(book2?.volume).toBe(2);
+    expect(EpisodeSchema.safeParse(book2).success).toBe(true);
+    expect(EpisodeSchema.safeParse({ ...book2, id: 'episode:stage5-rites' }).success).toBe(false);
+    const book1 = bookEpisodes.find((e) => e.id === 'episode:stage5-rites')!;
+    expect(episodesFor('stage5', 'rites', [book2!, book1]).map((e) => e.id)).toEqual(['episode:stage5-rites', 'episode:stage5-rites-v2']);
+    expect(buildBook(rites, lookup)?.episode.volume).toBe(1);
   });
 
   it('the two-story nature book stays a placeholder when one of its stories is held', () => {

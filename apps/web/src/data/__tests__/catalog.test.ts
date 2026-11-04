@@ -3,6 +3,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { CATALOGUE_TITLES } from '../catalogue-titles.generated';
 import { catalogLabel, catalogTitle, catalogTitleEntry, itemCategory, itemTitle, plannableQuest } from '../catalog';
+import { consoleChooserGroups } from '../../lib/console/lesson-picker';
 
 /**
  * Every grid cell has shipped since F-CURR-001, so the coming-soon cases read a copy of the catalogue
@@ -138,5 +139,26 @@ describe('catalogTitle', () => {
       expect(catalogTitleEntry(id, 'ko')).toEqual({ title: id, fallback: true });
       expect(catalogTitleEntry(id, 'en')).toEqual({ title: id, fallback: true });
     }
+  });
+});
+
+describe('a cell\'s Volume 2 in the console (F-CURR-002 row CM-40)', () => {
+  const v2 = 'episode:stage2-nature-v2';
+  const withV2: Catalog = {
+    ...CATALOG,
+    cells: CATALOG.cells.map((c) =>
+      c.episodeId === 'episode:stage2-nature' ? { ...c, episodeIds: [c.episodeId, v2], volumes: [{ episodeId: v2, title: 'Outdoor Words 2', minutes: 8, questIds: [] }] } : c,
+    ),
+  };
+
+  it('names a Volume 2 episode by its own English title, and an unknown one by its id', () => {
+    expect(catalogTitle(v2, 'en', withV2)).toBe('Outdoor Words 2');
+    expect(catalogTitleEntry(v2, 'es', withV2)).toEqual({ title: 'Outdoor Words 2', fallback: true });
+    expect(catalogTitle(v2, 'en', CATALOG)).toBe(v2);
+  });
+
+  it('the console chooser offers no Volume 2 row (the console reads no learner switch)', () => {
+    const keys = consoleChooserGroups('en', 'lecture').flatMap((g) => g.rows.map((r) => r.key));
+    expect(keys.some((k) => k.endsWith('-v2'))).toBe(false);
   });
 });

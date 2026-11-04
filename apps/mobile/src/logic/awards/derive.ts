@@ -87,21 +87,32 @@ export function gridEpisodes(stage: StageKey, world: Pick<AwardWorld, 'episodes'
 }
 
 /**
+ * The cells of a stage, read from their first volumes (F-STORY-005 PR 5.8, F-CURR-002 row CM-40): one grid episode per
+ * cell, its Volume 1. A cell's Volume 2 (or a Stage 5 book 2) is depth on the cell, never one more cell: it adds no
+ * route day, and a stage's completion and its card read the first volumes, so a Volume 2, shipped or a preview,
+ * never holds a stage back, and a learner who finished a stage before its Volume 2 shipped stays Complete
+ * (`stageDoneAt` is never un-latched).
+ */
+export function stageCells(stage: StageKey, world: Pick<AwardWorld, 'episodes'>): Episode[] {
+  return gridEpisodes(stage, world).filter((e) => (e.volume ?? 1) === 1);
+}
+
+/**
  * A stage can complete only when every grid cell of it is shipped (the
  * Journey's "open" row); story shelves never count toward a stage.
  */
 export function stageCanComplete(stage: StageKey, world: Pick<AwardWorld, 'episodes'>): boolean {
-  return stageAvailability(stage, gridEpisodes(stage, world)) === 'open';
+  return stageAvailability(stage, stageCells(stage, world)) === 'open';
 }
 
-/** Every grid episode of a fully shipped stage is complete; `at` is the latest of their completion times. */
+/** Every cell of a fully shipped stage is complete (its first volume); `at` is the latest of their completion times. */
 export function isStageComplete(
   stage: StageKey,
   world: Pick<AwardWorld, 'episodes'>,
   completed: ReadonlyMap<string, string>,
 ): { complete: boolean; at?: string } {
   if (!stageCanComplete(stage, world)) return { complete: false };
-  const times = gridEpisodes(stage, world).map((e) => completed.get(e.id));
+  const times = stageCells(stage, world).map((e) => completed.get(e.id));
   if (times.some((t) => t === undefined)) return { complete: false };
   return { complete: true, at: latest(times as string[]) };
 }

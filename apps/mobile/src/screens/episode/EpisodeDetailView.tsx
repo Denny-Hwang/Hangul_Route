@@ -25,6 +25,7 @@ import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
+import { cellVolumes, volumePageEpisode } from '../../logic/episode/volumes';
 import { UPPER_CARD_GATED_IDS } from '../../content/heritage-cards';
 import { shownRewardCardIds } from '../../logic/awards/upper-cards';
 import { useCurrFlag } from '../../store/remote-config-store';
@@ -57,6 +58,7 @@ import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
 import { passGate } from '../../store/gate-telemetry';
 import { episodeIntro } from '../../logic/episode/intro';
+import { laterTaleNeedsInternet, useLaterNeedsInternet } from './use-later-offline';
 import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
@@ -64,6 +66,7 @@ import { CellLinkRow } from '../story/CellLinkRow';
 import { preloadQuestReviews } from '../quest/quest-reviews';
 import { CellCheckSlot } from '../cell-check/cell-check-entry';
 import { StoryEpisodeDetail, type StoryTarget } from './StoryEpisodeDetail';
+import { VolumeTabs } from './VolumeTabs';
 
 export interface EpisodeDetailViewProps {
   episodeId: string;
@@ -92,6 +95,11 @@ export interface EpisodeDetailViewProps {
   onAsk: (gate: AskGate) => void;
   /** The preview card's Back to open lessons: the next lesson page, the first free word topic, the Library or the Journey. */
   onBackToOpenLessons: (target: BackTarget) => void;
+  /**
+   * Opens another volume of the same cell (F-CURR-002 row CM-40): the stack screen sets its param, the Journey pane
+   * selects it. Without it the volume tabs still show which volume this is.
+   */
+  onOpenVolume?: (episodeId: string) => void;
 }
 
 /** The number disc of a quest row (unchanged size, RouteMarkers constants). */
@@ -116,6 +124,7 @@ export function EpisodeDetailView({
   from,
   onAsk: openAsk,
   onBackToOpenLessons,
+  onOpenVolume,
 }: EpisodeDetailViewProps): ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode;
@@ -123,10 +132,25 @@ export function EpisodeDetailView({
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).
   const titles = useLessonTitlesVersion();
+  // A cell's Volume 2 (row CM-40) only while `volumes` is on: off, a page asked for it (an older link or back stack)
+  // shows the cell's first volume, so no Volume 2 entry point shows; its progress, cards and memory stay.
+  const volumesOn = useCurrFlag('volumes');
   const episode = useMemo(() => {
-    const source = episodeById(episodeId);
+    const source = volumePageEpisode(episodeById(episodeId), volumesOn);
     return source && localizeEpisode(source, locale);
-  }, [episodeId, locale, titles]);
+  }, [episodeId, locale, titles, volumesOn]);
+  // The cell's playable volumes, for "Vol 1" and "Vol 2" (none drawn for a cell of one).
+  const volumes = useMemo(() => (episode ? cellVolumes(episode, volumesOn) : []), [episode, volumesOn]);
+  // F-CURR-002 row CM-5B: a later volume, offline and not on the device, needs the internet the first time.
+  const needsInternet = useLaterNeedsInternet(episode);
+  const laterLine = needsInternet ? (
+    <>
+      <Spacer size="md" />
+      <Card padding="md" tone="sunken" testID="episode-later-needs-internet">
+        <Body tone="secondary">{m.later.line}</Body>
+      </Card>
+    </>
+  ) : null;
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   // A quest's warm-up and Try these again start loading here, with their switches on (F-CURR-002 row CM-15).
@@ -240,6 +264,13 @@ export function EpisodeDetailView({
         onOpenCellStories={(stage, theme) => onOpenCellStories(stage, theme, 'story-pill')}
         cellStoryCount={cellStoryCount}
         onOpenCellStoriesRow={() => onOpenCellStories(episode.stage, episode.theme, 'lesson-row')}
+        taleNeedsInternet={needsInternet ? laterTaleNeedsInternet : undefined}
+        volumeTabs={
+          <>
+            <VolumeTabs volumes={volumes} currentId={episode.id} onOpenVolume={onOpenVolume} />
+            {laterLine}
+          </>
+        }
       />
     );
   }
@@ -305,6 +336,8 @@ export function EpisodeDetailView({
           <Pill tone="secondary" label={theme?.titleEn ?? ''} size="sm" />
           {isPreview ? <Pill tone="neutral" label={m.comingSoon.pill} size="sm" /> : null}
         </View>
+        {isPreview ? null : <VolumeTabs volumes={volumes} currentId={episode.id} onOpenVolume={onOpenVolume} />}
+        {isPreview ? null : laterLine}
 
         <Spacer size="md" />
         {/* The stage colour is an accent bar, not the text colour: stage1-4 are below 3:1 as text. */}
@@ -423,7 +456,18 @@ export function EpisodeDetailView({
                     </>
                   ) : null}
                   <Spacer size="md" />
-                  {action === 'closed' ? (
+                  {needsInternet && action !== 'closed' ? (
+                    // Words, never a disabled button (the closed row's pattern): it opens once the internet is back.
+                    <View
+                      testID="episode-quest-needs-internet"
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
+                    >
+                      <Pip state="later" context="stage" />
+                      <Body weight="semibold" tone="secondary">
+                        {m.later.start}
+                      </Body>
+                    </View>
+                  ) : action === 'closed' ? (
                     // Text, never a disabled button (RouteMarkers "Closed row"): the stage-row dotted pip and the words.
                     <View
                       testID="episode-quest-not-open"

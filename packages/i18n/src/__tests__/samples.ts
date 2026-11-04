@@ -1043,6 +1043,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // F-CURR-002 row CM-40: a cell's volumes, Vol 1 and Vol 2 (two at most), and the cell's "Opens Volume 2" sentence.
+  'learner.episode.volumes.tab': [[1], [2]],
+  'learner.episode.volumes.tabA11y': [[1], [2]],
+  'a11y.journeyVolume': [[1], [2]],
   // F-TCH-004 row NB-1: a Recent row taught to the end, with its day label.
   'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
   // AMENDMENTS-GROWNUP-UX GX-14 (T14): the open ready-made card's minutes and the length it was built for.
@@ -1053,6 +1057,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.relink.askedDaysAgo': [[1], [3]],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
+  // F-CURR-002 row CM-5B: the Offline lessons card (sizes already formatted for the locale).
+  'caregiver.dashboard.offline.stage': [[2, 'Word'], [5, 'Story']],
+  'caregiver.dashboard.offline.size': [['0.4'], ['12.3']],
+  'caregiver.dashboard.offline.saving': [['0.1', '0.4'], ['6.5', '12.3']],
+  'caregiver.dashboard.offline.space': [['950.2'], ['12']],
   // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
   // name, a formatted date) and the asking-to-join card's source class.
   'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],

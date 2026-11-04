@@ -24,7 +24,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
-import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
+import { cardById, episodeById, episodesAll, episodesWithVolumes, questById, questsAll } from '../../content';
 import { storyById, storyLevels } from '../../content/stories';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
@@ -288,7 +288,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   useEffect(() => {
     if (offplanSent.current || !profile || total === 0 || planBefore.current === null) return;
     offplanSent.current = true;
-    const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesAll);
+    // The finished quest's episode, a cell's Volume 2 too (F-CURR-002 row CM-40).
+    const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesWithVolumes);
     if (event) void track(event);
   }, [profile, total, questId, routeInput]);
   // The run that completed Stage 1 leads to its ceremony (F-QUEST-002 §3.8): See your Stage 1 prize is the one primary.

@@ -66,8 +66,8 @@ export const TITLES_HEADER =
 
 export const TITLES_REL = ["apps", "web", "src", "data", "catalogue-titles.generated.ts"];
 
-/** The content ids whose titles the console draws: grid episodes (cells), quests, stories and word topics. */
-export const TITLE_ID_RE = /^(episode:stage[1-7]-[a-z]+|(quest|story|vocab-topic):[a-z0-9]+(-[a-z0-9]+)*)$/;
+/** The content ids whose titles the console draws: grid episodes (cells, and a cell's Volume 2, F-CURR-002 row CM-40), quests, stories and word topics. */
+export const TITLE_ID_RE = /^(episode:stage[1-7]-[a-z]+(-v2)?|(quest|story|vocab-topic):[a-z0-9]+(-[a-z0-9]+)*)$/;
 
 /** On since F-TCH-004 PR 11 added the presenter's story adapter. */
 export const STORIES_IN_LECTURE = true;

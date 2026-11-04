@@ -53,8 +53,11 @@ export const HOME_DEFAULT: HomeSnapshot = {
   scrollY: 0,
 };
 
-/** A chooser key: a content id or a letter set (the `lesson-chooser` keys); nothing else is kept. */
-export const CHOOSER_KEY_RE = /^(episode:stage[1-7]-[a-z]+|(quest|story|vocab-topic):[a-z0-9]+(-[a-z0-9]+)*|letters:(consonants|vowels))$/;
+/**
+ * A chooser key: a content id or a letter set (the `lesson-chooser` keys); nothing else is kept. An episode is a cell's
+ * first volume or its Volume 2 (`episode:stage2-life-v2`, F-CURR-002 row CM-40).
+ */
+export const CHOOSER_KEY_RE = /^(episode:stage[1-7]-[a-z]+(-v2)?|(quest|story|vocab-topic):[a-z0-9]+(-[a-z0-9]+)*|letters:(consonants|vowels))$/;
 const KEY_MAX = 64;
 /** More than a deck can hold, so a full selection always fits. */
 const KEYS_MAX = 120;
