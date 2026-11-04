@@ -2,26 +2,18 @@ import type { Locator, Page } from '@playwright/test';
 import { HiddenHeritageRoundSchema } from '@hangul-route/content-schema';
 import { LIBRARY_SCENE } from '@hangul-route/content-schema/testing/role-play';
 import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/food-market';
-import { FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
-import { LETTERS_SCHOOL_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/letters-school';
-import { PLAY_COURTYARD_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/play-courtyard';
-import { SEOLLAL_ROOM_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/seollal-room';
-import { touchTarget } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
-import { spotHitRects } from '../../src/logic/hidden-heritage-flow';
 import { expect, test } from './fixtures';
 import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, seedStored } from './helpers';
-import { hitRectOffences, type HitRectCheck } from './target-audit';
 import { Touchscreen, type TouchPoint } from './touch';
 
 /**
- * AMENDMENTS-TOUCH row KT-6, section 11.2 for this row's boards: Hidden Heritage's spots (the F8 ratchet: every hit area
- * reaches 64 at 320 px unless `spotHitRects` reports it boxed, where it takes exactly its room; the graze matrix; a
+ * AMENDMENTS-TOUCH row KT-6, section 11.2 for this row's boards: Hidden Heritage's spots (the graze matrix; a
  * release 40 px outside and a slide into a neighbour commit nothing and leave no press look; in the narrow latch a
  * sideways drag past 32 px scrolls the scene and a vertical drag on a spot moves nothing), Write Frame's word pick and
  * Role Play's replies (fixture build), Build a Letter (a bounce on the tray never reaches a slot; a slot takes its tile
- * back) and Match Shape (grazes commit; a 72 px drag scrolls) in the release build. KT-11 runs the whole matrix over
- * every board.
+ * back) and Match Shape (grazes commit) in the release build. The hit-area ratchet of these games (F8 included) is
+ * `target-size.spec.ts`. KT-11 runs the whole matrix over every board.
  *
  * Profiles: 320 x 640 with touch and the largest text size (the screens scroll), and the 820 x 1180 tablet (they fit).
  *
@@ -97,7 +89,6 @@ async function pageScroll(target: Locator): Promise<{ room: number; top: number 
 type HhWindow = Window & {
   __hrHiddenHeritageE2E?: { open(p: { sceneId?: string }): void; log(): { answers: Array<{ key: string; correct: boolean }>; completed: number } };
 };
-const SCENES = [FOOD_MARKET_SCENE, LETTERS_SCHOOL_SCENE, SEOLLAL_ROOM_SCENE, FOUR_SEASONS_SCENE, PLAY_COURTYARD_SCENE];
 
 async function openScene(page: Page, sceneId: string, largest: boolean): Promise<void> {
   await page.goto('/');
@@ -112,35 +103,10 @@ async function openScene(page: Page, sceneId: string, largest: boolean): Promise
 const hhAnswers = async (page: Page): Promise<number> => (await page.evaluate(() => (window as HhWindow).__hrHiddenHeritageE2E!.log())).answers.length;
 
 /** The thing ids of a scene in the order `spotHitRects` takes them, with their spots. */
-function things(scene: (typeof SCENES)[number]): Array<{ id: string; spot: { x: number; y: number; w: number; h: number } }> {
+function things(scene: typeof FOOD_MARKET_SCENE): Array<{ id: string; spot: { x: number; y: number; w: number; h: number } }> {
   const round = HiddenHeritageRoundSchema.parse(scene.round);
   return [...round.targets, ...round.others].map((t) => ({ id: t.id, spot: t.spot }));
 }
-
-test.describe('Hidden Heritage spots: the F8 ratchet at 320 px, largest text (AMENDMENTS-TOUCH KT-6, 6.6, KT-D8)', () => {
-  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
-  test.use({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
-
-  for (const scene of SCENES) {
-    test(`${scene.id}: every hit area reaches 64 where it is not boxed, and takes its computed room where it is`, async ({ page }) => {
-      await openScene(page, scene.id, true);
-      const width = (await boxOf(page.getByTestId('hh-scene'))).width;
-      const list = things(scene);
-      const expected = spotHitRects(
-        list.map((t) => t.spot),
-        width,
-        touchTarget.min,
-      );
-      const checks: HitRectCheck[] = [];
-      for (const [i, t] of list.entries()) {
-        const b = await boxOf(page.getByTestId(`hh-spot-${t.id}`));
-        checks.push({ name: t.id, measured: { width: b.width, height: b.height }, expected: expected[i]! });
-      }
-      test.info().annotations.push({ type: 'scene', description: `${scene.id} at ${width} px: boxed ${expected.filter((e) => e.boxed.x || e.boxed.y).length}` });
-      expect(hitRectOffences(checks)).toEqual([]);
-    });
-  }
-});
 
 for (const profile of PROFILES) {
   test.describe(`Hidden Heritage, Write Frame and Role Play under touch, ${profile.name} (AMENDMENTS-TOUCH KT-6, 11.2)`, () => {
@@ -190,11 +156,12 @@ for (const profile of PROFILES) {
       await expect(page.getByTestId('hh-press')).toHaveCount(0);
 
       // On a scrolling screen, a 72 px vertical drag from a spot scrolls the page and commits nothing.
+      const from = centre(await inView(spot));
       const sc = await pageScroll(spot);
       if (sc !== null && sc.room >= 40) {
         before = await hhAnswers(page);
         const up = sc.room - sc.top >= sc.top;
-        await touch.graze(centre(await inView(spot)), 0, up ? -72 : 72, { steps: 8 });
+        await touch.graze(from, 0, up ? -72 : 72, { steps: 8 });
         await page.waitForTimeout(AFTER_LOCK);
         expect(await hhAnswers(page), '72 px drag').toBe(before);
         expect(Math.abs(((await pageScroll(spot))?.top ?? sc.top) - sc.top), 'the drag scrolled the page').toBeGreaterThanOrEqual(20);
