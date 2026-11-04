@@ -148,7 +148,8 @@ export function planChangeAt(placements: readonly PlacementResult[] | undefined,
 
 /** `proposeRoute`'s input for an existing plan (its own rhythm, minutes, goals and tier). */
 const updateInputOf = (context: ProposalContext, active: SelfRoute): ProposeInput => ({
-  ...proposalInputOf(context),
+  // An existing plan is not re-laid around the class's quests (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  ...proposalInputOf({ ...context, classQuestIds: undefined }),
   existing: { meta: active.meta, items: active.items },
 });
 

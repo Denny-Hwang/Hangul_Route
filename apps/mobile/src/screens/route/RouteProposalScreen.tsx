@@ -34,6 +34,8 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { dayKey } from '../../logic/homework/mission-builder';
+import { episodesAll } from '../../content';
+import { classScheduledQuestIds, sourcesOf } from '../../logic/homework/plan-derivation';
 import {
   CUSTOM_WEEKS_MAX,
   CUSTOM_WEEKS_MIN,
@@ -134,10 +136,12 @@ export function RouteProposalScreen({ route, navigation }: Props): ReactElement 
       unlockedStages: unlockedStagesFor(new Date(), profileId) as StageKey[],
       today,
       testedOut: snapshot.testedOut,
+      // A new own plan leaves out what an in-force class or school curriculum schedules (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+      classQuestIds: [...classScheduledQuestIds(sourcesOf(plans ?? [], null), today, episodesAll)],
     };
     // `tier` is read through `unlockedStagesFor`; it is listed so a tier change re-plans.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snapshot, profileId, today, tier]);
+  }, [profile, snapshot, profileId, today, tier, plans]);
 
   const initial = useMemo(() => (context === null ? null : safePropose(proposalInputOf(context))), [context]);
   const [choice, setChoice] = useState<PlanChoice | null>(null);

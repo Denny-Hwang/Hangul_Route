@@ -26,6 +26,7 @@ import {
   type StageKey,
   type Weekday,
 } from '@hangul-route/content-schema';
+import { ownPlanProposalOffered, type Layer } from './layer';
 
 /**
  * The learner's weekly plan proposal (F-PLAN-002 section 3.9, AMENDMENTS-PLC-PLAN-HANDOFF
@@ -59,6 +60,11 @@ export interface PlanPromptInput {
   /** `route-ui:<profileId>.dismissedAt`. */
   dismissedAt: string | undefined;
   nowMs: number;
+  /**
+   * The learner's layer today (`layerOf`, AMENDMENTS-ROUTE-CLASS-BLEND section 8): no proposal while the class plan
+   * has practice days. Absent reads as solo.
+   */
+  layer?: Layer;
 }
 
 /**
@@ -80,6 +86,7 @@ export function planPromptHidden(dismissedAt: string | undefined, newestResultAt
  */
 export function planPromptEligible(i: PlanPromptInput): boolean {
   if (!i.enabled || i.learnerType !== 'self' || i.hasPlan) return false;
+  if (i.layer !== undefined && !ownPlanProposalOffered(i.layer)) return false;
   if (i.questsDone < 1 && i.newestResultAt === undefined) return false;
   return !planPromptHidden(i.dismissedAt, i.newestResultAt, i.nowMs);
 }
@@ -135,6 +142,23 @@ export interface ProposalContext {
   startDate?: DateKey;
   /** Tests only; the app always plans from the shared catalogue. */
   catalog?: Catalog;
+  /**
+   * The quests an in-force class or school curriculum schedules (`classScheduledQuestIds`, AMENDMENTS-ROUTE-CLASS-BLEND
+   * section 8, BL-6): a new own plan leaves them out, so it never repeats the class. A plan the learner already has is
+   * not re-laid by them (the derivation's dedupe hides them instead), so `updateInputOf` drops them.
+   */
+  classQuestIds?: readonly string[];
+}
+
+/** `completedQuestIds` holds at most this many ids (`CurriculumParamsSchema`). */
+const COMPLETED_MAX = 400;
+
+/** The learner's completions, then the class's quests not already among them, within the params cap. */
+function withClassQuests(completed: readonly string[], classQuestIds: readonly string[] | undefined): string[] {
+  if (classQuestIds === undefined || classQuestIds.length === 0) return [...completed];
+  const done = new Set(completed);
+  const extra = classQuestIds.filter((id) => !done.has(id));
+  return [...completed, ...extra.slice(0, Math.max(0, COMPLETED_MAX - completed.length))];
 }
 
 /**
@@ -157,7 +181,8 @@ export function proposalInputOf(c: ProposalContext): ProposeInput {
   return {
     audience: 'self',
     seed,
-    completedQuestIds: [...c.completedQuestIds],
+    // The seed starts from the learner's real completions; the generator also skips the class's quests.
+    completedQuestIds: withClassQuests(c.completedQuestIds, c.classQuestIds),
     levelOrder: levelOrder(c.ageGroup),
     ...(c.pace === undefined ? {} : { pace: c.pace }),
     unlockedStages: [...c.unlockedStages],

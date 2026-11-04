@@ -14,7 +14,7 @@ import type { TelemetryEvent } from '../platform/telemetry';
 import { cursorContext, type CursorContext } from './cursor-context';
 import type { Tier } from './entitlement';
 import { assignmentsForToday, SOURCE_RANK } from './homework/assignment-merger';
-import { ASSIGNED_BY, sourceIdOf, sourcesOf, type DeriveSource, type SourceKind } from './homework/plan-derivation';
+import { ASSIGNED_BY, restingSourceIds, sourceIdOf, sourcesOf, visibleHomework, type DeriveSource, type SourceKind } from './homework/plan-derivation';
 import { nextQuestAfter, offerableQuests } from './next-quest';
 
 /**
@@ -312,11 +312,13 @@ export interface RouteNextContext {
 
 /** The input every screen builds the same way: plan sources with the self-route, and the shared cursor. */
 export function routeNextInputOf(c: RouteNextContext): RouteNextInput {
+  // A resting own weekly plan is no source, and its pending items wait out of view (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const resting = restingSourceIds(c.plans ?? [], c.snapshot.selfRoute, c.today);
   return {
-    snapshot: c.snapshot,
+    snapshot: resting.length === 0 ? c.snapshot : { ...c.snapshot, homework: visibleHomework(c.snapshot.homework, resting) },
     profileId: c.profileId,
     today: c.today,
-    sources: sourcesOf(c.plans ?? [], c.snapshot.selfRoute),
+    sources: sourcesOf(c.plans ?? [], c.snapshot.selfRoute, c.today),
     quests: c.quests,
     episodes: c.episodes,
     cursor: cursorContext({ tier: c.tier, placements: c.snapshot.placements, quests: c.quests, episodes: c.episodes, isQuestOpen: c.isQuestOpen }),

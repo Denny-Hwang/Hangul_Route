@@ -97,6 +97,10 @@ describe('the Home plan prompt (F-PLC-001 AM-6, OD-16)', () => {
     expect(planPromptEligible(prompt({ enabled: false }))).toBe(false);
     expect(planPromptEligible(prompt({ learnerType: 'child' }))).toBe(false);
     expect(planPromptEligible(prompt({ hasPlan: true }))).toBe(false);
+    // AMENDMENTS-ROUTE-CLASS-BLEND section 8: not while the class plan has practice days.
+    expect(planPromptEligible(prompt({ layer: 'class-with-practice' }))).toBe(false);
+    expect(planPromptEligible(prompt({ layer: 'class-only' }))).toBe(true);
+    expect(planPromptEligible(prompt({ layer: 'solo' }))).toBe(true);
   });
 
   it('hides for 14 days after Not now, then comes back', () => {
@@ -409,5 +413,42 @@ describe('otherPlanFrom (section 3.10: a class or home plan comes first)', () =>
     expect(otherPlanFrom([plan('family'), plan('class')])).toBe('teacher');
     expect(otherPlanFrom([plan('family')])).toBe('home');
     expect(otherPlanFrom([plan('school')])).toBe('home');
+  });
+});
+
+describe('a new own plan leaves out the class\'s quests (AMENDMENTS-ROUTE-CLASS-BLEND section 8, BL-6)', () => {
+  const base = { placements: undefined, ageGroup: '8-9', unlockedStages: ['stage1' as const], today: TODAY };
+  const first = (proposal: RouteProposal | null): string | undefined => {
+    if (proposal === null) return undefined;
+    const draft = generateCurriculum({ ...proposal.params, completedQuestIds: [] }, CATALOG);
+    return draft.items.find((item) => item.kind === 'quest')?.id;
+  };
+
+  it('adds the quests an in-force class curriculum schedules to the ones the generator skips, after the completions', () => {
+    const input = proposalInputOf({ ...base, completedQuestIds: ['quest:x'], classQuestIds: ['quest:x', 'quest:y', 'quest:z'] });
+    expect(input.completedQuestIds).toEqual(['quest:x', 'quest:y', 'quest:z']);
+    expect(proposalInputOf({ ...base, completedQuestIds: ['quest:x'] }).completedQuestIds).toEqual(['quest:x']);
+    expect(proposalInputOf({ ...base, completedQuestIds: ['quest:x'], classQuestIds: [] }).completedQuestIds).toEqual(['quest:x']);
+  });
+
+  it('stays within the params cap of 400, the real completions first', () => {
+    const done = Array.from({ length: 398 }, (_, i) => `quest:done-${i}`);
+    const input = proposalInputOf({ ...base, completedQuestIds: done, classQuestIds: ['quest:a', 'quest:b', 'quest:c'] });
+    expect(input.completedQuestIds).toHaveLength(400);
+    expect(input.completedQuestIds.slice(-2)).toEqual(['quest:a', 'quest:b']);
+    const full = Array.from({ length: 401 }, (_, i) => `quest:done-${i}`);
+    expect(proposalInputOf({ ...base, completedQuestIds: full, classQuestIds: ['quest:a'] }).completedQuestIds).toEqual(full);
+  });
+
+  it('the plan made from the proposal never schedules a lesson the class schedules', () => {
+    const plain = proposeRoute(proposalInputOf({ ...base, completedQuestIds: [] }));
+    const opener = first(plain);
+    expect(opener).toBeDefined();
+    const without = proposeRoute(proposalInputOf({ ...base, completedQuestIds: [], classQuestIds: [opener as string] }));
+    expect(without?.params.completedQuestIds).toEqual([opener]);
+    // The screens draft the plan from the proposal's params (`paramsOfChoice`), which carry the skipped quests.
+    const items = without === null ? [] : generateCurriculum(without.params, CATALOG).items;
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.some((item) => item.id === opener)).toBe(false);
   });
 });

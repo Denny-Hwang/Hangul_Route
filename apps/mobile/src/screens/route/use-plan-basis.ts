@@ -1,9 +1,11 @@
 import type { SelfRoute, StageKey } from '@hangul-route/content-schema';
 import { useEffect, useMemo } from 'react';
+import { episodesAll } from '../../content';
+import { classScheduledQuestIds, sourcesOf } from '../../logic/homework/plan-derivation';
 import { proposalInputOf, safePropose, type PlanChoice } from '../../logic/route/proposal-flow';
 import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
 import { setupBasisOf, type SetupContext, type SetupState } from '../../logic/route/setup-flow';
-import { unlockedStagesFor } from '../../store/plan-store';
+import { unlockedStagesFor, usePlanStore } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
@@ -26,6 +28,7 @@ export interface PlanBasis {
 export function usePlanBasis(profileId: string, choice?: PlanChoice): PlanBasis {
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId) ?? null);
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
+  const plans = usePlanStore((s) => s.byLearner[profileId]);
   // The access tier re-renders when the inbox or the subscription changes what is open (F-ENT-003 section 3.4).
   const tier = useAccessTier(profileId);
   // Read again on focus and when the app comes back: the steps may stay open across midnight.
@@ -41,11 +44,14 @@ export function usePlanBasis(profileId: string, choice?: PlanChoice): PlanBasis 
     const completedQuestIds = completedQuestIdsOf(snapshot.quests);
     const unlockedStages = unlockedStagesFor(new Date(), profileId) as StageKey[];
     // From the newest level check (`effectiveRoute`), with or without a plan in force: a later place to start moves Change the plan's start.
-    const proposal = safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today, testedOut: snapshot.testedOut }));
+    // A new own plan leaves out what an in-force class or school curriculum schedules (AMENDMENTS-ROUTE-CLASS-BLEND section 8);
+    // a plan in force is not re-laid around them.
+    const classQuestIds = active === null ? [...classScheduledQuestIds(sourcesOf(plans ?? [], null), today, episodesAll)] : [];
+    const proposal = safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today, testedOut: snapshot.testedOut, classQuestIds }));
     return setupBasisOf({ active, proposal, ...(choice === undefined ? {} : { choice }), completedQuestIds, unlockedStages, today });
     // `tier` is read through `unlockedStagesFor`; it is listed so a tier change plans again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snapshot, active, choice, profileId, today, tier]);
+  }, [profile, snapshot, active, choice, profileId, today, tier, plans]);
 
   return { ready: profile !== null && snapshot !== undefined, today, active, basis };
 }

@@ -6,11 +6,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { selfRouteResting } from '../../logic/homework/plan-derivation';
 import { movedLineVisible } from '../../logic/route/home-slot';
 import { planOverview } from '../../logic/route/plan-view';
 import { activeSelfRoute } from '../../logic/route/self-route';
 import type { RootStackParamList } from '../../navigation/types';
 import { announceForScreenReader } from '../../platform/screen-reader';
+import { usePlanStore } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
@@ -41,6 +43,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId) ?? null);
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
   const ui = useRouteStore((s) => s.ui[profileId]);
+  const plans = usePlanStore((s) => s.byLearner[profileId]);
   const changesOpen = usePlanChangesOpen(profile);
   // Read again on focus and when the app comes back: the screen may stay open across midnight.
   const today = useToday();
@@ -91,7 +94,9 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
 
   const active = activeSelfRoute(snapshot);
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
-  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen });
+  // A resting plan offers no check-in (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const resting = selfRouteResting(plans ?? [], active, today);
+  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen, resting });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
   // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong).
   const stale = active !== null && active.meta.catalogVersion < CATALOG.version;

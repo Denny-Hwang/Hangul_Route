@@ -1,4 +1,4 @@
-import { CATALOG, generateCurriculum, type CurriculumDraft } from '@hangul-route/content-schema';
+import { CATALOG, addDays, generateCurriculum, weekdayOf, type CurriculumDraft, type InboxPlan } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -10,7 +10,9 @@ vi.mock('../../platform/storage', () => ({
 }));
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
 
+import { blendedMeta } from '../../logic/homework/__tests__/curriculum-fixture';
 import { dayKey } from '../../logic/homework/mission-builder';
+import { ownPlanBackShows } from '../../logic/route/layer';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../account-store';
 import { usePlanStore } from '../plan-store';
@@ -315,5 +317,68 @@ describe('route-store: marks keep what is stored', () => {
     mem.set('route-ui:profile:a', { dismissedAt: '2026-10-01T00:00:00.000Z' });
     await useRouteStore.getState().markMovedSeen('profile:a', NOW.toISOString());
     expect(mem.get('route-ui:profile:a')).toEqual({ dismissedAt: '2026-10-01T00:00:00.000Z', movedSeenAt: NOW.toISOString() });
+  });
+});
+
+describe('route-store: the own plan rests and resumes (AMENDMENTS-ROUTE-CLASS-BLEND section 8, BL-OD-5)', () => {
+  const DAY_MS = 86_400_000;
+  const draft = (startOffsetDays: number): CurriculumDraft =>
+    generateCurriculum(
+      { audience: 'self', level: { stage: 'stage1', band: 0 }, startDate: addDays(TODAY, startOffsetDays), weeks: 12, sessionsPerWeek: 3, minutesPerSession: 15, unlockedStages: ['stage1'] },
+      CATALOG,
+    );
+  /** A class plan with practice days whose class met yesterday: its route holds today. */
+  const blendedPlan = (): InboxPlan => ({
+    id: 'plan:blend',
+    spaceId: 'space:c',
+    spaceKind: 'class',
+    spaceName: 'A',
+    title: 'Term',
+    items: [],
+    publishedAt: '2026-09-20T00:00:00.000Z',
+    updatedAt: '2026-09-20T00:00:00.000Z',
+    meta: blendedMeta({ startDate: addDays(TODAY, -8), lectureDays: [weekdayOf(addDays(TODAY, -1))], weeks: 4 }),
+  });
+
+  it('a resting plan is never moved along and is noted; when the class plan is gone it is re-paced once and the back line is set', async () => {
+    const created = await useRouteStore.getState().create('profile:a', draft(-10), { from: 'setup', changed: true }, new Date(NOW.getTime() - 10 * DAY_MS));
+    await usePlanStore.getState().applyPlans('profile:a', [blendedPlan()]);
+    const pending = useProgressStore.getState().byProfile['profile:a']?.homework.filter((h) => h.id.startsWith(`${created?.id}#`) && !h.completedAt) ?? [];
+    expect(pending.length).toBeGreaterThan(0);
+    vi.mocked(track).mockClear();
+
+    expect(await useRouteStore.getState().repaceDue('profile:a', NOW)).toBe(false);
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+    expect(useRouteStore.getState().ui['profile:a']?.restingFor).toBe(created?.id);
+    // Its pending items wait in the snapshot, untouched.
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.filter((h) => h.id.startsWith(`${created?.id}#`) && !h.completedAt)).toEqual(pending);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.repacedAt).toBeNull();
+
+    // The learner leaves the class: the plan is back, re-paced once (requeue) from today.
+    await usePlanStore.getState().applyPlans('profile:a', []);
+    expect(await useRouteStore.getState().repaceDue('profile:a', NOW)).toBe(true);
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(true);
+    const ui = useRouteStore.getState().ui['profile:a'];
+    expect(ui?.restingFor).toBeUndefined();
+    expect(ui?.backAt).toBe(NOW.toISOString());
+    expect(ownPlanBackShows(ui ?? {})).toBe(true);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.repacedAt).toBe(NOW.toISOString());
+    expect(track).toHaveBeenCalledWith(expect.objectContaining({ name: 'route.repaced', payload: expect.objectContaining({ mode: 'auto' }) }));
+    // Once: nothing more is due today.
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+    await useRouteStore.getState().markBackSeen('profile:a', new Date(NOW.getTime() + 1000).toISOString());
+    expect(ownPlanBackShows(useRouteStore.getState().ui['profile:a'] ?? {})).toBe(false);
+  });
+
+  it('the resume waits while a session is open', async () => {
+    await useRouteStore.getState().create('profile:a', draft(-3), { from: 'setup', changed: true }, new Date(NOW.getTime() - 3 * DAY_MS));
+    await usePlanStore.getState().applyPlans('profile:a', [blendedPlan()]);
+    expect(await useRouteStore.getState().repaceDue('profile:a', NOW)).toBe(false);
+    await usePlanStore.getState().applyPlans('profile:a', []);
+    useProgressStore.setState({ openSession: { profileId: 'profile:a', sessionId: 's', owner: 'quest:x', streak: true } });
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+    expect(useRouteStore.getState().ui['profile:a']?.restingFor).toBeDefined();
+    useProgressStore.setState({ openSession: null });
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(true);
   });
 });

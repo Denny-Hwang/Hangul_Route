@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { episodesAll, questsAll, stages } from '../content';
 import { isStageEntitled } from '../logic/entitlement';
 import { dayKey } from '../logic/homework/mission-builder';
-import { deriveAssignments, planIdOf, sourcesOf, type DeriveResult } from '../logic/homework/plan-derivation';
+import { deriveAssignments, planIdOf, restingSourceIds, sourcesOf, type DeriveResult } from '../logic/homework/plan-derivation';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { accessTier, questOpenFor } from './tier-store';
 import { onProfileRemoved } from './profile-removal';
@@ -60,15 +60,18 @@ export function unlockedStagesFor(now: Date, learnerId: string): string[] {
 
 function deriveFor(learnerId: string, plans: readonly InboxPlan[], snapshot: ProgressSnapshot, now: Date): DeriveResult {
   const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
-  // The learner's own weekly plan rides along as a source of kind `self` (F-PLAN-002 section 3.6).
+  const today = dayKey(now.toISOString());
+  // The learner's own weekly plan rides along as a source of kind `self` (F-PLAN-002 section 3.6), and rests while a
+  // class plan with practice days is in force (AMENDMENTS-ROUTE-CLASS-BLEND section 8): its pending items then wait.
   return deriveAssignments({
-    sources: sourcesOf(plans, snapshot.selfRoute),
+    sources: sourcesOf(plans, snapshot.selfRoute, today),
+    resting: restingSourceIds(plans, snapshot.selfRoute, today),
     snapshot,
     profileId: learnerId,
     quests: questsAll,
     episodes: episodesAll,
     unlockedStages: unlockedStagesFor(now, learnerId),
-    today: dayKey(now.toISOString()),
+    today,
     learnerName: profile?.displayName ?? 'Your learner',
     // The same access tier as the stages above, plus the switch and the quests this snapshot finished
     // (F-ENT-003 section 3.6): a merged copy may hold one finished on another device (section 3.2).

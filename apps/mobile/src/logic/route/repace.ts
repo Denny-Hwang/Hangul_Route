@@ -38,6 +38,11 @@ export interface AutoRepaceInput {
   today: DateKey;
   /** A quest (or any session) is open for this learner: never re-pace under them. */
   sessionOpen: boolean;
+  /**
+   * The plan rests while a class plan with practice days is in force (AMENDMENTS-ROUTE-CLASS-BLEND section 8): its
+   * items wait and are never moved along meanwhile; the resume re-paces it once.
+   */
+  resting?: boolean;
 }
 
 /**
@@ -46,7 +51,7 @@ export interface AutoRepaceInput {
  */
 export function autoRepaceDue(i: AutoRepaceInput): boolean {
   const route = i.route;
-  if (route === null || route.archivedAt !== null || i.sessionOpen) return false;
+  if (route === null || route.archivedAt !== null || i.sessionOpen || i.resting === true) return false;
   if (route.meta.repacedAt !== null && route.meta.repacedAt.slice(0, 10) === i.today) return false;
   // Past the last week nothing is left to move along: a re-pace would change nothing but its marks.
   const last = route.meta.weeks[route.meta.weeks.length - 1];
@@ -92,6 +97,8 @@ export interface CheckInInput {
   today: DateKey;
   /** `route-ui:<profileId>.checkInFor`: the plan whose check-in was already answered. */
   answeredFor: string | undefined;
+  /** A resting plan (AMENDMENTS-ROUTE-CLASS-BLEND section 8) offers no check-in. */
+  resting?: boolean;
 }
 
 /**
@@ -105,7 +112,7 @@ export interface CheckInInput {
  */
 export function checkInOffer(i: CheckInInput): CheckInOffer | null {
   const route = i.route;
-  if (route === null || route.archivedAt !== null || i.answeredFor === route.id) return null;
+  if (route === null || route.archivedAt !== null || i.answeredFor === route.id || i.resting === true) return null;
   const week = route.meta.weeks.find((w) => w.index === CHECK_IN_WEEK);
   if (week === undefined || i.today < week.startDate || i.today >= addDays(week.startDate, 7)) return null;
   const perWeek = sessionsPerWeekOf(route.meta.params);

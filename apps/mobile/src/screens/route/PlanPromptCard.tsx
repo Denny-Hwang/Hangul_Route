@@ -6,9 +6,11 @@ import { View } from 'react-native';
 import { routeEnabledFor } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { questsDoneOf } from '../../logic/placement/entry';
+import { selfRouteResting, sourcesOf } from '../../logic/homework/plan-derivation';
 import { hasPlanNow } from '../../logic/plan-free-lines';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { movedLineVisible, planSlotOf, type PlanSlot } from '../../logic/route/home-slot';
+import { layerOf } from '../../logic/route/layer';
 import { newestResultAt, planPromptEligible, proposalSkippedEvent } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
 import { track } from '../../platform/telemetry';
@@ -36,6 +38,7 @@ export function usePlanPrompt(
   // P2-8b: the flag and a UI locale whose weekly plan words are reviewed (en only for now).
   const enabled = routeEnabledFor(useLocale());
   const ui = useRouteStore((s) => (profileId === null ? undefined : s.ui[profileId]));
+  const today = useToday();
   useFocusEffect(
     useCallback(() => {
       if (!enabled || profileId === null) return undefined;
@@ -53,6 +56,8 @@ export function usePlanPrompt(
     newestResultAt: newestResultAt(snapshot.placements),
     dismissedAt: ui.dismissedAt,
     nowMs: Date.now(),
+    // No proposal while the class plan has practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+    layer: layerOf(sourcesOf(plans, null), today),
   });
 }
 
@@ -108,7 +113,8 @@ export function usePlanSlot(
   const active = routeEnabledFor(useLocale()) ? activeSelfRoute(snapshot) : null;
   // A child's check-in waits for the grown-up gate (section 3.9): yes changes the plan a grown-up set.
   const changesOpen = usePlanChangesOpen(profile);
-  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined && snapshot !== undefined, answeredFor: ui?.checkInFor, changesOpen });
+  const resting = selfRouteResting(plans ?? [], active, today);
+  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined && snapshot !== undefined, answeredFor: ui?.checkInFor, changesOpen, resting });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId ?? ''}|${active?.id ?? ''}`);
   const [moved, setMoved] = useState(false);
   const movedNow = active !== null && ui !== undefined && movedLineVisible(ui);
