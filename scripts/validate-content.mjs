@@ -150,6 +150,11 @@ const isLessonFile = (file) => LESSON_FILE.test(file.split(sep).join("/"));
 const CURRICULUM_FILE = /^content\/(?:episodes\/stage-[2-467]\/.+\.json|packs\/.+|stories\/[^/]+\.json)$/;
 // F-CURR-002 §9.3 review-copy: the learner review strings of each UI locale, when the repo has them.
 const REVIEW_LOCALES = ["en", "es", "ko"];
+// F-CURR-002 row CM-48: a "This week in Korea" drop (content/weekly/<monday>.json): its `sources` and `review` record
+// are reference text, and a `{ko:...}` token in its `noteEn` is taught Korean, as in a lesson cell.
+const WEEK_FILE = /^content\/weekly\/\d{4}-\d{2}-\d{2}\.json$/;
+const isWeekFile = (file) => WEEK_FILE.test(file.split(sep).join("/"));
+const isWeekZone = (path, k) => path.length === 0 && (k === "sources" || k === "review");
 const isLessonZone = (path, k) =>
   (path.length === 0 && k === "review") ||
   (path.length === 2 && path[0] === "culture" && (k === "sources" || k === "verification"));
@@ -159,7 +164,7 @@ const isLessonZone = (path, k) =>
  * renderers do not read the token, so it stays a `korean-in-ui-field` everywhere else.
  */
 const withoutKoTokens = (text) => text.replace(/\{ko:[^}]*\}/g, " ");
-const uiText = (file, k, v) => (isLessonFile(file) && k.endsWith("En") ? withoutKoTokens(v) : v);
+const uiText = (file, k, v) => ((isLessonFile(file) || isWeekFile(file)) && k.endsWith("En") ? withoutKoTokens(v) : v);
 
 /** A `ko` that is one lone letter, with no `spokenKo`, outside the shown-only places (F-CNT-001, M8). */
 function loneLetterWithoutSpoken(file, path, obj) {
@@ -223,7 +228,8 @@ function visit(value, path, file, violations, parentObj, inReferenceZone = false
       const zone =
         inReferenceZone ||
         (path.length === 0 && REFERENCE_ZONE_KEYS.has(k) && isStoryFile(file)) ||
-        (isLessonFile(file) && isLessonZone(path, k));
+        (isLessonFile(file) && isLessonZone(path, k)) ||
+        (isWeekFile(file) && isWeekZone(path, k));
       if (
         !zone &&
         typeof v === "string" &&

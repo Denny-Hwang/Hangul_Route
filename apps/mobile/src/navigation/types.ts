@@ -169,6 +169,8 @@ export type RootStackParamList = {
    * learner). Row CM-25: `mode: 'jump'` is Stage Jump Ahead, and `cellId` is then the stage key.
    */
   CellCheck: { cellId: string; mode: 'check' | 'testout' | 'jump' };
+  /** F-CURR-002 row CM-48: this local week's "This week in Korea" drop; no params, so no week or profile in a URL. */
+  WeekDrop: undefined;
   /** F-CURR-002 row CM-22: the Stage Check of a Stage 2-7 (a stage key; nothing about the learner). */
   StageCheck: { stageKey: StageKey };
   /** F-CURR-002 row CM-22: the one retroactive summary of the stages finished earlier (no params). */
