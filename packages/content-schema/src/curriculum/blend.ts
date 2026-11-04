@@ -4,7 +4,9 @@ import { WEEKDAYS, addDays, isDateKey, weekdayOf, type Weekday } from './dates';
 /**
  * Class days with practice days: the calendar and packing primitives of AMENDMENTS-ROUTE-CLASS-BLEND sections 6.2
  * and 6.3 (row BL-1). Pure and bundled, so the console preview and every device rule run offline (section 9.5). The
- * blended generator path (BL-2) builds on these; nothing here changes `generateCurriculum`.
+ * blended generator path (BL-2) builds on these; nothing here changes `generateCurriculum`. Imported from the
+ * `@hangul-route/content-schema/blend` subpath, not the package index, so the start bundle does not grow until a
+ * caller needs it (it ships in whichever bundle imports it, offline like the rest).
  */
 
 /** Minutes of the review quiz `fillToLength` adds to a lecture deck (BL-OD-2). */

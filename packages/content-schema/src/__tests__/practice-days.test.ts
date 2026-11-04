@@ -1,21 +1,18 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { WEEKDAYS, addDays, weekdayOf, type Weekday } from '..';
 import {
   CLASS_PACE,
   CLASS_REVIEW_MINUTES,
   REFRESH_MIN_ROOM,
-  WEEKDAYS,
-  addDays,
   classBudget,
   cyclesOf,
   newCellsPerClassDay,
   packClass,
   practiceDaysFor,
   spreadPractice,
-  weekdayOf,
   type PackItem,
-  type Weekday,
-} from '..';
+} from '../curriculum/blend';
 
 /**
  * AMENDMENTS-ROUTE-CLASS-BLEND sections 6.2 and 6.3 (row BL-1): the default practice days, class cycles, class
