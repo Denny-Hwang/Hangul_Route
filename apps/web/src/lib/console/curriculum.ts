@@ -769,6 +769,14 @@ export function weekdayLabel(day: Weekday, locale: UiLocale = DEFAULT_LOCALE): s
 /** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the weeks that hold lessons. */
 export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWeek'> & Partial<Pick<FreeDaysView, 'comingSoonClosed'>>;
 
+/** A blended plan's warnings (AMENDMENTS-ROUTE-CLASS-BLEND section 6.6): row BL-4 words them; until then they show no line. */
+const UNWORDED_WARNING_CODES = ['item-cap', 'practice-short', 'class-paced'] as const;
+/** A warning the console has words for. */
+export type WordedWarning = CurriculumWarning & { code: Exclude<CurriculumWarning['code'], (typeof UNWORDED_WARNING_CODES)[number]> };
+export function isWordedWarning(warning: CurriculumWarning): warning is WordedWarning {
+  return !(UNWORDED_WARNING_CODES as readonly string[]).includes(warning.code);
+}
+
 /**
  * A generator warning in plain, invitational words (section 3.8 step 4). With `free` (an
  * unlicensed space while the free-plan switch is on, `freeDaysView`) the left-out line names the
@@ -777,7 +785,7 @@ export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWee
  * section 3.9.3). With `neutral` (`leftOutNeutral`) the left-out line names both products and
  * never "Premium". Without either, every line keeps its wording.
  */
-export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null, neutral = false): string {
+export function warningText(warning: WordedWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null, neutral = false): string {
   const words = getMessages(locale).console.curriculum.preview.warnings;
   const freeDays = getMessages(locale).console.curriculum.freeDays;
   const count = warning.count ?? 0;
@@ -814,10 +822,13 @@ export function statsText(stats: Pick<CurriculumStats, 'readyItems' | 'minutesPl
   return getMessages(locale).console.curriculum.preview.stats(stats.readyItems, minutes, StageKeySchema.options.indexOf(stats.endsAtStage) + 1);
 }
 
-/** A learner's line on a route readout: "4 / 6 so far · 36 planned" (`total` is what the device has scheduled so far). */
+/** A learner's line on a route readout: "4 / 6 so far · 36 planned" (`total` is what the device has scheduled so far), or GX-8's two states. */
 export function readoutLine(row: ReadoutRow, planned: number, locale: UiLocale = DEFAULT_LOCALE): string {
   const words = getMessages(locale).console.curriculum.readout;
-  if (!row.synced) return words.waiting;
+  // GX-8 T9: the plan readout's two words for a learner with no progress yet; "not started" counts the planned length.
+  const plan = getMessages(locale).console.plan.readout;
+  if (row.state === 'notDelivered') return plan.notDelivered;
+  if (row.state === 'notStarted') return plan.notStarted(planned);
   return row.notReady > 0 ? words.lineNotReady(row.done, row.total, planned, row.notReady) : words.line(row.done, row.total, planned);
 }
 

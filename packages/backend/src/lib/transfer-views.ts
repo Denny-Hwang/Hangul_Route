@@ -76,7 +76,10 @@ interface ClassViewCommon {
 export interface TransferSourceView extends ClassViewCommon {
   role: 'source';
   initiator: TransferInitiator;
-  /** Only on a request this class started, and only before the move. */
+  /**
+   * While the request is open, family-started ones included ([GX-W] GX-OD-2, amends F-SPACE-002 section 4.2: the source
+   * class already lists the learner); null afterwards. The destination's view never carries it (T8).
+   */
   learnerId: string | null;
   /** While the request is open (the learner is still in the class); null afterwards, so history keeps no name. */
   learner: { name: string; avatar: string } | null;
@@ -343,7 +346,7 @@ export function sourceView(t: StoredTransfer, look: ViewLookups): TransferSource
     ...classCommon(t, 'source'),
     role: 'source',
     initiator: t.initiator,
-    learnerId: open && t.initiator === 'source' ? t.learnerId : null,
+    learnerId: open ? t.learnerId : null,
     learner: open && learner ? { name: shownName(source, learner.displayName), avatar: learner.avatar } : null,
     destination: dest && (t.initiator === 'source' || t.introduce) ? { spaceId: dest.id, name: dest.name } : null,
   };

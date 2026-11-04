@@ -254,6 +254,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       // Row CM-47: the added realia layouts.
       { name: 'realia-kinds-chunk', marker: 'screen-chunk:realia-kinds' },
       { name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' },
+      // The grown-up reports, a chunk of their own for the start bundle's headroom.
+      { name: 'reports-chunk', marker: 'screen-chunk:reports' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -318,6 +320,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/week-drop/week-drop-chunk.tsx')).toContain(`export const WEEK_DROP_CHUNK = '${SCREEN_CHUNKS[15].marker}';`);
     expect(read('src/screens/week-drop/week-drop-entry.tsx')).toContain("import('./week-drop-chunk')");
     expect(read('src/screens/minigames/my-story-entry.tsx')).toContain("import('./my-story-chunk')");
+    // The grown-up reports' chunk, reached only through the entry's literal import().
+    expect(read('src/screens/parent/reports-chunk.tsx')).toContain(`export const REPORTS_CHUNK = '${SCREEN_CHUNKS[16].marker}';`);
+    expect(read('src/screens/parent/reports-entry.tsx')).toContain("import('./reports-chunk')");
     // Row CM-47: the added realia layouts' chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/realia-kinds-chunk.tsx')).toContain(`export const REALIA_KINDS_CHUNK = '${SCREEN_CHUNKS[14].marker}';`);
     expect(read('src/screens/minigames/realia-kinds-entry.tsx')).toContain("import('./realia-kinds-chunk')");
@@ -467,6 +472,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'my-story-chunk has no web bundle: the chunk is missing from the build',
       'realia-kinds-chunk has no web bundle: the chunk is missing from the build',
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
+      'reports-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

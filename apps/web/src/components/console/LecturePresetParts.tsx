@@ -57,6 +57,9 @@ export const PRESETS_CSS = `
 .hr-lp-panel{display:flex;flex-direction:column;gap:${rem(spacing.lg)};padding:0 ${rem(spacing.lg)} ${rem(spacing.lg)}}
 .hr-lp-panel[hidden]{display:none}
 .hr-lp-fallback{padding:${rem(spacing.sm)} ${rem(spacing.md)};border-radius:${px(radii.md)};background:${colors.surface.sunken};color:${colors.text.primary}}
+.hr-lp-classday{display:flex;flex-direction:column;gap:${rem(spacing.xs)};min-width:0;overflow-wrap:anywhere}
+.hr-lp-classday p{margin:0}
+.hr-lp-classday p:first-child{font-weight:${typography.weight.bold}}
 .hr-lp-chips{display:flex;flex-wrap:wrap;gap:${rem(spacing.sm)};min-width:0;margin:0;padding:0;border:none}
 .hr-lp-chips legend{padding:0;margin:0 0 ${rem(spacing.xs)};font-weight:${typography.weight.bold}}
 .hr-lp-chip{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};padding:0 ${rem(spacing.md)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};font-weight:${typography.weight.semibold};cursor:pointer}
@@ -66,7 +69,6 @@ export const PRESETS_CSS = `
 .hr-lp-sub{display:flex;flex-direction:column;gap:${rem(spacing.xs)};min-width:0}
 .hr-lp-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:${rem(spacing.md)}}
 .hr-lp-head h3{margin:0;font-size:${rem(typography.size.body)};font-weight:${typography.weight.bold}}
-.hr-lp-head span{color:${colors.text.secondary}}
 .hr-lp-list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none;border-top:${px(borderWidth.thin)} solid ${colors.border.subtle}}
 .hr-lp-list li{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:${rem(spacing.md)};padding:${rem(spacing.sm)} 0;border-bottom:${px(borderWidth.thin)} solid ${colors.border.subtle}}
 .hr-lp-list li > span:first-child{font-weight:${typography.weight.bold};overflow-wrap:anywhere;min-width:0}
@@ -123,8 +125,14 @@ export interface LecturePresetsProps {
   /** The cards in display order (`consolePresetOrder`). */
   order: readonly LecturePreset[];
   open: LecturePreset | null;
-  /** The length each card builds (`presetMinutes`). */
-  minutesOf: (preset: LecturePreset) => PresetMinutes;
+  /** The length each card builds (`cardMinutes`: a blended class day's class length for Next lesson, else `presetMinutes`). */
+  minutesOf: (preset: LecturePreset) => number;
+  /**
+   * A blended plan's class day (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3, row BL-5), or null. Set, Next lesson's panel
+   * draws no length chips (the length is changed in the plan) and shows the class day and the class length instead.
+   * `weekday` arrives as a whole weekday in the console language.
+   */
+  classDay: { weekday: string; lessons: number; minutes: number } | null;
   /** Stage by stage's chip and the stages it offers. */
   stage: StageKey;
   stages: readonly StageKey[];
@@ -149,10 +157,11 @@ export interface LecturePresetsProps {
 
 const stageNumber = (stage: StageKey): number => Number(stage.slice('stage'.length));
 
-export function LecturePresetsSection({ order, open, minutesOf, stage, stages, fallbackOf, note, planTitle, family, outline, outlineMinutes, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
+export function LecturePresetsSection({ order, open, minutesOf, classDay, stage, stages, fallbackOf, note, planTitle, family, outline, outlineMinutes, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
   const m = useMessages();
   const l = m.console.lecture;
   const p = l.presets;
+  const blendLines = m.console.curriculum.blend.lecture;
   return (
     <section className="hr-lp" aria-labelledby="lecture-presets-title" data-testid="lecture-presets">
       <h2 id="lecture-presets-title">{p.title}</h2>
@@ -163,11 +172,20 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
           const minutes = minutesOf(preset);
           // The open card is named by what it holds; the length chips keep the length it was built for.
           const shown = isOpen && outlineMinutes !== null ? outlineMinutes : minutes;
+          // Its one minutes line (GX-14, T14): what it holds, with the length beside it when they differ.
+          const held = isOpen ? aboutMinutes(outline) : minutes;
+          const minutesLine = held === minutes ? l.outline.about(held) : l.minutesOf(held, minutes);
           const words = presetCardWords(preset, p, { planTitle, family });
           const fallback = fallbackOf(preset);
           const panelId = `lecture-preset-panel-${preset}`;
           const lineId = `lecture-preset-line-${preset}`;
-          const lengths = PRESET_LENGTHS[preset];
+          const minutesId = `lecture-preset-minutes-${preset}`;
+          // The name keeps its minutes (LV-4); when the visible minutes line says something the name does not,
+          // it joins the description so screen readers and voice control hear what the screen shows.
+          const describedBy = held === shown && held === minutes ? lineId : `${lineId} ${minutesId}`;
+          // A blended class day keeps its plan's length: no chips on Next lesson (section 10.3).
+          const day = preset === 'next-lesson' ? classDay : null;
+          const lengths = day !== null ? [] : PRESET_LENGTHS[preset];
           return (
             <li key={preset} className="hr-lp-card" data-open={isOpen} data-testid={`lecture-preset-card-${preset}`}>
               <button
@@ -176,7 +194,7 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 aria-label={m.a11y.presenter.presetCard(words.title, shown)}
-                aria-describedby={lineId}
+                aria-describedby={describedBy}
                 onClick={() => onToggle(preset)}
                 data-testid={`lecture-preset-${preset}`}
               >
@@ -185,7 +203,9 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                   {fallback ?? words.line}
                 </span>
                 <span className="hr-lp-meta">
-                  <span>{l.outline.about(shown)}</span>
+                  <span id={minutesId} data-testid={isOpen ? 'lecture-preset-minutes' : undefined}>
+                    {minutesLine}
+                  </span>
                   <IconSvg name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
                 </span>
               </button>
@@ -200,11 +220,17 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                     {preset === 'by-stage' ? (
                       <Chips legend={p.stage.choose} options={stages} value={stage} name="lecture-preset-stage" label={(s) => p.stage.chip(stageNumber(s))} onChange={onStage} testId="lecture-preset-stage" />
                     ) : null}
+                    {day !== null ? (
+                      <div className="hr-lp-classday" data-testid="lecture-preset-class-day">
+                        <p>{blendLines.classDay(day.weekday, day.lessons)}</p>
+                        <p>{blendLines.classLength(day.minutes)}</p>
+                      </div>
+                    ) : null}
                     {lengths.length > 1 ? (
                       <Chips
                         legend={p.length.title}
                         options={lengths}
-                        value={minutes}
+                        value={minutes as PresetMinutes}
                         name={`lecture-preset-length-${preset}`}
                         label={(n) => p.length.option(n)}
                         onChange={(n) => onMinutes(preset, n)}
@@ -214,7 +240,6 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                     <div className="hr-lp-sub">
                       <div className="hr-lp-head">
                         <h3 id={`${panelId}-list`}>{p.preview.title}</h3>
-                        <span data-testid="lecture-preset-minutes">{l.outline.about(aboutMinutes(outline))}</span>
                       </div>
                       <ul className="hr-lp-list" aria-labelledby={`${panelId}-list`} data-testid="lecture-preset-preview">
                         {outline.map((block, i) => (
