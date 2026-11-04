@@ -6,6 +6,7 @@ import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
 import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
 import { expectNoHorizontalOverflow } from './viewport';
+import { expectTextFits } from './text-fit';
 import { shot } from './shots';
 
 /**
@@ -1337,14 +1338,17 @@ const VOLUME2_PLAYS = new Map<string, (page: Page) => Promise<void>>([
 ]);
 
 /** A new learner whose stored remote copy holds `flags` (the `volumes` ramp), on the Journey. */
-async function journeyWithFlags(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+async function journeyWithFlags(page: Page, flags: Record<string, { on: boolean; pct: number }>, textSize?: 'largest'): Promise<void> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  await seedStoredAll(page, { 'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags } });
+  await seedStoredAll(page, {
+    'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags },
+    ...(textSize ? { 'device:settings': { uiLocale: 'en', textSize, uiLocaleAt: '2026-10-16T09:00:00.000Z' } } : {}),
+  });
   await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const guide = page.getByTestId('install-guide');
@@ -1378,13 +1382,63 @@ test.describe('Volume 2 cells (F-CURR-002 rows CM-40 and CM-45)', () => {
     }
   }
 
-  test('volumes off (launch state): the cell opens Volume 1 alone, with no Vol tabs and no Volume 2 title', async ({ page }) => {
-    await journeyWithFlags(page, {});
-    for (const episode of LATER_VOLUMES) {
+  // Row CM-45 S6 at 320 px and the Largest text size (150%): the calendar's longest cell (추석, 음력 팔월 보름 and its
+  // romanization), the Cloze Pick fallback's card above its options, and the ticket's two-column rows fit, with no
+  // sideways scroll and no clipped text.
+  test('320 at the Largest text size: the Holidays Volume 2 calendar, its Cloze Pick fallback and the ticket fit', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await journeyWithFlags(page, { volumes: { on: true, pct: 100 } }, 'largest');
+    const openCell = async (): Promise<void> => {
+      await page.getByRole('button', { name: journeyCellName(6, THEME_LABEL.rites), exact: false }).first().click();
+      const tabs = page.getByRole('tablist', { name: 'Volumes' });
+      await tabs.getByRole('tab', { name: 'Volume 2' }).click();
+      await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+    };
+    await openCell();
+    await startFirstQuest(page);
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByTestId('realia-read-question')).toBeVisible();
+    await expectTextFits(page, 'the q1 calendar at Largest');
+    await shot(page, 'cm45-s6-q1-calendar-320-largest');
+    await pickRealia(page, ['d25', 'chubun', 'd11', 'lunar-8-15']);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByTestId('listen-pick-option-a1:t1')).toBeVisible();
+    await expectTextFits(page, 'the q1 Cloze Pick fallback at Largest');
+    await shot(page, 'cm45-s6-q1-cloze-fallback-320-largest');
+    // The ticket is quest 3's Practice: back Home (the quest's progress is kept), then the Journey.
+    await page.goto('/');
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await openCell();
+    await page.getByTestId('episode-quest-quest:stage6-rites-v2-q3').getByRole('button', { name: 'Start', exact: true }).click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByTestId('realia-read-question')).toBeVisible();
+    await expectTextFits(page, 'the q3 ticket at Largest');
+    await shot(page, 'cm45-s6-q3-ticket-320-largest');
+    expect(errors).toEqual([]);
+  });
+
+  // One test per Volume 2, each from a fresh Journey, so a second Volume 2 in the same row of the grid does not start
+  // from the first one's cell page.
+  for (const episode of LATER_VOLUMES) {
+    test(`volumes off (launch state): ${episode.id}'s cell opens Volume 1 alone, with no Vol tabs and no Volume 2 title`, async ({ page }) => {
+      const first = FIRST_VOLUMES.find((e) => e.stage === episode.stage && e.theme === episode.theme);
+      expect(first, `${episode.id} has a Volume 1 in its cell`).toBeDefined();
+      await journeyWithFlags(page, {});
       const stage = Number(episode.stage.replace('stage', ''));
       await page.getByRole('button', { name: journeyCellName(stage, THEME_LABEL[episode.theme]), exact: false }).first().click();
+      // The cell opens its Volume 1: the redirect, not only the absence of Volume 2.
+      await expect(page.getByText(first!.titleEn).first()).toBeVisible();
       await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
       await expect(page.getByText(episode.titleEn)).toHaveCount(0);
-    }
-  });
+    });
+  }
 });
