@@ -284,7 +284,7 @@ export function CycleTable({ rows, locale }: { rows: readonly CycleRow[]; locale
   const m = useMessages().console.curriculum;
   const b = m.blend.preview;
   const cell: CSSProperties = { padding: `${spacing.sm}px`, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}`, verticalAlign: 'top', textAlign: 'left' };
-  const head: CSSProperties = { ...cell, color: colors.text.muted, fontSize: rem(typography.size.caption), fontWeight: typography.weight.semibold, borderTop: 'none' };
+  const head: CSSProperties = { ...cell, color: colors.text.muted, fontSize: rem(typography.size.caption), fontWeight: typography.weight.semibold, borderTop: 'none', whiteSpace: 'nowrap' };
   const column = (name: string): JSX.Element => <div style={{ ...labelStyle, marginTop: spacing.sm }}>{name}</div>;
   return (
     <>

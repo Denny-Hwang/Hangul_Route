@@ -124,7 +124,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // and route, the calendar key, the generated list of drop weeks with the chunk's hash and loader, the done mark's key and
   // removal, two route registrations and the English strings. The card, the pages, the drops and their review loader are
   // precached chunks. The line is the measurement plus a 4,249 B rounding margin.
-  startBundleRaw: 4_845_000,
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-4 (the console's class days and practice days): its stack base (BL-3 with BL-W
+  // and BL-D merged, 610c2bebc) measures 4,844,246 B raw / 1,295,595 B gzip (release `build:web`); the row adds 3,072 B
+  // (4,847,318 B raw / 1,296,534 B gzip), all of it the English `console.curriculum.blend` strings the learner app's
+  // dictionary carries with every console namespace (the console's code is not in the learner bundle). The line is the
+  // measurement plus a 2,682 B rounding margin.
+  startBundleRaw: 4_850_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
