@@ -2192,7 +2192,7 @@ export const learner = {
       practiceDays: {
         title: '내 연습 요일',
         hint: '연습할 요일을 골라요. 레슨은 그대로예요.',
-        count: '한 주에 며칠',
+        count: '일주일에 며칠',
         gate: 'PIN 필요',
       },
     },
