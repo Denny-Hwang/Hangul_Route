@@ -183,7 +183,8 @@ test.describe('Realia Read (F-CURR-001 G-2)', () => {
 
   // Row CM-47 at the text size's Largest (1.5 x the reading sizes) at 320: the layouts most at risk with big text (a
   // calendar's day tiles, a forecast's tiles, a receipt's rows with no leader, a map's pinned places, a timetable's
-  // ruled rows) still fit the column with every line button on screen, and the text really is larger.
+  // ruled rows, a label's thick frame and a poster's centred lines) still fit the column with every line button on
+  // screen, and the text really is larger.
   test.describe('the CM-47 layouts at Largest text, 320', () => {
     test.use({ viewport: { width: 320, height: 568 } });
     for (const [kind, group, ko] of [
@@ -193,6 +194,10 @@ test.describe('Realia Read (F-CURR-001 G-2)', () => {
       ['map', 'Map, 3 lines', '정상'],
       // A timetable ships to learners (the re-kinded Rites departure board and trip plan): ruled rows, no leader.
       ['timetable', 'Timetable, 3 lines', '부산'],
+      // Row CM-44 S6 (Letters Volume 2) is the first content with a label (the library card) and a poster (the book
+      // cover and the Hangeul Day poster), so their smokes join here as CM-47 deferred them.
+      ['label', 'Food label, 2 lines', '원산지'],
+      ['poster', 'Poster, 3 lines', '오전 열 시'],
     ] as const satisfies ReadonlyArray<readonly [AddedKind, string, string]>) {
       test(`a ${kind} fits, with every line button visible`, async ({ page }) => {
         await page.goto('/');

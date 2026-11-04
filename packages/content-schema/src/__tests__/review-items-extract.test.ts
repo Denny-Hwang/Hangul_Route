@@ -385,13 +385,24 @@ describe('the sources of a content tree (shared by the generator and the lint)',
     ['content/notes.txt', 'x'],
   ]);
 
-  it('takes the ready cells of every volume and the ready pack levels', () => {
+  it('takes the ready cells of every volume and the ready pack levels, every later volume after every first volume', () => {
     expect(lessonSourcesOfTree(tree).map((s) => [s.file, s.cellId, s.stage, s.home, s.volume])).toEqual([
       ['content/episodes/stage-2/life.json', 'episode:stage2-life', 2, 'life', 1],
+      ['content/packs/numbers-time/stage-2.json', 'episode:pack-numbers-time-s2', 2, 'pack:numbers-time', 1],
       ['content/episodes/stage-3/life.v2.json', 'episode:stage3-life-v2', 3, 'life', 2],
       ['content/episodes/stage-3/rites.json', 'episode:stage3-rites-v2', 3, 'rites', 2],
-      ['content/packs/numbers-time/stage-2.json', 'episode:pack-numbers-time-s2', 2, 'pack:numbers-time', 1],
     ]);
+  });
+
+  it('a Volume 2 file that sorts before a Volume 1 file of its stage still comes after it (CM-40 route order)', () => {
+    const order = lessonSourcesOfTree(
+      new Map<string, unknown>([
+        ['content/episodes/stage-6/letters.v2.json', ready],
+        ['content/episodes/stage-6/nature.json', ready],
+        ['content/episodes/stage-7/crafts.json', ready],
+      ]),
+    ).map((s) => s.cellId);
+    expect(order).toEqual(['episode:stage6-nature', 'episode:stage7-crafts', 'episode:stage6-letters-v2']);
   });
 
   it('takes the ready stories, the topic words and the sense groups', () => {

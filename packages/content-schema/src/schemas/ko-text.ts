@@ -17,6 +17,12 @@ export const KoTextShape = z.object({
   audioRef: z.string().optional(),
   /** Teaching-UI split, e.g. ['a','beo','ji']; join('') must equal `romanization`. */
   syllables: z.array(z.string().min(1)).optional(),
+  /**
+   * A sound change the F-CNT-002 converter does not model and the spelling does not show (n-insertion across a
+   * phrase, tensification in a compound; see `hasSoundChange`). The review-item extractor and the
+   * `dictation-unambiguous` lint read it, so the item is never dictated (F-CURR-002 §4.5).
+   */
+  soundChange: z.literal(true).optional(),
 });
 
 /**

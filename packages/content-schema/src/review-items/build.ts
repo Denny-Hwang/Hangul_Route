@@ -71,14 +71,19 @@ export interface ReviewItemSources {
   snapshot: StableIdSnapshot;
 }
 
-/** Every occurrence of the sources: Stage 1, the lessons, the stories and the week drops. */
+/**
+ * Every occurrence of the sources: Stage 1, the first-volume lessons, the stories, the week drops, then a cell's later
+ * volumes (F-CURR-002 row CM-40: a later volume is learned after every first volume, so it comes after everything that
+ * shipped before it).
+ */
 export function allOccurrences(sources: Pick<ReviewItemSources, 'stage1' | 'lessons' | 'stories' | 'weeks'>): ItemOccurrence[] {
   const symbols: readonly ReviewSymbol[] = sources.stage1.symbols;
   return [
     ...(sources.stage1.occurrences as ItemOccurrence[]),
-    ...sources.lessons.flatMap((l) => lessonOccurrences(l, symbols)),
+    ...sources.lessons.filter((l) => l.volume === 1).flatMap((l) => lessonOccurrences(l, symbols)),
     ...sources.stories.flatMap((s) => storyOccurrences(s.story, s.file, symbols)),
     ...(sources.weeks ?? []).flatMap((w) => weekOccurrences(w, symbols)),
+    ...sources.lessons.filter((l) => l.volume !== 1).flatMap((l) => lessonOccurrences(l, symbols)),
   ];
 }
 
