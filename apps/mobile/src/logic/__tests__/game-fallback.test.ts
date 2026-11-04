@@ -59,6 +59,8 @@ describe('the game.<kind> switches and their fallbacks (F-CURR-002 §7.1, §12.2
     expect(switched).toContain('quest:stage7-life-v2-q3 step 3');
     // Row CM-44 S7 (Stage 7 Letters & Books Volume 2, q3 Apply) is the fourth.
     expect(switched).toContain('quest:stage7-letters-v2-q3 step 3');
+    // Row CM-45 S7 (Stage 7 Holidays & Traditions Volume 2, q3 Apply) is the fifth.
+    expect(switched).toContain('quest:stage7-rites-v2-q3 step 3');
   });
 
   /**

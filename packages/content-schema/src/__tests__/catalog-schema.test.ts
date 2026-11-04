@@ -140,9 +140,9 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    // + the eighteen Volume 2 cells of F-CURR-002 rows CM-41..CM-45 (3 lesson quests each): +54 lesson quests.
+    // + the nineteen Volume 2 cells of F-CURR-002 rows CM-41..CM-45 (3 lesson quests each): +57 lesson quests.
     // + the Stage 5 books 2 of row CM-46 (Nature 3 and Play 2 read quests): +5 lesson quests.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(167);
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(170);
   });
 
   it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode (a book 2 tale is listed in its book only, row CM-46)', () => {
@@ -607,6 +607,9 @@ describe('routeCatalogOf', () => {
       'quest:stage7-life-v2-q1',
       'quest:stage7-life-v2-q2',
       'quest:stage7-life-v2-q3',
+      'quest:stage7-rites-v2-q1',
+      'quest:stage7-rites-v2-q2',
+      'quest:stage7-rites-v2-q3',
       'quest:stage7-nature-v2-q1',
       'quest:stage7-nature-v2-q2',
       'quest:stage7-nature-v2-q3',

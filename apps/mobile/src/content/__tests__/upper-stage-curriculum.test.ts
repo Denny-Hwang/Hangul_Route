@@ -1055,10 +1055,10 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 129 of 132 shipped Practices scaffold
-    // (the 54 Volume 2 quests of rows CM-41..CM-45 all do).
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 132 of 135 shipped Practices scaffold
+    // (the 57 Volume 2 quests of rows CM-41..CM-45 all do).
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([132, 129]);
+    expect([QUESTS.length, scaffolding.size]).toEqual([135, 132]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {

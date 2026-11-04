@@ -7,10 +7,12 @@ import {
   catalogEpisode,
   cellEpisodeIds,
   chooserGroups,
+  effectiveRoute,
   classPosition,
   freeRouteQuestIds,
   gridLessonIds,
   groupOfKey,
+  isRouteStartQuest,
   learnerPosition,
   placedOutGrowth,
   presetBlockMinutes,
@@ -29,6 +31,7 @@ import {
 import { assembleCatalog, expandCellRows, type GeneratedCellRow } from '../catalog/assemble';
 import { GENERATED_STORIES, GENERATED_TOPICS } from '../catalog/catalog.generated';
 import { STORY_SHELF } from '../catalog/data';
+import { makeResult } from './fixtures/placement-results';
 
 /**
  * Two volumes per cell in the catalogue (F-CURR-002 §5.1 and §6.2, F-STORY-005 PR 5.8, row CM-40): a cell's Volume 2
@@ -270,5 +273,25 @@ describe('a later volume is no lecture route quest (row CM-40)', () => {
       expect(preset.blocks.some((b) => b.kind === 'quest')).toBe(true);
       expect(preset.blocks.some((b) => b.kind === 'quest' && later.has(b.id))).toBe(false);
     }
+  });
+});
+
+describe('a later volume is no route start and no start choice (row CM-41)', () => {
+  const route = routeCatalogOf(withVolumes());
+  const later = new Set([...NATURE_V2, ...CRAFTS4_V2, ...SHIPPED_LATER_QUESTS]);
+
+  it('marks every later-volume quest, and only those, as a grid quest that is no route start', () => {
+    expect(route.quests.filter((q) => q.laterVolume === true).map((q) => q.id).sort()).toEqual([...later].sort());
+    for (const q of route.quests) expect(isRouteStartQuest(q), q.id).toBe(q.grid && !later.has(q.id));
+  });
+
+  it('with every Volume 1 grid quest done, the route has no start (never a Volume 2 quest) and asks for no stage', () => {
+    const firstVolume = route.quests.filter((q) => q.grid && !later.has(q.id)).map((q) => q.id);
+    const seed = effectiveRoute([makeResult()], route, { isEntitled: () => true, completedQuestIds: new Set(firstVolume) });
+    expect(seed).toMatchObject({ startQuestId: null, startEpisodeId: null, needsStage: null });
+    // One Volume 1 quest left: it is the start, ahead of every Volume 2 quest.
+    const lastLeft = firstVolume[firstVolume.length - 1] as string;
+    const one = effectiveRoute([makeResult()], route, { isEntitled: () => true, completedQuestIds: new Set(firstVolume.filter((id) => id !== lastLeft)) });
+    expect(one?.startQuestId).toBe(lastLeft);
   });
 });
