@@ -155,6 +155,7 @@ const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANG
  * The scene's card back (F-CURR-002 §17 Phase 4, row CM-41 S2; wireframe "Facts on the card back"): under the found
  * words, Did you know? and every fact of the scene's note in the UI language, each with its source line (the card back's
  * citation: institution and title, never a URL). A named region a screen reader can jump to, as the reward step's tip.
+ * Every Volume 2 placement of a scene shows it (rows CM-41 S2 and CM-42 S2).
  */
 function SceneCardBack({ scene }: { scene: HiddenHeritageScene }): ReactElement | null {
   const m = useMessages();
@@ -174,7 +175,7 @@ function SceneCardBack({ scene }: { scene: HiddenHeritageScene }): ReactElement 
       role="region"
       aria-label={m.learner.cultureTip.region}
       testID="hh-card-back"
-      style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, gap: spacing.sm }}
+      style={{ alignSelf: 'stretch', backgroundColor: colors.surface.sunken, borderRadius: radii.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, gap: spacing.sm }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
         <Icon name="sparkle" size={16} color={colors.brand.primary} />
@@ -184,11 +185,11 @@ function SceneCardBack({ scene }: { scene: HiddenHeritageScene }): ReactElement 
       </View>
       {facts.map((fact) => (
         <View key={fact.id} testID={`hh-card-back-${fact.id}`} style={{ gap: spacing.xxs }}>
-          <Text {...KOREAN_LINE_BREAK} style={line}>
+          <Text {...KOREAN_LINE_BREAK} testID={`hh-fact-${fact.id}-text`} style={line}>
             {fact.claim}
           </Text>
           {fact.citation ? (
-            <Text {...KOREAN_LINE_BREAK} style={source}>
+            <Text {...KOREAN_LINE_BREAK} testID={`hh-fact-${fact.id}-source`} style={source}>
               {fact.citation.runs.map((run, i) => (
                 <Text {...KOREAN_LINE_BREAK} key={i} {...(run.korean ? koreanSpeech : {})}>
                   {run.text}
