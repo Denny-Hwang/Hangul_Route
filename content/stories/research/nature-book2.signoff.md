@@ -25,5 +25,5 @@ spot-check them live in a browser before a later fact edit.
 | jeju-volcanic-island | the UNESCO status is named Jeju Volcanic Island and Lava Tubes wherever a learner reads it (s7, summary) | pass |
 | all | Story Order rounds settle by their markers; romanization by rule (build and lint) | pass |
 
-The es and ko strings changed in this round go to the workflow's independent review on the PR before the story review
-fields are signed again; this file records the author's check only.
+The es and ko strings changed in this round still need the workflow's independent review on the PR; the story review
+fields were not signed again by this round, and this file records the author's check only.

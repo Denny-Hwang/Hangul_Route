@@ -406,6 +406,13 @@
               "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
               "accessed": "2026-11-04",
               "quote_or_locator": "국가유산 설명: \"천연기념물인 흑두루미와 먹황새, 노랑부리저어새를 비롯한 흰목물떼새, 방울새, 개개비, 검은머리물떼새 등 11종의 국제 희귀조류와 200여종의 조류가 이곳을 찾는 등\""
+            },
+            {
+              "title": "철새 도래지 순천만",
+              "publisher": "순천시 순천만습지 (Suncheon City, scbay.suncheon.go.kr)",
+              "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"총 252종의 조류가 관찰되는 우리나라 대표 철새도래지\""
             }
           ]
         },
@@ -469,7 +476,7 @@
     },
     {
       "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
-      "reason": "Fix round 1 (2026-11-04): Suncheon City stays a secondary source of f4 only. Its 'only regular wintering site in Korea' sentence and its seasonal bird list are no longer narrated: the Korea Heritage Service's 흑두루미 entry (an allowlisted institution, F-CURR-002 §6.6) says the cranes winter at Suncheon Bay and at Cheonsu Bay."
+      "reason": "Fix round 1 (2026-11-04): Suncheon City stays a secondary source of f4 and f6 (252 kinds of birds observed, behind the KHS 'more than 200'). Its 'only regular wintering site in Korea' sentence and its seasonal bird list are no longer narrated: the Korea Heritage Service's 흑두루미 entry (an allowlisted institution, F-CURR-002 §6.6) says the cranes winter at Suncheon Bay and at Cheonsu Bay."
     }
   ],
   "institutions_as_of_access_date": {
