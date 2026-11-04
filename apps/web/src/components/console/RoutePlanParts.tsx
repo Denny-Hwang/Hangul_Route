@@ -21,7 +21,8 @@ import {
   weeksToFit,
   type RepaceResult,
 } from '@/lib/console/curriculum';
-import { planStatusLabel, type ReadoutRow } from '@/lib/console/plans';
+import { classPracticeTotals, planStatusLabel, type ReadoutRow } from '@/lib/console/plans';
+import { routeBlendEnabled } from '@/lib/console/config';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
 
@@ -206,6 +207,8 @@ export function RouteReadout({
   const where = thisWeekOf(plan.meta.weeks, today);
   const planned = plan.items.length;
   const thisWeek = where.status === 'in' ? weekGroups([where.week], plan.items, undefined, locale).rows[0] : undefined;
+  // BL-9 (sections 10.2 and 11): a class plan with practice days shows the class's practice total, counts only.
+  const classTotals = routeBlendEnabled() && plan.meta.params.blend !== undefined && rows.length > 0 ? classPracticeTotals(rows, planned) : null;
 
   useEffect(() => {
     if (step.at === 'confirm') confirmText.current?.focus();
@@ -248,6 +251,11 @@ export function RouteReadout({
               </ul>
             ) : null}
           </>
+        ) : null}
+        {classTotals ? (
+          <p data-testid="readout-class-practice" style={{ margin: `0 0 ${spacing.xs}px`, fontWeight: typography.weight.semibold }}>
+            {c.readout.line(classTotals.done, classTotals.total, classTotals.planned)}
+          </p>
         ) : null}
         <Muted>{messages.readoutHint}</Muted>
         <div style={{ display: 'grid', gap: spacing.xs, marginTop: spacing.sm }}>

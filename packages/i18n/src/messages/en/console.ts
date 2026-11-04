@@ -1163,6 +1163,26 @@ export const consoleMsgs = {
         classDay: (weekday: string, n: number) => plural('en', n, { one: `Class day: ${weekday} · ${n} lesson`, other: `Class day: ${weekday} · ${n} lessons` }),
         classLength: (minutes: number) => `Class length: ${minutes} min`,
       },
+      /**
+       * The family's child card (section 11 and BL-OD-6, row BL-9; wireframe design/wireframes/parent/route-class-blend.md
+       * P1): GX-4's class line with how the class meets appended (the class's own days, never the child's), and, while a
+       * family weekly plan reaches the child, the class's practice days with **Pause** / **Resume** for that plan. `{days}`
+       * and `{weekdays}` arrive as whole weekday names in the console language, already joined.
+       */
+      family: {
+        /** Whole weekday names as one phrase for a weekly habit, in the order given: "Wednesday, Friday, and Sunday". */
+        weekdayList: (names: string[]) => (names.length <= 2 ? names.join(' and ') : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1] ?? ''}`),
+        classLine: (className: string, days: string, n: number) =>
+          plural('en', n, { one: `In: ${className} · class on ${days}, practice ${n} time a week`, other: `In: ${className} · class on ${days}, practice ${n} times a week` }),
+        classHasPractice: (name: string, weekdays: string) => `${name}'s class has practice days on ${weekdays}.`,
+        pause: 'Pause the family weekly plan while class runs',
+        resume: 'Resume the family weekly plan',
+        failed: "Couldn't change the family weekly plan right now. Try again.",
+      },
+      /** The grown-up report's practice-week line (section 11, BL-OD-11, row BL-9): fills only, no denominator, never drawn at 0. */
+      report: {
+        practiceWeek: (n: number) => plural('en', n, { one: `Practiced on ${n} day this week`, other: `Practiced on ${n} days this week` }),
+      },
     },
   },
   /**
