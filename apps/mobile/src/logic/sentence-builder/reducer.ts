@@ -8,8 +8,8 @@ import { FRESH_SCORE, isRightTile, scoreComplete, scoreMiss, type RoundScore } f
  *
  * Each tap is answered at once (no Done button): a right tile joins the line and stays; a
  * wrong tile slides to the slot and back, is marked "tried" and stays tappable; the second
- * miss on one slot rings the right tile. Taps wait while a tile slides back, and only the
- * first touch in a 50 ms window counts. A built sentence is heard once, then the next round
+ * miss on one slot rings the right tile. Taps wait while a tile slides back, and a touch inside
+ * `TOUCH_WINDOW_MS` of an accepted one is a bounce (AMENDMENTS-TOUCH 6.3). A built sentence is heard once, then the next round
  * opens (`advance`); the last round completes the step. Skip (not in the Check) completes the
  * step through the flow too, so the host hears `complete` at most once.
  *
@@ -19,8 +19,12 @@ import { FRESH_SCORE, isRightTile, scoreComplete, scoreMiss, type RoundScore } f
  * Check result. A round built with no miss reports one `answer(true)` at completion.
  */
 
-/** Touches inside this window after an accepted one are dropped (F-001 §3.4, as Listen & Pick). */
-export const TOUCH_WINDOW_MS = 50;
+/** Touches inside this window after an accepted one are a bounce and are dropped (AMENDMENTS-TOUCH 6.3, KT-D5). */
+// `TAP_LOCK_MS` of the design system's tap model less a 50 ms clock slack, as Listen & Pick's (literals here: logic
+// imports no design-system subpath at runtime; the test pins the value). The tray's `board` lock is the gate at
+// `TAP_LOCK_MS` on the touch events' own times; this window is the backstop on `Date.now()` at dispatch, so a first
+// tap whose handler ran a few ms late must not make it drop a tap the board accepted.
+export const TOUCH_WINDOW_MS = 350;
 
 /** Why the last miss happened, for Hoya's line (`view.ts`). */
 export type SbHint = 'miss' | 'lastWord' | 'particle' | 'lookHere';

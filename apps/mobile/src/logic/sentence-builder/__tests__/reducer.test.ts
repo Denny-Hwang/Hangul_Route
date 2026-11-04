@@ -1,3 +1,4 @@
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { describe, expect, it } from 'vitest';
 import { buildRound, type SbRound } from '../progression';
 import { TOUCH_WINDOW_MS, missHint, startFlow, stepFlow, type SbEffect, type SbEvent, type SbState } from '../reducer';
@@ -11,7 +12,7 @@ const book = buildRound(BOOK_PARTICLE, 3)!;
 
 const idOf = (round: SbRound, ko: string): string => round.tray.find((t) => t.ko === ko)!.id;
 
-/** Runs events through the reducer; taps are spaced past the 50 ms window and every slide settles. */
+/** Runs events through the reducer; taps are spaced past the touch window and every slide settles. */
 function play(rounds: readonly SbRound[], taps: readonly string[], state: SbState = startFlow(rounds.length)) {
   const effects: SbEffect[] = [];
   let at = (state.lastTapAt ?? 0) + 1000;
@@ -176,7 +177,40 @@ describe('skip', () => {
 });
 
 describe('taps the flow drops', () => {
-  it('drops a second touch inside 50 ms, a placed tile, an unknown tile and taps after the sentence is built', () => {
+  it('the window is TAP_LOCK_MS less a 50 ms clock slack (AMENDMENTS-TOUCH 6.3, KT-D5; the board lock is the gate at 400 ms)', () => {
+    expect(TOUCH_WINDOW_MS).toBe(TAP_LOCK_MS - 50);
+    expect(TAP_LOCK_MS).toBe(400);
+  });
+
+  it('drops a bounce on another tile 60, 150 and 349 ms after an accepted tap, a right one or a miss (F5)', () => {
+    const rice = idOf(eat, '밥을');
+    const verb = idOf(eat, '먹어요');
+    const placed = stepFlow(startFlow(1), [eat], { type: 'tap', tileId: rice, at: 1000 }).state;
+    // A miss slides back; once it has settled, a bounce still inside the window is dropped.
+    const missed = stepFlow(stepFlow(startFlow(1), [eat], { type: 'tap', tileId: verb, at: 1000 }).state, [eat], { type: 'settle' }).state;
+    for (const gap of [60, 150, TOUCH_WINDOW_MS - 1]) {
+      expect(stepFlow(placed, [eat], { type: 'tap', tileId: verb, at: 1000 + gap }).state, `right, ${gap}`).toBe(placed);
+      expect(stepFlow(missed, [eat], { type: 'tap', tileId: rice, at: 1000 + gap }).state, `miss, ${gap}`).toBe(missed);
+    }
+  });
+
+  it('accepts a tap that reaches the flow 5 ms before TAP_LOCK_MS (a late first dispatch) and any tap after it', () => {
+    const rice = idOf(eat, '밥을');
+    const verb = idOf(eat, '먹어요');
+    const placed = stepFlow(startFlow(1), [eat], { type: 'tap', tileId: rice, at: 1000 }).state;
+    expect(stepFlow(placed, [eat], { type: 'tap', tileId: verb, at: 1000 + TAP_LOCK_MS - 5 }).state.status).toBe('complete');
+    expect(stepFlow(placed, [eat], { type: 'tap', tileId: verb, at: 1000 + TAP_LOCK_MS }).state.status).toBe('complete');
+  });
+
+  it('a miss asks for the slide back, during which every tap waits (the screen holds the app lock for it)', () => {
+    const verb = idOf(eat, '먹어요');
+    const out = stepFlow(startFlow(1), [eat], { type: 'tap', tileId: verb, at: 1000 });
+    expect(out.effects).toContainEqual({ type: 'schedule-settle' });
+    expect(out.state.returning).toBe(verb);
+    expect(stepFlow(out.state, [eat], { type: 'tap', tileId: idOf(eat, '밥을'), at: 5000 }).state).toBe(out.state);
+  });
+
+  it('drops a second touch inside the window, a placed tile, an unknown tile and taps after the sentence is built', () => {
     const rice = idOf(eat, '밥을');
     const first = stepFlow(startFlow(1), [eat], { type: 'tap', tileId: rice, at: 1000 }).state;
     expect(stepFlow(first, [eat], { type: 'tap', tileId: idOf(eat, '먹어요'), at: 1000 + TOUCH_WINDOW_MS - 1 }).state).toBe(first);
