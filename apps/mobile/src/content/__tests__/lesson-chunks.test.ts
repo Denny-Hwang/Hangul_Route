@@ -33,10 +33,19 @@ describe('the lesson manifest and its chunks', () => {
     for (const line of manifest.split('\n').filter((l) => /^\s*import\s/.test(l))) expect(line, line).toMatch(/^import type /);
     expect(manifest).not.toMatch(/\brequire\(|import\(`|import\([^'")]/);
     const imports = manifest.match(/import\('[^']+'\)/g) ?? [];
-    expect(imports.sort()).toEqual(
-      [...cells.map((id) => `import('./lesson-chunks/${name(id)}')`), "import('./lesson-chunks/lessons-titles-es')", "import('./lesson-chunks/lessons-titles-ko')"].sort(),
-    );
-    expect(Object.keys(index).sort()).toEqual(['LESSON_CELL_CHUNKS', 'LESSON_EPISODES', 'LESSON_QUESTS', 'LESSON_TEACHES', 'LESSON_TITLE_CHUNKS', 'loadLessonCell', 'loadLessonTitles']);
+    const text = ['titles-es', 'titles-ko', 'headers-en', 'headers-es', 'headers-ko'].map((t) => `import('./lesson-chunks/lessons-${t}')`);
+    expect(imports.sort()).toEqual([...cells.map((id) => `import('./lesson-chunks/${name(id)}')`), ...text].sort());
+    expect(Object.keys(index).sort()).toEqual([
+      'LESSON_CELL_CHUNKS',
+      'LESSON_EPISODES',
+      'LESSON_HEADER_CHUNKS',
+      'LESSON_QUESTS',
+      'LESSON_TEACHES',
+      'LESSON_TITLE_CHUNKS',
+      'loadLessonCell',
+      'loadLessonHeaders',
+      'loadLessonTitles',
+    ]);
   });
 
   it('no other app source names a chunk, so none can reach the start bundle', () => {
@@ -60,11 +69,34 @@ describe('the lesson manifest and its chunks', () => {
     for (const locale of ['es', 'ko'] as const) {
       const titles = await index.loadLessonTitles(locale);
       expect(titles.CHUNK_HASH).toBe(index.LESSON_TITLE_CHUNKS[locale]);
-      // Titles only: every step and game gloss rides in its cell's chunk.
+      // Titles only: every step and game gloss rides in its cell's chunk, every display line in the headers chunk.
       for (const [id, entry] of Object.entries(titles.LESSON_TITLE_OVERLAYS)) {
         expect(id).toMatch(/^(episode|quest):/);
-        for (const field of Object.keys(entry)) expect(field).not.toMatch(/^steps\./);
+        expect(Object.keys(entry), id).toEqual(['title']);
       }
+    }
+  });
+
+  it('the display lines are in one headers chunk per locale, English included, never in the manifest (row CM-40)', async () => {
+    for (const episode of index.LESSON_EPISODES) for (const field of ['subtitleEn', 'hoyaIntroEn', 'rewardCardIds']) expect(episode, episode.id).not.toHaveProperty(field);
+    for (const quest of index.LESSON_QUESTS) for (const field of ['blurbEn', 'teaserEn']) expect(quest, quest.id).not.toHaveProperty(field);
+    const en = await index.loadLessonHeaders('en');
+    expect(en.CHUNK_HASH).toBe(index.LESSON_HEADER_CHUNKS.en);
+    expect(Object.keys(en.LESSON_EPISODE_HEADERS).sort()).toEqual(index.LESSON_EPISODES.map((e) => e.id).sort());
+    for (const [id, lines] of Object.entries(en.LESSON_EPISODE_HEADERS)) {
+      expect(lines.hoyaIntroEn.length, id).toBeGreaterThan(0);
+      expect(lines.subtitleEn?.length, id).toBeGreaterThan(0);
+    }
+    expect(Object.keys(en.LESSON_HEADER_OVERLAYS)).toEqual([]);
+    for (const locale of ['es', 'ko'] as const) {
+      const headers = await index.loadLessonHeaders(locale);
+      expect(headers.CHUNK_HASH).toBe(index.LESSON_HEADER_CHUNKS[locale]);
+      expect(Object.keys(headers.LESSON_EPISODE_HEADERS)).toEqual([]);
+      for (const [id, entry] of Object.entries(headers.LESSON_HEADER_OVERLAYS)) {
+        for (const field of Object.keys(entry)) expect(['subtitle', 'hoyaIntro', 'blurb', 'teaser'], `${id} ${field}`).toContain(field);
+      }
+      // Every shipped episode's subtitle and Hoya intro are translated.
+      for (const episode of index.LESSON_EPISODES) expect(Object.keys(headers.LESSON_HEADER_OVERLAYS[episode.id] ?? {}).sort(), `${locale} ${episode.id}`).toEqual(['hoyaIntro', 'subtitle']);
     }
   });
 });

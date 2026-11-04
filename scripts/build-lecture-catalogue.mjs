@@ -37,10 +37,10 @@
 //
 //   apps/web/src/data/catalogue-titles.generated.ts
 //       CATALOGUE_TITLES      { <locale>: { <id>: title } }  grid episode, quest,
-//                             story and vocab-topic titles from content/i18n/<locale>/*.json
+//                             story, vocab-topic and stage titles from content/i18n/<locale>/*.json
 //
 // The console is a static export with no content bundle and must not ship the
-// whole overlay set, so only the `title` field of those four id kinds is kept;
+// whole overlay set, so only the `title` field of those five id kinds is kept;
 // `catalogTitle` (apps/web/src/data/catalog.ts) falls back to CATALOG's English.
 //
 // Usage:
@@ -66,8 +66,12 @@ export const TITLES_HEADER =
 
 export const TITLES_REL = ["apps", "web", "src", "data", "catalogue-titles.generated.ts"];
 
-/** The content ids whose titles the console draws: grid episodes (cells), quests, stories and word topics. */
-export const TITLE_ID_RE = /^(episode:stage[1-7]-[a-z]+|(quest|story|vocab-topic):[a-z0-9]+(-[a-z0-9]+)*)$/;
+/**
+ * The content ids whose titles the console draws: grid episodes (cells), quests, stories, word topics and the seven
+ * stages (`stage:stageN`, AMENDMENTS-GROWNUP-UX section 10.3, GX-9: read by `stageTitleIn` in
+ * `apps/web/src/lib/console/stage-titles.ts`).
+ */
+export const TITLE_ID_RE = /^(stage:stage[1-7]|episode:stage[1-7]-[a-z]+|(quest|story|vocab-topic):[a-z0-9]+(-[a-z0-9]+)*)$/;
 
 /** On since F-TCH-004 PR 11 added the presenter's story adapter. */
 export const STORIES_IN_LECTURE = true;
@@ -149,7 +153,7 @@ export function renderCatalogue(model) {
 }
 
 /**
- * The `title` of every grid episode, quest, story and word-topic entry of each overlay
+ * The `title` of every grid episode, quest, story, word-topic and stage entry of each overlay
  * locale, sorted by id. A file that is not `{ entries: { <id>: { ... } } }`, or a
  * title that is not a non-empty string, fails the build; other ids and fields are
  * left out (they are not drawn by the console).

@@ -187,9 +187,13 @@ async function loadedLessonChunks(page: Page): Promise<string[]> {
   );
 }
 
-const CELL_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-cell-stage\d-[a-z]+-[0-9a-f]{32}\.js$/;
+// A cell's Volume 2 has a body chunk of its own (F-CURR-002 row CM-40): lessons-cell-stage<n>-<theme>-v2.
+const CELL_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-cell-stage\d-[a-z]+(?:-v2)?-[0-9a-f]{32}\.js$/;
 const TITLE_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-titles-(es|ko)-[0-9a-f]{32}\.js$/;
+// The display lines (row CM-40): one headers chunk per locale, English included, loaded before the first screen.
+const HEADERS_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-headers-(en|es|ko)-[0-9a-f]{32}\.js$/;
 const LETTERS_BUNDLE = /\/_expo\/static\/js\/web\/lessons-cell-stage2-letters-[0-9a-f]{32}\.js$/;
+const STAGE2_LETTERS_SUBTITLE = 'The rest of Hangul, and the words it opens.';
 
 /** Journey > Stage 2 Letters & Books > Start, up to the first quest's Discover step (ㅐ and its example 개, from the chunk). */
 async function playStage2LettersDiscover(page: Page): Promise<void> {
@@ -199,6 +203,8 @@ async function playStage2LettersDiscover(page: Page): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(2, 'Letters & Books'), exact: true }).click();
   await expect(page.getByText('Word Builder').first()).toBeVisible();
+  // The cell's subtitle is a display line of the English headers chunk (F-CURR-002 row CM-40), there offline.
+  await expect(page.getByText(STAGE2_LETTERS_SUBTITLE).first()).toBeVisible();
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
@@ -230,6 +236,7 @@ test('lesson chunks are precached, load from the precache offline, and an upper-
   const cached = await cachedPaths(page);
   expect(cached.filter((p) => CELL_BUNDLE.test(p))).toHaveLength(LESSON_EPISODES.length);
   expect(cached.filter((p) => TITLE_BUNDLE.test(p))).toHaveLength(2);
+  expect(cached.filter((p) => HEADERS_BUNDLE.test(p))).toHaveLength(3);
 
   // The worker serves the shell; with the network gone, the learner home opens, then every cell's chunk loads from the precache.
   await page.reload();
@@ -240,8 +247,11 @@ test('lesson chunks are precached, load from the precache offline, and an upper-
   await expect(page.getByText('Hi, Suni!')).toBeVisible();
   await expect.poll(async () => (await loadedLessonChunks(page)).filter((p) => CELL_BUNDLE.test(p)).length, { timeout: 15_000 }).toBe(LESSON_EPISODES.length);
   expect((await loadedLessonChunks(page)).filter((p) => TITLE_BUNDLE.test(p))).toEqual([]);
+  // The English learner's first screen waited for the English headers alone (row CM-40).
+  expect((await loadedLessonChunks(page)).filter((p) => HEADERS_BUNDLE.test(p))).toEqual([expect.stringMatching(/\/lessons-headers-en-[0-9a-f]{32}\.js$/)]);
 
-  // Journey > Stage 2 Letters & Books: the cell page reads the manifest, and its first quest plays offline from its chunk.
+  // Journey > Stage 2 Letters & Books: the cell page reads the manifest and its subtitle from the English headers chunk,
+  // and its first quest plays offline from its chunk.
   await playStage2LettersDiscover(page);
   expect((await loadedLessonChunks(page)).filter((p) => LETTERS_BUNDLE.test(p))).toHaveLength(1);
   expect(errors).toEqual([]);
@@ -260,6 +270,10 @@ test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
     await expect.poll(async () => (await loadedLessonChunks(page)).filter((p) => TITLE_BUNDLE.test(p))).toEqual([expect.stringMatching(/\/lessons-titles-es-[0-9a-f]{32}\.js$/)]);
+    // The Spanish display lines and their English base (row CM-40), never the Korean ones.
+    await expect
+      .poll(async () => (await loadedLessonChunks(page)).filter((p) => HEADERS_BUNDLE.test(p)).sort())
+      .toEqual([expect.stringMatching(/\/lessons-headers-en-[0-9a-f]{32}\.js$/), expect.stringMatching(/\/lessons-headers-es-[0-9a-f]{32}\.js$/)]);
     expect(errors).toEqual([]);
   });
 
