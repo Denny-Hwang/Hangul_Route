@@ -15,7 +15,17 @@ import {
   type SpaceEstimate,
   type StagePackRow,
 } from '../logic/offline/offline-packs';
-import * as cache from '../platform/offline-cache';
+import {
+  EVERY_CHUNK_ON_DEVICE,
+  cachedUrls,
+  dropLaterUrls,
+  laterCacheUrls,
+  offlineCacheSupported,
+  readOfflineIndex,
+  removeFiles,
+  saveFile,
+  spaceEstimate,
+} from '../platform/offline-cache';
 import { isOnline } from '../platform/online';
 import { readJson, writeJson } from '../platform/storage';
 
@@ -220,15 +230,15 @@ export function createOfflinePacksStore(deps: OfflinePacksDeps): StoreApi<Offlin
 }
 
 export const offlinePacks = createOfflinePacksStore({
-  native: cache.EVERY_CHUNK_ON_DEVICE,
-  supported: cache.offlineCacheSupported,
-  readIndex: cache.readOfflineIndex,
-  cachedUrls: cache.cachedUrls,
-  saveFile: cache.saveFile,
-  removeFiles: cache.removeFiles,
-  laterCacheUrls: cache.laterCacheUrls,
-  dropLaterUrls: cache.dropLaterUrls,
-  spaceEstimate: cache.spaceEstimate,
+  native: EVERY_CHUNK_ON_DEVICE,
+  supported: offlineCacheSupported,
+  readIndex: readOfflineIndex,
+  cachedUrls,
+  saveFile,
+  removeFiles,
+  laterCacheUrls,
+  dropLaterUrls,
+  spaceEstimate,
   online: isOnline,
   readChosen: () => readJson<StageKey[]>(CHOSEN_KEY),
   writeChosen: (stages) => writeJson(CHOSEN_KEY, stages),
