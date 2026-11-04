@@ -1,0 +1,1212 @@
+{
+  "v": 1,
+  "id": "story:gyeonu-jingnyeo",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261104,
+  "title": {
+    "ko": "견우와 직녀",
+    "romanization": "Gyeonuwa Jingnyeo",
+    "en": "Gyeonu and Jingnyeo: The Bridge of Birds"
+  },
+  "summaryEn": "A short, simple retelling of the tale of Gyeonu and Jingnyeo, told across East Asia: a weaver and a herder who live apart across the Milky Way meet once a year on Chilseok, on a bridge of crows and magpies.",
+  "hoyaIntroEn": "Let's hear the tale of two stars who meet once a year on a bridge of birds!",
+  "hoyaOutroEn": "Now you know why people look up at the stars on Chilseok!",
+  "theme": "rites",
+  "kind": "folk-tale",
+  "recommendedStage": 5,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Know that the tale of Gyeonu and Jingnyeo is shared across East Asia, and that its oldest known written record is from China.",
+    "Put the main events in order: the marriage, the forgotten work, the parting, the bridge of birds.",
+    "Know that Chilseok, the seventh night of the seventh lunar month, is the night of this tale.",
+    "Read and recognize 하늘 (haneul), 목동 (mokdong), 다리 (dari), 까치 (kkachi), 별 (byeol) and 비 (bi)."
+  ],
+  "origin": {
+    "type": "traditional",
+    "noteEn": "A traditional tale shared across East Asia, in the version told in Korea; the Sources screen lists the versions this retelling follows.",
+    "retellingNoteEn": "Shortened and told simply; versions differ."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "chilseok",
+      "ko": "칠석",
+      "romanization": "Chilseok",
+      "en": "the seventh night of the seventh lunar month",
+      "kind": "term"
+    },
+    {
+      "id": "haneul",
+      "ko": "하늘",
+      "romanization": "haneul",
+      "en": "sky",
+      "kind": "word"
+    },
+    {
+      "id": "mokdong",
+      "ko": "목동",
+      "romanization": "mokdong",
+      "en": "herder",
+      "kind": "word"
+    },
+    {
+      "id": "eunhasu",
+      "ko": "은하수",
+      "romanization": "eunhasu",
+      "en": "the Milky Way",
+      "kind": "word"
+    },
+    {
+      "id": "dari",
+      "ko": "다리",
+      "romanization": "dari",
+      "en": "bridge",
+      "kind": "word"
+    },
+    {
+      "id": "kkachi",
+      "ko": "까치",
+      "romanization": "kkachi",
+      "en": "magpie",
+      "kind": "word"
+    },
+    {
+      "id": "byeol",
+      "ko": "별",
+      "romanization": "byeol",
+      "en": "star",
+      "kind": "word"
+    },
+    {
+      "id": "bi",
+      "ko": "비",
+      "romanization": "bi",
+      "en": "rain",
+      "kind": "word"
+    },
+    {
+      "id": "jingnyeo",
+      "ko": "직녀",
+      "romanization": "Jingnyeo",
+      "en": "the weaver in the tale",
+      "kind": "term"
+    },
+    {
+      "id": "gyeonu",
+      "ko": "견우",
+      "romanization": "Gyeonu",
+      "en": "the herder in the tale",
+      "kind": "term"
+    },
+    {
+      "id": "otgam",
+      "ko": "옷감",
+      "romanization": "otgam",
+      "en": "cloth",
+      "kind": "word"
+    },
+    {
+      "id": "jjayo",
+      "ko": "짜요",
+      "romanization": "jjayo",
+      "en": "weaves",
+      "kind": "word"
+    },
+    {
+      "id": "ieyo",
+      "ko": "이에요",
+      "romanization": "ieyo",
+      "en": "is",
+      "kind": "word"
+    },
+    {
+      "id": "il-nyeon",
+      "ko": "일 년",
+      "romanization": "il nyeon",
+      "en": "one year",
+      "kind": "phrase"
+    },
+    {
+      "id": "han-beon",
+      "ko": "한 번",
+      "romanization": "han beon",
+      "en": "once",
+      "kind": "phrase"
+    },
+    {
+      "id": "mannayo",
+      "ko": "만나요",
+      "romanization": "mannayo",
+      "en": "meet",
+      "kind": "word"
+    },
+    {
+      "id": "noayo",
+      "ko": "놓아요",
+      "romanization": "noayo",
+      "en": "build (a bridge); put",
+      "kind": "word"
+    },
+    {
+      "id": "wayo",
+      "ko": "와요",
+      "romanization": "wayo",
+      "en": "comes; falls (of rain)",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Story time with Hoya! This old tale is told across East Asia, and in Korea too. It is about Gyeonu and Jingnyeo and the night they meet: Chilseok, the seventh night of the seventh lunar month.",
+          "captionEn": "An old tale of two stars",
+          "keyword": {
+            "id": "chilseok",
+            "ko": "칠석",
+            "romanization": "Chilseok",
+            "en": "the seventh night of the seventh lunar month",
+            "kind": "term"
+          },
+          "factIds": [
+            "f1",
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Night sky full of stars over the countryside; Hoya sits reading a storybook (no readable text).",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 200,
+                "y": 300,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 200,
+                "y": 288,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya reads a storybook on a rock under a sky full of stars."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "In the tale, Jingnyeo lives in the sky. She is the granddaughter of the King of the Sky. She is a fine weaver, and she works hard.",
+          "captionEn": "Jingnyeo, the weaver",
+          "keyword": {
+            "id": "haneul",
+            "ko": "하늘",
+            "romanization": "haneul",
+            "en": "sky",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Jingnyeo in a room, with bolts of cloth she has woven beside her.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:silk-bolts",
+                "x": 267,
+                "y": 288,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 133,
+                "y": 286,
+                "s": 1.2,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Jingnyeo stands beside bolts of cloth she has woven."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "The King of the Sky loves her dearly. He has her marry Gyeonu, a herder who lives across the Milky Way. In an old painting, Gyeonu leads an ox.",
+          "captionEn": "Gyeonu, the herder",
+          "keyword": {
+            "id": "mokdong",
+            "ko": "목동",
+            "romanization": "mokdong",
+            "en": "herder",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2",
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Gyeonu the herder walking beside an ox in a field.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:ox",
+                "x": 230,
+                "y": 286,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 110,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Gyeonu walks beside his ox in a field."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The two are so happy together that they forget their work. The King of the Sky grows angry. He sends them to live apart, on either side of the Milky Way.",
+          "captionEn": "Apart across the Milky Way",
+          "keyword": {
+            "id": "eunhasu",
+            "ko": "은하수",
+            "romanization": "eunhasu",
+            "en": "the Milky Way",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A wide band of stars across the night sky, with a small figure on each side, far apart.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 145,
+                "y": 286,
+                "s": 1.0,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 255,
+                "y": 286,
+                "s": 1.0,
+                "tint": "surface.paper",
+                "flip": true
+              }
+            ],
+            "altEn": "Two figures stand apart under the Milky Way."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Now they can be together only one day a year, on Chilseok. They wait and wait for that day.",
+          "captionEn": "Once a year",
+          "line": {
+            "ko": "일 년에 한 번 만나요.",
+            "romanization": "Il nyeone han beon mannayo.",
+            "en": "They meet once a year.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A calendar page with one day marked by a star; Hoya thinks about how long a year is.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:calendar-page",
+                "x": 160,
+                "y": 250,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 300,
+                "y": 292,
+                "s": 0.7
+              }
+            ],
+            "altEn": "Hoya looks at a calendar page and thinks about a long year."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "But even on Chilseok, the wide Milky Way keeps them apart. So the crows and magpies of the earth fly up to the sky. They join their heads and make a bridge.",
+          "captionEn": "Birds make a bridge",
+          "keyword": {
+            "id": "dari",
+            "ko": "다리",
+            "romanization": "dari",
+            "en": "bridge",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Birds flying up into the night sky in a long line, forming a bridge.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 200,
+                "y": 130,
+                "s": 2.0
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 110,
+                "y": 160,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 290,
+                "y": 160,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 200,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Birds fly up into the night sky in a long line while Hoya watches."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "The bridge is called Ojakgyo, the bridge of crows and magpies. Gyeonu and Jingnyeo meet at last! Storytellers say the birds come home after Chilseok with bald heads, from making the bridge.",
+          "captionEn": "They meet on the bridge",
+          "keyword": {
+            "id": "kkachi",
+            "ko": "까치",
+            "romanization": "kkachi",
+            "en": "magpie",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5",
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two figures meet in the middle of a line of birds across the starry sky; soft glow.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 160,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 240,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper",
+                "flip": true
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 200,
+                "y": 130,
+                "s": 1.2
+              }
+            ],
+            "altEn": "Gyeonu and Jingnyeo meet under the stars, with a bird above them."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Storytellers say rain on Chilseok is their happy tears, and rain the next morning is their tears of parting. Around Chilseok, look up at night: two stars shine high on either side of the Milky Way.",
+          "captionEn": "Two stars in the sky",
+          "keyword": {
+            "id": "byeol",
+            "ko": "별",
+            "romanization": "byeol",
+            "en": "star",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya looks up at a starry night sky from the countryside, waving.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 200,
+                "y": 300,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 288,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya stands on a rock and waves up at a sky full of stars."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What is Jingnyeo good at in the tale?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Fishing",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Weaving",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Singing",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Farming",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "In the tale, Jingnyeo is a fine weaver, and she works hard."
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Who makes the bridge across the Milky Way?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The King of the Sky",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Gyeonu's ox",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Crows and magpies",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Jingnyeo",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f5"
+          ],
+          "explainEn": "The crows and magpies fly up and make the bridge Ojakgyo by joining their heads."
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "How often can Gyeonu and Jingnyeo be together in the tale?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Every day",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Every full moon",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Never",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Once a year, on Chilseok",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f4"
+          ],
+          "explainEn": "The King of the Sky lets them be together only one day a year, on Chilseok."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "eunhasu",
+        "dari",
+        "kkachi",
+        "byeol"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s2",
+          "narrationEn": "In the tale, Jingnyeo lives in the {kw:haneul}. She is a fine weaver.",
+          "captionEn": "Jingnyeo, the weaver",
+          "keyword": {
+            "id": "otgam",
+            "ko": "옷감",
+            "romanization": "otgam",
+            "en": "cloth",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "직녀는 옷감을 짜요.",
+            "romanization": "Jingnyeoneun otgameul jjayo.",
+            "en": "Jingnyeo weaves cloth.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Jingnyeo in a room, with bolts of cloth she has woven beside her.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:silk-bolts",
+                "x": 267,
+                "y": 288,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 133,
+                "y": 286,
+                "s": 1.2,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Jingnyeo stands beside bolts of cloth she has woven."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Gyeonu lives across the {kw:eunhasu}. He looks after the herds.",
+          "captionEn": "Gyeonu, the herder",
+          "keyword": {
+            "id": "mokdong",
+            "ko": "목동",
+            "romanization": "mokdong",
+            "en": "herder",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "견우는 목동이에요.",
+            "romanization": "Gyeonuneun mokdongieyo.",
+            "en": "Gyeonu is a herder.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Gyeonu the herder walking beside an ox in a field.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:ox",
+                "x": 230,
+                "y": 286,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 110,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Gyeonu walks beside his ox in a field."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The King of the Sky sends them to live apart. They can be together only on {kw:chilseok}.",
+          "captionEn": "Once a year",
+          "keyword": {
+            "id": "mannayo",
+            "ko": "만나요",
+            "romanization": "mannayo",
+            "en": "meet",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "일 년에 한 번 만나요.",
+            "romanization": "Il nyeone han beon mannayo.",
+            "en": "They meet once a year.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A calendar page with one day marked by a star; Hoya thinks about how long a year is.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:calendar-page",
+                "x": 160,
+                "y": 250,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 300,
+                "y": 292,
+                "s": 0.7
+              }
+            ],
+            "altEn": "Hoya looks at a calendar page and thinks about a long year."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Crows and magpies fly up and make a {kw:dari} with their heads.",
+          "captionEn": "Birds make a bridge",
+          "keyword": {
+            "id": "kkachi",
+            "ko": "까치",
+            "romanization": "kkachi",
+            "en": "magpie",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "까치가 다리를 놓아요.",
+            "romanization": "Kkachiga darireul noayo.",
+            "en": "The magpies make a bridge.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Birds flying up into the night sky in a long line, forming a bridge.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 200,
+                "y": 130,
+                "s": 2.0
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 110,
+                "y": 160,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 290,
+                "y": 160,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 200,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Birds fly up into the night sky in a long line while Hoya watches."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "On the bridge of birds, the two meet at last.",
+          "captionEn": "They meet on the bridge",
+          "keyword": {
+            "id": "gyeonu",
+            "ko": "견우",
+            "romanization": "Gyeonu",
+            "en": "the herder in the tale",
+            "kind": "term"
+          },
+          "line": {
+            "ko": "견우와 직녀가 만나요.",
+            "romanization": "Gyeonuwa Jingnyeoga mannayo.",
+            "en": "Gyeonu and Jingnyeo meet.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two figures meet in the middle of a line of birds across the starry sky; soft glow.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 160,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 240,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper",
+                "flip": true
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 200,
+                "y": 130,
+                "s": 1.2
+              }
+            ],
+            "altEn": "Gyeonu and Jingnyeo meet under the stars, with a bird above them."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Storytellers say rain on Chilseok is their happy tears. Look up for two {kw:byeol} on either side of the Milky Way.",
+          "captionEn": "Rain on Chilseok",
+          "keyword": {
+            "id": "bi",
+            "ko": "비",
+            "romanization": "bi",
+            "en": "rain",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "칠석에 비가 와요.",
+            "romanization": "Chilseoge biga wayo.",
+            "en": "It rains on Chilseok.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya looks up at a starry night sky from the countryside, waving.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 200,
+                "y": 300,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 288,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya stands on a rock and waves up at a sky full of stars."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "목동",
+            "romanization": "mokdong",
+            "en": "herder"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Weaver",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "King",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Herder",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Fisher",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Mokdong means herder. In the tale, Gyeonu is a herder."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "옷감",
+            "romanization": "otgam",
+            "en": "cloth"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Cloth",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Rice",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Paper",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Rope",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Otgam means cloth. In the tale, Jingnyeo weaves cloth."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "What do storytellers say rain on Chilseok is?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Snow from the moon",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Water from the bridge",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Gyeonu and Jingnyeo's happy tears",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "A gift from the birds",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f7"
+          ],
+          "explainEn": "Storytellers say rain on Chilseok is the happy tears of Gyeonu and Jingnyeo."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s5",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "otgam",
+        "mokdong",
+        "mannayo",
+        "bi"
+      ],
+      "grammarFocusEn": "Topic -eun / -neun; object -eul / -reul; present -ayo / -eoyo"
+    }
+  ],
+  "coverSceneId": "s7",
+  "pillarTags": [],
+  "topicTags": [
+    "gyeonu-jingnyeo",
+    "chilseok",
+    "ojakgyo"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Chilseok is the night of the seventh day of the seventh lunar month. A legend says that on this night Gyeonu and Jingnyeo, who live on either side of the Milky Way and long for each other, meet once a year on the bridge Ojakgyo.",
+      "claimKo": "칠석은 음력 칠월 초이렛날의 밤이다. 은하수를 사이에 두고 서로 그리워하던 견우와 직녀가 이날 오작교에서 일 년에 한 번 만난다는 전설이 있다.",
+      "sources": [
+        {
+          "title": "칠석 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B9%A0%EC%84%9D",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"음력으로 칠월 초이렛날의 밤. 이때에 은하의 서쪽에 있는 직녀와 동쪽에 있는 견우가 오작교에서 일 년에 한 번 만난다는 전설이 있다.\""
+        },
+        {
+          "title": "견우직녀 설화 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002170",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "정의: \"견우와 직녀가 은하수를 사이에 두고 서로 그리워하다가 한 해에 한 번 오작교에서 만나는 칠월 칠석의 유래에 관한 전설.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The tale of Gyeonu and Jingnyeo is shared across East Asia: writers across East Asia have used it since long ago, and its oldest known written record is in Jingchu Suishiji, a book of seasonal customs from China. In Korea, a wall painting in a Goguryeo tomb shows Gyeonu leading an ox and Jingnyeo with a dog, with the Milky Way between them.",
+      "claimKo": "견우직녀 설화는 예로부터 동양권 문인들의 시문 주제로 쓰였고, 가장 오래된 기록은 중국의 『형초세시기』에서 발견된다. 우리나라에서는 고구려 덕흥리 고분 벽화에 은하수를 가운데 두고 소를 끌고 가는 견우와 개를 데리고 있는 직녀가 그려져 있다.",
+      "sources": [
+        {
+          "title": "견우직녀 설화 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002170",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "유래와 전승: \"이 설화의 가장 오래된 기록은 진(晉)나라 종름(宗懍)의 『형초세시기(荊楚歲時記)』에서 발견된다.\" / \"고분 벽화에서 은하수를 가운데에 두고 앞에는 소를 끌고 가는 견우, 뒤에는 개를 데리고 있는 직녀가 그려져 있는 것이 발견된다.\" / 의의와 평가: \"예로부터 동양권에서 무수히 많은 문인들의 시문의 주제로도 사용되어 왔다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "In the tale, Jingnyeo is the granddaughter of the King of the Sky; she is good at weaving and hard-working. The King of the Sky loves her dearly and has her marry Gyeonu, a herder who lives across the Milky Way.",
+      "claimKo": "설화에서 직녀는 하느님의 손녀로 길쌈을 잘하고 부지런했다. 하느님은 손녀를 매우 사랑하여 은하수 건너편의 목동 견우와 혼인하게 했다.",
+      "sources": [
+        {
+          "title": "견우직녀 설화 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002170",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"원래 직녀는 하느님[天帝]의 손녀로 길쌈을 잘하고 부지런하였다. 하느님이 손녀를 매우 사랑하여 은하수 건너편의 '하고(河鼓)'라는 목동(견우)과 혼인하게 했다.\""
+        },
+        {
+          "title": "견우 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EA%B2%AC%EC%9A%B0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "견우 3 (牽牛): \"견우직녀 설화에 나오는 남자 주인공.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "In the tale, the couple enjoy their new life so much that they neglect their work. The King of the Sky grows very angry, makes them live apart on either side of the Milky Way, and lets them be together only one day a year, on Chilseok.",
+      "claimKo": "설화에서 두 사람은 신혼의 즐거움에 빠져 맡은 일을 게을리했다. 하느님은 크게 노하여 그들을 은하수를 사이에 두고 떨어져 살게 하고, 한 해 중 칠월 칠석날 하루만 같이 지내도록 했다.",
+      "sources": [
+        {
+          "title": "견우직녀 설화 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002170",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"그러나 이들 부부는 신혼의 즐거움에 빠져 맡은 일을 게을리 하였고, 하느님은 크게 노하여 그들을 은하수를 가운데에 두고 다시 떨어져 살게 하고, 한 해 중에 칠월 칠석날 하루만 같이 지내도록 했다.\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "In the tale, the Milky Way keeps the two apart even on Chilseok, so the crows and magpies of the earth fly up to the sky and make a bridge by joining their heads. The bridge is called Ojakgyo, the bridge the crows and magpies made.",
+      "claimKo": "설화에서 은하수 때문에 칠석날에도 만나지 못하자, 지상의 까막까치들이 하늘로 올라가 머리를 이어 다리를 놓아 주었다. 그 다리를 까막까치가 놓은 다리, 곧 오작교라 한다.",
+      "sources": [
+        {
+          "title": "견우직녀 설화 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002170",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"은하수 때문에 칠월 칠석날도 서로 만나지 못하자, 보다 못한 지상의 까막까치들이 하늘로 올라가 머리를 이어 다리를 놓아 주었다. 그 다리를 '까막까치가 놓은 다리', 즉 '오작교(烏鵲橋)'라 하였다.\""
+        },
+        {
+          "title": "오작교 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%98%A4%EC%9E%91%EA%B5%90",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"까마귀와 까치가 은하수에 놓는다는 다리. 칠월 칠석날 저녁에, 견우와 직녀를 만나게 하기 위하여 이 다리를 놓는다고 한다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "Storytellers say that after Chilseok the crows and magpies come home with bald heads, from making the bridge.",
+      "claimKo": "칠석이 지나면 까막까치가 다리를 놓느라고 머리가 모두 벗겨져 돌아온다고 한다.",
+      "sources": [
+        {
+          "title": "견우직녀 설화 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002170",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"칠석이 지나면 까막까치가 다리를 놓느라고 머리가 모두 벗겨져 돌아온다고 한다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "Rain that falls on Chilseok is called chilseogu; people say it is the tears Gyeonu and Jingnyeo shed because they are so happy, and that rain the next morning is their tears of parting.",
+      "claimKo": "칠월 칠석에 내리는 비는 칠석우라 하여 두 사람이 너무 기뻐서 흘리는 눈물이라 하고, 이튿날 아침에 오는 비는 이별의 눈물이라고 전한다.",
+      "sources": [
+        {
+          "title": "견우직녀 설화 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0002170",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "의의와 평가: \"칠월 칠석에 내리는 비는 '칠석우(七夕雨)'라 하여 그들이 너무 기뻐서 흘리는 눈물이라고 하며, 그 이튿날 아침에 오는 비는 이별의 눈물이라고 전한다.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Around Chilseok, the star of Jingnyeo and the star of Gyeonu are seen high in the sky on either side of the Milky Way, as if they met once a year; the tale was most likely made by people watching these stars.",
+      "claimKo": "칠석 무렵이면 하늘 높이 은하수 양쪽에 직녀성과 견우성이 보여 마치 일 년에 한 번씩 만나는 것처럼 보이며, 이 별자리를 보고 견우와 직녀 설화를 만들어 냈을 것으로 보인다.",
+      "sources": [
+        {
+          "title": "칠석 — 한국민족문화대백과사전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0058486",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"그러다가 칠석 때면 천장 부근에서 두 별을 보게 되는데 마치 일 년에 한 번씩 만나는 것처럼 보인다. 이러한 별자리를 보고 '견우와 직녀' 설화를 만들어냈음직하다.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Traditional tale, one version retold simply (versions differ; the tale is shared across East Asia). As told in: 한국민족문화대백과사전 「견우직녀 설화」, 「칠석」 (한국학중앙연구원); 국립국어원 표준국어대사전. Not history.",
+  "verification": {
+    "passes": 1,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Author pass (F-CURR-002 CM-46, 2026-11-04): every cited page was fetched on the access date and each quoteOrLocator was compared with the page text; claims restate only what the quotes say. The multi-agent review (three parallel checkers, a reviser and a third pass, F-CURR-002 §9.2) has not run yet, so passes stays 1 and review stays draft."
+  },
+  "authorNotes": "Traditional tale (F-STORY-001 §3.5): narration tells what happens in the tale, not history. Source version: the Encyclopedia of Korean Culture entry 「견우직녀 설화」 (E0002170, by 박현숙, revised 2023), whose references list the National Folk Museum of Korea's 『한국민속문학사전: 설화편』 (2012); the Folk Museum's own entry could not be read for this pass (its site serves its text only through a script interface, which was not used), so the review should compare the retelling with it. Never framed as Korean in origin: s1 says the tale is told across East Asia and in Korea too; f2 records the oldest written record in a Chinese book. The year of the Goguryeo tomb (408 in the source) is left out, so no digit needs a second source. Directions are left out: NIKL puts Jingnyeo west of the Milky Way and Gyeonu east, while the Encyclopedia's 칠석 entry says the opposite for the stars; the story says \"on either side\". Faithful but gentle (§5.1): the parting is a punishment for neglected work, told without blame words; the bald heads of the birds are a funny detail, not an injury. Kept out: the Chilseok prayers to the Big Dipper and the shaman rite (not this tale). 하느님 is told as \"the King of the Sky\" (the source glosses it 天帝). 까막까치 (crows and magpies) appears in narration; the learner word is 까치 (magpie). The name is spelled Jingnyeo, the Revised Romanization of 직녀 as it is said (the spec writes Jiknyeo, the letters rather than the sound), so the English names and the romanization of the Korean lines agree. Scene art reuses registry items only: prop:swallow stands for the birds and its alt text says birds, not magpies.",
+  "errata": []
+}
