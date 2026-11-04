@@ -1,6 +1,5 @@
 import type { HiddenHeritageRound, HiddenHeritageSpot, KoText } from '@hangul-route/content-schema';
 import { HIDDEN_HERITAGE_SPOT } from '@hangul-route/content-schema';
-import { touchTarget } from '@hangul-route/design-system/tokens';
 import type { Messages } from '@hangul-route/i18n';
 import type { MinigameScope } from './minigame-config';
 import { shuffleSeeded } from './story/seeded-order';
@@ -261,11 +260,11 @@ const EPS = 1e-6;
 const across = (axis: Axis): Axis => (axis === 'x' ? 'y' : 'x');
 const overlap = (a: Span, b: Span): boolean => a[0] < b[1] - EPS && b[0] < a[1] - EPS;
 
-/** Grows a drawn span toward `touchTarget.min` inside its bounds: shared evenly, and what one side lacks goes to the other. */
-function grow(drawn: Span, bounds: Span): { span: Span; boxed: boolean } {
-  const need = touchTarget.min - (drawn[1] - drawn[0]);
+/** Grows a drawn span toward `min` inside its bounds: shared evenly, and what one side lacks goes to the other. */
+function grow(drawn: Span, bounds: Span, min: number): { span: Span; boxed: boolean } {
+  const need = min - (drawn[1] - drawn[0]);
   if (need <= 0) return { span: drawn, boxed: false };
-  if (bounds[1] - bounds[0] < touchTarget.min - EPS) return { span: [bounds[0], bounds[1]], boxed: true };
+  if (bounds[1] - bounds[0] < min - EPS) return { span: [bounds[0], bounds[1]], boxed: true };
   const before = drawn[0] - bounds[0];
   const after = bounds[1] - drawn[1];
   const right = Math.min(after, need - Math.min(before, need / 2));
@@ -282,9 +281,10 @@ function grow(drawn: Span, bounds: Span): { span: Span; boxed: boolean } {
  * pass cuts two hit rectangles that still overlap (diagonal neighbours) at the midline of the axis on which their drawn
  * rectangles are farther apart, and grows each again on that axis, so the room the cut took goes to the free side. A
  * hit rectangle is never smaller than its drawn one, never overlaps another, and stays inside the scene. No schema or
- * content change: the drawn spots stay as authored (`HIDDEN_HERITAGE_SPOT`).
+ * content change: the drawn spots stay as authored (`HIDDEN_HERITAGE_SPOT`). `min` is `touchTarget.min` (the screen
+ * passes the token: this logic module imports no design-system code at run time).
  */
-export function spotHitRects(spots: readonly HiddenHeritageSpot[], sceneWidth: number): SpotHitRect[] {
+export function spotHitRects(spots: readonly HiddenHeritageSpot[], sceneWidth: number, min: number): SpotHitRect[] {
   const extent: Record<Axis, number> = { x: sceneWidth, y: (sceneWidth * SCENE_UNITS.height) / SCENE_UNITS.width };
   const drawn = spots.map((s) => {
     const r = spotRect(s, sceneWidth);
@@ -302,7 +302,7 @@ export function spotHitRects(spots: readonly HiddenHeritageSpot[], sceneWidth: n
     };
     return { x: of('x'), y: of('y') };
   });
-  const hit = drawn.map((d, i) => ({ x: grow(d.x, bounds[i]!.x), y: grow(d.y, bounds[i]!.y) }));
+  const hit = drawn.map((d, i) => ({ x: grow(d.x, bounds[i]!.x, min), y: grow(d.y, bounds[i]!.y, min) }));
 
   // Diagonal neighbours: each cut separates one pair for good (bounds only tighten), so this ends.
   for (let pass = 0; pass <= spots.length * spots.length; pass += 1) {
@@ -325,7 +325,7 @@ export function spotHitRects(spots: readonly HiddenHeritageSpot[], sceneWidth: n
     const mid = (drawn[first]![axis][1] + drawn[second]![axis][0]) / 2;
     bounds[first]![axis][1] = Math.min(bounds[first]![axis][1], mid);
     bounds[second]![axis][0] = Math.max(bounds[second]![axis][0], mid);
-    for (const k of [first, second]) hit[k]![axis] = grow(drawn[k]![axis], bounds[k]![axis]);
+    for (const k of [first, second]) hit[k]![axis] = grow(drawn[k]![axis], bounds[k]![axis], min);
   }
 
   return hit.map((h) => ({

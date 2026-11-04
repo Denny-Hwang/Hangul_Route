@@ -304,7 +304,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
 
   const header = headerView(state, rounds, m.learner.minigame);
   const sceneBox = (views: readonly SpotView[], tappable: boolean, width: number): ReactElement => {
-    const hits = tappable ? spotHitRects(views.map((v) => v.spot), width) : [];
+    const hits = tappable ? spotHitRects(views.map((v) => v.spot), width, touchTarget.min) : [];
     return (
       <View
         testID="hh-scene"

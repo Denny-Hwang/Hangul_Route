@@ -252,7 +252,7 @@ describe('spotHitRects: every spot reaches 64 without overlapping, except a boxe
 
   /** The invariants of section 6.6 on any layout: never smaller than drawn, inside the scene, 64 unless boxed, no overlap. */
   function invariants(spots: readonly Spot[], width: number): SpotHitRect[] {
-    const hits = spotHitRects(spots, width);
+    const hits = spotHitRects(spots, width, MIN);
     const height = (width * 3) / 4;
     hits.forEach((h, i) => {
       const d = spotRect(spots[i]!, width);
