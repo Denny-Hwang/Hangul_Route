@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route blend: the published readout and the class-day card (BL-D mock)</title>
+<link rel="stylesheet" href="route-blend.css">
+<script src="strings.js"></script>
+</head>
+<body>
+<!--
+  Amendment sections 10.2 (readout, Move this class day, Add / Stop practice days) and 10.3 (the lecture card on a
+  blended plan: no length chips); wireframe console/curriculum-wizard.md "Meeting" M4 and M5. Today is Thu,
+  Nov 19: the class met on two scheduled Tuesdays of 26. Counts are the class aggregate (done / so far), never a
+  learner list, never attendance.
+-->
+<header class="console-top"><b>Hangul Route</b><span>Evening Class D</span></header>
+<main class="console-main">
+  <section class="panel" aria-labelledby="this-week">
+    <h2 id="this-week" data-t="existing.thisWeek"></h2>
+    <h3><span data-t="console.preview.classCol"></span> · <span data-date="2026-11-17"></span></h3>
+    <ul class="readout-lines" id="class-lessons"></ul>
+    <h3 data-t="console.preview.practiceCol"></h3>
+    <p class="note"><span data-t="console.practice.suggested" data-a="[&quot;wdsl:3,5,0&quot;]"></span></p>
+    <p class="agg"><b data-t="console.readout.practiceAgg" data-a="[41, 54, 234]"></b></p>
+    <p data-t="console.readout.classDays" data-a="[2, 26]"></p>
+    <div class="btn-row" style="justify-content: flex-start">
+      <button class="btn" type="button" data-t="existing.repace"></button>
+      <button class="btn" type="button" data-t="console.readout.move"></button>
+    </div>
+    <button class="link" type="button" data-t="console.readout.stopPractice"></button>
+  </section>
+
+  <section class="panel lecture-card" aria-labelledby="present">
+    <h2 id="present" data-t="existing.present"></h2>
+    <div class="facts">
+      <p data-t="console.lecture.classDay" data-a="[&quot;wd:2&quot;, 3]"></p>
+      <p class="note" data-t="console.lecture.classLength" data-a="[30]"></p>
+    </div>
+    <div class="btn-row" style="justify-content: flex-start"><button class="btn primary" type="button" data-t="existing.present"></button></div>
+  </section>
+
+  <p class="board-label">A class-only plan (no practice days) on the same readout: the upgrade link (section 14)</p>
+  <section class="panel">
+    <h2 data-t="existing.thisWeek"></h2>
+    <button class="link" type="button" data-t="console.readout.addPractice"></button>
+  </section>
+</main>
+<script>
+window.beforeApply = (RB) => {
+  const P = RB.S[RB.lang].console.preview;
+  document.getElementById('class-lessons').innerHTML = [7, 8, 9].map((n) => `<li>${P.lesson(n)}</li>`).join('');
+};
+</script>
+</body>
+</html>

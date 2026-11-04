@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route blend: the wizard's meeting block (BL-D mock)</title>
+<link rel="stylesheet" href="route-blend.css">
+<script src="strings.js"></script>
+</head>
+<body>
+<!--
+  Amendment section 10.1; wireframe design/wireframes/console/curriculum-wizard.md, section "Meeting" (M1, M2).
+  Step 2 of the class wizard with routeBlendEnabled() on. The meeting block (#meeting) replaces the class-day +
+  homework-day chips and the pace chips; Starts and How long? stay below it, Days off gains "Only the class is off".
+  States: ?state=change (Change days open), split (the second mode chosen), zero (0 practice days: Class only, no
+  mode), every (7 practice days: every day, also after class).
+-->
+<header class="console-top"><b>Hangul Route</b><span>Evening Class D</span></header>
+<main class="console-main">
+  <a class="back" href="#" data-t="existing.back"></a>
+  <div class="step-head"><h1 data-t="existing.planTerm"></h1><span class="step-of" data-t="existing.stepOf" data-a="[2,4]"></span></div>
+
+  <section class="panel meeting" id="meeting" aria-labelledby="meeting-title">
+    <h2 id="meeting-title" data-t="console.meeting.title"></h2>
+    <div class="meeting-grid">
+      <!-- 1. Class: weekday chips (1 to 5) and Class length -->
+      <div class="meeting-col">
+        <span class="group-label" id="class-days-label" data-t="console.classDays"></span>
+        <div class="chips" role="group" aria-labelledby="class-days-label" id="class-chips"></div>
+        <label class="meeting-row" style="margin-top: var(--spacing-sm)">
+          <span class="group-label" data-t="console.classLength"></span>
+          <select class="select" id="class-length"></select>
+        </label>
+      </div>
+      <!-- 2. Learners also practise on their own: [0-7] times a week x [5..30] min -->
+      <div class="meeting-col">
+        <span class="group-label" id="practice-label" data-t="console.practice.row"></span>
+        <div class="inline-fields" role="group" aria-labelledby="practice-label" id="practice-inline"></div>
+        <p class="suggested-days" id="suggested">
+          <span id="suggested-line"></span>
+          <button class="link" type="button" aria-expanded="false" id="change-days" data-t="console.practice.change"></button>
+        </p>
+        <div class="chips" role="group" aria-labelledby="practice-label" id="practice-chips" hidden></div>
+      </div>
+      <!-- 3. How do class and practice fit together? (only with 1 or more practice days) -->
+      <fieldset class="span" id="mode">
+        <legend class="group-label" data-t="console.mode.title"></legend>
+        <div class="mode-cards" role="radiogroup">
+          <div class="mode-card" role="radio" aria-checked="true" id="mode-overlap" tabindex="0"><span class="radio-dot"></span><span><b><span data-t="console.mode.overlap"></span> <span class="tag" data-t="existing.suggested"></span></b><span class="hint" data-t="console.mode.overlapHint"></span></span></div>
+          <div class="mode-card" role="radio" aria-checked="false" id="mode-split" tabindex="-1"><span class="radio-dot"></span><span><b data-t="console.mode.split"></b><span class="hint" data-t="console.mode.splitHint"></span></span></div>
+        </div>
+      </fieldset>
+      <!-- 4. Length: the length chips stay; Keep the average; no pace chips for a blended plan -->
+      <div class="span">
+        <span class="group-label" id="len-label" data-t="existing.howLong"></span>
+        <div class="meeting-row">
+          <div class="chips" role="radiogroup" aria-labelledby="len-label">
+            <button class="chip" role="radio" aria-checked="false" type="button" data-t="existing.len4"></button>
+            <button class="chip" role="radio" aria-checked="false" type="button" data-t="existing.len12"></button>
+            <button class="chip" role="radio" aria-checked="true" type="button"><span data-t="existing.len6m"></span> <span class="tag" data-t="existing.suggested"></span></button>
+            <button class="chip" role="radio" aria-checked="false" type="button" data-t="existing.lenCustom"></button>
+          </div>
+          <span class="checkbox" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span data-t="console.keepAverage"></span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <label class="meeting-row"><span class="group-label" data-t="existing.starts"></span><span class="select" data-date="2026-11-09"></span></label>
+    <span class="group-label" data-t="existing.daysOff"></span>
+    <div class="break-row"><span class="select" data-date="2026-12-21"></span><span>–</span><span class="select" data-date="2027-01-03"></span>
+      <span class="checkbox" role="checkbox" aria-checked="false" tabindex="0"><span class="box"></span><span data-t="console.classDayOff"></span></span></div>
+    <div class="break-row"><span class="select" data-date="2027-02-16"></span><span>–</span><span class="select" data-date="2027-02-16"></span>
+      <span class="checkbox" role="checkbox" aria-checked="true" tabindex="0"><span class="box"></span><span data-t="console.classDayOff"></span></span></div>
+    <button class="link" type="button" data-t="existing.addBreak"></button>
+    <p class="note" data-t="existing.sessionsNote" data-a="[100, 26]"></p>
+  </section>
+  <div class="btn-row"><button class="btn" type="button" data-t="existing.backBtn"></button><button class="btn primary" type="button" data-t="existing.next"></button></div>
+</main>
+<script>
+window.beforeApply = (RB) => {
+  const state = RB.params.get('state') ?? '';
+  const CLASS = [2];                                  // Tuesday
+  const P = state === 'zero' ? 0 : state === 'every' ? 7 : 3;
+  // practiceDaysFor(Tue, 3) = Wed, Fri, Sun; P = 7 adds Tuesday after class (section 6.3 table).
+  const PRACTICE = P === 7 ? [3, 4, 5, 6, 0, 1, 2] : P === 3 ? [3, 5, 0] : [];
+  const order = [0, 1, 2, 3, 4, 5, 6];                // WEEKDAYS: Sunday first, as the console's chips
+  const chip = (d, on, role) => `<button class="chip" type="button" role="${role}" aria-checked="${on}" data-wd="${d}"></button>`;
+  document.getElementById('class-chips').innerHTML = order.map((d) => chip(d, CLASS.includes(d), 'checkbox')).join('');
+  document.getElementById('practice-chips').innerHTML = order.map((d) => chip(d, PRACTICE.includes(d), 'checkbox')).join('');
+  const opt = (v, label, sel) => `<option value="${v}"${sel ? ' selected' : ''}>${label}</option>`;
+  const minutes = (n) => ({ en: `${n} min`, es: `${n} min`, ko: `${n}분` })[RB.lang];
+  document.getElementById('class-length').innerHTML = [15, 20, 30, 45, 60].map((n) => opt(n, minutes(n), n === 30)).join('');
+  // The row's word order is the locale's (ko: 주 [3]회 × 한 번에 [10]분): practice.inline, a proposed key (README).
+  const C0 = RB.S[RB.lang].console.practice;
+  document.getElementById('practice-inline').innerHTML = C0.inline.map((w) => w === '{n}' ? `<select class="select" id="practice-count" aria-label="${C0.days}"></select>` : w === '{m}' ? `<select class="select" id="practice-minutes" aria-label="${C0.minutes}"></select>` : `<span aria-hidden="true">${w}</span>`).join('');
+  document.getElementById('practice-count').innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map((n) => opt(n, String(n), n === P)).join('');
+  document.getElementById('practice-minutes').innerHTML = [5, 10, 15, 20, 30].map((n) => opt(n, String(n), n === 10)).join('');
+  const line = document.getElementById('suggested-line');
+  const C = RB.S[RB.lang].console;
+  if (P === 0) {
+    document.getElementById('suggested').hidden = true;
+    document.getElementById('mode').hidden = true;
+  } else if (P >= 7 - CLASS.length) {
+    line.textContent = P > 7 - CLASS.length ? `${C.practice.everyDay}, ${C.practice.afterClass(RB.wd(2))}` : C.practice.everyDay;
+  } else {
+    line.textContent = C.practice.suggested(PRACTICE.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((d) => RB.wd(d, 'short')).join(', '));
+  }
+  if (state === 'change') {
+    document.getElementById('practice-chips').hidden = false;
+    document.getElementById('change-days').setAttribute('aria-expanded', 'true');
+  }
+  if (state === 'split') {
+    document.getElementById('mode-overlap').setAttribute('aria-checked', 'false');
+    document.getElementById('mode-split').setAttribute('aria-checked', 'true');
+  }
+};
+</script>
+</body>
+</html>

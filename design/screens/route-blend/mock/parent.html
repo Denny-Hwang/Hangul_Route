@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route blend: the parent's child card and report line (BL-D mock)</title>
+<link rel="stylesheet" href="route-blend.css">
+<script src="strings.js"></script>
+</head>
+<body>
+<!--
+  Amendment sections 8 (family weekly plan, BL-OD-6) and 11 (BL-9, BL-OD-11); wireframe
+  parent/route-class-blend.md P1 and P2. P1: the family home child card. The class line is GX-4's (#937) line
+  with the meeting words appended, on the same row (no new row). GX-11's week line and squares (#942) are drawn
+  as context only, unchanged. With a family weekly plan running, the card adds the class-practice line and the
+  Pause link. P2: the grown-up report's practice-week line: "Practised on {n} days this week" and a 7-mark strip
+  that fills from the start (n marks filled, the rest outlined): no denominator, no weekday, no word for a day
+  without practice.
+-->
+<header class="console-top"><b>Hangul Route</b><span data-t="existing.familyHome"></span></header>
+<main class="console-main">
+  <p class="board-label">P1. Family home: Mina's card (class with practice days; a family weekly plan is running)</p>
+  <section class="child-card" aria-labelledby="mina">
+    <h2 id="mina">Mina</h2>
+    <p class="class-line" data-testid="child-class-line" data-t="console.family.classLine" data-a="[&quot;Evening Class D&quot;, &quot;wd:2&quot;, 3]"></p>
+    <p class="note board-context" data-t="existing.weekLine"></p>
+    <p class="note" data-t="console.family.classHasPractice" data-a="[&quot;Mina&quot;, &quot;wdl:3,5,0&quot;]"></p>
+    <button class="link" type="button" data-t="console.family.pause"></button>
+  </section>
+
+  <p class="board-label">P2. Grown-up report, This week: the practice-week line and the filling strip</p>
+  <section class="child-card" aria-labelledby="report">
+    <h2 id="report" data-t="existing.reportTitle"></h2>
+    <div class="practice-week">
+      <p data-t="console.report.practiceWeek" data-a="[3]"></p>
+      <ol class="strip" aria-hidden="true" id="strip"></ol>
+    </div>
+  </section>
+</main>
+<script>
+window.beforeApply = () => {
+  const n = 3;
+  document.getElementById('strip').innerHTML = Array.from({ length: 7 }, (_, i) => `<li data-on="${i < n}"></li>`).join('');
+};
+</script>
+</body>
+</html>

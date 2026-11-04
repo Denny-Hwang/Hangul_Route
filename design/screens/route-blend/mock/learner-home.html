@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route blend: Home on a class day and on a practice day (BL-D mock)</title>
+<link rel="stylesheet" href="route-blend.css">
+<script src="glyphs.js"></script>
+<script src="strings.js"></script>
+</head>
+<body>
+<!--
+  Amendment section 7; wireframe journey/route-class-blend.md B2 to B4. Default: a class day (Tuesday). One calm
+  line "Class today." above card (2); nothing is assigned for the class itself and nothing asks "Did you go?".
+  Card (2) rows: practice items from the class plan keep the one From class pill; a lesson met in class
+  (lectureDate) shows the small class glyph inside the same pill and the longer accessible name. A practice-only
+  lesson (split) keeps the plain pill. ?day=practice: a practice day after its lessons are done: card (2) shows
+  Refresh, never a to-do and never a count.
+-->
+<div class="app">
+  <main class="screen">
+    <h1 class="screen-title" data-t="existing.homeTitle"></h1>
+    <p class="calm-line" id="class-today" data-t="learner.classToday"></p>
+    <section class="card" aria-labelledby="today" id="card2">
+      <h2 id="today" data-t="existing.today"></h2>
+      <ul class="rows" id="rows"></ul>
+    </section>
+  </main>
+  <nav class="tab-bar" id="tabs"></nav>
+</div>
+<script>
+window.beforeApply = (RB) => {
+  const S = RB.S[RB.lang], P = S.console.preview;
+  const practiceDay = RB.params.get('day') === 'practice';
+  document.getElementById('tabs').innerHTML = S.existing.tabs.map((t, i) => `<span class="${i === 0 ? 'on' : ''}">${t}</span>`).join('');
+  // The pill: one label, its words the existing From class key; the glyph is decorative, the accessible name says it.
+  const pill = (met) => met
+    ? `<span class="pill" role="text" aria-label="${S.a11y.fromClassMet}">${window.glyph('class')}<span data-label>${S.existing.fromTeacher}</span></span>`
+    : `<span class="pill"><span data-label>${S.existing.fromTeacher}</span></span>`;
+  const row = (id, title, met) => `<li class="row" data-row="${id}"><div class="row-body"><span class="row-title">${title}</span>${pill(met)}</div></li>`;
+  if (practiceDay) {
+    document.getElementById('class-today').hidden = true;
+    document.getElementById('card2').innerHTML = `
+      <h2 id="today">${S.existing.today}</h2>
+      <div class="refresh" role="button" tabindex="0" aria-label="${S.a11y.refresh}" data-row="refresh">
+        <p class="head">${window.glyph('replay', 24)}<span data-label>${S.learner.refresh}</span></p>
+        <p class="hint">${S.learner.refreshLine}</p>
+      </div>`;
+  } else {
+    // Tuesday: last class's lessons are still on the practice days; today's class lessons start tomorrow.
+    document.getElementById('rows').innerHTML = row('a', P.lesson(2), true) + row('b', P.lesson(3), false);
+  }
+};
+</script>
+</body>
+</html>
