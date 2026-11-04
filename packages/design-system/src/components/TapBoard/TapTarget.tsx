@@ -30,6 +30,7 @@ export function TapTarget({
   inactive = false,
   accessibilityLabel,
   accessibilityState,
+  ariaSelected,
   lockMs,
   gapFill = true,
   style,
@@ -64,9 +65,8 @@ export function TapTarget({
     accessibilityLabel,
     // An explicit `accessibilityState.disabled` (an inactive card drawn as disabled) is kept: the prop only adds to it.
     accessibilityState: { ...accessibilityState, disabled: disabled || accessibilityState?.disabled === true },
-    // react-native-web reads only `disabled` from `accessibilityState`: the selection goes to the DOM as aria-selected
-    // (Card Match's picked Korean card said so on its Pressable before row KT-4b).
-    'aria-selected': accessibilityState?.selected,
+    // Opt-in only (Card Match's Korean cards, KT-4b): never derived from `accessibilityState`, so other buttons carry none.
+    ...(ariaSelected === undefined ? {} : { 'aria-selected': ariaSelected }),
     // Only a disabled target disables the Pressable: on native a `disabled={false}` would override the state above.
     disabled: disabled ? true : undefined,
     testID,

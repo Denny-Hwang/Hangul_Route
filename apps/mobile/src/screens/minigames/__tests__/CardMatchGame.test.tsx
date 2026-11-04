@@ -1,4 +1,4 @@
-import { TapLockProvider, touchTarget, useTapLock } from '@hangul-route/design-system';
+import { TapLockProvider, TapTarget, touchTarget, useTapLock } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -188,6 +188,21 @@ describe('Card Match: a Korean card first, as today (6.2)', () => {
     await tap(r, 'en', GEUNE);
     expect(run.answers).toEqual([['pair-0', true, { texts: ['그네'], rung: 'read' }]]);
     expect(card(r, 'ko', GEUNE).props['aria-disabled']).toBe(true);
+  });
+
+  it('a meaning is inactive (no press look, still a focusable button) until a Korean card is picked, and while it shows a miss', async () => {
+    const r = await play();
+    const target = (idx: number): ReactTestInstance => r.root.find((n) => n.type === TapTarget && n.props.testID === `card-match-en-${idx}`);
+    for (let i = 0; i < PAIRS.length; i += 1) expect(target(i).props.inactive, `en-${i} with no pick`).toBe(true);
+    expect(card(r, 'en', GEUNE).props['aria-disabled']).not.toBe(true);
+    await tap(r, 'ko', GEUNE);
+    for (let i = 0; i < PAIRS.length; i += 1) expect(target(i).props.inactive, `en-${i} after a pick`).toBe(false);
+    await tap(r, 'en', MORAE);
+    expect(target(MORAE).props.inactive, 'the amber meaning of the miss').toBe(true);
+    expect(target(GEUNE).props.inactive).toBe(false);
+    await wait(600);
+    expect(target(MORAE).props.inactive, 'the miss let go of the pick').toBe(true);
+    expect(selected(r, 'ko', GEUNE)).toBe(false);
   });
 
   it('a meaning tapped after a pair is made, with no new Korean pick, scores nothing', async () => {

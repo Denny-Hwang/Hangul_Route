@@ -57,7 +57,8 @@ interface Props {
  *
  * Row KT-4b: both columns are `TapTarget`s on two `target` TapBoards (a graze still counts, a bounce on one card
  * never counts twice, a quick tap on a different card does), with the press look (section 4.3) on the drawn card, never
- * on the hit area. The pair that ends the round also locks the app-level clock (`lock(TAP_LOCK_MS)`, KT-D5), since
+ * on the hit area. A meaning is `inactive` (claimed, no press look, still focusable) while no Korean card is picked and
+ * while it shows a miss's amber, so a no-op tap never looks chosen. The pair that ends the round also locks the app-level clock (`lock(TAP_LOCK_MS)`, KT-D5), since
  * the step then moves on.
  */
 
@@ -248,6 +249,7 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
                     onCommit={() => pickKorean(p.idx)}
                     accessibilityLabel={m.a11y.minigame.koreanWord(p.romanization ?? p.ko)}
                     accessibilityState={{ selected: isSelected }}
+                    ariaSelected={isSelected}
                     disabled={isMatched}
                     style={TARGET}
                   >
@@ -282,6 +284,9 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
                     onCommit={() => pickMeaning(p.idx)}
                     accessibilityLabel={m.a11y.minigame.meaning(p.en)}
                     disabled={isMatched}
+                    // With no Korean card picked, or while this meaning shows a miss's amber, a tap is a no-op: the
+                    // board claims it with no press look, so it never looks chosen and then does nothing (F1).
+                    inactive={selectedKo === null || isWrong}
                     style={TARGET}
                   >
                     {({ pressed }) => (

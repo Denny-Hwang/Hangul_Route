@@ -9,10 +9,12 @@ import { Touchscreen, type TouchPoint } from './touch';
  *
  * - The graze matrix (moves of 0, 8, 16, 24 and 32 px on both axes, and a 900 ms hold) commits on Pic-Word's pictures,
  *   on the scrolling board (320 x 640, largest text) and on the fitting one (the 820 x 1180 tablet), and on Card Match's
- *   Korean cards. A picture or a Korean card only moves the selection, so the matrix scores nothing.
+ *   Korean cards. A picture or a Korean card only moves the selection, so the matrix scores nothing. Two grazes on
+ *   Card Match's meanings (24 px across, a 900 ms hold) make their pairs.
+ * - Card Match: a meaning touched before a Korean pick shows no press look and does nothing.
  * - A move that ends 40 px outside a tile commits nothing and shows no press look while the finger is out; a slide into
- *   the neighbouring tile commits nothing, an edge graze 4 px into it commits the tile it started on; on the scrolling
- *   board a 72 px vertical drag from a tile scrolls the page and changes nothing.
+ *   the neighbouring tile commits nothing (both games), an edge graze 4 px into it commits the tile it started on
+ *   (Pic-Word); on the scrolling board a 72 px vertical drag from a tile scrolls the page and changes nothing (both).
  * - Regressions: F1 (a 20 px vertical graze selects, scrolling profile), F2 (taps 60 and 150 ms apart, release to
  *   down, end selected), F3 (Card Match: the next pick is still selected 700 ms after a miss's flash would have ended).
  *
@@ -146,8 +148,13 @@ for (const profile of [
       await touch.end(1);
       await expectOnly(first, 'F1: a 20 px vertical graze');
 
-      // F2: taps 60 and 150 ms apart (release to down) on the selected picture keep it selected.
+      // F2: from an unselected picture, a tap that selects it and a bounce 60 or 150 ms later (release to down) end with
+      // it selected, and only it: the first tap must select, the bounce must not undo it.
+      const last = pictures[pictures.length - 1]!;
       for (const gap of [60, 150]) {
+        await touch.tap(centre(await inView(last)));
+        await page.waitForTimeout(AFTER_LOCK);
+        await expectOnly(last, `F2: another picture first (${gap} ms)`);
         const at = centre(await inView(first));
         await touch.tap(at);
         await page.waitForTimeout(gap);
@@ -235,6 +242,19 @@ for (const profile of [
       };
       const sc = await scroller(cards[0]!);
       test.info().annotations.push({ type: 'board', description: sc === null || sc.room < 40 ? 'Card Match fits the screen' : `Card Match scrolls (${sc.room} px)` });
+      if (profile.largest) expect(sc !== null && sc.room >= 40, 'Card Match scrolls at 320 px with the largest text').toBe(true);
+
+      // A meaning touched with no Korean card picked is a no-op: it shows no press look and picks nothing.
+      const swing = meaning('swing');
+      const restSwing = await drawn(swing);
+      const sw = centre(await inView(swing));
+      await touch.start({ id: 1, ...sw });
+      await touch.move({ id: 1, x: sw.x, y: sw.y + 8 });
+      await page.waitForTimeout(300);
+      expect(await drawn(swing), 'no press look on a meaning before a Korean pick').toBe(restSwing);
+      await touch.end(1);
+      await page.waitForTimeout(AFTER_LOCK);
+      await expectOnly(null, 'a meaning first');
 
       // The matrix on the Korean cards: each graze picks a card other than the picked one (no score, no pair).
       let current = -1;
@@ -260,6 +280,26 @@ for (const profile of [
       await page.waitForTimeout(AFTER_LOCK);
       await expectOnly(picked, 'released 40 px outside');
 
+      // A slide from one unpicked card into its unpicked neighbour commits nothing.
+      const [a, n] = [0, 1, 2, 3].filter((i) => cards[i] !== picked).slice(0, 2).map((i) => cards[i]!) as [Locator, Locator];
+      await inView(a);
+      const deep = await slide(a, n);
+      await touch.graze(deep.start, 0, deep.dy, { steps: 6 });
+      await page.waitForTimeout(AFTER_LOCK);
+      await expectOnly(picked, 'slid into the neighbour');
+
+      // On the scrolling board a 72 px vertical drag from a card scrolls the page and changes nothing (T15b).
+      const sc2 = await scroller(a);
+      if (sc2 !== null && sc2.room >= 40) {
+        const at = centre(await inView(a));
+        const up = sc2.room - sc2.top >= sc2.top;
+        await touch.graze(at, 0, up ? -72 : 72, { steps: 8 });
+        await page.waitForTimeout(AFTER_LOCK);
+        await expectOnly(picked, '72 px drag');
+        const after = await scroller(a);
+        expect(Math.abs((after?.top ?? sc2.top) - sc2.top), 'the drag scrolled the page').toBeGreaterThanOrEqual(20);
+      }
+
       // F3: geune, the wrong "sand", then morae at once: morae is still selected after the miss's flash would have ended.
       await touch.tap(centre(await inView(korean('geune'))));
       await touch.tap(centre(await inView(meaning('sand'))));
@@ -270,6 +310,19 @@ for (const profile of [
       // The pick still makes its pair with a graze on its meaning.
       await touch.graze(centre(await inView(meaning('sand'))), 0, -16);
       await expect(korean('morae')).toHaveAttribute('aria-disabled', 'true');
+
+      // Grazes on the meanings board make their pairs too: 24 px across, then a 900 ms hold.
+      for (const [ro, gloss, g] of [
+        ['gong', 'ball', { dx: 24, dy: 0 }],
+        ['geune', 'swing', { dx: 0, dy: 0, holdMs: 900 }],
+      ] as const) {
+        await page.waitForTimeout(AFTER_LOCK);
+        await touch.tap(centre(await inView(korean(ro))));
+        await expect(korean(ro)).toHaveAttribute('aria-selected', 'true');
+        await page.waitForTimeout(150);
+        await touch.graze(centre(await inView(meaning(gloss))), g.dx, g.dy, { steps: 4, holdMs: 'holdMs' in g ? g.holdMs : 0 });
+        await expect(korean(ro), `${gloss}: graze ${g.dx},${g.dy}`).toHaveAttribute('aria-disabled', 'true');
+      }
     });
   });
 }

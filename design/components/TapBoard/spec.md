@@ -32,7 +32,8 @@ Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board 
 | `inactive` | `boolean?` | KT-2. For the board like `disabled` (claimed, never pressed, never committed), but the button stays enabled and focusable and its `accessibilityState` is the caller's (an answered ChoiceCard, `correct` or a locked miss) |
 | `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it |
 | `accessibilityLabel` | `string` | Required |
-| `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept). On the web `selected` is also written as `aria-selected` (react-native-web reads only `disabled` from `accessibilityState`; KT-4b, Card Match's picked Korean card) |
+| `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept). |
+| `ariaSelected` | `boolean?` | Opt-in, web: written as `aria-selected` (react-native-web reads only `disabled` from `accessibilityState`). Never derived from `accessibilityState.selected`, since ARIA does not allow it on `button`; only Card Match's Korean cards pass it, as their Pressable did before KT-4b |
 | `lockMs` | `number?` | The target lock after a commit on a `target` board (default `TAP_LOCK_MS`); the keyboard's keys pass `KEY_BOUNCE_MS` (KT-7) |
 | `style` | `StyleProp<ViewStyle> \| (look) => StyleProp<ViewStyle>` | The hit area's own style: its box is what the board hit-tests, so a target that must fill a cell styles it here |
 | `testID` | `string?` | |
