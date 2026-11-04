@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:nanjung-ilgi",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "이순신 장군의 난중일기",
     "romanization": "Isunsin janggunui Nanjungilgi",
@@ -33,7 +33,7 @@
     ],
     "advisoryNoteEn": "Briefly mentions a war from Korea's history.",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-13"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -91,6 +91,27 @@
       "romanization": "Isunsin",
       "en": "Yi Sunsin, a Joseon naval commander",
       "kind": "term"
+    },
+    {
+      "id": "sseosseoyo",
+      "ko": "썼어요",
+      "romanization": "sseosseoyo",
+      "en": "wrote",
+      "kind": "word"
+    },
+    {
+      "id": "iyagi",
+      "ko": "이야기",
+      "romanization": "iyagi",
+      "en": "story; what happened",
+      "kind": "word"
+    },
+    {
+      "id": "gukbo",
+      "ko": "국보",
+      "romanization": "gukbo",
+      "en": "National Treasure",
+      "kind": "word"
     }
   ],
   "cultureNotes": [],
@@ -507,6 +528,421 @@
         "maeil",
         "nalssi"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya opens his notebook. A diary is an {kw:ilgi}. Today we read about a diary that a commander kept during a war long ago.",
+          "captionEn": "Hoya opens his little notebook",
+          "keyword": {
+            "id": "ilgi",
+            "ko": "일기",
+            "romanization": "ilgi",
+            "en": "diary",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "오늘도 일기를 써요!",
+            "romanization": "oneuldo ilgireul sseoyo!",
+            "en": "I'm writing in my diary today, too!",
+            "speaker": "hoya"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "hoya:reading",
+                "x": 190,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 316,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya sits on the floor with a little notebook and a brush, ready to keep a diary."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "{kw:yi-sun-sin} lived from 1545 to 1598 and was a naval commander, a {kw:janggun}, of Joseon. Before war came, he built ships around Yeosu.",
+          "captionEn": "Yi Sunsin builds ships near Yeosu",
+          "keyword": {
+            "id": "janggun",
+            "ko": "장군",
+            "romanization": "janggun",
+            "en": "general; commander (the title Koreans use for Admiral Yi)",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "이순신은 장군이에요.",
+            "romanization": "Isunsineun janggunieyo.",
+            "en": "Yi Sunsin is a commander.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:panokseon",
+                "x": 160,
+                "y": 204,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-commander",
+                "x": 320,
+                "y": 290,
+                "s": 1
+              }
+            ],
+            "altEn": "A calm Joseon naval commander stands on the shore beside a wooden panokseon warship in a quiet harbor."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "During the Imjin War, from 1592 to 1598, Admiral Yi kept a diary, writing in it almost every day, {kw:maeil}.",
+          "captionEn": "Admiral Yi writes almost every day",
+          "keyword": {
+            "id": "sseosseoyo",
+            "ko": "썼어요",
+            "romanization": "sseosseoyo",
+            "en": "wrote",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "장군은 일기를 썼어요.",
+            "romanization": "Jangguneun ilgireul sseosseoyo.",
+            "en": "The commander wrote a diary.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-commander",
+                "x": 150,
+                "y": 290,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 268,
+                "y": 290,
+                "s": 1
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 250,
+                "y": 232,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:oil-lamp",
+                "x": 296,
+                "y": 226,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:paper-stack",
+                "x": 360,
+                "y": 292,
+                "s": 0.7
+              }
+            ],
+            "altEn": "In a wooden room the commander stands at his desk by lamplight, with his diary and folded papers."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "He wrote about the weather, {kw:nalssi}, about army life, about his own feelings, and about the lives of ordinary people.",
+          "captionEn": "He writes about weather and feelings",
+          "keyword": {
+            "id": "nalssi",
+            "ko": "날씨",
+            "romanization": "nalssi",
+            "en": "weather",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "일기에 날씨를 썼어요.",
+            "romanization": "Ilgie nalssireul sseosseoyo.",
+            "en": "He wrote the weather in his diary.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:writing-lines",
+                "x": 200,
+                "y": 240,
+                "s": 2
+              },
+              {
+                "ref": "prop:weather-signs",
+                "x": 76,
+                "y": 124,
+                "s": 1,
+                "z": "front"
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 60,
+                "y": 286,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 340,
+                "y": 286,
+                "s": 0.8,
+                "flip": true
+              }
+            ],
+            "altEn": "A diary page of brush strokes among small pictures of sun, rain and ordinary people, the things Admiral Yi wrote about."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "He also wrote about his family, {kw:gajok}, and about the people who served with him.",
+          "captionEn": "He writes about his family",
+          "keyword": {
+            "id": "iyagi",
+            "ko": "이야기",
+            "romanization": "iyagi",
+            "en": "story; what happened",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "가족 이야기도 썼어요.",
+            "romanization": "Gajok iyagido sseosseoyo.",
+            "en": "He also wrote about his family.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 140,
+                "y": 286,
+                "s": 0.95,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-commander",
+                "x": 244,
+                "y": 288,
+                "s": 1.05
+              }
+            ],
+            "altEn": "On the coast a young relative arrives from home and is warmly greeted by the commander."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Today the handwritten diary is a National Treasure kept at Hyeonchungsa Shrine in Asan. In 2013, UNESCO added it to the Memory of the World Register.",
+          "captionEn": "The diary is a National Treasure",
+          "keyword": {
+            "id": "gukbo",
+            "ko": "국보",
+            "romanization": "gukbo",
+            "en": "National Treasure",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "난중일기는 국보예요.",
+            "romanization": "Nanjungilgineun gukboyeyo.",
+            "en": "The Nanjung Ilgi is a National Treasure.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine.",
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:desk-low",
+                "x": 136,
+                "y": 290,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 136,
+                "y": 240,
+                "s": 0.7
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 250,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya holds his own diary by a low desk outside a shrine with a curved tiled roof, like Hyeonchungsa where the diary is kept."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "썼어요",
+            "romanization": "sseosseoyo",
+            "en": "wrote"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Read",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Drew",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Sang",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Wrote",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Sseosseoyo means wrote. Admiral Yi wrote in his diary almost every day."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "날씨",
+            "romanization": "nalssi",
+            "en": "weather"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Weather",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Ship",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Family",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Sea",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Nalssi means weather. He wrote about the weather in his diary."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "Where is the handwritten diary kept today?",
+          "options": [
+            {
+              "id": "a",
+              "en": "In Yeosu",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "At Hyeonchungsa Shrine in Asan",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "In Paris",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "At Haeinsa Temple",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f7"
+          ],
+          "explainEn": "The diary is a National Treasure kept at Hyeonchungsa Shrine in Asan."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "sseosseoyo",
+        "iyagi",
+        "gukbo"
+      ],
+      "grammarFocusEn": "Present -eoyo and past -eosseoyo (sseoyo, sseosseoyo); -do (also)"
     }
   ],
   "coverSceneId": "s1",
@@ -766,7 +1202,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR."
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged and the cited sources not re-opened in this pass, so checkedAt stays the date of the last source check; findings and outcomes in the PR."
   },
   "authorNotes": "Kept gentle on purpose: battles, the turtle ship (거북선), and Admiral Yi's death in the final battle of 1598 are omitted to keep the story gentle; the war is only named. Coverage dates differ by source (handwritten volumes: 1592-05-01 to 1598-10-07 lunar per encykorea; UNESCO and the KHS portal give January 1592 to November 1598, which includes passages known only from the printed 이충무공전서), so narration says only '1592 to 1598'. The KHS portal MoW page notes an eighth volume (1595, 을미일기) is lost; narration says seven volumes survive. The naming year (1795, 이충무공전서) comes from encykorea only, so no year is given. The National Treasure designation covers the diary together with letters (서간첩) and war-report drafts (임진장초). Romanization: surname written 'Yi' as in KHS and UNESCO usage (strict RR would give 'I'). 장군 is glossed as the customary Korean title for him; his posts were naval commands (수군절도사, later 삼도수군통제사). REVISION: removed 'even in very hard times' (not in any source); kept UNESCO's hedge 'almost daily' because the surviving volumes have gaps (the 1595 volume is lost). Scene 5 now says he 'wrote about' family, relatives and subordinates (two sources) instead of 'visits'. Second sources added for f3, f4, f5, f6 from 우리역사넷 (국사편찬위원회) and the KHS MoW page. The identity of the person who chose the title is not stated; only 'editors of 이충무공전서' is claimed. PR 1.8c: keyword 난중일기 is kind 'term', matching the book title 동의보감.",
   "errata": []
