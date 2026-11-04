@@ -619,6 +619,57 @@ const buildBlend = (p: CurriculumParams & { blend: NonNullable<CurriculumParams[
   });
 };
 
+/** The blended walk over class cycles (`generate-blend.ts`, row BL-2). */
+export type BlendedPath = (input: BlendBuildInput) => CurriculumDraft;
+/** Whether a blended plan has a practice date on or after `from`, on the route the blended walk lays. */
+export type BlendedSessionsFrom = (params: CurriculumParams, from: DateKey) => boolean;
+let blendedPath: BlendedPath | undefined;
+let blendedSessionsFrom: BlendedSessionsFrom | undefined;
+
+/**
+ * Installs the blended path. `@hangul-route/content-schema/blend-generator` (`curriculum/generate-blend.ts`) calls it
+ * when it is first imported, so the path ships only in the bundles that plan class days with practice days (the
+ * console); the learner app's start bundle never carries it. A blended plan generated without it throws.
+ */
+export function installBlendedPath(path: BlendedPath, sessionsFrom: BlendedSessionsFrom): void {
+  blendedPath = path;
+  blendedSessionsFrom = sessionsFrom;
+}
+
+/**
+ * Class days with practice days (AMENDMENTS-ROUTE-CLASS-BLEND, row BL-2): steps 3 to 5 as for any plan, then the
+ * blended walk of `generate-blend.ts` over class cycles. Weeks and the done set start at the route's first class day.
+ */
+const buildBlend = (p: CurriculumParams & { blend: NonNullable<CurriculumParams['blend']> }, catalog: Catalog, opts: BuildOptions): CurriculumDraft => {
+  const lookup = new Lookup(catalog);
+  const from = opts.freezeBefore !== undefined && opts.freezeBefore > p.startDate ? opts.freezeBefore : p.startDate;
+  const history = (opts.history ?? []).filter((item) => item.targetDate !== undefined && item.targetDate < from).sort(byDate);
+  const fromCatalog = catalogQueuesOf(p, catalog, themeOrderOf(p), cadenceOf(p).endStage, new Set(history.map((item) => item.id)));
+  const queues: Queues = opts.queue ?? fromCatalog;
+  if (blendedPath === undefined) {
+    throw new Error('A plan with class days and practice days needs the blended generator: import "@hangul-route/content-schema/blend-generator" first.');
+  }
+  return blendedPath({
+    params: p,
+    catalogVersion: catalog.version,
+    lookup,
+    lessons: queues.lessons,
+    stories: queues.stories,
+    comingSoon: queues.comingSoon,
+    catalogLessons: fromCatalog.lessons,
+    locked: fromCatalog.locked,
+    alreadyDone: fromCatalog.alreadyDone,
+    shift: opts.queue !== undefined,
+    history,
+    historyWeeks: opts.historyWeeks,
+    planItems: opts.planItems,
+    historyRefresh: opts.historyRefresh,
+    from,
+    topics: catalog.topics,
+    festivalDay,
+  });
+};
+
 /** Step 9: stats and warnings. */
 const summarise = (
   p: CurriculumParams,
