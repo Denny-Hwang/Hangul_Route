@@ -48,3 +48,7 @@ export { SPARK_DEFAULT_MAX_ROWS, SPARK_DEFAULT_SLOTS, SPARK_FILL_MS, sparkLayout
 export type { SparkLayout } from './spark';
 // The in-app two-set Hangul keyboard (F-CURR-001 G-3): the paint and its pure layout.
 export * from './components/HangulKeyboard';
+// The forgiving tap (docs/specs/AMENDMENTS-TOUCH.md KT-1): the pure model, and the board every learner answer area uses.
+// Pure app logic (no react-native) can import the model by its own path, '@hangul-route/design-system/src/tap-model'.
+export * from './tap-model';
+export * from './components/TapBoard';

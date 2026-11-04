@@ -1,0 +1,11 @@
+export { TapBoard } from './TapBoard';
+export { TapTarget } from './TapTarget';
+export { TapControl } from './TapControl';
+export { TapScroller } from './TapScroller';
+export { TapScrollerContext, useTapScroller } from './scroller';
+export { TapLockContext, TapLockProvider } from './TapLockProvider';
+export type { TapLockClock } from './TapLockProvider';
+export { useTapLock } from './use-tap-lock';
+export { usePressGuard } from './use-press-guard';
+export type { TapScrollerLike } from './controller';
+export type { PressGuard, PressGuardOptions, TapBoardProps, TapControlProps, TapLock, TapLook, TapScrollerProps, TapTargetProps } from './types';
