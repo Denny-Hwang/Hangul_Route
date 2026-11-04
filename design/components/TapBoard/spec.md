@@ -92,6 +92,8 @@ The press look is never `border.focus` (the focus ring and ChoiceCard's `hint`),
 
 `Button` shows its pressed fill without react-native-web's 50 ms `delayPressIn` and runs its `onPress` through `usePressGuard()` (a finger's bounce within `TAP_LOCK_MS` runs once, a finger's press during the app lock is dropped, a finger's press that runs sets the lock), and is at least `touchTarget.min` wide as well as tall. Its `hitSlop` stays (native only; the web size is already at least `touchTarget.min`).
 
+KT-3: inside a `TapBoard` a `Button` is one of the board's answers (Culture Quiz, Tap Respond): it renders through `TapTarget` with its own look (its pressed fill shows while the board shows the press), a `disabled` Button (a locked miss) is a disabled target the board still claims, and a soft-disabled one or one with no `onPress` is `inactive`. Its hint and `expanded` are for controls, not answers, and are not carried in a board; a control does not sit inside a board. `Tile` takes `disabled` (R3: a locked wrong tile): it stays a `TapTarget` the board claims, keeps its state's look (amber for `wrong`), never shows the press look, never commits, and is announced as disabled.
+
 ## Where it appears
 
 ChoiceCard and Tile, inside a board or not (KT-2); every learner answer area listed in `AMENDMENTS-TOUCH.md` §6 (KT-3 to KT-7). Not used by the presenter Stage, which keeps its own responder, or by Trace, which keeps its pan.
