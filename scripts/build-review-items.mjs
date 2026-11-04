@@ -10,6 +10,8 @@
 //      keeps it equal to the Stage 1 data);
 //   3. the shipped stories: the taught words of each story's check rounds (build-stories.mjs
 //      `storyReviewOccurrences`);
+//   4. the ready "This week in Korea" drops: each drop's items, in the drop's own cell `week:<monday>`
+//      (build-week-drops.mjs `weekReviewOccurrences`, row CM-48; the `week` memory shard);
 //
 // with the topic words of content/vocab (a topic word keeps its `vocab:` id, so it is one item, not
 // two) and the senses of content/vocab/_senses.json (a homograph's sense suffix, `lex:bae~pear`). The
@@ -46,6 +48,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 import { chunkHash, ContentError, lessonReviewOccurrences } from "./build-lessons.mjs";
 import { storyReviewOccurrences } from "./build-stories.mjs";
+import { weekReviewOccurrences } from "./build-week-drops.mjs";
 import { writeIfChanged } from "./write-if-changed.mjs";
 
 export const GENERATED_HEADER =
@@ -125,6 +128,7 @@ export async function buildFromTree(root) {
     ...stage1.occurrences,
     ...(await lessonReviewOccurrences(root, stage1.symbols)),
     ...(await storyReviewOccurrences(root, stage1.symbols)),
+    ...(await weekReviewOccurrences(root, stage1.symbols)),
   ];
   const result = m.buildReviewItems(occurrences, snapshot, m.vocabIndex(topicWords, senseGroups), stage1.symbols);
   for (const item of result.items) {
