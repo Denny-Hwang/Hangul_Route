@@ -531,8 +531,8 @@
         {
           "id": "s4",
           "kind": "apply",
-          "titleEn": "Listen and Reply",
-          "minigameKind": "tap-respond",
+          "titleEn": "Put the Talk in Order",
+          "minigameKind": "story-order",
           "minigameRef": "minigame:s4-letters-v2-q2-apply",
           "durationSeconds": 85
         },
@@ -739,153 +739,65 @@
         },
         {
           "ref": "minigame:s4-letters-v2-q2-apply",
-          "kind": "tap-respond",
-          "turns": [
+          "kind": "story-order",
+          "rounds": [
             {
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "그림책이 어디 있어요?",
-                "romanization": "geurimchaegi eodi isseoyo",
-                "en": "Where are the picture books?"
-              },
-              "replies": [
+              "id": "picture-books",
+              "captionsOnly": true,
+              "panels": [
                 {
-                  "id": "r1",
-                  "text": {
-                    "ko": "감사합니다!",
-                    "romanization": "gamsahamnida",
-                    "en": "Thank you!"
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "저기 있어요.",
-                    "romanization": "jeogi isseoyo",
-                    "en": "They are over there."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "누구예요?",
-                    "romanization": "nuguyeyo",
-                    "en": "Who is it?"
-                  },
-                  "correct": false
-                }
-              ]
-            },
-            {
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "한글 책은 어디 있어요?",
-                "romanization": "hangeul chaegeun eodi isseoyo",
-                "en": "And where are the books about Hangul?"
-              },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "이쪽에 있어요.",
-                    "romanization": "ijjoge isseoyo",
-                    "en": "They are this way."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "도서관 카드 있어요?",
-                    "romanization": "doseogwan kadeu isseoyo",
-                    "en": "Do you have a library card?"
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "할머니예요.",
-                    "romanization": "halmeoniyeyo",
-                    "en": "It is Grandma."
-                  },
-                  "correct": false
-                }
-              ]
-            },
-            {
-              "speakerEn": "Librarian",
-              "line": {
-                "ko": "저기 있어요.",
-                "romanization": "jeogi isseoyo",
-                "en": "They are over there."
-              },
-              "replies": [
-                {
-                  "id": "r1",
-                  "text": {
-                    "ko": "책 여기 있어요.",
-                    "romanization": "chaek yeogi isseoyo",
-                    "en": "Here is the book."
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r2",
-                  "text": {
+                  "id": "ask",
+                  "caption": {
                     "ko": "그림책이 어디 있어요?",
                     "romanization": "geurimchaegi eodi isseoyo",
                     "en": "Where are the picture books?"
-                  },
-                  "correct": false
+                  }
                 },
                 {
-                  "id": "r3",
-                  "text": {
+                  "id": "there",
+                  "caption": {
+                    "ko": "저기 있어요.",
+                    "romanization": "jeogi isseoyo",
+                    "en": "They are over there."
+                  }
+                },
+                {
+                  "id": "thanks",
+                  "caption": {
                     "ko": "감사합니다!",
                     "romanization": "gamsahamnida",
                     "en": "Thank you!"
-                  },
-                  "correct": true
+                  }
                 }
               ]
             },
             {
-              "speakerEn": "Hoya",
-              "line": {
-                "ko": "화장실이 어디예요?",
-                "romanization": "hwajangsiri eodiyeyo",
-                "en": "Where is the restroom?"
-              },
-              "replies": [
+              "id": "hangul-books",
+              "captionsOnly": true,
+              "panels": [
                 {
-                  "id": "r1",
-                  "text": {
+                  "id": "ask",
+                  "caption": {
+                    "ko": "한글 책은 어디 있어요?",
+                    "romanization": "hangeul chaegeun eodi isseoyo",
+                    "en": "And where are the books about Hangul?"
+                  }
+                },
+                {
+                  "id": "this-way",
+                  "caption": {
+                    "ko": "이쪽에 있어요.",
+                    "romanization": "ijjoge isseoyo",
+                    "en": "They are this way."
+                  }
+                },
+                {
+                  "id": "thanks",
+                  "caption": {
                     "ko": "감사합니다!",
                     "romanization": "gamsahamnida",
                     "en": "Thank you!"
-                  },
-                  "correct": false
-                },
-                {
-                  "id": "r2",
-                  "text": {
-                    "ko": "저기예요.",
-                    "romanization": "jeogiyeyo",
-                    "en": "It is over there."
-                  },
-                  "correct": true
-                },
-                {
-                  "id": "r3",
-                  "text": {
-                    "ko": "가방이에요.",
-                    "romanization": "gabangieyo",
-                    "en": "It is a bag."
-                  },
-                  "correct": false
+                  }
                 }
               ]
             }
@@ -1559,7 +1471,7 @@
       "Culture and facts: five notes, each with two or three sources, an allowlisted institution first (National Hangeul Museum for n1 and n2, NIKL for n3 to n5), quoted words, access date 2026-10-30 and names as of that date. n2 says 'published' for 간행 (finding fixed).",
       "Culture and facts (cont.): the Hangeul Day facts are new against Volume 1's note: 1926 가갸날 and the 1928 name, why 9 October, 28 letters in 1446 and 24 today. No UNESCO claim. Library and bookshop are generic, the partners named by role (사서, 직원); no brand, shop, library, person or price.",
       "Learning design: at most 4 new Discover lines a quest (lesson-new-load); lesson-recycle 37.5% or more of each quest's Practice and Check items come from earlier quests (Volume 1 S2 to S4 and this cell); no Dictation; no wrong option is also right.",
-      "Learning design (cont.): triples Role Play / Story Order / Tap to Respond, Role Play / Tap to Respond / Cloze Pick, Role Play / Cloze Pick / Sentence Builder; none is a Volume 1 triple and the three Checks differ. Every Role Play path has 4 turns and ends on its closing; off, each plays Tap to Respond. Fixed: the quest 2 closing reads 'You asked where everything is, and found it!'.",
+      "Learning design (cont.): triples Role Play / Story Order / Tap to Respond, Role Play / Story Order / Cloze Pick, Role Play / Cloze Pick / Sentence Builder; none is a Volume 1 triple with any game switch on or off (q2's Apply was Tap to Respond until 2026-11-04; its captions reuse q2's reviewed lines and glosses) and the three Checks differ. Every Role Play path has 4 turns and ends on its closing.",
       "Third pass (2026-10-30): every first-round revision landed. Fixed on 2026-10-31: the es shop partner and its gloss without gender; three quest 3 English lines say 'a book about Hangul'; status stayed draft until this record; ko n2 drops a repeated 책.",
       "Third pass (cont.): declined keeping only one natural reply at quest 1 turn 1: the learner stands at the desk with the book, so 도서관 카드 있어요? follows either 안녕하세요! reply, and that line recycles a Volume 1 item. validate-content, the U-rules, the Role Play rules, items-stable-id and the overlay tests pass. Outcome: ready, behind volumes (pct 0).",
       "PR review (MAR, 2026-10-31): a line taught with two good replies (책 여기 있어요, 저기 있어요, 호야, 안녕하세요!) no longer offers the other good reply as a wrong option in a review round (engine fix, tested). The shared line 책 여기 있어요 reads 'Here is the book.' (es 'Aquí está el libro.'), right at the library and the bookshop.",

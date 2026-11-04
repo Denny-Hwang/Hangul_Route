@@ -89,7 +89,7 @@
       "steps.s2.discover.pages.1.items.0.lines.1.line.gloss": "가까운 쪽을 가리키며 길을 알려 주는 말",
       "steps.s2.discover.pages.1.items.0.lines.1.speaker": "사서",
       "steps.s3.title": "사서에게 묻기",
-      "steps.s4.title": "듣고 대답 고르기",
+      "steps.s4.title": "대화 순서 맞추기",
       "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "찾았어요!",
       "steps.s6.hoyaLine": "책이 어디 있는지 묻고 찾아냈어요!"
@@ -124,22 +124,12 @@
       "rolePlay.scene.nodes.end.closing": "어디 있는지 모두 물어보고 찾았어요!"
     },
     "minigame:s4-letters-v2-q2-apply": {
-      "dialogue.0.npc": "그림이 많이 든 읽을거리가 놓인 곳을 묻는 말",
-      "dialogue.0.options.gamsahamnida.gloss": "고마움을 전하는 인사",
-      "dialogue.0.options.jeogi-isseoyo.gloss": "먼 곳을 가리키며 알려 주는 말",
-      "dialogue.0.options.nuguyeyo.gloss": "사람을 묻는 말",
-      "dialogue.1.npc": "우리 글자를 다룬 읽을거리는 어느 곳에 놓였는지 묻는 말",
-      "dialogue.1.options.ijjoge-isseoyo.gloss": "가까운 쪽을 가리키며 길을 알려 주는 말",
-      "dialogue.1.options.doseogwan-kadeu-isseoyo.gloss": "읽을거리를 빌릴 때 보여 주는 회원증을 가지고 왔는지 묻는 말",
-      "dialogue.1.options.halmeoniyeyo.gloss": "아버지나 어머니의 어머니라는 답",
-      "dialogue.2.npc": "먼 곳을 가리키며 알려 주는 말",
-      "dialogue.2.options.chaek-yeogi-isseoyo.gloss": "읽을 것을 건네주며 하는 말",
-      "dialogue.2.options.geurimchaegi-eodi-isseoyo.gloss": "그림이 많이 든 읽을거리가 놓인 곳을 묻는 말",
-      "dialogue.2.options.gamsahamnida.gloss": "고마움을 전하는 인사",
-      "dialogue.3.npc": "볼일 보는 곳이 어디인지 묻는 말",
-      "dialogue.3.options.gamsahamnida.gloss": "고마움을 전하는 인사",
-      "dialogue.3.options.jeogiyeyo.gloss": "먼 곳을 가리키는 답",
-      "dialogue.3.options.gabangieyo.gloss": "물건을 넣어 메는 것이라는 답"
+      "storyOrder.rounds.picture-books.panels.ask.caption.gloss": "그림이 많이 든 읽을거리가 놓인 곳을 묻는 말",
+      "storyOrder.rounds.picture-books.panels.there.caption.gloss": "먼 곳을 가리키며 알려 주는 말",
+      "storyOrder.rounds.picture-books.panels.thanks.caption.gloss": "고마움을 전하는 인사",
+      "storyOrder.rounds.hangul-books.panels.ask.caption.gloss": "우리 글자를 다룬 읽을거리는 어느 곳에 놓였는지 묻는 말",
+      "storyOrder.rounds.hangul-books.panels.this-way.caption.gloss": "가까운 쪽을 가리키며 길을 알려 주는 말",
+      "storyOrder.rounds.hangul-books.panels.thanks.caption.gloss": "고마움을 전하는 인사"
     },
     "minigame:s4-letters-v2-q2-check": {
       "clozePick.rounds.c1.sentence.gloss": "그림이 많이 든 읽을거리가 놓인 곳을 묻는 말",
