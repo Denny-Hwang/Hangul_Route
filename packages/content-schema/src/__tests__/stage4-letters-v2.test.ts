@@ -68,9 +68,26 @@ describe('Letters Volume 2, Stage 4 (row CM-44 S4)', () => {
     for (const t of v2) expect(v1.has(t), t).toBe(false);
     for (const q of V2.quests) expect([scopeOf(q, 'practice').kind, scopeOf(q, 'apply').kind], q.id).toContain('role-play');
     // Section 7.1: Letters' Stage 4 pair is Tap to Respond and Role Play; Volume 2 adds Story Order and Cloze Pick.
-    expect(V2.quests.flatMap((q) => [scopeOf(q, 'practice').kind, scopeOf(q, 'apply').kind])).toEqual(
-      expect.arrayContaining(['tap-respond', 'story-order', 'cloze-pick']),
-    );
+    // Tap to Respond plays as quest 1's Check (and as each Role Play's fallback).
+    expect(V2.quests.flatMap((q) => [scopeOf(q, 'practice').kind, scopeOf(q, 'apply').kind])).toEqual(expect.arrayContaining(['story-order', 'cloze-pick']));
+    expect(V2.quests.flatMap((q) => (['practice', 'apply', 'check'] as const).map((k) => scopeOf(q, k).kind))).toContain('tap-respond');
+  });
+
+  it('plays no Volume 1 triple with any game.<kind> switch dark either (section 5.1, 12.2)', () => {
+    // The shipped kind each switched format plays while its switch is off: `logic/role-play/fallback.ts`,
+    // `logic/story-order/fallback.ts` and `logic/cloze-pick/round.ts`. One learner state applies to both volumes.
+    const FALLBACK: Readonly<Record<string, string>> = { 'role-play': 'tap-respond', 'cloze-pick': 'listen-pick', 'story-order': 'story-sequence' };
+    const switched = Object.keys(FALLBACK);
+    const played = (q: LessonQuest, off: ReadonlySet<string>): string =>
+      (['practice', 'apply', 'check'] as const)
+        .map((k) => scopeOf(q, k).kind)
+        .map((kind) => (off.has(kind) ? (FALLBACK[kind] as string) : kind))
+        .join(' / ');
+    for (let mask = 0; mask < 1 << switched.length; mask += 1) {
+      const off = new Set(switched.filter((_, i) => (mask & (1 << i)) !== 0));
+      const v1 = new Set(V1.quests.map((q) => played(q, off)));
+      for (const q of V2.quests) expect(v1.has(played(q, off)), `${q.id} with ${[...off].join(', ') || 'no switch'} off plays ${played(q, off)}`).toBe(false);
+    }
   });
 
   it('rotates its Checks: three games, each a read-meaning or produce game', () => {
