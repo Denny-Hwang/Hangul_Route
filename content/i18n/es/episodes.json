@@ -50,6 +50,10 @@
     "episode:stage5-nature-v2": {
       "title": "Isla, montaña y humedal",
       "hoyaIntro": "Leamos en coreano historias de una isla, una montaña y un humedal de Corea, una oración corta a la vez."
+    },
+    "episode:stage5-life-v2": {
+      "title": "El jang y los pasteles de arroz",
+      "hoyaIntro": "Leamos en coreano historias de la comida coreana a lo largo del año, una oración corta a la vez."
     }
   }
 }

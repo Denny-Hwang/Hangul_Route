@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG,
+  laterVolumeStoryIds,
   LECTURE_MAX_BLOCKS,
   LETTER_SET_KEYS,
   StageKeySchema,

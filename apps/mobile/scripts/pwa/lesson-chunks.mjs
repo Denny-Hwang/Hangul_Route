@@ -152,7 +152,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // of the narration overlays touches every reader of a story's text (reader, checks, Sources, presenter, review items)
   // and is its own row, so the line is that measurement plus a 4,943 B rounding margin, once; the next CM-46 cell moves
   // the narration overlays out first (F-CURR-002 §10, CM-46 decision record).
-  localeChunkRaw: 1_055_000,
+  // Row CM-46 Food then did: every story's scene narration, caption and alt rides in its own story chunk
+  // (build-overlays.mjs `isStoryChunkField`), so ko measured 881,524 B with the Food book 2 tales (1,033,676 B before
+  // the move), and the line goes back to 1,010,000 B.
+  localeChunkRaw: 1_010_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
   // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
   // PresenterApp 232,574 B, BrowseApp 104,116 B, about 67 KB under the line.

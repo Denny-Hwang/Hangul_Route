@@ -58,6 +58,23 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam'],
     pillarTags: ['B1', 'B5', 'E4'],
   },
+  /**
+   * The Food cell's book 2 (F-CURR-002 §5.3 S5, row CM-46): the two new tales, on the Volume 2 path behind `volumes`.
+   * Kimjang and Kim Hongdo's market paintings already ship in book 1 (`gimjang-arirang`, `kim-hongdo-genre-paintings`),
+   * so book 2 tells of jang and of the rice cakes of the seasons. The two tales are a book of their own size
+   * (BOOK_MIN_QUESTS).
+   */
+  {
+    id: 'episode:stage5-life-v2',
+    stage: 'stage5',
+    theme: 'life',
+    order: 2,
+    titleEn: 'Jang and Rice Cakes',
+    hoyaIntroEn: "Let's read stories of Korean food through the year in Korean, one short sentence at a time.",
+    storyIds: ['story:jang-fermented-sauces', 'story:tteok-through-the-seasons'],
+    pillarTags: ['B1', 'B5'],
+    volume: 2,
+  },
   {
     id: 'episode:stage5-rites',
     stage: 'stage5',

@@ -1,4 +1,4 @@
-import type { HeldStoryCard, Story, StoryLevel } from '@hangul-route/content-schema';
+import type { HeldStoryCard, Overlays, Story, StoryLevel } from '@hangul-route/content-schema';
 
 /**
  * The stories at runtime (F-CURR-002 §10, rows CM-8 and CM-8b). The story shelf (`__generated__/stories-shelf.ts`,
@@ -85,6 +85,11 @@ export type StoryShelfEntry = Omit<Story, StoryBodyField | DefaultedField> &
 export interface StoryBodyChunk {
   CHUNK_HASH: string;
   STORY_BODY: StoryBody;
+  /**
+   * The es / ko text of the story's scenes (narration, caption, alt), which the learner PWA's locale chunks leave
+   * out (row CM-8b's overlay half, F-CURR-002 §10); absent when the story has none.
+   */
+  STORY_OVERLAYS?: Partial<Overlays>;
 }
 
 /**
@@ -145,6 +150,11 @@ export interface StoryStoreOptions {
    * pending script and the next ensure asks again (`platform/lesson-chunk-abandon`).
    */
   abandon?: (bundleName: string) => void;
+  /**
+   * Lays a loaded chunk's scene text (`STORY_OVERLAYS`) into the content overlays, before the body is ready, so no
+   * screen draws the story's scenes without it (`content/stories.ts` binds `installContentOverlay`).
+   */
+  installOverlays?: (overlays: Partial<Overlays>) => void;
 }
 
 /**
@@ -176,7 +186,7 @@ export interface StoryStore {
 }
 
 export function createStoryStore(manifest: StoryManifest, load: StoryLoader, options: StoryStoreOptions = {}): StoryStore {
-  const { timeoutMs, abandon } = options;
+  const { timeoutMs, abandon, installOverlays } = options;
   const entries = new Map(manifest.entries.map((e) => [e.id, e]));
   const bodies = new Map<string, StoryBody>(Object.entries(manifest.inline ?? {}));
   const loads = new Map<string, Promise<void>>();
@@ -220,6 +230,7 @@ export function createStoryStore(manifest: StoryManifest, load: StoryLoader, opt
       (mod) => {
         loads.delete(storyId);
         if (mod.CHUNK_HASH !== entry.chunk) throw new StoryChunkMismatch(storyId, entry.chunk, mod.CHUNK_HASH);
+        if (mod.STORY_OVERLAYS !== undefined) installOverlays?.(mod.STORY_OVERLAYS);
         bodies.set(storyId, mod.STORY_BODY);
         changed();
       },

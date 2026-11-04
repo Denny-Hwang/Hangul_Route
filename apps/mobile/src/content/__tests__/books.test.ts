@@ -14,6 +14,9 @@ import { storiesAll, storyById, storyQuests } from '../stories';
 import { completeStages, stagesToLatch, withStageLatches } from '../../logic/my-route/latch';
 import { snapshotWith } from '../../logic/my-route/__tests__/fixtures/bundle-2026-10';
 import { STORY_QUEST_COPY, STORY_STEP_SECONDS, storyQuestSkeleton } from '../story-skeleton';
+import { foundNotes } from '../../logic/story/culture-notes';
+import { defaultStoryIndex } from '../../logic/story/story-index';
+import { nextStoryAfter } from '../../logic/story/story-pick';
 
 /** F-STORY-005 §3.2 "Books", §3.3 book plan, PR 5.6. */
 describe('Stage 5 books (books.ts)', () => {

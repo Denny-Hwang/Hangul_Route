@@ -37,3 +37,6 @@ The ten stories that shipped with a listen tier only (`tripitaka-koreana`, `sill
 
 ## Nature book 2 (F-CURR-002 row CM-46, 2026-11-04)
 Three new readers for the Stage 5 Nature cell's book 2 (`jeju-volcanic-island`, `jirisan-national-park`, `suncheon-bay-wetland`), authored directly in `content/stories/` (no importer run). `nature-book2.sources.json` holds every fact with its quoted source words as opened on 2026-11-04, the pages that could not be read and the institutions' names as of that date; `nature-book2.changes.md` lists the checker findings and outcomes and `nature-book2.signoff.md` the third pass.
+
+## Food book 2 (F-CURR-002 row CM-46, 2026-11-04)
+Two new tales for the Stage 5 Food cell's book 2 (`episode:stage5-life-v2`, Volume 2, behind `volumes`): `jang-fermented-sauces` (jang-making; UNESCO 2024, Korea Heritage Service) and `tteok-through-the-seasons` (seasonal rice cakes; National Folk Museum of Korea, encykorea). They were authored directly as story files (no cluster `.final.json`); every fact carries its quotes. `life-book2.changes.md` lists every checker finding and its outcome, and `life-book2.signoff.md` the third pass.

@@ -1,6 +1,6 @@
 import { LectureDeckSchema, discoverItemTexts, sayRef, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodeById, episodesAll, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
+import { episodeById, episodesAll, episodesWithVolumes, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
 import { episodesWithVolumes } from '../../../content/episodes';
 import { buildStoryIndex } from '../../story/story-index';

@@ -346,6 +346,37 @@ describe("build-stories.mjs: the shelf and the chunks (F-CURR-002 CM-8)", () => 
     assert.equal(edited.chunks[1].hash, plan.chunks[1].hash);
   });
 
+  test("a story's es / ko scene text is in its chunk and its hash (row CM-8b's overlay half, F-CURR-002 §10)", () => {
+    const overlays = { es: {}, ko: { "story:hangul-day": { "scenes.s1.narration": "한글날이에요." } } };
+    const plain = planChunks([ready()]);
+    const withText = planChunks([ready()], overlays);
+    assert.notEqual(withText.chunks[0].hash, plain.chunks[0].hash);
+    assert.equal(withText.entries[0].chunk, withText.chunks[0].hash);
+    assert.equal(withText.chunks[0].hash, chunkHash(`${plain.chunks[0].literal}\n${JSON.stringify({ ko: overlays.ko })}`));
+    const modules = buildModules({ stories: [ready()], overlays });
+    const chunk = modules["story-chunks/story-hangul-day.ts"];
+    assert.match(chunk, /export const STORY_OVERLAYS: StoryBodyChunk\['STORY_OVERLAYS'\] = \{"ko":\{"story:hangul-day":\{"scenes\.s1\.narration":"한글날이에요\."\}\}\};\n$/);
+    // A story with no scene text keeps the chunk it had.
+    assert.doesNotMatch(buildModules({ stories: [ready()] })["story-chunks/story-hangul-day.ts"], /STORY_OVERLAYS/);
+    assert.deepEqual(chunkManifest([ready()], { overlays })[0].hash, withText.chunks[0].hash);
+  });
+
+  test("the CLI reads the scene text from content/i18n into the story's chunk", () => {
+    const root = makeRoot();
+    putStory(root, ready());
+    const dir = join(root, "content", "i18n", "ko");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "stories.json"),
+      JSON.stringify({ locale: "ko", domain: "stories", entries: { "story:hangul-day": { title: "한글날", "scenes.s1.narration": "한글날이에요." } } }),
+    );
+    assert.equal(run(root).status, 0);
+    const chunk = chunkOf(join(root, OUT_REL), "story:hangul-day").source;
+    assert.match(chunk, /STORY_OVERLAYS[^\n]*"scenes\.s1\.narration":"한글날이에요\."/);
+    assert.doesNotMatch(chunk, /"title":"한글날"/);
+    assert.equal(readChunkManifest(root)[0].hash, chunkOf(join(root, OUT_REL), "story:hangul-day").hash);
+  });
+
   test("the shelf reaches each chunk only through a literal import() of loadStoryBody, never statically", () => {
     const root = makeRoot();
     putStory(root, ready());

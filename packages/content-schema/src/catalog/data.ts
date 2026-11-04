@@ -151,6 +151,9 @@ const handLessonQuests: CatalogQuest[] = [
   lesson('story-cheugugi-rain-gauge-read', 'stage5', 'crafts', 'The Bowl That Measured the Rain', 4),
   lesson('story-jagyeongnu-water-clock-read', 'stage5', 'crafts', 'Jang Yeongsil and the Clock That Rang by Itself', 5),
   lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Food cell's book 2, on its own Volume 2 episode.
+  { ...lesson('story-jang-fermented-sauces-read', 'stage5', 'life', 'Making Jang: Sauces from Soybeans', 5), episodeId: 'episode:stage5-life-v2' },
+  { ...lesson('story-tteok-through-the-seasons-read', 'stage5', 'life', 'Rice Cakes Through the Seasons', 5), episodeId: 'episode:stage5-life-v2' },
   // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Nature cell's book 2, on its own Volume 2 episode.
   { ...lesson('story-jeju-volcanic-island-read', 'stage5', 'nature', 'Jeju, the Island Volcanoes Made', 5), episodeId: 'episode:stage5-nature-v2' },
   { ...lesson('story-jirisan-national-park-read', 'stage5', 'nature', "Jirisan, Korea's First National Park", 5), episodeId: 'episode:stage5-nature-v2' },

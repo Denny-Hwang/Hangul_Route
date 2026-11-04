@@ -50,6 +50,10 @@
     "episode:stage5-nature-v2": {
       "title": "섬, 산, 그리고 습지",
       "hoyaIntro": "우리나라의 섬과 산과 습지 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
+    },
+    "episode:stage5-life-v2": {
+      "title": "장과 떡",
+      "hoyaIntro": "한 해 동안 먹는 한국 음식 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
     }
   }
 }

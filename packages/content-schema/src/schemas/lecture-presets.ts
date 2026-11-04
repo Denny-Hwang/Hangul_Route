@@ -1,5 +1,5 @@
 import { routeCatalogOf } from '../catalog/route-catalog';
-import { catalogEpisode, cellEpisodeIds, storyIsReady, type Catalog } from '../catalog/schema';
+import { catalogEpisode, cellEpisodeIds, laterVolumeStoryIds, storyIsReady, type Catalog } from '../catalog/schema';
 import type { RouteQuest } from '../placement/route-seed';
 import { StageKeySchema, type StageKey } from './heritage-card';
 import {
@@ -410,7 +410,9 @@ function byStage(minutes: PresetMinutes, ctx: PresetContext): Built {
  */
 function storyTime(minutes: PresetMinutes, ctx: PresetContext): Built {
   const { catalog } = ctx;
-  const ready = catalog.stories.filter(storyIsReady).sort((a, b) => a.order - b.order);
+  // A book 2 tale (F-CURR-002 row CM-46) is Volume 2 content behind `volumes`, a learner switch a preset never reads.
+  const laterVolume = laterVolumeStoryIds(catalog);
+  const ready = catalog.stories.filter((s) => storyIsReady(s) && !laterVolume.has(s.id)).sort((a, b) => a.order - b.order);
   if (ready.length === 0) return hangulWeek1(minutes, ctx, 'zero');
   const classStage = ctx.position?.stage !== undefined ? StageKeySchema.safeParse(ctx.position.stage) : undefined;
   const levelOk = classStage?.success === true ? ready.filter((s) => s.recommendedStage <= stageNumberOf(classStage.data) + 1) : ready;

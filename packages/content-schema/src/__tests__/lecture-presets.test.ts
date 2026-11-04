@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG,
+  laterVolumeStoryIds,
   LECTURE_MAX_BLOCKS,
   LECTURE_PRESETS,
   LectureDeckSchema,
@@ -427,7 +428,15 @@ describe('by-stage', () => {
 });
 
 describe('story-time', () => {
-  const ready = CATALOG.stories.filter((st) => st.status === 'ready').sort((x, y) => x.order - y.order);
+  // A book 2 tale (F-CURR-002 row CM-46) is Volume 2 content, never in a preset.
+  const laterVolume = laterVolumeStoryIds(CATALOG);
+  const ready = CATALOG.stories.filter((st) => st.status === 'ready' && !laterVolume.has(st.id)).sort((x, y) => x.order - y.order);
+
+  it('leaves out the Food book 2 tales, which only a later volume holds (row CM-46)', () => {
+    expect([...laterVolume]).toEqual(['story:jang-fermented-sauces', 'story:tteok-through-the-seasons']);
+    const all = resolvePreset('story-time', 30, { catalog: CATALOG, shown: { questIds: [], storyIds: ready.map((st) => st.id) } });
+    for (const id of laterVolume) expect(all.blocks.some((bl) => bl.kind === 'story' && bl.storyId === id), id).toBe(false);
+  });
   const storiesOf = (r: ResolvedPreset): string[] => r.blocks.flatMap((bl) => (bl.kind === 'story' ? [bl.storyId] : []));
 
   it('the catalogue has ready stories enough to fill 30 minutes', () => {

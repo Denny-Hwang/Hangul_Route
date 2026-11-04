@@ -13,7 +13,8 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-overlays.mjs");
 const OUT_REL = join("packages", "content-schema", "src", "i18n-overlays.generated.ts");
 
-const { GENERATED_HEADER, buildOverlays, isLessonOverlay, localeOut, renderLocaleOverlays, renderOverlays } = await import(SCRIPT);
+const { GENERATED_HEADER, buildOverlays, isLessonOverlay, isStoryChunkField, localeOut, localeTable, renderLocaleOverlays, renderOverlays, storyChunkOverlays } =
+  await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -112,6 +113,38 @@ describe("build-overlays.mjs: merging (pure)", () => {
     assert.doesNotMatch(es, /가/);
     assert.match(renderLocaleOverlays(model, "ko"), /export const OVERLAYS_KO: Overlays\['ko'\] = \{/);
     assert.equal(localeOut("ko"), join("packages", "content-schema", "src", "i18n-overlays-ko.generated.ts"));
+  });
+
+  test("a story's scene text rides in its story chunk, not in the locale chunks (row CM-8b's overlay half, F-CURR-002 §10)", () => {
+    assert.equal(isStoryChunkField("story:a", "scenes.s1.narration"), true);
+    assert.equal(isStoryChunkField("story:a", "tiers.read.scenes.s2.caption"), true);
+    assert.equal(isStoryChunkField("story:a", "tiers.listen.scenes.s3.alt"), true);
+    for (const field of ["title", "summary", "hoyaIntro", "cultureNotes.n1.body", "checks.c1.prompt", "keywords.k1.gloss", "facts.f1.claim"]) {
+      assert.equal(isStoryChunkField("story:a", field), false, field);
+    }
+    assert.equal(isStoryChunkField("card:a", "scenes.s1.narration"), false);
+    const model = buildOverlays([
+      file(
+        "content/i18n/ko/stories.json",
+        overlay("ko", "stories", {
+          "story:a": { title: "가", "scenes.s1.narration": "나", "tiers.read.scenes.s1.caption": "다" },
+          "story:b": { "scenes.s1.narration": "라" },
+          "card:a": { title: "마" },
+        }),
+      ),
+      file("content/i18n/es/stories.json", overlay("es", "stories", { "story:a": { title: "Á" } })),
+    ]);
+    // The locale table keeps the title and card text; a story left with no field leaves it.
+    assert.deepEqual(localeTable(model, "ko"), { "card:a": { title: "마" }, "story:a": { title: "가" } });
+    assert.doesNotMatch(renderLocaleOverlays(model, "ko"), /나|다|라/);
+    // The both-locale module (native, the console) keeps everything.
+    assert.match(renderOverlays(model), /"scenes\.s1\.narration": "나"/);
+    // Each story's chunk gets its own scene text, only for the locales that have some.
+    assert.deepEqual(storyChunkOverlays(model, "story:a"), {
+      ko: { "story:a": { "scenes.s1.narration": "나", "tiers.read.scenes.s1.caption": "다" } },
+    });
+    assert.deepEqual(storyChunkOverlays(model, "story:b"), { ko: { "story:b": { "scenes.s1.narration": "라" } } });
+    assert.deepEqual(storyChunkOverlays(model, "story:c"), {});
   });
 });
 

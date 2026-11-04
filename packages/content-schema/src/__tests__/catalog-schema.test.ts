@@ -163,8 +163,8 @@ describe('the shipped catalogue data', () => {
     }
   });
 
-  it('numbers the stories 1 to 24 and marks the six free samplers and the three anchors', () => {
-    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 24 }, (_, i) => i + 1));
+  it('numbers the stories 1 to 26 and marks the six free samplers and the three anchors', () => {
+    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 26 }, (_, i) => i + 1));
     expect(CATALOG.stories.filter((s) => s.sampler).map((s) => s.id)).toEqual([
       'story:sejong-new-letters',
       'story:hangeul-day',
@@ -619,7 +619,7 @@ describe('routeCatalogOf', () => {
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);
-    expect(stories).toHaveLength(24);
+    expect(stories).toHaveLength(26);
     expect(stories.map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 
