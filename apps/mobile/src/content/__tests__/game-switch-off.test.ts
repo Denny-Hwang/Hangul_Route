@@ -79,7 +79,7 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
 
   it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
-    expect(cloze.filter((id) => id.startsWith('quest:stage3-')).sort()).toEqual([
+    expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-v2-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
       'quest:stage3-letters-q1',
       'quest:stage3-life-q1',
@@ -87,6 +87,13 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage3-nature-q1',
       'quest:stage3-rites-q3',
     ]);
+  });
+
+  it('reads the Volume 2 steps too: Stage 3 Holidays & Traditions Volume 2 plays Cloze Pick in every quest, Dictation in q2 and Read Pick Meaning in q3 (row CM-45 S3)', () => {
+    const ofKind = (kind: string) => steps.filter(({ ref }) => scopeOf(ref)?.kind === kind).map(({ questId }) => questId);
+    for (const id of ['quest:stage3-rites-v2-q1', 'quest:stage3-rites-v2-q2', 'quest:stage3-rites-v2-q3']) expect(ofKind('cloze-pick'), id).toContain(id);
+    expect(ofKind('type-hangul')).toContain('quest:stage3-rites-v2-q2');
+    expect(ofKind('listen-pick')).toContain('quest:stage3-rites-v2-q3');
   });
 
   it('the check finds a fallback that cannot play (on the e2e fixture step)', () => {

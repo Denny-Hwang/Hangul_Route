@@ -21,7 +21,7 @@ import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import { clozeFixtureScope } from '../../logic/cloze-pick/e2e-rounds';
 import { lp, minigameScopes, type MinigameScope } from '../../logic/minigame-config';
 import { ALL_LESSON_SCOPES, LESSON_STAGE_MODULES } from './helpers/lesson-stages';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
 import { questsAll } from '../quests';
@@ -47,7 +47,8 @@ type Shipped = Record<string, ReadonlyMap<string, object>>;
 const SHIPPED: Shipped = {
   jamo: new Map(jamoAll.map((j) => [j.id, j])),
   card: new Map(heritageCardsAll.map((c) => [c.id, c])),
-  episode: new Map(episodesAll.map((e) => [e.id, e])),
+  // Every shipped episode, a cell's later volumes included (F-CURR-002 row CM-40).
+  episode: new Map(episodesWithVolumes.map((e) => [e.id, e])),
   quest: new Map(questsAll.map((q) => [q.id, q])),
   minigame: new Map([...Object.entries(minigameScopes), ...Object.entries(ALL_LESSON_SCOPES)]),
   stage: new Map(stages.map((s) => [`stage:${s.key}`, s])),
@@ -155,6 +156,26 @@ function overlayProblems(overlays: Overlays, shippedByPrefix: Shipped = SHIPPED)
   return problems;
 }
 
+/**
+ * A Cloze Pick particle round whose Korean meaning spells out the answer (row CM-45 S4 review): the gap's host word is
+ * written with the answer particle attached, maybe after an honorific dative (할머니___ answered 도, glossed 할머니께도).
+ * The English meaning may say "too"; the Korean one would show the very tile.
+ */
+function koGlossesShowingParticle(overlays: Overlays, scopes: Readonly<Record<string, MinigameScope>>): string[] {
+  const problems: string[] = [];
+  for (const [ref, scope] of Object.entries(scopes)) {
+    for (const round of scope.clozePick?.rounds ?? []) {
+      if (round.gapKind !== 'particle') continue;
+      const host = (round.sentence.ko.split('___')[0] ?? '').trim().split(/\s+/).at(-1) ?? '';
+      const answer = round.tiles[round.answerIndex]?.ko ?? '';
+      const gloss = overlays.ko[ref]?.[`clozePick.rounds.${round.id}.sentence.gloss`];
+      if (host === '' || answer === '' || typeof gloss !== 'string') continue;
+      if (new RegExp(`${host}(께서|께|에게|한테)?${answer}(?![가-힣])`).test(gloss)) problems.push(`ko ${ref} ${round.id}: "${gloss}" spells out ${host}${answer}`);
+    }
+  }
+  return problems;
+}
+
 /** Glosses one minigame shows side by side (pairs; one turn's options) that read the same in a locale. */
 function duplicateGlosses(overlays: Overlays, scopes: Readonly<Record<string, MinigameScope>> = minigameScopes): string[] {
   const problems: string[] = [];
@@ -204,6 +225,30 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
     for (const locale of ['es', 'ko'] as const) {
       for (const id of Object.keys(fromChunks[locale])) expect(['episode', 'quest', 'minigame'], id).toContain(overlayPrefix(id));
     }
+  });
+
+  it('no Korean Cloze Pick meaning spells out its particle answer on the gap\'s word (row CM-45 S4 review)', () => {
+    for (const [n, mod] of Object.entries(LESSON_STAGE_MODULES)) expect(koGlossesShowingParticle(mod.LESSON_SCOPE_OVERLAYS, mod.LESSON_SCOPES), `stage ${n}`).toEqual([]);
+    const scopes: Record<string, MinigameScope> = {
+      'minigame:leak-demo': {
+        kind: 'cloze-pick',
+        clozePick: {
+          rounds: [
+            {
+              id: 'c2',
+              gapKind: 'particle',
+              sentence: { ko: '할머니___ 새해 복 많이 받으세요.', romanization: 'halmeoni___ saehae bok mani badeuseyo', en: 'Happy New Year to you too, Grandma.' },
+              tiles: [{ ko: '도', romanization: 'do', en: 'too' }, { ko: '를', romanization: 'reul', en: 'object' }, { ko: '는', romanization: 'neun', en: 'topic' }],
+              answerIndex: 0,
+            },
+          ],
+        },
+      } as unknown as MinigameScope,
+    };
+    const leaky: Overlays = { es: {}, ko: { 'minigame:leak-demo': { 'clozePick.rounds.c2.sentence.gloss': '할머니께도 새해에 좋은 일이 많기를 비는 답' } } };
+    expect(koGlossesShowingParticle(leaky, scopes)).toEqual(['ko minigame:leak-demo c2: "할머니께도 새해에 좋은 일이 많기를 비는 답" spells out 할머니도']);
+    const fixed: Overlays = { es: {}, ko: { 'minigame:leak-demo': { 'clozePick.rounds.c2.sentence.gloss': '할머니께 같은 새해 인사를 돌려 드리는 답' } } };
+    expect(koGlossesShowingParticle(fixed, scopes)).toEqual([]);
   });
 
   it('no TypeScript-resident English gloss opens with the romanization of its Korean (gloss-repeats-romanization)', () => {

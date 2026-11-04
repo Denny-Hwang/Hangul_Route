@@ -648,6 +648,16 @@ describe('learnerPosition (N3)', () => {
     expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, position }))).toBe('stage1-life-q3 · stage1-rites-q1 · air-write 2');
   });
 
+  it('never steps into a cell\'s later volume: a Volume 2 is off the route (F-CURR-002 row CM-40; a shipped Stage 3 Volume 2, CM-45 S3)', () => {
+    // The first quest of a shipped Stage 3 later volume (Holidays Volume 2, row CM-45 S3, on this branch).
+    const later = CATALOG.cells.filter((c) => c.stage === 'stage3').flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds))[0] ?? '';
+    expect(CATALOG.quests.some((q) => q.id === later)).toBe(true);
+    expect(learnerPosition(later, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    expect(learnerPosition(null, ['quest:stage7-crafts-q3'], CATALOG)).toBeNull();
+    const stage3 = resolvePreset('by-stage', 120, { catalog: CATALOG, stage: 'stage3' });
+    expect(outline(stage3).includes('-v2-')).toBe(false);
+  });
+
   it('none done: the first route quest; no routeNext quest reads the same; the last route quest done: null (the fallback)', () => {
     expect(learnerPosition('quest:homework-x', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
     expect(learnerPosition(null, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
