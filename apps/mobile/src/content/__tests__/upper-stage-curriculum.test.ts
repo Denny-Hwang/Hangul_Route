@@ -1004,7 +1004,7 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
   const scaffolding = new Set<string>();
   const shortened = new Map<string, [MinigameScope, MinigameScope]>();
   it('runs over every shipped lesson quest', () => {
-    expect(QUESTS.length).toBeGreaterThanOrEqual(84);
+    expect(QUESTS.length).toBeGreaterThanOrEqual(87);
   });
 
   for (const quest of QUESTS) {
@@ -1054,10 +1054,10 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 123 of 126 shipped Practices scaffold
-    // (the 48 Volume 2 quests of rows CM-41..CM-45 all do).
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 126 of 129 shipped Practices scaffold
+    // (the 51 Volume 2 quests of rows CM-41..CM-45 all do).
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([126, 123]);
+    expect([QUESTS.length, scaffolding.size]).toEqual([129, 126]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {
