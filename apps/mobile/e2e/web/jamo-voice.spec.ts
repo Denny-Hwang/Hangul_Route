@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { encodeDeck, type LectureDeckInput, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { colors } from '@hangul-route/design-system/tokens';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, onboardChild, openLettersEpisode, passDiscover, readStored, seedStored, waitForNextListenPickRound } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, onboardChild, openLettersEpisode, passDiscover, readStored, seedStored, waitForNextListenPickRound, pastTapLock } from './helpers';
 import {
   captureSpeech,
   discoverPageOf,
@@ -155,6 +155,7 @@ test.describe('the voice matches the letter (release build, device voice)', () =
       if (letter === 'ㄴ' && !missedOnNieun) {
         // ㅏ is not heard in 니은: tapping it is a plain miss, with the amber nudge and Hoya naming the letter.
         const a = tiles.filter({ hasText: 'ㅏ' });
+        await pastTapLock(page);
         await a.click();
         const bubble = shown(page, 'match-sound-bubble');
         await expect(bubble).toBeVisible();
@@ -172,6 +173,7 @@ test.describe('the voice matches the letter (release build, device voice)', () =
         await expect.poll(async () => (await said(page)).at(-1)?.text).toBe('니은');
         missedOnNieun = true;
       }
+      await pastTapLock(page);
       await right.click();
       targets.push(letter!);
       if (round < 6) await expect(roundPill(page, round + 1)).toBeVisible();

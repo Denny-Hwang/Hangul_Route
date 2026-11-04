@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { colors, touchTarget } from '@hangul-route/design-system/tokens';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, pastTapLock } from './helpers';
 import { closeInstallGuide } from './text-fit';
 
 /**
@@ -84,9 +84,11 @@ async function endRound(page: Page, n: number, how: 'right' | 'miss-then-right')
   await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', `Round ${n}`);
   const { right, wrong } = await optionsOf(page);
   if (how === 'miss-then-right') {
+    await pastTapLock(page);
     await page.getByTestId(wrong).click();
     await expect(page.getByTestId('daily-review-miss')).toBeVisible();
   }
+  await pastTapLock(page);
   await page.getByTestId(right).click();
   await expect
     .poll(async () => (await page.getByTestId('daily-review-result').count()) > 0 || (await page.getByTestId('daily-review-dots').getAttribute('aria-label', { timeout: 1_000 }).catch(() => null)) === `Round ${n + 1}`, { timeout: 5_000 })
