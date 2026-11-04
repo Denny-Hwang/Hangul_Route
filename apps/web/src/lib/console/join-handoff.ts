@@ -35,3 +35,16 @@ export function openAppWithJoinCode(input: { code: string; now: number; locale: 
   // chooser (`who=1`, OA-D12).
   assign(learnerHome(origin, input.locale, { who: !handedOff }));
 }
+
+/**
+ * **Open the app on this device** on a child card that has not started yet (AMENDMENTS-GROWNUP-UX GX-11, P2): the child
+ * already joined, so no code is handed off; the grown-up unlock and the console session are cleared like the Learner app
+ * exit, and the learner app opens at "Who is using this?" ([OA] `who=1`), where the child picks their own name.
+ */
+export function openLearnerApp(input: { locale: UiLocale; origin?: string; storage?: KeyValueStorage | null; assign?: (url: string) => void }): void {
+  const storage = input.storage === undefined ? browserStorage('session') : input.storage;
+  const origin = input.origin ?? (typeof window === 'undefined' ? '' : window.location.origin);
+  clearGrownUpTab(storage);
+  const assign = input.assign ?? ((url: string) => window.location.assign(url));
+  assign(learnerHome(origin, input.locale, { who: true }));
+}

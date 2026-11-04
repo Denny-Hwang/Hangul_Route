@@ -21,6 +21,10 @@ describe('readers (lenient: a row this bundle cannot read is dropped)', () => {
     expect(readIncoming({ ...inc, learner: { name: 'Mina', avatar: 'tiger' } })?.learner).toEqual({ name: 'Mina', avatar: 'tiger' });
     expect(readIncoming({ ...inc, learner: 'x' })?.learner).toBeNull();
     expect(readIncoming({ ...inc, kind: 'teleport' })).toBeNull();
+    // GX-1: the waiting move's expiresAt is read when the view carries it (lenient: absent or not a string, left out).
+    expect(readOutgoing({ ...out, expiresAt: '2026-11-12T00:00:00.000Z' })?.expiresAt).toBe('2026-11-12T00:00:00.000Z');
+    expect(readIncoming({ ...inc, expiresAt: '2026-11-12T00:00:00.000Z' })?.expiresAt).toBe('2026-11-12T00:00:00.000Z');
+    expect(readIncoming({ ...inc, expiresAt: 7 })).not.toHaveProperty('expiresAt');
     expect(readMoveLists({ outgoing: [out, { id: 3 }], incoming: [inc, 'x'] })).toEqual({ outgoing: [out], incoming: [inc] });
     expect(readMoveLists(null)).toEqual({ outgoing: [], incoming: [] });
   });

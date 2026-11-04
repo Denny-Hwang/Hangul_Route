@@ -26,8 +26,9 @@ import {
 } from './lesson-lint-items';
 import type { StageKey } from './schemas/heritage-card';
 import { LessonNoteSchema, LessonReviewSchema, isLessonSignedOff, type LessonNote } from './schemas/lesson';
-import { Stage1TableSchema, reviewItemsOf, type Stage1Table } from './review-items/build';
-import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from './review-items/sources';
+import { Stage1TableSchema, allOccurrences, reviewItemsOf, type Stage1Table } from './review-items/build';
+import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree, weekSourcesOfTree } from './review-items/sources';
+import { WEEK_DROP_FILE_RE, WeekDropSchema, type WeekDrop } from './week-drops/week-drop';
 import { StableIdSnapshotSchema, type StableIdIssue } from './review-items/stable-ids';
 import { lintRolePlayScopes } from './role-play-rules';
 
@@ -299,9 +300,10 @@ export function allowlistedInstitution(publisher: string, accessed: string, url?
 
 // ---- files and tiers --------------------------------------------------------------------------------
 
-export type CurriculumTier = 'volume1' | 'volume2' | 'pack' | 'shipped-story' | 'new-story';
+export type CurriculumTier = 'volume1' | 'volume2' | 'pack' | 'shipped-story' | 'new-story' | 'week';
 // Row CM-3B: Volume 1 is strict too, once rows CM-3A and CM-3C left it no finding (§9.3); a shipped story still warns.
-const STRICT_TIERS: ReadonlySet<CurriculumTier> = new Set(['volume1', 'volume2', 'pack', 'new-story']);
+// Row CM-48: every "This week in Korea" drop is new content, so its findings are errors from day one.
+const STRICT_TIERS: ReadonlySet<CurriculumTier> = new Set(['volume1', 'volume2', 'pack', 'new-story', 'week']);
 export const severityOf = (tier: CurriculumTier): CurriculumSeverity => (STRICT_TIERS.has(tier) ? 'error' : 'warning');
 
 
@@ -1032,6 +1034,7 @@ type Push = (file: string, tier: CurriculumTier, f: Omit<CurriculumFinding, 'fil
 function tierOfCell(cell: string, shipped: ReadonlySet<string>): CurriculumTier {
   if (cell.startsWith('story:')) return shipped.has(cell) ? 'shipped-story' : 'new-story';
   if (cell.startsWith('episode:pack-')) return 'pack';
+  if (cell.startsWith('week:')) return 'week';
   return /-v[0-9]+$/.test(cell) ? 'volume2' : 'volume1';
 }
 
@@ -1062,6 +1065,7 @@ function lintStableIds(tree: ReadonlyMap<string, unknown>, shipped: ReadonlySet<
     stage1: table,
     lessons: lessonSourcesOfTree(tree),
     stories: storySourcesOfTree(tree),
+    weeks: weekSourcesOfTree(tree),
     ...vocabOfTree(tree),
     snapshot: snapshot.data,
   });
@@ -1186,6 +1190,7 @@ export function lintCurriculum(tree: ReadonlyMap<string, unknown>, opts: Curricu
     const overlay = OVERLAY_FILE_RE.exec(file);
     if (overlay !== null) lintOverlayCopy(file, overlay[1] as string, tree.get(file), owned, push);
   }
+  lintWeekDrops(tree, files, push);
   lintStableIds(tree, shipped, push);
   return findings;
 }
@@ -1204,4 +1209,77 @@ export function lintReviewStrings(learner: unknown, file: string): CurriculumFin
     path,
     message: reviewCopyMessage(problem),
   }));
+}
+
+// ---- "This week in Korea" (row CM-48) ------------------------------------------------------------------------
+
+/** A drop's reference zone: its sources and its review record (citations and reviewer text, not learner copy). */
+const WEEK_REFERENCE_KEYS = new Set(['sources', 'review']);
+
+/**
+ * The §9.3 rules on the "This week in Korea" drops (F-CURR-002 §5.7, row CM-48), F-CURR-001 §3.1 adapted to a
+ * micro-lesson; errors from day one. `lesson-schema`: the file is a `WeekDropSchema` body named by its Monday.
+ * `lesson-new-load`: at most 8 items the route (Stage 1, the ready cells and stories) and the earlier drops have not
+ * taught. `culture-source`: a source from the §6.6 allowlist, named as of its access date. `dictation-unambiguous`:
+ * no two items of a drop are said alike, so a heard round of the practice never asks them apart. `review-copy`: no
+ * percentage, score, age word, speaking line or emoji in the learner copy. `items-stable-id` reads the drops with the
+ * other sources (`lintStableIds`).
+ */
+function lintWeekDrops(tree: ReadonlyMap<string, unknown>, files: readonly string[], push: Push): void {
+  const weekFiles = files.filter((file) => WEEK_DROP_FILE_RE.test(file));
+  if (weekFiles.length === 0) return;
+  const known = routeKnownKo(tree);
+  for (const file of weekFiles) {
+    const add: Add = (rule, path, message) => push(file, 'week', { rule, path, message });
+    const raw = tree.get(file);
+    lintNewCopy(raw, '', WEEK_REFERENCE_KEYS, add);
+    // Read off the raw items, so a file that is not a drop yet still reports its load.
+    const items = (isRecord(raw) && Array.isArray(raw.items) ? raw.items : []).filter(isRecord).map((item) => String(item.ko ?? ''));
+    const fresh = items.filter((ko) => !known.has(normalizeKo(ko)));
+    if (fresh.length > 8) add('lesson-new-load', 'items', `${fresh.length} items are new (at most 8): ${fresh.join(', ')}`);
+    const parsed = WeekDropSchema.safeParse(raw);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0] as z.ZodIssue;
+      add('lesson-schema', pathOf(...first.path) || '(root)', `not a week drop: ${first.message}`);
+      continue;
+    }
+    const drop = parsed.data;
+    const monday = WEEK_DROP_FILE_RE.exec(file)?.[1];
+    if (drop.weekOf !== monday) add('lesson-schema', 'weekOf', `the drop of the week of ${drop.weekOf} is content/weekly/${drop.weekOf}.json`);
+    if (drop.status === 'ready') for (const item of drop.items) known.add(normalizeKo(item.ko));
+    lintWeekSources(drop, add);
+    const sounds = new Map<string, string>();
+    drop.items.forEach((item, i) => {
+      const sound = pronunciationKey(item.ko);
+      const other = sounds.get(sound);
+      if (other !== undefined) add('dictation-unambiguous', pathOf('items', i), `${item.ko} is said like ${other}: a heard round could not ask them apart`);
+      else sounds.set(sound, item.ko);
+    });
+  }
+}
+
+/** The Korean the route teaches (Stage 1, the ready lesson cells and stories), normalized as the lint compares it. */
+function routeKnownKo(tree: ReadonlyMap<string, unknown>): Set<string> {
+  const stage1 = Stage1TableSchema.safeParse(tree.get(REVIEW_STAGE1_FILE));
+  const occurrences = allOccurrences({
+    stage1: stage1.success ? stage1.data : { schemaVersion: 1, symbols: [], occurrences: [] },
+    lessons: lessonSourcesOfTree(tree),
+    stories: storySourcesOfTree(tree),
+  });
+  return new Set(occurrences.map((o) => normalizeKo(o.ko)));
+}
+
+/** `culture-source` on a drop: one allowlisted source at least, each allowlisted one under its name as of access. */
+function lintWeekSources(drop: WeekDrop, add: Add): void {
+  const matches = drop.sources.map((s) => allowlistedInstitution(s.publisher, s.accessed, s.url));
+  if (!matches.some((m) => m !== undefined)) {
+    add('culture-source', 'sources', 'no source is from the F-CURR-002 §6.6 allowlist of public institutions, on a host the institution runs');
+  }
+  matches.forEach((m, si) => {
+    if (m === undefined || m.nameAsOfAccess) return;
+    const s = drop.sources[si] as LessonBodySource;
+    const { formerly } = m.institution;
+    const expected = formerly !== undefined && s.accessed < formerly.until ? formerly : m.institution;
+    add('culture-source', pathOf('sources', si, 'publisher'), `on ${s.accessed} the institution was called the ${expected.name} (${expected.ko})`);
+  });
 }

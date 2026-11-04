@@ -13,6 +13,7 @@ import {
   readerCheckpoints,
   readerKeyAction,
   sayItYourselfShown,
+  sceneHearShown,
   stepsForVoice,
   termId,
   wordId,
@@ -100,6 +101,29 @@ describe('stepsForVoice (§3.4: no Korean voice, English narration still plays)'
 
   it('drops the Korean steps (language ko-KR, the PlaySpec default) when it cannot', () => {
     expect(stepsForVoice(steps, false).map((s) => s.text)).toEqual(['Long ago, King', 'wanted everyone to read.']);
+  });
+});
+
+describe('sceneHearShown (NB-2: no acceptable voice, no play button)', () => {
+  const en: PlaySpec = { text: 'Long ago, King', language: 'en-US', kind: 'narration', source: 'story-reader' };
+  const ko: PlaySpec = { text: '세종', language: 'ko-KR', kind: 'word', source: 'story-reader' };
+  const koLine: PlaySpec = { text: '세종이 글자를 만들었어요.', kind: 'sentence', source: 'story-reader' };
+
+  it('shows the button while a Korean voice or a clip can play (or the check still runs)', () => {
+    expect(sceneHearShown([ko, koLine], true)).toBe(true);
+    expect(sceneHearShown([en, ko], true)).toBe(true);
+  });
+
+  it('keeps the button when English narration can still play without a Korean voice', () => {
+    expect(sceneHearShown([en, ko, koLine], false)).toBe(true);
+  });
+
+  it('hides the button when every step is Korean and no acceptable Korean voice or clip exists', () => {
+    expect(sceneHearShown([ko, koLine], false)).toBe(false);
+  });
+
+  it('hides it for a scene with nothing to say', () => {
+    expect(sceneHearShown([], true)).toBe(false);
   });
 });
 
