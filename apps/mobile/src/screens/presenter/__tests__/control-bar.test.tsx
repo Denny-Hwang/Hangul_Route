@@ -357,10 +357,10 @@ const WORDS: Record<'en' | 'es' | 'ko', { full: number[]; more: number[] }> = {
   ko: { full: [31.1, 31.1, 31.1, 31.1, 31.1], more: [31.1] },
 };
 
-/** Hands the rail's label probe each label's drawn height (More, Next, Reveal, Previous, Sound): one 21 px line each unless given. */
-function measureLabels(r: ReactTestRenderer, heights: number[] = [21, 21, 21, 21, 21]): void {
+/** Hands the rail's label probe each label's drawn height (More, Next, Reveal, Previous, Sound, Finish): one 21 px line each unless given. */
+function measureLabels(r: ReactTestRenderer, heights: number[] = [21, 21, 21, 21, 21, 21]): void {
   const probes = r.root.findAll((n) => typeof n.type !== 'string' && String(n.props.testID ?? '').startsWith('presenter-rail-label-') && typeof n.props.onLayout === 'function');
-  expect(probes).toHaveLength(5);
+  expect(probes).toHaveLength(6);
   probes.forEach((node, i) => layoutOf(node, RAIL_LABEL_ROOM.full, heights[i]!));
 }
 
@@ -521,13 +521,13 @@ describe('the full rail buttons (88 wide, at least 64 tall, Next 96 where the ra
     expect(byTestId(r.root, 'presenter-next')[0]!.props['aria-label']).toBe(getMessages(lang).common.buttons.next);
   });
 
-  it('probes every word of every full-rail label once, Next and Reveal both (so the rail never flips between builds)', async () => {
+  it('probes every word of every full-rail label once, Next, Reveal and Finish (so the rail never flips between builds or at the end)', async () => {
     const r = await render(bar({ compact: true, rail: 'full', railHeight: 390 }, 'ko'));
     const words = r.root
       .findAll((n) => typeof n.type !== 'string' && String(n.props.testID ?? '').startsWith('presenter-rail-word-full-') && typeof n.props.onLayout === 'function')
       .map((n) => textOf(byTestId(n, String(n.props.testID))[0] ?? n));
     const m = getMessages('ko').learner.presenter.bar;
-    const expected = [...new Set([m.more.cta, getMessages('ko').common.buttons.next, m.reveal.cta, m.prev.cta, m.sound.cta].flatMap((label) => label.split(/\s+/)))];
+    const expected = [...new Set([m.more.cta, getMessages('ko').common.buttons.next, m.reveal.cta, m.prev.cta, m.sound.cta, m.finish.cta].flatMap((label) => label.split(/\s+/)))];
     expect(words).toEqual(expected);
   });
 });
@@ -592,8 +592,11 @@ describe('the rail label fallback (PN-0b N8): a word wider than its room', () =>
     const onRailMeasure = vi.fn();
     const r = await render(bar({ compact: true, rail: 'full', railHeight: 390, onRailMeasure }, 'ko'));
     measureWords(r, WORDS.ko);
-    measureLabels(r, [42, 21, 42, 21, 21]);
+    measureLabels(r, [42, 21, 42, 21, 21, 21]);
     expect(onRailMeasure).toHaveBeenLastCalledWith({ full: true, heights: { more: 90, next: 90, prev: 69, sound: 69 } });
+    // Finish counts too (row NB-1): a two-line Finish makes Next 90 even where Next and Reveal are one line.
+    measureLabels(r, [21, 21, 21, 21, 21, 42]);
+    expect(onRailMeasure).toHaveBeenLastCalledWith({ full: true, heights: { more: 69, next: 90, prev: 69, sound: 69 } });
     // Next's least height follows the measure: 2 x 90 + 96 + 69 + 40 = 385 holds Next at 96 in 390 px.
     expect(flatStyle(byTestId(r.root, 'presenter-next')[0]!).minHeight).toBe('96px');
   });
@@ -659,3 +662,40 @@ function opacityUp(node: ReactTestInstance): number {
   }
   return out;
 }
+
+/** F-TCH-004 section 3.5 amendment 2026-11-03 (row NB-1): at the end Next reads Finish on every bar. */
+describe('Finish at the end of the lesson (NB-1)', () => {
+  const layouts: Array<[string, Partial<ControlBarProps>]> = [
+    ['docked', {}],
+    ['phone bar', { compact: true }],
+    ['full rail', { compact: true, rail: 'full', railHeight: 390 }],
+    ['compact rail', { compact: true, rail: 'compact', railHeight: 360 }],
+  ];
+
+  it.each(layouts)('%s: Next is named Finish in each language, and the press runs onNext', async (_name, layout) => {
+    for (const lang of ['en', 'es', 'ko'] as const) {
+      const onNext = vi.fn();
+      const r = await render(bar({ ...layout, finish: true, revealNext: true, onNext }, lang));
+      const next = byTestId(r.root, 'presenter-next')[0]!;
+      expect(next.props['aria-label'], lang).toBe(getMessages(lang).learner.presenter.bar.finish.cta);
+      await press(next);
+      expect(onNext, lang).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it.each(layouts)('%s: without finish, Next and Reveal stay as they were', async (_name, layout) => {
+    const r = await render(bar({ ...layout, finish: false }));
+    expect(byTestId(r.root, 'presenter-next')[0]!.props['aria-label']).toBe('Next');
+    const reveal = await render(bar({ ...layout, revealNext: true }));
+    expect(byTestId(reveal.root, 'presenter-next')[0]!.props['aria-label']).toBe('Reveal');
+  });
+
+  it('the docked bar, the phone bar and the full rail draw the Finish label; the compact rail names it only', async () => {
+    for (const layout of layouts.slice(0, 3).map(([, l]) => l)) {
+      const r = await render(bar({ ...layout, finish: true }));
+      expect(labelText(byTestId(r.root, 'presenter-next')[0]!), JSON.stringify(layout)).toBe('Finish');
+    }
+    const compact = await render(bar({ compact: true, rail: 'compact', railHeight: 360, finish: true }));
+    expect(labelText(byTestId(compact.root, 'presenter-next')[0]!)).toBe('');
+  });
+});

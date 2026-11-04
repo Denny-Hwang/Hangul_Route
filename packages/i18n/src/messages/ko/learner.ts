@@ -1668,6 +1668,7 @@ export const learner = {
         storageOff: '이 기기에서는 최근 수업을 쓸 수 없어요. 수업은 그대로 할 수 있어요.',
         resume: { cta: '이어 하기' },
         startOver: { cta: '처음부터' },
+        finished: (day: string) => `마친 날: ${day}`,
       },
       quick: {
         consonants: '자음',
@@ -1727,6 +1728,7 @@ export const learner = {
       more: { cta: '더 보기' },
       fullscreen: { cta: '전체 화면' },
       exit: { cta: '나가기' },
+      finish: { cta: '마치기' },
       noVoice: '여기는 한국어 음성이 없어요. 직접 읽어 주세요!',
       noSound: '이 슬라이드에는 소리가 없어요.',
       soundFailed: '소리가 나지 않았어요. 직접 읽어 주세요!',
@@ -1737,7 +1739,9 @@ export const learner = {
     exit: {
       title: '수업을 나갈까요?',
       line: '누구의 진도도 바뀌지 않아요.',
+      resumeLine: '최근 수업에 이 슬라이드가 남아서 나중에 이어 할 수 있어요.',
       keepGoing: { cta: '계속하기' },
+      finish: { title: '수업을 마칠까요?', line: '수업 끝까지 왔어요.', cta: '마치기' },
     },
     grid: {
       kind: {
@@ -1802,7 +1806,7 @@ export const learner = {
         practice: '집에서 Hangul Route로 연습해요',
         codeTitle: '이 코드로 들어와요',
         howToJoin: (cta: string) => `Hangul Route에서 ‘${cta}’ 버튼을 누르고 이 코드를 입력해요.`,
-        exitHint: '마치려면 나가기를 고르세요.',
+        exitHint: '마치려면 마치기를 고르세요.',
       },
       sentence: { label: '문장' },
       pattern: { label: '문장 틀' },
