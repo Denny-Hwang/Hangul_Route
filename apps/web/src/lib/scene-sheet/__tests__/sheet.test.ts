@@ -20,6 +20,8 @@ const scenesOf = (story: Record<string, unknown>): RawScene[] => (story.tiers as
 /** sillok-royal-historians with art on s2 (the spec's worked example) and every other scene pending. */
 function historians(): Record<string, unknown> {
   const story = raw('sillok-royal-historians.json');
+  // the listen tier only, as the story shipped before its read tier (F-CURR-002 row CM-46a): the counts below are its 7 scenes
+  story.tiers = (story.tiers as unknown[]).slice(0, 1);
   const scenes = scenesOf(story);
   // start from no art at all, whatever the file holds today: every scene
   // pending (a ready story needs art or artPending on each scene), s2 drawn

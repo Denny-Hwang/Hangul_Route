@@ -27,7 +27,7 @@ const walk = (rel: string): void => {
     else if (e.isFile() && e.name.endsWith('.json')) tree.set(child, json(child));
   }
 };
-for (const dir of ['content/episodes', 'content/stories', 'content/vocab', 'content/packs']) {
+for (const dir of ['content/episodes', 'content/stories', 'content/vocab', 'content/packs', 'content/weekly']) {
   try {
     walk(dir);
   } catch {

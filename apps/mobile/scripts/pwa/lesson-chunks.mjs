@@ -119,7 +119,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (the tile pool rules), JV-4 0 (e2e), AC-1 +7,619 (the say key, the clip lookup order, the pack switches), AC-2, AC-3
   // and AC-4 0 (scripts), AC-6 +1,959 (the clip registry and the pack hooks; the loader is a lazy chunk), the
   // integration's Match Shape migration 0 (a screen chunk). The line is the measurement plus a 4,896 B rounding margin.
-  startBundleRaw: 4_840_000,
+  // F-CURR-002 row CM-48 (This week in Korea): main 1bfda3fc8 measures 4,838,051 B raw (release `build:web`, Metro cache
+  // cleared), 1,949 B under the old 4,840,000 B line; the row adds 2,700 B (4,840,751 B raw / 1,294,652 B gzip): its door
+  // and route, the calendar key, the generated list of drop weeks with the chunk's hash and loader, the done mark's key and
+  // removal, two route registrations and the English strings. The card, the pages, the drops and their review loader are
+  // precached chunks. The line is the measurement plus a 4,249 B rounding margin.
+  startBundleRaw: 4_845_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -128,8 +133,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 8dfb8a43c; a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves text out
   // (CM-8b's story overlay split). Row CM-46a (the read tiers of the ten listen-only stories, about 45 KB of ko story
   // overlays) measures ko 1,001,146 B, es 588,515 B raw (release build, Metro cache cleared, on CM-8b's head), so the
-  // line is that measurement plus an 8,854 B rounding margin; the next story row (CM-46) moves the story narration
-  // overlays into the story chunks (CM-8b's overlay half) rather than raising it again.
+  // line is that measurement plus an 8,854 B rounding margin (CI measured ko 1,001,745 B after main 377d44291 was merged,
+  // 8,255 B under it); the next story row (CM-46) moves the story narration overlays into the story chunks (CM-8b's
+  // overlay half) rather than raising it again.
   localeChunkRaw: 1_010_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
   // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
@@ -174,6 +180,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
   reviewItemsRaw: 150_000,
   reviewItemsGzip: 30_000,
+  // "This week in Korea" (F-CURR-002 §5.7, §10, row CM-48): the week drops, one content-hashed chunk of
+  // scripts/build-week-drops.mjs, lazy and precached, held here on its built bundle and there on its module (`BUDGET`,
+  // the same lines). Set at CM-48 from the first 13 drops (24,172 B raw / 6,662 B gzip as generated, 27,699 B raw / 6,491 B gzip as built); a year of drops is
+  // about four times that, so the batch that crosses it raises both lines with its measurement or splits the chunk.
+  weekDropsRaw: 60_000,
+  weekDropsGzip: 16_000,
 });
 
 export const md5 = (text) => createHash('md5').update(text, 'utf8').digest('hex');
@@ -348,6 +360,13 @@ export const SCREEN_CHUNKS = Object.freeze([
   // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
   // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
   Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
+  // F-CURR-002 row CM-47: the eight added realia layouts and their dressings (`src/screens/minigames/realia-kinds-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/minigames/realia-kinds-entry.tsx` when a sheet has one
+  // of those kinds); until it is in, the start bundle's RealiaSheet draws such a sheet as the plain sheet.
+  Object.freeze({ name: 'realia-kinds-chunk', marker: 'screen-chunk:realia-kinds' }),
+  // F-CURR-002 row CM-48: This week in Korea, the Home card and the drop's pages (`src/screens/week-drop/week-drop-chunk.tsx`,
+  // reached only through the literal `import()` of `src/screens/week-drop/week-drop-entry.tsx` while `weeklyDrop` is on).
+  Object.freeze({ name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' }),
 ]);
 
 /**
@@ -449,7 +468,7 @@ export function withWholeClipPack(report, budget = PRECACHE_BUDGET) {
  * precached clips (AMENDMENTS-AUDIO-CLIPS AC-6) and the whole learner precache.
  * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], scenes?: readonly { name: string }[], audioPacks?: readonly { name: string }[], clips?: { count: number, bytes: number }, bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], storyShelf = [], locales = [], roots = [], reviewItems = [], screens = [], scenes = [], audioPacks = [], clips, bundles, precache }) {
+export function precacheReport({ manifest, stories = [], storyShelf = [], locales = [], roots = [], reviewItems = [], weekDrops = [], screens = [], scenes = [], audioPacks = [], clips, bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     audioPackChunks: chunkTotals(audioPacks, bundles),
@@ -462,6 +481,8 @@ export function precacheReport({ manifest, stories = [], storyShelf = [], locale
     localeChunks: chunkTotals(locales, bundles),
     rootChunks: chunkTotals(roots, bundles),
     reviewItemChunks: chunkTotals(reviewItems, bundles),
+    // Row CM-48: the week-drop chunk.
+    weekDropChunks: chunkTotals(weekDrops, bundles),
     screenChunks: chunkTotals(screens, bundles),
     sceneChunks: chunkTotals(scenes, bundles),
     precache: { count: precache.count, raw: precache.size },
@@ -491,6 +512,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   if (report.rootChunks !== undefined && report.rootChunks.count > 0) {
     lines.push(
       `  grown-up root chunks  ${report.rootChunks.count} bundles  ${report.rootChunks.raw} B raw  ${report.rootChunks.gzip} B gzip  (largest ${report.rootChunks.largest?.raw ?? 0} B raw, ceiling ${budget.rootChunkRaw} B each)`,
+    );
+  }
+  if (report.weekDropChunks !== undefined && report.weekDropChunks.count > 0) {
+    lines.push(
+      `  week-drop chunk  ${report.weekDropChunks.count} bundles  ${report.weekDropChunks.raw} B raw  ${report.weekDropChunks.gzip} B gzip  (ceiling ${budget.weekDropsRaw} B raw, ${budget.weekDropsGzip} B gzip)`,
     );
   }
   if (report.reviewItemChunks !== undefined && report.reviewItemChunks.count > 0) {
@@ -573,6 +599,12 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
           `(raise PRECACHE_BUDGET.${line} in apps/mobile/scripts/pwa/lesson-chunks.mjs as a reviewed one-line change with the measured numbers in the PR)`,
       );
     }
+  }
+  const weekDrops = report.weekDropChunks;
+  if (weekDrops !== undefined) {
+    const raise = '(raise it in scripts/build-week-drops.mjs BUDGET and PRECACHE_BUDGET together, as a reviewed one-line change with the measured numbers in the PR)';
+    if (weekDrops.raw > budget.weekDropsRaw) problems.push(`the week-drop bundle is ${weekDrops.raw} B raw, over its ceiling of ${budget.weekDropsRaw} B ${raise}`);
+    if (weekDrops.gzip > budget.weekDropsGzip) problems.push(`the week-drop bundle is ${weekDrops.gzip} B gzip, over its ceiling of ${budget.weekDropsGzip} B gzip ${raise}`);
   }
   const reviewItems = report.reviewItemChunks;
   if (reviewItems !== undefined) {

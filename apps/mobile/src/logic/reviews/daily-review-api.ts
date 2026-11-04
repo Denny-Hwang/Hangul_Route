@@ -129,7 +129,8 @@ export function createDailyReviewApi(deps: DailyReviewDeps): DailyReviewApi {
     }
   }
 
-  const lessonCells = (ctx: EngineContext, id: string): string[] => (ctx.index.byId.get(id)?.cells ?? []).filter((c) => c.startsWith('episode:'));
+  // The chunks that hold an item's es and ko meanings: its lesson cells and, row CM-48, the week drops that teach it.
+  const lessonCells = (ctx: EngineContext, id: string): string[] => (ctx.index.byId.get(id)?.cells ?? []).filter((c) => c.startsWith('episode:') || c.startsWith('week:'));
   /** The items a plan asks, and with `options` the items its pick rounds offer beside the answer. */
   const planItems = (plan: PlannedSession, options: boolean): string[] =>
     plan.rounds.flatMap((r) => [r.question.itemId, ...(options && r.type === 'pick' ? r.options.map((o) => o.id) : [])]);

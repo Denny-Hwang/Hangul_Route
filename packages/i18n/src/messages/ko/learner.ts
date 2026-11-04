@@ -2068,7 +2068,7 @@ export const learner = {
   mastery: {
     level: { done: '완료', practiced: '연습함', mastered: '익힘' },
     readyToRefresh: '다시 볼 때예요',
-    newVolume: '새 묶음이 있어요',
+    newVolume: '새 권이 나왔어요',
     levelUp: (title: string, level: string) => `${title}: ${level}`,
   },
   wordsKnown: {
@@ -2167,5 +2167,11 @@ export const learner = {
     throwAgain: '한 번 더 던져요',
     pieceHome: '말 하나가 도착했어요!',
     home: '도착',
+  },
+  weekDrop: {
+    heading: '이번 주 한국 이야기',
+    practice: { cta: '낱말 연습하기' },
+    done: '이번 주는 다 했어요',
+    next: '다음 주에 새 이야기가 와요.',
   },
 } satisfies DeepPartial<Messages['learner']>;

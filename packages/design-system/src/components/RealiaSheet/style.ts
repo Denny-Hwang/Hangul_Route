@@ -1,5 +1,5 @@
 import { borderWidth, colors, radii, spacing, touchTarget } from '../../tokens';
-import type { RealiaLineMark, RealiaSheetKind } from './types';
+import type { RealiaBaseKind, RealiaLineMark, RealiaSheetKind } from './types';
 
 /**
  * Pure looks behind `RealiaSheet` (F-CURR-001 G-2; design/screens/minigame-realia-read/,
@@ -28,8 +28,8 @@ export interface RealiaDressing {
   bottom?: string;
 }
 
-/** The scene-art props that dress each kind (`REALIA_REGISTRY`); the plain sheet has none. */
-export const REALIA_DRESSINGS: Readonly<Record<RealiaSheetKind, RealiaDressing>> = {
+/** The scene-art props that dress each G-2 kind (`REALIA_REGISTRY`); the plain sheet has none (CM-47's: `kinds-style.ts`). */
+export const REALIA_DRESSINGS: Readonly<Record<RealiaBaseKind, RealiaDressing>> = {
   menu: { top: 'prop:realia-awning', bottom: 'prop:realia-counter' },
   ticket: { top: 'prop:realia-train-band' },
   sign: { top: 'prop:realia-mountains', bottom: 'prop:realia-post-foot' },
@@ -72,6 +72,11 @@ export function realiaLineLook(mark: RealiaLineMark): RealiaLineLook {
     default:
       return { backgroundColor: undefined, borderColor: 'transparent', borderWidth: borderWidth.thick, borderStyle: 'solid', icon: null };
   }
+}
+
+/** The layout `RealiaSheet` draws for a kind: its own for a G-2 kind, the plain sheet for any other (CM-47's, an unknown one). */
+export function realiaBaseKind(kind: RealiaSheetKind): RealiaBaseKind {
+  return Object.prototype.hasOwnProperty.call(REALIA_DRESSINGS, kind) ? (kind as RealiaBaseKind) : 'plain';
 }
 
 /** The surface a kind's lines sit on: a trail board is amber paper, everything else white paper. */
