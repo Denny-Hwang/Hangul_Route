@@ -173,6 +173,49 @@ function enclosingObject(source: string, at: number): string {
   return source.slice(start);
 }
 
+/** The object literal that opens at `start` (a `{`): up to its matching `}`. */
+function objectFrom(source: string, start: number): string {
+  let depth = 0;
+  for (let i = start; i < source.length; i += 1) {
+    const ch = source[i];
+    if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(start, i + 1);
+    }
+  }
+  return source.slice(start);
+}
+
+/**
+ * `buttonBase` and every local name built on it, one level after another: `const smallButton = buttonBase;`,
+ * `const control = { ...buttonBase, flex: 'none' };`, `const primary = { ...control, ... };`. A spread of any of them is
+ * a spread of the floor, so the scan follows them all.
+ */
+function buttonBaseNames(source: string): string[] {
+  const names = new Set(['buttonBase']);
+  const declarations = Array.from(source.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*(?::\s*[\w.<>]+\s*)?=\s*/g));
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const declaration of declarations) {
+      const name = declaration[1] as string;
+      if (names.has(name)) continue;
+      const at = (declaration.index ?? 0) + declaration[0].length;
+      const direct = /^([A-Za-z_$][\w$]*)\s*[;,\n]/.exec(source.slice(at, at + 200));
+      const built =
+        direct !== null
+          ? names.has(direct[1] as string)
+          : source[at] === '{' && Array.from(objectFrom(source, at).matchAll(/\.\.\.([A-Za-z_$][\w$]*)\b/g)).some((m) => names.has(m[1] as string));
+      if (built) {
+        names.add(name);
+        grew = true;
+      }
+    }
+  }
+  return Array.from(names);
+}
+
 /** The top-level keys an object literal sets (nested objects and spreads skipped). */
 function topLevelKeys(literal: string): string[] {
   const keys: string[] = [];
@@ -206,11 +249,22 @@ describe('source scan: no per-call size on the console button (GX-6)', () => {
     expect(topLevelKeys(enclosingObject(src, src.indexOf('...buttonBase')))).toEqual(['minHeight', 'style', 'minWidth']);
   });
 
-  it('no object that spreads buttonBase sets minHeight, minWidth, display, alignItems, justifyContent or boxSizing', () => {
+  it('the scan follows names built on buttonBase (an alias, or a literal that spreads it or another alias)', () => {
+    const src = 'const small: CSSProperties = buttonBase;\nconst control = { ...buttonBase, flex: "none" };\nconst primary = { color: "x", ...control };\nconst other = { ...panelStyle };';
+    expect(buttonBaseNames(src).sort()).toEqual(['buttonBase', 'control', 'primary', 'small']);
+  });
+
+  it('the console names built on buttonBase are found (smallButton, button, control, primary)', () => {
+    const all = new Set(users.flatMap((f) => buttonBaseNames(readFileSync(f, 'utf8'))));
+    for (const name of ['smallButton', 'primaryButton', 'button', 'control', 'primary']) expect(all.has(name), name).toBe(true);
+  });
+
+  it('no object that spreads buttonBase, or a name built on it, sets minHeight, minWidth, display, alignItems, justifyContent or boxSizing', () => {
     const offenders: string[] = [];
     for (const file of users) {
       const source = readFileSync(file, 'utf8');
-      for (const match of source.matchAll(/\.\.\.buttonBase\b/g)) {
+      const spread = new RegExp(`\\.\\.\\.(?:${buttonBaseNames(source).join('|')})\\b`, 'g');
+      for (const match of source.matchAll(spread)) {
         const keys = topLevelKeys(enclosingObject(source, match.index ?? 0));
         const bad = keys.filter((k) => OWNED.includes(k));
         if (bad.length > 0) offenders.push(`${relative(WEB_SRC, file)}: ${bad.join(', ')}`);

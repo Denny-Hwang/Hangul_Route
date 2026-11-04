@@ -5,7 +5,7 @@
 **Owner**: solo dev
 **Rollout**: Roadmap S3 (second half) — the adult side of F-SPACE-001
 
-> **Amended 2026-10-31 by `AMENDMENTS-GROWNUP-UX.md` [GX]** (§3.4): a class row's count covers re-links, transfers and teacher moves, shown as "{n} need your OK" and linking to the class page's review sheet (row GX-3); counts only, never a name.
+> **Amended 2026-10-31 by `AMENDMENTS-GROWNUP-UX.md` [GX]** (§3.4): a class row's count covers re-links, transfers and teacher moves, shown as "{n} need your OK" and linking to the class page's review sheet (row GX-3; a school admin's child classes counted through the school's new `GET /api/spaces/:id/attention`, row GX-W); counts only, never a name.
 
 Parent: F-SPACE-001 (all routes exist) · F-AUTH-001 (bearer, dev fallback) · F-TCH-001 §3.2 (roster rules) · wireframes `design/wireframes/console/sign-in.md`, `onboarding-role.md`, `home.md`, `roster.md`
 
