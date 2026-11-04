@@ -89,6 +89,18 @@ function classMoveContract(name: string, make: () => Db): void {
       expect(await db.classMovesOfSpace(DST, 'source', 10)).toEqual([]);
     });
 
+    it('[GX-W] reads the open moves of a set of spaces by role, set-based, past their window too (the caller filters)', async () => {
+      await db.putSpace(space('space:third'));
+      await db.createClassMove(move());
+      await db.createClassMove(move({ id: 'move:0002', learnerId: 'profile:mina', sourceSpaceId: 'space:third', createdAt: LATER, updatedAt: LATER, expiresAt: T }));
+      expect((await db.openClassMovesOfSpaces([SRC, 'space:third'], 'source')).map((m) => m.id).sort()).toEqual(['move:0001', 'move:0002']);
+      expect((await db.openClassMovesOfSpaces([DST], 'destination')).map((m) => m.id).sort()).toEqual(['move:0001', 'move:0002']);
+      expect(await db.openClassMovesOfSpaces([DST], 'source')).toEqual([]);
+      expect(await db.openClassMovesOfSpaces([], 'destination')).toEqual([]);
+      expect(await db.endClassMove('move:0001', 'cancelled', 'cancelled', null, NOW)).toBe(1);
+      expect((await db.openClassMovesOfSpaces([SRC, 'space:third'], 'source')).map((m) => m.id)).toEqual(['move:0002']);
+    });
+
     it('ends from requested only; expiry needs the window to be over', async () => {
       await db.createClassMove(move());
       expect(await db.endClassMove('move:0001', 'expired', 'expired', null, NOW)).toBe(0);

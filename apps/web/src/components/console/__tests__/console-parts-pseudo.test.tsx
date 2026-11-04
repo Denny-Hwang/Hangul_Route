@@ -55,7 +55,7 @@ const plan = (over: Partial<PlanView>): PlanView => ({
   updatedAt: '2026-10-10T09:00:00.000Z',
   ...over,
 });
-const row = (over: Partial<ReadoutRow>): ReadoutRow => ({ learnerId: 'l:1', name: 'Mina', done: 1, total: 2, notReady: 0, synced: true, lastActiveAt: '2026-10-11T08:00:00.000Z', ...over });
+const row = (over: Partial<ReadoutRow>): ReadoutRow => ({ learnerId: 'l:1', name: 'Mina', done: 1, total: 2, notReady: 0, state: 'progress', lastActiveAt: '2026-10-11T08:00:00.000Z', ...over });
 // Data on the readout: the plan title, item notes, raw target dates, learner names and the published date.
 const readoutData = ['Week three', 'warm up', '2026-10-12', 'Mina', 'Jun', realFormatDate('en', '2026-10-10T09:00:00.000Z', 'monthDay', { utc: true }), ...contentTitles];
 const noop = (): void => undefined;
@@ -63,7 +63,7 @@ const noop = (): void => undefined;
 describe('plan parts render only dictionary text (en-XA)', () => {
   it('the published readout for everyone, with progress rows (synced, not ready, waiting)', () => {
     const html = renderToStaticMarkup(
-      <PlanReadout plan={plan({})} rows={[row({}), row({ learnerId: 'l:2', name: 'Jun', done: 0, notReady: 1 }), row({ learnerId: 'l:3', name: 'Mina', synced: false, lastActiveAt: '2026-10-10T08:00:00.000Z' })]} kind="class" busy={false} now={now} onEdit={noop} onArchive={noop} onNew={noop} />,
+      <PlanReadout plan={plan({})} rows={[row({}), row({ learnerId: 'l:2', name: 'Jun', done: 0, notReady: 1 }), row({ learnerId: 'l:3', name: 'Mina', state: 'notDelivered', lastActiveAt: '2026-10-10T08:00:00.000Z' })]} kind="class" busy={false} now={now} onEdit={noop} onArchive={noop} onNew={noop} />,
     );
     expect(html).toContain('data-testid="readout-row"');
     expectAllPseudo(html, readoutData);
