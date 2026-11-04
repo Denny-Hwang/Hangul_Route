@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): Odd One Out and Culture Quiz take touches through the shared tap board (commit on release with a generous reach, a 400 ms lock); a locked wrong Odd One Out tile is disabled, so a bounce scores no extra miss (rows KT-2, KT-3).
+
 ## 1. Context
 
 Stage 1 ships 6 of the 12 catalog minigames (Match Sound, Build a Letter,
