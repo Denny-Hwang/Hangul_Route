@@ -1,0 +1,860 @@
+{
+  "c": [
+    {
+      "lang": "en",
+      "state": "default",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 1075,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 807,
+      "screens": 1.89,
+      "decisionsScreens": 1.42
+    },
+    {
+      "lang": "en",
+      "state": "default",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 404,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 305,
+      "screens": 0.56,
+      "decisionsScreens": 0.42
+    },
+    {
+      "lang": "en",
+      "state": "default",
+      "width": 320,
+      "text": "text=200",
+      "top": 375,
+      "height": 2689,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 2119,
+      "screens": 4.73,
+      "decisionsScreens": 3.73
+    },
+    {
+      "lang": "en",
+      "state": "state=change",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 1235,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 967,
+      "screens": 2.17,
+      "decisionsScreens": 1.7
+    },
+    {
+      "lang": "en",
+      "state": "state=change",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 444,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 345,
+      "screens": 0.62,
+      "decisionsScreens": 0.48
+    },
+    {
+      "lang": "en",
+      "state": "state=split",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 1075,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 807,
+      "screens": 1.89,
+      "decisionsScreens": 1.42
+    },
+    {
+      "lang": "en",
+      "state": "state=split",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 406,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 307,
+      "screens": 0.56,
+      "decisionsScreens": 0.43
+    },
+    {
+      "lang": "en",
+      "state": "state=zero",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 667,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 399,
+      "screens": 1.17,
+      "decisionsScreens": 0.7
+    },
+    {
+      "lang": "en",
+      "state": "state=zero",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 279,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 123,
+      "screens": 0.39,
+      "decisionsScreens": 0.17
+    },
+    {
+      "lang": "en",
+      "state": "state=every",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 1096,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 828,
+      "screens": 1.93,
+      "decisionsScreens": 1.46
+    },
+    {
+      "lang": "en",
+      "state": "state=every",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 404,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 305,
+      "screens": 0.56,
+      "decisionsScreens": 0.42
+    },
+    {
+      "lang": "es",
+      "state": "default",
+      "width": 320,
+      "text": "100",
+      "top": 175,
+      "height": 1205,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 937,
+      "screens": 2.12,
+      "decisionsScreens": 1.65
+    },
+    {
+      "lang": "es",
+      "state": "default",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 410,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 310,
+      "screens": 0.57,
+      "decisionsScreens": 0.43
+    },
+    {
+      "lang": "es",
+      "state": "default",
+      "width": 320,
+      "text": "text=200",
+      "top": 439,
+      "height": 2903,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 2333,
+      "screens": 5.11,
+      "decisionsScreens": 4.11
+    },
+    {
+      "lang": "es",
+      "state": "state=change",
+      "width": 320,
+      "text": "100",
+      "top": 175,
+      "height": 1365,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 1097,
+      "screens": 2.4,
+      "decisionsScreens": 1.93
+    },
+    {
+      "lang": "es",
+      "state": "state=change",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 450,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 350,
+      "screens": 0.63,
+      "decisionsScreens": 0.49
+    },
+    {
+      "lang": "es",
+      "state": "state=split",
+      "width": 320,
+      "text": "100",
+      "top": 175,
+      "height": 1205,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 937,
+      "screens": 2.12,
+      "decisionsScreens": 1.65
+    },
+    {
+      "lang": "es",
+      "state": "state=split",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 408,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 308,
+      "screens": 0.57,
+      "decisionsScreens": 0.43
+    },
+    {
+      "lang": "es",
+      "state": "state=zero",
+      "width": 320,
+      "text": "100",
+      "top": 175,
+      "height": 736,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 468,
+      "screens": 1.3,
+      "decisionsScreens": 0.82
+    },
+    {
+      "lang": "es",
+      "state": "state=zero",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 279,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 123,
+      "screens": 0.39,
+      "decisionsScreens": 0.17
+    },
+    {
+      "lang": "es",
+      "state": "state=every",
+      "width": 320,
+      "text": "100",
+      "top": 175,
+      "height": 1227,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 959,
+      "screens": 2.16,
+      "decisionsScreens": 1.69
+    },
+    {
+      "lang": "es",
+      "state": "state=every",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 423,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 323,
+      "screens": 0.59,
+      "decisionsScreens": 0.45
+    },
+    {
+      "lang": "ko",
+      "state": "default",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 898,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 686,
+      "screens": 1.58,
+      "decisionsScreens": 1.21
+    },
+    {
+      "lang": "ko",
+      "state": "default",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 404,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 305,
+      "screens": 0.56,
+      "decisionsScreens": 0.42
+    },
+    {
+      "lang": "ko",
+      "state": "default",
+      "width": 320,
+      "text": "text=200",
+      "top": 439,
+      "height": 2130,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 1720,
+      "screens": 3.75,
+      "decisionsScreens": 3.03
+    },
+    {
+      "lang": "ko",
+      "state": "state=change",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 1002,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 790,
+      "screens": 1.76,
+      "decisionsScreens": 1.39
+    },
+    {
+      "lang": "ko",
+      "state": "state=change",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 444,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 345,
+      "screens": 0.62,
+      "decisionsScreens": 0.48
+    },
+    {
+      "lang": "ko",
+      "state": "state=split",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 919,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 708,
+      "screens": 1.62,
+      "decisionsScreens": 1.25
+    },
+    {
+      "lang": "ko",
+      "state": "state=split",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 406,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 307,
+      "screens": 0.56,
+      "decisionsScreens": 0.43
+    },
+    {
+      "lang": "ko",
+      "state": "state=zero",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 555,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 343,
+      "screens": 0.98,
+      "decisionsScreens": 0.6
+    },
+    {
+      "lang": "ko",
+      "state": "state=zero",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 279,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 123,
+      "screens": 0.39,
+      "decisionsScreens": 0.17
+    },
+    {
+      "lang": "ko",
+      "state": "state=every",
+      "width": 320,
+      "text": "100",
+      "top": 146,
+      "height": 919,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 708,
+      "screens": 1.62,
+      "decisionsScreens": 1.25
+    },
+    {
+      "lang": "ko",
+      "state": "state=every",
+      "width": 1280,
+      "text": "100",
+      "top": 146,
+      "height": 404,
+      "clipped": 0,
+      "scrollers": 0,
+      "decisionsEnd": 305,
+      "screens": 0.56,
+      "decisionsScreens": 0.42
+    }
+  ],
+  "d": [
+    {
+      "lang": "en",
+      "case": "1 class, 1 practice",
+      "text": "Your class's weekly plan: class on Tuesday, practice on Wednesday.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "en",
+      "case": "1 class, 2 practice",
+      "text": "Your class's weekly plan: class on Tuesday, practice on Wednesday and Saturday.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "1 class, 3 practice",
+      "text": "Your class's weekly plan: class on Tuesday, practice on Wednesday, Friday, and Sunday.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "2 classes, 3 practice",
+      "text": "Your class's weekly plan: class on Monday and Thursday, practice on Tuesday, Friday, and Saturday.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "2 classes, 3 practice (longest es/ko names)",
+      "text": "Your class's weekly plan: class on Wednesday and Saturday, practice on Monday, Thursday, and Sunday.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "1 class, 5 practice (most days)",
+      "text": "Your class's weekly plan: class on Tuesday, practice on most days.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "en",
+      "case": "1 class, 6 practice on every non-class day (every day)",
+      "text": "Your class's weekly plan: class on Tuesday, practice every day.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "en",
+      "case": "2 classes, 4 practice, Sunday free (most days)",
+      "text": "Your class's weekly plan: class on Monday and Thursday, practice on most days.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "2 classes, 6 practice incl. a class day (every day, longest es/ko names)",
+      "text": "Your class's weekly plan: class on Wednesday and Saturday, practice every day.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "1 class, 6 practice incl. the class day, Wednesday free (every day except, longest es/ko names)",
+      "text": "Your class's weekly plan: class on Saturday, practice every day except Wednesday.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "1 class, 7 practice (every day)",
+      "text": "Your class's weekly plan: class on Tuesday, practice every day.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "en",
+      "case": "1 class, 6 practice incl. the class day (every day except)",
+      "text": "Your class's weekly plan: class on Tuesday, practice every day except Monday.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "en",
+      "case": "2 classes, 5 practice on every non-class day (every day)",
+      "text": "Your class's weekly plan: class on Monday and Thursday, practice every day.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 1 practice",
+      "text": "Plan semanal de tu clase: clase los martes, práctica los miércoles.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 2 practice",
+      "text": "Plan semanal de tu clase: clase los martes, práctica los miércoles y sábados.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 3 practice",
+      "text": "Plan semanal de tu clase: clase los martes, práctica los miércoles, viernes y domingos.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "2 classes, 3 practice",
+      "text": "Plan semanal de tu clase: clase los lunes y jueves, práctica los martes, viernes y sábados.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "2 classes, 3 practice (longest es/ko names)",
+      "text": "Plan semanal de tu clase: clase los miércoles y sábados, práctica los lunes, jueves y domingos.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 5 practice (most days)",
+      "text": "Plan semanal de tu clase: clase los martes, práctica casi todos los días.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 6 practice on every non-class day (every day)",
+      "text": "Plan semanal de tu clase: clase los martes, práctica todos los días.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "es",
+      "case": "2 classes, 4 practice, Sunday free (most days)",
+      "text": "Plan semanal de tu clase: clase los lunes y jueves, práctica casi todos los días.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "2 classes, 6 practice incl. a class day (every day, longest es/ko names)",
+      "text": "Plan semanal de tu clase: clase los miércoles y sábados, práctica todos los días.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 6 practice incl. the class day, Wednesday free (every day except, longest es/ko names)",
+      "text": "Plan semanal de tu clase: clase los sábados, práctica todos los días menos los miércoles.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 7 practice (every day)",
+      "text": "Plan semanal de tu clase: clase los martes, práctica todos los días.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "es",
+      "case": "1 class, 6 practice incl. the class day (every day except)",
+      "text": "Plan semanal de tu clase: clase los martes, práctica todos los días menos los lunes.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "es",
+      "case": "2 classes, 5 practice on every non-class day (every day)",
+      "text": "Plan semanal de tu clase: clase los lunes y jueves, práctica todos los días.",
+      "lines": 3,
+      "left": 0,
+      "right": 0,
+      "bottom": 382
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 1 practice",
+      "text": "반의 주간 계획: 화요일 수업, 수요일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 2 practice",
+      "text": "반의 주간 계획: 화요일 수업, 수요일·토요일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 3 practice",
+      "text": "반의 주간 계획: 화요일 수업, 수요일·금요일·일요일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "2 classes, 3 practice",
+      "text": "반의 주간 계획: 월요일·목요일 수업, 화요일·금요일·토요일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "2 classes, 3 practice (longest es/ko names)",
+      "text": "반의 주간 계획: 수요일·토요일 수업, 월요일·목요일·일요일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 5 practice (most days)",
+      "text": "반의 주간 계획: 화요일 수업, 거의 매일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 6 practice on every non-class day (every day)",
+      "text": "반의 주간 계획: 화요일 수업, 매일 연습.",
+      "lines": 1,
+      "left": 0,
+      "right": 0,
+      "bottom": 333
+    },
+    {
+      "lang": "ko",
+      "case": "2 classes, 4 practice, Sunday free (most days)",
+      "text": "반의 주간 계획: 월요일·목요일 수업, 거의 매일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "2 classes, 6 practice incl. a class day (every day, longest es/ko names)",
+      "text": "반의 주간 계획: 수요일·토요일 수업, 매일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 6 practice incl. the class day, Wednesday free (every day except, longest es/ko names)",
+      "text": "반의 주간 계획: 토요일 수업, 수요일 빼고 매일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 7 practice (every day)",
+      "text": "반의 주간 계획: 화요일 수업, 매일 연습.",
+      "lines": 1,
+      "left": 0,
+      "right": 0,
+      "bottom": 333
+    },
+    {
+      "lang": "ko",
+      "case": "1 class, 6 practice incl. the class day (every day except)",
+      "text": "반의 주간 계획: 화요일 수업, 월요일 빼고 매일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    },
+    {
+      "lang": "ko",
+      "case": "2 classes, 5 practice on every non-class day (every day)",
+      "text": "반의 주간 계획: 월요일·목요일 수업, 매일 연습.",
+      "lines": 2,
+      "left": 0,
+      "right": 0,
+      "bottom": 357
+    }
+  ],
+  "dClassPart": [
+    {
+      "lang": "en",
+      "case": "3 classes, 3 practice",
+      "text": "Your class's weekly plan: class on Monday, Wednesday, and Friday, practice on Tuesday, Thursday, and Saturday.",
+      "lines": 4
+    },
+    {
+      "lang": "en",
+      "case": "3 classes (longest es/ko names), 3 practice",
+      "text": "Your class's weekly plan: class on Wednesday, Saturday, and Sunday, practice on Monday, Tuesday, and Thursday.",
+      "lines": 4
+    },
+    {
+      "lang": "en",
+      "case": "5 classes, 2 practice",
+      "text": "Your class's weekly plan: class on Monday, Tuesday, Wednesday, Thursday, and Friday, practice on Saturday and Sunday.",
+      "lines": 4
+    },
+    {
+      "lang": "en",
+      "case": "4 classes, 3 practice",
+      "text": "Your class's weekly plan: class on Monday, Tuesday, Thursday, and Friday, practice on Wednesday, Saturday, and Sunday.",
+      "lines": 4
+    },
+    {
+      "lang": "es",
+      "case": "3 classes, 3 practice",
+      "text": "Plan semanal de tu clase: clase los lunes, miércoles y viernes, práctica los martes, jueves y sábados.",
+      "lines": 3
+    },
+    {
+      "lang": "es",
+      "case": "3 classes (longest es/ko names), 3 practice",
+      "text": "Plan semanal de tu clase: clase los miércoles, sábados y domingos, práctica los lunes, martes y jueves.",
+      "lines": 3
+    },
+    {
+      "lang": "es",
+      "case": "5 classes, 2 practice",
+      "text": "Plan semanal de tu clase: clase los lunes, martes, miércoles, jueves y viernes, práctica los sábados y domingos.",
+      "lines": 4
+    },
+    {
+      "lang": "es",
+      "case": "4 classes, 3 practice",
+      "text": "Plan semanal de tu clase: clase los lunes, martes, jueves y viernes, práctica los miércoles, sábados y domingos.",
+      "lines": 4
+    },
+    {
+      "lang": "ko",
+      "case": "3 classes, 3 practice",
+      "text": "반의 주간 계획: 월요일·수요일·금요일 수업, 화요일·목요일·토요일 연습.",
+      "lines": 2
+    },
+    {
+      "lang": "ko",
+      "case": "3 classes (longest es/ko names), 3 practice",
+      "text": "반의 주간 계획: 수요일·토요일·일요일 수업, 월요일·화요일·목요일 연습.",
+      "lines": 2
+    },
+    {
+      "lang": "ko",
+      "case": "5 classes, 2 practice",
+      "text": "반의 주간 계획: 월요일·화요일·수요일·목요일·금요일 수업, 토요일·일요일 연습.",
+      "lines": 2
+    },
+    {
+      "lang": "ko",
+      "case": "4 classes, 3 practice",
+      "text": "반의 주간 계획: 월요일·화요일·목요일·금요일 수업, 수요일·토요일·일요일 연습.",
+      "lines": 2
+    }
+  ]
+}

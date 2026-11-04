@@ -387,7 +387,9 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: spacing.md }}>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text {...KOREAN_LINE_BREAK} style={{ ...text(ts.bodyLg, 'bold', colors.text.primary), overflowWrap: 'anywhere' } as TextStyle}>{item.deck.title}</Text>
-                <Text {...KOREAN_LINE_BREAK} style={text(ts.body, 'regular', colors.text.secondary)}>{recentDayLabel(locale, day, item.savedAt, today)}</Text>
+                <Text {...KOREAN_LINE_BREAK} testID={`presenter-recent-day-${item.deck.id}`} style={text(ts.body, 'regular', colors.text.secondary)}>
+                  {item.finishedAt !== undefined ? m.finished(recentDayLabel(locale, day, item.finishedAt, today)) : recentDayLabel(locale, day, item.savedAt, today)}
+                </Text>
               </View>
               <Pressable
                 role="button"
@@ -413,8 +415,11 @@ function RecentPanel({ messages, locale, recent, onResume, onStartOver, onRemove
               </Pressable>
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-              <HomeButton label={m.resume.cta} onPress={() => onResume(item)} primary compact testID={`presenter-recent-resume-${item.deck.id}`} />
-              <HomeButton label={m.startOver.cta} onPress={() => onStartOver(item)} compact testID={`presenter-recent-startover-${item.deck.id}`} />
+              {/* A lesson taught to the end (row NB-1) has nothing to resume: Start over is its one action. */}
+              {item.finishedAt === undefined ? (
+                <HomeButton label={m.resume.cta} onPress={() => onResume(item)} primary compact testID={`presenter-recent-resume-${item.deck.id}`} />
+              ) : null}
+              <HomeButton label={m.startOver.cta} onPress={() => onStartOver(item)} primary={item.finishedAt !== undefined} compact testID={`presenter-recent-startover-${item.deck.id}`} />
             </View>
           </View>
         ))}
