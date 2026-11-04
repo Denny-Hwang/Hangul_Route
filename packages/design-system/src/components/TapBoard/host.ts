@@ -111,3 +111,69 @@ export function supportsPinchZoom(): boolean {
   const css = (globalThis as { CSS?: { supports?: (property: string, value: string) => boolean } }).CSS;
   return typeof css?.supports === 'function' && css.supports('touch-action', 'pinch-zoom');
 }
+
+/** A click with no pointer type of its own counts as a finger when a touch went down this recently (ms). */
+const RECENT_TOUCH_MS = 1000;
+
+interface PointerDocument {
+  addEventListener?: (type: string, listener: (event: { pointerType?: unknown }) => void, capture?: boolean) => void;
+}
+
+/** The last pointer that went down on each page, for a click that carries no `pointerType` (Safari's MouseEvent). */
+const lastDown = new WeakMap<object, { finger: boolean; at: number }>();
+
+function watchPointers(doc: object): void {
+  if (lastDown.has(doc)) return;
+  lastDown.set(doc, { finger: false, at: Number.NEGATIVE_INFINITY });
+  (doc as PointerDocument).addEventListener?.(
+    'pointerdown',
+    (event) => {
+      lastDown.set(doc, { finger: event.pointerType === 'touch' || event.pointerType === 'pen', at: tapNow() });
+    },
+    true,
+  );
+}
+
+/**
+ * Was this press a finger (or a pen)? The press guard (KT-2, AMENDMENTS-TOUCH section 4.4) drops a bounce, and a bounce
+ * is a finger's: a mouse click, keyboard Enter or Space, and a screen reader's activate are deliberate and pass. Native:
+ * every press is a finger. Web: the click's `pointerType` (an empty one is the keyboard); a click with none (Safari's
+ * MouseEvent) is a finger when the last pointer down on the page, under a second ago, was a touch or a pen.
+ */
+export function pressIsTouch(event: unknown): boolean {
+  const doc = pageDocument();
+  if (doc === null) return true;
+  watchPointers(doc);
+  const type = (event as { nativeEvent?: { pointerType?: unknown } } | undefined)?.nativeEvent?.pointerType;
+  if (typeof type === 'string') return type === 'touch' || type === 'pen';
+  const last = lastDown.get(doc);
+  return last !== undefined && last.finger && tapNow() - last.at < RECENT_TOUCH_MS;
+}
+
+function pageDocument(): object | null {
+  const doc = (globalThis as { document?: unknown }).document;
+  return doc === undefined || doc === null || typeof doc !== 'object' ? null : doc;
+}
+
+/**
+ * Starts reading the page's pointer downs, so the first guarded click of a session that carries no `pointerType`
+ * (Safari, the iOS 14 PWA) still knows its finger. Called when this module loads and when `TapLockProvider` mounts;
+ * `pressIsTouch` calls it too, for a page whose document came later. Native: nothing to watch.
+ */
+export function watchPagePointers(): void {
+  const doc = pageDocument();
+  if (doc !== null) watchPointers(doc);
+}
+
+/**
+ * A mouse's or trackpad's second click of a double click (`detail` over 1, web only). The press guard drops it, so a
+ * double click on Continue or Next runs once (R8 with a mouse, a school Chromebook's trackpad). A single click, keyboard
+ * Enter or Space (`detail` 0) and a screen reader's activate are never a repeat.
+ */
+export function pressIsRepeatClick(event: unknown): boolean {
+  if (pageDocument() === null) return false;
+  const detail = (event as { nativeEvent?: { detail?: unknown } } | undefined)?.nativeEvent?.detail;
+  return typeof detail === 'number' && detail > 1;
+}
+
+watchPagePointers();

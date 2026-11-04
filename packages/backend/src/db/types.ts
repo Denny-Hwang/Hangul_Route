@@ -245,6 +245,12 @@ export interface Db {
   getRelink(id: string): Promise<StoredRelink | null>;
   putRelink(request: StoredRelink): Promise<void>;
   relinksOf(spaceId: string): Promise<StoredRelink[]>;
+  /**
+   * [GX-W] Pending re-links of these spaces still inside their window (`expires_at > now`), set-based (one statement
+   * whatever the number of spaces). Read-only: a row past its window is left out, not expired (the list route does
+   * that on its own read), so `GET /api/spaces` `attention` never writes (AMENDMENTS-GROWNUP-UX section 12).
+   */
+  pendingRelinksOfSpaces(spaceIds: readonly string[], now: Date): Promise<StoredRelink[]>;
 
   // entitlements (F-ENT-001)
   entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]>;
@@ -315,6 +321,8 @@ export interface Db {
   /** Every request of a learner, newest first. */
   transfersOfLearner(learnerId: string): Promise<StoredTransfer[]>;
   openTransferOf(learnerId: string): Promise<StoredTransfer | null>;
+  /** [GX-W] The open requests of a set of learners (at most one each), newest first; one statement per 90 ids. */
+  openTransfersOfLearners(learnerIds: readonly string[]): Promise<StoredTransfer[]>;
   /**
    * The latest **source-started** request the learner side refused (declined, or withdrew) that ended at or
    * after `since` (section 4.9, the 30-day `cannot_send` rule). The learner side ending a request it started
@@ -347,6 +355,8 @@ export interface Db {
   /** Bounded purge of counter rows older than `before`. */
   purgeRateHits(before: Date, limit: number): Promise<number>;
   getTransferPrefs(learnerId: string): Promise<TransferPrefs>;
+  /** [GX-W] Which of these learners manage their own classes (`self_managed`), set-based in one statement. */
+  selfManagedLearners(learnerIds: readonly string[]): Promise<string[]>;
   /** Upsert touching only `which`. */
   setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void>;
 
@@ -486,6 +496,11 @@ export interface Db {
   /** Newest first, at most `limit`: moves out of (`source`) or into (`destination`) the space. */
   classMovesOfSpace(spaceId: string, role: 'source' | 'destination', limit: number): Promise<StoredClassMove[]>;
   openClassMoveOf(learnerId: string): Promise<StoredClassMove | null>;
+  /**
+   * [GX-W] The open (`requested`) moves out of (`source`) or into (`destination`) a set of spaces, newest first; one
+   * statement per 90 ids. No window: open rows are one per learner, and the caller filters or settles the expired ones.
+   */
+  openClassMovesOfSpaces(spaceIds: readonly string[], role: 'source' | 'destination'): Promise<StoredClassMove[]>;
   /** Executed at or after `since`, newest first, for the given learners (the family notices). */
   executedClassMovesOf(learnerIds: readonly string[], since: Date): Promise<StoredClassMove[]>;
   /**

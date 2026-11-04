@@ -378,7 +378,43 @@ describe('TapTarget inside a board', () => {
 
   it('a disabled target says so in its state', () => {
     inBoard();
-    expect(renderTarget({ disabled: true }).props.accessibilityState).toEqual({ disabled: true });
+    const el = renderTarget({ disabled: true });
+    expect(el.props.accessibilityState).toEqual({ disabled: true });
+    expect(el.props.disabled).toBe(true);
+  });
+
+  it('an inactive target (an answered card, KT-2) is claimed and never pressed or committed, but stays an enabled, focusable button', () => {
+    const { registered, clicks } = inBoard([':t1:']);
+    const commits: string[] = [];
+    const el = renderTarget({ inactive: true, onCommit: () => commits.push('x'), accessibilityState: { selected: true } });
+    runEffects();
+    const entry = registered.get(':t1:') as { disabled: () => boolean; commit: () => void };
+    expect(entry.disabled()).toBe(true);
+    expect(el.props.disabled).toBeUndefined();
+    expect(el.props.accessibilityState).toEqual({ selected: true, disabled: false });
+    // A card drawn as disabled says so, and still is not a disabled (unfocusable) Pressable.
+    hooks.store = [];
+    const drawn = renderTarget({ inactive: true, accessibilityState: { selected: false, disabled: true } });
+    expect(drawn.props.accessibilityState).toEqual({ selected: false, disabled: true });
+    expect(drawn.props.disabled).toBeUndefined();
+    expect(textOf(el.props.children as ReactNode)).toBe('idle');
+    (el.props.onPress as (e?: unknown) => void)({ timeStamp: 5 });
+    expect(clicks).toEqual([':t1:']);
+    expect(commits).toEqual([]);
+  });
+
+  it('pressableRef gets the Pressable\'s node too (a function or an object ref), as the board does', () => {
+    const { registered } = inBoard();
+    const seen: unknown[] = [];
+    const el = renderTarget({ pressableRef: (v) => seen.push(v) });
+    runEffects();
+    refOf(el)('host');
+    expect(seen).toEqual(['host']);
+    expect((registered.get(':t1:') as { node: () => unknown }).node()).toBe('host');
+    const obj = { current: null as unknown };
+    hooks.store = [];
+    refOf(renderTarget({ pressableRef: obj as never }))('node-2');
+    expect(obj.current).toBe('node-2');
   });
 });
 
@@ -398,14 +434,32 @@ describe('TapTarget outside a board', () => {
     expect(commits).toEqual([0, TAP_LOCK_MS]);
   });
 
-  it('shows the Pressable\'s own pressed state, never on a disabled target', () => {
+  it('shows the Pressable\'s own pressed state, never on a disabled target; no touch-action of its own', () => {
     const render = (props: Partial<TapTargetProps>) => renderTarget(props).props.children as (s: { pressed: boolean }) => ReactNode;
     expect(textOf(render({})({ pressed: true }))).toBe('pressed');
     hooks.store = [];
     expect(textOf(render({ disabled: true })({ pressed: true }))).toBe('idle');
     hooks.store = [];
-    const style = renderTarget({ style: { opacity: 1 } }).props.style as (s: { pressed: boolean }) => unknown;
-    expect(style({ pressed: true })).toEqual([{ opacity: 1 }, { touchAction: 'pinch-zoom' }]);
+    // No board drives the page's scroll here, so the browser keeps its own touch-action (a drag on it still scrolls).
+    expect(renderTarget({ style: { opacity: 1 } }).props.style).toEqual({ opacity: 1 });
+    hooks.store = [];
+    const style = renderTarget({ style: ({ pressed }) => ({ opacity: pressed ? 0.5 : 1 }) }).props.style as (s: { pressed: boolean }) => unknown;
+    expect(style({ pressed: true })).toEqual({ opacity: 0.5 });
+    hooks.store = [];
+    const off = renderTarget({ disabled: true, style: ({ pressed }) => ({ opacity: pressed ? 0.5 : 1 }) }).props.style as (s: { pressed: boolean }) => unknown;
+    expect(off({ pressed: true })).toEqual({ opacity: 1 });
+  });
+
+  it('an inactive target shows no press and its press does nothing: it neither runs nor sets the app lock', () => {
+    const app = { until: () => 0, extendTo: () => undefined, lock: vi.fn(), locked: false };
+    ctx.app = app;
+    const commits: number[] = [];
+    const el = renderTarget({ inactive: true, onCommit: () => commits.push(1) });
+    expect(el.props.disabled).toBeUndefined();
+    expect(textOf((el.props.children as (s: { pressed: boolean }) => ReactNode)({ pressed: true }))).toBe('idle');
+    expect(el.props.onPress).toBeUndefined();
+    expect(commits).toEqual([]);
+    expect(app.lock).not.toHaveBeenCalled();
   });
 });
 
@@ -513,5 +567,26 @@ describe('useTapLock and usePressGuard', () => {
     vi.setSystemTime(1000 + 200);
     speaker(() => calls.push('speaker again'))();
     expect(calls).toEqual(['speaker', 'next']);
+  });
+
+  it('a mouse, keyboard or screen-reader press (web) is deliberate: it always runs and sets no lock; a touch is guarded', () => {
+    const listeners = new Map<string, (e: { pointerType?: string }) => void>();
+    (globalThis as { document?: unknown }).document = { addEventListener: (t: string, fn: (e: { pointerType?: string }) => void) => listeners.set(t, fn) };
+    try {
+      const app = { until: () => Number.POSITIVE_INFINITY, extendTo: () => undefined, lock: vi.fn(), locked: true };
+      ctx.app = app;
+      syncContexts();
+      hooks.at = 0;
+      const runs: string[] = [];
+      const guarded = usePressGuard()((kind: { nativeEvent: { pointerType: string } }) => runs.push(kind.nativeEvent.pointerType));
+      guarded({ nativeEvent: { pointerType: 'mouse' } });
+      guarded({ nativeEvent: { pointerType: 'mouse' } });
+      guarded({ nativeEvent: { pointerType: '' } });
+      guarded({ nativeEvent: { pointerType: 'touch' } });
+      expect(runs).toEqual(['mouse', 'mouse', '']);
+      expect(app.lock).not.toHaveBeenCalled();
+    } finally {
+      delete (globalThis as { document?: unknown }).document;
+    }
   });
 });

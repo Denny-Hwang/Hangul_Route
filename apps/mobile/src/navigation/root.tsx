@@ -17,8 +17,7 @@ import { withOwnSafeArea } from './with-own-safe-area';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
 import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
 import { PinResetScreen } from '../screens/parent/PinResetScreen';
-import { PlacementReportScreen } from '../screens/parent/PlacementReportScreen';
-import { LearnerReportScreen } from '../screens/parent/LearnerReportScreen';
+import { LearnerReportRoute, PlacementReportRoute } from '../screens/parent/reports-entry';
 import { flags } from '../config/flags';
 import { RestoreScreen } from '../screens/sync/RestoreScreen';
 import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
@@ -196,9 +195,9 @@ export function RootNavigator(): ReactElement {
         <Stack.Screen name="StorySources" component={StorySourcesScreen} />
         <Stack.Screen name="CultureNotes" component={CultureNotesScreen} />
         <Stack.Screen name="Placement" component={PlacementScreen} options={{ gestureEnabled: false }} />
-        <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
+        <Stack.Screen name="PlacementReport" component={PlacementReportRoute} />
         {/* F-REPORT-001 section 3.9 (RP-9): registered only with the reports flag on. */}
-        {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}
+        {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportRoute} /> : null}
         {/* The weekly plan screens (F-PLAN-002 P2-7a, P2-7b) register on the raw flag; the entries gate (P2-8b): Home's
             plan slot, the Profile row, Open plan, the placement strip and the report card read routeEnabledFor(locale). */}
         {flags.routeEnabled ? <Stack.Screen name="RouteProposal" component={RouteProposalScreen} /> : null}

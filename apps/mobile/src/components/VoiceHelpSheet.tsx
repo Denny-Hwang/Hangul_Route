@@ -1,6 +1,6 @@
-import { Body, Button, Caption, Heading, Icon, Spacer, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Button, Caption, Heading, Icon, Spacer, colors, radii, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { Modal, ScrollView, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { voiceHelpContent } from '../logic/audio/voice-help';
 
@@ -23,7 +23,7 @@ export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} accessibilityViewIsModal>
       <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID={testID}>
-        <Pressable
+        <GuardedPressable
           onPress={onClose}
           accessibilityRole="button"
           accessibilityLabel={m.common.buttons.close}
@@ -44,15 +44,16 @@ export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }
             <View style={{ flex: 1 }}>
               <Heading level="prompt">{help.title}</Heading>
             </View>
-            <Pressable
+            <GuardedPressable
               onPress={onClose}
               accessibilityRole="button"
               accessibilityLabel={m.common.buttons.close}
+              // Native only (react-native-web drops it); the target is already at least touchTarget.min each way.
               hitSlop={spacing.sm}
               style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
             >
               <Icon name="close" size={22} color={colors.text.muted} />
-            </Pressable>
+            </GuardedPressable>
           </View>
           <Caption tone="muted">{help.note}</Caption>
           <Spacer size="md" />

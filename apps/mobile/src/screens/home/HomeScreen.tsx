@@ -21,11 +21,12 @@ import {
   useEffectiveFontScale,
   useLayoutClass,
   useMediaSize,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
+import { AccessibilityInfo, Platform, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
@@ -932,7 +933,7 @@ export function HomeScreen(): ReactElement {
           <Spacer size="xl" />
         </>
       ) : null}
-      <Pressable
+      <GuardedPressable
         onPress={() => navigation.navigate('Homework')}
         accessibilityRole="button"
         accessibilityLabel={m.a11y.openHomework}
@@ -948,7 +949,7 @@ export function HomeScreen(): ReactElement {
             <Icon name="card" size={24} color={colors.text.muted} />
           </View>
         </Card>
-      </Pressable>
+      </GuardedPressable>
 
       <Spacer size="xl" />
       <HoyaBubble tone="idle" message={m.learner.home.tip[homeTip({ questsDone, playedToday: learnedOn(snap?.sessions ?? [], localToday) })]} />
@@ -1004,18 +1005,18 @@ export function HomeScreen(): ReactElement {
         {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
             colour its avatar name says (not the Pillar theme), with a visible
             label — the only way to profiles, backup, classes and the grown-up zone. */}
-        <Pressable
+        <GuardedPressable
           onPress={() => navigation.navigate('Profile')}
           accessibilityRole="button"
           accessibilityLabel={m.a11y.profileEntry}
-          hitSlop={spacing.xs}
-          style={{ alignItems: 'center', minWidth: touchTarget.min, gap: spacing.xxs }}
+          // The avatar and its word are the hit area, at least touchTarget.min each way (react-native-web drops hitSlop).
+          style={{ alignItems: 'center', justifyContent: 'center', minWidth: touchTarget.min, minHeight: touchTarget.min, gap: spacing.xxs }}
         >
           <ProfileAvatar avatar={profile?.avatar ?? DEFAULT_AVATAR} size={AVATAR_SIZE} ring />
           <Caption tone="secondary" weight="semibold">
             {m.learner.home.profileLabel}
           </Caption>
-        </Pressable>
+        </GuardedPressable>
         </View>
       </View>
 

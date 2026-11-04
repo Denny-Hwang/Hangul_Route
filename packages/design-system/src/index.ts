@@ -52,3 +52,5 @@ export * from './components/HangulKeyboard';
 // Pure app logic (no react-native) can import the model by its own path, '@hangul-route/design-system/src/tap-model'.
 export * from './tap-model';
 export * from './components/TapBoard';
+// The press look of ChoiceCard and Tile (AMENDMENTS-TOUCH section 4.3), for the boards KT-3 to KT-6 paint by hand.
+export * from './press-look';

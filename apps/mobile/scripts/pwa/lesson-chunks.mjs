@@ -142,13 +142,21 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (release `build:web`, CI): +22,893 B, the forgiving tap model (`tap-model.ts`), the `TapBoard` family in the
   // design-system barrel, `TapLockProvider` above the navigator and the `Screen` fit and scroller. Every learner answer
   // area adopts it in KT-2 to KT-7, so it cannot be a lazy chunk. The line is the measurement plus a 5,056 B margin.
-  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8 (the learner's own practice days, behind routeBlendEnabled), stacked on BL-7
-  // (#967) and KT-1 (#943): its base, BL-7 with KT-1 merged (df784d174), measures 4,883,692 B raw / 1,307,821 B gzip;
-  // the row measures 4,888,782 B raw / 1,309,498 B gzip (release `build:web`): +5,090 B. The start bundle gets the
-  // Profile row, the PracticeDays route's door and the chunk loader, the derivation's learner-days hook and chip rules
-  // (`logic/route/practice-days.ts`), the snapshot write and merge, the English strings and TapTarget's role prop; the
-  // screen and `placePractice` are the practice-days chunk (14.3 kB). The line is the measurement plus a 4,218 B margin.
-  startBundleRaw: 4_893_000,
+  // Row KT-2 (PR #949: ChoiceCard, Tile and Button on TapTarget, the press look, the press guard), merged onto KT-1's
+  // head and main 377d44291 (CM-48 in it), measures 4,863,471 B raw / 1,302,136 B gzip (CI release build): the line
+  // stays, 2,529 B left for KT-3 to KT-9.
+  // The KT integration (integrate/kt-1103: KT-1, KT-10, KT-2, KT-3, KT-4a, KT-8 and KT-9 on main 25e108b5e, which adds
+  // NB-1 and NB-2) measures 4,870,372 B raw / 1,304,901 B gzip (release `build:web --budget`): 4,372 B over the line.
+  // Each row fit alone (KT-3 4,864,709 B, KT-9 4,865,262 B); together they cross it, with KT-4a's Card Match and
+  // KT-8's one-finger stroke ownership for Trace (`trace-pointers.ts`, `trace-pan.ts`) also in the start bundle, and
+  // NB-2 on main. The line is the measurement plus a 4,628 B margin.
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8 (the learner's own practice days, behind routeBlendEnabled), restacked on main
+  // a0906b64f with the KT integration (#976) and BL-7 (#967) heads and the grown-up reports chunk (#977): it measures
+  // 4,859,564 B raw / 1,302,918 B gzip (release `build:web --budget`), under the line. The start bundle gets the Profile
+  // row, the PracticeDays route's door and the chunk loader, the derivation's learner-days hook and chip rules, the
+  // snapshot write and merge, the English strings and TapTarget's role prop; the screen and `placePractice` are the
+  // practice-days chunk. The line stays.
+  startBundleRaw: 4_875_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -372,6 +380,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // F-CURR-002 row CM-48: This week in Korea, the Home card and the drop's pages (`src/screens/week-drop/week-drop-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/week-drop/week-drop-entry.tsx` while `weeklyDrop` is on).
   Object.freeze({ name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' }),
+  // The grown-up reports, the learner report and the level-check report (`src/screens/parent/reports-chunk.tsx`, reached
+  // only through the literal `import()` of `src/screens/parent/reports-entry.tsx`), out of the start bundle for headroom.
+  Object.freeze({ name: 'reports-chunk', marker: 'screen-chunk:reports' }),
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the device placer (`placePractice`)
   // (`src/screens/route/practice-days-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/route/practice-days-load.ts` while `routeBlendEnabled` is on).

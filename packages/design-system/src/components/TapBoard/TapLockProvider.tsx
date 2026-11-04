@@ -1,6 +1,6 @@
 import { createContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { tapNow } from './host';
+import { tapNow, watchPagePointers } from './host';
 
 /**
  * The app-level `board` lock (docs/specs/AMENDMENTS-TOUCH.md KT-D5, rule 10), mounted once in the app root above the
@@ -21,6 +21,9 @@ export function TapLockProvider({ children }: { children: ReactNode }): ReactEle
   const until = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    watchPagePointers();
+  }, []);
   useEffect(
     () => () => {
       if (timer.current !== null) clearTimeout(timer.current);

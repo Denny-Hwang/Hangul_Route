@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { ReactNode, Ref } from 'react';
+import type { StyleProp, View, ViewStyle } from 'react-native';
 import type { TapLockScope, TapMultiTouch, TapScroll } from '../../tap-model';
 import type { TapScrollerLike } from './controller';
 
@@ -30,6 +30,11 @@ export interface TapTargetProps {
   onCommit: () => void;
   /** Claimed, never pressed, never committed (a locked wrong tile). */
   disabled?: boolean;
+  /**
+   * Claimed, never pressed, never committed, like `disabled`, while the button stays enabled and focusable (KT-2: an
+   * answered ChoiceCard, `correct` or a locked miss, keeps today's accessible state and can still take focus).
+   */
+  inactive?: boolean;
   accessibilityLabel: string;
   /**
    * Default `button`. A choice chip that keeps its on or off (a weekday, a count) is a `checkbox` or a `radio`, with
@@ -45,6 +50,8 @@ export interface TapTargetProps {
   /** The hit area's own style (its size is what the board hit-tests); a function gets the board's look. */
   style?: StyleProp<ViewStyle> | ((look: TapLook) => StyleProp<ViewStyle>);
   testID?: string;
+  /** The Pressable's node, for a screen that moves focus to this target (as Button's `pressableRef`). */
+  pressableRef?: Ref<View>;
   /** The caller paints its own states, and the press look when `pressed`. */
   children: (look: TapLook) => ReactNode;
 }

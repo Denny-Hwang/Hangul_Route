@@ -191,6 +191,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       // Row CM-47: the added realia layouts.
       { name: 'realia-kinds-chunk', marker: 'screen-chunk:realia-kinds' },
       { name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' },
+      // The grown-up reports, a chunk of their own for the start bundle's headroom.
+      { name: 'reports-chunk', marker: 'screen-chunk:reports' },
       // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the placer.
       { name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' },
     ]);
@@ -257,9 +259,12 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(read('src/screens/week-drop/week-drop-chunk.tsx')).toContain(`export const WEEK_DROP_CHUNK = '${SCREEN_CHUNKS[15].marker}';`);
     expect(read('src/screens/week-drop/week-drop-entry.tsx')).toContain("import('./week-drop-chunk')");
     // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the placer, reached only through the loader's literal import().
-    expect(read('src/screens/route/practice-days-chunk.tsx')).toContain(`export const PRACTICE_DAYS_CHUNK = '${SCREEN_CHUNKS[16].marker}';`);
+    expect(read('src/screens/route/practice-days-chunk.tsx')).toContain(`export const PRACTICE_DAYS_CHUNK = '${SCREEN_CHUNKS[17].marker}';`);
     expect(read('src/screens/route/practice-days-load.ts')).toContain("import('./practice-days-chunk')");
     expect(read('src/screens/minigames/my-story-entry.tsx')).toContain("import('./my-story-chunk')");
+    // The grown-up reports' chunk, reached only through the entry's literal import().
+    expect(read('src/screens/parent/reports-chunk.tsx')).toContain(`export const REPORTS_CHUNK = '${SCREEN_CHUNKS[16].marker}';`);
+    expect(read('src/screens/parent/reports-entry.tsx')).toContain("import('./reports-chunk')");
     // Row CM-47: the added realia layouts' chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/realia-kinds-chunk.tsx')).toContain(`export const REALIA_KINDS_CHUNK = '${SCREEN_CHUNKS[14].marker}';`);
     expect(read('src/screens/minigames/realia-kinds-entry.tsx')).toContain("import('./realia-kinds-chunk')");
@@ -409,6 +414,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'my-story-chunk has no web bundle: the chunk is missing from the build',
       'realia-kinds-chunk has no web bundle: the chunk is missing from the build',
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
+      'reports-chunk has no web bundle: the chunk is missing from the build',
       'practice-days-chunk has no web bundle: the chunk is missing from the build',
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
@@ -578,14 +584,16 @@ describe('precacheReport and its budget lines', () => {
     // Row BL-7 (the learner's class days and practice days, behind routeBlendEnabled) measured 4,860,799 B over BL-6
     // at b55361104 (4,849,712 B), so the line is 4,865,000 B.
     // AMENDMENTS-TOUCH KT-1 (#943) measures 4,860,944 B (CI release build, +22,893 B over main 1bfda3fc8): 4,866,000 B.
-    // Row BL-8 (the learner's own practice days) measured 4,888,782 B over BL-7 with KT-1 (4,883,692 B), so the line is
-    // 4,893,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_893_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_883_692, 4_888_782]) {
+    // KT-2 (#949) on KT-1 and main 377d44291 measures 4,863,471 B (CI release build): the line stays.
+    // The KT integration (KT-1, KT-10, KT-2, KT-3, KT-4a, KT-8, KT-9 on main 25e108b5e) measures 4,870,372 B: 4,875,000 B.
+    // Row BL-8 (the learner's own practice days) on main a0906b64f with the KT integration, BL-7 and the reports chunk
+    // measures 4,859,564 B: the line stays.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_875_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_859_564]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_888_782).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_870_372).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
