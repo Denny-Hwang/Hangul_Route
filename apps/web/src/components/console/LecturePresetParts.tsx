@@ -57,6 +57,9 @@ export const PRESETS_CSS = `
 .hr-lp-panel{display:flex;flex-direction:column;gap:${rem(spacing.lg)};padding:0 ${rem(spacing.lg)} ${rem(spacing.lg)}}
 .hr-lp-panel[hidden]{display:none}
 .hr-lp-fallback{padding:${rem(spacing.sm)} ${rem(spacing.md)};border-radius:${px(radii.md)};background:${colors.surface.sunken};color:${colors.text.primary}}
+.hr-lp-classday{display:flex;flex-direction:column;gap:${rem(spacing.xs)};min-width:0;overflow-wrap:anywhere}
+.hr-lp-classday p{margin:0}
+.hr-lp-classday p:first-child{font-weight:${typography.weight.bold}}
 .hr-lp-chips{display:flex;flex-wrap:wrap;gap:${rem(spacing.sm)};min-width:0;margin:0;padding:0;border:none}
 .hr-lp-chips legend{padding:0;margin:0 0 ${rem(spacing.xs)};font-weight:${typography.weight.bold}}
 .hr-lp-chip{display:inline-flex;align-items:center;gap:${rem(spacing.xs)};min-height:${px(touchTarget.min)};padding:0 ${rem(spacing.md)};border-radius:${px(radii.pill)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};font-weight:${typography.weight.semibold};cursor:pointer}
@@ -123,8 +126,14 @@ export interface LecturePresetsProps {
   /** The cards in display order (`consolePresetOrder`). */
   order: readonly LecturePreset[];
   open: LecturePreset | null;
-  /** The length each card builds (`presetMinutes`). */
-  minutesOf: (preset: LecturePreset) => PresetMinutes;
+  /** The length each card builds (`cardMinutes`: a blended class day's class length for Next lesson, else `presetMinutes`). */
+  minutesOf: (preset: LecturePreset) => number;
+  /**
+   * A blended plan's class day (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3, row BL-5), or null. Set, Next lesson's panel
+   * draws no length chips (the length is changed in the plan) and shows the class day and the class length instead.
+   * `weekday` arrives as a whole weekday in the console language.
+   */
+  classDay: { weekday: string; lessons: number; minutes: number } | null;
   /** Stage by stage's chip and the stages it offers. */
   stage: StageKey;
   stages: readonly StageKey[];
@@ -149,10 +158,11 @@ export interface LecturePresetsProps {
 
 const stageNumber = (stage: StageKey): number => Number(stage.slice('stage'.length));
 
-export function LecturePresetsSection({ order, open, minutesOf, stage, stages, fallbackOf, note, planTitle, family, outline, outlineMinutes, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
+export function LecturePresetsSection({ order, open, minutesOf, classDay, stage, stages, fallbackOf, note, planTitle, family, outline, outlineMinutes, onToggle, onMinutes, onStage }: LecturePresetsProps): JSX.Element {
   const m = useMessages();
   const l = m.console.lecture;
   const p = l.presets;
+  const blendLines = m.console.curriculum.blend.lecture;
   return (
     <section className="hr-lp" aria-labelledby="lecture-presets-title" data-testid="lecture-presets">
       <h2 id="lecture-presets-title">{p.title}</h2>
@@ -167,7 +177,9 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
           const fallback = fallbackOf(preset);
           const panelId = `lecture-preset-panel-${preset}`;
           const lineId = `lecture-preset-line-${preset}`;
-          const lengths = PRESET_LENGTHS[preset];
+          // A blended class day keeps its plan's length: no chips on Next lesson (section 10.3).
+          const day = preset === 'next-lesson' ? classDay : null;
+          const lengths = day !== null ? [] : PRESET_LENGTHS[preset];
           return (
             <li key={preset} className="hr-lp-card" data-open={isOpen} data-testid={`lecture-preset-card-${preset}`}>
               <button
@@ -200,11 +212,17 @@ export function LecturePresetsSection({ order, open, minutesOf, stage, stages, f
                     {preset === 'by-stage' ? (
                       <Chips legend={p.stage.choose} options={stages} value={stage} name="lecture-preset-stage" label={(s) => p.stage.chip(stageNumber(s))} onChange={onStage} testId="lecture-preset-stage" />
                     ) : null}
+                    {day !== null ? (
+                      <div className="hr-lp-classday" data-testid="lecture-preset-class-day">
+                        <p>{blendLines.classDay(day.weekday, day.lessons)}</p>
+                        <p>{blendLines.classLength(day.minutes)}</p>
+                      </div>
+                    ) : null}
                     {lengths.length > 1 ? (
                       <Chips
                         legend={p.length.title}
                         options={lengths}
-                        value={minutes}
+                        value={minutes as PresetMinutes}
                         name={`lecture-preset-length-${preset}`}
                         label={(n) => p.length.option(n)}
                         onChange={(n) => onMinutes(preset, n)}
