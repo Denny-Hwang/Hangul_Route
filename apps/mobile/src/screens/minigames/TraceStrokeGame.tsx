@@ -28,7 +28,7 @@ import type { LayoutChangeEvent } from 'react-native';
 import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
-import { pointsToPathD } from '../../logic/stroke-diagram';
+import { inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
 import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from '../../logic/trace-copy';
 import {
@@ -362,7 +362,7 @@ export function TraceStrokeGame({
             {strokes.map((stroke, i) => (
               <Path
                 key={`drawn-${i}`}
-                d={pointsToPathD(stroke)}
+                d={inkPathD(stroke)}
                 stroke={colors.text.primary}
                 strokeWidth={8}
                 strokeLinecap="round"

@@ -67,15 +67,16 @@ export async function canvasBox(page: Page, selector: string): Promise<{ x: numb
 /** Every path drawn in the live canvas (ghost and ink); a stroke adds one. */
 export const paths = (page: Page, selector: string): Promise<number> => page.locator(`${selector} path`).count();
 
-/** The points of the newest ink (the last path in the live canvas), in screen pixels. */
+/**
+ * The finger's samples in the newest ink (the last path in the live canvas), in screen pixels. The ink
+ * is smoothed (NB-3): a sample is an M or L end, or a Q's control point.
+ */
 export async function lastInk(page: Page, selector: string): Promise<Point[]> {
   const box = await canvasBox(page, selector);
   const d = (await page.locator(`${selector} path`).last().getAttribute('d')) ?? '';
-  return d
-    .split(/[ML]/)
-    .filter((part) => part.trim() !== '')
+  return (d.match(/[MLQ][^MLQ]*/g) ?? [])
     .map((part) => {
-      const [x, y] = part.trim().split(/\s+/).map(Number);
+      const [x, y] = part.slice(1).trim().split(/[\s,]+/).map(Number);
       return { x: box.x + (x! * box.width) / VIEWBOX, y: box.y + (y! * box.height) / VIEWBOX };
     });
 }
