@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useId, useRef } from 'react';
+import { useCallback, useContext, useEffect, useId, useRef } from 'react';
 import type { MutableRefObject, ReactElement } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import type { TypeSizeName } from '../../text-size';
+import { TapBoardContext } from '../TapBoard/context';
 import { NO_PRESS_DELAY } from '../TapBoard/press-delay';
+import { TapTarget } from '../TapBoard/TapTarget';
 import { usePressGuard } from '../TapBoard/use-press-guard';
 import { useTypeScale } from '../TextSize';
 import type { ButtonProps, ButtonSize, ButtonTone } from './types';
@@ -92,6 +95,10 @@ export function Button({
   // tap lock is on is dropped, and a press that runs sets that lock, so a bounce on an answer cannot press a Continue
   // that appears under the finger and a bounce on Continue or Next cannot answer on the next screen.
   const guard = usePressGuard();
+  // Inside a TapBoard a Button is one of the board's answers (AMENDMENTS-TOUCH section 6, row KT-3: Culture Quiz, Tap
+  // Respond): the board decides its tap (commit on release, reach, gap fill, the lock). A non-answer control does not
+  // sit inside a board (or is wrapped in `TapControl` with no Button inside).
+  const board = useContext(TapBoardContext);
   const fontSize = useTypeScale().size[sizeFont[size]];
   // react-native-web drops accessibilityHint: describe the button by a hidden copy of the hint instead.
   const webHint = accessibilityHint !== undefined && Platform.OS === 'web';
@@ -122,6 +129,68 @@ export function Button({
     if (Platform.OS !== 'web') return;
     syncAriaDisabled(node.current, webSoft);
   }, [webSoft, disabled]);
+  const frame = (pressed: boolean): ViewStyle => ({
+    minHeight: sizeHeight[size],
+    // A one-glyph label is narrower than the 64 floor (AMENDMENTS-TOUCH KT-2: the web size is at least 64 each way).
+    minWidth: touchTarget.min,
+    paddingHorizontal: sizePaddingX[size],
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: looksDisabled
+      ? colors.surface.sunken
+      : pressed
+        ? tonePressedBg[tone]
+        : toneBg[tone],
+    borderWidth: tone === 'ghost' ? 2 : 0,
+    borderColor: tone === 'ghost' ? colors.brand.primary : 'transparent',
+    opacity: looksDisabled ? 0.6 : 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: fullWidth ? 'stretch' : 'flex-start',
+  });
+  const content = (pressed: boolean, hint: boolean): ReactElement => (
+    <>
+      {leading ? <View style={{ marginRight: spacing.sm }}>{leading}</View> : null}
+      <Text {...KOREAN_LINE_BREAK}
+        style={{
+          color: looksDisabled ? colors.text.muted : pressed ? tonePressedFg[tone] : toneFg[tone],
+          fontSize,
+          fontWeight: typography.weight.semibold,
+          letterSpacing: typography.tracking.normal,
+        }}
+      >
+        {label}
+      </Text>
+      {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
+      {hint ? (
+        <Text {...KOREAN_LINE_BREAK} id={hintId} style={{ display: 'none' }}>
+          {accessibilityHint}
+        </Text>
+      ) : null}
+    </>
+  );
+
+  if (board !== null) {
+    // An answer on a board: a TapTarget with the Button's look (its pressed fill while the board shows the press).
+    // A disabled one (a locked miss) is claimed by the board and takes no tap; a soft-disabled one, or one with no
+    // handler, stays focusable and takes no tap either. The hint and `expanded` are for controls, never answers.
+    return (
+      <TapTarget
+        pressableRef={setNode}
+        testID={testID}
+        onCommit={() => onPress?.()}
+        disabled={disabled}
+        inactive={soft || onPress === undefined}
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityState={{ disabled: looksDisabled }}
+        style={({ pressed }) => frame(pressed && !looksDisabled)}
+      >
+        {({ pressed }) => content(pressed && !looksDisabled, false)}
+      </TapTarget>
+    );
+  }
+
   return (
     <Pressable
       {...describedBy}
@@ -138,48 +207,9 @@ export function Button({
       hitSlop={spacing.sm}
       // The pressed look shows on the first touch frame, not after react-native-web's 50 ms delay.
       {...NO_PRESS_DELAY}
-      style={({ pressed }) => ({
-        minHeight: sizeHeight[size],
-        // A one-glyph label is narrower than the 64 floor (AMENDMENTS-TOUCH KT-2: the web size is at least 64 each way).
-        minWidth: touchTarget.min,
-        paddingHorizontal: sizePaddingX[size],
-        paddingVertical: spacing.sm,
-        borderRadius: radii.pill,
-        backgroundColor: looksDisabled
-          ? colors.surface.sunken
-          : pressed
-            ? tonePressedBg[tone]
-            : toneBg[tone],
-        borderWidth: tone === 'ghost' ? 2 : 0,
-        borderColor: tone === 'ghost' ? colors.brand.primary : 'transparent',
-        opacity: looksDisabled ? 0.6 : 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        alignSelf: fullWidth ? 'stretch' : 'flex-start',
-      })}
+      style={({ pressed }) => frame(pressed)}
     >
-      {({ pressed }) => (
-        <>
-          {leading ? <View style={{ marginRight: spacing.sm }}>{leading}</View> : null}
-          <Text {...KOREAN_LINE_BREAK}
-            style={{
-              color: looksDisabled ? colors.text.muted : pressed ? tonePressedFg[tone] : toneFg[tone],
-              fontSize,
-              fontWeight: typography.weight.semibold,
-              letterSpacing: typography.tracking.normal,
-            }}
-          >
-            {label}
-          </Text>
-          {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
-          {webHint ? (
-            <Text {...KOREAN_LINE_BREAK} id={hintId} style={{ display: 'none' }}>
-              {accessibilityHint}
-            </Text>
-          ) : null}
-        </>
-      )}
+      {({ pressed }) => content(pressed, webHint)}
     </Pressable>
   );
 }

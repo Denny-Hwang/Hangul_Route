@@ -2,6 +2,8 @@ import { Children } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TAP_LOCK_MS } from '../../../tap-model';
+import { TapBoardContext } from '../../TapBoard/context';
+import { TapTarget } from '../../TapBoard/TapTarget';
 import { Button } from '../Button';
 import type { ButtonProps } from '../types';
 
@@ -18,6 +20,8 @@ const platform = vi.hoisted(() => ({ OS: 'web' }));
 const app = vi.hoisted(() => ({ clock: null as null | { until: () => number; lock: (ms: number) => void; extendTo: (at: number) => void; locked: boolean } }));
 /** The effects of the last call, kept so a test can run them after handing the Pressable its node. */
 const effects = vi.hoisted(() => [] as (() => void)[]);
+/** The board a Button sits in (AMENDMENTS-TOUCH row KT-3); `ctx` is set to `TapBoardContext` once it is imported. */
+const inBoard = vi.hoisted(() => ({ ctx: null as unknown, board: null as unknown }));
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: platform }));
 /** The chosen text size step's factor, read through `useTypeScale` (owner items 6 and 7). */
 const textSize = vi.hoisted(() => ({ factor: 1 }));
@@ -34,8 +38,8 @@ vi.mock('react', async (importOriginal) => {
     effects.push(fn);
   };
   const useCallback = <T,>(fn: T): T => fn;
-  // The only context Button reads is the app-level tap lock (through usePressGuard); null is "no provider".
-  const useContext = (): unknown => app.clock;
+  // Button reads the board it sits in (null: none) and the app-level tap lock (through usePressGuard; null: no provider).
+  const useContext = (c: unknown): unknown => (c !== null && c === inBoard.ctx ? inBoard.board : app.clock);
   const hooks = { useId, useRef, useEffect, useCallback, useContext };
   return { ...actual, ...hooks, default: { ...actual, ...hooks } };
 });
@@ -307,5 +311,47 @@ describe('Button press guard and no press delay (AMENDMENTS-TOUCH 4.4, R8, row K
       if (had) g.document = saved;
       else delete g.document;
     }
+  });
+});
+
+describe('Button inside a TapBoard (AMENDMENTS-TOUCH section 6, row KT-3: Culture Quiz and Tap Respond answers)', () => {
+  inBoard.ctx = TapBoardContext;
+  const BOARD = { register: () => () => undefined, registerControl: () => () => undefined, click: () => undefined, lock: () => undefined, remeasure: () => undefined, locked: false, pressed: new Set<string>() };
+  afterEach(() => {
+    inBoard.board = null;
+  });
+
+  it('is one TapTarget of the board that commits onPress, with its label and testID, and its own look', () => {
+    inBoard.board = BOARD;
+    const presses: string[] = [];
+    const el = pressable({ label: 'Tteok', testID: 'answer-0', onPress: () => presses.push('tteok') });
+    expect(el.type).toBe(TapTarget);
+    expect(el.props).toMatchObject({ accessibilityLabel: 'Tteok', testID: 'answer-0', disabled: false, inactive: false, accessibilityState: { disabled: false } });
+    expect('hitSlop' in el.props).toBe(false);
+    (el.props.onCommit as () => void)();
+    expect(presses).toEqual(['tteok']);
+    const style = el.props.style as (look: { pressed: boolean }) => Props;
+    expect(style({ pressed: false }).minHeight).toBe(style({ pressed: true }).minHeight);
+    expect(style({ pressed: true }).backgroundColor).not.toBe(style({ pressed: false }).backgroundColor);
+  });
+
+  it('disabled (a locked miss): a disabled target the board still claims, drawn disabled with no pressed fill', () => {
+    inBoard.board = BOARD;
+    const el = pressable({ disabled: true, tone: 'nudge' });
+    expect(el.type).toBe(TapTarget);
+    expect(el.props.disabled).toBe(true);
+    expect(el.props.accessibilityState).toEqual({ disabled: true });
+    const style = el.props.style as (look: { pressed: boolean }) => Props;
+    expect(style({ pressed: true })).toEqual(style({ pressed: false }));
+  });
+
+  it('soft-disabled or with no handler: inactive (focusable, takes no tap)', () => {
+    inBoard.board = BOARD;
+    expect(pressable({ softDisabled: true }).props.inactive).toBe(true);
+    expect(pressable({ onPress: undefined }).props.inactive).toBe(true);
+  });
+
+  it('outside a board it stays the plain guarded Pressable', () => {
+    expect(pressable({}).type).toBe('Pressable');
   });
 });
