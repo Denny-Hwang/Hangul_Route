@@ -9,7 +9,7 @@
       "culture.n1.text": "{ko:새해 복 많이 받으세요} es un saludo habitual de Año Nuevo: desea a la otra persona mucha suerte en el año nuevo. En la reverencia de Año Nuevo, la reverencia misma es el saludo, y los mayores responden con buenos deseos.",
       "culture.n2.text": "{ko:설날} y {ko:추석} toman su fecha del calendario lunar, el calendario tradicional de Corea. Seollal es el primer día del primer mes lunar, y Chuseok es el día 15 del octavo mes lunar.",
       "culture.n3.text": "Los 24 términos solares dividen el año según el camino del sol, con unos 15 días entre uno y otro. Son un calendario compartido en Asia oriental. La UNESCO inscribió \"The Twenty-Four Solar Terms\" para China en 2016.",
-      "culture.n4.text": "En 2026, {ko:입동}, el comienzo del invierno, cae el 7 de noviembre, y {ko:동지}, el 22 de diciembre. Dongji es el día con la noche más larga y el día más corto del año. En Dongji se comen gachas de frijol rojo, {ko:팥죽}."
+      "culture.n4.text": "{ko:입동}, el comienzo del invierno, cae hacia el 7 de noviembre, y {ko:동지}, hacia el 22 de diciembre (en 2026, justo esos días). Dongji es el día con la noche más larga y el día más corto del año. En Dongji se comen gachas de frijol rojo, {ko:팥죽}."
     },
     "quest:stage3-rites-v2-q1": {
       "title": "Una tarjeta de Año Nuevo",
@@ -29,11 +29,11 @@
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "Escribo una tarjeta.",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "¡Feliz Año Nuevo, ___!",
       "steps.s2.discover.pages.0.items.0.examples.halmeoni-saehae-bok-mani-badeuseyo.gloss": "¡Feliz Año Nuevo, abuela!",
-      "steps.s2.discover.pages.0.items.0.examples.seonsaengnim-saehae-bok-mani-badeuseyo.gloss": "¡Feliz Año Nuevo, maestra!"
+      "steps.s2.discover.pages.0.items.0.examples.seonsaengnim-saehae-bok-mani-badeuseyo.gloss": "¡Feliz Año Nuevo, profe!"
     },
     "minigame:s3-rites-v2-q1-practice": {
       "orderIt.rounds.r1.sentence.gloss": "¡Feliz Año Nuevo, abuela!",
-      "orderIt.rounds.r2.sentence.gloss": "¡Feliz Año Nuevo, maestra!",
+      "orderIt.rounds.r2.sentence.gloss": "¡Feliz Año Nuevo, profe!",
       "orderIt.rounds.r3.sentence.gloss": "Escribo una tarjeta.",
       "orderIt.rounds.r4.sentence.gloss": "Hago la reverencia de Año Nuevo.",
       "orderIt.rounds.r5.sentence.gloss": "Tengo una abuela y un abuelo.",
@@ -45,7 +45,7 @@
       "orderIt.rounds.r4.particle.choices.eul.gloss": "marca de objeto, tras consonante final"
     },
     "minigame:s3-rites-v2-q1-apply": {
-      "clozePick.rounds.a1.sentence.gloss": "¡Feliz Año Nuevo, maestra!",
+      "clozePick.rounds.a1.sentence.gloss": "¡Feliz Año Nuevo, profe!",
       "clozePick.rounds.a2.sentence.gloss": "Hago la reverencia de Año Nuevo.",
       "clozePick.rounds.a3.sentence.gloss": "¡Feliz Año Nuevo!",
       "clozePick.rounds.a4.sentence.gloss": "¡Feliz Año Nuevo, abuela!",
@@ -96,7 +96,7 @@
       "orderIt.rounds.r1.sentence.gloss": "Que pases un feliz Seollal.",
       "orderIt.rounds.r2.sentence.gloss": "Que pases un feliz Chuseok.",
       "orderIt.rounds.r3.sentence.gloss": "Envío una tarjeta.",
-      "orderIt.rounds.r4.sentence.gloss": "¡Feliz Año Nuevo, maestra!",
+      "orderIt.rounds.r4.sentence.gloss": "¡Feliz Año Nuevo, profe!",
       "orderIt.rounds.r5.sentence.gloss": "Como songpyeon.",
       "orderIt.rounds.r1.distractors.meogeoyo.gloss": "comer (en 'como')",
       "orderIt.rounds.r2.distractors.bwayo.gloss": "mirar, ver (en 'veo')",

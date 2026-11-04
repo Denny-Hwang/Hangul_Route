@@ -9,7 +9,7 @@
       "culture.n1.text": "{ko:새해 복 많이 받으세요}는 흔히 하는 새해 인사예요. 새해에 좋은 일이 많기를 바라는 말이에요. 세배할 때는 절하는 것 자체가 인사이고, 어른들은 덕담으로 답해요.",
       "culture.n2.text": "{ko:설날}과 {ko:추석}은 한국의 전통 역법인 음력으로 날짜를 정해요. 설날은 음력 1월 1일이고, 추석은 음력 8월 15일이에요.",
       "culture.n3.text": "24절기는 해가 지나는 길에 따라 한 해를 나눈 것으로, 약 15일 간격이에요. 동아시아가 함께 쓰는 달력이에요. 유네스코는 2016년에 중국의 \"The Twenty-Four Solar Terms\"(24절기)를 등재했어요.",
-      "culture.n4.text": "2026년에는 겨울이 시작되는 {ko:입동}이 11월 7일, {ko:동지}가 12월 22일이에요. 동지는 한 해 가운데 밤이 가장 길고 낮이 가장 짧은 날이에요. 동지에는 붉은팥으로 쑨 {ko:팥죽}을 먹어요."
+      "culture.n4.text": "겨울이 시작되는 {ko:입동}은 11월 7일쯤, {ko:동지}는 12월 22일쯤이에요. 2026년에는 바로 그날이에요. 동지는 한 해 가운데 밤이 가장 길고 낮이 가장 짧은 날이에요. 동지에는 붉은팥으로 쑨 {ko:팥죽}을 먹어요."
     },
     "quest:stage3-rites-v2-q1": {
       "title": "새해 카드",
@@ -27,13 +27,13 @@
       "steps.s2.discover.pages.1.items.0.word.gloss": "막 시작한 일 년",
       "steps.s2.discover.pages.0.items.0.note": "카드를 받을 사람을 부른 뒤 {ko:새해 복 많이 받으세요}라고 써요. 새해에 좋은 일이 많기를 바라는 말이에요.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "마음을 적는 종이에 글을 적는다는 말",
-      "steps.s2.discover.pages.0.items.0.frame.gloss": "누군가를 부르고 설 인사를 하는 틀",
-      "steps.s2.discover.pages.0.items.0.examples.halmeoni-saehae-bok-mani-badeuseyo.gloss": "할머니께 드리는 설 인사말",
-      "steps.s2.discover.pages.0.items.0.examples.seonsaengnim-saehae-bok-mani-badeuseyo.gloss": "가르쳐 주시는 분께 드리는 설 인사말"
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "누군가를 부르고 새해 인사를 하는 틀",
+      "steps.s2.discover.pages.0.items.0.examples.halmeoni-saehae-bok-mani-badeuseyo.gloss": "할머니께 드리는 새해 인사말",
+      "steps.s2.discover.pages.0.items.0.examples.seonsaengnim-saehae-bok-mani-badeuseyo.gloss": "가르쳐 주시는 분께 드리는 새해 인사말"
     },
     "minigame:s3-rites-v2-q1-practice": {
-      "orderIt.rounds.r1.sentence.gloss": "할머니께 드리는 설 인사말",
-      "orderIt.rounds.r2.sentence.gloss": "가르쳐 주시는 분께 드리는 설 인사말",
+      "orderIt.rounds.r1.sentence.gloss": "할머니께 드리는 새해 인사말",
+      "orderIt.rounds.r2.sentence.gloss": "가르쳐 주시는 분께 드리는 새해 인사말",
       "orderIt.rounds.r3.sentence.gloss": "마음을 적는 종이에 글을 적는다는 말",
       "orderIt.rounds.r4.sentence.gloss": "설에 어른께 절을 한다는 말",
       "orderIt.rounds.r5.sentence.gloss": "아빠나 엄마의 어머니와 아버지가 계시다는 말",
@@ -45,7 +45,7 @@
       "orderIt.rounds.r4.particle.choices.eul.gloss": "받침 있는 말 뒤에서 동작의 대상을 나타내는 조사"
     },
     "minigame:s3-rites-v2-q1-apply": {
-      "clozePick.rounds.a1.sentence.gloss": "가르쳐 주시는 분께 드리는 설 인사말",
+      "clozePick.rounds.a1.sentence.gloss": "가르쳐 주시는 분께 드리는 새해 인사말",
       "clozePick.rounds.a2.sentence.gloss": "설에 어른께 절을 한다는 말",
       "clozePick.rounds.a3.sentence.gloss": "설에 좋은 일을 비는 인사말",
       "clozePick.rounds.a4.sentence.gloss": "할머니께 드리는 설 인사말",
@@ -96,7 +96,7 @@
       "orderIt.rounds.r1.sentence.gloss": "음력 정월 초하루 명절을 즐겁게 지내라는 인사",
       "orderIt.rounds.r2.sentence.gloss": "음력 팔월 보름 명절을 즐겁게 지내라는 인사",
       "orderIt.rounds.r3.sentence.gloss": "마음을 적은 종이를 부친다는 말",
-      "orderIt.rounds.r4.sentence.gloss": "가르쳐 주시는 분께 드리는 설 인사말",
+      "orderIt.rounds.r4.sentence.gloss": "가르쳐 주시는 분께 드리는 새해 인사말",
       "orderIt.rounds.r5.sentence.gloss": "반달 모양으로 빚은 떡을 먹는다는 말",
       "orderIt.rounds.r1.distractors.meogeoyo.gloss": "음식을 입에 넣어 삼킴 (‘요’로 끝나는 꼴)",
       "orderIt.rounds.r2.distractors.bwayo.gloss": "눈으로 살핌 (‘요’로 끝나는 꼴)",
@@ -109,7 +109,7 @@
       "clozePick.rounds.a1.sentence.gloss": "음력 팔월 보름 명절을 즐겁게 지내라는 인사",
       "clozePick.rounds.a2.sentence.gloss": "해마다 기리는 날을 즐겁게 지내라는 인사",
       "clozePick.rounds.a3.sentence.gloss": "마음을 적은 종이를 부친다는 말",
-      "clozePick.rounds.a4.sentence.gloss": "할머니께 드리는 설 인사말",
+      "clozePick.rounds.a4.sentence.gloss": "할머니께 드리는 새해 인사말",
       "clozePick.rounds.a1.tiles.chuseok.gloss": "가을에 햇곡식을 거두며 맞는 명절",
       "clozePick.rounds.a1.tiles.songpyeon.gloss": "반달 모양으로 빚은 떡",
       "clozePick.rounds.a1.tiles.hanbok.gloss": "한국의 전통 옷",
@@ -142,7 +142,7 @@
       "steps.s2.hoyaLine": "‘들어 보기’를 누르고, 문장을 하나씩 직접 읽어 봐요.",
       "steps.s6.hoyaLine": "겨울 절기 두 개를 말할 수 있어요. 따뜻하게 지내요!",
       "steps.s2.discover.pages.0.items.0.note": "날의 이름을 말하고, 받침이 있으면 {ko:이에요}, 받침이 없으면 {ko:예요}를 붙여요: {ko:입동이에요}, {ko:동지예요}.",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "해가 가장 짧은 절기에는 캄캄한 때가 오래간다는 말",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "낮이 가장 짧은 절기에는 어두운 때가 길다는 말",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "오늘이 어떤 날인지 말하는 틀",
       "steps.s2.discover.pages.0.items.0.examples.oneureun-ipdongieyo.gloss": "오늘이 겨울이 시작되는 절기라는 말",
       "steps.s2.discover.pages.0.items.0.examples.oneureun-dongjiyeyo.gloss": "오늘이 밤이 가장 긴 절기라는 말"
@@ -150,7 +150,7 @@
     "minigame:s3-rites-v2-q3-practice": {
       "orderIt.rounds.r1.sentence.gloss": "오늘이 겨울이 시작되는 절기라는 말",
       "orderIt.rounds.r2.sentence.gloss": "오늘이 밤이 가장 긴 절기라는 말",
-      "orderIt.rounds.r3.sentence.gloss": "해가 가장 짧은 절기에는 캄캄한 때가 오래간다는 말",
+      "orderIt.rounds.r3.sentence.gloss": "낮이 가장 짧은 절기에는 어두운 때가 길다는 말",
       "orderIt.rounds.r4.sentence.gloss": "음력 팔월 보름 명절을 즐겁게 지내라는 인사",
       "orderIt.rounds.r5.sentence.gloss": "둥근 달을 바라본다는 말",
       "orderIt.rounds.r3.distractors.meogeoyo.gloss": "음식을 입에 넣어 삼킴 (‘요’로 끝나는 꼴)",
@@ -164,7 +164,7 @@
     },
     "minigame:s3-rites-v2-q3-apply": {
       "clozePick.rounds.a1.sentence.gloss": "오늘이 밤이 가장 긴 절기라는 말",
-      "clozePick.rounds.a2.sentence.gloss": "캄캄한 때가 오래간다는 말",
+      "clozePick.rounds.a2.sentence.gloss": "어두운 때가 길다는 말",
       "clozePick.rounds.a3.sentence.gloss": "오늘이 음력 팔월 보름 명절이라는 말",
       "clozePick.rounds.a4.sentence.gloss": "음력 정월 초하루 명절을 즐겁게 지내라는 인사",
       "clozePick.rounds.a1.tiles.yeyo.gloss": "무엇이라고 알려 주는 말끝 (받침 없는 말 뒤)",
@@ -181,9 +181,9 @@
       "clozePick.rounds.a4.tiles.tteok.gloss": "쌀가루를 쪄서 만든 음식"
     },
     "minigame:s3-rites-v2-q3-check": {
-      "listenPick.rounds.c1.prompt": "해가 가장 짧은 절기에는 캄캄한 때가 오래간다는 말",
+      "listenPick.rounds.c1.prompt": "낮이 가장 짧은 절기에는 어두운 때가 길다는 말",
       "listenPick.rounds.c2.prompt": "오늘이 겨울이 시작되는 절기라는 말",
-      "listenPick.rounds.c1.options.night.label": "오래 캄캄한 저녁",
+      "listenPick.rounds.c1.options.night.label": "오래 캄캄한 때",
       "listenPick.rounds.c1.options.sun.label": "해가 쨍쨍한 날",
       "listenPick.rounds.c1.options.flower.label": "봄꽃",
       "listenPick.rounds.c2.options.winter.label": "겨울의 시작",

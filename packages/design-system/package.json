@@ -35,6 +35,9 @@
     "./src/scene-art/hidden-heritage/four-seasons": "./src/scene-art/hidden-heritage/four-seasons.ts",
     "./src/scene-art/hidden-heritage/play-courtyard": "./src/scene-art/hidden-heritage/play-courtyard.ts",
     "./hangul-keyboard-layout": "./src/components/HangulKeyboard/layout.ts",
+    "./src/components/RealiaSheet/RealiaKindSheet": "./src/components/RealiaSheet/RealiaKindSheet.tsx",
+    "./src/components/RealiaSheet/kinds-style": "./src/components/RealiaSheet/kinds-style.ts",
+    "./src/scene-art/realia-kinds-registry": "./src/scene-art/realia-kinds-registry.ts",
     "./components/*": "./src/components/*/index.ts"
   },
   "scripts": {

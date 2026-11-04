@@ -1234,7 +1234,7 @@
     {
       "id": "n4",
       "kind": "culture",
-      "textEn": "In 2026, {ko:입동}, the start of winter, falls on 7 November, and {ko:동지} on 22 December. Dongji is the day with the longest night and the shortest day of the year. On Dongji, people eat red bean porridge, {ko:팥죽}.",
+      "textEn": "{ko:입동}, the start of winter, falls around 7 November, and {ko:동지} around 22 December (in 2026, on those days). Dongji is the day with the longest night and the shortest day of the year. On Dongji, people eat red bean porridge, {ko:팥죽}.",
       "sources": [
         {
           "title": "2026년 달력자료: 24절기",
@@ -1269,7 +1269,7 @@
         "passes": 3,
         "checkedAt": "2026-11-03",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, 2026-11-03): the claims are that in 2026 입동 falls on 7 November and 동지 on 22 December, that 입동 is the start of winter, that Dongji has the longest night and the shortest day of the year, and that people eat 팥죽 on Dongji. KASI 2026 calendar data (24절기 table, fetched 2026-11-03): 입동 11 7 18 52, 동지 12 22 5 50. National Folk Museum of Korea, children's folk dictionary 동지 (topic 103): 'the 22nd of the 24 solar terms, the day with the longest night and the shortest day of the year'; 'on Dongji people make and eat 팥죽'. stdict 입동: from this day winter is said to begin (시작된다고 한다); stdict 동지: in the northern hemisphere the shortest day and the longest night.\npass 2 (MAR culture and facts checker, 2026-11-03): dates are KASI's (Korea Standard Time), as the row asks; 'the start of winter' is the gloss, the hedge of stdict kept in the q3 Discover English (the start of winter as the term's name). No claim of a custom every family keeps. Names as of the access date: 한국천문연구원, 국립민속박물관, 국립국어원.\npass 3 (MAR third pass after the reviser, 2026-11-03): the reviser kept the year in the sentence so the dates are never read as fixed; confirmed."
+        "notes": "pass 1 (author sourcing, 2026-11-03): the claims are that in 2026 입동 falls on 7 November and 동지 on 22 December, that 입동 is the start of winter, that Dongji has the longest night and the shortest day of the year, and that people eat 팥죽 on Dongji. KASI 2026 calendar data (24절기 table, fetched 2026-11-03): 입동 11 7 18 52, 동지 12 22 5 50. National Folk Museum of Korea, children's folk dictionary 동지 (topic 103): 'the 22nd of the 24 solar terms, the day with the longest night and the shortest day of the year'; 'on Dongji people make and eat 팥죽'. stdict 입동: from this day winter is said to begin (시작된다고 한다); stdict 동지: in the northern hemisphere the shortest day and the longest night.\npass 2 (MAR culture and facts checker, 2026-11-03): dates are KASI's (Korea Standard Time), as the row asks; 'the start of winter' is the gloss, the hedge of stdict kept in the q3 Discover English (the start of winter as the term's name). No claim of a custom every family keeps. Names as of the access date: 한국천문연구원, 국립민속박물관, 국립국어원.\npass 3 (MAR third pass after the reviser, 2026-11-03): the reviser kept the year in the sentence so the dates are never read as fixed; confirmed.\nfix round 1 (PR review, 2026-11-03): the cell merges dark and may open after 2026, so the note now leads with the stable dates and keeps 2026 as the example year. 'around 7 November' rests on KASI's 2026 row (11 7) and stdict 입동 ('11월 8일경'); 'around 22 December' on KASI's 2026 row (12 22) and stdict 동지 ('12월 22일이나 23일경'); '(in 2026, on those days)' is KASI's 2026 table. The es and ko text say the same; the independent re-check is the PR's next review round."
       }
     }
   ],

@@ -82,9 +82,11 @@ describe('Stage 3 Holidays & Traditions Volume 2 (row CM-45 S3)', () => {
     expect(n3?.textEn).not.toMatch(/Korean (invention|origin)|from Korea/i);
     expect((n3?.sources ?? []).map((s) => s.url)).toContain(kasi);
     expect((n3?.sources ?? []).find((s) => s.url.startsWith('https://ich.unesco.org/'))?.quoteOrLocator).toContain('Inscribed in 2016 (11.COM)');
-    // 입동 11월 7일 and 동지 12월 22일 in KASI's 2026 table, as the note says.
-    expect(n4?.textEn).toContain('falls on 7 November');
-    expect(n4?.textEn).toContain('on 22 December');
+    // 입동 around 7 November and 동지 around 22 December, as in KASI's 2026 table; the note does not read as a
+    // one-year date, because the cell may open after 2026.
+    expect(n4?.textEn).toContain('around 7 November');
+    expect(n4?.textEn).toContain('around 22 December');
+    expect(n4?.textEn).not.toMatch(/^In 2026/);
     const table = (n4?.sources ?? []).find((s) => s.url === kasi)?.quoteOrLocator ?? '';
     expect(table).toContain('입동 11 7');
     expect(table).toContain('동지 12 22');
