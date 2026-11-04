@@ -169,11 +169,13 @@ describe('stepRealiaRead', () => {
     expect(two.state).toMatchObject({ wrongIds: ['icheon', 'ocheon'], lookHere: true });
   });
 
-  it('drops a second touch inside the TAP_LOCK_MS window (a bounce, AMENDMENTS-TOUCH KT-D5)', () => {
-    expect(REALIA_READ_TIMING.touchWindowMs).toBe(TAP_LOCK_MS);
+  it('drops a second touch inside the window, TAP_LOCK_MS less a 50 ms clock slack (a bounce, AMENDMENTS-TOUCH KT-D5)', () => {
+    expect(REALIA_READ_TIMING.touchWindowMs).toBe(TAP_LOCK_MS - 50);
     const one = run(startRealiaRead(3), [tap('icheon', 100)]);
     expect(stepRealiaRead(one.state, tap('samcheon', 100 + REALIA_READ_TIMING.touchWindowMs - 1)).effects).toEqual([]);
     expect(stepRealiaRead(one.state, tap('samcheon', 100 + REALIA_READ_TIMING.touchWindowMs)).state.status).toBe('resolved');
+    // A tap the board passed at 400 ms that reached the flow 5 ms early (the first handler ran late) still counts.
+    expect(stepRealiaRead(one.state, tap('samcheon', 100 + TAP_LOCK_MS - 5)).state.status).toBe('resolved');
   });
 
   it('a line tap plays the line and reveals it, never scores, and is ignored after a hit', () => {

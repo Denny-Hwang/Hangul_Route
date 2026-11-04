@@ -35,8 +35,8 @@ function play(mode: QuestionFlowMode, taps: ReadonlyArray<readonly [string, numb
 }
 
 describe('timing (F-VOC-004 §3.6, F-VOC-003 quick check)', () => {
-  it('600 ms after a right answer, 1000 ms after a miss, 700 ms in the check, a TAP_LOCK_MS bounce window (AMENDMENTS-TOUCH KT-D5)', () => {
-    expect(QUESTION_FLOW_TIMING).toEqual({ revealRightMs: 600, revealMissMs: 1_000, checkAdvanceMs: 700, touchWindowMs: TAP_LOCK_MS });
+  it('600 ms after a right answer, 1000 ms after a miss, 700 ms in the check, a bounce window of TAP_LOCK_MS less a 50 ms clock slack (AMENDMENTS-TOUCH KT-D5)', () => {
+    expect(QUESTION_FLOW_TIMING).toEqual({ revealRightMs: 600, revealMissMs: 1_000, checkAdvanceMs: 700, touchWindowMs: TAP_LOCK_MS - 50 });
     expect(TAP_LOCK_MS).toBe(400);
   });
 });
@@ -138,8 +138,8 @@ describe("mode 'check': try again until right (F-VOC-003 quick check, Listen & P
 });
 
 describe('both modes', () => {
-  it('drops a bounce inside TAP_LOCK_MS of an accepted one (AMENDMENTS-TOUCH KT-D5; was 50 ms, F-001 §3.4)', () => {
-    for (const gap of [60, 150, TAP_LOCK_MS - 1]) {
+  it('drops a bounce inside the window of an accepted one (AMENDMENTS-TOUCH KT-D5; was 50 ms, F-001 §3.4)', () => {
+    for (const gap of [60, 150, QUESTION_FLOW_TIMING.touchWindowMs - 1]) {
       const { effects } = play('check', [
         ['vocab:bae', 100],
         ['vocab:sagwa', 100 + gap],
@@ -151,6 +151,12 @@ describe('both modes', () => {
       ['vocab:sagwa', 100 + TAP_LOCK_MS],
     ]);
     expect(later.effects.filter((e) => e.type === 'answer')).toHaveLength(2);
+    // A tap the board passed at 400 ms that reached the flow 5 ms early (the first handler ran late) still counts.
+    const skewed = play('check', [
+      ['vocab:bae', 100],
+      ['vocab:sagwa', 100 + TAP_LOCK_MS - 5],
+    ]);
+    expect(skewed.effects.filter((e) => e.type === 'answer')).toHaveLength(2);
   });
 
   it('ignores an id that is not an option', () => {

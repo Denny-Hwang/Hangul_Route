@@ -378,23 +378,30 @@ test('a bounce across the 320 ms advance gives the next round no answer; a later
   const touch = await Touchscreen.of(page);
   const at = await pointIn(page, rightId);
   // The right answer, then a bounce at the same place once round 2 has opened (it opens 320 ms after the answer). The
-  // answer commits after `tappedAt`, so `bounceBound` is at least the real gap from the answer to the bounce's release.
-  const tappedAt = Date.now();
+  // gap is read in the page from the two releases' own event times, the clock the board's lock runs on.
+  await page.evaluate(() => {
+    const w = window as Window & { __touchEnds?: number[] };
+    w.__touchEnds = [];
+    window.addEventListener('touchend', (e) => w.__touchEnds!.push(e.timeStamp), { capture: true });
+  });
   await touch.tap(at, 10);
-  await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 2');
-  const wait = 345 - (Date.now() - tappedAt);
-  if (wait > 0) await page.waitForTimeout(wait);
+  // Every animation frame, not the assertion's back-off polling (whose 250 and 500 ms steps alone outrun the lock).
+  await page.waitForFunction(() => document.querySelector('[data-testid="daily-review-dots"]')?.getAttribute('aria-label') === 'Round 2', undefined, { polling: 'raf', timeout: 5_000 });
   await touch.start({ id: 1, ...at });
   await touch.end(1);
-  const bounceBound = Date.now() - tappedAt;
-  test.info().annotations.push({ type: 'bounce', description: `released at most ${bounceBound} ms after the answer (the lock is 400)` });
+  const ends = await page.evaluate(() => (window as Window & { __touchEnds?: number[] }).__touchEnds ?? []);
+  expect(ends).toHaveLength(2);
+  const bounceGap = Math.round(ends[1]! - ends[0]!);
+  test.info().annotations.push({ type: 'bounce', description: `released ${bounceGap} ms after the answer's release (the lock is ${TAP_LOCK_MS})` });
+  // Fail closed: a machine too slow to land the bounce inside the lock reports the case as skipped (with the time it
+  // took), never as a pass that checked nothing. The render test `review-rounds-lock.test.tsx` pins the same rule on a
+  // fake clock for every run.
+  test.skip(bounceGap >= TAP_LOCK_MS, `the bounce released ${bounceGap} ms after the answer, past the ${TAP_LOCK_MS} ms lock: nothing to check`);
   await page.waitForTimeout(200);
   await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 2');
-  // Inside the lock (a slow machine can miss the window; then the case says nothing): round 2 has no answer.
-  if (bounceBound < 400) {
-    await expect(page.getByTestId('daily-review-dot-filled')).toHaveCount(1);
-    await expect(page.getByTestId('daily-review-miss')).toHaveCount(0);
-  }
+  // Inside the lock: round 2 has no answer.
+  await expect(page.getByTestId('daily-review-dot-filled')).toHaveCount(1);
+  await expect(page.getByTestId('daily-review-miss')).toHaveCount(0);
   // Past the lock, a deliberate tap there is round 2's first answer.
   await touch.tap(at);
   await expect

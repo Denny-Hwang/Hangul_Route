@@ -218,15 +218,15 @@ describe('the right tap', () => {
   });
 });
 
-describe('a bounce inside TAP_LOCK_MS is dropped (AMENDMENTS-TOUCH KT-D5; was the 50 ms window of F-001 §3.4)', () => {
-  it('the window is TAP_LOCK_MS (400 ms)', () => {
-    expect(LISTEN_PICK_TIMING.touchWindowMs).toBe(TAP_LOCK_MS);
+describe('a bounce inside the window is dropped (AMENDMENTS-TOUCH KT-D5; was the 50 ms window of F-001 §3.4)', () => {
+  it('the window is TAP_LOCK_MS less a 50 ms clock slack (the board lock is the gate at 400 ms)', () => {
+    expect(LISTEN_PICK_TIMING.touchWindowMs).toBe(TAP_LOCK_MS - 50);
     expect(TAP_LOCK_MS).toBe(400);
   });
 
-  it('drops a second tap on another option inside the window (a bounce 60, 150 or 399 ms later)', () => {
+  it('drops a second tap on another option inside the window (a bounce 60, 150 or 349 ms later)', () => {
     const first = stepFlow(startFlow(2), tap('b', 1000));
-    for (const gap of [60, 150, TAP_LOCK_MS - 1]) {
+    for (const gap of [60, 150, LISTEN_PICK_TIMING.touchWindowMs - 1]) {
       const second = stepFlow(first.state, tap('c', 1000 + gap));
       expect(second.state.wrongIds).toEqual(['b']);
       expect(second.effects).toEqual([]);
@@ -236,6 +236,12 @@ describe('a bounce inside TAP_LOCK_MS is dropped (AMENDMENTS-TOUCH KT-D5; was th
   it('accepts a tap at TAP_LOCK_MS and later', () => {
     const first = stepFlow(startFlow(2), tap('b', 1000));
     const second = stepFlow(first.state, tap('c', 1000 + TAP_LOCK_MS));
+    expect(second.state.wrongIds).toEqual(['b', 'c']);
+  });
+
+  it('accepts a tap the board passed at 400 ms that reached the flow 5 ms early (the first handler ran late)', () => {
+    const first = stepFlow(startFlow(2), tap('b', 1000));
+    const second = stepFlow(first.state, tap('c', 1000 + TAP_LOCK_MS - 5));
     expect(second.state.wrongIds).toEqual(['b', 'c']);
   });
 
