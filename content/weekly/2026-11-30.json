@@ -1,0 +1,77 @@
+{
+  "id": "week:2026-11-30",
+  "weekOf": "2026-11-30",
+  "status": "ready",
+  "kind": "solar-terms",
+  "topic": "jeolgi",
+  "day": "2026-12-07",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "The 24 Solar Terms",
+  "noteEn": "The year has 24 {ko:절기}, solar terms, about 15 days apart. They follow the sun through the year. They are a calendar shared across East Asia. UNESCO inscribed The Twenty-Four Solar Terms for China in 2016.",
+  "items": [
+    {
+      "id": "jeolgi",
+      "ko": "절기",
+      "romanization": "jeolgi",
+      "en": "solar term"
+    },
+    {
+      "id": "bom",
+      "ko": "봄",
+      "romanization": "bom",
+      "en": "spring"
+    },
+    {
+      "id": "yeoreum",
+      "ko": "여름",
+      "romanization": "yeoreum",
+      "en": "summer"
+    },
+    {
+      "id": "gaeul",
+      "ko": "가을",
+      "romanization": "gaeul",
+      "en": "autumn"
+    },
+    {
+      "id": "gyeoul",
+      "ko": "겨울",
+      "romanization": "gyeoul",
+      "en": "winter"
+    }
+  ],
+  "sources": [
+    {
+      "title": "표준국어대사전: 절기(節氣)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=481013&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"한 해를 스물넷으로 나눈, 계절의 표준이 되는 것.\""
+    },
+    {
+      "title": "The Twenty-Four Solar Terms, knowledge in China of time and practices developed through observation of the sun's annual motion",
+      "publisher": "UNESCO Intangible Cultural Heritage",
+      "url": "https://ich.unesco.org/en/RL/the-twenty-four-solar-terms-knowledge-in-china-of-time-and-practices-developed-through-observation-of-the-sun-s-annual-motion-00647",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"Inscribed in 2016 (11.COM) on the Representative List of the Intangible Cultural Heritage of Humanity\" / State: China / \"The ancient Chinese divided the sun's annual circular motion into 24 segments. Each segment was called a specific 'Solar Term'.\""
+    },
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"상강 10월 23일 18시 38분\" / \"입동 11월 7일 18시 52분\" / \"소설 11월 22일 16시 23분\" / \"대설 12월 7일 11시 53분\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Shared East Asian heritage is not framed as Korean in origin (§5.1): the note calls the terms a calendar shared across East Asia and names UNESCO's element for China, inscribed 2016, under its UNESCO name. 'About 15 days apart' reads the KASI table (23 Oct, 7 Nov, 22 Nov, 7 Dec); 'follow the sun' restates UNESCO's 'the sun's annual circular motion'. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}
