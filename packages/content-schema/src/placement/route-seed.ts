@@ -110,6 +110,12 @@ export const priorityTokensOf = (
   return tokens.slice(0, MAX_PRIORITY_TOKENS);
 };
 
+/**
+ * A grid quest the route can start on or name next: every grid quest but a cell's later volume (F-CURR-002 row CM-41),
+ * so a learner who has done or placed out every Volume 1 quest gets no start, never a Volume 2 quest while `volumes` is off.
+ */
+export const isRouteStartQuest = (quest: Pick<RouteQuest, 'grid' | 'laterVolume'>): boolean => quest.grid && quest.laterVolume !== true;
+
 interface SeedInput {
   level: PlacementLevel;
   oralStage: StageKey | null;
@@ -121,7 +127,7 @@ interface SeedInput {
 const buildSeed = (input: SeedInput, catalog: RouteCatalog, opts: RouteOptions): RouteSeed => {
   const placedOut = new Set(input.placedOut);
   const remaining = inRouteOrder(catalog).filter(
-    (quest) => quest.grid && quest.playable && quest.laterVolume !== true && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
+    (quest) => isRouteStartQuest(quest) && quest.playable && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
   );
   const start = remaining.find((quest) => opts.isEntitled(quest.stage)) ?? null;
   let needsStage: StageKey | null = null;
