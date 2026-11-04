@@ -277,6 +277,9 @@ describe('the attention banner and the review sheet (sections 5.1, 5.2)', () => 
     const reads = count('relinkRequests');
     state.relinks = [];
     await press(byTestId('sheet-device-approve')[0] as ReactTestInstance);
+    // GX-D12: the sheet's Approve opens the re-link dialog; its Approve decides.
+    expect(calls.find((c) => c.name === 'decideRelink')).toBeUndefined();
+    await press(popupOpen()?.find((n) => n.props['data-testid'] === 'relink-popup-approve' && n.type === 'button') as ReactTestInstance);
     expect(calls.find((c) => c.name === 'decideRelink')?.args).toEqual(['space:sunflower', 'relink:jaehan', true]);
     expect(count('relinkRequests')).toBeGreaterThan(reads);
     expect(textOf(cardOf('Jaehan'))).toContain('Jaehan can open their new device now.');
@@ -385,7 +388,7 @@ describe('the re-link pop-up (section 5.3)', () => {
     expect(count('listSpaces')).toBe(before === 0 ? 1 : before);
   });
 
-  it('the family roster gets the banner and the sheet, never the pop-up (it gets the re-link bar of GX-5)', async () => {
+  it('the family roster gets the banner and the sheet, never an automatic pop-up (it gets the re-link bar of GX-5)', async () => {
     state.kind = 'family';
     nav.query = 'id=space%3Akim-family';
     state.learners = [member('profile:yuhan', 'Yuhan'), member('profile:jaehan', 'Jaehan')];
@@ -396,6 +399,19 @@ describe('the re-link pop-up (section 5.3)', () => {
     expect(textOf(byTestId('attention-banner')[0] as ReactTestInstance)).toContain('2 requests need your OK');
     await press(byTestId('attention-review-now')[0] as ReactTestInstance);
     expect(textOf(byTestId('sheet-family-row')[0] as ReactTestInstance)).toContain('Class move: Saturday Class B');
+  });
+
+  it('on the family roster a re-link Approve still opens the dialog (GX-D12): never approved in one tap', async () => {
+    state.kind = 'family';
+    nav.query = 'id=space%3Akim-family';
+    state.learners = [member('profile:yuhan', 'Yuhan'), member('profile:jaehan', 'Jaehan')];
+    state.transfers = [];
+    state.incoming = [];
+    await render();
+    expect(popupOpen()).toBeUndefined();
+    await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline'));
+    expect(calls.find((c) => c.name === 'decideRelink')).toBeUndefined();
+    expect(textOf(popupOpen() as ReactTestInstance)).toContain('New device request: Jaehan');
   });
 });
 

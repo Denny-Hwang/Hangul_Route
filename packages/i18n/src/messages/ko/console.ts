@@ -290,6 +290,7 @@ export const consoleMsgs = {
     askedAgo: (minutes: number) => `${minutes}분 전에 요청함`,
     closed: '이 요청은 이미 닫혔어요 — 학습자가 다시 요청할 수 있어요.',
     failed: '처리되지 않았어요. 다시 해 보세요.',
+    platform: { ios: 'iPhone 또는 iPad', android: 'Android', web: '웹' },
   },
   docTitle: {
     console: '계정 페이지 — Hangul Route',
@@ -1766,6 +1767,7 @@ export const consoleMsgs = {
     chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
     newDevice: (minutes: number) => `새 기기 · ${minutes}분 남음`,
     moveTo: (className: string) => `반 이동: ${className}`,
+    moveOut: '다른 반으로 이동',
     moveWaiting: '이동 대기 중',
     waitingFor: (className: string) => `기다리는 반: ${className}`,
     moving: (date: string) => `이동 예정 · ${date}`,
@@ -1774,6 +1776,12 @@ export const consoleMsgs = {
     noPractice: '아직 연습 기록이 없어요',
     minutesLeft: (minutes: number) => `${minutes}분 남음`,
     review: { cta: '확인하기' },
+  },
+  relinkPopup: {
+    title: (name: string) => `새 기기 연결 요청: ${name}`,
+    closes: (minutes: number) => `${minutes}분 뒤에 이 요청이 마감돼요.`,
+    later: { cta: '나중에' },
+    meta: (platform: string, asked: string) => `${platform} · ${asked}`,
   },
   attention: {
     incomingHeading: '이 반에 들어오려는 학생',
@@ -1784,13 +1792,8 @@ export const consoleMsgs = {
     reviewNow: { cta: '지금 확인' },
     sheetTitle: '승인 대기',
     devicesHeading: '새 기기',
-    outgoingHeading: '이 반에서 나가는 이동',
+    outgoingHeading: '다른 반으로 옮기려는 학생',
     empty: '기다리는 요청이 없어요.',
-  },
-  relinkPopup: {
-    title: (name: string) => `새 기기 연결 요청: ${name}`,
-    closes: (minutes: number) => `${minutes}분 뒤에 이 요청이 마감돼요.`,
-    later: { cta: '나중에' },
   },
   relinkBar: {
     one: (space: string) => `새 기기 승인 대기 · ${space}`,

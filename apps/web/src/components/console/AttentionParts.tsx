@@ -7,6 +7,7 @@ import { AvatarChip } from '@/components/AvatarChip';
 import { SourceConsent } from '@/components/console/ClassTransferParts';
 import { inertOthers, tabTarget } from '@/components/console/ConfirmSheet';
 import { DECIDED_HOLD_MS, IncomingCard, actionCardStyle, incomingKey, relinkSettled, type IncomingApi } from '@/components/console/LearnerStatusParts';
+import { RelinkPopup } from '@/components/console/RelinkPopup';
 import { MoveButton } from '@/components/console/TransferParts';
 import type { ConsoleApi, TransferSourceView } from '@/lib/console/api';
 import { minutesShown, type IncomingItem, type OutgoingItem } from '@/lib/console/learner-status';
@@ -119,6 +120,9 @@ export interface SheetDevice {
   name: string;
   avatar: string | null;
   expiresAt: string;
+  /** For the re-link dialog that Approve opens (GX-D12): the platform and the request time, when the read gave them. */
+  platform?: string | null;
+  requestedAt?: string | null;
 }
 
 export interface SheetOutgoing {
@@ -229,6 +233,12 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
   // A consent answer the page itself must handle (the session ended, the role or the switch changed): its words on the
   // row (the moves page's page-state lines), also said, so a press never ends in silence.
   const [rowState, setRowState] = useState<Record<string, string>>({});
+  // GX-D12: a device's Approve opens the re-link dialog over the sheet (hint, platform, request time); the sheet's keys
+  // wait while it is open (Escape is the dialog's Later, never the sheet's Close).
+  const [relinkFor, setRelinkFor] = useState<{ key: string; device: SheetDevice } | null>(null);
+  const relinkOpen = useRef(false);
+  relinkOpen.current = relinkFor !== null;
+  const relinkSettledKey = useRef<string | null>(null);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const order = useRef<Record<Held['section'], string[]>>({ devices: [], incoming: [], outgoing: [], family: [] });
 
@@ -254,6 +264,7 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
   }, []);
 
   const keyAction = useCallback((event: { key: string; shiftKey: boolean; defaultPrevented?: boolean; preventDefault: () => void }): void => {
+    if (relinkOpen.current) return;
     if (event.key === 'Escape') {
       event.preventDefault();
       latestClose.current();
@@ -389,6 +400,10 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
                 api={api}
                 spaceId={spaceId}
                 online={online && !readOnly}
+                onApprove={() => {
+                  relinkSettledKey.current = null;
+                  setRelinkFor({ key, device: item });
+                }}
                 onAnswered={(text) => answered(key, { section: 'devices', name: item.name, avatar: item.avatar }, text, item.learnerId)}
                 onFailed={setSaid}
               />
@@ -481,6 +496,35 @@ export function ReviewSheet(props: ReviewSheetProps): JSX.Element {
           ),
         )}
       </div>
+      {relinkFor ? (
+        <RelinkPopup
+          key={relinkFor.key}
+          api={api}
+          spaceId={spaceId}
+          request={{ id: relinkFor.device.id, expiresAt: relinkFor.device.expiresAt, platform: relinkFor.device.platform ?? null, requestedAt: relinkFor.device.requestedAt ?? null }}
+          learnerName={relinkFor.device.name}
+          online={online && !readOnly}
+          now={now}
+          onLater={() => setRelinkFor(null)}
+          onResult={(text, settled) => {
+            const { key, device } = relinkFor;
+            if (!settled) {
+              // Still open: the dialog keeps its buttons with the line under them; the sheet's region says it too.
+              setSaid(text);
+              return;
+            }
+            relinkSettledKey.current = key;
+            setRelinkFor(null);
+            answered(key, { section: 'devices', name: device.name, avatar: device.avatar }, text, device.learnerId);
+          }}
+          focusOnClose={() => {
+            // Answered: the row stays 5 s with its line, so focus goes to it; Later goes back to its Approve.
+            const key = relinkSettledKey.current;
+            relinkSettledKey.current = null;
+            return key ? (sheet.current?.querySelector?.<HTMLElement>(`[data-sheet-key="${key}"]`) ?? null) : null;
+          }}
+        />
+      ) : null}
     </>
   );
 }
@@ -509,6 +553,7 @@ function DeviceRow({
   api,
   spaceId,
   online,
+  onApprove,
   onAnswered,
   onFailed,
 }: {
@@ -518,6 +563,8 @@ function DeviceRow({
   api: Pick<ConsoleApi, 'decideRelink'>;
   spaceId: string;
   online: boolean;
+  /** Opens the re-link dialog for this request (GX-D12): no re-link is approved in one tap. */
+  onApprove: () => void;
   /** Answered, or closed meanwhile: the row is held with its line, then leaves. */
   onAnswered: (text: string) => void;
   /** A failure that leaves the request open (offline, a 5xx, a learner who left): said; the row keeps its answers. */
@@ -529,15 +576,16 @@ function DeviceRow({
   const [failed, setFailed] = useState<string | null>(null);
   const nameId = `${rowKey}-name`;
   const reasonId = `${rowKey}-reason`;
-  const decide = async (approve: boolean): Promise<void> => {
+  // Deny answers here in one tap; Approve opens the dialog (the sheet holds the row with the dialog's result).
+  const deny = async (): Promise<void> => {
     if (busy) return;
     setBusy(true);
     setFailed(null);
-    const result = await api.decideRelink(spaceId, device.id, approve);
+    const result = await api.decideRelink(spaceId, device.id, false);
     setBusy(false);
     if (result.ok) {
       announceRosterChange();
-      onAnswered(relinkNoteText({ kind: approve ? 'approved' : 'denied', name: device.name }, locale));
+      onAnswered(relinkNoteText({ kind: 'denied', name: device.name }, locale));
       return;
     }
     const text = relinkNoteText({ kind: 'decideFailed', result }, locale);
@@ -559,10 +607,10 @@ function DeviceRow({
         {c.status.newDevice(minutesShown(device.expiresAt, now))}
       </p>
       <div style={actions}>
-        <MoveButton primary waiting={busy} disabled={!online} describedBy={`${nameId} ${reasonId}`} onClick={() => void decide(true)} testId="sheet-device-approve">
+        <MoveButton primary waiting={busy} disabled={!online} describedBy={`${nameId} ${reasonId}`} onClick={onApprove} testId="sheet-device-approve">
           {c.relink.approve.cta}
         </MoveButton>
-        <MoveButton waiting={busy} disabled={!online} describedBy={`${nameId} ${reasonId}`} onClick={() => void decide(false)} testId="sheet-device-deny">
+        <MoveButton waiting={busy} disabled={!online} describedBy={`${nameId} ${reasonId}`} onClick={() => void deny()} testId="sheet-device-deny">
           {c.relink.deny.cta}
         </MoveButton>
       </div>

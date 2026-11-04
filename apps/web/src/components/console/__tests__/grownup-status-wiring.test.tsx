@@ -148,8 +148,20 @@ const fakeDocument = {
     if (type === 'visibilitychange') listeners.delete(l);
   },
 };
+// GX-2's pop-up opens on its own for a request this tab has not shown (attention-wiring.test.tsx covers that). These GX-1
+// cases open the dialog from the card, so every request here starts as already shown and reminded.
+const session: Record<string, string> = {};
 const fakeWindow = {
   location: { pathname: '/teach/space', search: '', origin: 'https://app.hangulroute.com' },
+  sessionStorage: {
+    getItem: (k: string) => session[k] ?? null,
+    setItem: (k: string, v: string) => {
+      session[k] = v;
+    },
+    removeItem: (k: string) => {
+      delete session[k];
+    },
+  },
   addEventListener: () => undefined,
   removeEventListener: () => undefined,
 };
@@ -172,6 +184,9 @@ beforeEach(() => {
     member('profile:mina', 'Mina', { joinedAt: '2026-10-30T08:00:00.000Z', summary: null, lastSyncedAt: null }),
   ];
   state.relinks = [relinkFor('profile:jaehan', 'Jaehan')];
+  for (const key of Object.keys(session)) delete session[key];
+  session['hr:console:relinkShown'] = JSON.stringify(['relink:jaehan', 'relink:yuhan']);
+  session['hr:console:relinkReminded'] = JSON.stringify(['relink:jaehan', 'relink:yuhan']);
   state.transfers = [incomingTransfer];
   state.incoming = [teacherMoveIn];
   state.decide = ok({});
@@ -206,6 +221,8 @@ const cardOf = (name: string): ReactTestInstance => {
   return card;
 };
 const chipIn = (card: ReactTestInstance): ReactTestInstance | undefined => card.findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === 'learner-status')[0];
+const popupOf = (): ReactTestInstance | undefined => byTestId('relink-popup')[0];
+const popupPart = (id: string): ReactTestInstance => byTestId(id)[0] as ReactTestInstance;
 const count = (name: string): number => calls.filter((c) => c.name === name).length;
 
 /** What the page asked to focus: react-test-renderer has no DOM, so each ref gets a node that records it. */
@@ -270,20 +287,60 @@ describe('the class page shows a status next to every learner (GX-1, section 4)'
     expect(textOf(mina)).not.toContain('not synced yet');
   });
 
-  it('the action chip opens the decision for its request: the re-link pop-up (GX-2, section 5.3)', async () => {
+  it('the action chip opens the re-link dialog: title, platform and request time, the safety hint, the minutes left (GX-D12)', async () => {
     await render();
-    const later = (): ReactTestInstance | undefined => byTestId('relink-popup-later')[0];
-    await press(later() as ReactTestInstance);
-    expect(byTestId('relink-popup')).toEqual([]);
+    focused.length = 0;
     await press(chipIn(cardOf('Jaehan')) as ReactTestInstance);
-    expect(textOf(byTestId('relink-popup')[0] as ReactTestInstance)).toContain('New device request: Jaehan');
+    const popup = popupOf() as ReactTestInstance;
+    expect(popup.props.role).toBe('alertdialog');
+    expect(popup.props['aria-modal']).toBe('true');
+    const title = popup.find((n) => n.type === 'h2');
+    expect(textOf(title)).toBe('New device request: Jaehan');
+    expect(popup.props['aria-labelledby']).toBe(title.props.id);
+    expect(textOf(popupPart('relink-popup-meta'))).toBe('iPhone or iPad · asked 2 min ago');
+    expect(textOf(popupPart('relink-popup-hint'))).toBe('Approve only if this learner is with you or you expect this device.');
+    expect(textOf(popupPart('relink-popup-closes'))).toBe('This request closes in 8 min.');
+    // The hint is read with the dialog: it describes it.
+    expect(String(popup.props['aria-describedby'])).toContain(popupPart('relink-popup-hint').props.id);
+    // Focus starts on the title, so the hint is read before any button.
+    expect(focused).toEqual(['self:h2:']);
+    expect(count('decideRelink')).toBe(0);
   });
 
-  it('Approve inline answers the request, says so on the card, reads the re-links again and keeps the card in place 5 s', async () => {
+  it('Approve on the card never answers in one tap: it opens the dialog, and only the dialog Approve decides', async () => {
+    await render();
+    await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline'));
+    expect(count('decideRelink')).toBe(0);
+    expect(popupOf()).toBeDefined();
+    expect(textOf(popupPart('relink-popup-hint'))).toContain('Approve only if');
+  });
+
+  it('Later (and the backdrop) closes the dialog and the request stays: the chip and the answers are still there', async () => {
+    await render();
+    await press(chipIn(cardOf('Jaehan')) as ReactTestInstance);
+    await press(popupPart('relink-popup-later'));
+    expect(popupOf()).toBeUndefined();
+    expect(count('decideRelink')).toBe(0);
+    expect(textOf(chipIn(cardOf('Jaehan')) as ReactTestInstance)).toBe('Needs your OK');
+    await press(chipIn(cardOf('Jaehan')) as ReactTestInstance);
+    await press(popupPart('relink-popup-backdrop'));
+    expect(popupOf()).toBeUndefined();
+  });
+
+  it('Deny on the card answers in one tap (it only closes the request)', async () => {
+    await render();
+    await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-deny-inline'));
+    expect(popupOf()).toBeUndefined();
+    expect(calls.find((c) => c.name === 'decideRelink')?.args).toEqual(['space:sunflower', 'relink:jaehan', false]);
+  });
+
+  it('the dialog Approve answers the request, closes, says so on the card, reads the re-links again and keeps the card in place 5 s', async () => {
     await render();
     const before = count('relinkRequests');
     state.relinks = [];
     await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline'));
+    await press(popupPart('relink-popup-approve'));
+    expect(popupOf()).toBeUndefined();
     expect(calls.find((c) => c.name === 'decideRelink')?.args).toEqual(['space:sunflower', 'relink:jaehan', true]);
     expect(count('relinkRequests')).toBeGreaterThan(before);
     expect(textOf(cardOf('Jaehan'))).toContain('Jaehan can open their new device now.');
@@ -431,17 +488,23 @@ describe('GX-1 review fixes', () => {
     focused.length = 0;
     state.decide = { ok: false, error: 'unknown', status: 503 };
     await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline'));
+    focused.length = 0;
+    await press(popupPart('relink-popup-approve'));
+    // The dialog stays with its buttons and the line under them; the card keeps its chip, border and answers.
+    expect(popupOf()).toBeDefined();
+    expect(byTestId('relink-popup-failed')).toHaveLength(1);
     const card = cardOf('Jaehan');
     expect(textOf(chipIn(card) as ReactTestInstance)).toBe('Needs your OK');
     expect(card.props.style.border).toContain(colors.feedback.nudge);
     expect(card.findAll((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline')).toHaveLength(1);
-    expect(card.findAll((n) => n.props['data-testid'] === 'relink-answer-failed' && n.type === 'p')).toHaveLength(1);
     expect(card.findAll((n) => n.props['data-testid'] === 'learner-decided')).toHaveLength(0);
     // Focus stays on the button the grown-up pressed: nothing moved it.
     expect(focused).toEqual([]);
+    await press(popupPart('relink-popup-later'));
     state.decide = { ok: false, error: 'network', status: 0 };
     await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-deny-inline'));
     expect(cardOf('Jaehan').findAll((n) => n.type === 'button' && n.props['data-testid'] === 'relink-deny-inline')).toHaveLength(1);
+    expect(cardOf('Jaehan').findAll((n) => n.props['data-testid'] === 'relink-answer-failed' && n.type === 'p')).toHaveLength(1);
   });
 
   it('a settled inline answer moves focus to the learner name, which stays on the card', async () => {
@@ -449,7 +512,10 @@ describe('GX-1 review fixes', () => {
     focused.length = 0;
     state.relinks = [];
     await press(cardOf('Jaehan').find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-approve-inline'));
-    expect(focused).toEqual(['self:strong:']);
+    focused.length = 0;
+    await press(popupPart('relink-popup-approve'));
+    // The dialog leaves and focus lands on the learner's name, never on the Approve that went away.
+    expect(focused.at(-1)).toBe('self:strong:');
     const name = cardOf('Jaehan').find((n) => n.type === 'strong');
     expect(name.props.tabIndex).toBe(-1);
   });

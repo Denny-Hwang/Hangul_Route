@@ -197,7 +197,13 @@ test.describe('en: answering in the sheet and the pop-up', () => {
     const sheet = page.getByRole('dialog', { name: c.attention.sheetTitle });
     await expect(sheet).toBeVisible();
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
+    // GX-D12: the device's Approve opens the re-link dialog over the sheet (hint, platform, time); its Approve decides.
     await sheet.getByTestId('sheet-device-row').getByRole('button', { name: c.relink.approve.cta }).click();
+    const dialog = page.getByRole('alertdialog', { name: c.relinkPopup.title('Jaehan') });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText(c.relinkApproveHint)).toBeVisible();
+    await dialog.getByRole('button', { name: c.relink.approve.cta, exact: true }).click();
+    await expect(dialog).toHaveCount(0);
     await expect(sheet.getByText(c.relink.approved('Jaehan')).first()).toBeVisible();
     const move = sheet.getByTestId('incoming-card').filter({ hasText: 'J. K.' });
     await move.getByRole('button', { name: c.teacherMove.section.accept.cta }).click();
