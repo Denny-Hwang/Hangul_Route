@@ -1072,8 +1072,8 @@ export const consoleMsgs = {
       classDayOff: 'Only the class is off',
       preview: {
         everyDay: 'on all 7 days',
-        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, allDays: boolean) =>
-          `About ${total} sessions a week${allDays ? ' on all 7 days' : ''}: ${plural('en', classDays, { one: `${classDays} class day`, other: `${classDays} class days` })} (${classMin} min) and ${plural('en', practiceDays, { one: `${practiceDays} practice day`, other: `${practiceDays} practice days` })} (${practiceMin} min each, plus about 2-3 minutes of Daily Review).`,
+        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, everyDay: string | null) =>
+          `About ${total} sessions a week${everyDay === null ? '' : ` ${everyDay}`}: ${plural('en', classDays, { one: `${classDays} class day`, other: `${classDays} class days` })} (${classMin} min) and ${plural('en', practiceDays, { one: `${practiceDays} practice day`, other: `${practiceDays} practice days` })} (${practiceMin} min each, plus about 2-3 minutes of Daily Review).`,
         perDay: (classItems: number, practiceItems: number) =>
           `Class days teach about ${plural('en', classItems, { one: `${classItems} lesson`, other: `${classItems} lessons` })}; practice days play about ${practiceItems}.`,
         average: (sessions: number, teaching: string, calendar: string | null) =>
@@ -1096,7 +1096,7 @@ export const consoleMsgs = {
           `Move the class on ${date}? Its lessons and every later class day's lessons move to the following class days. What is done stays done.`,
         moveConfirm: { cta: 'Move it' },
         moved: 'Moved. Devices pick up the new dates on their next sync.',
-        addPractice: { cta: 'Add practice days' },
+        addPractice: { cta: 'Add practice days to this plan' },
         stopPractice: { cta: 'Stop practice days' },
         stopAsk: 'Stop practice days? From today the plan has class days only. What is done stays done.',
         stopConfirm: { cta: 'Stop them' },

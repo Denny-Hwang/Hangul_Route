@@ -1,10 +1,11 @@
-import { CATALOG, generateCurriculum, toMeta, toPlanItems, type CurriculumMeta, type PlanItem } from '@hangul-route/content-schema';
+import { CATALOG, addDays, generateCurriculum, toMeta, toPlanItems, type CurriculumMeta, type PlanItem } from '@hangul-route/content-schema';
 import { LOCALES, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { isCaregiverSafe } from '../banned-text';
 import {
   CLASS_LENGTH_CHOICES,
   PRACTICE_COUNT_CHOICES,
+  PRACTICE_MINUTES_PICTURES_FIRST,
   defaultsFor,
   meetingShown,
   toParams,
@@ -54,6 +55,17 @@ describe('defaultsFor and the meeting block (section 10.1)', () => {
     expect(state).toMatchObject({ blendMode: 'overlap', lectureDays: [], lectureMinutes: 30, practicePerWeek: 0, practiceMinutes: 10, practiceDays: null, keepAverage: false });
     expect(CLASS_LENGTH_CHOICES).toEqual([15, 20, 30, 45, 60]);
     expect(PRACTICE_COUNT_CHOICES).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it('a Pictures-first class (most learners at the first level) practices 5 minutes', () => {
+    const learners = [
+      { id: 'a', ageGroup: '5-7', summary: null },
+      { id: 'b', ageGroup: '5-7', summary: null },
+      { id: 'c', ageGroup: '8-9', summary: null },
+    ];
+    expect(defaultsFor('class', learners, TODAY)).toMatchObject({ practiceMinutes: 5, lectureMinutes: 30, practicePerWeek: 0 });
+    expect(PRACTICE_MINUTES_PICTURES_FIRST).toBe(5);
+    expect(defaultsFor('class', learners.slice(1), TODAY).practiceMinutes).toBe(10);
   });
 
   it('a family has no meeting block', () => {
@@ -230,11 +242,16 @@ describe('the readout (section 10.2)', () => {
   });
 
   it('Stop practice days lays the future out as a Class only plan; Add practice days lays it out again with blend', () => {
-    const stop = stopPracticeParams(plan.meta.params);
+    const stop = stopPracticeParams(plan.meta.params, '2026-11-05');
+    if (stop === null || typeof stop === 'string') throw new Error('stop');
     expect(stop).toMatchObject({ sessionsPerWeek: 1, sessionDays: ['tue'], minutesPerSession: 30 });
-    expect(stop?.blend).toBeUndefined();
-    const stopped = changePractice(plan, stop ?? (undefined as never), '2026-11-05', '2026-11-05T09:00:00.000Z');
+    expect(stop.blend).toBeUndefined();
+    // Only the class is off on 24 November: the Class only plan keeps that class off (a one-day plan day off).
+    expect(stop.daysOff).toEqual([{ from: '2026-11-24', to: '2026-11-24' }]);
+    const stopped = changePractice(plan, stop, '2026-11-05', '2026-11-05T09:00:00.000Z');
     expect(stopped.meta.params.blend).toBeUndefined();
+    expect(stopped.items.some((item) => item.targetDate === '2026-11-24')).toBe(false);
+    expect(stopped.items.some((item) => item.targetDate === '2026-12-01')).toBe(true);
     expect(stopped.items.filter((item) => (item.targetDate ?? '') >= '2026-11-05').every((item) => item.lectureDate === undefined)).toBe(true);
 
     const classOnly = { ...plan, meta: stopped.meta, items: stopped.items };
@@ -247,6 +264,37 @@ describe('the readout (section 10.2)', () => {
     expect(added.planId).toBe(plan.id);
     expect(added.meta.params.blend?.personal.perWeek).toBe(1);
     expect(added.items.some((item) => item.lectureDate !== undefined && item.lectureDate >= '2026-11-05')).toBe(true);
+  });
+
+  it('Stop practice days keeps only class days off from today on, joins touching ones, and holds to 12 ranges', () => {
+    expect(stopPracticeParams(plan.meta.params, '2026-11-25')).toMatchObject({ daysOff: [] });
+    const params = { ...plan.meta.params, daysOff: [{ from: '2026-11-25', to: '2026-11-30' }] };
+    expect(stopPracticeParams(params, TODAY)).toMatchObject({ daysOff: [{ from: '2026-11-24', to: '2026-11-30' }] });
+    const full = {
+      ...plan.meta.params,
+      daysOff: Array.from({ length: 12 }, (_, k) => ({ from: `2027-0${1 + Math.floor(k / 4)}-0${1 + 2 * (k % 4)}`, to: `2027-0${1 + Math.floor(k / 4)}-0${1 + 2 * (k % 4)}` })),
+    };
+    expect(stopPracticeParams(full, TODAY)).toBe('too-many-breaks');
+  });
+
+  it('Move this class day reaches a class day in the weeks Keep the average added', () => {
+    const kept = published(owner({ keepAverage: true, daysOff: [{ from: '2026-11-09', to: '2026-11-22' }] }));
+    expect(kept.meta.weeks.length).toBeGreaterThan(kept.meta.params.weeks);
+    const last = nextClassDay(kept.meta, addDays(kept.meta.params.startDate, 7 * kept.meta.params.weeks));
+    expect(last).not.toBeNull();
+    const moved = moveClassDay(kept, last ?? '', last ?? '', '2026-11-05T09:00:00.000Z');
+    expect(moved.meta.params.blend?.classDaysOff).toContain(last);
+  });
+
+  it('counts a lesson that no longer fits once, however many practice rows it had', () => {
+    const stop = stopPracticeParams(plan.meta.params, '2026-11-05');
+    if (stop === null || typeof stop === 'string') throw new Error('stop');
+    const stopped = changePractice(plan, stop, '2026-11-05', '2026-11-05T09:00:00.000Z');
+    const key = (item: PlanItem): string => `${item.kind}:${item.id}`;
+    const ahead = (items: readonly PlanItem[]) => new Set(items.filter((item) => (item.targetDate ?? '9999') >= '2026-11-05').map(key));
+    const after = ahead(stopped.items);
+    expect(stopped.leftOver).toBeGreaterThanOrEqual([...ahead(plan.items)].filter((k) => !after.has(k)).length);
+    expect(stopped.leftOver).toBeLessThanOrEqual(ahead(plan.items).size);
   });
 
   it('Add practice days starts with no class day when the homework day cannot be told apart', () => {
@@ -280,8 +328,8 @@ describe('every console.curriculum.blend word stays calm (section 13)', () => {
       b.keepAverage,
       b.classDayOff,
       b.preview.everyDay,
-      b.preview.header(4, 1, 30, 3, 10, false),
-      b.preview.header(8, 1, 30, 7, 10, true),
+      b.preview.header(4, 1, 30, 3, 10, null),
+      b.preview.header(8, 1, 30, 7, 10, b.preview.everyDay),
       b.preview.perDay(3, 1),
       b.preview.average(95, '4', '3.7'),
       b.preview.start('Tue, Nov 10'),

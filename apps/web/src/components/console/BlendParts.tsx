@@ -3,7 +3,7 @@
 import { WEEKDAYS, type CurriculumDraft, type CurriculumMeta, type Weekday } from '@hangul-route/content-schema';
 import { borderWidth, colors, layout, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { UiLocale } from '@hangul-route/i18n';
-import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Chip, ChipGroup, ItemText, KindBadge, SuggestedTag } from '@/components/console/CurriculumParts';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import type { PlanView } from '@/lib/console/api';
@@ -14,6 +14,7 @@ import {
   PRACTICE_COUNT_CHOICES,
   classDaysOf,
   dateRangeText,
+  dayText,
   defaultsFor,
   meetingProblem,
   practiceCountOf,
@@ -76,7 +77,7 @@ const linkButton: CSSProperties = {
   cursor: 'pointer',
 };
 
-/** The two slots of the practice row ("[3] times a week × [10] min each time"; ko "주 [3]회 × 한 번에 [10]분"): no letters, so no locale (nor the pseudo-locale) rewrites them. */
+/** The two slots of the practice row ("[3] times a week × [10] min each time"; the Korean puts the count after a word): no letters, so no locale (nor the pseudo-locale) rewrites them. */
 const SLOT_N = '\u2063\u2460\u2063';
 const SLOT_M = '\u2063\u2461\u2063';
 
@@ -386,13 +387,18 @@ export function BlendThisWeek({ plan, today, locale }: { plan: { meta: Curriculu
   );
 }
 
-type ControlStep = { at: 'idle' } | { at: 'move'; date: string } | { at: 'stop' } | { at: 'add'; state: WizardState };
+type ControlStep =
+  | { at: 'idle' }
+  | { at: 'move'; date: string; result: RepaceResult }
+  | { at: 'stop'; result: RepaceResult | null }
+  | { at: 'add'; state: WizardState };
 
 /**
  * The readout's plan changes of a class curriculum (sections 10.2 and 14; wireframe M4): **Move this class day** and
- * **Stop practice days** on a blended plan, **Add practice days** on a Class only one (the meeting block, prefilled).
- * Move and Stop ask first; nothing ever asks whether class happened (BL-OD-8). Each saves the re-laid plan on the same
- * plan id through `onSave`, as Re-pace from today does, so devices reconcile on their next sync.
+ * **Stop practice days** on a blended plan, **Add practice days to this plan** on a Class only one (the meeting block,
+ * prefilled). Like Re-pace from today, each change is laid out before it is saved: the confirm shows what no longer fits
+ * and the new last day before Yes. Nothing ever asks whether class happened (BL-OD-8). Each saves the re-laid plan on
+ * the same plan id through `onSave`, so devices reconcile on their next sync.
  */
 export function BlendControls({
   plan,
@@ -414,6 +420,18 @@ export function BlendControls({
   const askText = useRef<HTMLParagraphElement>(null);
   const blended = blendOfPlan(plan.meta) !== null;
   const next = blended ? nextClassDay(plan.meta, today) : null;
+  const addState = step.at === 'add' ? step.state : null;
+  // The meeting block's change laid out as the teacher edits it, so its left-over line shows before Save.
+  const added = useMemo((): RepaceResult | 'failed' | null => {
+    if (addState === null) return null;
+    const params = addPracticeParams(plan.meta.params, addState);
+    if (params === null || !practiceFits(plan.meta.params, addState)) return null;
+    try {
+      return changePractice(plan, params, today, new Date().toISOString());
+    } catch {
+      return 'failed';
+    }
+  }, [addState, plan, today]);
 
   useEffect(() => {
     if (step.at === 'move' || step.at === 'stop') askText.current?.focus();
@@ -421,34 +439,41 @@ export function BlendControls({
 
   if (plan.meta.params.audience !== 'class') return null;
 
-  const run = async (make: () => RepaceResult, done: 'moved' | 'changed'): Promise<void> => {
-    let result: RepaceResult;
-    try {
-      result = make();
-    } catch {
-      // A stored plan this build cannot re-lay: say so, never crash the readout.
-      setNote('failed');
-      return;
-    }
+  const save = async (result: RepaceResult, done: 'moved' | 'changed'): Promise<void> => {
     const saved = await onSave(result);
     setNote(saved ? done : 'failed');
     if (saved) setStep({ at: 'idle' });
   };
   const nowIso = (): string => new Date().toISOString();
-  const open = (next: ControlStep): void => {
+  // Lay the change out first; a stored plan this build cannot re-lay says so and never crashes the readout.
+  const open = (make: () => ControlStep): void => {
     setNote(null);
-    setStep(next);
+    try {
+      setStep(make());
+    } catch {
+      setNote('failed');
+    }
   };
+  const leftOverLine = (result: RepaceResult): JSX.Element | null =>
+    result.leftOver > 0 ? (
+      <p style={{ margin: `0 0 ${spacing.sm}px`, color: colors.text.secondary }} data-testid="blend-left-over">
+        {m.readout.repaceLeftOver(result.leftOver, dayText(result.endDate, locale))}
+      </p>
+    ) : null;
 
-  const confirmPanel = (text: string, confirmLabel: string, onYes: () => void, testId: string): JSX.Element => (
+  const confirmPanel = (text: string, result: RepaceResult | null, problem: string | null, confirmLabel: string, done: 'moved' | 'changed', testId: string): JSX.Element => (
     <div role="group" aria-label={text} style={{ ...panelStyle, borderColor: colors.brand.primary, marginTop: spacing.sm }} data-testid={testId}>
       <p ref={askText} tabIndex={-1} style={{ margin: `0 0 ${spacing.sm}px` }}>
         {text}
       </p>
+      {result ? leftOverLine(result) : null}
+      {problem ? <Notice tone="nudge">{problem}</Notice> : null}
       <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <Button tone="primary" disabled={busy} onClick={onYes} testId={`${testId}-yes`}>
-          {confirmLabel}
-        </Button>
+        {result ? (
+          <Button tone="primary" disabled={busy} onClick={() => void save(result, done)} testId={`${testId}-yes`}>
+            {confirmLabel}
+          </Button>
+        ) : null}
         <Button onClick={() => setStep({ at: 'idle' })}>{m.readout.cancel.cta}</Button>
       </div>
     </div>
@@ -456,22 +481,22 @@ export function BlendControls({
 
   let body: ReactNode = null;
   if (step.at === 'move') {
-    const date = step.date;
-    body = confirmPanel(b.readout.moveAsk(classDateText(date, locale)), b.readout.moveConfirm.cta, () => void run(() => moveClassDay(plan, date, today, nowIso()), 'moved'), 'blend-move-confirm');
+    body = confirmPanel(b.readout.moveAsk(classDateText(step.date, locale)), step.result, null, b.readout.moveConfirm.cta, 'moved', 'blend-move-confirm');
   } else if (step.at === 'stop') {
-    const params = stopPracticeParams(plan.meta.params);
-    body = confirmPanel(b.readout.stopAsk, b.readout.stopConfirm.cta, () => params && void run(() => changePractice(plan, params, today, nowIso()), 'changed'), 'blend-stop-confirm');
+    body = confirmPanel(b.readout.stopAsk, step.result, step.result === null ? m.rhythm.tooManyBreaks : null, b.readout.stopConfirm.cta, 'changed', 'blend-stop-confirm');
   } else if (step.at === 'add') {
     const state = step.state;
-    const params = addPracticeParams(plan.meta.params, state);
     const fits = practiceFits(plan.meta.params, state);
+    const result = added !== null && added !== 'failed' ? added : null;
     body = (
       <div style={{ marginTop: spacing.sm }} data-testid="blend-add-editor">
         <MeetingBlock state={state} onChange={(patch) => setStep({ at: 'add', state: { ...state, ...patch } })} locale={locale} />
         {!fits ? <Notice tone="nudge">{m.rhythm.tooMany}</Notice> : null}
         {meetingProblem(state) === 'no-class-day' ? <Muted>{b.meeting.pickClassDay}</Muted> : null}
+        {added === 'failed' ? <Notice tone="nudge">{b.readout.failed}</Notice> : null}
+        {result ? leftOverLine(result) : null}
         <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.sm }}>
-          <Button tone="primary" disabled={busy || params === null || !fits} onClick={() => params && void run(() => changePractice(plan, params, today, nowIso()), 'changed')} testId="blend-add-save">
+          <Button tone="primary" disabled={busy || result === null} onClick={() => result && void save(result, 'changed')} testId="blend-add-save">
             {b.readout.save.cta}
           </Button>
           <Button onClick={() => setStep({ at: 'idle' })}>{m.readout.cancel.cta}</Button>
@@ -488,16 +513,16 @@ export function BlendControls({
       {step.at === 'idle' ? (
         <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
           {blended && next !== null ? (
-            <Button disabled={busy} onClick={() => open({ at: 'move', date: next })} testId="blend-move">
+            <Button disabled={busy} onClick={() => open(() => ({ at: 'move', date: next, result: moveClassDay(plan, next, today, nowIso()) }))} testId="blend-move">
               {b.readout.move.cta}
             </Button>
           ) : null}
           {blended ? (
-            <button type="button" style={linkButton} disabled={busy} onClick={() => open({ at: 'stop' })} data-testid="blend-stop">
+            <button type="button" style={linkButton} disabled={busy} onClick={() => open(() => stopStep(plan, today, nowIso()))} data-testid="blend-stop">
               {b.readout.stopPractice.cta}
             </button>
           ) : (
-            <Button disabled={busy} onClick={() => open({ at: 'add', state: { ...defaultsFor('class', [], today), ...addPracticePrefill(plan.meta.params) } })} testId="blend-add">
+            <Button disabled={busy} onClick={() => open(() => ({ at: 'add', state: { ...defaultsFor('class', [], today), ...addPracticePrefill(plan.meta.params) } }))} testId="blend-add">
               {b.readout.addPractice.cta}
             </Button>
           )}
@@ -506,4 +531,11 @@ export function BlendControls({
       {body}
     </div>
   );
+}
+
+/** **Stop practice days** laid out: the Class only result, or null when the class days off it keeps pass 12 ranges. */
+function stopStep(plan: PlanView & { meta: CurriculumMeta }, today: string, nowIso: string): ControlStep {
+  const params = stopPracticeParams(plan.meta.params, today);
+  if (params === null) throw new Error('not a blended plan');
+  return { at: 'stop', result: params === 'too-many-breaks' ? null : changePractice(plan, params, today, nowIso) };
 }

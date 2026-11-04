@@ -127,6 +127,11 @@ const WIDER_BUDGET: Readonly<Record<string, { max: number; reason: string }>> = 
     max: 48,
     reason: 'the one action of the persona-home PIN-owner card, a full-width button (400 px column) that wraps its words; en 35, es 48, ko 29 as measured in the OA-0b lengths board',
   },
+  // AMENDMENTS-ROUTE-CLASS-BLEND sections 14 and 19 (row BL-4; BL-D mock strings.js): the spec's wording keeps "to this plan".
+  'console.curriculum.blend.readout.addPractice.cta': {
+    max: 36,
+    reason: 'the spec and BL-D mock wording "Add practice days to this plan" (en 30, es 35, ko 14); a console readout button in a wrapping flex row (Button wraps its words, no nowrap), the only control on a Class only plan',
+  },
 };
 
 /**

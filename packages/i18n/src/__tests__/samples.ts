@@ -1052,7 +1052,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.curriculum.blend.practice.suggested': [['Wed, Fri, Sun'], ['Wed']],
   'console.curriculum.blend.practice.afterClass': [['Tuesday'], ['Saturday']],
   'console.curriculum.blend.practice.pickDays': [[3], [1]],
-  'console.curriculum.blend.preview.header': [[4, 1, 30, 3, 10, false], [8, 1, 30, 7, 10, true], [2, 1, 15, 1, 5, false], [5, 2, 45, 3, 10, false]],
+  'console.curriculum.blend.preview.header': [[4, 1, 30, 3, 10, null], [8, 1, 30, 7, 10, 'on all 7 days'], [2, 1, 15, 1, 5, null], [5, 2, 45, 3, 10, null]],
   'console.curriculum.blend.preview.perDay': [[3, 1], [1, 2]],
   'console.curriculum.blend.preview.average': [[104, '4', null], [95, '4', '3.7'], [1, '1', null]],
   'console.curriculum.blend.preview.start': [['Tue, Nov 10']],

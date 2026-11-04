@@ -172,10 +172,12 @@ function CurriculumInner(): JSX.Element {
   const neutral = leftOutNeutral(coverage, contentGatingEnabled());
   // The *Suggested* length and the line under each length chip (step 2 only: four generator runs).
   const pace = paceOf(state);
+  // With the meeting block the pace chips are hidden and the proposal would read the old pace, not the class and practice
+  // days: no *Suggested* tag and no per-length line until the blended preview shows the real numbers (BL-4 review).
   const proposal = useMemo(
-    () => (step === 2 && roster !== null ? wizardProposal(state, context) : null),
+    () => (step === 2 && roster !== null && !meeting ? wizardProposal(state, context) : null),
     // The proposal reads the start, the learner, the pace, the start day and the motivation; nothing else of the form.
-    [step, roster, context, state.audience, state.start, state.learnerId, pace, state.startDate, state.motivation],
+    [step, roster, meeting, context, state.audience, state.start, state.learnerId, pace, state.startDate, state.motivation],
   );
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;

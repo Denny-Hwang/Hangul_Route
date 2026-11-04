@@ -1,11 +1,12 @@
 import { CATALOG, addDays, generateCurriculum, toMeta, toPlanItems, type CurriculumDraft, type CurriculumMeta, type PlanItem } from '@hangul-route/content-schema';
 import { formatDate as realFormatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { BlendControls, BlendPreview, BlendPreviewHeader, BlendThisWeek, MeetingBlock } from '@/components/console/BlendParts';
 import { RouteReadout } from '@/components/console/RoutePlanParts';
 import type { PlanView } from '@/lib/console/api';
-import { defaultsFor, toParams, type WizardState } from '@/lib/console/curriculum';
+import { defaultsFor, toParams, type RepaceResult, type WizardState } from '@/lib/console/curriculum';
 import type { ReadoutRow } from '@/lib/console/plans';
 import { wordsOf } from './pseudo-text';
 
@@ -193,5 +194,61 @@ describe('the readout (section 10.2; wireframe M4)', () => {
     expect(off).not.toContain('blend-controls');
     expect(on.match(/data-testid="readout-row"/g)).toHaveLength(1);
     expect(on).not.toMatch(/%/);
+  });
+});
+
+describe('the readout plan changes are laid out before they are saved (F-PLAN-002 re-pace convention)', () => {
+  const draft = draftOf({ daysOff: [{ from: '2026-11-24', to: '2026-11-24', classOnly: true }] });
+  const meta = toMeta(draft);
+  const items = toPlanItems(draft);
+  const byId = (root: ReactTestInstance, id: string): ReactTestInstance[] => root.findAll((node) => typeof node.type === 'string' && node.props['data-testid'] === id);
+  async function mount(view: PlanView & { meta: CurriculumMeta }, onSave: (result: RepaceResult) => Promise<boolean>): Promise<ReactTestInstance> {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    let renderer: ReactTestRenderer | null = null;
+    await act(async () => {
+      renderer = create(<BlendControls plan={view} today="2026-11-04" locale={PSEUDO} busy={false} onSave={onSave} />, { createNodeMock: () => ({ focus: () => undefined }) });
+    });
+    if (!renderer) throw new Error('not mounted');
+    return (renderer as ReactTestRenderer).root;
+  }
+  async function press(root: ReactTestInstance, id: string): Promise<void> {
+    const [node] = byId(root, id);
+    if (!node) throw new Error(`no ${id}`);
+    await act(async () => {
+      (node.props.onClick as () => void)();
+    });
+  }
+
+  it('Move this class day opens a confirm with the laid-out plan, and Yes saves that plan', async () => {
+    const onSave = vi.fn(async (_result: RepaceResult) => true);
+    const root = await mount(plan(meta, items), onSave);
+    await press(root, 'blend-move');
+    expect(byId(root, 'blend-move-confirm')).toHaveLength(1);
+    expect(onSave).not.toHaveBeenCalled();
+    await press(root, 'blend-move-confirm-yes');
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSave.mock.calls[0]?.[0].meta.params.blend?.classDaysOff).toEqual(['2026-11-10', '2026-11-24']);
+  });
+
+  it('Stop practice days keeps a class day off as a plan day off', async () => {
+    const onSave = vi.fn(async (_result: RepaceResult) => true);
+    const root = await mount(plan(meta, items), onSave);
+    await press(root, 'blend-stop');
+    await press(root, 'blend-stop-confirm-yes');
+    const result = onSave.mock.calls[0]?.[0];
+    expect(result?.meta.params.blend).toBeUndefined();
+    expect(result?.meta.params.daysOff).toEqual([{ from: '2026-11-24', to: '2026-11-24' }]);
+    expect(result?.items.some((item) => item.targetDate === '2026-11-24')).toBe(false);
+  });
+
+  it('Stop practice days says when the class days off would pass 12 breaks, and offers no Yes', async () => {
+    const full = Array.from({ length: 12 }, (_, k) => ({ from: addDays('2027-01-04', 7 * k), to: addDays('2027-01-04', 7 * k) }));
+    const crowded = { ...meta, params: { ...meta.params, daysOff: full } };
+    const root = await mount(plan(crowded, items), async () => true);
+    await press(root, 'blend-stop');
+    expect(byId(root, 'blend-stop-confirm')).toHaveLength(1);
+    expect(byId(root, 'blend-stop-confirm-yes')).toHaveLength(0);
+    const text = (node: ReactTestInstance | string): string => (typeof node === 'string' ? node : node.children.map(text).join(''));
+    expect(text(root)).toContain(getMessages(PSEUDO).console.curriculum.rhythm.tooManyBreaks);
   });
 });

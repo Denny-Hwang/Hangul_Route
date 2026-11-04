@@ -88,19 +88,30 @@ test.describe('the meeting block (BL-4, assumption c)', () => {
     const box = await page.getByTestId('meeting-block').boundingBox();
     expect(box).not.toBeNull();
     expect(box?.height ?? 9999).toBeLessThanOrEqual(720);
+    await page.getByTestId('meeting-block').scrollIntoViewIfNeeded();
+    const seen = await page.getByTestId('meeting-block').boundingBox();
+    expect(seen?.y ?? -1).toBeGreaterThanOrEqual(0);
+    expect((seen?.y ?? 0) + (seen?.height ?? 9999)).toBeLessThanOrEqual(720);
     expect(await sideways(page)).toBeLessThanOrEqual(0);
     await page.getByTestId('practice-change').click();
     await page.getByTestId('meeting-block').screenshot({ path: test.info().outputPath('meeting-en-1280.png') });
     await page.screenshot({ path: test.info().outputPath('wizard-step2-en-1280.png'), fullPage: true });
   });
 
-  for (const text of [100, 200]) {
+  // "One scroll" as the BL-D README reads it (one vertical scroll, nothing sideways, clipped or nested), plus a height
+  // guard per text size: the README measured 1.2 to 1.6 screens at 100 % and 3.0 to 4.1 at 200 % (320 x 568).
+  const SCREENS: Record<number, number> = { 100: 2, 150: 3.5, 200: 5 };
+  for (const text of [100, 150, 200]) {
     test(`at 320 px with ${text} % text: one vertical scroll, nothing sideways or clipped`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 568 });
       await mockClass(page);
+      // The console's text size provider owns the inline `html` font-size, so the browser text size is a stylesheet rule
+      // with !important (as page-back.spec.ts does): every rem on the page grows with it.
       await page.addInitScript((size) => {
         document.addEventListener('DOMContentLoaded', () => {
-          document.documentElement.style.fontSize = `${size}%`;
+          const style = document.createElement('style');
+          style.textContent = `html{font-size:calc(${size}% * var(--hr-text-scale, 1)) !important}`;
+          document.head.appendChild(style);
         });
       }, text);
       await stepTwo(page);
@@ -112,7 +123,7 @@ test.describe('the meeting block (BL-4, assumption c)', () => {
       expect(own.overflow).not.toMatch(/auto|scroll/);
       const clipped = await block.evaluate((el) => {
         const outer = el.getBoundingClientRect();
-        return [...el.querySelectorAll('button, select, span, p')].filter((child) => {
+        return Array.from(el.querySelectorAll('button, select, span, p')).filter((child) => {
           const r = child.getBoundingClientRect();
           return r.width > 0 && (r.right > outer.right + 1 || r.left < outer.left - 1);
         }).length;
@@ -120,7 +131,8 @@ test.describe('the meeting block (BL-4, assumption c)', () => {
       expect(clipped).toBe(0);
       const height = (await block.boundingBox())?.height ?? 0;
       test.info().annotations.push({ type: 'meeting-block-height', description: `${height} px at 320 with ${text} % text (${(height / 568).toFixed(1)} screens)` });
-      await page.screenshot({ path: test.info().outputPath(`wizard-step2-en-320${text === 200 ? '-text200' : ''}.png`), fullPage: true });
+      expect(height / 568, `meeting block at 320 with ${text} % text`).toBeLessThanOrEqual(SCREENS[text] ?? 5);
+      await page.screenshot({ path: test.info().outputPath(`wizard-step2-en-320${text === 100 ? '' : `-text${text}`}.png`), fullPage: true });
     });
   }
 

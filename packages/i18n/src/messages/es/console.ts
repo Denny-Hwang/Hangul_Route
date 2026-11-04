@@ -860,8 +860,8 @@ export const consoleMsgs = {
       classDayOff: 'Solo se cancela la clase',
       preview: {
         everyDay: 'los 7 días',
-        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, allDays: boolean) =>
-          `Unas ${total} sesiones por semana${allDays ? ', los 7 días' : ''}: ${plural('es', classDays, { one: `${classDays} día de clase`, other: `${classDays} días de clase` })} (${classMin} min) y ${plural('es', practiceDays, { one: `${practiceDays} día de práctica`, other: `${practiceDays} días de práctica` })} (${practiceMin} min cada uno, más unos 2-3 minutos de Repaso diario).`,
+        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, everyDay: string | null) =>
+          `Unas ${total} sesiones por semana${everyDay === null ? '' : `, ${everyDay}`}: ${plural('es', classDays, { one: `${classDays} día de clase`, other: `${classDays} días de clase` })} (${classMin} min) y ${plural('es', practiceDays, { one: `${practiceDays} día de práctica`, other: `${practiceDays} días de práctica` })} (${practiceMin} min cada uno, más unos 2-3 minutos de Repaso diario).`,
         perDay: (classItems: number, practiceItems: number) =>
           `Los días de clase enseñan ${plural('es', classItems, { one: 'una lección', other: `unas ${classItems} lecciones` })}; los días de práctica hacen ${plural('es', practiceItems, { one: 'una', other: `unas ${practiceItems}` })}.`,
         average: (sessions: number, teaching: string, calendar: string | null) =>
@@ -884,7 +884,7 @@ export const consoleMsgs = {
           `¿Mover la clase del ${date}? Sus lecciones y las de cada día de clase posterior pasan a los días de clase siguientes. Lo que está hecho sigue hecho.`,
         moveConfirm: { cta: 'Moverla' },
         moved: 'Listo. Los dispositivos reciben las fechas nuevas en su próxima sincronización.',
-        addPractice: { cta: 'Añadir días de práctica' },
+        addPractice: { cta: 'Añadir días de práctica a este plan' },
         stopPractice: { cta: 'Quitar los días de práctica' },
         stopAsk: '¿Quitar los días de práctica? Desde hoy el plan solo tiene días de clase. Lo que está hecho sigue hecho.',
         stopConfirm: { cta: 'Quitarlos' },
@@ -893,7 +893,7 @@ export const consoleMsgs = {
         failed: 'No se pudo cambiar el plan ahora. Inténtalo otra vez.',
       },
       warn: {
-        itemCap: (week: number) => `Este plan se llena en la semana ${week}. Elige menos semanas, o practicar lo que enseñó la clase.`,
+        itemCap: (week: number) => `Este plan se llena en la semana ${week}. Elige menos semanas, o elige «Practicar lo que enseñó la clase».`,
         practiceShort: 'Los días de práctica no alcanzan para todo lo que podrían enseñar los días de clase, así que los días de clase llevan menos. Añade días de práctica, o hazlos más largos.',
         classPaced: 'Algunos días de clase llevan menos lecciones para que los estudiantes practiquen cada una poco después.',
       },

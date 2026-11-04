@@ -119,6 +119,11 @@ describe('the class wizard with the flag off (today exactly)', () => {
     expect(byTestId(root, 'pace-gentle')).toHaveLength(1);
     expect(textOf(root)).toContain(c.rhythm.daysHint.class);
   });
+
+  it('shows the per-length lines read from the pace chips', async () => {
+    const root = await stepTwo();
+    expect(byTestId(root, 'length-line-12-week')).toHaveLength(1);
+  });
 });
 
 describe('the class wizard with the flag on (section 10.1)', () => {
@@ -137,6 +142,9 @@ describe('the class wizard with the flag on (section 10.1)', () => {
     // 0 practice days: no suggested days, no mode cards (a Class only plan).
     expect(byTestId(root, 'practice-line')).toHaveLength(0);
     expect(byTestId(root, 'blend-mode-overlap')).toHaveLength(0);
+    // The pace chips are hidden, so no length line or Suggested tag is read from them.
+    expect(byTestId(root, 'length-line-12-week')).toHaveLength(0);
+    expect(byTestId(one(root, 'length-12-week'), 'suggested-tag')).toHaveLength(0);
   });
 
   it('suggests the practice days, opens Change days, shows the mode cards and refuses a sixth class day', async () => {

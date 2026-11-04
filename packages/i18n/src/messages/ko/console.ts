@@ -780,8 +780,8 @@ export const consoleMsgs = {
       classDayOff: '수업만 쉬어요',
       preview: {
         everyDay: '7일 모두',
-        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, allDays: boolean) =>
-          `한 주에 약 ${total}번${allDays ? '(7일 모두)' : ''}: 수업하는 날 ${classDays}일(${classMin}분), 연습하는 날 ${practiceDays}일(한 번에 ${practiceMin}분, 오늘의 복습 2~3분쯤 더).`,
+        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, everyDay: string | null) =>
+          `한 주에 약 ${total}번${everyDay === null ? '' : `(${everyDay})`}: 수업하는 날 ${classDays}일(${classMin}분), 연습하는 날 ${practiceDays}일(한 번에 ${practiceMin}분, 오늘의 복습 2~3분쯤 더).`,
         perDay: (classItems: number, practiceItems: number) => `수업하는 날에는 레슨을 ${classItems}개쯤 배우고, 연습하는 날에는 ${practiceItems}개쯤 해요.`,
         average: (sessions: number, teaching: string, calendar: string | null) =>
           `모두 ${sessions}번, 수업이 있는 주마다 ${teaching}번${calendar === null ? '' : `(달력 전체로는 한 주에 ${calendar}번)`}.`,
@@ -802,7 +802,7 @@ export const consoleMsgs = {
         moveAsk: (date: string) => `${date} 수업을 옮길까요? 이날의 레슨과 그 뒤 수업일의 레슨이 다음 수업일로 옮겨져요. 한 것은 그대로 남아요.`,
         moveConfirm: { cta: '옮기기' },
         moved: '옮겼어요. 기기는 다음에 동기화할 때 새 날짜를 받아요.',
-        addPractice: { cta: '연습하는 날 더하기' },
+        addPractice: { cta: '이 계획에 연습하는 날 더하기' },
         stopPractice: { cta: '연습하는 날 그만두기' },
         stopAsk: '연습하는 날을 그만둘까요? 오늘부터는 수업하는 날만 있어요. 한 것은 그대로 남아요.',
         stopConfirm: { cta: '그만두기' },

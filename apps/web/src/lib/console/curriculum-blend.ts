@@ -23,6 +23,7 @@ import {
 import { DEFAULT_LOCALE, formatDate, formatNumber, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { itemCategory, itemTitle } from '@/data/catalog';
 import {
+  MAX_DAYS_OFF,
   PRACTICE_MINUTES_DEFAULT,
   blendOf,
   classDaysOf,
@@ -165,7 +166,7 @@ export function blendPreviewText(draft: CurriculumDraft, locale: UiLocale = DEFA
   const teaching = draft.stats.sessionsPerTeachingWeek ?? L + P;
   const calendar = draft.stats.sessionsPerCalendarWeek ?? teaching;
   return {
-    header: words.header(L + P, L, blend.lecture.minutes, P, blend.personal.minutes, L + P > 7),
+    header: words.header(L + P, L, blend.lecture.minutes, P, blend.personal.minutes, L + P > 7 ? words.everyDay : null),
     perDay: words.perDay(classItems, practiceItems),
     average: words.average(draft.stats.sessions, formatNumber(locale, teaching), calendar === teaching ? null : formatNumber(locale, calendar)),
     start: words.start(classDateText(first.startDate, locale)),
@@ -269,7 +270,20 @@ export function planPracticeDays(meta: CurriculumMeta): Weekday[] {
  */
 export function moveClassDay(plan: RepaceInput, classDay: string, today: string, nowIso: string, source: Catalog = CATALOG): RepaceResult {
   const draft = regenerateFrom({ meta: plan.meta, items: plan.items }, today, source, { mode: 'shift', classDay });
-  return repaceResultOf(plan, draft, today, nowIso);
+  return blendRepaceResult(plan, draft, today, nowIso);
+}
+
+/**
+ * `repaceResultOf` with what no longer fits counted once per lesson or story: a blended plan lists a lesson on its class
+ * day and again on each practice date, so counting rows would call removed practice repeats "left over".
+ */
+function blendRepaceResult(plan: RepaceInput, draft: CurriculumDraft, today: string, nowIso: string): RepaceResult {
+  const result = repaceResultOf(plan, draft, today, nowIso);
+  const ahead = (list: readonly PlanItem[]): Set<string> =>
+    new Set(list.filter((item) => item.targetDate === undefined || item.targetDate >= today).map((item) => `${item.kind}:${item.id}`));
+  const after = ahead(result.items);
+  const dropped = [...ahead(plan.items)].filter((key) => !after.has(key)).length;
+  return { ...result, leftOver: Math.max(dropped, draft.warnings.find((w) => w.code === 'fewer-sessions-than-units')?.count ?? 0) };
 }
 
 type ShiftParams = Omit<CurriculumParamsInput, 'completedQuestIds'>;
@@ -291,18 +305,42 @@ export function practiceFits(params: Pick<StoredCurriculumParams, 'weeks'>, stat
   return params.weeks * (classDaysOf(state).length + practiceCountOf(state)) <= CURRICULUM_MAX_ITEMS;
 }
 
-/** The params of **Stop practice days** (section 14): the class days become the plan's session days, without `blend`. */
-export function stopPracticeParams(params: StoredCurriculumParams): ShiftParams | null {
+/** Ranges sorted by start, with overlapping or touching ones joined. */
+function mergedDaysOff(ranges: readonly DaysOff[]): DaysOff[] {
+  const out: DaysOff[] = [];
+  for (const range of [...ranges].sort((x, y) => (x.from < y.from ? -1 : x.from > y.from ? 1 : 0))) {
+    const last = out[out.length - 1];
+    if (last !== undefined && range.from <= addDays(last.to, 1)) {
+      if (range.to > last.to) out[out.length - 1] = { from: last.from, to: range.to };
+    } else out.push({ ...range });
+  }
+  return out;
+}
+
+/** Why **Stop practice days** cannot run: the class days off it keeps would pass the route's 12 days-off ranges. */
+export type StopProblem = 'too-many-breaks';
+
+/**
+ * The params of **Stop practice days** (section 14): the class days become the plan's session days, without `blend`.
+ * A date the teacher marked **Only the class is off** lives only in `blend.classDaysOff`, so each one from today on
+ * becomes a one-day plan day off (joined with touching ranges): the Class only plan keeps that class off. Over the
+ * route's 12 ranges it returns the problem instead (the caller says "A route holds up to 12 breaks.").
+ */
+export function stopPracticeParams(params: StoredCurriculumParams, today = ''): ShiftParams | StopProblem | null {
   const blend = params.blend;
   if (!blend) return null;
   const days = WEEKDAYS.filter((day) => blend.lecture.days.includes(day));
-  return { ...withoutCadence(params), sessionsPerWeek: days.length, sessionDays: days, minutesPerSession: classOnlyMinutes(blend.lecture.minutes) };
+  const base = params.daysOff ?? [];
+  const kept = (blend.classDaysOff ?? []).filter((date) => date >= today && !isOff(date, base));
+  const daysOff = kept.length === 0 ? [...base] : mergedDaysOff([...base, ...kept.map((date) => ({ from: date, to: date }))]);
+  if (daysOff.length > MAX_DAYS_OFF) return 'too-many-breaks';
+  return { ...withoutCadence(params), daysOff, sessionsPerWeek: days.length, sessionDays: days, minutesPerSession: classOnlyMinutes(blend.lecture.minutes) };
 }
 
 /** Add or Stop practice days: the future laid again under `params` on the same plan id (`regenerateFrom` shift, BL-3). */
 export function changePractice(plan: RepaceInput, params: ShiftParams, today: string, nowIso: string, source: Catalog = CATALOG): RepaceResult {
   const draft = regenerateFrom({ meta: plan.meta, items: plan.items }, today, source, { mode: 'shift', params });
-  return repaceResultOf(plan, draft, today, nowIso);
+  return blendRepaceResult(plan, draft, today, nowIso);
 }
 
 /**

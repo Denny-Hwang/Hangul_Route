@@ -109,8 +109,15 @@ export const MAX_CLASS_DAYS = 5;
 /** The wizard's practice count before BL-10 (BL-OD-12): 0, a Class only plan. BL-10 makes it 3 when it flips the flag. */
 export const PRACTICE_PER_WEEK_DEFAULT = 0;
 
-/** The practice length of a class plan (section 10.1); a Pictures-first class takes `PICTURES_FIRST_MINUTES`. */
+/** The practice length of a class plan (section 10.1); a Pictures-first class takes `PRACTICE_MINUTES_PICTURES_FIRST`. */
 export const PRACTICE_MINUTES_DEFAULT: MinuteChoice = 10;
+
+/**
+ * A Pictures-first class's practice length: 5 minutes (section 10.1, "10 minutes, 5 when pictures-first"). The spec
+ * also names `PICTURES_FIRST_MINUTES`, but that preset is a whole session's 10 minutes, so the practice row keeps the
+ * stated 5.
+ */
+export const PRACTICE_MINUTES_PICTURES_FIRST: MinuteChoice = 5;
 
 /** `practise what class taught` (BL-OD-1, preselected) or `class and practice cover different lessons`. */
 export type BlendMode = 'overlap' | 'split';
@@ -228,7 +235,7 @@ export function defaultsFor(audience: WizardAudience, learners: readonly Planner
           lectureDays: [],
           lectureMinutes: 30,
           practicePerWeek: PRACTICE_PER_WEEK_DEFAULT,
-          practiceMinutes: picturesFirst ? PICTURES_FIRST_MINUTES : PRACTICE_MINUTES_DEFAULT,
+          practiceMinutes: picturesFirst ? PRACTICE_MINUTES_PICTURES_FIRST : PRACTICE_MINUTES_DEFAULT,
           practiceDays: null,
           keepAverage: false,
         }
