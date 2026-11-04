@@ -100,12 +100,8 @@ export interface BuildOptions extends GenerateOptions {
    * set the caller derived from today's catalogue (a fresh draft or a reseed that sends its set).
    */
   placedOutAt?: number;
-  /**
-   * `regenerateFrom` `shift` of a blended plan (row BL-3): lessons a class day before the cutoff has taught and no
-   * practice date before `freezeBefore` has played yet. They keep their `lectureDate` and wait for a practice date.
-   */
-  carriedIn?: PlanItem[];
-  /** `regenerateFrom` of a blended plan (row BL-3): the stored Refresh dates; those before `freezeBefore` stay. */
+  /** Re-pacing a blended plan (row BL-2): the stored items and Refresh entries; `generate-blend.ts` reads them. */
+  planItems?: PlanItem[];
   historyRefresh?: CurriculumMeta['refresh'];
 }
 
@@ -544,15 +540,19 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
 
 /** The blended walk over class cycles (`generate-blend.ts`, row BL-2). */
 export type BlendedPath = (input: BlendBuildInput) => CurriculumDraft;
+/** Whether a blended plan has a practice date on or after `from`, on the route the blended walk lays. */
+export type BlendedSessionsFrom = (params: CurriculumParams, from: DateKey) => boolean;
 let blendedPath: BlendedPath | undefined;
+let blendedSessionsFrom: BlendedSessionsFrom | undefined;
 
 /**
  * Installs the blended path. `@hangul-route/content-schema/blend-generator` (`curriculum/generate-blend.ts`) calls it
  * when it is first imported, so the path ships only in the bundles that plan class days with practice days (the
  * console); the learner app's start bundle never carries it. A blended plan generated without it throws.
  */
-export function installBlendedPath(path: BlendedPath): void {
+export function installBlendedPath(path: BlendedPath, sessionsFrom: BlendedSessionsFrom): void {
   blendedPath = path;
+  blendedSessionsFrom = sessionsFrom;
 }
 
 /** What the blended `shift` (row BL-3) reads of the generator, bound to one catalogue. */
@@ -610,9 +610,9 @@ const buildBlend = (p: CurriculumParams & { blend: NonNullable<CurriculumParams[
     alreadyDone: fromCatalog.alreadyDone,
     shift: opts.queue !== undefined,
     history,
-    carriedIn: opts.carriedIn ?? [],
-    historyRefresh: opts.historyRefresh ?? [],
     historyWeeks: opts.historyWeeks,
+    planItems: opts.planItems,
+    historyRefresh: opts.historyRefresh,
     from,
     topics: catalog.topics,
     festivalDay,
@@ -790,7 +790,8 @@ export function regenerateFrom(
     freezeBefore: today,
     historyWeeks: plan.meta.weeks,
     placedOutAt: plan.meta.catalogVersion,
-    ...(plan.meta.refresh === undefined ? {} : { historyRefresh: plan.meta.refresh }),
+    planItems: plan.items,
+    historyRefresh: plan.meta.refresh,
     ...(opts.catalogHistory === undefined ? {} : { catalogHistory: opts.catalogHistory }),
   };
   if (opts.mode === 'reseed') {
@@ -818,7 +819,10 @@ export function regenerateFrom(
   if (opts.mode === 'requeue') {
     const lookup = new Lookup(catalog);
     const done = new Set(completed);
-    const sessionsLeft = calendarOf(CurriculumParamsSchema.parse(params)).some((week) => week.sessions.some((date) => date >= today));
+    const parsed = CurriculumParamsSchema.parse(params);
+    const sessionsLeft = parsed.blend && blendedSessionsFrom
+      ? blendedSessionsFrom(parsed, today)
+      : calendarOf(parsed).some((week) => week.sessions.some((date) => date >= today));
     const stays = (item: PlanItem): boolean =>
       !sessionsLeft || done.has(item.id) || lookup.category(asQueueItem(item)) === 'coming-soon';
     return build(params, catalog, { ...base, history: past.filter(stays) });

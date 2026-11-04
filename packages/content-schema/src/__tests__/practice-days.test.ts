@@ -4,6 +4,7 @@ import { WEEKDAYS, addDays, weekdayOf, type Weekday } from '..';
 import {
   CLASS_PACE,
   CLASS_REVIEW_MINUTES,
+  MAX_ROUTE_WEEKS,
   REFRESH_MIN_ROOM,
   classBudget,
   cyclesOf,
@@ -76,25 +77,29 @@ describe('practiceDaysFor (section 6.3 table)', () => {
     expect(() => practiceDaysFor(['someday' as Weekday], 2)).toThrow(RangeError);
   });
 
-  it('property: P distinct days, every non-class day first, each non-empty segment covered while P >= L', () => {
-    const lectureArb = fc.uniqueArray(fc.constantFrom(...WEEKDAYS), { minLength: 1, maxLength: 5 });
-    fc.assert(
-      fc.property(lectureArb, fc.integer({ min: 1, max: 7 }), (lecture, perWeek) => {
-        const days = practiceDaysFor(lecture, perWeek);
-        expect(days).toHaveLength(perWeek);
-        expect(new Set(days).size).toBe(perWeek);
-        const n = 7 - lecture.length;
-        const nonClass = days.filter((day) => !lecture.includes(day));
-        expect(nonClass).toHaveLength(Math.min(perWeek, n));
-        if (perWeek >= lecture.length) {
-          for (const classDay of lecture) {
-            const next = WEEKDAYS[(WEEKDAYS.indexOf(classDay) + 1) % 7] as Weekday;
-            // The day after a class is a practice day whenever it is not a class day itself.
-            if (!lecture.includes(next)) expect(days).toContain(next);
-          }
-        }
-      }),
+  it('exhaustive: P distinct days, every non-class day first, each non-empty segment covered while P >= L', () => {
+    // Every class-day set of 1 to 5 weekdays (119) x every P (7): 833 inputs, all checked.
+    const sets = Array.from({ length: 1 << 7 }, (_, mask) => WEEKDAYS.filter((_, bit) => (mask >> bit) & 1)).filter(
+      (set) => set.length >= 1 && set.length <= 5,
     );
+    expect(sets).toHaveLength(119);
+    for (const lecture of sets) {
+      for (let perWeek = 1; perWeek <= 7; perWeek += 1) {
+      const days = practiceDaysFor(lecture, perWeek);
+      expect(days).toHaveLength(perWeek);
+      expect(new Set(days).size).toBe(perWeek);
+      const n = 7 - lecture.length;
+      const nonClass = days.filter((day) => !lecture.includes(day));
+      expect(nonClass).toHaveLength(Math.min(perWeek, n));
+      if (perWeek >= lecture.length) {
+        for (const classDay of lecture) {
+          const next = WEEKDAYS[(WEEKDAYS.indexOf(classDay) + 1) % 7] as Weekday;
+          // The day after a class is a practice day whenever it is not a class day itself.
+          if (!lecture.includes(next)) expect(days).toContain(next);
+        }
+      }
+      }
+    }
   });
 });
 
@@ -170,6 +175,10 @@ describe('cyclesOf (section 6.3 first and last cycle)', () => {
     expect(() => cyclesOf({ startDate: '2026-11-03', weeks: 1, lectureDays: ['tue'], practiceDays: [] })).toThrow(RangeError);
     expect(() => cyclesOf({ startDate: '2026-11-03', weeks: 1, lectureDays: ['tue', 'tue'], perWeek: 1 })).toThrow(RangeError);
     expect(() => cyclesOf({ startDate: '2026-11-03', weeks: 1, lectureDays: ['tue'] })).toThrow(RangeError);
+    expect(() => cyclesOf({ startDate: '2026-11-03', weeks: 1, lectureDays: ['tue'], practiceDays: ['xyz' as Weekday] })).toThrow(RangeError);
+    expect(() => cyclesOf({ startDate: '2026-11-03', weeks: 1, lectureDays: ['tue'], practiceDays: [...WEEKDAYS, 'xyz' as Weekday] })).toThrow(RangeError);
+    expect(() => cyclesOf({ startDate: '2026-11-03', weeks: MAX_ROUTE_WEEKS + 1, lectureDays: ['tue'], perWeek: 1 })).toThrow(RangeError);
+    expect(cyclesOf({ startDate: '2026-11-03', weeks: MAX_ROUTE_WEEKS, lectureDays: ['tue'], perWeek: 1 }).cycles).toHaveLength(MAX_ROUTE_WEEKS);
   });
 });
 
@@ -251,6 +260,74 @@ describe('packClass (section 6.2)', () => {
     expect(result.rest.map((item) => item.id)).toEqual(['b2', 'a3']);
   });
 
+  it('split hook: an opener past C_max is skipped, and lessons of open cells still fit (rest in queue order)', () => {
+    const packet = [lesson('a1', 'a'), lesson('a2', 'a'), lesson('b1', 'b'), lesson('c1', 'c'), lesson('b2', 'b'), lesson('c2', 'c')];
+    const openers = new Set(['a1', 'b1', 'c1']);
+    const result = packClass(packet, classBudget(60), CLASS_PACE, 2, { isOpener: (item) => openers.has(item.id) });
+    expect(result.taken.map((item) => item.id)).toEqual(['a1', 'b1', 'a2', 'b2']);
+    expect(result.rest.map((item) => item.id)).toEqual(['c1', 'c2']);
+    expect(result.openedCells).toEqual(['a', 'b']);
+    expect(result.classMinutes).toBe(30);
+  });
+
+  it('split hook: a lesson of an open cell is taken before a later cell opener left over', () => {
+    const queue = [lesson('a1', 'a'), lesson('x', 'a'), lesson('b1', 'b'), lesson('c1', 'c')];
+    const openers = new Set(['a1', 'b1', 'c1']);
+    const result = packClass(queue, classBudget(60), CLASS_PACE, 1, { isOpener: (item) => openers.has(item.id) });
+    expect(result.taken.map((item) => item.id)).toEqual(['a1', 'x']);
+    expect(result.rest.map((item) => item.id)).toEqual(['b1', 'c1']);
+  });
+
+  it('split hook: the budget ends the day among the openers, and nothing after is taken', () => {
+    const queue = [lesson('a1', 'a'), lesson('a2', 'a', 1), lesson('b1', 'b', 20), lesson('c1', 'c', 1)];
+    const openers = new Set(['a1', 'b1', 'c1']);
+    const result = packClass(queue, classBudget(30), CLASS_PACE, 3, { isOpener: (item) => openers.has(item.id) });
+    expect(result.taken.map((item) => item.id)).toEqual(['a1']);
+    expect(result.rest.map((item) => item.id)).toEqual(['a2', 'b1', 'c1']);
+  });
+
+  it('split hook: a lesson with no opener in the queue opens its cell within C_max, else waits', () => {
+    const queue = [lesson('a1', 'a'), lesson('z', 'z'), lesson('story'), lesson('old', 'o')];
+    const isOpener = (item: { id: string }): boolean => item.id === 'a1';
+    const one = packClass(queue, classBudget(60), CLASS_PACE, 1, { isOpener, openedBefore: ['o'] });
+    expect(one.taken.map((item) => item.id)).toEqual(['a1', 'story', 'old']);
+    expect(one.rest.map((item) => item.id)).toEqual(['z']);
+    const two = packClass(queue, classBudget(60), CLASS_PACE, 2, { isOpener, openedBefore: ['o'] });
+    expect(two.taken.map((item) => item.id)).toEqual(['a1', 'z', 'story', 'old']);
+    expect(two.openedCells).toEqual(['a', 'z']);
+    // With no opener at all, the first item is still taken.
+    expect(packClass([lesson('z', 'z'), lesson('y', 'y')], 10, CLASS_PACE, 0, { isOpener: () => false }).taken.map((item) => item.id)).toEqual(['z']);
+  });
+
+  it('property: split mode keeps the queue (rest in queue order), at most C_max new cells, and never a lesson before its cell opener', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.record({ minutes: fc.integer({ min: 1, max: 12 }), cell: fc.integer({ min: 0, max: 5 }) }), { maxLength: 20 }),
+        fc.integer({ min: 0, max: 3 }),
+        fc.constantFrom(15, 20, 30, 45, 60),
+        (spec, cMax, classMinutes) => {
+          const queue = spec.map((item, i) => lesson(`q${i}`, `c${item.cell}`, item.minutes));
+          const openerIds = new Set(queue.filter((item, i) => queue.findIndex((other) => other.cellId === item.cellId) === i).map((item) => item.id));
+          const result = packClass(queue, classBudget(classMinutes), CLASS_PACE, cMax, { isOpener: (item) => openerIds.has(item.id) });
+          expect([...result.taken, ...result.rest].map((item) => item.id).sort()).toEqual(queue.map((item) => item.id).sort());
+          expect(result.rest).toEqual(queue.filter((item) => !result.taken.includes(item)));
+          if (queue.length > 0) expect(result.openedCells.length).toBeLessThanOrEqual(Math.max(1, cMax));
+          const takenCells = new Set(result.taken.filter((item) => openerIds.has(item.id)).map((item) => item.cellId));
+          for (const item of result.taken) expect(takenCells.has(item.cellId)).toBe(true);
+        },
+      ),
+    );
+  });
+
+  it('rejects amounts that are not finite or below 0', () => {
+    expect(() => packClass([lesson('a', 'c1', Number.NaN)], 10, CLASS_PACE, 2)).toThrow(RangeError);
+    expect(() => packClass([lesson('a', 'c1', -1)], 10, CLASS_PACE, 2)).toThrow(RangeError);
+    expect(() => packClass([], -1, CLASS_PACE, 2)).toThrow(RangeError);
+    expect(() => packClass([], 10, Number.POSITIVE_INFINITY, 2)).toThrow(RangeError);
+    expect(() => packClass([], 10, CLASS_PACE, 1.5)).toThrow(RangeError);
+    expect(() => packClass([], 10, CLASS_PACE, -1)).toThrow(RangeError);
+  });
+
   it('never mutates its input', () => {
     const queue = [lesson('a', 'c1'), lesson('b', 'c2')];
     const copy = structuredClone(queue);
@@ -320,6 +397,13 @@ describe('spreadPractice (section 6.2)', () => {
     expect(spreadPractice({}, dates.slice(0, 2), 10).days.map((day) => day.refresh)).toEqual([true, true]);
   });
 
+  it('rejects a repeated or unreal date and amounts that are not finite or below 0', () => {
+    expect(() => spreadPractice({ taught: [lesson('a')] }, ['2026-11-04', '2026-11-04'], 10)).toThrow(RangeError);
+    expect(() => spreadPractice({ taught: [lesson('a')] }, ['2026-02-30'], 10)).toThrow(RangeError);
+    expect(() => spreadPractice({ taught: [lesson('a', undefined, -2)] }, ['2026-11-04'], 10)).toThrow(RangeError);
+    expect(() => spreadPractice({ taught: [lesson('a')] }, ['2026-11-04'], Number.NaN)).toThrow(RangeError);
+  });
+
   it('places a day in date order whatever order the dates come in', () => {
     const result = spreadPractice({ taught: [lesson('a'), lesson('b')] }, ['2026-11-08', '2026-11-04'], 10);
     expect(result.days.map((day) => [day.date, ids(day.items)])).toEqual([
@@ -375,7 +459,8 @@ describe('class and practice packing, properties', () => {
             if (last) expect(day.minutes - last.minutes).toBeLessThan(r.practiceMinutes);
             expect(day.refresh).toBe(day.items.length === 0 || r.practiceMinutes - day.minutes >= REFRESH_MIN_ROOM);
           }
-          // Round robin: a day with two or more items fewer than another is full.
+          // Round robin: days differ by at most one item unless the day with fewer is full (mixed minutes; the budget
+          // rule wins, see spreadPractice).
           const counts = spread.days.map((day) => day.items.length);
           const most = Math.max(0, ...counts);
           for (const day of spread.days) if (day.items.length < most - 1) expect(day.minutes).toBeGreaterThanOrEqual(r.practiceMinutes);

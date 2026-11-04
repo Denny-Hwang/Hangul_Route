@@ -12,7 +12,7 @@ import {
   spreadPractice,
   type PackItem,
 } from './blend';
-import { WEEKDAYS, addDays, daysBetween, isDateKey, weekdayOf } from './dates';
+import { WEEKDAYS, addDays, daysBetween, isDateKey } from './dates';
 import {
   WARNING_CODES,
   type CurriculumDraft,
@@ -24,7 +24,7 @@ import {
   type WeekMeta,
 } from './draft';
 import { installBlendedPath, installBlendedShift, type BlendedShift } from './generate';
-import type { Blend, CurriculumParams, CurriculumParamsInput, DateKey } from './params';
+import { CurriculumParamsSchema, type Blend, type CurriculumParams, type CurriculumParamsInput, type DateKey } from './params';
 import {
   CULTURE_EVERY,
   CURRICULUM_MAX_ITEMS,
@@ -59,8 +59,6 @@ export const BLEND_GENERATOR_VERSION = 2;
  */
 export const CLASS_DAY_MAX_LESSONS = 28;
 
-/** How far ahead the two-cycle bound reserves the later class days' floor loads (two weeks of classes). */
-const LOOKAHEAD_DAYS = 14;
 /** Cells listed by one Refresh entry (`CurriculumMeta.refresh`, section 9.2). */
 const REFRESH_MAX_CELLS = 6;
 
@@ -97,14 +95,15 @@ export interface BlendBuildInput {
   shift: boolean;
   /** Items dated before `from`, kept as they are. */
   history: readonly PlanItem[];
-  /**
-   * `regenerateFrom` `shift` (row BL-3): lessons a class day before `from` has taught that no practice date has
-   * played yet. They keep their `lectureDate` and take the first practice dates, before any new class lesson.
-   */
-  carriedIn?: readonly PlanItem[] | undefined;
-  /** `regenerateFrom` (row BL-3): the plan's stored Refresh dates; those before `from` stay as they are. */
-  historyRefresh?: ReadonlyArray<{ date: DateKey; cellIds: readonly string[] }> | undefined;
   historyWeeks?: readonly WeekMeta[] | undefined;
+  /**
+   * Re-pacing: the stored plan's items. One whose class day is before `from` and that is not in `history` was taught
+   * by its class: it keeps its `lectureDate`, is played on the next practice dates and is never taught again (a
+   * finished one is dropped, except in `shift`, which cannot know completion).
+   */
+  planItems?: readonly PlanItem[] | undefined;
+  /** Re-pacing: the stored Refresh entries; those dated before `from` are kept as they are. */
+  historyRefresh?: ReadonlyArray<{ date: DateKey; cellIds: readonly string[] }> | undefined;
   /** The first day the generator may place on (`freezeBefore`, or the start). */
   from: DateKey;
   topics: readonly CatalogTopic[];
@@ -193,12 +192,25 @@ export function buildBlended(input: BlendBuildInput): CurriculumDraft {
     // Only a ready lesson opens a cell (C_max, the split opener rule); a story or a coming-soon cell opens none.
     return { item, minutes: lookup.minutes(item), cellId: lookup.lessonCell(item)?.episodeId, story };
   };
+  // Re-pacing: what earlier class days taught. History items are already placed; `taught` ones are placed again
+  // as practice. Neither is queued for a class day again.
+  const kept = new Set(input.history.map((item) => item.id));
+  const done = new Set(input.shift ? [] : p.completedQuestIds);
+  const pastTaught = (input.planItems ?? [])
+    .filter((item) => item.lectureDate !== undefined && item.lectureDate < from && !kept.has(item.id) && !done.has(item.id))
+    // By class day; within one, by practice date, or in the class order the blended `shift` sends (row BL-3).
+    .sort(
+      (a, b) => compareKeys(a.lectureDate ?? '', b.lectureDate ?? '') || (input.shift ? 0 : compareKeys(a.targetDate ?? '', b.targetDate ?? '')),
+    );
+  const pastIds = new Set([...kept, ...pastTaught.map((item) => item.id)]);
+  const storyOf = (item: QueueItem): CatalogStory | undefined => (item.kind === 'quest' ? lookup.storiesByQuest.get(item.id) : undefined);
+  const pastEntryOf = (item: PlanItem): Entry => ({ ...entryOf(item, storyOf(item)), lectureDate: item.lectureDate });
   /** One queue: lessons, then the story pool, then the coming-soon cells (section 5; F-PLAN-002 section 3.3 steps 3-5). */
   let queue: Entry[] = [
     ...input.lessons.map((item) => entryOf(item)),
     ...input.stories.map((entry) => entryOf(entry.item, entry.story)),
     ...input.comingSoon.map((item) => entryOf(item)),
-  ];
+  ].filter((entry) => !pastIds.has(entry.item.id));
 
   const cycles: Cycle[] = route.cycles.map((cycle) => ({
     index: cycle.index,
@@ -241,19 +253,12 @@ export function buildBlended(input: BlendBuildInput): CurriculumDraft {
   let reached = placementStageNumber(p.level.stage);
   let sinceCulture = 0;
   let newSinceReview = 0;
-  let assigned = 0;
-  const carriedIn = input.carriedIn ?? [];
-  let carried: Entry[] = carriedIn
-    .filter((item): item is PlanItem & { lectureDate: DateKey } => item.lectureDate !== undefined)
-    .map((item) => ({ ...entryOf(item.note === undefined ? { kind: item.kind, id: item.id } : { kind: item.kind, id: item.id, note: item.note }), lectureDate: item.lectureDate }));
-  assigned += carried.length;
-  // Cells a class day has already opened (the split opener rule holds across a re-pace, row BL-3).
-  const opened = new Set<string>(
-    [...input.history, ...carriedIn].flatMap((item) => {
-      const cell = item.lectureDate === undefined ? undefined : lookup.lessonCell(item);
-      return cell === undefined ? [] : [cell.episodeId];
-    }),
-  );
+  // The 260-item cap counts what the plan already holds (history) and the taught lessons placed again.
+  let assigned = input.history.length + pastTaught.length;
+  // A taught lesson whose class date is no class day of this route (the class days changed) is due from the start.
+  const classDates = new Set(cycles.map((cycle) => cycle.classDate));
+  let carried: Entry[] = pastTaught.filter((item) => !classDates.has(item.lectureDate as DateKey)).map(pastEntryOf);
+  const opened = new Set<string>();
   const placed: CurriculumItem[] = [];
   const refresh: Array<{ date: DateKey; cellIds: string[] }> = (input.historyRefresh ?? [])
     .filter((entry) => entry.date < from)
@@ -383,38 +388,38 @@ export function buildBlended(input: BlendBuildInput): CurriculumDraft {
     return [...new Set(lists.flat())].slice(0, REFRESH_MAX_CELLS);
   };
 
-  // A re-pace (row BL-3): the class days before `from` are rebuilt from what they taught, so the review and culture
-  // counters, the opened cells, the stage reached and the Refresh lists go on from where the plan was.
-  const taughtBefore = [...input.history, ...carriedIn].filter((item) => item.lectureDate !== undefined && item.lectureDate < from);
-  for (const cycle of cycles) {
-    if (cycle.classDate >= from) break;
-    const taught = taughtBefore
-      .filter((item) => item.lectureDate === cycle.classDate)
-      .map((item): Entry => ({ ...entryOf({ kind: item.kind, id: item.id }), lectureDate: cycle.classDate }));
-    cycle.taught = taught;
-    if (!cycle.held) {
-      if (cycle.practice.length === 0) cycle.kind = 'break';
-      continue;
-    }
-    const story = taught.some((entry) => entry.item.kind === 'quest' && lookup.storiesByQuest.has(entry.item.id));
-    cycle.kind = story ? 'culture' : taught.length === 0 && isReviewSlot(cycle) ? 'review' : 'learn';
-    for (const entry of taught) {
-      if (ready(entry)) newSinceReview += 1;
-      const cell = lookup.lessonCell(entry.item);
-      if (cell !== undefined) reached = Math.max(reached, placementStageNumber(cell.stage));
-    }
-    if (cycle.kind === 'learn') sinceCulture += 1;
-    else if (cycle.kind === 'culture') sinceCulture = 0;
-    else newSinceReview = 0;
-  }
+  /** The stored week kind and festival of a past class day (re-pacing). */
+  const storedWeekOf = (date: DateKey): WeekMeta | undefined => input.historyWeeks?.find((meta) => meta.index === weekOf(date));
 
   for (const cycle of cycles) {
     const reservations = reserved.get(cycle.index) ?? [];
-    // A class day before `from` keeps what it was (rebuilt above); its practice dates from `from` on still take lessons.
-    const past = cycle.classDate < from;
+    // Re-pacing: a class day before `from` is replayed from what it taught, so the review and culture cadence, the
+    // opened cells, the stage reached and the Refresh cells are what the stored plan had (F-PLAN-002 section 3.3).
+    const replay = cycle.held && cycle.classDate < from;
+    let again: Entry[] = [];
+    if (replay) {
+      const past = [...input.history, ...pastTaught].filter((item) => item.lectureDate === cycle.classDate).map(pastEntryOf);
+      again = past.filter((entry) => pastTaught.some((item) => item.id === entry.item.id));
+      // A culture class reads a story (a festival's, or one due by the cadence); a learn class reaches
+      // stories only once the lessons have run out, and then not by the cadence.
+      const festival = storedWeekOf(cycle.classDate)?.focus.festival ?? null;
+      const due = festival !== null || (cultureEvery > 0 && sinceCulture >= cultureEvery);
+      if (past.some((entry) => entry.story !== undefined) && due) {
+        cycle.kind = 'culture';
+        cycle.festival = festival;
+      } else if (past.length === 0 && isReviewSlot(cycle) && newSinceReview > 0) cycle.kind = 'review';
+      else cycle.kind = 'learn';
+      cycle.taught = past;
+      for (const entry of past) {
+        if (entry.cellId !== undefined) opened.add(entry.cellId);
+        if (ready(entry)) newSinceReview += 1;
+        const cell = lookup.lessonCell(entry.item);
+        if (cell !== undefined) reached = Math.max(reached, placementStageNumber(cell.stage));
+      }
+    }
     // Step 6, per class cycle (section 5.3).
-    if (past) {
-      // kind and lessons rebuilt above
+    if (replay) {
+      // Kind set above.
     } else if (!cycle.held && cycle.practice.length === 0) cycle.kind = 'break';
     else if (!canTeach(cycle)) cycle.kind = 'learn';
     else if (reservations.length > 0) cycle.kind = 'culture';
@@ -432,7 +437,7 @@ export function buildBlended(input: BlendBuildInput): CurriculumDraft {
       else if (cycle.kind === 'culture') story = queue.find(fits);
       const later = reservations.slice(1).map((reservation) => reservation.entry);
       if (story !== undefined) queue = [story, ...queue.filter((entry) => entry !== story)];
-      const room = Math.min(CLASS_DAY_MAX_LESSONS, CURRICULUM_MAX_ITEMS - assigned);
+      const room = Math.max(0, Math.min(CLASS_DAY_MAX_LESSONS, CURRICULUM_MAX_ITEMS - assigned));
       let packed: Entry[];
       if (story !== undefined) {
         const rest = queue.slice(1);
@@ -477,16 +482,16 @@ export function buildBlended(input: BlendBuildInput): CurriculumDraft {
       }
       assigned += taught.length;
     }
-    if (!past) cycle.taught = taught;
-    if (past) {
-      // counted above
-    } else if (cycle.kind === 'learn' && canTeach(cycle)) sinceCulture += 1;
+    if (!replay) cycle.taught = taught;
+    else taught = again;
+    if (cycle.kind === 'learn' && (canTeach(cycle) || replay)) sinceCulture += 1;
     else if (cycle.kind === 'culture') sinceCulture = 0;
     else if (cycle.kind === 'review') newSinceReview = 0;
 
-    // Split: practice-only lessons of cells the class has opened, while they fit this cycle (section 5.2).
+    // Split: practice-only lessons of cells the class has opened, while they fit this cycle (section 5.2); on
+    // re-pacing, also on the practice dates left in the cycle of a class day already held.
     const practiceOnly: Entry[] = [];
-    if (split && canTeach(cycle) && (cycle.kind === 'learn' || cycle.kind === 'culture')) {
+    if (split && (canTeach(cycle) || replay) && (cycle.kind === 'learn' || cycle.kind === 'culture')) {
       const dates = practiceOf(cycle.index);
       while (queue.length > 0 && assigned < CURRICULUM_MAX_ITEMS) {
         const head = queue[0] as Entry;
@@ -740,7 +745,8 @@ function summariseBlended(s: SummaryInput): { stats: CurriculumStats; warnings: 
       personal: { sessions: practiceSessions.length, items: items.length, refreshDays: s.refreshDays, minutesPlanned: minutesOf(items) },
     },
     sessionsPerTeachingWeek: teachingWeeks.length === 0 ? 0 : round1(sessions / teachingWeeks.length),
-    sessionsPerCalendarWeek: round1(sessions / s.weekCount),
+    // Keep the average (BL-OD-18): over the planned weeks, which the extended route was made to fill.
+    sessionsPerCalendarWeek: round1(sessions / (s.p.blend?.keepAverage === true ? Math.min(s.p.weeks, s.weekCount) : s.weekCount)),
   };
 
   const warnings: CurriculumWarning[] = [];
@@ -763,43 +769,64 @@ function summariseBlended(s: SummaryInput): { stats: CurriculumStats; warnings: 
 /**
  * `regenerateFrom` `shift` of a blended plan (AMENDMENTS-ROUTE-CLASS-BLEND sections 10.2, 12.1 and 14, row BL-3;
  * F-PLAN-002 section 3.7 as amended by BL-A3). Items dated before the freeze stay as they are. A lesson a class day
- * before the cutoff has taught and no practice date has played yet keeps its `lectureDate` and takes the next practice
- * dates; every other future item is laid again in route order. `classDay` (**Move this class day**) adds that class
- * date to `blend.classDaysOff` and freezes what is dated before it (or before today, when it has gone by). `params`
- * (**Add practice days** / **Stop practice days**) lays the future again under new params, with or without `blend`.
+ * before the freeze has taught and no practice date has played yet keeps its `lectureDate` and takes the next practice
+ * dates (the re-pace of row BL-2); every other future item is laid again in route order. `classDay` (**Move this class
+ * day**) is a class date of the route on or after today: it joins `blend.classDaysOff` and the freeze moves to it.
+ * `params` (**Add practice days** / **Stop practice days**) lays the future again under new params, with or without
+ * `blend`; the route itself (start, weeks, audience, level) stays.
  */
 export const shiftBlended: BlendedShift = (plan, today, opts, kit) => {
+  if (opts.params !== undefined) sameRoute(plan.meta.params, opts.params);
   let params: CurriculumParamsInput = { ...(opts.params ?? plan.meta.params), completedQuestIds: opts.completedQuestIds ?? [] };
   let from = today;
   const classDay = opts.classDay;
   if (classDay !== undefined) {
-    params = withClassDayOff(params, classDay);
-    if (classDay > today) from = classDay;
+    params = withClassDayOff(params, classDay, today);
+    from = classDay;
   }
   const isBefore = (item: PlanItem): boolean => item.targetDate !== undefined && item.targetDate < from;
   const history = plan.items.filter(isBefore);
   let future = plan.items.filter((item) => !isBefore(item));
-  // Taught before the moved class day (or before today) and not played yet: it keeps its class day.
-  const cutoff = classDay ?? from;
-  let carriedIn = params.blend === undefined ? [] : future.filter((item) => item.lectureDate !== undefined && item.lectureDate < cutoff);
-  future = future.filter((item) => !carriedIn.includes(item));
+  let planItems = plan.items;
   if (plan.meta.params.blend !== undefined) {
     const rank = kit.routeRank(plan.meta.params);
     future = byRank(future, rank, () => 0);
-    // In class order: by class day, a culture class's story first, then the route order.
-    carriedIn = byRank(carriedIn, rank, (a, b) => compareKeys(a.lectureDate ?? '', b.lectureDate ?? '') || Number(kit.isStory(b)) - Number(kit.isStory(a)));
+    // The lessons a class day has taught, in class order: by class day, a culture class's story first, then the route.
+    planItems = byRank(plan.items, rank, (a, b) => compareKeys(a.lectureDate ?? '', b.lectureDate ?? '') || Number(kit.isStory(b)) - Number(kit.isStory(a)));
   }
-  return kit.build(params, { ...kit.base, freezeBefore: from, history, queue: kit.queueOf(future), carriedIn });
+  return kit.build(params, { ...kit.base, freezeBefore: from, history, queue: kit.queueOf(future), planItems });
 };
 
-/** Move this class day: a class date of the route joins `blend.classDaysOff` (once). */
-function withClassDayOff(params: CurriculumParamsInput, classDay: DateKey): CurriculumParamsInput {
+/**
+ * The `params` override changes how the class meets, never the route: a plan's past items are dated by its start and
+ * weeks and were chosen for its audience and level (row BL-3).
+ */
+function sameRoute(stored: RouteParams, next: RouteParams): void {
+  for (const key of ['startDate', 'weeks', 'audience'] as const) {
+    if (next[key] !== stored[key]) throw new RangeError(`params: ${key} cannot change in shift (add or stop practice days keep the route)`);
+  }
+  if (JSON.stringify(next.level) !== JSON.stringify(stored.level)) {
+    throw new RangeError('params: level cannot change in shift (add or stop practice days keep the route)');
+  }
+}
+type RouteParams = Pick<CurriculumParamsInput, 'startDate' | 'weeks' | 'audience' | 'level'>;
+
+/**
+ * Move this class day: a class date of the route, today or later, joins `blend.classDaysOff` (once). A class day
+ * that has gone by is not moved (section 12.1: the teacher knows ahead; the plan never asks whether class happened).
+ */
+function withClassDayOff(params: CurriculumParamsInput, classDay: DateKey, today: DateKey): CurriculumParamsInput {
   const blend = params.blend;
   if (blend === undefined) throw new Error('Move this class day needs a plan with class days and practice days (blend)');
   if (!isDateKey(classDay)) throw new RangeError(`classDay: ${classDay} is not a real day`);
-  if (!blend.lecture.days.includes(weekdayOf(classDay))) throw new RangeError(`classDay: ${classDay} is not a class day of this plan`);
-  const last = addDays(params.startDate, 7 * params.weeks + 6);
-  if (classDay < params.startDate || classDay > last) throw new RangeError(`classDay: ${classDay} is outside the route`);
+  if (classDay < today) throw new RangeError(`classDay: ${classDay} has gone by; only a class day from today on can move`);
+  const p = CurriculumParamsSchema.parse(params) as CurriculumParams & { blend: Blend };
+  const practiceDays = p.blend.personal.days ?? practiceDaysFor(p.blend.lecture.days, p.blend.personal.perWeek);
+  const isOff = (date: DateKey): boolean => p.daysOff.some((range) => range.from <= date && date <= range.to);
+  const { route } = routeWeeks(p, practiceDays, isOff);
+  if (!route.cycles.some((cycle) => cycle.classDate === classDay)) {
+    throw new RangeError(`classDay: ${classDay} is not a class day of this route`);
+  }
   const off = blend.classDaysOff ?? [];
   return off.includes(classDay) ? params : { ...params, blend: { ...blend, classDaysOff: [...off, classDay].sort(compareKeys) } };
 }
@@ -812,5 +839,17 @@ function byRank(items: readonly PlanItem[], rank: ReadonlyMap<string, number>, f
     .map((entry) => entry.item);
 }
 
-installBlendedPath(buildBlended);
+/**
+ * Whether a blended plan has a practice date on or after `from`, on the route the walk lays (class cycles, `keepAverage`
+ * weeks and days off included): `regenerateFrom` `requeue` moves unfinished past items only when it has (row BL-2).
+ */
+export function blendedSessionsFrom(params: CurriculumParams, from: DateKey): boolean {
+  const p = params as CurriculumParams & { blend: Blend };
+  const practiceDays = p.blend.personal.days ?? practiceDaysFor(p.blend.lecture.days, p.blend.personal.perWeek);
+  const isOff = (date: DateKey): boolean => p.daysOff.some((range) => range.from <= date && date <= range.to);
+  const { route } = routeWeeks(p, practiceDays, isOff);
+  return route.cycles.some((cycle) => cycle.practiceDates.some((date) => date >= from && !isOff(date)));
+}
+
+installBlendedPath(buildBlended, blendedSessionsFrom);
 installBlendedShift(shiftBlended);
