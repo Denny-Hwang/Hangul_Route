@@ -1,3 +1,4 @@
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -56,9 +57,9 @@ async function play(keys: ClozeFixture[], options: { width?: number; mode?: 'alw
 
 const tile = (r: ReactTestRenderer, id: string) => byTestId(r.root, `cloze-pick-tile-${id}`).find((n) => typeof n.props.onClick === 'function');
 const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
-  // Taps a beat apart: only the first touch in the 50 ms window counts (the Listen & Pick rule).
+  // Taps a beat apart: a touch inside TAP_LOCK_MS of the last one is a bounce (AMENDMENTS-TOUCH KT-D5).
   await act(async () => {
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(TAP_LOCK_MS);
   });
   const node = tile(r, id);
   expect(node, id).toBeDefined();

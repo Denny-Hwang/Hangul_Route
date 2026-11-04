@@ -1,13 +1,14 @@
 import type { RouteCatalog, RouteQuest } from '../placement/route-seed';
 import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from '../schemas/heritage-card';
-import { cellIsReady, storyIsReady, type Catalog } from './schema';
+import { cellEpisodeIds, cellIsReady, storyIsReady, type Catalog } from './schema';
 
 const NOT_ON_THE_ROUTE = Number.MAX_SAFE_INTEGER;
 
 /**
  * The catalogue as F-PLC-001's `RouteCatalog` (spec section 3.2). `order` is the
  * canonical position on the route: lesson quests in grid order (stage, then theme,
- * then the cell's own quest list), then the story quests in story order. `playable`
+ * then the cell's own quest list), then the quests of the cells' later volumes (F-CURR-002
+ * row CM-40), then the story quests in story order. `playable`
  * is "the cell is ready" for a lesson and "the story is ready" for a story quest;
  * `grid` is `kind === 'lesson'`. A quest that no cell and no story lists (an invalid
  * catalogue) sorts last, in array order.
@@ -21,10 +22,14 @@ export const routeCatalogOf = (catalog: Catalog): RouteCatalog => {
     (a, b) => stageRank(a.stage) - stageRank(b.stage) || themeRank(a.theme) - themeRank(b.theme),
   );
   for (const cell of cells) for (const questId of cell.questIds) rank.set(questId, rank.size);
+  // F-CURR-002 row CM-40: a later volume's quests follow every first volume's, cell by cell (they add no route day),
+  // in catalogue order; each is a grid quest that a level below its stage places out like the first volume's.
+  const laterVolume = new Set(cells.flatMap((cell) => cellEpisodeIds(cell).slice(1)));
+  for (const quest of catalog.quests) if (quest.kind === 'lesson' && laterVolume.has(quest.episodeId)) rank.set(quest.id, rank.size);
   const stories = [...catalog.stories].sort((a, b) => a.order - b.order);
   for (const story of stories) rank.set(story.questId, rank.size);
 
-  const readyEpisodes = new Set(catalog.cells.filter(cellIsReady).map((cell) => cell.episodeId));
+  const readyEpisodes = new Set(catalog.cells.filter(cellIsReady).flatMap((cell) => cellEpisodeIds(cell)));
   const readyStoryQuests = new Set(catalog.stories.filter(storyIsReady).map((story) => story.questId));
 
   const quests = catalog.quests

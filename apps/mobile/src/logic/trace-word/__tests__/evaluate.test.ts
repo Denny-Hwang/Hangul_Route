@@ -279,3 +279,76 @@ describe('createTraceWordGate: the idle gate of block mode (wireframe "Idle gate
     expect(onEvaluate).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('round ㅇ and ㅎ loops score as the octagons did (NB-3 parity)', () => {
+  // The 8-point loops the stroke data shipped before NB-3, kept here to pin the verdicts.
+  const octagon = (pts: ReadonlyArray<readonly [number, number]>): JamoStrokePoint[] => pts.map(([x, y]) => ({ x, y }));
+  const OLD_IEUNG = octagon([[100, 40], [60, 56], [40, 95], [60, 134], [100, 150], [140, 134], [160, 95], [140, 56], [100, 40]]);
+  const OLD_HIEUT_RING = octagon([[100, 85], [60, 100], [40, 125], [60, 145], [100, 155], [140, 145], [160, 125], [140, 100], [100, 85]]);
+  const oldLookup = (jamoId: string): JamoStrokePoint[][] | undefined => {
+    if (jamoId === 'jamo:ieung' || jamoId === 'jamo:ieung-batchim') return [OLD_IEUNG];
+    if (jamoId === 'jamo:hieut') {
+      const now = strokesForJamo(jamoId)!;
+      return [now[0]!, now[1]!, OLD_HIEUT_RING];
+    }
+    return strokesForJamo(jamoId);
+  };
+  const LOOP_BLOCKS = ['호', '아', '강', '앙', '형', '공', '뱅', '이', '회'];
+  const outlineOf = (strokes: JamoStrokePoint[][]): { x: number; y: number; width: number; height: number } => {
+    const pts = strokes.flat();
+    const xs = pts.map((p) => p.x);
+    const ys = pts.map((p) => p.y);
+    return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
+  };
+  /** The learner's drawing: every letter traced, the loops drawn as a hand-made ring or square. */
+  const drawing = (block: PlacedBlock, squareness: number): JamoStrokePoint[][] =>
+    block.letters.flatMap((l) => {
+      if (l.char !== 'ㅇ' && l.char !== 'ㅎ') return trace(l.strokes);
+      const ringIdx = l.strokes.length - 1;
+      return [...trace(l.strokes.slice(0, ringIdx)), ...ring(outlineOf([l.strokes[ringIdx]!]), squareness)];
+    });
+
+  it('keeps every round ㅇ and ㅎ loop below the ring/square split', () => {
+    for (const syllable of LOOP_BLOCKS) {
+      for (const l of place(syllable).letters) {
+        if (l.char === 'ㅇ') expect(hullFill(l.strokes.flat()), syllable).toBeLessThan(LOOP_FILL_SPLIT);
+        if (l.char === 'ㅎ') expect(hullFill(l.strokes[l.strokes.length - 1]!), syllable).toBeLessThan(LOOP_FILL_SPLIT);
+      }
+    }
+  });
+
+  it('gives the same pass or retry for traces, rings and squares as the octagons did', () => {
+    const changed: string[] = [];
+    for (const syllable of LOOP_BLOCKS) {
+      const now = place(syllable);
+      const before = placeBlockStrokes(syllable, oldLookup)!;
+      const drawings: Array<[string, JamoStrokePoint[][]]> = [
+        ['round trace', trace(now.strokes)],
+        ['octagon trace', trace(before.strokes)],
+        ['round trace off by 6, shaky', wobble(trace(now.strokes, 6, -6), 3)],
+        ['ring', drawing(now, 2)],
+        ['shaky ring', wobble(drawing(now, 2), 3)],
+        ['diamond', drawing(now, 1)],
+        ['rounded diamond', drawing(now, 1.2)],
+        ['rounded square', drawing(now, 3)],
+        ['square', drawing(now, 8)],
+      ];
+      for (const [label, drawn] of drawings) {
+        const a = scoreTraceUnit(lettersOf(now), drawn);
+        const b = scoreTraceUnit(lettersOf(before), drawn);
+        if (a.passed !== b.passed) changed.push(`${syllable} ${label}: ${b.passed ? 'pass' : 'retry'} -> ${a.passed ? 'pass' : 'retry'}`);
+        expect(a.orderCorrect, `${syllable} ${label} order`).toBe(b.orderCorrect);
+      }
+      expect(scoreTraceUnit(lettersOf(now), drawing(now, 2)).passed, `${syllable} ring`).toBe(true);
+      // ㅇ alone is told from ㅁ by its fill; ㅎ is judged with its bars, the same before and after.
+      if (!now.letters.some((l) => l.char === 'ㅎ')) {
+        expect(scoreTraceUnit(lettersOf(now), drawing(now, 8)).passed, `${syllable} square`).toBe(false);
+      }
+    }
+    // The only verdicts that move, both at the far ends of the shapes: a straight-sided
+    // diamond in a tall ㅇ sat closer to the octagon's corners than to a circle, and a
+    // squared-off ㅎ ring now covers the rounder loop. A rounded diamond, any ring, shaky
+    // or not, and every trace score as before.
+    expect(changed).toEqual(['호 square: retry -> pass', '아 diamond: pass -> retry', '이 diamond: pass -> retry']);
+  });
+});

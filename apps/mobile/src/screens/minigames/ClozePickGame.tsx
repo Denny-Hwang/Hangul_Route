@@ -21,10 +21,15 @@ import {
   useTypeScale,
   KOREAN_LANGUAGE,
   KOREAN_LINE_BREAK,
+  TapTarget,
+  pressInset,
+  pressTransform,
+  usePressLook,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -91,6 +96,7 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
   const reducedMotion = useReducedMotion();
   const layoutClass = useLayoutClass();
   const textScale = useTypeScale();
+  const press = usePressLook();
 
   const [state, setState] = useState<ClozeFlowState>(() => startCloze(rounds.length));
   const stateRef = useRef(state);
@@ -317,50 +323,66 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
             <Body tone="secondary" testID="cloze-pick-instruction">
               {copy.clozePick.instruction[view.instruction]}
             </Body>
-            <View testID="cloze-pick-tiles" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-              {pick.options.map((option) => {
-                const card = optionView(pick, option, state, { mode: host.mode, romanizationMode }, a11y);
-                const look = choiceCardStyle(card.cardState);
-                return (
-                  <View key={option.id} style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}>
-                    {/* The option card's looks (design/components/ChoiceCard) in the compact tile of the mock: centred
-                        Korean over its romanization, 64 tall, a miss in amber with a thicker border and its mark. */}
-                    <Pressable
-                      testID={`cloze-pick-tile-${option.id}`}
-                      onPress={look.interactive ? () => dispatch({ type: 'tap', optionId: option.id, answerId: pick.answerId, at: Date.now() }) : undefined}
-                      accessibilityRole="button"
-                      accessibilityLabel={card.accessibilityLabel}
-                      accessibilityState={{ disabled: look.disabled, selected: look.selected }}
-                      style={{
-                        minHeight: touchTarget.min,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingVertical: spacing.sm,
-                        paddingHorizontal: spacing.xxl,
-                        borderRadius: look.borderRadius,
-                        borderWidth: card.cardState === 'wrong' ? borderWidth.thick : look.borderWidth,
-                        borderColor: look.borderColor,
-                        backgroundColor: look.backgroundColor,
-                      }}
-                    >
-                      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-                        {card.ko}
-                      </Text>
-                      {card.romanization !== '' ? (
-                        <Body size="sm" tone="secondary">
-                          {card.romanization}
-                        </Body>
-                      ) : null}
-                      {look.mark ? (
-                        <View style={{ position: 'absolute', right: spacing.md }}>
-                          <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
-                        </View>
-                      ) : null}
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
+            <TapBoard lock="board">
+              {/* One board for the tiles (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+              <View testID="cloze-pick-tiles" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+                {pick.options.map((option) => {
+                  const card = optionView(pick, option, state, { mode: host.mode, romanizationMode }, a11y);
+                  const look = choiceCardStyle(card.cardState);
+                  return (
+                    <View key={option.id} style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}>
+                      {/* The option card's looks (design/components/ChoiceCard) in the compact tile of the mock: centred
+                          Korean over its romanization, 64 tall, a miss in amber with a thicker border and its mark. */}
+                      <TapTarget
+                        testID={`cloze-pick-tile-${option.id}`}
+                        onCommit={() => dispatch({ type: 'tap', optionId: option.id, answerId: pick.answerId, at: Date.now() })}
+                        // An answered tile (the fit, or a locked miss) takes no tap but stays a focusable button with its state.
+                        inactive={!look.interactive}
+                        accessibilityLabel={card.accessibilityLabel}
+                        accessibilityState={{ disabled: look.disabled, selected: look.selected }}
+                        style={{ alignSelf: 'stretch' }}
+                      >
+                        {({ pressed }) => {
+                          // The press look (AMENDMENTS-TOUCH section 4.3) on the drawn box, never a state look.
+                          const p = pressed && look.interactive ? press : null;
+                          const rest = card.cardState === 'wrong' ? borderWidth.thick : look.borderWidth;
+                          return (
+                            <View
+                              style={{
+                                minHeight: touchTarget.min,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                paddingVertical: spacing.sm - pressInset(p, rest),
+                                paddingHorizontal: spacing.xxl - pressInset(p, rest),
+                                borderRadius: look.borderRadius,
+                                borderWidth: p?.borderWidth ?? rest,
+                                borderColor: p?.borderColor ?? look.borderColor,
+                                backgroundColor: look.backgroundColor,
+                                transform: pressTransform(p),
+                              }}
+                            >
+                              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                                {card.ko}
+                              </Text>
+                              {card.romanization !== '' ? (
+                                <Body size="sm" tone="secondary">
+                                  {card.romanization}
+                                </Body>
+                              ) : null}
+                              {look.mark ? (
+                                <View style={{ position: 'absolute', right: spacing.md }}>
+                                  <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
+                                </View>
+                              ) : null}
+                            </View>
+                          );
+                        }}
+                      </TapTarget>
+                    </View>
+                  );
+                })}
+              </View>
+            </TapBoard>
           </View>
         }
         feedback={

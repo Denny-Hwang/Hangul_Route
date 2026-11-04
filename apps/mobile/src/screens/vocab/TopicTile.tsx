@@ -1,7 +1,7 @@
-import { Body, KoreanText, Progress, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, KoreanText, Progress, borderWidth, colors, radii, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import type { VocabTopic } from '@hangul-route/content-schema';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import type { TopicTileView } from '../../logic/vocab/topic-view';
 import { PictureArt } from '../minigames/PictureArt';
 
@@ -59,7 +59,7 @@ export function TopicTile({
   testID?: string;
 }): ReactElement {
   return (
-    <Pressable
+    <GuardedPressable
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
@@ -93,6 +93,6 @@ export function TopicTile({
       <Body weight="semibold" tone="secondary">
         {view.countLine}
       </Body>
-    </Pressable>
+    </GuardedPressable>
   );
 }

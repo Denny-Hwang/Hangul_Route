@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin, headerBack, headerClose } from './helpers';
+import { answerCheckRounds, onboardChild, openGrownUpZone, passDiscover, unlockWithPin, headerBack, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { nextPage, position } from './story-reader-helpers';
 
@@ -1170,6 +1170,7 @@ async function finishFlashcardChunk(page: Page): Promise<void> {
     // The answered word stays on screen with its gloss for a moment; the next question names another word.
     const stillAsking = async (): Promise<boolean> =>
       !(await summary.isVisible()) && (await question.innerText({ timeout: 500 }).catch(() => '')).split(/\s+/).includes(FOOD_ROMANIZED[id]!);
+    await pastTapLock(page);
     await page.getByTestId(`vocab-question-option-${id}`).click();
     await expect(async () => {
       expect(await stillAsking(), `the check moved on from "${asked}"`).toBe(false);

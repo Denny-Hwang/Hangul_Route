@@ -49,6 +49,23 @@ describe('lessonChunkProblems', () => {
     expect(isStartBundle(bundles[1].url)).toBe(false);
   });
 
+  it('checks the headers chunks and a Volume 2 body chunk like any other (F-CURR-002 row CM-40)', () => {
+    const manifest = [
+      { name: 'lessons-cell-stage2-rites', hash: '0123456789abcdef' },
+      { name: 'lessons-cell-stage2-rites-v2', hash: '1123456789abcdef' },
+      { name: 'lessons-headers-en', hash: '2123456789abcdef' },
+    ];
+    const start = { url: START, text: `var m={"a":"0123456789abcdef","b":"1123456789abcdef"},h={"en":"2123456789abcdef"};` };
+    const bundles = [start, ...manifest.map((m) => chunk(m.name, m.hash))];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    // Volume 1's bundle is never taken for Volume 2's (the md5 suffix ends the name).
+    expect(lessonChunkUrls(manifest.slice(0, 1), bundles)).toEqual([bundles[1].url]);
+    const missing = bundles.filter((b) => !b.url.includes('lessons-headers-en'));
+    expect(lessonChunkProblems({ manifest, bundles: missing, precached: all(missing) })).toEqual(['lessons-headers-en has no web bundle: the chunk is missing from the build']);
+    const pulledIn = [{ url: START, text: `${start.text}e.CHUNK_HASH="2123456789abcdef";` }, ...bundles.slice(1)];
+    expect(lessonChunkProblems({ manifest, bundles: pulledIn, precached: all(pulledIn) })).toContain(`lessons-headers-en is in the start bundle ${START}: a static import pulled the chunk in`);
+  });
+
   it('fails a chunk missing from the build, and one missing from the precache (the clip gaps mechanism)', () => {
     const bundles = sound().filter((b) => !b.url.includes('lessons-titles-es'));
     expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual(['lessons-titles-es has no web bundle: the chunk is missing from the build']);
@@ -573,12 +590,15 @@ describe('precacheReport and its budget lines', () => {
     // The jamo voice and clips integration (JV-1 to JV-4, AC-1 to AC-4 and AC-6 together) measures 4,835,104 B on main
     // fe074758a (4,815,388 B; release build, Metro cache cleared), so the line is 4,840,000 B.
     // Row CM-48 (This week in Korea) measured 4,840,751 B on main 1bfda3fc8 (4,838,051 B), so the line is 4,845,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_845_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104]) {
+    // AMENDMENTS-TOUCH KT-1 (#943) measures 4,860,944 B (CI release build, +22,893 B over main 1bfda3fc8): 4,866,000 B.
+    // KT-2 (#949) on KT-1 and main 377d44291 measures 4,863,471 B (CI release build): the line stays.
+    // The KT integration (KT-1, KT-10, KT-2, KT-3, KT-4a, KT-8, KT-9 on main 25e108b5e) measures 4,870,372 B: 4,875,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_875_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_835_104).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_870_372).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
