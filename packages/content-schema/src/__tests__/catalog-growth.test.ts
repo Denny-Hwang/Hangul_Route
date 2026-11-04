@@ -1,3 +1,4 @@
+import { VOLUME_TWO_STORY_SLUGS } from '../catalog/data';
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG,
@@ -107,7 +108,11 @@ describe('the frozen catalogue history', () => {
   it('lists every quest of the shipped catalogue at its version', () => {
     expect(LEGACY_CATALOG_VERSION).toBe(8);
     expect(new Set(CATALOG_QUEST_IDS_V8).size).toBe(CATALOG_QUEST_IDS_V8.length);
-    expect([...questIdsAtVersion(CATALOG_VERSION)].sort()).toEqual(CATALOG.quests.map((q) => q.id).sort());
+    // A book 2 tale's listen quest (row CM-46) carries its story's stamp but is listed by the catalogue only once
+    // `volumes` opens for everyone; until then the history names it ahead of the catalogue, and nothing else differs.
+    const ahead = [...VOLUME_TWO_STORY_SLUGS].map((slug) => `quest:story-${slug}-listen`);
+    expect([...questIdsAtVersion(CATALOG_VERSION)].filter((id) => !ahead.includes(id)).sort()).toEqual(CATALOG.quests.map((q) => q.id).sort());
+    for (const id of ahead) expect(questIdsAtVersion(CATALOG_VERSION).has(id), id).toBe(true);
     expect(CATALOG_HISTORY.version).toBe(CATALOG_VERSION);
   });
 
@@ -151,7 +156,8 @@ describe('placedOutGrowth', () => {
   });
 
   it('with the shipped history, a result stored at version 8 gains the Stage 2 quests shipped since, and one stored today gains none', () => {
-    const shippedSince = CATALOG.quests.filter((q) => !V8.has(q.id) && q.stage === 'stage2').map((q) => q.id);
+    // Lesson quests: a story's listen quest (the book 2 tales of row CM-46 are stage 2 stories) is never placed out.
+    const shippedSince = CATALOG.quests.filter((q) => !V8.has(q.id) && q.stage === 'stage2' && q.kind === 'lesson').map((q) => q.id);
     expect(shippedSince).toEqual([
       ...WB,
       'quest:stage2-life-q2',

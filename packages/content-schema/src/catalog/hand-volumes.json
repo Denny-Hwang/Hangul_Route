@@ -1,0 +1,10 @@
+[
+  {
+    "cellId": "episode:stage5-crafts",
+    "episodeId": "episode:stage5-crafts-v2",
+    "volume": 2,
+    "title": "Masks and Paper",
+    "minutes": 10,
+    "questIds": ["quest:story-hahoe-mask-dance-read", "quest:story-hanji-korean-paper-read"]
+  }
+]

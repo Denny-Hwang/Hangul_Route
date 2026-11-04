@@ -1,6 +1,7 @@
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
-import { assembleCatalog, expandCellRows, type StoryShelfEntry } from './assemble';
+import { assembleCatalog, expandCellRows, type CatalogVolumeSource, type StoryShelfEntry } from './assemble';
 import { GENERATED_CATALOG_VERSION, GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from './catalog.generated';
+import HAND_VOLUMES from './hand-volumes.json';
 import type { Catalog, CatalogCell, CatalogQuest } from './schema';
 
 /**
@@ -150,8 +151,27 @@ const handLessonQuests: CatalogQuest[] = [
   lesson('story-cheugugi-rain-gauge-read', 'stage5', 'crafts', 'The Bowl That Measured the Rain', 4),
   lesson('story-jagyeongnu-water-clock-read', 'stage5', 'crafts', 'Jang Yeongsil and the Clock That Rang by Itself', 5),
   lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Play cell's book 2, on its own Volume 2 episode.
+  { ...lesson('story-hahoe-mask-dance-read', 'stage5', 'crafts', 'The Hahoe Masks and the Mask Dance', 5), episodeId: 'episode:stage5-crafts-v2' },
+  { ...lesson('story-hanji-korean-paper-read', 'stage5', 'crafts', 'Hanji: Paper from the Paper Mulberry', 5), episodeId: 'episode:stage5-crafts-v2' },
 ];
 
+/**
+ * The hand-written later volumes (F-CURR-002 row CM-40): the Stage 5 books 2 of `books.ts` (row CM-46), each the
+ * second episode of its Stage 5 cell, with its read quests above. JSON, so scripts/build-lecture-catalogue.mjs reads it
+ * too: a book 2 tale is Volume 2 content, so the console offers it as a story only once `volumes` opens (row CM-40).
+ */
+const handVolumes: readonly CatalogVolumeSource[] = HAND_VOLUMES;
+
+/**
+ * The tales a book 2 holds (row CM-46): the read quests `quest:story-<slug>-read` of the hand-written later volumes.
+ * They are Volume 2 content, so, as row CM-40 keeps a cell's Volume 2 off the route days and out of the console until
+ * `volumes` opens for everyone, the catalogue lists them only inside their book 2, not as shelf stories: no route,
+ * preset or console story list offers them. The row that opens `volumes` for everyone lists them.
+ */
+export const VOLUME_TWO_STORY_SLUGS: ReadonlySet<string> = new Set(
+  handVolumes.flatMap((v) => v.questIds.flatMap((id) => /^quest:story-([a-z0-9]+(?:-[a-z0-9]+)*)-read$/.exec(id)?.[1] ?? [])),
+);
 /**
  * The shelf order and festival anchors of the stories that shipped up to version 32 (F-STORY-005
  * section 3.3, table order). Frozen: a story file added later takes the next order after these, in
@@ -190,10 +210,10 @@ const generated = expandCellRows(GENERATED_LESSON_CELL_ROWS);
 export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
   cells: [...handCells, ...generated.cells],
-  // F-CURR-002 row CM-40: the Volume 2 of a cell (none until a Volume 2 content row ships).
-  volumes: generated.volumes,
+  // F-CURR-002 row CM-40: the Volume 2 of a cell; row CM-46 adds the hand-written Stage 5 books 2.
+  volumes: [...handVolumes, ...generated.volumes],
   lessonQuests: [...handLessonQuests, ...generated.quests],
-  stories: GENERATED_STORIES,
+  stories: GENERATED_STORIES.filter((story) => !VOLUME_TWO_STORY_SLUGS.has(story.slug)),
   storyShelf: STORY_SHELF,
   topics: GENERATED_TOPICS,
   // F-VOC-001 section 3.3: twelve launch topics, the first four free (D5), five minutes each.

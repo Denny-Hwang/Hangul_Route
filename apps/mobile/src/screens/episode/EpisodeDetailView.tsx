@@ -219,7 +219,11 @@ export function EpisodeDetailView({
   }, [episode, preview, profileId, from]);
 
   // A story episode that is not a preview, with every story in the index, is the story page; else the quest list.
-  const storyEntries = useMemo(() => (episode ? storyEpisodeEntries(episode, defaultStoryIndex()) : null), [episode]);
+  // A book 2 (row CM-46) is a later volume: its entries are in the index with the volumes, read only while `volumes` is on.
+  const storyEntries = useMemo(
+    () => (episode ? storyEpisodeEntries(episode, defaultStoryIndex({ volumes: volumesOn })) : null),
+    [episode, volumesOn],
+  );
   // The cell's heritage stories (F-STORY-005 §3.6, wireframe episode/detail-cell-stories-row C): 0 hides the row.
   const cellStoryCount = useMemo(() => (episode ? lessonRowCount(episode, defaultStoryIndex()) : 0), [episode]);
 

@@ -21,6 +21,7 @@ import {
 } from '..';
 import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
 import { STAGE1_15_QUESTS } from './fixtures/stage1-15';
+import { VOLUME_TWO_STORY_SLUGS } from '../catalog/data';
 
 const clone = (): Catalog => structuredClone(CATALOG);
 const issues = (catalog: unknown): string[] => {
@@ -139,10 +140,13 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108);
+    // + the Play book 2 of F-CURR-002 row CM-46 (Volume 2 of Stage 5 Play): +2 read quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(110);
   });
 
-  it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
+  it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode (a book 2 tale is listed in its book only, row CM-46)', () => {
+    expect([...VOLUME_TWO_STORY_SLUGS]).toEqual(['hahoe-mask-dance', 'hanji-korean-paper']);
+    for (const slug of VOLUME_TWO_STORY_SLUGS) expect(CATALOG.stories.some((s) => s.id === `story:${slug}`), slug).toBe(false);
     expect(CATALOG.stories).toHaveLength(24);
     expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(112);
     expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(24);
@@ -547,6 +551,9 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q1',
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
+      // Row CM-46: the Play book 2's read quests, a later volume after every first volume's (row CM-40).
+      'quest:story-hahoe-mask-dance-read',
+      'quest:story-hanji-korean-paper-read',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);
