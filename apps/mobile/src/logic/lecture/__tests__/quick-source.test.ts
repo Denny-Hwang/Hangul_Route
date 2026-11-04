@@ -1,4 +1,4 @@
-import { CATALOG, cellIsReady, storyIsReady, type ChooserEpisodeRow, type ChooserGroup } from '@hangul-route/content-schema';
+import { CATALOG, cellIsReady, laterVolumeStoryIds, storyIsReady, type ChooserEpisodeRow, type ChooserGroup } from '@hangul-route/content-schema';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
 import { describe, expect, it } from 'vitest';
 import { episodeById, jamoConsonants, jamoVowels, questById } from '../../../content';
@@ -48,7 +48,9 @@ describe('presenterChooserGroups: what Customize offers', () => {
 
   it('adds the stories the presenter can show (ready, through the Library gate), in catalogue order', () => {
     const stories = groups.find((g) => g.id === 'stories')!.rows;
-    const ready = CATALOG.stories.filter(storyIsReady).sort((a, b) => a.order - b.order);
+    // A book 2 tale (F-CURR-002 row CM-46) is listed only with `volumes`, as its Volume 2 is.
+    const laterVolume = laterVolumeStoryIds(CATALOG);
+    const ready = CATALOG.stories.filter((s) => storyIsReady(s) && !laterVolume.has(s.id)).sort((a, b) => a.order - b.order);
     const bundle = lectureBundle('en');
     expect(stories.length).toBeGreaterThan(8);
     expect(stories.map((s) => s.key)).toEqual(ready.filter((s) => typeof bundle.story?.(s.id) === 'object').map((s) => s.id));

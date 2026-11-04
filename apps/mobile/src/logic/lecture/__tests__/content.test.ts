@@ -1,6 +1,6 @@
 import { LectureDeckSchema, discoverItemTexts, sayRef, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodeById, episodesAll, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
+import { episodeById, episodesAll, episodesWithVolumes, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
@@ -19,7 +19,8 @@ const deck = (blocks: LectureBlock[]) =>
   LectureDeckSchema.parse({ v: 1, id: 'lecture:ship01', title: 'All of it', createdAt: '2026-10-11T09:00:00Z', seed: 1, blocks });
 
 const listedStoryIds = [
-  ...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId)),
+  // With the later volumes (rows CM-40, CM-46): the presenter can expand a book 2 tale.
+  ...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesWithVolumes, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId)),
 ];
 
 const shippedEpisodes = episodesAll.filter((e) => e.status !== 'preview' && e.questIds.length > 0);

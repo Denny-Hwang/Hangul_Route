@@ -1,5 +1,5 @@
 import type { Episode } from '@hangul-route/content-schema';
-import { bookEpisodes } from './books';
+import { bookEpisodes, VOLUME_TWO_STORY_IDS } from './books';
 import { lessonEpisodes } from './lessons';
 import { stages, themes } from './stages';
 import { storyEpisodes } from './stories';
@@ -171,6 +171,16 @@ export const MAX_EPISODES_PER_CELL = 2;
 /** An episode's volume: 1 unless it says otherwise (`EpisodeSchema` ties volume k >= 2 to the `-v<k>` id). */
 export const volumeOf = (episode: Pick<Episode, 'volume'>): number => episode.volume ?? 1;
 
+/**
+ * The shelf episode of a book 2 tale (F-CURR-002 §4.3, row CM-46): Volume 2 content, so it is one of the later
+ * volumes (`volumeEpisodes`), shown with them while `volumes` is on and never on the route's list.
+ */
+export const isVolumeTwoShelf = (episode: Pick<Episode, 'id' | 'placement'>): boolean =>
+  episode.placement === 'shelf' && VOLUME_TWO_STORY_IDS.has(`story:${episode.id.replace(/^episode:shelf-/, '')}`);
+
+/** The volume a learner's surfaces give an episode: its own, or 2 for a book 2 tale's shelf episode (row CM-46). */
+export const shownVolumeOf = (episode: Pick<Episode, 'id' | 'placement' | 'volume'>): number => (isVolumeTwoShelf(episode) ? 2 : volumeOf(episode));
+
 /** The key of an episode's grid cell (stage × theme); the one definition every cell count uses. */
 export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
 
@@ -191,7 +201,10 @@ export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...le
  * show a cell's volumes read them, through `episodesFor` and `episodeById`, and only while `volumes` is on
  * (`withVolumes`). Their quests are in `questsAll`, so progress, cards and memory states stay whatever the switch.
  */
-export const volumeEpisodes: readonly Episode[] = [...lessonEpisodes, ...bookEpisodes].filter((e) => volumeOf(e) >= 2);
+export const volumeEpisodes: readonly Episode[] = [
+  ...[...lessonEpisodes, ...bookEpisodes].filter((e) => volumeOf(e) >= 2),
+  ...storyEpisodes.filter((e) => isVolumeTwoShelf(e)),
+];
 
 /**
  * The cells of `list` holding more grid episodes than `max` (F-STORY-005 §3.1
@@ -221,7 +234,7 @@ export function previewEpisodesFor(claimers: readonly Episode[]): Episode[] {
 /** `storyEpisodes`: the generated shelf episodes (F-STORY-001 §3.9). */
 export const episodesAll: Episode[] = [
   ...handWrittenEpisodes,
-  ...storyEpisodes,
+  ...storyEpisodes.filter((e) => !isVolumeTwoShelf(e)),
   ...previewEpisodesFor(handWrittenEpisodes),
 ];
 
@@ -233,7 +246,7 @@ export const episodesWithVolumes: readonly Episode[] = [...episodesAll, ...volum
  * without them while it is off, so every Volume 2 entry point hides and nothing else changes.
  */
 export function withVolumes(volumesOn: boolean, list: readonly Episode[] = episodesWithVolumes): Episode[] {
-  return volumesOn ? [...list] : list.filter((e) => volumeOf(e) === 1);
+  return volumesOn ? [...list] : list.filter((e) => shownVolumeOf(e) === 1);
 }
 
 export function episodeById(id: string): Episode | undefined {

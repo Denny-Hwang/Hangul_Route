@@ -88,7 +88,39 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:cheugugi-rain-gauge', 'story:jagyeongnu-water-clock', 'story:pansori-tales'],
     pillarTags: ['E3', 'C3'],
   },
+  /**
+   * The Food cell's book 2 (F-CURR-002 §5.3 S5, row CM-46): the two new tales, on the Volume 2 path behind `volumes`.
+   * Kimjang and Kim Hongdo's market paintings already ship in book 1 (`gimjang-arirang`, `kim-hongdo-genre-paintings`),
+   * so book 2 tells of jang and of the rice cakes of the seasons. The two tales are a book of their own size
+   * (BOOK_MIN_QUESTS).
+   */
+  {
+    id: 'episode:stage5-life-v2',
+    stage: 'stage5',
+    theme: 'life',
+    order: 2,
+    titleEn: 'Jang and Rice Cakes',
+    hoyaIntroEn: "Let's read stories of Korean food through the year in Korean, one short sentence at a time.",
+    storyIds: ['story:jang-fermented-sauces', 'story:tteok-through-the-seasons'],
+    pillarTags: ['B1', 'B5'],
+    volume: 2,
+  },
 ];
+
+/**
+ * The stories that only a book 2 holds (F-CURR-002 §4.3, §5.1, row CM-46): new tales that are Volume 2 content. They
+ * have no shelf twin, so their one door is their book, which shows only while `volumes` is on; the review engine reads
+ * this set (`SourceVisibility.cellVolume`) so their items hide with `volumes` off too. A story that is also in a book 1,
+ * or on the shelf, is never here.
+ */
+export const VOLUME_TWO_STORY_IDS: ReadonlySet<string> = new Set(
+  BOOK_DEFINITIONS.filter((d) => (d.volume ?? 1) >= 2)
+    .flatMap((d) => d.storyIds)
+    .filter((id) => !BOOK_DEFINITIONS.some((d) => (d.volume ?? 1) === 1 && d.storyIds.includes(id))),
+);
+
+/** The volume of a review-item cell that is a story (`story:<slug>`): 2 for a book 2 tale, else undefined (§4.3). */
+export const storyCellVolume = (cell: string): number | undefined => (VOLUME_TWO_STORY_IDS.has(cell) ? 2 : undefined);
 
 /** The production review gate of the story index (D14), for one story. */
 function isReviewed(story: Story): boolean {
