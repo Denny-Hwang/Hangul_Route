@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import { CATALOG, isPlanCatalogStale, planCatalogVersion } from '@hangul-route/content-schema';
 import { routeEnabledFor } from '../../../config/flags';
 
 /**
@@ -130,7 +131,11 @@ describe('every learner-facing weekly plan entry reads routeEnabledFor(locale) (
 describe('the overview offers Refresh route only for an older catalogue (F-STORY-005 PR 5.6)', () => {
   it('a route saved on a newer catalogue (another device on a newer build) is not stale', () => {
     const overview = src('screens/route/RouteOverviewScreen.tsx');
-    expect(overview).toContain('active.meta.catalogVersion < CATALOG.version');
+    // Older only, against the last version that added a quest a plan can hold (F-CURR-002 row CM-46): `isPlanCatalogStale`
+    // is `storedAt < planCatalogVersion(catalog)`, whose unit tests are in content-schema's catalog-volumes.test.ts.
+    expect(overview).toContain('isPlanCatalogStale(active.meta.catalogVersion, CATALOG)');
     expect(overview).not.toContain('active.meta.catalogVersion !== CATALOG.version');
+    expect(isPlanCatalogStale(CATALOG.version + 1, CATALOG)).toBe(false);
+    expect(isPlanCatalogStale(planCatalogVersion(CATALOG) - 1, CATALOG)).toBe(true);
   });
 });
