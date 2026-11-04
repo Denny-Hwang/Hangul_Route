@@ -385,7 +385,7 @@ export const a11y = {
     blend: {
       fromClassMet: 'De la clase. Lo viste en clase.',
       practiceDay: (weekday: string) => `Día de práctica, ${weekday}`,
-      refresh: 'Refrescar: vuelve a mirar lo que enseñó la clase',
+      refresh: 'Repasar: vuelve a mirar lo que enseñó la clase',
     },
   },
 } satisfies DeepPartial<Messages['a11y']>;
