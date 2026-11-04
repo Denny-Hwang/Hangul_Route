@@ -77,6 +77,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/minigames/match-shape-entry.tsx#MatchShapeStepBody': 'screens/minigames/MatchShapeStepBody.tsx#MatchShapeStepBody',
   // Row CM-38: the My Story game's chunk (a minigame step: its Screen is Write Frame's).
   'screens/minigames/my-story-entry.tsx#MyStoryGame': 'screens/minigames/MyStoryGame.tsx#MyStoryGame',
+  // Row CM-47: the Realia Read e2e screen's chunk (fixture builds only), with the fixtures of every realia kind.
+  'navigation/realia-read-e2e.tsx#RealiaReadE2eBody': 'navigation/realia-read-e2e-screen.tsx#RealiaReadE2eBody',
 };
 
 /**
