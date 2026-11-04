@@ -9,10 +9,9 @@ import { API, SESSION_KEY } from './report-fixtures';
  * own), then the blended preview's cycle table, then Use this route and the published readout with Move this class day.
  * Screenshots at 320 and 1280. The whole flow (Present this plan on the class day) is BL-10's `route-blend.spec.ts`.
  *
- * Runs on an export made with the flag on:
+ * Runs on the console e2e export (the flag is on by default since BL-10):
  *
- *   NEXT_PUBLIC_API_BASE_URL=https://api.report-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true \
- *   NEXT_PUBLIC_ROUTE_BLEND_ENABLED=true pnpm --filter @hangul-route/web build
+ *   NEXT_PUBLIC_API_BASE_URL=https://api.report-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true pnpm --filter @hangul-route/web build
  *
  * with `ROUTE_BLEND_E2E=1`.
  */
@@ -78,7 +77,7 @@ async function sideways(page: Page): Promise<number> {
 }
 
 test.describe('the meeting block (BL-4, assumption c)', () => {
-  test.skip(!FULL, 'needs the console export with NEXT_PUBLIC_ROUTE_BLEND_ENABLED=true (ROUTE_BLEND_E2E=1)');
+  test.skip(!FULL, 'needs the console e2e export with the mocked API (ROUTE_BLEND_E2E=1)');
 
   test('fits one 1280 x 720 screen', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });

@@ -7,13 +7,13 @@ import { shot } from './shots';
 
 /**
  * AMENDMENTS-ROUTE-CLASS-BLEND section 7 (row BL-7; design/wireframes/journey/route-class-blend.md B1 to B3): the
- * learner's class days and practice days on the web PWA, behind `flags.routeBlendEnabled`. The switch is off until
- * BL-10, so this runs only on a build made with `EXPO_PUBLIC_ROUTE_BLEND_ENABLED=1` and `E2E_ROUTE_BLEND=1`; BL-10's
- * `route-blend.spec.ts` covers the launch state. A class on Tuesday with practice on Wednesday, Friday and Sunday,
+ * learner's class days and practice days on the web PWA, behind `flags.routeBlendEnabled`, on by default since BL-10
+ * (BL-OD-12), so this runs on the release build; `E2E_ROUTE_BLEND=0` skips it on a kill-switch build
+ * (`EXPO_PUBLIC_ROUTE_BLEND_ENABLED=false`). BL-10's `route-blend.spec.ts` covers the whole launch state. A class on Tuesday with practice on Wednesday, Friday and Sunday,
  * from Monday 2026-11-02; the browser clock is fixed at midday UTC on the day under test.
  */
 
-test.skip(process.env.E2E_ROUTE_BLEND !== '1', 'needs a build with EXPO_PUBLIC_ROUTE_BLEND_ENABLED=1 (BL-10 turns it on)');
+test.skip(process.env.E2E_ROUTE_BLEND === '0', 'the kill-switch build (EXPO_PUBLIC_ROUTE_BLEND_ENABLED=false) draws none of this');
 test.use({ timezoneId: 'UTC' });
 
 const en = getMessages('en');

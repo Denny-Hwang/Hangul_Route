@@ -8,14 +8,14 @@ import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
 
 /**
  * AMENDMENTS-ROUTE-CLASS-BLEND section 9.4 (row BL-8, BL-OD-7; wireframe design/wireframes/journey/route-class-blend.md
- * B7): My practice days on the web PWA, behind `flags.routeBlendEnabled`. The switch is off until BL-10, so this runs
- * only on a build made with `EXPO_PUBLIC_ROUTE_BLEND_ENABLED=1` and `E2E_ROUTE_BLEND=1`. A Tuesday class with practice
+ * B7): My practice days on the web PWA, behind `flags.routeBlendEnabled`, on by default since BL-10 (BL-OD-12), so
+ * this runs on the release build; `E2E_ROUTE_BLEND=0` skips it on a kill-switch build. A Tuesday class with practice
  * on Wednesday, Friday and Sunday, for a child on a device with a PIN: Profile -> My practice days shows "PIN required"
  * and names every chip so, a tap opens the grown-up gate, and after the PIN the grown-up moves the days. The chips are
  * KT-1 TapTargets; the Route line then names the learner's own days, and the stored snapshot holds them.
  */
 
-test.skip(process.env.E2E_ROUTE_BLEND !== '1', 'needs a build with EXPO_PUBLIC_ROUTE_BLEND_ENABLED=1 (BL-10 turns it on)');
+test.skip(process.env.E2E_ROUTE_BLEND === '0', 'the kill-switch build (EXPO_PUBLIC_ROUTE_BLEND_ENABLED=false) draws none of this');
 test.use({ timezoneId: 'UTC' });
 
 const en = getMessages('en');
