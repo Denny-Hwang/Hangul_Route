@@ -35,7 +35,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { describeStrokeOrder, pointsToPathD } from '../../logic/stroke-diagram';
+import { describeStrokeOrder, inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
 import { TRACE_IDLE_MS, idleOnTouch, type TraceEvaluator } from '../../logic/trace-evaluator';
 import { NO_TRACE_POINTERS, type CanvasPoint, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
 import { traceCanvasMax, traceLayoutMode, traceScreenWidth, traceSidePanelWidth } from '../../logic/trace-layout';
@@ -653,7 +653,7 @@ function BlockArt({
       {ink.map((stroke, i) => (
         <Path
           key={`ink-${i}`}
-          d={pointsToPathD(stroke)}
+          d={inkPathD(stroke)}
           stroke={colors.text.primary}
           strokeWidth={inkWidth}
           strokeLinecap="round"
@@ -702,7 +702,7 @@ function BlockChip({
       {ink ? (
         <Svg width={touchTarget.min - 2 * borderWidth.thick} height={touchTarget.min - 2 * borderWidth.thick} viewBox={`0 0 ${BLOCK_VIEWBOX} ${BLOCK_VIEWBOX}`}>
           {ink.map((stroke, i) => (
-            <Path key={i} d={pointsToPathD(stroke)} stroke={colors.text.primary} strokeWidth={CHIP_INK_WIDTH} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <Path key={i} d={inkPathD(stroke)} stroke={colors.text.primary} strokeWidth={CHIP_INK_WIDTH} strokeLinecap="round" strokeLinejoin="round" fill="none" />
           ))}
         </Svg>
       ) : (
