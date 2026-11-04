@@ -450,12 +450,18 @@ describe('the reading slides at each build (AMENDMENTS-LECTURE-V2 section 5.2, L
     expect(sheetUnits({ kind: 'sign' })).toBe(420);
     expect(sheetUnits({ kind: 'plain' })).toBe(420);
     expect(sheetUnits({ kind: 'price-card' })).toBe(600);
+    // Row CM-47: a forecast's days and a calendar's dates are tiles too; the ruled rows, the map and the poster are sheets.
+    expect(sheetUnits({ kind: 'forecast' })).toBe(600);
+    expect(sheetUnits({ kind: 'calendar' })).toBe(600);
+    for (const kind of ['recipe', 'receipt', 'label', 'timetable', 'map', 'poster'] as const) expect(sheetUnits({ kind }), kind).toBe(420);
   });
 
   it('a sheet grows with its floored text on a small phone, up to 700 units', () => {
     // 568 x 320: a unit of 0.44 px draws the 28-unit caption at the 18 px floor, 1.45 times its units.
     expect(sheetUnits({ kind: 'menu' }, 18 / (0.44375 * 28))).toBe(608);
     expect(sheetUnits({ kind: 'price-card' }, 18 / (0.44375 * 28))).toBe(700);
+    expect(sheetUnits({ kind: 'forecast' }, 18 / (0.44375 * 28))).toBe(700);
+    expect(sheetUnits({ kind: 'timetable' }, 18 / (0.44375 * 28))).toBe(608);
     expect(sheetUnits({ kind: 'menu' }, 0.5)).toBe(420);
   });
 

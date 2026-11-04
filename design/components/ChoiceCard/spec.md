@@ -3,6 +3,8 @@
 Spec: `docs/specs/F-STORY-003-story-checks-sequence-v2.md` §3.4 ("`ChoiceCard`" paragraph) and PR 3.3 in §6 · wireframe: `design/wireframes/story/check.md` screens A-D (notation `( )` option card) · Korean content is drawn with `design/components/KoreanText/spec.md`
 Code: `packages/design-system/src/components/ChoiceCard/` (`ChoiceCard.tsx` paint, `style.ts` pure `choiceCardStyle`, `types.ts`, `index.ts`)
 
+> **Amended 2026-10-31 by `docs/specs/AMENDMENTS-TOUCH.md` [KT]** (row KT-2): while pressed the card shows a thick `border.shape` outline and shrinks to 0.97 (no shrink under reduced motion) instead of the `border.focus` border, which is also the `hint` ring; inside a `TapBoard` (`design/components/TapBoard/spec.md`) the card commits on release with a 24 px reach, fills gaps to the nearest card and ignores a bounce for 400 ms; the web-dead `hitSlop` goes. The "While pressed" line and the touch-target bullet below change in KT-2.
+
 ## What it is
 
 The one option card for "pick one" questions: a text option, a Korean option, or a picture option. It is **the only definition other specs reuse** (F-QUEST-002 Listen & Pick, Pic-Word Match, Hangul Check; F-VOC). A wrong tap is a nudge, never a failure: amber, no red, no X.

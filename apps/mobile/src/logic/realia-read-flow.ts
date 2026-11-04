@@ -191,7 +191,8 @@ export function stepRealiaRead(state: RealiaReadState, event: RealiaReadEvent): 
 // ---------------------------------------------------------------------------
 // View-models
 
-export type RealiaSheetKindView = 'menu' | 'ticket' | 'sign' | 'price-card' | 'plain';
+/** A realia's layout: the four G-2 kinds, the eight of F-CURR-002 row CM-47 (`RealiaKindSheet`), or the plain sheet. */
+export type RealiaSheetKindView = NonNullable<Realia['kind']> | 'plain';
 
 export interface RealiaHeaderView {
   kind: 'bar' | 'dots';
