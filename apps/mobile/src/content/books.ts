@@ -48,6 +48,32 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day'],
     pillarTags: ['A1'],
   },
+  // F-CURR-002 §5.2 S5, row CM-46: the Letters cell's book 2, in the order the records were made. The eight
+  // listen-only Letters stories joined it through their read tiers (row CM-46a); the two new tales (Hangul letters of
+  // Joseon families, and how Hangul got its name) join once their multi-agent review signs them (`buildBook` leaves an
+  // unreviewed story out). Volume 2, so it shows only while `volumes` is on.
+  {
+    id: 'episode:stage5-letters-v2',
+    stage: 'stage5',
+    theme: 'letters',
+    order: 1,
+    titleEn: 'Books, Records and Letters',
+    hoyaIntroEn: "Let's read stories of old books, records and letters in Korean, one short sentence at a time.",
+    storyIds: [
+      'story:tripitaka-koreana',
+      'story:jikji-metal-type',
+      'story:sillok-royal-historians',
+      'story:sillok-mountain-archives',
+      'story:eongan-letters',
+      'story:nanjung-ilgi',
+      'story:seungjeongwon-ilgi-every-day',
+      'story:ilseongnok-daily-reflection',
+      'story:hangul-name',
+      'story:joseon-records-today',
+    ],
+    pillarTags: ['A1'],
+    volume: 2,
+  },
   {
     id: 'episode:stage5-life',
     stage: 'stage5',
@@ -149,3 +175,17 @@ export const bookEpisodes: Episode[] = built.map((b) => b.episode);
 
 /** The Read quests of every shipped book, in book order (`questsAll` appends them). */
 export const bookQuests: Quest[] = built.flatMap((b) => b.quests);
+
+/**
+ * The volume of a story cell (`story:<slug>`) for the review engine's visibility (F-CURR-002 §4.3, row CM-46): a story
+ * that a book 2 adds, in no book 1 and added after the first 24 stories (it carries `addedIn`), is Volume 2 content, so
+ * its items hide while `volumes` is off. Every other story, the read-tier stories that join a book 2 included, stays
+ * book 1 (undefined: the engine reads the cell id, which carries no volume).
+ */
+const BOOK1_STORY_IDS = new Set(BOOK_DEFINITIONS.filter((d) => (d.volume ?? 1) === 1).flatMap((d) => d.storyIds));
+const BOOK2_STORY_IDS = new Set(BOOK_DEFINITIONS.filter((d) => (d.volume ?? 1) >= 2).flatMap((d) => d.storyIds));
+
+export function storyCellVolume(cell: string, lookup: (id: string) => Story | undefined = storyById): number | undefined {
+  if (!BOOK2_STORY_IDS.has(cell) || BOOK1_STORY_IDS.has(cell)) return undefined;
+  return lookup(cell)?.addedIn === undefined ? undefined : 2;
+}

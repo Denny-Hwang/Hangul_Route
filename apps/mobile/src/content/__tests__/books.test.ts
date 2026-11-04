@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BOOK_MAX_QUESTS,
+  bookMaxQuests,
   BOOK_MIN_QUESTS,
   BOOK_STAGE,
   EpisodeSchema,
   QuestSchema,
   type Story,
 } from '@hangul-route/content-schema';
-import { BOOK_DEFINITIONS, bookEpisodes, bookQuests, buildBook } from '../books';
-import { episodesAll, episodeById, episodesFor } from '../episodes';
+import { BOOK_DEFINITIONS, bookEpisodes, bookQuests, buildBook, storyCellVolume } from '../books';
+import { episodesAll, episodeById, episodesFor, volumeEpisodes } from '../episodes';
 import { questsAll } from '../quests';
 import { storiesAll, storyById, storyQuests } from '../stories';
 import { completeStages, stagesToLatch, withStageLatches } from '../../logic/my-route/latch';
@@ -17,9 +17,11 @@ import { STORY_QUEST_COPY, STORY_STEP_SECONDS, storyQuestSkeleton } from '../sto
 
 /** F-STORY-005 §3.2 "Books", §3.3 book plan, PR 5.6. */
 describe('Stage 5 books (books.ts)', () => {
-  it('ships all five Stage 5 books in grid order, each with its placeholder id, its planned title and stories (§3.3 book plan)', () => {
+  it('ships all five Stage 5 books in grid order, each with its placeholder id, its planned title and stories (§3.3 book plan), and the Letters book 2', () => {
     expect(bookEpisodes.map((e) => [e.id, e.order, e.titleEn, e.storyIds])).toEqual([
       ['episode:stage5-letters', 1, 'Stories of Letters', ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day']],
+      // F-CURR-002 row CM-46: the eight read-tier stories of row CM-46a; the two new tales join with their review sign-off.
+      ['episode:stage5-letters-v2', 1, 'Books, Records and Letters', ['story:tripitaka-koreana', 'story:jikji-metal-type', 'story:sillok-royal-historians', 'story:sillok-mountain-archives', 'story:nanjung-ilgi', 'story:seungjeongwon-ilgi-every-day', 'story:ilseongnok-daily-reflection', 'story:joseon-records-today']],
       ['episode:stage5-life', 2, 'Family Stories', ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam']],
       ['episode:stage5-rites', 3, 'Festival Tales', ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae']],
       ['episode:stage5-nature', 4, 'Nature Tales', ['story:sun-and-moon', 'story:angbuilgu-sundial']],
@@ -30,6 +32,7 @@ describe('Stage 5 books (books.ts)', () => {
   it('every book carries its pillar tags and a minute total equal to its quests', () => {
     expect(Object.fromEntries(bookEpisodes.map((e) => [e.id, e.pillarTags]))).toEqual({
       'episode:stage5-letters': ['A1'],
+      'episode:stage5-letters-v2': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
       'episode:stage5-nature': ['D5', 'E5'],
@@ -43,13 +46,14 @@ describe('Stage 5 books (books.ts)', () => {
 
   it.each(bookEpisodes.map((e) => [e.id, e] as const))('%s is a valid grid story book of its Stage 5 cell', (_id, book) => {
     expect(EpisodeSchema.safeParse(book).success).toBe(true);
-    expect(book.id).toBe(`episode:${book.stage}-${book.theme}`);
+    // Book 1 keeps its placeholder id; a book 2 is the cell's Volume 2 (F-CURR-002 row CM-40).
+    expect(book.id).toBe(`episode:${book.stage}-${book.theme}${(book.volume ?? 1) > 1 ? `-v${book.volume}` : ''}`);
     expect(book.stage).toBe(BOOK_STAGE);
     expect(book.format).toBe('story');
     expect(book.placement).toBe('grid');
     expect(book.status).toBe('shipped');
     expect(book.questIds.length).toBeGreaterThanOrEqual(BOOK_MIN_QUESTS);
-    expect(book.questIds.length).toBeLessThanOrEqual(BOOK_MAX_QUESTS);
+    expect(book.questIds.length).toBeLessThanOrEqual(bookMaxQuests(book.volume ?? 1));
     // One quest per story, in the same order: quest:story-<slug>-read.
     expect(book.questIds).toEqual((book.storyIds ?? []).map((id) => `quest:story-${id.replace(/^story:/, '')}-read`));
     // Book reward cards are the Stage 5 scene cards of F-CARD-S5-001 (a draft, out of scope).
@@ -79,7 +83,8 @@ describe('Stage 5 books (books.ts)', () => {
   it('a book replaces its placeholder and its quests are in the quest list', () => {
     for (const book of bookEpisodes) {
       expect(episodeById(book.id)).toBe(book);
-      expect(episodesAll.filter((e) => e.id === book.id)).toHaveLength(1);
+      // A book 2 is a later volume (row CM-40): in episodesWithVolumes, never in the route's episodesAll.
+      expect(((book.volume ?? 1) === 1 ? episodesAll : volumeEpisodes).filter((e) => e.id === book.id)).toHaveLength(1);
       for (const questId of book.questIds) expect(questsAll.some((q) => q.id === questId)).toBe(true);
     }
     expect(bookQuests.map((q) => q.id)).toEqual(bookEpisodes.flatMap((e) => e.questIds));
@@ -227,7 +232,8 @@ describe('storyQuestSkeleton (story-skeleton.ts)', () => {
 
 /** F-STORY-005 PR 5.6: with all five books shipped, Stage 5 is `open` and can complete (F-ROUTE-001 OD-6 latch). */
 describe('Stage 5 completion on the shipped bundle', () => {
-  const stage5Quests = bookEpisodes.flatMap((e) => e.questIds);
+  // Stage completion reads each cell's first volume (F-STORY-005 PR 5.8), so the Letters book 2 is not needed.
+  const stage5Quests = bookEpisodes.filter((e) => (e.volume ?? 1) === 1).flatMap((e) => e.questIds);
   const NOW = new Date('2026-10-13T09:00:00.000Z');
   const episodeOf = new Map(bookEpisodes.flatMap((e) => e.questIds.map((q) => [q, e.id] as const)));
   /** The fixture helper guesses episode ids from quest ids; a book quest names its book. */
@@ -245,5 +251,22 @@ describe('Stage 5 completion on the shipped bundle', () => {
     expect(latched.stageDoneAt).toEqual({ stage5: NOW.toISOString() });
     expect(stagesToLatch(latched, episodesAll)).toEqual([]);
     expect([...completeStages(latched, episodesAll)]).toEqual(['stage5']);
+  });
+});
+
+describe('storyCellVolume (F-CURR-002 §4.3, row CM-46)', () => {
+  const lookup = (id: string): Story | undefined => storyById(id);
+  it('is undefined for every shipped story, the read-tier stories that join the Letters book 2 included', () => {
+    for (const story of storiesAll.filter((s) => s.addedIn === undefined)) expect(storyCellVolume(story.id, lookup), story.id).toBeUndefined();
+    expect(storyCellVolume('story:jikji-metal-type', lookup)).toBeUndefined();
+    expect(storyCellVolume('episode:stage2-life-v2', lookup)).toBeUndefined();
+  });
+
+  it('is 2 for a tale that only a book 2 adds (added after the first 24 stories), so its items hide with volumes off', () => {
+    const tale = { ...(storyById('story:jikji-metal-type') as Story), id: 'story:eongan-letters', addedIn: 20261104 };
+    const withTale = (id: string): Story | undefined => (id === tale.id ? tale : lookup(id));
+    expect(storyCellVolume('story:eongan-letters', withTale)).toBe(2);
+    expect(storyCellVolume('story:hangul-name', (id) => (id === 'story:hangul-name' ? { ...tale, id } : undefined))).toBe(2);
+    expect(storyCellVolume('story:eongan-letters', () => undefined)).toBeUndefined();
   });
 });

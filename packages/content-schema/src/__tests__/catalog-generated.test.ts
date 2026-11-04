@@ -81,7 +81,8 @@ describe('catalogue parity with the last hand-kept catalogue (version 32)', () =
 
   it('orders the lesson quests by route (cell by cell), then the story quests in shelf order', () => {
     const lessons = CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual(CATALOG.cells.flatMap((c) => c.questIds));
+    // A later volume's quests follow every first volume's (row CM-40); the Letters book 2 is one (row CM-46).
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds))]);
     expect(CATALOG.quests.filter((q) => q.kind === 'story').map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 });

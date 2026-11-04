@@ -19,7 +19,7 @@ import { FREE_VOCAB_TOPIC_IDS } from '../../logic/content-access';
 import { bookEpisodes } from '../books';
 import { questTeaches } from '../../logic/stage1/curriculum';
 import { discoverQuest } from '../../logic/stage1/__tests__/fixtures';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { jamoAll, jamoWordBuilder } from '../jamo';
 import { questsAll } from '../quests';
 import { storiesAll, storyQuests } from '../stories';
@@ -45,7 +45,8 @@ const teachesOf = (quest: Quest): string[] =>
   questTeaches(quest).map((id) => symbolKeys.get(id) ?? `unknown:${id}`);
 
 const isShelf = (episode: Episode): boolean => episode.placement === 'shelf';
-const gridEpisodes = episodesAll.filter((episode) => !isShelf(episode));
+/** The grid episodes with the later volumes (row CM-40; the Letters book 2 of row CM-46), which `episodesAll` leaves out. */
+const gridEpisodes = episodesWithVolumes.filter((episode) => !isShelf(episode));
 /** A cell's first volume is the cell (F-CURR-002 row CM-40); a later volume is one of its `episodeIds`. */
 const cellEpisodes = gridEpisodes.filter((episode) => (episode.volume ?? 1) === 1);
 const laterVolumes = gridEpisodes.filter((episode) => (episode.volume ?? 1) > 1);
@@ -57,9 +58,10 @@ const episodeIdsOf = (episode: Episode): string[] =>
     .map((e) => e.id);
 const storyQuestIds = new Set(storyQuests.map((quest) => quest.id));
 const lessonQuests = questsAll.filter((quest) => !storyQuestIds.has(quest.id));
-const episodeOfQuest = (questId: string): Episode | undefined => episodesAll.find((e) => e.questIds.includes(questId));
+const episodeOfQuest = (questId: string): Episode | undefined => episodesWithVolumes.find((e) => e.questIds.includes(questId));
 
-const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds' | 'optionalQuestIds' | 'episodeIds'> => ({
+const laterVolumesOf = (episode: Episode): Episode[] => laterVolumes.filter((e) => e.stage === episode.stage && e.theme === episode.theme);
+const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds' | 'optionalQuestIds' | 'episodeIds' | 'volumes'> => ({
   stage: episode.stage,
   theme: episode.theme,
   episodeId: episode.id,
@@ -70,6 +72,10 @@ const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episod
   ...(episode.optionalQuestIds === undefined ? {} : { optionalQuestIds: episode.optionalQuestIds }),
   // F-CURR-002 row CM-40: the cell's episodes by volume, its first volume alone until a Volume 2 ships.
   episodeIds: episodeIdsOf(episode),
+  // A later volume's own title, minutes and quests (row CM-40), when the cell ships one.
+  ...(laterVolumesOf(episode).length === 0
+    ? {}
+    : { volumes: laterVolumesOf(episode).map((v) => ({ episodeId: v.id, title: v.titleEn, minutes: v.estimatedMinutes, questIds: v.questIds })) }),
 });
 
 describe('cells and the bundle episodes', () => {
@@ -105,9 +111,10 @@ describe('cells and the bundle episodes', () => {
   });
 
   it('lists every Stage 5 book as a shipped cell whose read quests are catalogue lesson quests (F-STORY-005 PR 5.6)', () => {
-    expect(bookEpisodes.map((book) => book.theme)).toEqual(['letters', 'life', 'rites', 'nature', 'crafts']);
+    expect(bookEpisodes.filter((book) => (book.volume ?? 1) === 1).map((book) => book.theme)).toEqual(['letters', 'life', 'rites', 'nature', 'crafts']);
     for (const book of bookEpisodes) {
-      const cell = CATALOG.cells.find((c) => c.episodeId === book.id);
+      // A book 2 (row CM-46) is a later volume of its book 1's cell.
+      const cell = CATALOG.cells.find((c) => (c.episodeIds ?? [c.episodeId]).includes(book.id));
       expect(cell?.status, book.id).toBe('shipped');
       for (const questId of book.questIds) {
         expect(CATALOG.quests.find((q) => q.id === questId)?.kind, questId).toBe('lesson');

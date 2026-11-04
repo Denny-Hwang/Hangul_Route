@@ -119,13 +119,13 @@ describe('seeding at the five historical snapshot points', () => {
   });
 });
 
-describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33)', () => {
-  const snap = finished(108);
+describe('the all-quests fixture (scenario S-c; 108 quests since row CM-33, 116 with the Letters book 2 of row CM-46)', () => {
+  const snap = finished(116);
   const seed = deriveSeed(input(snap));
 
   it('holds every lesson quest of the catalogue', () => {
-    expect(LESSON_QUESTS).toHaveLength(108);
-    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(108);
+    expect(LESSON_QUESTS).toHaveLength(116);
+    expect(Object.keys(snap.questDoneAt ?? {})).toHaveLength(116);
   });
 
   it('every seeded item has a due day, no day holds more than 15, and the spread is reported', () => {

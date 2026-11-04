@@ -130,10 +130,15 @@ const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
 /** F-STORY-004 §3.9: the intended free sampler. */
 const SAMPLER = ['seollal-new-year', 'hangeul-day', 'chuseok-ganggangsullae', 'sun-and-moon', 'sejong-new-letters', 'cheugugi-rain-gauge'];
 
-const storyFiles: Story[] = readdirSync(STORY_DIR)
+const allStoryFiles: Story[] = readdirSync(STORY_DIR)
   .filter((name) => name.endsWith('.json'))
   .sort()
   .map((name) => parseStory(JSON.parse(readFileSync(join(STORY_DIR, name), 'utf8')) as unknown));
+/**
+ * The table covers the 24 stories of the research set. A story added later carries `addedIn` (F-CURR-002 row CM-6) and
+ * takes its shelf place by that stamp; the book 2 tales of row CM-46 are checked in `books.test.ts` and the story lints.
+ */
+const storyFiles: Story[] = allStoryFiles.filter((story) => story.addedIn === undefined);
 
 interface ResearchEpisode {
   id: string;
@@ -151,7 +156,7 @@ for (const cluster of CLUSTERS) {
 }
 
 const slugOf = (story: Pick<Story, 'id'>): string => story.id.replace(/^story:/, '');
-const fileBySlug = new Map(storyFiles.map((story) => [slugOf(story), story]));
+const fileBySlug = new Map(allStoryFiles.map((story) => [slugOf(story), story]));
 const fileOf = (r: PlacementRow): Story => {
   const story = fileBySlug.get(r.slug);
   if (!story) throw new Error(`no story file for ${r.slug}`);
@@ -177,6 +182,12 @@ const homeKey = (story: Pick<Story, 'recommendedStage' | 'theme'>): string => ce
 const pillarOf = (tag: string): Pillar => tag.charAt(0) as Pillar;
 
 describe('placement table (F-STORY-005 §3.3) against the story files', () => {
+  it('leaves out only stories added after the table, each with its addedIn stamp and topic tags', () => {
+    const later = allStoryFiles.filter((story) => story.addedIn !== undefined);
+    expect(later.map(slugOf)).toEqual(['eongan-letters', 'hangul-name']);
+    for (const story of later) expect(story.topicTags?.length, story.id).toBeGreaterThan(0);
+  });
+
   it('has a row for every story file and a file for every row, each id once', () => {
     expect(PLACEMENT).toHaveLength(24);
     expect(new Set(PLACEMENT.map((r) => r.slug)).size).toBe(24);
@@ -321,7 +332,7 @@ describe('pillar tags (F-STORY-005 §3.8)', () => {
 
 describe('home cells over the bundle', () => {
   it('bundles every non-draft story file, each equal to its file on the fields placement reads', () => {
-    const published = storyFiles.filter((story) => story.state !== 'draft');
+    const published = allStoryFiles.filter((story) => story.state !== 'draft');
     expect(published.length).toBeGreaterThan(0);
     expect(storiesAll.map((story) => story.id).sort()).toEqual(published.map((story) => story.id).sort());
     const placementFields = (story: Story) => ({

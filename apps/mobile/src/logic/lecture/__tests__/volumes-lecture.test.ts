@@ -53,8 +53,11 @@ describe('the presenter keeps and offers a Volume 2 (row CM-40)', () => {
     const on = keys(true) ?? [];
     expect(on.indexOf(V2)).toBe(on.indexOf('episode:stage2-nature') + 1);
     expect(keys(false)).not.toContain(V2);
-    // The shipped catalogue holds no Volume 2, so the presenter's chooser is unchanged.
-    expect(presenterChooserGroups('en', { consonants: 'C', vowels: 'V' }, { volumes: true }).flatMap((g) => g.rows.map((r) => r.key)).some((k) => k.endsWith('-v2'))).toBe(false);
+    // The shipped catalogue's only Volume 2 is the Letters book 2 (row CM-46): listed after its cell with volumes on, never off.
+    const shipped = (volumes: boolean) => presenterChooserGroups('en', { consonants: 'C', vowels: 'V' }, { volumes }).flatMap((g) => g.rows.map((r) => r.key));
+    expect(shipped(true).filter((k) => k.endsWith('-v2'))).toEqual(['episode:stage5-letters-v2']);
+    expect(shipped(true).indexOf('episode:stage5-letters-v2')).toBe(shipped(true).indexOf('episode:stage5-letters') + 1);
+    expect(shipped(false).some((k) => k.endsWith('-v2'))).toBe(false);
   });
 
   it('a deck with a Volume 2 block survives its link, and a presenter without that episode skips it (old-presenter path)', () => {

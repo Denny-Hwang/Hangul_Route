@@ -75,7 +75,9 @@ describe('gridEpisodes / shelfEpisodes', () => {
 
   it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    // A later volume's quests are in questsAll but count nowhere (F-CURR-002 row CM-40; the Letters book 2, row CM-46).
+    const laterVolumeQuestIds = new Set(volumeEpisodes.flatMap((e) => e.questIds));
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q) && !laterVolumeQuestIds.has(q.id));
     expect(handWritten.length).toBeGreaterThan(0);
     for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
   });
@@ -103,10 +105,10 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); no Volume 2 ships yet', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); the Letters book 2 (row CM-46) is the first Volume 2', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes).toEqual([]);
-    expect(episodesWithVolumes).toEqual(episodesAll);
+    expect(volumeEpisodes.map((e) => e.id)).toEqual(['episode:stage5-letters-v2']);
+    expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
   });
 
   it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {
@@ -150,7 +152,7 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
 
   it('builds the bundle as hand-written, then shelf stories, then previews of unclaimed cells', () => {
     expect(episodesAll).toEqual([...handWrittenEpisodes, ...storyEpisodes, ...previewEpisodesFor(handWrittenEpisodes)]);
-    for (const b of bookEpisodes) expect(handWrittenEpisodes).toContain(b);
+    for (const b of bookEpisodes) expect((b.volume ?? 1) === 1 ? handWrittenEpisodes : volumeEpisodes).toContain(b);
   });
 
   it('keeps every episode id unique', () => {
@@ -158,15 +160,17 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('ships the five Stage 5 books (PR 5.6), each claiming its placeholder cell', () => {
+  it('ships the five Stage 5 books (PR 5.6), each claiming its placeholder cell, and the Letters book 2 (row CM-46)', () => {
     expect(bookEpisodes.map((e) => e.id)).toEqual([
       'episode:stage5-letters',
+      'episode:stage5-letters-v2',
       'episode:stage5-life',
       'episode:stage5-rites',
       'episode:stage5-nature',
       'episode:stage5-crafts',
     ]);
     expect(cellsOverCapacity(episodesAll)).toEqual([]);
+    expect(cellsOverCapacity(episodesWithVolumes)).toEqual([]);
   });
 });
 

@@ -139,13 +139,15 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108);
+    // + the 8 read quests of the Letters cell's book 2 (F-CURR-002 row CM-46), a later volume.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(116);
   });
 
-  it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
-    expect(CATALOG.stories).toHaveLength(24);
-    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(112);
-    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(24);
+  // F-CURR-002 row CM-46 adds the two Letters book 2 tales (5 minutes each).
+  it('has 26 stories adding up to 122 minutes, each with a listen quest on its shelf episode', () => {
+    expect(CATALOG.stories).toHaveLength(26);
+    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(122);
+    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(26);
     for (const story of CATALOG.stories) {
       const slug = story.id.slice('story:'.length);
       expect(story.questId).toBe(`quest:story-${slug}-listen`);
@@ -158,8 +160,9 @@ describe('the shipped catalogue data', () => {
     }
   });
 
-  it('numbers the stories 1 to 24 and marks the six free samplers and the three anchors', () => {
-    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 24 }, (_, i) => i + 1));
+  it('numbers the stories 1 to 26 (the CM-46 tales after the frozen 24, by addedIn and slug) and marks the six free samplers and the three anchors', () => {
+    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 26 }, (_, i) => i + 1));
+    expect(CATALOG.stories.slice(24).map((s) => s.id)).toEqual(['story:eongan-letters', 'story:hangul-name']);
     expect(CATALOG.stories.filter((s) => s.sampler).map((s) => s.id)).toEqual([
       'story:sejong-new-letters',
       'story:hangeul-day',
@@ -176,9 +179,9 @@ describe('the shipped catalogue data', () => {
     ]);
   });
 
-  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9)', () => {
-    expect(CATALOG.stories).toHaveLength(24);
-    expect(CATALOG.stories.every((s) => s.status === 'ready')).toBe(true);
+  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9); the CM-46 tales wait for theirs', () => {
+    expect(CATALOG.stories).toHaveLength(26);
+    expect(CATALOG.stories.filter((s) => s.status !== 'ready').map((s) => s.id)).toEqual(['story:eongan-letters', 'story:hangul-name']);
   });
 
   it('has the 12 launch topics in order, the first four free, none with a quest yet', () => {
@@ -547,10 +550,19 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q1',
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
+      // F-CURR-002 row CM-46: the Letters cell's book 2, a later volume after every first volume.
+      'quest:story-tripitaka-koreana-read',
+      'quest:story-jikji-metal-type-read',
+      'quest:story-sillok-royal-historians-read',
+      'quest:story-sillok-mountain-archives-read',
+      'quest:story-nanjung-ilgi-read',
+      'quest:story-seungjeongwon-ilgi-every-day-read',
+      'quest:story-ilseongnok-daily-reflection-read',
+      'quest:story-joseon-records-today-read',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);
-    expect(stories).toHaveLength(24);
+    expect(stories).toHaveLength(26);
     expect(stories.map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 
