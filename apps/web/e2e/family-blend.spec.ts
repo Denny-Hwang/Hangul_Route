@@ -16,7 +16,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
  *   ROUTE_BLEND_E2E=1 pnpm --filter @hangul-route/web exec playwright test family-blend.spec
  *
  * Class days and practice days are on by default since BL-10, so the export needs no blend setting. No CI lane builds
- * this export (a workflow change, outside the BL rows).
+ * this export yet: BL-10's row defers its flag-on lane to issue #990 (a workflow change), so each PR runs it locally.
  */
 test.skip(process.env.ROUTE_BLEND_E2E !== '1', 'needs the export built against the mocked API (ROUTE_BLEND_E2E=1)');
 

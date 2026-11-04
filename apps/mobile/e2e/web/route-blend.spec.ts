@@ -28,10 +28,12 @@ import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
  * practice 3 times a week (10 min, Wednesday, Friday and Sunday), overlap, 4 weeks from Monday 2026-11-02, so every
  * item, `lectureDate`, Refresh date and `sessionsPerWeek` is what a published plan carries.
  *
- * - **An older app (assumption b).** The device copy is the plan as an app built before BL-W keeps it: parsed with the
- *   schema frozen at cf7a4e483 (no `lectureDate`, no `meta.refresh`, no `params.blend`; the Worker test
- *   `inbox-blend.test.ts` freezes the same one). Every practice item lands on its date, the weekly goal is 4 days from
- *   `sessionsPerWeek`, and none of the blended words draw (no class day is known to it).
+ * - **A plan as an older app keeps it (assumption b).** The blended plan parses with the schema frozen at cf7a4e483
+ *   (no `lectureDate`, no `meta.refresh`, no `params.blend`; the Worker test `inbox-blend.test.ts` freezes the same one),
+ *   which is the older app's own check. The stripped copy is then seeded into THIS app: every practice item lands on
+ *   its date, the weekly goal is 4 days from `sessionsPerWeek`, and none of the blended words draw. That shows the
+ *   stripped plan still carries every date and the goal; the older app's own derivation is not run here (it is
+ *   unchanged code, covered by the frozen-schema parse above and by `inbox-blend.test.ts`).
  * - **This app.** On the class day "Class today." and the Route line; the From class pill with the class glyph and its
  *   label "From class. You met this in class."; on a practice day with its lessons done, Refresh opens the review.
  * - **The own plan rests** while the class plan has practice days: Profile reads the resting line with See it, and its
@@ -43,6 +45,14 @@ import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
  */
 
 test.use({ timezoneId: 'UTC' });
+
+/**
+ * A kill-switch build (`EXPO_PUBLIC_ROUTE_BLEND_ENABLED=false`, run with `E2E_ROUTE_BLEND=0`) draws none of the blended
+ * views, so the tests that look at them skip; the plan's derivation is not flagged (section 14), so the older-app copy,
+ * the own plan resting out of sight and the weekly goal still run there.
+ */
+const KILL_SWITCH = process.env.E2E_ROUTE_BLEND === '0';
+const KILL_SWITCH_SKIP = 'the kill-switch build (EXPO_PUBLIC_ROUTE_BLEND_ENABLED=false) draws none of this';
 
 const en = getMessages('en');
 const words = en.learner.route.blend;
@@ -185,8 +195,8 @@ const noBadWords = async (page: Page): Promise<void> => {
   expect(text).not.toMatch(/%/);
 };
 
-test.describe('an older app (assumption b)', () => {
-  test('parses the blended plan, keeps every practice item on its date, and reads a weekly goal of 4 days', async ({ page }) => {
+test.describe('a plan as an older app keeps it (assumption b)', () => {
+  test('the frozen schema parses the blended plan; this app on that stripped copy keeps every practice item on its date and a weekly goal of 4 days', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     const plan = blendedPlan();
     const old = OldInboxPlanSchema.parse(plan);
@@ -233,6 +243,7 @@ for (const size of [
     });
 
     test('the class day: Class today, the Route line, the From class pill with its glyph and label', async ({ page }) => {
+      test.skip(KILL_SWITCH, KILL_SWITCH_SKIP);
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(String(e)));
       await learner(page, { now: TUESDAY });
@@ -259,6 +270,7 @@ for (const size of [
     });
 
     test("a practice day with its lessons done: Refresh takes card (2) and opens the review", async ({ page }) => {
+      test.skip(KILL_SWITCH, KILL_SWITCH_SKIP);
       // Friday: Wednesday's and Friday's lessons are done, and Friday is a Refresh date of the plan.
       const plan = blendedPlan();
       expect(plan.meta?.refresh?.some((entry) => entry.date === '2026-11-06')).toBe(true);
@@ -272,15 +284,28 @@ for (const size of [
       await shot(page, `route-blend-launch-refresh-${size.width}`);
       await refresh.click();
       await expect(page.getByTestId('home-refresh')).toBeHidden();
+      // The review itself is on screen, as the plan's Refresh step says (`refreshRouteOf`): the Daily Review's rounds,
+      // its All refreshed page, or the Cell Check.
+      const review = page
+        .getByTestId('daily-review-dots')
+        .or(page.getByRole('heading', { name: en.learner.dailyReview.allRefreshed.title }))
+        .or(page.getByTestId('cell-check-title'));
+      await expect(review.first()).toBeVisible();
+      await shot(page, `route-blend-launch-refresh-opened-${size.width}`);
     });
 
     test('the own weekly plan rests: the resting line with See it, and its lessons wait out of sight', async ({ page }) => {
       const profileId = await learner(page, { now: TUESDAY, selfRoute: ownPlan() });
       await page.getByRole('button', { name: en.a11y.profileEntry }).click();
       const resting = page.getByTestId('profile-plan-resting');
-      await resting.scrollIntoViewIfNeeded();
-      await expect(resting).toContainText(words.ownResting);
-      await expect(page.getByTestId('profile-plan-see-it')).toBeVisible();
+      if (KILL_SWITCH) {
+        // The resting line is a blended view; the rest itself (below) is derivation and still holds.
+        await expect(resting).toHaveCount(0);
+      } else {
+        await resting.scrollIntoViewIfNeeded();
+        await expect(resting).toContainText(words.ownResting);
+        await expect(page.getByTestId('profile-plan-see-it')).toBeVisible();
+      }
       await noBadWords(page);
       await expectNoSidewaysScroll(page, 'Profile, own plan resting');
       await shot(page, `route-blend-launch-resting-${size.width}`);
@@ -301,7 +326,8 @@ for (const size of [
   });
 }
 
-test('320 at the Largest text size: Class today, the Route line and Homework fit, nothing clipped or sideways', async ({ page }) => {
+test('320 at the Largest text size: Class today and the Route line fit, nothing clipped or sideways', async ({ page }) => {
+  test.skip(KILL_SWITCH, KILL_SWITCH_SKIP);
   await page.setViewportSize({ width: 320, height: 568 });
   await learner(page, { now: TUESDAY, largest: true });
   await expect(page.getByTestId('home-class-today')).toHaveText(words.classToday);
@@ -316,6 +342,7 @@ test('320 at the Largest text size: Class today, the Route line and Homework fit
 
 for (const locale of ['es', 'ko'] as const) {
   test(`${locale} at 320: Class today, the Route line and the resting line in ${locale}`, async ({ page }) => {
+    test.skip(KILL_SWITCH, KILL_SWITCH_SKIP);
     await page.setViewportSize({ width: 320, height: 568 });
     const m = getMessages(locale);
     await learner(page, { now: TUESDAY, locale, selfRoute: ownPlan() });
