@@ -58,7 +58,7 @@ import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
 import { passGate } from '../../store/gate-telemetry';
 import { episodeIntro } from '../../logic/episode/intro';
-import { useLaterNeedsInternet } from './use-later-offline';
+import { laterTaleNeedsInternet, useLaterNeedsInternet } from './use-later-offline';
 import { storyEpisodeEntries } from '../../logic/story/story-episode';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import { lessonRowCount, type CellStoriesSource } from '../../logic/story/cell-stories';
@@ -264,6 +264,7 @@ export function EpisodeDetailView({
         onOpenCellStories={(stage, theme) => onOpenCellStories(stage, theme, 'story-pill')}
         cellStoryCount={cellStoryCount}
         onOpenCellStoriesRow={() => onOpenCellStories(episode.stage, episode.theme, 'lesson-row')}
+        taleNeedsInternet={needsInternet ? laterTaleNeedsInternet : undefined}
         volumeTabs={
           <>
             <VolumeTabs volumes={volumes} currentId={episode.id} onOpenVolume={onOpenVolume} />

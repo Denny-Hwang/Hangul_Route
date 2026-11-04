@@ -1,5 +1,5 @@
 import type { UiLocale } from '@hangul-route/i18n';
-import { Body, Screen } from '@hangul-route/design-system';
+import { Body, Button, Pip, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import { useEffect, useState, useSyncExternalStore, type ComponentType, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { lessonContent } from '../content/lessons';
@@ -9,6 +9,7 @@ import { isStoryNewBuildError, type StoryStore } from '../logic/story/story-chun
 import { storyContent } from '../content/stories';
 import { localePacks } from '../content/locale-packs';
 import { contentScope, type ContentScope } from '../content/later-content';
+import { isLaterCellId } from '../logic/offline/offline-packs';
 import { abandonPendingChunk } from '../platform/lesson-chunk-abandon';
 import { isNewBuildAnswer, reloadForNewBuild } from '../platform/new-build-reload';
 import { activeLocale, useLocaleStore } from '../store/locale-store';
@@ -22,7 +23,10 @@ import { OopsScreen } from './system/OopsScreen';
  *   (`LessonWaiting`, the way back) until the quest's chunk is in (the service worker answers from
  *   its precache, so this is a frame or two). A chunk that cannot load goes to the app's crash
  *   screen, whose Try again returns to Home, where opening the lesson loads it again; a chunk of a newer
- *   build (what it held, or what its URL answers when asked again) reloads the page once instead;
+ *   build (what it held, or what its URL answers when asked again) reloads the page once instead. A later
+ *   volume's chunk (row CM-5B) that cannot load and is not a newer build (offline, or a network that does not
+ *   answer) is the calm `LaterNeedsInternet` state instead, whichever way the quest was opened
+ *   (`useLessonQuestState`);
  * - `useLessonContentVersion`: the screens that count over every quest (the skills of My Route and
  *   the grown-up reports) load every chunk and recompute as each arrives (a count only fills);
  * - `withLessonContent`: the grown-up roots (All lessons, the presenter), which read the whole
@@ -57,7 +61,22 @@ export interface LessonContentDeps {
   abandon?: (bundleName: string) => void;
   /** A root chunk that has not loaded after this many ms fails (a hung request); 15 s when omitted. */
   rootTimeoutMs?: number;
+  /**
+   * A later volume's cell (row CM-5B: not precached): its chunk failing for any reason but a newer build means it
+   * needs the internet the first time, never the crash screen. None when omitted.
+   */
+  isLaterCell?: (cellId: string) => boolean;
 }
+
+/**
+ * A chunk a screen plays from (row CM-5B): `ready`; `waiting` while it loads; `needs-internet` when it is a later
+ * volume's chunk that is not on the device and the network did not give it (the screen says so calmly, with a way back).
+ */
+export type ChunkState = 'ready' | 'waiting' | 'needs-internet';
+
+/** Two chunks a screen needs (a quest's cell and its story): needs-internet if either does, ready once both are. */
+export const combinedChunkState = (a: ChunkState, b: ChunkState): ChunkState =>
+  a === 'needs-internet' || b === 'needs-internet' ? 'needs-internet' : a === 'ready' && b === 'ready' ? 'ready' : 'waiting';
 
 /**
  * A grown-up root that is a chunk of its own (F-CURR-002 §10): the presenter and All lessons are not part of the
@@ -110,6 +129,36 @@ export function LessonWaiting(): ReactElement {
   );
 }
 
+/**
+ * A later volume (a cell's Volume 2, a tale only a book 2 holds) that could not load (row CM-5B): offline, or a network
+ * that does not answer, and not saved on this device. The same calm line as its lesson page, and a way back; it opens
+ * once the internet is back. Never the crash screen, whichever way it was opened (a homework, a note, a review, the shelf).
+ */
+export function LaterNeedsInternet({ onBack }: { onBack?: (() => void) | undefined }): ReactElement {
+  const m = useMessages();
+  return (
+    <Screen>
+      <View
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg }}
+        accessibilityLiveRegion="polite"
+        testID="later-needs-internet"
+      >
+        <Pip state="later" context="stage" />
+        <Spacer size="md" />
+        <Body tone="secondary" align="center">
+          {m.learner.episode.later.line}
+        </Body>
+        {onBack === undefined ? null : (
+          <>
+            <Spacer size="lg" />
+            <Button label={m.common.buttons.back} tone="secondary" size="md" onPress={onBack} testID="later-needs-internet-back" />
+          </>
+        )}
+      </View>
+    </Screen>
+  );
+}
+
 export function lessonContentBindings({
   store,
   locale,
@@ -120,16 +169,20 @@ export function lessonContentBindings({
   abandon,
   rootTimeoutMs = 15_000,
   scope,
+  isLaterCell = () => false,
 }: LessonContentDeps) {
   const subscribe = store.subscribe;
   /** True when a failed load means a newer build on the host: what the chunk said, else what its URL answers now. */
   const isNewer = async (error: unknown): Promise<boolean> => isNewBuildError(error) || (await newBuildAnswer(error).catch(() => false));
 
-  /** True once the quest's chunk is in (at once for a quest that is not a lesson quest); throws a failed load. */
-  function useLessonQuestReady(questId: string): boolean {
+  /**
+   * The quest's chunk: `ready` at once for a quest that is not a lesson quest; a later volume's chunk that cannot load
+   * (not a newer build) is `needs-internet`; any other failed load throws (the crash screen).
+   */
+  function useLessonQuestState(questId: string): ChunkState {
     const ready = useSyncExternalStore(subscribe, () => store.isQuestReady(questId));
     // Keyed by the quest, so a host that reuses the screen for another quest never shows the old one's failure.
-    const [failed, setFailed] = useState<{ questId: string; error: unknown } | null>(null);
+    const [failed, setFailed] = useState<{ questId: string; error: unknown; later: boolean } | null>(null);
     useEffect(() => {
       if (ready) return undefined;
       let live = true;
@@ -139,24 +192,36 @@ export function lessonContentBindings({
           if (!live) return;
           const newer = await isNewer(error);
           if (!live || (newer && reload())) return;
-          setFailed({ questId, error });
+          setFailed({ questId, error, later: !newer && isLaterCell(cell) });
         });
       }
       return () => {
         live = false;
       };
     }, [questId, ready]);
-    if (!ready && failed !== null && failed.questId === questId) throw failed.error;
-    return ready;
+    if (ready) return 'ready';
+    if (failed === null || failed.questId !== questId) return 'waiting';
+    if (failed.later) return 'needs-internet';
+    throw failed.error;
   }
 
-  /** Loads every lesson chunk; the number changes as each arrives, for the memos that count over every quest. */
-  function useLessonContentVersion(): number {
+  /** True once the quest's chunk is in (at once for a quest that is not a lesson quest); throws a failed load. */
+  function useLessonQuestReady(questId: string): boolean {
+    return useLessonQuestState(questId) === 'ready';
+  }
+
+  /**
+   * Loads every lesson chunk; the number changes as each arrives, for the memos that count over every quest. With
+   * `laterWhenOnline` (the grown-up reports), every later volume loads while online too, so a report counts the same on
+   * any device; without it (the learner's own screens) a later volume counts once it is on the device, so a learner who
+   * never opens a Volume 2 never downloads one (row CM-5B).
+   */
+  function useLessonContentVersion(laterWhenOnline = false): number {
     const version = useSyncExternalStore(subscribe, store.version);
     useEffect(() => {
       // A chunk that cannot load leaves its quests out of the counts; the next screen visit tries again. A later
       // volume counts once it is on the device (row CM-5B): the learner's own Volume 2 quests were cached when played.
-      const cells = scope === undefined ? null : [...scope.core.cells, ...scope.later(false).cells];
+      const cells = scope === undefined ? null : [...scope.core.cells, ...scope.later(laterWhenOnline).cells];
       (cells === null ? store.ensureAll() : store.ensureCells(cells)).catch(() => undefined);
     }, []);
     return version;
@@ -246,10 +311,10 @@ export function lessonContentBindings({
     return LessonContentRoot;
   }
 
-  return { useLessonQuestReady, useLessonContentVersion, withLessonContent };
+  return { useLessonQuestState, useLessonQuestReady, useLessonContentVersion, withLessonContent };
 }
 
-export const { useLessonQuestReady, useLessonContentVersion, withLessonContent } = lessonContentBindings({
+export const { useLessonQuestState, useLessonQuestReady, useLessonContentVersion, withLessonContent } = lessonContentBindings({
   store: lessonContent,
   locale: () => activeLocale(useLocaleStore.getState()),
   reloadForNewBuild: () => reloadForNewBuild(),
@@ -260,4 +325,5 @@ export const { useLessonQuestReady, useLessonContentVersion, withLessonContent }
     abandonPendingChunk(bundleName);
   },
   scope: contentScope(),
+  isLaterCell: isLaterCellId,
 });

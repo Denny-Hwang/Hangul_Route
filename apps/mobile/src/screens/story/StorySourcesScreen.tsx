@@ -24,8 +24,8 @@ import { copyText } from '../../platform/pwa';
 import { track } from '../../platform/telemetry';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
 import { endGrownUpSessionAfterUse } from '../../store/grown-up-session';
-import { LessonWaiting } from '../lesson-content';
-import { useStoryReady } from '../story-content';
+import { LaterNeedsInternet, LessonWaiting } from '../lesson-content';
+import { useStoryState } from '../story-content';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { passGate } from '../../store/gate-telemetry';
 import { CitationText, CorrectionsList, Disclosure, FactCard, SeeFactRow, SourcesHeader, SourcesHeading } from './SourcesParts';
@@ -51,7 +51,14 @@ type Props = {
 export function StorySourcesScreen(props: Props): ReactElement {
   // The facts and their sources come from the story's chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
   // only its waiting state (the way back, then a calm status line if it takes longer).
-  return useStoryReady(props.route.params.storyId) ? <StorySourcesBody {...props} /> : <LessonWaiting />;
+  // A tale only a book 2 holds that is not on the device and cannot load (row CM-5B) says so calmly, with a way back.
+  const state = useStoryState(props.route.params.storyId);
+  if (state === 'needs-internet') {
+    const nav = props.navigation;
+    const back = props.onBack ?? (nav === undefined ? undefined : () => backOrHome(nav, () => nav.navigate('Main', { screen: 'Home' })));
+    return <LaterNeedsInternet onBack={back} />;
+  }
+  return state === 'ready' ? <StorySourcesBody {...props} /> : <LessonWaiting />;
 }
 
 function StorySourcesBody({ route, navigation, ...exitProps }: Props): ReactElement {

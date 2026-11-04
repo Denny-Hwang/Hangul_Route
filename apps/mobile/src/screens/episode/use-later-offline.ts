@@ -22,8 +22,14 @@ export function useLaterNeedsInternet(episode: Pick<Episode, 'id' | 'volume' | '
     void offlinePacks.getState().init();
   }, []);
   if (episode === undefined || online || (episode.volume ?? 1) < 2) return false;
-  if (episode.format === 'story') {
-    return !(episode.storyIds ?? []).every((id) => storyContent.isStoryReady(id) || storyOpensOffline(id));
-  }
+  if (episode.format === 'story') return (episode.storyIds ?? []).some(laterTaleNeedsInternet);
   return !(lessonContent.isCellReady(episode.id) || cellOpensOffline(episode.id));
+}
+
+/**
+ * One tale of a book 2 page that cannot open offline (row CM-5B): neither loaded in this session nor on the device. Read
+ * while `useLaterNeedsInternet` says the page needs the internet (that hook subscribes to the saves and the chunks).
+ */
+export function laterTaleNeedsInternet(storyId: string): boolean {
+  return !(storyContent.isStoryReady(storyId) || storyOpensOffline(storyId));
 }
