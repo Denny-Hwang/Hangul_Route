@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { CATALOG, generateCurriculum, toMeta } from '@hangul-route/content-schema';
 import { formatDate, getMessages } from '@hangul-route/i18n';
@@ -250,11 +252,25 @@ test.describe('the stage list page (LR-8)', () => {
  */
 const ENGLISH_ONLY_TITLES = /\b(Words|Sentences|Dialogue|Stories|Real-use|Self-expression)\b/;
 
+/** The titles the console shows in `locale`: the learner app's overlay titles (`content/i18n/<locale>/stages.json`), English as shipped. */
+const ENGLISH_TITLES = ['Hangul', 'Words', 'Sentences', 'Dialogue', 'Stories', 'Real-use', 'Self-expression'] as const;
+function stageTitles(locale: 'ko' | 'es' | 'en'): Record<'stage1' | 'stage2' | 'stage3' | 'stage4', string> {
+  const overlay =
+    locale === 'en'
+      ? null
+      : (JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'content', 'i18n', locale, 'stages.json'), 'utf8')) as {
+          entries: Record<string, { title: string }>;
+        });
+  const title = (n: number): string => overlay?.entries[`stage:stage${n}`]?.title ?? ENGLISH_TITLES[n - 1]!;
+  return { stage1: title(1), stage2: title(2), stage3: title(3), stage4: title(4) };
+}
+
 for (const locale of ['ko', 'es', 'en'] as const) {
   test.describe(`stage titles in ${locale} (GX-9)`, () => {
     test.skip(!FULL, 'needs an export built with the Learning Route on (LEARNING_ROUTE_E2E=1)');
     test.use({ locale: locale === 'ko' ? 'ko-KR' : locale === 'es' ? 'es-US' : 'en-US' });
     const m = getMessages(locale).console;
+    const titles = stageTitles(locale);
 
     for (const width of [360, 1280]) {
       test(`class at ${width}: the card and the stage list name each stage in ${locale}`, async ({ page }) => {
@@ -264,11 +280,11 @@ for (const locale of ['ko', 'es', 'en'] as const) {
 
         await expect(page.getByRole('heading', { level: 1 })).toHaveText(m.learningRoute.title('Mina'));
         const card = page.getByRole('region', { name: m.learningRoute.section, exact: true });
-        await expect(card.getByText(m.learningRoute.now('Mina', 1, m.stageTitles.stage1), { exact: true })).toBeVisible();
-        await expect(card.getByText(m.learningRoute.planReaches.class(2, m.stageTitles.stage2), { exact: true })).toBeVisible();
+        await expect(card.getByText(m.learningRoute.now('Mina', 1, titles.stage1), { exact: true })).toBeVisible();
+        await expect(card.getByText(m.learningRoute.planReaches.class(2, titles.stage2), { exact: true })).toBeVisible();
 
         const list = page.locator('ol');
-        for (const stage of ['stage1', 'stage2', 'stage3', 'stage4'] as const) await expect(list).toContainText(m.stageTitles[stage]);
+        for (const stage of ['stage1', 'stage2', 'stage3', 'stage4'] as const) await expect(list).toContainText(titles[stage]);
         if (locale !== 'en') await expect(page.locator('main')).not.toContainText(ENGLISH_ONLY_TITLES);
 
         await noSidewaysScroll(page);
