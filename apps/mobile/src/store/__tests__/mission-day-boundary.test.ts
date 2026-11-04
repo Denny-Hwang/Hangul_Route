@@ -138,7 +138,9 @@ describe('Home and the Learning Route page read today from useToday (F-ROUTE-001
 
   it('Home keys the homework count and the route input by useToday', () => {
     expect(home).toMatch(/const\s+today\s*=\s*useToday\(\s*\)/);
-    expect(home).toMatch(/dueTodayCount\(\s*snap\?\.homework\s*,\s*today\s*\)/);
+    // The shown homework leaves a resting own plan's items out (AMENDMENTS-ROUTE-CLASS-BLEND section 8), keyed by the same day.
+    expect(home).toMatch(/dueTodayCount\(\s*homework\s*,\s*today\s*\)/);
+    expect(memoDeps(home, 'const homework = useMemo(')).toContain('today');
     expect(home).not.toMatch(/dayKey\(\s*new Date\(\)/);
     expect(memoDeps(home, 'const routeInput = useMemo(')).toContain('today');
   });

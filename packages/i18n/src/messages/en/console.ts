@@ -1080,14 +1080,108 @@ export const consoleMsgs = {
         }`,
     },
     /**
-     * Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND, `console.curriculum.blend.*`). `lecture`: the
-     * lecture card's lines for a blended plan's class day (section 10.3, row BL-5), in place of the length chips; the
-     * length is changed in the plan, not on the card. `weekday` arrives as a whole weekday in the console language.
+     * Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 19, `console.curriculum.blend.*`; row BL-4):
+     * the wizard's meeting block (section 10.1), the preview header and cycle table (10.2), the readout lines and
+     * controls (10.2, 14), and the blended plan's warnings (6.6). "Class day" and "practice day" are the UI words;
+     * the code word "lecture" is never shown. Counts are scheduled sessions and class totals, never attendance and
+     * never one learner against another. Weekday names arrive in the console language. `lecture`: the lecture card's
+     * lines for a blended plan's class day (section 10.3, row BL-5), in place of the length chips; the length is
+     * changed in the plan, not on the card.
      */
     blend: {
+      meeting: {
+        title: 'How does this class meet?',
+        pickClassDay: 'Pick at least one class day.',
+        maxClassDays: 'A class meets on up to 5 days a week.',
+      },
+      classDays: 'Class',
+      classLength: 'Class length',
+      practice: {
+        row: 'Learners also practice on their own',
+        /** The count select's accessible name. */
+        days: 'times a week',
+        /** The minutes select's accessible name. */
+        minutes: 'min each time',
+        /** The practice row in the locale's word order; `n` and `m` stand where the two selects go. */
+        inline: (n: string, m: string) => `${n} times a week × ${m} min each time`,
+        suggested: (days: string) => `Practice on ${days}`,
+        change: { cta: 'Change days' },
+        everyDay: 'Practice every day',
+        afterClass: (weekdays: string) => `also after class on ${weekdays}`,
+        daysLabel: 'Practice days',
+        pickDays: (n: number) => plural('en', n, { one: 'Pick 1 practice day, or change the number above.', other: `Pick ${n} practice days, or change the number above.` }),
+      },
+      mode: {
+        title: 'How do class and practice fit together?',
+        overlap: 'Practice what class taught',
+        overlapHint: "Each class's lessons come back on the practice days after it.",
+        split: 'Class and practice cover different lessons',
+        splitHint: 'Practice days also bring new lessons from the groups class has started. Covers more, faster.',
+      },
+      keepAverage: 'Keep the average when there are days off',
+      classDayOff: 'Only the class is off',
+      preview: {
+        everyDay: 'on all 7 days',
+        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, everyDay: string | null) =>
+          `About ${total} sessions a week${everyDay === null ? '' : ` ${everyDay}`}: ${plural('en', classDays, { one: `${classDays} class day`, other: `${classDays} class days` })} (${classMin} min) and ${plural('en', practiceDays, { one: `${practiceDays} practice day`, other: `${practiceDays} practice days` })} (${practiceMin} min each, plus about 2-3 minutes of Daily Review).`,
+        perDay: (classItems: number, practiceItems: number) =>
+          `Class days teach about ${plural('en', classItems, { one: `${classItems} lesson`, other: `${classItems} lessons` })}; practice days play about ${practiceItems}.`,
+        average: (sessions: number, teaching: string, calendar: string | null) =>
+          `${plural('en', sessions, { one: '1 session', other: `${sessions} sessions` })} in all, ${teaching} a teaching week${calendar === null ? '' : ` (${calendar} over the whole calendar)`}.`,
+        start: (date: string) => `Starts with the first class on ${date}.`,
+        endsOn: (date: string) => `To keep the average, the route runs until ${date}.`,
+        refresh: 'Refresh',
+        classCol: 'Class',
+        practiceCol: 'Practice',
+        practiceOnlyTag: 'practice only',
+        classReview: 'Review together',
+        noClass: 'No class this day',
+        tableLabel: 'Class days and practice days of the route',
+      },
+      readout: {
+        classDay: (date: string) => `Class · ${date}`,
+        classDays: (n: number, total: number) => `Class days so far: ${n} of ${total}`,
+        move: { cta: 'Move this class day' },
+        moveAsk: (date: string) =>
+          `Move the class on ${date}? Its lessons and every later class day's lessons move to the following class days. What is done stays done.`,
+        moveConfirm: { cta: 'Move it' },
+        moved: 'Moved. Devices pick up the new dates on their next sync.',
+        addPractice: { cta: 'Add practice days to this plan' },
+        stopPractice: { cta: 'Stop practice days' },
+        stopAsk: 'Stop practice days? From today the plan has class days only. What is done stays done.',
+        stopConfirm: { cta: 'Stop them' },
+        save: { cta: 'Save practice days' },
+        changed: 'Saved. Devices pick up the new days on their next sync.',
+        failed: "Couldn't change the plan right now. Try again.",
+      },
+      warn: {
+        itemCap: (week: number) => `This plan is full at week ${week}. Choose fewer weeks, or practice what class taught.`,
+        practiceShort: "Practice days can't keep up with what class days could teach, so class days carry less. Add practice days, or make them longer.",
+        classPaced: 'Some class days carry fewer lessons so learners can practice each one soon after.',
+      },
       lecture: {
         classDay: (weekday: string, n: number) => plural('en', n, { one: `Class day: ${weekday} · ${n} lesson`, other: `Class day: ${weekday} · ${n} lessons` }),
         classLength: (minutes: number) => `Class length: ${minutes} min`,
+      },
+      /**
+       * The family's child card (section 11 and BL-OD-6, row BL-9; wireframe design/wireframes/parent/route-class-blend.md
+       * P1): GX-4's class line with how the class meets appended (the class's own days, never the child's), and, while a
+       * family weekly plan reaches the child, the class's practice days with **Pause** / **Resume** for that plan. `{days}`
+       * and `{weekdays}` arrive as whole weekday names in the console language, already joined.
+       */
+      family: {
+        /** Whole weekday names as one phrase for a weekly habit, in the order given: "Wednesday, Friday, and Sunday". */
+        weekdayList: (names: string[]) => (names.length <= 2 ? names.join(' and ') : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1] ?? ''}`),
+        classLine: (className: string, days: string, n: number) =>
+          plural('en', n, { one: `In: ${className} · class on ${days}, practice ${n} time a week`, other: `In: ${className} · class on ${days}, practice ${n} times a week` }),
+        classHasPractice: (name: string, weekdays: string) => `${name}'s class has practice days on ${weekdays}.`,
+        pause: 'Pause the family weekly plan while class runs',
+        resume: 'Resume the family weekly plan',
+        failed: "Couldn't change the family weekly plan right now. Try again.",
+      },
+      /** The grown-up report's practice-week line (section 11, BL-OD-11, row BL-9): fills only, no denominator, never drawn at 0. */
+      report: {
+        practiceWeek: (n: number) => plural('en', n, { one: `Practiced on ${n} day this week`, other: `Practiced on ${n} days this week` }),
       },
     },
   },

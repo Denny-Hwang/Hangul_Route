@@ -2,7 +2,7 @@ import { formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceKind } from '@hangul-route/content-schema';
 import type { RosterLearner } from '../api';
-import { addDays, currentPlan, latestPublished, moveItem, memberKind, oneExplicitPerDay, planErrorText, planEveryone, planReaches, planSummary, planReadout, planStatusLabel, readoutLine, rosterPlan, spaceKey, spreadDates } from '../plans';
+import { addDays, classPracticeTotals, currentPlan, latestPublished, moveItem, memberKind, oneExplicitPerDay, planErrorText, planEveryone, planReaches, planSummary, planReadout, planStatusLabel, readoutLine, rosterPlan, spaceKey, spreadDates } from '../plans';
 
 describe('plan helpers (F-PLAN-001 §3.5)', () => {
   it('spreads dates evenly and never twice on one day', () => {
@@ -225,5 +225,13 @@ describe('plan page words (F-I18N-001 PR 10b)', () => {
     expect(readoutLine(row, PSEUDO)).toMatch(bracketed);
     expect(readoutLine({ ...row, state: 'notDelivered' }, PSEUDO)).toMatch(bracketed);
     expect(readoutLine({ ...row, state: 'notStarted' }, PSEUDO)).toMatch(bracketed);
+  });
+});
+
+describe('classPracticeTotals (AMENDMENTS-ROUTE-CLASS-BLEND sections 10.2 and 11, row BL-9)', () => {
+  const r = (state: ReadoutRowT['state'], done: number, total: number): ReadoutRowT => ({ learnerId: `l:${done}:${total}:${state}`, name: 'x', done, total, notReady: 0, state, lastActiveAt: '2026-10-11T08:00:00.000Z' });
+  it('adds what each reached learner has done and has so far; planned counts every learner the plan reaches', () => {
+    expect(classPracticeTotals([r('progress', 3, 5), r('progress', 1, 2), r('notStarted', 0, 10), r('notDelivered', 0, 10)], 10)).toEqual({ done: 4, total: 7, planned: 40 });
+    expect(classPracticeTotals([], 10)).toEqual({ done: 0, total: 0, planned: 0 });
   });
 });

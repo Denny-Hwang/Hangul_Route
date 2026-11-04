@@ -154,3 +154,20 @@ export function moveItem(items: readonly PlanItem[], from: number, to: number): 
   if (moved) out.splice(to, 0, moved);
   return out;
 }
+
+/**
+ * The class aggregate of practice on a readout of a class plan with practice days (AMENDMENTS-ROUTE-CLASS-BLEND
+ * sections 10.2 and 11, row BL-9; wireframe M4 "41 / 54 so far · 234 planned"): the class's total done and scheduled so
+ * far over the learners the plan has reached, and the plan's length for every learner it reaches. Counts only: no
+ * learner is named, sorted or compared; a learner who has not opened the plan adds to `planned` only.
+ */
+export function classPracticeTotals(rows: readonly ReadoutRow[], planned: number): { done: number; total: number; planned: number } {
+  let done = 0;
+  let total = 0;
+  for (const row of rows) {
+    if (row.state !== 'progress') continue;
+    done += row.done;
+    total += row.total;
+  }
+  return { done, total, planned: planned * rows.length };
+}

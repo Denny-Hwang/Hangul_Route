@@ -121,6 +121,35 @@ describe('RouteReadout (section 3.8 step 6)', () => {
   });
 });
 
+describe('RouteReadout: the class practice total of a class plan with practice days (AMENDMENTS-ROUTE-CLASS-BLEND BL-9)', () => {
+  const blended = (): { meta: CurriculumMeta; items: PlanItem[] } => {
+    const { meta, items } = route();
+    const blend = { mode: 'overlap' as const, lecture: { days: ['sun' as const], minutes: 30 as const }, personal: { perWeek: 1, minutes: 10 as const }, classDaysOff: [], keepAverage: false };
+    return { meta: { ...meta, generatorVersion: 2, params: { ...meta.params, blend } }, items };
+  };
+  const rows = [row({ done: 3, total: 5 }), row({ learnerId: 'l:2', name: 'Jun', done: 1, total: 2 }), row({ learnerId: 'l:3', state: 'notStarted', done: 0, total: 9 })];
+
+  it('shows one class total line from the dictionary with the flag on, counts only, no learner named in it', () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    const { meta, items } = blended();
+    const html = readout(meta, items, '2026-10-26', rows);
+    const line = /data-testid="readout-class-practice"[^>]*>([^<]*)</.exec(html)?.[1] ?? '';
+    expect(line).toBe(pseudoText(getMessages('en').console.curriculum.readout.line(4, 7, items.length * 3)));
+    expect(line).not.toContain(inPseudo('Mina'));
+    expect(html).not.toMatch(/%/);
+  });
+
+  it('is not drawn with the flag off, on a class-only route, or with nobody reached', () => {
+    const { meta, items } = blended();
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
+    expect(readout(meta, items, '2026-10-26', rows)).not.toContain('readout-class-practice');
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    const plain = route();
+    expect(readout(plain.meta, plain.items, '2026-10-26', rows)).not.toContain('readout-class-practice');
+    expect(readout(meta, items, '2026-10-26', [])).not.toContain('readout-class-practice');
+  });
+});
+
 describe('PlanSwitcher (section 3.8 step 5)', () => {
   const { meta } = route();
   const plans = [

@@ -696,7 +696,7 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
 /**
  * AMENDMENTS-ROUTE-CLASS-BLEND section 10.3 (row BL-5): Present this plan on a blended plan shows the class day's
  * lessons at the real class length; the Next lesson card draws no length chips, and reads the class day and the class
- * length instead. Needs the lecture e2e export built with `NEXT_PUBLIC_ROUTE_BLEND_ENABLED=1` as well, and
+ * length instead. Class days are on by default since BL-10, so the lecture e2e export needs no blend setting; run with
  * `ROUTE_BLEND_E2E=1`.
  */
 const BLEND = process.env.ROUTE_BLEND_E2E === '1';

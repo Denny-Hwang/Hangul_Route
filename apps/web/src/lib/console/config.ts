@@ -233,13 +233,14 @@ export function pinResetSignInEnabled(env: ConsoleEnv = buildEnv()): boolean {
 
 /**
  * Class days and practice days on the console (AMENDMENTS-ROUTE-CLASS-BLEND section 14, the one definition every BL
- * row shares): the wizard's meeting block, the readout controls and the lecture card's class-day pick (BL-5). On only
- * with `NEXT_PUBLIC_ROUTE_BLEND_ENABLED` set to `'true'` or `'1'` (the `learningRouteEnabled()` parse); off by default
- * until BL-10 flips it after its end-to-end run.
+ * row shares): the wizard's meeting block, the readout controls and the lecture card's class-day pick (BL-5). On by
+ * default since row BL-10 (BL-OD-12: both switches flip after the end-to-end run and the multi-agent review): exactly
+ * `false`, `0`, `off`, `no` or `disabled` (case and spaces ignored) switches it off on a build, the same values as the
+ * app's `parseLectureSwitch`, so one value turns both sides off. Off, no new blended plan can be made; a published one still derives on every device (section 14).
  */
 export function routeBlendEnabled(env: ConsoleEnv = buildEnv()): boolean {
-  const raw = env.NEXT_PUBLIC_ROUTE_BLEND_ENABLED;
-  return raw === 'true' || raw === '1';
+  const value = env.NEXT_PUBLIC_ROUTE_BLEND_ENABLED?.trim().toLowerCase();
+  return !(value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled');
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

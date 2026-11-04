@@ -43,6 +43,8 @@ export interface ResultsTeaser {
   caption: TeaserCaption;
   /** Where `routeNext` found the quest; absent without `route` and on "Try this one again". */
   source?: NextSource;
+  /** `routeNext`'s quest is a lesson met in class (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4); only when true. */
+  fromClass?: true;
 }
 
 export interface ResultsTeaserInput {
@@ -112,7 +114,7 @@ export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefi
     if (!quest) return undefined;
     const caption: TeaserCaption =
       next.source === 'cursor' ? 'nextUp' : input.planBefore && isOffPlan(input.planBefore, questId) ? 'backToPlan' : 'nextInPlan';
-    return teaserOf(quest, next.episodeId, input, { again, caption, source: next.source });
+    return teaserOf(quest, next.episodeId, input, { again, caption, source: next.source, ...(next.fromClass === true ? { fromClass: true as const } : {}) });
   }
   const cursor = {
     snapshot: input.snapshot ?? EMPTY_SNAPSHOT,
@@ -137,7 +139,7 @@ function teaserOf(
   target: Quest,
   episodeId: string,
   input: ResultsTeaserInput,
-  how: { again: boolean; caption: TeaserCaption; source?: NextSource },
+  how: { again: boolean; caption: TeaserCaption; source?: NextSource; fromClass?: true },
 ): ResultsTeaser {
   const local = localizeQuest(target, input.locale ?? 'en', input.overlays);
   return {
@@ -148,6 +150,7 @@ function teaserOf(
     again: how.again,
     caption: how.caption,
     ...(how.source === undefined ? {} : { source: how.source }),
+    ...(how.fromClass === true ? { fromClass: true as const } : {}),
   };
 }
 
@@ -161,9 +164,9 @@ export function teaserCaption(
   return m.results.nextUp.title;
 }
 
-/** `route.next_started { source, surface: 'results' }` when the teaser is the one next; null for "Try this one again". */
-export function teaserNextStartedEvent(profileId: string, teaser: Pick<ResultsTeaser, 'source'>): TelemetryEvent | null {
-  return teaser.source === undefined ? null : nextStartedEvent(profileId, teaser.source, 'results');
+/** `route.next_started { source, surface: 'results', fromClass }` when the teaser is the one next; null for "Try this one again". */
+export function teaserNextStartedEvent(profileId: string, teaser: Pick<ResultsTeaser, 'source' | 'fromClass'>): TelemetryEvent | null {
+  return teaser.source === undefined ? null : nextStartedEvent(profileId, teaser.source, 'results', teaser.fromClass === true);
 }
 
 /** The teaser button's words: "Try this one again" when every game was skipped, else "Play next quest". */

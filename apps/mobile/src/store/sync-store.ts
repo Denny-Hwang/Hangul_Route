@@ -15,6 +15,8 @@ import {
   type ServerLearnerFields,
 } from '../logic/sync/learner-profile';
 import { buildActivity, deviceLocalDay } from '../logic/reports/activity';
+import { practiceWeekOf } from '../logic/route/practice-week';
+import { utcDayKey } from '../logic/day-clock';
 import { syncLearner } from '../logic/sync/engine';
 import { memorySummaryFor, pullMemoryAfterAdopt, refreshMemorySummary } from '../logic/sync/memory-hook';
 import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
@@ -193,6 +195,9 @@ export const summarizeFor = (snapshot: ProgressSnapshot) => {
     activity: buildActivity({ snapshot, now, questJamo, localDay: deviceLocalDay, isQuestOpen: questOpenFor(snapshot.profileId, now, snapshot) }),
     // The memory counts (F-CURR-002 row CM-16), as the memory store last gave them; none while the profile does not record.
     memory: memorySummaryFor(snapshot.profileId),
+    // Practice days this week while a class plan with practice days is in force (AMENDMENTS-ROUTE-CLASS-BLEND section
+    // 11, BL-9): a count only, family only (the Worker leaves it out of every class and school roster).
+    practiceWeek: practiceWeekOf({ snapshot, plans: inbox, planDay: utcDayKey(now), today: deviceLocalDay(now.toISOString()), localDay: deviceLocalDay }),
   });
 };
 

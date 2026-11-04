@@ -579,4 +579,15 @@ export const a11y = {
   weekDrop: {
     card: (title: string, state: string) => `This week in Korea: ${title}. ${state}.`,
   },
+  /** Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND sections 7 and 19, row BL-7). */
+  route: {
+    blend: {
+      /** The From class pill of a lesson met in class: the pill's words, then where the learner met it. */
+      fromClassMet: 'From class. You met this in class.',
+      /** A practice-day choice (BL-8). */
+      practiceDay: (weekday: string) => `Practice day, ${weekday}`,
+      /** The Refresh row's name. */
+      refresh: 'Refresh: look back at what class taught',
+    },
+  },
 } as const;

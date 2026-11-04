@@ -42,6 +42,8 @@ import { NextLessons } from './NextLessons';
 import { useToday } from '../route/use-today';
 import { useMastery } from '../../store/mastery-entry';
 import { RouteCard } from './RouteCard';
+import { BlendPlanLine } from '../route/BlendParts';
+import { WEEKDAY_DATE, blendWeekOf, weeklyPlanLine, type BlendWeek } from '../../logic/route/blend-view';
 import { SkillsCard } from './SkillsCard';
 import { LaterRowItem, StageRowItem } from './TrailRow';
 import { LetterWall } from './LetterWall';
@@ -205,7 +207,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const wordsKnown = useMastery(readOnly ? null : profileId, snap, useToday('local'))?.read?.wordsKnown ?? 0;
   // The skills count every quest's games, so every lesson chunk loads and the counts follow (F-CURR-002 §10).
   const lessonsLoaded = useLessonContentVersion();
-  const built = useMemo((): { model: MyRouteModel; week: number | null; upcoming: RouteNextQuestResult[]; inPlan: ReadonlySet<string> } | { error: true } => {
+  const built = useMemo((): { model: MyRouteModel; week: number | null; upcoming: RouteNextQuestResult[]; inPlan: ReadonlySet<string>; blendWeek: BlendWeek | null } | { error: true } => {
     try {
       const snapshot = snap ?? emptySnapshot(profileId);
       const now = new Date();
@@ -224,7 +226,9 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized, seen, now, next }));
       // The tab's next lessons start with the card's own one next (`upcomingLessons`); the grown-up page lists none.
       const upcoming = variant === 'tab' ? upcomingLessons(next, NEXT_LESSON_COUNT) : [];
-      return { model, week: routeWeekOf(model, next), upcoming, inPlan: variant === 'tab' ? planView(next).inPlanQuestIds : new Set<string>() };
+      // The class plan with practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7): the learner's tab only.
+      const blendWeek = flags.routeBlendEnabled && variant === 'tab' ? blendWeekOf(next.sources, next.today, snapshot.practiceDays) : null;
+      return { model, week: routeWeekOf(model, next), upcoming, inPlan: variant === 'tab' ? planView(next).inPlanQuestIds : new Set<string>(), blendWeek };
     } catch {
       return { error: true };
     }
@@ -234,6 +238,15 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const week = 'model' in built ? built.week : null;
   const upcoming = 'model' in built ? built.upcoming : null;
   const inPlan = 'model' in built ? built.inPlan : null;
+  const blendWeek = 'model' in built ? built.blendWeek : null;
+  // B1: "Your class's weekly plan: class on ..., practice on ...", one text node, in place of the week line.
+  const blendLine = useMemo(
+    () =>
+      blendWeek === null
+        ? null
+        : weeklyPlanLine(blendWeek, messages.learner.route.blend, (day) => formatDate(locale, `${WEEKDAY_DATE[day]}T00:00:00.000Z`, 'weekdayLong', { utc: true })),
+    [blendWeek, messages, locale],
+  );
   const nextRows = useMemo((): NextLessonRowView[] => {
     if (upcoming === null || inPlan === null) return [];
     const r = messages.learner;
@@ -279,13 +292,14 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
       seen,
       firstReached,
       letterWall: routeLetterWall(model),
-      week,
+      // The class plan's weekly plan line replaces the week line and Open plan (B1: no "Week n of N" for it).
+      week: blendWeek === null ? week : null,
       // Open plan (R-7d) is a weekly plan entry: it follows the UI locale's review (P2-8b), as Home and Profile do.
       planOverview: routeEnabledFor(locale),
       // "Plan ends {date}" on the grown-up card only (LR-OD-7); a plan day is a UTC calendar day.
       formatDay: (day) => formatDate(locale, `${day}T00:00:00.000Z`, 'monthDay', { utc: true }),
     });
-  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, firstReached, week, practiceTopic, myStoryOn]);
+  }, [model, messages, readOnly, profile?.displayName, localized, locale, seen, firstReached, week, practiceTopic, myStoryOn, blendWeek]);
 
   // Once per focus: route_map.viewed from the tab, then remember what this open saw (active learner only, never
   // read-only: the grown-up screen sends and writes nothing, section 8).
@@ -399,7 +413,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
     if (cta.action === 'quest' && model.next) {
       const event = continueTappedEvent({ profileId, model, readOnly });
       if (event) void track(event);
-      if (!readOnly) void track(nextStartedEvent(profileId, model.next.source, 'route'));
+      if (!readOnly) void track(nextStartedEvent(profileId, model.next.source, 'route', upcoming?.[0]?.questId === model.next.questId && upcoming[0].fromClass === true));
       navigation.navigate('QuestPlayer', { questId: model.next.questId, episodeId: model.next.episodeId });
     } else if (cta.action === 'practice' && practiceTopic !== null) {
       // The free-end hero (LR-5b): practice words that stay open; the route page never asks (section 4.5).
@@ -431,6 +445,12 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
         wordsKnown={wordsKnown >= 1 ? messages.learner.wordsKnown.route(formatNumber(locale, wordsKnown)) : null}
       />
 
+      {blendLine !== null ? (
+        <>
+          <Spacer size="sm" />
+          <BlendPlanLine text={blendLine} />
+        </>
+      ) : null}
       {view.planLine !== null ? (
         <>
           <Spacer size="sm" />

@@ -14,6 +14,7 @@ import {
   type DateKey,
   type DurationId,
   type Focus,
+  type GenerateOptions,
   type Motivation,
   type PaceId,
   type PlacementLevel,
@@ -25,7 +26,7 @@ import {
   type ThemeKey,
   type Weekday,
 } from '@hangul-route/content-schema';
-import { MINUTE_CHOICES, PACE_IDS, daysReady, initialChoice, weeksOfChoice, type LengthChoice, type MinuteChoice, type PlanChoice } from './proposal-flow';
+import { MINUTE_CHOICES, PACE_IDS, daysReady, draftOptionsOf, initialChoice, weeksOfChoice, type LengthChoice, type MinuteChoice, type PlanChoice } from './proposal-flow';
 
 /**
  * The four set-up steps of the learner's weekly plan (F-PLAN-002 section 3.9, wireframe
@@ -75,6 +76,8 @@ export interface SetupContext {
   level: PlacementLevel | null;
   placedOutQuestIds?: readonly string[];
   motivation?: Motivation;
+  /** A new plan's proposal leaves these out (`RouteProposal.excludeQuestIds`, AMENDMENTS-ROUTE-CLASS-BLEND section 8). */
+  excludeQuestIds?: readonly string[];
 }
 
 const LENGTH_OF_WEEKS = new Map<number, DurationId>(
@@ -138,6 +141,9 @@ export const THEMES: readonly ThemeKey[] = ThemeKeySchema.options;
  * The generator params of the answers. A starting card that stands for the context's own level
  * keeps its exact placed-out set (the level check's); another card plans from that card's level.
  */
+/** The generator options of a set-up draft: the quests a new plan leaves out (`draftOptionsOf`). */
+export const setupDraftOptions = (ctx: SetupContext): GenerateOptions => draftOptionsOf(ctx);
+
 export function setupParams(ctx: SetupContext, state: SetupState): CurriculumParamsInput {
   const level = STARTING_LEVELS[state.start];
   const sameStart = ctx.level !== null && startingPointOf(ctx.level) === state.start;
@@ -208,6 +214,7 @@ export function setupBasisOf(i: SetupBasisInput): { ctx: SetupContext; state: Se
     level: startFrom.level,
     ...(startFrom.placedOutQuestIds === undefined ? {} : { placedOutQuestIds: [...new Set([...startFrom.placedOutQuestIds, ...growth])] }),
     ...(params.goals.motivation === undefined ? {} : { motivation: params.goals.motivation }),
+    ...(stored === null && i.proposal?.excludeQuestIds !== undefined ? { excludeQuestIds: [...i.proposal.excludeQuestIds] } : {}),
   };
   if (stored !== null) {
     const state = setupFromStored(stored, i.today);

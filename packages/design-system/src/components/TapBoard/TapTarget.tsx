@@ -29,6 +29,7 @@ export function TapTarget({
   disabled = false,
   inactive = false,
   accessibilityLabel,
+  accessibilityRole = 'button',
   accessibilityState,
   lockMs,
   gapFill = true,
@@ -60,10 +61,12 @@ export function TapTarget({
       if (typeof out === 'function') out(v as View | null);
       else if (out) (out as MutableRefObject<unknown>).current = v;
     },
-    accessibilityRole: 'button',
+    accessibilityRole,
     accessibilityLabel,
     // An explicit `accessibilityState.disabled` (an inactive card drawn as disabled) is kept: the prop only adds to it.
     accessibilityState: { ...accessibilityState, disabled: disabled || accessibilityState?.disabled === true },
+    // react-native-web reads the ARIA prop, not `accessibilityState`, for a chip's on or off (AMENDMENTS-ROUTE-CLASS-BLEND BL-8).
+    ...(accessibilityState?.checked === undefined ? {} : { 'aria-checked': accessibilityState.checked }),
     // Only a disabled target disables the Pressable: on native a `disabled={false}` would override the state above.
     disabled: disabled ? true : undefined,
     testID,

@@ -88,6 +88,11 @@ export interface GenerateOptions {
   historyWeeks?: WeekMeta[];
   /** The catalogue-growth rule's history (F-CURR-001 §3.13); default the shipped one. */
   catalogHistory?: CatalogHistory;
+  /**
+   * Quests left out of the queues without counting as already done (no `already-done-skipped`): the quests an in-force
+   * class or school curriculum schedules, for a new own plan (AMENDMENTS-ROUTE-CLASS-BLEND section 8, BL-6). Never stored.
+   */
+  exclude?: readonly string[];
 }
 
 /** What `generateCurriculum` builds with; `regenerateFrom` adds a re-pace's queue and history (exported for row BL-3). */
@@ -361,7 +366,7 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
     .filter((item): item is PlanItem & { targetDate: DateKey } => item.targetDate !== undefined && item.targetDate < from)
     .sort(byDate)
     .map((item): CurriculumItem => ({ ...item, week: weekOf(item.targetDate) }));
-  const fromCatalog = catalogQueuesOf(p, catalog, themeOrder, cadence.endStage, new Set(history.map((item) => item.id)));
+  const fromCatalog = catalogQueuesOf(p, catalog, themeOrder, cadence.endStage, new Set([...history.map((item) => item.id), ...(opts.exclude ?? [])]));
   const queues: Queues = opts.queue ?? fromCatalog;
   const { lessons, stories, comingSoon } = queues;
   const reserved = p.culturalAnchors ? reserveAnchors(stories, calendar, from, end, p.startDate) : new Map<number, Reservation[]>();

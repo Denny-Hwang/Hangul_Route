@@ -2173,4 +2173,28 @@ export const learner = {
     done: '이번 주는 다 했어요',
     next: '다음 주에 새 이야기가 와요.',
   },
+  route: {
+    blend: {
+      // 요일은 가운뎃점으로 이어요 (수요일·금요일·일요일): "및" 은 딱딱하고, 쉼표는 수업과 연습 사이 쉼표와 겹쳐요.
+      planLine: (classDays: string, practice: string) => `반의 주간 계획: ${classDays} 수업, ${practice}.`,
+      practiceOn: (days: string) => `${days} 연습`,
+      practiceMost: '거의 매일 연습',
+      practiceAllBut: (weekday: string) => `${weekday} 빼고 매일 연습`,
+      practiceEvery: '매일 연습',
+      dayList: (names: readonly string[]) => names.join('·'),
+      refresh: '되짚기',
+      refreshLine: '수업에서 배운 것을 다시 봐요.',
+      classToday: '오늘은 수업이 있어요.',
+      ownResting: '반의 계획에 연습하는 날이 있는 동안 내 주간 계획은 쉬고 있어요.',
+      seeIt: '보기',
+      ownBack: '내 주간 계획이 다시 시작됐어요.',
+      proposalInstead: '반의 주간 계획에 연습하는 날이 들어 있어요.',
+      practiceDays: {
+        title: '내 연습 요일',
+        hint: '연습할 요일을 골라요. 레슨은 그대로예요.',
+        count: '일주일에 며칠',
+        gate: 'PIN 필요',
+      },
+    },
+  },
 } satisfies DeepPartial<Messages['learner']>;

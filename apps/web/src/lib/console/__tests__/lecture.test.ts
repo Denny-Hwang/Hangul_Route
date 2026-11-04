@@ -516,7 +516,8 @@ describe('planOutline on a blended plan (BL-5)', () => {
     expect(planOutline(plan({ items: quests(3) }), '2026-11-04', true)).toEqual({ blocks: planBlocks({ items: quests(3) }), omitted: 0 });
   });
 
-  it('the flag defaults to routeBlendEnabled(), off in this build', () => {
-    expect(planOutline(blended, '2026-11-04')).toEqual(planOutline(blended, '2026-11-04', false));
+  it('the flag defaults to routeBlendEnabled(), on since BL-10', () => {
+    expect(planOutline(blended, '2026-11-04')).toEqual(planOutline(blended, '2026-11-04', true));
+    expect(planOutline(blended, '2026-11-04')).not.toEqual(planOutline(blended, '2026-11-04', false));
   });
 });

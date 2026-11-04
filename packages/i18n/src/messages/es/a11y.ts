@@ -381,4 +381,11 @@ export const a11y = {
   weekDrop: {
     card: (title: string, state: string) => `Esta semana en Corea: ${title}. ${state}.`,
   },
+  route: {
+    blend: {
+      fromClassMet: 'De la clase. Lo viste en clase.',
+      practiceDay: (weekday: string) => `Día de práctica, ${weekday}`,
+      refresh: 'Repasar: vuelve a mirar lo que enseñó la clase',
+    },
+  },
 } satisfies DeepPartial<Messages['a11y']>;

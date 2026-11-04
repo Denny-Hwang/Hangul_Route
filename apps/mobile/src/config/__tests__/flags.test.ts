@@ -272,6 +272,26 @@ describe('flags', { timeout: 20_000 }, () => {
     expect(mod.flags.myRouteEnabled).toBe(true);
   });
 
+  it('routeBlendEnabled (AMENDMENTS-ROUTE-CLASS-BLEND BL-7) is ON since BL-10 (BL-OD-12); "false", "0", "off", "no" or "disabled" is the kill switch', async () => {
+    delete process.env.EXPO_PUBLIC_ROUTE_BLEND_ENABLED;
+    let mod = await reload();
+    expect(mod.flags.routeBlendEnabled).toBe(true);
+    expect(mod.launchDefaultFlags.routeBlendEnabled).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', 'disabled', 'FALSE', ' false ']) {
+      process.env.EXPO_PUBLIC_ROUTE_BLEND_ENABLED = off;
+      mod = await reload();
+      expect(mod.flags.routeBlendEnabled, off).toBe(false);
+    }
+    for (const on of ['true', '1', 'maybe']) {
+      process.env.EXPO_PUBLIC_ROUTE_BLEND_ENABLED = on;
+      mod = await reload();
+      expect(mod.flags.routeBlendEnabled, on).toBe(true);
+    }
+    delete process.env.EXPO_PUBLIC_ROUTE_BLEND_ENABLED;
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_ROUTE_BLEND_ENABLED');
+  });
+
   it('myRouteEnabled is read by its literal name, so a web build can carry the override', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED');

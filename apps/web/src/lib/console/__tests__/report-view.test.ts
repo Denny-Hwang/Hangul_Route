@@ -1001,3 +1001,18 @@ describe('More detail: the memory counts (F-CURR-002 CM-16)', () => {
     expect(memoryLinesOf(levels, getMessages('ko'))).toEqual(['아는 낱말: 3개', '복습할 때가 된 항목: 2개', '에피소드: 완료 1개']);
   });
 });
+
+describe('the practice-week line (AMENDMENTS-ROUTE-CLASS-BLEND section 11, BL-OD-11, row BL-9)', () => {
+  const withWeek = { ...STEADY, practiceWeek: { practicedDays: 3 } } as ReportSummary;
+
+  it('a family reads it on the week tab while the flag is on', () => {
+    expect(view(withWeek, { routeBlend: true }).thisPeriod?.practiceWeek).toEqual({ line: 'Practiced on 3 days this week', filled: 3 });
+  });
+
+  it('is not drawn with the flag off, for a class, at 0, or on an earlier week', () => {
+    expect(view(withWeek).thisPeriod?.practiceWeek).toBeNull();
+    expect(view(withWeek, { routeBlend: true, kind: 'class' }).thisPeriod?.practiceWeek).toBeNull();
+    expect(view({ ...STEADY, practiceWeek: { practicedDays: 0 } } as ReportSummary, { routeBlend: true }).thisPeriod?.practiceWeek).toBeNull();
+    expect(view(withWeek, { routeBlend: true, query: { period: 'week', at: '2026-10-08', from: null } }).thisPeriod?.practiceWeek ?? null).toBeNull();
+  });
+});

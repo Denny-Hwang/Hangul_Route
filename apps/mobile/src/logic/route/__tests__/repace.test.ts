@@ -11,6 +11,7 @@ import {
   pendingPastOf,
   repaceSelfRoute,
   repacedEvent,
+  resumeStepOf,
   retainedOfferStep,
   type RetainedOffer,
 } from '../repace';
@@ -59,6 +60,12 @@ describe('automatic re-pace (section 3.7)', () => {
     expect(autoRepaceDue({ route, homework: old, today, sessionOpen: false })).toBe(true);
     expect(autoRepaceDue({ route, homework: [hw(route, 'q1', '2026-09-14'), hw(route, 'q2', '2026-09-16')], today, sessionOpen: false })).toBe(false);
     expect(autoRepaceDue({ route, homework: [], today, sessionOpen: false })).toBe(false);
+  });
+
+  it('never while the plan rests beside a class plan with practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 8)', () => {
+    const three = [hw(route, 'q1', '2026-09-13'), hw(route, 'q2', '2026-09-18'), hw(route, 'q3', '2026-09-19')];
+    expect(autoRepaceDue({ route, homework: three, today, sessionOpen: false, resting: true })).toBe(false);
+    expect(autoRepaceDue({ route, homework: three, today, sessionOpen: false, resting: false })).toBe(true);
   });
 
   it('never once the plan\'s last week is over: nothing is left to move along', () => {
@@ -110,6 +117,9 @@ describe('the Hoya check-in (FP-B14, OD-13)', () => {
     expect(checkInOffer({ route, completedQuestIds: done, today: '2026-10-04', answeredFor: undefined })).toBeNull();
     expect(checkInOffer({ route, completedQuestIds: done, today: '2026-10-12', answeredFor: undefined })).toBeNull();
     expect(checkInOffer({ route, completedQuestIds: done, today: week5, answeredFor: route.id })).toBeNull();
+    // A resting plan offers no check-in (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+    expect(checkInOffer({ route, completedQuestIds: done, today: week5, answeredFor: undefined, resting: true })).toBeNull();
+    expect(checkInOffer({ route, completedQuestIds: done, today: week5, answeredFor: undefined, resting: false })).toEqual({ kind: 'faster', pace: 'brisk' });
     expect(checkInOffer({ route: null, completedQuestIds: done, today: week5, answeredFor: undefined })).toBeNull();
     expect(checkInOffer({ route: { ...route, archivedAt: 'x' }, completedQuestIds: done, today: week5, answeredFor: undefined })).toBeNull();
   });
@@ -228,5 +238,20 @@ describe('retainedOfferStep: the check-in a screen keeps showing, per learner an
     expect(retainedOfferStep(shown, null, 'profile:b|route:2')).toEqual({ key: 'profile:b|route:2', shown: null, closed: false });
     expect(retainedOfferStep(shown, faster, 'profile:b|route:2')).toEqual({ key: 'profile:b|route:2', shown: faster, closed: false });
     expect(retainedOfferStep({ ...shown, shown: null, closed: true }, faster, 'profile:a|route:9')).toEqual({ key: 'profile:a|route:9', shown: faster, closed: false });
+  });
+});
+
+describe('resumeStepOf: the resume of a rested own plan (AMENDMENTS-ROUTE-CLASS-BLEND section 8)', () => {
+  const meta = (weeks: string[], repacedAt: string | null) => ({ meta: { weeks: weeks.map((startDate, i) => ({ index: i + 1, startDate })), repacedAt } }) as unknown as Pick<SelfRoute, 'meta'>;
+  it('re-paces a plan with days left that was not moved along today', () => {
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], null), '2026-09-30')).toBe('repace');
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], '2026-09-29T08:00:00.000Z'), '2026-09-30')).toBe('repace');
+  });
+  it('is done when another device already moved it along today', () => {
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], '2026-09-30T08:00:00.000Z'), '2026-09-30')).toBe('done');
+  });
+  it('is over once its last week ended, or with no weeks', () => {
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], null), '2026-10-05')).toBe('over');
+    expect(resumeStepOf(meta([], null), '2026-10-05')).toBe('over');
   });
 });

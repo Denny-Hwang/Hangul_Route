@@ -90,6 +90,21 @@ describe('placementStart: the primary action follows routeNext when the start qu
     });
   });
 
+  it('a lesson met in class keeps fromClass for route.next_started (AMENDMENTS-ROUTE-CLASS-BLEND section 18)', () => {
+    const fromClass = { ...nextQuest, source: 'class', sourceId: 'assignment:a', fromClass: true } as const;
+    expect(placementStart({ start, isQuestOpen: closedStart, next: fromClass, freeTopicKey: null })).toEqual({
+      kind: 'quest',
+      questId: 'quest:s1-q3',
+      episodeId: 'episode:s1',
+      source: 'class',
+      fromClass: true,
+    });
+    const same = { ...fromClass, questId: start.questId, episodeId: start.episodeId } as const;
+    expect(placementStart({ start, isQuestOpen: open, next: same, freeTopicKey: null })).toEqual({ kind: 'quest', ...start, source: 'class', fromClass: true });
+    // The open start quest that is not the one next carries neither.
+    expect(placementStart({ start, isQuestOpen: open, next: fromClass, freeTopicKey: null })).toEqual({ kind: 'quest', ...start, source: null });
+  });
+
   it('a closed start quest at free-end with placedOut: the first free word topic', () => {
     expect(placementStart({ start, isQuestOpen: closedStart, next: { kind: 'free-end', placedOut: true }, freeTopicKey: 'food' })).toEqual({
       kind: 'topic',

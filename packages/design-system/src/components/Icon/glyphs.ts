@@ -206,6 +206,9 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   // More (three dots): the phone rail's More when its word does not fit the compact button (PN-0b N8,
   // AMENDMENTS-PRESENTER-NAV section 5.2). Never alone: the button carries its label as the accessible name.
   more: [fill(circle(5, 12, 2.2)), fill(circle(12, 12, 2.2)), fill(circle(19, 12, 2.2))],
+  // Class (AMENDMENTS-ROUTE-CLASS-BLEND row BL-7; BL-D README finding 7): a board on an easel, in front of the From
+  // class pill's words for a lesson met in class. Decorative: the pill carries the accessible name.
+  class: [stroke('M4 4.5 H20 V14.5 H4 Z', 2.2), stroke('M8 19.5 L12 14.5 L16 19.5', 2.2), stroke('M7.5 9.5 H13', 2.2)],
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];
