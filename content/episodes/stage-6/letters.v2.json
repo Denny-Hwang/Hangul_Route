@@ -141,7 +141,7 @@
           "kind": "realia-read",
           "realia": {
             "ref": "realia:s6-letters-v2-q1-card",
-            "kind": "ticket",
+            "kind": "label",
             "title": {
               "ko": "도서관 카드",
               "romanization": "doseogwan kadeu",

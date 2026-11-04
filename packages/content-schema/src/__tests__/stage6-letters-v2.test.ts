@@ -74,10 +74,15 @@ describe('Letters Volume 2, Stage 6 (row CM-44 S6)', () => {
     for (const k of checks) expect(checkKindsFor('stage6'), k).toContain(k);
   });
 
-  it('reads the CM-47 poster beside the shipped ticket kind, on a library card, a book cover, a poster and a station board', () => {
-    const kinds = new Set(realiaKinds(V2));
-    expect(kinds).toContain('poster');
-    expect(kinds).toContain('ticket');
+  it('draws its sheets in the kinds CM-47 names for them: the library card a label, the book cover and the poster posters, the station board a timetable', () => {
+    const kindOf = new Map(V2.quests.flatMap((q) => q.scopes.flatMap((s) => ('realia' in s && s.realia !== undefined ? [[s.realia.ref, s.realia.kind] as const] : []))));
+    expect(Object.fromEntries(kindOf)).toEqual({
+      'realia:s6-letters-v2-q1-card': 'label',
+      'realia:s6-letters-v2-q1-book': 'poster',
+      'realia:s6-letters-v2-q2-poster': 'poster',
+      'realia:s6-letters-v2-q3-board': 'timetable',
+    });
+    expect(new Set(realiaKinds(V2))).toEqual(new Set(['label', 'poster', 'timetable']));
     const refs = new Set(V2.quests.flatMap((q) => q.scopes.flatMap((s) => ('realia' in s && s.realia !== undefined ? [s.realia.ref] : []))));
     expect([...refs].sort()).toEqual(['realia:s6-letters-v2-q1-book', 'realia:s6-letters-v2-q1-card', 'realia:s6-letters-v2-q2-poster', 'realia:s6-letters-v2-q3-board']);
   });

@@ -20,7 +20,7 @@ const lettersCell = (page: Page) => page.getByRole('button', { name: journeyCell
 const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ' };
 
 /** A learner with Stage 6 Letters' Volume 1 done, and the switches as given; ends on the Journey. */
-async function learner(page: Page, flags: Record<string, { on: boolean; pct: number }>): Promise<void> {
+async function learner(page: Page, flags: Record<string, { on: boolean; pct: number }>, textSize?: 'largest'): Promise<void> {
   const AT = '2026-10-01T10:00:00.000Z';
   await page.goto('/');
   await keepSidewaysIfAsked(page);
@@ -34,6 +34,7 @@ async function learner(page: Page, flags: Record<string, { on: boolean; pct: num
   await seedStoredAll(page, {
     [`progress:${id}`]: { profileId: id, updatedAt: AT, episodes: [], quests, cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, questDoneAt: Object.fromEntries(questIds.map((q) => [q, AT])) },
     'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags },
+    ...(textSize ? { 'device:settings': { uiLocale: 'en', uiLocaleAt: AT, textSize } } : {}),
   });
   await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
@@ -92,7 +93,7 @@ test.describe('Letters Volume 2, Stage 6, at launch state (F-CURR-002 row CM-44 
     await expectNoHorizontalOverflow(page);
     await shot(page, 'cm44-s6-v2-q1-discover-320');
     await passDiscover(page);
-    // Practice: Realia Read on the library card (a ticket sheet).
+    // Practice: Realia Read on the library card (a label sheet, CM-47).
     await page.getByRole('button', { name: 'Play minigame' }).click();
     await expect(page.getByTestId('realia-read-question')).toHaveText('Whose card is this?', { timeout: 5_000 });
     await expectNoHorizontalOverflow(page);
@@ -129,6 +130,34 @@ test.describe('Letters Volume 2, Stage 6, at launch state (F-CURR-002 row CM-44 
     }
     await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
     await shot(page, 'cm44-s6-v2-q1-reward-320');
+    expect(errors).toEqual([]);
+  });
+
+  // Row CM-47 left the label's Largest-text smoke to the first content that uses it: this library card is that content.
+  test('320 at Largest text: the library card (a label sheet) fits, with every line button on screen', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await page.setViewportSize({ width: 320, height: 720 });
+    await learner(page, VOLUMES_ON, 'largest');
+    await lettersCell(page).click();
+    await expect(page.getByText('Library Day').first()).toBeVisible();
+    await startFirstQuest(page);
+    await passDiscover(page);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByTestId('realia-read-question')).toHaveText('Whose card is this?', { timeout: 5_000 });
+    await expect(page.getByTestId('realia-read-sheet-kind-label')).toBeVisible({ timeout: 10_000 });
+    const sheet = page.getByRole('group', { name: /, 4 lines$/ });
+    // bodyLg (20) x 1.5: the setting reached the sheet.
+    expect(await sheet.getByText('이름', { exact: true }).first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(30);
+    const buttons = sheet.getByRole('button');
+    expect(await buttons.count()).toBe(4);
+    for (const button of await buttons.all()) {
+      await button.scrollIntoViewIfNeeded();
+      await expect(button).toBeVisible();
+      expect((await button.boundingBox())!.width).toBeLessThanOrEqual(320);
+    }
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'cm44-s6-v2-q1-card-320-largest');
     expect(errors).toEqual([]);
   });
 
