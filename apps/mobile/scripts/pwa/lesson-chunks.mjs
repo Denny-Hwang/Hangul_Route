@@ -143,8 +143,16 @@ export const PRECACHE_BUDGET = Object.freeze({
   // strings, main fc580beed; ko 925,171 B, es 542,657 B on main 8dfb8a43c). The line left about 99 KB for the stories
   // and strings ahead (CM-46a, CM-46) at the shrink, about 94 KB on the final integration and about 75 KB on main
   // 8dfb8a43c; a PR that crosses it raises it as a reviewed one-line change with its measurement, or moves text out
-  // (CM-8b's story overlay split).
-  localeChunkRaw: 1_000_000,
+  // (CM-8b's story overlay split). Row CM-46a (the read tiers of the ten listen-only stories, about 45 KB of ko story
+  // overlays) measures ko 1,001,146 B, es 588,515 B raw (release build, Metro cache cleared, on CM-8b's head), so the
+  // line is that measurement plus an 8,854 B rounding margin (CI measured ko 1,001,745 B after main 377d44291 was merged,
+  // 8,255 B under it); the next story row (CM-46) moves the story narration overlays into the story chunks (CM-8b's
+  // overlay half) rather than raising it again. Row CM-46 (the Nature book 2, three new tales, about 45 KB of ko story
+  // overlays) measures ko 1,050,057 B, es 617,398 B (release build, Metro cache cleared, on CM-46a's head with main dde2fbda9): the move
+  // of the narration overlays touches every reader of a story's text (reader, checks, Sources, presenter, review items)
+  // and is its own row, so the line is that measurement plus a 4,943 B rounding margin, once; the next CM-46 cell moves
+  // the narration overlays out first (F-CURR-002 §10, CM-46 decision record).
+  localeChunkRaw: 1_055_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
   // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
   // PresenterApp 232,574 B, BrowseApp 104,116 B, about 67 KB under the line.
@@ -175,14 +183,20 @@ export const PRECACHE_BUDGET = Object.freeze({
   storyChunkRaw: 70_000,
   storiesRaw: 2_000_000,
   storiesGzip: 510_000,
+  // The story shelf chunk (row CM-8b, `stories-shelf-<md5>.js`): every learner waits for it before the first screen, as
+  // for the lesson headers, so it has a line of its own on the built bundle, the line of its module (build-stories.mjs
+  // `BUDGET.shelfRaw`; the test keeps them equal). Measured at CM-8b: 20,133 B raw / 5,447 B gzip built for 24 stories
+  // (21,458 B as generated); the plan's 35 stories project about 29,700 B with CM-46a's tier levels, 74% of the line.
+  storyShelfRaw: 40_000,
   // The review-item index (F-CURR-002 §4.2, §10 ceilings table, row CM-10): one content-hashed chunk of
   // scripts/build-review-items.mjs, lazy and precached, held here on its built bundle and there on its module
   // (`BUDGET`, the same lines; the test keeps them equal). Measured at CM-10's first cut: 728 items, 94,162 B raw /
   // 19,597 B gzip as generated, 101,969 B raw / 19,256 B gzip as built (release `build:web`); with CM-10's review
   // fixes (the Stage 1 Discover words) 733 items, 97,670 B raw / 20,024 B gzip as generated, 105,189 B raw /
   // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
-  reviewItemsRaw: 150_000,
-  reviewItemsGzip: 30_000,
+  // The F-CURR-002 Volume 2 integration (rows CM-40..CM-46) measures 158,112 B raw / 34,019 B gzip as generated.
+  reviewItemsRaw: 170_000,
+  reviewItemsGzip: 37_000,
   // "This week in Korea" (F-CURR-002 §5.7, §10, row CM-48): the week drops, one content-hashed chunk of
   // scripts/build-week-drops.mjs, lazy and precached, held here on its built bundle and there on its module (`BUDGET`,
   // the same lines). Set at CM-48 from the first 13 drops (24,172 B raw / 6,662 B gzip as generated, 27,699 B raw / 6,491 B gzip as built); a year of drops is
@@ -200,18 +214,28 @@ const carries = (text, hash) => new RegExp(`CHUNK_HASH\\s*=\\s*["']${hash}["']`)
 
 /**
  * Problems with the lesson chunks of one web build (empty = sound).
- * @param {{ manifest: { name: string, hash: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
- *   `manifest`: build-lessons.mjs `chunkManifest`; `bundles`: every JS file of WEB_JS_DIR; `precached`: the precache URLs.
+ * @param {{ manifest: { name: string, hash: string, namedBy?: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
+ *   `manifest`: build-lessons.mjs `chunkManifest` (and build-stories.mjs's); `bundles`: every JS file of WEB_JS_DIR;
+ *   `precached`: the precache URLs. An entry with `namedBy` (a story body, row CM-8b) has its hash named by that chunk's
+ *   bundle (the story shelf) instead of the start bundle, which names the shelf's.
  */
 export function lessonChunkProblems({ manifest, bundles, precached }) {
   const problems = [];
   const listed = new Set(precached.map((u) => u.replace(/^\/+/, '')));
   const starts = bundles.filter((b) => isStartBundle(b.url));
   if (starts.length !== 1) problems.push(`expected one start bundle (${WEB_JS_DIR}/index-<hash>.js), found ${starts.length}`);
-  for (const { name, hash } of manifest) {
+  for (const { name, hash, namedBy } of manifest) {
     for (const start of starts) {
       if (carries(start.text, hash)) problems.push(`${name} is in the start bundle ${start.url}: a static import pulled the chunk in`);
-      if (!start.text.includes(`"${hash}"`)) problems.push(`the start bundle ${start.url} does not name ${name}'s hash ${hash}: the shell and the chunk come from other content`);
+      if (namedBy === undefined && !start.text.includes(`"${hash}"`)) {
+        problems.push(`the start bundle ${start.url} does not name ${name}'s hash ${hash}: the shell and the chunk come from other content`);
+      }
+    }
+    if (namedBy !== undefined) {
+      const namers = bundles.filter((b) => !isStartBundle(b.url) && NAMED.exec(b.url)?.[1] === namedBy);
+      if (!namers.some((b) => b.text.includes(`"${hash}"`))) {
+        problems.push(`no ${namedBy} bundle names ${name}'s hash ${hash}: the chunk that lists it and the chunk come from other content`);
+      }
     }
     const own = bundles.filter((b) => !isStartBundle(b.url) && NAMED.exec(b.url)?.[1] === name);
     if (own.length === 0) {
@@ -464,7 +488,7 @@ export function withWholeClipPack(report, budget = PRECACHE_BUDGET) {
  * precached clips (AMENDMENTS-AUDIO-CLIPS AC-6) and the whole learner precache.
  * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], scenes?: readonly { name: string }[], audioPacks?: readonly { name: string }[], clips?: { count: number, bytes: number }, bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], weekDrops = [], screens = [], scenes = [], audioPacks = [], clips, bundles, precache }) {
+export function precacheReport({ manifest, stories = [], storyShelf = [], locales = [], roots = [], reviewItems = [], weekDrops = [], screens = [], scenes = [], audioPacks = [], clips, bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
     audioPackChunks: chunkTotals(audioPacks, bundles),
@@ -473,6 +497,7 @@ export function precacheReport({ manifest, stories = [], locales = [], roots = [
     start: start === undefined ? null : { url: start.url, raw: bytes(start.text), gzip: gzipSize(start.text) },
     lessonChunks: chunkTotals(manifest, bundles),
     storyChunks: chunkTotals(stories, bundles),
+    storyShelf: chunkTotals(storyShelf, bundles),
     localeChunks: chunkTotals(locales, bundles),
     rootChunks: chunkTotals(roots, bundles),
     reviewItemChunks: chunkTotals(reviewItems, bundles),
@@ -493,6 +518,11 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   lines.push(`  lesson chunks  ${report.lessonChunks.count} bundles  ${report.lessonChunks.raw} B raw  ${report.lessonChunks.gzip} B gzip`);
   if (report.storyChunks !== undefined) {
     lines.push(`  story chunks  ${report.storyChunks.count} bundles  ${report.storyChunks.raw} B raw  ${report.storyChunks.gzip} B gzip`);
+  }
+  if (report.storyShelf !== undefined && report.storyShelf.count > 0) {
+    lines.push(
+      `  story shelf chunk  ${report.storyShelf.count} bundles  ${report.storyShelf.raw} B raw  ${report.storyShelf.gzip} B gzip  (ceiling ${budget.storyShelfRaw} B raw, before the first screen)`,
+    );
   }
   if (report.localeChunks !== undefined && report.localeChunks.count > 0) {
     lines.push(
@@ -567,6 +597,13 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
     if (stories.gzip > budget.storiesGzip) {
       problems.push(`the story bundles are ${stories.gzip} B gzip, over the stories ceiling of ${budget.storiesGzip} B gzip ${raise}`);
     }
+  }
+  const shelf = report.storyShelf?.largest;
+  if (shelf !== null && shelf !== undefined && shelf.raw > budget.storyShelfRaw) {
+    problems.push(
+      `the story shelf bundle ${shelf.url} is ${shelf.raw} B raw, over its ceiling of ${budget.storyShelfRaw} B, which every learner waits for before the first screen ` +
+        '(raise it in scripts/build-stories.mjs BUDGET.shelfRaw and PRECACHE_BUDGET.storyShelfRaw together, as a reviewed one-line change with the measured numbers in the PR)',
+    );
   }
   const ceilings = [
     [report.localeChunks, budget.localeChunkRaw, 'locale', 'localeChunkRaw'],

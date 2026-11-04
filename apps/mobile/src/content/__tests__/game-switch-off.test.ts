@@ -3,8 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { clozeFixtureScope } from '../../logic/cloze-pick/e2e-rounds';
 import { clozeFallbackScope, validClozeRounds } from '../../logic/cloze-pick/round';
 import { validRounds } from '../../logic/listen-pick';
+import { picWordFallback } from '../../logic/hidden-heritage-fallback';
+import { validRounds as validHiddenHeritageRounds } from '../../logic/hidden-heritage-flow';
+import { canDrawPicture } from '../../logic/__tests__/drawn-pictures';
 import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
+import { LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from './helpers/lesson-stages';
 
@@ -52,6 +56,13 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     expect(steps.length).toBeGreaterThan(100);
   });
 
+  it('reads every built lesson quest, a cell\'s Volume 2 included, so a Volume 2 content row is checked here with no change (row CM-40)', () => {
+    const read = new Set(steps.map((s) => s.questId));
+    expect(LESSON_QUESTS.filter((q) => !read.has(q.id)).map((q) => q.id)).toEqual([]);
+    // The steps of a Volume 2 come from its own chunk, the way ALL_LESSON_STEPS reads every chunk the manifest names.
+    expect(Object.keys(ALL_LESSON_STEPS).length).toBeGreaterThanOrEqual(LESSON_QUESTS.length);
+  });
+
   it('ships Cloze Pick steps, so the switch-off check below is not empty (CM-30 decision record, row CM-3A)', () => {
     expect(steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').length).toBeGreaterThan(0);
   });
@@ -69,16 +80,30 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
     expect(problems).toEqual([]);
   });
 
-  it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3)', () => {
+  it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3) and Nature Volume 2, S3 (row CM-41)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
-    expect(cloze.filter((id) => id.startsWith('quest:stage3-')).sort()).toEqual([
+    // Food & Daily Life Volume 2 has its own check below; Holidays Volume 2 (row CM-45 S3) plays Cloze Pick in each quest too (q1 twice).
+    expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-life-v2-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
       'quest:stage3-letters-q1',
       'quest:stage3-life-q1',
       'quest:stage3-life-q3',
       'quest:stage3-nature-q1',
+      // Row CM-41: Cloze Pick is a main format of Nature Volume 2, S3 (the q1 and q3 Practice, the q2 Apply).
+      'quest:stage3-nature-v2-q1',
+      'quest:stage3-nature-v2-q2',
+      'quest:stage3-nature-v2-q3',
       'quest:stage3-rites-q3',
+      'quest:stage3-rites-v2-q1',
+      'quest:stage3-rites-v2-q1',
+      'quest:stage3-rites-v2-q2',
+      'quest:stage3-rites-v2-q3',
     ]);
+  });
+
+  it('reads the Volume 2 Cloze Pick steps too: every quest of Stage 3 Food & Daily Life Volume 2 plays one (row CM-43 S3)', () => {
+    const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
+    for (const id of ['quest:stage3-life-v2-q1', 'quest:stage3-life-v2-q2', 'quest:stage3-life-v2-q3']) expect(cloze, id).toContain(id);
   });
 
   it('the check finds a fallback that cannot play (on the e2e fixture step)', () => {
@@ -91,13 +116,52 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
   it('the shipped quests play Cloze Pick, so the check above is not empty (row CM-3A S6)', () => {
     const shipped = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick');
     expect(shipped.length).toBeGreaterThan(0);
-    // The Stage 6 Check rotation authors five value-gap realia questions (Letters q2, Life q2, Rites q2, Crafts q1 and q3).
+    // The Stage 6 Check rotation authors five value-gap realia questions (Letters q2, Life q2, Rites q2, Crafts q1 and q3);
+    // Play Volume 2, S6 (row CM-42) adds two: the q1 Check on the yut rules card and the q3 Apply on the sign-up sheet.
     expect(shipped.filter(({ questId }) => questId.startsWith('quest:stage6-')).map(({ questId }) => questId).sort()).toEqual([
       'quest:stage6-crafts-q1',
       'quest:stage6-crafts-q3',
+      'quest:stage6-crafts-v2-q1',
+      'quest:stage6-crafts-v2-q3',
       'quest:stage6-letters-q2',
+      // Row CM-44 S6: each Stage 6 Letters & Books Volume 2 quest plays one.
+      'quest:stage6-letters-v2-q1',
+      'quest:stage6-letters-v2-q2',
+      'quest:stage6-letters-v2-q3',
       'quest:stage6-life-q2',
+      // Row CM-41 S6: the Stage 6 Nature Volume 2 Apply (q1, the weather card) and Check (q2, the trail sign).
+      'quest:stage6-nature-v2-q1',
+      'quest:stage6-nature-v2-q2',
       'quest:stage6-rites-q2',
+      // Row CM-45 S6: the Stage 6 Holidays Volume 2 Applies (q1, the calendar; q2, the timetable) and Check (q3, the ticket).
+      'quest:stage6-rites-v2-q1',
+      'quest:stage6-rites-v2-q2',
+      'quest:stage6-rites-v2-q3',
     ]);
+  });
+});
+
+describe('game.hidden-heritage off: every shipped Hidden Heritage step plays Pic-Word Match on its targets (row CM-42 S2)', () => {
+  const hh = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'hidden-heritage');
+
+  it('ships Hidden Heritage steps (the Play Volume 2 places scene:play-courtyard), so the check is not empty', () => {
+    expect(hh.map(({ questId }) => questId)).toContain('quest:stage2-crafts-v2-q1');
+  });
+
+  it('each fallback board holds its scene round targets, one drawn picture each, under the targets ids', () => {
+    for (const { questId, i, ref } of hh) {
+      const scope = scopeOf(ref)!;
+      const fallback = picWordFallback(scope);
+      expect(fallback.kind, `${questId} step ${i}`).toBe('pic-word-match');
+      expect(PLAYABLE_KINDS.has(fallback.kind)).toBe(true);
+      const rounds = validHiddenHeritageRounds(scope);
+      expect(rounds.length, `${questId} step ${i}`).toBeGreaterThan(0);
+      expect(fallback.picWord!.boards.map((b) => b.pairs.map((p) => p.id)), `${questId} step ${i}`).toEqual(rounds.map((r) => r.targets.map((t) => t.id)));
+      for (const pair of fallback.picWord!.boards.flatMap((b) => b.pairs)) {
+        expect(pair.pictureRef !== undefined && canDrawPicture(pair.pictureRef), `${questId} ${pair.id}`).toBe(true);
+        expect(pair.word.romanization.length, `${questId} ${pair.id}`).toBeGreaterThan(0);
+      }
+      expect(new Set(fallback.picWord!.boards.flatMap((b) => b.pairs.map((p) => p.pictureRef))).size, `${questId}: one picture, one word`).toBe(fallback.picWord!.boards.flatMap((b) => b.pairs).length);
+    }
   });
 });

@@ -62,9 +62,27 @@ export const localizeJamo = (jamo: Jamo, locale: UiLocale, overlays?: Overlays):
 export const localizeStory = (story: Story, locale: UiLocale, overlays?: Overlays): Story =>
   localize(story, story.id, locale, overlays ?? OVERLAYS);
 
-/** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref (a lesson ref reads its loaded cell's glosses). */
-export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocale, overlays?: Overlays): MinigameScope =>
-  localize(scope, ref, locale, overlays ?? CONTENT_OVERLAYS);
+/**
+ * A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref (a lesson ref reads its loaded cell's
+ * glosses). A book 2 tale's Story Order (F-CURR-002 row CM-46) is the story's: its captions' meanings are the story's
+ * overlay (`tiers.<level>.storyOrder.rounds.<round>.panels.<panel>.caption.gloss`), not the ref's.
+ */
+export function localizeScope(scope: MinigameScope, ref: string, locale: UiLocale, overlays?: Overlays): MinigameScope {
+  if (scope.kind === 'story-order' && scope.story !== undefined && scope.storyOrder !== undefined) {
+    const entry = locale === 'en' ? undefined : (overlays ?? OVERLAYS)[locale]?.[scope.story.storyId];
+    if (entry === undefined) return scope;
+    const at = `tiers.${scope.story.level}.storyOrder.rounds.`;
+    const rounds = scope.storyOrder.rounds.map((round) => ({
+      ...round,
+      panels: round.panels.map((panel) => {
+        const gloss = entry[`${at}${round.id}.panels.${panel.id}.caption.gloss`];
+        return gloss === undefined ? panel : { ...panel, caption: { ...panel.caption, en: gloss } };
+      }),
+    }));
+    return { ...scope, storyOrder: { rounds } };
+  }
+  return localize(scope, ref, locale, overlays ?? CONTENT_OVERLAYS);
+}
 
 /**
  * Something that carries the English title of a content entity as built (a mission card,

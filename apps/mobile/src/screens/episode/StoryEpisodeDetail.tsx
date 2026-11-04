@@ -19,7 +19,7 @@ import {
   touchTarget,
   useMediaSize,
 } from '@hangul-route/design-system';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -47,7 +47,7 @@ import {
   type TaleRowAction,
   type TaleRowView,
 } from '../../logic/story/story-episode';
-import { defaultStoryIndex, type StoryIndexEntry } from '../../logic/story/story-index';
+import type { StoryIndexEntry } from '../../logic/story/story-index';
 import { storyCoverVariant } from '../../logic/story/story-tile';
 import { playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { track } from '../../platform/telemetry';
@@ -56,6 +56,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { CellLinkRow } from '../story/CellLinkRow';
 import { SpeakerButton } from '../story/ReaderParts';
+import { useStoryIndex } from '../story/use-story-index';
 import { CoverFallback } from '../library/StoryTile';
 import { useStoriesLoaded } from '../story-content';
 
@@ -91,6 +92,8 @@ interface Props extends StoryEpisodeNavigation {
    * draws the row when it is above 0 (wireframe episode/detail-cell-stories-row D); a shelf page has 0.
    */
   cellStoryCount: number;
+  /** A Stage 5 cell's "Vol 1" / "Vol 2" tabs (F-CURR-002 row CM-40), under the pills; none for a cell of one book. */
+  volumeTabs?: ReactNode;
 }
 
 /**
@@ -115,6 +118,7 @@ export function StoryEpisodeDetail({
   onOpenCellStories,
   cellStoryCount,
   onOpenCellStoriesRow,
+  volumeTabs,
 }: Props): ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
@@ -133,7 +137,9 @@ export function StoryEpisodeDetail({
     // storyChunks: a localized copy reads the story's body once, so it is made again when a chunk arrives.
     [sourceEntries, locale, storyChunks],
   );
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), storiesAll, snap), [snap, storyChunks]);
+  // A book 2 tale's notes (row CM-46) count while `volumes` is on.
+  const { entries: storyIndex } = useStoryIndex();
+  const notes = useMemo(() => foundNotes(storyIndex, storiesAll, snap), [storyIndex, snap, storyChunks]);
   const stageDef = stageByKey(episode.stage);
   const themeDef = themeByKey(episode.theme);
   const view = useMemo(
@@ -229,6 +235,7 @@ export function StoryEpisodeDetail({
           <Pill tone="secondary" label={view.pills[1]} size="sm" />
           <Pill tone="neutral" label={view.pills[2]} size="sm" />
         </View>
+        {volumeTabs}
         {home && homeStage && homeTheme ? (
           <Pressable
             onPress={() => onOpenCellStories(home.stage, home.theme)}

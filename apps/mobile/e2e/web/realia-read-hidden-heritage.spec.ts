@@ -171,7 +171,10 @@ test.describe('Hidden Heritage (F-CURR-002 CM-36)', () => {
   });
 });
 
-/** F-CURR-002 row CM-37 part 1: the Letters school room scene, opened through the same e2e hook. */
+/**
+ * F-CURR-002 row CM-37 part 1: the Letters school room scene, opened through the same e2e hook; Letters & Books Volume 2
+ * quest 2 plays it as its Apply, and its card back is row CM-44 S2's.
+ */
 const LETTERS = 'scene:letters-school';
 const LETTERS_THINGS = ['mountain', 'bird', 'book', 'brush', 'tree', 'flower'];
 const LETTERS_TARGETS: Record<string, { id: string; meaning: string }> = {
@@ -206,6 +209,17 @@ test.describe('Hidden Heritage, the Letters school room (F-CURR-002 CM-37)', () 
     await expect(page.getByText('You found them all')).toBeVisible();
     await expectNoShame(page);
     await shot(page, 'hidden-heritage-letters-end-320');
+    // Row CM-44 S2 (Letters Volume 2 quest 2 plays this scene): its card back, every fact of the note with its source line, no URL.
+    const back = page.getByTestId('hh-card-back');
+    await back.scrollIntoViewIfNeeded();
+    await expect(back.getByText('Did you know?')).toBeVisible();
+    for (const id of ['f1', 'f2', 'f3']) await expect(back.getByTestId(`hh-card-back-${id}`)).toContainText('Source:');
+    await expect(back.getByTestId('hh-card-back-f1')).toContainText('Danwon pungsokdocheop');
+    await expect(back.getByTestId('hh-card-back-f2')).toContainText('Classical Chinese');
+    await expect(back.getByTestId('hh-card-back-f3')).toContainText('writing brush');
+    expect(await back.innerText()).not.toMatch(/https?:|www\./);
+    await expectNoHorizontalOverflow(page);
+    await shot(page, 'hidden-heritage-letters-card-back-320');
     expect((await log(page)).answers.map((a) => a.correct)).toEqual([true, true, true]);
     await page.getByTestId('hh-continue').click();
     await expect.poll(async () => (await log(page)).completed).toBe(1);
@@ -238,10 +252,20 @@ test.describe('Hidden Heritage, the Letters school room (F-CURR-002 CM-37)', () 
       if (i < 2) await expect(page.getByTestId('hh-prompt')).not.toContainText(ko);
     }
     await expect(page.getByText('You found them all')).toBeVisible();
+    // Row CM-44 S2: the card back sits between the found words and Continue; at Largest its three facts and their source
+    // lines fit, and Continue is a scroll away and still plays the step to its end.
+    const back = page.getByTestId('hh-card-back');
+    await back.scrollIntoViewIfNeeded();
+    for (const id of ['f1', 'f2', 'f3']) await expect(back.getByTestId(`hh-card-back-${id}`)).toContainText('Source:');
+    await expectNoSidewaysScroll(page, 'Letters card back, Largest');
+    await expectNoClippedText(page, 'Letters card back, Largest');
     await page.getByTestId('hh-continue').scrollIntoViewIfNeeded();
     await expect(page.getByTestId('hh-continue')).toBeVisible();
+    await expect(page.getByTestId('hh-continue')).toBeInViewport();
     await expectNoSidewaysScroll(page, 'Letters end, Largest');
     await expectNoClippedText(page, 'Letters end, Largest');
+    await page.getByTestId('hh-continue').click();
+    await expect.poll(async () => (await log(page)).completed).toBe(1);
   });
 
   test.describe('at 768', () => {

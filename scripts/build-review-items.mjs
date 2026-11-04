@@ -66,9 +66,11 @@ export const STAGE1_TABLE = "packages/content-schema/src/review-items/stage1-ite
  * Budget line of the review-item index (F-CURR-002 §10 ceilings table): lazy and precached, so it puts
  * no weight on start-up. The built bundle is held to the same line in apps/mobile/scripts/pwa/lesson-chunks.mjs
  * (`PRECACHE_BUDGET.reviewItemsRaw`, `reviewItemsGzip`). Raising it is a reviewed one-line change with the
- * measured numbers in the PR.
+ * measured numbers in the PR. The F-CURR-002 Volume 2 integration (rows CM-40..CM-46, fifteen Volume 2 cells and two books 2)
+ * measures 1,067 items, 158,112 B raw / 34,019 B gzip as generated, past the first line (150,000 / 30,000), so the line is
+ * that measurement plus a rounding margin.
  */
-export const BUDGET = Object.freeze({ raw: 150_000, gzip: 30_000 });
+export const BUDGET = Object.freeze({ raw: 170_000, gzip: 37_000 });
 
 const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const relOf = (root, file) => file.slice(root.length + 1).split(sep).join("/");

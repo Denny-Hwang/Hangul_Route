@@ -12,6 +12,7 @@ import {
   RealiaReadRoundSchema,
   RealiaSchema,
   StoryOrderRoundSchema,
+  SyllableBuildRoundSchema,
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
@@ -33,9 +34,17 @@ import { AddedInSchema, CardIdSchema, IsoDateSchema, SourceSchema, VerificationS
 
 /** Stages that hold lesson cells: Stage 1 is hand-written, Stage 5 holds the story books. */
 export const LESSON_STAGES = ['stage2', 'stage3', 'stage4', 'stage6', 'stage7'] as const satisfies readonly StageKey[];
-export const LESSON_CELL_ID_RE = /^episode:stage[2-467]-(letters|life|rites|nature|crafts)$/;
-/** `minigame:s<n>-<theme>-q<k>-<step>`. */
-export const LESSON_SCOPE_REF_RE = /^minigame:s[2-467]-(letters|life|rites|nature|crafts)-q[1-9]-[a-z0-9-]+$/;
+/**
+ * `episode:stage<n>-<theme>`, or `episode:stage<n>-<theme>-v2` for the cell's Volume 2 (F-CURR-002 §5.1 and §6.2, row
+ * CM-40): a cell holds two volumes at most (F-STORY-005 `MAX_EPISODES_PER_CELL`), so only `-v2` is a suffix.
+ */
+export const LESSON_CELL_ID_RE = /^episode:stage[2-467]-(letters|life|rites|nature|crafts)(-v2)?$/;
+/** `minigame:s<n>-<theme>-q<k>-<step>`, or `minigame:s<n>-<theme>-v2-q<k>-<step>` in a Volume 2 cell (row CM-40). */
+export const LESSON_SCOPE_REF_RE = /^minigame:s[2-467]-(letters|life|rites|nature|crafts)(-v2)?-q[1-9]-[a-z0-9-]+$/;
+/** The volumes a lesson cell file can be: Volume 1 (`<theme>.json`, no `volume`) and Volume 2 (`<theme>.v2.json`). */
+export const LESSON_VOLUMES = [1, 2] as const;
+/** The id suffix of a cell's volume: none for Volume 1, `-v2` for Volume 2 (as `cellOfVolume` of the review items names it). */
+export const volumeSuffix = (volume: number | undefined): string => (volume === undefined || volume === 1 ? '' : `-v${volume}`);
 /** The six steps of every upper-stage quest, in order (F-CURR-001 §3.1 rule 1). */
 export const LESSON_STEP_ORDER: readonly QuestStepKind[] = ['intro', 'discover', 'practice', 'apply', 'check', 'reward'];
 /** A note restating a fact a reviewed story already cites: `story:<slug>#<factId>` (§3.9 Reuse). */
@@ -117,6 +126,21 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('hidden-heritage'), rounds: z.array(HiddenHeritageRoundSchema).min(1).max(2) }),
   /** My Story (F-CURR-002 §7.1 F8, row CM-38): 3-5 chained word-bank frames, one neutral option in every bank. */
   z.object({ ref: ScopeRefSchema, kind: z.literal('my-story'), frames: MyStoryFramesSchema }),
+  /**
+   * Syllable Build (F-CURR-002 §7.1 F3; scope added by row CM-44 S2, the first S2 cell that plays one, as the CM-32
+   * decision record names): 1-6 blocks with unique ids. A lesson's block is a taught word, so its meaning (`target.en`)
+   * is required: it shows under the speaker and its es and ko come from the cell's overlay.
+   */
+  z.object({
+    ref: ScopeRefSchema,
+    kind: z.literal('syllable-build'),
+    rounds: z
+      .array(SyllableBuildRoundSchema)
+      .min(1)
+      .max(6)
+      .refine((rounds) => new Set(rounds.map((r) => r.id)).size === rounds.length, 'round ids must be unique')
+      .refine((rounds) => rounds.every((r) => r.target.en !== undefined), 'a lesson block is a word with its meaning (target.en)'),
+  }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];
@@ -276,6 +300,8 @@ export const LessonCellObjectSchema = z
     stage: StageKeySchema,
     theme: ThemeKeySchema,
     status: z.enum(['draft', 'ready']),
+    /** Volume 2 of the cell (`<theme>.v2.json`, row CM-40); a Volume 1 file states none. */
+    volume: z.literal(2).optional(),
     titleEn: z.string().trim().min(1).max(28),
     subtitleEn: z.string().trim().min(1).max(60),
     hoyaIntroEn: z.string().trim().min(1).max(90),
@@ -297,8 +323,13 @@ export function lessonCellRules(cell: z.output<typeof LessonCellObjectSchema>, c
     ctx.addIssue({ code: z.ZodIssueCode.custom, path, message });
   const { stage, theme } = cell;
   const n = stageNumber(stage);
+  // A Volume 2 cell's ids all carry `-v2` after the theme (F-CURR-002 §6.2): episode, quests and scope refs.
+  const v = volumeSuffix(cell.volume);
+  const own = `${theme}${v}`;
 
-  if (cell.id !== `episode:${stage}-${theme}`) issue(['id'], `a ${stage} ${theme} cell has id episode:${stage}-${theme}`);
+  if (cell.id !== `episode:${stage}-${own}`) {
+    issue(['id'], cell.volume === undefined ? `a ${stage} ${theme} cell has id episode:${stage}-${theme}` : `a ${stage} ${theme} cell of volume ${cell.volume} has id episode:${stage}-${own}`);
+  }
   if (cell.order !== themeOrder(theme)) issue(['order'], `a cell in ${theme} has order ${themeOrder(theme)}`);
   if (cell.status === 'ready' && !isLessonSignedOff(cell.review)) {
     issue(['review'], 'lesson-review-unsigned: a ready cell needs both multi-agent review sign-offs, reviewedBy and reviewedAt');
@@ -308,7 +339,7 @@ export function lessonCellRules(cell: z.output<typeof LessonCellObjectSchema>, c
 
   cell.quests.forEach((quest, qi) => {
     const at = (...path: (string | number)[]) => ['quests', qi, ...path];
-    const prefix = `${stage}-${theme}-q${qi + 1}`;
+    const prefix = `${stage}-${own}-q${qi + 1}`;
     if (quest.id !== `quest:${prefix}`) issue(at('id'), `quest ${qi + 1} of this cell has id quest:${prefix}`);
 
     const kinds = quest.steps.map((s) => s.kind);
@@ -321,8 +352,8 @@ export function lessonCellRules(cell: z.output<typeof LessonCellObjectSchema>, c
 
     const scopes = new Map<string, LessonScope>();
     quest.scopes.forEach((scope, si) => {
-      if (!scope.ref.startsWith(`minigame:s${n}-${theme}-q${qi + 1}-`)) {
-        issue(at('scopes', si, 'ref'), `a scope of ${prefix} has a ref starting minigame:s${n}-${theme}-q${qi + 1}-`);
+      if (!scope.ref.startsWith(`minigame:s${n}-${own}-q${qi + 1}-`)) {
+        issue(at('scopes', si, 'ref'), `a scope of ${prefix} has a ref starting minigame:s${n}-${own}-q${qi + 1}-`);
       }
       if (scopes.has(scope.ref)) issue(at('scopes', si, 'ref'), `scope ref ${scope.ref} is listed twice`);
       scopes.set(scope.ref, scope);

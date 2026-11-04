@@ -244,6 +244,37 @@ describe('Realia Read', () => {
     const twice = { ...parsed, entries: [parsed.entries[0]!, parsed.entries[0]!] };
     expect(realiaReadIssues(twice, []).map((i) => i.message)).toEqual(['realia entry ids must be unique']);
   });
+
+  it('realiaReadIssues: a direction answer is drawn on the sheet, by a sign board or in the line (F-CURR-002 CM-41 S6)', () => {
+    const left = kt('왼쪽', 'oenjjok', 'left');
+    const ask = RealiaReadRoundSchema.parse({
+      id: 'r',
+      questionEn: 'Which way?',
+      options: [
+        { id: 'l', text: left },
+        { id: 'r', text: kt('오른쪽', 'oreunjjok', 'right') },
+      ],
+      answerId: 'l',
+      answerEntryId: 'lot',
+    });
+    const place = { id: 'lot', text: kt('주차장', 'juchajang', 'parking lot') };
+    const sheet = (kind: string | undefined, entry: object) => RealiaSchema.parse({ ref: 'realia:t', kind, entries: [entry], altEn: 'A test sheet' });
+    // A map whose direction is only `dir` shows nothing to a sighted learner.
+    expect(realiaReadIssues(sheet('map', { ...place, dir: 'left' }), [ask])).toEqual([
+      {
+        path: ['rounds', 0, 'answerId'],
+        message: 'the answer "왼쪽" is a direction the sheet does not show: on a map sheet the answer entry "lot" carries it as its text or value (only a sign\'s board draws dir)',
+      },
+    ]);
+    expect(realiaReadIssues(sheet(undefined, place), [ask])[0]?.message).toContain('on a plain sheet');
+    // The map's value, or a sign board pointing the answer's way, shows it.
+    expect(realiaReadIssues(sheet('map', { ...place, value: left }), [ask])).toEqual([]);
+    expect(realiaReadIssues(sheet('map', { ...place, text: kt('왼쪽 주차장', 'oenjjok juchajang', 'parking lot, left') }), [ask])).toEqual([]);
+    expect(realiaReadIssues(sheet('sign', { ...place, dir: 'left' }), [ask])).toEqual([]);
+    expect(realiaReadIssues(sheet('sign', { ...place, dir: 'right' }), [ask])).toHaveLength(1);
+    // A non-direction answer is not checked here.
+    expect(realiaReadIssues(sheet('map', place), [{ ...ask, options: [{ id: 'l', text: place.text }, ask.options[1]!] }])).toEqual([]);
+  });
 });
 
 describe('Type Hangul and Trace a Word', () => {

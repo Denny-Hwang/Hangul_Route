@@ -1099,4 +1099,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
   'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
   'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
+  // F-CURR-002 row CM-40: a cell's volumes, Vol 1 and Vol 2 (two at most), and the cell's "Opens Volume 2" sentence.
+  'learner.episode.volumes.tab': [[1], [2]],
+  'learner.episode.volumes.tabA11y': [[1], [2]],
+  'a11y.journeyVolume': [[1], [2]],
 };

@@ -6,6 +6,7 @@ import {
   a11yRomanization,
   checkConsistency,
   checkExceptions,
+  checkFrameRomanization,
   checkJamoRomanization,
   checkProse,
   checkRomanization,
@@ -76,6 +77,15 @@ describe('checkRomanization', () => {
       '가족식탁 / gajok siktak: 1 Korean word, 2 romanized',
     );
     expect(rules('가족 식탁', 'gajok siktak')).toEqual([]);
+  });
+
+  it('R3 in a frame: a sentence mark right after a slot belongs to the slot, not to the next word (CM-45 S3)', () => {
+    expect(checkFrameRomanization('___, 새해 복 많이 받으세요.', '___, saehae bok mani badeuseyo')).toEqual([]);
+    expect(checkFrameRomanization('저는 ___을/를 좋아해요.', 'jeoneun ___eul/reul joahaeyo')).toEqual([]);
+    expect(checkFrameRomanization('___, 새해 복 많이 받으세요.', '___, saehae bongmani badeuseyo').map((i) => i.rule)).toEqual([
+      'romanization-spacing',
+      'romanization-mismatch',
+    ]);
   });
 
   it('R4: an empty romanization is missing', () => {

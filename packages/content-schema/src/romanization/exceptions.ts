@@ -40,6 +40,27 @@ export const ROMANIZATION_EXCEPTIONS: readonly RomanizationException[] = [
     allowed: ['horangiga eommain cheokaeyo.'],
     reason: 'ㄱ+ㅎ across the noun-verb join of 척하다: the converter keeps the noun convention (묵호 mukho) and gives cheokhaeyo; the verb ending aspirates',
   },
+  // F-CURR-002 row CM-46a: the read tiers of sillok-royal-historians and joseon-records-today say 기록했어요.
+  {
+    ko: '기록했어요',
+    allowed: ['girokaesseoyo'],
+    reason: 'ㄱ+ㅎ across the noun-verb join of 기록하다 (as 왜 기록할까요? above): the converter gives girokhaesseoyo; the verb ending aspirates',
+  },
+  {
+    ko: '사관이 기록했어요.',
+    allowed: ['sagwani girokaesseoyo.'],
+    reason: 'ㄱ+ㅎ across the noun-verb join of 기록하다 (as 왜 기록할까요? above): the converter gives girokhaesseoyo; the verb ending aspirates',
+  },
+  {
+    ko: '사관이 왕의 말을 기록했어요.',
+    allowed: ['sagwani wangui mareul girokaesseoyo.'],
+    reason: 'ㄱ+ㅎ across the noun-verb join of 기록하다 (as 왜 기록할까요? above): the converter gives girokhaesseoyo; the verb ending aspirates',
+  },
+  {
+    ko: '화성을 기록했어요.',
+    allowed: ['hwaseongeul girokaesseoyo.'],
+    reason: 'ㄱ+ㅎ across the noun-verb join of 기록하다 (as 왜 기록할까요? above): the converter gives girokhaesseoyo; the verb ending aspirates',
+  },
 ];
 
 /**

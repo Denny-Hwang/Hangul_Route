@@ -31,3 +31,9 @@ Each `*.final.json` carries `verification: { passes: 3, checked_at: "2026-10-10"
 - **Native language and culture review** of Korean text and tone: the multi-agent final review (owner decision 2026-10-12; two separate passes signed `reviewedBy: "MAR"`, see [F-STORY-001 §3.6](../../../docs/specs/F-STORY-001-story-schema-pipeline.md) and [docs/workflows/story-content-qa.md](../../../docs/workflows/story-content-qa.md)).
 - Re-check the items listed under "remaining uncertainty" in the sign-off, in particular time-dependent facts: Haeinsa Janggyeong Panjeon visitor rules (haeinsa.or.kr) and the current location of the Hunminjeongeum Haerye (Kansong Art Museum).
 - Where a source could only be read through an archive copy (unesco.org, heritage portal descriptions), spot-check it live in a browser.
+
+## Read tiers of the listen-only stories (F-CURR-002 row CM-46a, 2026-10-31)
+The ten stories that shipped with a listen tier only (`tripitaka-koreana`, `sillok-royal-historians`, `janggyeong-panjeon`, `jikji-metal-type`, `sillok-mountain-archives`, `nanjung-ilgi`, `seungjeongwon-ilgi-every-day`, `ilseongnok-daily-reflection`, `uigwe-royal-birthday`, `joseon-records-today`) gained a `read` tier that restates facts they already cite; no fact or source changed. `read-tiers.changes.md` lists every checker finding and its outcome, and `read-tiers.signoff.md` the third pass.
+
+## Nature book 2 (F-CURR-002 row CM-46, 2026-11-04)
+Three new readers for the Stage 5 Nature cell's book 2 (`jeju-volcanic-island`, `jirisan-national-park`, `suncheon-bay-wetland`), authored directly in `content/stories/` (no importer run). `nature-book2.sources.json` holds every fact with its quoted source words as opened on 2026-11-04, the pages that could not be read and the institutions' names as of that date; `nature-book2.changes.md` lists the checker findings and outcomes and `nature-book2.signoff.md` the third pass.

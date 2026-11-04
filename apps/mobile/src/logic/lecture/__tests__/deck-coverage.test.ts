@@ -18,7 +18,7 @@ import {
   type ThemeKey,
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, gridEpisodes } from '../../../content';
+import { episodesAll, episodesWithVolumes, gridEpisodes } from '../../../content';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
 import { questsAll } from '../../../content/quests';
 import { storiesAll } from '../../../content/stories';
@@ -115,6 +115,10 @@ const BASELINE: Readonly<Record<string, CellRow>> = {
   'stage4:life': { quests: 3, slides: 20, wordCards: 12, differentWords: 12, quiz: 18, skipped: {}, flattened: {} },
   'stage4:rites': { quests: 3, slides: 21, wordCards: 12, differentWords: 12, quiz: 16, skipped: {}, flattened: {} },
   'stage4:nature': { quests: 3, slides: 20, wordCards: 12, differentWords: 11, quiz: 25, skipped: {}, flattened: {} },
+  // F-CURR-002 row CM-41 S4: Stage 4 Nature's Volume 2 (Hiking Plans), with `game.role-play` off: the 12 reply slides of
+  // its Role Play main paths, 4 Realia Read, 2 Cloze Pick and 2 Tap to Respond question slides; the rolePlay-on deck is
+  // pinned in its own test below.
+  'stage4:nature:v2': { quests: 3, slides: 47, wordCards: 3, differentWords: 3, quiz: 20, skipped: {}, flattened: {} },
   'stage4:crafts': { quests: 3, slides: 20, wordCards: 12, differentWords: 10, quiz: 16, skipped: {}, flattened: {} },
   stage5: { quests: 14, slides: 186, wordCards: 0, differentWords: 0, quiz: 42, skipped: {}, flattened: {} },
   'stage6:letters': {
@@ -272,11 +276,31 @@ function measure(episodes: readonly Episode[], bundle: LectureBundle): Measured 
   return { ...row, skipped, flattened };
 }
 
+/**
+ * Every shipped grid episode by cell, each cell's first volume, and a later volume (F-CURR-002 row CM-40) the table pins
+ * (`stage4:nature:v2`, row CM-41 S4); every later volume also gets its own walk below (`deck coverage of the later volumes`),
+ * as the presenter's chooser lists it only while `volumes` is on.
+ */
+/**
+ * The game kinds the presenter has no slide for yet: My Story (row CM-38, first in a lesson with Stage 7 Nature Volume 2,
+ * row CM-41 S7) and Syllable Build (row CM-32, first in a lesson with Stage 2 Letters Volume 2, row CM-44 S2). A deck
+ * skips such a step calmly (`unsupported-step`); both cells are later volumes, dark while `volumes` is off, so the
+ * presenter row that draws these kinds lands before the `volumes` ramp.
+ */
+const PRESENTER_LACKS: ReadonlySet<string> = new Set(['my-story', 'syllable-build']);
+const presenterLacks = (ref: string): boolean => {
+  const kind = lectureBundle('en').scopeFor(ref)?.kind;
+  return kind !== undefined && PRESENTER_LACKS.has(kind);
+};
+
 function shippedCells(): Map<string, Episode[]> {
   const cells = new Map<string, Episode[]>();
-  for (const episode of gridEpisodes(episodesAll)) {
+  for (const episode of gridEpisodes(episodesWithVolumes)) {
     if (episode.status === 'preview' || episode.questIds.length === 0) continue;
-    const key = episode.stage === 'stage5' ? 'stage5' : `${episode.stage satisfies StageKey}:${episode.theme satisfies ThemeKey}`;
+    const cell = episode.stage === 'stage5' ? 'stage5' : `${episode.stage satisfies StageKey}:${episode.theme satisfies ThemeKey}`;
+    const key = (episode.volume ?? 1) > 1 ? `${cell}:v${episode.volume}` : cell;
+    // A later volume walks here only when the table pins it (Stage 4 Nature, row CM-41 S4); the others walk below.
+    if ((episode.volume ?? 1) > 1 && !(key in BASELINE)) continue;
     cells.set(key, [...(cells.get(key) ?? []), episode]);
   }
   return cells;
@@ -351,6 +375,40 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     for (const [key, row] of measured) expect(row.skipped, key).toEqual({});
   });
 
+  it('a later volume holds its floors with game.role-play off and on: one Role Play slide per main-path turn on, its reply slides off, no step skipped (row CM-41 S4)', () => {
+    const later = gridEpisodes(episodesWithVolumes).filter((e) => (e.volume ?? 1) > 1 && e.status !== 'preview');
+    expect(later.map((e) => e.id)).toContain('episode:stage4-nature-v2');
+    for (const episode of later) {
+      const deck = LectureDeckSchema.parse({ v: 1, id: 'lecture:coverage', title: 'Coverage', createdAt: '2026-10-15T00:00:00Z', seed: 1, blocks: [{ kind: 'episode', id: episode.id }] });
+      const off = expandDeck(deck, bundle, { canPlayKorean: true }, { rolePlay: false });
+      const on = expandDeck(deck, bundle, { canPlayKorean: true }, { rolePlay: true });
+      expect(off.skipped.filter((s) => !presenterLacks(s.ref)), episode.id).toEqual([]);
+      expect(on.skipped.filter((s) => !presenterLacks(s.ref)), episode.id).toEqual([]);
+      // Each Role Play step: its main-path turns as role-play slides (on) or as reply question slides (off), one for one.
+      const rolePlaySteps = episode.questIds.flatMap((questId) =>
+        (bundle.questById(questId)?.steps ?? []).flatMap((step) => (step.minigameRef !== undefined && bundle.scopeFor(step.minigameRef)?.kind === 'role-play' ? [`/${questId}/${step.id}/`] : [])),
+      );
+      // Stage 4 Nature (row CM-41 S4) plays one Role Play a quest; a later volume without Role Play has nothing to swap.
+      if (episode.id === 'episode:stage4-nature-v2') expect(rolePlaySteps.length, episode.id).toBe(episode.questIds.length);
+      if (rolePlaySteps.length === 0) {
+        expect(on.slides.length, episode.id).toBe(off.slides.length);
+        continue;
+      }
+      for (const path of rolePlaySteps) {
+        const onSlides = on.slides.filter((s) => s.key.includes(path));
+        const offSlides = off.slides.filter((s) => s.key.includes(path));
+        expect(onSlides.length, path).toBeGreaterThanOrEqual(4);
+        expect(onSlides.every((s) => s.kind === 'role-play'), path).toBe(true);
+        expect(offSlides.map((s) => s.kind), path).toEqual(onSlides.map(() => 'quiz'));
+      }
+      const count = (slides: readonly { kind: string }[], kind: string): number => slides.filter((s) => s.kind === kind).length;
+      expect(count(off.slides, 'role-play'), episode.id).toBe(0);
+      expect(count(on.slides, 'role-play'), episode.id).toBeGreaterThanOrEqual(4 * rolePlaySteps.length);
+      expect(count(off.slides, 'quiz') - count(on.slides, 'quiz'), episode.id).toBe(count(on.slides, 'role-play'));
+      expect(on.slides.length, episode.id).toBe(off.slides.length);
+    }
+  });
+
   it('every shipped type-hangul, trace-word and write-frame round has its own write-together slide (LV-S4)', () => {
     const counts = { type: 0, trace: 0, frame: 0, 'own-name': 0 };
     let rounds = 0;
@@ -404,8 +462,9 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     // Section 1: 23 order-it steps holding 105 rounds and 15 Stage 7 Checks holding 30; row CM-3A S3 adds the five
     // Stage 3 Sentence Builder Checks (10 rounds), row CM-3A S4 the three Stage 4 Food Applies (12 rounds) and four
     // Stage 4 Sentence Builder Checks (8 rounds), and row CM-3A S7 keeps 5 of the Stage 7 Checks as Sentence Builder
-    // (10 rounds) and moves 10 to Cloze Pick and Write Frame (section 7.1 Check rotation).
-    expect({ rounds, built }).toEqual({ rounds: 145, built: 145 });
+    // (10 rounds) and moves 10 to Cloze Pick and Write Frame (section 7.1 Check rotation). Row CM-41 S4 adds Stage 4 Nature
+    // Volume 2's Sentence Builder Apply (4 rounds) and Check (2 rounds).
+    expect({ rounds, built }).toEqual({ rounds: 151, built: 151 });
   });
 
   it('LECTURE_MAX_BLOCKS times the largest one-block deck stays under the Worker slide bound (section 11)', () => {
@@ -513,7 +572,8 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
   });
 
   it('the BASELINE constant matches the section 1 totals, less what the LV-S rows lowered (pins the table text, not the builder)', () => {
-    const upper = Object.entries(BASELINE).filter(([key]) => /^stage[23467]:/.test(key));
+    // The section 1 cells: each cell's first volume (a later volume's row, row CM-41 S4, came after section 1).
+    const upper = Object.entries(BASELINE).filter(([key]) => /^stage[23467]:[a-z]+$/.test(key));
     expect(upper).toHaveLength(25);
     const steps = upper.reduce((n, [, row]) => n + Object.values(row.skipped).reduce((m, [s]) => m + s, 0), 0);
     const rounds = upper.reduce((n, [, row]) => n + Object.values(row.skipped).reduce((m, [, r]) => m + r, 0), 0);
@@ -523,5 +583,74 @@ describe('deck coverage ratchet (AMENDMENTS-LECTURE-V2 section 1, LV-2)', () => 
     // 23 practice and apply steps holding 105, 15 Stage 7 Checks holding 30); LV-S4 the last 33 (114 rounds: type-hangul 21 / 73,
     // write-frame 7 / 21, trace-word 5 / 20).
     expect({ slides: upper.reduce((n, [, row]) => n + row.slides, 0), steps, rounds, flat }).toEqual({ slides: 969, steps: 0, rounds: 0, flat: 0 });
+  });
+});
+
+/**
+ * F-CURR-002 row CM-40: a cell's later volume is off the grid walk above (`gridEpisodes` reads Volume 1), so the shipped
+ * Volume 2 cells get the same walk here, keyed `<stage>:<theme>:v<k>`. No step is skipped, no word card repeats, no Discover
+ * item is flattened, and each cell builds at least its committed question slides, with `game.role-play` off (the main
+ * path's reply slides) and on (one Role Play slide per main-path turn).
+ */
+const BASELINE_LATER_VOLUMES: Readonly<Record<string, { quests: number; quiz: number; quizRolePlayOn: number; rolePlaySlides: number }>> = {
+  // Row CM-45 S4, Seollal Visit: three Role Plays of four turns (q1 and q3 Practice, q2 Apply), two Tap to Respond
+  // games, Cloze Pick and Sentence Builder: 16 question slides, plus 12 reply slides with game.role-play off.
+  'stage4:rites:v2': { quests: 3, quiz: 28, quizRolePlayOn: 16, rolePlaySlides: 12 },
+};
+
+describe('deck coverage of the later volumes (F-CURR-002 row CM-40, CM-45 S4)', () => {
+  const bundle = lectureBundle('en');
+  const later = new Map<string, Episode[]>();
+  for (const episode of episodesWithVolumes) {
+    if ((episode.volume ?? 1) < 2 || episode.status === 'preview' || episode.questIds.length === 0) continue;
+    const key = `${episode.stage}:${episode.theme}:v${episode.volume}`;
+    later.set(key, [...(later.get(key) ?? []), episode]);
+  }
+  const expand = (episode: Episode, rolePlay: boolean) =>
+    expandDeck(
+      LectureDeckSchema.parse({ v: 1, id: 'lecture:coverage', title: 'Coverage', createdAt: '2026-10-15T00:00:00Z', seed: 1, blocks: [{ kind: 'episode', id: episode.id }] }),
+      bundle,
+      { canPlayKorean: true },
+      { rolePlay },
+    );
+
+  it('walks every shipped later volume: the table names a floor for some of them', () => {
+    // The lesson Volume 2 cells of rows CM-41..CM-45 and the two Stage 5 books 2 of row CM-46.
+    expect(later.size).toBe(17);
+    for (const key of Object.keys(BASELINE_LATER_VOLUMES)) expect([...later.keys()], key).toContain(key);
+  });
+
+  it.each([...later.keys()].filter((key) => !(key in BASELINE_LATER_VOLUMES)))('%s: no step skipped but a kind the presenter lacks, one card per word, nothing flattened', (key) => {
+    const row = measure(later.get(key) ?? [], bundle);
+    for (const kind of Object.keys(row.skipped)) expect(PRESENTER_LACKS.has(kind), `${key} ${kind}`).toBe(true);
+    expect(row.flattened).toEqual({});
+    expect(row.repeatedWordCards).toBe(0);
+    for (const episode of later.get(key) ?? []) {
+      for (const rolePlay of [false, true]) {
+        const expanded = expand(episode, rolePlay);
+        expect(expanded.skipped.filter((s) => !presenterLacks(s.ref)), `${episode.id} role-play ${rolePlay ? 'on' : 'off'}`).toEqual([]);
+        for (const s of expanded.slides) expect(s.key.length, s.key).toBeLessThanOrEqual(256);
+      }
+    }
+  });
+
+  it.each(Object.keys(BASELINE_LATER_VOLUMES))('%s: no step skipped, one card per word, nothing flattened, no fewer question slides than the table', (key) => {
+    const row = measure(later.get(key) ?? [], bundle);
+    const base = BASELINE_LATER_VOLUMES[key]!;
+    expect(row.quests).toBe(base.quests);
+    expect(row.skipped).toEqual({});
+    expect(row.flattened).toEqual({});
+    expect(row.repeatedWordCards).toBe(0);
+    expect(row.quiz).toBeGreaterThanOrEqual(base.quiz);
+    for (const episode of later.get(key) ?? []) {
+      for (const rolePlay of [false, true]) {
+        const expanded = expand(episode, rolePlay);
+        expect(expanded.skipped, `${episode.id} role-play ${rolePlay ? 'on' : 'off'}`).toEqual([]);
+        for (const s of expanded.slides) expect(s.key.length, s.key).toBeLessThanOrEqual(256);
+      }
+      const on = expand(episode, true);
+      expect(on.slides.filter((s) => s.kind === 'quiz').length, `${episode.id} quiz, role-play on`).toBeGreaterThanOrEqual(base.quizRolePlayOn);
+      expect(on.slides.filter((s) => s.kind === 'role-play').length, `${episode.id} role-play slides`).toBe(base.rolePlaySlides);
+    }
   });
 });

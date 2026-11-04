@@ -36,8 +36,8 @@ const hearRounds = Object.entries(ALL_LESSON_SCOPES).flatMap(([ref, scope]) =>
 );
 
 describe('Dictation: the shown meaning never carries the word (row CM-3A S2)', () => {
-  it('the Stage 2 Dictation Checks are shipped: fourteen rounds', () => {
-    expect(hearRounds.filter(({ ref }) => /^minigame:s2-.*-check$/.test(ref))).toHaveLength(14);
+  it('the Stage 2 Dictation Checks are shipped: eighteen rounds (Nature Volume 2 q1 adds two, row CM-41 S2; Letters Volume 2 two, row CM-44 S2)', () => {
+    expect(hearRounds.filter(({ ref }) => /^minigame:s2-.*-check$/.test(ref))).toHaveLength(18);
   });
 
   it('en and es: no meaning holds the romanization', () => {

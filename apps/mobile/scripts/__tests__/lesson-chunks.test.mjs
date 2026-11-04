@@ -49,6 +49,23 @@ describe('lessonChunkProblems', () => {
     expect(isStartBundle(bundles[1].url)).toBe(false);
   });
 
+  it('checks the headers chunks and a Volume 2 body chunk like any other (F-CURR-002 row CM-40)', () => {
+    const manifest = [
+      { name: 'lessons-cell-stage2-rites', hash: '0123456789abcdef' },
+      { name: 'lessons-cell-stage2-rites-v2', hash: '1123456789abcdef' },
+      { name: 'lessons-headers-en', hash: '2123456789abcdef' },
+    ];
+    const start = { url: START, text: `var m={"a":"0123456789abcdef","b":"1123456789abcdef"},h={"en":"2123456789abcdef"};` };
+    const bundles = [start, ...manifest.map((m) => chunk(m.name, m.hash))];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    // Volume 1's bundle is never taken for Volume 2's (the md5 suffix ends the name).
+    expect(lessonChunkUrls(manifest.slice(0, 1), bundles)).toEqual([bundles[1].url]);
+    const missing = bundles.filter((b) => !b.url.includes('lessons-headers-en'));
+    expect(lessonChunkProblems({ manifest, bundles: missing, precached: all(missing) })).toEqual(['lessons-headers-en has no web bundle: the chunk is missing from the build']);
+    const pulledIn = [{ url: START, text: `${start.text}e.CHUNK_HASH="2123456789abcdef";` }, ...bundles.slice(1)];
+    expect(lessonChunkProblems({ manifest, bundles: pulledIn, precached: all(pulledIn) })).toContain(`lessons-headers-en is in the start bundle ${START}: a static import pulled the chunk in`);
+  });
+
   it('fails a chunk missing from the build, and one missing from the precache (the clip gaps mechanism)', () => {
     const bundles = sound().filter((b) => !b.url.includes('lessons-titles-es'));
     expect(lessonChunkProblems({ manifest: MANIFEST, bundles, precached: all(bundles) })).toEqual(['lessons-titles-es has no web bundle: the chunk is missing from the build']);
@@ -112,6 +129,30 @@ describe('the story chunks of row CM-8 (the same checks)', () => {
     ]);
   });
 
+  it('[CM-8b] a story body named by the shelf chunk: the shelf bundle names its hash, the start bundle the shelf\'s', () => {
+    const shelfText = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="5555666677778888";e.STORY_SHELF=[{"id":"story:sun-and-moon","chunk":"1111222233334444"}]});`;
+    const shelf = { url: `${WEB_JS_DIR}/stories-shelf-${md5(shelfText)}.js`, text: shelfText };
+    const manifest = [...MANIFEST, { ...STORIES[0], namedBy: 'stories-shelf' }, { name: 'stories-shelf', hash: '5555666677778888' }];
+    const start = { url: START, text: `${startText}var h="5555666677778888";` };
+    const bundles = [start, ...MANIFEST.map((m) => chunk(m.name, m.hash)), storyChunk('story-sun-and-moon', '1111222233334444'), shelf];
+    expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
+    // The body's hash is not in the start bundle (it is in the shelf), so only a shelf that does not name it fails.
+    const otherShelfText = shelfText.replace('1111222233334444', '9999222233334444');
+    const otherShelf = { url: `${WEB_JS_DIR}/stories-shelf-${md5(otherShelfText)}.js`, text: otherShelfText };
+    expect(lessonChunkProblems({ manifest, bundles: [...bundles.slice(0, 4), otherShelf], precached: all([...bundles.slice(0, 4), otherShelf]) })).toEqual([
+      'no stories-shelf bundle names story-sun-and-moon\'s hash 1111222233334444: the chunk that lists it and the chunk come from other content',
+    ]);
+    // The shelf itself is held to the start bundle like any chunk: named there, never pulled in.
+    const unnamed = [{ url: START, text: startText }, ...bundles.slice(1)];
+    expect(lessonChunkProblems({ manifest, bundles: unnamed, precached: all(unnamed) })).toEqual([
+      `the start bundle ${START} does not name stories-shelf's hash 5555666677778888: the shell and the chunk come from other content`,
+    ]);
+    const pulled = [{ url: START, text: `${start.text}e.CHUNK_HASH="5555666677778888";` }, ...bundles.slice(1)];
+    expect(lessonChunkProblems({ manifest, bundles: pulled, precached: all(pulled) })).toEqual([
+      `stories-shelf is in the start bundle ${START}: a static import pulled the chunk in`,
+    ]);
+  });
+
   it('lists the story bundles with the lesson bundles for the nosniff check (an older build asks for either)', () => {
     const bundles = withStory();
     expect(lessonChunkUrls([...MANIFEST, ...STORIES], bundles)).toEqual(bundles.slice(1).map((b) => b.url));
@@ -152,6 +193,28 @@ describe('the story chunks of row CM-8 (the same checks)', () => {
     expect(PRECACHE_BUDGET.storyChunkRaw).toBe(BUDGET.perStoryRaw);
     expect(PRECACHE_BUDGET.storiesRaw).toBe(BUDGET.totalRaw);
     expect(PRECACHE_BUDGET.storiesGzip).toBe(BUDGET.totalGzip);
+    // Row CM-8b: the story shelf chunk, which every learner waits for before the first screen.
+    expect(PRECACHE_BUDGET.storyShelfRaw).toBe(BUDGET.shelfRaw);
+    expect(PRECACHE_BUDGET.storyShelfRaw).toBe(40_000);
+  });
+
+  it('[CM-8b] reports the story shelf chunk on a line of its own, held to storyShelfRaw', () => {
+    const shelfText = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="5555666677778888"});`;
+    const shelf = { url: `${WEB_JS_DIR}/stories-shelf-${md5(shelfText)}.js`, text: shelfText };
+    const bundles = [...withStory(), shelf];
+    const storyShelf = [{ name: 'stories-shelf' }];
+    const report = precacheReport({ manifest: MANIFEST, stories: [...STORIES, ...storyShelf], storyShelf, bundles, precache: { count: 5, size: 99 } });
+    expect(report.storyShelf).toEqual({ count: 1, raw: shelfText.length, gzip: expect.any(Number), largest: { url: shelf.url, raw: shelfText.length } });
+    expect(report.storyChunks.count).toBe(2);
+    expect(reportLines(report)).toContain(
+      `  story shelf chunk  1 bundles  ${shelfText.length} B raw  ${report.storyShelf.gzip} B gzip  (ceiling ${PRECACHE_BUDGET.storyShelfRaw} B raw, before the first screen)`,
+    );
+    expect(precacheBudgetProblems(report)).toEqual([]);
+    expect(precacheBudgetProblems(report, { ...PRECACHE_BUDGET, storyShelfRaw: shelfText.length - 1 })).toEqual([
+      expect.stringMatching(new RegExp(`^the story shelf bundle ${WEB_JS_DIR}/stories-shelf-[0-9a-f]{32}\\.js is ${shelfText.length} B raw, over its ceiling of ${shelfText.length - 1} B, which every learner waits for before the first screen `)),
+    ]);
+    // A report without the shelf has no shelf line.
+    expect(reportLines(precacheReport({ manifest: MANIFEST, stories: STORIES, bundles, precache: { count: 5, size: 99 } })).some((l) => l.includes('story shelf'))).toBe(false);
   });
 });
 
@@ -494,8 +557,10 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
   it('the locale chunk line sits over the largest measured chunk (ko, 905,927 B) and the root line over the presenter (245,964 B)', () => {
     // F-CURR-002 §10 ceilings table: measured at the start bundle shrink (ko 901,191 B, es 527,438 B, BrowseApp
     // 111,404 B raw) and again on the final integration's strings (main fc580beed: ko 905,927 B, es 530,463 B raw).
-    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_000_000);
-    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(905_927);
+    // Row CM-46a: ko 1,001,146 B raw with the ten read tiers' overlays (line 1,010,000 B). Row CM-46 Play: ko 1,036,759 B
+    // raw with the Play book 2's two tales, so the line is that plus an 8,241 B margin.
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_045_000);
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(1_036_759);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBe(300_000);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBeGreaterThan(245_964);
   });
@@ -657,11 +722,11 @@ describe('the review-item chunk of row CM-10 (the same checks, its own budget li
     expect(precacheBudgetProblems({ ...report, reviewItemChunks: { count: 1, raw: 100, gzip: 40, largest: { url: 'x', raw: 100 } } }, lines)).toEqual([]);
   });
 
-  it('the lines on the built bundle are the lines of scripts/build-review-items.mjs, the §10 ceiling (150,000 B raw / 30,000 B gzip)', async () => {
+  it('the lines on the built bundle are the lines of scripts/build-review-items.mjs, the §10 ceiling (170,000 B raw / 37,000 B gzip since the Volume 2 integration)', async () => {
     const { BUDGET } = await import('../../../../scripts/build-review-items.mjs');
     expect(PRECACHE_BUDGET.reviewItemsRaw).toBe(BUDGET.raw);
     expect(PRECACHE_BUDGET.reviewItemsGzip).toBe(BUDGET.gzip);
-    expect(BUDGET).toEqual({ raw: 150_000, gzip: 30_000 });
+    expect(BUDGET).toEqual({ raw: 170_000, gzip: 37_000 });
   });
 });
 

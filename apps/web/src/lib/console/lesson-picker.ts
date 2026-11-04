@@ -58,6 +58,9 @@ export function consoleChooserGroups(locale: UiLocale, use: PickerUse, stages?: 
     stages,
     stories: use === 'lecture' ? LECTURE_STORIES.map((s) => s.id) : null,
     topics: use === 'lecture' ? LECTURE_VOCAB_TOPICS.map((t) => t.id) : null,
+    // A cell's Volume 2 (F-CURR-002 row CM-40) is not offered here: the console reads no learner switch, and Volume 2 is
+    // behind `volumes`. A deck or selection that holds a Volume 2 id keeps it, and its title resolves (`catalogTitle`).
+    volumes: false,
   });
   return use === 'lecture' ? groups.map(withLectureTopicMinutes) : groups;
 }

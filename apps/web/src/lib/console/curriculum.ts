@@ -15,6 +15,7 @@ import {
   isDateKey,
   levelOrder,
   placementLevelRank,
+  planCatalogStale,
   proposeRoute,
   questsPlacedOutAtLevel,
   regenerateFrom,
@@ -937,7 +938,8 @@ export function weeksToFit(plan: RepaceInput, today: string, source: Catalog = C
 
 /** A route made from an older catalogue than this build's: the readout offers **Refresh route** (a `shift` on the current catalogue; it adds no lessons). */
 export function isStaleCatalog(meta: CurriculumMeta, source: Catalog = CATALOG): boolean {
-  return meta.catalogVersion < source.version;
+  // A catalogue that added only later volumes (F-CURR-002 row CM-40) is not newer for a plan: a refresh adds nothing.
+  return planCatalogStale(meta.catalogVersion, source);
 }
 
 export interface DraftPlanBody {

@@ -157,6 +157,20 @@ describe('suggestedStartQuestId (the coarse start the builder pre-fills)', () =>
     expect(suggestedStartQuestId(null, storyOnly)).toBeNull();
   });
 
+  it('never suggests a cell\'s later volume, even when it is the only quest the level leaves (F-CURR-002 row CM-41)', () => {
+    const volumes = catalogOf(
+      [cell({ episodeId: 'ep:s1-letters', episodeIds: ['ep:s1-letters', 'ep:s1-letters-v2'], questIds: ['q:a', 'q:b'] })],
+      [
+        quest({ id: 'q:a', episodeId: 'ep:s1-letters', teaches: ['ㄱ', 'ㅏ'] }),
+        quest({ id: 'q:b', episodeId: 'ep:s1-letters', teaches: ['ㅓ'] }),
+        quest({ id: 'q:v2', episodeId: 'ep:s1-letters-v2' }),
+      ],
+    );
+    expect(suggestedStartQuestId(null, volumes)).toBe('q:a');
+    // Band 1 places out q:a and q:b; the Volume 2 quest teaches no symbol, so the level leaves it, and it is no start.
+    expect(suggestedStartQuestId({ stage: 'stage1', band: 1 }, volumes)).toBeNull();
+  });
+
   it('is null when the level places out every playable quest (never a quest the learner placed out)', () => {
     expect(suggestedStartQuestId({ stage: 'stage3', band: 0 }, FIXTURE)).toBeNull();
     expect(suggestedStart(withPlacement(placement({ level: { stage: 'stage3', band: 0 }, beyondContent: true })), 'en', FIXTURE).items).toEqual([]);
