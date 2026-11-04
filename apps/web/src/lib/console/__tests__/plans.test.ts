@@ -129,6 +129,13 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
       expect(readoutLine(rows[0] as ReadoutRowT, 'en')).toBe('1 / 4');
     });
 
+    it('a targeted plan (a suggested start) reads out only the learners it reaches; the rest are never told it is on its way', () => {
+      const targeted = { ...PLAN, targetLearnerIds: ['sam'] };
+      const rows = planReadout(targeted, [synced('ana', '2026-09-21T08:00:00.000Z'), synced('sam', '2026-09-19T08:00:00.000Z'), synced('mina', null)]);
+      expect(rows.map((r) => [r.learnerId, r.state])).toEqual([['sam', 'notDelivered']]);
+      expect(planReadout(PLAN, [synced('ana', null), synced('sam', null)]).map((r) => r.learnerId)).toEqual(['ana', 'sam']);
+    });
+
     it('a draft (no publish time) or an unreadable sync time never claims the plan arrived', () => {
       expect(planReadout({ ...PLAN, publishedAt: null }, [synced('a', '2026-09-21T08:00:00.000Z')])[0]?.state).toBe('notDelivered');
       expect(planReadout(PLAN, [synced('a', 'not a date')])[0]?.state).toBe('notDelivered');
@@ -151,6 +158,7 @@ type ReadoutRowT = ReturnType<typeof planReadout>[number];
 const PLAN = {
   id: 'plan:w3',
   publishedAt: '2026-09-20T10:00:00.000Z',
+  targetLearnerIds: null,
   items: [
     { kind: 'quest' as const, id: 'a' },
     { kind: 'quest' as const, id: 'b' },

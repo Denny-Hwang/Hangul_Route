@@ -72,12 +72,16 @@ export interface ReadoutRow {
   lastActiveAt: string;
 }
 
-/** The plan fields a readout reads: its id, when it was published, and its length. */
-export type ReadoutPlan = { id: string; publishedAt: string | null; items: readonly unknown[] };
+/** The plan fields a readout reads: its id, when it was published, its length, and who it is for. */
+export type ReadoutPlan = { id: string; publishedAt: string | null; items: readonly unknown[]; targetLearnerIds: readonly string[] | null };
 
-/** Per-learner progress for one plan, in roster order (most recent activity first — not a ranking). */
+/**
+ * Per-learner progress for one plan, in roster order (most recent activity first — not a ranking). Only the learners
+ * the plan reaches get a row: a targeted plan (such as a suggested start) is never delivered to the rest, so neither
+ * "Gets this plan next time the app opens" nor "Not started yet" would be true for them.
+ */
 export function planReadout(plan: ReadoutPlan, learners: readonly RosterLearner[]): ReadoutRow[] {
-  return learners.map((l) => {
+  return learners.filter((l) => planReaches(plan, l.id)).map((l) => {
     const progress = l.summary?.planProgress[plan.id];
     const state: ReadoutState = progress ? 'progress' : syncedAfter(l.lastSyncedAt, plan.publishedAt) ? 'notStarted' : 'notDelivered';
     return {
