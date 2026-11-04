@@ -233,7 +233,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
                 testID={`build-letter-slot-${i}`}
                 gapFill={false}
                 disabled={feedback !== 'idle'}
-                accessibilityLabel={copy.buildLetter.takeBack(tileAccessibilityLabel(j, m.a11y.minigame.finalTile) ?? j.char)}
+                accessibilityLabel={copy.buildLetter.takeBack(tileAccessibilityLabel(j, m.a11y.minigame.finalTile) ?? j.romanization)}
                 onCommit={() => takeBack(i)}
               >
                 {({ pressed }) => slotBox(pressed && feedback === 'idle' ? press : null)}

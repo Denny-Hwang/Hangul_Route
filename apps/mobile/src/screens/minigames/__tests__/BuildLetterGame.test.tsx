@@ -148,8 +148,9 @@ describe('Build a Letter on a target board (AMENDMENTS-TOUCH 6.5, R2)', () => {
     await tick(TAP_LOCK_MS);
     await click(r.root, `build-letter-tile-${A}`);
     expect(slots(r.root)).toEqual(['ㄱ', 'ㅏ', '']);
-    // The filled slot is a button named for the screen reader (the one new string); an empty slot is no button.
-    expect(host(r.root, 'build-letter-slot-0').props['aria-label']).toBe('Take back ㄱ');
+    // The filled slot is a button named for the screen reader (the one new string, with the letter's sound, never Hangul
+    // in a UI string); an empty slot is no button.
+    expect(host(r.root, 'build-letter-slot-0').props['aria-label']).toBe(`Take back ${jamoAll.find((j) => j.id === G)!.romanization}`);
     expect(host(r.root, 'build-letter-slot-2').props.role).not.toBe('button');
     await tick(TAP_LOCK_MS);
     await click(r.root, 'build-letter-slot-0');
