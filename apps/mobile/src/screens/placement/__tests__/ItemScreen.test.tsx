@@ -75,19 +75,21 @@ const options = (root: ReactTestInstance): ReactTestInstance[] =>
   hostNodes(root, (n) => typeof n.props['data-testid'] === 'string' && (n.props['data-testid'] as string).startsWith('placement-option-') && typeof n.props.onClick === 'function');
 
 /** A click as react-native-web's press responder gets it, straight to the host's handler: the tap clock is not moved. */
-async function click(target: ReactTestInstance): Promise<void> {
+async function click(target: ReactTestInstance, pointerType?: 'mouse'): Promise<void> {
   const currentTarget = { getAttribute: (name: string): unknown => target.props[name] ?? null, tagName: String(target.type) };
+  const nativeEvent = pointerType === undefined ? {} : { pointerType };
   await act(async () => {
-    (target.props.onClick as (e: unknown) => void)({ altKey: false, currentTarget, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined });
+    (target.props.onClick as (e: unknown) => void)({ altKey: false, currentTarget, nativeEvent, preventDefault: () => undefined, stopPropagation: () => undefined });
   });
 }
-const clickFirstOption = async (root: ReactTestInstance): Promise<string> => {
+const clickFirstOption = async (root: ReactTestInstance, pointerType?: 'mouse'): Promise<string> => {
   const first = options(root)[0];
   if (first === undefined) throw new Error('no option');
   const id = String(first.props['data-testid']);
-  await click(first);
+  await click(first, pointerType);
   return id;
 };
+const notSureOf = (root: ReactTestInstance): ReactTestInstance => byTestId(root, 'placement-not-sure').find((n) => typeof n.props.onClick === 'function')!;
 const tick = async (ms: number): Promise<void> => {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
@@ -138,11 +140,43 @@ describe('ItemScreen, Standard: one answer per item across the keyed remount (AM
     const r = await open(log);
     await clickFirstOption(r.root);
     await tick(150);
-    const notSure = () => byTestId(r.root, 'placement-not-sure').find((n) => typeof n.props.onClick === 'function')!;
+    const notSure = (): ReactTestInstance => notSureOf(r.root);
     await click(notSure());
     expect(log.events).toHaveLength(1);
     await tick(TAP_LOCK_MS);
     await click(notSure());
     expect(log.events).toHaveLength(2);
+  });
+
+  describe('a mouse click, which no press guard holds, still waits for the board and the item guard', () => {
+    // A page with a document, so a press says what made it: KT-2's press guard runs a mouse click at once and sets no
+    // lock, while a board takes every click on its own lock (rule 9). Only the board and choose()/notSure() stop these.
+    beforeEach(() => {
+      (globalThis as { document?: unknown }).document = { addEventListener: () => undefined, removeEventListener: () => undefined };
+    });
+    afterEach(() => {
+      delete (globalThis as { document?: unknown }).document;
+    });
+
+    it('a choice, then the next item\'s choice 150 ms later: one placement.item_answered', async () => {
+      const log: Log = { events: [] };
+      const r = await open(log);
+      await clickFirstOption(r.root, 'mouse');
+      await tick(150);
+      await clickFirstOption(r.root, 'mouse');
+      expect(log.events).toHaveLength(1);
+      await tick(300);
+      await clickFirstOption(r.root, 'mouse');
+      expect(log.events).toHaveLength(2);
+    });
+
+    it('a choice, then the next item\'s "not sure" 150 ms later: one placement.item_answered', async () => {
+      const log: Log = { events: [] };
+      const r = await open(log);
+      await clickFirstOption(r.root, 'mouse');
+      await tick(150);
+      await click(notSureOf(r.root), 'mouse');
+      expect(log.events).toHaveLength(1);
+    });
   });
 });

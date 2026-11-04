@@ -41,12 +41,13 @@ const clickable = (root: ReactTestInstance, testId: string): ReactTestInstance |
   byTestId(root, testId).find((n) => typeof n.props.onClick === 'function');
 
 /** A click as react-native-web's press responder gets it, straight to the host's handler: the tap clock is not moved. */
-async function click(root: ReactTestInstance, testId: string): Promise<void> {
+async function click(root: ReactTestInstance, testId: string, pointerType?: 'mouse'): Promise<void> {
   const target = clickable(root, testId);
   if (target === undefined) throw new Error(`no ${testId}`);
   const currentTarget = { getAttribute: (name: string): unknown => target.props[name] ?? null, tagName: String(target.type) };
+  const nativeEvent = pointerType === undefined ? {} : { pointerType };
   await act(async () => {
-    (target.props.onClick as (e: unknown) => void)({ altKey: false, currentTarget, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined });
+    (target.props.onClick as (e: unknown) => void)({ altKey: false, currentTarget, nativeEvent, preventDefault: () => undefined, stopPropagation: () => undefined });
   });
 }
 
@@ -131,5 +132,38 @@ describe('Sentence Builder on a board: a bounce is never a second tile or a Skip
     await tick(TAP_LOCK_MS);
     await click(r.root, 'sentence-builder-skip');
     expect(log.completes).toBe(1);
+  });
+
+  describe('a mouse click, which no press guard holds: only the tray board and Skip\'s own lock check stop it', () => {
+    // A page with a document, so a press says what made it: KT-2's press guard runs a mouse click at once and sets no
+    // lock, while a board takes every click on its own lock (rule 9).
+    beforeEach(() => {
+      (globalThis as { document?: unknown }).document = { addEventListener: () => undefined, removeEventListener: () => undefined };
+    });
+    afterEach(() => {
+      delete (globalThis as { document?: unknown }).document;
+    });
+
+    it('Skip clicked 100 ms after a tile is ignored (Skip reads useTapLock())', async () => {
+      const log: Log = { answers: [], completes: 0 };
+      const r = await mount(log);
+      await click(r.root, 'sentence-builder-tile-w0', 'mouse');
+      expect(placed(r.root)).toBe(1);
+      await tick(100);
+      await click(r.root, 'sentence-builder-skip', 'mouse');
+      expect(log.completes).toBe(0);
+      await tick(TAP_LOCK_MS);
+      await click(r.root, 'sentence-builder-skip', 'mouse');
+      expect(log.completes).toBe(1);
+    });
+
+    it('a second tile clicked 380 ms after a right one, past the flow\'s own 350 ms window, is no miss (the tray is a board)', async () => {
+      const log: Log = { answers: [], completes: 0 };
+      const r = await mount(log);
+      await click(r.root, 'sentence-builder-tile-w0', 'mouse');
+      await tick(TAP_LOCK_MS - 20);
+      await click(r.root, 'sentence-builder-tile-d0', 'mouse');
+      expect(log.answers).toEqual([]);
+    });
   });
 });
