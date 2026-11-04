@@ -1047,4 +1047,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.relink.deniedFamily': [['Mina']],
   'console.relink.askedHoursAgo': [[1], [4]],
   'console.relink.askedDaysAgo': [[1], [3]],
+  // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
+  'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
 };
