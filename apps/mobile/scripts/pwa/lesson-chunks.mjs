@@ -138,7 +138,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // row and the proposal line, and their English strings. The shared practice-day rule stays in the content-schema
   // `blend` subpath (the line reads the days the plan wrote). The line is the measurement plus a 4,201 B rounding
   // margin.
-  startBundleRaw: 4_865_000,
+  // AMENDMENTS-TOUCH row KT-1 (PR #943) on main 1bfda3fc8 (4,838,051 B in CI) measures 4,860,944 B raw / 1,300,892 B gzip
+  // (release `build:web`, CI): +22,893 B, the forgiving tap model (`tap-model.ts`), the `TapBoard` family in the
+  // design-system barrel, `TapLockProvider` above the navigator and the `Screen` fit and scroller. Every learner answer
+  // area adopts it in KT-2 to KT-7, so it cannot be a lazy chunk. The line is the measurement plus a 5,056 B margin.
+  startBundleRaw: 4_888_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

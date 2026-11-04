@@ -1,7 +1,7 @@
 # TapBoard, TapTarget (component spec v2)
 
 Spec: `docs/specs/AMENDMENTS-TOUCH.md` (KT-D1 to KT-D11, sections 3 to 5; rows KT-1 and KT-2) · no wireframe of its own: it adds no screen and no layout, only how existing answer cards, tiles and keys take a touch and how they look while pressed
-Code (KT-1): `packages/design-system/src/tap-model.ts` (pure model), `packages/design-system/src/components/TapBoard/` (`TapBoard.tsx`, `TapTarget.tsx`, `TapControl.tsx`, `TapScroller.tsx`, `TapLockProvider.tsx`, `use-tap-lock.ts`, `use-press-guard.ts`, `types.ts`, `index.ts`)
+Code (KT-1): `packages/design-system/src/tap-model.ts` (pure model), `packages/design-system/src/components/TapBoard/` (`TapBoard.tsx`, `TapTarget.tsx`, `TapControl.tsx`, `TapScroller.tsx`, `TapLockProvider.tsx`, `use-tap-lock.ts`, `use-press-guard.ts`, `types.ts`, `index.ts`; the responder in `controller.ts`, the platform reads in `host.ts`, the contexts in `context.ts` and `scroller.ts`), and the fit and scroller `Screen` publishes (`packages/design-system/src/components/Screen/fit.ts`)
 
 ## What it is
 
@@ -17,7 +17,7 @@ No copy and no i18n dependency. The caller passes the accessible names.
 |---|---|---|
 | `lock` | `'board' \| 'target'` | Required. `board`: after a commit the app-level lock (`TapLockProvider`) is on for `TAP_LOCK_MS` and every board and guarded press waits, including a board that mounts in that time (a commit moves, removes, reveals or advances something). `target`: only the committed target (pairing games) |
 | `scroll` | `'auto' \| 'none'`, default `auto` | `auto`: the board drives the nearest `TapScroller` when it can scroll (a touch on a target turns into a scroll after `TAP_TRAVEL` along its axis). `none`: never scrolls (the keyboard) |
-| `multiTouch` | `'latest' \| 'each'`, default `latest` | `latest`: a later finger that lands on a target takes the board and the earlier touch rests (never commits); a finger on nothing is ignored. `each` only for the keyboard: every finger is its own tap and the target follows the finger |
+| `multiTouch` | `'latest' \| 'each'`, default `latest` | `latest`: a later finger that lands on a target takes the board and the earlier touch rests (never commits); a finger on nothing is ignored; a later finger that stays down `PALM_HOLD_MS` after an earlier finger lifted is a palm and commits nothing. `each` only for the keyboard: every finger is its own tap and the target follows the finger |
 | `disabled` | `boolean?` | No target commits; touches are still claimed so nothing under them fires |
 | `testID` | `string?` | |
 
@@ -32,6 +32,8 @@ Web `touch-action`: every `TapTarget` is `pinch-zoom`; the board itself is `pinc
 | `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it |
 | `accessibilityLabel` | `string` | Required |
 | `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop |
+| `lockMs` | `number?` | The target lock after a commit on a `target` board (default `TAP_LOCK_MS`); the keyboard's keys pass `KEY_BOUNCE_MS` (KT-7) |
+| `style` | `StyleProp<ViewStyle> \| (look) => StyleProp<ViewStyle>` | The hit area's own style: its box is what the board hit-tests, so a target that must fill a cell styles it here |
 | `testID` | `string?` | |
 | `children` | `(look: { pressed: boolean }) => ReactNode` | The caller paints its own states and the press look when `pressed` |
 
@@ -49,7 +51,7 @@ Web `touch-action`: every `TapTarget` is `pinch-zoom`; the board itself is `pinc
 |---|---|---|
 | idle | the caller's | on release inside |
 | pressed (finger down and inside) | the press look | on release |
-| finger outside reach and travel, or over another target | the caller's (press look off) | no |
+| finger outside reach and travel, or more than 8 px (`NEIGHBOUR_DEPTH`) inside another target | the caller's (press look off) | no |
 | scrolling (travel past 32 px along the scroller's axis) | the caller's (press look off) | no |
 | resting (a later finger took the board) | the caller's (press look off) | no |
 | locked | the caller's, no press look | no |
@@ -62,11 +64,12 @@ Web `touch-action`: every `TapTarget` is `pinch-zoom`; the board itself is `pinc
 | Press look outline | `colors.border.shape` at `borderWidth.thick` |
 | Press look shrink | scale 0.97, none under reduced motion |
 | Gap reach | `spacing.lg` (16) |
+| Neighbour depth | `spacing.sm` (8) |
 | Release reach | `spacing.xl` (24) |
 | Travel | `spacing.xxl` (32) |
 | Key bounce | `motion.duration.fast` (120) |
 
-`TAP_LOCK_MS` (400), `CLICK_ECHO_MS` (700) and `FLING_DECAY` (0.95 per 16 ms) are input timings, not styles, and are pinned in `tap-model.test.ts`.
+`TAP_LOCK_MS` (400), `CLICK_ECHO_MS` (700), `PALM_HOLD_MS` (1500) and `FLING_DECAY` (0.95 per 16 ms) are input timings, not styles, and are pinned in `tap-model.test.ts`.
 
 The press look is never `border.focus` (the focus ring and ChoiceCard's `hint`), `brand.primary` (Pic-Word's selection ring), `brand.primaryLight` (Card Match's selected fill), `surface.sunken` (the `disabled` fill) or a feedback colour: a touch that does not count must never look like a choice.
 
@@ -79,7 +82,7 @@ The press look is never `border.focus` (the focus ring and ChoiceCard's `hint`),
 
 ## Tests
 
-`src/__tests__/tap-model.test.ts` (rules T1-T20 of the amendment), `src/components/TapBoard/__tests__/TapBoard.test.tsx` (responder capture, latest finger, termination, scroller drive and cancel, native rect cache, `TapControl`, `touch-action`), `src/components/TapBoard/__tests__/TapLockProvider.test.tsx` (a lock that outlives a remount), and the Playwright touch suites of the rows that adopt it.
+`src/__tests__/tap-model.test.ts` (rules T1-T20 of the amendment on the pure model), `src/components/TapBoard/__tests__/controller.test.ts` (responder capture, latest finger, termination, scroller drive, fling and cancel, clicks, the app lock across a remount), `host.test.ts` (the web hit test and rectangles, the native rect cache, the clock), `TapBoard.test.tsx` (`touch-action` on the board and every target, the responder on the View, `TapControl`, `TapScroller`, the Screen registration and native re-measuring, `TapTarget`, the hooks), `TapLockProvider.test.tsx` (the app clock), `src/components/Screen/__tests__/screen-fit.test.tsx` (fit, scroller, opt-in native `scrollEnabled`), and the Playwright touch suites: `apps/mobile/e2e/web/type-hangul-tap-board.spec.ts` (KT-1, a fixture-only board of four targets at 320 px and tablet) and those of the rows that adopt it.
 
 ## Where it appears
 
