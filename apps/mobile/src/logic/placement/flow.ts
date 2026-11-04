@@ -4,6 +4,7 @@ import {
   PlacementRunStateSchema,
   PlacementSourceSchema,
   UiLocaleSchema,
+  currentQuestion,
   effectiveRoute,
   hashSeed,
   placementStageNumber,
@@ -485,6 +486,15 @@ export function choicesEnabled(input: ChoicesGateInput & { nowMs: number }): boo
  */
 export function promptPlayback(input: { screenReader: boolean; needsGesture: boolean }): 'auto' | 'tap' {
   return input.screenReader || input.needsGesture ? 'tap' : 'auto';
+}
+
+/**
+ * One answer per item (AMENDMENTS-TOUCH 6.4, F6): an `answer` or a `notSure` counts only for the item that is open now
+ * and has no answer yet. A press that still names an item already answered (a bounce, a late click on a view that is
+ * leaving) changes nothing. Alone this does not stop a bounce on the next item; the app-level tap lock does that.
+ */
+export function answersItem(run: PlacementRunState, itemId: string): boolean {
+  return run.stop === null && currentQuestion(run)?.id === itemId && !run.responses.some((r) => r.questionId === itemId);
 }
 
 /** Short speaks the instruction on the first item of each rung only. */

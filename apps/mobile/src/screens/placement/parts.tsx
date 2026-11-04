@@ -8,9 +8,12 @@ import {
   spacing,
   touchTarget,
   GuardedPressable,
+  TapScroller,
+  type TapScrollerLike,
 } from '@hangul-route/design-system';
+import { useMemo, useRef, useState } from 'react';
 import type { ReactNode, ComponentProps, ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 export type IconName = ComponentProps<typeof Icon>['name'];
 
@@ -184,5 +187,57 @@ export function ChoiceGrid({ columns, children }: { columns: 1 | 2; children: Re
         </View>
       ))}
     </View>
+  );
+}
+
+/**
+ * Short in a small landscape window: the choices scroll in their own column. Their board scrolls it for a drag that
+ * starts on a card (AMENDMENTS-TOUCH KT-D3, rule 5), as `Screen` does for its own ScrollView.
+ */
+export function ChoiceScroller({ children }: { children: ReactNode }): ReactElement {
+  const ref = useRef<ScrollView | null>(null);
+  const size = useRef({ viewport: 0, content: 0, offset: 0 });
+  const listeners = useRef(new Set<(offset: number) => void>());
+  const [canScroll, setCanScroll] = useState(false);
+  const measure = (): void => setCanScroll(size.current.content > size.current.viewport + 1);
+  const scroller = useMemo<TapScrollerLike>(
+    () => ({
+      axis: 'y',
+      canScroll,
+      scrollBy: (delta) => {
+        const s = size.current;
+        s.offset = Math.max(0, Math.min(s.content - s.viewport, s.offset + delta));
+        ref.current?.scrollTo({ y: s.offset, animated: false });
+        return s.offset;
+      },
+      onScroll: (listener) => {
+        listeners.current.add(listener);
+        return () => {
+          listeners.current.delete(listener);
+        };
+      },
+    }),
+    [canScroll],
+  );
+  return (
+    <ScrollView
+      ref={ref}
+      style={{ flex: 1 }}
+      scrollEventThrottle={16}
+      onLayout={(e) => {
+        size.current.viewport = e.nativeEvent.layout.height;
+        measure();
+      }}
+      onContentSizeChange={(_w, h) => {
+        size.current.content = h;
+        measure();
+      }}
+      onScroll={(e) => {
+        size.current.offset = e.nativeEvent.contentOffset.y;
+        for (const listener of listeners.current) listener(size.current.offset);
+      }}
+    >
+      <TapScroller scroller={scroller}>{children}</TapScroller>
+    </ScrollView>
   );
 }

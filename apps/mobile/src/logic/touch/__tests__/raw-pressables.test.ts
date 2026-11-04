@@ -50,7 +50,6 @@ const PENDING: Readonly<Record<string, ReadonlyArray<readonly [name: string, row
     ['`card-match-ko-${p.idx}`', 'KT-4b'],
     ['`card-match-en-${p.idx}`', 'KT-4b'],
   ],
-  'screens/placement/ItemScreen.tsx': [['placement-not-sure', 'KT-5']],
   'screens/minigames/HiddenHeritageGame.tsx': [['`hh-spot-${view.id}`', 'KT-6']],
   'screens/minigames/MatchShapeBoard.tsx': [
     ['`${testID}-tile-${t.index}`', 'KT-6'],
