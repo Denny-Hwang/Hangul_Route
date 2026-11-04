@@ -466,7 +466,7 @@ describe('school page: the title and each class row', () => {
 
 /** [SA] section 3.4: the class page's line comes from the roster's seats, not the free cap. */
 describe('class page: the seat line from the roster seats', () => {
-  const notice = (root: ReactTestInstance): ReactTestInstance | undefined => root.findAll((n) => n.type === 'div' && n.props.role === 'status')[0];
+  const notice = (root: ReactTestInstance): ReactTestInstance | undefined => root.findAll((n) => n.type === 'div' && n.props.role === 'status' && n.props['data-testid'] !== 'attention-banner-live')[0];
   it('a free class at 20: the free-limit line with the billing link', async () => {
     state.seats = { learners: 20, cap: 20, schoolLearners: null, schoolCap: null };
     const root = await render(<SpacePage />);

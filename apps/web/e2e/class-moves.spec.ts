@@ -166,14 +166,17 @@ test.describe('the receiving class accepts (TV-D8)', () => {
   test('an ask shows initials only; Accept moves the student in', async ({ page }) => {
     await mockConsole(page, 'class', { incoming: [{ id: 'move:2', kind: 'accept', status: 'waiting', from: { name: 'Weekday Class W' }, learner: { alias: 'J. L.', avatar: 'hoya-orange', level: 'starter' }, createdAt: NOW, expiresAt: NOW, at: null }] });
     await page.goto('/teach/space/transfers?id=space%3Aa');
-    const section = page.getByTestId('teacher-moves');
-    await expect(section.getByRole('heading', { name: tm.section.title })).toBeVisible();
-    const card = section.getByTestId('teacher-move-incoming');
+    // With nothing sent from this class and no history, the Teacher moves section is left out (GX-2).
+    await expect(page.getByTestId('teacher-moves')).toHaveCount(0);
+    // AMENDMENTS-GROWNUP-UX GX-2: one incoming list. The ask is drawn under *Joining this class*, Accept first.
+    const joining = page.getByRole('region', { name: en.console.transfer.groups.joining });
+    const card = joining.getByTestId('teacher-move-incoming');
+    await expect(card.getByRole('button').first()).toHaveText(tm.section.accept.cta);
     await expect(card).toContainText('J. L.');
     await expect(card).toContainText(tm.section.from('Weekday Class W'));
     await page.screenshot({ path: 'test-results/class-moves-incoming.png' });
     await card.getByRole('button', { name: tm.section.accept.cta }).click();
-    await expect(section.getByTestId('teacher-move-incoming')).toHaveCount(0);
+    await expect(page.getByTestId('teacher-move-incoming')).toHaveCount(0);
     for (const width of [320, 768]) {
       await page.setViewportSize({ width, height: 900 });
       await noSidewaysScroll(page);

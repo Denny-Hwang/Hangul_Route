@@ -1787,12 +1787,20 @@ export const consoleMsgs = {
   },
   relinkPopup: {
     title: (name: string) => `새 기기 연결 요청: ${name}`,
-    closes: (minutes: number) => `${minutes}분 뒤에 이 요청이 닫혀요.`,
+    closes: (minutes: number) => `${minutes}분 뒤에 이 요청이 마감돼요.`,
     later: { cta: '나중에' },
     meta: (platform: string, asked: string) => `${platform} · ${asked}`,
   },
   attention: {
     incomingHeading: '이 반에 들어오려는 학생',
     from: (className: string) => `보낸 반: ${className}`,
+    title: (n: number) => `승인을 기다리는 요청 ${n}건`,
+    devices: (n: number) => `새 기기 ${n}건`,
+    moves: (n: number) => `반 이동 ${n}건`,
+    reviewNow: { cta: '지금 확인' },
+    sheetTitle: '승인 대기',
+    devicesHeading: '새 기기',
+    outgoingHeading: '다른 반으로 옮기려는 학생',
+    empty: '기다리는 요청이 없어요.',
   },
 } satisfies DeepPartial<Messages['console']>;

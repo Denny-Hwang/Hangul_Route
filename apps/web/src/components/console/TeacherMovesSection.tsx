@@ -22,6 +22,9 @@ import { announceRosterChange } from '@/lib/console/roster-broadcast';
  * - *Sent from this class*: an ask that waits, with **Cancel**.
  * - *Done*: moves of the last 30 days. An ended move is one neutral line with a date and no actor or reason.
  * Refreshed on a timer; nothing auto-dismisses; every word comes from `console.teacherMove.section`.
+ *
+ * AMENDMENTS-GROWNUP-UX GX-2: Accept comes first (primary), as on every other incoming card, and the moves page draws the
+ * asks under its one *Joining this class* heading (`incomingHere: false`, `TeacherMovesIncoming`).
  */
 
 export type TeacherMovesApi = Pick<ConsoleApi, 'classMoves' | 'acceptClassMove' | 'declineClassMove' | 'cancelClassMove'>;
@@ -34,6 +37,13 @@ export interface TeacherMovesSectionProps {
   readOnly: boolean;
   refreshMs: number;
   onPageState: (state: 'locked' | 'signIn' | 'forbidden') => void;
+  /** The page's reads and answers (`useTeacherMoves`), when the page also draws the incoming cards elsewhere. */
+  moves?: TeacherMoves;
+  /**
+   * false: the asks into this class are drawn under the page's one *Joining this class* heading (GX-2, one incoming
+   * list on the moves page), not here.
+   */
+  incomingHere?: boolean;
 }
 
 const card: CSSProperties = {
@@ -50,36 +60,57 @@ const h3: CSSProperties = { margin: `${spacing.lg}px 0 ${spacing.sm}px`, fontSiz
 const muted: CSSProperties = { margin: 0, color: colors.text.secondary, fontSize: rem(typography.size.body) };
 const nudge: CSSProperties = { margin: 0, color: colors.text.primary, fontWeight: typography.weight.semibold, borderInlineStart: `${borderWidth.thick}px solid ${colors.feedback.nudge}`, paddingInlineStart: spacing.sm };
 
-export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs, onPageState }: TeacherMovesSectionProps): JSX.Element | null {
-  const { messages, locale } = useConsoleLocale();
-  const t = messages.console.teacherMove.section;
-  const titleId = useId();
+/** The section's reads and answers, shared by the section and the incoming cards drawn under *Joining this class*. */
+export interface TeacherMoves {
+  lists: ClassMoveLists | null;
+  now: Date;
+  busy: string | null;
+  noRoom: ReadonlySet<string>;
+  failed: string | null;
+  act: (id: string, run: () => Promise<ApiResult<unknown>>) => Promise<void>;
+}
+
+/**
+ * Reads the class's teacher moves on mount and every `refreshMs` while online, and answers them. `enabled: false` reads
+ * nothing (a section that is handed its moves by the page).
+ */
+export function useTeacherMoves({
+  spaceId,
+  api,
+  online,
+  refreshMs,
+  onPageState,
+  enabled = true,
+}: Omit<TeacherMovesSectionProps, 'readOnly' | 'moves' | 'incomingHere' | 'api'> & { api: TeacherMovesApi | null; enabled?: boolean }): TeacherMoves {
   const [lists, setLists] = useState<ClassMoveLists | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [noRoom, setNoRoom] = useState<Set<string>>(new Set());
   const [failed, setFailed] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
-  const live = useRef(true);
-  useEffect(
-    () => () => {
+  // Set true in the effect body (AMENDMENTS-GROWNUP-UX GX-2): React's StrictMode mounts, unmounts and mounts again under
+  // `next dev`, and a ref set false by that first cleanup and never set true again kept the section from ever drawing.
+  const live = useRef(false);
+  useEffect(() => {
+    live.current = true;
+    return () => {
       live.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
 
-  const pageState = useCallback(
-    (result: ApiResult<unknown>): boolean => {
-      const err = moveError(result);
-      if (err && (err.kind === 'locked' || err.kind === 'signIn' || err.kind === 'forbidden')) {
-        onPageState(err.kind);
-        return true;
-      }
-      return false;
-    },
-    [onPageState],
-  );
+  // The latest page callback, read through a ref: a page that passes a new closure on each render never restarts the reads.
+  const onPageStateRef = useRef(onPageState);
+  onPageStateRef.current = onPageState;
+  const pageState = useCallback((result: ApiResult<unknown>): boolean => {
+    const err = moveError(result);
+    if (err && (err.kind === 'locked' || err.kind === 'signIn' || err.kind === 'forbidden')) {
+      onPageStateRef.current(err.kind);
+      return true;
+    }
+    return false;
+  }, []);
 
   const load = useCallback(async (): Promise<void> => {
+    if (!api) return;
     const r = await api.classMoves(spaceId);
     if (!live.current) return;
     setNow(new Date());
@@ -88,12 +119,13 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
   }, [api, spaceId, pageState]);
 
   useEffect(() => {
+    if (!enabled || !api) return undefined;
     void load();
     const timer = setInterval(() => {
       if (online) void load();
     }, refreshMs);
     return () => clearInterval(timer);
-  }, [load, online, refreshMs]);
+  }, [load, online, refreshMs, enabled, api]);
 
   const act = async (id: string, run: () => Promise<ApiResult<unknown>>): Promise<void> => {
     if (busy || !online) return;
@@ -127,6 +159,65 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
     setFailed(id);
   };
 
+  return { lists, now, busy, noRoom, failed, act };
+}
+
+/** Another teacher's asks into this class that wait: one card each, **Accept** (primary, first) then **Not now**. */
+export function TeacherMovesIncoming({ moves, spaceId, api, online, readOnly }: { moves: TeacherMoves; spaceId: string; api: TeacherMovesApi; online: boolean; readOnly: boolean }): JSX.Element | null {
+  const { messages, locale } = useConsoleLocale();
+  const t = messages.console.teacherMove.section;
+  const { lists, now, busy, noRoom, failed, act } = moves;
+  if (!lists) return null;
+  const waitingIn = lists.incoming.filter((m) => m.status === 'waiting');
+  if (waitingIn.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm, marginBottom: spacing.md }}>
+      {waitingIn.map((m) => {
+        const alias = m.learner && 'alias' in m.learner ? m.learner : null;
+        const level = alias ? levelPillLabel(alias.level, locale) : null;
+        return (
+          <article key={m.id} style={card} data-testid="teacher-move-incoming">
+            <div style={row}>
+              {alias ? <AvatarChip avatar={alias.avatar} /> : null}
+              <strong style={{ fontSize: rem(typography.size.bodyLg) }}>{alias?.alias ?? ''}</strong>
+              {level ? <span style={{ ...muted, fontSize: rem(typography.size.bodySm) }}>{level}</span> : null}
+            </div>
+            <p style={muted}>{t.from(m.from.name)}</p>
+            <p style={muted}>{t.asked(relativeDay(m.createdAt, now, locale))}</p>
+            {noRoom.has(m.id) ? <p style={nudge}>{t.noRoom}</p> : null}
+            {failed === m.id ? <p style={nudge}>{t.failed}</p> : null}
+            {readOnly ? null : (
+              // Primary first, as on every incoming card (GX-2: the class page, the review sheet and the transfer cards).
+              <div style={row}>
+                <MoveButton primary waiting={busy === m.id} disabled={!online || (busy !== null && busy !== m.id)} onClick={() => void act(m.id, () => api.acceptClassMove(spaceId, m.id))} testId="teacher-move-accept">
+                  {noRoom.has(m.id) ? t.tryAgain.cta : t.accept.cta}
+                </MoveButton>
+                <MoveButton disabled={!online || busy !== null} onClick={() => void act(m.id, () => api.declineClassMove(spaceId, m.id))} testId="teacher-move-not-now">
+                  {t.notNow.cta}
+                </MoveButton>
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+/** How many of another teacher's asks into this class wait (the *Joining this class* group's count). */
+export function waitingIncomingCount(moves: TeacherMoves): number {
+  return moves.lists?.incoming.filter((m) => m.status === 'waiting').length ?? 0;
+}
+
+export function TeacherMovesSection(props: TeacherMovesSectionProps): JSX.Element | null {
+  const { spaceId, api, online, readOnly, incomingHere = true } = props;
+  const { messages, locale } = useConsoleLocale();
+  const t = messages.console.teacherMove.section;
+  const titleId = useId();
+  const own = useTeacherMoves({ ...props, enabled: props.moves === undefined });
+  const moves = props.moves ?? own;
+  const { lists, now, busy, failed, act } = moves;
+
   if (!lists) return null;
   const waitingIn = lists.incoming.filter((m) => m.status === 'waiting');
   const waitingOut = lists.outgoing.filter((m) => m.status === 'waiting');
@@ -134,6 +225,9 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
     ...lists.incoming.filter((m) => m.status !== 'waiting').map((m) => ({ id: m.id, text: incomingDone(m), at: m.at })),
     ...lists.outgoing.filter((m) => m.status !== 'waiting').map((m) => ({ id: m.id, text: outgoingDone(m), at: m.at })),
   ].sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''));
+  // With the asks drawn under *Joining this class* (GX-2), a section with nothing sent and no history says nothing: it is
+  // left out rather than drawn as an empty block.
+  if (!incomingHere && waitingOut.length === 0 && doneRows.length === 0) return null;
 
   function incomingDone(m: IncomingMove): string {
     if (m.status === 'moved' && m.learner && 'name' in m.learner) return t.joined(m.learner.name);
@@ -149,37 +243,13 @@ export function TeacherMovesSection({ spaceId, api, online, readOnly, refreshMs,
         {t.title}
       </h2>
 
-      <h3 style={h3}>{t.incoming}</h3>
-      {waitingIn.length === 0 ? <p style={muted}>{t.empty}</p> : null}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-        {waitingIn.map((m) => {
-          const alias = m.learner && 'alias' in m.learner ? m.learner : null;
-          const level = alias ? levelPillLabel(alias.level, locale) : null;
-          return (
-            <article key={m.id} style={card} data-testid="teacher-move-incoming">
-              <div style={row}>
-                {alias ? <AvatarChip avatar={alias.avatar} /> : null}
-                <strong style={{ fontSize: rem(typography.size.bodyLg) }}>{alias?.alias ?? ''}</strong>
-                {level ? <span style={{ ...muted, fontSize: rem(typography.size.bodySm) }}>{level}</span> : null}
-              </div>
-              <p style={muted}>{t.from(m.from.name)}</p>
-              <p style={muted}>{t.asked(relativeDay(m.createdAt, now, locale))}</p>
-              {noRoom.has(m.id) ? <p style={nudge}>{t.noRoom}</p> : null}
-              {failed === m.id ? <p style={nudge}>{t.failed}</p> : null}
-              {readOnly ? null : (
-                <div style={row}>
-                  <MoveButton disabled={!online || busy !== null} onClick={() => void act(m.id, () => api.declineClassMove(spaceId, m.id))} testId="teacher-move-not-now">
-                    {t.notNow.cta}
-                  </MoveButton>
-                  <MoveButton primary waiting={busy === m.id} disabled={!online || (busy !== null && busy !== m.id)} onClick={() => void act(m.id, () => api.acceptClassMove(spaceId, m.id))} testId="teacher-move-accept">
-                    {noRoom.has(m.id) ? t.tryAgain.cta : t.accept.cta}
-                  </MoveButton>
-                </div>
-              )}
-            </article>
-          );
-        })}
-      </div>
+      {incomingHere ? (
+        <>
+          <h3 style={h3}>{t.incoming}</h3>
+          {waitingIn.length === 0 ? <p style={muted}>{t.empty}</p> : null}
+          <TeacherMovesIncoming moves={moves} spaceId={spaceId} api={api} online={online} readOnly={readOnly} />
+        </>
+      ) : null}
 
       <h3 style={h3}>{t.outgoing}</h3>
       {waitingOut.length === 0 ? <p style={muted}>{t.empty}</p> : null}

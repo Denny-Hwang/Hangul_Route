@@ -1897,5 +1897,13 @@ export const consoleMsgs = {
   attention: {
     incomingHeading: 'Quieren unirse a esta clase',
     from: (className: string) => `Viene de ${className}`,
+    title: (n: number) => plural('es', n, { one: `${n} solicitud espera tu aprobación`, other: `${n} solicitudes esperan tu aprobación` }),
+    devices: (n: number) => plural('es', n, { one: `${n} dispositivo nuevo`, other: `${n} dispositivos nuevos` }),
+    moves: (n: number) => plural('es', n, { one: `${n} cambio de clase`, other: `${n} cambios de clase` }),
+    reviewNow: { cta: 'Revisar ahora' },
+    sheetTitle: 'Por aprobar',
+    devicesHeading: 'Dispositivos nuevos',
+    outgoingHeading: 'Salidas de esta clase',
+    empty: 'No hay nada pendiente.',
   },
 } satisfies DeepPartial<Messages['console']>;

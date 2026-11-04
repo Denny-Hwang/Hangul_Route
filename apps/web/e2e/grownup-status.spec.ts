@@ -71,6 +71,9 @@ async function mockClass(page: Page, over: { relinks?: unknown[] } = {}): Promis
   let transfers: unknown[] = [TRANSFER_IN];
   await page.clock.install({ time: NOW });
   await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
+  // GX-2's re-link pop-up has been seen in this tab already: these tests answer on the card (grownup-attention.spec.ts
+  // covers the pop-up).
+  await page.addInitScript(() => window.sessionStorage.setItem('hr:console:relinkShown', JSON.stringify(['relink:jaehan', 'relink:yuhan'])));
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });

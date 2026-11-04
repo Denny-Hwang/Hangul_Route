@@ -1077,6 +1077,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parentHome.week': [[1, 5], [4, 36], [7, 120]],
   'console.parentHome.next': [['Meet the Letters 3']],
   'console.parentHome.notStarted': [['Sora']],
+  // AMENDMENTS-GROWNUP-UX GX-2: the attention banner's counts (1 and many).
+  'console.attention.title': [[1], [3], [12]],
+  'console.attention.devices': [[1], [3]],
+  'console.attention.moves': [[1], [3]],
   'console.relinkPopup.title': [['Jaehan']],
   'console.relinkPopup.closes': [[1], [8]],
   'console.relinkPopup.meta': [['iPhone or iPad', 'asked 2 min ago']],

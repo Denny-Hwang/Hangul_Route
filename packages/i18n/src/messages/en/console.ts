@@ -2407,5 +2407,18 @@ export const consoleMsgs = {
   attention: {
     incomingHeading: 'Asking to join this class',
     from: (className: string) => `From ${className}`,
+    /**
+     * GX-2 section 5.1: the attention banner under the class title (a polite live region whose text changes only with a
+     * count), its second line of the non-zero parts joined by " · ", and its button.
+     */
+    title: (n: number) => plural('en', n, { one: `${n} request needs your OK`, other: `${n} requests need your OK` }),
+    devices: (n: number) => plural('en', n, { one: `${n} new device`, other: `${n} new devices` }),
+    moves: (n: number) => plural('en', n, { one: `${n} class move`, other: `${n} class moves` }),
+    reviewNow: { cta: 'Review now' },
+    /** GX-2 section 5.2: the review sheet. It never closes itself; with nothing left it says so. */
+    sheetTitle: 'Needs your OK',
+    devicesHeading: 'New devices',
+    outgoingHeading: 'Moves out of this class',
+    empty: 'Nothing is waiting.',
   },
 } as const;

@@ -20,7 +20,8 @@ vi.mock('@/lib/i18n/locale-context', async () => {
 import { FamilyClassCards, MoveNotice, scopeCardDomId, type FamilyClassCardsApi, type MoveNoticeApi } from '@/components/console/FamilyClassCards';
 import { ReportScopeBlock } from '@/components/console/ReportScopeBlock';
 import { MOVE_LOCK_MS, TeacherMoveSheet, type TeacherMoveApi } from '@/components/console/TeacherMoveSheet';
-import { TeacherMovesSection, type TeacherMovesApi } from '@/components/console/TeacherMovesSection';
+import { TeacherMovesIncoming, TeacherMovesSection, useTeacherMoves, waitingIncomingCount, type TeacherMovesApi } from '@/components/console/TeacherMovesSection';
+import { StrictMode } from 'react';
 
 const en = getMessages('en').console;
 const tm = en.teacherMove;
@@ -347,6 +348,70 @@ describe('TeacherMovesSection (screen 2)', () => {
     act(() => renderer?.unmount());
     await section(api({ outgoing: [], incoming: [incoming()] }), true);
     expect(byTestId('teacher-move-accept')).toHaveLength(0);
+  });
+});
+
+describe('TeacherMovesSection: one incoming list, Accept first (AMENDMENTS-GROWNUP-UX GX-2)', () => {
+  const incoming = (over: Partial<IncomingMove> = {}): IncomingMove => ({ id: 'move:2', kind: 'accept', status: 'waiting', from: { name: 'Weekday Class D' }, learner: { alias: 'M. K.', avatar: 'tiger', level: 'starter' }, createdAt: '2026-10-13T00:00:00.000Z', at: null, ...over });
+  const api = (lists: { outgoing: OutgoingMove[]; incoming: IncomingMove[] }) =>
+    ({
+      classMoves: vi.fn(async () => ok(lists)),
+      acceptClassMove: vi.fn(async () => ok(incoming({ status: 'moved' }))),
+      declineClassMove: vi.fn(async () => ok(incoming({ status: 'ended' }))),
+      cancelClassMove: vi.fn(async () => ok(outgoing({ status: 'ended' }))),
+    }) as unknown as TeacherMovesApi & Record<string, ReturnType<typeof vi.fn>>;
+
+  it('Accept (primary) comes before Not now, as on every other incoming card', async () => {
+    await render(<TeacherMovesSection spaceId="space:b" api={api({ outgoing: [], incoming: [incoming()] })} online readOnly={false} refreshMs={60_000} onPageState={() => undefined} />);
+    const card = one('teacher-move-incoming');
+    expect(card.findAll((n) => n.type === 'button').map((b) => b.props['data-testid'])).toEqual(['teacher-move-accept', 'teacher-move-not-now']);
+  });
+
+  it('draws under StrictMode (next dev): its live ref is set true in the effect, not only at the first render', async () => {
+    const a = api({ outgoing: [], incoming: [incoming()] });
+    await render(
+      <StrictMode>
+        <TeacherMovesSection spaceId="space:b" api={a} online readOnly={false} refreshMs={60_000} onPageState={() => undefined} />
+      </StrictMode>,
+    );
+    expect(byTestId('teacher-moves')).toHaveLength(1);
+    expect(byTestId('teacher-move-incoming')).toHaveLength(1);
+    await click('teacher-move-accept');
+    expect(a.acceptClassMove).toHaveBeenCalledWith('space:b', 'move:2');
+  });
+
+  it('the page reads once and draws the asks elsewhere: the section keeps Sent from this class and Done only', async () => {
+    const a = api({ outgoing: [outgoing({ kind: 'accept', status: 'waiting', learner: { name: 'Jun', avatar: 'tiger' } })], incoming: [incoming(), incoming({ id: 'move:5' })] });
+    const seen: number[] = [];
+    function Page(): JSX.Element {
+      const moves = useTeacherMoves({ spaceId: 'space:b', api: a, online: true, refreshMs: 60_000, onPageState: () => undefined });
+      seen.push(waitingIncomingCount(moves));
+      return (
+        <>
+          <TeacherMovesSection spaceId="space:b" api={a} online readOnly={false} refreshMs={60_000} onPageState={() => undefined} moves={moves} incomingHere={false} />
+          <section data-testid="joining">
+            <TeacherMovesIncoming moves={moves} spaceId="space:b" api={a} online readOnly={false} />
+          </section>
+        </>
+      );
+    }
+    await render(<Page />);
+    expect(a.classMoves).toHaveBeenCalledTimes(1);
+    expect(one('teacher-moves').findAll((n) => n.props['data-testid'] === 'teacher-move-incoming')).toHaveLength(0);
+    expect(text(one('teacher-moves'))).not.toContain(tm.section.incoming);
+    expect(one('joining').findAll((n) => n.props['data-testid'] === 'teacher-move-incoming' && typeof n.type === 'string')).toHaveLength(2);
+    expect(one('teacher-move-outgoing')).toBeDefined();
+    expect(seen[seen.length - 1]).toBe(2);
+  });
+
+  it('with the asks drawn elsewhere and nothing sent or done, the section is left out (no empty block above the cards)', async () => {
+    const a = api({ outgoing: [], incoming: [incoming()] });
+    function Page(): JSX.Element {
+      const moves = useTeacherMoves({ spaceId: 'space:b', api: a, online: true, refreshMs: 60_000, onPageState: () => undefined });
+      return <TeacherMovesSection spaceId="space:b" api={a} online readOnly={false} refreshMs={60_000} onPageState={() => undefined} moves={moves} incomingHere={false} />;
+    }
+    await render(<Page />);
+    expect((renderer as ReactTestRenderer).root.findAll((n) => n.props['data-testid'] === 'teacher-moves')).toHaveLength(0);
   });
 });
 

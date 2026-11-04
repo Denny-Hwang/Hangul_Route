@@ -42,6 +42,12 @@ export interface ClassMovesProps {
   /** The regenerate flow's confirm step (the page's `useConfirm`, the ConfirmSheet of AMENDMENTS-DISPLAY-NAV section 8). */
   confirm: (ask: ConfirmAsk) => Promise<boolean>;
   onPageState: (state: ClassPageState) => void;
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-2: another teacher's asks into this class (`TeacherMovesIncoming`), drawn first under the
+   * one *Joining this class* heading, and how many there are (the group's empty line counts them).
+   */
+  joiningLead?: ReactNode;
+  joiningLeadCount?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -404,7 +410,7 @@ function focusInCard(): boolean {
  * auto-dismisses), and answers per card: Agree / Agree for both classes / Not now on the source, Accept / Not now
  * with reasons on the destination, Cancel request when this class started it, Try again for room.
  */
-export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnly, direct, confirm, onPageState }: ClassMovesProps): JSX.Element {
+export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnly, direct, confirm, onPageState, joiningLead = null, joiningLeadCount = 0 }: ClassMovesProps): JSX.Element {
   const { messages } = useConsoleLocale();
   const c = messages.console;
   const t = c.transfer;
@@ -519,7 +525,17 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
   };
 
   if (views === null) {
+    // Another teacher's asks (read on their own) never wait on this read: while it loads or after it failed, they are
+    // still drawn under *Joining this class*, so a failed transfer read never hides an ask that can be answered.
     return (
+      <>
+      {joiningLeadCount > 0 ? (
+        <div style={{ maxWidth: layout.maxWidth.reading }}>
+          <Group title={t.groups.joining} empty={false}>
+            {joiningLead}
+          </Group>
+        </div>
+      ) : null}
       <div aria-busy={loadFailed ? 'false' : 'true'} data-testid="class-moves-loading">
         {loadFailed ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.sm }}>
@@ -537,6 +553,7 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
           ))
         )}
       </div>
+      </>
     );
   }
 
@@ -558,7 +575,8 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
         ))}
         <History views={groups.leavingHistory} />
       </Group>
-      <Group title={t.groups.joining} empty={groups.joining.length === 0 && groups.joiningHistory.length === 0}>
+      <Group title={t.groups.joining} empty={joiningLeadCount === 0 && groups.joining.length === 0 && groups.joiningHistory.length === 0}>
+        {joiningLead}
         {groups.joining.map((view) => (
           <DestinationCard key={view.id} view={view} note={notes[view.id] ?? null} {...card} />
         ))}
@@ -573,6 +591,66 @@ export function ClassMoves({ spaceId, spaceName, api, online, refreshMs, readOnl
           </div>
         ) : null}
       </Group>
+    </div>
+  );
+}
+
+/**
+ * AMENDMENTS-GROWNUP-UX GX-2 (section 5.2): the shipped consent card of one move out of this class (Agree, Agree for both
+ * classes, Not now), drawn inside the review sheet when its row's **Review** is pressed. The same card and the same
+ * answers as the moves page; `onAnswered` gets the polite line after an answer that went through or found the move
+ * changed (the page reads again), and nothing after a failure (the card keeps its Try again).
+ */
+export function SourceConsent({
+  view,
+  spaceId,
+  api,
+  online,
+  direct,
+  onAnswered,
+  onPageState,
+}: {
+  view: TransferSourceView;
+  spaceId: string;
+  api: ClassMovesApi;
+  online: boolean;
+  direct: ReadonlySet<string>;
+  onAnswered: (text: string) => void;
+  onPageState?: (state: ClassPageState) => void;
+}): JSX.Element {
+  const { messages } = useConsoleLocale();
+  const t = messages.console.transfer;
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<Note | null>(null);
+  const run = (card: ClassView, call: () => Promise<ApiResult<unknown>>, oneSlot?: () => Promise<ApiResult<unknown>>): void => {
+    const go = async (): Promise<void> => {
+      setBusy(true);
+      setNote(null);
+      const result = await call();
+      if (result.ok) announceRosterChange();
+      setBusy(false);
+      const outcome = actionOutcome(result);
+      if (outcome === 'locked' || outcome === 'signIn' || outcome === 'forbidden') {
+        onPageState?.(outcome);
+        return;
+      }
+      if (outcome === 'failed') {
+        const again = !result.ok && result.code === 'one_slot_per_action' && oneSlot ? () => run(card, oneSlot) : () => void go();
+        setNote({ kind: 'failed', again });
+        return;
+      }
+      if (outcome === 'changed') {
+        setNote({ kind: 'changed' });
+        return;
+      }
+      onAnswered(t.a11y.updated);
+    };
+    void go();
+  };
+  return (
+    <div data-testid="sheet-consent">
+      <style>{STEPS_CSS}</style>
+      <SourceCard view={view} now={new Date()} busy={busy} online={online} readOnly={false} direct={direct} note={note} run={run} api={api} spaceId={spaceId} onRefresh={() => onAnswered(t.a11y.updated)} />
     </div>
   );
 }
