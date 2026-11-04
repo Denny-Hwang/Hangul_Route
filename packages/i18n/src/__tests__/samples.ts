@@ -1045,4 +1045,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-7: the weekly plan line's parts (long weekday names, the locale's list).
+  'learner.route.blend.planLine': [['Tuesday', 'practice on Wednesday, Friday, and Sunday'], ['Monday and Thursday', 'practice every day']],
+  'learner.route.blend.practiceOn': [['Wednesday'], ['Wednesday, Friday, and Sunday']],
+  'learner.route.blend.practiceAllBut': [['Monday'], ['Sunday']],
+  'learner.route.blend.dayList': [[['Tuesday']], [['Monday', 'Thursday']], [['Wednesday', 'Friday', 'Sunday']]],
+  'a11y.route.blend.practiceDay': [['Tuesday'], ['Sunday']],
 };
