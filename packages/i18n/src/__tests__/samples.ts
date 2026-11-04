@@ -1099,4 +1099,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // AMENDMENTS-GROWNUP-UX GX-7: the invite disclosure's code and the roster card's activity line (a day word and minutes).
   'console.space.invite': [['ABC234']],
   'console.space.learner.practiced': [['today', 2], ['Thu', 14]],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
+  'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
+  'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
 };

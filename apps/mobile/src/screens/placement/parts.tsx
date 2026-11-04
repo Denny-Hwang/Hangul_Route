@@ -7,6 +7,7 @@ import {
   radii,
   spacing,
   touchTarget,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import type { ReactNode, ComponentProps, ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
@@ -32,7 +33,8 @@ export function SpeakerButton({
   testID?: string;
 }): ReactElement {
   return (
-    <Pressable
+    <GuardedPressable
+      setsLock={false}
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
@@ -47,7 +49,7 @@ export function SpeakerButton({
       })}
     >
       <Icon name="speaker" size={Math.round(size / 2)} color={colors.text.inverse} />
-    </Pressable>
+    </GuardedPressable>
   );
 }
 

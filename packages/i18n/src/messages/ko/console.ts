@@ -770,6 +770,12 @@ export const consoleMsgs = {
             : `그중 ${closed}개는 1단계 다음이라서, 나오면 다음으로 열려요: ${product}. 나머지는 나오면 정해진 날짜에 시작해요.`
         }`,
     },
+    blend: {
+      lecture: {
+        classDay: (weekday: string, n: number) => `수업 날: ${weekday} · 레슨 ${n}개`,
+        classLength: (minutes: number) => `수업 길이: ${minutes}분`,
+      },
+    },
   },
   placement: {
     startingSpot: (stage: number, band: string, date: string) => `시작 위치: ${stage}단계 · ${band} · ${date}`,

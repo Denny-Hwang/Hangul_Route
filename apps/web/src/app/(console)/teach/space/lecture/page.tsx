@@ -1,7 +1,8 @@
 'use client';
 
-import { LECTURE_MAX_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
+import { LECTURE_MAX_BLOCKS, OUTLINE_MAX_LESSON_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { formatDate } from '@hangul-route/i18n';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -36,6 +37,7 @@ import {
   type LectureSource,
 } from '@/lib/console/lecture';
 import {
+  cardMinutes,
   consolePresetContext,
   consolePresetOrder,
   defaultPresetStage,
@@ -190,8 +192,15 @@ function LectureInner(): JSX.Element {
         // "Present this plan": Next lesson open, the plan's own blocks as the outline (section 4.6).
         const outline = planOutline(chosen, today);
         applyPreset('next-lesson', presetMinutes('next-lesson', {}), chip, context);
-        setBlocks(outline.blocks);
-        setOmitted(outline.omitted);
+        // A blended class day (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3) keeps the resolved deck: every lesson of the
+        // day, then the quiz and the activity at the class's real length.
+        // fillOutline keeps at most OUTLINE_MAX_LESSON_BLOCKS lessons, so a class day counts what that cap leaves out too.
+        if (context.classDay === null) setBlocks(outline.blocks);
+        setOmitted(
+          context.classDay === null
+            ? outline.omitted
+            : outline.omitted + Math.max(0, outline.blocks.filter((b) => b.kind !== 'class-code').length - OUTLINE_MAX_LESSON_BLOCKS),
+        );
         setSource('plan');
       } else if (preselected === 'revisit' && revisitNow) {
         // "Revisit together": the warm-up open, the space's letters to revisit as the outline.
@@ -461,11 +470,12 @@ function LectureInner(): JSX.Element {
           <LecturePresetsSection
             order={order}
             open={open}
-            minutesOf={(preset) => presetMinutes(preset, lengths)}
+            minutesOf={(preset) => cardMinutes(preset, lengths, ctx.classDay)}
+            classDay={ctx.classDay ? { weekday: formatDate(locale, `${ctx.classDay.date}T00:00:00Z`, 'weekdayLong', { utc: true }), lessons: ctx.classDay.lessons, minutes: ctx.classDay.minutes } : null}
             stage={stageShown}
             stages={stages}
             fallbackOf={(preset) => fallbacks.get(preset) ?? null}
-            note={open === 'next-lesson' && source === 'plan' && omitted > 0 ? l.source.trimmed(omitted, LECTURE_MAX_BLOCKS) : null}
+            note={open === 'next-lesson' && source === 'plan' && omitted > 0 ? l.source.trimmed(omitted, ctx.classDay ? OUTLINE_MAX_LESSON_BLOCKS : LECTURE_MAX_BLOCKS) : null}
             planTitle={ctx.plan?.title ?? null}
             family={family}
             outline={blocks}

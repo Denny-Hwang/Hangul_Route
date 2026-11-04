@@ -11,10 +11,11 @@ import {
   radii,
   spacing,
   touchTarget,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
 import { overlayFrame } from '../logic/layout/overlay-frame';
@@ -116,15 +117,16 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): ReactEl
               {copy.installGuideHelp ? <Caption tone="secondary">{copy.installGuideHelp}</Caption> : null}
               <Caption tone="muted">{m.offline}</Caption>
             </View>
-            <Pressable
+            <GuardedPressable
               onPress={dismiss}
+              // Native only (react-native-web drops it); the target is already at least touchTarget.min each way.
               hitSlop={spacing.sm}
               accessibilityRole="button"
               accessibilityLabel={messages.common.buttons.close}
               style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
             >
               <Icon name="close" size={22} color={colors.text.muted} />
-            </Pressable>
+            </GuardedPressable>
           </View>
 
           <View style={{ marginTop: spacing.md }}>

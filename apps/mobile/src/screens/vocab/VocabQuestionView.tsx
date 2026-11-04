@@ -15,10 +15,12 @@ import {
   useMediaSize,
   type HoyaTone,
   KOREAN_LINE_BREAK,
+  GuardedPressable,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { AccessibilityInfo, Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Platform, Text, View, type LayoutChangeEvent } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { localizedGloss, vocabItem, vocabTopic } from '../../content/vocab';
@@ -317,7 +319,8 @@ export function VocabQuestionView({
   const speakerButton = (size: 'small' | 'large'): ReactElement => {
     const side = size === 'large' ? bigSpeaker : touchTarget.min;
     return (
-      <Pressable
+      <GuardedPressable
+        setsLock={false}
         ref={(node) => {
           if (size === 'large') promptRef.current = node as unknown as View | null;
         }}
@@ -338,7 +341,7 @@ export function VocabQuestionView({
         }}
       >
         <Icon name="speaker" size={size === 'large' ? bigSpeakerIcon : spacing.xl} color={colors.brand.secondaryDark} />
-      </Pressable>
+      </GuardedPressable>
     );
   };
 
@@ -423,27 +426,30 @@ export function VocabQuestionView({
         {soundStatus}
       </View>
 
-      <View testID={`${testID}-options`} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: OPTION_GAP }}>
-        {question.options.map((option) => {
-          const view = optionView(question, option, state, ctx, ring, m.a11y.minigame);
-          const picture = view.ko === undefined;
-          return (
-            <View key={option.id} style={{ width: cardWidth }}>
-              <ChoiceCard
-                testID={`${testID}-option-${option.id}`}
-                state={view.cardState}
-                wrongMark={wrongMarkFor(mode)}
-                layout={picture ? 'tile' : 'row'}
-                ko={view.ko}
-                romanization={view.romanization}
-                art={picture ? <PictureArt pictureRef={view.pictureRef} gloss={view.gloss} size={pictureSize} decorative /> : undefined}
-                accessibilityLabel={view.accessibilityLabel}
-                onPress={() => dispatch({ type: 'tap', optionId: option.id, at: Date.now() }, key)}
-              />
-            </View>
-          );
-        })}
-      </View>
+      <TapBoard lock="board">
+        {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+        <View testID={`${testID}-options`} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: OPTION_GAP }}>
+          {question.options.map((option) => {
+            const view = optionView(question, option, state, ctx, ring, m.a11y.minigame);
+            const picture = view.ko === undefined;
+            return (
+              <View key={option.id} style={{ width: cardWidth }}>
+                <ChoiceCard
+                  testID={`${testID}-option-${option.id}`}
+                  state={view.cardState}
+                  wrongMark={wrongMarkFor(mode)}
+                  layout={picture ? 'tile' : 'row'}
+                  ko={view.ko}
+                  romanization={view.romanization}
+                  art={picture ? <PictureArt pictureRef={view.pictureRef} gloss={view.gloss} size={pictureSize} decorative /> : undefined}
+                  accessibilityLabel={view.accessibilityLabel}
+                  onPress={() => dispatch({ type: 'tap', optionId: option.id, at: Date.now() }, key)}
+                />
+              </View>
+            );
+          })}
+        </View>
+      </TapBoard>
 
       {Platform.OS === 'web' ? (
         // One polite line for the outcome; a new node on every accepted tap, so the same words are said again.

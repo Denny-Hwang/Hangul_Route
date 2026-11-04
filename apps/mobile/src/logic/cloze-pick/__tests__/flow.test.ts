@@ -37,12 +37,12 @@ describe('Cloze Pick flow', () => {
   });
 
   it('the second miss rings the tile that fits', () => {
-    const out = run(startCloze(1), tap('w1', 100), tap('w2', 400));
+    const out = run(startCloze(1), tap('w1', 100), tap('w2', 600));
     expect(out.state.hint).toBe(true);
     expect(out.state.wrongIds).toEqual(['w1', 'w2']);
   });
 
-  it('only the first touch in the 50 ms window counts', () => {
+  it('a bounce inside the TAP_LOCK_MS window is dropped (AMENDMENTS-TOUCH KT-D5)', () => {
     const first = stepCloze(startCloze(1), tap('w1', 100));
     expect(stepCloze(first.state, tap('right', 100 + LISTEN_PICK_TIMING.touchWindowMs - 1)).effects).toEqual([]);
   });

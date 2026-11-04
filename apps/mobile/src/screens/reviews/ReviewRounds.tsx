@@ -20,6 +20,7 @@ import {
   useLayoutClass,
   useMediaSize,
   type ChoiceCardState,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -178,21 +179,24 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: Round
         </View>
       )}
       {round.question.voiceFallback ? <PromptPanel view={slot.view} onAction={(action) => slot.act(action, hear)} testID="daily-review-sound-notice" /> : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {round.options.map((option) => (
-          <View key={option.id} style={{ flexGrow: 1, flexBasis: lc.width === 'compact' ? '45%' : OPTION_MIN, minWidth: 0 }}>
-            <ChoiceCard
-              layout={tiles ? 'tile' : 'row'}
-              state={stateOf(option)}
-              {...(option.ko ? { ko: option.ko.ko, romanization: showOptionRomanization ? option.ko.romanization : '' } : { label: option.label })}
-              art={option.picture ? <PictureArt pictureRef={option.picture} gloss={option.label ?? ''} size={pictureSize} decorative /> : null}
-              onPress={() => tap(option)}
-              accessibilityLabel={optionLabel(option, showOptionRomanization)}
-              testID={`daily-review-option-${option.id}`}
-            />
-          </View>
-        ))}
-      </View>
+      <TapBoard lock="board">
+        {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          {round.options.map((option) => (
+            <View key={option.id} style={{ flexGrow: 1, flexBasis: lc.width === 'compact' ? '45%' : OPTION_MIN, minWidth: 0 }}>
+              <ChoiceCard
+                layout={tiles ? 'tile' : 'row'}
+                state={stateOf(option)}
+                {...(option.ko ? { ko: option.ko.ko, romanization: showOptionRomanization ? option.ko.romanization : '' } : { label: option.label })}
+                art={option.picture ? <PictureArt pictureRef={option.picture} gloss={option.label ?? ''} size={pictureSize} decorative /> : null}
+                onPress={() => tap(option)}
+                accessibilityLabel={optionLabel(option, showOptionRomanization)}
+                testID={`daily-review-option-${option.id}`}
+              />
+            </View>
+          ))}
+        </View>
+      </TapBoard>
       {wrong.length > 0 && !solved ? <MissLine round={round} heard={round.heard} /> : null}
     </View>
   );
@@ -517,21 +521,24 @@ export function ClozeRoundView({ round, onFirst, onSolved, reducedMotion }: Roun
       </View>
       {solved ? <PromptPanel variant="status" view={slot.view} onAction={(action) => slot.act(action, hear)} testID="daily-review-sound-notice" /> : null}
       <Body tone="secondary">{copy.clozePick.instruction.word}</Body>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {round.tiles.map((option) => (
-          <View key={option.id} style={{ flexGrow: 1, flexBasis: lc.width === 'compact' ? '100%' : OPTION_MIN, minWidth: 0 }}>
-            <ChoiceCard
-              layout="row"
-              state={stateOf(option)}
-              ko={option.ko?.ko ?? ''}
-              romanization={option.ko?.romanization ?? ''}
-              onPress={() => tap(option)}
-              accessibilityLabel={optionLabel(option, true)}
-              testID={`daily-review-option-${option.id}`}
-            />
-          </View>
-        ))}
-      </View>
+      <TapBoard lock="board">
+        {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          {round.tiles.map((option) => (
+            <View key={option.id} style={{ flexGrow: 1, flexBasis: lc.width === 'compact' ? '100%' : OPTION_MIN, minWidth: 0 }}>
+              <ChoiceCard
+                layout="row"
+                state={stateOf(option)}
+                ko={option.ko?.ko ?? ''}
+                romanization={option.ko?.romanization ?? ''}
+                onPress={() => tap(option)}
+                accessibilityLabel={optionLabel(option, true)}
+                testID={`daily-review-option-${option.id}`}
+              />
+            </View>
+          ))}
+        </View>
+      </TapBoard>
       {wrong.length > 0 && !solved ? (
         <View accessibilityLiveRegion="polite" testID="daily-review-miss">
           <HoyaBubble tone="thinking" message={copy.clozePick.miss} />

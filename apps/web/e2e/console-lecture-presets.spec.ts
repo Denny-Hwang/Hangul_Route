@@ -693,3 +693,76 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
     expect(look).not.toBe(primary);
   });
 });
+
+/**
+ * AMENDMENTS-ROUTE-CLASS-BLEND section 10.3 (row BL-5): Present this plan on a blended plan shows the class day's
+ * lessons at the real class length; the Next lesson card draws no length chips, and reads the class day and the class
+ * length instead. Needs the lecture e2e export built with `NEXT_PUBLIC_ROUTE_BLEND_ENABLED=1` as well, and
+ * `ROUTE_BLEND_E2E=1`.
+ */
+const BLEND = process.env.ROUTE_BLEND_E2E === '1';
+const CLASS_LESSONS = ['letters-q1', 'letters-q2', 'letters-q3', 'life-q1', 'life-q2', 'life-q3', 'rites-q1'].map((s) => `quest:stage1-${s}`);
+const BLENDED_PLAN = {
+  ...PLAN,
+  id: 'plan:blend',
+  title: 'Class and practice',
+  // Thursday 2026-10-15 (NOW) is the class day: seven lessons, 31 catalogue minutes, past the 30 chip.
+  items: [
+    ...CLASS_LESSONS.map((id) => ({ kind: 'quest', id, week: 1, lectureDate: '2026-10-15', targetDate: '2026-10-16' })),
+    { kind: 'quest', id: 'quest:stage1-rites-q2', week: 1, targetDate: '2026-10-17' },
+    { kind: 'quest', id: 'quest:stage1-rites-q3', week: 2, lectureDate: '2026-10-22', targetDate: '2026-10-23' },
+  ],
+  meta: {
+    kind: 'curriculum',
+    generatorVersion: 2,
+    catalogVersion: 1,
+    params: {
+      audience: 'class',
+      level: { stage: 'stage1', band: 0 },
+      startDate: '2026-10-12',
+      weeks: 2,
+      sessionsPerWeek: 4,
+      minutesPerSession: 10,
+      goals: { focus: 'balanced', motivation: 'heritage' },
+      unlockedStages: ['stage1'],
+      reviewEvery: 4,
+      blend: { mode: 'overlap', lecture: { days: ['thu'], minutes: 45 }, personal: { perWeek: 3, minutes: 10 }, classDaysOff: [], keepAverage: false },
+    },
+    weeks: [
+      { index: 1, startDate: '2026-10-12', kind: 'learn', focus: { episodeId: null, storyIds: [], festival: null }, extras: [] },
+      { index: 2, startDate: '2026-10-19', kind: 'learn', focus: { episodeId: null, storyIds: [], festival: null }, extras: [] },
+    ],
+    horizonDays: 14,
+    repacedAt: null,
+  },
+};
+
+test.describe('Present this plan on a blended plan: the class day at its class length (BL-5)', () => {
+  test.skip(!LECTURE || !BLEND, 'needs the lecture e2e export built with NEXT_PUBLIC_ROUTE_BLEND_ENABLED=1 (LECTURE_E2E=1 ROUTE_BLEND_E2E=1)');
+  const blend = en.console.curriculum.blend.lecture;
+
+  for (const width of [320, 1180]) {
+    test(`at ${width}: every lesson of the class day, the quiz and the activity; the class lines, no length chips`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 320 ? 640 : 820 });
+      const { unexpected } = await mock(page, { plans: [BLENDED_PLAN] });
+      await page.goto(lecturePath('class', `&from=plan&plan=${encodeURIComponent(BLENDED_PLAN.id)}`));
+      const presets = page.getByTestId('lecture-presets');
+      const next = presets.getByRole('button', { name: en.a11y.presenter.presetCard(p.next.title, 45) });
+      await expect(next).toHaveAttribute('aria-expanded', 'true');
+      const panel = page.getByTestId('lecture-preset-panel-next-lesson');
+      await expect(panel.getByTestId('lecture-preset-class-day')).toContainText(blend.classDay('Thursday', 7));
+      await expect(panel.getByTestId('lecture-preset-class-day')).toContainText(blend.classLength(45));
+      await expect(panel.getByRole('radio')).toHaveCount(0);
+      // 7 lessons (31 min), the 4-round quiz, then 10 minutes left: a 5-minute activity.
+      await expect(panel.getByTestId('lecture-preset-preview').getByRole('listitem')).toHaveCount(9);
+      await expect(page.getByTestId('lecture-footer-minutes')).toHaveText(l.outline.about(40));
+      await noSidewaysScroll(page);
+      await shot(page, `bl5-lecture-class-day-${width}`);
+      // Another card keeps its length chips.
+      await presets.getByRole('button', { name: en.a11y.presenter.presetCard(p.story.title, 20) }).click();
+      await expect(page.getByTestId('lecture-preset-panel-story-time').getByRole('radio', { name: p.length.option(30) })).toBeVisible();
+      await expect(page.getByTestId('lecture-preset-class-day')).toHaveCount(0);
+      expect(unexpected).toEqual([]);
+    });
+  }
+});
