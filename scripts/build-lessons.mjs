@@ -265,6 +265,9 @@ export function runtimeScope(scope, where) {
     // F-CURR-002 row CM-38: the chain's frames; off (`game.my-story`), the app plays the first in Write Frame.
     case "my-story":
       return { kind, rounds: scope.frames.length, myStory: { frames: scope.frames } };
+    // F-CURR-002 row CM-44 S2: one round per block; off (`game.syllable-build`), the app plays Listen & Pick on the block.
+    case "syllable-build":
+      return { kind, rounds: scope.rounds.length, syllableBuild: { rounds: scope.rounds } };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }
@@ -479,6 +482,20 @@ const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== und
 const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 
 /**
+ * Fields the content carries for the build only, never read by the app: `soundChange: true` marks a sound change the
+ * converter cannot see (liaison, F-CURR-002 section 4.2, row CM-44 S2) on a round or its Korean, and goes into the review
+ * items (`extract.ts`); the lesson modules leave it out, so their literals keep the runtime schema's shape.
+ */
+export const BUILD_ONLY_FIELDS = Object.freeze(["soundChange"]);
+
+/** Pure: the value with every `BUILD_ONLY_FIELDS` key removed, at any depth. */
+export function withoutBuildOnly(value) {
+  if (Array.isArray(value)) return value.map(withoutBuildOnly);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).filter(([k]) => !BUILD_ONLY_FIELDS.includes(k)).map(([k, v]) => [k, withoutBuildOnly(v)]));
+}
+
+/**
  * Pure: ready shaped cells -> what each chunk holds and its hash.
  *   manifest  the episodes and the quest headers, English, without steps or display lines
  *   cells     one body per cell and volume: steps by quest id, scopes by ref, the es / ko glosses of both, and each
@@ -503,8 +520,8 @@ export function planChunks(cells) {
         if (line.length > 0) lines[locale][id] = Object.fromEntries(line);
       }
     }
-    const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, q.steps])));
-    const scopes = literal(sortedKeys(cell.scopes));
+    const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, withoutBuildOnly(q.steps)])));
+    const scopes = literal(withoutBuildOnly(sortedKeys(cell.scopes)));
     const glosses = overlaysLiteral(overlays);
     const notes = literal(cell.notes ?? {});
     return {

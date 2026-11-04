@@ -1004,7 +1004,14 @@
     "pat|뭐 드릴까요": "pat:mwo-deurilkkayo",
     "pat|네, 잘 먹었습니다": "pat:ne-jal-meogeotseumnida",
     "pat|떡볶이 얼마예요": "pat:tteokbokki-eolmayeyo",
-    "pat|여기 있어요": "pat:yeogi-isseoyo"
+    "pat|여기 있어요": "pat:yeogi-isseoyo",
+    "lex|박물관": "lex:bangmulgwan",
+    "lex|책이": "lex:chaegi",
+    "lex|음악": "lex:eumak",
+    "lex|국물": "lex:gungmul",
+    "lex|학생": "lex:haksaeng",
+    "lex|학년": "lex:hangnyeon",
+    "lex|책상": "vocab:chaeksang"
   },
   "alias": {
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"
