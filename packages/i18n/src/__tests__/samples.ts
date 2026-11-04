@@ -1052,4 +1052,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.status.moving': [['Nov 3']],
   'console.status.minutesLeft': [[1], [8]],
   'console.attention.from': [['Class B']],
+  'console.relinkPopup.title': [['Jaehan']],
+  'console.relinkPopup.closes': [[1], [8]],
+  'console.relinkPopup.meta': [['iPhone or iPad', 'asked 2 min ago']],
 };
