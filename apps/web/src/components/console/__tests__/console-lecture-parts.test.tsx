@@ -242,6 +242,7 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
         order={['hangul-week-1', 'by-stage', 'warm-up', 'next-lesson']}
         open="hangul-week-1"
         minutesOf={() => length}
+        classDay={null}
         stage="stage1"
         stages={['stage1']}
         fallbackOf={() => null}
