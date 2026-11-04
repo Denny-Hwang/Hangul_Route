@@ -557,8 +557,10 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
   it('the locale chunk line sits over the largest measured chunk (ko, 905,927 B) and the root line over the presenter (245,964 B)', () => {
     // F-CURR-002 §10 ceilings table: measured at the start bundle shrink (ko 901,191 B, es 527,438 B, BrowseApp
     // 111,404 B raw) and again on the final integration's strings (main fc580beed: ko 905,927 B, es 530,463 B raw).
-    // Row CM-46a: ko 1,001,146 B raw with the ten read tiers' overlays, so the line is that plus an 8,854 B margin.
-    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_010_000);
+    // Row CM-46a: ko 1,001,146 B raw with the ten read tiers' overlays, so the line was that plus an 8,854 B margin.
+    // Row CM-46 Letters: ko 1,012,863 B raw (CI, main a0906b64f), so the line is that plus a 2,137 B margin.
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_015_000);
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(1_012_863);
     expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(1_001_146);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBe(300_000);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBeGreaterThan(245_964);
