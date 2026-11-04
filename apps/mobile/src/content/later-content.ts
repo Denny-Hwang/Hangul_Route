@@ -3,7 +3,7 @@ import { isOnline } from '../platform/online';
 import { offlinePacks } from '../store/offline-packs-store';
 import { VOLUME_TWO_STORY_IDS } from './books';
 import { LESSON_CELL_CHUNKS } from './__generated__/lessons-index';
-import { STORY_SHELF } from './__generated__/stories-index';
+import { storyShelf } from './story-shelf';
 
 /**
  * Which body chunks are core and which are later (F-CURR-002 §10 item 4, row CM-5B). Core chunks (Volume 1, Stage 1,
@@ -17,7 +17,8 @@ import { STORY_SHELF } from './__generated__/stories-index';
 export const LATER_STORY_IDS: ReadonlySet<string> = VOLUME_TWO_STORY_IDS;
 
 const cellIds = Object.keys(LESSON_CELL_CHUNKS);
-const storyIds = STORY_SHELF.map((e) => e.id);
+// The shelf (row CM-8b): a chunk on the web, loaded before the app's modules run, as content/stories.ts reads it.
+const storyIds = storyShelf().STORY_SHELF.map((e) => e.id);
 
 export const CORE_CELLS: readonly string[] = cellIds.filter((id) => !isLaterCellId(id));
 export const LATER_CELLS: readonly string[] = cellIds.filter(isLaterCellId);

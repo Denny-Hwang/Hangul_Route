@@ -131,16 +131,17 @@ const MATRIX: Record<StageKey, Record<ThemeKey, string>> = {
 /** F-STORY-004 §3.9: the intended free sampler. */
 const SAMPLER = ['seollal-new-year', 'hangeul-day', 'chuseok-ganggangsullae', 'sun-and-moon', 'sejong-new-letters', 'cheugugi-rain-gauge'];
 
-/**
- * The story files of the §3.3 plan: every file but a book 2 tale (F-CURR-002 §5.6, row CM-46), which F-CURR-002 places
- * in its book 2 (Volume 2, behind `volumes`), not on this table, and which shows in no home cell (its shelf episode is
- * one of the later volumes).
- */
-const storyFiles: Story[] = readdirSync(STORY_DIR)
+const allStoryFiles: Story[] = readdirSync(STORY_DIR)
   .filter((name) => name.endsWith('.json'))
   .sort()
-  .map((name) => parseStory(JSON.parse(readFileSync(join(STORY_DIR, name), 'utf8')) as unknown))
-  .filter((story) => !VOLUME_TWO_STORY_IDS.has(story.id));
+  .map((name) => parseStory(JSON.parse(readFileSync(join(STORY_DIR, name), 'utf8')) as unknown));
+/**
+ * The story files of the §3.3 plan: the 24 stories of the research set. A story added later carries `addedIn`
+ * (F-CURR-002 row CM-6): a book 2 tale (F-CURR-002 §5.6, row CM-46), which F-CURR-002 places in its book 2 (Volume 2,
+ * behind `volumes`), not on this table, and which shows in no home cell; the book 2 tales are checked in
+ * `books.test.ts` and the story lints.
+ */
+const storyFiles: Story[] = allStoryFiles.filter((story) => story.addedIn === undefined);
 
 interface ResearchEpisode {
   id: string;

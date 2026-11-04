@@ -2,7 +2,6 @@ import { LectureDeckSchema, discoverItemTexts, sayRef, type LectureBlock, type O
 import { describe, expect, it } from 'vitest';
 import { episodeById, episodesAll, episodesWithVolumes, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
-import { episodesWithVolumes } from '../../../content/episodes';
 import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';

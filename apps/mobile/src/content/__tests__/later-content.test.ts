@@ -4,7 +4,7 @@ import { offlinePacks } from '../../store/offline-packs-store';
 import { BOOK_DEFINITIONS } from '../books';
 import { CORE_CELLS, CORE_STORIES, LATER_CELLS, LATER_STORIES, LATER_STORY_IDS, cellOpensOffline, contentScope, storyOpensOffline } from '../later-content';
 import { LESSON_CELL_CHUNKS } from '../__generated__/lessons-index';
-import { STORY_SHELF } from '../__generated__/stories-index';
+import { storyShelf } from '../story-shelf';
 
 /** F-CURR-002 row CM-5B: which body chunks are core (precached) and which are later (cached on use, or saved). */
 const initial = offlinePacks.getState();
@@ -17,9 +17,11 @@ describe('later content', () => {
     expect([...CORE_CELLS, ...LATER_CELLS].sort()).toEqual(Object.keys(LESSON_CELL_CHUNKS).sort());
     expect(CORE_CELLS.some(isLaterCellId)).toBe(false);
     expect(LATER_CELLS.every(isLaterCellId)).toBe(true);
-    expect([...CORE_STORIES, ...LATER_STORIES].sort()).toEqual(STORY_SHELF.map((e) => e.id).sort());
+    expect([...CORE_STORIES, ...LATER_STORIES].sort()).toEqual(storyShelf().STORY_SHELF.map((e) => e.id).sort());
     // Every first volume is core: Stage 1, Volume 1 and every book 1 tale stay in the precache.
     for (const book of BOOK_DEFINITIONS.filter((b) => (b.volume ?? 1) === 1)) for (const id of book.storyIds) expect(LATER_STORY_IDS.has(id)).toBe(false);
+    // A shelf story that joined the Letters book 2 through its read tier (row CM-46) stays core.
+    expect(CORE_STORIES).toContain('story:tripitaka-koreana');
   });
 
   it('a core cell or tale always opens offline; a later one once the device holds it', () => {

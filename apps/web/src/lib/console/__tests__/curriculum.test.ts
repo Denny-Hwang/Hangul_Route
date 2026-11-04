@@ -602,10 +602,9 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     const book2 = CATALOG.cells.flatMap((cell) => cell.volumes ?? []).flatMap((volume) => volume.questIds);
     expect(book2).toContain('quest:story-jikji-metal-type-read');
     expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, { ...CATALOG_QUEST_ADDITIONS, [next]: book2 })).toBe(false);
-    // The shipped catalogue's book 2 stamp is above every plan quest's, and a plan saved before it is not stale.
-    expect(planCatalogVersion(CATALOG)).toBeLessThan(CATALOG.version);
-    expect(isStaleCatalog({ ...plan.meta, catalogVersion: planCatalogVersion(CATALOG) })).toBe(false);
-    expect(isStaleCatalog({ ...plan.meta, catalogVersion: planCatalogVersion(CATALOG) - 1 })).toBe(true);
+    // A first-volume lesson stamped beside them still asks.
+    const firstVolume = CATALOG.cells.find((cell) => cell.stage === 'stage2' && cell.questIds.length > 0)!.questIds[0]!;
+    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, { ...CATALOG_QUEST_ADDITIONS, [next]: [...book2, firstVolume] })).toBe(true);
   });
 
   it('does not flag a route when the catalogue since added only a later volume: Refresh route would add nothing (F-CURR-002 CM-40, CM-43 S4)', () => {
