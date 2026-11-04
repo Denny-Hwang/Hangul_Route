@@ -11,12 +11,15 @@ import { strokesForJamo } from '../../src/content/jamo-strokes';
  * Largest text size (150%), with a screenshot of each attached to the report. Trace a Word's ㅎ ring is
  * in `trace-word-round-loop.spec.ts`.
  *
- * Meet the Letters quest 2 traces ㅁ then ㅇ: the test traces ㅁ along its guide to reach ㅇ.
+ * Meet the Letters quest 2 traces ㅁ ㅇ ㅗ ㅜ in a shuffled order: the test traces each other letter along
+ * its guide until ㅇ is up.
  */
 
 const STROKE_CANVAS = '#trace-canvas';
 /** jamo-strokes LOOP_SEGMENTS. */
 const LOOP_SEGMENTS = 64;
+/** The quest's other letters, by the romanization in the heading (ㅇ is told by its round guide). */
+const OTHER_LETTERS: Record<string, string> = { m: 'jamo:mieum', o: 'jamo:o', u: 'jamo:u' };
 
 async function openTraceStroke(page: Page, largest: boolean): Promise<void> {
   await page.goto('/');
@@ -57,19 +60,25 @@ for (const vp of [
       const at = (p: Point): Point => ({ x: box.x + (p.x * box.width) / VIEWBOX, y: box.y + (p.y * box.height) / VIEWBOX });
       const finger = await Finger.on(page);
 
-      // ㅁ first: trace its one stroke along the guide, then Done; the next letter is ㅇ.
-      const mieum = strokesForJamo('jamo:mieum')![0]!;
-      await finger.down([at(mieum[0]!)]);
-      for (let i = 1; i < mieum.length; i++) {
-        const [a, b] = [mieum[i - 1]!, mieum[i]!];
-        for (let k = 1; k <= 10; k++) await finger.move([at({ x: a.x + ((b.x - a.x) * k) / 10, y: a.y + ((b.y - a.y) * k) / 10 })]);
+      // The quest's letters come in a shuffled order: trace each one along its guide until ㅇ is up.
+      const heading = page.getByRole('heading', { name: /^Trace the letter / }).first();
+      const isIeung = async (): Promise<boolean> => (await chordsPerPath(page)).some((n) => n >= LOOP_SEGMENTS);
+      for (let round = 0; round < 4 && !(await isIeung()); round++) {
+        const name = (await heading.textContent()) ?? '';
+        const jamoId = OTHER_LETTERS[name.replace(/^Trace the letter /, '').trim()];
+        expect(jamoId, `a letter of the quest: ${name}`).toBeTruthy();
+        for (const stroke of strokesForJamo(jamoId!)!) {
+          await finger.down([at(stroke[0]!)]);
+          for (let i = 1; i < stroke.length; i++) {
+            const [a, b] = [stroke[i - 1]!, stroke[i]!];
+            for (let k = 1; k <= 10; k++) await finger.move([at({ x: a.x + ((b.x - a.x) * k) / 10, y: a.y + ((b.y - a.y) * k) / 10 })]);
+          }
+          await finger.up();
+        }
+        await page.getByRole('button', { name: 'Done', exact: true }).click();
+        await expect(heading, 'the traced letter passes and the next one is up').not.toHaveText(name, { timeout: 10_000 });
       }
-      await finger.up();
-      await page.getByRole('button', { name: 'Done', exact: true }).click();
-
-      await expect
-        .poll(async () => (await chordsPerPath(page)).filter((n) => n >= LOOP_SEGMENTS).length, { timeout: 10_000, message: 'the ㅇ guide is drawn round' })
-        .toBe(1);
+      expect(await isIeung(), 'the ㅇ guide is drawn round').toBe(true);
       const before = (await chordsPerPath(page)).length;
 
       // A quick loop round ㅇ: only 12 finger samples, the way a fast finger reports them.
