@@ -786,13 +786,15 @@ export default function ParentHomePage(): JSX.Element {
       {popup.pick && api && popupFamily ? (
         <RelinkPopup
           key={popup.pick.request.id + (popup.pick.reminder ? ':again' : '')}
-          pick={popup.pick}
+          request={popup.pick.request}
+          learnerName={popup.pick.request.learnerName}
+          reminder={popup.pick.reminder}
           now={now}
           api={api}
           spaceId={popupFamily}
           online={online}
           onLater={popup.close}
-          onResult={(_learnerId, text, settled) => {
+          onResult={(text, settled) => {
             resultSeq.current += 1;
             const key = resultSeq.current;
             setPopupResults((prev) => ({ ...prev, [popupFamily]: { key, text } }));

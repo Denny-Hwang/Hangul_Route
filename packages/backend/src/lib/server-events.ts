@@ -234,6 +234,9 @@ const LECTURE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, Fie
     offlineReady: isBoolean,
   },
   'lecture.complete': {
+    // F-TCH-004 section 3.14 amendment 2026-11-03 (row NB-1, Worker first): taught to the end
+    // (Finish, or Exit after the last slide was reached), or left part way. A boolean only.
+    finished: isBoolean,
     slidesShown: wholeUpTo(LECTURE_SLIDES_MAX),
     minutes: wholeUpTo(600),
     reveals: wholeUpTo(LECTURE_REVEALS_MAX),

@@ -351,7 +351,7 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
     return { log, doc, node, createNodeMock };
   }
 
-  type Extra = { onReadScope?: (id: string) => void; onReviewing?: (open: boolean) => void; api?: MockApi };
+  type Extra = { onReadScope?: (id: string) => void; onReviewing?: (open: boolean) => void; onApproveRelink?: (id: string) => void; api?: MockApi };
   const strip = (state: FamilyAsks, extra: Extra) => (
     <FamilyNeedsYou
       familyId="space:f"
@@ -364,7 +364,7 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
       now={NOW}
       onChanged={async () => undefined}
       onReadScope={extra.onReadScope ?? (() => undefined)}
-      onApproveRelink={() => undefined}
+      onApproveRelink={extra.onApproveRelink ?? (() => undefined)}
       onReviewing={extra.onReviewing}
     />
   );
@@ -408,6 +408,20 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
     });
     expect(all('needs-you-sheet')).toHaveLength(1);
     expect(world.log[world.log.length - 1]).toBe('sheet-first-button');
+  });
+
+  it('Approve in the See all sheet closes the sheet and asks the page for its re-link pop-up, so one dialog is open at a time', async () => {
+    const api = makeApi();
+    const onApproveRelink = vi.fn();
+    await act(async () => {
+      renderer = create(strip(three(), { api, onApproveRelink }), { createNodeMock: focusWorld().createNodeMock });
+    });
+    await click('needs-you-see-all');
+    const approve = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-approve' && typeof n.type === 'string');
+    await act(async () => approve.props.onClick());
+    expect(all('needs-you-sheet')).toHaveLength(0);
+    expect(onApproveRelink).toHaveBeenCalledWith('relink:1');
+    expect(api.decideRelink).not.toHaveBeenCalled();
   });
 
   it('closing the sheet after the See all row left moves focus to the strip heading, not the page', async () => {

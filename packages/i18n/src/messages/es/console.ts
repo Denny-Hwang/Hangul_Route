@@ -1164,7 +1164,7 @@ export const consoleMsgs = {
     askOwner: 'Pide un código familiar a quien creó el espacio familiar.',
     copyFailed: 'No se pudo copiar. El código está en la pantalla.',
     needsYou: {
-      title: 'Necesita tu respuesta',
+      title: 'Pendiente de tu respuesta',
       move: (name: string) => `Un cambio de clase de ${name} espera tu aprobación.`,
       moveMeta: (to: string, days: number) => `Clase nueva: ${to} · ${plural('es', days, { one: `Termina en ${days} día`, other: `Termina en ${days} días` })}`,
       relink: (name: string) => `${name} quiere seguir en un dispositivo nuevo.`,

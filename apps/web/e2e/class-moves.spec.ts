@@ -249,8 +249,8 @@ test.describe("a teacher reads a student's words (TV-D2)", () => {
 // AMENDMENTS-GROWNUP-UX GX-4 (section 7; section 14 "class-moves.spec.ts (extend)"; wireframe
 // design/wireframes/parent/needs-you.md, mock design/screens/approvals/mock/parent-*.html): the family's Needs you strip
 // above the first child, the fold rule, a status chip and a class line on each child card, the move notice inside its
-// child's card, consent in 2 taps, a re-link approved through the pop-up (GX-5), and Read and OK. ko, en and es at
-// 360 x 740 and 1280 x 800.
+// child's card, consent in 2 taps, a re-link approved through the re-link pop-up (GX-D12; it also opens on its own, GX-5) and denied in one tap, a
+// self-managed learner's move as the quiet Move waiting chip with no strip row, and Read and OK. ko, en and es at 360 x 740 and 1280 x 800.
 
 const GX_NOW = new Date('2026-10-31T12:00:00.000Z');
 const gxAt = (minutes: number): string => new Date(GX_NOW.getTime() + minutes * 60_000).toISOString();
@@ -438,16 +438,51 @@ test.describe('en: answering from Needs you (GX-4)', () => {
     const strip = page.getByRole('region', { name: p.needsYou.title });
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
     await strip.getByRole('button', { name: c.relink.approve.cta, exact: true }).click();
-    const dialog = page.getByRole('alertdialog', { name: c.relinkPopup.title('Mina') });
-    await expect(dialog).toContainText(c.relinkApproveHint);
-    expect(mock.calls.some((call) => call.method === 'POST')).toBe(false);
-    await dialog.getByRole('button', { name: c.relink.approve.cta, exact: true }).click();
+    // GX-D12: no surface approves a re-link in one tap. The strip's Approve opens the pop-up and sends nothing yet.
+    const popup = page.getByTestId('relink-popup');
+    await expect(popup).toBeVisible();
+    await expect(popup).toHaveAttribute('role', 'alertdialog');
+    await expect(popup.getByRole('heading', { name: c.relinkPopup.title('Mina') })).toBeVisible();
+    await expect(popup.getByTestId('relink-popup-meta')).toHaveText(c.relinkPopup.meta(c.relink.platform.ios, c.relink.askedAgo(2)));
+    await expect(popup.getByTestId('relink-popup-hint')).toHaveText(c.relinkApproveHint);
+    await expect(page.getByTestId('needs-you-result')).toHaveText('');
+    expect(mock.calls.some((call) => call.method === 'POST' && call.path.endsWith('/approve'))).toBe(false);
+    await popup.getByTestId('relink-popup-approve').click();
+    await expect(page.getByTestId('relink-popup')).toHaveCount(0);
     await expect(page.getByTestId('needs-you-result')).toHaveText(c.relink.approved('Mina'));
     await expect(page.getByRole('region', { name: p.needsYou.title })).toHaveCount(0);
     await expect(kidCard(page, 'Mina').getByTestId('child-status')).toHaveCount(0);
     expect(mock.calls.some((call) => call.method === 'POST' && call.path === '/api/spaces/space:kim/relink-requests/relink:mina/approve')).toBe(true);
     for (const call of mock.calls) expect(call.path).not.toMatch(/Mina|Jun|Sora/);
   });
+
+  test('a re-link is denied in one tap from the strip, with no pop-up', async ({ page }) => {
+    // The pop-up already showed Mina's request in this tab (GX-5's auto-open), so the page opens on the strip.
+    const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], moves: [], shown: ['relink:mina'] });
+    await page.goto('/parent');
+    const strip = page.getByRole('region', { name: p.needsYou.title });
+    await strip.getByRole('button', { name: c.relink.deny.cta, exact: true }).click();
+    await expect(page.getByTestId('needs-you-result')).toHaveText(c.relink.denied('Mina'));
+    await expect(page.getByTestId('relink-popup')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: p.needsYou.title })).toHaveCount(0);
+    await expect(kidCard(page, 'Mina').getByTestId('child-status')).toHaveCount(0);
+    expect(mock.calls.some((call) => call.method === 'POST' && call.path === '/api/spaces/space:kim/relink-requests/relink:mina/deny')).toBe(true);
+    for (const call of mock.calls) expect(call.path).not.toMatch(/Mina|Jun|Sora/);
+  });
+
+  for (const route of ['device', 'none'] as const) {
+    test(`a self-managed learner's move (learnerRoute ${route}) shows Move waiting and no strip row`, async ({ page }) => {
+      await mockFamily(page, { relinks: [], moves: [{ ...JUN_MOVE, learnerRoute: route }] });
+      await page.goto('/parent');
+      const chip = kidCard(page, 'Jun').getByTestId('child-status');
+      await expect(chip).toHaveText(c.status.moveWaiting);
+      await expect(chip).toHaveAttribute('data-tone', 'quiet');
+      await expect(kidCard(page, 'Jun').getByRole('button', { name: c.status.moveWaiting })).toHaveCount(0);
+      // The family cannot answer this move: no Needs you row, no region.
+      await expect(page.getByTestId('needs-you-row')).toHaveCount(0);
+      await expect(page.getByRole('region', { name: p.needsYou.title })).toHaveCount(0);
+    });
+  }
 
   test('consent in 2 taps: Review opens the consent sheet directly, Yes agrees for the family', async ({ page }) => {
     // The pop-up already showed Mina's request in this tab, so the page opens on the strip.

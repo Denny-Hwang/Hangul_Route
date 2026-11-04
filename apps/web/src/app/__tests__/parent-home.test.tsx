@@ -657,6 +657,7 @@ describe('the family home: Needs you, child chips and class lines (GX-4)', () =>
     expect(byTestId(r, 'relink-popup')).toHaveLength(0);
     await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
     expect(data.calls).not.toContain('decide:sp_f:relink:1:true');
+    expect(textOf(byTestId(r, 'relink-popup-hint')[0] as ReactTestInstance)).toBe(en.console.relinkApproveHint);
     await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
     await act(async () => undefined);
     expect(data.calls).toContain('decide:sp_f:relink:1:true');
