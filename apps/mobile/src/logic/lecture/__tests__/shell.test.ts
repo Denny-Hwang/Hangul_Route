@@ -798,6 +798,7 @@ describe('lecture.complete navigation counts (PN-6)', () => {
     t = step(t, at(2, 1), at(1), 'prev', 'swipe', 60_000);
     t = step(t, at(1), at(0), 'prev', 'button', 70_000);
     expect(completePayload(t, 70_000, 'docked')).toEqual({
+      finished: false,
       slidesShown: 4,
       minutes: 1,
       reveals: 1,
@@ -883,13 +884,13 @@ describe('lecture.complete navigation counts (PN-6)', () => {
     for (const key of NAV_KEYS.slice(1)) expect(Number.isInteger(over[key as keyof typeof over]), key).toBe(true);
   });
 
-  it('completePayload carries the three counts and the seven keys, and nothing else: no id, place, time or title', () => {
+  it('completePayload carries the three counts, the seven keys and finished (NB-1), and nothing else: no id, place, time or title', () => {
     let t = startTally(0, 'lecture:secret-slide');
     t = tallyLayout(t, 'docked');
     t = step(t, at(0), at(1), 'next', 'button', 1_234);
     const payload = completePayload(t, 61_234, 'docked');
-    expect(Object.keys(payload).sort()).toEqual(['minutes', 'reveals', 'slidesShown', ...NAV_KEYS].sort());
-    expect(Object.values(payload).every((v) => typeof v === 'number' || v === 'docked')).toBe(true);
+    expect(Object.keys(payload).sort()).toEqual(['finished', 'minutes', 'reveals', 'slidesShown', ...NAV_KEYS].sort());
+    expect(Object.values(payload).every((v) => typeof v === 'number' || typeof v === 'boolean' || v === 'docked')).toBe(true);
     expect(JSON.stringify(payload)).not.toMatch(/secret|lecture:|1234|forwardAt|startedAt/);
   });
 
@@ -1105,5 +1106,21 @@ describe('slideDetail: the write-together slides (LV-S4)', () => {
     expect(walk(of({ variant: 'frame', builds: ['frame', 'bank', 'example'], frame, banks, example }))).toEqual([undefined, '밥, 빵', 'For example, 아침에 밥을 먹어요., achime babeul meogeoyo']);
     const groups = Array.from({ length: 6 }, (_, g) => [{ ko: ['가', '나', '다', '라', '마', '바'][g]!, romanization: 'x' }]);
     expect(walk(of({ variant: 'own-name', builds: ['frame', 'table', 'table'], frame, groups }))).toEqual([undefined, '가, 나, 다, 라, 마', '바']);
+  });
+});
+
+/** F-TCH-004 section 3.14 amendment 2026-11-03 (row NB-1): `lecture.complete` says whether the lesson was taught to the end. */
+describe('lecture.complete finished (NB-1)', () => {
+  it('is false unless the lesson finished, and true from Finish or an Exit after the end', () => {
+    const t = startTally(0, 'a');
+    expect(completePayload(t, 60_000, 'rail').finished).toBe(false);
+    expect(completePayload(t, 60_000, 'rail', false).finished).toBe(false);
+    expect(completePayload(t, 60_000, 'rail', true)).toMatchObject({ finished: true, slidesShown: 1, minutes: 1, navLayout: 'rail' });
+  });
+
+  it('holds no id, name or title: only the counts, the layout and the one flag', () => {
+    expect(Object.keys(completePayload(startTally(0, 'a'), 0, 'docked', true)).sort()).toEqual(
+      ['finished', 'minutes', 'navLayout', 'points', 'quickBacks', 'reveals', 'slidesShown', 'stepsButton', 'stepsClick', 'stepsKey', 'stepsSwipe'].sort(),
+    );
   });
 });
