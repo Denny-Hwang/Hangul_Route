@@ -135,8 +135,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // overlays) measures ko 1,001,146 B, es 588,515 B raw (release build, Metro cache cleared, on CM-8b's head), so the
   // line is that measurement plus an 8,854 B rounding margin (CI measured ko 1,001,745 B after main 377d44291 was merged,
   // 8,255 B under it); the next story row (CM-46) moves the story narration overlays into the story chunks (CM-8b's
-  // overlay half) rather than raising it again.
-  localeChunkRaw: 1_010_000,
+  // overlay half) rather than raising it again. Row CM-46 Letters adds no story narration (its two unsigned tales'
+  // overlays are withheld until their sign-off) but the book 2 episode and the eight read quests' titles; with main
+  // a0906b64f's new UI strings (about 4.3 KB of ko since main dde2fbda9) CI measures ko 1,012,863 B raw, so the line
+  // is that measurement plus a 2,137 B margin. The tales' sign-off PR (+28 KB of narration) still moves the narration
+  // into the story chunks instead of raising it.
+  localeChunkRaw: 1_015_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
   // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
   // PresenterApp 232,574 B, BrowseApp 104,116 B, about 67 KB under the line.
