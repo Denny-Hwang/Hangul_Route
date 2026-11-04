@@ -43,6 +43,27 @@ export function pointsToPathD(points: readonly JamoStrokePoint[]): string {
   return [`M ${first!.x} ${first!.y}`, ...rest.map((p) => `L ${p.x} ${p.y}`)].join(' ');
 }
 
+/**
+ * The learner's ink as SVG path data (NB-3). The finger's samples are joined
+ * by quadratic curves through the midpoints between them (each sample is the
+ * control point), so a quick circle with few samples still turns smoothly
+ * instead of showing corners. The path starts on the first sample and ends on
+ * the last, so the ink never looks shorter than what was drawn. Guides keep
+ * `pointsToPathD`: their corners (ㄱ, ㅁ) are meant to be sharp.
+ */
+export function inkPathD(points: readonly JamoStrokePoint[]): string {
+  if (points.length < 3) return pointsToPathD(points);
+  const at = (q: JamoStrokePoint): string => `${q.x} ${q.y}`;
+  const parts = [`M ${at(points[0]!)}`];
+  for (let i = 1; i < points.length - 1; i++) {
+    const c = points[i]!;
+    const n = points[i + 1]!;
+    parts.push(`Q ${at(c)} ${at({ x: (c.x + n.x) / 2, y: (c.y + n.y) / 2 })}`);
+  }
+  parts.push(`L ${at(points[points.length - 1]!)}`);
+  return parts.join(' ');
+}
+
 function strokeLength(stroke: readonly JamoStrokePoint[]): number {
   let total = 0;
   for (let i = 1; i < stroke.length; i++) {
