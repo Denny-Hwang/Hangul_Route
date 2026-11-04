@@ -156,6 +156,14 @@ describe('classTodayOf', () => {
     expect(classTodayOf([src('plan:a', 't', off)], '2026-09-29')).toBe(false);
     expect(classTodayOf([src('plan:a', 't', off)], '2026-09-22')).toBe(true);
   });
+
+  it('is false inside the plan\'s days off (both sessions of the date are off, section 6.1)', () => {
+    const meta = blendedMeta();
+    const off = { ...meta, params: { ...meta.params, daysOff: [{ from: '2026-09-28', to: '2026-10-04' }] } };
+    expect(classTodayOf([src('plan:a', 't', off)], '2026-09-29')).toBe(false);
+    expect(classTodayOf([src('plan:a', 't', off)], '2026-09-22')).toBe(true);
+    expect(classTodayOf([src('plan:a', 't', off)], '2026-10-06')).toBe(true);
+  });
 });
 
 describe('refreshShows and refreshStartedEvent', () => {

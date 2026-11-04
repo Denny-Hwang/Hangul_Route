@@ -107,12 +107,15 @@ export const WEEKDAY_DATE: Readonly<Record<Weekday, string>> = {
 };
 
 /**
- * "Class today." (section 7, B2): today is a class weekday of the leading blended plan and not one of its class days
- * off. Nothing is assigned for the class and nothing asks whether the learner went.
+ * "Class today." (section 7, B2): today is a class weekday of the leading blended plan, not one of its class days off
+ * (`blend.classDaysOff`) and not inside one of the plan's days off (`daysOff`, which take both sessions of a date,
+ * section 6.1). Nothing is assigned for the class and nothing asks whether the learner went.
  */
 export function classTodayOf(sources: readonly DeriveSource[], today: string): boolean {
-  const blend = leadingBlended(sources, today)?.meta?.params.blend;
-  if (blend === undefined) return false;
+  const params = leadingBlended(sources, today)?.meta?.params;
+  const blend = params?.blend;
+  if (params === undefined || blend === undefined) return false;
+  if ((params.daysOff ?? []).some((range) => range.from <= today && today <= range.to)) return false;
   return blend.lecture.days.includes(weekdayOf(today)) && !blend.classDaysOff.includes(today);
 }
 
