@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, completeSelfForm, homeFor, readStored, seedStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
+import { completeChildForm, completeSelfForm, homeFor, readStored, seedStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -142,6 +142,8 @@ async function runWithoutSound(
   await page.getByTestId('placement-warmup-option-rice').click();
   await expect(page.getByTestId('placement-item')).toBeVisible();
   await check?.('item');
+  // Past the answer lock of the last tap (AMENDMENTS-TOUCH 6.4).
+  await pastTapLock(page);
   await page.locator('[data-testid^="placement-option-"]').first().click();
   await headerClose(page).click();
   await expect(page.getByTestId('placement-pause')).toBeVisible();
@@ -302,6 +304,7 @@ test.describe('the level check end to end (release build, flag on by default)', 
       await expect(result.or(notSure).first()).toBeVisible();
       if (await result.isVisible()) break;
       expect(answered, 'Short asks at most nine questions').toBeLessThan(9);
+      await pastTapLock(page);
       await notSure.click();
       answered += 1;
     }

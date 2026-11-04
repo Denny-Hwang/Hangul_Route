@@ -274,6 +274,7 @@ async function finishQuestAllRight(page: Page, beforeResults?: () => Promise<voi
   await expect(page.getByRole('heading', { name: 'Put the story in order' })).toBeVisible();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (const caption of ORDER) {
+    await pastTapLock(page);
     await page.locator('[data-testid^="story-sequence-card-"]').filter({ hasText: caption }).click();
   }
   await page.getByRole('button', { name: 'Skip replay' }).click();
