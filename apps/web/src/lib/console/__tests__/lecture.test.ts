@@ -10,6 +10,7 @@ import {
   canComposeIn,
   catalogueTitle,
   classCodeBlock,
+  classDayOf,
   lecturePlanFrom,
   lectureSourceFrom,
   moveBlock,
@@ -454,5 +455,68 @@ describe('deck and presenter link (F-TCH-004 §3.2)', () => {
       const haystacks = [decodeURIComponent(parsed.pathname), decodeURIComponent(parsed.search), JSON.stringify(decoded.ok ? decoded.deck : null)].map((h) => h.toLowerCase());
       for (const needle of needles) for (const hay of haystacks) expect(hay.includes(needle.toLowerCase()), `${title}: ${needle}`).toBe(false);
     }
+  });
+});
+
+/**
+ * AMENDMENTS-ROUTE-CLASS-BLEND section 10.3 (row BL-5): Present this plan on a blended plan shows the class day's
+ * lessons, picked by `lectureDate`, behind `routeBlendEnabled()`.
+ */
+describe('planOutline on a blended plan (BL-5)', () => {
+  const plan = (over: Partial<PlanView>): PlanView => ({
+    id: 'plan:b',
+    spaceId: 'space:c',
+    authorAccountId: 'teacher-kim',
+    title: 'Class and practice',
+    items: [],
+    targetLearnerIds: null,
+    publishedAt: '2026-11-01T00:00:00.000Z',
+    archivedAt: null,
+    createdAt: '2026-11-01T00:00:00.000Z',
+    updatedAt: '2026-11-01T00:00:00.000Z',
+    ...over,
+  });
+  const week = (index: number, startDate: string): WeekMeta => ({ index, startDate, kind: 'learn', focus: { episodeId: null, storyIds: [], festival: null }, extras: [] });
+  const quests = (n: number): PlanItem[] => Array.from({ length: n }, (_, i) => ({ kind: 'quest' as const, id: `quest:q${i}` }));
+  const weeks = [week(1, '2026-11-02'), week(2, '2026-11-09')];
+  const blendMeta = (minutes: 15 | 20 | 30 | 45 | 60 = 45) =>
+    ({ weeks, params: { blend: { mode: 'overlap', lecture: { days: ['tue'], minutes }, personal: { perWeek: 3, minutes: 10 } } } }) as unknown as PlanView['meta'];
+  // Practice-only items (no lectureDate) are mixed in; class days are 2026-11-03 and 2026-11-10.
+  const items: PlanItem[] = [
+    { kind: 'quest', id: 'quest:c1a', week: 1, lectureDate: '2026-11-03', targetDate: '2026-11-04' },
+    { kind: 'quest', id: 'quest:p1', week: 1, targetDate: '2026-11-05' },
+    { kind: 'quest', id: 'quest:c1b', week: 1, lectureDate: '2026-11-03', targetDate: '2026-11-06' },
+    { kind: 'quest', id: 'quest:c2a', week: 2, lectureDate: '2026-11-10', targetDate: '2026-11-11' },
+    { kind: 'episode', id: 'episode:stage1-life', week: 2, lectureDate: '2026-11-10', targetDate: '2026-11-13' },
+    { kind: 'quest', id: 'quest:p2', week: 2, targetDate: '2026-11-12' },
+  ];
+  const blended = plan({ items, meta: blendMeta() });
+  const ids = (today: string, on = true) => planOutline(blended, today, on).blocks.map((b) => (b.kind === 'quest' || b.kind === 'episode' ? b.id : b.kind));
+
+  it('presents the next class day on or after today, in plan order; before the route the first, after it the last', () => {
+    expect(ids('2026-11-03')).toEqual(['quest:c1a', 'quest:c1b']);
+    expect(ids('2026-11-04')).toEqual(['quest:c2a', 'episode:stage1-life']);
+    expect(ids('2026-10-01')).toEqual(['quest:c1a', 'quest:c1b']);
+    expect(ids('2026-12-01')).toEqual(['quest:c2a', 'episode:stage1-life']);
+  });
+
+  it('classDayOf gives the date, the class length and the items; null for a classic or single-track plan', () => {
+    expect(classDayOf(blended, '2026-11-04')).toEqual({ date: '2026-11-10', minutes: 45, items: [items[3], items[4]] });
+    expect(classDayOf(plan({ items, meta: blendMeta(15) }), '2026-11-01')?.minutes).toBe(15);
+    expect(classDayOf(plan({ items: quests(3) }), '2026-11-04')).toBeNull();
+    expect(classDayOf(plan({ items, meta: { weeks } as unknown as PlanView['meta'] }), '2026-11-04')).toBeNull();
+    // A blended plan with no class day left in its items.
+    expect(classDayOf(plan({ items: [items[1]!], meta: blendMeta() }), '2026-11-04')).toBeNull();
+  });
+
+  it("with the flag off, or on a single-track route, the week's items as before", () => {
+    expect(ids('2026-11-04', false)).toEqual(['quest:c1a', 'quest:p1', 'quest:c1b']);
+    const single = plan({ items, meta: { weeks } as unknown as PlanView['meta'] });
+    expect(planOutline(single, '2026-11-04', true)).toEqual(planOutline(single, '2026-11-04', false));
+    expect(planOutline(plan({ items: quests(3) }), '2026-11-04', true)).toEqual({ blocks: planBlocks({ items: quests(3) }), omitted: 0 });
+  });
+
+  it('the flag defaults to routeBlendEnabled(), off in this build', () => {
+    expect(planOutline(blended, '2026-11-04')).toEqual(planOutline(blended, '2026-11-04', false));
   });
 });

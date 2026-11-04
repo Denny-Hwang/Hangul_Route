@@ -1,6 +1,7 @@
 import { CATALOG, FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, teachingOrder } from '@hangul-route/content-schema';
-import { DEFAULT_LOCALE, describeRelativeDay, getMessages, type UiLocale } from '@hangul-route/i18n';
-import type { RosterLearner, RosterSeats } from './api';
+import { DEFAULT_LOCALE, describeRelativeDay, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
+import type { RosterLearner, RosterSeats, RosterSummary } from './api';
+import { joinOrder } from './parent-home';
 import { parseVocabSummary } from './vocab-summary';
 
 /**
@@ -24,7 +25,10 @@ export interface ClassRollup {
    * students and never a per-student rate. Empty while no roster carries `summary.vocab`.
    */
   vocabRevisit: string[];
-  /** Learners whose last activity is older than a week, or who never synced. */
+  /**
+   * Learners whose last activity is older than a week, or who never synced, leaving out anyone who joined under a
+   * week ago (GX-8 T7: a learner who joined today has not been away for a week).
+   */
   notSynced: number;
 }
 
@@ -44,8 +48,63 @@ export function classRollup(learners: readonly RosterLearner[], now: Date): Clas
     anchorAccuracy: accuracies.length ? accuracies.reduce((a, b) => a + b, 0) / accuracies.length : null,
     revisit,
     vocabRevisit: topThree(wordCounts),
-    notSynced: learners.filter((l) => !l.summary || now.getTime() - Date.parse(l.summary.lastActiveAt) > NOT_SYNCED_AFTER_DAYS * DAY_MS).length,
+    notSynced: learners.filter((l) => !joinedThisWeek(l, now) && (!l.summary || now.getTime() - Date.parse(l.summary.lastActiveAt) > NOT_SYNCED_AFTER_DAYS * DAY_MS)).length,
   };
+}
+
+/** Joined under `NOT_SYNCED_AFTER_DAYS` ago; an unreadable join time counts as earlier, as before GX-8. */
+function joinedThisWeek(learner: Pick<RosterLearner, 'joinedAt'>, now: Date): boolean {
+  const joined = Date.parse(learner.joinedAt);
+  return !Number.isNaN(joined) && now.getTime() - joined < NOT_SYNCED_AFTER_DAYS * DAY_MS;
+}
+
+/** The roll-up's lines that change with the space kind or hide (AMENDMENTS-GROWNUP-UX GX-8, T7, T8, P4). */
+export interface WeekLines {
+  /** "3 of 9 practiced this week"; a family's says "learners" (P4). */
+  practiced: string;
+  /** "Stage 1 first-try answers: 75%"; null while no learner has a Stage 1 first-try figure (T8: never "–"). */
+  anchor: string | null;
+  /** "2 haven't opened the app in over a week"; null at 0. */
+  notSynced: string | null;
+}
+
+export function weekLines(kind: string, rollup: ClassRollup, locale: UiLocale = DEFAULT_LOCALE): WeekLines {
+  const w = getMessages(locale).console.space.week;
+  return {
+    practiced: kind === 'family' ? w.practicedFamily(rollup.practicedThisWeek, rollup.students) : w.practiced(rollup.practicedThisWeek, rollup.students),
+    anchor: rollup.anchorAccuracy === null ? null : w.anchor(percent(rollup.anchorAccuracy)),
+    notSynced: rollup.notSynced > 0 ? w.notSynced(rollup.notSynced) : null,
+  };
+}
+
+/**
+ * A card's quest line (T10): "Stage 1 quests: 3 of 15 · 4 cards"; a learner with no quest finished but minutes this
+ * week reads "Working on the first quest", so "0 of 15" beside "2 min this week" never reads as nothing done.
+ */
+export function questsLine(summary: Pick<RosterSummary, 'stage1' | 'cardsUnlocked' | 'minutesLast7d'>, locale: UiLocale = DEFAULT_LOCALE): string {
+  const l = getMessages(locale).console.space.learner;
+  if (summary.stage1.questsDone === 0 && summary.minutesLast7d > 0) return l.firstQuest;
+  return l.questsCards(summary.stage1.questsDone, summary.stage1.questsTotal, summary.cardsUnlocked);
+}
+
+/**
+ * The roster's card order (P4; AMENDMENTS-GROWNUP-UX section 4): a family keeps the order its learners joined in, as
+ * the family home does; a class keeps the Worker's "most recent activity first". Never by a score.
+ */
+export function rosterOrder(kind: string, learners: readonly RosterLearner[]): RosterLearner[] {
+  return kind === 'family' ? joinOrder(learners) : [...learners];
+}
+
+/** The heading over the cards, matching `rosterOrder`: "Learners" for a family (P4), "Most recent activity first" for a class. */
+export function rosterHeading(kind: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  const s = getMessages(locale).console.space;
+  return kind === 'family' ? s.rosterHeadingFamily : s.recentFirst;
+}
+
+/** A card's join words: a family's dated "Joined Oct 14" (P4, never "Joined: Tue"); a class keeps "joined today". */
+export function joinedLine(kind: string, joinedAt: string, now: Date, locale: UiLocale = DEFAULT_LOCALE): string {
+  const s = getMessages(locale).console.space;
+  return kind === 'family' ? s.joinedOn(formatDate(locale, joinedAt, 'monthDay')) : s.learner.joined(relativeDay(joinedAt, now, locale));
 }
 
 /**

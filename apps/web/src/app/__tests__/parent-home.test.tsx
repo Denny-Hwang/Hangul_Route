@@ -1,7 +1,9 @@
+import { colors } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { catalogTitle } from '@/data/catalog';
 import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { findBannedWord } from '@/lib/console/banned-text';
 import { codeExpiry } from '@/lib/console/rollup';
@@ -33,10 +35,14 @@ vi.mock('@/lib/console/shell-store', () => ({
   },
 }));
 
-const handoff = vi.hoisted(() => ({ calls: [] as Array<{ code: string }> }));
+const handoff = vi.hoisted(() => ({ calls: [] as Array<{ code: string }>, opened: [] as string[] }));
 vi.mock('@/lib/console/join-handoff', () => ({
   openAppWithJoinCode: (input: { code: string }) => {
     handoff.calls.push({ code: input.code });
+  },
+  // GX-11: Open the app on this device on a child card that never started (no code handed off).
+  openLearnerApp: (input: { locale: string }) => {
+    handoff.opened.push(input.locale);
   },
 }));
 
@@ -61,6 +67,13 @@ const data = vi.hoisted(() => ({
   scopeThrows: false,
   /** [SA] The family renames the page sent (AMENDMENTS-SEATS-ADMINS section 5.3). */
   renames: [] as Array<{ id: string; name: string }>,
+  /** GX-4: the family's re-links, class moves (with options) and notices; the calls the page made. */
+  relinks: null as unknown,
+  transfers: null as unknown,
+  notices: null as unknown,
+  calls: [] as string[],
+  /** The next re-link read answers with this promise instead (a read that is still under way). */
+  relinkNext: null as Promise<unknown> | null,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -82,8 +95,32 @@ vi.mock('@/components/console/use-console', async () => {
       return data.scope ?? { ok: true, data: { current: 'class-scope-2026-10', learners: [] } };
     },
     acknowledgeClassScope: async () => ({ ok: true, data: { version: 'class-scope-2026-10', ackedAt: '2026-10-12T12:00:00Z' } }),
-    moveNotices: async () => ({ ok: true, data: [] }),
-    markMoveSeen: async () => ({ ok: true, data: { seen: true } }),
+    moveNotices: async (id: string) => {
+      data.calls.push(`notices:${id}`);
+      return data.notices ?? { ok: true, data: [] };
+    },
+    markMoveSeen: async (id: string, moveId: string) => {
+      data.calls.push(`seen:${id}:${moveId}`);
+      return { ok: true, data: { seen: true } };
+    },
+    relinkRequests: async (id: string) => {
+      data.calls.push(`relinks:${id}`);
+      if (data.relinkNext) {
+        const next = data.relinkNext;
+        data.relinkNext = null;
+        return next;
+      }
+      return data.relinks ?? { ok: true, data: [] };
+    },
+    transferRequests: async (id: string) => {
+      data.calls.push(`transfers:${id}`);
+      return data.transfers ?? { ok: true, data: { requests: [], options: [] } };
+    },
+    decideRelink: async (id: string, requestId: string, approve: boolean) => {
+      data.calls.push(`decide:${id}:${requestId}:${approve}`);
+      data.relinks = { ok: true, data: [] };
+      return { ok: true, data: { id: requestId } };
+    },
     renameSpace: async (id: string, name: string) => {
       data.renames.push({ id, name });
       return { ok: true, data: { space: { id, kind: 'family', name, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: '2026-10-01T00:00:00Z' }, changed: true } };
@@ -120,7 +157,8 @@ function learner(id: string, name: string, joinedAt: string, minutes: number, la
     joinedAt,
     lastActiveAt,
     lastSyncedAt: lastActiveAt,
-    summary: { minutesLast7d: minutes } as RosterLearner['summary'],
+    // An older app's summary (no day-by-day `activity`): the card keeps the shipped last-active and minutes lines (GX-11).
+    summary: { lastActiveAt, minutesLast7d: minutes } as RosterLearner['summary'],
   } as RosterLearner;
 }
 
@@ -143,6 +181,7 @@ beforeEach(() => {
   nav.pushed = [];
   shellWrites.personas = [];
   handoff.calls = [];
+  handoff.opened = [];
   frame.spaces = [];
   data.rosters = {};
   data.rosterCalls = [];
@@ -152,6 +191,11 @@ beforeEach(() => {
   data.scope = null;
   data.scopeThrows = false;
   data.renames = [];
+  data.relinks = null;
+  data.transfers = null;
+  data.notices = null;
+  data.calls = [];
+  data.relinkNext = null;
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
@@ -533,5 +577,290 @@ describe('the family home: rename and seats (SA-3)', () => {
     r = await render([family]);
     expect(textOf(byTestId(r, 'family-seats')[0] as ReactTestInstance)).toBe('0 of 4 learners');
     expect(byTestId(r, 'family-seats-line')).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AMENDMENTS-GROWNUP-UX GX-4 (section 7; wireframe design/wireframes/parent/needs-you.md): Needs you under the family
+// heading, a status chip and a class line on each child card, the move notice inside its child's card.
+
+describe('the family home: Needs you, child chips and class lines (GX-4)', () => {
+  const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
+  const sora = learner('profile:sora', 'Sora', '2026-09-09T00:00:00Z', 0);
+  const pendingRelink = { id: 'relink:1', learnerId: 'profile:mina', learnerName: 'Mina', deviceId: 'd', platform: 'ios', requestedAt: '2026-10-12T11:57:00Z', expiresAt: '2026-10-12T12:07:00Z', status: 'pending' };
+  const familyMove = {
+    id: 'transfer:f1',
+    role: 'learner_side',
+    status: 'requested',
+    initiator: 'source',
+    learner: { id: 'profile:jun', name: 'Jun' },
+    from: { spaceId: 'space:a', name: 'Sunday Class A' },
+    to: { spaceId: 'space:d', name: 'Evening Class D', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 8 },
+    learnerState: 'pending',
+    sourceState: 'yes',
+    destinationState: 'waiting',
+    introduce: false,
+    premiumChange: 'none',
+    destinationConsentMode: 'parent',
+    relinkAffected: false,
+    sourcePlansAffected: false,
+    visibleToday: [],
+    blockReason: null,
+    executeAfter: null,
+    createdAt: '2026-10-11T12:00:00Z',
+    expiresAt: '2026-10-21T12:00:00Z',
+    executedAt: null,
+    endedAt: null,
+    learnerRoute: 'caregiver',
+    endedFrom: null,
+    termsDigest: 'b'.repeat(64),
+  };
+  const options = [
+    { learnerId: 'profile:mina', name: 'Mina', classes: [{ spaceId: 'space:d', name: 'Evening Class D' }], selfManaged: false, blockTeacherRequests: false },
+    { learnerId: 'profile:jun', name: 'Jun', classes: [{ spaceId: 'space:a', name: 'Sunday Class A' }, { spaceId: 'space:b', name: 'Saturday Class' }], selfManaged: false, blockTeacherRequests: false },
+    { learnerId: 'profile:sora', name: 'Sora', classes: [], selfManaged: false, blockTeacherRequests: false },
+  ];
+  const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
+  const order = (r: ReactTestRenderer): string[] =>
+    r.root.findAll((n) => typeof n.type === 'string' && ['needs-you', 'family-class-cards', 'learner-card'].includes(n.props['data-testid'] as string)).map((n) => n.props['data-testid'] as string);
+
+  it('nothing waits: no strip, no chip; children start right under the heading', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(byTestId(r, 'child-status')).toHaveLength(0);
+  });
+
+  it('a child asking to continue on a new device: the strip above every card with Approve inline, and the chip on that child (text, not a button)', async () => {
+    data.rosters = { sp_f: roster(family, [mina, jun]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    const r = await render([family]);
+    expect(order(r)).toEqual(['needs-you', 'learner-card', 'learner-card']);
+    expect(textOf(byTestId(r, 'needs-you')[0] as ReactTestInstance)).toContain(p.needsYou.relink('Mina'));
+    const chip = card(r, 'Mina').find((n) => n.props['data-testid'] === 'child-status' && typeof n.type === 'string');
+    expect(chip.type).toBe('span');
+    expect(textOf(chip)).toBe(p.status.relink);
+    expect(card(r, 'Jun').findAll((n) => n.props['data-testid'] === 'child-status')).toHaveLength(0);
+    // The re-link read runs whatever CLASS_TRANSFER says; the class-move reads do not (the flag is off here).
+    expect(data.calls).toContain('relinks:sp_f');
+    expect(data.calls.some((c) => c.startsWith('transfers:') || c.startsWith('notices:'))).toBe(false);
+    // Approve opens the re-link pop-up with the safety hint (GX-D12); its Approve answers, then the family is read again
+    // and the row leaves.
+    await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    expect(data.calls.some((c) => c.startsWith('decide:'))).toBe(false);
+    expect(textOf(byTestId(r, 'relink-popup-hint')[0] as ReactTestInstance)).toBe(en.console.relinkApproveHint);
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+    expect(data.calls).toContain('decide:sp_f:relink:1:true');
+    expect(data.calls.filter((c) => c === 'relinks:sp_f')).toHaveLength(2);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(textOf(byTestId(r, 'needs-you-result')[0] as ReactTestInstance)).toBe(en.console.relink.approved('Mina'));
+  });
+
+  it('class moves on: the move row with Review, the move chip, and the class line on every child (one, many, none)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.rosters = { sp_f: roster(family, [mina, jun, sora]) };
+    data.transfers = { ok: true, data: { requests: [familyMove], options } };
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-review')).toHaveLength(1);
+    expect(textOf(byTestId(r, 'needs-you')[0] as ReactTestInstance)).toContain(p.needsYou.move('Jun'));
+    expect(textOf(card(r, 'Jun').find((n) => n.props['data-testid'] === 'child-status' && typeof n.type === 'string'))).toBe(p.status.move);
+    const lines = (name: string): string => textOf(card(r, name).find((n) => n.props['data-testid'] === 'child-class-line' && typeof n.type === 'string'));
+    expect(lines('Mina')).toBe(p.classLine.one('Evening Class D'));
+    expect(lines('Jun')).toBe(`${p.classLine.many(2)}Sunday Class A · Saturday Class`);
+    expect(lines('Sora')).toBe(p.classLine.none);
+    // The strip replaces the family actions' "N class moves waiting" pill.
+    expect(byTestId(r, 'family-moves-waiting')).toHaveLength(0);
+  });
+
+  it('the class line is omitted when the class-move read is skipped (flag off) or fails, never "Family only" on a guess', async () => {
+    data.rosters = { sp_f: roster(family, [sora]) };
+    data.transfers = { ok: true, data: { requests: [], options } };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    let r = await render([family]);
+    expect(byTestId(r, 'child-class-line')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.transfers = { ok: false, error: 'network', status: -1 };
+    r = await render([family]);
+    expect(byTestId(r, 'child-class-line')).toHaveLength(0);
+    expect(allText(r)).not.toContain(p.classLine.none);
+  });
+
+  it('three items fold: the soonest-closing row and "2 more things need you" with See all; the first child card still follows', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.rosters = { sp_f: roster(family, [mina, jun, sora]) };
+    data.relinks = { ok: true, data: [pendingRelink, { ...pendingRelink, id: 'relink:2', learnerId: 'profile:sora', learnerName: 'Sora', expiresAt: '2026-10-12T12:09:00Z' }] };
+    data.transfers = { ok: true, data: { requests: [familyMove], options } };
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-row').map((row) => row.props['data-kind'])).toEqual(['relink']);
+    expect(textOf(byTestId(r, 'needs-you-more')[0] as ReactTestInstance)).toContain(p.needsYou.more(2));
+    expect(order(r)[0]).toBe('needs-you');
+    expect(order(r)[1]).toBe('learner-card');
+  });
+
+  it("the move notice sits inside the card of the child it is about, after the child's lines and before the buttons; OK writes seen", async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.rosters = { sp_f: roster(family, [mina, jun]) };
+    data.notices = { ok: true, data: [{ id: 'mv:1', learnerId: 'profile:mina', learnerName: 'Mina', to: { spaceId: 'space:d', name: 'Evening Class D' }, executedAt: '2026-10-11T00:00:00Z' }] };
+    const r = await render([family]);
+    const notice = card(r, 'Mina').findAll((n) => n.props['data-testid'] === 'move-notice' && typeof n.type === 'string');
+    expect(notice).toHaveLength(1);
+    expect(textOf(notice[0] as ReactTestInstance)).toContain(en.console.classScope.notice('Mina', 'Evening Class D'));
+    expect(card(r, 'Jun').findAll((n) => n.props['data-testid'] === 'move-notice')).toHaveLength(0);
+    const inMina = card(r, 'Mina').findAll((n) => typeof n.type === 'string' && (n.props['data-testid'] === 'move-notice' || n.type === 'a')).map((n) => (n.type === 'a' ? 'link' : 'notice'));
+    expect(inMina[0]).toBe('notice');
+    await act(async () => (card(r, 'Mina').find((n) => n.props['data-testid'] === 'move-notice-ok' && typeof n.type === 'string')).props.onClick());
+    expect(data.calls).toContain('seen:sp_f:mv:1');
+    expect(byTestId(r, 'move-notice')).toHaveLength(0);
+  });
+
+  it('Read and OK brings the shipped class-scope card into view and focuses it (GX-OD-3 open: the card stays)', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    data.scope = { ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId: 'profile:mina', name: 'Mina', needed: true }] } };
+    const target = { scrollIntoView: vi.fn(), focus: vi.fn() };
+    const getElementById = vi.fn(() => target);
+    vi.stubGlobal('document', { getElementById, activeElement: null });
+    const r = await render([family]);
+    expect(byTestId(r, 'class-scope-card')).toHaveLength(1);
+    await act(async () => (byTestId(r, 'needs-you-read')[0] as ReactTestInstance).props.onClick());
+    expect(getElementById).toHaveBeenCalledWith('class-scope-sp_f-profile:mina');
+    expect(target.scrollIntoView).toHaveBeenCalled();
+    expect(target.focus).toHaveBeenCalledWith({ preventScroll: true });
+    vi.unstubAllGlobals();
+  });
+
+  it('a read that started before an answer and ends after it never puts the answered row back (the newest read draws)', async () => {
+    data.rosters = { sp_f: roster(family, [mina]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    const r = await render([family]);
+    expect(byTestId(r, 'needs-you-approve')).toHaveLength(1);
+    // A read of the family starts and is still under way (it will say the re-link is pending)...
+    let finishOld: (value: unknown) => void = () => undefined;
+    data.relinkNext = new Promise((resolve) => {
+      finishOld = resolve;
+    });
+    const classCards = r.root.find((n) => typeof n.type !== 'string' && typeof n.props.onStale === 'function' && 'scope' in n.props);
+    act(() => classCards.props.onStale());
+    // ...then Approve (in the re-link pop-up): the answer's own read lands first and the row leaves.
+    await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => undefined);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    // The older read ends now: it is dropped, so the decided row and its chip do not come back.
+    await act(async () => finishOld({ ok: true, data: [pendingRelink] }));
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(byTestId(r, 'child-status')).toHaveLength(0);
+  });
+
+  it('an archived family asks nothing and draws no strip', async () => {
+    const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [mina]) };
+    data.relinks = { ok: true, data: [pendingRelink] };
+    const r = await render([archived]);
+    expect(byTestId(r, 'needs-you')).toHaveLength(0);
+    expect(data.calls).toEqual([]);
+  });
+});
+
+describe('the family home: the child card week, next and lecture slot (GX-11)', () => {
+  // The suite's clock: 2026-10-12T12:00:00Z, so the last 7 days are Oct 6 to Oct 12 (the learner's offset 0).
+  const day = (d: string, min: number) => ({ d, min, q: 0, c: 0, w: 0, j: [] as string[] });
+  const activity = (days: ReturnType<typeof day>[], over: Record<string, unknown> = {}) => ({
+    v: 1,
+    tz: 0,
+    asOf: '2026-10-12',
+    days,
+    months: [],
+    total: { since: '2026-09-01', min: 300, q: 4, c: 2, w: 0, days: 12 },
+    milestones: [],
+    ...over,
+  });
+  const withSummary = (base: RosterLearner, summary: unknown): RosterLearner => ({ ...base, summary: summary as RosterLearner['summary'] });
+  const steady = withSummary(mina, {
+    lastActiveAt: '2026-10-11T08:00:00Z',
+    minutesLast7d: 36,
+    activity: activity([day('2026-10-06', 9), day('2026-10-07', 10), day('2026-10-09', 12), day('2026-10-11', 5)], { next: { q: 'quest:stage1-letters-q1', plan: false } }),
+  });
+  const quiet = withSummary(learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 0), { lastActiveAt: '2026-09-20T08:00:00Z', minutesLast7d: 0, activity: activity([day('2026-09-20', 12)]) });
+  const never = { ...learner('profile:sora', 'Sora', '2026-09-09T00:00:00Z', 0), summary: null };
+  const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
+  const within = (node: ReactTestInstance, id: string): ReactTestInstance[] => node.findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === id);
+
+  it('a child who practiced: the week line, the 7 squares (fill only, hidden from screen readers) and Next', async () => {
+    data.rosters = { sp_f: roster(family, [steady]) };
+    const r = await render([family]);
+    const mine = card(r, 'Mina');
+    expect(textOf(within(mine, 'child-week-line')[0] as ReactTestInstance)).toBe(p.week(4, 36));
+    const squares = within(mine, 'child-week-squares')[0] as ReactTestInstance;
+    expect(squares.props['aria-hidden']).toBe(true);
+    const marks = squares.findAll((n) => n.type === 'li');
+    expect(marks.map((li) => li.props['data-on'])).toEqual(['true', 'true', 'false', 'true', 'false', 'true', 'false']);
+    // Fill only: a practiced day takes the report's practiced mark, every other day the same plain outline (no red, no cross).
+    const styles = marks.map((li) => li.props.style as Record<string, unknown>);
+    expect(new Set(styles.filter((_, i) => marks[i]?.props['data-on'] === 'false').map((st) => JSON.stringify(st))).size).toBe(1);
+    expect(JSON.stringify(styles)).not.toContain(colors.feedback.danger);
+    expect(textOf(within(mine, 'child-next')[0] as ReactTestInstance)).toBe(p.next(catalogTitle('quest:stage1-letters-q1', 'en')));
+    expect(textOf(mine)).not.toContain(en.console.space.learner.lastActive(''));
+  });
+
+  it('a child who never started: the line with the name and Open the app on this device, which opens the learner app (no code)', async () => {
+    data.rosters = { sp_f: roster(family, [never]) };
+    const r = await render([family]);
+    const sora = card(r, 'Sora');
+    expect(textOf(within(sora, 'child-week-line')[0] as ReactTestInstance)).toBe(p.notStarted('Sora'));
+    expect(within(sora, 'child-week-squares')).toHaveLength(0);
+    const open = within(sora, 'child-open-app')[0] as ReactTestInstance;
+    expect(textOf(open)).toBe(p.empty.openApp);
+    act(() => open.props.onClick());
+    expect(handoff.opened).toEqual(['en']);
+    expect(handoff.calls).toEqual([]);
+  });
+
+  it('a child who never started, in an archived family: the plain not-started words, no Open the app (the family cannot act)', async () => {
+    const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [never]) };
+    const r = await render([archived]);
+    const sora = card(r, 'Sora');
+    expect(textOf(within(sora, 'child-week-line')[0] as ReactTestInstance)).toBe(p.lastActive.notStarted);
+    expect(within(sora, 'child-open-app')).toHaveLength(0);
+  });
+
+  it('a child quiet for 7 days: the restart line, never "0 of the last 7 days", and no squares', async () => {
+    data.rosters = { sp_f: roster(family, [quiet]) };
+    const r = await render([family]);
+    const jun = card(r, 'Jun');
+    expect(textOf(within(jun, 'child-week-line')[0] as ReactTestInstance)).toBe(p.restart);
+    expect(within(jun, 'child-week-squares')).toHaveLength(0);
+    expect(textOf(jun)).not.toContain(p.week(0, 0));
+  });
+
+  describe('the Lecture mode card below 70em (P3)', () => {
+    beforeEach(() => {
+      vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', undefined);
+      vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com', hash: '' }, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+    });
+    afterEach(() => {
+      // Unmount while the stubbed window is still there (the card's listeners are removed on unmount).
+      act(() => mounted?.unmount());
+      mounted = null;
+      vi.unstubAllGlobals();
+    });
+    const order = (r: ReactTestRenderer): string[] =>
+      r.root.findAll((n) => typeof n.type === 'string' && ['learner-card', 'lecture-card'].includes(n.props['data-testid'] as string)).map((n) => n.props['data-testid'] as string);
+
+    it('with 2 or more children, after the last child (never between child 1 and child 2)', async () => {
+      data.rosters = { sp_f: roster(family, [steady, quiet, never]) };
+      const r = await render([family]);
+      expect(order(r)).toEqual(['learner-card', 'learner-card', 'learner-card', 'lecture-card']);
+    });
+
+    it('with one child, right after that card', async () => {
+      data.rosters = { sp_f: roster(family, [steady]) };
+      const r = await render([family]);
+      expect(order(r)).toEqual(['learner-card', 'lecture-card']);
+    });
   });
 });
