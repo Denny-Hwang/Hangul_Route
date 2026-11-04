@@ -8,15 +8,17 @@ import {
   Progress,
   Screen,
   Spacer,
+  borderWidth,
   colors,
   radii,
   spacing,
+  touchTarget,
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -39,7 +41,18 @@ interface Props {
 /**
  * CardMatch — present Korean words on the left, English meanings on the right.
  * Child taps matching pairs. Game completes when all pairs are matched.
+ *
+ * Touch (AMENDMENTS-TOUCH 6.2, row KT-4a): a Korean card first, then its meaning, as the instruction says. A
+ * meaning tapped with no Korean card picked is a no-op and scores nothing. Another Korean card moves the pick; the
+ * picked card again keeps it. The wrong flash's timer is kept in a ref, cleared by any new pick and on unmount, and
+ * when it fires it lets go only of the pick that missed (unless the child re-tapped it), so it never un-selects the
+ * next pick. A bounce on the amber meaning of a miss, while it shows, is not a second miss.
  */
+
+/** A wrong pair stays amber this long; then the pick that missed is let go. */
+const WRONG_FLASH_MS = 600;
+/** Last pair matched -> the step completes. */
+const FINISH_DELAY_MS = 800;
 
 /** The word a pair asks, read as Korean to meaning (F-CURR-002 row CM-12). */
 function askedPair(pairs: readonly { ko: string }[], idx: number): RoundAsked | undefined {
@@ -71,6 +84,10 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
   const [selectedKo, setSelectedKo] = useState<number | null>(null);
   const [matched, setMatched] = useState<Set<number>>(new Set());
   const [wrongFlash, setWrongFlash] = useState<{ ko: number; en: number } | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The Korean pick the running flash lets go of when it ends; a re-tap on that pick keeps it (sets this to null).
+  const flashRelease = useRef<number | null>(null);
+  const finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // F-LAYOUT-001 §3.6: the cards grow with the window (their padding scales; the words keep their type size).
   const cardPadding = useMediaSize(spacing.md);
   // Each Korean word is printed on its card; the panel only says why it is silent (F-AUDIO-004 A-5b).
@@ -88,32 +105,95 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
   };
 
   useEffect(() => {
+    // Scheduled once: a re-render with a new `onFinish` must not finish the step twice.
+    if (finishTimer.current !== null) return;
     if (matched.size === pairs.length && pairs.length > 0) {
-      setTimeout(() => {
+      finishTimer.current = setTimeout(() => {
         markStepComplete();
         onFinish();
-      }, 800);
+      }, FINISH_DELAY_MS);
     }
   }, [matched, pairs.length, markStepComplete, onFinish]);
 
-  const tryMatch = (enIdx: number): void => {
-    if (selectedKo === null) return;
-    if (matched.has(selectedKo)) return;
+  // Leaving the game (Back, Skip, the end) stops both timers.
+  useEffect(
+    () => () => {
+      if (flashTimer.current !== null) clearTimeout(flashTimer.current);
+      if (finishTimer.current !== null) clearTimeout(finishTimer.current);
+      flashTimer.current = null;
+      finishTimer.current = null;
+    },
+    [],
+  );
+
+  const stopFlash = (): void => {
+    if (flashTimer.current !== null) clearTimeout(flashTimer.current);
+    flashTimer.current = null;
+    flashRelease.current = null;
+    setWrongFlash(null);
+  };
+
+  const pickKorean = (idx: number): void => {
+    if (matched.has(idx)) return;
+    hear(idx);
+    // The picked card again: a bounce or a double tap keeps the pick and a running flash; during the flash it also
+    // keeps the pick that missed past the flash, so a child who re-taps it to try again is not let go.
+    if (selectedKo === idx) {
+      flashRelease.current = null;
+      return;
+    }
+    stopFlash();
+    setSelectedKo(idx);
+  };
+
+  const pickMeaning = (enIdx: number): void => {
+    // Korean card first, as today: a meaning with no Korean pick does nothing and scores nothing.
+    if (selectedKo === null || matched.has(selectedKo) || matched.has(enIdx)) return;
+    // The amber meaning of the miss just made, while it still shows: a bounce on it is not a second miss.
+    if (flashTimer.current !== null && wrongFlash?.en === enIdx) return;
+    stopFlash();
     if (selectedKo === enIdx) {
       success();
       answerRound(pairRoundKey(selectedKo), true, askedPair(pairs, selectedKo));
       setMatched(new Set([...matched, selectedKo]));
       setSelectedKo(null);
-    } else {
-      nudge();
-      answerRound(pairRoundKey(selectedKo), false, askedPair(pairs, selectedKo));
-      setWrongFlash({ ko: selectedKo, en: enIdx });
-      setTimeout(() => {
-        setWrongFlash(null);
-        setSelectedKo(null);
-      }, 600);
+      return;
     }
+    nudge();
+    answerRound(pairRoundKey(selectedKo), false, askedPair(pairs, selectedKo));
+    setWrongFlash({ ko: selectedKo, en: enIdx });
+    flashRelease.current = selectedKo;
+    flashTimer.current = setTimeout(() => {
+      const missed = flashRelease.current;
+      flashTimer.current = null;
+      flashRelease.current = null;
+      setWrongFlash(null);
+      setSelectedKo((current) => (missed !== null && current === missed ? null : current));
+    }, WRONG_FLASH_MS);
   };
+
+  const cardStyle = (state: { matched: boolean; selected: boolean; wrong: boolean }) => ({
+    minHeight: touchTarget.min,
+    justifyContent: 'center' as const,
+    padding: cardPadding,
+    borderRadius: radii.lg,
+    backgroundColor: state.matched
+      ? colors.feedback.successLight
+      : state.selected
+        ? colors.brand.primaryLight
+        : state.wrong
+          ? colors.feedback.nudgeLight
+          : colors.surface.paper,
+    borderWidth: borderWidth.base,
+    borderColor: state.matched
+      ? colors.feedback.success
+      : state.selected
+        ? colors.brand.primary
+        : state.wrong
+          ? colors.feedback.nudge
+          : colors.border.subtle,
+    opacity: state.matched ? 0.5 : 1,
+  });
 
   return (
     <Screen tone="canvas" scrollable>
@@ -138,33 +218,14 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
             return (
               <Pressable
                 key={`ko-${p.idx}`}
-                onPress={() => {
-                  if (isMatched) return;
-                  setSelectedKo(p.idx);
-                  hear(p.idx);
-                }}
+                testID={`card-match-ko-${p.idx}`}
+                onPress={() => pickKorean(p.idx)}
+                accessibilityRole="button"
                 accessibilityLabel={m.a11y.minigame.koreanWord(p.romanization ?? p.ko)}
+                accessibilityState={{ selected: isSelected, disabled: isMatched }}
+                aria-selected={isSelected}
                 disabled={isMatched}
-                style={{
-                  padding: cardPadding,
-                  borderRadius: radii.lg,
-                  backgroundColor: isMatched
-                    ? colors.feedback.successLight
-                    : isSelected
-                      ? colors.brand.primaryLight
-                      : isWrong
-                        ? colors.feedback.nudgeLight
-                        : colors.surface.paper,
-                  borderWidth: 2,
-                  borderColor: isMatched
-                    ? colors.feedback.success
-                    : isSelected
-                      ? colors.brand.primary
-                      : isWrong
-                        ? colors.feedback.nudge
-                        : colors.border.subtle,
-                  opacity: isMatched ? 0.5 : 1,
-                }}
+                style={cardStyle({ matched: isMatched, selected: isSelected, wrong: isWrong })}
               >
                 <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '700', color: colors.text.primary }}>
                   {p.ko}
@@ -185,25 +246,13 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
             return (
               <Pressable
                 key={`en-${p.idx}`}
-                onPress={() => tryMatch(p.idx)}
+                testID={`card-match-en-${p.idx}`}
+                onPress={() => pickMeaning(p.idx)}
+                accessibilityRole="button"
                 accessibilityLabel={m.a11y.minigame.meaning(p.en)}
+                accessibilityState={{ disabled: isMatched }}
                 disabled={isMatched}
-                style={{
-                  padding: cardPadding,
-                  borderRadius: radii.lg,
-                  backgroundColor: isMatched
-                    ? colors.feedback.successLight
-                    : isWrong
-                      ? colors.feedback.nudgeLight
-                      : colors.surface.paper,
-                  borderWidth: 2,
-                  borderColor: isMatched
-                    ? colors.feedback.success
-                    : isWrong
-                      ? colors.feedback.nudge
-                      : colors.border.subtle,
-                  opacity: isMatched ? 0.5 : 1,
-                }}
+                style={cardStyle({ matched: isMatched, selected: false, wrong: isWrong })}
               >
                 <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '600', color: colors.text.primary }}>
                   {p.en}

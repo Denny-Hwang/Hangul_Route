@@ -115,3 +115,31 @@ describe('M6: no stale replay over the next round', () => {
     expect(spoken()).toEqual([first, first]);
   });
 });
+
+describe('R3: a locked wrong tile takes no tap (AMENDMENTS-TOUCH row KT-3)', () => {
+  it('after a miss the tile is disabled, keeps its amber look, and a tap on it is no second miss: no replay, no new bubble', async () => {
+    const r = await play({ kind: 'match-sound', jamoIds: L1, rounds: 2, focusJamoIds: ['jamo:giyeok'] });
+    const [first] = spoken();
+    const target = NAME_OF.get(first!)!;
+    const wrong = L1.find((id) => id !== target)!;
+    await press(tile(r.root, wrong));
+    // The miss's own replay, 800 ms later.
+    await tick(800);
+    expect(spoken()).toEqual([first, first]);
+    const locked = byTestId(r.root, `match-sound-tile-${wrong}`).find((n) => n.props['aria-disabled'] !== undefined);
+    expect(locked?.props['aria-disabled']).toBe(true);
+    // A tap and a bounce on the locked tile: nothing is answered, so no replay is scheduled again.
+    const node = byTestId(r.root, `match-sound-tile-${wrong}`).find((n) => typeof n.props.onClick === 'function');
+    if (node) {
+      await press(node);
+      await tick(60);
+      await press(node);
+    }
+    await tick(2_000);
+    expect(spoken()).toEqual([first, first]);
+    // The right tile still answers.
+    await press(tile(r.root, target));
+    await tick(700);
+    expect(spoken()).toHaveLength(3);
+  });
+});

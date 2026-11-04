@@ -1,4 +1,4 @@
-import { Screen, ScreenHeaderSlotContext, TextSizeProvider } from '@hangul-route/design-system';
+import { Screen, ScreenHeaderSlotContext, TapLockProvider, TextSizeProvider } from '@hangul-route/design-system';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -296,18 +296,21 @@ export default function BrowseApp(): ReactElement {
           {visit.status === 'ready' && session ? (
             <BrowseSessionProvider value={session}>
               <BrowseSettingsProvider>
-                <ScreenHeaderSlotContext.Provider value={BrowseScreenHeader}>
-                  <NavigationContainer
-                    ref={navigation}
-                    initialState={routesOf(visit.initial)}
-                    documentTitle={{ formatter: () => messages.caregiver.browse.documentTitle }}
-                    onReady={onReady}
-                    onStateChange={onNavigate}
-                  >
-                    <BrowseNavigator />
-                    <StatusBar style="dark" />
-                  </NavigationContainer>
-                </ScreenHeaderSlotContext.Provider>
+                {/* One tap lock clock for every answer board and guarded press (AMENDMENTS-TOUCH KT-D5, rule 10). */}
+                <TapLockProvider>
+                  <ScreenHeaderSlotContext.Provider value={BrowseScreenHeader}>
+                    <NavigationContainer
+                      ref={navigation}
+                      initialState={routesOf(visit.initial)}
+                      documentTitle={{ formatter: () => messages.caregiver.browse.documentTitle }}
+                      onReady={onReady}
+                      onStateChange={onNavigate}
+                    >
+                      <BrowseNavigator />
+                      <StatusBar style="dark" />
+                    </NavigationContainer>
+                  </ScreenHeaderSlotContext.Provider>
+                </TapLockProvider>
                 <ConfirmHost />
               </BrowseSettingsProvider>
             </BrowseSessionProvider>
