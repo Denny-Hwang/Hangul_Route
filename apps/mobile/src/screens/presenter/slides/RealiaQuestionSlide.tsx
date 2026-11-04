@@ -1,5 +1,5 @@
 import type { RomanizationMode } from '@hangul-route/content-schema';
-import { colors, koreanTextLabel, presenter, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
+import { colors, koreanTextLabel, presenter, realiaBaseKind, spacing, touchTarget, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
@@ -26,6 +26,12 @@ export type RealiaQuestionBody = QuizBody & { prompt: Extract<QuizBody['prompt']
 /** A realia question (LV-S2): a Realia Read round beside its sheet. */
 export function isRealiaQuestion(slide: Slide): slide is RealiaQuestionBody {
   return slide.kind === 'quiz' && slide.prompt.ask === 'realia';
+}
+
+/** Whether a slide shows a realia sheet of a row CM-47 kind (a realia page or a realia question), whose layout is the lazy realia kinds chunk. */
+export function showsRealiaKind(slide: Slide): boolean {
+  const sheet = slide.kind === 'realia' ? slide.sheet : isRealiaQuestion(slide) ? slide.prompt.sheet : undefined;
+  return sheet !== undefined && realiaBaseKind(sheet.kind) !== sheet.kind;
 }
 
 /**
