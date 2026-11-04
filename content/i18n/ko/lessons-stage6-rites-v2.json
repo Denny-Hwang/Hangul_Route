@@ -6,8 +6,8 @@
       "title": "명절 달력",
       "subtitle": "달력, 축제 포스터, 기차표를 읽어요.",
       "hoyaIntro": "곧 추석이에요! 달력, 축제 포스터, 기차표를 읽어 봐요.",
-      "culture.n1.text": "{ko:추석}은 음력 8월 15일이에요. 그래서 양력 날짜는 해마다 달라지고, 2026년에는 9월 25일이에요. 한국의 음력은 주로 중국에서 들어왔어요.",
-      "culture.n2.text": "{ko:강강술래}는 주로 추석날 밤에 하는 둥근 춤이에요. 보름달 아래에서 여자들이 손을 잡고 노래하며 둥글게 돌아요. 유네스코는 2009년에 강강술래를 인류무형문화유산으로 등재했어요.",
+      "culture.n1.text": "{ko:추석}은 음력 8월 15일이에요. 그래서 양력 날짜는 해마다 달라지고, 2026년에는 9월 25일이에요. 음력은 동아시아가 함께 쓰는 달력이에요. 중국에서는 이맘때를 중추라고 불러요. 한국은 1896년까지 음력을 공식 달력으로 썼어요.",
+      "culture.n2.text": "{ko:강강술래}는 주로 추석날 밤에 원을 그리며 추는 춤이에요. 보름달 아래에서 여자들이 손을 잡고 노래하며 둥글게 돌아요. 유네스코는 2009년에 강강술래를 인류무형문화유산으로 등재했어요.",
       "culture.n3.text": "달 이름은 숫자에 {ko:월}을 붙여요. 9월은 {ko:구월}이에요. 두 달은 다르게 읽어요. 6월은 {ko:육월}이 아니라 {ko:유월}, 10월은 {ko:십월}이 아니라 {ko:시월}이에요."
     },
     "quest:stage6-rites-v2-q1": {
@@ -65,7 +65,7 @@
       "steps.s5.title": "짧은 문제 두 개",
       "steps.s6.title": "기차표를 읽었어요!",
       "steps.s1.hoyaLine": "호야네 가족은 추석 전날 기차를 타요. 기차표를 읽어 봐요!",
-      "steps.s6.hoyaLine": "명절 기차표를 읽었어요. 즐거운 여행 되세요!",
+      "steps.s6.hoyaLine": "명절 기차표를 읽었어요. 즐거운 여행 하세요!",
       "steps.s2.discover.pages.0.caption": "기차표에는 날짜와 자리가 나와요.",
       "steps.s2.discover.pages.1.caption": "기차가 어디로 가는지, 언제 떠나는지도 나와요.",
       "steps.s2.discover.pages.2.caption": "매표소에서 직원이 어디에 가는지 물어요.",
@@ -157,7 +157,7 @@
     "minigame:s6-rites-v2-q2-apply": {
       "clozePick.rounds.a1.sentence.gloss": "윷을 던지며 노는 놀이를 ___에 한다는 말",
       "clozePick.rounds.a2.sentence.gloss": "반달 모양 떡 빚기를 ___에 한다는 말",
-      "clozePick.rounds.a3.sentence.gloss": "7시에 하는 것이 ___이라는 말",
+      "clozePick.rounds.a3.sentence.gloss": "7시에 하는 것이 ___라는 말",
       "clozePick.rounds.a1.tiles.han-si.gloss": "1시",
       "clozePick.rounds.a1.tiles.du-si.gloss": "2시",
       "clozePick.rounds.a1.tiles.se-si.gloss": "3시",

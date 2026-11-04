@@ -6,7 +6,7 @@
       "title": "Calendario de fiestas",
       "subtitle": "Lee un calendario, un cartel de festival y un boleto de tren.",
       "hoyaIntro": "¡Ya llega Chuseok! Vamos a leer el calendario, un cartel de festival y un boleto de tren.",
-      "culture.n1.text": "{ko:추석} (Chuseok) es el día 15 del octavo mes del calendario lunar, así que su fecha en el calendario solar cambia cada año: en 2026 es el 25 de septiembre. El calendario lunar de Corea vino sobre todo de China.",
+      "culture.n1.text": "{ko:추석} (Chuseok) es el día 15 del octavo mes del calendario lunar, así que su fecha en el calendario solar cambia cada año: en 2026 es el 25 de septiembre. El calendario lunar se comparte en Asia oriental: en China, esta época del año se llama «mitad del otoño». Corea lo usó como calendario oficial hasta 1896.",
       "culture.n2.text": "{ko:강강술래} (Ganggangsullae) es una danza en círculo que se hace sobre todo la noche de Chuseok: bajo la luna llena, las mujeres se toman de las manos y cantan mientras bailan en un círculo. La UNESCO inscribió Ganggangsullae en 2009.",
       "culture.n3.text": "Los meses son un número con {ko:월}: septiembre es {ko:구월}. Dos meses se dicen de otra forma: junio es {ko:유월}, no {ko:육월}, y octubre es {ko:시월}, no {ko:십월}."
     },
@@ -155,8 +155,8 @@
       "realiaRead.rounds.r4.options.yeonnalligi.text.gloss": "volar cometas"
     },
     "minigame:s6-rites-v2-q2-apply": {
-      "clozePick.rounds.a1.sentence.gloss": "El yut es a la ___.",
-      "clozePick.rounds.a2.sentence.gloss": "Hacer songpyeon es a las ___.",
+      "clozePick.rounds.a1.sentence.gloss": "El yut es a ___.",
+      "clozePick.rounds.a2.sentence.gloss": "Hacer songpyeon es a ___.",
       "clozePick.rounds.a3.sentence.gloss": "___ es a las siete.",
       "clozePick.rounds.a1.tiles.han-si.gloss": "1:00",
       "clozePick.rounds.a1.tiles.du-si.gloss": "2:00",
@@ -243,7 +243,7 @@
       "dialogue.3.options.du-si-gichayo.gloss": "El tren de las dos."
     },
     "minigame:s6-rites-v2-q3-check": {
-      "clozePick.rounds.c1.sentence.gloss": "El tren sale a las ___.",
+      "clozePick.rounds.c1.sentence.gloss": "El tren sale a ___.",
       "clozePick.rounds.c2.sentence.gloss": "El asiento es el ___.",
       "clozePick.rounds.c1.tiles.han-si.gloss": "1:00",
       "clozePick.rounds.c1.tiles.du-si.gloss": "2:00",

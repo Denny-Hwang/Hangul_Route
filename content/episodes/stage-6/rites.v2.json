@@ -1725,7 +1725,7 @@
     {
       "id": "n1",
       "kind": "culture",
-      "textEn": "{ko:추석} (Chuseok) is the 15th day of the 8th month of the lunar calendar, so its date on the solar calendar moves each year: in 2026 it is 25 September. Korea's lunar calendar came mainly from China.",
+      "textEn": "{ko:추석} (Chuseok) is the 15th day of the 8th lunar month, so its solar date moves each year: in 2026 it is 25 September. East Asia shares this lunar calendar; China calls this time mid-autumn. Korea used it officially until 1896.",
       "sources": [
         {
           "title": "2026년 달력자료: 국경일과 공휴일, 음력 (2026 calendar data: national holidays and public holidays, lunar months)",
@@ -1757,10 +1757,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
-        "checkedAt": "2026-10-31",
+        "passes": 4,
+        "checkedAt": "2026-11-03",
         "scope": "lesson",
-        "notes": "pass 1 (author sourcing, CM-45 S6, 2026-10-31): the KASI 2026 calendar data page, the Encyclopedia of Korean Seasonal Customs entry 추석, the dictionary entry 음력 2 and the Encyclopedia of Korean Culture entry 역법 read on 2026-10-31. 'the 15th day of the 8th month of the lunar calendar' = 음력 팔월 보름 (NFMK); 'its solar date moves each year' = 음력 is used to set the dates of 설 and 추석 (NIKL) while the official calendar is the solar one; 'in 2026 it is 25 September' = KASI lunar month 8 begins 2026-09-11, so 8/15 is 2026-09-25, inside the KASI holiday 9월24일~9월26일; 'Korea's lunar calendar came mainly from China' = 우리나라는 주로 중국의 태음태양력을 도입하여 사용했다 (AKS). Used in: q1 (the calendar page, its Discover and rounds) and the q1 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-31): all four pages re-read; each quote found. The calendar page's four days are KASI's: 백로 9/7, lunar 8/1 on 9/11, 추분 9/23, 추석 9/25 (lunar 8/15); KASI marks its table as not the official announcement (월력요항), and the dates were checked to agree with each other (lunar 8/1 + 14 days = 9/25, the middle of the 24-26 holiday). Shared heritage (§5.1): the note says the calendar came mainly from China and never calls it Korean in origin; the NIKL wording 우리나라의 전통 역법 is not used. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): the drawn calendar names no maker or brand; the institutions are named as on the access date (한국천문연구원, 국립민속박물관, 국립국어원). Outcome: pass, no change."
+        "notes": "pass 1 (author sourcing, CM-45 S6, 2026-10-31): the KASI 2026 calendar data page, the Encyclopedia of Korean Seasonal Customs entry 추석, the dictionary entry 음력 2 and the Encyclopedia of Korean Culture entry 역법 read on 2026-10-31. 'the 15th day of the 8th lunar month' = 음력 팔월 보름 (NFMK); 'its solar date moves each year' = 음력 is used to set the dates of 설 and 추석 (NIKL) while the official calendar is the solar one; 'in 2026 it is 25 September' = KASI lunar month 8 begins 2026-09-11, so 8/15 is 2026-09-25, inside the KASI holiday 9월24일~9월26일; (revised in pass 4) 'East Asia shares this lunar calendar; China calls this time mid-autumn' = 중국인들은 추석 무렵을 중추(中秋) 또는 월석(月夕)이라 하는데 (NFMK), with 우리 민족이 오래도록 써왔던 태음태양력은 중국력이다 (AKS, supporting only); 'Korea used it officially until 1896' = 1896년에 양력으로 역법이 고쳐지기 전까지 우리나라에서 공식적으로 사용하였다 (NIKL). Used in: q1 (the calendar page, its Discover and rounds) and the q1 Did you know? tip.\npass 2 (MAR culture and facts, 2026-10-31): all four pages re-read; each quote found. The calendar page's four days are KASI's: 백로 9/7, lunar 8/1 on 9/11, 추분 9/23, 추석 9/25 (lunar 8/15); KASI marks its table as not the official announcement (월력요항), and the dates were checked to agree with each other (lunar 8/1 + 14 days = 9/25, the middle of the 24-26 holiday). Shared heritage (§5.1): the note says the calendar came mainly from China and never calls it Korean in origin; the NIKL wording 우리나라의 전통 역법 is not used. Outcome: pass, no change.\npass 3 (MAR third pass, 2026-10-31): the drawn calendar names no maker or brand; the institutions are named as on the access date (한국천문연구원, 국립민속박물관, 국립국어원). Outcome: pass, no change.\npass 4 (MAR reviser after the independent review of PR #924, 2026-11-03): the sentence 'Korea's lunar calendar came mainly from China' rested only on the AKS entry, which is not on the 6.6 allowlist, and framed the calendar as a one-way import. It now says the calendar is shared across East Asia (NFMK: the Chinese name 중추 for the Chuseok season) and that Korea used it officially until 1896 (NIKL); AKS stays as a supporting source. es and ko n1 match. Outcome: revised."
       }
     },
     {
@@ -1822,17 +1822,19 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-31",
+    "reviewedAt": "2026-11-03",
     "notes": [
       "Volume 2 MAR (row CM-45 S6, F-CURR-002 9.2, 2026-10-31; passes: author, language, culture and facts, learning design, reviser, third pass). No native-speaker or expert review is claimed; language: native-reviewed is the schema's name for the signed-off language gate.",
       "Language pass: spelling, spacing, particles and 해요체 line by line (추석은 구월 이십오일이에요; 구월 이십삼일은 ___이에요 with consonant-final tiles; ___는 일곱 시에 해요 with vowel-final tiles; 구월 이십사일이요); every romanization is the F-CNT-002 converter's (이십오일 isiboil, 십이번 sibibeon, 음력 팔월 초하루 eumnyeok parwol choharu).",
       "Language pass (cont.): Applied: dates, the seat and the lunar dates are written in Hangul (구월 이십오일, 십이번, 음력 팔월 보름), as Volume 1 writes its hours, so the converter checks each; the clerk asks 몇 시 기차로 드릴까요?; the 강강술래 gloss no longer opens with its romanization; the calendar's alt text says lunar month 8 begins on the 11th, not 8/1 read aloud.",
-      "Culture and facts pass: n1 (Chuseok is lunar 8/15, 25 September in 2026; the calendar came to Korea mainly from China) on KASI's 2026 calendar data, the NFMK seasonal-customs entry 추석, the NIKL entry 음력 and the AKS entry 역법; n2 (Ganggangsullae, inscribed 2009) on the NFMK entry and UNESCO; n3 (유월 and 시월) on Hangul Orthography article 52 and the NIKL entries.",
+      "Culture and facts pass: n1 (Chuseok is lunar 8/15, 25 September in 2026; the lunar calendar shared across East Asia, official in Korea until 1896) on KASI's 2026 calendar data, the NFMK seasonal-customs entry 추석, the NIKL entry 음력 and the AKS entry 역법; n2 (Ganggangsullae, inscribed 2009) on the NFMK entry and UNESCO; n3 (유월 and 시월) on Hangul Orthography article 52 and the NIKL entries.",
       "Culture and facts pass (cont.): every calendar day is KASI's (백로 9/7, lunar month 8 from 9/11, 추분 9/23, 추석 9/25, holiday 9/24-26), and the ticket's 24 September is the day before Chuseok; the poster, timetable and ticket are drawn and generic (no organiser, park, operator, line or train number); the lunar calendar is never called Korean in origin; suits any age.",
       "Learning design pass: 3 quests; Discover words per quest within the Stage 6 cap of 6 (U-3) and at most 8 new items (lesson-new-load); Practice and Check items from earlier quests at least 30 in 100 in each quest, with the Volume 1 words 추석, 송편, 윷놀이, 출발, 도착, 서울, 대구 and the hours in new contexts; Checks Type Hangul (Dictation), Realia Read (the timetable) and Cloze Pick (ticket values), one of each.",
       "Learning design pass (cont.): triples RR/CP/TH, RR/CP/RR, RR/TR/CP differ from Volume 1's (RR/TH/RR, RR/TH/CP, RR/TH/TH) and adjacent quests differ. Applied: every Practice has four rounds (U-1: the poster's games line, the ticket's departure and its seat line); q3's Check asked the date its Practice had asked and now reads the time and the seat. Each Check reads its own quest's card or words.",
       "Learning design pass (cont.): device voice: the Dictation targets 추석 and 송편 have no sound change and one spelling each, and play their Type Hangul see fallback while game.type-hangul-hear is at pct 0; dates and seats are Sino-Korean (구월, 이십사일, 십이번) and hours native (일곱 시), written as said; 보름 and 초하루 name the lunar 15th and 1st as the NFMK entry does; no number is dictated.",
-      "Reviser: applied the fixes above. Third pass: no change. The checker passes ran in one authoring session as separate passes against the checklists of 9.2 and 9.3."
+      "Reviser: applied the fixes above. Third pass: no change. The checker passes ran in one authoring session as separate passes against the checklists of 9.2 and 9.3.",
+      "Independent review (PR #924, 2026-11-03) and reviser: n1 now frames the lunar calendar as shared across East Asia on allowlisted quotes (NFMK, NIKL), AKS supporting only; es Cloze Pick lines no longer give away the hour by article (El yut es a ___, Hacer songpyeon es a ___, El tren sale a ___).",
+      "Independent review (cont.): ko q2 a3 reads ___라는 말 for the vowel-final tiles; ko style: 즐거운 여행 하세요, 원을 그리며 추는 춤. The q2 Check keeps asking the timetable time to event, the reverse of the Apply's event to time. Third pass on the changed lines: no further change."
     ]
   },
   "contentVer": 1
