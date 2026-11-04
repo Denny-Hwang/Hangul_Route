@@ -2068,7 +2068,7 @@ export const learner = {
   mastery: {
     level: { done: '완료', practiced: '연습함', mastered: '익힘' },
     readyToRefresh: '다시 볼 때예요',
-    newVolume: '새 묶음이 있어요',
+    newVolume: '새 권이 나왔어요',
     levelUp: (title: string, level: string) => `${title}: ${level}`,
   },
   wordsKnown: {

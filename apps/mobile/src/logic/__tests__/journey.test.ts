@@ -268,7 +268,8 @@ describe('isCellComplete (F-STORY-005 §3.5)', () => {
     const firstVolumes = { quests: cells.map((c) => ({ questId: c.questIds[0] as string, episodeId: c.id, startedAt: at, completedAt: at, stars: 3 as const, attempts: 1, accuracy: 1 })) };
     expect(stageAvailability('stage2', [...cells, preview])).toBe('open');
     expect(stageCompleteFor('stage2', [...cells, preview], firstVolumes)).toBe(true);
-    // A shipped Volume 2 not started yet never holds the stage back, and the cell's own look still waits for it.
+    // A shipped Volume 2 not started yet never holds the stage back; the cell's look reads Volume 1 too (journey-cells.ts),
+    // while `isCellComplete` (every volume done) stays false.
     expect(stageCompleteFor('stage2', [...cells, shipped], firstVolumes)).toBe(true);
     expect(isDerivedComplete('stage2', [...cells, shipped], firstVolumes)).toBe(true);
     expect(allPlayableDone('stage2', [...cells, shipped], firstVolumes)).toBe(true);
