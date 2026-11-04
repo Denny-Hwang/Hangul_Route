@@ -128,13 +128,13 @@ Audience: **teacher** only (class audience). The family wizard and a school spac
 
 ### Scenario (Given-When-Then)
 
-Given: a teacher whose class meets on Tuesdays for 30 minutes, and who wants learners to practise alone three times a week for 10 minutes
+Given: a teacher whose class meets on Tuesdays for 30 minutes, and who wants learners to practice alone three times a week for 10 minutes
 When: they open step 2 of the class wizard
-Then: one block asks when the class meets and how learners practise, suggests the practice days, offers the two ways class and practice fit together, and the preview shows class days and practice days side by side with honest totals
+Then: one block asks when the class meets and how learners practice, suggests the practice days, offers the two ways class and practice fit together, and the preview shows class days and practice days side by side with honest totals
 
 ### Screen goal
 
-"Say how the class meets and how learners practise, on one screen."
+"Say how the class meets and how learners practice, on one screen."
 
 ### M1. Step 2, the meeting block (class audience, flag on; 1280 px)
 
@@ -145,12 +145,12 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 │ ← Back to <class>                                                                         │
 │ Plan a term                                                               Step 2 of 4     │
 │ ┌ How does this class meet? ──────────────────────────────────────────────────────────┐ │
-│ │ Class                                        Learners also practise on their own     │ │
+│ │ Class                                        Learners also practice on their own     │ │
 │ │ [Sun][Mon][TUE][Wed][Thu][Fri][Sat]          [ 3 v] times a week × [10 v] min each time │ │
 │ │ Class length [ 30 min v ]                    Practice on Wed, Fri, Sun  Change days   │ │
 │ │                                              (Change days open: [Sun]..[Sat] chips)   │ │
 │ │ How do class and practice fit together?      (shown only with 1 or more practice days)│ │
-│ │ ┌(o) Practise what class taught [Suggested]─┐ ┌( ) Class and practice cover different ┐│ │
+│ │ ┌(o) Practice what class taught [Suggested]─┐ ┌( ) Class and practice cover different ┐│ │
 │ │ │ Each class's lessons come back on the     │ │ lessons. Practice days also bring new ││ │
 │ │ │ practice days after it.                   │ │ lessons from the groups class has ... ││ │
 │ │ └───────────────────────────────────────────┘ └───────────────────────────────────────┘│ │
@@ -161,18 +161,19 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 │ Days off [ Mon, Dec 21 ] – [ Sun, Jan 3 ]  [ ] Only the class is off                      │
 │          [ Tue, Feb 16 ] – [ Tue, Feb 16 ] [x] Only the class is off                      │
 │          [ + Add a break ]                                                                │
-│ That is 100 sessions in 26 weeks.                                                         │
+│ That is 95 sessions in 26 weeks.                                                          │
 │                                                                   [ Back ]  [[ Next ]]    │
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Class** weekday chips are a multi-select of 1 to 5 days (`role="checkbox"`, selected state bold with a thicker outline, never colour alone); a sixth tap is refused with one line beside the chips. **Class length**: 15, 20, 30, 45, 60 min, default 30 (BL-OD-13).
 - **Practice row**: count 0 to 7 (default 0 until the BL-10 flip, then 3, BL-OD-12) × minutes 5, 10, 15, 20, 30 (default 10; 5 when pictures-first). 0 is today's Class only plan: the suggested-days line and the mode cards hide (state `zero`). A teacher who wanted one homework day picks 1.
-- **Suggested days line**: `practiceDaysFor(classDays, P)` as short weekday names in week order from Monday ("Practice on Wed, Fri, Sun"). With `7 - L` practice days: "Practice every day"; above it, "Practice every day, also after class on Tuesday" (state `every`). **Change days** (`aria-expanded`) opens the seven weekday chips; the count stays the row's count; a class day may be chosen (it then holds a session after class, section 6.1).
-- **Mode cards** (radio group, arrow keys move and select): *Practise what class taught* preselected with the *Suggested* tag (BL-OD-1); *Class and practice cover different lessons* (state `split`).
+- **Suggested days line**: `practiceDaysFor(classDays, P)` as short weekday names in week order from Monday ("Practice on Wed, Fri, Sun"). With `7 - L` practice days: "Practice every day" (the learner's line says "practice every day" for the same plan, B1); above it, "Practice every day, also after class on Tuesday" (state `every`). **Change days** (`aria-expanded`) opens the seven weekday chips; the count stays the row's count; a class day may be chosen (it then holds a session after class, section 6.1).
+- **Mode cards** (radio group, arrow keys move and select): *Practice what class taught* preselected with the *Suggested* tag (BL-OD-1); *Class and practice cover different lessons* (state `split`).
 - **Length**: the length chips stay; **Keep the average when there are days off** is a checkbox, off (BL-OD-18); when on, the preview names the new end date.
 - **Days off**: each break row gains the checkbox **Only the class is off** (`blend.classDaysOff`): practice goes on, the class day carries nothing. Off = today's break (no sessions at all).
 - One block, one screen: measured by `design/screens/route-blend/tools/capture.mjs` (assumption c; numbers in that README).
+- The numbers on M1, M3 and M4 use one set of days off: 26 weeks of 1 + 3 is 104 sessions; the new-year break (Dec 21 - Jan 3) removes 2 class days and 6 practice days, and the class-only day off (Tue, Feb 16) removes 1 class: **95 sessions**, **23 scheduled class dates**. BL-4 computes them from the generator (`stats`), never from this page.
 
 ### M2. Step 2 at 320 px (and 200 % text)
 
@@ -185,7 +186,7 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 │ [Wed][Thu][Fri]          │
 │ [Sat]                    │
 │ Class length [30 min v]  │
-│ Learners also practise   │
+│ Learners also practice   │
 │ on their own             │
 │ [3 v] times a week ×     │
 │ [10 v] min each time     │
@@ -194,7 +195,7 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 │ Change days              │
 │ How do class and         │
 │ practice fit together?   │
-│ ┌(o) Practise what ... ┐ │
+│ ┌(o) Practice what ... ┐ │
 │ └──────────────────────┘ │
 │ ┌( ) Class and practice┐ │
 │ └──────────────────────┘ │
@@ -204,6 +205,7 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 ```
 
 - One column, chips wrap, nothing scrolls sideways, no scroll area inside the block; the block is one vertical scroll (assumption c).
+- **Open point for BL-4 review (or the owner):** at 320 px with 200 % text the block measures 3.8 to 5.1 screens of 568 px. This row reads assumption c's "one scroll at 320 px" as one continuous vertical scroll with nothing sideways and nothing nested; the spec does not define it further. A stricter reading (for example, the suggested-days line and both mode cards within 2 screens at 100 % text) is measured in the README so the choice can be made on numbers.
 - The practice row follows the locale's word order: Korean reads "주 [3]회 × 한 번에 [10]분" (the mocks propose one key, `practice.inline`, for the row; see the route-blend README).
 
 ### M3. Step 4, the preview header and the cycle table
@@ -214,7 +216,7 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 │ About 4 sessions a week: 1 class day (30 min) and 3 practice days (10 min each,  │
 │ plus about 2-3 minutes of Daily Review).                                         │
 │ Class days teach about 3 lessons; practice days play about 1.                    │  <- overlap; split: about 2
-│ 96 sessions in all, 4 a teaching week.                                           │
+│ 95 sessions in all, 4 a teaching week.                                           │
 │ Starts with the first class on Tue, Nov 10.                                      │
 │ ┌ The weeks of the route ────────────────────────────────────────────────────┐   │
 │ │ Week │ Dates            │ Kind   │ Class             │ Practice            │   │
@@ -231,6 +233,7 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 
 - Each row is one **class cycle** (a class day and the days up to the next one, section 6.3). **Class** cell: the class date and its lesson titles. **Practice** cell: each practice weekday and date, then its lessons: the class's lessons first, then (split only) practice-only lessons written "Title (practice only)", then **Refresh** where the day has room or no lesson. Tags are words, never colour alone.
 - The table keeps header cells (`th scope="col"`) and the week cell as the row header (`th scope="row"`). Below 600 px each row becomes a card; each cell is introduced by its column name.
+- **Split keeps the opener rule (section 5.2, BL-OD-4).** The class cell lists the openers of the packet's cells first (in the mock: First letters 1 and 4, the first lessons of two cells of 3), then further packet lessons (First letters 2). A practice-only lesson always belongs to a cell that a class day has already opened, on a date strictly before it (First letters 3, 5, 6 on Wed, Fri, Sun); a lesson of an unopened cell waits for the next class day and the practice day takes a Refresh instead.
 - The per-day line takes its numbers from `stats.byTrack`: in overlap a practice day plays about 1 lesson plus Refresh (golden C); the spec's example "about 2" is the split case (golden D). BL-4 reads the stats, never a constant.
 - Warnings `item-cap`, `practice-short`, `class-paced` and `content-runs-out` join the existing Notices box above the table, worded as invitations.
 
@@ -239,15 +242,16 @@ It sits at the top of step 2 and replaces the class-day + homework-day chips (an
 ```
 │ This week                                                    │
 │ Class · Tue, Nov 17                                           │
-│   First letters 7 · First letters 8 · First letters 9        │  <- the class day's lessons first
+│   First letters 4 · First letters 5 · First letters 6        │  <- the class day's lessons first
 │ Practice                                                      │
 │   Practice on Wed, Fri, Sun                                   │  <- the class's default days, never a learner's own
 │   41 / 54 so far · 234 planned                                │  <- the existing class aggregate line, counts only
-│ Class days so far: 2 of 26                                    │  <- scheduled class dates up to today, never attendance
+│ Class days so far: 2 of 23                                    │  <- scheduled class dates up to today, never attendance
 │ [ Re-pace from today ]  [ Move this class day ]               │
 │ Stop practice days                                            │
 ```
 
+- **Class days so far: {n} of {N}**: `n` is the scheduled class dates up to today, `N` the plan's scheduled class dates (Tuesdays in the route less those removed by days off and class-only days off: 23 here). Never attendance.
 - **Move this class day** sits next to **Re-pace from today** and asks first, like Re-pace: "the class day's lessons and every later class day's move to the following class days" (BL-3 `classDay` shift); nothing done is moved.
 - **Stop practice days** (link) re-lays the future without practice days; a class-only published plan shows **Add practice days to this plan** instead (opens M1 prefilled).
 - No learner list, no learner sorted or compared, no per-learner practice days; nothing asks "Did class happen?" (BL-OD-8).

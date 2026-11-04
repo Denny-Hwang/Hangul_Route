@@ -16,8 +16,8 @@
 //   d-320         the learner weekly plan line fits the Route card column at 320 x 568 in at most 3 lines, for 1-3
 //                 practice weekday names and the collapsed forms, in en, es and ko (assumption d)
 //   words         no emoji, no banned word (packages/i18n/src/banned-words.json, plus "late" and "behind"), no "lecture"
-//                 in any drawn string
-//   counts        no number above 3 on a learner screen (amendment section 13)
+//                 in any drawn string or accessible name (aria-label, aria-labelledby: the words a screen reader says)
+//   counts        no number above 3 on a learner screen, drawn or read aloud (amendment section 13)
 //   one-label     no learner row shows two labels with the same words (section 7)
 //   tables        every table header cell has a scope (F-PLAN-002 section 3.11)
 import { createRequire } from 'node:module';
@@ -57,14 +57,28 @@ const LINE_CASES = [
   { name: '2 classes, 3 practice', cls: [1, 4], practice: [2, 5, 6] },
   { name: '2 classes, 3 practice (longest es/ko names)', cls: [3, 6], practice: [4, 0, 1] },
   { name: '1 class, 5 practice (most days)', cls: [2], practice: [3, 4, 5, 6, 0] },
-  { name: '1 class, 6 practice (every day except)', cls: [2], practice: [3, 4, 5, 6, 0, 1] },
-  { name: '2 classes, 5 practice (most days)', cls: [1, 4], practice: [2, 3, 5, 6, 0] },
-  { name: '2 classes, 6 practice (every day except, longest es/ko names)', cls: [3, 6], practice: [0, 1, 2, 4, 5, 6] },
+  { name: '1 class, 6 practice on every non-class day (every day)', cls: [2], practice: [3, 4, 5, 6, 0, 1] },
+  { name: '2 classes, 4 practice, Sunday free (most days)', cls: [1, 4], practice: [2, 3, 5, 6] },
+  { name: '2 classes, 6 practice incl. a class day (every day, longest es/ko names)', cls: [3, 6], practice: [0, 1, 2, 4, 5, 6] },
+  { name: '1 class, 6 practice incl. the class day, Wednesday free (every day except, longest es/ko names)', cls: [6], practice: [6, 0, 1, 2, 4, 5] },
   { name: '1 class, 7 practice (every day)', cls: [2], practice: [3, 4, 5, 6, 0, 1, 2] },
+  { name: '1 class, 6 practice incl. the class day (every day except)', cls: [2], practice: [2, 3, 4, 5, 6, 0] },
+  { name: '2 classes, 5 practice on every non-class day (every day)', cls: [1, 4], practice: [2, 3, 5, 6, 0] },
+];
+
+/**
+ * The class part has no collapse rule in section 7 (up to 5 names). Measured and recorded, not failed: a finding
+ * for BL-7 (README finding 10).
+ */
+const CLASS_PART_CASES = [
+  { name: '3 classes, 3 practice', cls: [1, 3, 5], practice: [2, 4, 6] },
+  { name: '3 classes (longest es/ko names), 3 practice', cls: [3, 6, 0], practice: [1, 2, 4] },
+  { name: '5 classes, 2 practice', cls: [1, 2, 3, 4, 5], practice: [6, 0] },
+  { name: '4 classes, 3 practice', cls: [1, 2, 4, 5], practice: [3, 6, 0] },
 ];
 
 const failures = [];
-const results = { c: [], d: [] };
+const results = { c: [], d: [], dClassPart: [] };
 const fail = (rule, where, detail) => failures.push(`${rule} · ${where} · ${detail}`);
 
 const url = (file, query) => `${pathToFileURL(join(MOCK, file)).href}?${query}`;
@@ -85,10 +99,19 @@ const visibleText = (page) =>
     return clone.innerText;
   });
 
+/** The accessible names a screen reader says (aria-label, aria-labelledby), without the choice controls. */
+const spokenText = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('[aria-label], [aria-labelledby]')]
+      .filter((n) => !n.closest('[data-choice], [hidden], .board-label, .board-title, .board-note'))
+      .map((n) => n.getAttribute('aria-label') ?? (n.getAttribute('aria-labelledby') ?? '').split(/\s+/).map((id) => document.getElementById(id)?.textContent ?? '').join(' '))
+      .join('\n'),
+  );
+
 async function checkPage(page, where, learner, lang) {
   const sideways = await page.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth);
   if (sideways > 0) fail('sideways', where, `scrolls ${sideways} px sideways`);
-  const text = await visibleText(page);
+  const text = `${await visibleText(page)}\n${await spokenText(page)}`;
   if (/\p{Extended_Pictographic}/u.test(text)) fail('words', where, 'an emoji is drawn');
   const banned = [...(BANNED[lang]?.learner ?? []), ...(BANNED[lang]?.caregiver ?? []), ...EXTRA_BANNED[lang]];
   for (const word of banned) {
@@ -164,9 +187,14 @@ async function meetingFit(page, where, lang, state, r) {
       return b.width > 0 && (b.right > window.innerWidth + 0.5 || n.scrollWidth > n.clientWidth + 1 && getComputedStyle(n).overflowX !== 'visible');
     }).length;
     const scrollers = inner.filter((n) => ['auto', 'scroll'].includes(getComputedStyle(n).overflowY)).length;
-    return { top: Math.round(box.top + window.scrollY), height: Math.round(box.height), clipped, scrollers };
+    // The stricter reading of "one scroll" (README, open point): how far down the block the decisions end (the
+    // mode cards, else the practice row) measured from the block's top.
+    const mode = document.getElementById('mode');
+    const last = mode && !mode.hidden ? mode : document.getElementById('practice-inline');
+    const decisionsEnd = Math.round(last.getBoundingClientRect().bottom - box.top);
+    return { top: Math.round(box.top + window.scrollY), height: Math.round(box.height), clipped, scrollers, decisionsEnd };
   });
-  results.c.push({ lang, state: state || 'default', width: r.w, text: r.text || '100', ...m, screens: +(m.height / r.h).toFixed(2) });
+  results.c.push({ lang, state: state || 'default', width: r.w, text: r.text || '100', ...m, screens: +(m.height / r.h).toFixed(2), decisionsScreens: +(m.decisionsEnd / r.h).toFixed(2) });
   if (r.w === 1280 && m.height > r.h) fail('c-1280', where, `the meeting block is ${m.height} px, taller than ${r.h}`);
   if (r.w === 1280 && state === '' && m.top + m.height > r.h) fail('c-1280', where, `the block ends at ${m.top + m.height} px, below the first ${r.h} px screen`);
   if (m.clipped > 0) fail('c-320', where, `${m.clipped} elements are clipped or overflow`);
@@ -191,6 +219,18 @@ async function planLineFit(browser) {
       results.d.push({ lang, case: c.name, ...m });
       if (m.lines > 3) fail('d-320', where, `${m.lines} lines: "${m.text}"`);
       if (m.left < -0.5 || m.right < -0.5) fail('d-320', where, 'the line is wider than the card column');
+      await ctx.close();
+    }
+    for (const c of CLASS_PART_CASES) {
+      const query = `lang=${lang}&class=${c.cls.join(',')}&practice=${c.practice.join(',')}`;
+      const { ctx, page } = await open(browser, 320, 568, 2, 'route-line.html', query);
+      await checkPage(page, `route-line.html?${query} @320`, true, lang);
+      const m = await page.evaluate(() => {
+        const line = document.getElementById('plan-line');
+        const b = line.getBoundingClientRect();
+        return { text: line.textContent, lines: Math.round(b.height / parseFloat(getComputedStyle(line).lineHeight)) };
+      });
+      results.dClassPart.push({ lang, case: c.name, ...m });
       await ctx.close();
     }
   }

@@ -245,7 +245,8 @@ td ul { display: flex; flex-direction: column; gap: var(--spacing-xxs); }
 .pill { align-self: flex-start; display: inline-flex; align-items: center; gap: var(--spacing-xxs); padding: var(--spacing-xxs) var(--spacing-sm); border-radius: var(--radii-pill); background: var(--colors-brand-secondaryLight); color: var(--colors-brand-secondaryDark); font-size: var(--size-caption); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
 .pill .icon { width: var(--pill-glyph); height: var(--pill-glyph); }
 .card h2 { font-size: var(--size-bodyLg); line-height: var(--leading-tight); }
-.refresh { display: flex; flex-direction: column; gap: var(--spacing-xxs); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-brand-secondaryLight); }
+.refresh { display: flex; flex-direction: column; gap: var(--spacing-xxs); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radii-md); background: var(--colors-brand-secondaryLight); width: 100%; border: 0; font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.refresh .hint { display: block; }
 .refresh .head { display: flex; align-items: center; gap: var(--spacing-sm); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
 .list-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-md); background: var(--colors-surface-paper); border-radius: var(--radii-md); }
 .list-row .row-body { gap: var(--spacing-xs); flex: 1 1 12rem; }

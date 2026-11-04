@@ -12,6 +12,9 @@
  */
 (function () {
   const plural = (lang, n, forms) => forms[new Intl.PluralRules(lang).select(n)] ?? forms.other;
+  // es: a weekly habit takes the plural article and plural names ("los martes", "los sábados y domingos"); "el
+  // martes" is one coming Tuesday. lunes to viernes are the same in the plural; sábado and domingo add -s.
+  const esPl = (names) => names.replace(/\b(sábado|domingo)\b/gu, '$1s');
 
   const S = {
     en: {
@@ -59,7 +62,7 @@
         classDays: 'Class',
         classLength: 'Class length',
         practice: {
-          row: 'Learners also practise on their own',
+          row: 'Learners also practice on their own',
           days: 'times a week',
           minutes: 'min each time',
           inline: ['{n}', 'times a week', '×', '{m}', 'min each time'],
@@ -70,7 +73,7 @@
         },
         mode: {
           title: 'How do class and practice fit together?',
-          overlap: 'Practise what class taught',
+          overlap: 'Practice what class taught',
           overlapHint: "Each class's lessons come back on the practice days after it.",
           split: 'Class and practice cover different lessons',
           splitHint: 'Practice days also bring new lessons from the groups class has started. Covers more, faster.',
@@ -80,7 +83,7 @@
         preview: {
           header: (total, classDays, classMin, practiceDays, practiceMin) =>
             `About ${total} sessions a week: ${plural('en', classDays, { one: `${classDays} class day`, other: `${classDays} class days` })} (${classMin} min) and ${plural('en', practiceDays, { one: `${practiceDays} practice day`, other: `${practiceDays} practice days` })} (${practiceMin} min each, plus about 2-3 minutes of Daily Review).`,
-          perDay: (c, p) => `Class days teach about ${c} lessons; practice days play about ${p}.`,
+          perDay: (c, p) => `Class days teach about ${plural('en', c, { one: `${c} lesson`, other: `${c} lessons` })}; practice days play about ${p}.`,
           average: (s, t) => `${s} sessions in all, ${t} a teaching week.`,
           start: (date) => `Starts with the first class on ${date}.`,
           refresh: 'Refresh',
@@ -108,7 +111,7 @@
           classHasPractice: (name, days) => `${name}'s class has practice days on ${days}.`,
         },
         report: {
-          practiceWeek: (n) => plural('en', n, { one: `Practised on ${n} day this week`, other: `Practised on ${n} days this week` }),
+          practiceWeek: (n) => plural('en', n, { one: `Practiced on ${n} day this week`, other: `Practiced on ${n} days this week` }),
         },
       },
       learner: {
@@ -124,7 +127,7 @@
         seeIt: 'See it',
         ownBack: 'Your own weekly plan is back.',
         proposalInstead: "Your class's weekly plan has practice days for you.",
-        practiceDays: { title: 'My practice days', hint: 'Pick the days you practise. Your lessons stay the same.', count: 'Days a week' },
+        practiceDays: { title: 'My practice days', hint: 'Pick the days you practice. Your lessons stay the same.', count: 'Days a week' },
       },
       a11y: {
         fromClassMet: 'From class. You met this in class.',
@@ -185,7 +188,7 @@
           suggested: (days) => `Práctica: ${days}`,
           change: 'Cambiar días',
           everyDay: 'Práctica todos los días',
-          afterClass: (wd) => `también después de la clase del ${wd}`,
+          afterClass: (wd) => `también después de la clase de los ${esPl(wd)}`,
         },
         mode: {
           title: '¿Cómo se combinan la clase y la práctica?',
@@ -199,7 +202,7 @@
         preview: {
           header: (total, classDays, classMin, practiceDays, practiceMin) =>
             `Unas ${total} sesiones por semana: ${plural('es', classDays, { one: `${classDays} día de clase`, other: `${classDays} días de clase` })} (${classMin} min) y ${plural('es', practiceDays, { one: `${practiceDays} día de práctica`, other: `${practiceDays} días de práctica` })} (${practiceMin} min cada uno, más unos 2-3 minutos de Repaso diario).`,
-          perDay: (c, p) => `Los días de clase enseñan unas ${c} lecciones; los días de práctica juegan unas ${p}.`,
+          perDay: (c, p) => `Los días de clase enseñan ${plural('es', c, { one: 'una lección', other: `unas ${c} lecciones` })}; los días de práctica hacen ${plural('es', p, { one: 'una', other: `unas ${p}` })}.`,
           average: (s, t) => `${s} sesiones en total, ${t} por semana con clases.`,
           start: (date) => `Empieza con la primera clase, el ${date}.`,
           refresh: 'Refrescar',
@@ -221,19 +224,19 @@
           classLength: (m) => `Duración de la clase: ${m} min`,
         },
         family: {
-          classLine: (cls, wd, n) => `En: ${cls} · clase el ${wd}, práctica ${n} veces por semana`,
+          classLine: (cls, wd, n) => `En: ${cls} · clase los ${esPl(wd)}, práctica ${n} veces por semana`,
           pause: 'Pausar el plan semanal de la familia mientras dure la clase',
-          classHasPractice: (name, days) => `La clase de ${name} tiene días de práctica el ${days}.`,
+          classHasPractice: (name, days) => `La clase de ${name} tiene días de práctica los ${esPl(days)}.`,
         },
         report: {
           practiceWeek: (n) => plural('es', n, { one: `Practicó ${n} día esta semana`, other: `Practicó ${n} días esta semana` }),
         },
       },
       learner: {
-        planLine: (classDays, practicePart) => `Plan semanal de tu clase: clase el ${classDays}, ${practicePart}.`,
-        practiceOn: (days) => `práctica el ${days}`,
+        planLine: (classDays, practicePart) => `Plan semanal de tu clase: clase los ${esPl(classDays)}, ${practicePart}.`,
+        practiceOn: (days) => `práctica los ${esPl(days)}`,
         practiceMost: 'práctica casi todos los días',
-        practiceAllBut: (wd) => `práctica todos los días menos el ${wd}`,
+        practiceAllBut: (wd) => `práctica todos los días menos los ${esPl(wd)}`,
         practiceEvery: 'práctica todos los días',
         refresh: 'Refrescar',
         refreshLine: 'Vuelve a mirar lo que enseñó la clase.',
@@ -328,7 +331,7 @@
           classReview: '함께 복습',
         },
         readout: {
-          classDays: (n, total) => `지금까지 수업일: ${total}일 중 ${n}일`,
+          classDays: (n, total) => `지금까지 수업: ${total}번 중 ${n}번`,
           move: '이 수업일 옮기기',
           addPractice: '이 계획에 연습하는 날 더하기',
           stopPractice: '연습하는 날 그만두기',
@@ -360,7 +363,7 @@
         seeIt: '보기',
         ownBack: '내 주간 계획이 다시 시작됐어요.',
         proposalInstead: '반의 주간 계획에 나를 위한 연습하는 날이 있어요.',
-        practiceDays: { title: '내 연습하는 날', hint: '연습할 요일을 골라요. 레슨은 그대로예요.', count: '한 주에 며칠' },
+        practiceDays: { title: '내 연습 요일', hint: '연습할 요일을 골라요. 레슨은 그대로예요.', count: '한 주에 며칠' },
       },
       a11y: {
         fromClassMet: '반에서. 수업에서 만났어요.',
@@ -385,18 +388,19 @@
   const weekOrder = (days) => [...days].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7));
 
   /**
-   * Section 7's line. The practice part depends on the practice days alone (a class day the learner also
-   * practises on counts): 1-3 days by name; 4-5 "most days"; 6 "every day except {the one day}"; 7 "every day".
-   * So 1 class + 6 practice (Tue; Wed to Mon) reads "every day except Tuesday", which is true: Tuesday has the
-   * class and no practice. (The console's suggested-days line is about the class's sessions and says "Practice
-   * every day" from 7 - L days; see curriculum-wizard.md "Meeting".)
+   * Section 7's line. The practice part collapses past 3 names: "practice every day" when the practice days cover
+   * every weekday, or every non-class day (the class days hold the class, so the week is full: 1 class + 6 practice,
+   * Tue; Wed to Mon, reads "every day", as the console's "Practice every day" for the same plan); "every day except
+   * {weekday}" when 6 practice days leave out a day that has no class either; "most days" for 4 or more otherwise;
+   * 1-3 days by name. The rule matches the console's suggested-days line (10.1), so teacher and learner read the same.
    */
   function planLine(classDays, practiceDays) {
     const L = S[lang].learner;
     const distinct = [...new Set(practiceDays)];
+    const free = [0, 1, 2, 3, 4, 5, 6].filter((d) => !distinct.includes(d) && !classDays.includes(d));
     let part;
-    if (distinct.length === 7) part = L.practiceEvery;
-    else if (distinct.length === 6) part = L.practiceAllBut(wd([0, 1, 2, 3, 4, 5, 6].find((d) => !distinct.includes(d))));
+    if (free.length === 0 && distinct.length >= 4) part = L.practiceEvery;
+    else if (distinct.length === 6 && free.length === 1) part = L.practiceAllBut(wd(free[0]));
     else if (distinct.length >= 4) part = L.practiceMost;
     else part = L.practiceOn(list(weekOrder(distinct).map((d) => wd(d))));
     return L.planLine(list(weekOrder(classDays).map((d) => wd(d))), part);

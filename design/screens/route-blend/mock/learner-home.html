@@ -35,17 +35,17 @@ window.beforeApply = (RB) => {
   document.getElementById('tabs').innerHTML = S.existing.tabs.map((t, i) => `<span class="${i === 0 ? 'on' : ''}">${t}</span>`).join('');
   // The pill: one label, its words the existing From class key; the glyph is decorative, the accessible name says it.
   const pill = (met) => met
-    ? `<span class="pill" role="text" aria-label="${S.a11y.fromClassMet}">${window.glyph('class')}<span data-label>${S.existing.fromTeacher}</span></span>`
+    ? `<span class="pill" role="img" aria-label="${S.a11y.fromClassMet}">${window.glyph('class')}<span data-label>${S.existing.fromTeacher}</span></span>`
     : `<span class="pill"><span data-label>${S.existing.fromTeacher}</span></span>`;
   const row = (id, title, met) => `<li class="row" data-row="${id}"><div class="row-body"><span class="row-title">${title}</span>${pill(met)}</div></li>`;
   if (practiceDay) {
     document.getElementById('class-today').hidden = true;
     document.getElementById('card2').innerHTML = `
       <h2 id="today">${S.existing.today}</h2>
-      <div class="refresh" role="button" tabindex="0" aria-label="${S.a11y.refresh}" data-row="refresh">
-        <p class="head">${window.glyph('replay', 24)}<span data-label>${S.learner.refresh}</span></p>
-        <p class="hint">${S.learner.refreshLine}</p>
-      </div>`;
+      <button class="refresh" type="button" aria-label="${S.a11y.refresh}" data-row="refresh">
+        <span class="head">${window.glyph('replay', 24)}<span data-label>${S.learner.refresh}</span></span>
+        <span class="hint">${S.learner.refreshLine}</span>
+      </button>`;
   } else {
     // Tuesday: last class's lessons are still on the practice days; today's class lessons start tomorrow.
     document.getElementById('rows').innerHTML = row('a', P.lesson(2), true) + row('b', P.lesson(3), false);

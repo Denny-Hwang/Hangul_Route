@@ -32,7 +32,7 @@
           <select class="select" id="class-length"></select>
         </label>
       </div>
-      <!-- 2. Learners also practise on their own: [0-7] times a week x [5..30] min -->
+      <!-- 2. Learners also practice on their own: [0-7] times a week x [5..30] min -->
       <div class="meeting-col">
         <span class="group-label" id="practice-label" data-t="console.practice.row"></span>
         <div class="inline-fields" role="group" aria-labelledby="practice-label" id="practice-inline"></div>
@@ -44,8 +44,8 @@
       </div>
       <!-- 3. How do class and practice fit together? (only with 1 or more practice days) -->
       <fieldset class="span" id="mode">
-        <legend class="group-label" data-t="console.mode.title"></legend>
-        <div class="mode-cards" role="radiogroup">
+        <legend class="group-label" id="mode-title" data-t="console.mode.title"></legend>
+        <div class="mode-cards" role="radiogroup" aria-labelledby="mode-title">
           <div class="mode-card" role="radio" aria-checked="true" id="mode-overlap" tabindex="0"><span class="radio-dot"></span><span><b><span data-t="console.mode.overlap"></span> <span class="tag" data-t="existing.suggested"></span></b><span class="hint" data-t="console.mode.overlapHint"></span></span></div>
           <div class="mode-card" role="radio" aria-checked="false" id="mode-split" tabindex="-1"><span class="radio-dot"></span><span><b data-t="console.mode.split"></b><span class="hint" data-t="console.mode.splitHint"></span></span></div>
         </div>
@@ -74,7 +74,7 @@
     <div class="break-row"><span class="select" data-date="2027-02-16"></span><span>–</span><span class="select" data-date="2027-02-16"></span>
       <span class="checkbox" role="checkbox" aria-checked="true" tabindex="0"><span class="box"></span><span data-t="console.classDayOff"></span></span></div>
     <button class="link" type="button" data-t="existing.addBreak"></button>
-    <p class="note" data-t="existing.sessionsNote" data-a="[100, 26]"></p>
+    <p class="note" data-t="existing.sessionsNote" data-a="[95, 26]"></p>
   </section>
   <div class="btn-row"><button class="btn" type="button" data-t="existing.backBtn"></button><button class="btn primary" type="button" data-t="existing.next"></button></div>
 </main>

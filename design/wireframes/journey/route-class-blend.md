@@ -10,11 +10,11 @@ Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `(glyph)` a decor
 
 Given: Mina's class meets on Tuesday and its weekly plan has practice on Wednesday, Friday and Sunday
 When: she opens Route, Home or Profile
-Then: she sees, in calm words, when class is and when she practises; lessons from class keep one From class pill; a practice day with room offers a Refresh; her own weekly plan rests instead of competing; nothing counts what she did not do
+Then: she sees, in calm words, when class is and when she practices; lessons from class keep one From class pill; a practice day with room offers a Refresh; her own weekly plan rests instead of competing; nothing counts what she did not do
 
 ## Screen goal
 
-"Know when class is and when to practise, with nothing to catch up on."
+"Know when class is and when to practice, with nothing to catch up on."
 
 ## B1. Route tab: the weekly plan line (under the route card)
 
@@ -37,15 +37,16 @@ The practice part depends on the learner's practice days (her own, when she move
 
 | Practice days | Practice part (en) | es | ko |
 |---|---|---|---|
-| 1 to 3 | practice on Wednesday, Friday, and Sunday | práctica el miércoles, viernes y domingo | 수요일·금요일·일요일 연습 |
-| 4 or 5 | practice on most days | práctica casi todos los días | 거의 매일 연습 |
-| 6 | practice every day except Tuesday | práctica todos los días menos el martes | 화요일 빼고 매일 연습 |
-| 7 | practice every day | práctica todos los días | 매일 연습 |
+| 1 to 3 | practice on Wednesday, Friday, and Sunday | práctica los miércoles, viernes y domingos | 수요일·금요일·일요일 연습 |
+| 4 or more, some weekday with neither class nor practice | practice on most days | práctica casi todos los días | 거의 매일 연습 |
+| 6, leaving out one weekday that has no class either | practice every day except Monday | práctica todos los días menos los lunes | 월요일 빼고 매일 연습 |
+| every non-class day (with or without class days), or all 7 | practice every day | práctica todos los días | 매일 연습 |
 
 - Weekday names are long names from `Intl.DateTimeFormat(locale, { weekday: 'long' })`, in week order from Monday, joined by `Intl.ListFormat` in en and es and by a middle dot in ko (the Korean list form "및" is formal and its commas run into the comma between the class part and the practice part).
-- Two class days: "class on Monday and Thursday". The count rule is by practice days alone, so 1 class + 6 practice days (Wednesday to Monday) reads "every day except Tuesday", which is true: Tuesday has the class and no practice session.
+- Two class days: "class on Monday and Thursday". The collapse follows section 7: practice days that cover every non-class day, together with the class days, read "practice every day". So 1 class + 6 practice days (Wednesday to Monday) reads "class on Tuesday, practice every day", the same words as the console's "Practice every day" for that plan (M1). "Every day except {weekday}" names only a weekday with neither class nor practice (for example Tuesday class, practice Tuesday after class and Wednesday to Sunday: "every day except Monday").
+- **es (BL-7, BL-9):** a weekly habit takes the plural article and plural names: "clase los martes, práctica los miércoles, viernes y domingos" ("el martes" would be one coming Tuesday). lunes to viernes are the same in the plural; sábado and domingo add -s. The same rule holds for the parent's class line (P1) and the console's "after class on {weekday}".
 - Never a date, a count above 3, "Week n of N" for the class plan or a countdown. **Open plan** stays hidden (it is the own plan's link).
-- Assumption d (section 17): measured at 320 x 568 for 1 to 3 weekday names and every collapsed form: at most 3 lines in en and es, 2 in ko (README of the mocks). Korean wraps between words (`lineBreakStrategyIOS="hangul-word"` on iOS).
+- Assumption d (section 17): measured at 320 x 568 for 1 to 3 practice weekday names and every collapsed form (README of the mocks). The class part has no collapse rule in section 7 and takes up to 5 names; the 3- and 5-class-day cases are measured too and recorded as a finding for BL-7 (README, finding 10): a class part may need its own collapse (a spec amendment), decided in BL-7. Korean wraps between words (`lineBreakStrategyIOS="hangul-word"` on iOS).
 
 ## B2. Home on a class day: "Class today." and the From class pill
 
@@ -108,7 +109,7 @@ Unchanged drawing; its target is the plan's distinct days (4 for 1 class + 3 pra
 
 ```
 ┌ My practice days ───────────────────────────┐
-│ Pick the days you practise. Your lessons    │
+│ Pick the days you practice. Your lessons    │
 │ stay the same.                              │
 │ (lock) PIN required                         │  <- child profile only (planChangesOpen false)
 │ Days a week                                 │
@@ -117,7 +118,7 @@ Unchanged drawing; its target is the plan's distinct days (4 for 1 class + 3 pra
 └─────────────────────────────────────────────┘
 ```
 
-- Count chips 1 to 7 (radio) and weekday chips (checkbox). Picking a count keeps the chosen days and adds or removes from the end of the default order; picking days sets the count. A class day is allowed (its session comes after class with earlier classes' lessons or a Refresh).
+- Count chips 1 to 7 (radio) and weekday chips (checkbox). The weekday chips start on Sunday, as the app's existing weekday control does (`WEEKDAYS` in `RouteSetupScreen`, "Change days and time"), so the learner meets one chip order across the app; the B1 line reads in week order from Monday as the spec's tables do (a sentence, not a control). Picking a count keeps the chosen days and adds or removes from the end of the default order; picking days sets the count. A class day is allowed (its session comes after class with earlier classes' lessons or a Refresh).
 - Weekday chip accessible name: "Practice day, Tuesday" (`a11y.route.blend.practiceDay`); on a gated child profile each control's name gains "(PIN required)" by the existing `caregiver.gated` rule, and a tap opens the grown-up gate first.
 - The numbers on the count chips are choices, not counts of work, so the "no count above 3" rule does not apply to them.
 - "Days a week" has no key in section 19 yet: proposed `learner.route.blend.practiceDays.count` (README). The KT-1 `TapTarget` wraps every chip.

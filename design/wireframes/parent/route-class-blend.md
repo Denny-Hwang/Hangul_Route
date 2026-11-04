@@ -9,7 +9,7 @@ Audience: **parent or caregiver** in a family space. Never a class viewer: `summ
 
 Given: Mina is in Evening Class D, which meets on Tuesday and has 3 practice days a week
 When: her parent opens the family home or her report
-Then: the card says when class is and how often she practises, on the class line that is already there, and the report shows how many days she practised this week with a strip that only fills
+Then: the card says when class is and how often she practices, on the class line that is already there, and the report shows how many days she practiced this week with a strip that only fills
 
 ## Screen goal
 
@@ -33,10 +33,10 @@ Then: the card says when class is and how often she practises, on the class line
 ## P2. Grown-up report, This week
 
 ```
-│ Practised on 3 days this week   ■ ■ ■ □ □ □ □ │
+│ Practiced on 3 days this week   ■ ■ ■ □ □ □ □ │
 ```
 
-- "Practised on {n} days this week" (ICU plural: "1 day"). With no practice yet this week the line and the strip are not drawn (a design choice of this row: a "0 days" line would say what was not done); the report's existing lines stay.
+- "Practiced on {n} days this week" (ICU plural: "1 day"). With no practice yet this week the line and the strip are not drawn (a design choice of this row: a "0 days" line would say what was not done); the report's existing lines stay.
 - The strip has 7 marks that fill from the start (n filled in `feedback.success`, the rest outlined): a meter that only fills, hidden from screen readers (the line says it). No denominator, no weekday names, no word for a day without practice (BL-OD-11).
 - The class itself never counts; Refresh counts as practice.
 
