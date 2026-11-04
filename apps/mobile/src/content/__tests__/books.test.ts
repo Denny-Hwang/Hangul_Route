@@ -74,9 +74,18 @@ describe('Stage 5 books (books.ts)', () => {
         expect(s.tiers.some((t) => t.level === 'read')).toBe(true);
         expect(s.shelf).toBeDefined();
         expect(episodesAll.some((e) => e.placement === 'shelf' && e.id === `episode:shelf-${id.replace(/^story:/, '')}`)).toBe(true);
-        // Both review passes of the read tier are on record.
-        expect(s.verification.notes).toMatch(/MAR \d{4}-\d{2}-\d{2} language review of the read tier/);
-        expect(s.verification.notes).toMatch(/MAR \d{4}-\d{2}-\d{2} culture review of the read tier/);
+        // Both review passes of the read tier are on record: as two named reviews (the book 1 stories), or as the one
+        // multi-agent pass of row CM-46a (#941) whose parallel checkers were the language and the culture and facts
+        // lenses (the read-tier stories of a book 2, F-CURR-002 row CM-46). The record is read as written, never added to.
+        const notes = s.verification.notes ?? '';
+        const named =
+          /MAR \d{4}-\d{2}-\d{2} language review of the read tier/.test(notes) &&
+          /MAR \d{4}-\d{2}-\d{2} culture review of the read tier/.test(notes);
+        const readTierPass =
+          /MAR \d{4}-\d{2}-\d{2} read tier \(F-CURR-002 CM-46a\): author, then three parallel checkers \(language [^;]*; culture and facts [^;]*; learning design [^)]*\), reviser, third pass/.test(
+            notes,
+          );
+        expect(named || readTierPass, `${id}: the read tier's language and culture reviews are on record`).toBe(true);
       }
     }
   });
