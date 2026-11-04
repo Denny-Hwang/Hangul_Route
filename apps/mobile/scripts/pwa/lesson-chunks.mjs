@@ -157,7 +157,7 @@ export const PRECACHE_BUDGET = Object.freeze({
   // snapshot write and merge, the English strings and TapTarget's role prop; the screen and `placePractice` are the
   // practice-days chunk. The line stays.
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-10 (the launch flip: `routeBlendEnabled` on by default, BL-OD-12), stacked on the
-  // BL-4, BL-8 (with BL-6 and BL-7) and BL-9 heads over main 49ee60bb4, measures 4,866,149 B raw / 1,305,086 B gzip
+  // BL-4, BL-8 (with BL-6 and BL-7) and BL-9 heads over main 76c5ad15f, measures 4,866,385 B raw / 1,305,324 B gzip
   // (release `build:web --budget`): the flagged pieces were already in the start bundle, so the flip adds no code. The
   // line stays.
   startBundleRaw: 4_875_000,
