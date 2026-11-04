@@ -91,6 +91,8 @@ const familyMove = {
   from: { spaceId: 'space:a', name: 'Sunday Class A' },
   to: { spaceId: 'space:b', name: 'Saturday Class B', ownerName: 'Ms Park', schoolName: null, ageBucket: 'months', learnerCount: 8 },
   learnerState: 'pending',
+  // GX-4 Fix D: the family answers the learner step only on the caregiver route (`familyMustAnswer`).
+  learnerRoute: 'caregiver',
   sourceState: 'yes',
   destinationState: 'waiting',
   blockReason: null,

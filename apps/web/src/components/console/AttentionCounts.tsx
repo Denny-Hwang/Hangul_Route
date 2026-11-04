@@ -41,15 +41,8 @@ export function AttentionCountChip({ spaceId, fallback, testId }: { spaceId: str
   );
 }
 
-const linkButton: CSSProperties = {
-  ...buttonBase,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: touchTarget.min,
-  boxSizing: 'border-box',
-  textDecoration: 'none',
-};
+// buttonBase owns the size, the centring and `textDecoration` (GX-6); a link drawn as a button takes it as it is.
+const linkButton: CSSProperties = { ...buttonBase };
 const linksRow: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.sm, paddingTop: spacing.sm, borderTop: `${borderWidth.thin}px solid ${colors.border.subtle}` };
 
 /** A school's classes with requests waiting, from the school's `attention` (null when the frame has none for it). */
