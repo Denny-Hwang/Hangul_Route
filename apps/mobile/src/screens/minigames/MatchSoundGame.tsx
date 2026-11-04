@@ -14,11 +14,12 @@ import {
   touchTarget,
   useLayoutClass,
   useMediaSize,
+  GuardedPressable,
   TapBoard,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -171,7 +172,8 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
             <Spacer size="md" />
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
-              <Pressable
+              <GuardedPressable
+                setsLock={false}
                 onPress={() => void hear()}
                 accessibilityRole="button"
                 accessibilityLabel={view.speakerLabel}
@@ -180,7 +182,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
                 style={{ padding: spacing.md }}
               >
                 <Icon name="speaker" size={48} />
-              </Pressable>
+              </GuardedPressable>
               <Caption tone="muted">{view.speakerCaption}</Caption>
             </View>
 

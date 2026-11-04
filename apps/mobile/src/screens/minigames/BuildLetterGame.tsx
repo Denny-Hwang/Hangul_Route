@@ -17,10 +17,11 @@ import {
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -143,7 +144,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
       <Spacer size="md" />
 
       <View style={{ alignItems: 'center' }}>
-        <Pressable
+        <GuardedPressable
+          setsLock={false}
           onPress={hear}
           accessibilityRole="button"
           accessibilityLabel={m.a11y.minigame.hear(round.romanization)}
@@ -161,7 +163,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         >
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: targetGlyph, fontWeight: '800', color: colors.text.primary }}>{round.targetSyllable}</Text>
           <Caption tone="secondary">{round.romanization}</Caption>
-        </Pressable>
+        </GuardedPressable>
       </View>
       <Spacer size="sm" />
       <PromptPanel

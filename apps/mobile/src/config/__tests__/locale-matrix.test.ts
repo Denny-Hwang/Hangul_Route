@@ -173,7 +173,13 @@ describe('toleratedKeys', () => {
   });
 
   it('the matrix widths each find a ratchet window in the real list', () => {
-    for (const vp of MATRIX_VIEWPORTS) expect(toleratedKeys(allowlist, matrixList, vp)).toContain('Library | button | All');
+    // Every real window marked with one line of its own (the real lists can be empty once every offender is fixed, as
+    // the Library filter chips were in row KT-9): each matrix width takes exactly one window's line.
+    const marked: TouchTargetAllowlist = {
+      ...allowlist,
+      offenders: Object.fromEntries(Object.keys(allowlist.offenders).map((vp) => [vp, [`Home | button | ${vp}`]])),
+    };
+    for (const vp of MATRIX_VIEWPORTS) expect(toleratedKeys(marked, { ...matrixList, offenders: [] }, vp)).toHaveLength(1);
   });
 });
 

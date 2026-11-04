@@ -22,12 +22,13 @@ import {
   touchTarget,
   useMediaSize,
   type ChoiceCardState,
+  GuardedPressable,
   TapBoard,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
@@ -364,7 +365,8 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
       <View style={{ alignItems: 'center', gap: spacing.md }}>
         {heard ? (
           <>
-            <Pressable
+            <GuardedPressable
+              setsLock={false}
               testID="quest-review-speaker"
               onPress={hear}
               accessibilityRole="button"
@@ -382,7 +384,7 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
               }}
             >
               <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-            </Pressable>
+            </GuardedPressable>
             <Button label={m.learner.minigame.listenPick.hearAgain.cta} tone="secondary" size="md" onPress={hear} testID="quest-review-hear-again" />
             {round.cue?.pictureRef !== undefined ? <PictureArt pictureRef={round.cue.pictureRef} gloss={round.cue.gloss} size={pictureSize} /> : round.cue ? <Body weight="semibold">{round.cue.gloss}</Body> : null}
             {/* The fallback text when the sound is off, missing or failed (F-AUDIO-004 W2-W4), and the answer once it is over. */}

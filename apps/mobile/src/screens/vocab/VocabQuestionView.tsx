@@ -15,11 +15,12 @@ import {
   useMediaSize,
   type HoyaTone,
   KOREAN_LINE_BREAK,
+  GuardedPressable,
   TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { AccessibilityInfo, Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Platform, Text, View, type LayoutChangeEvent } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { localizedGloss, vocabItem, vocabTopic } from '../../content/vocab';
@@ -318,7 +319,8 @@ export function VocabQuestionView({
   const speakerButton = (size: 'small' | 'large'): ReactElement => {
     const side = size === 'large' ? bigSpeaker : touchTarget.min;
     return (
-      <Pressable
+      <GuardedPressable
+        setsLock={false}
         ref={(node) => {
           if (size === 'large') promptRef.current = node as unknown as View | null;
         }}
@@ -339,7 +341,7 @@ export function VocabQuestionView({
         }}
       >
         <Icon name="speaker" size={size === 'large' ? bigSpeakerIcon : spacing.xl} color={colors.brand.secondaryDark} />
-      </Pressable>
+      </GuardedPressable>
     );
   };
 

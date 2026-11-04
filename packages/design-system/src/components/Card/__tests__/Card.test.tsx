@@ -8,13 +8,14 @@ import { Card } from '../Card';
  * calling the component directly with react-native's hosts replaced by plain tags.
  */
 vi.mock('react-native', () => ({ View: 'View', Pressable: 'Pressable' }));
+vi.mock('../../TapBoard/GuardedPressable', () => ({ GuardedPressable: 'GuardedPressable' }));
 
 type El = ReactElement<Record<string, unknown>>;
 
 describe('Card accessibilityHint', () => {
   it('a pressable card passes the hint next to its label', () => {
     const el = Card({ children: null, onPress: () => undefined, accessibilityLabel: 'A card', accessibilityHint: 'Ask a grown-up' }) as El;
-    expect(el.type).toBe('Pressable');
+    expect(el.type).toBe('GuardedPressable');
     expect(el.props.accessibilityLabel).toBe('A card');
     expect(el.props.accessibilityHint).toBe('Ask a grown-up');
   });
@@ -28,5 +29,21 @@ describe('Card accessibilityHint', () => {
     const el = Card({ children: null, accessibilityHint: 'Ask a grown-up' }) as El;
     expect(el.type).toBe('View');
     expect(el.props.accessibilityHint).toBe('Ask a grown-up');
+  });
+});
+
+describe('Card press guard (AMENDMENTS-TOUCH 6.9, row KT-9)', () => {
+  it('a pressable card is a GuardedPressable (the guard of 4.4, no press delay) that sets the lock when it opens', () => {
+    const onPress = vi.fn();
+    const el = Card({ children: null, onPress }) as El;
+    expect(el.type).toBe('GuardedPressable');
+    expect(el.props.onPress).toBe(onPress);
+    expect(el.props.setsLock).toBeUndefined();
+  });
+
+  it('a static card is a plain View with no press props', () => {
+    const el = Card({ children: null }) as El;
+    expect(el.type).toBe('View');
+    expect(el.props.onPress).toBeUndefined();
   });
 });

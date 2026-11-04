@@ -21,11 +21,12 @@ import {
   layout,
   useLayoutClass,
   useMediaSize,
+  GuardedPressable,
   TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -366,7 +367,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
             {textContent ?? <View style={{ alignItems: 'center', gap: spacing.md }}>
               {spellingKit === null ? null : <spellingKit.SpellingCue round={round} />}
               <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
-                <Pressable
+                <GuardedPressable
+                  setsLock={false}
                   ref={(node) => {
                     speakerRef.current = node as unknown as Focusable | null;
                   }}
@@ -387,7 +389,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                   }}
                 >
                   <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-                </Pressable>
+                </GuardedPressable>
               </Animated.View>
               {hearAgainShown ? (
                 <View style={{ alignSelf: 'center' }}>
