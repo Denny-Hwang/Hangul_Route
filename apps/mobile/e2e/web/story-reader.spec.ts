@@ -338,7 +338,11 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(prompt.getByTestId('story-reader-prompt-help')).toBeVisible();
   });
 
-  test('NB-2: a Korean-language Mac reads the story with Samantha and Yuna, never a novelty voice', async ({ page }, info) => {
+  for (const size of [
+    { width: 320, height: 568 },
+    { width: 1280, height: 800 },
+  ]) test(`NB-2 ${size.width}px: a Korean-language Mac reads the story with Samantha and Yuna, never a novelty voice`, async ({ page }, info) => {
+    await page.setViewportSize(size);
     // Chrome on macOS with the system language set to Korean: voiceURI is the name, Yuna is the default and no
     // English voice is. Before NB-2 the English narration went to the first voice by id: "Albert".
     await page.addInitScript(() => {
@@ -392,6 +396,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await page.getByTestId('story-reader-hear-scene').click();
     const log = (): Promise<string[]> => page.evaluate(() => (window as Window & { __voiceLog?: string[] }).__voiceLog ?? []);
     await expect.poll(log).toContainEqual(expect.stringContaining('wanted everyone to learn to read.'));
+    // The scene's Korean words and line follow the English narration.
+    await expect.poll(log).toContainEqual(expect.stringContaining('|ko-KR|'));
     const spoken = (await log()).filter((l) => !l.endsWith('|'));
     const voicesUsed = new Set(spoken.map((l) => l.split('|')[0]));
     expect([...voicesUsed].sort()).toEqual(['Samantha', 'Yuna']);
