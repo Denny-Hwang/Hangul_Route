@@ -11,6 +11,7 @@ import {
   pendingPastOf,
   repaceSelfRoute,
   repacedEvent,
+  resumeStepOf,
   retainedOfferStep,
   type RetainedOffer,
 } from '../repace';
@@ -237,5 +238,20 @@ describe('retainedOfferStep: the check-in a screen keeps showing, per learner an
     expect(retainedOfferStep(shown, null, 'profile:b|route:2')).toEqual({ key: 'profile:b|route:2', shown: null, closed: false });
     expect(retainedOfferStep(shown, faster, 'profile:b|route:2')).toEqual({ key: 'profile:b|route:2', shown: faster, closed: false });
     expect(retainedOfferStep({ ...shown, shown: null, closed: true }, faster, 'profile:a|route:9')).toEqual({ key: 'profile:a|route:9', shown: faster, closed: false });
+  });
+});
+
+describe('resumeStepOf: the resume of a rested own plan (AMENDMENTS-ROUTE-CLASS-BLEND section 8)', () => {
+  const meta = (weeks: string[], repacedAt: string | null) => ({ meta: { weeks: weeks.map((startDate, i) => ({ index: i + 1, startDate })), repacedAt } }) as unknown as Pick<SelfRoute, 'meta'>;
+  it('re-paces a plan with days left that was not moved along today', () => {
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], null), '2026-09-30')).toBe('repace');
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], '2026-09-29T08:00:00.000Z'), '2026-09-30')).toBe('repace');
+  });
+  it('is done when another device already moved it along today', () => {
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], '2026-09-30T08:00:00.000Z'), '2026-09-30')).toBe('done');
+  });
+  it('is over once its last week ended, or with no weeks', () => {
+    expect(resumeStepOf(meta(['2026-09-21', '2026-09-28'], null), '2026-10-05')).toBe('over');
+    expect(resumeStepOf(meta([], null), '2026-10-05')).toBe('over');
   });
 });

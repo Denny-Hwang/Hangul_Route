@@ -8,7 +8,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { draftWeeks, learnerNotices, previewStats, previewWeeks, type LearnerNotice } from '../../logic/route/plan-view';
-import { routesAfterStart, setupParams } from '../../logic/route/setup-flow';
+import { routesAfterStart, setupDraftOptions, setupParams } from '../../logic/route/setup-flow';
 import type { RootStackParamList } from '../../navigation/types';
 import { useRouteStore } from '../../store/route-store';
 import { LinkButton } from '../../components/LinkButton';
@@ -54,7 +54,7 @@ export function RoutePreviewScreen({ route, navigation }: Props): ReactElement {
   const draft = useMemo((): CurriculumDraft | null => {
     if (basis === null) return null;
     try {
-      return generateCurriculum(setupParams(basis.ctx, setup), CATALOG);
+      return generateCurriculum(setupParams(basis.ctx, setup), CATALOG, setupDraftOptions(basis.ctx));
     } catch {
       return null;
     }

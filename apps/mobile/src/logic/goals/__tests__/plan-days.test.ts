@@ -64,9 +64,24 @@ describe('class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 6.1
     expect(planDaysInForce([tue, thu], '2026-09-25')).toBe(6);
     const full = blendSrc('plan:full', { lectureDays: ['mon'], practiceDays: ['tue', 'wed', 'thu', 'fri', 'sat', 'sun'] }, '2026-09-21T00:00:00.000Z');
     expect(planDaysInForce([tue, full], '2026-09-25')).toBe(7);
-    // A plan with default days (weekdays not listed) counts at least its own D.
+    // A plan with default days (weekdays not listed) adds its class days and its practice days as days of their own.
     const unknown = blendSrc('plan:u', { lectureDays: ['mon', 'thu'], perWeek: 4 }, '2026-09-21T00:00:00.000Z');
-    expect(planDaysInForce([blendSrc('plan:small', { practiceDays: ['wed'] }), unknown], '2026-09-25')).toBe(6);
+    expect(planDaysInForce([blendSrc('plan:small', { practiceDays: ['wed'] }), unknown], '2026-09-25')).toBe(7);
+  });
+
+  it('two plans without listed weekdays count their days together, not the larger alone', () => {
+    const tue = blendSrc('plan:tue', { perWeek: 1 });
+    const thu = blendSrc('plan:thu', { lectureDays: ['thu'], perWeek: 1 }, '2026-09-21T00:00:00.000Z');
+    expect(planDaysInForce([tue], '2026-09-25')).toBe(2);
+    expect(planDaysInForce([tue, thu], '2026-09-25')).toBe(4);
+  });
+
+  it('a blended class plan leads before a newer class plan without practice days (section 12.2)', () => {
+    const newerClass = src({ id: 'plan:newer', assignedAt: '2026-09-22T00:00:00.000Z', meta: { ...curriculumMeta(), params: { ...curriculumMeta().params, sessionsPerWeek: 2 } } });
+    expect(planDaysInForce([blendSrc('plan:b'), newerClass], TODAY)).toBe(4);
+    expect(planDaysInForce([newerClass, blendSrc('plan:b')], TODAY)).toBe(4);
+    // Once the blended plan ended, the other class plan sets the days.
+    expect(planDaysInForce([blendSrc('plan:b', { weeks: 1 }), newerClass], '2026-10-05')).toBe(2);
   });
 
   it('a blended plan outranks a family plan and the own plan; an ended one leaves the days to them', () => {

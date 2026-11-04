@@ -20,12 +20,12 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { questsAll } from '../../content';
+import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { assignedByLabel, dueLabel, groupAssignments, homeworkWindow, showsTodayCount } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
-import { restingSourceIds, visibleHomework } from '../../logic/homework/plan-derivation';
+import { hiddenHomeworkOf, visibleHomework } from '../../logic/homework/plan-derivation';
 import { fromClassPillOf } from '../../logic/route/blend-view';
 import { flags } from '../../config/flags';
 import { useAudience } from '../../store/audience';
@@ -52,9 +52,10 @@ export function HomeworkScreen(): ReactElement {
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
-  // A resting own weekly plan's pending items wait out of view, never late (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  // A resting own weekly plan's pending items, and own or family items a class plan also schedules, wait out of view,
+  // never late (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
   const groups = useMemo(
-    () => groupAssignments(snap ? visibleHomework(snap.homework, restingSourceIds(plans ?? [], snap.selfRoute, todayKey)) : [], todayKey),
+    () => groupAssignments(snap ? visibleHomework(snap.homework, hiddenHomeworkOf(plans ?? [], snap.selfRoute, todayKey, episodesAll)) : [], todayKey),
     [snap, plans, todayKey],
   );
   const view = useMemo(() => homeworkWindow(groups, todayKey), [groups, todayKey]);

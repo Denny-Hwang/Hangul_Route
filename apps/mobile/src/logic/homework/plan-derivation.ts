@@ -69,6 +69,9 @@ export const ASSIGNED_BY: Record<SourceKind, HomeworkAssignment['assignedBy']> =
 
 const sourceOfPlan = (p: InboxPlan): DeriveSource => ({ id: p.id, kind: p.spaceKind, assignedAt: p.publishedAt, items: p.items, meta: p.meta ?? null });
 
+/** Own and family plans step aside for a class or school curriculum's quests (section 8). */
+const yieldsToClass = (kind: SourceKind): boolean => kind === 'self' || kind === 'family';
+
 /**
  * The learner's own weekly plan rests while a class plan with practice days is in force (AMENDMENTS-ROUTE-CLASS-BLEND
  * section 8, BL-OD-5): a pure check of the plans on `today`, never stored. False for an archived or missing plan.
@@ -96,15 +99,55 @@ export function restingSourceIds(plans: readonly InboxPlan[], selfRoute: SelfRou
 }
 
 /**
- * The homework Home and Homework show (section 8): a resting source's pending assignments stay in the snapshot (none
- * removed, none marked late) and are left out here; finished ones and every other assignment show as before.
+ * The pending items an own or a family plan holds for a quest an in-force class or school curriculum schedules
+ * (section 8, dedupe in every layer): kept in the snapshot (never deleted, so a family plan's progress keeps its
+ * total), left out of Home, Homework and `routeNext`, and back as soon as the class plan drops the quest.
  */
-export function visibleHomework<H extends Pick<HomeworkAssignment, 'id' | 'completedAt'>>(homework: readonly H[], resting: readonly string[]): H[] {
-  if (resting.length === 0) return [...homework];
+export interface YieldToClass {
+  /** The own and family sources in force (`route:…`, `plan:…`). */
+  sourceIds: ReadonlySet<string>;
+  /** `classScheduledQuestIds`. */
+  questIds: ReadonlySet<string>;
+}
+
+/** What Home, Homework and `routeNext` leave out today: a resting source's pending items and those yielding to class. */
+export interface HiddenHomework {
+  resting: readonly string[];
+  yielding: YieldToClass;
+}
+
+/** `HiddenHomework` of the plans on `today` (section 8). */
+export function hiddenHomeworkOf(plans: readonly InboxPlan[], selfRoute: SelfRoute | null | undefined, today: string, episodes: readonly Episode[]): HiddenHomework {
+  const sources = sourcesOf(plans, selfRoute, today);
+  const yielding = sources.filter((s) => yieldsToClass(s.kind));
+  return {
+    resting: restingSourceIds(plans, selfRoute, today),
+    yielding: {
+      sourceIds: new Set(yielding.map((s) => s.id)),
+      questIds: yielding.length === 0 ? new Set<string>() : classScheduledQuestIds(sources, today, episodes),
+    },
+  };
+}
+
+/** True when nothing is hidden: callers keep the snapshot as it is. */
+export const nothingHidden = (hidden: HiddenHomework): boolean => hidden.resting.length === 0 && hidden.yielding.questIds.size === 0;
+
+/**
+ * The homework Home and Homework show (section 8): a resting source's pending assignments, and an own or family
+ * plan's pending assignments that yield to an in-force class curriculum, stay in the snapshot (none removed, none
+ * marked late) and are left out here; finished ones and every other assignment show as before. A bare list names the
+ * resting sources only.
+ */
+export function visibleHomework<H extends Pick<HomeworkAssignment, 'id' | 'completedAt' | 'questId'>>(homework: readonly H[], hidden: readonly string[] | HiddenHomework): H[] {
+  const resting = Array.isArray(hidden) ? (hidden as readonly string[]) : (hidden as HiddenHomework).resting;
+  const yielding = Array.isArray(hidden) ? null : (hidden as HiddenHomework).yielding;
+  if (resting.length === 0 && (yielding === null || yielding.questIds.size === 0)) return [...homework];
   return homework.filter((h) => {
     if (h.completedAt) return true;
     const sourceId = sourceIdOf(h.id);
-    return sourceId === null || !resting.includes(sourceId);
+    if (sourceId === null) return true;
+    if (resting.includes(sourceId)) return false;
+    return yielding === null || !(yielding.sourceIds.has(sourceId) && yielding.questIds.has(h.questId));
   });
 }
 
@@ -174,9 +217,6 @@ interface Wanted {
   fromClass: boolean;
 }
 
-/** Own and family plans step aside for a class or school curriculum's quests (section 8). */
-const yieldsToClass = (kind: SourceKind): boolean => kind === 'self' || kind === 'family';
-
 export function deriveAssignments(input: DeriveInput): DeriveResult {
   const { sources, snapshot, profileId, quests, episodes, unlockedStages, today, learnerName, isQuestOpen } = input;
   const resting = new Set(input.resting ?? []);
@@ -191,11 +231,13 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
   };
 
   // Section 8 (every layer): an own or family plan's item whose quest an in-force class or school curriculum schedules
-  // is skipped for that source; the plan keeps the item, so it derives again if the class plan drops the quest.
+  // is skipped for that source; the plan keeps the item, so it derives again if the class plan drops the quest. A
+  // pending assignment it already made stays as it is (hidden, never deleted: `visibleHomework`).
   const classQuests = sources.some((s) => yieldsToClass(s.kind)) ? classScheduledQuestIds(sources, today, episodes) : new Set<string>();
 
   // What the sources ask for today: the first item naming a quest wins its date.
   const wanted = new Map<string, Wanted>();
+  const yielded = new Set<string>();
   for (const source of sources) {
     const yields = yieldsToClass(source.kind);
     // Rule 1: a curriculum stops at today + horizonDays; a classic plan has no horizon.
@@ -211,7 +253,10 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
         continue;
       }
       for (const questId of targets) {
-        if (yields && classQuests.has(questId)) continue;
+        if (yields && classQuests.has(questId)) {
+          yielded.add(planAssignmentId(source.id, questId));
+          continue;
+        }
         const episode = episodeOfQuest(questId);
         if (!episode || !questIds.has(questId) || !canAssignQuest({ questId, episodes, unlockedStages, learnerName, isQuestOpen }).allowed) {
           bump(source.id);
@@ -239,6 +284,11 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
       continue;
     }
     const want = activeSourceIds.has(sourceId) ? wanted.get(h.id) : undefined;
+    if (!want && yielded.has(h.id)) {
+      // Yields to the class plan (section 8): kept as it is, hidden on Home and Homework.
+      next.set(h.id, h);
+      continue;
+    }
     if (!want) {
       // The source left the inbox, or its item left the plan, the horizon, the unlocked stages or the open quests.
       removed += 1;

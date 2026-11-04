@@ -19,11 +19,13 @@ import { curriculumInForce } from '../route/layer';
  */
 export function planDaysInForce(sources: readonly DeriveSource[], today: string, practiceDays?: readonly PracticeDaysEntry[]): number | null {
   const rank = (s: DeriveSource): number => SOURCE_RANK[ASSIGNED_BY[s.kind]];
+  // A class plan with practice days leads while it is in force (section 12.2), even before a newer class plan without.
+  const blended = sources.filter((s) => blendedClass(s) && curriculumInForce(s.meta, today));
+  if (blended.length > 0) return blendedDays(blended, practiceDays);
   const ranked = [...sources].sort((a, b) => rank(a) - rank(b) || b.assignedAt.localeCompare(a.assignedAt));
   for (const source of ranked) {
     const meta = source.meta;
     if (!curriculumInForce(meta, today) || meta === undefined || meta === null) continue;
-    if (blendedClass(source)) return blendedDays(ranked.filter((s) => blendedClass(s) && curriculumInForce(s.meta, today)), practiceDays);
     const days = sessionsPerWeekOf(meta.params);
     if (Number.isInteger(days) && days > 0) return Math.min(7, days);
   }
@@ -32,8 +34,13 @@ export function planDaysInForce(sources: readonly DeriveSource[], today: string,
 
 const blendedClass = (s: DeriveSource): boolean => s.kind === 'class' && s.meta?.params.blend !== undefined;
 
-/** One blended plan's weekdays, or its distinct-day count when the plan does not name its practice weekdays. */
-function weekdaysOf(source: DeriveSource, practiceDays: readonly PracticeDaysEntry[] | undefined): { days: Set<Weekday> } | { count: number } {
+/**
+ * One blended plan's weekdays; when the plan names no practice weekdays (the generator always writes `sessionDays`, so
+ * only a hand-made or damaged plan), its class days and its distinct-day count: its practice days then count as days
+ * of their own (an estimate; resolving them with `practiceDaysFor` would pull the whole blend module into the start
+ * bundle for that case).
+ */
+function weekdaysOf(source: DeriveSource, practiceDays: readonly PracticeDaysEntry[] | undefined): { days: Set<Weekday>; count?: number } {
   const params = (source.meta as NonNullable<DeriveSource['meta']>).params;
   const blend = params.blend as NonNullable<typeof params.blend>;
   const learner = practiceDays?.find((e) => e.planId === source.id)?.days;
@@ -42,7 +49,7 @@ function weekdaysOf(source: DeriveSource, practiceDays: readonly PracticeDaysEnt
   // The generator writes the union of class and practice days as `sessionDays` (section 9.1).
   if (params.sessionDays !== undefined && params.sessionDays.length > 0) return { days: new Set([...blend.lecture.days, ...params.sessionDays]) };
   // Default practice days fill the non-class days first, then class days (`practiceDaysFor`, BL-OD-19).
-  return { count: Math.min(7, blend.lecture.days.length + blend.personal.perWeek) };
+  return { days: new Set(blend.lecture.days), count: Math.min(7, blend.lecture.days.length + blend.personal.perWeek) };
 }
 
 function blendedDays(blended: readonly DeriveSource[], practiceDays: readonly PracticeDaysEntry[] | undefined): number {
@@ -50,8 +57,9 @@ function blendedDays(blended: readonly DeriveSource[], practiceDays: readonly Pr
   let unknown = 0;
   for (const source of blended) {
     const of = weekdaysOf(source, practiceDays);
-    if ('days' in of) for (const day of of.days) union.add(day);
-    else unknown = Math.max(unknown, of.count);
+    for (const day of of.days) union.add(day);
+    // A plan without named practice days adds its practice days beyond its class days.
+    if (of.count !== undefined) unknown += of.count - of.days.size;
   }
-  return Math.min(7, Math.max(union.size, unknown));
+  return Math.min(7, union.size + unknown);
 }

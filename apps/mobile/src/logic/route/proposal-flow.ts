@@ -18,6 +18,7 @@ import {
   type DateKey,
   type DurationId,
   type DurationOption,
+  type GenerateOptions,
   type LearnerType,
   type PaceId,
   type PlacementResult,
@@ -150,17 +151,6 @@ export interface ProposalContext {
   classQuestIds?: readonly string[];
 }
 
-/** `completedQuestIds` holds at most this many ids (`CurriculumParamsSchema`). */
-const COMPLETED_MAX = 400;
-
-/** The learner's completions, then the class's quests not already among them, within the params cap. */
-function withClassQuests(completed: readonly string[], classQuestIds: readonly string[] | undefined): string[] {
-  if (classQuestIds === undefined || classQuestIds.length === 0) return [...completed];
-  const done = new Set(completed);
-  const extra = classQuestIds.filter((id) => !done.has(id));
-  return [...completed, ...extra.slice(0, Math.max(0, COMPLETED_MAX - completed.length))];
-}
-
 /**
  * `proposeRoute`'s input for a self learner (F-PLC-001 AM-4): the effective route of every
  * stored result **with** the learner's real completions (so the plan starts at the first quest
@@ -181,8 +171,9 @@ export function proposalInputOf(c: ProposalContext): ProposeInput {
   return {
     audience: 'self',
     seed,
-    // The seed starts from the learner's real completions; the generator also skips the class's quests.
-    completedQuestIds: withClassQuests(c.completedQuestIds, c.classQuestIds),
+    // Real completions only: the class's quests are left out as exclusions, never counted as lessons the learner knows.
+    completedQuestIds: [...c.completedQuestIds],
+    ...(c.classQuestIds === undefined || c.classQuestIds.length === 0 ? {} : { excludeQuestIds: [...c.classQuestIds] }),
     levelOrder: levelOrder(c.ageGroup),
     ...(c.pace === undefined ? {} : { pace: c.pace }),
     unlockedStages: [...c.unlockedStages],
@@ -191,6 +182,9 @@ export function proposalInputOf(c: ProposalContext): ProposeInput {
     ...(c.startDate === undefined ? {} : { startDate: c.startDate }),
   };
 }
+
+/** `{ startDate }` when a start day is given, else nothing (spread into a `ProposalContext`). */
+export const withStart = (startDate: DateKey | undefined): { startDate?: DateKey } => (startDate === undefined ? {} : { startDate });
 
 /** `proposeRoute`, or null when it has nothing ready or the input breaks a params cap (it throws then). */
 export function safePropose(input: ProposeInput): RouteProposal | null {
@@ -258,6 +252,11 @@ export function daysReady(choice: PlanChoice): boolean {
 /** A new pace starts again from its own spread days. */
 export function withPace(choice: PlanChoice, pace: PaceId): PlanChoice {
   return { ...choice, pace, days: null };
+}
+
+/** The generator options of a draft from `proposal`: the quests it leaves out (an in-force class's, section 8). */
+export function draftOptionsOf(proposal: Pick<RouteProposal, 'excludeQuestIds'>): GenerateOptions {
+  return proposal.excludeQuestIds === undefined || proposal.excludeQuestIds.length === 0 ? {} : { exclude: [...proposal.excludeQuestIds] };
 }
 
 /** The generator params of a choice: the proposal's start, goals and tier with the learner's length, day, pace, days and minutes. */
