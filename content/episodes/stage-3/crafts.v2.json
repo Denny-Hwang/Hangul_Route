@@ -277,9 +277,9 @@
                   "en": "it is the turn of"
                 },
                 {
-                  "ko": "차요",
-                  "romanization": "chayo",
-                  "en": "kick"
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "come"
                 },
                 {
                   "ko": "가요",
@@ -1169,10 +1169,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
-        "checkedAt": "2026-10-30",
+        "passes": 4,
+        "checkedAt": "2026-11-03",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that in yunnori players split into sides, take turns throwing the yut sticks, move their pieces by each throw, and that the side that brings all its pieces home first wins. The Standard Korean Language Dictionary, 윷-놀이 (search results page, HTTP 200), says the sides take turns throwing (교대로 윷을 던져서), move four pieces by the throw (그에 따라 윷판 위에 네 개의 말을 움직여) and that the side whose pieces all pass the final point first wins. The Korea Heritage Service page for the National Intangible Heritage 윷놀이 (HTTP 200) says the game is played in two sides that throw four yut sticks and that the side that first brings all its pieces to the goal wins. The note is an English paraphrase; the locators quote the Korean. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again (HTTP 200) and each claim matched to a quoted phrase: sides (편을 갈라; 양편으로 나뉘어), turns (교대로), moving by the throw (그에 따라 ... 움직여; 엎어지고 젖혀진 상태에 따라), winning (먼저 최종점을 통과하는 편이 이긴다; 먼저 도달시키는 편이 이기는): confirmed. The number of pieces is left out of the note. The institution is named as of the access date (국가유산청, Korea Heritage Service, since 2024-05-17). No UNESCO or designation claim is made. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text, sources and locators re-read against the fetched pages; no run of words is shared with a quoted source; unchanged."
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that in yunnori players split into sides, take turns throwing the yut sticks, move their pieces by each throw, and that the side that brings all its pieces home first wins. The Standard Korean Language Dictionary, 윷-놀이 (search results page, HTTP 200), says the sides take turns throwing (교대로 윷을 던져서), move four pieces by the throw (그에 따라 윷판 위에 네 개의 말을 움직여) and that the side whose pieces all pass the final point first wins. The Korea Heritage Service page for the National Intangible Heritage 윷놀이 (HTTP 200) says the game is played in two sides that throw four yut sticks and that the side that first brings all its pieces to the goal wins. The note is an English paraphrase; the locators quote the Korean. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again (HTTP 200) and each claim matched to a quoted phrase: sides (편을 갈라; 양편으로 나뉘어), turns (교대로), moving by the throw (그에 따라 ... 움직여; 엎어지고 젖혀진 상태에 따라), winning (먼저 최종점을 통과하는 편이 이긴다; 먼저 도달시키는 편이 이기는): confirmed. The number of pieces is left out of the note. The institution is named as of the access date (국가유산청, Korea Heritage Service, since 2024-05-17). No UNESCO or designation claim is made. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text, sources and locators re-read against the fetched pages; no run of words is shared with a quoted source; unchanged. Line 4 (passes: 4, independent culture and facts checker, 2026-11-03): a reviewer agent other than the author matched each claim (sides, turns, moving by the throw, all pieces home wins) to the quoted Standard Korean Language Dictionary and Korea Heritage Service locators: confirmed; the institution name holds as of the access date; no UNESCO, designation, origin or brand claim; unchanged."
       }
     },
     {
@@ -1217,10 +1217,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
-        "checkedAt": "2026-10-30",
+        "passes": 4,
+        "checkedAt": "2026-11-03",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that how the four yut sticks land names the throw, the five names 도, 개, 걸, 윷 and 모, that 도 counts one and 모 five, and that the pieces move by the count. Standard Korean Language Dictionary (search results pages, HTTP 200): 윷 「1」 is four pieces of split wood used in a game of five grades 도, 개, 걸, 윷, 모; 도 1 「1」 is three sticks face down and one face up, counted as one; 모 2 「1」 is all four face down, counted as five; 윷-놀이 says the throw sets the count and the pieces move by it. Korea Heritage Service, 윷놀이: four yut sticks, and the game goes by whether they land face down or face up. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): every page fetched again (HTTP 200); 도 한 끗, 모 다섯 끗, the five names and the four sticks confirmed word for word in the locators. The counts of 개 (two), 걸 (three) and 윷 (four) are in the same dictionary (개 4, 걸 1) but are not claimed by the note, which names only the first and the last. 개 is also the word for dog (Word Builder q1): it appears here only inside a note token, never as a taught item or a heard option. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text and five sources re-read; no copied run of words; unchanged."
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that how the four yut sticks land names the throw, the five names 도, 개, 걸, 윷 and 모, that 도 counts one and 모 five, and that the pieces move by the count. Standard Korean Language Dictionary (search results pages, HTTP 200): 윷 「1」 is four pieces of split wood used in a game of five grades 도, 개, 걸, 윷, 모; 도 1 「1」 is three sticks face down and one face up, counted as one; 모 2 「1」 is all four face down, counted as five; 윷-놀이 says the throw sets the count and the pieces move by it. Korea Heritage Service, 윷놀이: four yut sticks, and the game goes by whether they land face down or face up. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): every page fetched again (HTTP 200); 도 한 끗, 모 다섯 끗, the five names and the four sticks confirmed word for word in the locators. The counts of 개 (two), 걸 (three) and 윷 (four) are in the same dictionary (개 4, 걸 1) but are not claimed by the note, which names only the first and the last. 개 is also the word for dog (Word Builder q1): it appears here only inside a note token, never as a taught item or a heard option. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text and five sources re-read; no copied run of words; unchanged. Line 4 (passes: 4, independent culture and facts checker, 2026-11-03): a reviewer agent other than the author matched four sticks, the five names, 도 one and 모 five to the quoted dictionary and Korea Heritage Service locators: confirmed; unchanged."
       }
     },
     {
@@ -1244,10 +1244,10 @@
         }
       ],
       "verification": {
-        "passes": 3,
-        "checkedAt": "2026-10-30",
+        "passes": 4,
+        "checkedAt": "2026-11-03",
         "scope": "lesson",
-        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 이겼어요 says someone won a game or a match, and that the winner comes first with 이 after a final consonant and 가 after a vowel. Standard Korean Language Dictionary, 이기다 1 (search results page, HTTP 200): to come out ahead in a bet, a match or a fight. Encyclopedia of Korean Culture, 문법 (HTTP 200), (2) 접사의 모습, ① 곡용접사: a particle takes one of two forms by whether the word before it ends in a final consonant, 학생이 against 학교가. Line 2 (passes: 2, MAR language checker, 2026-10-30): both pages fetched again (HTTP 200): confirmed. 이겼어요 is 이기다 in the polite past (이기어 -> 이겨, with -었-), which the note does not name; the Stage 3 Letters cell note n2 already teaches the 이 / 가 rule with its own dictionary sources. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text and sources re-read; no copied run of words; unchanged."
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 이겼어요 says someone won a game or a match, and that the winner comes first with 이 after a final consonant and 가 after a vowel. Standard Korean Language Dictionary, 이기다 1 (search results page, HTTP 200): to come out ahead in a bet, a match or a fight. Encyclopedia of Korean Culture, 문법 (HTTP 200), (2) 접사의 모습, ① 곡용접사: a particle takes one of two forms by whether the word before it ends in a final consonant, 학생이 against 학교가. Line 2 (passes: 2, MAR language checker, 2026-10-30): both pages fetched again (HTTP 200): confirmed. 이겼어요 is 이기다 in the polite past (이기어 -> 이겨, with -었-), which the note does not name; the Stage 3 Letters cell note n2 already teaches the 이 / 가 rule with its own dictionary sources. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text and sources re-read; no copied run of words; unchanged. Line 4 (passes: 4, independent language and culture checker, 2026-11-03): a reviewer agent other than the author re-read the note against its sources; the allowlisted dictionary comes first and the Academy of Korean Studies source, off the allowlist, second, which the rule allows: confirmed; unchanged."
       }
     }
   ],
@@ -1255,9 +1255,9 @@
     "language": "native-reviewed",
     "culture": "culture-reviewed",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-30",
+    "reviewedAt": "2026-11-03",
     "notes": [
-      "MAR row CM-42 S3 (F-CURR-002 section 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass). Volume 2 of Play & Crafts at Stage 3: rule sentences for taking turns (___ 차례예요), throwing (___ 던져요) and winning (___ 이겼어요), one new pattern a quest.",
+      "MAR row CM-42 S3 (F-CURR-002 section 9.2): author 2026-10-30; on 2026-11-03 two independent reviewer agents, not the author, ran the three checkers (language for en, es, ko with the F-CNT-002 converter; culture and facts; learning design), a reviser applied their findings and the lints ran as the third pass. Rule sentences for turns (___ 차례예요), throws (___ 던져요) and wins (___ 이겼어요).",
       "Language: 해요체 with sentence marks; spacing 한 번 더, 우리 팀이; particle rounds test 을/를 and 이/가 (호야가, 팀이, 공을, 팽이를, 축구를); romanization by the converter (charyeyeyo, igyeosseoyo, uri timi, han beon deo). 다시 해요 is the polite suggestion, glossed Let's play again.",
       "Language (cont.): every word gap keeps grammatical wrong tiles (한 번 더 가요, 바다에 던져요, 다시 가요), so the gap is read by its meaning line, as in Volume 1; no tile is right for the meaning shown.",
       "Learning design: 내 and 네 sound alike (Word Builder q1), so 네 차례 is not taught and no heard round, Check or distractor holds 내 차례예요 against another spelling (F-CURR-001 section 3.5); 내 차례예요 is built and read only. Dictation asks 공 and 연 (one taught spelling each, said as written); 던져요 [던저요] and 차례예요 stay out of it.",
@@ -1265,7 +1265,9 @@
       "Learning design (cont.): triples q1 order-it / cloze-pick / order-it, q2 order-it / cloze-pick / type-hangul, q3 order-it / listen-pick / cloze-pick, none equal to a Volume 1 triple or its neighbour; three different produce Checks; every Practice is a Sentence Builder, so each can scaffold (CM-24). Practice and Check recycle 43, 57 and 43 in 100 (lesson-recycle); 3 new units a quest.",
       "Culture and facts: n1 (turns and winning) and n2 (the five throw names, 도 one and 모 five) each re-checked against the Standard Korean Language Dictionary and the Korea Heritage Service page for the National Intangible Heritage 윷놀이, named as of the access date; no UNESCO, designation or origin claim; no real person, shop, brand or price; no age wording.",
       "Reviser: q2 Practice became the Sentence Builder and its Apply the Cloze Pick (a Cloze Pick Practice cannot scaffold, U-11); the es picture labels follow the cell style (amigo, amiga; mamá; hermano o hermana menor); the ko title of q2 is 윷 던지기; the q1 reward title is Fair Play. Third pass: validate-content, the lesson lint and the overlay rules clean; no change.",
-      "Translation (es, ko): es keeps the Volume 1 wording (palitos de yut, marca de objeto, tras consonante final); ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English."
+      "Translation (es, ko): es keeps the Volume 1 wording (palitos de yut, marca de objeto, tras consonante final); ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English.",
+      "Independent checkers (2026-11-03): language en pass, es pass with two wording notes, ko pass once one gloss changed; culture and facts pass, every claim matched to its quoted locator, no UNESCO, designation, origin or brand claim; learning design pass: 3 quests, recycle 43, 57 and 43 in 100, triples unlike Volume 1 and each other, Dictation only 공 and 연, 네 차례 nowhere.",
+      "Reviser (2026-11-03): ko glosses used 동무, dated in South Korean use, now 함께 노는 사람; ko 가 is glossed like the other particles (받침 없는 말 뒤에서 주어를 나타내는 조사); es q2 title ¿Todo listo para lanzar? and hacer volar una cometa; the q1 Apply gap 동생 ___ offers 와요 (come) in place of 차요 (kick). Third pass: validate-content and the lesson lints clean."
     ]
   },
   "contentVer": 1
