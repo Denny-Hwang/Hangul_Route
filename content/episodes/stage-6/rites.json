@@ -662,7 +662,7 @@
               }
             ],
             "altEn": "A station departure board: trains to Daejeon, Busan and Daegu, each with its time",
-            "kind": "ticket"
+            "kind": "timetable"
           },
           "rounds": [
             {
@@ -981,7 +981,7 @@
               }
             ],
             "altEn": "A station departure board: trains to Daejeon, Busan and Daegu, each with its time",
-            "kind": "ticket"
+            "kind": "timetable"
           }
         }
       ]
@@ -1158,7 +1158,7 @@
               }
             ],
             "altEn": "Hoya's trip plan: the station at one, the train at two, the hometown at five, Grandma's home at six",
-            "kind": "ticket"
+            "kind": "timetable"
           },
           "rounds": [
             {
