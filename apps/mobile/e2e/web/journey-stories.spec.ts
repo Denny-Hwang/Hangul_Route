@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, headerBack, readStored, seedStoredAll } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, headerBack, openGrownUpZone, readStored, seedStoredAll, unlockWithPin } from './helpers';
 import { shot } from './shots';
 import { expectTextFits } from './text-fit';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
@@ -439,29 +439,99 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
     await expect(page.getByText('Outdoor Words 2')).toHaveCount(0);
   });
 
-  test('offline: Volume 2 is a precached chunk of its own, and its first quest plays from it with the network gone', async ({ page, context }) => {
-    await volumesLearner(page, VOLUMES_ON);
-    await expect
+  /** Every cached URL path, by cache name. */
+  const cachedPaths = (page: Page): Promise<Record<string, string[]>> =>
+    page.evaluate(async () => {
+      const out: Record<string, string[]> = {};
+      for (const name of await caches.keys()) out[name] = (await (await caches.open(name)).keys()).map((req) => new URL(req.url).pathname);
+      return out;
+    });
+  const workerInControl = (page: Page) =>
+    expect
       .poll(() => page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.active && !!navigator.serviceWorker.controller), { timeout: 30_000 })
       .toBe(true);
-    const cached = await page.evaluate(async () => {
-      const urls: string[] = [];
-      for (const name of await caches.keys()) for (const req of await (await caches.open(name)).keys()) urls.push(new URL(req.url).pathname);
-      return urls;
-    });
-    expect(cached.filter((p) => V2_BUNDLE.test(p))).toHaveLength(1);
+  /** Online: Home, Journey, the Nature cell (it opens Volume 2), Start on its first quest, the quest's first screen. */
+  async function playVolumeTwo(page: Page): Promise<void> {
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await natureCell(page).click();
+    await expect(page.getByText('Outdoor Words 2').first()).toBeVisible();
+    await expect(page.getByTestId('episode-later-needs-internet')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  }
+
+  // F-CURR-002 row CM-5B: Volume 2 is a later chunk, out of the learner precache, cached on first use or saved.
+  test('offline: Volume 2 is not precached; unsaved it says it needs the internet; saved in the Grown-up area it plays offline; Remove takes it out', async ({ page, context }) => {
+    await volumesLearner(page, VOLUMES_ON);
+    await workerInControl(page);
+    // Neither the precache nor the background load fetched it: no learner downloads a later volume unasked.
+    const before = await cachedPaths(page);
+    expect(Object.values(before).flat().filter((p) => V2_BUNDLE.test(p))).toEqual([]);
+    expect(Object.values(before).flat()).toContain('/offline-packs.json');
+
+    // Offline and not saved: a calm line on the Volume 2 page, and words in place of Start.
     await context.setOffline(true);
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
     await page.getByText('Journey', { exact: true }).last().click();
     await natureCell(page).click();
     await expect(page.getByText('Outdoor Words 2').first()).toBeVisible();
-    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
-    const anyway = page.getByRole('button', { name: 'Play anyway' });
-    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-    if (await anyway.isVisible()) await anyway.click();
-    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+    await expect(page.getByTestId('episode-later-needs-internet')).toHaveText('This volume needs the internet the first time. After that, it works offline too.');
+    await expect(page.getByTestId('episode-quest-needs-internet').first()).toHaveText('Needs the internet');
+    await expect(page.getByRole('button', { name: 'Start', exact: true })).toHaveCount(0);
+    await shot(page, 'cm5b-volume2-needs-internet');
+
+    // Back online, a grown-up saves Stage 2 from the Offline lessons card.
+    await context.setOffline(false);
+    await openGrownUpZone(page, 'Dami');
+    await unlockWithPin(page);
+    const card = page.getByTestId('dashboard-offline');
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('heading', { name: 'Offline lessons' })).toBeVisible();
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/^About 0\.\d MB · Not saved yet$/);
+    await shot(page, 'cm5b-offline-card-not-saved');
+    await page.getByRole('button', { name: 'Save: Stage 2: Words' }).click();
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Saved on this device$/);
+    await expect(page.getByRole('button', { name: 'Remove: Stage 2: Words' })).toBeVisible();
+    await shot(page, 'cm5b-offline-card-saved');
+    const saved = await cachedPaths(page);
+    expect((saved['hr-later-v1'] ?? []).filter((p) => V2_BUNDLE.test(p))).toHaveLength(1);
+    expect(await readStored(page, 'device:offline-saved')).toEqual(['stage2']);
+
+    // Offline again: Volume 2's first quest plays from the saved chunk.
+    await context.setOffline(true);
+    await page.goto('/');
+    await playVolumeTwo(page);
     const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
     expect(loaded.filter((p) => V2_BUNDLE.test(p))).toHaveLength(1);
+
+    // Remove: the chunk leaves the device and the choice is forgotten.
+    await context.setOffline(false);
+    await openGrownUpZone(page, 'Dami');
+    await unlockWithPin(page);
+    await page.getByRole('button', { name: 'Remove: Stage 2: Words' }).click();
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Not saved yet$/);
+    expect(((await cachedPaths(page))['hr-later-v1'] ?? []).filter((p) => V2_BUNDLE.test(p))).toEqual([]);
+    expect(await readStored(page, 'device:offline-saved')).toEqual([]);
+  });
+
+  test('first use: a Volume 2 opened online is runtime-cached and then plays offline with nothing saved', async ({ page, context }) => {
+    await volumesLearner(page, VOLUMES_ON);
+    await workerInControl(page);
+    await page.reload();
+    await playVolumeTwo(page);
+    await expect.poll(async () => ((await cachedPaths(page))['hr-later-v1'] ?? []).filter((p) => V2_BUNDLE.test(p)).length).toBe(1);
+    await context.setOffline(true);
+    await page.goto('/');
+    await playVolumeTwo(page);
+    // The card counts it: Stage 2 is saved (its one file is on the device), though nobody chose it.
+    await context.setOffline(false);
+    await openGrownUpZone(page, 'Dami');
+    await unlockWithPin(page);
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Saved on this device$/);
   });
 });

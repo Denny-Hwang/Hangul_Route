@@ -192,6 +192,9 @@ const CELL_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-cell-stage\d-[a-z]+(?:-v
 const TITLE_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-titles-(es|ko)-[0-9a-f]{32}\.js$/;
 // The display lines (row CM-40): one headers chunk per locale, English included, loaded before the first screen.
 const HEADERS_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-headers-(en|es|ko)-[0-9a-f]{32}\.js$/;
+// Row CM-5B: a Volume 2 chunk is a later chunk, never precached and never loaded in the background unasked.
+const LATER_CELL_BUNDLE = /^\/_expo\/static\/js\/web\/lessons-cell-stage\d-[a-z]+-v\d-[0-9a-f]{32}\.js$/;
+const CORE_CELL_COUNT = LESSON_EPISODES.filter((e) => !/-v\d$/.test(e.id)).length;
 const LETTERS_BUNDLE = /\/_expo\/static\/js\/web\/lessons-cell-stage2-letters-[0-9a-f]{32}\.js$/;
 const STAGE2_LETTERS_SUBTITLE = 'The rest of Hangul, and the words it opens.';
 
@@ -234,7 +237,8 @@ test('lesson chunks are precached, load from the precache offline, and an upper-
   await controlledBySw(page);
 
   const cached = await cachedPaths(page);
-  expect(cached.filter((p) => CELL_BUNDLE.test(p))).toHaveLength(LESSON_EPISODES.length);
+  expect(cached.filter((p) => CELL_BUNDLE.test(p) && !LATER_CELL_BUNDLE.test(p))).toHaveLength(CORE_CELL_COUNT);
+  expect(cached.filter((p) => LATER_CELL_BUNDLE.test(p))).toEqual([]);
   expect(cached.filter((p) => TITLE_BUNDLE.test(p))).toHaveLength(2);
   expect(cached.filter((p) => HEADERS_BUNDLE.test(p))).toHaveLength(3);
 
@@ -245,7 +249,7 @@ test('lesson chunks are precached, load from the precache offline, and an upper-
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByText('Hi, Suni!')).toBeVisible();
-  await expect.poll(async () => (await loadedLessonChunks(page)).filter((p) => CELL_BUNDLE.test(p)).length, { timeout: 15_000 }).toBe(LESSON_EPISODES.length);
+  await expect.poll(async () => (await loadedLessonChunks(page)).filter((p) => CELL_BUNDLE.test(p)).length, { timeout: 15_000 }).toBe(CORE_CELL_COUNT);
   expect((await loadedLessonChunks(page)).filter((p) => TITLE_BUNDLE.test(p))).toEqual([]);
   // The English learner's first screen waited for the English headers alone (row CM-40).
   expect((await loadedLessonChunks(page)).filter((p) => HEADERS_BUNDLE.test(p))).toEqual([expect.stringMatching(/\/lessons-headers-en-[0-9a-f]{32}\.js$/)]);
