@@ -316,3 +316,33 @@ describe('a later volume is no route start and no start choice (row CM-41)', () 
     expect(one?.startQuestId).toBe(lastLeft);
   });
 });
+
+describe('a later volume is no override target, and an override places it out with its own cell (rows CM-40, CM-43 S6)', () => {
+  const route = routeCatalogOf(withVolumes());
+  const later = new Set(route.quests.filter((q) => q.laterVolume === true).map((q) => q.id));
+  const base = {
+    id: 'placement:v2', startedAt: '2026-10-01T10:00:00.000Z', completedAt: '2026-10-01T10:08:00.000Z', source: 'onboarding', testLocale: 'en',
+    length: 'full', mode: 'standard', revealMode: 'tap', bankVersion: 1, contentVer: 'test', responses: [], gates: [],
+    strands: { 'hangul-recognition': 'secure', 'sound-letter': 'not-yet', 'syllable-reading': 'not-tested', vocabulary: 'not-yet', sentences: 'not-yet' },
+    level: { stage: 'stage1', band: 0 }, oralStage: null, beyondContent: false, startQuestId: null, placedOutQuestIds: [], priorityTokens: [],
+  } as unknown as Parameters<typeof effectiveRoute>[0][number];
+  const opts = () => ({ isEntitled: () => true, completedQuestIds: new Set<string>(), catalogHistory: { version: CATALOG_VERSION, idsAt: () => new Set(route.quests.map((q) => q.id)) } });
+  const override = (startQuestId: string) => ({ ...base, override: { by: 'parent' as const, at: '2026-10-02T00:00:00.000Z', startQuestId } });
+
+  it('an override naming a Volume 2 quest moves nothing', () => {
+    const ignored = effectiveRoute([override(FIXTURE2_V2[0] as string)], route, opts());
+    expect(ignored?.placedOutQuestIds).toEqual([]);
+    expect(ignored?.startQuestId).toBe(effectiveRoute([base], route, opts())?.startQuestId);
+  });
+
+  it('an override naming a Stage 3 first volume places every Stage 2 later volume out and no later one of a later stage', () => {
+    const atStage3 = effectiveRoute([override('quest:stage3-letters-q1')], route, opts())?.placedOutQuestIds ?? [];
+    const placedLater = atStage3.filter((id) => later.has(id));
+    for (const id of FIXTURE2_V2) expect(placedLater).toContain(id);
+    for (const id of FIXTURE4_V2) expect(placedLater).not.toContain(id);
+    const stageOf = (id: string) => route.quests.find((q) => q.id === id)?.stage;
+    expect(placedLater.length).toBeGreaterThan(FIXTURE2_V2.length);
+    expect(placedLater.every((id) => stageOf(id) === 'stage2')).toBe(true);
+    expect([...later].filter((id) => stageOf(id) === 'stage2').every((id) => placedLater.includes(id))).toBe(true);
+  });
+});

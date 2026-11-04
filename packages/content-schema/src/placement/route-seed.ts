@@ -125,12 +125,6 @@ interface SeedInput {
   motivation: Motivation | undefined;
 }
 
-/**
- * A quest the route can start at or lead to (F-PLC-001 section 3.7): a playable grid quest of a cell's first volume. A
- * later volume (F-CURR-002 row CM-40) is off the route, so a seed, an override or a 'next' card never names one.
- */
-export const onTheRoute = (quest: RouteQuest): boolean => quest.grid && quest.playable && quest.laterVolume !== true;
-
 const buildSeed = (input: SeedInput, catalog: RouteCatalog, opts: RouteOptions): RouteSeed => {
   const placedOut = new Set(input.placedOut);
   const remaining = inRouteOrder(catalog).filter(

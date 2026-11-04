@@ -488,6 +488,15 @@ async function loadedStoryChunks(page: Page): Promise<string[]> {
 const STORY_BUNDLE = /^\/_expo\/static\/js\/web\/story-[a-z0-9-]+-[0-9a-f]{32}\.js$/;
 /** The story shelf chunk (row CM-8b), which the app loads before its first screen. */
 const SHELF_BUNDLE = /^\/_expo\/static\/js\/web\/stories-shelf-[0-9a-f]{32}\.js$/;
+
+/**
+ * Row CM-5B: a tale only a book 2 holds is a later chunk, out of the precache and not loaded in the background unasked.
+ * The post-build lists the later chunks in /offline-packs.json (precached); the core tales are the shelf's others.
+ */
+async function laterStoryUrls(page: Page): Promise<string[]> {
+  const index = (await page.evaluate(async () => (await fetch('/offline-packs.json')).json())) as { stages: { files: { url: string }[] }[] };
+  return index.stages.flatMap((s) => s.files.map((f) => f.url)).filter((url) => STORY_BUNDLE.test(url));
+}
 const TALE = 'story:sun-and-moon';
 const TALE_BUNDLE = /^\/_expo\/static\/js\/web\/story-sun-and-moon-[0-9a-f]{32}\.js$/;
 /** The shelf knows the tale's levels and scene counts before its chunk loads. */
@@ -502,7 +511,9 @@ async function onboardThenOffline(page: Page, context: import('@playwright/test'
   await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
   await controlledBySw(page);
   const cached = await cachedPaths(page);
-  expect(cached.filter((p) => STORY_BUNDLE.test(p))).toHaveLength(STORY_SHELF.length);
+  const later = await laterStoryUrls(page);
+  expect(cached.filter((p) => STORY_BUNDLE.test(p))).toHaveLength(STORY_SHELF.length - later.length);
+  for (const url of later) expect(cached, url).not.toContain(url);
   expect(cached.filter((p) => SHELF_BUNDLE.test(p))).toHaveLength(1);
   await page.reload();
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
@@ -529,8 +540,9 @@ test('story chunks are precached, load from the precache offline, and a story op
   expect(TALE_SCENES).toBeGreaterThan(0);
 
   await onboardThenOffline(page, context, 'Suni');
-  // The background load, offline, from the precache: every story chunk, each once.
-  await expect.poll(async () => (await loadedStoryChunks(page)).length, { timeout: 15_000 }).toBe(STORY_SHELF.length);
+  // The background load, offline, from the precache: every core story chunk (row CM-5B: not a book 2 tale), each once.
+  const coreStories = STORY_SHELF.length - (await laterStoryUrls(page)).length;
+  await expect.poll(async () => (await loadedStoryChunks(page)).length, { timeout: 15_000 }).toBe(coreStories);
   for (const url of await loadedStoryChunks(page)) expect(url).toMatch(STORY_BUNDLE);
 
   // Library > Story Time: the tiles come from the shelf; the tale's page and its quest load its chunk only.
@@ -548,7 +560,7 @@ test('story chunks are precached, load from the precache offline, and a story op
   await expect(page.getByText(/Story time with Hoya!/).first()).toBeVisible();
   const loaded = await loadedStoryChunks(page);
   expect(loaded.filter((p) => TALE_BUNDLE.test(p))).toHaveLength(1);
-  expect(loaded).toHaveLength(STORY_SHELF.length);
+  expect(loaded).toHaveLength(coreStories);
   expect(errors).toEqual([]);
 });
 
