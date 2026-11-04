@@ -56,4 +56,4 @@ The values are the spec's section 13 exactly (copied into `mock/presenter-nav.js
 
 ## Exit (PR 6)
 
-- An alert dialog over `surface.overlay`: "Leave the lesson?", "Nothing about anyone's progress changes.", **Keep going** (primary, focused) and **Exit**. Exit leaves fullscreen, releases the wake lock, unlocks the screen orientation, sends `lecture.complete`, applies a waiting update and goes home.
+- An alert dialog over `surface.overlay`: "Leave the lesson?", "Nothing about anyone's progress changes.", **Keep going** (primary, focused) and **Exit**. **Amended 2026-11-03 (F-TCH-004 section 3.5 amendment NB-1):** part way, the line reads "Recent lessons keeps this slide, so you can resume later." where Recent can be written; once the run reached its last slide the dialog reads "Finish the lesson?", "You reached the end of the lesson.", **Keep going** and **Finish** (primary, focused), and leaving records the lesson as finished. Exit leaves fullscreen, releases the wake lock, unlocks the screen orientation, sends `lecture.complete`, applies a waiting update and goes home.

@@ -72,7 +72,7 @@ describe('LearnerReportScreen source rules', () => {
 
 describe('entries', () => {
   it('the screen is registered only with the reports flag on', () => {
-    expect(root).toContain('{flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}');
+    expect(root).toContain('{flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportRoute} /> : null}');
   });
 
   it('the dashboard draws See report only with the flag on and a reviewed locale, through reportEntry', () => {

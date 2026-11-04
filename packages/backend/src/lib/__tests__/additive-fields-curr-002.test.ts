@@ -30,7 +30,9 @@ describe('preserveAdditiveFields (F-CURR-002 section 4.8 fields)', () => {
   it('lists every new field after the earlier ones, each with a merge and absent-only as unset', () => {
     const keys = ADDITIVE_FIELDS.map((f) => f.payloadKey);
     expect(keys.slice(0, 6)).toEqual(['placements', 'stageDoneAt', 'selfRoute', 'vocab', 'questDoneAt', 'sessions']);
-    expect(keys.slice(6)).toEqual(NEW_KEYS);
+    expect(keys.slice(6, 6 + NEW_KEYS.length)).toEqual(NEW_KEYS);
+    // AMENDMENTS-ROUTE-CLASS-BLEND row BL-W appends practiceDays after them (inbox-blend.test.ts).
+    expect(keys.slice(6 + NEW_KEYS.length)).toEqual(['practiceDays']);
     for (const key of NEW_KEYS) {
       const field = ADDITIVE_FIELDS.find((f) => f.payloadKey === key);
       expect(field?.merge).toBeDefined();

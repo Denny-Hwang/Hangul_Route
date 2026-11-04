@@ -30,6 +30,7 @@ import {
   readerCheckpoints,
   readerKeyAction,
   sayItYourselfShown,
+  sceneHearShown,
   termId,
   wordId,
   type ReaderMode,
@@ -105,6 +106,11 @@ export interface StoryReaderViewProps {
   onFinish: () => void;
   /** The fallback's Back. Close and the device back are the route's ScreenHeader and its history (AMENDMENTS-DISPLAY-NAV section 7). */
   onClose: () => void;
+  /**
+   * The end page reached, once per reading (with `story.read.finished`). The replay route earns the story's points
+   * here, so leaving the end page with Close or Back keeps them as Done does (F-TCH-004 section 3.5 amendment NB-1).
+   */
+  onReachEnd?: () => void;
   /** Opens Sources (PR 2.7); without it the Sources buttons are not drawn. */
   onOpenSources?: (from: 'reader' | 'end', sceneIndex: number) => void;
   /**
@@ -159,6 +165,7 @@ function ReaderBody({
   onSceneChange,
   onAnswer,
   onFinish,
+  onReachEnd,
   onOpenSources,
   narrationLangs,
   onOpenCultureNote,
@@ -226,8 +233,8 @@ function ReaderBody({
   const spokenCheckpoints = useRef<Set<string>>(new Set());
 
   // Mutable inputs the effect runner reads at call time.
-  const live = useRef({ readToMe: readToMeOn, unlocked: audio.unlocked, mode, onSceneChange, onAnswer });
-  live.current = { readToMe: readToMeOn, unlocked: audio.unlocked, mode, onSceneChange, onAnswer };
+  const live = useRef({ readToMe: readToMeOn, unlocked: audio.unlocked, mode, onSceneChange, onAnswer, onReachEnd });
+  live.current = { readToMe: readToMeOn, unlocked: audio.unlocked, mode, onSceneChange, onAnswer, onReachEnd };
   const pendingAutoplay = useRef<number | null>(null);
   const termsOpened = useRef(0);
   const finishedSent = useRef(false);
@@ -275,6 +282,7 @@ function ReaderBody({
           audio.stop();
           if (!finishedSent.current) {
             finishedSent.current = true;
+            live.current.onReachEnd?.();
             const s = stateRef.current;
             void track({
               name: 'story.read.finished',
@@ -572,11 +580,13 @@ function ReaderBody({
                     onTerm={(id) => openItem(termId(id))}
                   />
                 </View>
-                <SpeakerButton
-                  label={copy.hearStory}
-                  onPress={() => audio.play(sceneSteps(state.index, ['narration', 'korean']))}
-                  testID="story-reader-hear-scene"
-                />
+                {sceneHearShown(planSceneAudio(view, { include: ['narration', 'korean'] }), audio.canPlayKorean) ? (
+                  <SpeakerButton
+                    label={copy.hearStory}
+                    onPress={() => audio.play(sceneSteps(state.index, ['narration', 'korean']))}
+                    testID="story-reader-hear-scene"
+                  />
+                ) : null}
               </View>
             </Card>
           </View>

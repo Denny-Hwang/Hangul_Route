@@ -2298,6 +2298,8 @@ export const learner = {
         storageOff: 'Recent lessons are off on this device. Lessons still work.',
         resume: { cta: 'Resume' },
         startOver: { cta: 'Start over' },
+        /** A row taught to the end (row NB-1): the day it finished. */
+        finished: (day: string) => `Finished: ${day}`,
       },
       /** The parts of Customize's chooser that stay from Quick lesson (AMENDMENTS-LECTURE-V2 section 18.3). */
       quick: {
@@ -2367,6 +2369,8 @@ export const learner = {
       more: { cta: 'More' },
       fullscreen: { cta: 'Full screen' },
       exit: { cta: 'Exit' },
+      /** Next on the last slide at its last build (F-TCH-004 section 3.5 amendment 2026-11-03, row NB-1). */
+      finish: { cta: 'Finish' },
       /** Status chips (PR 9, spec sections 3.7 and 3.8); nothing about a learner ever shows here. */
       noVoice: 'No Korean voice here. You say it!',
       /** Flashed at the top of the stage after a Sound press (spec section 3.7 amendment 2026-10-17). */
@@ -2380,7 +2384,11 @@ export const learner = {
     exit: {
       title: 'Leave the lesson?',
       line: "Nothing about anyone's progress changes.",
+      /** Before the end, when Recent lessons keeps the slide (row NB-1): the slides shown are not lost. */
+      resumeLine: 'Recent lessons keeps this slide, so you can resume later.',
       keepGoing: { cta: 'Keep going' },
+      /** After the last slide was reached (row NB-1): leaving finishes the lesson. */
+      finish: { title: 'Finish the lesson?', line: 'You reached the end of the lesson.', cta: 'Finish' },
     },
     /** Kind labels: the live region and the slide grid. */
     grid: {
@@ -2467,7 +2475,7 @@ export const learner = {
         codeTitle: 'Join with this code',
         /** `cta` is the shipped Join label (`caregiver.spaces.join.cta`). */
         howToJoin: (cta: string) => `Tap “${cta}” in Hangul Route and type this code.`,
-        exitHint: 'To finish, choose Exit.',
+        exitHint: 'To finish, choose Finish.',
       },
       /** The kind label at the top left of a reading slide (LV-S1, design V5): the same values as `grid.kind`. */
       sentence: { label: 'Sentence' },
@@ -3038,5 +3046,20 @@ export const learner = {
     pieceHome: 'A piece went home!',
     /** The home tray's label; the tray draws only the pieces that went home. */
     home: 'Home',
+  },
+  /**
+   * This week in Korea (F-CURR-002 section 5.7, row CM-48; design/wireframes/home/this-week-in-korea.md): one small
+   * calendar lesson a week, a solar term or a holiday. The drop's title, note and words are content, never in here.
+   * Never a count of weeks, a missed week, a score or a percentage; read by the `review-copy` rule.
+   */
+  weekDrop: {
+    /** The Home card's heading and the drop page's small heading. */
+    heading: 'This week in Korea',
+    /** The Meet page's one primary: the 5 quick rounds. */
+    practice: { cta: 'Practice the words' },
+    /** The Done page's headline and the card's line once the week's drop is done. */
+    done: 'Done for this week',
+    /** Under the Done headline: forward-looking, never about a week gone by. */
+    next: 'A new one comes next week.',
   },
 } as const;
