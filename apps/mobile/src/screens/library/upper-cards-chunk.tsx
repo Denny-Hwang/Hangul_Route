@@ -1,7 +1,7 @@
 import type { HeritageCard } from '@hangul-route/content-schema';
-import { Body, Caption, Heading, Spacer, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Caption, Heading, Spacer, borderWidth, colors, radii, spacing, GuardedPressable } from '@hangul-route/design-system';
 import { useMemo, type ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { albumLegendCards, heritageCardsAll } from '../../content/heritage-cards';
 import { ALBUM_STAGES, ALBUM_THEMES } from '../../content/album-order';
@@ -76,7 +76,7 @@ export function AlbumsSection({ owned, onOpenCard }: { owned: ReadonlySet<string
                   {faces.map((source) => {
                     const card = localizeCard(source, locale);
                     return (
-                      <Pressable
+                      <GuardedPressable
                         key={card.id}
                         testID={`library-album-card-${card.id}`}
                         onPress={() => onOpenCard(source)}
@@ -91,7 +91,7 @@ export function AlbumsSection({ owned, onOpenCard }: { owned: ReadonlySet<string
                         })}
                       >
                         <CardArt card={card} size={THUMB} />
-                      </Pressable>
+                      </GuardedPressable>
                     );
                   })}
                 </View>

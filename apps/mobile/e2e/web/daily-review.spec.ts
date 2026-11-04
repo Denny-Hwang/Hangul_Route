@@ -1,8 +1,10 @@
 import type { Locator, Page } from '@playwright/test';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { colors, touchTarget } from '@hangul-route/design-system/tokens';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { Touchscreen, pointIn } from './touch';
 
 /**
  * F-CURR-002 row CM-14 (sections 4.3, 4.5, 4.8, 7.7, 11.3, 12.2): the Daily Review from Today mission slot 3, Keep
@@ -85,6 +87,12 @@ const missColors = (target: Locator): Promise<string[]> =>
     });
   });
 
+/**
+ * The answers are a TapBoard (AMENDMENTS-TOUCH row KT-3): for `TAP_LOCK_MS` after an answer every answer waits, the
+ * next round's included (it opens 320 ms after a right answer), so a deliberate tap waits the lock out first.
+ */
+const pastLock = (page: Page): Promise<void> => page.waitForTimeout(TAP_LOCK_MS + 50);
+
 /** Answers the round on screen: right, or wrong first (amber, Hoya shows the answer) and then right. */
 async function answer(page: Page, how: 'right' | 'miss-then-right'): Promise<void> {
   const prompt = page.getByTestId('daily-review-prompt');
@@ -97,11 +105,13 @@ async function answer(page: Page, how: 'right' | 'miss-then-right'): Promise<voi
     const other = page.locator('[data-testid^="daily-review-option-"]').filter({ hasNot: page.locator(`[data-testid="daily-review-option-${word?.id}"]`) });
     const wrongs = await page.locator('[data-testid^="daily-review-option-"]').evaluateAll((els, rightId) => els.map((e) => e.getAttribute('data-testid')).filter((t) => t !== `daily-review-option-${rightId}`), word?.id);
     expect(other).toBeTruthy();
+    await pastLock(page);
     await page.getByTestId(wrongs[0] as string).click();
     await expect(page.getByTestId('daily-review-miss')).toBeVisible();
   }
   const dots = page.getByTestId('daily-review-dots');
   const before = await dots.getAttribute('aria-label');
+  await pastLock(page);
   await right.click();
   // The round moves on: the dots name the next round, or the session ends (the loading frame, then the result).
   await expect
@@ -181,6 +191,7 @@ test('Daily Review from slot 3: 10 read rounds, a miss in amber, then stars and 
   const wrongId = await page
     .locator('[data-testid^="daily-review-option-"]')
     .evaluateAll((els, r) => els.map((e) => e.getAttribute('data-testid')).find((t) => t !== `daily-review-option-${r}`), rightId);
+  await pastLock(page);
   await page.getByTestId(wrongId as string).click();
   await expect(page.getByTestId('daily-review-miss')).toBeVisible();
   await expect(page.getByTestId('daily-review-dot-filled')).toHaveCount(1);
@@ -189,6 +200,7 @@ test('Daily Review from slot 3: 10 read rounds, a miss in amber, then stars and 
   expect(await missColors(page.getByTestId(wrongId as string))).not.toContain(RED);
   expect(await missColors(page.getByTestId('daily-review-screen'))).not.toContain(RED);
   await shots(page, 'daily-review-miss');
+  await pastLock(page);
   await page.getByTestId(`daily-review-option-${rightId}`).click();
   await playRounds2(page, 9, 2);
 
@@ -286,6 +298,7 @@ test("the day's 20: two Daily Reviews stopped on their last round spend it; the 
     const wrongId = await page
       .locator('[data-testid^="daily-review-option-"]')
       .evaluateAll((els, r) => els.map((e) => e.getAttribute('data-testid')).find((t) => t !== `daily-review-option-${r}`), rightId);
+    await pastLock(page);
     await page.getByTestId(wrongId as string).click();
     await expect(page.getByTestId('daily-review-miss')).toBeVisible();
     await page.getByRole('button', { name: 'Stop the review' }).click();
@@ -351,4 +364,54 @@ test('offline: after one online visit the Daily Review plays with the network go
   await expect(page.getByTestId('daily-review-result')).toBeVisible();
   await context.setOffline(false);
   expect(errors).toEqual([]);
+});
+
+test('a bounce across the 320 ms advance gives the next round no answer; a later tap does (AMENDMENTS-TOUCH KT-3)', async ({ page }) => {
+  const id = await onboard(page);
+  await seed(page, id, 4);
+  await card(page).click();
+  await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 1');
+  const prompt = page.getByTestId('daily-review-prompt');
+  const ko = ((await prompt.innerText()).split('\n')[0] ?? '').trim();
+  const rightId = `daily-review-option-${byKo.get(ko)?.id}`;
+  // This browser has no Korean voice: "No sound? Read it here." comes in under the prompt once the voice check settles,
+  // and moves the answers down. Round 2 opens with it in place, so the point is measured on the settled layout (else
+  // the bounce and the later tap land on the notice, not on an answer).
+  await expect(page.getByTestId('daily-review-sound-notice')).toBeVisible();
+  await page.waitForTimeout(450);
+  const touch = await Touchscreen.of(page);
+  const at = await pointIn(page, rightId);
+  // The right answer, then a bounce at the same place once round 2 has opened (it opens 320 ms after the answer). The
+  // gap is read in the page from the two releases' own event times, the clock the board's lock runs on.
+  await page.evaluate(() => {
+    const w = window as Window & { __touchEnds?: number[] };
+    w.__touchEnds = [];
+    window.addEventListener('touchend', (e) => w.__touchEnds!.push(e.timeStamp), { capture: true });
+  });
+  await touch.tap(at, 10);
+  // Every animation frame, not the assertion's back-off polling (whose 250 and 500 ms steps alone outrun the lock).
+  await page.waitForFunction(() => document.querySelector('[data-testid="daily-review-dots"]')?.getAttribute('aria-label') === 'Round 2', undefined, { polling: 'raf', timeout: 5_000 });
+  await touch.start({ id: 1, ...at });
+  await touch.end(1);
+  // The bounce and the later tap must land on one of round 2's answers, or the case checks nothing.
+  const under = await page.evaluate((p) => document.elementFromPoint(p.x, p.y)?.closest('[data-testid^="daily-review-option-"]')?.getAttribute('data-testid') ?? null, at);
+  expect(under, 'the point is on an answer of round 2').not.toBeNull();
+  const ends = await page.evaluate(() => (window as Window & { __touchEnds?: number[] }).__touchEnds ?? []);
+  expect(ends).toHaveLength(2);
+  const bounceGap = Math.round(ends[1]! - ends[0]!);
+  test.info().annotations.push({ type: 'bounce', description: `released ${bounceGap} ms after the answer's release (the lock is ${TAP_LOCK_MS})` });
+  // Fail closed: a machine too slow to land the bounce inside the lock reports the case as skipped (with the time it
+  // took), never as a pass that checked nothing. The render test `review-rounds-lock.test.tsx` pins the same rule on a
+  // fake clock for every run.
+  test.skip(bounceGap >= TAP_LOCK_MS, `the bounce released ${bounceGap} ms after the answer, past the ${TAP_LOCK_MS} ms lock: nothing to check`);
+  await page.waitForTimeout(200);
+  await expect(page.getByTestId('daily-review-dots')).toHaveAttribute('aria-label', 'Round 2');
+  // Inside the lock: round 2 has no answer.
+  await expect(page.getByTestId('daily-review-dot-filled')).toHaveCount(1);
+  await expect(page.getByTestId('daily-review-miss')).toHaveCount(0);
+  // Past the lock, a deliberate tap there is round 2's first answer.
+  await touch.tap(at);
+  await expect
+    .poll(async () => (await page.getByTestId('daily-review-dot-filled').count()) === 2 || (await page.getByTestId('daily-review-miss').count()) > 0)
+    .toBe(true);
 });

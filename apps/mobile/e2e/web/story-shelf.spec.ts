@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerBack } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerBack, pastTapLock } from './helpers';
 import { nextPage, position } from './story-reader-helpers';
 
 /**
@@ -160,6 +160,7 @@ async function finishFromLastScene(page: Page): Promise<void> {
   await expect(stepHeading(page, 'A few questions')).toBeVisible();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (const answer of CHECK_ANSWERS) {
+    await pastTapLock(page);
     await page.getByTestId(`story-check-option-${answer}`).click();
     await page.getByTestId('story-check-next').click();
   }

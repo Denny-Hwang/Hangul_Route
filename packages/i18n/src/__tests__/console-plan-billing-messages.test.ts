@@ -42,7 +42,10 @@ describe('plan page (teach/space/plan/page.tsx)', () => {
   });
 
   it('keeps the readout line (plans.ts readoutLine)', () => {
-    expect(p.readout.waiting).toBe('waiting for the next sync');
+    // GX-8 T9 (AMENDMENTS-GROWNUP-UX section 8): two true states replace "waiting for the next sync".
+    expect(p.readout).not.toHaveProperty('waiting');
+    expect(p.readout.notDelivered).toBe('Gets this plan next time the app opens');
+    expect(p.readout.notStarted(4)).toBe('Not started yet (0 / 4)');
     expect(p.readout.progress(2, 3)).toBe('2 / 3');
     expect(p.readout.withNotReady(0, 2, 1)).toBe('0 / 2 · 1 not ready yet');
   });

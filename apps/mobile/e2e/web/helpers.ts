@@ -1,6 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { layoutClassFor } from '@hangul-route/design-system/layout';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { isDeviceLandscape, isPhoneDevice } from '../../src/logic/layout/orientation-guard';
 
 /**
@@ -394,6 +395,14 @@ export async function passDiscover(page: Page): Promise<void> {
     await page.getByRole('button', { name: 'Continue' }).click();
   }
   await expect(pill).toHaveCount(0);
+}
+
+/**
+ * Waits out the answer lock (AMENDMENTS-TOUCH KT-D5, row KT-3): for `TAP_LOCK_MS` after an answer on a pick-one board
+ * every answer waits, a click included (rule 9), so a deliberate answer right after another waits first.
+ */
+export function pastTapLock(page: Page): Promise<void> {
+  return page.waitForTimeout(TAP_LOCK_MS + 50);
 }
 
 /** The Listen & Pick option cards; a tapped card says so in its label ("Right answer: ..." / "Not this one: ..."). */
