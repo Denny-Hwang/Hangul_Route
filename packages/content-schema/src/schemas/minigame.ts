@@ -317,11 +317,13 @@ export const OrderItRoundSchema = z
 export type OrderItRound = z.infer<typeof OrderItRoundSchema>;
 
 /**
- * The four realia layouts of the Realia Read sheet (row G-2, design/wireframes/minigame/realia-read.md):
- * a menu board, a train ticket, a trail sign and market price cards. A realia without a kind is
- * drawn as the plain sheet (the same lines on paper, never blank).
+ * The realia layouts of the Realia Read sheet (design/wireframes/minigame/realia-read.md): the four of
+ * row G-2 (a menu board, a train ticket, a trail sign and market price cards), then the eight of
+ * F-CURR-002 row CM-47 (a recipe card, a receipt, a packaged-food label, a weather forecast card, a
+ * calendar page, a timetable, a park map and a poster), appended. A realia without a kind, or with one
+ * a renderer does not draw, is drawn as the plain sheet (the same lines on paper, never blank).
  */
-export const REALIA_KINDS = ['menu', 'ticket', 'sign', 'price-card'] as const;
+export const REALIA_KINDS = ['menu', 'ticket', 'sign', 'price-card', 'recipe', 'receipt', 'label', 'forecast', 'calendar', 'timetable', 'map', 'poster'] as const;
 export const RealiaKindSchema = z.enum(REALIA_KINDS);
 export type RealiaKind = z.infer<typeof RealiaKindSchema>;
 
