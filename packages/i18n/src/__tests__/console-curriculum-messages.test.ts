@@ -87,6 +87,48 @@ describe('console.curriculum stays calm in every locale', () => {
   }
 });
 
+// AMENDMENTS-ROUTE-CLASS-BLEND section 19 (row BL-4): the meeting block, the preview header and the readout lines.
+// American spelling (the BL-D README, finding 6); "lecture" is never a UI word; Korean 수업 / 연습, Spanish clase / práctica.
+describe('console.curriculum.blend (BL-4)', () => {
+  const b = c.blend;
+
+  it('pins the English meeting block, header and readout words', () => {
+    expect(b.meeting.title).toBe('How does this class meet?');
+    expect(b.practice.row).toBe('Learners also practice on their own');
+    expect(b.practice.inline('3', '10')).toBe('3 times a week × 10 min each time');
+    expect(b.practice.suggested('Wed, Fri, Sun')).toBe('Practice on Wed, Fri, Sun');
+    expect(b.mode.overlap).toBe('Practice what class taught');
+    expect(b.mode.split).toBe('Class and practice cover different lessons');
+    expect(b.preview.header(4, 1, 30, 3, 10, null)).toBe('About 4 sessions a week: 1 class day (30 min) and 3 practice days (10 min each, plus about 2-3 minutes of Daily Review).');
+    expect(b.preview.header(8, 1, 30, 7, 10, b.preview.everyDay)).toMatch(/^About 8 sessions a week on all 7 days: /);
+    expect(b.preview.perDay(3, 1)).toBe('Class days teach about 3 lessons; practice days play about 1.');
+    expect(b.preview.average(95, '4', '3.7')).toBe('95 sessions in all, 4 a teaching week (3.7 over the whole calendar).');
+    expect(b.preview.average(104, '4', null)).toBe('104 sessions in all, 4 a teaching week.');
+    expect(b.readout.classDays(2, 23)).toBe('Class days so far: 2 of 23');
+    expect(b.warn.itemCap(24)).toBe('This plan is full at week 24. Choose fewer weeks, or practice what class taught.');
+    expect(b.readout.addPractice.cta).toBe('Add practice days to this plan');
+  });
+
+  it('es and ko word the class and practice with the glossary, and es takes plural weekday names for a habit', () => {
+    const es = getMessages('es').console.curriculum.blend;
+    const ko = getMessages('ko').console.curriculum.blend;
+    expect(es.practice.inline('3', '10')).toBe('3 veces por semana × 10 min cada vez');
+    expect(ko.practice.inline('3', '10')).toBe('주 3회 × 한 번에 10분');
+    expect(es.practice.afterClass('sábado')).toBe('también después de la clase de los sábados');
+    expect(es.practice.afterClass('martes')).toBe('también después de la clase de los martes');
+    expect(ko.readout.classDays(2, 23)).toBe('지금까지 수업: 23번 중 2번');
+    expect(es.warn.itemCap(24)).toBe('Este plan se llena en la semana 24. Elige menos semanas, o elige «Practicar lo que enseñó la clase».');
+    expect(es.readout.addPractice.cta).toBe('Añadir días de práctica a este plan');
+    expect(ko.readout.addPractice.cta).toBe('이 계획에 연습하는 날 추가하기');
+    expect(es.preview.header(8, 1, 30, 7, 10, es.preview.everyDay)).toMatch(/^Unas 8 sesiones por semana, los 7 días: /);
+    expect(ko.preview.header(8, 1, 30, 7, 10, ko.preview.everyDay)).toMatch(/^한 주에 약 8번\(7일 모두\): /);
+    for (const locale of LOCALES) {
+      const words = outputsOf(getMessages(locale).console.curriculum.blend, 'console.curriculum.blend').join(' ');
+      expect(words, locale).not.toMatch(/lecture|강의|conferencia/i);
+    }
+  });
+});
+
 // AMENDMENTS-ROUTE-CLASS-BLEND section 10.3 (row BL-5): the lecture card's class-day lines. Counts and lengths only:
 // no learner, no comparison, no attendance word; every locale words both lines.
 describe('console.curriculum.blend.lecture (BL-5)', () => {
