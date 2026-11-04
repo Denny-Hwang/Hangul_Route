@@ -394,7 +394,7 @@ describe('resultsTeaser: the target is routeNext (F-ENT-003 section 3.8, PR E3-4
   it('route.next_started when the teaser is the one next; none for "Try this one again"', () => {
     const r = route(withPlan);
     const t = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q5', total: 5, route: r, planBefore: planBeforeOf(r) })!;
-    expect(teaserNextStartedEvent(P, t)).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'self', surface: 'results' } });
+    expect(teaserNextStartedEvent(P, t)).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'self', surface: 'results', fromClass: false } });
     const again = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q1', total: 0, route: r })!;
     expect(teaserNextStartedEvent(P, again)).toBeNull();
   });

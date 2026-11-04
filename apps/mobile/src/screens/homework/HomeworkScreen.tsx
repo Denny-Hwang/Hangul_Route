@@ -26,6 +26,8 @@ import { localizeQuest } from '../../logic/content-locale';
 import { assignedByLabel, dueLabel, groupAssignments, homeworkWindow, showsTodayCount } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
 import { restingSourceIds, visibleHomework } from '../../logic/homework/plan-derivation';
+import { fromClassPillOf } from '../../logic/route/blend-view';
+import { flags } from '../../config/flags';
 import { useAudience } from '../../store/audience';
 import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -186,6 +188,9 @@ function AssignmentRow({
   const m = messages.learner.homework;
   const title = questTitle(assignment.questId, m.questFallback, locale);
   const due = dueLabel(assignment.targetDate, todayKey, m.due);
+  // One From class pill; a lesson met in class adds the class glyph and says so (AMENDMENTS-ROUTE-CLASS-BLEND section 7).
+  const pill = fromClassPillOf({ enabled: flags.routeBlendEnabled, fromClass: assignment.fromClass, label: assignedByLabel(assignment, m.from), metLabel: messages.a11y.route.blend.fromClassMet });
+  const rowLabel = messages.a11y.homeworkRow(title, due);
   if (closed) {
     return (
       <View style={{ marginBottom: spacing.sm }} testID="homework-row-not-open">
@@ -194,7 +199,7 @@ function AssignmentRow({
             <Body weight="semibold" style={{ flex: 1 }}>
               {title}
             </Body>
-            <Pill tone="nudge" label={assignedByLabel(assignment, m.from)} size="sm" />
+            <Pill tone="nudge" size="sm" {...pill} testID="homework-row-pill" />
           </View>
           <Spacer size="xs" />
           <Caption tone="muted">{due}</Caption>
@@ -213,7 +218,7 @@ function AssignmentRow({
     <Pressable
       onPress={() => onPress(assignment)}
       accessibilityRole="button"
-      accessibilityLabel={messages.a11y.homeworkRow(title, due)}
+      accessibilityLabel={pill.accessibilityLabel === undefined ? rowLabel : `${rowLabel}. ${pill.accessibilityLabel}`}
       style={{ marginBottom: spacing.sm, minHeight: touchTarget.min }}
     >
       <Card padding="md">
@@ -221,7 +226,7 @@ function AssignmentRow({
           <Body weight="semibold" style={{ flex: 1 }}>
             {title}
           </Body>
-          <Pill tone="nudge" label={assignedByLabel(assignment, m.from)} size="sm" />
+          <Pill tone="nudge" size="sm" {...pill} testID="homework-row-pill" />
         </View>
         <Spacer size="xs" />
         <Caption tone="muted">{due}</Caption>

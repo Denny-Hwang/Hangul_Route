@@ -3,14 +3,14 @@ import type { InboxPlan, Profile, ProgressSnapshot } from '@hangul-route/content
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { routeEnabledFor } from '../../config/flags';
+import { flags, routeEnabledFor } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { questsDoneOf } from '../../logic/placement/entry';
 import { selfRouteResting, sourcesOf } from '../../logic/homework/plan-derivation';
 import { hasPlanNow } from '../../logic/plan-free-lines';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { movedLineVisible, planSlotOf, type PlanSlot } from '../../logic/route/home-slot';
-import { layerOf } from '../../logic/route/layer';
+import { layerOf, ownPlanBackShows } from '../../logic/route/layer';
 import { newestResultAt, planPromptEligible, proposalSkippedEvent } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
 import { track } from '../../platform/telemetry';
@@ -19,6 +19,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
 import { LinkButton } from '../../components/LinkButton';
 import { CheckInCard, useCheckInOffer, useShownOffer } from './CheckInCard';
+import { OwnBackLine, ProposalInsteadCard } from './BlendParts';
 import { usePlanChangesOpen } from './use-plan-gate';
 import { useToday } from './use-today';
 
@@ -33,7 +34,7 @@ export function usePlanPrompt(
   profile: Profile | null,
   snapshot: ProgressSnapshot | undefined,
   plans: readonly InboxPlan[] | undefined,
-): boolean {
+): { prompt: boolean; instead: boolean } {
   const profileId = profile?.id ?? null;
   // P2-8b: the flag and a UI locale whose weekly plan words are reviewed (en only for now).
   const enabled = routeEnabledFor(useLocale());
@@ -47,8 +48,8 @@ export function usePlanPrompt(
       return undefined;
     }, [enabled, profileId]),
   );
-  if (!enabled || profile === null || ui === undefined || plans === undefined || snapshot === undefined) return false;
-  return planPromptEligible({
+  if (!enabled || profile === null || ui === undefined || plans === undefined || snapshot === undefined) return NO_PROMPT;
+  const input = {
     enabled,
     learnerType: effectiveLearnerType(profile),
     hasPlan: hasPlanNow(plans, snapshot),
@@ -56,9 +57,22 @@ export function usePlanPrompt(
     newestResultAt: newestResultAt(snapshot.placements),
     dismissedAt: ui.dismissedAt,
     nowMs: Date.now(),
-    // No proposal while the class plan has practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
-    layer: layerOf(sourcesOf(plans, null), today),
-  });
+  };
+  // No proposal while the class plan has practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 8); with the switch on
+  // (row BL-7) its line says so instead, where the prompt would have been.
+  const layer = layerOf(sourcesOf(plans, null), today);
+  const prompt = planPromptEligible({ ...input, layer });
+  const instead = flags.routeBlendEnabled && layer === 'class-with-practice' && planPromptEligible({ ...input, layer: 'solo' });
+  return { prompt, instead };
+}
+
+const NO_PROMPT = { prompt: false, instead: false } as const;
+
+/** Not now on Home's prompt (or its class-plan line): hidden for 14 days or until the next result (OD-16). */
+function notNow(profileId: string): void {
+  void useRouteStore.getState().markDismissed(profileId, new Date().toISOString());
+  const event = proposalSkippedEvent(profileId, 'home');
+  void track({ name: event.name, profileId, payload: { ...event.payload } });
 }
 
 /**
@@ -75,11 +89,7 @@ export function PlanPromptCard({ profileId, onOpen }: { profileId: string; onOpe
         <Button label={t.make.cta} tone="ghost" size="md" onPress={onOpen} testID="home-plan-prompt-open" />
         <LinkButton
           label={t.notNow.cta}
-          onPress={() => {
-            void useRouteStore.getState().markDismissed(profileId, new Date().toISOString());
-            const event = proposalSkippedEvent(profileId, 'home');
-            void track({ name: event.name, profileId, payload: { ...event.payload } });
-          }}
+          onPress={() => notNow(profileId)}
           testID="home-plan-prompt-not-now"
         />
       </View>
@@ -106,7 +116,7 @@ export function usePlanSlot(
   snapshot: ProgressSnapshot | undefined,
   plans: readonly InboxPlan[] | undefined,
 ): PlanSlotState {
-  const prompt = usePlanPrompt(profile, snapshot, plans);
+  const { prompt, instead } = usePlanPrompt(profile, snapshot, plans);
   const profileId = profile?.id ?? null;
   const ui = useRouteStore((s) => (profileId === null ? undefined : s.ui[profileId]));
   const today = useToday();
@@ -134,7 +144,9 @@ export function usePlanSlot(
       return undefined;
     }, [profileId, closeOffer]),
   );
-  return { slot: planSlotOf({ prompt, offer: shownOffer, moved: moved && active !== null }), closeCheckIn: closeOffer };
+  // "Your own weekly plan is back." once after the rested plan comes back (section 8, row BL-7).
+  const back = flags.routeBlendEnabled && active !== null && ui !== undefined && ownPlanBackShows(ui);
+  return { slot: planSlotOf({ prompt, instead, offer: shownOffer, back, moved: moved && active !== null }), closeCheckIn: closeOffer };
 }
 
 /** The card of Home's plan slot. */
@@ -155,6 +167,8 @@ export function PlanSlotCard({
   onCloseCheckIn: () => void;
 }): ReactElement | null {
   if (slot.kind === 'prompt') return <PlanPromptCard profileId={profileId} onOpen={onOpen} />;
+  if (slot.kind === 'instead') return <ProposalInsteadCard onNotNow={() => notNow(profileId)} />;
+  if (slot.kind === 'back') return <OwnBackLine profileId={profileId} onOverview={onOverview} />;
   if (slot.kind === 'check-in') return <CheckInCard key={profileId} profileId={profileId} offer={slot.offer} onClose={onCloseCheckIn} testID="home-plan-check-in" />;
   return <MovedLine profileId={profileId} onOverview={onOverview} />;
 }

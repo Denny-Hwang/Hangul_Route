@@ -56,6 +56,8 @@ export type RouteNext =
       sourceId: string | null;
       /** Set when the quest comes from a homework assignment (steps 1 and 2). */
       assignmentId?: string;
+      /** The assignment is a lesson met in class (`fromClass`, AMENDMENTS-ROUTE-CLASS-BLEND section 9.4); only when true. */
+      fromClass?: true;
     }
   /** The effective switch is on, the learner is free, nothing new is open and a closed lesson exists. */
   | { kind: 'free-end'; placedOut: boolean }
@@ -156,7 +158,7 @@ function leadingOf(i: RouteNextInput, f: Facts): { source: DeriveSource; items: 
   return null;
 }
 
-function questNext(questId: string, episode: Episode, source: NextSource, sourceId: string | null, assignmentId?: string): RouteNext {
+function questNext(questId: string, episode: Episode, source: NextSource, sourceId: string | null, assignment?: Pick<HomeworkAssignment, 'id' | 'fromClass'>): RouteNext {
   return {
     kind: 'quest',
     questId,
@@ -164,7 +166,8 @@ function questNext(questId: string, episode: Episode, source: NextSource, source
     stage: episode.stage,
     source,
     sourceId,
-    ...(assignmentId === undefined ? {} : { assignmentId }),
+    ...(assignment === undefined ? {} : { assignmentId: assignment.id }),
+    ...(assignment?.fromClass === true ? { fromClass: true as const } : {}),
   };
 }
 
@@ -198,13 +201,13 @@ export function routeNext(i: RouteNextInput): RouteNext {
     if (!episode) continue;
     const sourceId = sourceIdOf(assignment.id);
     const kind = i.sources.find((s) => s.id === sourceId)?.kind ?? EXPLICIT_SOURCE[assignment.assignedBy];
-    return questNext(assignment.questId, episode, kind, sourceId, assignment.id);
+    return questNext(assignment.questId, episode, kind, sourceId, assignment);
   }
 
   // 2. The leading source's earliest item.
   const leading = leadingOf(i, f);
   const first = leading?.items[0];
-  if (leading && first) return questNext(first.assignment.questId, first.episode, leading.source.kind, leading.source.id, first.assignment.id);
+  if (leading && first) return questNext(first.assignment.questId, first.episode, leading.source.kind, leading.source.id, first.assignment);
 
   // 3. The default route: the one cursor.
   const cursor = {
@@ -372,9 +375,13 @@ export function isOffPlan(before: PlanBefore, questId: string): boolean {
 
 export type NextSurface = 'home' | 'results' | 'journey' | 'episode' | 'route' | 'placement';
 
-/** `route.next_started { source, surface }`: a quest that was `routeNext` is started from that surface. */
-export function nextStartedEvent(profileId: string | undefined, source: NextSource, surface: NextSurface): TelemetryEvent {
-  return { name: 'route.next_started', ...(profileId === undefined ? {} : { profileId }), payload: { source, surface } };
+/**
+ * `route.next_started { source, surface, fromClass }`: a quest that was `routeNext` is started from that surface;
+ * `fromClass` says whether it is a lesson met in class (AMENDMENTS-ROUTE-CLASS-BLEND section 18, row BL-7). A boolean
+ * only: no plan id, date or weekday.
+ */
+export function nextStartedEvent(profileId: string | undefined, source: NextSource, surface: NextSurface, fromClass = false): TelemetryEvent {
+  return { name: 'route.next_started', ...(profileId === undefined ? {} : { profileId }), payload: { source, surface, fromClass } };
 }
 
 /**
