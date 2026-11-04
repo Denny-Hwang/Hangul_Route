@@ -12,13 +12,16 @@ import { Touchscreen, type TouchPoint } from './touch';
  * release 40 px outside and a slide into a neighbour commit nothing and leave no press look; in the narrow latch a
  * sideways drag past 32 px scrolls the scene and a vertical drag on a spot moves nothing), Write Frame's word pick and
  * Role Play's replies (fixture build), Build a Letter (a bounce on the tray never reaches a slot; a slot takes its tile
- * back) and Match Shape (grazes commit) in the release build. The hit-area ratchet of these games (F8 included) is
- * `target-size.spec.ts`. KT-11 runs the whole matrix over every board.
+ * back) and Match Shape (grazes commit) in the release build. The hit-area ratchet of these games is `target-size.spec.ts`
+ * (release build) and `realia-read-hidden-heritage-hit-areas.spec.ts` (F8, fixture build). KT-11 runs the whole matrix over every board.
+ *
+ * The file's name starts with `realia-read-` so the fixture e2e run of the PWA workflow, which selects spec files by
+ * name, runs its fixture half; its Build a Letter and Match Shape tests skip there and run in the release build.
  *
  * Profiles: 320 x 640 with touch and the largest text size (the screens scroll), and the 820 x 1180 tablet (they fit).
  *
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test build-boards-touch   (the fixture half)
- *   pnpm --filter @hangul-route/mobile exec playwright test build-boards-touch                    (the release half)
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage-touch   (the fixture half)
+ *   pnpm --filter @hangul-route/mobile exec playwright test realia-read-hidden-heritage-touch                    (the release half)
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
