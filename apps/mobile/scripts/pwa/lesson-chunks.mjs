@@ -131,14 +131,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // and its hidden items, the weekly goal's distinct days, the resume re-pace. The line is the measurement plus a 2,717 B
   // rounding margin.
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-7 (the learner's class days and practice days, behind routeBlendEnabled): its
-  // base (BL-6 at 714deef1e with BL-D, docs only) is BL-6's 4,847,283 B raw; the row measures 4,858,365 B raw /
-  // 1,300,023 B gzip (release `build:web`, Metro cache cleared): +11,082 B. Home, the Route tab, Homework and Profile
-  // are start-bundle screens, so their pieces ride with them: the weekly plan line and its collapse rules, Class today,
-  // Refresh and its routing,
-  // the class glyph on the From class pill, the resting row and the proposal line, and their English strings. The shared
-  // practice-day rule stays in the content-schema `blend` subpath (the line reads the days the plan wrote). The line is
-  // the measurement plus a 1,635 B rounding margin.
-  startBundleRaw: 4_860_000,
+  // base (BL-6 at b55361104 with its review fixes and main's NB-1 #953) measures 4,849,712 B raw / 1,297,552 B gzip;
+  // the row measures 4,860,799 B raw / 1,300,877 B gzip (release `build:web`, Metro cache cleared): +11,087 B. Home,
+  // the Route tab, Homework and Profile are start-bundle screens, so their pieces ride with them: the weekly plan line
+  // and its collapse rules, Class today, Refresh and its routing, the class glyph on the From class pill, the resting
+  // row and the proposal line, and their English strings. The shared practice-day rule stays in the content-schema
+  // `blend` subpath (the line reads the days the plan wrote). The line is the measurement plus a 4,201 B rounding
+  // margin.
+  startBundleRaw: 4_865_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

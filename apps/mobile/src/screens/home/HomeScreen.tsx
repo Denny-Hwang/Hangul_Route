@@ -611,7 +611,7 @@ export function HomeScreen(): ReactElement {
       // The same week as the Learning Route's plan line (R-7b): the goal's plan, the class's or the learner's own.
       // A class plan with practice days has no "Week n" line (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7).
       const blended = flags.routeBlendEnabled && routeInput !== null && leadingBlended(routeInput.sources, routeInput.today) !== null;
-      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: blended ? null : routeWeekOf(model, routeInput ?? undefined) });
+      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: routeWeekOf(model, routeInput !== null && !blended ? routeInput : undefined) });
     } catch {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.
       return null;
