@@ -5,6 +5,7 @@ import { PRODUCE_KINDS, READ_MEANING_KINDS, lintCurriculum, lintLessonCell } fro
 import { normalizeKo } from '../lesson-lint-items';
 import { rolePlayIssues } from '../role-play-rules';
 import { Stage1TableSchema, reviewItemsOf } from '../review-items/build';
+import { lessonOccurrences } from '../review-items/extract';
 import { REVIEW_SNAPSHOT_FILE, REVIEW_STAGE1_FILE, lessonSourcesOfTree, storySourcesOfTree, vocabOfTree } from '../review-items/sources';
 import { StableIdSnapshotSchema } from '../review-items/stable-ids';
 import { LessonCellSchema, type LessonCell, type LessonQuest, type LessonScope } from '../schemas/lesson';

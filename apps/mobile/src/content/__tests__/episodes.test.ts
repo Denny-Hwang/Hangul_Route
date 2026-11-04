@@ -105,9 +105,16 @@ describe('episodeFor', () => {
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
-  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); Stage 2 Nature & Animals ships the first Volume 2 (row CM-41 S2)', () => {
+  it('holds two volumes per cell since PR 5.8 (F-CURR-002 row CM-40); the content rows CM-41..CM-46 ship the later volumes', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(2);
-    expect(volumeEpisodes.map((e) => [e.id, e.stage, e.theme, e.volume])).toEqual([['episode:stage2-nature-v2', 'stage2', 'nature', 2]]);
+    // The lesson Volume 2 cells (rows CM-41..CM-45), then the Stage 5 books 2 and their tales' shelf episodes (row CM-46).
+    const lessonV2 = volumeEpisodes.filter((e) => e.placement !== 'shelf' && e.stage !== 'stage5');
+    expect(lessonV2).toHaveLength(15);
+    for (const e of lessonV2) expect([e.id, e.volume]).toEqual([`episode:${e.stage}-${e.theme}-v2`, 2]);
+    expect(volumeEpisodes.filter((e) => e.stage === 'stage5' && e.placement !== 'shelf').map((e) => e.id)).toEqual(['episode:stage5-nature-v2', 'episode:stage5-crafts-v2']);
+    expect(volumeEpisodes.filter((e) => e.placement === 'shelf').map((e) => e.id).sort()).toEqual(
+      ['hahoe-mask-dance', 'hanji-korean-paper', 'jeju-volcanic-island', 'jirisan-national-park', 'suncheon-bay-wetland'].map((slug) => `episode:shelf-${slug}`),
+    );
     expect(episodesWithVolumes).toEqual([...episodesAll, ...volumeEpisodes]);
     expect(episodesAll.some((e) => volumeOf(e) > 1)).toBe(false);
   });
@@ -152,8 +159,10 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
   });
 
   it('builds the bundle as hand-written, then shelf stories, then previews of unclaimed cells', () => {
-    expect(episodesAll).toEqual([...handWrittenEpisodes, ...storyEpisodes, ...previewEpisodesFor(handWrittenEpisodes)]);
-    for (const b of bookEpisodes) expect(handWrittenEpisodes).toContain(b);
+    // A book 2 tale's shelf episode (row CM-46) is one of the later volumes, as the book 2 is.
+    const routeShelf = storyEpisodes.filter((e) => !volumeEpisodes.includes(e));
+    expect(episodesAll).toEqual([...handWrittenEpisodes, ...routeShelf, ...previewEpisodesFor(handWrittenEpisodes)]);
+    for (const b of bookEpisodes) expect(volumeOf(b) === 1 ? handWrittenEpisodes : volumeEpisodes).toContain(b);
   });
 
   it('keeps every episode id unique', () => {
@@ -161,15 +170,18 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('ships the five Stage 5 books (PR 5.6), each claiming its placeholder cell', () => {
+  it('ships the five Stage 5 books (PR 5.6), each claiming its placeholder cell, and the Nature book 2 (row CM-46)', () => {
     expect(bookEpisodes.map((e) => e.id)).toEqual([
       'episode:stage5-letters',
       'episode:stage5-life',
       'episode:stage5-rites',
       'episode:stage5-nature',
+      'episode:stage5-nature-v2',
       'episode:stage5-crafts',
+      'episode:stage5-crafts-v2',
     ]);
     expect(cellsOverCapacity(episodesAll)).toEqual([]);
+    expect(cellsOverCapacity(episodesWithVolumes)).toEqual([]);
   });
 });
 

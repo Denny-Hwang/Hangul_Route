@@ -143,12 +143,12 @@ describe('catalogTitle', () => {
 });
 
 describe('a cell\'s Volume 2 in the console (F-CURR-002 row CM-40)', () => {
-  // A fixture Volume 2 of Stage 4 Play & Crafts; Stage 2 Nature ships a real one (row CM-41 S2).
-  const v2 = 'episode:stage4-crafts-v2';
+  // A fixture Volume 2 of Stage 4 Letters & Books, a cell that ships none; Stage 2 Nature ships a real one (row CM-41 S2).
+  const v2 = 'episode:stage4-letters-v2';
   const withV2: Catalog = {
     ...CATALOG,
     cells: CATALOG.cells.map((c) =>
-      c.episodeId === 'episode:stage4-crafts' ? { ...c, episodeIds: [c.episodeId, v2], volumes: [{ episodeId: v2, title: 'Playdate Talk 2', minutes: 8, questIds: [] }] } : c,
+      c.episodeId === 'episode:stage4-letters' ? { ...c, episodeIds: [c.episodeId, v2], volumes: [{ episodeId: v2, title: 'Playdate Talk 2', minutes: 8, questIds: [] }] } : c,
     ),
   };
 

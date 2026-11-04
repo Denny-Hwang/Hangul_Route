@@ -23,6 +23,8 @@ describe('Stage 5 books (books.ts)', () => {
       ['episode:stage5-life', 2, 'Family Stories', ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam']],
       ['episode:stage5-rites', 3, 'Festival Tales', ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae']],
       ['episode:stage5-nature', 4, 'Nature Tales', ['story:sun-and-moon', 'story:angbuilgu-sundial']],
+      // F-CURR-002 row CM-46: the Nature cell's book 2, its three new tales.
+      ['episode:stage5-nature-v2', 4, 'Island, Mountain and Wetland', ['story:jeju-volcanic-island', 'story:jirisan-national-park', 'story:suncheon-bay-wetland']],
       ['episode:stage5-crafts', 5, 'Craft Stories', ['story:cheugugi-rain-gauge', 'story:jagyeongnu-water-clock', 'story:pansori-tales']],
       ['episode:stage5-crafts-v2', 5, 'Masks and Paper', ['story:hahoe-mask-dance', 'story:hanji-korean-paper']],
     ]);
@@ -34,6 +36,7 @@ describe('Stage 5 books (books.ts)', () => {
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
       'episode:stage5-nature': ['D5', 'E5'],
+      'episode:stage5-nature-v2': ['D2'],
       'episode:stage5-crafts': ['E3', 'C3'],
       'episode:stage5-crafts-v2': ['C4', 'E1'],
     });
@@ -278,7 +281,14 @@ describe('the Play book 2 (row CM-46)', () => {
   });
 
   it('names only its new tales as Volume 2 stories, so a shipped book 1 or shelf story never hides', () => {
-    expect([...VOLUME_TWO_STORY_IDS]).toEqual(['story:hahoe-mask-dance', 'story:hanji-korean-paper']);
+    // The Nature book 2 (row CM-46 Nature) and the Play book 2, in book order.
+    expect([...VOLUME_TWO_STORY_IDS]).toEqual([
+      'story:jeju-volcanic-island',
+      'story:jirisan-national-park',
+      'story:suncheon-bay-wetland',
+      'story:hahoe-mask-dance',
+      'story:hanji-korean-paper',
+    ]);
     expect(storyCellVolume('story:hahoe-mask-dance')).toBe(2);
     expect(storyCellVolume('story:janggyeong-panjeon')).toBeUndefined();
     expect(storyCellVolume('story:cheugugi-rain-gauge')).toBeUndefined();

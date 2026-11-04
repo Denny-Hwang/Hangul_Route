@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { addDays, daysBetween } from '../../vocab/srs';
 import { cellOfEpisode } from '../resolve';
 import { SEED_PER_DAY, deriveSeed, seedInputKey, seedSnapshot, type SeedInput } from '../seed';
-import { ITEMS, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, utcDay } from './fixtures';
+import { ITEMS, LATER_VOLUMES, LESSON_QUESTS, PLACEMENT, RETIRED, finished, historicalPoints, utcDay } from './fixtures';
 
 /**
  * F-CURR-002 section 4.8, steps 1-6 (row CM-12): the one-time seeding, at the five historical
@@ -137,14 +137,17 @@ describe('the all-quests fixture (scenario S-c; 111 quests since row CM-41 S2)',
     expect(days.size).toBe(seed.spreadDays);
     const last = [...days.keys()].sort().at(-1) as string;
     expect(daysBetween(SEED_DAY, last)).toBe(seed.spreadDays);
-    // Every taught lesson item that is not a topic word or retired is seeded.
-    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && [...i.cells, ...i.asked].some((c) => c.startsWith('episode:')));
+    // Every taught lesson item that is not a topic word or retired is seeded; an item only the Volume 2 teaches (row
+    // CM-41 S6) waits for that volume, which the fixture leaves undone.
+    const firstVolume = (c: string): boolean => c.startsWith('episode:') && !c.endsWith('-v2');
+    const expected = ITEMS.filter((i) => !i.id.startsWith('vocab:') && !RETIRED.has(i.id) && [...i.cells, ...i.asked].some(firstVolume));
     expect(seed.count).toBe(expected.length);
     expect(seed.spreadDays).toBeLessThanOrEqual(62);
   });
 
   it('orders by the most recent quest first, then the stage: the last cell finished falls due first', () => {
-    const lastQuest = LESSON_QUESTS[106];
+    // The last quest finished (the fixture finishes them in catalogue order; row CM-41's Volume 2 quests come last).
+    const lastQuest = LESSON_QUESTS[LESSON_QUESTS.length - 1];
     const firstDay = [...seed.states.entries()].filter(([, s]) => s.state.d === addDays(SEED_DAY, 1)).map(([id]) => id);
     const lastCellItems = ITEMS.filter((i) => [...i.cells, ...i.asked].includes(lastQuest?.episodeId ?? '')).map((i) => i.id);
     expect(firstDay.some((id) => lastCellItems.includes(id))).toBe(true);

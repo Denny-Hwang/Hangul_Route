@@ -1185,10 +1185,10 @@ describe('Update the plan: a family learner card after a newer level check (rese
     expect(planUpdateOffer('family', check, [newer, older], LATER, FROZEN)?.plan.id).toBe('plan:older');
   });
 
-  it('every placement level places out no more lessons than the params hold (120 since F-CURR-001 S2-3 made it 41), so the seed never throws', () => {
+  it('every placement level places out no more lessons than the params hold (300 since F-CURR-002 Volume 2; 120 since F-CURR-001 S2-3 made it 41), so the seed never throws', () => {
     for (const stage of StageKeySchema.options) {
       for (const band of [0, 1, 2, 3]) {
-        expect(questsPlacedOutAtLevel({ stage, band }, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(120);
+        expect(questsPlacedOutAtLevel({ stage, band }, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(300);
       }
     }
   });

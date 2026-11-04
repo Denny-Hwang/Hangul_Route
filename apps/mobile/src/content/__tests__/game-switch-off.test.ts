@@ -82,7 +82,8 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
 
   it('reads the shipped Cloze Pick steps: the six Stage 3 Checks of the rotation (row CM-3A S3) and Nature Volume 2, S3 (row CM-41)', () => {
     const cloze = steps.filter(({ ref }) => scopeOf(ref)?.kind === 'cloze-pick').map(({ questId }) => questId);
-    expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-v2-')).sort()).toEqual([
+    // Food & Daily Life Volume 2 has its own check below; Holidays Volume 2 (row CM-45 S3) plays Cloze Pick in each quest too.
+    expect(cloze.filter((id) => id.startsWith('quest:stage3-') && !id.includes('-life-v2-')).sort()).toEqual([
       'quest:stage3-crafts-q1',
       'quest:stage3-letters-q1',
       'quest:stage3-life-q1',
@@ -93,6 +94,9 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage3-nature-v2-q2',
       'quest:stage3-nature-v2-q3',
       'quest:stage3-rites-q3',
+      'quest:stage3-rites-v2-q1',
+      'quest:stage3-rites-v2-q2',
+      'quest:stage3-rites-v2-q3',
     ]);
   });
 
@@ -119,6 +123,10 @@ describe('every quest with each game.<kind> off (section 12.2)', () => {
       'quest:stage6-crafts-v2-q1',
       'quest:stage6-crafts-v2-q3',
       'quest:stage6-letters-q2',
+      // Row CM-44 S6: each Stage 6 Letters & Books Volume 2 quest plays one.
+      'quest:stage6-letters-v2-q1',
+      'quest:stage6-letters-v2-q2',
+      'quest:stage6-letters-v2-q3',
       'quest:stage6-life-q2',
       // Row CM-41 S6: the Stage 6 Nature Volume 2 Apply (q1, the weather card) and Check (q2, the trail sign).
       'quest:stage6-nature-v2-q1',

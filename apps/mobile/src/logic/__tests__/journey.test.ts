@@ -207,7 +207,8 @@ describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest to
 
   it('is 0 of the grid total with no progress, and the total stays the grid count for today\'s bundle', () => {
     expect(gridQuestProgress([grid, shelf], quests, [])).toEqual({ completed: 0, total: 2 });
-    // Every hand-written quest is a grid quest; bundled shelf stories never count, nor an optional addition not yet done.
+    // Every hand-written quest is a grid quest; bundled shelf stories never count, nor an optional addition not yet done,
+    // nor a later volume's quest (F-CURR-002 row CM-40: Home's total is the route's).
     const optional = new Set(episodesAll.flatMap((e) => e.optionalQuestIds ?? []));
     // A cell's later volume adds no count (F-CURR-002 rows CM-40, CM-41 S2): its quests are on `volumeEpisodes` only.
     const later = new Set(volumeEpisodes.flatMap((e) => e.questIds));
