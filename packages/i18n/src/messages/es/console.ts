@@ -828,6 +828,76 @@ export const consoleMsgs = {
             : `${plural('es', closed, { one: `1 de ellos va después de la Etapa 1 y se abre con ${product} cuando salga.`, other: `${closed} de ellos van después de la Etapa 1 y se abren con ${product} cuando salgan.` })} Los demás empiezan en sus fechas cuando salgan.`
         }`,
     },
+    blend: {
+      meeting: {
+        title: '¿Cómo se reúne esta clase?',
+        pickClassDay: 'Elige al menos un día de clase.',
+        maxClassDays: 'Una clase se reúne hasta 5 días por semana.',
+      },
+      classDays: 'Clase',
+      classLength: 'Duración de clase',
+      practice: {
+        row: 'Los estudiantes también practican por su cuenta',
+        days: 'veces por semana',
+        minutes: 'min cada vez',
+        inline: (n: string, m: string) => `${n} veces por semana × ${m} min cada vez`,
+        suggested: (days: string) => `Práctica: ${days}`,
+        change: { cta: 'Cambiar días' },
+        everyDay: 'Práctica todos los días',
+        // A weekly habit takes plural names: "los martes", "los sábados" (sábado and domingo add -s).
+        afterClass: (weekdays: string) => `también tras la clase de los ${String(weekdays).replace(/\b(sábado|domingo)\b/g, '$1s')}`,
+        daysLabel: 'Días de práctica',
+        pickDays: (n: number) => plural('es', n, { one: 'Elige 1 día de práctica, o cambia el número de arriba.', other: `Elige ${n} días de práctica, o cambia el número de arriba.` }),
+      },
+      mode: {
+        title: '¿Cómo se combinan la clase y la práctica?',
+        overlap: 'Practicar lo que enseñó la clase',
+        overlapHint: 'Las lecciones de cada clase vuelven en los días de práctica que siguen.',
+        split: 'La clase y la práctica cubren lecciones distintas',
+        splitHint: 'Los días de práctica también traen lecciones nuevas de los grupos que la clase ya empezó. Avanza más, y más rápido.',
+      },
+      keepAverage: 'Mantener el promedio cuando hay días libres',
+      classDayOff: 'Solo se cancela la clase',
+      preview: {
+        everyDay: 'los 7 días',
+        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, allDays: boolean) =>
+          `Unas ${total} sesiones por semana${allDays ? ', los 7 días' : ''}: ${plural('es', classDays, { one: `${classDays} día de clase`, other: `${classDays} días de clase` })} (${classMin} min) y ${plural('es', practiceDays, { one: `${practiceDays} día de práctica`, other: `${practiceDays} días de práctica` })} (${practiceMin} min cada uno, más unos 2-3 minutos de Repaso diario).`,
+        perDay: (classItems: number, practiceItems: number) =>
+          `Los días de clase enseñan ${plural('es', classItems, { one: 'una lección', other: `unas ${classItems} lecciones` })}; los días de práctica hacen ${plural('es', practiceItems, { one: 'una', other: `unas ${practiceItems}` })}.`,
+        average: (sessions: number, teaching: string, calendar: string | null) =>
+          `${plural('es', sessions, { one: '1 sesión', other: `${sessions} sesiones` })} en total, ${teaching} por semana con clases${calendar === null ? '' : ` (${calendar} en todo el calendario)`}.`,
+        start: (date: string) => `Empieza con la primera clase, el ${date}.`,
+        endsOn: (date: string) => `Para mantener el promedio, la ruta sigue hasta el ${date}.`,
+        refresh: 'Refrescar',
+        classCol: 'Clase',
+        practiceCol: 'Práctica',
+        practiceOnlyTag: 'solo práctica',
+        classReview: 'Repaso en grupo',
+        noClass: 'Sin clase este día',
+        tableLabel: 'Días de clase y días de práctica de la ruta',
+      },
+      readout: {
+        classDay: (date: string) => `Clase · ${date}`,
+        classDays: (n: number, total: number) => `Días de clase hasta hoy: ${n} de ${total}`,
+        move: { cta: 'Mover este día de clase' },
+        moveAsk: (date: string) =>
+          `¿Mover la clase del ${date}? Sus lecciones y las de cada día de clase posterior pasan a los días de clase siguientes. Lo que está hecho sigue hecho.`,
+        moveConfirm: { cta: 'Moverla' },
+        moved: 'Listo. Los dispositivos reciben las fechas nuevas en su próxima sincronización.',
+        addPractice: { cta: 'Añadir días de práctica' },
+        stopPractice: { cta: 'Quitar los días de práctica' },
+        stopAsk: '¿Quitar los días de práctica? Desde hoy el plan solo tiene días de clase. Lo que está hecho sigue hecho.',
+        stopConfirm: { cta: 'Quitarlos' },
+        save: { cta: 'Guardar días de práctica' },
+        changed: 'Guardado. Los dispositivos reciben los días nuevos en su próxima sincronización.',
+        failed: 'No se pudo cambiar el plan ahora. Inténtalo otra vez.',
+      },
+      warn: {
+        itemCap: (week: number) => `Este plan se llena en la semana ${week}. Elige menos semanas, o practicar lo que enseñó la clase.`,
+        practiceShort: 'Los días de práctica no alcanzan para todo lo que podrían enseñar los días de clase, así que los días de clase llevan menos. Añade días de práctica, o hazlos más largos.',
+        classPaced: 'Algunos días de clase llevan menos lecciones para que los estudiantes practiquen cada una poco después.',
+      },
+    },
   },
   placement: {
     startingSpot: (stage: number, band: string, date: string) => `Punto de partida: Etapa ${stage} · ${band} · ${date}`,

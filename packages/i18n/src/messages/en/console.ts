@@ -1031,6 +1031,85 @@ export const consoleMsgs = {
             : `${plural('en', closed, { one: `1 of them is past Stage 1 and opens with ${product} once released.`, other: `${closed} of them are past Stage 1 and open with ${product} once released.` })} The others start on their dates once they are released.`
         }`,
     },
+    /**
+     * Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 19, `console.curriculum.blend.*`; row BL-4):
+     * the wizard's meeting block (section 10.1), the preview header and cycle table (10.2), the readout lines and
+     * controls (10.2, 14), and the blended plan's warnings (6.6). "Class day" and "practice day" are the UI words;
+     * the code word "lecture" is never shown. Counts are scheduled sessions and class totals, never attendance and
+     * never one learner against another. Weekday names arrive in the console language.
+     */
+    blend: {
+      meeting: {
+        title: 'How does this class meet?',
+        pickClassDay: 'Pick at least one class day.',
+        maxClassDays: 'A class meets on up to 5 days a week.',
+      },
+      classDays: 'Class',
+      classLength: 'Class length',
+      practice: {
+        row: 'Learners also practice on their own',
+        /** The count select's accessible name. */
+        days: 'times a week',
+        /** The minutes select's accessible name. */
+        minutes: 'min each time',
+        /** The practice row in the locale's word order; `n` and `m` stand where the two selects go. */
+        inline: (n: string, m: string) => `${n} times a week × ${m} min each time`,
+        suggested: (days: string) => `Practice on ${days}`,
+        change: { cta: 'Change days' },
+        everyDay: 'Practice every day',
+        afterClass: (weekdays: string) => `also after class on ${weekdays}`,
+        daysLabel: 'Practice days',
+        pickDays: (n: number) => plural('en', n, { one: 'Pick 1 practice day, or change the number above.', other: `Pick ${n} practice days, or change the number above.` }),
+      },
+      mode: {
+        title: 'How do class and practice fit together?',
+        overlap: 'Practice what class taught',
+        overlapHint: "Each class's lessons come back on the practice days after it.",
+        split: 'Class and practice cover different lessons',
+        splitHint: 'Practice days also bring new lessons from the groups class has started. Covers more, faster.',
+      },
+      keepAverage: 'Keep the average when there are days off',
+      classDayOff: 'Only the class is off',
+      preview: {
+        everyDay: 'on all 7 days',
+        header: (total: number, classDays: number, classMin: number, practiceDays: number, practiceMin: number, allDays: boolean) =>
+          `About ${total} sessions a week${allDays ? ' on all 7 days' : ''}: ${plural('en', classDays, { one: `${classDays} class day`, other: `${classDays} class days` })} (${classMin} min) and ${plural('en', practiceDays, { one: `${practiceDays} practice day`, other: `${practiceDays} practice days` })} (${practiceMin} min each, plus about 2-3 minutes of Daily Review).`,
+        perDay: (classItems: number, practiceItems: number) =>
+          `Class days teach about ${plural('en', classItems, { one: `${classItems} lesson`, other: `${classItems} lessons` })}; practice days play about ${practiceItems}.`,
+        average: (sessions: number, teaching: string, calendar: string | null) =>
+          `${plural('en', sessions, { one: '1 session', other: `${sessions} sessions` })} in all, ${teaching} a teaching week${calendar === null ? '' : ` (${calendar} over the whole calendar)`}.`,
+        start: (date: string) => `Starts with the first class on ${date}.`,
+        endsOn: (date: string) => `To keep the average, the route runs until ${date}.`,
+        refresh: 'Refresh',
+        classCol: 'Class',
+        practiceCol: 'Practice',
+        practiceOnlyTag: 'practice only',
+        classReview: 'Review together',
+        noClass: 'No class this day',
+        tableLabel: 'Class days and practice days of the route',
+      },
+      readout: {
+        classDay: (date: string) => `Class · ${date}`,
+        classDays: (n: number, total: number) => `Class days so far: ${n} of ${total}`,
+        move: { cta: 'Move this class day' },
+        moveAsk: (date: string) =>
+          `Move the class on ${date}? Its lessons and every later class day's lessons move to the following class days. What is done stays done.`,
+        moveConfirm: { cta: 'Move it' },
+        moved: 'Moved. Devices pick up the new dates on their next sync.',
+        addPractice: { cta: 'Add practice days' },
+        stopPractice: { cta: 'Stop practice days' },
+        stopAsk: 'Stop practice days? From today the plan has class days only. What is done stays done.',
+        stopConfirm: { cta: 'Stop them' },
+        save: { cta: 'Save practice days' },
+        changed: 'Saved. Devices pick up the new days on their next sync.',
+        failed: "Couldn't change the plan right now. Try again.",
+      },
+      warn: {
+        itemCap: (week: number) => `This plan is full at week ${week}. Choose fewer weeks, or practice what class taught.`,
+        practiceShort: "Practice days can't keep up with what class days could teach, so class days carry less. Add practice days, or make them longer.",
+        classPaced: 'Some class days carry fewer lessons so learners can practice each one soon after.',
+      },
+    },
   },
   /**
    * The roster's level-check line and the advisory hand-off (F-PLC-001 section 3.9, wireframe
