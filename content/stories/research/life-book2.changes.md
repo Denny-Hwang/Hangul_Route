@@ -52,3 +52,23 @@ Every quote in `facts[].sources[].quoteOrLocator` was read on 2026-11-04 on the 
 ## Third pass
 
 See `life-book2.signoff.md`.
+
+## Fix round 1 (2026-11-04, PR #971 review)
+
+Two independent reviewers read both tales, their checks, culture notes and facts, and the es and ko overlays. Their language and culture outcome: ko PASS (particles after `{kw:}` tokens, Grandma's -단다 register, the ko titles); es PASS with nits; heritage PASS (shared East Asian framing, no origin claim, UNESCO status only for the exact element, KHS date 2018-12-27, no repeat of kimjang, Kim Hongdo, tteokguk or songpyeon). Their findings and what changed:
+
+| story | where | finding | outcome |
+|---|---|---|---|
+| jang | f4 | Cited only encykorea (not on the §6.6 allowlist) | NFM 메주쑤기 (topic 268) and NIKL 메주, 간장, 된장 first; encykorea kept after them |
+| jang | f7, listen s7, cn-geumjul | Cited only encykorea; no allowlisted source gives the charcoal and red peppers or the lucky day | NIKL 금줄 (the rope is hung when jang is made, to keep 부정 out) and UNESCO (amulets and rites for fermentation and aging) first; the charcoal, the red peppers and the lucky day left the claim, the narration and the note; es and ko to match |
+| jang | read s8 | "jang-making knowledge and practices" dropped "beliefs" from the element | "knowledge, beliefs and practices of jang making"; es and ko to match |
+| jang | es listen s2 | "Las salsas de soja" reads as soy sauces | "Las salsas hechas de soja" |
+| tteok | f1 | Cited only encykorea | NIKL 떡 and NFM 시루떡 (265), 수리취떡 (69), 화전 (182) first; the claim now says what they say (tteok of steamed grain flour, made for feasts, rites and the change of seasons, a tteok for each holiday); es and ko to match |
+| tteok | f2, listen s2, read s2 | "The earliest kind" and the earthenware siru rested on encykorea only | NIKL 시루 (a round 질그릇) and NFM 시루떡 (265) first; "one of the oldest ways" left the narration and the claim; "grain flour" became "rice flour" (NFM 265); es and ko to match |
+| tteok | f3, f4 | f4 cited only encykorea; f3 had one allowlisted page | NFM 화전 (182), 삼짇날 (178), 국화전 (254) and 중양절 (251) first |
+| tteok | listen s8, f7 | The winter beat read as off-topic in a tale of rice cakes | Saealsim named a kind of tteok (NFM 104 calls them 경단; NIKL 경단 is a 떡), NIKL 경단 added to f7; es and ko to match |
+| tteok | hoyaOutro | Named spring, summer and autumn only | Winter added ("round rice balls in winter"); es and ko to match |
+| tteok | es | "sopa espesa" for 죽; "Un pastel con rueda en verano" | "gachas de frijoles rojos" (s8 both tiers, captions, f7); "Un pastel con dibujo de rueda en verano" |
+| both | Story Order | §5.3 S5 names Story Order; the story schema cannot carry its rounds yet | Tracked as row CM-46o in the spec's rows table, and §5.3 S5 Food says so; the rounds land on the CM-46 Nature row's schema |
+
+The new and changed English, es and ko lines of this round go to the PR's next independent review before the sign-off is final.

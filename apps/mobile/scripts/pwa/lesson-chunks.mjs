@@ -135,7 +135,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // overlays) measures ko 1,001,146 B, es 588,515 B raw (release build, Metro cache cleared, on CM-8b's head), so the
   // line is that measurement plus an 8,854 B rounding margin (CI measured ko 1,001,745 B after main 377d44291 was merged,
   // 8,255 B under it); the next story row (CM-46) moves the story narration overlays into the story chunks (CM-8b's
-  // overlay half) rather than raising it again.
+  // overlay half) rather than raising it again. Row CM-46 Food did: every story's scene narration, caption and alt rides
+  // in its own story chunk (build-overlays.mjs `isStoryChunkField`), so ko measures 881,524 B with the Food book 2 tales
+  // (1,033,676 B before the move); the line does not move.
   localeChunkRaw: 1_010_000,
   // Each grown-up root chunk (the presenter, All lessons): measured at the start bundle shrink: PresenterApp 245,964 B,
   // BrowseApp 111,404 B raw, so the line was the presenter plus about 54 KB; with named React imports (main 8dfb8a43c)
