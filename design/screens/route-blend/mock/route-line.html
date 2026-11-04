@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route blend: the Route weekly plan line (BL-D mock)</title>
+<link rel="stylesheet" href="route-blend.css">
+<script src="glyphs.js"></script>
+<script src="strings.js"></script>
+</head>
+<body>
+<!--
+  Amendment section 7 (Route card, weekly plan line); wireframe journey/route-class-blend.md B1. The learner's
+  Route tab, top of the page at 320 x 568: the route card (LR-11's narrow card, unchanged) and, under it, the one
+  weekly plan line. ?class=2&practice=3,5,0 (JS weekday numbers, 0 = Sunday) sets the days; the line collapses
+  past 3 practice names. The line is one text node (section 7, accessibility).
+-->
+<div class="app">
+  <main class="screen">
+    <h1 class="screen-title" data-t="existing.routeTitle"></h1>
+    <section class="card" id="route-card">
+      <p class="where-line" data-t="existing.stage1"></p>
+      <p class="source-line" data-t="existing.fromClassPlan"></p>
+      <p class="next-line" data-t="existing.next1"></p>
+      <div class="button" role="button" data-t="existing.continue"></div>
+    </section>
+    <p class="plan-line" id="plan-line" data-testid="my-route-plan-line"></p>
+  </main>
+  <nav class="tab-bar" id="tabs"></nav>
+</div>
+<script>
+window.beforeApply = (RB) => {
+  const nums = (s, d) => (s ? s.split(',').map(Number) : d);
+  const cls = nums(RB.params.get('class'), [2]);
+  const practice = nums(RB.params.get('practice'), [3, 5, 0]);
+  document.getElementById('plan-line').textContent = RB.planLine(cls, practice);
+  document.getElementById('tabs').innerHTML = RB.S[RB.lang].existing.tabs.map((t, i) => `<span class="${i === 1 ? 'on' : ''}">${t}</span>`).join('');
+};
+</script>
+</body>
+</html>

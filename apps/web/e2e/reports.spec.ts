@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { CATALOG, storyIsReady } from '@hangul-route/content-schema';
 import { touchTarget } from '@hangul-route/design-system/tokens';
+import { en } from '@hangul-route/i18n';
 import { EMPTY, LEGACY, MEMORY, PARTIAL, SESSION_KEY, STEADY, classUrl, mockClass, mockReport, reportUrl, spaceId } from './report-fixtures';
 
 /**
@@ -646,7 +647,9 @@ test.describe('the family report at /parent/learner and the report nav items (RP
       await page.goto('/parent/learner');
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Whose report?');
       const rows = page.getByTestId('report-chooser').getByRole('link');
-      await expect(rows).toHaveText(['Mina', 'Jun']);
+      await expect(page.getByTestId('report-chooser-name')).toHaveText(['Mina', 'Jun']);
+      // AMENDMENTS-GROWNUP-UX GX-11 (P10): the child card's first line under each name; neither has a summary yet.
+      await expect(page.getByTestId('report-chooser-line')).toHaveText([en.console.parentHome.lastActive.notStarted, en.console.parentHome.lastActive.notStarted]);
       await expect(rows.first()).toHaveAttribute('href', '/parent/learner?id=space%3Akim-family&learner=profile%3Amina&period=week&from=nav');
       for (const box of [await rows.nth(0).boundingBox(), await rows.nth(1).boundingBox()]) expect(box?.height ?? 0).toBeGreaterThanOrEqual(touchTarget.min);
       await expect(page.getByTestId('nav-reports')).toHaveAttribute('href', '/parent/learner');

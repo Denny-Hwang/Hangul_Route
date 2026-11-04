@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route blend: Profile weekly plan rows and My practice days (BL-D mock)</title>
+<link rel="stylesheet" href="route-blend.css">
+<script src="glyphs.js"></script>
+<script src="strings.js"></script>
+</head>
+<body>
+<!--
+  Amendment sections 7, 8 and 9.4 (BL-8); wireframe journey/route-class-blend.md B5 to B7. Profile, weekly plan
+  area: (1) a learner with an own weekly plan: it rests while the class plan has practice days (never "stopped"),
+  See it opens the read-only overview; (2) a learner without one: the proposal line instead of "Hoya can make a
+  weekly plan for you", Make a weekly plan still reachable; (3) My practice days (Profile -> weekly plan): how many
+  (1 to 7) and which days, class days allowed (the class day carries the class glyph). ?who=child: a child
+  profile: the setting is behind the grown-up gate (planChangesOpen false), its controls named "PIN required".
+  The day numbers 1 to 7 are choices, not counts (data-choice), so the "no count above 3" rule does not apply.
+-->
+<div class="app">
+  <main class="screen">
+    <h1 class="screen-title" data-t="existing.profileTitle"></h1>
+    <p class="board-label">1. An own weekly plan exists: it rests</p>
+    <div class="list-row" data-row="resting">
+      <div class="row-body"><span class="row-title" data-label data-t="existing.weeklyPlanOpen"></span><span class="hint" data-t="learner.ownResting"></span></div>
+      <button class="button-quiet" type="button" data-label data-t="learner.seeIt"></button>
+    </div>
+    <p class="board-label">2. No own weekly plan: the proposal line instead</p>
+    <div class="list-row" data-row="proposal">
+      <div class="row-body"><span class="hint" data-t="learner.proposalInstead"></span></div>
+      <button class="button-quiet" type="button" data-label data-t="existing.weeklyPlanMake"></button>
+    </div>
+    <p class="board-label">3. My practice days</p>
+    <section class="card setting" aria-labelledby="pd-title">
+      <h2 id="pd-title" data-t="learner.practiceDays.title"></h2>
+      <p class="hint" data-t="learner.practiceDays.hint"></p>
+      <p class="gate" id="gate" hidden></p>
+      <span class="group-label" id="count-label" data-t="learner.practiceDays.count"></span>
+      <div class="chips" role="radiogroup" aria-labelledby="count-label" id="count" data-choice></div>
+      <div class="chips" role="group" aria-labelledby="pd-title" id="days"></div>
+    </section>
+  </main>
+  <nav class="tab-bar" id="tabs"></nav>
+</div>
+<script>
+window.beforeApply = (RB) => {
+  const S = RB.S[RB.lang];
+  const child = RB.params.get('who') === 'child';
+  document.getElementById('tabs').innerHTML = S.existing.tabs.map((t, i) => `<span class="${i === 3 ? 'on' : ''}">${t}</span>`).join('');
+  const chosen = [3, 5, 0];                 // the class's default for a Tuesday class; Tuesday may be picked too
+  const gated = (name) => (child ? `${name} (${S.existing.pinRequired})` : name);
+  document.getElementById('count').innerHTML = [1, 2, 3, 4, 5, 6, 7]
+    .map((n) => `<button class="chip" type="button" role="radio" aria-checked="${n === chosen.length}" aria-label="${gated(String(n))}">${n}</button>`).join('');
+  document.getElementById('days').innerHTML = [0, 1, 2, 3, 4, 5, 6]
+    .map((d) => `<button class="chip" type="button" role="checkbox" aria-checked="${chosen.includes(d)}" aria-label="${gated(S.a11y.practiceDay(RB.wd(d)))}">${d === 2 ? window.glyph('class') : ''}<span>${RB.wd(d, 'short')}</span></button>`).join('');
+  if (child) {
+    const gate = document.getElementById('gate');
+    gate.hidden = false;
+    gate.innerHTML = `${window.glyph('lock')}<span>${S.existing.pinRequired}</span>`;
+  }
+};
+</script>
+</body>
+</html>

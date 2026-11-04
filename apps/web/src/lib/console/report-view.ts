@@ -314,6 +314,18 @@ const questTitleOf = (id: string, catalog: Catalog, locale: UiLocale = DEFAULT_L
   catalog.quests.some((quest) => quest.id === id) ? catalogTitle(id, locale, catalog) : null;
 
 /**
+ * The learner's next quest as the report's P4 line reads it (`activity.next`, the app's own next, so the family home never
+ * disagrees with the learner's Home): its id and its title in `locale`; null without a next, at the free-lessons end, or
+ * for a quest this build's catalogue does not hold (AMENDMENTS-GROWNUP-UX GX-11, "Next: {quest}").
+ */
+export function reportNextQuest(summary: ReportSummary | null, locale: UiLocale = DEFAULT_LOCALE, catalog: Catalog = CATALOG): { id: string; title: string } | null {
+  const next = summary?.activity?.next;
+  if (!next || 'end' in next) return null;
+  const title = questTitleOf(next.q, catalog, locale);
+  return title === null ? null : { id: next.q, title };
+}
+
+/**
  * The sentence of one insight line (section 3.6), in the report's voice; null for a line this build cannot word (a
  * quest its catalogue does not hold). Actions are added by the page view, which knows the space and the viewer's role.
  */
