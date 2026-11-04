@@ -588,9 +588,9 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
   it('offers no Refresh route for a later volume that merges dark (F-CURR-002 row CM-46)', () => {
     const plan = classPlan();
     const next = CATALOG.version + 1;
-    // The Letters book 2's quests are a later volume of their cell: off the route days, never in a plan.
+    // The Nature book 2's quests are a later volume of their cell: off the route days, never in a plan.
     const book2 = CATALOG.cells.flatMap((cell) => cell.volumes ?? []).flatMap((volume) => volume.questIds);
-    expect(book2).toContain('quest:story-jikji-metal-type-read');
+    expect(book2).toContain('quest:story-jeju-volcanic-island-read');
     expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, { ...CATALOG_QUEST_ADDITIONS, [next]: book2 })).toBe(false);
     // The shipped catalogue's book 2 stamp is above every plan quest's, and a plan saved before it is not stale.
     expect(planCatalogVersion(CATALOG)).toBeLessThan(CATALOG.version);
