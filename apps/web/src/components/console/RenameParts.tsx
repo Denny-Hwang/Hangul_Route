@@ -39,7 +39,7 @@ export function RenameStyles(): JSX.Element {
   return <style>{RENAME_CSS}</style>;
 }
 
-const control: CSSProperties = { ...buttonBase, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: touchTarget.min, boxSizing: 'border-box', flex: 'none' };
+const control: CSSProperties = { ...buttonBase, flex: 'none' };
 const primary: CSSProperties = { ...control, backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
 const unavailable: CSSProperties = { ...control, backgroundColor: colors.surface.sunken, borderColor: colors.border.subtle, color: colors.text.muted, cursor: 'default' };
 const inputStyle = (invalid: boolean, saving: boolean): CSSProperties => ({

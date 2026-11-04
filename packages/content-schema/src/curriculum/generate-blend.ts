@@ -12,7 +12,7 @@ import {
   spreadPractice,
   type PackItem,
 } from './blend';
-import { WEEKDAYS, addDays, daysBetween } from './dates';
+import { WEEKDAYS, addDays, daysBetween, isDateKey } from './dates';
 import {
   WARNING_CODES,
   type CurriculumDraft,
@@ -23,8 +23,8 @@ import {
   type WeekKind,
   type WeekMeta,
 } from './draft';
-import { installBlendedPath } from './generate';
-import type { Blend, CurriculumParams, DateKey } from './params';
+import { installBlendedPath, installBlendedShift, type BlendedShift } from './generate';
+import { CurriculumParamsSchema, type Blend, type CurriculumParams, type CurriculumParamsInput, type DateKey } from './params';
 import {
   CULTURE_EVERY,
   CURRICULUM_MAX_ITEMS,
@@ -198,9 +198,10 @@ export function buildBlended(input: BlendBuildInput): CurriculumDraft {
   const done = new Set(input.shift ? [] : p.completedQuestIds);
   const pastTaught = (input.planItems ?? [])
     .filter((item) => item.lectureDate !== undefined && item.lectureDate < from && !kept.has(item.id) && !done.has(item.id))
+    // By class day; within one, by practice date, or in the class order the blended `shift` sends (row BL-3).
     .sort(
-    (a, b) => compareKeys(a.lectureDate ?? '', b.lectureDate ?? '') || compareKeys(a.targetDate ?? '', b.targetDate ?? ''),
-  );
+      (a, b) => compareKeys(a.lectureDate ?? '', b.lectureDate ?? '') || (input.shift ? 0 : compareKeys(a.targetDate ?? '', b.targetDate ?? '')),
+    );
   const pastIds = new Set([...kept, ...pastTaught.map((item) => item.id)]);
   const storyOf = (item: QueueItem): CatalogStory | undefined => (item.kind === 'quest' ? lookup.storiesByQuest.get(item.id) : undefined);
   const pastEntryOf = (item: PlanItem): Entry => ({ ...entryOf(item, storyOf(item)), lectureDate: item.lectureDate });
@@ -426,6 +427,7 @@ export function buildBlended(input: BlendBuildInput): CurriculumDraft {
     else if (cultureEvery > 0 && sinceCulture >= cultureEvery && queue.some(fits)) cycle.kind = 'culture';
     else cycle.kind = 'learn';
 
+    // A past class day's lessons are history or carried in already: they are not dealt again.
     let taught: Entry[] = [];
     if (canTeach(cycle) && (cycle.kind === 'learn' || cycle.kind === 'culture')) {
       // The culture cycle's story is a class lesson (section 5.3): read together, then alone.
@@ -615,6 +617,8 @@ function weekMetaOf(w: WeekMetaInput): WeekMeta[] {
         focus: { episodeId: stored.focus.episodeId, storyIds: [...stored.focus.storyIds], festival: stored.focus.festival },
         extras: stored.extras.map((extra) => ({ ...extra })),
       };
+      // The word-topic cadence goes on from the stored weeks, as the generator counted them (row BL-3).
+      if (copy.kind === 'learn' && !symbolsLeft && index >= lastSymbolWeek) sinceVocab += 1;
       for (const extra of copy.extras) {
         if (extra.kind !== 'vocab') continue;
         sinceVocab = 0;
@@ -763,6 +767,79 @@ function summariseBlended(s: SummaryInput): { stats: CurriculumStats; warnings: 
 }
 
 /**
+ * `regenerateFrom` `shift` of a blended plan (AMENDMENTS-ROUTE-CLASS-BLEND sections 10.2, 12.1 and 14, row BL-3;
+ * F-PLAN-002 section 3.7 as amended by BL-A3). Items dated before the freeze stay as they are. A lesson a class day
+ * before the freeze has taught and no practice date has played yet keeps its `lectureDate` and takes the next practice
+ * dates (the re-pace of row BL-2); every other future item is laid again in route order. `classDay` (**Move this class
+ * day**) is a class date of the route on or after today: it joins `blend.classDaysOff` and the freeze moves to it.
+ * `params` (**Add practice days** / **Stop practice days**) lays the future again under new params, with or without
+ * `blend`; the route itself (start, weeks, audience, level) stays.
+ */
+export const shiftBlended: BlendedShift = (plan, today, opts, kit) => {
+  if (opts.params !== undefined) sameRoute(plan.meta.params, opts.params);
+  let params: CurriculumParamsInput = { ...(opts.params ?? plan.meta.params), completedQuestIds: opts.completedQuestIds ?? [] };
+  let from = today;
+  const classDay = opts.classDay;
+  if (classDay !== undefined) {
+    params = withClassDayOff(params, classDay, today);
+    from = classDay;
+  }
+  const isBefore = (item: PlanItem): boolean => item.targetDate !== undefined && item.targetDate < from;
+  const history = plan.items.filter(isBefore);
+  let future = plan.items.filter((item) => !isBefore(item));
+  let planItems = plan.items;
+  if (plan.meta.params.blend !== undefined) {
+    const rank = kit.routeRank(plan.meta.params);
+    future = byRank(future, rank, () => 0);
+    // The lessons a class day has taught, in class order: by class day, a culture class's story first, then the route.
+    planItems = byRank(plan.items, rank, (a, b) => compareKeys(a.lectureDate ?? '', b.lectureDate ?? '') || Number(kit.isStory(b)) - Number(kit.isStory(a)));
+  }
+  return kit.build(params, { ...kit.base, freezeBefore: from, history, queue: kit.queueOf(future), planItems });
+};
+
+/**
+ * The `params` override changes how the class meets, never the route: a plan's past items are dated by its start and
+ * weeks and were chosen for its audience and level (row BL-3).
+ */
+function sameRoute(stored: RouteParams, next: RouteParams): void {
+  for (const key of ['startDate', 'weeks', 'audience'] as const) {
+    if (next[key] !== stored[key]) throw new RangeError(`params: ${key} cannot change in shift (add or stop practice days keep the route)`);
+  }
+  if (JSON.stringify(next.level) !== JSON.stringify(stored.level)) {
+    throw new RangeError('params: level cannot change in shift (add or stop practice days keep the route)');
+  }
+}
+type RouteParams = Pick<CurriculumParamsInput, 'startDate' | 'weeks' | 'audience' | 'level'>;
+
+/**
+ * Move this class day: a class date of the route, today or later, joins `blend.classDaysOff` (once). A class day
+ * that has gone by is not moved (section 12.1: the teacher knows ahead; the plan never asks whether class happened).
+ */
+function withClassDayOff(params: CurriculumParamsInput, classDay: DateKey, today: DateKey): CurriculumParamsInput {
+  const blend = params.blend;
+  if (blend === undefined) throw new Error('Move this class day needs a plan with class days and practice days (blend)');
+  if (!isDateKey(classDay)) throw new RangeError(`classDay: ${classDay} is not a real day`);
+  if (classDay < today) throw new RangeError(`classDay: ${classDay} has gone by; only a class day from today on can move`);
+  const p = CurriculumParamsSchema.parse(params) as CurriculumParams & { blend: Blend };
+  const practiceDays = p.blend.personal.days ?? practiceDaysFor(p.blend.lecture.days, p.blend.personal.perWeek);
+  const isOff = (date: DateKey): boolean => p.daysOff.some((range) => range.from <= date && date <= range.to);
+  const { route } = routeWeeks(p, practiceDays, isOff);
+  if (!route.cycles.some((cycle) => cycle.classDate === classDay)) {
+    throw new RangeError(`classDay: ${classDay} is not a class day of this route`);
+  }
+  const off = blend.classDaysOff ?? [];
+  return off.includes(classDay) ? params : { ...params, blend: { ...blend, classDaysOff: [...off, classDay].sort(compareKeys) } };
+}
+
+/** Stable: `first`, then the route rank (unranked last), then the given order. */
+function byRank(items: readonly PlanItem[], rank: ReadonlyMap<string, number>, first: (a: PlanItem, b: PlanItem) => number): PlanItem[] {
+  return items
+    .map((item, index) => ({ item, index, rank: rank.get(item.id) ?? Number.MAX_SAFE_INTEGER }))
+    .sort((a, b) => first(a.item, b.item) || a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.item);
+}
+
+/**
  * Whether a blended plan has a practice date on or after `from`, on the route the walk lays (class cycles, `keepAverage`
  * weeks and days off included): `regenerateFrom` `requeue` moves unfinished past items only when it has (row BL-2).
  */
@@ -775,3 +852,4 @@ export function blendedSessionsFrom(params: CurriculumParams, from: DateKey): bo
 }
 
 installBlendedPath(buildBlended, blendedSessionsFrom);
+installBlendedShift(shiftBlended);
