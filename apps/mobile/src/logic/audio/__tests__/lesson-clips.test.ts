@@ -84,6 +84,21 @@ describe('logic/audio/lesson-clips', () => {
     return lessonClipPlan({ questId, episodeId: episode?.id, quests: [quest], episodes: episodesWithVolumes }).units;
   };
 
+  it('a Volume 2 quest warms its own episode when the plan has the later volumes, as the clip packs chunk passes them (row CM-40)', () => {
+    const v2Quests: ClipPlanQuest[] = [
+      { id: 'quest:stage2-nature-v2-q1', steps: [{ minigameRef: 'minigame:s2-nature-v2-q1-check' }] },
+      { id: 'quest:stage2-nature-v2-q2', steps: [] },
+    ];
+    const v2: ClipPlanEpisode = { id: 'episode:stage2-nature-v2', stage: 'stage2', questIds: v2Quests.map((q) => q.id) };
+    // Opened from a screen that names no episode (the Results "Next up", a review card): the episode comes from the list.
+    const plan = lessonClipPlan({ questId: 'quest:stage2-nature-v2-q1', quests: v2Quests, episodes: [...episodes, v2] });
+    expect(plan.scopes).toEqual(['stage2']);
+    expect(plan.units).toEqual(['quest:stage2-nature-v2-q1', 'minigame:s2-nature-v2-q1-check', 'episode:stage2-nature-v2', 'quest:stage2-nature-v2-q2']);
+    expect(lessonClipPlan({ questId: 'quest:stage2-nature-v2-q1', quests: v2Quests, episodes }).units).not.toContain('episode:stage2-nature-v2');
+    const chunk = readFileSync(join(__dirname, '../../../platform/clip-packs-chunk.ts'), 'utf8');
+    expect(chunk).toMatch(/lessonClipPlan\(\{ \.\.\.prep, quests: questsAll, episodes: episodesWithVolumes \}\)/);
+  });
+
   it('every shipped quest\'s own plan reaches at least one warm unit of the real clip manifest (books included)', () => {
     expect(manifestUnits.size).toBeGreaterThan(30);
     const missed = questsAll.filter((q) => !ownUnits(q.id).some((u) => manifestUnits.has(u))).map((q) => q.id);
