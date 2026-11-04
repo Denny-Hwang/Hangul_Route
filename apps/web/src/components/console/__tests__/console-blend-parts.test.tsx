@@ -153,7 +153,7 @@ describe('the readout (section 10.2; wireframe M4)', () => {
   const draft = draftOf();
   const meta = toMeta(draft);
   const items = toPlanItems(draft);
-  const row: ReadoutRow = { learnerId: 'l:1', name: 'Mina', done: 1, total: 2, notReady: 0, synced: true, lastActiveAt: '2026-11-04T08:00:00.000Z' };
+  const row: ReadoutRow = { learnerId: 'l:1', name: 'Mina', done: 1, total: 2, notReady: 0, state: 'progress', lastActiveAt: '2026-11-04T08:00:00.000Z' };
 
   it('shows this week\'s class lessons first, the class practice days and the class days so far', () => {
     const html = renderToStaticMarkup(<BlendThisWeek plan={{ meta, items }} today="2026-11-11" locale={PSEUDO} />);
