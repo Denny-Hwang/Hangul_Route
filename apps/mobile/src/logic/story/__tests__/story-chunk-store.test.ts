@@ -154,13 +154,18 @@ describe('storiesOverStore', () => {
     expect(lazy?.shelf).toEqual(story.shelf);
     expect(lazy?.hoyaIntroEn).toBe(story.hoyaIntroEn);
     expect(lazy?.review.language).toBe(story.review.language);
-    // Before the chunk: placeholders, and the card's keyword alone.
+    // Before the chunk: placeholders, and the card's keyword alone, with its Korean word and no gloss (row CM-8b).
     expect(lazy?.tiers).toEqual([]);
     expect(lazy?.facts).toEqual([]);
     expect(lazy?.summaryEn).toBe('');
-    expect(lazy?.keywords).toEqual([story.keywords.find((k) => k.id === story.card?.keywordId)]);
+    const cardKeyword = story.keywords.find((k) => k.id === story.card?.keywordId);
+    expect(lazy?.keywords).toEqual([{ id: cardKeyword?.id, ko: cardKeyword?.ko, romanization: cardKeyword?.romanization, en: '', kind: 'word' }]);
     expect(lazy?.review.advisory).toEqual(story.review.advisory);
     expect(lazy?.review.reviewedBy).toBeUndefined();
+    // The advisory note and the cover scene are body fields (row CM-8b): blank until the chunk is in.
+    expect(story.review.advisoryNoteEn).toBeDefined();
+    expect(lazy?.review.advisoryNoteEn).toBeUndefined();
+    expect(lazy?.coverSceneId).toBe('');
     // The shelf-only fields are not on the story.
     expect(Object.keys(lazy ?? {})).not.toContain('levels');
     expect(Object.keys(lazy ?? {})).not.toContain('chunk');
@@ -171,6 +176,9 @@ describe('storiesOverStore', () => {
     await p;
     expect(lazy).toEqual(story);
     expect(lazy?.review.reviewedBy).toBe(story.review.reviewedBy);
+    expect(lazy?.review.advisoryNoteEn).toBe(story.review.advisoryNoteEn);
+    expect(lazy?.coverSceneId).toBe(story.coverSceneId);
+    expect(lazy?.keywords).toEqual(story.keywords);
   });
 
   it('fills the shelf defaults back in, and placeholders are schema-shaped', () => {
@@ -188,8 +196,11 @@ describe('storiesOverStore', () => {
     expect(lazy?.errata).toEqual([]);
     expect(lazy?.referenceDisplay).toBe('');
     expect(lazy?.authorNotes).toBeUndefined();
+    const noWord = { ...entry };
+    delete noWord.cardWord;
+    expect(storiesOverStore([noWord], { bodyOf: () => undefined })[0]?.keywords).toEqual([]);
     const noCard = { ...entry };
-    delete noCard.cardKeyword;
+    delete noCard.card;
     expect(storiesOverStore([noCard], { bodyOf: () => undefined })[0]?.keywords).toEqual([]);
   });
 
@@ -207,11 +218,19 @@ describe('splitStory and shelfLevelOf', () => {
     }
     expect(entry.chunk).toBe('h-hangul');
     expect(entry.levels).toEqual(story.tiers.map((t) => ({ level: t.level, scenes: t.scenes.length })));
-    expect(entry.review).toEqual({ language: story.review.language, culture: story.review.culture, advisory: story.review.advisory, advisoryNoteEn: story.review.advisoryNoteEn });
+    // Row CM-8b: the advisory note, the cover scene and the card's whole keyword are in the body; the shelf keeps the
+    // gate and the card's Korean word.
+    expect(entry.review).toEqual({ language: story.review.language, culture: story.review.culture, advisory: story.review.advisory });
+    expect(Object.keys(entry)).not.toContain('coverSceneId');
+    expect(Object.keys(entry)).not.toContain('cardKeyword');
+    expect(body.coverSceneId).toBe(story.coverSceneId);
+    expect(body.review.advisoryNoteEn).toBe(story.review.advisoryNoteEn);
+    const cardKeyword = story.keywords.find((k) => k.id === story.card?.keywordId);
+    expect(entry.cardWord).toEqual({ ko: cardKeyword?.ko, romanization: cardKeyword?.romanization });
     expect(Object.keys(body).sort()).toEqual(STORY_BODY_FIELDS.filter((f) => story[f] !== undefined).sort());
     const quiet = splitStory({ ...story, review: { ...story.review, advisory: [], advisoryNoteEn: undefined } }, 'h').entry.review;
     expect(quiet).toEqual({ language: story.review.language, culture: story.review.culture });
-    expect(splitStory({ ...story, card: undefined }, 'h').entry.cardKeyword).toBeUndefined();
+    expect(splitStory({ ...story, card: undefined }, 'h').entry.cardWord).toBeUndefined();
   });
 
   it('the shelf tier is listen, else the first tier', () => {

@@ -7,7 +7,7 @@
 //   0. writes every module generated from content/ (scripts/generate.mjs, F-CURR-002 CM-6), since
 //      the export below tells metro.config.js not to (HANGUL_ROUTE_GENERATE=off,
 //      fixture-build-options.mjs), so Metro keeps the fixture stories of step 1,
-//   1. regenerates the story modules (apps/mobile/src/content/__generated__/stories-index.ts, the fixtures inline) with
+//   1. regenerates the story modules (apps/mobile/src/content/__generated__/stories-shelf.ts, the fixtures inline) with
 //      `build-stories.mjs --include-fixtures`, the lesson modules and the catalogue rows with `build-lessons.mjs
 //      --include-fixtures` (a fixture Volume 2 of Stage 2 Nature, F-CURR-002 row CM-40: no Volume 2 ships yet), and the
 //      clip map with the
@@ -79,8 +79,11 @@ try {
   if (status === 0 && interrupted === null) {
     status = run('expo', ['export', '--platform', 'web', '--output-dir', out], exportEnv(process.env, options, ownTmp));
   }
-  // The post-build checks the lesson chunks the bundle was built from, the fixture Volume 2's included (row CM-40).
-  if (status === 0 && interrupted === null) status = run(process.execPath, [join(app, 'scripts', 'pwa-postbuild.mjs'), out, '--lesson-fixtures']);
+  // The post-build checks the lesson chunks the bundle was built from, the fixture Volume 2's included (row CM-40), and
+  // the story shelf with the story fixtures in it (row CM-8b).
+  if (status === 0 && interrupted === null) {
+    status = run(process.execPath, [join(app, 'scripts', 'pwa-postbuild.mjs'), out, '--lesson-fixtures', '--story-fixtures']);
+  }
 } finally {
   if (ownTmp !== null) rmSync(ownTmp, { recursive: true, force: true });
   const restored = spawnSync(process.execPath, [generator], { cwd: app, stdio: 'inherit' }).status ?? 1;
