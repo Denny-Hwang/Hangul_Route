@@ -8,6 +8,8 @@
 
 ---
 
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): §3.4: the 50 ms multi-touch rule is replaced by one forgiving tap (commit on release within 24 px of the tile or 32 px of travel, gaps filled to the nearest tile), the latest finger on a tile owning the board (an earlier resting finger never commits; a finger on nothing is ignored, never cancelling) and a 400 ms lock after a commit that survives a round remount; a locked wrong tile is disabled (rows KT-1 to KT-3).
+
 ## 1. Context
 
 Stage 1 Anchor Skill is **jamo recognition** — 24 자모 + 6 받침 at ≥ 90 % accuracy (`docs/blueprints/05-episode-learning-goals.md` §1). The catalog (`06-mini-game-catalog.md`) prescribes "Match Sound" as the foundational Recognition game: child hears a jamo, taps the matching tile.
