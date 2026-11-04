@@ -7,7 +7,10 @@ import { Platform, type LayoutChangeEvent, type NativeScrollEvent, type NativeSy
  * drives this scroller, not the `Screen`'s, so a drag past `TAP_TRAVEL` that starts on an answer moves this content
  * along its axis (Hidden Heritage's horizontal scene in the narrow latch, section 6.6; Write Frame's sound panel). The
  * web moves the scroll node itself; native scrolls to an offset it keeps from `onScroll`, clamped to the content it
- * measured. Spread `props` on the ScrollView and pass `scroller` to `TapScroller`.
+ * measured. Spread `props` on the ScrollView and pass `scroller` to `TapScroller`; a ScrollView with its own layout
+ * handlers calls `measure` from them instead. The web reads whether it can scroll from the scroll node itself (no
+ * layout callback, as `Screen` does), unless the caller knows (`canScroll`: Hidden Heritage's latched scene is always
+ * wider than its window).
  */
 export interface ScrollViewScroller {
   scroller: TapScrollerLike;
@@ -15,6 +18,10 @@ export interface ScrollViewScroller {
     ref: (node: unknown) => void;
     onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle: number;
+    onLayout?: (e: LayoutChangeEvent) => void;
+    onContentSizeChange?: (w: number, h: number) => void;
+  };
+  measure: {
     onLayout: (e: LayoutChangeEvent) => void;
     onContentSizeChange: (w: number, h: number) => void;
   };
@@ -29,7 +36,7 @@ interface WebScrollNode {
   clientHeight: number;
 }
 
-export function useScrollViewScroller(axis: 'x' | 'y'): ScrollViewScroller {
+export function useScrollViewScroller(axis: 'x' | 'y', known?: boolean): ScrollViewScroller {
   const node = useRef<unknown>(null);
   const offset = useRef(0);
   const listeners = useRef(new Set<(offset: number) => void>());
@@ -61,15 +68,23 @@ export function useScrollViewScroller(axis: 'x' | 'y'): ScrollViewScroller {
     [x],
   );
 
-  const canScroll = size.content > size.viewport + 1;
-  const scroller = useMemo<TapScrollerLike>(
-    () => ({
+  const web = Platform.OS === 'web';
+  const measured = size.content > size.viewport + 1;
+  const scroller = useMemo<TapScrollerLike>(() => {
+    const dom = (): WebScrollNode | null => (node.current as { getScrollableNode?: () => WebScrollNode | null } | null)?.getScrollableNode?.() ?? null;
+    return {
       axis,
-      canScroll,
+      // Read when the board asks (at each touch), so the web never needs a layout callback.
+      get canScroll(): boolean {
+        if (known !== undefined) return known;
+        if (!web) return measured;
+        const el = dom();
+        return el !== null && (x ? el.scrollWidth > el.clientWidth + 1 : el.scrollHeight > el.clientHeight + 1);
+      },
       scrollBy: (delta) => {
-        if (Platform.OS === 'web') {
-          const el = (node.current as { getScrollableNode?: () => WebScrollNode | null } | null)?.getScrollableNode?.();
-          if (el === null || el === undefined) return offset.current;
+        if (web) {
+          const el = dom();
+          if (el === null) return offset.current;
           if (x) el.scrollLeft = clampOffset(el.scrollLeft, delta, el.scrollWidth, el.clientWidth);
           else el.scrollTop = clampOffset(el.scrollTop, delta, el.scrollHeight, el.clientHeight);
           return x ? el.scrollLeft : el.scrollTop;
@@ -85,9 +100,9 @@ export function useScrollViewScroller(axis: 'x' | 'y'): ScrollViewScroller {
           listeners.current.delete(listener);
         };
       },
-    }),
-    [axis, canScroll, size.content, size.viewport, x],
-  );
+    };
+  }, [axis, known, measured, size.content, size.viewport, web, x]);
 
-  return { scroller, props: { ref, onScroll, scrollEventThrottle: 16, onLayout, onContentSizeChange } };
+  const measure = { onLayout, onContentSizeChange };
+  return { scroller, props: { ref, onScroll, scrollEventThrottle: 16, ...(web ? {} : measure) }, measure };
 }

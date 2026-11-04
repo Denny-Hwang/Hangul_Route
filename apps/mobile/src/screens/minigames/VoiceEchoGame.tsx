@@ -9,7 +9,13 @@ import {
   Pill,
   Screen,
   Spacer,
+  TapBoard,
+  TapTarget,
+  borderWidth,
   colors,
+  pressInset,
+  pressTransform,
+  usePressLook,
   radii,
   spacing,
   typography,
@@ -20,7 +26,7 @@ import {
 } from '@hangul-route/design-system';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -50,6 +56,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
   const copy = m.learner.minigame.voiceEcho;
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
+  const press = usePressLook();
   const [acknowledged, setAcknowledged] = useState(false);
   // F-LAYOUT-001 §3.6: the speaker grows with the window.
   const speaker = useMediaSize(SPEAKER);
@@ -117,37 +124,52 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
       <HoyaBubble tone="idle" message={copy.bubble} />
 
       <View style={{ flex: 1 }} />
-      <Pressable
-        onPress={() => setAcknowledged(!acknowledged)}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: acknowledged }}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.md,
-          padding: spacing.md,
-          backgroundColor: acknowledged ? colors.feedback.successLight : colors.surface.paper,
-          borderRadius: radii.lg,
-          borderWidth: 2,
-          borderColor: acknowledged ? colors.feedback.success : colors.border.subtle,
-        }}
-      >
-        <View
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: radii.sm,
-            borderWidth: 2,
-            borderColor: acknowledged ? colors.feedback.success : colors.border.strong,
-            backgroundColor: acknowledged ? colors.feedback.success : 'transparent',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+      {/* The learner's one answer on a `board` board (AMENDMENTS-TOUCH section 6, row KT-6): a graze still ticks it, a
+          bounce never ticks it and unticks it again. */}
+      <TapBoard lock="board">
+        <TapTarget
+          onCommit={() => setAcknowledged((a) => !a)}
+          accessibilityRole="checkbox"
+          accessibilityLabel={copy.saidIt}
+          accessibilityState={{ checked: acknowledged }}
+          testID="voice-echo-said-it"
         >
-          {acknowledged ? <Icon name="check" size={20} color={colors.text.inverse} /> : null}
-        </View>
-        <Body weight="semibold">{copy.saidIt}</Body>
-      </Pressable>
+          {({ pressed }) => {
+            const p = pressed ? press : null;
+            return (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.md,
+                  padding: spacing.md - pressInset(p, borderWidth.base),
+                  backgroundColor: acknowledged ? colors.feedback.successLight : colors.surface.paper,
+                  borderRadius: radii.lg,
+                  borderWidth: p?.borderWidth ?? borderWidth.base,
+                  borderColor: p?.borderColor ?? (acknowledged ? colors.feedback.success : colors.border.subtle),
+                  transform: pressTransform(p),
+                }}
+              >
+                <View
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: radii.sm,
+                    borderWidth: 2,
+                    borderColor: acknowledged ? colors.feedback.success : colors.border.strong,
+                    backgroundColor: acknowledged ? colors.feedback.success : 'transparent',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {acknowledged ? <Icon name="check" size={20} color={colors.text.inverse} /> : null}
+                </View>
+                <Body weight="semibold">{copy.saidIt}</Body>
+              </View>
+            );
+          }}
+        </TapTarget>
+      </TapBoard>
       <Spacer size="md" />
       <Caption tone="muted" align="center">
         {copy.note}

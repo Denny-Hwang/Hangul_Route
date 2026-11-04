@@ -172,7 +172,8 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   const [contentWidth, setContentWidth] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const sideways = useScrollViewScroller('x');
+  // The latched scene is always wider than its window (it keeps 256 dp where the window has less).
+  const sideways = useScrollViewScroller('x', true);
 
   const [state, setState] = useState<FlowState>(() => startFlow(rounds, seed));
   const stateRef = useRef(state);

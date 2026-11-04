@@ -36,6 +36,8 @@ export interface TapTargetProps {
    */
   inactive?: boolean;
   accessibilityLabel: string;
+  /** Default `button`; `checkbox` for an answer that toggles a tick (Voice Echo's "I said it", with `checked`). */
+  accessibilityRole?: 'button' | 'checkbox';
   /** `disabled` is merged from the prop. */
   accessibilityState?: { selected?: boolean; disabled?: boolean; checked?: boolean };
   /** The target lock after a commit on a `target` board (default `TAP_LOCK_MS`; the keyboard's keys: `KEY_BOUNCE_MS`). */

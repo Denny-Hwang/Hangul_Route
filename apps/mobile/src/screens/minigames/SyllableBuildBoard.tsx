@@ -7,6 +7,9 @@ import {
   KOREAN_LANGUAGE,
   KOREAN_LINE_BREAK,
   KoreanText,
+  TAP_LOCK_MS,
+  TapBoard,
+  TapTarget,
   borderWidth,
   colors,
   motion,
@@ -15,7 +18,11 @@ import {
   touchTarget,
   typography,
   useMediaSize,
+  usePressLook,
+  useTapLock,
   useTypeScale,
+  pressInset,
+  pressTransform,
   GuardedPressable,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -137,6 +144,10 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   viewRef.current = slot.view;
   const noVoice = slot.view.textShown;
   const [helpOpen, setHelpOpen] = useState(false);
+  const press = usePressLook();
+  const tapLock = useTapLock();
+  const lockRef = useRef(tapLock.lock);
+  lockRef.current = tapLock.lock;
 
   const [state, setState] = useState<BuildState>(() => (parts ? startBuild(parts, fixed ?? null) : startBuild({ first: '', vowel: '', final: null })));
   const stateRef = useRef(state);
@@ -174,6 +185,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
           } else nudge();
           return;
         case 'solved':
+          // The round-ending commit locks the app clock, so the next round's keyed board mounts locked (KT-D5).
+          lockRef.current(TAP_LOCK_MS);
           handlers.current.onRight?.();
           solvedTimer.current = setTimeout(() => handlers.current.onSolved(), SOLVED_PAUSE_MS);
           return;
@@ -214,30 +227,48 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   const speakerLabel = slot.view.reason === 'muted' || slot.view.reason === 'blocked' ? slot.view.speakerLabel : m.a11y.minigame.hearAgain;
   const right = state.status === 'right';
 
+  // A zone is a take-back target (AMENDMENTS-TOUCH 6, row KT-6): only a touch inside it clears it (`gapFill={false}`),
+  // outside its own lock, so a bounce on a tile never empties the zone it just filled.
   const zoneBox = (zone: (typeof zones)[number], width: number, height: number): ReactElement => {
     const look = ZONE_LOOK[zone.look];
     return (
-      <Pressable
+      <TapTarget
         key={zone.zone}
         testID={`${testID}-zone-${zone.zone}`}
-        accessibilityRole="button"
         accessibilityLabel={zone.accessibilityLabel}
-        accessibilityState={{ disabled: !zone.tappable }}
         disabled={!zone.tappable}
-        onPress={() => dispatch({ type: 'clear', zone: zone.zone })}
-        style={{ width, height, borderRadius: radii.lg, alignItems: 'center', justifyContent: 'center', ...look }}
+        gapFill={false}
+        onCommit={() => dispatch({ type: 'clear', zone: zone.zone })}
       >
-        {zone.face !== null ? (
-          zone.text ? (
-            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: scale.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary, textAlign: 'center' }}>{zone.face}</Text>
-          ) : (
-            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * Math.min(width, height)), fontWeight: typography.weight.bold, color: colors.text.primary }}>
-              {zone.face}
-            </Text>
-          )
-        ) : null}
-        {zone.look === 'marked' || zone.look === 'right' ? <Mark look={zone.look} /> : null}
-      </Pressable>
+        {({ pressed }) => {
+          const p = pressed && zone.tappable ? press : null;
+          return (
+            <View
+              style={{
+                width,
+                height,
+                borderRadius: radii.lg,
+                alignItems: 'center',
+                justifyContent: 'center',
+                ...look,
+                ...(p ? { borderColor: p.borderColor, borderWidth: p.borderWidth, borderStyle: 'solid' as const } : {}),
+                transform: pressTransform(p),
+              }}
+            >
+              {zone.face !== null ? (
+                zone.text ? (
+                  <Text {...KOREAN_LINE_BREAK} style={{ fontSize: scale.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary, textAlign: 'center' }}>{zone.face}</Text>
+                ) : (
+                  <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * Math.min(width, height)), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                    {zone.face}
+                  </Text>
+                )
+              ) : null}
+              {zone.look === 'marked' || zone.look === 'right' ? <Mark look={zone.look} /> : null}
+            </View>
+          );
+        }}
+      </TapTarget>
     );
   };
 
@@ -291,54 +322,82 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
             </Pressable>
           )}
         </View>
-        <View
-          role="group"
-          aria-label={prompt.blockLabel ?? undefined}
-          testID={`${testID}-block`}
-          style={{ gap: spacing.sm }}
-        >
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {zoneBox(first, zoneTop, zoneTop)}
-            {zoneBox(vowel, zoneTop, zoneTop)}
+        {/* The block's zones on their own `target` board (the tiles have theirs below). */}
+        <TapBoard lock="target">
+          <View
+            role="group"
+            aria-label={prompt.blockLabel ?? undefined}
+            testID={`${testID}-block`}
+            style={{ gap: spacing.sm }}
+          >
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              {zoneBox(first, zoneTop, zoneTop)}
+              {zoneBox(vowel, zoneTop, zoneTop)}
+            </View>
+            {zoneBox(final, blockWidth, touchTarget.min)}
           </View>
-          {zoneBox(final, blockWidth, touchTarget.min)}
-        </View>
+        </TapBoard>
       </View>
 
       {noVoice ? <PromptPanel view={slot.view} onAction={(action) => slot.act(action, say)} onHelp={() => setHelpOpen(true)} testID={`${testID}-prompt`} /> : null}
       {helpOpen ? <VoiceHelpSheet visible onClose={() => setHelpOpen(false)} /> : null}
 
-      {rows.map((row) => (
-        <View key={row.zone} role="group" aria-label={row.caption} style={{ gap: spacing.xxs }}>
-          <Caption>{row.caption}</Caption>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            {row.tiles.map((t) => {
-              const look = tileColors(t.zone, t.look);
-              return (
-                <Pressable
-                  key={t.key}
-                  testID={`${testID}-tile-${t.key}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={t.accessibilityLabel}
-                  accessibilityState={{ selected: t.look === 'selected' || t.look === 'marked', disabled: right }}
-                  disabled={right}
-                  onPress={() => dispatch({ type: 'tile', zone: t.zone, letter: t.letter })}
-                  style={{ minWidth: tile, minHeight: tile, width: t.text ? undefined : tile, paddingHorizontal: t.text ? spacing.xs : 0, borderRadius: radii.lg, alignItems: 'center', justifyContent: 'center', ...look }}
-                >
-                  {t.text ? (
-                    <Text {...KOREAN_LINE_BREAK} style={{ fontSize: scale.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary, textAlign: 'center', maxWidth: tile + spacing.xxl }}>{t.face}</Text>
-                  ) : (
-                    <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * tile), fontWeight: typography.weight.bold, color: colors.text.primary }}>
-                      {t.face}
-                    </Text>
-                  )}
-                  {t.look === 'marked' ? <Mark look="marked" /> : null}
-                </Pressable>
-              );
-            })}
-          </View>
+      {/* The tiles on one `target` board (AMENDMENTS-TOUCH section 6, row KT-6): tapping two different tiles quickly is a
+          real move; a bounce on one tile counts once. */}
+      <TapBoard lock="target">
+        <View style={{ gap: spacing.sm }}>
+          {rows.map((row) => (
+            <View key={row.zone} role="group" aria-label={row.caption} style={{ gap: spacing.xxs }}>
+              <Caption>{row.caption}</Caption>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                {row.tiles.map((t) => {
+                  const look = tileColors(t.zone, t.look);
+                  return (
+                    <TapTarget
+                      key={t.key}
+                      testID={`${testID}-tile-${t.key}`}
+                      accessibilityLabel={t.accessibilityLabel}
+                      accessibilityState={{ selected: t.look === 'selected' || t.look === 'marked' }}
+                      disabled={right}
+                      onCommit={() => dispatch({ type: 'tile', zone: t.zone, letter: t.letter })}
+                    >
+                      {({ pressed }) => {
+                        const p = pressed && !right ? press : null;
+                        const inset = pressInset(p, look.borderWidth);
+                        return (
+                          <View
+                            style={{
+                              minWidth: tile,
+                              minHeight: tile,
+                              width: t.text ? undefined : tile,
+                              paddingHorizontal: t.text ? Math.max(0, spacing.xs - inset) : 0,
+                              borderRadius: radii.lg,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              ...look,
+                              ...(p ? { borderColor: p.borderColor, borderWidth: p.borderWidth, ...(look.borderBottomWidth !== undefined ? { borderBottomWidth: Math.max(look.borderBottomWidth, p.borderWidth) } : {}) } : {}),
+                              transform: pressTransform(p),
+                            }}
+                          >
+                            {t.text ? (
+                              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: scale.bodySm, fontWeight: typography.weight.semibold, color: colors.text.primary, textAlign: 'center', maxWidth: tile + spacing.xxl }}>{t.face}</Text>
+                            ) : (
+                              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * tile), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                                {t.face}
+                              </Text>
+                            )}
+                            {t.look === 'marked' ? <Mark look="marked" /> : null}
+                          </View>
+                        );
+                      }}
+                    </TapTarget>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
         </View>
-      ))}
+      </TapBoard>
 
       <View accessibilityLiveRegion="polite" style={{ minHeight: touchTarget.min }}>
         {line !== null ? (

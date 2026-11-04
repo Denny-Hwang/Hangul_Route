@@ -318,6 +318,16 @@ describe('TapTarget inside a board', () => {
     expect(stamps).toEqual([1234]);
   });
 
+  it('a toggle answer is a checkbox with its checked state (Voice Echo, KT-6)', () => {
+    inBoard();
+    const el = renderTarget({ accessibilityRole: 'checkbox', accessibilityState: { checked: true } });
+    expect(el.props.accessibilityRole).toBe('checkbox');
+    expect(el.props.accessibilityState).toEqual({ checked: true, disabled: false });
+    expect(el.props['aria-checked']).toBe(true);
+    expect(renderTarget({ accessibilityState: { selected: false } }).props['aria-selected']).toBe(false);
+    expect(renderTarget().props['aria-selected']).toBeUndefined();
+  });
+
   it('paints the board\'s press look, not the Pressable\'s', () => {
     inBoard([':t1:']);
     expect(textOf(renderTarget().props.children as ReactNode)).toBe('pressed');
