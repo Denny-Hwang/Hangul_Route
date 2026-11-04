@@ -45,12 +45,11 @@ const CONTROLS: Readonly<Record<string, readonly string[]>> = {
 };
 
 /** Answers still on a raw Pressable, each with the AMENDMENTS-TOUCH row (section 12) that puts it on a board. */
-const PENDING: Readonly<Record<string, ReadonlyArray<readonly [name: string, row: 'KT-3' | 'KT-4b' | 'KT-5' | 'KT-6']>>> = {
+const PENDING: Readonly<Record<string, ReadonlyArray<readonly [name: string, row: 'KT-4b' | 'KT-5' | 'KT-6']>>> = {
   'screens/minigames/CardMatchGame.tsx': [
-    ['() => { if (isMatched) return; setSelectedKo(p.idx); hear(p.idx); }', 'KT-4b'],
-    ['() => tryMatch(p.idx)', 'KT-4b'],
+    ['`card-match-ko-${p.idx}`', 'KT-4b'],
+    ['`card-match-en-${p.idx}`', 'KT-4b'],
   ],
-  'screens/minigames/ClozePickGame.tsx': [['`cloze-pick-tile-${option.id}`', 'KT-3']],
   'screens/minigames/SentenceBuilderGame.tsx': [['`sentence-builder-tile-${tile.id}`', 'KT-5']],
   'screens/placement/ItemScreen.tsx': [['placement-not-sure', 'KT-5']],
   'screens/minigames/HiddenHeritageGame.tsx': [['`hh-spot-${view.id}`', 'KT-6']],
