@@ -300,7 +300,8 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     // vocab: hidden until F-VOC-005 P-4b adds its consent item (P-4 shipped the console line dormant).
     // routeGoal: the family space reads it, a class or school never does (Learning Route section 9, LR-W1).
     // memory: hidden at base scope; row CM-16 gave it the memory item, read at full scope from MEMORY_SCOPE_TEXT_VERSIONS (section 4.8).
-    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory']);
+    // practiceWeek: the family space reads it, a class or school never does (AMENDMENTS-ROUTE-CLASS-BLEND section 11).
+    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory', 'practiceWeek']);
   });
 
   it('allow-lists summary.activity under the activity item, whose sentence names day-by-day practice (F-REPORT-001 RP-W2)', () => {

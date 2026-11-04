@@ -1,0 +1,71 @@
+{
+  "id": "week:2026-12-14",
+  "weekOf": "2026-12-14",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "dongji",
+  "day": "2026-12-22",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Long Nights",
+  "noteEn": "In Korea, the nights are long now. Next week brings {ko:동지}, the day with the longest night and the shortest day of the year.",
+  "items": [
+    {
+      "id": "bam",
+      "ko": "밤",
+      "romanization": "bam",
+      "en": "night"
+    },
+    {
+      "id": "nat",
+      "ko": "낮",
+      "romanization": "nat",
+      "en": "daytime"
+    },
+    {
+      "id": "byeol",
+      "ko": "별",
+      "romanization": "byeol",
+      "en": "star"
+    },
+    {
+      "id": "dal",
+      "ko": "달",
+      "romanization": "dal",
+      "en": "moon"
+    },
+    {
+      "id": "haneul",
+      "ko": "하늘",
+      "romanization": "haneul",
+      "en": "sky"
+    }
+  ],
+  "sources": [
+    {
+      "title": "어린이민속사전: 동지",
+      "publisher": "National Folk Museum of Korea (국립민속박물관) — 어린이박물관 어린이민속사전",
+      "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=103",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"동지는 24절기 중 스물두 번째 절기로 일 년 중에서 밤이 가장 길고 낮이 가장 짧은 날입니다.\" / \"그래서 옛날 사람들은 동지를 새해의 시작으로 여겼고 ‘아세(亞歲)’라고 불렀습니다.\" / \"아세는 ‘작은 설’이라는 뜻입니다.\" / \"동지에는 ‘팥죽’을 만들어 먹고, ‘새해 달력’을 선물합니다.\""
+    },
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"동지 12월 22일 5시 50분\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "passes": 4,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. The longest night and shortest day is the National Folk Museum of Korea's own sentence; the date (22 December 2026, the next week) is from the KASI table. 달 is also the word for a month; the gloss names the moon. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review.",
+      "Pass 4, PR review (MAR, 2026-10-31): the long-nights line now says 'In Korea' (es 'En Corea', ko '한국은'), so it holds for a learner in the Southern Hemisphere. No fact changed."
+    ]
+  }
+}

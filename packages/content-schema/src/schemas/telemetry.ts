@@ -215,6 +215,11 @@ export const TELEMETRY_EVENT_NAMES = [
   'guest.left',
   'guest.saved',
   'guest.expired',
+  // AMENDMENTS-ROUTE-CLASS-BLEND section 18, TELEMETRY-NAMES-2 section T (row BL-W, Worker first; payloads:
+  // ROUTE_BLEND_TELEMETRY_PAYLOADS in route-blend-telemetry.ts: a count and codes only; stored without a profileId,
+  // never a plan, space, cell or learner id, a date or a weekday list)
+  'route.practice_days_changed',
+  'route.refresh_started',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

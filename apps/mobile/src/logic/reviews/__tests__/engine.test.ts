@@ -739,6 +739,19 @@ describe('what the engine never selects', () => {
     expect(pooled({ volumes: true, topicPacks: true, cellVolume })).toEqual(['lex:eongan', 'lex:sun']);
     expect(cellVisible('episode:stage2-life-v2', { volumes: false, topicPacks: true, cellVolume })).toBe(false);
   });
+
+  it('row CM-48: with weeklyDrop off an item whose only source is a week drop is skipped; one the route teaches too stays', () => {
+    const weekOnly = mk('lex:ipdong', { cells: ['week:2026-11-02'], stage: 2 });
+    const shared = mk('lex:mu', { cells: ['episode:stage2-life', 'week:2026-11-02'], stage: 2 });
+    const states = { [weekOnly.id]: { st: st() }, [shared.id]: { st: st() } };
+    const pooled = (visibility: EngineContext['visibility']) => duePool(ctxOf([weekOnly, shared], states, { visibility })).map((i) => i.id).sort();
+    expect(pooled({ volumes: true, topicPacks: true, weeklyDrop: false })).toEqual(['lex:mu']);
+    expect(pooled({ volumes: true, topicPacks: true, weeklyDrop: true })).toEqual(['lex:ipdong', 'lex:mu']);
+    // Absent, the drops show (the surfaces that never ask a week item leave it out).
+    expect(pooled({ volumes: true, topicPacks: true })).toEqual(['lex:ipdong', 'lex:mu']);
+    expect(cellVisible('week:2026-11-02', { volumes: false, topicPacks: false })).toBe(true);
+    expect(cellVisible('week:2026-11-02', { volumes: true, topicPacks: true, weeklyDrop: false })).toBe(false);
+  });
 });
 
 describe('topic words, read where they are (section 4.8 step 4)', () => {
