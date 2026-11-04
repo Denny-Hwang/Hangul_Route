@@ -2,7 +2,7 @@ import { CATALOG, type CurriculumDraft, type SelfRoute } from '@hangul-route/con
 import { z } from 'zod';
 import { create } from 'zustand';
 import { dayKey } from '../logic/homework/mission-builder';
-import { selfRouteResting } from '../logic/homework/plan-derivation';
+import { hiddenHomeworkOf, selfRouteResting, visibleHomework } from '../logic/homework/plan-derivation';
 import { seenKey } from '../logic/my-route/seen';
 import { ownPlanRestStep } from '../logic/route/layer';
 import { createdEvent } from '../logic/route/proposal-flow';
@@ -10,6 +10,7 @@ import { applyCheckIn, autoRepaceDue, checkInOffer, pendingPastOf, repaceSelfRou
 import { activeSelfRoute, archivedRoute, completedQuestIdsOf, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
+import { episodesAll } from '../content';
 import { usePlanStore } from './plan-store';
 import { onProfileRemoved } from './profile-removal';
 import { useProgressStore } from './progress-store';
@@ -179,7 +180,9 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     if (step === 'rest' && active !== null && ui.restingFor !== active.id) await mark(profileId, { restingFor: active.id });
     const sessionOpen = progress.openSession?.profileId === profileId;
     if (step === 'resume') return { due: !sessionOpen, active, resume: true };
-    const due = autoRepaceDue({ route: active, homework: progress.byProfile[profileId]?.homework ?? [], today, sessionOpen, resting });
+    // Items hidden because a class plan schedules their quest (section 8) are not late lessons of the own plan.
+    const homework = visibleHomework(progress.byProfile[profileId]?.homework ?? [], hiddenHomeworkOf(plans, active, today, episodesAll));
+    const due = autoRepaceDue({ route: active, homework, today, sessionOpen, resting });
     return { due, active, resume: false };
   };
 
