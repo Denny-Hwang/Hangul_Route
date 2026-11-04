@@ -55,6 +55,8 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
 const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/reviews/DailyReviewRoute.tsx#DailyReviewScreen': 'screens/reviews/DailyReviewScreen.tsx#DailyReviewScreen',
   'screens/cell-check/cell-check-entry.tsx#CellCheckScreen': 'screens/cell-check/CellCheckScreen.tsx#CellCheckScreen',
+  // Row CM-48: the This week in Korea chunk.
+  'screens/week-drop/week-drop-entry.tsx#WeekDropScreen': 'screens/week-drop/WeekDropScreen.tsx#WeekDropScreen',
   // Row CM-22: the Stage Check's chunk.
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
@@ -77,6 +79,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/minigames/match-shape-entry.tsx#MatchShapeStepBody': 'screens/minigames/MatchShapeStepBody.tsx#MatchShapeStepBody',
   // Row CM-38: the My Story game's chunk (a minigame step: its Screen is Write Frame's).
   'screens/minigames/my-story-entry.tsx#MyStoryGame': 'screens/minigames/MyStoryGame.tsx#MyStoryGame',
+  // Row CM-47: the Realia Read e2e screen's chunk (fixture builds only), with the fixtures of every realia kind.
+  'navigation/realia-read-e2e.tsx#RealiaReadE2eBody': 'navigation/realia-read-e2e-screen.tsx#RealiaReadE2eBody',
 };
 
 /**
