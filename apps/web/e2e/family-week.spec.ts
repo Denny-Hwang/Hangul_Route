@@ -5,7 +5,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
  * AMENDMENTS-GROWNUP-UX GX-11 (section 9 P2, P3, P10; section 14 "parent-home render tests (extend)"; wireframe
  * design/wireframes/parent/needs-you.md, mock design/screens/approvals/mock/parent-*.html): on the family home each child
  * card says how the week went ("Practiced {d} of the last 7 days · {m} min" with the report's 7-day squares, fill only,
- * then "Next: {quest}"), a child who never started gets "Not started yet. Open the app on {name}'s device." with Open the
+ * then "Next: {quest}"), a child who never started gets "Not started yet. Open the app on the device {name} uses." with Open the
  * app on this device, a child quiet for 7 days the restart line; with 2 or more children on a phone the Lecture mode card
  * comes after the last child, and from 70em the Needs you strip comes before it in the page; the report chooser shows the
  * card's first line under each name. ko, en and es at 360 x 740 and 1280 x 800, over the static export with the account
@@ -168,6 +168,7 @@ test.describe('en: one child, and never a name in a request (GX-11)', () => {
     await page.setViewportSize({ width: 360, height: 740 });
     await mockFamily(page, [MINA]);
     await page.goto('/parent');
+    await expect(page.getByTestId('learner-card')).toBeVisible();
     await expect(page.getByTestId('lecture-card')).toBeVisible();
     const order = await page.evaluate(() => Array.from(document.querySelectorAll('[data-testid="learner-card"], [data-testid="lecture-card"]')).map((el) => el.getAttribute('data-testid')));
     expect(order).toEqual(['learner-card', 'lecture-card']);

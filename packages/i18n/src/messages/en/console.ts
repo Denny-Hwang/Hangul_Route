@@ -1474,7 +1474,7 @@ export const consoleMsgs = {
      */
     week: (days: number, minutes: number) => `Practiced ${days} of the last 7 days · ${minutes}\u00a0min`,
     next: (title: string) => `Next: ${title}`,
-    notStarted: (name: string) => `Not started yet. Open the app on ${name}'s device.`,
+    notStarted: (name: string) => `Not started yet. Open the app on the device ${name} uses.`,
     restart: 'A 5-minute quest is a good restart.',
     /** The report chooser's line under the name of a child who never started. */
     lastActive: { notStarted: 'Not started yet' },

@@ -76,7 +76,7 @@ import { headRem, rem } from '@/lib/console/rem';
  *
  * The child's week (AMENDMENTS-GROWNUP-UX GX-11, section 9 P2): under the class line, "Practiced {d} of the last 7 days
  * · {m} min" with the report's 7-day squares (fill only, beside words that say the same), then "Next: {quest}" from the
- * report's next resolver; a child who never started gets "Not started yet. Open the app on {name}'s device." with
+ * report's next resolver; a child who never started gets "Not started yet. Open the app on the device {name} uses." with
  * **Open the app on this device**; a child quiet for 7 days "A 5-minute quest is a good restart." (never a zero).
  *
  * Lecture mode (AMENDMENTS-LECTURE-V2 E2, LV-5; design/screens/app-shell/lecture-card.md "Placement"): one card, in
