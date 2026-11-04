@@ -7,8 +7,8 @@ import { CardMatchGame } from '../CardMatchGame';
 
 /**
  * AMENDMENTS-TOUCH 6.2 (row KT-4a, F3): Card Match through react-native-web. The wrong-flash timer only clears
- * the pick it was set for (a stale timer never un-selects the next pick); either side may be picked first, and
- * the round key stays the Korean card of the attempted pair; both columns are buttons at least `touchTarget.min`
+ * the pick it was set for (a stale timer never un-selects the next pick); the order stays a Korean card first,
+ * so a meaning tapped first is a no-op and scores nothing; both columns are buttons at least `touchTarget.min`
  * tall; leaving the game clears the flash and the completion timers.
  */
 
@@ -143,17 +143,6 @@ describe('Card Match: taps during the wrong flash (review #934)', () => {
     expect(selected(r, 'ko', GEUNE)).toBe(true);
   });
 
-  it('a bounce on the amber Korean card (meaning first) is not a second miss and does not replay the word', async () => {
-    const r = await play();
-    await tap(r, 'en', MORAE);
-    await tap(r, 'ko', GEUNE);
-    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
-    await wait(120);
-    await tap(r, 'ko', GEUNE);
-    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([['pair-0', false]]);
-    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
-  });
-
   it('the amber card counts again once the flash is over', async () => {
     const r = await play();
     await tap(r, 'ko', GEUNE);
@@ -183,31 +172,37 @@ describe('Card Match: taps during the wrong flash (review #934)', () => {
   });
 });
 
-describe('Card Match: either side first', () => {
-  it('a meaning tapped first is selected, and the Korean card then makes the pair under the Korean key', async () => {
+describe('Card Match: a Korean card first, as today (6.2)', () => {
+  it('a meaning tapped first is a no-op: nothing is selected, scored or said', async () => {
     const r = await play();
     await tap(r, 'en', GEUNE);
-    expect(selected(r, 'en', GEUNE)).toBe(true);
+    expect(selected(r, 'en', GEUNE)).toBe(false);
+    expect(run.answers).toEqual([]);
+    expect(audio.playPrompt).not.toHaveBeenCalled();
+    // The Korean card then only selects and plays its word; the pair is made with its meaning, under the Korean key.
     await tap(r, 'ko', GEUNE);
+    expect(selected(r, 'ko', GEUNE)).toBe(true);
+    expect(run.answers).toEqual([]);
+    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
+    await tap(r, 'en', GEUNE);
     expect(run.answers).toEqual([['pair-0', true, { texts: ['그네'], rung: 'read' }]]);
     expect(card(r, 'ko', GEUNE).props['aria-disabled']).toBe(true);
-    // The Korean card is said when it is tapped, whichever side came first.
-    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
   });
 
-  it('a wrong pair started from the meaning scores the Korean card that was tapped', async () => {
+  it('a meaning tapped after a pair is made, with no new Korean pick, scores nothing', async () => {
     const r = await play();
-    await tap(r, 'en', MORAE);
     await tap(r, 'ko', GEUNE);
-    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([['pair-0', false]]);
-  });
-
-  it('a second meaning moves the selection; no pair is attempted on the same side', async () => {
-    const r = await play();
     await tap(r, 'en', GEUNE);
     await tap(r, 'en', MORAE);
-    expect(selected(r, 'en', GEUNE)).toBe(false);
-    expect(selected(r, 'en', MORAE)).toBe(true);
+    expect(run.answers.map(([key, correct]) => [key, correct])).toEqual([['pair-0', true]]);
+  });
+
+  it('a second Korean card moves the pick; no pair is attempted', async () => {
+    const r = await play();
+    await tap(r, 'ko', GEUNE);
+    await tap(r, 'ko', MORAE);
+    expect(selected(r, 'ko', GEUNE)).toBe(false);
+    expect(selected(r, 'ko', MORAE)).toBe(true);
     expect(run.answers).toEqual([]);
   });
 });
