@@ -120,6 +120,11 @@ describe('attentionModel: one status per learner (section 3.2)', () => {
     expect(status).toMatchObject({ kind: 'relink', action: true, relink: { id: 'relink:jaehan', expiresAt: min(8) } });
   });
 
+  it('a listed re-link carries its platform and request time for the re-link dialog (GX-D12)', () => {
+    const status = model({ roster: [learner('profile:jaehan')], relinks: [relink('profile:jaehan', { platform: 'android', requestedAt: min(-3) })] }).byLearner['profile:jaehan'];
+    expect(status?.relink).toEqual({ id: 'relink:jaehan', expiresAt: min(8), platform: 'android', requestedAt: min(-3) });
+  });
+
   it('an expired, approved or denied re-link is dropped before ranking', () => {
     const roster = [learner('profile:jaehan')];
     expect(model({ roster, relinks: [relink('profile:jaehan', { expiresAt: min(-1) })] }).byLearner['profile:jaehan']?.kind).toBe('in_class');
@@ -307,6 +312,21 @@ describe('attentionModel: incoming items and totals (sections 3.4, 4.1)', () => 
     });
     expect(m.incoming.map((i) => i.id)).toEqual(['soon', 'late', 'move:old', 'move:new']);
   });
+
+  it('a teacher move carries its expiresAt from the class-move view (GX-1 reader) and orders by it with the transfers', () => {
+    const m = model({
+      transfers: [destination({ id: 'transfer:late', expiresAt: day(10) })],
+      classMoves: teacherMoves({ incoming: [...incomingMove('move:none'), ...incomingMove('move:soon', { expiresAt: day(1) })] }),
+    });
+    expect(m.incoming.map((i) => i.id)).toEqual(['move:soon', 'transfer:late', 'move:none']);
+    expect(m.incoming[0]?.expiresAt).toBe(day(1));
+    expect(m.incoming[2]?.expiresAt).toBeNull();
+  });
+
+  it('an outgoing teacher move matched by learner id carries its expiresAt (teacher moves ordered by it)', () => {
+    const lists = readMoveLists({ outgoing: [{ id: 'move:o', kind: 'accept', status: 'waiting', to: { spaceId: 's', name: 'Class E' }, learner: null, createdAt: day(-1), at: null, learnerId: 'profile:suji', expiresAt: day(3) }] });
+    expect(model({ roster: [learner('profile:suji')], classMoves: lists }).byLearner['profile:suji']?.move?.expiresAt).toBe(day(3));
+  });
 });
 
 describe('rosterOrder (section 4 "Ordering")', () => {
@@ -351,7 +371,11 @@ describe('statusWords (section 4 table)', () => {
   it('every kind in English', () => {
     expect(statusWords(s({ kind: 'relink', action: true, relink: { id: 'r', expiresAt: min(7.5) } }), NOW, 'en')).toEqual({ chip: 'Needs your OK', reason: 'New device · 8 min left', tone: 'action' });
     expect(statusWords(s({ kind: 'move_yours', action: true, move: { source: 'transfer', id: 't', to: 'Evening Class D', on: null, expiresAt: null } }), NOW, 'en')).toEqual({ chip: 'Needs your OK', reason: 'Class move: Evening Class D', tone: 'action' });
-    expect(statusWords(s({ kind: 'move_yours', action: true, move: { source: 'transfer', id: 't', to: null, on: null, expiresAt: null } }), NOW, 'en')?.reason).toBeNull();
+    // A family-started move with no destination name is never left without a reason (status.moveOut).
+    const out = s({ kind: 'move_yours', action: true, move: { source: 'transfer', id: 't', to: null, on: null, expiresAt: null } });
+    expect(statusWords(out, NOW, 'en')?.reason).toBe('Moving to another class');
+    expect(statusWords(out, NOW, 'es')?.reason).toBe('Cambio a otra clase');
+    expect(statusWords(out, NOW, 'ko')?.reason).toBe('다른 반으로 이동');
     expect(statusWords(s({ kind: 'move_room' }), NOW, 'en')).toEqual({ chip: 'Waiting for a seat', reason: null, tone: 'quiet' });
     expect(statusWords(s({ kind: 'move_scheduled', move: { source: 'transfer', id: 't', to: null, on: '2026-11-03T12:00:00.000Z', expiresAt: null } }), NOW, 'en')).toEqual({ chip: 'Moving Nov 3', reason: null, tone: 'info' });
     expect(statusWords(s({ kind: 'move_scheduled' }), NOW, 'en')).toEqual({ chip: 'Move waiting', reason: null, tone: 'quiet' });

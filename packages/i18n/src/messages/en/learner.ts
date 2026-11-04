@@ -3030,4 +3030,19 @@ export const learner = {
     /** The home tray's label; the tray draws only the pieces that went home. */
     home: 'Home',
   },
+  /**
+   * This week in Korea (F-CURR-002 section 5.7, row CM-48; design/wireframes/home/this-week-in-korea.md): one small
+   * calendar lesson a week, a solar term or a holiday. The drop's title, note and words are content, never in here.
+   * Never a count of weeks, a missed week, a score or a percentage; read by the `review-copy` rule.
+   */
+  weekDrop: {
+    /** The Home card's heading and the drop page's small heading. */
+    heading: 'This week in Korea',
+    /** The Meet page's one primary: the 5 quick rounds. */
+    practice: { cta: 'Practice the words' },
+    /** The Done page's headline and the card's line once the week's drop is done. */
+    done: 'Done for this week',
+    /** Under the Done headline: forward-looking, never about a week gone by. */
+    next: 'A new one comes next week.',
+  },
 } as const;

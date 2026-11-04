@@ -1043,6 +1043,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
+  'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
   // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
   // name, a formatted date) and the asking-to-join card's source class.
   'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],
@@ -1056,4 +1058,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.settings.inviteGrownUpLine': [['K7PM4Q']],
   'console.parentHome.classLine.one': [['Sunday Class A']],
   'console.parentHome.classLine.many': [[2], [3]],
+  'console.relinkPopup.title': [['Jaehan']],
+  'console.relinkPopup.closes': [[1], [8]],
+  'console.relinkPopup.meta': [['iPhone or iPad', 'asked 2 min ago']],
 };

@@ -19,6 +19,7 @@ import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
 import { useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { AskingToJoin, DecidedLine, ReasonLine, RelinkAnswer, StatusChip, actionCardStyle, revealAnswers, useDecided } from '@/components/console/LearnerStatusParts';
+import { RelinkPopup } from '@/components/console/RelinkPopup';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
@@ -264,7 +265,7 @@ function SpaceInner(): JSX.Element {
   lastOrder.current = ordered.map((l) => l.id);
   const relinksWaiting = attention?.totals.relinks ?? 0;
   const movesWaiting = attention?.totals.moves ?? 0;
-  // A failure that leaves the request open is only said: the card keeps its chip and answers (RelinkAnswer shows the line).
+  // A failure that leaves the request open is only said: the card keeps its chip and answers (the dialog or Deny shows the line).
   const afterDecision = (learnerId: string, text: string, settled: boolean): void => {
     announce(text);
     if (!settled) return;
@@ -533,14 +534,28 @@ function LearnerCardHead({
   const level = levelPillLabel(learner.ageGroup, locale);
   const reviewHref = status?.kind === 'move_yours' ? ROUTES.spaceTransfers(spaceId, kind) : null;
   const relinkAnswer = !!words && status?.kind === 'relink' && !!api;
-  // The chip opens the answers only when the card draws them; otherwise it is the amber span, never a dead button.
-  const activate = relinkAnswer || (words && reviewHref) ? () => revealAnswers(answerRow.current) : undefined;
+  // GX-D12: a re-link's chip and its Approve open the re-link dialog (hint, platform, request time); never one tap.
+  const [popupFor, setPopupFor] = useState<string | null>(null);
+  const settledRef = useRef(false);
+  const openPopup = (): void => {
+    if (!status?.relink) return;
+    settledRef.current = false;
+    setPopupFor(status.relink.id);
+  };
+  // The chip opens the decision only when the card draws it; otherwise it is the amber span, never a dead button.
+  const activate = relinkAnswer ? openPopup : words && reviewHref ? () => revealAnswers(answerRow.current) : undefined;
   // A settled answer replaces the buttons with the result line: focus goes to the learner's name, which stays, so a
   // keyboard or screen-reader user keeps their place (the polite region says the result).
   const answered = (text: string, settled: boolean): void => {
-    if (settled) nameRef.current?.focus();
+    if (settled) {
+      settledRef.current = true;
+      setPopupFor(null);
+      nameRef.current?.focus();
+    }
     onDecided(text, settled);
   };
+  // The dialog shows only while its request is still this card's (a poll that finds it closed takes the dialog away).
+  const popupRequest = popupFor && relinkAnswer && status?.relink?.id === popupFor ? status.relink : null;
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
@@ -558,7 +573,30 @@ function LearnerCardHead({
       {words?.reason ? <ReasonLine id={reasonId} text={words.reason} /> : null}
       {decidedLine ? <DecidedLine text={decidedLine} /> : null}
       {relinkAnswer && words && status && api ? (
-        <RelinkAnswer api={api} spaceId={spaceId} status={status} learnerName={learner.displayName} describedBy={words.reason ? `${nameId} ${reasonId}` : nameId} online={online} rowRef={answerRow} onResult={answered} />
+        <RelinkAnswer
+          api={api}
+          spaceId={spaceId}
+          status={status}
+          learnerName={learner.displayName}
+          describedBy={words.reason ? `${nameId} ${reasonId}` : nameId}
+          online={online}
+          rowRef={answerRow}
+          onApprove={openPopup}
+          onResult={answered}
+        />
+      ) : null}
+      {popupRequest && api ? (
+        <RelinkPopup
+          api={api}
+          spaceId={spaceId}
+          request={popupRequest}
+          learnerName={learner.displayName}
+          online={online}
+          now={now}
+          onLater={() => setPopupFor(null)}
+          onResult={answered}
+          focusOnClose={() => (settledRef.current ? nameRef.current : null)}
+        />
       ) : null}
       {words && reviewHref ? (
         <div ref={answerRow} style={{ marginTop: spacing.sm }}>
