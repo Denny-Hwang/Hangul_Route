@@ -74,3 +74,4 @@ export * from './schemas/curr-rollup-buckets';
 export * from './schemas/guest';
 // F-CURR-002 row CM-35: the Role Play scene shape and its small readers; the graph rules are in `./lint` (role-play-rules.ts), off the start bundle.
 export * from './schemas/role-play';
+export * from './schemas/route-blend-telemetry';
