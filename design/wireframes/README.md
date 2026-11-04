@@ -83,6 +83,7 @@
 | `console/note-composer.md` · `console/notes-sent.md` · `console/family-notes.md` · `console/notes-hub.md` | R | F-FEEDBACK-001 §6.13, §7.2, §9 (FB-0; built in FB-11a, FB-11b, FB-12; console pages on app.hangulroute.com per F-APP-001) |
 | `billing/billing-home.md` · `checkout-return.md` · `receipts.md` · `step-up.md` · `plan-status.md` | R | F-BILL-002 (supersedes `console/billing.md`; `plan-status` supersedes the body of `paywall/upgrade.md`; page at `/account/billing` inside F-APP-001's frame) |
 | `reports/learner-report.md` · `reports/class-report.md` · `reports/print.md` (console, app.hangulroute.com) · `reports/in-app-report.md` (learner app, behind the grown-up gate); supersede `parent/learner-detail.md` and the web part of `parent/dashboard.md` | R | F-REPORT-001 (RP-0) |
+| `journey/route-class-blend.md` · `parent/route-class-blend.md` · `console/curriculum-wizard.md` section "Meeting" | R | AMENDMENTS-ROUTE-CLASS-BLEND §7, §8, §10, §11 (BL-D: class days and practice days; mocks `design/screens/route-blend/`; built in BL-4, BL-5, BL-7, BL-8, BL-9) |
 
 ### D. App shell — persona sign-in on app.hangulroute.com (F-APP-001)
 | 파일 | 상태 | 스펙 |

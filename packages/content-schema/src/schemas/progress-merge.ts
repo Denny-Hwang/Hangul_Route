@@ -4,10 +4,12 @@ import {
   GoalsSchema,
   PROGRESS_RECORD_MAX,
   capRecord,
+  newestPracticeDays,
   trimDayLog,
   type CellLevel,
   type DayLog,
   type Goals,
+  type PracticeDaysEntry,
   type ProgressSnapshot,
   type StreakLocal,
 } from './progress';
@@ -116,6 +118,16 @@ export function mergeGoals(a: Goals | undefined, b: Goals | undefined): Goals | 
   const order = compareIsoInstant(a.setAt, b.setAt) || a.daily - b.daily || a.weeklyDays - b.weeklyDays;
   const w = order >= 0 ? a : b;
   return { daily: w.daily, weeklyDays: w.weeklyDays, setAt: w.setAt };
+}
+
+/**
+ * `practiceDays` (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-W): entries of both sides by plan, the newest
+ * `updatedAt` winning per plan, at most `PRACTICE_DAYS_MAX` (the newest), in `planId` order. Commutative,
+ * associative and idempotent like the rules above.
+ */
+export function mergePracticeDays(a: readonly PracticeDaysEntry[] | undefined, b: readonly PracticeDaysEntry[] | undefined): PracticeDaysEntry[] | undefined {
+  if (a === undefined && b === undefined) return undefined;
+  return newestPracticeDays([...(a ?? []), ...(b ?? [])]);
 }
 
 /**

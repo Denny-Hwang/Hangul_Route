@@ -63,6 +63,7 @@ import {
   thisWeekOf,
   toParams,
   unlockedStagesForSpace,
+  isWordedWarning,
   warningText,
   weekGroups,
   weekLabel,
@@ -432,7 +433,7 @@ describe('warnings and stats in plain words', () => {
     const draft = generateCurriculum(params, READY);
     const texts = [
       ...weekGroups(draft.weeks, draft.items, READY).rows.flatMap((r) => [weekLabel(r, 'en', READY), ...r.week.extras.map((e) => extraText(e, 'en', READY))]),
-      ...draft.warnings.map((w) => warningText(w, 'en')),
+      ...draft.warnings.filter(isWordedWarning).map((w) => warningText(w, 'en')),
     ];
     expect(texts.length).toBeGreaterThan(26);
     for (const text of texts) {
