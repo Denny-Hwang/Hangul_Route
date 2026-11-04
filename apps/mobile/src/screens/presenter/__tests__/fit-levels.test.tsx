@@ -147,11 +147,12 @@ describe('RealiaSheetStage tight: the same lines at the same width, less room ar
   const draw = (slide: RealiaQuestionBody, tight: boolean): Promise<ReactTestRenderer> =>
     render(atOneUnit(<RealiaSheetStage sheet={slide.prompt.sheet} rom width={512} answer={{ entryId: slide.prompt.answerEntryId, shown: false }} tight={tight} />));
 
-  it('the shipped Stage 6 realia questions carry the four G-2 sheets and three CM-47 kinds, none plain', () => {
+  it('the shipped Stage 6 realia questions carry the four G-2 sheets and four CM-47 kinds, none plain', () => {
     // Row CM-47: the departure board and the trip plan are timetables, the order slip a receipt; row CM-44 S6 (Letters
-    // Volume 2) adds a poster (the Hangeul Day poster) and a timetable (the subway board).
-    expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'poster']));
-    expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'poster', 'plain']));
+    // Volume 2) adds a label (the library card), a poster (the book cover and the Hangeul Day poster) and a timetable
+    // (the subway station board).
+    expect(new Set(shippedKinds.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'label', 'poster']));
+    expect(new Set(sheetsByKind.map((s) => s.prompt.sheet.kind))).toEqual(new Set(['menu', 'ticket', 'sign', 'price-card', 'timetable', 'receipt', 'label', 'poster', 'plain']));
   });
 
   it('a menu: the dressing strip at spacing.sm, not spacing.xl', async () => {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { lessonOccurrences, stage1Occurrences, storyOccurrences, type ItemOccurrence, type LessonSource, type ReviewSymbol, type Stage1Data } from './extract';
+import { lessonOccurrences, stage1Occurrences, storyOccurrences, weekOccurrences, type ItemOccurrence, type LessonSource, type ReviewSymbol, type Stage1Data, type WeekSource } from './extract';
 import { buildReviewItems, vocabIndex, type ReviewItemsBuild, type SenseGroup, type StableIdSnapshot, type TopicWord } from './stable-ids';
 
 /**
@@ -62,6 +62,8 @@ export interface ReviewItemSources {
   lessons: readonly LessonSource[];
   /** The shipped (ready) stories. */
   stories: readonly StorySource[];
+  /** The ready "This week in Korea" drops (row CM-48); none when absent. */
+  weeks?: readonly WeekSource[];
   /** Every topic word of content/vocab/<topic>.json. */
   topicWords: readonly TopicWord[];
   /** content/vocab/_senses.json `groups`. */
@@ -70,16 +72,17 @@ export interface ReviewItemSources {
 }
 
 /**
- * Every occurrence of the three sources: Stage 1, the first-volume lessons, the stories, then a cell's later volumes
- * (F-CURR-002 row CM-40: a later volume is learned after every first volume, so it comes after everything that
+ * Every occurrence of the sources: Stage 1, the first-volume lessons, the stories, the week drops, then a cell's later
+ * volumes (F-CURR-002 row CM-40: a later volume is learned after every first volume, so it comes after everything that
  * shipped before it).
  */
-export function allOccurrences(sources: Pick<ReviewItemSources, 'stage1' | 'lessons' | 'stories'>): ItemOccurrence[] {
+export function allOccurrences(sources: Pick<ReviewItemSources, 'stage1' | 'lessons' | 'stories' | 'weeks'>): ItemOccurrence[] {
   const symbols: readonly ReviewSymbol[] = sources.stage1.symbols;
   return [
     ...(sources.stage1.occurrences as ItemOccurrence[]),
     ...sources.lessons.filter((l) => l.volume === 1).flatMap((l) => lessonOccurrences(l, symbols)),
     ...sources.stories.flatMap((s) => storyOccurrences(s.story, s.file, symbols)),
+    ...(sources.weeks ?? []).flatMap((w) => weekOccurrences(w, symbols)),
     ...sources.lessons.filter((l) => l.volume !== 1).flatMap((l) => lessonOccurrences(l, symbols)),
   ];
 }
