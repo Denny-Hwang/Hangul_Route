@@ -7,8 +7,8 @@ import { resetTransferLockForTests } from '@/lib/console/transfer-lock';
 /**
  * AMENDMENTS-GROWNUP-UX row GX-10, the settings page's wiring (T11, P7): the page reads the space's re-links (always)
  * and, while class moves are shown, its transfers (and a class's teacher moves), and draws the same `attentionModel` as
- * the class roster: the chip next to each learner's name, Move off while that learner's move is open, an action chip that
- * opens the shipped re-link page, and a family learner's class line from the transfer list's options. A read that fails
+ * the class roster: the chip next to each learner's name, Move off while that learner's move is open, a re-link's action chip that
+ * opens the re-link pop-up (GX-D12: the hint, the platform and the request time, never a one-tap approve), and a family learner's class line from the transfer list's options. A read that fails
  * or a method an older bundle lacks adds nothing and never breaks the page.
  */
 vi.mock('@/lib/i18n/locale-context', async () => {
@@ -33,6 +33,7 @@ const state = vi.hoisted(() => ({
   transfers: null as unknown,
   moves: null as unknown,
   calls: [] as string[],
+  decided: [] as Array<{ id: string; approve: boolean }>,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -67,6 +68,11 @@ vi.mock('@/components/console/use-console', async () => {
       state.calls.push('classMoves');
       return state.moves ?? { ok: true, data: { outgoing: [], incoming: [] } };
     },
+    decideRelink: async (_space: string, id: string, approve: boolean) => {
+      state.decided.push({ id, approve });
+      state.relinks = { ok: true, data: [] };
+      return { ok: true, data: {} };
+    },
     billingSummary: async () => ({ ok: false, error: 'network', status: -1 }),
   };
   const session = { accountId: 'acc_1', displayName: 'Mr Han' };
@@ -92,6 +98,7 @@ afterEach(() => {
   state.transfers = null;
   state.moves = null;
   state.calls = [];
+  state.decided = [];
   nav.pushed = [];
 });
 
@@ -132,7 +139,7 @@ const classStartedMoveOut = {
 };
 
 describe('class settings rows (T11)', () => {
-  it('a new device: Needs your OK next to the name, its tap opens the re-link page; the others read In class', async () => {
+  it('a new device: Needs your OK next to the name, its tap opens the re-link pop-up; the others read In class', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.relinks = { ok: true, data: [relink] };
     const root = await renderPage();
@@ -140,7 +147,12 @@ describe('class settings rows (T11)', () => {
     const chip = jaehan.find((n) => n.type === 'button' && n.props['data-testid'] === 'learner-status');
     expect(chip.props['aria-label']).toBe(c.status.chipName(c.status.needsOk, c.status.newDevice(8)));
     act(() => chip.props.onClick());
-    expect(nav.pushed).toEqual(['/teach/space/relink?id=space%3Aa']);
+    // GX-D12: the pop-up with the shipped hint, not a page change and never a one-tap approve.
+    expect(nav.pushed).toEqual([]);
+    const popup = root.find((n) => n.props['data-testid'] === 'relink-popup' && typeof n.type === 'string');
+    expect(textOf(popup)).toContain(c.relinkPopup.title('Jaehan'));
+    expect(textOf(popup)).toContain(c.relinkApproveHint);
+    expect(state.decided).toEqual([]);
     expect(textOf(rowOf(root, 'Mina'))).toContain(c.status.inClass);
     // The learner who needs an answer comes first (the roster's order) and carries the action edge.
     const order = root.findAll((n) => n.type === 'div' && n.props['data-testid'] === 'settings-learner-row').map((r) => r.findAll((n) => n.type === 'strong').map(textOf)[0]);
@@ -149,6 +161,27 @@ describe('class settings rows (T11)', () => {
     expect(rowOf(root, 'Mina').props['data-action']).toBeUndefined();
     // Ids only in the address, never a name.
     for (const href of nav.pushed) expect(href).not.toMatch(/Jaehan|Mina/);
+  });
+
+  it('the pop-up: Later closes it and keeps the chip; Approve answers, says so on the page and drops the chip', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.relinks = { ok: true, data: [relink] };
+    const root = await renderPage();
+    const chipOf = () => rowOf(root, 'Jaehan').findAll((n) => n.type === 'button' && n.props['data-testid'] === 'learner-status');
+    const popups = () => root.findAll((n) => n.props['data-testid'] === 'relink-popup' && typeof n.type === 'string');
+    act(() => chipOf()[0]!.props.onClick());
+    act(() => root.find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-popup-later').props.onClick());
+    expect(popups()).toHaveLength(0);
+    expect(chipOf()).toHaveLength(1);
+    act(() => chipOf()[0]!.props.onClick());
+    await act(async () => {
+      root.find((n) => n.type === 'button' && n.props['data-testid'] === 'relink-popup-approve').props.onClick();
+    });
+    await act(async () => undefined);
+    expect(state.decided).toEqual([{ id: 'relink:j', approve: true }]);
+    expect(popups()).toHaveLength(0);
+    expect(textOf(root.find((n) => n.props['data-testid'] === 'settings-relink-line'))).toContain('Jaehan');
+    expect(chipOf()).toHaveLength(0);
   });
 
   it("a learner's open move: Move is off with the reason; the other learner's Move works", async () => {

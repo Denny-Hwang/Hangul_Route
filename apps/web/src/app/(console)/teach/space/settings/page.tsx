@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
 import { FamilyStartFlow } from '@/components/console/FamilyTransferParts';
 import { NoteSendersPanel } from '@/components/console/FamilyNotesParts';
+import { RelinkPopup } from '@/components/console/RelinkPopup';
 import { TeacherMoveSheet } from '@/components/console/TeacherMoveSheet';
 import { TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, LoadErrorPanel, Notice } from '@/components/console/ui';
@@ -80,6 +81,10 @@ function SettingsInner(): JSX.Element {
   const [transferList, setTransferList] = useState<TransferView[] | null>(null);
   const [classMoveLists, setClassMoveLists] = useState<ClassMoveLists | null>(null);
   const [optionsRead, setOptionsRead] = useState(false);
+  // GX-D2, GX-D12: a re-link's action chip opens the re-link pop-up (hint, platform, request time), never a one-tap
+  // approve; the learner whose request it is, and the line a settled answer leaves on the page.
+  const [relinkFor, setRelinkFor] = useState<{ id: string; name: string } | null>(null);
+  const [relinkLine, setRelinkLine] = useState<string | null>(null);
   // F-BILL-002 B-12: the billing summary read, so the archive confirm can name the plan it affects; null = no line.
   const billingRead = useRef<Promise<BillingSummary | null> | null>(null);
   const asking = useRef(false);
@@ -225,6 +230,9 @@ function SettingsInner(): JSX.Element {
       : undefined;
   // P7: a family learner's classes, only when the options were read (never "Family only" on a guess).
   const familyClasses = optionsRead ? new Map(moveOptions.map((o) => [o.learnerId, o.classes.map((k) => k.name)] as const)) : null;
+  // The dialog shows only while its learner still has a re-link waiting (a poll that finds it closed takes it away).
+  const popupStatus = relinkFor ? statuses?.[relinkFor.id] : undefined;
+  const popupRelink = popupStatus?.kind === 'relink' ? (popupStatus.relink ?? null) : null;
   const schoolAdmin = space?.kind === 'school' && members.some((mb) => mb.memberKind === 'account' && mb.memberId === session.accountId && mb.role === 'admin' && !mb.isOwner);
 
   return (
@@ -232,6 +240,11 @@ function SettingsInner(): JSX.Element {
       {confirmSheet}
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
+      {relinkLine ? (
+        <div role="status" data-testid="settings-relink-line">
+          <Notice tone="info">{relinkLine}</Notice>
+        </div>
+      ) : null}
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
       {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
       {teacherMoveLine ? <Notice tone="success">{teacherMoveLine}</Notice> : null}
@@ -258,8 +271,16 @@ function SettingsInner(): JSX.Element {
             schoolAdmin={schoolAdmin}
             statuses={statuses}
             familyClasses={familyClasses}
-            // An action chip opens the decision for that item on its shipped page (ids only in the address).
-            onOpenStatus={(status) => router.push(status.kind === 'relink' ? ROUTES.spaceRelink(spaceId, space.kind) : ROUTES.spaceTransfers(spaceId, space.kind))}
+            // An action chip opens the decision for that item: the re-link pop-up (GX-D12), else the moves page (ids only
+            // in the address).
+            onOpenStatus={(status, learner) => {
+              if (status.kind === 'relink' && status.relink) {
+                setRelinkLine(null);
+                setRelinkFor(learner);
+                return;
+              }
+              router.push(status.kind === 'relink' ? ROUTES.spaceRelink(spaceId, space.kind) : ROUTES.spaceTransfers(spaceId, space.kind));
+            }}
             deleteTarget={deleteTarget}
             typedName={typedName}
             onRegenerate={() => {
@@ -322,6 +343,25 @@ function SettingsInner(): JSX.Element {
             }
           />
           {archived ? <Button onClick={() => router.push(personaHome(personaOfKind(space.kind)))}>{s.backToConsole.cta}</Button> : null}
+          {popupRelink && relinkFor ? (
+            <RelinkPopup
+              api={api}
+              spaceId={spaceId}
+              request={popupRelink}
+              learnerName={relinkFor.name}
+              online={online}
+              now={now}
+              onLater={() => setRelinkFor(null)}
+              onResult={(text, settled) => {
+                // A failure that leaves the request open stays in the dialog, under its buttons; a settled answer closes
+                // it, says the result on the page and reads the re-links again so the chip drops.
+                if (!settled) return;
+                setRelinkFor(null);
+                setRelinkLine(text);
+                void readRelinks();
+              }}
+            />
+          ) : null}
           {moving && movesShown && space.kind === 'class' && !archived ? (
             <TeacherMoveSheet
               spaceId={spaceId}

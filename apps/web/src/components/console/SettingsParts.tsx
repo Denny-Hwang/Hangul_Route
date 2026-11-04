@@ -62,8 +62,8 @@ export interface SettingsSectionsProps {
    * open move turns that learner's Move off with the reason. Absent (a school, a read not made): no chip.
    */
   statuses?: Readonly<Record<string, LearnerStatus>>;
-  /** GX-10: an action chip's tap (Needs your OK) opens the decision for that item. */
-  onOpenStatus?: (status: LearnerStatus) => void;
+  /** GX-10: an action chip's tap (Needs your OK) opens the decision for that item, for this learner (id and name). */
+  onOpenStatus?: (status: LearnerStatus, learner: { id: string; name: string }) => void;
   /**
    * GX-10 (P7, section 7.2): a family's learners' class names, from the family's transfer list `options`. null or absent:
    * the read was skipped or failed, so no class line at all (never "Family only" on a guess); a learner missing from the
@@ -218,7 +218,7 @@ export function SettingsSections({
               <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xxs, minWidth: 0, flex: '1 1 12em' }}>
                 <span data-testid="settings-learner-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }}>
                   <strong style={{ overflowWrap: 'anywhere' }}>{l.name}</strong>
-                  {words ? <StatusChip words={words} onActivate={status && onOpenStatus ? () => onOpenStatus(status) : undefined} /> : null}
+                  {words ? <StatusChip words={words} onActivate={status && onOpenStatus ? () => onOpenStatus(status, { id: l.memberId, name: l.name }) : undefined} /> : null}
                 </span>
                 <span style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}>
                   {classes ? `${classLine(classes, c.parentHome.classLine)} · ` : null}

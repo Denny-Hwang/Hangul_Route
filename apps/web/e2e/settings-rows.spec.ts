@@ -178,6 +178,18 @@ for (const { locale, browser } of LOCALES) {
         await page.getByRole('heading', { name: c.settings.learners.title.class }).scrollIntoViewIfNeeded();
         await page.screenshot({ path: test.info().outputPath(`settings-rows-class-${locale}-${label}.png`), fullPage: true });
         if (label === '360') await noSidewaysScroll(page);
+        // GX-D12: the chip opens the re-link pop-up (the hint, the platform, the time), never a page change or a one-tap
+        // approve; Later closes it and the chip stays.
+        await jaehan.getByRole('button', { name: c.status.chipName(c.status.needsOk, c.status.newDevice(8)) }).click();
+        const popup = page.getByTestId('relink-popup');
+        await expect(popup).toBeVisible();
+        await expect(popup.getByTestId('relink-popup-hint')).toHaveText(c.relinkApproveHint);
+        await expect(page).toHaveURL(/\/teach\/space\/settings\?id=space%3Aa$/);
+        await page.screenshot({ path: test.info().outputPath(`settings-rows-class-popup-${locale}-${label}.png`) });
+        if (label === '360') await noSidewaysScroll(page);
+        await page.getByTestId('relink-popup-later').click();
+        await expect(popup).toHaveCount(0);
+        await expect(jaehan.getByRole('button', { name: c.status.chipName(c.status.needsOk, c.status.newDevice(8)) })).toBeVisible();
       });
 
       test(`${label}: family rows: the class line, no default chip; Invite another grown-up copies the code`, async ({ page }) => {
