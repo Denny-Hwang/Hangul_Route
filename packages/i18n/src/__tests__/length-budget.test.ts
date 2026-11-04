@@ -115,10 +115,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.mastery.level.done': '"Terminado" (9) against "Done" (4), one letter over the 8-character floor: the report\'s level word ("1 terminado"); drawn only in a line that wraps (the level-up banner) and read in a cell label',
   // AMENDMENTS-GROWNUP-UX GX-1 (section 10.1, the one date order of the PR #917 review): status chips beside a learner's name.
   'console.status.moving': '"Cambia de clase el {date}" against "Moving {date}": Spanish needs the verb phrase and its article before a date; a chip that wraps under the name on a phone',
-  // AMENDMENTS-GROWNUP-UX GX-2 (section 10.1): the banner's second line, the sheet's first heading and the pop-up's Later.
+  // AMENDMENTS-GROWNUP-UX GX-2 (section 10.1): the banner's second line and the sheet's first heading.
   'console.attention.devices': '"1 dispositivo nuevo" (19) against "1 new device" (12): the Spanish noun and its adjective; the banner\'s second line wraps under its title',
   'console.attention.devicesHeading': '"Dispositivos nuevos" (19) against "New devices" (11): the same noun and adjective; a section heading of the review sheet that wraps',
-  'console.relinkPopup.later.cta': 'the standard Spanish button word "Más tarde" (9) against "Later" (5), one letter over the 8-character floor, inside the 28-character cta budget; the pop-up buttons wrap',
   'console.status.new': '"Nueva llegada" (13) against "New" (3): a bare "Nuevo/Nueva" would take the learner\'s gender; the noun keeps the chip neutral, and it wraps under the name on a phone',
   // GX-1 (section 5.3): the re-link pop-up's put-off button; "Luego" reads as "then", so the two-word "Más tarde" is the one Spanish word for Later.
   'console.relinkPopup.later.cta': '"Más tarde" (9) against "Later" (5), one letter over the 8-character floor: a pop-up button drawn at its own width beside Approve and Deny, which wrap on a phone',
