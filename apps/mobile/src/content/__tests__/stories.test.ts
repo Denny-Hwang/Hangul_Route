@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { EpisodeSchema, MinigameKindSchema, QuestSchema, parseStory } from '@hangul-route/content-schema';
 import { buildBundle } from '../../../../../scripts/build-stories.mjs';
-import { episodesAll } from '../episodes';
+import { episodesAll, isVolumeTwoShelf, volumeEpisodes } from '../episodes';
 import { questsAll } from '../quests';
 import { parseStoryMinigameRef, storyIdOfQuest } from '../../logic/story/story-ref';
 import { storiesAll, storyById, storyEpisodes, storyFixtureIds, storyQuests, storySlug } from '../stories';
@@ -31,7 +31,8 @@ describe('stories bundle wiring (F-STORY-001 PR 1.4)', () => {
   });
 
   it('every shelf episode is appended to episodesAll, every story quest to questsAll', () => {
-    for (const e of storyEpisodes) expect(episodesAll).toContain(e);
+    // A book 2 tale's shelf episode is a later volume instead (F-CURR-002 row CM-46), shown only while `volumes` is on.
+    for (const e of storyEpisodes) expect(isVolumeTwoShelf(e) ? volumeEpisodes : episodesAll).toContain(e);
     for (const q of storyQuests) expect(questsAll).toContain(q);
   });
 

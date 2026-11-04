@@ -139,13 +139,14 @@ describe('the shipped catalogue data', () => {
     // + My Favorite Animal (S7-4): +3 lesson quests.
     // + Make & Share (S7-5): +3 lesson quests.
     // + the Stage 1 addition of F-CURR-002 row CM-33: +1 lesson quest.
-    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(108);
+    // + the Nature book 2 of F-CURR-002 row CM-46 (a later volume): +3 read quests.
+    expect(CATALOG.quests.filter((q) => q.kind === 'lesson')).toHaveLength(111);
   });
 
-  it('has 24 stories adding up to 112 minutes, each with a listen quest on its shelf episode', () => {
-    expect(CATALOG.stories).toHaveLength(24);
-    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(112);
-    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(24);
+  it('has 27 stories adding up to 127 minutes, each with a listen quest on its shelf episode (the 24 and the Nature book 2 tales, row CM-46)', () => {
+    expect(CATALOG.stories).toHaveLength(27);
+    expect(CATALOG.stories.reduce((sum, s) => sum + s.minutes, 0)).toBe(127);
+    expect(CATALOG.quests.filter((q) => q.kind === 'story')).toHaveLength(27);
     for (const story of CATALOG.stories) {
       const slug = story.id.slice('story:'.length);
       expect(story.questId).toBe(`quest:story-${slug}-listen`);
@@ -158,8 +159,10 @@ describe('the shipped catalogue data', () => {
     }
   });
 
-  it('numbers the stories 1 to 24 and marks the six free samplers and the three anchors', () => {
-    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 24 }, (_, i) => i + 1));
+  it('numbers the stories 1 to 27 and marks the six free samplers and the three anchors', () => {
+    expect(CATALOG.stories.map((s) => s.order)).toEqual(Array.from({ length: 27 }, (_, i) => i + 1));
+    // A later story takes the next shelf place in addedIn order (F-CURR-002 §9.1): the three Nature book 2 tales follow the 24.
+    expect(CATALOG.stories.slice(24).map((s) => s.id)).toEqual(['story:jeju-volcanic-island', 'story:jirisan-national-park', 'story:suncheon-bay-wetland']);
     expect(CATALOG.stories.filter((s) => s.sampler).map((s) => s.id)).toEqual([
       'story:sejong-new-letters',
       'story:hangeul-day',
@@ -176,9 +179,10 @@ describe('the shipped catalogue data', () => {
     ]);
   });
 
-  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9)', () => {
-    expect(CATALOG.stories).toHaveLength(24);
-    expect(CATALOG.stories.every((s) => s.status === 'ready')).toBe(true);
+  it('offers every story since PR 1.9 added the shelf blocks and both review sign-offs (F-STORY-001 PR 1.9), but not a book 2 tale (row CM-46)', () => {
+    expect(CATALOG.stories.slice(0, 24).every((s) => s.status === 'ready')).toBe(true);
+    // A tale only a later volume holds is never offered by the console (row CM-40 keeps later volumes off the lecture route).
+    expect(CATALOG.stories.slice(24).map((s) => s.status)).toEqual(['draft', 'draft', 'draft']);
   });
 
   it('has the 12 launch topics in order, the first four free, none with a quest yet', () => {
@@ -547,10 +551,14 @@ describe('routeCatalogOf', () => {
       'quest:stage7-crafts-q1',
       'quest:stage7-crafts-q2',
       'quest:stage7-crafts-q3',
+      // F-CURR-002 row CM-46: the Nature cell's book 2, a later volume, after every first volume.
+      'quest:story-jeju-volcanic-island-read',
+      'quest:story-jirisan-national-park-read',
+      'quest:story-suncheon-bay-wetland-read',
     ]);
     expect(route.quests.slice(0, lessons.length).every((q) => q.grid)).toBe(true);
     const stories = route.quests.filter((q) => !q.grid);
-    expect(stories).toHaveLength(24);
+    expect(stories).toHaveLength(27);
     expect(stories.map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 

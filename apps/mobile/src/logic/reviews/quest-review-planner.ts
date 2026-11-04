@@ -1,6 +1,7 @@
 import type { UiLocale } from '@hangul-route/content-schema';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import { episodeById, episodesAll, questsAll } from '../../content';
+import { storyCellVolume } from '../../content/books';
 import { lessonContent } from '../../content/lessons';
 import { journeyContent } from '../../content/sync-context';
 import { useAudioStore } from '../../store/audio-store';
@@ -58,6 +59,8 @@ async function contextFor(read: ReviewInputs, profileId: string): Promise<Engine
       pack: (key) => currFlagOn(`pack.${key}`, profileId),
       // Row CM-48: an item whose only source is a hidden week drop is skipped.
       weeklyDrop: currFlagOn('weeklyDrop', profileId),
+      // Row CM-46: a story that only a book 2 adds is Volume 2 content.
+      cellVolume: storyCellVolume,
     },
   };
 }

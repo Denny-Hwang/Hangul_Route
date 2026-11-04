@@ -15,7 +15,7 @@ const SCRIPT = join(REPO, "scripts", "build-lecture-catalogue.mjs");
 const OUT_REL = join("apps", "web", "src", "data", "lecture-catalogue.generated.ts");
 const TITLES_OUT_REL = join("apps", "web", "src", "data", "catalogue-titles.generated.ts");
 
-const { GENERATED_HEADER, STORIES_IN_LECTURE, TITLES_HEADER, TITLE_ID_RE, buildCatalogue, buildTitles, isListedStory, renderCatalogue, renderTitles } = await import(SCRIPT);
+const { GENERATED_HEADER, STORIES_IN_LECTURE, TITLES_HEADER, TITLE_ID_RE, buildCatalogue, buildTitles, isBookTwoTale, isListedStory, renderCatalogue, renderTitles } = await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -110,6 +110,21 @@ describe("lecture catalogue shaping (F-TCH-004 §3.11)", () => {
     });
     assert.deepEqual(model.stories, [{ id: "story:sun-moon", titleEn: "The Sun and the Moon", minutes: 5 }]);
     assert.deepEqual(model.topics, [{ id: "vocab-topic:food", titleEn: "Food", words: 3 }]);
+  });
+
+  test("a book 2 tale (its read quest hand-stamped, F-CURR-002 row CM-46) is never listed on its own", () => {
+    const handStamps = { "quest:story-jeju-volcanic-island-read": 20261105, "quest:stage1-crafts-q4": 20261028 };
+    assert.equal(isBookTwoTale("story:jeju-volcanic-island", handStamps), true);
+    assert.equal(isBookTwoTale("story:sun-moon", handStamps), false);
+    const model = buildCatalogue({
+      stories: [
+        { name: "b.json", json: story("sun-moon", "The Sun and the Moon") },
+        { name: "j.json", json: story("jeju-volcanic-island", "Jeju, the Island Volcanoes Made") },
+      ],
+      topicFiles: [],
+      handStamps,
+    });
+    assert.deepEqual(model.stories, [{ id: "story:sun-moon", titleEn: "The Sun and the Moon", minutes: 5 }]);
   });
 
   test("with the gate off, stories stay out but story files are still shaped", () => {

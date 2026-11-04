@@ -99,14 +99,24 @@ export function isListedStory(story) {
   return story.state === "ready" && story.review?.language === "native-reviewed" && story.review?.culture === "culture-reviewed";
 }
 
-export function buildCatalogue({ stories, topicFiles, storiesInLecture = STORIES_IN_LECTURE }) {
+/**
+ * F-CURR-002 row CM-46: a book 2 tale, a story whose read quest is stamped by hand in the catalogue
+ * (`packages/content-schema/src/catalog/hand-stamps.json`, where a Stage 5 book 2 stamps its quests). Its book is a
+ * later volume, which the presenter's chooser offers only while `volumes` is on, so the console never lists the tale on
+ * its own (the catalogue does not offer it either: `catalog/data.ts` gives it status draft).
+ */
+export function isBookTwoTale(id, handStamps) {
+  return Object.prototype.hasOwnProperty.call(handStamps, `quest:story-${String(id).replace(/^story:/, "")}-read`);
+}
+
+export function buildCatalogue({ stories, topicFiles, storiesInLecture = STORIES_IN_LECTURE, handStamps = {} }) {
   const listedStories = [];
   for (const { name, json } of stories) {
     if (!isObject(json)) throw new ContentError(`${name}: a story file must hold one JSON object`);
     const id = str(json, "id", name);
     const titleEn = str(json.title, "en", `${name}: title`);
     const minutes = num(json, "minutes", name);
-    if (storiesInLecture && isListedStory(json)) listedStories.push({ id, titleEn, minutes });
+    if (storiesInLecture && isListedStory(json) && !isBookTwoTale(id, handStamps)) listedStories.push({ id, titleEn, minutes });
   }
   // An explicit "en": the output is not committed, so the runtime's default locale must not decide it.
   listedStories.sort((a, b) => a.titleEn.localeCompare(b.titleEn, "en") || a.id.localeCompare(b.id, "en"));
@@ -222,6 +232,12 @@ function readOverlays(root) {
     .flatMap((locale) => readDir(root, ["content", "i18n", locale], () => true).map((file) => ({ locale, ...file })));
 }
 
+/** The catalogue's hand stamps (row CM-6); `{}` where the file is absent (a fixture root). */
+function readHandStamps(root) {
+  const file = join(root, "packages", "content-schema", "src", "catalog", "hand-stamps.json");
+  return existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
+}
+
 const USAGE = "Usage: node scripts/build-lecture-catalogue.mjs [--check]";
 
 export function main(argv, root) {
@@ -240,6 +256,7 @@ export function main(argv, root) {
     const model = buildCatalogue({
       stories: readDir(root, ["content", "stories"], () => true),
       topicFiles: readDir(root, ["content", "vocab"], (name) => !name.startsWith("_")),
+      handStamps: readHandStamps(root),
     });
     const titles = buildTitles({ overlayFiles: readOverlays(root) });
     outputs = [

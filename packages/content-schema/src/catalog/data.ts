@@ -1,5 +1,5 @@
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
-import { assembleCatalog, expandCellRows, type StoryShelfEntry } from './assemble';
+import { assembleCatalog, expandCellRows, type CatalogVolumeSource, type StoryShelfEntry } from './assemble';
 import { GENERATED_CATALOG_VERSION, GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from './catalog.generated';
 import type { Catalog, CatalogCell, CatalogQuest } from './schema';
 
@@ -76,6 +76,39 @@ const lesson = (
   teaches: string[] = [],
 ): CatalogQuest => ({ id: `quest:${id}`, episodeId: `episode:${stage}-${theme}`, stage, theme, title, minutes, teaches, kind: 'lesson' });
 
+/**
+ * F-CURR-002 row CM-46: the Nature cell's book 2 (`episode:stage5-nature-v2`, `books.ts`), a later volume of the cell
+ * on the CM-40 path, so it is off the route days and shows only while `volumes` is on. Its quests are the read quests
+ * of its three new tales (Jeju's volcanic island and lava tubes, Jirisan National Park and the Suncheon Bay wetland),
+ * in book order (`catalog-parity.test.ts` holds them equal); each is stamped in hand-stamps.json.
+ */
+const NATURE_BOOK2 = 'episode:stage5-nature-v2';
+const natureBook2Quest = (slug: string, title: string, minutes: number): CatalogQuest => ({
+  ...lesson(`story-${slug}-read`, 'stage5', 'nature', title, minutes),
+  episodeId: NATURE_BOOK2,
+});
+const NATURE_BOOK2_QUESTS: CatalogQuest[] = [
+  natureBook2Quest('jeju-volcanic-island', 'Jeju, the Island Volcanoes Made', 5),
+  natureBook2Quest('jirisan-national-park', "Jirisan, Korea's First National Park", 5),
+  natureBook2Quest('suncheon-bay-wetland', 'Suncheon Bay, Where Migrating Birds Come', 5),
+];
+/**
+ * The book 2 tales (stories only a later volume holds): the catalogue never offers them as stories (status `draft`), so
+ * the console's chooser and the lecture presets leave them out, as row CM-40 keeps a later volume off the lecture route.
+ * The app shows them, and their shelf episodes, only while `volumes` is on (`books.ts`, `episodes.ts`).
+ */
+const NATURE_BOOK2_TALES: ReadonlySet<string> = new Set(NATURE_BOOK2_QUESTS.map((q) => q.id.replace(/^quest:story-/, '').replace(/-read$/, '')));
+const natureVolumes: CatalogVolumeSource[] = [
+  {
+    cellId: 'episode:stage5-nature',
+    episodeId: NATURE_BOOK2,
+    volume: 2,
+    title: 'Island, Mountain and Wetland',
+    minutes: NATURE_BOOK2_QUESTS.reduce((sum, q) => sum + q.minutes, 0),
+    questIds: NATURE_BOOK2_QUESTS.map((q) => q.id),
+  },
+];
+
 /** The hand-written cells: Stage 1 (TypeScript quests) and the Stage 5 books (`books.ts`). */
 const handCells: CatalogCell[] = [
   cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
@@ -150,6 +183,8 @@ const handLessonQuests: CatalogQuest[] = [
   lesson('story-cheugugi-rain-gauge-read', 'stage5', 'crafts', 'The Bowl That Measured the Rain', 4),
   lesson('story-jagyeongnu-water-clock-read', 'stage5', 'crafts', 'Jang Yeongsil and the Clock That Rang by Itself', 5),
   lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): book 2 of the Nature cell (`books.ts`), on its own episode.
+  ...NATURE_BOOK2_QUESTS,
 ];
 
 /**
@@ -190,10 +225,10 @@ const generated = expandCellRows(GENERATED_LESSON_CELL_ROWS);
 export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
   cells: [...handCells, ...generated.cells],
-  // F-CURR-002 row CM-40: the Volume 2 of a cell (none until a Volume 2 content row ships).
-  volumes: generated.volumes,
+  // F-CURR-002 row CM-40: the Volume 2 of a cell; row CM-46 adds the Nature cell's book 2.
+  volumes: [...generated.volumes, ...natureVolumes],
   lessonQuests: [...handLessonQuests, ...generated.quests],
-  stories: GENERATED_STORIES,
+  stories: GENERATED_STORIES.map((row) => (NATURE_BOOK2_TALES.has(row.slug) ? { ...row, status: 'draft' as const } : row)),
   storyShelf: STORY_SHELF,
   topics: GENERATED_TOPICS,
   // F-VOC-001 section 3.3: twelve launch topics, the first four free (D5), five minutes each.

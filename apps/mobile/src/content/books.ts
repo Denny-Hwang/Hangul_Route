@@ -78,6 +78,19 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:sun-and-moon', 'story:angbuilgu-sundial'],
     pillarTags: ['D5', 'E5'],
   },
+  // F-CURR-002 §5.5 S5, row CM-46: the Nature cell's book 2, three new readers about Korea's nature (a volcanic island,
+  // the first national park and a wetland of migrating birds). Volume 2, so it shows only while `volumes` is on.
+  {
+    id: 'episode:stage5-nature-v2',
+    stage: 'stage5',
+    theme: 'nature',
+    order: 4,
+    titleEn: 'Island, Mountain and Wetland',
+    hoyaIntroEn: "Let's read stories of Korea's island, mountain and wetland in Korean, one short sentence at a time.",
+    storyIds: ['story:jeju-volcanic-island', 'story:jirisan-national-park', 'story:suncheon-bay-wetland'],
+    pillarTags: ['D2'],
+    volume: 2,
+  },
   {
     id: 'episode:stage5-crafts',
     stage: 'stage5',
@@ -149,3 +162,26 @@ export const bookEpisodes: Episode[] = built.map((b) => b.episode);
 
 /** The Read quests of every shipped book, in book order (`questsAll` appends them). */
 export const bookQuests: Quest[] = built.flatMap((b) => b.quests);
+
+/**
+ * The volume of a story cell (`story:<slug>`) for the review engine's visibility (F-CURR-002 §4.3, row CM-46): a story
+ * that a book 2 adds, in no book 1 and added after the first 24 stories (it carries `addedIn`), is Volume 2 content, so
+ * its items hide while `volumes` is off. Every other story, the read-tier stories that join a book 2 included, stays
+ * book 1 (undefined: the engine reads the cell id, which carries no volume).
+ */
+const BOOK1_STORY_IDS = new Set(BOOK_DEFINITIONS.filter((d) => (d.volume ?? 1) === 1).flatMap((d) => d.storyIds));
+const BOOK2_STORY_IDS = new Set(BOOK_DEFINITIONS.filter((d) => (d.volume ?? 1) >= 2).flatMap((d) => d.storyIds));
+
+/**
+ * The stories that only a book 2 holds and that were added after the first 24 (F-CURR-002 §4.3, §5.1, row CM-46): new
+ * tales that are Volume 2 content. Their shelf episodes are later volumes too (`episodes.ts`), so every door to them
+ * shows only while `volumes` is on.
+ */
+export const VOLUME_TWO_STORY_IDS: ReadonlySet<string> = new Set(
+  [...BOOK2_STORY_IDS].filter((id) => !BOOK1_STORY_IDS.has(id) && storyById(id)?.addedIn !== undefined),
+);
+
+export function storyCellVolume(cell: string, lookup: (id: string) => Story | undefined = storyById): number | undefined {
+  if (!BOOK2_STORY_IDS.has(cell) || BOOK1_STORY_IDS.has(cell)) return undefined;
+  return lookup(cell)?.addedIn === undefined ? undefined : 2;
+}

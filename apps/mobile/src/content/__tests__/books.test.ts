@@ -7,8 +7,8 @@ import {
   QuestSchema,
   type Story,
 } from '@hangul-route/content-schema';
-import { BOOK_DEFINITIONS, bookEpisodes, bookQuests, buildBook } from '../books';
-import { episodesAll, episodeById, episodesFor } from '../episodes';
+import { BOOK_DEFINITIONS, VOLUME_TWO_STORY_IDS, bookEpisodes, bookQuests, buildBook, storyCellVolume } from '../books';
+import { episodesAll, episodeById, episodesFor, episodesWithVolumes, volumeEpisodes } from '../episodes';
 import { questsAll } from '../quests';
 import { storiesAll, storyById, storyQuests } from '../stories';
 import { completeStages, stagesToLatch, withStageLatches } from '../../logic/my-route/latch';
@@ -17,12 +17,14 @@ import { STORY_QUEST_COPY, STORY_STEP_SECONDS, storyQuestSkeleton } from '../sto
 
 /** F-STORY-005 §3.2 "Books", §3.3 book plan, PR 5.6. */
 describe('Stage 5 books (books.ts)', () => {
-  it('ships all five Stage 5 books in grid order, each with its placeholder id, its planned title and stories (§3.3 book plan)', () => {
+  it('ships all five Stage 5 books in grid order, each with its placeholder id, its planned title and stories (§3.3 book plan), and the Nature book 2', () => {
     expect(bookEpisodes.map((e) => [e.id, e.order, e.titleEn, e.storyIds])).toEqual([
       ['episode:stage5-letters', 1, 'Stories of Letters', ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day']],
       ['episode:stage5-life', 2, 'Family Stories', ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam']],
       ['episode:stage5-rites', 3, 'Festival Tales', ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae']],
       ['episode:stage5-nature', 4, 'Nature Tales', ['story:sun-and-moon', 'story:angbuilgu-sundial']],
+      // F-CURR-002 row CM-46: the Nature cell's book 2, its three new tales.
+      ['episode:stage5-nature-v2', 4, 'Island, Mountain and Wetland', ['story:jeju-volcanic-island', 'story:jirisan-national-park', 'story:suncheon-bay-wetland']],
       ['episode:stage5-crafts', 5, 'Craft Stories', ['story:cheugugi-rain-gauge', 'story:jagyeongnu-water-clock', 'story:pansori-tales']],
     ]);
   });
@@ -33,6 +35,7 @@ describe('Stage 5 books (books.ts)', () => {
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
       'episode:stage5-nature': ['D5', 'E5'],
+      'episode:stage5-nature-v2': ['D2'],
       'episode:stage5-crafts': ['E3', 'C3'],
     });
     for (const book of bookEpisodes) {
@@ -43,7 +46,8 @@ describe('Stage 5 books (books.ts)', () => {
 
   it.each(bookEpisodes.map((e) => [e.id, e] as const))('%s is a valid grid story book of its Stage 5 cell', (_id, book) => {
     expect(EpisodeSchema.safeParse(book).success).toBe(true);
-    expect(book.id).toBe(`episode:${book.stage}-${book.theme}`);
+    // Book 1 keeps its placeholder id; a book 2 is the cell's Volume 2 (F-CURR-002 row CM-40).
+    expect(book.id).toBe(`episode:${book.stage}-${book.theme}${(book.volume ?? 1) > 1 ? `-v${book.volume}` : ''}`);
     expect(book.stage).toBe(BOOK_STAGE);
     expect(book.format).toBe('story');
     expect(book.placement).toBe('grid');
@@ -68,7 +72,8 @@ describe('Stage 5 books (books.ts)', () => {
         expect(s.review.reviewedBy).toBe('MAR');
         expect(s.tiers.some((t) => t.level === 'read')).toBe(true);
         expect(s.shelf).toBeDefined();
-        expect(episodesAll.some((e) => e.placement === 'shelf' && e.id === `episode:shelf-${id.replace(/^story:/, '')}`)).toBe(true);
+        // A book 2 tale's shelf twin is a later volume too (row CM-46): in episodesWithVolumes, never on the route's list.
+        expect(episodesWithVolumes.some((e) => e.placement === 'shelf' && e.id === `episode:shelf-${id.replace(/^story:/, '')}`)).toBe(true);
         // Both review passes of the read tier are on record.
         expect(s.verification.notes).toMatch(/MAR \d{4}-\d{2}-\d{2} language review of the read tier/);
         expect(s.verification.notes).toMatch(/MAR \d{4}-\d{2}-\d{2} culture review of the read tier/);
@@ -79,7 +84,8 @@ describe('Stage 5 books (books.ts)', () => {
   it('a book replaces its placeholder and its quests are in the quest list', () => {
     for (const book of bookEpisodes) {
       expect(episodeById(book.id)).toBe(book);
-      expect(episodesAll.filter((e) => e.id === book.id)).toHaveLength(1);
+      // A book 2 is a later volume (row CM-40): in episodesWithVolumes, never in the route's episodesAll.
+      expect(((book.volume ?? 1) === 1 ? episodesAll : volumeEpisodes).filter((e) => e.id === book.id)).toHaveLength(1);
       for (const questId of book.questIds) expect(questsAll.some((q) => q.id === questId)).toBe(true);
     }
     expect(bookQuests.map((q) => q.id)).toEqual(bookEpisodes.flatMap((e) => e.questIds));
@@ -227,7 +233,8 @@ describe('storyQuestSkeleton (story-skeleton.ts)', () => {
 
 /** F-STORY-005 PR 5.6: with all five books shipped, Stage 5 is `open` and can complete (F-ROUTE-001 OD-6 latch). */
 describe('Stage 5 completion on the shipped bundle', () => {
-  const stage5Quests = bookEpisodes.flatMap((e) => e.questIds);
+  // Stage completion reads each cell's first volume (F-STORY-005 PR 5.8), so the Nature book 2 is not needed.
+  const stage5Quests = bookEpisodes.filter((e) => (e.volume ?? 1) === 1).flatMap((e) => e.questIds);
   const NOW = new Date('2026-10-13T09:00:00.000Z');
   const episodeOf = new Map(bookEpisodes.flatMap((e) => e.questIds.map((q) => [q, e.id] as const)));
   /** The fixture helper guesses episode ids from quest ids; a book quest names its book. */
@@ -245,5 +252,36 @@ describe('Stage 5 completion on the shipped bundle', () => {
     expect(latched.stageDoneAt).toEqual({ stage5: NOW.toISOString() });
     expect(stagesToLatch(latched, episodesAll)).toEqual([]);
     expect([...completeStages(latched, episodesAll)]).toEqual(['stage5']);
+  });
+});
+
+describe('the Nature book 2 behind volumes (F-CURR-002 §4.3, row CM-46)', () => {
+  const lookup = (id: string): Story | undefined => storyById(id);
+  const TALES = ['story:jeju-volcanic-island', 'story:jirisan-national-park', 'story:suncheon-bay-wetland'];
+
+  it('is a later volume: the book and the shelf episodes of its tales are in volumeEpisodes only, never on the route list', () => {
+    expect([...VOLUME_TWO_STORY_IDS].filter((id) => TALES.includes(id))).toEqual(TALES);
+    expect(volumeEpisodes.map((e) => e.id)).toEqual(expect.arrayContaining(['episode:stage5-nature-v2', ...TALES.map((id) => `episode:shelf-${id.slice('story:'.length)}`)]));
+    for (const id of ['episode:stage5-nature-v2', ...TALES.map((t) => `episode:shelf-${t.slice('story:'.length)}`)]) {
+      expect(episodesAll.some((e) => e.id === id), id).toBe(false);
+    }
+    // With volumes off the cell shows its book 1 alone.
+    expect(episodesFor('stage5', 'nature', episodesAll).map((e) => e.id)).toEqual(['episode:stage5-nature']);
+    expect(episodesFor('stage5', 'nature', episodesWithVolumes).map((e) => e.id)).toEqual(['episode:stage5-nature', 'episode:stage5-nature-v2']);
+  });
+
+  it('marks its tales Volume 2 for the review engine, and no shipped story of a book 1', () => {
+    for (const id of TALES) expect(storyCellVolume(id, lookup), id).toBe(2);
+    for (const id of ['story:sun-and-moon', 'story:angbuilgu-sundial', 'story:jikji-metal-type']) expect(storyCellVolume(id, lookup), id).toBeUndefined();
+    expect(storyCellVolume('episode:stage2-life-v2', lookup)).toBeUndefined();
+  });
+
+  it('plays the Story Order of each tale in its read quest: the fourth step is story-order on the read tier', () => {
+    for (const id of TALES) {
+      const quest = bookQuests.find((q) => q.id === `quest:story-${id.slice('story:'.length)}-read`);
+      const s4 = quest?.steps.find((step) => step.id === 's4');
+      expect(s4?.minigameKind, id).toBe('story-order');
+      expect(s4?.minigameRef, id).toBe(`minigame:story-order-read-${id.slice('story:'.length)}`);
+    }
   });
 });
