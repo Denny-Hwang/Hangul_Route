@@ -391,13 +391,14 @@ export function nextFitLevel(input: { room: number; content: number; level: numb
 }
 
 /**
- * The sheet's width on the stage, in units: price cards side by side take more room than a menu,
- * ticket or sign. `textScale` is how much bigger than its units the stage draws the sheet's small
- * text (the 18 px floor on a small phone, `presenter.size.caption` there): the sheet grows with it,
- * so its lines keep their layout, up to `SHEET_MAX_W`.
+ * The sheet's width on the stage, in units: tiles side by side (price cards, a forecast's days, a
+ * calendar's dates) take more room than a menu, ticket, sign or any other sheet. `textScale` is how
+ * much bigger than its units the stage draws the sheet's small text (the 18 px floor on a small phone,
+ * `presenter.size.caption` there): the sheet grows with it, so its lines keep their layout, up to `SHEET_MAX_W`.
  */
 export function sheetUnits(sheet: Pick<RealiaSheetView, 'kind'>, textScale = 1): number {
-  const base = sheet.kind === 'price-card' ? SHEET_CARDS_W : SHEET_W;
+  // Tiles side by side: price cards, and the forecast and calendar tiles of row CM-47.
+  const base = sheet.kind === 'price-card' || sheet.kind === 'forecast' || sheet.kind === 'calendar' ? SHEET_CARDS_W : SHEET_W;
   return Math.min(Math.max(base, SHEET_MAX_W), Math.round(base * Math.max(1, textScale)));
 }
 

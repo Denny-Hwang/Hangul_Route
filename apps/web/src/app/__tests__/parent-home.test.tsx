@@ -645,8 +645,12 @@ describe('the family home: Needs you, child chips and class lines (GX-4)', () =>
     // The re-link read runs whatever CLASS_TRANSFER says; the class-move reads do not (the flag is off here).
     expect(data.calls).toContain('relinks:sp_f');
     expect(data.calls.some((c) => c.startsWith('transfers:') || c.startsWith('notices:'))).toBe(false);
-    // Approve inline, then the family is read again and the row leaves.
+    // Approve opens the re-link pop-up with the safety hint (GX-D12); its Approve answers, then the family is read again
+    // and the row leaves.
     await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    expect(data.calls.some((c) => c.startsWith('decide:'))).toBe(false);
+    expect(textOf(byTestId(r, 'relink-popup-hint')[0] as ReactTestInstance)).toBe(en.console.relinkApproveHint);
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
     await act(async () => undefined);
     expect(data.calls).toContain('decide:sp_f:relink:1:true');
     expect(data.calls.filter((c) => c === 'relinks:sp_f')).toHaveLength(2);
@@ -740,8 +744,9 @@ describe('the family home: Needs you, child chips and class lines (GX-4)', () =>
     });
     const classCards = r.root.find((n) => typeof n.type !== 'string' && typeof n.props.onStale === 'function' && 'scope' in n.props);
     act(() => classCards.props.onStale());
-    // ...then Approve: the answer's own read lands first and the row leaves.
+    // ...then Approve (in the re-link pop-up): the answer's own read lands first and the row leaves.
     await act(async () => (byTestId(r, 'needs-you-approve')[0] as ReactTestInstance).props.onClick());
+    await act(async () => (byTestId(r, 'relink-popup-approve')[0] as ReactTestInstance).props.onClick());
     await act(async () => undefined);
     expect(byTestId(r, 'needs-you')).toHaveLength(0);
     // The older read ends now: it is dropped, so the decided row and its chip do not come back.

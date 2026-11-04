@@ -423,6 +423,8 @@ export const consoleMsgs = {
     askedAgo: (minutes: number) => `asked ${minutes} min ago`,
     closed: 'This request already closed — the learner can ask again.',
     failed: "Didn't go through. Try again.",
+    /** AMENDMENTS-GROWNUP-UX GX-1 (section 5.3): the platform a re-link request names; any other value reads `device`. */
+    platform: { ios: 'iPhone or iPad', android: 'Android', web: 'Web' },
   },
 
   /**
@@ -2340,6 +2342,8 @@ export const consoleMsgs = {
     chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
     newDevice: (minutes: number) => `New device · ${minutes} min left`,
     moveTo: (className: string) => `Class move: ${className}`,
+    /** A move out of the class whose destination is not shared with this grown-up (a family-started request). */
+    moveOut: 'Moving to another class',
     moveWaiting: 'Move waiting',
     waitingFor: (className: string) => `Waiting for: ${className}`,
     /** The date arrives formatted (`formatDate`, `monthDay`). */
@@ -2351,6 +2355,17 @@ export const consoleMsgs = {
     review: { cta: 'Review' },
   },
   /** GX-1 section 4.1: learners asking to join this class (initials, picture and level only until accepted, T8). */
+  /**
+   * GX-1 (section 5.3, GX-D12): the re-link decision dialog, opened by a re-link's action chip and by every re-link Approve,
+   * so no re-link is approved without the shipped `relinkApproveHint`, the platform and the request time.
+   */
+  relinkPopup: {
+    title: (name: string) => `New device request: ${name}`,
+    closes: (minutes: number) => `This request closes in ${minutes} min.`,
+    later: { cta: 'Later' },
+    /** The platform (`relink.platform.*` or `relink.device`) and the request time (`relink.askedAgo` / `askedJustNow`). */
+    meta: (platform: string, asked: string) => `${platform} · ${asked}`,
+  },
   attention: {
     incomingHeading: 'Asking to join this class',
     from: (className: string) => `From ${className}`,

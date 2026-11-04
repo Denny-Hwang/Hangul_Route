@@ -325,6 +325,7 @@ export const consoleMsgs = {
     askedAgo: (minutes: number) => `pidió hace ${minutes} min`,
     closed: 'Esta solicitud ya se cerró: el estudiante puede pedir otra vez.',
     failed: 'No se realizó. Reintenta.',
+    platform: { ios: 'iPhone o iPad', android: 'Android', web: 'Web' },
   },
 
   docTitle: {
@@ -1157,7 +1158,7 @@ export const consoleMsgs = {
     askOwner: 'Pide un código familiar a quien creó el espacio familiar.',
     copyFailed: 'No se pudo copiar. El código está en la pantalla.',
     needsYou: {
-      title: 'Necesita tu respuesta',
+      title: 'Pendiente de tu respuesta',
       move: (name: string) => `Un cambio de clase de ${name} espera tu aprobación.`,
       moveMeta: (to: string, days: number) => `Clase nueva: ${to} · ${plural('es', days, { one: `Termina en ${days} día`, other: `Termina en ${days} días` })}`,
       relink: (name: string) => `${name} quiere seguir en un dispositivo nuevo.`,
@@ -1868,6 +1869,7 @@ export const consoleMsgs = {
     chipName: (chip: string, reason: string) => `${chip}: ${reason}`,
     newDevice: (minutes: number) => plural('es', minutes, { one: `Dispositivo nuevo · queda ${minutes} min`, other: `Dispositivo nuevo · quedan ${minutes} min` }),
     moveTo: (className: string) => `Cambio de clase: ${className}`,
+    moveOut: 'Cambio a otra clase',
     moveWaiting: 'Cambio en espera',
     waitingFor: (className: string) => `Esperando a: ${className}`,
     moving: (date: string) => `Cambia de clase el ${date}`,
@@ -1876,6 +1878,12 @@ export const consoleMsgs = {
     noPractice: 'Aún sin práctica registrada',
     minutesLeft: (minutes: number) => plural('es', minutes, { one: `Queda ${minutes} min`, other: `Quedan ${minutes} min` }),
     review: { cta: 'Revisar' },
+  },
+  relinkPopup: {
+    title: (name: string) => `Solicitud de dispositivo nuevo: ${name}`,
+    closes: (minutes: number) => `Esta solicitud se cierra en ${minutes} min.`,
+    later: { cta: 'Más tarde' },
+    meta: (platform: string, asked: string) => `${platform} · ${asked}`,
   },
   attention: {
     incomingHeading: 'Quieren unirse a esta clase',

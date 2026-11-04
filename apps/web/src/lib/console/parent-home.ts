@@ -147,7 +147,7 @@ export interface FamilyAsks {
 }
 
 export type NeedsYouItem =
-  | { kind: 'relink'; id: string; learnerId: string; name: string; expiresAt: string; at: string }
+  | { kind: 'relink'; id: string; learnerId: string; name: string; expiresAt: string; at: string; platform: string | null }
   | { kind: 'move'; id: string; learnerId: string; name: string; to: string; expiresAt: string; at: string }
   | { kind: 'scope'; id: string; learnerId: string; name: string; expiresAt: null; at: null };
 
@@ -176,7 +176,7 @@ function familyStepWaits(view: TransferLearnerSideView, now: Date): boolean {
 export function needsYou(asks: FamilyAsks, now: Date): NeedsYouItem[] {
   const items: NeedsYouItem[] = [];
   for (const r of asks.relinks ?? []) {
-    if (r.status === 'pending' && later(r.expiresAt, now)) items.push({ kind: 'relink', id: r.id, learnerId: r.learnerId, name: r.learnerName, expiresAt: r.expiresAt, at: r.requestedAt });
+    if (r.status === 'pending' && later(r.expiresAt, now)) items.push({ kind: 'relink', id: r.id, learnerId: r.learnerId, name: r.learnerName, expiresAt: r.expiresAt, at: r.requestedAt, platform: r.platform ?? null });
   }
   for (const v of sideViews(asks.transfers)) {
     if (familyStepWaits(v, now)) items.push({ kind: 'move', id: v.id, learnerId: v.learner.id, name: v.learner.name, to: v.to.name, expiresAt: v.expiresAt, at: v.createdAt });
@@ -214,11 +214,13 @@ export function needsYouWords(item: NeedsYouItem, now: Date, locale: UiLocale = 
 }
 
 /** The one chip of a child card (section 7.2): what waits for the family about this child, or a move on a date. */
-export type ChildStatus = { kind: 'relink' } | { kind: 'move' } | { kind: 'scope' } | { kind: 'moving'; on: string };
+export type ChildStatus = { kind: 'relink' } | { kind: 'move' } | { kind: 'scope' } | { kind: 'moving'; on: string } | { kind: 'moveWaiting' };
 
 /**
  * One chip per child, by priority: a re-link (closing in minutes), a move that needs the family's OK, the class info to
- * read, then an agreed move with its date ahead. A move waiting for a seat, or with no date, is no chip.
+ * read, an agreed move with its date ahead, then a move whose learner step the family cannot answer from the console (a
+ * self-managed learner, `learnerRoute` not `caregiver`: the quiet **Move waiting**, section 7.1). A move waiting for a
+ * seat, or with no date, is no chip.
  */
 export function childStatus(learnerId: string, asks: FamilyAsks, now: Date): ChildStatus | null {
   const items = needsYou(asks, now).filter((item) => item.learnerId === learnerId);
@@ -226,13 +228,21 @@ export function childStatus(learnerId: string, asks: FamilyAsks, now: Date): Chi
   const dated = sideViews(asks.transfers).find(
     (v) => v.learner.id === learnerId && v.status === 'approved' && v.blockReason === null && v.executeAfter !== null && later(v.executeAfter, now),
   );
-  return dated?.executeAfter ? { kind: 'moving', on: dated.executeAfter } : null;
+  if (dated?.executeAfter) return { kind: 'moving', on: dated.executeAfter };
+  const selfManaged = sideViews(asks.transfers).some(
+    (v) => v.learner.id === learnerId && v.status === 'requested' && v.learnerState === 'pending' && v.learnerRoute !== 'caregiver' && later(v.expiresAt, now),
+  );
+  return selfManaged ? { kind: 'moveWaiting' } : null;
 }
 
-/** A chip's text and fill: the family's action chips in the amber light fill, Moving in the info fill. Text, never a button. */
-export function childChipWords(status: ChildStatus, locale: UiLocale = DEFAULT_LOCALE): { text: string; tone: 'action' | 'info' } {
+/**
+ * A chip's text and fill: the family's action chips in the amber light fill, Moving in the info fill, Move waiting in the
+ * quiet `surface.sunken` fill. Text, never a button.
+ */
+export function childChipWords(status: ChildStatus, locale: UiLocale = DEFAULT_LOCALE): { text: string; tone: 'action' | 'info' | 'quiet' } {
   const c = getMessages(locale).console;
   if (status.kind === 'moving') return { text: c.status.moving(formatDate(locale, status.on, 'monthDay')), tone: 'info' };
+  if (status.kind === 'moveWaiting') return { text: c.status.moveWaiting, tone: 'quiet' };
   return { text: c.parentHome.status[status.kind], tone: 'action' };
 }
 

@@ -29,6 +29,11 @@ const RecentItemSchema = z
     deck: LectureDeckSchema,
     savedAt: SavedAtSchema,
     lastSlideKey: SlideKeySchema.optional(),
+    /**
+     * When the lesson was last taught to the end (Finish, or Exit after the last slide; F-TCH-004
+     * section 3.12 amendment 2026-11-03, row NB-1): a time, never a name. A new Start clears it.
+     */
+    finishedAt: SavedAtSchema.optional(),
   })
   .strict();
 
@@ -59,14 +64,23 @@ export function emptyRecent(): RecentList {
   return { v: 1, items: [] };
 }
 
-/** A valid item; one whose only fault is its slide key is kept without it (it reopens at the start). */
+/**
+ * A valid item; one whose only faults are its slide key or its finish time is kept without them (it
+ * reopens at the start, and shows as not finished).
+ */
 function parseItem(candidate: unknown): RecentItem | undefined {
   const item = RecentItemSchema.safeParse(candidate);
   if (item.success) return item.data;
-  if (typeof candidate !== 'object' || candidate === null || !('lastSlideKey' in candidate)) return undefined;
-  const { lastSlideKey: _dropped, ...rest } = candidate as Record<string, unknown>;
-  const retry = RecentItemSchema.safeParse(rest);
-  return retry.success ? retry.data : undefined;
+  if (typeof candidate !== 'object' || candidate === null) return undefined;
+  const record = candidate as Record<string, unknown>;
+  const without = (...keys: string[]): Record<string, unknown> => Object.fromEntries(Object.entries(record).filter(([k]) => !keys.includes(k)));
+  const tries = [without('lastSlideKey'), without('finishedAt'), without('lastSlideKey', 'finishedAt')];
+  for (const attempt of tries) {
+    if (Object.keys(attempt).length === Object.keys(record).length) continue;
+    const retry = RecentItemSchema.safeParse(attempt);
+    if (retry.success) return retry.data;
+  }
+  return undefined;
 }
 
 /** The deck versions this build reads; an item whose deck has a higher one comes from a newer build. */
@@ -153,6 +167,23 @@ export function rememberDeck(list: RecentList, deck: LectureDeck, savedAt: strin
 export function setLastSlide(list: RecentList, deckId: string, lastSlideKey: string): RecentList {
   if (!SlideKeySchema.safeParse(lastSlideKey).success || !list.items.some((i) => i.deck.id === deckId)) return list;
   return { ...list, items: list.items.map((i) => (i.deck.id === deckId ? { ...i, lastSlideKey } : i)) };
+}
+
+/**
+ * Records a lesson taught to the end (row NB-1): the row keeps `finishedAt` and drops its slide, so
+ * the home offers Start over (a finished lesson has nothing to resume). A bad time or an unknown
+ * deck changes nothing.
+ */
+export function markFinished(list: RecentList, deckId: string, finishedAt: string): RecentList {
+  if (!SavedAtSchema.safeParse(finishedAt).success || !list.items.some((i) => i.deck.id === deckId)) return list;
+  return {
+    ...list,
+    items: list.items.map((i) => {
+      if (i.deck.id !== deckId) return i;
+      const { lastSlideKey: _left, ...rest } = i;
+      return { ...rest, finishedAt };
+    }),
+  };
 }
 
 export function forgetDeck(list: RecentList, deckId: string): RecentList {

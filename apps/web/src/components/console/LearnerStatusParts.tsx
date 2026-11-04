@@ -9,6 +9,7 @@ import { moveError } from '@/lib/console/class-moves';
 import type { ChipTone, IncomingItem, LearnerStatus, StatusWords } from '@/lib/console/learner-status';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { relinkNoteText } from '@/lib/console/relink';
+import { relinkSettled } from '@/components/console/RelinkPopup';
 import { rem } from '@/lib/console/rem';
 import { announceRosterChange } from '@/lib/console/roster-broadcast';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
@@ -101,7 +102,7 @@ export function StatusChip({ words, onActivate, testId = 'learner-status' }: { w
  * button (the Needs you strip owns the actions). `action` is the family's own action, in the amber light fill (no border,
  * no dot: the card keeps its shipped border); `info` a dated move.
  */
-export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info'; testId?: string }): JSX.Element {
+export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info' | 'quiet'; testId?: string }): JSX.Element {
   return (
     <span data-testid={testId} data-tone={tone} style={{ ...chipBase, whiteSpace: 'normal', backgroundColor: TONE_FILL[tone] }}>
       {text}
@@ -119,7 +120,8 @@ export function ReasonLine({ id, text }: { id: string; text: string }): JSX.Elem
 }
 
 /**
- * The action chip's tap until GX-2's pop-up: the answers scroll into view and the first one takes focus, so the tap
+ * The action chip's tap on a move or an incoming ask until GX-2's review sheet (a re-link's chip opens the re-link
+ * dialog): the answers scroll into view and the first one takes focus, so the tap
  * always shows where the answer is (a pointer tap draws no focus ring on its own).
  */
 export function revealAnswers(row: HTMLElement | null): void {
@@ -174,20 +176,15 @@ export function useDecided(): {
 
 export type RelinkApi = Pick<ConsoleApi, 'decideRelink'>;
 
-/**
- * Whether a decide answer closed the request: it was answered, or it closed meanwhile (409, except a learner who left
- * the class; 404). A network error or a 5xx leaves it open, so the answers stay.
- */
-export function relinkSettled(result: ApiResult<unknown>): boolean {
-  if (result.ok) return true;
-  return (result.status === 409 && result.code !== 'not_a_member') || result.status === 404;
-}
+/** Kept here for the callers that read it with the card's parts; the dialog owns the rule (`RelinkPopup.tsx`). */
+export { relinkSettled };
 
 /**
- * A re-link card's inline **Approve** (primary) and **Deny** (`api.decideRelink`). Each is described by the learner's name
- * and the reason line, so "Approve" is read with whose request it is. The result goes to `onResult` (the page's polite
- * region; when `settled`, also the card's result line and a read again). A failure that leaves the request open keeps
- * the answers and shows its line under them, so the grown-up can try again while the minutes run.
+ * A re-link card's inline **Approve** (primary) and **Deny**. Approve never answers in one tap: it opens the re-link
+ * dialog (`onApprove`), which carries the safety hint, the platform and the request time (GX-D12). Deny only closes the
+ * request, so it answers here (`api.decideRelink`). Each is described by the learner's name and the reason line, so
+ * "Approve" is read with whose request it is. A Deny that fails and leaves the request open keeps the answers and shows
+ * its line under them, so the grown-up can try again while the minutes run.
  */
 export function RelinkAnswer({
   api,
@@ -197,6 +194,7 @@ export function RelinkAnswer({
   describedBy,
   online,
   rowRef,
+  onApprove,
   onResult,
 }: {
   api: RelinkApi;
@@ -205,8 +203,9 @@ export function RelinkAnswer({
   learnerName: string;
   describedBy: string;
   online: boolean;
-  /** The row of answers: the action chip's tap moves focus to its first button (GX-2 opens the pop-up instead). */
   rowRef?: RefObject<HTMLDivElement>;
+  /** Opens the re-link dialog for this request. */
+  onApprove: () => void;
   onResult: (text: string, settled: boolean) => void;
 }): JSX.Element | null {
   const { messages, locale } = useConsoleLocale();
@@ -215,15 +214,15 @@ export function RelinkAnswer({
   const request = status.relink;
   if (!request) return null;
   const t = messages.console.relink;
-  const decide = async (approve: boolean): Promise<void> => {
+  const deny = async (): Promise<void> => {
     if (busy) return;
     setBusy(true);
     setFailed(null);
-    const result = await api.decideRelink(spaceId, request.id, approve);
+    const result = await api.decideRelink(spaceId, request.id, false);
     setBusy(false);
     if (result.ok) {
       announceRosterChange();
-      onResult(relinkNoteText({ kind: approve ? 'approved' : 'denied', name: learnerName }, locale), true);
+      onResult(relinkNoteText({ kind: 'denied', name: learnerName }, locale), true);
       return;
     }
     const text = relinkNoteText({ kind: 'decideFailed', result }, locale);
@@ -234,10 +233,10 @@ export function RelinkAnswer({
   return (
     <>
       <div style={actionsRow} data-testid="relink-answer" ref={rowRef}>
-        <MoveButton primary waiting={busy} disabled={!online} describedBy={describedBy} onClick={() => void decide(true)} testId="relink-approve-inline">
+        <MoveButton primary disabled={!online || busy} describedBy={describedBy} onClick={onApprove} testId="relink-approve-inline">
           {t.approve.cta}
         </MoveButton>
-        <MoveButton waiting={busy} disabled={!online} describedBy={describedBy} onClick={() => void decide(false)} testId="relink-deny-inline">
+        <MoveButton waiting={busy} disabled={!online} describedBy={describedBy} onClick={() => void deny()} testId="relink-deny-inline">
           {t.deny.cta}
         </MoveButton>
       </div>
