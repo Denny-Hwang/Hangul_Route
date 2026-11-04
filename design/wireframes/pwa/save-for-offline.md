@@ -83,7 +83,7 @@ B. A Volume 2 page, offline, not saved and not loaded this session
 ## Data needs
 
 - reads: `/offline-packs.json` (precached, written by the build: each stage's files, bytes and cache), Cache Storage (`caches.match`), `navigator.storage.estimate()`, `navigator.onLine`, the device record `device:offline-saved` (the chosen stages)
-- writes: Cache Storage (`hr-later-v1` for later chunks, the clip caches for clips), `device:offline-saved`
+- writes: Cache Storage (`hr-later-v1` for later chunks, `hr-offline-audio-v1` for clips: neither expires, and the clip rules read the second on a miss), `device:offline-saved`; asks for persistent storage on Save
 - telemetry: none in this row (no new event names; Worker first applies if one is added later)
 
 ## Accessibility
