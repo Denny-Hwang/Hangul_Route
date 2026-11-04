@@ -19,7 +19,7 @@ import {
   type WeekMeta,
 } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { PlanView, Roster, RosterLearner } from '../api';
 import { LECTURE_V2_LINKS_FROM, buildDeck, presenterLink, v2LinksAllowed } from '../lecture';
 import {
@@ -569,7 +569,11 @@ describe('a blended class day on the Next lesson card (BL-5)', () => {
     const off = consolePresetContext({ roster: roster([]), plan: blended, today: TODAY, now: NOW, blend: false });
     expect(off.plan).not.toHaveProperty('classMinutes');
     expect(off.classDay).toBeNull();
+    // Unset, `blend` follows routeBlendEnabled(): on since BL-10, off with the kill switch.
+    expect(consolePresetContext({ roster: roster([]), plan: blended, today: TODAY, now: NOW }).classDay).not.toBeNull();
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
     expect(consolePresetContext({ roster: roster([]), plan: blended, today: TODAY, now: NOW }).classDay).toBeNull();
+    vi.unstubAllEnvs();
     const classic = consolePresetContext({ roster: roster([]), plan: plan(), today: TODAY, now: NOW, blend: true });
     expect(classic.plan).not.toHaveProperty('classMinutes');
     expect(classic.classDay).toBeNull();

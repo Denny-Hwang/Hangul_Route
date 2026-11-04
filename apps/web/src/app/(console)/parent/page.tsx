@@ -227,9 +227,10 @@ export default function ParentHomePage(): JSX.Element {
   const names = useNameOverrides();
 
   // `quiet`: the read again when the tab comes back into view (F-LEARN-001 section 3.11). The drawn cards stay while it
-  // reads, and a failed quiet read keeps them: a background read never turns a family into an error.
+  // reads, and a failed quiet read keeps them: a background read never turns a family into an error. `archived`: an
+  // archived family draws no Pause or Resume (BL-9), so it reads no plan for them.
   const loadRoster = useCallback(
-    async (spaceId: string, role: SpaceListItem['role'], quiet = false): Promise<void> => {
+    async (spaceId: string, role: SpaceListItem['role'], quiet = false, archived = false): Promise<void> => {
       if (!api) return;
       const seen = rosterSeq.current[spaceId] ?? 0;
       const call = quiet ? seen : seen + 1;
@@ -239,7 +240,7 @@ export default function ParentHomePage(): JSX.Element {
       // Plans only for a family this account owns: the line is owner only, so a co-caregiver's family needs no plan read.
       // With class days and practice days on (AMENDMENTS-ROUTE-CLASS-BLEND BL-9), every account that writes the family's
       // plans reads them too, for Pause and Resume of the family weekly plan.
-      const readPlans = (contentGatingEnabled() && role === 'owner') || (routeBlendEnabled() && planWriter(role));
+      const readPlans = (contentGatingEnabled() && role === 'owner') || (routeBlendEnabled() && planWriter(role) && !archived);
       const [result, planList] = await Promise.all([api.roster(spaceId).catch(() => null), readPlans ? api.listPlans(spaceId).catch(() => null) : null]);
       if (call !== rosterSeq.current[spaceId]) return;
       if (planList?.ok) setPlans((prev) => ({ ...prev, [spaceId]: planList.data }));
@@ -324,7 +325,7 @@ export default function ParentHomePage(): JSX.Element {
       setItems(listed);
       const view = parentHomeView(listed);
       if (view.state === 'families') {
-        await Promise.all(view.families.flatMap((family) => [loadRoster(family.space.id, family.role, quiet), ...(isArchivedFamily(family) ? [] : [loadAsks(family.space.id)])]));
+        await Promise.all(view.families.flatMap((family) => [loadRoster(family.space.id, family.role, quiet, isArchivedFamily(family)), ...(isArchivedFamily(family) ? [] : [loadAsks(family.space.id)])]));
       }
     },
     [api, loadRoster, loadAsks, names],
@@ -751,7 +752,7 @@ export default function ParentHomePage(): JSX.Element {
               api={api}
               online={online}
               now={now}
-              onChanged={() => Promise.all([loadAsks(id, true), loadRoster(id, family.role, true)]).then(() => undefined)}
+              onChanged={() => Promise.all([loadAsks(id, true), loadRoster(id, family.role, true, archived)]).then(() => undefined)}
               onReadScope={(learnerId) => readScope(id, learnerId)}
               onApproveRelink={popup.openFor}
               onDialog={(open) => onStripDialog(id, open)}
@@ -779,7 +780,7 @@ export default function ParentHomePage(): JSX.Element {
           {entry.state === 'failed' ? (
             <div style={{ ...panelStyle, margin: 0 }}>
               <p style={{ margin: `0 0 ${spacing.sm}px` }}>{c.cantReach}</p>
-              <Button testId={`family-retry-${id}`} onClick={() => void loadRoster(id, family.role)}>
+              <Button testId={`family-retry-${id}`} onClick={() => void loadRoster(id, family.role, false, archived)}>
                 {c.tryAgain}
               </Button>
             </div>
