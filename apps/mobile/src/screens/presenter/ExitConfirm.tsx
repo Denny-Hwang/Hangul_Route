@@ -9,20 +9,29 @@ import { GhostButton, PrimaryButton } from './StatePage';
 
 /**
  * The Exit confirm (design/screens/presenter/overlays.md "Exit"): an alert dialog over
- * `surface.overlay`, "Leave the lesson?", "Nothing about anyone's progress changes.", Keep going
- * (primary, focused) and Exit. Esc or Keep going closes it; Tab and Shift+Tab stay inside it.
+ * `surface.overlay`. Esc or Keep going closes it; Tab and Shift+Tab stay inside it.
+ *
+ * F-TCH-004 section 3.5 amendment 2026-11-03 (row NB-1), two faces:
+ * - **Before the end** "Leave the lesson?", Keep going (primary, focused) and Exit. Its line says
+ *   the slide is kept for Resume when Recent lessons can keep it (`resumable`), else "Nothing about
+ *   anyone's progress changes."
+ * - **After the last slide was reached** (`finish`) "Finish the lesson?", "You reached the end of
+ *   the lesson.", Keep going and **Finish** (primary, focused): leaving now finishes the lesson.
+ * The leave or finish button keeps `presenter-exit-confirm`; `onExit` runs either.
  */
-export function ExitConfirm({ onKeepGoing, onExit }: { onKeepGoing: () => void; onExit: () => void }): ReactElement {
+export function ExitConfirm({ onKeepGoing, onExit, finish = false, resumable = false }: { onKeepGoing: () => void; onExit: () => void; finish?: boolean; resumable?: boolean }): ReactElement {
   const textScale = useTypeScale();
   const { messages } = usePresenterView();
   const m = messages.learner.presenter;
   const keep = useRef<View>(null);
   const exit = useRef<View>(null);
   useEffect(() => {
-    keep.current?.focus?.();
+    (finish ? exit : keep).current?.focus?.();
     // Tab stays in the dialog (aria-modal), so no control behind it can be reached or activated.
-    return trapFocus(() => [exit.current, keep.current]);
-  }, []);
+    return trapFocus(() => (finish ? [keep.current, exit.current] : [exit.current, keep.current]));
+  }, [finish]);
+  const title = finish ? m.exit.finish.title : m.exit.title;
+  const line = finish ? m.exit.finish.line : resumable ? m.exit.resumeLine : m.exit.line;
   return (
     <View
       style={{
@@ -54,12 +63,21 @@ export function ExitConfirm({ onKeepGoing, onExit }: { onKeepGoing: () => void; 
         }}
       >
         <Text {...KOREAN_LINE_BREAK} nativeID="presenter-exit-title" role="heading" style={{ fontSize: textScale.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-          {m.exit.title}
+          {title}
         </Text>
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.secondary, lineHeight: Math.round(textScale.size.body * typography.leading.normal) }}>{m.exit.line}</Text>
+        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.body, color: colors.text.secondary, lineHeight: Math.round(textScale.size.body * typography.leading.normal) }}>{line}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'flex-end' }}>
-          <GhostButton ref={exit} testID="presenter-exit-confirm" label={m.bar.exit.cta} onPress={onExit} />
-          <PrimaryButton ref={keep} testID="presenter-keep-going" label={m.exit.keepGoing.cta} onPress={onKeepGoing} />
+          {finish ? (
+            <>
+              <GhostButton ref={keep} testID="presenter-keep-going" label={m.exit.keepGoing.cta} onPress={onKeepGoing} />
+              <PrimaryButton ref={exit} testID="presenter-exit-confirm" label={m.exit.finish.cta} onPress={onExit} />
+            </>
+          ) : (
+            <>
+              <GhostButton ref={exit} testID="presenter-exit-confirm" label={m.bar.exit.cta} onPress={onExit} />
+              <PrimaryButton ref={keep} testID="presenter-keep-going" label={m.exit.keepGoing.cta} onPress={onKeepGoing} />
+            </>
+          )}
         </View>
       </View>
     </View>

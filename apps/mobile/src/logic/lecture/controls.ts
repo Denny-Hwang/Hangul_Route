@@ -151,6 +151,26 @@ export function initialPresenterState(deck: ControlDeck, startKey?: string): Pre
   };
 }
 
+/**
+ * The lesson is at its end (F-TCH-004 section 3.5 amendment 2026-11-03, row NB-1): the slide shown
+ * is the last one the run can show (no later slide that is not skipped) at its last build, so Next
+ * has nowhere to go. The bar's Next reads Finish here.
+ */
+export function atLessonEnd(state: Pick<PresenterState, 'slideIdx' | 'reveal' | 'skipped'>, deck: ControlDeck): boolean {
+  const current = deck.slides[state.slideIdx];
+  if (current === undefined) return false;
+  return state.reveal >= revealsOf(current) && findFrom(deck, state.skipped, state.slideIdx + 1, 1) === -1;
+}
+
+/**
+ * Whether leaving now finishes the lesson (row NB-1): the run reached its last slide at least once
+ * (`ended`, which a step back keeps), or it is at its end. Exit, the browser's Back and Finish all
+ * read it, so a lesson taught to the end is never recorded as left part way.
+ */
+export function finishesOnLeave(state: Pick<PresenterState, 'slideIdx' | 'reveal' | 'skipped' | 'ended'>, deck: ControlDeck): boolean {
+  return state.ended || atLessonEnd(state, deck);
+}
+
 type Navigation = 'next' | 'prev' | 'first' | 'last' | { goto: number };
 
 function isNavigation(event: PresenterEvent): event is Navigation {

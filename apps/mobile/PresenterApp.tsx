@@ -26,14 +26,14 @@ import { lectureBundle, soundCheckSpec } from './src/logic/lecture/content';
 import { lectureStories } from './src/logic/lecture/sources/story';
 import { readToMePlan } from './src/logic/lecture/story-slides';
 import { createAudioRunner, type RunnerResult } from './src/logic/story/audio-runner';
-import { initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
+import { atLessonEnd, finishesOnLeave, initialPresenterState, reduce, type PresenterEvent, type PresenterState } from './src/logic/lecture/controls';
 import { expandDeck, withBuilds, type DeckSwitches, type Slide } from './src/logic/lecture/deck-builder';
 import type { KeyCommand } from './src/logic/lecture/keymap';
 import { recentView } from './src/logic/lecture/home-view';
 import { blockMinutesOn, blockTitleIn, presenterChooserGroups, wordReviewWordsOn } from './src/logic/lecture/quick-source';
 import { HOME_DEFAULT, type HomeSnapshot } from './src/logic/lecture/home-state';
 import { presenterPresetContext, presetLectureDeck, presetPreview, presetTitle, resolveOnPresenter, type WordReviewBlock } from './src/logic/lecture/preset-source';
-import { RECENT_READ_TIMEOUT_MS, boundedRecent, commitRecent, emptyRecent, forgetDeck, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
+import { RECENT_READ_TIMEOUT_MS, boundedRecent, commitRecent, emptyRecent, forgetDeck, markFinished, readRecent, rememberDeck, setLastSlide, type LoadedRecent, type RecentList, type RecentStore } from './src/logic/lecture/recent';
 import {
   completePayload,
   homeStart,
@@ -558,8 +558,8 @@ function Presenter(): ReactElement {
   const [romanization, setRomanization] = useState<'always' | 'tap' | null>(null);
   const [strokePlay, setStrokePlay] = useState<StrokePlay | null>(null);
   const [fullscreen, setFullscreen] = useState(isFullscreen);
-  // Next on the End slide: the hint, and focus on the docked bar's Exit or the compact bar's More (which holds Exit).
-  const exitRef = useRef<View>(null);
+  // Next on the End slide from a key or a clicker (row NB-1): focus goes to Next, which reads Finish there.
+  const nextRef = useRef<View>(null);
   const [endHint, setEndHint] = useState(false);
   // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6);
   // on both bars an explicit Sound press that has nothing to play, or does not play, says so there (section 3.7).
@@ -789,12 +789,13 @@ function Presenter(): ReactElement {
       // The rail never hides (AMENDMENTS-PRESENTER-NAV section 5.2).
       const stepped = event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
       if (overlayRef.current && stepped) hideBarNow();
-      // Next on the End slide: the hint, and focus on Exit (the docked bar) or More, which holds it (the phone bar, shown).
-      const atEnd = event === 'next' && state === before && before.overlay === null && before.slideIdx === slides.length - 1;
+      // Next on the End slide (a key, a clicker or a swipe; never an accidental exit): the hint, and focus
+      // on Next, which reads Finish there (row NB-1), with the phone bar shown.
+      const atEnd = event === 'next' && state === before && before.overlay === null && atLessonEnd(before, { slides });
       setEndHint(atEnd);
       if (atEnd) {
         if (phoneRef.current) showBar();
-        exitRef.current?.focus?.();
+        nextRef.current?.focus?.();
       }
       // The stroke guide plays only on a forward stroke reveal or a replay; any other slide change
       // drops it, so going back to a complete slide is silent (section 3.5 amendment point 2).
@@ -952,21 +953,34 @@ function Presenter(): ReactElement {
     });
   }, [narrator, landHome, endNavHint]);
 
+  /**
+   * Exit, the browser's Back onto the home, and Finish (F-TCH-004 section 3.5 amendment 2026-11-03,
+   * row NB-1): a lesson that reached its last slide (`finishesOnLeave`) leaves as finished: its
+   * Recent row records the finish and `lecture.complete` says `finished: true`. A lesson left part
+   * way keeps its slide in Recent for Resume and says `finished: false`; nothing is discarded.
+   */
   const onExit = useCallback(() => {
     const started = begun.current;
+    const at = stateRef.current;
+    const finished = started && at !== null && finishesOnLeave(at, { slides });
+    const deckId = deck?.id;
     begun.current = false;
     leaveLesson();
     releaseDevice();
     // A Start the window never showed was not a lesson: nothing to count or apply.
     if (!started) return;
     const now = Date.now();
-    const payload = completePayload(tally.current ?? startTally(now, undefined), now, navRef.current);
+    if (finished && deckId !== undefined) {
+      const finishedAt = new Date(now).toISOString();
+      updateRecent((list) => markFinished(list, deckId, finishedAt));
+    }
+    const payload = completePayload(tally.current ?? startTally(now, undefined), now, navRef.current, finished);
     tally.current = null;
     void track({ name: 'lecture.complete', payload }).finally(() => {
       // A waiting update applies only now, never mid-lesson (section 3.8).
       if (updateWaiting) applyUpdate();
     });
-  }, [updateWaiting, leaveLesson, releaseDevice]);
+  }, [updateWaiting, leaveLesson, releaseDevice, slides, deck, updateRecent]);
 
   /**
    * A lesson not yet begun (the rotate page or the too-small page before the first slide) back to
@@ -1472,6 +1486,13 @@ function Presenter(): ReactElement {
             if (userDispatch('prev', 'button')) navStepSeen();
           }}
           onNext={() => {
+            // At the end Next reads Finish (row NB-1): the press finishes the lesson, no confirm.
+            const now = stateRef.current;
+            if (now !== null && now.overlay === null && !(now.timerOpen && now.timerMode === 'full') && atLessonEnd(now, { slides })) {
+              activate();
+              onExit();
+              return;
+            }
             if (userDispatch('next', 'button')) navStepSeen();
           }}
           onSound={() => userDispatch('replay-sound')}
@@ -1503,7 +1524,8 @@ function Presenter(): ReactElement {
             }
           }}
           {...(phone ? {} : { onBandHeight: setBand })}
-          exitRef={exitRef}
+          nextRef={nextRef}
+          finish={atLessonEnd(p, { slides })}
           compact={phone}
           rail={rail}
           railHeight={window.height - insets.top - insets.bottom}
@@ -1599,7 +1621,10 @@ function Presenter(): ReactElement {
         ) : null}
       </>
     );
-    const exitConfirm = p.overlay === 'exit' ? <ExitConfirm onKeepGoing={() => userDispatch('close')} onExit={onExit} /> : null;
+    const exitConfirm =
+      p.overlay === 'exit' ? (
+        <ExitConfirm onKeepGoing={() => userDispatch('close')} onExit={onExit} finish={finishesOnLeave(p, { slides })} resumable={recentLoaded?.writable === true} />
+      ) : null;
     body = nav === 'rail' ? (
       // The rail (section 5.2): the stage column takes the window less the left, top and bottom insets;
       // the rail sits at its right, inside the right inset, so the class tools cover the stage only and
