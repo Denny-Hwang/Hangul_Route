@@ -58,7 +58,8 @@ async function play(
           <WriteFrameGame scope={scope} host={h} />
         </RomanizationModeOverride>
       </LayoutProvider>,
-      { createNodeMock: () => ({ focus: domFocus, addEventListener: () => undefined, removeEventListener: () => undefined }) },
+      // getBoundingClientRect: on `ios` the keyboard's TapBoard (KT-7) measures its keys through measureInWindow.
+      { createNodeMock: () => ({ focus: domFocus, addEventListener: () => undefined, removeEventListener: () => undefined, nodeType: 1, getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }) }) },
     );
   });
   mounted.push(r);
