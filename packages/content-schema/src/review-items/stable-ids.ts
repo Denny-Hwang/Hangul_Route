@@ -250,15 +250,18 @@ const WEEK_RANK = 8;
 const isWeekCell = (cell: string): boolean => cell.startsWith('week:');
 
 /**
- * Route order of a cell: its stage, its theme, Stage 1 and the lesson cells before the stories, then the id. The week
- * drops come after the whole route (row CM-48), in week order: a drop keyed to the calendar never becomes the home of
- * an item the route teaches, so that item keeps its home, stage and memory shard.
+ * Route order of a cell: its volume (the route catalogue puts every later volume after Stage 7 of
+ * Volume 1, row CM-40), its stage, its theme, Stage 1 and the lesson cells before the stories, then
+ * the id. A later volume therefore never leads an item a Volume 1 cell already teaches. The week
+ * drops come after the whole route and every later volume (row CM-48), in week order: a drop keyed to
+ * the calendar never becomes the home of an item the route teaches, so that item keeps its home,
+ * stage and memory shard.
  */
-function cellRank(occ: ItemOccurrence): [number, number, number, string] {
-  if (isWeekCell(occ.cell)) return [WEEK_RANK, 0, 0, occ.cell];
+function cellRank(occ: ItemOccurrence): [number, number, number, number, string] {
+  if (isWeekCell(occ.cell)) return [WEEK_RANK, 0, 0, 0, occ.cell];
   const story = occ.cell.startsWith('story:') ? 1 : 0;
   const theme = THEMES.indexOf(occ.home);
-  return [occ.stage, story, theme < 0 ? THEMES.length : theme, occ.cell];
+  return [occ.volume, occ.stage, story, theme < 0 ? THEMES.length : theme, occ.cell];
 }
 const compareRank = (a: ItemOccurrence, b: ItemOccurrence): number => {
   const [x, y] = [cellRank(a), cellRank(b)];
@@ -487,9 +490,16 @@ function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrenc
   const first = list[0] as ItemOccurrence;
   // Row CM-48: an item the route teaches keeps its text, gloss and picture from the route; a week drop only adds a cell.
   const route = list.filter((o) => !isWeekCell(o.cell));
-  const own = route.length > 0 ? route : list;
+  const taught = route.length > 0 ? route : list;
+  // The occurrences of the item's first volume: a later volume that teaches it again adds its cell
+  // and nothing else, so the item an earlier volume shipped keeps its text, gloss, picture and stage.
+  const own = taught.filter((o) => o.volume === first.volume);
   const lead = own.find((o) => o.source === 'discover') ?? first;
-  const glossed = own.find((o) => o.en !== undefined && o.source === 'discover') ?? own.find((o) => o.en !== undefined);
+  const glossed =
+    own.find((o) => o.en !== undefined && o.source === 'discover') ??
+    own.find((o) => o.en !== undefined) ??
+    list.find((o) => o.en !== undefined && o.source === 'discover') ??
+    list.find((o) => o.en !== undefined);
   const word = identity.vocabId === undefined ? undefined : vocab.byId.get(identity.vocabId);
   const inOrder = [...new Set(list.map((o) => o.cell))];
   const discovered = new Set(list.filter((o) => o.source === 'discover').map((o) => o.cell));
@@ -503,8 +513,8 @@ function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrenc
     ko: lead.ko,
     romanization: lead.romanization !== '' ? lead.romanization : (list.find((o) => o.romanization !== '')?.romanization ?? romanize(lead.ko).text),
     home: first.home,
-    stage: Math.min(...teaching.map((o) => o.stage)),
-    volume: Math.min(...teaching.map((o) => o.volume)),
+    stage: Math.min(...teaching.filter((o) => o.volume === first.volume).map((o) => o.stage)),
+    volume: first.volume,
     cells,
     asked: inOrder.filter((cell) => !cells.includes(cell)),
     formats: [],
@@ -521,10 +531,10 @@ function mergeGroup(id: string, identity: Identity, list: readonly ItemOccurrenc
         ? undefined
         : (glossed.glossKey ?? list.find(sameEnglish)?.glossKey ?? glossAt.get(glossText(lead.ko, glossed.en as string)));
   if (glossKey !== undefined) item.glossKey = glossKey;
-  const picture = list.find((o) => o.picture !== undefined)?.picture ?? (word?.visual !== undefined && !word.visual.startsWith('swatch:') ? word.visual : undefined);
+  const picture = own.find((o) => o.picture !== undefined)?.picture ?? (word?.visual !== undefined && !word.visual.startsWith('swatch:') ? word.visual : undefined);
   if (picture !== undefined) item.picture = picture;
   if (identity.kind === 'exc') {
-    const reply = { ...((list.find((o) => o.reply?.glossKey !== undefined) ?? lead).reply as KoLine) };
+    const reply = { ...((own.find((o) => o.reply?.glossKey !== undefined) ?? lead).reply as KoLine) };
     const replyKey = reply.en === undefined || reply.glossKey !== undefined ? undefined : glossAt.get(glossText(reply.ko, reply.en));
     if (replyKey !== undefined) reply.glossKey = replyKey;
     item.reply = reply;

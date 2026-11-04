@@ -826,7 +826,24 @@
     "lex|야구": "vocab:yagu",
     "lex|연필": "vocab:yeonpil",
     "lex|윷놀이": "vocab:yunnori",
-    "lex|반달가슴곰": "lex:bandalgaseumgom"
+    "lex|반달가슴곰": "lex:bandalgaseumgom",
+    "lex|불어요": "lex:bureoyo",
+    "lex|더워요": "lex:deowoyo",
+    "pat|바람이 불어요": "pat:barami-bureoyo",
+    "pat|곰이 더 커요": "pat:gomi-deo-keoyo",
+    "pat|고양이가 더 작아요": "pat:goyangiga-deo-jagayo",
+    "pat|겨울에 눈이 와요": "pat:gyeoure-nuni-wayo",
+    "pat|겨울이 더 추워요": "pat:gyeouri-deo-chuwoyo",
+    "pat|하늘에 구름이 있어요": "pat:haneure-gureumi-isseoyo",
+    "pat|호랑이가 더 커요": "pat:horangiga-deo-keoyo",
+    "pat|___이/가 더 추워요": "pat:n-i-ga-deo-chuwoyo",
+    "pat|___이/가 더 커요": "pat:n-i-ga-deo-keoyo",
+    "pat|___이/가 와요": "pat:n-i-ga-wayo",
+    "pat|눈이 와요": "pat:nuni-wayo",
+    "pat|새가 더 작아요": "pat:saega-deo-jagayo",
+    "pat|산이 더 추워요": "pat:sani-deo-chuwoyo",
+    "pat|토끼가 더 작아요": "pat:tokkiga-deo-jagayo",
+    "pat|여름이 더 더워요": "pat:yeoreumi-deo-deowoyo"
   },
   "alias": {
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"
