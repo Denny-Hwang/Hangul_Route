@@ -93,6 +93,52 @@ export function masteryWords(level: CellLevel, refresh: boolean, newVolume: bool
 const withWords = (label: string, words: readonly string[]): string =>
   words.length === 0 ? label : `${label}${label.endsWith('.') ? '' : '.'} ${words.map((w) => `${w}.`).join(' ')}`;
 
+/**
+ * The volume dots (F-STORY-005 PR 5.8, F-CURR-002 row CM-40; wireframe `journey/volumes.md` A): one dot per playable
+ * volume, filled once that volume is complete, in the glyph box under the theme glyph: clear of every corner mark
+ * (the pin, the check and the count mark own the band) and inside the In your plan / Not open yet ring. Decorative:
+ * the cell's label says which volume a tap opens.
+ */
+const VOLUME_DOT = spacing.xs;
+const VOLUME_DOT_GAP = spacing.xxs;
+function VolumeDots({ volumes, glyphBox, glyph, testID }: { volumes: readonly { volume: number; complete: boolean }[]; glyphBox: number; glyph: number; testID: string }): ReactElement {
+  const dot = useMediaSize(VOLUME_DOT);
+  return (
+    <View
+      pointerEvents="none"
+      aria-hidden
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
+      testID={testID}
+      style={{
+        position: 'absolute',
+        top: (glyphBox + glyph) / 2 + VOLUME_DOT_GAP,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        columnGap: VOLUME_DOT_GAP,
+      }}
+    >
+      {volumes.map((v) => (
+        <View
+          key={v.volume}
+          testID={`${testID}-${v.volume}-${v.complete ? 'done' : 'open'}`}
+          style={{
+            width: dot,
+            height: dot,
+            borderRadius: radii.pill,
+            // Filled once done; an open volume is an empty ring in the keyline colour (never a colour alone).
+            backgroundColor: v.complete ? colors.text.primary : 'transparent',
+            borderWidth: borderWidth.thin,
+            borderColor: v.complete ? colors.text.primary : colors.border.shape,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export interface JourneyGridProps {
   /** Stage definitions in the UI locale. */
   stages: readonly StageDef[];
@@ -361,11 +407,15 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
   const newVolume = ringed && episodeId !== null && mastery.newVolume.has(episodeId);
   const edge = cell.selected ? borderWidth.thick : CELL_EDGE;
 
+  // A cell of two volumes opens its first volume not complete (F-STORY-005 PR 5.8); `openId` is the cell's own otherwise.
+  const openId = cell.openId ?? episodeId;
+  const volumeDots = !isLater && !storiesOnly && model.volumes.length >= 2;
   const press = (): void => {
     if (disabled) return;
     if (storiesOnly) onOpenStories?.(cell.stage, cell.theme);
-    else if (episodeId !== null) onOpen(episodeId);
+    else if (openId !== null) onOpen(openId);
   };
+  const opensVolume = volumeDots ? model.volumes.find((v) => v.episodeId === openId)?.volume : undefined;
 
   return (
     <Pressable
@@ -375,7 +425,7 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
       aria-selected={paneMode && !storiesOnly ? cell.selected : undefined}
       accessibilityLabel={withWords(
         withAccessWords(cellLabel(model, stage, theme, messages.a11y.journeyCell, labelMarksOf(cell)), cell.access, episodeTitle, messages.a11y.access),
-        mastery ? masteryWords(level, refresh, newVolume, messages.learner.mastery) : [],
+        [...(mastery ? masteryWords(level, refresh, newVolume, messages.learner.mastery) : []), ...(opensVolume === undefined ? [] : [messages.a11y.journeyVolume(opensVolume)])],
       )}
       testID={cellTestId(model.kind, cell.stage, cell.theme, cell.marks)}
       style={{
@@ -422,6 +472,7 @@ function GridCell({ cell, stage, theme, paneMode, deepBand, cellWidth, onOpen, o
               <Icon name={themeGlyph(theme.key)} size={glyphSize} color={colors.text.primary} testID={`theme-glyph-${themeGlyph(theme.key)}`} />
             </View>
           )}
+          {volumeDots ? <VolumeDots volumes={model.volumes} glyphBox={cellLayout.glyphBox} glyph={glyphSize} testID={`journey-volumes-${cell.stage}-${cell.theme}`} /> : null}
           {ring !== null ? (
             // Around the theme glyph: the solid ring (In your plan) or the dotted ring (Not open yet). Never both.
             <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>

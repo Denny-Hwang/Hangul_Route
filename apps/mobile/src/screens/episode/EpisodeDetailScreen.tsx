@@ -20,6 +20,8 @@ export function EpisodeDetailScreen({ route, navigation }: Props): ReactElement 
       onOpenCultureNotes={(storyId) => navigation.push('CultureNotes', { storyId })}
       onOpenCellStories={(stage, theme, source) => navigation.navigate('CellStories', { stage, theme, source })}
       onBack={() => navigation.goBack()}
+      // F-CURR-002 row CM-40: Vol 1 and Vol 2 of a cell are one page each; a tab swaps this page's volume.
+      onOpenVolume={(episodeId) => navigation.setParams({ episodeId })}
     />
   );
 }

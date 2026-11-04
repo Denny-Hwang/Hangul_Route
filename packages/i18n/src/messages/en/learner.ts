@@ -593,6 +593,15 @@ export const learner = {
       startThere: { cta: 'Start there' },
       playAnyway: { cta: 'Play anyway' },
     },
+    /**
+     * A cell's two volumes on its page (F-CURR-002 §5.1, row CM-40; F-STORY-005 PR 5.8), only while `volumes` is on:
+     * the switch's label, each volume's short name and its spoken name.
+     */
+    volumes: {
+      label: 'Volumes',
+      tab: (n: number) => `Vol ${n}`,
+      tabA11y: (n: number) => `Volume ${n}`,
+    },
   },
 
   results: {

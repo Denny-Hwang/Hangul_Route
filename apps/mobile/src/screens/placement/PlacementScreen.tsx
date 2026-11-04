@@ -17,7 +17,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentType, ReactElement } from 'react';
 import { AppState } from 'react-native';
 import { flags, routeEnabledFor } from '../../config/flags';
-import { episodesAll, questsAll } from '../../content';
+import { episodesWithVolumes, questsAll } from '../../content';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { useLocale, useLocalePacks } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
@@ -325,7 +325,8 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
       const completed = new Set((snapshot?.quests ?? []).filter((q) => q.completedAt !== undefined).map((q) => q.questId));
       const tier = accessTier(profile.id, new Date());
       const opts = { isEntitled: (stage: string) => isStageEntitled(stage, tier), completedQuestIds: completed };
-      const catalog = placementRouteCatalog(questsAll, episodesAll);
+      // A cell's Volume 2 is placed out like its Volume 1 by a level above its stage (F-CURR-002 row CM-40).
+      const catalog = placementRouteCatalog(questsAll, episodesWithVolumes);
       const result: PlacementResult = finishRun(savedRun.run, {
         catalog,
         ...opts,

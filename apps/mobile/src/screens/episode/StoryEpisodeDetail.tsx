@@ -19,7 +19,7 @@ import {
   touchTarget,
   useMediaSize,
 } from '@hangul-route/design-system';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -91,6 +91,8 @@ interface Props extends StoryEpisodeNavigation {
    * draws the row when it is above 0 (wireframe episode/detail-cell-stories-row D); a shelf page has 0.
    */
   cellStoryCount: number;
+  /** A Stage 5 cell's "Vol 1" / "Vol 2" tabs (F-CURR-002 row CM-40), under the pills; none for a cell of one book. */
+  volumeTabs?: ReactNode;
 }
 
 /**
@@ -115,6 +117,7 @@ export function StoryEpisodeDetail({
   onOpenCellStories,
   cellStoryCount,
   onOpenCellStoriesRow,
+  volumeTabs,
 }: Props): ReactElement {
   const messages = useMessages();
   const copy = shelfCopy(messages);
@@ -229,6 +232,7 @@ export function StoryEpisodeDetail({
           <Pill tone="secondary" label={view.pills[1]} size="sm" />
           <Pill tone="neutral" label={view.pills[2]} size="sm" />
         </View>
+        {volumeTabs}
         {home && homeStage && homeTheme ? (
           <Pressable
             onPress={() => onOpenCellStories(home.stage, home.theme)}
