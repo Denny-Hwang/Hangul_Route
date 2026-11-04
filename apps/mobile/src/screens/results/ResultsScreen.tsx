@@ -80,6 +80,7 @@ import { firstFreeTopicKey } from '../vocab/topic-data';
 import { clearTryAgainHandoff, peekTryAgainHandoff } from '../quest/quest-reviews';
 import { useBackGuard } from '../use-back-guard';
 import { latchStageCeremonyLater, useStageCeremonyOn } from '../stage-check/stage-check-entry';
+import { useCurrFlag } from '../../store/remote-config-store';
 
 type ResultsMessages = Messages['learner']['results'];
 
@@ -367,6 +368,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   // after a reload. Which extras show is known from the shelf (the title and the levels), so they never shift in late.
   const questStoryId = quest === undefined ? null : storyIdOfQuest(quest);
   const storyChunks = useStoriesLoaded(questStoryId === null ? [] : [questStoryId]);
+  // Next story walks a book 2 too while `volumes` is on (F-CURR-002 row CM-46).
+  const volumesOn = useCurrFlag('volumes');
   const storyResults = useMemo(() => {
     const story = resultsStoryOf(
       quest,
@@ -381,7 +384,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
     );
     if (!story) return null;
     const next = nextStoryAfter(questId, {
-      entries: defaultStoryIndex(),
+      entries: defaultStoryIndex({ volumes: volumesOn }),
       snapshot,
       bookmarks,
       isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll, isQuestOpen: questOpen }),
@@ -400,7 +403,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
       messages.learner.story.results,
     );
     return { story, next, view };
-  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks, volumesOn]);
 
   const goHome = (): void => {
     navigation.dispatch(

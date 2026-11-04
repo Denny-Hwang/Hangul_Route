@@ -14,6 +14,9 @@ import { storiesAll, storyById, storyQuests } from '../stories';
 import { completeStages, stagesToLatch, withStageLatches } from '../../logic/my-route/latch';
 import { snapshotWith } from '../../logic/my-route/__tests__/fixtures/bundle-2026-10';
 import { STORY_QUEST_COPY, STORY_STEP_SECONDS, storyQuestSkeleton } from '../story-skeleton';
+import { foundNotes } from '../../logic/story/culture-notes';
+import { defaultStoryIndex } from '../../logic/story/story-index';
+import { nextStoryAfter } from '../../logic/story/story-pick';
 
 /** F-STORY-005 §3.2 "Books", §3.3 book plan, PR 5.6. */
 describe('Stage 5 books (books.ts)', () => {
@@ -283,6 +286,18 @@ describe('the Food book 2 (row CM-46)', () => {
     expect(storyCellVolume('story:gimjang-arirang')).toBeUndefined();
     expect(storyCellVolume('story:kim-hongdo-genre-paintings')).toBeUndefined();
     expect(storyCellVolume('episode:stage2-life')).toBeUndefined();
+  });
+
+  it('with `volumes` on, a finished tale\'s culture note is found and Next story walks the book; off, neither (review fix)', () => {
+    const quests = [{ questId: 'quest:story-jang-fermented-sauces-read', completedAt: '2026-11-04T10:00:00.000Z' }];
+    const snap = { quests } as unknown as Parameters<typeof foundNotes>[2];
+    const noteIds = (volumes: boolean): string[] => foundNotes(defaultStoryIndex({ volumes }), storiesAll, snap).map((n) => n.note.id);
+    expect(noteIds(false)).not.toContain('cn-geumjul');
+    expect(noteIds(true)).toContain('cn-geumjul');
+    const next = (volumes: boolean) =>
+      nextStoryAfter('quest:story-jang-fermented-sauces-read', { entries: defaultStoryIndex({ volumes }), snapshot: undefined, bookmarks: { v: 1, byStory: {} }, isLocked: () => false });
+    expect(next(false)).toBeNull();
+    expect(next(true)?.storyId).toBe('story:tteok-through-the-seasons');
   });
 
   it('repeats no shipped Food story: kimjang and Kim Hongdo stay in book 1 (F-CURR-002 §5.3)', () => {

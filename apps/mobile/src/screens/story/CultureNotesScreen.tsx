@@ -49,6 +49,7 @@ import { SpeakerButton } from './ReaderParts';
 import { Disclosure, SourcesHeading } from './SourcesParts';
 import { LessonWaiting } from '../lesson-content';
 import { useNoteStoriesLoaded, useNoteStoriesReady } from '../story-content';
+import { useCurrFlag } from '../../store/remote-config-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CultureNotes'>;
 type Navigation = Props['navigation'];
@@ -114,7 +115,9 @@ function CultureNotesContent({
   // from its story's chunk (F-CURR-002 §10), so the list fills as each arrives.
   const noteChunks = useNoteStoriesLoaded();
   const stories = useMemo(() => storiesAll.map((s) => localizeStory(s, locale)), [locale, noteChunks]);
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), stories, snap), [stories, snap]);
+  // A book 2 tale's notes count while `volumes` is on (F-CURR-002 row CM-46).
+  const volumesOn = useCurrFlag('volumes');
+  const notes = useMemo(() => foundNotes(defaultStoryIndex({ volumes: volumesOn }), stories, snap), [stories, snap, volumesOn]);
   const view = useMemo(() => cultureNotesScreenView({ notes, storyId, noteId }), [notes, storyId, noteId]);
   const actions = useMemo(
     () => cultureNotesActions({ from, storyTimeOffered: librarySectionTabs({ entries: defaultStoryIndex() }).includes('story-time') }),

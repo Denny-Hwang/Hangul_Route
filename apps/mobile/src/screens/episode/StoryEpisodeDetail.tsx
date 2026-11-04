@@ -58,6 +58,7 @@ import { CellLinkRow } from '../story/CellLinkRow';
 import { SpeakerButton } from '../story/ReaderParts';
 import { CoverFallback } from '../library/StoryTile';
 import { useStoriesLoaded } from '../story-content';
+import { useCurrFlag } from '../../store/remote-config-store';
 
 const NO_BOOKMARKS = emptyBookmarks();
 /** Earned card art and the silhouette share one size (spec §3.6: `HeritageCardArt` 96). */
@@ -136,7 +137,9 @@ export function StoryEpisodeDetail({
     // storyChunks: a localized copy reads the story's body once, so it is made again when a chunk arrives.
     [sourceEntries, locale, storyChunks],
   );
-  const notes = useMemo(() => foundNotes(defaultStoryIndex(), storiesAll, snap), [snap, storyChunks]);
+  // A book 2 tale's notes count while `volumes` is on (F-CURR-002 row CM-46): the index then holds the later volumes.
+  const volumesOn = useCurrFlag('volumes');
+  const notes = useMemo(() => foundNotes(defaultStoryIndex({ volumes: volumesOn }), storiesAll, snap), [snap, storyChunks, volumesOn]);
   const stageDef = stageByKey(episode.stage);
   const themeDef = themeByKey(episode.theme);
   const view = useMemo(
