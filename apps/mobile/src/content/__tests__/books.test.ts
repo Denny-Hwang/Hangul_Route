@@ -8,7 +8,8 @@ import {
   type Story,
 } from '@hangul-route/content-schema';
 import { BOOK_DEFINITIONS, bookEpisodes, bookQuests, buildBook, storyCellVolume } from '../books';
-import { episodesAll, episodeById, episodesFor, volumeEpisodes } from '../episodes';
+import { episodesAll, episodeById, episodesFor, volumeEpisodes, withVolumes } from '../episodes';
+import { cellVolumes } from '../../logic/episode/volumes';
 import { questsAll } from '../quests';
 import { storiesAll, storyById, storyQuests } from '../stories';
 import { completeStages, stagesToLatch, withStageLatches } from '../../logic/my-route/latch';
@@ -268,5 +269,15 @@ describe('storyCellVolume (F-CURR-002 §4.3, row CM-46)', () => {
     expect(storyCellVolume('story:eongan-letters', withTale)).toBe(2);
     expect(storyCellVolume('story:hangul-name', (id) => (id === 'story:hangul-name' ? { ...tale, id } : undefined))).toBe(2);
     expect(storyCellVolume('story:eongan-letters', () => undefined)).toBeUndefined();
+  });
+});
+
+describe('the Letters book 2 behind volumes (F-CURR-002 row CM-46)', () => {
+  it('shows in its cell only while volumes is on, after book 1, and never joins the route list', () => {
+    const letters = episodeById('episode:stage5-letters')!;
+    expect(cellVolumes(letters, false).map((e) => e.id)).toEqual(['episode:stage5-letters']);
+    expect(cellVolumes(letters, true).map((e) => e.id)).toEqual(['episode:stage5-letters', 'episode:stage5-letters-v2']);
+    expect(withVolumes(false).some((e) => e.id === 'episode:stage5-letters-v2')).toBe(false);
+    expect(episodesAll.some((e) => e.id === 'episode:stage5-letters-v2')).toBe(false);
   });
 });
