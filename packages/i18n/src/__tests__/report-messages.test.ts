@@ -253,7 +253,8 @@ describe('Appendix A drafts (English)', () => {
   it('pins the class words (section 3.7, behaviour 5)', () => {
     const c = r.class;
     expect(c.headline(2, 12, r.when.week)).toBe('2 of 12 learners practiced this week.');
-    expect(c.band.none).toBe('Not yet');
+    // GX-8 T15 (AMENDMENTS-GROWNUP-UX section 8): the empty day band says what it counts.
+    expect(c.didntPractice(9)).toBe("Didn't practice: 9");
     expect(c.olderApp(3)).toBe('3 learners have an older app: their day-by-day figures appear after an update.');
     expect(c.lettersNew).toBe('Letters the class got strong on');
     expect(c.revisit).toBe('Letters to revisit together');
@@ -432,6 +433,7 @@ const NUMBER_NOT_COUNTED: Readonly<Record<string, string>> = {
   'report.class.questsNew': 'a label and its number',
   'report.class.cardsNew': 'a label and its number',
   'report.class.count': 'a label and its number',
+  'report.class.didntPractice': 'a label and its number (GX-8 T15, the class report\'s no-practice band)',
   'report.class.band.range': 'a range of 2 or more days, always plural',
   'report.class.band.atLeast': 'the 10+ band, always plural',
   'report.class.planRow': 'numbers after "assigned to", "started by" and "finished by", no noun',
