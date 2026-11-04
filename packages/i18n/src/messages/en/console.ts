@@ -1407,6 +1407,13 @@ export const consoleMsgs = {
             one: `${n} learner is already in ${cap} classes. Move or remove them before unarchiving.`,
             other: `${n} learners are already in ${cap} classes. Move or remove them before unarchiving.`,
           }),
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-10 (T11, P7): a learner row's Move is off while a move of that learner is open, with this
+     * reason beside it; a family's **Invite another grown-up** copies the family code and says what the other grown-up does.
+     */
+    moveOpen: 'A move is already open.',
+    inviteGrownUp: { cta: 'Invite another grown-up' },
+    inviteGrownUpLine: (code: string) => `They sign in, then enter this code: ${code}`,
   },
   /**
    * The school admin view (`SchoolAdmin`, `school.ts`, F-SCHOOL-001 §3.3, F-I18N-001 PR 10c),
