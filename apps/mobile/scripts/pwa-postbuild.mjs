@@ -23,6 +23,10 @@
 // in the same report. Locale chunks (the es / ko UI messages and content text, one chunk per locale) and the grown-up
 // roots (the presenter, All lessons) are checked the same way (one precached bundle each, never in the start bundle)
 // and reported beside them.
+// Later chunks (CM-5B, pwa/offline-packs.mjs): a lesson cell's Volume 2 and the tales only a book 2 holds leave the
+// learner precache. They are runtime-cached on first use (`hr-later-v1`, cache-first) and a grown-up can save a stage
+// for offline ahead of time from offline-packs.json (precached), which lists each stage's later chunks and the clips of
+// its audio pack with their bytes. The build fails if a later chunk is precached or missing from the index.
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
 import { readFileSync, readdirSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import * as nodeModule from 'node:module';
@@ -52,6 +56,17 @@ import {
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
+import {
+  OFFLINE_PACKS_FILE,
+  laterBundles,
+  laterChunkProblems,
+  laterChunks,
+  laterGlobIgnores,
+  laterRuntimeCaching,
+  laterStoryIds,
+  laterTotals,
+  offlinePacksIndex,
+} from './pwa/offline-packs.mjs';
 import {
   LEARNER_CHUNKS,
   LOCALE_CHUNKS,
@@ -195,12 +210,36 @@ const clipPacks = clipPackMap(
   readFileSync(join(here, '..', 'src', 'content', 'jamo.ts'), 'utf8'),
 );
 
+// The lesson and story chunks (F-CURR-002 §10): the manifests the app was built from, read from content/ as
+// build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline story fixtures, never chunks, and,
+// with --lesson-fixtures, the fixture Volume 2 cell of `build-lessons.mjs --include-fixtures`, F-CURR-002 row CM-40).
+const lessonManifest = lessonBuild.chunkManifest(args.includes('--lesson-fixtures') ? lessonBuild.readCellsWithFixtures(repo) : lessonBuild.readCells(repo));
+const storyManifest = storyBuild.readChunkManifest(repo);
+const jsDir = join(dist, '_expo', 'static', 'js', 'web');
+const bundles = existsSync(jsDir)
+  ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
+  : [];
+// Row CM-5B: the later chunks, out of the precache, and the index Save for offline reads (written before the glob, so it is precached).
+const later = laterChunks({
+  lessons: lessonManifest,
+  stories: storyManifest,
+  laterStories: laterStoryIds(readFileSync(join(here, '..', 'src', 'content', 'books.ts'), 'utf8')),
+});
+const laterBuilt = laterBundles(later, bundles);
+const offlinePacks = offlinePacksIndex({
+  later: laterBuilt,
+  clips: builtMp3s(dist).map((url) => ({ url, bytes: statSync(join(dist, url)).size })),
+  packOf: (ref) => clipPacks.get(ref),
+});
+writeFileSync(join(dist, OFFLINE_PACKS_FILE), `${JSON.stringify(offlinePacks)}\n`);
+const laterRule = laterRuntimeCaching(later);
+
 const precache = {
   globDirectory: dist,
   globPatterns: ['**/*.{js,html,ico,png,json,webmanifest,svg,mp3,woff2}'],
   // Workbox's default ignore, every clip outside the precached pack (served by the runtime rules below), and
   // every console file (grown-up paths and _next/): never in the learner's offline bundle.
-  globIgnores: ['**/node_modules/**/*', ...audioPrecacheIgnores(clipPacks), ...grownUpGlobIgnores(GROWN_UP_PREFIXES)],
+  globIgnores: ['**/node_modules/**/*', ...audioPrecacheIgnores(clipPacks), ...grownUpGlobIgnores(GROWN_UP_PREFIXES), ...laterGlobIgnores(laterBuilt)],
   // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
   // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
   // anyway; the limit only decides whether it is kept for offline use.
@@ -220,7 +259,7 @@ const { count, size, warnings } = await generateSW({
   clientsClaim: true,
   skipWaiting: false, // the app decides when to apply an update (never mid-quest)
   cleanupOutdatedCaches: true,
-  runtimeCaching: [...audioRuntimeCaching(), grownUpNavigationRule(GROWN_UP_PREFIXES)],
+  runtimeCaching: [...audioRuntimeCaching(), ...(laterRule === null ? [] : [laterRule]), grownUpNavigationRule(GROWN_UP_PREFIXES)],
 });
 for (const w of warnings) process.stdout.write(`workbox: ${w}\n`);
 
@@ -257,9 +296,9 @@ assertLearnerPrecache(manifestUrls, isGrownUpPath, (url) => readFileSync(join(di
 // The lecture presenter's Hangul font works offline (F-TCH-004 §3.6, §3.8).
 assertPresenterFontPrecached(manifestUrls);
 // The app's own JS bundle works offline: Workbox only warns when a file is over the size limit.
-const jsDir = join(dist, '_expo', 'static', 'js', 'web');
+const laterUrls = new Set(laterBuilt.map((b) => b.url));
 const unprecachedJs = existsSync(jsDir)
-  ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => `_expo/static/js/web/${f}`).filter((url) => !manifestUrls.includes(url))
+  ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => `_expo/static/js/web/${f}`).filter((url) => !manifestUrls.includes(url) && !laterUrls.has(url))
   : [];
 if (unprecachedJs.length > 0) throw new Error(`pwa-postbuild: app bundles missing from the precache (over maximumFileSizeToCacheInBytes?): ${unprecachedJs.join(', ')}`);
 // [OA] Row OA-7a review: a warning well before the limit, so the growth is seen before an offline start is at risk.
@@ -272,18 +311,10 @@ if (existsSync(jsDir)) {
   }
 }
 
-// The lesson and story chunks (F-CURR-002 §10): the manifests the app was built from, read from content/ as
-// build-lessons.mjs and build-stories.mjs read it (an e2e fixture build adds inline story fixtures, never chunks, and,
-// with --lesson-fixtures, the fixture Volume 2 cell of `build-lessons.mjs --include-fixtures`, F-CURR-002 row CM-40).
-const lessonManifest = lessonBuild.chunkManifest(args.includes('--lesson-fixtures') ? lessonBuild.readCellsWithFixtures(repo) : lessonBuild.readCells(repo));
-const storyManifest = storyBuild.readChunkManifest(repo);
 // The review-item index (F-CURR-002 §4.2, row CM-10): one chunk, under the same checks.
 const reviewItemManifest = await reviewItemBuild.readChunkManifest(repo);
 // "This week in Korea" (F-CURR-002 row CM-48): the week drops, one chunk, under the same checks.
 const weekDropManifest = await weekDropBuild.readChunkManifest(repo);
-const bundles = existsSync(jsDir)
-  ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
-  : [];
 const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest, ...weekDropManifest];
 // The per-pack clip map chunks the map generator wrote (AC-B6): one marked chunk per pack outside the precache.
 const packChunkDir = join(here, '..', 'src', 'content', '__generated__', PACK_CHUNK_DIR);
@@ -294,7 +325,9 @@ const AUDIO_PACK_CHUNKS = existsSync(packChunkDir)
       .sort()
       .map((pack) => ({ name: packChunkName(pack), marker: packChunkMarker(pack) }))
   : [];
-const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls });
+const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls, runtime: later.map((c) => c.name) });
+// Row CM-5B: no later chunk precached, each in the index, and the index precached.
+chunkProblems.push(...laterChunkProblems({ built: laterBuilt, precached: manifestUrls, index: offlinePacks }));
 // The locale chunks (the es / ko UI messages and content text, one per locale), the grown-up roots and the learner
 // screen chunks ([GU] the guest's first quest stack), under the same rules.
 chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS, ...AUDIO_PACK_CHUNKS], bundles, precached: manifestUrls }));
@@ -314,6 +347,7 @@ const report = precacheReport({
   screens: SCREEN_CHUNKS,
   scenes: SCENE_CHUNKS,
   audioPacks: AUDIO_PACK_CHUNKS,
+  later: laterTotals(laterBuilt),
   clips: precachedClips,
   bundles,
   precache: { count, size },

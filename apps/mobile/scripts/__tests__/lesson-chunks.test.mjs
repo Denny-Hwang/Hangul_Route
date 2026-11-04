@@ -60,6 +60,16 @@ describe('lessonChunkProblems', () => {
     expect(lessonChunkProblems({ manifest, bundles, precached: all(bundles) })).toEqual([]);
     // Volume 1's bundle is never taken for Volume 2's (the md5 suffix ends the name).
     expect(lessonChunkUrls(manifest.slice(0, 1), bundles)).toEqual([bundles[1].url]);
+    // Row CM-5B: a later chunk named as runtime-cached may be out of the precache; every other check still holds it.
+    const withoutV2 = all(bundles).filter((u) => u !== bundles[2].url);
+    expect(lessonChunkProblems({ manifest, bundles, precached: withoutV2 })).toEqual([`${bundles[2].url} is missing from the precache`]);
+    expect(lessonChunkProblems({ manifest, bundles, precached: withoutV2, runtime: ['lessons-cell-stage2-rites-v2'] })).toEqual([]);
+    expect(lessonChunkProblems({ manifest, bundles: [start, bundles[1], bundles[3]], precached: withoutV2, runtime: ['lessons-cell-stage2-rites-v2'] })).toEqual([
+      'lessons-cell-stage2-rites-v2 has no web bundle: the chunk is missing from the build',
+    ]);
+    // The precache report prints the later chunks on a line of their own, outside the precache.
+    const report = precacheReport({ manifest, bundles, later: { count: 1, raw: 4_000 }, precache: { count: 3, size: 9 } });
+    expect(reportLines(report)).toContain('  later chunks (runtime-cached, Save for offline, CM-5B)  1 bundles  4000 B raw  (not in the learner precache)');
     const missing = bundles.filter((b) => !b.url.includes('lessons-headers-en'));
     expect(lessonChunkProblems({ manifest, bundles: missing, precached: all(missing) })).toEqual(['lessons-headers-en has no web bundle: the chunk is missing from the build']);
     const pulledIn = [{ url: START, text: `${start.text}e.CHUNK_HASH="2123456789abcdef";` }, ...bundles.slice(1)];
@@ -546,7 +556,8 @@ describe('precacheReport and its budget lines', () => {
       expect.stringMatching(
         new RegExp(`^the start bundle is ${PRECACHE_BUDGET.startBundleRaw + 1} B raw, over its ceiling of ${PRECACHE_BUDGET.startBundleRaw} B: it must not grow .*raise PRECACHE_BUDGET\\.startBundleRaw`),
       ),
-      `the learner precache is ${PRECACHE_BUDGET.learnerPrecacheRaw + 1} B, over its ceiling of ${PRECACHE_BUDGET.learnerPrecacheRaw} B: row CM-5B (Save for offline) is triggered`,
+      `the learner precache is ${PRECACHE_BUDGET.learnerPrecacheRaw + 1} B, over its ceiling of ${PRECACHE_BUDGET.learnerPrecacheRaw} B: ` +
+        'a later volume or pack belongs in the runtime-cached later chunks of row CM-5B (pwa/offline-packs.mjs), Save for offline, not in the precache',
     ]);
     expect(precacheBudgetProblems({ ...report, start: null, precache: { count: 0, raw: 0 } })).toEqual(['no start bundle to measure']);
     // A report without the story line (as CM-5 built it) prints the others.

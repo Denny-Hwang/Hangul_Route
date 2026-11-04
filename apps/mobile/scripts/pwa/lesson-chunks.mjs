@@ -145,7 +145,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // scene's description, the setting and props it adds, its reference round and its note, as built.
   sceneChunkRaw: 25_000,
   // The learner precache measured after CM-5 (8,787,329 B, 35 files, the release build, no recorded clips) + 2.5 MB;
-  // crossing it triggers CM-5B (Save for offline). On main 8dfb8a43c it measures 9,361,858 B (77 files, no recorded
+  // crossing it triggers CM-5B (Save for offline). The Volume 2 integration crossed it (11,590,564 B with every Volume 2
+  // cell and both books 2; 12,110,564 B with the whole jamo-s1 pack), so row CM-5B takes the later volumes out of the
+  // precache (pwa/offline-packs.mjs): they are runtime-cached on first use and saved for offline on request. The line
+  // does not move; Volume 1, Stage 1 and the start-up chunks stay precached under it. On main 8dfb8a43c it measures 9,361,858 B (77 files, no recorded
   // clips), 1,925,471 B under the line. The jamo recordings re-measure it when they land (F-CURR-002 §10).
   learnerPrecacheRaw: 11_287_329,
   // AMENDMENTS-AUDIO-CLIPS G5 (row AC-6): the clips the learner precache holds, which is the `jamo-s1` pack alone (43
@@ -188,11 +191,14 @@ const carries = (text, hash) => new RegExp(`CHUNK_HASH\\s*=\\s*["']${hash}["']`)
 
 /**
  * Problems with the lesson chunks of one web build (empty = sound).
- * @param {{ manifest: { name: string, hash: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
- *   `manifest`: build-lessons.mjs `chunkManifest`; `bundles`: every JS file of WEB_JS_DIR; `precached`: the precache URLs.
+ * @param {{ manifest: { name: string, hash: string }[], bundles: { url: string, text: string }[], precached: string[], runtime?: readonly string[] }} input
+ *   `manifest`: build-lessons.mjs `chunkManifest`; `bundles`: every JS file of WEB_JS_DIR; `precached`: the precache URLs;
+ *   `runtime`: the names of the later chunks (row CM-5B), which are runtime-cached instead of precached.
  */
-export function lessonChunkProblems({ manifest, bundles, precached }) {
+export function lessonChunkProblems({ manifest, bundles, precached, runtime = [] }) {
   const problems = [];
+  // The later chunks of row CM-5B (a Volume 2 cell, a book 2 tale) are runtime-cached, never precached: offline-packs.mjs checks them.
+  const runtimeCached = new Set(runtime);
   const listed = new Set(precached.map((u) => u.replace(/^\/+/, '')));
   const starts = bundles.filter((b) => isStartBundle(b.url));
   if (starts.length !== 1) problems.push(`expected one start bundle (${WEB_JS_DIR}/index-<hash>.js), found ${starts.length}`);
@@ -210,7 +216,7 @@ export function lessonChunkProblems({ manifest, bundles, precached }) {
     for (const bundle of own) {
       if (!carries(bundle.text, hash)) problems.push(`${bundle.url} does not carry ${hash}, the hash the manifest names for ${name}`);
       if (NAMED.exec(bundle.url)?.[2] !== md5(bundle.text)) problems.push(`${bundle.url}: its file name is not the md5 of its content`);
-      if (!listed.has(bundle.url)) problems.push(`${bundle.url} is missing from the precache`);
+      if (!runtimeCached.has(name) && !listed.has(bundle.url)) problems.push(`${bundle.url} is missing from the precache`);
     }
   }
   return problems;
@@ -452,9 +458,10 @@ export function withWholeClipPack(report, budget = PRECACHE_BUDGET) {
  * precached clips (AMENDMENTS-AUDIO-CLIPS AC-6) and the whole learner precache.
  * @param {{ manifest: { name: string }[], stories?: { name: string }[], locales?: readonly { name: string }[], roots?: readonly { name: string }[], reviewItems?: { name: string }[], screens?: readonly { name: string }[], scenes?: readonly { name: string }[], audioPacks?: readonly { name: string }[], clips?: { count: number, bytes: number }, bundles: { url: string, text: string }[], precache: { count: number, size: number } }} input
  */
-export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], weekDrops = [], screens = [], scenes = [], audioPacks = [], clips, bundles, precache }) {
+export function precacheReport({ manifest, stories = [], locales = [], roots = [], reviewItems = [], weekDrops = [], screens = [], scenes = [], audioPacks = [], later, clips, bundles, precache }) {
   const start = bundles.find((b) => isStartBundle(b.url));
   return {
+    later: later === undefined ? undefined : { count: later.count, raw: later.raw },
     audioPackChunks: chunkTotals(audioPacks, bundles),
     // Only the post-build measures the precached clips; a report without them skips the clip lines and checks.
     clips: clips === undefined ? undefined : { count: clips.count, bytes: clips.bytes },
@@ -517,6 +524,9 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
   }
   if (report.clips !== undefined && report.clips.count > 0) {
     lines.push(`  precached clips  ${report.clips.count} files  ${report.clips.bytes} B  (ceiling ${budget.precachedClipsRaw} B, jamo-s1 only)`);
+  }
+  if (report.later !== undefined) {
+    lines.push(`  later chunks (runtime-cached, Save for offline, CM-5B)  ${report.later.count} bundles  ${report.later.raw} B raw  (not in the learner precache)`);
   }
   lines.push(`  learner precache  ${report.precache.count} files  ${report.precache.raw} B  (ceiling ${budget.learnerPrecacheRaw} B)`);
   if (report.clips !== undefined) {
@@ -598,7 +608,8 @@ export function precacheBudgetProblems(report, budget = PRECACHE_BUDGET) {
   }
   if (report.precache.raw > budget.learnerPrecacheRaw) {
     problems.push(
-      `the learner precache is ${report.precache.raw} B, over its ceiling of ${budget.learnerPrecacheRaw} B: row CM-5B (Save for offline) is triggered`,
+      `the learner precache is ${report.precache.raw} B, over its ceiling of ${budget.learnerPrecacheRaw} B: ` +
+        'a later volume or pack belongs in the runtime-cached later chunks of row CM-5B (pwa/offline-packs.mjs), Save for offline, not in the precache',
     );
   }
   return problems;
