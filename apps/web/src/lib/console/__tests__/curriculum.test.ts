@@ -1,5 +1,7 @@
 import {
   CATALOG,
+  CATALOG_QUEST_ADDITIONS,
+  planCatalogVersion,
   CurriculumParamsSchema,
   PACES,
   StageKeySchema,
@@ -576,7 +578,24 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     const plan = classPlan();
     expect(isStaleCatalog(plan.meta)).toBe(false);
     expect(isStaleCatalog({ ...plan.meta, catalogVersion: 0 })).toBe(true);
-    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: CATALOG.version + 1 })).toBe(true);
+    // A later catalogue asks only when it adds a quest a plan can hold (a first-volume lesson or a ready story).
+    const next = CATALOG.version + 1;
+    const added = (ids: string[]) => ({ ...CATALOG_QUEST_ADDITIONS, [next]: ids });
+    const firstVolume = CATALOG.cells.find((cell) => cell.stage === 'stage2' && cell.questIds.length > 0)!.questIds[0]!;
+    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, added([firstVolume]))).toBe(true);
+  });
+
+  it('offers no Refresh route for a later volume that merges dark (F-CURR-002 row CM-46)', () => {
+    const plan = classPlan();
+    const next = CATALOG.version + 1;
+    // The Letters book 2's quests are a later volume of their cell: off the route days, never in a plan.
+    const book2 = CATALOG.cells.flatMap((cell) => cell.volumes ?? []).flatMap((volume) => volume.questIds);
+    expect(book2).toContain('quest:story-jikji-metal-type-read');
+    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, { ...CATALOG_QUEST_ADDITIONS, [next]: book2 })).toBe(false);
+    // The shipped catalogue's book 2 stamp is above every plan quest's, and a plan saved before it is not stale.
+    expect(planCatalogVersion(CATALOG)).toBeLessThan(CATALOG.version);
+    expect(isStaleCatalog({ ...plan.meta, catalogVersion: planCatalogVersion(CATALOG) })).toBe(false);
+    expect(isStaleCatalog({ ...plan.meta, catalogVersion: planCatalogVersion(CATALOG) - 1 })).toBe(true);
   });
 
   /** The catalogue every route saved before F-QUEST-002 Q-6a was made from: version 1, no lesson teaches anything. */
