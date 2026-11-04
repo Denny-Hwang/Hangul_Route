@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route blend: the preview header and the cycle table (BL-D mock)</title>
+<link rel="stylesheet" href="route-blend.css">
+<script src="strings.js"></script>
+</head>
+<body>
+<!--
+  Amendment section 10.2 (preview) and 6.5 (golden C overlap, golden D split with ?mode=split); wireframe
+  console/curriculum-wizard.md "Meeting" M3. Class on Tuesday 30 min, 3 practice days of 10 min (Wed, Fri, Sun),
+  26 weeks from Mon, Nov 9 (the route starts with the first class, Tue, Nov 10), the days off of step 2 (M1): two
+  weeks over the new year (Dec 21 - Jan 3: 2 class days and 6 practice days) and one class-only day off (Tue,
+  Feb 16). Sessions: 26 x 4 - 8 - 1 = 95; scheduled class dates: 26 - 2 - 1 = 23 (readout.html uses the same).
+  Numbers follow the spec's worked example until BL-2's goldens regenerate them.
+  Split (golden D, section 5.2 and BL-OD-4): lessons of 5 min in cells of 3 (cell A = lessons 1-3, cell B = 4-6,
+  ...), C_max = 2. The class day takes the openers of the packet's cells first (A's 1, B's 4), then further packet
+  lessons in order (2); the practice-only lessons (3, 5, 6) all belong to cells a class day has already opened.
+  Practice days deal the class lessons, then the practice-only ones, round robin (section 6.2).
+-->
+<header class="console-top"><b>Hangul Route</b><span>Evening Class D</span></header>
+<main class="console-main">
+  <div class="step-head"><h1 data-t="existing.previewTitle"></h1><span class="step-of" data-t="existing.stepOf" data-a="[4,4]"></span></div>
+  <section class="panel preview-head" id="preview-header">
+    <p data-t="console.preview.header" data-a="[4, 1, 30, 3, 10]"></p>
+    <p id="per-day"></p>
+    <p data-t="console.preview.average" data-a="[95, 4]"></p>
+    <p class="note" data-t="console.preview.start" data-a="[&quot;date:2026-11-10&quot;]"></p>
+  </section>
+  <section class="panel">
+    <table class="cycles" id="cycles">
+      <caption data-t="existing.weeksLabel"></caption>
+      <thead><tr>
+        <th scope="col" data-t="existing.week"></th>
+        <th scope="col" data-t="existing.dates"></th>
+        <th scope="col" data-t="existing.kind"></th>
+        <th scope="col" data-t="console.preview.classCol"></th>
+        <th scope="col" data-t="console.preview.practiceCol"></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="note" data-t="existing.draftLine"></p>
+  </section>
+  <div class="btn-row"><button class="btn" type="button" data-t="existing.change"></button><button class="btn primary" type="button" data-t="existing.use"></button></div>
+</main>
+<script>
+window.beforeApply = (RB) => {
+  const split = RB.params.get('mode') === 'split';
+  const E = RB.S[RB.lang].existing, P = RB.S[RB.lang].console.preview;
+  document.getElementById('per-day').textContent = P.perDay(3, split ? 2 : 1);
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const day = (iso) => RB.date(iso);
+  const refresh = `<li class="refresh-tag">${esc(P.refresh)}</li>`;
+  // Golden C (overlap): class 1, 2, 3; each practice day one class lesson + Refresh.
+  // Golden D (split): a packet of two cells (base+1..3, base+4..6). Class: the openers first (base+1, base+4), then
+  // base+2. Practice-only: base+3, base+5, base+6 (cells opened by this class day). Round robin over Wed, Fri, Sun:
+  // [c1, c2, c3, o1, o2, o3] gives Wed c1 + o1, Fri c2 + o2, Sun c3 + o3.
+  const learnRow = (week, from, to, cls, wed, fri, sun, base) => {
+    const classLessons = split ? [1, 4, 2] : [1, 2, 3];
+    const onlyLessons = [3, 5, 6];
+    const lessons = classLessons.map((i) => `<li>${esc(P.lesson(base + i))}</li>`).join('');
+    const pday = (iso, k) => `<li><span class="day">${esc(day(iso))}</span><ul><li>${esc(P.lesson(base + classLessons[k]))}</li>${split ? `<li class="practice-only">${esc(P.lesson(base + onlyLessons[k]))} (${esc(P.practiceOnlyTag)})</li>` : refresh}</ul></li>`;
+    return `<tr><th scope="row">${week}</th><td data-head="${esc(E.dates)}">${esc(day(from))} – ${esc(day(to))}</td><td data-head="${esc(E.kind)}" class="kind">${esc(E.learn)}</td>
+      <td data-head="${esc(P.classCol)}"><span class="day">${esc(day(cls))}</span><ul>${lessons}</ul></td>
+      <td data-head="${esc(P.practiceCol)}"><ul>${pday(wed, 0)}${pday(fri, 1)}${pday(sun, 2)}</ul></td></tr>`;
+  };
+  const reviewRow = (week, from, to, cls, wed, fri, sun) =>
+    `<tr><th scope="row">${week}</th><td data-head="${esc(E.dates)}">${esc(day(from))} – ${esc(day(to))}</td><td data-head="${esc(E.kind)}" class="kind">${esc(E.review)}</td>
+      <td data-head="${esc(P.classCol)}"><span class="day">${esc(day(cls))}</span><ul><li>${esc(P.classReview)}</li></ul></td>
+      <td data-head="${esc(P.practiceCol)}"><ul>${[wed, fri, sun].map((d) => `<li><span class="day">${esc(day(d))}</span><ul>${refresh}</ul></li>`).join('')}</ul></td></tr>`;
+  const step = split ? 6 : 3;
+  document.getElementById('rows').innerHTML = [
+    learnRow(1, '2026-11-10', '2026-11-16', '2026-11-10', '2026-11-11', '2026-11-13', '2026-11-15', 0),
+    learnRow(2, '2026-11-17', '2026-11-23', '2026-11-17', '2026-11-18', '2026-11-20', '2026-11-22', step),
+    learnRow(3, '2026-11-24', '2026-11-30', '2026-11-24', '2026-11-25', '2026-11-27', '2026-11-29', 2 * step),
+    reviewRow(4, '2026-12-01', '2026-12-07', '2026-12-01', '2026-12-02', '2026-12-04', '2026-12-06'),
+  ].join('');
+};
+</script>
+</body>
+</html>
