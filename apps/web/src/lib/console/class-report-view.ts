@@ -191,9 +191,14 @@ function stepperOf(period: ReportPeriod, at: string | null, now: Date, href: (at
   };
 }
 
-function bandLabel(band: ClassDayBand, m: Messages): string {
+/** One day-band row: "Didn't practice: 3" for the empty band (GX-8 T15), "1 to 2 days: 3" for the others. */
+function bandRow(band: ClassDayBand, learners: number, m: Messages): string {
+  const c = m.report.class;
+  return band === '0' || band === 'not_yet' ? c.didntPractice(learners) : c.count(bandLabel(band, m), learners);
+}
+
+function bandLabel(band: Exclude<ClassDayBand, '0' | 'not_yet'>, m: Messages): string {
   const b = m.report.class.band;
-  if (band === '0' || band === 'not_yet') return b.none;
   if (band === 'practiced') return b.practiced;
   if (band === '10+') return b.atLeast(10);
   const [from, to] = band.split('-').map(Number) as [number, number];
@@ -265,7 +270,7 @@ export function classReportView(input: ClassReportViewInput): ClassReportView {
       heading: m.report.section.thisPeriod,
       noneYet: practiced ? null : period === 'all' ? h.noneEver : past ? h.noneThen(when) : h.noneYet(when),
       afterUpdate: null,
-      bands: bands && bands.length ? { heading: c.section.daysPracticed, rows: bands.map((row) => c.count(bandLabel(row.band, m), row.learners)) } : null,
+      bands: bands && bands.length ? { heading: c.section.daysPracticed, rows: bands.map((row) => bandRow(row.band, row.learners, m)) } : null,
       notSaved: notSaved > 0 ? c.windowNotSaved(notSaved) : null,
       time: {
         heading: c.section.time,

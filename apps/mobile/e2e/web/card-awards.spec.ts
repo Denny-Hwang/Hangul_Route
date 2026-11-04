@@ -9,7 +9,7 @@ import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { questsAll } from '../../src/content/quests';
 import { missingAwards } from '../../src/logic/awards/derive';
 import { expect, test } from './fixtures';
-import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored, seedStoredAll } from './helpers';
+import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored, seedStoredAll, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { expectTextFits } from './text-fit';
 
@@ -273,6 +273,7 @@ test.describe('card awards (F-STORY-006 6.9, release bundle)', () => {
     for (const check of listen.checks) {
       const right = check.options.find((o) => o.isCorrect);
       if (!right) throw new Error(`${check.id} has no right option`);
+      await pastTapLock(page);
       await page.getByTestId(`story-check-option-${right.id}`).click();
       await page.getByTestId('story-check-next').click();
     }

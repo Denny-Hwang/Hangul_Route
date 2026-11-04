@@ -35,6 +35,7 @@ export const consoleMsgs = {
   clerkPending: 'Esta versión aún no tiene inicio de sesión. La app de estudiantes funciona sin cuenta.',
   cantReach: 'Ahora no se puede llegar a la consola.',
   tryAgain: 'Reintentar',
+  errorPage: { title: 'Algo salió mal en esta página.' },
   noSpaces: 'Aún no estás en ningún espacio.',
   createSpace: 'Crear un espacio',
   writeOnBoard: 'Escríbelo en la pizarra. Los estudiantes se unen desde Perfil → Clases y familia → Unirme a una clase.',
@@ -54,7 +55,7 @@ export const consoleMsgs = {
   noPlanYet: 'Aún no hay plan. Elige unas misiones, reparte las fechas y publica antes de la clase.',
   relinkApproveHint: 'Aprueba solo si este estudiante está contigo o esperas este dispositivo.',
   relinkNothing: 'Nada pendiente. Las solicitudes aparecen aquí durante 10 minutos desde que un estudiante la envía.',
-  relinkAnotherWay: 'Otra opción: crea un código de rescate nuevo y díctaselo al estudiante. El código anterior deja de funcionar.',
+  relinkAnotherWay: 'Crea un código de rescate nuevo y díctaselo al estudiante. El código anterior deja de funcionar.',
   relinkCardsComeBack:
     'Al aprobar, el estudiante vuelve a esta clase. Sus tarjetas vuelven con el código de rescate que su adulto guarda en la app (Guardar mi progreso); los docentes no pueden verlo ni crearlo de nuevo.',
   rescueIssued: 'Díctale esto ahora al estudiante o a su adulto: se muestra una sola vez.',
@@ -280,24 +281,28 @@ export const consoleMsgs = {
     week: {
       title: 'Esta semana',
       practiced: (practiced: number, students: number) => `${practiced} de ${students} ${plural('es', practiced, { one: 'practicó', other: 'practicaron' })} esta semana`,
-      anchor: (accuracy: string) => `Clave de la Etapa 1: ${accuracy}`,
+      anchor: (accuracy: string) => `Etapa 1, aciertos al primer intento: ${accuracy}`,
       revisit: (jamo: string) => `Jamo para repasar en grupo: ${jamo}`,
       notSynced: (count: number) =>
-        plural('es', count, { one: `${count} no sincroniza desde hace una semana`, other: `${count} no sincronizan desde hace una semana` }),
+        plural('es', count, { one: `${count} no abre la app desde hace más de una semana`, other: `${count} no abren la app desde hace más de una semana` }),
+      practicedFamily: (practiced: number, learners: number) => `${practiced} de ${learners} ${plural('es', practiced, { one: 'practicó', other: 'practicaron' })} esta semana`,
       wordsRevisit: (words: string) => `Palabras para repasar en grupo: ${words}`,
     },
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
-    relinkRequests: { cta: 'Reconexiones' },
+    relinkRequests: { cta: 'Dispositivos nuevos' },
     relinkPending: {
-      cta: (count: number) => plural('es', count, { one: `${count} reconexión`, other: `${count} reconexiones` }),
+      cta: (count: number) => plural('es', count, { one: `${count} dispositivo nuevo por aprobar`, other: `${count} dispositivos nuevos por aprobar` }),
     },
     settings: { cta: 'Ajustes' },
     studentsLabel: 'Estudiantes',
     recentFirst: 'Primero la actividad más reciente',
+    rosterHeadingFamily: 'Quienes aprenden',
+    joinedOn: (date: string) => `Se unió el ${date}`,
     learner: {
       lastActive: (when: string) => `Última actividad: ${when}`,
       questsCards: (done: number, total: number, cards: number) =>
-        plural('es', cards, { one: `Misiones ${done} / ${total} · ${cards} tarjeta`, other: `Misiones ${done} / ${total} · ${cards} tarjetas` }),
+        plural('es', cards, { one: `Misiones de la Etapa 1: ${done} de ${total} · ${cards} tarjeta`, other: `Misiones de la Etapa 1: ${done} de ${total} · ${cards} tarjetas` }),
+      firstQuest: 'En la primera misión',
       minutesThisWeek: (minutes: number) => `${minutes} min esta semana`,
       revisit: (jamo: string) => `Repasar: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
@@ -308,15 +313,17 @@ export const consoleMsgs = {
     wordGloss: (romanization: string, gloss: string) => `${romanization} (${gloss})`,
   },
   relink: {
-    title: 'Reconexiones',
-    titleFor: (space: string) => `${space} · reconexiones`,
+    title: 'Solicitudes de dispositivo nuevo',
+    titleFor: (space: string) => `${space} · solicitudes de dispositivo nuevo`,
     back: (space: string | null) => (space ? `Volver a ${space}` : 'Volver al espacio'),
     approved: (name: string) => `${name} ya puede abrir su dispositivo nuevo.`,
     denied: (name: string) => `Cerrada. El dispositivo de ${name} dirá "pregúntale a tu docente".`,
+    deniedFamily: (name: string) => `Cerrada. El dispositivo de ${name} dirá "pregúntale a un adulto".`,
     issueAsk: (name: string) => `¿Crear un código de rescate nuevo para ${name}?`,
     issueFailed: 'Ahora no se pudo crear un código.',
-    askingToBe: (name: string) => `Alguien pide entrar como ${name}`,
+    askingToBe: (name: string) => `${name} · desde un dispositivo nuevo`,
     device: 'dispositivo',
+    platform: { ios: 'iPhone o iPad', android: 'Android', web: 'Web' },
     approve: { cta: 'Aprobar' },
     deny: { cta: 'Rechazar' },
     anotherWay: 'Otra opción',
@@ -329,9 +336,10 @@ export const consoleMsgs = {
     expiresIn: (minutes: number) => `expira en ${minutes} min`,
     askedJustNow: 'pidió hace un momento',
     askedAgo: (minutes: number) => `pidió hace ${minutes} min`,
+    askedHoursAgo: (hours: number) => plural('es', hours, { one: `pidió hace ${hours} hora`, other: `pidió hace ${hours} horas` }),
+    askedDaysAgo: (days: number) => plural('es', days, { one: `pidió hace ${days} día`, other: `pidió hace ${days} días` }),
     closed: 'Esta solicitud ya se cerró: el estudiante puede pedir otra vez.',
     failed: 'No se realizó. Reintenta.',
-    platform: { ios: 'iPhone o iPad', android: 'Android', web: 'Web' },
   },
 
   docTitle: {
@@ -404,7 +412,8 @@ export const consoleMsgs = {
     progressTitle: 'Progreso',
     noMembers: { family: 'Aún no hay estudiantes.', class: 'Aún no hay estudiantes.', school: 'Aún no hay miembros.' },
     readout: {
-      waiting: 'esperando la próxima sincronización',
+      notDelivered: 'Recibe este plan al abrir la app',
+      notStarted: (total: number) => `Aún sin empezar (0 / ${total})`,
       progress: (done: number, total: number) => `${done} / ${total}`,
       withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
     },
@@ -757,7 +766,6 @@ export const consoleMsgs = {
       line: (done: number, total: number, planned: number) => `${done} / ${total} hasta ahora · ${plural('es', planned, { one: `${planned} planeado`, other: `${planned} planeados` })}`,
       lineNotReady: (done: number, total: number, planned: number, notReady: number) =>
         `${done} / ${total} hasta ahora · ${plural('es', planned, { one: `${planned} planeado`, other: `${planned} planeados` })} · ${plural('es', notReady, { one: `${notReady} aún no está listo`, other: `${notReady} aún no están listos` })}`,
-      waiting: 'esperando la próxima sincronización',
       repace: { cta: 'Reajustar desde hoy' },
       repaceHint: 'Mantiene lo hecho y ordena el resto desde la próxima sesión.',
       repaceAsk: (date: string) => `¿Reajustar el ritmo desde hoy? Lo hecho sigue hecho. El resto pasa a las próximas sesiones, desde el ${date}.`,
@@ -835,6 +843,12 @@ export const consoleMsgs = {
             : `${plural('es', closed, { one: `1 de ellos va después de la Etapa 1 y se abre con ${product} cuando salga.`, other: `${closed} de ellos van después de la Etapa 1 y se abren con ${product} cuando salgan.` })} Los demás empiezan en sus fechas cuando salgan.`
         }`,
     },
+    blend: {
+      lecture: {
+        classDay: (weekday: string, n: number) => plural('es', n, { one: `Día de clase: ${weekday} · ${n} lección`, other: `Día de clase: ${weekday} · ${n} lecciones` }),
+        classLength: (minutes: number) => `Duración de la clase: ${minutes} min`,
+      },
+    },
   },
   placement: {
     startingSpot: (stage: number, band: string, date: string) => `Punto de partida: Etapa ${stage} · ${band} · ${date}`,
@@ -871,6 +885,7 @@ export const consoleMsgs = {
       opensTab: 'Se abre en una pestaña nueva',
     },
     presentPlan: { cta: 'Presentar este plan' },
+    minutesOf: (minutes: number, length: number) => `cerca de ${minutes} min (de ${length})`,
     revisitChip: { cta: 'Repasar en grupo' },
     source: {
       title: 'Fuente',
@@ -1183,6 +1198,11 @@ export const consoleMsgs = {
       many: (n: number) => `En ${n} clases`,
       none: 'Solo en familia',
     },
+    week: (days: number, minutes: number) => `Practicó ${days} de los últimos 7 días · ${minutes}\u00a0min`,
+    next: (title: string) => `Siguiente: ${title}`,
+    notStarted: (name: string) => `Aún no ha empezado. Abre la app en el dispositivo que usa ${name}.`,
+    restart: 'Una misión de 5 minutos es ideal para retomar.',
+    lastActive: { notStarted: 'Aún no ha empezado' },
   },
   journey: {
     title: 'Ruta de aprendizaje',
@@ -1854,7 +1874,7 @@ export const consoleMsgs = {
   },
   pinPrompt: {
     body: 'Crea un PIN de adultos en la app para que solo los adultos abran estas páginas.',
-    cta: 'Abrir la app',
+    cta: 'Crear el PIN en la app',
   },
   pinReset: {
     title: 'PIN de adultos nuevo',

@@ -1045,6 +1045,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
   // F-TCH-004 row NB-1: a Recent row taught to the end, with its day label.
   'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
+  // AMENDMENTS-GROWNUP-UX GX-14 (T14): the open ready-made card's minutes and the length it was built for.
+  'console.lecture.minutesOf': [[14, 20], [9, 10], [1, 30]],
+  // AMENDMENTS-GROWNUP-UX GX-12: a family's re-link denial and the request time rolled up to hours and days.
+  'console.relink.deniedFamily': [['Mina']],
+  'console.relink.askedHoursAgo': [[1], [4]],
+  'console.relink.askedDaysAgo': [[1], [3]],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
   // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
@@ -1067,6 +1073,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parentHome.classLine.many': [[2]],
   'console.transfer.familyNeedsYou': [[1], [2]],
   'console.transfer.endsOn': [['Nov 9']],
+  // AMENDMENTS-GROWNUP-UX GX-11: a child card's week line (1 and many days, minutes), its next quest, the never-started line.
+  'console.parentHome.week': [[1, 5], [4, 36], [7, 120]],
+  'console.parentHome.next': [['Meet the Letters 3']],
+  'console.parentHome.notStarted': [['Sora']],
   // AMENDMENTS-GROWNUP-UX GX-2: the attention banner's counts (1 and many).
   'console.attention.title': [[1], [3], [12]],
   'console.attention.devices': [[1], [3]],
@@ -1074,6 +1084,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.relinkPopup.title': [['Jaehan']],
   'console.relinkPopup.closes': [[1], [8]],
   'console.relinkPopup.meta': [['iPhone or iPad', 'asked 2 min ago']],
+  // AMENDMENTS-GROWNUP-UX row GX-8: the family practiced line, the dated join, the plan readout's not-started count, the class report's no-practice band.
+  'console.space.week.practicedFamily': [[1, 3], [0, 1]],
+  'console.space.joinedOn': [['Oct 14']],
+  'console.plan.readout.notStarted': [[4]],
+  'report.class.didntPractice': [[1], [9]],
   // AMENDMENTS-GROWNUP-UX GX-3: the home row chip and the Classes tab name (1 and many), a school row's class link, and
   // the re-link bar (a class name; two or more devices).
   'console.home.attention': [[1], [3]],
@@ -1083,4 +1098,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.shell.navAttention.home': [[1], [3]],
   'console.relinkBar.one': [['Sunday Class A']],
   'console.relinkBar.many': [[2], [5]],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
+  'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
+  'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
 };

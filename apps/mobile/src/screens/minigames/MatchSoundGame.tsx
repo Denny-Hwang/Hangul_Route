@@ -14,10 +14,12 @@ import {
   touchTarget,
   useLayoutClass,
   useMediaSize,
+  GuardedPressable,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -118,7 +120,8 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   }
 
   const handleTap = (jamoId: string): void => {
-    if (feedback === 'correct') return;
+    // A locked wrong tile takes no tap (AMENDMENTS-TOUCH R3): a bounce on it is never another miss, nudge or replay.
+    if (feedback === 'correct' || lockedWrongIds.includes(jamoId)) return;
     if (jamoId === round.promptJamo.id) {
       tapLight();
       success();
@@ -169,7 +172,8 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
             <Spacer size="md" />
 
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
-              <Pressable
+              <GuardedPressable
+                setsLock={false}
                 onPress={() => void hear()}
                 accessibilityRole="button"
                 accessibilityLabel={view.speakerLabel}
@@ -178,7 +182,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
                 style={{ padding: spacing.md }}
               >
                 <Icon name="speaker" size={48} />
-              </Pressable>
+              </GuardedPressable>
               <Caption tone="muted">{view.speakerCaption}</Caption>
             </View>
 
@@ -194,35 +198,39 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
           </>
         }
         answers={
-          <View
-            testID="match-sound-tiles"
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: spacing.md,
-              ...(gridWidth !== undefined ? { width: gridWidth, alignSelf: 'center' } : null),
-            }}
-          >
-            {round.tiles.map((j) => {
-              let state: 'idle' | 'correct' | 'wrong' | 'disabled' = 'idle';
-              if (lockedWrongIds.includes(j.id)) state = 'wrong';
-              if (feedback === 'correct' && j.id === round.promptJamo.id) state = 'correct';
-              return (
-                <Tile
-                  key={j.id}
-                  label={j.char}
-                  romanization={j.romanization}
-                  state={state}
-                  size="lg"
-                  dimension={tile}
-                  accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
-                  testID={`match-sound-tile-${j.id}`}
-                  onPress={() => handleTap(j.id)}
-                />
-              );
-            })}
-          </View>
+          <TapBoard lock="board">
+            {/* One board for the tiles (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice, and a locked wrong tile takes no tap (R3). */}
+            <View
+              testID="match-sound-tiles"
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: spacing.md,
+                ...(gridWidth !== undefined ? { width: gridWidth, alignSelf: 'center' } : null),
+              }}
+            >
+              {round.tiles.map((j) => {
+                let state: 'idle' | 'correct' | 'wrong' | 'disabled' = 'idle';
+                if (lockedWrongIds.includes(j.id)) state = 'wrong';
+                if (feedback === 'correct' && j.id === round.promptJamo.id) state = 'correct';
+                return (
+                  <Tile
+                    key={j.id}
+                    label={j.char}
+                    romanization={j.romanization}
+                    state={state}
+                    size="lg"
+                    dimension={tile}
+                    accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
+                    disabled={state === 'wrong'}
+                    testID={`match-sound-tile-${j.id}`}
+                    onPress={() => handleTap(j.id)}
+                  />
+                );
+              })}
+            </View>
+          </TapBoard>
         }
         feedback={
           feedback === 'wrong' ? (

@@ -57,6 +57,9 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/cell-check/cell-check-entry.tsx#CellCheckScreen': 'screens/cell-check/CellCheckScreen.tsx#CellCheckScreen',
   // Row CM-48: the This week in Korea chunk.
   'screens/week-drop/week-drop-entry.tsx#WeekDropScreen': 'screens/week-drop/WeekDropScreen.tsx#WeekDropScreen',
+  // The grown-up reports' chunk.
+  'screens/parent/reports-entry.tsx#LearnerReportScreen': 'screens/parent/LearnerReportScreen.tsx#LearnerReportScreen',
+  'screens/parent/reports-entry.tsx#PlacementReportScreen': 'screens/parent/PlacementReportScreen.tsx#PlacementReportScreen',
   // Row CM-22: the Stage Check's chunk.
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',
@@ -72,6 +75,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   // Row CM-36: the Hidden Heritage game's chunk.
   'screens/minigames/hidden-heritage-entry.tsx#HiddenHeritageGame': 'screens/minigames/HiddenHeritageGame.tsx#HiddenHeritageGame',
   'navigation/hidden-heritage-e2e.tsx#HiddenHeritageE2eBody': 'navigation/hidden-heritage-e2e-screen.tsx#HiddenHeritageE2eBody',
+  // Row KT-1: the TapBoard e2e screen's chunk (AMENDMENTS-TOUCH).
+  'navigation/tap-board-e2e.tsx#TapBoardE2eBody': 'navigation/tap-board-e2e-screen.tsx#TapBoardE2eBody',
   // Row CM-32: the Syllable Build chunk's quest game and Block Sprint.
   'screens/minigames/syllable-build-entry.tsx#SyllableBuildStepBody': 'screens/minigames/SyllableBuildStepBody.tsx#SyllableBuildStepBody',
   'screens/decode-sprint/DecodingSprintRoute.tsx#DecodingSprintScreen': 'screens/decode-sprint/DecodingSprintScreen.tsx#DecodingSprintScreen',

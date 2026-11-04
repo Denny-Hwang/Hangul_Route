@@ -30,6 +30,7 @@ import {
   readerCheckpoints,
   readerKeyAction,
   sayItYourselfShown,
+  sceneHearShown,
   termId,
   wordId,
   type ReaderMode,
@@ -579,11 +580,13 @@ function ReaderBody({
                     onTerm={(id) => openItem(termId(id))}
                   />
                 </View>
-                <SpeakerButton
-                  label={copy.hearStory}
-                  onPress={() => audio.play(sceneSteps(state.index, ['narration', 'korean']))}
-                  testID="story-reader-hear-scene"
-                />
+                {sceneHearShown(planSceneAudio(view, { include: ['narration', 'korean'] }), audio.canPlayKorean) ? (
+                  <SpeakerButton
+                    label={copy.hearStory}
+                    onPress={() => audio.play(sceneSteps(state.index, ['narration', 'korean']))}
+                    testID="story-reader-hear-scene"
+                  />
+                ) : null}
               </View>
             </Card>
           </View>

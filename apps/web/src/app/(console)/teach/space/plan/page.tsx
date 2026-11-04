@@ -297,7 +297,7 @@ function PlanInner(): JSX.Element {
     setEditing(true);
   };
 
-  const readout = current?.publishedAt && !editing ? planReadout(current.id, learners) : null;
+  const readout = current?.publishedAt && !editing ? planReadout(current, learners) : null;
   const stagesNotice = planStagesNotice({ unlocked, gating: contentGatingEnabled(), coverage, kind }, locale);
   const suggestNotice = suggestionNoticeShown(draft, suggestedFor) ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
 

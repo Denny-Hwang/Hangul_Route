@@ -6,7 +6,7 @@ import type { UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { Button, Notice } from '@/components/console/ui';
-import { dateRangeText, dayText, extraText, warningText, weekLabel, type FreePlanWording, type WeekItem, type WeekRow } from '@/lib/console/curriculum';
+import { dateRangeText, dayText, extraText, isWordedWarning, warningText, weekLabel, type FreePlanWording, type WeekItem, type WeekRow } from '@/lib/console/curriculum';
 import { ROUTES } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
@@ -263,12 +263,14 @@ export function WarningList({
   neutral?: boolean;
 }): JSX.Element | null {
   const words = useMessages().console;
-  if (warnings.length === 0) return null;
+  // A warning with no words yet (a blended plan's, worded by row BL-4) is left out.
+  const shown = warnings.filter(isWordedWarning);
+  if (shown.length === 0) return null;
   const link = free ? words.access.openBilling.cta : neutral ? null : billingLink ? words.curriculum.preview.warnings.seePlans.cta : null;
   return (
     <Notice tone="nudge">
       <ul style={{ margin: 0, paddingLeft: spacing.lg, lineHeight: typography.leading.relaxed }}>
-        {warnings.map((warning) => (
+        {shown.map((warning) => (
           <li key={`${warning.code}:${warning.week ?? 0}`} data-testid="route-warning">
             {warningText(warning, locale, free, neutral)}
             {warning.code === 'premium-needed' && link ? (

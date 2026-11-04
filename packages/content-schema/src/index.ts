@@ -76,3 +76,4 @@ export * from './schemas/guest';
 export * from './schemas/role-play';
 // AMENDMENTS-GROWNUP-UX row GX-W: the approvals fields of the roster and the spaces list, with lenient readers.
 export * from './schemas/attention';
+export * from './schemas/route-blend-telemetry';

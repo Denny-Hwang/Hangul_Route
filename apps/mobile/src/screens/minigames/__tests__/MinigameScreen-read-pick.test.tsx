@@ -1,3 +1,4 @@
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -73,7 +74,7 @@ const route = { key: 'Minigame-1', name: 'Minigame' as const, params: { questId:
 const mounted: ReactTestRenderer[] = [];
 const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
   await act(async () => {
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(TAP_LOCK_MS);
   });
   const node = byTestId(r.root, id).find((n) => typeof n.props.onClick === 'function');
   expect(node, id).toBeDefined();
@@ -129,7 +130,9 @@ describe('a Read Pick Meaning Check (row CM-3A S2)', () => {
       [1, true, 'see-baram'],
     ]);
     expect(runStore.completes).toBe(1);
-    expect((track.mock.calls[0]?.[0] as { payload: { kind: string } }).payload.kind).toBe('listen-pick');
+    // The taps are TAP_LOCK_MS apart (row KT-3), long enough for the sound check's own events to come first.
+    const finished = track.mock.calls.map((c) => c[0] as { name: string; payload: { kind: string } }).filter((e) => e.name === 'minigame.finished');
+    expect(finished.map((e) => e.payload.kind)).toEqual(['listen-pick']);
   });
 
   it('keeps the learner’s romanization mode: shown with "always", the Hangul alone with "tap"', async () => {

@@ -16,6 +16,7 @@ import {
   typography,
   useMediaSize,
   useTypeScale,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -247,7 +248,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
     <View testID={testID} style={{ gap: spacing.sm }}>
       <View style={{ flexDirection: 'row', gap: spacing.lg, alignItems: 'flex-start' }}>
         <View style={{ flexShrink: 1, gap: spacing.sm, minWidth: touchTarget.min }}>
-          <Pressable
+          <GuardedPressable
+            setsLock={false}
             testID={`${testID}-speaker`}
             onPress={say}
             accessibilityRole="button"
@@ -262,7 +264,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
             }}
           >
             <Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />
-          </Pressable>
+          </GuardedPressable>
           {right ? (
             <View accessibilityLiveRegion="polite" testID={`${testID}-built`}>
               <KoreanText ko={target.ko} romanization={target.romanization} gloss={target.gloss} size="md" accessibilityLabel={prompt.blockLabel ?? undefined} />

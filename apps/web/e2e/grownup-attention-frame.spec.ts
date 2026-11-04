@@ -3,7 +3,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 
 /**
  * AMENDMENTS-GROWNUP-UX GX-3 (owner request 2026-10-31; section 14 `apps/web/e2e/grownup-attention.spec.ts`, the GX-3
- * part, kept in its own file next to GX-2's): once the Worker sends GX-W's `attention`, the teacher home shows the amber
+ * part, kept in this file beside GX-2's review-sheet part when the two rows were integrated): once the Worker sends GX-W's `attention`, the teacher home shows the amber
  * **{n} need your OK** chip after a class's name (to the class page's review, `#attention`), the Classes tab shows the
  * number on screen with its meaning in the tab's name, the tab title gets "(n) ", and every teacher page but the class
  * page shows the re-link bar while a new device waits; **Review** opens the class page. The counts are read again every
@@ -12,7 +12,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
  * grownup-status.spec.ts:
  *
  *   NEXT_PUBLIC_API_BASE_URL=https://api.gx-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true NEXT_PUBLIC_CLASS_TRANSFER=enabled pnpm --filter @hangul-route/web build
- *   GROWNUP_E2E=1 pnpm --filter @hangul-route/web exec playwright test grownup-attention-teacher.spec
+ *   GROWNUP_E2E=1 pnpm --filter @hangul-route/web exec playwright test grownup-attention-frame.spec
  *
  * Like class-moves.spec.ts, no CI lane runs it yet (a lane is a workflow change); each PR runs that build and suite locally.
  */

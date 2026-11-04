@@ -50,6 +50,12 @@ export const consoleMsgs = {
   clerkPending: 'Sign-in is not set up on this build yet. The learner app works without an account.',
   cantReach: "Can't reach the console right now.",
   tryAgain: 'Try again',
+  /**
+   * AMENDMENTS-GROWNUP-UX GX-14 (P5): `app/(console)/error.tsx`, shown in the console's language when a page fails to
+   * draw, in place of the framework's white English page. Its buttons are `tryAgain` and the way out
+   * `shell.backToLearning`. Blames nobody, names nothing.
+   */
+  errorPage: { title: 'Something went wrong on this page.' },
   noSpaces: "You're not in any space yet.",
   createSpace: 'Create a space',
   writeOnBoard: 'Write it on the board. Students join from Profile → Classes & family → Join a class.',
@@ -69,7 +75,8 @@ export const consoleMsgs = {
   noPlanYet: 'No plan yet. Pick a few quests, spread the dates, and publish before class.',
   relinkApproveHint: 'Approve only if this learner is with you or you expect this device.',
   relinkNothing: 'Nothing waiting. Requests appear here for 10 minutes after a learner asks.',
-  relinkAnotherWay: 'Another way: issue a new rescue code and read it to the learner. The old code stops working.',
+  /** Under the page's "Another way" heading (`relink.anotherWay`), so it does not repeat the heading (GX-12). */
+  relinkAnotherWay: 'Issue a new rescue code and read it to the learner. The old code stops working.',
   relinkCardsComeBack: "Approving brings the learner back into this class. Their cards come back with the rescue code their grown-up keeps in the app (Save my progress) — teachers can't see or reissue it.",
   rescueIssued: 'Read this to the learner or their grown-up now — it is shown once.',
   archiveKeeps: 'Keeps everything, stops new joins. You can unarchive later.',
@@ -376,21 +383,33 @@ export const consoleMsgs = {
     week: {
       title: 'This week',
       practiced: (practiced: number, students: number) => `${practiced} of ${students} practiced this week`,
-      anchor: (accuracy: string) => `Stage 1 anchor: ${accuracy}`,
+      /** GX-8 T8: shown only while some learner has a Stage 1 first-try figure (`weekLines` hides it otherwise). */
+      anchor: (accuracy: string) => `Stage 1 first-try answers: ${accuracy}`,
       revisit: (jamo: string) => `Jamo to revisit together: ${jamo}`,
-      notSynced: (count: number) => plural('en', count, { one: `${count} hasn't synced in a week`, other: `${count} haven't synced in a week` }),
+      /** GX-8 T7: learners who joined under a week ago are not counted (`classRollup`). */
+      notSynced: (count: number) =>
+        plural('en', count, { one: `${count} hasn't opened the app in over a week`, other: `${count} haven't opened the app in over a week` }),
+      /** GX-8 P4: a family's practiced line speaks of learners, never students. */
+      practicedFamily: (practiced: number, learners: number) =>
+        plural('en', learners, { one: `${practiced} of ${learners} learner practiced this week`, other: `${practiced} of ${learners} learners practiced this week` }),
       /** F-VOC-005 P-4: up to three words most often on the students' lists, never a ranking of students. The page fills the words. */
       wordsRevisit: (words: string) => `Words to revisit together: ${words}`,
     },
     /** The latest plan's button. Holds a user-entered plan title, so it is not a budgeted `cta`; its fixed words are budgeted in length-budget.test.ts and the button wraps. */
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
-    relinkRequests: { cta: 'Re-link requests' },
+    /** One name for a re-link with the status chip (AMENDMENTS-GROWNUP-UX section 10.1 glossary, GX-12): "new device". */
+    relinkRequests: { cta: 'New device requests' },
+    /** A waiting count says the grown-up decides, in the one action wording (AMENDMENTS-GROWNUP-UX section 10.1, review of PR #933). */
     relinkPending: {
-      cta: (count: number) => plural('en', count, { one: `${count} re-link request`, other: `${count} re-link requests` }),
+      cta: (count: number) => plural('en', count, { one: `${count} new device needs your OK`, other: `${count} new devices need your OK` }),
     },
     settings: { cta: 'Settings' },
     studentsLabel: 'Students',
     recentFirst: 'Most recent activity first',
+    /** GX-8 P4: a family roster's heading (it keeps join order, so it never says "most recent activity first"). */
+    rosterHeadingFamily: 'Learners',
+    /** GX-8 P4: a family card's join day, a date from `formatDate` ("Oct 14"). */
+    joinedOn: (date: string) => `Joined ${date}`,
     /**
      * One student card; the day words come from `relativeDay`, the readout from `readoutLine`
      * (`plan.readout`). `revisit` takes taught Korean, rendered by the page through `aroundSlot`
@@ -398,8 +417,11 @@ export const consoleMsgs = {
      */
     learner: {
       lastActive: (when: string) => `Last active ${when}`,
+      /** GX-8 T10: the stage named, "of" rather than a slash. */
       questsCards: (done: number, total: number, cards: number) =>
-        plural('en', cards, { one: `Quests ${done} / ${total} · ${cards} card`, other: `Quests ${done} / ${total} · ${cards} cards` }),
+        plural('en', cards, { one: `Stage 1 quests: ${done} of ${total} · ${cards} card`, other: `Stage 1 quests: ${done} of ${total} · ${cards} cards` }),
+      /** GX-8 T10: no quest finished yet but minutes this week, instead of "0 of 15". */
+      firstQuest: 'Working on the first quest',
       minutesThisWeek: (minutes: number) => `${minutes} min this week`,
       revisit: (jamo: string) => `Revisit: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
@@ -414,18 +436,25 @@ export const consoleMsgs = {
   },
   /** Re-link approval (`/teach/space/relink`, `relink.ts`): identity and timing only, no progress numbers. */
   relink: {
-    title: 'Re-link requests',
-    titleFor: (space: string) => `${space} · re-link requests`,
+    title: 'New device requests',
+    titleFor: (space: string) => `${space} · new device requests`,
     back: (space: string | null) => `Back to ${space ?? 'the space'}`,
     approved: (name: string) => `${name} can open their new device now.`,
     denied: (name: string) => `Closed. ${name}'s device will say "ask your teacher".`,
+    /** The same note on a family's page (AMENDMENTS-GROWNUP-UX P8): a family has no teacher. */
+    deniedFamily: (name: string) => `Closed. ${name}'s device will say "ask your grown-up".`,
     /** Followed by `oldCodeStops` in the confirm dialog. */
     issueAsk: (name: string) => `Issue a new rescue code for ${name}?`,
     issueFailed: "Couldn't issue a code right now.",
-    /** The page shows the name in bold (`aroundSlot`), so a translation may put it anywhere, exactly once. */
-    askingToBe: (name: string) => `Someone is asking to be ${name}`,
-    /** When the request names no platform. */
+    /**
+     * The card's heading: the learner's name and what is asked, calm (GX-12; the safety hint sits next to Approve). The
+     * page shows the name in bold (`aroundSlot`), so a translation may put it anywhere, exactly once.
+     */
+    askingToBe: (name: string) => `${name} · on a new device`,
+    /** When the request names no platform, or one `platform` does not name. */
     device: 'device',
+    /** The device the request came from, by the platform the learner app sends (`relinkPlatform`, GX-12). */
+    platform: { ios: 'iPhone or iPad', android: 'Android', web: 'Web' },
     approve: { cta: 'Approve' },
     deny: { cta: 'Deny' },
     anotherWay: 'Another way',
@@ -438,10 +467,11 @@ export const consoleMsgs = {
     expiresIn: (minutes: number) => `expires in ${minutes} min`,
     askedJustNow: 'asked just now',
     askedAgo: (minutes: number) => `asked ${minutes} min ago`,
+    /** From 60 minutes on, the time rolls up to hours, then days (`requestedLabel`, GX-12). */
+    askedHoursAgo: (hours: number) => plural('en', hours, { one: `asked ${hours} hour ago`, other: `asked ${hours} hours ago` }),
+    askedDaysAgo: (days: number) => plural('en', days, { one: `asked ${days} day ago`, other: `asked ${days} days ago` }),
     closed: 'This request already closed — the learner can ask again.',
     failed: "Didn't go through. Try again.",
-    /** AMENDMENTS-GROWNUP-UX GX-1 (section 5.3): the platform a re-link request names; any other value reads `device`. */
-    platform: { ios: 'iPhone or iPad', android: 'Android', web: 'Web' },
   },
 
   /**
@@ -540,7 +570,10 @@ export const consoleMsgs = {
     noMembers: { family: 'No learners yet.', class: 'No students yet.', school: 'No members yet.' },
     /** One learner's progress on the plan (`readoutLine`); counts only, never a ranking. */
     readout: {
-      waiting: 'waiting for the next sync',
+      /** GX-8 T9: no progress for the plan, and the device last synced before it was published (or never). */
+      notDelivered: 'Gets this plan next time the app opens',
+      /** GX-8 T9: no progress for the plan although the device synced after it was published; `total` is the plan's length. */
+      notStarted: (total: number) => `Not started yet (0 / ${total})`,
       progress: (done: number, total: number) => `${done} / ${total}`,
       withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${notReady} not ready yet`,
     },
@@ -953,7 +986,6 @@ export const consoleMsgs = {
       line: (done: number, total: number, planned: number) => `${done} / ${total} so far · ${planned} planned`,
       lineNotReady: (done: number, total: number, planned: number, notReady: number) =>
         `${done} / ${total} so far · ${planned} planned · ${notReady} not ready yet`,
-      waiting: 'waiting for the next sync',
       repace: { cta: 'Re-pace from today' },
       repaceHint: 'Keeps what is done and lays the rest from the next session.',
       repaceAsk: (date: string) => `Re-pace from today? What is done stays done. The rest moves to the next sessions, from ${date}.`,
@@ -1050,6 +1082,17 @@ export const consoleMsgs = {
             : `${plural('en', closed, { one: `1 of them is past Stage 1 and opens with ${product} once released.`, other: `${closed} of them are past Stage 1 and open with ${product} once released.` })} The others start on their dates once they are released.`
         }`,
     },
+    /**
+     * Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND, `console.curriculum.blend.*`). `lecture`: the
+     * lecture card's lines for a blended plan's class day (section 10.3, row BL-5), in place of the length chips; the
+     * length is changed in the plan, not on the card. `weekday` arrives as a whole weekday in the console language.
+     */
+    blend: {
+      lecture: {
+        classDay: (weekday: string, n: number) => plural('en', n, { one: `Class day: ${weekday} · ${n} lesson`, other: `Class day: ${weekday} · ${n} lessons` }),
+        classLength: (minutes: number) => `Class length: ${minutes} min`,
+      },
+    },
   },
   /**
    * The roster's level-check line and the advisory hand-off (F-PLC-001 section 3.9, wireframe
@@ -1115,6 +1158,11 @@ export const consoleMsgs = {
       opensTab: 'Opens in a new tab',
     },
     presentPlan: { cta: 'Present this plan' },
+    /**
+     * GX-14 (T14): the open ready-made card's one minutes line when what it holds is not the length it was built for
+     * ("about 14 min (of 20)"), in place of the length and the content minutes shown apart. Starts with `outline.about`.
+     */
+    minutesOf: (minutes: number, length: number) => `about ${minutes} min (of ${length})`,
     revisitChip: { cta: 'Revisit together' },
     source: {
       title: 'Source',
@@ -1484,6 +1532,17 @@ export const consoleMsgs = {
       many: (n: number) => `In ${n} classes`,
       none: 'Family only',
     },
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-11 (section 9 P2, P10): a child card's week line (with the report's 7-day squares beside
+     * it, fill only) and its next quest; a child who never started; a child quiet for 7 days or more. `{name}` is a
+     * learner's roster name, `{title}` a quest title in the console's language. The report chooser reads the same line.
+     */
+    week: (days: number, minutes: number) => `Practiced ${days} of the last 7 days · ${minutes}\u00a0min`,
+    next: (title: string) => `Next: ${title}`,
+    notStarted: (name: string) => `Not started yet. Open the app on the device ${name} uses.`,
+    restart: 'A 5-minute quest is a good restart.',
+    /** The report chooser's line under the name of a child who never started. */
+    lastActive: { notStarted: 'Not started yet' },
   },
   /**
    * The journey strip on a roster card (F-ROUTE-001 section 3.12, R-9a; Appendix B
@@ -2322,7 +2381,8 @@ export const consoleMsgs = {
   /** [OA] Section 7.6: the set-a-PIN card on a `nopin` browser, once per browser. */
   pinPrompt: {
     body: 'Set a grown-up PIN in the app so only grown-ups open these pages.',
-    cta: 'Open the app',
+    /** GX-14 (P9): says what the app is opened for. */
+    cta: 'Set the PIN in the app',
   },
   /**
    * [OA] Section 8.5 (row OA-6): `/account/pin-reset`, the sign-in reset page behind the lock. One title in every state;

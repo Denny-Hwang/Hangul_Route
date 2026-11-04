@@ -21,7 +21,7 @@
       "reviewedAt": "2026-10-23"
     },
     "console": {
-      "enSha": "89be0d5ae25ef72057b5e4305cd107cc09a5cb8edda4a0fa2aefb4e1159a62d0",
+      "enSha": "9a6e4d6e6b77b59f3d558ba3d794520c23adee8c14c25cf9d04b33f47495b715",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-11-04"
     },
@@ -31,9 +31,9 @@
       "reviewedAt": "2026-10-23"
     },
     "report": {
-      "enSha": "f87dd6027a9cd828dccf909e84b489924ff919f6a312df62540be52241c3be97",
+      "enSha": "3308d4e9a8ad02be1c538098227a70ad5b5cc5411a1120d7170687b447cb36c0",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-22"
+      "reviewedAt": "2026-10-31"
     }
   },
   "ko": {
@@ -58,7 +58,7 @@
       "reviewedAt": "2026-10-23"
     },
     "console": {
-      "enSha": "89be0d5ae25ef72057b5e4305cd107cc09a5cb8edda4a0fa2aefb4e1159a62d0",
+      "enSha": "9a6e4d6e6b77b59f3d558ba3d794520c23adee8c14c25cf9d04b33f47495b715",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-11-04"
     },
@@ -68,9 +68,9 @@
       "reviewedAt": "2026-10-23"
     },
     "report": {
-      "enSha": "f87dd6027a9cd828dccf909e84b489924ff919f6a312df62540be52241c3be97",
+      "enSha": "3308d4e9a8ad02be1c538098227a70ad5b5cc5411a1120d7170687b447cb36c0",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-10-22"
+      "reviewedAt": "2026-10-31"
     }
   }
 }

@@ -1,7 +1,9 @@
+import { colors } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { catalogTitle } from '@/data/catalog';
 import type { Roster, RosterLearner, SpaceListItem } from '@/lib/console/api';
 import { findBannedWord } from '@/lib/console/banned-text';
 import { codeExpiry } from '@/lib/console/rollup';
@@ -33,10 +35,14 @@ vi.mock('@/lib/console/shell-store', () => ({
   },
 }));
 
-const handoff = vi.hoisted(() => ({ calls: [] as Array<{ code: string }> }));
+const handoff = vi.hoisted(() => ({ calls: [] as Array<{ code: string }>, opened: [] as string[] }));
 vi.mock('@/lib/console/join-handoff', () => ({
   openAppWithJoinCode: (input: { code: string }) => {
     handoff.calls.push({ code: input.code });
+  },
+  // GX-11: Open the app on this device on a child card that never started (no code handed off).
+  openLearnerApp: (input: { locale: string }) => {
+    handoff.opened.push(input.locale);
   },
 }));
 
@@ -162,7 +168,8 @@ function learner(id: string, name: string, joinedAt: string, minutes: number, la
     joinedAt,
     lastActiveAt,
     lastSyncedAt: lastActiveAt,
-    summary: { minutesLast7d: minutes } as RosterLearner['summary'],
+    // An older app's summary (no day-by-day `activity`): the card keeps the shipped last-active and minutes lines (GX-11).
+    summary: { lastActiveAt, minutesLast7d: minutes } as RosterLearner['summary'],
   } as RosterLearner;
 }
 
@@ -185,6 +192,7 @@ beforeEach(() => {
   nav.pushed = [];
   shellWrites.personas = [];
   handoff.calls = [];
+  handoff.opened = [];
   frame.spaces = [];
   frame.counts = [];
   data.rosters = {};
@@ -971,5 +979,105 @@ describe('the family home: the re-link pop-up, the 20 s re-link read and the tab
     await advance(20_000);
     expect(popup(r)).toHaveLength(0);
     expect(data.calls).toEqual([]);
+  });
+});
+
+describe('the family home: the child card week, next and lecture slot (GX-11)', () => {
+  // The suite's clock: 2026-10-12T12:00:00Z, so the last 7 days are Oct 6 to Oct 12 (the learner's offset 0).
+  const day = (d: string, min: number) => ({ d, min, q: 0, c: 0, w: 0, j: [] as string[] });
+  const activity = (days: ReturnType<typeof day>[], over: Record<string, unknown> = {}) => ({
+    v: 1,
+    tz: 0,
+    asOf: '2026-10-12',
+    days,
+    months: [],
+    total: { since: '2026-09-01', min: 300, q: 4, c: 2, w: 0, days: 12 },
+    milestones: [],
+    ...over,
+  });
+  const withSummary = (base: RosterLearner, summary: unknown): RosterLearner => ({ ...base, summary: summary as RosterLearner['summary'] });
+  const steady = withSummary(mina, {
+    lastActiveAt: '2026-10-11T08:00:00Z',
+    minutesLast7d: 36,
+    activity: activity([day('2026-10-06', 9), day('2026-10-07', 10), day('2026-10-09', 12), day('2026-10-11', 5)], { next: { q: 'quest:stage1-letters-q1', plan: false } }),
+  });
+  const quiet = withSummary(learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 0), { lastActiveAt: '2026-09-20T08:00:00Z', minutesLast7d: 0, activity: activity([day('2026-09-20', 12)]) });
+  const never = { ...learner('profile:sora', 'Sora', '2026-09-09T00:00:00Z', 0), summary: null };
+  const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
+  const within = (node: ReactTestInstance, id: string): ReactTestInstance[] => node.findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === id);
+
+  it('a child who practiced: the week line, the 7 squares (fill only, hidden from screen readers) and Next', async () => {
+    data.rosters = { sp_f: roster(family, [steady]) };
+    const r = await render([family]);
+    const mine = card(r, 'Mina');
+    expect(textOf(within(mine, 'child-week-line')[0] as ReactTestInstance)).toBe(p.week(4, 36));
+    const squares = within(mine, 'child-week-squares')[0] as ReactTestInstance;
+    expect(squares.props['aria-hidden']).toBe(true);
+    const marks = squares.findAll((n) => n.type === 'li');
+    expect(marks.map((li) => li.props['data-on'])).toEqual(['true', 'true', 'false', 'true', 'false', 'true', 'false']);
+    // Fill only: a practiced day takes the report's practiced mark, every other day the same plain outline (no red, no cross).
+    const styles = marks.map((li) => li.props.style as Record<string, unknown>);
+    expect(new Set(styles.filter((_, i) => marks[i]?.props['data-on'] === 'false').map((st) => JSON.stringify(st))).size).toBe(1);
+    expect(JSON.stringify(styles)).not.toContain(colors.feedback.danger);
+    expect(textOf(within(mine, 'child-next')[0] as ReactTestInstance)).toBe(p.next(catalogTitle('quest:stage1-letters-q1', 'en')));
+    expect(textOf(mine)).not.toContain(en.console.space.learner.lastActive(''));
+  });
+
+  it('a child who never started: the line with the name and Open the app on this device, which opens the learner app (no code)', async () => {
+    data.rosters = { sp_f: roster(family, [never]) };
+    const r = await render([family]);
+    const sora = card(r, 'Sora');
+    expect(textOf(within(sora, 'child-week-line')[0] as ReactTestInstance)).toBe(p.notStarted('Sora'));
+    expect(within(sora, 'child-week-squares')).toHaveLength(0);
+    const open = within(sora, 'child-open-app')[0] as ReactTestInstance;
+    expect(textOf(open)).toBe(p.empty.openApp);
+    act(() => open.props.onClick());
+    expect(handoff.opened).toEqual(['en']);
+    expect(handoff.calls).toEqual([]);
+  });
+
+  it('a child who never started, in an archived family: the plain not-started words, no Open the app (the family cannot act)', async () => {
+    const archived = { ...family, space: { ...family.space, archivedAt: '2026-10-01T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [never]) };
+    const r = await render([archived]);
+    const sora = card(r, 'Sora');
+    expect(textOf(within(sora, 'child-week-line')[0] as ReactTestInstance)).toBe(p.lastActive.notStarted);
+    expect(within(sora, 'child-open-app')).toHaveLength(0);
+  });
+
+  it('a child quiet for 7 days: the restart line, never "0 of the last 7 days", and no squares', async () => {
+    data.rosters = { sp_f: roster(family, [quiet]) };
+    const r = await render([family]);
+    const jun = card(r, 'Jun');
+    expect(textOf(within(jun, 'child-week-line')[0] as ReactTestInstance)).toBe(p.restart);
+    expect(within(jun, 'child-week-squares')).toHaveLength(0);
+    expect(textOf(jun)).not.toContain(p.week(0, 0));
+  });
+
+  describe('the Lecture mode card below 70em (P3)', () => {
+    beforeEach(() => {
+      vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', undefined);
+      vi.stubGlobal('window', { location: { origin: 'https://app.hangulroute.com', hash: '' }, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+    });
+    afterEach(() => {
+      // Unmount while the stubbed window is still there (the card's listeners are removed on unmount).
+      act(() => mounted?.unmount());
+      mounted = null;
+      vi.unstubAllGlobals();
+    });
+    const order = (r: ReactTestRenderer): string[] =>
+      r.root.findAll((n) => typeof n.type === 'string' && ['learner-card', 'lecture-card'].includes(n.props['data-testid'] as string)).map((n) => n.props['data-testid'] as string);
+
+    it('with 2 or more children, after the last child (never between child 1 and child 2)', async () => {
+      data.rosters = { sp_f: roster(family, [steady, quiet, never]) };
+      const r = await render([family]);
+      expect(order(r)).toEqual(['learner-card', 'learner-card', 'learner-card', 'lecture-card']);
+    });
+
+    it('with one child, right after that card', async () => {
+      data.rosters = { sp_f: roster(family, [steady]) };
+      const r = await render([family]);
+      expect(order(r)).toEqual(['learner-card', 'lecture-card']);
+    });
   });
 });

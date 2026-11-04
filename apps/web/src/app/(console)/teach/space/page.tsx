@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -40,7 +40,7 @@ import { rosterNotesLinks } from '@/lib/console/notes-page';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { rosterReportLink } from '@/lib/console/report-view';
 import { rosterClassReportLink } from '@/lib/console/class-report-view';
-import { capState, classRollup, codeExpiry, familyCountLine, percent, relativeDay, seatLine } from '@/lib/console/rollup';
+import { capState, classRollup, codeExpiry, familyCountLine, joinedLine, questsLine, relativeDay, rosterHeading as rosterHeadingText, rosterOrder as joinOrderFor, seatLine, weekLines } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
 import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import { ownRouteLine, readoutLine as routeReadoutLine, spaceCoverage, type SpaceCoverage } from '@/lib/console/curriculum';
@@ -284,6 +284,10 @@ function SpaceInner(): JSX.Element {
   };
 
   const rollup = roster ? classRollup(roster.learners, now) : null;
+  // GX-8 (T7, T8, P4): the roll-up's kind-aware lines; the anchor line hides while nobody has one.
+  const week = roster && rollup ? weekLines(roster.space.kind, rollup, locale) : null;
+  // GX-8 P4: a family's cards in the order its learners joined (as on the family home); a class keeps recent activity first.
+  const cards = roster ? joinOrderFor(roster.space.kind, roster.learners) : [];
   // The class join link and its QR code (owner decision 2026-10-17): a class with a code only, the code alone in the fragment.
   const joinLink = roster ? rosterJoinLink({ kind: roster.space.kind, code: roster.joinCode, origin: appUrl() }) : null;
   // [SA] section 3.4: the count against the roster's own cap (`seats`), not the free cap.
@@ -293,7 +297,7 @@ function SpaceInner(): JSX.Element {
   // The newest plan for everyone: a plan for one learner (a suggested start) never takes over the roster.
   const latestPlan = rosterPlan(plans);
   const lecture = lectureModeEnabled() && canComposeIn(spaces, spaceId);
-  const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
+  const readout = latestPlan && roster ? new Map(planReadout(latestPlan, roster.learners).map((r) => [r.learnerId, r])) : null;
   // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
   const weekRevisit = aroundSlot(c.space.week.revisit);
   const learnerRevisit = aroundSlot(c.space.learner.revisit);
@@ -305,7 +309,7 @@ function SpaceInner(): JSX.Element {
   // One line about the newest live whole-class plan (Learning Route section 6.3, LR-9); a class only, never about learners.
   const goalLine = roster ? classGoalLine({ kind: roster.space.kind, plans, today, stageTitle, locale }) : null;
   // Notes (F-FEEDBACK-001 FB-11a, section 6.13 item 3): the roster header's Notes and each card's Send a note, by flag.
-  const ordered = roster && attention ? rosterOrder(roster.learners, attention.byLearner, decided.pinned, lastOrder.current) : [];
+  const ordered = roster && attention ? rosterOrder(cards, attention.byLearner, decided.pinned, lastOrder.current) : [];
   lastOrder.current = ordered.map((l) => l.id);
   const relinksWaiting = attention?.totals.relinks ?? 0;
   const movesWaiting = attention?.totals.moves ?? 0;
@@ -480,12 +484,12 @@ function SpaceInner(): JSX.Element {
             </Notice>
           ) : null}
 
-          {rollup && !empty ? (
+          {rollup && week && !empty ? (
             <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title}>
               <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
-                <li>{c.space.week.practiced(rollup.practicedThisWeek, rollup.students)}</li>
-                <li>{c.space.week.anchor(percent(rollup.anchorAccuracy))}</li>
+                <li>{week.practiced}</li>
+                {week.anchor ? <li data-testid="week-anchor">{week.anchor}</li> : null}
                 {rollup.revisit.length ? (
                   <li>
                     {weekRevisit.before}
@@ -495,7 +499,7 @@ function SpaceInner(): JSX.Element {
                       <Link
                         href={ROUTES.spaceLecture(spaceId, 'revisit', undefined, roster.space.kind)}
                         data-testid="revisit-together"
-                        style={{ display: 'inline-flex', alignItems: 'center', minHeight: spacing.xxxl, fontSize: rem(typography.size.caption), fontWeight: typography.weight.bold, padding: `0 ${spacing.md}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        style={{ ...buttonBase, whiteSpace: 'nowrap' }}
                       >
                         {c.lecture.revisitChip.cta}
                       </Link>
@@ -503,7 +507,7 @@ function SpaceInner(): JSX.Element {
                   </li>
                 ) : null}
                 <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
-                {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
+                {week.notSynced ? <li data-testid="week-not-synced">{week.notSynced}</li> : null}
               </ul>
               <ClassReportLink spaceId={spaceId} kind={roster.space.kind} locale={locale} />
             </section>
@@ -521,6 +525,7 @@ function SpaceInner(): JSX.Element {
                 <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
               </Link>
             ) : null}
+            {/* A waiting request asks the grown-up to decide: the amber nudge tone (GX-1) and the action wording (review of PR #933). */}
             <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
               <Button tone={relinksWaiting > 0 ? 'nudge' : 'secondary'} testId="relink-requests">
                 {relinksWaiting > 0 ? c.space.relinkPending.cta(relinksWaiting) : c.space.relinkRequests.cta}
@@ -547,9 +552,9 @@ function SpaceInner(): JSX.Element {
           </div>
 
           {!empty ? (
-            <section aria-label={c.space.studentsLabel}>
+            <section aria-label={roster.space.kind === 'family' ? c.space.rosterHeadingFamily : c.space.studentsLabel}>
               <h2 ref={rosterHeading} tabIndex={-1} data-testid="roster-heading" style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>
-                {actionFirst ? c.space.studentsLabel : c.space.recentFirst}
+                {actionFirst && roster.space.kind !== 'family' ? c.space.studentsLabel : rosterHeadingText(roster.space.kind, locale)}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
                 {ordered.map((l, index) => (
@@ -577,7 +582,7 @@ function SpaceInner(): JSX.Element {
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
                         <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
                         <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />
-                        <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
+                        <div data-testid="quests-line">{questsLine(l.summary, locale)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
                         <JourneyStrip kind={roster.space.kind} summary={l.summary} />
                         {l.summary.needsPractice.length ? (
@@ -601,9 +606,16 @@ function SpaceInner(): JSX.Element {
                         {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
                         <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
                       </div>
-                    ) : attention?.byLearner[l.id]?.kind === 'new' ? null : (
+                    ) : attention?.byLearner[l.id]?.kind === 'new' ? (
+                      // GX-1 x GX-8: a New card's reason line already says no practice is shared yet, so a class card adds
+                      // nothing; a family card still keeps GX-8 P4's dated join ("Joined Oct 14"), the case P4 targets.
+                      roster.space.kind === 'family' ? <Muted>{joinedLine('family', l.joinedAt, now, locale)}</Muted> : null
+                    ) : (
                       <Muted>
-                        {c.notSyncedYet} · {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}
+                        {/* GX-8 P4: a family card leads with its dated join ("Joined Oct 14 · not synced yet"). */}
+                        {roster.space.kind === 'family'
+                          ? `${joinedLine('family', l.joinedAt, now, locale)} · ${c.notSyncedYet}`
+                          : `${c.notSyncedYet} · ${joinedLine(roster.space.kind, l.joinedAt, now, locale)}`}
                       </Muted>
                     )}
                     <SeeReport spaceId={spaceId} kind={roster.space.kind} learnerId={l.id} locale={locale} />
@@ -727,7 +739,7 @@ function LearnerCardHead({
             href={reviewHref}
             data-testid="move-review"
             aria-describedby={words.reason ? `${nameId} ${reasonId}` : nameId}
-            style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, textDecoration: 'none', boxSizing: 'border-box', backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary }}
+            style={{ ...buttonBase, backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary }}
           >
             {c.status.review.cta}
           </Link>
@@ -749,7 +761,7 @@ function SeeReport({ spaceId, kind, learnerId, locale }: { spaceId: string; kind
     <Link
       href={link.href}
       data-testid="see-report"
-      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
+      style={{ ...buttonBase, marginTop: spacing.sm }}
     >
       {link.text}
     </Link>
@@ -766,7 +778,7 @@ function NotesLink({ href, testId, text, describedBy }: { href: string; testId: 
       href={href}
       data-testid={testId}
       aria-describedby={describedBy}
-      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, ...(describedBy ? { marginTop: spacing.sm, marginLeft: spacing.xs } : {}), textDecoration: 'none', boxSizing: 'border-box' }}
+      style={{ ...buttonBase, ...(describedBy ? { marginTop: spacing.sm, marginLeft: spacing.xs } : {}) }}
     >
       {text}
     </Link>
@@ -781,7 +793,7 @@ function ClassReportLink({ spaceId, kind, locale }: { spaceId: string; kind: Ros
     <Link
       href={link.href}
       data-testid="class-report-link"
-      style={{ ...buttonBase, display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, marginTop: spacing.sm, textDecoration: 'none', boxSizing: 'border-box' }}
+      style={{ ...buttonBase, marginTop: spacing.sm }}
     >
       {link.text}
     </Link>
