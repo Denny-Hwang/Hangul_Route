@@ -115,7 +115,9 @@ describe('S-b: two quests a day; on review-first days the Daily Review and Keep 
   });
 });
 
-describe('S-c: a learner with all 107 quests done, seeded, then S-a', () => {
+// The first 107 lesson quests of the catalogue, in its order: since row CM-42 S4 these hold Stage 4 Play Volume 2's three
+// quests (a learner with `volumes` on), so the seed also covers Volume 2 items; S-a's route itself stays on first volumes.
+describe('S-c: a learner with 107 lesson quests done (Volume 2 of Stage 4 Play among them), seeded, then S-a', () => {
   const seededAt = '2026-11-01T08:00:00.000Z';
   const seedDay = '2026-11-01';
   const seed = deriveSeed({ snapshot: finished(107), items: ITEMS, retired: RETIRED, quests: CATALOG.quests, cells: CATALOG.cells, seededAt, dayOf: utcDay });
