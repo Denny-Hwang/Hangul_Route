@@ -8,7 +8,7 @@
 
 ---
 
-> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): §3.4: the 50 ms multi-touch rule is replaced by one forgiving tap (commit on release within 24 px of the tile or 32 px of travel, gaps filled to the nearest tile), the first finger owning the board (later fingers ignored, never cancelling) and a 400 ms lock after a commit; a locked wrong tile is disabled (rows KT-1 to KT-3).
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): §3.4: the 50 ms multi-touch rule is replaced by one forgiving tap (commit on release within 24 px of the tile or 32 px of travel, gaps filled to the nearest tile), the latest finger on a tile owning the board (an earlier resting finger never commits; a finger on nothing is ignored, never cancelling) and a 400 ms lock after a commit that survives a round remount; a locked wrong tile is disabled (rows KT-1 to KT-3).
 
 ## 1. Context
 

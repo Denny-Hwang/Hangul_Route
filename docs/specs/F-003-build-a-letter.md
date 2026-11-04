@@ -8,7 +8,7 @@
 
 ---
 
-> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): a placed tile can be taken back by tapping it or its filled slot (the tiles after it shift left; a bounce on a tile just placed does not remove it), and taps during the 900 ms wrong reset are swallowed instead of accepted and wiped (section 6.5; row KT-6).
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): a placed tile can be taken back by tapping its filled slot (the tiles after it shift left); the used tray tile stays disabled, so tapping it again never removes it, and taps during the 900 ms wrong reset are swallowed instead of accepted and wiped (section 6.5; row KT-6).
 
 ## 1. Context
 

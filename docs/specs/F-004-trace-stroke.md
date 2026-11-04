@@ -7,7 +7,7 @@
 
 ---
 
-> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): the pan activates at 4 px (`spacing.xs`) and takes one pointer, and a touch that never becomes a stroke leaves no ink and re-arms the idle check (section 6.8; row KT-8).
+> **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): the pan activates at 4 px (`spacing.xs`), the stroke follows the first finger that moves (a resting palm is ignored and never cancels a stroke), and a touch that never becomes a stroke leaves no ink and re-arms the idle check (section 6.8; row KT-8).
 
 ## 1. Context
 
