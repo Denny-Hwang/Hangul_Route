@@ -144,11 +144,11 @@
     {
       "id": "cn-geumjul",
       "titleEn": "A rope around the jar",
-      "bodyEn": "To keep jang tasting good, people tied a straw rope, geumjul, around the jars and floated charcoal or red peppers on the jang.",
+      "bodyEn": "When jang was made, people tied a straw rope, geumjul, around the jars to keep bad things away and help the jang ripen well.",
       "term": {
         "ko": "금줄",
         "romanization": "geumjul",
-        "en": "a straw rope hung to keep bad luck away"
+        "en": "a straw rope hung to keep bad things away"
       },
       "factIds": [
         "f7"
@@ -422,7 +422,7 @@
         },
         {
           "id": "s7",
-          "narrationEn": "Every home's jang tastes a little different, {kw:jangmat}. Families keep old soy sauce and add it to new jang, year after year. To protect the taste, people floated charcoal or red peppers on it and tied a straw rope around the jars.",
+          "narrationEn": "Every home's jang tastes a little different, {kw:jangmat}. Families keep old soy sauce and add it to new jang, year after year. When they made jang, people tied a straw rope around the jars to keep bad things away.",
           "captionEn": "Every home has its own jang",
           "keyword": {
             "id": "jangmat",
@@ -825,7 +825,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "Jang-making is a National Intangible Heritage of Korea, and in 2024 UNESCO inscribed Korea's jang-making knowledge and practices.",
+          "narrationEn": "Jang-making is a National Intangible Heritage of Korea, and in 2024 UNESCO inscribed Korea's knowledge, beliefs and practices of jang making.",
           "captionEn": "A living heritage",
           "line": {
             "ko": "장 담그기는 국가무형유산이에요.",
@@ -1094,6 +1094,34 @@
       "claimKo": "메주는 콩을 무르게 삶아 찧어 덩이로 만들어 띄운다. 장 담그기는 메주를 소금물에 담가 발효시켜 장을 만드는 일이며, 숙성시킨 뒤 액체를 퍼내어 달인 것이 간장이고 그 찌꺼기가 된장이 된다.",
       "sources": [
         {
+          "title": "메주쑤기 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=268",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"메주를 만드는 방법은 먼저 좋은 콩을 골라 물에 불린 뒤, 가마솥에 5시간 이상 푹 삶습니다. 다음으로 삶은 콩을 절구에 넣고 곱게 찧어 네모나 둥근 모양으로 빚습니다. 그리고 겉이 잘 마르면 새끼줄로 엮어 바람이 잘 통하는 곳에 매달아 두고 천천히 익힙니다.\""
+        },
+        {
+          "title": "표준국어대사전 메주",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=메주",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "메주 「명사」: \"콩을 삶아서 찧은 다음, 덩이를 지어서 띄워 말린 것. 간장, 된장, 고추장 따위를 담그는 원료로 쓴다.\""
+        },
+        {
+          "title": "표준국어대사전 간장",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=간장",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "간장 1 「명사」: \"음식의 간을 맞추는 데 쓰는 짠맛이 나는 흑갈색 액체. 메주를 소금물에 30~40일 정도 담가 우려낸 뒤 그 국물을 떠내어 솥에 붓고 달여서 만든다.\""
+        },
+        {
+          "title": "표준국어대사전 된장",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=된장",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "된장 「명사」 「1」: \"메주로 간장을 담근 뒤에 장물을 떠내고 남은 건더기.\""
+        },
+        {
           "title": "장 담그기",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
           "url": "https://encykorea.aks.ac.kr/Article/E0076963",
@@ -1150,11 +1178,25 @@
     },
     {
       "id": "f7",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "To keep the taste good, people chose a lucky day to make jang, floated charcoal or red peppers on it, and hung a straw rope (geumjul) on the jars to keep bad luck away.",
-      "claimKo": "맛있는 장을 만들기 위하여 길일을 택하여 장을 담그고, 장에 숯이나 고추를 띄우고, 장독에 금줄을 치는 등 부정을 막았다.",
+      "claimEn": "When jang was made, people hung a straw rope (geumjul) on the jars to keep bad things away; such customs, like amulets and rites, were meant to help the jang ferment and age well.",
+      "claimKo": "장을 담글 때 장독에 금줄을 둘러 부정한 것이 들어오지 못하게 하였으며, 이처럼 부적이나 의례 같은 풍속은 장이 잘 발효되고 숙성되기를 바라는 것이었다.",
       "sources": [
+        {
+          "title": "표준국어대사전 금줄",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=금줄",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "금-줄 4 (禁줄) 「명사」 『민속』: \"부정한 것의 침범이나 접근을 막기 위하여 문이나 길 어귀에 건너질러 매거나 신성한 대상물에 매는 새끼줄. 아이를 낳았을 때, 장 담글 때, 잡병을 쫓고자 할 때, 신성 영역을 나타내고자 할 때에 사용한다.\""
+        },
+        {
+          "title": "Knowledge, beliefs and practices related to jang making in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/knowledge-beliefs-and-practices-related-to-jang-making-in-the-republic-of-korea-01975",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"The tradition has led to related cultural practices, such as the use of amulets or the performance of certain rites to ensure successful fermentation and aging.\""
+        },
         {
           "title": "장 담그기",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -1239,7 +1281,7 @@
     "passes": 3,
     "checkedAt": "2026-11-04",
     "scope": "story",
-    "notes": "Sources opened and quotes read on 2026-11-04: the UNESCO element page (ich.unesco.org RL 01975) and decision 19.COM 7.B.3, the Korea Heritage Service heritage portal page of 장 담그기 (description read through the khs.go.kr open API SearchKindOpenapiDt.do, as the page renders it with JavaScript; designation date 20181227), encykorea E0076963 (장 담그기) and E0048233 (장; process only). MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/life-book2.changes.md and the third pass in life-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text."
+    "notes": "Sources opened and quotes read on 2026-11-04: the UNESCO element page (ich.unesco.org RL 01975) and decision 19.COM 7.B.3, the Korea Heritage Service heritage portal page of 장 담그기 (description read through the khs.go.kr open API SearchKindOpenapiDt.do, as the page renders it with JavaScript; designation date 20181227), encykorea E0076963 (장 담그기) and E0048233 (장; process only). MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/life-book2.changes.md and the third pass in life-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text. Fix round 1 (2026-11-04, PR review): f4 and f7 cite allowlisted sources first (National Folk Museum of Korea 메주쑤기, topic 268; NIKL Standard Korean Dictionary 메주, 간장, 된장, 금줄; UNESCO's element page for the amulets and rites); the charcoal and red peppers, which only encykorea gave, left f7, the s7 narration and the geumjul note; the read-tier s8 line names the exact element (knowledge, beliefs and practices)."
   },
   "authorNotes": "Shared heritage: soybean sauces are made across East Asia (the Korea Heritage Service places Korea in the soybean-sauce culture area, 두장문화권), so no sentence says jang began in Korea. encykorea E0048233 argues that soybean jang spread from Goguryeo lands to China and Japan; that view is not used, and the entry is cited only for how meju and the two sauces are made. UNESCO name: the element is written as UNESCO writes it, \"Knowledge, beliefs and practices related to jang making in the Republic of Korea\" (no hyphen in jang making), inscribed 2024 (19.COM); the narration says UNESCO inscribed Korea's knowledge, beliefs and practices of jang making, never that UNESCO inscribed jang or doenjang. The National Intangible Heritage is 장 담그기, designated 27 December 2018 as a community element with no holder. Left out: UNESCO's and the KHS's note that the practice centres on women of the household (narration says families); the Joseon-era book quotes (농가월령가, 산가요록) and their years; the ratio of meju, salt and water; the 40 to 50 days of ripening (encykorea) as numbers; the buseonbon paper sock charm. 장고 (janggo) is also a name of the hourglass drum; here it is glossed as the storehouse, as in the KHS text. The straw rope (geumjul) and charcoal or red peppers follow encykorea E0076963 only.",
   "errata": []

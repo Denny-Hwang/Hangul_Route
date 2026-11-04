@@ -11,7 +11,7 @@
   },
   "summaryEn": "Grandma shows Hoya a rice cake for every season: azalea flower cakes in spring, cartwheel-stamped surichwi cakes for Dano in summer, chrysanthemum cakes in autumn, and red bean porridge with round rice balls on the longest night of winter.",
   "hoyaIntroEn": "Spring, summer, autumn and winter. Let's find the rice cake for every season!",
-  "hoyaOutroEn": "Flowers in spring, green leaves in summer, chrysanthemums in autumn. Which tteok would you like to try?",
+  "hoyaOutroEn": "Flowers in spring, green leaves in summer, chrysanthemums in autumn, round rice balls in winter. Which tteok would you like to try?",
   "theme": "life",
   "kind": "daily-life",
   "recommendedStage": 2,
@@ -208,7 +208,7 @@
         },
         {
           "id": "s2",
-          "narrationEn": "One of the oldest ways to make tteok is to steam grain flour in an earthenware steamer, a {kw:siru}. Tteok became a food for rites, feasts and the seasons.",
+          "narrationEn": "One way to make tteok is to steam rice flour in an earthenware steamer, a {kw:siru}. People made tteok for feasts, for rites and when the seasons changed.",
           "captionEn": "Steamed in a siru",
           "keyword": {
             "id": "siru",
@@ -465,7 +465,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "Winter, {kw:gyeoul}! Dongji has the longest night of the year. Families gather for red bean porridge, {kw:patjuk}, with little round rice balls inside, {kw:saealsim}.",
+          "narrationEn": "Winter, {kw:gyeoul}! Dongji has the longest night of the year. Families gather for red bean porridge, {kw:patjuk}, with {kw:saealsim} inside: little round balls of sticky rice, a kind of tteok.",
           "captionEn": "Red bean porridge in winter",
           "keyword": {
             "id": "patjuk",
@@ -656,7 +656,7 @@
         },
         {
           "id": "s2",
-          "narrationEn": "People steam grain flour in an earthenware steamer, a {kw:siru}.",
+          "narrationEn": "People steam rice flour in an earthenware steamer, a {kw:siru}.",
           "captionEn": "Steamed in a siru",
           "line": {
             "ko": "시루에 떡을 쪄요.",
@@ -1005,11 +1005,39 @@
   "facts": [
     {
       "id": "f1",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "Seasonal holiday foods (jeolsik) are made for each holiday through the year; the first of them is tteok, made from rice and other grains, and a different tteok is made to suit each season's weather and harvest.",
-      "claimKo": "절식은 절일을 맞아 만들어 먹는 전통음식이며, 각 절식에서 우선되는 것은 쌀과 잡곡을 기본 재료로 하는 떡으로, 절식에 따라 그 계절의 기후와 산출성에 맞추어 각기 다른 것을 만든다.",
+      "claimEn": "Tteok is food made by steaming grain flour, or pounding or shaping what was steamed; people made it for feasts and rites and when the seasons changed, and each holiday has its own tteok, like surichwitteok at Dano and hwajeon on outings in spring and autumn.",
+      "claimKo": "떡은 곡식 가루를 찌거나, 그 찐 것을 치거나 빚어서 만든 음식이며, 잔치와 제사 때와 계절이 바뀔 때 만들어 먹었고, 단오의 수리취떡, 봄가을 나들이의 화전처럼 명절마다 먹는 떡이 있다.",
       "sources": [
+        {
+          "title": "표준국어대사전 떡",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=떡",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "떡 1 「명사」 「1」: \"곡식 가루를 찌거나, 그 찐 것을 치거나 빚어서 만든 음식을 통틀어 이르는 말.\""
+        },
+        {
+          "title": "시루떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=265",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"시루떡은 시루라는 그릇에 쌀가루를 여러 겹으로 쌓아 쪄 만든 떡입니다. … 옛날부터 사람들은 계절이 바뀔 때나 이사할 때, 기쁜 일이나 슬픈 일이 있을 때마다 시루떡을 만들어 먹었습니다. … 잔치나 제사 때는 붉은 팥고물 대신 흰 팥이나 녹두, 깨 등을 쌀가루 위에 올려 시루떡을 만들었습니다.\""
+        },
+        {
+          "title": "수리취떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=69",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"수리취떡은 주로 단오에 먹습니다.\""
+        },
+        {
+          "title": "화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=182",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"화전은 찹쌀가루 반죽에 제철 꽃을 얹어 기름에 지져 만든 떡입니다. 봄에는 진달래꽃과 배꽃, 여름에는 장미, 가을에는 국화처럼 그 계절에 피는 꽃이 화전의 주재료입니다.\""
+        },
         {
           "title": "절식(節食)",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -1021,11 +1049,25 @@
     },
     {
       "id": "f2",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "Sirutteok is tteok made by steaming grain flour in a steamer (siru); it is thought to be the earliest kind of tteok, as bronze and earthenware siru have been found among early remains, and tteok became food for rites, feasts and the seasons.",
-      "claimKo": "시루떡은 곡식을 가루로 만들어 증기에 찌는 떡으로, 낙랑 유적에서 동으로 된 시루와 흙으로 된 시루가 발견된 것을 근거로 떡의 종류 중 가장 먼저 시작된 것으로 여겨지며, 떡은 제사와 잔치의 음식 또는 시속음식이 되었다.",
+      "claimEn": "A siru is a round earthenware steamer with several holes in its bottom, used to steam tteok or rice; sirutteok is made by steaming rice flour in layers in it, and people made tteok for feasts and rites and when the seasons changed.",
+      "claimKo": "시루는 떡이나 쌀 따위를 찌는 데 쓰는 둥근 질그릇으로 바닥에 구멍이 여러 개 뚫려 있으며, 시루떡은 시루에 쌀가루를 여러 겹으로 쌓아 쪄 만든 떡이다. 사람들은 잔치와 제사 때와 계절이 바뀔 때 떡을 만들어 먹었다.",
       "sources": [
+        {
+          "title": "표준국어대사전 시루",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=시루",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "시루 「명사」: \"떡이나 쌀 따위를 찌는 데 쓰는 둥근 질그릇. 모양이 자배기 같고 바닥에 구멍이 여러 개 뚫려 있다.\""
+        },
+        {
+          "title": "시루떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=265",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"시루떡은 시루라는 그릇에 쌀가루를 여러 겹으로 쌓아 쪄 만든 떡입니다. … 옛날부터 사람들은 계절이 바뀔 때나 이사할 때, 기쁜 일이나 슬픈 일이 있을 때마다 시루떡을 만들어 먹었습니다. … 잔치나 제사 때는 붉은 팥고물 대신 흰 팥이나 녹두, 깨 등을 쌀가루 위에 올려 시루떡을 만들었습니다.\""
+        },
         {
           "title": "시루떡",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -1042,6 +1084,20 @@
       "claimEn": "Hwajeon is tteok of glutinous rice flour dough fried in oil with flowers pressed on top. On Samjitnal, the 3rd day of the 3rd lunar month, people on spring outings picked azaleas and ate azalea hwajeon as the holiday food.",
       "claimKo": "화전은 찹쌀가루를 반죽하여 기름에 지진 떡으로 꽃을 붙여 지진다. 삼월 삼짇날 들놀이를 할 때 진달래꽃을 따서 지진 꽃전을 절식으로 먹는 풍속이 있다.",
       "sources": [
+        {
+          "title": "화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=182",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"화전은 찹쌀가루 반죽에 제철 꽃을 얹어 기름에 지져 만든 떡입니다. … 진달래 꽃잎을 얹은 화전은 ‘두견화전’이라고 부르며, 이 떡은 화전놀이와 함께 봄을 느끼게 해주는 대표적인 계절 음식입니다.\""
+        },
+        {
+          "title": "삼짇날 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=178",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"삼짇날은 음력 3월 3일로 … 옛날 사람들은 삼짇날에 산이나 들에 나가 꽃을 보고 새 풀이 돋은 땅을 밟으며 화전놀이를 즐겼습니다. 또 화전이나 쑥떡 같은 봄철 음식을 만들어 나누어 먹었고\""
+        },
         {
           "title": "화전",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -1072,6 +1128,27 @@
       "claimEn": "In autumn, hwajeon was also made with chrysanthemum (gukhwajeon); the hwajeon of the 9th day of the 9th lunar month is a tteok flavored with the scent of the season's flowers, eaten on autumn outings.",
       "claimKo": "가을에는 황국화와 감국잎으로 국화전을 부쳐 먹었으며, 중구일(9월 9일)의 화전(국화전)은 계절의 꽃향기를 가미한 떡으로 가을 들놀이에서 먹었다.",
       "sources": [
+        {
+          "title": "국화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=254",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"국화전은 얇게 편 찹쌀가루 반죽 위에 국화 꽃잎을 올려 전으로 부쳐 만든 음식입니다. 옛날 사람들은 주로 음력 9월 9일인 중양절에 국화전을 먹었습니다. 이때 국화가 많이 피기 때문입니다.\""
+        },
+        {
+          "title": "중양절 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=251",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"이 무렵에는 국화가 활짝 피는 때여서 높은 산에 올라 국화전을 먹고 국화주를 마시며 단풍놀이를 즐겼습니다.\""
+        },
+        {
+          "title": "화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=182",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"봄에는 진달래꽃과 배꽃, 여름에는 장미, 가을에는 국화처럼 그 계절에 피는 꽃이 화전의 주재료입니다.\""
+        },
         {
           "title": "화전",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -1161,6 +1238,13 @@
           "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=104",
           "accessed": "2026-11-04",
           "quoteOrLocator": "\"동지팥죽은 팥을 넣고 만든 죽으로 동지의 명절 음식입니다. … ‘새알심’이라는 찹쌀로 만든 동그란 모양의 경단을 함께 넣어서 끓입니다. 옛날 사람들은 … 가족이 함께 모여 팥죽을 먹었습니다.\""
+        },
+        {
+          "title": "표준국어대사전 경단",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=경단",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "경단 5 (瓊團) 「명사」: \"찹쌀가루나 찰수수 따위의 가루를 반죽하여 밤톨만 한 크기로 동글동글하게 빚어 끓는 물에 삶아 낸 후 고물을 묻히거나 꿀이나 엿물을 바른 떡. 또는 그런 모양의 것.\""
         }
       ]
     }
@@ -1170,8 +1254,8 @@
     "passes": 3,
     "checkedAt": "2026-11-04",
     "scope": "story",
-    "notes": "Sources opened and quotes read on 2026-11-04: encykorea E0049806 (절식), E0032347 (시루떡), E0064862 (화전), E0031353 (수리취), and the National Folk Museum of Korea children's folk encyclopedia pages 수리취떡 (topic 69), 단오 (65), 동지 (103) and 동지팥죽 (104) on nfm.go.kr (server-rendered; the folkency.nfm.go.kr pages render with JavaScript and were not used). MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/life-book2.changes.md and the third pass in life-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text."
+    "notes": "Sources opened and quotes read on 2026-11-04: encykorea E0049806 (절식), E0032347 (시루떡), E0064862 (화전), E0031353 (수리취), and the National Folk Museum of Korea children's folk encyclopedia pages 수리취떡 (topic 69), 단오 (65), 동지 (103) and 동지팥죽 (104) on nfm.go.kr (server-rendered; the folkency.nfm.go.kr pages render with JavaScript and were not used). MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/life-book2.changes.md and the third pass in life-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text. Fix round 1 (2026-11-04, PR review): f1, f2, f3 and f4 cite allowlisted sources first (NIKL Standard Korean Dictionary 떡, 시루, 경단; National Folk Museum of Korea 시루떡 265, 화전 182, 삼짇날 178, 국화전 254, 중양절 251); 'one of the oldest ways' left the s2 narration and f2, and 'grain flour' became 'rice flour' (NFM 265); the winter scene names saealsim a kind of tteok (NFM 104, NIKL 경단) and Hoya's outro names winter."
   },
-  "authorNotes": "Topic: rice cakes of the seasons, kept apart from the shipped stories: tteokguk (seollal-new-year) and songpyeon (chuseok-ganggangsullae, and the Stage 1 rites quest) are not told again; autumn is told with chrysanthemum hwajeon on outings, not songpyeon. Dates: Samjitnal (3rd day of the 3rd month) and Dano (5th day of the 5th month) are lunar dates (NFM 단오 page: 음력 5월 5일); Dongji is a solar term, so no date is given for it, only that it has the longest night. Saealsim are glutinous rice balls (경단) cooked in the porridge; the NFM custom of eating as many as one's years is left out (no age words). Red bean porridge being thrown on gates to keep spirits away (NFM) is left out. The cartwheel stamp (차륜병) follows NFM 69 and encykorea E0049806; surichwitteok may be made with mugwort or surichwi leaves (NFM), so the narration says green leaves. Hwajeon was also made with pear blossoms, roses and other flowers (encykorea); the story names only azaleas (spring) and chrysanthemums (autumn). The siru is called earthenware in the narration because the encykorea entry names earthen (흙으로 된) steamers among the earliest finds.",
+  "authorNotes": "Topic: rice cakes of the seasons, kept apart from the shipped stories: tteokguk (seollal-new-year) and songpyeon (chuseok-ganggangsullae, and the Stage 1 rites quest) are not told again; autumn is told with chrysanthemum hwajeon on outings, not songpyeon. Dates: Samjitnal (3rd day of the 3rd month) and Dano (5th day of the 5th month) are lunar dates (NFM 단오 page: 음력 5월 5일); Dongji is a solar term, so no date is given for it, only that it has the longest night. Saealsim are glutinous rice balls (경단) cooked in the porridge; the NFM custom of eating as many as one's years is left out (no age words). Red bean porridge being thrown on gates to keep spirits away (NFM) is left out. The cartwheel stamp (차륜병) follows NFM 69 and encykorea E0049806; surichwitteok may be made with mugwort or surichwi leaves (NFM), so the narration says green leaves. Hwajeon was also made with pear blossoms, roses and other flowers (encykorea); the story names only azaleas (spring) and chrysanthemums (autumn). The siru is called earthenware because the NIKL Standard Korean Dictionary defines it as a round 질그릇; the narration makes no claim about the oldest kind of tteok (only encykorea gave that, and it is not on the §6.6 allowlist). Saealsim are named a kind of tteok because NFM 104 calls them 경단 and NIKL defines 경단 as a 떡.",
   "errata": []
 }
