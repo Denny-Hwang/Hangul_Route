@@ -88,13 +88,14 @@ if (typeof nodeModule.register !== 'function') {
 }
 nodeModule.register(pathToFileURL(join(repo, 'scripts', 'ts-loader.mjs')));
 const importSource = (path) => import(pathToFileURL(join(repo, path)).href);
-const [tokens, appShell, i18n, lessonBuild, storyBuild, reviewItemBuild] = await Promise.all([
+const [tokens, appShell, i18n, lessonBuild, storyBuild, reviewItemBuild, weekDropBuild] = await Promise.all([
   importSource('packages/design-system/src/tokens.ts'),
   importSource('packages/content-schema/src/schemas/app-shell.ts'),
   importSource('packages/i18n/src/index.ts'),
   importSource('scripts/build-lessons.mjs'),
   importSource('scripts/build-stories.mjs'),
   importSource('scripts/build-review-items.mjs'),
+  importSource('scripts/build-week-drops.mjs'),
 ]);
 const { GROWN_UP_PREFIXES, isGrownUpPath } = appShell;
 const canvas = tokens.colors.surface.canvas;
@@ -277,10 +278,12 @@ const lessonManifest = lessonBuild.chunkManifest(lessonBuild.readCells(repo));
 const storyManifest = storyBuild.readChunkManifest(repo);
 // The review-item index (F-CURR-002 §4.2, row CM-10): one chunk, under the same checks.
 const reviewItemManifest = await reviewItemBuild.readChunkManifest(repo);
+// "This week in Korea" (F-CURR-002 row CM-48): the week drops, one chunk, under the same checks.
+const weekDropManifest = await weekDropBuild.readChunkManifest(repo);
 const bundles = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
   : [];
-const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest];
+const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest, ...weekDropManifest];
 // The per-pack clip map chunks the map generator wrote (AC-B6): one marked chunk per pack outside the precache.
 const packChunkDir = join(here, '..', 'src', 'content', '__generated__', PACK_CHUNK_DIR);
 const AUDIO_PACK_CHUNKS = existsSync(packChunkDir)
@@ -306,6 +309,7 @@ const report = precacheReport({
   locales: LOCALE_CHUNKS,
   roots: ROOT_CHUNKS,
   reviewItems: reviewItemManifest,
+  weekDrops: weekDropManifest,
   screens: SCREEN_CHUNKS,
   scenes: SCENE_CHUNKS,
   audioPacks: AUDIO_PACK_CHUNKS,
