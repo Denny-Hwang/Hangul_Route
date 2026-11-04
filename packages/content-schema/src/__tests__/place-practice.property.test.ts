@@ -247,6 +247,29 @@ describe('placePractice: named cases (section 9.4, BL-8)', () => {
     expect(out.kept.map((item) => item.id)).toEqual(['c', 'f']);
   });
 
+  it('the excess goes to a later learner day of the same cycle with room before the next cycle', () => {
+    // Mon and Wed for a Thursday class, 10 minutes (cap 15): 9 + 4 + 9 minutes. Monday takes x (9), the 9-minute z does
+    // not fit beside it, so it goes to Wednesday with y (4 + 9 = 13), not to the next Monday.
+    const items = [lesson('x', THU, '2026-11-06', 9), lesson('y', THU, '2026-11-08', 4), lesson('z', THU, '2026-11-10', 9)];
+    const out = placePractice(items, [], ['mon', 'wed'], { classDays: ['thu'], budget: 10, endDate: '2026-11-25' });
+    expect(out.items.map((item) => [item.id, item.targetDate])).toEqual([
+      ['x', '2026-11-09'],
+      ['y', '2026-11-11'],
+      ['z', '2026-11-11'],
+    ]);
+    expect(out.kept).toEqual([]);
+  });
+
+  it('an item longer than 1.5 x B_P never fits a learner day, so it keeps its plan date', () => {
+    const items = [lesson('story', THU, '2026-11-06', 10), lesson('short', THU, '2026-11-08', 5)];
+    const out = placePractice(items, [], ['mon'], { classDays: ['thu'], budget: 5, endDate: '2026-11-25' });
+    expect(out.items.map((item) => [item.id, item.targetDate])).toEqual([
+      ['story', '2026-11-06'],
+      ['short', '2026-11-09'],
+    ]);
+    expect(out.kept.map((item) => item.id)).toEqual(['story']);
+  });
+
   it('moves Refresh to the learner days with room or no lesson, with the cells of that cycle', () => {
     const items = [lesson('a', THU, '2026-11-06')];
     const refresh: RefreshEntry[] = [

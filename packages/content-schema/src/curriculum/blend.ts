@@ -362,9 +362,11 @@ const MAX_REFRESH_CELLS = 6;
  * 1. a new date is after the item's `lectureDate` (the window starts after the cycle's class day);
  * 2. in split, a practice-only item's new date is after its cell opener's class date (checked, and true by the window);
  * 3. an item stays in its own cycle or moves to a later one;
- * 4. a day holds at most `PRACTICE_DAY_CAP x budget` of placed items; the excess carries to the next learner day, and
- *    an item that would then fall more than two cycles after its class day (its plan cycle, when the plan put it later)
- *    keeps its plan date (`kept`);
+ * 4. a day holds at most `PRACTICE_DAY_CAP x budget` of placed items; the excess carries to the next learner day with
+ *    room (a later one in the same cycle first, then the next cycle's), and an item that would then fall more than two
+ *    cycles after its class day (its plan cycle, when the plan put it later) keeps its plan date (`kept`). The cap
+ *    counts re-dated items only: an item that keeps its plan date (`kept`, or dated before `from`) may share a day with
+ *    placed ones. A single item longer than the cap never fits a learner day, so it always keeps its plan date;
  * 5. Refresh entries move to the learner's dates that end with at least `REFRESH_MIN_ROOM` minutes of room or no
  *    lesson, with the cells of the plan's entries in that cycle (else the latest earlier entry's).
  *
@@ -450,16 +452,28 @@ export function placePractice<T extends PlaceItem>(items: readonly T[], refresh:
     const own = [...(byCycle.get(c) ?? [])].sort(order);
     const queue = [...carry, ...own];
     if (queue.length === 0) continue;
-    const spread = spreadPractice({ carried: carry, taught: own.filter((d) => d.item.lectureDate !== undefined), practiceOnly: own.filter((d) => d.item.lectureDate === undefined) }, learnerDates(c), cap);
+    const dates = learnerDates(c);
+    const spread = spreadPractice({ carried: carry, taught: own.filter((d) => d.item.lectureDate !== undefined), practiceOnly: own.filter((d) => d.item.lectureDate === undefined) }, dates, cap);
     const left = new Set<Due>(spread.carry);
+    const dayLoad = new Map<string, number>();
     for (const day of spread.days) {
-      let minutes = 0;
       for (const due of day.items) {
+        const minutes = dayLoad.get(day.date) ?? 0;
         if (minutes + due.minutes <= cap && day.date > floorOf(due.item)) {
-          minutes += due.minutes;
+          dayLoad.set(day.date, minutes + due.minutes);
           placed.set(due.index, day.date);
         } else left.add(due);
       }
+    }
+    // Invariant 4: what a day could not hold goes to the learner's next day with room in this cycle (in queue order),
+    // and only then to the next cycle.
+    for (const due of queue) {
+      if (!left.has(due)) continue;
+      const date = dates.find((d) => d > floorOf(due.item) && (dayLoad.get(d) ?? 0) + due.minutes <= cap);
+      if (date === undefined) continue;
+      dayLoad.set(date, (dayLoad.get(date) ?? 0) + due.minutes);
+      placed.set(due.index, date);
+      left.delete(due);
     }
     carry = [];
     for (const due of queue) {
