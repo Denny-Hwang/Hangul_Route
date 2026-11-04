@@ -325,7 +325,7 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   'caregiver.join.who.refused',
   // AMENDMENTS-GROWNUP-UX GX-1: the status chip's accessible name, the chip and its reason line joined by ": ".
   'console.status.chipName',
-  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · ", and the product name Android.
+  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · " (the product name Android is
+  // listed above with GX-12).
   'console.relinkPopup.meta',
-  'console.relink.platform.android',
 ];

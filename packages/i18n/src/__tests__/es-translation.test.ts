@@ -212,9 +212,7 @@ const LITERALLY_SHARED: readonly string[] = [
   'a11y.minigame.matchShape.originTile',
   // AMENDMENTS-GROWNUP-UX GX-1: the status chip's accessible name, the chip and its reason line joined by ": ".
   'console.status.chipName',
-  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · ", and two platform names that are
-  // the same word in Spanish.
+  // GX-1 (section 10.1): the re-link pop-up's platform and request time joined by " · " (the two platform names that are
+  // the same word in Spanish are listed above with GX-12).
   'console.relinkPopup.meta',
-  'console.relink.platform.android',
-  'console.relink.platform.web',
 ];
