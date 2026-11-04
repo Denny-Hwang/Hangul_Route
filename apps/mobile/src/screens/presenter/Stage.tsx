@@ -26,6 +26,7 @@ import { gridKindKey } from '../../logic/lecture/tools';
 import type { LectureSceneView } from '../../logic/lecture/sources/story';
 import { units } from '../../logic/lecture/stage-constants';
 import { STAGE_PADDING } from './stage-metrics';
+import { loadRealiaKinds } from '../minigames/realia-kinds-entry';
 import type { NavLayout, StageScale } from '../../logic/lecture/stage-scale';
 import { usePresenterView, useStageText } from './presenter-context';
 import { ActivitySlide } from './slides/ActivitySlide';
@@ -36,7 +37,7 @@ import { EndSlide } from './slides/EndSlide';
 import { LetterSlide } from './slides/LetterSlide';
 import { PatternSlide } from './slides/PatternSlide';
 import { ReadAlongSlide } from './slides/ReadAlongSlide';
-import { RealiaQuestionSlide, isRealiaQuestion } from './slides/RealiaQuestionSlide';
+import { RealiaQuestionSlide, isRealiaQuestion, showsRealiaKind } from './slides/RealiaQuestionSlide';
 import { RealiaSlide } from './slides/RealiaSlide';
 import { RolePlaySlide } from './slides/RolePlaySlide';
 import { SentenceBuildSlide } from './slides/SentenceBuildSlide';
@@ -114,6 +115,11 @@ export function Stage(props: StageProps): ReactElement {
   const touchEndedAt = useRef(Number.NEGATIVE_INFINITY);
   const insets = useSafeAreaInsets();
   const windowWidth = useWindowDimensions().width;
+  // Row CM-47: a deck that shows a realia sheet of an added kind asks for its layout chunk when it opens, so the sheet's
+  // first visit draws its own layout instead of the plain sheet first (it stays the plain sheet if the chunk cannot load).
+  useEffect(() => {
+    if (slides.some(showsRealiaKind)) void loadRealiaKinds();
+  }, [slides]);
 
   const kind = messages.learner.presenter.grid.kind[gridKindKey(slide.kind)];
   const detail = slideDetail(slide, {
