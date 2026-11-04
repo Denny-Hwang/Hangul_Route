@@ -41,3 +41,21 @@ expert review, and no copy claims one.
 | all | check answer positions | listen a, b, c / b, c, a / c, a, b; read c, a, d / b, d, a / d, b, c |
 | all | each read line restates a cited fact; four new keywords at most per tier | pass |
 | all | art reuses the scene library; one new prop (`prop:hooded-crane`) inside the 200 KB registry line | pass |
+
+## Fix round 1 (PR #974 review, 2026-11-04)
+
+| story | finding | outcome |
+|---|---|---|
+| suncheon | f1-f6 cited no institution on the §6.6 allowlist (encykorea, Suncheon City only) | the Korea Heritage Service entries 명승 순천만 and 천연기념물 흑두루미 (heritage.go.kr; their text read through the service's open API, SearchKindOpenapiDt.do) are now the first source of f1-f6; quotes matched by script against the fetched text; encykorea and Suncheon City stay secondary |
+| suncheon | "the only place in Korea where hooded cranes regularly spend the winter" (f4, listen s4, check c1, a learning goal) | cut back: the KHS crane entry says they winter at Suncheon Bay and at Cheonsu Bay, so the story says Suncheon Bay is one of the places where they spend the winter |
+| suncheon | seasonal bird list (f6, listen s5, check c2) stated by Suncheon City only | replaced by the KHS list: more than 200 kinds of birds, the hooded crane, black stork, Eurasian spoonbill and reed warbler among them; the listen line is 순천만에 새가 아주 많아요 (the keyword 계절마다 is gone); c2 asks how many kinds |
+| suncheon | river-sediment origin (f1) and grain of the reclaimed fields (f3) stated by encykorea only | left out of the narration; the food is the mudflat's worms, crabs and shellfish (KHS); c3's answer follows |
+| suncheon | Story Order: p2 and p3 could swap | three panels: 먼저 ... 날아와요 / 그다음에 겨울 동안 갯벌에서 먹이를 먹어요 / 마지막에 다시 북쪽으로 날아가요, each settled by its marker |
+| suncheon | grammarFocusEn "nara-wayo", "gaetbeoreneun" | "-eseo narawayo (fly in from ...); -e (at, in): gyeoure, gaetbeore" |
+| jirisan | f7 (flagship species, behind cn-hieori) cited encykorea only | the Korea National Park Service's 국립공원깃대종 page (지리산국립공원 깃대종: 반달가슴곰, 히어리, "우리나라에만 자생하는 고유종") is its first source |
+| jirisan | Story Order p4 stated the project's aim as reached | 마지막에 곰이 다시 지리산에 살아요 (f4, f5, listen s5) |
+| jirisan | grammarFocusEn "-e salayo" | "-e sarayo" |
+| jirisan | ko gloss of 풀어, 묶인 것을 놓아 | 가두지 않고 자유롭게 놓아 |
+| jeju | s7 and the summary claimed UNESCO status without the inscribed name (§5.1) | both name Jeju Volcanic Island and Lava Tubes (es «Isla volcánica y tubos de lava de Jeju», ko 제주 화산섬과 용암동굴) |
+| jeju | ko s7 석회 모양이 자라요 | 석회질 생성물이 자라요 |
+| jeju | es c1 ¿Qué hizo la isla de Jeju? (reads as "what did Jeju do") | ¿Qué formó la isla de Jeju? |

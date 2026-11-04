@@ -868,7 +868,7 @@
       "newKeywordIds": [
         "dongmul"
       ],
-      "grammarFocusEn": "-e salayo (live in ...); -a/-eo jueosseoyo (did ... for someone): pureo jueosseoyo",
+      "grammarFocusEn": "-e sarayo (live in ...); -a/-eo jueosseoyo (did ... for someone): pureo jueosseoyo",
       "storyOrder": {
         "kind": "story-order",
         "rounds": [
@@ -904,9 +904,9 @@
               {
                 "id": "p4",
                 "caption": {
-                  "ko": "마지막에 사람과 곰이 함께 살아요.",
-                  "romanization": "Majimage saramgwa gomi hamkke sarayo.",
-                  "en": "Last, people and bears live together."
+                  "ko": "마지막에 곰이 다시 지리산에 살아요.",
+                  "romanization": "Majimage gomi dasi Jirisane sarayo.",
+                  "en": "Last, bears live in Jirisan again."
                 }
               }
             ]
@@ -1079,6 +1079,13 @@
       "claimKo": "지리산 국립공원의 깃대종은 반달가슴곰과 히어리이며, 히어리는 한국 특산식물이다.",
       "sources": [
         {
+          "title": "국립공원깃대종 (지리산국립공원 깃대종)",
+          "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+          "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020053",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "지리산국립공원 깃대종 설명 표: \"반달가슴곰\" … \"히어리\" … \"우리나라에만 자생하는 고유종으로\""
+        },
+        {
           "title": "지리산 국립공원",
           "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
           "url": "https://encykorea.aks.ac.kr/Article/E0054158",
@@ -1088,12 +1095,12 @@
       ]
     }
   ],
-  "referenceDisplay": "Sources: 국립공원공단(지리산국립공원, 반달가슴곰); 한국민족문화대백과사전(지리산 국립공원)",
+  "referenceDisplay": "Sources: 국립공원공단(지리산국립공원, 반달가슴곰, 국립공원깃대종); 국가유산청(반달가슴곰); 한국민족문화대백과사전(지리산 국립공원)",
   "verification": {
     "passes": 3,
     "checkedAt": "2026-11-04",
     "scope": "story",
-    "notes": "Sources opened and quoted on 2026-11-04; every quoted Korean passage was re-checked by script against the fetched page text (whitespace ignored). MAR (F-CURR-002 §9.2): pass 0 author; pass 1 three checkers, each on its own lens: language (Korean lines, glosses, F-CNT-002 romanization machine-checked against the RR converter), culture and facts (every sentence against its cited facts, §5.1 conventions: UNESCO status only under the inscribed name, institution names as of the access date, no shared heritage framed as Korean in origin), learning design (Stage 5 level, Story Order rounds settled by their captions, check answer positions); pass 2 reviser; pass 3 third check of the revised file. Reviser changes: the read tier says 가장 높은 봉우리 (highest, from f3) instead of 가장 큰; f4 to f6 gained the Korea Heritage Service article as the authoritative source next to the Korea National Park Service pages. MAR 2026-11-04 language review of the read tier and the listen tier; MAR 2026-11-04 culture review of the read tier and the listen tier; findings and outcomes in the PR."
+    "notes": "Sources opened and quoted on 2026-11-04; every quoted Korean passage was re-checked by script against the fetched page text (whitespace ignored). MAR (F-CURR-002 §9.2): pass 0 author; pass 1 three checkers, each on its own lens: language (Korean lines, glosses, F-CNT-002 romanization machine-checked against the RR converter), culture and facts (every sentence against its cited facts, §5.1 conventions: UNESCO status only under the inscribed name, institution names as of the access date, no shared heritage framed as Korean in origin), learning design (Stage 5 level, Story Order rounds settled by their captions, check answer positions); pass 2 reviser; pass 3 third check of the revised file. Reviser changes: the read tier says 가장 높은 봉우리 (highest, from f3) instead of 가장 큰; f4 to f6 gained the Korea Heritage Service article as the authoritative source next to the Korea National Park Service pages. MAR 2026-11-04 language review of the read tier and the listen tier; MAR 2026-11-04 culture review of the read tier and the listen tier; findings and outcomes in the PR. Fix round 1 (2026-11-04): f7 (the flagship species, behind cn-hieori) cites the Korea National Park Service's flagship species page first; the Story Order's last panel says the bears live in Jirisan again (f4, f5), not that the project's aim is reached."
   },
   "authorNotes": "The causes of the bears' decline (habitat loss, poaching, the colonial-era hunts the KHS article reports) are not narrated; the story says only that the bears became very rare (non-graphic). The 2004 start year is left out of narration. Areas differ by source (483.022 km2 in KNPS and encykorea, about 471 km2 in the 2011 KHS article), so no area is given. Institutions as of 2026-11-04: the Korea National Park Service is listed among the 산하기관 of the Ministry of Climate, Energy and Environment (mcee.go.kr, 외청·소속기관·산하공공기관).",
   "errata": []

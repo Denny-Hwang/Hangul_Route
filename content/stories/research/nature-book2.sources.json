@@ -270,6 +270,13 @@
           "claim_ko": "지리산 국립공원의 깃대종은 반달가슴곰과 히어리이며, 히어리는 한국 특산식물이다.",
           "sources": [
             {
+              "title": "국립공원깃대종 (지리산국립공원 깃대종)",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020053",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "지리산국립공원 깃대종 설명 표: \"반달가슴곰\" … \"히어리\" … \"우리나라에만 자생하는 고유종으로\""
+            },
+            {
               "title": "지리산 국립공원",
               "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
               "url": "https://encykorea.aks.ac.kr/Article/E0054158",
@@ -285,9 +292,16 @@
       "facts": [
         {
           "id": "f1",
-          "claim_en": "The Suncheon Bay mudflat formed where the Dongcheon and Isacheon rivers flow out to the sea: fine river sediment could not be carried far out to sea by the tides and settled again along the shore.",
-          "claim_ko": "순천만 갯벌은 동천과 이사천이 바다로 빠져나가는 하구에서, 하천의 고운 물질이 조류에 실려 멀리 나가지 못하고 연안에 다시 쌓이면서 만들어졌다.",
+          "claim_en": "Among the coastal wetlands of Korea's south coast, Suncheon Bay is one that represents the country: reed fields, seepweed and S-shaped channels spread across its wide mudflat.",
+          "claim_ko": "순천만은 남해안 지역에 발달한 연안습지 중 우리나라를 대표할 만하며, 갯벌에 갈대밭과 칠면초 군락, S자형 수로가 어우러져 있다.",
           "sources": [
+            {
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"순천만은 남해안 지역에 발달한 연안습지 중 우리나라를 대표할 만하며, 갯벌에 펼쳐지는 갈대밭과 칠면초 군락, S자형 수로 등이 어우러져 아름다운 해안생태경관을 보여주는 경승지이다.\" … \"넓은 갯벌에는\""
+            },
             {
               "title": "순천만",
               "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -299,9 +313,16 @@
         },
         {
           "id": "f2",
-          "claim_en": "Reeds grew on the Suncheon Bay mudflat, and a huge reed field spreads from where the Dongcheon and Isacheon rivers meet to the front of the mudflat; then migratory birds such as the hooded crane began to come.",
-          "claim_ko": "순천만 갯벌에 갈대가 자라 동천과 이사천의 합류 지점부터 갯벌 앞부분까지 거대한 갈대 군락이 펼쳐져 있고, 흑두루미 같은 철새가 찾아오게 되었다.",
+          "claim_en": "Reed fields spread across the Suncheon Bay mudflat.",
+          "claim_ko": "순천만 갯벌에는 갈대밭이 펼쳐져 있다.",
           "sources": [
+            {
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"갯벌에 펼쳐지는 갈대밭과 칠면초 군락\""
+            },
             {
               "title": "순천만",
               "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -313,9 +334,16 @@
         },
         {
           "id": "f3",
-          "claim_en": "Shellfish of the mudflat and grain from the reclaimed fields give migratory birds such as the hooded crane plenty of food and shelter.",
-          "claim_ko": "갯벌의 어패류와 간척지의 곡물이 흑두루미 같은 철새들에게 풍부한 먹이와 보호막이 된다.",
+          "claim_en": "The wide mudflat of Suncheon Bay is rich in life such as lugworms, crabs and shellfish, and birds such as the hooded crane come there; this mudflat life is food for the birds.",
+          "claim_ko": "순천만의 넓은 갯벌에는 갯지렁이류, 게류, 조개류 같은 생물이 다양하고 풍부하여 흑두루미 같은 새들이 찾아오며, 이 생물들이 새들의 먹이가 된다.",
           "sources": [
+            {
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"넓은 갯벌에는 갯지렁이류와 각종 게류, 조개류 등 갯벌 생물상이 다양하고 풍부하여 천연기념물인 흑두루미와 먹황새, 노랑부리저어새를 비롯한\""
+            },
             {
               "title": "순천만",
               "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -327,23 +355,37 @@
         },
         {
           "id": "f4",
-          "claim_en": "Suncheon Bay is one of Korea's representative places where migratory birds come, and it is the only place in Korea where hooded cranes regularly spend the winter.",
-          "claim_ko": "순천만은 우리나라 대표 철새도래지이며, 흑두루미가 우리나라에서 유일하게 겨울을 나는 정기적인 월동지이다.",
+          "claim_en": "Hooded cranes come to Korea in winter as migratory birds, and Suncheon Bay is one of the places in Korea where they spend the winter.",
+          "claim_ko": "흑두루미는 우리나라에 겨울에 찾아오는 철새이며, 순천만은 흑두루미가 우리나라에서 겨울을 나는 곳 가운데 하나이다.",
           "sources": [
+            {
+              "title": "흑두루미 (천연기념물)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1369902280000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"우리나라에는 겨울에 찾아오는 철새로\" … \"현재는 전남 순천만에서 약 100∼120마리, 충남 천수만 지역에서 약 50∼60마리가 겨울을 나고 있다.\""
+            },
             {
               "title": "철새 도래지 순천만",
               "publisher": "순천시 순천만습지 (Suncheon City, scbay.suncheon.go.kr)",
               "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
               "accessed": "2026-11-04",
-              "quote_or_locator": "\"우리나라 대표 철새도래지\" … \"순천만은 흑두루미가 우리나라에서 유일하게 겨울을 나는 정기적인 월동지이다.\""
+              "quote_or_locator": "\"우리나라 대표 철새도래지\" … \"흑두루미\""
             }
           ]
         },
         {
           "id": "f5",
-          "claim_en": "Hooded cranes breed in the north, around Lake Baikal, northwestern Mongolia, the Amur river basin, the Ussuri region and northeast China, and move south in winter.",
-          "claim_ko": "흑두루미는 바이칼호 부근, 몽골 북서부, 흑룡강 유역, 우수리 지방, 중국 동북 지방 등 북쪽에서 번식하고 겨울에는 남쪽으로 이동한다.",
+          "claim_en": "Hooded cranes are found in Siberia, China, Japan and Korea. They breed in the north, around Lake Baikal, northwestern Mongolia, the Amur river basin, the Ussuri region and northeast China, and move south in winter.",
+          "claim_ko": "흑두루미는 시베리아, 중국, 일본, 한국 등지에 분포한다. 바이칼호 부근, 몽골 북서부, 흑룡강 유역, 우수리 지방, 중국 동북 지방 등 북쪽에서 번식하고 겨울에는 남쪽으로 이동한다.",
           "sources": [
+            {
+              "title": "흑두루미 (천연기념물)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1369902280000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"흑두루미는 시베리아, 중국, 일본, 한국 등지에 분포한다.\" … \"우리나라에는 겨울에 찾아오는 철새로\""
+            },
             {
               "title": "흑두루미",
               "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
@@ -355,15 +397,15 @@
         },
         {
           "id": "f6",
-          "claim_en": "Different birds come to Suncheon Bay in each season: hooded cranes and ducks in winter, migrating shorebirds in spring and autumn, and egrets, herons and reed warblers in summer.",
-          "claim_ko": "순천만에는 계절마다 다른 새가 찾아온다. 겨울에는 흑두루미와 오리류, 봄과 가을에는 이동하는 도요물떼새, 여름에는 백로류와 개개비 등이 온다.",
+          "claim_en": "More than 200 kinds of birds come to Suncheon Bay, among them the hooded crane, the black stork, the Eurasian spoonbill and the Oriental reed warbler.",
+          "claim_ko": "순천만에는 흑두루미와 먹황새, 노랑부리저어새, 개개비 등을 비롯해 200여 종의 새가 찾아온다.",
           "sources": [
             {
-              "title": "철새 도래지 순천만",
-              "publisher": "순천시 순천만습지 (Suncheon City, scbay.suncheon.go.kr)",
-              "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
               "accessed": "2026-11-04",
-              "quote_or_locator": "\"계절별로는 겨울철 흑두루미와 오리류, 봄·가을철 국제적 이동성 도요물떼새, 여름철 백로류와 개개비 등이 찾아와\""
+              "quote_or_locator": "국가유산 설명: \"천연기념물인 흑두루미와 먹황새, 노랑부리저어새를 비롯한 흰목물떼새, 방울새, 개개비, 검은머리물떼새 등 11종의 국제 희귀조류와 200여종의 조류가 이곳을 찾는 등\""
             }
           ]
         },
@@ -424,6 +466,10 @@
     {
       "url": "https://encykorea.aks.ac.kr/Article/E0065880",
       "reason": "used for the hooded crane's breeding range only; its statement that Korea has no regular wintering site is older than Suncheon City's current page"
+    },
+    {
+      "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+      "reason": "Fix round 1 (2026-11-04): Suncheon City stays a secondary source of f4 only. Its 'only regular wintering site in Korea' sentence and its seasonal bird list are no longer narrated: the Korea Heritage Service's 흑두루미 entry (an allowlisted institution, F-CURR-002 §6.6) says the cranes winter at Suncheon Bay and at Cheonsu Bay."
     }
   ],
   "institutions_as_of_access_date": {

@@ -15,3 +15,15 @@ The third pass read the revised stories and overlays against `nature-book2.chang
 
 THIRD PASS: PASS. Remaining uncertainty: the UNESCO and Ramsar Secretariat pages could not be read by the session;
 spot-check them live in a browser before a later fact edit.
+
+## Fix round 1, 2026-11-04
+
+| story | check | verdict |
+|---|---|---|
+| suncheon-bay-wetland | every fact's first source is on the §6.6 allowlist (Korea Heritage Service; National Institute of Ecology for f7, f8); every narrated sentence maps to a fact that source states; no "only" claim | pass |
+| jirisan-national-park | f7 cites the Korea National Park Service first; the last Story Order panel restates f4 and f5 | pass |
+| jeju-volcanic-island | the UNESCO status is named Jeju Volcanic Island and Lava Tubes wherever a learner reads it (s7, summary) | pass |
+| all | Story Order rounds settle by their markers; romanization by rule (build and lint) | pass |
+
+The es and ko strings changed in this round go to the workflow's independent review on the PR before the story review
+fields are signed again; this file records the author's check only.

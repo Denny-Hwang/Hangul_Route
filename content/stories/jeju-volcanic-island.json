@@ -9,7 +9,7 @@
     "romanization": "Hwasani mandeun seom, Jeju",
     "en": "Jeju, the Island Volcanoes Made"
   },
-  "summaryEn": "Hoya visits Jeju, an island made by volcanoes. He looks up at Hallasan, sees the sunrise peak Seongsan Ilchulbong and learns about the long lava tubes under the ground, together a UNESCO World Heritage site since 2007.",
+  "summaryEn": "Hoya visits Jeju, an island made by volcanoes. He looks up at Hallasan, sees the sunrise peak Seongsan Ilchulbong and learns about the long lava tubes under the ground. Since 2007 they have been UNESCO World Heritage together, as Jeju Volcanic Island and Lava Tubes.",
   "hoyaIntroEn": "An island made by volcanoes? Let's visit Jeju and find out!",
   "hoyaOutroEn": "Volcanoes made Jeju's mountain, its small hills and its long caves. Amazing, right?",
   "theme": "nature",
@@ -392,7 +392,7 @@
         },
         {
           "id": "s7",
-          "narrationEn": "In Yongcheon and Dangcheomul, caves near the coast, limestone shapes grow that are rare in lava tubes. In 2007, Hallasan, Seongsan Ilchulbong and these lava tubes became UNESCO World Heritage, {kw:segyeyusan}.",
+          "narrationEn": "In Yongcheon and Dangcheomul, caves near the coast, limestone shapes grow that are rare in lava tubes. In 2007, Hallasan, Seongsan Ilchulbong and these lava tubes became UNESCO World Heritage, {kw:segyeyusan}, together named Jeju Volcanic Island and Lava Tubes.",
           "captionEn": "Jeju becomes World Heritage",
           "keyword": {
             "id": "segyeyusan",
@@ -1046,7 +1046,7 @@
     "passes": 3,
     "checkedAt": "2026-11-04",
     "scope": "story",
-    "notes": "Sources opened and quoted on 2026-11-04; every quoted Korean passage was re-checked by script against the fetched page text (whitespace ignored). MAR (F-CURR-002 §9.2): pass 0 author; pass 1 three checkers, each on its own lens: language (Korean lines, glosses, F-CNT-002 romanization machine-checked against the RR converter), culture and facts (every sentence against its cited facts, §5.1 conventions: UNESCO status only under the inscribed name, institution names as of the access date, no shared heritage framed as Korean in origin), learning design (Stage 5 level, Story Order rounds settled by their captions, check answer positions); pass 2 reviser; pass 3 third check of the revised file. Reviser changes: s7 lost the unsourced 'white' of the limestone formations and names the three inscribed areas; the Story Order's last caption gained its subject (이곳이). MAR 2026-11-04 language review of the read tier and the listen tier; MAR 2026-11-04 culture review of the read tier and the listen tier; findings and outcomes in the PR."
+    "notes": "Sources opened and quoted on 2026-11-04; every quoted Korean passage was re-checked by script against the fetched page text (whitespace ignored). MAR (F-CURR-002 §9.2): pass 0 author; pass 1 three checkers, each on its own lens: language (Korean lines, glosses, F-CNT-002 romanization machine-checked against the RR converter), culture and facts (every sentence against its cited facts, §5.1 conventions: UNESCO status only under the inscribed name, institution names as of the access date, no shared heritage framed as Korean in origin), learning design (Stage 5 level, Story Order rounds settled by their captions, check answer positions); pass 2 reviser; pass 3 third check of the revised file. Reviser changes: s7 lost the unsourced 'white' of the limestone formations and names the three inscribed areas; the Story Order's last caption gained its subject (이곳이). MAR 2026-11-04 language review of the read tier and the listen tier; MAR 2026-11-04 culture review of the read tier and the listen tier; findings and outcomes in the PR. Fix round 1 (2026-11-04): s7 and the summary name the property under its UNESCO name (§5.1)."
   },
   "authorNotes": "UNESCO: inscribed in 2007 as \"Jeju Volcanic Island and Lava Tubes\" (the Korea Heritage Service portal gives the English name); whc.unesco.org answered 403 to the authoring session, so the portal and encykorea carry the inscription, and no other UNESCO status (geopark, biosphere reserve) is claimed. Ages in years (about 1.8 million; 100,000 to 300,000; 120,000 to 50,000) stay out of the narration. 'Highest in South Korea' follows the portal's 남한. The definition of a volcano in s2 and s5 is plain wording, not a claim about Jeju.",
   "errata": []
