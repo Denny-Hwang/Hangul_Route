@@ -46,6 +46,10 @@
     "episode:stage5-crafts": {
       "title": "Historias de artesanía",
       "hoyaIntro": "Leamos en coreano historias de manos ingeniosas y cuentos antiguos, una oración corta a la vez."
+    },
+    "episode:stage5-life-v2": {
+      "title": "El jang y los pasteles de arroz",
+      "hoyaIntro": "Leamos en coreano historias de la comida coreana a lo largo del año, una oración corta a la vez."
     }
   }
 }
