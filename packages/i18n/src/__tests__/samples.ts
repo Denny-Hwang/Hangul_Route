@@ -1043,6 +1043,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-CURR-002 row CM-39: how far the piece moved (1 to 5 a throw), and a throw's name with its romanization.
   'learner.yutReview.stations': [[1], [2], [5]],
   'a11y.yutReview.throw': [['x', 'gae', 2], ['x', 'do', 1]],
+  // F-TCH-004 row NB-1: a Recent row taught to the end, with its day label.
+  'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).

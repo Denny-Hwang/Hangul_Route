@@ -690,6 +690,8 @@ export function settleWithin(request: Promise<unknown>, maxMs: number): Promise<
 
 /** `lecture.complete` (F-TCH-004 section 3.14, AMENDMENTS-PRESENTER-NAV section 12): exactly these keys. */
 export type CompletePayload = NavCounts & {
+  /** Taught to the end (Finish, or Exit after the last slide was reached; F-TCH-004 section 3.5 amendment 2026-11-03, row NB-1). */
+  finished: boolean;
   slidesShown: number;
   minutes: number;
   reveals: number;
@@ -700,10 +702,12 @@ export type CompletePayload = NavCounts & {
  * `lecture.complete` (section 3.14): whole minutes since Start, never negative; the layout the tally
  * took (`layoutNow` only for a lesson left before its start settled) and the navigation counts, each
  * a whole number from 0 to `NAV_COUNT_MAX`. No coordinates, ids, per-step timings or deck title.
+ * `finished` (row NB-1): the lesson was taught to the end; false for a lesson left part way.
  */
-export function completePayload(tally: RunTally, now: number, layoutNow: NavLayout): CompletePayload {
+export function completePayload(tally: RunTally, now: number, layoutNow: NavLayout, finished = false): CompletePayload {
   const count = (n: number): number => Math.min(NAV_COUNT_MAX, Math.max(0, Math.floor(n)));
   return {
+    finished,
     slidesShown: tally.shown.size,
     minutes: Math.max(0, Math.round((now - tally.startedAt) / 60_000)),
     reveals: tally.reveals,
