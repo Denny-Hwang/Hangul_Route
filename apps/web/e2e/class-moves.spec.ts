@@ -519,8 +519,9 @@ test.describe('en: answering from Needs you (GX-4)', () => {
 
   test('Read and OK from the See all sheet: the sheet closes and the class-scope card keeps focus and stays in view', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
-    // Three items: the re-link keeps its row, the move and the class-scope update fold behind See all.
-    await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], scopeNeeded: ['profile:sora'], notice: false });
+    // Three items: the re-link keeps its row, the move and the class-scope update fold behind See all. The pop-up already
+    // showed Mina's request in this tab (GX-5's auto-open), so the page opens on the strip.
+    await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], scopeNeeded: ['profile:sora'], notice: false, shown: ['relink:mina'] });
     await page.goto('/parent');
     const strip = page.getByRole('region', { name: p.needsYou.title });
     await strip.getByRole('button', { name: p.needsYou.seeAll.cta }).click();
