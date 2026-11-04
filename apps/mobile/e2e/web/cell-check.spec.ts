@@ -77,6 +77,9 @@ const cellItems = (cell: string | readonly string[]) => ITEMS.filter((i) => (typ
 const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
 const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
 
+/** The typed miss: no word of the course is within one jamo of it (gradeTyped's "hinted"). */
+const MISS = 'ㅋㅋㅋㅋ';
+
 async function typeKorean(page: Page, text: string): Promise<void> {
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
     if (jamo === ' ') await tapHangulKey(page, 'space');
@@ -102,7 +105,9 @@ async function answer(page: Page, cell: string | readonly string[], right: boole
       target = items.find((i) => i.en !== undefined && labels.includes(i.en))?.ko ?? '';
     }
     if (!right || target === '') {
-      await typeKorean(page, 'ㅋ');
+      // A miss that is never "almost": four ㅋ are at least two jamo from every word (one ㅋ is one jamo from 코, a
+      // one-letter slip that hides the keyboard behind Next).
+      await typeKorean(page, MISS);
       await page.getByTestId('daily-review-type-done').click();
       await expect(page.getByTestId('daily-review-miss')).toBeVisible();
       if (target === '') target = ((await page.getByTestId('daily-review-miss').innerText()).match(/[가-힣]+(?: [가-힣]+)*/g) ?? []).sort((a, b) => b.length - a.length)[0] ?? '';
