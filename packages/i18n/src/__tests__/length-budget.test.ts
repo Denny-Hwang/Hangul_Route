@@ -129,6 +129,8 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'console.relinkPopup.later.cta': '"Más tarde" (9) against "Later" (5), one letter over the 8-character floor: a pop-up button drawn at its own width beside Approve and Deny, which wrap on a phone',
   // AMENDMENTS-GROWNUP-UX row GX-8 (section 10.2): the family roster's heading.
   'console.space.rosterHeadingFamily': '"Quienes aprenden" (16) against "Learners" (8): the gender-neutral form the console uses for family members (no "los aprendices"); an h2 over the cards that wraps',
+  // AMENDMENTS-GROWNUP-UX GX-3 (section 5.5, the one action wording of section 10.1): the re-link bar's sentence.
+  'console.relinkBar.many': '"{n} dispositivos nuevos esperan tu aprobación" against "{n} new devices need your OK": "esperan tu aprobación" is the one full-sentence form of "needs your OK" in Spanish (section 10.1); the bar\'s line wraps at any width',
 };
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };

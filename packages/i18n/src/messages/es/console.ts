@@ -150,6 +150,9 @@ export const consoleMsgs = {
       classReports: 'Informes de clase',
       lecture: 'Modo proyección',
     },
+    navAttention: {
+      classes: (n: number) => `Clases, ${n} por aprobar`,
+    },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
   pageBack: {
@@ -242,6 +245,8 @@ export const consoleMsgs = {
     lessons: 'Lecciones',
     noClass: { title: 'Aún no tienes una clase.', setUp: 'Crear una clase', goFamily: 'Ir a Familia' },
     cross: { addFamily: '¿También aprenden en casa? Crea un espacio familiar', toFamily: 'Tu familia está en Familia' },
+    attention: (n: number) => `${n} por aprobar`,
+    schoolClassAttention: (className: string, n: number) => `${className}: ${n} por aprobar`,
   },
   space: {
     loading: 'Cargando…',
@@ -1905,5 +1910,9 @@ export const consoleMsgs = {
     devicesHeading: 'Dispositivos nuevos',
     outgoingHeading: 'Salidas de esta clase',
     empty: 'No hay nada pendiente.',
+  },
+  relinkBar: {
+    one: (space: string) => `Un dispositivo nuevo espera tu aprobación · ${space}`,
+    many: (n: number) => plural('es', n, { one: `${n} dispositivo nuevo espera tu aprobación`, other: `${n} dispositivos nuevos esperan tu aprobación` }),
   },
 } satisfies DeepPartial<Messages['console']>;

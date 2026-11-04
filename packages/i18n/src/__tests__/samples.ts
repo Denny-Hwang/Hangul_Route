@@ -1089,4 +1089,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.space.joinedOn': [['Oct 14']],
   'console.plan.readout.notStarted': [[4]],
   'report.class.didntPractice': [[1], [9]],
+  // AMENDMENTS-GROWNUP-UX GX-3: the home row chip and the Classes tab name (1 and many), a school row's class link, and
+  // the re-link bar (a class name; two or more devices).
+  'console.home.attention': [[1], [3]],
+  'console.home.schoolClassAttention': [['Class B', 1], ['Class B', 2]],
+  'console.shell.navAttention.classes': [[1], [3]],
+  'console.relinkBar.one': [['Sunday Class A']],
+  'console.relinkBar.many': [[2], [5]],
 };
