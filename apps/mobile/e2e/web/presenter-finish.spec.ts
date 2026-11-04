@@ -53,12 +53,18 @@ async function startLesson(page: Page, touch: boolean): Promise<void> {
   await expect(page.getByTestId('presenter-stage')).toBeVisible();
 }
 
-/** The End key, then Next until it reads Finish (the End slide at its last build). */
+/**
+ * The End key, one slide back, then Next until it reads Finish (the End slide at its last build). The run steps onto
+ * the End slide with Next, so it counts as taught to the end; a jump alone does not (the NB-1 review fix).
+ */
 async function toTheEnd(page: Page): Promise<void> {
   await page.keyboard.press('End');
+  await page.keyboard.press('ArrowLeft');
   const next = page.getByTestId('presenter-next');
   for (let i = 0; i < 10 && (await next.getAttribute('aria-label')) !== 'Finish'; i++) await page.keyboard.press('ArrowRight');
   await expect(next).toHaveAccessibleName('Finish');
+  // Finish ignores a press in its first FINISH_ARM_MS (600 ms, the double tap guard of the NB-1 review fix).
+  await page.waitForTimeout(700);
 }
 
 async function pressId(page: Page, id: string, touch: boolean): Promise<void> {
@@ -159,5 +165,22 @@ test.describe('the home at the narrowest phone, 320 x 568', () => {
     await page.getByTestId(ROW).scrollIntoViewIfNeeded();
     await shot(page, 'presenter-finish-home-320x568');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  });
+});
+
+test.describe('a jump to the End slide, 1280 x 720', () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+
+  test('End then a step back leaves part way: a peek at the closing slide is not a finished lesson', async ({ page }) => {
+    await startLesson(page, false);
+    await page.keyboard.press('End');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('Escape');
+    const dialog = page.getByTestId('presenter-exit-dialog');
+    await expect(dialog.getByText('Leave the lesson?')).toBeVisible();
+    await pressId(page, 'presenter-exit-confirm', false);
+    await expect(page.getByTestId(`presenter-recent-resume-${DECK.id}`)).toBeVisible();
+    expect((await row(page))?.finishedAt).toBeUndefined();
   });
 });

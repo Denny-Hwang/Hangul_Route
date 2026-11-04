@@ -199,6 +199,11 @@ import { useClipPacks } from './src/platform/audio-assets-store';
  * step (browsers throttle `replaceState`, and a throttled write could refuse the next push).
  */
 const HOME_SAVE_MS = 300;
+/**
+ * How long a press of Next is ignored once it turns into Finish (F-TCH-004 section 3.5 amendment NB-1, review fix): a
+ * quick double tap through the last builds never ends the lesson on its second tap; a later press finishes.
+ */
+export const FINISH_ARM_MS = 600;
 
 // The strict read throws on a failed or damaged read, so Recent is then never written over (`readRecent`).
 const recentStore: RecentStore = { readJson: (key) => readJsonExact<unknown>(key), writeJson: (key, value) => writeJson(key, value) };
@@ -560,6 +565,8 @@ function Presenter(): ReactElement {
   const [fullscreen, setFullscreen] = useState(isFullscreen);
   // Next on the End slide from a key or a clicker (row NB-1): focus goes to Next, which reads Finish there.
   const nextRef = useRef<View>(null);
+  // When Next last turned into Finish (a step onto the end of the run); a Finish press within FINISH_ARM_MS is ignored.
+  const finishArmedAt = useRef(0);
   const [endHint, setEndHint] = useState(false);
   // On a phone the no-voice chip shows for a moment at the top of the stage when a sound build cannot play (section 3.6);
   // on both bars an explicit Sound press that has nothing to play, or does not play, says so there (section 3.7).
@@ -776,6 +783,7 @@ function Presenter(): ReactElement {
       }
       stateRef.current = state;
       setPstate(state);
+      if (!atLessonEnd(before, { slides }) && atLessonEnd(state, { slides })) finishArmedAt.current = Date.now();
       reportTools(toolsOpened(before, state));
       if (effect?.type === 'start-timer') stepTimer({ type: 'start', ms: effect.ms, now: Date.now() });
       if (tally.current) tally.current = tallyStep(tally.current, before, state, slides, { event, ...(source !== undefined ? { source } : {}), at: Date.now() });
@@ -1489,6 +1497,8 @@ function Presenter(): ReactElement {
             // At the end Next reads Finish (row NB-1): the press finishes the lesson, no confirm.
             const now = stateRef.current;
             if (now !== null && now.overlay === null && !(now.timerOpen && now.timerMode === 'full') && atLessonEnd(now, { slides })) {
+              // A second tap of a quick double tap, landing as Next turns into Finish, does nothing (review fix).
+              if (Date.now() - finishArmedAt.current < FINISH_ARM_MS) return;
               activate();
               onExit();
               return;

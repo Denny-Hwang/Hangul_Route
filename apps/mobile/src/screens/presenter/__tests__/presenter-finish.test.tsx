@@ -74,7 +74,7 @@ vi.mock('react-native-gesture-handler', async () => {
 });
 vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 
-import PresenterApp from '../../../../PresenterApp';
+import PresenterApp, { FINISH_ARM_MS } from '../../../../PresenterApp';
 
 type Size = { width: number; height: number; scale: number; fontScale: number };
 const TABLET: Size = { width: 1180, height: 820, scale: 1, fontScale: 1 };
@@ -191,6 +191,8 @@ async function toTheEnd(r: ReactTestRenderer): Promise<void> {
     await tick(5);
   }
   expect(label(r, 'presenter-next')).toBe('Finish');
+  // Finish takes a press only once it has read Finish for FINISH_ARM_MS (the double tap guard).
+  await tick(FINISH_ARM_MS);
 }
 
 const SIZES: Array<[string, Size]> = [
@@ -263,6 +265,30 @@ describe('Finish at the end of a lecture (NB-1)', () => {
     expect(row?.lastSlideKey).toBeDefined();
     expect(row?.finishedAt).toBeUndefined();
     expect(byTestId(r.root, 'presenter-recent-resume-lecture:finish0001')).toHaveLength(1);
+  });
+
+  it.each(SIZES)('%s: a quick double tap through the last build never finishes on its second tap; a later press does', async (_name, size) => {
+    Dimensions.set({ window: size, screen: size });
+    const r = await lesson();
+    await settle();
+    await toTheEnd(r);
+    key('prev');
+    await tick(10);
+    expect(label(r, 'presenter-next')).not.toBe('Finish');
+    // Two taps 100 ms apart: the first steps onto the end (Next turns into Finish), the second lands on Finish.
+    await press(one(r, 'presenter-next'));
+    await tick(100);
+    expect(label(r, 'presenter-next')).toBe('Finish');
+    await press(one(r, 'presenter-next'));
+    await tick(10);
+    expect(byTestId(r.root, 'presenter-stage')).toHaveLength(1);
+    expect(completes()).toHaveLength(0);
+    // A deliberate press after the guard finishes.
+    await tick(FINISH_ARM_MS);
+    await press(one(r, 'presenter-next'));
+    await tick(20);
+    expect(byTestId(r.root, 'presenter-stage')).toHaveLength(0);
+    expect(completes()).toEqual([expect.objectContaining({ finished: true })]);
   });
 
   it('a finished lesson started again is a new run: its row offers Resume again once it is left part way', async () => {
