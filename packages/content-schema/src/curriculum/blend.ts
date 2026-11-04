@@ -309,3 +309,191 @@ export function spreadPractice<T extends PackItem>(cycleItems: CycleItems<T>, pr
     carry: queue.slice(next),
   };
 }
+
+/**
+ * A learner's own practice days (section 9.4, row BL-8, BL-OD-7): a day may hold up to `PRACTICE_DAY_CAP x B_P`
+ * minutes of re-dated items, so a learner who picked fewer days than the class still plays each class's lessons soon.
+ */
+export const PRACTICE_DAY_CAP = 1.5;
+
+/** What `placePractice` reads of a plan item: its date, the class day that taught it, minutes and cell. */
+export interface PlaceItem extends PackItem {
+  targetDate?: string | undefined;
+  lectureDate?: string | undefined;
+}
+
+/** A Refresh date and the cells it looks back at (`CurriculumMeta.refresh`). */
+export interface RefreshEntry {
+  date: string;
+  cellIds: string[];
+}
+
+export interface PlaceContext {
+  /** The plan's class weekdays (`blend.lecture.days`): the cycle boundaries. */
+  classDays: readonly Weekday[];
+  /** `B_P`: the plan's practice minutes (`blend.personal.minutes`). */
+  budget: number;
+  /** The first day that may change (the device's today): earlier items and Refresh entries keep their dates. */
+  from?: string | undefined;
+  /** The route's last day; default the latest item or Refresh date. No learner date after it is used. */
+  endDate?: string | undefined;
+  /** A plan day off (`daysOff`): no item or Refresh is placed on it. */
+  isDayOff?: ((date: string) => boolean) | undefined;
+}
+
+export interface PlacedPractice<T> {
+  /** The items in their input order, each with its new `targetDate` (only `targetDate` ever changes). */
+  items: T[];
+  /** The Refresh entries: before `from` as the plan has them, from `from` on on the learner's days. Date order. */
+  refresh: RefreshEntry[];
+  /** Items that found no learner day within two cycles of their class day: they keep their plan date. Input order. */
+  kept: T[];
+}
+
+const MAX_REFRESH = 364;
+const MAX_REFRESH_CELLS = 6;
+
+/**
+ * Re-dates a blended plan's practice items to the learner's own practice days (section 9.4), on the device only. Cycle
+ * by cycle (a cycle's practice window runs from the day after a class day up to and including the next class day),
+ * the cycle's due items (carried first, then class lessons by class day, then practice-only lessons, each in plan-date
+ * order) are dealt with `spreadPractice` over the learner's dates in that window from `from` on, under five invariants:
+ *
+ * 1. a new date is after the item's `lectureDate` (the window starts after the cycle's class day);
+ * 2. in split, a practice-only item's new date is after its cell opener's class date (checked, and true by the window);
+ * 3. an item stays in its own cycle or moves to a later one;
+ * 4. a day holds at most `PRACTICE_DAY_CAP x budget` of placed items; the excess carries to the next learner day, and
+ *    an item that would then fall more than two cycles after its class day (its plan cycle, when the plan put it later)
+ *    keeps its plan date (`kept`);
+ * 5. Refresh entries move to the learner's dates that end with at least `REFRESH_MIN_ROOM` minutes of room or no
+ *    lesson, with the cells of the plan's entries in that cycle (else the latest earlier entry's).
+ *
+ * So a learner day before the class day (a Tuesday for a Thursday class) never gets that week's class lessons, and a
+ * learner who picks only the class day plays each class's lessons on the next class day, after class.
+ */
+export function placePractice<T extends PlaceItem>(items: readonly T[], refresh: readonly RefreshEntry[], practiceDays: readonly Weekday[], ctx: PlaceContext): PlacedPractice<T> {
+  checkClassDays(ctx.classDays);
+  if (!Number.isFinite(ctx.budget) || ctx.budget <= 0) throw new RangeError('budget: a finite number above 0');
+  if (practiceDays.length < 1 || practiceDays.length > 7 || new Set(practiceDays).size !== practiceDays.length) throw new RangeError('practice days: 1 to 7 distinct weekdays');
+  for (const day of practiceDays) if (!WEEKDAYS.includes(day)) throw new RangeError(`practice days: ${String(day)} is not a weekday`);
+  for (const item of items) checkAmount('minutes', item.minutes);
+  const from = ctx.from ?? '';
+  const dated = items.flatMap((item, index) => (item.targetDate === undefined ? [] : [{ item, index, planDate: item.targetDate }]));
+  const allDates = [...dated.map((d) => d.planDate), ...dated.flatMap((d) => (d.item.lectureDate === undefined ? [] : [d.item.lectureDate])), ...refresh.map((e) => e.date)];
+  if (allDates.length === 0) return { items: [...items], refresh: [...refresh], kept: [] };
+  const first = allDates.reduce((a, b) => (a < b ? a : b));
+  const endDate = ctx.endDate ?? [...dated.map((d) => d.planDate), ...refresh.map((e) => e.date)].reduce((a, b) => (a > b ? a : b), first);
+
+  // Class dates: the last one before the earliest date, then every one up to the first after the route's end.
+  let start = addDays(first, -1);
+  while (!ctx.classDays.includes(weekdayOf(start))) start = addDays(start, -1);
+  const classDates: string[] = [];
+  for (let date = start; ; date = addDays(date, 1)) {
+    if (ctx.classDays.includes(weekdayOf(date))) {
+      classDates.push(date);
+      if (date > endDate) break;
+    }
+  }
+  /** The cycle a practice date falls in: the last class date strictly before it. */
+  const cycleOf = (date: string): number => {
+    let c = 0;
+    for (let i = 0; i < classDates.length && (classDates[i] as string) < date; i += 1) c = i;
+    return c;
+  };
+  const lastCycle = classDates.length - 2;
+  const learnerDates = (c: number): string[] => {
+    const out: string[] = [];
+    const end = (classDates[c + 1] as string) < endDate ? (classDates[c + 1] as string) : endDate;
+    for (let date = addDays(classDates[c] as string, 1); date <= end; date = addDays(date, 1)) {
+      if (practiceDays.includes(weekdayOf(date)) && date >= from && !(ctx.isDayOff?.(date) ?? false)) out.push(date);
+    }
+    return out;
+  };
+
+  const openerDate = new Map<string, string>();
+  for (const { item } of dated) {
+    if (item.lectureDate === undefined || item.cellId === undefined) continue;
+    const prev = openerDate.get(item.cellId);
+    if (prev === undefined || item.lectureDate < prev) openerDate.set(item.cellId, item.lectureDate);
+  }
+  /** The earliest date an item may take (invariants 1 and 2): after its class day, or after its cell opener's. */
+  const floorOf = (item: T): string => item.lectureDate ?? (item.cellId === undefined ? '' : (openerDate.get(item.cellId) ?? ''));
+
+  interface Due extends PackItem {
+    index: number;
+    item: T;
+    planDate: string;
+    planCycle: number;
+    lastCycle: number;
+  }
+  const byCycle = new Map<number, Due[]>();
+  for (const { item, index, planDate } of dated) {
+    if (planDate < from) continue;
+    const planCycle = cycleOf(planDate);
+    const ref = item.lectureDate === undefined ? planCycle : cycleOf(addDays(item.lectureDate, 1));
+    const due: Due = { index, item, planDate, minutes: item.minutes, cellId: item.cellId, planCycle, lastCycle: Math.max(ref + 1, planCycle) };
+    byCycle.set(planCycle, [...(byCycle.get(planCycle) ?? []), due]);
+  }
+  const order = (a: Due, b: Due): number =>
+    (a.item.lectureDate === undefined ? 1 : 0) - (b.item.lectureDate === undefined ? 1 : 0) ||
+    (a.item.lectureDate ?? '').localeCompare(b.item.lectureDate ?? '') ||
+    a.planDate.localeCompare(b.planDate) ||
+    a.index - b.index;
+
+  const placed = new Map<number, string>();
+  const keptIndex = new Set<number>();
+  const cap = PRACTICE_DAY_CAP * ctx.budget;
+  let carry: Due[] = [];
+  const cycles = [...byCycle.keys()];
+  const firstCycle = cycles.length === 0 ? lastCycle + 1 : Math.min(...cycles);
+  for (let c = firstCycle; c <= lastCycle; c += 1) {
+    const own = [...(byCycle.get(c) ?? [])].sort(order);
+    const queue = [...carry, ...own];
+    if (queue.length === 0) continue;
+    const spread = spreadPractice({ carried: carry, taught: own.filter((d) => d.item.lectureDate !== undefined), practiceOnly: own.filter((d) => d.item.lectureDate === undefined) }, learnerDates(c), cap);
+    const left = new Set<Due>(spread.carry);
+    for (const day of spread.days) {
+      let minutes = 0;
+      for (const due of day.items) {
+        if (minutes + due.minutes <= cap && day.date > floorOf(due.item)) {
+          minutes += due.minutes;
+          placed.set(due.index, day.date);
+        } else left.add(due);
+      }
+    }
+    carry = [];
+    for (const due of queue) {
+      if (!left.has(due)) continue;
+      if (due.lastCycle > c) carry.push(due);
+      else keptIndex.add(due.index);
+    }
+  }
+  for (const due of carry) keptIndex.add(due.index);
+
+  const out = items.map((item, index) => {
+    const date = placed.get(index);
+    return date === undefined || date === item.targetDate ? item : { ...item, targetDate: date };
+  });
+
+  // Invariant 5: Refresh on the learner's dates with room or no lesson.
+  const load = new Map<string, number>();
+  for (const item of out) if (item.targetDate !== undefined) load.set(item.targetDate, (load.get(item.targetDate) ?? 0) + item.minutes);
+  const sortedPlan = [...refresh].sort((a, b) => a.date.localeCompare(b.date));
+  const cellsFor = (date: string): string[] => {
+    const c = cycleOf(date);
+    const same = sortedPlan.filter((e) => cycleOf(e.date) === c);
+    const source = same.length > 0 ? same : sortedPlan.filter((e) => e.date < date).slice(-1);
+    return [...new Set(source.flatMap((e) => e.cellIds))].slice(0, MAX_REFRESH_CELLS);
+  };
+  const moved: RefreshEntry[] = [];
+  for (let c = 0; c <= lastCycle; c += 1) {
+    for (const date of learnerDates(c)) {
+      const minutes = load.get(date) ?? 0;
+      if (minutes > 0 && ctx.budget - minutes < REFRESH_MIN_ROOM) continue;
+      const cellIds = cellsFor(date);
+      if (cellIds.length > 0) moved.push({ date, cellIds });
+    }
+  }
+  const nextRefresh = [...sortedPlan.filter((e) => e.date < from), ...moved].slice(0, MAX_REFRESH);
+  return { items: out, refresh: nextRefresh, kept: items.filter((_, index) => keptIndex.has(index)) };
+}
