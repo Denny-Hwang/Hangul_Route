@@ -84,16 +84,7 @@ const HOME_CSS = `
 @media (min-width:${FULL}){.hr-ph-family{grid-template-columns:minmax(0,1fr) ${layout.pane.master}px;column-gap:${spacing.xxl}px;align-items:start}}
 `;
 
-const button: CSSProperties = {
-  ...buttonBase,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxSizing: 'border-box',
-  minHeight: touchTarget.min,
-  textAlign: 'center',
-  textDecoration: 'none',
-};
+const button: CSSProperties = buttonBase;
 const primary: CSSProperties = { ...button, fontSize: rem(typography.size.body), backgroundColor: colors.brand.primary, borderColor: colors.brand.primary, color: colors.text.onPrimary };
 const pressed: CSSProperties = { ...button, backgroundColor: colors.surface.sunken };
 const textLink: CSSProperties = {

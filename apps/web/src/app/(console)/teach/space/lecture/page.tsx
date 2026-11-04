@@ -1,7 +1,7 @@
 'use client';
 
 import { LECTURE_MAX_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
-import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -64,15 +64,9 @@ const OPENS_TAB_ID = 'lecture-present-alone-tab';
 /** Start on the no-compose page: a link styled as the console's primary button, at the touch-target floor. */
 const presentAloneStyle = {
   ...buttonBase,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxSizing: 'border-box',
-  minHeight: touchTarget.min,
   backgroundColor: colors.brand.primary,
   borderColor: colors.brand.primary,
   color: colors.text.onPrimary,
-  textDecoration: 'none',
 } as const;
 
 /**
