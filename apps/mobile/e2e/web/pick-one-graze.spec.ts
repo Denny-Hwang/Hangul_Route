@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { passDiscover, seedStored } from './helpers';
 import { LETTER_OF, captureSpeech, en, nextSaid, roundPill, saidCount, shown } from './jamo-voice-rig';
@@ -268,6 +269,9 @@ for (const profile of [
       await page.getByRole('button', { name: 'Go', exact: true }).click();
       const options = page.locator('[data-testid^="listen-pick-option-"]').filter({ visible: true });
       await expect(page.getByTestId('listen-pick-option-jamo:eo')).toBeVisible();
+      // No Korean voice here: "No sound? Read it here." comes in above the cards once the voice check settles and moves
+      // them down (by about 400 px at the largest text). Every point below is measured on that settled layout.
+      await expect(page.getByTestId('listen-pick-prompt-detail')).toBeVisible();
       const ids = await options.evaluateAll((els) => els.map((e) => e.getAttribute('data-testid') ?? ''));
       const rightId = 'listen-pick-option-jamo:eo';
       const wrongIds = ids.filter((id) => id !== rightId);
@@ -282,11 +286,26 @@ for (const profile of [
       // Both points first, so the 150 ms is measured from the first release to the second touch-down.
       const p1 = centre(await boxOf(page, w1));
       const p2 = centre(await boxOf(page, w2));
+      // The gap is read in the page from the inputs' own event times, the clock the board's lock runs on.
+      await page.evaluate(() => {
+        const w = window as Window & { __touches?: Array<[string, number]> };
+        w.__touches = [];
+        for (const type of ['touchstart', 'touchend']) window.addEventListener(type, (e) => w.__touches!.push([type, e.timeStamp]), { capture: true });
+      });
       await touch.tap(p1);
       await page.waitForTimeout(150);
       await touch.tap(p2);
       await expect(page.getByTestId(w1)).toHaveAttribute('aria-label', /^Not this one/);
       await page.waitForTimeout(AFTER_MISS);
+      const touches = await page.evaluate(() => (window as Window & { __touches?: Array<[string, number]> }).__touches ?? []);
+      const firstEnd = touches.find(([type]) => type === 'touchend')?.[1] ?? 0;
+      const secondDown = touches.filter(([type]) => type === 'touchstart')[1]?.[1] ?? Infinity;
+      const bounceGap = Math.round(secondDown - firstEnd);
+      test.info().annotations.push({ type: 'bounce', description: `the second touch went down ${bounceGap} ms after the first release (the lock is ${TAP_LOCK_MS})` });
+      // Fail closed: a machine too slow to land the second touch inside the lock sent a deliberate tap (which may answer),
+      // so the case reports as skipped with the time it took, never as a pass that checked nothing. The render tests
+      // (TapBoard.test.tsx, controller.test.ts) pin the same rule on a fake clock for every run.
+      test.skip(bounceGap >= TAP_LOCK_MS, `the second touch went down ${bounceGap} ms after the first release, past the ${TAP_LOCK_MS} ms lock: no bounce to check`);
       expect(await answered(w2), 'the 150 ms bounce answered nothing').toBe(false);
       expect(await answered(rightId)).toBe(false);
 

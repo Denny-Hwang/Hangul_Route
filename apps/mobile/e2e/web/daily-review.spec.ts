@@ -374,6 +374,10 @@ test('a bounce across the 320 ms advance gives the next round no answer; a later
   const prompt = page.getByTestId('daily-review-prompt');
   const ko = ((await prompt.innerText()).split('\n')[0] ?? '').trim();
   const rightId = `daily-review-option-${byKo.get(ko)?.id}`;
+  // This browser has no Korean voice: "No sound? Read it here." comes in under the prompt once the voice check settles,
+  // and moves the answers down. Round 2 opens with it in place, so the point is measured on the settled layout (else
+  // the bounce and the later tap land on the notice, not on an answer).
+  await expect(page.getByTestId('daily-review-sound-notice')).toBeVisible();
   await page.waitForTimeout(450);
   const touch = await Touchscreen.of(page);
   const at = await pointIn(page, rightId);
@@ -389,6 +393,9 @@ test('a bounce across the 320 ms advance gives the next round no answer; a later
   await page.waitForFunction(() => document.querySelector('[data-testid="daily-review-dots"]')?.getAttribute('aria-label') === 'Round 2', undefined, { polling: 'raf', timeout: 5_000 });
   await touch.start({ id: 1, ...at });
   await touch.end(1);
+  // The bounce and the later tap must land on one of round 2's answers, or the case checks nothing.
+  const under = await page.evaluate((p) => document.elementFromPoint(p.x, p.y)?.closest('[data-testid^="daily-review-option-"]')?.getAttribute('data-testid') ?? null, at);
+  expect(under, 'the point is on an answer of round 2').not.toBeNull();
   const ends = await page.evaluate(() => (window as Window & { __touchEnds?: number[] }).__touchEnds ?? []);
   expect(ends).toHaveLength(2);
   const bounceGap = Math.round(ends[1]! - ends[0]!);

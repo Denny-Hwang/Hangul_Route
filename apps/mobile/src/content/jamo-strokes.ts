@@ -1,6 +1,7 @@
 /**
  * Jamo stroke skeletons — hand-authored ordered polygonal approximations
- * of each of the 30 Stage 1 jamo. Coordinates are in a 200 × 200 viewBox.
+ * of each of the 30 Stage 1 jamo (loops are sampled from true circles, see
+ * `loop`). Coordinates are in a 200 × 200 viewBox.
  *
  * F-004 Trace Stroke uses these to score the child's finger-drawn path
  * against the expected stroke skeleton (coverage scoring with 24-unit
@@ -25,6 +26,38 @@ export interface JamoStrokes {
 }
 
 const p = (x: number, y: number): JamoStrokePoint => ({ x, y });
+
+/**
+ * Chords in a loop (ㅇ, ㅎ's circle). The loops are sampled from a true circle
+ * or ellipse, never hand-placed corners (NB-3: an 8-point ㅇ drew as an
+ * octagon). At 64 the widest chord strays 0.12% of the radius from the curve,
+ * invisible at any canvas size, and a multiple of 4 puts a point exactly on
+ * the top, left, bottom and right of the loop.
+ */
+const LOOP_SEGMENTS = 64;
+
+/** Two decimals keep the SVG path data short; far below a pixel at any size. */
+const round2 = (v: number): number => +v.toFixed(2);
+
+/**
+ * A closed loop round centre (cx, cy) with radii rx, ry: it starts at the top
+ * and runs counter-clockwise on screen (top, left, bottom, right), the way ㅇ
+ * is written; the last point is the first again.
+ */
+function loop(cx: number, cy: number, rx: number, ry: number): JamoStrokePoint[] {
+  const points: JamoStrokePoint[] = [];
+  for (let i = 0; i < LOOP_SEGMENTS; i++) {
+    const t = (2 * Math.PI * i) / LOOP_SEGMENTS;
+    points.push(p(round2(cx - rx * Math.sin(t)), round2(cy - ry * Math.cos(t))));
+  }
+  points.push(points[0]!);
+  return points;
+}
+
+/** ㅇ (and ㅇ as a final): round, centred where the old 120 × 110 ring was. */
+const IEUNG_CIRCLE = loop(100, 95, 57.5, 57.5);
+/** ㅎ's ring under its bar, in the old ring's box (x 40–160, y 85–155). */
+const HIEUT_LOOP = loop(100, 120, 60, 35);
 
 // Padding from viewBox edges: keep strokes between (30, 30) and (170, 170)
 // so the child has a comfortable margin to draw within.
@@ -79,21 +112,11 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(110, 80), p(160, 150)],
     ],
   },
-  // ㅇ ieung — circle (8-point polygon), from the top, counter-clockwise as written
+  // ㅇ ieung — a true circle, from the top, counter-clockwise as written
   {
     jamoId: 'jamo:ieung',
     strokes: [
-      [
-        p(100, 40),
-        p(60, 56),
-        p(40, 95),
-        p(60, 134),
-        p(100, 150),
-        p(140, 134),
-        p(160, 95),
-        p(140, 56),
-        p(100, 40),
-      ],
+      IEUNG_CIRCLE,
     ],
   },
   // ㅈ jieut — top horizontal + left diagonal + right diagonal
@@ -149,17 +172,7 @@ export const jamoStrokes: JamoStrokes[] = [
     strokes: [
       [p(100, 30), p(100, 50)],
       [p(40, 65), p(160, 65)],
-      [
-        p(100, 85),
-        p(60, 100),
-        p(40, 125),
-        p(60, 145),
-        p(100, 155),
-        p(140, 145),
-        p(160, 125),
-        p(140, 100),
-        p(100, 85),
-      ],
+      HIEUT_LOOP,
     ],
   },
 
@@ -268,17 +281,7 @@ export const jamoStrokes: JamoStrokes[] = [
   {
     jamoId: 'jamo:ieung-batchim',
     strokes: [
-      [
-        p(100, 40),
-        p(60, 56),
-        p(40, 95),
-        p(60, 134),
-        p(100, 150),
-        p(140, 134),
-        p(160, 95),
-        p(140, 56),
-        p(100, 40),
-      ],
+      IEUNG_CIRCLE,
     ],
   },
 ];
