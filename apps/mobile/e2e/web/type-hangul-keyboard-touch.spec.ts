@@ -17,6 +17,8 @@ import { Touchscreen, type TouchPoint } from './touch';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+/** `KEY_BOUNCE_MS` (AMENDMENTS-TOUCH KT-D7, `motion.duration.fast`). */
+const KEY_BOUNCE_MS = 120;
 /** `colors.border.shape`, the press look's outline (section 4.3). */
 const PRESS_OUTLINE = 'rgb(133, 115, 96)';
 /** Past the longest key lock (Shift, 400 ms), with room for a busy machine. */
@@ -141,6 +143,18 @@ test.describe('Type Hangul keyboard under touch (AMENDMENTS-TOUCH KT-7, F7)', ()
         expect(await field(page)).toBe(before);
       });
 
+      test('a lift 8 px above the top row still types the key (gap fill); 40 px above types nothing', async ({ page }) => {
+        const touch = await open(page, profile.largest);
+        const b = await keyBox(page, 'ㄱ');
+        const from = centre(b);
+        const before = await field(page);
+        await touch.graze(from, 0, -(b.height / 2 + 40), { steps: 4 });
+        await page.waitForTimeout(APART);
+        expect(await field(page)).toBe(before);
+        await touch.graze(from, 0, -(b.height / 2 + 8), { steps: 4 });
+        await expect.poll(() => field(page)).toBe('ㄱ');
+      });
+
       test('a lift off the keyboard types nothing', async ({ page }) => {
         const touch = await open(page, profile.largest);
         const before = await field(page);
@@ -151,15 +165,32 @@ test.describe('Type Hangul keyboard under touch (AMENDMENTS-TOUCH KT-7, F7)', ()
         expect(await field(page)).toBe(before);
       });
 
-      test('a bounce on a letter (60 ms) types once; deletes 150 to 250 ms apart each erase one', async ({ page }) => {
+      test('a bounce on a letter (60 ms) types once', async ({ page }) => {
         const touch = await open(page, profile.largest);
         const h = centre(await keyBox(page, 'ㅎ'));
-        await touch.tap(h, 20);
-        await page.waitForTimeout(60);
-        await touch.tap(h, 20);
+        // The gap is read in the page from the two releases' own event times, the clock the key lock runs on.
+        await page.evaluate(() => {
+          const w = window as Window & { __touchEnds?: number[] };
+          w.__touchEnds = [];
+          window.addEventListener('touchend', (e) => w.__touchEnds!.push(e.timeStamp), { capture: true });
+        });
+        await touch.tap(h, 5);
+        await page.waitForTimeout(30);
+        await touch.tap(h, 5);
+        const ends = await page.evaluate(() => (window as Window & { __touchEnds?: number[] }).__touchEnds ?? []);
+        expect(ends).toHaveLength(2);
+        const gap = Math.round(ends[1]! - ends[0]!);
+        test.info().annotations.push({ type: 'bounce', description: `released ${gap} ms after the first release (the lock is ${KEY_BOUNCE_MS})` });
+        // Fail closed: a machine too slow to land the bounce inside the lock reports the case as skipped (with the time
+        // it took), never as a pass that checked nothing. The DS unit test pins 100 ms on a manual clock every run.
+        test.skip(gap >= KEY_BOUNCE_MS, `the bounce released ${gap} ms after the first, past the ${KEY_BOUNCE_MS} ms lock: nothing to check`);
         await page.waitForTimeout(APART);
         expect(await field(page)).toBe('ㅎ');
-        for (const id of ['ㅗ', 'ㅇ']) {
+      });
+
+      test('deletes 150 to 250 ms apart each erase one', async ({ page }) => {
+        const touch = await open(page, profile.largest);
+        for (const id of ['ㅎ', 'ㅗ', 'ㅇ']) {
           await touch.tap(centre(await keyBox(page, id)), 20);
           await page.waitForTimeout(APART);
         }
@@ -195,9 +226,12 @@ test.describe('Type Hangul keyboard under touch (AMENDMENTS-TOUCH KT-7, F7)', ()
           expect(b.width).toBeGreaterThanOrEqual(63.5);
           expect(b.height).toBeGreaterThanOrEqual(63.5);
         }
+        // The next key in each row (the nearest box to the right on the same top), unless the key ends its row: its
+        // left edge meets this key's right edge, so a dead line of any width fails.
         for (const b of boxes) {
-          const next = boxes.find((o) => Math.abs(o.top - b.top) < 0.5 && o.left > b.left && o.left - b.right < 4);
-          if (next !== undefined) expect(Math.abs(next.left - b.right)).toBeLessThan(0.5);
+          const right = boxes.filter((o) => Math.abs(o.top - b.top) < 0.5 && o.left >= b.right - 0.5).sort((p, q) => p.left - q.left);
+          const next = right[0];
+          if (next !== undefined) expect(Math.abs(next.left - b.right), `gap after the key at ${b.left},${b.top}`).toBeLessThan(0.5);
         }
       });
     });

@@ -19,7 +19,9 @@ import { KOREAN_LINE_BREAK } from '../../line-break';
  * Touch (docs/specs/AMENDMENTS-TOUCH.md section 6.7, KT-D7): the keys are one `TapBoard` with
  * `multiTouch="each"`, so every finger is its own tap. A key types when its finger lifts, the key
  * under the finger at that moment (the press look follows a finger that slides); a lift off the
- * keyboard types nothing; a rollover types both letters in the order the fingers lift. A letter,
+ * keyboard types nothing, except within `GAP_REACH` (16 px) of an outer key, which still types that
+ * key (gap fill). A key held for any length types on its lift, as on a system keyboard (there is no
+ * palm hold on `each`). A rollover types both letters in the order the fingers lift. A letter,
  * Delete or Space drops a repeat within `KEY_BOUNCE_MS`; Shift has the 400 ms target lock. The
  * board neither sets nor reads the app-level tap lock. Hit cells stay edge to edge: the face is
  * inset by the padding inside each key's hit area.

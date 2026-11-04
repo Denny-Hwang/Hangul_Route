@@ -216,11 +216,26 @@ describe('HangulKeyboard under touch (F7)', () => {
     expect(k.typed).toEqual(['ㄱ', 'ㅅ']);
   });
 
+  it('a lift 8 px above the top row still types the key (gap fill, within GAP_REACH); 40 px above types nothing', () => {
+    const k = keyboard();
+    const g = k.centre('ㄱ');
+    expect(k.rects.get('ㄱ')!.y).toBe(0);
+    k.down(1, g);
+    k.move(1, { x: g.x, y: -4 });
+    k.up(1, { x: g.x, y: -8 });
+    expect(k.typed).toEqual(['ㄱ']);
+    k.clock.now += 500;
+    k.down(1, g);
+    k.move(1, { x: g.x, y: -20 });
+    k.up(1, { x: g.x, y: -40 });
+    expect(k.typed).toEqual(['ㄱ']);
+  });
+
   it('0, 8, 16, 24 and 32 px slides type the key under the finger at release', () => {
     const k = keyboard();
     const r = k.rects.get('ㅇ')!;
     // From 20 px inside the key's top-left corner: rightwards and downwards stay on ㅇ, leftwards and upwards cross to
-    // ㄴ and ㅈ once the finger is past the edge.
+    // ㄴ and ㄷ once the finger is past the edge.
     const from = { x: r.x + 20, y: r.y + 20 };
     const expected: string[] = [];
     const keyAt = (p: { x: number; y: number }): string =>
