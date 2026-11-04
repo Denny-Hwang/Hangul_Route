@@ -38,7 +38,8 @@ export type IconName =
   | 'lantern'
   | 'leaf'
   | 'spinning-top'
-  | 'more';
+  | 'more'
+  | 'class';
 
 export interface IconProps {
   name: IconName;
