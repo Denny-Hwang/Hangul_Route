@@ -67,7 +67,11 @@ export interface PresenterState {
   timerMode: TimerMode;
   /** Slide keys hidden from the run for this session (grid); memory only, never saved in the deck. */
   skipped: ReadonlySet<string>;
-  /** The last slide has been reached at least once (`lecture.complete` reads it). */
+  /**
+   * The run stepped onto its last slide with Next at least once, or was resumed there (`finishesOnLeave` reads it).
+   * A jump (End, the grid, a goto) does not set it (F-TCH-004 section 3.5 amendment NB-1, review fix): a teacher who
+   * checks the closing slide part way has not taught the lesson to its end.
+   */
   ended: boolean;
   /** The option the presenter points at (1 to the slide's option count), or none; any step clears it (section 7.3). */
   pointed: number | null;
@@ -151,6 +155,27 @@ export function initialPresenterState(deck: ControlDeck, startKey?: string): Pre
   };
 }
 
+/**
+ * The lesson is at its end (F-TCH-004 section 3.5 amendment 2026-11-03, row NB-1): the slide shown
+ * is the last one the run can show (no later slide that is not skipped) at its last build, so Next
+ * has nowhere to go. The bar's Next reads Finish here.
+ */
+export function atLessonEnd(state: Pick<PresenterState, 'slideIdx' | 'reveal' | 'skipped'>, deck: ControlDeck): boolean {
+  const current = deck.slides[state.slideIdx];
+  if (current === undefined) return false;
+  return state.reveal >= revealsOf(current) && findFrom(deck, state.skipped, state.slideIdx + 1, 1) === -1;
+}
+
+/**
+ * Whether leaving now finishes the lesson (row NB-1): the run stepped onto its last slide with Next at
+ * least once (`ended`, which a step back keeps; a jump with End or the grid does not count), or it is
+ * at its end (the last build of the last slide, however it got there). Exit, the browser's Back and Finish all
+ * read it, so a lesson taught to the end is never recorded as left part way.
+ */
+export function finishesOnLeave(state: Pick<PresenterState, 'slideIdx' | 'reveal' | 'skipped' | 'ended'>, deck: ControlDeck): boolean {
+  return state.ended || atLessonEnd(state, deck);
+}
+
 type Navigation = 'next' | 'prev' | 'first' | 'last' | { goto: number };
 
 function isNavigation(event: PresenterEvent): event is Navigation {
@@ -166,8 +191,10 @@ function slideVisible(state: PresenterState): boolean {
   return state.overlay === null && !fullTimer(state);
 }
 
-function land(state: PresenterState, deck: ControlDeck, slideIdx: number, reveal: number): PresenterState {
-  return { ...state, slideIdx, reveal, ended: state.ended || slideIdx === deck.slides.length - 1 };
+function land(state: PresenterState, deck: ControlDeck, slideIdx: number, reveal: number, stepped = false): PresenterState {
+  // Only a Next step onto the last slide the run shows (skipped slides left out) ends the run (row NB-1).
+  const ended = state.ended || (stepped && findFrom(deck, state.skipped, slideIdx + 1, 1) === -1);
+  return { ...state, slideIdx, reveal, ended };
 }
 
 function findFrom(deck: ControlDeck, skipped: ReadonlySet<string>, from: number, step: 1 | -1): number {
@@ -184,7 +211,7 @@ function navigate(state: PresenterState, event: Navigation, deck: ControlDeck): 
   if (event === 'next') {
     if (reveal < revealsOf(current)) return { ...state, reveal: reveal + 1 };
     const to = findFrom(deck, state.skipped, state.slideIdx + 1, 1);
-    return to === -1 ? state : land(state, deck, to, 0);
+    return to === -1 ? state : land(state, deck, to, 0, true);
   }
   if (event === 'prev') {
     if (reveal > 0) return { ...state, reveal: reveal - 1 };
