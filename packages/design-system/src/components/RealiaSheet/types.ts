@@ -1,5 +1,12 @@
-/** The layout a realia is drawn in (F-CURR-001 G-2); `plain` is the fallback sheet for an unknown kind. */
-export type RealiaSheetKind = 'menu' | 'ticket' | 'sign' | 'price-card' | 'plain';
+/** The layouts `RealiaSheet` draws itself (F-CURR-001 G-2); `plain` is the fallback sheet for an unknown kind. */
+export type RealiaBaseKind = 'menu' | 'ticket' | 'sign' | 'price-card' | 'plain';
+/**
+ * The layouts of F-CURR-002 row CM-47, drawn by `RealiaKindSheet` (a lazy chunk, never the start bundle);
+ * `RealiaSheet` draws them as the plain sheet, so a sheet is never blank while that chunk is not in.
+ */
+export type RealiaAddedKind = 'recipe' | 'receipt' | 'label' | 'forecast' | 'calendar' | 'timetable' | 'map' | 'poster';
+/** The layout a realia is drawn in. */
+export type RealiaSheetKind = RealiaBaseKind | RealiaAddedKind;
 
 /** `found`: the line that held the right answer. `lookHere`: the line to read again after a second miss. */
 export type RealiaLineMark = 'none' | 'found' | 'lookHere';

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  atLessonEnd,
+  finishesOnLeave,
   initialPresenterState,
   pointableOptions,
   reduce,
@@ -134,7 +136,8 @@ describe('next / prev (F-TCH-004 §3.5)', () => {
 describe('first / last / goto', () => {
   it('first and last go to the first and last slide that is not skipped, at build 0', () => {
     expect(run(at(3, 1), 'first')).toMatchObject({ slideIdx: 0, reveal: 0 });
-    expect(run(at(1, 2), 'last')).toMatchObject({ slideIdx: 4, reveal: 0, ended: true });
+    // A jump is not teaching to the end (row NB-1): `ended` stays false.
+    expect(run(at(1, 2), 'last')).toMatchObject({ slideIdx: 4, reveal: 0, ended: false });
     expect(run(at(3, 1, { skipped: new Set(['t']) }), 'first')).toMatchObject({ slideIdx: 1, reveal: 0 });
   });
 
@@ -147,7 +150,7 @@ describe('first / last / goto', () => {
   it('goto lands on the slide at build 0 and clamps an index out of range', () => {
     expect(run(at(0), { goto: 3 })).toMatchObject({ slideIdx: 3, reveal: 0 });
     expect(run(at(2), { goto: -5 })).toMatchObject({ slideIdx: 0, reveal: 0 });
-    expect(run(at(2), { goto: 99 })).toMatchObject({ slideIdx: 4, reveal: 0, ended: true });
+    expect(run(at(2), { goto: 99 })).toMatchObject({ slideIdx: 4, reveal: 0, ended: false });
     expect(run(at(2), { goto: 1.7 })).toMatchObject({ slideIdx: 1 });
     expect(run(at(2), { goto: Number.NaN })).toMatchObject({ slideIdx: 0 });
   });
@@ -502,5 +505,59 @@ describe('{ point: n }: pointing at an option (AMENDMENTS-PRESENTER-NAV section 
     const empty = { slides: [] };
     const s = initialPresenterState(empty);
     expect(reduce(s, { point: 1 }, empty).state).toBe(s);
+  });
+});
+
+/** F-TCH-004 section 3.5 amendment 2026-11-03 (row NB-1): Finish at the end, and what leaving records. */
+describe('atLessonEnd and finishesOnLeave (NB-1)', () => {
+  it('is at the end only on the last slide at its last build', () => {
+    expect(atLessonEnd(at(4, 0), DECK)).toBe(true);
+    expect(atLessonEnd(at(3, 0), DECK)).toBe(false);
+    expect(atLessonEnd(at(3, 1), DECK)).toBe(false);
+    expect(atLessonEnd(at(0, 0), DECK)).toBe(false);
+    const lastHasBuilds = { slides: [slide('t', 1), slide('q', 2)] };
+    expect(atLessonEnd({ slideIdx: 1, reveal: 0, skipped: new Set() }, lastHasBuilds)).toBe(false);
+    expect(atLessonEnd({ slideIdx: 1, reveal: 1, skipped: new Set() }, lastHasBuilds)).toBe(true);
+  });
+
+  it('a skipped End slide moves the end to the last slide the run shows', () => {
+    const skipped = new Set(['e']);
+    expect(atLessonEnd(at(3, 1, { skipped }), DECK)).toBe(true);
+    expect(atLessonEnd(at(3, 0, { skipped }), DECK)).toBe(false);
+  });
+
+  it('Next at the end moves nothing, so Finish is the only way on', () => {
+    const end = at(4, 0, { ended: true });
+    expect(atLessonEnd(end, DECK)).toBe(true);
+    expect(run(end, 'next')).toBe(end);
+  });
+
+  it('a slide index outside the deck is never the end', () => {
+    expect(atLessonEnd({ slideIdx: 9, reveal: 0, skipped: new Set() }, DECK)).toBe(false);
+  });
+
+  it('leaving finishes once the run reached the last slide, also after a step back; never before', () => {
+    expect(finishesOnLeave(at(2), DECK)).toBe(false);
+    const reached = run(at(3, 1), 'next');
+    expect(finishesOnLeave(reached, DECK)).toBe(true);
+    expect(finishesOnLeave(run(reached, 'prev', 'prev'), DECK)).toBe(true);
+    expect(finishesOnLeave(at(3, 1, { skipped: new Set(['e']) }), DECK)).toBe(true);
+  });
+
+  it('a jump to the last slide (End, the grid, a goto) finishes only while at the end; a step back after it leaves part way', () => {
+    const jumped = run(at(0), 'last');
+    expect(jumped.ended).toBe(false);
+    // At the end (the End slide has one build) Exit still offers Finish.
+    expect(finishesOnLeave(jumped, DECK)).toBe(true);
+    // Back to slide 1 after peeking at the closing slide: Exit leaves part way, Resume kept.
+    expect(finishesOnLeave(run(jumped, 'prev'), DECK)).toBe(false);
+    const grid = run(at(1), { goto: 4 });
+    expect(finishesOnLeave(run(grid, { goto: 1 }), DECK)).toBe(false);
+  });
+
+  it('a Next step onto the last slide the run shows ends the run when the End slide is skipped', () => {
+    const skipped = new Set(['e']);
+    const s = run(at(2, 99, { skipped }), 'next');
+    expect(s).toMatchObject({ slideIdx: 3, ended: true });
   });
 });
