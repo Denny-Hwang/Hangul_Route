@@ -224,16 +224,20 @@ describe('routeBlendEnabled', () => {
     vi.unstubAllEnvs();
   });
 
-  it('is on unless NEXT_PUBLIC_ROUTE_BLEND_ENABLED is "false", "0", "off" or "disabled" (case and spaces ignored)', () => {
+  it('is on unless NEXT_PUBLIC_ROUTE_BLEND_ENABLED is "false", "0", "off", "no" or "disabled" (case and spaces ignored)', () => {
     expect(routeBlendEnabled({})).toBe(true);
     expect(routeBlendEnabled()).toBe(true);
     for (const on of ['true', '1', 'enabled', 'TRUE', '', ' true', 'maybe']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: on }), on).toBe(true);
-    for (const off of ['false', '0', 'off', 'disabled', 'FALSE', ' false ', 'Off']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
+    for (const off of ['false', '0', 'off', 'no', 'disabled', 'FALSE', ' false ', 'Off', 'NO']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
   });
 
   it('reads the build value by its literal name', () => {
     vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
     expect(buildEnv().NEXT_PUBLIC_ROUTE_BLEND_ENABLED).toBe('false');
     expect(routeBlendEnabled()).toBe(false);
+  });
+
+  it('turns off on every value that turns the app side off (parseLectureSwitch), so one value works on both', () => {
+    for (const off of ['false', '0', 'off', 'no', 'disabled']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
   });
 });

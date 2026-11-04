@@ -9,7 +9,7 @@ import { API, SESSION_KEY } from './report-fixtures';
  * route, Publish, the readout with its class lines, then **Present this plan** on the class day, which opens the Next
  * lesson card on that class day's lessons at the class length. Both modes: **Practise what class taught** (overlap:
  * every lesson has its class day) and **Class and practice cover different lessons** (split: practice days also bring
- * lessons class has not met). At 320 and 1280, at 200 % text at 320, and in en, es and ko (shots in the test output).
+ * lessons class has not met). At 320 and 1280, at 200 % text at 320, and in en, es and ko, with no sideways scroll and no text clipped in the readout lines or the class day (shots in the test output).
  *
  * Runs on the console e2e export with the mocked API:
  *
@@ -90,6 +90,24 @@ async function mockClass(page: Page, locale: UiLocale = 'en', text = 100): Promi
 
 const sideways = (page: Page): Promise<number> => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
+/**
+ * Text cut off inside a box: the box and every box inside it that hides or scrolls its overflow must fit its own
+ * content (scrollWidth and scrollHeight within clientWidth and clientHeight, 1 px for rounding). Returns what does not.
+ */
+async function clipped(page: Page, testId: string): Promise<string[]> {
+  return page.getByTestId(testId).first().evaluate((root) => {
+    const out: string[] = [];
+    for (const el of [root, ...Array.from(root.querySelectorAll('*'))]) {
+      if (!(el instanceof HTMLElement) || el.clientWidth === 0) continue;
+      const style = getComputedStyle(el);
+      const hides = (v: string) => v !== 'visible';
+      if (hides(style.overflowX) && el.scrollWidth > el.clientWidth + 1) out.push(`${el.dataset.testid ?? el.tagName} x ${el.scrollWidth}>${el.clientWidth}`);
+      if (hides(style.overflowY) && el.scrollHeight > el.clientHeight + 1) out.push(`${el.dataset.testid ?? el.tagName} y ${el.scrollHeight}>${el.clientHeight}`);
+    }
+    return out;
+  });
+}
+
 /** The class day the lecture card presents: the first `lectureDate` on or after today, its lessons in plan order. */
 function classDayOf(items: readonly SavedItem[]): { date: string; count: number } {
   const dates = [...new Set(items.flatMap((item) => (item.lectureDate ? [item.lectureDate] : [])))].sort();
@@ -146,6 +164,7 @@ async function wizardToPresent(page: Page, mode: 'overlap' | 'split', locale: Ui
   await expect(page.getByTestId('class-days-so-far')).toBeVisible();
   await expect(page.getByTestId('blend-move')).toBeVisible();
   expect(await sideways(page)).toBeLessThanOrEqual(0);
+  for (const id of ['blend-this-week', 'class-days-so-far']) expect(await clipped(page, id), id).toEqual([]);
   const readout = await page.getByRole('main').innerText();
   if (locale === 'en') expect(readout).not.toMatch(/%|lecture|\bbehind\b|\blate\b|\bmissed\b|\boverdue\b/i);
   await page.screenshot({ path: test.info().outputPath(`${name}-readout.png`), fullPage: true });
@@ -161,6 +180,7 @@ async function wizardToPresent(page: Page, mode: 'overlap' | 'split', locale: Ui
   await expect(panel.getByTestId('lecture-preset-class-day')).toContainText(blend.classLength(30));
   await expect(panel.getByRole('radio')).toHaveCount(0);
   expect(await sideways(page)).toBeLessThanOrEqual(0);
+  expect(await clipped(page, 'lecture-preset-class-day'), 'lecture-preset-class-day').toEqual([]);
   await page.screenshot({ path: test.info().outputPath(`${name}-present.png`), fullPage: true });
 }
 
@@ -183,18 +203,26 @@ test.describe('the class wizard to Present this plan in the launch state (BL-10)
 
   test('at 320 with 200 % text: the readout and the presented class day stay inside the window', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
-    const { saved } = await mockClass(page, 'en', 200);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    const { saved, unexpected } = await mockClass(page, 'en', 200);
     await wizardToPresent(page, 'overlap', 'en', saved, 320, 'route-blend-overlap-en-320-text200');
+    expect(errors).toEqual([]);
+    expect(unexpected).toEqual([]);
   });
 
   for (const locale of ['es', 'ko'] as const) {
     test(`in ${locale} at 320 and 1280: the same flow in the console's ${locale} words`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(String(e)));
       for (const width of [320, 1280]) {
         await page.setViewportSize({ width, height: width === 320 ? 568 : 800 });
-        const { saved } = await mockClass(page, locale);
+        const { saved, unexpected } = await mockClass(page, locale);
         await wizardToPresent(page, 'overlap', locale, saved, width, `route-blend-overlap-${locale}-${width}`);
+        expect(unexpected, `${locale} at ${width}`).toEqual([]);
         await page.unrouteAll({ behavior: 'ignoreErrors' });
       }
+      expect(errors).toEqual([]);
     });
   }
 });
