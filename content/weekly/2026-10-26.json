@@ -1,0 +1,70 @@
+{
+  "id": "week:2026-10-26",
+  "weekOf": "2026-10-26",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "sanggang",
+  "day": "2026-10-23",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Frost Falls",
+  "noteEn": "{ko:상강} began on 23 October. Its name means frost falls. Mornings and evenings get cold, and frost starts to form.",
+  "items": [
+    {
+      "id": "sanggang",
+      "ko": "상강",
+      "romanization": "sanggang",
+      "en": "Frost Falls, a solar term"
+    },
+    {
+      "id": "seori",
+      "ko": "서리",
+      "romanization": "seori",
+      "en": "frost"
+    },
+    {
+      "id": "gaeul",
+      "ko": "가을",
+      "romanization": "gaeul",
+      "en": "autumn"
+    },
+    {
+      "id": "achim",
+      "ko": "아침",
+      "romanization": "achim",
+      "en": "morning"
+    },
+    {
+      "id": "jeonyeok",
+      "ko": "저녁",
+      "romanization": "jeonyeok",
+      "en": "evening"
+    }
+  ],
+  "sources": [
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"상강 10월 23일 18시 38분\""
+    },
+    {
+      "title": "표준국어대사전: 상강(霜降)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=173116&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"이십사절기의 하나. 한로(寒露)와 입동(立冬) 사이에 들며, 아침과 저녁의 기온이 내려가고, 서리가 내리기 시작할 무렵이다. 10월 23일경이다.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Date (23 October 2026) from the KASI table. 'Mornings and evenings get cold, and frost starts to form' restates the NIKL entry; the name's meaning reads its characters 霜降 as the entry shows them. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

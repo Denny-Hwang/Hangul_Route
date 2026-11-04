@@ -121,17 +121,18 @@ describe('[TV] class-scope versions', () => {
 describe('[TV] what the full scope adds is classified and named', () => {
   const summaryKeys = Object.keys(ProgressSummarySchema.shape).sort();
 
-  it('classifies every summary key: base, full-scope extra, or never (schemaVersion)', () => {
+  it('classifies every summary key: base, full-scope extra, or never (schemaVersion; practiceWeek, family only)', () => {
     const base: readonly string[] = TEACHER_VISIBLE_SUMMARY_KEYS;
     const extra: readonly string[] = TEACHER_FULL_SCOPE_EXTRA_KEYS;
-    expect([...base, ...extra, 'schemaVersion'].sort()).toEqual(summaryKeys);
+    // practiceWeek (AMENDMENTS-ROUTE-CLASS-BLEND section 11): a family reads it; a class or school never does, at any scope.
+    expect([...base, ...extra, 'schemaVersion', 'practiceWeek'].sort()).toEqual(summaryKeys);
     expect(base.filter((k) => extra.includes(k))).toEqual([]);
   });
 
   it('keeps every full-scope key on the hidden list, which means hidden at base scope', () => {
     const hidden: readonly string[] = TEACHER_HIDDEN_SUMMARY_KEYS;
     for (const key of TEACHER_FULL_SCOPE_EXTRA_KEYS) expect(hidden).toContain(key);
-    expect(hidden.filter((k) => !(TEACHER_FULL_SCOPE_EXTRA_KEYS as readonly string[]).includes(k))).toEqual(['schemaVersion']);
+    expect(hidden.filter((k) => !(TEACHER_FULL_SCOPE_EXTRA_KEYS as readonly string[]).includes(k))).toEqual(['schemaVersion', 'practiceWeek']);
   });
 
   it('maps every full-scope key and the learner settings to a consent item', () => {

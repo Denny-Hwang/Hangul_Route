@@ -580,4 +580,8 @@ export const a11y = {
    * label adds the full stop), the volume a tap opens (the first one not finished). The volume dots are decorative.
    */
   journeyVolume: (n: number) => `Opens Volume ${n}`,
+  /** This week in Korea (F-CURR-002 row CM-48): the Home card, one button; `state` is its minutes or "Done for this week". */
+  weekDrop: {
+    card: (title: string, state: string) => `This week in Korea: ${title}. ${state}.`,
+  },
 } as const;

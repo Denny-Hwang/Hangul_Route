@@ -47,6 +47,8 @@ export const ReportSummarySchema = ProgressSummarySchema.pick({
   vocab: true,
   stage1Anchor: true,
   memory: true,
+  // AMENDMENTS-ROUTE-CLASS-BLEND section 11: family spaces only (rosterSummary)
+  practiceWeek: true,
 }).partial();
 export type ReportSummary = z.infer<typeof ReportSummarySchema>;
 

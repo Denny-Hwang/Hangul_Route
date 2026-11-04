@@ -1,0 +1,70 @@
+{
+  "id": "week:2026-12-07",
+  "weekOf": "2026-12-07",
+  "status": "ready",
+  "kind": "solar-term",
+  "topic": "daeseol",
+  "day": "2026-12-07",
+  "stage": 2,
+  "minutes": 2,
+  "titleEn": "Heavy Snow",
+  "noteEn": "{ko:대설} is on 7 December. Its name means heavy snow. A snowy day is good for a snowman or a snowball fight.",
+  "items": [
+    {
+      "id": "daeseol",
+      "ko": "대설",
+      "romanization": "daeseol",
+      "en": "Heavy Snow, a solar term"
+    },
+    {
+      "id": "nunsaram",
+      "ko": "눈사람",
+      "romanization": "nunsaram",
+      "en": "snowman"
+    },
+    {
+      "id": "nunssaum",
+      "ko": "눈싸움",
+      "romanization": "nunssaum",
+      "en": "snowball fight"
+    },
+    {
+      "id": "sseolmae",
+      "ko": "썰매",
+      "romanization": "sseolmae",
+      "en": "sled"
+    },
+    {
+      "id": "nun",
+      "ko": "눈",
+      "romanization": "nun",
+      "en": "snow"
+    }
+  ],
+  "sources": [
+    {
+      "title": "2026년 달력자료: 24절기",
+      "publisher": "Korea Astronomy and Space Science Institute (한국천문연구원) — 천문우주지식정보",
+      "url": "https://astro.kasi.re.kr/kor/life/post/calendarData?year=2026",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "24절기 표: \"대설 12월 7일 11시 53분\""
+    },
+    {
+      "title": "표준국어대사전: 대설(大雪)",
+      "publisher": "National Institute of Korean Language (국립국어원) — 표준국어대사전",
+      "url": "https://stdict.korean.go.kr/search/searchView.do?word_no=78442&searchKeywordTo=3",
+      "accessed": "2026-10-30",
+      "quoteOrLocator": "\"아주 많이 오는 눈.\""
+    }
+  ],
+  "review": {
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "passes": 3,
+    "notes": [
+      "Pass 1, author (content-skill): note, items and sources written from the cited pages, all accessed 2026-10-30; every claim is quoted in quoteOrLocator.",
+      "Pass 2, three checkers. Language: romanization of every item and token is the F-CNT-002 converter's output (checked by the build); polite 해요 register in the ko text; Pre-A1 English. Culture and facts: each claim matched to an allowlisted source (§6.6) with the §5.1 conventions. Date from the KASI table; the name's meaning is NIKL's 대설 entry ('아주 많이 오는 눈'). 눈싸움 also names a staring game (눈, eye); the gloss names the snow sense. Learning design: 5 items, at most 8 new (lesson-new-load), no two items of the drop said alike (dictation-unambiguous), no %, score, age word, speaking line or emoji (review-copy).",
+      "Pass 3, reviser and third pass: fixes of pass 2 applied (wording kept plain, every holiday and term date re-read against the KASI table), es and ko overlays re-read against the English; no copy claims native-speaker or expert review."
+    ]
+  }
+}

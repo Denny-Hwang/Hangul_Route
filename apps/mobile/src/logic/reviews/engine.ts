@@ -19,7 +19,7 @@ import type { ReviewItemIndex } from './review-items-store';
  * - **The due pool** is every item with a box and `d` <= today, not answered today, not retired,
  *   and with a source the learner can see (section 12.2: with `volumes` off an item whose only
  *   source is Volume 2 is skipped, with `topicPacks` or `pack.<key>` off one whose only source is a
- *   hidden pack). Selection order: the lowest box first, then the oldest due day, then a jitter
+ *   hidden pack, with `weeklyDrop` off one whose only source is a hidden week drop, row CM-48). Selection order: the lowest box first, then the oldest due day, then a jitter
  *   seeded by the item id, so fragile items come first.
  * - **Stretch items** (the next rung of an item at best box 3 or higher that is not due) only fill
  *   the slots of a Daily Review the pool cannot.
@@ -88,6 +88,8 @@ export interface SourceVisibility {
    * suffix (none is Volume 1); every story shipped today is book 1.
    */
   cellVolume?: (cell: string) => number | undefined;
+  /** `weeklyDrop` (row CM-48): the "This week in Korea" drops (`week:<monday>` cells); shown when absent. */
+  weeklyDrop?: boolean;
 }
 
 export const ALL_VISIBLE: SourceVisibility = { volumes: true, topicPacks: true };
@@ -165,6 +167,7 @@ const VOLUME_CELL = /-v(\d+)$/;
 
 /** Whether the learner can see a cell that teaches or asks an item. A book 1 story is always shown. */
 export function cellVisible(cell: string, vis: SourceVisibility): boolean {
+  if (cell.startsWith('week:')) return vis.weeklyDrop !== false;
   const pack = PACK_CELL.exec(cell);
   if (pack) {
     if (!vis.topicPacks) return false;

@@ -768,6 +768,14 @@ export function weekdayLabel(day: Weekday, locale: UiLocale = DEFAULT_LOCALE): s
 /** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the weeks that hold lessons. */
 export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWeek'> & Partial<Pick<FreeDaysView, 'comingSoonClosed'>>;
 
+/** A blended plan's warnings (AMENDMENTS-ROUTE-CLASS-BLEND section 6.6): row BL-4 words them; until then they show no line. */
+const UNWORDED_WARNING_CODES = ['item-cap', 'practice-short', 'class-paced'] as const;
+/** A warning the console has words for. */
+export type WordedWarning = CurriculumWarning & { code: Exclude<CurriculumWarning['code'], (typeof UNWORDED_WARNING_CODES)[number]> };
+export function isWordedWarning(warning: CurriculumWarning): warning is WordedWarning {
+  return !(UNWORDED_WARNING_CODES as readonly string[]).includes(warning.code);
+}
+
 /**
  * A generator warning in plain, invitational words (section 3.8 step 4). With `free` (an
  * unlicensed space while the free-plan switch is on, `freeDaysView`) the left-out line names the
@@ -776,7 +784,7 @@ export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWee
  * section 3.9.3). With `neutral` (`leftOutNeutral`) the left-out line names both products and
  * never "Premium". Without either, every line keeps its wording.
  */
-export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null, neutral = false): string {
+export function warningText(warning: WordedWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null, neutral = false): string {
   const words = getMessages(locale).console.curriculum.preview.warnings;
   const freeDays = getMessages(locale).console.curriculum.freeDays;
   const count = warning.count ?? 0;

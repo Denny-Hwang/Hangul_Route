@@ -1047,4 +1047,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.episode.volumes.tab': [[1], [2]],
   'learner.episode.volumes.tabA11y': [[1], [2]],
   'a11y.journeyVolume': [[1], [2]],
+  // F-TCH-004 row NB-1: a Recent row taught to the end, with its day label.
+  'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
+  // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
+  'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
 };
