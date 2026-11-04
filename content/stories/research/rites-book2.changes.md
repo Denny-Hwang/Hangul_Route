@@ -35,9 +35,10 @@ The review should compare both stories with the Folk Museum entries (견우직�
 | gyeonu-jingnyeo | No year for the Goguryeo tomb | A digit needs a second source; the mural is named without its date. |
 | gyeonu-jingnyeo | The birds' bald heads kept, as a light detail | Faithful to the source and not an injury on screen (§5.1). |
 | gyeonu-jingnyeo | 목동 (herder) as the learner word, not 소 (ox) | 소 is a held-out probe block of Syllable Build (`decode-pool.json`), which must never be a review item. |
-| gyeonu-jingnyeo | prop:swallow stands for the crows and magpies | Registry art only; the alt text says "birds". |
+| gyeonu-jingnyeo | prop:magpie (new registry prop) for the crows and magpies | Fix round 1: the earlier prop:swallow showed a swallow on the scene that teaches 까치. The new prop draws the Korean magpie (black head, back and long tail; white belly and shoulders); the alt text still says "birds", since the bridge is of crows and magpies. |
 | daeboreum-full-moon | No gwibalgisul in narration, no jwibulnori | An alcoholic drink, and spinning fire; f1 names the drink in the reference zone only. |
 | daeboreum-full-moon | The daljip is lit by "people"; Hoya watches from a safe distance | Fire is never handled by Hoya or the learner. |
+| daeboreum-full-moon | Hoya taps the walnut; a grown-up cracks it (listen s3, read s3) | Fix round 1: the app is for every age, and a young child should not copy biting a whole walnut shell. The custom itself (people crack bureom with their teeth, s2, f2) stays as the sources state it. |
 | daeboreum-full-moon | The 송천달집태우기 designation and dates left out | The story names one village's daljip only; no designation number. |
 | both | Every read line is built from the story's keywords (and particles) | `story-coverage` 100% on all four tiers (listen 12 of 12 and 8 of 8, read 19 of 19 and 12 of 12). |
 | both | Scene art reuses registry settings, props and Hoya only; no new SVG | Composition rules: no error, no warning. |
@@ -45,3 +46,10 @@ The review should compare both stories with the Folk Museum entries (견우직�
 ## Story Order
 
 §5.4 S5 lists Story Order for this cell. A story has no Story Order round in its schema yet (StoryTierSchema is strict; the quest skeleton has no order step), the same gap the Letters book 2 records; `story-order-text` therefore has nothing new here. A shared row should add the field once for every book 2.
+
+## Fix round 1 (2026-11-04), author changes
+
+- es: Latin-American words as F-I18N-001 §3.10 asks ("maníes", not "cacahuetes"; "se enoja" kept); s7 "de tanto formar el puente" (the source says the birds made the bridge).
+- ko: s1 of the Daeboreum tale drops the repeated date ("그러니까 첫째 달 열닷새"); 정월 보름날 already says it.
+- Both overlays carry the two tales' `quest:story-<slug>-listen` titles (the catalogue lists the listen quests; the titles repeat the story titles, as the other overlays do).
+- These are author changes, not review findings. The §9.2 review and the independent es and ko review have still not run; the tales stay `draft`, `passes: 1`.

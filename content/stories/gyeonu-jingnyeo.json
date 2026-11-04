@@ -390,19 +390,19 @@
                 "s": 1.0
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 200,
                 "y": 130,
                 "s": 2.0
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 110,
                 "y": 160,
                 "s": 1.2
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 290,
                 "y": 160,
                 "s": 1.2
@@ -460,7 +460,7 @@
                 "flip": true
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 200,
                 "y": 130,
                 "s": 1.2
@@ -786,19 +786,19 @@
                 "s": 1.0
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 200,
                 "y": 130,
                 "s": 2.0
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 110,
                 "y": 160,
                 "s": 1.2
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 290,
                 "y": 160,
                 "s": 1.2
@@ -861,7 +861,7 @@
                 "flip": true
               },
               {
-                "ref": "prop:swallow",
+                "ref": "prop:magpie",
                 "x": 200,
                 "y": 130,
                 "s": 1.2
