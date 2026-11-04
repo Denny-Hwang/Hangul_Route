@@ -257,7 +257,7 @@ export const consoleMsgs = {
     invite: (code: string) => `학생 초대하기 · 코드 ${code}`,
     firstRun: {
       title: '처음 할 일',
-      steps: ['반 코드나 QR 코드를 보여 주세요.', "학생이 앱에서 '반에 참여하기'를 눌러요.", '이번 주 계획을 만들어요.'],
+      steps: ['반 코드나 QR 코드를 보여 주세요.', "학생이 앱에서 '반에 참여하기'를 눌러요.", '이번 주 계획을 세워 주세요.'],
     },
     studentsLabel: '학생',
     recentFirst: '최근 활동 순서',
@@ -268,7 +268,7 @@ export const consoleMsgs = {
       questsCards: (done: number, total: number, cards: number) => `1단계 퀘스트 ${done}/${total} · 카드 ${cards}장`,
       firstQuest: '첫 퀘스트 진행 중',
       minutesThisWeek: (minutes: number) => `이번 주 ${minutes}분`,
-      practiced: (when: string, minutes: number) => `연습: ${when} · 이번 주 ${minutes}분`,
+      practiced: (when: string, minutes: number) => `마지막 연습: ${when} · 이번 주 ${minutes}분`,
       revisit: (jamo: string) => `다시 볼 것: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `참여: ${when}`,
