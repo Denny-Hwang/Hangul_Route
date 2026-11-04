@@ -287,7 +287,7 @@ describe('the roster chip (beside Re-link requests)', () => {
   it('a family roster button carries the count too (singular)', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.kind = 'family';
-    state.requests['space:a'] = [{ id: 'f', role: 'learner_side', status: 'requested', learnerState: 'pending' } as unknown as TransferView];
+    state.requests['space:a'] = [{ id: 'f', role: 'learner_side', status: 'requested', learnerState: 'pending', learnerRoute: 'caregiver' } as unknown as TransferView];
     const root = await render(<SpacePage />);
     expect(byTestId(root, 'class-moves')).toEqual([]);
     expect(textOf(byTestId(root, 'family-moves')[0] as ReactTestInstance)).toBe(t.waiting(1));
@@ -327,14 +327,28 @@ describe('the home badges', () => {
     expect(byTestId(root, 'class-moves-space:a')).toEqual([]);
   });
 
-  it('family home: the family actions gain "1 class move waiting" to the family page', async () => {
+  it('family home: a move that waits for the family is a Needs you row with Review (GX-4), no longer a pill in the family actions', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.kind = 'family';
     state.spaces = [item('space:f', 'family', 'owner', 'Kim family')];
-    state.requests['space:f'] = [{ id: 'f', role: 'learner_side', status: 'requested', learnerState: 'pending' } as unknown as TransferView];
+    state.requests['space:f'] = [
+      {
+        id: 'f',
+        role: 'learner_side',
+        status: 'requested',
+        learnerState: 'pending',
+        learnerRoute: 'caregiver',
+        learner: { id: 'profile:jun', name: 'Jun' },
+        to: { spaceId: 'space:d', name: 'Evening Class D' },
+        createdAt: '2026-10-11T12:00:00.000Z',
+        expiresAt: '2099-10-21T12:00:00.000Z',
+      } as unknown as TransferView,
+    ];
     const root = await render(<ParentHomePage />);
-    const link = byTestId(root, 'family-moves-waiting')[0] as ReactTestInstance;
-    expect(textOf(link)).toBe(t.waiting(1));
-    expect(link.props.href).toBe('/parent/space/transfers?id=space%3Af');
+    expect(byTestId(root, 'family-moves-waiting')).toEqual([]);
+    const row = byTestId(root, 'needs-you-row')[0] as ReactTestInstance;
+    expect(row.props['data-kind']).toBe('move');
+    expect(textOf(row)).toContain(m.parentHome.needsYou.move('Jun'));
+    expect(byTestId(root, 'needs-you-review')).toHaveLength(1);
   });
 });

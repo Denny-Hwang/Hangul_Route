@@ -8,7 +8,7 @@ import { AvatarChip } from '@/components/AvatarChip';
 import { MoveButton } from '@/components/console/TransferParts';
 import type { ApiResult, ConsoleApi, TransferDestinationView, TransferSourceView, TransferView } from '@/lib/console/api';
 import { levelPillLabel } from '@/lib/console/level-label';
-import { canCancel, daysLeft, daysSince, isOpenTransfer, slotLabel, statusLine, stepWord } from '@/lib/console/transfer';
+import { canCancel, daysLeft, daysSince, isOpenTransfer, slotLabel, statusLine, stepDone, stepWord } from '@/lib/console/transfer';
 import { actionOutcome, canAgreeBoth, classMoveGroups, historyDate, ownAnswerWaits, retryShown, type ClassView } from '@/lib/console/transfer-requests';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { rem } from '@/lib/console/rem';
@@ -120,7 +120,7 @@ function Steps({ view }: { view: TransferSourceView }): JSX.Element {
     <ol className="hr-move-steps" aria-label={t.a11y.steps} style={{ listStyle: 'none', margin: 0, padding: 0 }}>
       {(['learner', 'source', 'destination'] as const).map((slot) => {
         const word = stepWord(slot, view, locale);
-        const yes = word !== t.steps.waiting;
+        const yes = stepDone(slot, view);
         return (
           <li key={slot} style={stepStyle}>
             <IconSvg name={yes ? 'check' : 'dash'} size={20} color={yes ? colors.feedback.successDark : colors.text.muted} />
