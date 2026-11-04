@@ -906,3 +906,38 @@ describe('a Stage Jump (row CM-25): asked items by their result across the stage
     expect(Object.keys(await derived(one))).toContain(unasked.id);
   });
 });
+
+describe('the week shard (F-CURR-002 §4.8, row CM-48: This week in Korea)', () => {
+  const WEEK_ONLY = INDEX.items.find((i) => !i.id.startsWith('vocab:') && i.home === 'week' && i.cells.every((c) => c.startsWith('week:'))) as (typeof INDEX.items)[number];
+  const SHARED = INDEX.items.find((i) => !i.id.startsWith('vocab:') && i.cells.some((c) => c.startsWith('week:')) && i.cells.some((c) => c.startsWith('episode:'))) as (typeof INDEX.items)[number];
+
+  it('records a word only drops teach in the week shard, and one the route teaches too in its stage shard', async () => {
+    expect(WEEK_ONLY).toBeDefined();
+    expect(SHARED).toBeDefined();
+    const d = device();
+    await d.rt.recordAnswers('p1', [{ itemId: WEEK_ONLY.id, correct: true, rung: 'read' }, { itemId: SHARED.id, correct: true, rung: 'read' }], d.clock.now);
+    const rows = (await d.rt.file('p1'))?.rows ?? {};
+    expect(rows[WEEK_ONLY.id]?.sh).toBe('week');
+    expect(rows[SHARED.id]?.sh).toBe(`stage${SHARED.stage}`);
+    expect(rows[WEEK_ONLY.id]?.st).toMatchObject({ b: 1, n: 1, d: '2026-10-23' });
+  });
+
+  it('pushes the week shard, and a second device pulls it and merges it into its own store', async () => {
+    const server = fakeServer();
+    const a = device({ server });
+    a.snapshots.set('p1', finished(0));
+    await a.rt.recordAnswers('p1', [{ itemId: WEEK_ONLY.id, correct: true, rung: 'read' }], a.clock.now);
+    await a.rt.sync('p1');
+    expect(server.posted.flatMap((p) => Object.keys(p.shards))).toEqual(['week']);
+    const b = device({ server });
+    b.snapshots.set('p1', structuredClone(a.snapshots.get('p1') as ProgressSnapshot));
+    b.clock.now = new Date('2026-10-23T09:00:00.000Z');
+    await b.rt.recordAnswers('p1', [{ itemId: WEEK_ONLY.id, correct: false, rung: 'read' }], b.clock.now);
+    await b.rt.sync('p1');
+    const rowB = (await b.rt.file('p1'))?.rows[WEEK_ONLY.id];
+    expect(rowB?.sh).toBe('week');
+    // The merge keeps both answers' counts: the item was met on A and answered again on B.
+    expect(rowB?.st.n).toBeGreaterThanOrEqual(1);
+    expect(server.posted.flatMap((p) => Object.keys(p.shards))).toEqual(['week', 'week']);
+  });
+});
