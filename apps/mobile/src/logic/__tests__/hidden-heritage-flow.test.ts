@@ -1,5 +1,10 @@
 import { HiddenHeritageRoundSchema, checkRomanization, type HiddenHeritageRound } from '@hangul-route/content-schema';
 import { FOOD_MARKET_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/food-market';
+import { FOUR_SEASONS_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/four-seasons';
+import { LETTERS_SCHOOL_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/letters-school';
+import { PLAY_COURTYARD_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/play-courtyard';
+import { SEOLLAL_ROOM_SCENE } from '@hangul-route/design-system/src/scene-art/hidden-heritage/seollal-room';
+import { touchTarget } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
@@ -17,6 +22,7 @@ import {
   sceneLayout,
   showsHoya,
   slotViews,
+  spotHitRects,
   spotRect,
   spotViews,
   startFlow,
@@ -24,10 +30,25 @@ import {
   validRounds,
   type FlowEvent,
   type FlowState,
+  type SpotHitRect,
 } from '../hidden-heritage-flow';
 import { picWordFallback } from '../hidden-heritage-fallback';
 
 /** F-CURR-002 row CM-36: the pure rules of Hidden Heritage (design/wireframes/minigame/hidden-heritage.md). */
+
+/**
+ * The shipped spots boxed under 64 (AMENDMENTS-TOUCH 6.6): none at the 288 dp scene of a 320 window; at the 256 dp
+ * floor (a split screen after the first answer) these, each taking exactly the room between its bounds. A content
+ * row moves them; this amendment re-authors no content.
+ */
+const BOXED_SHIPPED: Record<number, Record<string, string[]>> = {
+  288: {},
+  256: {
+    'scene:food-market': ['gimchi x 60.2', 'guk x 60.2'],
+    'scene:letters-school': ['but x 61.4', 'namu x 62.7', 'sae x 58.9'],
+    'scene:play-courtyard': ['paengi x 60.2', 'paengi y 61.8', 'yut x 63.7', 'yut y 59.8', 'eolle y 63.7', 'gonggi y 61.1', 'yutpan y 59.8'],
+  },
+};
 
 const ROUND: HiddenHeritageRound = HiddenHeritageRoundSchema.parse(FOOD_MARKET_SCENE.round);
 const ROUNDS = [ROUND];
@@ -221,4 +242,171 @@ describe('the fallback board', () => {
     expect(scope.picWord?.boards[0]?.pairs).toEqual(ROUND.targets.map((t) => ({ id: t.id, pictureRef: t.picture, word: t.word })));
     expect(picWordFallback({ kind: 'hidden-heritage' }).picWord?.boards).toEqual([]);
   });
+});
+
+describe('spotHitRects: every spot reaches 64 without overlapping, except a boxed axis (AMENDMENTS-TOUCH 6.6, KT-D8)', () => {
+  const MIN = touchTarget.min;
+  type Spot = { x: number; y: number; w: number; h: number };
+  const span = (r: SpotHitRect, axis: 'x' | 'y'): [number, number] => (axis === 'x' ? [r.left, r.left + r.width] : [r.top, r.top + r.height]);
+  const near = (a: number, b: number): void => expect(a).toBeCloseTo(b, 6);
+
+  /** The invariants of section 6.6 on any layout: never smaller than drawn, inside the scene, 64 unless boxed, no overlap. */
+  function invariants(spots: readonly Spot[], width: number): SpotHitRect[] {
+    const hits = spotHitRects(spots, width);
+    const height = (width * 3) / 4;
+    hits.forEach((h, i) => {
+      const d = spotRect(spots[i]!, width);
+      expect(h.left).toBeLessThanOrEqual(d.left + 1e-6);
+      expect(h.top).toBeLessThanOrEqual(d.top + 1e-6);
+      expect(h.left + h.width).toBeGreaterThanOrEqual(d.left + d.width - 1e-6);
+      expect(h.top + h.height).toBeGreaterThanOrEqual(d.top + d.height - 1e-6);
+      expect(h.left).toBeGreaterThanOrEqual(-1e-6);
+      expect(h.top).toBeGreaterThanOrEqual(-1e-6);
+      expect(h.left + h.width).toBeLessThanOrEqual(width + 1e-6);
+      expect(h.top + h.height).toBeLessThanOrEqual(height + 1e-6);
+      if (!h.boxed.x) expect(h.width).toBeGreaterThanOrEqual(MIN - 1e-6);
+      if (!h.boxed.y) expect(h.height).toBeGreaterThanOrEqual(MIN - 1e-6);
+      if (h.boxed.x) expect(h.width).toBeLessThan(MIN);
+      if (h.boxed.y) expect(h.height).toBeLessThan(MIN);
+    });
+    for (let i = 0; i < hits.length; i += 1) {
+      for (let j = i + 1; j < hits.length; j += 1) {
+        const [a, b] = [hits[i]!, hits[j]!];
+        const apart = (axis: 'x' | 'y'): boolean => span(a, axis)[1] <= span(b, axis)[0] + 1e-6 || span(b, axis)[1] <= span(a, axis)[0] + 1e-6;
+        expect(apart('x') || apart('y'), `spots ${i} and ${j} overlap`).toBe(true);
+      }
+    }
+    return hits;
+  }
+
+  it('a lone spot grows evenly to 64 on both axes', () => {
+    // At 288 px, 75 units are 54 dp: 5 dp more on each side.
+    const [h] = invariants([{ x: 160, y: 110, w: 75, h: 75 }], 288);
+    near(h!.width, MIN);
+    near(h!.height, MIN);
+    near(h!.left, 160 * 0.72 - 5);
+    near(h!.top, 110 * 0.72 - 5);
+    expect(h!.boxed).toEqual({ x: false, y: false });
+  });
+
+  it('a spot at the scene edge grows inward to 64, never clamped short', () => {
+    const [left, corner] = invariants(
+      [
+        { x: 0, y: 110, w: 75, h: 75 },
+        { x: 325, y: 225, w: 75, h: 75 },
+      ],
+      256,
+    );
+    expect(left!.left).toBe(0);
+    near(left!.width, MIN);
+    near(corner!.left + corner!.width, 256);
+    near(corner!.top + corner!.height, 192);
+    near(corner!.width, MIN);
+    near(corner!.height, MIN);
+    expect([left!.boxed, corner!.boxed]).toEqual([
+      { x: false, y: false },
+      { x: false, y: false },
+    ]);
+  });
+
+  it('a neighbour on one side: the growth goes the other way, and neither crosses the midline', () => {
+    // Two spots 11 units apart in a row at 256 px (0.64 dp a unit): 48 dp each, a 7.04 dp gap.
+    const [a, b] = invariants(
+      [
+        { x: 100, y: 110, w: 75, h: 75 },
+        { x: 186, y: 110, w: 75, h: 75 },
+      ],
+      256,
+    );
+    const mid = ((175 + 186) / 2) * 0.64;
+    near(a!.left + a!.width, mid);
+    near(b!.left, mid);
+    near(a!.width, MIN);
+    near(b!.width, MIN);
+  });
+
+  it('boxed between two neighbours: the axis takes exactly the room between the midlines, drawn + one gap', () => {
+    const [, middle] = invariants(
+      [
+        { x: 30, y: 110, w: 75, h: 75 },
+        { x: 116, y: 110, w: 75, h: 75 },
+        { x: 202, y: 110, w: 75, h: 75 },
+      ],
+      256,
+    );
+    expect(middle!.boxed).toEqual({ x: true, y: false });
+    near(middle!.left, ((105 + 116) / 2) * 0.64);
+    near(middle!.left + middle!.width, ((191 + 202) / 2) * 0.64);
+    near(middle!.width, (75 + 11) * 0.64);
+    near(middle!.height, MIN);
+  });
+
+  it('boxed by the scene edge and a neighbour: drawn + half the gap', () => {
+    const [edge] = invariants(
+      [
+        { x: 0, y: 110, w: 75, h: 75 },
+        { x: 86, y: 110, w: 75, h: 75 },
+        { x: 172, y: 110, w: 75, h: 75 },
+      ],
+      256,
+    );
+    // Room 0 .. midline 80.5 units: 51.52 dp, under 64, so all of it.
+    expect(edge!.boxed.x).toBe(true);
+    expect(edge!.left).toBe(0);
+    near(edge!.width, 80.5 * 0.64);
+  });
+
+  it('diagonal neighbours are cut at the midline of the axis where they are farther apart; the cut goes to the free side', () => {
+    // Apart by 12 units across and 15 down: grown evenly they would overlap, so the cut is on y (the larger gap), and
+    // the 3.2 dp it takes from the near side goes to the far side: each still reaches 64.
+    const [a, b] = invariants(
+      [
+        { x: 100, y: 50, w: 75, h: 75 },
+        { x: 187, y: 140, w: 75, h: 75 },
+      ],
+      256,
+    );
+    const cut = ((125 + 140) / 2) * 0.64;
+    near(a!.top + a!.height, cut);
+    near(b!.top, cut);
+    near(a!.top, cut - MIN);
+    near(a!.height, MIN);
+    near(b!.height, MIN);
+    near(a!.width, MIN);
+    near(b!.width, MIN);
+  });
+
+  it('a spot drawn at 64 or more keeps its drawn rectangle', () => {
+    const [h] = invariants([{ x: 100, y: 100, w: 120, h: 100 }], 288);
+    const d = spotRect({ x: 100, y: 100, w: 120, h: 100 }, 288);
+    near(h!.left, d.left);
+    near(h!.top, d.top);
+    near(h!.width, d.width);
+    near(h!.height, d.height);
+    expect(h!.boxed).toEqual({ x: false, y: false });
+  });
+
+  // The shipped scenes (rows CM-36, CM-37) at the 288 dp scene of a 320 window and at the 256 dp floor. Every spot not
+  // listed reaches 64 on both axes; a listed spot is boxed on that axis and takes the room named (dp, rounded).
+  const SCENES = [FOOD_MARKET_SCENE, LETTERS_SCHOOL_SCENE, SEOLLAL_ROOM_SCENE, FOUR_SEASONS_SCENE, PLAY_COURTYARD_SCENE];
+  const BOXED: Record<number, Record<string, string[]>> = BOXED_SHIPPED;
+  for (const width of [288, 256]) {
+    it(`the shipped scenes at ${width} dp: every hit rectangle holds the rules, and the boxed spots are these`, () => {
+      const found: Record<string, string[]> = {};
+      for (const scene of SCENES) {
+        const round = HiddenHeritageRoundSchema.parse(scene.round);
+        const things = [...round.targets, ...round.others];
+        const hits = invariants(
+          things.map((t) => t.spot),
+          width,
+        );
+        const boxed = hits.flatMap((h, i) => [
+          ...(h.boxed.x ? [`${things[i]!.id} x ${h.width.toFixed(1)}`] : []),
+          ...(h.boxed.y ? [`${things[i]!.id} y ${h.height.toFixed(1)}`] : []),
+        ]);
+        if (boxed.length > 0) found[scene.id] = boxed;
+      }
+      expect(found).toEqual(BOXED[width]);
+    });
+  }
 });

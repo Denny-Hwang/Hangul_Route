@@ -13,6 +13,7 @@ import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/
 import { HiddenHeritageStep } from '../hidden-heritage-entry';
 import * as scenes from '../hidden-heritage-scenes';
 import type { MinigameHost } from '../host';
+import { passTapLock } from '../../../test-support/render';
 
 /**
  * F-CURR-002 row CM-36: the Hidden Heritage step (design/wireframes/minigame/hidden-heritage.md). The game and each scene
@@ -125,13 +126,13 @@ describe('with game.hidden-heritage on', () => {
     expect(spots(root).map((s) => s.props.accessibilityLabel)).toEqual(['jar', 'basket', 'rice', 'soup', 'kimchi', 'chopsticks']);
   });
 
-  it('every spot is a button of 48 dp or more at 320 px (54 dp for the smallest spot)', async () => {
+  it('every spot is a button whose hit area reaches 64 dp at 320 px (AMENDMENTS-TOUCH 6.6: none is boxed at 288)', async () => {
     gameSwitch(true);
     const root = await draw();
     for (const s of spots(root)) {
       expect(s.props.accessibilityRole).toBe('button');
       const style = StyleSheet.flatten(s.props.style) as { width: number; height: number };
-      expect(Math.min(style.width, style.height), s.props.testID).toBeGreaterThanOrEqual(54);
+      expect(Math.min(style.width, style.height), s.props.testID).toBeGreaterThanOrEqual(64 - 1e-6);
     }
   });
 
@@ -140,10 +141,12 @@ describe('with game.hidden-heritage on', () => {
     const root = await draw();
     const asked = ROUND.targets.find((t) => t.word.ko === root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko)!;
     const spot = (id: string) => spots(root).find((s) => s.props.testID === `hh-spot-${id}`)!;
+    passTapLock();
     await act(async () => spot('hangari').props.onPress());
     expect(log).toEqual([[expect.stringMatching(/^w\d$/), false]]);
     expect(text(root)).toContain('Look again');
     expect(root.findAll((n) => n.props.testID === 'hh-ring-miss').length).toBeGreaterThan(0);
+    passTapLock();
     await act(async () => spot(asked.id).props.onPress());
     expect(log[1]).toEqual([log[0]![0], true]);
     expect(root.findAll((n) => n.props.testID === 'hh-ring-found').length).toBeGreaterThan(0);
@@ -186,6 +189,7 @@ describe('with game.hidden-heritage on', () => {
     gameSwitch(true);
     const root = await draw(SCOPE, 320, 288);
     const spot = (id: string) => spots(root).find((s) => s.props.testID === `hh-spot-${id}`)!;
+    passTapLock();
     await act(async () => spot('hangari').props.onPress());
     expect(log).toHaveLength(1);
     const measured = root.findAll((n) => typeof n.props.onLayout === 'function' && n.props.testID === undefined)[0]!;
@@ -200,6 +204,7 @@ describe('with game.hidden-heritage on', () => {
       expect(Math.min(style.width, style.height), s.props.testID).toBeGreaterThanOrEqual(48);
     }
     const asked = ROUND.targets.find((t) => t.word.ko === root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko)!;
+    passTapLock();
     await act(async () => spot(asked.id).props.onPress());
     expect(log.map(([key]) => key)).toEqual([log[0]![0], log[0]![0]]);
     expect(log.every(([key]) => /^w\d$/.test(key))).toBe(true);

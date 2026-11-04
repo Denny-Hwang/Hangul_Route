@@ -9,6 +9,9 @@ import {
   Progress,
   Screen,
   Spacer,
+  TapBoard,
+  TapScroller,
+  TapTarget,
   borderWidth,
   colors,
   layout,
@@ -21,7 +24,7 @@ import {
 import type { HiddenHeritageScene } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { HIDDEN_HERITAGE_RINGS } from '@hangul-route/design-system/src/scene-art/hidden-heritage/types';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Pressable, ScrollView, View, type LayoutChangeEvent, type PressableStateCallbackType } from 'react-native';
+import { ScrollView, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -38,6 +41,7 @@ import {
   sceneLayout,
   showsHoya,
   slotViews,
+  spotHitRects,
   spotRect,
   spotViews,
   startFlow,
@@ -47,6 +51,7 @@ import {
   type FlowEvent,
   type FlowState,
   type RingKind,
+  type SpotHitRect,
   type SpotView,
 } from '../../logic/hidden-heritage-flow';
 import { picWordFallback } from '../../logic/hidden-heritage-fallback';
@@ -56,6 +61,7 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import type { MinigameHost } from './host';
 import { HiddenHeritageSceneArt } from './HiddenHeritageScene';
 import { PicWordMatchGame } from './PicWordMatchGame';
+import { useScrollViewScroller } from './use-scroll-view-scroller';
 
 /**
  * Hidden Heritage (F-CURR-002 §7.1 F7, row CM-36; design/wireframes/minigame/hidden-heritage.md, mock
@@ -83,8 +89,6 @@ const SHORT_CHROME = touchTarget.min + spacing.xl * 2;
 const HINT_INSET = spacing.xs;
 const FOCUS_OFFSET = spacing.xxs;
 
-type SpotState = PressableStateCallbackType & { focused?: boolean };
-
 /** The ring tokens the scene profile checks every spot against (`HIDDEN_HERITAGE_RINGS`), so the two never differ. */
 const ringColour: Record<RingKind, string> = {
   found: resolveColor(HIDDEN_HERITAGE_RINGS.found),
@@ -106,38 +110,54 @@ function Ring({ kind }: { kind: RingKind }): ReactElement {
   );
 }
 
-function Spot({ view, sceneWidth, onTap }: { view: SpotView; sceneWidth: number; onTap: (id: string) => void }): ReactElement {
+/**
+ * One thing of the scene: a `TapTarget` on its hit rectangle (`spotHitRects`, AMENDMENTS-TOUCH 6.6: at least 64 unless
+ * boxed in), with the drawn spot inside it where the found, miss and look-here rings and the focus outline sit. While a
+ * finger that will count is down, the press look is a ring on the hit rectangle (`border.shape`, `borderWidth.thick`, no
+ * fill, so the scene stays visible); it is never a state ring.
+ */
+function Spot({ view, sceneWidth, hit, onTap }: { view: SpotView; sceneWidth: number; hit: SpotHitRect; onTap: (id: string) => void }): ReactElement {
   const rect = spotRect(view.spot, sceneWidth);
+  const [focused, setFocused] = useState(false);
   return (
-    <Pressable
-      testID={`hh-spot-${view.id}`}
-      accessibilityRole="button"
-      accessibilityLabel={view.label}
-      onPress={() => onTap(view.id)}
-      style={{ position: 'absolute', ...rect }}
+    <View
+      style={{ position: 'absolute', left: hit.left, top: hit.top, width: hit.width, height: hit.height }}
+      // Keyboard focus on the button inside (react-native-web's focus events bubble): the focus outline on the drawn spot.
+      {...({ onFocus: () => setFocused(true), onBlur: () => setFocused(false) } as ViewProps)}
     >
-      {({ focused }: SpotState) => (
-        <>
-          {view.ring ? <Ring kind={view.ring} /> : null}
-          {focused ? (
-            <View
-              pointerEvents="none"
-              testID="hh-focus"
-              style={{
-                position: 'absolute',
-                top: -(FOCUS_OFFSET + borderWidth.thick),
-                left: -(FOCUS_OFFSET + borderWidth.thick),
-                right: -(FOCUS_OFFSET + borderWidth.thick),
-                bottom: -(FOCUS_OFFSET + borderWidth.thick),
-                borderWidth: borderWidth.thick,
-                borderColor: colors.border.focus,
-                borderRadius: radii.md,
-              }}
-            />
-          ) : null}
-        </>
-      )}
-    </Pressable>
+      <TapTarget testID={`hh-spot-${view.id}`} accessibilityLabel={view.label} onCommit={() => onTap(view.id)} style={{ width: hit.width, height: hit.height }}>
+        {({ pressed }) => (
+          <>
+            <View pointerEvents="none" style={{ position: 'absolute', left: rect.left - hit.left, top: rect.top - hit.top, width: rect.width, height: rect.height }}>
+              {view.ring ? <Ring kind={view.ring} /> : null}
+              {focused ? (
+                <View
+                  pointerEvents="none"
+                  testID="hh-focus"
+                  style={{
+                    position: 'absolute',
+                    top: -(FOCUS_OFFSET + borderWidth.thick),
+                    left: -(FOCUS_OFFSET + borderWidth.thick),
+                    right: -(FOCUS_OFFSET + borderWidth.thick),
+                    bottom: -(FOCUS_OFFSET + borderWidth.thick),
+                    borderWidth: borderWidth.thick,
+                    borderColor: colors.border.focus,
+                    borderRadius: radii.md,
+                  }}
+                />
+              ) : null}
+            </View>
+            {pressed ? (
+              <View
+                pointerEvents="none"
+                testID="hh-press"
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderWidth: borderWidth.thick, borderColor: colors.border.shape, borderRadius: radii.md }}
+              />
+            ) : null}
+          </>
+        )}
+      </TapTarget>
+    </View>
   );
 }
 
@@ -152,6 +172,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   const [contentWidth, setContentWidth] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const sideways = useScrollViewScroller('x');
 
   const [state, setState] = useState<FlowState>(() => startFlow(rounds, seed));
   const stateRef = useRef(state);
@@ -281,7 +302,9 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   if (fit === null) return <PicWordMatchGame scope={fallbackScope} host={host} onBack={onBack} />;
 
   const header = headerView(state, rounds, m.learner.minigame);
-  const sceneBox = (views: readonly SpotView[], tappable: boolean, width: number): ReactElement => (
+  const sceneBox = (views: readonly SpotView[], tappable: boolean, width: number): ReactElement => {
+    const hits = tappable ? spotHitRects(views.map((v) => v.spot), width) : [];
+    return (
       <View
         testID="hh-scene"
         accessible={!tappable}
@@ -290,28 +313,36 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
         style={{ width, height: (width * 3) / 4, alignSelf: 'center', borderRadius: radii.lg, overflow: 'hidden' }}
       >
         {tappable ? (
-          // While playing, the setting is still told first: the art is one image named by the alt text, before the spots.
-          <View testID="hh-scene-art" accessible accessibilityRole="image" accessibilityLabel={round.altEn}>
-            <HiddenHeritageSceneArt scene={scene} width={width} />
-          </View>
-        ) : (
-          <HiddenHeritageSceneArt scene={scene} width={width} />
-        )}
-        {views.map((v) =>
-          tappable ? (
-            <Spot key={v.id} view={v} sceneWidth={width} onTap={(id) => dispatch({ type: 'tap', id })} />
-          ) : v.ring ? (
-            <View key={v.id} pointerEvents="none" style={{ position: 'absolute', ...spotRect(v.spot, width) }}>
-              <Ring kind={v.ring} />
+          // One board for the scene (AMENDMENTS-TOUCH 6.6, row KT-6): a graze still counts, a bounce never counts twice.
+          <TapBoard lock="board">
+            {/* While playing, the setting is still told first: the art is one image named by the alt text, before the spots. */}
+            <View testID="hh-scene-art" accessible accessibilityRole="image" accessibilityLabel={round.altEn}>
+              <HiddenHeritageSceneArt scene={scene} width={width} />
             </View>
-          ) : null,
+            {views.map((v, i) => (
+              <Spot key={v.id} view={v} sceneWidth={width} hit={hits[i]!} onTap={(id) => dispatch({ type: 'tap', id })} />
+            ))}
+          </TapBoard>
+        ) : (
+          <>
+            <HiddenHeritageSceneArt scene={scene} width={width} />
+            {views.map((v) =>
+              v.ring ? (
+                <View key={v.id} pointerEvents="none" style={{ position: 'absolute', ...spotRect(v.spot, width) }}>
+                  <Ring kind={v.ring} />
+                </View>
+              ) : null,
+            )}
+          </>
         )}
       </View>
     );
+  };
+  // In the narrow latch the scene scrolls sideways; its board drives that scroller (a sideways drag past 32 px).
   const sceneView = (views: readonly SpotView[], tappable: boolean): ReactElement | null =>
     fit === undefined ? null : latchedNarrow ? (
-      <ScrollView horizontal testID="hh-scene-scroll">
-        {sceneBox(views, tappable, fit.sceneWidth)}
+      <ScrollView horizontal testID="hh-scene-scroll" {...sideways.props}>
+        <TapScroller scroller={sideways.scroller}>{sceneBox(views, tappable, fit.sceneWidth)}</TapScroller>
       </ScrollView>
     ) : (
       sceneBox(views, tappable, fit.sceneWidth)

@@ -18,6 +18,7 @@ import { HiddenHeritageStep } from '../hidden-heritage-entry';
 import * as scenes from '../hidden-heritage-scenes';
 import type { MinigameHost } from '../host';
 import { glossRepeatsRomanization } from '../../../../../../scripts/overlay-rules.mjs';
+import { passTapLock } from '../../../test-support/render';
 
 /**
  * F-CURR-002 row CM-37 part 3: the Nature & Animals four-season scene in the Hidden Heritage step
@@ -215,9 +216,11 @@ describe('with game.hidden-heritage on', () => {
     const ko = root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko as string;
     const asked = ROUND.targets.find((t) => t.word.ko === ko)!;
     const spot = (id: string) => spots(root).find((s) => s.props.testID === `hh-spot-${id}`)!;
+    passTapLock();
     await act(async () => spot('bandalgaseumgom').props.onPress());
     expect(log).toEqual([[expect.stringMatching(/^w\d$/), false]]);
     expect(text(root)).toContain('Look again');
+    passTapLock();
     await act(async () => spot(asked.id).props.onPress());
     expect(log[1]).toEqual([log[0]![0], true]);
   });
