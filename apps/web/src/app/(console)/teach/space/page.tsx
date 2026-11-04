@@ -400,6 +400,7 @@ function SpaceInner(): JSX.Element {
                 <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
               </Link>
             ) : null}
+            {/* A waiting request asks the grown-up to decide: the amber nudge tone (GX-1) and the action wording (review of PR #933). */}
             <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
               <Button tone={relinksWaiting > 0 ? 'nudge' : 'secondary'} testId="relink-requests">
                 {relinksWaiting > 0 ? c.space.relinkPending.cta(relinksWaiting) : c.space.relinkRequests.cta}

@@ -1047,6 +1047,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.presenter.home.recent.finished': [['Today'], ['Yesterday'], ['Oct 30']],
   // AMENDMENTS-GROWNUP-UX GX-14 (T14): the open ready-made card's minutes and the length it was built for.
   'console.lecture.minutesOf': [[14, 20], [9, 10], [1, 30]],
+  // AMENDMENTS-GROWNUP-UX GX-12: a family's re-link denial and the request time rolled up to hours and days.
+  'console.relink.deniedFamily': [['Mina']],
+  'console.relink.askedHoursAgo': [[1], [4]],
+  'console.relink.askedDaysAgo': [[1], [3]],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
   // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
