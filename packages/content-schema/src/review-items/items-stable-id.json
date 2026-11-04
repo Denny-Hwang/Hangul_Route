@@ -1037,7 +1037,27 @@
     "rea|realia:s6-letters-v2-q1-card": "rea:s6-letters-v2-q1-card",
     "rea|realia:s6-letters-v2-q2-poster": "rea:s6-letters-v2-q2-poster",
     "rea|realia:s6-letters-v2-q3-board": "rea:s6-letters-v2-q3-board",
-    "lex|지하철": "vocab:jihacheol"
+    "lex|지하철": "vocab:jihacheol",
+    "lex|보내세요": "lex:bonaeseyo",
+    "lex|보내요": "lex:bonaeyo",
+    "lex|카드": "lex:kadeu",
+    "lex|써요": "lex:sseoyo",
+    "pat|밤이 길어요": "pat:bami-gireoyo",
+    "pat|동지는 밤이 길어요": "pat:dongjineun-bami-gireoyo",
+    "pat|할머니, 새해 복 많이 받으세요": "pat:halmeoni-saehae-bok-mani-badeuseyo",
+    "pat|즐거운 추석 보내세요": "pat:jeulgeoun-chuseok-bonaeseyo",
+    "pat|즐거운 명절 보내세요": "pat:jeulgeoun-myeongjeol-bonaeseyo",
+    "pat|즐거운 ___ 보내세요": "pat:jeulgeoun-n-bonaeseyo",
+    "pat|즐거운 설날 보내세요": "pat:jeulgeoun-seollal-bonaeseyo",
+    "pat|카드를 보내요": "pat:kadeureul-bonaeyo",
+    "pat|카드를 써요": "pat:kadeureul-sseoyo",
+    "pat|___, 새해 복 많이 받으세요": "pat:n-saehae-bok-mani-badeuseyo",
+    "pat|오늘은 추석이에요": "pat:oneureun-chuseogieyo",
+    "pat|오늘은 동지예요": "pat:oneureun-dongjiyeyo",
+    "pat|오늘은 입동이에요": "pat:oneureun-ipdongieyo",
+    "pat|오늘은 ___이에요/예요": "pat:oneureun-n-ieyo-yeyo",
+    "pat|선생님, 새해 복 많이 받으세요": "pat:seonsaengnim-saehae-bok-mani-badeuseyo",
+    "lex|선생님": "vocab:seonsaengnim"
   },
   "alias": {
     "exc|호야, 안녕하세요|선생님, 안녕하세요! 이게 뭐예요": "exc:hoya-annyeonghaseyo"

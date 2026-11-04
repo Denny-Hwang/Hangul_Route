@@ -5,8 +5,9 @@
  * fact needs at least one source on one of them. `SOURCE_HOST_ALLOWLIST` is
  * the 31 hosts of the research set plus the Korea National Park Service
  * (F-CURR-001 S6-4) and the Institute for the Translation of Korean Classics
- * database (Ilseongnok), and the Korea Meteorological Administration and National Institute of Biological
- * Resources hosts of the Nature Volume 2 notes (F-CURR-002 row CM-41 S2); a host outside it is only a warning
+ * database (Ilseongnok), the Korea Meteorological Administration and National Institute of Biological
+ * Resources hosts of the Nature Volume 2 notes (F-CURR-002 row CM-41 S2), and the Korea Astronomy and Space
+ * Science Institute's calendar data (F-CURR-002 §6.6, row CM-45 S3: the solar-term dates); a host outside it is only a warning
  * (`source-host-unlisted`), and adding a host is a one-line, reviewed PR.
  */
 export const AUTHORITATIVE_HOST_SUFFIXES = [
@@ -18,6 +19,7 @@ export const AUTHORITATIVE_HOST_SUFFIXES = [
 ] as const;
 
 export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
+  'astro.kasi.re.kr',
   'contents.history.go.kr',
   'db.itkc.or.kr',
   'encykorea.aks.ac.kr',
@@ -27,6 +29,7 @@ export const SOURCE_HOST_ALLOWLIST: readonly string[] = [
   'korean.go.kr',
   'media.unesco.org',
   'news.sbs.co.kr',
+  'opendict.korean.go.kr', // F-CURR-002 CM-44 S7 (Urimalsaem, the National Institute of Korean Language's open dictionary)
   'science.kma.go.kr',
   'shfestival.com',
   'sillok.history.go.kr',
