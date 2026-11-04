@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, pastTapLock } from './helpers';
 import { back, checkpointCard, checkpointSkip, fullyVisible, next, nextPage, position, primaryButtons } from './story-reader-helpers';
 
 /**
@@ -264,6 +264,7 @@ async function finishQuestAllRight(page: Page, beforeResults?: () => Promise<voi
   await expect(page.getByRole('heading', { name: 'A few questions' })).toBeVisible();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (const id of CHECK_RIGHT) {
+    await pastTapLock(page);
     await page.getByTestId(`story-check-option-${id}`).click();
     await page.getByTestId('story-check-next').click();
   }

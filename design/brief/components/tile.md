@@ -18,7 +18,7 @@ Tile is the foundational interactive surface for Match Sound (F-001 §3.1), Buil
 - Glyph size: sm `title`(28) · md `display`(36) · lg `hero`(48)
 - Romanization size: `bodySm` (16), `text.muted`, weight 500
 - Shadow: `card` (subtle) only in `idle` and on press
-- Press transform: `scale(1.04)` (a small "I'm awake" lift)
+- Press look (amended 2026-10-31 by `docs/specs/AMENDMENTS-TOUCH.md` 4.3, row KT-2; replaces the old `scale(1.04)` lift): a thick `border.shape` outline (`borderWidth.thick`) and a shrink to 0.97, shown at once while the finger is on the tile; under reduced motion the outline only, no shrink. The outline comes out of the inner padding, so nothing moves. Never `border.focus`, `brand.primary` or a feedback colour. No `hitSlop`: the tile is at least 64 itself, and inside a `TapBoard` the board's gap fill reaches it
 
 ## 3. State colors
 
@@ -45,7 +45,7 @@ PNG showing the full tile state × size matrix.
 
 Rows: 4 states (idle / correct / wrong / disabled) = 4 rows
 Columns: 3 sizes (sm 64 / md 80 / lg 96) = 3 columns
-+ 1 extra row at the bottom for "press" state of md size (scale 1.04)
++ 1 extra row at the bottom for "press" state of md size (thick `border.shape` outline, scale 0.97)
 
 Each tile is a square showing a Korean jamo in the center + romanization
 below. Use these sample jamo:
@@ -53,7 +53,7 @@ below. Use these sample jamo:
 - Row 2 (correct): ㄱ / ㄴ / ㄷ
 - Row 3 (wrong): ㄱ / ㄴ / ㄷ
 - Row 4 (disabled): ㄱ / ㄴ / ㄷ
-- Bottom row (md press): ㅏ with scale 1.04 transform indicator
+- Bottom row (md press): ㅏ with the thick `border.shape` outline and a 0.97 shrink indicator
 
 Tile dimensions and inner spec:
 - sm: 64×64 box, glyph 28sp, rom 16sp, inner padding 16px

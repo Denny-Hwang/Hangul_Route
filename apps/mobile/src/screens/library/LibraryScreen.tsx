@@ -23,12 +23,13 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useTypeScale,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Fragment, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
-import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { themes } from '../../content';
 import { awardWorld, awardWorldFor } from '../../content/award-world';
@@ -295,7 +296,7 @@ export function LibraryScreen(): ReactElement {
                   const cards = group.cardIds.map((id) => cardOf.get(id)).filter((c): c is HeritageCard => c !== undefined);
                   return (
                     <View key={group.key}>
-                      <Pressable
+                      <GuardedPressable
                         testID={`library-group-${group.key}`}
                         onPress={() => setOpenGroup(open ? null : group.key)}
                         accessibilityRole="button"
@@ -321,7 +322,7 @@ export function LibraryScreen(): ReactElement {
                         <View style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}>
                           <Icon name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
                         </View>
-                      </Pressable>
+                      </GuardedPressable>
                       {open ? (
                         <View style={{ paddingTop: spacing.sm }}>{cardGrid(cards, `library-group-${group.key}-cards`)}</View>
                       ) : null}
@@ -394,21 +395,27 @@ export function LibraryScreen(): ReactElement {
 }
 
 function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }): ReactElement {
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the pill keeps its size; the guarded button around it is at least touchTarget.min
+  // each way, so the web hit area (react-native-web has no hitSlop) reaches 64 (audit UX-25).
   return (
-    <Pressable
+    <GuardedPressable
       onPress={onPress}
       accessibilityRole="button"
-      style={{
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-        borderRadius: radii.pill,
-        backgroundColor: active ? colors.brand.primary : colors.surface.paper,
-        borderWidth: 1,
-        borderColor: active ? colors.brand.primary : colors.border.subtle,
-      }}
+      style={{ minHeight: touchTarget.min, minWidth: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
     >
-      <Text {...KOREAN_LINE_BREAK} style={{ color: active ? colors.text.inverse : colors.text.primary, fontWeight: '600' }}>{label}</Text>
-    </Pressable>
+      <View
+        style={{
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.sm,
+          borderRadius: radii.pill,
+          backgroundColor: active ? colors.brand.primary : colors.surface.paper,
+          borderWidth: 1,
+          borderColor: active ? colors.brand.primary : colors.border.subtle,
+        }}
+      >
+        <Text {...KOREAN_LINE_BREAK} style={{ color: active ? colors.text.inverse : colors.text.primary, fontWeight: '600' }}>{label}</Text>
+      </View>
+    </GuardedPressable>
   );
 }
 
@@ -443,7 +450,7 @@ function CardThumb({
   const messages = useMessages();
   const m = messages.learner.library;
   return (
-    <Pressable
+    <GuardedPressable
       onPress={onPress}
       accessibilityRole="button"
       aria-selected={selected}
@@ -486,7 +493,7 @@ function CardThumb({
           {cardTitleIsKo(card) ? null : <Caption tone="secondary">{card.titleEn}</Caption>}
         </>
       )}
-    </Pressable>
+    </GuardedPressable>
   );
 }
 
@@ -520,7 +527,7 @@ function CardSilhouette({ size }: { size: number }): ReactElement {
 /** The one Next card hint of the Cards to find shelf: a silhouette, "Next card" and how to earn it. */
 function NextCardRow({ label, hint, a11yLabel, onPress }: { label: string; hint: string; a11yLabel: string; onPress: () => void }): ReactElement {
   return (
-    <Pressable
+    <GuardedPressable
       testID="library-next-card"
       onPress={onPress}
       accessibilityRole="button"
@@ -542,6 +549,6 @@ function NextCardRow({ label, hint, a11yLabel, onPress }: { label: string; hint:
         </Caption>
         <Body weight="semibold">{hint}</Body>
       </View>
-    </Pressable>
+    </GuardedPressable>
   );
 }

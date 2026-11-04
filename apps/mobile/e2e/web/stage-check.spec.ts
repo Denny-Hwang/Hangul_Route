@@ -3,7 +3,7 @@ import { CATALOG, keysFor } from '@hangul-route/content-schema';
 import { decodeReviewItems } from '@hangul-route/content-schema/review-items';
 import * as chunk from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, seedStored } from './helpers';
+import { onboardChild, readStored, seedStored, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide, expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
@@ -67,6 +67,9 @@ const stageItems = ITEMS.filter((i) => i.cells.some((c) => STAGE2.includes(c)));
 const SHIFTED: Record<string, string> = { 'ㅃ': 'ㅂ', 'ㅉ': 'ㅈ', 'ㄸ': 'ㄷ', 'ㄲ': 'ㄱ', 'ㅆ': 'ㅅ', 'ㅒ': 'ㅐ', 'ㅖ': 'ㅔ' };
 const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ': 'ㅗㅣ', 'ㅝ': 'ㅜㅓ', 'ㅞ': 'ㅜㅔ', 'ㅟ': 'ㅜㅣ', 'ㅢ': 'ㅡㅣ' };
 
+/** The typed miss: no word of the course is within one jamo of it (gradeTyped's "hinted"). */
+const MISS = 'ㅋㅋㅋㅋ';
+
 async function typeKorean(page: Page, text: string): Promise<void> {
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
     if (jamo === ' ') await page.getByTestId('hangul-key-space').click();
@@ -90,7 +93,9 @@ async function answer(page: Page, right: boolean): Promise<void> {
       target = stageItems.find((i) => i.en !== undefined && labels.includes(i.en))?.ko ?? '';
     }
     if (!right || target === '') {
-      await typeKorean(page, 'ㅋ');
+      // A miss that is never "almost": four ㅋ are at least two jamo from every word (one ㅋ is one jamo from 코, a
+      // one-letter slip that hides the keyboard behind Next).
+      await typeKorean(page, MISS);
       await page.getByTestId('daily-review-type-done').click();
       await expect(page.getByTestId('daily-review-miss')).toBeVisible();
       if (target === '') target = ((await page.getByTestId('daily-review-miss').innerText()).match(/[가-힣]+(?: [가-힣]+)*/g) ?? []).sort((a, b) => b.length - a.length)[0] ?? '';
@@ -113,9 +118,11 @@ async function answer(page: Page, right: boolean): Promise<void> {
     const id = stageItems.find((i) => i.ko === ko && ids.includes(i.id))?.id ?? ids.find((x) => stageItems.some((i) => i.id === x && i.ko === ko));
     expect(id, `the prompt ${ko} names an item of the stage`).toBeDefined();
     if (!right) {
+      await pastTapLock(page);
       await page.getByTestId(`daily-review-option-${ids.find((x) => x !== id)}`).click();
       await expect(page.getByTestId('daily-review-miss')).toBeVisible();
     }
+    await pastTapLock(page);
     await page.getByTestId(`daily-review-option-${id}`).click();
   }
   const moved = async (): Promise<boolean> =>

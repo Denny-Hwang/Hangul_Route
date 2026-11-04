@@ -1,6 +1,5 @@
-import { Body, Icon, colors, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Icon, colors, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import type { ComponentProps, ReactElement } from 'react';
-import { Pressable } from 'react-native';
 
 type IconName = ComponentProps<typeof Icon>['name'];
 
@@ -23,7 +22,7 @@ export function LinkButton({
   accessibilityHint?: string;
 }): ReactElement {
   return (
-    <Pressable
+    <GuardedPressable
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
@@ -35,6 +34,6 @@ export function LinkButton({
       <Body weight="semibold" tone="brand">
         {label}
       </Body>
-    </Pressable>
+    </GuardedPressable>
   );
 }

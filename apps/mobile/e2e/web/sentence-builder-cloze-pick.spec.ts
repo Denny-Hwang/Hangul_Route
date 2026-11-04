@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { seedStored } from './helpers';
 import { shot } from './shots';
@@ -57,9 +58,9 @@ const log = (page: Page): Promise<Log> => page.evaluate(() => (window as E2eWind
 const events = (page: Page): Promise<TelemetryEvent[]> => page.evaluate(() => (window as E2eWindow).__hrClozePickE2E!.events());
 const tile = (page: Page, round: string, i: number) => page.getByTestId(`cloze-pick-tile-${round}:t${i}`);
 const option = (page: Page, round: string, i: number) => page.getByTestId(`listen-pick-option-${round}:t${i}`);
-/** A tap a beat after the last one, as a learner taps: the game keeps only the first touch in a 50 ms window. */
+/** A tap a beat after the last one, as a learner taps: an answer within TAP_LOCK_MS of the last is a bounce (AMENDMENTS-TOUCH KT-3). */
 async function tap(page: Page, target: ReturnType<typeof tile>): Promise<void> {
-  await page.waitForTimeout(120);
+  await page.waitForTimeout(TAP_LOCK_MS + 50);
   await target.click();
 }
 
