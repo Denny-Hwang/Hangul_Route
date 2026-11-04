@@ -300,7 +300,9 @@ describe('golden: the default curriculum for an unlicensed space is the free pla
       // so never one of its locked lessons either.
       const routeLessons = routeDaysOf(catalog).flatMap((day) => day.questIds);
       expect(sorted(draft.locked)).toEqual(sorted(routeLessons.filter((id) => !free.has(id))));
-      expect(sorted([...grid].filter((id) => !routeLessons.includes(id))).every((id) => /-v[0-9]+-q[0-9]+$/.test(id))).toBe(true);
+      // Off the route days: only later volumes, a lesson Volume 2 or a Stage 5 book 2's read quests (row CM-46).
+      const later = new Set(catalog.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds)));
+      expect(sorted([...grid].filter((id) => !routeLessons.includes(id))).every((id) => later.has(id))).toBe(true);
       // With every stage unlocked, the same plan holds lessons past the free plan.
       const licensed = generateCurriculum({ ...params, unlockedStages: ALL_STAGES }, catalog);
       expect(licensed.items.some((item) => grid.has(item.id) && !free.has(item.id))).toBe(true);

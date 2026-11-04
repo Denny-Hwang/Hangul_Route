@@ -71,6 +71,8 @@ function withVolumes(rows = V2): Catalog {
 }
 const NATURE_V2 = ['quest:stage2-nature-v2-q1', 'quest:stage2-nature-v2-q2', 'quest:stage2-nature-v2-q3'];
 const CRAFTS4_V2 = ['quest:stage4-crafts-v2-q1', 'quest:stage4-crafts-v2-q2', 'quest:stage4-crafts-v2-q3'];
+/** Every later-volume quest the shipped catalogue holds (each Volume 2 content row and each Stage 5 book 2). */
+const SHIPPED_LATER_QUESTS = CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds));
 
 describe('the catalogue with two volumes per cell (row CM-40)', () => {
   it('expands a Volume 2 row into a later volume of its cell, quests named <cell>-v2-q<k> on its own episode', () => {

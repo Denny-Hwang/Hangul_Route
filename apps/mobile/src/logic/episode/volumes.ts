@@ -28,5 +28,5 @@ export function cellVolumes(episode: Pick<Episode, 'stage' | 'theme'>, volumesOn
  * link): the player shows the episode page instead, which `volumePageEpisode` turns into the cell's first volume.
  */
 export function isLaterVolumeQuest(questId: string, episodeId: string, list: readonly Episode[] = episodesWithVolumes): boolean {
-  return list.some((e) => volumeOf(e) >= 2 && (e.id === episodeId || e.questIds.includes(questId)));
+  return list.some((e) => shownVolumeOf(e) >= 2 && (e.id === episodeId || e.questIds.includes(questId)));
 }

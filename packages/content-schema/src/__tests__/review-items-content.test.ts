@@ -341,7 +341,9 @@ describe('the "This week in Korea" drops as a review-item source (F-CURR-002 §5
   });
 
   it('never moves an item the route teaches: it keeps its home, stage, gloss key and first cell, and the drop is a later cell', () => {
-    const shared = built.items.filter((i) => weekCells(i).length > 0 && i.cells.some((c) => !c.startsWith('week:')));
+    // The route is each cell's first volume: a later volume (row CM-40) never changes an item a drop already teaches.
+    const later = new Set(lessons.filter((l) => l.volume > 1).map((l) => l.cellId));
+    const shared = built.items.filter((i) => weekCells(i).length > 0 && i.cells.some((c) => !c.startsWith('week:') && !later.has(c)));
     expect(shared.map((i) => i.id)).toEqual(expect.arrayContaining(['lex:baechu', 'vocab:gimchi', 'vocab:nun-snow', 'lex:bam', 'lex:saehae']));
     for (const item of shared) {
       expect(item.home, item.id).not.toBe('week');
