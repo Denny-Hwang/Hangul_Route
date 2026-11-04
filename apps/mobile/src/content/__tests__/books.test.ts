@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BOOK_MAX_QUESTS,
+  bookMaxQuests,
   BOOK_MIN_QUESTS,
   BOOK_STAGE,
   EpisodeSchema,
@@ -23,6 +23,8 @@ describe('Stage 5 books (books.ts)', () => {
   it('ships all five Stage 5 books in grid order, each with its placeholder id, its planned title and stories (§3.3 book plan), and the Play book 2 (F-CURR-002 row CM-46)', () => {
     expect(bookEpisodes.map((e) => [e.id, e.order, e.titleEn, e.storyIds])).toEqual([
       ['episode:stage5-letters', 1, 'Stories of Letters', ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day']],
+      // F-CURR-002 row CM-46: the eight read-tier stories of row CM-46a; the two new tales join with their review sign-off.
+      ['episode:stage5-letters-v2', 1, 'Books, Records and Letters', ['story:tripitaka-koreana', 'story:jikji-metal-type', 'story:sillok-royal-historians', 'story:sillok-mountain-archives', 'story:nanjung-ilgi', 'story:seungjeongwon-ilgi-every-day', 'story:ilseongnok-daily-reflection', 'story:joseon-records-today']],
       ['episode:stage5-life', 2, 'Family Stories', ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam']],
       ['episode:stage5-rites', 3, 'Festival Tales', ['story:seollal-new-year', 'story:dano-ssireum', 'story:chuseok-ganggangsullae']],
       ['episode:stage5-nature', 4, 'Nature Tales', ['story:sun-and-moon', 'story:angbuilgu-sundial']],
@@ -36,6 +38,7 @@ describe('Stage 5 books (books.ts)', () => {
   it('every book carries its pillar tags and a minute total equal to its quests', () => {
     expect(Object.fromEntries(bookEpisodes.map((e) => [e.id, e.pillarTags]))).toEqual({
       'episode:stage5-letters': ['A1'],
+      'episode:stage5-letters-v2': ['A1'],
       'episode:stage5-life': ['B1', 'B5', 'E4'],
       'episode:stage5-rites': ['B5'],
       'episode:stage5-nature': ['D5', 'E5'],
@@ -58,7 +61,7 @@ describe('Stage 5 books (books.ts)', () => {
     expect(book.placement).toBe('grid');
     expect(book.status).toBe('shipped');
     expect(book.questIds.length).toBeGreaterThanOrEqual(BOOK_MIN_QUESTS);
-    expect(book.questIds.length).toBeLessThanOrEqual(BOOK_MAX_QUESTS);
+    expect(book.questIds.length).toBeLessThanOrEqual(bookMaxQuests(book.volume ?? 1));
     // One quest per story, in the same order: quest:story-<slug>-read.
     expect(book.questIds).toEqual((book.storyIds ?? []).map((id) => `quest:story-${id.replace(/^story:/, '')}-read`));
     // Book reward cards are the Stage 5 scene cards of F-CARD-S5-001 (a draft, out of scope).

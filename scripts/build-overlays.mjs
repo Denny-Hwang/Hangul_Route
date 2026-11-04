@@ -58,8 +58,10 @@ const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v)
  * files: [{ rel: "content/i18n/<locale>/<name>.json", json }] -> { es: {...}, ko: {...} },
  * entity ids and field names sorted. Throws ContentError on a file that is not an
  * overlay of its folder's locale and on an entity that sits in two files of one locale.
+ * `withheld` (entity ids) are checked like any other entry but left out of the tables: the stories no
+ * learner path offers yet (`withheldStoryIds`).
  */
-export function buildOverlays(files) {
+export function buildOverlays(files, { withheld = new Set() } = {}) {
   const merged = Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, new Map()]));
   const owner = new Map();
   for (const { rel, json } of files) {
@@ -72,6 +74,7 @@ export function buildOverlays(files) {
       const key = `${locale}\u0000${id}`;
       if (owner.has(key)) throw new ContentError(`${id} is also in ${owner.get(key)}; an entity belongs to one overlay file`, rel);
       owner.set(key, rel);
+      if (withheld.has(id)) continue;
       const fields = Object.entries(entry)
         .filter(([field, text]) => isOverlayFieldAllowed(id, field) && typeof text === "string" && text.trim() !== "")
         .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
@@ -134,6 +137,37 @@ export function renderLocaleOverlays(model, locale) {
   );
 }
 
+/**
+ * The overlay entity ids of the story files no learner path offers yet (F-CURR-002 row CM-46): `story:<slug>` and its
+ * `quest:story-<slug>-listen` / `-read`. A story is offered
+ * once it is `ready`, has a `shelf` block and both review sign-offs (`catalogStatusOfStory` in the catalogue, the
+ * same rule as build-lessons.mjs). Their es / ko text stays in content/i18n (validate-content checks it), but it
+ * joins the locale chunks only with the sign-off, so an unsigned tale never adds to what every es or ko learner
+ * loads before the first screen (`PRECACHE_BUDGET.localeChunkRaw`, F-CURR-002 section 10).
+ */
+export function withheldStoryIds(root) {
+  const dir = join(root, "content", "stories");
+  const ids = new Set();
+  if (!existsSync(dir)) return ids;
+  for (const name of readdirSync(dir).filter((n) => n.endsWith(".json")).sort()) {
+    let story;
+    try {
+      story = JSON.parse(readFileSync(join(dir, name), "utf8"));
+    } catch {
+      continue; // build-stories.mjs and validate-content report a broken story file
+    }
+    if (!isObject(story) || typeof story.id !== "string") continue;
+    const review = isObject(story.review) ? story.review : {};
+    const offered =
+      story.state === "ready" && isObject(story.shelf) && review.language === "native-reviewed" && review.culture === "culture-reviewed";
+    if (offered) continue;
+    // The story and its two quests (its shelf listen quest and its book read quest, F-STORY-004 / F-STORY-005).
+    const slug = story.id.replace(/^story:/, "");
+    for (const id of [story.id, `quest:story-${slug}-listen`, `quest:story-${slug}-read`]) ids.add(id);
+  }
+  return ids;
+}
+
 const relOf = (root, file) => relative(root, file).split(sep).join("/");
 
 /**
@@ -186,7 +220,7 @@ export function main(argv, root) {
 
   let model;
   try {
-    model = buildOverlays(readFiles(root));
+    model = buildOverlays(readFiles(root), { withheld: withheldStoryIds(root) });
   } catch (error) {
     if (!(error instanceof ContentError)) throw error;
     process.stdout.write(`::error file=${error.file}::${error.message}\n`);

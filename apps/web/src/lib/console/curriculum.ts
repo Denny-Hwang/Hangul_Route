@@ -1,6 +1,7 @@
 import {
   AUDIENCE_DEFAULTS,
   CATALOG,
+  CATALOG_QUEST_ADDITIONS,
   FREE_ROUTE_STAGES,
   CURRICULUM_MAX_ITEMS,
   CurriculumMetaSchema,
@@ -10,6 +11,7 @@ import {
   StageKeySchema,
   WEEKDAYS,
   addDays,
+  isPlanCatalogStale,
   defaultPaceFor,
   generateCurriculum,
   isDateKey,

@@ -228,6 +228,54 @@ describe("build-overlays.mjs: CLI", () => {
     assert.equal(run(root, ["--nope"]).status, 2);
   });
 
+  test("leaves a story no learner path offers out of the tables until it is signed (F-CURR-002 row CM-46)", () => {
+    const root = makeRoot();
+    const story = (slug, over = {}) => ({
+      id: `story:${slug}`,
+      state: "ready",
+      shelf: {},
+      review: { language: "native-reviewed", culture: "culture-reviewed" },
+      ...over,
+    });
+    put(root, "content/stories/signed.json", story("signed"));
+    put(root, "content/stories/draft-tale.json", story("draft-tale", { review: { language: "draft", culture: "draft" } }));
+    put(root, "content/stories/no-shelf.json", story("no-shelf", { shelf: undefined }));
+    put(
+      root,
+      "content/i18n/ko/stories.json",
+      overlay("ko", "stories", {
+        "story:signed": { title: "서명" },
+        "story:draft-tale": { title: "초안" },
+        "story:no-shelf": { title: "선반 없음" },
+        "quest:story-draft-tale-listen": { title: "초안" },
+        "quest:story-signed-listen": { title: "서명" },
+        "card:a": { title: "카드" },
+      }),
+    );
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const ko = readFileSync(join(root, localeOut("ko")), "utf8");
+    assert.match(ko, /"story:signed"/);
+    assert.match(ko, /"card:a"/);
+    assert.match(ko, /"quest:story-signed-listen"/);
+    assert.doesNotMatch(ko, /story:draft-tale|story-draft-tale-listen|story:no-shelf/);
+    assert.doesNotMatch(readFileSync(join(root, OUT_REL), "utf8"), /story:draft-tale/);
+    // Signing the tale brings its text in.
+    put(root, "content/stories/draft-tale.json", story("draft-tale"));
+    assert.equal(run(root, ["--check"]).status, 1);
+    assert.equal(run(root).status, 0);
+    assert.match(readFileSync(join(root, localeOut("ko")), "utf8"), /"story:draft-tale"/);
+  });
+
+  test("buildOverlays still checks a withheld entry (one file per entity) but leaves it out", () => {
+    const files = [file("content/i18n/es/s.json", overlay("es", "s", { "story:t": { title: "T" }, "card:a": { title: "A" } }))];
+    assert.deepEqual(buildOverlays(files, { withheld: new Set(["story:t"]) }), { es: { "card:a": { title: "A" } }, ko: {} });
+    assert.throws(
+      () => buildOverlays([...files, file("content/i18n/es/t.json", overlay("es", "t", { "story:t": { title: "U" } }))], { withheld: new Set(["story:t"]) }),
+      /also in/,
+    );
+  });
+
   test("the checked-in module matches the repository's content/i18n", () => {
     const r = spawnSync("node", [SCRIPT, "--check"], { encoding: "utf8", env: { ...process.env, HANGUL_ROUTE_ROOT: REPO } });
     assert.equal(r.status, 0, r.stdout + r.stderr);

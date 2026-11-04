@@ -1,7 +1,7 @@
-import { cellChunkName, isLaterCellId, laterStoryIdsOf, storyChunkName } from '../logic/offline/offline-packs';
+import { cellChunkName, isLaterCellId, storyChunkName } from '../logic/offline/offline-packs';
 import { isOnline } from '../platform/online';
 import { offlinePacks } from '../store/offline-packs-store';
-import { BOOK_DEFINITIONS } from './books';
+import { VOLUME_TWO_STORY_IDS } from './books';
 import { LESSON_CELL_CHUNKS } from './__generated__/lessons-index';
 import { STORY_SHELF } from './__generated__/stories-index';
 
@@ -13,8 +13,8 @@ import { STORY_SHELF } from './__generated__/stories-index';
  * never downloads one, and an offline grown-up root never waits on a chunk it cannot get.
  */
 
-/** The tales only a book 2 holds. */
-export const LATER_STORY_IDS: ReadonlySet<string> = new Set(laterStoryIdsOf(BOOK_DEFINITIONS));
+/** The tales only a book 2 holds (a new tale, never a shelf story that joined a book 2 through its read tier). */
+export const LATER_STORY_IDS: ReadonlySet<string> = VOLUME_TWO_STORY_IDS;
 
 const cellIds = Object.keys(LESSON_CELL_CHUNKS);
 const storyIds = STORY_SHELF.map((e) => e.id);

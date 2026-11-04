@@ -40,3 +40,6 @@ Three new readers for the Stage 5 Nature cell's book 2 (`jeju-volcanic-island`, 
 
 ## Food book 2 (F-CURR-002 row CM-46, 2026-11-04)
 Two new tales for the Stage 5 Food cell's book 2 (`episode:stage5-life-v2`, Volume 2, behind `volumes`): `jang-fermented-sauces` (jang-making; UNESCO 2024, Korea Heritage Service) and `tteok-through-the-seasons` (seasonal rice cakes; National Folk Museum of Korea, encykorea). They were authored directly as story files (no cluster `.final.json`); every fact carries its quotes. `life-book2.changes.md` lists every checker finding and its outcome, and `life-book2.signoff.md` the third pass.
+
+## Letters book 2 tales (F-CURR-002 row CM-46, 2026-11-04)
+`eongan-letters` and `hangul-name` were authored straight from allowlisted public-institution pages (no cluster research file): each fact cites the page it restates, with the quote and the access date. `letters-book2.changes.md` lists the sources and the author decisions; the multi-agent review appends its findings there and writes `letters-book2.signoff.md` before the two stories are signed.

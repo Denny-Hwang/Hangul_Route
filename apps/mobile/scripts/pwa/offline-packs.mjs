@@ -31,13 +31,16 @@ const withoutComments = (source) => source.replace(/\/\*[\s\S]*?\*\//g, '').repl
 
 /**
  * The tales only a book 2 holds (F-CURR-002 §5.1, row CM-46): every story id of a `volume: 2` book that no book 1
- * holds, read from the text of `src/content/books.ts` (`BOOK_DEFINITIONS`), the way the clip packs read jamo.ts. The
- * app derives the same set from the definitions themselves (`laterStoryIds`, `src/content/later-content.ts`), and a
- * test holds the two equal.
+ * holds and that `isNewTale` keeps, read from the text of `src/content/books.ts` (`BOOK_DEFINITIONS`), the way the clip
+ * packs read jamo.ts. The post-build passes "the story file carries `addedIn`" (a new tale): a shelf story that joined
+ * a book 2 through its read tier (the Letters book 2) stays a shelf story and stays precached. The app derives the same
+ * set from the definitions themselves (`laterStoryIdsOf`, `src/content/books.ts` `VOLUME_TWO_STORY_IDS`), and a test
+ * holds the two equal.
  * @param {string} booksSource the text of apps/mobile/src/content/books.ts
+ * @param {(storyId: string) => boolean} [isNewTale]
  * @returns {string[]} sorted
  */
-export function laterStoryIds(booksSource) {
+export function laterStoryIds(booksSource, isNewTale = () => true) {
   const text = withoutComments(booksSource);
   const at = text.indexOf('BOOK_DEFINITIONS');
   if (at < 0) throw new Error('offline-packs: BOOK_DEFINITIONS not found in books.ts');
@@ -63,7 +66,7 @@ export function laterStoryIds(booksSource) {
   };
   const parsed = books.map(read);
   const first = new Set(parsed.filter((b) => b.volume === 1).flatMap((b) => b.ids));
-  return [...new Set(parsed.filter((b) => b.volume >= 2).flatMap((b) => b.ids))].filter((id) => !first.has(id)).sort();
+  return [...new Set(parsed.filter((b) => b.volume >= 2).flatMap((b) => b.ids))].filter((id) => !first.has(id) && isNewTale(id)).sort();
 }
 
 /**

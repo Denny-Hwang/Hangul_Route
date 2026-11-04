@@ -1,4 +1,5 @@
 import { BOOK_MIN_QUESTS, type Episode, type Quest, type Story } from '@hangul-route/content-schema';
+import { laterStoryIdsOf } from '../logic/offline/offline-packs';
 import { storyTierLevels } from '../logic/story/story-chunk-store';
 import { storyById } from './stories';
 import { storyQuestSkeleton } from './story-skeleton';
@@ -47,6 +48,32 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     hoyaIntroEn: "Let's read stories about Hangul in Korean, one short sentence at a time.",
     storyIds: ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day'],
     pillarTags: ['A1'],
+  },
+  // F-CURR-002 §5.2 S5, row CM-46: the Letters cell's book 2, in the order the records were made. The eight
+  // listen-only Letters stories joined it through their read tiers (row CM-46a); the two new tales (Hangul letters of
+  // Joseon families, and how Hangul got its name) join once their multi-agent review signs them (`buildBook` leaves an
+  // unreviewed story out). Volume 2, so it shows only while `volumes` is on.
+  {
+    id: 'episode:stage5-letters-v2',
+    stage: 'stage5',
+    theme: 'letters',
+    order: 1,
+    titleEn: 'Books, Records and Letters',
+    hoyaIntroEn: "Let's read stories of old books, records and letters in Korean, one short sentence at a time.",
+    storyIds: [
+      'story:tripitaka-koreana',
+      'story:jikji-metal-type',
+      'story:sillok-royal-historians',
+      'story:sillok-mountain-archives',
+      'story:eongan-letters',
+      'story:nanjung-ilgi',
+      'story:seungjeongwon-ilgi-every-day',
+      'story:ilseongnok-daily-reflection',
+      'story:hangul-name',
+      'story:joseon-records-today',
+    ],
+    pillarTags: ['A1'],
+    volume: 2,
   },
   {
     id: 'episode:stage5-life',
@@ -145,9 +172,7 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
  * or on the shelf, is never here.
  */
 export const VOLUME_TWO_STORY_IDS: ReadonlySet<string> = new Set(
-  BOOK_DEFINITIONS.filter((d) => (d.volume ?? 1) >= 2)
-    .flatMap((d) => d.storyIds)
-    .filter((id) => !BOOK_DEFINITIONS.some((d) => (d.volume ?? 1) === 1 && d.storyIds.includes(id))),
+  laterStoryIdsOf(BOOK_DEFINITIONS, (id) => storyById(id)?.addedIn !== undefined),
 );
 
 /** The volume of a review-item cell that is a story (`story:<slug>`): 2 for a book 2 tale, else undefined (§4.3). */

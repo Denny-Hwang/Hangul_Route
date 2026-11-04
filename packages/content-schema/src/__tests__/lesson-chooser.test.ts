@@ -165,7 +165,11 @@ describe('chooserGroups: the groups over CATALOG', () => {
     expect(rowKeys(group(some, 'topics'))).toEqual([TOPIC_IDS[2]]);
   });
 
+  // The row CM-46 tales are in the catalogue as drafts until their review signs them.
+  const READY_STORIES = [...CATALOG.stories].filter((s) => s.status === 'ready').sort((a, b) => a.order - b.order);
+
   it('a draft story is never offered', () => {
+    expect(READY_STORIES.length).toBeLessThan(CATALOG.stories.length);
     const draft: Catalog = { ...CATALOG, stories: CATALOG.stories.map((s, i) => (i === 0 ? { ...s, status: 'draft' } : s)) };
     const rows = group(chooserGroups({ ...options('en'), catalog: draft }), 'stories').rows;
     expect(rows.map((r) => r.key)).not.toContain(CATALOG.stories[0]!.id);

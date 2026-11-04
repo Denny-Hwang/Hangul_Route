@@ -77,6 +77,42 @@ const lesson = (
   teaches: string[] = [],
 ): CatalogQuest => ({ id: `quest:${id}`, episodeId: `episode:${stage}-${theme}`, stage, theme, title, minutes, teaches, kind: 'lesson' });
 
+/**
+ * F-CURR-002 row CM-46: the Letters cell's book 2 (`episode:stage5-letters-v2`, `books.ts`), a later volume of the
+ * cell on the CM-40 path, so it is off the route days and shows only while `volumes` is on. Its quests are the read
+ * quests of the reviewed stories `buildBook` keeps, in book order (`catalog-parity.test.ts` holds them equal); the two
+ * new tales join with their review sign-off.
+ */
+const LETTERS_BOOK2 = 'episode:stage5-letters-v2';
+const book2Quest = (slug: string, title: string, minutes: number): CatalogQuest => ({
+  ...lesson(`story-${slug}-read`, 'stage5', 'letters', title, minutes),
+  episodeId: LETTERS_BOOK2,
+});
+const LETTERS_BOOK2_QUESTS: CatalogQuest[] = [
+  book2Quest('tripitaka-koreana', 'Eighty Thousand Woodblocks', 5),
+  book2Quest('jikji-metal-type', 'Jikji: Printed with Metal Type', 5),
+  book2Quest('sillok-royal-historians', 'Hoya Meets the Royal Historians', 4),
+  book2Quest('sillok-mountain-archives', 'The Annals Hide in the Mountains', 5),
+  book2Quest('nanjung-ilgi', "Admiral Yi's Diary", 4),
+  book2Quest('seungjeongwon-ilgi-every-day', "The Royal Secretariat's Everyday Diary", 5),
+  book2Quest('ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 4),
+  book2Quest('joseon-records-today', 'Old Records, New Discoveries', 4),
+];
+/**
+ * The Letters book 2 as a later volume. Kept apart from hand-volumes.json: its tales are shelf stories that joined
+ * through their read tiers (row CM-46a), so they stay shelf stories and are not in `VOLUME_TWO_STORY_SLUGS`.
+ */
+const LETTERS_BOOK2_VOLUME: CatalogVolumeSource[] = [
+  {
+    cellId: 'episode:stage5-letters',
+    episodeId: LETTERS_BOOK2,
+    volume: 2,
+    title: 'Books, Records and Letters',
+    minutes: LETTERS_BOOK2_QUESTS.reduce((sum, q) => sum + q.minutes, 0),
+    questIds: LETTERS_BOOK2_QUESTS.map((q) => q.id),
+  },
+];
+
 /** The hand-written cells: Stage 1 (TypeScript quests) and the Stage 5 books (`books.ts`). */
 const handCells: CatalogCell[] = [
   cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
@@ -151,6 +187,8 @@ const handLessonQuests: CatalogQuest[] = [
   lesson('story-cheugugi-rain-gauge-read', 'stage5', 'crafts', 'The Bowl That Measured the Rain', 4),
   lesson('story-jagyeongnu-water-clock-read', 'stage5', 'crafts', 'Jang Yeongsil and the Clock That Rang by Itself', 5),
   lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): book 2 of the Letters cell (`books.ts`), on its own episode.
+  ...LETTERS_BOOK2_QUESTS,
   // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Food cell's book 2, on its own Volume 2 episode.
   { ...lesson('story-jang-fermented-sauces-read', 'stage5', 'life', 'Making Jang: Sauces from Soybeans', 5), episodeId: 'episode:stage5-life-v2' },
   { ...lesson('story-tteok-through-the-seasons-read', 'stage5', 'life', 'Rice Cakes Through the Seasons', 5), episodeId: 'episode:stage5-life-v2' },
@@ -218,7 +256,7 @@ export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
   cells: [...handCells, ...generated.cells],
   // F-CURR-002 row CM-40: the Volume 2 of a cell; row CM-46 adds the hand-written Stage 5 books 2.
-  volumes: [...handVolumes, ...generated.volumes],
+  volumes: [...LETTERS_BOOK2_VOLUME, ...handVolumes, ...generated.volumes],
   lessonQuests: [...handLessonQuests, ...generated.quests],
   stories: GENERATED_STORIES.filter((story) => !VOLUME_TWO_STORY_SLUGS.has(story.slug)),
   storyShelf: STORY_SHELF,

@@ -180,10 +180,12 @@ export interface BookVolume {
 }
 
 /**
- * The tales only a book 2 holds (F-CURR-002 §5.1, row CM-46): a story of a volume 2 book that no book 1 holds. The
- * web build reads the same set from books.ts (scripts/pwa/offline-packs.mjs `laterStoryIds`); a test holds them equal.
+ * The tales only a book 2 holds (F-CURR-002 §5.1, row CM-46): a story of a volume 2 book that no book 1 holds and that
+ * `isNewTale` keeps (the app passes "added after the first 24 stories", its `addedIn`: a shelf story that joined a book 2
+ * through its read tier, as the Letters book 2's do, stays a shelf story and stays precached). The web build reads the
+ * same set from books.ts and the story files (scripts/pwa/offline-packs.mjs `laterStoryIds`); a test holds them equal.
  */
-export function laterStoryIdsOf(books: readonly BookVolume[]): string[] {
+export function laterStoryIdsOf(books: readonly BookVolume[], isNewTale: (storyId: string) => boolean = () => true): string[] {
   const first = new Set(books.filter((b) => (b.volume ?? 1) === 1).flatMap((b) => b.storyIds));
-  return [...new Set(books.filter((b) => (b.volume ?? 1) >= 2).flatMap((b) => b.storyIds))].filter((id) => !first.has(id)).sort();
+  return [...new Set(books.filter((b) => (b.volume ?? 1) >= 2).flatMap((b) => b.storyIds))].filter((id) => !first.has(id) && isNewTale(id)).sort();
 }

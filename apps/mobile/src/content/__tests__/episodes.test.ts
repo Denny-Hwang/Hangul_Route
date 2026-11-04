@@ -173,6 +173,7 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
   it('ships the five Stage 5 books (PR 5.6), each claiming its placeholder cell, and the Nature book 2 (row CM-46)', () => {
     expect(bookEpisodes.map((e) => e.id)).toEqual([
       'episode:stage5-letters',
+      'episode:stage5-letters-v2',
       'episode:stage5-life',
       'episode:stage5-rites',
       'episode:stage5-nature',

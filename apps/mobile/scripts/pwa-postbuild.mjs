@@ -221,11 +221,20 @@ const jsDir = join(dist, '_expo', 'static', 'js', 'web');
 const bundles = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => ({ url: `${WEB_JS_DIR}/${f}`, text: readFileSync(join(jsDir, f), 'utf8') }))
   : [];
+// The new tales (a story file with `addedIn`): a book 2 tale that no book 1 holds is later only if it is one of these.
+const storiesDir = join(repo, 'content', 'stories');
+const newTales = new Set(
+  readdirSync(storiesDir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(readFileSync(join(storiesDir, f), 'utf8')))
+    .filter((s) => s.addedIn !== undefined)
+    .map((s) => s.id),
+);
 // Row CM-5B: the later chunks, out of the precache, and the index Save for offline reads (written before the glob, so it is precached).
 const later = laterChunks({
   lessons: lessonManifest,
   stories: storyManifest,
-  laterStories: laterStoryIds(readFileSync(join(here, '..', 'src', 'content', 'books.ts'), 'utf8')),
+  laterStories: laterStoryIds(readFileSync(join(here, '..', 'src', 'content', 'books.ts'), 'utf8'), (id) => newTales.has(id)),
 });
 const laterBuilt = laterBundles(later, bundles);
 const offlinePacks = offlinePacksIndex({

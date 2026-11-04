@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BOOK_DEFINITIONS } from '../../../content/books';
+import { BOOK_DEFINITIONS, VOLUME_TWO_STORY_IDS } from '../../../content/books';
 import {
   LATER_CACHE,
   availableChunks,
@@ -141,11 +141,33 @@ describe('later content ids', () => {
         { storyIds: ['story:b', 'story:c'], volume: 2 },
       ]),
     ).toEqual(['story:c']);
+    // A shelf story that joined a book 2 through its read tier (the Letters book 2, row CM-46) is not a new tale.
+    expect(
+      laterStoryIdsOf(
+        [
+          { storyIds: ['story:a'] },
+          { storyIds: ['story:shelf', 'story:new'], volume: 2 },
+        ],
+        (id) => id === 'story:new',
+      ),
+    ).toEqual(['story:new']);
   });
 
   it('the app and the web build read the same tales from the shipped books.ts, and the same cache and version', () => {
     const source = readFileSync(join(__dirname, '..', '..', '..', 'content', 'books.ts'), 'utf8');
     expect(laterStoryIds(source)).toEqual(laterStoryIdsOf(BOOK_DEFINITIONS));
+    // With the new-tale rule both apply (the post-build reads `addedIn` from the story files): the later tales are the
+    // app's Volume 2 stories, and none of the Letters book 2's shelf stories is one.
+    const storiesDir = join(__dirname, '..', '..', '..', '..', '..', '..', 'content', 'stories');
+    const newTales = new Set(
+      readdirSync(storiesDir)
+        .filter((f) => f.endsWith('.json'))
+        .map((f) => JSON.parse(readFileSync(join(storiesDir, f), 'utf8')) as { id: string; addedIn?: number })
+        .filter((s) => s.addedIn !== undefined)
+        .map((s) => s.id),
+    );
+    expect(laterStoryIds(source, (id: string) => newTales.has(id))).toEqual([...VOLUME_TWO_STORY_IDS].sort());
+    expect(VOLUME_TWO_STORY_IDS.has('story:tripitaka-koreana')).toBe(false);
     expect(BUILD_LATER_CACHE).toBe(LATER_CACHE);
     expect(BUILD_VERSION).toBe(1);
   });
