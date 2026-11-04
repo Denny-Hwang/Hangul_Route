@@ -47,11 +47,15 @@
 .gx-chip-room { background: var(--colors-surface-sunken); }
 /* the parent child card's status: amber fill (the family's action), but a span, no border; the strip owns the button */
 .gx-chip-need { background: var(--colors-feedback-nudgeLight); }
-/* action chip: a button, at least touchTarget.min tall */
-.gx-chip-action { min-height: var(--touch-min); padding: var(--spacing-sm) var(--spacing-lg); border: var(--border-width-base) solid var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); font-weight: var(--weight-bold); cursor: pointer; font-size: var(--size-bodySm); }
+/* action chip: a button drawn at pill height (so the name row stays short and the level pill keeps its place) whose hit
+   area is still touchTarget.min tall: the ::after box is 64 px high, centred on the chip, and takes no layout space */
+.gx-chip-action { position: relative; padding: var(--spacing-xs) var(--spacing-md); border: var(--border-width-base) solid var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); font-weight: var(--weight-bold); cursor: pointer; font-size: var(--size-bodySm); }
+.gx-chip-action::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: var(--touch-min); transform: translateY(-50%); }
 .gx-chip-action::before { content: ""; width: var(--status-dot); height: var(--status-dot); border-radius: var(--radii-circle); background: var(--colors-feedback-nudge); }
 .card-row { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
 .card-row .btn { flex: 1 1 8rem; }
+/* wide screens: inline answers keep a button's size instead of stretching across the card */
+@media (min-width: 45em) { .card-row .btn { max-width: 16rem; } }
 
 /* ---------------------------------------------------------------- sheet and dialog */
 .scrim { position: fixed; inset: 0; background: var(--colors-surface-overlay); display: flex; align-items: flex-end; justify-content: center; z-index: var(--z-raised); }
@@ -92,6 +96,13 @@
 .squares span.on { background: var(--colors-brand-secondary); border-color: var(--colors-brand-secondary); }
 .child-grid { display: grid; grid-template-columns: 1fr; gap: var(--spacing-md); }
 @media (min-width: 70em) { .child-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ---------------------------------------------------------------- phone nav: one row that scrolls inside itself (app-shell D3)
+   with an inline-end edge fade, so a cut-off last tab ("Billing") reads as "more this way" (spec section 9 P6) */
+@media (max-width: 44.99em) {
+  .frame-nav { position: relative; }
+  .frame-nav::after { content: ""; position: absolute; top: 0; bottom: 0; right: var(--gutter-compact); width: var(--spacing-xxl); background: linear-gradient(to left, var(--colors-surface-paper), transparent); pointer-events: none; }
+}
 
 /* ---------------------------------------------------------------- GX-6 button system: no short label renders as a circle */
 .btn { min-width: var(--touch-child); }
