@@ -17,7 +17,8 @@ import { Button, Muted, buttonBase, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem, TransferLearnerSideView } from '@/lib/console/api';
-import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled, routeBlendEnabled } from '@/lib/console/config';
+import { classHasPracticeLine, classLineWithMeeting, familyPlanSave, familyPlanStep, meetingOf, type FamilyPlanStep } from '@/lib/console/family-blend';
 import { spaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
 import { openAppWithJoinCode, openLearnerApp } from '@/lib/console/join-handoff';
@@ -27,7 +28,6 @@ import {
   childWeek,
   childWeekLines,
   classLine,
-  classLineWords,
   familyActionLinks,
   familyLectureCard,
   firstRowEnd,
@@ -87,6 +87,9 @@ import { headRem, rem } from '@/lib/console/rem';
  * (GX-11, P3), while the roster loads, or with no learner card, at the end of the family's main column, after the last
  * child. With no family, after the "no family yet" panel. Nothing while `lectureModeEnabled()` is off.
  */
+
+/** The family roles that write its plans (`plan.write`): the owner and a caregiver. */
+const planWriter = (role: SpaceListItem['role']): boolean => role === 'owner' || role === 'caregiver';
 
 /** Background reads of the family list that may fail in a row before they stop (a signed-out answer stops them at once). */
 const QUIET_FAILURES_BEFORE_STOP = 3;
@@ -183,6 +186,9 @@ export default function ParentHomePage(): JSX.Element {
   // The free-lessons line (F-ENT-003 section 3.9.2): each family's plans and the account's entitlements, read only with the switch on.
   const [plans, setPlans] = useState<Record<string, PlanView[]>>({});
   const [entitlements, setEntitlements] = useState<EntitlementView[] | null>(null);
+  // BL-9: the child whose family-plan Pause or Resume is saving, and the one whose save failed (one at a time).
+  const [planBusy, setPlanBusy] = useState<string | null>(null);
+  const [planFailed, setPlanFailed] = useState<string | null>(null);
   const homeView = items ? parentHomeView(items) : null;
   // [TV] The class-scope update and the one-time move notices (AMENDMENTS-TEACHER-VISIBILITY-TRANSFER TV-D5, TV-D10), and
   // GX-4's Needs you: each live family's re-links, class moves, class-scope state and notices (absent until first read).
@@ -216,7 +222,9 @@ export default function ParentHomePage(): JSX.Element {
       const read = names.begin();
       if (!quiet) setRosters((prev) => ({ ...prev, [spaceId]: { state: 'loading' } }));
       // Plans only for a family this account owns: the line is owner only, so a co-caregiver's family needs no plan read.
-      const readPlans = contentGatingEnabled() && role === 'owner';
+      // With class days and practice days on (AMENDMENTS-ROUTE-CLASS-BLEND BL-9), every account that writes the family's
+      // plans reads them too, for Pause and Resume of the family weekly plan.
+      const readPlans = (contentGatingEnabled() && role === 'owner') || (routeBlendEnabled() && planWriter(role));
       const [result, planList] = await Promise.all([api.roster(spaceId).catch(() => null), readPlans ? api.listPlans(spaceId).catch(() => null) : null]);
       if (call !== rosterSeq.current[spaceId]) return;
       if (planList?.ok) setPlans((prev) => ({ ...prev, [spaceId]: planList.data }));
@@ -442,6 +450,28 @@ export default function ParentHomePage(): JSX.Element {
     );
   };
 
+  /**
+   * Pause or Resume the family weekly plan for one child (AMENDMENTS-ROUTE-CLASS-BLEND BL-OD-6, row BL-9): each live
+   * plan of the step saved with the child left out or put back, then the family's plans read again.
+   */
+  const changeFamilyPlan = async (familyId: string, learnerId: string, familyLearnerIds: string[], step: FamilyPlanStep): Promise<void> => {
+    if (!api || planBusy) return;
+    setPlanBusy(learnerId);
+    setPlanFailed(null);
+    let ok = true;
+    for (const plan of step.plans) {
+      const saved = await api.savePlan(familyId, familyPlanSave(plan, learnerId, familyLearnerIds, step.kind)).catch(() => null);
+      if (!saved?.ok) {
+        ok = false;
+        break;
+      }
+    }
+    const fresh = await api.listPlans(familyId).catch(() => null);
+    if (fresh?.ok) setPlans((prev) => ({ ...prev, [familyId]: fresh.data }));
+    setPlanBusy(null);
+    if (!ok) setPlanFailed(learnerId);
+  };
+
   const card = (family: SpaceListItem, learner: RosterLearner): JSX.Element => {
     const familyId = family.space.id;
     const actions = learnerCardActions(familyId, learner.id, flags);
@@ -463,6 +493,13 @@ export default function ParentHomePage(): JSX.Element {
     const chip = status ? childChipWords(status, locale) : null;
     const line = familyAsks ? classLine(learner.id, familyAsks.transfers) : null;
     const notice = familyAsks && api ? noticeFor(learner.id, familyAsks.notices) : null;
+    // BL-9 (section 11, BL-OD-6): how the child's one class meets, on the class line, and Pause / Resume of the family
+    // weekly plan while that class has practice days. Off with the flag; never on an archived family.
+    const blendOn = routeBlendEnabled();
+    const meeting = blendOn && familyAsks ? meetingOf(learner.id, familyAsks.transfers) : null;
+    const familyRoster = rosters[familyId];
+    const familyLearnerIds = familyRoster?.state === 'ready' ? familyRoster.roster.learners.map((l) => l.id) : [];
+    const planStep = !isArchivedFamily(family) && api ? familyPlanStep(learner.id, meeting, plans[familyId], planWriter(family.role)) : null;
     return (
       <article key={learner.id} data-testid="learner-card" aria-label={learner.displayName} style={cardStyle}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
@@ -472,7 +509,7 @@ export default function ParentHomePage(): JSX.Element {
         </div>
         {line ? (
           <div style={facts} data-testid="child-class-line">
-            {classLineWords(line, locale).map((text) => (
+            {classLineWithMeeting(line, meeting, blendOn, locale).map((text) => (
               <span key={text}>{text}</span>
             ))}
           </div>
@@ -492,6 +529,22 @@ export default function ParentHomePage(): JSX.Element {
           <p data-testid="child-next" style={{ ...facts, margin: 0, color: colors.text.primary }}>
             {weekWords.next}
           </p>
+        ) : null}
+        {planStep && meeting ? (
+          <div style={{ ...facts, gap: spacing.xs }} data-testid="child-family-plan">
+            <span>{classHasPracticeLine(learner.displayName, meeting, locale)}</span>
+            <button
+              type="button"
+              style={{ ...textLink, alignSelf: 'flex-start', paddingLeft: 0, fontSize: rem(typography.size.bodySm) }}
+              data-testid={planStep.kind === 'pause' ? 'family-plan-pause' : 'family-plan-resume'}
+              disabled={planBusy !== null}
+              aria-busy={planBusy === learner.id}
+              onClick={() => void changeFamilyPlan(familyId, learner.id, familyLearnerIds, planStep)}
+            >
+              {planStep.kind === 'pause' ? c.curriculum.blend.family.pause : c.curriculum.blend.family.resume}
+            </button>
+            {planFailed === learner.id ? <span role="status">{c.curriculum.blend.family.failed}</span> : null}
+          </div>
         ) : null}
         <FreeLessonsLine line={freeLine} />
         {notice && api ? (
