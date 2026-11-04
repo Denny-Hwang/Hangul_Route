@@ -13,7 +13,7 @@
       "scenes.s4.narration": "Los dos están tan felices juntos que olvidan su trabajo. El Rey del Cielo se enoja. Los manda a vivir separados, uno a cada lado de la Vía Láctea.",
       "scenes.s5.narration": "Ahora solo pueden estar juntos un día al año, en Chilseok. Esperan y esperan ese día.",
       "scenes.s6.narration": "Pero ni siquiera en Chilseok pueden cruzar la ancha Vía Láctea. Entonces los cuervos y las urracas de la tierra suben volando al cielo. Juntan sus cabezas y forman un puente.",
-      "scenes.s7.narration": "El puente se llama Ojakgyo, el puente de los cuervos y las urracas. ¡Gyeonu y Jingnyeo por fin se encuentran! Se dice que después de Chilseok los pájaros vuelven con la cabeza pelada de tanto sostener el puente.",
+      "scenes.s7.narration": "El puente se llama Ojakgyo, el puente de los cuervos y las urracas. ¡Gyeonu y Jingnyeo por fin se encuentran! Se dice que después de Chilseok los pájaros vuelven con la cabeza pelada de tanto formar el puente.",
       "scenes.s8.narration": "Se dice que la lluvia de Chilseok son sus lágrimas de alegría, y la lluvia de la mañana siguiente, sus lágrimas de despedida. Hacia Chilseok, mira el cielo de noche: dos estrellas brillan en lo alto, una a cada lado de la Vía Láctea.",
       "scenes.s1.caption": "Un cuento antiguo de dos estrellas",
       "scenes.s2.caption": "Jingnyeo, la tejedora",
@@ -98,14 +98,17 @@
       "facts.f7.claim": "La lluvia que cae en Chilseok se llama chilseogu; se dice que son las lágrimas que derraman Gyeonu y Jingnyeo porque están muy felices, y que la lluvia de la mañana siguiente son sus lágrimas de despedida.",
       "facts.f8.claim": "Hacia Chilseok, la estrella de Jingnyeo y la estrella de Gyeonu se ven en lo alto del cielo, una a cada lado de la Vía Láctea, como si se encontraran una vez al año; lo más probable es que el cuento naciera de observar estas estrellas."
     },
+    "quest:story-gyeonu-jingnyeo-listen": {
+      "title": "Gyeonu y Jingnyeo: el puente de pájaros"
+    },
     "story:daeboreum-full-moon": {
       "title": "Daeboreum: la primera luna llena",
       "summary": "Hoya pasa Daeboreum, la primera luna llena del año lunar: parte frutos secos duros llamados bureom al amanecer, come arroz de cinco granos, juega a vender el calor, saluda a la luna con un deseo y mira arder la casa de la luna desde una distancia segura.",
       "hoyaIntro": "¡Ya llegó la primera luna llena del año! Probemos juntos las costumbres de Daeboreum.",
       "hoyaOutro": "¡Ahora sabes cómo la gente recibe la primera luna llena del año!",
       "scenes.s1.narration": "¡Mira esa luna grande y redonda! Daeboreum es la fiesta de la primera luna llena del año lunar, el día quince del primer mes. ¡Hoya quiere probar todas las costumbres!",
-      "scenes.s2.narration": "Muy temprano por la mañana, la gente parte con los dientes frutos secos duros: cacahuetes, nueces, piñones y castañas. Estos frutos se llaman bureom.",
-      "scenes.s3.narration": "¡Crac! Se dice que partir bureom aleja los granos de la piel todo el año. Hoya prueba una nuez. ¡Es durísima!",
+      "scenes.s2.narration": "Muy temprano por la mañana, la gente parte con los dientes frutos secos duros: maníes, nueces, piñones y castañas. Estos frutos se llaman bureom.",
+      "scenes.s3.narration": "¡Crac! Se dice que partir bureom aleja los granos de la piel todo el año. Hoya da golpecitos a una nuez. ¡Es durísima! Un adulto se la parte.",
       "scenes.s4.narration": "Luego viene el ogokbap, arroz cocido con cinco granos: arroz glutinoso mezclado con mijo, sorgo glutinoso, frijoles negros y frijoles rojos.",
       "scenes.s5.narration": "Esa mañana, la gente juega a deowipalgi, vender el calor. Si alguien dice tu nombre y respondes, te dice: «¡Cómprame el calor!». Se dice que quien lo vende no sufrirá el calor ese verano. ¡Por eso nadie responde!",
       "scenes.s6.narration": "Por la tarde, la gente sale a una colina o a un campo y espera a que salga la luna. Esto es dalmaji, recibir a la luna. Cuando sale la luna llena, piden un deseo.",
@@ -121,7 +124,7 @@
       "scenes.s8.caption": "Un año nuevo luminoso",
       "tiers.read.scenes.s1.narration": "{kw:daeboreum} es la fiesta de la primera luna llena del año lunar.",
       "tiers.read.scenes.s2.narration": "Por la mañana, la gente parte frutos secos duros llamados {kw:bureom}.",
-      "tiers.read.scenes.s3.narration": "Hoya prueba una {kw:hodu}. ¡Es durísima!",
+      "tiers.read.scenes.s3.narration": "Hoya da golpecitos a una {kw:hodu}. ¡Es durísima!",
       "tiers.read.scenes.s4.narration": "Luego viene el {kw:ogokbap}, arroz cocido con cinco granos.",
       "tiers.read.scenes.s6.narration": "Por la tarde, la gente espera la {kw:boreumdal} en una colina.",
       "tiers.read.scenes.s7.narration": "Miran la luna y piden un {kw:sowon}.",
@@ -147,7 +150,7 @@
       "checks.c1.prompt": "¿Qué son los bureom?",
       "checks.c2.prompt": "¿Con qué se hace el ogokbap?",
       "checks.c3.prompt": "¿Qué hace la gente cuando sale la luna llena?",
-      "checks.c1.explain": "Los bureom son frutos secos duros, como cacahuetes y nueces, que la gente parte la mañana de Daeboreum.",
+      "checks.c1.explain": "Los bureom son frutos secos duros, como maníes y nueces, que la gente parte la mañana de Daeboreum.",
       "checks.c2.explain": "El ogokbap es arroz cocido con cinco granos: arroz glutinoso, mijo, sorgo glutinoso, frijoles negros y frijoles rojos.",
       "checks.c3.explain": "La gente recibe a la luna que sale y pide un deseo.",
       "checks.c1.options.a": "Pasteles de arroz",
@@ -181,12 +184,15 @@
       "checks.r3.options.c": "A medianoche",
       "checks.r3.options.d": "Después de que se pone la luna",
       "facts.f1.claim": "Daeboreum es la fiesta del día quince del primer mes lunar, la primera luna llena del año. Al amanecer la gente bebe gwibalgisul, parte bureom con los dientes y come yakbap, ogokbap y otras comidas.",
-      "facts.f2.claim": "Los bureom son los frutos secos duros, como cacahuetes, nueces, piñones, castañas y nueces de ginkgo, que la gente parte con los dientes al amanecer de Daeboreum. Se dice que partirlos aleja los granos de la piel todo el año.",
+      "facts.f2.claim": "Los bureom son los frutos secos duros, como maníes, nueces, piñones, castañas y nueces de ginkgo, que la gente parte con los dientes al amanecer de Daeboreum. Se dice que partirlos aleja los granos de la piel todo el año.",
       "facts.f3.claim": "El ogokbap es arroz cocido con cinco granos: arroz glutinoso mezclado con mijo, sorgo glutinoso, frijoles negros y frijoles rojos. Suele prepararse y comerse en la primera luna llena del año lunar.",
       "facts.f4.claim": "Deowipalgi, vender el calor, es una costumbre de Daeboreum. Esa mañana la gente no responde cuando alguien dice su nombre; si responde, quien llamó dice «¡Mi calor!» o «¡Cómprame el calor!» y le vende el calor. Se dice que así quien lo vende no sufrirá el calor ese verano.",
       "facts.f5.claim": "Dalmaji, recibir a la luna, es salir a una colina o a un campo la tarde de Daeboreum para esperar a que salga la luna. La gente también mira la luna y pide un deseo.",
       "facts.f6.claim": "Daljip-taeugi es una costumbre de Daeboreum: cuando sale la luna, la gente prende fuego a un daljip, un montón de ramas de pino y otra madera. En el pueblo de Songcheon, el daljip es un cono de cañas enteras de bambú envuelto en enredaderas y relleno de paja y ramas de pino.",
       "facts.f7.claim": "Se dice que solo si el daljip arde bien el pueblo tendrá paz y buena cosecha. Daljip-taeugi guarda la esperanza de un año nuevo luminoso, abundante y sin enfermedades ni preocupaciones."
+    },
+    "quest:story-daeboreum-full-moon-listen": {
+      "title": "Daeboreum: la primera luna llena"
     }
   }
 }

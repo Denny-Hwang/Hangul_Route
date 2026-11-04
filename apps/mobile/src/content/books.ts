@@ -113,7 +113,7 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     pillarTags: ['B5'],
   },
   // F-CURR-002 §5.4 S5, row CM-46: the Holidays cell's book 2. Daeboreum (the first full moon) and the tale of Gyeonu
-  // and Jiknyeo (Chilseok) are the two new tales, in the order of the lunar year; the royal birthday record joined through
+  // and Jingnyeo (Chilseok) are the two new tales, in the order of the lunar year; the royal birthday record joined through
   // its read tier (row CM-46a). The two tales join once their multi-agent review signs them (`buildBook` leaves an
   // unreviewed story out), so until then the book has one quest and is not built. Volume 2: it shows only while
   // `volumes` is on.

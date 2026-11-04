@@ -223,7 +223,7 @@
         },
         {
           "id": "s3",
-          "narrationEn": "Crack! People say that cracking bureom keeps skin boils away all year. Hoya tries a walnut. It is very hard!",
+          "narrationEn": "Crack! People say that cracking bureom keeps skin boils away all year. Hoya taps a walnut. It is very hard! A grown-up cracks it for him.",
           "captionEn": "A very hard walnut",
           "keyword": {
             "id": "hodu",
@@ -697,7 +697,7 @@
         },
         {
           "id": "s3",
-          "narrationEn": "Hoya tries a {kw:hodu}. It is very hard!",
+          "narrationEn": "Hoya taps a {kw:hodu}. It is very hard!",
           "captionEn": "A very hard walnut",
           "keyword": {
             "id": "ttakttakhaeyo",
