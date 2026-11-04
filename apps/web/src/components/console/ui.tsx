@@ -59,18 +59,26 @@ export const selectBase: CSSProperties = {
 };
 
 /**
+ * `dangerText` (AMENDMENTS-GROWNUP-UX GX-10, T11 and P7): the quieter look of a destructive action that sits beside a
+ * main one on a row (Remove beside Move): the same size and box as every console button, no fill and no border, the
+ * label underlined in the danger colour. It always runs behind the shipped confirm.
+ *
  * `nudge`: a secondary action that waits for the grown-up (a count of requests to answer): the amber fill and border of
  * `Notice tone="nudge"`, text `text.primary` (AMENDMENTS-GROWNUP-UX section 4; never the danger colour).
  */
-export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel, describedBy }: { children: ReactNode; tone?: 'primary' | 'secondary' | 'danger' | 'nudge'; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string; describedBy?: string }): JSX.Element {
+export type ButtonTone = 'primary' | 'secondary' | 'danger' | 'dangerText' | 'nudge';
+
+export function Button({ children, tone = 'secondary', disabled, onClick, type = 'button', testId, ariaLabel, describedBy }: { children: ReactNode; tone?: ButtonTone; disabled?: boolean; onClick?: () => void; type?: 'button' | 'submit'; testId?: string; ariaLabel?: string; describedBy?: string }): JSX.Element {
   const toneStyle: CSSProperties =
     tone === 'primary'
       ? { backgroundColor: colors.brand.primary, color: colors.text.onPrimary, borderColor: colors.brand.primary }
       : tone === 'danger'
         ? { color: colors.feedback.danger, borderColor: colors.feedback.danger }
-        : tone === 'nudge'
-          ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` }
-          : {};
+        : tone === 'dangerText'
+          ? { color: colors.feedback.danger, borderColor: 'transparent', backgroundColor: 'transparent', textDecoration: 'underline' }
+          : tone === 'nudge'
+            ? { backgroundColor: colors.feedback.nudgeLight, border: `${borderWidth.base}px solid ${colors.feedback.nudge}` }
+            : {};
   return (
     <button type={type} disabled={disabled} onClick={onClick} data-testid={testId} aria-label={ariaLabel} aria-describedby={describedBy} style={{ ...buttonBase, ...toneStyle, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}

@@ -1080,6 +1080,10 @@ export const consoleMsgs = {
       n === null
         ? `이미 반 ${cap}개에 들어가 있는 학생이 있어요. 보관을 풀기 전에 그 학생을 다른 반으로 옮기거나 빼 주세요.`
         : `학생 ${n}명이 이미 반 ${cap}개에 들어가 있어요. 보관을 풀기 전에 다른 반으로 옮기거나 빼 주세요.`,
+    /** AMENDMENTS-GROWNUP-UX GX-10 (T11, P7). */
+    moveOpen: '이미 진행 중인 이동이 있어요.',
+    inviteGrownUp: { cta: '다른 어른 초대하기' },
+    inviteGrownUpLine: (code: string) => `초대받은 어른이 로그인한 뒤 이 코드를 입력하면 돼요: ${code}`,
   },
   school: {
     title: '학교',

@@ -1,4 +1,6 @@
 import type { StageKey } from '@hangul-route/content-schema';
+import type { UiLocale } from '@hangul-route/i18n';
+import { CATALOGUE_TITLES } from '@/data/catalogue-titles.generated';
 
 /**
  * The seven stage titles, which are content (F-I18N-001 section 3.6: like a quest title, a stage
@@ -17,4 +19,15 @@ export const STAGE_TITLES: Readonly<Record<StageKey, string>> = {
   stage7: 'Self-expression',
 };
 
-export const stageTitle = (stage: StageKey): string => STAGE_TITLES[stage];
+/**
+ * The stage title getter for one console locale, the `stageTitle` every console view model takes
+ * (AMENDMENTS-GROWNUP-UX section 10.3, GX-9). The es and ko titles are the ones the learner app already
+ * shows: the content overlays' `stage:stageN` title (`content/i18n/<locale>/stages.json`), kept in the
+ * generated `CATALOGUE_TITLES` (`scripts/build-lecture-catalogue.mjs`), so a grown-up's console and a
+ * child's app name a stage the same way ("Etapa 4 · Diálogo"). A locale with no overlay title falls back to
+ * the English title. No dictionary key and no new translation.
+ */
+export const stageTitleIn =
+  (locale: UiLocale) =>
+  (stage: StageKey): string =>
+    (locale === 'en' ? undefined : CATALOGUE_TITLES[locale]?.[`stage:${stage}`]) ?? STAGE_TITLES[stage];
