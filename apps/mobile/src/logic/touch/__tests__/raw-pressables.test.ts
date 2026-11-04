@@ -10,7 +10,7 @@ import { attributeValue, openingTagEnd, rawPressableRatchet, rawPressables, type
  * `GuardedPressable`, which also commits on the browser's click) outside a `TapBoard`. Every one there is either a control on CONTROLS (a speaker, a reveal, a setting, a way out:
  * none of them answers) or an answer on PENDING, named with the row that moves it onto a board. A new raw Pressable
  * fails until it is a `TapTarget` in a board or, if it answers nothing, a listed control; a listed line that is no
- * longer found fails too, so PENDING only shrinks as KT-3, KT-4b, KT-5 and KT-6 land.
+ * longer found fails too, so PENDING only shrinks as KT-5 and KT-6 land (KT-3 and KT-4b have).
  */
 const srcDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const FOLDERS = ['screens/minigames', 'screens/quest', 'screens/placement', 'screens/vocab'] as const;
@@ -45,11 +45,7 @@ const CONTROLS: Readonly<Record<string, readonly string[]>> = {
 };
 
 /** Answers still on a raw Pressable, each with the AMENDMENTS-TOUCH row (section 12) that puts it on a board. */
-const PENDING: Readonly<Record<string, ReadonlyArray<readonly [name: string, row: 'KT-4b' | 'KT-5' | 'KT-6']>>> = {
-  'screens/minigames/CardMatchGame.tsx': [
-    ['`card-match-ko-${p.idx}`', 'KT-4b'],
-    ['`card-match-en-${p.idx}`', 'KT-4b'],
-  ],
+const PENDING: Readonly<Record<string, ReadonlyArray<readonly [name: string, row: 'KT-5' | 'KT-6']>>> = {
   'screens/minigames/SentenceBuilderGame.tsx': [['`sentence-builder-tile-${tile.id}`', 'KT-5']],
   'screens/placement/ItemScreen.tsx': [['placement-not-sure', 'KT-5']],
   'screens/minigames/HiddenHeritageGame.tsx': [['`hh-spot-${view.id}`', 'KT-6']],

@@ -1,4 +1,5 @@
-import { touchTarget } from '@hangul-route/design-system';
+import { TapLockProvider, touchTarget, useTapLock } from '@hangul-route/design-system';
+import type { ReactElement } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MinigameScope } from '../../../logic/minigame-config';
@@ -247,5 +248,69 @@ describe('Card Match: targets and timers', () => {
     await tap(r2, 'en', MORAE);
     await unmount(r2);
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+/** The app-level lock as the last render read it (a render that changes nothing keeps the last value). */
+const lockSeen: boolean[] = [false];
+function LockProbe(): ReactElement | null {
+  lockSeen.push(useTapLock().locked);
+  return null;
+}
+const inside = (node: ReactTestInstance, ancestor: ReactTestInstance): boolean => {
+  for (let n: ReactTestInstance | null = node; n !== null; n = n.parent) if (n === ancestor) return true;
+  return false;
+};
+
+describe('Card Match on two target boards (AMENDMENTS-TOUCH 6.2, row KT-4b)', () => {
+  it('the Korean cards are on one board and the meanings on another, every card a pinch-zoom target', async () => {
+    const r = await play();
+    const koBoard = byTestId(r.root, 'card-match-ko-board').find((n) => typeof n.type === 'string');
+    const enBoard = byTestId(r.root, 'card-match-en-board').find((n) => typeof n.type === 'string');
+    expect(koBoard && enBoard).toBeTruthy();
+    for (let i = 0; i < PAIRS.length; i += 1) {
+      const ko = card(r, 'ko', i);
+      const en = card(r, 'en', i);
+      expect(inside(ko, koBoard!) && !inside(ko, enBoard!), `ko-${i}`).toBe(true);
+      expect(inside(en, enBoard!) && !inside(en, koBoard!), `en-${i}`).toBe(true);
+      // A target inside a board on the web never becomes a browser pan (KT-D3).
+      expect(JSON.stringify(ko.props.style)).toMatch(/pinch-zoom|"none"/);
+      expect(JSON.stringify(en.props.style)).toMatch(/pinch-zoom|"none"/);
+    }
+  });
+
+  it('a bounce on a Korean card inside its target lock changes nothing: the pick stays and no word replays twice', async () => {
+    const r = await play();
+    const node = card(r, 'ko', GEUNE);
+    const click = async (): Promise<void> => {
+      const currentTarget = { getAttribute: (name: string): unknown => node.props[name] ?? null, tagName: String(node.type) };
+      await act(async () => {
+        (node.props.onClick as (e: unknown) => void)({ altKey: false, currentTarget, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined });
+      });
+    };
+    await tap(r, 'ko', GEUNE);
+    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
+    await wait(150);
+    await click();
+    expect(selected(r, 'ko', GEUNE)).toBe(true);
+    expect(audio.playPrompt).toHaveBeenCalledTimes(1);
+    expect(run.answers).toEqual([]);
+  });
+
+  it('the pair that ends the round locks the app clock (KT-D5); an earlier pair does not', async () => {
+    const r = await render(
+      <TapLockProvider>
+        <CardMatchGame scope={SCOPE} onFinish={() => void (finishes += 1)} />
+        <LockProbe />
+      </TapLockProvider>,
+    );
+    mounted.push(r);
+    for (let i = 0; i < PAIRS.length; i += 1) {
+      await tap(r, 'ko', i);
+      await tap(r, 'en', i);
+      expect(lockSeen.at(-1), `pair ${i + 1}`).toBe(i === PAIRS.length - 1);
+    }
+    await wait(450);
+    expect(lockSeen.at(-1)).toBe(false);
   });
 });

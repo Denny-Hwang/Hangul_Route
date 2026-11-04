@@ -11,6 +11,8 @@ import { choiceCardStyle } from './style';
 import type { ChoiceCardProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
+const STRETCH = { alignSelf: 'stretch' } as const;
+
 /**
  * ChoiceCard — the one option card for "pick one" questions (F-STORY-003 §3.4):
  * a text option, a Korean option (drawn with `KoreanText`) or a picture option.
@@ -38,6 +40,7 @@ export function ChoiceCard({
   accessibilityLabel,
   testID,
   pressableRef,
+  targetStyle,
 }: ChoiceCardProps): ReactElement {
   const look = choiceCardStyle(state, { wrongMark });
   const bodySize = useTypeScale().size.body;
@@ -117,7 +120,8 @@ export function ChoiceCard({
       inactive={!look.interactive || onPress === undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: look.disabled, selected: look.selected }}
-      style={{ alignSelf: 'stretch' }}
+      // A frame the caller draws around the card (Pic-Word's selection ring) goes on the hit area, so it is no dead ring.
+      style={targetStyle === undefined ? STRETCH : [STRETCH, targetStyle]}
     >
       {({ pressed }) => content(pressed && look.interactive && onPress !== undefined ? press : null)}
     </TapTarget>

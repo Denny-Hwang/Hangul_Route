@@ -63,6 +63,11 @@ async function playPractice(page: Page, misses: number): Promise<void> {
         // A wrong word first: a first-try miss on this picture's pair, which stays selected for the right word.
         missed += 1;
         await page.getByTestId(`pic-word-word-${pairs[(i + 1) % pairs.length]}`).click();
+        await page.getByTestId(`pic-word-word-${id}`).click();
+        // That wrong word is the next pair's word: wait past its 400 ms tile lock (AMENDMENTS-TOUCH T8, row KT-4b), as a
+        // person always does.
+        await page.waitForTimeout(700);
+        continue;
       }
       await page.getByTestId(`pic-word-word-${id}`).click();
     }

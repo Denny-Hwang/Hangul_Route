@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild } from './helpers';
+import { onboardChild, openPlaygroundWordsQuest } from './helpers';
 import {
   AUDIT_SCREENS,
   AUDIT_VIEWPORTS,
+  GAME_AUDIT_BOARDS,
+  GAME_AUDIT_VIEWPORT,
   isOffender,
   measureTargets,
   occurrenceKeys,
@@ -163,6 +165,25 @@ test.describe('touch targets in the PWA overlays', () => {
     await page.goto('/');
     await expect(page.getByRole('button', { name: 'Keep sideways' })).toBeVisible();
     expect(await smallIn(page, 'portrait-guard'), 'portrait guard').toEqual([]);
+  });
+});
+
+// AMENDMENTS-TOUCH KT-D8 (section 11.2): a game's answer boards at 320 x 640 with the largest text, with no allowlist.
+test.describe(`game answers at ${viewportKey(GAME_AUDIT_VIEWPORT)} with the largest text (AMENDMENTS-TOUCH KT-D8)`, () => {
+  test.use({ viewport: GAME_AUDIT_VIEWPORT, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
+
+  test(`Card Match: every card in both columns is at least ${TARGET_MIN} x ${TARGET_MIN} (row KT-4b)`, async ({ page }) => {
+    await openPlaygroundWordsQuest(page, { largest: true });
+    await page.getByRole('button', { name: 'Skip for now' }).click();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    const boards = GAME_AUDIT_BOARDS['Card Match'] ?? [];
+    for (const board of boards) await expect(page.getByTestId(board)).toBeVisible();
+    for (const board of boards) {
+      const all = await page.evaluate(measureTargets, board);
+      expect(all.length, `${board} has cards`).toBeGreaterThanOrEqual(3);
+      const small = all.filter((t) => isOffender(t)).map((t) => `${t.role} | ${t.name} (${Math.round(t.width)}x${Math.round(t.height)})`);
+      expect(small, `${board}: cards under ${TARGET_MIN}`).toEqual([]);
+    }
   });
 });
 

@@ -64,6 +64,9 @@ export function TapTarget({
     accessibilityLabel,
     // An explicit `accessibilityState.disabled` (an inactive card drawn as disabled) is kept: the prop only adds to it.
     accessibilityState: { ...accessibilityState, disabled: disabled || accessibilityState?.disabled === true },
+    // react-native-web reads only `disabled` from `accessibilityState`: the selection goes to the DOM as aria-selected
+    // (Card Match's picked Korean card said so on its Pressable before row KT-4b).
+    'aria-selected': accessibilityState?.selected,
     // Only a disabled target disables the Pressable: on native a `disabled={false}` would override the state above.
     disabled: disabled ? true : undefined,
     testID,

@@ -311,6 +311,9 @@ describe('TapTarget inside a board', () => {
     expect(el.props.accessibilityRole).toBe('button');
     expect(el.props.accessibilityLabel).toBe('ㄱ giyeok');
     expect(el.props.accessibilityState).toEqual({ selected: true, disabled: false });
+    // react-native-web drops `accessibilityState.selected`; the caller's selection reaches the DOM as aria-selected.
+    expect(el.props['aria-selected']).toBe(true);
+    expect(renderTarget({}).props['aria-selected']).toBeUndefined();
     expect(el.props.testID).toBe('tile-0');
     expect(el.props.delayPressIn).toBe(0);
     (el.props.onPress as (e?: unknown) => void)({ timeStamp: 1234 });
