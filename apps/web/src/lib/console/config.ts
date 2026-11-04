@@ -25,6 +25,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_LOCK_PASSKEY?: string;
   /** [OA] The sign-in PIN reset page (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 16): off unless `true`, `1`, `on`, `yes` or `enabled`. */
   NEXT_PUBLIC_PIN_RESET_SIGNIN?: string;
+  /** Class days and practice days on the console (AMENDMENTS-ROUTE-CLASS-BLEND section 14): off unless `true` or `1`. */
+  NEXT_PUBLIC_ROUTE_BLEND_ENABLED?: string;
   NODE_ENV?: string;
 }
 
@@ -51,6 +53,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_CLASS_TRANSFER: process.env.NEXT_PUBLIC_CLASS_TRANSFER,
     NEXT_PUBLIC_LOCK_PASSKEY: process.env.NEXT_PUBLIC_LOCK_PASSKEY,
     NEXT_PUBLIC_PIN_RESET_SIGNIN: process.env.NEXT_PUBLIC_PIN_RESET_SIGNIN,
+    NEXT_PUBLIC_ROUTE_BLEND_ENABLED: process.env.NEXT_PUBLIC_ROUTE_BLEND_ENABLED,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -226,6 +229,17 @@ export function pinResetSignInEnabled(env: ConsoleEnv = buildEnv()): boolean {
   if (value === 'true' || value === '1' || value === 'on' || value === 'yes' || value === 'enabled') return true;
   if (value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled') return false;
   return PIN_RESET_SIGNIN_LAUNCH_DEFAULT;
+}
+
+/**
+ * Class days and practice days on the console (AMENDMENTS-ROUTE-CLASS-BLEND section 14, the one definition every BL
+ * row shares): the wizard's meeting block, the readout controls and the lecture card's class-day pick (BL-5). On only
+ * with `NEXT_PUBLIC_ROUTE_BLEND_ENABLED` set to `'true'` or `'1'` (the `learningRouteEnabled()` parse); off by default
+ * until BL-10 flips it after its end-to-end run.
+ */
+export function routeBlendEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const raw = env.NEXT_PUBLIC_ROUTE_BLEND_ENABLED;
+  return raw === 'true' || raw === '1';
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';

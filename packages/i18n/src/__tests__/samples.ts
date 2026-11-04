@@ -1105,4 +1105,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.shell.navAttention.classes': [[1], [3]],
   'console.relinkBar.one': [['Sunday Class A']],
   'console.relinkBar.many': [[2], [5]],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
+  'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
+  'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
 };
