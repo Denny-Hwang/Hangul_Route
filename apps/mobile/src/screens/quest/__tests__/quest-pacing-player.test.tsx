@@ -10,6 +10,7 @@ import { useRemoteConfigStore } from '../../../store/remote-config-store';
 import { byTestId, press, render, screenTexts } from '../../../test-support/render';
 import { QuestPlayerView } from '../QuestPlayerView';
 import { questPacingChunk, resetQuestPacingChunkForTests } from '../quest-pacing';
+import { endVoiceCheckHold } from '../../../store/audio-store';
 
 /**
  * F-CURR-002 section 4.6 (row CM-24) in the quest player, with the real pacing chunk: a strong Practice makes the
@@ -79,6 +80,8 @@ const counter = (texts: string[]): string | undefined => texts.find((t) => /^\d+
 const adaptEvents = (track: ReturnType<typeof vi.fn>) => track.mock.calls.map(([e]) => e).filter((e: { name: string }) => e.name === 'quest.adapt');
 
 beforeEach(() => {
+  // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
+  endVoiceCheckHold();
   resetQuestAdaptForTests();
   resetQuestPacingChunkForTests();
   useQuestRunStore.getState().reset();

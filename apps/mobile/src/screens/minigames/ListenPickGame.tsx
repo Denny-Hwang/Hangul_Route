@@ -438,7 +438,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
           </>
         }
         answers={
-          <TapBoard lock="board">
+          <TapBoard lock="board" held={!slot.settled}>
             {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
             <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
               {round.options.map((option) => {

@@ -6,6 +6,7 @@ import { tileId } from '../../../logic/cloze-pick/round';
 import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { ClozePickStep, type ClozePickRendered } from '../cloze-pick-entry';
+import { endVoiceCheckHold } from '../../../store/audio-store';
 
 /**
  * F-CURR-002 row CM-30, section 12.2 (no switch bricks a quest): the Listen & Pick fallback is in the start bundle with
@@ -35,6 +36,8 @@ vi.mock('../../../platform/audio', async (importOriginal) => ({
 
 const mounted: ReactTestRenderer[] = [];
 beforeEach(() => {
+  // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
+  endVoiceCheckHold();
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
 });
 afterEach(async () => {
