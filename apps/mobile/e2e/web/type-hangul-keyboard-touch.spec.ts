@@ -111,11 +111,12 @@ test.describe('Type Hangul keyboard under touch (AMENDMENTS-TOUCH KT-7, F7)', ()
 
       test('graze rows: 0, 8, 16, 24 and 32 px slides type the key under the finger at release, and the press look follows the finger', async ({ page }) => {
         const touch = await open(page, profile.largest);
-        const b = await keyBox(page, 'ㅇ');
-        const from = { x: b.x + 20, y: b.y + 20 };
         const expected: string[] = [];
         for (const d of [0, 8, 16, 24, 32]) {
           for (const [dx, dy] of [[d, 0], [0, d], [-d, 0], [0, -d]] as const) {
+            // Measured again before every slide: the answer above the keyboard grows as keys type, which can move it.
+            const k = await keyBox(page, 'ㅇ');
+            const from = { x: k.x + 20, y: k.y + 20 };
             const end = { x: from.x + dx, y: from.y + dy };
             expected.push(await keyAt(page, end));
             await touch.graze(from, dx, dy);
@@ -127,7 +128,7 @@ test.describe('Type Hangul keyboard under touch (AMENDMENTS-TOUCH KT-7, F7)', ()
         expect(new Set(expected)).toEqual(new Set(['ㅇ', 'ㄴ', 'ㄷ']));
         await expect.poll(() => field(page)).toBe(expected.join(''));
         // The press look: down on ㅇ, slide well into ㄴ (its left neighbour), back: it follows the finger.
-        const o = centre(b);
+        const o = centre(await keyBox(page, 'ㅇ'));
         const n = centre(await keyBox(page, 'ㄴ'));
         const before = await field(page);
         await touch.start({ id: 1, ...o });
