@@ -398,4 +398,10 @@ describe('resultsTeaser: the target is routeNext (F-ENT-003 section 3.8, PR E3-4
     const again = resultsTeaser({ ...base, snapshot: withPlan, questId: 'quest:q1', total: 0, route: r })!;
     expect(teaserNextStartedEvent(P, again)).toBeNull();
   });
+
+  it('route.next_started from results says when the next lesson was met in class (section 18, row BL-7)', () => {
+    const t: Pick<ResultsTeaser, 'source' | 'fromClass'> = { source: 'class', fromClass: true };
+    expect(teaserNextStartedEvent(P, t)).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'class', surface: 'results', fromClass: true } });
+    expect(teaserNextStartedEvent(P, { source: 'class' })).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'class', surface: 'results', fromClass: false } });
+  });
 });

@@ -68,7 +68,7 @@ export function completedAtOf(offer: 'live' | 'finish', savedAtMs: number, nowMs
 /** What the result screen's primary action opens (F-PLC-001 section 3.1 step 7, amended by F-ENT-003 E3-4). */
 export type PlacementStart =
   /** `source` is set when the quest is `routeNext` (for `route.next_started`), else null. */
-  | { kind: 'quest'; questId: string; episodeId: string; source: NextSource | null }
+  | { kind: 'quest'; questId: string; episodeId: string; source: NextSource | null; fromClass?: true }
   | { kind: 'topic'; topicKey: string }
   | { kind: 'journey' };
 
@@ -88,10 +88,11 @@ export function placementStart(i: {
   const { start, next } = i;
   if (start === null) return { kind: 'journey' };
   if (i.isQuestOpen(start.questId)) {
-    const source = next.kind === 'quest' && next.questId === start.questId ? next.source : null;
-    return { kind: 'quest', ...start, source };
+    const same = next.kind === 'quest' && next.questId === start.questId;
+    const source = same ? next.source : null;
+    return { kind: 'quest', ...start, source, ...(same && next.fromClass === true ? { fromClass: true as const } : {}) };
   }
-  if (next.kind === 'quest') return { kind: 'quest', questId: next.questId, episodeId: next.episodeId, source: next.source };
+  if (next.kind === 'quest') return { kind: 'quest', questId: next.questId, episodeId: next.episodeId, source: next.source, ...(next.fromClass === true ? { fromClass: true as const } : {}) };
   if (next.kind === 'free-end' && next.placedOut && i.freeTopicKey !== null) return { kind: 'topic', topicKey: i.freeTopicKey };
   return { kind: 'journey' };
 }

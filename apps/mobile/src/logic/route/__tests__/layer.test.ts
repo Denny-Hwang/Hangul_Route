@@ -8,6 +8,7 @@ import {
   isClassKind,
   layerOf,
   leadingBlended,
+  OWN_PLAN_BACK_FRESH_MS,
   ownPlanBackShows,
   ownPlanProposalOffered,
   ownPlanRestStep,
@@ -137,6 +138,17 @@ describe('ownPlanRestStep and ownPlanBackShows (section 8, BL-OD-5)', () => {
     expect(ownPlanBackShows({ backAt: '2026-10-20T08:00:00.000Z' })).toBe(true);
     expect(ownPlanBackShows({ backAt: '2026-10-20T08:00:00.000Z', backSeenAt: '2026-10-20T09:00:00.000Z' })).toBe(false);
     expect(ownPlanBackShows({ backAt: '2026-12-01T08:00:00.000Z', backSeenAt: '2026-10-20T09:00:00.000Z' })).toBe(true);
+  });
+
+  it('with a clock, the back line shows only while the resume is at most 7 days old', () => {
+    const at = '2026-10-20T08:00:00.000Z';
+    const ms = Date.parse(at);
+    expect(ownPlanBackShows({ backAt: at }, ms)).toBe(true);
+    expect(ownPlanBackShows({ backAt: at }, ms + OWN_PLAN_BACK_FRESH_MS)).toBe(true);
+    // A resume written long ago (for example while the switch was off) is not news any more.
+    expect(ownPlanBackShows({ backAt: at }, ms + OWN_PLAN_BACK_FRESH_MS + 1)).toBe(false);
+    expect(ownPlanBackShows({ backAt: at, backSeenAt: '2026-10-20T09:00:00.000Z' }, ms)).toBe(false);
+    expect(ownPlanBackShows({ backAt: 'not a time' }, ms)).toBe(false);
   });
 });
 

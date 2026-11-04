@@ -383,7 +383,7 @@ export const a11y = {
   },
   route: {
     blend: {
-      fromClassMet: '반에서. 수업에서 만났어요.',
+      fromClassMet: '반에서. 수업에서 배웠어요.',
       practiceDay: (weekday: string) => `연습하는 날, ${weekday}`,
       refresh: '되짚기: 수업에서 배운 것을 다시 봐요',
     },

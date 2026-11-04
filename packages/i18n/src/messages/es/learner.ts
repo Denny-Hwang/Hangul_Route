@@ -2252,7 +2252,7 @@ export const learner = {
       practiceAllBut: (weekday: string) => `práctica todos los días menos los ${esWeekly(weekday)}`,
       practiceEvery: 'práctica todos los días',
       dayList: (names: readonly string[]) => (names.length <= 2 ? names.join(' y ') : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1] ?? ''}`),
-      refresh: 'Refrescar',
+      refresh: 'Repasar',
       refreshLine: 'Vuelve a mirar lo que enseñó la clase.',
       classToday: 'Hoy hay clase.',
       ownResting: 'Tu propio plan semanal descansa mientras el plan de tu clase tiene días de práctica.',

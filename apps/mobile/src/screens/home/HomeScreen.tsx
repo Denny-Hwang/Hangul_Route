@@ -110,8 +110,7 @@ import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
 import { ClassTodayLine, RefreshCard } from '../route/BlendParts';
 import { useRouteBlendHome } from '../route/use-route-blend';
-import { refreshRouteOf, refreshShows, refreshStartedEvent } from '../../logic/route/blend-view';
-import { leadingBlended } from '../../logic/route/layer';
+import { blendWeekOf, refreshRouteOf, refreshShows, refreshStartedEvent } from '../../logic/route/blend-view';
 import type { RefreshStep } from '../../logic/route/refresh';
 import { useToday } from '../route/use-today';
 import { firstFreeTopicKey, pickerTopics, topicWords, wordsOffered } from '../vocab/topic-data';
@@ -609,8 +608,9 @@ export function HomeScreen(): ReactElement {
       // The same F-ENT-003 input as card (2), so the strip's goal is the Learning Route's (LR-5a).
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date(), ...(routeInput ? { next: routeInput } : {}) }));
       // The same week as the Learning Route's plan line (R-7b): the goal's plan, the class's or the learner's own.
-      // A class plan with practice days has no "Week n" line (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7).
-      const blended = flags.routeBlendEnabled && routeInput !== null && leadingBlended(routeInput.sources, routeInput.today) !== null;
+      // A class plan with practice days has no "Week n" line (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7): the
+      // same check as the Route tab, which shows its weekly plan line in place of the week only when the days are named.
+      const blended = flags.routeBlendEnabled && routeInput !== null && blendWeekOf(routeInput.sources, routeInput.today, snapshot.practiceDays) !== null;
       return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: routeWeekOf(model, routeInput !== null && !blended ? routeInput : undefined) });
     } catch {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.

@@ -68,11 +68,19 @@ export function usePlanPrompt(
 
 const NO_PROMPT = { prompt: false, instead: false } as const;
 
-/** Not now on Home's prompt (or its class-plan line): hidden for 14 days or until the next result (OD-16). */
+/** Not now on Home's prompt: hidden for 14 days or until the next result (OD-16). */
 function notNow(profileId: string): void {
   void useRouteStore.getState().markDismissed(profileId, new Date().toISOString());
   const event = proposalSkippedEvent(profileId, 'home');
   void track({ name: event.name, profileId, payload: { ...event.payload } });
+}
+
+/**
+ * Not now on the class-plan line (row BL-7): hidden the same way as the prompt (14 days or the next result), but it
+ * is not a proposal, so no `route.proposal_skipped` is sent and the proposal funnel counts only real skips.
+ */
+export function hideInstead(profileId: string): void {
+  void useRouteStore.getState().markDismissed(profileId, new Date().toISOString());
 }
 
 /**
@@ -127,6 +135,7 @@ export function usePlanSlot(
   const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined && snapshot !== undefined, answeredFor: ui?.checkInFor, changesOpen, resting });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId ?? ''}|${active?.id ?? ''}`);
   const [moved, setMoved] = useState(false);
+  const [back, setBack] = useState(false);
   const movedNow = active !== null && ui !== undefined && movedLineVisible(ui);
   // Kept for this visit; it is marked seen only by the card that draws it (`MovedLine`), so a line the
   // check-in or the level check kept off the slot still shows later.
@@ -141,12 +150,18 @@ export function usePlanSlot(
       const current = activeSelfRoute(useProgressStore.getState().byProfile[profileId]);
       if (stored !== undefined && current !== null && stored.checkInFor === current.id) closeOffer();
       if (stored === undefined || !movedLineVisible(stored)) setMoved(false);
+      if (stored === undefined || !ownPlanBackShows(stored, Date.now())) setBack(false);
       return undefined;
     }, [profileId, closeOffer]),
   );
-  // "Your own weekly plan is back." once after the rested plan comes back (section 8, row BL-7).
-  const back = flags.routeBlendEnabled && active !== null && ui !== undefined && ownPlanBackShows(ui);
-  return { slot: planSlotOf({ prompt, instead, offer: shownOffer, back, moved: moved && active !== null }), closeCheckIn: closeOffer };
+  // "Your own weekly plan is back." once after the rested plan comes back (section 8, row BL-7). Kept for this visit
+  // like the moved line: `OwnBackLine` marks it seen as it is drawn, and the store then says it is seen at once, so a
+  // live read would take it away in the frame it appears. It goes on the next focus.
+  const backNow = flags.routeBlendEnabled && active !== null && ui !== undefined && ownPlanBackShows(ui, Date.now());
+  useEffect(() => {
+    if (backNow) setBack(true);
+  }, [backNow]);
+  return { slot: planSlotOf({ prompt, instead, offer: shownOffer, back: back && active !== null, moved: moved && active !== null }), closeCheckIn: closeOffer };
 }
 
 /** The card of Home's plan slot. */
@@ -167,7 +182,7 @@ export function PlanSlotCard({
   onCloseCheckIn: () => void;
 }): ReactElement | null {
   if (slot.kind === 'prompt') return <PlanPromptCard profileId={profileId} onOpen={onOpen} />;
-  if (slot.kind === 'instead') return <ProposalInsteadCard onNotNow={() => notNow(profileId)} />;
+  if (slot.kind === 'instead') return <ProposalInsteadCard onNotNow={() => hideInstead(profileId)} />;
   if (slot.kind === 'back') return <OwnBackLine profileId={profileId} onOverview={onOverview} />;
   if (slot.kind === 'check-in') return <CheckInCard key={profileId} profileId={profileId} offer={slot.offer} onClose={onCloseCheckIn} testID="home-plan-check-in" />;
   return <MovedLine profileId={profileId} onOverview={onOverview} />;

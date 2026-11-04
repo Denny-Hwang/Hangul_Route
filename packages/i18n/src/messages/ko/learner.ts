@@ -2188,7 +2188,7 @@ export const learner = {
       ownResting: '반의 계획에 연습하는 날이 있는 동안 내 주간 계획은 쉬고 있어요.',
       seeIt: '보기',
       ownBack: '내 주간 계획이 다시 시작됐어요.',
-      proposalInstead: '반의 주간 계획에 나를 위한 연습하는 날이 있어요.',
+      proposalInstead: '반의 주간 계획에 연습하는 날이 들어 있어요.',
       practiceDays: {
         title: '내 연습 요일',
         hint: '연습할 요일을 골라요. 레슨은 그대로예요.',

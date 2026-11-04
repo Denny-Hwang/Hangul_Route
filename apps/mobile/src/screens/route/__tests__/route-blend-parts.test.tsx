@@ -156,16 +156,18 @@ describe.each(LOCALES)('%s at 320 x 568', (locale) => {
 });
 
 /**
- * Assumption d (section 17): the line fits the Route card at 320 x 568 in at most 3 lines in es and ko, for 1 to 3
- * practice weekday names, 1 or 2 class days and every collapsed form. The BL-D mock measured those lines in Chromium
- * at 320 x 568 (`design/screens/route-blend/shots/measurements.json`, `d`): every case there takes 3 lines or fewer.
+ * Assumption d (section 17, as amended in BL-7 for BL-D finding 10): the line fits the Route card at 320 x 568 in es
+ * and ko, for 1 to 3 practice weekday names and every collapsed form: in at most 3 lines with 1 or 2 class days and at
+ * most 4 lines with 3 to 5 class days (the class part never collapses: each class day is named); Korean in at most 2
+ * lines with 1 or 2 class days. The BL-D mock measured those lines in Chromium at 320 x 568
+ * (`design/screens/route-blend/shots/measurements.json`, `d` and `dClassPart`).
  * The renderer here draws no glyphs, so each line is wrapped between words (Korean wraps between words too,
  * `hangul-word` / `keep-all`) at the widest line, in characters, that still wraps every measured case into at least
  * the lines Chromium drew (so the rule is no kinder than the mock); every built week must then wrap in 3 lines or fewer.
  */
 describe('assumption d: the line fits at 320 x 568 in es and ko', () => {
   type Measured = { lang: string; text: string; lines: number };
-  const measured = JSON.parse(readFileSync(join(__dirname, '../../../../../../design/screens/route-blend/shots/measurements.json'), 'utf8')) as { d: Measured[] };
+  const measured = JSON.parse(readFileSync(join(__dirname, '../../../../../../design/screens/route-blend/shots/measurements.json'), 'utf8')) as { d: Measured[]; dClassPart: Measured[] };
   const DAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   const wrap = (text: string, perLine: number): number => {
     let lines = 1;
@@ -182,7 +184,8 @@ describe('assumption d: the line fits at 320 x 568 in es and ko', () => {
   };
   const weeks = (): BlendWeek[] => {
     const out: BlendWeek[] = [];
-    for (const classDays of [['tue'], ['wed'], ['sat'], ['mon', 'thu'], ['wed', 'sat']] as Weekday[][]) {
+    const classWeeks = [['tue'], ['wed'], ['sat'], ['mon', 'thu'], ['wed', 'sat'], ['mon', 'wed', 'fri'], ['wed', 'sat', 'sun'], ['mon', 'tue', 'thu', 'fri'], ['wed', 'thu', 'sat', 'sun'], ['mon', 'tue', 'wed', 'thu', 'fri'], ['wed', 'thu', 'fri', 'sat', 'sun']] as Weekday[][];
+    for (const classDays of classWeeks) {
       const free = DAYS.filter((d) => !classDays.includes(d));
       // 1 to 3 names: every pick of the free days.
       for (let a = 0; a < free.length; a += 1) {
@@ -200,17 +203,22 @@ describe('assumption d: the line fits at 320 x 568 in es and ko', () => {
   };
 
   it.each(['es', 'ko'] as const)('%s', (locale) => {
-    const cases = measured.d.filter((d) => d.lang === locale);
+    const cases = [...measured.d, ...measured.dClassPart].filter((d) => d.lang === locale);
     expect(cases.length).toBeGreaterThan(5);
-    expect(cases.every((d) => d.lines <= 3)).toBe(true);
+    expect(cases.every((d) => d.lines <= (locale === 'ko' ? 2 : 4))).toBe(true);
     // The widest line (in characters) at which the rule still wraps every measured case into at least its drawn lines.
     let perLine = 10;
     while (cases.every((d) => wrap(d.text, perLine + 1) >= d.lines)) perLine += 1;
     // The rule is no kinder than Chromium: it never wraps a measured case into fewer lines than the mock drew.
     for (const d of cases) expect(wrap(d.text, perLine), d.text).toBeGreaterThanOrEqual(d.lines);
-    for (const w of weeks()) {
+    const weekList = weeks();
+    expect(weekList.some((w) => w.classDays.length === 5)).toBe(true);
+    for (const w of weekList) {
       const text = lineOf(locale, w);
-      expect(wrap(text, perLine), text).toBeLessThanOrEqual(3);
+      // Korean: 2 lines with 1 or 2 class days (the mock's ko lines); with 3 to 5 the shared bound of 4 (the word-wrap
+      // model here is coarser than Chromium for the long middle-dot lists, which the mock drew in 2 lines).
+      const bound = w.classDays.length >= 3 ? 4 : locale === 'ko' ? 2 : 3;
+      expect(wrap(text, perLine), text).toBeLessThanOrEqual(bound);
     }
   });
 });
