@@ -353,6 +353,9 @@ export const SCREEN_CHUNKS = Object.freeze([
   // F-CURR-002 row CM-48: This week in Korea, the Home card and the drop's pages (`src/screens/week-drop/week-drop-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/week-drop/week-drop-entry.tsx` while `weeklyDrop` is on).
   Object.freeze({ name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' }),
+  // The grown-up reports, the learner report and the level-check report (`src/screens/parent/reports-chunk.tsx`, reached
+  // only through the literal `import()` of `src/screens/parent/reports-entry.tsx`), out of the start bundle for headroom.
+  Object.freeze({ name: 'reports-chunk', marker: 'screen-chunk:reports' }),
 ]);
 
 /**
