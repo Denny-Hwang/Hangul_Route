@@ -4,9 +4,10 @@ import type { DeriveSource } from '../homework/plan-derivation';
 
 /**
  * The device half of `placePractice` (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-8): one blended class plan
- * re-dated to the learner's own practice days, from today on, on the device only. Item minutes and cells come from
- * the shipped catalogue (a lesson quest's cell is its episode; an episode item is its own cell). Only the
- * practice-days chunk imports this module, so the `blend` subpath stays out of the start bundle.
+ * re-dated to the learner's own practice days, from the day they took effect on (`placementFrom`), on the device
+ * only. Item minutes and cells come from the shipped catalogue (a lesson quest's cell is its episode; an episode item
+ * is its own cell). Only the practice-days chunk imports this module, so the `blend` subpath stays out of the start
+ * bundle.
  */
 
 type Placeable = PlanItem & PlaceItem;
@@ -32,7 +33,7 @@ function routeEnd(startDate: string, weeks: number, classDays: readonly Weekday[
   return addDays(first, 7 * weeks - 1);
 }
 
-export function placeSourceForLearner(source: DeriveSource, days: readonly Weekday[], today: string, catalog: Catalog = CATALOG): DeriveSource {
+export function placeSourceForLearner(source: DeriveSource, days: readonly Weekday[], from: string, catalog: Catalog = CATALOG): DeriveSource {
   const meta = source.meta;
   const blend = meta?.params.blend;
   if (meta === null || meta === undefined || blend === undefined) return source;
@@ -46,7 +47,7 @@ export function placeSourceForLearner(source: DeriveSource, days: readonly Weekd
     {
       classDays: blend.lecture.days,
       budget: blend.personal.minutes,
-      from: today,
+      from,
       endDate: lastItem > end ? lastItem : end,
       isDayOff: (date) => params.daysOff.some((range) => range.from <= date && date <= range.to),
     },

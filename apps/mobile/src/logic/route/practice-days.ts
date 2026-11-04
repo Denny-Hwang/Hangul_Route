@@ -65,8 +65,11 @@ export function practiceDaysChangedEvent(days: readonly Weekday[], by: ChangedBy
   return { name: 'route.practice_days_changed', payload: { days: days.length, by } };
 }
 
-/** Re-dates one blended class plan to the learner's days on `today` (the chunk's `placeSourceForLearner`). */
-export type PracticePlacer = (source: DeriveSource, days: readonly Weekday[], today: string) => DeriveSource;
+/**
+ * Re-dates one blended class plan to the learner's days from `from` on (the chunk's `placeSourceForLearner`): `from`
+ * is the day the days took effect (`placementFrom`), so the dates it gives never move as the days pass.
+ */
+export type PracticePlacer = (source: DeriveSource, days: readonly Weekday[], from: string) => DeriveSource;
 
 let placer: PracticePlacer | null = null;
 
@@ -92,7 +95,20 @@ export function withLearnerDays(sources: readonly DeriveSource[], entries: reado
   if (place === null || entries === undefined || entries.length === 0) return [...sources];
   return sources.map((source) => {
     if (!isClassKind(source.kind) || source.meta?.params.blend === undefined) return source;
-    const days = learnerDaysOf(entries, source.id);
-    return days === undefined ? source : place(source, days, today);
+    const entry = entries.find((e) => e.planId === source.id);
+    if (entry === undefined || entry.days.length === 0) return source;
+    return place(source, [...entry.days], placementFrom(entry, today));
   });
+}
+
+/**
+ * The first day `placePractice` may re-date (section 9.4): the day the learner's days were saved (`updatedAt`, as the
+ * derivation's `today` counts days), not today, so a lesson moved to a learner day stays there as the days pass and
+ * never drifts back to its plan date. An entry stamped later than today (a device clock ahead) counts from today.
+ */
+export function placementFrom(entry: Pick<PracticeDaysEntry, 'updatedAt'>, today: string): string {
+  const time = Date.parse(entry.updatedAt);
+  if (!Number.isFinite(time)) return today;
+  const saved = new Date(time).toISOString().slice(0, 10);
+  return saved < today ? saved : today;
 }

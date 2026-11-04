@@ -10,6 +10,7 @@ import {
   needsPlacer,
   practiceDaysChangedEvent,
   practiceDaysWrite,
+  placementFrom,
   practicePlacerReady,
   setPracticePlacer,
   toggleDay,
@@ -126,9 +127,9 @@ describe('placeSourceForLearner (the chunk\'s placer)', () => {
     expect(placeSourceForLearner(unblended, ['tue'], '2026-11-02')).toBe(unblended);
   });
 
-  it('moves Refresh with the days, and leaves the past alone', () => {
+  it('moves Refresh with the days, and leaves what is before `from` alone', () => {
     const out = placeSourceForLearner(blended(), ['sat', 'mon'], '2026-11-09');
-    // 6 and 8 November are before today: they keep their dates.
+    // 6 and 8 November are before `from` (the day the days took effect): they keep their dates.
     expect(out.items.slice(0, 2).map((item) => item.targetDate)).toEqual(['2026-11-06', '2026-11-08']);
     expect(out.meta?.refresh?.every((e) => ['sat', 'mon'].includes(new Date(`${e.date}T00:00:00Z`).toUTCString().slice(0, 3).toLowerCase()))).toBe(true);
   });
@@ -176,5 +177,25 @@ describe('withLearnerDays', () => {
     expect(out[3]).toEqual(plain);
     expect(withLearnerDays([blended()], [], '2026-11-02')[0]).toEqual(blended());
     expect(needsPlacer([own], [entry('route:mine', ['tue'], '2026-11-01T00:00:00.000Z')])).toBe(false);
+  });
+
+  it('keeps the learner\'s dates as the days pass: placement counts from the day the days were saved, not today', () => {
+    setPracticePlacer(placeSourceForLearner);
+    const saved = [entry('plan:thu', ['tue'], '2026-11-05T09:00:00.000Z')];
+    const on = (today: string): Array<string | undefined> => (withLearnerDays([blended()], saved, today)[0] as DeriveSource).items.map((item) => item.targetDate);
+    const first = on('2026-11-05');
+    // The Thursday class's lessons sit on the learner's Tuesday, never on the class default Friday or Sunday.
+    expect(first.slice(0, 2)).toEqual(['2026-11-10', '2026-11-10']);
+    // Friday, Saturday, Monday, Tuesday and after: the same dates, nothing drifts back to a plan date already past.
+    for (const today of ['2026-11-06', '2026-11-07', '2026-11-09', '2026-11-10', '2026-11-14']) expect(on(today)).toEqual(first);
+  });
+});
+
+describe('placementFrom', () => {
+  it('is the day the days were saved, or today when the stamp is later than today or unreadable', () => {
+    expect(placementFrom({ updatedAt: '2026-11-05T09:00:00.000Z' }, '2026-11-09')).toBe('2026-11-05');
+    expect(placementFrom({ updatedAt: '2026-11-05T09:00:00+09:00' }, '2026-11-09')).toBe('2026-11-05');
+    expect(placementFrom({ updatedAt: '2026-11-12T00:00:00.000Z' }, '2026-11-09')).toBe('2026-11-09');
+    expect(placementFrom({ updatedAt: 'not a time' }, '2026-11-09')).toBe('2026-11-09');
   });
 });
