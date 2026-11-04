@@ -5,6 +5,7 @@ import {
   GoalsSchema,
   LatchRecordSchema,
   MemorySummarySchema,
+  PracticeDaysSchema,
   ProgressSnapshotSchema,
   StreakLocalSchema,
   mergeCellBest,
@@ -12,6 +13,7 @@ import {
   mergeEarliest,
   mergeGoals,
   mergeLatchRecord,
+  mergePracticeDays,
   mergeStreakBest,
   mergeStreakLocal,
 } from '@hangul-route/content-schema';
@@ -268,7 +270,14 @@ const CURR_002_FIELDS: readonly AdditiveField[] = [
   curr002('stageCeremonyAt', LatchRecordSchema, mergeLatchRecord),
 ];
 
-export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT, SESSIONS, ...CURR_002_FIELDS];
+/**
+ * `practiceDays` (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-W; BL-8 writes it): the curr002 rule. An absent key
+ * never erases the stored entries; a sent list is merged with the stored one by plan, the newest `updatedAt` winning
+ * (`mergePracticeDays`), so a device that synced before the learner changed days on another one never undoes it.
+ */
+const PRACTICE_DAYS: AdditiveField = curr002('practiceDays', PracticeDaysSchema, mergePracticeDays);
+
+export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB, QUEST_DONE_AT, SESSIONS, ...CURR_002_FIELDS, PRACTICE_DAYS];
 
 export interface SnapshotParts<P, S> {
   payload: P;

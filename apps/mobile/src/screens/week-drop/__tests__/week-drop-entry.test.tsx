@@ -30,6 +30,19 @@ const idle = async (): Promise<void> => {
     for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
   });
 };
+/**
+ * Waits until `ready` holds. The chunk arrives through a dynamic `import()` (here the async mock factory), which takes
+ * an unknown number of ticks on a loaded CI worker, so a positive check never relies on a fixed number of idle ticks.
+ */
+async function until(ready: () => boolean): Promise<void> {
+  await vi.waitFor(
+    async () => {
+      await idle();
+      if (!ready()) throw new Error('not yet');
+    },
+    { timeout: 5_000, interval: 10 },
+  );
+}
 const on = (value: boolean, pct = 100): void =>
   useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { weeklyDrop: { on: value, pct } } } });
 async function slot(today: string, profileId: string | null = 'profile:mina'): Promise<ReactTestRenderer> {
@@ -76,6 +89,7 @@ describe('WeekDropHomeSlot (row CM-48)', () => {
   it("on, in a week with a drop: the chunk loads once and the card gets the week's Monday", async () => {
     on(true);
     const r = await slot('2026-11-05');
+    await until(() => byTestId(r.root, 'week-drop-card-stub').length > 0);
     expect(byTestId(r.root, 'week-drop-card-stub')).toHaveLength(1);
     expect(chunk.props[0]).toEqual({ profileId: 'profile:mina', week: '2026-11-02' });
     expect(chunk.loads).toBe(1);
@@ -90,7 +104,7 @@ describe('WeekDropRoute (row CM-48)', () => {
     const route = { key: 'k', name: 'WeekDrop' } as Parameters<typeof WeekDropRoute>[0]['route'];
     const r = await render(<WeekDropRoute navigation={navigation} route={route} />);
     mounted.push(r);
-    await idle();
+    await until(() => byTestId(r.root, 'week-drop-screen-stub').length > 0);
     expect(byTestId(r.root, 'week-drop-screen-stub')).toHaveLength(1);
     expect(goBack).not.toHaveBeenCalled();
   });
