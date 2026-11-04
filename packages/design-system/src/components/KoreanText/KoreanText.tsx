@@ -3,6 +3,8 @@ import { Pressable, Text, View } from 'react-native';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '../../tokens';
 import { KOREAN_LANGUAGE, koreanTextView } from '../../korean-text';
 import { Icon } from '../Icon';
+import { NO_PRESS_DELAY } from '../TapBoard/press-delay';
+import { usePressGuard } from '../TapBoard/use-press-guard';
 import { useTypeScale } from '../TextSize';
 import type { KoreanTextProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
@@ -31,6 +33,9 @@ export function KoreanText({
   testID,
 }: KoreanTextProps): ReactElement {
   const scale = useTypeScale().size;
+  // AMENDMENTS-TOUCH 6.9 (row KT-9): the speaker replays a sound and moves nothing, so it drops its own bounce and waits
+  // for the app-level tap lock, but a tap on it never sets that lock (the answers next to it stay live).
+  const guard = usePressGuard({ setsLock: false });
   const view = koreanTextView({
     scale,
     ko,
@@ -129,10 +134,12 @@ export function KoreanText({
   return (
     <Pressable
       testID={testID}
-      onPress={onPress}
+      onPress={guard(onPress)}
+      {...NO_PRESS_DELAY}
       accessibilityRole="button"
       accessibilityLabel={view.label}
       accessibilityLanguage={KOREAN_LANGUAGE}
+      // Native only (react-native-web drops it); the target is already at least touchTarget.min each way.
       hitSlop={spacing.sm}
       style={({ pressed }) => ({
         alignItems: 'center',
