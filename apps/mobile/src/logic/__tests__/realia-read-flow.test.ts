@@ -12,6 +12,10 @@ import { layout } from '@hangul-route/design-system/tokens';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { REALIA_FIXTURES } from '../../navigation/realia-read-e2e-fixture';
+import { REALIA_KIND_FIXTURES } from '../../navigation/realia-kinds-e2e-fixture';
+
+/** The four G-2 realia and one per CM-47 kind (row CM-47). */
+const ALL_FIXTURES = { ...REALIA_FIXTURES, ...REALIA_KIND_FIXTURES };
 import {
   REALIA_READ_TIMING,
   lineBaseLabel,
@@ -60,7 +64,7 @@ function run(state: RealiaReadState, events: RealiaReadEvent[]): { state: Realia
 const tap = (optionId: string, at: number, answerId = q1.answerId): RealiaReadEvent => ({ type: 'tap', optionId, answerId, at });
 
 describe('the fixtures are valid Realia Read content', () => {
-  it.each(Object.entries(REALIA_FIXTURES))('%s parses and cross-checks', (_name, scope) => {
+  it.each(Object.entries(ALL_FIXTURES))('%s parses and cross-checks', (_name, scope) => {
     const realia = RealiaSchema.parse(scope.realiaRead.realia);
     const rounds = scope.realiaRead.rounds.map((r) => RealiaReadRoundSchema.parse(r));
     expect(realiaReadIssues(realia, rounds)).toEqual([]);
@@ -70,7 +74,7 @@ describe('the fixtures are valid Realia Read content', () => {
   // Listed in romanization-registry.ts (F-CNT-002 §3.4) as a test fixture checked here: every Hangul-only text is checked with the
   // converter; a figure with digits (2,000원, 3:00) is read by its authored romanization.
   it('romanizes every Hangul-only text as the converter does', () => {
-    const texts: KoText[] = Object.values(REALIA_FIXTURES).flatMap((scope) => {
+    const texts: KoText[] = Object.values(ALL_FIXTURES).flatMap((scope) => {
       const realia = RealiaSchema.parse(scope.realiaRead.realia);
       const rounds = scope.realiaRead.rounds.map((r) => RealiaReadRoundSchema.parse(r));
       return [
@@ -85,7 +89,7 @@ describe('the fixtures are valid Realia Read content', () => {
   });
 
   it('keeps every price a round practice amount in won, up to 10,000 (OD-11)', () => {
-    const prices = Object.values(REALIA_FIXTURES).flatMap((s) =>
+    const prices = Object.values(ALL_FIXTURES).flatMap((s) =>
       s.realiaRead.realia.entries.flatMap((e) => [...(e.value?.ko.matchAll(/([\d,]+)원/g) ?? [])].map((m) => Number(m[1]!.replace(/,/g, '')))),
     );
     expect(prices.length).toBeGreaterThan(0);
@@ -234,6 +238,24 @@ describe('the sheet', () => {
     expect(sheetSummary(REALIA_FIXTURES.priceCards.realiaRead.realia, A11Y)).toBe('Price cards, 3 lines');
     expect(sheetSummary({ ...menu.realia, kind: undefined }, A11Y)).toBe('Reading sheet, 4 lines');
     expect(sheetSummary(menu.realia, getMessages('ko').a11y.minigame)).toBe('메뉴판, 4줄');
+  });
+
+  it('draws and names each CM-47 kind as its own sheet (row CM-47)', () => {
+    const names = Object.values(REALIA_KIND_FIXTURES).map(({ realiaRead: { realia } }) => [sheetKind(realia), sheetSummary(realia, A11Y)]);
+    expect(names).toEqual([
+      ['recipe', 'Recipe card, 3 lines'],
+      ['receipt', 'Receipt, 4 lines'],
+      ['label', 'Food label, 2 lines'],
+      ['forecast', 'Weather forecast, 3 lines'],
+      ['calendar', 'Calendar, 2 lines'],
+      ['timetable', 'Timetable, 3 lines'],
+      ['map', 'Map, 3 lines'],
+      ['poster', 'Poster, 3 lines'],
+    ]);
+    expect(sheetSummary(REALIA_KIND_FIXTURES.timetable.realiaRead.realia, getMessages('es').a11y.minigame)).toBe('Horario, 3 líneas');
+    expect(sheetSummary(REALIA_KIND_FIXTURES.receipt.realiaRead.realia, getMessages('ko').a11y.minigame)).toBe('영수증, 4줄');
+    // A map place with a direction says it, as a trail board does.
+    expect(lineBaseLabel(REALIA_KIND_FIXTURES.map.realiaRead.realia.entries[2]!, A11Y)).toBe('정상, jeongsang, to the right');
   });
 
   it('names a line by its Korean, romanization, value and direction', () => {

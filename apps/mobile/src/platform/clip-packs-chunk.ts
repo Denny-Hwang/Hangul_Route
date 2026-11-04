@@ -1,5 +1,6 @@
 import type { AudioPack } from '@hangul-route/content-schema/audio-packs';
-import { episodesWithVolumes, questsAll } from '../content';
+import { questsAll } from '../content';
+import { episodesWithVolumes } from '../content/episodes';
 import { loadAudioPackChunk } from '../content/__generated__/audio-assets';
 import { createClipPackLoader } from '../logic/audio/clip-pack-loader';
 import { lessonClipPlan } from '../logic/audio/lesson-clips';
@@ -24,7 +25,7 @@ export type ClipPrep = { scopes: readonly AudioPack[]; units: readonly string[] 
 
 /** Loads the packs; the warm-up then runs on its own (a prompt waits for the packs, never for the warm-up). */
 export async function prepareClips(prep: ClipPrep): Promise<void> {
-  // Every shipped episode, a cell's Volume 2 included (F-CURR-002 row CM-40), so a Volume 2 lesson warms its stage's pack.
+  // Every shipped episode, a cell's later volume too (F-CURR-002 row CM-40), so a Volume 2 quest warms its own clips.
   const plan = 'questId' in prep ? lessonClipPlan({ ...prep, quests: questsAll, episodes: episodesWithVolumes }) : prep;
   await Promise.all(plan.scopes.map((scope) => clipPackLoader.loadFor(scope)));
   const refs = clipPackLoader.unitRefs(plan.units);
