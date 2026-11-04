@@ -141,11 +141,39 @@ function watchPointers(doc: object): void {
  * MouseEvent) is a finger when the last pointer down on the page, under a second ago, was a touch or a pen.
  */
 export function pressIsTouch(event: unknown): boolean {
-  const doc = (globalThis as { document?: unknown }).document;
-  if (doc === undefined || doc === null || typeof doc !== 'object') return true;
+  const doc = pageDocument();
+  if (doc === null) return true;
   watchPointers(doc);
   const type = (event as { nativeEvent?: { pointerType?: unknown } } | undefined)?.nativeEvent?.pointerType;
   if (typeof type === 'string') return type === 'touch' || type === 'pen';
   const last = lastDown.get(doc);
   return last !== undefined && last.finger && tapNow() - last.at < RECENT_TOUCH_MS;
 }
+
+function pageDocument(): object | null {
+  const doc = (globalThis as { document?: unknown }).document;
+  return doc === undefined || doc === null || typeof doc !== 'object' ? null : doc;
+}
+
+/**
+ * Starts reading the page's pointer downs, so the first guarded click of a session that carries no `pointerType`
+ * (Safari, the iOS 14 PWA) still knows its finger. Called when this module loads and when `TapLockProvider` mounts;
+ * `pressIsTouch` calls it too, for a page whose document came later. Native: nothing to watch.
+ */
+export function watchPagePointers(): void {
+  const doc = pageDocument();
+  if (doc !== null) watchPointers(doc);
+}
+
+/**
+ * A mouse's or trackpad's second click of a double click (`detail` over 1, web only). The press guard drops it, so a
+ * double click on Continue or Next runs once (R8 with a mouse, a school Chromebook's trackpad). A single click, keyboard
+ * Enter or Space (`detail` 0) and a screen reader's activate are never a repeat.
+ */
+export function pressIsRepeatClick(event: unknown): boolean {
+  if (pageDocument() === null) return false;
+  const detail = (event as { nativeEvent?: { detail?: unknown } } | undefined)?.nativeEvent?.detail;
+  return typeof detail === 'number' && detail > 1;
+}
+
+watchPagePointers();

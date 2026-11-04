@@ -280,8 +280,32 @@ describe('Button press guard and no press delay (AMENDMENTS-TOUCH 4.4, R8, row K
     }
   });
 
-  it('a disabled or soft-disabled button still has no handler at all', () => {
+  it('a disabled, soft-disabled or handler-less button has no handler at all, so a tap on it sets no lock', () => {
     expect(pressable({ disabled: true }).props.onPress).toBeUndefined();
     expect(pressable({ softDisabled: true }).props.onPress).toBeUndefined();
+    expect(pressable({ onPress: undefined }).props.onPress).toBeUndefined();
+  });
+
+  it('web: a mouse click runs at once and sets no lock; the second click of a double click is dropped', () => {
+    const g = globalThis as { document?: unknown };
+    const had = 'document' in g;
+    const saved = g.document;
+    g.document = { addEventListener: () => undefined };
+    try {
+      const lock = vi.fn();
+      app.clock = { until: () => 0, lock, extendTo: () => undefined, locked: false };
+      const onPress = vi.fn();
+      const press = pressable({ onPress }).props.onPress as (e: unknown) => void;
+      press({ nativeEvent: { pointerType: 'mouse', detail: 1 } });
+      press({ nativeEvent: { pointerType: 'mouse', detail: 2 } });
+      expect(onPress).toHaveBeenCalledTimes(1);
+      press({ nativeEvent: { pointerType: 'mouse', detail: 1 } });
+      press({ nativeEvent: { pointerType: '', detail: 0 } });
+      expect(onPress).toHaveBeenCalledTimes(3);
+      expect(lock).not.toHaveBeenCalled();
+    } finally {
+      if (had) g.document = saved;
+      else delete g.document;
+    }
   });
 });

@@ -18,6 +18,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { e2eLog as log } from './tap-board-e2e';
+import { TAP_BOARD_E2E_CARDS } from './tap-board-e2e-cards';
 import type { RootStackParamList } from './types';
 
 /**
@@ -39,11 +40,7 @@ const CONTROL = 'ㅁ';
 /** The `tall` layout's block: taller than a tablet window, in tile rows. */
 const TALL_ROWS = 20;
 
-/** `cards`: two Korean options (taught words, so no UI copy), two letter tiles and one button. */
-const CARDS = [
-  { ko: '나무', romanization: 'namu' },
-  { ko: '바다', romanization: 'bada' },
-] as const;
+/** `cards`: two Korean options (`TAP_BOARD_E2E_CARDS`), two letter tiles and one button. */
 const TILES = ['ㅅ', 'ㅇ'] as const;
 const BUTTON = 'ㅂ';
 
@@ -52,7 +49,7 @@ function CardsBoard({ lock, disabled }: { lock: 'board' | 'target'; disabled: re
     <>
       <TapBoard lock={lock} testID="tap-board">
         <View style={{ gap: spacing.md }}>
-          {CARDS.map((card, index) => (
+          {TAP_BOARD_E2E_CARDS.map((card, index) => (
             <ChoiceCard
               key={card.ko}
               testID={`tap-card-${index}`}

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createNativeRects, pressIsTouch, stampedClock, supportsPinchZoom, tapNow, webHitAt, webRect } from '../host';
+import { createNativeRects, pressIsRepeatClick, pressIsTouch, stampedClock, watchPagePointers, supportsPinchZoom, tapNow, webHitAt, webRect } from '../host';
 
 /**
  * How a board reads each platform (docs/specs/AMENDMENTS-TOUCH.md section 3.2 rules 1 and 2): the web walks the DOM from
@@ -183,5 +183,24 @@ describe('pressIsTouch (the press guard reads only a finger or a pen, KT-2)', ()
     now += 2;
     expect(pressIsTouch(undefined)).toBe(false);
     clock.mockRestore();
+  });
+
+  it('web, Safari: a pointer down before the first guarded press of a session still counts once the page is watched', () => {
+    const doc = fakeDocument();
+    g.document = doc;
+    watchPagePointers();
+    doc.listeners.get('pointerdown')!({ pointerType: 'touch' });
+    expect(pressIsTouch({ nativeEvent: {} })).toBe(true);
+  });
+
+  it('a mouse double click: only its second click is a repeat; keyboard (detail 0) and native never are', () => {
+    g.document = fakeDocument();
+    expect(pressIsRepeatClick({ nativeEvent: { pointerType: 'mouse', detail: 1 } })).toBe(false);
+    expect(pressIsRepeatClick({ nativeEvent: { pointerType: 'mouse', detail: 2 } })).toBe(true);
+    expect(pressIsRepeatClick({ nativeEvent: { detail: 3 } })).toBe(true);
+    expect(pressIsRepeatClick({ nativeEvent: { pointerType: '', detail: 0 } })).toBe(false);
+    expect(pressIsRepeatClick(undefined)).toBe(false);
+    delete g.document;
+    expect(pressIsRepeatClick({ nativeEvent: { detail: 2 } })).toBe(false);
   });
 });

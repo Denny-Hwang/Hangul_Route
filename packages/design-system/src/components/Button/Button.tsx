@@ -126,7 +126,7 @@ export function Button({
     <Pressable
       {...describedBy}
       ref={setNode}
-      onPress={looksDisabled ? undefined : guard(onPress)}
+      onPress={looksDisabled || onPress === undefined ? undefined : guard(onPress)}
       disabled={disabled || (soft && !webSoft)}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
