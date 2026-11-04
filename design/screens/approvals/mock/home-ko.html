@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher home with the re-link bar, the attention chip and the nav count (GX-0 mock)</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="approvals.css">
+</head>
+<body>
+<!-- Design mock (owner request 2026-10-31, design pass GX-0 v2 after the PR #917 review: docs/specs/AMENDMENTS-GROWNUP-UX.md), not shipped code. Strings are the section 10 drafts; names and class names are sample data. The class page shows the state once GX-W is deployed (the move chips need the roster's pending field); its move out has no destination name, the usual case (status.moveOut). Every re-link Approve opens the pop-up (GX-D12). The parent home's three items are Mina's re-link and two class moves for Jun (one per class), with no unread class-scope update (until GX-5b the shipped class-scope card would sit under the strip). -->
+<div class="frame"><header class="frame-top"><div class="frame-bar"><a class="brand" href="#"><span class="brand-mark" aria-hidden="true">HR</span><span class="brand-name">Hangul Route</span></a><span class="persona-text">선생님</span><a class="way-back" href="#"><span>학습 앱</span></a></div><nav class="frame-nav"><ul class="nav-list"><li><a class="nav-item" href="#" aria-current="page" aria-label="반, 승인 대기 3건">반<span class="count" aria-hidden="true">3</span></a></li><li><a class="nav-item" href="#">레슨</a></li><li><a class="nav-item" href="#">강의 모드</a></li><li><a class="nav-item" href="#">결제</a></li></ul></nav></header><main class="frame-main" id="content"><div class="relink-bar" role="status"><div><p class="reason">새 기기 승인 대기 · 일요일 반 A</p><p class="line">8분 남음</p></div><a class="btn btn-primary" href="#">확인하기</a></div><div class="page-head"><h1>반</h1><a class="btn btn-small" href="#">+ 새 반</a></div>
+<div class="gx-rows">
+<article class="gx-row"><div class="grow"><p class="gx-name">일요일 반 A <a class="gx-chip gx-chip-action" href="#">승인 대기 3건</a></p><p class="line">학생 4명</p></div><a class="btn btn-small" href="#">열기</a></article>
+<article class="gx-row"><div class="grow"><p class="gx-name">초급 B반</p><p class="line">학생 0명</p></div><a class="btn btn-small" href="#">열기</a></article>
+</div></main></div>
+</body>
+</html>

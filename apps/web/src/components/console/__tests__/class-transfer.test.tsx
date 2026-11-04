@@ -177,6 +177,34 @@ describe('page states', () => {
     expect(text(root())).not.toContain(t.states.failed);
   });
 
+  it("a failed transfer read never hides another teacher's ask: it stays under Joining this class above the failed state", async () => {
+    const { api } = fakeApi([{ ok: false, error: 'network', status: -1 }]);
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+    await act(async () => {
+      renderer = create(
+        <ClassMoves
+          spaceId="space:a"
+          spaceName="Sunday Class A"
+          api={api}
+          online
+          refreshMs={60_000}
+          readOnly={false}
+          direct={new Set()}
+          confirm={async () => true}
+          onPageState={() => undefined}
+          joiningLead={<article data-testid="teacher-move-incoming">J. K.</article>}
+          joiningLeadCount={1}
+        />,
+        { createNodeMock: () => ({}) },
+      );
+    });
+    await act(async () => undefined);
+    expect(text(root())).toContain(t.states.failed);
+    expect(text(root())).toContain(t.groups.joining);
+    expect(allTestId('teacher-move-incoming')).toHaveLength(1);
+  });
+
   it('empty: both groups say "Nothing waiting."', async () => {
     const { api } = fakeApi([list()]);
     await renderMoves(api);
