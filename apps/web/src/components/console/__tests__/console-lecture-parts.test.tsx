@@ -1,4 +1,4 @@
-import { LECTURE_MAX_BLOCKS, type LectureBlock, type UiLocale } from '@hangul-route/content-schema';
+import { LECTURE_MAX_BLOCKS, type LectureBlock, type PresetMinutes, type UiLocale } from '@hangul-route/content-schema';
 import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -7,6 +7,7 @@ import { LectureChooserSection, LectureOptionsSection, LectureOutlineSection, Le
 import { LectureCustomize, LectureFooter, LecturePresetsLoading, LecturePresetsSection } from '@/components/console/LecturePresetParts';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import type { PlanView } from '@/lib/console/api';
+import { aboutMinutes } from '@/lib/console/lecture';
 import { presetCardWords } from '@/lib/console/lecture-presets';
 import { aroundSlot } from '@/lib/i18n/slot';
 import { expectAllPseudo } from './pseudo-text';
@@ -224,12 +225,81 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expect(html).toContain(m.console.curriculum.blend.lecture.classDay(weekday, 3));
     expect(html).toContain(m.console.curriculum.blend.lecture.classLength(45));
     expect(html).not.toContain('data-testid="lecture-preset-length-next-lesson"');
-    expect(html).toContain(m.console.lecture.outline.about(45));
+    // Its one minutes line (GX-14) names what it holds against the class length it was built for.
+    const held = aboutMinutes([revisit]);
+    expect(minutesLines(html)).toEqual([htmlText(held === 45 ? m.console.lecture.outline.about(45) : m.console.lecture.minutesOf(held, 45))]);
     // Another open card keeps its chips and draws no class-day lines.
     const other = renderToStaticMarkup(<LecturePresetsSection {...props} order={[...props.order]} open="by-stage" />);
     expect(other).toContain('data-testid="lecture-preset-length-by-stage"');
     expect(other).not.toContain('data-testid="lecture-preset-class-day"');
     expectAllPseudo(joined(html), ['Week three', weekday, jamo, ...rowWords([revisit])]);
+  });
+
+  /** The open ready-made card with an outline of `outline`, built for `length` minutes (`outlineMinutes` as the page passes it). */
+  const openCard = (outline: LectureBlock[], length: PresetMinutes, outlineMinutes: number | null): string =>
+    renderToStaticMarkup(
+      <LecturePresetsSection
+        order={['hangul-week-1', 'by-stage', 'warm-up', 'next-lesson']}
+        open="hangul-week-1"
+        minutesOf={() => length}
+        stage="stage1"
+        stages={['stage1']}
+        fallbackOf={() => null}
+        note={null}
+        planTitle={null}
+        family={false}
+        outline={outline}
+        outlineMinutes={outlineMinutes}
+        onToggle={noop}
+        onMinutes={noop}
+        onStage={noop}
+      />,
+    );
+  const htmlText = (text: string): string => renderToStaticMarkup(<i>{text}</i>).slice('<i>'.length, -'</i>'.length);
+  const minutesLines = (html: string): string[] => Array.from(html.matchAll(/data-testid="lecture-preset-minutes"[^>]*>([^<]*)</g), (match) => match[1] ?? '');
+
+  it('GX-14 (T14): the open card says its minutes once, "about 14 min (of 20)", never the length and the content minutes apart', () => {
+    const w = getMessages(PSEUDO).console.lecture;
+    const outline: LectureBlock[] = [revisit];
+    const held = aboutMinutes(outline);
+    expect(held).not.toBe(20);
+    for (const own of [null, held]) {
+      const html = openCard(outline, 20, own);
+      expect(minutesLines(html)).toEqual([htmlText(w.minutesOf(held, 20))]);
+      const panel = html.slice(html.indexOf('id="lecture-preset-panel-hangul-week-1"'));
+      const card = panel.slice(0, panel.indexOf('</li>'));
+      // What the card holds (the preview) carries no second minutes figure.
+      expect(card).not.toContain(htmlText(w.outline.about(held)));
+      expect(card).toContain(htmlText(w.presets.preview.title));
+      // The closed cards keep the length they were built for.
+      expect(html).toContain(htmlText(w.outline.about(20)));
+    }
+  });
+
+  it('GX-14 (T14): when what the open card holds is the length it was built for, the line is the plain "about 20 min"', () => {
+    const w = getMessages(PSEUDO).console.lecture;
+    const outline: LectureBlock[] = [revisit];
+    const held = aboutMinutes(outline);
+    // The card's length stands in as the outline's own minutes (only equality matters to the line).
+    const html = openCard(outline, held as PresetMinutes, null);
+    expect(minutesLines(html)).toEqual([htmlText(w.outline.about(held))]);
+    expect(html).not.toContain(htmlText(w.minutesOf(held, held)));
+  });
+
+  it('GX-14 review: the open card\'s minutes line joins its description when it says something its name does not', () => {
+    const w = getMessages(PSEUDO).console.lecture;
+    const outline: LectureBlock[] = [revisit];
+    const held = aboutMinutes(outline);
+    const describedBy = (html: string): string | undefined =>
+      /<button[^>]*aria-describedby="([^"]*)"[^>]*data-testid="lecture-preset-hangul-week-1"/.exec(html)?.[1];
+    for (const own of [null, held]) {
+      const html = openCard(outline, 20, own);
+      expect(describedBy(html)).toBe('lecture-preset-line-hangul-week-1 lecture-preset-minutes-hangul-week-1');
+      // The described span is the one that carries "about 14 min (of 20)".
+      expect(html).toContain(`id="lecture-preset-minutes-hangul-week-1" data-testid="lecture-preset-minutes">${htmlText(w.minutesOf(held, 20))}<`);
+    }
+    // When the line repeats the name's minutes, the description stays the card's line alone.
+    expect(describedBy(openCard(outline, held as PresetMinutes, null))).toBe('lecture-preset-line-hangul-week-1');
   });
 
   it('a card that cannot build what it names says so in its line, open or closed; the open card holds the note (section 4.1)', () => {

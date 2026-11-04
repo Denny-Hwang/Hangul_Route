@@ -233,12 +233,12 @@ export const report = {
     milestones: (when: string) => `${when} 단계 이정표`,
     milestone: (n: number, stage: string, count: number) => `${n}단계: ${stage}, 학습자 ${count}명 완료`,
     band: {
-      none: '아직 없음',
       practiced: '연습함',
       range: (from: number, to: number) => `${from}~${to}일`,
       atLeast: (from: number) => `${from}일 이상`,
     },
     count: (label: string, count: number) => `${label}: ${count}`,
+    didntPractice: (count: number) => `연습하지 않은 학생: ${count}명`,
     minutesTotal: (minutes: number) => `전체 시간: ${minutes}분`,
     medianMinutes: (minutes: number) => `연습한 학습자의 보통 시간: ${minutes}분`,
     planLesson: '수업 계획하기',

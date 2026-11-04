@@ -160,6 +160,9 @@ test.describe('the lecture setup page, presets first (LV-4)', () => {
       const preview = panel.getByTestId('lecture-preset-preview').getByRole('listitem');
       await expect(preview).toHaveCount(4);
       await expect(page.getByTestId('lecture-footer-minutes')).toHaveText(l.outline.about(19));
+      // The open card says its minutes once (GX-14, T14): what it holds, and the length it was built for.
+      await expect(open.getByTestId('lecture-preset-minutes')).toHaveText(l.minutesOf(19, 20));
+      await expect(panel.getByTestId('lecture-preset-minutes')).toHaveCount(0);
       await expect(page.getByTestId('open-presenter')).toBeInViewport();
       await expect(page.getByTestId('open-presenter')).toBeEnabled();
       // No helper picker anywhere (LV-D7).
@@ -549,7 +552,7 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
     await popup.close();
   });
 
-  test('family home at 375 x 667: the card after the first learner card, both in the first screen; the family words', async ({ page }) => {
+  test('family home at 375 x 667 with two learners: the card after the last learner card (GX-11, P3), the first card whole on the first screen; the family words', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await mockHome(page, [PARKS]);
     await page.goto('/parent');
@@ -562,16 +565,19 @@ test.describe('the Lecture mode card, nav item and space button (LV-5)', () => {
     const first = await cards.nth(0).boundingBox();
     const second = await cards.nth(1).boundingBox();
     const box = await lecture.boundingBox();
-    // The whole first learner card and the top of the Lecture mode card are on the first screen.
+    // The whole first learner card is on the first screen; with 2 or more learners the Lecture mode card comes after the
+    // last one, never between child 1 and child 2 (AMENDMENTS-GROWNUP-UX GX-11, P3).
     expect((first?.y ?? Infinity) + (first?.height ?? 0)).toBeLessThanOrEqual(667);
-    expect(box?.y ?? Infinity).toBeLessThan(667);
-    expect(box?.y ?? 0).toBeGreaterThan((first?.y ?? 0) + (first?.height ?? 0) - 1);
-    expect(second?.y ?? 0).toBeGreaterThan((box?.y ?? 0) + (box?.height ?? 0) - 1);
+    expect(second?.y ?? 0).toBeGreaterThan((first?.y ?? 0) + (first?.height ?? 0) - 1);
+    expect(box?.y ?? 0).toBeGreaterThan((second?.y ?? 0) + (second?.height ?? 0) - 1);
     const nav = page.getByTestId('frame-nav');
     // Lessons needs the app origin (F-BROWSE-001 section 4.3), so this localhost export draws the row without it.
     await expect(nav.getByRole('link')).toHaveText([en.console.shell.nav.home, en.console.shell.nav.reports, en.console.shell.nav.notes, en.console.shell.nav.lecture, en.console.shell.nav.billing]);
-    // Every item of the row is on the screen (the row wraps instead of hiding its last items).
-    for (const box of await nav.getByRole('link').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().right))) expect(box).toBeLessThanOrEqual(375);
+    // One row (GX-14, P6): the row scrolls inside itself and its end fades while tabs are hidden past it.
+    const tops = await nav.getByRole('link').evaluateAll((els) => Array.from(new Set(els.map((el) => Math.round(el.getBoundingClientRect().top)))));
+    expect(tops).toHaveLength(1);
+    const hidden = await nav.locator('ul').evaluate((list) => list.scrollWidth > list.clientWidth + 1);
+    await expect(page.getByTestId('frame-nav-row')).toHaveAttribute('data-more-end', String(hidden));
     await noSidewaysScroll(page);
     await shot(page, 'lv5-parent-home-375-first', false);
     await shot(page, 'lv5-parent-home-375');

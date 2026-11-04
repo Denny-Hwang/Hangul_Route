@@ -59,12 +59,12 @@ import {
  */
 export const GENERATOR_VERSION = 1;
 
-type QueueItem = Pick<PlanItem, 'kind' | 'id' | 'note'>;
-interface StoryEntry {
+export type QueueItem = Pick<PlanItem, 'kind' | 'id' | 'note'>;
+export interface StoryEntry {
   item: QueueItem;
   story: CatalogStory;
 }
-interface Queues {
+export interface Queues {
   lessons: QueueItem[];
   stories: StoryEntry[];
   comingSoon: QueueItem[];
@@ -90,7 +90,8 @@ export interface GenerateOptions {
   catalogHistory?: CatalogHistory;
 }
 
-interface BuildOptions extends GenerateOptions {
+/** What `generateCurriculum` builds with; `regenerateFrom` adds a re-pace's queue and history (exported for row BL-3). */
+export interface BuildOptions extends GenerateOptions {
   /** `regenerateFrom` `shift`: the plan's own future items replace the catalogue queue. */
   queue?: Queues;
   /**
@@ -554,6 +555,36 @@ export function installBlendedPath(path: BlendedPath, sessionsFrom: BlendedSessi
   blendedSessionsFrom = sessionsFrom;
 }
 
+/** What the blended `shift` (row BL-3) reads of the generator, bound to one catalogue. */
+export interface BlendedShiftKit {
+  /** The re-pace's freeze, stored weeks, placed-out version and stored Refresh dates. */
+  base: BuildOptions;
+  build: (params: CurriculumParamsInput, opts: BuildOptions) => CurriculumDraft;
+  /** The plan's own items as the generator's queue (lessons, the story pool, the coming-soon cells). */
+  queueOf: (items: readonly PlanItem[]) => NonNullable<BuildOptions['queue']>;
+  /** Item id to its place in the route: the catalogue's lesson queue, then its story pool. */
+  routeRank: (stored: StoredCurriculumParams) => Map<string, number>;
+  isStory: (item: PlanItem) => boolean;
+}
+export type BlendedShift = (
+  plan: { meta: CurriculumMeta; items: PlanItem[] },
+  today: DateKey,
+  opts: RegenerateOptions,
+  kit: BlendedShiftKit,
+) => CurriculumDraft;
+let blendedShift: BlendedShift | undefined;
+
+/**
+ * Installs `regenerateFrom`'s `shift` for a blended plan, Move this class day and Add / Stop practice days (row
+ * BL-3). Like the blended path it ships from the `blend-generator` subpath only, outside the learner app's start bundle.
+ */
+export function installBlendedShift(shift: BlendedShift): void {
+  blendedShift = shift;
+}
+
+const NEEDS_BLEND_GENERATOR =
+  'A plan with class days and practice days needs the blended generator: import "@hangul-route/content-schema/blend-generator" first.';
+
 /**
  * Class days with practice days (AMENDMENTS-ROUTE-CLASS-BLEND, row BL-2): steps 3 to 5 as for any plan, then the
  * blended walk of `generate-blend.ts` over class cycles. Weeks and the done set start at the route's first class day.
@@ -565,7 +596,7 @@ const buildBlend = (p: CurriculumParams & { blend: NonNullable<CurriculumParams[
   const fromCatalog = catalogQueuesOf(p, catalog, themeOrderOf(p), cadenceOf(p).endStage, new Set(history.map((item) => item.id)));
   const queues: Queues = opts.queue ?? fromCatalog;
   if (blendedPath === undefined) {
-    throw new Error('A plan with class days and practice days needs the blended generator: import "@hangul-route/content-schema/blend-generator" first.');
+    throw new Error(NEEDS_BLEND_GENERATOR);
   }
   return blendedPath({
     params: p,
@@ -690,6 +721,16 @@ export type ReseedPatch = Partial<Pick<CurriculumParams, 'level' | 'placedOutQue
 export interface RegenerateOptions {
   mode: RegenerateMode;
   completedQuestIds?: string[];
+  /**
+   * `shift` only (AMENDMENTS-ROUTE-CLASS-BLEND section 10.2, row BL-3): **Move this class day**. That class date
+   * joins `blend.classDaysOff`; its lessons and every later class day's move to the following class days.
+   */
+  classDay?: DateKey;
+  /**
+   * `shift` only (section 14, row BL-3): the plan's params replaced, for **Add practice days** (params with `blend`)
+   * and **Stop practice days** (params without it). Past items stay; the future is laid again under these params.
+   */
+  params?: Omit<CurriculumParamsInput, 'completedQuestIds'>;
   /** `reseed` only; ignored by the other modes. */
   paramsPatch?: ReseedPatch;
   /** The catalogue-growth rule's history (F-CURR-001 §3.13); default the shipped one. */
@@ -721,6 +762,14 @@ export interface RegenerateOptions {
  * complete them, so moving them would never settle), and when no session is
  * left on or after `today` there is nowhere to move anything: every past item
  * stays and the plan is unchanged. Offer **Add N weeks** (`weeks + N`) first.
+ *
+ * A blended plan (AMENDMENTS-ROUTE-CLASS-BLEND, row BL-3) in `shift`: a lesson a class day has already taught and no
+ * practice date has played yet keeps its `lectureDate` and waits for the next practice dates; every other future
+ * lesson is laid again in route order. `classDay` (**Move this class day**, section 10.2) adds that class date to
+ * `blend.classDaysOff` and freezes everything dated before it (or before today, when it has gone by): its lessons and
+ * every later class day's move to the following class days, practice dates follow by sections 6.2 and 6.3, and split
+ * practice-only lessons wait for their opener's new class day. `params` (**Add practice days** / **Stop practice
+ * days**, section 14) lays the future again under new params, with or without `blend`; past items stay.
  */
 export function regenerateFrom(
   plan: { meta: CurriculumMeta; items: PlanItem[] },
@@ -729,6 +778,9 @@ export function regenerateFrom(
   opts: RegenerateOptions,
 ): CurriculumDraft {
   RealDateKeySchema.parse(today);
+  if ((opts.classDay !== undefined || opts.params !== undefined) && opts.mode !== 'shift') {
+    throw new Error('classDay and params are options of the shift mode');
+  }
   const completed = opts.completedQuestIds ?? [];
   const params: CurriculumParamsInput = { ...plan.meta.params, completedQuestIds: completed };
   const isPast = (item: PlanItem): boolean => item.targetDate !== undefined && item.targetDate < today;
@@ -775,6 +827,27 @@ export function regenerateFrom(
       !sessionsLeft || done.has(item.id) || lookup.category(asQueueItem(item)) === 'coming-soon';
     return build(params, catalog, { ...base, history: past.filter(stays) });
   }
-  const future = plan.items.filter((item) => !isPast(item));
-  return build(params, catalog, { ...base, history: past, queue: planQueuesOf(future, new Lookup(catalog)) });
+  if (opts.classDay === undefined && opts.params === undefined && plan.meta.params.blend === undefined) {
+    const future = plan.items.filter((item) => !isPast(item));
+    return build(params, catalog, { ...base, history: past, queue: planQueuesOf(future, new Lookup(catalog)) });
+  }
+  if (blendedShift === undefined) throw new Error(NEEDS_BLEND_GENERATOR);
+  const lookup = new Lookup(catalog);
+  return blendedShift(plan, today, opts, {
+    base,
+    build: (input, buildOpts) => build(input, catalog, buildOpts),
+    queueOf: (items) => planQueuesOf(items, lookup),
+    routeRank: (stored) => routeRankOf(stored, catalog),
+    isStory: (item) => lookup.category(item) === 'story',
+  });
 }
+
+/**
+ * A blended plan stores its items by practice date, which deals a class's lessons round robin (section 6.2), so the
+ * queue is laid again in route order: the catalogue's lesson queue, then its story pool. Other items keep their order.
+ */
+const routeRankOf = (stored: StoredCurriculumParams, catalog: Catalog): Map<string, number> => {
+  const p = CurriculumParamsSchema.parse({ ...stored, completedQuestIds: [] });
+  const queues = catalogQueuesOf(p, catalog, themeOrderOf(p), cadenceOf(p).endStage, new Set());
+  return new Map([...queues.lessons, ...queues.stories.map((entry) => entry.item)].map((item, index) => [item.id, index]));
+};

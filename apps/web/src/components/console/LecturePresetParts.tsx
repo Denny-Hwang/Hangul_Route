@@ -69,7 +69,6 @@ export const PRESETS_CSS = `
 .hr-lp-sub{display:flex;flex-direction:column;gap:${rem(spacing.xs)};min-width:0}
 .hr-lp-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;column-gap:${rem(spacing.md)}}
 .hr-lp-head h3{margin:0;font-size:${rem(typography.size.body)};font-weight:${typography.weight.bold}}
-.hr-lp-head span{color:${colors.text.secondary}}
 .hr-lp-list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none;border-top:${px(borderWidth.thin)} solid ${colors.border.subtle}}
 .hr-lp-list li{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:${rem(spacing.md)};padding:${rem(spacing.sm)} 0;border-bottom:${px(borderWidth.thin)} solid ${colors.border.subtle}}
 .hr-lp-list li > span:first-child{font-weight:${typography.weight.bold};overflow-wrap:anywhere;min-width:0}
@@ -173,10 +172,17 @@ export function LecturePresetsSection({ order, open, minutesOf, classDay, stage,
           const minutes = minutesOf(preset);
           // The open card is named by what it holds; the length chips keep the length it was built for.
           const shown = isOpen && outlineMinutes !== null ? outlineMinutes : minutes;
+          // Its one minutes line (GX-14, T14): what it holds, with the length beside it when they differ.
+          const held = isOpen ? aboutMinutes(outline) : minutes;
+          const minutesLine = held === minutes ? l.outline.about(held) : l.minutesOf(held, minutes);
           const words = presetCardWords(preset, p, { planTitle, family });
           const fallback = fallbackOf(preset);
           const panelId = `lecture-preset-panel-${preset}`;
           const lineId = `lecture-preset-line-${preset}`;
+          const minutesId = `lecture-preset-minutes-${preset}`;
+          // The name keeps its minutes (LV-4); when the visible minutes line says something the name does not,
+          // it joins the description so screen readers and voice control hear what the screen shows.
+          const describedBy = held === shown && held === minutes ? lineId : `${lineId} ${minutesId}`;
           // A blended class day keeps its plan's length: no chips on Next lesson (section 10.3).
           const day = preset === 'next-lesson' ? classDay : null;
           const lengths = day !== null ? [] : PRESET_LENGTHS[preset];
@@ -188,7 +194,7 @@ export function LecturePresetsSection({ order, open, minutesOf, classDay, stage,
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 aria-label={m.a11y.presenter.presetCard(words.title, shown)}
-                aria-describedby={lineId}
+                aria-describedby={describedBy}
                 onClick={() => onToggle(preset)}
                 data-testid={`lecture-preset-${preset}`}
               >
@@ -197,7 +203,9 @@ export function LecturePresetsSection({ order, open, minutesOf, classDay, stage,
                   {fallback ?? words.line}
                 </span>
                 <span className="hr-lp-meta">
-                  <span>{l.outline.about(shown)}</span>
+                  <span id={minutesId} data-testid={isOpen ? 'lecture-preset-minutes' : undefined}>
+                    {minutesLine}
+                  </span>
                   <IconSvg name="arrow-right" size={spacing.xl} color={colors.text.secondary} />
                 </span>
               </button>
@@ -232,7 +240,6 @@ export function LecturePresetsSection({ order, open, minutesOf, classDay, stage,
                     <div className="hr-lp-sub">
                       <div className="hr-lp-head">
                         <h3 id={`${panelId}-list`}>{p.preview.title}</h3>
-                        <span data-testid="lecture-preset-minutes">{l.outline.about(aboutMinutes(outline))}</span>
                       </div>
                       <ul className="hr-lp-list" aria-labelledby={`${panelId}-list`} data-testid="lecture-preset-preview">
                         {outline.map((block, i) => (
