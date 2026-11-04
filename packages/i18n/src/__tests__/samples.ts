@@ -1073,6 +1073,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parentHome.classLine.many': [[2]],
   'console.transfer.familyNeedsYou': [[1], [2]],
   'console.transfer.endsOn': [['Nov 9']],
+  // AMENDMENTS-GROWNUP-UX GX-11: a child card's week line (1 and many days, minutes), its next quest, the never-started line.
+  'console.parentHome.week': [[1, 5], [4, 36], [7, 120]],
+  'console.parentHome.next': [['Meet the Letters 3']],
+  'console.parentHome.notStarted': [['Sora']],
   'console.relinkPopup.title': [['Jaehan']],
   'console.relinkPopup.closes': [[1], [8]],
   'console.relinkPopup.meta': [['iPhone or iPad', 'asked 2 min ago']],

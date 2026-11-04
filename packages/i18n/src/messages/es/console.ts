@@ -1186,6 +1186,11 @@ export const consoleMsgs = {
       many: (n: number) => `En ${n} clases`,
       none: 'Solo en familia',
     },
+    week: (days: number, minutes: number) => `Practicó ${days} de los últimos 7 días · ${minutes}\u00a0min`,
+    next: (title: string) => `Siguiente: ${title}`,
+    notStarted: (name: string) => `Aún no ha empezado. Abre la app en el dispositivo que usa ${name}.`,
+    restart: 'Una misión de 5 minutos es ideal para retomar.',
+    lastActive: { notStarted: 'Aún no ha empezado' },
   },
   journey: {
     title: 'Ruta de aprendizaje',

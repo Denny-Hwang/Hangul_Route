@@ -20,10 +20,12 @@ import type { EntitlementView, PlanView, Roster, RosterLearner, SpaceListItem, T
 import { appUrl, browseEntryShown, contentGatingEnabled, learningRouteEnabled, lectureModeEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
 import { spaceCoverage } from '@/lib/console/curriculum';
 import { rosterFreeLessonsLine } from '@/lib/console/free-lessons-line-view';
-import { openAppWithJoinCode } from '@/lib/console/join-handoff';
+import { openAppWithJoinCode, openLearnerApp } from '@/lib/console/join-handoff';
 import {
   childChipWords,
   childStatus,
+  childWeek,
+  childWeekLines,
   classLine,
   classLineWords,
   familyActionLinks,
@@ -42,7 +44,7 @@ import {
 } from '@/lib/console/parent-home';
 import { personaHome } from '@/lib/console/personas';
 import { dateKey, livePublished } from '@/lib/console/plans';
-import { capState, codeExpiry, familyCountLine, relativeDay, seatLine } from '@/lib/console/rollup';
+import { capState, codeExpiry, familyCountLine, seatLine } from '@/lib/console/rollup';
 import { renameShown } from '@/lib/console/rename';
 import { RenameStyles, RenameTitle, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
 import type { ConsoleApi } from '@/lib/console/api';
@@ -72,12 +74,18 @@ import { headRem, rem } from '@/lib/console/rem';
  * about. The family's re-links, class moves (with their `options`), class-scope state and notices join the page's quiet
  * load, so a new item appears without a reload. The strip replaces the family actions' "N class moves waiting" pill.
  *
+ * The child's week (AMENDMENTS-GROWNUP-UX GX-11, section 9 P2): under the class line, "Practiced {d} of the last 7 days
+ * · {m} min" with the report's 7-day squares (fill only, beside words that say the same), then "Next: {quest}" from the
+ * report's next resolver; a child who never started gets "Not started yet. Open the app on the device {name} uses." with
+ * **Open the app on this device**; a child quiet for 7 days "A 5-minute quest is a good restart." (never a zero).
+ *
  * Lecture mode (AMENDMENTS-LECTURE-V2 E2, LV-5; design/screens/app-shell/lecture-card.md "Placement"): one card, in
  * the first family's section. From 70em first in its side column, above the family actions (outside their
- * landmark); below 70em in the card grid right after the last card of its first row (one column below 45em: directly
- * after the first learner card, so the first screen at 375 x 667 keeps that whole card), placed there in the page
- * itself so the reading and focus order is the order on screen; with no learner card, at the end of the family's
- * main column. With no family, after the "no family yet" panel. Nothing while `lectureModeEnabled()` is off.
+ * landmark); the Needs you strip, in the main column, comes before it in the page. Below 70em with one learner, in the
+ * card grid right after that card (one column below 45em, so the first screen at 375 x 667 keeps that whole card),
+ * placed there in the page itself so the reading and focus order is the order on screen; with 2 or more learners
+ * (GX-11, P3), while the roster loads, or with no learner card, at the end of the family's main column, after the last
+ * child. With no family, after the "no family yet" panel. Nothing while `lectureModeEnabled()` is off.
  */
 
 /** Background reads of the family list that may fail in a row before they stop (a signed-out answer stops them at once). */
@@ -147,6 +155,16 @@ const cardStyle: CSSProperties = {
   minWidth: 0,
 };
 const facts: CSSProperties = { display: 'flex', flexDirection: 'column', gap: spacing.xxs, color: colors.text.secondary, fontSize: rem(typography.size.bodySm) };
+/** GX-11: the 7-day squares, the report calendar's marks in small (practiced filled, every other day an outline; fill only). */
+const squaresRow: CSSProperties = { display: 'flex', gap: spacing.xs, margin: 0, padding: 0, listStyle: 'none' };
+const squareStyle = (on: boolean): CSSProperties => ({
+  width: spacing.lg,
+  height: spacing.lg,
+  boxSizing: 'border-box',
+  borderRadius: radii.xs,
+  backgroundColor: on ? colors.brand.secondary : colors.surface.paper,
+  border: `${borderWidth.base}px solid ${on ? colors.brand.secondaryDark : colors.border.shape}`,
+});
 const skeleton: CSSProperties = { ...cardStyle, boxShadow: 'none', backgroundColor: colors.surface.sunken, minHeight: touchTarget.min * 3 };
 
 export default function ParentHomePage(): JSX.Element {
@@ -435,6 +453,10 @@ export default function ParentHomePage(): JSX.Element {
         )
       : null;
     const label = (key: 'seeReport' | 'open' | 'sendNote' | 'route'): string => p.child[key];
+    // GX-11 (P2): the child's week, read through the learner report itself; a child who never started gets the app.
+    const week = childWeek(learner, now, locale);
+    const weekWords = childWeekLines(week, learner.displayName, now, locale);
+    const startHere = week.kind === 'notStarted' && !isArchivedFamily(family);
     // GX-4 (section 7.2): one status chip (text; the strip owns the buttons), the class line, and TV-D10's notice here.
     const familyAsks = asks[familyId];
     const status = familyAsks ? childStatus(learner.id, familyAsks, now) : null;
@@ -455,10 +477,22 @@ export default function ParentHomePage(): JSX.Element {
             ))}
           </div>
         ) : null}
-        <div style={facts}>
-          <span>{c.space.learner.lastActive(relativeDay(learner.lastActiveAt, now, locale))}</span>
-          {learner.summary ? <span>{p.minutes7d(learner.summary.minutesLast7d)}</span> : null}
+        <div style={facts} data-testid="child-week">
+          <span data-testid="child-week-line">{week.kind === 'notStarted' && !startHere ? p.lastActive.notStarted : weekWords.first}</span>
+          {weekWords.second ? <span>{weekWords.second}</span> : null}
         </div>
+        {week.kind === 'week' ? (
+          <ol style={squaresRow} aria-hidden={true} data-testid="child-week-squares">
+            {week.squares.map((on, index) => (
+              <li key={index} style={squareStyle(on)} data-on={on ? 'true' : 'false'} />
+            ))}
+          </ol>
+        ) : null}
+        {weekWords.next ? (
+          <p data-testid="child-next" style={{ ...facts, margin: 0, color: colors.text.primary }}>
+            {weekWords.next}
+          </p>
+        ) : null}
         <FreeLessonsLine line={freeLine} />
         {notice && api ? (
           <MoveNotice
@@ -473,9 +507,15 @@ export default function ParentHomePage(): JSX.Element {
             }
           />
         ) : null}
-        <Link href={actions.primary.href} style={primary}>
-          {label(actions.primary.key)}
-        </Link>
+        {startHere ? (
+          <button type="button" style={primary} data-testid="child-open-app" onClick={() => openLearnerApp({ locale })}>
+            {p.empty.openApp}
+          </button>
+        ) : (
+          <Link href={actions.primary.href} style={primary}>
+            {label(actions.primary.key)}
+          </Link>
+        )}
         {actions.secondary.length > 0 ? (
           <div className="hr-ph-row">
             {actions.secondary.map((action) => (
@@ -509,7 +549,8 @@ export default function ParentHomePage(): JSX.Element {
     const expanded = openPanel === id && !archived;
     const canAdd = entry.state === 'ready' && !empty && !archived;
     // The one Lecture mode card goes in the first family's section (lecture-card.md "Placement").
-    const lectureSlot = lectureView && family === firstFamily ? lectureCardSlot(wideHome, entry.state === 'loading' ? 2 : learners.length) : null;
+    const waiting = api && !archived && asks[id] ? needsYou(asks[id] as FamilyAsks, now).length : 0;
+    const lectureSlot = lectureView && family === firstFamily ? lectureCardSlot(wideHome, entry.state === 'loading' ? 2 : learners.length, waiting) : null;
     const first = family === firstFamily;
     const after = (slot: 'afterMain'): JSX.Element | null => (lectureSlot === slot ? lectureCard : null);
     const actions = (
@@ -634,10 +675,11 @@ export default function ParentHomePage(): JSX.Element {
           ) : null}
           {after('afterMain')}
         </div>
-        {lectureSlot === 'side' ? (
+        {lectureSlot === 'side' || lectureSlot === 'sideAfter' ? (
           <div className="hr-ph-side">
-            {lectureCard}
+            {lectureSlot === 'side' ? <Fragment key="lecture-mode">{lectureCard}</Fragment> : null}
             {side}
+            {lectureSlot === 'sideAfter' ? <Fragment key="lecture-mode">{lectureCard}</Fragment> : null}
           </div>
         ) : (
           side
@@ -686,8 +728,9 @@ export default function ParentHomePage(): JSX.Element {
         <div className="hr-ph-family">
           <div className="hr-ph-main" aria-busy={true}>
             <div className="hr-ph-cards" ref={setCardsGrid}>
-              {withLectureCard(skeletons(), !wideHome)}
+              {skeletons()}
             </div>
+            {wideHome ? null : lectureCard}
           </div>
           {wideHome ? <div className="hr-ph-side">{lectureCard}</div> : null}
         </div>

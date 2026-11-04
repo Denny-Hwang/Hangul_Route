@@ -1,9 +1,12 @@
+import { CATALOG, learnerReport, type Catalog } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
-import type { RelinkView, RosterLearner, SpaceListItem, TransferLearnerSideView, TransferList } from './api';
+import { reportSummaryOf, type RelinkView, type RosterLearner, type SpaceListItem, type TransferLearnerSideView, type TransferList } from './api';
 import type { ClassScopeState, MoveNotice } from './class-moves';
 import { minutesShown } from './learner-status';
 import { lectureCardView, type LectureCardView } from './lecture-entry';
 import { heldPersonas } from './personas';
+import { reportDayText, reportNextQuest } from './report-view';
+import { relativeDay } from './rollup';
 import { ROUTES } from './routing';
 import { familyMustAnswer } from './transfer';
 
@@ -95,16 +98,22 @@ export function familyLectureCard(items: readonly SpaceListItem[] | 'failed' | n
 /**
  * Where the family home draws its one card (design/screens/app-shell/lecture-card.md "Placement", measured at
  * 375 x 667): from 70em (`wide`) first in the first family's side column, level with the learner cards and above the
- * family actions; below it in the first family's card grid right after the last card of its first row (one column
- * below 45em: directly after the first learner card or loading card, so the first screen keeps that whole card and
- * shows the top of this one), so the order on screen is the order in the page (`firstRowEnd`); with no card to follow
- * (a family with no learner yet, a roster that did not load), at the end of the family's main column.
+ * family actions (the Needs you strip, in the main column, comes before it in the page); below it, with one learner,
+ * in the first family's card grid right after that card, so the first screen keeps the whole card and shows the top
+ * of this one. AMENDMENTS-GROWNUP-UX GX-11 (P3): with 2 or more learners (or while the roster loads) below 70em, at
+ * the end of the family's main column, after the last child, so the card never sits between child 1 and child 2;
+ * with no card to follow (no learner yet, a roster that did not load), there too.
  */
-export type LectureSlot = 'side' | 'afterFirstRow' | 'afterMain';
+export type LectureSlot = 'side' | 'sideAfter' | 'afterFirstRow' | 'afterMain';
 
-export function lectureCardSlot(wide: boolean, cards: number): LectureSlot {
-  if (wide) return 'side';
-  return cards > 0 ? 'afterFirstRow' : 'afterMain';
+/**
+ * `waiting`: the family's Needs you items. From 70em, while any wait (GX-11 review), the card goes after the family
+ * actions in the side column ('sideAfter'), so the strip with Approve and Deny is what a parent sees first, not the
+ * Lecture mode card level with the family's heading.
+ */
+export function lectureCardSlot(wide: boolean, cards: number, waiting = 0): LectureSlot {
+  if (wide) return waiting > 0 ? 'sideAfter' : 'side';
+  return cards === 1 ? 'afterFirstRow' : 'afterMain';
 }
 
 /** The index of the card the Lecture mode card follows: the last card of the grid's first row of `columns`. */
@@ -264,4 +273,70 @@ export function classLineWords(line: ClassLine, locale: UiLocale = DEFAULT_LOCAL
 /** The TV-D10 notice about this child, shown inside the child's card (the first, if several). */
 export function noticeFor(learnerId: string, notices: readonly MoveNotice[]): MoveNotice | null {
   return notices.find((n) => n.learnerId === learnerId) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// AMENDMENTS-GROWNUP-UX GX-11 (section 9 P2 and P10; wireframe design/wireframes/parent/needs-you.md, mock
+// design/screens/approvals/mock/parent-*.html): what a child card says about the child's week, read from the roster's
+// summary through the learner report itself (`learnerReport`, the week period: the last 7 days in the learner's own
+// day), so the card, the chooser and the report never disagree. Counts only, never a comparison; squares only fill.
+
+export type ChildWeek =
+  /** No summary yet, or a summary with no practice day at all. */
+  | { kind: 'notStarted' }
+  /** Practiced at least one of the last 7 days: the days, their minutes, the 7 squares (oldest first) and the next quest. */
+  | { kind: 'week'; days: number; minutes: number; squares: boolean[]; next: string | null }
+  /** Quiet for the last 7 days: the restart line (never a zero), with the next quest when known. */
+  | { kind: 'restart'; next: string | null }
+  /**
+   * Not saved for more than 7 days (the report's `stale`): the report's own "Last saved {date}." line, never a count or
+   * a restart nudge for days this page cannot see (the child may have practised offline).
+   */
+  | { kind: 'stale'; lastSaved: string; next: string | null }
+  /** An older app with no day-by-day data: the shipped last-active and minutes lines. */
+  | { kind: 'legacy'; lastActiveAt: string; minutes: number | null };
+
+export function childWeek(learner: RosterLearner, now: Date, locale: UiLocale = DEFAULT_LOCALE, catalog: Catalog = CATALOG): ChildWeek {
+  const summary = learner.summary === null ? null : reportSummaryOf(learner.summary);
+  const report = learnerReport({ summary, viewer: 'family', voice: 'third', period: 'week', now, catalog, lastSyncedAt: learner.lastSyncedAt });
+  const legacy = (): ChildWeek => ({ kind: 'legacy', lastActiveAt: summary?.lastActiveAt || learner.lastActiveAt, minutes: summary?.minutesLast7d ?? null });
+  if (summary === null || report.state === 'no_data') return { kind: 'notStarted' };
+  // A row with minutes but none of the report's progress fields (an older summary) has practised: never "Not started".
+  if (report.state === 'empty') return !summary.activity && (summary.minutesLast7d ?? 0) > 0 ? legacy() : { kind: 'notStarted' };
+  if (report.state === 'legacy' || report.figures === null) return legacy();
+  const next = reportNextQuest(summary, locale, catalog)?.title ?? null;
+  if (report.stale) return { kind: 'stale', lastSaved: report.stale.lastSaved, next };
+  const days = report.figures.days.count;
+  if (days === 0) return { kind: 'restart', next };
+  const squares = (report.calendar ?? []).map((cell) => cell.kind === 'practiced');
+  return { kind: 'week', days, minutes: report.figures.minutes.count, squares, next };
+}
+
+/**
+ * A child's week in words: `first` (and, for an older app, `second`) under the name, `next` ("Next: {quest}") under the
+ * squares, and `chooser`, the one line the report chooser draws under the name (P10).
+ */
+export function childWeekLines(week: ChildWeek, name: string, now: Date, locale: UiLocale = DEFAULT_LOCALE): { first: string; second?: string; next: string | null; chooser: string } {
+  const c = getMessages(locale).console;
+  const p = c.parentHome;
+  const next = 'next' in week && week.next !== null ? p.next(week.next) : null;
+  switch (week.kind) {
+    case 'notStarted':
+      return { first: p.notStarted(name), next: null, chooser: p.lastActive.notStarted };
+    case 'restart':
+      return { first: p.restart, next, chooser: p.restart };
+    case 'stale': {
+      const line = getMessages(locale).report.state.stale(reportDayText(week.lastSaved, now.toISOString().slice(0, 10), locale));
+      return { first: line, next, chooser: line };
+    }
+    case 'week': {
+      const line = p.week(week.days, week.minutes);
+      return { first: line, next, chooser: line };
+    }
+    default: {
+      const first = c.space.learner.lastActive(relativeDay(week.lastActiveAt, now, locale));
+      if (week.minutes === null) return { first, next: null, chooser: first };
+      return { first, second: p.minutes7d(week.minutes), next: null, chooser: p.minutes7d(week.minutes) };
+    }
+  }
 }

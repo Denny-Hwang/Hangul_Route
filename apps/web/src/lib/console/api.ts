@@ -852,6 +852,16 @@ function parseLearnerReport(raw: unknown): LearnerReportBody | null {
   if (envelope === null) return null;
   const source = raw.summary;
   if (source === null || source === undefined) return { ...envelope, summary: null };
+  const summary = reportSummaryOf(source);
+  return summary === null ? null : { ...envelope, summary };
+}
+
+/**
+ * A summary as the report reads it, each key (and each plan of `planProgress`) checked on its own and a key this bundle
+ * cannot read dropped; null for a value that is not an object. The learner report body reads it, and so does the family
+ * home's child card from a roster row's `summary` (AMENDMENTS-GROWNUP-UX GX-11), so both draw the same week.
+ */
+export function reportSummaryOf(source: unknown): ReportSummary | null {
   if (!isPlainRecord(source)) return null;
   const summary: Record<string, unknown> = {};
   for (const [key, field] of Object.entries(ReportSummarySchema.shape)) {
@@ -869,5 +879,5 @@ function parseLearnerReport(raw: unknown): LearnerReportBody | null {
     const checked = field.safeParse(value);
     if (checked.success && checked.data !== undefined) summary[key] = checked.data;
   }
-  return { ...envelope, summary: summary as ReportSummary };
+  return summary as ReportSummary;
 }
