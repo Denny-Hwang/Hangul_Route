@@ -45,6 +45,8 @@ export type StoryBody = Pick<Story, StoryBodyField>;
 export interface StoryTierHeader {
   level: StoryLevel;
   scenes: number;
+  /** The tier has a Story Order (F-CURR-002 row CM-46: a book 2 tale's read tier); absent otherwise. */
+  storyOrder?: true;
 }
 
 /**
@@ -333,6 +335,16 @@ export function storyTierLevels(story: Pick<Story, 'tiers'>): StoryLevel[] {
 }
 
 /**
+ * Whether a story's tier at this level has a Story Order (F-CURR-002 row CM-46): the shelf's header for a story of
+ * `storiesOverStore` (known before its chunk loads), else its own tier.
+ */
+export function storyTierHasOrder(story: Pick<Story, 'tiers'>, level: StoryLevel): boolean {
+  const header = shelfOf.get(story)?.levels.find((t) => t.level === level);
+  if (header !== undefined) return header.storyOrder === true;
+  return story.tiers.find((t) => t.level === level)?.storyOrder !== undefined;
+}
+
+/**
  * A full story split into its shelf entry and its body: the TypeScript twin of `planChunks` in
  * scripts/build-stories.mjs, used for stories parsed at runtime (the test fixtures of an e2e build)
  * and kept equal to the generator by `content/__tests__/story-chunks.test.ts`.
@@ -355,7 +367,7 @@ export function splitStory(story: Story, chunk: string): { entry: StoryShelfEntr
   const entry = {
     ...(shelf as Omit<StoryShelfEntry, 'review' | 'levels' | 'cardWord' | 'chunk'>),
     review,
-    levels: story.tiers.map((t) => ({ level: t.level, scenes: t.scenes.length })),
+    levels: story.tiers.map((t) => ({ level: t.level, scenes: t.scenes.length, ...(t.storyOrder ? { storyOrder: true as const } : {}) })),
     ...(cardKeyword === undefined ? {} : { cardWord: { ko: cardKeyword.ko, romanization: cardKeyword.romanization } }),
     chunk,
   };

@@ -342,7 +342,8 @@ export function splitStory(story) {
     else if (!isDefault(key, value)) shelf[key] = value;
   }
   const tiers = Array.isArray(story.tiers) ? story.tiers : [];
-  shelf.levels = tiers.map((t) => ({ level: t.level, scenes: Array.isArray(t.scenes) ? t.scenes.length : 0 }));
+  // A tier with a Story Order (row CM-46, a book 2 tale's read tier) says so, so its book quest is built before the chunk.
+  shelf.levels = tiers.map((t) => ({ level: t.level, scenes: Array.isArray(t.scenes) ? t.scenes.length : 0, ...(t.storyOrder ? { storyOrder: true } : {}) }));
   // The card's face (its Korean word and romanization) is drawn wherever the card is listed, before any chunk;
   // the rest of the keyword (its id, gloss and kind) is in the body with the other keywords (row CM-8b).
   const cardKeyword = story.card ? (story.keywords ?? []).find((k) => k.id === story.card.keywordId) : undefined;
