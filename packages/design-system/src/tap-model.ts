@@ -181,13 +181,17 @@ function claim(point: TapPoint, targets: readonly TapTargetSnapshot[], hit?: Tap
   // Controls first (rule 2): a speaker or a hint inside the board is never claimed.
   if (hit?.kind === 'control' || controls.some((rect) => rectDistance(point, rect) === 0)) return { claimed: false, id: null };
   const near: Array<{ id: string; distance: number }> = [];
+  let nearTakeBack = false;
   for (const target of targets) {
     const distance = rectDistance(point, target.rect);
     if (distance === 0) return { claimed: true, id: target.id };
     // A take-back target is reached only from inside its own rectangle.
     if (distance <= GAP_REACH && target.gapFill !== false) near.push({ id: target.id, distance });
+    else if (distance <= GAP_REACH) nearTakeBack = true;
   }
-  if (near.length === 0) return { claimed: false, id: null };
+  // Just outside a take-back target and near no other: the board takes the touch so it is nobody's, as a tie. Left to
+  // the browser, its touch adjustment would send the click into the take-back target (KT-6, Build a Letter's slot).
+  if (near.length === 0) return { claimed: nearTakeBack, id: null };
   const nearest = Math.min(...near.map((n) => n.distance));
   const closest = near.filter((n) => n.distance - nearest <= TIE_PX);
   return { claimed: true, id: closest.length === 1 ? closest[0]!.id : null };
@@ -203,9 +207,9 @@ export function claimTarget(point: TapPoint, targets: readonly TapTargetSnapshot
 }
 
 /**
- * Whether the board takes a touch at `point`: every touch that goes to a target, and a tie in a gap, which the board
- * takes so that it commits nothing (the browser would otherwise send its click to whichever target its own touch
- * adjustment picks). A touch near no target, or on another control, falls through to whatever is under it.
+ * Whether the board takes a touch at `point`: every touch that goes to a target, a tie in a gap, and a touch in the gap
+ * band of a take-back target (`gapFill={false}`) that no other target fills, which the board takes so that it commits
+ * nothing (the browser would otherwise send its click to whichever target its own touch adjustment picks). A touch near no target, or on another control, falls through to whatever is under it.
  */
 export function claimsTouch(point: TapPoint, targets: readonly TapTargetSnapshot[], hit?: TapHit, controls?: readonly TapRect[]): boolean {
   return claim(point, targets, hit, controls).claimed;

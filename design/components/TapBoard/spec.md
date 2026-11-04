@@ -30,8 +30,9 @@ Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board 
 | `onCommit` | `() => void` | Called once per tap, after the board's rules (`AMENDMENTS-TOUCH.md` §3.2) |
 | `disabled` | `boolean?` | Claimed, never pressed, never committed (a locked wrong tile) |
 | `inactive` | `boolean?` | KT-2. For the board like `disabled` (claimed, never pressed, never committed), but the button stays enabled and focusable and its `accessibilityState` is the caller's (an answered ChoiceCard, `correct` or a locked miss) |
-| `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it |
+| `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it; a touch in its gap band that no other target fills is taken by the board and commits nothing (KT-6) |
 | `accessibilityLabel` | `string` | Required |
+| `accessibilityRole` | `'button' \| 'checkbox'`, default `button` | KT-6: `checkbox` for an answer that toggles a tick (Voice Echo), with `accessibilityState.checked`; on the web `selected` and `checked` also go out as `aria-selected` and `aria-checked` |
 | `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept) |
 | `lockMs` | `number?` | The target lock after a commit on a `target` board (default `TAP_LOCK_MS`); the keyboard's keys pass `KEY_BOUNCE_MS` (KT-7) |
 | `style` | `StyleProp<ViewStyle> \| (look) => StyleProp<ViewStyle>` | The hit area's own style: its box is what the board hit-tests, so a target that must fill a cell styles it here |

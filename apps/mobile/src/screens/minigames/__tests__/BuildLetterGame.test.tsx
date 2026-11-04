@@ -173,10 +173,14 @@ describe('Build a Letter on a target board (AMENDMENTS-TOUCH 6.5, R2)', () => {
     expect(await touch(r.root, 10 + tray.indexOf(`build-letter-tile-${G}`) * 90 + 40, 440)).toBe(true);
     expect(slots(r.root)).toEqual(['ㄱ', '']);
     await tick(TAP_LOCK_MS);
-    // 3 px left of the filled slot, and 3 px under it: nothing claims the touch.
-    expect(await touch(r.root, 97, 136)).toBe(false);
-    expect(await touch(r.root, 136, 175)).toBe(false);
+    // 3 px left of the filled slot, and 3 px under it: the board takes the touch (so no browser click reaches the slot)
+    // and it is nobody's: the tile stays.
+    expect(await touch(r.root, 97, 136)).toBe(true);
     expect(slots(r.root)).toEqual(['ㄱ', '']);
+    await tick(TAP_LOCK_MS);
+    expect(await touch(r.root, 136, 175)).toBe(true);
+    expect(slots(r.root)).toEqual(['ㄱ', '']);
+    await tick(TAP_LOCK_MS);
     // Inside it: the tile comes back.
     expect(await touch(r.root, 104, 136)).toBe(true);
     expect(slots(r.root)).toEqual(['', '']);
