@@ -1,6 +1,6 @@
 'use client';
 
-import { LECTURE_MAX_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
+import { LECTURE_MAX_BLOCKS, OUTLINE_MAX_LESSON_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
 import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import { formatDate } from '@hangul-route/i18n';
 import { useSearchParams } from 'next/navigation';
@@ -200,8 +200,13 @@ function LectureInner(): JSX.Element {
         applyPreset('next-lesson', presetMinutes('next-lesson', {}), chip, context);
         // A blended class day (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3) keeps the resolved deck: every lesson of the
         // day, then the quiz and the activity at the class's real length.
+        // fillOutline keeps at most OUTLINE_MAX_LESSON_BLOCKS lessons, so a class day counts what that cap leaves out too.
         if (context.classDay === null) setBlocks(outline.blocks);
-        setOmitted(outline.omitted);
+        setOmitted(
+          context.classDay === null
+            ? outline.omitted
+            : outline.omitted + Math.max(0, outline.blocks.filter((b) => b.kind !== 'class-code').length - OUTLINE_MAX_LESSON_BLOCKS),
+        );
         setSource('plan');
       } else if (preselected === 'revisit' && revisitNow) {
         // "Revisit together": the warm-up open, the space's letters to revisit as the outline.
@@ -476,7 +481,7 @@ function LectureInner(): JSX.Element {
             stage={stageShown}
             stages={stages}
             fallbackOf={(preset) => fallbacks.get(preset) ?? null}
-            note={open === 'next-lesson' && source === 'plan' && omitted > 0 ? l.source.trimmed(omitted, LECTURE_MAX_BLOCKS) : null}
+            note={open === 'next-lesson' && source === 'plan' && omitted > 0 ? l.source.trimmed(omitted, ctx.classDay ? OUTLINE_MAX_LESSON_BLOCKS : LECTURE_MAX_BLOCKS) : null}
             planTitle={ctx.plan?.title ?? null}
             family={family}
             outline={blocks}
