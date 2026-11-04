@@ -23,15 +23,17 @@ import type { MinigameScope } from './minigame-config';
  * the right tap marks that line found with its gloss, speaks the option once and opens the next
  * question 700 ms later; after the last question the step is complete. A line tap plays the line
  * and, in `tap` romanization mode, reveals its romanization for the rest of the step; it never
- * scores, never selects and is not a hint (wireframe "A line tap is not a hint"). Only the first
- * touch in a 50 ms window counts. No timer, no score number, no red.
+ * scores, never selects and is not a hint (wireframe "A line tap is not a hint"). A touch inside
+ * `TAP_LOCK_MS` (400 ms) after an accepted one is a bounce and is dropped (AMENDMENTS-TOUCH KT-D5). No timer, no score number, no red.
  */
 
 export const REALIA_READ_TIMING = {
   /** Right tap -> the next question opens. */
   advanceDelayMs: 700,
-  /** Touches inside this window after an accepted one are dropped. */
-  touchWindowMs: 50,
+  /** Touches inside this window after an accepted one are a bounce and are dropped (AMENDMENTS-TOUCH KT-D5). */
+  // `TAP_LOCK_MS` of the design system's tap model (a literal here: app code imports no design-system subpath at
+  // runtime, and logic stays free of react-native); the test pins the two equal.
+  touchWindowMs: 400,
 } as const;
 
 export type MinigameCopy = Messages['learner']['minigame'];
@@ -89,7 +91,7 @@ export interface RealiaReadState {
   lookHere: boolean;
   /** Lines whose romanization a tap revealed (`tap` mode); kept for the whole step. */
   revealed: readonly string[];
-  /** When the last accepted option tap arrived, for the 50 ms window. */
+  /** When the last accepted option tap arrived, for the bounce window (`touchWindowMs`). */
   lastTapAt: number | null;
 }
 

@@ -1,3 +1,4 @@
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import {
   ROMANIZATION_EXCEPTIONS,
   a11yRomanization,
@@ -168,7 +169,8 @@ describe('stepRealiaRead', () => {
     expect(two.state).toMatchObject({ wrongIds: ['icheon', 'ocheon'], lookHere: true });
   });
 
-  it('drops a second touch inside the 50 ms window', () => {
+  it('drops a second touch inside the TAP_LOCK_MS window (a bounce, AMENDMENTS-TOUCH KT-D5)', () => {
+    expect(REALIA_READ_TIMING.touchWindowMs).toBe(TAP_LOCK_MS);
     const one = run(startRealiaRead(3), [tap('icheon', 100)]);
     expect(stepRealiaRead(one.state, tap('samcheon', 100 + REALIA_READ_TIMING.touchWindowMs - 1)).effects).toEqual([]);
     expect(stepRealiaRead(one.state, tap('samcheon', 100 + REALIA_READ_TIMING.touchWindowMs)).state.status).toBe('resolved');
@@ -190,7 +192,7 @@ describe('stepRealiaRead', () => {
   });
 
   it('advances through the questions, keeps reveals, then completes once', () => {
-    let s = run(startRealiaRead(2), [{ type: 'line', entryId: 'gimbap' }, tap('icheon', 10), tap('samcheon', 100)]).state;
+    let s = run(startRealiaRead(2), [{ type: 'line', entryId: 'gimbap' }, tap('icheon', 10), tap('samcheon', 600)]).state;
     // advance only from resolved
     expect(stepRealiaRead(startRealiaRead(2), { type: 'advance' }).effects).toEqual([]);
     const next = stepRealiaRead(s, { type: 'advance' });
@@ -282,7 +284,7 @@ describe('the sheet', () => {
   });
 
   it('second miss: the answer line is ringed and its name says so', () => {
-    const state = run(startRealiaRead(3), [tap('icheon', 1), tap('ocheon', 100)]).state;
+    const state = run(startRealiaRead(3), [tap('icheon', 1), tap('ocheon', 600)]).state;
     const views = lineViews(menu.realia, q1, state, always, A11Y);
     expect(views.map((v) => v.mark)).toEqual(['none', 'none', 'lookHere', 'none']);
     expect(views[2]!.accessibilityLabel).toBe('라면, ramyeon, 3,000원, samcheon won. Look here');
@@ -297,7 +299,7 @@ describe('the sheet', () => {
   });
 
   it('a question with no answer line marks nothing', () => {
-    const state = run(startRealiaRead(3), [tap('icheon', 1), tap('ocheon', 100)]).state;
+    const state = run(startRealiaRead(3), [tap('icheon', 1), tap('ocheon', 600)]).state;
     expect(lineViews(menu.realia, { ...q1, answerEntryId: undefined }, state, always, A11Y).every((v) => v.mark === 'none')).toBe(true);
     expect(lineViews(menu.realia, undefined, state, always, A11Y).every((v) => v.mark === 'none')).toBe(true);
   });
@@ -336,7 +338,7 @@ describe('realiaOptionView', () => {
   });
 
   it('never rings the right option after two misses (the line is ringed instead)', () => {
-    const state = run(startRealiaRead(3), [tap('icheon', 1), tap('ocheon', 100)]).state;
+    const state = run(startRealiaRead(3), [tap('icheon', 1), tap('ocheon', 600)]).state;
     expect(realiaOptionView(q1, option('samcheon'), state, always, A11Y, KOREAN_ITEM).cardState).toBe('idle');
   });
 
@@ -394,7 +396,7 @@ describe('realiaStatus', () => {
     expect(realiaStatus(menu.realia, q1, startRealiaRead(3), 'quest', COPY, A11Y)).toEqual({ hoya: undefined, lookHere: undefined });
     const one = run(startRealiaRead(3), [tap('icheon', 1)]).state;
     expect(realiaStatus(menu.realia, q1, one, 'quest', COPY, A11Y)).toEqual({ hoya: 'Look again', lookHere: undefined });
-    const two = run(one, [tap('ocheon', 100)]).state;
+    const two = run(one, [tap('ocheon', 600)]).state;
     expect(realiaStatus(menu.realia, q1, two, 'quest', COPY, A11Y)).toEqual({
       hoya: 'Look again',
       lookHere: 'Look here: 라면, ramyeon, 3,000원, samcheon won',
@@ -405,7 +407,7 @@ describe('realiaStatus', () => {
   it('says nothing in a review or once the question is answered', () => {
     const one = run(startRealiaRead(3), [tap('icheon', 1)]).state;
     expect(realiaStatus(menu.realia, q1, one, 'review', COPY, A11Y).hoya).toBeUndefined();
-    const hit = run(one, [tap('samcheon', 100)]).state;
+    const hit = run(one, [tap('samcheon', 600)]).state;
     expect(realiaStatus(menu.realia, q1, hit, 'quest', COPY, A11Y).hoya).toBeUndefined();
   });
 });

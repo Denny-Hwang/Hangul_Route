@@ -1,5 +1,6 @@
 import type { ListenPickRound } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { describe, expect, it } from 'vitest';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
@@ -217,25 +218,32 @@ describe('the right tap', () => {
   });
 });
 
-describe('only the first touch in a 50 ms window counts (F-001 §3.4)', () => {
-  it('drops a second tap on another option inside the window', () => {
-    const first = stepFlow(startFlow(2), tap('b', 1000));
-    const second = stepFlow(first.state, tap('c', 1049));
-    expect(second.state.wrongIds).toEqual(['b']);
-    expect(second.effects).toEqual([]);
+describe('a bounce inside TAP_LOCK_MS is dropped (AMENDMENTS-TOUCH KT-D5; was the 50 ms window of F-001 §3.4)', () => {
+  it('the window is TAP_LOCK_MS (400 ms)', () => {
+    expect(LISTEN_PICK_TIMING.touchWindowMs).toBe(TAP_LOCK_MS);
+    expect(TAP_LOCK_MS).toBe(400);
   });
 
-  it('accepts a tap at 50 ms and later', () => {
+  it('drops a second tap on another option inside the window (a bounce 60, 150 or 399 ms later)', () => {
     const first = stepFlow(startFlow(2), tap('b', 1000));
-    const second = stepFlow(first.state, tap('c', 1050));
+    for (const gap of [60, 150, TAP_LOCK_MS - 1]) {
+      const second = stepFlow(first.state, tap('c', 1000 + gap));
+      expect(second.state.wrongIds).toEqual(['b']);
+      expect(second.effects).toEqual([]);
+    }
+  });
+
+  it('accepts a tap at TAP_LOCK_MS and later', () => {
+    const first = stepFlow(startFlow(2), tap('b', 1000));
+    const second = stepFlow(first.state, tap('c', 1000 + TAP_LOCK_MS));
     expect(second.state.wrongIds).toEqual(['b', 'c']);
   });
 
   it('does not let a dropped tap move the window', () => {
     const first = stepFlow(startFlow(2), tap('b', 1000)).state;
-    const dropped = stepFlow(first, tap('c', 1040)).state;
+    const dropped = stepFlow(first, tap('c', 1300)).state;
     expect(dropped.lastTapAt).toBe(1000);
-    expect(stepFlow(dropped, tap('c', 1050)).state.wrongIds).toEqual(['b', 'c']);
+    expect(stepFlow(dropped, tap('c', 1000 + TAP_LOCK_MS)).state.wrongIds).toEqual(['b', 'c']);
   });
 });
 

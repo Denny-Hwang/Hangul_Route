@@ -16,7 +16,8 @@ import type { HostMode } from '../screens/minigames/host';
  * first; a second miss rings the right option (a ring once on stays for the round); the right tap resolves the
  * round and the next one opens 700 ms later; the first answer in a round is
  * the scored one (the run store keeps later ones as retries, `first-try.ts`);
- * only the first touch in a 50 ms window counts (F-001 §3.4).
+ * a touch inside `TAP_LOCK_MS` (400 ms) after an accepted one is a bounce and is dropped (AMENDMENTS-TOUCH KT-D5;
+ * the 50 ms window of F-001 §3.4 became this lock).
  */
 
 // The round's speech and its audio surface id live in a pure module (the lecture deck builder uses them too).
@@ -27,8 +28,10 @@ export const LISTEN_PICK_TIMING = {
   replayDelayMs: 800,
   /** Right tap -> the next round opens. */
   advanceDelayMs: 700,
-  /** Touches inside this window after an accepted one are dropped. */
-  touchWindowMs: 50,
+  /** Touches inside this window after an accepted one are a bounce and are dropped (AMENDMENTS-TOUCH KT-D5). */
+  // `TAP_LOCK_MS` of the design system's tap model (a literal here: app code imports no design-system subpath at
+  // runtime, and logic stays free of react-native); the test pins the two equal.
+  touchWindowMs: 400,
 } as const;
 
 export type MinigameCopy = Messages['learner']['minigame'];
@@ -45,7 +48,7 @@ export interface ListenPickFlowState {
   hint: boolean;
   /** The prompt is shown as text because it cannot be played (unavailable or muted). */
   textPrompt: boolean;
-  /** When the last accepted tap arrived, for the 50 ms window. */
+  /** When the last accepted tap arrived, for the bounce window (`touchWindowMs`). */
   lastTapAt: number | null;
 }
 
