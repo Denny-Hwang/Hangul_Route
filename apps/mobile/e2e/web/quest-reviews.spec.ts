@@ -144,8 +144,9 @@ test('the warm-up opens a Stage 2 quest with earlier due words, outside its six 
   await expect(page.getByRole('button', { name: 'Start', exact: true }).first()).toBeVisible();
   await page.waitForLoadState('networkidle');
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  // The early-quest sheet, if it opens, opens before the quest: wait for it or the warm-up, never a fixed time.
   const anyway = page.getByRole('button', { name: 'Play anyway' });
-  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  await expect(anyway.or(page.getByText('Warm-up', { exact: true })).first()).toBeVisible();
   if (await anyway.isVisible()) await anyway.click();
 
   // The warm-up: its own pill and line, fill-only dots, no step counter, the sound notice (no voice here).
