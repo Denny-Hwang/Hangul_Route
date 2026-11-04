@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, headerBack } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, headerBack, pastTapLock } from './helpers';
 import { fullyVisible, nextPage } from './story-reader-helpers';
 
 /**
@@ -71,7 +71,11 @@ async function playQuest(page: Page, misses = 0, missSlot = false): Promise<void
   await expect(stepHeading(page, 'A few questions')).toBeVisible();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (const [i, check] of CHECKS.entries()) {
-    if (i < misses) await page.getByTestId(`story-check-option-${check.wrong}`).click();
+    await pastTapLock(page);
+    if (i < misses) {
+      await page.getByTestId(`story-check-option-${check.wrong}`).click();
+      await pastTapLock(page);
+    }
     await page.getByTestId(`story-check-option-${check.right}`).click();
     await page.getByTestId('story-check-next').click();
   }

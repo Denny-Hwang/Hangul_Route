@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck, readStored, seedStored } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheck, readStored, seedStored, pastTapLock } from './helpers';
 
 /**
  * F-CURR-002 section 4.5 (row CM-15) on the web PWA: the quest warm-up before a Stage 2+ quest's first step and
@@ -65,6 +65,8 @@ async function answerRounds(page: Page, doneId: string): Promise<number> {
     const count = await options.count();
     for (let i = 0; i < count; i += 1) {
       const option = options.nth(i);
+      // A deliberate answer waits out the answer lock of the one before (AMENDMENTS-TOUCH KT-3).
+      await pastTapLock(page);
       await option.click();
       const said = (await option.getAttribute('aria-label')) ?? '';
       if (said.startsWith('Right answer')) break;
@@ -139,8 +141,9 @@ test('the warm-up opens a Stage 2 quest with earlier due words, outside its six 
   await expect(page.getByRole('button', { name: 'Start', exact: true }).first()).toBeVisible();
   await page.waitForLoadState('networkidle');
   await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  // The early-quest sheet, if it opens, opens before the quest: wait for it or the warm-up, never a fixed time.
   const anyway = page.getByRole('button', { name: 'Play anyway' });
-  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  await expect(anyway.or(page.getByText('Warm-up', { exact: true })).first()).toBeVisible();
   if (await anyway.isVisible()) await anyway.click();
 
   // The warm-up: its own pill and line, fill-only dots, no step counter, the sound notice (no voice here).

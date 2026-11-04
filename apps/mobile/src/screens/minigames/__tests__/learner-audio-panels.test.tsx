@@ -54,6 +54,11 @@ vi.mock('react-native-gesture-handler', () => {
     const handlers: Record<string, (e?: { x: number; y: number }) => void> = {};
     pan.latest = handlers;
     const builder = {
+      minDistance: () => builder,
+      onTouchesDown: () => builder,
+      onTouchesMove: () => builder,
+      onTouchesUp: () => builder,
+      onTouchesCancelled: () => builder,
       onBegin: (fn: (e?: { x: number; y: number }) => void) => ((handlers.begin = fn), builder),
       onUpdate: (fn: (e?: { x: number; y: number }) => void) => ((handlers.update = fn), builder),
       onEnd: (fn: () => void) => ((handlers.end = fn), builder),

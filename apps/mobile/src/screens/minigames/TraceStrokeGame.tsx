@@ -18,8 +18,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { ScrollView, View } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
+import { GestureDetector } from 'react-native-gesture-handler';
 import { Svg, Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
@@ -29,7 +28,7 @@ import type { LayoutChangeEvent } from 'react-native';
 import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
-import { pointsToPathD } from '../../logic/stroke-diagram';
+import { inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
 import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from '../../logic/trace-copy';
 import {
@@ -39,9 +38,11 @@ import {
   traceScreenWidth,
   traceSidePanelWidth,
 } from '../../logic/trace-layout';
-import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../logic/trace-evaluator';
+import { TRACE_IDLE_MS, createTraceEvaluator, idleOnTouch, type TraceEvaluator } from '../../logic/trace-evaluator';
+import { NO_TRACE_POINTERS, type CanvasPoint, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
 import { PromptPanel } from '../../components/PromptPanel';
 import { StrokeHint } from '../../components/StrokeHint';
+import { tracePanGesture } from '../../components/trace-pan';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { useHeldWhile } from '../../components/use-held-while';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -90,7 +91,11 @@ export function TraceStrokeGame({
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   const [roundIdx, setRoundIdx] = useState(0);
-  const [strokes, setStrokes] = useState<JamoStrokePoint[][]>([]);
+  // The drawn strokes; a ref too, so each touch event reads them as they are, before React renders.
+  const [strokes, setStrokesState] = useState<JamoStrokePoint[][]>([]);
+  const strokesRef = useRef<JamoStrokePoint[][]>([]);
+  // Which finger draws (AMENDMENTS-TOUCH 6.8): the fingers on the canvas, by pointer id.
+  const pointersRef = useRef<TracePointers>(NO_TRACE_POINTERS);
   const [feedback, setFeedback] = useState<Feedback>('idle');
   // The letter's sound: the letter is the heading, so the panel only says why it is silent (F-AUDIO-004 A-5b).
   const sound = usePromptSlot({ source: TRACE_STROKE_AUDIO_SOURCE, textOnScreen: true });
@@ -144,7 +149,8 @@ export function TraceStrokeGame({
 
   useEffect(() => {
     gateRef.current?.nextRound();
-    setStrokes([]);
+    strokesRef.current = [];
+    setStrokesState([]);
     setFeedback('idle');
     setOrderCorrect(null);
     setDirectionNudge('none');
@@ -165,6 +171,11 @@ export function TraceStrokeGame({
       </Screen>
     );
   }
+
+  const setStrokes = (next: JamoStrokePoint[][]): void => {
+    strokesRef.current = next;
+    setStrokesState(next);
+  };
 
   const afterResult = (fn: () => void, ms: number): void => {
     if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
@@ -230,49 +241,35 @@ export function TraceStrokeGame({
   };
   evaluateRef.current = evaluate;
 
-  const beginStroke = (point: JamoStrokePoint): void => {
-    setStrokes((prev) => [...prev, [point]]);
-    gateRef.current?.strokeStarted();
-  };
-
-  const appendStrokePoint = (point: JamoStrokePoint): void => {
-    setStrokes((prev) => {
-      if (prev.length === 0) return [[point]];
-      const next = [...prev];
-      const last = next[next.length - 1]!;
-      next[next.length - 1] = [...last, point];
-      return next;
-    });
-  };
-
-  const endStroke = (): void => {
-    gateRef.current?.strokeEnded();
-  };
-  const fingerDown = (): void => setStroking(true);
-  const fingerUp = (): void => setStroking(false);
-
-  const toViewBoxPoint = (x: number, y: number): JamoStrokePoint => {
+  const toViewBoxPoint = ({ x, y }: CanvasPoint): JamoStrokePoint => {
     const scale = VIEWBOX / canvasSize;
     return { x: x * scale, y: y * scale };
   };
 
-  const panGesture = Gesture.Pan()
-    .onBegin((e) => {
-      const pt = toViewBoxPoint(e.x, e.y);
-      runOnJS(fingerDown)();
-      runOnJS(beginStroke)(pt);
-    })
-    .onUpdate((e) => {
-      const pt = toViewBoxPoint(e.x, e.y);
-      runOnJS(appendStrokePoint)(pt);
-    })
-    .onEnd(() => {
-      runOnJS(endStroke)();
-    })
-    // After onEnd, and also when the touch is cancelled or never became a pan.
-    .onFinalize(() => {
-      runOnJS(fingerUp)();
-    });
+  // The point ends the last stroke; on a canvas cleared under a finger still drawing (a retry, a new
+  // letter), it starts a new one, so the finger draws on from here.
+  const appendStrokePoint = (point: JamoStrokePoint): void => {
+    const prev = strokesRef.current;
+    setStrokes([...prev.slice(0, -1), [...(prev[prev.length - 1] ?? []), point]]);
+  };
+
+  // One finger draws; a dot or a resting palm leaves no ink (AMENDMENTS-TOUCH 6.8, logic/trace-pointers).
+  const onTouchEffect = (effect: TraceTouchEffect): void => {
+    if (effect.kind === 'start') {
+      setStrokes([...strokesRef.current, [toViewBoxPoint(effect.from), toViewBoxPoint(effect.to)]]);
+    } else if (effect.kind === 'point') {
+      appendStrokePoint(toViewBoxPoint(effect.at));
+    } else if (effect.kind === 'drop') {
+      // A drifting palm had the stroke; the finger took it: the palm's few points go. While a finger owns
+      // the stroke the last stroke is its own (a cleared canvas only gets ink from that finger).
+      setStrokes(strokesRef.current.slice(0, -1));
+    }
+    idleOnTouch(gateRef.current, effect.kind, strokesRef.current.length > 0);
+  };
+  const fingerDown = (): void => setStroking(true);
+  const fingerUp = (): void => setStroking(false);
+
+  const panGesture = tracePanGesture(pointersRef, { onEffect: onTouchEffect, onFingerDown: fingerDown, onFingerUp: fingerUp });
 
   const handleClear = (): void => {
     setStrokes([]);
@@ -365,7 +362,7 @@ export function TraceStrokeGame({
             {strokes.map((stroke, i) => (
               <Path
                 key={`drawn-${i}`}
-                d={pointsToPathD(stroke)}
+                d={inkPathD(stroke)}
                 stroke={colors.text.primary}
                 strokeWidth={8}
                 strokeLinecap="round"
