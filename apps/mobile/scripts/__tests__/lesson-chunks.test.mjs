@@ -568,8 +568,9 @@ describe('precacheReport and its budget lines', () => {
     // fe074758a (4,815,388 B; release build, Metro cache cleared), so the line is 4,840,000 B.
     // Row CM-48 (This week in Korea) measured 4,840,751 B on main 1bfda3fc8 (4,838,051 B), so the line is 4,845,000 B.
     // AMENDMENTS-TOUCH KT-1 (#943) measures 4,860,944 B (CI release build, +22,893 B over main 1bfda3fc8): 4,866,000 B.
+    // KT-2 (#949) on KT-1 and main 377d44291 measures 4,863,471 B (CI release build): the line stays.
     expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_866_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_860_944]) {
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_860_944, 4_863_471]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.

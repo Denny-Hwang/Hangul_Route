@@ -128,6 +128,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (release `build:web`, CI): +22,893 B, the forgiving tap model (`tap-model.ts`), the `TapBoard` family in the
   // design-system barrel, `TapLockProvider` above the navigator and the `Screen` fit and scroller. Every learner answer
   // area adopts it in KT-2 to KT-7, so it cannot be a lazy chunk. The line is the measurement plus a 5,056 B margin.
+  // Row KT-2 (PR #949: ChoiceCard, Tile and Button on TapTarget, the press look, the press guard), merged onto KT-1's
+  // head and main 377d44291 (CM-48 in it), measures 4,863,471 B raw / 1,302,136 B gzip (CI release build): the line
+  // stays, 2,529 B left for KT-3 to KT-9.
   startBundleRaw: 4_866_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
