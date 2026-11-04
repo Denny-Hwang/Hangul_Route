@@ -49,6 +49,17 @@ THIRD PASS: PASS.
 
 OVERLAY THIRD PASS: PASS.
 
+### PR review round (2026-11-03)
+
+The PR's independent reviewer read the es and ko overlays again and proposed two ko wording changes; both are applied exactly as the reviewer worded them.
+
+| story | item | verdict | note |
+|---|---|---|---|
+| jikji-metal-type | ko read s2: 스님 백운 → 백운 스님 | pass | `75세였던 백운 {kw:seunim}이`: the name before the title, as the ko caption already has it; kw token kept |
+| sillok-royal-historians | ko gloss of 떨어졌어요 | pass | `균형을 잃고 아래로 내려왔다는 말` keeps the sense of falling by accident (Taejong's fall from his horse) |
+
+The frozen review-item id of 기록했어요 is `lex:girokaesseoyo`, the same as its keyword id and the sanctioned romanization (the raw converter had given `lex:girokhaesseoyo`; it was corrected before the snapshot reached main).
+
 ## Machine checks at sign-off
 
 - `story-coverage`: every new read tier has 100% of its Korean tokens taught by the story's recommended stage (the lesson words of that stage and below, and the story's own keywords).
