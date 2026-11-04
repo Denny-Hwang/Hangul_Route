@@ -381,4 +381,37 @@ describe('route-store: the own plan rests and resumes (AMENDMENTS-ROUTE-CLASS-BL
     useProgressStore.setState({ openSession: null });
     expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(true);
   });
+
+  it('a resume that could not be stored keeps the mark and no back line; the next start tries again', async () => {
+    const created = await useRouteStore.getState().create('profile:a', draft(-3), { from: 'setup', changed: true }, new Date(NOW.getTime() - 3 * DAY_MS));
+    await usePlanStore.getState().applyPlans('profile:a', [blendedPlan()]);
+    expect(await useRouteStore.getState().repaceDue('profile:a', NOW)).toBe(false);
+    await usePlanStore.getState().applyPlans('profile:a', []);
+    const setSelfRoute = vi.spyOn(useProgressStore.getState(), 'setSelfRoute').mockReturnValue(false);
+    try {
+      expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+    } finally {
+      setSelfRoute.mockRestore();
+    }
+    expect(useRouteStore.getState().ui['profile:a']?.restingFor).toBe(created?.id);
+    expect(useRouteStore.getState().ui['profile:a']?.backAt).toBeUndefined();
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(true);
+    expect(useRouteStore.getState().ui['profile:a']?.backAt).toBe(NOW.toISOString());
+  });
+
+  it('an own plan whose weeks ended while it rested is not moved along and gets no back line', async () => {
+    // 12 weeks from 90 days ago: its last week ended 6 days ago, while the class plan ran.
+    await useRouteStore.getState().create('profile:a', draft(-90), { from: 'setup', changed: true }, new Date(NOW.getTime() - 90 * DAY_MS));
+    await usePlanStore.getState().applyPlans('profile:a', [blendedPlan()]);
+    expect(await useRouteStore.getState().repaceDue('profile:a', NOW)).toBe(false);
+    expect(useRouteStore.getState().ui['profile:a']?.restingFor).toBeDefined();
+    await usePlanStore.getState().applyPlans('profile:a', []);
+    vi.mocked(track).mockClear();
+    expect(await useRouteStore.getState().autoRepace('profile:a', NOW)).toBe(false);
+    const ui = useRouteStore.getState().ui['profile:a'];
+    expect(ui?.restingFor).toBeUndefined();
+    expect(ui?.backAt).toBeUndefined();
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute?.meta.repacedAt).toBeNull();
+    expect(track).not.toHaveBeenCalled();
+  });
 });

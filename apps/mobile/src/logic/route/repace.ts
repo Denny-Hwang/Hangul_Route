@@ -49,6 +49,18 @@ export interface AutoRepaceInput {
  * At most once per UTC day (a re-pace of either kind today counts), never while a session is
  * open or after the plan's last week, and only when three or more past-dated items wait or the oldest is a week old.
  */
+/**
+ * The resume of a rested own plan (AMENDMENTS-ROUTE-CLASS-BLEND section 8, BL-OD-5): `repace` once (requeue); `done`
+ * when it was already moved along today (another device ran the resume); `over` when its weeks ended while it rested
+ * (nothing to move along and no "back" line).
+ */
+export function resumeStepOf(route: Pick<SelfRoute, 'meta'>, today: DateKey): 'repace' | 'done' | 'over' {
+  const last = route.meta.weeks[route.meta.weeks.length - 1];
+  if (last === undefined || addDays(last.startDate, 7) <= today) return 'over';
+  if (route.meta.repacedAt !== null && route.meta.repacedAt.slice(0, 10) === today) return 'done';
+  return 'repace';
+}
+
 export function autoRepaceDue(i: AutoRepaceInput): boolean {
   const route = i.route;
   if (route === null || route.archivedAt !== null || i.sessionOpen || i.resting === true) return false;

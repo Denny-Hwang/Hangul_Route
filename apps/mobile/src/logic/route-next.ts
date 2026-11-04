@@ -14,7 +14,7 @@ import type { TelemetryEvent } from '../platform/telemetry';
 import { cursorContext, type CursorContext } from './cursor-context';
 import type { Tier } from './entitlement';
 import { assignmentsForToday, SOURCE_RANK } from './homework/assignment-merger';
-import { ASSIGNED_BY, restingSourceIds, sourceIdOf, sourcesOf, visibleHomework, type DeriveSource, type SourceKind } from './homework/plan-derivation';
+import { ASSIGNED_BY, hiddenHomeworkOf, nothingHidden, sourceIdOf, sourcesOf, visibleHomework, type DeriveSource, type SourceKind } from './homework/plan-derivation';
 import { nextQuestAfter, offerableQuests } from './next-quest';
 
 /**
@@ -312,10 +312,11 @@ export interface RouteNextContext {
 
 /** The input every screen builds the same way: plan sources with the self-route, and the shared cursor. */
 export function routeNextInputOf(c: RouteNextContext): RouteNextInput {
-  // A resting own weekly plan is no source, and its pending items wait out of view (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
-  const resting = restingSourceIds(c.plans ?? [], c.snapshot.selfRoute, c.today);
+  // A resting own weekly plan is no source, and its pending items wait out of view; so do an own or family plan's
+  // pending items for a quest an in-force class curriculum schedules (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const hidden = hiddenHomeworkOf(c.plans ?? [], c.snapshot.selfRoute, c.today, c.episodes);
   return {
-    snapshot: resting.length === 0 ? c.snapshot : { ...c.snapshot, homework: visibleHomework(c.snapshot.homework, resting) },
+    snapshot: nothingHidden(hidden) ? c.snapshot : { ...c.snapshot, homework: visibleHomework(c.snapshot.homework, hidden) },
     profileId: c.profileId,
     today: c.today,
     sources: sourcesOf(c.plans ?? [], c.snapshot.selfRoute, c.today),

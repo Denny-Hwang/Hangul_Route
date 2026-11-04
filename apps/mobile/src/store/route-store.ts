@@ -6,7 +6,7 @@ import { selfRouteResting } from '../logic/homework/plan-derivation';
 import { seenKey } from '../logic/my-route/seen';
 import { ownPlanRestStep } from '../logic/route/layer';
 import { createdEvent } from '../logic/route/proposal-flow';
-import { applyCheckIn, autoRepaceDue, checkInOffer, pendingPastOf, repaceSelfRoute, repacedEvent, type CheckInOffer } from '../logic/route/repace';
+import { applyCheckIn, autoRepaceDue, checkInOffer, pendingPastOf, repaceSelfRoute, repacedEvent, resumeStepOf, type CheckInOffer } from '../logic/route/repace';
 import { activeSelfRoute, archivedRoute, completedQuestIdsOf, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -241,9 +241,16 @@ export const useRouteStore = create<State & Actions>((set, get) => {
         if (!due || active === null) return false;
         if (resume) {
           // Once: the remaining lessons start from today, minus what was finished meanwhile; the line shows once.
-          const moved = await repace(profileId, active, 'auto', now);
-          await mark(profileId, { restingFor: undefined, backAt: now.toISOString() });
-          return moved;
+          const step = resumeStepOf(active, dayKey(now.toISOString()));
+          if (step === 'repace') {
+            // A re-pace that could not be laid out or stored keeps the mark, so the next start tries again.
+            if (!(await repace(profileId, active, 'auto', now))) return false;
+            await mark(profileId, { restingFor: undefined, backAt: now.toISOString() });
+            return true;
+          }
+          // Already moved along today (another device), or its weeks ended while it rested (no "back" line then).
+          await mark(profileId, step === 'done' ? { restingFor: undefined, backAt: now.toISOString() } : { restingFor: undefined });
+          return false;
         }
         if (!(await repace(profileId, active, 'auto', now))) return false;
         await mark(profileId, { movedAt: now.toISOString() });

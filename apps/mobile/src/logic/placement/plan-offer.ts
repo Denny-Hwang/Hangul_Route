@@ -25,6 +25,7 @@ import {
 import type { Messages } from '@hangul-route/i18n';
 import {
   PACE_IDS,
+  draftOptionsOf,
   newestResultAt,
   planPromptHidden,
   proposalInputOf,
@@ -201,7 +202,7 @@ export function stripLineOf(proposal: RouteProposal): { length: DurationId; days
 /** The plan exactly as shown: the proposal at its suggested length, or the length picked; null when it would not lay out. */
 export function draftOfOffer(proposal: RouteProposal, length: DurationId = proposal.defaultId, catalog = CATALOG): CurriculumDraft | null {
   try {
-    return generateCurriculum({ ...proposal.params, weeks: LENGTH_PRESETS[length].weeks }, catalog);
+    return generateCurriculum({ ...proposal.params, weeks: LENGTH_PRESETS[length].weeks }, catalog, draftOptionsOf(proposal));
   } catch {
     return null;
   }

@@ -2,9 +2,12 @@ import type { Episode, HomeworkAssignment, InboxPlan, PlanItem, ProgressSnapshot
 import { describe, expect, it } from 'vitest';
 import { planDaysInForce } from '../../goals/plan-days';
 import { layerOf, leadingBlended } from '../../route/layer';
+import { planProgressOf } from '../../sync/summarize';
 import {
   classScheduledQuestIds,
   deriveAssignments,
+  hiddenHomeworkOf,
+  nothingHidden,
   restingSourceIds,
   selfRouteResting,
   sourcesOf,
@@ -133,13 +136,48 @@ describe('the dedupe against class plans, in every layer (section 8)', () => {
     const before = derive([], snap({ selfRoute: route })).homework;
     expect(ids(before)).toEqual(['route:mine#quest:a', 'route:mine#quest:b']);
     const finishedB = before.map((h) => (h.questId === 'quest:b' ? { ...h, completedAt: 'x' } : h));
-    const withClass = derive([classOnly({ items: [{ kind: 'quest', id: 'quest:a', targetDate: '2026-09-24' }, { kind: 'quest', id: 'quest:b', targetDate: '2026-09-24' }] })], snap({ selfRoute: route, homework: finishedB }));
-    expect(ids(withClass.homework)).toEqual(['plan:class#quest:a', 'plan:class#quest:b', 'route:mine#quest:b']);
+    const classPlans = [classOnly({ items: [{ kind: 'quest', id: 'quest:a', targetDate: '2026-09-24' }, { kind: 'quest', id: 'quest:b', targetDate: '2026-09-24' }] })];
+    const withClass = derive(classPlans, snap({ selfRoute: route, homework: finishedB }));
+    // Hidden, never deleted: the pending own item stays in the snapshot exactly as it was.
+    expect(ids(withClass.homework)).toEqual(['plan:class#quest:a', 'plan:class#quest:b', 'route:mine#quest:a', 'route:mine#quest:b']);
+    expect(withClass.removed).toBe(0);
+    expect(withClass.homework.find((h) => h.id === 'route:mine#quest:a')).toEqual(before.find((h) => h.id === 'route:mine#quest:a'));
     expect(withClass.homework.find((h) => h.id === 'route:mine#quest:b')?.completedAt).toBe('x');
+    // Home, Homework and routeNext leave it out; the finished one still shows.
+    const hidden = hiddenHomeworkOf(classPlans, route, TODAY, episodes);
+    expect(ids(visibleHomework(withClass.homework, hidden))).toEqual(['plan:class#quest:a', 'plan:class#quest:b', 'route:mine#quest:b']);
     // The own plan still holds the item; it derives again when the class plan drops the quest.
     expect(route.items.map((i) => i.id)).toEqual(['quest:a', 'quest:b']);
     const dropped = derive([classOnly({ items: [{ kind: 'quest', id: 'quest:b', targetDate: '2026-09-24' }] })], snap({ selfRoute: route, homework: withClass.homework }));
     expect(ids(dropped.homework)).toEqual(['plan:class#quest:b', 'route:mine#quest:a', 'route:mine#quest:b']);
+  });
+
+  it('a family plan\'s pending item is kept while hidden, so its progress total in the summary does not shrink', () => {
+    const fam = family([{ kind: 'quest', id: 'quest:a', targetDate: '2026-09-23' }, { kind: 'quest', id: 'quest:d', targetDate: '2026-09-23' }]);
+    const first = derive([fam], snap()).homework;
+    expect(planProgressOf(snap({ homework: first }))['plan:family']).toEqual({ done: 0, total: 2, notReady: 0 });
+    const plans = [classOnly(), fam];
+    const later = derive(plans, snap({ homework: first }));
+    expect(later.removed).toBe(0);
+    expect(planProgressOf(snap({ homework: later.homework }))['plan:family']).toEqual({ done: 0, total: 2, notReady: 0 });
+    // The class item shows; only own and family plans yield.
+    expect(ids(visibleHomework(later.homework, hiddenHomeworkOf(plans, null, TODAY, episodes)))).toEqual(['plan:class#quest:a', 'plan:family#quest:d']);
+    expect(derive(plans, snap({ homework: later.homework })).changed).toBe(false);
+  });
+
+  it('a hidden pending item whose source left the inbox is removed as before', () => {
+    const fam = family([{ kind: 'quest', id: 'quest:a', targetDate: '2026-09-23' }]);
+    const first = derive([fam], snap()).homework;
+    const left = derive([classOnly()], snap({ homework: first }));
+    expect(ids(left.homework)).toEqual(['plan:class#quest:a']);
+    expect(left.removed).toBe(1);
+  });
+
+  it('nothing is hidden with no class curriculum in force', () => {
+    const fam = family([{ kind: 'quest', id: 'quest:a', targetDate: '2026-09-23' }]);
+    const hidden = hiddenHomeworkOf([fam], null, TODAY, episodes);
+    expect(nothingHidden(hidden)).toBe(true);
+    expect(nothingHidden(hiddenHomeworkOf([classOnly(), fam], null, TODAY, episodes))).toBe(false);
   });
 
   it('Class with practice: a family plan keeps running (BL-OD-6) with the dedupe', () => {

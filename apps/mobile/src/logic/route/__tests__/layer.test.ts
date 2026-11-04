@@ -11,6 +11,7 @@ import {
   ownPlanBackShows,
   ownPlanProposalOffered,
   ownPlanRestStep,
+  ownPlanStartAfterClass,
 } from '../layer';
 
 // 2026-09-21 is a Monday. A Tuesday class from 2026-09-21 for 4 weeks: first class 09-22, route to 10-19.
@@ -136,5 +137,20 @@ describe('ownPlanRestStep and ownPlanBackShows (section 8, BL-OD-5)', () => {
     expect(ownPlanBackShows({ backAt: '2026-10-20T08:00:00.000Z' })).toBe(true);
     expect(ownPlanBackShows({ backAt: '2026-10-20T08:00:00.000Z', backSeenAt: '2026-10-20T09:00:00.000Z' })).toBe(false);
     expect(ownPlanBackShows({ backAt: '2026-12-01T08:00:00.000Z', backSeenAt: '2026-10-20T09:00:00.000Z' })).toBe(true);
+  });
+});
+
+describe('ownPlanStartAfterClass (section 8: a plan made while the class has practice days starts after it)', () => {
+  it('is the day after the latest route end of the class plans with practice days in force', () => {
+    expect(ownPlanStartAfterClass([source()], '2026-09-23')).toBe('2026-10-20');
+    const longer = source({ id: 'plan:d', meta: blendedMeta({ weeks: 6 }) });
+    expect(ownPlanStartAfterClass([source(), longer], '2026-09-23')).toBe('2026-11-03');
+  });
+
+  it('is undefined in the other layers', () => {
+    expect(ownPlanStartAfterClass([], '2026-09-23')).toBeUndefined();
+    expect(ownPlanStartAfterClass([source({ meta: curriculumMeta() })], '2026-09-23')).toBeUndefined();
+    expect(ownPlanStartAfterClass([source({ kind: 'family' })], '2026-09-23')).toBeUndefined();
+    expect(ownPlanStartAfterClass([source()], '2026-10-20')).toBeUndefined();
   });
 });

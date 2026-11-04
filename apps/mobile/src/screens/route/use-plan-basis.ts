@@ -2,7 +2,8 @@ import type { SelfRoute, StageKey } from '@hangul-route/content-schema';
 import { useEffect, useMemo } from 'react';
 import { episodesAll } from '../../content';
 import { classScheduledQuestIds, sourcesOf } from '../../logic/homework/plan-derivation';
-import { proposalInputOf, safePropose, type PlanChoice } from '../../logic/route/proposal-flow';
+import { ownPlanStartAfterClass } from '../../logic/route/layer';
+import { proposalInputOf, safePropose, withStart, type PlanChoice } from '../../logic/route/proposal-flow';
 import { activeSelfRoute, completedQuestIdsOf } from '../../logic/route/self-route';
 import { setupBasisOf, type SetupContext, type SetupState } from '../../logic/route/setup-flow';
 import { unlockedStagesFor, usePlanStore } from '../../store/plan-store';
@@ -47,7 +48,7 @@ export function usePlanBasis(profileId: string, choice?: PlanChoice): PlanBasis 
     // A new own plan leaves out what an in-force class or school curriculum schedules (AMENDMENTS-ROUTE-CLASS-BLEND section 8);
     // a plan in force is not re-laid around them.
     const classQuestIds = active === null ? [...classScheduledQuestIds(sourcesOf(plans ?? [], null), today, episodesAll)] : [];
-    const proposal = safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today, testedOut: snapshot.testedOut, classQuestIds }));
+    const proposal = safePropose(proposalInputOf({ placements: snapshot.placements, completedQuestIds, ageGroup: profile.ageGroup, unlockedStages, today, testedOut: snapshot.testedOut, classQuestIds, ...withStart(active === null ? ownPlanStartAfterClass(sourcesOf(plans ?? [], null), today) : undefined) }));
     return setupBasisOf({ active, proposal, ...(choice === undefined ? {} : { choice }), completedQuestIds, unlockedStages, today });
     // `tier` is read through `unlockedStagesFor`; it is listed so a tier change plans again.
     // eslint-disable-next-line react-hooks/exhaustive-deps

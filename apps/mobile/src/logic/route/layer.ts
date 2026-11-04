@@ -78,6 +78,21 @@ export function leadingBlended<S extends Pick<DeriveSource, 'kind' | 'meta' | 'a
   return lead;
 }
 
+/**
+ * A new own weekly plan made while the layer is class-with-practice starts the day after the class plans' last day
+ * (section 8: "it starts the day after the class plan's last day"), so it never begins resting; the latest route end
+ * of every class plan with practice days in force. Undefined in the other layers (the plan starts as before).
+ */
+export function ownPlanStartAfterClass(sources: readonly MetaSource[], today: string): string | undefined {
+  let end: string | undefined;
+  for (const source of sources) {
+    if (!blendInForce(source, today) || source.meta === null || source.meta === undefined) continue;
+    const span = blendSpanOf(source.meta);
+    if (span !== null && (end === undefined || span.to > end)) end = span.to;
+  }
+  return end === undefined ? undefined : addDays(end, 1);
+}
+
 /** The proposal for a new own weekly plan is offered on Home in every layer but class-with-practice (section 8). */
 export const ownPlanProposalOffered = (layer: Layer): boolean => layer !== 'class-with-practice';
 
