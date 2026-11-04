@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG,
+  laterVolumeStoryIds,
   LECTURE_MAX_BLOCKS,
   LETTER_SET_KEYS,
   StageKeySchema,
@@ -154,7 +155,11 @@ describe('chooserGroups: the groups over CATALOG', () => {
   });
 
   it('Stories: the given ready stories in catalogue order; Word topics: the given topics in their order', () => {
-    expect(rowKeys(group(groups, 'stories'))).toEqual([...CATALOG.stories].sort((a, b) => a.order - b.order).map((s) => s.id));
+    // A book 2 tale (F-CURR-002 row CM-46) is a later volume's: listed only with `volumes`, as its volume is.
+    const laterVolume = laterVolumeStoryIds(CATALOG);
+    const byOrder = [...CATALOG.stories].sort((a, b) => a.order - b.order).map((s) => s.id);
+    expect(rowKeys(group(groups, 'stories'))).toEqual(byOrder.filter((id) => !laterVolume.has(id)));
+    expect(rowKeys(group(chooserGroups({ ...options('en'), volumes: true }), 'stories'))).toEqual(byOrder);
     expect(rowKeys(group(groups, 'topics'))).toEqual([...CATALOG.topics].sort((a, b) => a.order - b.order).map((t) => `vocab-topic:${t.key}`));
     const topic = group(groups, 'topics').rows[0]!;
     expect(topic.kind === 'topic' && topic.minutes).toBe(CATALOG.topics.find((t) => `vocab-topic:${t.key}` === topic.key)!.minutes);
@@ -167,7 +172,7 @@ describe('chooserGroups: the groups over CATALOG', () => {
     const draft: Catalog = { ...CATALOG, stories: CATALOG.stories.map((s, i) => (i === 0 ? { ...s, status: 'draft' } : s)) };
     const rows = group(chooserGroups({ ...options('en'), catalog: draft }), 'stories').rows;
     expect(rows.map((r) => r.key)).not.toContain(CATALOG.stories[0]!.id);
-    expect(rows).toHaveLength(CATALOG.stories.length - 1);
+    expect(rows).toHaveLength(CATALOG.stories.length - 1 - laterVolumeStoryIds(CATALOG).size);
   });
 
   it('no Stories or Word topics group without ids (the plan builder)', () => {

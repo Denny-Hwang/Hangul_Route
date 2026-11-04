@@ -240,6 +240,24 @@ export const cellIsReady = (cell: Pick<CatalogCell, 'status'>): boolean =>
 /** A story is offered only when a reviewer has signed it (F-STORY-004). */
 export const storyIsReady = (story: Pick<CatalogStory, 'status'>): boolean => story.status === 'ready';
 
+/**
+ * The stories that only a cell's later volume holds (F-CURR-002 §4.3, §5.1, row CM-46): a Stage 5 book 2 tale, whose
+ * read quest is in a later volume of its cell and in no first volume. They are Volume 2 content, behind the learner
+ * switch `volumes`, so a surface that reads no learner switch (the presets, the console chooser) leaves them out.
+ */
+export function laterVolumeStoryIds(catalog: Pick<Catalog, 'cells' | 'stories'>): ReadonlySet<string> {
+  const first = new Set(catalog.cells.flatMap((c) => c.questIds));
+  const later = new Set(catalog.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds)));
+  return new Set(
+    catalog.stories
+      .filter((s) => {
+        const read = `quest:story-${s.id.replace(/^story:/, '')}-read`;
+        return later.has(read) && !first.has(read);
+      })
+      .map((s) => s.id),
+  );
+}
+
 /** The fields of a story file (F-STORY-001 section 3.2) that decide its catalogue status. */
 export interface StoryOfferFields {
   state: 'draft' | 'ready';

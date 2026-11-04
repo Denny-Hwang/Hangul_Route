@@ -1,4 +1,4 @@
-import { cellIsReady, storyIsReady, type Catalog } from '../catalog/schema';
+import { cellIsReady, laterVolumeStoryIds, storyIsReady, type Catalog } from '../catalog/schema';
 import { romanize } from '../romanization/rr';
 import { StageKeySchema, ThemeKeySchema, type StageKey } from './heritage-card';
 import { LECTURE_MAX_BLOCKS, type LectureBlock } from './lecture';
@@ -179,8 +179,10 @@ function stageGroup(stage: StageKey, options: ChooserOptions): ChooserGroup | nu
 
 function storiesGroup(options: ChooserOptions): ChooserGroup | null {
   const allowed = new Set(options.stories ?? []);
+  // A book 2 tale (F-CURR-002 row CM-46) is a later volume's content: listed only with `volumes`, as the volume is.
+  const laterVolume = options.volumes === true ? new Set<string>() : laterVolumeStoryIds(options.catalog);
   const rows: ChooserRow[] = options.catalog.stories
-    .filter((s) => allowed.has(s.id) && storyIsReady(s))
+    .filter((s) => allowed.has(s.id) && storyIsReady(s) && !laterVolume.has(s.id))
     .sort((a, b) => a.order - b.order)
     .map((s) => {
       const title = options.title(s.id);

@@ -151,7 +151,8 @@ describe('placedOutGrowth', () => {
   });
 
   it('with the shipped history, a result stored at version 8 gains the Stage 2 quests shipped since, and one stored today gains none', () => {
-    const shippedSince = CATALOG.quests.filter((q) => !V8.has(q.id) && q.stage === 'stage2').map((q) => q.id);
+    // Lesson quests: a story's listen quest is never placed out (row CM-46 added the first stage 2 stories since version 8).
+    const shippedSince = CATALOG.quests.filter((q) => !V8.has(q.id) && q.stage === 'stage2' && q.kind === 'lesson').map((q) => q.id);
     expect(shippedSince).toEqual([
       ...WB,
       'quest:stage2-life-q2',

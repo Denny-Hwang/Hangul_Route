@@ -1,5 +1,5 @@
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
-import { assembleCatalog, expandCellRows, type StoryShelfEntry } from './assemble';
+import { assembleCatalog, expandCellRows, type CatalogVolumeSource, type StoryShelfEntry } from './assemble';
 import { GENERATED_CATALOG_VERSION, GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from './catalog.generated';
 import type { Catalog, CatalogCell, CatalogQuest } from './schema';
 
@@ -150,6 +150,24 @@ const handLessonQuests: CatalogQuest[] = [
   lesson('story-cheugugi-rain-gauge-read', 'stage5', 'crafts', 'The Bowl That Measured the Rain', 4),
   lesson('story-jagyeongnu-water-clock-read', 'stage5', 'crafts', 'Jang Yeongsil and the Clock That Rang by Itself', 5),
   lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Food cell's book 2, on its own Volume 2 episode.
+  { ...lesson('story-jang-fermented-sauces-read', 'stage5', 'life', 'Making Jang: Sauces from Soybeans', 5), episodeId: 'episode:stage5-life-v2' },
+  { ...lesson('story-tteok-through-the-seasons-read', 'stage5', 'life', 'Rice Cakes Through the Seasons', 5), episodeId: 'episode:stage5-life-v2' },
+];
+
+/**
+ * The hand-written later volumes (F-CURR-002 row CM-40): the Stage 5 books 2 of `books.ts` (row CM-46), each the
+ * second episode of its Stage 5 cell, with its read quests above.
+ */
+const handVolumes: CatalogVolumeSource[] = [
+  {
+    cellId: 'episode:stage5-life',
+    episodeId: 'episode:stage5-life-v2',
+    volume: 2,
+    title: 'Jang and Rice Cakes',
+    minutes: 10,
+    questIds: ['quest:story-jang-fermented-sauces-read', 'quest:story-tteok-through-the-seasons-read'],
+  },
 ];
 
 /**
@@ -190,8 +208,8 @@ const generated = expandCellRows(GENERATED_LESSON_CELL_ROWS);
 export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
   cells: [...handCells, ...generated.cells],
-  // F-CURR-002 row CM-40: the Volume 2 of a cell (none until a Volume 2 content row ships).
-  volumes: generated.volumes,
+  // F-CURR-002 row CM-40: the Volume 2 of a cell; row CM-46 adds the hand-written Stage 5 books 2.
+  volumes: [...handVolumes, ...generated.volumes],
   lessonQuests: [...handLessonQuests, ...generated.quests],
   stories: GENERATED_STORIES,
   storyShelf: STORY_SHELF,
