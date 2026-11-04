@@ -3,7 +3,7 @@
   "domain": "stories-letters-book2",
   "entries": {
     "story:eongan-letters": {
-      "title": "조선 가족들이 주고받은 한글 편지",
+      "title": "가족에게 보낸 한글 편지",
       "summary": "호야가 조선 시대의 한글 편지, 언간 이야기를 읽어요. 지금까지 찾은 것 가운데 가장 오래된 한글 편지는 먼 곳의 군관이 아내에게 쓴 편지예요. 정조 임금은 어릴 때부터 외숙모에게 한글 편지를 썼어요.",
       "hoyaIntro": "조선 시대 가족들이 한글로 쓴 편지를 읽어 봐요!",
       "hoyaOutro": "이제 조선 시대 가족들이 한글 편지로 따뜻한 마음을 나눈 이야기를 알게 됐어요!",
@@ -86,7 +86,7 @@
       "checks.r2.explain": "아내는 결혼한 남자의 짝인 여자예요. 나신걸은 아내에게 편지를 썼어요.",
       "checks.r2.options.a": "결혼한 남자의 짝인 여자",
       "checks.r2.options.b": "나를 낳아 주신 분",
-      "checks.r2.options.c": "부모의 딸",
+      "checks.r2.options.c": "여자로 태어난 자식",
       "checks.r2.options.d": "어머니의 남자 형제의 아내",
       "checks.r3.prompt": "군관은 누구를 보고 싶어 했어요?",
       "checks.r3.explain": "나신걸은 어머니와 아이들이 얼마나 보고 싶은지 썼어요.",
@@ -96,11 +96,11 @@
       "checks.r3.options.d": "임금"
     },
     "quest:story-eongan-letters-listen": {
-      "title": "조선 가족들이 주고받은 한글 편지"
+      "title": "가족에게 보낸 한글 편지"
     },
     "story:hangul-name": {
       "title": "한글은 어떻게 이름을 얻었을까요?",
-      "summary": "호야는 한글에게 다른 이름들이 먼저 있었다는 것을 알게 돼요. 훈민정음, 언문, 국문이에요. 학자 주시경이 처음으로 한글이라고 부른 것으로 보이고, 그 뒤로 이 이름이 널리 쓰였어요.",
+      "summary": "호야는 한글에 먼저 다른 이름들이 있었다는 것을 알게 돼요. 훈민정음, 언문, 국문이에요. 학자 주시경이 처음으로 한글이라고 부른 것으로 보이고, 그 뒤로 이 이름이 널리 쓰였어요.",
       "hoyaIntro": "한글은 처음부터 한글이라고 불렸을까요? 알아봐요!",
       "hoyaOutro": "이제 한글이 어떻게 이름을 얻었는지 알게 됐어요!",
       "scenes.s1.narration": "호야가 궁금해해요. 한글은 처음부터 한글이라고 불렸을까요? 이 이름이 어디에서 왔는지 알아봐요.",
@@ -124,7 +124,7 @@
       "keywords.eonmun.gloss": "한글을 부르던 옛 이름",
       "keywords.gungmun.gloss": "나라의 글이라는 뜻의 이름",
       "keywords.hangeul.gloss": "우리나라 고유의 글자",
-      "keywords.japji.gloss": "여러 글과 그림을 모아 때마다 펴내는 책",
+      "keywords.japji.gloss": "여러 글과 그림을 모아 정해진 때마다 펴내는 책",
       "keywords.sajeon.gloss": "낱말의 뜻을 모아 풀이한 책",
       "keywords.geul.gloss": "생각이나 말을 글자로 적은 것",
       "keywords.yet.gloss": "아주 오래전의",
@@ -170,14 +170,14 @@
       "tiers.read.scenes.s7.caption": "말을 모은 말모이",
       "tiers.read.scenes.s8.caption": "모두 한글이라고 해요",
       "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
-      "checks.r1.explain": "옛은 아주 오래전의라는 뜻이에요. 언문은 한글을 부르던 옛 이름이에요.",
+      "checks.r1.explain": "옛은 '아주 오래전의'라는 뜻이에요. 언문은 한글을 부르던 옛 이름이에요.",
       "checks.r1.options.a": "새로 생긴",
       "checks.r1.options.b": "아주 오래전의",
       "checks.r1.options.c": "길이가 짧은",
       "checks.r1.options.d": "널리 알려진",
       "checks.r2.prompt": "{target}의 뜻은 무엇일까요?",
       "checks.r2.explain": "사전은 낱말의 뜻을 모아 풀이한 책이에요. 말모이는 사전을 만들려던 원고예요.",
-      "checks.r2.options.a": "때마다 펴내는 책",
+      "checks.r2.options.a": "정해진 때마다 펴내는 책",
       "checks.r2.options.b": "하고 싶은 말을 적어 보내는 글",
       "checks.r2.options.c": "낱말의 뜻을 모아 풀이한 책",
       "checks.r2.options.d": "날마다 소식을 전하는 종이",
