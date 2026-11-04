@@ -11,6 +11,7 @@ import {
   touchTarget,
   useLayoutClass,
   useMediaSize,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -58,7 +59,8 @@ export function OddOneOutGame({ scope, onFinish }: Props): ReactElement {
   }
 
   const handleTap = (jamoId: string): void => {
-    if (feedback === 'correct') return;
+    // A locked wrong tile takes no tap (AMENDMENTS-TOUCH R3): a bounce on it is never another miss, nudge or replay.
+    if (feedback === 'correct' || lockedWrongIds.includes(jamoId)) return;
     if (jamoId === round.oddJamo.id) {
       tapLight();
       success();
@@ -102,34 +104,39 @@ export function OddOneOutGame({ scope, onFinish }: Props): ReactElement {
           </>
         }
         answers={
-          <View
-            testID="odd-one-out-tiles"
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: spacing.md,
-              ...(gridWidth !== undefined ? { width: gridWidth, alignSelf: 'center' } : null),
-            }}
-          >
-            {round.tiles.map((j) => {
-              let state: 'idle' | 'correct' | 'wrong' | 'disabled' = 'idle';
-              if (lockedWrongIds.includes(j.id)) state = 'wrong';
-              if (feedback === 'correct' && j.id === round.oddJamo.id) state = 'correct';
-              return (
-                <Tile
-                  key={j.id}
-                  label={j.char}
-                  romanization={j.romanization}
-                  state={state}
-                  size="lg"
-                  dimension={tile}
-                  accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
-                  onPress={() => handleTap(j.id)}
-                />
-              );
-            })}
-          </View>
+          <TapBoard lock="board">
+            {/* One board for the tiles (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice, and a locked wrong tile takes no tap (R3). */}
+            <View
+              testID="odd-one-out-tiles"
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: spacing.md,
+                ...(gridWidth !== undefined ? { width: gridWidth, alignSelf: 'center' } : null),
+              }}
+            >
+              {round.tiles.map((j) => {
+                let state: 'idle' | 'correct' | 'wrong' | 'disabled' = 'idle';
+                if (lockedWrongIds.includes(j.id)) state = 'wrong';
+                if (feedback === 'correct' && j.id === round.oddJamo.id) state = 'correct';
+                return (
+                  <Tile
+                    key={j.id}
+                    label={j.char}
+                    romanization={j.romanization}
+                    state={state}
+                    size="lg"
+                    dimension={tile}
+                    accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
+                    disabled={state === 'wrong'}
+                    testID={`odd-one-out-tile-${j.id}`}
+                    onPress={() => handleTap(j.id)}
+                  />
+                );
+              })}
+            </View>
+          </TapBoard>
         }
         feedback={
           feedback === 'wrong' ? (

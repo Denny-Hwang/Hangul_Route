@@ -3,7 +3,7 @@ import { CATALOG, keysFor } from '@hangul-route/content-schema';
 import { decodeReviewItems } from '@hangul-route/content-schema/review-items';
 import * as chunk from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
-import { journeyCellName, onboardChild, readStored, seedStored } from './helpers';
+import { journeyCellName, onboardChild, readStored, seedStored, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide, expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
@@ -127,9 +127,11 @@ async function answer(page: Page, cell: string | readonly string[], right: boole
     const id = items.find((i) => i.ko === ko && ids.includes(i.id))?.id ?? ids.find((x) => items.some((i) => i.id === x && i.ko === ko));
     expect(id, `the prompt ${ko} names an item of the cell`).toBeDefined();
     if (!right) {
+      await pastTapLock(page);
       await page.getByTestId(`daily-review-option-${ids.find((x) => x !== id)}`).click();
       await expect(page.getByTestId('daily-review-miss')).toBeVisible();
     }
+    await pastTapLock(page);
     await page.getByTestId(`daily-review-option-${id}`).click();
   }
   await expect

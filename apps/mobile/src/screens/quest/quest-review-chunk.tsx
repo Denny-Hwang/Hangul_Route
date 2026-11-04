@@ -22,6 +22,7 @@ import {
   touchTarget,
   useMediaSize,
   type ChoiceCardState,
+  TapBoard,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -397,24 +398,27 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
         )}
       </View>
       <Spacer size="lg" />
-      <View testID="quest-review-options" style={{ gap: spacing.md }}>
-        {round.options.map((option) => {
-          const state = stateOf(option);
-          return (
-            <ChoiceCard
-              key={option.id}
-              testID={`quest-review-option-${option.id}`}
-              state={state}
-              ko={option.ko}
-              romanization={option.ko !== undefined && showRomanization ? (option.romanization ?? '') : ''}
-              label={option.pictureRef === undefined ? option.label : undefined}
-              art={option.pictureRef !== undefined ? <PictureArt pictureRef={option.pictureRef} gloss={option.label ?? ''} size={pictureSize} decorative /> : undefined}
-              accessibilityLabel={announce(option, state)}
-              onPress={() => tap(option.id)}
-            />
-          );
-        })}
-      </View>
+      <TapBoard lock="board">
+        {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+        <View testID="quest-review-options" style={{ gap: spacing.md }}>
+          {round.options.map((option) => {
+            const state = stateOf(option);
+            return (
+              <ChoiceCard
+                key={option.id}
+                testID={`quest-review-option-${option.id}`}
+                state={state}
+                ko={option.ko}
+                romanization={option.ko !== undefined && showRomanization ? (option.romanization ?? '') : ''}
+                label={option.pictureRef === undefined ? option.label : undefined}
+                art={option.pictureRef !== undefined ? <PictureArt pictureRef={option.pictureRef} gloss={option.label ?? ''} size={pictureSize} decorative /> : undefined}
+                accessibilityLabel={announce(option, state)}
+                onPress={() => tap(option.id)}
+              />
+            );
+          })}
+        </View>
+      </TapBoard>
       <View accessibilityLiveRegion="polite">
         {missed && !right ? (
           <>

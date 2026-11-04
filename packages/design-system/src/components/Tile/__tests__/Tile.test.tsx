@@ -50,6 +50,19 @@ describe('Tile (AMENDMENTS-TOUCH 4.4, row KT-2)', () => {
     expect(tile({ state: 'disabled' }).type).toBe('View');
   });
 
+  it('disabled (a locked wrong tile, AMENDMENTS-TOUCH R3, row KT-3): still one TapTarget the board claims, but disabled, with the same wrong look and no press look', () => {
+    const presses: string[] = [];
+    const el = tile({ state: 'wrong', disabled: true, onPress: () => presses.push('ㄱ') });
+    expect(el.type).toBe('TapTarget');
+    expect(el.props.disabled).toBe(true);
+    const style = box({ state: 'wrong', disabled: true }, true).props.style as Props;
+    expect(style.borderColor).toBe(colors.feedback.nudge);
+    expect(style.backgroundColor).toBe(colors.feedback.nudgeLight);
+    expect(style.borderWidth).toBe(borderWidth.base);
+    expect(style.transform).toBeUndefined();
+    expect(tile({ state: 'wrong' }).props.disabled).toBe(false);
+  });
+
   it('at rest: the state border and no transform, with the card shadow', () => {
     const style = box({ state: 'idle' }, false).props.style as Props;
     expect(style).toMatchObject({ borderColor: colors.border.subtle, borderWidth: borderWidth.base, ...shadows.card });

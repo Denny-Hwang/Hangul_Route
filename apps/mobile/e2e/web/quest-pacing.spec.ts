@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStored } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStored, pastTapLock } from './helpers';
 import { expectNoSidewaysScroll } from './text-fit';
 
 /**
@@ -159,6 +159,7 @@ test('two first-try misses in Practice play one scaffold round of the same words
   await page.getByTestId('listen-pick-options').screenshot({ path: test.info().outputPath('pacing-scaffold-options-320.png') });
   await page.setViewportSize({ width: 393, height: 851 });
 
+  await pastTapLock(page);
   await page.locator('[data-testid^="listen-pick-option-"][aria-label^="Look here"]').click();
   // Then Apply, as always: its card and the quest's own counter.
   await expect(page.getByText(/^4 \/ 6$/)).toBeVisible();

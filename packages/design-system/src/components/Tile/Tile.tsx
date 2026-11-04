@@ -34,6 +34,7 @@ export function Tile({
   romanization,
   onPress,
   state = 'idle',
+  disabled = false,
   size = 'md',
   dimension,
   accessibilityLabel,
@@ -99,6 +100,8 @@ export function Tile({
     );
   }
 
+  // A `disabled` tile (a locked wrong one) stays a TapTarget, so a board still claims a touch on it and it keeps its
+  // state's look; the target is disabled, so it never commits (AMENDMENTS-TOUCH R3).
   // TapTarget (AMENDMENTS-TOUCH section 4.4): inside a TapBoard the board decides the tap; outside one it is a plain
   // button with the press guard. Its own box is the hit area; the press look (section 4.3: a thick border.shape outline
   // and a 0.97 shrink, none under reduced motion) goes on the drawn box inside it, which fills it.
@@ -106,29 +109,34 @@ export function Tile({
     <TapTarget
       testID={testID}
       onCommit={onPress}
+      disabled={disabled}
       accessibilityLabel={accessibilityLabel ?? `Korean letter ${label}, tap to select`}
     >
-      {({ pressed }) => (
-        <View
-          style={{
-            flexGrow: 1,
-            minWidth: dim,
-            minHeight: dim,
-            // A thicker press outline grows inward (off the padding), so the tile keeps its size and nothing moves.
-            padding: spacing.md - pressInset(pressed ? press : null, borderWidth.base),
-            backgroundColor: stateBg[state],
-            borderRadius: radii.lg,
-            borderWidth: pressed ? press.borderWidth : borderWidth.base,
-            borderColor: pressed ? press.borderColor : stateBorder[state],
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: pressTransform(pressed ? press : null),
-            ...shadows.card,
-          }}
-        >
-          {inner}
-        </View>
-      )}
+      {({ pressed: touched }) => {
+        // A disabled tile never shows the press look (section 4.3): it takes no tap.
+        const pressed = touched && !disabled;
+        return (
+            <View
+              style={{
+                flexGrow: 1,
+                minWidth: dim,
+                minHeight: dim,
+                // A thicker press outline grows inward (off the padding), so the tile keeps its size and nothing moves.
+                padding: spacing.md - pressInset(pressed ? press : null, borderWidth.base),
+                backgroundColor: stateBg[state],
+                borderRadius: radii.lg,
+                borderWidth: pressed ? press.borderWidth : borderWidth.base,
+                borderColor: pressed ? press.borderColor : stateBorder[state],
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: pressTransform(pressed ? press : null),
+                ...shadows.card,
+              }}
+            >
+              {inner}
+            </View>
+        );
+      }}
     </TapTarget>
   );
 }
