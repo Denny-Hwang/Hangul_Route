@@ -54,7 +54,8 @@ describe('console.transfer (English, F-SPACE-002 section 4.8)', () => {
   });
 
   it('words the steps with a state word, never colour alone', () => {
-    expect(t.steps).toEqual({ family: 'Family', thisClass: 'This class', newClass: 'New class', saidYes: 'said yes', youSaidYes: 'you said yes', waiting: 'waiting' });
+    // AMENDMENTS-GROWNUP-UX GX-4 Fix D (section 7.5): the family page words its own waiting step as its answer.
+    expect(t.steps).toEqual({ family: 'Family', thisClass: 'This class', newClass: 'New class', saidYes: 'said yes', youSaidYes: 'you said yes', waiting: 'waiting', yourAnswer: 'your answer needed' });
     expect(t.a11y.steps).toBe('Who has said yes');
   });
 

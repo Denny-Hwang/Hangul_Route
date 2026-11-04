@@ -35,7 +35,7 @@ const MODAL_SHADOW = `0 ${shadows.modal.shadowOffset.height}px ${shadows.modal.s
 
 // `max-height: 90vh` keeps a strip of the page in view above the sheet on a short phone, as the console's Display
 // sheet does (a viewport share, not a size token); the buttons' row basis is the design-system ConfirmSheet's 4 x xxxl.
-const CONFIRM_CSS = `
+export const CONFIRM_CSS = `
 .hr-confirm-scrim{position:fixed;inset:0;z-index:${z.modal};background:${colors.surface.overlay}}
 .hr-confirm{position:fixed;left:0;right:0;bottom:0;z-index:${z.modal};max-height:90vh;overflow-y:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:${rem(spacing.md)};background:${colors.surface.paper};color:${colors.text.primary};border-radius:${radii.xl}px ${radii.xl}px 0 0;padding:${rem(spacing.xl)} ${layout.gutter.compact}px;box-shadow:${MODAL_SHADOW};text-align:left}
 .hr-confirm h2{margin:0;font-size:${rem(typography.size.prompt)};font-weight:${typography.weight.bold};line-height:${typography.leading.tight};overflow-wrap:anywhere;white-space:pre-line}

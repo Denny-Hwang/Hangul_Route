@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, browseEnabled, browseEntryShown, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, browseEnabled, browseEntryShown, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, routeBlendEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -215,5 +215,26 @@ describe('browseEnabled and browseEntryShown (F-BROWSE-001 section 5.4; F-APP-00
     expect(browseEntryShown('https://app.hangulroute.com', {})).toBe(true);
     expect(browseEntryShown('https://hangulroute.com', {})).toBe(false);
     expect(browseEntryShown('https://app.hangulroute.com', { NEXT_PUBLIC_BROWSE: 'false' })).toBe(false);
+  });
+});
+
+/** AMENDMENTS-ROUTE-CLASS-BLEND section 14 (rows BL-4, BL-5; BL-10 flips it): class days and practice days on the console, default off. */
+describe('routeBlendEnabled', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('is off unless NEXT_PUBLIC_ROUTE_BLEND_ENABLED is "true" or "1"', () => {
+    expect(routeBlendEnabled({})).toBe(false);
+    expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: 'true' })).toBe(true);
+    expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: '1' })).toBe(true);
+    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
+    expect(routeBlendEnabled()).toBe(false);
+  });
+
+  it('reads the build value by its literal name', () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', '1');
+    expect(buildEnv().NEXT_PUBLIC_ROUTE_BLEND_ENABLED).toBe('1');
+    expect(routeBlendEnabled()).toBe(true);
   });
 });
