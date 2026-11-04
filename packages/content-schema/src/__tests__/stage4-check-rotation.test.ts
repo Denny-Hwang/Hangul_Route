@@ -75,7 +75,8 @@ const repeated = (list: readonly string[]): string[] => list.filter((x, i) => li
 
 describe('Stage 4 Check rotation (F-CURR-002 section 7.1, row CM-3A S4)', () => {
   it('every section 9.3 rule passes with zero findings for Stage 4, the frozen ids included', () => {
-    const findings = lintCurriculum(tree, { today: '2026-10-23' }).filter(
+    // Today, so a source accessed on a later content row's day (Volume 2, row CM-41 S4) is not in the future.
+    const findings = lintCurriculum(tree, { today: new Date().toISOString().slice(0, 10) }).filter(
       (f) => f.file.startsWith('content/episodes/stage-4/') || (f.rule === 'items-stable-id' && f.file === REVIEW_SNAPSHOT_FILE),
     );
     expect(findings.map((f) => `${f.rule} ${f.severity} ${f.file} ${f.path}: ${f.message}`)).toEqual([]);
@@ -138,6 +139,30 @@ describe('Stage 4 Check rotation (F-CURR-002 section 7.1, row CM-3A S4)', () => 
     }
   });
 
+  it('a Volume 2 triple is no Volume 1 triple of its cell, as authored and with any game.<kind> switch dark (row CM-41 S4, section 5.1)', () => {
+    // The shipped kind each switched format plays while its `game.<kind>` switch is off (section 12.2): the app's
+    // fallbacks (`logic/role-play/fallback.ts`, `logic/cloze-pick/round.ts`, `GAME_SWITCHES` in `logic/game-switches.ts`).
+    const FALLBACK: Readonly<Record<string, string>> = { 'role-play': 'tap-respond', 'cloze-pick': 'listen-pick', 'story-order': 'story-sequence' };
+    const switched = Object.keys(FALLBACK);
+    const played = (quest: LessonQuest, off: ReadonlySet<string>): string =>
+      (['practice', 'apply', 'check'] as const)
+        .map((k) => scopeOf(quest, k).kind)
+        .map((kind) => (off.has(kind) ? (FALLBACK[kind] as string) : kind))
+        .join(' / ');
+    const v2Files = readdirSync(join(REPO_ROOT, 'content/episodes/stage-4')).filter((f) => /\.v[0-9]+\.json$/.test(f));
+    expect(v2Files).toContain('nature.v2.json');
+    for (const file of v2Files) {
+      const later = LessonCellSchema.parse(tree.get(`content/episodes/stage-4/${file}`));
+      const first = CELLS[THEMES.indexOf(later.theme as (typeof THEMES)[number])] as LessonCell;
+      // Every on/off state of the switches (2^3), the learner's one state applying to both volumes.
+      for (let mask = 0; mask < 1 << switched.length; mask += 1) {
+        const off = new Set(switched.filter((_, i) => (mask & (1 << i)) !== 0));
+        const v1 = new Set(first.quests.map((q) => played(q, off)));
+        for (const quest of later.quests) expect(v1.has(played(quest, off)), `${quest.id} with ${[...off].join(', ') || 'no switch'} off plays ${played(quest, off)}`).toBe(false);
+      }
+    }
+  });
+
   it('keeps the shipped card awards (cells and the Greeting Dialogues quest card)', () => {
     expect(CELLS.map((c) => c.rewardCardIds)).toEqual([['card:mwoyeyo'], ['card:masisseoyo'], ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'], ['card:biga-wayo'], ['card:gachi']]);
     expect(QUESTS.flatMap((q) => (q.rewardCardId ? [`${q.id} ${q.rewardCardId}`] : []))).toEqual(['quest:stage4-rites-q1 card:insa']);
@@ -173,7 +198,18 @@ describe('Stage 4 review-item ids (F-CURR-002 section 4.2, row CM-3A S4)', () =>
     // teaches each turn and sentence as a new item (157 items) breaks S-b on 4 of 5 seeds. Retired items have no row.
     const firstCell = (cells: readonly string[]): string | undefined => cells.find((c) => c.startsWith('episode:'));
     const stage4 = built.items.filter((i) => firstCell(i.cells)?.startsWith('episode:stage4-') === true);
-    expect(stage4.length).toBeLessThanOrEqual(123);
+    // Volume 2 is its own load (row CM-41 S4, next test): the gate above is the Volume 1 route's.
+    const volume1 = stage4.filter((i) => !/-v[0-9]+$/.test(firstCell(i.cells) ?? ''));
+    expect(volume1.length).toBeLessThanOrEqual(123);
+  });
+
+  it('keeps the Volume 2 load: Stage 4 Nature Volume 2 first teaches no more items than the largest Volume 1 Stage 4 cell (30), re-asking Volume 1 for the rest (row CM-41 S4)', () => {
+    const firstCell = (cells: readonly string[]): string | undefined => cells.find((c) => c.startsWith('episode:'));
+    const nature2 = built.items.filter((i) => firstCell(i.cells) === 'episode:stage4-nature-v2');
+    // 28 today. The engine shows an item whose only source is Volume 2 only with `volumes` on (row CM-13), so the Volume 1
+    // load above, which the 60-day simulation holds, is unchanged.
+    expect(nature2.length).toBeGreaterThan(0);
+    expect(nature2.length).toBeLessThanOrEqual(30);
   });
 
   it('a removed item is retired: in no row, kept in the retired table for reports', () => {

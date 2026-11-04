@@ -230,3 +230,14 @@ describe('S-e: one quest-day introduces 8 items, then S-a', () => {
     expect(Math.min(...eight.map((id) => sim.held3.get(id) ?? Number.POSITIVE_INFINITY))).toBeGreaterThanOrEqual(4);
   });
 });
+
+describe('the simulated route is each cell’s first volume (F-CURR-002 row CM-40)', () => {
+  it('a later volume adds no route quest; the volumes-on scenario plays the later volumes after the route', () => {
+    const route = questPlans().map((p) => p.questId);
+    expect(route.filter((id) => /-v[0-9]+-q[0-9]+$/.test(id))).toEqual([]);
+    const withVolumes = questPlans(undefined, true).map((p) => p.questId);
+    expect(withVolumes.slice(0, route.length)).toEqual(route);
+    expect(withVolumes.slice(route.length)).toContain('quest:stage4-nature-v2-q1');
+    expect(withVolumes.slice(route.length).every((id) => /-v[0-9]+-q[0-9]+$/.test(id))).toBe(true);
+  });
+});

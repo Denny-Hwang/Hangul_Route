@@ -1,3 +1,4 @@
+import { CATALOG } from '@hangul-route/content-schema';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import type { MemoryAnswer } from '../../memory/memory-runtime';
 import type { MemoryRow } from '../../memory/memory-file';
@@ -72,8 +73,16 @@ const INTRODUCE_NONE: ReadonlySet<string> = new Set(
   stage1Quests.filter((q) => !q.steps.some((s) => (s.discover?.pages.length ?? 0) > 0)).map((q) => q.id),
 );
 
-/** The lesson quests in route order, each with the items it introduces: a cell's items split evenly over its quests. */
-export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPlan[] {
+/** Each cell's first volume: the Learning Route (F-CURR-002 row CM-40, a later volume adds no route day). */
+const FIRST_VOLUMES: ReadonlySet<string> = new Set(CATALOG.cells.map((c) => c.episodeId));
+
+/**
+ * The lesson quests in route order, each with the items it introduces: a cell's items split evenly over its quests.
+ * The route is each cell's first volume; `volumesOn` also plays the later volumes after them, in catalogue order (the
+ * optional scenario of a learner with `volumes` on who opens every Volume 2 from its tab once the route is done).
+ */
+export function questPlans(items: readonly ReviewItem[] = INDEX.items, volumesOn = false): QuestPlan[] {
+  const route = LESSON_QUESTS.filter((q) => volumesOn || FIRST_VOLUMES.has(q.episodeId));
   const firstCell = (item: ReviewItem): string | undefined => item.cells.find((c) => c.startsWith('episode:'));
   const byCell = new Map<string, string[]>();
   for (const item of items) {
@@ -82,12 +91,12 @@ export function questPlans(items: readonly ReviewItem[] = INDEX.items): QuestPla
   }
   const questsOf = new Map<string, string[]>();
   const lastOf = new Map<string, string>();
-  for (const q of LESSON_QUESTS) {
+  for (const q of route) {
     const cell = cellOfEpisode(q.episodeId);
     lastOf.set(cell, q.id);
     if (!INTRODUCE_NONE.has(q.id)) questsOf.set(cell, [...(questsOf.get(cell) ?? []), q.id]);
   }
-  return LESSON_QUESTS.map((q) => {
+  return route.map((q) => {
     const cell = cellOfEpisode(q.episodeId);
     const quests = questsOf.get(cell) ?? [q.id];
     const at = quests.indexOf(q.id);
