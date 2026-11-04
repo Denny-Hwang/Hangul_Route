@@ -141,7 +141,9 @@ const ROMAN_SLOT = /___(?:[a-z]+(?:\/[a-z]+)?)?/;
 /**
  * A sentence frame with slots (`저는 ___을/를 좋아해요` / `jeoneun ___eul/reul joahaeyo`):
  * the slots and their particles are not words, so the text between them is checked
- * piece by piece with `checkRomanization`, after the slot counts agree.
+ * piece by piece with `checkRomanization`, after the slot counts agree. A sentence mark
+ * right after a slot (`___, 새해 복 많이 받으세요`, the name a card is written to) belongs
+ * to the slot, not to the next word.
  */
 export function checkFrameRomanization(ko: string, given: string, ctx?: CheckContext): RomanizationIssue[] {
   const koParts = ko.split(KO_SLOT);
@@ -149,7 +151,8 @@ export function checkFrameRomanization(ko: string, given: string, ctx?: CheckCon
   if (koParts.length !== romParts.length) {
     return [issue('romanization-mismatch', `${ko}: ${koParts.length - 1} slot(s), the romanization has ${romParts.length - 1}`, ko, given)];
   }
-  return koParts.flatMap((part, i) => (/[가-힣]/.test(part) ? checkRomanization(part.trim(), (romParts[i] as string).trim(), ctx) : []));
+  const afterSlot = (part: string, i: number): string => (i > 0 ? part.replace(/^[.,!?~·…]+/, '') : part).trim();
+  return koParts.flatMap((part, i) => (/[가-힣]/.test(part) ? checkRomanization(afterSlot(part, i), (romParts[i] as string).trim(), ctx) : []));
 }
 
 function isAllowed(ko: string, given: string, ctx: CheckContext | undefined): boolean {
