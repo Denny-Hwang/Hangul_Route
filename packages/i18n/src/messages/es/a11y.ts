@@ -379,4 +379,7 @@ export const a11y = {
       plural('es', n, { one: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó 1 casilla.`, other: `Tirada: ${ko}, ${romanization}. Tu ficha avanzó ${n} casillas.` }),
   },
   journeyVolume: (n: number) => `Abre el volumen ${n}`,
+  weekDrop: {
+    card: (title: string, state: string) => `Esta semana en Corea: ${title}. ${state}.`,
+  },
 } satisfies DeepPartial<Messages['a11y']>;
