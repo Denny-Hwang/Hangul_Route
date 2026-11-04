@@ -217,6 +217,15 @@ describe('platform/audio.web: voice choice (AD5)', () => {
     audio.dispose();
   });
 
+  it('NB-2: on a Korean-language Mac (Yuna default, no English default) story narration uses Samantha, never Albert or Eddy', async () => {
+    const english = ['Albert', 'Bad News', 'Eddy (English (US))', 'Fred', 'Samantha', 'Zarvox'].map((n) => voice(n, 'en-US'));
+    const { synth, audio } = rig({ voices: [...APPLE_KO, voice('Yuna', 'ko-KR', { default: true }), ...english] });
+    await audio.playPrompt({ text: 'Long ago, a king', language: 'en-US', kind: 'narration' });
+    await audio.playPrompt({ text: '세종', language: 'ko-KR', kind: 'word' });
+    expect(synth.spoken.map((u) => u.voice?.name)).toEqual(['Samantha', 'Yuna']);
+    audio.dispose();
+  });
+
   it('waits for voices that arrive after the first prompt (Chrome)', async () => {
     const { synth, audio } = rig({ voices: [] });
     const result = audio.playPrompt({ text: '가' });

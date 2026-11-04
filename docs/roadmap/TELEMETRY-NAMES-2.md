@@ -123,7 +123,7 @@ Four names in the new `lecture.` namespace (a teacher's presenter, `/present`). 
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|
 | 1 | `lecture.start` | F-TCH-004 §3.14 | `{ source: 'console' \| 'quick' \| 'recent', blocks, slides, skipped, picker: 'none' \| 'names' \| 'initials' \| 'numbers', romanization: 'always' \| 'tap', voice: 'ready' \| 'none' \| 'unknown', offlineReady: boolean }` (the Start tap) | PR 1 | PR 6 |
-| 2 | `lecture.complete` | F-TCH-004 §3.14 | `{ slidesShown, minutes, reveals }` (Exit confirm, or the last slide then exit). PN-1 adds `navLayout: 'docked' \| 'rail' \| 'overlay'` and six whole-number counts `stepsButton`, `stepsSwipe`, `stepsKey`, `stepsClick`, `quickBacks`, `points` (each 0 to 100000), AMENDMENTS-PRESENTER-NAV §12; the presenter sends them from PN-6 (`navLayout` of the first slide shown once Start's fullscreen request settled) | PR 1 | PR 6 |
+| 2 | `lecture.complete` | F-TCH-004 §3.14 | `{ slidesShown, minutes, reveals }` (Exit confirm, or the last slide then exit). PN-1 adds `navLayout: 'docked' \| 'rail' \| 'overlay'` and six whole-number counts `stepsButton`, `stepsSwipe`, `stepsKey`, `stepsClick`, `quickBacks`, `points` (each 0 to 100000), AMENDMENTS-PRESENTER-NAV §12; the presenter sends them from PN-6 (`navLayout` of the first slide shown once Start's fullscreen request settled). NB-1 (2026-11-03) adds `finished: boolean` (Finish, or Exit after the last slide was reached; F-TCH-004 §3.5 amendment NB-1); an event without `finished` comes from an older client and means unknown, not false | PR 1 | PR 6 |
 | 3 | `lecture.tool_used` | F-TCH-004 §3.14 | `{ tool: 'timer' \| 'picker' \| 'blank' \| 'pause' \| 'grid' \| 'fullscreen' }` (first use of each tool per lecture) | PR 1 | PR 9 |
 | 4 | `lecture.deck_rejected` | F-TCH-004 §3.14 | `{ reason: 'empty' \| 'too_large' \| 'bad_encoding' \| 'bad_json' \| 'unsupported_version' \| 'invalid' }` (the codec reasons, §3.2) | PR 1 | PR 6 |
 
@@ -278,3 +278,16 @@ These are shape checks, so `questId`, `stampId` and `questKind` could still carr
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|
 | 1 | `audio.source_summary` | AMENDMENTS-AUDIO-CLIPS AC-B9 | `{ clip, say, tts, text, appVersion }`: how many prompts each source played since the last summary (`clip` the record's clip, `say` the text-keyed clip, `tts` the device voice, `text` the visible text), whole numbers 0-100000, and the app version (`1.0.0` form, app.json). Sent at most once per app session, when the app leaves the foreground or the page hides (`visibilitychange` hidden, `pagehide`), and only when something was counted. No text, ref, voice, source surface, learner id or URL; stored without a profile id. G3 = `(clip + say) / (clip + say + tts + text)` | AC-1 | AC-1 (`logic/audio/controller.ts`, `platform/audio*.ts`) |
+
+## T. Class days with practice days names (AMENDMENTS-ROUTE-CLASS-BLEND section 18; added by its BL-W PR)
+
+> Two new names. Row **BL-W** adds both to `TELEMETRY_EVENT_NAMES` (after the section 12 `guest.*` names), the exact-list tests (rule 2: `packages/content-schema/src/__tests__/telemetry.test.ts` and `packages/backend/src/__tests__/telemetry-route-blend.test.ts`) and, in the same Worker-first deploy, their storage rule to `keptEventFields` (`packages/backend/src/lib/server-events.ts`, `ROUTE_BLEND_PAYLOAD_RULES`): each payload key is kept only when its documented schema (`ROUTE_BLEND_TELEMETRY_PAYLOADS`, `packages/content-schema/src/schemas/route-blend-telemetry.ts`; strict) accepts the value, any other key is dropped, and the event is stored **without a profile id**. The emitting rows (BL-7, BL-8) send them only after that Worker is deployed (rule 1). None collides with sections A to S or with `TELEMETRY_EVENT_NAMES` on `main` at `cf7a4e483`; `route.` already holds F-PLAN-002's and F-ENT-003's names, and neither name below repeats one of them.
+
+**Payload rules:** a count and codes only. No plan id, space id, cell id, learner id, date or weekday list is sent or stored. Blended plan counts for the owner come from D1 (`plans.meta_json`) as aggregate queries, not from telemetry.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `route.practice_days_changed` | AMENDMENTS-ROUTE-CLASS-BLEND §18 | `{ days: 1-7, by: 'self' \| 'grownup' }`: how many practice days the learner now has, and whether the learner or a grown-up (behind the grown-up gate) changed them | BL-W | BL-8 |
+| 2 | `route.refresh_started` | AMENDMENTS-ROUTE-CLASS-BLEND §18 | `{ via: 'cell-check' \| 'daily-review' }`: a Refresh started, through the Cell Check of a listed cell or through Daily Review | BL-W | BL-7 |
+
+**Payload widening (no Worker change).** `route.next_started` (section N) gains `fromClass: boolean` (BL-7): true when the next item came from a class plan item with a `lectureDate`. The Worker stores that name's payload as sent (it has no payload allowlist), so no rule changes; a test pins that the field survives. `route.created` is unchanged.
