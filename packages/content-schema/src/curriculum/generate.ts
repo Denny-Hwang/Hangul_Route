@@ -36,6 +36,7 @@ import {
   type DateKey,
   type StoredCurriculumParams,
 } from './params';
+import type { BlendBuildInput } from './generate-blend';
 import {
   COMING_SOON_MAX,
   COMING_SOON_NOTE,
@@ -98,6 +99,9 @@ interface BuildOptions extends GenerateOptions {
    * set the caller derived from today's catalogue (a fresh draft or a reseed that sends its set).
    */
   placedOutAt?: number;
+  /** Re-pacing a blended plan (row BL-2): the stored items and Refresh entries; `generate-blend.ts` reads them. */
+  planItems?: PlanItem[];
+  historyRefresh?: CurriculumMeta['refresh'];
 }
 
 const stageIndex = (stage: StageKey): number => StageKeySchema.options.indexOf(stage);
@@ -342,6 +346,7 @@ const withGrowth = (p: CurriculumParams, catalog: Catalog, opts: BuildOptions): 
 const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOptions): CurriculumDraft => {
   const p = withGrowth(CurriculumParamsSchema.parse(input), catalog, opts);
   if (opts.freezeBefore !== undefined) RealDateKeySchema.parse(opts.freezeBefore);
+  if (p.blend !== undefined) return buildBlend({ ...p, blend: p.blend }, catalog, opts);
   const cadence = cadenceOf(p);
   const lookup = new Lookup(catalog);
   const calendar = calendarOf(p);
@@ -532,6 +537,57 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
   };
 };
 
+/** The blended walk over class cycles (`generate-blend.ts`, row BL-2). */
+export type BlendedPath = (input: BlendBuildInput) => CurriculumDraft;
+/** Whether a blended plan has a practice date on or after `from`, on the route the blended walk lays. */
+export type BlendedSessionsFrom = (params: CurriculumParams, from: DateKey) => boolean;
+let blendedPath: BlendedPath | undefined;
+let blendedSessionsFrom: BlendedSessionsFrom | undefined;
+
+/**
+ * Installs the blended path. `@hangul-route/content-schema/blend-generator` (`curriculum/generate-blend.ts`) calls it
+ * when it is first imported, so the path ships only in the bundles that plan class days with practice days (the
+ * console); the learner app's start bundle never carries it. A blended plan generated without it throws.
+ */
+export function installBlendedPath(path: BlendedPath, sessionsFrom: BlendedSessionsFrom): void {
+  blendedPath = path;
+  blendedSessionsFrom = sessionsFrom;
+}
+
+/**
+ * Class days with practice days (AMENDMENTS-ROUTE-CLASS-BLEND, row BL-2): steps 3 to 5 as for any plan, then the
+ * blended walk of `generate-blend.ts` over class cycles. Weeks and the done set start at the route's first class day.
+ */
+const buildBlend = (p: CurriculumParams & { blend: NonNullable<CurriculumParams['blend']> }, catalog: Catalog, opts: BuildOptions): CurriculumDraft => {
+  const lookup = new Lookup(catalog);
+  const from = opts.freezeBefore !== undefined && opts.freezeBefore > p.startDate ? opts.freezeBefore : p.startDate;
+  const history = (opts.history ?? []).filter((item) => item.targetDate !== undefined && item.targetDate < from).sort(byDate);
+  const fromCatalog = catalogQueuesOf(p, catalog, themeOrderOf(p), cadenceOf(p).endStage, new Set(history.map((item) => item.id)));
+  const queues: Queues = opts.queue ?? fromCatalog;
+  if (blendedPath === undefined) {
+    throw new Error('A plan with class days and practice days needs the blended generator: import "@hangul-route/content-schema/blend-generator" first.');
+  }
+  return blendedPath({
+    params: p,
+    catalogVersion: catalog.version,
+    lookup,
+    lessons: queues.lessons,
+    stories: queues.stories,
+    comingSoon: queues.comingSoon,
+    catalogLessons: fromCatalog.lessons,
+    locked: fromCatalog.locked,
+    alreadyDone: fromCatalog.alreadyDone,
+    shift: opts.queue !== undefined,
+    history,
+    historyWeeks: opts.historyWeeks,
+    planItems: opts.planItems,
+    historyRefresh: opts.historyRefresh,
+    from,
+    topics: catalog.topics,
+    festivalDay,
+  });
+};
+
 /** Step 9: stats and warnings. */
 const summarise = (
   p: CurriculumParams,
@@ -621,6 +677,8 @@ export function toMeta(draft: CurriculumDraft): CurriculumMeta {
     weeks: draft.weeks.map(copyWeek),
     horizonDays: HORIZON_DAYS,
     repacedAt: null,
+    // A blended plan's Refresh dates (row BL-2); a single-cadence meta has no such key.
+    ...(draft.refresh === undefined ? {} : { refresh: draft.refresh.map((entry) => ({ date: entry.date, cellIds: [...entry.cellIds] })) }),
   };
 }
 
@@ -680,6 +738,8 @@ export function regenerateFrom(
     freezeBefore: today,
     historyWeeks: plan.meta.weeks,
     placedOutAt: plan.meta.catalogVersion,
+    planItems: plan.items,
+    historyRefresh: plan.meta.refresh,
     ...(opts.catalogHistory === undefined ? {} : { catalogHistory: opts.catalogHistory }),
   };
   if (opts.mode === 'reseed') {
@@ -707,7 +767,10 @@ export function regenerateFrom(
   if (opts.mode === 'requeue') {
     const lookup = new Lookup(catalog);
     const done = new Set(completed);
-    const sessionsLeft = calendarOf(CurriculumParamsSchema.parse(params)).some((week) => week.sessions.some((date) => date >= today));
+    const parsed = CurriculumParamsSchema.parse(params);
+    const sessionsLeft = parsed.blend && blendedSessionsFrom
+      ? blendedSessionsFrom(parsed, today)
+      : calendarOf(parsed).some((week) => week.sessions.some((date) => date >= today));
     const stays = (item: PlanItem): boolean =>
       !sessionsLeft || done.has(item.id) || lookup.category(asQueueItem(item)) === 'coming-soon';
     return build(params, catalog, { ...base, history: past.filter(stays) });

@@ -150,9 +150,10 @@ export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_K
  * (F-CURR-002 section 4.8) is hidden at base scope: row CM-16 gave it the
  * `memory` consent item, and a class or school reads it only for a learner whose
  * family acknowledged a class-scope text that names that item
- * (`MEMORY_SCOPE_TEXT_VERSIONS`, `schemas/class-scope.ts`).
+ * (`MEMORY_SCOPE_TEXT_VERSIONS`, `schemas/class-scope.ts`). `practiceWeek` (AMENDMENTS-ROUTE-CLASS-BLEND section 11)
+ * is read by the family space only, at every scope, like `selfRoute` before the full scope existed.
  */
-export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory'] as const;
+export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute', 'vocab', 'routeGoal', 'memory', 'practiceWeek'] as const;
 export type TeacherHiddenSummaryKey = Extract<(typeof TEACHER_HIDDEN_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
 export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummaryKey, TeacherVisibleItemId>> = {

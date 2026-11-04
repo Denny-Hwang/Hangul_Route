@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { itemCategory } from '@/data/catalog';
 // The frozen October 2026 catalogue (Stage 1 complete, every story ready): pinned figures stay true while the live catalogue grows.
 import { CATALOG_2026_10 } from '@hangul-route/content-schema/testing/catalog-2026-10';
-import { defaultsFor, freeDaysView, leftOutNeutral, lessonWeeks, spaceCoverage, toParams, warningText, type WizardState } from '../curriculum';
+import { defaultsFor, freeDaysView, isWordedWarning, leftOutNeutral, lessonWeeks, spaceCoverage, toParams, warningText, type WizardState } from '../curriculum';
 
 /**
  * F-ENT-003 section 3.9.3 (E3-9; wireframe console/curriculum-free-days): for a space this viewer
@@ -290,7 +290,7 @@ describe('the left-out warning with the switch on (section 3.9.3)', () => {
     const draft = draftOf(stateFor('class', { length: '12-week' }), FROZEN);
     const result = view(draft, FROZEN);
     if (!result) throw new Error('view');
-    expect(draft.warnings.filter((w) => w.code === 'premium-needed').map((w) => warningText(w, 'en', result))).toEqual([
+    expect(draft.warnings.filter((w) => w.code === 'premium-needed').filter(isWordedWarning).map((w) => warningText(w, 'en', result))).toEqual([
       'The free plan covers Stage 1 (lessons in weeks 1 to 11). 3 more lessons open with a Group License. They are left out of this plan.',
     ]);
     expect(free.shortPlan(result.lastWeek ?? 0)).toBe('This plan has lessons until week 11. After that it has stories and practice.');
