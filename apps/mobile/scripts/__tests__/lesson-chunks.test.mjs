@@ -552,8 +552,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // F-CURR-002 §10 ceilings table: measured at the start bundle shrink (ko 901,191 B, es 527,438 B, BrowseApp
     // 111,404 B raw) and again on the final integration's strings (main fc580beed: ko 905,927 B, es 530,463 B raw).
     // Row CM-46a: ko 1,001,146 B raw with the ten read tiers' overlays, so the line is that plus an 8,854 B margin.
-    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_010_000);
-    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(1_001_146);
+    // Row CM-46 (the Nature book 2): ko 1,050,057 B raw with its three tales' overlays, so the line is that plus 4,943 B.
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBe(1_055_000);
+    expect(PRECACHE_BUDGET.localeChunkRaw).toBeGreaterThan(1_050_057);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBe(300_000);
     expect(PRECACHE_BUDGET.rootChunkRaw).toBeGreaterThan(245_964);
   });
