@@ -73,7 +73,7 @@ function ParentChooser(): JSX.Element {
           return;
         }
         const rosters = new Map<string, readonly RosterLearner[]>(results.map(([id, r]) => [id, r.ok ? r.data.learners : []]));
-        setLoad({ kind: 'rows', rows: parentChooserRows(families, rosters), partial: failed > 0 });
+        setLoad({ kind: 'rows', rows: parentChooserRows(families, rosters, new Date(), locale), partial: failed > 0 });
       } catch {
         // A read that throws in the client (not an API answer) falls back to the error and Try again, never the
         // skeleton forever.
@@ -85,7 +85,7 @@ function ParentChooser(): JSX.Element {
     return () => {
       live = false;
     };
-  }, [api, enabled, nonce]);
+  }, [api, enabled, nonce, locale]);
 
   // The browser's title and history never hold a learner's name (section 3.10).
   const documentTitle = m.report.documentTitle;

@@ -134,6 +134,11 @@ const LECTURE_PAGE = /^\/(?:teach|parent)\/space\/lecture(?:[/.]|$)/;
 const PARENT_HOME_PAGE = /^\/parent(?:\/|\.html)?$/;
 const TEACHER_HOME_PAGE = /^\/teach\/home(?:\/|\.html)?$/;
 
+/** A lecture-mode setup page (AMENDMENTS-LECTURE-V2): the frame draws no re-link bar there (AMENDMENTS-GROWNUP-UX 5.5). */
+export function isLecturePage(pathname: string): boolean {
+  return LECTURE_PAGE.test(pathname);
+}
+
 /**
  * The item to highlight (`aria-current="page"`, section 3.8): Billing on the billing pages; Lecture mode on any
  * lecture setup page (AMENDMENTS-LECTURE-V2 E3; both personas draw it, so like Billing it needs no resolved persona); on the
@@ -190,4 +195,13 @@ export function revealScrollLeft(row: { scrollLeft: number; width: number }, ite
   if (item.left >= row.scrollLeft && end <= row.scrollLeft + row.width) return null;
   if (item.left < row.scrollLeft || item.width > row.width) return item.left;
   return end - row.width;
+}
+
+/**
+ * Which ends of the one-row tab bar have tabs hidden past them (AMENDMENTS-GROWNUP-UX GX-14, P6): the row draws an edge
+ * fade there, so a cut-off last tab reads as "more this way", and none when everything shows. A pixel of slack absorbs
+ * the fractions a zoomed page reports.
+ */
+export function rowHiddenEdges(row: { scrollLeft: number; clientWidth: number; scrollWidth: number }): { start: boolean; end: boolean } {
+  return { start: row.scrollLeft > 1, end: row.scrollWidth - (row.scrollLeft + row.clientWidth) > 1 };
 }
