@@ -606,7 +606,11 @@ function SpaceInner(): JSX.Element {
                         {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
                         <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
                       </div>
-                    ) : attention?.byLearner[l.id]?.kind === 'new' ? null : (
+                    ) : attention?.byLearner[l.id]?.kind === 'new' ? (
+                      // GX-1 x GX-8: a New card's reason line already says no practice is shared yet, so a class card adds
+                      // nothing; a family card still keeps GX-8 P4's dated join ("Joined Oct 14"), the case P4 targets.
+                      roster.space.kind === 'family' ? <Muted>{joinedLine('family', l.joinedAt, now, locale)}</Muted> : null
+                    ) : (
                       <Muted>
                         {/* GX-8 P4: a family card leads with its dated join ("Joined Oct 14 · not synced yet"). */}
                         {roster.space.kind === 'family'
