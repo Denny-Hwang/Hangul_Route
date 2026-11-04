@@ -2,6 +2,7 @@ import {
   CATALOG,
   LECTURE_PRESETS,
   LECTURE_REVISIT_CHAR_RE,
+  OUTLINE_MAX_LESSON_BLOCKS,
   PRESET_DEFAULT_MINUTES,
   PRESET_LENGTHS,
   StageKeySchema,
@@ -13,6 +14,7 @@ import {
   questIdsOfBlocks,
   resolvePreset,
   type Catalog,
+  type ClassMinutes,
   type LectureBlock,
   type LecturePreset,
   type PresetContext,
@@ -24,7 +26,8 @@ import {
 import type { Messages } from '@hangul-route/i18n';
 import type { PlanView, Roster } from './api';
 import { thisWeekOf, weekGroups } from './curriculum';
-import { planBlocks, planOutline, titleProblem, v2LinksAllowed, type LectureSource } from './lecture';
+import { routeBlendEnabled } from './config';
+import { classDayOf, planBlocks, planOutline, titleProblem, v2LinksAllowed, type LectureSource } from './lecture';
 import { classRollup } from './rollup';
 import { parseVocabSummary } from './vocab-summary';
 
@@ -78,7 +81,8 @@ export function presetStages(catalog: Catalog = CATALOG): StageKey[] {
 /** The quest ids of the plan's items this week and last week (W1): a classic plan is all this week's; a route reads its weeks. */
 export function planWeekQuests(plan: Pick<PlanView, 'items' | 'meta'> | null, today: string): { thisWeek: string[]; lastWeek: string[] } {
   if (!plan) return { thisWeek: [], lastWeek: [] };
-  const thisWeek = questIdsOfBlocks(planOutline(plan, today).blocks, CATALOG);
+  // W1 reads the plan's weeks; a blended plan's class-day pick (BL-5) is for Next lesson only.
+  const thisWeek = questIdsOfBlocks(planOutline(plan, today, false).blocks, CATALOG);
   const weeks = plan.meta?.weeks ?? [];
   if (weeks.length === 0) return { thisWeek, lastWeek: [] };
   const where = thisWeekOf(weeks, today);
@@ -120,24 +124,40 @@ export interface ConsolePresetInput {
   /** Today, as `dateKey`. */
   today: string;
   now: Date;
+  /** Class days and practice days (`routeBlendEnabled()`, AMENDMENTS-ROUTE-CLASS-BLEND section 10.3): a blended plan presents its class day. */
+  blend?: boolean;
+}
+
+/** A blended plan's class day on the lecture card (section 10.3): its date, how many lessons it presents and the class length. */
+export interface ConsoleClassDay {
+  /** `dateKey` of the class day. */
+  date: string;
+  lessons: number;
+  minutes: ClassMinutes;
 }
 
 /** The console's preset context: the resolver's, plus whether the roll-up itself had letters to revisit (the deck's `source`). */
 export interface ConsolePresetContext extends PresetContext {
   /** True when the space's roll-up had letters to revisit; false when U's letters are only the plan's taught letters. */
   rollupRevisit: boolean;
+  /** The class day Next lesson presents for a blended plan (section 10.3), else null: then the card keeps its length chips. */
+  classDay: ConsoleClassDay | null;
 }
 
 /** The console's preset context (sections 4.2 and 4.3): the roster and the plan read as the resolver needs them, nothing more. */
 export function consolePresetContext(input: ConsolePresetInput): ConsolePresetContext {
   const learners = input.roster?.learners ?? [];
-  const outline = input.plan ? planOutline(input.plan, input.today).blocks : [];
+  const blend = input.blend ?? routeBlendEnabled();
+  const outline = input.plan ? planOutline(input.plan, input.today, blend).blocks : [];
+  // `classMinutes` only for a blended plan's class-day outline (section 10.3): N1 then presents the whole day at its length.
+  const day = blend && input.plan && outline.length > 0 ? classDayOf(input.plan, input.today) : null;
+  const classDay: ConsoleClassDay | null = day ? { date: day.date, lessons: Math.min(outline.length, OUTLINE_MAX_LESSON_BLOCKS), minutes: day.minutes } : null;
   const rollup = classRollup(learners, input.now);
   const weeks = planWeekQuests(input.plan, input.today);
   const roster = input.roster;
   return {
     catalog: CATALOG,
-    plan: input.plan && outline.length > 0 ? { title: input.plan.title, blocks: outline } : null,
+    plan: input.plan && outline.length > 0 ? { title: input.plan.title, blocks: outline, ...(classDay ? { classMinutes: classDay.minutes } : {}) } : null,
     ...(roster ? { planTitleOk: (title: string) => titleProblem(title, roster) === null } : {}),
     position: classPosition(
       learners.map((l) => ({ journey: l.summary?.journey ?? null })),
@@ -151,6 +171,7 @@ export function consolePresetContext(input: ConsolePresetInput): ConsolePresetCo
     }),
     revisitChars: consoleRevisitChars(rollup.revisit, outline),
     rollupRevisit: rollup.revisit.some((c) => LECTURE_REVISIT_CHAR_RE.test(c)),
+    classDay,
   };
 }
 
@@ -158,6 +179,11 @@ export function consolePresetContext(input: ConsolePresetInput): ConsolePresetCo
 export function defaultPresetStage(ctx: PresetContext, stages: readonly StageKey[] = presetStages(ctx.catalog)): StageKey {
   const own = ctx.position?.stage;
   return own !== undefined && stages.includes(own) ? own : (stages[0] ?? 'stage1');
+}
+
+/** The length a card shows (section 10.3): a blended class day's class length for Next lesson, else `presetMinutes`. */
+export function cardMinutes(preset: LecturePreset, chosen: Partial<Record<LecturePreset, PresetMinutes>>, classDay: ConsoleClassDay | null): number {
+  return preset === 'next-lesson' && classDay !== null ? classDay.minutes : presetMinutes(preset, chosen);
 }
 
 /** The length a card builds: the chosen chip when the preset offers it, else its default. */

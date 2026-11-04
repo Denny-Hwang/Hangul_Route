@@ -148,6 +148,7 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
         order={['next-lesson', 'hangul-week-1', 'by-stage', 'story-time', 'word-review', 'warm-up']}
         open="by-stage"
         minutesOf={() => 20}
+        classDay={null}
         stage="stage2"
         stages={['stage1', 'stage2', 'stage3']}
         fallbackOf={() => null}
@@ -178,6 +179,7 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
         order={['hangul-week-1', 'by-stage', 'warm-up', 'next-lesson']}
         open="next-lesson"
         minutesOf={() => 20}
+        classDay={null}
         stage="stage1"
         stages={['stage1']}
         fallbackOf={() => null}
@@ -198,6 +200,38 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
     expect(label('by-stage')).toBe(html$(m.a11y.presenter.presetCard(presetCardWords('by-stage', p, { planTitle: 'Week three', family: false }).title, 20)));
   });
 
+  it('a blended class day: Next lesson shows the class day and the class length, and no length chips (BL-5)', () => {
+    const m = getMessages(PSEUDO);
+    const props = {
+      order: ['next-lesson', 'by-stage'] as const,
+      minutesOf: (preset: string) => (preset === 'next-lesson' ? 45 : 20),
+      classDay: { weekday: 'Thursday', lessons: 3, minutes: 45 },
+      stage: 'stage1' as const,
+      stages: ['stage1' as const],
+      fallbackOf: () => null,
+      note: null,
+      planTitle: 'Week three',
+      family: false,
+      outline: [revisit],
+      outlineMinutes: null,
+      onToggle: noop,
+      onMinutes: noop,
+      onStage: noop,
+    };
+    const html = renderToStaticMarkup(<LecturePresetsSection {...props} order={[...props.order]} open="next-lesson" />);
+    const weekday = 'Thursday';
+    expect(html).toContain('data-testid="lecture-preset-class-day"');
+    expect(html).toContain(m.console.curriculum.blend.lecture.classDay(weekday, 3));
+    expect(html).toContain(m.console.curriculum.blend.lecture.classLength(45));
+    expect(html).not.toContain('data-testid="lecture-preset-length-next-lesson"');
+    expect(html).toContain(m.console.lecture.outline.about(45));
+    // Another open card keeps its chips and draws no class-day lines.
+    const other = renderToStaticMarkup(<LecturePresetsSection {...props} order={[...props.order]} open="by-stage" />);
+    expect(other).toContain('data-testid="lecture-preset-length-by-stage"');
+    expect(other).not.toContain('data-testid="lecture-preset-class-day"');
+    expectAllPseudo(joined(html), ['Week three', weekday, jamo, ...rowWords([revisit])]);
+  });
+
   it('a card that cannot build what it names says so in its line, open or closed; the open card holds the note (section 4.1)', () => {
     const w = getMessages(PSEUDO).console.lecture;
     const fallbacks: Partial<Record<string, string>> = { 'next-lesson': w.presets.fallback.zero, 'word-review': w.presets.fallback.warmUp };
@@ -206,6 +240,7 @@ describe('lecture setup sections render only dictionary text (en-XA)', () => {
         order={['hangul-week-1', 'by-stage', 'story-time', 'word-review', 'warm-up', 'next-lesson']}
         open="next-lesson"
         minutesOf={() => 20}
+        classDay={null}
         stage="stage1"
         stages={['stage1']}
         fallbackOf={(preset) => fallbacks[preset] ?? null}

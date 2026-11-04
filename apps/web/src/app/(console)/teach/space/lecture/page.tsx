@@ -2,6 +2,7 @@
 
 import { LECTURE_MAX_BLOCKS, type LectureBlock, type LecturePreset, type PresetContext, type PresetMinutes, type ResolvedPreset, type RomanizationMode, type StageKey, type UiLocale } from '@hangul-route/content-schema';
 import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { formatDate } from '@hangul-route/i18n';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -36,6 +37,7 @@ import {
   type LectureSource,
 } from '@/lib/console/lecture';
 import {
+  cardMinutes,
   consolePresetContext,
   consolePresetOrder,
   defaultPresetStage,
@@ -467,7 +469,8 @@ function LectureInner(): JSX.Element {
           <LecturePresetsSection
             order={order}
             open={open}
-            minutesOf={(preset) => presetMinutes(preset, lengths)}
+            minutesOf={(preset) => cardMinutes(preset, lengths, ctx.classDay)}
+            classDay={ctx.classDay ? { weekday: formatDate(locale, `${ctx.classDay.date}T00:00:00Z`, 'weekdayLong', { utc: true }), lessons: ctx.classDay.lessons, minutes: ctx.classDay.minutes } : null}
             stage={stageShown}
             stages={stages}
             fallbackOf={(preset) => fallbacks.get(preset) ?? null}
