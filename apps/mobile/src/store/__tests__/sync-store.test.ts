@@ -29,6 +29,7 @@ import { useProgressStore } from '../progress-store';
 import { usePlanStore } from '../plan-store';
 import { onSynced, setSyncApiForTests, useSyncStore } from '../sync-store';
 import { setMemoryStoreHook } from '../../logic/sync/memory-hook';
+import { blendedMeta } from '../../logic/homework/__tests__/curriculum-fixture';
 
 const snap = (quests: string[]): ProgressSnapshot => ({
   profileId: 'profile:a',
@@ -157,6 +158,20 @@ describe('sync-store (F-SYNC-002)', () => {
     setSyncApiForTests(fakeApi({ putSnapshot }) as never);
     await useSyncStore.getState().syncNow('profile:a');
     expect(putSnapshot.mock.calls[0]?.[1].summary.routeGoal).toEqual({ stage: 'stage1', from: 'default' });
+  });
+
+  it('uploads summary.practiceWeek while a class plan with practice days is in force, and none without one (AMENDMENTS-ROUTE-CLASS-BLEND BL-9)', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const startDate = new Date(Date.parse(`${today}T00:00:00.000Z`) - 7 * 86_400_000).toISOString().slice(0, 10);
+    const plan = { id: 'plan:c', spaceId: 'space:c', spaceKind: 'class' as const, spaceName: 'Class', title: 'Weekly plan', items: [], publishedAt: '2026-10-01T09:00:00.000Z', updatedAt: '2026-10-01T09:00:00.000Z', meta: blendedMeta({ startDate }) };
+    usePlanStore.setState({ byLearner: { 'profile:a': [plan] }, notReady: {} });
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(putSnapshot.mock.calls[0]?.[1].summary.practiceWeek).toEqual({ practicedDays: 0 });
+    usePlanStore.setState({ byLearner: { 'profile:a': [] }, notReady: {} });
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(putSnapshot.mock.calls.at(-1)?.[1].summary).not.toHaveProperty('practiceWeek');
   });
 
   it('leaves summary.routeGoal out while this device does not know the learner\'s plans yet, never a guessed default (Learning Route LR-6)', async () => {

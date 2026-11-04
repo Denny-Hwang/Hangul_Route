@@ -230,6 +230,15 @@ describe('summarize: summary.memory (F-CURR-002 section 4.8, row CM-16)', () => 
   });
 });
 
+describe('summarize: summary.practiceWeek (AMENDMENTS-ROUTE-CLASS-BLEND section 11, row BL-9)', () => {
+  it('passes the count through, including 0, and leaves the key out without a class plan with practice days', () => {
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, practiceWeek: { practicedDays: 3 } }).practiceWeek).toEqual({ practicedDays: 3 });
+    const zero = summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, practiceWeek: { practicedDays: 0 } });
+    expect(ProgressSummarySchema.parse(zero).practiceWeek).toEqual({ practicedDays: 0 });
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {} })).not.toHaveProperty('practiceWeek');
+  });
+});
+
 describe('letterSignalsOf', () => {
   it('is the summary\'s own letter lists, so the report revisit and the summary never disagree', () => {
     const questJamo = { q1: ['ㄱ', 'ㄴ'], q2: ['ㄴ', 'ㄷ'], stage2: ['ㅁ'] };

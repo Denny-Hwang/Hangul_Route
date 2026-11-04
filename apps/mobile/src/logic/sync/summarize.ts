@@ -38,6 +38,8 @@ export interface SummarizeInput {
   activity?: ProgressSummary['activity'];
   /** The memory counts, from the memory store while the profile records (F-CURR-002 row CM-16); left out when absent. */
   memory?: ProgressSummary['memory'];
+  /** Practice days this week, family only (AMENDMENTS-ROUTE-CLASS-BLEND section 11, `practiceWeekOf`); left out when absent. */
+  practiceWeek?: ProgressSummary['practiceWeek'];
 }
 
 /** done / total per plan from the plan-derived assignments, plus what was skipped. */
@@ -190,7 +192,7 @@ export function stage1AnchorOf(reviews: readonly ReviewEntry[]): ProgressSummary
   return { met: symbolsRight >= ANCHOR_SYMBOLS && wordsRight >= ANCHOR_WORDS, checkedAt: newest.generatedAt, tricky };
 }
 
-export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey, routeGoal, activity, memory }: SummarizeInput): ProgressSummary {
+export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey, routeGoal, activity, memory, practiceWeek }: SummarizeInput): ProgressSummary {
   const completed = snapshot.quests.filter((q) => q.completedAt);
   const stage1Set = new Set(stage1QuestIds);
   const stage1Done = completed.filter((q) => stage1Set.has(q.questId));
@@ -232,6 +234,7 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     ...(routeGoal ? { routeGoal } : {}),
     ...(activity ? { activity } : {}),
     ...(memory ? { memory } : {}),
+    ...(practiceWeek ? { practiceWeek } : {}),
     // Omitted for a learner with no words, so their summary stays byte-identical (F-VOC-005 section 3.8).
     ...(words.items.length > 0 ? { vocab: vocabSummaryOf(words, localDay(now)) } : {}),
   };
