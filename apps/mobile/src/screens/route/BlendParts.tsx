@@ -1,7 +1,7 @@
 import { Body, Button, Caption, Card, Icon, Spacer, colors, spacing, touchTarget } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRouteStore } from '../../store/route-store';
 
@@ -99,5 +99,27 @@ export function PlanRowBlendLine({ kind, onSeeIt }: { kind: 'resting' | 'instead
         <Button label={words.seeIt} tone="ghost" size="md" onPress={onSeeIt} testID="profile-plan-see-it" />
       </View>
     </View>
+  );
+}
+
+/**
+ * Profile -> weekly plan: the My practice days row (row BL-8, wireframe B7). Always reachable while the class plan
+ * with practice days leads; a child's change goes through the grown-up gate on the screen itself.
+ */
+export function PracticeDaysRow({ onOpen }: { onOpen: () => void }): ReactElement {
+  const words = useMessages().learner.route.blend.practiceDays;
+  return (
+    <Pressable
+      testID="profile-practice-days"
+      onPress={onOpen}
+      accessibilityRole="button"
+      accessibilityLabel={words.title}
+      style={{ minHeight: touchTarget.min, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}
+    >
+      <Body weight="semibold" style={{ flex: 1 }}>
+        {words.title}
+      </Body>
+      <Icon name="arrow-right" size={24} color={colors.text.muted} />
+    </Pressable>
   );
 }

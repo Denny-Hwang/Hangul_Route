@@ -82,6 +82,8 @@ export type GrownUpDestination =
   | 'JoinSpace'
   /** [GU] AMENDMENTS-GUEST-FIRST-LESSON section 8.2 (row GU-4, CS-G2, CS-G10): Keep my progress after the first quest on a device with a PIN, in the `Guest` stack; verify only with `verifyForLockedProfile`, then the save form; never a grown-up session, never a new PIN. */
   | 'SaveGuest'
+  /** AMENDMENTS-ROUTE-CLASS-BLEND section 9.4 (row BL-8): a child's My practice days on a gated device (`PinEntry.profileId`); back to the screen as the grown-up's view. */
+  | 'PracticeDays'
   // add new members above this line
 ;
 
@@ -381,6 +383,12 @@ export type RootStackParamList = {
    * nothing else (CS-G1).
    */
   Guest: NavigatorScreenParams<GuestStackParamList>;
+  /**
+   * My practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-8, wireframe B7), Profile -> weekly plan,
+   * registered only while `flags.routeBlendEnabled` is on. `viewer: 'grownup'` after the grown-up gate (a child's
+   * days): it then counts as a Grown-up area page, so the session stays open while the grown-up picks the days.
+   */
+  PracticeDays: { profileId: string; viewer?: 'grownup' };
 };
 
 /** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */

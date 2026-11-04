@@ -30,6 +30,7 @@ import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { profileRowOpens } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
 import { planRowBlendOf } from '../../logic/route/blend-view';
+import { PracticeDaysRow } from '../route/BlendParts';
 import { layerOf } from '../../logic/route/layer';
 import { sourcesOf } from '../../logic/homework/plan-derivation';
 import { usePlanStore } from '../../store/plan-store';
@@ -84,6 +85,8 @@ export function ProfileScreen(): ReactElement {
   const planRowBlend = flags.routeBlendEnabled
     ? planRowBlendOf({ layerWithPractice: layerOf(sourcesOf(blendPlans ?? [], null), planDay) === 'class-with-practice', hasOwnPlan: activeSelfRoute(snap) !== null })
     : null;
+  // My practice days (row BL-8, wireframe B7): the learner's own days while the class plan with practice days leads.
+  const practiceDaysRow = flags.routeBlendEnabled && layerOf(sourcesOf(blendPlans ?? [], null), planDay) === 'class-with-practice';
   const cachedTier = useTierStore((s) => (active ? s.byLearner[active.id] : undefined));
   const entitled = effectiveTier(active?.id ?? '', new Date());
   // The free line follows the real tier model: everything is open while content gating is off (owner request 2026-10-16, item 8).
@@ -414,6 +417,12 @@ export function ProfileScreen(): ReactElement {
                 <>
                   <Spacer size="sm" />
                   <PlanRowBlendLine kind={planRowBlend} onSeeIt={() => navigation.navigate('RouteOverview', { profileId: active.id })} />
+                </>
+              ) : null}
+              {practiceDaysRow ? (
+                <>
+                  <Spacer size="sm" />
+                  <PracticeDaysRow onOpen={() => navigation.navigate('PracticeDays', { profileId: active.id })} />
                 </>
               ) : null}
             </Card>

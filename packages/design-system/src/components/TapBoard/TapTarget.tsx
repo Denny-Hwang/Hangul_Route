@@ -25,7 +25,7 @@ function resolveStyle(style: TapTargetProps['style'], look: TapLook): StyleProp<
   return [own, { touchAction: targetTouchAction(supportsPinchZoom()) } as unknown as ViewStyle];
 }
 
-export function TapTarget({ onCommit, disabled = false, accessibilityLabel, accessibilityState, lockMs, gapFill = true, style, testID, children }: TapTargetProps): ReactElement {
+export function TapTarget({ onCommit, disabled = false, accessibilityLabel, accessibilityRole = 'button', accessibilityState, lockMs, gapFill = true, style, testID, children }: TapTargetProps): ReactElement {
   const board = useContext(TapBoardContext);
   const id = useId();
   const node = useRef<unknown>(null);
@@ -43,9 +43,11 @@ export function TapTarget({ onCommit, disabled = false, accessibilityLabel, acce
     ref: (v: unknown) => {
       node.current = v;
     },
-    accessibilityRole: 'button',
+    accessibilityRole,
     accessibilityLabel,
     accessibilityState: { ...accessibilityState, disabled },
+    // react-native-web reads the ARIA prop, not `accessibilityState`, for a chip's on or off (AMENDMENTS-ROUTE-CLASS-BLEND BL-8).
+    ...(accessibilityState?.checked === undefined ? {} : { 'aria-checked': accessibilityState.checked }),
     disabled,
     testID,
     ...NO_PRESS_DELAY,

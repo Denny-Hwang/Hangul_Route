@@ -2259,6 +2259,12 @@ export const learner = {
       seeIt: 'Verlo',
       ownBack: 'Tu propio plan semanal volvió.',
       proposalInstead: 'El plan semanal de tu clase tiene días de práctica para ti.',
+      practiceDays: {
+        title: 'Mis días de práctica',
+        hint: 'Elige los días en que practicas. Tus lecciones siguen iguales.',
+        count: 'Días por semana',
+        gate: 'Requiere PIN',
+      },
     },
   },
 } satisfies DeepPartial<Messages['learner']>;

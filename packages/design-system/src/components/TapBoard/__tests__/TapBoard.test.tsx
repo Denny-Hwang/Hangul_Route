@@ -304,6 +304,16 @@ describe('TapTarget inside a board', () => {
     return { value, clicks, registered, remeasured };
   }
 
+  it('a choice chip is a checkbox or a radio, and its checked state goes out as aria-checked too (BL-8)', () => {
+    inBoard();
+    const chip = renderTarget({ accessibilityRole: 'checkbox', accessibilityState: { checked: true } });
+    expect(chip.props.accessibilityRole).toBe('checkbox');
+    expect(chip.props['aria-checked']).toBe(true);
+    const radio = renderTarget({ accessibilityRole: 'radio', accessibilityState: { checked: false } });
+    expect(radio.props['aria-checked']).toBe(false);
+    expect('aria-checked' in renderTarget({}).props).toBe(false);
+  });
+
   it('is a focusable button with the caller\'s label and state; its click (with its time stamp) goes to the board', () => {
     const { clicks } = inBoard();
     const el = renderTarget({ accessibilityState: { selected: true }, testID: 'tile-0' });

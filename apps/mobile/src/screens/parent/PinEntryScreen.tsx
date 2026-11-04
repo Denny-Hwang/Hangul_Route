@@ -419,6 +419,11 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
       if (step.kind === 'back') back();
       else if (step.kind === 'proposal') navigation.replace('RouteProposal', { source: 'profile', profileId: step.profileId });
       else navigation.replace('RouteSetup', { profileId: step.profileId });
+    } else if (route.params.next === 'PracticeDays') {
+      // A child's practice days (AMENDMENTS-ROUTE-CLASS-BLEND row BL-8): back to the screen as the grown-up's view.
+      const { profileId } = route.params;
+      if (profileId === undefined) back();
+      else navigation.replace('PracticeDays', { profileId, viewer: 'grownup' });
     } else if (route.params.next === 'NoteReport') {
       // "Tell a grown-up" on a note page (F-FEEDBACK-001 section 6.10 item 4): the report sheet of that note.
       const { noteId, profileId, noteVia } = route.params;

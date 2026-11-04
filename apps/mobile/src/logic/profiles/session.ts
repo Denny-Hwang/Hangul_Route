@@ -145,7 +145,7 @@ const AREA_ROUTES: ReadonlySet<string> = new Set([
 // The onboarding stack's own screens are the focused routes while it shows (`getCurrentRoute` names the leaf).
 const GATE_ROUTES: ReadonlySet<string> = new Set(['PinEntry', 'PinReset', 'Onboarding', 'Welcome', 'CreateProfile', 'FirstQuestPreview', 'PlacementInvite']);
 /** Routes shared by learners and grown-ups: in the area when opened from it (`viewer: 'grownup'`), else a learner screen. */
-const SHARED_ROUTES: ReadonlySet<string> = new Set(['MyRoute', 'RouteOverview']);
+const SHARED_ROUTES: ReadonlySet<string> = new Set(['MyRoute', 'RouteOverview', 'PracticeDays']);
 
 export function routeZone(name: string, params?: unknown): RouteZone {
   if (GATE_ROUTES.has(name)) return 'gate';

@@ -4,6 +4,8 @@ import {
   latestLocalDay,
   pruneReviews,
   SelfRouteSchema,
+  PracticeDaysEntrySchema,
+  type PracticeDaysEntry,
   pruneDailyReviews,
   type PlacementResult,
   type ProgressSnapshot,
@@ -14,6 +16,7 @@ import {
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
+import { practiceDaysWrite } from '../logic/route/practice-days';
 import { awardWorldFor, welcomeCardIds } from '../content/award-world';
 import { applyAwards } from '../logic/awards/apply';
 import { catchUpGrantedPayload } from '../logic/awards/catch-up';
@@ -274,6 +277,13 @@ interface Actions {
    * stored; returns whether it was. Plan derivation runs separately (`usePlanStore.rederive`).
    */
   setSelfRoute: (profileId: string, route: SelfRoute) => boolean;
+  /**
+   * The learner's own practice days for one class plan (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-8):
+   * replaces that plan's `practiceDays` entry, drops the entries of plans not in `livePlanIds` (the days go with their
+   * plan), persists and syncs like any write. An entry the schema refuses is never stored; returns whether it was.
+   * Plan derivation runs separately (`usePlanStore.rederive`).
+   */
+  setPracticeDays: (profileId: string, entry: PracticeDaysEntry, livePlanIds: readonly string[]) => boolean;
   /**
    * A goals write (F-CURR-002 row CM-17: points in `dayLog`, `goals`, the `steadyWeeks` latch) on the saved
    * snapshot only: false, with nothing written, while the profile's saved copy has not been read (a write
@@ -777,6 +787,16 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (!parsed.success) return false;
     const snap = withSnapshotDefaults(get().byProfile[profileId] ?? blankSnapshot(profileId));
     const updated: ProgressSnapshot = { ...snap, selfRoute: parsed.data, updatedAt: new Date().toISOString() };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+    return true;
+  },
+
+  setPracticeDays: (profileId, entry, livePlanIds) => {
+    const parsed = PracticeDaysEntrySchema.safeParse(entry);
+    if (!parsed.success) return false;
+    const snap = withSnapshotDefaults(get().byProfile[profileId] ?? blankSnapshot(profileId));
+    const updated: ProgressSnapshot = { ...snap, practiceDays: practiceDaysWrite(snap.practiceDays, parsed.data, livePlanIds), updatedAt: new Date().toISOString() };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
     return true;

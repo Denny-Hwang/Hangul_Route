@@ -191,6 +191,8 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       // Row CM-47: the added realia layouts.
       { name: 'realia-kinds-chunk', marker: 'screen-chunk:realia-kinds' },
       { name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' },
+      // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the placer.
+      { name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([

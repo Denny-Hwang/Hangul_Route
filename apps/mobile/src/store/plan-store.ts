@@ -3,7 +3,10 @@ import { create } from 'zustand';
 import { episodesAll, questsAll, stages } from '../content';
 import { isStageEntitled } from '../logic/entitlement';
 import { dayKey } from '../logic/homework/mission-builder';
-import { deriveAssignments, planIdOf, restingSourceIds, sourcesOf, type DeriveResult } from '../logic/homework/plan-derivation';
+import { flags } from '../config/flags';
+import { deriveAssignments, planIdOf, restingSourceIds, sourcesOf, type DeriveResult, type DeriveSource } from '../logic/homework/plan-derivation';
+import { needsPlacer, practicePlacerReady, withLearnerDays } from '../logic/route/practice-days';
+import { loadPracticeDaysChunk } from '../screens/route/practice-days-load';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { accessTier, questOpenFor } from './tier-store';
 import { onProfileRemoved } from './profile-removal';
@@ -58,13 +61,28 @@ export function unlockedStagesFor(now: Date, learnerId: string): string[] {
   return stages.filter((s) => isStageEntitled(s.key, tier)).map((s) => s.key);
 }
 
+/**
+ * The sources a learner derives from on `today`: the inbox plans and the own weekly plan (`sourcesOf`), with every
+ * class plan with practice days re-dated to the learner's own practice days while `flags.routeBlendEnabled` is on
+ * (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-8). Until the practice-days chunk is in, the plans keep their dates.
+ */
+function learnerSources(plans: readonly InboxPlan[], snapshot: ProgressSnapshot, today: string): DeriveSource[] {
+  const sources = sourcesOf(plans, snapshot.selfRoute, today);
+  return flags.routeBlendEnabled ? withLearnerDays(sources, snapshot.practiceDays, today) : sources;
+}
+
+/** The learner moved practice days of a class plan and the placer is not in yet: load it, then derive again. */
+function placerWanted(plans: readonly InboxPlan[], snapshot: ProgressSnapshot): boolean {
+  return flags.routeBlendEnabled && !practicePlacerReady() && needsPlacer(sourcesOf(plans, null), snapshot.practiceDays);
+}
+
 function deriveFor(learnerId: string, plans: readonly InboxPlan[], snapshot: ProgressSnapshot, now: Date): DeriveResult {
   const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
   const today = dayKey(now.toISOString());
   // The learner's own weekly plan rides along as a source of kind `self` (F-PLAN-002 section 3.6), and rests while a
   // class plan with practice days is in force (AMENDMENTS-ROUTE-CLASS-BLEND section 8): its pending items then wait.
   return deriveAssignments({
-    sources: sourcesOf(plans, snapshot.selfRoute, today),
+    sources: learnerSources(plans, snapshot, today),
     resting: restingSourceIds(plans, snapshot.selfRoute, today),
     snapshot,
     profileId: learnerId,
@@ -93,6 +111,12 @@ export const usePlanStore = create<State & Actions>((set, get) => {
     set((s) => ({ notReady: { ...s.notReady, [learnerId]: result.notReady } }));
     if (result.changed) {
       useProgressStore.getState().replaceSnapshot(learnerId, { ...snapshot, homework: result.homework, updatedAt: now.toISOString() });
+    }
+    if (placerWanted(plans, snapshot)) {
+      loadPracticeDaysChunk().then(
+        () => void get().rederive(learnerId),
+        () => undefined,
+      );
     }
     return { changed: result.changed, added: result.added, removed: result.removed, redated: result.redated, notReady: result.notReady };
   };

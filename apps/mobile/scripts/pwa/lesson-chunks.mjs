@@ -366,6 +366,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // F-CURR-002 row CM-48: This week in Korea, the Home card and the drop's pages (`src/screens/week-drop/week-drop-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/week-drop/week-drop-entry.tsx` while `weeklyDrop` is on).
   Object.freeze({ name: 'week-drop-chunk', marker: 'screen-chunk:week-drop' }),
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the device placer (`placePractice`)
+  // (`src/screens/route/practice-days-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/route/practice-days-load.ts` while `routeBlendEnabled` is on).
+  Object.freeze({ name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' }),
 ]);
 
 /**
