@@ -1,0 +1,1143 @@
+{
+  "v": 1,
+  "id": "story:hahoe-mask-dance",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261104,
+  "title": {
+    "ko": "하회탈과 탈춤",
+    "romanization": "Hahoetalgwa talchum",
+    "en": "The Hahoe Masks and the Mask Dance"
+  },
+  "summaryEn": "Hoya visits Hahoe village in Andong, where a mask dance drama has long been handed down. He meets the wooden masks, whose jaws move as if they talk, learns they are a National Treasure, and hears that Korea's mask dance dramas are on UNESCO's list.",
+  "hoyaIntroEn": "Clang, clang! Let's go to Hahoe village and meet the masks.",
+  "hoyaOutroEn": "The masks talked, the players danced and everyone laughed. Now you know the Hahoe masks!",
+  "theme": "crafts",
+  "kind": "intangible",
+  "recommendedStage": 2,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Read and recognize 탈 (tal, mask) and 탈춤 (talchum, mask dance drama).",
+    "Know that the Hahoe Byeolsingut Talnori is a mask dance drama handed down in Hahoe village, Andong, and was performed with a village rite.",
+    "Know that the Hahoe masks are carved from wood, that their jaws move as if they talk, and that the Hahoe and Byeongsan masks are a National Treasure.",
+    "Know that in 2022 UNESCO inscribed Talchum, mask dance drama in the Republic of Korea, of which the Hahoe play is one part."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-04"
+  },
+  "keywords": [
+    {
+      "id": "tal",
+      "ko": "탈",
+      "romanization": "tal",
+      "en": "mask",
+      "kind": "word"
+    },
+    {
+      "id": "maeul",
+      "ko": "마을",
+      "romanization": "maeul",
+      "en": "village",
+      "kind": "word"
+    },
+    {
+      "id": "namu",
+      "ko": "나무",
+      "romanization": "namu",
+      "en": "wood; tree",
+      "kind": "word"
+    },
+    {
+      "id": "yangban",
+      "ko": "양반",
+      "romanization": "yangban",
+      "en": "nobleman (of old Korea)",
+      "kind": "word"
+    },
+    {
+      "id": "useoyo",
+      "ko": "웃어요",
+      "romanization": "useoyo",
+      "en": "laugh",
+      "kind": "word"
+    },
+    {
+      "id": "chum",
+      "ko": "춤",
+      "romanization": "chum",
+      "en": "dance",
+      "kind": "word"
+    },
+    {
+      "id": "gukbo",
+      "ko": "국보",
+      "romanization": "gukbo",
+      "en": "National Treasure",
+      "kind": "word"
+    },
+    {
+      "id": "talchum",
+      "ko": "탈춤",
+      "romanization": "talchum",
+      "en": "mask dance drama",
+      "kind": "word"
+    },
+    {
+      "id": "sseoyo",
+      "ko": "써요",
+      "romanization": "sseoyo",
+      "en": "put on; wear (a mask or hat)",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureosseoyo",
+      "ko": "만들었어요",
+      "romanization": "mandeureosseoyo",
+      "en": "made",
+      "kind": "word"
+    },
+    {
+      "id": "saramdeul",
+      "ko": "사람들",
+      "romanization": "saramdeul",
+      "en": "people",
+      "kind": "word"
+    },
+    {
+      "id": "hahoetal",
+      "ko": "하회탈",
+      "romanization": "hahoetal",
+      "en": "Hahoe mask",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Clang, clang! Hoya hears a small gong in Hahoe village in Andong. The people of this village have handed down a mask dance drama. \"In Korean, a mask is {kw:tal},\" Hoya says. \"Let's go and see!\"",
+          "captionEn": "Hoya hears a gong in Hahoe village",
+          "keyword": {
+            "id": "tal",
+            "ko": "탈",
+            "romanization": "tal",
+            "en": "mask",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya waves at the edge of a village; a player in a white nobleman mask stands nearby.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 130,
+                "y": 272,
+                "s": 1.05
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 280,
+                "y": 292,
+                "s": 0.7
+              }
+            ],
+            "altEn": "Hoya waves at the edge of Hahoe village, where a player in a nobleman mask stands ready for the mask play."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "The mask play was part of a rite of the {kw:maeul}, the village. Once every ten years, or when something special happened, the village prayed to its guardian spirit for peace and a good harvest, and players in masks performed to please the spirit.",
+          "captionEn": "The village rite and its mask play",
+          "keyword": {
+            "id": "maeul",
+            "ko": "마을",
+            "romanization": "maeul",
+            "en": "village",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Villagers sit on open ground while a masked player gets ready to perform.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 200,
+                "y": 300,
+                "s": 1.3,
+                "z": "front",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 200,
+                "y": 252,
+                "s": 1
+              }
+            ],
+            "altEn": "Villagers sit together on open ground while a player in a mask gets ready to perform for the village rite."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "The Hahoe masks are carved from {kw:namu}, wood, and coated with lacquer two or three times. Most old Korean masks were made of gourds or paper and burned after the play, so wooden masks like these are rare.",
+          "captionEn": "The masks are carved from wood",
+          "keyword": {
+            "id": "namu",
+            "ko": "나무",
+            "romanization": "namu",
+            "en": "wood; tree",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A craftsperson kneels at work beside a block of wood in a wooden room; Hoya watches.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 170,
+                "y": 288,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:craft-wood",
+                "x": 268,
+                "y": 292,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 340,
+                "y": 292,
+                "s": 0.6,
+                "flip": true
+              }
+            ],
+            "altEn": "A craftsperson kneels at work beside a block of wood, and Hoya wonders how a mask is carved from it."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "A mask's jaw is carved on its own and hung on with cord. When the player moves, the jaw moves too, as if the mask were talking! The {kw:yangban} mask, the nobleman, is one of the finest.",
+          "captionEn": "The jaw moves as if the mask talks",
+          "keyword": {
+            "id": "yangban",
+            "ko": "양반",
+            "romanization": "yangban",
+            "en": "nobleman (of old Korea)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6",
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A close-up of the nobleman figure in a white bearded mask against a plain paper background.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 170,
+                "y": 280,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 310,
+                "y": 292,
+                "s": 0.65,
+                "flip": true
+              }
+            ],
+            "altEn": "A close look at the nobleman in his white mask with a long beard, whose jaw is made to move as he talks."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Choraengi, the yangban's servant, goes back and forth and teases the proud yangban again and again. The play makes fun of the yangban, and the people watching cheer and {kw:useoyo}: they laugh!",
+          "captionEn": "Choraengi teases, and everyone laughs",
+          "keyword": {
+            "id": "useoyo",
+            "ko": "웃어요",
+            "romanization": "useoyo",
+            "en": "laugh",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3",
+            "f4",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The nobleman and his servant in a field; a seated crowd laughs in front; Hoya cheers.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 150,
+                "y": 262,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 240,
+                "y": 266,
+                "s": 1,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 200,
+                "y": 300,
+                "s": 1.3,
+                "z": "front",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 352,
+                "y": 296,
+                "s": 0.6
+              }
+            ],
+            "altEn": "The servant Choraengi teases the proud nobleman in the mask play, and the crowd and Hoya laugh."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "A band led by a small gong, the kkwaenggwari, plays the music. The players {kw:chum}, dance, with everyday movements and a little rhythm, making it up as they go.",
+          "captionEn": "The players dance to the music",
+          "keyword": {
+            "id": "chum",
+            "ko": "춤",
+            "romanization": "chum",
+            "en": "dance",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A drummer and a masked player dance in a field while Hoya cheers.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:drum",
+                "x": 90,
+                "y": 282,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 170,
+                "y": 270,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 260,
+                "y": 264,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 350,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Musicians play while a masked player dances with simple everyday moves, and Hoya cheers."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "The Hahoe masks, with the Byeongsan masks of the neighbouring village, are a {kw:gukbo}, a National Treasure. No one knows exactly who made them or when, but a village legend says a young man named Heo Doryeong carved them.",
+          "captionEn": "The masks are a National Treasure",
+          "keyword": {
+            "id": "gukbo",
+            "ko": "국보",
+            "romanization": "gukbo",
+            "en": "National Treasure",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A glass museum case under soft light; Hoya looks up at it in wonder.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 180,
+                "y": 200,
+                "s": 1.2,
+                "z": "back"
+              },
+              {
+                "ref": "prop:display-case",
+                "x": 180,
+                "y": 292,
+                "s": 1.45
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 322,
+                "y": 292,
+                "s": 0.6,
+                "flip": true
+              }
+            ],
+            "altEn": "Hoya gazes at a museum case where the old wooden masks, a National Treasure, are kept safe."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "In 2022, UNESCO inscribed Talchum, mask dance drama in the Republic of Korea on its list of the intangible heritage of humanity. The Hahoe play is one of those {kw:talchum}, mask dance dramas. Hoya waves goodbye to the masks!",
+          "captionEn": "Korea's mask dances join UNESCO's list",
+          "keyword": {
+            "id": "talchum",
+            "ko": "탈춤",
+            "romanization": "talchum",
+            "en": "mask dance drama",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya cheers in a sunny field beside a masked player and a happy crowd.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 200,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 96,
+                "y": 266,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 290,
+                "y": 286,
+                "s": 0.9,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya cheers beside a masked player and a happy crowd: Korea's mask dance dramas are on UNESCO's list."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "Why are wooden masks like the Hahoe masks rare?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Most old masks were made of gourds or paper and burned after the play",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Wood was never used in Hahoe village",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "The Hahoe masks were made only last year",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Most old Korean masks were made of gourds or paper and burned after the play, so wooden masks like these are rare.",
+          "factIds": [
+            "f6"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "탈",
+            "romanization": "tal",
+            "en": "mask"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Drum",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Mask",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Village",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Tal means mask. The Hahoe masks are carved from wood.",
+          "factIds": [
+            "f6"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What makes a Hahoe mask seem to talk?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A bell inside the mask",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "The player paints a new mouth each time",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Its jaw is carved on its own and hung on with cord",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "The jaw is carved on its own and hung on with cord, so it moves when the player moves, as if the mask were talking.",
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "tal",
+        "maeul",
+        "yangban",
+        "talchum"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hahoe village hands down a mask dance drama. A mask is {kw:tal}.",
+          "captionEn": "Masks of Hahoe village",
+          "line": {
+            "ko": "탈이에요!",
+            "romanization": "Tarieyo!",
+            "en": "It's a mask!",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya waves at the edge of a village; a player in a white nobleman mask stands nearby.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 130,
+                "y": 272,
+                "s": 1.05
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 280,
+                "y": 292,
+                "s": 0.7
+              }
+            ],
+            "altEn": "Hoya waves at the edge of Hahoe village, where a player in a nobleman mask stands ready for the mask play."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "For the village rite, the players put on masks, {kw:sseoyo}, and perform to please the village's guardian spirit.",
+          "captionEn": "The players put on their masks",
+          "line": {
+            "ko": "탈을 써요.",
+            "romanization": "Tareul sseoyo.",
+            "en": "They put on masks.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Villagers sit on open ground while a masked player gets ready to perform.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 200,
+                "y": 300,
+                "s": 1.3,
+                "z": "front",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 200,
+                "y": 252,
+                "s": 1
+              }
+            ],
+            "altEn": "Villagers sit together on open ground while a player in a mask gets ready to perform for the village rite."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "The Hahoe masks were carved from wood. They were {kw:mandeureosseoyo}, made, by hand.",
+          "captionEn": "Masks carved from wood",
+          "line": {
+            "ko": "나무로 만들었어요.",
+            "romanization": "Namuro mandeureosseoyo.",
+            "en": "They made them from wood.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A craftsperson kneels at work beside a block of wood in a wooden room; Hoya watches.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 170,
+                "y": 288,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:craft-wood",
+                "x": 268,
+                "y": 292,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 340,
+                "y": 292,
+                "s": 0.6,
+                "flip": true
+              }
+            ],
+            "altEn": "A craftsperson kneels at work beside a block of wood, and Hoya wonders how a mask is carved from it."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Here comes the {kw:yangban}, the nobleman. His mask is one of the finest, and its jaw moves.",
+          "captionEn": "Next, the yangban comes out",
+          "line": {
+            "ko": "양반 탈이에요.",
+            "romanization": "Yangban tarieyo.",
+            "en": "It's the yangban mask.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6",
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A close-up of the nobleman figure in a white bearded mask against a plain paper background.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 170,
+                "y": 280,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 310,
+                "y": 292,
+                "s": 0.65,
+                "flip": true
+              }
+            ],
+            "altEn": "A close look at the nobleman in his white mask with a long beard, whose jaw is made to move as he talks."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Choraengi teases the proud yangban, and the {kw:saramdeul}, the people watching, cheer and laugh.",
+          "captionEn": "Choraengi teases, and people laugh",
+          "line": {
+            "ko": "사람들이 웃어요.",
+            "romanization": "Saramdeuri useoyo.",
+            "en": "People laugh.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The nobleman and his servant in a field; a seated crowd laughs in front; Hoya cheers.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-yangban-mask",
+                "x": 150,
+                "y": 262,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 240,
+                "y": 266,
+                "s": 1,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 200,
+                "y": 300,
+                "s": 1.3,
+                "z": "front",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 352,
+                "y": 296,
+                "s": 0.6
+              }
+            ],
+            "altEn": "The servant Choraengi teases the proud nobleman in the mask play, and the crowd and Hoya laugh."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Today the {kw:hahoetal}, the Hahoe masks, are a National Treasure.",
+          "captionEn": "Today, a National Treasure",
+          "line": {
+            "ko": "하회탈은 국보예요.",
+            "romanization": "Hahoetareun gukboyeyo.",
+            "en": "The Hahoe masks are a National Treasure.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A glass museum case under soft light; Hoya looks up at it in wonder.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 180,
+                "y": 200,
+                "s": 1.2,
+                "z": "back"
+              },
+              {
+                "ref": "prop:display-case",
+                "x": 180,
+                "y": 292,
+                "s": 1.45
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 322,
+                "y": 292,
+                "s": 0.6,
+                "flip": true
+              }
+            ],
+            "altEn": "Hoya gazes at a museum case where the old wooden masks, a National Treasure, are kept safe."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "써요",
+            "romanization": "sseoyo",
+            "en": "put on; wear"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Laugh",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Made",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Put on a mask",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Dance",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Sseoyo means put on or wear. Tareul sseoyo: they put on masks.",
+          "factIds": [
+            "f2"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "양반",
+            "romanization": "yangban",
+            "en": "nobleman"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Nobleman",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Servant",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Village",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Mask",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Yangban means a nobleman of old Korea. The yangban mask is one of the finest Hahoe masks.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, why do the people watching laugh?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The masks fall off",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "It starts to rain",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "The drum is too loud",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Choraengi teases the proud yangban",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Choraengi, the yangban's servant, teases the proud yangban again and again, and the people watching laugh.",
+          "factIds": [
+            "f4"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "tal",
+        "sseoyo",
+        "mandeureosseoyo",
+        "saramdeul"
+      ],
+      "grammarFocusEn": "Object -eul/-reul with a verb (tareul sseoyo); -ro (of, with) and the past -asseoyo/-eosseoyo"
+    }
+  ],
+  "coverSceneId": "s1",
+  "shelf": {
+    "category": "culture",
+    "order": 19,
+    "sampler": false,
+    "minutes": 5
+  },
+  "pillarTags": [
+    "C4"
+  ],
+  "topicTags": [
+    "hahoe-masks",
+    "talchum",
+    "mask-dance-drama"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Hahoe Byeolsingut Talnori is a mask dance drama handed down in Hahoe village (Hahoe-ri), Pungcheon-myeon, Andong, North Gyeongsang Province. It was designated a National Intangible Cultural Property in 1980; the category is called National Intangible Heritage today.",
+      "claimKo": "하회별신굿탈놀이는 경상북도 안동시 풍천면 하회리에 전승되어 오는 탈놀이로, 1980년 국가무형문화재(현 국가무형유산)로 지정되었다.",
+      "sources": [
+        {
+          "title": "하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0060751",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "정의: \"경상북도 안동시 풍천면 하회리에 전승되어오는 탈놀이.\" 내용: \"1980년 국가무형문화재(현, 국가무형유산)로 지정되었다.\""
+        },
+        {
+          "title": "국가무형유산 하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273700690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "지정(등록)일 1980.11.17; 소재지 경상북도 안동시. 설명(국가유산청 공공데이터 SearchKindOpenapiDt.do로 읽음): \"경북 안동 하회마을에서는 … 별신굿을 해왔으며 굿과 더불어 성황님을 즐겁게 해드리기 위하여 탈놀이를 하였다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "A byeolsingut is a village rite for the village guardian deity, praying for the village's peace and a good harvest. In Hahoe village it was held once every ten years, or when something special happened, and the mask play was performed with the rite to please the deity.",
+      "claimKo": "별신굿은 마을의 수호신인 성황(서낭)님에게 마을의 평화와 농사의 풍년을 비는 굿이다. 하회마을에서는 10년에 한 번 또는 특별한 일이 있을 때 별신굿을 했으며, 굿과 함께 성황님을 즐겁게 하려고 탈놀이를 하였다.",
+      "sources": [
+        {
+          "title": "국가무형유산 하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273700690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명: \"별신굿이란 3년, 5년 혹은 10년마다 마을의 수호신인 성황(서낭)님에게 마을의 평화와 농사의 풍년을 기원하는 굿을 말한다. 경북 안동 하회마을에서는 약 500년 전부터 10년에 한번 섣달 보름날(12월 15일)이나 특별한 일이 있을 때 무진생(戊辰生) 성황님에게 별신굿을 해왔으며 굿과 더불어 성황님을 즐겁게 해드리기 위하여 탈놀이를 하였다.\""
+        },
+        {
+          "title": "하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0060751",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"이 놀이는 10년에 한 번씩 혹은 신탁(神託)에 따라 임시로 거행되는 별신굿의 하나로서 행해지는데\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The characters of the Hahoe Byeolsingut Talnori include Juji, Gaksi (a young bride), a monk, the yangban (a nobleman), the seonbi (a scholar), Choraengi, Imae, Bune, Baekjeong (a butcher) and Halmi (an old woman), and the play mocks the yangban with sharp satire and humour.",
+      "claimKo": "하회별신굿탈놀이의 등장인물로는 주지승·각시·중·양반·선비·초랭이·이매·부네·백정·할미 등이 있으며, 양반에 대한 신랄한 풍자와 해학을 내용으로 한다.",
+      "sources": [
+        {
+          "title": "국가무형유산 하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273700690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명: \"등장인물로는 주지승·각시·중·양반·선비·초랭이·이매·부네·백정·할미 등이 있다. 파계승에 대한 비웃음과 양반에 대한 신랄한 풍자·해학 등을 내용으로 하고 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the scene of the yangban and the seonbi, the yangban comes out with his servant Choraengi. Choraengi goes back and forth between the two and keeps mocking and teasing the yangban.",
+      "claimKo": "양반과 선비 마당에서 양반은 하인 초랭이를 데리고 나오고, 초랭이는 양반과 선비 사이를 오가며 계속해서 양반을 풍자하고 골려 준다.",
+      "sources": [
+        {
+          "title": "하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0060751",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"여섯째마당은 ‘양반과 선비’마당으로 양반이 하인인 초랭이를 데리고 나오고 … 초랭이가 양반과 선비 사이를 왔다갔다하며 서로 인사를 시키고는 … 초랭이는 계속해서 양반을 풍자하고 골려준다.\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The music of the play is played by a pungmul band centred on the kkwaenggwari (a small gong), and the dance is improvised, made of everyday movements with a little rhythm added.",
+      "claimKo": "탈놀이의 반주는 꽹과리가 중심이 되는 풍물꾼이 하며, 춤은 즉흥적이고 일상적인 동작에 약간의 율동을 섞은 것이다.",
+      "sources": [
+        {
+          "title": "국가무형유산 하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273700690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명: \"탈놀이의 반주는 꽹과리가 중심이 되는 풍물꾼이 하며 즉흥적이고 일상적인 동작에 약간의 율동을 섞은 춤사위로 이루어진다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Korean masks were mostly made of gourds or paper, so few old ones survive, and they were usually burned after the year's mask play; the Hahoe and Byeongsan masks are rare wooden masks. They were coated with lacquer in two or three layers, and the jaw is carved separately and hung on with cord, so it moves during the play as if the mask were talking. The yangban and Baekjeong masks stand out for their carving.",
+      "claimKo": "한국의 탈은 대개 바가지나 종이로 만들어 오래 남은 것이 드물고 탈놀이가 끝나면 태우는 것이 일반적이었으나, 하회탈과 병산탈은 드문 나무 탈이다. 옻칠을 두세 겹 하였고, 턱을 따로 조각해 노끈으로 달아 놀이할 때 말하는 것처럼 움직인다. 양반탈과 백정탈은 조각 솜씨가 특히 뛰어나다.",
+      "sources": [
+        {
+          "title": "국보 안동 하회탈 및 병산탈 (安東 河回탈 및 屛山탈)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113701210000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명(국가유산청 공공데이터 SearchKindOpenapiDt.do로 읽음): \"한국의 가면은 대개 바가지나 종이로 만든 것이 많아서 오래 보존된 예가 드물며, 그 해 탈놀이가 끝난 후 태워버리는 것이 일반적이었다. 그러나 하회탈과 병산탈은 드물게 보이는 목조탈이며 … 옻칠을 두겹 세겹으로 칠해 … 턱은 따로 조각되어 있어서, 아래턱을 노끈으로 달아 놀이할 때 말하는 것처럼 움직이게 함으로써 … 특히 양반과 백정은 입체감과 조각기술면에서 우수함이 돋보인다.\""
+        },
+        {
+          "title": "하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0060751",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"그 위에 두 겹, 세 겹으로 옻칠을 한 뒤 색을 칠했다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Hahoe masks and the Byeongsan masks, from the neighbouring village of Byeongsan, are designated together as a National Treasure; eleven Hahoe masks survive. Who made them and exactly when are not known, and a legend in the village says that a young man called Heo Doryeong made them.",
+      "claimKo": "하회탈과 이웃 병산마을의 병산탈은 함께 국보로 지정되어 있으며, 하회탈은 11개가 전한다. 만든 사람과 정확한 제작 연대는 알 수 없고, 마을에는 허도령이 만들었다는 전설이 전한다.",
+      "sources": [
+        {
+          "title": "국보 안동 하회탈 및 병산탈 (安東 河回탈 및 屛山탈)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113701210000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "종목 국보; 지정(등록)일 1964.03.30. 설명: \"경상북도 안동군 하회마을과 그 이웃인 병산마을에 전해 내려오는 탈로서 … 하회탈로는 11개가 전해지는데 … 이 탈들의 제작자와 정확한 제작연대는 알 수 없으나 마을에는 허도령이 만들었다는 전설이 전한다.\""
+        },
+        {
+          "title": "국가무형유산 하회별신굿탈놀이 (河回別神굿탈놀이)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273700690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명: \"놀이에 사용되는 탈은 주지탈 등을 포함하여 모두 10종 11개로 … 원본은 1964년 하회탈 및 병산탈로 지정되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "On 30 November 2022 the 17th session of UNESCO's Intergovernmental Committee for the Safeguarding of the Intangible Cultural Heritage inscribed Talchum, mask dance drama in the Republic of Korea on the Representative List of the Intangible Cultural Heritage of Humanity. The element is made up of 18 mask dance dramas, and the Hahoe Byeolsingut Talnori is one of them. The Committee praised its message of universal equality and its criticism of social hierarchy. Talchum is played with the audience trading cheers and jeers with the players.",
+      "claimKo": "2022년 11월 30일 제17차 유네스코 무형유산보호협약 정부간위원회는 「한국의 탈춤」을 인류무형문화유산 대표목록에 등재하였다. 한국의 탈춤은 18개 종목으로 이루어지며 하회별신굿탈놀이도 그중 하나이다. 위원회는 보편적 평등의 가치와 신분제 비판을 높이 평가하였다. 탈춤은 관객과 환호와 야유를 주고받으며 펼쳐진다.",
+      "sources": [
+        {
+          "title": "(국영문 동시배포) 「한국의 탈춤」, 유네스코 인류무형문화유산 등재 (2022-11-30 보도자료)",
+          "publisher": "국가유산청 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155703789&sectionId=b_sec_1&mn=NS_01_02_02",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"30일 오전(현지 시간) 모로코 라바트에서 개최된 제17차 유네스코 무형유산보호협약 정부간위원회(11.28.-12.3.)는「한국의 탈춤」을 유네스코 인류무형문화유산 대표목록에 등재하기로 최종 결정하였다. 유네스코 무형유산위원회는 「한국의 탈춤」이 강조하는 보편적 평등의 가치와 사회 신분제에 대한 비판이 오늘날에도 여전히 의미가 있는 주제이며\" … \"관객과 적극적인 환호와 야유를 주고받으며 비판할 것은 비판하되 크게 하나 됨을 지향하는 유쾌한 상호 존중의 공동체 유산\""
+        },
+        {
+          "title": "인류무형문화유산: 한국의 탈춤",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FCulHeritage%2FCulHeritage_22.jsp&pageNo=5_3_2_0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "구성 종목 목록에 \"하회별신굿탈놀이\" 포함; \"2022년 18개 종목이 ‘유네스코 인류무형문화유산 대표목록’으로 등재되었다.\""
+        },
+        {
+          "title": "Talchum, mask dance drama in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/talchum-mask-dance-drama-in-the-republic-of-korea-01742",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Element page, file 01742: inscribed in 2022 (17.COM) on the Representative List of the Intangible Cultural Heritage of Humanity. The live page answered with a bot check on 2026-11-04; the inscription year and file number were read from search excerpts of this page and match the Korea Heritage Service press release."
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털(안동 하회탈 및 병산탈, 하회별신굿탈놀이, 한국의 탈춤)·보도자료; 한국민족문화대백과사전; UNESCO",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Sources opened and quotes read on 2026-11-04: the Korea Heritage Service heritage portal (the portal page renders its description with JavaScript, so the description was read through the khs.go.kr open API SearchKindOpenapiDt.do for the same heritage number; the designation date and category from the page itself), encykorea E0060751, the Korea Heritage Service press release of 2022-11-30 and its portal page on 한국의 탈춤. ich.unesco.org answered with a bot check, so the inscription year and file number (2022, 01742) were read from search excerpts of that page; they match the press release. MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/crafts-book2.changes.md and the third pass in crafts-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text."
+  },
+  "authorNotes": "Topic: the Hahoe Byeolsingut Talnori and the Hahoe masks under the UNESCO element Talchum, mask dance drama in the Republic of Korea (inscribed 2022, F-CURR-002 §5.6 S5). Distinct from dano-ssireum, which shows the Gangneung Gwanno mask play under the Gangneung Danoje element: no shared topic tag or source URL (story-topic-unique). Deliberately omitted: the scenes not meant for every audience (Bune and the monk; the wedding and wedding-night scenes, encykorea), the 'about 500 years' of the KHS description (one source, kept out of narration), and how the Heo Doryeong legend ends. Wood: the KHS National Treasure description says willow (버드나무) while the KHS Byeolsingut description and encykorea say alder (오리나무), so the story says only wood. Jaw: the KHS description says the jaw is carved separately; the story does not name which masks have one. Hahoe village's World Heritage status (Historic Villages of Korea) is not mentioned: a UNESCO status is claimed only for Talchum, under its UNESCO name. The press release of 2022 was issued by the Cultural Heritage Administration (문화재청); it is cited as the Korea Heritage Service, the institution's name on the access date. No reward card in this row (book 2 tale; Volume 2 cards are F-CARD scope).",
+  "errata": []
+}
