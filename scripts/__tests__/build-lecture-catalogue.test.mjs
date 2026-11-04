@@ -112,19 +112,33 @@ describe("lecture catalogue shaping (F-TCH-004 §3.11)", () => {
     assert.deepEqual(model.topics, [{ id: "vocab-topic:food", titleEn: "Food", words: 3 }]);
   });
 
-  test("a book 2 tale (its read quest hand-stamped, F-CURR-002 row CM-46) is never listed on its own", () => {
-    const handStamps = { "quest:story-jeju-volcanic-island-read": 20261105, "quest:stage1-crafts-q4": 20261028 };
-    assert.equal(isBookTwoTale("story:jeju-volcanic-island", handStamps), true);
-    assert.equal(isBookTwoTale("story:sun-moon", handStamps), false);
+  test("a book 2 tale (added after the first 24, its read quest hand-stamped, F-CURR-002 row CM-46) is never listed on its own", () => {
+    const handStamps = {
+      "quest:story-jeju-volcanic-island-read": 20261105,
+      "quest:story-jikji-metal-type-read": 20261104,
+      "quest:stage1-crafts-q4": 20261028,
+    };
+    const jeju = story("jeju-volcanic-island", "Jeju, the Island Volcanoes Made", { addedIn: 20261105 });
+    // A first-24 story whose read tier is stamped too (row CM-46a) carries no addedIn: it stays a book 1 story.
+    const jikji = story("jikji-metal-type", "Jikji");
+    assert.equal(isBookTwoTale(jeju, handStamps), true);
+    assert.equal(isBookTwoTale(jikji, handStamps), false);
+    assert.equal(isBookTwoTale(story("sun-moon", "The Sun and the Moon"), handStamps), false);
+    // A later story with no stamped read quest is not a book 2 tale either.
+    assert.equal(isBookTwoTale(story("jeju-volcanic-island", "Jeju", { addedIn: 20261105 }), {}), false);
     const model = buildCatalogue({
       stories: [
         { name: "b.json", json: story("sun-moon", "The Sun and the Moon") },
-        { name: "j.json", json: story("jeju-volcanic-island", "Jeju, the Island Volcanoes Made") },
+        { name: "j.json", json: jeju },
+        { name: "k.json", json: jikji },
       ],
       topicFiles: [],
       handStamps,
     });
-    assert.deepEqual(model.stories, [{ id: "story:sun-moon", titleEn: "The Sun and the Moon", minutes: 5 }]);
+    assert.deepEqual(model.stories, [
+      { id: "story:jikji-metal-type", titleEn: "Jikji", minutes: 5 },
+      { id: "story:sun-moon", titleEn: "The Sun and the Moon", minutes: 5 },
+    ]);
   });
 
   test("with the gate off, stories stay out but story files are still shaped", () => {

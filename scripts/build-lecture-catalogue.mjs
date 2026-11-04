@@ -100,13 +100,16 @@ export function isListedStory(story) {
 }
 
 /**
- * F-CURR-002 row CM-46: a book 2 tale, a story whose read quest is stamped by hand in the catalogue
+ * F-CURR-002 row CM-46: a book 2 tale, a story added after the first 24 (it carries `addedIn`, as the app's
+ * `VOLUME_TWO_STORY_IDS` reads it) whose read quest is stamped by hand in the catalogue
  * (`packages/content-schema/src/catalog/hand-stamps.json`, where a Stage 5 book 2 stamps its quests). Its book is a
  * later volume, which the presenter's chooser offers only while `volumes` is on, so the console never lists the tale on
- * its own (the catalogue does not offer it either: `catalog/data.ts` gives it status draft).
+ * its own (the catalogue does not offer it either: `catalog/data.ts` gives it status draft). A first-24 story whose
+ * read tier is stamped there too (row CM-46a's read quests) has no `addedIn`, so it stays listed.
  */
-export function isBookTwoTale(id, handStamps) {
-  return Object.prototype.hasOwnProperty.call(handStamps, `quest:story-${String(id).replace(/^story:/, "")}-read`);
+export function isBookTwoTale(story, handStamps) {
+  if (!isObject(story) || story.addedIn === undefined) return false;
+  return Object.prototype.hasOwnProperty.call(handStamps, `quest:story-${String(story.id).replace(/^story:/, "")}-read`);
 }
 
 export function buildCatalogue({ stories, topicFiles, storiesInLecture = STORIES_IN_LECTURE, handStamps = {} }) {
@@ -116,7 +119,7 @@ export function buildCatalogue({ stories, topicFiles, storiesInLecture = STORIES
     const id = str(json, "id", name);
     const titleEn = str(json.title, "en", `${name}: title`);
     const minutes = num(json, "minutes", name);
-    if (storiesInLecture && isListedStory(json) && !isBookTwoTale(id, handStamps)) listedStories.push({ id, titleEn, minutes });
+    if (storiesInLecture && isListedStory(json) && !isBookTwoTale(json, handStamps)) listedStories.push({ id, titleEn, minutes });
   }
   // An explicit "en": the output is not committed, so the runtime's default locale must not decide it.
   listedStories.sort((a, b) => a.titleEn.localeCompare(b.titleEn, "en") || a.id.localeCompare(b.id, "en"));
