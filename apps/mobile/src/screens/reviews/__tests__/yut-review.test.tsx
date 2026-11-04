@@ -211,7 +211,10 @@ async function answer(root: ReactTestInstance, i: number, how: How): Promise<voi
     await tap(root, 'daily-review-type-done');
   }
   await act(async () => {
-    await vi.runOnlyPendingTimersAsync();
+    // Reduced motion: the round's own pause is 0, so only it runs (the answer board's TAP_LOCK_MS lock timer, row KT-3,
+    // must not move the clock past the start of the result's own hold).
+    if (motion.reduced) await vi.advanceTimersByTimeAsync(0);
+    else await vi.runOnlyPendingTimersAsync();
   });
   await settle();
 }

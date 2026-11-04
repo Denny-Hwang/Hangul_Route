@@ -15,6 +15,7 @@ import {
   typography,
   useMediaSize,
   useTypeScale,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -187,7 +188,8 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
 
   const speaker = (
     <Animated.View style={first && !reduced ? pulseStyle : undefined}>
-      <Pressable
+      <GuardedPressable
+        setsLock={false}
         testID={`${testID}-speaker`}
         onPress={hear.play}
         disabled={holding}
@@ -206,7 +208,7 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
         }}
       >
         <Icon name="speaker" size={compact ? spacing.xl : spacing.xxxl} color={holding ? colors.text.muted : colors.brand.secondaryDark} />
-      </Pressable>
+      </GuardedPressable>
     </Animated.View>
   );
   const romanization = (

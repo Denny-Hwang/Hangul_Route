@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { availableLocales, getMessages } from '@hangul-route/i18n';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
 import { shot } from './shots';
@@ -27,8 +28,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 /** Words and marks a learner never reads here (D3, S11, behaviour 16): no fraction, no percent, no "wrong". */
 const SHAME = /\b(wrong|fail\w*|missed|lost|lose|streak|combo|lives|accuracy)\b|%|\d\s*\/\s*\d|\d+ of \d+/i;
-/** More than the question view's 50 ms double-tap window. */
-const TAP_GAP_MS = 120;
+/** More than the answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-3) between two deliberate taps. */
+const TAP_GAP_MS = TAP_LOCK_MS + 50;
 /** Food words in file order. Without sound each word is asked at most twice at Some reading (word to picture, picture to word). */
 const FOOD_IDS = ['vocab:sagwa-apple', 'vocab:banana', 'vocab:uyu', 'vocab:ppang', 'vocab:bap', 'vocab:gimchi', 'vocab:gimbap', 'vocab:ramyeon'] as const;
 const FOUR = FOOD_IDS.slice(0, 4);

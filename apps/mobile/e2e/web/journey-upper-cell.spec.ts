@@ -4,7 +4,7 @@ import { LESSON_EPISODES } from '../../src/content/__generated__/lessons-index';
 import { strokesForJamo } from '../../src/content/jamo-strokes';
 import { placeWordStrokes } from '../../src/logic/trace-word/block-strokes';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, openGrownUpZone, passDiscover, playCheckByIds, readStored, seedStoredAll, unlockWithPin, waitForNextListenPickRound, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
@@ -87,6 +87,7 @@ async function typeWords(page: Page, words: readonly string[]): Promise<void> {
 async function readRealia(page: Page, rounds: ReadonlyArray<readonly [question: string, optionId: string]>): Promise<void> {
   for (const [question, optionId] of rounds) {
     await expect(page.getByTestId('realia-read-question')).toHaveText(question, { timeout: 5_000 });
+    await pastTapLock(page);
     await page.getByTestId(`realia-read-option-${optionId}`).click();
   }
 }
@@ -430,7 +431,7 @@ async function playDictationCheck(page: Page, name: string, words: readonly [str
   for (const word of words) await typeAnswer(page, word);
 }
 
-/** Play Card Match: each Korean card (labelled by its romanization), then its meaning. The cards carry a label, not a button role. */
+/** Play Card Match: each Korean card (labelled by its romanization), then its meaning. The cards are buttons named by their labels. */
 async function playCardMatch(page: Page, pairs: readonly (readonly [romanization: string, meaning: string])[]): Promise<void> {
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (const [romanization, meaning] of pairs) {
@@ -856,6 +857,7 @@ const PLAYS: Readonly<Record<string, CellPlay>> = {
         ['Which dish is mixed rice?', 'a'],
       ] as const) {
         await expect(page.getByTestId('realia-read-question')).toHaveText(question);
+        await pastTapLock(page);
         await page.getByTestId(`realia-read-option-${answer}`).click();
       }
       await page.getByRole('button', { name: 'Play minigame' }).click();

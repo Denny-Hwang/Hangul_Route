@@ -13,6 +13,7 @@ import { JourneyScreen } from '../screens/journey/JourneyScreen';
 import { LibraryScreen } from '../screens/library/LibraryScreen';
 import { MyRouteTabScreen } from '../screens/my-route/MyRouteScreen';
 import { useUiStore } from '../store/ui-store';
+import { GuardedTabButton } from './tab-button';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -109,6 +110,8 @@ export function MainTabs(): ReactElement {
           paddingRight,
         },
         tabBarIcon: ({ color, size }) => <Icon name={TAB_ICON[route.name]} size={size} color={color} />,
+        // AMENDMENTS-TOUCH 6.9 (row KT-9): the navigator's own button with the press guard and no press delay.
+        tabBarButton: (props) => <GuardedTabButton {...props} />,
       })}
     >
       {order.map((name) => (

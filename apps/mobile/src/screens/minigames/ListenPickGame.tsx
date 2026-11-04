@@ -21,10 +21,12 @@ import {
   layout,
   useLayoutClass,
   useMediaSize,
+  GuardedPressable,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -365,7 +367,8 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
             {textContent ?? <View style={{ alignItems: 'center', gap: spacing.md }}>
               {spellingKit === null ? null : <spellingKit.SpellingCue round={round} />}
               <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
-                <Pressable
+                <GuardedPressable
+                  setsLock={false}
                   ref={(node) => {
                     speakerRef.current = node as unknown as Focusable | null;
                   }}
@@ -386,7 +389,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                   }}
                 >
                   <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-                </Pressable>
+                </GuardedPressable>
               </Animated.View>
               {hearAgainShown ? (
                 <View style={{ alignSelf: 'center' }}>
@@ -435,32 +438,35 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
           </>
         }
         answers={
-          <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-            {round.options.map((option) => {
-              const view = optionView(round, option, state, optionContext, m.a11y.minigame);
-              return (
-                <View
-                  key={option.id}
-                  style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}
-                >
-                  <ChoiceCard
-                    testID={`listen-pick-option-${option.id}`}
-                    state={view.cardState}
-                    ko={view.ko}
-                    romanization={view.romanization}
-                    label={view.label}
-                    art={
-                      view.pictureRef !== undefined ? (
-                        <PictureArt pictureRef={view.pictureRef} gloss={view.gloss ?? ''} size={pictureSize} />
-                      ) : undefined
-                    }
-                    accessibilityLabel={view.accessibilityLabel}
-                    onPress={() => dispatch({ type: 'tap', optionId: option.id, answerId: round.answerId, at: Date.now() })}
-                  />
-                </View>
-              );
-            })}
-          </View>
+          <TapBoard lock="board">
+            {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+            <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+              {round.options.map((option) => {
+                const view = optionView(round, option, state, optionContext, m.a11y.minigame);
+                return (
+                  <View
+                    key={option.id}
+                    style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}
+                  >
+                    <ChoiceCard
+                      testID={`listen-pick-option-${option.id}`}
+                      state={view.cardState}
+                      ko={view.ko}
+                      romanization={view.romanization}
+                      label={view.label}
+                      art={
+                        view.pictureRef !== undefined ? (
+                          <PictureArt pictureRef={view.pictureRef} gloss={view.gloss ?? ''} size={pictureSize} />
+                        ) : undefined
+                      }
+                      accessibilityLabel={view.accessibilityLabel}
+                      onPress={() => dispatch({ type: 'tap', optionId: option.id, answerId: round.answerId, at: Date.now() })}
+                    />
+                  </View>
+                );
+              })}
+            </View>
+          </TapBoard>
         }
         feedback={
           <View accessibilityLiveRegion="polite">
