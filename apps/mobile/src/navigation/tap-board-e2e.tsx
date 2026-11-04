@@ -7,8 +7,9 @@ import type { RootStackParamList } from './types';
 /**
  * End-to-end entry to the design-system `TapBoard` (docs/specs/AMENDMENTS-TOUCH.md row KT-1), for fixture builds only
  * (the switch of `story-e2e.tsx`: a real build never registers this screen or installs the hook). No learner surface
- * uses a board until rows KT-2 to KT-7 adopt it, so the touch e2e (`e2e/web/tap-board.spec.ts`) opens a board of four
- * 96 x 96 targets here, 12 px apart, through `window.__hrTapBoardE2E.open(...)`, and reads what committed. The screen
+ * uses a board until rows KT-2 to KT-7 adopt it, so the touch e2e (`e2e/web/type-hangul-tap-board.spec.ts`) opens a
+ * board of four 96 x 96 targets here, 12 px apart, through `window.__hrTapBoardE2E.open(...)`, and reads what
+ * committed. The screen
  * is a chunk (`./tap-board-e2e-screen.tsx`), so the start bundle carries only this hook.
  */
 

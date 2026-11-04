@@ -4,7 +4,7 @@ import { Touchscreen, pointIn } from './touch';
 
 /**
  * AMENDMENTS-TOUCH row KT-1: the design-system `TapBoard` under real touches (section 3.3, the rows with an e2e half:
- * T1-T3, T6, T7, T9, T9b, T10, T14, T15, T15b, T17; and T4, T5, T13, T16, T20). No learner surface uses a board until rows KT-2 to KT-7, so this suite opens a board of four 96 x 96 targets,
+ * T1-T3, T6, T7, T9, T9b, T9d, T10, T14, T15, T15b, T15d, T17, T17b; and T4, T5, T13, T16, T20). No learner surface uses a board until rows KT-2 to KT-7, so this suite opens a board of four 96 x 96 targets,
  * 12 px apart, through `window.__hrTapBoardE2E`, which exists only in the fixture bundle (served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
@@ -177,17 +177,45 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
         expect(await commits(page)).toEqual([1]);
       });
 
-      test('T17 a slide from one answer into its neighbour commits nothing', async ({ page }) => {
+      test('T9d a palm that lands on another answer after a tap and stays down answers nothing', async ({ page }) => {
+        const touch = await open(page, { lock: 'target', layout: 'fit' });
+        await touch.start({ id: 1, ...(await pointIn(page, 'tap-target-0')) });
+        await page.waitForTimeout(60);
+        await touch.start({ id: 2, ...(await pointIn(page, 'tap-target-3')) });
+        await page.waitForTimeout(60);
+        await touch.end(1);
+        await page.waitForTimeout(2000);
+        await touch.end(2);
+        await settle(page);
+        expect(await commits(page)).toEqual([]);
+      });
+
+      test('T17 a slide from one answer well into its neighbour commits nothing', async ({ page }) => {
         const touch = await open(page, { lock: 'board', layout: 'fit' });
         const a = (await page.getByTestId('tap-target-0').boundingBox())!;
         const from = { x: a.x + a.width - 4, y: a.y + a.height / 2 };
         await touch.start({ id: 1, ...from });
         await touch.move({ id: 1, x: from.x + 12, y: from.y });
-        await touch.move({ id: 1, x: from.x + 25, y: from.y });
+        // 28 px: within TAP_TRAVEL, and 12 px into the neighbour (more than NEIGHBOUR_DEPTH, 8).
+        await touch.move({ id: 1, x: from.x + 28, y: from.y });
         await expect.poll(() => outline(page, 0)).not.toBe(PRESS_OUTLINE);
         await touch.end(1);
         await settle(page);
         expect(await commits(page)).toEqual([]);
+      });
+
+      test('T17b an edge graze that ends just inside the neighbour commits the answer it started on', async ({ page }) => {
+        const touch = await open(page, { lock: 'board', layout: 'fit' });
+        const a = (await page.getByTestId('tap-target-0').boundingBox())!;
+        const from = { x: a.x + a.width - 4, y: a.y + a.height / 2 };
+        await touch.start({ id: 1, ...from });
+        await touch.move({ id: 1, x: from.x + 10, y: from.y });
+        // 20 px: 4 px into the neighbour.
+        await touch.move({ id: 1, x: from.x + 20, y: from.y });
+        await expect.poll(() => outline(page, 0)).toBe(PRESS_OUTLINE);
+        await touch.end(1);
+        await settle(page);
+        expect(await commits(page)).toEqual([0]);
       });
 
       test('T10 a hold of 900 ms commits on release', async ({ page }) => {
@@ -252,6 +280,20 @@ test.describe('TapBoard under touch (AMENDMENTS-TOUCH KT-1)', () => {
         expect(moved).toBeLessThanOrEqual(41);
         expect(await commits(page)).toEqual([]);
         await expect.poll(() => outline(page, 2)).not.toBe(PRESS_OUTLINE);
+      });
+
+      test('T15d a 72 px drag that starts in the gap next to an answer scrolls the page too (no dead zone)', async ({ page }) => {
+        const touch = await open(page, { lock: 'board', layout: 'tall' });
+        const scroller = page.getByTestId('tap-board-e2e');
+        const before = await scroller.evaluate((el) => el.scrollTop);
+        const a = (await page.getByTestId('tap-target-0').boundingBox())!;
+        // 4 px right of the first answer: in the gap band, claimed for it, off its rectangle.
+        await touch.graze({ x: a.x + a.width + 4, y: a.y + a.height / 2 }, 0, -72, { steps: 9, holdMs: 250 });
+        await settle(page);
+        const moved = (await scroller.evaluate((el) => el.scrollTop)) - before;
+        expect(moved).toBeGreaterThanOrEqual(39);
+        expect(moved).toBeLessThanOrEqual(41);
+        expect(await commits(page)).toEqual([]);
       });
     });
   }

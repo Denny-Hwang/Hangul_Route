@@ -47,8 +47,12 @@ vi.mock('react', async (importOriginal) => {
     useRef: <T,>(initial: T) => slot(() => ({ current: initial })).value,
     useCallback: <T,>(fn: T): T => fn,
     useMemo: <T,>(fn: () => T): T => fn(),
-    useEffect: (fn: () => void | (() => void)) => {
-      hooks.effects.push(fn);
+    // As React does: an effect runs again only when one of its deps changed (or it has none).
+    useEffect: (fn: () => void | (() => void), deps?: readonly unknown[]) => {
+      const s = slot<{ deps: readonly unknown[] | undefined } | null>(() => null);
+      const changed = s.value === null || deps === undefined || s.value.deps === undefined || deps.length !== s.value.deps.length || deps.some((d, i) => !Object.is(d, s.value!.deps![i]));
+      s.value = { deps };
+      if (changed) hooks.effects.push(fn);
     },
   };
   return { ...actual, ...stubs, default: { ...actual, ...stubs } };
@@ -165,6 +169,18 @@ describe('Screen fit (scrolling screen, web)', () => {
     node.scrollHeight = 1063;
     FakeObserver.last!.fire();
     expect(fitOf(render()).fits).toBe(false);
+  });
+
+  it('a footer that comes or goes remounts the ScrollView: the fit is observed again on the new scroll node', () => {
+    (globalThis as { ResizeObserver?: unknown }).ResizeObserver = FakeObserver;
+    const first = { scrollHeight: 640, clientHeight: 640, children: [] as unknown[] };
+    mount(scrollOf(render()), first);
+    expect(fitOf(render()).fits).toBe(true);
+    // The footer appears (Type Hangul's pinned row): the content now scrolls in a new, shorter scroll node.
+    const second = { scrollHeight: 900, clientHeight: 560, children: [] as unknown[] };
+    mount(scrollOf(render({ footer: <span>footer</span> })), second);
+    expect(FakeObserver.last!.watched).toEqual([second]);
+    expect(fitOf(render({ footer: <span>footer</span> })).fits).toBe(false);
   });
 
   it('a browser with no ResizeObserver keeps not fitting (the boards keep the vertical pan)', () => {

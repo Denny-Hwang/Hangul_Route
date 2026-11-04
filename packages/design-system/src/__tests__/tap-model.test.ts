@@ -8,6 +8,8 @@ import {
   GAP_REACH,
   INITIAL_TAP_STATE,
   KEY_BOUNCE_MS,
+  NEIGHBOUR_DEPTH,
+  PALM_HOLD_MS,
   RELEASE_REACH,
   TAP_LOCK_MS,
   TAP_TRAVEL,
@@ -81,6 +83,8 @@ describe('constants (section 3.1)', () => {
     expect(RELEASE_REACH).toBe(spacing.xl);
     expect(GAP_REACH).toBe(spacing.lg);
     expect([TAP_TRAVEL, RELEASE_REACH, GAP_REACH]).toEqual([32, 24, 16]);
+    expect(NEIGHBOUR_DEPTH).toBe(spacing.sm);
+    expect(NEIGHBOUR_DEPTH).toBe(8);
   });
 
   it('the timings: a 400 ms lock, a 700 ms click echo, a 120 ms key bounce (motion.duration.fast)', () => {
@@ -88,6 +92,7 @@ describe('constants (section 3.1)', () => {
     expect(CLICK_ECHO_MS).toBe(700);
     expect(KEY_BOUNCE_MS).toBe(motion.duration.fast);
     expect(KEY_BOUNCE_MS).toBe(120);
+    expect(PALM_HOLD_MS).toBe(1500);
   });
 
   it('the fling: 0.95 per 16 ms frame, stops under 0.05 px/ms, velocity over the last 100 ms', () => {
@@ -303,6 +308,20 @@ describe('fingers (rule 8, KT-D4)', () => {
     expect(out.state.touches).toEqual([]);
   });
 
+  it('a palm that lands on B after a tap on A and stays down past PALM_HOLD_MS answers nothing when it lifts', () => {
+    const out = run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 150, 48, 60), up('1', 48, 48, 120), up('2', 150, 48, 60 + PALM_HOLD_MS)]);
+    expect(out.commits).toEqual([]);
+    expect(out.state.touches).toEqual([]);
+    // T9 still holds for a quick second finger: it lifts well inside PALM_HOLD_MS and commits.
+    expect(run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 150, 48, 60), up('1', 48, 48, 120), up('2', 150, 48, 400)]).commits).toEqual(['B']);
+    // While the earlier finger is still down, a long hold of the later one is not a palm (T9b's thumb is still resting).
+    expect(run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 150, 48, 60), up('2', 150, 48, 60 + PALM_HOLD_MS), up('1', 48, 48, 3000)]).commits).toEqual(['B']);
+  });
+
+  it('a finger that lands after the owner and lifts does not make a long hold a palm', () => {
+    expect(run(FIRST_TARGET, [down('1', 48, 48, 0), ...tap('2', 400, 400, 20), up('1', 48, 48, 2000)]).commits).toEqual(['A']);
+  });
+
   it('T9c: a second finger on an empty margin changes nothing; the first commits', () => {
     const out = run(FIRST_TARGET, [down('1', 48, 48, 0), down('2', 400, 400, 20), up('2', 400, 400, 60), up('1', 48, 48, 100)]);
     expect(out.commits).toEqual(['A']);
@@ -327,6 +346,18 @@ describe('a slide onto a neighbour (rule 4, T17)', () => {
 
   it('over the gap band of a neighbour (not its rectangle) the touch is still inside', () => {
     expect(run(FIRST_BOARD, [down('1', 90, 48, 0, [A, C]), up('1', 101, 48, 40, [A, C])]).commits).toEqual(['A']);
+  });
+
+  it('an edge graze that ends just inside the neighbour (up to NEIGHBOUR_DEPTH) still commits the tile it started on', () => {
+    // A and B 12 px apart (the gap is x 96..108). 4 px inside A's edge, a 20 px slide ends 4 px inside B.
+    expect(run(FIRST_BOARD, [down('1', 92, 48, 0), move('1', 102, 48, 20), move('1', 112, 48, 40), up('1', 112, 48, 60)]).commits).toEqual(['A']);
+    // 8 px inside A's edge, a 24 px slide ends 4 px inside B; the press look stayed on all the way.
+    const graze = run(FIRST_BOARD, [down('1', 88, 48, 0), move('1', 112, 48, 30)]);
+    expect([...pressedTargets(graze.state)]).toEqual(['A']);
+    expect(run(FIRST_BOARD, [up('1', 112, 48, 60)], graze.state).commits).toEqual(['A']);
+    // Exactly NEIGHBOUR_DEPTH in still counts; one more pixel is over the neighbour.
+    expect(run(FIRST_BOARD, [down('1', 92, 48, 0), up('1', 108 + NEIGHBOUR_DEPTH, 48, 40)]).commits).toEqual(['A']);
+    expect(run(FIRST_BOARD, [down('1', 92, 48, 0), up('1', 109 + NEIGHBOUR_DEPTH, 48, 40)]).commits).toEqual([]);
   });
 
   it('a disabled neighbour does not count as a neighbour', () => {
@@ -467,10 +498,19 @@ describe('a board that can scroll drives its scroller (rule 5, T14, T15)', () =>
     expect(out.scrolls).toEqual([-28]);
   });
 
-  it('only a touch that went down on the target itself drives: a gap-filled touch is left to the browser pan', () => {
+  it('a drag that starts in the gap band (claimed, off the target) drives the scroll too: no dead zone between tiles', () => {
     const out = run(SCROLLING, [down('1', 100, 48, 0), move('1', 100, 120, 30), up('1', 100, 120, 60)]);
-    expect(out.scrolls).toEqual([]);
+    expect(out.scrolls.reduce((a, b) => a + b, 0)).toBe(-40);
     expect(out.commits).toEqual([]);
+    // A tie in the gap is nobody's, but a drag from it still scrolls.
+    const tie = run(SCROLLING, [down('1', 102, 48, 0), move('1', 102, 120, 30), up('1', 102, 120, 60)]);
+    expect(tie.scrolls.reduce((a, b) => a + b, 0)).toBe(-40);
+  });
+
+  it('a touch that turned into a scroll never commits, even if the scroller is gone by the release', () => {
+    const scrolled = run(SCROLLING, [down('1', 48, 48, 0), move('1', 48, 100, 30), move('1', 48, 50, 60)]);
+    const gone: TapBoardConfig = { ...FIRST_BOARD, scroller: null };
+    expect(run(gone, [up('1', 48, 50, 90)], scrolled.state).commits).toEqual([]);
   });
 
   it('a board that cannot scroll (it fits, or no scroller) keeps the tap model: 40 px down ends inside reach', () => {

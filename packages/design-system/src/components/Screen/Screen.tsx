@@ -77,12 +77,13 @@ export function Screen({
     offset.current = e.nativeEvent.contentOffset.y;
     for (const listener of listeners.current) listener(offset.current);
   }, []);
+  // A footer that comes or goes remounts the ScrollView (the root changes), so the fit is observed again on the new node.
   useEffect(() => {
     if (native || !scrollable) return undefined;
     const node = (scrollRef.current as { getScrollableNode?: () => unknown } | null)?.getScrollableNode?.();
     const Observer = (globalThis as { ResizeObserver?: Parameters<typeof observeWebFit>[2] }).ResizeObserver;
     return observeWebFit(node as Parameters<typeof observeWebFit>[0], setMeasuredFits, Observer) ?? undefined;
-  }, [native, scrollable]);
+  }, [native, scrollable, hasFooter]);
   const fits = scrollable ? measuredFits : true;
 
   // The boards on this screen (native `scrollEnabled` is opt-in) and whether a text field has the keyboard.
