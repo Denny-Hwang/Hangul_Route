@@ -1031,6 +1031,17 @@ export const consoleMsgs = {
             : `${plural('en', closed, { one: `1 of them is past Stage 1 and opens with ${product} once released.`, other: `${closed} of them are past Stage 1 and open with ${product} once released.` })} The others start on their dates once they are released.`
         }`,
     },
+    /**
+     * Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND, `console.curriculum.blend.*`). `lecture`: the
+     * lecture card's lines for a blended plan's class day (section 10.3, row BL-5), in place of the length chips; the
+     * length is changed in the plan, not on the card. `weekday` arrives as a whole weekday in the console language.
+     */
+    blend: {
+      lecture: {
+        classDay: (weekday: string, n: number) => plural('en', n, { one: `Class day: ${weekday} · ${n} lesson`, other: `Class day: ${weekday} · ${n} lessons` }),
+        classLength: (minutes: number) => `Class length: ${minutes} min`,
+      },
+    },
   },
   /**
    * The roster's level-check line and the advisory hand-off (F-PLC-001 section 3.9, wireframe
