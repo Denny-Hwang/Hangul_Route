@@ -1,7 +1,7 @@
-import { KoreanText, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass, useEffectiveFontScale } from '@hangul-route/design-system';
+import { KoreanText, borderWidth, colors, radii, spacing, touchTarget, useLayoutClass, useEffectiveFontScale, GuardedPressable } from '@hangul-route/design-system';
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, View, type LayoutChangeEvent } from 'react-native';
+import { View, type LayoutChangeEvent } from 'react-native';
 import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
 import { wallArtSize, wallColumns, type WallTileView } from '../../logic/vocab/topic-view';
 import { PictureArt } from '../minigames/PictureArt';
@@ -109,7 +109,7 @@ function WallTile({ tile, art, onOpen }: { tile: WallTileView; art: number; onOp
   }
 
   return (
-    <Pressable
+    <GuardedPressable
       onPress={() => onOpen(tile.id)}
       accessibilityRole="button"
       accessibilityLabel={tile.accessibilityLabel}
@@ -117,6 +117,6 @@ function WallTile({ tile, art, onOpen }: { tile: WallTileView; art: number; onOp
       style={({ pressed }) => ({ ...frame, borderColor: pressed ? colors.border.focus : 'transparent' })}
     >
       {body}
-    </Pressable>
+    </GuardedPressable>
   );
 }

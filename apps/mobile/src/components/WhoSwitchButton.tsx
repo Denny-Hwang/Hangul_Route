@@ -1,6 +1,5 @@
-import { Caption, Icon, colors, spacing, touchTarget } from '@hangul-route/design-system';
+import { Caption, Icon, colors, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
-import { Pressable } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { canSwitchProfileFrom } from '../logic/profiles/session';
 import { useProfileStore } from '../store/profile-store';
@@ -21,19 +20,18 @@ export function WhoSwitchButton({ onPress }: { onPress: () => void }): ReactElem
   const profiles = useProfileStore((s) => s.profiles);
   if (!canSwitchProfileFrom('home') || !switchOffered(learnerProfiles(profiles).length)) return null;
   return (
-    <Pressable
+    <GuardedPressable
       testID="home-who-switch"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={w.switch}
       accessibilityHint={w.title}
-      hitSlop={spacing.xs}
       style={{ alignItems: 'center', justifyContent: 'center', minWidth: touchTarget.min, minHeight: touchTarget.min, gap: spacing.xxs }}
     >
       <Icon name="parent" size={GLYPH} color={colors.text.secondary} />
       <Caption tone="secondary" weight="semibold">
         {w.switch}
       </Caption>
-    </Pressable>
+    </GuardedPressable>
   );
 }

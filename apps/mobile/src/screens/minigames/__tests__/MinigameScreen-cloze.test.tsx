@@ -1,3 +1,4 @@
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tileId } from '../../../logic/cloze-pick/round';
@@ -58,7 +59,7 @@ const route = { key: 'Minigame-1', name: 'Minigame' as const, params: { questId:
 const mounted: ReactTestRenderer[] = [];
 const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
   await act(async () => {
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(TAP_LOCK_MS);
   });
   const node = byTestId(r.root, id).find((n) => typeof n.props.onClick === 'function');
   expect(node, id).toBeDefined();

@@ -119,6 +119,14 @@ if (!AppState.isAvailable) {
   AppState.addEventListener = (() => ({ remove: () => undefined })) as unknown as typeof AppState.addEventListener;
 }
 
+// The boards' and the press guard's clock runs on the render tests' tap clock (tap-clock.ts): `press()` moves it past
+// the press guard's 400 ms (AMENDMENTS-TOUCH section 4.4), so a press here is a deliberate tap, never a bounce.
+vi.mock('../../../../packages/design-system/src/components/TapBoard/host', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../../packages/design-system/src/components/TapBoard/host')>();
+  const { tapClockNow } = await import('./tap-clock');
+  return { ...actual, tapNow: () => tapClockNow(actual.tapNow()) };
+});
+
 // A test that fails before its own unmount leaves its screen mounted; unmount it before the next test.
 afterEach(async () => {
   await cleanup();

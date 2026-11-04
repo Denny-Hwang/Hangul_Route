@@ -1,4 +1,4 @@
-import { Body, Button, ChoiceCard, Heading, HoyaBubble, KOREAN_LANGUAGE, KOREAN_LINE_BREAK, Pill, Screen, Spacer, colors, motion, spacing, typography, useLayoutClass, useTypeScale, type ChoiceCardState } from '@hangul-route/design-system';
+import { Body, Button, ChoiceCard, Heading, HoyaBubble, KOREAN_LANGUAGE, KOREAN_LINE_BREAK, Pill, Screen, Spacer, colors, motion, spacing, typography, useLayoutClass, useTypeScale, type ChoiceCardState, TapBoard } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
@@ -118,19 +118,22 @@ export function ReadPickGame({ scope, host, onBack }: Props): ReactElement {
         </Text>
       </View>
       <Spacer size="lg" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {round.options.map((option) => (
-          <View key={option.id} style={{ flexGrow: 1, flexBasis: lc.width === 'compact' ? '30%' : '20%', minWidth: 0 }}>
-            <ChoiceCard
-              state={stateOf(option)}
-              label={option.sound}
-              onPress={() => tap(option)}
-              accessibilityLabel={soundSpoken(option.sound, m.a11y.minigame.matchShape)}
-              testID={`read-pick-option-${option.id}`}
-            />
-          </View>
-        ))}
-      </View>
+      <TapBoard lock="board">
+        {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          {round.options.map((option) => (
+            <View key={option.id} style={{ flexGrow: 1, flexBasis: lc.width === 'compact' ? '30%' : '20%', minWidth: 0 }}>
+              <ChoiceCard
+                state={stateOf(option)}
+                label={option.sound}
+                onPress={() => tap(option)}
+                accessibilityLabel={soundSpoken(option.sound, m.a11y.minigame.matchShape)}
+                testID={`read-pick-option-${option.id}`}
+              />
+            </View>
+          ))}
+        </View>
+      </TapBoard>
       <Spacer size="lg" />
       <View accessibilityLiveRegion="polite">
         {wrong.length > 0 && !solved ? <HoyaBubble tone="thinking" message={copy.matchShape.readPick.miss} testID="read-pick-hoya" /> : null}
