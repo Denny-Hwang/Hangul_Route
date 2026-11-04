@@ -12,6 +12,7 @@ import {
   encodeDeck,
   presetBlockMinutes,
   rosterAlias,
+  type ClassMinutes,
   type LectureBlock,
   type LectureDeck,
   type LectureOptions,
@@ -25,6 +26,7 @@ import { catalogTitleEntry, itemTitle } from '@/data/catalog';
 import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS, type LectureCatalogueStory } from '@/data/lecture-catalogue.generated';
 import type { PlanView, Roster, SpaceListItem } from './api';
 import { findBannedWord } from './banned-text';
+import { routeBlendEnabled } from './config';
 import { composesIn } from './lecture-entry';
 import { thisWeekOf, weekGroups } from './curriculum';
 import { type PlanLike, rosterPlan } from './plans';
@@ -86,14 +88,39 @@ function presentedWeek(weeks: readonly WeekMeta[], today: string): WeekMeta | nu
   return (where.status === 'before' ? weeks[0] : weeks[weeks.length - 1]) ?? null;
 }
 
+/** What `planOutline` and `classDayOf` read of a plan: its items and, for a route, its weeks and a blended plan's class length. */
+export interface OutlinePlan {
+  items: readonly PlanItem[];
+  meta?: { weeks: readonly WeekMeta[]; params?: { blend?: { lecture: { minutes: ClassMinutes } } | undefined } } | null;
+}
+
+/**
+ * A blended plan's class day to present (AMENDMENTS-ROUTE-CLASS-BLEND section 10.3, row BL-5): the items whose
+ * `lectureDate` is the next class date on or after today, in plan order; before the route the first class day, after
+ * it the last. `minutes` is the plan's class length (`blend.lecture.minutes`). Null for a classic or single-track plan,
+ * or a blended plan with no class day.
+ */
+export function classDayOf(plan: OutlinePlan, today: string): { date: string; minutes: ClassMinutes; items: PlanItem[] } | null {
+  const blend = plan.meta?.params?.blend;
+  if (!blend) return null;
+  const dates = [...new Set(plan.items.flatMap((item) => (item.lectureDate !== undefined ? [item.lectureDate] : [])))].sort();
+  const date = dates.find((d) => d >= today) ?? dates[dates.length - 1];
+  if (date === undefined) return null;
+  return { date, minutes: blend.lecture.minutes, items: plan.items.filter((item) => item.lectureDate === date) };
+}
+
 /**
  * "Present this plan" (§3.11): a classic plan gives one block per item; a route plan
- * (`meta`, up to 260 items over a term) gives this week's items only. Either way the
- * outline holds at most `LECTURE_MAX_BLOCKS`; `omitted` counts what the cap left out.
+ * (`meta`, up to 260 items over a term) gives this week's items only; a blended plan, with `blend` on
+ * (`routeBlendEnabled()`, AMENDMENTS-ROUTE-CLASS-BLEND section 10.3), its class day's items (`classDayOf`). Either way
+ * the outline holds at most `LECTURE_MAX_BLOCKS`; `omitted` counts what the cap left out.
  */
-export function planOutline(plan: { items: readonly PlanItem[]; meta?: { weeks: readonly WeekMeta[] } | null }, today: string): { blocks: LectureBlock[]; omitted: number } {
+export function planOutline(plan: OutlinePlan, today: string, blend: boolean = routeBlendEnabled()): { blocks: LectureBlock[]; omitted: number } {
   let items: readonly PlanItem[] = plan.items;
-  if (plan.meta) {
+  const classDay = blend ? classDayOf(plan, today) : null;
+  if (classDay) {
+    items = classDay.items;
+  } else if (plan.meta) {
     const week = presentedWeek(plan.meta.weeks, today);
     const row = week ? weekGroups([week], plan.items).rows[0] : undefined;
     items = (row?.items ?? []).flatMap((entry) => {
