@@ -24,6 +24,7 @@ import type { PlanView, Roster, RosterLearner } from '../api';
 import { LECTURE_V2_LINKS_FROM, buildDeck, presenterLink, v2LinksAllowed } from '../lecture';
 import {
   V2_PRESETS,
+  cardMinutes,
   consolePresetContext,
   consolePresetOrder,
   consolePresets,
@@ -531,5 +532,60 @@ describe('the chooser on the outline: one tri-state choice per episode (sections
     const quiz: LectureBlock = { kind: 'quiz', from: 'previous', rounds: 4 };
     const out = applyChooserSelection<LectureBlock>([quiz], () => null, ['episode:stage1-letters'], () => [{ kind: 'episode', id: 'episode:stage1-letters' }]);
     expect(out).toEqual([quiz, { kind: 'episode', id: 'episode:stage1-letters' }]);
+  });
+});
+
+/**
+ * AMENDMENTS-ROUTE-CLASS-BLEND section 10.3 (row BL-5): a blended plan's Next lesson is its class day at the class's
+ * real length. The console passes `classMinutes` only for a blended plan's class-day outline, with the flag on.
+ */
+describe('a blended class day on the Next lesson card (BL-5)', () => {
+  const blendMeta = (minutes: 15 | 20 | 30 | 45 | 60) =>
+    ({
+      weeks: [{ index: 1, startDate: '2026-10-12', kind: 'learn', focus: { episodeId: null, storyIds: [], festival: null }, extras: [] }],
+      params: { blend: { mode: 'overlap', lecture: { days: ['thu'], minutes }, personal: { perWeek: 3, minutes: 10 } } },
+    }) as unknown as PlanView['meta'];
+  // Seven Stage 1 lessons on Thursday 2026-10-15 (31 catalogue minutes, past the 30 chip), and a practice item.
+  const ids = ['letters-q1', 'letters-q2', 'letters-q3', 'life-q1', 'life-q2', 'life-q3', 'rites-q1'].map((s) => `quest:stage1-${s}`);
+  const items: PlanView['items'] = [
+    ...ids.map((id) => ({ kind: 'quest' as const, id, week: 1, lectureDate: '2026-10-15', targetDate: '2026-10-16' })),
+    { kind: 'quest', id: 'quest:stage1-rites-q2', week: 1, targetDate: '2026-10-17' },
+  ];
+  const blended = plan({ items, meta: blendMeta(45) });
+
+  it('passes classMinutes for a blended plan with the flag on, and names the class day', () => {
+    const ctx = consolePresetContext({ roster: roster([]), plan: blended, today: TODAY, now: NOW, blend: true });
+    expect(ctx.plan?.classMinutes).toBe(45);
+    expect(ctx.plan?.blocks.map((b) => (b.kind === 'quest' ? b.id : b.kind))).toEqual(ids);
+    expect(ctx.classDay).toEqual({ date: '2026-10-15', lessons: 7, minutes: 45 });
+    const resolved = resolveConsolePreset('next-lesson', 20, 'stage1', ctx);
+    expect(resolved.minutes).toBe(45);
+    expect(resolved.blocks.filter((b) => b.kind === 'quest').map((b) => (b.kind === 'quest' ? b.id : ''))).toEqual(ids);
+    expect(resolved.blocks.slice(ids.length).map((b) => b.kind)).toEqual(['quiz', 'activity']);
+    expect(presetSource(resolved, ctx)).toBe('plan');
+  });
+
+  it('passes no classMinutes with the flag off, for a classic plan, or for a single-track route', () => {
+    const off = consolePresetContext({ roster: roster([]), plan: blended, today: TODAY, now: NOW, blend: false });
+    expect(off.plan).not.toHaveProperty('classMinutes');
+    expect(off.classDay).toBeNull();
+    expect(consolePresetContext({ roster: roster([]), plan: blended, today: TODAY, now: NOW }).classDay).toBeNull();
+    const classic = consolePresetContext({ roster: roster([]), plan: plan(), today: TODAY, now: NOW, blend: true });
+    expect(classic.plan).not.toHaveProperty('classMinutes');
+    expect(classic.classDay).toBeNull();
+    const single = plan({ items, meta: { weeks: blendMeta(45)?.weeks ?? [] } as unknown as PlanView['meta'] });
+    const route = consolePresetContext({ roster: roster([]), plan: single, today: TODAY, now: NOW, blend: true });
+    expect(route.plan).not.toHaveProperty('classMinutes');
+    expect(route.classDay).toBeNull();
+    // No plan at all: nothing to present as a class day.
+    expect(consolePresetContext({ roster: roster([]), plan: null, today: TODAY, now: NOW, blend: true }).classDay).toBeNull();
+  });
+
+  it("the card shows the class length for Next lesson only; W1 still reads the plan's week", () => {
+    const ctx = consolePresetContext({ roster: roster([]), plan: blended, today: TODAY, now: NOW, blend: true });
+    expect(cardMinutes('next-lesson', { 'next-lesson': 10 }, ctx.classDay)).toBe(45);
+    expect(cardMinutes('story-time', { 'story-time': 30 }, ctx.classDay)).toBe(30);
+    expect(cardMinutes('next-lesson', { 'next-lesson': 10 }, null)).toBe(10);
+    expect(planWeekQuests(blended, TODAY).thisWeek).toEqual([...ids, 'quest:stage1-rites-q2']);
   });
 });

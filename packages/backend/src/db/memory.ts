@@ -480,6 +480,11 @@ export class MemoryDb implements Db {
   async relinksOf(spaceId: string): Promise<StoredRelink[]> {
     return clone([...this.relinks.values()].filter((r) => r.spaceId === spaceId));
   }
+  async pendingRelinksOfSpaces(spaceIds: readonly string[], now: Date): Promise<StoredRelink[]> {
+    const ids = new Set(spaceIds);
+    const at = now.toISOString();
+    return clone([...this.relinks.values()].filter((r) => ids.has(r.spaceId) && r.status === 'pending' && r.expiresAt > at));
+  }
 
   async entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]> {
     return clone([...this.entitlements.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId));
@@ -710,6 +715,10 @@ export class MemoryDb implements Db {
   async openTransferOf(learnerId: string): Promise<StoredTransfer | null> {
     return clone([...this.transfers.values()].find((t) => t.learnerId === learnerId && isOpenTransfer(t)) ?? null);
   }
+  async openTransfersOfLearners(learnerIds: readonly string[]): Promise<StoredTransfer[]> {
+    const ids = new Set(learnerIds);
+    return clone([...this.transfers.values()].filter((t) => ids.has(t.learnerId) && isOpenTransfer(t)).sort(newestFirst));
+  }
   async lastLearnerRefusal(learnerId: string, since: Date): Promise<StoredTransfer | null> {
     const from = since.toISOString();
     const rows = [...this.transfers.values()].filter((t) => t.learnerId === learnerId && t.initiator === 'source' && (t.endReason === 'declined_learner' || t.endReason === 'withdrawn_learner') && t.endedAt !== null && t.endedAt >= from);
@@ -783,6 +792,9 @@ export class MemoryDb implements Db {
   }
   async getTransferPrefs(learnerId: string): Promise<TransferPrefs> {
     return clone(this.transferPrefs.get(learnerId) ?? { selfManaged: false, blockTeacherRequests: false, updatedAt: null });
+  }
+  async selfManagedLearners(learnerIds: readonly string[]): Promise<string[]> {
+    return [...new Set(learnerIds)].filter((id) => this.transferPrefs.get(id)?.selfManaged === true);
   }
   async setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void> {
     assertTransferPrefKey(which);
@@ -1135,6 +1147,11 @@ export class MemoryDb implements Db {
   }
   async openClassMoveOf(learnerId: string): Promise<StoredClassMove | null> {
     return clone([...this.classMoves.values()].find((m) => m.learnerId === learnerId && m.status === 'requested') ?? null);
+  }
+  async openClassMovesOfSpaces(spaceIds: readonly string[], role: 'source' | 'destination'): Promise<StoredClassMove[]> {
+    const ids = new Set(spaceIds);
+    const rows = [...this.classMoves.values()].filter((m) => ids.has(role === 'source' ? m.sourceSpaceId : m.destSpaceId) && m.status === 'requested');
+    return clone(rows.sort(newestMoveFirst));
   }
   async executedClassMovesOf(learnerIds: readonly string[], since: Date): Promise<StoredClassMove[]> {
     const ids = new Set(learnerIds);

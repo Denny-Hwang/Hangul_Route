@@ -1,5 +1,6 @@
 import {
   MemorySummarySchema,
+  PracticeWeekSummarySchema,
   TEACHER_VISIBLE_SUMMARY_KEYS,
   type ActivitySummary,
   type ClassScope,
@@ -166,7 +167,7 @@ const ROUTE_GOAL_KEYS = ['stage', 'from'] as const satisfies readonly (keyof Non
  * What a full-scope viewer additionally reads of a learner's summary (a family always; [TV] a class or school after
  * the acknowledgement), and `memory` where the acknowledgement's text listed it (F-CURR-002 row CM-16).
  */
-export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute' | 'routeGoal' | 'vocab' | 'stage1Anchor' | 'memory'>;
+export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute' | 'routeGoal' | 'vocab' | 'stage1Anchor' | 'memory' | 'practiceWeek'>;
 
 export interface RosterSummaryOptions {
   joinedAt?: string | null;
@@ -199,11 +200,16 @@ export interface RosterSummaryOptions {
  *   roster list (F-VOC-005 section 3.8).
  * - The memory counts (F-CURR-002 row CM-16): a family always; a full-scope class
  *   or school only with `memory` (an acknowledgement at a memory-scope version).
+ * - `practiceWeek` (AMENDMENTS-ROUTE-CLASS-BLEND section 11): a family only, at
+ *   every scope; a class or school roster never has it.
  */
 export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, kind: SpaceKind, opts: RosterSummaryOptions = {}): FamilyVisibleSummary | null {
   const viewer: ActivityViewer = { kind, joinedAt: opts.joinedAt, scope: opts.scope };
   const out: FamilyVisibleSummary | null = teacherVisibleSummary(summary, planIds, viewer);
   if (!out || !readsFullScope(viewer) || !isPlain(summary)) return out;
+  // Checked whole, so only the count leaves, and only to a family.
+  const practiceWeek = kind === 'family' ? PracticeWeekSummarySchema.safeParse(summary.practiceWeek) : null;
+  if (practiceWeek?.success) out.practiceWeek = practiceWeek.data;
   // Projected to the known keys, like every other field here: keys a newer writer left under them never leave.
   if (isPlain(summary.selfRoute)) out.selfRoute = pick(summary.selfRoute, SELF_ROUTE_KEYS) as ProgressSummary['selfRoute'];
   if (isPlain(summary.routeGoal)) out.routeGoal = pick(summary.routeGoal, ROUTE_GOAL_KEYS) as ProgressSummary['routeGoal'];

@@ -17,8 +17,7 @@ import { withOwnSafeArea } from './with-own-safe-area';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
 import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
 import { PinResetScreen } from '../screens/parent/PinResetScreen';
-import { PlacementReportScreen } from '../screens/parent/PlacementReportScreen';
-import { LearnerReportScreen } from '../screens/parent/LearnerReportScreen';
+import { LearnerReportRoute, PlacementReportRoute } from '../screens/parent/reports-entry';
 import { flags } from '../config/flags';
 import { RestoreScreen } from '../screens/sync/RestoreScreen';
 import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
@@ -73,6 +72,7 @@ import { ClozePickE2eHook, ClozePickE2eScreen } from '../screens/minigames/cloze
 import { StoryOrderE2eHook, StoryOrderE2eScreen } from './story-order-e2e';
 import { RolePlayE2eHook, RolePlayE2eScreen } from './role-play-e2e';
 import { HiddenHeritageE2eHook, HiddenHeritageE2eScreen } from './hidden-heritage-e2e';
+import { TapBoardE2eHook, TapBoardE2eScreen } from './tap-board-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -142,6 +142,7 @@ export function RootNavigator(): ReactElement {
       {STORY_FIXTURES_BUILD ? <StoryOrderE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <RolePlayE2eHook /> : null}
       {STORY_FIXTURES_BUILD ? <HiddenHeritageE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <TapBoardE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         screenListeners={flags.guestLessonEnabled ? guestRunGuard : undefined}
@@ -193,9 +194,9 @@ export function RootNavigator(): ReactElement {
         <Stack.Screen name="StorySources" component={StorySourcesScreen} />
         <Stack.Screen name="CultureNotes" component={CultureNotesScreen} />
         <Stack.Screen name="Placement" component={PlacementScreen} options={{ gestureEnabled: false }} />
-        <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
+        <Stack.Screen name="PlacementReport" component={PlacementReportRoute} />
         {/* F-REPORT-001 section 3.9 (RP-9): registered only with the reports flag on. */}
-        {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportScreen} /> : null}
+        {flags.reportsEnabled ? <Stack.Screen name="LearnerReport" component={LearnerReportRoute} /> : null}
         {/* The weekly plan screens (F-PLAN-002 P2-7a, P2-7b) register on the raw flag; the entries gate (P2-8b): Home's
             plan slot, the Profile row, Open plan, the placement strip and the report card read routeEnabledFor(locale). */}
         {flags.routeEnabled ? <Stack.Screen name="RouteProposal" component={RouteProposalScreen} /> : null}
@@ -228,6 +229,7 @@ export function RootNavigator(): ReactElement {
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="StoryOrderE2e" component={StoryOrderE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="RolePlayE2e" component={RolePlayE2eScreen} /> : null}
         {STORY_FIXTURES_BUILD ? <Stack.Screen name="HiddenHeritageE2e" component={HiddenHeritageE2eScreen} /> : null}
+        {STORY_FIXTURES_BUILD ? <Stack.Screen name="TapBoardE2e" component={TapBoardE2eScreen} /> : null}
         {/* [OA] People on this device (row OA-7a): one person's page, reached only from the Grown-up area card, with flags.whoChooserEnabled. */}
         {flags.whoChooserEnabled ? <Stack.Screen name="PersonOnDevice" component={PersonOnDeviceScreen} /> : null}
         {/* [GU] The guest's first quest (row GU-3): only with flags.guestLessonEnabled (web only), no swipe back. */}

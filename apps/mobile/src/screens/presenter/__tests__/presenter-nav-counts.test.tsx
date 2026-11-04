@@ -168,7 +168,7 @@ async function exitLesson(r: ReactTestRenderer): Promise<Record<string, unknown>
   return complete[0]!.payload!;
 }
 
-const KEYS = ['minutes', 'navLayout', 'points', 'quickBacks', 'reveals', 'slidesShown', 'stepsButton', 'stepsClick', 'stepsKey', 'stepsSwipe'];
+const KEYS = ['finished', 'minutes', 'navLayout', 'points', 'quickBacks', 'reveals', 'slidesShown', 'stepsButton', 'stepsClick', 'stepsKey', 'stepsSwipe'];
 
 describe('lecture.complete counts each step by its source (section 12)', () => {
   it('docked: a bar button, a key, a mouse swipe and a mouse click each count under their own source; a quick Previous is a quick back', async () => {

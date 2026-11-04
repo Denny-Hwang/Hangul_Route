@@ -1,4 +1,5 @@
 import type { BrowserContext, Page } from '@playwright/test';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
 import { shot } from './shots';
@@ -22,8 +23,8 @@ import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
-/** More than the question view's 50 ms double-tap window between two deliberate taps. */
-const TAP_GAP_MS = 120;
+/** More than the answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-3) between two deliberate taps. */
+const TAP_GAP_MS = TAP_LOCK_MS + 50;
 /** Words and marks a learner never reads here (D3, T3): no fraction, no percent, no "wrong". */
 const SHAME = /\b(wrong|fail\w*|missed|lost|lose|premium|locked)\b|%|\d\s*\/\s*\d|\d+ of \d+/i;
 /** Food's first chunk at 4 words (level 1 words in file order) and the next one. */

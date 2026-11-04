@@ -3,7 +3,7 @@
 Spec: `docs/specs/F-STORY-003-story-checks-sequence-v2.md` §3.4 ("`ChoiceCard`" paragraph) and PR 3.3 in §6 · wireframe: `design/wireframes/story/check.md` screens A-D (notation `( )` option card) · Korean content is drawn with `design/components/KoreanText/spec.md`
 Code: `packages/design-system/src/components/ChoiceCard/` (`ChoiceCard.tsx` paint, `style.ts` pure `choiceCardStyle`, `types.ts`, `index.ts`)
 
-> **Amended 2026-10-31 by `docs/specs/AMENDMENTS-TOUCH.md` [KT]** (row KT-2): while pressed the card shows a thick `border.shape` outline and shrinks to 0.97 (no shrink under reduced motion) instead of the `border.focus` border, which is also the `hint` ring; inside a `TapBoard` (`design/components/TapBoard/spec.md`) the card commits on release with a 24 px reach, fills gaps to the nearest card and ignores a bounce for 400 ms; the web-dead `hitSlop` goes. The "While pressed" line and the touch-target bullet below change in KT-2.
+> **Amended 2026-10-31 by `docs/specs/AMENDMENTS-TOUCH.md` [KT]** (row KT-2, applied): while pressed the card shows a thick `border.shape` outline and shrinks to 0.97 (no shrink under reduced motion) instead of the `border.focus` border, which is also the `hint` ring; inside a `TapBoard` (`design/components/TapBoard/spec.md`) the card commits on release with a 24 px reach, fills gaps to the nearest card and ignores a bounce for 400 ms; the web-dead `hitSlop` is gone. The "While pressed" line, the touch-target bullet and the reduced-motion bullet below say so.
 
 ## What it is
 
@@ -76,7 +76,7 @@ State styles (the pure `choiceCardStyle(state)`):
 | `hint` | `surface.paper` | `border.focus`, thick | `text.primary` | none | yes | no | no |
 | `disabled` | `surface.sunken` | `border.subtle` | `text.primary` | none | no | no | yes |
 
-While pressed, the border is `border.focus` (no scale, no fade: instant, so reduced motion needs nothing extra).
+While pressed (`idle` and `hint` only; an answered or disabled card never looks pressed), the card shows the press look of `AMENDMENTS-TOUCH.md` §4.3: the border turns `border.shape` at `borderWidth.thick` and the drawn card shrinks to 0.97 (the pure `pressLook`, `packages/design-system/src/press-look.ts`). Instant, no fade. Under reduced motion there is no shrink, the outline alone. The press look is never `border.focus`, so a press never looks like the `hint` ring or the focus ring. The shrink is on the drawn card, not on the hit area a `TapBoard` measures.
 
 No new token. `disabled` uses `surface.sunken` (the existing Tile convention) so a resolved item's other options read as inactive without lowering the text contrast.
 
@@ -95,13 +95,14 @@ No new token. `disabled` uses `surface.sunken` (the existing Tile convention) so
 
 ## Accessibility
 
-- One accessible element: `accessibilityRole="button"`, `accessibilityLabel` from the caller, `accessibilityState={{ disabled, selected }}` from `choiceCardStyle`.
+- One accessible element: `accessibilityRole="button"`, `accessibilityLabel` from the caller, `accessibilityState={{ disabled, selected }}` from `choiceCardStyle`. It is drawn through `TapTarget` (`design/components/TapBoard/spec.md`): an answered or `disabled` card is `inactive` there (a board claims a touch on it and commits nothing), and it stays a focusable button with the same accessible state, so a screen can still move focus to it.
+- Taps: inside a `TapBoard` the board decides (commit on release, 24 px reach, 32 px travel, gap fill to the nearest card, the 400 ms lock); outside one the card is a plain button whose press is guarded against a finger's bounce (`usePressGuard`: a finger's repeat within 400 ms and a finger's press during the app-level tap lock are dropped; a mouse, keyboard or screen-reader press runs). A card with no `onPress` is inactive too.
 - The Korean block inside is not a separate stop (the card is one element); the caller's label names it.
 - Colour is never the only cue (see deviation notes): mark, ring and the accessible name.
-- Touch target: whole card >= `touchTarget.child` (80), full row width is tappable; `hitSlop` `spacing.sm`.
+- Touch target: whole card >= `touchTarget.child` (80), full row width is tappable. No `hitSlop` (react-native-web dropped it, so it never reached the web); inside a `TapBoard` the board's gap fill (`spacing.lg`, 16) reaches the card from the gap around it on every platform.
 - Text wraps, never truncates; the card grows with the learner's text size. No emoji, no raster, no fixed height.
-- Reduced motion: no motion at all in the component.
-- Tests: `src/__tests__/choice-card.test.ts` (the pure styles, `wrongMark`, `choiceCardTileWidth`) and `src/components/ChoiceCard/__tests__/ChoiceCard.test.tsx` (where the mark sits in each layout).
+- Reduced motion: the only motion is the 0.97 press shrink, and under reduced motion it is not drawn (the outline alone).
+- Tests: `src/__tests__/choice-card.test.ts` (the pure styles, `wrongMark`, `choiceCardTileWidth`), `src/__tests__/press-look.test.ts` (the press look) and `src/components/ChoiceCard/__tests__/ChoiceCard.test.tsx` (where the mark sits in each layout; the `TapTarget`, `inactive` states, the press look and reduced motion).
 
 ## Where it appears
 

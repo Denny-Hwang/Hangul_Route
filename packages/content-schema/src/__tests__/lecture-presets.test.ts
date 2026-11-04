@@ -15,7 +15,9 @@ import {
   decodeDeck,
   deckVersion,
   encodeDeck,
+  fillOutline,
   fillToLength,
+  generateCurriculum,
   presetBlockMinutes,
   presetDeck,
   presetLength,
@@ -28,6 +30,8 @@ import {
   warmUpChars,
   wordReviewCardCap,
   type Catalog,
+  type ClassMinutes,
+  type CurriculumParamsInput,
   type JourneySummary,
   type LectureBlock,
   type LecturePreset,
@@ -35,6 +39,9 @@ import {
   type ResolvedPreset,
   type StageKey,
 } from '../index';
+// Installs the blended path into generateCurriculum (row BL-2), for goldens C, D and E below.
+import '../curriculum/generate-blend';
+import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
 
 /**
  * AMENDMENTS-LECTURE-V2 section 4 (row LV-1): the presets, the fill rule, N2
@@ -856,5 +863,138 @@ describe('no output contains a roster string', () => {
         }
       }
     }
+  });
+});
+
+/**
+ * AMENDMENTS-ROUTE-CLASS-BLEND section 10.3 (row BL-5): a blended class day is presented whole, at the class's real
+ * length. `fillOutline` keeps every outline block (never a minutes stop), then the quiz and the activity by the fill
+ * rule's constants; N1 uses it only when the console passes `classMinutes`.
+ */
+describe('fillOutline (BL-5)', () => {
+  const q = (id: string): LectureBlock => ({ kind: 'quest', id: `quest:${id}` });
+  const LENGTHS: readonly ClassMinutes[] = [15, 20, 30, 45, 60];
+  /** Eight Stage 1 lessons (5, 5, 5, 4, 4, 4, 4 and 5 minutes): 36 catalogue minutes, past every chip. */
+  const eight = ['letters-q1', 'letters-q2', 'letters-q3', 'life-q1', 'life-q2', 'life-q3', 'rites-q1', 'rites-q2'].map((id) => q(`stage1-${id}`));
+
+  it.each(LENGTHS)('keeps every outline block in order at %i minutes', (minutes) => {
+    const filled = fillOutline(eight, minutes, true, CATALOG);
+    expect(filled.slice(0, eight.length)).toEqual(eight);
+    expect(filled.length).toBeLessThanOrEqual(LECTURE_MAX_BLOCKS);
+  });
+
+  it('a 45- and a 60-minute class day over 30 catalogue minutes keeps every lesson (fillToLength at 30 would cut)', () => {
+    const seven = eight.slice(0, 7);
+    expect([presetMinutesOf(seven, CATALOG), presetMinutesOf(eight, CATALOG)]).toEqual([31, 36]);
+    expect(fillToLength(seven, 30, true, CATALOG).filter((b) => b.kind === 'quest')).toHaveLength(6);
+    // 45: 31 + quiz 4 = 35, 10 left: air-write 5.
+    expect(fillOutline(seven, 45, true, CATALOG).map(short)).toEqual([...seven.map(short), 'quiz 4', 'air-write 5']);
+    // 60: 36 + quiz 4 = 40, 20 left: air-write 5.
+    expect(fillOutline(eight, 60, true, CATALOG).map(short)).toEqual([...eight.map(short), 'quiz 4', 'air-write 5']);
+  });
+
+  it('the quiz with review and at least 5 minutes left; the activity with at least 2, at most 5', () => {
+    const two = eight.slice(0, 2); // 10 minutes
+    expect(fillOutline(two, 15, true, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'quiz 4']);
+    expect(fillOutline(two, 20, true, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'quiz 4', 'air-write 5']);
+    expect(fillOutline(two, 15, false, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'air-write 5']);
+    // 15 of 15: no quiz, no activity (nothing left).
+    const three = [...two, { kind: 'quest', id: 'quest:stage1-letters-q3' } as LectureBlock];
+    expect(fillOutline(three, 15, true, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage1-letters-q2', 'stage1-letters-q3']);
+    // A day past its length keeps every lesson and adds nothing.
+    expect(fillOutline(eight, 15, true, CATALOG).map(short)).toEqual(eight.map(short));
+    // Not every lesson Stage 1: copy-on-paper.
+    expect(fillOutline([q('stage1-letters-q1'), q('stage2-life-q1')], 20, false, CATALOG).map(short)).toEqual(['stage1-letters-q1', 'stage2-life-q1', 'copy-on-paper 5']);
+  });
+
+  it('never a class-code block, at most 28 lessons and LECTURE_MAX_BLOCKS blocks', () => {
+    expect(fillOutline([{ kind: 'class-code', code: 'ABC234' }, q('stage1-letters-q1')], 15, true, CATALOG).map(short)).toEqual([
+      'stage1-letters-q1',
+      'quiz 4',
+      'air-write 5',
+    ]);
+    // Unknown ids count 0 minutes: 28 lessons, then the quiz and the activity fill the last two places.
+    const many = Array.from({ length: 40 }, (_, i) => q(`unknown-${i}`));
+    const filled = fillOutline(many, 15, true, CATALOG);
+    expect(filled).toHaveLength(LECTURE_MAX_BLOCKS);
+    expect(filled.slice(0, LECTURE_MAX_BLOCKS - 2)).toEqual(many.slice(0, LECTURE_MAX_BLOCKS - 2));
+    expect(filled.slice(LECTURE_MAX_BLOCKS - 2).map(short)).toEqual(['quiz 4', 'copy-on-paper 5']);
+  });
+
+  it('N1 with classMinutes uses it and reports the class length; without it, N1 is unchanged', () => {
+    const plan = { title: 'Week 2', blocks: eight };
+    const blended = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan: { ...plan, classMinutes: 45 } });
+    expect([blended.minutes, blended.blocks]).toEqual([45, fillOutline(eight, 45, true, CATALOG)]);
+    expect(blended).not.toHaveProperty('classMinutes');
+    // A chip value does not change a class day: the plan's length does.
+    expect(resolvePreset('next-lesson', 10, { catalog: CATALOG, plan: { ...plan, classMinutes: 45 } })).toEqual(blended);
+    const classic = resolvePreset('next-lesson', 20, { catalog: CATALOG, plan });
+    expect([classic.minutes, classic.blocks]).toEqual([20, fillToLength(eight, 20, true, CATALOG)]);
+    // With no usable plan block the position decides, at the chip length.
+    const fallthrough = resolvePreset('next-lesson', 10, {
+      catalog: CATALOG,
+      plan: { title: 'Week 2', blocks: [{ kind: 'class-code', code: 'ABC234' }], classMinutes: 60 },
+      position: { questId: 'quest:stage4-life-q1' },
+    });
+    expect([fallthrough.minutes, outline(fallthrough)]).toEqual([10, 'stage4-life-q1 · stage4-life-q2']);
+  });
+
+  it('the other presets ignore classMinutes', () => {
+    const plan = { title: 'Week 2', blocks: eight, classMinutes: 60 as const };
+    for (const preset of LECTURE_PRESETS.filter((p) => p !== 'next-lesson')) {
+      for (const minutes of PRESET_LENGTHS[preset]) {
+        expect(resolvePreset(preset, minutes, { catalog: CATALOG, plan }), `${preset} ${minutes}`).toEqual(
+          resolvePreset(preset, minutes, { catalog: CATALOG, plan: { title: plan.title, blocks: plan.blocks } }),
+        );
+      }
+    }
+  });
+
+  type Blend = NonNullable<CurriculumParamsInput['blend']> & { lecture: { minutes: ClassMinutes } };
+  const goldens: [name: string, blend: Blend, startDate: string][] = [
+    ['C', { mode: 'overlap', lecture: { days: ['tue'], minutes: 30 }, personal: { perWeek: 3, minutes: 10 } }, '2026-11-02'],
+    ['D', { mode: 'split', lecture: { days: ['tue'], minutes: 30 }, personal: { perWeek: 3, minutes: 10 } }, '2026-11-02'],
+    ['E', { mode: 'overlap', lecture: { days: ['thu'], minutes: 45 }, personal: { perWeek: 3, minutes: 10 } }, '2026-11-04'],
+  ];
+  describe.each(goldens)('golden %s: every class day presented whole', (_name, blend, startDate) => {
+    const params: CurriculumParamsInput = {
+      audience: 'class',
+      level: { stage: 'stage1', band: 0 },
+      startDate,
+      weeks: 26,
+      sessionsPerWeek: 4,
+      minutesPerSession: 10,
+      goals: { focus: 'balanced', motivation: 'heritage' },
+      unlockedStages: ['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7'],
+      reviewEvery: 4,
+      blend,
+    };
+    const draft = generateCurriculum(params, CATALOG_2026_10);
+    const classDays = [...new Set(draft.items.flatMap((item) => (item.lectureDate !== undefined ? [item.lectureDate] : [])))];
+    const outlineOf = (date: string): LectureBlock[] =>
+      draft.items.filter((item) => item.lectureDate === date).map((item) => ({ kind: item.kind, id: item.id }) as LectureBlock);
+
+    it('has class days to present', () => {
+      expect(classDays.length).toBeGreaterThan(0);
+    });
+
+    it.each(LENGTHS)('at %i minutes, every outline lesson in order, then the fill rules', (minutes) => {
+      for (const date of classDays) {
+        const lessons = outlineOf(date);
+        const resolved = resolvePreset('next-lesson', 20, { catalog: CATALOG_2026_10, plan: { title: 'Class day', blocks: lessons, classMinutes: minutes } });
+        expect(resolved.blocks.slice(0, lessons.length), date).toEqual(lessons);
+        expect(resolved.blocks.slice(lessons.length).every((b) => b.kind === 'quiz' || b.kind === 'activity'), date).toBe(true);
+        expect(resolved.blocks.length).toBeLessThanOrEqual(LECTURE_MAX_BLOCKS);
+        expect(resolved.minutes).toBe(minutes);
+      }
+    });
+
+    it("at the plan's own class length, every class day has room for the review quiz", () => {
+      for (const date of classDays) {
+        const lessons = outlineOf(date);
+        const blocks = fillOutline(lessons, blend.lecture.minutes, true, CATALOG_2026_10);
+        expect(blocks.slice(lessons.length).map((b) => b.kind)[0], date).toBe('quiz');
+      }
+    });
   });
 });

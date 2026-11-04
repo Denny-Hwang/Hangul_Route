@@ -17,7 +17,8 @@ import type { VocabQuestion } from './question-builder';
  *
  * Every accepted tap reports an `answer` effect with `firstTry` set on the
  * first one; the host records the first answer per question as the scored one
- * (`first-try.ts`). Only the first touch in a 50 ms window counts (F-001 §3.4).
+ * (`first-try.ts`). A touch inside `touchWindowMs` (350 ms, under the board's 400 ms lock) after an accepted one is a bounce and is
+ * dropped (AMENDMENTS-TOUCH KT-D5; the 50 ms window of F-001 §3.4 became this lock).
  */
 
 export type QuestionFlowMode = 'speed' | 'check';
@@ -29,8 +30,12 @@ export const QUESTION_FLOW_TIMING = {
   revealMissMs: 1_000,
   /** Check: the right answer -> the next question. */
   checkAdvanceMs: 700,
-  /** Touches inside this window after an accepted one are dropped. */
-  touchWindowMs: 50,
+  /** Touches inside this window after an accepted one are a bounce and are dropped (AMENDMENTS-TOUCH KT-D5). */
+  // `TAP_LOCK_MS` of the design system's tap model less a 50 ms clock slack (literals here: app code imports no
+  // design-system subpath at runtime, and logic stays free of react-native; the test pins the value). The board's
+  // lock is the gate at `TAP_LOCK_MS` on the touch events' own times; this window is the backstop on `Date.now()` at
+  // dispatch, so a first tap whose handler ran a few ms late must not make it drop a tap the board accepted.
+  touchWindowMs: 350,
 } as const;
 
 export interface QuestionFlowState {
@@ -42,7 +47,7 @@ export interface QuestionFlowState {
   wrongIds: readonly string[];
   /** A sound prompt could not play, so its word is shown as text. */
   textPrompt: boolean;
-  /** When the last accepted tap arrived, for the 50 ms window. */
+  /** When the last accepted tap arrived, for the bounce window (`touchWindowMs`). */
   lastTapAt: number | null;
 }
 

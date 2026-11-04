@@ -12,6 +12,7 @@ import {
   Spacer,
   colors,
   spacing,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -162,24 +163,27 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Spacer size="lg" />
-      <View style={{ gap: spacing.md }}>
-        {turn.options.map((opt) => {
-          const isWrongLocked = lockedWrong.includes(opt.ko);
-          const showCorrect = feedback === 'correct' && opt.isCorrect;
-          const tone = showCorrect ? 'success' : isWrongLocked ? 'nudge' : 'secondary';
-          return (
-            <Button
-              key={opt.ko}
-              label={replyOptionLabel(opt)}
-              tone={tone}
-              size="lg"
-              fullWidth
-              disabled={isWrongLocked}
-              onPress={() => handleTap(opt, opt.isCorrect)}
-            />
-          );
-        })}
-      </View>
+      <TapBoard lock="board">
+        {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
+        <View style={{ gap: spacing.md }}>
+          {turn.options.map((opt) => {
+            const isWrongLocked = lockedWrong.includes(opt.ko);
+            const showCorrect = feedback === 'correct' && opt.isCorrect;
+            const tone = showCorrect ? 'success' : isWrongLocked ? 'nudge' : 'secondary';
+            return (
+              <Button
+                key={opt.ko}
+                label={replyOptionLabel(opt)}
+                tone={tone}
+                size="lg"
+                fullWidth
+                disabled={isWrongLocked}
+                onPress={() => handleTap(opt, opt.isCorrect)}
+              />
+            );
+          })}
+        </View>
+      </TapBoard>
 
       {feedback === 'wrong' ? (
         <>

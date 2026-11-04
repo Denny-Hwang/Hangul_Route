@@ -18,6 +18,7 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useEffectiveFontScale,
+  GuardedPressable,
 } from '@hangul-route/design-system';
 import { romanizationShown as showRomanization } from '@hangul-route/i18n';
 import type { EventArg, NavigationAction } from '@react-navigation/native';
@@ -525,7 +526,8 @@ function CardsPhase({
 
       <Spacer size="md" />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Pressable
+        <GuardedPressable
+          setsLock={false}
           testID="vocab-card-speaker"
           onPress={() => {
             dispatch('hear');
@@ -545,7 +547,7 @@ function CardsPhase({
           }}
         >
           <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
-        </Pressable>
+        </GuardedPressable>
         <View {...HIDDEN} style={{ flexShrink: 1 }}>
           <Body>{copy.hear}</Body>
         </View>
