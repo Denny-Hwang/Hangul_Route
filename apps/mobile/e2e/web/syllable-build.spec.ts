@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { blockParts, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -70,6 +70,42 @@ const stage1Done = (profileId: string): ProgressSnapshot => ({
   streakDays: 0,
 });
 
+/**
+ * Writes JSON values (key to value) on a page with no app code (the precached offline page), then opens the app once.
+ * Written under the running app, a seeded value can be overwritten: the memory store saves the record it holds in
+ * memory 400 ms after a change, so a save that lands after the write puts the empty record back (the Daily Review then
+ * has nothing due and its card never shows).
+ */
+async function seedQuiet(page: Page, entries: Record<string, unknown>): Promise<void> {
+  await page.goto('/grown-ups-offline.html');
+  await page.evaluate(
+    (pairs) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('keyval', 'readwrite');
+          for (const [k, json] of pairs) tx.objectStore('keyval').put(json, `hr:${k}`);
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    Object.entries(entries).map(([k, v]) => [k, JSON.stringify(v)] as const),
+  );
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+}
+
+/**
+ * The install guide shows from the third open once the service worker controls the page, which can come seconds
+ * later on a busy machine, over the Home cards: snoozed for the whole test (F-PWA-001 section 3.1), so no tap waits on it.
+ */
+const GUIDE_SNOOZED = { visits: 0, snoozedUntilVisit: 1_000, installed: false };
+
 async function learner(page: Page, flags: Flags = ON, done = true): Promise<string> {
   await page.goto('/');
   await keepSidewaysIfAsked(page);
@@ -78,13 +114,11 @@ async function learner(page: Page, flags: Flags = ON, done = true): Promise<stri
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const id = (await readStored<string>(page, 'profiles:active')) as string;
-  if (done) await seedStored(page, `progress:${id}`, stage1Done(id));
-  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags });
-  await page.reload();
-  await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  const guide = page.getByTestId('install-guide');
-  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
-  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await seedQuiet(page, {
+    ...(done ? { [`progress:${id}`]: stage1Done(id) } : {}),
+    'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags },
+    'pwa:install-guide': GUIDE_SNOOZED,
+  });
   return id;
 }
 
@@ -166,13 +200,27 @@ test.describe('the Block Sprint (Decoding Sprint, row CM-32)', () => {
 
     // The minute runs out while a round waits: the round is dropped, never a miss.
     await expect.poll(() => lastSpoken(page)).not.toBe(before);
-    // The clock holds while an answer shows, so some of the minute is left: run it out, a second at a time at the end.
-    const seconds = Number((await page.getByTestId('vocab-speed-clock').innerText()).split(':')[1]);
-    expect(seconds).toBeGreaterThan(30);
-    await page.clock.runFor((seconds - 1) * 1000);
-    await expect(page.getByTestId('decoding-sprint-drill')).toBeVisible();
-    await page.clock.runFor(1000);
-    await expect(page.getByText("That's the time! Nice work.")).toBeVisible();
+    // The clock holds while an answer shows, so some of the minute is left: run it out a second at a time. The page's
+    // time is stopped first: while it flows, the shown seconds (rounded up, redrawn every quarter second) can be a
+    // second ahead of the clock by the time a step starts, so a step sized from them could pass the end unseen. Stopped,
+    // each step moves the shown seconds by one; a reading can still trail the clock by one step, never more.
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1_000);
+    const clock = page.getByTestId('vocab-speed-clock');
+    const timeUp = page.getByText("That's the time! Nice work.");
+    const secondsOf = (digits: string): number => digits.split(':').reduce((n, part) => n * 60 + Number(part), 0);
+    let shown = await clock.innerText();
+    expect(secondsOf(shown)).toBeGreaterThan(30);
+    for (let step = 0; step <= 60; step += 1) {
+      await page.clock.runFor(1000);
+      await expect(clock.filter({ hasNotText: shown }).or(timeUp).first()).toBeVisible();
+      if (await timeUp.isVisible()) break;
+      const [now] = await clock.allInnerTexts();
+      if (now === undefined || secondsOf(now) === 0) break;
+      // Two seconds shown is at least a moment left: the round still waits on screen.
+      if (secondsOf(now) >= 2) await expect(page.getByTestId('decoding-sprint-drill')).toBeVisible();
+      shown = now;
+    }
+    await expect(timeUp).toBeVisible();
     // Time flows on by itself again (runFor leaves the fake clock where it stopped).
     await page.clock.resume();
     await expect(page.getByText('A few more blocks. No clock now.')).toBeVisible({ timeout: 5_000 });
@@ -273,9 +321,7 @@ test.describe('Syllable Build at the produce rung of the Daily Review (row CM-32
     });
     const rows: Record<string, unknown> = {};
     for (const [itemId] of BLOCKS) rows[itemId] = { sh: 'stage1', st: { b: 3, d: today, c: 2, r: 3, n: 4, f: '2026-01-01', s: 3, at: '2026-01-02T09:00:00.000Z' } };
-    await seedStored(page, `memory:${id}`, { v: 1, rows, vf: {}, pending: [], cursor: 0, seededFrom: null, day: null, dailySent: null });
-    await page.reload();
-    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await seedQuiet(page, { [`memory:${id}`]: { v: 1, rows, vf: {}, pending: [], cursor: 0, seededFrom: null, day: null, dailySent: null } });
     await page.getByRole('button', { name: /^Daily Review\. About 3 minutes\./ }).click();
     await expect(page.getByTestId('daily-review-build')).toBeVisible();
     await expectTargets(await page.locator('[data-testid^="daily-review-build-board-tile-"]').all());
