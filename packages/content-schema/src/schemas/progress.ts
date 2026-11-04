@@ -341,6 +341,9 @@ export type PracticeDaysEntry = z.infer<typeof PracticeDaysEntrySchema>;
  * section 4.8 pattern. A malformed entry drops on its own, a second entry for one plan keeps the newest `updatedAt`,
  * and at most `PRACTICE_DAYS_MAX` entries are kept (the newest). A value that is not a list reads as absent, so the
  * Worker's preserve rule keeps the stored one. The merge rule is `mergePracticeDays` (`progress-merge.ts`).
+ * Known limits of a merge-only rule: sync never removes an entry (an ended plan's entry stays until newer ones push it
+ * past the cap), and an entry stamped by a device clock far in the future wins later merges. Readers (BL-6, BL-8)
+ * therefore use only the entries of plans in force and drop the others when they write.
  */
 export const PracticeDaysSchema = z.unknown().transform((input): PracticeDaysEntry[] | undefined => {
   if (!Array.isArray(input)) return undefined;
