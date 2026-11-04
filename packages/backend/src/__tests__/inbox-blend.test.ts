@@ -1,11 +1,13 @@
 import {
   CATALOG,
+  CURRICULUM_MAX_ITEMS,
   CurriculumMetaSchema,
   InboxPlanSchema,
   PlanItemShapeSchema,
   StoredCurriculumParamsSchema,
   addDays,
   generateCurriculum,
+  isDateKey,
   toMeta,
   toPlanItems,
   type CurriculumMeta,
@@ -85,8 +87,31 @@ const meta: CurriculumMeta = {
 // Every dated item was taught on the class day before it (the generator of BL-2 writes these; here they are set by hand).
 const items: PlanItem[] = toPlanItems(draft).map((item) => (item.targetDate ? { ...item, lectureDate: addDays(item.targetDate, -1) } : item));
 
+/**
+ * The cross-field check of an app built before BL-W, frozen from `curriculum/params.ts` at cf7a4e483 (the last main
+ * commit before BL-W). It counts `sessionDays` (or `sessionsPerWeek`) only and knows nothing of `blend`.
+ */
+const preBlendRefineParams = (
+  params: { startDate: string; weeks: number; sessionsPerWeek: number; sessionDays?: readonly string[] | undefined; daysOff: ReadonlyArray<{ from: string; to: string }> },
+  ctx: { addIssue: (issue: { code: 'custom'; path: Array<string | number>; params: { code: string } }) => void },
+): void => {
+  const fail = (code: string, path: Array<string | number>): void => ctx.addIssue({ code: 'custom', path, params: { code } });
+  const days = params.sessionDays ?? [];
+  days.forEach((day, index) => {
+    if (days.indexOf(day) !== index) fail('session-day-repeated', ['sessionDays', index]);
+  });
+  const perWeek = params.sessionDays === undefined ? params.sessionsPerWeek : params.sessionDays.length;
+  if (params.weeks * perWeek > CURRICULUM_MAX_ITEMS) fail('too-many-sessions', ['weeks']);
+  params.daysOff.forEach((range, index) => {
+    if (!isDateKey(range.from)) fail('not-a-real-day', ['daysOff', index, 'from']);
+    if (!isDateKey(range.to)) fail('not-a-real-day', ['daysOff', index, 'to']);
+    if (range.from > range.to) fail('days-off-reversed', ['daysOff', index, 'to']);
+  });
+  if (!isDateKey(params.startDate)) fail('not-a-real-day', ['startDate']);
+};
+
 /** The parser of an app built before BL-W: the same shapes without `lectureDate`, `meta.refresh` and `params.blend`. */
-const OldParamsSchema = StoredCurriculumParamsSchema.innerType().omit({ blend: true });
+const OldParamsSchema = StoredCurriculumParamsSchema.innerType().omit({ blend: true }).superRefine(preBlendRefineParams);
 const OldMetaSchema = CurriculumMetaSchema.omit({ refresh: true }).extend({ params: OldParamsSchema });
 const OldInboxPlanSchema = InboxPlanSchema.extend({
   items: PlanItemShapeSchema.omit({ lectureDate: true }).array(),
