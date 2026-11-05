@@ -193,3 +193,82 @@ Panel J — 375 wide, a class with a code, the QR shown
 - A family or a school: no join link (a family joins from its own home's "Open the app on this device"; a school has no learners).
 - No code yet (Create a code): no join link until there is one; a new code changes the link (the old code, and so the old link, stops).
 - Interaction: Copy link copies the whole link ("Link copied"); Show / Hide QR code toggles the image in place. Nothing is sent anywhere; the QR is drawn in the page.
+
+## Class page order (GX-7)
+
+Spec: `docs/specs/AMENDMENTS-GROWNUP-UX.md` section 8 T3 to T5 (owner request 2026-10-31, owner screenshot 2) · code `apps/web/src/lib/console/class-page.ts`, `apps/web/src/components/console/ClassPageParts.tsx` · shots `design/screens/class-page/shots/`. Supersedes the order of Box diagram above for a **class** (a family roster keeps it: the code first, every button in one row).
+
+Given: a teacher opens a class with learners on a phone
+When: the page draws
+Then: what changes week to week comes first (This week, the plan), the everyday buttons stay in view, the rest folds under **More**, and the join code no longer pushes the roster down
+
+Panel K — 360 wide, a class with learners
+
+```
++--------------------------------------------+
+| [< Back to Classes]                        |
+| Sunday Class A                             |
+| 2 students                                 |
+| |! banner (GX-2), only while something waits|
+| +----------------------------------------+ |
+| | This week                              | |  <- the roll-up; Class report moved to the bar
+| +----------------------------------------+ |
+| (flag) class goal line (LR-9)              |
+| [[ Plan: Week of Oct 27 ]]                 |  <- primary; "Plan this week" with no plan
+| [ Plan this term ] [ Lecture mode ]        |
+| [ Class report ]   [ More v ]              |  <- More: aria-expanded / aria-controls, a disclosure
+|  ----------------------------------------  |     (open) [ Notes ] [ New device requests ]
+|                                            |            [ Class moves ] [ Settings ]
+|  while something waits, in the bar instead: |
+|  [ 1 re-link request ] [ 2 class moves waiting ] (amber)
+| Asking to join this class (GX-1)           |
+| Most recent activity first                 |
+| +----------------------------------------+ |
+| | (o) Yuhan (* In class)      level      | |  <- 1: avatar · name · chip … level
+| | Practiced yesterday · 36 min this week | |  <- 2: one activity line
+| | o o o ... On Stage 1 · Quests 7 / 15 · | |  <- 3: the segments with the quests; no "Learning
+| |   5 cards                              | |        Route" label, no "Stage by stage" (report)
+| | Revisit: ㅂ · ㅅ                        | |  <- 4: when present (and the words lines)
+| | Week of Oct 27: …                      | |  <- 5: the plan lines (readout, update, start, own route)
+| | [ See report ] [ Send a note ]         | |  <- 6: one row (with Suggest a different start
+| | [ Suggest a different start ]          | |        when there is a starting-spot line)
+| +----------------------------------------+ |
+| +----------------------------------------+ |
+| | Invite students · code SUN234       v  | |  <- collapsed; a 64 px row button inside an h2
+| +----------------------------------------+ |
++--------------------------------------------+
+```
+
+Panel L — 360 wide, an empty class
+
+```
++--------------------------------------------+
+| Sunday Class A · 0 students                |
+| +----------------------------------------+ |
+| | Invite students · code SUN234       ^  | |  <- open from the start
+| |            CLASS CODE                  | |
+| |          S U N 2 3 4                   | |  <- hero size, centred, on the first phone screen
+| |  ( Copy ) ( Regenerate )               | |
+| |  Write it on the board. …              | |
+| |  join link and QR (OR-UX)              | |
+| +----------------------------------------+ |
+| +----------------------------------------+ |
+| | First steps                            | |
+| | 1. Show the class code or QR code.     | |
+| | 2. Students tap Join a class in the app| |
+| | 3. Plan this week.                     | |
+| +----------------------------------------+ |
+| [[ Plan this week ]] [ Plan this term ]    |
+| [ More v ]  -> Settings                    |
++--------------------------------------------+
+```
+
+- **Hidden until there is a learner:** Lecture mode, Class report, Notes, New device requests and Class moves. An entry with something waiting comes back (a teacher move into an empty class shows Class moves; a waiting re-link shows its entry).
+- **The empty class leads with the code.** The spec's order puts Invite students last; with no This week and no roster, last would put the code under the first steps and the bar, below the first phone screen in es (measured: the code's bottom at 821 px of 740). The code is the one thing an empty class needs, so it leads and the steps follow; once the first learner joins, the disclosure closes and moves to the end.
+- **More is a disclosure, not a menu:** its buttons show in a row right under the bar, in reading order, at the console button size (GX-6). `aria-controls` is set only while the row is open. It never carries a count and never takes the amber look.
+- **A waiting entry is never folded (GX-7 review):** while New device requests or Class moves has a waiting count, it stands in the bar after the everyday buttons, its count in words on the amber button ("1 re-link request", "2 class moves waiting"); it folds back under More once nothing waits. The owner found a count tucked away easy to miss.
+- **Seat cap:** the near-cap / at-cap notice stays near the top of a class page (under the asking-to-join cards), with learners or without, never below the roster.
+- **Card line 3 past Stage 1:** the quests count is Stage 1's, so it joins "On Stage N" only on Stage 1; past it, a line of its own names the stage ("Stage 1: Quests 15 / 15 · 5 cards").
+- **Card line 2:** a day inside the last week is the whole weekday ("Practiced Wednesday", "Última práctica: miércoles", Korean the full weekday name); es reads "Última práctica: {when} · {n} min esta semana" (GX-7 review: "Practicó mié" was ungrammatical).
+- **Invite students moving:** when the first learner joins, the disclosure moves to the end; focus that was inside it lands on its new button.
+- **Card:** a learner who has not shared practice keeps the shipped "Not synced yet · joined …" line (or the New chip, GX-1); with no readable journey, line 3 is the quests text alone.

@@ -19,7 +19,7 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => lang.locale, useSetLocale: () => () => undefined };
 });
 
-import { RelinkPopup, shownKeys, useRelinkPopup } from '@/components/console/RelinkPopup';
+import { RelinkPopup, shownKeys, typingInField, useRelinkPopup } from '@/components/console/RelinkPopup';
 
 const NOW = new Date('2026-10-31T12:00:00.000Z');
 const at = (minutes: number): string => new Date(NOW.getTime() + minutes * 60_000).toISOString();
@@ -65,6 +65,7 @@ beforeEach(() => {
   });
   fakeDocument.visibilityState = 'visible';
   fakeDocument.modal = null;
+  fakeDocument.activeElement = null;
   lang.locale = 'en';
 });
 
@@ -292,6 +293,54 @@ describe('useRelinkPopup', () => {
     expect(current()).toEqual({ request: expect.objectContaining({ id: 'r1' }), reminder: false });
     await act(async () => control?.openFor('gone'));
     expect(current()?.request.id).toBe('r1');
+  });
+
+  it('shown with more than 2 minutes left and closed after the 2-minute mark: the reminder does not open at once', async () => {
+    await mount([relink('r1', 8)]);
+    expect(current()?.reminder).toBe(false);
+    // The pop-up stays open while the grown-up is away; they tap Later with 1:50 left.
+    vi.setSystemTime(new Date(NOW.getTime() + (6 * 60 + 10) * 1000));
+    await act(async () => control?.close());
+    await update([relink('r1', 8)]);
+    expect(current()).toBeNull();
+    expect(JSON.parse(session[RELINK_REMINDED_KEY] ?? '[]')).toEqual(['r1']);
+  });
+
+  it('closed with more than 2 minutes left: the reminder still comes at 2 minutes', async () => {
+    await mount([relink('r1', 8)]);
+    await act(async () => control?.close());
+    expect(session[RELINK_REMINDED_KEY]).toBeUndefined();
+    vi.setSystemTime(new Date(NOW.getTime() + (6 * 60 + 10) * 1000));
+    await update([relink('r1', 8)]);
+    expect(current()?.reminder).toBe(true);
+  });
+
+  it('never opens on its own while a text field has focus (a rename being typed); the next read without one does', async () => {
+    fakeDocument.activeElement = { tagName: 'INPUT', getAttribute: () => 'text' };
+    await mount([relink('r1', 8)]);
+    expect(current()).toBeNull();
+    fakeDocument.activeElement = { tagName: 'BUTTON', getAttribute: () => null };
+    await update([relink('r1', 8)]);
+    expect(current()?.request.id).toBe('r1');
+    fakeDocument.activeElement = null;
+  });
+
+  it('typingInField: text inputs, text areas and editable regions; never buttons or check boxes', () => {
+    const el = (tagName: string, type: string | null = null, editable = false) => ({ tagName, getAttribute: () => type, isContentEditable: editable });
+    const cases: Array<[unknown, boolean]> = [
+      [el('INPUT'), true],
+      [el('INPUT', 'search'), true],
+      [el('TEXTAREA'), true],
+      [el('DIV', null, true), true],
+      [el('INPUT', 'checkbox'), false],
+      [el('BUTTON'), false],
+      [null, false],
+    ];
+    for (const [active, typing] of cases) {
+      fakeDocument.activeElement = active;
+      expect(typingInField()).toBe(typing);
+    }
+    fakeDocument.activeElement = null;
   });
 
   it('without session storage it still opens once, not after each Later', async () => {

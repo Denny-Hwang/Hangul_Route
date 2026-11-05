@@ -132,6 +132,8 @@ describe('each confirm site opens the ConfirmSheet with its verb, and only the v
   it('the space page: a new join code (console.confirm.newCode)', async () => {
     fake.impl = { roster: () => roster(), listPlans: () => ok([]), relinkRequests: () => ok([]), regenerateCode: () => ok({ joinCode: 'SUN456', expiresAt: '2099-11-15T12:00:00.000Z' }) };
     const root = await mount(<SpacePage />);
+    // GX-7: on a class with learners the join code sits in the collapsed Invite students disclosure; open it first.
+    await press(byTestId(root, 'invite-toggle')[0]!);
     await askThenAnswer(() => root, () => button(root, c.space.regenerate.cta), { title: c.space.regenerateAsk('Sunflower'), verb: c.confirm.newCode }, 'regenerateCode');
   });
 
