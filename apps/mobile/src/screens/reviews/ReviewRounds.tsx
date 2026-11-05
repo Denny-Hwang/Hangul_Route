@@ -179,7 +179,7 @@ export function PickRoundView({ round, onFirst, onSolved, reducedMotion }: Round
         </View>
       )}
       {round.question.voiceFallback ? <PromptPanel view={slot.view} onAction={(action) => slot.act(action, hear)} testID="daily-review-sound-notice" /> : null}
-      <TapBoard lock="board">
+      <TapBoard lock="board" held={!slot.settled}>
         {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
           {round.options.map((option) => (

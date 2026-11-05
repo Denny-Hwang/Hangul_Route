@@ -374,9 +374,8 @@ test('a bounce across the 320 ms advance gives the next round no answer; a later
   const prompt = page.getByTestId('daily-review-prompt');
   const ko = ((await prompt.innerText()).split('\n')[0] ?? '').trim();
   const rightId = `daily-review-option-${byKo.get(ko)?.id}`;
-  // This browser has no Korean voice: "No sound? Read it here." comes in under the prompt once the voice check settles,
-  // and moves the answers down. Round 2 opens with it in place, so the point is measured on the settled layout (else
-  // the bounce and the later tap land on the notice, not on an answer).
+  // This browser has no Korean voice: "No sound? Read it here." shows under the prompt once the voice check settles,
+  // and the answers are held until then (no-voice-notice-shift.spec.ts), so the point is measured on the shown answers.
   await expect(page.getByTestId('daily-review-sound-notice')).toBeVisible();
   await page.waitForTimeout(450);
   const touch = await Touchscreen.of(page);
