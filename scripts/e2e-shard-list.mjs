@@ -54,8 +54,9 @@ export function parseShardArg(arg) {
 /**
  * Round-robin: the tests at positions current-1, current-1+total, ... With four shards, shard 2 also runs the weekly
  * plan bundle's specs, which put it at the 20-minute job limit (main 19m06s, 2026-11-05; the CM tail integration timed
- * out twice there with every test passing). So of the tests round-robin deals to shard 2, every fifth one
- * (floor(k / 4) mod 5 = 4) goes to shard 3, the lightest shard (about 15 minutes). Every listed test still lands in
+ * out twice there with every test passing). So of the tests round-robin deals to shard 2, every tenth one
+ * (floor(k / 4) mod 10 = 9) goes to shard 3, the lightest shard (about 15 minutes; handing it every fifth took shard 3
+ * to 20m02s and shard 2 down to 14m30s, so one in ten). Every listed test still lands in
  * exactly one shard.
  */
 export function pickShard(tests, { current, total }) {
@@ -65,7 +66,7 @@ export function pickShard(tests, { current, total }) {
 /** The shard (1-based) that test k of a list goes to. */
 export function shardOf(k, total) {
   const dealt = (k % total) + 1;
-  if (total === 4 && dealt === 2 && Math.floor(k / 4) % 5 === 4) return 3;
+  if (total === 4 && dealt === 2 && Math.floor(k / 4) % 10 === 9) return 3;
   return dealt;
 }
 
