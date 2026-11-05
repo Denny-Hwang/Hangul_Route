@@ -52,8 +52,13 @@ const LEARNER_DIST = {
   'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
   // The lesson chunks the learner build emits (F-CURR-002 §10), with the start bundle that names them.
   ...lessonBundles(),
-  'manifest.webmanifest': '{"name":"Hangul Route","id":"/","start_url":"/","scope":"/"}',
+  'manifest.webmanifest':
+    '{"name":"Hangul Route","id":"/","start_url":"/","scope":"/","icons":[{"src":"/icon-192.png","sizes":"192x192"},{"src":"/icon-512.png","sizes":"512x512"},{"src":"/icon-1024.png","sizes":"1024x1024"}]}',
   'favicon.ico': 'icon',
+  // The install icons (pwa/install-icons.mjs): 192 and 512 px are precached, the 1024 px one is not.
+  'icon-192.png': 'png192',
+  'icon-512.png': 'png512',
+  'icon-1024.png': 'png1024',
   // F-TCH-004 PR 3: the presenter font expo copies from public/fonts/ (the post-build requires it in the precache).
   'fonts/hr-presenter-kr.woff2': 'wOF2 stand-in',
   '_headers': LEARNER_HEADERS,

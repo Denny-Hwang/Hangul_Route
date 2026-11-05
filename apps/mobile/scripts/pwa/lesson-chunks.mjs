@@ -196,6 +196,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // precache (pwa/offline-packs.mjs): they are runtime-cached on first use and saved for offline on request. The line
   // does not move; Volume 1, Stage 1 and the start-up chunks stay precached under it. On main 8dfb8a43c it measures 9,361,858 B (77 files, no recorded
   // clips), 1,925,471 B under the line. The jamo recordings re-measure it when they land (F-CURR-002 §10).
+  // Install-only icons (perf(pwa) headroom, pwa/install-icons.mjs): `icon-1024.png` (362,969 B) is read by the install alone
+  // and left the precache, the touch icon is the precached 512 px file. Release `build:web --budget` on main 74332fac1:
+  // 10,764,639 B (104 files; 11,284,639 B with the whole jamo-s1 pack, 2,690 B under the line) before, 10,401,669 B
+  // (103 files; 10,921,669 B with the pack, 365,660 B under the line) after. The line does not move: that room is for the
+  // lessons; growth beyond it still goes to the later chunks of CM-5B.
   learnerPrecacheRaw: 11_287_329,
   // AMENDMENTS-AUDIO-CLIPS G5 (row AC-6): the clips the learner precache holds, which is the `jamo-s1` pack alone (43
   // clips, about 0.35 MB at 64 kbps); its line is the pack's set limit of AC-B6 (at most 520,000 B), so the clips can

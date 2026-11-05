@@ -198,7 +198,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
           </>
         }
         answers={
-          <TapBoard lock="board">
+          <TapBoard lock="board" held={!slot.settled}>
             {/* One board for the tiles (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice, and a locked wrong tile takes no tap (R3). */}
             <View
               testID="match-sound-tiles"
