@@ -1108,6 +1108,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.home.attention': [[1], [3]],
   'console.home.schoolClassAttention': [['Class B', 1], ['Class B', 2]],
   'console.shell.navAttention.classes': [[1], [3]],
+  // AMENDMENTS-GROWNUP-UX GX-5: the parent's Home tab name (1 and many).
+  'console.shell.navAttention.home': [[1], [3]],
   'console.relinkBar.one': [['Sunday Class A']],
   'console.relinkBar.many': [[2], [5]],
   // AMENDMENTS-GROWNUP-UX GX-10: the family code in the invite line.

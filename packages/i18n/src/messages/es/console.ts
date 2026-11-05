@@ -152,6 +152,7 @@ export const consoleMsgs = {
     },
     navAttention: {
       classes: (n: number) => `Clases, ${n} por aprobar`,
+      home: (n: number) => `Inicio, ${n} por revisar`,
     },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },

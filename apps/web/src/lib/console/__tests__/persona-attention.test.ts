@@ -7,7 +7,9 @@ import {
   attentionDeployed,
   attentionHref,
   navCountText,
+  parentAttention,
   relinkBarView,
+  scopeNeeded,
   teacherAttention,
   titleWithCount,
 } from '../persona-attention';
@@ -161,5 +163,80 @@ describe('titleWithCount', () => {
     expect(titleWithCount('(3) Classes · Hangul Route', 2)).toBe('(2) Classes · Hangul Route');
     expect(titleWithCount('(99+) Classes', 0)).toBe('Classes');
     expect(titleWithCount('Classes', 120)).toBe('(99+) Classes');
+  });
+});
+
+/**
+ * AMENDMENTS-GROWNUP-UX GX-5 (sections 5.5 and 7.4): the parent's count on the Home tab and the parent re-link bar on every
+ * other parent page. The re-links and the family's answerable moves come from GX-W's `attention` of each family space
+ * (the Worker counts a learner-side move only when `learnerRoute === 'caregiver'`); the class-scope part from the shipped
+ * `classScope(familyId)` read. Counts and family names only.
+ */
+describe('attentionDeployed for the parent persona', () => {
+  it('is true once a live family carries a readable attention; a class does not count for the parent', () => {
+    expect(attentionDeployed([item('f1', 'family', 'owner', att(0, 0))], 'parent')).toBe(true);
+    expect(attentionDeployed([item('f1', 'family', 'owner')], 'parent')).toBe(false);
+    expect(attentionDeployed([item('c1', 'class', 'owner', att(1, 0))], 'parent')).toBe(false);
+    expect(attentionDeployed([item('f1', 'family', 'owner', att(1, 0), { archivedAt: '2026-10-02T00:00:00Z' })], 'parent')).toBe(false);
+  });
+});
+
+describe('scopeNeeded', () => {
+  it('counts the learners with a class-scope update to read; an unread or failed read is null (adds nothing)', () => {
+    expect(scopeNeeded({ current: 'v', learners: [{ learnerId: 'a', name: 'A', needed: true }, { learnerId: 'b', name: 'B', needed: false }, { learnerId: 'c', name: 'C', needed: true }] })).toBe(2);
+    expect(scopeNeeded(null)).toBeNull();
+  });
+});
+
+describe('parentAttention (section 7.4)', () => {
+  it('is null when no family carries attention (an older Worker: no number, no bar)', () => {
+    expect(parentAttention({ spaces: [item('f1', 'family', 'owner')], scope: { f1: 2 }, movesShown: true })).toBeNull();
+  });
+
+  it('per family: re-links + the moves the family can answer + the children with a class-scope update; classes do not count', () => {
+    const view = parentAttention({
+      spaces: [item('f1', 'family', 'owner', att(1, 2, at(6))), item('f2', 'family', 'caregiver', att(0, 0)), item('c1', 'class', 'owner', att(5, 5, at(1)))],
+      scope: { f1: 1, f2: 1 },
+      movesShown: true,
+    });
+    expect(view?.bySpace.f1).toEqual({ relinks: 1, moves: 2, all: 4, relinkExpiresAt: at(6) });
+    expect(view?.bySpace.f2).toEqual({ relinks: 0, moves: 0, all: 1, relinkExpiresAt: null });
+    expect(view?.bySpace.c1).toBeUndefined();
+    expect(view?.total).toBe(5);
+    expect(view?.relinks).toBe(1);
+    expect(view?.kinds.f1).toBe('family');
+    expect(view?.names.f1).toBe('Name f1');
+    expect(view?.soonestRelink).toEqual({ spaceId: 'f1', expiresAt: at(6) });
+  });
+
+  it('the moves follow CLASS_TRANSFER; the re-links and the class-scope part do not', () => {
+    const view = parentAttention({ spaces: [item('f1', 'family', 'owner', att(1, 2, at(6)))], scope: { f1: 1 }, movesShown: false });
+    expect(view?.bySpace.f1).toEqual({ relinks: 1, moves: 0, all: 2, relinkExpiresAt: at(6) });
+    expect(view?.total).toBe(2);
+  });
+
+  it('a class-scope read not made or failed adds nothing; an archived family asks nothing', () => {
+    const view = parentAttention({
+      spaces: [item('f1', 'family', 'owner', att(0, 1)), item('f9', 'family', 'owner', att(3, 3, at(2)), { archivedAt: '2026-10-02T00:00:00Z' })],
+      scope: { f1: null },
+      movesShown: true,
+    });
+    expect(view?.total).toBe(1);
+    expect(view?.bySpace.f9).toBeUndefined();
+    expect(view?.relinks).toBe(0);
+    expect(view?.soonestRelink).toBeNull();
+  });
+
+  it('picks the family whose re-link closes first for the bar', () => {
+    const view = parentAttention({ spaces: [item('f1', 'family', 'owner', att(1, 0, at(9))), item('f2', 'family', 'owner', att(1, 0, at(3)))], scope: {}, movesShown: true });
+    expect(view?.relinks).toBe(2);
+    expect(view?.soonestRelink).toEqual({ spaceId: 'f2', expiresAt: at(3) });
+  });
+});
+
+describe('relinkBarView for a family (section 5.5)', () => {
+  it('Review goes to the family home, where the pop-up and the strip answer it; no id, no name in the address', () => {
+    const view = relinkBarView({ names: { f1: 'Kim family' }, kinds: { f1: 'family' }, relinks: 1, soonestRelink: { spaceId: 'f1', expiresAt: at(4) } }, NOW);
+    expect(view).toEqual({ count: 1, spaceId: 'f1', name: 'Kim family', minutes: 4, href: '/parent' });
   });
 });
