@@ -3,7 +3,7 @@ import { LayoutProvider, layoutClassFor } from '@hangul-route/design-system';
 import TestRenderer, { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MinigameScope } from '../../../logic/minigame-config';
-import { useAudioStore } from '../../../store/audio-store';
+import { endVoiceCheckHold, useAudioStore } from '../../../store/audio-store';
 import { byTestId, press, screenTexts } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
 import { SOLVED_PAUSE_MS, SyllableBuildBoard } from '../SyllableBuildBoard';
@@ -47,6 +47,8 @@ const tap = async (root: ReactTestInstance, id: string): Promise<void> => {
 const texts = (r: ReactTestRenderer): string[] => screenTexts(r.root);
 
 beforeEach(() => {
+  // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
+  endVoiceCheckHold();
   useAudioStore.setState({ tts: { state: 'unknown' }, muted: false });
 });
 afterEach(async () => {

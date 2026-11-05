@@ -745,6 +745,7 @@ function ReaderBody({
           onSkip={skipCheckpointCard}
           // Native has no scrollIntoView: once Hoya's hint or explanation is laid out, the text area scrolls to it.
           onBubbleShown={() => textScrollRef.current?.scrollToEnd({ animated: !reducedMotion })}
+          optionsHeld={!audio.slot.settled}
           promptPanel={
             audio.slot.view.textShown ? (
               <PromptPanel
