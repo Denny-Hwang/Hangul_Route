@@ -1135,4 +1135,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.episode.volumes.tab': [[1], [2]],
   'learner.episode.volumes.tabA11y': [[1], [2]],
   'a11y.journeyVolume': [[1], [2]],
+  // Owner request OW-3: the quest card is earned at 2 stars, kept for later under that; the Library hint names the quest and the episode.
+  'learner.quest.cardWaiting.title': [['Lunar New Year']],
+  'learner.quest.cardWaiting.line': [['Lunar New Year', 'New Year & Festivals']],
 };

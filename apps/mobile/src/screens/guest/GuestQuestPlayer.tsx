@@ -18,6 +18,7 @@ import { useQuestRunStore } from '../../store/quest-run-store';
 import { useQuestAccess } from '../../store/tier-store';
 import { QuestPlayerView } from '../quest/QuestPlayerView';
 import { leaveGuestRun } from './guest-exits';
+import { holdsCard } from '../quest/reward-card-note';
 
 export type GuestQuestPlayerProps = NativeStackScreenProps<GuestStackParamList, 'QuestPlayer'>;
 
@@ -63,6 +64,7 @@ export function GuestQuestPlayer({ route, navigation }: GuestQuestPlayerProps): 
   );
   const ports: QuestPlayerPorts = {
     ...session,
+    ownsCard: (cardId) => holdsCard(learnerId, cardId),
     ...guestQuestExits({
       questId,
       episodeId,

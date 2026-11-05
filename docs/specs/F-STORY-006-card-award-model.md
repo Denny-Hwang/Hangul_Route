@@ -211,7 +211,7 @@ No server change: cards already ride in `snapshot.cards`; the Worker validates t
 |---|---|---|
 | `LibraryScreen.tsx:45` caption | "`{n} of {M} collected`" | "`{n}` cards collected" (singular for 1) |
 | `LibraryScreen.tsx:47` pill | `{n}/{M}` | removed (a fraction whose denominator grows with every release; D3 spirit). Revert option recorded in §8 |
-| `LibraryScreen.tsx:79-80` explainer | "Finish quests to unlock cards. Legendary cards appear when you complete a whole stage." | three short lines: "Finish a quest to earn its card." / "Finish every quest in an episode to earn more cards." / "Finish all of Stage 1 for the legendary cards." (+ "Finish a story to earn its card." once a story is playable) |
+| `LibraryScreen.tsx:79-80` explainer | "Finish quests to unlock cards. Legendary cards appear when you complete a whole stage." | three short lines: "Finish a quest to earn its card." (now "Get 2 stars in a quest to earn its card.", OW-3) / "Finish every quest in an episode to earn more cards." / "Finish all of Stage 1 for the legendary cards." (+ "Finish a story to earn its card." once a story is playable) |
 | `LibraryScreen.tsx:120` tile label | "Locked card" | "Locked card. `<earn hint>`" |
 | `LibraryScreen.tsx:131-135` tile body | lock + "Locked" | lock + the earn hint (≤ 2 lines, `Caption`) |
 | `CardDetailScreen.tsx:150` flip label | "Locked card" | "Locked card. `<earn hint>`" |
@@ -221,6 +221,13 @@ No server change: cards already ride in `snapshot.cards`; the Worker validates t
 | tiger | `legendary`, `first-launch` | unchanged rarity (§8 decision 5); the Library explainer line for it: "Hoya's tiger card is a welcome gift." |
 
 The Library also marks cards with `newSinceLastView` using a "New" `Pill` (tone `info`). Locked tiles keep the existing look (`colors.surface.sunken`, lock) — only the words change.
+
+**The quest card says what the run did (owner request OW-3, 2026-11-04).** The quest's own card is earned at 2+ stars, so the places that name it must not promise it earlier:
+
+- **Reward step** (the last step of a quest, learner and guest runs; not the All lessons preview, which saves nothing): at 2+ stars with the card not held, the quest's authored lines stand ("Seollal Card! ... joins your library!"). Under 2 stars with the card not held, the heading is "The `<card>` card is waiting" and the line is "Get 2 stars in this quest to earn the `<card>` card. You also get it when you finish every quest in `<episode title>`.". With the card already held (a replay) nothing is waiting and the authored lines stand. Strings: `learner.quest.cardWaiting`.
+- **Results** under 2 stars, played, card not held after the write: Hoya's bubble (`results-hoya`, a polite live region) adds the second line to the run's cheer. A 1-star finish of the episode's last quest brings the card as an extra, so nothing is added then.
+- **Library** "How to collect more": "Get 2 stars in a quest to earn its card." (was "Finish a quest to earn its card."). A quest card's locked tile keeps the episode earn hint above, which is true; the 2-star path is told by the explainer and the reward step.
+- Pure rule: `logic/reward.ts` (`cardWaits`: a card under 2 stars and not held waits; every shipped quest card is an episode card of its own episode, so the line always names an episode). Tests: `card-waits.test.ts`, `results-award-store.test.ts` (the reported sequence), `quest-reward-card.test.tsx`, `results-card-waiting.test.tsx`, `e2e/web/card-award-quest.spec.ts`.
 
 **Results.** After the existing card banner (`ResultsScreen.tsx:117-129`), `extras` render as `ExtraCardsBanner` (`screens/results/ExtraCardsBanner.tsx`, new): a `Card tone="brand"`, headline "N more cards joined your Library!" (1: "1 more card joined your Library!"), a row of up to six `CardArtThumb`s (96 dp tiles of `HeritageCardArt`, wrapping), each tappable to `CardDetail`, and, when an episode just completed, the line "You finished `<episode title>`!". It uses the same entrance as `CardUnlockBanner` (translateY spring, 400 ms delay) and is static with reduced motion; it sits inside the existing live region so assistive tech announces "N more cards joined your Library: Rice, Chopsticks". A stage completion hands over to F-QUEST-002's "See your Stage 1 prize" button. iOS gets `announceForAccessibility` like `ResultsScreen.tsx:91-96`.
 

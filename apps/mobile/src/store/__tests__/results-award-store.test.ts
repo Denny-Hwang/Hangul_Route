@@ -82,6 +82,47 @@ describe('Results award through the real progress store', () => {
     expect(useProgressStore.getState().byProfile['p1']?.quests).toHaveLength(1);
   });
 
+  describe('the reported sequence (OW-3, 2026-11-04): Seollal quest at 1 star', () => {
+    const RITES = 'episode:stage1-rites';
+    // Quest 1 of Meet the Letters (the book) and quest 2 (the hanji), both at 2 stars: the learner holds 3 cards with the tiger.
+    const twoCards = (): void => {
+      visit('quest:stage1-letters-q1', 'card:book', 2);
+      visit('quest:stage1-letters-q2', 'card:hanji', 2);
+    };
+
+    it('1 star on the Seollal quest awards no card: the Library and the count stay at the 3 cards the learner holds', () => {
+      twoCards();
+      expect(owned().sort()).toEqual(['card:book', 'card:hanji', 'card:tiger']);
+      const r = visit('quest:stage1-rites-q1', 'card:seollal', 1, vi.fn(), RITES);
+      expect(r.outcome).toEqual({ award: null, extras: [], episodeCompleted: null, stageCompleted: null });
+      expect(owned().sort()).toEqual(['card:book', 'card:hanji', 'card:tiger']);
+      // The run itself is saved, so the card is one replay (or one finished episode) away.
+      expect(useProgressStore.getState().byProfile['p1']?.quests.find((q) => q.questId === 'quest:stage1-rites-q1')?.stars).toBe(1);
+      expect(useProgressStore.getState().reconcileAwards('p1')).toEqual([]);
+    });
+
+    it('the same quest replayed at 2 stars brings the card, once, and the count goes to 4', () => {
+      twoCards();
+      visit('quest:stage1-rites-q1', 'card:seollal', 1, vi.fn(), RITES);
+      const replay = visit('quest:stage1-rites-q1', 'card:seollal', 2, vi.fn(), RITES);
+      expect(replay.outcome.award).toMatchObject({ cardId: 'card:seollal', isNew: true });
+      expect(owned().sort()).toEqual(['card:book', 'card:hanji', 'card:seollal', 'card:tiger']);
+      const again = visit('quest:stage1-rites-q1', 'card:seollal', 3, vi.fn(), RITES);
+      expect(again.outcome.award).toMatchObject({ isNew: false });
+      expect(owned()).toHaveLength(4);
+    });
+
+    it('finishing every quest of the episode at 1 star brings the Seollal card too, with the episode cards', () => {
+      twoCards();
+      visit('quest:stage1-rites-q1', 'card:seollal', 1, vi.fn(), RITES);
+      visit('quest:stage1-rites-q2', 'card:chuseok', 1, vi.fn(), RITES);
+      const last = visit('quest:stage1-rites-q3', 'card:sebae', 1, vi.fn(), RITES);
+      expect(last.outcome.episodeCompleted).toBe(RITES);
+      expect(last.outcome.extras.map((e) => e.cardId)).toContain('card:seollal');
+      expect(owned()).toContain('card:seollal');
+    });
+  });
+
   it('the last quest of Meet the Letters at 1 star brings the episode cards as extras with one write, and the reconcile finds nothing left', () => {
     visit('quest:stage1-letters-q1', 'card:book', 1);
     visit('quest:stage1-letters-q2', 'card:hanji', 1);

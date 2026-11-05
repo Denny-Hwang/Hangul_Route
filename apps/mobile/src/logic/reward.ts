@@ -9,6 +9,16 @@ export function shouldUnlockCard(stars: 0 | 1 | 2 | 3): boolean {
   return stars >= CARD_UNLOCK_MIN_STARS;
 }
 
+/**
+ * Whether a finished run leaves the quest's own card waiting (F-STORY-006 §3.1, F-MOTION-003 §3.5): the quest has a
+ * card, the run is under 2 stars and the profile does not hold the card. Nothing is awarded by such a run; the card
+ * comes with 2 stars on a replay, or with its episode when every quest of it is finished. The reward step, Results and
+ * the Library tell the same story from this one rule; a card already held (a replay) is never waiting.
+ */
+export function cardWaits(input: { rewardCardId: string | undefined; stars: 0 | 1 | 2 | 3; held: boolean }): boolean {
+  return input.rewardCardId !== undefined && !input.held && !shouldUnlockCard(input.stars);
+}
+
 export interface CardAward {
   cardId: string;
   /** false on a replay whose card is already in the Library — nothing to announce. */

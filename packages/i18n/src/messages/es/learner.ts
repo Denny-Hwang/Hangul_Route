@@ -339,7 +339,7 @@ export const learner = {
     rarity: { common: 'común', uncommon: 'poco común', rare: 'rara', legendary: 'legendaria' },
     how: {
       title: 'Cómo conseguir más',
-      quest: 'Termina una misión para ganar su tarjeta.',
+      quest: 'Consigue 2 estrellas en una misión para ganar su tarjeta.',
       episode: 'Termina todas las misiones de un episodio para ganar más tarjetas.',
       stage: (stage: number) => `Termina toda la Etapa ${stage} para las tarjetas legendarias.`,
       story: 'Termina una historia para ganar su tarjeta.',
@@ -517,6 +517,11 @@ export const learner = {
     },
     continue: { cta: 'Continuar' },
     seeResults: { cta: 'Ver resultados' },
+    cardWaiting: {
+      title: (card: string) => `La tarjeta ${card} te espera`,
+      line: (card: string, episode: string) =>
+        `Consigue 2 estrellas en esta misión para ganar la tarjeta ${card}. También la ganas al terminar todas las misiones de ${episode}.`,
+    },
     keepGoing: '¡Sigamos!',
     launcher: {
       game: {

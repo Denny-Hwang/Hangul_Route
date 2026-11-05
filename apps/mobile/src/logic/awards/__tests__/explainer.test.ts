@@ -14,7 +14,7 @@ const lines = (world: AwardWorld, owned: readonly string[] = []): string[] =>
 describe('libraryExplainer (F-STORY-006 §3.7, wireframe library/earn-hints F)', () => {
   it('says only what a rule of this build can do: quest, episode, stage, story and welcome lines in that order', () => {
     expect(lines(WORLD)).toEqual([
-      'Finish a quest to earn its card.',
+      'Get 2 stars in a quest to earn its card.',
       'Finish every quest in an episode to earn more cards.',
       'Finish all of Stage 1 for the legendary cards.',
       'Finish a story to earn its card.',
@@ -38,13 +38,13 @@ describe('libraryExplainer (F-STORY-006 §3.7, wireframe library/earn-hints F)',
 
   it('has no quest line when no listed card is a quest reward, and no welcome line without a welcome card', () => {
     const bare: AwardWorld = { ...WORLD, quests: [], cards: WORLD.cards.filter((c) => c.unlockedBy !== 'first-launch') };
-    expect(lines(bare)).not.toContain('Finish a quest to earn its card.');
+    expect(lines(bare)).not.toContain('Get 2 stars in a quest to earn its card.');
     expect(lines(bare)).not.toContain("Hoya's tiger card is a welcome gift.");
   });
 
   it('a story quest card alone gives the story line, not the quest line', () => {
     const storyQuestOnly: AwardWorld = { ...WORLD, quests: WORLD.quests.filter((q) => q.id === 'quest:story-sun-and-moon-a1') };
-    expect(lines(storyQuestOnly)).not.toContain('Finish a quest to earn its card.');
+    expect(lines(storyQuestOnly)).not.toContain('Get 2 stars in a quest to earn its card.');
     expect(lines(storyQuestOnly)).toContain('Finish a story to earn its card.');
   });
 
@@ -64,7 +64,7 @@ describe('libraryExplainer (F-STORY-006 §3.7, wireframe library/earn-hints F)',
   it('for the shipped bundle: the five lines, never a fraction, a percent or a shaming word', () => {
     const shipped = lines(awardWorld);
     expect(shipped).toEqual([
-      'Finish a quest to earn its card.',
+      'Get 2 stars in a quest to earn its card.',
       'Finish every quest in an episode to earn more cards.',
       'Finish all of Stage 1 for the legendary cards.',
       'Finish a story to earn its card.',

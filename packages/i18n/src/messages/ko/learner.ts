@@ -320,7 +320,7 @@ export const learner = {
     rarity: { common: '보통', uncommon: '드문', rare: '희귀', legendary: '전설' },
     how: {
       title: '카드를 더 모으는 방법',
-      quest: '퀘스트를 끝내면 그 카드를 받아요.',
+      quest: '퀘스트에서 별을 2개 받으면 그 카드를 받아요.',
       episode: '에피소드의 퀘스트를 모두 끝내면 카드를 더 받아요.',
       stage: (stage: number) => `${stage}단계를 모두 끝내면 전설 카드를 받아요.`,
       story: '이야기를 끝내면 그 카드를 받아요.',
@@ -492,6 +492,11 @@ export const learner = {
     },
     continue: { cta: '계속' },
     seeResults: { cta: '결과 보기' },
+    cardWaiting: {
+      title: (card: string) => `${card} 카드가 기다리고 있어요`,
+      line: (card: string, episode: string) =>
+        `이 퀘스트에서 별을 2개 받으면 ${card} 카드를 받아요. ${episode}의 퀘스트를 모두 끝내도 받아요.`,
+    },
     keepGoing: '계속해 봐요!',
     launcher: {
       game: {
