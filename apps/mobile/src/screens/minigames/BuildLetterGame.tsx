@@ -25,6 +25,9 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   GuardedPressable,
+  Icon,
+  KEY_BOUNCE_MS,
+  useTypeScale,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -34,7 +37,7 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { jamoAll } from '../../content/jamo';
 import { useMessages } from '../../i18n/use-messages';
-import { blockShape, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
+import { blockShape, removeLastTile, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildBuildLetterRounds, type BuildLetterRound } from '../../logic/round-builder';
 import { playPrompt } from '../../platform/audio';
@@ -81,6 +84,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
   const [helpOpen, setHelpOpen] = useState(false);
   const tapLock = useTapLock();
   const press = usePressLook();
+  const bodySize = useTypeScale().size.body;
 
   useEffect(() => {
     setSelected([]);
@@ -149,6 +153,17 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
     setSelected(selected.filter((_, i) => i !== slot));
     tapLight();
   };
+
+  /**
+   * Undo (OW-1-undo): a backspace for the last placed tile, one tap one tile. It is a take-back, not an attempt, so it scores
+   * nothing and shows nothing of the answer; it waits like a slot tap while the right block shows or a wrong one resets.
+   */
+  const undoLast = (): void => {
+    if (feedback !== 'idle' || selected.length === 0) return;
+    setSelected(removeLastTile(selected));
+    tapLight();
+  };
+  const canUndo = feedback === 'idle' && selected.length > 0;
 
   return (
     <Screen tone="canvas">
@@ -241,6 +256,44 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
             );
           }}
         />
+
+        <Spacer size="sm" />
+        {/* Always on screen so it is found at once; dimmed and inert while there is nothing to take back. One more target of
+            the board, a short bounce so a held-down finger or quick taps clear tile after tile (a keyboard's Delete). */}
+        <View style={{ alignItems: 'center' }}>
+          <TapTarget
+            testID="build-letter-undo"
+            lockMs={KEY_BOUNCE_MS}
+            gapFill={false}
+            disabled={!canUndo}
+            accessibilityLabel={copy.buildLetter.undo.name}
+            onCommit={undoLast}
+            style={({ pressed }) => ({
+              minHeight: touchTarget.min,
+              minWidth: touchTarget.min,
+              paddingHorizontal: spacing.lg,
+              paddingVertical: spacing.sm,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing.sm,
+              borderRadius: radii.pill,
+              borderWidth: borderWidth.base,
+              borderColor: !canUndo ? colors.border.subtle : pressed ? colors.border.focus : colors.border.strong,
+              backgroundColor: !canUndo ? colors.surface.sunken : pressed ? colors.brand.primaryLight : colors.surface.paper,
+              opacity: canUndo ? 1 : 0.6,
+            })}
+          >
+            {() => (
+              <>
+                <Icon name="backspace" size={spacing.xl} color={canUndo ? colors.text.primary : colors.text.muted} />
+                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: bodySize, fontWeight: typography.weight.semibold, color: canUndo ? colors.text.primary : colors.text.muted }}>
+                  {copy.buildLetter.undo.label}
+                </Text>
+              </>
+            )}
+          </TapTarget>
+        </View>
 
         <Spacer size="lg" />
         <Caption tone="muted" align="center">

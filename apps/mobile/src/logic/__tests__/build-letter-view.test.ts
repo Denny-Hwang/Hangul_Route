@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { findJamo } from '../../content/jamo';
 import {
   blockShape,
+  removeLastTile,
   shapeHint as shapeHintWith,
   tileAccessibilityLabel as tileAccessibilityLabelWith,
   type BlockShape,
@@ -86,5 +87,23 @@ describe('the hint and the tile label take their words as a parameter (en-XA)', 
     expect(tileAccessibilityLabelWith(findJamo('jamo:nieun-batchim')!, pseudo.a11y.minigame.finalTile)).toBe(
       pseudoText('final n'),
     );
+  });
+});
+
+describe('removeLastTile (the Undo button of Build a Letter)', () => {
+  it('drops the last placed tile and keeps the order of the rest', () => {
+    expect(removeLastTile(['jamo:giyeok', 'jamo:a', 'jamo:nieun'])).toEqual(['jamo:giyeok', 'jamo:a']);
+    expect(removeLastTile(['jamo:giyeok'])).toEqual([]);
+  });
+
+  it('is a no-op on an empty block (the same array comes back)', () => {
+    const empty: string[] = [];
+    expect(removeLastTile(empty)).toBe(empty);
+  });
+
+  it('never changes its input', () => {
+    const placed = ['jamo:giyeok', 'jamo:a'];
+    removeLastTile(placed);
+    expect(placed).toEqual(['jamo:giyeok', 'jamo:a']);
   });
 });

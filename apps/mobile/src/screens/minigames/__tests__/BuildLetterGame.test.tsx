@@ -126,6 +126,102 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('Build a Letter Undo button (OW-1-undo): a backspace for the last placed tile', () => {
+  const undo = 'build-letter-undo';
+
+  it('is always on screen, named for the screen reader, and disabled while no tile is placed', async () => {
+    const r = await draw(GAK);
+    await tick(TAP_LOCK_MS);
+    expect(host(r.root, undo).props['aria-label']).toBe('Undo last tile');
+    expect(disabled(r.root, undo)).toBe(true);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['', '', '']);
+    await click(r.root, `build-letter-tile-${G}`);
+    expect(disabled(r.root, undo)).toBe(false);
+    expect(host(r.root, undo).props['aria-label']).toBe('Undo last tile');
+  });
+
+  it('removes the LAST placed tile, one per tap, and its tray tile is enabled again; nothing is scored', async () => {
+    const r = await draw(GAK);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${G}`);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${A}`);
+    expect(slots(r.root)).toEqual(['ㄱ', 'ㅏ', '']);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['ㄱ', '', '']);
+    expect(disabled(r.root, `build-letter-tile-${A}`)).toBe(false);
+    expect(disabled(r.root, `build-letter-tile-${G}`)).toBe(true);
+    // A repeat within the 120 ms bounce is one tap; after it, the next tap removes the next tile.
+    await tick(30);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['ㄱ', '', '']);
+    await tick(150);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['', '', '']);
+    expect(disabled(r.root, `build-letter-tile-${G}`)).toBe(false);
+    expect(disabled(r.root, undo)).toBe(true);
+    expect(answers).toEqual([]);
+  });
+
+  it('after an undo the block can still be finished: one correct answer, no penalty for the take-back', async () => {
+    const r = await draw(GA);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${A}`);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['', '']);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${G}`);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${A}`);
+    expect(answers).toEqual([[0, true]]);
+  });
+
+  it('a wrong full fill still resets after 900 ms; Undo is swallowed during the reset and never reveals the answer', async () => {
+    const r = await draw(GA);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${A}`);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${G}`);
+    expect(answers).toEqual([[0, false]]);
+    expect(disabled(r.root, undo)).toBe(true);
+    await tick(300);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['ㅏ', 'ㄱ']);
+    await tick(600);
+    expect(slots(r.root)).toEqual(['', '']);
+    expect(answers).toEqual([[0, false]]);
+    expect(disabled(r.root, undo)).toBe(true);
+  });
+
+  it('is swallowed while the right block shows', async () => {
+    const r = await draw(GA);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${G}`);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${A}`);
+    expect(answers).toEqual([[0, true]]);
+    await tick(300);
+    await click(r.root, undo);
+    expect(slots(r.root)).toEqual(['ㄱ', 'ㅏ']);
+  });
+
+  it('a touch on it lands (inside the 64 px pill); a touch 3 px outside does not reach a neighbour', async () => {
+    const r = await draw(GA);
+    rects = { [undo]: { left: 100, top: 300, width: 120, height: 64 } };
+    const tray = [...new Set(r.root.findAll((n) => typeof n.props['data-testid'] === 'string' && String(n.props['data-testid']).startsWith('build-letter-tile-')).map((n) => String(n.props['data-testid'])))];
+    tray.forEach((id, i) => (rects[id] = { left: 10 + i * 90, top: 400, width: 80, height: 80 }));
+    await tick(TAP_LOCK_MS);
+    expect(await touch(r.root, 10 + tray.indexOf(`build-letter-tile-${G}`) * 90 + 40, 440)).toBe(true);
+    expect(slots(r.root)).toEqual(['ㄱ', '']);
+    await tick(TAP_LOCK_MS);
+    await touch(r.root, 160, 332);
+    expect(slots(r.root)).toEqual(['', '']);
+  });
+});
+
 describe('Build a Letter on a target board (AMENDMENTS-TOUCH 6.5, R2)', () => {
   it('a used tray tile stays disabled: a repeat tap on it does nothing and never takes it back', async () => {
     const r = await draw(GA);
