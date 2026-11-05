@@ -266,6 +266,15 @@ export function laterVolumeStoryIds(catalog: Pick<Catalog, 'cells' | 'stories'>)
   );
 }
 
+/**
+ * The quest ids of every cell's later volumes (F-CURR-002 row CM-40): catalogue quests that no route, plan or route day
+ * holds, opened only from the cell's Vol tabs while `volumes` is on. A surface that sends a learner to a quest from a
+ * first volume only (the console's note suggestions) leaves them out.
+ */
+export function laterVolumeQuestIds(catalog: Pick<Catalog, 'cells'>): ReadonlySet<string> {
+  return new Set(catalog.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds)));
+}
+
 /** The fields of a story file (F-STORY-001 section 3.2) that decide its catalogue status. */
 export interface StoryOfferFields {
   state: 'draft' | 'ready';

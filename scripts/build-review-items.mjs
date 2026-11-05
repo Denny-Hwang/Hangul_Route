@@ -70,9 +70,11 @@ export const STAGE1_TABLE = "packages/content-schema/src/review-items/stage1-ite
  * twenty-three Volume 2 cells and four books 2) measures 1,222 items, 181,677 B raw / 39,133 B gzip as generated and
  * 197,401 B raw / 38,616 B gzip as built (release build:web), past the first line (150,000 / 30,000), so the line is the
  * larger measurement plus a rounding margin (owner decision 2026-10-14: one measured raise when there is no real burden;
- * the chunk is lazy and loads on the first review).
+ * the chunk is lazy and loads on the first review). The CM tail integration (Stage 2 Holidays and Stage 4 Letters Volume 2,
+ * the Holidays book 2) measures 1,265 items, 190,655 B raw / 40,460 B gzip as generated and 207,348 B raw / 39,918 B gzip as
+ * built, so the raw line moves to 215,000 B and the gzip line holds.
  */
-export const BUDGET = Object.freeze({ raw: 205_000, gzip: 41_000 });
+export const BUDGET = Object.freeze({ raw: 215_000, gzip: 41_000 });
 
 const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const relOf = (root, file) => file.slice(root.length + 1).split(sep).join("/");

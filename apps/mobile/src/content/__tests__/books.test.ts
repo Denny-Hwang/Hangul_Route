@@ -300,10 +300,12 @@ describe('the Play book 2 (row CM-46)', () => {
   });
 
   it('names only its new tales as Volume 2 stories, so a shipped book 1 or shelf story never hides', () => {
-    // The new tales of the Letters (waiting for their sign-off), Food, Nature and Play books 2, sorted; the Letters book
-    // 2's read-tier stories are shelf stories and never here.
+    // The new tales of the Letters and Holidays (waiting for their sign-off), Food, Nature and Play books 2, sorted; the
+    // Letters book 2's read-tier stories and the royal birthday record are shelf stories and never here.
     expect([...VOLUME_TWO_STORY_IDS]).toEqual([
+      'story:daeboreum-full-moon',
       'story:eongan-letters',
+      'story:gyeonu-jingnyeo',
       'story:hahoe-mask-dance',
       'story:hangul-name',
       'story:hanji-korean-paper',
@@ -323,5 +325,55 @@ describe('the Play book 2 (row CM-46)', () => {
   it('keeps janggyeong-panjeon out of book 2: it stays a shelf story (the editorial choice in books.ts)', () => {
     expect(bookEpisodes.some((e) => (e.storyIds ?? []).includes('story:janggyeong-panjeon'))).toBe(false);
     expect(episodesAll.some((e) => e.id === 'episode:shelf-janggyeong-panjeon')).toBe(true);
+  });
+});
+
+describe('the Holidays book 2 (F-CURR-002 §5.4 S5, row CM-46)', () => {
+  const definition = BOOK_DEFINITIONS.find((d) => d.id === 'episode:stage5-rites-v2')!;
+  const lookup = (id: string): Story | undefined => storyById(id);
+  const TALES = ['story:daeboreum-full-moon', 'story:gyeonu-jingnyeo'];
+  /** The bundle as it will be once the multi-agent review signs the two tales. */
+  const signed = (id: string): Story | undefined => {
+    const s = lookup(id);
+    return s && TALES.includes(id) ? { ...s, review: { ...s.review, language: 'native-reviewed', culture: 'culture-reviewed', reviewedBy: 'MAR' } } : s;
+  };
+
+  it('plans the two new tales and the royal birthday record, as volume 2 of the Holidays cell', () => {
+    expect(definition).toMatchObject({ stage: 'stage5', theme: 'rites', order: 3, volume: 2 });
+    expect(definition.storyIds).toEqual([...TALES, 'story:uigwe-royal-birthday']);
+  });
+
+  it('bundles both tales with a listen and a read tier, unsigned until their review, so the book is not built yet', () => {
+    for (const id of TALES) {
+      const story = lookup(id);
+      expect(story, id).toBeDefined();
+      expect(story?.tiers.map((t) => t.level)).toEqual(['listen', 'read']);
+      expect(story?.review.language).toBe('draft');
+      expect(story?.addedIn).toBe(20261107);
+    }
+    expect(buildBook(definition, lookup)).toBeNull();
+    expect(bookEpisodes.some((e) => e.id === 'episode:stage5-rites-v2')).toBe(false);
+  });
+
+  it('once signed, builds a valid book 2 of three read quests whose tales hide with volumes off', () => {
+    const book = buildBook(definition, signed);
+    expect(book?.episode.id).toBe('episode:stage5-rites-v2');
+    expect(book?.episode.volume).toBe(2);
+    expect(EpisodeSchema.safeParse(book?.episode).success).toBe(true);
+    expect(book?.episode.questIds).toEqual([
+      'quest:story-daeboreum-full-moon-read',
+      'quest:story-gyeonu-jingnyeo-read',
+      'quest:story-uigwe-royal-birthday-read',
+    ]);
+    for (const quest of book?.quests ?? []) expect(QuestSchema.safeParse(quest).success).toBe(true);
+    // A tale only a book 2 adds is Volume 2 content; the read-tier story stays book 1 (no volume).
+    for (const id of TALES) expect(storyCellVolume(id), id).toBe(2);
+    expect(storyCellVolume('story:uigwe-royal-birthday')).toBeUndefined();
+  });
+
+  it('never shows in the Holidays cell while the book is unbuilt, whatever volumes says', () => {
+    expect(episodesFor('stage5', 'rites', withVolumes(false)).map((e) => e.id)).toEqual(['episode:stage5-rites']);
+    expect(episodesFor('stage5', 'rites', withVolumes(true)).map((e) => e.id)).toEqual(['episode:stage5-rites']);
+    expect(withVolumes(true).some((e) => e.id === 'episode:stage5-rites-v2')).toBe(false);
   });
 });
