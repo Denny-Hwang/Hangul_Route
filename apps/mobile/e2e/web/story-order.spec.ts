@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, type CheckAnswer } from './helpers';
+import { completeChildForm, journeyCellName, keepSidewaysIfAsked, passDiscover, playCheckByIds, type CheckAnswer, pastTapLock } from './helpers';
 
 /**
  * F-STORY-003 PR 3.5a: Story Order v2 on the shipped Stage 1 sequences.
@@ -95,6 +95,7 @@ async function shownOrder(page: Page): Promise<string[]> {
 
 async function placeAll(page: Page): Promise<void> {
   for (const [i, step] of STEPS.entries()) {
+    await pastTapLock(page);
     await card(page, step.caption).click();
     if (i < STEPS.length - 1) {
       await expect(page.getByTestId(`story-sequence-slot-${i + 1}`)).toContainText(step.caption);
@@ -138,6 +139,7 @@ test('a wrong card is an amber nudge that moves nothing; two misses ring the rig
   await openNewYearOrder(page);
   const wrong = card(page, 'Eat tteokguk');
 
+  await pastTapLock(page);
   await wrong.click();
   await expect(page.getByText('Try another').first()).toBeVisible();
   expect(await frameColor(wrong)).toBe(AMBER);
@@ -147,11 +149,13 @@ test('a wrong card is an amber nudge that moves nothing; two misses ring the rig
 
   // After the flash the card is plain again; a second wrong card rings the right one.
   await page.waitForTimeout(800);
+  await pastTapLock(page);
   await card(page, 'Receive lucky money').click();
   await expect(page.getByText('This one comes next.')).toBeVisible();
   const right = card(page, 'Wear hanbok');
   await expect(right).toHaveAccessibleName(/This one comes next\./);
 
+  await pastTapLock(page);
   await right.click();
   await expect(page.getByTestId('story-sequence-slot-1')).toContainText('Wear hanbok');
   await expect(page.getByText('1 / 4')).toBeVisible();
@@ -194,6 +198,7 @@ test('every slot placed: the story replays in order, pauses, steps, and Done fin
 
 test('Skip replay ends the step at once; one first-try miss still keeps the card', async ({ page }) => {
   await openNewYearOrder(page);
+  await pastTapLock(page);
   await card(page, 'Bow to elders').click(); // one miss on slot 1
   await placeAll(page);
   await page.getByRole('button', { name: 'Skip replay' }).click();
@@ -305,7 +310,10 @@ const artCard = (page: Page, id: string): Locator => page.getByTestId(`story-seq
 const cardArt = (page: Page, id: string): Locator => page.getByTestId(`story-sequence-card-art-${id}`);
 
 async function placeArtSteps(page: Page): Promise<void> {
-  for (const step of ART_STEPS) await artCard(page, step.id).click();
+  for (const step of ART_STEPS) {
+    await pastTapLock(page);
+    await artCard(page, step.id).click();
+  }
   await expect(page.getByRole('heading', { name: 'The story, in order' })).toBeVisible();
 }
 

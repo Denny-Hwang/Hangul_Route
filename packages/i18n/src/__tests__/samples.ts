@@ -83,6 +83,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.leaveSpace': [['Sunday Class A']],
   'learner.minigame.progress.pill': [[1, 4], [12, 12]],
   'learner.minigame.buildLetter.notQuite': [['The vowel goes beside the first letter.']],
+  'learner.minigame.buildLetter.takeBack': [['g'], ['final k']],
   'a11y.minigame.hear': [['ga']],
   'a11y.minigame.finalTile': [['ng']],
   'a11y.minigame.blockShape': [['The vowel goes under the first letter.']],

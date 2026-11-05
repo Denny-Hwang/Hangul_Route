@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { CATALOG, keysFor } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, passDiscover, readStored, seedStoredAll } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, passDiscover, readStored, seedStoredAll, tapHangulKey } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -57,15 +57,14 @@ const SPLIT: Record<string, string> = { 'ㅘ': 'ㅗㅏ', 'ㅙ': 'ㅗㅐ', 'ㅚ':
 /** Type Hangul round `n` of `total` on the in-app keyboard (the upper-cell journey's helper), then Done. */
 async function typeRound(page: Page, n: number, total: number, text: string): Promise<void> {
   await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
-  const key = (id: string) => page.getByTestId(`hangul-key-${id}`);
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
     if (jamo === ' ') {
-      await key('space').click();
+      await tapHangulKey(page, 'space');
     } else if (SHIFTED[jamo]) {
-      await key('shift').click();
-      await key(SHIFTED[jamo]).click();
+      await tapHangulKey(page, 'shift');
+      await tapHangulKey(page, SHIFTED[jamo]);
     } else {
-      await key(jamo).click();
+      await tapHangulKey(page, jamo);
     }
   }
   await page.getByTestId('type-hangul-done').click();

@@ -2,7 +2,7 @@ import { keysFor } from '@hangul-route/content-schema';
 import type { Locator, Page } from '@playwright/test';
 import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStored } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStored, tapHangulKey } from './helpers';
 import { shot } from './shots';
 import { expectNoSidewaysScroll, expectTextFits } from './text-fit';
 
@@ -46,7 +46,7 @@ async function playDictationCheck(page: Page, words: readonly string[]): Promise
   await page.getByRole('button', { name: 'Go', exact: true }).click();
   for (const word of words) {
     await expect(page.getByTestId('type-hangul-field')).toBeVisible();
-    for (const jamo of keysFor(word)) await page.getByTestId(jamo === ' ' ? 'hangul-key-space' : `hangul-key-${jamo}`).click();
+    for (const jamo of keysFor(word)) await tapHangulKey(page, jamo === ' ' ? 'space' : jamo);
     await page.getByTestId('type-hangul-done').click();
     await expect(page.getByText('You typed it!')).toBeVisible();
   }

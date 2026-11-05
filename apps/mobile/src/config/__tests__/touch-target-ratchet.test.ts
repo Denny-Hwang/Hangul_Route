@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 import {
   AUDIT_SCREENS,
   AUDIT_VIEWPORTS,
+  GAME_AUDIT_BOARDS,
+  GAME_AUDIT_VIEWPORT,
+  hitRectOffences,
   isOffender,
   occurrenceKeys,
   offenderKey,
@@ -128,6 +131,16 @@ describe('the audit walks what the spec names (§3.8)', () => {
   });
 });
 
+describe('the game answer boards the ratchet measures (AMENDMENTS-TOUCH KT-D8, section 11.2)', () => {
+  it('at 320x640 with the largest text', () => {
+    expect(viewportKey(GAME_AUDIT_VIEWPORT)).toBe('320x640');
+  });
+
+  it('Card Match: both columns (row KT-4b); no allowlist, every answer at least 64 x 64', () => {
+    expect(GAME_AUDIT_BOARDS).toEqual({ 'Card Match': ['card-match-ko-board', 'card-match-en-board'] });
+  });
+});
+
 describe('touch-target-allowlist.json', () => {
   const entries = Object.entries(allowlist.offenders);
 
@@ -171,5 +184,18 @@ const BASELINE: readonly string[] = [
 describe('touch-target-allowlist.json never grows past the recorded baseline', () => {
   it.each(Object.entries(allowlist.offenders))('%s: every entry was an offender when the audit landed', (_vp, list) => {
     expect(list.filter((entry) => !BASELINE.includes(entry))).toEqual([]);
+  });
+});
+
+describe('hitRectOffences (AMENDMENTS-TOUCH 6.6, KT-6): a hit area reaches 64 unless boxed, and a boxed axis is its room', () => {
+  const free = { boxed: { x: false, y: false } };
+  it('passes a 64 hit area (and a sub-pixel under it), fails one under 64 on either axis', () => {
+    expect(hitRectOffences([{ name: 'a', measured: { width: 64, height: 63.6 }, expected: { width: 64, height: 64, ...free } }])).toEqual([]);
+    expect(hitRectOffences([{ name: 'a', measured: { width: 54, height: 70 }, expected: { width: 64, height: 70, ...free } }])).toEqual(['a x: 54.0 under 64']);
+  });
+  it('a boxed axis must equal its computed room within a pixel, under 64 or not', () => {
+    const boxed = { width: 55, height: 64, boxed: { x: true, y: false } };
+    expect(hitRectOffences([{ name: 'b', measured: { width: 55.6, height: 64 }, expected: boxed }])).toEqual([]);
+    expect(hitRectOffences([{ name: 'b', measured: { width: 52, height: 64 }, expected: boxed }])).toEqual(['b x: boxed, 52.0 is not its room 55.0']);
   });
 });

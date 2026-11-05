@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { keysFor } from '@hangul-route/content-schema';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
-import { keepSidewaysIfAsked, seedStored } from './helpers';
+import { keepSidewaysIfAsked, seedStored, tapHangulKey } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -48,16 +49,15 @@ async function open(page: Page, rounds: Fixture[], mode: 'quest' | 'preview' | '
   await page.addStyleTag({ content: '[data-testid="pwa-banners"] { display: none !important; }' });
 }
 
-const key = (page: Page, id: string) => page.getByTestId(`hangul-key-${id}`);
 const log = (page: Page): Promise<Log> => page.evaluate(() => (window as E2eWindow).__hrWriteFrameE2E!.log());
 const events = (page: Page): Promise<TelemetryEvent[]> => page.evaluate(() => (window as E2eWindow).__hrWriteFrameE2E!.events());
 async function typeText(page: Page, text: string): Promise<void> {
   for (const jamo of keysFor(text)) {
     if (SHIFTED[jamo]) {
-      await key(page, 'shift').click();
-      await key(page, SHIFTED[jamo]).click();
+      await tapHangulKey(page, 'shift');
+      await tapHangulKey(page, SHIFTED[jamo]);
     } else {
-      await key(page, jamo).click();
+      await tapHangulKey(page, jamo);
     }
   }
 }
@@ -91,6 +91,8 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
     // Change word goes back with the pick kept; 떡볶이 ends in a vowel: 를.
     await page.getByTestId('write-frame-change-word').click();
     await expect(page.getByTestId('write-frame-word-1')).toHaveAttribute('aria-selected', 'true');
+    // Past the word bank's answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-6) since the first pick.
+    await page.waitForTimeout(TAP_LOCK_MS + 50);
     await page.getByTestId('write-frame-word-0').click();
     await expect(page.getByTestId('write-frame-ending')).toHaveText('를');
     await expect(page.getByTestId('write-frame-notice')).toHaveText('를 after 떡볶이');
@@ -106,7 +108,7 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
     expect(await page.locator('body').innerText()).not.toMatch(SHAME);
     await shot(page, 'write-frame-320-near');
     await page.getByTestId('type-hangul-fix').click();
-    for (let i = 0; i < 4; i += 1) await key(page, 'delete').click();
+    for (let i = 0; i < 4; i += 1) await tapHangulKey(page, 'delete');
     await typeText(page, '볶이');
     await page.getByTestId('write-frame-done').click();
     await expect(page.getByText('You wrote a sentence!')).toBeVisible();
@@ -204,17 +206,17 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
     await page.getByTestId('write-frame-tab-keyboard').click();
     await expect(page.getByTestId('write-frame-field')).toContainText('호야');
     // A final on the last block: the ending follows it on the frame line only (no shot, no finish with that name).
-    await key(page, 'ㄴ').click();
+    await tapHangulKey(page, 'ㄴ');
     await expect(page.getByTestId('write-frame-ending')).toHaveText('이에요');
-    await key(page, 'delete').click();
+    await tapHangulKey(page, 'delete');
     await expect(page.getByTestId('write-frame-ending')).toHaveText('예요');
     // A lone letter after the cast name: the helper line and both endings.
-    await key(page, 'ㅗ').click();
+    await tapHangulKey(page, 'ㅗ');
     await expect(page.getByText('Finish the last block.')).toBeVisible();
     await expect(page.getByTestId('write-frame-ending')).toHaveText('이에요/예요');
     await expect(page.getByTestId('write-frame-done')).toBeDisabled();
     await shot(page, 'write-frame-320-name-keyboard');
-    await key(page, 'delete').click();
+    await tapHangulKey(page, 'delete');
     await expect(page.getByTestId('write-frame-field')).toContainText('호야');
     await page.getByTestId('write-frame-done').click();
     await expect(page.getByText('제 이름은 호야예요.')).toBeVisible();

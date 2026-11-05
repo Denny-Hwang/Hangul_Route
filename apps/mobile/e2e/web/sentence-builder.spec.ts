@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+import { pastTapLock } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -69,14 +70,18 @@ const hint = (page: Page) => page.getByTestId('sentence-builder-hint');
  * the tile is marked tried, and its slide back is over (the flow takes no tap while it returns).
  */
 async function missTile(page: Page, name: string): Promise<void> {
+  await pastTapLock(page);
   await tile(page, name).click();
   await expect(tile(page, `${name}, tried`)).toBeVisible();
   await expect(page.getByTestId('sentence-builder-returning')).toHaveCount(0);
 }
 
-/** Taps a tile that is right for the next place, past the 50 ms touch window of the last tap. */
+/**
+ * Taps a tile that is right for the next place, past the tray's answer lock of the last tap (AMENDMENTS-TOUCH 6.3: a
+ * `board` board, a click included, rule 9).
+ */
 async function placeTile(page: Page, name: string): Promise<void> {
-  await page.waitForTimeout(120);
+  await pastTapLock(page);
   await tile(page, name).click();
 }
 
@@ -141,7 +146,8 @@ test.describe('Sentence Builder (F-CURR-001 G-1)', () => {
     await expect(hint(page)).toContainText('In Korean, the doing or describing word comes last.');
     const tried = tile(page, '먹어요, meogeoyo, tried');
     await expect(tried).toBeVisible();
-    const border = await tried.evaluate((el) => getComputedStyle(el).borderTopColor);
+    // The tile's drawn box is the button's child (the button is the hit area its board measures, AMENDMENTS-TOUCH 4.2).
+    const border = await tried.evaluate((el) => getComputedStyle(el.firstElementChild ?? el).borderTopColor);
     expect(border).toBe(NUDGE);
     expect(border).not.toBe(DANGER);
     expect((await log(page)).answers).toEqual([{ key: '0', correct: false, itemId: 'e2e-eat-rice' }]);
@@ -203,6 +209,8 @@ test.describe('Sentence Builder (F-CURR-001 G-1)', () => {
     await placeTile(page, '밥을, babeul');
     await placeTile(page, '먹어요, meogeoyo');
     await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
+    // Skip waits out the answer lock of the last tile (AMENDMENTS-TOUCH 6.3).
+    await pastTapLock(page);
     await page.getByRole('button', { name: 'Skip' }).click();
     // Past the no-sound pause (motion.duration.crawl) after which the built sentence would advance.
     await page.waitForTimeout(900);

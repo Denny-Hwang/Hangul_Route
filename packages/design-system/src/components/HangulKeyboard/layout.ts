@@ -1,5 +1,6 @@
 import type { LayoutClass } from '../../layout';
 import { scaleMedia } from '../../layout';
+import { KEY_BOUNCE_MS, TAP_LOCK_MS } from '../../tap-model';
 import { layout, spacing, touchTarget } from '../../tokens';
 
 /**
@@ -45,6 +46,30 @@ export function pressLetter(base: string, shift: boolean): { jamo: string; shift
 
 export type KeyboardArrangement = 'standard' | 'split';
 export type KeyKind = 'letter' | 'shift' | 'delete' | 'space';
+
+/**
+ * How long a key ignores a repeat after it types (docs/specs/AMENDMENTS-TOUCH.md KT-D7, section 6.7): a letter, Delete
+ * and Space drop a repeat within `KEY_BOUNCE_MS` (120), so quick repeated deletes still work; only Shift, a toggle, has
+ * the 400 ms target lock (`TAP_LOCK_MS`), so a bounce never turns it on and off.
+ */
+export function keyLockMs(kind: KeyKind): number {
+  return kind === 'shift' ? TAP_LOCK_MS : KEY_BOUNCE_MS;
+}
+
+/** What one committed key does: the jamo it types (as drawn), Delete, Space, or nothing (Shift alone). */
+export type KeyOutput = { kind: 'letter'; jamo: string } | { kind: 'delete' } | { kind: 'space' } | null;
+
+/**
+ * One committed key against the Shift state: Shift toggles, a letter types its face and turns Shift off (one-shot),
+ * Delete and Space leave Shift as it is. Pure, so a rollover's two commits in one event read each other's Shift.
+ */
+export function keyStep(shift: boolean, key: Pick<KeyboardKey, 'kind' | 'base'>): { shift: boolean; output: KeyOutput } {
+  if (key.kind === 'shift') return { shift: !shift, output: null };
+  if (key.kind === 'delete') return { shift, output: { kind: 'delete' } };
+  if (key.kind === 'space') return { shift, output: { kind: 'space' } };
+  const { jamo, shift: next } = pressLetter(key.base ?? '', shift);
+  return { shift: next, output: { kind: 'letter', jamo } };
+}
 
 /** One key's hit area, in dp from the keyboard's top-left corner. Hit areas touch; the face is inset when painted. */
 export interface KeyboardKey {

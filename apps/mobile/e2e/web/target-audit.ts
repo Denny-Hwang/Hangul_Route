@@ -33,6 +33,16 @@ export const AUDIT_VIEWPORTS = [
 /** §3.8: the screens it walks, in the order it walks them. */
 export const AUDIT_SCREENS: readonly AuditScreen[] = ['Home', 'Journey', 'Library', 'Profile'];
 
+/**
+ * AMENDMENTS-TOUCH KT-D8 and section 11.2: every answer target of a game reaches 64 x 64 at 320 px with the largest
+ * text. The window, and each game's answer boards (by `testID`) measured there; a game has no allowlist. Rows add their
+ * games (KT-4b: Card Match; KT-11: every game, en, es and ko).
+ */
+export const GAME_AUDIT_VIEWPORT = { width: 320, height: 640 } as const;
+export const GAME_AUDIT_BOARDS: Readonly<Record<string, readonly string[]>> = {
+  'Card Match': ['card-match-ko-board', 'card-match-en-board'],
+};
+
 export interface TouchTargetAllowlist {
   /** Why the file exists and how to change it (kept in the JSON for whoever opens it). */
   note: string;
@@ -158,6 +168,35 @@ export function measureTargets(within: string | null): MeasuredTarget[] {
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) continue;
     out.push({ role, name: nameOf(el), width: r.width, height: r.height });
+  }
+  return out;
+}
+
+/**
+ * AMENDMENTS-TOUCH KT-D8 and 6.6 (row KT-6): the game boards are held to the floor by their hit areas. Where a board
+ * hit-tests a rectangle other than the drawn box (Hidden Heritage's spots, `spotHitRects`), each axis must reach
+ * `touchTarget.min` unless the spot is boxed in on it, and a boxed axis must take exactly the room computed for it (one
+ * px of rounding either way). Returns one line per offence, empty when every hit area holds.
+ */
+export interface HitRectCheck {
+  name: string;
+  measured: { width: number; height: number };
+  expected: { width: number; height: number; boxed: { x: boolean; y: boolean } };
+}
+
+export function hitRectOffences(checks: readonly HitRectCheck[], min: number = TARGET_MIN): string[] {
+  const out: string[] = [];
+  for (const c of checks) {
+    for (const [axis, size, room, boxed] of [
+      ['x', c.measured.width, c.expected.width, c.expected.boxed.x],
+      ['y', c.measured.height, c.expected.height, c.expected.boxed.y],
+    ] as const) {
+      if (boxed) {
+        if (Math.abs(size - room) > 1) out.push(`${c.name} ${axis}: boxed, ${size.toFixed(1)} is not its room ${room.toFixed(1)}`);
+      } else if (Math.round(size) < min) {
+        out.push(`${c.name} ${axis}: ${size.toFixed(1)} under ${min}`);
+      }
+    }
   }
   return out;
 }

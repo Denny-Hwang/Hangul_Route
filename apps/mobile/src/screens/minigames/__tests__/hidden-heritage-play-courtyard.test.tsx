@@ -15,6 +15,7 @@ import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/
 import { HiddenHeritageStep } from '../hidden-heritage-entry';
 import * as scenes from '../hidden-heritage-scenes';
 import type { MinigameHost } from '../host';
+import { passTapLock } from '../../../test-support/render';
 
 /**
  * F-CURR-002 row CM-37 part 4: the Play & Crafts Hidden Heritage scene, a courtyard of the traditional games (§5.6 S2),
@@ -177,9 +178,11 @@ describe('with game.hidden-heritage on', () => {
     expect(prompt.props.romanization).toBe(asked.word.romanization);
     expect(prompt.props.gloss).toBeUndefined();
     const other = asked.id === 'yut' ? 'yutpan' : 'eolle';
+    passTapLock();
     await act(async () => spots(root).find((s) => s.props.testID === `hh-spot-${other}`)!.props.onPress());
     expect(log).toEqual([[expect.stringMatching(/^w\d$/), false]]);
     expect(root.findAll((n) => n.props.testID === 'hh-ring-miss').length).toBeGreaterThan(0);
+    passTapLock();
     await act(async () => spots(root).find((s) => s.props.testID === `hh-spot-${asked.id}`)!.props.onPress());
     expect(log[1]).toEqual([log[0]![0], true]);
   });

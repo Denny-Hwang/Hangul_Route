@@ -31,6 +31,8 @@ export function TapTarget({
   accessibilityLabel,
   accessibilityRole = 'button',
   accessibilityState,
+  ariaSelected,
+  ariaPressed,
   lockMs,
   gapFill = true,
   style,
@@ -67,8 +69,11 @@ export function TapTarget({
     accessibilityState: { ...accessibilityState, disabled: disabled || accessibilityState?.disabled === true },
     // react-native-web reads the ARIA prop, not `accessibilityState`, for a chip's on or off (AMENDMENTS-ROUTE-CLASS-BLEND BL-8).
     ...(accessibilityState?.checked === undefined ? {} : { 'aria-checked': accessibilityState.checked }),
+    // Opt-in only (Card Match's Korean cards, KT-4b): never derived from `accessibilityState`, so other buttons carry none.
+    ...(ariaSelected === undefined ? {} : { 'aria-selected': ariaSelected }),
     // Only a disabled target disables the Pressable: on native a `disabled={false}` would override the state above.
     disabled: disabled ? true : undefined,
+    ...(ariaPressed === undefined ? {} : { 'aria-pressed': ariaPressed }),
     testID,
     ...NO_PRESS_DELAY,
   } as const;

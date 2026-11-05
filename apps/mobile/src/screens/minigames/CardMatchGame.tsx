@@ -8,6 +8,9 @@ import {
   Progress,
   Screen,
   Spacer,
+  TAP_LOCK_MS,
+  TapBoard,
+  TapTarget,
   borderWidth,
   colors,
   radii,
@@ -16,11 +19,15 @@ import {
   typography,
   useMediaSize,
   KOREAN_LINE_BREAK,
+  pressInset,
+  pressTransform,
+  usePressLook,
+  useTapLock,
   useTypeScale,
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -47,7 +54,16 @@ interface Props {
  * picked card again keeps it. The wrong flash's timer is kept in a ref, cleared by any new pick and on unmount, and
  * when it fires it lets go only of the pick that missed (unless the child re-tapped it), so it never un-selects the
  * next pick. A bounce on the amber meaning of a miss, while it shows, is not a second miss.
+ *
+ * Row KT-4b: both columns are `TapTarget`s on two `target` TapBoards (a graze still counts, a bounce on one card
+ * never counts twice, a quick tap on a different card does), with the press look (section 4.3) on the drawn card, never
+ * on the hit area. A meaning is `inactive` (claimed, no press look, still focusable) while no Korean card is picked and
+ * while it shows a miss's amber, so a no-op tap never looks chosen. The pair that ends the round also locks the app-level clock (`lock(TAP_LOCK_MS)`, KT-D5), since
+ * the step then moves on.
  */
+
+/** The hit area of a card: the full column width and at least the 64 floor (KT-D8); the drawn card fills it. */
+const TARGET = { alignSelf: 'stretch', minHeight: touchTarget.min } as const;
 
 /** A wrong pair stays amber this long; then the pick that missed is let go. */
 const WRONG_FLASH_MS = 600;
@@ -78,6 +94,8 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
     return indexed;
   }, [pairs]);
 
+  const press = usePressLook();
+  const appLock = useTapLock();
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
@@ -157,6 +175,8 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
       answerRound(pairRoundKey(selectedKo), true, askedPair(pairs, selectedKo));
       setMatched(new Set([...matched, selectedKo]));
       setSelectedKo(null);
+      // The round-ending commit: the step moves on, so a bounce must not reach what comes next (KT-D5).
+      if (matched.size + 1 === pairs.length) appLock.lock(TAP_LOCK_MS);
       return;
     }
     nudge();
@@ -172,10 +192,12 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
     }, WRONG_FLASH_MS);
   };
 
-  const cardStyle = (state: { matched: boolean; selected: boolean; wrong: boolean }) => ({
+  // The drawn card; the press look (a thicker `border.shape` outline that grows inward, and the shrink) goes here, never
+  // on the target the board measures.
+  const cardStyle = (state: { matched: boolean; selected: boolean; wrong: boolean }, pressed: boolean) => ({
     minHeight: touchTarget.min,
     justifyContent: 'center' as const,
-    padding: cardPadding,
+    padding: cardPadding - pressInset(pressed ? press : null, borderWidth.base),
     borderRadius: radii.lg,
     backgroundColor: state.matched
       ? colors.feedback.successLight
@@ -184,15 +206,18 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
         : state.wrong
           ? colors.feedback.nudgeLight
           : colors.surface.paper,
-    borderWidth: borderWidth.base,
-    borderColor: state.matched
-      ? colors.feedback.success
-      : state.selected
-        ? colors.brand.primary
-        : state.wrong
-          ? colors.feedback.nudge
-          : colors.border.subtle,
+    borderWidth: pressed ? press.borderWidth : borderWidth.base,
+    borderColor: pressed
+      ? press.borderColor
+      : state.matched
+        ? colors.feedback.success
+        : state.selected
+          ? colors.brand.primary
+          : state.wrong
+            ? colors.feedback.nudge
+            : colors.border.subtle,
     opacity: state.matched ? 0.5 : 1,
+    transform: pressTransform(pressed ? press : null),
   });
 
   return (
@@ -210,56 +235,72 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        <View style={{ flex: 1, gap: spacing.sm }}>
-          {koList.map((p) => {
-            const isMatched = matched.has(p.idx);
-            const isSelected = selectedKo === p.idx;
-            const isWrong = wrongFlash?.ko === p.idx;
-            return (
-              <Pressable
-                key={`ko-${p.idx}`}
-                testID={`card-match-ko-${p.idx}`}
-                onPress={() => pickKorean(p.idx)}
-                accessibilityRole="button"
-                accessibilityLabel={m.a11y.minigame.koreanWord(p.romanization ?? p.ko)}
-                accessibilityState={{ selected: isSelected, disabled: isMatched }}
-                aria-selected={isSelected}
-                disabled={isMatched}
-                style={cardStyle({ matched: isMatched, selected: isSelected, wrong: isWrong })}
-              >
-                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '700', color: colors.text.primary }}>
-                  {p.ko}
-                </Text>
-                {p.romanization ? (
-                  <Caption tone="secondary" style={{ fontStyle: 'italic' }}>
-                    {p.romanization}
-                  </Caption>
-                ) : null}
-              </Pressable>
-            );
-          })}
+        <View style={{ flex: 1 }}>
+          <TapBoard lock="target" testID="card-match-ko-board">
+            <View style={{ gap: spacing.sm }}>
+              {koList.map((p) => {
+                const isMatched = matched.has(p.idx);
+                const isSelected = selectedKo === p.idx;
+                const isWrong = wrongFlash?.ko === p.idx;
+                return (
+                  <TapTarget
+                    key={`ko-${p.idx}`}
+                    testID={`card-match-ko-${p.idx}`}
+                    onCommit={() => pickKorean(p.idx)}
+                    accessibilityLabel={m.a11y.minigame.koreanWord(p.romanization ?? p.ko)}
+                    accessibilityState={{ selected: isSelected }}
+                    ariaSelected={isSelected}
+                    disabled={isMatched}
+                    style={TARGET}
+                  >
+                    {({ pressed }) => (
+                      <View style={cardStyle({ matched: isMatched, selected: isSelected, wrong: isWrong }, pressed)}>
+                        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '700', color: colors.text.primary }}>
+                          {p.ko}
+                        </Text>
+                        {p.romanization ? (
+                          <Caption tone="secondary" style={{ fontStyle: 'italic' }}>
+                            {p.romanization}
+                          </Caption>
+                        ) : null}
+                      </View>
+                    )}
+                  </TapTarget>
+                );
+              })}
+            </View>
+          </TapBoard>
         </View>
-        <View style={{ flex: 1, gap: spacing.sm }}>
-          {enList.map((p) => {
-            const isMatched = matched.has(p.idx);
-            const isWrong = wrongFlash?.en === p.idx;
-            return (
-              <Pressable
-                key={`en-${p.idx}`}
-                testID={`card-match-en-${p.idx}`}
-                onPress={() => pickMeaning(p.idx)}
-                accessibilityRole="button"
-                accessibilityLabel={m.a11y.minigame.meaning(p.en)}
-                accessibilityState={{ disabled: isMatched }}
-                disabled={isMatched}
-                style={cardStyle({ matched: isMatched, selected: false, wrong: isWrong })}
-              >
-                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '600', color: colors.text.primary }}>
-                  {p.en}
-                </Text>
-              </Pressable>
-            );
-          })}
+        <View style={{ flex: 1 }}>
+          <TapBoard lock="target" testID="card-match-en-board">
+            <View style={{ gap: spacing.sm }}>
+              {enList.map((p) => {
+                const isMatched = matched.has(p.idx);
+                const isWrong = wrongFlash?.en === p.idx;
+                return (
+                  <TapTarget
+                    key={`en-${p.idx}`}
+                    testID={`card-match-en-${p.idx}`}
+                    onCommit={() => pickMeaning(p.idx)}
+                    accessibilityLabel={m.a11y.minigame.meaning(p.en)}
+                    disabled={isMatched}
+                    // With no Korean card picked, or while this meaning shows a miss's amber, a tap is a no-op: the
+                    // board claims it with no press look, so it never looks chosen and then does nothing (F1).
+                    inactive={selectedKo === null || isWrong}
+                    style={TARGET}
+                  >
+                    {({ pressed }) => (
+                      <View style={cardStyle({ matched: isMatched, selected: false, wrong: isWrong }, pressed)}>
+                        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodyLg, fontWeight: '600', color: colors.text.primary }}>
+                          {p.en}
+                        </Text>
+                      </View>
+                    )}
+                  </TapTarget>
+                );
+              })}
+            </View>
+          </TapBoard>
         </View>
       </View>
 

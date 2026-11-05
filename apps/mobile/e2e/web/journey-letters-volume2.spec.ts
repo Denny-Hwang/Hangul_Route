@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStoredAll } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, pastTapLock, readStored, seedStoredAll } from './helpers';
 import { shot } from './shots';
 import { expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
@@ -110,7 +110,10 @@ test.describe('Letters Volume 2, Stage 4, at launch state (F-CURR-002 row CM-44 
     await replyTurns(page, ['안녕하세요! 이 책 빌려 주세요.', '네, 여기 있어요.', '감사합니다!', '감사합니다!'], 'minigame');
     // Apply: Story Order, dark, so Story Sequence on the same captions.
     await page.getByRole('button', { name: 'Play minigame' }).click();
-    for (const id of ['borrow', 'card', 'here', 'book']) await page.getByTestId(`story-sequence-card-${id}`).click();
+    for (const id of ['borrow', 'card', 'here', 'book']) {
+      await pastTapLock(page);
+      await page.getByTestId(`story-sequence-card-${id}`).click();
+    }
     await page.getByTestId('story-sequence-skip-replay').or(page.getByTestId('story-sequence-done')).first().click();
     // Check: Tap to Respond, the Dialogue reply pick (two turns).
     await page.getByRole('button', { name: 'Go', exact: true }).click();
@@ -140,7 +143,7 @@ test.describe('Letters Volume 2, Stage 4, at launch state (F-CURR-002 row CM-44 
     // The casual hello is less natural with the librarian: it is never sent, and the chat waits for another tap.
     await page.getByTestId('role-play-reply-hi').click();
     await expect(page.getByTestId('role-play-partner-newest')).toContainText('호야, 안녕하세요!');
-    await page.waitForTimeout(150);
+    await pastTapLock(page);
     await page.getByTestId('role-play-reply-borrow').click();
     await expect(page.getByTestId('role-play-partner-newest')).toContainText('도서관 카드 있어요?');
     expect(errors).toEqual([]);

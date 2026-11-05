@@ -154,7 +154,16 @@ describe('TapBoard controller: the capture responder', () => {
   it('T18: a take-back target is not gap-filled', () => {
     const h = harness();
     h.add('Z', B_RECT, { gapFill: false });
-    expect(h.board.handlers.onStartShouldSetResponderCapture(ev(1, 104, 48))).toBe(false);
+    // 4 px outside Z: the board takes the touch (so no browser click reaches Z) and it commits nothing (KT-6).
+    expect(h.board.handlers.onStartShouldSetResponderCapture(ev(1, 104, 48))).toBe(true);
+    h.board.handlers.onResponderGrant(ev(1, 104, 48));
+    h.board.handlers.onResponderStart(ev(1, 104, 48));
+    expect(h.pressedLog).toEqual([]);
+    h.advance(40);
+    h.board.handlers.onResponderEnd(ev(1, 104, 48, null, 'touchend'));
+    expect(h.commits).toEqual([]);
+    // Beyond the gap reach it falls through; inside Z it is Z's.
+    expect(h.board.handlers.onStartShouldSetResponderCapture(ev(1, 80, 48))).toBe(false);
     expect(h.board.handlers.onStartShouldSetResponderCapture(ev(1, 110, 48))).toBe(true);
   });
 

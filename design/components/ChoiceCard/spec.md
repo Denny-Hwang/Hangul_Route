@@ -27,6 +27,7 @@ The design system has no copy and no i18n dependency. The caller passes already-
 | `accessibilityLabel` | `string` | Required. The accessible name (for a picture option, the text label) |
 | `testID` | `string?` | |
 | `pressableRef` | `Ref<View>?` | The pressable's node, for a screen that moves focus to the card (as Button's `pressableRef`) |
+| `targetStyle` | `StyleProp<ViewStyle>?` | The hit area's own style, around the drawn card: a frame the caller draws (Pic-Word's selection ring and its 4 px padding) is part of the target, so a touch on it is a touch on the card and there is no dead ring (`AMENDMENTS-TOUCH.md` §6, row KT-4b). The press look stays on the drawn card. Added in KT-4b |
 
 ## Anatomy
 

@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { layoutClassFor } from '@hangul-route/design-system/layout';
-import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
+import { KEY_BOUNCE_MS, TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { isDeviceLandscape, isPhoneDevice } from '../../src/logic/layout/orientation-guard';
 
 /**
@@ -405,6 +405,16 @@ export function pastTapLock(page: Page): Promise<void> {
   return page.waitForTimeout(TAP_LOCK_MS + 50);
 }
 
+/**
+ * One press on the in-app Hangul keyboard (`hangul-key-<id>`), paced as a learner's: the keyboard drops a repeat of the
+ * same key within `KEY_BOUNCE_MS` and a Shift within `TAP_LOCK_MS` of the last (AMENDMENTS-TOUCH KT-D7, row KT-7), so a
+ * machine-speed click waits past that key's lock before the next.
+ */
+export async function tapHangulKey(page: Page, id: string): Promise<void> {
+  await page.getByTestId(`hangul-key-${id}`).click();
+  await page.waitForTimeout((id === 'shift' ? TAP_LOCK_MS : KEY_BOUNCE_MS) + 30);
+}
+
 /** The Listen & Pick option cards; a tapped card says so in its label ("Right answer: ..." / "Not this one: ..."). */
 const LISTEN_PICK_OPTIONS = '[data-testid^="listen-pick-option-"]';
 
@@ -585,4 +595,27 @@ export async function showPhoneControls(page: Page): Promise<void> {
 export async function phoneHasRail(page: Page): Promise<boolean> {
   await expect(page.getByTestId('presenter-stage')).toBeVisible();
   return (await page.getByTestId('presenter-rail').count()) > 0;
+}
+
+/**
+ * A fresh child (PIN `E2E_PIN`), with the largest text size when asked, in the first quest of Stage 2 Play & Crafts
+ * (Playground Words, At the Playground) past its Discover pages: on its Practice launcher, whose game is Pic-Word Match;
+ * the next step is Card Match (AMENDMENTS-TOUCH rows KT-4b and KT-11, the touch suites and the target ratchet).
+ */
+export async function openPlaygroundWordsQuest(page: Page, o: { largest: boolean }): Promise<void> {
+  await onboardChild(page, { name: 'Dami' });
+  if (o.largest) await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+  await page.goto('/');
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await page.getByRole('button', { name: journeyCellName(2, 'Play & Crafts') }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(headerClose(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
 }

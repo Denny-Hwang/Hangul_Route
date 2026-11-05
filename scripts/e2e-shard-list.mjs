@@ -18,6 +18,7 @@
 // selects exactly as many tests as it has lines.
 
 import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** The tests of `playwright test --list` output, one string per test, in listed order. */
@@ -52,22 +53,65 @@ export function parseShardArg(arg) {
 }
 
 /**
- * Round-robin: the tests at positions current-1, current-1+total, ... With four shards, shard 2 also runs the weekly
- * plan bundle's specs, which put it at the 20-minute job limit (main 19m06s, 2026-11-05; the CM tail integration timed
- * out twice there with every test passing). So of the tests round-robin deals to shard 2, every tenth one
- * (floor(k / 4) mod 10 = 9) goes to shard 3, the lightest shard (about 15 minutes; handing it every fifth took shard 3
- * to 20m02s and shard 2 down to 14m30s, so one in ten). Every listed test still lands in
- * exactly one shard.
+ * Round-robin: the tests at positions current-1, current-1+total, ... With four shards and a table of weights
+ * (`e2e-shard-weights.json`) the shares are instead dealt by weight, longest first, each test to the shard that has the
+ * least weight so far. Round-robin alone drifts: the long files sit at fixed positions, so every batch of new tests moves
+ * them between shards, and the PWA e2e shards (a 20 minute limit, main at 14 to 19 minutes each) ran out of time with
+ * every test passing: shard 2 on the CM tail integration (patched by moving every tenth of its tests to shard 3), then
+ * shards 3 and 4 on the KT tail integration (release part 15.4 and 14.3 minutes against 11.8 and 11.0), and after the
+ * patch shards 1 and 2 (15.7 and 16.8). Replayed on the 1,818 tests of that run with the durations its shards reported, the
+ * test time per shard was 25.3, 24.4, 29.7 and 26.1 minutes under round-robin with the old patch and is 26.0 to 27.2 by
+ * weight. A test weighs its own seconds when the table lists it (the 102 tests of 12 s or more
+ * in the release run, 19 in the fixture run), else its spec file's mean in that run, else 0.25 s (a file the table does
+ * not list: its tests are skipped in that run, or it is new). Every listed test still lands in exactly one shard.
  */
-export function pickShard(tests, { current, total }) {
+export function pickShard(tests, { current, total }, weightOf = null) {
+  if (total === 4 && weightOf !== null) {
+    const dealt = dealByWeight(tests, total, weightOf);
+    return tests.filter((_, k) => dealt[k] === current);
+  }
   return tests.filter((_, k) => shardOf(k, total) === current);
 }
 
-/** The shard (1-based) that test k of a list goes to. */
+/** The shard (1-based) that test k of a list goes to, round-robin. */
 export function shardOf(k, total) {
-  const dealt = (k % total) + 1;
-  if (total === 4 && dealt === 2 && Math.floor(k / 4) % 10 === 9) return 3;
-  return dealt;
+  return (k % total) + 1;
+}
+
+/** The shard (1-based) of each test, by weight: heaviest first, each to the shard with the least weight so far. */
+export function dealByWeight(tests, total, weightOf) {
+  const weights = tests.map((t) => weightOf(t));
+  const order = tests.map((_, k) => k).sort((a, b) => weights[b] - weights[a] || a - b);
+  const load = new Array(total).fill(0);
+  const shardOfTest = new Array(tests.length);
+  for (const k of order) {
+    let best = 0;
+    for (let s = 1; s < total; s++) if (load[s] < load[best]) best = s;
+    load[best] += weights[k];
+    shardOfTest[k] = best + 1;
+  }
+  return shardOfTest;
+}
+
+/** The spec file of a listed test ("[project] › file.spec.ts:12:3 › ..."). */
+export function specFileOf(test) {
+  const m = test.match(/(?:^|› )([^\s›]+?):\d+:\d+ › /);
+  return m ? m[1] : "";
+}
+
+/** A listed test as the weights table names it: its spec file, then the first 70 characters of the rest of the line. */
+export function testKeyOf(test) {
+  const m = test.match(/(?:^|› )([^\s›]+?):\d+:\d+ › (.*)$/);
+  return m ? `${m[1]} › ${m[2].slice(0, 70)}` : "";
+}
+
+const UNLISTED_SECONDS = 0.25;
+
+/** The weight function for a run: `release` (the first Playwright run of a shard) or `fixture` (STORY_FIXTURES=1). */
+export function weightsFor(run, table) {
+  const files = table?.[run]?.files ?? {};
+  const slow = table?.[run]?.tests ?? {};
+  return (test) => slow[testKeyOf(test)] ?? files[specFileOf(test)] ?? UNLISTED_SECONDS;
 }
 
 function main(argv) {
@@ -80,7 +124,9 @@ function main(argv) {
   if (total !== null && total !== tests.length) {
     throw new Error(`read ${tests.length} tests but the list says Total: ${total}`);
   }
-  const mine = pickShard(tests, shard);
+  const table = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "e2e-shard-weights.json"), "utf8"));
+  const fixtures = Object.keys(process.env).some((k) => k.startsWith("STORY_FIXTURES") && process.env[k]);
+  const mine = pickShard(tests, shard, weightsFor(fixtures ? "fixture" : "release", table));
   process.stdout.write(mine.map((t) => `${t}\n`).join(""));
   process.stderr.write(`e2e-shard-list: shard ${shard.current}/${shard.total}: ${mine.length} of ${tests.length} tests\n`);
 }

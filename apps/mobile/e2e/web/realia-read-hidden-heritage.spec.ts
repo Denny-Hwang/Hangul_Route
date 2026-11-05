@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { seedStored, seedStoredAll } from './helpers';
 import { expectNoClippedText, expectNoSidewaysScroll } from './text-fit';
@@ -22,6 +23,8 @@ import { expectNoHorizontalOverflow } from './viewport';
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+/** More than the answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-6) between two deliberate taps on the scene. */
+const TAP_GAP_MS = TAP_LOCK_MS + 50;
 const SHAME = /\b(wrong|fail\w*|missed|lost|lose|score)\b|%/i;
 // The shelf, then the counter set as a table (row CM-43 S2 added the rice cakes and the spoon, and moved the kimchi up).
 const THINGS = ['jar', 'kimchi', 'rice cake', 'basket', 'cooked rice', 'soup', 'spoon', 'chopsticks'];
@@ -100,6 +103,8 @@ test.describe('Hidden Heritage (F-CURR-002 CM-36)', () => {
         await expectNoShame(page);
         for (let i = 0; i < Object.keys(TARGETS).length; i += 1) {
           ko = await asked(page);
+          // Past the scene board's answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-6) since the last answer.
+          await page.waitForTimeout(TAP_GAP_MS);
           await spot(page, TARGETS[ko]!.id).click();
           await expect(page.getByRole('button', { name: `${TARGETS[ko]!.meaning}, found` })).toBeVisible();
           if (i === 0) await shot(page, `hidden-heritage-found-${size.name}`);

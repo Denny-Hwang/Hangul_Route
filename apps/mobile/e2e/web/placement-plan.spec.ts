@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved, headerClose } from './helpers';
+import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -67,6 +67,8 @@ async function runACheck(page: Page): Promise<void> {
   await page.getByTestId('placement-warmup-speaker').click();
   await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
   await page.getByTestId('placement-warmup-option-rice').click();
+  // Past the answer lock of the last tap (AMENDMENTS-TOUCH 6.4).
+  await pastTapLock(page);
   await page.locator('[data-testid^="placement-option-"]').first().click();
   await headerClose(page).click();
   await page.getByTestId('placement-enough').click();

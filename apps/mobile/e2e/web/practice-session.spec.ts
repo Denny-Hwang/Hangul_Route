@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
+import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved, passPlacementLanguage, headerClose, pastTapLock } from './helpers';
 import { next } from './story-reader-helpers';
 
 /**
@@ -121,6 +121,8 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
     await page.getByTestId('placement-warmup-speaker').click();
     await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
     await page.getByTestId('placement-warmup-option-rice').click();
+    // Past the answer lock of the last tap (AMENDMENTS-TOUCH 6.4).
+    await pastTapLock(page);
     await page.locator('[data-testid^="placement-option-"]').first().click();
     await headerClose(page).click();
     await page.getByTestId('placement-enough').click();

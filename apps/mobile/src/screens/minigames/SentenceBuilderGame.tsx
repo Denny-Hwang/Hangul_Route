@@ -23,10 +23,16 @@ import {
   useMediaSize,
   KOREAN_LINE_BREAK,
   useTypeScale,
+  TapBoard,
+  TapTarget,
+  pressInset,
+  pressTransform,
+  usePressLook,
+  useTapLock,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Platform, Pressable, Text, View, type TextStyle } from 'react-native';
+import { Platform, Text, View, type TextStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -94,8 +100,6 @@ const NO_SOUND_ADVANCE_MS = motion.duration.crawl;
 /** The motion.easing.standard token; `Easing.ease` only if the token ever stops being a cubic-bezier. */
 const STANDARD = cubicBezierPoints(motion.easing.standard);
 const EASE = STANDARD ? Easing.bezier(...STANDARD) : Easing.ease;
-/** A pressed tile grows as the design system's `Tile` does (Tile.tsx); none under reduced motion. */
-const PRESS_SCALE = 1.04;
 
 /** What a round's sentence plays: its spoken Korean and its own recording, if any (AMENDMENTS-AUDIO-CLIPS AC-B7). */
 function sentenceSpeech(sentence: SbRound['sentence']): PlaySpec {
@@ -130,6 +134,11 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
   hostRef.current = host;
   const reducedRef = useRef(reducedMotion);
   reducedRef.current = reducedMotion;
+  // The app-level `board` lock (AMENDMENTS-TOUCH 6.3, KT-D5): the tray's commits set it, the slide back extends it,
+  // and Skip, outside the tray, waits on it.
+  const tapLock = useTapLock();
+  const tapLockRef = useRef(tapLock);
+  tapLockRef.current = tapLock;
   const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const mounted = useRef(true);
   const completed = useRef(false);
@@ -172,9 +181,13 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
             if (effect.kind === 'success') success();
           }
           return;
-        case 'schedule-settle':
-          later(reducedRef.current ? 0 : RETURN_MS, () => dispatchRef.current({ type: 'settle' }));
+        case 'schedule-settle': {
+          const ms = reducedRef.current ? 0 : RETURN_MS;
+          // No tile can be tapped while one slides back, so no press look shows on any, and Skip waits too.
+          if (ms > 0) tapLockRef.current.lock(ms);
+          later(ms, () => dispatchRef.current({ type: 'settle' }));
           return;
+        }
         case 'play-sentence': {
           // The built sentence is heard once, in full; with no sound the next round opens after a short pause.
           const heard = hear().then(
@@ -315,17 +328,14 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
           <Spacer size="md" />
           <View style={{ borderTopWidth: borderWidth.base, borderStyle: 'dashed', borderColor: colors.border.subtle }} />
           <Spacer size="md" />
-          <View testID="sentence-builder-tray" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-            {tray.map((tile) => (
-              <TrayTile
-                key={tile.id}
-                tile={tile}
-                tileMin={tileMin}
-                reducedMotion={reducedMotion}
-                onPress={() => dispatch({ type: 'tap', tileId: tile.id, at: Date.now() })}
-              />
-            ))}
-          </View>
+          <TapBoard lock="board">
+            {/* The tray only is one board (AMENDMENTS-TOUCH 6.3): a graze still counts, and a bounce never taps the tile that slid under the finger (F5). */}
+            <View testID="sentence-builder-tray" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+              {tray.map((tile) => (
+                <TrayTile key={tile.id} tile={tile} tileMin={tileMin} reducedMotion={reducedMotion} onPress={() => dispatch({ type: 'tap', tileId: tile.id, at: Date.now() })} />
+              ))}
+            </View>
+          </TapBoard>
         </>
       ) : (
         <View accessibilityLiveRegion="polite" testID="sentence-builder-done" style={{ gap: spacing.sm }}>
@@ -351,7 +361,8 @@ export function SentenceBuilderGame({ scope, host, patternNote, onBack }: Props)
         <>
           <Spacer size="xl" />
           <View style={{ alignSelf: 'flex-start' }}>
-            <Button label={copy.skip.cta} tone="ghost" size="md" onPress={() => dispatch({ type: 'skip' })} testID="sentence-builder-skip" />
+            {/* Outside the tray, Skip ignores a press while the app lock runs (a bounce off a tile, a slide back), with no visual change (F5). */}
+            <Button label={copy.skip.cta} tone="ghost" size="md" onPress={() => (tapLock.locked ? undefined : dispatch({ type: 'skip' }))} testID="sentence-builder-skip" />
           </View>
         </>
       ) : null}
@@ -493,6 +504,7 @@ function LineUnit({ unit, widest, tileMin, attachedMin, complete, reducedMotion 
 }
 
 function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; tileMin: number; reducedMotion: boolean; onPress: () => void }): ReactElement {
+  const press = usePressLook();
   const rise = useSharedValue(0);
   useEffect(() => {
     if (!tile.returning || reducedMotion) return;
@@ -513,23 +525,29 @@ function TrayTile({ tile, tileMin, reducedMotion, onPress }: { tile: TileView; t
         { padding: spacing.xs, margin: -spacing.xs, borderRadius: radii.lg, borderWidth: borderWidth.thick, borderColor: tile.look === 'ring' ? colors.border.focus : 'transparent' },
       ]}
     >
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={tile.accessibilityLabel}
-        testID={`sentence-builder-tile-${tile.id}`}
-        hitSlop={spacing.xs}
-        style={({ pressed }) => ({
-          ...tileBox(tileMin),
-          paddingRight: tried ? spacing.xl : spacing.lg,
-          borderColor: tried ? colors.feedback.nudge : colors.border.strong,
-          backgroundColor: tried ? colors.feedback.nudgeLight : colors.surface.paper,
-          transform: [{ scale: pressed && !reducedMotion ? PRESS_SCALE : 1 }],
-        })}
-      >
-        <TileFace ko={tile.ko} romanization={tile.romanization} />
-        {tried ? <Mark name="dash" color={colors.text.secondary} /> : null}
-      </Pressable>
+      <TapTarget onCommit={onPress} accessibilityLabel={tile.accessibilityLabel} testID={`sentence-builder-tile-${tile.id}`}>
+        {({ pressed }) => {
+          // The press look (AMENDMENTS-TOUCH 4.3) on the drawn box, never a state look; the hit area keeps its size.
+          const p = pressed ? press : null;
+          return (
+            <View
+              style={{
+                ...tileBox(tileMin),
+                paddingVertical: spacing.sm - pressInset(p, borderWidth.base),
+                paddingLeft: spacing.lg - pressInset(p, borderWidth.base),
+                paddingRight: (tried ? spacing.xl : spacing.lg) - pressInset(p, borderWidth.base),
+                borderWidth: p?.borderWidth ?? borderWidth.base,
+                borderColor: p?.borderColor ?? (tried ? colors.feedback.nudge : colors.border.strong),
+                backgroundColor: tried ? colors.feedback.nudgeLight : colors.surface.paper,
+                transform: pressTransform(p),
+              }}
+            >
+              <TileFace ko={tile.ko} romanization={tile.romanization} />
+              {tried ? <Mark name="dash" color={colors.text.secondary} /> : null}
+            </View>
+          );
+        }}
+      </TapTarget>
     </Animated.View>
   );
 }

@@ -31,10 +31,12 @@ Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board 
 | `onCommit` | `() => void` | Called once per tap, after the board's rules (`AMENDMENTS-TOUCH.md` §3.2) |
 | `disabled` | `boolean?` | Claimed, never pressed, never committed (a locked wrong tile) |
 | `inactive` | `boolean?` | KT-2. For the board like `disabled` (claimed, never pressed, never committed), but the button stays enabled and focusable and its `accessibilityState` is the caller's (an answered ChoiceCard, `correct` or a locked miss) |
-| `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it |
+| `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it; a touch in its gap band that no other target fills is taken by the board and commits nothing (KT-6) |
 | `accessibilityLabel` | `string` | Required |
-| `accessibilityRole` | `'button' \| 'checkbox' \| 'radio'`, default `button` | A choice chip that keeps its on or off (My practice days' weekday and count chips, AMENDMENTS-ROUTE-CLASS-BLEND BL-8) is a `checkbox` or `radio`; `accessibilityState.checked` also goes out as `aria-checked` on the web |
-| `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept) |
+| `accessibilityRole` | `'button' \| 'checkbox' \| 'radio'`, default `button` | A choice chip that keeps its on or off (My practice days' weekday and count chips, AMENDMENTS-ROUTE-CLASS-BLEND BL-8) is a `checkbox` or `radio` (a toggle answer such as Voice Echo's "I said it" is a `checkbox`, KT-6); `accessibilityState.checked` also goes out as `aria-checked` on the web |
+| `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept). |
+| `ariaSelected` | `boolean?` | Opt-in, web: written as `aria-selected` (react-native-web reads only `disabled` from `accessibilityState`). Never derived from `accessibilityState.selected`, since ARIA does not allow it on `button`; only Card Match's Korean cards pass it, as their Pressable did before KT-4b |
+| `ariaPressed` | `boolean?` | KT-7. A toggle's `aria-pressed` on the web (the keyboard's Shift); none when undefined |
 | `lockMs` | `number?` | The target lock after a commit on a `target` board (default `TAP_LOCK_MS`); the keyboard's keys pass `KEY_BOUNCE_MS` (KT-7) |
 | `style` | `StyleProp<ViewStyle> \| (look) => StyleProp<ViewStyle>` | The hit area's own style: its box is what the board hit-tests, so a target that must fill a cell styles it here |
 | `testID` | `string?` | |
@@ -86,7 +88,7 @@ The press look is never `border.focus` (the focus ring and ChoiceCard's `hint`),
 
 ## Tests
 
-`src/__tests__/tap-model.test.ts` (rules T1-T20 of the amendment on the pure model), `src/components/TapBoard/__tests__/controller.test.ts` (responder capture, latest finger, termination, scroller drive, fling and cancel, clicks, the app lock across a remount), `host.test.ts` (the web hit test and rectangles, the native rect cache, the clock), `TapBoard.test.tsx` (`touch-action` on the board and every target, the responder on the View, `TapControl`, `TapScroller`, the Screen registration and native re-measuring, `TapTarget`, the hooks), `TapLockProvider.test.tsx` (the app clock), `src/components/Screen/__tests__/screen-fit.test.tsx` (fit, scroller, opt-in native `scrollEnabled`), and the Playwright touch suites: `apps/mobile/e2e/web/type-hangul-tap-board.spec.ts` (KT-1, a fixture-only board of four targets at 320 px and tablet) and those of the rows that adopt it.
+`src/__tests__/tap-model.test.ts` (rules T1-T20 of the amendment on the pure model), `src/components/TapBoard/__tests__/controller.test.ts` (responder capture, latest finger, termination, scroller drive, fling and cancel, clicks, the app lock across a remount), `host.test.ts` (the web hit test and rectangles, the native rect cache, the clock), `TapBoard.test.tsx` (`touch-action` on the board and every target, the responder on the View, `TapControl`, `TapScroller`, the Screen registration and native re-measuring, `TapTarget`, the hooks), `TapLockProvider.test.tsx` (the app clock), `src/components/Screen/__tests__/screen-fit.test.tsx` (fit, scroller, opt-in native `scrollEnabled`), and the Playwright touch suites: `apps/mobile/e2e/web/type-hangul-tap-board.spec.ts` (KT-1, a fixture-only board of four targets at 320 px and tablet) and those of the rows that adopt it (KT-3 `pick-one-graze.spec.ts`; KT-4b `pic-word-touch.spec.ts`, Pic-Word Match and Card Match).
 
 ## The press look in the design system (KT-2)
 

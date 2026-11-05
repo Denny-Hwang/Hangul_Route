@@ -111,6 +111,9 @@ async function playLifeQuestWithAMiss(page: Page): Promise<void> {
   // The chopsticks picture, then the kimchi word: a first-try miss on 젓가락.
   await page.getByTestId('pic-word-picture-jeotgarak').click();
   await page.getByTestId('pic-word-word-gimchi').click();
+  // Pic-Word's boards hold a 400 ms lock per tile (AMENDMENTS-TOUCH T8, row KT-4b): the kimchi word is tapped again
+  // next, so wait past its lock (a person never taps the same tile twice that fast on purpose).
+  await page.waitForTimeout(700);
   for (const id of ['gimchi', 'bap', 'gimbap', 'jeotgarak']) {
     await page.getByTestId(`pic-word-picture-${id}`).click();
     await page.getByTestId(`pic-word-word-${id}`).click();

@@ -343,11 +343,32 @@ describe('TapTarget inside a board', () => {
     expect(el.props.accessibilityRole).toBe('button');
     expect(el.props.accessibilityLabel).toBe('ㄱ giyeok');
     expect(el.props.accessibilityState).toEqual({ selected: true, disabled: false });
+    // aria-selected is opt-in: a selected state alone never writes it (role=button); `ariaSelected` does.
+    expect(el.props['aria-selected']).toBeUndefined();
+    expect(renderTarget({ ariaSelected: true }).props['aria-selected']).toBe(true);
+    expect(renderTarget({ ariaSelected: false }).props['aria-selected']).toBe(false);
     expect(el.props.testID).toBe('tile-0');
     expect(el.props.delayPressIn).toBe(0);
     (el.props.onPress as (e?: unknown) => void)({ timeStamp: 1234 });
     expect(clicks).toEqual([':t1:']);
     expect(stamps).toEqual([1234]);
+  });
+
+  it('a toggle answer is a checkbox with its checked state (Voice Echo, KT-6)', () => {
+    inBoard();
+    const el = renderTarget({ accessibilityRole: 'checkbox', accessibilityState: { checked: true } });
+    expect(el.props.accessibilityRole).toBe('checkbox');
+    expect(el.props.accessibilityState).toEqual({ checked: true, disabled: false });
+    expect(el.props['aria-checked']).toBe(true);
+    expect(renderTarget({ accessibilityState: { selected: false } }).props['aria-selected']).toBeUndefined();
+    expect(renderTarget().props['aria-selected']).toBeUndefined();
+  });
+
+  it('a toggle passes aria-pressed (the keyboard\'s Shift, KT-7); a target without it has none', () => {
+    inBoard();
+    expect(renderTarget({ ariaPressed: true }).props['aria-pressed']).toBe(true);
+    expect(renderTarget({ ariaPressed: false }).props['aria-pressed']).toBe(false);
+    expect('aria-pressed' in renderTarget().props).toBe(false);
   });
 
   it('paints the board\'s press look, not the Pressable\'s', () => {

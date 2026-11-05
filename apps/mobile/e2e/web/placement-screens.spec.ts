@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, readStored, waitForSaved, passPlacementLanguage, headerClose } from './helpers';
+import { answerForkNew, readStored, waitForSaved, passPlacementLanguage, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -192,6 +192,8 @@ async function notSureToEnd(page: Page, max = 50): Promise<number> {
     if (await result.isVisible()) break;
     const keepGoing = page.getByTestId('placement-keep-going');
     if (await keepGoing.isVisible()) await keepGoing.click();
+    // Past the answer lock of the last answer (AMENDMENTS-TOUCH 6.4: one board on the app lock, a click included).
+    await pastTapLock(page);
     // The last answer ends the run: the button may leave the screen while this click is in flight.
     await page.getByTestId('placement-not-sure').click({ timeout: 3_000 }).catch(() => undefined);
   }
@@ -237,6 +239,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByLabel('Question, 4 choices')).toBeVisible();
     await expect(page.getByTestId('placement-not-sure')).toBeVisible();
     await shot(page, 'placement-item-standard');
+    await pastTapLock(page);
     await page.locator('[data-testid^="placement-option-"]').first().click();
     await expect(page.getByTestId('placement-got-it')).toBeVisible();
 
@@ -332,6 +335,7 @@ test.describe('level check screens (fixture bundle)', () => {
     for (const c of cards) expect(Math.min(c.w, c.h)).toBeGreaterThanOrEqual(80);
 
     // The cards enable once the prompt has played; an answer fills the trail with no "Got it".
+    await pastTapLock(page);
     await page.locator('[data-testid^="placement-option-"]').first().click();
     await expect(page.getByTestId('placement-got-it')).toHaveCount(0);
 
@@ -412,6 +416,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.getByTestId('placement-hoya-start').click();
     await warmUp(page, 'tiger');
     await expect(page.getByTestId('placement-item')).toBeVisible();
+    await pastTapLock(page);
     await answerFirstChoice(page);
     const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
     await expect.poll(async () => (await readStored<{ run: { responses: unknown[] } }>(page, `placement-run:${profileId}`))?.run.responses.length).toBe(1);
@@ -433,6 +438,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Tap to hear it.');
     await expect(page.getByText('Tap to hear it.').first()).toBeVisible();
     // ...and any tap unlocks sound again: the next question plays on open.
+    await pastTapLock(page);
     await page.getByTestId('placement-not-sure').click();
     await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Hear it again');
   });
@@ -447,6 +453,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.getByTestId('placement-warmup-speaker').click();
     await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
     await page.getByTestId('placement-warmup-option-rice').click();
+    await pastTapLock(page);
     await page.locator('[data-testid^="placement-option-"]').first().click();
     await expect(page.getByTestId('placement-item')).toBeVisible();
     await expect(page.getByTestId('placement-pause')).toHaveCount(0);
@@ -478,6 +485,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.evaluate(() => {
       (window as E2eWindow).__speechFails = true;
     });
+    await pastTapLock(page);
     await answerFirstChoice(page);
     await expect(page.getByTestId('placement-tap-to-hear')).toBeVisible();
     await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Tap to hear it.');

@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-import type { View } from 'react-native';
+import type { StyleProp, View, ViewStyle } from 'react-native';
 
 export type ChoiceCardState = 'idle' | 'correct' | 'wrong' | 'hint' | 'disabled';
 
@@ -39,4 +39,10 @@ export interface ChoiceCardProps {
    * `AccessibilityInfo.setAccessibilityFocus` on native), as Button's `pressableRef`. Optional; nothing else changes.
    */
   pressableRef?: Ref<View>;
+  /**
+   * The hit area's own style, around the drawn card: a frame the caller draws (Pic-Word's selection ring and its
+   * padding) is part of the target, so a touch on it is a touch on the card (AMENDMENTS-TOUCH section 6, row KT-4b).
+   * Optional; without it the target only stretches. Never the press look's place: that stays on the drawn card.
+   */
+  targetStyle?: StyleProp<ViewStyle>;
 }

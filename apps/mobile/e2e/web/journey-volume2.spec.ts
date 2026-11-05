@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, readStored, seedStoredAll } from './helpers';
+import { completeChildForm, headerClose, journeyCellName, keepSidewaysIfAsked, passDiscover, pastTapLock, readStored, seedStoredAll } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -108,7 +108,10 @@ test.describe('Play Volume 2, Stage 4, at launch state (F-CURR-002 row CM-42 S4)
     await replyTurns(page, ['응, 좋아!', '숨바꼭질 하자!', '좋아!', '좋아! 같이 가자!'], 'minigame');
     // Apply: Story Order, dark, so Story Sequence on the same captions.
     await page.getByRole('button', { name: 'Play minigame' }).click();
-    for (const id of ['ask', 'what', 'hide', 'go']) await page.getByTestId(`story-sequence-card-${id}`).click();
+    for (const id of ['ask', 'what', 'hide', 'go']) {
+      await pastTapLock(page);
+      await page.getByTestId(`story-sequence-card-${id}`).click();
+    }
     await page.getByTestId('story-sequence-skip-replay').or(page.getByTestId('story-sequence-done')).first().click();
     // Check: Cloze Pick, dark, so Listen & Pick with the sentence as its text prompt.
     await page.getByRole('button', { name: 'Go', exact: true }).click();
@@ -117,7 +120,7 @@ test.describe('Play Volume 2, Stage 4, at launch state (F-CURR-002 row CM-42 S4)
       const option = page.getByTestId(`listen-pick-option-${round}:t${tile}`);
       await expect(option).toBeVisible({ timeout: 5_000 });
       if (round === 'c1') await shot(page, 'cm42-s4-v2-q1-check-320');
-      await page.waitForTimeout(120);
+      await pastTapLock(page);
       await option.click();
     }
     await expect(page.getByText('Finish', { exact: true }).first()).toBeVisible();
@@ -143,7 +146,7 @@ test.describe('Play Volume 2, Stage 4, at launch state (F-CURR-002 row CM-42 S4)
     // The polite reply is less natural with a close friend: it is never sent, and the chat waits for another tap.
     await page.getByTestId('role-play-reply-polite').click();
     await expect(page.getByTestId('role-play-partner-newest')).toContainText('같이 놀래?');
-    await page.waitForTimeout(150);
+    await pastTapLock(page);
     await page.getByTestId('role-play-reply-yes').click();
     await expect(page.getByTestId('role-play-partner-newest')).toContainText('뭐 할래?');
     expect(errors).toEqual([]);

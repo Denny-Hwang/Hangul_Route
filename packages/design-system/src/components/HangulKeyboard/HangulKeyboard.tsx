@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { pressTransform } from '../../press-look';
 import { borderWidth, colors, radii, spacing, typography } from '../../tokens';
 import { Icon } from '../Icon';
-import { keyboardLayout, keyFace, pressLetter, type KeyboardKey } from './layout';
+import { TapBoard, TapTarget, usePressLook } from '../TapBoard';
+import { keyboardLayout, keyFace, keyLockMs, keyStep, type KeyboardKey } from './layout';
 import type { HangulKeyboardProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
@@ -13,6 +15,16 @@ import { KOREAN_LINE_BREAK } from '../../line-break';
  * the keys `keyboardLayout` places and reports presses; it holds no text and composes
  * nothing (`composeTyped` in content-schema does). Shift is one-shot and lives here.
  * No copy: the caller passes the localised names. No key sound, no haptic per key.
+ *
+ * Touch (docs/specs/AMENDMENTS-TOUCH.md section 6.7, KT-D7): the keys are one `TapBoard` with
+ * `multiTouch="each"`, so every finger is its own tap. A key types when its finger lifts, the key
+ * under the finger at that moment (the press look follows a finger that slides); a lift off the
+ * keyboard types nothing, except within `GAP_REACH` (16 px) of an outer key, which still types that
+ * key (gap fill). A key held for any length types on its lift, as on a system keyboard (there is no
+ * palm hold on `each`). A rollover types both letters in the order the fingers lift. A letter,
+ * Delete or Space drops a repeat within `KEY_BOUNCE_MS`; Shift has the 400 ms target lock. The
+ * board neither sets nor reads the app-level tap lock. Hit cells stay edge to edge: the face is
+ * inset by the padding inside each key's hit area.
  */
 export function HangulKeyboard({
   onKey,
@@ -27,29 +39,24 @@ export function HangulKeyboard({
   testID,
 }: HangulKeyboardProps): ReactElement {
   const [shift, setShift] = useState(false);
+  // Commits arrive one after another inside one touch event (a rollover): each reads the Shift the last one left.
+  const shiftNow = useRef(shift);
+  const press = usePressLook();
   const kb = keyboardLayout(width, layoutClass);
   const tablet = layoutClass.mediaScale > 1;
   const glyphSize = tablet ? typography.size.display : typography.size.title;
   const soundSize = tablet ? typography.size.bodySm : typography.size.caption;
   const edgeToEdge = layoutClass.width === 'compact' || layoutClass.short;
 
-  const press = (key: KeyboardKey): void => {
+  const commit = (key: KeyboardKey): void => {
     if (disabled) return;
-    if (key.kind === 'shift') {
-      setShift((on) => !on);
-      return;
-    }
-    if (key.kind === 'delete') {
-      onDelete();
-      return;
-    }
-    if (key.kind === 'space') {
-      onSpace();
-      return;
-    }
-    const { jamo, shift: next } = pressLetter(key.base ?? '', shift);
-    setShift(next);
-    onKey(jamo);
+    const step = keyStep(shiftNow.current, key);
+    shiftNow.current = step.shift;
+    setShift(step.shift);
+    if (step.output === null) return;
+    if (step.output.kind === 'delete') onDelete();
+    else if (step.output.kind === 'space') onSpace();
+    else onKey(step.output.jamo);
   };
 
   const renderFace = (key: KeyboardKey): ReactElement => {
@@ -97,55 +104,63 @@ export function HangulKeyboard({
   };
 
   return (
-    <View
-      testID={testID}
-      style={{
-        width: kb.width,
-        height: kb.height + (edgeToEdge ? borderWidth.thin : 0),
-        backgroundColor: colors.surface.canvas,
-        borderTopWidth: edgeToEdge ? borderWidth.thin : 0,
-        borderTopColor: colors.border.subtle,
-        alignSelf: 'center',
-      }}
-    >
-      {kb.keys.map((key) => {
-        const action = key.kind !== 'letter';
-        const shiftOn = key.kind === 'shift' && shift;
-        const fill = shiftOn
-          ? colors.brand.secondaryLight
-          : key.half === 'vowel'
-            ? colors.surface.sunken
-            : colors.surface.paper;
-        return (
-          <Pressable
-            key={key.id}
-            testID={testID ? `${testID}-${key.id}` : undefined}
-            onPress={() => press(key)}
-            disabled={disabled}
-            accessibilityRole="button"
-            accessibilityLabel={nameOf(key)}
-            accessibilityState={key.kind === 'shift' ? { selected: shift, disabled } : { disabled }}
-            aria-pressed={key.kind === 'shift' ? shift : undefined}
-            style={{ position: 'absolute', left: key.x, top: key.y, width: key.width, height: key.height, padding: spacing.xxs }}
-          >
-            {({ pressed }) => (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: radii.sm,
-                  backgroundColor: pressed && !disabled ? colors.brand.primaryLight : fill,
-                  borderWidth: shiftOn ? borderWidth.thick : action ? borderWidth.base : borderWidth.thin,
-                  borderColor: shiftOn ? colors.brand.secondaryDark : action ? colors.border.strong : colors.border.subtle,
-                }}
-              >
-                {renderFace(key)}
-              </View>
-            )}
-          </Pressable>
-        );
-      })}
-    </View>
+    <TapBoard lock="target" multiTouch="each" scroll="none" disabled={disabled}>
+      <View
+        testID={testID}
+        style={{
+          width: kb.width,
+          height: kb.height + (edgeToEdge ? borderWidth.thin : 0),
+          backgroundColor: colors.surface.canvas,
+          borderTopWidth: edgeToEdge ? borderWidth.thin : 0,
+          borderTopColor: colors.border.subtle,
+          alignSelf: 'center',
+        }}
+      >
+        {kb.keys.map((key) => {
+          const action = key.kind !== 'letter';
+          const shiftOn = key.kind === 'shift' && shift;
+          const fill = shiftOn
+            ? colors.brand.secondaryLight
+            : key.half === 'vowel'
+              ? colors.surface.sunken
+              : colors.surface.paper;
+          const restBorder = shiftOn ? borderWidth.thick : action ? borderWidth.base : borderWidth.thin;
+          return (
+            <TapTarget
+              key={key.id}
+              testID={testID ? `${testID}-${key.id}` : undefined}
+              onCommit={() => commit(key)}
+              lockMs={keyLockMs(key.kind)}
+              disabled={disabled}
+              accessibilityLabel={nameOf(key)}
+              accessibilityState={key.kind === 'shift' ? { selected: shift } : undefined}
+              ariaPressed={key.kind === 'shift' ? shift : undefined}
+              // The hit cell is the whole key; the padding insets the face inside it, so no dead line runs between keys.
+              style={{ position: 'absolute', left: key.x, top: key.y, width: key.width, height: key.height, padding: spacing.xxs }}
+            >
+              {({ pressed }) => {
+                const look = pressed && !disabled ? press : null;
+                return (
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: radii.sm,
+                      backgroundColor: fill,
+                      borderWidth: look === null ? restBorder : look.borderWidth,
+                      borderColor: look === null ? (shiftOn ? colors.brand.secondaryDark : action ? colors.border.strong : colors.border.subtle) : look.borderColor,
+                      transform: pressTransform(look),
+                    }}
+                  >
+                    {renderFace(key)}
+                  </View>
+                );
+              }}
+            </TapTarget>
+          );
+        })}
+      </View>
+    </TapBoard>
   );
 }

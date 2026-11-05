@@ -102,6 +102,8 @@ function StoryOrderFallback({ scope, host, sequenceId, onFinish }: { scope: Mini
     return <StorySequenceGame scope={{ kind: 'story-sequence', storySteps: [] }} sequenceId={sequenceId} chain={{ keyPrefix: '', last: true }} onFinish={onFinish} />;
   }
   const last = index === scopes.length - 1;
+  // Keyed per round: the cards' `board` lock lives on the app clock (AMENDMENTS-TOUCH KT-D5, row KT-5), so a bounce
+  // across this remount still lands inside it.
   return (
     <StorySequenceGame
       key={round.id}

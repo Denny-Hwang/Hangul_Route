@@ -20,6 +20,7 @@ import {
   useLayoutClass,
   useMediaSize,
   useTypeScale,
+  TapBoard,
 } from '@hangul-route/design-system';
 import { romanizationShown } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -443,30 +444,34 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
       </Text>
       {placedCount > 0 ? soundPanel('story-order-sound') : null}
       <Spacer size="lg" />
-      <View testID="story-order-cards" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-        {remaining.map((card) => {
-          const outcome = wrongFlash === card.id ? 'wrong' : hintId === card.id ? 'hint' : null;
-          const romanization = romanizationShown(romanizationMode, revealed.has(card.id) || state.meanings) ? card.line.romanization : '';
-          return (
-            <View key={card.id} style={{ flexGrow: 1, flexBasis: CELL_BASIS[columns], minWidth: touchTarget.hero }}>
-              <ChoiceCard
-                testID={`story-order-card-${card.id}`}
-                pressableRef={(node) => {
-                  if (node) cardNodes.current.set(card.id, node);
-                  else cardNodes.current.delete(card.id);
-                }}
-                art={card.pictureRef !== undefined ? <PictureArt pictureRef={card.pictureRef} gloss={card.line.en} size={pictureSize} decorative /> : null}
-                state={outcome ?? 'idle'}
-                ko={card.line.ko}
-                romanization={romanization}
-                {...(state.meanings ? { gloss: card.line.en } : {})}
-                accessibilityLabel={storyOrderCardLabel(card, romanization, state.meanings, outcome, copy)}
-                onPress={() => dispatch({ type: 'tap', cardId: card.id })}
-              />
-            </View>
-          );
-        })}
-      </View>
+      {/* One board for the cards (AMENDMENTS-TOUCH section 6, row KT-5): a graze still counts, and a bounce never taps
+          the card that reflowed under the finger (F4). */}
+      <TapBoard lock="board">
+        <View testID="story-order-cards" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+          {remaining.map((card) => {
+            const outcome = wrongFlash === card.id ? 'wrong' : hintId === card.id ? 'hint' : null;
+            const romanization = romanizationShown(romanizationMode, revealed.has(card.id) || state.meanings) ? card.line.romanization : '';
+            return (
+              <View key={card.id} style={{ flexGrow: 1, flexBasis: CELL_BASIS[columns], minWidth: touchTarget.hero }}>
+                <ChoiceCard
+                  testID={`story-order-card-${card.id}`}
+                  pressableRef={(node) => {
+                    if (node) cardNodes.current.set(card.id, node);
+                    else cardNodes.current.delete(card.id);
+                  }}
+                  art={card.pictureRef !== undefined ? <PictureArt pictureRef={card.pictureRef} gloss={card.line.en} size={pictureSize} decorative /> : null}
+                  state={outcome ?? 'idle'}
+                  ko={card.line.ko}
+                  romanization={romanization}
+                  {...(state.meanings ? { gloss: card.line.en } : {})}
+                  accessibilityLabel={storyOrderCardLabel(card, romanization, state.meanings, outcome, copy)}
+                  onPress={() => dispatch({ type: 'tap', cardId: card.id })}
+                />
+              </View>
+            );
+          })}
+        </View>
+      </TapBoard>
       <Spacer size="lg" />
       {state.meanings ? (
         // Web: focusable by script only (tabIndex -1), so the line is not a Tab stop that does nothing (WCAG 2.4.3).

@@ -814,6 +814,8 @@ export const learner = {
         besideFinal: 'The vowel goes beside the first letter. The last letter sits at the bottom.',
         underFinal: 'The vowel goes under the first letter. The last letter sits at the bottom.',
       },
+      /** A filled slot's screen-reader name (AMENDMENTS-TOUCH 6.5): a tap takes that tile back. `name` is the tile's own label. */
+      takeBack: (name: string) => `Take back ${name}`,
     },
     /** Trace Stroke (F-004 to F-008): coverage passes; order and direction only surface as "next time" nudges. */
     trace: {

@@ -9,6 +9,8 @@ import {
   Progress,
   Screen,
   Spacer,
+  TAP_LOCK_MS,
+  TapBoard,
   borderWidth,
   colors,
   radii,
@@ -16,9 +18,11 @@ import {
   touchTarget,
   useLayoutClass,
   useMediaSize,
+  useTapLock,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode, ReactElement } from 'react';
+import type { ViewStyle } from 'react-native';
 import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
@@ -70,27 +74,28 @@ interface Props {
 }
 
 interface TileFrameProps {
-  selected: boolean;
   badge: number | undefined;
+  /** The ChoiceCard, which takes `ringStyle(selected)` as its `targetStyle`. */
   children: ReactNode;
 }
 
+const RING_REST: ViewStyle = { padding: spacing.xs, borderRadius: radii.xl, borderWidth: borderWidth.thick, borderColor: colors.surface.canvas };
+const RING_SELECTED: ViewStyle = { ...RING_REST, borderColor: colors.brand.primary };
+
 /**
- * Selection ring and match number around a ChoiceCard. The ring is drawn
- * around the card (not by it) so the card keeps its own five states; the
- * number sits on both tiles of a matched pair next to the card's check mark,
- * so a match never relies on colour alone.
+ * The selection ring around a ChoiceCard, drawn by the card's own target (`targetStyle`): the ring and its 4 px padding
+ * are part of the tile, so a touch on them is a touch on the tile, never a dead ring (AMENDMENTS-TOUCH section 6, row
+ * KT-4b). The ring is drawn around the card (not by it) so the card keeps its own five states.
  */
-function TileFrame({ selected, badge, children }: TileFrameProps): ReactElement {
+const ringStyle = (selected: boolean): ViewStyle => (selected ? RING_SELECTED : RING_REST);
+
+/**
+ * The match number on both tiles of a matched pair, next to the card's check mark, so a match never relies on colour
+ * alone. It takes no touch: a touch under it reaches the tile.
+ */
+function TileFrame({ badge, children }: TileFrameProps): ReactElement {
   return (
-    <View
-      style={{
-        padding: spacing.xs,
-        borderRadius: radii.xl,
-        borderWidth: borderWidth.thick,
-        borderColor: selected ? colors.brand.primary : colors.surface.canvas,
-      }}
-    >
+    <View>
       {children}
       {badge !== undefined ? (
         <View pointerEvents="none" style={{ position: 'absolute', top: spacing.sm, right: spacing.sm }}>
@@ -113,6 +118,9 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
   const { windowWidth, windowHeight } = useLayoutClass();
   const side = useMediaSize(touchTarget[pictureSide(windowWidth, windowHeight)]);
 
+  const appLock = useTapLock();
+  const appLockRef = useRef(appLock);
+  appLockRef.current = appLock;
   const [state, setState] = useState<PicWordFlowState>(() =>
     startFlow(boards.map((board) => board.pairs.length)),
   );
@@ -177,8 +185,11 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
 
   const dispatch = useCallback(
     (event: FlowEvent): void => {
+      const before = stateRef.current.status;
       const out = stepFlow(stateRef.current, event);
       stateRef.current = out.state;
+      // The pair that ends a board (KT-D5): the board then moves on, so a bounce must not reach the next one.
+      if (event.type === 'select' && before === 'playing' && out.state.status === 'resolved') appLockRef.current.lock(TAP_LOCK_MS);
       setState(out.state);
       out.effects.forEach(runEffect);
     },
@@ -242,44 +253,55 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
       </View>
 
       <Spacer size="lg" />
+      {/* Two target boards (AMENDMENTS-TOUCH section 6, row KT-4b): a graze counts, a bounce on one tile never counts twice, a quick tap on another tile does. */}
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        <View style={{ flex: 1, gap: spacing.sm }}>
-          {order.pictureOrder.map((pairId) => {
-            const pair = pairById.get(pairId);
-            if (!pair) return null;
-            const view = pictureTileView(pair, state, m.a11y.minigame);
-            return (
-              <TileFrame key={pairId} selected={view.selected} badge={view.badge}>
-                <ChoiceCard
-                  testID={`pic-word-picture-${pairId}`}
-                  state={view.cardState}
-                  art={<PictureArt pictureRef={view.pictureRef} gloss={view.gloss} size={side} />}
-                  accessibilityLabel={view.accessibilityLabel}
-                  onPress={select('picture', pairId)}
-                />
-              </TileFrame>
-            );
-          })}
+        <View style={{ flex: 1 }}>
+          <TapBoard lock="target" testID="pic-word-pictures">
+            <View style={{ gap: spacing.sm }}>
+              {order.pictureOrder.map((pairId) => {
+                const pair = pairById.get(pairId);
+                if (!pair) return null;
+                const view = pictureTileView(pair, state, m.a11y.minigame);
+                return (
+                  <TileFrame key={pairId} badge={view.badge}>
+                    <ChoiceCard
+                      testID={`pic-word-picture-${pairId}`}
+                      state={view.cardState}
+                      art={<PictureArt pictureRef={view.pictureRef} gloss={view.gloss} size={side} />}
+                      accessibilityLabel={view.accessibilityLabel}
+                      onPress={select('picture', pairId)}
+                      targetStyle={ringStyle(view.selected)}
+                    />
+                  </TileFrame>
+                );
+              })}
+            </View>
+          </TapBoard>
         </View>
-        <View style={{ flex: 1, gap: spacing.sm }}>
-          {order.wordOrder.map((pairId) => {
-            const pair = pairById.get(pairId);
-            if (!pair) return null;
-            const view = wordTileView(pair, state, { romanizationMode }, m.a11y.minigame);
-            return (
-              <TileFrame key={pairId} selected={view.selected} badge={view.badge}>
-                <ChoiceCard
-                  testID={`pic-word-word-${pairId}`}
-                  state={view.cardState}
-                  ko={view.ko}
-                  romanization={view.romanization}
-                  gloss={view.gloss}
-                  accessibilityLabel={view.accessibilityLabel}
-                  onPress={select('word', pairId)}
-                />
-              </TileFrame>
-            );
-          })}
+        <View style={{ flex: 1 }}>
+          <TapBoard lock="target" testID="pic-word-words">
+            <View style={{ gap: spacing.sm }}>
+              {order.wordOrder.map((pairId) => {
+                const pair = pairById.get(pairId);
+                if (!pair) return null;
+                const view = wordTileView(pair, state, { romanizationMode }, m.a11y.minigame);
+                return (
+                  <TileFrame key={pairId} badge={view.badge}>
+                    <ChoiceCard
+                      testID={`pic-word-word-${pairId}`}
+                      state={view.cardState}
+                      ko={view.ko}
+                      romanization={view.romanization}
+                      gloss={view.gloss}
+                      accessibilityLabel={view.accessibilityLabel}
+                      onPress={select('word', pairId)}
+                      targetStyle={ringStyle(view.selected)}
+                    />
+                  </TileFrame>
+                );
+              })}
+            </View>
+          </TapBoard>
         </View>
       </View>
 

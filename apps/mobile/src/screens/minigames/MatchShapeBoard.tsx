@@ -7,6 +7,8 @@ import {
   Icon,
   KOREAN_LANGUAGE,
   KOREAN_LINE_BREAK,
+  TapBoard,
+  TapTarget,
   borderWidth,
   colors,
   motion,
@@ -17,12 +19,14 @@ import {
   typography,
   useLayoutClass,
   useMediaSize,
+  usePressLook,
   useTypeScale,
+  pressTransform,
 } from '@hangul-route/design-system';
 import { ShapeOriginArt } from '@hangul-route/design-system/src/components/ShapeOriginArt/ShapeOriginArt';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -107,6 +111,23 @@ const TILE_LOOK: Record<ShapeTileLook, { backgroundColor: string; borderColor: s
   ring: { backgroundColor: colors.surface.paper, borderColor: colors.border.focus, borderWidth: borderWidth.thick },
 };
 
+/**
+ * A tile's drawn box: its look, or while a finger that will count is down the press look (AMENDMENTS-TOUCH 4.3: a thick
+ * `border.shape` outline and the shrink), never a state look. The box fills its target, so the hit area keeps its size.
+ */
+function tileBox(press: ReturnType<typeof usePressLook> | null, look: ShapeTileLook, size: { minHeight: number; gap?: number }) {
+  return {
+    flexGrow: 1,
+    ...size,
+    borderRadius: radii.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...TILE_LOOK[look],
+    ...(press ? { borderColor: press.borderColor, borderWidth: press.borderWidth } : {}),
+    transform: pressTransform(press),
+  } as const;
+}
+
 /** A `{ko:}` note: its UI text, its letters drawn as Korean (the voice says them in Korean). */
 function TokenLine({ note, testID }: { note: string; testID?: string }): ReactElement {
   const scale = useTypeScale().size;
@@ -134,6 +155,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   const tileTall = useMediaSize(touchTarget.min) > touchTarget.min ? touchTarget.hero : touchTarget.min;
   const pairTall = useMediaSize(touchTarget.hero);
   const target = findJamo(round.target);
+  const press = usePressLook();
 
   // The pair board is a letter question (AMENDMENTS-AUDIO-CLIPS JV-A1, section 6.1): the letter's name (ㄴ is nieun), from
   // its name clip when the build has one, else the device voice or the same name as text (section 3.8).
@@ -220,34 +242,35 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
           </Text>
           <Text {...KOREAN_LINE_BREAK} style={{ fontSize: scale.body, color: colors.text.secondary, fontWeight: typography.weight.semibold }}>{heading.sound}</Text>
         </View>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          {tiles.map((t) => (
-            <Pressable
-              key={t.index}
-              testID={`${testID}-tile-${t.index}`}
-              accessibilityRole="button"
-              accessibilityLabel={t.accessibilityLabel}
-              accessibilityState={{ selected: t.look === 'found', disabled: found || t.look === 'found' || t.look === 'marked' }}
-              disabled={found || t.look === 'found' || t.look === 'marked'}
-              onPress={() => dispatch({ type: 'tap-tile', index: t.index })}
-              style={{
-                flexBasis: '30%',
-                flexGrow: 1,
-                minHeight: Math.max(touchTarget.min, pairTall),
-                borderRadius: radii.lg,
-                alignItems: 'center',
-                justifyContent: 'center',
-                ...TILE_LOOK[t.look],
-              }}
-            >
-              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * Math.max(touchTarget.min, pairTall)), fontWeight: typography.weight.bold, color: colors.text.primary }}>
-                {t.char}
-              </Text>
-              {t.sound !== null ? <Caption>{t.sound}</Caption> : null}
-              <Mark look={t.look} />
-            </Pressable>
-          ))}
-        </View>
+        {/* One board for the tiles (AMENDMENTS-TOUCH section 6, row KT-6): a graze still counts, a bounce never counts twice. */}
+        <TapBoard lock="board">
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {tiles.map((t) => {
+              const off = found || t.look === 'found' || t.look === 'marked';
+              return (
+                <TapTarget
+                  key={t.index}
+                  testID={`${testID}-tile-${t.index}`}
+                  accessibilityLabel={t.accessibilityLabel}
+                  accessibilityState={{ selected: t.look === 'found' }}
+                  disabled={off}
+                  onCommit={() => dispatch({ type: 'tap-tile', index: t.index })}
+                  style={{ flexBasis: '30%', flexGrow: 1 }}
+                >
+                  {({ pressed }) => (
+                    <View style={tileBox(pressed && !off ? press : null, t.look, { minHeight: Math.max(touchTarget.min, pairTall) })}>
+                      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * Math.max(touchTarget.min, pairTall)), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                        {t.char}
+                      </Text>
+                      {t.sound !== null ? <Caption>{t.sound}</Caption> : null}
+                      <Mark look={t.look} />
+                    </View>
+                  )}
+                </TapTarget>
+              );
+            })}
+          </View>
+        </TapBoard>
         {status}
         {helpOpen ? <VoiceHelpSheet visible onClose={() => setHelpOpen(false)} /> : null}
         <View accessibilityLiveRegion="polite" style={{ minHeight: touchTarget.min, gap: spacing.sm }}>
@@ -310,26 +333,34 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
           </View>
         ) : null}
       </View>
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        {tiles.map((t) => (
-          <Pressable
-            key={t.id}
-            testID={`${testID}-tile-${t.id}`}
-            accessibilityRole="button"
-            accessibilityLabel={t.accessibilityLabel}
-            accessibilityState={{ selected: t.look === 'found', disabled: found || t.look === 'marked' }}
-            disabled={found || t.look === 'marked'}
-            onPress={() => dispatch({ type: 'tap', id: t.id })}
-            style={{ flex: 1, minHeight: tileTall + spacing.xl, borderRadius: radii.lg, alignItems: 'center', justifyContent: 'center', gap: spacing.xxs, ...TILE_LOOK[t.look] }}
-          >
-            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * tileTall), fontWeight: typography.weight.bold, color: colors.text.primary }}>
-              {t.char}
-            </Text>
-            <Caption>{t.sound}</Caption>
-            <Mark look={t.look} />
-          </Pressable>
-        ))}
-      </View>
+      <TapBoard lock="board">
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          {tiles.map((t) => {
+            const off = found || t.look === 'marked';
+            return (
+              <TapTarget
+                key={t.id}
+                testID={`${testID}-tile-${t.id}`}
+                accessibilityLabel={t.accessibilityLabel}
+                accessibilityState={{ selected: t.look === 'found' }}
+                disabled={off}
+                onCommit={() => dispatch({ type: 'tap', id: t.id })}
+                style={{ flex: 1 }}
+              >
+                {({ pressed }) => (
+                  <View style={tileBox(pressed && !off ? press : null, t.look, { minHeight: tileTall + spacing.xl, gap: spacing.xxs })}>
+                    <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: Math.round(JAMO_FACE * tileTall), fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                      {t.char}
+                    </Text>
+                    <Caption>{t.sound}</Caption>
+                    <Mark look={t.look} />
+                  </View>
+                )}
+              </TapTarget>
+            );
+          })}
+        </View>
+      </TapBoard>
       {found ? <Button label={copy.continue.cta} size="lg" fullWidth onPress={() => dispatch({ type: 'continue' })} testID={`${testID}-continue`} /> : null}
       {status}
       {helpOpen ? <VoiceHelpSheet visible onClose={() => setHelpOpen(false)} /> : null}

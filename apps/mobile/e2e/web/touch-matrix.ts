@@ -58,7 +58,12 @@ export interface Answer extends Box {
   lookedPressed: boolean;
   /** The drawn box's resting paint (fill and outline): a miss on a board that names no outcome shows only in it. */
   paint: string;
+  /** A selection board's pick (Pic-Word's "Selected: ..." name, Card Match's `aria-selected`): a commit there moves it. */
+  selected: boolean;
 }
+
+/** An answer's name without its selection or its miss note (Sentence Builder's "tried" and "comes next"): the same answer before and after it is picked (a pick is a commit, a repeat tap is none). */
+export const identity = (a: Pick<Answer, 'label'>): string => a.label.replace(/^Selected: /, '').replace(/, (tried|comes next)$/, '');
 
 /**
  * Every answer target on the page: a button (role or tag) whose computed `touch-action` has `pinch-zoom` and is not
@@ -67,7 +72,7 @@ export interface Answer extends Box {
 export function readAnswers(page: Page): Promise<Answer[]> {
   return page.evaluate(
     ({ shape, shrunk }) => {
-      const out: Array<{ x: number; y: number; width: number; height: number; label: string; disabled: boolean; lookedPressed: boolean; paint: string }> = [];
+      const out: Array<{ x: number; y: number; width: number; height: number; label: string; disabled: boolean; lookedPressed: boolean; paint: string; selected: boolean }> = [];
       const isButton = (el: Element): boolean => el.getAttribute('role') === 'button' || el.tagName === 'BUTTON';
       for (const el of Array.from(document.querySelectorAll('[role="button"], button'))) {
         if (!isButton(el)) continue;
@@ -92,9 +97,10 @@ export function readAnswers(page: Page): Promise<Answer[]> {
           disabled:
             el.getAttribute('aria-disabled') === 'true' ||
             (el as HTMLButtonElement).disabled === true ||
-            /^(Right answer|Not this one)/.test(el.getAttribute('aria-label') ?? ''),
+            /^(Right answer|Not this one|Matched, )/.test(el.getAttribute('aria-label') ?? ''),
           lookedPressed: d !== null && (d.transform === shrunk || d.borderTopColor === shape),
           paint: d === null ? '' : `${d.backgroundColor} ${d.borderTopColor}`,
+          selected: el.getAttribute('aria-selected') === 'true' || /^Selected: /.test(el.getAttribute('aria-label') ?? ''),
         });
       }
       return out.map((a, index) => ({ ...a, index }));
@@ -107,7 +113,7 @@ export function readAnswers(page: Page): Promise<Answer[]> {
 export async function snapshot(page: Page): Promise<string> {
   const answers = await readAnswers(page);
   const text = await page.evaluate(() => document.body.innerText);
-  return JSON.stringify({ answers: answers.map((a) => [a.label, a.disabled, a.lookedPressed ? '' : a.paint]), text });
+  return JSON.stringify({ answers: answers.map((a) => [a.label, a.disabled, a.lookedPressed ? '' : a.paint, a.selected]), text });
 }
 
 /** The answers and where they are, for knowing the layout has stopped moving. */
@@ -377,14 +383,14 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
 
     // The queue: one graze on the first open answer not tapped yet in this round.
     const every = await settle(page);
-    const roundNow = every.map((a) => a.label).sort().join('|');
+    const roundNow = every.map(identity).sort().join('|');
     if (roundNow !== round) {
       round = roundNow;
       tapped.clear();
     }
     // A solved round (the right answer named) leaves the rest inactive until the game moves on.
     const open = every.some((a) => SOLVED.test(a.label)) ? [] : every.filter((a) => !a.disabled);
-    const fresh = open.filter((a) => !tapped.has(a.label));
+    const fresh = open.filter((a) => !tapped.has(identity(a)));
     const live = fresh.length > 0 ? fresh : open;
     if (live.length === 0) continue;
     if (queue.length === 0) break;
@@ -400,7 +406,7 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
       const pb = centre(fresh);
       const bBefore = await stateOf(fresh.label);
       await touch.tap(pa);
-      tapped.add(a.label);
+      tapped.add(identity(a));
       await page.waitForTimeout(150);
       await touch.tap(pb);
       await page.waitForTimeout(300);
@@ -418,7 +424,7 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
     const a = await inView(page, live[0]!);
     const before = await snapshot(page);
     await grazeAndExpectCommit(page, touch, centre(a), g, before, o.name);
-    tapped.add(a.label);
+    tapped.add(identity(a));
     committed.push(key(g));
     await page.waitForTimeout(AFTER_LOCK);
   }
