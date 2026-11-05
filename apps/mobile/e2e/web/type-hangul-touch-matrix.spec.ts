@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, seedStored } from './helpers';
+import { STORY_ORDER_FIXTURES } from '../../src/navigation/story-order-e2e-fixture';
 import { Touchscreen } from './touch';
 import { FULL_MATRIX, MATRIX, clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
 
@@ -40,6 +41,8 @@ type E2eWindow = Window & {
   __hrClozePickE2E?: { open(params: { rounds: Array<'word' | 'particle' | 'value'> }): void };
   __hrVocabE2E?: { openQuestion(params: { format: 'word-to-image' | 'image-to-word' | 'audio-to-image'; mode: 'speed' | 'check'; optionCount?: 3 | 4 }): void };
   __hrStoryE2E?: { openQuest(p: { questId: string; episodeId: string }): void };
+  __hrSentenceE2E?: { open(params: { set: 'practice'; mode: 'quest' }): void };
+  __hrStoryOrderE2E?: { open(p: unknown): void };
 };
 
 /** The profile's text size and the UI language, seeded when either is not the default. */
@@ -100,10 +103,39 @@ async function storyCheckNext(page: Page): Promise<boolean> {
   return true;
 }
 
+/** AMENDMENTS-TOUCH row KT-5: Sentence Builder in its quest mode (three tiles in the tray), as `sentence-builder-story-placement-touch.spec.ts` opens it. */
+async function openSentenceBuilder(page: Page, profile: Profile, locale: UiLocale = 'en'): Promise<void> {
+  await page.goto('/');
+  await textSize(page, profile, locale);
+  await page.waitForFunction(() => Boolean((window as E2eWindow).__hrSentenceE2E), undefined, { timeout: 10_000 });
+  await page.evaluate(() => (window as E2eWindow).__hrSentenceE2E?.open({ set: 'practice', mode: 'quest' }));
+  await expect(page.getByTestId('sentence-builder-tray')).toBeVisible();
+  await hidePwaBanner(page);
+}
+
+/** Row KT-5: the captions-only morning round (up, wash, eat, park) as Story Order (`on`) or as its Story Sequence fallback (off). */
+async function openMorning(page: Page, profile: Profile, on: boolean, locale: UiLocale = 'en'): Promise<void> {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as E2eWindow).__hrStoryOrderE2E), undefined, { timeout: 10_000 });
+  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { 'game.story-order': { on, pct: 100 } } });
+  await textSize(page, profile, locale);
+  await page.reload();
+  await page.waitForFunction(() => Boolean((window as E2eWindow).__hrStoryOrderE2E), undefined, { timeout: 10_000 });
+  await page.evaluate((scope) => (window as E2eWindow).__hrStoryOrderE2E?.open({ scope }), STORY_ORDER_FIXTURES.captions);
+  await expect(page.getByTestId(on ? 'story-order-cards' : 'story-sequence-cards')).toBeVisible();
+  await hidePwaBanner(page);
+}
+const openStoryOrder = (page: Page, profile: Profile, locale?: UiLocale): Promise<void> => openMorning(page, profile, true, locale);
+const openStorySequence = (page: Page, profile: Profile, locale?: UiLocale): Promise<void> => openMorning(page, profile, false, locale);
+
 const BOARDS: ReadonlyArray<{ name: string; open: (page: Page, profile: Profile) => Promise<void>; stateful?: boolean; smoke?: ReadonlyArray<Profile['key']>; onIdle?: (page: Page) => Promise<boolean>; maxRestarts?: number }> = [
   { name: 'Cloze Pick', open: openClozePick, stateful: true, smoke: ['phone'] },
   { name: 'Vocabulary question', open: openVocabQuestion, stateful: true, maxRestarts: 4 },
   { name: 'Story Check', open: openStoryCheck, stateful: true, onIdle: storyCheckNext, maxRestarts: 3 },
+  // Row KT-5 (section 11.3); Placement and the quest's Story Sequence are in the row's own spec.
+  { name: 'Sentence Builder', open: openSentenceBuilder, maxRestarts: 4 },
+  { name: 'Story Order', open: openStoryOrder, maxRestarts: 4 },
+  { name: 'Story Sequence (Story Order fallback)', open: openStorySequence, maxRestarts: 4 },
 ];
 
 for (const profile of PROFILES) {

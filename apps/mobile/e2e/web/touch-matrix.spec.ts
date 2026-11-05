@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
-import { journeyCellName, keepSidewaysIfAsked, onboardChild, passDiscover, readStored, seedStoredAll, seedStored } from './helpers';
+import { journeyCellName, keepSidewaysIfAsked, onboardChild, openPlaygroundWordsQuest, passDiscover, readStored, seedStoredAll, seedStored } from './helpers';
 import { Touchscreen } from './touch';
 import { FULL_MATRIX, MATRIX, clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
 
@@ -150,15 +150,64 @@ async function openDailyReview(page: Page, profile: Profile): Promise<void> {
   await expect(page.getByTestId('daily-review-dots')).toBeVisible();
 }
 
+/** AMENDMENTS-TOUCH row KT-4b: Stage 2 Play & Crafts, quest 1, past Discover and the first Check: Pic-Word Match, its Practice step. */
+async function openPicWord(page: Page, profile: Profile): Promise<void> {
+  await clearDevice(page, test.info().project.use.baseURL);
+  await openPlaygroundWordsQuest(page, { largest: profile.largest });
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByTestId('pic-word-pictures')).toBeVisible();
+}
+
+/** Row KT-4b: the same quest with the Practice skipped: Card Match, its Apply step. */
+async function openCardMatch(page: Page, profile: Profile): Promise<void> {
+  await clearDevice(page, test.info().project.use.baseURL);
+  await openPlaygroundWordsQuest(page, { largest: profile.largest });
+  await skipStep(page);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByTestId('card-match-ko-board')).toBeVisible();
+}
+
+/** Row KT-6: the guest's first quest, past the intro, Discover and the first game: Build a Letter (the guest quest needs no account). */
+async function openBuildLetter(page: Page, profile: Profile): Promise<void> {
+  await clearDevice(page, test.info().project.use.baseURL);
+  if (profile.largest) await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+  await page.goto('/?try=1');
+  await expect(page.getByText('Hi from Hoya', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await passDiscover(page);
+  await skipStep(page);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('Build this letter')).toBeVisible();
+}
+
+/** Row KT-6: Stage 1 Play & Crafts, quest 4 with `game.match-shape` switched on by a stored remote copy: Match Shape (dark in the release build). */
+async function openMatchShape(page: Page, profile: Profile): Promise<void> {
+  await freshLearner(page, profile);
+  await seedStored(page, 'remote-config', { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { 'game.match-shape': { on: true, pct: 100 } } });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await dismissInstallGuide(page);
+  await startQuest(page, 1, 'Play & Crafts', 3);
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByTestId('match-shape-game')).toBeVisible();
+}
+
 const MATRIX_ALL = MATRIX.length;
 
-const BOARDS: ReadonlyArray<{ name: string; open: (page: Page, profile: Profile) => Promise<void>; stateful?: boolean; smoke?: ReadonlyArray<Profile['key']> }> = [
+const BOARDS: ReadonlyArray<{ name: string; open: (page: Page, profile: Profile) => Promise<void>; stateful?: boolean; smoke?: ReadonlyArray<Profile['key']>; maxRestarts?: number; grazes?: number }> = [
   { name: 'Culture Quiz', open: openCultureQuiz, smoke: ['phone', 'tablet'] },
   { name: 'Tap & Respond', open: openTapRespond },
   { name: 'Odd One Out', open: openOddOneOut, stateful: true, smoke: ['phone'] },
   { name: 'Read Pick', open: openReadPick, stateful: true },
   { name: 'Realia Read', open: openRealiaRead, stateful: true },
   { name: 'Daily Review', open: openDailyReview, stateful: true, smoke: ['phone'] },
+  // Rows KT-4b and KT-6 (section 11.3). A pick or a placement changes what an answer says, which is a commit here;
+  // the full matrix only (the smoke set is fixed by the 20 minute shards).
+  { name: 'Pic-Word Match', open: openPicWord, maxRestarts: 4 },
+  // Card Match takes a meaning only after a Korean pick: its four Korean cards and the meaning of the last pick are five commits.
+  { name: 'Card Match', open: openCardMatch, maxRestarts: 4, grazes: 5 },
+  { name: 'Build a Letter', open: openBuildLetter, maxRestarts: 4 },
+  { name: 'Match Shape', open: openMatchShape, maxRestarts: 4 },
 ];
 
 for (const profile of PROFILES) {
@@ -174,8 +223,9 @@ for (const profile of PROFILES) {
         await runMatrix(page, touch, {
           name: board.name,
           statefulAnswers: board.stateful,
-          grazes: FULL_MATRIX ? MATRIX_ALL : undefined,
+          grazes: FULL_MATRIX ? (board.grazes ?? MATRIX_ALL) : undefined,
           restart: () => board.open(page, profile),
+          maxRestarts: board.maxRestarts,
           note: (type, description) => test.info().annotations.push({ type, description }),
         });
       });

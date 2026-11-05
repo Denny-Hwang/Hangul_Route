@@ -161,7 +161,16 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (release `build:web --budget`; on main 74332fac1 it was 4,901,256 B with main alone at 4,873,332 B): +27,924 B, the four
   // rows' device code that is not flagged out of the bundle, plus the voice-check hold that landed on main since. The line is
   // the measurement plus a 2,843 B margin; main's own line (4,875,000 B) does not hold the four rows.
-  startBundleRaw: 4_905_000,
+  // The KT tail integration (integrate/kt-tail-1105: KT-4b, KT-5, KT-6 and KT-7 on main e93044853) measures 4,909,345 B raw /
+  // 1,315,697 B gzip (release `build:web --budget`); main alone is 4,902,157 B, so the four rows add 7,188 B, measured one
+  // merge at a time: KT-4b +1,061 B (Card Match and Pic-Word boards), KT-5 +2,052 B (Story Sequence and Order, Sentence
+  // Builder and Placement boards), KT-6 +3,284 B (Build a Letter's take-back and board, Hidden Heritage's hit areas, the
+  // other boards' TapTargets) and KT-7 +776 B (the Type Hangul keyboard's per-finger tracking), and 15 B for the Write Frame
+  // word card's `ariaSelected`. The line 4,905,000 B left 2,843 B over main alone. Moving the flag-off BL-7 UI out
+  // (`BlendParts.tsx` is 3,215 B and `blend-view.ts` 2,761 B in the start bundle) would give back about 5 KB at most and
+  // is a separate change: `blend-view`'s functions are read synchronously by five screens. The line is the measurement
+  // plus a 2,655 B margin (one measured raise, 7,000 B over the previous line).
+  startBundleRaw: 4_912_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

@@ -44,7 +44,7 @@ import { picWordFallback } from '../hidden-heritage-fallback';
 const BOXED_SHIPPED: Record<number, Record<string, string[]>> = {
   288: {},
   256: {
-    'scene:food-market': ['gimchi x 60.2', 'guk x 60.2'],
+    'scene:food-market': ['gimchi x 58.2', 'tteok x 58.2', 'guk x 60.2', 'sutgarak x 60.2'],
     'scene:letters-school': ['but x 61.4', 'namu x 62.7', 'sae x 58.9'],
     'scene:play-courtyard': ['paengi x 60.2', 'paengi y 61.8', 'yut x 63.7', 'yut y 59.8', 'eolle y 63.7', 'gonggi y 61.1', 'yutpan y 59.8'],
   },

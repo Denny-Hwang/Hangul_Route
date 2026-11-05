@@ -786,6 +786,7 @@ function WordCard({ word, selected, romanizationVisible, columns, onPress, testI
     <TapTarget
       accessibilityLabel={label}
       accessibilityState={{ selected }}
+      ariaSelected={selected}
       onCommit={onPress}
       testID={testID}
       style={{ flexBasis: `${Math.floor(100 / columns) - 4}%`, flexGrow: 1 }}
