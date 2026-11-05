@@ -593,6 +593,23 @@ export const learner = {
       startThere: { cta: 'Start there' },
       playAnyway: { cta: 'Play anyway' },
     },
+    /**
+     * A cell's two volumes on its page (F-CURR-002 §5.1, row CM-40; F-STORY-005 PR 5.8), only while `volumes` is on:
+     * the switch's label, each volume's short name and its spoken name.
+     */
+    volumes: {
+      label: 'Volumes',
+      tab: (n: number) => `Vol ${n}`,
+      tabA11y: (n: number) => `Volume ${n}`,
+    },
+    /**
+     * A later volume that is not on the device, while offline (F-CURR-002 row CM-5B): one calm line on its page, and
+     * the words in place of each Start. It opens once the internet is back; nobody did anything wrong.
+     */
+    later: {
+      line: 'This volume needs the internet the first time. After that, it works offline too.',
+      start: 'Needs the internet',
+    },
   },
 
   results: {

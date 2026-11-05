@@ -168,7 +168,8 @@ export function LearningRouteRow({
   const plans = usePlanStore((s) => s.byLearner[profileId]);
   const localized = useMemo(() => localizedRouteContent(locale), [locale, titles]);
   // The skills count every quest's games, so every lesson chunk loads and the counts follow (F-CURR-002 §10).
-  const lessonsLoaded = useLessonContentVersion();
+  // A grown-up report counts every volume while online, so it reads the same on any device (row CM-5B).
+  const lessonsLoaded = useLessonContentVersion(true);
 
   const view = useMemo((): DashboardRowView | null => {
     try {

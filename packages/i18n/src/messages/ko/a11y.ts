@@ -388,4 +388,5 @@ export const a11y = {
       refresh: '되짚기: 수업에서 배운 것을 다시 봐요',
     },
   },
+  journeyVolume: (n: number) => `${n}권이 열려요`,
 } satisfies DeepPartial<Messages['a11y']>;

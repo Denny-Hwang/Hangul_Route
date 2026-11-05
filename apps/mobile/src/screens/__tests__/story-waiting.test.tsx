@@ -32,6 +32,16 @@ vi.mock('../story-content', async (importOriginal) => {
       ready.asked.push(storyId);
       return storyId === null || ready.story;
     },
+    // The hosts read the state (row CM-5B adds needs-internet, driven in story-content.test.tsx).
+    useStoryState: (storyId: string | null | undefined) => {
+      ready.asked.push(storyId);
+      return storyId == null || ready.story ? 'ready' : 'waiting';
+    },
+    useStoryQuestState: (quest: Quest | undefined) => {
+      const storyId = quest === undefined ? null : idOf(quest);
+      ready.asked.push(storyId);
+      return storyId === null || ready.story ? 'ready' : 'waiting';
+    },
     useNoteStoriesReady: () => ready.notes,
   };
 });

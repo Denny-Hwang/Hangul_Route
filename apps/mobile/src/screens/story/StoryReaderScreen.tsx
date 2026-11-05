@@ -9,8 +9,8 @@ import { readerStory } from '../../logic/story/reader-locale';
 import type { RootStackParamList } from '../../navigation/types';
 import { recordActivityPointsLater } from '../../store/goals-entry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
-import { LessonWaiting } from '../lesson-content';
-import { useStoryReady } from '../story-content';
+import { LaterNeedsInternet, LessonWaiting } from '../lesson-content';
+import { useStoryState } from '../story-content';
 import { usePracticeSession } from '../use-practice-session';
 import { StoryReaderView } from './StoryReaderView';
 import { useStoryNotesFound } from './use-story-notes-found';
@@ -56,7 +56,14 @@ export function StoryReaderScreen(props: Props): ReactElement {
   useClipPacks('stories', props.route.params.storyId);
   // The story's scenes come from its chunk (F-CURR-002 §10, row CM-8): until it is in, the screen draws
   // only its waiting state (the way back, then a calm status line if it takes longer).
-  return useStoryReady(props.route.params.storyId) ? <StoryReaderBody {...props} /> : <LessonWaiting />;
+  // A tale only a book 2 holds that is not on the device and cannot load (row CM-5B) says so calmly, with a way back.
+  const state = useStoryState(props.route.params.storyId);
+  if (state === 'needs-internet') {
+    const nav = props.navigation;
+    const back = props.onBack ?? (nav === undefined ? undefined : () => backOrHome(nav, () => nav.navigate('Main', { screen: 'Home' })));
+    return <LaterNeedsInternet onBack={back} />;
+  }
+  return state === 'ready' ? <StoryReaderBody {...props} /> : <LessonWaiting />;
 }
 
 function StoryReaderBody({ route, navigation, onOpenSources, onOpenCultureNote, onDone, ...exitProps }: Props): ReactElement {

@@ -1,18 +1,8 @@
 // First of all: Metro's bundle loader, for the lesson chunks (F-CURR-002 §10).
 import './src/async-bundles';
 import { registerRootComponent } from 'expo';
-import App from './App';
 import { bootRoot } from './src/platform/app-root';
-import { withLessonContent, type LazyRoot } from './src/screens/lesson-content';
-
-/**
- * The grown-up roots are chunks of their own (F-CURR-002 §10): a learner's start bundle carries neither the
- * presenter nor All lessons, and the web build emits each as a precached bundle (`PresenterApp-<md5>.js`,
- * `BrowseApp-<md5>.js`) that `withLessonContent` loads with the content the root reads. Literal `import()`s
- * only: a static import would pull a root back into the start bundle (the post-build check fails on its marker).
- */
-const PresenterRoot: LazyRoot<object> = { name: 'PresenterApp', load: () => import('./PresenterApp') };
-const BrowseRoot: LazyRoot<object> = { name: 'BrowseApp', load: () => import('./BrowseApp') };
+import { withStoryShelf } from './src/screens/story-shelf-gate';
 
 /**
  * The root is chosen, and its boot step run, before anything mounts (F-APP-001 sections 3.4 and
@@ -27,15 +17,17 @@ function GrownUpBounce(): null {
   return null;
 }
 
+/**
+ * The story shelf comes before the roots (F-CURR-002 §10, row CM-8b): every module that reads the stories derives
+ * its lists from the shelf when it first runs, and on the web the shelf is a precached chunk of its own. So the
+ * roots (`src/screens/app-roots.tsx`: the learner app, the presenter, All lessons) are required inside a function
+ * that `withStoryShelf` calls once the shelf is in: Metro keeps them in the start bundle and runs them then. A static
+ * import here would run them before the shelf (the shelf's reader throws, and
+ * `src/content/__tests__/story-shelf-boot.test.ts` walks these imports). Native builds have the shelf from the start.
+ */
 const root = bootRoot();
-// The grown-up roots read the whole lesson catalogue (decks, lesson facts), so they mount once every
-// lesson chunk and their own code are in (F-CURR-002 §10); the learner app loads a lesson's chunk when it opens.
 registerRootComponent(
   root === 'grown-up-bounce'
     ? GrownUpBounce
-    : root === 'presenter'
-      ? withLessonContent(PresenterRoot)
-      : root === 'browse'
-        ? withLessonContent(BrowseRoot)
-        : App,
+    : withStoryShelf(() => (require('./src/screens/app-roots') as typeof import('./src/screens/app-roots')).rootComponent(root)),
 );

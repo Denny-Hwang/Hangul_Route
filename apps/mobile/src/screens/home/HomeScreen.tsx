@@ -80,7 +80,8 @@ import { learnedOn, shownStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import { useStoriesLoaded } from '../story-content';
-import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
+import { entryForQuest } from '../../logic/story/story-index';
+import { useStoryIndex } from '../story/use-story-index';
 import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
 import { homeVocabNudge, topicRefIndex } from '../../logic/vocab/home-card';
@@ -410,7 +411,8 @@ export function HomeScreen(): ReactElement {
   const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   // Reviewed stories only (D14): empty in production while every bundled story is still a draft.
-  const storyIndex = defaultStoryIndex();
+  // A book 2 tale (row CM-46) joins while `volumes` is on.
+  const { entries: storyIndex } = useStoryIndex();
 
   useEffect(() => {
     if (profile) ensure(profile.id);

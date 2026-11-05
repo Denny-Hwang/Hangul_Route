@@ -26,13 +26,15 @@ function ctxOf(ids: readonly string[], states: EngineContext['states'] = Object.
 }
 
 describe('Syllable Build over the symbols of this build (row CM-32)', () => {
-  it('keeps the format only for a symbol a block can host; the rest (ㅌ, compound vowels, finals heard as another) keep read', () => {
+  it('keeps the format only for a symbol a block can host; the rest (compound vowels, finals heard as another) keep read', () => {
     const building = SYMS.filter((i) => i.formats.includes('syllable-build'));
     const reading = SYMS.filter((i) => !i.formats.includes('syllable-build'));
     expect(building.length).toBeGreaterThan(10);
     expect(reading.length).toBeGreaterThan(0);
     for (const item of reading) expect(item.formats, item.id).toContain('read-pick');
-    expect(reading.map((i) => i.id)).toContain('sym:tieut');
+    // ㅌ kept read until row CM-46: the Play book 2 asks 탈 (mask), a block that hosts it. A compound vowel still keeps read.
+    expect(reading.map((i) => i.id)).toContain('sym:ui');
+    expect(building.map((i) => i.id)).toContain('sym:tieut');
   });
 
   it('every symbol that keeps it gets a round: a block holding the symbol in its zone', () => {

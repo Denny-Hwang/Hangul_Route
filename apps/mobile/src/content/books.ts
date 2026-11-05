@@ -1,4 +1,5 @@
 import { BOOK_MIN_QUESTS, type Episode, type Quest, type Story } from '@hangul-route/content-schema';
+import { laterStoryIdsOf } from '../logic/offline/offline-packs';
 import { storyTierLevels } from '../logic/story/story-chunk-store';
 import { storyById } from './stories';
 import { storyQuestSkeleton } from './story-skeleton';
@@ -29,6 +30,11 @@ export interface BookDefinition {
   /** The stories in reading order (an editorial decision, §3.3 book plan). */
   storyIds: readonly string[];
   pillarTags: NonNullable<Episode['pillarTags']>;
+  /**
+   * A cell's book 2 (F-CURR-002 §5.1, row CM-40): volume 2, id `episode:stage5-<theme>-v2`, the second episode of its
+   * cell, on the same path as a lesson cell's Volume 2. Absent for book 1.
+   */
+  volume?: 2;
 }
 
 /** The books, in grid order. */
@@ -43,6 +49,32 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:sejong-new-letters', 'story:shapes-of-hangeul', 'story:hangeul-day'],
     pillarTags: ['A1'],
   },
+  // F-CURR-002 §5.2 S5, row CM-46: the Letters cell's book 2, in the order the records were made. The eight
+  // listen-only Letters stories joined it through their read tiers (row CM-46a); the two new tales (Hangul letters of
+  // Joseon families, and how Hangul got its name) join once their multi-agent review signs them (`buildBook` leaves an
+  // unreviewed story out). Volume 2, so it shows only while `volumes` is on.
+  {
+    id: 'episode:stage5-letters-v2',
+    stage: 'stage5',
+    theme: 'letters',
+    order: 1,
+    titleEn: 'Books, Records and Letters',
+    hoyaIntroEn: "Let's read stories of old books, records and letters in Korean, one short sentence at a time.",
+    storyIds: [
+      'story:tripitaka-koreana',
+      'story:jikji-metal-type',
+      'story:sillok-royal-historians',
+      'story:sillok-mountain-archives',
+      'story:eongan-letters',
+      'story:nanjung-ilgi',
+      'story:seungjeongwon-ilgi-every-day',
+      'story:ilseongnok-daily-reflection',
+      'story:hangul-name',
+      'story:joseon-records-today',
+    ],
+    pillarTags: ['A1'],
+    volume: 2,
+  },
   {
     id: 'episode:stage5-life',
     stage: 'stage5',
@@ -52,6 +84,23 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     hoyaIntroEn: "Let's read stories of everyday life in Korean, one short sentence at a time.",
     storyIds: ['story:gimjang-arirang', 'story:kim-hongdo-genre-paintings', 'story:donguibogam'],
     pillarTags: ['B1', 'B5', 'E4'],
+  },
+  /**
+   * The Food cell's book 2 (F-CURR-002 §5.3 S5, row CM-46): the two new tales, on the Volume 2 path behind `volumes`.
+   * Kimjang and Kim Hongdo's market paintings already ship in book 1 (`gimjang-arirang`, `kim-hongdo-genre-paintings`),
+   * so book 2 tells of jang and of the rice cakes of the seasons. The two tales are a book of their own size
+   * (BOOK_MIN_QUESTS).
+   */
+  {
+    id: 'episode:stage5-life-v2',
+    stage: 'stage5',
+    theme: 'life',
+    order: 2,
+    titleEn: 'Jang and Rice Cakes',
+    hoyaIntroEn: "Let's read stories of Korean food through the year in Korean, one short sentence at a time.",
+    storyIds: ['story:jang-fermented-sauces', 'story:tteok-through-the-seasons'],
+    pillarTags: ['B1', 'B5'],
+    volume: 2,
   },
   {
     id: 'episode:stage5-rites',
@@ -73,6 +122,19 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:sun-and-moon', 'story:angbuilgu-sundial'],
     pillarTags: ['D5', 'E5'],
   },
+  // F-CURR-002 §5.5 S5, row CM-46: the Nature cell's book 2, three new readers about Korea's nature (a volcanic island,
+  // the first national park and a wetland of migrating birds). Volume 2, so it shows only while `volumes` is on.
+  {
+    id: 'episode:stage5-nature-v2',
+    stage: 'stage5',
+    theme: 'nature',
+    order: 4,
+    titleEn: 'Island, Mountain and Wetland',
+    hoyaIntroEn: "Let's read stories of Korea's island, mountain and wetland in Korean, one short sentence at a time.",
+    storyIds: ['story:jeju-volcanic-island', 'story:jirisan-national-park', 'story:suncheon-bay-wetland'],
+    pillarTags: ['D2'],
+    volume: 2,
+  },
   {
     id: 'episode:stage5-crafts',
     stage: 'stage5',
@@ -83,7 +145,38 @@ export const BOOK_DEFINITIONS: readonly BookDefinition[] = [
     storyIds: ['story:cheugugi-rain-gauge', 'story:jagyeongnu-water-clock', 'story:pansori-tales'],
     pillarTags: ['E3', 'C3'],
   },
+  /**
+   * The Play cell's book 2 (F-CURR-002 §5.6 S5, row CM-46): the two new tales, on the Volume 2 path behind `volumes`.
+   * Editorial choice: janggyeong-panjeon, a crafts story whose read tier row CM-46a added, stays a shelf story and is not
+   * in this book. It is the hall that keeps the Tripitaka woodblocks, so it reads with the printing and records stories
+   * (its research cluster is hangul-printing), not with masks and paper. The two tales are a book of its own size
+   * (BOOK_MIN_QUESTS).
+   */
+  {
+    id: 'episode:stage5-crafts-v2',
+    stage: 'stage5',
+    theme: 'crafts',
+    order: 5,
+    titleEn: 'Masks and Paper',
+    hoyaIntroEn: "Let's read stories of masks and paper made by hand in Korean, one short sentence at a time.",
+    storyIds: ['story:hahoe-mask-dance', 'story:hanji-korean-paper'],
+    pillarTags: ['C4', 'E1'],
+    volume: 2,
+  },
 ];
+
+/**
+ * The stories that only a book 2 holds (F-CURR-002 §4.3, §5.1, row CM-46): new tales that are Volume 2 content. They
+ * have no shelf twin, so their one door is their book, which shows only while `volumes` is on; the review engine reads
+ * this set (`SourceVisibility.cellVolume`) so their items hide with `volumes` off too. A story that is also in a book 1,
+ * or on the shelf, is never here.
+ */
+export const VOLUME_TWO_STORY_IDS: ReadonlySet<string> = new Set(
+  laterStoryIdsOf(BOOK_DEFINITIONS, (id) => storyById(id)?.addedIn !== undefined),
+);
+
+/** The volume of a review-item cell that is a story (`story:<slug>`): 2 for a book 2 tale, else undefined (§4.3). */
+export const storyCellVolume = (cell: string): number | undefined => (VOLUME_TWO_STORY_IDS.has(cell) ? 2 : undefined);
 
 /** The production review gate of the story index (D14), for one story. */
 function isReviewed(story: Story): boolean {
@@ -126,7 +219,7 @@ export function buildBook(definition: BookDefinition, lookup: (id: string) => St
       status: 'shipped',
       format: 'story',
       placement: 'grid',
-      volume: 1,
+      volume: definition.volume ?? 1,
       storyIds: stories.map((s) => s.id),
       pillarTags: [...definition.pillarTags],
       companionId: 'hoya',
@@ -144,3 +237,4 @@ export const bookEpisodes: Episode[] = built.map((b) => b.episode);
 
 /** The Read quests of every shipped book, in book order (`questsAll` appends them). */
 export const bookQuests: Quest[] = built.flatMap((b) => b.quests);
+

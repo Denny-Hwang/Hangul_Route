@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
   CATALOG,
+  VOLUME_TWO_STORY_SLUGS,
   VOCAB_TOPIC_KEYS,
   catalogStatusOfStory,
   cellIsReady,
@@ -16,10 +17,10 @@ import {
   type Quest,
 } from '@hangul-route/content-schema';
 import { FREE_VOCAB_TOPIC_IDS } from '../../logic/content-access';
-import { bookEpisodes } from '../books';
+import { VOLUME_TWO_STORY_IDS, bookEpisodes } from '../books';
 import { questTeaches } from '../../logic/stage1/curriculum';
 import { discoverQuest } from '../../logic/stage1/__tests__/fixtures';
-import { episodesAll } from '../episodes';
+import { episodesWithVolumes } from '../episodes';
 import { jamoAll, jamoWordBuilder } from '../jamo';
 import { questsAll } from '../quests';
 import { storiesAll, storyQuests } from '../stories';
@@ -45,7 +46,8 @@ const teachesOf = (quest: Quest): string[] =>
   questTeaches(quest).map((id) => symbolKeys.get(id) ?? `unknown:${id}`);
 
 const isShelf = (episode: Episode): boolean => episode.placement === 'shelf';
-const gridEpisodes = episodesAll.filter((episode) => !isShelf(episode));
+// Every bundle episode, a cell's later volumes included (`volumeEpisodes`, F-CURR-002 row CM-40 part 2).
+const gridEpisodes = episodesWithVolumes.filter((episode) => !isShelf(episode));
 /** A cell's first volume is the cell (F-CURR-002 row CM-40); a later volume is one of its `episodeIds`. */
 const cellEpisodes = gridEpisodes.filter((episode) => (episode.volume ?? 1) === 1);
 const laterVolumes = gridEpisodes.filter((episode) => (episode.volume ?? 1) > 1);
@@ -55,11 +57,14 @@ const episodeIdsOf = (episode: Episode): string[] =>
     .filter((e) => e.stage === episode.stage && e.theme === episode.theme)
     .sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1))
     .map((e) => e.id);
+/** The cell's later volumes in the bundle, by volume. */
+const laterOf = (episode: Episode): Episode[] =>
+  laterVolumes.filter((e) => e.stage === episode.stage && e.theme === episode.theme).sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1));
 const storyQuestIds = new Set(storyQuests.map((quest) => quest.id));
 const lessonQuests = questsAll.filter((quest) => !storyQuestIds.has(quest.id));
-const episodeOfQuest = (questId: string): Episode | undefined => episodesAll.find((e) => e.questIds.includes(questId));
+const episodeOfQuest = (questId: string): Episode | undefined => episodesWithVolumes.find((e) => e.questIds.includes(questId));
 
-const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds' | 'optionalQuestIds' | 'episodeIds'> => ({
+const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episodeId' | 'title' | 'minutes' | 'questIds' | 'optionalQuestIds' | 'episodeIds' | 'volumes'> => ({
   stage: episode.stage,
   theme: episode.theme,
   episodeId: episode.id,
@@ -70,6 +75,8 @@ const cellOf = (episode: Episode): Pick<CatalogCell, 'stage' | 'theme' | 'episod
   ...(episode.optionalQuestIds === undefined ? {} : { optionalQuestIds: episode.optionalQuestIds }),
   // F-CURR-002 row CM-40: the cell's episodes by volume, its first volume alone until a Volume 2 ships.
   episodeIds: episodeIdsOf(episode),
+  // Row CM-41 S2: the first Volume 2 ships, so a cell describes its later volumes (title, minutes, quests).
+  ...(laterOf(episode).length === 0 ? {} : { volumes: laterOf(episode).map((e) => ({ episodeId: e.id, title: e.titleEn, minutes: e.estimatedMinutes, questIds: e.questIds })) }),
 });
 
 describe('cells and the bundle episodes', () => {
@@ -105,9 +112,20 @@ describe('cells and the bundle episodes', () => {
   });
 
   it('lists every Stage 5 book as a shipped cell whose read quests are catalogue lesson quests (F-STORY-005 PR 5.6)', () => {
-    expect(bookEpisodes.map((book) => book.theme)).toEqual(['letters', 'life', 'rites', 'nature', 'crafts']);
+    expect(bookEpisodes.map((book) => [book.theme, book.volume])).toEqual([
+      ['letters', 1],
+      ['letters', 2],
+      ['life', 1],
+      ['life', 2],
+      ['rites', 1],
+      ['nature', 1],
+      ['nature', 2],
+      ['crafts', 1],
+      ['crafts', 2],
+    ]);
     for (const book of bookEpisodes) {
-      const cell = CATALOG.cells.find((c) => c.episodeId === book.id);
+      // A book 2 (row CM-46) is a later volume of its cell: the cell is book 1's, and lists book 2 among its episodes.
+      const cell = CATALOG.cells.find((c) => c.episodeId === book.id || (c.episodeIds ?? []).includes(book.id));
       expect(cell?.status, book.id).toBe('shipped');
       for (const questId of book.questIds) {
         expect(CATALOG.quests.find((q) => q.id === questId)?.kind, questId).toBe('lesson');
@@ -144,7 +162,8 @@ describe('quests and the bundle quests', () => {
   });
 
   it('has a story quest with equal id, title, minutes and shelf episode for every bundled story quest', () => {
-    for (const quest of storyQuests) {
+    // A book 2 tale (row CM-46) is listed by the catalogue only inside its book 2 until `volumes` opens for everyone.
+    for (const quest of storyQuests.filter((q) => !VOLUME_TWO_STORY_SLUGS.has(q.id.replace(/^quest:story-/, '').replace(/-listen$/, '')))) {
       const episode = episodeOfQuest(quest.id);
       const found = CATALOG.quests.find((q) => q.id === quest.id);
       const expected = { id: quest.id, episodeId: episode?.id, title: quest.titleEn, minutes: quest.estimatedMinutes, kind: 'story' };
@@ -212,16 +231,31 @@ const rawStories = readdirSync(STORY_DIR)
  * the bundle holds the story's listen quest.
  */
 describe('stories and content/stories', () => {
+  it('lists a book 2 tale only inside its book 2: its read quests, never a shelf story (row CM-46)', () => {
+    // The app's Volume 2 tales are the catalogue's, and the two Letters book 2 tales that wait for their sign-off, which
+    // the catalogue lists as draft stories (offered nowhere) until then.
+    const waiting = CATALOG.stories.filter((s) => s.status === 'draft').map((s) => s.id);
+    expect(waiting).toEqual(['story:eongan-letters', 'story:hangul-name']);
+    expect([...VOLUME_TWO_STORY_SLUGS].map((slug) => `story:${slug}`).sort()).toEqual([...VOLUME_TWO_STORY_IDS].filter((id) => !waiting.includes(id)).sort());
+    for (const slug of VOLUME_TWO_STORY_SLUGS) {
+      expect(CATALOG.stories.some((s) => s.id === `story:${slug}`), slug).toBe(false);
+      const book2 = bookEpisodes.find((b) => (b.volume ?? 1) === 2 && b.storyIds?.includes(`story:${slug}`));
+      expect(book2, slug).toBeDefined();
+      expect(CATALOG.quests.find((q) => q.id === `quest:story-${slug}-read`)?.episodeId, slug).toBe(book2?.id);
+    }
+  });
+
   it('has a story with equal id, title, minutes, recommended stage, theme and offer status for every story file', () => {
     expect(rawStories.length).toBeGreaterThan(0);
-    for (const raw of rawStories) {
+    for (const raw of rawStories.filter((r) => !VOLUME_TWO_STORY_SLUGS.has(r.id.replace(/^story:/, '')))) {
       const expected: Pick<CatalogStory, 'id' | 'title' | 'minutes' | 'recommendedStage' | 'theme' | 'status'> = {
         id: raw.id,
         title: raw.title.en,
         minutes: raw.minutes,
         recommendedStage: raw.recommendedStage,
         theme: raw.theme as CatalogStory['theme'],
-        status: catalogStatusOfStory(raw),
+        // A tale only a book 2 holds is never offered by the catalogue (data.ts, row CM-46): its book is a later volume.
+        status: VOLUME_TWO_STORY_IDS.has(raw.id) ? 'draft' : catalogStatusOfStory(raw),
       };
       const found = CATALOG.stories.find((s) => s.id === raw.id);
       expect(found, `no catalogue story for ${raw.id}${row(expected)}`).toBeDefined();
@@ -236,9 +270,9 @@ describe('stories and content/stories', () => {
   });
 
   it('gives every bundled story the status of the rule, and the same sampler flag once it has a shelf block', () => {
-    for (const story of storiesAll) {
+    for (const story of storiesAll.filter((s) => !VOLUME_TWO_STORY_SLUGS.has(s.id.replace(/^story:/, '')))) {
       const found = CATALOG.stories.find((s) => s.id === story.id);
-      const status = catalogStatusOfStory(story);
+      const status = VOLUME_TWO_STORY_IDS.has(story.id) ? 'draft' : catalogStatusOfStory(story);
       const why = `shelf block: ${story.shelf ? 'yes' : 'no'}, review: ${story.review.language} / ${story.review.culture}`;
       expect(found?.status, `bundled story ${story.id} must be ${status} in the catalogue (${why})`).toBe(status);
       // The catalogue sampler is the intended free set (D5); a story file states it only in its shelf block (PR 1.9).

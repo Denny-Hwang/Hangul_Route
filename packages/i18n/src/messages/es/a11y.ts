@@ -388,4 +388,5 @@ export const a11y = {
       refresh: 'Repasar: vuelve a mirar lo que enseñó la clase',
     },
   },
+  journeyVolume: (n: number) => `Abre el volumen ${n}`,
 } satisfies DeepPartial<Messages['a11y']>;

@@ -13,7 +13,7 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-lessons.mjs");
 const OUT = join("apps", "mobile", "src", "content", "__generated__");
 
-const { BUDGET, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, discoverJamo, jamoOf, planChunks, runtimeScope, shapeCell, sizes } =
+const { BUDGET, BUILD_ONLY_FIELDS, CHUNK_DIR, GENERATED_HEADER, LESSON_STAGES, buildModules, cellChunkName, chunkHash, chunkManifest, checkBudget, discoverJamo, jamoOf, planChunks, runtimeScope, shapeCell, sizes, withoutBuildOnly } =
   await import(SCRIPT);
 
 const roots = [];
@@ -350,6 +350,8 @@ describe("build-lessons.mjs: runtime scopes (the app's MinigameScope)", () => {
       ],
       // F-CURR-002 row CM-38: a chain plays one round per frame.
       [{ kind: "my-story", frames: [1, 2, 3] }, { kind: "my-story", rounds: 3, myStory: { frames: [1, 2, 3] } }],
+      // F-CURR-002 row CM-44 S2: Syllable Build plays one round per block (the app's `syllableBuild` scope).
+      [{ kind: "syllable-build", rounds: [1, 2, 3, 4] }, { kind: "syllable-build", rounds: 4, syllableBuild: { rounds: [1, 2, 3, 4] } }],
     ];
     for (const [input, expected] of cases) assert.deepEqual(runtimeScope({ ref, ...input }, "t"), expected, input.kind);
   });
@@ -473,7 +475,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(r.stdout, /stage 3 game content {2}0 cells {2}0 B raw/);
     assert.match(r.stdout, /total {2}\d+ B raw {2}\d+ B gzip/);
     assert.match(r.stdout, /lesson-chunks\/lessons-headers-en\.ts {2}\d+ B raw/);
-    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 40000 B raw per headers chunk, 90000 B raw and 16000 B gzip per cell chunk, 220000 B raw and 40000 B gzip per stage, 1400000 B raw and 210000 B gzip in total/);
+    assert.match(r.stdout, /Budget: 9000 B raw per quest \(cell average\), 60000 B raw for the manifest, 30000 B raw per title chunk, 40000 B raw per headers chunk, 90000 B raw and 16000 B gzip per cell chunk, 380000 B raw and 48000 B gzip per stage, 2400000 B raw and 400000 B gzip in total/);
   });
 
   test("--report fails over budget; a draft is never measured", () => {
@@ -509,7 +511,7 @@ describe("build-lessons.mjs: --check and --report", () => {
     assert.match(over[3], /lessons-cell-stage2-rites\.ts is 999999 B raw, over the cell chunk ceiling of 90000 B/);
     assert.match(over[4], /lessons-cell-stage2-rites\.ts is 999999 B gzip, over the cell chunk ceiling of 16000 B/);
     assert.match(over[5], /lessons-headers-en\.ts is 40001 B raw, over the headers chunk ceiling of 40000 B/);
-    assert.match(over[6], /the Stage 2 game content is 220001 B raw/);
+    assert.match(over[6], /the Stage 2 game content is 380001 B raw/);
     assert.deepEqual(BUDGET, {
       perQuestRawAvg: 9_000,
       manifestRaw: 60_000,
@@ -517,10 +519,10 @@ describe("build-lessons.mjs: --check and --report", () => {
       headersChunkRaw: 40_000,
       cellChunkRaw: 90_000,
       cellChunkGzip: 16_000,
-      stageRaw: 220_000,
-      stageGzip: 40_000,
-      totalRaw: 1_400_000,
-      totalGzip: 210_000,
+      stageRaw: 380_000,
+      stageGzip: 48_000,
+      totalRaw: 2_400_000,
+      totalGzip: 400_000,
     });
     // A cell chunk at its line passes it.
     assert.deepEqual(checkBudget({ perCell: [], perModule: [{ name: "lesson-chunks/lessons-cell-stage2-rites.ts", raw: BUDGET.cellChunkRaw, gzip: BUDGET.cellChunkGzip }], total: { raw: 0, gzip: 0 } }), []);
@@ -679,6 +681,46 @@ describe("build-lessons.mjs: the lesson headers chunks (F-CURR-002 §10, row CM-
     const episodes = [...index.matchAll(/"id":"(episode:[^"]+)"/g)].map((m) => m[1]);
     assert.ok(episodes.length >= 25);
     for (const id of episodes) assert.match(en, new RegExp(`"${id}":\\{"subtitleEn":`), id);
+  });
+});
+
+describe("build-lessons.mjs --include-fixtures: the e2e Volume 2 (row CM-40)", () => {
+  test("copies Stage 2 Nature as its Volume 2: -v2 ids, volume 2, its overlays renamed; never with --check or --report", async () => {
+    const { FIXTURE_VOLUME2, volume2Fixture } = await import(SCRIPT);
+    assert.deepEqual({ ...FIXTURE_VOLUME2 }, { stageNo: 2, theme: "nature" });
+    const v1 = cell("stage2", "nature", "ready", { order: 4, titleEn: "Outdoor Words" });
+    const { cell: v2, files } = volume2Fixture(v1, [{ rel: "content/i18n/es/lessons-stage2-nature.json", locale: "es", json: overlay("es", "x", { "episode:stage2-nature": { title: "Palabras" }, "quest:stage2-nature-q1": { title: "Uno" } }) }]);
+    assert.equal(v2.id, "episode:stage2-nature-v2");
+    assert.equal(v2.volume, 2);
+    assert.equal(v2.titleEn, "Outdoor Words 2");
+    assert.equal(v2.quests[0].id, "quest:stage2-nature-v2-q1");
+    assert.ok(v2.quests[0].scopes.every((s) => s.ref.startsWith("minigame:s2-nature-v2-q1-")));
+    assert.equal(files[0].rel, "content/i18n/es/lessons-stage2-nature-v2.json");
+    assert.deepEqual(Object.keys(files[0].json.entries), ["episode:stage2-nature-v2", "quest:stage2-nature-v2-q1"]);
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/nature.json", v1);
+    put(root, "content/episodes/stage-2/crafts.json", cell("stage2", "crafts", "ready", { order: 5 }));
+    // The list the fixture bundle's post-build checks (pwa-postbuild.mjs --lesson-fixtures): the fixture after its Volume 1.
+    const { readCellsWithFixtures } = await import(SCRIPT);
+    assert.deepEqual(readCellsWithFixtures(root).map((c) => c.episode.id), ["episode:stage2-nature", "episode:stage2-nature-v2", "episode:stage2-crafts"]);
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /E2E FIXTURE MODULES/);
+    assert.match(read(root, "lessons-index.ts"), /case "episode:stage2-nature-v2"/);
+    assert.ok(existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
+    // A plain run removes it again.
+    assert.equal(run(root).status, 0);
+    assert.ok(!existsSync(join(root, OUT, CHUNK_DIR, "lessons-cell-stage2-nature-v2.ts")));
+    assert.equal(run(root, ["--include-fixtures", "--check"]).status, 2);
+  });
+
+  test("gives no fixture once the cell ships a Volume 2 of its own (row CM-41 S2): the shipped one is played", async () => {
+    const { fixtureCells } = await import(SCRIPT);
+    const root = makeRoot();
+    put(root, "content/episodes/stage-2/nature.json", cell("stage2", "nature", "ready", { order: 4, titleEn: "Outdoor Words" }));
+    assert.equal(fixtureCells(root).length, 1);
+    put(root, "content/episodes/stage-2/nature.v2.json", {});
+    assert.deepEqual(fixtureCells(root), []);
   });
 });
 
@@ -891,5 +933,19 @@ describe("build-lessons.mjs: the catalogue rows (F-CURR-002 row CM-6)", () => {
     assert.equal(ci.status, 1, ci.stdout);
     assert.match(ci.stdout, /::error::addedIn stamp check: origin\/main does not resolve/);
     assert.equal(run(root, ["--check"], { GITHUB_ACTIONS: "true", HANGUL_ROUTE_STAMP_BASE: "none" }).status, 0);
+  });
+});
+
+describe("build-only fields (F-CURR-002 section 4.2, row CM-44 S2)", () => {
+  test("soundChange stays out of the lesson modules at any depth; everything else is kept as it was, in order", () => {
+    assert.deepEqual(BUILD_ONLY_FIELDS, ["soundChange"]);
+    const steps = [{ id: "s2", kind: "discover", discover: { pages: [{ items: [{ type: "word", word: { ko: "책이", romanization: "chaegi", en: "book", soundChange: true } }] }] } }];
+    const out = withoutBuildOnly(steps);
+    assert.deepEqual(out, [{ id: "s2", kind: "discover", discover: { pages: [{ items: [{ type: "word", word: { ko: "책이", romanization: "chaegi", en: "book" } }] }] } }]);
+    assert.deepEqual(Object.keys(out[0]), ["id", "kind", "discover"]);
+    assert.equal(steps[0].discover.pages[0].items[0].word.soundChange, true, "the content is not changed");
+    assert.deepEqual(withoutBuildOnly({ "minigame:x": { rounds: [{ id: "r", soundChange: true, target: { ko: "가" } }] } }), { "minigame:x": { rounds: [{ id: "r", target: { ko: "가" } }] } });
+    assert.equal(withoutBuildOnly(null), null);
+    assert.equal(withoutBuildOnly("가"), "가");
   });
 });

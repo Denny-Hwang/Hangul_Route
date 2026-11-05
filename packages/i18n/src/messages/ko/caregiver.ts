@@ -127,6 +127,29 @@ export const caregiver = {
       preview: { cta: '레슨 미리 보기' },
       storageBlocked: '브라우저가 이 페이지의 저장 공간을 막았어요. 여기서는 레슨을 열 수 없어요.',
     },
+    offline: {
+      title: '오프라인 레슨',
+      line: '1단계와 모든 단계의 1권은 항상 이 기기에 있어요. 다른 권은 여기서 저장하면 인터넷 없이 쓸 수 있어요.',
+      opened: '인터넷에 연결되어 있을 때 한 번 연 권도 오프라인용으로 남아요.',
+      stage: (n: number, title: string) => `${n}단계: ${title}`,
+      size: (mb: string) => `약 ${mb}MB`,
+      state: {
+        saved: '이 기기에 저장됨',
+        partly: '일부만 저장됨',
+        notSaved: '아직 저장 안 됨',
+      },
+      save: { cta: '저장' },
+      saveAll: { cta: '모두 저장' },
+      remove: { cta: '삭제' },
+      saving: (done: string, total: string) => `저장 중: ${total}MB 중 ${done}MB`,
+      space: (mb: string) => `이 앱이 더 쓸 수 있는 공간: 약 ${mb}MB`,
+      offlineNow: '지금은 오프라인이에요. 저장하려면 인터넷이 필요해요.',
+      problem: {
+        network: '저장하지 못했어요. 인터넷 연결을 확인하고 다시 해 보세요.',
+        space: '이 기기에 공간이 부족해요. 다른 것을 지운 뒤 다시 해 보세요.',
+        notFile: '앱에 새 버전이 있어요. 페이지를 새로 고친 뒤 다시 해 보세요.',
+      },
+    },
   },
 
   plan: {

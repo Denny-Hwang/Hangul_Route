@@ -1,0 +1,1261 @@
+{
+  "v": 1,
+  "id": "story:tteok-through-the-seasons",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261104,
+  "title": {
+    "ko": "계절마다 먹는 떡",
+    "romanization": "Gyejeolmada meongneun tteok",
+    "en": "Rice Cakes Through the Seasons"
+  },
+  "summaryEn": "Grandma shows Hoya a rice cake for every season: azalea flower cakes in spring, cartwheel-stamped surichwi cakes for Dano in summer, chrysanthemum cakes in autumn, and red bean porridge with round rice balls on the longest night of winter.",
+  "hoyaIntroEn": "Spring, summer, autumn and winter. Let's find the rice cake for every season!",
+  "hoyaOutroEn": "Flowers in spring, green leaves in summer, chrysanthemums in autumn, round rice balls in winter. Which tteok would you like to try?",
+  "theme": "life",
+  "kind": "daily-life",
+  "recommendedStage": 2,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Read and recognize 떡 (tteok, rice cake), 봄 (bom, spring), 여름 (yeoreum, summer), 가을 (gaeul, autumn) and 겨울 (gyeoul, winter).",
+    "Know that tteok is made from rice and other grains and that each seasonal holiday has its own food.",
+    "Match seasonal foods to their season: azalea hwajeon in spring, surichwitteok on Dano, chrysanthemum hwajeon in autumn and red bean porridge on Dongji."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage customs, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-04"
+  },
+  "keywords": [
+    {
+      "id": "tteok",
+      "ko": "떡",
+      "romanization": "tteok",
+      "en": "rice cake",
+      "kind": "word"
+    },
+    {
+      "id": "ssal",
+      "ko": "쌀",
+      "romanization": "ssal",
+      "en": "rice (uncooked grain)",
+      "kind": "word"
+    },
+    {
+      "id": "siru",
+      "ko": "시루",
+      "romanization": "siru",
+      "en": "an earthenware steamer",
+      "kind": "word"
+    },
+    {
+      "id": "jjyeoyo",
+      "ko": "쪄요",
+      "romanization": "jjyeoyo",
+      "en": "steam; steams",
+      "kind": "word"
+    },
+    {
+      "id": "bom",
+      "ko": "봄",
+      "romanization": "bom",
+      "en": "spring",
+      "kind": "word"
+    },
+    {
+      "id": "yeoreum",
+      "ko": "여름",
+      "romanization": "yeoreum",
+      "en": "summer",
+      "kind": "word"
+    },
+    {
+      "id": "gaeul",
+      "ko": "가을",
+      "romanization": "gaeul",
+      "en": "autumn; fall",
+      "kind": "word"
+    },
+    {
+      "id": "gyeoul",
+      "ko": "겨울",
+      "romanization": "gyeoul",
+      "en": "winter",
+      "kind": "word"
+    },
+    {
+      "id": "hwajeon",
+      "ko": "화전",
+      "romanization": "hwajeon",
+      "en": "flower rice cake, fried with petals",
+      "kind": "word"
+    },
+    {
+      "id": "jindallae",
+      "ko": "진달래",
+      "romanization": "jindallae",
+      "en": "azalea",
+      "kind": "word"
+    },
+    {
+      "id": "gukhwajeon",
+      "ko": "국화전",
+      "romanization": "gukhwajeon",
+      "en": "chrysanthemum rice cake",
+      "kind": "word"
+    },
+    {
+      "id": "surichwitteok",
+      "ko": "수리취떡",
+      "romanization": "surichwitteok",
+      "en": "surichwi rice cake, for Dano",
+      "kind": "word"
+    },
+    {
+      "id": "patjuk",
+      "ko": "팥죽",
+      "romanization": "patjuk",
+      "en": "red bean porridge",
+      "kind": "word"
+    },
+    {
+      "id": "saealsim",
+      "ko": "새알심",
+      "romanization": "saealsim",
+      "en": "small round rice balls in porridge",
+      "kind": "word"
+    },
+    {
+      "id": "meogeoyo",
+      "ko": "먹어요",
+      "romanization": "meogeoyo",
+      "en": "eat; eats",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureoyo",
+      "ko": "만들어요",
+      "romanization": "mandeureoyo",
+      "en": "make; makes",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [
+    {
+      "id": "cn-tteoksal",
+      "titleEn": "A stamp for rice cakes",
+      "bodyEn": "A tteoksal is a stamp, usually made of wood, pressed onto rice cake to print a pattern. For Dano, the pattern is a cartwheel.",
+      "term": {
+        "ko": "떡살",
+        "romanization": "tteoksal",
+        "en": "a wooden stamp for rice cakes"
+      },
+      "factIds": [
+        "f5"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Grandma sets out a tray. \"In Korea, every season has its own rice cake, {kw:tteok}.\" Tteok is made from rice and other grains, and each holiday has its own kind.",
+          "captionEn": "Every season has its own tteok",
+          "keyword": {
+            "id": "tteok",
+            "ko": "떡",
+            "romanization": "tteok",
+            "en": "rice cake",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:feast-table",
+                "x": 200,
+                "y": 272,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 74,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 330,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Grandma sits by a low table of rice cakes, and Hoya waves, ready to learn their names."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "One way to make tteok is to steam rice flour in an earthenware steamer, a {kw:siru}. People made tteok for feasts, for rites and when the seasons changed.",
+          "captionEn": "Steamed in a siru",
+          "keyword": {
+            "id": "siru",
+            "ko": "시루",
+            "romanization": "siru",
+            "en": "an earthenware steamer",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 190,
+                "y": 210,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:soban",
+                "x": 190,
+                "y": 292,
+                "s": 2.2,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 330,
+                "y": 294,
+                "s": 0.72
+              }
+            ],
+            "altEn": "A warm round steamer of fresh rice cake sits on a small table, and Hoya wonders how old this kind of tteok is."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Spring, {kw:bom}! On Samjitnal, the 3rd day of the 3rd lunar month, people went on spring outings and picked azaleas, {kw:jindallae}.",
+          "captionEn": "Picking azaleas in spring",
+          "keyword": {
+            "id": "jindallae",
+            "ko": "진달래",
+            "romanization": "jindallae",
+            "en": "azalea",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 70,
+                "y": 252,
+                "s": 1.0,
+                "z": "back",
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 200,
+                "y": 284,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "prop:basket",
+                "x": 270,
+                "y": 292,
+                "s": 1.2,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 350,
+                "y": 296,
+                "s": 0.6
+              }
+            ],
+            "altEn": "On a spring hillside with pink blossoms, a woman fills a basket with azalea flowers, and Hoya cheers."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "They pressed the petals onto little rounds of sticky rice dough and fried them in oil. This flower rice cake is called {kw:hwajeon}.",
+          "captionEn": "Flower rice cakes",
+          "keyword": {
+            "id": "hwajeon",
+            "ko": "화전",
+            "romanization": "hwajeon",
+            "en": "flower rice cake, fried with petals",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 294,
+                "s": 2.2,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 80,
+                "y": 286,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 330,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Friends on a spring outing share a tray of round rice cakes with pink petals on top, and Hoya joins them."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Summer, {kw:yeoreum}! On Dano, the 5th day of the 5th lunar month, people steamed rice flour with green leaves and stamped it with a cartwheel pattern. This is {kw:surichwitteok}.",
+          "captionEn": "A cartwheel cake for Dano",
+          "keyword": {
+            "id": "surichwitteok",
+            "ko": "수리취떡",
+            "romanization": "surichwitteok",
+            "en": "surichwi rice cake, for Dano",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 294,
+                "s": 2.2,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 336,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "A table of green rice cakes stamped with a cartwheel pattern is ready for Dano, and Hoya cheers."
+          },
+          "cultureNoteId": "cn-tteoksal"
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Why green leaves? Around Dano, mugwort and surichwi grow plentifully, and people believed they kept everyone healthy through the summer heat.",
+          "captionEn": "Green leaves for the summer",
+          "keyword": {
+            "id": "yeoreum",
+            "ko": "여름",
+            "romanization": "yeoreum",
+            "en": "summer",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:herbs",
+                "x": 200,
+                "y": 292,
+                "s": 1.9
+              },
+              {
+                "ref": "prop:breeze",
+                "x": 300,
+                "y": 180,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 340,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Mugwort and other green plants grow thick on an early summer day, and Hoya fans himself in the warm air."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Autumn, {kw:gaeul}! On autumn outings, people made hwajeon again, this time with chrysanthemum petals. It is called {kw:gukhwajeon}.",
+          "captionEn": "Chrysanthemum cakes in autumn",
+          "keyword": {
+            "id": "gukhwajeon",
+            "ko": "국화전",
+            "romanization": "gukhwajeon",
+            "en": "chrysanthemum rice cake",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:persimmon-tree",
+                "x": 70,
+                "y": 256,
+                "s": 1.1,
+                "z": "back"
+              },
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 294,
+                "s": 2.2,
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 336,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "On an autumn outing under a persimmon tree, a tray of rice cakes topped with yellow chrysanthemum petals waits, and Hoya smiles."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Winter, {kw:gyeoul}! Dongji has the longest night of the year. Families gather for red bean porridge, {kw:patjuk}, with {kw:saealsim} inside: little round balls of sticky rice, a kind of tteok.",
+          "captionEn": "Red bean porridge in winter",
+          "keyword": {
+            "id": "patjuk",
+            "ko": "팥죽",
+            "romanization": "patjuk",
+            "en": "red bean porridge",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:night-window",
+                "x": 200,
+                "y": 196,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 298,
+                "s": 2.2,
+                "tint": "text.secondary"
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 70,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 340,
+                "y": 296,
+                "s": 0.6
+              }
+            ],
+            "altEn": "On the longest night of winter, Grandma serves red bean porridge with round rice balls, and Hoya joins her."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "Which flowers did people pick in spring for hwajeon?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Azaleas",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Sunflowers",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Lotus flowers",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "On Samjitnal in spring, people picked azaleas and fried the petals on rice dough to make hwajeon.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What pattern is stamped on {target}?",
+          "target": {
+            "ko": "수리취떡",
+            "romanization": "surichwitteok",
+            "en": "surichwi rice cake, for Dano"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "A full moon",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A cartwheel",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "A tiger",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Surichwitteok for Dano is stamped with a wooden tteok stamp in the shape of a cartwheel.",
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What do families eat together on Dongji, the longest night?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Cold noodles",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Chrysanthemum rice cakes",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Red bean porridge with rice balls",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "On Dongji, families eat red bean porridge, patjuk, with small round rice balls called saealsim.",
+          "factIds": [
+            "f7"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s3",
+        "s5",
+        "s7",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "tteok",
+        "siru",
+        "hwajeon",
+        "patjuk"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Rice cake, {kw:tteok}, is made from rice and other grains.",
+          "captionEn": "Tteok is made from rice",
+          "line": {
+            "ko": "떡은 쌀로 만들어요.",
+            "romanization": "Tteogeun ssallo mandeureoyo.",
+            "en": "Rice cake is made from rice.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:feast-table",
+                "x": 200,
+                "y": 272,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 74,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 330,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Grandma sits by a low table of rice cakes, and Hoya waves, ready to learn their names."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "People steam rice flour in an earthenware steamer, a {kw:siru}.",
+          "captionEn": "Steamed in a siru",
+          "line": {
+            "ko": "시루에 떡을 쪄요.",
+            "romanization": "Sirue tteogeul jjyeoyo.",
+            "en": "People steam rice cake in a siru.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 190,
+                "y": 210,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:soban",
+                "x": 190,
+                "y": 292,
+                "s": 2.2,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 330,
+                "y": 294,
+                "s": 0.72
+              }
+            ],
+            "altEn": "A warm round steamer of fresh rice cake sits on a small table, and Hoya wonders how old this kind of tteok is."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In spring, {kw:bom}, people make {kw:hwajeon}, rice cakes with azalea petals.",
+          "captionEn": "Flower cakes in spring",
+          "line": {
+            "ko": "봄에 화전을 먹어요.",
+            "romanization": "Bome hwajeoneul meogeoyo.",
+            "en": "People eat flower rice cakes in spring.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 294,
+                "s": 2.2,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 80,
+                "y": 286,
+                "s": 1.0,
+                "tint": "brand.secondaryLight"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 330,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "Friends on a spring outing share a tray of round rice cakes with pink petals on top, and Hoya joins them."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "In summer, {kw:yeoreum}, on Dano, people eat {kw:surichwitteok}, stamped with a cartwheel.",
+          "captionEn": "A cartwheel cake in summer",
+          "line": {
+            "ko": "여름에 수리취떡을 먹어요.",
+            "romanization": "Yeoreume surichwitteogeul meogeoyo.",
+            "en": "People eat surichwi rice cake in summer.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 294,
+                "s": 2.2,
+                "tint": "brand.primary"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 336,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "A table of green rice cakes stamped with a cartwheel pattern is ready for Dano, and Hoya cheers."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In autumn, {kw:gaeul}, people make {kw:gukhwajeon} with chrysanthemum petals.",
+          "captionEn": "Chrysanthemum cakes in autumn",
+          "line": {
+            "ko": "가을에 국화전을 먹어요.",
+            "romanization": "Gaeure gukhwajeoneul meogeoyo.",
+            "en": "People eat chrysanthemum rice cakes in autumn.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:persimmon-tree",
+                "x": 70,
+                "y": 256,
+                "s": 1.1,
+                "z": "back"
+              },
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 294,
+                "s": 2.2,
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 336,
+                "y": 296,
+                "s": 0.66
+              }
+            ],
+            "altEn": "On an autumn outing under a persimmon tree, a tray of rice cakes topped with yellow chrysanthemum petals waits, and Hoya smiles."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "On Dongji in winter, {kw:gyeoul}, families eat red bean porridge, {kw:patjuk}, with round rice balls.",
+          "captionEn": "Red bean porridge in winter",
+          "line": {
+            "ko": "겨울에 팥죽을 먹어요.",
+            "romanization": "Gyeoure patjugeul meogeoyo.",
+            "en": "People eat red bean porridge in winter.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:night-window",
+                "x": 200,
+                "y": 196,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:soban",
+                "x": 200,
+                "y": 298,
+                "s": 2.2,
+                "tint": "text.secondary"
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 70,
+                "y": 290,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 340,
+                "y": 296,
+                "s": 0.6
+              }
+            ],
+            "altEn": "On the longest night of winter, Grandma serves red bean porridge with round rice balls, and Hoya joins her."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "떡",
+            "romanization": "tteok",
+            "en": "rice cake"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Porridge",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Rice cake",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Flower",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Steamer",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Tteok means rice cake. It is made from rice and other grains.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "겨울",
+            "romanization": "gyeoul",
+            "en": "winter"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Spring",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Summer",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Autumn",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Winter",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Gyeoul means winter. On Dongji in winter, families eat red bean porridge.",
+          "factIds": [
+            "f7"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In which season do people eat surichwitteok?",
+          "options": [
+            {
+              "id": "a",
+              "en": "In summer, on Dano",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "In spring, on Samjitnal",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "In autumn",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "In winter, on Dongji",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Surichwitteok is the rice cake of Dano, a summer holiday.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s4",
+        "s5",
+        "s7",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "bom",
+        "yeoreum",
+        "gaeul",
+        "gyeoul"
+      ],
+      "grammarFocusEn": "-e (in a season: bome, gyeoure); -euro/-ro (made from ...)"
+    }
+  ],
+  "coverSceneId": "s1",
+  "shelf": {
+    "category": "culture",
+    "order": 24,
+    "sampler": false,
+    "minutes": 5
+  },
+  "pillarTags": [
+    "B1",
+    "B5"
+  ],
+  "topicTags": [
+    "tteok",
+    "rice-cakes",
+    "seasonal-foods",
+    "hwajeon",
+    "surichwitteok"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 2,
+      "scope": "documented",
+      "claimEn": "Tteok is food made by steaming grain flour, or pounding or shaping what was steamed; people made it for feasts and rites and when the seasons changed, and each holiday has its own tteok, like surichwitteok at Dano and hwajeon on outings in spring and autumn.",
+      "claimKo": "떡은 곡식 가루를 찌거나, 그 찐 것을 치거나 빚어서 만든 음식이며, 잔치와 제사 때와 계절이 바뀔 때 만들어 먹었고, 단오의 수리취떡, 봄가을 나들이의 화전처럼 명절마다 먹는 떡이 있다.",
+      "sources": [
+        {
+          "title": "표준국어대사전 떡",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=떡",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "떡 1 「명사」 「1」: \"곡식 가루를 찌거나, 그 찐 것을 치거나 빚어서 만든 음식을 통틀어 이르는 말.\""
+        },
+        {
+          "title": "시루떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=265",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"시루떡은 시루라는 그릇에 쌀가루를 여러 겹으로 쌓아 쪄 만든 떡입니다. … 옛날부터 사람들은 계절이 바뀔 때나 이사할 때, 기쁜 일이나 슬픈 일이 있을 때마다 시루떡을 만들어 먹었습니다. … 잔치나 제사 때는 붉은 팥고물 대신 흰 팥이나 녹두, 깨 등을 쌀가루 위에 올려 시루떡을 만들었습니다.\""
+        },
+        {
+          "title": "수리취떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=69",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"수리취떡은 주로 단오에 먹습니다.\""
+        },
+        {
+          "title": "화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=182",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"화전은 찹쌀가루 반죽에 제철 꽃을 얹어 기름에 지져 만든 떡입니다. 봄에는 진달래꽃과 배꽃, 여름에는 장미, 가을에는 국화처럼 그 계절에 피는 꽃이 화전의 주재료입니다.\""
+        },
+        {
+          "title": "절식(節食)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0049806",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "정의: \"절일(節日)을 맞아 그 뜻을 기리면서 만들어 먹는 전통음식.\" / \"각 절식에서 우선되는 것은 쌀과 잡곡을 기본 재료로 하는 떡이며 절식에 따라 그 계절의 기후와 산출성에 맞추어 각기 다른 것을 만든다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 2,
+      "scope": "documented",
+      "claimEn": "A siru is a round earthenware steamer with several holes in its bottom, used to steam tteok or rice; sirutteok is made by steaming rice flour in layers in it, and people made tteok for feasts and rites and when the seasons changed.",
+      "claimKo": "시루는 떡이나 쌀 따위를 찌는 데 쓰는 둥근 질그릇으로 바닥에 구멍이 여러 개 뚫려 있으며, 시루떡은 시루에 쌀가루를 여러 겹으로 쌓아 쪄 만든 떡이다. 사람들은 잔치와 제사 때와 계절이 바뀔 때 떡을 만들어 먹었다.",
+      "sources": [
+        {
+          "title": "표준국어대사전 시루",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=시루",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "시루 「명사」: \"떡이나 쌀 따위를 찌는 데 쓰는 둥근 질그릇. 모양이 자배기 같고 바닥에 구멍이 여러 개 뚫려 있다.\""
+        },
+        {
+          "title": "시루떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=265",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"시루떡은 시루라는 그릇에 쌀가루를 여러 겹으로 쌓아 쪄 만든 떡입니다. … 옛날부터 사람들은 계절이 바뀔 때나 이사할 때, 기쁜 일이나 슬픈 일이 있을 때마다 시루떡을 만들어 먹었습니다. … 잔치나 제사 때는 붉은 팥고물 대신 흰 팥이나 녹두, 깨 등을 쌀가루 위에 올려 시루떡을 만들었습니다.\""
+        },
+        {
+          "title": "시루떡",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0032347",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "정의: \"곡식을 가루로 만들어 증기에 찌는 떡.\" / \"그 중에서도 가장 먼저 시작된 것이 시루떡이다. 시루떡은 그 역사가 오랜 것으로 추측된다. 낙랑유적에서 동으로 된 시루와 흙으로 된 시루 등이 발견된 것이 그 근거이다.\" / \"떡은 밥과는 달리 … 각종 제사와 잔치의 음식 또는 시속음식(時俗飮食)이 되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Hwajeon is tteok of glutinous rice flour dough fried in oil with flowers pressed on top. On Samjitnal, the 3rd day of the 3rd lunar month, people on spring outings picked azaleas and ate azalea hwajeon as the holiday food.",
+      "claimKo": "화전은 찹쌀가루를 반죽하여 기름에 지진 떡으로 꽃을 붙여 지진다. 삼월 삼짇날 들놀이를 할 때 진달래꽃을 따서 지진 꽃전을 절식으로 먹는 풍속이 있다.",
+      "sources": [
+        {
+          "title": "화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=182",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"화전은 찹쌀가루 반죽에 제철 꽃을 얹어 기름에 지져 만든 떡입니다. … 진달래 꽃잎을 얹은 화전은 ‘두견화전’이라고 부르며, 이 떡은 화전놀이와 함께 봄을 느끼게 해주는 대표적인 계절 음식입니다.\""
+        },
+        {
+          "title": "삼짇날 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=178",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"삼짇날은 음력 3월 3일로 … 옛날 사람들은 삼짇날에 산이나 들에 나가 꽃을 보고 새 풀이 돋은 땅을 밟으며 화전놀이를 즐겼습니다. 또 화전이나 쑥떡 같은 봄철 음식을 만들어 나누어 먹었고\""
+        },
+        {
+          "title": "화전",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0064862",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"찹쌀가루를 반죽하여 기름에 지진 떡으로, 계절에 따라서 진달래꽃·장미꽃·배꽃·국화꽃 등을 붙여서 지진다. … 삼월 삼짇날［重三節］ 들놀이를 할 때 진달래꽃을 따서 찹쌀가루에 섞어 지진 꽃전을 절식으로 먹는 풍속이 있는데\""
+        },
+        {
+          "title": "절식(節食)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0049806",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"3월 삼짇날(3일)의 중삼절식(重三節食)\" / \"중삼절이나 중구일의 화전(두견화전 · 국화전)은 계절의 꽃향기를 가미한 별미로운 떡이다. 화전은 봄과 가을의 들놀이에서 자연과 조화를 이룬다.\""
+        },
+        {
+          "title": "단오 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=65",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"1월 1일 ‘설’, 3월 3일 ‘삼짇날’, 5월 5일 ‘단오’, 7월 7일 ‘칠석’, 9월 9일 ‘중양절’이 그렇습니다.\" (the dates are lunar; the page calls 단오 음력 5월 5일)"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In autumn, hwajeon was also made with chrysanthemum (gukhwajeon); the hwajeon of the 9th day of the 9th lunar month is a tteok flavored with the scent of the season's flowers, eaten on autumn outings.",
+      "claimKo": "가을에는 황국화와 감국잎으로 국화전을 부쳐 먹었으며, 중구일(9월 9일)의 화전(국화전)은 계절의 꽃향기를 가미한 떡으로 가을 들놀이에서 먹었다.",
+      "sources": [
+        {
+          "title": "국화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=254",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"국화전은 얇게 편 찹쌀가루 반죽 위에 국화 꽃잎을 올려 전으로 부쳐 만든 음식입니다. 옛날 사람들은 주로 음력 9월 9일인 중양절에 국화전을 먹었습니다. 이때 국화가 많이 피기 때문입니다.\""
+        },
+        {
+          "title": "중양절 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=251",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"이 무렵에는 국화가 활짝 피는 때여서 높은 산에 올라 국화전을 먹고 국화주를 마시며 단풍놀이를 즐겼습니다.\""
+        },
+        {
+          "title": "화전 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=182",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"봄에는 진달래꽃과 배꽃, 여름에는 장미, 가을에는 국화처럼 그 계절에 피는 꽃이 화전의 주재료입니다.\""
+        },
+        {
+          "title": "화전",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0064862",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"진달래화전 외에도 봄에는 이화전(梨花煎), 여름에는 장미화전(薔薇花煎), 가을에는 황국화와 감국잎으로 국화전(菊花煎)을 부쳐 먹었으며\""
+        },
+        {
+          "title": "절식(節食)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0049806",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"9월 9일의 중구절식(重九節食)\" / \"중삼절이나 중구일의 화전(두견화전 · 국화전)은 계절의 꽃향기를 가미한 별미로운 떡이다. 화전은 봄과 가을의 들놀이에서 자연과 조화를 이룬다.\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Surichwitteok, the tteok of Dano (the 5th day of the 5th lunar month), is made by steaming boiled mugwort or surichwi leaves with nonglutinous rice flour and stamping it with a wooden tteok stamp (tteoksal) in the shape of a cartwheel.",
+      "claimKo": "수리취떡은 쑥이나 수리취 잎을 삶아서 멥쌀가루와 섞은 뒤에 찌고, 수레바퀴 모양의 떡살로 찍어 낸 떡으로, 주로 단오(음력 5월 5일)에 먹는다.",
+      "sources": [
+        {
+          "title": "수리취떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=69",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"수리취떡은 쑥이나 수리취 잎을 삶아서 멥쌀가루와 섞은 뒤에 찌고, 수레바퀴 모양의 ‘떡살’로 찍어 낸 떡입니다. 떡살은 떡을 눌러 갖가지 무늬를 찍어 내는 판으로 보통 나무로 만듭니다. 수리취떡은 주로 단오에 먹습니다.\""
+        },
+        {
+          "title": "단오 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=65",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"단오는 음력 5월 5일로 중요한 명절입니다.\" / \"‘수리취떡’, ‘앵두화채’ 등의 음식도 먹습니다.\""
+        },
+        {
+          "title": "절식(節食)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0049806",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"5월 5일의 단오절식(端午節食)\" / \"차륜병은 멥쌀가루를 시루에서 익힌 다음 수리취잎을 끓는 물에 데친 것과 섞어 만든 떡이다. … 차륜(車輪 : 수레바퀴) 모양을 양각한 떡살로 찍어서\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Many people made surichwitteok at Dano because mugwort and surichwi grow plentifully around that time and were believed to keep people healthy and help them bear the summer heat.",
+      "claimKo": "단오 무렵 쑥과 수리취가 많고 약효가 좋아 단오에 수리취떡을 많이 만들어 먹었으며, 쑥과 수리취를 먹으면 건강해지고 더위를 타지 않는다고 믿었다.",
+      "sources": [
+        {
+          "title": "수리취떡 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=69",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"단오에 수리취떡을 많이 만들어 먹는 이유는 단오 무렵 쑥과 수리취가 많고, 그 약효가 좋기 때문입니다. 쑥과 수리취를 먹으면 건강해지고 더위를 타지 않을 뿐만 아니라, 나쁜 일을 막을 수 있다고 믿어서\""
+        },
+        {
+          "title": "수리취",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031353",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"연한 잎을 떡에 섞어서 먹는데, 특히 수리취를 넣어 만든 수리취 절편은 5월 단오의 절식으로 유명하다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Dongji, the winter solstice, has the longest night of the year; its holiday food is red bean porridge (patjuk) cooked with saealsim, small round balls made of glutinous rice, and families gathered to eat it together.",
+      "claimKo": "동지는 일 년 중에서 밤이 가장 긴 날이며, 동지의 명절 음식인 동지팥죽에는 찹쌀로 만든 동그란 경단인 새알심을 넣어 끓이고, 가족이 함께 모여 팥죽을 먹었다.",
+      "sources": [
+        {
+          "title": "동지 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=103",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"동지는 24절기 중 스물두 번째 절기로 일 년 중에서 밤이 가장 길고 낮이 가장 짧은 날입니다.\" / \"동지에는 ‘팥죽’을 만들어 먹고\""
+        },
+        {
+          "title": "동지팥죽 (어린이민속사전)",
+          "publisher": "국립민속박물관 어린이박물관 (National Folk Museum of Korea, nfm.go.kr)",
+          "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=104",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"동지팥죽은 팥을 넣고 만든 죽으로 동지의 명절 음식입니다. … ‘새알심’이라는 찹쌀로 만든 동그란 모양의 경단을 함께 넣어서 끓입니다. 옛날 사람들은 … 가족이 함께 모여 팥죽을 먹었습니다.\""
+        },
+        {
+          "title": "표준국어대사전 경단",
+          "publisher": "국립국어원 표준국어대사전 (National Institute of Korean Language, stdict.korean.go.kr)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=경단",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "경단 5 (瓊團) 「명사」: \"찹쌀가루나 찰수수 따위의 가루를 반죽하여 밤톨만 한 크기로 동글동글하게 빚어 끓는 물에 삶아 낸 후 고물을 묻히거나 꿀이나 엿물을 바른 떡. 또는 그런 모양의 것.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국립민속박물관 어린이민속사전(수리취떡, 단오, 동지, 동지팥죽); 한국민족문화대백과사전(절식, 시루떡, 화전, 수리취)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Sources opened and quotes read on 2026-11-04: encykorea E0049806 (절식), E0032347 (시루떡), E0064862 (화전), E0031353 (수리취), and the National Folk Museum of Korea children's folk encyclopedia pages 수리취떡 (topic 69), 단오 (65), 동지 (103) and 동지팥죽 (104) on nfm.go.kr (server-rendered; the folkency.nfm.go.kr pages render with JavaScript and were not used). MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/life-book2.changes.md and the third pass in life-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text. Fix round 1 (2026-11-04, PR review): f1, f2, f3 and f4 cite allowlisted sources first (NIKL Standard Korean Dictionary 떡, 시루, 경단; National Folk Museum of Korea 시루떡 265, 화전 182, 삼짇날 178, 국화전 254, 중양절 251); 'one of the oldest ways' left the s2 narration and f2, and 'grain flour' became 'rice flour' (NFM 265); the winter scene names saealsim a kind of tteok (NFM 104, NIKL 경단) and Hoya's outro names winter."
+  },
+  "authorNotes": "Topic: rice cakes of the seasons, kept apart from the shipped stories: tteokguk (seollal-new-year) and songpyeon (chuseok-ganggangsullae, and the Stage 1 rites quest) are not told again; autumn is told with chrysanthemum hwajeon on outings, not songpyeon. Dates: Samjitnal (3rd day of the 3rd month) and Dano (5th day of the 5th month) are lunar dates (NFM 단오 page: 음력 5월 5일); Dongji is a solar term, so no date is given for it, only that it has the longest night. Saealsim are glutinous rice balls (경단) cooked in the porridge; the NFM custom of eating as many as one's years is left out (no age words). Red bean porridge being thrown on gates to keep spirits away (NFM) is left out. The cartwheel stamp (차륜병) follows NFM 69 and encykorea E0049806; surichwitteok may be made with mugwort or surichwi leaves (NFM), so the narration says green leaves. Hwajeon was also made with pear blossoms, roses and other flowers (encykorea); the story names only azaleas (spring) and chrysanthemums (autumn). The siru is called earthenware because the NIKL Standard Korean Dictionary defines it as a round 질그릇; the narration makes no claim about the oldest kind of tteok (only encykorea gave that, and it is not on the §6.6 allowlist). Saealsim are named a kind of tteok because NFM 104 calls them 경단 and NIKL defines 경단 as a 떡.",
+  "errata": []
+}

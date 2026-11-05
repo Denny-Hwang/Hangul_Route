@@ -13,7 +13,7 @@ The design system has no copy: the caller passes localised labels and the row's 
 
 | Prop | Type | Notes |
 |---|---|---|
-| `items` | `readonly { id: T; label: string }[]` | In display order; only the sections that are available |
+| `items` | `readonly { id: T; label: string; accessibilityLabel?: string }[]` | In display order; only the sections that are available. `accessibilityLabel` is the tab's spoken name when the visible label is short (the lesson page's "Vol 1", read as "Volume 1", F-CURR-002 row CM-40); `label` otherwise |
 | `value` | `T` | The selected id |
 | `onChange` | `(id: T) => void` | Fires on every tap, also on the selected tab |
 | `accessibilityLabel` | `string` | Name of the `tablist` ("Library sections") |
