@@ -96,9 +96,10 @@ describe('removeLastTile (the Undo button of Build a Letter)', () => {
     expect(removeLastTile(['jamo:giyeok'])).toEqual([]);
   });
 
-  it('is a no-op on an empty block (the same array comes back)', () => {
+  it('is a no-op on an empty block (an empty array comes back, never the input)', () => {
     const empty: string[] = [];
-    expect(removeLastTile(empty)).toBe(empty);
+    expect(removeLastTile(empty)).toEqual([]);
+    expect(removeLastTile(empty)).not.toBe(empty);
   });
 
   it('never changes its input', () => {
