@@ -16,9 +16,9 @@ import { presenterChooserGroups } from '../quick-source';
 /**
  * The lecture side of a cell's Volume 2 (F-CURR-002 §8 and row CM-40): the presenter's chooser keeps a `-v2` episode key,
  * lists a cell's Volume 2 as its own row only while `volumes` is on, a deck carries the id through its link, and a
- * presenter whose bundle has no such episode (an older build, or this one before a Volume 2 ships) skips the block
- * calmly instead of failing the deck. The fixture Volume 2 is Stage 4 Letters & Books', a cell that ships none; rows
- * CM-41..CM-45 ship real ones.
+ * presenter whose bundle has no such episode (an older build) skips the block calmly instead of failing the deck.
+ * The fixture Volume 2 is Stage 4 Letters & Books' (it stands in for the one row CM-44 S4 ships); rows CM-41..CM-45 ship
+ * real ones.
  */
 
 const V2 = 'episode:stage4-letters-v2';
@@ -59,7 +59,7 @@ describe('the presenter keeps and offers a Volume 2 (row CM-40)', () => {
     const shipped = (volumes: boolean) => presenterChooserGroups('en', { consonants: 'C', vowels: 'V' }, { volumes }).flatMap((g) => g.rows.map((r) => r.key));
     const laterKeys = shipped(true).filter((k) => k.endsWith('-v2'));
     expect(laterKeys).toContain(SHIPPED_V2);
-    expect(laterKeys).not.toContain(V2);
+    expect(laterKeys).toContain(V2);
     for (const key of laterKeys) expect(shipped(true).indexOf(key), key).toBe(shipped(true).indexOf(key.replace(/-v2$/, '')) + 1);
     expect(shipped(false).some((k) => k.endsWith('-v2'))).toBe(false);
   });
@@ -69,7 +69,10 @@ describe('the presenter keeps and offers a Volume 2 (row CM-40)', () => {
     expect(decoded.ok).toBe(true);
     if (!decoded.ok) return;
     expect(decoded.deck.blocks).toEqual([{ kind: 'episode', id: V2 }]);
-    const expanded = expandDeck(decoded.deck, lectureBundle('en'), { canPlayKorean: true });
+    // An older presenter's bundle has no such episode.
+    const real = lectureBundle('en');
+    const older: LectureBundle = { ...real, episodeById: (id) => (id === V2 ? undefined : real.episodeById(id)) };
+    const expanded = expandDeck(decoded.deck, older, { canPlayKorean: true });
     expect(expanded.skipped).toEqual([{ blockIndex: 0, ref: V2, reason: 'unknown-id' }]);
     expect(CATALOG.cells.length).toBe(35);
   });
