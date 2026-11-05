@@ -9,13 +9,24 @@ import { loadLocalePack } from '../locale-packs.web';
  * which carries that locale's whole message overlay and content overlays (the tests read the packages' eager
  * tables, which hold the same text). The native build has no loader.
  */
+const SCENE_TEXT = /^(?:tiers\.[^.]+\.)?scenes\.[^.]+\.(?:narration|caption|alt)$/;
+function withoutSceneText(table: Readonly<Record<string, Readonly<Record<string, string>>>>): Record<string, Record<string, string>> {
+  const out: Record<string, Record<string, string>> = {};
+  for (const [id, fields] of Object.entries(table)) {
+    const kept = Object.entries(fields).filter(([field]) => !(id.startsWith('story:') && SCENE_TEXT.test(field)));
+    if (kept.length > 0) out[id] = Object.fromEntries(kept);
+  }
+  return out;
+}
+
 describe('locale chunk loaders', () => {
   it('the web loader reaches each locale\'s chunk, with its marker, its messages and its content text', async () => {
     expect(loadLocalePack).not.toBeNull();
     for (const locale of ['es', 'ko'] as const) {
       const chunk = await loadLocalePack!(locale);
       expect(chunk.LOCALE_PACK).toBe(`locale-pack:${locale}`);
-      expect(chunk.LOCALE_CONTENT).toEqual(OVERLAYS[locale]);
+      // Every content overlay but a story's scene text, which rides in the story's own chunk (row CM-8b's overlay half).
+      expect(chunk.LOCALE_CONTENT).toEqual(withoutSceneText(OVERLAYS[locale]));
       expect(Object.keys(chunk.LOCALE_CONTENT).length).toBeGreaterThan(100);
       expect(chunk.LOCALE_MESSAGES.common?.buttons?.ok).toBe(getMessages(locale).common.buttons.ok);
       expect(Object.keys(chunk.LOCALE_MESSAGES).sort()).toEqual(['a11y', 'caregiver', 'common', 'console', 'landing', 'learner', 'report']);

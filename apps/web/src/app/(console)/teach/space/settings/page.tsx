@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
 import { FamilyStartFlow } from '@/components/console/FamilyTransferParts';
 import { NoteSendersPanel } from '@/components/console/FamilyNotesParts';
+import { RelinkPopup } from '@/components/console/RelinkPopup';
 import { TeacherMoveSheet } from '@/components/console/TeacherMoveSheet';
 import { TransferSheet, useOnline, useTransfersShown } from '@/components/console/TransferParts';
 import { Button, LoadErrorPanel, Notice } from '@/components/console/ui';
@@ -16,11 +17,14 @@ import { useConsole } from '@/components/console/use-console';
 import { useNotesApi } from '@/components/console/use-notes-api';
 import { useRosterChanges } from '@/components/console/use-roster-changes';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
-import { unarchiveOverCap, type ApiResult, type MemberView, type Roster, type TransferOption } from '@/lib/console/api';
+import { CLASS_RELINK_GAP_MS, CLASS_RELINK_REFRESH_MS } from '@/lib/console/visible-refresh';
+import { unarchiveOverCap, type ApiResult, type MemberView, type RelinkView, type Roster, type TransferOption, type TransferView } from '@/lib/console/api';
+import type { ClassMoveLists } from '@/lib/console/class-moves';
+import { attentionModel, type LearnerStatus } from '@/lib/console/learner-status';
 import { archiveConfirmText, archivePlanNote, settleWithin } from '@/lib/console/archive-plan-note';
 import { notesEnabled, schoolConsentModeEnabled } from '@/lib/console/config';
 import { personaHome, personaOfKind } from '@/lib/console/personas';
-import { isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
+import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
 import { spaceSubPageBack } from '@/lib/console/page-back';
 import { capState, familyCountLine, seatLine } from '@/lib/console/rollup';
 import { RenameStyles, SettingsNameRow, useAnnouncer, useNameOverrides, useSpaceRename } from '@/components/console/RenameParts';
@@ -71,6 +75,16 @@ function SettingsInner(): JSX.Element {
   const online = useOnline();
   // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
   const [moveOptions, setMoveOptions] = useState<TransferOption[]>([]);
+  // AMENDMENTS-GROWNUP-UX GX-10 (T11, P7): the lists each learner row's status is drawn from (`attentionModel`, the class
+  // roster's model) and whether the family's classes were read (a class line only then). null: not read, adds nothing.
+  const [relinkList, setRelinkList] = useState<RelinkView[] | null>(null);
+  const [transferList, setTransferList] = useState<TransferView[] | null>(null);
+  const [classMoveLists, setClassMoveLists] = useState<ClassMoveLists | null>(null);
+  const [optionsRead, setOptionsRead] = useState(false);
+  // GX-D2, GX-D12: a re-link's action chip opens the re-link pop-up (hint, platform, request time), never a one-tap
+  // approve; the learner whose request it is, and the line a settled answer leaves on the page.
+  const [relinkFor, setRelinkFor] = useState<{ id: string; name: string } | null>(null);
+  const [relinkLine, setRelinkLine] = useState<string | null>(null);
   // F-BILL-002 B-12: the billing summary read, so the archive confirm can name the plan it affects; null = no line.
   const billingRead = useRef<Promise<BillingSummary | null> | null>(null);
   const asking = useRef(false);
@@ -111,12 +125,23 @@ function SettingsInner(): JSX.Element {
         drawn.current = true;
         setRoster({ ...r.data, space: { ...r.data.space, name: names.nameFor(r.data.space.id, r.data.space.name, started) } });
         setMembers(mem.data);
-        if (r.data.space.kind === 'family' && movesShown) {
-          // The move options are extra: a failed read leaves them empty and never breaks the settings page.
-          const moves = await Promise.resolve()
-            .then(() => api.transferRequests(spaceId))
-            .catch(() => null);
-          if (call === loadSeq.current) setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
+        // GX-10: the status lists, extra like the move options: a failed read (or a method an older bundle lacks) adds
+        // nothing and never breaks the settings page. Re-links whatever CLASS_TRANSFER says; moves only while shown.
+        const kind = r.data.space.kind;
+        const movesRead = movesShown && (kind === 'class' || kind === 'family');
+        const extra = <T,>(read: () => Promise<ApiResult<T>>): Promise<ApiResult<T> | null> => Promise.resolve().then(read).catch(() => null);
+        const [relinks, moves, teacherMoves] = await Promise.all([
+          kind === 'class' || kind === 'family' ? extra(() => api.relinkRequests(spaceId)) : null,
+          movesRead ? extra(() => api.transferRequests(spaceId)) : null,
+          movesRead && kind === 'class' ? extra(() => api.classMoves(spaceId)) : null,
+        ]);
+        if (call === loadSeq.current) {
+          setRelinkList(relinks?.ok ? relinks.data : null);
+          setTransferList(moves?.ok ? moves.data.requests : null);
+          setClassMoveLists(teacherMoves?.ok ? teacherMoves.data : null);
+          // On a family (T-6d): the learners in a live class, from the class-moves list's `options`.
+          setMoveOptions(moves?.ok ? (moves.data.options ?? []) : []);
+          setOptionsRead(kind === 'family' && moves?.ok === true && Array.isArray(moves.data.options));
         }
         return { members: mem.data };
       })();
@@ -135,6 +160,19 @@ function SettingsInner(): JSX.Element {
   // into view (no slow poll: a settings page is not a classroom screen) and when another console tab changed a roster.
   useVisibleRefresh(() => void load(true), !!api && !error);
   useRosterChanges(() => void load(true), !!api && !error);
+
+  // GX-10 (section 4, as the class roster, GX-1 section 5.4): the re-link-only read every 20 s while the tab is in view.
+  // A re-link closes in 10 minutes while the learner waits at the device, so a new one shows, "N min left" counts down
+  // (each read draws the row again with a fresh `now`) and an expired one drops its "Needs your OK".
+  const readRelinks = useCallback(async (): Promise<void> => {
+    if (!api) return;
+    const r = await Promise.resolve()
+      .then(() => api.relinkRequests(spaceId))
+      .catch(() => null);
+    if (r?.ok) setRelinkList(r.data);
+  }, [api, spaceId]);
+  const relinkWatch = !!api && !error && (roster?.space.kind === 'class' || roster?.space.kind === 'family');
+  useVisibleRefresh(() => void readRelinks(), relinkWatch, { pollMs: CLASS_RELINK_REFRESH_MS, gapMs: CLASS_RELINK_GAP_MS });
 
   // [SA] The Name block (AMENDMENTS-SEATS-ADMINS section 5.3): the title and the Back label read the new name at once.
   const { announce, region: renameLive } = useAnnouncer();
@@ -185,6 +223,16 @@ function SettingsInner(): JSX.Element {
   const space = roster?.space ?? null;
   const archived = !!space?.archivedAt;
   // [SA] AMENDMENTS-SEATS-ADMINS section 6.6: an administrator (not the owner) of this school sees it control by control.
+  // GX-10: one status per learner, the class roster's own model (a school's rows carry none).
+  const statuses: Record<string, LearnerStatus> | undefined =
+    roster && (roster.space.kind === 'class' || roster.space.kind === 'family')
+      ? attentionModel({ kind: roster.space.kind, roster: roster.learners, relinks: relinkList, transfers: movesShown ? transferList : null, classMoves: movesShown && roster.space.kind === 'class' ? classMoveLists : null, now }).byLearner
+      : undefined;
+  // P7: a family learner's classes, only when the options were read (never "Family only" on a guess).
+  const familyClasses = optionsRead ? new Map(moveOptions.map((o) => [o.learnerId, o.classes.map((k) => k.name)] as const)) : null;
+  // The dialog shows only while its learner still has a re-link waiting (a poll that finds it closed takes it away).
+  const popupStatus = relinkFor ? statuses?.[relinkFor.id] : undefined;
+  const popupRelink = popupStatus?.kind === 'relink' ? (popupStatus.relink ?? null) : null;
   const schoolAdmin = space?.kind === 'school' && members.some((mb) => mb.memberKind === 'account' && mb.memberId === session.accountId && mb.role === 'admin' && !mb.isOwner);
 
   return (
@@ -192,6 +240,11 @@ function SettingsInner(): JSX.Element {
       {confirmSheet}
       {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
+      {relinkLine ? (
+        <div role="status" data-testid="settings-relink-line">
+          <Notice tone="info">{relinkLine}</Notice>
+        </div>
+      ) : null}
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
       {moveNote === 'sent' ? <Notice tone="success">{c.transfer.start.sent}</Notice> : null}
       {teacherMoveLine ? <Notice tone="success">{teacherMoveLine}</Notice> : null}
@@ -216,6 +269,18 @@ function SettingsInner(): JSX.Element {
             busy={busy}
             schoolConsent={schoolConsentModeEnabled()}
             schoolAdmin={schoolAdmin}
+            statuses={statuses}
+            familyClasses={familyClasses}
+            // An action chip opens the decision for that item: the re-link pop-up (GX-D12), else the moves page (ids only
+            // in the address).
+            onOpenStatus={(status, learner) => {
+              if (status.kind === 'relink' && status.relink) {
+                setRelinkLine(null);
+                setRelinkFor(learner);
+                return;
+              }
+              router.push(status.kind === 'relink' ? ROUTES.spaceRelink(spaceId, space.kind) : ROUTES.spaceTransfers(spaceId, space.kind));
+            }}
             deleteTarget={deleteTarget}
             typedName={typedName}
             onRegenerate={() => {
@@ -278,6 +343,25 @@ function SettingsInner(): JSX.Element {
             }
           />
           {archived ? <Button onClick={() => router.push(personaHome(personaOfKind(space.kind)))}>{s.backToConsole.cta}</Button> : null}
+          {popupRelink && relinkFor ? (
+            <RelinkPopup
+              api={api}
+              spaceId={spaceId}
+              request={popupRelink}
+              learnerName={relinkFor.name}
+              online={online}
+              now={now}
+              onLater={() => setRelinkFor(null)}
+              onResult={(text, settled) => {
+                // A failure that leaves the request open stays in the dialog, under its buttons; a settled answer closes
+                // it, says the result on the page and reads the re-links again so the chip drops.
+                if (!settled) return;
+                setRelinkFor(null);
+                setRelinkLine(text);
+                void readRelinks();
+              }}
+            />
+          ) : null}
           {moving && movesShown && space.kind === 'class' && !archived ? (
             <TeacherMoveSheet
               spaceId={spaceId}
@@ -335,17 +419,22 @@ function SettingsInner(): JSX.Element {
                 online={online}
                 preselect={{ learnerId: moving.memberId }}
                 answersHidden={false}
+                // Every way out reads the lists again (as the class sheet does), so the row's "Move waiting" chip and its
+                // Move turned off show at once after the grown-up's own request.
                 onCreated={() => {
                   setMoving(null);
                   setMoveNote('sent');
+                  void load(true);
                 }}
                 onPageState={(state) => {
                   setMoving(null);
                   setMoveNote(state);
+                  void load(true);
                 }}
                 onNotice={(notice) => {
                   setMoving(null);
                   setMoveNote(notice);
+                  void load(true);
                 }}
               />
             </TransferSheet>

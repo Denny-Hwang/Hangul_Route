@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import { CATALOG, planCatalogStale } from '@hangul-route/content-schema';
 import { routeEnabledFor } from '../../../config/flags';
 
 /**
@@ -130,7 +131,10 @@ describe('every learner-facing weekly plan entry reads routeEnabledFor(locale) (
 describe('the overview offers Refresh route only for an older catalogue (F-STORY-005 PR 5.6)', () => {
   it('a route saved on a newer catalogue (another device on a newer build) is not stale', () => {
     const overview = src('screens/route/RouteOverviewScreen.tsx');
-    expect(overview).toContain('active.meta.catalogVersion < CATALOG.version');
+    // Older only, through the shared rule (a catalogue that added only later volumes is not newer either, row CM-43 S4).
+    expect(overview).toContain('planCatalogStale(active.meta.catalogVersion, CATALOG)');
     expect(overview).not.toContain('active.meta.catalogVersion !== CATALOG.version');
+    expect(planCatalogStale(CATALOG.version + 1, CATALOG)).toBe(false);
+    expect(planCatalogStale(CATALOG.version, CATALOG)).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG,
+  laterVolumeStoryIds,
   LECTURE_MAX_BLOCKS,
   LETTER_SET_KEYS,
   StageKeySchema,
@@ -154,7 +155,8 @@ describe('chooserGroups: the groups over CATALOG', () => {
   });
 
   it('Stories: the given ready stories in catalogue order; Word topics: the given topics in their order', () => {
-    expect(rowKeys(group(groups, 'stories'))).toEqual([...CATALOG.stories].sort((a, b) => a.order - b.order).map((s) => s.id));
+    // A story the catalogue does not offer (status draft: the Nature book 2 tales, F-CURR-002 row CM-46) is no row.
+    expect(rowKeys(group(groups, 'stories'))).toEqual([...CATALOG.stories].filter((s) => s.status === 'ready').sort((a, b) => a.order - b.order).map((s) => s.id));
     expect(rowKeys(group(groups, 'topics'))).toEqual([...CATALOG.topics].sort((a, b) => a.order - b.order).map((t) => `vocab-topic:${t.key}`));
     const topic = group(groups, 'topics').rows[0]!;
     expect(topic.kind === 'topic' && topic.minutes).toBe(CATALOG.topics.find((t) => `vocab-topic:${t.key}` === topic.key)!.minutes);
@@ -163,11 +165,15 @@ describe('chooserGroups: the groups over CATALOG', () => {
     expect(rowKeys(group(some, 'topics'))).toEqual([TOPIC_IDS[2]]);
   });
 
+  // The row CM-46 tales are in the catalogue as drafts until their review signs them.
+  const READY_STORIES = [...CATALOG.stories].filter((s) => s.status === 'ready').sort((a, b) => a.order - b.order);
+
   it('a draft story is never offered', () => {
+    expect(READY_STORIES.length).toBeLessThan(CATALOG.stories.length);
     const draft: Catalog = { ...CATALOG, stories: CATALOG.stories.map((s, i) => (i === 0 ? { ...s, status: 'draft' } : s)) };
     const rows = group(chooserGroups({ ...options('en'), catalog: draft }), 'stories').rows;
     expect(rows.map((r) => r.key)).not.toContain(CATALOG.stories[0]!.id);
-    expect(rows).toHaveLength(CATALOG.stories.length - 1);
+    expect(rows).toHaveLength(CATALOG.stories.filter((s) => s.status === 'ready').length - 1);
   });
 
   it('no Stories or Word topics group without ids (the plan builder)', () => {

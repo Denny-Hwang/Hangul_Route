@@ -1,4 +1,4 @@
-import { cellIsReady, storyIsReady, type Catalog } from '../catalog/schema';
+import { cellIsReady, laterVolumeStoryIds, storyIsReady, type Catalog } from '../catalog/schema';
 import { romanize } from '../romanization/rr';
 import { StageKeySchema, ThemeKeySchema, type StageKey } from './heritage-card';
 import { LECTURE_MAX_BLOCKS, type LectureBlock } from './lecture';
@@ -102,6 +102,11 @@ export interface ChooserOptions {
   stories?: readonly string[] | null;
   /** Topic ids (`vocab-topic:<key>`) the surface lists (ready topics only); absent or empty: no Word topics group. */
   topics?: readonly string[] | null;
+  /**
+   * List each cell's later volumes (F-CURR-002 row CM-40, `volumes` on) as rows of their own after the cell's row, keyed
+   * by their episode id (`episode:stage2-life-v2`). Absent or false: the first volumes only, as before.
+   */
+  volumes?: boolean;
 }
 
 // ---- search text --------------------------------------------------------------------------------
@@ -143,15 +148,19 @@ function stageGroup(stage: StageKey, options: ChooserOptions): ChooserGroup | nu
     .filter((cell) => cell.stage === stage && cellIsReady(cell))
     .sort((a, b) => themeRank(a.theme) - themeRank(b.theme))
     .flatMap((cell): ChooserEpisodeRow[] => {
-      const lessons = cell.questIds.flatMap((id): ChooserLesson[] => {
-        const quest = quests.get(id);
-        if (!quest) return [];
-        const title = options.title(id);
-        return [{ key: id, title, minutes: quest.minutes, search: termsOf(id, title, options, quest.teaches.map((t) => t.split('/')[0]!)) }];
-      });
-      if (lessons.length === 0) return [];
-      const title = options.title(cell.episodeId);
-      return [{ kind: 'episode', key: cell.episodeId, title, minutes: cell.minutes, lessons, search: termsOf(cell.episodeId, title, options) }];
+      const row = (episodeId: string, questIds: readonly string[], minutes: number): ChooserEpisodeRow[] => {
+        const lessons = questIds.flatMap((id): ChooserLesson[] => {
+          const quest = quests.get(id);
+          if (!quest) return [];
+          const title = options.title(id);
+          return [{ key: id, title, minutes: quest.minutes, search: termsOf(id, title, options, quest.teaches.map((t) => t.split('/')[0]!)) }];
+        });
+        if (lessons.length === 0) return [];
+        const title = options.title(episodeId);
+        return [{ kind: 'episode', key: episodeId, title, minutes, lessons, search: termsOf(episodeId, title, options) }];
+      };
+      const later = options.volumes === true ? (cell.volumes ?? []) : [];
+      return [...row(cell.episodeId, cell.questIds, cell.minutes), ...later.flatMap((v) => row(v.episodeId, v.questIds, v.minutes))];
     });
   const lessonCount = episodes.reduce((n, row) => n + row.lessons.length, 0);
   const rows: ChooserRow[] = [...episodes];
@@ -170,8 +179,10 @@ function stageGroup(stage: StageKey, options: ChooserOptions): ChooserGroup | nu
 
 function storiesGroup(options: ChooserOptions): ChooserGroup | null {
   const allowed = new Set(options.stories ?? []);
+  // A book 2 tale (F-CURR-002 row CM-46) is a later volume's content: listed only with `volumes`, as the volume is.
+  const laterVolume = options.volumes === true ? new Set<string>() : laterVolumeStoryIds(options.catalog);
   const rows: ChooserRow[] = options.catalog.stories
-    .filter((s) => allowed.has(s.id) && storyIsReady(s))
+    .filter((s) => allowed.has(s.id) && storyIsReady(s) && !laterVolume.has(s.id))
     .sort((a, b) => a.order - b.order)
     .map((s) => {
       const title = options.title(s.id);

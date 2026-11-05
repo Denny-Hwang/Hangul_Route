@@ -227,6 +227,22 @@ describe('buildReviewItems: merge and frozen ids', () => {
     });
   });
 
+  it('never lets a later volume lead an item Volume 1 teaches, even from an earlier stage (row CM-41 review)', () => {
+    const list = [
+      occ({ kind: 'pat', ko: '비가 와요.', en: 'It is raining.', source: 'discover', picture: 'word:nature-rain', glossKey: 'quest:stage3-nature-v2-q1#x', cell: 'episode:stage3-nature-v2', stage: 3, volume: 2, home: 'nature' }),
+      occ({ kind: 'pat', ko: '비가 와요!', en: 'It is raining!', glossKey: 'minigame:s4-nature-q1-check#y', cell: 'episode:stage4-nature', stage: 4, home: 'nature' }),
+      occ({ kind: 'lex', ko: '커요', en: 'is big', source: 'discover', glossKey: 'minigame:v2#a', cell: 'episode:stage3-nature-v2', stage: 3, volume: 2, home: 'nature' }),
+      occ({ kind: 'lex', ko: '커요', en: 'big', glossKey: 'minigame:s7#b', cell: 'episode:stage7-nature', stage: 7, home: 'nature' }),
+    ];
+    const [rain, big] = buildReviewItems(list, EMPTY_SNAPSHOT, vocab).items;
+    // Volume 1 leads: its text, gloss, stage (the memory shard) and first cell; Volume 2's Discover page adds its cell.
+    expect(rain).toMatchObject({ ko: '비가 와요!', en: 'It is raining!', glossKey: 'minigame:s4-nature-q1-check#y', stage: 4, volume: 1, cells: ['episode:stage4-nature', 'episode:stage3-nature-v2'], asked: [] });
+    expect(rain?.picture).toBeUndefined();
+    expect(big).toMatchObject({ ko: '커요', en: 'big', glossKey: 'minigame:s7#b', stage: 7, volume: 1, cells: ['episode:stage7-nature', 'episode:stage3-nature-v2'] });
+    // An item only a later volume teaches is that volume's.
+    expect(buildReviewItems([list[0] as ItemOccurrence], EMPTY_SNAPSHOT, vocab).items[0]).toMatchObject({ stage: 3, volume: 2, en: 'It is raining.', picture: 'word:nature-rain' });
+  });
+
   it('takes the English and its gloss key from one occurrence, else a field that glosses the same text', () => {
     const paired = buildReviewItems(
       [

@@ -59,11 +59,26 @@ const settle = async (): Promise<void> => {
   });
 };
 
-function bindings(over: { reload?: () => boolean; noteStoryIds?: readonly string[]; answer?: (error: unknown) => Promise<boolean> } = {}) {
+function bindings(
+  over: {
+    reload?: () => boolean;
+    noteStoryIds?: readonly string[];
+    answer?: (error: unknown) => Promise<boolean>;
+    isLaterStory?: (id: string) => boolean;
+    laterOnDevice?: (id: string) => boolean;
+  } = {},
+) {
   const cold = coldStore();
   const reload = vi.fn(over.reload ?? (() => false));
   const answer = vi.fn(over.answer ?? (async () => false));
-  const b = storyContentBindings({ store: cold.store, noteStoryIds: over.noteStoryIds ?? [moon.id], reloadForNewBuild: reload, isNewBuildAnswer: answer });
+  const b = storyContentBindings({
+    store: cold.store,
+    noteStoryIds: over.noteStoryIds ?? [moon.id],
+    reloadForNewBuild: reload,
+    isNewBuildAnswer: answer,
+    ...(over.isLaterStory === undefined ? {} : { isLaterStory: over.isLaterStory }),
+    ...(over.laterOnDevice === undefined ? {} : { laterOnDevice: over.laterOnDevice }),
+  });
   return { ...cold, ...b, reload, answer };
 }
 
@@ -167,6 +182,47 @@ describe('useStoryReady (the reader, its games, Sources)', () => {
     expect(byTestId(r.root, 'waiting')).toHaveLength(1);
     await act(async () => t.pending[moon.id]?.resolve(chunkOf(moon.id)));
     expect(byTestId(r.root, 'body')).toHaveLength(1);
+  });
+});
+
+describe('useStoryState (row CM-5B: a book 2 tale opened from the shelf, a cell list, a quest)', () => {
+  function Reader({ hook, storyId }: { hook: (id: string | null) => string; storyId: string }): ReactElement {
+    const state = hook(storyId);
+    return <Text testID={state}>{state}</Text>;
+  }
+  const isLaterStory = (id: string): boolean => id === moon.id;
+
+  it('a book 2 tale that cannot load (offline, not saved) is needs-internet, never the crash screen', async () => {
+    const t = bindings({ isLaterStory });
+    const r = await render(
+      <ErrorBoundary fallbackRender={() => <Text testID="crash">crash</Text>}>
+        <Reader hook={t.useStoryState} storyId={moon.id} />
+      </ErrorBoundary>,
+    );
+    expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+    await act(async () => t.pending[moon.id]?.reject(new Error('offline')));
+    await settle();
+    expect(byTestId(r.root, 'needs-internet')).toHaveLength(1);
+    expect(t.reload).not.toHaveBeenCalled();
+  });
+
+  it('a book 1 tale that fails is still the crash screen; a book 2 tale of a newer build still reloads', async () => {
+    const t = bindings({ isLaterStory });
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const r = await render(
+      <ErrorBoundary fallbackRender={() => <Text testID="crash">crash</Text>}>
+        <Reader hook={t.useStoryState} storyId={sun.id} />
+      </ErrorBoundary>,
+    );
+    await act(async () => t.pending[sun.id]?.reject(new Error('offline')));
+    await settle();
+    expect(byTestId(r.root, 'crash')).toHaveLength(1);
+    errors.mockRestore();
+    const newer = bindings({ isLaterStory, reload: () => true });
+    await render(<Reader hook={newer.useStoryState} storyId={moon.id} />);
+    await act(async () => newer.pending[moon.id]?.resolve(chunkOf(moon.id, 'another-build')));
+    await settle();
+    expect(newer.reload).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -287,6 +343,55 @@ describe('useNoteStoriesReady (Culture notes)', () => {
     await settle();
     expect(t.reload).toHaveBeenCalledTimes(1);
     expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+  });
+
+  it('a book 2 tale not on the device that cannot load is left out (row CM-5B), never the crash screen; a book 1 tale still is', async () => {
+    const isLaterStory = (id: string): boolean => id === moon.id;
+    const t = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory });
+    const r = await render(
+      <ErrorBoundary fallbackRender={() => <Text testID="crash">crash</Text>}>
+        <Notes hook={t.useNoteStoriesReady} />
+      </ErrorBoundary>,
+    );
+    await act(async () => t.pending[sun.id]?.resolve(chunkOf(sun.id)));
+    await act(async () => t.pending[moon.id]?.reject(new Error('offline')));
+    await settle();
+    expect(byTestId(r.root, 'notes')).toHaveLength(1);
+    expect(byTestId(r.root, 'crash')).toHaveLength(0);
+    expect(t.reload).not.toHaveBeenCalled();
+
+    const core = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory });
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const crashed = await render(
+      <ErrorBoundary fallbackRender={() => <Text testID="crash">crash</Text>}>
+        <Notes hook={core.useNoteStoriesReady} />
+      </ErrorBoundary>,
+    );
+    await act(async () => core.pending[sun.id]?.reject(new Error('offline')));
+    await act(async () => core.pending[moon.id]?.reject(new Error('offline')));
+    await settle();
+    expect(byTestId(crashed.root, 'crash')).toHaveLength(1);
+    errors.mockRestore();
+  });
+
+  it('never asks for a book 2 tale that is not on the device (row CM-5B: no later chunk loads unasked); one on the device loads', async () => {
+    const isLaterStory = (id: string): boolean => id === moon.id;
+    const off = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory, laterOnDevice: () => false });
+    const r = await render(<Notes hook={off.useNoteStoriesReady} />);
+    await act(async () => off.pending[sun.id]?.resolve(chunkOf(sun.id)));
+    await settle();
+    expect(off.asked).toEqual([sun.id]);
+    expect(byTestId(r.root, 'notes')).toHaveLength(1);
+    function Loaded({ hook }: { hook: () => number }): null {
+      hook();
+      return null;
+    }
+    const loadedOff = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory, laterOnDevice: () => false });
+    await render(<Loaded hook={loadedOff.useNoteStoriesLoaded} />);
+    expect(loadedOff.asked).toEqual([sun.id]);
+    const on = bindings({ noteStoryIds: [sun.id, moon.id], isLaterStory, laterOnDevice: (id) => id === moon.id });
+    await render(<Loaded hook={on.useNoteStoriesLoaded} />);
+    expect([...on.asked].sort()).toEqual([moon.id, sun.id].sort());
   });
 
   it('is ready at once when every note story is in', async () => {

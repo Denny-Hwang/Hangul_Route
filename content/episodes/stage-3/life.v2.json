@@ -1,0 +1,1248 @@
+{
+  "id": "episode:stage3-life-v2",
+  "stage": "stage3",
+  "theme": "life",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Tastes and Recipes",
+  "subtitleEn": "Say how food tastes, ask for it and make bibimbap.",
+  "hoyaIntroEn": "Sweet, spicy, yummy! Let's talk about food and make bibimbap together!",
+  "order": 2,
+  "pillarTags": [
+    "B2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage3-life-v2-q1",
+      "titleEn": "Sweet and Spicy",
+      "blurbEn": "Say how food tastes.",
+      "teaserEn": "Next: say what you like, and ask for it.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Taste It",
+          "hoyaLineEn": "Food can be sweet or spicy. Let's say how it tastes!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "It Tastes ___",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "맛이 ___.",
+                      "romanization": "masi ___",
+                      "en": "It tastes ___."
+                    },
+                    "noteEn": "{ko:맛} means taste. Put a taste word in the gap: {ko:달아요} is sweet and {ko:매워요} is spicy.",
+                    "examples": [
+                      {
+                        "ko": "맛이 달아요.",
+                        "romanization": "masi darayo",
+                        "en": "It tastes sweet."
+                      },
+                      {
+                        "ko": "맛이 매워요.",
+                        "romanization": "masi maewoyo",
+                        "en": "It tastes spicy."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "떡볶이가 매워요.",
+                      "romanization": "tteokbokkiga maewoyo",
+                      "en": "The tteokbokki is spicy."
+                    },
+                    "picture": "word:culture-tteokbokki"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "바나나가 달아요.",
+                      "romanization": "bananaga darayo",
+                      "en": "The banana is sweet."
+                    },
+                    "picture": "word:food-banana"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-life-v2-q1-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-life-v2-q1-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s3-life-v2-q1-check",
+          "durationSeconds": 45
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Tasty Talk!",
+          "hoyaLineEn": "You can say how food tastes. Yum!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-life-v2-q1-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "맛이 달아요.",
+                "romanization": "masi darayo",
+                "en": "It tastes sweet."
+              },
+              "pictureRef": "word:food-banana",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink (in 'I drink')"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "떡볶이가 매워요.",
+                "romanization": "tteokbokkiga maewoyo",
+                "en": "The tteokbokki is spicy."
+              },
+              "pictureRef": "word:culture-tteokbokki",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "김치가 맛있어요.",
+                "romanization": "gimchiga masisseoyo",
+                "en": "The kimchi is tasty."
+              },
+              "pictureRef": "card:kimchi",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "바나나가 달아요.",
+                "romanization": "bananaga darayo",
+                "en": "The banana is sweet."
+              },
+              "pictureRef": "word:food-banana",
+              "distractors": [
+                {
+                  "ko": "먹어요",
+                  "romanization": "meogeoyo",
+                  "en": "eat (in 'I eat')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "라면이 맛있어요.",
+                "romanization": "ramyeoni masisseoyo",
+                "en": "The ramyeon is tasty."
+              },
+              "pictureRef": "word:food-ramyeon",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  },
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-v2-q1-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "맛이 ___.",
+                "romanization": "masi ___",
+                "en": "It tastes sweet."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "달아요",
+                  "romanization": "darayo",
+                  "en": "is sweet"
+                },
+                {
+                  "ko": "매워요",
+                  "romanization": "maewoyo",
+                  "en": "is spicy"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "떡볶이___ 매워요.",
+                "romanization": "tteokbokki___ maewoyo",
+                "en": "The tteokbokki is spicy."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "가",
+                  "romanization": "ga",
+                  "en": "subject marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "tteokbokkiga maewoyo"
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "바나나가 ___.",
+                "romanization": "bananaga ___",
+                "en": "The banana is sweet."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "달아요",
+                  "romanization": "darayo",
+                  "en": "is sweet"
+                },
+                {
+                  "ko": "매워요",
+                  "romanization": "maewoyo",
+                  "en": "is spicy"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "맛이 ___.",
+                "romanization": "masi ___",
+                "en": "It tastes spicy."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "매워요",
+                  "romanization": "maewoyo",
+                  "en": "is spicy"
+                },
+                {
+                  "ko": "달아요",
+                  "romanization": "darayo",
+                  "en": "is sweet"
+                },
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "come"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "d1",
+              "promptEn": "Type the word for bread.",
+              "mode": "hear",
+              "target": {
+                "ko": "빵",
+                "romanization": "ppang",
+                "en": "bread"
+              }
+            },
+            {
+              "id": "d2",
+              "promptEn": "Type the word for rice cake.",
+              "mode": "hear",
+              "target": {
+                "ko": "떡",
+                "romanization": "tteok",
+                "en": "rice cake"
+              }
+            }
+          ]
+        }
+      ],
+      "addedIn": 20261105
+    },
+    {
+      "id": "quest:stage3-life-v2-q2",
+      "titleEn": "I Like It, Please",
+      "blurbEn": "Say what food you like, and ask for it.",
+      "teaserEn": "Next: make bibimbap step by step.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "My Favourite Food",
+          "hoyaLineEn": "What food do you like? Let's say it, then ask for it!",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "I Like ___, ___ Please",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "김밥을 좋아해요.",
+                      "romanization": "gimbabeul joahaeyo",
+                      "en": "I like gimbap."
+                    },
+                    "picture": "card:kimbap"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "떡볶이를 좋아해요.",
+                      "romanization": "tteokbokkireul joahaeyo",
+                      "en": "I like tteokbokki."
+                    },
+                    "picture": "word:culture-tteokbokki"
+                  }
+                ],
+                "captionEn": "With joahaeyo, the food takes eul or reul. With joayo, from Volume 1, it takes i or ga."
+              },
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___ 주세요.",
+                      "romanization": "___ juseyo",
+                      "en": "___, please."
+                    },
+                    "noteEn": "Say what you would like, then {ko:주세요}. It politely asks someone to give it to you.",
+                    "examples": [
+                      {
+                        "ko": "물 주세요.",
+                        "romanization": "mul juseyo",
+                        "en": "Water, please."
+                      },
+                      {
+                        "ko": "김밥 주세요.",
+                        "romanization": "gimbap juseyo",
+                        "en": "Gimbap, please."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-life-v2-q2-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Listen and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s3-life-v2-q2-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-life-v2-q2-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Yes, Please!",
+          "hoyaLineEn": "You can say what you like and ask for it. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-life-v2-q2-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "김밥을 좋아해요.",
+                "romanization": "gimbabeul joahaeyo",
+                "en": "I like gimbap."
+              },
+              "pictureRef": "card:kimbap",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "사과가 좋아요.",
+                "romanization": "sagwaga joayo",
+                "en": "I like apples."
+              },
+              "pictureRef": "word:food-apple",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "물 주세요.",
+                "romanization": "mul juseyo",
+                "en": "Water, please."
+              },
+              "pictureRef": "word:food-water",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go (in 'I go')"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "우유가 좋아요.",
+                "romanization": "uyuga joayo",
+                "en": "I like milk."
+              },
+              "pictureRef": "word:food-milk",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink (in 'I drink')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "떡볶이가 매워요.",
+                "romanization": "tteokbokkiga maewoyo",
+                "en": "The tteokbokki is spicy."
+              },
+              "pictureRef": "word:culture-tteokbokki",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "가",
+                    "romanization": "ga",
+                    "en": "subject marker, after a vowel"
+                  },
+                  {
+                    "ko": "이",
+                    "romanization": "i",
+                    "en": "subject marker, after a final consonant"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-v2-q2-apply",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "prompt": {
+                "ko": "김밥 주세요.",
+                "romanization": "gimbap juseyo",
+                "en": "Gimbap, please."
+              },
+              "options": [
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "Gimbap"
+                },
+                {
+                  "id": "water",
+                  "pictureRef": "word:food-water",
+                  "labelEn": "Water"
+                },
+                {
+                  "id": "milk",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "Milk"
+                }
+              ],
+              "answerId": "gimbap"
+            },
+            {
+              "id": "a2",
+              "prompt": {
+                "ko": "물 주세요.",
+                "romanization": "mul juseyo",
+                "en": "Water, please."
+              },
+              "options": [
+                {
+                  "id": "water",
+                  "pictureRef": "word:food-water",
+                  "labelEn": "Water"
+                },
+                {
+                  "id": "bread",
+                  "pictureRef": "word:food-bread",
+                  "labelEn": "Bread"
+                },
+                {
+                  "id": "milk",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "Milk"
+                }
+              ],
+              "answerId": "water"
+            },
+            {
+              "id": "a3",
+              "prompt": {
+                "ko": "비빔밥을 좋아해요.",
+                "romanization": "bibimbabeul joahaeyo",
+                "en": "I like bibimbap."
+              },
+              "options": [
+                {
+                  "id": "bibimbap",
+                  "pictureRef": "word:culture-bibimbap",
+                  "labelEn": "Bibimbap"
+                },
+                {
+                  "id": "tteokbokki",
+                  "pictureRef": "word:culture-tteokbokki",
+                  "labelEn": "Tteokbokki"
+                },
+                {
+                  "id": "gimbap",
+                  "pictureRef": "card:kimbap",
+                  "labelEn": "Gimbap"
+                }
+              ],
+              "answerId": "bibimbap"
+            },
+            {
+              "id": "a4",
+              "prompt": {
+                "ko": "우유 주세요.",
+                "romanization": "uyu juseyo",
+                "en": "Milk, please."
+              },
+              "options": [
+                {
+                  "id": "milk",
+                  "pictureRef": "word:food-milk",
+                  "labelEn": "Milk"
+                },
+                {
+                  "id": "water",
+                  "pictureRef": "word:food-water",
+                  "labelEn": "Water"
+                },
+                {
+                  "id": "tteok",
+                  "pictureRef": "word:food-tteok",
+                  "labelEn": "Rice cake"
+                }
+              ],
+              "answerId": "milk"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-v2-q2-check",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "김밥___ 좋아해요.",
+                "romanization": "gimbap___ joahaeyo",
+                "en": "I like gimbap."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "gimbabeul joahaeyo"
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "물 ___.",
+                "romanization": "mul ___",
+                "en": "Water, please."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "주세요",
+                  "romanization": "juseyo",
+                  "en": "please give me"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        }
+      ],
+      "addedIn": 20261105
+    },
+    {
+      "id": "quest:stage3-life-v2-q3",
+      "titleEn": "Bibimbap Steps",
+      "blurbEn": "Make bibimbap, one step after another.",
+      "estimatedMinutes": 5,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Let's Cook",
+          "hoyaLineEn": "Let's make bibimbap! First the rice, then the toppings, then we mix.",
+          "durationSeconds": 7
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Step by Step",
+          "hoyaLineEn": "Tap Hear it, then read each sentence yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "pattern",
+                    "frame": {
+                      "ko": "___을/를 넣어요.",
+                      "romanization": "___eul/reul neoeoyo",
+                      "en": "I put in ___."
+                    },
+                    "noteEn": "Name the food with {ko:을} or {ko:를}, then {ko:넣어요}: you put it into the bowl.",
+                    "examples": [
+                      {
+                        "ko": "밥을 넣어요.",
+                        "romanization": "babeul neoeoyo",
+                        "en": "I put in the rice."
+                      },
+                      {
+                        "ko": "나물을 넣어요.",
+                        "romanization": "namureul neoeoyo",
+                        "en": "I put in the seasoned vegetables."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "먼저 밥을 넣어요.",
+                      "romanization": "meonjeo babeul neoeoyo",
+                      "en": "First, I put in the rice."
+                    },
+                    "picture": "card:rice"
+                  },
+                  {
+                    "type": "sentence",
+                    "sentence": {
+                      "ko": "그다음에 비벼요.",
+                      "romanization": "geudaeume bibyeoyo",
+                      "en": "Next, I mix it."
+                    },
+                    "picture": "word:culture-bibimbap"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 65
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Build the Sentence",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-life-v2-q3-practice",
+          "durationSeconds": 90
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Fill the Gap",
+          "minigameKind": "cloze-pick",
+          "minigameRef": "minigame:s3-life-v2-q3-apply",
+          "durationSeconds": 75
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Two Quick Ones",
+          "minigameKind": "order-it",
+          "minigameRef": "minigame:s3-life-v2-q3-check",
+          "durationSeconds": 40
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Bibimbap Time!",
+          "hoyaLineEn": "You made bibimbap, step by step. Time to eat!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s3-life-v2-q3-practice",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "r1",
+              "sentence": {
+                "ko": "먼저 밥을 넣어요.",
+                "romanization": "meonjeo babeul neoeoyo",
+                "en": "First, I put in the rice."
+              },
+              "pictureRef": "card:rice",
+              "distractors": [
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "come (in 'I come')"
+                }
+              ]
+            },
+            {
+              "id": "r2",
+              "sentence": {
+                "ko": "고추장을 넣어요.",
+                "romanization": "gochujangeul neoeoyo",
+                "en": "I put in the red pepper paste."
+              },
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "r3",
+              "sentence": {
+                "ko": "그다음에 비벼요.",
+                "romanization": "geudaeume bibyeoyo",
+                "en": "Next, I mix it."
+              },
+              "pictureRef": "word:culture-bibimbap",
+              "distractors": [
+                {
+                  "ko": "와요",
+                  "romanization": "wayo",
+                  "en": "come (in 'I come')"
+                }
+              ]
+            },
+            {
+              "id": "r4",
+              "sentence": {
+                "ko": "맛이 매워요.",
+                "romanization": "masi maewoyo",
+                "en": "It tastes spicy."
+              },
+              "pictureRef": "word:culture-bibimbap",
+              "distractors": [
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go (in 'I go')"
+                }
+              ]
+            },
+            {
+              "id": "r5",
+              "sentence": {
+                "ko": "비빔밥을 좋아해요.",
+                "romanization": "bibimbabeul joahaeyo",
+                "en": "I like bibimbap."
+              },
+              "pictureRef": "word:culture-bibimbap",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-v2-q3-apply",
+          "kind": "cloze-pick",
+          "rounds": [
+            {
+              "id": "a1",
+              "sentence": {
+                "ko": "먼저 ___을 넣어요.",
+                "romanization": "meonjeo ___eul neoeoyo",
+                "en": "First, I put in the rice."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "밥",
+                  "romanization": "bap",
+                  "en": "rice"
+                },
+                {
+                  "ko": "물",
+                  "romanization": "mul",
+                  "en": "water"
+                },
+                {
+                  "ko": "떡",
+                  "romanization": "tteok",
+                  "en": "rice cake"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a2",
+              "sentence": {
+                "ko": "나물___ 넣어요.",
+                "romanization": "namul___ neoeoyo",
+                "en": "I put in the seasoned vegetables."
+              },
+              "gapKind": "particle",
+              "tiles": [
+                {
+                  "ko": "을",
+                  "romanization": "eul",
+                  "en": "object marker, after a final consonant"
+                },
+                {
+                  "ko": "를",
+                  "romanization": "reul",
+                  "en": "object marker, after a vowel"
+                },
+                {
+                  "ko": "이",
+                  "romanization": "i",
+                  "en": "subject marker, after a final consonant"
+                }
+              ],
+              "answerIndex": 0,
+              "filledRomanization": "namureul neoeoyo"
+            },
+            {
+              "id": "a3",
+              "sentence": {
+                "ko": "달걀을 ___.",
+                "romanization": "dalgyareul ___",
+                "en": "I put in an egg."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "넣어요",
+                  "romanization": "neoeoyo",
+                  "en": "put in"
+                },
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink"
+                },
+                {
+                  "ko": "가요",
+                  "romanization": "gayo",
+                  "en": "go"
+                }
+              ],
+              "answerIndex": 0
+            },
+            {
+              "id": "a4",
+              "sentence": {
+                "ko": "___ 고추장을 넣어요.",
+                "romanization": "___ gochujangeul neoeoyo",
+                "en": "Next, I put in the red pepper paste."
+              },
+              "gapKind": "word",
+              "tiles": [
+                {
+                  "ko": "그다음에",
+                  "romanization": "geudaeume",
+                  "en": "next, after that"
+                },
+                {
+                  "ko": "먼저",
+                  "romanization": "meonjeo",
+                  "en": "first"
+                },
+                {
+                  "ko": "물",
+                  "romanization": "mul",
+                  "en": "water"
+                }
+              ],
+              "answerIndex": 0
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s3-life-v2-q3-check",
+          "kind": "order-it",
+          "rounds": [
+            {
+              "id": "c1",
+              "sentence": {
+                "ko": "밥이 뜨거워요.",
+                "romanization": "babi tteugeowoyo",
+                "en": "The rice is hot."
+              },
+              "pictureRef": "card:rice",
+              "distractors": [
+                {
+                  "ko": "마셔요",
+                  "romanization": "masyeoyo",
+                  "en": "drink (in 'I drink')"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "sentence": {
+                "ko": "달걀을 넣어요.",
+                "romanization": "dalgyareul neoeoyo",
+                "en": "I put in an egg."
+              },
+              "pictureRef": "word:food-egg",
+              "distractors": [],
+              "particle": {
+                "tile": 0,
+                "choices": [
+                  {
+                    "ko": "을",
+                    "romanization": "eul",
+                    "en": "object marker, after a final consonant"
+                  },
+                  {
+                    "ko": "를",
+                    "romanization": "reul",
+                    "en": "object marker, after a vowel"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "addedIn": 20261105
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "{ko:나물} are plants and leaves that people can eat. As a side dish, they are boiled, stir-fried or left raw, then seasoned and tossed.",
+      "sources": [
+        {
+          "title": "나물 (한국의식주생활사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/7431",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘식물성 식재료로, 삶거나 볶거나 날것 상태로 양념해서 버무린 밥반찬으로서의 음식.’"
+        },
+        {
+          "title": "나물",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%82%98%EB%AC%BC",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘나물’ 「명사」 「1」: “사람이 먹을 수 있는 풀이나 나뭇잎 따위를 통틀어 이르는 말. 고사리, 도라지, 두릅, 냉이 따위가 있다.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 나물 are plants and leaves people can eat, and that as a side dish they are boiled, stir-fried or left raw, then seasoned and tossed. National Folk Museum of Korea, Encyclopedia of Korean Folk Culture, 한국의식주생활사전 entry 나물 (topic 7431, read through the site's own topic API, HTTP 200), 정의: a dish of plant ingredients, boiled, stir-fried or raw, seasoned and tossed, eaten with rice. Standard Korean Language Dictionary, 나물 「1」 (search results page, HTTP 200): the general word for grasses and tree leaves people can eat, with 고사리, 도라지, 두릅 and 냉이 as examples. English paraphrase; the locators quote the Korean. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again; each claim matched to a quoted phrase: plants and leaves people can eat (사람이 먹을 수 있는 풀이나 나뭇잎), boiled, stir-fried or raw (삶거나 볶거나 날것 상태로), seasoned and tossed (양념해서 버무린), a side dish (밥반찬). Finding applied: the author's first draft said greens, roots and leaves; the dictionary says grasses and leaves, so roots came out. The institution is named as of the access date (국립민속박물관, National Folk Museum of Korea). No origin, UNESCO or health claim. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): note text, sources and locators re-read against the fetched pages; the English shares no run of words with a quoted source, and the ko text says it in its own words (reworded after the independent review, 2026-10-31); the es and ko texts say the same and keep the one {ko:} token."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "{ko:비빔밥} is rice mixed with vegetables, {ko:나물}, meat and seasoning. Made at home, it is often mixed before it goes into the bowls. In a restaurant, the toppings are set on the rice and each person mixes their own.",
+      "sources": [
+        {
+          "title": "비빔밥 (한류문화사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/12006",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "정의: ‘곡물로 지은 밥에 채소·나물·반찬·고기·양념 등을 넣고 비빈 음식.’ 내용: ‘하나는 여러 가지 재료를 밥과 함께 비빈 다음 개인 밥그릇에 담고 그 위에 고명을 올리는 방식이다. 이 방식은 가정에서 비빔밥을 만들 때 적용된다. 다른 하나는 밥 위에 여러 가지 재료를 올려서 먹는 사람이 직접 비벼 먹도록 하는 방식이다. 이 방식은 20세기 이후 도시에 생겨난 한식 음식점에서 비빔밥을 손님에게 제공할 때 적용되었다.’"
+        },
+        {
+          "title": "비빔밥",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B9%84%EB%B9%94%EB%B0%A5",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "표제어 ‘비빔-밥’ 「명사」: “고기나 나물 따위와 여러 가지 양념을 넣어 비벼 먹는 밥.”"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that 비빔밥 is rice mixed with vegetables, 나물, meat and seasoning; that at home it is often mixed before it is put into the bowls; and that in a restaurant the toppings are set on the rice and each person mixes their own. National Folk Museum of Korea, 한류문화사전 entry 비빔밥 (topic 12006, HTTP 200): 정의 lists 채소·나물·반찬·고기·양념 mixed into rice; 내용 names two ways, mixing first and topping the bowls (the home way) and setting the ingredients on the rice for the eater to mix (the way the city restaurants of the 1900s served it), and calls the first 가정식 and the second 음식점 판매용. Standard Korean Language Dictionary, 비빔-밥 (HTTP 200): rice eaten mixed with meat or 나물 and seasonings. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both pages fetched again: confirmed. 'Often' keeps the home sentence from reading as a rule for every home; the restaurant sentence restates 음식점 판매용 and names no restaurant, city or brand (the entry's Jeonju, airline and celebrity passages are left out on purpose). Named as of the access date. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): re-read; the English copies no run of words, and the ko text says it in its own words (reworded after the independent review, 2026-10-31); the es and ko texts keep both {ko:} tokens and the hedge (muchas veces; 때가 많아요)."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "The first known written recipe for {ko:비빔밥} is in a cookbook handwritten in Hangul in the late 1800s. It mixes rice with stir-fried meat, {ko:나물} and sesame oil, then lays pieces of fried egg on top.",
+      "sources": [
+        {
+          "title": "비빔밥 (한국의식주생활사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/7703",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: ‘비빔밥의 조리법은 19세기 말쯤에 쓰인 한글 필사본 『시의전서是議全書』에서 처음으로 나온다.’ 같은 단락: ‘밥에 고기 볶은 것, 간납, 여러 가지 나물, 튀각 부숴 놓은 것을 모두 섞고 깨소금과 참기름을 많이 넣어 비벼서 그릇에 담는다. 그 위에 부친 달걀을 골패 짝만큼씩 썰어 얹는다.’"
+        },
+        {
+          "title": "비빔밥 (한류문화사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/12006",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "내용: ‘비빔밥의 조리법은 19세기 말과 20세기 초에 쓰인 요리책, 비빔밥 음식점에서의 조리법을 살펴보면 크게 두 가지 방식으로 만들어졌다.’"
+        }
+      ],
+      "verification": {
+        "passes": 3,
+        "checkedAt": "2026-10-30",
+        "scope": "lesson",
+        "notes": "Line 1 (passes: 1, MAR author sourcing, 2026-10-30): the claims are that the first known written recipe for 비빔밥 is in a cookbook handwritten in Hangul in the late 1800s, and that it mixes rice with stir-fried meat, 나물 and sesame oil, then lays pieces of fried egg on top. National Folk Museum of Korea, 한국의식주생활사전 entry 비빔밥 (topic 7703, HTTP 200), 내용: the recipe first appears in 『시의전서』, a Hangul manuscript written around the late 19th century; it mixes the rice with stir-fried meat, 간납, several 나물 and crushed 튀각, with sesame salt and plenty of sesame oil, and lays fried egg cut into pieces on top. The 한류문화사전 entry (topic 12006) also dates the recipes it reads to cookbooks of the late 19th and early 20th centuries. Line 2 (passes: 2, MAR culture and facts checker, 2026-10-30): both entries fetched again: confirmed. 'First known' restates 처음으로 나온다 (first appears) without claiming the dish began then; 'handwritten' restates 필사본. The note does not name the book, so no title is romanized; it lists three of the ingredients and says nothing of the others. Named as of the access date. Line 3 (passes: 3, MAR third pass after the reviser, 2026-10-30): re-read; the English copies no run of words; es and ko keep the two {ko:} tokens and the late-1800s date (a finales del siglo XIX; 1800년대 말)."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-30",
+    "notes": [
+      "MAR row CM-43 S3 (F-CURR-002 section 9.2, 2026-10-30; passes: author, language, culture and facts, learning design, reviser, third pass; the three checkers ran as separate lenses in the authoring session, and an independent review agent then checked the content and the es and ko strings in the PR review stage, as the separate checker pass; no native-speaker or expert review is claimed).",
+      "Scope: Volume 2 of Food & Daily Life at Stage 3: taste (맛이 ___ with 달아요 and 매워요, beside Volume 1's 맛있어요), preference and request (김밥을 좋아해요 and the frame ___ 주세요) and the steps of bibimbap in order (___을/를 넣어요, 먼저, 그다음에 비벼요). One new pattern a quest (U-3). Culture: no UNESCO, designation or origin claim; no real person, restaurant, city, brand or price; no age wording.",
+      "Language: 해요체 with sentence marks; 물 주세요 and 김밥 주세요 drop the particle, as a request does; 그다음 is one word (Standard Korean Language Dictionary 그-다음), so 그다음에; particle rounds test 이/가 and 을/를 (떡볶이가, 라면이, 김밥을, 나물을, 고추장을, 비빔밥을); romanization by the converter (masi darayo, joahaeyo, neoeoyo, geudaeume bibyeoyo).",
+      "Language (cont.): Every word-gap Cloze keeps tiles that are grammatical but wrong for the meaning line (맛이 매워요 against It tastes sweet, 물 마셔요 against Water, please), read by its meaning, as in Volume 1.",
+      "Learning design: hasSoundChange flags 넣어요 [너어요], 좋아해요 [조아해요] and 떡볶이 [떡뽀끼]; liaison is not flagged, so 맛이 [마시], 맛있어요 [마시써요], 달아요 [다라요], 김밥을 [김바블] and 달걀을 [달갸를] are kept out of in-quest Dictation by authoring only (review may still offer 달아요, as the repo liaison policy allows). Dictation asks 빵 and 떡 only; q2 heard rounds answer with pictures.",
+      "Learning design (cont.): Sentence Builder as sequence: q3 Practice walks the recipe in order (rice first, then 고추장, then mix, then the taste, then I like bibimbap; 나물 is put in by Discover and Apply a2), and the order is tested, not only shown: Apply a4 gaps the step word (___ 고추장을 넣어요 against Next, with 그다음에 and 먼저 as tiles).",
+      "Learning design (cont.): Triples q1 order-it / cloze-pick / type-hangul, q2 order-it / listen-pick / cloze-pick, q3 order-it / cloze-pick / order-it; none equals a Volume 1 triple (every Volume 1 Apply is Pic-Word Match) or its neighbour; every Practice is a Sentence Builder, so each can scaffold (CM-24).",
+      "Learning design (cont.): Practice and Check recycle 57, 50 and 43 in 100 (lesson-recycle); new units 3 a quest. Findings applied: q2 and q3 first recycled 33 in 100, so q2 Practice r5 became 떡볶이가 매워요 and q3 Check c1 밥이 뜨거워요 (Volume 1); when the independent review moved q3 Check c2 to the new 달걀을 넣어요, q3 Practice r5 took q2 비빔밥을 좋아해요 in place of 나물을 넣어요.",
+      "Culture and facts: n1 (나물), n2 (two ways to serve 비빔밥) and n3 (the first known written recipe, a Hangul manuscript of the late 1800s) each matched phrase by phrase to the National Folk Museum of Korea's Encyclopedia of Korean Folk Culture (한국의식주생활사전, 한류문화사전) and the Standard Korean Language Dictionary, named as of the access date.",
+      "Reviser: q2 first had two frames (U-3 allows one): ___ 주세요 stays the frame and 좋아해요 is taught by two sentences with a caption; Dictation asks 빵, not 김치, whose meaning kimchi spells its sound; n1 says plants and leaves; the q3 r1 distractor is 와요, which cannot follow 밥을. Third pass: validate-content, lesson lint, U-rules and overlay rules clean.",
+      "Translation (es, ko): es keeps the Volume 1 wording (marca de objeto, después de consonante final; pastel de arroz; fideos instantáneos) and the cell's own picture labels; ko glosses are short definitions that never echo the Korean they explain (overlay-circular-gloss); the {ko:} tokens of each note and Discover line match the English.",
+      "Independent review (PR stage, 2026-10-31), applied: q3 Check c2 is 달걀을 넣어요, so it asks the q3 frame; the q2 caption sets joahaeyo (eul, reul) beside Volume 1 joayo (i, ga); Apply a4 tests the recipe order; es and ko note wording. Kept: lex:darayo and lex:maewoyo beside Stage 4 pat:darayo and pat:maewoyo, as the extractor does for five pairs (an extractor follow-up)."
+    ]
+  },
+  "contentVer": 1
+}

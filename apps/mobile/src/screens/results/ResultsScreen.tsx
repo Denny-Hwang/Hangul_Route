@@ -24,7 +24,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
-import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
+import { cardById, episodeById, episodesAll, episodesWithVolumes, questById, questsAll } from '../../content';
 import { storyById, storyLevels } from '../../content/stories';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode, localizeStory } from '../../logic/content-locale';
@@ -54,6 +54,7 @@ import { bookmarkClearedByResults } from '../../logic/story/resume';
 import { storyIdOfQuest } from '../../logic/story/story-ref';
 import { useStoriesLoaded } from '../story-content';
 import { defaultStoryIndex } from '../../logic/story/story-index';
+import { useStoryIndex } from '../story/use-story-index';
 import { nextStoryAfter, storyLockFor } from '../../logic/story/story-pick';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
@@ -279,7 +280,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         ...(routeInput ? { route: routeInput } : {}),
         ...(planBefore.current ? { planBefore: planBefore.current } : {}),
       }),
-    [snapshot, questId, total, tier, questOpen, locale, routeInput],
+    // A lesson quest's teaser and blurb come with the headers chunk (F-CURR-002 row CM-40): `titles` bumps when it lands.
+    [snapshot, questId, total, tier, questOpen, locale, routeInput, titles],
   );
 
   // `route.offplan_finished` once per results visit, for a first completion of an off-plan quest (section 3.12).
@@ -287,7 +289,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   useEffect(() => {
     if (offplanSent.current || !profile || total === 0 || planBefore.current === null) return;
     offplanSent.current = true;
-    const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesAll);
+    // The finished quest's episode, a cell's Volume 2 too (F-CURR-002 row CM-40).
+    const event = offplanFinishedEvent(profile.id, planBefore.current, questId, episodesWithVolumes);
     if (event) void track(event);
   }, [profile, total, questId, routeInput]);
   // The run that completed Stage 1 leads to its ceremony (F-QUEST-002 §3.8): See your Stage 1 prize is the one primary.
@@ -334,7 +337,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         return card && localizeCard(card, locale);
       })
       .filter((c): c is HeritageCard => Boolean(c));
-  }, [freeEnd, snapshot, locale]);
+    // A lesson episode's reward cards come with the headers chunk (F-CURR-002 row CM-40).
+  }, [freeEnd, snapshot, locale, titles]);
   const memberships = useMembershipStore((s) => (profileId ? s.byLearner[profileId] : undefined));
   const { audience } = useAudience();
   const ask = askFor(audience, isClassOnly(memberships ?? []), messages.learner.access);
@@ -364,6 +368,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   // after a reload. Which extras show is known from the shelf (the title and the levels), so they never shift in late.
   const questStoryId = quest === undefined ? null : storyIdOfQuest(quest);
   const storyChunks = useStoriesLoaded(questStoryId === null ? [] : [questStoryId]);
+  // A book 2 tale (row CM-46) walks its own book to Next story while `volumes` is on.
+  const storyIndex = useStoryIndex();
   const storyResults = useMemo(() => {
     const story = resultsStoryOf(
       quest,
@@ -378,10 +384,10 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
     );
     if (!story) return null;
     const next = nextStoryAfter(questId, {
-      entries: defaultStoryIndex(),
+      entries: storyIndex.entries,
       snapshot,
       bookmarks,
-      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: episodesAll, isQuestOpen: questOpen }),
+      isLocked: storyLockFor({ tier, gatingEnabled: gatingActive(flags, bundleOs()), episodes: storyIndex.episodes, isQuestOpen: questOpen }),
     });
     const view = storyResultsExtras(
       {
@@ -397,7 +403,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
       messages.learner.story.results,
     );
     return { story, next, view };
-  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks]);
+  }, [quest, questId, locale, snapshot, bookmarks, tier, questOpen, stars, episode, messages, storyChunks, storyIndex.entries, storyIndex.episodes]);
 
   const goHome = (): void => {
     navigation.dispatch(

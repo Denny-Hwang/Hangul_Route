@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { heldAnswers } from '../../components/held-answers';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { PickRoundPlan } from '../../logic/syllable-build/sprint';
@@ -128,7 +129,7 @@ export function SprintPick({ round, onAnswer, onDone, reveal = true, testID = 's
       </View>
       {slot.view.textShown ? <PromptPanel view={slot.view} onAction={(action) => slot.act(action, say)} onHelp={() => setHelpOpen(true)} testID={`${testID}-prompt`} /> : null}
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+      <View style={[{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, heldAnswers(!slot.settled)]}>
         {round.options.map((ko) => (
           <View key={ko} style={{ flexGrow: 1, flexBasis: '45%', minWidth: touchTarget.hero }}>
             <ChoiceCard

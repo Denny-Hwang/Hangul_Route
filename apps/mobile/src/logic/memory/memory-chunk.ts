@@ -1,4 +1,5 @@
 import { mergeCellBest, mergeLatchRecord } from '@hangul-route/content-schema';
+import { storyCellVolume } from '../../content/books';
 import { episodeById } from '../../content/episodes';
 import { lessonContent } from '../../content/lessons';
 import { reviewItemsChunk } from '../../content/review-items';
@@ -61,6 +62,8 @@ const visibility = (profileId: string): SourceVisibility => ({
   topicPacks: currFlagOn('topicPacks', profileId),
   pack: (key) => currFlagOn(`pack.${key}`, profileId),
   weeklyDrop: currFlagOn('weeklyDrop', profileId),
+  // Row CM-46: a book 2 tale's items (cell `story:<slug>`) are Volume 2 content and hide with `volumes` off.
+  cellVolume: storyCellVolume,
 });
 
 /** Loads the chunk that holds a cell's es and ko meanings: the week drops for a drop's cell (row CM-48), else its lesson chunk. */

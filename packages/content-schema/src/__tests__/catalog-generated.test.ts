@@ -17,7 +17,7 @@ import {
 } from '..';
 import { assembleCatalog, expandCellRows, type CatalogSources, type GeneratedStoryRow } from '../catalog/assemble';
 import { GENERATED_CATALOG_VERSION, GENERATED_QUEST_ADDITIONS } from '../catalog/catalog.generated';
-import { STORY_SHELF } from '../catalog/data';
+import { STORY_SHELF, VOLUME_TWO_STORY_SLUGS } from '../catalog/data';
 import HAND_STAMPS from '../catalog/hand-stamps.json';
 import { StoryShelfSchema } from '../schemas/story';
 import CATALOG_V32_JSON from './fixtures/catalog-v32.json';
@@ -79,9 +79,10 @@ describe('catalogue parity with the last hand-kept catalogue (version 32)', () =
     }
   });
 
-  it('orders the lesson quests by route (cell by cell), then the story quests in shelf order', () => {
+  it('orders the lesson quests by route (cell by cell), then the later volumes\' quests, then the story quests in shelf order', () => {
     const lessons = CATALOG.quests.filter((q) => q.kind === 'lesson').map((q) => q.id);
-    expect(lessons).toEqual(CATALOG.cells.flatMap((c) => c.questIds));
+    // A cell's later volume follows every first volume, cell by cell (F-CURR-002 rows CM-40, CM-41 S2).
+    expect(lessons).toEqual([...CATALOG.cells.flatMap((c) => c.questIds), ...CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds))]);
     expect(CATALOG.quests.filter((q) => q.kind === 'story').map((q) => q.id)).toEqual(CATALOG.stories.map((s) => s.questId));
   });
 });
@@ -103,7 +104,11 @@ describe('CATALOG_VERSION from addedIn stamps', () => {
   });
 
   it('lists every shipped quest under some version, so a stored placement knows what it skipped', () => {
-    expect([...questIdsAtVersion(CATALOG_VERSION)].sort()).toEqual(CATALOG.quests.map((q) => q.id).sort());
+    // A book 2 tale's listen quest (row CM-46) carries its story's stamp but is listed by the catalogue only once
+    // `volumes` opens for everyone; until then the history names it ahead of the catalogue, and nothing else differs.
+    const ahead = [...VOLUME_TWO_STORY_SLUGS].map((slug) => `quest:story-${slug}-listen`);
+    expect([...questIdsAtVersion(CATALOG_VERSION)].filter((id) => !ahead.includes(id)).sort()).toEqual(CATALOG.quests.map((q) => q.id).sort());
+    for (const id of ahead) expect(questIdsAtVersion(CATALOG_VERSION).has(id), id).toBe(true);
   });
 
   it('stamps a hand-written quest only in hand-stamps.json: a Stage 1 or Stage 5 lesson quest added after version 32', () => {

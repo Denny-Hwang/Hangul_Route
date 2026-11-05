@@ -106,6 +106,8 @@ export const OVERLAY_FIELDS = {
     'hiddenHeritage.rounds.<roundId>.alt',
     'hiddenHeritage.rounds.<roundId>.targets.<thing>.word.gloss',
     'hiddenHeritage.rounds.<roundId>.others.<thing>.word.gloss',
+    // F-CURR-002 row CM-44 S2: a Syllable Build block's meaning, shown under the speaker.
+    'syllableBuild.rounds.<roundId>.target.gloss',
     // F-CURR-002 row CM-33: the Stage 1 additions' Match Shape lines.
     'matchShape.rounds.<roundId>.note',
     'matchShape.rounds.<roundId>.diffNote',
@@ -138,6 +140,8 @@ export const OVERLAY_FIELDS = {
     'cultureNotes.<noteId>.body',
     'facts.<factId>.claim',
     'errata.<erratumId>.summary',
+    // F-CURR-002 row CM-46: a book 2 tale's Story Order panel caption meaning (its read tier, `tiers.read.storyOrder`).
+    'tiers.<level>.storyOrder.rounds.<roundId>.panels.<panelId>.caption.gloss',
   ],
   vocab: ['gloss', 'senseNote'],
   'vocab-topic': ['title', 'blurb', 'hoyaIntro'],

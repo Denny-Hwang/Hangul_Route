@@ -32,6 +32,7 @@ import {
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { CheckState } from '../../logic/story/check-player';
 import type { CheckView } from '../../logic/story/check-view';
+import { heldAnswers } from '../../components/held-answers';
 import { PictureArt } from '../minigames/PictureArt';
 import { SpeakerButton } from './ReaderParts';
 
@@ -73,6 +74,8 @@ export interface CheckpointCardProps {
   onBubbleShown?: () => void;
   /** The reader's shared sound state (`PromptPanel`: muted, no Korean voice, tap to hear). */
   promptPanel?: ReactNode;
+  /** The options are not shown yet: the reader's voice check may still bring the prompt panel in above them. */
+  optionsHeld?: boolean;
   /** The card region, for the focus move when it opens (web). */
   regionRef: (node: CheckpointFocusable | null) => void;
 }
@@ -102,6 +105,7 @@ export function CheckpointCard({
   onSkip,
   onBubbleShown,
   promptPanel,
+  optionsHeld = false,
   regionRef,
 }: CheckpointCardProps): ReactElement {
   const pictureSize = useMediaSize(touchTarget.hero);
@@ -184,7 +188,7 @@ export function CheckpointCard({
 
           {promptPanel}
 
-          <View testID="story-reader-checkpoint-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+          <View testID="story-reader-checkpoint-options" style={[{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }, heldAnswers(optionsHeld)]}>
             {item.options.map((option) => {
               const card = optionCardView(item, option, check, { ...ctx, copy: checkCopy });
               const art =

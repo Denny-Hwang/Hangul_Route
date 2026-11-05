@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHECK_ROUNDS,
+  LESSON_CELL_ID_RE,
   LESSON_SCOPE_KINDS,
   LESSON_STAGES,
   LessonCellSchema,
@@ -215,6 +216,51 @@ describe('LessonCellSchema (F-CURR-001 §3.10)', () => {
   });
 });
 
+/** A cell's Volume 2 (F-CURR-002 §5.1 and §6.2, row CM-40): every id of the cell gains `-v2`, and the file says `volume: 2`. */
+function volume2(cell: Json): Json {
+  const { stage, theme } = cell as { stage: string; theme: string };
+  const n = stage.slice('stage'.length);
+  const text = JSON.stringify(cell)
+    .split(`quest:${stage}-${theme}-q`)
+    .join(`quest:${stage}-${theme}-v2-q`)
+    .split(`minigame:s${n}-${theme}-q`)
+    .join(`minigame:s${n}-${theme}-v2-q`);
+  return { ...(JSON.parse(text) as Json), id: `episode:${stage}-${theme}-v2`, volume: 2 };
+}
+
+describe('LessonCellSchema: Volume 2 (F-CURR-002 §5.1, row CM-40)', () => {
+  it('accepts a Volume 2 cell: the -v2 ids, volume 2, its quests and scopes named after it', () => {
+    const v2 = volume2(lessonCell('stage2', 'nature'));
+    expect(messages(v2)).toEqual([]);
+    expect(LESSON_CELL_ID_RE.test('episode:stage2-nature-v2')).toBe(true);
+    expect(LESSON_CELL_ID_RE.test('episode:stage2-nature')).toBe(true);
+    expect(LESSON_CELL_ID_RE.test('episode:stage2-nature-v3')).toBe(false);
+    expect(LESSON_CELL_ID_RE.test('episode:stage5-nature-v2')).toBe(false);
+    expect(LessonCellSchema.parse(v2).volume).toBe(2);
+    expect(LessonCellSchema.parse(lessonCell()).volume).toBeUndefined();
+  });
+
+  it('ties the -v2 id to volume 2 both ways', () => {
+    expect(messages({ ...volume2(lessonCell('stage2', 'nature')), volume: undefined })).toContain(
+      'id: a stage2 nature cell has id episode:stage2-nature',
+    );
+    expect(messages({ ...lessonCell('stage2', 'nature'), volume: 2 })).toContain('id: a stage2 nature cell of volume 2 has id episode:stage2-nature-v2');
+    expect(messages({ ...lessonCell('stage2', 'nature'), volume: 3 })).toEqual([expect.stringMatching(/^volume:/)]);
+  });
+
+  it('names a Volume 2 quest quest:<cell>-v2-q<k> and its scopes minigame:s<n>-<theme>-v2-q<k>-<step>', () => {
+    const v2 = volume2(lessonCell('stage2', 'nature'));
+    v2.quests[0].id = 'quest:stage2-nature-q1';
+    expect(messages(v2)).toContain('quests.0.id: quest 1 of this cell has id quest:stage2-nature-v2-q1');
+    const mixed = volume2(lessonCell('stage2', 'nature'));
+    mixed.quests[0].scopes[0].ref = 'minigame:s2-nature-q1-practice';
+    mixed.quests[0].steps[2].minigameRef = 'minigame:s2-nature-q1-practice';
+    expect(messages(mixed)).toContain('quests.0.scopes.0.ref: a scope of stage2-nature-v2-q1 has a ref starting minigame:s2-nature-v2-q1-');
+    expect(LessonScopeSchema.safeParse({ ref: 'minigame:s2-nature-v2-q1-practice', kind: 'build-letter', words: [kt('연', 'yeon', 'kite')] }).success).toBe(true);
+    expect(LessonScopeSchema.safeParse({ ref: 'minigame:s2-nature-v3-q1-practice', kind: 'build-letter', words: [kt('연', 'yeon', 'kite')] }).success).toBe(false);
+  });
+});
+
 describe('LessonQuestSchema: Realia Read cross-checks (row G-2)', () => {
   const realiaQuest = (answerEntryId: string | undefined) => {
     const quest = clone(lessonQuest('stage6', 'letters', 1)) as Json;
@@ -350,9 +396,32 @@ describe('LessonScopeSchema', () => {
         'write-frame',
         'story-order',
         'hidden-heritage',
+        // F-CURR-002 row CM-44 S2: the first S2 cell that plays Syllable Build (CM-32 decision record, "Schema").
+        'syllable-build',
       ].sort(),
     );
     for (const kind of LESSON_SCOPE_KINDS) expect(MinigameKindSchema.options).toContain(kind);
+  });
+
+  it('takes Syllable Build rounds (row CM-44 S2): 1 to 6 with unique ids, each a word with its meaning', () => {
+    const round = (id: string, en: string | null = 'hand') => ({
+      id,
+      target: en === null ? { ko: '손', romanization: 'son' } : { ko: '손', romanization: 'son', en },
+      firstTiles: ['ㅅ', 'ㅈ', 'ㄴ'],
+      vowelTiles: ['ㅗ', 'ㅜ', 'ㅏ'],
+      finalTiles: ['ㄴ', 'ㅁ', 'ㅇ'],
+    });
+    const parse = (rounds: unknown[]) => LessonScopeSchema.safeParse({ ref, kind: 'syllable-build', rounds });
+    const ok = parse([round('b1'), round('b2')]);
+    expect(ok.success).toBe(true);
+    if (ok.success) expect(scopeRoundCount(ok.data)).toBe(2);
+    expect(parse([]).success).toBe(false);
+    expect(parse(Array.from({ length: 7 }, (_, i) => round(`b${i}`))).success).toBe(false);
+    expect(parse([round('b1'), round('b1')]).success).toBe(false);
+    // A lesson's block is a taught word: its meaning is shown under the speaker and translated in the overlays.
+    expect(parse([round('b1', null)]).success).toBe(false);
+    // The round's own rules (CM-32) still hold: no two finals heard alike.
+    expect(parse([{ ...round('b1'), finalTiles: ['ㄴ', 'ㅂ', 'ㅍ'] }]).success).toBe(false);
   });
 
   it('rejects a ref outside the minigame:s<n>-<theme>-q<k>-<step> grammar', () => {

@@ -1,5 +1,5 @@
 import { routeCatalogOf } from '../catalog/route-catalog';
-import { storyIsReady, type Catalog } from '../catalog/schema';
+import { catalogEpisode, cellEpisodeIds, laterVolumeStoryIds, storyIsReady, type Catalog } from '../catalog/schema';
 import type { RouteQuest } from '../placement/route-seed';
 import { StageKeySchema, type StageKey } from './heritage-card';
 import {
@@ -173,7 +173,8 @@ export function presetBlockMinutes(block: LectureBlock, catalog: Catalog): numbe
     case 'quest':
       return catalog.quests.find((q) => q.id === block.id)?.minutes ?? 0;
     case 'episode':
-      return catalog.cells.find((c) => c.episodeId === block.id)?.minutes ?? 0;
+      // Any volume of a cell (F-CURR-002 row CM-40).
+      return catalogEpisode(catalog, block.id)?.minutes ?? 0;
     case 'story':
       return catalog.stories.find((s) => s.id === block.storyId)?.minutes ?? 0;
     case 'vocab':
@@ -276,9 +277,14 @@ export function fillOutline(outline: readonly LectureBlock[], classMinutes: Clas
 
 // ---- route helpers ------------------------------------------------------------------------------
 
-/** Route quests (section 4.2): lesson quests only, playable only, in route order. */
+/**
+ * Route quests (section 4.2): lesson quests only, playable only, in route order. A cell's later volume is not on the
+ * route (F-CURR-002 row CM-40: it adds no route day, and a room sees it only through the chooser while `volumes` is on),
+ * so the presets and the class's place never reach a Volume 2 quest.
+ */
 function routeQuests(catalog: Catalog): RouteQuest[] {
-  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable);
+  const later = new Set(catalog.cells.flatMap((cell) => cellEpisodeIds(cell).slice(1)));
+  return routeCatalogOf(catalog).quests.filter((q) => q.grid && q.playable && !later.has(q.episodeId));
 }
 
 const stageNumberOf = (stage: StageKey): number => StageKeySchema.options.indexOf(stage) + 1;
@@ -404,7 +410,9 @@ function byStage(minutes: PresetMinutes, ctx: PresetContext): Built {
  */
 function storyTime(minutes: PresetMinutes, ctx: PresetContext): Built {
   const { catalog } = ctx;
-  const ready = catalog.stories.filter(storyIsReady).sort((a, b) => a.order - b.order);
+  // A book 2 tale (F-CURR-002 row CM-46) is Volume 2 content behind `volumes`, a learner switch a preset never reads.
+  const laterVolume = laterVolumeStoryIds(catalog);
+  const ready = catalog.stories.filter((s) => storyIsReady(s) && !laterVolume.has(s.id)).sort((a, b) => a.order - b.order);
   if (ready.length === 0) return hangulWeek1(minutes, ctx, 'zero');
   const classStage = ctx.position?.stage !== undefined ? StageKeySchema.safeParse(ctx.position.stage) : undefined;
   const levelOk = classStage?.success === true ? ready.filter((s) => s.recommendedStage <= stageNumberOf(classStage.data) + 1) : ready;
@@ -550,7 +558,7 @@ export function questIdsOfBlocks(blocks: readonly LectureBlock[], catalog: Catal
   const ids: string[] = [];
   for (const block of blocks) {
     if (block.kind === 'quest') ids.push(block.id);
-    else if (block.kind === 'episode') ids.push(...(catalog.cells.find((c) => c.episodeId === block.id)?.questIds ?? []));
+    else if (block.kind === 'episode') ids.push(...(catalogEpisode(catalog, block.id)?.questIds ?? []));
     else if (block.kind === 'story' && block.level === 'read') {
       // `storyId` is `story:<slug>` (the deck schema), so this is the id `questBlock` read it from.
       const id = `quest:story-${block.storyId.slice('story:'.length)}-read`;

@@ -1,0 +1,1091 @@
+{
+  "v": 1,
+  "id": "story:suncheon-bay-wetland",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261105,
+  "title": {
+    "ko": "철새가 찾아오는 순천만",
+    "romanization": "Cheolsaega chajaoneun Suncheonman",
+    "en": "Suncheon Bay, Where Migrating Birds Come"
+  },
+  "summaryEn": "Hoya visits Suncheon Bay, a wetland of mudflats and reeds where many kinds of migrating birds come. He meets the hooded cranes that spend the winter there and learns why the bay is a Ramsar wetland.",
+  "hoyaIntroEn": "Mud, reeds and lots of birds! Let's visit the wetland at Suncheon Bay.",
+  "hoyaOutroEn": "The wide mudflat is full of life, and that brings the birds. See you next winter, cranes!",
+  "theme": "nature",
+  "kind": "site",
+  "recommendedStage": 3,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Read and recognize 갯벌 (gaetbeol, mudflat), 갈대 (galdae, reed), 철새 (cheolsae, migratory bird) and 흑두루미 (heukdurumi, hooded crane).",
+    "Know that hooded cranes come to Korea in winter, and that Suncheon Bay is one of the places where they spend it.",
+    "Know that Suncheon Bay was registered as a Ramsar wetland in 2006, under the treaty that protects wetlands important for waterbirds."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage and nature facts, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-04"
+  },
+  "keywords": [
+    {
+      "id": "gaetbeol",
+      "ko": "갯벌",
+      "romanization": "gaetbeol",
+      "en": "mudflat",
+      "kind": "word"
+    },
+    {
+      "id": "galdae",
+      "ko": "갈대",
+      "romanization": "galdae",
+      "en": "reed",
+      "kind": "word"
+    },
+    {
+      "id": "cheolsae",
+      "ko": "철새",
+      "romanization": "cheolsae",
+      "en": "migratory bird",
+      "kind": "word"
+    },
+    {
+      "id": "heukdurumi",
+      "ko": "흑두루미",
+      "romanization": "heukdurumi",
+      "en": "hooded crane",
+      "kind": "word"
+    },
+    {
+      "id": "meogi",
+      "ko": "먹이",
+      "romanization": "meogi",
+      "en": "food (for animals)",
+      "kind": "word"
+    },
+    {
+      "id": "seupji",
+      "ko": "습지",
+      "romanization": "seupji",
+      "en": "wetland",
+      "kind": "word"
+    },
+    {
+      "id": "suncheonman",
+      "ko": "순천만",
+      "romanization": "Suncheonman",
+      "en": "Suncheon Bay",
+      "kind": "word"
+    },
+    {
+      "id": "neolbeun",
+      "ko": "넓은",
+      "romanization": "neolbeun",
+      "en": "wide",
+      "kind": "word"
+    },
+    {
+      "id": "aju",
+      "ko": "아주",
+      "romanization": "aju",
+      "en": "very",
+      "kind": "word"
+    },
+    {
+      "id": "manayo",
+      "ko": "많아요",
+      "romanization": "manayo",
+      "en": "there are many",
+      "kind": "word"
+    },
+    {
+      "id": "gyeoul",
+      "ko": "겨울",
+      "romanization": "gyeoul",
+      "en": "winter",
+      "kind": "word"
+    },
+    {
+      "id": "bukjjok",
+      "ko": "북쪽",
+      "romanization": "bukjjok",
+      "en": "north",
+      "kind": "word"
+    },
+    {
+      "id": "narawayo",
+      "ko": "날아와요",
+      "romanization": "narawayo",
+      "en": "fly in",
+      "kind": "word"
+    },
+    {
+      "id": "ramsareu",
+      "ko": "람사르",
+      "romanization": "Ramsareu",
+      "en": "Ramsar",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [
+    {
+      "id": "cn-ramsar",
+      "titleEn": "A promise for wetlands",
+      "bodyEn": "The Ramsar Convention was adopted in Ramsar, Iran, in 1971. Countries that join it protect wetlands that matter for waterbirds, and list them as Ramsar wetlands.",
+      "term": {
+        "ko": "람사르 습지",
+        "romanization": "Ramsareu seupji",
+        "en": "Ramsar wetland"
+      },
+      "factIds": [
+        "f7"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya walks to Suncheon Bay. \"This wide mud by the sea is a mudflat, {kw:gaetbeol},\" he says. Suncheon Bay is a leading example of the wetlands along Korea's south coast.",
+          "captionEn": "The mudflat of Suncheon Bay",
+          "keyword": {
+            "id": "gaetbeol",
+            "ko": "갯벌",
+            "romanization": "gaetbeol",
+            "en": "mudflat",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya at the edge of a wide mudflat by the sea.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "hoya:idle",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya stands at the edge of the shore, wet mud and the sea behind him."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Reeds, {kw:galdae}, grow on the mudflat. Wide fields of reeds spread across it.",
+          "captionEn": "Wide fields of reeds",
+          "keyword": {
+            "id": "galdae",
+            "ko": "갈대",
+            "romanization": "galdae",
+            "en": "reed",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "hoya:waving",
+                "x": 240,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya waves in a wide green field near the bay."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Birds that travel with the seasons are migratory birds, {kw:cheolsae}. More than 200 kinds of birds come to Suncheon Bay.",
+          "captionEn": "Where migrating birds come",
+          "keyword": {
+            "id": "cheolsae",
+            "ko": "철새",
+            "romanization": "cheolsae",
+            "en": "migratory bird",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:swallow",
+                "x": 120,
+                "y": 90,
+                "s": 1
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 280,
+                "y": 70,
+                "s": 0.8
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 200,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya looks up at small birds flying over the sea."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Look! A hooded crane, {kw:heukdurumi}. These cranes raise their young far to the north and fly south for the winter. Suncheon Bay is one of the places in Korea where they spend the winter.",
+          "captionEn": "The hooded cranes come",
+          "keyword": {
+            "id": "heukdurumi",
+            "ko": "흑두루미",
+            "romanization": "heukdurumi",
+            "en": "hooded crane",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:hooded-crane",
+                "x": 120,
+                "y": 280,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:hooded-crane",
+                "x": 300,
+                "y": 276,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 210,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya cheers between two hooded cranes standing on the shore."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Many kinds of birds come here: hooded cranes, black storks, spoonbills and reed warblers among them.",
+          "captionEn": "Many birds",
+          "line": {
+            "ko": "순천만에 새가 아주 많아요.",
+            "romanization": "Suncheonmane saega aju manayo.",
+            "en": "There are very many birds at Suncheon Bay.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:hooded-crane",
+                "x": 300,
+                "y": 280,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 110,
+                "y": 90,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 170,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya reads on the shore while a crane stands nearby and a bird flies overhead."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Why here? The wide mudflat is full of life, such as worms, crabs and shellfish. This food, {kw:meogi}, brings birds like the hooded crane.",
+          "captionEn": "Food for the birds",
+          "keyword": {
+            "id": "meogi",
+            "ko": "먹이",
+            "romanization": "meogi",
+            "en": "food (for animals)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:hooded-crane",
+                "x": 140,
+                "y": 280,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 270,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya watches a hooded crane in the fields."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Wetlands, {kw:seupji}, are important homes for waterbirds. In 2006 Suncheon Bay was registered under the Ramsar Convention, a treaty between countries to protect such wetlands.",
+          "captionEn": "A Ramsar wetland",
+          "keyword": {
+            "id": "seupji",
+            "ko": "습지",
+            "romanization": "seupji",
+            "en": "wetland",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 140,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:hooded-crane",
+                "x": 320,
+                "y": 280,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 180,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya cheers on the shore beside a hooded crane under a bright glow."
+          },
+          "cultureNoteId": "cn-ramsar"
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "In the story, where do hooded cranes spend the winter?",
+          "options": [
+            {
+              "id": "a",
+              "en": "On a high mountain",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "In a big city",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "At Suncheon Bay",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Hooded cranes come to Korea in winter, and Suncheon Bay is one of the places where they spend it.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "How many kinds of birds come to Suncheon Bay?",
+          "options": [
+            {
+              "id": "a",
+              "en": "More than 200 kinds",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Only one kind",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "No birds at all",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "More than 200 kinds of birds come to Suncheon Bay, the hooded crane among them.",
+          "factIds": [
+            "f6"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What food do the birds find at Suncheon Bay?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Bread and cake",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Worms, crabs and shellfish",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Only leaves",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "The wide mudflat is full of worms, crabs and shellfish, so the birds find plenty of food.",
+          "factIds": [
+            "f3"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s2",
+        "s4",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "gaetbeol",
+        "galdae",
+        "cheolsae",
+        "heukdurumi"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Suncheon Bay has a wide mudflat, {kw:gaetbeol}.",
+          "captionEn": "A wide mudflat",
+          "line": {
+            "ko": "순천만에 넓은 갯벌이 있어요.",
+            "romanization": "Suncheonmane neolbeun gaetbeori isseoyo.",
+            "en": "Suncheon Bay has a wide mudflat.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "hoya:idle",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya stands at the edge of the shore, wet mud and the sea behind him."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "There are very many reeds, {kw:galdae}.",
+          "captionEn": "Many reeds",
+          "line": {
+            "ko": "갈대가 아주 많아요.",
+            "romanization": "Galdaega aju manayo.",
+            "en": "There are very many reeds.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "hoya:waving",
+                "x": 240,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya waves in a wide green field near the bay."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "In winter, hooded cranes, {kw:heukdurumi}, come.",
+          "captionEn": "Cranes come in winter",
+          "line": {
+            "ko": "겨울에 흑두루미가 와요.",
+            "romanization": "Gyeoure heukdurumiga wayo.",
+            "en": "In winter, hooded cranes come.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:hooded-crane",
+                "x": 120,
+                "y": 280,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:hooded-crane",
+                "x": 300,
+                "y": 276,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 210,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya cheers between two hooded cranes standing on the shore."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Hooded cranes fly in from the north.",
+          "captionEn": "From the north",
+          "line": {
+            "ko": "흑두루미는 북쪽에서 날아와요.",
+            "romanization": "Heukdurumineun bukjjogeseo narawayo.",
+            "en": "Hooded cranes fly in from the north.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:hooded-crane",
+                "x": 300,
+                "y": 280,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:swallow",
+                "x": 110,
+                "y": 90,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 170,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya reads on the shore while a crane stands nearby and a bird flies overhead."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The mudflat has a lot of food, {kw:meogi}.",
+          "captionEn": "Plenty of food",
+          "line": {
+            "ko": "갯벌에 먹이가 많아요.",
+            "romanization": "Gaetbeore meogiga manayo.",
+            "en": "The mudflat has a lot of food.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:hooded-crane",
+                "x": 140,
+                "y": 280,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 270,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya watches a hooded crane in the fields."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Suncheon Bay is a Ramsar wetland, {kw:seupji}.",
+          "captionEn": "A Ramsar wetland",
+          "line": {
+            "ko": "순천만은 람사르 습지예요.",
+            "romanization": "Suncheonmaneun Ramsareu seupjiyeyo.",
+            "en": "Suncheon Bay is a Ramsar wetland.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 140,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:hooded-crane",
+                "x": 320,
+                "y": 280,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 180,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya cheers on the shore beside a hooded crane under a bright glow."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "갯벌",
+            "romanization": "gaetbeol",
+            "en": "mudflat"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Reed",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Wetland",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Food",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Mudflat",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Gaetbeol means mudflat. Suncheon Bay has a wide mudflat.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "흑두루미",
+            "romanization": "heukdurumi",
+            "en": "hooded crane"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Duck",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Hooded crane",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Shellfish",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Reed",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Heukdurumi means hooded crane. Hooded cranes come to Suncheon Bay in winter.",
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, where do the hooded cranes fly in from?",
+          "options": [
+            {
+              "id": "a",
+              "en": "From the south",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "From the city",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "From the north",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "From the mountains of Jeju",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Hooded cranes raise their young in the north and fly south for the winter.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "meogi",
+        "seupji"
+      ],
+      "grammarFocusEn": "-eseo narawayo (fly in from ...); -e (at, in): gyeoure, gaetbeore",
+      "storyOrder": {
+        "kind": "story-order",
+        "rounds": [
+          {
+            "id": "cranes",
+            "captionsOnly": true,
+            "captionsSettleOrder": true,
+            "panels": [
+              {
+                "id": "p1",
+                "caption": {
+                  "ko": "먼저 흑두루미가 북쪽에서 날아와요.",
+                  "romanization": "Meonjeo heukdurumiga bukjjogeseo narawayo.",
+                  "en": "First, the hooded cranes fly in from the north."
+                }
+              },
+              {
+                "id": "p2",
+                "caption": {
+                  "ko": "그다음에 겨울 동안 갯벌에서 먹이를 먹어요.",
+                  "romanization": "Geudaeume gyeoul dongan gaetbeoreseo meogireul meogeoyo.",
+                  "en": "Next, all winter long, they eat food on the mudflat."
+                }
+              },
+              {
+                "id": "p3",
+                "caption": {
+                  "ko": "마지막에 다시 북쪽으로 날아가요.",
+                  "romanization": "Majimage dasi bukjjogeuro naragayo.",
+                  "en": "Last, they fly back to the north."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "coverSceneId": "s4",
+  "shelf": {
+    "category": "culture",
+    "order": 27,
+    "sampler": false,
+    "minutes": 5
+  },
+  "pillarTags": [
+    "D2"
+  ],
+  "topicTags": [
+    "suncheon-bay",
+    "ramsar-wetland",
+    "hooded-crane",
+    "migratory-birds",
+    "mudflat"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Among the coastal wetlands of Korea's south coast, Suncheon Bay is one that represents the country: reed fields, seepweed and S-shaped channels spread across its wide mudflat.",
+      "claimKo": "순천만은 남해안 지역에 발달한 연안습지 중 우리나라를 대표할 만하며, 갯벌에 갈대밭과 칠면초 군락, S자형 수로가 어우러져 있다.",
+      "sources": [
+        {
+          "title": "순천만 (명승)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "국가유산 설명: \"순천만은 남해안 지역에 발달한 연안습지 중 우리나라를 대표할 만하며, 갯벌에 펼쳐지는 갈대밭과 칠면초 군락, S자형 수로 등이 어우러져 아름다운 해안생태경관을 보여주는 경승지이다.\" … \"넓은 갯벌에는\""
+        },
+        {
+          "title": "순천만",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"순천시 주요 하천인 동천과 이사천이 빠져나가는 하구로 많은 하천 미립 물질이 조류에 의해 바다 멀리 빠져나가지 못하고 연안에 재퇴적되면서 순천만 갯벌이 형성되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Reed fields spread across the Suncheon Bay mudflat.",
+      "claimKo": "순천만 갯벌에는 갈대밭이 펼쳐져 있다.",
+      "sources": [
+        {
+          "title": "순천만 (명승)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "국가유산 설명: \"갯벌에 펼쳐지는 갈대밭과 칠면초 군락\""
+        },
+        {
+          "title": "순천만",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"갯벌은 간척으로 농경지가 되었지만 방조제 밖으로 성장을 계속해 염생 식물이 정착하고 갈대가 자라면서 흑두루미 등의 철새들이 찾아오게 되었다.\" … \"순천시의 동천과 이사천의 합류 지점으로부터 순천만의 갯벌 앞부분까지에는 약 총면적 5.4㎢에 달하는 거대한 갈대 군락이 펼쳐져 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The wide mudflat of Suncheon Bay is rich in life such as lugworms, crabs and shellfish, and birds such as the hooded crane come there; this mudflat life is food for the birds.",
+      "claimKo": "순천만의 넓은 갯벌에는 갯지렁이류, 게류, 조개류 같은 생물이 다양하고 풍부하여 흑두루미 같은 새들이 찾아오며, 이 생물들이 새들의 먹이가 된다.",
+      "sources": [
+        {
+          "title": "순천만 (명승)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "국가유산 설명: \"넓은 갯벌에는 갯지렁이류와 각종 게류, 조개류 등 갯벌 생물상이 다양하고 풍부하여 천연기념물인 흑두루미와 먹황새, 노랑부리저어새를 비롯한\""
+        },
+        {
+          "title": "순천만",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"갯벌에서의 어패류와 간척지 의한 곡물 등이 흑두루미와 같은 철새들의 풍부한 먹잇감과 보호막이 되면서\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Hooded cranes come to Korea in winter as migratory birds, and Suncheon Bay is one of the places in Korea where they spend the winter.",
+      "claimKo": "흑두루미는 우리나라에 겨울에 찾아오는 철새이며, 순천만은 흑두루미가 우리나라에서 겨울을 나는 곳 가운데 하나이다.",
+      "sources": [
+        {
+          "title": "흑두루미 (천연기념물)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1369902280000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "국가유산 설명: \"우리나라에는 겨울에 찾아오는 철새로\" … \"현재는 전남 순천만에서 약 100∼120마리, 충남 천수만 지역에서 약 50∼60마리가 겨울을 나고 있다.\""
+        },
+        {
+          "title": "철새 도래지 순천만",
+          "publisher": "순천시 순천만습지 (Suncheon City, scbay.suncheon.go.kr)",
+          "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"우리나라 대표 철새도래지\" … \"흑두루미\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Hooded cranes are found in Siberia, China, Japan and Korea. They breed in the north, around Lake Baikal, northwestern Mongolia, the Amur river basin, the Ussuri region and northeast China, and move south in winter.",
+      "claimKo": "흑두루미는 시베리아, 중국, 일본, 한국 등지에 분포한다. 바이칼호 부근, 몽골 북서부, 흑룡강 유역, 우수리 지방, 중국 동북 지방 등 북쪽에서 번식하고 겨울에는 남쪽으로 이동한다.",
+      "sources": [
+        {
+          "title": "흑두루미 (천연기념물)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1369902280000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "국가유산 설명: \"흑두루미는 시베리아, 중국, 일본, 한국 등지에 분포한다.\" … \"우리나라에는 겨울에 찾아오는 철새로\""
+        },
+        {
+          "title": "흑두루미",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0065880",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"바이칼호 부근·몽고 북서부·흑룡강 유역·우수리 지방·중국 동북지방 등지에서 번식하고 겨울에는 이동, 남하하여\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "More than 200 kinds of birds come to Suncheon Bay, among them the hooded crane, the black stork, the Eurasian spoonbill and the Oriental reed warbler.",
+      "claimKo": "순천만에는 흑두루미와 먹황새, 노랑부리저어새, 개개비 등을 비롯해 200여 종의 새가 찾아온다.",
+      "sources": [
+        {
+          "title": "순천만 (명승)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "국가유산 설명: \"천연기념물인 흑두루미와 먹황새, 노랑부리저어새를 비롯한 흰목물떼새, 방울새, 개개비, 검은머리물떼새 등 11종의 국제 희귀조류와 200여종의 조류가 이곳을 찾는 등\""
+        },
+        {
+          "title": "철새 도래지 순천만",
+          "publisher": "순천시 순천만습지 (Suncheon City, scbay.suncheon.go.kr)",
+          "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"총 252종의 조류가 관찰되는 우리나라 대표 철새도래지\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Ramsar Convention is the Convention on Wetlands of International Importance especially as Waterfowl Habitat, adopted in Ramsar, Iran, in 1971 to protect wetlands that waterbirds live in.",
+      "claimKo": "람사르협약은 '물새 서식지로서 특히 국제적으로 중요한 습지에 관한 협약'으로, 물새가 사는 습지를 국제적으로 보호하려고 1971년 이란의 람사르에서 채택되었다.",
+      "sources": [
+        {
+          "title": "람사르협약 (람사르습지 목록)",
+          "publisher": "국립생태원 습지센터 (National Institute of Ecology, Wetland Center; nie.re.kr)",
+          "url": "https://www.nie.re.kr/nie/main/contents.do?menuNo=200291",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"‘물새 서식지로서 특히 국제적으로 중요한 습지에 관한 협약’\" … \"1971년 2월 2일 이란의 람사르(ramsar)에서 채택되었고, 물새 서식 습지대를 국제적으로 보호하기 위한 것으로\""
+        },
+        {
+          "title": "순천만",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"물새의 서식지로서 국제적으로 중요한 습지의 보호에 관한 국제 협약.\" … \"1971년 이란의 람사르에서 열린 국제회의에서 채택되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Suncheon Bay was registered under the Ramsar Convention in 2006; the National Institute of Ecology lists it as a Ramsar wetland together with the Boseong mudflat, registered on 20 January 2006.",
+      "claimKo": "순천만은 2006년 람사르협약에 등록되었다. 국립생태원은 순천만·보성갯벌을 2006년 1월 20일 등록된 람사르습지로 기록하고 있다.",
+      "sources": [
+        {
+          "title": "순천만",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"2006년 람사르 협약에 등록되면서\""
+        },
+        {
+          "title": "람사르협약 (람사르습지 목록)",
+          "publisher": "국립생태원 습지센터 (National Institute of Ecology, Wetland Center; nie.re.kr)",
+          "url": "https://www.nie.re.kr/nie/main/contents.do?menuNo=200291",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "람사르습지 목록, 순천만·보성갯벌 행: \"순천만·보성갯벌\" … \"2006.01.20\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털(명승 순천만, 천연기념물 흑두루미); 한국민족문화대백과사전(순천만, 흑두루미); 순천시 순천만습지(철새 도래지 순천만); 국립생태원 습지센터(람사르협약)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Sources opened and quoted on 2026-11-04; every quoted Korean passage was re-checked by script against the fetched page text (whitespace ignored). MAR (F-CURR-002 §9.2): pass 0 author; pass 1 three checkers, each on its own lens: language (Korean lines, glosses, F-CNT-002 romanization machine-checked against the RR converter), culture and facts (every sentence against its cited facts, §5.1 conventions: UNESCO status only under the inscribed name, institution names as of the access date, no shared heritage framed as Korean in origin), learning design (Stage 5 level, Story Order rounds settled by their captions, check answer positions); pass 2 reviser; pass 3 third check of the revised file. Reviser changes: number words removed where no fact gives them (two rivers); the wintering claim cites Suncheon City's current page, not the older encyclopedia entry. MAR 2026-11-04 language review of the read tier and the listen tier; MAR 2026-11-04 culture review of the read tier and the listen tier; findings and outcomes in the PR. Fix round 1 (2026-11-04): §6.6 allowlisted sources added to f1-f6 (Korea Heritage Service), the 'only wintering site' claim cut back, the seasonal list replaced, the Story Order round made three panels whose markers settle the order."
+  },
+  "authorNotes": "National Wetlands Center: as of 2026-11-04 the National Institute of Ecology's site names it 국립생태원 습지센터 (its history: 2019.05 국립습지센터 이관), and the Ministry of Climate, Energy and Environment lists the institute among its 산하기관 (mcee.go.kr, 외청·소속기관·산하공공기관). The Ramsar Convention Secretariat's site list did not render for the session, so the site status rests on the institute's list and encykorea; nothing else is claimed for the Secretariat. Bird counts are left out (they change every year). encykorea's older 흑두루미 entry says Korea has no regular wintering site; Suncheon City's current page carries that claim, encykorea only the breeding range. Fix round 1 (PR review, 2026-11-04): every fact now cites an institution on the F-CURR-002 §6.6 allowlist first. The Korea Heritage Service's entries (명승 순천만; 천연기념물 흑두루미, its text read through the service's open API, SearchKindOpenapiDt.do) carry f1 to f6. The KHS crane entry says hooded cranes also winter at Cheonsu Bay, so the claim that Suncheon Bay is the only regular wintering site in Korea was cut back to 'one of the places where they spend the winter'; the seasonal bird list (Suncheon City only) became the KHS list of more than 200 kinds; the river-sediment origin and the grain of the reclaimed fields (encykorea only) left the narration. encykorea and Suncheon City stay as secondary sources.",
+  "errata": []
+}

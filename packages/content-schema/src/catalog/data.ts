@@ -1,6 +1,7 @@
 import type { StageKey, ThemeKey } from '../schemas/heritage-card';
-import { assembleCatalog, expandCellRows, type StoryShelfEntry } from './assemble';
+import { assembleCatalog, expandCellRows, type CatalogVolumeSource, type StoryShelfEntry } from './assemble';
 import { GENERATED_CATALOG_VERSION, GENERATED_LESSON_CELL_ROWS, GENERATED_STORIES, GENERATED_TOPICS } from './catalog.generated';
+import HAND_VOLUMES from './hand-volumes.json';
 import type { Catalog, CatalogCell, CatalogQuest } from './schema';
 
 /**
@@ -76,6 +77,42 @@ const lesson = (
   teaches: string[] = [],
 ): CatalogQuest => ({ id: `quest:${id}`, episodeId: `episode:${stage}-${theme}`, stage, theme, title, minutes, teaches, kind: 'lesson' });
 
+/**
+ * F-CURR-002 row CM-46: the Letters cell's book 2 (`episode:stage5-letters-v2`, `books.ts`), a later volume of the
+ * cell on the CM-40 path, so it is off the route days and shows only while `volumes` is on. Its quests are the read
+ * quests of the reviewed stories `buildBook` keeps, in book order (`catalog-parity.test.ts` holds them equal); the two
+ * new tales join with their review sign-off.
+ */
+const LETTERS_BOOK2 = 'episode:stage5-letters-v2';
+const book2Quest = (slug: string, title: string, minutes: number): CatalogQuest => ({
+  ...lesson(`story-${slug}-read`, 'stage5', 'letters', title, minutes),
+  episodeId: LETTERS_BOOK2,
+});
+const LETTERS_BOOK2_QUESTS: CatalogQuest[] = [
+  book2Quest('tripitaka-koreana', 'Eighty Thousand Woodblocks', 5),
+  book2Quest('jikji-metal-type', 'Jikji: Printed with Metal Type', 5),
+  book2Quest('sillok-royal-historians', 'Hoya Meets the Royal Historians', 4),
+  book2Quest('sillok-mountain-archives', 'The Annals Hide in the Mountains', 5),
+  book2Quest('nanjung-ilgi', "Admiral Yi's Diary", 4),
+  book2Quest('seungjeongwon-ilgi-every-day', "The Royal Secretariat's Everyday Diary", 5),
+  book2Quest('ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 4),
+  book2Quest('joseon-records-today', 'Old Records, New Discoveries', 4),
+];
+/**
+ * The Letters book 2 as a later volume. Kept apart from hand-volumes.json: its tales are shelf stories that joined
+ * through their read tiers (row CM-46a), so they stay shelf stories and are not in `VOLUME_TWO_STORY_SLUGS`.
+ */
+const LETTERS_BOOK2_VOLUME: CatalogVolumeSource[] = [
+  {
+    cellId: 'episode:stage5-letters',
+    episodeId: LETTERS_BOOK2,
+    volume: 2,
+    title: 'Books, Records and Letters',
+    minutes: LETTERS_BOOK2_QUESTS.reduce((sum, q) => sum + q.minutes, 0),
+    questIds: LETTERS_BOOK2_QUESTS.map((q) => q.id),
+  },
+];
+
 /** The hand-written cells: Stage 1 (TypeScript quests) and the Stage 5 books (`books.ts`). */
 const handCells: CatalogCell[] = [
   cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
@@ -150,8 +187,36 @@ const handLessonQuests: CatalogQuest[] = [
   lesson('story-cheugugi-rain-gauge-read', 'stage5', 'crafts', 'The Bowl That Measured the Rain', 4),
   lesson('story-jagyeongnu-water-clock-read', 'stage5', 'crafts', 'Jang Yeongsil and the Clock That Rang by Itself', 5),
   lesson('story-pansori-tales-read', 'stage5', 'crafts', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 6),
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): book 2 of the Letters cell (`books.ts`), on its own episode.
+  ...LETTERS_BOOK2_QUESTS,
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Food cell's book 2, on its own Volume 2 episode.
+  { ...lesson('story-jang-fermented-sauces-read', 'stage5', 'life', 'Making Jang: Sauces from Soybeans', 5), episodeId: 'episode:stage5-life-v2' },
+  { ...lesson('story-tteok-through-the-seasons-read', 'stage5', 'life', 'Rice Cakes Through the Seasons', 5), episodeId: 'episode:stage5-life-v2' },
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Nature cell's book 2, on its own Volume 2 episode.
+  { ...lesson('story-jeju-volcanic-island-read', 'stage5', 'nature', 'Jeju, the Island Volcanoes Made', 5), episodeId: 'episode:stage5-nature-v2' },
+  { ...lesson('story-jirisan-national-park-read', 'stage5', 'nature', "Jirisan, Korea's First National Park", 5), episodeId: 'episode:stage5-nature-v2' },
+  { ...lesson('story-suncheon-bay-wetland-read', 'stage5', 'nature', 'Suncheon Bay, Where Migrating Birds Come', 5), episodeId: 'episode:stage5-nature-v2' },
+  // F-CURR-002 row CM-46 (stamped in hand-stamps.json): the Play cell's book 2, on its own Volume 2 episode.
+  { ...lesson('story-hahoe-mask-dance-read', 'stage5', 'crafts', 'The Hahoe Masks and the Mask Dance', 5), episodeId: 'episode:stage5-crafts-v2' },
+  { ...lesson('story-hanji-korean-paper-read', 'stage5', 'crafts', 'Hanji: Paper from the Paper Mulberry', 5), episodeId: 'episode:stage5-crafts-v2' },
 ];
 
+/**
+ * The hand-written later volumes (F-CURR-002 row CM-40): the Stage 5 books 2 of `books.ts` (row CM-46), each the
+ * second episode of its Stage 5 cell, with its read quests above. JSON, so scripts/build-lecture-catalogue.mjs reads it
+ * too: a book 2 tale is Volume 2 content, so the console offers it as a story only once `volumes` opens (row CM-40).
+ */
+const handVolumes: readonly CatalogVolumeSource[] = HAND_VOLUMES;
+
+/**
+ * The tales a book 2 holds (row CM-46): the read quests `quest:story-<slug>-read` of the hand-written later volumes.
+ * They are Volume 2 content, so, as row CM-40 keeps a cell's Volume 2 off the route days and out of the console until
+ * `volumes` opens for everyone, the catalogue lists them only inside their book 2, not as shelf stories: no route,
+ * preset or console story list offers them. The row that opens `volumes` for everyone lists them.
+ */
+export const VOLUME_TWO_STORY_SLUGS: ReadonlySet<string> = new Set(
+  handVolumes.flatMap((v) => v.questIds.flatMap((id) => /^quest:story-([a-z0-9]+(?:-[a-z0-9]+)*)-read$/.exec(id)?.[1] ?? [])),
+);
 /**
  * The shelf order and festival anchors of the stories that shipped up to version 32 (F-STORY-005
  * section 3.3, table order). Frozen: a story file added later takes the next order after these, in
@@ -190,8 +255,10 @@ const generated = expandCellRows(GENERATED_LESSON_CELL_ROWS);
 export const CATALOG: Catalog = assembleCatalog({
   version: CATALOG_VERSION,
   cells: [...handCells, ...generated.cells],
+  // F-CURR-002 row CM-40: the Volume 2 of a cell; row CM-46 adds the hand-written Stage 5 books 2.
+  volumes: [...LETTERS_BOOK2_VOLUME, ...handVolumes, ...generated.volumes],
   lessonQuests: [...handLessonQuests, ...generated.quests],
-  stories: GENERATED_STORIES,
+  stories: GENERATED_STORIES.filter((story) => !VOLUME_TWO_STORY_SLUGS.has(story.slug)),
   storyShelf: STORY_SHELF,
   topics: GENERATED_TOPICS,
   // F-VOC-001 section 3.3: twelve launch topics, the first four free (D5), five minutes each.

@@ -13,7 +13,8 @@ const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-overlays.mjs");
 const OUT_REL = join("packages", "content-schema", "src", "i18n-overlays.generated.ts");
 
-const { GENERATED_HEADER, buildOverlays, isLessonOverlay, localeOut, renderLocaleOverlays, renderOverlays } = await import(SCRIPT);
+const { GENERATED_HEADER, buildOverlays, isLessonOverlay, isStoryChunkField, localeOut, localeTable, renderLocaleOverlays, renderOverlays, storyChunkOverlays } =
+  await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -113,6 +114,38 @@ describe("build-overlays.mjs: merging (pure)", () => {
     assert.match(renderLocaleOverlays(model, "ko"), /export const OVERLAYS_KO: Overlays\['ko'\] = \{/);
     assert.equal(localeOut("ko"), join("packages", "content-schema", "src", "i18n-overlays-ko.generated.ts"));
   });
+
+  test("a story's scene text rides in its story chunk, not in the locale chunks (row CM-8b's overlay half, F-CURR-002 §10)", () => {
+    assert.equal(isStoryChunkField("story:a", "scenes.s1.narration"), true);
+    assert.equal(isStoryChunkField("story:a", "tiers.read.scenes.s2.caption"), true);
+    assert.equal(isStoryChunkField("story:a", "tiers.listen.scenes.s3.alt"), true);
+    for (const field of ["title", "summary", "hoyaIntro", "cultureNotes.n1.body", "checks.c1.prompt", "keywords.k1.gloss", "facts.f1.claim"]) {
+      assert.equal(isStoryChunkField("story:a", field), false, field);
+    }
+    assert.equal(isStoryChunkField("card:a", "scenes.s1.narration"), false);
+    const model = buildOverlays([
+      file(
+        "content/i18n/ko/stories.json",
+        overlay("ko", "stories", {
+          "story:a": { title: "가", "scenes.s1.narration": "나", "tiers.read.scenes.s1.caption": "다" },
+          "story:b": { "scenes.s1.narration": "라" },
+          "card:a": { title: "마" },
+        }),
+      ),
+      file("content/i18n/es/stories.json", overlay("es", "stories", { "story:a": { title: "Á" } })),
+    ]);
+    // The locale table keeps the title and card text; a story left with no field leaves it.
+    assert.deepEqual(localeTable(model, "ko"), { "card:a": { title: "마" }, "story:a": { title: "가" } });
+    assert.doesNotMatch(renderLocaleOverlays(model, "ko"), /나|다|라/);
+    // The both-locale module (native, the console) keeps everything.
+    assert.match(renderOverlays(model), /"scenes\.s1\.narration": "나"/);
+    // Each story's chunk gets its own scene text, only for the locales that have some.
+    assert.deepEqual(storyChunkOverlays(model, "story:a"), {
+      ko: { "story:a": { "scenes.s1.narration": "나", "tiers.read.scenes.s1.caption": "다" } },
+    });
+    assert.deepEqual(storyChunkOverlays(model, "story:b"), { ko: { "story:b": { "scenes.s1.narration": "라" } } });
+    assert.deepEqual(storyChunkOverlays(model, "story:c"), {});
+  });
 });
 
 describe("build-overlays.mjs: CLI", () => {
@@ -149,6 +182,9 @@ describe("build-overlays.mjs: CLI", () => {
     assert.match(out, /"title": "A"/);
     assert.doesNotMatch(out, /Palabras de fiesta/);
     assert.equal(isLessonOverlay("lessons-stage7-crafts.json"), true);
+    // F-CURR-002 row CM-40: a cell's Volume 2 glosses are build-lessons.mjs's too; no third volume.
+    assert.equal(isLessonOverlay("lessons-stage2-nature-v2.json"), true);
+    assert.equal(isLessonOverlay("lessons-stage2-nature-v3.json"), false);
     assert.equal(isLessonOverlay("lessons.json"), false);
     assert.equal(isLessonOverlay("stage1-quests.json"), false);
   });
@@ -190,6 +226,54 @@ describe("build-overlays.mjs: CLI", () => {
     assert.match(r.stdout, /::error file=content\/i18n\/es\/bad\.json::invalid JSON/);
     assert.equal(existsSync(join(root, OUT_REL)), false);
     assert.equal(run(root, ["--nope"]).status, 2);
+  });
+
+  test("leaves a story no learner path offers out of the tables until it is signed (F-CURR-002 row CM-46)", () => {
+    const root = makeRoot();
+    const story = (slug, over = {}) => ({
+      id: `story:${slug}`,
+      state: "ready",
+      shelf: {},
+      review: { language: "native-reviewed", culture: "culture-reviewed" },
+      ...over,
+    });
+    put(root, "content/stories/signed.json", story("signed"));
+    put(root, "content/stories/draft-tale.json", story("draft-tale", { review: { language: "draft", culture: "draft" } }));
+    put(root, "content/stories/no-shelf.json", story("no-shelf", { shelf: undefined }));
+    put(
+      root,
+      "content/i18n/ko/stories.json",
+      overlay("ko", "stories", {
+        "story:signed": { title: "서명" },
+        "story:draft-tale": { title: "초안" },
+        "story:no-shelf": { title: "선반 없음" },
+        "quest:story-draft-tale-listen": { title: "초안" },
+        "quest:story-signed-listen": { title: "서명" },
+        "card:a": { title: "카드" },
+      }),
+    );
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const ko = readFileSync(join(root, localeOut("ko")), "utf8");
+    assert.match(ko, /"story:signed"/);
+    assert.match(ko, /"card:a"/);
+    assert.match(ko, /"quest:story-signed-listen"/);
+    assert.doesNotMatch(ko, /story:draft-tale|story-draft-tale-listen|story:no-shelf/);
+    assert.doesNotMatch(readFileSync(join(root, OUT_REL), "utf8"), /story:draft-tale/);
+    // Signing the tale brings its text in.
+    put(root, "content/stories/draft-tale.json", story("draft-tale"));
+    assert.equal(run(root, ["--check"]).status, 1);
+    assert.equal(run(root).status, 0);
+    assert.match(readFileSync(join(root, localeOut("ko")), "utf8"), /"story:draft-tale"/);
+  });
+
+  test("buildOverlays still checks a withheld entry (one file per entity) but leaves it out", () => {
+    const files = [file("content/i18n/es/s.json", overlay("es", "s", { "story:t": { title: "T" }, "card:a": { title: "A" } }))];
+    assert.deepEqual(buildOverlays(files, { withheld: new Set(["story:t"]) }), { es: { "card:a": { title: "A" } }, ko: {} });
+    assert.throws(
+      () => buildOverlays([...files, file("content/i18n/es/t.json", overlay("es", "t", { "story:t": { title: "U" } }))], { withheld: new Set(["story:t"]) }),
+      /also in/,
+    );
   });
 
   test("the checked-in module matches the repository's content/i18n", () => {

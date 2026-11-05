@@ -8,9 +8,10 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSPr
 import { Chip, ChipGroup, ShortPlanLine, SuggestedTag, WarningList, WeekTable, onRadioKeys } from '@/components/console/CurriculumParts';
 import { Button, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AdultFrame } from '@/components/console/AdultFrame';
+import { BlendPreview, BlendPreviewHeader, MeetingBlock } from '@/components/console/BlendParts';
 import { useConsole } from '@/components/console/use-console';
 import type { Roster } from '@/lib/console/api';
-import { contentGatingEnabled } from '@/lib/console/config';
+import { contentGatingEnabled, routeBlendEnabled } from '@/lib/console/config';
 import {
   FOCUS_CHOICES,
   LENGTH_CHOICES,
@@ -26,7 +27,9 @@ import {
   leftOutNeutral,
   lengthPreviewText,
   levelHint,
+  meetingShown,
   paceOf,
+  practiceCountOf,
   pacePatch,
   prefilledState,
   relearnedState,
@@ -147,28 +150,34 @@ function CurriculumInner(): JSX.Element {
     setState((s) => followProposal({ ...s, ...patch }, context));
   };
 
-  const problem: WizardProblem | null = wizardProblem(state, today);
+  // AMENDMENTS-ROUTE-CLASS-BLEND section 10.1 (row BL-4): with the flag on, a class says how it meets instead of the
+  // class-day and homework-day chips, the pace chips and the minutes chips.
+  const meeting = meetingShown(state, routeBlendEnabled());
+  const blended = meeting && practiceCountOf(state) >= 1;
+  const problem: WizardProblem | null = wizardProblem(state, today, meeting);
   const loading = roster === null;
   const noLearner = learnerProblem(state, learners.length);
   const draft: CurriculumDraft | null = useMemo(() => {
-    const params = toParams(state, unlocked);
+    const params = toParams(state, unlocked, meeting);
     if (!params || problem !== null) return null;
     try {
       return generateCurriculum(params, CATALOG);
     } catch {
       return null;
     }
-  }, [state, unlocked, problem]);
+  }, [state, unlocked, problem, meeting]);
   // F-ENT-003 section 3.9.3: an uncovered space with the free-plan switch on (null otherwise: today's wording). Only the preview step shows it.
   const free = useMemo(() => (step === STEPS && draft ? freeDaysView(draft, coverage, contentGatingEnabled()) : null), [step, draft, coverage]);
   // The switch is on but this viewer cannot tell the coverage: neutral product words, no link (section 3.11).
   const neutral = leftOutNeutral(coverage, contentGatingEnabled());
   // The *Suggested* length and the line under each length chip (step 2 only: four generator runs).
   const pace = paceOf(state);
+  // With the meeting block the pace chips are hidden and the proposal would read the old pace, not the class and practice
+  // days: no *Suggested* tag and no per-length line until the blended preview shows the real numbers (BL-4 review).
   const proposal = useMemo(
-    () => (step === 2 && roster !== null ? wizardProposal(state, context) : null),
+    () => (step === 2 && roster !== null && !meeting ? wizardProposal(state, context) : null),
     // The proposal reads the start, the learner, the pace, the start day and the motivation; nothing else of the form.
-    [step, roster, context, state.audience, state.start, state.learnerId, pace, state.startDate, state.motivation],
+    [step, roster, meeting, context, state.audience, state.start, state.learnerId, pace, state.startDate, state.motivation],
   );
 
   if (!ready || !session) return <AdultFrame>{null}</AdultFrame>;
@@ -193,6 +202,10 @@ function CurriculumInner(): JSX.Element {
         return c.rhythm.tooManyBreaks;
       case 'too-many':
         return c.rhythm.tooMany;
+      case 'no-class-day':
+        return c.blend.meeting.pickClassDay;
+      case 'practice-days':
+        return c.blend.practice.pickDays(practiceCountOf(state));
     }
   };
 
@@ -294,15 +307,18 @@ function CurriculumInner(): JSX.Element {
       {step === 2 ? (
         <section aria-label={c.rhythm.title}>
           <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.md}px` }}>{c.rhythm.title}</h2>
-          <ChipGroup label={c.rhythm.pace}>
-            {PACE_CHOICES.map((id: PaceId) => (
-              <Chip key={id} selected={pace === id} onClick={() => updateAndFollow({ ...pacePatch(id), rhythmPicked: true })} testId={`pace-${id}`}>
-                {c.rhythm.paceOption(c.rhythm.paces[id], PACES[id])}
-                {suggested === id ? <SuggestedTag /> : null}
-              </Chip>
-            ))}
-          </ChipGroup>
-          {pace === null ? (
+          {meeting ? <MeetingBlock state={state} onChange={(patch) => update({ ...patch, rhythmPicked: true })} locale={locale} /> : null}
+          {meeting ? null : (
+            <ChipGroup label={c.rhythm.pace}>
+              {PACE_CHOICES.map((id: PaceId) => (
+                <Chip key={id} selected={pace === id} onClick={() => updateAndFollow({ ...pacePatch(id), rhythmPicked: true })} testId={`pace-${id}`}>
+                  {c.rhythm.paceOption(c.rhythm.paces[id], PACES[id])}
+                  {suggested === id ? <SuggestedTag /> : null}
+                </Chip>
+              ))}
+            </ChipGroup>
+          )}
+          {!meeting && pace === null ? (
             <div style={{ margin: `-${spacing.sm}px 0 ${spacing.lg}px` }}>
               <Muted>{c.rhythm.offChips}</Muted>
             </div>
@@ -325,6 +341,12 @@ function CurriculumInner(): JSX.Element {
               );
             })}
           </ChipGroup>
+          {blended ? (
+            <label style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', margin: `-${spacing.sm}px 0 ${spacing.lg}px`, minHeight: spacing.xxxl }}>
+              <input type="checkbox" checked={state.keepAverage === true} onChange={(e) => update({ keepAverage: e.target.checked })} data-testid="keep-average" />
+              {c.blend.keepAverage}
+            </label>
+          ) : null}
           {state.length === 'custom' ? (
             <label style={{ display: 'block', marginBottom: spacing.lg }}>
               <span style={labelStyle}>{c.rhythm.weeks}</span>
@@ -342,26 +364,30 @@ function CurriculumInner(): JSX.Element {
             <span style={labelStyle}>{c.rhythm.startDate}</span>
             <input type="date" min={today} value={state.startDate} onChange={(e) => update({ startDate: e.target.value })} style={inputStyle} />
           </label>
-          <ChipGroup label={c.rhythm.days} role="group">
-            {WEEKDAYS.map((day) => (
-              <Chip key={day} role="checkbox" selected={state.sessionDays.includes(day)} onClick={() => toggleDay(day)} testId={`day-${day}`}>
-                {weekdayLabel(day, locale)}
-              </Chip>
-            ))}
-          </ChipGroup>
-          <Muted>{c.rhythm.daysHint[audience]}</Muted>
-          {state.sessionDays.length > 0 ? (
-            <div style={{ marginBottom: spacing.lg }}>
-              <Muted>{c.rhythm.daysChosen(state.sessionDays.length)}</Muted>
-            </div>
-          ) : null}
-          <ChipGroup label={c.rhythm.minutes}>
-            {MINUTE_CHOICES.map((n) => (
-              <Chip key={n} selected={state.minutesPerSession === n} onClick={() => update({ minutesPerSession: n, rhythmPicked: true })}>
-                {c.rhythm.minutesOption(n)}
-              </Chip>
-            ))}
-          </ChipGroup>
+          {meeting ? null : (
+            <>
+              <ChipGroup label={c.rhythm.days} role="group">
+                {WEEKDAYS.map((day) => (
+                  <Chip key={day} role="checkbox" selected={state.sessionDays.includes(day)} onClick={() => toggleDay(day)} testId={`day-${day}`}>
+                    {weekdayLabel(day, locale)}
+                  </Chip>
+                ))}
+              </ChipGroup>
+              <Muted>{c.rhythm.daysHint[audience]}</Muted>
+              {state.sessionDays.length > 0 ? (
+                <div style={{ marginBottom: spacing.lg }}>
+                  <Muted>{c.rhythm.daysChosen(state.sessionDays.length)}</Muted>
+                </div>
+              ) : null}
+              <ChipGroup label={c.rhythm.minutes}>
+                {MINUTE_CHOICES.map((n) => (
+                  <Chip key={n} selected={state.minutesPerSession === n} onClick={() => update({ minutesPerSession: n, rhythmPicked: true })}>
+                    {c.rhythm.minutesOption(n)}
+                  </Chip>
+                ))}
+              </ChipGroup>
+            </>
+          )}
           <div style={{ marginBottom: spacing.lg }}>
             <div style={labelStyle}>{c.rhythm.daysOff}</div>
             <Muted>{c.rhythm.daysOffHint}</Muted>
@@ -375,6 +401,17 @@ function CurriculumInner(): JSX.Element {
                   <span style={labelStyle}>{c.rhythm.breakTo}</span>
                   <input type="date" value={range.to} onChange={(e) => update({ daysOff: state.daysOff.map((r, i) => (i === k ? { ...r, to: e.target.value } : r)) })} style={inputStyle} />
                 </label>
+                {blended ? (
+                  <label style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', minHeight: spacing.xxxl }}>
+                    <input
+                      type="checkbox"
+                      checked={range.classOnly === true}
+                      onChange={(e) => update({ daysOff: state.daysOff.map((r, i) => (i === k ? { ...r, classOnly: e.target.checked } : r)) })}
+                      data-testid={`class-only-${k}`}
+                    />
+                    {c.blend.classDayOff}
+                  </label>
+                ) : null}
                 <button
                   type="button"
                   aria-label={c.rhythm.removeBreak(k + 1)}
@@ -457,9 +494,11 @@ function CurriculumInner(): JSX.Element {
 
       {step === 4 && draft ? (
         <section aria-label={c.preview.title}>
+          {stats ? <BlendPreviewHeader draft={draft} locale={locale} /> : null}
           {stats ? <p style={{ margin: `0 0 ${spacing.md}px`, color: colors.text.secondary }} data-testid="route-stats">{stats}</p> : <Notice>{c.preview.empty}</Notice>}
           <WarningList warnings={draft.warnings} locale={locale} billingLink={audience === 'class'} free={free} neutral={neutral} />
-          {stats ? (
+          {stats && draft.params.blend ? <BlendPreview draft={draft} locale={locale} /> : null}
+          {stats && !draft.params.blend ? (
             <div style={{ ...panelStyle, padding: spacing.md, marginBottom: spacing.md }}>
               <WeekTable rows={rows} locale={locale} />
             </div>

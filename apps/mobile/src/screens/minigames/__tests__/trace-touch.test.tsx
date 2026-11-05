@@ -159,12 +159,15 @@ async function dot(at: { x: number; y: number }, id = 0): Promise<void> {
   await finalize();
 }
 
-/** The points of the newest ink path, in the canvas's viewBox. */
+/**
+ * The finger's samples in the newest ink path, in the canvas's viewBox. The ink
+ * is smoothed (NB-3): a sample is an M or L end, or a Q's control point.
+ */
 const lastInk = (root: ReactTestInstance): Array<{ x: number; y: number }> => {
   const paths = root.findAll((n) => n.type === Path && n.props.strokeWidth === INK_WIDTH);
   const d = String(paths[paths.length - 1]!.props.d);
-  return d.split(/[ML]/).filter((part) => part.trim() !== '').map((part) => {
-    const [x, y] = part.trim().split(' ').map(Number);
+  return (d.match(/[MLQ][^MLQ]*/g) ?? []).map((part) => {
+    const [x, y] = part.slice(1).trim().split(' ').map(Number);
     return { x: x!, y: y! };
   });
 };

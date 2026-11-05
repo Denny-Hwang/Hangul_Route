@@ -269,8 +269,8 @@ for (const profile of [
       await page.getByRole('button', { name: 'Go', exact: true }).click();
       const options = page.locator('[data-testid^="listen-pick-option-"]').filter({ visible: true });
       await expect(page.getByTestId('listen-pick-option-jamo:eo')).toBeVisible();
-      // No Korean voice here: "No sound? Read it here." comes in above the cards once the voice check settles and moves
-      // them down (by about 400 px at the largest text). Every point below is measured on that settled layout.
+      // No Korean voice here: "No sound? Read it here." shows above the cards once the voice check settles; the cards are
+      // held until then (no-voice-notice-shift.spec.ts). Every point below is measured on that layout.
       await expect(page.getByTestId('listen-pick-prompt-detail')).toBeVisible();
       const ids = await options.evaluateAll((els) => els.map((e) => e.getAttribute('data-testid') ?? ''));
       const rightId = 'listen-pick-option-jamo:eo';

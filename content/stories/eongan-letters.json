@@ -1,0 +1,1131 @@
+{
+  "v": 1,
+  "id": "story:eongan-letters",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261104,
+  "title": {
+    "ko": "가족에게 쓴 한글 편지",
+    "romanization": "Gajogege sseun Hangeul pyeonji",
+    "en": "Hangul Letters to the Family"
+  },
+  "summaryEn": "Hoya reads about eongan, the Hangul letters of Joseon: the oldest one found so far, from an officer far away to his wife, and the letters King Jeongjo wrote to his aunt from boyhood on.",
+  "hoyaIntroEn": "Let's read letters that families in Joseon wrote in Hangul!",
+  "hoyaOutroEn": "Now you know how Joseon families shared warm feelings in Hangul letters!",
+  "theme": "letters",
+  "kind": "documentary",
+  "recommendedStage": 3,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Know that eongan is an old word for a letter written in Hangul in Joseon times.",
+    "Know that the Na Singeol Hangul Letter, from an officer to his wife, is the oldest Hangul letter found so far, and that it shows men and people far from the capital wrote Hangul too.",
+    "Know that King Jeongjo wrote Hangul letters to his aunt from boyhood on, and that the album is a Treasure at the National Hangeul Museum.",
+    "Read and recognize 편지 (pyeonji), 군관 (gungwan), 가족 (gajok), 외숙모 (oesungmo), 안부 (anbu) and 썼어요 (sseosseoyo)."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "pyeonji",
+      "ko": "편지",
+      "romanization": "pyeonji",
+      "en": "letter",
+      "kind": "word"
+    },
+    {
+      "id": "gungwan",
+      "ko": "군관",
+      "romanization": "gungwan",
+      "en": "military officer",
+      "kind": "word"
+    },
+    {
+      "id": "gajok",
+      "ko": "가족",
+      "romanization": "gajok",
+      "en": "family",
+      "kind": "word"
+    },
+    {
+      "id": "bomul",
+      "ko": "보물",
+      "romanization": "bomul",
+      "en": "Treasure (a heritage item)",
+      "kind": "word"
+    },
+    {
+      "id": "hangeul",
+      "ko": "한글",
+      "romanization": "Hangeul",
+      "en": "Hangul (the Korean alphabet)",
+      "kind": "word"
+    },
+    {
+      "id": "oesungmo",
+      "ko": "외숙모",
+      "romanization": "oesungmo",
+      "en": "aunt (the wife of your mother's brother)",
+      "kind": "word"
+    },
+    {
+      "id": "anbu",
+      "ko": "안부",
+      "romanization": "anbu",
+      "en": "how someone is; greetings",
+      "kind": "word"
+    },
+    {
+      "id": "maeum",
+      "ko": "마음",
+      "romanization": "maeum",
+      "en": "heart; feelings",
+      "kind": "word"
+    },
+    {
+      "id": "sseosseoyo",
+      "ko": "썼어요",
+      "romanization": "sseosseoyo",
+      "en": "wrote",
+      "kind": "word"
+    },
+    {
+      "id": "anae",
+      "ko": "아내",
+      "romanization": "anae",
+      "en": "wife",
+      "kind": "word"
+    },
+    {
+      "id": "bogo-sipeoyo",
+      "ko": "보고 싶어요",
+      "romanization": "bogo sipeoyo",
+      "en": "want to see; miss (someone)",
+      "kind": "phrase"
+    },
+    {
+      "id": "gajang-oraedoen",
+      "ko": "가장 오래된",
+      "romanization": "gajang oraedoen",
+      "en": "oldest",
+      "kind": "word"
+    },
+    {
+      "id": "wang",
+      "ko": "왕",
+      "romanization": "wang",
+      "en": "king",
+      "kind": "word"
+    },
+    {
+      "id": "mureosseoyo",
+      "ko": "물었어요",
+      "romanization": "mureosseoyo",
+      "en": "asked",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya finds an old letter written in Hangul. Long ago, a Hangul letter was called an eongan. It was an old word that looked down on such letters a little.",
+          "captionEn": "An old letter in Hangul",
+          "keyword": {
+            "id": "pyeonji",
+            "ko": "편지",
+            "romanization": "pyeonji",
+            "en": "letter",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A hanok room; an old letter (no readable text) and Hoya reading beside it.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:blank-sheet",
+                "x": 300,
+                "y": 260,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "In a quiet room, Hoya reads beside an old letter."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Na Singeol was a junior military officer in early Joseon. He was serving far away in the north, so he wrote a letter home to his wife in Hangul.",
+          "captionEn": "An officer writes home",
+          "keyword": {
+            "id": "gungwan",
+            "ko": "군관",
+            "romanization": "gungwan",
+            "en": "military officer",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A junior officer in uniform with a brush and paper, about to write home. No readable text.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:writing-set",
+                "x": 270,
+                "y": 286,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-commander",
+                "x": 170,
+                "y": 290,
+                "s": 1.2
+              }
+            ],
+            "altEn": "A junior military officer stands ready to write a letter with a brush and paper."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "He wrote how much he longed to see his mother and their children. He asked his wife to send the clothes he needed and to look after the farm work.",
+          "captionEn": "He longs to see his family",
+          "keyword": {
+            "id": "gajok",
+            "ko": "가족",
+            "romanization": "gajok",
+            "en": "family",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The family at home by rice fields: the wife, the officer's mother and a child. Calm and warm.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:rice-field",
+                "x": 200,
+                "y": 300,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 120,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 210,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 300,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "At home by the rice fields are the officer's family: his wife, his mother and a child."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The letter was found long afterwards, folded many times. It is the oldest Hangul letter found so far, and today it is a Treasure.",
+          "captionEn": "The oldest Hangul letter found",
+          "keyword": {
+            "id": "bomul",
+            "ko": "보물",
+            "romanization": "bomul",
+            "en": "Treasure (a heritage item)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2",
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A museum case holding two old folded sheets of paper with a soft glow. No text.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:museum-case",
+                "x": 200,
+                "y": 290,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 210,
+                "s": 0.9
+              }
+            ],
+            "altEn": "The folded old letter rests safely in a museum case, with a soft glow behind it."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "This letter shows that Hangul had spread to faraway places and to officers of low rank. It also shows that men wrote Hangul easily too.",
+          "captionEn": "Hangul spreads far",
+          "keyword": {
+            "id": "hangeul",
+            "ko": "한글",
+            "romanization": "Hangeul",
+            "en": "Hangul (the Korean alphabet)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A village lane; a man shows a page of flowing writing (abstract strokes) to a villager.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-official",
+                "x": 130,
+                "y": 270,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:sheet-cursive",
+                "x": 220,
+                "y": 236,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 300,
+                "y": 280,
+                "s": 1.0
+              }
+            ],
+            "altEn": "In a village lane, a man holds up a page of flowing Hangul writing while a villager looks on."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "King Jeongjo also wrote Hangul letters to his aunt, Lady Yeoheung Min. He began when he was a small boy and kept writing after he became king.",
+          "captionEn": "Jeongjo writes to his aunt",
+          "keyword": {
+            "id": "oesungmo",
+            "ko": "외숙모",
+            "romanization": "oesungmo",
+            "en": "aunt (the wife of your mother's brother)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The young royal heir by a brush and paper, ready to write. No readable text.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:writing-set",
+                "x": 270,
+                "y": 288,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 170,
+                "y": 290,
+                "s": 1.3
+              }
+            ],
+            "altEn": "A young boy stands by a brush and paper, ready to write a letter."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In his letters, he sent greetings for each season. He asked how his aunt was and whether she was in good health.",
+          "captionEn": "Greetings for the seasons",
+          "keyword": {
+            "id": "anbu",
+            "ko": "안부",
+            "romanization": "anbu",
+            "en": "how someone is; greetings",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The aunt at home holds up a letter.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:blank-sheet",
+                "x": 270,
+                "y": 250,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 180,
+                "y": 288,
+                "s": 1.1
+              }
+            ],
+            "altEn": "An aunt in her room holds up a letter she has received."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Jeongjo's letters are kept in an album at the National Hangeul Museum, and the album is a Treasure. Letters like these show how Joseon families shared warm feelings in Hangul.",
+          "captionEn": "Letters full of warm feelings",
+          "keyword": {
+            "id": "maeum",
+            "ko": "마음",
+            "romanization": "maeum",
+            "en": "heart; feelings",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8",
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Present day: an old album of letters in a museum case; Hoya reads the label beside it (no readable text).",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:museum-case",
+                "x": 150,
+                "y": 288,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 296,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "In a museum, an album of letters rests in a case, and Hoya reads beside it."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "Who did Na Singeol write his letter to?",
+          "options": [
+            {
+              "id": "a",
+              "en": "His wife",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "The king",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "His teacher",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A monk",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Na Singeol, a junior military officer, wrote his letter in Hangul to his wife."
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What does the Na Singeol letter show?",
+          "options": [
+            {
+              "id": "a",
+              "en": "That only kings used Hangul",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "That letters were printed with metal type",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "That men wrote Hangul easily too",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "That Hangul was not used yet",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f5"
+          ],
+          "explainEn": "The letter shows that men, too, wrote Hangul with ease, and that Hangul had spread far from the capital."
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What did Jeongjo ask his aunt about in his letters?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The price of rice",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A trip to the sea",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A new palace",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "How she was and her health",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f7"
+          ],
+          "explainEn": "Jeongjo sent greetings for the seasons and asked how his aunt was and about her health."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "pyeonji",
+        "gungwan",
+        "gajok",
+        "oesungmo"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Long ago, people in Joseon wrote letters, {kw:pyeonji}, in {kw:hangeul}. An old word for such a letter is eongan.",
+          "captionEn": "An old letter in Hangul",
+          "keyword": {
+            "id": "sseosseoyo",
+            "ko": "썼어요",
+            "romanization": "sseosseoyo",
+            "en": "wrote",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "한글로 편지를 썼어요.",
+            "romanization": "Hangeullo pyeonjireul sseosseoyo.",
+            "en": "They wrote letters in Hangul.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A hanok room; an old letter (no readable text) and Hoya reading beside it.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:blank-sheet",
+                "x": 300,
+                "y": 260,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 200,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "In a quiet room, Hoya reads beside an old letter."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Na Singeol, a {kw:gungwan} serving far away in the north, wrote a letter to his wife.",
+          "captionEn": "An officer writes home",
+          "keyword": {
+            "id": "anae",
+            "ko": "아내",
+            "romanization": "anae",
+            "en": "wife",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "군관이 아내에게 썼어요.",
+            "romanization": "Gungwani anaeege sseosseoyo.",
+            "en": "An officer wrote to his wife.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A junior officer in uniform with a brush and paper, about to write home. No readable text.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:writing-set",
+                "x": 270,
+                "y": 286,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-commander",
+                "x": 170,
+                "y": 290,
+                "s": 1.2
+              }
+            ],
+            "altEn": "A junior military officer stands ready to write a letter with a brush and paper."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "He wrote how much he longed to see his mother and their children, his {kw:gajok}.",
+          "captionEn": "He longs to see his family",
+          "keyword": {
+            "id": "bogo-sipeoyo",
+            "ko": "보고 싶어요",
+            "romanization": "bogo sipeoyo",
+            "en": "want to see; miss (someone)",
+            "kind": "phrase"
+          },
+          "line": {
+            "ko": "가족이 보고 싶어요.",
+            "romanization": "Gajogi bogo sipeoyo.",
+            "en": "I want to see my family.",
+            "speaker": "character"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The family at home by rice fields: the wife, the officer's mother and a child. Calm and warm.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:rice-field",
+                "x": 200,
+                "y": 300,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 120,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 210,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 300,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "At home by the rice fields are the officer's family: his wife, his mother and a child."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "His letter is the oldest Hangul letter found so far. Today it is a {kw:bomul}.",
+          "captionEn": "The oldest Hangul letter found",
+          "keyword": {
+            "id": "gajang-oraedoen",
+            "ko": "가장 오래된",
+            "romanization": "gajang oraedoen",
+            "en": "oldest",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "가장 오래된 한글 편지예요.",
+            "romanization": "Gajang oraedoen Hangeul pyeonjiyeyo.",
+            "en": "It is the oldest known Hangul letter.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A museum case holding two old folded sheets of paper with a soft glow. No text.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:museum-case",
+                "x": 200,
+                "y": 290,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 210,
+                "s": 0.9
+              }
+            ],
+            "altEn": "The folded old letter rests safely in a museum case, with a soft glow behind it."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "King Jeongjo wrote Hangul letters to his {kw:oesungmo}, from boyhood until he was king.",
+          "captionEn": "Jeongjo writes to his aunt",
+          "keyword": {
+            "id": "wang",
+            "ko": "왕",
+            "romanization": "wang",
+            "en": "king",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "왕이 외숙모에게 썼어요.",
+            "romanization": "Wangi oesungmoege sseosseoyo.",
+            "en": "The king wrote to his aunt.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The young royal heir by a brush and paper, ready to write. No readable text.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:writing-set",
+                "x": 270,
+                "y": 288,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 170,
+                "y": 290,
+                "s": 1.3
+              }
+            ],
+            "altEn": "A young boy stands by a brush and paper, ready to write a letter."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In his letters, he asked about her {kw:anbu}: how she was and whether she was in good health.",
+          "captionEn": "Greetings for the seasons",
+          "keyword": {
+            "id": "mureosseoyo",
+            "ko": "물었어요",
+            "romanization": "mureosseoyo",
+            "en": "asked",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "안부를 물었어요.",
+            "romanization": "Anbureul mureosseoyo.",
+            "en": "He asked how she was.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The aunt at home holds up a letter.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:blank-sheet",
+                "x": 270,
+                "y": 250,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 180,
+                "y": 288,
+                "s": 1.1
+              }
+            ],
+            "altEn": "An aunt in her room holds up a letter she has received."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "썼어요",
+            "romanization": "sseosseoyo",
+            "en": "wrote"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Read",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Wrote",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Sent",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Found",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ],
+          "explainEn": "Sseosseoyo means wrote. People in Joseon wrote letters in Hangul."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "아내",
+            "romanization": "anae",
+            "en": "wife"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Wife",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Mother",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Daughter",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Aunt",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Anae means wife. Na Singeol wrote his letter to his wife."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "Who did the officer long to see?",
+          "options": [
+            {
+              "id": "a",
+              "en": "His teacher",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "His friends in the army",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "His mother and their children",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "The king",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f4"
+          ],
+          "explainEn": "Na Singeol wrote how much he longed to see his mother and their children."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s2",
+        "s4",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "sseosseoyo",
+        "anae",
+        "bogo-sipeoyo",
+        "gajang-oraedoen"
+      ],
+      "grammarFocusEn": "Past -eosseoyo (wrote, asked); -ege (to someone); -go sipeoyo (miss)"
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "topicTags": [
+    "eongan",
+    "hangul-letters",
+    "na-singeol-letter",
+    "jeongjo-hangul-letters"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Eongan is an old word for a letter written in Hangul. It meant 'a letter in eonmun' and was used in a way that looked down on such letters.",
+      "claimKo": "언간은 예전에 언문 편지라는 뜻으로, 한글로 쓴 편지를 낮잡아 이르던 말이다.",
+      "sources": [
+        {
+          "title": "언간 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%96%B8%EA%B0%84",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"예전에, 언문 편지라는 뜻으로, 한글로 쓴 편지를 낮잡는 뜻으로 이르던 말.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Na Singeol Hangul Letter is two sheets that Na Singeol, a junior military officer of early Joseon, wrote in Hangul to his wife, a woman of the Sinchang Maeng clan. When he wrote it, he seems to have been serving as a junior officer in Hamgyeong Province in the far north. The letter was found folded many times in her tomb.",
+      "claimKo": "나신걸 한글편지는 조선 초기 군관 나신걸이 아내 신창맹씨에게 한글로 써서 보낸 편지 2장이다. 편지를 쓸 때 그는 함경도에서 하급 군관으로 근무한 것으로 보이며, 편지는 신창맹씨 묘에서 여러 번 접힌 상태로 발견되었다.",
+      "sources": [
+        {
+          "title": "나신걸 한글편지 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1122522090000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"조선 초기 군관(軍官) 나신걸(羅臣傑, 1461∼1524)이 아내 신창맹씨(新昌孟氏)에게 한글로 써서 보낸 편지 2장\"; \"편지를 썼을 당시 그는 함경도에서 하급 군관으로 근무하고 있었던 것으로 보인다\"; \"피장자의 머리맡에서 여러 번 접힌 상태로 발견되었다\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Na Singeol Hangul Letter is the oldest Hangul letter found so far, and it is designated a Treasure.",
+      "claimKo": "나신걸 한글편지는 지금까지 발견된 한글 편지 가운데 가장 오래된 자료이며, 보물로 지정되어 있다.",
+      "sources": [
+        {
+          "title": "나신걸 한글편지 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1122522090000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"‘나신걸 한글편지’는 현재까지 발견된 한글편지 가운데 가장 오래된 자료\"; designation shown on the page: 보물"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the letter, Na Singeol mostly writes that he misses his mother and their children, asks his wife to send clothes he needs, such as a cheollik, and asks her to look after the farm work and small household matters.",
+      "claimKo": "편지는 어머니와 자녀들에 대한 그리움, 철릭 등 필요한 옷을 보내 달라는 부탁, 농사일과 소소한 집안일을 살펴 달라는 당부가 주를 이룬다.",
+      "sources": [
+        {
+          "title": "나신걸 한글편지 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1122522090000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"내용은 모친과 자녀들에 대한 그리움, 철릭(天翼, 조선시대 무관이 입던 공복公服) 등 필요한 의복을 보내주고, 농사일을 잘 챙기며 소소한 가정사를 살펴봐 달라는 당부가 주를 이룬다.\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The letter shows that Hangul had spread to the faraway border regions and to junior officials, and that men, too, used Hangul with ease, although Hangul in Joseon has often been thought of as mainly a script of women.",
+      "claimKo": "이 편지는 한글이 먼 변방 지역과 하급 관리에게까지 널리 퍼졌음을 보여 주며, 한글이 여성 중심의 글로 여겨진 것과 달리 남성들도 한글을 익숙하게 썼음을 보여 준다.",
+      "sources": [
+        {
+          "title": "나신걸 한글편지 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1122522090000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한양에서 멀리 떨어진 변방지역과 하급관리에게까지 한글이 널리 보급되었음을 말해 준다\"; \"조선 시대 한글이 여성 중심의 글이었다고 인식된 것과 달리 ... 남성들 역시 한글을 익숙하게 사용했음을 보여 준다\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "King Jeongjo wrote letters in Hangul to Lady Yeoheung Min, his aunt (the wife of his mother's eldest brother), from when he was a small boy, through his years as the royal heir, to his years as king. They are collected in one album.",
+      "claimKo": "정조는 원손 시절부터 세손 시절, 왕위에 있던 시절까지 큰외숙모 여흥 민씨에게 한글로 편지를 썼고, 이 편지들은 한 첩으로 모여 있다.",
+      "sources": [
+        {
+          "title": "정조어필한글편지첩 — 주요 문화유산",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/relic/designated/8",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"정조가 큰외숙모인 여흥 민씨에게 한글로 쓴 편지 등을 모아 만든 첩\""
+        },
+        {
+          "title": "정조 한글어찰첩 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121121690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"정조(正祖, 1752∼1800)가 원손시절부터 세손시절(1759년), 재위시절(1776∼1800)까지 국동 외숙모 여흥민씨에게 한글로 쓴 편지 14점과 대자(大字) 글씨 2점을 모은 서첩이다.\""
+        },
+        {
+          "title": "국립한글박물관, 정조의 한글편지와 효의왕후(정조의 비) 한글 필사본 전문 공개 (보도자료)",
+          "publisher": "문화체육관광부 (Ministry of Culture, Sports and Tourism) for the National Hangeul Museum",
+          "url": "https://www.mcst.go.kr/site/s_notice/press/pressView.jsp?pSeq=13889",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"정조가 원손 시절부터 재위 22년까지 큰외숙모인 여흥 민씨에게 보낸 편지 등을 모아 만든 ‘정조어필한글편지첩’\"; \"어린이의 필체로 쓰인 조선시대 한글 편지의 주인공이 바로 정조\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jeongjo's letters to his aunt are mostly greetings for the seasons and questions about how she is and about her health.",
+      "claimKo": "편지는 주로 계절 인사와 외숙모의 안부와 건강을 묻는 내용이다.",
+      "sources": [
+        {
+          "title": "정조 한글어찰첩 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121121690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"편지의 전반적인 내용은 주로 계절인사와 외숙모의 안부와 건강을 묻는 내용이 주를 이루며\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Jeongjo's Hangul letter album is designated a Treasure and is held by the National Hangeul Museum.",
+      "claimKo": "정조어필한글편지첩(정조 한글어찰첩)은 보물이며 국립한글박물관이 소장하고 있다.",
+      "sources": [
+        {
+          "title": "정조어필한글편지첩 — 주요 문화유산",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/relic/designated/8",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Listed among the museum's major heritage items; \"종목 보물\""
+        },
+        {
+          "title": "정조 한글어찰첩 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121121690000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Designation: 보물; 관리자: 국립한글박물관"
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Letters and writings like these show that people in Joseon talked with each other in Hangul and shared warm feelings with their families.",
+      "claimKo": "이런 자료를 통해 조선 시대 사람들이 한글로 서로 소통하며 가족과 따뜻한 정을 나누었음을 알 수 있다.",
+      "sources": [
+        {
+          "title": "<한글, 마음을 적다> — 기획 전시",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/exhibition/643",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"조선시대 사람들이 한글로 서로 소통하며 가족과 따뜻한 정을 나누었음을 확인할 수 있습니다.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털(나신걸 한글편지, 정조 한글어찰첩); 국립한글박물관(주요 문화유산, 기획 전시); 문화체육관광부 보도자료; 국립국어원 표준국어대사전",
+  "verification": {
+    "passes": 1,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Author pass (F-CURR-002 CM-46, 2026-11-04): every cited page was fetched on the access date and each quoteOrLocator was compared with the page text; claims restate only what the quotes say. The multi-agent review (three parallel checkers, a reviser and a third pass, F-CURR-002 §9.2) has not run yet, so passes stays 1 and review stays draft."
+  },
+  "authorNotes": "Names follow F-CNT-002 (no hyphens): Na Singeol (나신걸), Jeongjo, Lady Yeoheung Min (여흥 민씨). Left out on purpose: the dates and ages (1461-1524, the 1490s dating, 2011 find, Jeongjo 1752-1800), so no fact needs a second numeric source; the tomb is named only in f2 (reference zone) and the narration says the letter was found long afterwards, folded many times, so no scene names a burial. The heritage portal names the album 정조 한글어찰첩 and the museum names it 정조어필한글편지첩; the story says only \"an album\". The MCST press release says Jeongjo's Hangul letters survive in the original only in this album; that claim is left out because it is about surviving originals among his letters and is easy to misread. 큰외숙모 is the wife of the mother's eldest brother (Hyegyeonggung Hong's eldest brother); the story says \"his aunt\". The 2025 exhibition page (hangeul.go.kr/exhibition/643) is a touring show held at the Chungcheongnam-do History Museum; it is cited only for its statement about families sharing feelings in Hangul.",
+  "errata": []
+}

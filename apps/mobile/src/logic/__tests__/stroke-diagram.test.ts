@@ -4,6 +4,7 @@ import { jamoStrokes, strokesForJamo } from '../../content/jamo-strokes';
 import {
   BADGE_RADIUS,
   buildStrokeDiagram,
+  inkPathD,
   describeStroke as describeStrokeWith,
   describeStrokeOrder as describeStrokeOrderWith,
   pointAlong,
@@ -204,5 +205,111 @@ describe('describeStrokeOrder — text alternative for the still diagram', () =>
     expect(describeStrokeWith([{ x: 30, y: 100 }, { x: 170, y: 100 }], pseudo)).toContain(pseudoText('right'));
     expect(describeStrokeWith([{ x: 5, y: 5 }], pseudo)).toBe(pseudoText('a dot'));
     expect(describeStrokeOrderWith(target, pseudo).startsWith('[')).toBe(true);
+  });
+});
+
+// NB-3: the learner's ink is the finger's samples. Drawn as straight joins, a
+// quick circle (few samples) shows corners; the ink is smoothed through the
+// midpoints so it turns without a kink, and still starts and ends where the
+// finger did.
+describe('inkPathD', () => {
+  it('draws nothing for no points and a bare move for one', () => {
+    expect(inkPathD([])).toBe('');
+    expect(inkPathD([{ x: 3, y: 4 }])).toBe('M 3 4');
+  });
+
+  it('two points are one straight line', () => {
+    expect(inkPathD([{ x: 0, y: 0 }, { x: 10, y: 5 }])).toBe('M 0 0 L 10 5');
+  });
+
+  it('bends through each sample as a curve to the next midpoint, ending on the last sample', () => {
+    const d = inkPathD([
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+      { x: 20, y: 10 },
+    ]);
+    expect(d).toBe('M 0 0 Q 10 0 10 5 Q 10 10 15 10 L 20 10');
+  });
+
+  /** Unit tangents in and out at every joint of the flattened path; returns the sharpest turn in degrees. */
+  function sharpestTurn(d: string): number {
+    const nums = (d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+    const tokens = d.match(/[MLQ]/g) ?? [];
+    const segs: Array<{ from: [number, number]; ctl?: [number, number]; to: [number, number] }> = [];
+    let k = 0;
+    let at: [number, number] = [0, 0];
+    for (const t of tokens) {
+      if (t === 'M') {
+        at = [nums[k]!, nums[k + 1]!];
+        k += 2;
+      } else if (t === 'L') {
+        const to: [number, number] = [nums[k]!, nums[k + 1]!];
+        segs.push({ from: at, to });
+        at = to;
+        k += 2;
+      } else {
+        const ctl: [number, number] = [nums[k]!, nums[k + 1]!];
+        const to: [number, number] = [nums[k + 2]!, nums[k + 3]!];
+        segs.push({ from: at, ctl, to });
+        at = to;
+        k += 4;
+      }
+    }
+    const dir = (a: [number, number], b: [number, number]): number => Math.atan2(b[1] - a[1], b[0] - a[0]);
+    let worst = 0;
+    for (let i = 1; i < segs.length; i++) {
+      const prev = segs[i - 1]!;
+      const next = segs[i]!;
+      const out = dir(prev.ctl ?? prev.from, prev.to);
+      const into = dir(next.from, next.ctl ?? next.to);
+      let turn = Math.abs(into - out);
+      if (turn > Math.PI) turn = 2 * Math.PI - turn;
+      worst = Math.max(worst, (turn * 180) / Math.PI);
+    }
+    return worst;
+  }
+
+  it('a loop that ends where it began closes smoothly, with no point where the ends meet', () => {
+    const samples = Array.from({ length: 13 }, (_, i) => {
+      const t = (2 * Math.PI * i) / 12;
+      return { x: 100 - 60 * Math.sin(t), y: 95 - 60 * Math.cos(t) };
+    });
+    const d = inkPathD(samples);
+    expect(d.endsWith(' Z')).toBe(true);
+    // Every finger sample still shapes the ink: each is a curve's control point.
+    const controls = [...d.matchAll(/Q (-?[\d.e-]+) (-?[\d.e-]+)/g)].map((m) => ({ x: Number(m[1]), y: Number(m[2]) }));
+    expect(controls).toHaveLength(12);
+    samples.slice(0, 12).forEach((q, i) => {
+      expect(controls[i]!.x).toBeCloseTo(q.x);
+      expect(controls[i]!.y).toBeCloseTo(q.y);
+    });
+    // Where the path closes, it leaves the start the way it arrives: the start is the midpoint
+    // between the last and first sample, on the line from one control to the next.
+    const start = d.match(/^M (-?[\d.e-]+) (-?[\d.e-]+)/)!;
+    expect(Number(start[1])).toBeCloseTo((samples[11]!.x + samples[0]!.x) / 2);
+    expect(Number(start[2])).toBeCloseTo((samples[11]!.y + samples[0]!.y) / 2);
+    expect(sharpestTurn(d)).toBeLessThan(0.5);
+  });
+
+  it('a stroke that stops just short of its start stays open', () => {
+    const d = inkPathD([
+      { x: 0, y: 0 },
+      { x: 20, y: 0 },
+      { x: 20, y: 20 },
+      { x: 0, y: 20 },
+      { x: 0, y: 5 },
+    ]);
+    expect(d.startsWith('M 0 0')).toBe(true);
+    expect(d.endsWith('L 0 5')).toBe(true);
+  });
+
+  it('a quick circle (12 samples) has no corner, where straight joins turn 30 degrees', () => {
+    const samples = Array.from({ length: 13 }, (_, i) => {
+      const t = (2 * Math.PI * i) / 12;
+      return { x: 100 - 60 * Math.sin(t), y: 95 - 60 * Math.cos(t) };
+    });
+    expect(sharpestTurn(pointsToPathD(samples))).toBeCloseTo(30, 0);
+    expect(sharpestTurn(inkPathD(samples))).toBeLessThan(0.5);
   });
 });

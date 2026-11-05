@@ -155,6 +155,14 @@ describe('isNewBuildAnswer (F-CURR-002 §10: a chunk script error is asked again
     expect(failedChunkUrl(scriptError(`${ORIGIN}/_expo/static/js/web/storybook-0123456789abcdef0123456789abcdef.js`), ORIGIN)).toBeUndefined();
   });
 
+  it('asks the story shelf chunk (row CM-8b) again the same way', async () => {
+    const shelf = `${ORIGIN}/_expo/static/js/web/stories-shelf-0123456789abcdef0123456789abcdef.js`;
+    const p = probe();
+    expect(await isNewBuildAnswer(scriptError(shelf), p.env)).toBe(true);
+    expect(p.asked).toEqual([shelf]);
+    expect(failedChunkUrl(scriptError(`${ORIGIN}/_expo/static/js/web/stories-0123456789abcdef0123456789abcdef.js`), ORIGIN)).toBeUndefined();
+  });
+
   it('asks a locale chunk (the UI messages and content text of one locale) again the same way', async () => {
     const chunk = `${ORIGIN}/_expo/static/js/web/locale-ko-0123456789abcdef0123456789abcdef.js`;
     const p = probe();

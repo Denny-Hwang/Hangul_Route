@@ -1,0 +1,1400 @@
+{
+  "id": "episode:stage2-nature-v2",
+  "stage": "stage2",
+  "theme": "nature",
+  "status": "ready",
+  "volume": 2,
+  "titleEn": "Seasons and Animals",
+  "subtitleEn": "Read the four seasons, their weather and two animals.",
+  "hoyaIntroEn": "Spring, summer, autumn, winter. Let us read the year together!",
+  "order": 4,
+  "pillarTags": [
+    "D2"
+  ],
+  "rewardCardIds": [],
+  "quests": [
+    {
+      "id": "quest:stage2-nature-v2-q1",
+      "titleEn": "Four Seasons",
+      "blurbEn": "Read spring, summer, autumn and winter.",
+      "teaserEn": "Next: find the seasons in a picture.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "The Year Turns",
+          "hoyaLineEn": "Korea has four seasons. Let us read them!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Season Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "봄",
+                      "romanization": "bom",
+                      "en": "spring"
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "여름",
+                      "romanization": "yeoreum",
+                      "en": "summer",
+                      "syllables": [
+                        "yeo",
+                        "reum"
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "가을",
+                      "romanization": "gaeul",
+                      "en": "autumn",
+                      "syllables": [
+                        "ga",
+                        "eul"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "겨울",
+                      "romanization": "gyeoul",
+                      "en": "winter",
+                      "syllables": [
+                        "gyeo",
+                        "ul"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 55
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Hear and Pick",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-nature-v2-q1-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Build the Word",
+          "minigameKind": "build-letter",
+          "minigameRef": "minigame:s2-nature-v2-q1-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Type the Word",
+          "minigameKind": "type-hangul",
+          "minigameRef": "minigame:s2-nature-v2-q1-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Season Words!",
+          "hoyaLineEn": "Spring, summer, autumn and winter: you read them all!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-nature-v2-q1-practice",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "hear-bom",
+              "prompt": {
+                "ko": "봄",
+                "romanization": "bom",
+                "en": "spring"
+              },
+              "options": [
+                {
+                  "id": "bom",
+                  "text": {
+                    "ko": "봄",
+                    "romanization": "bom",
+                    "en": "spring"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "text": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ],
+              "answerId": "bom"
+            },
+            {
+              "id": "hear-yeoreum",
+              "prompt": {
+                "ko": "여름",
+                "romanization": "yeoreum",
+                "en": "summer"
+              },
+              "options": [
+                {
+                  "id": "yeoreum",
+                  "text": {
+                    "ko": "여름",
+                    "romanization": "yeoreum",
+                    "en": "summer"
+                  }
+                },
+                {
+                  "id": "baram",
+                  "text": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "text": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                }
+              ],
+              "answerId": "yeoreum"
+            },
+            {
+              "id": "hear-gaeul",
+              "prompt": {
+                "ko": "가을",
+                "romanization": "gaeul",
+                "en": "autumn"
+              },
+              "options": [
+                {
+                  "id": "gaeul",
+                  "text": {
+                    "ko": "가을",
+                    "romanization": "gaeul",
+                    "en": "autumn"
+                  }
+                },
+                {
+                  "id": "gureum",
+                  "text": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "text": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ],
+              "answerId": "gaeul"
+            },
+            {
+              "id": "hear-gyeoul",
+              "prompt": {
+                "ko": "겨울",
+                "romanization": "gyeoul",
+                "en": "winter"
+              },
+              "options": [
+                {
+                  "id": "gyeoul",
+                  "text": {
+                    "ko": "겨울",
+                    "romanization": "gyeoul",
+                    "en": "winter"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "text": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "yeoreum",
+                  "text": {
+                    "ko": "여름",
+                    "romanization": "yeoreum",
+                    "en": "summer"
+                  }
+                }
+              ],
+              "answerId": "gyeoul"
+            },
+            {
+              "id": "hear-baram",
+              "prompt": {
+                "ko": "바람",
+                "romanization": "baram",
+                "en": "wind"
+              },
+              "options": [
+                {
+                  "id": "baram",
+                  "text": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "bom",
+                  "text": {
+                    "ko": "봄",
+                    "romanization": "bom",
+                    "en": "spring"
+                  }
+                },
+                {
+                  "id": "gaeul",
+                  "text": {
+                    "ko": "가을",
+                    "romanization": "gaeul",
+                    "en": "autumn"
+                  }
+                }
+              ],
+              "answerId": "baram"
+            },
+            {
+              "id": "hear-bi",
+              "prompt": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              },
+              "options": [
+                {
+                  "id": "bi",
+                  "text": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "gyeoul",
+                  "text": {
+                    "ko": "겨울",
+                    "romanization": "gyeoul",
+                    "en": "winter"
+                  }
+                },
+                {
+                  "id": "nun",
+                  "text": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                }
+              ],
+              "answerId": "bi"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-v2-q1-apply",
+          "kind": "build-letter",
+          "words": [
+            {
+              "ko": "봄",
+              "romanization": "bom",
+              "en": "spring"
+            },
+            {
+              "ko": "겨울",
+              "romanization": "gyeoul",
+              "en": "winter",
+              "syllables": [
+                "gyeo",
+                "ul"
+              ]
+            },
+            {
+              "ko": "비",
+              "romanization": "bi",
+              "en": "rain"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-v2-q1-check",
+          "kind": "type-hangul",
+          "rounds": [
+            {
+              "id": "hear-bom",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "봄",
+                "romanization": "bom",
+                "en": "spring"
+              }
+            },
+            {
+              "id": "hear-gyeoul",
+              "promptEn": "Listen to the word and write it in Hangul.",
+              "mode": "hear",
+              "target": {
+                "ko": "겨울",
+                "romanization": "gyeoul",
+                "en": "winter"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-nature-v2-q2",
+      "titleEn": "Find the Seasons",
+      "blurbEn": "Find wind, rain, a magpie and a mountain in four seasons.",
+      "teaserEn": "Next: a moon bear and a magpie.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Look Closely",
+          "hoyaLineEn": "Each season has its own weather. What can you find?",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Words to Find",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "captionEn": "Wind in spring and rain in summer.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "바람",
+                      "romanization": "baram",
+                      "en": "wind",
+                      "syllables": [
+                        "ba",
+                        "ram"
+                      ]
+                    },
+                    "picture": "word:science-wind"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "비",
+                      "romanization": "bi",
+                      "en": "rain"
+                    },
+                    "picture": "word:nature-rain"
+                  }
+                ]
+              },
+              {
+                "captionEn": "A magpie in autumn and a mountain in winter.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "까치",
+                      "romanization": "kkachi",
+                      "en": "magpie",
+                      "syllables": [
+                        "kka",
+                        "chi"
+                      ]
+                    },
+                    "picture": "card:magpie"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "산",
+                      "romanization": "san",
+                      "en": "mountain"
+                    },
+                    "picture": "card:mountain"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-nature-v2-q2-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Find It in the Picture",
+          "minigameKind": "hidden-heritage",
+          "minigameRef": "minigame:s2-nature-v2-q2-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Read the Word",
+          "minigameKind": "listen-pick",
+          "minigameRef": "minigame:s2-nature-v2-q2-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "You Found Them!",
+          "hoyaLineEn": "You found something in every season. Well done!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-nature-v2-q2-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "baram",
+                  "pictureRef": "word:science-wind",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                },
+                {
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "kkachi",
+                  "pictureRef": "card:magpie",
+                  "word": {
+                    "ko": "까치",
+                    "romanization": "kkachi",
+                    "en": "magpie"
+                  }
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                },
+                {
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "word": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                },
+                {
+                  "id": "baram",
+                  "pictureRef": "word:science-wind",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "kkachi",
+                  "pictureRef": "card:magpie",
+                  "word": {
+                    "ko": "까치",
+                    "romanization": "kkachi",
+                    "en": "magpie"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                },
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                },
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "word": {
+                    "ko": "바다",
+                    "romanization": "bada",
+                    "en": "sea"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-v2-q2-apply",
+          "kind": "hidden-heritage",
+          "rounds": [
+            {
+              "id": "hh1",
+              "sceneId": "scene:four-seasons",
+              "altEn": "Four panels side by side, one for each season of the year.",
+              "targets": [
+                {
+                  "id": "baram",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  },
+                  "spot": {
+                    "x": 7,
+                    "y": 12,
+                    "w": 86,
+                    "h": 110
+                  },
+                  "picture": "word:science-wind"
+                },
+                {
+                  "id": "bi",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  },
+                  "spot": {
+                    "x": 107,
+                    "y": 12,
+                    "w": 86,
+                    "h": 110
+                  },
+                  "picture": "word:nature-rain"
+                },
+                {
+                  "id": "kkachi",
+                  "word": {
+                    "ko": "까치",
+                    "romanization": "kkachi",
+                    "en": "magpie"
+                  },
+                  "spot": {
+                    "x": 207,
+                    "y": 12,
+                    "w": 86,
+                    "h": 110
+                  },
+                  "picture": "card:magpie"
+                },
+                {
+                  "id": "san",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  },
+                  "spot": {
+                    "x": 307,
+                    "y": 12,
+                    "w": 86,
+                    "h": 110
+                  },
+                  "picture": "card:mountain"
+                }
+              ],
+              "others": [
+                {
+                  "id": "kkot",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  },
+                  "spot": {
+                    "x": 7,
+                    "y": 136,
+                    "w": 86,
+                    "h": 154
+                  }
+                },
+                {
+                  "id": "namu",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  },
+                  "spot": {
+                    "x": 107,
+                    "y": 136,
+                    "w": 86,
+                    "h": 154
+                  }
+                },
+                {
+                  "id": "bandalgaseumgom",
+                  "word": {
+                    "ko": "반달가슴곰",
+                    "romanization": "bandalgaseumgom",
+                    "en": "moon bear"
+                  },
+                  "spot": {
+                    "x": 207,
+                    "y": 136,
+                    "w": 86,
+                    "h": 154
+                  }
+                },
+                {
+                  "id": "nun",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  },
+                  "spot": {
+                    "x": 307,
+                    "y": 136,
+                    "w": 86,
+                    "h": 154
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-v2-q2-check",
+          "kind": "listen-pick",
+          "rounds": [
+            {
+              "id": "see-san",
+              "promptShown": true,
+              "prompt": {
+                "ko": "산",
+                "romanization": "san",
+                "en": "mountain"
+              },
+              "options": [
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "labelEn": "mountain"
+                },
+                {
+                  "id": "bada",
+                  "pictureRef": "card:sea",
+                  "labelEn": "sea"
+                },
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "labelEn": "moon"
+                }
+              ],
+              "answerId": "san"
+            },
+            {
+              "id": "see-bi",
+              "promptShown": true,
+              "prompt": {
+                "ko": "비",
+                "romanization": "bi",
+                "en": "rain"
+              },
+              "options": [
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "labelEn": "rain"
+                },
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "labelEn": "snow"
+                },
+                {
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "labelEn": "cloud"
+                }
+              ],
+              "answerId": "bi"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quest:stage2-nature-v2-q3",
+      "titleEn": "Moon Bears and Magpies",
+      "blurbEn": "Read bear, bird, moon bear and magpie.",
+      "estimatedMinutes": 4,
+      "addedIn": 20261030,
+      "steps": [
+        {
+          "id": "s1",
+          "kind": "intro",
+          "titleEn": "Animals Outside",
+          "hoyaLineEn": "Let us meet two animals that live in Korea!",
+          "durationSeconds": 8
+        },
+        {
+          "id": "s2",
+          "kind": "discover",
+          "titleEn": "Animal Words",
+          "hoyaLineEn": "Tap Hear it, then read each word yourself.",
+          "discover": {
+            "pages": [
+              {
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "곰",
+                      "romanization": "gom",
+                      "en": "bear"
+                    },
+                    "picture": "word:animal-bear"
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "새",
+                      "romanization": "sae",
+                      "en": "bird"
+                    },
+                    "picture": "word:animal-bird"
+                  }
+                ]
+              },
+              {
+                "captionEn": "A moon bear is a kind of bear, and a magpie is a kind of bird.",
+                "items": [
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "반달가슴곰",
+                      "romanization": "bandalgaseumgom",
+                      "en": "moon bear",
+                      "syllables": [
+                        "ban",
+                        "dal",
+                        "ga",
+                        "seum",
+                        "gom"
+                      ]
+                    },
+                    "noteEn": "A black bear with a white half-moon mark on its chest."
+                  },
+                  {
+                    "type": "word",
+                    "word": {
+                      "ko": "까치",
+                      "romanization": "kkachi",
+                      "en": "magpie",
+                      "syllables": [
+                        "kka",
+                        "chi"
+                      ]
+                    },
+                    "picture": "card:magpie"
+                  }
+                ]
+              }
+            ]
+          },
+          "durationSeconds": 50
+        },
+        {
+          "id": "s3",
+          "kind": "practice",
+          "titleEn": "Picture and Word",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-nature-v2-q3-practice",
+          "durationSeconds": 85
+        },
+        {
+          "id": "s4",
+          "kind": "apply",
+          "titleEn": "Match the Cards",
+          "minigameKind": "card-match",
+          "minigameRef": "minigame:s2-nature-v2-q3-apply",
+          "durationSeconds": 70
+        },
+        {
+          "id": "s5",
+          "kind": "check",
+          "titleEn": "Match the Picture",
+          "minigameKind": "pic-word-match",
+          "minigameRef": "minigame:s2-nature-v2-q3-check",
+          "durationSeconds": 35
+        },
+        {
+          "id": "s6",
+          "kind": "reward",
+          "titleEn": "Animal Words!",
+          "hoyaLineEn": "Bear, bird, moon bear and magpie: well read!",
+          "durationSeconds": 8
+        }
+      ],
+      "scopes": [
+        {
+          "ref": "minigame:s2-nature-v2-q3-practice",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "sae",
+                  "pictureRef": "word:animal-bird",
+                  "word": {
+                    "ko": "새",
+                    "romanization": "sae",
+                    "en": "bird"
+                  }
+                },
+                {
+                  "id": "namu",
+                  "pictureRef": "word:nature-tree",
+                  "word": {
+                    "ko": "나무",
+                    "romanization": "namu",
+                    "en": "tree"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "kkachi",
+                  "pictureRef": "card:magpie",
+                  "word": {
+                    "ko": "까치",
+                    "romanization": "kkachi",
+                    "en": "magpie"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "kkot",
+                  "pictureRef": "word:nature-flower",
+                  "word": {
+                    "ko": "꽃",
+                    "romanization": "kkot",
+                    "en": "flower"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "sae",
+                  "pictureRef": "word:animal-bird",
+                  "word": {
+                    "ko": "새",
+                    "romanization": "sae",
+                    "en": "bird"
+                  }
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "nun",
+                  "pictureRef": "word:nature-snow",
+                  "word": {
+                    "ko": "눈",
+                    "romanization": "nun",
+                    "en": "snow"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "haneul",
+                  "pictureRef": "word:nature-sky",
+                  "word": {
+                    "ko": "하늘",
+                    "romanization": "haneul",
+                    "en": "sky"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "kkachi",
+                  "pictureRef": "card:magpie",
+                  "word": {
+                    "ko": "까치",
+                    "romanization": "kkachi",
+                    "en": "magpie"
+                  }
+                },
+                {
+                  "id": "gureum",
+                  "pictureRef": "word:nature-cloud",
+                  "word": {
+                    "ko": "구름",
+                    "romanization": "gureum",
+                    "en": "cloud"
+                  }
+                },
+                {
+                  "id": "byeol",
+                  "pictureRef": "word:nature-star",
+                  "word": {
+                    "ko": "별",
+                    "romanization": "byeol",
+                    "en": "star"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "sae",
+                  "pictureRef": "word:animal-bird",
+                  "word": {
+                    "ko": "새",
+                    "romanization": "sae",
+                    "en": "bird"
+                  }
+                },
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "dal",
+                  "pictureRef": "card:moon",
+                  "word": {
+                    "ko": "달",
+                    "romanization": "dal",
+                    "en": "moon"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-v2-q3-apply",
+          "kind": "card-match",
+          "pairs": [
+            {
+              "ko": "반달가슴곰",
+              "romanization": "bandalgaseumgom",
+              "en": "moon bear"
+            },
+            {
+              "ko": "까치",
+              "romanization": "kkachi",
+              "en": "magpie"
+            },
+            {
+              "ko": "산",
+              "romanization": "san",
+              "en": "mountain"
+            },
+            {
+              "ko": "꽃",
+              "romanization": "kkot",
+              "en": "flower"
+            }
+          ]
+        },
+        {
+          "ref": "minigame:s2-nature-v2-q3-check",
+          "kind": "pic-word-match",
+          "boards": [
+            {
+              "pairs": [
+                {
+                  "id": "gom",
+                  "pictureRef": "word:animal-bear",
+                  "word": {
+                    "ko": "곰",
+                    "romanization": "gom",
+                    "en": "bear"
+                  }
+                },
+                {
+                  "id": "kkachi",
+                  "pictureRef": "card:magpie",
+                  "word": {
+                    "ko": "까치",
+                    "romanization": "kkachi",
+                    "en": "magpie"
+                  }
+                },
+                {
+                  "id": "baram",
+                  "pictureRef": "word:science-wind",
+                  "word": {
+                    "ko": "바람",
+                    "romanization": "baram",
+                    "en": "wind"
+                  }
+                }
+              ]
+            },
+            {
+              "pairs": [
+                {
+                  "id": "sae",
+                  "pictureRef": "word:animal-bird",
+                  "word": {
+                    "ko": "새",
+                    "romanization": "sae",
+                    "en": "bird"
+                  }
+                },
+                {
+                  "id": "san",
+                  "pictureRef": "card:mountain",
+                  "word": {
+                    "ko": "산",
+                    "romanization": "san",
+                    "en": "mountain"
+                  }
+                },
+                {
+                  "id": "bi",
+                  "pictureRef": "word:nature-rain",
+                  "word": {
+                    "ko": "비",
+                    "romanization": "bi",
+                    "en": "rain"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "culture": [
+    {
+      "id": "n1",
+      "kind": "culture",
+      "textEn": "Early in summer comes {ko:장마}, the rainy season. It usually begins on Jeju Island in mid-June, reaches the middle of the country a few days later, and lasts about a month.",
+      "sources": [
+        {
+          "title": "기상청 날씨누리 「한국 기후특성」 (Climate of Korea)",
+          "publisher": "기상청 (Korea Meteorological Administration)",
+          "url": "https://www.weather.go.kr/w/climate/statistics/korea.do",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "장마: ‘6월 중순 후반(6.19.)에 제주지역에서 시작하여 남부지방(6.23.)에 거쳐 중부지방(6.25.)에 이르게 되며, 장마 기간은 제주지역이 32.4일로 가장 길게 나타나고, 남부와 중부지방은 약 31일로 나타난다.’ (the page gives the 1991-2020 climate normals)"
+        },
+        {
+          "title": "기상청 어린이 기상교실 「4계절이 뚜렷한 우리나라」",
+          "publisher": "기상청 (Korea Meteorological Administration)",
+          "url": "https://www.kma.go.kr/kids/246.jsp",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "여름철의 기상: ‘한대 전선대가 한반도에 머물면서 ‘장마’가 계속돼요.’"
+        }
+      ],
+      "verification": {
+        "passes": 7,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-41 S2, 2026-10-30): the Korea Meteorological Administration pages 한국 기후특성 (weather.go.kr) and 4계절이 뚜렷한 우리나라 (kma.go.kr kids) opened; both say Korea's four seasons are clearly marked; korea.do gives the summer share of the year's rain as 54% and the rainy season starting in the second half of June, and the kids page names 장마 as the summer weather. The note says 'more than half' and 'early in summer', no more than the quotes. English paraphrase.\nPass 2 (culture and facts check, 2026-10-30): both KMA pages opened again; '사계절이 뚜렷하게', '여름철 강수량이 710.9mm로 연 강수량의 54%' and the rainy season from 6.19 (Jeju) to 6.25 (central region) on korea.do, and '4계절이 뚜렷' and '여름철 ... 장마' on the kids page, match each clause. No UNESCO claim; the institution is 기상청 (Korea Meteorological Administration) on the access date. Holds.\nPass 3 (language and learning design, 2026-10-30): the token 장마 (jangma, converter) with 가; es and ko keep the one {ko:} token and the es has no Hangul outside it. Reviser: the ko read 오는 ... 오고 ... 오는; it now reads 초여름에는 비가 오래 이어지는 장마가 시작되고, 한 해 비의 절반 이상이 여름에 내려요. No age word, emoji, speaking UI or percentage in any locale.\nPass 4 (third pass, 2026-10-30): the revised en, es and ko read against both sources and F-CURR-002 §5.1 and §7.7 again; each claim says no more than its quotes; no copy claims native-speaker or expert review. The independent MAR culture review of the PR re-reads the sources.\nPass 5 (reviser, 2026-10-31): two independent PR reviews found that the note restated facts f1 and f2 of scene:four-seasons, which the q2 card back of this cell shows (four clear seasons; more than half the rain in summer). The note now keeps only what the card back does not say: 장마, where and when it begins, and how long it lasts. korea.do was opened again on 2026-10-31; its 장마 paragraph (the 1991-2020 normals) gives 6.19 on Jeju, 6.25 in the central region and about 31 to 32.4 days, so the note says 'mid-June', 'a few days later' and 'about a month', and 'usually' because the dates are normals.\nPass 6 (language and learning design check, 2026-10-31): en, es and ko keep the one {ko:장마} token; the es has no Hangul outside it; the ko is 해요체 (장마가 와요; 6월 중순 제주도에서 시작해 며칠 뒤 중부 지방에 이르고, 한 달쯤 계속돼요). No age word, emoji, percentage or speaking UI.\nPass 7 (third pass, 2026-10-31): the revised en, es and ko read against the korea.do quote; each clause says no more than it ('6월 중순 후반', '중부지방(6.25.)', '약 31일'); no copy claims native-speaker or expert review."
+      }
+    },
+    {
+      "id": "n2",
+      "kind": "culture",
+      "textEn": "The moon bear, {ko:반달가슴곰}, eats both plants and animals. It is especially fond of acorns and honey.",
+      "sources": [
+        {
+          "title": "한반도의 생물다양성 「반달가슴곰」 (Biodiversity of the Korean Peninsula: moon bear)",
+          "publisher": "국립생물자원관 (National Institute of Biological Resources)",
+          "url": "https://species.nibr.go.kr/species/speciesDetail.do?ktsn=120000212858",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘식성은 잡식성으로 단단한 과일이나 과실 특히 도토리를 좋아하나’ / ‘꿀을 특히 좋아하며’"
+        },
+        {
+          "title": "반달가슴곰 (표준국어대사전)",
+          "publisher": "국립국어원 (National Institute of Korean Language)",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%B0%98%EB%8B%AC%EA%B0%80%EC%8A%B4%EA%B3%B0",
+          "accessed": "2026-10-30",
+          "quoteOrLocator": "‘곰과의 하나. … 잡식성으로 나무의 빈 구멍이나 굴에 들어가 겨울잠을 잔다.’"
+        }
+      ],
+      "verification": {
+        "passes": 7,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-41 S2, 2026-10-30): the National Institute of Biological Resources species page for 반달가슴곰 (its description, read through the page's content service) and the National Institute of Korean Language Standard Korean Dictionary entry. Both give the white half-moon mark on the chest and the winter sleep in a den or a hollow tree; NIBR says it likes acorns in particular and honey in particular. The endangered status and the 2004 Jirisan project are the Stage 4 Nature note (n1 there) and are not repeated. English paraphrase.\nPass 2 (culture and facts check, 2026-10-30): NIBR (앞가슴에 반달 모양의 흰색 무늬; 특히 도토리를 좋아하나; 꿀을 특히 좋아하며; 겨울에 굴속 또는 나무 구멍 ... 동면) and NIKL (앞가슴에 반달 모양의 흰무늬; 나무의 빈 구멍이나 굴에 들어가 겨울잠) match each clause. Institutions named as on the access date. No designation number. Holds.\nPass 3 (language and learning design, 2026-10-30): the token 반달가슴곰 with 은 after its final ㅁ; es oso negro asiático, as the scene's es names it. Reviser: the ko 잠을 자요 became 겨울잠을 자요, the word the NIKL entry uses. The Stage 4 Nature note (endangered, the 2004 Jirisan project) is not repeated here.\nPass 4 (third pass, 2026-10-30): the revised en, es and ko read against both sources and F-CURR-002 §5.1 and §7.7 again; each claim says no more than its quotes; no copy claims native-speaker or expert review. The independent MAR culture review of the PR re-reads the sources.\nPass 5 (reviser, 2026-10-31): two independent PR reviews found that the half-moon mark and the winter sleep restate fact f4 of scene:four-seasons, which the q2 card back shows. The note now keeps the facts the card back does not give: the bear is omnivorous (잡식성, NIBR and NIKL) and especially likes acorns and honey (NIBR). The half-moon mark stays in the q3 Discover line, which is a word gloss, not a note.\nPass 6 (language and learning design check, 2026-10-31): the token 반달가슴곰 with 은; es 'come plantas y animales' and ko '식물과 동물을 가리지 않고 먹어요' say omnivorous and no more; 'especially' is the source's 특히 for both foods.\nPass 7 (third pass, 2026-10-31): the revised en, es and ko read against both quotes; no claim about size, range, status or the 2004 Jirisan project (Stage 4 Nature); no copy claims native-speaker or expert review."
+      }
+    },
+    {
+      "id": "n3",
+      "kind": "culture",
+      "textEn": "In the 1800s, folk paintings of a tiger with a magpie, {ko:까치호랑이}, began to show the magpie standing up to the tiger. The pictures poked fun at the powerful: the tiger stood for officials with power, and the magpie for ordinary people.",
+      "sources": [
+        {
+          "title": "까치호랑이 (한국민속상징사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/10300",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘19세기에는 민화 호랑이 그림에서 큰 변화가 일어난다. 그것은 배경에 까치가 등장하는 경우가 급격히 증가한다는 점이다. 더욱이 까치가 단순한 배경으로 머문 것이 아니라 호랑이와 까치의 관계가 적극적으로 설정된다.’ / ‘까치는 이에 질세라 부리를 한껏 벌리고 꼬리를 높이 세우고 호랑이와 당당히 맞서고 있다.’ / ‘그것은 당시 사회의 부조리를 비판하는 풍자이다. 호랑이는 양반이나 권력을 가진 관리를 상징하고, 까치는 서민을 대표한다.’"
+        },
+        {
+          "title": "까치호랑이 (한국민속예술사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/6565",
+          "accessed": "2026-10-31",
+          "quoteOrLocator": "‘19세기에는 민화 호랑이 그림에서 큰 변화가 일어난다. 그것은 배경에 까치가 등장하는 경우가 급격히 증가한다는 점이다.’ / ‘이 그림에서 까치는 명나라 호랑이 그림처럼 단순히 배경 역할에 머문 것이 아니라 호랑이와 맞대응하고 있다.’ / ‘호랑이는 양반이나 권력을 가진 관리를 상징하고, 까치는 서민을 대표한다.’"
+        }
+      ],
+      "verification": {
+        "passes": 7,
+        "checkedAt": "2026-10-31",
+        "scope": "lesson",
+        "notes": "Pass 1 (author sourcing, CM-41 S2, 2026-10-30): the National Folk Museum of Korea entries 까치호랑이 (folk symbols dictionary, topic 10300; folk arts dictionary, topic 6565), read through the site's topic service. English paraphrase.\nPass 2 (culture and facts check, 2026-10-30): both entries re-read; the first draft (Chinese origin, 19th-century popularity, a friendlier tiger) matched its quotes.\nPass 3 (language and learning design, 2026-10-30): the token 까치호랑이 once in each locale; the ko uses 19세기, the source's own term.\nPass 4 (third pass, 2026-10-30): en, es and ko read against both sources and F-CURR-002 §5.1 and §7.7.\nPass 5 (reviser, 2026-10-31): two independent PR reviews found the draft repeated Volume 1's China-origin note (same two entries) and fact f6 of scene:four-seasons, which this cell's q2 card back shows. Both entries were opened again on 2026-10-31 (topic detail 10300 and 6565). The note now carries two facts neither gives: in the 19th century the magpie stops being background and stands up to the tiger (당당히 맞서고; 호랑이와 맞대응), and the pictures are satire, the tiger standing for yangban and officials with power and the magpie for ordinary people (풍자; 관리를 상징하고, 까치는 서민을 대표한다). It says nothing of the picture type's origin, so nothing is framed as Korean in origin; Volume 1's note and f6 credit the Chinese paintings (§5.1).\nPass 6 (language and learning design check, 2026-10-31): es 'plantándole cara al tigre' and ko '당당히 맞서기 시작했어요' follow 당당히 맞서고; 'officials with power' is 권력을 가진 관리 (yangban, a word the cell never teaches, is left out); 'poked fun at the powerful' is 풍자 and no more. No person, painting or collection is named; es has no Hangul outside the token.\nPass 7 (third pass, 2026-10-31): the revised en, es and ko read against both quotes and §5.1 again; each claim says no more than its quotes; no copy claims native-speaker or expert review."
+      }
+    }
+  ],
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-10-31",
+    "notes": [
+      "Volume 2 of Nature & Animals, Stage 2 (F-CURR-002 §5.5 S2, row CM-41 S2): the four seasons (봄 여름 가을 겨울), the weather words of Volume 1 in new games, bear, bird and the moon bear (반달가슴곰), and the magpie of Stage 2 Letters. Hidden Heritage on scene:four-seasons (q2 Apply), its round copied from the scene.",
+      "Author pass (2026-10-30): 3 quests, six steps each, 256-261 s; new items 4, 0 and 1 (곰 and 새 come from Stage 2 Letters); every scored read uses Stage 1 letters (까치 and 꽃 only in picture and card rounds); Practice and Check items from earlier quests: 33, 100 and 100 in 100 (lesson-recycle at least 30).",
+      "Language checker (MAR, 2026-10-30): Korean and RR through the F-CNT-002 converter; ko lines in polite 해요체; particles after the note tokens checked. Reviser: ko 1800년대 to 19세기, 잠을 자요 to 겨울잠을 자요, the n1 ko reworded; the q3 Card Match ko meanings never name another card's word (까치 beside 새, 반달가슴곰 beside 곰).",
+      "Culture and facts checker (MAR, 2026-10-30): every note and Discover line matched to its KMA, NIBR, NIKL or NFM quote, opened on 2026-10-30, institutions named as on that date; kkachihorangi grew from Chinese tiger paintings (§5.1); no UNESCO claim; no person, brand, shop or price; no tiger drawn.",
+      "Learning design checker (MAR, 2026-10-30): §9.3 lints clean; Checks are Dictation, Read Pick Meaning and Pic-Word Match, one each; no triple is Volume 1's or a neighbour's; Dictation asks 봄 and 겨울 (one spelling, no sound change); a heard pick never offers two words that sound alike; 눈 is never asked by ear; 새 and 까치 never share a Pic-Word board.",
+      "Third pass (MAR, 2026-10-30): the revised cell, its es and ko overlays and the card back of the Hidden Heritage step (the scene's six facts, with the scene's own es and ko) read again against §5.1, §7.7 and F-CURR-001 §3.1. No native-speaker or expert review is claimed.",
+      "Reviser after the PR reviews (MAR, 2026-10-31): q1 Apply (Build the Word) now builds 봄 and 겨울, the two new words its Dictation then asks (F-CURR-001 §3.1 rule 4), and 비, recycled, keeping the Apply at four rounds (U-1); 여름 and 가을 are asked by ear in Practice.",
+      "Reviser (MAR, 2026-10-31): q3 Card Match is now 반달가슴곰, 까치, 산 and 꽃, so no board pairs a general word with its own kind (곰 with 반달가슴곰, 새 with 까치) and each ko meaning fits one card; 곰 and 새 are asked in q3 Practice and Check.",
+      "Reviser (MAR, 2026-10-31): notes n1, n2 and n3 no longer restate card-back facts f1, f2, f4 and f6 or Volume 1's China-origin note; each carries its own facts (the 장마 dates and length, the omnivorous bear, the magpie standing up to the tiger as satire).",
+      "Checkers on the revision (MAR, 2026-10-31): language (ko 해요체, particles after each token, ko Card Match meanings that name no other card's word, the see-bi prompt and its label now the same); culture and facts (korea.do and both NFM entries opened again on 2026-10-31); learning design (§9.3 lints, item load, Check variety re-run).",
+      "Third pass (MAR, 2026-10-31): the cell, its es and ko overlays and the card back read again together. No native-speaker or expert review is claimed."
+    ]
+  },
+  "contentVer": 1
+}

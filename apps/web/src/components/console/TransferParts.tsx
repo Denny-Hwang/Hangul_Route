@@ -7,6 +7,7 @@ import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, 
 import type { ApiResult, ConsoleApi, TransferPreview, TransferView } from '@/lib/console/api';
 import { startError, startErrorText, type StartError } from '@/lib/console/transfer';
 import { subscribeTransferLock, transfersShown } from '@/lib/console/transfer-lock';
+import { buttonBase } from '@/components/console/ui';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { headRem, rem } from '@/lib/console/rem';
 
@@ -451,20 +452,38 @@ export function StartMoveSheet({ spaceId, learner, api, online, onClose, onSent,
 // ---------------------------------------------------------------------------
 // The settings learner row's Move action (start-sheet.md, "Settings learner row")
 
-export function MoveRowAction({ name, online, onMove, family }: { name: string; online: boolean; onMove: () => void; family?: boolean }): JSX.Element {
+/**
+ * AMENDMENTS-GROWNUP-UX GX-10 (T11, P7): the row's Move is drawn in the console button look (`buttonBase`), the same size
+ * and box as the row's Remove. `blocked` is the reason it is off (a move of this learner is already open): it is then
+ * `aria-disabled` (still focusable, so a keyboard user hears why) with the reason right under it; offline it says so as
+ * shipped.
+ */
+export function MoveRowAction({ name, online, onMove, family, blocked }: { name: string; online: boolean; onMove: () => void; family?: boolean; blocked?: string | null }): JSX.Element {
   const { messages } = useConsoleLocale();
   const t = messages.console.transfer;
   const helpId = useId();
+  const reason = blocked ?? (online ? null : t.states.offline);
   return (
-    <>
-      <MoveButton label={family ? t.a11y.moveRowFamily(name) : t.a11y.moveRow(name)} waiting={!online} describedBy={online ? undefined : helpId} onClick={onMove} testId="move-row">
+    // Move and its reason are one column, so the reason sits right under the Move it explains (also when a narrow row
+    // wraps Remove onto its own line). The reason takes the column's width without setting it (`width: 0` with
+    // `minWidth: 100%`): a long reason wraps under Move and never pushes the row's buttons out of line with the others.
+    <span data-testid="move-row-group" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: spacing.xxs, maxWidth: '100%' }}>
+      <button
+        type="button"
+        aria-label={family ? t.a11y.moveRowFamily(name) : t.a11y.moveRow(name)}
+        aria-disabled={reason ? true : undefined}
+        aria-describedby={reason ? helpId : undefined}
+        data-testid="move-row"
+        onClick={reason ? undefined : onMove}
+        style={{ ...buttonBase, ...(reason ? { backgroundColor: colors.surface.sunken, borderColor: colors.border.subtle, color: colors.text.muted, cursor: 'default' } : {}) }}
+      >
         {family ? t.start.move.family.cta : t.start.move.class.cta}
-      </MoveButton>
-      {!online ? (
-        <span id={helpId} style={{ flexBasis: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary }}>
-          {t.states.offline}
+      </button>
+      {reason ? (
+        <span id={helpId} data-testid="move-row-reason" style={{ width: 0, minWidth: '100%', fontSize: rem(typography.size.bodySm), color: colors.text.secondary, overflowWrap: 'anywhere' }}>
+          {reason}
         </span>
       ) : null}
-    </>
+    </span>
   );
 }

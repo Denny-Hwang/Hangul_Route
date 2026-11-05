@@ -23,13 +23,13 @@ import { describe, expect, it } from 'vitest';
 import type { RoundAsked } from '../../logic/memory/asked';
 import { compactSource, shortenScope } from '../../logic/quest-flow/quest-adapt';
 import { compactView, discoverCards } from '../../logic/quest-flow/pacing-view';
-import { scaffoldScope } from '../../logic/quest-flow/quest-scaffold';
+import { scaffoldScope, scopeItems } from '../../logic/quest-flow/quest-scaffold';
 import { buildDiscover } from '../../logic/stage1/discover-flow';
 import { runtimeScope } from '../../../../../scripts/build-lessons.mjs';
 import { CONTENT_OVERLAYS } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { PLAYABLE_KINDS } from '../../logic/minigame-renderers';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { LESSON_EPISODES, LESSON_QUESTS } from '../__generated__/lessons-index';
 import { questsAll } from '../quests';
 import { scopeFor } from '../../logic/minigame-config';
@@ -126,7 +126,10 @@ export function questProblems(stage: StageKey, quest: LessonQuest): string[] {
     } else {
       const range = ROUND_RANGE[stage]?.[step.kind];
       // Story Sequence and Story Order (row CM-34) order one talk a round: a step is one ordering, not a round count.
-      if (range && scope.kind !== 'story-sequence' && scope.kind !== 'story-order' && (rounds < range[0] || rounds > range[1])) {
+      // A Hidden Heritage scene (F-CURR-002 §17 Phase 4, row CM-44 S2) plays its targets, 3-5 as the round schema
+      // allows, copied from the scene unchanged: Letters' school room asks 3.
+      const hiddenHeritageOk = scope.kind === 'hidden-heritage' && rounds >= 3 && rounds <= 5;
+      if (range && scope.kind !== 'story-sequence' && scope.kind !== 'story-order' && !hiddenHeritageOk && (rounds < range[0] || rounds > range[1])) {
         out.push(`U-1 ${quest.id}: ${step.kind} plays ${rounds} rounds, not ${range[0]}-${range[1]}`);
       }
     }
@@ -157,7 +160,8 @@ export function missingGlosses(entities: ReadonlyArray<readonly [string, object]
 
 describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
   it('every file parses as a LessonCell and sits in its stage folder', () => {
-    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}.json`);
+    // A Volume 2 is `<theme>.v2.json` beside its Volume 1 and says `volume: 2` (F-CURR-002 §5.1, rows CM-40, CM-41).
+    for (const { rel, cell } of CELLS) expect(rel, cell.id).toBe(`content/episodes/stage-${cell.stage.slice(5)}/${cell.theme}${cell.volume === 2 ? '.v2' : ''}.json`);
   });
 
   it('the generated index holds exactly the ready cells (a draft stays "Coming later")', () => {
@@ -184,8 +188,9 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
 
   it('a ready cell replaces its placeholder in the bundle, and its quests and scopes are shipped', () => {
     for (const { cell } of READY) {
-      const episode = episodesAll.filter((e) => e.id === cell.id);
+      const episode = episodesWithVolumes.filter((e) => e.id === cell.id);
       expect(episode.map((e) => e.status), cell.id).toEqual(['shipped']);
+      expect(episodesAll.some((e) => e.id === cell.id), cell.id).toBe(cell.volume === undefined);
       for (const quest of cell.quests) {
         expect(questsAll.some((q) => q.id === quest.id), quest.id).toBe(true);
         for (const scope of quest.scopes) expect(ALL_LESSON_SCOPES[scope.ref]?.kind, scope.ref).toBe(scope.kind);
@@ -195,9 +200,11 @@ describe('the lesson cell files (F-CURR-001 section 3.10)', () => {
 
   it('T-2: once Greeting Dialogues is a generated cell, Stage 4 plays in grid theme order (Read Along, Kitchen Talk, Greeting Dialogues, ...)', () => {
     if (!READY.some((c) => c.cell.id === 'episode:stage4-rites')) return;
-    const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-'));
+    // A cell's later volume plays after every first volume (F-CURR-002 row CM-40; Snack Bar Talk, row CM-43 S4), off the route.
+    const stage4 = questsAll.map((q) => q.id).filter((id) => id.startsWith('quest:stage4-') && !/-v[0-9]+-q[0-9]+$/.test(id));
     const THEME_ORDER = ['letters', 'life', 'rites', 'nature', 'crafts'];
-    const expected = READY.filter((c) => c.cell.stage === 'stage4')
+    // First volumes in grid theme order; a later volume (row CM-40) is off this order, as the filter above reads it.
+    const expected = READY.filter((c) => c.cell.stage === 'stage4' && (c.cell.volume ?? 1) === 1)
       .sort((a, b) => THEME_ORDER.indexOf(a.cell.theme) - THEME_ORDER.indexOf(b.cell.theme))
       .flatMap((c) => c.cell.quests.map((q) => q.id));
     expect(expected.slice(0, 3)).toEqual(['quest:stage4-letters-q1', 'quest:stage4-letters-q2', 'quest:stage4-letters-q3']);
@@ -376,7 +383,7 @@ describe('U-10 three-language completeness of every ready cell', () => {
   for (const { cell } of READY) {
     it(`${cell.id}: every English field has its es and ko value`, () => {
       const stage = LESSON_STAGE_MODULES[Number(cell.stage.slice(5)) as 2 | 3 | 4 | 6 | 7];
-      const episode = episodesAll.find((e) => e.id === cell.id) as object;
+      const episode = episodesWithVolumes.find((e) => e.id === cell.id) as object;
       const quests = cell.quests.map((q) => [q.id, questsAll.find((x) => x.id === q.id) as object] as const);
       const scopes = cell.quests.flatMap((q) => q.scopes.map((s) => [s.ref, stage.LESSON_SCOPES[s.ref] as object] as const));
       expect(missingGlosses([[cell.id, episode], ...quests], CONTENT_OVERLAYS)).toEqual([]);
@@ -411,15 +418,25 @@ function scopeWords(scope: LessonScope): { read: KoText[]; shown: KoText[] } {
     case 'build-letter':
       return { read: [...scope.words], shown: [...scope.words] };
     case 'listen-pick': {
-      const options = scope.rounds.flatMap((r) => r.options.flatMap((o) => (o.text ? [o.text] : [])));
+      // A spelling round's look-alike (F-CURR-002 §4.5, row CM-44 S2: 채기 beside 책이) is a spelling, not a word, so it
+      // is read but never counted as a word shown (U-6).
+      const lookAlike = (r: (typeof scope.rounds)[number], id: string): boolean => r.promptKind === 'spelling' && id !== r.answerId;
+      const options = scope.rounds.flatMap((r) => r.options.flatMap((o) => (o.text && !lookAlike(r, o.id) ? [o.text] : [])));
+      const lookAlikes = scope.rounds.flatMap((r) => r.options.flatMap((o) => (o.text && lookAlike(r, o.id) ? [o.text] : [])));
       // A prompt is heard, but with no Korean voice it shows as text (F-AUDIO-004), so it is read too.
       const prompts = scope.rounds.map((r) => r.prompt);
-      return { read: [...options, ...prompts], shown: [...options, ...prompts] };
+      return { read: [...options, ...lookAlikes, ...prompts], shown: [...options, ...prompts] };
     }
     // F-CURR-002 row CM-3A S2: a Dictation (or `see`) round's word is written, then shown.
     case 'type-hangul': {
       const targets = scope.rounds.map((r) => r.target);
       return { read: targets, shown: targets };
+    }
+    // F-CURR-002 row CM-36: a Hidden Heritage target is heard and shown with its romanization (exposure, never a scored
+    // read); its other things name spots only (they are never asked).
+    case 'hidden-heritage': {
+      const targets = scope.rounds.flatMap((r) => r.targets.map((t) => t.word));
+      return { read: [], shown: targets };
     }
     default:
       return { read: [], shown: [] };
@@ -534,8 +551,12 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   });
 
   it('U-4 decodable scored reading in Stage 2: Stage 1 symbols, plus in Word Builder the symbols it taught by then', () => {
+    // Letters Volume 2 (row CM-44 S2) assumes nothing from Word Builder: with `volumes` on, its page's Vol 2 tab opens
+    // it before Volume 1 is complete (the curriculum stays unlocked). So it reads Stage 1 symbols and the symbols its own
+    // Discover shows, and its Pic-Word tiles (which carry their romanization) are exposure, as in every other Stage 2 cell.
     for (const cell of stage2) {
       const taught = new Set(STAGE1_KEYS);
+      const decodes = cell.theme === 'letters' && (cell.volume ?? 1) === 1;
       for (const quest of cell.quests) {
         // Only Word Builder adds symbols; the other Stage 2 cells never read one (a plan orders themes freely).
         if (cell.theme === 'letters') for (const j of discoverSymbols(quest)) taught.add(keyOf(j));
@@ -543,9 +564,10 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
         // Card Match tile carries its romanization and a Listen & Pick prompt is heard (Playground Words S2-3,
         // Holiday Words S2-2), so their scored reads are the written Listen & Pick options and Build a Letter, and from
         // row CM-3A S2 the Read Pick Meaning prompts and the Dictation words.
-        const scored =
-          cell.theme === 'letters'
-            ? quest
+        const scored = decodes
+          ? quest
+          : cell.theme === 'letters'
+            ? ({ ...quest, scopes: quest.scopes.filter((sc) => sc.kind !== 'pic-word-match' && sc.kind !== 'card-match') } as LessonQuest)
             : ({
                 ...quest,
                 scopes: quest.scopes.flatMap((sc): LessonScope[] =>
@@ -563,7 +585,13 @@ describe('content checks each cell row fills in (F-CURR-001 section 5)', () => {
   });
 
   it('U-6 at least half the Korean words outside Discover are reused (Stage 2)', () => {
-    for (const cell of stage2) expect(stage2ReuseProblems(cell)).toEqual([]);
+    for (const cell of stage2) {
+      // A Volume 2 is the same cell as its Volume 1 (F-CURR-002 §5.1, row CM-40), so the words Volume 1 taught count
+      // as reused (rule 5: "the same cell taught it").
+      const first = cell.volume === undefined ? undefined : stage2.find((c) => c.theme === cell.theme && c.volume === undefined);
+      const known = first === undefined ? STAGE2_KNOWN_WORDS : new Set([...STAGE2_KNOWN_WORDS, ...first.quests.flatMap((q) => [...discoverWords(q), ...q.scopes.flatMap((sc) => scopeWords(sc).shown)].map((w) => w.ko))]);
+      expect(stage2ReuseProblems(cell, known), cell.id).toEqual([]);
+    }
   });
 
   it('no Word Builder round asks to tell ㅐ from ㅔ, or ㅚ ㅙ ㅞ apart, by ear (section 3.3), Dictation included', () => {
@@ -636,10 +664,17 @@ const STAGE1_WORDS: ReadonlySet<string> = new Set(
 );
 
 /** What a cell of `stage` may count as taught before its own Discover (rule 5): Stage 1 and the vocabulary of its level. */
-const wordsBefore = (stage: StageKey): ReadonlySet<string> => {
+const wordsBefore = (stage: StageKey, volume = 1): ReadonlySet<string> => {
   const base = new Set([...STAGE1_WORDS, ...VOCAB_ITEMS.filter((v) => v.level <= vocabLevelFor(stage)).map((v) => v.ko)]);
-  // Rule 5 and U-6: an earlier stage counts too (every route plays a stage's cells before the next stage's).
-  const earlier = READY.filter((c) => Number(c.cell.stage.slice(5)) < Number(stage.slice(5)));
+  // Rule 5 and U-6: an earlier stage counts too (every route plays a stage's cells before the next stage's). A Volume 2
+  // cell also builds on Volume 1 of its own stage, and on the Volume 2 cells of earlier stages, as the F-CURR-002 §9.3
+  // lint reads the route (`lessonsBefore` in lesson-lint.ts); a Volume 1 cell reads Volume 1 alone.
+  const n = Number(stage.slice(5));
+  const earlier = READY.filter((c) => {
+    const at = Number(c.cell.stage.slice(5));
+    const v = c.cell.volume ?? 1;
+    return volume === 1 ? v === 1 && at < n : (v === 1 && at <= n) || (v > 1 && at < n);
+  });
   for (const { cell } of earlier) for (const q of cell.quests) for (const w of wordsOf(discoverTexts(q), base)) base.add(w);
   return base;
 };
@@ -666,6 +701,7 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(stemOf('친구가', new Set())).toBe('친구');
     expect(stemOf('학교에', new Set())).toBe('학교');
     expect(stemOf('송편하고', new Set())).toBe('송편');
+    expect(stemOf('친구에게', new Set())).toBe('친구'); // F-CURR-002 row CM-44 S7: the letter frame ___에게
     expect(stemOf('책이에요', new Set())).toBe('책');
     expect(stemOf('학교예요', new Set())).toBe('학교');
     expect(stemOf('고양이', new Set(['고양이']))).toBe('고양이');
@@ -745,9 +781,19 @@ describe('U-3 new-item caps and U-6 reuse (F-CURR-001 section 3.1 rules 4 and 5)
     expect(scopeTexts(lp as unknown as LessonScope)).toEqual({ read: ['산에 가요.'], heard: ['바다에 가요.'], particles: [] });
   });
 
+  /** A Volume 2 cell also counts its stage's Volume 1 cells as taught (F-CURR-002 section 9.3, `lessonsBefore`). */
+  const knownBefore = (cell: LessonCell): ReadonlySet<string> => {
+    const base = new Set(wordsBefore(cell.stage));
+    if (cell.volume !== 2) return base;
+    for (const { cell: other } of READY) {
+      if (other.stage !== cell.stage || other.volume === 2) continue;
+      for (const q of other.quests) for (const w of wordsOf(discoverTexts(q), base)) base.add(w);
+    }
+    return base;
+  };
   for (const { cell } of READY.filter((c) => c.cell.stage !== 'stage2')) {
     it(`${cell.id}: one new pattern and at most the new words of its stage a quest; at least half the other words reused`, () => {
-      expect(reuseProblems(cell.stage, cell.quests, wordsBefore(cell.stage))).toEqual([]);
+      expect(reuseProblems(cell.stage, cell.quests, wordsBefore(cell.stage, cell.volume ?? 1))).toEqual([]);
     });
   }
 });
@@ -934,7 +980,15 @@ function missesOf(scope: MinigameScope): RoundAsked[] {
       // A first-try miss names the turn and the less natural reply tapped (row CM-35).
       return (scope.rolePlay?.scene.nodes ?? []).flatMap((n) => ('replies' in n ? n.replies.filter((r) => r.kind === 'lessNatural').map((r) => ({ scope, itemId: `${n.id}/${r.id}` })) : []));
     default:
-      return [...ids(scope.listenPick?.rounds), ...ids(scope.orderIt?.rounds), ...ids(scope.typeHangul?.rounds), ...ids(scope.realiaRead?.rounds), ...ids(scope.traceWord?.rounds)];
+      return [
+        ...ids(scope.listenPick?.rounds),
+        ...ids(scope.orderIt?.rounds),
+        ...ids(scope.typeHangul?.rounds),
+        ...ids(scope.realiaRead?.rounds),
+        ...ids(scope.traceWord?.rounds),
+        // A Cloze Pick Practice (Nature Volume 2, S3, row CM-41) names its round; its scaffold hears the completed sentences.
+        ...ids(scope.clozePick?.rounds),
+      ];
   }
 }
 
@@ -951,7 +1005,7 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
   const scaffolding = new Set<string>();
   const shortened = new Map<string, [MinigameScope, MinigameScope]>();
   it('runs over every shipped lesson quest', () => {
-    expect(QUESTS.length).toBeGreaterThanOrEqual(78);
+    expect(QUESTS.length).toBeGreaterThanOrEqual(90);
   });
 
   for (const quest of QUESTS) {
@@ -968,7 +1022,8 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
       const applyKo = new Set(scopeKo(apply));
       for (const ko of scopeKo(shorter ?? apply)) expect(applyKo.has(ko), ko).toBe(true);
       // Every scaffold a pair of first-try misses can bring asks only the Practice's own Korean.
-      const practiceKo = new Set(scopeKo(practice));
+      // A Cloze Pick round asks its completed sentence (row CM-30), which its scope holds as the sentence and the tile.
+      const practiceKo = new Set([...scopeKo(practice), ...scopeItems(practice).map((t) => t.ko)]);
       const misses = missesOf(practice);
       const scaffolds = misses.flatMap((a, i) => misses.slice(i + 1).map((b) => scaffoldScope(practice, [a, b]))).filter((s): s is MinigameScope => s !== null);
       for (const s of scaffolds) for (const ko of scopeKo(s)) expect(practiceKo.has(ko), ko).toBe(true);
@@ -1000,9 +1055,10 @@ describe('U-11 every adapted path shows each new item on Discover before it is a
     const listsWords = (q: (typeof QUESTS)[number]): boolean => scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind !== 'story-sequence';
     const left = QUESTS.filter((q) => listsWords(q) && !scaffolding.has(q.id)).map((q) => `${q.id} (${scopeFor(q.steps.find((s) => s.kind === 'practice')!.minigameRef!)!.kind})`);
     expect(left).toEqual([]);
-    // The exception is named in the section 4.6 decision record (row CM-3A S4): 75 of 78 shipped Practices scaffold.
+    // The exception is named in the section 4.6 decision record (row CM-3A S4): 144 of 147 shipped Practices scaffold
+    // (the 69 Volume 2 quests of rows CM-41..CM-45 all do).
     expect(QUESTS.filter((q) => !listsWords(q)).map((q) => q.id)).toEqual(['quest:stage4-rites-q1', 'quest:stage4-rites-q2', 'quest:stage4-rites-q3']);
-    expect([QUESTS.length, scaffolding.size]).toEqual([78, 75]);
+    expect([QUESTS.length, scaffolding.size]).toEqual([147, 144]);
   });
 
   it('every shorter Apply keeps two rounds or more and is the full Apply less its last round', () => {

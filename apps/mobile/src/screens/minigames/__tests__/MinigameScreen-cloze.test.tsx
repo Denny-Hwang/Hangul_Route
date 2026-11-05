@@ -5,6 +5,7 @@ import { tileId } from '../../../logic/cloze-pick/round';
 import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { byTestId, press, render, unmount } from '../../../test-support/render';
 import { MinigameScreen } from '../MinigameScreen';
+import { endVoiceCheckHold } from '../../../store/audio-store';
 
 /**
  * F-CURR-002 row CM-30 through the real quest host: a `cloze-pick` step plays its Listen & Pick fallback while
@@ -67,6 +68,8 @@ const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
 };
 
 beforeEach(() => {
+  // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
+  endVoiceCheckHold();
   track.mockClear();
   runStore.answers = [];
   runStore.completes = 0;

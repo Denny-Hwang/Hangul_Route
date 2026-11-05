@@ -1,4 +1,4 @@
-import { PlacementResultSchema, questsPlacedOutAtLevel, type Episode, type Quest } from '@hangul-route/content-schema';
+import { PlacementResultSchema, effectiveRoute, questsPlacedOutAtLevel, type Episode, type Quest } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../../content';
 import { episodeOf, plainQuest } from '../../stage1/__tests__/fixtures';
@@ -24,6 +24,18 @@ describe('appRouteCatalog', () => {
       ['quest:shelf', 'episode:shelf', 4, false, false],
     ]);
     expect(catalog.quests[2]).toMatchObject({ stage: 'stage1', theme: 'life', teaches: [] });
+  });
+
+  it('marks a later volume\'s quest (F-CURR-002 row CM-41): placed out like Volume 1, never a route start', () => {
+    const v2 = episodeOf('episode:one-v2', ['quest:c'], { volume: 2 });
+    const catalog = appRouteCatalog(QUESTS, [EPISODES[0] as Episode, v2]);
+    expect(catalog.quests.map((q) => [q.id, q.laterVolume ?? false])).toEqual([
+      ['quest:a', false],
+      ['quest:b', false],
+      ['quest:c', true],
+    ]);
+    const all = effectiveRoute([placementResult()], catalog, { isEntitled: () => true, completedQuestIds: new Set(['quest:a', 'quest:b']) });
+    expect(all?.startQuestId).toBeNull();
   });
 
   it('a quest listed by two episodes belongs to the first', () => {

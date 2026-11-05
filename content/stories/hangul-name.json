@@ -1,0 +1,1092 @@
+{
+  "v": 1,
+  "id": "story:hangul-name",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261104,
+  "title": {
+    "ko": "한글이라는 이름",
+    "romanization": "Hangeuriraneun ireum",
+    "en": "How Hangul Got Its Name"
+  },
+  "summaryEn": "Hoya finds out that Hangul had other names first: Hunminjeongeum, eonmun and gungmun. The scholar Ju Sigyeong seems to be the first to call it Hangul, and the name came into general use after that.",
+  "hoyaIntroEn": "Was Hangul always called Hangul? Let's find out!",
+  "hoyaOutroEn": "Now you know how Hangul got its name!",
+  "theme": "letters",
+  "kind": "documentary",
+  "recommendedStage": 4,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Know that King Sejong named the letters Hunminjeongeum, and that the letters were later also called eonmun, jeongeum and gungmun.",
+    "Know that Ju Sigyeong seems to be the first person to call the letters Hangul, and that the name came into general use after that.",
+    "Know that Ju Sigyeong and his students worked on Malmoi, the first Korean dictionary project, whose manuscript is a Treasure at the National Hangeul Museum.",
+    "Read and recognize 이름 (ireum), 언문 (eonmun), 국문 (gungmun), 한글 (Hangeul), 사전 (sajeon) and 말모이 (Malmoi)."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "ireum",
+      "ko": "이름",
+      "romanization": "ireum",
+      "en": "name",
+      "kind": "word"
+    },
+    {
+      "id": "hunminjeongeum",
+      "ko": "훈민정음",
+      "romanization": "Hunminjeongeum",
+      "en": "King Sejong's name for the letters",
+      "kind": "term"
+    },
+    {
+      "id": "eonmun",
+      "ko": "언문",
+      "romanization": "eonmun",
+      "en": "an old name for Hangul",
+      "kind": "term"
+    },
+    {
+      "id": "gungmun",
+      "ko": "국문",
+      "romanization": "gungmun",
+      "en": "the nation's writing",
+      "kind": "term"
+    },
+    {
+      "id": "hangeul",
+      "ko": "한글",
+      "romanization": "Hangeul",
+      "en": "Hangul (the Korean alphabet)",
+      "kind": "word"
+    },
+    {
+      "id": "japji",
+      "ko": "잡지",
+      "romanization": "japji",
+      "en": "magazine",
+      "kind": "word"
+    },
+    {
+      "id": "sajeon",
+      "ko": "사전",
+      "romanization": "sajeon",
+      "en": "dictionary",
+      "kind": "word"
+    },
+    {
+      "id": "geul",
+      "ko": "글",
+      "romanization": "geul",
+      "en": "writing; letters",
+      "kind": "word"
+    },
+    {
+      "id": "yet",
+      "ko": "옛",
+      "romanization": "yet",
+      "en": "old; of long ago",
+      "kind": "word"
+    },
+    {
+      "id": "nara",
+      "ko": "나라",
+      "romanization": "nara",
+      "en": "country; nation",
+      "kind": "word"
+    },
+    {
+      "id": "malmoi",
+      "ko": "말모이",
+      "romanization": "Malmoi",
+      "en": "a collection of words; a dictionary",
+      "kind": "term"
+    },
+    {
+      "id": "uri",
+      "ko": "우리",
+      "romanization": "uri",
+      "en": "we; our",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya wonders: has Hangul always been called Hangul? Let's find out where its name came from.",
+          "captionEn": "Where does the name come from?",
+          "keyword": {
+            "id": "ireum",
+            "ko": "이름",
+            "romanization": "ireum",
+            "en": "name",
+            "kind": "word"
+          },
+          "factIds": [],
+          "framing": true,
+          "approximations": [],
+          "artBrief": "Hoya ponders beside an open book (no readable text): was Hangul always called Hangul?",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:book-open",
+                "x": 190,
+                "y": 276,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 320,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Hoya thinks hard beside an open book of Hangul."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "When King Sejong made the new letters, he named them Hunminjeongeum. The name means the correct sounds for teaching the people.",
+          "captionEn": "Sejong names the letters",
+          "keyword": {
+            "id": "hunminjeongeum",
+            "ko": "훈민정음",
+            "romanization": "Hunminjeongeum",
+            "en": "King Sejong's name for the letters",
+            "kind": "term"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "King Sejong seated in the palace hall; papers with the new letters (abstract strokes) nearby.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 200,
+                "y": 188,
+                "s": 1
+              },
+              {
+                "ref": "prop:papers-loose",
+                "x": 344,
+                "y": 290,
+                "s": 0.8
+              }
+            ],
+            "altEn": "King Sejong sits in the palace hall, with papers of the new letters nearby."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "But many scholars of the time looked down on the new letters. They called Chinese writing jinseo, true writing, and they called Hangul eonmun.",
+          "captionEn": "An old name: eonmun",
+          "keyword": {
+            "id": "eonmun",
+            "ko": "언문",
+            "romanization": "eonmun",
+            "en": "an old name for Hangul",
+            "kind": "term"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A yangban scholar in his study beside books in Chinese characters (abstract). No readable text.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-scholar",
+                "x": 120,
+                "y": 272,
+                "s": 1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 330,
+                "y": 290,
+                "s": 0.8
+              }
+            ],
+            "altEn": "A scholar of long ago sits in his study beside a stack of books."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Much later, in a time of change called the Gaehwagi, people came to value their own letters more. They called them jeongeum or gungmun, the nation's writing.",
+          "captionEn": "The nation's writing",
+          "keyword": {
+            "id": "gungmun",
+            "ko": "국문",
+            "romanization": "gungmun",
+            "en": "the nation's writing",
+            "kind": "term"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A time of change: a villager beside a sheet of writing (abstract strokes).",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:sheet-cursive",
+                "x": 300,
+                "y": 236,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 190,
+                "y": 284,
+                "s": 1.2,
+                "tint": "theme.crafts"
+              }
+            ],
+            "altEn": "A villager stands beside a sheet of flowing writing."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Ju Sigyeong cared deeply about the Korean language and worked hard to teach it. He seems to be the first person to call the letters Hangul.",
+          "captionEn": "A new name: Hangul",
+          "keyword": {
+            "id": "hangeul",
+            "ko": "한글",
+            "romanization": "Hangeul",
+            "en": "Hangul (the Korean alphabet)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Ju Sigyeong, a teacher, beside a stack of books. No readable text.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 290,
+                "y": 286,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-scholar",
+                "x": 180,
+                "y": 276,
+                "s": 1.2,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "A teacher stands beside a stack of books."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "He used the name for the groups and classes he led. He also put a section called Hangeul Puri into the magazine Aideulboi.",
+          "captionEn": "The name in a magazine",
+          "keyword": {
+            "id": "japji",
+            "ko": "잡지",
+            "romanization": "japji",
+            "en": "magazine",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "An open magazine for children (no readable text); Hoya reads it.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:book-open",
+                "x": 160,
+                "y": 270,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 300,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "An open children's magazine lies on a paper background, and Hoya reads beside it."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Ju Sigyeong and his students also wrote Malmoi, the first Korean dictionary project. Malmoi means a collection of words. Its manuscript is a Treasure at the National Hangeul Museum.",
+          "captionEn": "Malmoi, a collection of words",
+          "keyword": {
+            "id": "sajeon",
+            "ko": "사전",
+            "romanization": "sajeon",
+            "en": "dictionary",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6",
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Present day: the Malmoi manuscript in a museum case; Hoya reads the label (no readable text).",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:museum-case",
+                "x": 150,
+                "y": 288,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 296,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "In a museum, an old handwritten manuscript rests in a case, and Hoya reads beside it."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "After that, the name Hangul came into general use. Now you know the story behind the name of these letters!",
+          "captionEn": "Everyone says Hangul",
+          "keyword": {
+            "id": "geul",
+            "ko": "글",
+            "romanization": "geul",
+            "en": "writing; letters",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A glowing open book above a hill; Hoya cheers with a child. No text.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 214,
+                "s": 1
+              },
+              {
+                "ref": "prop:book-open",
+                "x": 200,
+                "y": 184,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 110,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 290,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "A glowing open book floats above a hill, and Hoya cheers with a child."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What name did King Sejong give the new letters?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Eonmun",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Hunminjeongeum",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Gungmun",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Malmoi",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ],
+          "explainEn": "King Sejong named the letters Hunminjeongeum, the correct sounds for teaching the people."
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Who seems to be the first person to call the letters Hangul?",
+          "options": [
+            {
+              "id": "a",
+              "en": "King Sejong",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Jang Yeongsil",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Yi Sunsin",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Ju Sigyeong",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f4"
+          ],
+          "explainEn": "Ju Sigyeong seems to be the first person to give the letters the name Hangul."
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What is Malmoi?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A dictionary project",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "A magazine",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A palace",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A festival",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ],
+          "explainEn": "Malmoi was the first Korean dictionary project, by Ju Sigyeong and his students. Its name means a collection of words."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "hunminjeongeum",
+        "eonmun",
+        "gungmun",
+        "sajeon"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s2",
+          "narrationEn": "King Sejong named the letters {kw:hunminjeongeum}: the correct sounds for teaching the people.",
+          "captionEn": "Sejong names the letters",
+          "keyword": {
+            "id": "ireum",
+            "ko": "이름",
+            "romanization": "ireum",
+            "en": "name",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "이름은 훈민정음이에요.",
+            "romanization": "Ireumeun Hunminjeongeumieyo.",
+            "en": "The name is Hunminjeongeum.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "King Sejong seated in the palace hall; papers with the new letters (abstract strokes) nearby.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 200,
+                "y": 188,
+                "s": 1
+              },
+              {
+                "ref": "prop:papers-loose",
+                "x": 344,
+                "y": 290,
+                "s": 0.8
+              }
+            ],
+            "altEn": "King Sejong sits in the palace hall, with papers of the new letters nearby."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Many scholars of the time looked down on the letters and called them {kw:eonmun}.",
+          "captionEn": "An old name: eonmun",
+          "keyword": {
+            "id": "yet",
+            "ko": "옛",
+            "romanization": "yet",
+            "en": "old; of long ago",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "언문은 옛 이름이에요.",
+            "romanization": "Eonmuneun yet ireumieyo.",
+            "en": "Eonmun is an old name.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A yangban scholar in his study beside books in Chinese characters (abstract). No readable text.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-scholar",
+                "x": 120,
+                "y": 272,
+                "s": 1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 330,
+                "y": 290,
+                "s": 0.8
+              }
+            ],
+            "altEn": "A scholar of long ago sits in his study beside a stack of books."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In the Gaehwagi, people called the letters {kw:gungmun}, the nation's writing.",
+          "captionEn": "The nation's writing",
+          "keyword": {
+            "id": "nara",
+            "ko": "나라",
+            "romanization": "nara",
+            "en": "country; nation",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "국문은 나라의 글이에요.",
+            "romanization": "Gungmuneun naraui geurieyo.",
+            "en": "Gungmun means the nation's writing.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A time of change: a villager beside a sheet of writing (abstract strokes).",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:sheet-cursive",
+                "x": 300,
+                "y": 236,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 190,
+                "y": 284,
+                "s": 1.2,
+                "tint": "theme.crafts"
+              }
+            ],
+            "altEn": "A villager stands beside a sheet of flowing writing."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Ju Sigyeong seems to be the first person to call the letters {kw:hangeul}.",
+          "captionEn": "A new name: Hangul",
+          "keyword": {
+            "id": "hangeul",
+            "ko": "한글",
+            "romanization": "Hangeul",
+            "en": "Hangul (the Korean alphabet)",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "새 이름은 한글이에요.",
+            "romanization": "Sae ireumeun Hangeurieyo.",
+            "en": "The new name is Hangul.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Ju Sigyeong, a teacher, beside a stack of books. No readable text.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 290,
+                "y": 286,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-scholar",
+                "x": 180,
+                "y": 276,
+                "s": 1.2,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "A teacher stands beside a stack of books."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Ju Sigyeong and his students wrote Malmoi, a {kw:sajeon} project. Its name means a collection of words.",
+          "captionEn": "Malmoi, a collection of words",
+          "keyword": {
+            "id": "malmoi",
+            "ko": "말모이",
+            "romanization": "Malmoi",
+            "en": "a collection of words; a dictionary",
+            "kind": "term"
+          },
+          "line": {
+            "ko": "말모이는 사전이에요.",
+            "romanization": "Malmoineun sajeonieyo.",
+            "en": "Malmoi is a dictionary.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Present day: the Malmoi manuscript in a museum case; Hoya reads the label (no readable text).",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:museum-case",
+                "x": 150,
+                "y": 288,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 296,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "In a museum, an old handwritten manuscript rests in a case, and Hoya reads beside it."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "After that, the name Hangul came into general use for our {kw:geul}.",
+          "captionEn": "Everyone says Hangul",
+          "keyword": {
+            "id": "uri",
+            "ko": "우리",
+            "romanization": "uri",
+            "en": "we; our",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "한글은 우리 글이에요.",
+            "romanization": "Hangeureun uri geurieyo.",
+            "en": "Hangul is our writing.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A glowing open book above a hill; Hoya cheers with a child. No text.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 214,
+                "s": 1
+              },
+              {
+                "ref": "prop:book-open",
+                "x": 200,
+                "y": 184,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 110,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 290,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "A glowing open book floats above a hill, and Hoya cheers with a child."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "옛",
+            "romanization": "yet",
+            "en": "old; of long ago"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "New",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Old; of long ago",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Short",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Famous",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Yet means old or of long ago. Eonmun is an old name for Hangul."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "사전",
+            "romanization": "sajeon",
+            "en": "dictionary"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Magazine",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Letter",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Dictionary",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Newspaper",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ],
+          "explainEn": "Sajeon means dictionary. Malmoi was a dictionary project."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "What does the name Malmoi mean?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A new school",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "The correct sounds",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Our country",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A collection of words",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f6"
+          ],
+          "explainEn": "Malmoi is a native Korean word meaning a collection of words, that is, a dictionary."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "yet",
+        "nara",
+        "malmoi",
+        "uri"
+      ],
+      "grammarFocusEn": "Topic -eun / -neun; -ieyo / -yeyo (is); -ui (of)"
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "topicTags": [
+    "hangul-name",
+    "ju-sigyeong",
+    "malmoi",
+    "eonmun-gungmun"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "When Hangul was first made, King Sejong named the script Hunminjeongeum, which means 'the correct sounds (letters) for teaching the people'.",
+      "claimKo": "한글이 처음 만들어질 때 세종은 이 문자의 이름을 훈민정음이라고 정했다. \"백성을 가르치는 데 사용할 바른 소리(글자)\"라는 뜻이다.",
+      "sources": [
+        {
+          "title": "한글의 다른 이름 — 알고 싶은 한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 알고 싶은 한글",
+          "url": "https://www.korean.go.kr/hangeul/another/001.html",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한글이 처음 만들어질 때, 세종은 이 문자의 이름을 ‘훈민정음(訓民正音)’이라고 정했다. “백성을 가르치는 데 사용할 바른 소리(글자)”라는 뜻이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Many yangban scholars of the time looked down on Hangul next to Chinese characters, so Chinese writing was commonly called jinseo ('true writing') and Hangul was commonly called eonmun.",
+      "claimKo": "당시 양반 사대부들은 한문에 비해 한글을 낮잡아 보는 태도가 많아, 한자·한문은 진서라고 부르고 한글은 언문이라고 흔히 불렀다.",
+      "sources": [
+        {
+          "title": "한글의 다른 이름 — 알고 싶은 한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 알고 싶은 한글",
+          "url": "https://www.korean.go.kr/hangeul/another/001.html",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한자와 한문에 비해 한글을 낮잡아 보는 태도가 팽배해 있었다. 그래서 한자/한문은 ‘진서(眞書)’라고 부르고 한글은 ‘언문(諺文)’이라고 흔히 불렀다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the Gaehwagi, a time of opening and reform, people came to value their own script more, and names such as jeongeum and gungmun ('the nation's writing') came into wide use.",
+      "claimKo": "개화기에 이르러 우리 민족 고유의 문자인 한글의 가치를 높이 평가하게 되어 정음, 국문 등의 명칭도 많이 사용되었다.",
+      "sources": [
+        {
+          "title": "한글의 다른 이름 — 알고 싶은 한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 알고 싶은 한글",
+          "url": "https://www.korean.go.kr/hangeul/another/001.html",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"개화기에 이르러 민족정신에 대한 각성이 일어남에 따라 우리 민족 고유의 문자인 한글의 가치도 높이 평가하게 되어 ‘정음(正音)’, ‘국문(國文)’ 등의 명칭도 많이 사용되게 되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Ju Sigyeong, who cared deeply about the Korean language and its letters and worked to teach and study them, seems to be the first person to give the name Hangul to the script.",
+      "claimKo": "우리 민족의 글에 한글이라는 이름을 처음 붙여 사용한 사람은 주시경인 듯하다. 주시경은 우리 말과 글에 남다른 애정을 가지고 교육과 연구에 힘썼다.",
+      "sources": [
+        {
+          "title": "한글의 다른 이름 — 알고 싶은 한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 알고 싶은 한글",
+          "url": "https://www.korean.go.kr/hangeul/another/001.html",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"우리 민족의 글에 ‘한글’이라는 이름을 처음으로 붙여서 사용한 사람은 주시경인 듯하다. 주시경은 개화기에 우리 말과 글에 대해 남다른 애정을 가지고 교육과 연구에 힘쓴 사람인데\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Ju Sigyeong renamed groups he led to Hangeulmo and Hangeulbaegot, and put a section called 'Hangeul Puri' into the children's magazine Aideulboi.",
+      "claimKo": "주시경은 '배달말글 몯음'과 '조선어 강습원'을 '한글모', '한글배곧'으로 고쳐 부르고, 어린이 잡지 '아이들보이'에 '한글풀이'란을 넣었다.",
+      "sources": [
+        {
+          "title": "한글의 다른 이름 — 알고 싶은 한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 알고 싶은 한글",
+          "url": "https://www.korean.go.kr/hangeul/another/001.html",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"‘배달말글 몯음’이나 ‘조선어 강습원’을 ‘한글모’, ‘한글배곧’으로 개명하기도 하고, 어린이 잡지 ‘아이들보이’(1913. 9.)에 ‘한글풀이’란을 넣기도 하였다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Ju Sigyeong and his students wrote the manuscript of Malmoi, the first Korean dictionary project. Malmoi is a native Korean word meaning a collection of words, that is, a dictionary.",
+      "claimKo": "말모이 원고는 주시경과 제자들이 집필에 참여해 만든 우리나라 최초의 한글사전 말모이의 원고이다. 말모이는 말을 모아 만든 것이라는 뜻으로, 사전을 뜻하는 순우리말이다.",
+      "sources": [
+        {
+          "title": "말모이 원고 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121120850000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한글학자 주시경(1876∼1914)과 그의 제자 김두봉(1889∼?), 이규영(1890∼1920), 권덕규(1891∼1950)가 집필에 참여해 만든 우리나라 최초의 한글사전 ‘말모이’의 원고이다. ‘말모이’는 말을 모아 만든 것이라는 의미로, 오늘날 사전을 의미를 하는 순우리말이다.\""
+        },
+        {
+          "title": "말모이원고 — 주요 문화유산",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/relic/designated/5",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"주시경(周時經, 1876~1914)과 그의 제자들이 1911년~1914년 경 국어사전 편찬을 위해 작성한 원고\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Malmoi manuscript is designated a Treasure and is held by the National Hangeul Museum.",
+      "claimKo": "말모이 원고는 보물이며 국립한글박물관이 소장하고 있다.",
+      "sources": [
+        {
+          "title": "말모이원고 — 주요 문화유산",
+          "publisher": "국립한글박물관 (National Hangeul Museum)",
+          "url": "https://www.hangeul.go.kr/relic/designated/5",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Listed among the museum's major heritage items; \"종목 보물\""
+        },
+        {
+          "title": "말모이 원고 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121120850000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "Designation: 보물; 관리자: 국립한글박물관"
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "After that, the name Hangul came into general use.",
+      "claimKo": "그 후로 한글이라는 명칭이 일반화되었다.",
+      "sources": [
+        {
+          "title": "한글의 다른 이름 — 알고 싶은 한글",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 알고 싶은 한글",
+          "url": "https://www.korean.go.kr/hangeul/another/001.html",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"그 후로 ‘한글’이라는 명칭이 일반화되었다.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국립국어원(알고 싶은 한글); 국가유산청 국가유산포털(말모이 원고); 국립한글박물관(주요 문화유산)",
+  "verification": {
+    "passes": 1,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Author pass (F-CURR-002 CM-46, 2026-11-04): every cited page was fetched on the access date and each quoteOrLocator was compared with the page text; claims restate only what the quotes say. The multi-agent review (three parallel checkers, a reviser and a third pass, F-CURR-002 §9.2) has not run yet, so passes stays 1 and review stays draft."
+  },
+  "authorNotes": "Names follow F-CNT-002 (no hyphens): Ju Sigyeong (주시경), Aideulboi (아이들보이). The first use of the name is hedged as the source hedges it (\"인 듯하다\", seems to be); other theories (Choe Namseon, Yi Jongil) are not in an allowlisted source and are left out. No year is given: the NIKL page dates only the magazine (1913. 9.) and does not date the first use of the name; the meaning of 한 (great, one) is not in an allowlisted source and is left out. Hangul Day and its 1928 renaming are the hangeul-day story's topic and are not repeated. 암클 and 아햇글 are left out because the source says they may never have been used. Malmoi was never published; the story calls it a dictionary project, as the sources call it a manuscript (원고).",
+  "errata": []
+}
