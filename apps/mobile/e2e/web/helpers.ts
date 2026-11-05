@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { layoutClassFor } from '@hangul-route/design-system/layout';
-import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
+import { KEY_BOUNCE_MS, TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { isDeviceLandscape, isPhoneDevice } from '../../src/logic/layout/orientation-guard';
 
 /**
@@ -403,6 +403,16 @@ export async function passDiscover(page: Page): Promise<void> {
  */
 export function pastTapLock(page: Page): Promise<void> {
   return page.waitForTimeout(TAP_LOCK_MS + 50);
+}
+
+/**
+ * One press on the in-app Hangul keyboard (`hangul-key-<id>`), paced as a learner's: the keyboard drops a repeat of the
+ * same key within `KEY_BOUNCE_MS` and a Shift within `TAP_LOCK_MS` of the last (AMENDMENTS-TOUCH KT-D7, row KT-7), so a
+ * machine-speed click waits past that key's lock before the next.
+ */
+export async function tapHangulKey(page: Page, id: string): Promise<void> {
+  await page.getByTestId(`hangul-key-${id}`).click();
+  await page.waitForTimeout((id === 'shift' ? TAP_LOCK_MS : KEY_BOUNCE_MS) + 30);
 }
 
 /** The Listen & Pick option cards; a tapped card says so in its label ("Right answer: ..." / "Not this one: ..."). */

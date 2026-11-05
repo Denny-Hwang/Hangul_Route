@@ -3,7 +3,7 @@ import { CATALOG, keysFor } from '@hangul-route/content-schema';
 import { decodeReviewItems } from '@hangul-route/content-schema/review-items';
 import * as chunk from '../../src/content/__generated__/review-item-chunks/review-items';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, seedStored, pastTapLock } from './helpers';
+import { onboardChild, readStored, seedStored, pastTapLock, tapHangulKey } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide, expectTextFits } from './text-fit';
 import { expectNoHorizontalOverflow } from './viewport';
@@ -72,11 +72,11 @@ const MISS = 'ㅋㅋㅋㅋ';
 
 async function typeKorean(page: Page, text: string): Promise<void> {
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
-    if (jamo === ' ') await page.getByTestId('hangul-key-space').click();
+    if (jamo === ' ') await tapHangulKey(page, 'space');
     else if (SHIFTED[jamo]) {
-      await page.getByTestId('hangul-key-shift').click();
-      await page.getByTestId(`hangul-key-${SHIFTED[jamo]}`).click();
-    } else await page.getByTestId(`hangul-key-${jamo}`).click();
+      await tapHangulKey(page, 'shift');
+      await tapHangulKey(page, SHIFTED[jamo]);
+    } else await tapHangulKey(page, jamo);
   }
 }
 

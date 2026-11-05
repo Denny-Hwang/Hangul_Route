@@ -60,7 +60,7 @@ async function play(
           <TypeHangulGame scope={scope} host={h} />
         </RomanizationModeOverride>
       </LayoutProvider>,
-      { createNodeMock: () => ({ focus: domFocus, addEventListener: () => undefined, removeEventListener: () => undefined }) },
+      { createNodeMock: () => ({ focus: domFocus, addEventListener: () => undefined, removeEventListener: () => undefined, nodeType: 1, getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }) }) },
     );
   });
   mounted.push(r);

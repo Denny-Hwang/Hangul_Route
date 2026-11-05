@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { keysFor } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { keepSidewaysIfAsked } from './helpers';
+import { keepSidewaysIfAsked, tapHangulKey } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -58,12 +58,12 @@ const events = (page: Page): Promise<TelemetryEvent[]> => page.evaluate(() => (w
 async function typeText(page: Page, text: string): Promise<void> {
   for (const jamo of keysFor(text).flatMap((j) => [...(SPLIT[j] ?? j)])) {
     if (jamo === ' ') {
-      await key(page, 'space').click();
+      await tapHangulKey(page, 'space');
     } else if (SHIFTED[jamo]) {
-      await key(page, 'shift').click();
-      await key(page, SHIFTED[jamo]).click();
+      await tapHangulKey(page, 'shift');
+      await tapHangulKey(page, SHIFTED[jamo]);
     } else {
-      await key(page, jamo).click();
+      await tapHangulKey(page, jamo);
     }
   }
 }
@@ -135,10 +135,10 @@ test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () =>
     await page.setViewportSize({ width: 320, height: 568 });
     await open(page, ['hoya', 'bibimbap']);
     await typeText(page, '호');
-    await key(page, 'ㅇ').click();
+    await tapHangulKey(page, 'ㅇ');
     // The open block is underlined while it is built (홍, then 호여: the final hands over to the next block).
     await expect(page.getByTestId('type-hangul-open-block')).toHaveText('홍');
-    await key(page, 'ㅕ').click();
+    await tapHangulKey(page, 'ㅕ');
     await expect(page.getByTestId('type-hangul-field')).toContainText('호여');
     await shot(page, 'type-hangul-320-typing');
     // Nothing is scored while typing.
@@ -156,9 +156,9 @@ test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () =>
 
     await page.getByTestId('type-hangul-fix').click();
     await expect(page.getByTestId('type-hangul-field')).toContainText('호여');
-    await key(page, 'delete').click();
+    await tapHangulKey(page, 'delete');
     await expect(page.getByTestId('type-hangul-field')).toContainText('홍');
-    await key(page, 'ㅑ').click();
+    await tapHangulKey(page, 'ㅑ');
     await page.getByTestId('type-hangul-done').click();
     await expect(page.getByText('You typed it!')).toBeVisible();
     await shot(page, 'type-hangul-320-pass');
@@ -190,21 +190,21 @@ test.describe('Type Hangul: the in-app two-set keyboard (F-CURR-001 G-3)', () =>
     await page.setViewportSize({ width: 375, height: 667 });
     await open(page, ['sentence']);
     await expect(key(page, 'ㄱ')).toHaveAttribute('aria-label', 'ㄱ, g or k');
-    await key(page, 'shift').click();
+    await tapHangulKey(page, 'shift');
     await expect(key(page, 'shift')).toHaveAttribute('aria-pressed', 'true');
     await expect(key(page, 'ㄱ')).toHaveAttribute('aria-label', 'ㄲ, kk or k');
     await expect(key(page, 'ㅁ')).toHaveAttribute('aria-label', 'ㅁ, m');
     await shot(page, 'type-hangul-375-shift');
-    await key(page, 'ㄱ').click();
+    await tapHangulKey(page, 'ㄱ');
     await expect(page.getByTestId('type-hangul-field')).toContainText('ㄲ');
     await expect(key(page, 'shift')).toHaveAttribute('aria-pressed', 'false');
     await expect(key(page, 'ㄱ')).toHaveAttribute('aria-label', 'ㄱ, g or k');
-    await key(page, 'delete').click();
+    await tapHangulKey(page, 'delete');
     await expect(page.getByTestId('type-hangul-done')).toBeDisabled();
     await expectKeysInWindow(page, 375, 667, { w: 75, h: 64 });
 
     await typeText(page, '저는 호야예요');
-    await key(page, 'space').click();
+    await tapHangulKey(page, 'space');
     await expect(page.getByTestId('type-hangul-field')).toContainText('저는 호야예요');
     await page.getByTestId('type-hangul-done').click();
     await expect(page.getByText('You typed it!')).toBeVisible();

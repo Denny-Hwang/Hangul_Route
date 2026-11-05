@@ -364,6 +364,13 @@ describe('TapTarget inside a board', () => {
     expect(renderTarget().props['aria-selected']).toBeUndefined();
   });
 
+  it('a toggle passes aria-pressed (the keyboard\'s Shift, KT-7); a target without it has none', () => {
+    inBoard();
+    expect(renderTarget({ ariaPressed: true }).props['aria-pressed']).toBe(true);
+    expect(renderTarget({ ariaPressed: false }).props['aria-pressed']).toBe(false);
+    expect('aria-pressed' in renderTarget().props).toBe(false);
+  });
+
   it('paints the board\'s press look, not the Pressable\'s', () => {
     inBoard([':t1:']);
     expect(textOf(renderTarget().props.children as ReactNode)).toBe('pressed');

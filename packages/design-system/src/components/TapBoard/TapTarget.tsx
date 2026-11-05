@@ -32,6 +32,7 @@ export function TapTarget({
   accessibilityRole = 'button',
   accessibilityState,
   ariaSelected,
+  ariaPressed,
   lockMs,
   gapFill = true,
   style,
@@ -72,6 +73,7 @@ export function TapTarget({
     ...(ariaSelected === undefined ? {} : { 'aria-selected': ariaSelected }),
     // Only a disabled target disables the Pressable: on native a `disabled={false}` would override the state above.
     disabled: disabled ? true : undefined,
+    ...(ariaPressed === undefined ? {} : { 'aria-pressed': ariaPressed }),
     testID,
     ...NO_PRESS_DELAY,
   } as const;

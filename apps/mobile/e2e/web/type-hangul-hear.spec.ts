@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { seedStored, pastTapLock } from './helpers';
+import { seedStored, pastTapLock, tapHangulKey } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -92,7 +92,7 @@ const key = (page: Page, id: string) => page.getByTestId(`hangul-key-${id}`);
 const log = (page: Page): Promise<Log> => page.evaluate(() => (window as E2eWindow).__hrTypeHangulE2E!.log());
 const said = (page: Page): Promise<string[]> => page.evaluate(() => (window as SpeechWindow).__utterances ?? []);
 async function typeKeys(page: Page, jamo: string): Promise<void> {
-  for (const j of jamo) await key(page, j).click();
+  for (const j of jamo) await tapHangulKey(page, j);
 }
 
 /** Every visible button and key of the game (the screen under `root`): at least 48 x 48 and inside the window's width. */
