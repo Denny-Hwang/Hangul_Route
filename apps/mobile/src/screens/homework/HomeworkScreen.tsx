@@ -20,12 +20,16 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { questsAll } from '../../content';
+import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { assignedByLabel, dueLabel, groupAssignments, homeworkWindow, showsTodayCount } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
+import { hiddenHomeworkOf, visibleHomework } from '../../logic/homework/plan-derivation';
+import { fromClassPillOf } from '../../logic/route/blend-view';
+import { flags } from '../../config/flags';
 import { useAudience } from '../../store/audience';
+import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useQuestAccess } from '../../store/tier-store';
@@ -47,7 +51,13 @@ export function HomeworkScreen(): ReactElement {
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
 
   const todayKey = new Date().toISOString().slice(0, 10);
-  const groups = useMemo(() => groupAssignments(snap?.homework ?? [], todayKey), [snap, todayKey]);
+  const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  // A resting own weekly plan's pending items, and own or family items a class plan also schedules, wait out of view,
+  // never late (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const groups = useMemo(
+    () => groupAssignments(snap ? visibleHomework(snap.homework, hiddenHomeworkOf(plans ?? [], snap.selfRoute, todayKey, episodesAll)) : [], todayKey),
+    [snap, plans, todayKey],
+  );
   const view = useMemo(() => homeworkWindow(groups, todayKey), [groups, todayKey]);
   const [laterOpen, setLaterOpen] = useState(false);
   const hasPlayed = (snap?.quests.length ?? 0) > 0;
@@ -179,6 +189,9 @@ function AssignmentRow({
   const m = messages.learner.homework;
   const title = questTitle(assignment.questId, m.questFallback, locale);
   const due = dueLabel(assignment.targetDate, todayKey, m.due);
+  // One From class pill; a lesson met in class adds the class glyph and says so (AMENDMENTS-ROUTE-CLASS-BLEND section 7).
+  const pill = fromClassPillOf({ enabled: flags.routeBlendEnabled, fromClass: assignment.fromClass, label: assignedByLabel(assignment, m.from), metLabel: messages.a11y.route.blend.fromClassMet });
+  const rowLabel = messages.a11y.homeworkRow(title, due);
   if (closed) {
     return (
       <View style={{ marginBottom: spacing.sm }} testID="homework-row-not-open">
@@ -187,7 +200,7 @@ function AssignmentRow({
             <Body weight="semibold" style={{ flex: 1 }}>
               {title}
             </Body>
-            <Pill tone="nudge" label={assignedByLabel(assignment, m.from)} size="sm" />
+            <Pill tone="nudge" size="sm" {...pill} testID="homework-row-pill" />
           </View>
           <Spacer size="xs" />
           <Caption tone="muted">{due}</Caption>
@@ -206,7 +219,7 @@ function AssignmentRow({
     <Pressable
       onPress={() => onPress(assignment)}
       accessibilityRole="button"
-      accessibilityLabel={messages.a11y.homeworkRow(title, due)}
+      accessibilityLabel={pill.accessibilityLabel === undefined ? rowLabel : `${rowLabel}. ${pill.accessibilityLabel}`}
       style={{ marginBottom: spacing.sm, minHeight: touchTarget.min }}
     >
       <Card padding="md">
@@ -214,7 +227,7 @@ function AssignmentRow({
           <Body weight="semibold" style={{ flex: 1 }}>
             {title}
           </Body>
-          <Pill tone="nudge" label={assignedByLabel(assignment, m.from)} size="sm" />
+          <Pill tone="nudge" size="sm" {...pill} testID="homework-row-pill" />
         </View>
         <Spacer size="xs" />
         <Caption tone="muted">{due}</Caption>

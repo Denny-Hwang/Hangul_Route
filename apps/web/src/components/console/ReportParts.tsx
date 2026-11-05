@@ -33,6 +33,7 @@ import type {
   ReportTab,
   ReportThisPeriod,
 } from '@/lib/console/report-view';
+import type { PracticeWeekView } from '@/lib/console/family-blend';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { PageBack } from './PageBack';
 import { headRem } from '@/lib/console/rem';
@@ -152,6 +153,11 @@ export const REPORT_CSS = `
 .hr-report-cal-none{background:${colors.surface.paper};border:${px(borderWidth.base)} solid ${colors.border.shape}}
 .hr-report-cal-not_saved{background:transparent;border:${px(borderWidth.base)} dashed ${colors.border.shape}}
 .hr-report-calendar-text{color:${colors.text.secondary};font-size:${rem(typography.size.bodySm)}}
+.hr-report-practice-week{display:flex;flex-wrap:wrap;align-items:center;gap:${rem(spacing.sm)} ${rem(spacing.md)}}
+.hr-report-practice-week p{margin:0}
+.hr-report-strip{display:flex;gap:${rem(spacing.xs)};margin:0;padding:0;list-style:none}
+.hr-report-strip li{width:${px(spacing.lg)};height:${px(spacing.lg)};border-radius:${px(radii.xs)};box-sizing:border-box;background:${colors.surface.paper};border:${px(borderWidth.base)} solid ${colors.border.shape}}
+.hr-report-strip li[data-on="true"]{background:${colors.feedback.success};border-color:${colors.feedback.successDark}}
 .hr-report-more{display:flex;flex-direction:column;gap:${rem(spacing.md)}}
 .hr-report-more>h2{font-size:${rem(typography.size.bodyLg)}}
 .hr-report-disclosure{display:flex;width:100%;align-items:center;justify-content:space-between;gap:${rem(spacing.sm)};min-height:${px(touchTarget.min)};padding:${rem(spacing.sm)} ${rem(spacing.lg)};border-radius:${px(radii.md)};border:${px(borderWidth.thin)} solid ${colors.border.strong};background:${colors.surface.paper};color:${colors.text.primary};font:inherit;font-size:${rem(typography.size.bodyLg)};font-weight:${typography.weight.bold};text-align:left;cursor:pointer}
@@ -774,6 +780,24 @@ export function ReportGrowthBlock({ growth }: { growth: ReportGrowthView }): JSX
   );
 }
 
+/**
+ * The family's practice-week line (AMENDMENTS-ROUTE-CLASS-BLEND section 11, BL-OD-11, row BL-9; wireframe
+ * parent/route-class-blend.md P2): the words, and 7 marks that fill from the start, hidden from screen readers (the
+ * words say it). No denominator, no weekday, no word for a day without practice.
+ */
+export function PracticeWeekBlock({ view }: { view: PracticeWeekView }): JSX.Element {
+  return (
+    <div className="hr-report-practice-week" data-testid="report-practice-week">
+      <p className="hr-report-calendar-text">{view.line}</p>
+      <ol className="hr-report-strip" aria-hidden="true" data-testid="report-practice-strip">
+        {Array.from({ length: 7 }, (_, index) => (
+          <li key={index} data-on={index < view.filled ? 'true' : 'false'} />
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /** This period (layer 2): figure tiles, then the calendar (a week or a month) or the growth block (All time). */
 export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPeriod; month: boolean }): JSX.Element | null {
   if (block.figures === null && block.calendar === null && block.growth === null) return null;
@@ -796,6 +820,7 @@ export function ReportThisPeriodBlock({ block, month }: { block: ReportThisPerio
       ) : null}
       {block.calendar ? <CalendarBlock calendar={block.calendar} month={month} /> : null}
       {block.growth ? <ReportGrowthBlock growth={block.growth} /> : null}
+      {block.practiceWeek ? <PracticeWeekBlock view={block.practiceWeek} /> : null}
     </section>
   );
 }

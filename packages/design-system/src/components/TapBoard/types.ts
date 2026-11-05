@@ -42,6 +42,11 @@ export interface TapTargetProps {
    */
   inactive?: boolean;
   accessibilityLabel: string;
+  /**
+   * Default `button`. A choice chip that keeps its on or off (a weekday, a count) is a `checkbox` or a `radio`, with
+   * `accessibilityState.checked`, which also goes out as `aria-checked` on the web (row BL-8).
+   */
+  accessibilityRole?: 'button' | 'checkbox' | 'radio';
   /** `disabled` is merged from the prop. */
   accessibilityState?: { selected?: boolean; disabled?: boolean; checked?: boolean };
   /** The target lock after a commit on a `target` board (default `TAP_LOCK_MS`; the keyboard's keys: `KEY_BOUNCE_MS`). */

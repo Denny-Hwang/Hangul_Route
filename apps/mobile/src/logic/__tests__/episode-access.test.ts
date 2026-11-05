@@ -129,7 +129,7 @@ describe('startedFromEpisode', () => {
     expect(startedFromEpisode('p1', next('q2'), 'q2')).toEqual({
       name: 'route.next_started',
       profileId: 'p1',
-      payload: { source: 'self', surface: 'episode' },
+      payload: { source: 'self', surface: 'episode', fromClass: false },
     });
     expect(startedFromEpisode('p1', next('q2'), 'q3')).toBeNull();
     expect(startedFromEpisode('p1', { kind: 'rest' }, 'q3')).toBeNull();

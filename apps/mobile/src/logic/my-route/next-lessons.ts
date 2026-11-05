@@ -52,6 +52,8 @@ export interface NextLessonRowView {
   episodeId: string;
   /** `routeNext`'s source for the first row (its `route.next_started`); the later rows send nothing. */
   source: NextSource;
+  /** A lesson met in class (`fromClass`, AMENDMENTS-ROUTE-CLASS-BLEND section 18): only when true. */
+  fromClass?: true;
   first: boolean;
   title: string;
   /** "Stage 1 · Meet the Letters". */
@@ -90,6 +92,7 @@ export function nextLessonRows(i: NextLessonRowsInput): NextLessonRowView[] {
       questId: lesson.questId,
       episodeId: lesson.episodeId,
       source: lesson.source,
+      ...(lesson.fromClass === true ? { fromClass: true as const } : {}),
       first,
       title,
       where,
@@ -105,7 +108,7 @@ export function nextLessonRows(i: NextLessonRowsInput): NextLessonRowView[] {
  * card's one next, so it is `route.next_started { source, surface: 'route' }`; a later row, and any row on the
  * grown-up's read-only page, sends nothing.
  */
-export function nextLessonTapEvent(row: Pick<NextLessonRowView, 'first' | 'source'>, profileId: string | undefined, readOnly: boolean): TelemetryEvent | null {
+export function nextLessonTapEvent(row: Pick<NextLessonRowView, 'first' | 'source' | 'fromClass'>, profileId: string | undefined, readOnly: boolean): TelemetryEvent | null {
   if (!row.first || readOnly) return null;
-  return nextStartedEvent(profileId, row.source, 'route');
+  return nextStartedEvent(profileId, row.source, 'route', row.fromClass === true);
 }

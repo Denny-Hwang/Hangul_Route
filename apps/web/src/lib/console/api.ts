@@ -727,7 +727,11 @@ export type TransferView = TransferSourceView | TransferDestinationView | Transf
 export interface TransferOption {
   learnerId: string;
   name: string;
-  classes: { spaceId: string; name: string }[];
+  /**
+   * `meeting` (AMENDMENTS-ROUTE-CLASS-BLEND row BL-9): how a class with practice days meets, from its own plan; absent for
+   * any other class and from a Worker before BL-9. Read through `meetingOf`, never trusted as sent.
+   */
+  classes: { spaceId: string; name: string; meeting?: unknown }[];
   selfManaged: boolean;
   blockTeacherRequests: boolean;
 }

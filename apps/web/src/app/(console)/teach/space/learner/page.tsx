@@ -24,7 +24,7 @@ import { useConsole } from '@/components/console/use-console';
 import { useVisibleRefresh } from '@/components/console/use-visible-refresh';
 import type { ApiResult, LearnerReportBody, SpaceListItem } from '@/lib/console/api';
 import { browseLinksShown } from '@/lib/console/browse-link';
-import { learningRouteEnabled, notesEnabled, reportsEnabled } from '@/lib/console/config';
+import { learningRouteEnabled, notesEnabled, reportsEnabled, routeBlendEnabled } from '@/lib/console/config';
 import { learningRouteView, type LearningRouteGoal } from '@/lib/console/learning-route-view';
 import { reportNoteLink } from '@/lib/console/notes-page';
 import { dateKey } from '@/lib/console/plans';
@@ -249,7 +249,7 @@ function LearnerReportInner(): JSX.Element {
     );
   }
 
-  const view = learnerReportView({ data: screen.data, query, now: new Date(), role, stageTitle: stageTitleIn(locale), learningRoute: routeOn, goal, locale });
+  const view = learnerReportView({ data: screen.data, query, now: new Date(), role, stageTitle: stageTitleIn(locale), learningRoute: routeOn, goal, routeBlend: routeBlendEnabled(), locale });
   if (view === null) {
     // A space kind with no learner report (a school): the same words as any report this viewer cannot open.
     return frame(

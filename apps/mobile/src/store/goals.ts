@@ -56,15 +56,17 @@ const clockReady = Promise.all([loadGoalClock(), loadInstallKey()]).then(() => {
 });
 
 /** An active weekly plan's days a week for the learner (F-PLAN-002), or null. */
-export function planDaysFor(profileId: string, snapshot: Pick<ProgressSnapshot, 'selfRoute'> | undefined, now: Date = new Date()): number | null {
+export function planDaysFor(profileId: string, snapshot: Pick<ProgressSnapshot, 'selfRoute' | 'practiceDays'> | undefined, now: Date = new Date()): number | null {
   const plans = usePlanStore.getState().byLearner[profileId] ?? [];
-  return planDaysInForce(sourcesOf(plans, snapshot?.selfRoute ?? null), utcDayKey(now));
+  const today = utcDayKey(now);
+  // A class plan with practice days counts its distinct days, the learner's own when moved (AMENDMENTS-ROUTE-CLASS-BLEND section 6.1).
+  return planDaysInForce(sourcesOf(plans, snapshot?.selfRoute ?? null, today), today, snapshot?.practiceDays);
 }
 
 /** A weekly plan's days a week on a given (earlier) day, for the latch's earlier weeks. */
-function planDaysOnFor(profileId: string, snapshot: Pick<ProgressSnapshot, 'selfRoute'>): (day: string) => number | null {
-  const sources = sourcesOf(usePlanStore.getState().byLearner[profileId] ?? [], snapshot.selfRoute ?? null);
-  return (day) => planDaysInForce(sources, day);
+function planDaysOnFor(profileId: string, snapshot: Pick<ProgressSnapshot, 'selfRoute' | 'practiceDays'>): (day: string) => number | null {
+  const plans = usePlanStore.getState().byLearner[profileId] ?? [];
+  return (day) => planDaysInForce(sourcesOf(plans, snapshot.selfRoute ?? null, day), day, snapshot.practiceDays);
 }
 
 /**
