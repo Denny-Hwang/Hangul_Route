@@ -55,6 +55,14 @@ export function selectedSection(
   return requested !== undefined && visible.includes(requested) ? requested : 'cards';
 }
 
+/**
+ * Whether a link to `requested` lands on the Cards section: the Library then shows the learner's own cards first, under
+ * the All filter, from the top (owner request OW-2: Home's Cards chip is one link to them).
+ */
+export function opensYourCards(requested: LibrarySectionId | undefined, visible: readonly LibrarySectionId[]): boolean {
+  return selectedSection(requested, visible) === 'cards';
+}
+
 /** The sections this build can draw (Words, the `theme-packs` slot, joined with F-VOC-003 C-4). */
 export const DRAWN_LIBRARY_SECTIONS: ReadonlySet<LibrarySectionId> = new Set<LibrarySectionId>(['cards', 'story-time', 'culture', 'theme-packs']);
 

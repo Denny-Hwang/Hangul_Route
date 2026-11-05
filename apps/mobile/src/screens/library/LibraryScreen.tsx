@@ -28,7 +28,7 @@ import {
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Fragment, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { CardArt } from '../../components/CardArt';
 import { themes } from '../../content';
@@ -50,7 +50,7 @@ import {
   type GalleryMode,
   gridRows,
 } from '../../logic/layout/pane-sizes';
-import { librarySectionTabs, selectedSection, type LibrarySectionId } from '../../logic/story/library-sections';
+import { librarySectionTabs, opensYourCards, selectedSection, type LibrarySectionId } from '../../logic/story/library-sections';
 import { sectionTitle, shelfCopy } from '../../logic/story/shelf-copy';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
@@ -98,11 +98,34 @@ export function LibraryScreen(): ReactElement {
   const requested = useRoute<RouteProp<MainTabParamList, 'Library'>>().params?.section;
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Library'>>();
   const [section, setSection] = useState<LibrarySectionId>(() => selectedSection(requested, sections));
+  // A link to the Cards section (Home's Cards chip, a stage's See my cards) also lands on the learner's own cards: the
+  // All filter and the top of the page, wherever the tab was left. The tab stays mounted, so a changed key draws
+  // its scroll area again, from the top.
+  const [cardsOpened, setCardsOpened] = useState(0);
+  // One link opens the cards once: this effect may run again before the cleared param arrives (`sections` is a new array
+  // on every render), and the page is not drawn again from the top for that.
+  const linkHandled = useRef(false);
+  // The tab's first open through a link is already the All filter from the top: only a tab that was left somewhere is reset.
+  const wasDrawn = useRef(false);
   // A deep link (`params.section`) selects its section, then is cleared so the same link works again.
   // Switching tabs is local state only: not persisted, no navigation.
   useEffect(() => {
-    if (requested === undefined) return;
+    const fresh = !wasDrawn.current;
+    wasDrawn.current = true;
+    if (requested === undefined) {
+      linkHandled.current = false;
+      return;
+    }
     setSection(selectedSection(requested, sections));
+    if (!linkHandled.current && opensYourCards(requested, sections)) {
+      linkHandled.current = true;
+      if (!fresh) {
+        setFilter('all');
+        // Keyboard focus is not pulled onto the Cards tab: the page starts at its top.
+        setTabFocus(false);
+        setCardsOpened((n) => n + 1);
+      }
+    }
     tabNavigation.setParams({ section: undefined });
   }, [requested, sections, tabNavigation]);
   const tabsShown = sections.length > 0;
@@ -390,7 +413,7 @@ export function LibraryScreen(): ReactElement {
   }
 
   return (
-    <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={screenWidth} scrollable={!paneMode} header={rootHeader}>
+    <Screen key={cardsOpened} tone="canvas" edges={TAB_SCREEN_EDGES} width={screenWidth} scrollable={!paneMode} header={rootHeader}>
       <SplitPane master={gallery} detail={detail} masterLabel={m.panes.master} detailLabel={m.panes.detail} detailScrolls={false} />
     </Screen>
   );
@@ -403,6 +426,9 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
     <GuardedPressable
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      // react-native-web reads the ARIA prop, not `accessibilityState`: a button that is on or off is `aria-pressed`.
+      aria-pressed={active}
       style={{ minHeight: touchTarget.min, minWidth: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
     >
       <View
