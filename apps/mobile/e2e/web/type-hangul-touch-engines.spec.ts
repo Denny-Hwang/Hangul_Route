@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { Touchscreen, pointIn } from './touch';
+import { FULL_MATRIX } from './touch-matrix';
 import { SyntheticTouchscreen } from './touch-synthetic';
 
 /**
@@ -84,7 +85,8 @@ test.describe('the forgiving tap in the engines (AMENDMENTS-TOUCH KT-12)', () =>
     await open(page, 'board');
     const touch = new SyntheticTouchscreen(page);
     const centre = await pointIn(page, 'tap-target-0');
-    const moves = [0, 8, 16, 24, 32].flatMap((d) => [{ dx: 0, dy: d }, { dx: d, dy: 0 }, { dx: 0, dy: -d }, { dx: -d, dy: 0 }]);
+    // CI: both axes, one direction each (nine moves); E2E_TOUCH_MATRIX=full: all four directions (the 20 of the KT-1 matrix).
+    const moves = [0, 8, 16, 24, 32].flatMap((d) => (FULL_MATRIX ? [{ dx: 0, dy: d }, { dx: d, dy: 0 }, { dx: 0, dy: -d }, { dx: -d, dy: 0 }] : d === 0 ? [{ dx: 0, dy: 0 }] : [{ dx: 0, dy: d }, { dx: -d, dy: 0 }]));
     for (const m of moves) {
       await touch.graze(centre, m.dx, m.dy);
       await page.waitForTimeout(AFTER_LOCK);

@@ -1,6 +1,7 @@
 import type { CDPSession, Page } from '@playwright/test';
 import { FLING_DECAY, FLING_FRAME_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
+import { FULL_MATRIX } from './touch-matrix';
 
 /**
  * AMENDMENTS-TOUCH row KT-12, assumption U5 (section 10): a board-driven scroll with `FLING_DECAY` feels close enough to
@@ -16,7 +17,7 @@ import { expect, test } from './fixtures';
  *
  * The tuning rule of `FLING_DECAY` (docs/specs/AMENDMENTS-TOUCH.md section 10, U5): at every flick the board's gain is
  * between the two phone engines' gains (the lower less 20 %, the higher plus 25 %, for a release speed that varies a
- * little from run to run), and over the four flicks it averages 260 to 380 ms, around the geometric middle of the two
+ * little from run to run), and over the flicks it averages 260 to 380 ms, around the geometric middle of the two
  * engines over this range of speeds (about 335 ms; the theoretical gain of 0.95 per 16 ms is 320 ms, and the frames
  * measure 275 to 350). The felt comparison on a real phone stays an owner check.
  *
@@ -128,12 +129,18 @@ test.describe('board-driven fling against the phone engines (AMENDMENTS-TOUCH KT
   test.use({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true });
 
   // [travel px, moves, ms between moves]: release speeds from about 0.5 to 3 px/ms.
-  const FLICKS: ReadonlyArray<readonly [number, number, number]> = [
-    [160, 8, 40],
-    [200, 8, 24],
-    [240, 8, 14],
-    [320, 8, 10],
-  ];
+  // CI runs the middle two (the shards have 20 minutes); E2E_TOUCH_MATRIX=full runs all four.
+  const FLICKS: ReadonlyArray<readonly [number, number, number]> = FULL_MATRIX
+    ? [
+        [160, 8, 40],
+        [200, 8, 24],
+        [240, 8, 14],
+        [320, 8, 10],
+      ]
+    : [
+        [200, 8, 24],
+        [320, 8, 10],
+      ];
 
   test('the gain of a board-driven fling sits between iOS and Android, around their geometric middle', async ({ page }) => {
     test.setTimeout(180_000);

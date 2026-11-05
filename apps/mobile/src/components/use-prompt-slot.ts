@@ -27,6 +27,12 @@ export interface PromptSlot {
   reset: () => void;
   /** The panel button: Turn sound on / Try again / Tap to hear. `replay` plays the prompt once. */
   act: (action: FallbackAction, replay: () => void) => void;
+  /**
+   * Whether the text this slot shows without a play is decided: the voice check is over (or cannot change it: sound off, a
+   * bundled clip). Until then the screen holds its answers (`<TapBoard held={!slot.settled}>`), so "No sound? Read it
+   * here." never comes in above answers already on screen and moves them under a finger. Once true, stays true.
+   */
+  settled: boolean;
 }
 
 export interface PromptSlotOptions {
@@ -60,12 +66,17 @@ export function usePromptSlot({
   const tts = useAudioStore((s) => s.tts);
   const clips = useAudioStore((s) => s.clips);
   const unlocked = useAudioStore((s) => s.unlocked);
+  const voiceCheckPending = useAudioStore((s) => s.voiceCheckPending);
   const epoch = useRef(0);
+  // Answers once shown are never hidden again, whatever the store says later.
+  const revealed = useRef(false);
   const copy = useMessages().learner.audio;
 
   const capability = { tts, clips, unlocked };
   const clip = hasClip && clips;
   const view = promptPanelView(state, capability, muted, clip, copy);
+  const settled = revealed.current || muted || clip || !voiceCheckPending;
+  revealed.current = settled;
 
   // Mute and capability changes reach the slot as events, so text shown in a round stays (no flicker). An item whose
   // clip arrives late (its pack chunk) clears a "no Korean voice" text: with a clip it was never true.
@@ -104,5 +115,5 @@ export function usePromptSlot({
     if (action !== 'none') replay();
   }, []);
 
-  return { view, play, reset, act };
+  return { view, play, reset, act, settled };
 }

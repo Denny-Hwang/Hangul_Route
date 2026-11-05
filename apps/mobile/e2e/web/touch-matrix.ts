@@ -25,17 +25,24 @@ export async function clearDevice(page: Page, baseURL: string | undefined): Prom
 /** `touchTarget.min`: the floor of every answer target. */
 export const TARGET_MIN = touchTarget.min;
 
+/**
+ * `E2E_TOUCH_MATRIX=full` runs every board at both profiles with all nine grazes and the fit audit (on demand, as
+ * `E2E_WEBKIT=1`). The default is the smoke set CI runs: it has to fit the PWA e2e shards' 20 minutes, which the
+ * whole suite already uses most of.
+ */
+export const FULL_MATRIX = process.env.E2E_TOUCH_MATRIX === 'full';
+
 export type Box = { x: number; y: number; width: number; height: number };
 
 export const centre = (b: Box): TouchPoint => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
 export const inside = (p: TouchPoint, b: Box): boolean => p.x >= b.x && p.x <= b.x + b.width && p.y >= b.y && p.y <= b.y + b.height;
 
 /** Past the 400 ms lock, with room for a busy machine's slow event dispatch. */
-export const AFTER_LOCK = 700;
+export const AFTER_LOCK = 500;
 /** Past the lock and a miss's 800 ms replay (which can move the cards). */
 export const AFTER_MISS = 1_200;
 /** How long a move that must commit nothing is watched: past the lock, the replay and a right answer's 700 ms advance. */
-export const WATCH_MS = 1_800;
+export const WATCH_MS = 1_400;
 /** `colors.border.shape`, the press look's outline (section 4.3). */
 export const PRESS_OUTLINE = 'rgb(133, 115, 96)';
 /** The 0.97 shrink of the press look as a computed transform. */
@@ -222,7 +229,7 @@ export function gapBetween(a: Box, b: Box): number {
   return Math.hypot(dx, dy);
 }
 
-/** The graze matrix of section 11.2: 0, 8, 16, 24 and 32 px on both axes, in an order whose first five cover every distance. */
+/** The graze matrix of section 11.2: 0, 8, 16, 24 and 32 px on both axes, in an order whose first five cover every distance and both axes. */
 export const MATRIX: ReadonlyArray<{ dx: number; dy: number; holdMs?: number }> = [
   { dx: 0, dy: 0, holdMs: 900 },
   { dx: 0, dy: 8 },
@@ -239,6 +246,8 @@ export const MATRIX: ReadonlyArray<{ dx: number; dy: number; holdMs?: number }> 
 export const DISTANCES = [0, 8, 16, 24, 32] as const;
 
 export interface MatrixOptions {
+  /** How many entries of `MATRIX` to run (default 5, whose first five cover every distance and both axes; `FULL_MATRIX` runs all nine). */
+  grazes?: number;
   /** The board's name, for failure messages. */
   name: string;
   /** Reaches a fresh run of the game from nothing (a new device), for when a run ends before the matrix does. */
@@ -296,7 +305,7 @@ async function grazeAndExpectCommit(page: Page, touch: Touchscreen, at: TouchPoi
 export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions): Promise<MatrixResult> {
   const viewport = viewportOf(page);
   const committed: string[] = [];
-  const queue = [...MATRIX];
+  const queue = MATRIX.slice(0, o.grazes ?? 5);
   let scrolled = false;
   let runs = 1;
   let checkedNothing = false;
@@ -420,6 +429,6 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
       `${o.name}: a ${d} px move committed (${committed.join(' ')})`,
     ).toBe(true);
   }
-  o.note('matrix', `${o.name}: ${committed.length} of ${MATRIX.length} grazes committed (${committed.join(' ')}) in ${runs} run(s)`);
+  o.note('matrix', `${o.name}: ${committed.length} of ${o.grazes ?? 5} grazes committed (${committed.join(' ')}) in ${runs} run(s)`);
   return { committed, scrolled, runs };
 }
