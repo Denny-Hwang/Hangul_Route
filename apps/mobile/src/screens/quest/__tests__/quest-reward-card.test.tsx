@@ -28,8 +28,13 @@ const REWARD = QUEST.steps.findIndex((s) => s.kind === 'reward');
 const mounted: ReactTestRenderer[] = [];
 
 /** The reward step of the Seollal quest after a run of `correct` of `total` first-try rounds. */
-async function rewardStep(correct: number, total: number, ownsCard: ((id: string) => boolean) | undefined): Promise<string> {
-  const ports = { start: () => REWARD, end: vi.fn(), finish: vi.fn(), leave: vi.fn(), track: vi.fn(), ...(ownsCard ? { ownsCard } : {}) };
+async function rewardStep(
+  correct: number,
+  total: number,
+  ownsCard: ((id: string) => boolean) | undefined,
+  completesEpisode?: (episodeId: string, questId: string) => boolean,
+): Promise<string> {
+  const ports = { start: () => REWARD, end: vi.fn(), finish: vi.fn(), leave: vi.fn(), track: vi.fn(), ...(ownsCard ? { ownsCard } : {}), ...(completesEpisode ? { completesEpisode } : {}) };
   const r = await render(
     <QuestPlayerView questId={QUEST.id} episodeId="episode:stage1-rites" ports={ports} onOpenGame={() => undefined} onBack={() => undefined} reviewsFor={null} />,
   );
@@ -72,10 +77,16 @@ describe('the reward step tells the truth about the quest card (OW-3)', () => {
     expect(text).toContain('You also get it when you finish every quest in New Year & Festivals');
   });
 
-  it('with every game skipped (0 stars) it says the same, without a judgement of the run', async () => {
+  it('with every game skipped nothing is judged or saved, so the authored lines stay and Results says nothing either', async () => {
     const text = await rewardStep(0, 0, () => false);
-    expect(text).toContain('The Lunar New Year card is waiting');
-    expect(text).not.toMatch(/fail|wrong|miss|lost/i);
+    expect(text).not.toContain('is waiting');
+    expect(text).toContain('Seollal Card!');
+  });
+
+  it('a 1-star run that finishes the episode keeps the authored lines: the episode brings the card, Results celebrates it', async () => {
+    const text = await rewardStep(2, 5, () => false, (episodeId, questId) => episodeId === 'episode:stage1-rites' && questId === QUEST.id);
+    expect(text).not.toContain('is waiting');
+    expect(text).toContain('Seollal Card!');
   });
 
   it('a replay of a quest whose card is already held keeps the authored lines, at any stars: nothing is waiting', async () => {

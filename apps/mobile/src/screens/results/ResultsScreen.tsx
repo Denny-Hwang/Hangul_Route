@@ -71,7 +71,7 @@ import { awardWorldOf, useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
-import { useQuestCardLines } from '../quest/reward-card-note';
+import { completesEpisode, useQuestCardLines } from '../quest/reward-card-note';
 import { CardUnlockBanner } from './CardUnlockBanner';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { recordActivityPointsLater, useGoalsChunk, type GoalMoment } from '../../store/goals-entry';
@@ -202,7 +202,15 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const rewardCardId = quest?.rewardCardId;
   const waitingLines = useQuestCardLines(
     questId,
-    outcome !== null && played && cardWaits({ rewardCardId, stars, held: snapshot?.cards.some((c) => c.cardId === rewardCardId) ?? false }),
+    outcome !== null &&
+      snapshot !== undefined &&
+      cardWaits({
+        rewardCardId,
+        stars,
+        held: snapshot.cards.some((c) => c.cardId === rewardCardId),
+        played,
+        episodeCompletes: completesEpisode(snapshot, episodeId, questId),
+      }),
   );
 
   // The cards an episode, stage or set completion brought besides the quest card (F-STORY-006 §3.7).

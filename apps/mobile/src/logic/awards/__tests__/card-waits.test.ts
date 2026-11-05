@@ -8,18 +8,26 @@ import { cardWaits } from '../../reward';
 
 describe('cardWaits (F-STORY-006 §3.1, F-MOTION-003 §3.5)', () => {
   it('a quest with no card has nothing waiting', () => {
-    expect(cardWaits({ rewardCardId: undefined, stars: 1, held: false })).toBe(false);
+    expect(cardWaits({ rewardCardId: undefined, stars: 1, held: false, played: true, episodeCompletes: false })).toBe(false);
   });
 
   it('under 2 stars a card not held waits; 2 and 3 stars earn it, so nothing waits', () => {
-    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 0, held: false })).toBe(true);
-    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 1, held: false })).toBe(true);
-    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 2, held: false })).toBe(false);
-    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 3, held: false })).toBe(false);
+    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 0, held: false, played: true, episodeCompletes: false })).toBe(true);
+    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 1, held: false, played: true, episodeCompletes: false })).toBe(true);
+    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 2, held: false, played: true, episodeCompletes: false })).toBe(false);
+    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 3, held: false, played: true, episodeCompletes: false })).toBe(false);
+  });
+
+  it('a run that finishes the episode never leaves the card waiting: the episode brings it at any stars', () => {
+    for (const stars of [0, 1] as const) expect(cardWaits({ rewardCardId: 'card:seollal', stars, held: false, played: true, episodeCompletes: true })).toBe(false);
+  });
+
+  it('a run with every game skipped judges nothing and says nothing about the card', () => {
+    expect(cardWaits({ rewardCardId: 'card:seollal', stars: 0, held: false, played: false, episodeCompletes: false })).toBe(false);
   });
 
   it('a card already held never waits, at any stars', () => {
-    for (const stars of [0, 1, 2, 3] as const) expect(cardWaits({ rewardCardId: 'card:seollal', stars, held: true })).toBe(false);
+    for (const stars of [0, 1, 2, 3] as const) expect(cardWaits({ rewardCardId: 'card:seollal', stars, held: true, played: true, episodeCompletes: false })).toBe(false);
   });
 });
 

@@ -246,7 +246,15 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   const rewardCardId = quest?.rewardCardId;
   const cardLines = useQuestCardLines(
     questId,
-    onReward && !!ports.ownsCard && cardWaits({ rewardCardId, stars: questOutcome(runCorrect, runTotal).stars, held: !!rewardCardId && ports.ownsCard(rewardCardId) }),
+    onReward &&
+      !!ports.ownsCard &&
+      cardWaits({
+        rewardCardId,
+        stars: questOutcome(runCorrect, runTotal).stars,
+        held: !!rewardCardId && ports.ownsCard(rewardCardId),
+        played: questOutcome(runCorrect, runTotal).played,
+        episodeCompletes: ports.completesEpisode?.(episodeId, questId) ?? false,
+      }),
   );
   useEffect(() => {
     if (!onReward) return undefined;
@@ -403,7 +411,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
       ) : (
         <NarrativeStepBody
           copy={q}
-          line={cardLines ? { message: cardLines.line } : narrativeLine(step, q.keepGoing)}
+          line={cardLines ? { ...narrativeLine(step, q.keepGoing), message: cardLines.line } : narrativeLine(step, q.keepGoing)}
           onContinue={advance}
           isReward={step.kind === 'reward'}
           actions={

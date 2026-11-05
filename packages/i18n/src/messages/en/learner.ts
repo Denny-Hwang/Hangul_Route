@@ -490,7 +490,7 @@ export const learner = {
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Card gallery', detail: 'Card details' },
     /** The first shelf (owner request 2026-10-16, item 8): the cards the learner holds. */
-    yours: { title: 'Your cards', empty: 'Your first card is waiting. Finish a quest to earn it.' },
+    yours: { title: 'Your cards', empty: 'Your first card is waiting. Get 2 stars in a quest to earn it.' },
     /**
      * The second shelf: cards still to find, one row per episode, story, stage or set (`logic/library/shelves.ts`),
      * with one Next card hint for the shelf. Never a count of what is left (D3).

@@ -35,6 +35,11 @@ export interface QuestPlayerPorts {
    * and keeps the quest's authored lines.
    */
   ownsCard?(cardId: string): boolean;
+  /**
+   * Whether finishing this quest finishes its episode (F-STORY-006 §3.1): the episode then brings the quest's card at any
+   * stars, so the reward step must not call it waiting. Absent means no.
+   */
+  completesEpisode?(episodeId: string, questId: string): boolean;
 }
 
 /** The honest outcome of a run plus its retries (telemetry only, never scored). */

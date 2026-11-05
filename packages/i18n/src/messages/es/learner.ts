@@ -346,7 +346,7 @@ export const learner = {
       welcome: 'La tarjeta del tigre Hoya es un regalo de bienvenida.',
     },
     panes: { master: 'Galería', detail: 'Detalle de tarjeta' },
-    yours: { title: 'Tus tarjetas', empty: 'Tu primera tarjeta te espera. Termina una misión para ganarla.' },
+    yours: { title: 'Tus tarjetas', empty: 'Tu primera tarjeta te espera. Consigue 2 estrellas en una misión para ganarla.' },
     toFind: {
       title: 'Por encontrar',
       next: 'Siguiente tarjeta',

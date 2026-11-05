@@ -16,7 +16,7 @@ import { useFrozenCurrFlag } from '../../store/remote-config-store';
 import { useStoryStore } from '../../store/story-store';
 import { useQuestAccess } from '../../store/tier-store';
 import { QuestPlayerView } from './QuestPlayerView';
-import { holdsCard } from './reward-card-note';
+import { holdsCard, profileCompletesEpisode } from './reward-card-note';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
 
@@ -81,6 +81,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): ReactElement | 
   const ports: QuestPlayerPorts = {
     ...session,
     ownsCard: (cardId) => holdsCard(learnerId, cardId),
+    completesEpisode: (episode, quest) => profileCompletesEpisode(learnerId, episode, quest),
     ...learnerQuestExits({
       questId,
       episodeId,

@@ -327,7 +327,7 @@ export const learner = {
       welcome: '호야의 호랑이 카드는 환영 선물이에요.',
     },
     panes: { master: '카드 목록', detail: '카드 정보' },
-    yours: { title: '내 카드', empty: '첫 카드가 기다리고 있어요. 퀘스트를 끝내면 받아요.' },
+    yours: { title: '내 카드', empty: '첫 카드가 기다리고 있어요. 퀘스트에서 별을 2개 받으면 받아요.' },
     toFind: {
       title: '찾을 카드',
       next: '다음 카드',

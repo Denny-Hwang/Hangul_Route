@@ -1,3 +1,4 @@
+import { requiredQuestIds, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { cardById, episodeById, questById } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard, localizeEpisode } from '../../logic/content-locale';
@@ -6,6 +7,26 @@ import { useProgressStore } from '../../store/progress-store';
 /** Whether a profile's saved snapshot holds a card now (read at call time; no profile or snapshot holds none). */
 export function holdsCard(profileId: string | null, cardId: string): boolean {
   return profileId !== null && (useProgressStore.getState().byProfile[profileId]?.cards.some((c) => c.cardId === cardId) ?? false);
+}
+
+/**
+ * Whether finishing `questId` finishes its episode for a snapshot: the quest is one of the episode's required quests and
+ * every other required quest is done (a one-quest shelf episode always is). Such a run brings the quest's card as an
+ * episode card at any stars (F-STORY-006 §3.1), so it never leaves that card waiting. The same rule as the award
+ * engine's `isEpisodeComplete`, with this quest counted as done.
+ */
+export function completesEpisode(snapshot: Pick<ProgressSnapshot, 'quests'> | undefined, episodeId: string, questId: string): boolean {
+  const episode = episodeById(episodeId);
+  if (!episode || (episode.status !== 'shipped' && episode.status !== 'ready')) return false;
+  const required = requiredQuestIds(episode);
+  if (!required.includes(questId)) return false;
+  const done = new Set((snapshot?.quests ?? []).filter((q) => q.episodeId === episodeId && q.completedAt).map((q) => q.questId));
+  return required.every((id) => id === questId || done.has(id));
+}
+
+/** `completesEpisode` for a profile's saved snapshot, read at call time. */
+export function profileCompletesEpisode(profileId: string | null, episodeId: string, questId: string): boolean {
+  return completesEpisode(profileId === null ? undefined : useProgressStore.getState().byProfile[profileId], episodeId, questId);
 }
 
 /**
