@@ -19,7 +19,7 @@
       "blurbEn": "Read how to borrow a book at the library desk.",
       "teaserEn": "Next: find the shelf you want.",
       "estimatedMinutes": 5,
-      "addedIn": 20261103,
+      "addedIn": 20261107,
       "steps": [
         {
           "id": "s1",
@@ -444,7 +444,7 @@
       "blurbEn": "Ask the librarian where the books you want are.",
       "teaserEn": "Next: a visit to the bookshop.",
       "estimatedMinutes": 5,
-      "addedIn": 20261103,
+      "addedIn": 20261107,
       "steps": [
         {
           "id": "s1",
@@ -872,7 +872,7 @@
       "titleEn": "At the Bookshop",
       "blurbEn": "Find a book about Hangul at the bookshop.",
       "estimatedMinutes": 5,
-      "addedIn": 20261103,
+      "addedIn": 20261107,
       "steps": [
         {
           "id": "s1",
