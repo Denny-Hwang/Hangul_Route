@@ -23,7 +23,7 @@ describe('learner.library (F-STORY-006 §3.7)', () => {
 
   it('explains each award rule in one short sentence', () => {
     expect(l.how.title).toBe('How to collect more');
-    expect(l.how.quest).toBe('Finish a quest to earn its card.');
+    expect(l.how.quest).toBe('Get 2 stars in a quest to earn its card.');
     expect(l.how.episode).toBe('Finish every quest in an episode to earn more cards.');
     expect(l.how.stage(1)).toBe('Finish all of Stage 1 for the legendary cards.');
     expect(l.how.story).toBe('Finish a story to earn its card.');

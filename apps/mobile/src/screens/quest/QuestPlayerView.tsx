@@ -23,6 +23,8 @@ import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-m
 import { localizeQuest } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
+import { cardWaits } from '../../logic/reward';
+import { questOutcome } from '../../logic/quest-outcome';
 import {
   checkCompletedPayload,
   discoverCompletedPayload,
@@ -45,6 +47,7 @@ import { useStoryQuestState } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 import { CultureTip } from './culture-tip-entry';
+import { useQuestCardLines } from './reward-card-note';
 import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
 import { pacingWanted, questPacingChunk, type QuestPacingChunk } from './quest-pacing';
 import { useLessonClips } from '../../platform/audio-assets-store';
@@ -235,6 +238,24 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // when this play had first-try misses; See results stays right under it. Planned once the reward step shows.
   const onReward = !!quest && step?.kind === 'reward' && stepIndex === quest.steps.length - 1;
   const [again, setAgain] = useState<ReviewPhase>(NO_REVIEW);
+  // The quest's own card is earned at 2 stars and kept for later under that (F-STORY-006 §3.1, F-MOTION-003 §3.5): on the
+  // reward step the card lines say what this run did, so "joins your library" is never said of a card the run did not earn.
+  // The All lessons preview has no `ownsCard` and keeps the authored lines.
+  const runCorrect = useQuestRunStore((s) => s.correctCount);
+  const runTotal = useQuestRunStore((s) => s.totalCount);
+  const rewardCardId = quest?.rewardCardId;
+  const cardLines = useQuestCardLines(
+    questId,
+    onReward &&
+      !!ports.ownsCard &&
+      cardWaits({
+        rewardCardId,
+        stars: questOutcome(runCorrect, runTotal).stars,
+        held: !!rewardCardId && ports.ownsCard(rewardCardId),
+        played: questOutcome(runCorrect, runTotal).played,
+        episodeCompletes: ports.completesEpisode?.(episodeId, questId) ?? false,
+      }),
+  );
   useEffect(() => {
     if (!onReward) return undefined;
     const missed = useQuestRunStore.getState().missed;
@@ -367,7 +388,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
       </View>
 
       <Spacer size="lg" />
-      <Heading level="title">{step.titleEn}</Heading>
+      <Heading level="title">{cardLines?.title ?? step.titleEn}</Heading>
       <Spacer size="xs" />
       <Pill tone="primary" label={questStepLabel(step.kind, q.step)} size="sm" />
 
@@ -390,7 +411,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
       ) : (
         <NarrativeStepBody
           copy={q}
-          line={narrativeLine(step, q.keepGoing)}
+          line={cardLines ? { ...narrativeLine(step, q.keepGoing), message: cardLines.line } : narrativeLine(step, q.keepGoing)}
           onContinue={advance}
           isReward={step.kind === 'reward'}
           actions={
