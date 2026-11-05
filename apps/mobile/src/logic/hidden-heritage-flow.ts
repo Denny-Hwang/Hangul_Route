@@ -239,3 +239,100 @@ export function spotRect(spot: HiddenHeritageSpot, sceneWidth: number): { left: 
   const k = sceneWidth / SCENE_UNITS.width;
   return { left: spot.x * k, top: spot.y * k, width: spot.w * k, height: spot.h * k };
 }
+
+/** A spot's hit rectangle in dp (docs/specs/AMENDMENTS-TOUCH.md section 6.6), and per axis whether it is boxed in. */
+export interface SpotHitRect {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  /**
+   * Per axis: bounded on both sides (a neighbour's midline or the scene edge) with less than `touchTarget.min` between
+   * the bounds, so the rectangle takes exactly that room (KT-D8, the one exception to 64).
+   */
+  boxed: { x: boolean; y: boolean };
+}
+
+type Axis = 'x' | 'y';
+type Span = [lo: number, hi: number];
+/** Below this, two edges are the same edge (floating point of `k * units`). */
+const EPS = 1e-6;
+const across = (axis: Axis): Axis => (axis === 'x' ? 'y' : 'x');
+const overlap = (a: Span, b: Span): boolean => a[0] < b[1] - EPS && b[0] < a[1] - EPS;
+
+/** Grows a drawn span toward `min` inside its bounds: shared evenly, and what one side lacks goes to the other. */
+function grow(drawn: Span, bounds: Span, min: number): { span: Span; boxed: boolean } {
+  const need = min - (drawn[1] - drawn[0]);
+  if (need <= 0) return { span: drawn, boxed: false };
+  if (bounds[1] - bounds[0] < min - EPS) return { span: [bounds[0], bounds[1]], boxed: true };
+  const before = drawn[0] - bounds[0];
+  const after = bounds[1] - drawn[1];
+  const right = Math.min(after, need - Math.min(before, need / 2));
+  const left = Math.min(before, need - right);
+  return { span: [drawn[0] - left, drawn[1] + right], boxed: false };
+}
+
+/**
+ * Every spot's hit rectangle on a scene drawn `sceneWidth` wide (section 6.6), in the order of `spots`. Per axis the
+ * drawn rectangle grows toward `touchTarget.min`; the room on each side ends at the scene edge or at the midline of the
+ * gap to the nearest spot on that side whose drawn rectangle overlaps this one's span on the other axis. Growth is
+ * shared evenly between the sides, and what one side cannot take goes to the other, so a spot at the edge grows inward.
+ * A spot boxed in on an axis (less than 64 between its bounds) takes all of that room and is reported `boxed`. A last
+ * pass cuts two hit rectangles that still overlap (diagonal neighbours) at the midline of the axis on which their drawn
+ * rectangles are farther apart, and grows each again on that axis, so the room the cut took goes to the free side. A
+ * hit rectangle is never smaller than its drawn one, never overlaps another, and stays inside the scene. No schema or
+ * content change: the drawn spots stay as authored (`HIDDEN_HERITAGE_SPOT`). `min` is `touchTarget.min` (the screen
+ * passes the token: this logic module imports no design-system code at run time).
+ */
+export function spotHitRects(spots: readonly HiddenHeritageSpot[], sceneWidth: number, min: number): SpotHitRect[] {
+  const extent: Record<Axis, number> = { x: sceneWidth, y: (sceneWidth * SCENE_UNITS.height) / SCENE_UNITS.width };
+  const drawn = spots.map((s) => {
+    const r = spotRect(s, sceneWidth);
+    return { x: [r.left, r.left + r.width] as Span, y: [r.top, r.top + r.height] as Span };
+  });
+  const bounds = drawn.map((d, i) => {
+    const of = (axis: Axis): Span => {
+      let [lo, hi] = [0, extent[axis]];
+      drawn.forEach((o, j) => {
+        if (j === i || !overlap(d[across(axis)], o[across(axis)])) return;
+        if (o[axis][1] <= d[axis][0] + EPS) lo = Math.max(lo, (o[axis][1] + d[axis][0]) / 2);
+        else if (o[axis][0] >= d[axis][1] - EPS) hi = Math.min(hi, (d[axis][1] + o[axis][0]) / 2);
+      });
+      return [lo, hi];
+    };
+    return { x: of('x'), y: of('y') };
+  });
+  const hit = drawn.map((d, i) => ({ x: grow(d.x, bounds[i]!.x, min), y: grow(d.y, bounds[i]!.y, min) }));
+
+  // Diagonal neighbours: each cut separates one pair for good (bounds only tighten), so this ends.
+  for (let pass = 0; pass <= spots.length * spots.length; pass += 1) {
+    let pair: [number, number] | null = null;
+    for (let i = 0; i < hit.length && pair === null; i += 1) {
+      for (let j = i + 1; j < hit.length; j += 1) {
+        if (overlap(hit[i]!.x.span, hit[j]!.x.span) && overlap(hit[i]!.y.span, hit[j]!.y.span)) {
+          pair = [i, j];
+          break;
+        }
+      }
+    }
+    if (pair === null) break;
+    const [i, j] = pair;
+    const a = drawn[i]!;
+    const b = drawn[j]!;
+    const gap = (axis: Axis): number => Math.max(b[axis][0] - a[axis][1], a[axis][0] - b[axis][1]);
+    const axis: Axis = gap('x') >= gap('y') ? 'x' : 'y';
+    const [first, second] = a[axis][0] <= b[axis][0] ? [i, j] : [j, i];
+    const mid = (drawn[first]![axis][1] + drawn[second]![axis][0]) / 2;
+    bounds[first]![axis][1] = Math.min(bounds[first]![axis][1], mid);
+    bounds[second]![axis][0] = Math.max(bounds[second]![axis][0], mid);
+    for (const k of [first, second]) hit[k]![axis] = grow(drawn[k]![axis], bounds[k]![axis], min);
+  }
+
+  return hit.map((h) => ({
+    left: h.x.span[0],
+    top: h.y.span[0],
+    width: h.x.span[1] - h.x.span[0],
+    height: h.y.span[1] - h.y.span[0],
+    boxed: { x: h.x.boxed, y: h.y.boxed },
+  }));
+}

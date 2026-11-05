@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { keysFor } from '@hangul-route/content-schema';
+import { TAP_LOCK_MS } from '@hangul-route/design-system/tap-model';
 import { expect, test } from './fixtures';
 import { keepSidewaysIfAsked, seedStored } from './helpers';
 import { shot } from './shots';
@@ -91,6 +92,8 @@ test.describe('Write Frame: my own sentence and My page (F-CURR-001 G-5)', () =>
     // Change word goes back with the pick kept; 떡볶이 ends in a vowel: 를.
     await page.getByTestId('write-frame-change-word').click();
     await expect(page.getByTestId('write-frame-word-1')).toHaveAttribute('aria-selected', 'true');
+    // Past the word bank's answer lock (TAP_LOCK_MS, AMENDMENTS-TOUCH KT-6) since the first pick.
+    await page.waitForTimeout(TAP_LOCK_MS + 50);
     await page.getByTestId('write-frame-word-0').click();
     await expect(page.getByTestId('write-frame-ending')).toHaveText('를');
     await expect(page.getByTestId('write-frame-notice')).toHaveText('를 after 떡볶이');

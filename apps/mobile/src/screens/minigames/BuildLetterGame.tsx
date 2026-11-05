@@ -9,8 +9,15 @@ import {
   Screen,
   Spacer,
   SyllableBlock,
+  TAP_LOCK_MS,
+  TapBoard,
+  TapTarget,
   Tile,
+  borderWidth,
   colors,
+  pressTransform,
+  usePressLook,
+  useTapLock,
   radii,
   spacing,
   touchTarget,
@@ -39,6 +46,8 @@ const TARGET = 160;
 const TARGET_GLYPH = 80;
 const SLOT = 72;
 const HINT_CELL = 40;
+/** The wrong attempt shows its hint this long, then the slots empty (the board is locked meanwhile, AMENDMENTS-TOUCH 6.5). */
+const WRONG_RESET_MS = 900;
 
 interface Props {
   scope: MinigameScope;
@@ -70,6 +79,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
   const slot = usePromptSlot({ source: 'build-letter', textOnScreen: true });
   const { play, reset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
+  const tapLock = useTapLock();
+  const press = usePressLook();
 
   useEffect(() => {
     setSelected([]);
@@ -94,12 +105,10 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
     return sel.every((id, i) => id === round.componentJamoIds[i]);
   };
 
+  // AMENDMENTS-TOUCH 6.5 (R2): a used tray tile stays disabled, so a second tap on it never takes it back; a tile comes
+  // back only from its filled slot (`takeBack`). Nothing is taken while the right block shows or the wrong one resets.
   const handleTile = (jamoId: string): void => {
-    if (feedback === 'correct') return;
-    if (selected.includes(jamoId)) {
-      setSelected(selected.filter((id) => id !== jamoId));
-      return;
-    }
+    if (feedback !== 'idle' || selected.includes(jamoId)) return;
     const next = [...selected, jamoId];
     if (next.length > round.componentJamoIds.length) return;
     setSelected(next);
@@ -110,6 +119,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         success();
         answerRound(roundIdx, true, { texts: [round.targetSyllable], rung: 'produce' });
         setFeedback('correct');
+        // The round-ending commit locks the app clock, so the next round's board mounts locked (KT-D5).
+        tapLock.lock(TAP_LOCK_MS);
         setTimeout(() => {
           if (roundIdx >= rounds.length - 1) {
             markStepComplete();
@@ -122,12 +133,21 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         nudge();
         answerRound(roundIdx, false, { texts: [round.targetSyllable], rung: 'produce' });
         setFeedback('wrong');
+        // Taps during the reset are swallowed, not accepted and then wiped.
+        tapLock.lock(WRONG_RESET_MS);
         setTimeout(() => {
           setSelected([]);
           setFeedback('idle');
-        }, 900);
+        }, WRONG_RESET_MS);
       }
     }
+  };
+
+  /** A tap on a filled slot: that tile goes back to the tray, and the tiles after it shift left. */
+  const takeBack = (slot: number): void => {
+    if (feedback !== 'idle' || selected[slot] === undefined) return;
+    setSelected(selected.filter((_, i) => i !== slot));
+    tapLight();
   };
 
   return (
@@ -179,57 +199,82 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         {copy.buildLetter.slots}
       </Caption>
       <Spacer size="xs" />
-      <SyllableBlock
-        vowel={shape.vowel}
-        hasFinal={shape.hasFinal}
-        renderCell={({ index: i }) => {
-          const filled = selected[i];
-          const jamoChar = filled ? jamoAll.find((j) => j.id === filled)?.char ?? '' : '';
-          return (
-            <View
-              key={i}
-              style={{
-                width: slotSize,
-                height: slotSize,
-                borderRadius: radii.lg,
-                borderWidth: 2,
-                borderColor: filled ? colors.brand.primary : colors.border.subtle,
-                borderStyle: filled ? 'solid' : 'dashed',
-                backgroundColor: filled ? colors.brand.primaryLight : colors.surface.paper,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: slotGlyph, fontWeight: '700' }}>{jamoChar}</Text>
-            </View>
-          );
-        }}
-      />
+      {/* One board for the slots and the tray (AMENDMENTS-TOUCH 6.5, row KT-6), `target` lock: a filled slot is a take-back
+          target that gap fill never reaches, so a bounce on the tray never lands on it. */}
+      <TapBoard lock="target">
+        <SyllableBlock
+          vowel={shape.vowel}
+          hasFinal={shape.hasFinal}
+          renderCell={({ index: i }) => {
+            const filled = selected[i];
+            const j = filled ? jamoAll.find((x) => x.id === filled) : undefined;
+            const slotBox = (p: ReturnType<typeof usePressLook> | null): ReactElement => (
+              <View
+                style={{
+                  width: slotSize,
+                  height: slotSize,
+                  borderRadius: radii.lg,
+                  borderWidth: p?.borderWidth ?? borderWidth.base,
+                  borderColor: p?.borderColor ?? (filled ? colors.brand.primary : colors.border.subtle),
+                  borderStyle: filled ? 'solid' : 'dashed',
+                  backgroundColor: filled ? colors.brand.primaryLight : colors.surface.paper,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: pressTransform(p),
+                }}
+              >
+                <Text {...KOREAN_LINE_BREAK} style={{ fontSize: slotGlyph, fontWeight: '700' }}>{j?.char ?? ''}</Text>
+              </View>
+            );
+            if (!j) return <View key={i} testID={`build-letter-slot-${i}`}>{slotBox(null)}</View>;
+            return (
+              <TapTarget
+                key={i}
+                testID={`build-letter-slot-${i}`}
+                gapFill={false}
+                disabled={feedback !== 'idle'}
+                accessibilityLabel={copy.buildLetter.takeBack(tileAccessibilityLabel(j, m.a11y.minigame.finalTile) ?? j.romanization)}
+                onCommit={() => takeBack(i)}
+              >
+                {({ pressed }) => slotBox(pressed && feedback === 'idle' ? press : null)}
+              </TapTarget>
+            );
+          }}
+        />
 
-      <Spacer size="lg" />
-      <Caption tone="muted" align="center">
-        {copy.buildLetter.tiles}
-      </Caption>
-      <Spacer size="xs" />
-      <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
-        {round.tileJamoIds.map((id) => {
-          const j = jamoAll.find((x) => x.id === id);
-          if (!j) return null;
-          const used = selected.includes(id);
-          return (
-            <Tile
-              key={id}
-              label={j.char}
-              romanization={j.romanization}
-              accessibilityLabel={tileAccessibilityLabel(j, m.a11y.minigame.finalTile)}
-              size="md"
-              dimension={tile}
-              state={used ? 'disabled' : 'idle'}
-              onPress={() => handleTile(id)}
-            />
-          );
-        })}
-      </View>
+        <Spacer size="lg" />
+        <Caption tone="muted" align="center">
+          {copy.buildLetter.tiles}
+        </Caption>
+        <Spacer size="xs" />
+        <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
+          {round.tileJamoIds.map((id) => {
+            const j = jamoAll.find((x) => x.id === id);
+            if (!j) return null;
+            const label = tileAccessibilityLabel(j, m.a11y.minigame.finalTile);
+            const used = selected.includes(id);
+            // A used tile stays a (disabled) target of the board, so a second tap on it is claimed and does nothing:
+            // it never reaches a neighbour through gap fill (KT-D6).
+            return used ? (
+              <TapTarget key={id} testID={`build-letter-tile-${id}`} disabled accessibilityLabel={label ?? j.char} onCommit={() => undefined}>
+                {() => <Tile label={j.char} romanization={j.romanization} accessibilityLabel={label} size="md" dimension={tile} state="disabled" />}
+              </TapTarget>
+            ) : (
+              <Tile
+                key={id}
+                testID={`build-letter-tile-${id}`}
+                label={j.char}
+                romanization={j.romanization}
+                accessibilityLabel={label}
+                size="md"
+                dimension={tile}
+                state="idle"
+                onPress={() => handleTile(id)}
+              />
+            );
+          })}
+        </View>
+      </TapBoard>
 
       {feedback === 'wrong' ? (
         <>

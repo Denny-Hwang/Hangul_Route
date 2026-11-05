@@ -166,8 +166,11 @@ describe('claimTarget (rules 1 and 2)', () => {
     const z: TapTargetSnapshot = { id: 'Z', rect: { x: 104, y: 0, width: 96, height: 96 }, gapFill: false };
     // 3 px from Z, 5 px from A: A.
     expect(claimTarget({ x: 101, y: 48 }, [A, z])).toBe('A');
-    // 3 px from Z with A out of reach: nothing.
-    expect(claimsTouch({ x: 101, y: 48 }, [z])).toBe(false);
+    // 3 px from Z with A out of reach: nobody's, yet the board takes it (KT-6), so the browser's touch adjustment cannot
+    // send its click into Z; past GAP_REACH it falls through.
+    expect(claimTarget({ x: 101, y: 48 }, [z])).toBeNull();
+    expect(claimsTouch({ x: 101, y: 48 }, [z])).toBe(true);
+    expect(claimsTouch({ x: 104 - GAP_REACH - 1, y: 48 }, [z])).toBe(false);
     expect(claimTarget({ x: 110, y: 48 }, [A, z])).toBe('Z');
   });
 });

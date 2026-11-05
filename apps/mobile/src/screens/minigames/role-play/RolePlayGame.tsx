@@ -10,6 +10,9 @@ import {
   Progress,
   Screen,
   Spacer,
+  TapBoard,
+  TapScroller,
+  TapTarget,
   borderWidth,
   colors,
   motion,
@@ -18,12 +21,15 @@ import {
   touchTarget,
   typography,
   useLayoutClass,
+  usePressLook,
   useTypeScale,
+  pressInset,
+  pressTransform,
   KOREAN_LINE_BREAK,
 } from '@hangul-route/design-system';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Platform, Pressable, ScrollView, Text, View, useWindowDimensions, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { Platform, ScrollView, Text, View, useWindowDimensions, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../../components/VoiceHelpSheet';
@@ -40,6 +46,7 @@ import { useReducedMotion } from '../../../platform/motion';
 import { announceForScreenReader, focusForScreenReader } from '../../../platform/screen-reader';
 import { useAudioStore } from '../../../store/audio-store';
 import type { MinigameHost } from '../host';
+import { useScrollViewScroller } from '../use-scroll-view-scroller';
 
 /**
  * Role Play, read and tap (F-CURR-002 section 7.1 F6, row CM-35): design/wireframes/minigame/role-play.md and
@@ -498,6 +505,8 @@ function Replies(props: RepliesProps): ReactElement {
   const { onKeep } = props;
   // Hoya's why line opens at the top of the area, so a nudge is always read where it appears.
   const scrollRef = useRef<ScrollView | null>(null);
+  // The replies' own scroller: their board drives it, so a drag past 32 px on a reply scrolls the replies (rule 5).
+  const drive = useScrollViewScroller('y');
   const { whyId } = props;
   useEffect(() => {
     if (whyId !== null) scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -527,16 +536,24 @@ function Replies(props: RepliesProps): ReactElement {
       </View>
       <View style={{ flexShrink: 1 }}>
         <ScrollView
-          ref={scrollRef}
+          ref={(node: ScrollView | null) => {
+            scrollRef.current = node;
+            drive.props.ref(node);
+          }}
           key={props.turn}
           style={{ flexShrink: 1 }}
           contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.xs, paddingBottom: spacing.xs }}
           onLayout={(e: LayoutChangeEvent) => {
+            drive.measure.onLayout(e);
             const height = e.nativeEvent.layout.height;
             setView((v) => ({ ...v, height }));
           }}
-          onContentSizeChange={(_w: number, content: number) => setView((v) => ({ ...v, content }))}
+          onContentSizeChange={(w: number, content: number) => {
+            drive.measure.onContentSizeChange(w, content);
+            setView((v) => ({ ...v, content }));
+          }}
           onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+            drive.props.onScroll(e);
             const offset = e.nativeEvent.contentOffset.y;
             setView((v) => ({ ...v, offset }));
           }}
@@ -544,17 +561,24 @@ function Replies(props: RepliesProps): ReactElement {
           testID="role-play-replies"
         >
           {why ? <WhyBubble parts={why} /> : null}
-          {replies.map((r, i) => (
-            <ReplyBubble
-              key={r.id}
-              reply={r}
-              wrongLabel={props.wrongLabel}
-              hintLabel={props.hintLabel}
-              onTap={() => props.onTap(r.id)}
-              refFor={(node) => props.refFor(r.id, node)}
-              onLayout={i === 0 ? setFirstH : undefined}
-            />
-          ))}
+          {/* The replies on one `board` board (AMENDMENTS-TOUCH section 6, row KT-6); the game's own sending lock stays. */}
+          <TapScroller scroller={drive.scroller}>
+            <TapBoard lock="board">
+              <View style={{ gap: spacing.sm }}>
+                {replies.map((r, i) => (
+                  <ReplyBubble
+                    key={r.id}
+                    reply={r}
+                    wrongLabel={props.wrongLabel}
+                    hintLabel={props.hintLabel}
+                    onTap={() => props.onTap(r.id)}
+                    refFor={(node) => props.refFor(r.id, node)}
+                    onLayout={i === 0 ? setFirstH : undefined}
+                  />
+                ))}
+              </View>
+            </TapBoard>
+          </TapScroller>
         </ScrollView>
         {more ? <ScrollCue label={props.moreLabel} /> : null}
       </View>
@@ -577,6 +601,7 @@ interface ReplyBubbleProps {
 
 function ReplyBubble({ reply, wrongLabel, hintLabel, onTap, refFor, onLayout }: ReplyBubbleProps): ReactElement {
   const textScale = useTypeScale();
+  const press = usePressLook();
   const locked = reply.look === 'locked';
   const ring = reply.look === 'lookHere';
   const name = locked ? wrongLabel(replyName(reply)) : ring ? hintLabel(replyName(reply)) : replyName(reply);
@@ -587,36 +612,44 @@ function ReplyBubble({ reply, wrongLabel, hintLabel, onTap, refFor, onLayout }: 
       style={{ margin: -borderWidth.thick, borderRadius: radii.xl, borderWidth: borderWidth.thick, borderColor: ring ? colors.border.focus : 'transparent' }}
       testID={ring ? 'role-play-ring' : undefined}
     >
-      <Pressable
-        ref={(node) => refFor(node as Focusable | null)}
-        accessibilityRole="button"
+      <TapTarget
+        pressableRef={(node) => refFor(node as Focusable | null)}
         accessibilityLabel={name}
-        accessibilityState={{ disabled: reply.disabled }}
         disabled={reply.disabled}
-        onPress={onTap}
+        onCommit={onTap}
         testID={`role-play-reply-${reply.id}`}
-        style={{
-          minHeight: touchTarget.child,
-          justifyContent: 'center',
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.xs,
-          borderRadius: radii.xl,
-          borderWidth: locked ? borderWidth.thick : borderWidth.base,
-          borderColor: locked ? colors.feedback.nudge : colors.border.subtle,
-          backgroundColor: locked ? colors.feedback.nudgeLight : reply.look === 'sending' ? colors.brand.secondaryLight : colors.surface.paper,
-        }}
       >
-        <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-          {reply.ko}
-        </Text>
-        <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.romanization}</Text>
-        {reply.meaning ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.meaning}</Text> : null}
-        {locked ? (
-          <View style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }} {...hidden}>
-            <Icon name="dash" size={spacing.lg} color={colors.text.secondary} />
-          </View>
-        ) : null}
-      </Pressable>
+        {({ pressed }) => {
+          const rest = locked ? borderWidth.thick : borderWidth.base;
+          const p = pressed && !reply.disabled ? press : null;
+          return (
+            <View
+              style={{
+                minHeight: touchTarget.child,
+                justifyContent: 'center',
+                paddingHorizontal: spacing.lg - pressInset(p, rest),
+                paddingVertical: Math.max(0, spacing.xs - pressInset(p, rest)),
+                borderRadius: radii.xl,
+                borderWidth: p?.borderWidth ?? rest,
+                borderColor: p?.borderColor ?? (locked ? colors.feedback.nudge : colors.border.subtle),
+                backgroundColor: locked ? colors.feedback.nudgeLight : reply.look === 'sending' ? colors.brand.secondaryLight : colors.surface.paper,
+                transform: pressTransform(p),
+              }}
+            >
+              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.bodyLg, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                {reply.ko}
+              </Text>
+              <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.romanization}</Text>
+              {reply.meaning ? <Text {...KOREAN_LINE_BREAK} style={{ fontSize: textScale.size.bodySm, color: colors.text.secondary }}>{reply.meaning}</Text> : null}
+              {locked ? (
+                <View style={{ position: 'absolute', top: spacing.xs, right: spacing.xs }} {...hidden}>
+                  <Icon name="dash" size={spacing.lg} color={colors.text.secondary} />
+                </View>
+              ) : null}
+            </View>
+          );
+        }}
+      </TapTarget>
     </View>
   );
 }

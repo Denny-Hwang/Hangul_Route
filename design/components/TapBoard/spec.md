@@ -31,9 +31,9 @@ Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board 
 | `onCommit` | `() => void` | Called once per tap, after the board's rules (`AMENDMENTS-TOUCH.md` §3.2) |
 | `disabled` | `boolean?` | Claimed, never pressed, never committed (a locked wrong tile) |
 | `inactive` | `boolean?` | KT-2. For the board like `disabled` (claimed, never pressed, never committed), but the button stays enabled and focusable and its `accessibilityState` is the caller's (an answered ChoiceCard, `correct` or a locked miss) |
-| `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it |
+| `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it; a touch in its gap band that no other target fills is taken by the board and commits nothing (KT-6) |
 | `accessibilityLabel` | `string` | Required |
-| `accessibilityRole` | `'button' \| 'checkbox' \| 'radio'`, default `button` | A choice chip that keeps its on or off (My practice days' weekday and count chips, AMENDMENTS-ROUTE-CLASS-BLEND BL-8) is a `checkbox` or `radio`; `accessibilityState.checked` also goes out as `aria-checked` on the web |
+| `accessibilityRole` | `'button' \| 'checkbox' \| 'radio'`, default `button` | A choice chip that keeps its on or off (My practice days' weekday and count chips, AMENDMENTS-ROUTE-CLASS-BLEND BL-8) is a `checkbox` or `radio` (a toggle answer such as Voice Echo's "I said it" is a `checkbox`, KT-6); `accessibilityState.checked` also goes out as `aria-checked` on the web |
 | `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept). |
 | `ariaSelected` | `boolean?` | Opt-in, web: written as `aria-selected` (react-native-web reads only `disabled` from `accessibilityState`). Never derived from `accessibilityState.selected`, since ARIA does not allow it on `button`; only Card Match's Korean cards pass it, as their Pressable did before KT-4b |
 | `lockMs` | `number?` | The target lock after a commit on a `target` board (default `TAP_LOCK_MS`); the keyboard's keys pass `KEY_BOUNCE_MS` (KT-7) |

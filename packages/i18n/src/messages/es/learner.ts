@@ -574,6 +574,7 @@ export const learner = {
         besideFinal: 'La vocal va al lado de la primera letra. La última letra va abajo.',
         underFinal: 'La vocal va debajo de la primera letra. La última letra va abajo.',
       },
+      takeBack: (name: string) => `Quitar ${name}`,
     },
     trace: {
       heading: (romanization: string) => `Traza la letra ${romanization}`,

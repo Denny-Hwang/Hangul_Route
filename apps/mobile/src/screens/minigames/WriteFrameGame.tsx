@@ -13,6 +13,10 @@ import {
   Screen,
   SectionTabs,
   Spacer,
+  KEY_BOUNCE_MS,
+  TapBoard,
+  TapScroller,
+  TapTarget,
   borderWidth,
   colors,
   keyboardLayout,
@@ -24,6 +28,9 @@ import {
   touchTarget,
   typography,
   useLayoutClass,
+  usePressLook,
+  pressInset,
+  pressTransform,
   KOREAN_LINE_BREAK,
   useTypeScale,
 } from '@hangul-route/design-system';
@@ -32,6 +39,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, Ref, ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
+import { useScrollViewScroller } from './use-scroll-view-scroller';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { fieldView } from '../../logic/type-hangul/flow';
@@ -449,19 +457,22 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false, chain }
         <Spacer size="md" />
         <Body>{w.pick}</Body>
         <Spacer size="sm" />
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="write-frame-bank">
-          {bankOf(state.slotIdx).map((word, index) => (
-            <WordCard
-              key={word.ko}
-              word={word}
-              selected={state.picks[state.slotIdx] === index}
-              romanizationVisible={romanizationVisible}
-              columns={columns}
-              onPress={() => pickWord(index)}
-              testID={`write-frame-word-${index}`}
-            />
-          ))}
-        </View>
+        {/* The word bank on one `board` board (AMENDMENTS-TOUCH section 6, row KT-6): a pick moves on, so a bounce never picks twice. */}
+        <TapBoard lock="board">
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="write-frame-bank">
+            {bankOf(state.slotIdx).map((word, index) => (
+              <WordCard
+                key={word.ko}
+                word={word}
+                selected={state.picks[state.slotIdx] === index}
+                romanizationVisible={romanizationVisible}
+                columns={columns}
+                onPress={() => pickWord(index)}
+                testID={`write-frame-word-${index}`}
+              />
+            ))}
+          </View>
+        </TapBoard>
         <Spacer size="lg" />
         {skipButton('md', true)}
         {politeLine}
@@ -770,36 +781,45 @@ function WordCard({ word, selected, romanizationVisible, columns, onPress, testI
   const textScale = useTypeScale();
   const m = useMessages();
   const label = m.a11y.koreanItem({ ko: word.ko, romanization: word.romanization, gloss: word.en });
+  const press = usePressLook();
   return (
-    <Pressable
-      accessibilityRole="button"
+    <TapTarget
       accessibilityLabel={label}
       accessibilityState={{ selected }}
-      aria-selected={selected}
-      onPress={onPress}
+      onCommit={onPress}
       testID={testID}
-      style={({ pressed }) => ({
-        flexBasis: `${Math.floor(100 / columns) - 4}%`,
-        flexGrow: 1,
-        minHeight: touchTarget.child,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing.sm,
-        gap: spacing.xxs,
-        borderRadius: radii.lg,
-        borderWidth: selected ? borderWidth.thick : borderWidth.base,
-        borderColor: pressed ? colors.border.focus : selected ? colors.brand.secondaryDark : colors.border.subtle,
-        backgroundColor: selected ? colors.brand.secondaryLight : colors.surface.paper,
-      })}
+      style={{ flexBasis: `${Math.floor(100 / columns) - 4}%`, flexGrow: 1 }}
     >
-      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-        {word.ko}
-      </Text>
-      {romanizationVisible ? <Caption tone="secondary">{word.romanization}</Caption> : null}
-      <Caption tone="secondary" align="center">
-        {word.en}
-      </Caption>
-    </Pressable>
+      {({ pressed }) => {
+        const rest = selected ? borderWidth.thick : borderWidth.base;
+        const p = pressed ? press : null;
+        return (
+          <View
+            style={{
+              flexGrow: 1,
+              minHeight: touchTarget.child,
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: spacing.sm - pressInset(p, rest),
+              gap: spacing.xxs,
+              borderRadius: radii.lg,
+              borderWidth: p?.borderWidth ?? rest,
+              borderColor: p?.borderColor ?? (selected ? colors.brand.secondaryDark : colors.border.subtle),
+              backgroundColor: selected ? colors.brand.secondaryLight : colors.surface.paper,
+              transform: pressTransform(p),
+            }}
+          >
+            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+              {word.ko}
+            </Text>
+            {romanizationVisible ? <Caption tone="secondary">{word.romanization}</Caption> : null}
+            <Caption tone="secondary" align="center">
+              {word.en}
+            </Caption>
+          </View>
+        );
+      }}
+    </TapTarget>
   );
 }
 
@@ -819,34 +839,47 @@ function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPan
   const m = useMessages();
   const w = m.learner.minigame.writeFrame.name;
   const a = m.a11y.minigame;
+  const press = usePressLook();
+  // The sound tiles type like keys (AMENDMENTS-TOUCH section 6, row KT-6): a `target` board where a repeat on the same
+  // tile within `KEY_BOUNCE_MS` is a bounce, and two different tiles in quick succession both type.
   const tile = (ko: string, romanization: string, final: boolean): ReactElement => (
-    <Pressable
+    <TapTarget
       key={ko}
-      accessibilityRole="button"
       accessibilityLabel={a.writeFrame.tile(ko, a11yRomanization(romanization))}
-      onPress={() => onTile(final ? [ko] : keysFor(ko))}
+      onCommit={() => onTile(final ? [ko] : keysFor(ko))}
+      lockMs={KEY_BOUNCE_MS}
       testID={`write-frame-tile-${ko}`}
-      style={({ pressed }) => ({
-        minWidth: touchTarget.min,
-        minHeight: touchTarget.min,
-        paddingHorizontal: spacing.xs,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: radii.lg,
-        borderWidth: borderWidth.base,
-        borderColor: pressed ? colors.border.focus : colors.border.subtle,
-        backgroundColor: final ? colors.surface.sunken : colors.surface.paper,
-      })}
     >
-      <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-        {ko}
-      </Text>
-      <Caption tone="secondary">{romanization}</Caption>
-    </Pressable>
+      {({ pressed }) => {
+        const p = pressed ? press : null;
+        return (
+          <View
+            style={{
+              minWidth: touchTarget.min,
+              minHeight: touchTarget.min,
+              paddingHorizontal: Math.max(0, spacing.xs - pressInset(p, borderWidth.base)),
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: radii.lg,
+              borderWidth: p?.borderWidth ?? borderWidth.base,
+              borderColor: p?.borderColor ?? colors.border.subtle,
+              backgroundColor: final ? colors.surface.sunken : colors.surface.paper,
+              transform: pressTransform(p),
+            }}
+          >
+            <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+              {ko}
+            </Text>
+            <Caption tone="secondary">{romanization}</Caption>
+          </View>
+        );
+      }}
+    </TapTarget>
   );
+  const drive = useScrollViewScroller('y');
   return (
     <View style={{ height, width, alignSelf: 'center', backgroundColor: colors.surface.paper }} testID="write-frame-sounds">
-      <ScrollView contentContainerStyle={{ paddingHorizontal: gutter || spacing.sm, paddingVertical: spacing.sm, gap: spacing.sm }}>
+      <ScrollView {...drive.props} contentContainerStyle={{ paddingHorizontal: gutter || spacing.sm, paddingVertical: spacing.sm, gap: spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Body weight="bold">{w.sounds}</Body>
           <Pressable
@@ -868,17 +901,23 @@ function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPan
             <Icon name="backspace" size={spacing.xl} color={colors.text.primary} />
           </Pressable>
         </View>
-        {table.groups.map((group, g) => (
-          <View key={g} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
-            {group.map((t) => tile(t.ko, t.romanization, false))}
-          </View>
-        ))}
-        {table.finals.length > 0 ? (
-          <>
-            <Body weight="bold">{w.atTheEnd}</Body>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>{table.finals.map((t) => tile(t.ko, t.romanization, true))}</View>
-          </>
-        ) : null}
+        <TapScroller scroller={drive.scroller}>
+          <TapBoard lock="target">
+            <View style={{ gap: spacing.sm }}>
+              {table.groups.map((group, g) => (
+                <View key={g} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                  {group.map((t) => tile(t.ko, t.romanization, false))}
+                </View>
+              ))}
+              {table.finals.length > 0 ? (
+                <>
+                  <Body weight="bold">{w.atTheEnd}</Body>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>{table.finals.map((t) => tile(t.ko, t.romanization, true))}</View>
+                </>
+              ) : null}
+            </View>
+          </TapBoard>
+        </TapScroller>
       </ScrollView>
     </View>
   );

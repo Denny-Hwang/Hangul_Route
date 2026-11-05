@@ -58,7 +58,7 @@ async function play(
           <WriteFrameGame scope={scope} host={h} />
         </RomanizationModeOverride>
       </LayoutProvider>,
-      { createNodeMock: () => ({ focus: domFocus, addEventListener: () => undefined, removeEventListener: () => undefined }) },
+      { createNodeMock: () => ({ focus: domFocus, addEventListener: () => undefined, removeEventListener: () => undefined, nodeType: 1, getBoundingClientRect: () => ({ left: 0, top: 0, width: 0, height: 0 }) }) },
     );
   });
   mounted.push(r);
