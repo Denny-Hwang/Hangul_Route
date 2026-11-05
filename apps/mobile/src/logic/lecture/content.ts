@@ -1,4 +1,4 @@
-import type { Overlays, UiLocale } from '@hangul-route/content-schema';
+import type { Episode, Overlays, UiLocale } from '@hangul-route/content-schema';
 import { cardById, episodeById, jamoAll, jamoKnown, questById } from '../../content';
 import type { AudioCapability } from '../audio/capability';
 import { clipRefsFor, type PlaySpec } from '../audio/controller';
@@ -9,6 +9,15 @@ import { scopeFor } from '../minigame-config';
 import type { LectureBundle } from './deck-builder';
 import { lectureStories } from './sources/story';
 import { lectureVocabTopics } from './sources/vocab';
+import { lessonContent } from '../../content/lessons';
+import { storyContent } from '../../content/stories';
+
+/**
+ * A later volume whose body is not on this device (offline, its stage not saved: F-CURR-002 row CM-5B) reads as an
+ * unknown id, so the chooser leaves its row out and a deck that holds it skips the block, never a slide with no steps.
+ */
+const laterBodyIn = (episode: Episode): boolean =>
+  (episode.volume ?? 1) < 2 || (episode.questIds.every((id) => lessonContent.isQuestReady(id)) && (episode.storyIds ?? []).every((id) => storyContent.isStoryReady(id)));
 
 /**
  * The presenter's content (F-TCH-004 §3.3, §3.13).
@@ -81,11 +90,12 @@ export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBun
     },
     questById: (id) => {
       const quest = questById(id);
-      return quest && localizeQuest(quest, locale, overlays);
+      // A lesson quest whose cell is not in (a later volume, row CM-5B) has no steps to show.
+      return quest && lessonContent.isQuestReady(id) ? localizeQuest(quest, locale, overlays) : undefined;
     },
     episodeById: (id) => {
       const episode = episodeById(id);
-      return episode && localizeEpisode(episode, locale, overlays);
+      return episode && laterBodyIn(episode) ? localizeEpisode(episode, locale, overlays) : undefined;
     },
     cardById: (id) => {
       const card = cardById(id);

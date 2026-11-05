@@ -29,8 +29,9 @@ export const BUDGET_USD = 50;
 
 /**
  * The pilot (AC-5, section 11): all 65 jamo clips, 10 words with a sound change and 6 sentences, about 81 rows.
- * The first four words are the spec's probes (nasalization, liquidization, palatalization, h-aspiration); they are
- * not in the content, so they are generated for the pilot only and never shipped. The other six are content words
+ * The first four words are the spec's probes (nasalization, liquidization, palatalization, h-aspiration); a probe
+ * that is not in the content is generated for the pilot only and never shipped, and one the content teaches (국물,
+ * Letters Volume 2 S2) is its manifest row. The other six are content words
  * with a sound change: 박물관 [방물관], 설날 [설랄], 한글날 [한글랄], 집현전 [지편전], 학교 [학꾜], 부엌 [부억].
  */
 export const PILOT_PROBE_WORDS = ['국물', '신라', '같이', '좋다'];
@@ -125,7 +126,9 @@ export function pilotRows(rows, keys) {
     if (row === undefined) throw new Error(`pilot text "${text}" is not in ${MANIFEST_FILE}; pick another from the content`);
     return row;
   };
-  return [...jamo, ...PILOT_PROBE_WORDS.map((t) => probeRow(t, keys)), ...PILOT_CONTENT_WORDS.map(pick), ...PILOT_SENTENCES.map(pick)];
+  // A probe the content later teaches (국물, F-CURR-002 row CM-44 S2) is its manifest row, so the pilot says it as it ships.
+  const probe = (text) => byText.get(text) ?? probeRow(text, keys);
+  return [...jamo, ...PILOT_PROBE_WORDS.map(probe), ...PILOT_CONTENT_WORDS.map(pick), ...PILOT_SENTENCES.map(pick)];
 }
 
 /** The rows a command generates: --pilot or --pack, then narrowed by --only (keys or refs). */

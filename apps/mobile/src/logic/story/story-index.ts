@@ -1,6 +1,6 @@
 import type { Episode, Quest, StageKey, Story, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import { flags } from '../../config/flags';
-import { episodesAll } from '../../content/episodes';
+import { episodesAll, episodesWithVolumes } from '../../content/episodes';
 import { questsAll } from '../../content/quests';
 import { storiesAll } from '../../content/stories';
 import { storyTierLevels } from './story-chunk-store';
@@ -148,15 +148,21 @@ export function entriesForCell(index: readonly StoryIndexEntry[], stage: StageKe
 }
 
 let cached: readonly StoryIndexEntry[] | undefined;
+let cachedWithVolumes: readonly StoryIndexEntry[] | undefined;
 
-/** The bundle's index, built on first use and memoised for the life of the app. */
-export function defaultStoryIndex(): readonly StoryIndexEntry[] {
-  cached ??= buildStoryIndex({
-    stories: storiesAll,
-    episodes: episodesAll,
-    quests: questsAll,
-    showUnreviewed: flags.showUnreviewedStories,
-    levelsOf: storyTierLevels,
-  });
+const indexOver = (episodes: readonly Episode[]): StoryIndexEntry[] =>
+  buildStoryIndex({ stories: storiesAll, episodes, quests: questsAll, showUnreviewed: flags.showUnreviewedStories, levelsOf: storyTierLevels });
+
+/**
+ * The bundle's index, built on first use and memoised for the life of the app. It reads the route's episodes, so a
+ * book 2 (Volume 2, F-CURR-002 row CM-46) is not in it; `{ volumes: true }` adds the later volumes, for the cell page
+ * that shows a book 2 while `volumes` is on (EpisodeDetailView).
+ */
+export function defaultStoryIndex(options?: { volumes?: boolean }): readonly StoryIndexEntry[] {
+  if (options?.volumes === true) {
+    cachedWithVolumes ??= indexOver(episodesWithVolumes);
+    return cachedWithVolumes;
+  }
+  cached ??= indexOver(episodesAll);
   return cached;
 }

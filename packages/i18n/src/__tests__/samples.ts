@@ -1053,6 +1053,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.relink.askedDaysAgo': [[1], [3]],
   // F-CURR-002 row CM-48: the This week in Korea card, the drop's title (content) and its state line.
   'a11y.weekDrop.card': [['Winter Begins', 'About 2 minutes'], ['Winter Begins', 'Done for this week']],
+  // F-CURR-002 row CM-5B: the Offline lessons card (sizes already formatted for the locale).
+  'caregiver.dashboard.offline.stage': [[2, 'Word'], [5, 'Story']],
+  'caregiver.dashboard.offline.size': [['0.4'], ['12.3']],
+  'caregiver.dashboard.offline.saving': [['0.1', '0.4'], ['6.5', '12.3']],
+  'caregiver.dashboard.offline.space': [['950.2'], ['12']],
+
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-4: the meeting block, the preview header and cycle table, the readout (weekday names and dates arrive localized).
   'console.curriculum.blend.practice.inline': [['3', '10'], ['1', '5']],
   'console.curriculum.blend.practice.suggested': [['Wed, Fri, Sun'], ['Wed']],
@@ -1123,4 +1129,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
   'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
   'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
+  // F-CURR-002 row CM-40: a cell's volumes, Vol 1 and Vol 2 (two at most), and the cell's "Opens Volume 2" sentence.
+  'learner.episode.volumes.tab': [[1], [2]],
+  'learner.episode.volumes.tabA11y': [[1], [2]],
+  'a11y.journeyVolume': [[1], [2]],
 };

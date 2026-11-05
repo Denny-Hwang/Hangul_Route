@@ -188,6 +188,34 @@ export const caregiver = {
       preview: { cta: 'Preview lessons' },
       storageBlocked: "Your browser blocked this page's storage, so lessons cannot open here.",
     },
+    /**
+     * Offline lessons (F-CURR-002 §10 item 4, row CM-5B; wireframe pwa/save-for-offline): web only, on a device whose
+     * build has later volumes. One row per stage with a Volume 2 or a book 2: its size, its state and Save or Remove.
+     * Sizes are decimal megabytes, already formatted for the locale. A grown-up surface: plain words, no blame.
+     */
+    offline: {
+      title: 'Offline lessons',
+      line: 'Stage 1 and the first volume of every stage are always on this device. Save later volumes here to use them without the internet.',
+      opened: 'A volume opened once with the internet is kept for offline too.',
+      stage: (n: number, title: string) => `Stage ${n}: ${title}`,
+      size: (mb: string) => `About ${mb} MB`,
+      state: {
+        saved: 'Saved on this device',
+        partly: 'Partly saved',
+        notSaved: 'Not saved yet',
+      },
+      save: { cta: 'Save' },
+      saveAll: { cta: 'Save all' },
+      remove: { cta: 'Remove' },
+      saving: (done: string, total: string) => `Saving: ${done} of ${total} MB`,
+      space: (mb: string) => `Space left for this app: about ${mb} MB`,
+      offlineNow: 'You are offline. Saving needs the internet.',
+      problem: {
+        network: 'Could not save. Check the internet, then try again.',
+        space: 'Not enough space on this device. Remove something, then try again.',
+        notFile: 'The app has an update. Reload the page, then try again.',
+      },
+    },
   },
 
   /**

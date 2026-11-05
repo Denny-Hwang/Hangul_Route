@@ -1,4 +1,4 @@
-import { CATALOG, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
+import { CATALOG, cellEpisodeIds, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { decodeRetiredItem, decodeReviewItems, type ReviewItem } from '@hangul-route/content-schema/review-items';
 import * as chunk from '../../../content/__generated__/review-item-chunks/review-items';
 import type { ReviewItemIndex } from '../../reviews/review-items-store';
@@ -14,7 +14,15 @@ const RETIRED_ITEMS = chunk.REVIEW_RETIRED.map(decodeRetiredItem);
 export const RETIRED: ReadonlySet<string> = new Set(RETIRED_ITEMS.map((r) => r.id));
 export const INDEX: ReviewItemIndex = { items: ITEMS, byId: new Map(ITEMS.map((i) => [i.id, i])), retired: RETIRED, retiredById: new Map(RETIRED_ITEMS.map((r) => [r.id, r])) };
 
-export const LESSON_QUESTS = CATALOG.quests.filter((q) => q.kind === 'lesson');
+/**
+ * The episodes of the cells' later volumes (F-CURR-002 row CM-40). While `volumes` is at its built-in pct 0 no learner can
+ * finish them, so the seeding fixture and the section 4.3 gate's S-c both finish the first volumes only (row CM-42 S6
+ * review); the later volumes join both fixtures in the row that turns `volumes` on.
+ */
+export const LATER_VOLUMES: ReadonlySet<string> = new Set(CATALOG.cells.flatMap((c) => cellEpisodeIds(c).slice(1)));
+
+/** Every lesson quest a learner can finish today: the first volume of every cell, in catalogue order. */
+export const LESSON_QUESTS = CATALOG.quests.filter((q) => q.kind === 'lesson' && !LATER_VOLUMES.has(q.episodeId));
 
 /** The local day of an instant in UTC: the tests inject the local day, so none depends on the machine's time zone. */
 export const utcDay = (d: Date): string => d.toISOString().slice(0, 10);

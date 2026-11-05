@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:uigwe-royal-birthday",
   "state": "ready",
-  "contentVer": 4,
+  "contentVer": 5,
   "title": {
     "ko": "왕실 잔치를 그림으로 남긴 의궤",
     "romanization": "Wangsil janchireul geurimeuro namgin uigwe",
@@ -31,7 +31,7 @@
     "culture": "culture-reviewed",
     "advisory": [],
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -117,6 +117,34 @@
       "romanization": "Wonhaeng Eulmyo Jeongni Uigwe",
       "en": "the uigwe of King Jeongjo's 1795 royal trip",
       "kind": "term"
+    },
+    {
+      "id": "ireum",
+      "ko": "이름",
+      "romanization": "ireum",
+      "en": "name",
+      "kind": "word"
+    },
+    {
+      "id": "haesseoyo",
+      "ko": "했어요",
+      "romanization": "haesseoyo",
+      "en": "did; held",
+      "kind": "word"
+    },
+    {
+      "id": "haengnyeol",
+      "ko": "행렬",
+      "romanization": "haengnyeol",
+      "en": "procession",
+      "kind": "word"
+    },
+    {
+      "id": "jjigeosseoyo",
+      "ko": "찍었어요",
+      "romanization": "jjigeosseoyo",
+      "en": "printed",
+      "kind": "word"
     }
   ],
   "cultureNotes": [],
@@ -576,6 +604,431 @@
         "janchi",
         "banchado"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "For big royal events, such as weddings, banquets or rebuilding a palace, the Joseon court made an {kw:uigwe}, a record in words and pictures.",
+          "captionEn": "A royal event report in words and pictures",
+          "keyword": {
+            "id": "uigwe",
+            "ko": "의궤",
+            "romanization": "uigwe",
+            "en": "illustrated record of a royal event",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "의궤는 그림이 있는 보고서예요.",
+            "romanization": "Uigweneun geurimi inneun bogoseoyeyo.",
+            "en": "An uigwe is a report with pictures.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "An open old book with a colorful painted page of a ceremony beside a page of neat brush writing (no readable text); Hoya leaning in to look.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:uigwe-open",
+                "x": 238,
+                "y": 268,
+                "s": 2.5
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 70,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya leans in to look at an open uigwe: a painted picture of a royal event beside pages of neat brush writing."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Uigwe list the people who took part, even skilled craftspeople, {kw:jangin}, with each person's name and role.",
+          "captionEn": "Even craftspeople are listed",
+          "keyword": {
+            "id": "ireum",
+            "ko": "이름",
+            "romanization": "ireum",
+            "en": "name",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "의궤에 장인 이름도 있어요.",
+            "romanization": "Uigwee jangin ireumdo isseoyo.",
+            "en": "Uigwe even have the artisans' names.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A carpenter, a painter and an embroiderer at work in a palace workshop, each proud of their craft.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 200,
+                "y": 262,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-artisan",
+                "x": 76,
+                "y": 272,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-artisan",
+                "x": 324,
+                "y": 272,
+                "s": 1.2,
+                "flip": true,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:craft-wood",
+                "x": 76,
+                "y": 300,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:craft-painting",
+                "x": 200,
+                "y": 300,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:craft-embroidery",
+                "x": 324,
+                "y": 300,
+                "s": 1.3
+              }
+            ],
+            "altEn": "In a palace workshop a carpenter, a painter and an embroiderer each work carefully at their own craft."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In 1795, King Jeongjo went to Hwaseong with his mother, Lady Hyegyeong, to celebrate her 60th birthday, {kw:hwangap}.",
+          "captionEn": "Jeongjo travels with his mother",
+          "keyword": {
+            "id": "hwangap",
+            "ko": "환갑",
+            "romanization": "hwangap",
+            "en": "60th birthday",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "어머니의 환갑이에요.",
+            "romanization": "Eomeoniui hwangabieyo.",
+            "en": "It is his mother's 60th birthday.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A long, colorful royal procession winding along a road toward a fortress city; two ornate palanquins at the center.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fortress-gate",
+                "x": 310,
+                "y": 196,
+                "s": 0.6,
+                "z": "back"
+              },
+              {
+                "ref": "prop:palanquin",
+                "x": 190,
+                "y": 262,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:procession-row",
+                "x": 200,
+                "y": 296,
+                "s": 1.4,
+                "z": "front"
+              }
+            ],
+            "altEn": "A long royal procession with a red palanquin between two horses travels toward the walled city of Hwaseong."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The {kw:janchi} for Lady Hyegyeong was held at Bongsudang Hall in Hwaseong. The Annals of King Jeongjo record that day.",
+          "captionEn": "A grand feast at Bongsudang Hall",
+          "keyword": {
+            "id": "haesseoyo",
+            "ko": "했어요",
+            "romanization": "haesseoyo",
+            "en": "did; held",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "잔치를 했어요.",
+            "romanization": "Janchireul haesseoyo.",
+            "en": "They held a feast.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A festive palace hall with tables of food, musicians and dancers in bright costumes, and an honored elderly lady seated under a canopy.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:bead-curtain",
+                "x": 200,
+                "y": 196,
+                "s": 1.3,
+                "z": "back"
+              },
+              {
+                "ref": "prop:feast-table",
+                "x": 200,
+                "y": 262,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-dancer",
+                "x": 86,
+                "y": 290,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-dancer",
+                "x": 314,
+                "y": 290,
+                "s": 0.9,
+                "flip": true
+              }
+            ],
+            "altEn": "Court dancers perform beside a feast table, and a fine curtain screens the seat of Lady Hyegyeong, the guest of honor."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Many of its pictures are {kw:banchado}: pictures of a royal procession, usually drawn as if seen from high above, showing where everyone stood.",
+          "captionEn": "Long pictures of the royal procession",
+          "keyword": {
+            "id": "haengnyeol",
+            "ko": "행렬",
+            "romanization": "haengnyeol",
+            "en": "procession",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "반차도는 행렬 그림이에요.",
+            "romanization": "Banchadoneun haengnyeol geurimieyo.",
+            "en": "A banchado is a procession picture.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A bird's-eye view of a long procession: rows of tiny figures, horses, flags and palanquins arranged neatly along a path.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:banchado-strip",
+                "x": 200,
+                "y": 212,
+                "s": 1.9
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 318,
+                "y": 296,
+                "s": 0.65
+              }
+            ],
+            "altEn": "Hoya studies printed procession pages, drawn as if from high above, with rows of tiny figures, horses and a palanquin."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Unusually, this uigwe was printed with metal movable type, {kw:hwalja}. In 2007, UNESCO added the Joseon uigwe to the Memory of the World Register.",
+          "captionEn": "Printed with metal movable type",
+          "keyword": {
+            "id": "jjigeosseoyo",
+            "ko": "찍었어요",
+            "romanization": "jjigeosseoyo",
+            "en": "printed",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "활자로 의궤를 찍었어요.",
+            "romanization": "Hwaljaro uigwereul jjigeosseoyo.",
+            "en": "They printed the uigwe with movable type.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8",
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Small metal type pieces in a tray next to a freshly printed picture page and the printing tools beside it.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:type-tray",
+                "x": 140,
+                "y": 262,
+                "s": 2.5
+              },
+              {
+                "ref": "prop:print-sheet",
+                "x": 312,
+                "y": 262,
+                "s": 1.8
+              }
+            ],
+            "altEn": "A frame of small metal type sits beside a freshly printed picture page: this uigwe was printed with metal type."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "이름",
+            "romanization": "ireum",
+            "en": "name"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Name",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Picture",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Gift",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Birthday",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Ireum means name. Uigwe list each person's name and role."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "행렬",
+            "romanization": "haengnyeol",
+            "en": "procession"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Palace",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Banquet",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Library",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Procession",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f7"
+          ],
+          "explainEn": "Haengnyeol means procession. A banchado shows where people stood in a procession."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "Why did King Jeongjo travel to Hwaseong in 1795?",
+          "options": [
+            {
+              "id": "a",
+              "en": "For a wedding",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "For his mother's 60th birthday",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "To print a book",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "To repair a wall",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f4"
+          ],
+          "explainEn": "He went with his mother, Lady Hyegyeong, to celebrate her 60th birthday."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s4",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "ireum",
+        "haesseoyo",
+        "haengnyeol",
+        "jjigeosseoyo"
+      ],
+      "grammarFocusEn": "Noun + -ieyo/-yeyo (is); -e isseoyo (is in); past -aesseoyo/-eosseoyo"
     }
   ],
   "coverSceneId": "s1",
@@ -851,7 +1304,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR. MAR 2026-10-14 source pass: f6 (rev 2) adds 일성록 정조 19년 윤2월 13일 [03] (한국고전번역원 DB) as a second Korean public-institution source; page fetched, quote machine-matched; claims unchanged; pass recorded."
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR. MAR 2026-10-14 source pass: f6 (rev 2) adds 일성록 정조 19년 윤2월 13일 [03] (한국고전번역원 DB) as a second Korean public-institution source; page fetched, quote machine-matched; claims unchanged; pass recorded. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged and the cited sources not re-opened in this pass, so checkedAt stays the date of the last source check; findings and outcomes in the PR."
   },
   "authorNotes": "Narration omits the ages in the silk-gift entry (70+ and those turning 61) because they come from a single source; the Korean line '어르신' is a vocabulary item. 회갑 (source term) and 환갑 (everyday term) both mean the 60th birthday; 환갑 is taught. The feast date is given on the lunar calendar as recorded; the KHS English page says 'February 1795', which refers to the lunar leap 2nd month. The leap-month wording was rewritten simply ('an extra leap month after the second month'). The Hwaseong feast (13th of the leap 2nd month) took place during the 1795 trip celebrating her 60th year; her actual birthday fell in the 6th lunar month and the Encyclopedia notes a formal feast on 6/18 in Seoul, so narration says 'a celebration of her 60th birthday' and never says the Hwaseong feast was on the birthday itself. Revision: the uigwe is now named (원행을묘정리의궤); banchado described as 'long pictures' not paintings; 'woodblock' was REMOVED - Korean authorities (Encyclopedia of Korean Culture) say only 판화 (prints), and no Korean institutional source found says woodblock specifically (a Cambridge/Amsterdam UP page suggested by a checker did not mention woodcuts when re-fetched). The encyclopedia calls this 'the first uigwe printed with movable type'; narration says 'unusually' to stay conservative. UNESCO page text is paraphrased (unesco.org unreachable for re-quoting); UNESCO nomination-form quotes were re-checked against a saved copy of the PDF; the draft's banchado caption quote ('Banchado in color ... excellent clarity') could not be found in the PDF text and was replaced by the §1 Summary sentence on Banchado and Doseol. Omitted: the length of a painting (15.4 m, single source), page counts beyond f7, the story of Prince Sado (tragic), and the 1866 removal of Oegyujanggak uigwe to France and their 2011 return (war-related). PASS 3: second source for 판화 found (정병모, 판화사적 연구: 'prints' - and specifically 목판화, woodblock prints, with 정리자 metal type); narration stays at the more general 'prints'. Silk gifts (f6) confirmed directly in the original Annals entry text (命進饌時參班老人, 七十以上及六十一歲人, 各賜帛一匹); single primary source kept, no numbers in narration. SOURCE PASS 2026-10-14: f6 now also cites 일성록 정조 19년 윤2월 13일 [03] (ITKC DB), which gives the same order and ages (70세 이상, 61세), so the silk gifts are no longer single-source; the narration still leaves the ages out (no numbers).",
   "errata": []

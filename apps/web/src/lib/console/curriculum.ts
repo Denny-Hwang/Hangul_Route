@@ -1,6 +1,7 @@
 import {
   AUDIENCE_DEFAULTS,
   CATALOG,
+  CATALOG_QUEST_ADDITIONS,
   FREE_ROUTE_STAGES,
   CURRICULUM_MAX_ITEMS,
   CurriculumMetaSchema,
@@ -15,6 +16,7 @@ import {
   isDateKey,
   levelOrder,
   placementLevelRank,
+  planCatalogStale,
   proposeRoute,
   questsPlacedOutAtLevel,
   regenerateFrom,
@@ -1079,9 +1081,18 @@ export function weeksToFit(plan: RepaceInput, today: string, source: Catalog = C
   return null;
 }
 
-/** A route made from an older catalogue than this build's: the readout offers **Refresh route** (a `shift` on the current catalogue; it adds no lessons). */
-export function isStaleCatalog(meta: CurriculumMeta, source: Catalog = CATALOG): boolean {
-  return meta.catalogVersion < source.version;
+/**
+ * A route made from an older catalogue than this build's: the readout offers **Refresh route** (a `shift` on the current
+ * catalogue; it adds no lessons). A catalogue that added only later volumes (F-CURR-002 rows CM-40, CM-46: a lesson
+ * Volume 2, a Stage 5 book 2) is not newer for a plan: a refresh adds nothing. `additions` models a later catalogue's
+ * history (tests).
+ */
+export function isStaleCatalog(
+  meta: CurriculumMeta,
+  source: Catalog = CATALOG,
+  additions: Readonly<Record<number, readonly string[]>> = CATALOG_QUEST_ADDITIONS,
+): boolean {
+  return planCatalogStale(meta.catalogVersion, source, additions);
 }
 
 export interface DraftPlanBody {

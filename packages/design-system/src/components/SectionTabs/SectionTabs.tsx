@@ -66,6 +66,7 @@ export function SectionTabs<T extends string>({
             {...controls}
             testID={testID ? `${testID}-${item.id}` : undefined}
             accessibilityRole="tab"
+            accessibilityLabel={item.accessibilityLabel}
             accessibilityState={{ selected }}
             aria-selected={selected}
             onPress={() => onChange(item.id)}

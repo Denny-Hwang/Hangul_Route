@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import type { ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import type { BuildName } from '../../../logic/lecture/build-steps';
+import { VOLUME_TWO_STORY_IDS } from '../../../content/books';
 import { storiesAll } from '../../../content/stories';
 import { lectureBundle } from '../../../logic/lecture/content';
 import { expandDeck, type Slide } from '../../../logic/lecture/deck-builder';
@@ -64,7 +65,8 @@ const stage1 = slidesOf([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]);
 const stage3 = slidesOf([{ kind: 'quest', id: 'quest:stage3-nature-q1' }]);
 const stage4 = slidesOf([{ kind: 'quest', id: 'quest:stage4-life-q1' }]);
 const stage6 = slidesOf([{ kind: 'quest', id: 'quest:stage6-life-q3' }]);
-const stories = slidesOf(storiesAll.map((story): LectureBlock => ({ kind: 'story', storyId: story.id, checks: true })));
+// The shelf stories (a deck holds at most 30 blocks; the book 2 tales of row CM-46 are Volume 2 content).
+const stories = slidesOf(storiesAll.filter((story) => !VOLUME_TWO_STORY_IDS.has(story.id)).map((story): LectureBlock => ({ kind: 'story', storyId: story.id, checks: true })));
 
 const quiz = stage1.find((s): s is Extract<Slide, { kind: 'quiz' }> => s.kind === 'quiz' && !isListenOrReply(s) && !isStoryCheck(s) && !isRealiaQuestion(s) && s.options.length === 4)!;
 const listenRows = [...stage3, ...stage4].find(

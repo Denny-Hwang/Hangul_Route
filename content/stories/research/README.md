@@ -31,3 +31,15 @@ Each `*.final.json` carries `verification: { passes: 3, checked_at: "2026-10-10"
 - **Native language and culture review** of Korean text and tone: the multi-agent final review (owner decision 2026-10-12; two separate passes signed `reviewedBy: "MAR"`, see [F-STORY-001 §3.6](../../../docs/specs/F-STORY-001-story-schema-pipeline.md) and [docs/workflows/story-content-qa.md](../../../docs/workflows/story-content-qa.md)).
 - Re-check the items listed under "remaining uncertainty" in the sign-off, in particular time-dependent facts: Haeinsa Janggyeong Panjeon visitor rules (haeinsa.or.kr) and the current location of the Hunminjeongeum Haerye (Kansong Art Museum).
 - Where a source could only be read through an archive copy (unesco.org, heritage portal descriptions), spot-check it live in a browser.
+
+## Read tiers of the listen-only stories (F-CURR-002 row CM-46a, 2026-10-31)
+The ten stories that shipped with a listen tier only (`tripitaka-koreana`, `sillok-royal-historians`, `janggyeong-panjeon`, `jikji-metal-type`, `sillok-mountain-archives`, `nanjung-ilgi`, `seungjeongwon-ilgi-every-day`, `ilseongnok-daily-reflection`, `uigwe-royal-birthday`, `joseon-records-today`) gained a `read` tier that restates facts they already cite; no fact or source changed. `read-tiers.changes.md` lists every checker finding and its outcome, and `read-tiers.signoff.md` the third pass.
+
+## Nature book 2 (F-CURR-002 row CM-46, 2026-11-04)
+Three new readers for the Stage 5 Nature cell's book 2 (`jeju-volcanic-island`, `jirisan-national-park`, `suncheon-bay-wetland`), authored directly in `content/stories/` (no importer run). `nature-book2.sources.json` holds every fact with its quoted source words as opened on 2026-11-04, the pages that could not be read and the institutions' names as of that date; `nature-book2.changes.md` lists the checker findings and outcomes and `nature-book2.signoff.md` the third pass.
+
+## Food book 2 (F-CURR-002 row CM-46, 2026-11-04)
+Two new tales for the Stage 5 Food cell's book 2 (`episode:stage5-life-v2`, Volume 2, behind `volumes`): `jang-fermented-sauces` (jang-making; UNESCO 2024, Korea Heritage Service) and `tteok-through-the-seasons` (seasonal rice cakes; National Folk Museum of Korea, encykorea). They were authored directly as story files (no cluster `.final.json`); every fact carries its quotes. `life-book2.changes.md` lists every checker finding and its outcome, and `life-book2.signoff.md` the third pass.
+
+## Letters book 2 tales (F-CURR-002 row CM-46, 2026-11-04)
+`eongan-letters` and `hangul-name` were authored straight from allowlisted public-institution pages (no cluster research file): each fact cites the page it restates, with the quote and the access date. `letters-book2.changes.md` lists the sources and the author decisions; the multi-agent review appends its findings there and writes `letters-book2.signoff.md` before the two stories are signed.

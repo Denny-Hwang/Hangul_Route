@@ -12,6 +12,7 @@ import {
   RealiaReadRoundSchema,
   RealiaSchema,
   StoryOrderRoundSchema,
+  SyllableBuildRoundSchema,
   TraceWordRoundSchema,
   TypeHangulRoundSchema,
   WriteFrameRoundSchema,
@@ -125,6 +126,21 @@ export const LessonScopeSchema = z.discriminatedUnion('kind', [
   z.object({ ref: ScopeRefSchema, kind: z.literal('hidden-heritage'), rounds: z.array(HiddenHeritageRoundSchema).min(1).max(2) }),
   /** My Story (F-CURR-002 §7.1 F8, row CM-38): 3-5 chained word-bank frames, one neutral option in every bank. */
   z.object({ ref: ScopeRefSchema, kind: z.literal('my-story'), frames: MyStoryFramesSchema }),
+  /**
+   * Syllable Build (F-CURR-002 §7.1 F3; scope added by row CM-44 S2, the first S2 cell that plays one, as the CM-32
+   * decision record names): 1-6 blocks with unique ids. A lesson's block is a taught word, so its meaning (`target.en`)
+   * is required: it shows under the speaker and its es and ko come from the cell's overlay.
+   */
+  z.object({
+    ref: ScopeRefSchema,
+    kind: z.literal('syllable-build'),
+    rounds: z
+      .array(SyllableBuildRoundSchema)
+      .min(1)
+      .max(6)
+      .refine((rounds) => new Set(rounds.map((r) => r.id)).size === rounds.length, 'round ids must be unique')
+      .refine((rounds) => rounds.every((r) => r.target.en !== undefined), 'a lesson block is a word with its meaning (target.en)'),
+  }),
 ]);
 export type LessonScope = z.infer<typeof LessonScopeSchema>;
 export type LessonScopeKind = LessonScope['kind'];

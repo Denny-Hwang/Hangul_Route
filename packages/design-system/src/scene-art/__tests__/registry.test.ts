@@ -162,6 +162,8 @@ const PROPS = [
   'prop:tiger-trickster',
   'prop:sky-rope',
   'prop:sorghum',
+  // F-CURR-002 row CM-46: the Nature book 2
+  'prop:hooded-crane',
 ];
 
 const entries = Object.entries(SCENE_ART_REGISTRY);

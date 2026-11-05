@@ -90,7 +90,9 @@ export function LibraryScreen(): ReactElement {
   // Library sections (F-STORY-004 §3.3): reviewed stories only (D14), so a production build with no
   // reviewed story offers Cards alone and the screen is exactly today's gallery, with no tab row.
   const copy = shelfCopy(messages);
-  const storyIndex = defaultStoryIndex();
+  // A book 2 tale (F-CURR-002 row CM-46) is Volume 2 content: on the shelf only while `volumes` is on.
+  const volumesOn = useCurrFlag('volumes');
+  const storyIndex = defaultStoryIndex({ volumes: volumesOn });
   // Empty when only Cards is offered: no tab row at all. Words (F-VOC-003 T1) joins with its flag and a ready topic.
   const sections = useMemo(() => librarySectionTabs({ entries: storyIndex, words: wordsOffered() }), [storyIndex]);
   const requested = useRoute<RouteProp<MainTabParamList, 'Library'>>().params?.section;

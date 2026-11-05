@@ -53,6 +53,8 @@ describe('cellModel', () => {
       completed: false,
       storyCount: 2,
       storiesFinished: 0,
+      // One volume: one entry, so the cell draws no volume dots (row CM-40).
+      volumes: [{ episodeId: 'episode:s1-letters', volume: 1, complete: false }],
     });
   });
 
@@ -74,6 +76,7 @@ describe('cellModel', () => {
       completed: false,
       storyCount: 1,
       storiesFinished: 0,
+      volumes: [],
     });
   });
 
@@ -89,6 +92,7 @@ describe('cellModel', () => {
       completed: false,
       storyCount: 0,
       storiesFinished: 0,
+      volumes: [],
     });
     expect(model('stage7', 'crafts', { episodes: [] })).toMatchObject({ kind: 'placeholder' });
     const draft = lesson('s3-life', 'stage3', 'life', 'draft');

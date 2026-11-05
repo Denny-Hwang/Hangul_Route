@@ -1,5 +1,5 @@
 import { effectiveRoute, type CatalogHistory, type Episode, type PlacementResult, type Quest, type RouteCatalog, type RouteQuest, type RouteSeed } from '@hangul-route/content-schema';
-import { gridEpisodes } from '../../content/episodes';
+import { gridEpisodes, volumeOf } from '../../content/episodes';
 import { playableEpisodes } from '../next-quest';
 
 /**
@@ -29,6 +29,8 @@ export function appRouteCatalog(quests: readonly Quest[], episodes: readonly Epi
           teaches: [],
           playable: playable.has(episode.id),
           grid: grid.has(episode.id),
+          // F-CURR-002 row CM-40: placed out like the first volume, never a start, a next card or a start choice.
+          ...(volumeOf(episode) > 1 ? { laterVolume: true as const } : {}),
         },
       ];
     }),

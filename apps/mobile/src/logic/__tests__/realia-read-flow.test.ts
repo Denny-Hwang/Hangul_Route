@@ -258,8 +258,8 @@ describe('the sheet', () => {
     ]);
     expect(sheetSummary(REALIA_KIND_FIXTURES.timetable.realiaRead.realia, getMessages('es').a11y.minigame)).toBe('Horario, 3 líneas');
     expect(sheetSummary(REALIA_KIND_FIXTURES.receipt.realiaRead.realia, getMessages('ko').a11y.minigame)).toBe('영수증, 4줄');
-    // A map place with a direction says it, as a trail board does.
-    expect(lineBaseLabel(REALIA_KIND_FIXTURES.map.realiaRead.realia.entries[2]!, A11Y)).toBe('정상, jeongsang, to the right');
+    // A map place prints its way as its value (its legend draws no arrow), so the name reads the value (row CM-41 S6).
+    expect(lineBaseLabel(REALIA_KIND_FIXTURES.map.realiaRead.realia.entries[2]!, A11Y)).toBe('정상, jeongsang, 오른쪽, oreunjjok');
   });
 
   it('names a line by its Korean, romanization, value and direction', () => {

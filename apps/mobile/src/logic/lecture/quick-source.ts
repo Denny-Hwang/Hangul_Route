@@ -39,6 +39,8 @@ export interface ChooserLabels {
 export interface PresenterChooserInput {
   catalog?: Catalog;
   bundle?: LectureBundle;
+  /** List each cell's Volume 2 as its own row (F-CURR-002 row CM-40): only while `volumes` is on. */
+  volumes?: boolean;
 }
 
 const MINUTES_DECK: Omit<LectureDeck, 'blocks'> = {
@@ -69,6 +71,7 @@ export function wordReviewWordsOn(bundle: LectureBundle, block: Extract<LectureB
 function lookupTitle(locale: UiLocale, catalog: Catalog): (id: string) => string | null {
   const english = new Map<string, string>([
     ...catalog.cells.map((c) => [c.episodeId, c.title] as const),
+    ...catalog.cells.flatMap((c) => (c.volumes ?? []).map((v) => [v.episodeId, v.title] as const)),
     ...catalog.quests.map((q) => [q.id, q.title] as const),
     ...catalog.stories.map((s) => [s.id, s.title] as const),
     ...catalog.topics.map((t) => [`vocab-topic:${t.key}`, t.title] as const),
@@ -122,8 +125,14 @@ export function presenterChooserGroups(locale: UiLocale, labels: ChooserLabels, 
       const topic = bundle.vocabTopic?.(id);
       return topic !== undefined && topic !== 'not-ready' && topic.words.length > 0;
     });
-  // A cell the bundle cannot expand is not offered (with the shipped bundle, every ready cell is there).
-  const expandable = { ...catalog, cells: catalog.cells.filter((c) => bundle.episodeById(c.episodeId) !== undefined) };
+  // A cell the bundle cannot expand is not offered (with the shipped bundle, every ready cell is there); nor is a
+  // later volume of one (row CM-40).
+  const expandable = {
+    ...catalog,
+    cells: catalog.cells
+      .filter((c) => bundle.episodeById(c.episodeId) !== undefined)
+      .map((c) => (c.volumes === undefined ? c : { ...c, volumes: c.volumes.filter((v) => bundle.episodeById(v.episodeId) !== undefined) })),
+  };
   const groups = chooserGroups({
     catalog: expandable,
     title: titleIn(locale, catalog),
@@ -134,6 +143,7 @@ export function presenterChooserGroups(locale: UiLocale, labels: ChooserLabels, 
     },
     stories,
     topics,
+    volumes: input.volumes === true,
   });
   return groups.map((group) =>
     group.id !== 'topics'

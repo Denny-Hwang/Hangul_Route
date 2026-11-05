@@ -143,6 +143,25 @@ describe('the items-stable-id snapshot (F-CURR-002 §4.2, §9.3)', () => {
     }
   });
 
+  it('leaves every item of Volume 1 as it is when a later volume ships (row CM-41): its cells add the volume, nothing else moves', () => {
+    const laterVolume = /\/[a-z]+\.v\d+\.json$/;
+    const later = [...tree.keys()].filter((rel) => laterVolume.test(rel));
+    expect(later.length).toBeGreaterThan(0);
+    const volumeOne = new Map([...tree].filter(([rel]) => !laterVolume.test(rel)));
+    const before = reviewItemsOf({ stage1, lessons: lessonSourcesOfTree(volumeOne), stories, ...vocabOfTree(volumeOne), snapshot });
+    const now = new Map(built.items.map((i) => [i.id, i]));
+    // What a shipped item is to a learner who never opens Volume 2: its teaching cell, its stage and
+    // memory shard (home, stage), its volume, its text and gloss, its picture and reply.
+    const shipped = (i: ReviewItem): unknown => [i.kind, i.ko, i.romanization, i.en, i.glossKey, i.home, i.stage, i.volume, i.cells[0], i.picture, i.reply];
+    for (const item of before.items) {
+      const after = now.get(item.id);
+      expect(after, item.id).toBeDefined();
+      expect(shipped(after as ReviewItem), item.id).toEqual(shipped(item));
+      // A Volume 1 cell keeps every item it taught (its Cell Check, Test out and mastery pools).
+      expect(item.cells.every((cell) => (after as ReviewItem).cells.includes(cell)), item.id).toBe(true);
+    }
+  });
+
   it('keeps topic words as one item under their vocab: id, with the topic gloss', () => {
     const { topicWords } = vocabOfTree(tree);
     const topic = new Map(topicWords.map((w) => [w.id, w]));
@@ -257,6 +276,44 @@ describe('extraction coverage over the three sources (F-CURR-002 §4.2)', () => 
   });
 });
 
+describe('a shipped later volume leaves every first-volume item as it was (F-CURR-002 §4.2, §4.4, row CM-40)', () => {
+  const firstVolumesOnly = new Map([...tree].filter(([file]) => !/\.v[2-9]\.json$/.test(file) && !(isRec(tree.get(file)) && (tree.get(file) as Rec).volume !== undefined && (tree.get(file) as Rec).volume !== 1)));
+  const before = reviewItemsOf({ stage1, lessons: lessonSourcesOfTree(firstVolumesOnly), stories, weeks, ...vocabOfTree(firstVolumesOnly), snapshot });
+  const after = new Map(built.items.map((i) => [i.id, i]));
+  const laterVolumeCells = new Set(lessons.filter((l) => l.volume > 1).map((l) => l.cellId));
+
+  it('the repository ships a later volume, so the check below compares two different trees', () => {
+    expect(laterVolumeCells.size).toBeGreaterThan(0);
+  });
+
+  it("keeps each existing item's cells, volume, stage, home, English and gloss key; a later volume only adds its own cell or an asked entry", () => {
+    for (const item of before.items) {
+      const now = after.get(item.id);
+      expect(now, item.id).toBeDefined();
+      const pick = (i: ReviewItem) => ({
+        cells: i.cells.filter((cell) => !laterVolumeCells.has(cell)),
+        volume: i.volume,
+        stage: i.stage,
+        home: i.home,
+        en: i.en,
+        glossKey: i.glossKey,
+      });
+      expect(pick(now as ReviewItem), item.id).toEqual(pick(item));
+      expect((now as ReviewItem).cells.slice(0, item.cells.length), item.id).toEqual(item.cells);
+      expect((now as ReviewItem).asked.filter((cell) => !laterVolumeCells.has(cell)), item.id).toEqual(item.asked);
+    }
+  });
+
+  it('keeps every first-volume cell denominator (the items whose cells hold it)', () => {
+    const denominators = (items: readonly ReviewItem[]): Map<string, number> => {
+      const out = new Map<string, number>();
+      for (const i of items) for (const cell of i.cells) if (!laterVolumeCells.has(cell)) out.set(cell, (out.get(cell) ?? 0) + 1);
+      return out;
+    };
+    expect(denominators(built.items)).toEqual(denominators(before.items));
+  });
+});
+
 describe('the "This week in Korea" drops as a review-item source (F-CURR-002 §5.7, row CM-48)', () => {
   const byId = new Map(built.items.map((i) => [i.id, i]));
   const weekCells = (i: ReviewItem): string[] => i.cells.filter((c) => c.startsWith('week:'));
@@ -284,7 +341,9 @@ describe('the "This week in Korea" drops as a review-item source (F-CURR-002 §5
   });
 
   it('never moves an item the route teaches: it keeps its home, stage, gloss key and first cell, and the drop is a later cell', () => {
-    const shared = built.items.filter((i) => weekCells(i).length > 0 && i.cells.some((c) => !c.startsWith('week:')));
+    // The route is each cell's first volume: a later volume (row CM-40) never changes an item a drop already teaches.
+    const later = new Set(lessons.filter((l) => l.volume > 1).map((l) => l.cellId));
+    const shared = built.items.filter((i) => weekCells(i).length > 0 && i.cells.some((c) => !c.startsWith('week:') && !later.has(c)));
     expect(shared.map((i) => i.id)).toEqual(expect.arrayContaining(['lex:baechu', 'vocab:gimchi', 'vocab:nun-snow', 'lex:bam', 'lex:saehae']));
     for (const item of shared) {
       expect(item.home, item.id).not.toBe('week');

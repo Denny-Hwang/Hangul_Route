@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { SEED_PER_DAY, deriveSeed } from '../../memory/seed';
 import { applyAnswer, type DayFacts } from '../../memory/spacing';
 import { addDays, daysBetween } from '../../vocab/srs';
-import { INDEX, ITEMS, RETIRED, finished, utcDay } from '../../memory/__tests__/fixtures';
+import { INDEX, ITEMS, LESSON_QUESTS, RETIRED, finished, utcDay } from '../../memory/__tests__/fixtures';
 import type { ReviewItem } from '@hangul-route/content-schema/review-items';
 import { DAILY_REVIEW_DUE_CAP, DAILY_REVIEW_SIZE, REVIEW_FIRST_FACTOR, buildDailyReview, dueCount, withSentenceCredit, wordsInside } from '../engine';
 import { DEFAULT_KNOBS, START_DAY, Sim, questPlans, scenarioA, scenarioB } from './simulate';
@@ -115,10 +115,12 @@ describe('S-b: two quests a day; on review-first days the Daily Review and Keep 
   });
 });
 
-describe('S-c: a learner with all 107 quests done, seeded, then S-a', () => {
+// The first 107 lesson quests of the catalogue, in its order: since row CM-42 S4 these hold Stage 4 Play Volume 2's three
+// quests (a learner with `volumes` on), so the seed also covers Volume 2 items; S-a's route itself stays on first volumes.
+describe('S-c: a learner with 107 lesson quests done (Volume 2 of Stage 4 Play among them), seeded, then S-a', () => {
   const seededAt = '2026-11-01T08:00:00.000Z';
   const seedDay = '2026-11-01';
-  const seed = deriveSeed({ snapshot: finished(107), items: ITEMS, retired: RETIRED, quests: CATALOG.quests, cells: CATALOG.cells, seededAt, dayOf: utcDay });
+  const seed = deriveSeed({ snapshot: finished(LESSON_QUESTS.length), items: ITEMS, retired: RETIRED, quests: CATALOG.quests, cells: CATALOG.cells, seededAt, dayOf: utcDay });
 
   it('every seeded item has a due day, no day has more than 15 seeded due, and the spread ends by day 62', () => {
     expect(seed.count).toBeGreaterThan(500);
@@ -228,5 +230,17 @@ describe('S-e: one quest-day introduces 8 items, then S-a', () => {
     expect(eight.filter((id) => sim.held3.has(id)).length).toBeGreaterThan(0);
     for (const [id, day] of sim.held3) expect(day - (sim.intro.get(id) as number)).toBeGreaterThanOrEqual(4);
     expect(Math.min(...eight.map((id) => sim.held3.get(id) ?? Number.POSITIVE_INFINITY))).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('the simulated route is each cell’s first volume (F-CURR-002 row CM-40)', () => {
+  it('a later volume adds no route quest; the volumes-on scenario plays the later volumes after the route', () => {
+    const route = questPlans().map((p) => p.questId);
+    expect(route.filter((id) => /-v[0-9]+-q[0-9]+$/.test(id))).toEqual([]);
+    const withVolumes = questPlans(undefined, true).map((p) => p.questId);
+    expect(withVolumes.slice(0, route.length)).toEqual(route);
+    expect(withVolumes.slice(route.length)).toContain('quest:stage4-nature-v2-q1');
+    // A lesson Volume 2's quests and the Stage 5 books 2's read quests (row CM-46).
+    expect(withVolumes.slice(route.length).every((id) => /-v[0-9]+-q[0-9]+$/.test(id) || /^quest:story-[a-z0-9-]+-read$/.test(id))).toBe(true);
   });
 });
