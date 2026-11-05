@@ -560,11 +560,19 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(run.stdout).toMatch(/pwa-postbuild: precached \d+ files/);
   });
 
-  it('precaches every lesson chunk and prints the precache report (F-CURR-002 §10)', () => {
-    for (const { name } of LESSON_MANIFEST) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
-    // Row CM-8: every story chunk too.
+  it('precaches every core lesson and story chunk, runtime-caches the later ones, and prints the precache report (F-CURR-002 §10)', () => {
+    // Row CM-5B: a cell's Volume 2 and a tale only a book 2 holds are later chunks, named in the runtime rule
+    // (`hr-later-v1`) and never precached; every other lesson and story chunk (row CM-8) is precached.
+    const rule = /\(\?:([^()]*)\)-\[0-9a-f\]\{32\}\\\.js\$\/,new [a-z]\.CacheFirst\(\{cacheName:"hr-later-v1"/.exec(sw);
+    expect(rule, 'the later-chunk rule').not.toBeNull();
+    const later = new Set(rule[1].split('|'));
+    for (const { name } of LESSON_MANIFEST) expect(later.has(name), name).toBe(/-v\d+$/.test(name));
     expect(STORY_MANIFEST.length).toBeGreaterThan(0);
-    for (const { name } of STORY_MANIFEST) expect(sw, name).toMatch(new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`));
+    for (const { name } of [...LESSON_MANIFEST, ...STORY_MANIFEST]) {
+      const precached = new RegExp(`"_expo/static/js/web/${name}-[0-9a-f]{32}\\.js"`);
+      if (later.has(name)) expect(sw, name).not.toMatch(precached);
+      else expect(sw, name).toMatch(precached);
+    }
     expect(run.stdout).toContain('pwa-postbuild: precache report (F-CURR-002 §10)');
     expect(run.stdout).toMatch(/ {2}start bundle {2}_expo\/static\/js\/web\/index-abc\.js {2}\d+ B raw {2}\d+ B gzip {2}\(ceiling \d+ B raw\)/);
     expect(run.stdout).toContain(`  lesson chunks  ${LESSON_MANIFEST.length} bundles  `);

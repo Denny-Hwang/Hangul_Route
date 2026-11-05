@@ -40,8 +40,8 @@ import { questStepLabel } from '../../logic/quest-steps';
 import { stop } from '../../platform/audio';
 import { confirm } from '../../platform/dialog';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
-import { useStoryQuestReady } from '../story-content';
+import { LaterNeedsInternet, LessonWaiting, combinedChunkState, useLessonQuestState } from '../lesson-content';
+import { useStoryQuestState } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
 import { CultureTip } from './culture-tip-entry';
@@ -134,9 +134,10 @@ export function QuestPlayerView(props: QuestPlayerViewProps): ReactElement {
   // A lesson quest's steps come from its cell's chunk, and a story quest's story from the story's chunk
   // (F-CURR-002 §10): until it is in (a frame or two from the precache), the screen draws only its header (and a
   // calm status line if it takes longer), so the way back is always there.
-  const lessonReady = useLessonQuestReady(props.questId);
-  const storyReady = useStoryQuestReady(questById(props.questId));
-  return lessonReady && storyReady ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
+  // A later volume that is not on the device and cannot load (row CM-5B) says so calmly, with a way back.
+  const state = combinedChunkState(useLessonQuestState(props.questId), useStoryQuestState(questById(props.questId)));
+  if (state === 'needs-internet') return <LaterNeedsInternet onBack={props.onBack} />;
+  return state === 'ready' ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
 }
 
 function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false }: QuestPlayerViewProps): ReactElement {

@@ -8,8 +8,9 @@ import { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
 import { createLessonStore, LessonChunkMismatch, type LessonCellChunk, type LessonManifest, type LessonTitleChunk } from '../../logic/lessons/lesson-store';
 import { buttonsNamed, byTestId, press, render, screenTexts } from '../../test-support/render';
-import { LESSON_WAITING_LINE_MS, lessonContentBindings } from '../lesson-content';
+import { LESSON_WAITING_LINE_MS, LaterNeedsInternet, combinedChunkState, lessonContentBindings, type ChunkState } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
+import type { ContentScope } from '../../content/later-content';
 
 /**
  * The screens' side of the on-demand lesson chunks (F-CURR-002 §10, row CM-5) from a cold store. The
@@ -78,7 +79,14 @@ const settle = async (): Promise<void> => {
 };
 
 function bindings(
-  over: { reload?: () => boolean; answer?: (error: unknown) => Promise<boolean>; locales?: { ensureAll: () => Promise<void> }; rootTimeoutMs?: number } = {},
+  over: {
+    reload?: () => boolean;
+    answer?: (error: unknown) => Promise<boolean>;
+    locales?: { ensureAll: () => Promise<void> };
+    rootTimeoutMs?: number;
+    scope?: ContentScope;
+    isLaterCell?: (cellId: string) => boolean;
+  } = {},
 ) {
   const cold = coldStore();
   const reload = vi.fn(over.reload ?? (() => false));
@@ -92,6 +100,8 @@ function bindings(
     abandon,
     ...(over.locales === undefined ? {} : { locales: over.locales }),
     ...(over.rootTimeoutMs === undefined ? {} : { rootTimeoutMs: over.rootTimeoutMs }),
+    ...(over.scope === undefined ? {} : { scope: over.scope }),
+    ...(over.isLaterCell === undefined ? {} : { isLaterCell: over.isLaterCell }),
   });
   return { ...cold, ...b, reload, answer, abandon };
 }
@@ -412,5 +422,165 @@ describe('useLessonContentVersion (the screens that count over every quest)', ()
     await act(async () => t.pending['episode:stage3-life']?.reject(new Error('offline')));
     await settle();
     expect(new Set(seen).size).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * Row CM-5B: core and later chunks. Here Stage 3 Life stands for a later volume (a Volume 2 cell): with a scope, the
+ * whole-catalogue screens never wait on it offline, and a failed later chunk never holds a grown-up root back.
+ */
+describe('core and later chunks (row CM-5B)', () => {
+  const scopeWith = (state: { online: boolean; onDevice: boolean }): ContentScope => ({
+    core: { cells: ['episode:stage2-rites'], stories: [] },
+    later: (whenOnline) => ({ cells: (whenOnline && state.online) || state.onDevice ? ['episode:stage3-life'] : [], stories: [] }),
+  });
+  function Root(): ReactElement {
+    return <Text testID="root">root</Text>;
+  }
+
+  it('offline with the later volume not on the device: the root mounts on the core chunks alone', async () => {
+    const t = bindings({ scope: scopeWith({ online: false, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    expect(t.asked).toEqual(['episode:stage2-rites']);
+    await act(async () => t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites')));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+
+  it('online: the root loads the later volume too, and one that fails leaves it out instead of the crash screen', async () => {
+    const t = bindings({ scope: scopeWith({ online: true, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    expect(t.asked.sort()).toEqual(['episode:stage2-rites', 'episode:stage3-life']);
+    await act(async () => t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites')));
+    await act(async () => t.pending['episode:stage3-life']?.reject(new Error('offline')));
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+    expect(t.reload).not.toHaveBeenCalled();
+  });
+
+  it('a later chunk of a newer build reloads the page', async () => {
+    const t = bindings({ reload: () => true, scope: scopeWith({ online: true, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    await act(async () => t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites')));
+    await act(async () => t.pending['episode:stage3-life']?.reject(new LessonChunkMismatch('episode:stage3-life', 'h-life', 'x')));
+    await settle();
+    expect(t.reload).toHaveBeenCalledTimes(1);
+    expect(byTestId(r.root, 'root')).toHaveLength(0);
+  });
+
+  it('a core chunk that fails is still the crash screen', async () => {
+    const t = bindings({ scope: scopeWith({ online: false, onDevice: false }) });
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    await act(async () => t.pending['episode:stage2-rites']?.reject(new Error('offline')));
+    await settle();
+    expect(buttonsNamed(r.root, TRY_AGAIN)).toHaveLength(1);
+  });
+
+  it('mounts at once when the core chunks are in', async () => {
+    const t = bindings({ scope: scopeWith({ online: false, onDevice: false }) });
+    const loading = t.store.ensureCells(['episode:stage2-rites']);
+    t.pending['episode:stage2-rites']?.resolve(chunkOf('episode:stage2-rites'));
+    await loading;
+    const Wrapped = t.withLessonContent(Root);
+    const r = await render(<Wrapped />);
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+  });
+
+  it('the counting screens load the core chunks and a later one only once it is on the device', async () => {
+    const off = bindings({ scope: scopeWith({ online: true, onDevice: false }) });
+    function Counter({ hook }: { hook: () => number }): null {
+      hook();
+      return null;
+    }
+    await render(<Counter hook={off.useLessonContentVersion} />);
+    expect(off.asked).toEqual(['episode:stage2-rites']);
+    const kept = bindings({ scope: scopeWith({ online: false, onDevice: true }) });
+    await render(<Counter hook={kept.useLessonContentVersion} />);
+    expect(kept.asked.sort()).toEqual(['episode:stage2-rites', 'episode:stage3-life']);
+  });
+
+  it('a grown-up report (laterWhenOnline) loads every later volume while online, so it counts the same on any device', async () => {
+    const report = bindings({ scope: scopeWith({ online: true, onDevice: false }) });
+    function Report(): null {
+      report.useLessonContentVersion(true);
+      return null;
+    }
+    await render(<Report />);
+    expect(report.asked.sort()).toEqual(['episode:stage2-rites', 'episode:stage3-life']);
+  });
+
+  describe('a later volume opened from anywhere (a homework, a note, a review): never the crash screen', () => {
+    const LATER = 'quest:stage3-life-q1';
+    const isLaterCell = (id: string): boolean => id === 'episode:stage3-life';
+    function Player({ hook, questId }: { hook: (id: string) => ChunkState; questId: string }): ReactElement {
+      const state = hook(questId);
+      return <Text testID={state}>{state}</Text>;
+    }
+    const crashBoundary = (child: ReactElement): ReactElement => <ErrorBoundary fallbackRender={() => <Text testID="crash">crash</Text>}>{child}</ErrorBoundary>;
+
+    it('offline or a network that does not answer: needs-internet, no reload', async () => {
+      const t = bindings({ isLaterCell });
+      const r = await render(crashBoundary(<Player hook={t.useLessonQuestState} questId={LATER} />));
+      expect(byTestId(r.root, 'waiting')).toHaveLength(1);
+      await act(async () => t.pending['episode:stage3-life']?.reject(scriptError()));
+      await settle();
+      expect(byTestId(r.root, 'needs-internet')).toHaveLength(1);
+      expect(byTestId(r.root, 'crash')).toHaveLength(0);
+      expect(t.reload).not.toHaveBeenCalled();
+      // Back online, the next open loads it.
+      await act(async () => {
+        const loading = t.store.ensureCells(['episode:stage3-life']);
+        t.pending['episode:stage3-life']?.resolve(chunkOf('episode:stage3-life'));
+        await loading;
+      });
+      expect(byTestId(r.root, 'ready')).toHaveLength(1);
+    });
+
+    it('a later chunk of a newer build still reloads; refused, it is the crash screen as before', async () => {
+      const reloads = bindings({ isLaterCell, reload: () => true });
+      await render(<Player hook={reloads.useLessonQuestState} questId={LATER} />);
+      await act(async () => reloads.pending['episode:stage3-life']?.reject(new Error('Requiring unknown module "812".')));
+      await settle();
+      expect(reloads.reload).toHaveBeenCalledTimes(1);
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const refused = bindings({ isLaterCell, reload: () => false });
+      const r = await render(crashBoundary(<Player hook={refused.useLessonQuestState} questId={LATER} />));
+      await act(async () => refused.pending['episode:stage3-life']?.reject(new Error('Requiring unknown module "812".')));
+      await settle();
+      expect(byTestId(r.root, 'crash')).toHaveLength(1);
+      errors.mockRestore();
+    });
+
+    it('a core chunk that fails is still the crash screen', async () => {
+      const t = bindings({ isLaterCell });
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const r = await render(crashBoundary(<Player hook={t.useLessonQuestState} questId="quest:stage2-rites-q1" />));
+      await act(async () => t.pending['episode:stage2-rites']?.reject(scriptError()));
+      await settle();
+      expect(byTestId(r.root, 'crash')).toHaveLength(1);
+      errors.mockRestore();
+    });
+
+    it('a quest needs its cell and its story: needs-internet if either does, ready once both are', () => {
+      expect(combinedChunkState('ready', 'needs-internet')).toBe('needs-internet');
+      expect(combinedChunkState('waiting', 'needs-internet')).toBe('needs-internet');
+      expect(combinedChunkState('ready', 'waiting')).toBe('waiting');
+      expect(combinedChunkState('ready', 'ready')).toBe('ready');
+    });
+
+    it('LaterNeedsInternet: the calm line and Back (none without a way back)', async () => {
+      const onBack = vi.fn();
+      const r = await render(<LaterNeedsInternet onBack={onBack} />);
+      expect(screenTexts(r.root)).toContain(messages.learner.episode.later.line);
+      await press(buttonsNamed(r.root, messages.common.buttons.back)[0]!);
+      expect(onBack).toHaveBeenCalledTimes(1);
+      const bare = await render(<LaterNeedsInternet />);
+      expect(buttonsNamed(bare.root, messages.common.buttons.back)).toHaveLength(0);
+      expect(byTestId(bare.root, 'later-needs-internet')).toHaveLength(1);
+    });
   });
 });

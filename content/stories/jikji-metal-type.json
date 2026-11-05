@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:jikji-metal-type",
   "state": "ready",
-  "contentVer": 5,
+  "contentVer": 6,
   "title": {
     "ko": "직지, 금속활자로 찍은 책",
     "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
@@ -30,7 +30,7 @@
     "culture": "culture-reviewed",
     "advisory": [],
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-13"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -87,6 +87,41 @@
       "ko": "하권",
       "romanization": "hagwon",
       "en": "the second (last) volume of a set",
+      "kind": "word"
+    },
+    {
+      "id": "jjigeosseoyo",
+      "ko": "찍었어요",
+      "romanization": "jjigeosseoyo",
+      "en": "printed",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureosseoyo",
+      "ko": "만들었어요",
+      "romanization": "mandeureosseoyo",
+      "en": "made",
+      "kind": "word"
+    },
+    {
+      "id": "jejadeul",
+      "ko": "제자들",
+      "romanization": "jejadeul",
+      "en": "students; disciples",
+      "kind": "word"
+    },
+    {
+      "id": "oraedoen-chaek",
+      "ko": "오래된 책",
+      "romanization": "oraedoen chaek",
+      "en": "an old book",
+      "kind": "word"
+    },
+    {
+      "id": "isseoyo",
+      "ko": "있어요",
+      "romanization": "isseoyo",
+      "en": "there is; is (there)",
       "kind": "word"
     }
   ],
@@ -588,6 +623,430 @@
         "jeja",
         "hwalja"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "In 1377, people at Heungdeoksa, a {kw:jeol} outside Cheongju, printed a book with metal movable type.",
+          "captionEn": "Printing with metal type at a temple",
+          "keyword": {
+            "id": "jjigeosseoyo",
+            "ko": "찍었어요",
+            "romanization": "jjigeosseoyo",
+            "en": "printed",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "절에서 직지를 찍었어요.",
+            "romanization": "Jeoreseo jikjireul jjigeosseoyo.",
+            "en": "They printed Jikji at a temple.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A peaceful Goryeo-era temple courtyard with a wooden hall and a stone pagoda; inside an open door, figures bend over a work table with small shiny pieces. Hoya peeks around a pillar.",
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:fig-monk",
+                "x": 150,
+                "y": 270,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-monk",
+                "x": 252,
+                "y": 272,
+                "s": 1,
+                "flip": true,
+                "tint": "text.secondary"
+              },
+              {
+                "ref": "prop:type-tray",
+                "x": 202,
+                "y": 292,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 344,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "At Heungdeoksa Temple in Goryeo, monks are busy with something amazing, printing a book with metal type, and Hoya waves from the side."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "The book is {kw:jikji}. In 1372, the {kw:seunim} Baegun, then 75 years old, chose important teachings to put in it.",
+          "captionEn": "Monk Baegun gathers the teachings",
+          "keyword": {
+            "id": "mandeureosseoyo",
+            "ko": "만들었어요",
+            "romanization": "mandeureosseoyo",
+            "en": "made",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "스님이 직지를 만들었어요.",
+            "romanization": "Seunimi jikjireul mandeureosseoyo.",
+            "en": "A monk made Jikji.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "An elderly monk in gray robes writing calmly with a brush at a low desk by a paper window; mountains outside. No readable text on the paper.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 76,
+                "y": 282,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-monk-seated",
+                "x": 206,
+                "y": 286,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 330,
+                "y": 282,
+                "s": 0.9
+              }
+            ],
+            "altEn": "The wise old monk Baegun sits writing with a brush, gathering important teachings of the Buddha into the book Jikji."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Baegun's students, {kw:jeja}, printed it with support from a Buddhist nun named Myodeok.",
+          "captionEn": "His students print the book",
+          "keyword": {
+            "id": "jejadeul",
+            "ko": "제자들",
+            "romanization": "jejadeul",
+            "en": "students; disciples",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "제자들이 직지를 찍었어요.",
+            "romanization": "Jejadeuri jikjireul jjigeosseoyo.",
+            "en": "His students printed Jikji.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two younger monks carefully lifting a freshly printed sheet (shown as soft gray lines, no readable text) while a nun in robes watches kindly.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-monk",
+                "x": 126,
+                "y": 276,
+                "s": 1
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 196,
+                "y": 232,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:fig-monk",
+                "x": 266,
+                "y": 276,
+                "s": 1,
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-monk",
+                "x": 346,
+                "y": 272,
+                "s": 0.9,
+                "tint": "text.secondary",
+                "flip": true
+              }
+            ],
+            "altEn": "Baegun's students lift a freshly printed page in 1377, while the nun Myodeok, who supported the printing, watches kindly."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Each character was its own piece of {kw:hwalja}. Printers set the pieces in a plate to print a page, and mistakes were easier to fix.",
+          "captionEn": "One piece of type for each character",
+          "keyword": {
+            "id": "geumsokhwalja",
+            "ko": "금속활자",
+            "romanization": "geumsokhwalja",
+            "en": "metal movable type",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "금속활자로 찍었어요.",
+            "romanization": "Geumsokhwaljaro jjigeosseoyo.",
+            "en": "It was printed with metal type.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Close-up of hands placing tiny metal blocks into a tray frame in neat rows (block faces shown blank or as abstract bumps); Hoya holds one tiny block up to the light.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:type-tray",
+                "x": 196,
+                "y": 272,
+                "s": 2.4
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 336,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Small pieces of metal type are lined up in rows in a frame to make a page, and Hoya holds one tiny piece up to the light."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "{kw:jikji} is the world's oldest surviving book printed with movable metal type, though old records mention earlier metal-type printing.",
+          "captionEn": "The oldest surviving metal-type book",
+          "keyword": {
+            "id": "oraedoen-chaek",
+            "ko": "오래된 책",
+            "romanization": "oraedoen chaek",
+            "en": "an old book",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "직지는 오래된 책이에요.",
+            "romanization": "Jikjineun oraedoen chaegieyo.",
+            "en": "Jikji is an old book.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya proudly holds up an old bound book like a trophy on a small hill, with a gentle golden glow behind him; the cover is plain.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 236,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 200,
+                "y": 190,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "On a small hill Hoya proudly lifts up Jikji, the oldest surviving book printed with movable metal type."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Jikji had two volumes. Only the second, the {kw:hagwon}, survives. It is kept at the National Library of France in Paris.",
+          "captionEn": "One volume survives, in Paris",
+          "keyword": {
+            "id": "isseoyo",
+            "ko": "있어요",
+            "romanization": "isseoyo",
+            "en": "there is; is (there)",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "하권만 있어요.",
+            "romanization": "Hagwonman isseoyo.",
+            "en": "Only the second volume is left.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A quiet, grand library reading room with tall shelves and arched windows; one old book rests safely in a protective case. No signs, no flags, no text.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:archive-shelf",
+                "x": 72,
+                "y": 284,
+                "s": 1
+              },
+              {
+                "ref": "prop:archive-shelf",
+                "x": 328,
+                "y": 284,
+                "s": 1
+              },
+              {
+                "ref": "prop:museum-case",
+                "x": 200,
+                "y": 292,
+                "s": 1.5
+              }
+            ],
+            "altEn": "In a quiet library reading room in Paris, the surviving second volume of Jikji rests safely in a protective case."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "찍었어요",
+            "romanization": "jjigeosseoyo",
+            "en": "printed"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Painted",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Printed",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Washed",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Bought",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ],
+          "explainEn": "Jjigeosseoyo means printed. Jikji was printed with metal type in 1377."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "제자들",
+            "romanization": "jejadeul",
+            "en": "students; disciples"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Kings",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Farmers",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Merchants",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Students (disciples)",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Jejadeul means students or disciples. Baegun's disciples printed Jikji."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "Which volume of Jikji survives today?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Only the second volume",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Only the first volume",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Both volumes",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Neither volume",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ],
+          "explainEn": "Only the second volume survives. It is kept at the National Library of France in Paris."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s3",
+        "s4",
+        "s6"
+      ],
+      "newKeywordIds": [
+        "jjigeosseoyo",
+        "mandeureosseoyo",
+        "oraedoen-chaek",
+        "isseoyo"
+      ],
+      "grammarFocusEn": "Past -eosseoyo (printed, made); -ro (with); -man (only)"
     }
   ],
   "coverSceneId": "s1",
@@ -877,7 +1336,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 source pass: f8 (rev 3) adds the 청주고인쇄박물관 유네스코 직지상 page as a second Korean public-institution source; page fetched, quote machine-matched; claims unchanged; pass recorded."
+    "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 source pass: f8 (rev 3) adds the 청주고인쇄박물관 유네스코 직지상 page as a second Korean public-institution source; page fetched, quote machine-matched; claims unchanged; pass recorded. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged and the cited sources not re-opened in this pass, so checkedAt stays the date of the last source check; findings and outcomes in the PR."
   },
   "authorNotes": "There is no comparison with Gutenberg because official Korean sources give different gaps: '70여년' and '80여년' on the 국가유산포털 Jikji page, and '78년' on the Heungdeoksa site signboard text. How the book reached France is left out as a sensitive topic for young learners; per 국가유산포털 it was collected by Collin de Plancy, passed to Henri Vever, and went to the BnF under his will after his death in 1950. It can be added later with that source. The 1972 'International Book Year' exhibition and the old misnomer 'Jikji Simgyeong' are also left out. The surviving volume has lost its first leaf (38 of 39 leaves remain, per 국가유산포털), which is left out too. The casting method (wax versus sand) is not described because it is debated, and earlier metal-type evidence (the 1239 colophon) is mentioned only in general terms. The full title is 백운화상초록불조직지심체요절 (Baegun Hwasang Chorok Buljo Jikji Simche Yojeol). REVISED: the names of Baegun's disciples are no longer given in the narration. 국가유산포털 writes the second disciple 달담 and the Cheongju Early Printing Museum writes 달잠 (達湛); the museum names Seokchan and Daljam as disciples and Myodeok as donor. Scene 8: 'diggers' -> 'archaeologists'; 'The temple itself disappeared long ago' -> 'seems to have been lost in a fire long ago' (encykorea: 폐사된 것으로 보이며); 'bronze piece' -> 'metal piece' because 국가유산포털 describes the 금구 as a 쇠북(금구) fragment. Vocab 종이/인쇄/금속 replaced by 제자/금속활자/직지 so that every vocab word appears in a scene. FINAL PASS (3rd check): f8 quote no longer repeats the prize amount (UNESCO page copies show US$ 30,000 and US$ 40,000 at different times). All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): title.en and s1 say 'metal type', not 'letters made of metal' (Jikji predates Hangul and its type pieces are characters). s8 now says the temple seems to have closed after a fire (f9: abandoned after a fire). Advisory: the fire in s8 (proposed in F-STORY-001 §3.6) was reviewed and cleared; the scene names no person, harm or danger, only that a building closed long ago.",
   "errata": []

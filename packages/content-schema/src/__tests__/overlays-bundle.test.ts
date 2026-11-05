@@ -31,6 +31,17 @@ const PACKAGE = resolve(SRC, '..');
 const GENERATED_FILE = join(SRC, 'i18n-overlays.generated.ts');
 const localeFile = (locale: 'es' | 'ko'): string => join(SRC, `i18n-overlays-${locale}.generated.ts`);
 
+/** A locale table without a story's scene text (the twin of `localeTable` in scripts/build-overlays.mjs). */
+const SCENE_TEXT = /^(?:tiers\.[^.]+\.)?scenes\.[^.]+\.(?:narration|caption|alt)$/;
+function withoutSceneText(table: Record<string, Record<string, string>>): Record<string, Record<string, string>> {
+  const out: Record<string, Record<string, string>> = {};
+  for (const [id, fields] of Object.entries(table)) {
+    const kept = Object.entries(fields).filter(([field]) => !(id.startsWith('story:') && SCENE_TEXT.test(field)));
+    if (kept.length > 0) out[id] = Object.fromEntries(kept);
+  }
+  return out;
+}
+
 const LOCALE_BUDGET_BYTES = 1024 * 1024;
 const MODULE_BUDGET_BYTES = 2.25 * 1024 * 1024;
 
@@ -126,8 +137,12 @@ describe('content overlays stay out of the package barrel (F-I18N-001 open item 
 
   it('the one-locale subpaths serve each table on its own, for the learner PWA\'s locale chunks (F-CURR-002 §10)', () => {
     const manifest = JSON.parse(readFileSync(join(PACKAGE, 'package.json'), 'utf8')) as { exports: Record<string, string> };
-    expect(OVERLAYS_ES).toEqual(GENERATED.es);
-    expect(OVERLAYS_KO).toEqual(GENERATED.ko);
+    // Each is the both-locale table of its locale without a story's scene text, which rides in the story's chunk
+    // (row CM-8b's overlay half; build-stories.mjs `STORY_OVERLAYS`); a story keeps its title, summary and card text.
+    expect(OVERLAYS_ES).toEqual(withoutSceneText(GENERATED.es));
+    expect(OVERLAYS_KO).toEqual(withoutSceneText(GENERATED.ko));
+    expect(JSON.stringify(OVERLAYS_KO)).not.toMatch(/"(?:tiers\.[^."]+\.)?scenes\.[^."]+\.(?:narration|caption|alt)"/);
+    expect(OVERLAYS_KO['story:sun-and-moon']?.title).toBe(GENERATED.ko['story:sun-and-moon']?.title);
     for (const [locale, other] of [
       ['es', 'ko'],
       ['ko', 'es'],
@@ -153,6 +168,13 @@ describe('content overlays stay out of the package barrel (F-I18N-001 open item 
     expect(webTwin.OVERLAYS).toEqual({ es: {}, ko: {} });
     webTwin.installContentOverlay('ko', { 'card:test': { title: '시험' } });
     expect(webTwin.OVERLAYS).toEqual({ es: {}, ko: { 'card:test': { title: '시험' } } });
+    // A story's scene text (its chunk) and its title (the locale chunk) merge, whichever arrives first.
+    webTwin.installContentOverlay('ko', { 'story:test': { 'scenes.s1.narration': '장면' } });
+    webTwin.installContentOverlay('ko', { 'story:test': { title: '제목' } });
+    webTwin.installContentOverlay('es', { 'story:test': { title: 'Título' } });
+    webTwin.installContentOverlay('es', { 'story:test': { 'scenes.s1.narration': 'Escena' } });
+    expect(webTwin.OVERLAYS.ko['story:test']).toEqual({ 'scenes.s1.narration': '장면', title: '제목' });
+    expect(webTwin.OVERLAYS.es['story:test']).toEqual({ title: 'Título', 'scenes.s1.narration': 'Escena' });
     const before = JSON.stringify(OVERLAYS);
     installContentOverlay('es', OVERLAYS_ES);
     expect(JSON.stringify(OVERLAYS)).toBe(before);

@@ -226,6 +226,16 @@ describe('say rows: one per spoken text, in the first pack that uses it (AC-B4, 
     expect(rowOf(rows, '호랑이')).toMatchObject({ ref: sayRef('호랑이'), pack: 'stage1' });
   });
 
+  it("a cell's later volume never moves a live row: it picks the pack only for a text nothing else says (F-CURR-002 CM-44 S2)", () => {
+    const v2 = (ko) => occ(ko, 'stage2', { source: 'content/episodes/stage-2/letters.v2.json' });
+    const vocab = occ('책상', 'vocab', { source: 'content/vocab/school.json', audioRef: 'audio/vocab/chaeksang.mp3' });
+    const { rows } = build([v2('학교'), occ('학교', 'stage3', { source: 'content/episodes/stage-3/letters.json' }), v2('책상'), vocab, v2('국물')]);
+    expect(rowOf(rows, '학교')).toMatchObject({ pack: 'stage3', ref: sayRef('학교') });
+    expect(rowOf(rows, '책상')).toMatchObject({ pack: 'vocab', ref: 'audio/vocab/chaeksang.mp3' });
+    expect(rowOf(rows, '국물')).toMatchObject({ pack: 'stage2', ref: sayRef('국물') });
+    expect(rowOf(rows, '학교').sources).toContain('content/episodes/stage-2/letters.v2.json');
+  });
+
   it('two vocabulary records with one text and different clip paths stop the build', () => {
     const vocab = (slug) => occ('배', 'vocab', { source: 'content/vocab/food.json', audioRef: `audio/vocab/${slug}.mp3` });
     expect(() => build([vocab('bae-pear'), vocab('bae-boat')])).toThrow(/say the same text/);

@@ -108,13 +108,31 @@ test.describe('the card, on the release build (the launch default since LV-7)', 
     const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
     const id = profiles?.[0]?.id;
     if (!id) throw new Error('no profile stored');
+    // The address the tab opened with, taken from its main frame's navigations as they happen: the presenter takes the
+    // deck out of the address as it boots, which since the story shelf chunk (F-CURR-002 row CM-8b) can be before the
+    // page's load event, so a later tab.url() could read the address after the deck left it.
+    const opened: string[] = [];
+    let sawPresent: () => void = () => {};
+    const presentSeen = new Promise<void>((resolve) => (sawPresent = resolve));
+    const note = (u: string) => {
+      opened.push(u);
+      if (/\/present#d=/.test(u)) sawPresent();
+    };
+    context.on('page', (p) => {
+      note(p.url());
+      p.on('framenavigated', (frame) => {
+        if (frame === p.mainFrame()) note(frame.url());
+      });
+    });
     const [tab] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: en.caregiver.lecture.next(NAME) }).click()]);
+    await presentSeen;
+    const href = opened.find((u) => /\/present#d=/.test(u)) ?? '';
+    const url = new URL(href);
     await tab.waitForLoadState();
-    const url = new URL(tab.url());
     expect(url.pathname).toBe('/present');
     expect(url.hash.startsWith('#d=')).toBe(true);
     expect(url.search).toBe('');
-    const decoded = decodeURIComponent(tab.url());
+    const decoded = decodeURIComponent(href);
     for (const piece of [NAME, 'Mina', 'Ruiz', id]) expect(decoded, piece).not.toContain(piece);
     // The presenter boots the deck; its title is the preset name, never the learner's.
     await expect(tab.getByText(/Next lesson|Hangul week 1/).first()).toBeVisible();

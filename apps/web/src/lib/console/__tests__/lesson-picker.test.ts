@@ -1,5 +1,6 @@
 import {
   CATALOG,
+  laterVolumeStoryIds,
   CURRICULUM_MAX_ITEMS,
   PLAN_MAX_ITEMS,
   StageKeySchema,
@@ -17,7 +18,7 @@ import {
 } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
+import { LECTURE_STORIES as LECTURE_STORIES_ALL, LECTURE_VOCAB_TOPICS } from '@/data/lecture-catalogue.generated';
 import {
   CHOOSER_PAGE,
   chooserTabs,
@@ -49,6 +50,9 @@ import {
 import { blockMinutes, vocabMinutes } from '../lecture';
 import { ROUTES } from '../routing';
 
+
+/** The console offers no book 2 tale (F-CURR-002 row CM-46): Volume 2 is behind `volumes`, a learner switch it never reads. */
+const LECTURE_STORIES = LECTURE_STORIES_ALL.filter((st) => !laterVolumeStoryIds(CATALOG).has(st.id));
 /**
  * The console side of the grouped lesson picker (owner report 2026-10-16 item 5, AMENDMENTS-LECTURE-V2 row LV-3):
  * the groups per use and language, the labels, where the picker opens, the room a press needs, and how a press

@@ -1139,12 +1139,16 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     });
   };
 
-  /** The realia a quest's Realia Read scopes hold, by ref: a Discover realia page shows the sheet the quest plays. */
+  /**
+   * The realia a quest's Realia Read scopes and Cloze Pick cards hold, by ref: a Discover realia page shows the sheet the
+   * quest plays (a book cover only a value-gap Cloze Pick reads, F-CURR-002 row CM-44 S6, included).
+   */
   const realiaOfQuest =
     (quest: Quest) =>
     (ref: string): Realia | undefined => {
       for (const step of quest.steps) {
-        const realia = step.minigameRef === undefined ? undefined : bundle.scopeFor(step.minigameRef)?.realiaRead?.realia;
+        const scope = step.minigameRef === undefined ? undefined : bundle.scopeFor(step.minigameRef);
+        const realia = scope?.realiaRead?.realia ?? scope?.clozePick?.realia;
         if (realia?.ref === ref) return realia;
       }
       return undefined;

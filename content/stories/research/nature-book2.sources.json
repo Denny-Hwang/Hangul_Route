@@ -1,0 +1,487 @@
+{
+  "cluster": "nature-book2",
+  "row": "F-CURR-002 CM-46 (Stage 5 Nature, book 2)",
+  "accessed": "2026-11-04",
+  "note": "Provenance of the three book 2 tales: every source opened by the authoring session on the access date, with the quoted words of each fact. Never bundled, never imported (the stories were authored directly in content/stories/).",
+  "stories": [
+    {
+      "id": "story:jeju-volcanic-island",
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "Jeju Island was made by volcanic activity that went on over a very long time, into historical times.",
+          "claim_ko": "제주도는 아주 오랜 옛날부터 역사시대에 걸쳐 일어난 화산활동으로 만들어졌다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"제주도는 약 180만년 전부터 역사시대에 걸쳐 일어난 화산활동으로 만들어졌다.\""
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "In 2007 Hallasan, Seongsan Ilchulbong and the Geomunoreum lava tube system were inscribed together on the UNESCO World Heritage List as a natural site under the name \"Jeju Volcanic Island and Lava Tubes\".",
+          "claim_ko": "2007년 한라산, 성산일출봉, 거문오름 용암동굴계가 '제주 화산섬과 용암동굴(Jeju Volcanic Island and Lava Tubes)'이라는 이름으로 함께 유네스코 세계자연유산에 등재되었다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"세계유산으로 지정된 지역은 한라산, 성산일출봉, 거문오름용암동굴계 등 3개이다.\" … \"2007.6.27(수)일, 뉴질랜드 크라이스트처치에서 열린 제31차 세계유산위원회에서 제주화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)이라는 이름으로 세계자연유산으로 등재되었다.\""
+            },
+            {
+              "title": "제주 선흘리 거문오름",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0068777",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"거문오름 용암 동굴계는 2007년 유네스코 세계자연유산으로 등재되었다.\""
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "Hallasan is the highest mountain in South Korea; it is a shield volcano made by volcanic activity.",
+          "claim_ko": "한라산은 남한에서 가장 높은 산으로, 화산활동으로 만들어진 순상(방패 모양) 화산이다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"한라산은 남한에서 가장 높은 산으로서 화산활동에 의해 생성된 순상(방패모양)화산체이다.\""
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "Jeju has many small volcanic cones, which are called oreum in the Jeju dialect; Seongsan Ilchulbong is one of them.",
+          "claim_ko": "제주도에는 작은 화산체가 많고, 제주 방언으로 이를 오름이라고 한다. 성산일출봉도 그중 하나이다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"성산일출봉은 제주도에 분포하는 360개의 단성화산체(cinder cones:제주방언으로는 오름이라 함)중의 하나이며\""
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "Seongsan Ilchulbong was formed by a volcanic eruption under shallow sea water; it is also called the sunrise oreum.",
+          "claim_ko": "성산일출봉은 얕은 바다 밑에서 일어난 화산 분출로 만들어졌으며, 해뜨는 오름이라고도 불린다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"해뜨는 오름으로도 불리는 성산일출봉은 약 12만년에서 5만년 전에 얕은 수심의 해저에서 화산분출에 의해 형성된 전형적인 수성화산이다.\""
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "Lava that erupted from Geomunoreum flowed northeast to the coast at Woljeong, and along its way it formed many lava tubes: the Geomunoreum lava tube system.",
+          "claim_ko": "거문오름에서 분출한 용암이 북동쪽 월정 해안까지 흘러가면서 여러 용암동굴이 만들어졌다. 이것이 거문오름 용암동굴계이다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"거문오름용암동굴계는 지금으로부터 약 10~30만년 전에 거문오름에서 분출된 용암으로부터 만들어진 여러 개의 용암동굴이며\""
+            },
+            {
+              "title": "제주 선흘리 거문오름",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0068777",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"거문오름에서 10만~30만 년 전 분출한 현무암질 용암류는 북동 방향으로 흘러 월정 해안까지 도달했으며, 이 과정에서 용암 수로를 따라 다수의 용암 동굴계가 형성되었다.\""
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "Manjanggul is the largest lava tube of the Geomunoreum lava tube system.",
+          "claim_ko": "만장굴은 거문오름 용암동굴계에서 가장 규모가 큰 용암동굴이다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"거문오름용암동굴계에서 가장 규모가 큰 용암동굴은 만장굴로서 이 동굴의 길이와 규모는 세계적이다.\""
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "claim_en": "Yongcheon Cave and Dangcheomul Cave, in the low coastal land of Jeju, hold limestone cave formations that are rarely seen inside lava tubes.",
+          "claim_ko": "제주도 해안 저지대의 용천동굴과 당처물동굴 안에는 용암동굴에서 흔히 볼 수 없는 석회질 동굴생성물이 자라고 있다.",
+          "sources": [
+            {
+              "title": "제주 화산섬과 용암동굴 (Jeju Volcanic Island and Lava Tubes)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_08.jsp&pageNo=5_2_2_0",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"세계적인 경관과 가치를 가지고 있는 또 다른 동굴은 제주도 해안 저지대의 용천동굴과 당처물동굴이다.\" … \"이들 동굴 내에는 용암동굴 내에서는 흔히 볼수 없는 석회질 동굴생성물이 성장하고 있으며\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "story:jirisan-national-park",
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "Jirisan was designated as the first national park of the Republic of Korea on 29 December 1967.",
+          "claim_ko": "지리산은 1967년 12월 29일 대한민국 최초의 국립공원으로 지정되었다.",
+          "sources": [
+            {
+              "title": "지리산국립공원",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/front/portal/visit/visitCourseMain.do?parkId=120100&menuNo=7020093",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"1967년 최초의 국립공원으로 지정된 지리산은\""
+            },
+            {
+              "title": "지리산 국립공원",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"1967년 12월 29일 대한민국 최초의 국립공원으로 지정되었다.\""
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "Jirisan National Park stretches across three provinces and is the largest of Korea's mountain national parks.",
+          "claim_ko": "지리산국립공원은 3개 도에 걸쳐 있으며 가장 넓은 면적을 지닌 산악형 국립공원이다.",
+          "sources": [
+            {
+              "title": "지리산국립공원",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/front/portal/visit/visitCourseMain.do?parkId=120100&menuNo=7020093",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"1967년 최초의 국립공원으로 지정된 지리산은 경남의 하동, 함양, 산청, 전남의 구례, 전북의 남원 등 3개 도, 5개 시군에 걸쳐 483.022㎢의 가장 넓은 면적을 지닌 산악형 국립공원이다.\""
+            },
+            {
+              "title": "지리산 국립공원",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"3개 도에 걸쳐 자리한 지리산은\""
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "Countless peaks of Jirisan spread out like a folding screen, with valleys between its ridges; its main peak, Cheonwangbong, is the second-highest peak in South Korea.",
+          "claim_ko": "지리산의 수많은 봉우리는 병풍처럼 펼쳐져 있고 능선 사이로 계곡이 있다. 주봉인 천왕봉은 우리나라에서 두 번째로 높은 봉우리이다.",
+          "sources": [
+            {
+              "title": "지리산국립공원",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/front/portal/visit/visitCourseMain.do?parkId=120100&menuNo=7020093",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"셀 수 없이 많은 봉우리가 천왕봉(1,915m), 반야봉(1,732m), 노고단(1,507m)을 중심으로 병풍처럼 펼쳐져 있으며, 20여 개의 능선 사이로 계곡들이 자리하고 있다.\""
+            },
+            {
+              "title": "지리산 국립공원",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"주봉인 천왕봉(1,915m)\" … \"우리나라 제2의 고봉인 천왕봉\""
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "The Asiatic black bear, which once lived across the Korean Peninsula, became endangered, and only a few were left in Jirisan; so a project to restore the bears began in Jirisan National Park.",
+          "claim_ko": "한반도 전역에 살던 반달가슴곰은 멸종위기에 처했고 지리산에는 몇 마리만 남아 있었다. 그래서 지리산국립공원에서 반달가슴곰 복원사업이 시작되었다.",
+          "sources": [
+            {
+              "title": "반달가슴곰 (생태계복원)",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020028",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"한반도 전역에 서식하던 반달가슴곰은 서식지 파괴, 보신문화, 밀렵 등으로 멸종위기에 처해 있으며 2004년 지리산국립공원에서 복원사업이 시작되었습니다.\" … \"지리산에 남아있는 5마리정도의 반달가슴곰을 그대로 둘경우 멸종될 위험이 있어 외부로 부터 증식·복원을 추진하게 됨\""
+            },
+            {
+              "title": "지리산에서 자라나는 복원의 희망, 반달가슴곰 (월간 국가유산사랑)",
+              "publisher": "국가유산청 (Korea Heritage Service, khs.go.kr)",
+              "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=6113&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"극소수만 서식하고 있는 야생 곰의 멸종을 막기 위해\" … \"지리산 야생 반달가슴곰의 개체 수는 5마리 정도로 추정하고 있으며\""
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "For the project, Asiatic black bears of the same lineage as the Korean Peninsula's bears, from Russia (Primorye), North Korea and northeast China, were brought in and released.",
+          "claim_ko": "복원을 위해 한반도 반달가슴곰과 같은 계통인 러시아(연해주), 북한, 중국 북동부의 반달가슴곰을 들여와 풀어 주었다.",
+          "sources": [
+            {
+              "title": "반달가슴곰 (생태계복원)",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020028",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"한반도 아종과 동일 계통군인 러시아(연해주), 북한, 중국 북동부에 서식하는 반달가슴곰을 도입‧방사\""
+            },
+            {
+              "title": "지리산에서 자라나는 복원의 희망, 반달가슴곰 (월간 국가유산사랑)",
+              "publisher": "국가유산청 (Korea Heritage Service, khs.go.kr)",
+              "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=6113&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"2004년에 우리나라 토종 반달가슴곰과 유전자가 같은 러시아 연해주의 반달가슴곰 6마리를 도입•방사하면서 본격적인 복원사업이 시작되어\""
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "The Korea National Park Service describes the bear restoration as restoring the whole ecosystem of Jirisan, not one species, to make a place where people and wild animals live together.",
+          "claim_ko": "국립공원공단은 반달가슴곰 복원사업이 곰 한 종이 아니라 지리산 전체 생태계를 복원하여 사람과 야생동물이 함께 사는 환경을 만드는 사업이라고 설명한다.",
+          "sources": [
+            {
+              "title": "반달가슴곰 (생태계복원)",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020028",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"지리산의 반달가슴곰 복원사업은 곰 한 종을 복원하는 것이 아니라 지리산 전체 생태계를 복원하는 사업으로 인간과 야생동물이 공존하는 환경을 만드는 것입니다.\""
+            },
+            {
+              "title": "지리산에서 자라나는 복원의 희망, 반달가슴곰 (월간 국가유산사랑)",
+              "publisher": "국가유산청 (Korea Heritage Service, khs.go.kr)",
+              "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=6113&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"단순하게 멸종위기에 처한 한 종을 복원하는 사업이 아니다.\" … \"인간과 자연이 공존하는 방법을 찾는 것이다.\""
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "The flagship species of Jirisan National Park are the Asiatic black bear and hieori (winter hazel), a plant found naturally only in Korea.",
+          "claim_ko": "지리산 국립공원의 깃대종은 반달가슴곰과 히어리이며, 히어리는 한국 특산식물이다.",
+          "sources": [
+            {
+              "title": "국립공원깃대종 (지리산국립공원 깃대종)",
+              "publisher": "국립공원공단 (Korea National Park Service, knps.or.kr)",
+              "url": "https://www.knps.or.kr/portal/main/contents.do?menuNo=7020053",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "지리산국립공원 깃대종 설명 표: \"반달가슴곰\" … \"히어리\" … \"우리나라에만 자생하는 고유종으로\""
+            },
+            {
+              "title": "지리산 국립공원",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0054158",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"국립공원의 생태를 대표하는 깃대종\" … \"반달가슴곰과 히어리이다.\" … \"히어리는 한국 특산식물로\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "story:suncheon-bay-wetland",
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "Among the coastal wetlands of Korea's south coast, Suncheon Bay is one that represents the country: reed fields, seepweed and S-shaped channels spread across its wide mudflat.",
+          "claim_ko": "순천만은 남해안 지역에 발달한 연안습지 중 우리나라를 대표할 만하며, 갯벌에 갈대밭과 칠면초 군락, S자형 수로가 어우러져 있다.",
+          "sources": [
+            {
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"순천만은 남해안 지역에 발달한 연안습지 중 우리나라를 대표할 만하며, 갯벌에 펼쳐지는 갈대밭과 칠면초 군락, S자형 수로 등이 어우러져 아름다운 해안생태경관을 보여주는 경승지이다.\" … \"넓은 갯벌에는\""
+            },
+            {
+              "title": "순천만",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"순천시 주요 하천인 동천과 이사천이 빠져나가는 하구로 많은 하천 미립 물질이 조류에 의해 바다 멀리 빠져나가지 못하고 연안에 재퇴적되면서 순천만 갯벌이 형성되었다.\""
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "Reed fields spread across the Suncheon Bay mudflat.",
+          "claim_ko": "순천만 갯벌에는 갈대밭이 펼쳐져 있다.",
+          "sources": [
+            {
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"갯벌에 펼쳐지는 갈대밭과 칠면초 군락\""
+            },
+            {
+              "title": "순천만",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"갯벌은 간척으로 농경지가 되었지만 방조제 밖으로 성장을 계속해 염생 식물이 정착하고 갈대가 자라면서 흑두루미 등의 철새들이 찾아오게 되었다.\" … \"순천시의 동천과 이사천의 합류 지점으로부터 순천만의 갯벌 앞부분까지에는 약 총면적 5.4㎢에 달하는 거대한 갈대 군락이 펼쳐져 있다.\""
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "The wide mudflat of Suncheon Bay is rich in life such as lugworms, crabs and shellfish, and birds such as the hooded crane come there; this mudflat life is food for the birds.",
+          "claim_ko": "순천만의 넓은 갯벌에는 갯지렁이류, 게류, 조개류 같은 생물이 다양하고 풍부하여 흑두루미 같은 새들이 찾아오며, 이 생물들이 새들의 먹이가 된다.",
+          "sources": [
+            {
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"넓은 갯벌에는 갯지렁이류와 각종 게류, 조개류 등 갯벌 생물상이 다양하고 풍부하여 천연기념물인 흑두루미와 먹황새, 노랑부리저어새를 비롯한\""
+            },
+            {
+              "title": "순천만",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"갯벌에서의 어패류와 간척지 의한 곡물 등이 흑두루미와 같은 철새들의 풍부한 먹잇감과 보호막이 되면서\""
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "Hooded cranes come to Korea in winter as migratory birds, and Suncheon Bay is one of the places in Korea where they spend the winter.",
+          "claim_ko": "흑두루미는 우리나라에 겨울에 찾아오는 철새이며, 순천만은 흑두루미가 우리나라에서 겨울을 나는 곳 가운데 하나이다.",
+          "sources": [
+            {
+              "title": "흑두루미 (천연기념물)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1369902280000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"우리나라에는 겨울에 찾아오는 철새로\" … \"현재는 전남 순천만에서 약 100∼120마리, 충남 천수만 지역에서 약 50∼60마리가 겨울을 나고 있다.\""
+            },
+            {
+              "title": "철새 도래지 순천만",
+              "publisher": "순천시 순천만습지 (Suncheon City, scbay.suncheon.go.kr)",
+              "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"우리나라 대표 철새도래지\" … \"흑두루미\""
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "Hooded cranes are found in Siberia, China, Japan and Korea. They breed in the north, around Lake Baikal, northwestern Mongolia, the Amur river basin, the Ussuri region and northeast China, and move south in winter.",
+          "claim_ko": "흑두루미는 시베리아, 중국, 일본, 한국 등지에 분포한다. 바이칼호 부근, 몽골 북서부, 흑룡강 유역, 우수리 지방, 중국 동북 지방 등 북쪽에서 번식하고 겨울에는 남쪽으로 이동한다.",
+          "sources": [
+            {
+              "title": "흑두루미 (천연기념물)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1369902280000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"흑두루미는 시베리아, 중국, 일본, 한국 등지에 분포한다.\" … \"우리나라에는 겨울에 찾아오는 철새로\""
+            },
+            {
+              "title": "흑두루미",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0065880",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"바이칼호 부근·몽고 북서부·흑룡강 유역·우수리 지방·중국 동북지방 등지에서 번식하고 겨울에는 이동, 남하하여\""
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "More than 200 kinds of birds come to Suncheon Bay, among them the hooded crane, the black stork, the Eurasian spoonbill and the Oriental reed warbler.",
+          "claim_ko": "순천만에는 흑두루미와 먹황새, 노랑부리저어새, 개개비 등을 비롯해 200여 종의 새가 찾아온다.",
+          "sources": [
+            {
+              "title": "순천만 (명승)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1353600410000",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "국가유산 설명: \"천연기념물인 흑두루미와 먹황새, 노랑부리저어새를 비롯한 흰목물떼새, 방울새, 개개비, 검은머리물떼새 등 11종의 국제 희귀조류와 200여종의 조류가 이곳을 찾는 등\""
+            },
+            {
+              "title": "철새 도래지 순천만",
+              "publisher": "순천시 순천만습지 (Suncheon City, scbay.suncheon.go.kr)",
+              "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"총 252종의 조류가 관찰되는 우리나라 대표 철새도래지\""
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "The Ramsar Convention is the Convention on Wetlands of International Importance especially as Waterfowl Habitat, adopted in Ramsar, Iran, in 1971 to protect wetlands that waterbirds live in.",
+          "claim_ko": "람사르협약은 '물새 서식지로서 특히 국제적으로 중요한 습지에 관한 협약'으로, 물새가 사는 습지를 국제적으로 보호하려고 1971년 이란의 람사르에서 채택되었다.",
+          "sources": [
+            {
+              "title": "람사르협약 (람사르습지 목록)",
+              "publisher": "국립생태원 습지센터 (National Institute of Ecology, Wetland Center; nie.re.kr)",
+              "url": "https://www.nie.re.kr/nie/main/contents.do?menuNo=200291",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"‘물새 서식지로서 특히 국제적으로 중요한 습지에 관한 협약’\" … \"1971년 2월 2일 이란의 람사르(ramsar)에서 채택되었고, 물새 서식 습지대를 국제적으로 보호하기 위한 것으로\""
+            },
+            {
+              "title": "순천만",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"물새의 서식지로서 국제적으로 중요한 습지의 보호에 관한 국제 협약.\" … \"1971년 이란의 람사르에서 열린 국제회의에서 채택되었다.\""
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "claim_en": "Suncheon Bay was registered under the Ramsar Convention in 2006; the National Institute of Ecology lists it as a Ramsar wetland together with the Boseong mudflat, registered on 20 January 2006.",
+          "claim_ko": "순천만은 2006년 람사르협약에 등록되었다. 국립생태원은 순천만·보성갯벌을 2006년 1월 20일 등록된 람사르습지로 기록하고 있다.",
+          "sources": [
+            {
+              "title": "순천만",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0031976",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "\"2006년 람사르 협약에 등록되면서\""
+            },
+            {
+              "title": "람사르협약 (람사르습지 목록)",
+              "publisher": "국립생태원 습지센터 (National Institute of Ecology, Wetland Center; nie.re.kr)",
+              "url": "https://www.nie.re.kr/nie/main/contents.do?menuNo=200291",
+              "accessed": "2026-11-04",
+              "quote_or_locator": "람사르습지 목록, 순천만·보성갯벌 행: \"순천만·보성갯벌\" … \"2006.01.20\""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "not_used": [
+    {
+      "url": "https://whc.unesco.org/en/list/1264/",
+      "reason": "HTTP 403 / bot challenge to the authoring session; the inscription is quoted from the Korea Heritage Service portal, which names the property in English"
+    },
+    {
+      "url": "https://rsis.ramsar.org/",
+      "reason": "the site list renders with JavaScript only; Ramsar status is quoted from the National Institute of Ecology's list"
+    },
+    {
+      "url": "https://encykorea.aks.ac.kr/Article/E0065880",
+      "reason": "used for the hooded crane's breeding range only; its statement that Korea has no regular wintering site is older than Suncheon City's current page"
+    },
+    {
+      "url": "https://scbay.suncheon.go.kr/wetland/Introduce/0002/0004/",
+      "reason": "Fix round 1 (2026-11-04): Suncheon City stays a secondary source of f4 and f6 (252 kinds of birds observed, behind the KHS 'more than 200'). Its 'only regular wintering site in Korea' sentence and its seasonal bird list are no longer narrated: the Korea Heritage Service's 흑두루미 entry (an allowlisted institution, F-CURR-002 §6.6) says the cranes winter at Suncheon Bay and at Cheonsu Bay."
+    }
+  ],
+  "institutions_as_of_access_date": {
+    "Korea National Park Service (국립공원공단)": "listed among the 산하기관 of the Ministry of Climate, Energy and Environment (기후에너지환경부), https://mcee.go.kr/home/web/index.do?menuId=10429",
+    "National Institute of Ecology, Wetland Center (국립생태원 습지센터)": "the institute's site names the centre 습지센터 (history: 2019.05 국립습지센터 이관); the institute is listed among the 산하기관 of the Ministry of Climate, Energy and Environment, same page",
+    "Korea Heritage Service (국가유산청)": "named so since 2024-05-17"
+  }
+}

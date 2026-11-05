@@ -59,11 +59,13 @@ const SEASONS_TALES = [
 
 /** Every illustrated cluster, with its scene count (F-STORY-002 §3.9.8 cadence). */
 const CLUSTERS: ReadonlyArray<{ name: string; ids: readonly string[]; scenes: number }> = [
-  { name: 'records-joseon', ids: RECORDS_JOSEON, scenes: 45 },
-  // + 18 read scenes of the Stage 5 letters book (F-STORY-005 PR 5.6; art reused from the listen scene).
-  { name: 'hangul-printing', ids: HANGUL_PRINTING, scenes: 64 },
-  // + 30 read scenes of the Stage 5 life, nature and crafts books (F-STORY-005 PR 5.6).
-  { name: 'science-art-life', ids: SCIENCE_ART_LIFE, scenes: 73 },
+  // + 36 read scenes of its six stories (F-CURR-002 row CM-46a; art reused from the listen scene).
+  { name: 'records-joseon', ids: RECORDS_JOSEON, scenes: 81 },
+  // + 18 read scenes of the Stage 5 letters book (F-STORY-005 PR 5.6; art reused from the listen scene)
+  // + 18 of Tripitaka Koreana, Janggyeong Panjeon and Jikji (F-CURR-002 row CM-46a).
+  { name: 'hangul-printing', ids: HANGUL_PRINTING, scenes: 82 },
+  // + 30 read scenes of the Stage 5 life, nature and crafts books (F-STORY-005 PR 5.6) + 6 of Nanjung Ilgi (row CM-46a).
+  { name: 'science-art-life', ids: SCIENCE_ART_LIFE, scenes: 79 },
   // 48 listen scenes + 19 read scenes of the Stage 5 rites book + 17 of the life, nature and crafts books
   // (F-STORY-005 PR 5.6; art reused from the listen scene).
   { name: 'seasons-tales', ids: SEASONS_TALES, scenes: 84 },

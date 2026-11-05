@@ -32,6 +32,7 @@ import { LectureCard } from './LectureCard';
 import { PeopleOnDeviceCard } from './PeopleOnDeviceCard';
 import { ResetByWaitNotice } from './ResetByWaitNotice';
 import { BiometricShortcutCard } from './BiometricShortcutCard';
+import { OfflineLessonsCard } from './OfflineLessonsCard';
 import { localizeStage } from '../../logic/content-locale';
 import { bandLabel } from '../../logic/placement/copy';
 import { startingSpotRow } from '../../logic/placement/report-page';
@@ -172,6 +173,8 @@ export function ParentDashboardScreen({ navigation, route }: Props): ReactElemen
       ) : null}
       {/* AMENDMENTS-LECTURE-V2 E5 (LV-6): web only and behind flags.lectureModeEnabled; it draws nothing otherwise. */}
       <LectureCard learners={profiles.map((p) => ({ id: p.id, name: p.displayName }))} onGate={() => navigation.navigate('PinEntry', { next: 'LectureMode' })} />
+      {/* F-CURR-002 row CM-5B: web only, once the build has a later volume; it draws nothing otherwise. */}
+      <OfflineLessonsCard />
       {profiles.length === 0 ? (
         <Body>{m.noProfiles}</Body>
       ) : (

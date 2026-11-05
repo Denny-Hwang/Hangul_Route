@@ -4,6 +4,7 @@ import { narrationTokenIds, narrationWordCount } from '../narration';
 import { CompanionIdSchema, PillarTagSchema } from '../pillars';
 import { ThemeKeySchema } from './heritage-card';
 import { KoTextShape, KoTextSchema, refineKoText, type KoText } from './ko-text';
+import { StoryOrderRoundSchema } from './minigame';
 import { SceneArtSchema } from './scene-art';
 import { StoryCheckSchema } from './story-check';
 
@@ -190,6 +191,16 @@ export const StoryTierSchema = z
     newKeywordIds: z.array(z.string()).max(4),
     grammarFocusEn: z.string().trim().min(1).max(100).optional(),
     connective: KoTextSchema.optional(),
+    /**
+     * F-CURR-002 §5.5 S5 (row CM-46): a book 2 tale's Story Order (F5, `story-order`), read tier only. Its book quest's
+     * fourth step plays these rounds instead of the picture Story Sequence (`storyQuestSkeleton`); the panels' captions
+     * are Korean lines of the tier, and the lint `story-order-text` holds at least 1 round in 2 to captions that settle
+     * the order. While `game.story-order` is off each round plays as Story Sequence with text cards.
+     */
+    storyOrder: z
+      .object({ kind: z.literal('story-order'), rounds: z.array(StoryOrderRoundSchema).min(1).max(2) })
+      .strict()
+      .optional(),
   })
   .strict();
 export type StoryTier = z.infer<typeof StoryTierSchema>;
@@ -352,6 +363,15 @@ function storyCrossFieldRules(story: Story, ctx: z.RefinementCtx): void {
     const at = (...rest: Path): Path => ['tiers', ti, ...rest];
     if (levels.has(tier.level)) report(ctx, at('level'), 'tier levels must be unique');
     levels.add(tier.level);
+
+    if (tier.storyOrder !== undefined && tier.level !== 'read') {
+      report(ctx, at('storyOrder'), 'a Story Order round belongs to the read tier (its book quest plays it)');
+    }
+    const roundIds = new Set<string>();
+    tier.storyOrder?.rounds.forEach((round, ri) => {
+      if (roundIds.has(round.id)) report(ctx, at('storyOrder', 'rounds', ri, 'id'), `Story Order round ids must be unique (${round.id})`);
+      roundIds.add(round.id);
+    });
 
     const sceneIndex = new Map<string, number>();
     const usedKeywordIds = new Set<string>();

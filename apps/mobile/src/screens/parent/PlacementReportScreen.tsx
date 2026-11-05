@@ -22,7 +22,7 @@ import { useEffect, useMemo, useState, Fragment } from 'react';
 import type { ComponentProps, ReactElement } from 'react';
 import { Modal, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { episodesAll, jamoAll, questsAll, stages } from '../../content';
+import { episodesWithVolumes, jamoAll, questsAll, stages } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeStage } from '../../logic/content-locale';
@@ -70,7 +70,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PlacementReport'>;
 type ReportMessages = Messages['caregiver']['placementReport'];
 type PillTone = NonNullable<ComponentProps<typeof Pill>['tone']>;
 
-const CATALOG = placementRouteCatalog(questsAll, episodesAll);
+// The cells' later volumes too (F-CURR-002 row CM-40): a level below a Volume 2's stage places it out like Volume 1.
+const CATALOG = placementRouteCatalog(questsAll, episodesWithVolumes);
 const LOOKUP = bankLookup(PLACEMENT_BANK);
 const STRAND_GATES = new Map<PlacementStrand, readonly ReportRung['gate'][]>();
 for (const spec of RUNG_TABLE) STRAND_GATES.set(spec.strand, [...(STRAND_GATES.get(spec.strand) ?? []), spec.gate]);

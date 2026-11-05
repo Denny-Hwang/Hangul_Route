@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BOOK2_MAX_QUESTS,
+  BOOK_MAX_QUESTS,
+  bookMaxQuests,
   EpisodeObjectSchema,
   EpisodeSchema,
   PILLAR_HOME_THEME,
@@ -217,11 +220,22 @@ describe('EpisodeSchema grid rules (§3.2)', () => {
       'stage: a story episode on the grid is a stage5 book at launch, not stage4',
     ]);
     expect(messages({ ...book, questIds: ['quest:story-a-read'] })).toEqual([
-      'questIds: a story book holds 2-3 quests, not 1',
+      'questIds: a story book of volume 1 holds 2-3 quests, not 1',
     ]);
     expect(
       messages({ ...book, questIds: ['quest:a', 'quest:b', 'quest:c', 'quest:d'] }),
-    ).toEqual(['questIds: a story book holds 2-3 quests, not 4']);
+    ).toEqual(['questIds: a story book of volume 1 holds 2-3 quests, not 4']);
+  });
+
+  it('a book 2 holds 2 to 10 quests (F-CURR-002 row CM-46: the Letters book 2 plans ten stories)', () => {
+    const book2 = { ...book, id: 'episode:stage5-rites-v2', volume: 2 };
+    const ids = (n: number) => Array.from({ length: n }, (_, i) => `quest:story-s${i}-read`);
+    expect(bookMaxQuests(1)).toBe(BOOK_MAX_QUESTS);
+    expect(bookMaxQuests(2)).toBe(BOOK2_MAX_QUESTS);
+    expect(messages({ ...book2, questIds: ids(8) })).toEqual([]);
+    expect(messages({ ...book2, questIds: ids(10) })).toEqual([]);
+    expect(messages({ ...book2, questIds: ids(11) })).toEqual(['questIds: a story book of volume 2 holds 2-10 quests, not 11']);
+    expect(messages({ ...book2, questIds: ids(1) })).toEqual(['questIds: a story book of volume 2 holds 2-10 quests, not 1']);
   });
 
   it('a preview book may hold fewer quests, never another stage', () => {

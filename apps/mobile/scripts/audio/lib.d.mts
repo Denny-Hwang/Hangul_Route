@@ -16,7 +16,13 @@ export interface AudioRuntimeCachingRule {
     cacheName: string;
     expiration: { maxEntries: number };
     cacheableResponse: { statuses: number[]; headers: Record<string, string> };
+    plugins: readonly SavedClipFallback[];
   };
+}
+
+/** The Workbox plugin of the clip rules that reads a clip saved for offline (row CM-5B). */
+export interface SavedClipFallback {
+  cachedResponseWillBeUsed: (input: { cachedResponse?: Response | null; request: Request }) => Promise<Response | null>;
 }
 
 export const AUDIO_REF_PATTERN: RegExp;
@@ -32,6 +38,8 @@ export const PRECACHED_AUDIO_PACKS: readonly string[];
 export const SAY_AUDIO_GROUP: 'say';
 export const REF_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntries: number };
 export const SAY_RUNTIME_CACHE: { readonly cacheName: string; readonly maxEntries: number };
+export const OFFLINE_AUDIO_CACHE: 'hr-offline-audio-v1';
+export const savedClipFallback: SavedClipFallback;
 export const PACK_CHUNK_DIR: string;
 export const ASSET_MAP_MODULE: string;
 

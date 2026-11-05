@@ -381,4 +381,5 @@ export const a11y = {
   weekDrop: {
     card: (title: string, state: string) => `Esta semana en Corea: ${title}. ${state}.`,
   },
+  journeyVolume: (n: number) => `Abre el volumen ${n}`,
 } satisfies DeepPartial<Messages['a11y']>;

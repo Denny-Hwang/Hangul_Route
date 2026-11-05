@@ -182,3 +182,21 @@ export const SAND_RING: ItemDef = {
     { t: 'ellipse', cx: 120, cy: 30, rx: 100, ry: 21, stroke: 'border.strong', sw: 'thin', det: true },
   ],
 };
+
+/** F-CURR-002 row CM-46 (the Nature book 2): Grus monacha, standing, calm. */
+export const HOODED_CRANE: ItemDef = {
+  id: 'prop:hooded-crane',
+  kind: 'nature',
+  box: { w: 60, h: 90 },
+  z: 'mid',
+  alt: 'A hooded crane: dark grey body, white head and neck',
+  accuracyNote: 'Per encykorea: grey body, white neck, red crown.',
+  nodes: [
+    { t: 'path', d: 'M28 86L30 58M38 86L36 58', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M14 52Q16 34 34 34Q52 36 54 54Q46 62 30 60Q18 60 14 52Z', fill: 'text.secondary' },
+    { t: 'path', d: 'M22 38Q16 22 18 10', stroke: 'surface.paper', sw: 'thick' },
+    { t: 'circle', cx: 18, cy: 9, r: 5, fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M14 7L2 11H14Z', fill: 'feedback.nudge' },
+    { t: 'circle', cx: 17, cy: 5, r: 2, fill: 'theme.rites', det: true },
+  ],
+};
