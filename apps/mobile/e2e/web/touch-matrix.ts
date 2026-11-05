@@ -62,8 +62,8 @@ export interface Answer extends Box {
   selected: boolean;
 }
 
-/** An answer's name without its selection: the same answer before and after it is picked (a pick is a commit, a repeat tap is none). */
-export const identity = (a: Pick<Answer, 'label'>): string => a.label.replace(/^Selected: /, '');
+/** An answer's name without its selection or its miss note (Sentence Builder's "tried" and "comes next"): the same answer before and after it is picked (a pick is a commit, a repeat tap is none). */
+export const identity = (a: Pick<Answer, 'label'>): string => a.label.replace(/^Selected: /, '').replace(/, (tried|comes next)$/, '');
 
 /**
  * Every answer target on the page: a button (role or tag) whose computed `touch-action` has `pinch-zoom` and is not

@@ -175,6 +175,8 @@ for (const locale of ['es', 'ko'] as const) {
       ['Cloze Pick', openClozePick],
       ['Vocabulary question', openVocabQuestion],
       ['Story Check', openStoryCheck],
+      ['Sentence Builder', openSentenceBuilder],
+      ['Story Order', openStoryOrder],
     ] as const) {
       test(`${name} answers are at least 64 x 64`, async ({ page }) => {
         test.setTimeout(90_000);
