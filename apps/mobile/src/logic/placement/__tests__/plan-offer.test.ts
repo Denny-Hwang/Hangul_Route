@@ -127,6 +127,9 @@ describe('planOfferOf (F-PLC-001 section 3.1 step 7, AM-1, AM-2, AM-5)', () => {
     if (offer?.kind !== 'update') return;
     expect(offer.proposal.kind).toBe('update');
     expect(offer.source).toBe('retake');
+    // An existing plan is never re-laid around a class's quests (AMENDMENTS-ROUTE-CLASS-BLEND section 8): the update input leaves them out.
+    const withClass = planOfferOf(offerInput({ context: { ...raised, classQuestIds: ['quest:class-only'] }, active: planAtBand0(), dismissedAt: '2026-10-12T08:30:00.000Z' }));
+    expect(withClass?.kind === 'update' ? withClass.input.completedQuestIds : null).toEqual(offer.input.completedQuestIds);
   });
 
   it('a level that rose alone moves none of the plan\'s future: no update', () => {

@@ -100,9 +100,10 @@ describe('nextLessonTapEvent', () => {
     expect(nextLessonTapEvent({ first: true, source: 'class' }, 'profile:mina', false)).toEqual({
       name: 'route.next_started',
       profileId: 'profile:mina',
-      payload: { source: 'class', surface: 'route' },
+      payload: { source: 'class', surface: 'route', fromClass: false },
     });
-    expect(nextLessonTapEvent({ first: true, source: 'cursor' }, undefined, false)).toEqual({ name: 'route.next_started', payload: { source: 'cursor', surface: 'route' } });
+    expect(nextLessonTapEvent({ first: true, source: 'cursor' }, undefined, false)).toEqual({ name: 'route.next_started', payload: { source: 'cursor', surface: 'route', fromClass: false } });
+    expect(nextLessonTapEvent({ first: true, source: 'class', fromClass: true }, 'p', false)?.payload).toEqual({ source: 'class', surface: 'route', fromClass: true });
   });
 
   it('a later row sends nothing, and the grown-up\'s read-only page sends nothing', () => {

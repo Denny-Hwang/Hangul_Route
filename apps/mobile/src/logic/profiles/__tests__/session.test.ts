@@ -129,6 +129,9 @@ describe('[OA] routeZone and areaExitTracker (OA-D5b (2))', () => {
     expect(routeZone('MyRoute')).toBe('learner');
     expect(routeZone('RouteOverview', { profileId: 'p', viewer: 'grownup' })).toBe('area');
     expect(routeZone('RouteOverview', { profileId: 'p' })).toBe('learner');
+    // Row BL-8: a child's practice days after the gate are the grown-up's view; the learner's own are a learner screen.
+    expect(routeZone('PracticeDays', { profileId: 'p', viewer: 'grownup' })).toBe('area');
+    expect(routeZone('PracticeDays', { profileId: 'p' })).toBe('learner');
     for (const name of ['PinEntry', 'PinReset', 'Onboarding', 'Welcome', 'CreateProfile', 'FirstQuestPreview', 'PlacementInvite']) {
       expect(routeZone(name), name).toBe('gate');
     }

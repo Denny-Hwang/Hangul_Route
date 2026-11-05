@@ -86,7 +86,7 @@ Open any page in a browser with `?lang=en|es|ko` and `&text=200` for the 200 % t
 | `console.curriculum.blend.practice.inline` | {n} times a week × {m} min each time | {n} veces por semana × {m} min cada vez | 주 {n}회 × 한 번에 {m}분 | BL-4 |
 | `console.curriculum.blend.preview.practiceOnlyTag` | practice only | solo práctica | 연습에서만 | BL-4 |
 | `console.curriculum.blend.preview.classCol` / `practiceCol` | Class / Practice | Clase / Práctica | 수업 / 연습 | BL-4 (also the readout's Class and Practice headings, M4) |
-| `console.curriculum.blend.family.classHasPractice` | {name}'s class has practice days on {weekdays}. | La clase de {name} tiene días de práctica el {weekdays}. | {name}의 반은 {weekdays}에 연습해요. | BL-9 |
+| `console.curriculum.blend.family.classHasPractice` | {name}'s class has practice days on {weekdays}. | La clase de {name} tiene días de práctica los {weekdays}. | {name}의 반은 {weekdays}에 연습해요. | BL-9 |
 | `console.curriculum.blend.preview.classReview` | Review together | Repaso en grupo | 함께 복습 | BL-4 (the class cell of a review cycle; or an existing class-review preset name if BL-4 finds one) |
 | `learner.route.blend.seeIt` | See it | Verlo | 보기 | BL-7 |
 | `learner.route.blend.practiceDays.count` | Days a week | Días por semana | 한 주에 며칠 | BL-8 |

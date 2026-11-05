@@ -14,6 +14,7 @@ import { reviewStars } from '../../../logic/reviews/star-calc';
 import { YUT_REVIEW_FLAG, boardAfter, framesDuration, moveFrames, sessionSeed } from '../../../logic/reviews/yut-board';
 import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/remote-config-store';
 import { byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+import { endVoiceCheckHold } from '../../../store/audio-store';
 
 /**
  * F-CURR-002 section 7.1 F10 and row CM-39 (design/wireframes/minigame/yut-review.md): the Yut Review skin over the
@@ -240,6 +241,8 @@ const legNames = (root: ReactTestInstance): string[] =>
     .map((n) => String(n.props['data-testid']).slice('yut-throw-name-'.length));
 
 beforeEach(() => {
+  // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
+  endVoiceCheckHold();
   vi.useFakeTimers();
   resetRemoteConfigForTests();
   calls.length = 0;

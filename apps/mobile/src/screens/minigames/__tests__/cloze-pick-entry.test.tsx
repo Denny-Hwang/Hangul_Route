@@ -4,7 +4,7 @@ import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { clozeFixtureScope } from '../../../logic/cloze-pick/e2e-rounds';
 import { tileId } from '../../../logic/cloze-pick/round';
 import { getMessages } from '@hangul-route/i18n';
-import { useAudioStore } from '../../../store/audio-store';
+import { endVoiceCheckHold, useAudioStore } from '../../../store/audio-store';
 import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { ClozePickStep, FLAG_DECIDE_TIMEOUT_MS, type ClozePickRendered } from '../cloze-pick-entry';
 import type { MinigameHost } from '../host';
@@ -66,6 +66,8 @@ const tapId = async (r: ReactTestRenderer, id: string): Promise<void> => {
 };
 
 beforeEach(() => {
+  // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
+  endVoiceCheckHold();
   vi.clearAllMocks();
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
 });

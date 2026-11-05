@@ -79,6 +79,10 @@ const data = vi.hoisted(() => ({
   relinksBy: {} as Record<string, unknown>,
   /** GX-5: the next decision fails with this answer instead. */
   decideFails: null as unknown,
+  /** BL-9: the family's plans, the plan saves the page sent, and whether a save fails. */
+  plans: null as unknown,
+  saved: [] as Array<{ id: string; body: { id?: string; targetLearnerIds?: string[] | null; publish: boolean } }>,
+  saveFails: false,
 }));
 vi.mock('@/components/console/use-console', async () => {
   const { getMessages: messages } = await import('@hangul-route/i18n');
@@ -131,6 +135,17 @@ vi.mock('@/components/console/use-console', async () => {
       data.relinks = { ok: true, data: [] };
       delete data.relinksBy[id];
       return { ok: true, data: { id: requestId } };
+    },
+    listPlans: async (id: string) => {
+      data.calls.push(`plans:${id}`);
+      return data.plans ?? { ok: true, data: [] };
+    },
+    savePlan: async (id: string, body: { id?: string; targetLearnerIds?: string[] | null; publish: boolean }) => {
+      data.saved.push({ id, body });
+      if (data.saveFails) return { ok: false, error: 'network', status: -1 };
+      const list = (data.plans as { data: Array<{ id: string }> } | null)?.data ?? [];
+      data.plans = { ok: true, data: list.map((plan) => (plan.id === body.id ? { ...plan, targetLearnerIds: body.targetLearnerIds ?? null } : plan)) };
+      return { ok: true, data: body };
     },
     renameSpace: async (id: string, name: string) => {
       data.renames.push({ id, name });
@@ -210,6 +225,9 @@ beforeEach(() => {
   data.relinkNext = null;
   data.relinksBy = {};
   data.decideFails = null;
+  data.plans = null;
+  data.saved = [];
+  data.saveFails = false;
   vi.unstubAllEnvs();
   // Reports are on by default since F-REPORT-001 RP-11; these cases start from every sibling flag off and switch on what they need.
   vi.stubEnv('NEXT_PUBLIC_REPORTS_ENABLED', 'false');
@@ -1079,5 +1097,122 @@ describe('the family home: the child card week, next and lecture slot (GX-11)', 
       const r = await render([family]);
       expect(order(r)).toEqual(['learner-card', 'lecture-card']);
     });
+  });
+});
+
+// AMENDMENTS-ROUTE-CLASS-BLEND sections 8 and 11 (BL-OD-6), row BL-9; wireframe design/wireframes/parent/route-class-blend.md P1.
+describe('the family home: a class with practice days (BL-9)', () => {
+  const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
+  const meeting = { classDays: ['tue'], perWeek: 3, practiceDays: ['wed', 'fri', 'sun'] };
+  const options = [
+    { learnerId: 'profile:mina', name: 'Mina', classes: [{ spaceId: 'space:d', name: 'Evening Class D', meeting }], selfManaged: false, blockTeacherRequests: false },
+    { learnerId: 'profile:jun', name: 'Jun', classes: [], selfManaged: false, blockTeacherRequests: false },
+  ];
+  const familyPlan = {
+    id: 'plan:fam',
+    spaceId: 'sp_f',
+    authorAccountId: 'acc_1',
+    title: 'Our week',
+    items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
+    targetLearnerIds: null,
+    publishedAt: '2026-10-01T00:00:00Z',
+    archivedAt: null,
+    createdAt: '2026-10-01T00:00:00Z',
+    updatedAt: '2026-10-01T00:00:00Z',
+  };
+  const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
+  const inCard = (r: ReactTestRenderer, name: string, id: string): ReactTestInstance[] => card(r, name).findAll((n) => typeof n.type === 'string' && n.props['data-testid'] === id);
+  const b = en.console.curriculum.blend.family;
+
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    data.rosters = { sp_f: roster(family, [mina, jun]) };
+    data.transfers = { ok: true, data: { requests: [], options } };
+  });
+
+  it('appends how the class meets to the class line, on the same row, with the flag on', async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    const r = await render([family]);
+    expect(textOf(inCard(r, 'Mina', 'child-class-line')[0] as ReactTestInstance)).toBe('In: Evening Class D · class on Tuesday, practice 3 times a week');
+    expect(textOf(inCard(r, 'Jun', 'child-class-line')[0] as ReactTestInstance)).toBe(p.classLine.none);
+  });
+
+  it("keeps GX-4's line and reads no plan with the flag off", async () => {
+    data.plans = { ok: true, data: [familyPlan] };
+    const r = await render([family]);
+    expect(textOf(inCard(r, 'Mina', 'child-class-line')[0] as ReactTestInstance)).toBe(p.classLine.one('Evening Class D'));
+    expect(byTestId(r, 'child-family-plan')).toHaveLength(0);
+    expect(data.calls.some((c) => c.startsWith('plans:'))).toBe(false);
+  });
+
+  it("names the class's practice days and pauses the family weekly plan for that child; Resume puts the child back", async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', '1');
+    data.plans = { ok: true, data: [familyPlan] };
+    const r = await render([family]);
+    expect(inCard(r, 'Jun', 'child-family-plan')).toHaveLength(0);
+    const block = inCard(r, 'Mina', 'child-family-plan')[0] as ReactTestInstance;
+    expect(textOf(block)).toContain("Mina's class has practice days on Wednesday, Friday, and Sunday.");
+    const pause = inCard(r, 'Mina', 'family-plan-pause')[0] as ReactTestInstance;
+    expect(pause.type).toBe('button');
+    expect(textOf(pause)).toBe(b.pause);
+    await act(async () => pause.props.onClick());
+    expect(data.saved).toEqual([{ id: 'sp_f', body: { id: 'plan:fam', title: 'Our week', items: familyPlan.items, targetLearnerIds: ['profile:jun'], publish: true } }]);
+    const resume = inCard(r, 'Mina', 'family-plan-resume')[0] as ReactTestInstance;
+    expect(textOf(resume)).toBe(b.resume);
+    await act(async () => resume.props.onClick());
+    expect(data.saved[1]?.body.targetLearnerIds).toBeNull();
+    expect(inCard(r, 'Mina', 'family-plan-pause')).toHaveLength(1);
+  });
+
+  it("never offers Resume for a sibling's own plan, and leaves it as it is through Pause and Resume", async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    const junOwn = { ...familyPlan, id: 'plan:jun', title: 'Jun only', targetLearnerIds: ['profile:jun'], publishedAt: '2026-10-02T00:00:00Z' };
+    data.plans = { ok: true, data: [junOwn] };
+    let r = await render([family]);
+    expect(inCard(r, 'Mina', 'child-family-plan')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    data.plans = { ok: true, data: [familyPlan, junOwn] };
+    r = await render([family]);
+    await act(async () => (inCard(r, 'Mina', 'family-plan-pause')[0] as ReactTestInstance).props.onClick());
+    await act(async () => (inCard(r, 'Mina', 'family-plan-resume')[0] as ReactTestInstance).props.onClick());
+    expect(data.saved.map((s) => s.body.id)).toEqual(['plan:fam', 'plan:fam']);
+    const plansNow = (data.plans as { data: Array<{ id: string; targetLearnerIds: string[] | null }> }).data;
+    expect(plansNow.find((p) => p.id === 'plan:jun')?.targetLearnerIds).toEqual(['profile:jun']);
+    expect(plansNow.find((p) => p.id === 'plan:fam')?.targetLearnerIds).toBeNull();
+  });
+
+  it('reads the plans again before saving: a plan another grown-up already changed is not sent back', async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    data.plans = { ok: true, data: [familyPlan] };
+    const r = await render([family]);
+    const pause = inCard(r, 'Mina', 'family-plan-pause')[0] as ReactTestInstance;
+    // Another caregiver gave the plan to Jun alone after the card was drawn.
+    data.plans = { ok: true, data: [{ ...familyPlan, title: 'Edited', targetLearnerIds: ['profile:jun'] }] };
+    await act(async () => pause.props.onClick());
+    expect(data.saved).toEqual([]);
+    expect(inCard(r, 'Mina', 'family-plan-pause')).toHaveLength(0);
+  });
+
+  it('shows no meeting words and no Pause with the flag on while class moves are off (BL-10 turns both on)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    data.plans = { ok: true, data: [familyPlan] };
+    const r = await render([family]);
+    expect(byTestId(r, 'child-class-line')).toHaveLength(0);
+    expect(byTestId(r, 'child-family-plan')).toHaveLength(0);
+  });
+
+  it('says so when the save fails, and offers nothing without a live family plan', async () => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
+    data.plans = { ok: true, data: [familyPlan] };
+    data.saveFails = true;
+    let r = await render([family]);
+    await act(async () => (inCard(r, 'Mina', 'family-plan-pause')[0] as ReactTestInstance).props.onClick());
+    expect(textOf(inCard(r, 'Mina', 'child-family-plan')[0] as ReactTestInstance)).toContain(b.failed);
+    act(() => mounted?.unmount());
+    data.plans = { ok: true, data: [{ ...familyPlan, publishedAt: null }] };
+    r = await render([family]);
+    expect(byTestId(r, 'child-family-plan')).toHaveLength(0);
+    expect(findBannedWord(allText(r), 'en')).toBeNull();
   });
 });

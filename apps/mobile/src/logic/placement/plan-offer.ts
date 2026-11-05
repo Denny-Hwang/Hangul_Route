@@ -25,6 +25,7 @@ import {
 import type { Messages } from '@hangul-route/i18n';
 import {
   PACE_IDS,
+  draftOptionsOf,
   newestResultAt,
   planPromptHidden,
   proposalInputOf,
@@ -148,7 +149,8 @@ export function planChangeAt(placements: readonly PlacementResult[] | undefined,
 
 /** `proposeRoute`'s input for an existing plan (its own rhythm, minutes, goals and tier). */
 const updateInputOf = (context: ProposalContext, active: SelfRoute): ProposeInput => ({
-  ...proposalInputOf(context),
+  // An existing plan is not re-laid around the class's quests (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  ...proposalInputOf({ ...context, classQuestIds: undefined }),
   existing: { meta: active.meta, items: active.items },
 });
 
@@ -200,7 +202,7 @@ export function stripLineOf(proposal: RouteProposal): { length: DurationId; days
 /** The plan exactly as shown: the proposal at its suggested length, or the length picked; null when it would not lay out. */
 export function draftOfOffer(proposal: RouteProposal, length: DurationId = proposal.defaultId, catalog = CATALOG): CurriculumDraft | null {
   try {
-    return generateCurriculum({ ...proposal.params, weeks: LENGTH_PRESETS[length].weeks }, catalog);
+    return generateCurriculum({ ...proposal.params, weeks: LENGTH_PRESETS[length].weeks }, catalog, draftOptionsOf(proposal));
   } catch {
     return null;
   }

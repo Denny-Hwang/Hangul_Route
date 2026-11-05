@@ -261,6 +261,52 @@ test('lesson chunks are precached, load from the precache offline, and an upper-
   expect(errors).toEqual([]);
 });
 
+/**
+ * Perf(pwa) headroom row: the manifest's 1024 px icon is read by the install alone, so it is outside the precache
+ * (pwa/install-icons.mjs) and cold when the network drops. The learner path loses nothing: the 192 and 512 px icons, the
+ * manifest and the touch icon (the 512 px file) are precached, the shell and a lesson play offline, and the cold icon is
+ * the only request that fails.
+ */
+test('the install-only 1024 px icon is outside the precache, and the learner path plays offline with it cold (perf(pwa) headroom)', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Suni' });
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await controlledBySw(page);
+
+  // Online: the install can still fetch every icon the manifest lists, the 1024 px one included.
+  const manifest = (await (await page.request.get('/manifest.webmanifest')).json()) as { icons: { src: string }[] };
+  expect(manifest.icons.map((i) => i.src)).toEqual(['/icon-192.png', '/icon-512.png', '/icon-1024.png']);
+  for (const { src } of manifest.icons) expect((await page.request.get(src)).ok(), src).toBe(true);
+
+  // The worker keeps the sizes an offline install and the touch icon need, and not the install-only icon.
+  const touch = await page.locator('link[rel="apple-touch-icon"]').getAttribute('href');
+  expect(touch).toBe('/icon-512.png');
+  const cached = await cachedPaths(page);
+  for (const path of ['/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/favicon.ico']) expect(cached, path).toContain(path);
+  expect(cached).not.toContain('/icon-1024.png');
+
+  await page.reload();
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
+
+  // Offline: the cold icon is the one thing that does not load; the touch icon and the install icons come from the precache.
+  const offlineStatus = (url: string) => page.evaluate((u) => fetch(u).then((r) => r.status, () => 0), url);
+  expect(await offlineStatus('/icon-1024.png')).toBe(0);
+  for (const path of ['/icon-192.png', '/icon-512.png', '/manifest.webmanifest']) expect(await offlineStatus(path), path).toBe(200);
+
+  // And a lesson plays offline, from its chunk.
+  await playStage2LettersDiscover(page);
+  expect(errors).toEqual([]);
+});
+
 test.describe('in Spanish (F-CURR-002 CM-5: the title chunk of the active locale only)', () => {
   test.use({ locale: 'es-ES' });
 

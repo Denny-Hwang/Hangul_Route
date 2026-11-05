@@ -21,6 +21,12 @@ export interface TapBoardProps {
   multiTouch?: TapMultiTouch;
   /** No target commits; touches are still claimed, so nothing under them fires. */
   disabled?: boolean;
+  /**
+   * The answers are not shown yet: the board is not drawn (no space, no focus, no screen-reader stop) and nothing
+   * commits. A screen holds its answers while something above them may still appear, so they first show where they stay
+   * and never move under a finger (the "No sound? Read it here." text while the voice check runs, AMENDMENTS-TOUCH).
+   */
+  held?: boolean;
   testID?: string;
   children: ReactNode;
 }
@@ -36,6 +42,11 @@ export interface TapTargetProps {
    */
   inactive?: boolean;
   accessibilityLabel: string;
+  /**
+   * Default `button`. A choice chip that keeps its on or off (a weekday, a count) is a `checkbox` or a `radio`, with
+   * `accessibilityState.checked`, which also goes out as `aria-checked` on the web (row BL-8).
+   */
+  accessibilityRole?: 'button' | 'checkbox' | 'radio';
   /** `disabled` is merged from the prop. */
   accessibilityState?: { selected?: boolean; disabled?: boolean; checked?: boolean };
   /** The target lock after a commit on a `target` board (default `TAP_LOCK_MS`; the keyboard's keys: `KEY_BOUNCE_MS`). */

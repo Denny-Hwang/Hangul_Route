@@ -19,6 +19,7 @@ No copy and no i18n dependency. The caller passes the accessible names.
 | `scroll` | `'auto' \| 'none'`, default `auto` | `auto`: the board drives the nearest `TapScroller` when it can scroll (a touch on a target turns into a scroll after `TAP_TRAVEL` along its axis). `none`: never scrolls (the keyboard) |
 | `multiTouch` | `'latest' \| 'each'`, default `latest` | `latest`: a later finger that lands on a target takes the board and the earlier touch rests (never commits); a finger on nothing is ignored; a later finger that stays down `PALM_HOLD_MS` after an earlier finger lifted is a palm and commits nothing. `each` only for the keyboard: every finger is its own tap and the target follows the finger |
 | `disabled` | `boolean?` | No target commits; touches are still claimed so nothing under them fires |
+| `held` | `boolean?` | The answers are not shown yet: the board is not drawn (`display: none`: no space, no focus, no screen-reader stop) and nothing commits. A screen holds its answers while something above them may still come in, so they first show where they stay and never move under a finger (`!slot.settled`: the "No sound? Read it here." text while the voice check runs, see PromptPanel) |
 | `testID` | `string?` | |
 
 Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board itself is `pinch-zoom` when its `Screen` fits, else `pan-y pinch-zoom` (`pan-x pinch-zoom` under a horizontal `TapScroller`). A `TapTarget` outside a board keeps the browser's own `touch-action` (KT-2): no board is there to scroll the page for a drag that starts on it.
@@ -32,6 +33,7 @@ Web `touch-action`: every `TapTarget` inside a board is `pinch-zoom`; the board 
 | `inactive` | `boolean?` | KT-2. For the board like `disabled` (claimed, never pressed, never committed), but the button stays enabled and focusable and its `accessibilityState` is the caller's (an answered ChoiceCard, `correct` or a locked miss) |
 | `gapFill` | `boolean?`, default true | false for a take-back target (a filled slot or zone): only a touch inside its own rectangle reaches it |
 | `accessibilityLabel` | `string` | Required |
+| `accessibilityRole` | `'button' \| 'checkbox' \| 'radio'`, default `button` | A choice chip that keeps its on or off (My practice days' weekday and count chips, AMENDMENTS-ROUTE-CLASS-BLEND BL-8) is a `checkbox` or `radio`; `accessibilityState.checked` also goes out as `aria-checked` on the web |
 | `accessibilityState` | `{ selected?: boolean; disabled?: boolean }?` | `disabled` is merged from the prop (an explicit `disabled: true` is kept) |
 | `lockMs` | `number?` | The target lock after a commit on a `target` board (default `TAP_LOCK_MS`); the keyboard's keys pass `KEY_BOUNCE_MS` (KT-7) |
 | `style` | `StyleProp<ViewStyle> \| (look) => StyleProp<ViewStyle>` | The hit area's own style: its box is what the board hit-tests, so a target that must fill a cell styles it here |

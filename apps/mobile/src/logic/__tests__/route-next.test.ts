@@ -135,6 +135,15 @@ describe('routeNext: step 1, due now (the same function as Home card 2)', () => 
     expect([...view.inPlanEpisodeIds]).toEqual(['episode:s1-life']);
   });
 
+  it('carries fromClass for a lesson met in class, in step 1 and step 2 (AMENDMENTS-ROUTE-CLASS-BLEND, BL-7)', () => {
+    const due = snap([], [hw('plan:cls', 'q3', TODAY, { assignedBy: 'teacher', fromClass: true })]);
+    expect(routeNext(input({ snapshot: due, sources: [source('plan:cls', 'class', ['q3'])] }))).toMatchObject({ questId: 'quest:q3', fromClass: true });
+    const later = snap([], [hw('plan:cls', 'q3', '2026-10-15', { assignedBy: 'teacher', fromClass: true })]);
+    expect(routeNext(input({ snapshot: later, sources: [source('plan:cls', 'class', ['q3'])] }))).toMatchObject({ questId: 'quest:q3', fromClass: true });
+    const plain = snap([], [hw('plan:cls', 'q3', TODAY, { assignedBy: 'teacher' })]);
+    expect(routeNext(input({ snapshot: plain, sources: [source('plan:cls', 'class', ['q3'])] }))).not.toHaveProperty('fromClass');
+  });
+
   it('an item dated last week is still next today, and never late', () => {
     const s = snap([], [hw('plan:cls', 'q3', '2026-10-05')]);
     expect(routeNext(input({ snapshot: s, sources: [source('plan:cls', 'class', ['q3'])] }))).toMatchObject({ questId: 'quest:q3', source: 'class' });
@@ -489,8 +498,10 @@ describe('off-plan and telemetry', () => {
   });
 
   it('route.next_started carries the source and the surface', () => {
-    expect(nextStartedEvent(P, 'family', 'home')).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'family', surface: 'home' } });
-    expect(nextStartedEvent(undefined, 'cursor', 'placement')).toEqual({ name: 'route.next_started', payload: { source: 'cursor', surface: 'placement' } });
+    expect(nextStartedEvent(P, 'family', 'home')).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'family', surface: 'home', fromClass: false } });
+    expect(nextStartedEvent(undefined, 'cursor', 'placement')).toEqual({ name: 'route.next_started', payload: { source: 'cursor', surface: 'placement', fromClass: false } });
+    // AMENDMENTS-ROUTE-CLASS-BLEND section 18 (row BL-7): a lesson met in class says so, as a boolean only.
+    expect(nextStartedEvent(P, 'class', 'route', true)).toEqual({ name: 'route.next_started', profileId: P, payload: { source: 'class', surface: 'route', fromClass: true } });
   });
 });
 

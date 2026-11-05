@@ -28,6 +28,7 @@ import {
   type StageKey,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { practiceWeekView, type PracticeWeekView } from './family-blend';
 import { catalogTitle, plannableQuest } from '@/data/catalog';
 import type { ApiResult, LearnerReportBody } from './api';
 import type { LearningRouteGoal } from './learning-route-view';
@@ -582,6 +583,11 @@ export interface ReportThisPeriod {
   figures: ReportFigureTile[] | null;
   calendar: ReportCalendarView | null;
   growth: ReportGrowthView | null;
+  /**
+   * "Practiced on {n} days this week" with a strip that fills (AMENDMENTS-ROUTE-CLASS-BLEND section 11, row BL-9): a
+   * family viewer on the current week with a class plan with practice days only (`practiceWeekView`); null otherwise.
+   */
+  practiceWeek: PracticeWeekView | null;
 }
 
 /** A More detail block under its `h3`: letter tiles, or lines. */
@@ -656,6 +662,8 @@ export interface LearnerReportViewInput {
    * read was skipped or failed, so the classes line is left out (GX-13).
    */
   classes?: readonly string[] | null;
+  /** Class days and practice days on this build (`routeBlendEnabled()`): the family's practice-week line (BL-9). */
+  routeBlend?: boolean;
   catalog?: Catalog;
   locale?: UiLocale;
 }
@@ -949,7 +957,14 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     wentWell: section(m.report.section.wentWell, wentWell(ctx)),
     practiceNext: section(m.report.section.practiceNext, practiceNext(ctx)),
     thisPeriod: ready
-      ? { heading: m.report.section.thisPeriod, scope: m.report.scope.allDevices, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) }
+      ? {
+          heading: m.report.section.thisPeriod,
+          scope: m.report.scope.allDevices,
+          figures: figuresView(report, w),
+          calendar: calendarView(report, w),
+          growth: growthView(report, w),
+          practiceWeek: input.routeBlend ? practiceWeekView({ summary, viewer, period: report.period, at: query.at, now }, locale) : null,
+        }
       : null,
     moreDetail: summary === null ? null : detailView(report, summary, w),
   };

@@ -18,6 +18,7 @@ import {
   type DateKey,
   type DurationId,
   type DurationOption,
+  type GenerateOptions,
   type LearnerType,
   type PaceId,
   type PlacementResult,
@@ -26,6 +27,7 @@ import {
   type StageKey,
   type Weekday,
 } from '@hangul-route/content-schema';
+import { ownPlanProposalOffered, type Layer } from './layer';
 
 /**
  * The learner's weekly plan proposal (F-PLAN-002 section 3.9, AMENDMENTS-PLC-PLAN-HANDOFF
@@ -59,6 +61,11 @@ export interface PlanPromptInput {
   /** `route-ui:<profileId>.dismissedAt`. */
   dismissedAt: string | undefined;
   nowMs: number;
+  /**
+   * The learner's layer today (`layerOf`, AMENDMENTS-ROUTE-CLASS-BLEND section 8): no proposal while the class plan
+   * has practice days. Absent reads as solo.
+   */
+  layer?: Layer;
 }
 
 /**
@@ -80,6 +87,7 @@ export function planPromptHidden(dismissedAt: string | undefined, newestResultAt
  */
 export function planPromptEligible(i: PlanPromptInput): boolean {
   if (!i.enabled || i.learnerType !== 'self' || i.hasPlan) return false;
+  if (i.layer !== undefined && !ownPlanProposalOffered(i.layer)) return false;
   if (i.questsDone < 1 && i.newestResultAt === undefined) return false;
   return !planPromptHidden(i.dismissedAt, i.newestResultAt, i.nowMs);
 }
@@ -135,6 +143,12 @@ export interface ProposalContext {
   startDate?: DateKey;
   /** Tests only; the app always plans from the shared catalogue. */
   catalog?: Catalog;
+  /**
+   * The quests an in-force class or school curriculum schedules (`classScheduledQuestIds`, AMENDMENTS-ROUTE-CLASS-BLEND
+   * section 8, BL-6): a new own plan leaves them out, so it never repeats the class. A plan the learner already has is
+   * not re-laid by them (the derivation's dedupe hides them instead), so `updateInputOf` drops them.
+   */
+  classQuestIds?: readonly string[];
 }
 
 /**
@@ -157,7 +171,9 @@ export function proposalInputOf(c: ProposalContext): ProposeInput {
   return {
     audience: 'self',
     seed,
+    // Real completions only: the class's quests are left out as exclusions, never counted as lessons the learner knows.
     completedQuestIds: [...c.completedQuestIds],
+    ...(c.classQuestIds === undefined || c.classQuestIds.length === 0 ? {} : { excludeQuestIds: [...c.classQuestIds] }),
     levelOrder: levelOrder(c.ageGroup),
     ...(c.pace === undefined ? {} : { pace: c.pace }),
     unlockedStages: [...c.unlockedStages],
@@ -166,6 +182,9 @@ export function proposalInputOf(c: ProposalContext): ProposeInput {
     ...(c.startDate === undefined ? {} : { startDate: c.startDate }),
   };
 }
+
+/** `{ startDate }` when a start day is given, else nothing (spread into a `ProposalContext`). */
+export const withStart = (startDate: DateKey | undefined): { startDate?: DateKey } => (startDate === undefined ? {} : { startDate });
 
 /** `proposeRoute`, or null when it has nothing ready or the input breaks a params cap (it throws then). */
 export function safePropose(input: ProposeInput): RouteProposal | null {
@@ -233,6 +252,11 @@ export function daysReady(choice: PlanChoice): boolean {
 /** A new pace starts again from its own spread days. */
 export function withPace(choice: PlanChoice, pace: PaceId): PlanChoice {
   return { ...choice, pace, days: null };
+}
+
+/** The generator options of a draft from `proposal`: the quests it leaves out (an in-force class's, section 8). */
+export function draftOptionsOf(proposal: Pick<RouteProposal, 'excludeQuestIds'>): GenerateOptions {
+  return proposal.excludeQuestIds === undefined || proposal.excludeQuestIds.length === 0 ? {} : { exclude: [...proposal.excludeQuestIds] };
 }
 
 /** The generator params of a choice: the proposal's start, goals and tier with the learner's length, day, pace, days and minutes. */

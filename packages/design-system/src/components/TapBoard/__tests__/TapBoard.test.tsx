@@ -150,6 +150,28 @@ describe('TapBoard: touch-action (KT-D3)', () => {
   });
 });
 
+describe('TapBoard: held (answers not shown yet; no move under a finger)', () => {
+  it('is not drawn and commits nothing while held; once shown it draws and commits as before', () => {
+    const commits: string[] = [];
+    const held = renderBoard({ held: true });
+    expect(held.view.props.style).toEqual([expect.objectContaining({ touchAction: 'pinch-zoom' }), { display: 'none' }]);
+    const value = held.provider.props.value as TapBoardContextValue;
+    value.register('A', { node: () => null, disabled: () => false, commit: () => commits.push('A') });
+    value.click('A');
+    expect(commits).toEqual([]);
+    const shown = renderBoard({ held: false });
+    expect(touchActionOf(shown.view)).toBe('pinch-zoom');
+    expect(Array.isArray(shown.view.props.style)).toBe(false);
+    (shown.provider.props.value as TapBoardContextValue).click('A');
+    expect(commits).toEqual(['A']);
+  });
+
+  it('native: held is display none too (no web style)', () => {
+    platform.OS = 'ios';
+    expect(renderBoard({ held: true }).view.props.style).toEqual([undefined, { display: 'none' }]);
+  });
+});
+
 describe('TapBoard: the responder, the context and the Screen', () => {
   it('wires the capture responder on its View and passes testID', () => {
     const { view } = renderBoard({ testID: 'answers' });
@@ -303,6 +325,16 @@ describe('TapTarget inside a board', () => {
     syncContexts();
     return { value, clicks, registered, remeasured };
   }
+
+  it('a choice chip is a checkbox or a radio, and its checked state goes out as aria-checked too (BL-8)', () => {
+    inBoard();
+    const chip = renderTarget({ accessibilityRole: 'checkbox', accessibilityState: { checked: true } });
+    expect(chip.props.accessibilityRole).toBe('checkbox');
+    expect(chip.props['aria-checked']).toBe(true);
+    const radio = renderTarget({ accessibilityRole: 'radio', accessibilityState: { checked: false } });
+    expect(radio.props['aria-checked']).toBe(false);
+    expect('aria-checked' in renderTarget({}).props).toBe(false);
+  });
 
   it('is a focusable button with the caller\'s label and state; its click (with its time stamp) goes to the board', () => {
     const { clicks } = inBoard();

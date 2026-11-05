@@ -438,7 +438,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
           </>
         }
         answers={
-          <TapBoard lock="board">
+          // Held while the voice check may still bring the sound's text panel in above the cards; the text prompt mode
+          // draws its prompt as text from the start (its status panel shows only once the round is answered).
+          <TapBoard lock="board" held={!textMode && !slot.settled}>
             {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
             <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
               {round.options.map((option) => {

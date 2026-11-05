@@ -1032,3 +1032,18 @@ describe('AMENDMENTS-GROWNUP-UX GX-13 (T13): minutes with a unit, no repeated st
     expect(view(STEADY).glance?.classes).toBeNull();
   });
 });
+
+describe('the practice-week line (AMENDMENTS-ROUTE-CLASS-BLEND section 11, BL-OD-11, row BL-9)', () => {
+  const withWeek = { ...STEADY, practiceWeek: { practicedDays: 3 } } as ReportSummary;
+
+  it('a family reads it on the week tab while the flag is on', () => {
+    expect(view(withWeek, { routeBlend: true }).thisPeriod?.practiceWeek).toEqual({ line: 'Practiced on 3 days this week', filled: 3 });
+  });
+
+  it('is not drawn with the flag off, for a class, at 0, or on an earlier week', () => {
+    expect(view(withWeek).thisPeriod?.practiceWeek).toBeNull();
+    expect(view(withWeek, { routeBlend: true, kind: 'class' }).thisPeriod?.practiceWeek).toBeNull();
+    expect(view({ ...STEADY, practiceWeek: { practicedDays: 0 } } as ReportSummary, { routeBlend: true }).thisPeriod?.practiceWeek).toBeNull();
+    expect(view(withWeek, { routeBlend: true, query: { period: 'week', at: '2026-10-08', from: null } }).thisPeriod?.practiceWeek ?? null).toBeNull();
+  });
+});

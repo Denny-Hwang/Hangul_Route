@@ -1073,6 +1073,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.curriculum.blend.readout.classDays': [[2, 23], [0, 1]],
   'console.curriculum.blend.readout.moveAsk': [['Tue, Nov 17']],
   'console.curriculum.blend.warn.itemCap': [[24]],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-7: the weekly plan line's parts (long weekday names, the locale's list).
+  'learner.route.blend.planLine': [['Tuesday', 'practice on Wednesday, Friday, and Sunday'], ['Monday and Thursday', 'practice every day']],
+  'learner.route.blend.practiceOn': [['Wednesday'], ['Wednesday, Friday, and Sunday']],
+  'learner.route.blend.practiceAllBut': [['Monday'], ['Sunday']],
+  'learner.route.blend.dayList': [[['Tuesday']], [['Monday', 'Thursday']], [['Wednesday', 'Friday', 'Sunday']]],
+  'a11y.route.blend.practiceDay': [['Tuesday'], ['Sunday']],
   // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
   // name, a formatted date) and the asking-to-join card's source class.
   'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],
@@ -1129,6 +1135,10 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
   'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
   'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
+  'console.curriculum.blend.family.weekdayList': [[['Tuesday']], [['Monday', 'Thursday']], [['Wednesday', 'Friday', 'Sunday']]],
+  'console.curriculum.blend.family.classLine': [['Evening Class D', 'Tuesday', 3], ['Sunday Class A', 'Monday and Thursday', 1]],
+  'console.curriculum.blend.family.classHasPractice': [['Mina', 'Wednesday, Friday, and Sunday'], ['Jun', 'Saturday']],
+  'console.curriculum.blend.report.practiceWeek': [[1], [3], [7]],
   // F-CURR-002 row CM-40: a cell's volumes, Vol 1 and Vol 2 (two at most), and the cell's "Opens Volume 2" sentence.
   'learner.episode.volumes.tab': [[1], [2]],
   'learner.episode.volumes.tabA11y': [[1], [2]],

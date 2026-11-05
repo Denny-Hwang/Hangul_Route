@@ -163,7 +163,7 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Spacer size="lg" />
-      <TapBoard lock="board">
+      <TapBoard lock="board" held={!slot.settled}>
         {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
         <View style={{ gap: spacing.md }}>
           {turn.options.map((opt) => {

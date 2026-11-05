@@ -133,13 +133,16 @@ export function useCheckInOffer(i: {
   ready: boolean;
   answeredFor: string | undefined;
   changesOpen: boolean;
+  /** The plan rests while a class plan with practice days is in force (AMENDMENTS-ROUTE-CLASS-BLEND section 8): no check-in. */
+  resting?: boolean;
 }): CheckInOffer | null {
   const { route, quests, today, ready, answeredFor, changesOpen } = i;
+  const resting = i.resting === true;
   return useMemo(() => {
-    if (!ready || !changesOpen || route === null) return null;
+    if (!ready || !changesOpen || route === null || resting) return null;
     const completed = completedQuestIdsOf(quests);
     const offer = checkInOffer({ route, completedQuestIds: completed, today, answeredFor });
     if (offer === null) return null;
     return checkInFits(route, offer, completed, today, CATALOG) ? offer : null;
-  }, [route, quests, today, ready, answeredFor, changesOpen]);
+  }, [route, quests, today, ready, answeredFor, changesOpen, resting]);
 }

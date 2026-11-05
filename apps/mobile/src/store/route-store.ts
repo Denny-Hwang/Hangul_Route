@@ -2,12 +2,15 @@ import { CATALOG, type CurriculumDraft, type SelfRoute } from '@hangul-route/con
 import { z } from 'zod';
 import { create } from 'zustand';
 import { dayKey } from '../logic/homework/mission-builder';
+import { hiddenHomeworkOf, selfRouteResting, visibleHomework } from '../logic/homework/plan-derivation';
 import { seenKey } from '../logic/my-route/seen';
+import { ownPlanRestStep } from '../logic/route/layer';
 import { createdEvent } from '../logic/route/proposal-flow';
-import { applyCheckIn, autoRepaceDue, checkInOffer, pendingPastOf, repaceSelfRoute, repacedEvent, type CheckInOffer } from '../logic/route/repace';
+import { applyCheckIn, autoRepaceDue, checkInOffer, pendingPastOf, repaceSelfRoute, repacedEvent, resumeStepOf, type CheckInOffer } from '../logic/route/repace';
 import { activeSelfRoute, archivedRoute, completedQuestIdsOf, newSelfRouteId, selfRouteOf } from '../logic/route/self-route';
 import { readJson, removeKey, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
+import { episodesAll } from '../content';
 import { usePlanStore } from './plan-store';
 import { onProfileRemoved } from './profile-removal';
 import { useProgressStore } from './progress-store';
@@ -37,6 +40,14 @@ const RouteUiSchema = z.object({
   reportDismissedAt: z.string().optional(),
   /** Keep my plan / Not now on a plan update: the start change it answered (`planChangeAt`); the update stays hidden until the next one. */
   keptFor: z.string().optional(),
+  /**
+   * The own plan this device last saw resting while a class plan with practice days was in force
+   * (AMENDMENTS-ROUTE-CLASS-BLEND section 8, BL-OD-5): when it is back, it is re-paced once and the mark goes.
+   */
+  restingFor: z.string().optional(),
+  /** When the rested plan came back, and when its one-time "Your own weekly plan is back." line was seen (BL-7). */
+  backAt: z.string().optional(),
+  backSeenAt: z.string().optional(),
 });
 export type RouteUi = z.infer<typeof RouteUiSchema>;
 
@@ -72,7 +83,10 @@ interface Actions {
    * when three or more past-dated plan items wait or the oldest is a week old. True when it ran.
    */
   autoRepace: (profileId: string, now?: Date) => Promise<boolean>;
-  /** Whether `autoRepace` would run now (read-only): the caller syncs first, so the re-pace works on the newest copy. */
+  /**
+   * Whether `autoRepace` would run now: the caller syncs first, so the re-pace works on the newest copy. It changes
+   * no plan; it only notes a resting own plan (`restingFor`), so its resume is noticed later.
+   */
   repaceDue: (profileId: string, now?: Date) => Promise<boolean>;
   /** "Move my plan along": the same re-pace by hand; false without an active plan. */
   repaceNow: (profileId: string, now?: Date) => Promise<boolean>;
@@ -82,6 +96,8 @@ interface Actions {
    * `failed` when the new pace could not be laid out or stored (the check-in stays open).
    */
   answerCheckIn: (profileId: string, offer: CheckInOffer | null, now?: Date) => Promise<CheckInAnswer>;
+  /** The one-time "Your own weekly plan is back." line was seen (AMENDMENTS-ROUTE-CLASS-BLEND section 8). */
+  markBackSeen: (profileId: string, at: string) => Promise<void>;
   /** The calm "Hoya moved your plan along" line was seen. */
   markMovedSeen: (profileId: string, at: string) => Promise<void>;
   /** The report card's Not now (F-PLC-001 P-7b): hides that card for 14 days or until the next result. */
@@ -148,16 +164,26 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     return true;
   };
 
-  const dueNow = async (profileId: string, now: Date): Promise<{ due: boolean; active: SelfRoute | null }> => {
+  /**
+   * Whether the automatic re-pace is due, and whether it is the resume of a rested plan (AMENDMENTS-ROUTE-CLASS-BLEND
+   * section 8, BL-OD-5): a resting plan is never moved along; the device notes which plan it saw resting, and when
+   * that plan is back (the class plan ended, or the learner left the class) it is re-paced once (requeue).
+   */
+  const dueNow = async (profileId: string, now: Date): Promise<{ due: boolean; active: SelfRoute | null; resume: boolean }> => {
     const active = await activeOf(profileId);
     const progress = useProgressStore.getState();
-    const due = autoRepaceDue({
-      route: active,
-      homework: progress.byProfile[profileId]?.homework ?? [],
-      today: dayKey(now.toISOString()),
-      sessionOpen: progress.openSession?.profileId === profileId,
-    });
-    return { due, active };
+    const today = dayKey(now.toISOString());
+    const plans = await usePlanStore.getState().hydrate(profileId);
+    const resting = selfRouteResting(plans, active, today);
+    const ui = get().ui[profileId] ?? (await get().loadUi(profileId));
+    const step = ownPlanRestStep({ route: active, resting, restingFor: ui.restingFor });
+    if (step === 'rest' && active !== null && ui.restingFor !== active.id) await mark(profileId, { restingFor: active.id });
+    const sessionOpen = progress.openSession?.profileId === profileId;
+    if (step === 'resume') return { due: !sessionOpen, active, resume: true };
+    // Items hidden because a class plan schedules their quest (section 8) are not late lessons of the own plan.
+    const homework = visibleHomework(progress.byProfile[profileId]?.homework ?? [], hiddenHomeworkOf(plans, active, today, episodesAll));
+    const due = autoRepaceDue({ route: active, homework, today, sessionOpen, resting });
+    return { due, active, resume: false };
   };
 
   return {
@@ -174,6 +200,8 @@ export const useRouteStore = create<State & Actions>((set, get) => {
     markDismissed: (profileId, at) => mark(profileId, { dismissedAt: at }),
 
     markMovedSeen: (profileId, at) => mark(profileId, { movedSeenAt: at }),
+
+    markBackSeen: (profileId, at) => mark(profileId, { backSeenAt: at }),
 
     markReportDismissed: (profileId, at) => mark(profileId, { reportDismissedAt: at }),
 
@@ -212,8 +240,21 @@ export const useRouteStore = create<State & Actions>((set, get) => {
 
     autoRepace: (profileId, now = new Date()) =>
       oneRepace(profileId, async () => {
-        const { due, active } = await dueNow(profileId, now);
+        const { due, active, resume } = await dueNow(profileId, now);
         if (!due || active === null) return false;
+        if (resume) {
+          // Once: the remaining lessons start from today, minus what was finished meanwhile; the line shows once.
+          const step = resumeStepOf(active, dayKey(now.toISOString()));
+          if (step === 'repace') {
+            // A re-pace that could not be laid out or stored keeps the mark, so the next start tries again.
+            if (!(await repace(profileId, active, 'auto', now))) return false;
+            await mark(profileId, { restingFor: undefined, backAt: now.toISOString() });
+            return true;
+          }
+          // Already moved along today (another device), or its weeks ended while it rested (no "back" line then).
+          await mark(profileId, step === 'done' ? { restingFor: undefined, backAt: now.toISOString() } : { restingFor: undefined });
+          return false;
+        }
         if (!(await repace(profileId, active, 'auto', now))) return false;
         await mark(profileId, { movedAt: now.toISOString() });
         return true;

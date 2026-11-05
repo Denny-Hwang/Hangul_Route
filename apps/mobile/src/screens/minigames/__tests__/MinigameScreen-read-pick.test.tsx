@@ -6,6 +6,7 @@ import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
 import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { MinigameScreen } from '../MinigameScreen';
+import { endVoiceCheckHold } from '../../../store/audio-store';
 
 /**
  * F-CURR-002 row CM-3A S2 through the real quest host: a Listen & Pick Check whose rounds show their Korean prompt
@@ -94,6 +95,8 @@ const mount = async (mode: 'always' | 'tap' = 'always'): Promise<ReactTestRender
 };
 
 beforeEach(() => {
+  // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
+  endVoiceCheckHold();
   track.mockClear();
   runStore.answers = [];
   runStore.completes = 0;
