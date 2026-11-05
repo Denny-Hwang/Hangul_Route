@@ -1121,10 +1121,18 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.home.attention': [[1], [3]],
   'console.home.schoolClassAttention': [['Class B', 1], ['Class B', 2]],
   'console.shell.navAttention.classes': [[1], [3]],
+  // AMENDMENTS-GROWNUP-UX GX-5: the parent's Home tab name (1 and many).
+  'console.shell.navAttention.home': [[1], [3]],
   'console.relinkBar.one': [['Sunday Class A']],
   'console.relinkBar.many': [[2], [5]],
   // AMENDMENTS-GROWNUP-UX GX-10: the family code in the invite line.
   'console.settings.inviteGrownUpLine': [['K7PM4Q']],
+  // AMENDMENTS-GROWNUP-UX GX-7: the invite disclosure's code and the roster card's activity line (a day word and minutes).
+  'console.space.invite': [['ABC234']],
+  'console.space.learner.practiced': [['today', 2], ['Thu', 14]],
+  // AMENDMENTS-GROWNUP-UX GX-13: the report's minutes tile and the learner's classes line.
+  'report.minutesTile': [[1], [36]],
+  'report.classesLine': [[['Sunflower']], [['Sunflower', 'Saturday B']]],
   // AMENDMENTS-ROUTE-CLASS-BLEND row BL-5: the lecture card's class-day lines (weekday arrives localized).
   'console.curriculum.blend.lecture.classDay': [['Tuesday', 3], ['Thursday', 1]],
   'console.curriculum.blend.lecture.classLength': [[30], [45], [15]],
@@ -1136,4 +1144,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.episode.volumes.tab': [[1], [2]],
   'learner.episode.volumes.tabA11y': [[1], [2]],
   'a11y.journeyVolume': [[1], [2]],
+  // Owner request OW-3: the quest card is earned at 2 stars, kept for later under that; the Library hint names the quest and the episode.
+  'learner.quest.cardWaiting.title': [['Lunar New Year']],
+  'learner.quest.cardWaiting.line': [['Lunar New Year', 'New Year & Festivals']],
 };

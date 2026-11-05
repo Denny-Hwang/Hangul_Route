@@ -43,6 +43,7 @@ import { askFor, askGate, helpAskedEvent, isClassOnly } from '../../logic/access
 import { freeEndPrimary, freeEndResults, freeLessonCards } from '../../logic/free-end';
 import { offplanFinishedEvent, planBeforeOf, routeNext, routeNextInputOf, type PlanBefore } from '../../logic/route-next';
 import { episodeReturn } from '../../logic/layout/quest-return';
+import { cardWaits } from '../../logic/reward';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
@@ -70,6 +71,7 @@ import { awardWorldOf, useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { passGate } from '../../store/gate-telemetry';
+import { completesEpisode, useQuestCardLines } from '../quest/reward-card-note';
 import { CardUnlockBanner } from './CardUnlockBanner';
 import { ExtraCardsBanner } from './ExtraCardsBanner';
 import { recordActivityPointsLater, useGoalsChunk, type GoalMoment } from '../../store/goals-entry';
@@ -194,6 +196,22 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const albumSource = outcome?.extras.map((e) => cardById(e.cardId)).find((c) => c?.unlockedBy.startsWith('set:album-'));
   const albumCard = albumSource && localizeCard(albumSource, locale);
   const showSparkles = !!newCard && stars >= 3 && !albumCard;
+  // Under 2 stars the quest's card is not earned by this run (F-MOTION-003 §3.5; the episode brings it too, F-STORY-006
+  // §3.1): Hoya's line says how to get it. Read after the write, so a card the run did bring (a 1-star finish of the
+  // episode's last quest) is held and shows no note.
+  const rewardCardId = quest?.rewardCardId;
+  const waitingLines = useQuestCardLines(
+    questId,
+    outcome !== null &&
+      snapshot !== undefined &&
+      cardWaits({
+        rewardCardId,
+        stars,
+        held: snapshot.cards.some((c) => c.cardId === rewardCardId),
+        played,
+        episodeCompletes: completesEpisode(snapshot, episodeId, questId),
+      }),
+  );
 
   // The cards an episode, stage or set completion brought besides the quest card (F-STORY-006 §3.7).
   const extras = useMemo(() => {
@@ -489,7 +507,7 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
       </View>
 
       <Spacer size="lg" />
-      <HoyaBubble tone={stars >= 2 ? 'cheering' : 'thinking'} message={cheerMessage} />
+      <HoyaBubble tone={stars >= 2 ? 'cheering' : 'thinking'} message={waitingLines ? `${cheerMessage} ${waitingLines.line}` : cheerMessage} testID="results-hoya" />
 
       {/* Always mounted so assistive tech is watching it when the card appears. */}
       <View accessibilityRole="alert" accessibilityLiveRegion="polite">

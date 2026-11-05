@@ -2,14 +2,15 @@ import { Body, Caption, Heading, Icon, colors, radii, spacing, touchTarget } fro
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import type { GainTileView } from '../../logic/my-route/view';
+import type { LibrarySectionId } from '../../logic/story/library-sections';
 
 /**
  * Gains (F-ROUTE-001 section 3.8; wireframe
  * `design/wireframes/journey/my-route-overview.md` A): an icon and an absolute
  * number per tile, shown only when greater than zero, never a total. Cards and
- * stories open the Library.
+ * stories open the Library, each on its own section (the cards tile on the learner's cards, OW-2).
  */
-export function GainsCard({ tiles, onOpenLibrary }: { tiles: GainTileView[]; onOpenLibrary: () => void }): ReactElement {
+export function GainsCard({ tiles, onOpenLibrary }: { tiles: GainTileView[]; onOpenLibrary: (section: LibrarySectionId) => void }): ReactElement {
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="my-route-gains">
       {tiles.map((tile) => {
@@ -35,7 +36,7 @@ export function GainsCard({ tiles, onOpenLibrary }: { tiles: GainTileView[]; onO
         return tile.opensLibrary ? (
           <Pressable
             key={tile.key}
-            onPress={onOpenLibrary}
+            onPress={() => onOpenLibrary(tile.key === 'cards' ? 'cards' : 'story-time')}
             accessibilityRole="button"
             accessibilityLabel={tile.a11yLabel}
             style={({ pressed }) => ({ ...box, backgroundColor: pressed ? colors.surface.sunken : colors.surface.paper })}

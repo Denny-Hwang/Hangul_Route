@@ -10,6 +10,7 @@ import { localizeCard } from '../../logic/content-locale';
 import { guestResultsActions, guestSaveGate } from '../../logic/guest/guest-model';
 import { guestSaveCard } from '../../logic/guest/guest-save-cards';
 import { guestSaveTarget } from '../../logic/guest/guest-save';
+import { cardWaits } from '../../logic/reward';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import type { GuestStackParamList } from '../../navigation/types';
@@ -22,6 +23,7 @@ import { noteGuestSaveEntry } from '../../store/guest-save';
 import { useGuestStore } from '../../store/guest-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { completesEpisode, useQuestCardLines } from '../quest/reward-card-note';
 import { CardUnlockBanner } from '../results/CardUnlockBanner';
 import { useBackGuard } from '../use-back-guard';
 import { openGuestSave } from './guest-exits';
@@ -93,6 +95,7 @@ export function GuestResults({ route, navigation }: GuestResultsProps): ReactEle
   const profiles = useProfileStore((s) => s.profiles);
   const parentPinHash = useAccountStore((s) => s.parentPinHash);
   const rewardCardId = questById(questId)?.rewardCardId;
+  const snapshot = useProgressStore((s) => (learnerId === null ? undefined : s.byProfile[learnerId]));
   const holdsCard = useProgressStore((s) => (learnerId === null ? false : (s.byProfile[learnerId]?.cards.some((c) => c.cardId === rewardCardId) ?? false)));
   const questDone = useGuestStore((s) => s.record?.questDone === true);
   const played = total > 0;
@@ -119,6 +122,12 @@ export function GuestResults({ route, navigation }: GuestResultsProps): ReactEle
   const award = outcome?.award ?? null;
   const source = award?.isNew ? cardById(award.cardId) : undefined;
   const newCard = source && localizeCard(source, locale);
+  // Under 2 stars the quest's card is not earned by this run: Hoya's line says how to get it (F-MOTION-003 §3.5).
+  // Not before the saved snapshot is there: the episode may bring the card as a catch-up, so the line waits for it.
+  const waitingLines = useQuestCardLines(
+    questId,
+    outcome !== null && snapshot !== undefined && cardWaits({ rewardCardId, stars, held: holdsCard, played, episodeCompletes: completesEpisode(snapshot, episodeId, questId) }),
+  );
   useEffect(() => {
     if (!newCard || Platform.OS !== 'ios') return;
     AccessibilityInfo.announceForAccessibility(m.newCard.announce(newCard.titleEn));
@@ -135,7 +144,7 @@ export function GuestResults({ route, navigation }: GuestResultsProps): ReactEle
       </View>
 
       <Spacer size="lg" />
-      <HoyaBubble tone={stars >= 2 ? 'cheering' : 'thinking'} message={resultsCheerMessage(stars, played, m.cheer)} />
+      <HoyaBubble tone={stars >= 2 ? 'cheering' : 'thinking'} message={waitingLines ? `${resultsCheerMessage(stars, played, m.cheer)} ${waitingLines.line}` : resultsCheerMessage(stars, played, m.cheer)} />
       {replay ? (
         <>
           <Spacer size="sm" />

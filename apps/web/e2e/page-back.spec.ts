@@ -273,6 +273,8 @@ test.describe('ConfirmSheet on the console (AMENDMENTS-DISPLAY-NAV section 8)', 
       await page.setViewportSize({ width, height: width === 375 ? 667 : 800 });
       const { calls } = await mockConsole(page);
       await page.goto(`/teach/space?id=${ID}`);
+      // AMENDMENTS-GROWNUP-UX GX-7: a class with learners keeps its code in the collapsed Invite students disclosure.
+      await page.getByTestId('invite-toggle').click();
       const regenerate = page.getByRole('button', { name: c.space.regenerate.cta, exact: true });
       const sheet = page.getByRole('alertdialog', { name: c.space.regenerateAsk(SPACE.name) });
       const posts = () => calls.filter((call) => call === `POST /api/spaces/${ID}/code`).length;

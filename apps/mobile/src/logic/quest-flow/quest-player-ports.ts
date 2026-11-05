@@ -29,6 +29,17 @@ export interface QuestPlayerPorts {
   leave(): void;
   /** A quest telemetry event; the view never names a person (the ports add who, if anyone). */
   track(event: QuestPlayerEvent): void;
+  /**
+   * Whether the run's learner already holds a card, so the reward step tells the truth about the quest's card
+   * (F-STORY-006 §3.1: 2 stars earn it; under 2 it comes later). Absent in the All lessons preview, which saves nothing
+   * and keeps the quest's authored lines.
+   */
+  ownsCard?(cardId: string): boolean;
+  /**
+   * Whether finishing this quest finishes its episode (F-STORY-006 §3.1): the episode then brings the quest's card at any
+   * stars, so the reward step must not call it waiting. Absent means no.
+   */
+  completesEpisode?(episodeId: string, questId: string): boolean;
 }
 
 /** The honest outcome of a run plus its retries (telemetry only, never scored). */

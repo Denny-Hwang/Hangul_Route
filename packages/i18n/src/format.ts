@@ -201,12 +201,15 @@ const DAY_MS = 86_400_000;
  * "today" / "yesterday" / a weekday inside the last week / "Sep 3" beyond /
  * "not yet" without a readable date. The words come from the messages
  * (`getMessages(locale).common.time`) so each locale says them its own way.
+ * `weekday: 'weekdayLong'` names the weekday in full ("Wednesday"), for a line
+ * where the short form would stand alone (a one-character weekday in Korean).
  */
 export function describeRelativeDay(
   locale: UiLocale,
   words: RelativeDayWords,
   iso: string | null | undefined,
   now: Date,
+  weekday: 'weekday' | 'weekdayLong' = 'weekday',
 ): string {
   if (!iso) return words.notYet;
   const then = new Date(iso);
@@ -216,7 +219,7 @@ export function describeRelativeDay(
   const days = Math.round((startOfToday - startOfThen) / DAY_MS);
   if (days <= 0) return words.today;
   if (days === 1) return words.yesterday;
-  return formatDate(locale, then, days < 7 ? 'weekday' : 'monthDay');
+  return formatDate(locale, then, days < 7 ? weekday : 'monthDay');
 }
 
 /**

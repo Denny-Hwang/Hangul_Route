@@ -11,9 +11,13 @@ import { useConfirm } from '@/components/console/ConfirmSheet';
 import { RevisitLetterLinks } from '@/components/console/BrowseLink';
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
-import { StartingSpot } from '@/components/console/PlacementParts';
+import { StartingSpot, SuggestStartLink } from '@/components/console/PlacementParts';
 import { PlanUpdateLine } from '@/components/console/PlanUpdateParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
+import { ClassActionBar, FirstRunCard, InviteDisclosure } from '@/components/console/ClassPageParts';
+import { classActions, practicedLine, type ClassAction } from '@/lib/console/class-page';
+import { journeyStrip } from '@/lib/console/journey-strip';
+import { startingSpotLine } from '@/lib/console/placement';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
 import { ClassGoalLineView } from '@/components/console/ClassGoalParts';
 import { StudentWordsLines, WeekWordsRevisit } from '@/components/console/VocabWordsParts';
@@ -102,6 +106,8 @@ function SpaceInner(): JSX.Element {
   const relinkSeq = useRef(0);
   const rosterHeading = useRef<HTMLHeadingElement>(null);
   const spaceHead = useRef<HTMLDivElement>(null);
+  // GX-7 review: focus inside Invite students when it moves (empty class to first learner) lands on its new button.
+  const inviteFocus = useRef(false);
   // [SA] A rename never drops a read: the renamed name is laid over each read that lands (section 5.3, `NameOverrides`).
   const names = useNameOverrides();
 
@@ -347,6 +353,123 @@ function SpaceInner(): JSX.Element {
   // Action cards lead the roster, so its heading no longer says "most recent activity first" while any is there.
   const actionFirst = ordered.some((l) => attention?.byLearner[l.id]?.action === true);
   const notesLinks = roster ? rosterNotesLinks({ enabled: notesEnabled(), archived: roster.space.archivedAt !== null, role: spaces?.find((item) => item.space.id === spaceId)?.role ?? null, spaceId, kind: roster.space.kind }) : null;
+  // AMENDMENTS-GROWNUP-UX GX-7 (section 8 T3 to T5): a class page reads title, banner, This week, the action bar (More
+  // holds the rest), the roster and, last, the Invite students disclosure around the join code; an empty class starts
+  // with its first steps and the invite open. A family roster keeps its shipped order (the code first, every button).
+  const classPage = roster?.space.kind === 'class';
+  const classReport = roster ? rosterClassReportLink({ spaceId, kind: roster.space.kind, enabled: reportsEnabled(locale), locale }) : null;
+  const classActionList = classActions({
+    empty,
+    lecture,
+    classReport: classReport !== null,
+    notes: !!notesLinks?.header,
+    moves: movesShown,
+    relinksWaiting,
+    movesWaiting,
+  });
+  const actionNode = (action: ClassAction): JSX.Element | null => {
+    if (!roster) return null;
+    const kind = roster.space.kind;
+    switch (action) {
+      case 'plan':
+        return (
+          <Link key={action} href={ROUTES.spacePlan(spaceId, undefined, kind)}>
+            <Button tone="primary" testId="open-plan">{latestPlan ? c.space.openPlan.label(latestPlan.title) : c.planThisWeek}</Button>
+          </Link>
+        );
+      case 'termPlan':
+        return (
+          <Link key={action} href={ROUTES.spaceCurriculum(spaceId, kind)}>
+            <Button testId="plan-term">{c.curriculum.entries.planTerm.cta}</Button>
+          </Link>
+        );
+      case 'lecture':
+        return (
+          <Link key={action} href={ROUTES.spaceLecture(spaceId, undefined, undefined, kind)}>
+            <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
+          </Link>
+        );
+      case 'classReport':
+        return classReport ? (
+          <Link key={action} href={classReport.href} data-testid="class-report-link" style={buttonBase}>
+            {classReport.text}
+          </Link>
+        ) : null;
+      case 'notes':
+        return notesLinks?.header ? <NotesLink key={action} href={notesLinks.header} testId="roster-notes" text={c.notes.roster.notes.cta} /> : null;
+      case 'relink':
+        return (
+          <Link key={action} href={ROUTES.spaceRelink(spaceId, kind)}>
+            <Button tone={relinksWaiting > 0 ? 'nudge' : 'secondary'} testId="relink-requests">
+              {relinksWaiting > 0 ? c.space.relinkPending.cta(relinksWaiting) : c.space.relinkRequests.cta}
+            </Button>
+          </Link>
+        );
+      case 'moves':
+        return (
+          <Link key={action} href={ROUTES.spaceTransfers(spaceId, kind)}>
+            <Button testId="class-moves" tone={movesWaiting > 0 ? 'nudge' : 'secondary'}>
+              {movesWaiting > 0 ? c.transfer.waiting(movesWaiting) : c.transfer.entry.cta}
+            </Button>
+          </Link>
+        );
+      case 'settings':
+        return (
+          <Link key={action} href={ROUTES.spaceSettings(spaceId, kind)}>
+            <Button testId="space-settings">{c.space.settings.cta}</Button>
+          </Link>
+        );
+    }
+  };
+  /** The join code, its expiry, Copy and Regenerate, and the join link: in a panel of its own on a family roster, inside Invite students on a class page. */
+  const codePanel = (hero: boolean, framed: boolean): JSX.Element | null => {
+    if (!roster) return null;
+    const body = (
+      <>
+        <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted, textTransform: 'uppercase' }}>
+          {c.space.codeLabel[roster.space.kind]}
+        </div>
+        <div data-testid="join-code" style={{ fontSize: headRem(hero ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, margin: `${spacing.xs}px 0`, overflowWrap: 'anywhere' }}>
+          {roster.joinCode ?? '—'}
+        </div>
+        <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
+        {roster.space.kind === 'family' && cap ? <Muted>{familyCountLine(cap, locale)}</Muted> : null}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, justifyContent: hero ? 'center' : 'flex-start' }}>
+          {roster.joinCode ? <Button onClick={() => void copy()}>{copied ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button> : null}
+          <Button onClick={() => void regenerate()} disabled={busy}>
+            {roster.joinCode ? c.space.regenerate.cta : c.space.createCode.cta}
+          </Button>
+        </div>
+        {hero ? <Muted>{c.writeOnBoard}</Muted> : null}
+        {joinLink !== null ? <JoinLinkPanel key={joinLink} url={joinLink} copy={c.space.joinLink} centered={hero} /> : null}
+      </>
+    );
+    return framed ? (
+      <section style={{ ...panelStyle, marginBottom: spacing.lg, textAlign: hero ? 'center' : 'left' }} aria-label={c.space.joinCodeLabel}>
+        {body}
+      </section>
+    ) : (
+      <div aria-label={c.space.joinCodeLabel} role="group">
+        {body}
+      </div>
+    );
+  };
+  const invite = roster ? (
+    <InviteDisclosure key={empty ? 'empty' : 'learners'} code={roster.joinCode} empty={empty} focusMemo={inviteFocus}>
+      {(hero) => codePanel(hero, false)}
+    </InviteDisclosure>
+  ) : null;
+  const capNotice = capLine ? (
+    <Notice tone="nudge">
+      {capLine.text}
+      {capLine.upgrade ? (
+        <>
+          {' '}
+          <Link href={ROUTES.billing}>{c.space.upgrade}</Link>
+        </>
+      ) : null}
+    </Notice>
+  ) : null;
 
   return (
     <AdultFrame
@@ -451,41 +574,21 @@ function SpaceInner(): JSX.Element {
             />
           ) : null}
 
-          <section style={{ ...panelStyle, marginBottom: spacing.lg, textAlign: empty ? 'center' : 'left' }} aria-label={c.space.joinCodeLabel}>
-            <div style={{ fontSize: rem(typography.size.caption), color: colors.text.muted, textTransform: 'uppercase' }}>
-              {c.space.codeLabel[roster.space.kind]}
-            </div>
-            <div data-testid="join-code" style={{ fontSize: headRem(empty ? typography.size.hero : typography.size.display), fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, margin: `${spacing.xs}px 0` }}>
-              {roster.joinCode ?? '—'}
-            </div>
-            <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
-            {roster.space.kind === 'family' && cap ? <Muted>{familyCountLine(cap, locale)}</Muted> : null}
-            <div style={{ display: 'flex', gap: spacing.sm, justifyContent: empty ? 'center' : 'flex-start' }}>
-              {roster.joinCode ? <Button onClick={() => void copy()}>{copied ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button> : null}
-              <Button onClick={() => void regenerate()} disabled={busy}>
-                {roster.joinCode ? c.space.regenerate.cta : c.space.createCode.cta}
-              </Button>
-            </div>
-            {empty ? <Muted>{c.writeOnBoard}</Muted> : null}
-            {joinLink !== null ? <JoinLinkPanel key={joinLink} url={joinLink} copy={c.space.joinLink} centered={empty} /> : null}
-          </section>
 
-          <ClassGoalLineView line={goalLine} />
+          {/* GX-7 review: a seat-cap notice (near or at the cap, joins failing) stays near the top of a class page, with
+              learners or without, never below the roster. */}
+          {classPage ? capNotice : null}
+          {/* GX-7 (T5): an empty class leads with the code (on the first phone screen), then its three first steps. */}
+          {classPage && empty ? invite : null}
+          {classPage && empty ? <FirstRunCard /> : null}
+          {classPage ? null : codePanel(empty, true)}
 
-          {capLine ? (
-            <Notice tone="nudge">
-              {capLine.text}
-              {capLine.upgrade ? (
-                <>
-                  {' '}
-                  <Link href={ROUTES.billing}>{c.space.upgrade}</Link>
-                </>
-              ) : null}
-            </Notice>
-          ) : null}
+          {classPage ? null : <ClassGoalLineView line={goalLine} />}
+
+          {classPage ? null : capNotice}
 
           {rollup && week && !empty ? (
-            <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title}>
+            <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title} data-testid="this-week">
               <h2 style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
                 <li>{week.practiced}</li>
@@ -509,122 +612,132 @@ function SpaceInner(): JSX.Element {
                 <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
                 {week.notSynced ? <li data-testid="week-not-synced">{week.notSynced}</li> : null}
               </ul>
-              <ClassReportLink spaceId={spaceId} kind={roster.space.kind} locale={locale} />
             </section>
           ) : null}
 
-          <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href={ROUTES.spacePlan(spaceId, undefined, roster.space.kind)}>
-              <Button tone="primary">{latestPlan ? c.space.openPlan.label(latestPlan.title) : c.planThisWeek}</Button>
-            </Link>
-            <Link href={ROUTES.spaceCurriculum(spaceId, roster.space.kind)}>
-              <Button testId="plan-term">{c.curriculum.entries.planTerm.cta}</Button>
-            </Link>
-            {lecture ? (
-              <Link href={ROUTES.spaceLecture(spaceId, undefined, undefined, roster.space.kind)}>
-                <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
-              </Link>
-            ) : null}
-            {/* A waiting request asks the grown-up to decide: the amber nudge tone (GX-1) and the action wording (review of PR #933). */}
-            <Link href={ROUTES.spaceRelink(spaceId, roster.space.kind)}>
-              <Button tone={relinksWaiting > 0 ? 'nudge' : 'secondary'} testId="relink-requests">
-                {relinksWaiting > 0 ? c.space.relinkPending.cta(relinksWaiting) : c.space.relinkRequests.cta}
-              </Button>
-            </Link>
-            {movesShown && roster.space.kind === 'class' ? (
-              <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>
-                <Button testId="class-moves" tone={movesWaiting > 0 ? 'nudge' : 'secondary'}>
-                  {movesWaiting > 0 ? c.transfer.waiting(movesWaiting) : c.transfer.entry.cta}
-                </Button>
-              </Link>
-            ) : null}
-            {notesLinks?.header ? <NotesLink href={notesLinks.header} testId="roster-notes" text={c.notes.roster.notes.cta} /> : null}
-            <Link href={ROUTES.spaceSettings(spaceId, roster.space.kind)}>
-              <Button>{c.space.settings.cta}</Button>
-            </Link>
-            {movesShown && roster.space.kind === 'family' ? (
-              <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>
-                <Button testId="family-moves" tone={movesWaiting > 0 ? 'nudge' : 'secondary'}>
-                  {movesWaiting > 0 ? c.transfer.waiting(movesWaiting) : c.transfer.entry.cta}
-                </Button>
-              </Link>
-            ) : null}
-          </div>
+          {classPage ? <ClassGoalLineView line={goalLine} /> : null}
+
+          {classPage ? (
+            <ClassActionBar bar={classActionList.bar.map(actionNode)} more={classActionList.more.map(actionNode)} />
+          ) : (
+            <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
+              {actionNode('plan')}
+              {actionNode('termPlan')}
+              {lecture ? actionNode('lecture') : null}
+              {actionNode('relink')}
+              {notesLinks?.header ? actionNode('notes') : null}
+              {actionNode('settings')}
+              {movesShown && roster.space.kind === 'family' ? (
+                <Link href={ROUTES.spaceTransfers(spaceId, roster.space.kind)}>
+                  <Button testId="family-moves" tone={movesWaiting > 0 ? 'nudge' : 'secondary'}>
+                    {movesWaiting > 0 ? c.transfer.waiting(movesWaiting) : c.transfer.entry.cta}
+                  </Button>
+                </Link>
+              ) : null}
+            </div>
+          )}
 
           {!empty ? (
-            <section aria-label={roster.space.kind === 'family' ? c.space.rosterHeadingFamily : c.space.studentsLabel}>
+            <section aria-label={roster.space.kind === 'family' ? c.space.rosterHeadingFamily : c.space.studentsLabel} style={{ marginBottom: spacing.lg }}>
               <h2 ref={rosterHeading} tabIndex={-1} data-testid="roster-heading" style={{ fontSize: rem(typography.size.bodyLg), margin: `0 0 ${spacing.sm}px` }}>
                 {actionFirst && roster.space.kind !== 'family' ? c.space.studentsLabel : rosterHeadingText(roster.space.kind, locale)}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
-                {ordered.map((l, index) => (
-                  <article key={l.id} style={{ ...panelStyle, ...(attention?.byLearner[l.id]?.action && !decided.lines[l.id] ? actionCardStyle : {}) }} data-testid="student-card" data-status={attention?.byLearner[l.id]?.kind}>
-                    <LearnerCardHead
-                      learner={l}
-                      index={index}
-                      status={attention?.byLearner[l.id]}
-                      decidedLine={decided.lines[l.id] ?? null}
-                      now={now}
-                      locale={locale}
-                      api={api}
-                      spaceId={spaceId}
-                      kind={roster.space.kind}
-                      online={online}
-                      onDecided={(text, settled) => afterDecision(l.id, text, settled)}
-                      onActivate={activate}
-                      onNameRef={(el) => {
-                        if (el) nameEls.current.set(l.id, el);
-                        else nameEls.current.delete(l.id);
-                      }}
-                    />
-                    {l.summary ? (
-                      <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm), marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
-                        <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
-                        <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
-                        <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />
-                        <div data-testid="quests-line">{questsLine(l.summary, locale)}</div>
-                        <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
-                        <JourneyStrip kind={roster.space.kind} summary={l.summary} />
-                        {l.summary.needsPractice.length ? (
-                          <div>
-                            {learnerRevisit.before}
-                            {jamo(l.summary.needsPractice)}
-                            {learnerRevisit.after}
-                          </div>
-                        ) : null}
-                        <StudentWordsLines words={studentWords(l.summary, locale)} />
-                        {latestPlan && readout && planReaches(latestPlan, l.id) ? (
-                          <div>
-                            {c.space.learner.planReadout(
-                              latestPlan.title,
-                              latestPlan.meta
-                                ? routeReadoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, latestPlan.items.length, locale)
-                                : readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, locale),
-                            )}
-                          </div>
-                        ) : null}
-                        {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
-                        <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
-                      </div>
-                    ) : attention?.byLearner[l.id]?.kind === 'new' ? (
-                      // GX-1 x GX-8: a New card's reason line already says no practice is shared yet, so a class card adds
-                      // nothing; a family card still keeps GX-8 P4's dated join ("Joined Oct 14"), the case P4 targets.
-                      roster.space.kind === 'family' ? <Muted>{joinedLine('family', l.joinedAt, now, locale)}</Muted> : null
-                    ) : (
-                      <Muted>
-                        {/* GX-8 P4: a family card leads with its dated join ("Joined Oct 14 · not synced yet"). */}
-                        {roster.space.kind === 'family'
-                          ? `${joinedLine('family', l.joinedAt, now, locale)} · ${c.notSyncedYet}`
-                          : `${c.notSyncedYet} · ${joinedLine(roster.space.kind, l.joinedAt, now, locale)}`}
-                      </Muted>
-                    )}
-                    <SeeReport spaceId={spaceId} kind={roster.space.kind} learnerId={l.id} locale={locale} />
-                    {notesLinks?.card(l.id) ? <NotesLink href={notesLinks.card(l.id) ?? ''} testId="send-note" text={c.notes.sendNote.cta} describedBy={`roster-learner-${index}`} /> : null}
-                  </article>
-                ))}
+                {ordered.map((l, index) => {
+                  const report = rosterReportLink({ spaceId, kind: roster.space.kind, learnerId: l.id, enabled: reportsEnabled(locale), locale });
+                  const noteHref = notesLinks?.card(l.id) ?? null;
+                  // GX-8 (T10): the quests text names Stage 1 itself ("Stage 1 quests: 3 of 15 · 4 cards", or "Working on the first quest").
+                  const quests = l.summary ? questsLine(l.summary, locale) : '';
+                  // The quests count is Stage 1's (`summary.stage1`). It joins "On Stage N" only on Stage 1; past it, it takes a
+                  // line of its own (its words name Stage 1), so it never reads as the current stage's.
+                  const strip = l.summary ? journeyStrip(roster.space.kind, l.summary.journey, locale) : null;
+                  const hereOrder = strip?.segments.find((segment) => segment.here)?.order ?? null;
+                  const questsJoin = hereOrder === null || hereOrder === 1;
+                  const suggestShown = startingSpotLine(l.summary, locale) !== null;
+                  return (
+                    <article key={l.id} style={{ ...panelStyle, ...(attention?.byLearner[l.id]?.action && !decided.lines[l.id] ? actionCardStyle : {}) }} data-testid="student-card" data-status={attention?.byLearner[l.id]?.kind}>
+                      <LearnerCardHead
+                        learner={l}
+                        index={index}
+                        status={attention?.byLearner[l.id]}
+                        decidedLine={decided.lines[l.id] ?? null}
+                        now={now}
+                        locale={locale}
+                        api={api}
+                        spaceId={spaceId}
+                        kind={roster.space.kind}
+                        online={online}
+                        onDecided={(text, settled) => afterDecision(l.id, text, settled)}
+                        onActivate={activate}
+                        onNameRef={(el) => {
+                          if (el) nameEls.current.set(l.id, el);
+                          else nameEls.current.delete(l.id);
+                        }}
+                      />
+                      {l.summary ? (
+                        // GX-7 (section 8 T4): (2) the activity line, (3) the stage segments with the quests, (4) what to
+                        // revisit, (5) the plan lines; the card's buttons follow in one row.
+                        <div style={{ color: colors.text.secondary, fontSize: rem(typography.size.bodySm), marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
+                          <div data-testid="practiced-line">{practicedLine(l.summary, now, locale)}</div>
+                          {strip ? <JourneyStrip kind={roster.space.kind} summary={l.summary} variant="card" trailing={questsJoin ? quests : undefined} /> : null}
+                          {strip === null ? <div data-testid="quests-line">{quests}</div> : null}
+                          {strip && !questsJoin ? <div data-testid="quests-line">{quests}</div> : null}
+                          {l.summary.needsPractice.length ? (
+                            <div>
+                              {learnerRevisit.before}
+                              {jamo(l.summary.needsPractice)}
+                              {learnerRevisit.after}
+                            </div>
+                          ) : null}
+                          <StudentWordsLines words={studentWords(l.summary, locale)} />
+                          {latestPlan && readout && planReaches(latestPlan, l.id) ? (
+                            <div data-testid="plan-line">
+                              {c.space.learner.planReadout(
+                                latestPlan.title,
+                                latestPlan.meta
+                                  ? routeReadoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, latestPlan.items.length, locale)
+                                  : readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, locale),
+                              )}
+                            </div>
+                          ) : null}
+                          <PlanUpdateLine kind={roster.space.kind} learner={l} plans={plans} today={today} api={api} spaceId={spaceId} onSaved={() => void load()} />
+                          <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} link={false} />
+                          {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
+                          <FreeLessonsLine line={rosterFreeLessonsLine({ gating, role, coverage, spaceKind: roster.space.kind, learner: l, plans: livePlans, today }, locale)} />
+                        </div>
+                      ) : attention?.byLearner[l.id]?.kind === 'new' ? (
+                        // GX-1 x GX-8: a New card's reason line already says no practice is shared yet, so a class card adds
+                        // nothing; a family card still keeps GX-8 P4's dated join ("Joined Oct 14"), the case P4 targets.
+                        roster.space.kind === 'family' ? <Muted>{joinedLine('family', l.joinedAt, now, locale)}</Muted> : null
+                      ) : (
+                        <Muted>
+                          {/* GX-8 P4: a family card leads with its dated join ("Joined Oct 14 · not synced yet"). */}
+                          {roster.space.kind === 'family'
+                            ? `${joinedLine('family', l.joinedAt, now, locale)} · ${c.notSyncedYet}`
+                            : `${c.notSyncedYet} · ${joinedLine(roster.space.kind, l.joinedAt, now, locale)}`}
+                        </Muted>
+                      )}
+                      {report || noteHref || suggestShown ? (
+                        // T4 (6): the card's one row of buttons; Suggest a different start joins it (GX-7 review) rather
+                        // than drawing a second row under the starting-spot line.
+                        <div data-testid="card-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
+                          {report ? (
+                            <Link href={report.href} data-testid="see-report" style={buttonBase}>
+                              {report.text}
+                            </Link>
+                          ) : null}
+                          {noteHref ? <NotesLink href={noteHref} testId="send-note" text={c.notes.sendNote.cta} describedBy={`roster-learner-${index}`} /> : null}
+                          <SuggestStartLink summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} kind={roster.space.kind} />
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ) : null}
+
+          {classPage && !empty ? invite : null}
         </>
       ) : null}
     </AdultFrame>
@@ -751,24 +864,6 @@ function LearnerCardHead({
 }
 
 /**
- * The student card's **See report** (F-REPORT-001 RP-7a2, section 3.1): the learner's week report with `from=roster`,
- * ids only, for a class and a family; not drawn while reports are off for this build or console locale.
- */
-function SeeReport({ spaceId, kind, learnerId, locale }: { spaceId: string; kind: Roster['space']['kind']; learnerId: string; locale: UiLocale }): JSX.Element | null {
-  const link = rosterReportLink({ spaceId, kind, learnerId, enabled: reportsEnabled(locale), locale });
-  if (link === null) return null;
-  return (
-    <Link
-      href={link.href}
-      data-testid="see-report"
-      style={{ ...buttonBase, marginTop: spacing.sm }}
-    >
-      {link.text}
-    </Link>
-  );
-}
-
-/**
  * A notes entry of the roster (F-FEEDBACK-001 FB-11a): a secondary pill that navigates, ids only in its address. A card's
  * Send a note is described by the learner's name, so a links list says whom it is for (design pass N7).
  */
@@ -778,24 +873,9 @@ function NotesLink({ href, testId, text, describedBy }: { href: string; testId: 
       href={href}
       data-testid={testId}
       aria-describedby={describedBy}
-      style={{ ...buttonBase, ...(describedBy ? { marginTop: spacing.sm, marginLeft: spacing.xs } : {}) }}
+      style={buttonBase}
     >
       {text}
-    </Link>
-  );
-}
-
-/** The roll-up's **Class report** (F-REPORT-001 RP-8, section 3.1): class spaces only, while reports are on. */
-function ClassReportLink({ spaceId, kind, locale }: { spaceId: string; kind: Roster['space']['kind']; locale: UiLocale }): JSX.Element | null {
-  const link = rosterClassReportLink({ spaceId, kind, enabled: reportsEnabled(locale), locale });
-  if (link === null) return null;
-  return (
-    <Link
-      href={link.href}
-      data-testid="class-report-link"
-      style={{ ...buttonBase, marginTop: spacing.sm }}
-    >
-      {link.text}
     </Link>
   );
 }

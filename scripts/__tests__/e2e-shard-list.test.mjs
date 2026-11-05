@@ -86,16 +86,19 @@ describe("pickShard", () => {
   });
 });
 
-describe("four shards: shard 2 sheds one in ten to shard 3", () => {
-  test("shard 2 loses every tenth of its tests to shard 3, and only those", () => {
+describe("four shards: shards 3 and 4 shed one in ten each, to shards 1 and 2", () => {
+  test("shard 3 loses every tenth of its tests to shard 1 and shard 4 every tenth to shard 2, and only those", () => {
     const tests = Array.from({ length: 160 }, (_, i) => `t${i}`);
+    const one = pickShard(tests, { current: 1, total: 4 });
     const two = pickShard(tests, { current: 2, total: 4 });
     const three = pickShard(tests, { current: 3, total: 4 });
-    assert.equal(two.length, 36);
-    assert.equal(three.length, 44);
-    assert.equal(pickShard(tests, { current: 1, total: 4 }).length, 40);
-    assert.equal(pickShard(tests, { current: 4, total: 4 }).length, 40);
-    assert.deepEqual(three.filter((t) => Number(t.slice(1)) % 4 === 1), ["t37", "t77", "t117", "t157"]);
+    const four = pickShard(tests, { current: 4, total: 4 });
+    assert.equal(one.length, 44);
+    assert.equal(two.length, 44);
+    assert.equal(three.length, 36);
+    assert.equal(four.length, 36);
+    assert.deepEqual(one.filter((t) => Number(t.slice(1)) % 4 === 2), ["t38", "t78", "t118", "t158"]);
+    assert.deepEqual(two.filter((t) => Number(t.slice(1)) % 4 === 3), ["t35", "t75", "t115", "t155"]);
   });
 
   test("the other shard counts are plain round-robin", () => {

@@ -84,26 +84,59 @@ const visuallyHidden: CSSProperties = {
   border: spacing.none,
 };
 
-export function JourneyStrip({ kind, summary }: { kind: string; summary: Pick<RosterSummary, 'journey'> | null }): JSX.Element | null {
+/**
+ * `variant="card"` (AMENDMENTS-GROWNUP-UX GX-7, section 8 T4): the roster card's one line, the segments, "On Stage N"
+ * and `trailing` (the quests text), with no "Learning Route" label and no "Stage by stage" list: the learner's report
+ * and the Learning Route page carry the stage-by-stage view. The screen-reader word list stays.
+ */
+export function JourneyStrip({
+  kind,
+  summary,
+  variant = 'full',
+  trailing,
+}: {
+  kind: string;
+  summary: Pick<RosterSummary, 'journey'> | null;
+  variant?: 'full' | 'card';
+  trailing?: string;
+}): JSX.Element | null {
   const { locale } = useConsoleLocale();
   const strip = journeyStrip(kind, summary?.journey, locale);
   if (strip === null) return null;
+  const segments = (
+    <span data-testid="journey-segments" aria-hidden="true" style={{ display: 'inline-flex', gap: spacing.xs, lineHeight: 0 }}>
+      {strip.segments.map((segment) => (
+        <Segment key={segment.stage} segment={segment} />
+      ))}
+    </span>
+  );
+  const words = (
+    <ul data-testid="journey-words" style={visuallyHidden}>
+      {strip.segments.map((segment) => (
+        <li key={segment.stage}>{segment.text}</li>
+      ))}
+    </ul>
+  );
+  if (variant === 'card') {
+    const text = [strip.onStage, trailing].filter((part): part is string => !!part).join(' · ');
+    return (
+      <div data-testid="journey-strip" data-variant="card" style={{ position: 'relative', margin: `${spacing.xxs}px 0` }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: spacing.sm, rowGap: spacing.xxs }}>
+          {segments}
+          {text ? <span>{text}</span> : null}
+        </div>
+        {words}
+      </div>
+    );
+  }
   return (
     <div data-testid="journey-strip" style={{ position: 'relative', margin: `${spacing.xxs}px 0` }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: spacing.sm, rowGap: spacing.xxs }}>
         <span>{strip.title}</span>
-        <span data-testid="journey-segments" aria-hidden="true" style={{ display: 'inline-flex', gap: spacing.xs, lineHeight: 0 }}>
-          {strip.segments.map((segment) => (
-            <Segment key={segment.stage} segment={segment} />
-          ))}
-        </span>
+        {segments}
         {strip.onStage ? <span>{strip.onStage}</span> : null}
       </div>
-      <ul data-testid="journey-words" style={visuallyHidden}>
-        {strip.segments.map((segment) => (
-          <li key={segment.stage}>{segment.text}</li>
-        ))}
-      </ul>
+      {words}
       <details>
         <summary style={{ cursor: 'pointer', paddingBlock: spacing.xxs }}>{strip.details}</summary>
         <ul style={{ margin: `${spacing.xxs}px 0 0`, paddingLeft: spacing.lg }}>

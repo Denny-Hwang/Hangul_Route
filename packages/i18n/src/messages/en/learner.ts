@@ -481,7 +481,7 @@ export const learner = {
     /** The explainer, one line per award rule this build can fire (F-STORY-006 §3.7): what to do, never how far along. */
     how: {
       title: 'How to collect more',
-      quest: 'Finish a quest to earn its card.',
+      quest: 'Get 2 stars in a quest to earn its card.',
       episode: 'Finish every quest in an episode to earn more cards.',
       stage: (stage: number) => `Finish all of Stage ${stage} for the legendary cards.`,
       story: 'Finish a story to earn its card.',
@@ -490,7 +490,7 @@ export const learner = {
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Card gallery', detail: 'Card details' },
     /** The first shelf (owner request 2026-10-16, item 8): the cards the learner holds. */
-    yours: { title: 'Your cards', empty: 'Your first card is waiting. Finish a quest to earn it.' },
+    yours: { title: 'Your cards', empty: 'Your first card is waiting. Get 2 stars in a quest to earn it.' },
     /**
      * The second shelf: cards still to find, one row per episode, story, stage or set (`logic/library/shelves.ts`),
      * with one Next card hint for the shelf. Never a count of what is left (D3).
@@ -729,6 +729,16 @@ export const learner = {
     },
     continue: { cta: 'Continue' },
     seeResults: { cta: 'See results' },
+    /**
+     * The reward step and Results when the run did not earn the quest's card (F-STORY-006 §3.1, F-MOTION-003 §3.5): the card
+     * needs 2 stars, and its episode brings it too (`cardWaits`, logic/reward.ts). A run that earned it keeps the quest's authored lines. `card` and
+     * `episode` are content titles. What to do, never how far along.
+     */
+    cardWaiting: {
+      title: (card: string) => `The ${card} card is waiting`,
+      line: (card: string, episode: string) =>
+        `Get 2 stars in this quest to earn the ${card} card. You also get it when you finish every quest in ${episode}.`,
+    },
     /** Hoya's line when a narrative step authored none. */
     keepGoing: "Let's keep going!",
     /** The card before a minigame: the generic game card and the Check's own variant (F-QUEST-002 §3.3). */

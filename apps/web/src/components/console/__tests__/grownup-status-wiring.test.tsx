@@ -416,9 +416,9 @@ describe('learners asking to join get their own cards above the roster (section 
 });
 
 describe('the counts and the reads (sections 3.4, 5.4)', () => {
-  it('the class moves button counts the teacher move too; the re-link button counts the re-link', async () => {
+  it('the class moves button counts the teacher move too; the re-link button counts the re-link (both in the bar while they wait, GX-7 review)', async () => {
     await render();
-    const text = textOf(root());
+    const text = textOf(byTestId('class-actions')[0] as ReactTestInstance);
     expect(text).toContain('2 class moves waiting');
     expect(text).toContain('1 new device needs your OK');
   });
@@ -542,12 +542,18 @@ describe('GX-1 review fixes', () => {
     expect(byTestId('incoming-accept')).toEqual([]);
   });
 
-  it('asking-to-join comes before the class code; waiting counts take the amber nudge style', async () => {
+  it('asking-to-join comes before the class code; waiting counts take the amber nudge style, in the bar, not behind More (GX-7 review)', async () => {
     await render();
+    // GX-7: the code is in Invite students at the end of the page; open it to find the code.
+    await press(byTestId('invite-toggle')[0] as ReactTestInstance);
     const order = root().findAll((n) => n.props['data-testid'] === 'asking-to-join' || n.props['data-testid'] === 'join-code').map((n) => n.props['data-testid']);
     expect(order).toEqual(['asking-to-join', 'join-code']);
+    const more = byTestId('class-more-toggle')[0] as ReactTestInstance;
+    expect(String(more.props.style.border ?? '')).not.toContain(colors.feedback.nudge);
+    expect(more.props.style.backgroundColor).not.toBe(colors.feedback.nudgeLight);
+    const bar = byTestId('class-actions')[0] as ReactTestInstance;
     for (const id of ['relink-requests', 'class-moves']) {
-      const button = byTestId(id)[0] as ReactTestInstance;
+      const button = bar.find((n) => n.props['data-testid'] === id && typeof n.type === 'string');
       expect(button.props.style.border).toContain(colors.feedback.nudge);
       expect(button.props.style.backgroundColor).toBe(colors.feedback.nudgeLight);
     }
@@ -558,6 +564,8 @@ describe('GX-1 review fixes', () => {
     state.transfers = [];
     state.incoming = [];
     await render();
+    expect(String((byTestId('class-more-toggle')[0] as ReactTestInstance).props.style.border ?? '')).not.toContain(colors.feedback.nudge);
+    await press(byTestId('class-more-toggle')[0] as ReactTestInstance);
     for (const id of ['relink-requests', 'class-moves']) expect(String((byTestId(id)[0] as ReactTestInstance).props.style.border ?? '')).not.toContain(colors.feedback.nudge);
   });
 

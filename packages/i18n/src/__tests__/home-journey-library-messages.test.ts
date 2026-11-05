@@ -124,7 +124,7 @@ describe('learner.library', () => {
     expect(l.collected.line(1)).toBe('1 card collected');
     expect(l.filterAll).toBe('All');
     expect(l.how.title).toBe('How to collect more');
-    expect(l.how.quest).toBe('Finish a quest to earn its card.');
+    expect(l.how.quest).toBe('Get 2 stars in a quest to earn its card.');
   });
 
   it('says how to earn a locked card, one sentence per award rule, never how far along (F-STORY-006 §3.7)', () => {

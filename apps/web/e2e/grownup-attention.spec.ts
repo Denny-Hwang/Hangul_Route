@@ -150,10 +150,10 @@ for (const { locale, browser } of LOCALES) {
         const banner = page.getByTestId('attention-banner');
         await expect(banner.getByRole('status')).toHaveText(`${c.attention.title(4)}${c.attention.devices(1)} · ${c.attention.moves(3)}`);
         await expect(page).toHaveTitle(/^\(4\) /);
-        // Under the title, above the join code.
+        // Under the title, above the page's actions (GX-7: the join code is in Invite students at the end).
         const bannerBox = await banner.boundingBox();
-        const codeBox = await page.getByTestId('join-code').boundingBox();
-        expect((bannerBox?.y ?? 0) < (codeBox?.y ?? 0)).toBeTruthy();
+        const actionsBox = await page.getByTestId('class-actions').boundingBox();
+        expect((bannerBox?.y ?? 0) < (actionsBox?.y ?? 0)).toBeTruthy();
         await page.screenshot({ path: test.info().outputPath(`grownup-attention-banner-${locale}-${label}.png`) });
         if (label === '360') await noSidewaysScroll(page);
 

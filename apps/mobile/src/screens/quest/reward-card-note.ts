@@ -1,0 +1,49 @@
+import { requiredQuestIds, type ProgressSnapshot } from '@hangul-route/content-schema';
+import { cardById, episodeById, questById } from '../../content';
+import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeCard, localizeEpisode } from '../../logic/content-locale';
+import { useProgressStore } from '../../store/progress-store';
+
+/** Whether a profile's saved snapshot holds a card now (read at call time; no profile or snapshot holds none). */
+export function holdsCard(profileId: string | null, cardId: string): boolean {
+  return profileId !== null && (useProgressStore.getState().byProfile[profileId]?.cards.some((c) => c.cardId === cardId) ?? false);
+}
+
+/**
+ * Whether finishing `questId` finishes its episode for a snapshot: the quest is one of the episode's required quests and
+ * every other required quest is done (a one-quest shelf episode always is). Such a run brings the quest's card as an
+ * episode card at any stars (F-STORY-006 §3.1), so it never leaves that card waiting. The same rule as the award
+ * engine's `isEpisodeComplete`, with this quest counted as done.
+ */
+export function completesEpisode(snapshot: Pick<ProgressSnapshot, 'quests'> | undefined, episodeId: string, questId: string): boolean {
+  const episode = episodeById(episodeId);
+  if (!episode || (episode.status !== 'shipped' && episode.status !== 'ready')) return false;
+  const required = requiredQuestIds(episode);
+  if (!required.includes(questId)) return false;
+  const done = new Set((snapshot?.quests ?? []).filter((q) => q.episodeId === episodeId && q.completedAt).map((q) => q.questId));
+  return required.every((id) => id === questId || done.has(id));
+}
+
+/** `completesEpisode` for a profile's saved snapshot, read at call time. */
+export function profileCompletesEpisode(profileId: string | null, episodeId: string, questId: string): boolean {
+  return completesEpisode(profileId === null ? undefined : useProgressStore.getState().byProfile[profileId], episodeId, questId);
+}
+
+/**
+ * The title and line for a quest's card that this run left waiting (`waiting`: `cardWaits`), in the UI language, with
+ * the episode that also gives the card named (F-STORY-006 §3.1). Null when nothing waits: the reward step then keeps
+ * its authored lines and Results draws nothing.
+ */
+export function useQuestCardLines(questId: string, waiting: boolean): { title: string; line: string } | null {
+  const m = useMessages().learner.quest.cardWaiting;
+  const locale = useLocale();
+  // A title chunk that arrives late fills its titles in place (F-CURR-002 §10).
+  useLessonTitlesVersion();
+  const cardId = questById(questId)?.rewardCardId;
+  const source = cardId === undefined ? undefined : cardById(cardId);
+  // A quest card is also an episode card of its own episode (F-STORY-006 §3.1): the card's rule is that episode's id.
+  const episode = source && episodeById(source.unlockedBy);
+  if (!waiting || !source || !episode) return null;
+  const card = localizeCard(source, locale).titleEn;
+  return { title: m.title(card), line: m.line(card, localizeEpisode(episode, locale).titleEn) };
+}

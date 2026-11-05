@@ -107,3 +107,27 @@ describe('JourneyStrip (console/roster)', () => {
     expectAllPseudo(render('class', { journey }), [], 6);
   });
 });
+
+describe('JourneyStrip, the roster card line (AMENDMENTS-GROWNUP-UX GX-7, section 8 T4)', () => {
+  const card = (summary: { journey?: JourneySummary } | null, trailing?: string): string =>
+    renderToStaticMarkup(<JourneyStrip kind="class" summary={summary} variant="card" trailing={trailing} />);
+
+  it('one line: the seven segments, "On Stage 2" and the quests text; no "Learning Route" label and no "Stage by stage" (it lives in the report)', () => {
+    const html = card({ journey }, 'Quests 0 / 15 · 1 card');
+    expect(segmentsOf(html).match(/<svg/g)).toHaveLength(7);
+    expect(html).toContain('>On Stage 2 · Quests 0 / 15 · 1 card<');
+    expect(html).not.toContain('Learning Route');
+    expect(html).not.toContain('<details');
+    expect(html).not.toContain('Stage by stage');
+  });
+
+  it('keeps the screen-reader word list', () => {
+    const html = card({ journey });
+    expect(html).toContain('data-testid="journey-words"');
+    expect(html).toContain('>On Stage 2<');
+  });
+
+  it('with no readable journey, nothing (the page shows the quests text on its own)', () => {
+    expect(card(null, 'Quests 0 / 15 · 1 card')).toBe('');
+  });
+});
