@@ -94,6 +94,7 @@ import { clearGuestSavedNote, guestSavedNoteFor } from '../../store/guest-save';
 import { useMembershipStore } from '../../store/membership-store';
 import { usePlacementRunStore } from '../../store/placement-run-store';
 import { usePlanStore } from '../../store/plan-store';
+import { hiddenHomeworkOf, visibleHomework } from '../../logic/homework/plan-derivation';
 import { latestPin, pinMission, pinnedMission, vocabRoundsDone } from '../../store/mission-pin-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -421,7 +422,10 @@ export function HomeScreen(): ReactElement {
   const today = useToday();
   // The device's local day, the vocabulary card's day (F-VOC-005 P5, P-3b): read again at local midnight too.
   const localToday = useToday('local');
-  const homeworkDue = dueTodayCount(snap?.homework, today);
+  // A resting own weekly plan's pending items, and own or family items a class plan also schedules, wait out of view,
+  // never late (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const homework = useMemo(() => (snap ? visibleHomework(snap.homework, hiddenHomeworkOf(plans ?? [], snap.selfRoute, today, episodesAll)) : undefined), [snap, plans, today]);
+  const homeworkDue = dueTodayCount(homework, today);
   // The Daily Review (F-CURR-002 row CM-14): slot 3 from 3 due items, first on a review-first day; off, today's slot 3.
   const dailyReview = useDailyReviewHome(profile?.id ?? null, localToday, snap?.reviews);
   // Words known (F-CURR-002 section 4.4, row CM-20): the pill only while `mastery` is on and the learner records, from 1.
@@ -559,7 +563,7 @@ export function HomeScreen(): ReactElement {
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({
       plan: built,
-      assignments: snap.homework,
+      assignments: routeInput.snapshot.homework,
       today,
       enabled: true,
       titleOf: (questId) => questsAll.find((q) => q.id === questId)?.titleEn,
@@ -910,7 +914,7 @@ export function HomeScreen(): ReactElement {
         <Card padding="md" tone="sunken">
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Body weight="semibold">{homeworkCardTitle(snap?.homework, profile?.id) === 'review' ? m.learner.home.homework.reviewTitle : m.learner.home.homework.title}</Body>
+              <Body weight="semibold">{homeworkCardTitle(homework, profile?.id) === 'review' ? m.learner.home.homework.reviewTitle : m.learner.home.homework.title}</Body>
               <Caption tone="muted">
                 {homeworkDue === 0 ? copy.homeReviewsIdle : showsTodayCount(homeworkDue) ? m.learner.home.homework.due(homeworkDue) : m.learner.home.homework.dueMany}
               </Caption>

@@ -38,15 +38,32 @@ export interface AutoRepaceInput {
   today: DateKey;
   /** A quest (or any session) is open for this learner: never re-pace under them. */
   sessionOpen: boolean;
+  /**
+   * The plan rests while a class plan with practice days is in force (AMENDMENTS-ROUTE-CLASS-BLEND section 8): its
+   * items wait and are never moved along meanwhile; the resume re-paces it once.
+   */
+  resting?: boolean;
 }
 
 /**
  * At most once per UTC day (a re-pace of either kind today counts), never while a session is
  * open or after the plan's last week, and only when three or more past-dated items wait or the oldest is a week old.
  */
+/**
+ * The resume of a rested own plan (AMENDMENTS-ROUTE-CLASS-BLEND section 8, BL-OD-5): `repace` once (requeue); `done`
+ * when it was already moved along today (another device ran the resume); `over` when its weeks ended while it rested
+ * (nothing to move along and no "back" line).
+ */
+export function resumeStepOf(route: Pick<SelfRoute, 'meta'>, today: DateKey): 'repace' | 'done' | 'over' {
+  const last = route.meta.weeks[route.meta.weeks.length - 1];
+  if (last === undefined || addDays(last.startDate, 7) <= today) return 'over';
+  if (route.meta.repacedAt !== null && route.meta.repacedAt.slice(0, 10) === today) return 'done';
+  return 'repace';
+}
+
 export function autoRepaceDue(i: AutoRepaceInput): boolean {
   const route = i.route;
-  if (route === null || route.archivedAt !== null || i.sessionOpen) return false;
+  if (route === null || route.archivedAt !== null || i.sessionOpen || i.resting === true) return false;
   if (route.meta.repacedAt !== null && route.meta.repacedAt.slice(0, 10) === i.today) return false;
   // Past the last week nothing is left to move along: a re-pace would change nothing but its marks.
   const last = route.meta.weeks[route.meta.weeks.length - 1];
@@ -92,6 +109,8 @@ export interface CheckInInput {
   today: DateKey;
   /** `route-ui:<profileId>.checkInFor`: the plan whose check-in was already answered. */
   answeredFor: string | undefined;
+  /** A resting plan (AMENDMENTS-ROUTE-CLASS-BLEND section 8) offers no check-in. */
+  resting?: boolean;
 }
 
 /**
@@ -105,7 +124,7 @@ export interface CheckInInput {
  */
 export function checkInOffer(i: CheckInInput): CheckInOffer | null {
   const route = i.route;
-  if (route === null || route.archivedAt !== null || i.answeredFor === route.id) return null;
+  if (route === null || route.archivedAt !== null || i.answeredFor === route.id || i.resting === true) return null;
   const week = route.meta.weeks.find((w) => w.index === CHECK_IN_WEEK);
   if (week === undefined || i.today < week.startDate || i.today >= addDays(week.startDate, 7)) return null;
   const perWeek = sessionsPerWeekOf(route.meta.params);

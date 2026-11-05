@@ -6,7 +6,7 @@ import type { StageKey } from '../schemas/heritage-card';
 import type { PlanItem } from '../schemas/plan-item';
 import type { Motivation, PlacementLevel } from '../schemas/placement';
 import type { CurriculumDraft, CurriculumMeta, WarningCode } from './draft';
-import { generateCurriculum, regenerateFrom } from './generate';
+import { generateCurriculum, regenerateFrom, type GenerateOptions } from './generate';
 import { CurriculumParamsSchema, sessionsPerWeekOf, type CurriculumParams, type CurriculumParamsInput, type DateKey } from './params';
 import {
   CURRICULUM_MAX_ITEMS,
@@ -70,6 +70,11 @@ export interface ProposeInput {
    * no `unlockedStages`).
    */
   existing?: { meta: CurriculumMeta; items: PlanItem[] } | null;
+  /**
+   * A new plan only: quests it leaves out without calling them done (`GenerateOptions.exclude`), such as the quests an
+   * in-force class curriculum schedules (AMENDMENTS-ROUTE-CLASS-BLEND section 8). Copied onto the proposal.
+   */
+  excludeQuestIds?: readonly string[];
 }
 
 export interface DurationOption {
@@ -108,6 +113,8 @@ export interface RouteProposal {
    * screen shows `itemsRemoved` before the grown-up confirms.
    */
   diff?: { itemsRemoved: number; itemsAdded: number; newStartQuestId: string | null };
+  /** `new` only: `ProposeInput.excludeQuestIds`; a draft of these params passes them as `GenerateOptions.exclude`. */
+  excludeQuestIds?: readonly string[];
 }
 
 /** Gentle for "Pictures first" (`levelOrder` 0) and for classes, Steady otherwise (OD-13). */
@@ -166,9 +173,9 @@ const previewOf = (draft: CurriculumDraft, weeks: number, lastLessonWeek: number
   return draft.stats.stories > 0 ? 'lessons-and-stories' : 'lessons-then-free-practice';
 };
 
-const optionOf = (id: DurationId, base: CurriculumParamsInput, catalog: Catalog, probeLastLesson: number, m: Measures): DurationOption => {
+const optionOf = (id: DurationId, base: CurriculumParamsInput, catalog: Catalog, probeLastLesson: number, m: Measures, opts: GenerateOptions): DurationOption => {
   const weeks = LENGTH_PRESETS[id].weeks as DurationOption['weeks'];
-  const draft = generateCurriculum({ ...base, weeks }, catalog);
+  const draft = generateCurriculum({ ...base, weeks }, catalog, opts);
   const allFit = !draft.warnings.some((warning) => warning.code === 'fewer-sessions-than-units');
   const lastLessonWeek = allFit ? m.lastWeek(draft, m.isLesson) : Math.max(probeLastLesson, weeks + 1);
   const { lessons, stories, comingSoonItems, openSessions, endsAtStage } = draft.stats;
@@ -250,10 +257,10 @@ interface Shaped {
 }
 
 /** The probe, the recommended length and the three cards of one set of params. */
-const shapeOf = (base: CurriculumParamsInput, catalog: Catalog, m: Measures): Shaped => {
-  const probe = generateCurriculum(base, catalog);
+const shapeOf = (base: CurriculumParamsInput, catalog: Catalog, m: Measures, opts: GenerateOptions = {}): Shaped => {
+  const probe = generateCurriculum(base, catalog, opts);
   const probeLastLesson = m.lastWeek(probe, m.isLesson);
-  const options = DURATION_IDS.map((id) => optionOf(id, base, catalog, probeLastLesson, m)) as unknown as RouteProposal['options'];
+  const options = DURATION_IDS.map((id) => optionOf(id, base, catalog, probeLastLesson, m, opts)) as unknown as RouteProposal['options'];
   return { probe, defaultId: defaultDurationFor(probeLastLesson), options };
 };
 
@@ -286,11 +293,12 @@ function proposeNew(input: ProposeInput, m: Measures): RouteProposal | null {
   const { catalog } = input;
   const pace = input.pace ?? defaultPaceFor(input.audience, input.levelOrder);
   const base = baseParamsOf(input, pace, defaultMinutesFor(input.audience, input.levelOrder, input.rosterLevelOrders));
-  const { probe, defaultId, options } = shapeOf(base, catalog, m);
+  const exclude = input.excludeQuestIds !== undefined && input.excludeQuestIds.length > 0 ? [...input.excludeQuestIds] : undefined;
+  const { probe, defaultId, options } = shapeOf(base, catalog, m, exclude === undefined ? {} : { exclude });
   if (probe.stats.readyItems === 0) return null;
   const headline = headlineOf(probe.items, probe.params.level, catalog, m);
   const params = CurriculumParamsSchema.parse({ ...base, weeks: LENGTH_PRESETS[defaultId].weeks });
-  return { kind: 'new', headline, pace, params, options, defaultId };
+  return { kind: 'new', headline, pace, params, options, defaultId, ...(exclude === undefined ? {} : { excludeQuestIds: exclude }) };
 }
 
 function proposeFor(existing: NonNullable<ProposeInput['existing']>, input: ProposeInput, m: Measures): RouteProposal {

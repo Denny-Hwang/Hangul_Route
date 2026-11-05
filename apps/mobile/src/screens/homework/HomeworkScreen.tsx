@@ -20,12 +20,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
-import { questsAll } from '../../content';
+import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
 import { assignedByLabel, dueLabel, groupAssignments, homeworkWindow, showsTodayCount } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
+import { hiddenHomeworkOf, visibleHomework } from '../../logic/homework/plan-derivation';
 import { useAudience } from '../../store/audience';
+import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useQuestAccess } from '../../store/tier-store';
@@ -47,7 +49,13 @@ export function HomeworkScreen(): ReactElement {
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
 
   const todayKey = new Date().toISOString().slice(0, 10);
-  const groups = useMemo(() => groupAssignments(snap?.homework ?? [], todayKey), [snap, todayKey]);
+  const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  // A resting own weekly plan's pending items, and own or family items a class plan also schedules, wait out of view,
+  // never late (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const groups = useMemo(
+    () => groupAssignments(snap ? visibleHomework(snap.homework, hiddenHomeworkOf(plans ?? [], snap.selfRoute, todayKey, episodesAll)) : [], todayKey),
+    [snap, plans, todayKey],
+  );
   const view = useMemo(() => homeworkWindow(groups, todayKey), [groups, todayKey]);
   const [laterOpen, setLaterOpen] = useState(false);
   const hasPlayed = (snap?.quests.length ?? 0) > 0;
