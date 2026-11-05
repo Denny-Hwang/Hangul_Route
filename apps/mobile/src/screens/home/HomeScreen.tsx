@@ -834,14 +834,14 @@ export function HomeScreen(): ReactElement {
   const layoutClass = useLayoutClass();
   const hoyaSize = useMediaSize(HOYA_SIZE);
 
-  // See my cards: the Library, and those cards are seen, so the catch-up card goes for good.
+  // The Library on its Cards section (the learner's own cards first, the All filter), wherever the tab was left.
+  const openYourCards = (): void => navigation.navigate('Main', { screen: 'Library', params: { section: 'cards' } });
+
+  // See my cards: the same way in, and those cards are seen, so the catch-up card goes for good.
   const seeCaughtUpCards = (): void => {
     if (profile && catchUp) markCardsSeen(profile.id, catchUp.cardIds);
-    navigation.navigate('Main', { screen: 'Library' });
+    openYourCards();
   };
-
-  // The Cards chip: the Library on its Cards section (the learner's own cards first, the All filter).
-  const openYourCards = (): void => navigation.navigate('Main', { screen: 'Library', params: { section: 'cards' } });
 
   // Always mounted, so the web's assistive tech is watching when a later sync adds the card. A live
   // region on the web only: native announces the line itself (one announcement, no overlap).

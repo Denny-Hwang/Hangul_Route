@@ -56,4 +56,11 @@ describe('Library opened from the Home Cards chip', () => {
     expect(selected(r.root, m.filterAll)).toBe(true);
     expect(nav.setParams).toHaveBeenCalledWith({ section: undefined });
   });
+
+  it('the first open through a link starts on All and clears the link', async () => {
+    nav.params = { section: 'cards' };
+    const r = await render(<LibraryScreen />);
+    expect(selected(r.root, m.filterAll)).toBe(true);
+    expect(nav.setParams).toHaveBeenCalledWith({ section: undefined });
+  });
 });

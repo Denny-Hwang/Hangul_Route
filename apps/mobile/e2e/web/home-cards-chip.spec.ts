@@ -74,6 +74,8 @@ for (const who of ['child', 'self'] as const) {
     await expect(page.getByRole('button', { name: 'All', exact: true })).toHaveAttribute('aria-pressed', 'false');
     await page.mouse.move(160, 300);
     await page.mouse.wheel(0, 900);
+    // The page really moved: the filter row is out of view, so the reset below is a reset.
+    await expect(page.getByRole('button', { name: 'All', exact: true })).not.toBeInViewport();
     await tab(page, 'Today').click();
     await expect(chip(page)).toBeVisible();
 
@@ -95,7 +97,9 @@ for (const who of ['child', 'self'] as const) {
 
 test('keyboard: Tab reaches the chip and Enter opens the Library', async ({ page }) => {
   await learnerAtHome(page, 'child');
-  await chip(page).focus();
+  // Real Tab presses from the top of the page: the chip is in the tab order.
+  await page.locator('body').click({ position: { x: 1, y: 1 } });
+  for (let i = 0; i < 40 && !(await chip(page).evaluate((el) => el === document.activeElement)); i += 1) await page.keyboard.press('Tab');
   await expect(chip(page)).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Your cards' })).toBeInViewport({ ratio: 1 });

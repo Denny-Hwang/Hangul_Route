@@ -24,6 +24,7 @@ import type { MyRouteModel, SeenRecord } from '../../logic/my-route/types';
 import { emptySnapshot, myRouteView, stageRowLook } from '../../logic/my-route/view';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import { nextStartedEvent, planView, routeNextInputOf, upcomingLessons, type RouteNextQuestResult } from '../../logic/route-next';
+import type { LibrarySectionId } from '../../logic/story/library-sections';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { RootStackParamList } from '../../navigation/types';
 import { useReducedMotion } from '../../platform/motion';
@@ -349,7 +350,9 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
   const [openKey, setOpenKey] = useState<string | null | undefined>(undefined);
   const look = stageRowLook(windowWidth);
 
-  const openLibrary = (): void => navigation.navigate('Main', { screen: 'Library' });
+  // The Library on a section: cards open the learner's cards, stories open Story Time (OW-2: no link lands on a section left behind).
+  const openLibrary = (section?: LibrarySectionId): void =>
+    navigation.navigate('Main', section === undefined ? { screen: 'Library' } : { screen: 'Library', params: { section } });
   // A next-lesson row opens its lesson; the first is the card's own one next, so it counts as `route.next_started`.
   const openNextLesson = (row: NextLessonRowView): void => {
     const tapped = nextLessonTapEvent(row, profileId, readOnly);
@@ -537,7 +540,7 @@ function MyRouteBody({ profileId, readOnly, variant, navigation }: BodyProps): R
           {view.storiesNote !== null ? (
             <>
               <Spacer size="md" />
-              <StoriesNote text={view.storiesNote} cta={m.cta.stories} onOpen={openLibrary} />
+              <StoriesNote text={view.storiesNote} cta={m.cta.stories} onOpen={() => openLibrary('story-time')} />
             </>
           ) : null}
         </>

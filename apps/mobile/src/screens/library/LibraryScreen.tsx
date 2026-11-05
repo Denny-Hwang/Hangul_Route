@@ -105,9 +105,13 @@ export function LibraryScreen(): ReactElement {
   // One link opens the cards once: this effect may run again before the cleared param arrives (`sections` is a new array
   // on every render), and the page is not drawn again from the top for that.
   const linkHandled = useRef(false);
+  // The tab's first open through a link is already the All filter from the top: only a tab that was left somewhere is reset.
+  const wasDrawn = useRef(false);
   // A deep link (`params.section`) selects its section, then is cleared so the same link works again.
   // Switching tabs is local state only: not persisted, no navigation.
   useEffect(() => {
+    const fresh = !wasDrawn.current;
+    wasDrawn.current = true;
     if (requested === undefined) {
       linkHandled.current = false;
       return;
@@ -115,8 +119,12 @@ export function LibraryScreen(): ReactElement {
     setSection(selectedSection(requested, sections));
     if (!linkHandled.current && opensYourCards(requested, sections)) {
       linkHandled.current = true;
-      setFilter('all');
-      setCardsOpened((n) => n + 1);
+      if (!fresh) {
+        setFilter('all');
+        // Keyboard focus is not pulled onto the Cards tab: the page starts at its top.
+        setTabFocus(false);
+        setCardsOpened((n) => n + 1);
+      }
     }
     tabNavigation.setParams({ section: undefined });
   }, [requested, sections, tabNavigation]);
