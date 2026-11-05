@@ -1294,12 +1294,6 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
     });
   }
 
-  // F-CURR-002 row CM-41: Nature Volume 2, S3 (Weather Sentences) at its launch state. `volumes` is at built-in pct 0,
-  // so it is turned on through the stored remote copy, as a ramp would; `game.cloze-pick` stays dark, so its Cloze
-  // Pick Practice plays the Listen & Pick fallback in the text prompt mode (tile ids `<round>:t<n>`).
-  test('episode:stage3-nature-v2 q1 at 320 px: Vol 2 on the cell page, its Cloze Pick Practice as the fallback, to the reward', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (e) => errors.push(String(e)));
   // F-CURR-002 row CM-45 S2: a shipped Volume 2, Holidays & Traditions of Stage 2. `volumes` is at built-in pct 0 (the row
   // merges dark), so with it off the cell opens Volume 1 with no Vol tabs; turned on through the stored remote copy, as a
   // ramp would, the cell's page offers Vol 2, which opens its own page, and its first quest plays from its own chunk.
@@ -1372,6 +1366,20 @@ test.describe('upper-stage lesson cells (F-CURR-001)', () => {
   });
 
   test('episode:stage2-rites-v2 with volumes off (the launch state): the Holidays cell opens Volume 1 and its page has no Vol tabs', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
+    await openJourney(page);
+    await page.getByRole('button', { name: journeyCellName(2, THEME_LABEL.rites), exact: true }).click();
+    await expect(page.getByText('Holiday Words').first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+    await expect(page.getByText('Holidays Through the Year')).toHaveCount(0);
+  });
+
+  // F-CURR-002 row CM-41: Nature Volume 2, S3 (Weather Sentences) at its launch state. `volumes` is at built-in pct 0,
+  // so it is turned on through the stored remote copy, as a ramp would; `game.cloze-pick` stays dark, so its Cloze
+  // Pick Practice plays the Listen & Pick fallback in the text prompt mode (tile ids `<round>:t<n>`).
+  test('episode:stage3-nature-v2 q1 at 320 px: Vol 2 on the cell page, its Cloze Pick Practice as the fallback, to the reward', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
     await page.setViewportSize({ width: 320, height: 720 });
     await openJourneyWith(page, { volumes: { on: true, pct: 100 } });
     // Volume 1 is not done, so the cell opens it; the Vol 2 tab opens Weather Sentences.

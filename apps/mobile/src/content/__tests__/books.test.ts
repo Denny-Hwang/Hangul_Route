@@ -300,10 +300,12 @@ describe('the Play book 2 (row CM-46)', () => {
   });
 
   it('names only its new tales as Volume 2 stories, so a shipped book 1 or shelf story never hides', () => {
-    // The new tales of the Letters (waiting for their sign-off), Food, Nature and Play books 2, sorted; the Letters book
-    // 2's read-tier stories are shelf stories and never here.
+    // The new tales of the Letters and Holidays (waiting for their sign-off), Food, Nature and Play books 2, sorted; the
+    // Letters book 2's read-tier stories and the royal birthday record are shelf stories and never here.
     expect([...VOLUME_TWO_STORY_IDS]).toEqual([
+      'story:daeboreum-full-moon',
       'story:eongan-letters',
+      'story:gyeonu-jingnyeo',
       'story:hahoe-mask-dance',
       'story:hangul-name',
       'story:hanji-korean-paper',
@@ -347,7 +349,7 @@ describe('the Holidays book 2 (F-CURR-002 §5.4 S5, row CM-46)', () => {
       expect(story, id).toBeDefined();
       expect(story?.tiers.map((t) => t.level)).toEqual(['listen', 'read']);
       expect(story?.review.language).toBe('draft');
-      expect(story?.addedIn).toBe(20261104);
+      expect(story?.addedIn).toBe(20261107);
     }
     expect(buildBook(definition, lookup)).toBeNull();
     expect(bookEpisodes.some((e) => e.id === 'episode:stage5-rites-v2')).toBe(false);
@@ -365,14 +367,13 @@ describe('the Holidays book 2 (F-CURR-002 §5.4 S5, row CM-46)', () => {
     ]);
     for (const quest of book?.quests ?? []) expect(QuestSchema.safeParse(quest).success).toBe(true);
     // A tale only a book 2 adds is Volume 2 content; the read-tier story stays book 1 (no volume).
-    for (const id of TALES) expect(storyCellVolume(id, signed), id).toBe(2);
-    expect(storyCellVolume('story:uigwe-royal-birthday', signed)).toBeUndefined();
+    for (const id of TALES) expect(storyCellVolume(id), id).toBe(2);
+    expect(storyCellVolume('story:uigwe-royal-birthday')).toBeUndefined();
   });
 
   it('never shows in the Holidays cell while the book is unbuilt, whatever volumes says', () => {
-    const rites = episodeById('episode:stage5-rites')!;
-    expect(cellVolumes(rites, false).map((e) => e.id)).toEqual(['episode:stage5-rites']);
-    expect(cellVolumes(rites, true).map((e) => e.id)).toEqual(['episode:stage5-rites']);
+    expect(episodesFor('stage5', 'rites', withVolumes(false)).map((e) => e.id)).toEqual(['episode:stage5-rites']);
+    expect(episodesFor('stage5', 'rites', withVolumes(true)).map((e) => e.id)).toEqual(['episode:stage5-rites']);
     expect(withVolumes(true).some((e) => e.id === 'episode:stage5-rites-v2')).toBe(false);
   });
 });
