@@ -205,6 +205,15 @@ describe('[OA] PinEntry hand-backs and Change PIN', () => {
     expect(useUiStore.getState().gateReturnPending).toBe(true);
   });
 
+  it('BL-8: a child\'s practice days come back as the grown-up\'s view of that learner; without a learner, back', async () => {
+    const { r, navigation } = await showWith({ next: 'PracticeDays', profileId: 'profile:a' });
+    await typePin(r.root, '1234');
+    expect(navigation.replace).toHaveBeenCalledWith('PracticeDays', { profileId: 'profile:a', viewer: 'grownup' });
+    const none = await showWith({ next: 'PracticeDays' });
+    await typePin(none.r.root, '1234');
+    expect(none.navigation.replace).not.toHaveBeenCalledWith('PracticeDays', expect.anything());
+  });
+
   it('Cancel goes back without a return mark', async () => {
     const { r, navigation } = await showWith({ next: 'ExternalLink' });
     await press(buttonsNamed(r.root, buttons.cancel)[0] as ReactTestInstance);

@@ -942,3 +942,33 @@ describe('warm-up and Try these again entries (F-CURR-002 sections 4.5 and 4.8, 
     expect(merged.reviews.map((r) => r.id).sort()).toEqual(['warmup:2026-10-08', 'warmup:2026-10-21']);
   });
 });
+
+describe('practiceDays, the learner\'s own practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 9.4, row BL-8)', () => {
+  const entry = (planId: string, days: Array<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'>, updatedAt: string) => ({ planId, days, updatedAt });
+  const a1 = entry('plan:a', ['wed', 'fri'], '2026-11-01T09:00:00.000Z');
+  const a2 = entry('plan:a', ['sat'], '2026-11-02T09:00:00.000Z');
+  const b = entry('plan:b', ['tue'], '2026-11-01T10:00:00.000Z');
+
+  it('keeps the snapshot shape when neither side has the key', () => {
+    expect('practiceDays' in mergeSnapshots(base(), base(), { now: NOW })).toBe(false);
+  });
+
+  it('an absent key on either side never erases the other side\'s days', () => {
+    expect(mergeSnapshots(base({ practiceDays: [a1] }), base(), { now: NOW }).practiceDays).toEqual([a1]);
+    expect(mergeSnapshots(base(), base({ practiceDays: [a1] }), { now: NOW }).practiceDays).toEqual([a1]);
+  });
+
+  it('keeps the newest updatedAt per plan, in either order', () => {
+    expect(mergeSnapshots(base({ practiceDays: [a1, b] }), base({ practiceDays: [a2] }), { now: NOW }).practiceDays).toEqual([a2, b]);
+    expect(mergeSnapshots(base({ practiceDays: [a2] }), base({ practiceDays: [a1, b] }), { now: NOW }).practiceDays).toEqual([a2, b]);
+  });
+
+  it('isSubsetOf: the server holds the days when merging them changes nothing', () => {
+    expect(isSubsetOf(base(), base({ practiceDays: [a1] }))).toBe(true);
+    expect(isSubsetOf(base({ practiceDays: [a1] }), base())).toBe(false);
+    expect(isSubsetOf(base({ practiceDays: [a1] }), base({ practiceDays: [a2] }))).toBe(true);
+    expect(isSubsetOf(base({ practiceDays: [a2] }), base({ practiceDays: [a1] }))).toBe(false);
+    expect(isSubsetOf(base({ practiceDays: [b] }), base({ practiceDays: [a2] }))).toBe(false);
+    expect(isSubsetOf(base({ practiceDays: [] }), base())).toBe(true);
+  });
+});

@@ -100,13 +100,14 @@ export function routeGoalSummaryOf(input: RouteGoalSummaryInput): ProgressSummar
   try {
     const { snapshot, plans, journey, content, now } = input;
     const grid = gridEpisodesOf(content.episodes);
+    const today = dayKey(now.toISOString());
     const goal = pickGoal({
-      sources: sourcesOf(plans, snapshot.selfRoute).map((source) => ({ ...source, meta: source.meta ?? null })),
+      sources: sourcesOf(plans, snapshot.selfRoute, today).map((source) => ({ ...source, meta: source.meta ?? null })),
       catalog: content.catalog,
       stages: journey?.stages ?? [],
       availability: (stage) => stageAvailability(stage, grid),
       // The day the plan derivation uses (plan-store), so a plan sets the goal exactly while it derives homework.
-      today: dayKey(now.toISOString()),
+      today,
     });
     return goal === null ? undefined : { stage: goal.stage, from: goal.from };
   } catch {

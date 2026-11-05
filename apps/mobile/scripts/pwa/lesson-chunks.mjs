@@ -124,6 +124,20 @@ export const PRECACHE_BUDGET = Object.freeze({
   // and route, the calendar key, the generated list of drop weeks with the chunk's hash and loader, the done mark's key and
   // removal, two route registrations and the English strings. The card, the pages, the drops and their review loader are
   // precached chunks. The line is the measurement plus a 4,249 B rounding margin.
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-6 (class days and practice days on the device): its base (BL-W and BL-1 on main
+  // cf7a4e483) measures 4,842,169 B raw / 1,295,011 B gzip (release `build:web`); the row measures 4,847,283 B raw /
+  // 1,296,720 B gzip: +5,114 B. The derivation is not flagged (section 14: it must be right the moment a blended plan
+  // exists), so it rides the start bundle with Home: the layer rules (`route/layer.ts`), the dedupe, the own plan's rest
+  // and its hidden items, the weekly goal's distinct days, the resume re-pace. The line is the measurement plus a 2,717 B
+  // rounding margin.
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-7 (the learner's class days and practice days, behind routeBlendEnabled): its
+  // base (BL-6 at b55361104 with its review fixes and main's NB-1 #953) measures 4,849,712 B raw / 1,297,552 B gzip;
+  // the row measures 4,860,799 B raw / 1,300,877 B gzip (release `build:web`, Metro cache cleared): +11,087 B. Home,
+  // the Route tab, Homework and Profile are start-bundle screens, so their pieces ride with them: the weekly plan line
+  // and its collapse rules, Class today, Refresh and its routing, the class glyph on the From class pill, the resting
+  // row and the proposal line, and their English strings. The shared practice-day rule stays in the content-schema
+  // `blend` subpath (the line reads the days the plan wrote). The line is the measurement plus a 4,201 B rounding
+  // margin.
   // AMENDMENTS-TOUCH row KT-1 (PR #943) on main 1bfda3fc8 (4,838,051 B in CI) measures 4,860,944 B raw / 1,300,892 B gzip
   // (release `build:web`, CI): +22,893 B, the forgiving tap model (`tap-model.ts`), the `TapBoard` family in the
   // design-system barrel, `TapLockProvider` above the navigator and the `Screen` fit and scroller. Every learner answer
@@ -136,11 +150,23 @@ export const PRECACHE_BUDGET = Object.freeze({
   // Each row fit alone (KT-3 4,864,709 B, KT-9 4,865,262 B); together they cross it, with KT-4a's Card Match and
   // KT-8's one-finger stroke ownership for Trace (`trace-pointers.ts`, `trace-pan.ts`) also in the start bundle, and
   // NB-2 on main. The line is the measurement plus a 4,628 B margin.
-  // The CM tail integration (integrate/cm-tail-1105: Stage 2 Holidays and Stage 4 Letters Volume 2 and the Holidays book 2
-  // on main 2a18608bb, 4,870,074 B) measures 4,877,941 B raw / 1,305,252 B gzip (release `build:web`, CI=1): 2,941 B over
-  // the line. Each cell's start-loaded manifest entry and catalogue rows are about 1 KB, the Holidays book definition
-  // 1 KB, and the reply rule of the review pick rounds. The line is the measurement plus a 7,059 B margin.
-  startBundleRaw: 4_885_000,
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8 (the learner's own practice days, behind routeBlendEnabled), restacked on main
+  // a0906b64f with the KT integration (#976) and BL-7 (#967) heads and the grown-up reports chunk (#977): it measures
+  // 4,859,564 B raw / 1,302,918 B gzip (release `build:web --budget`), under the line. The start bundle gets the Profile
+  // row, the PracticeDays route's door and the chunk loader, the derivation's learner-days hook and chip rules, the
+  // snapshot write and merge, the English strings and TapTarget's role prop; the screen and `placePractice` are the
+  // practice-days chunk. The line stays.
+  // The BL tail integration (integrate/bl-tail-1105: BL-6, BL-7, BL-8 and BL-9 on main e800154ec, which holds the CM Volume 2
+  // integration, the voice-check answer hold and the install-icon precache change) measures 4,902,157 B raw / 1,313,427 B gzip
+  // (release `build:web --budget`; on main 74332fac1 it was 4,901,256 B with main alone at 4,873,332 B): +27,924 B, the four
+  // rows' device code that is not flagged out of the bundle, plus the voice-check hold that landed on main since. The line is
+  // the measurement plus a 2,843 B margin; main's own line (4,875,000 B) does not hold the four rows.
+  // The CM tail integration (integrate/cm-tail-1105: Stage 2 Holidays and Stage 4 Letters Volume 2 and the Holidays book 2) on
+  // main e93044853 (with the BL tail integration) measures 4,905,865 B raw / 1,314,322 B gzip (release `build:web`, CI=1;
+  // main alone 4,902,157 B): +3,708 B, 865 B over the line, because main's BL tail line left 2,843 B of margin. The
+  // cells' start-loaded manifest entries and catalogue rows and the Holidays book definition are the growth. The line is
+  // the measurement plus a 4,135 B margin.
+  startBundleRaw: 4_910_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -409,6 +435,10 @@ export const SCREEN_CHUNKS = Object.freeze([
   // The grown-up reports, the learner report and the level-check report (`src/screens/parent/reports-chunk.tsx`, reached
   // only through the literal `import()` of `src/screens/parent/reports-entry.tsx`), out of the start bundle for headroom.
   Object.freeze({ name: 'reports-chunk', marker: 'screen-chunk:reports' }),
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the device placer (`placePractice`)
+  // (`src/screens/route/practice-days-chunk.tsx`, reached only through the literal `import()` of
+  // `src/screens/route/practice-days-load.ts` while `routeBlendEnabled` is on).
+  Object.freeze({ name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' }),
 ]);
 
 /**

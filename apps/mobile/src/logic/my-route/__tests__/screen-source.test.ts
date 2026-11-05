@@ -384,7 +384,7 @@ describe('the route card wiring (Learning Route LR-5a)', () => {
 
   it('Continue opens the one next, sends continue_tapped and route.next_started from the route surface, never read-only', () => {
     expect(screen).toMatch(/cta\.action === 'quest' && model\.next/);
-    expect(screen).toContain("if (!readOnly) void track(nextStartedEvent(profileId, model.next.source, 'route'));");
+    expect(screen).toContain("if (!readOnly) void track(nextStartedEvent(profileId, model.next.source, 'route', ");
     expect(screen).toContain("navigation.navigate('QuestPlayer', { questId: model.next.questId, episodeId: model.next.episodeId })");
     expect(screen).not.toMatch(/model\.cursor\.questId/);
   });

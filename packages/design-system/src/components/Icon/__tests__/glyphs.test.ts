@@ -44,6 +44,7 @@ const EXPECTED_NAMES: IconName[] = [
   'leaf',
   'spinning-top',
   'more',
+  'class',
 ];
 
 describe('icon glyphs', () => {

@@ -292,6 +292,15 @@ export interface Flags {
    * every phone window uses the floating bar of section 5.3 (no strip); the tap rules of row PN-2 stay.
    */
   presenterRail: boolean;
+
+  /**
+   * [BL] Class days and practice days on the learner's device (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7): the
+   * Route card's weekly plan line, the class glyph on the From class pill, Refresh in card (2), "Class today.", the
+   * resting own plan row and the proposal line. OFF until row BL-10 flips it with the console's
+   * `NEXT_PUBLIC_ROUTE_BLEND_ENABLED`. `EXPO_PUBLIC_ROUTE_BLEND_ENABLED` (`parseBool`). Off: none of these draw;
+   * derivation still rests the own plan and dedupes (BL-6, not flagged, section 14).
+   */
+  routeBlendEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -323,6 +332,8 @@ const launchDefaults: Flags = {
   guestLessonEnabled: !isNativeBundle(),
   // [PN] PN-4: the phone rail ships on; the switch is for a rail problem without a revert (section 15).
   presenterRail: true,
+  // [BL] BL-10 turns this on with the console's switch.
+  routeBlendEnabled: false,
 };
 
 export const flags: Flags = {
@@ -359,6 +370,7 @@ export const flags: Flags = {
   // [GU] GU-D16: web only.
   guestLessonEnabled: !isNativeBundle() && parseKillSwitch(process.env.EXPO_PUBLIC_GUEST_LESSON, launchDefaults.guestLessonEnabled),
   presenterRail: parseKillSwitch(process.env.EXPO_PUBLIC_PRESENTER_RAIL, launchDefaults.presenterRail),
+  routeBlendEnabled: parseBool(process.env.EXPO_PUBLIC_ROUTE_BLEND_ENABLED, launchDefaults.routeBlendEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

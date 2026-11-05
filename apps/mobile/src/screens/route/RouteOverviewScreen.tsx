@@ -5,12 +5,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { View } from 'react-native';
+import { flags } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
+import { selfRouteResting } from '../../logic/homework/plan-derivation';
 import { movedLineVisible } from '../../logic/route/home-slot';
 import { planOverview } from '../../logic/route/plan-view';
 import { activeSelfRoute } from '../../logic/route/self-route';
 import type { RootStackParamList } from '../../navigation/types';
 import { announceForScreenReader } from '../../platform/screen-reader';
+import { usePlanStore } from '../../store/plan-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useRouteStore } from '../../store/route-store';
@@ -41,6 +44,7 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
   const profile = useProfileStore((s) => s.profiles.find((p) => p.id === profileId) ?? null);
   const snapshot = useProgressStore((s) => s.byProfile[profileId]);
   const ui = useRouteStore((s) => s.ui[profileId]);
+  const plans = usePlanStore((s) => s.byLearner[profileId]);
   const changesOpen = usePlanChangesOpen(profile);
   // Read again on focus and when the app comes back: the screen may stay open across midnight.
   const today = useToday();
@@ -91,8 +95,13 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
 
   const active = activeSelfRoute(snapshot);
   const view = useMemo(() => (active === null ? null : planOverview(active, today)), [active, today]);
-  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen });
+  // A resting plan offers no check-in (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const resting = selfRouteResting(plans ?? [], active, today);
+  const offer = useCheckInOffer({ route: active, quests: snapshot?.quests, today, ready: ui !== undefined, answeredFor: ui?.checkInFor, changesOpen, resting });
   const [shownOffer, closeOffer] = useShownOffer(offer, `${profileId}|${active?.id ?? ''}`);
+  // See it on a resting plan (AMENDMENTS-ROUTE-CLASS-BLEND sections 7 and 8, row BL-7): read-only, with the resting
+  // line; nothing moves, changes or stops it while the class plan has practice days.
+  const readOnlyRest = flags.routeBlendEnabled && resting;
   // Older only: a route synced from a device on a newer catalogue is not stale here (no refresh ping-pong).
   // A catalogue that added only later volumes (F-CURR-002 row CM-40) is not newer for a plan: a refresh adds nothing.
   const stale = active !== null && planCatalogStale(active.meta.catalogVersion, CATALOG);
@@ -200,6 +209,11 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
           <Body weight="semibold" size="lg">
             {view.status === 'finished' ? t.finished : t.intro}
           </Body>
+          {readOnlyRest ? (
+            <Body tone="secondary" testID="route-overview-resting">
+              {m.learner.route.blend.ownResting}
+            </Body>
+          ) : null}
           {movedLine ? (
             <Body tone="secondary" testID="route-overview-moved">
               {t.moved}
@@ -262,26 +276,30 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
             </>
           ) : null}
 
-          <Spacer size="xl" />
-          {stale ? (
+          {readOnlyRest ? null : (
             <>
-              <Body tone="secondary" testID="route-overview-new-lessons">
-                {t.newLessons}
-              </Body>
+              <Spacer size="xl" />
+              {stale ? (
+                <>
+                  <Body tone="secondary" testID="route-overview-new-lessons">
+                    {t.newLessons}
+                  </Body>
+                  <Spacer size="sm" />
+                </>
+              ) : null}
+              <Button
+                label={t.moveAlong.cta}
+                tone="secondary"
+                size="lg"
+                fullWidth
+                disabled={busy}
+                onPress={() => void moveAlong()}
+                testID="route-overview-move-along"
+              />
               <Spacer size="sm" />
+              <Button label={t.change.cta} tone="ghost" size="md" fullWidth onPress={changePlan} testID="route-overview-change" />
             </>
-          ) : null}
-          <Button
-            label={t.moveAlong.cta}
-            tone="secondary"
-            size="lg"
-            fullWidth
-            disabled={busy}
-            onPress={() => void moveAlong()}
-            testID="route-overview-move-along"
-          />
-          <Spacer size="sm" />
-          <Button label={t.change.cta} tone="ghost" size="md" fullWidth onPress={changePlan} testID="route-overview-change" />
+          )}
         </>
       )}
 
@@ -296,7 +314,9 @@ export function RouteOverviewScreen({ route, navigation }: Props): ReactElement 
         ) : null}
       </View>
       <Spacer size="lg" />
-      {confirmStop ? (
+      {readOnlyRest ? (
+        <LinkButton label={t.back.cta} onPress={leave} testID="route-overview-leave" />
+      ) : confirmStop ? (
         <Card padding="md" tone="sunken" testID="route-overview-stop-confirm">
           <Body>{t.stopConfirm.line}</Body>
           <Spacer size="sm" />

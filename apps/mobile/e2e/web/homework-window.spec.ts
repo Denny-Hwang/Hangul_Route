@@ -169,7 +169,9 @@ test('beta check: a class term and two family routes from the console list one w
     return { id, spaceId: `space:${id.slice(5)}`, spaceKind, spaceName, title: spaceName, items: toPlanItems(draft), publishedAt: at, updatedAt: at, meta: toMeta(draft) };
   };
   const plans: InboxPlan[] = [
-    published('plan:sunflower-term', 'class', 'Sunflower', { ...base, audience: 'class', weeks: 12, sessionsPerWeek: 2, sessionDays: ['tue', 'thu'] }),
+    // The class starts further on (band 2): an own or family plan never repeats a lesson an in-force class curriculum
+    // schedules (AMENDMENTS-ROUTE-CLASS-BLEND section 8), so the family routes keep the first lessons to show here.
+    published('plan:sunflower-term', 'class', 'Sunflower', { ...base, level: { stage: 'stage1', band: 2 }, audience: 'class', weeks: 12, sessionsPerWeek: 2, sessionDays: ['tue', 'thu'] }),
     published('plan:kim-family', 'family', 'Kim family', { ...base, audience: 'family', weeks: 12, sessionsPerWeek: 3 }),
     published('plan:lee-family', 'family', 'Lee family', { ...base, audience: 'family', weeks: 26, sessionsPerWeek: 4 }),
   ];
@@ -196,6 +198,9 @@ test('beta check: a class term and two family routes from the console list one w
     const homework = (await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.homework ?? [];
     for (const h of homework) expect(h.targetDate ?? '', h.id).not.toBe('');
     for (const h of homework) expect((h.targetDate ?? '') <= horizon, `${h.id} on ${h.targetDate} is past ${horizon}`).toBe(true);
+    // The same lesson is never on two plans at once: a family item the class schedules steps aside (section 8, BL-6).
+    const classQuests = new Set(plans[0]?.items.map((item) => item.id));
+    for (const h of homework) if (!h.id.startsWith('plan:sunflower-term#')) expect(classQuests.has(h.questId), h.id).toBe(false);
 
     await openHomework(page);
     await expect(page.getByRole('heading', { name: 'Homework' })).toBeVisible();

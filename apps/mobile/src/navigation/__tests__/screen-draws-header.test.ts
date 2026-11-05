@@ -60,6 +60,8 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   // The grown-up reports' chunk.
   'screens/parent/reports-entry.tsx#LearnerReportScreen': 'screens/parent/LearnerReportScreen.tsx#LearnerReportScreen',
   'screens/parent/reports-entry.tsx#PlacementReportScreen': 'screens/parent/PlacementReportScreen.tsx#PlacementReportScreen',
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days' chunk.
+  'screens/route/practice-days-entry.tsx#PracticeDaysScreen': 'screens/route/PracticeDaysScreen.tsx#PracticeDaysScreen',
   // Row CM-22: the Stage Check's chunk.
   'screens/stage-check/stage-check-entry.tsx#StageCheckScreen': 'screens/stage-check/StageCheckScreen.tsx#StageCheckScreen',
   'screens/stage-check/stage-check-entry.tsx#StageRecapScreen': 'screens/stage-check/StageRecapScreen.tsx#StageRecapScreen',

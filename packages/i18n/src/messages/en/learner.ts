@@ -3070,4 +3070,52 @@ export const learner = {
     /** Under the Done headline: forward-looking, never about a week gone by. */
     next: 'A new one comes next week.',
   },
+  /**
+   * Class days and practice days on the learner's device (AMENDMENTS-ROUTE-CLASS-BLEND sections 7, 8 and 19, row BL-7;
+   * design/wireframes/journey/route-class-blend.md B1 to B6), behind `flags.routeBlendEnabled`. Neutral facts only:
+   * never a date, a count above 3, attendance, a comparison or a missed day. Weekday names come in as the long names of
+   * `formatDate(locale, day, 'weekdayLong')`, in week order from Monday.
+   */
+  route: {
+    blend: {
+      /** B1: the Route card's weekly plan line, one text node; `practice` is one of the practice parts below. */
+      planLine: (classDays: string, practice: string) => `Your class's weekly plan: class on ${classDays}, ${practice}.`,
+      /** 1 to 3 practice days, by name. */
+      practiceOn: (days: string) => `practice on ${days}`,
+      /** 4 or more practice days that leave a weekday with neither class nor practice (section 7). */
+      practiceMost: 'practice on most days',
+      /** 6 practice days; the one weekday left has no class either. */
+      practiceAllBut: (weekday: string) => `practice every day except ${weekday}`,
+      /** Practice on every weekday, or on every non-class day (the class days fill the rest). */
+      practiceEvery: 'practice every day',
+      /** The locale's list of weekday names, as the locale's conjunction list writes it: "Wednesday, Friday, and Sunday". */
+      dayList: (names: readonly string[]) =>
+        names.length <= 2 ? names.join(' and ') : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1] ?? ''}`,
+      /** B3: card (2) on a practice day with room, after the day's lessons or as its only step. Never a to-do. */
+      refresh: 'Refresh',
+      refreshLine: 'Look back at what class taught.',
+      /** B2: one calm line above card (2) on a class day; no question about going. */
+      classToday: 'Class today.',
+      /** B5: Profile's weekly plan row while the own plan rests (section 8). Never "stopped" or "cancelled". */
+      ownResting: "Your own weekly plan is resting while your class's plan has practice days.",
+      /** B5: opens the resting plan's overview, read-only. */
+      seeIt: 'See it',
+      /** Once, when the class plan ends or the learner leaves the class (section 8). */
+      ownBack: 'Your own weekly plan is back.',
+      /** B6: instead of the weekly plan proposal while the class plan has practice days. */
+      proposalInstead: "Your class's weekly plan has practice days for you.",
+      /**
+       * B7 (row BL-8): My practice days, Profile -> weekly plan. The learner (a grown-up, for a child) moves the days and
+       * their count; the lessons never change. The count chips are choices 1 to 7, not counts of work.
+       */
+      practiceDays: {
+        title: 'My practice days',
+        hint: 'Pick the days you practice. Your lessons stay the same.',
+        /** The count chips' group name. */
+        count: 'Days a week',
+        /** A child profile on a gated device: a tap opens the grown-up gate first. */
+        gate: 'PIN required',
+      },
+    },
+  },
 } as const;

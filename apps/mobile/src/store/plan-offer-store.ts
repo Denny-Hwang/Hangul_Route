@@ -1,6 +1,9 @@
 import type { DurationId, RouteProposal, SelfRoute, StageKey } from '@hangul-route/content-schema';
 import { dayKey } from '../logic/homework/mission-builder';
+import { episodesAll } from '../content';
 import { draftOfOffer, planChangeAt, planOfferOf, updatedEvent, updatedRouteOf, type PlanOffer } from '../logic/placement/plan-offer';
+import { classScheduledQuestIds, sourcesOf } from '../logic/homework/plan-derivation';
+import { layerOf } from '../logic/route/layer';
 import type { ProposalContext } from '../logic/route/proposal-flow';
 import { activeSelfRoute } from '../logic/route/self-route';
 import { track } from '../platform/telemetry';
@@ -21,13 +24,17 @@ export function proposalContextFor(profileId: string, now: Date): ProposalContex
   const profile = useProfileStore.getState().profiles.find((p) => p.id === profileId);
   const snapshot = useProgressStore.getState().byProfile[profileId];
   if (profile === undefined || snapshot === undefined) return null;
+  const today = dayKey(now.toISOString());
+  // A new own plan leaves out what an in-force class or school curriculum schedules (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  const classQuestIds = [...classScheduledQuestIds(sourcesOf(usePlanStore.getState().byLearner[profileId] ?? [], null), today, episodesAll)];
   return {
     placements: snapshot.placements,
     completedQuestIds: snapshot.quests.filter((q) => q.completedAt !== undefined).map((q) => q.questId),
     ageGroup: profile.ageGroup,
     unlockedStages: unlockedStagesFor(now, profileId) as StageKey[],
-    today: dayKey(now.toISOString()),
+    today,
     testedOut: snapshot.testedOut,
+    classQuestIds,
   };
 }
 
@@ -47,10 +54,13 @@ export function planOfferNow(profileId: string, enabled: boolean, now: Date, sur
   const context = proposalContextFor(profileId, now);
   if (context === null) return null;
   const ui = useRouteStore.getState().ui[profileId];
+  const active = activeSelfRoute(useProgressStore.getState().byProfile[profileId]);
+  // No new own plan is offered while the class plan has practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 8).
+  if (active === null && layerOf(sourcesOf(usePlanStore.getState().byLearner[profileId] ?? [], null), context.today) === 'class-with-practice') return null;
   return planOfferOf({
     enabled,
     context,
-    active: activeSelfRoute(useProgressStore.getState().byProfile[profileId]),
+    active,
     dismissedAt: surface === 'report' ? ui?.reportDismissedAt : ui?.dismissedAt,
     keptFor: ui?.keptFor,
     nowMs: now.getTime(),
