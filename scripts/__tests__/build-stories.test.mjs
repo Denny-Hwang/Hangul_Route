@@ -868,7 +868,7 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     assert.equal(BUDGET.manifestRaw, 60_000);
     // Row CM-8b: the shelf chunk, which the web app waits for before its first screen, like the lesson headers (40,000 B).
     assert.equal(BUDGET.shelfRaw, 40_000);
-    assert.equal(BUDGET.artRaw, 150_000);
+    assert.equal(BUDGET.artRaw, 155_000);
   });
 
   test("checkBudget: the shelf chunk over its line fails, equal passes, absent is not checked", () => {
@@ -915,7 +915,7 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     putStory(root, ready());
     const r = run(root, ["--report"]);
     assert.equal(r.status, 0, r.stderr + r.stdout);
-    assert.match(r.stdout, /scene art\s+\d+ B raw over 7 scenes \(budget 150000 B\)/);
+    assert.match(r.stdout, /scene art\s+\d+ B raw over 7 scenes \(budget 155000 B\)/);
   });
 });
 

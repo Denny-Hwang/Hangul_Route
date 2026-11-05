@@ -161,6 +161,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (release `build:web --budget`; on main 74332fac1 it was 4,901,256 B with main alone at 4,873,332 B): +27,924 B, the four
   // rows' device code that is not flagged out of the bundle, plus the voice-check hold that landed on main since. The line is
   // the measurement plus a 2,843 B margin; main's own line (4,875,000 B) does not hold the four rows.
+  // The CM tail integration (integrate/cm-tail-1105: Stage 2 Holidays and Stage 4 Letters Volume 2 and the Holidays book 2) on
+  // main e93044853 (with the BL tail integration) measures 4,905,865 B raw / 1,314,322 B gzip (release `build:web`, CI=1;
+  // main alone 4,902,157 B): +3,708 B, 865 B over the line, because main's BL tail line left 2,843 B of margin. The
+  // cells' start-loaded manifest entries and catalogue rows and the Holidays book definition are the growth. The line is
+  // the measurement plus a 4,135 B margin.
   // The KT tail integration (integrate/kt-tail-1105: KT-4b, KT-5, KT-6 and KT-7 on main e93044853) measures 4,909,345 B raw /
   // 1,315,697 B gzip (release `build:web --budget`); main alone is 4,902,157 B, so the four rows add 7,188 B, measured one
   // merge at a time: KT-4b +1,061 B (Card Match and Pic-Word boards), KT-5 +2,052 B (Story Sequence and Order, Sentence
@@ -170,7 +175,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (`BlendParts.tsx` is 3,215 B and `blend-view.ts` 2,761 B in the start bundle) would give back about 5 KB at most and
   // is a separate change: `blend-view`'s functions are read synchronously by five screens. The line is the measurement
   // plus a 2,655 B margin (one measured raise, 7,000 B over the previous line).
-  startBundleRaw: 4_912_000,
+  // OW-1-undo (Build a Letter's Undo button, on main c2555a293 with the BL, CM and KT tails) measures 4,914,379 B raw /
+  // 1,316,898 B gzip (release `build:web --budget`, CI=1); the three tails together are 4,913,053 B (4,902,157 B + 7,188 B +
+  // 3,708 B), so the button adds 1,326 B. The line is the measurement plus a 2,621 B margin (one measured raise, 2,000 B over
+  // the KT line).
+  startBundleRaw: 4_917_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -241,7 +250,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
   // The F-CURR-002 Volume 2 integration (integrate/cm-1105, rows CM-40..CM-46 and CM-5B) measures 1,222 items,
   // 181,677 B raw / 39,133 B gzip as generated and 197,401 B raw / 38,616 B gzip as built: one measured raise.
-  reviewItemsRaw: 205_000,
+  // The CM tail integration (Stage 2 Holidays and Stage 4 Letters Volume 2, the Holidays book 2) measures 1,265 items,
+  // 190,655 B raw / 40,460 B gzip as generated and 207,348 B raw / 39,918 B gzip as built: the raw line moves, the gzip
+  // line holds.
+  reviewItemsRaw: 215_000,
   reviewItemsGzip: 41_000,
   // "This week in Korea" (F-CURR-002 §5.7, §10, row CM-48): the week drops, one content-hashed chunk of
   // scripts/build-week-drops.mjs, lazy and precached, held here on its built bundle and there on its module (`BUDGET`,

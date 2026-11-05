@@ -187,9 +187,11 @@ const pillarOf = (tag: string): Pillar => tag.charAt(0) as Pillar;
 describe('placement table (F-STORY-005 §3.3) against the story files', () => {
   it('leaves out only stories added after the table, each with its addedIn stamp and topic tags', () => {
     const later = allStoryFiles.filter((story) => story.addedIn !== undefined);
-    // The new tales of the CM-46 books 2: Letters (waiting for their sign-off), Food, Nature and Play.
+    // The new tales of the CM-46 books 2: Letters and Holidays (waiting for their sign-off), Food, Nature and Play.
     expect(later.map(slugOf)).toEqual([
+      'daeboreum-full-moon',
       'eongan-letters',
+      'gyeonu-jingnyeo',
       'hahoe-mask-dance',
       'hangul-name',
       'hanji-korean-paper',

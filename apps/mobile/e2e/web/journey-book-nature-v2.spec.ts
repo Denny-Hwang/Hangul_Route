@@ -45,8 +45,8 @@ test.describe('the Stage 5 Nature book 2 (regular build, F-CURR-002 CM-46)', () 
     await openJourney(page, VOLUMES_ON);
     // The cell shows its two volumes once the stored remote copy is read.
     await expect(page.getByTestId('journey-volumes-stage5-nature')).toHaveCount(1);
-    // A cell that ships no Volume 2 has no dots (Stage 2 Holidays & Traditions).
-    await expect(page.getByTestId('journey-volumes-stage2-rites')).toHaveCount(0);
+    // Stage 2 Holidays & Traditions ships its Volume 2 (CM-45 S2), so its cell has the dots too.
+    await expect(page.getByTestId('journey-volumes-stage2-rites')).toHaveCount(1);
     await natureCell(page).scrollIntoViewIfNeeded();
     await expectNoHorizontalOverflow(page, 'the Journey with the Nature volume dots at 320');
     await natureCell(page).click();

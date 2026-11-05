@@ -156,6 +156,7 @@ const PROPS = [
   'prop:changpo',
   'prop:ox',
   'prop:swallow',
+  'prop:magpie',
   'prop:gourds',
   'prop:turtle',
   'prop:rabbit',
