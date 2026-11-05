@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { touchTarget } from '@hangul-route/design-system/tokens';
 import { expect } from './fixtures';
 import { Touchscreen, type TouchPoint } from './touch';
 
@@ -11,6 +12,18 @@ import { Touchscreen, type TouchPoint } from './touch';
  *
  * Not a spec file: a spec file may not import another.
  */
+
+/** Nothing of an earlier run stays: leave the app (it holds its database open), clear the origin's data, and load it again. */
+export async function clearDevice(page: Page, baseURL: string | undefined): Promise<void> {
+  await page.goto('about:blank');
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Storage.clearDataForOrigin', { origin: new URL(baseURL ?? 'http://localhost:4173').origin, storageTypes: 'all' });
+  await cdp.detach();
+  await page.goto('/');
+}
+
+/** `touchTarget.min`: the floor of every answer target. */
+export const TARGET_MIN = touchTarget.min;
 
 export type Box = { x: number; y: number; width: number; height: number };
 
@@ -110,6 +123,39 @@ export async function settle(page: Page, maxMs = 12_000): Promise<Answer[]> {
   }
 }
 
+/** Waits until the page's text has not changed for `quietMs` (a late voice notice, an advance), at most `maxMs`. */
+export async function calm(page: Page, quietMs = 2_500, maxMs = 15_000): Promise<void> {
+  const t0 = Date.now();
+  let last = await page.evaluate(() => document.body.innerText);
+  let since = Date.now();
+  while (Date.now() - since < quietMs && Date.now() - t0 < maxMs) {
+    await page.waitForTimeout(250);
+    const now = await page.evaluate(() => document.body.innerText);
+    if (now !== last) {
+      last = now;
+      since = Date.now();
+    }
+  }
+}
+
+/** Whether the screen holds the board without scrolling, and how far it would scroll if not (the fit audit, report only). */
+export async function fitOf(page: Page): Promise<{ fits: boolean; room: number }> {
+  // The screen's scroller at the middle of its right edge: an answer may sit below the fold, where nothing is under a point.
+  const vp = page.viewportSize()!;
+  const sc = await scrollerAt(page, { x: vp.width - 2, y: vp.height / 2 });
+  return { fits: sc === null || sc.room < 2, room: sc?.room ?? 0 };
+}
+
+/** The target ratchet (KT-D8) on the board the page shows now: every answer is at least 64 x 64 at this text size and language. */
+export async function expectTargets(page: Page, name: string): Promise<number> {
+  const answers = await readAnswers(page);
+  expect(answers.length, `${name}: answers on the page`).toBeGreaterThanOrEqual(2);
+  for (const a of answers) {
+    expect(Math.min(Math.round(a.width), Math.round(a.height)), `${name}: "${a.label}" is ${Math.round(a.width)} x ${Math.round(a.height)}`).toBeGreaterThanOrEqual(TARGET_MIN);
+  }
+  return answers.length;
+}
+
 /** The distance the screen's own scroller (the nearest scrolling ancestor of the point) can still move, and its offset. */
 export async function scrollerAt(page: Page, at: TouchPoint): Promise<{ room: number; top: number } | null> {
   return page.evaluate((p) => {
@@ -197,6 +243,8 @@ export interface MatrixOptions {
   name: string;
   /** Reaches a fresh run of the game from nothing (a new device), for when a run ends before the matrix does. */
   restart?: () => Promise<void>;
+  /** Called when no answer is open (a game that waits on its own Continue or Next): true when it moved the game on. */
+  onIdle?: () => Promise<boolean>;
   /** The most fresh runs to start (default 2). */
   maxRestarts?: number;
   /** A ChoiceCard or Tile board: an answered target says so in its label or `aria-disabled`, which the bounce and two-finger checks need. */
@@ -211,6 +259,9 @@ export interface MatrixResult {
   runs: number;
 }
 
+/** A round whose right answer is named is over: the other answers take no tap until the game moves on. */
+const SOLVED = /^Right answer|\. Correct$/;
+
 const key = (g: { dx: number; dy: number }): string => `${g.dx},${g.dy}`;
 
 /** The viewport of the page, which a mobile profile always has. */
@@ -221,7 +272,12 @@ function viewportOf(page: Page): { width: number; height: number } {
 /** Nothing committed: the page says exactly what it said, after the lock, a replay and an advance would have shown. */
 async function expectNothing(page: Page, before: string, what: string): Promise<void> {
   await page.waitForTimeout(WATCH_MS);
-  expect(await snapshot(page), `${what}: the page changed, so something committed`).toBe(before);
+  const now = await snapshot(page);
+  if (now !== before) {
+    let i = 0;
+    while (before[i] === now[i]) i += 1;
+    throw new Error(`${what}: the page changed, so something committed. Before: ...${before.slice(Math.max(0, i - 80), i + 80)} After: ...${now.slice(Math.max(0, i - 80), i + 80)}`);
+  }
   expect((await readAnswers(page)).filter((a) => a.lookedPressed), `${what}: a press look stayed on`).toHaveLength(0);
 }
 
@@ -251,10 +307,14 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
   let round = '';
 
   // The device voice check settles a moment after a prompt opens and may put "No sound? Read it here." above the answers.
-  await page.waitForTimeout(2_000);
+  await calm(page);
   for (;;) {
-    const answers = (await settle(page)).filter((a) => !a.disabled);
+    const settled = await settle(page);
+    const answers = settled.some((a) => SOLVED.test(a.label)) ? [] : settled.filter((a) => !a.disabled);
     if (answers.length === 0) {
+      if (o.onIdle !== undefined && (await o.onIdle())) {
+        continue;
+      }
       // The run is over (or the board is not here yet): once the distances are in, that is the end.
       const covered = DISTANCES.every((d) => committed.some((c) => [Math.abs(Number(c.split(',')[0])), Math.abs(Number(c.split(',')[1]))].includes(d) && (d !== 0 || c === '0,0')));
       if (covered || queue.length === 0) break;
@@ -262,13 +322,15 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
       runs += 1;
       checkedNothing = false;
       await o.restart();
-      await page.waitForTimeout(2_000);
+      await calm(page);
       continue;
     }
 
     if (!checkedNothing) {
       checkedNothing = true;
       const all = (await readAnswers(page)).map((a) => a as Box);
+      // The target ratchet (KT-D8): every answer is at least 64 x 64, at this profile's text size and language.
+      await expectTargets(page, o.name);
       // A move that ends 40 px outside an answer commits nothing and leaves no press look.
       const first = await inView(page, answers[0]!);
       let before = await snapshot(page);
@@ -311,7 +373,8 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
       round = roundNow;
       tapped.clear();
     }
-    const open = every.filter((a) => !a.disabled);
+    // A solved round (the right answer named) leaves the rest inactive until the game moves on.
+    const open = every.some((a) => SOLVED.test(a.label)) ? [] : every.filter((a) => !a.disabled);
     const fresh = open.filter((a) => !tapped.has(a.label));
     const live = fresh.length > 0 ? fresh : open;
     if (live.length === 0) continue;
@@ -344,7 +407,6 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
 
     const g = queue.shift()!;
     const a = await inView(page, live[0]!);
-    if (process.env.KT_DEBUG === '1') o.note('step', `${key(g)} on ${a.label} @${Math.round(a.x)},${Math.round(a.y)} ${Math.round(a.width)}x${Math.round(a.height)}; open ${live.map((l) => l.label).join(' | ')}`);
     const before = await snapshot(page);
     await grazeAndExpectCommit(page, touch, centre(a), g, before, o.name);
     tapped.add(a.label);
