@@ -91,10 +91,10 @@ describe('every quest with the switches off (section 14)', () => {
     expect(scopes.length).toBeGreaterThan(100);
   });
 
-  it('the shipped Stage 2 Dictation Checks (row CM-3A S2, Nature Volume 2 q1, row CM-41 S2, Letters Volume 2, row CM-44 S2, and Food Volume 2, row CM-43 S2): 10 steps, 20 hear rounds, each a see round with the switch off', () => {
+  it('the shipped Stage 2 Dictation Checks (row CM-3A S2, Nature Volume 2 q1, row CM-41 S2, Letters Volume 2, row CM-44 S2, Food Volume 2, row CM-43 S2, and Holidays Volume 2 q3, row CM-45 S2): 11 steps, 22 hear rounds, each a see round with the switch off', () => {
     const dictation = scopes.filter(({ at, scope }) => at.startsWith('quest:stage2-') && (scope.typeHangul?.rounds ?? []).some((r) => typeHangulMode(r) === 'hear'));
-    expect(dictation).toHaveLength(10);
-    expect(dictation.flatMap(({ scope }) => scope.typeHangul!.rounds)).toHaveLength(20);
+    expect(dictation).toHaveLength(11);
+    expect(dictation.flatMap(({ scope }) => scope.typeHangul!.rounds)).toHaveLength(22);
     for (const { at, scope } of dictation) {
       expect(needsDictationChunk(scope), at).toBe(true);
       const off = applyGameSwitches(scope, ALL_OFF);

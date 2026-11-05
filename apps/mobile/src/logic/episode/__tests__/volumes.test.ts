@@ -26,9 +26,12 @@ describe('volumePageEpisode and cellVolumes', () => {
     // The bundle ships Stage 2 Nature's Volume 2 (row CM-41 S2); a cell with none lists its first volume alone.
     expect(cellVolumes(nature, true).map((e) => e.id)).toEqual([nature.id, 'episode:stage2-nature-v2']);
     expect(cellVolumes(nature, false).map((e) => e.id)).toEqual([nature.id]);
-    // Stage 2 Holidays & Traditions ships no Volume 2 yet (row CM-45 S2 is not merged).
+    // Stage 2 Holidays & Traditions ships its Volume 2 (row CM-45 S2); a Stage 1 cell ships none.
     const rites = episodesAll.find((e) => e.id === 'episode:stage2-rites') as Episode;
-    expect(cellVolumes(rites, true).map((e) => e.id)).toEqual([rites.id]);
+    expect(cellVolumes(rites, true).map((e) => e.id)).toEqual([rites.id, 'episode:stage2-rites-v2']);
+    expect(cellVolumes(rites, false).map((e) => e.id)).toEqual([rites.id]);
+    const stage1 = episodesAll.find((e) => e.id === 'episode:stage1-rites') as Episode;
+    expect(cellVolumes(stage1, true).map((e) => e.id)).toEqual([stage1.id]);
   });
 });
 
