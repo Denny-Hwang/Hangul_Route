@@ -354,7 +354,7 @@ export async function runMatrix(page: Page, touch: Touchscreen, o: MatrixOptions
       const b = await inView(page, (await settle(page)).filter((x) => !x.disabled)[0]!);
       const sc = await scrollerAt(page, centre(b));
       scrolled = sc !== null && sc.room >= 40;
-      o.note('board', `${o.name} ${scrolled ? `scrolls (${sc!.room} px)` : 'fits the screen'}; ${all.length} answers`);
+      o.note('board', `${o.name} ${sc !== null && sc.room >= 2 ? `scrolls (${sc.room} px${scrolled ? '' : ', too little for a drag case'})` : 'fits the screen'}; ${all.length} answers`);
       if (scrolled && sc !== null) {
         before = await snapshot(page);
         const up = sc.room - sc.top >= sc.top;

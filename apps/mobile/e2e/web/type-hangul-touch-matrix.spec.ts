@@ -3,7 +3,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, seedStored } from './helpers';
 import { Touchscreen } from './touch';
-import { clearDevice, expectTargets, runMatrix } from './touch-matrix';
+import { clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
 
 /**
  * AMENDMENTS-TOUCH row KT-11, section 11.2: the graze matrix (`touch-matrix.ts`) on the answer boards that only the
@@ -147,3 +147,25 @@ for (const locale of ['es', 'ko'] as const) {
     }
   });
 }
+
+/** The fit audit (section 11.2, report only) for these boards: fits or scrolls at 320 x 640, at the default and the largest text. */
+test.describe('answer boards on fixtures, the fit audit at 320 x 640 (AMENDMENTS-TOUCH KT-11, section 11.2)', () => {
+  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
+  test.use({ viewport: PROFILES[0].viewport, hasTouch: true, isMobile: true });
+
+  for (const board of BOARDS) {
+    test(`${board.name}: fits or scrolls at the default and the largest text`, async ({ page }) => {
+      test.setTimeout(120_000);
+      const cells: string[] = [];
+      for (const profile of [{ ...PROFILES[0], largest: false }, PROFILES[0]]) {
+        await board.open(page, profile);
+        await page.waitForTimeout(2_000);
+        const fit = await fitOf(page);
+        cells.push(`${profile.largest ? 'largest' : 'default'} text: ${fit.fits ? 'fits' : `scrolls ${Math.round(fit.room)} px`}`);
+      }
+      const row = `${board.name}: ${cells.join('; ')}`;
+      await test.info().attach('fit-audit.txt', { body: row, contentType: 'text/plain' });
+      test.info().annotations.push({ type: 'fit', description: row });
+    });
+  }
+});
