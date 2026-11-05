@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { touchTarget } from '@hangul-route/design-system/tokens';
 import { STORY_ORDER_FIXTURES } from '../../src/navigation/story-order-e2e-fixture';
 import { expect, test } from './fixtures';
-import { seedStored } from './helpers';
+import { seedStored, pastTapLock } from './helpers';
 import { shot } from './shots';
 import { expectNoHorizontalOverflow } from './viewport';
 
@@ -99,6 +99,7 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
         await shot(page, `story-order-captions-${size.name}`);
 
         // A card that does not come next: amber, never red, nothing moves.
+        await pastTapLock(page);
         await card(page, 'park').click();
         await expect(page.getByText('Try another').first()).toBeVisible();
         expect(await frameColor(page, 'park')).toBe(AMBER);
@@ -108,6 +109,7 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
 
         // Each right card moves into the next slot; the live line names the place and the line.
         for (const [i, p] of MORNING.panels.slice(0, 2).entries()) {
+          await pastTapLock(page);
           await card(page, p.id).click();
           await expect(page.getByTestId(`story-order-slot-${i + 1}`)).toHaveAccessibleName(`Place ${i + 1} of 4: ${p.caption.ko}`);
           await expect(page.getByTestId('story-order-announce')).toHaveText(`Place ${i + 1} of 4: ${p.caption.ko}`);
@@ -119,7 +121,10 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
         await expectTargets(page);
         await shot(page, `story-order-two-placed-${size.name}`);
 
-        for (const p of MORNING.panels.slice(2)) await card(page, p.id).click();
+        for (const p of MORNING.panels.slice(2)) {
+          await pastTapLock(page);
+          await card(page, p.id).click();
+        }
         // The replay: every line in order with its romanization and meaning.
         await expect(page.getByRole('heading', { name: 'The story, in order' })).toBeVisible();
         for (const p of MORNING.panels) await expect(page.getByTestId(`story-order-replay-line-${p.id}`)).toContainText(p.caption.en);
@@ -146,7 +151,10 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
         await expectNoHorizontalOverflow(page);
         await expectTargets(page);
         await shot(page, `story-order-illustrated-meanings-${size.name}`);
-        for (const p of DAY!.panels) await card(page, p.id).click();
+        for (const p of DAY!.panels) {
+          await pastTapLock(page);
+          await card(page, p.id).click();
+        }
         await page.getByTestId('story-order-done').click();
         // Round 2 holds the meanings back again.
         await expect(page.getByRole('heading', { name: 'Put the lines in order' })).toBeVisible();
@@ -165,7 +173,10 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
         await expect(page.locator('[data-testid^="story-sequence-card-art-"]')).toHaveCount(0);
         await shot(page, `story-order-fallback-${size.name}`);
         for (const round of STORY_ORDER_FIXTURES.twoRounds.storyOrder!.rounds) {
-          for (const p of round.panels) await page.getByTestId(`story-sequence-card-${p.id}`).click();
+          for (const p of round.panels) {
+            await pastTapLock(page);
+            await page.getByTestId(`story-sequence-card-${p.id}`).click();
+          }
           await page.getByTestId('story-sequence-done').click();
         }
         expect(await log(page)).toMatchObject({ completed: 0, fallbackFinished: 1 });
@@ -195,6 +206,8 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
         // The cards are one after the other in the tab order.
         for (let t = 0; t < at; t += 1) await page.keyboard.press('Tab');
         expect(await focusedCard()).toBe(p.id);
+        // A keyboard press commits through the board's lock too (AMENDMENTS-TOUCH rule 9): wait out the last one.
+        await pastTapLock(page);
         await page.keyboard.press(i % 2 === 0 ? 'Enter' : 'Space');
         // The last card fills the row and opens the replay, so its slot is not on screen any more.
         if (i === MORNING.panels.length - 1) break;
@@ -216,7 +229,10 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
 
     test('the replay never moves by itself and has no Pause; Back and Next step through', async ({ page }) => {
       await open(page, 'captions');
-      for (const p of MORNING.panels) await card(page, p.id).click();
+      for (const p of MORNING.panels) {
+        await pastTapLock(page);
+        await card(page, p.id).click();
+      }
       await expect(page.getByTestId('story-order-replay')).toBeVisible();
       await expect(page.getByTestId('story-order-replay-pause')).toHaveCount(0);
       await page.waitForTimeout(3_500);
@@ -233,7 +249,10 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
 
     test('the replay has a Pause and moves on by itself', async ({ page }) => {
       await open(page, 'captions');
-      for (const p of MORNING.panels) await card(page, p.id).click();
+      for (const p of MORNING.panels) {
+        await pastTapLock(page);
+        await card(page, p.id).click();
+      }
       await expect(page.getByTestId('story-order-replay-pause')).toBeVisible();
       await expect(page.getByTestId('story-order-replay-announce')).toHaveText(`${MORNING.panels[1]!.caption.ko} ${MORNING.panels[1]!.caption.en}`, { timeout: 6_000 });
     });
@@ -247,7 +266,10 @@ test.describe('Story Order (F-CURR-002 CM-34)', () => {
       const five = STORY_ORDER_FIXTURES.five.storyOrder!.rounds[0]!;
       await expectTargets(page);
       await expectNoHorizontalOverflow(page);
-      for (const p of five.panels.slice(0, 4)) await card(page, p.id).click();
+      for (const p of five.panels.slice(0, 4)) {
+        await pastTapLock(page);
+        await card(page, p.id).click();
+      }
       await expectNoHorizontalOverflow(page);
       await expectTargets(page);
       await page.getByTestId('story-order-skip').scrollIntoViewIfNeeded();

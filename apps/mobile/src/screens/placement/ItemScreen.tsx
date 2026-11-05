@@ -15,13 +15,19 @@ import {
   useLayoutClass,
   useMediaSize,
   useEffectiveFontScale,
+  TapBoard,
+  TapTarget,
+  pressInset,
+  pressTransform,
+  usePressLook,
+  useTapLock,
 } from '@hangul-route/design-system';
 import { currentQuestion, type AssessmentQuestion } from '@hangul-route/content-schema';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { cheerLine } from '../../logic/placement/copy';
-import { acknowledgement, choicesEnableAtMs, choicesEnabled, pauseSheet, promptPlayback, speaksInstruction } from '../../logic/placement/flow';
+import { acknowledgement, answersItem, choicesEnableAtMs, choicesEnabled, pauseSheet, promptPlayback, speaksInstruction } from '../../logic/placement/flow';
 import {
   NO_SOUND_SKIP,
   choiceColumns,
@@ -44,7 +50,7 @@ import { PictureArt } from '../minigames/PictureArt';
 import { usePlacement } from './context';
 import { PauseSheet } from './PauseSheet';
 import { LearnerScreenHeader } from '../../components/LearnerScreenHeader';
-import { ChoiceGrid, FootstepTrail, SpeakerButton } from './parts';
+import { ChoiceGrid, ChoiceScroller, FootstepTrail, SpeakerButton } from './parts';
 
 /** How long the neutral "Got it" stays (Standard and Deep). */
 const ACK_MS = 900;
@@ -109,6 +115,12 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   }, []);
   const autoStarted = useRef(false);
   const promptRef = useRef<object | null>(null);
+  // One answer per item (AMENDMENTS-TOUCH 6.4, F6): the choices and "not sure" are one `board` board, whose lock lives on
+  // the app clock, so it outlives this keyed view. A press while it runs, or once this item has its answer, does nothing.
+  const tapLock = useTapLock();
+  const answeredHere = useRef(false);
+  const press = usePressLook();
+  const takesAnswer = (): boolean => !tapLock.locked && !answeredHere.current && answersItem(state, question.id);
 
   const instruction = instructionForQuestion(m, question, flow.testLocale);
   const options = optionViews(question, { revealed, mode, testLocale: flow.testLocale, m });
@@ -195,14 +207,16 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
     setRevealed(true);
   };
   const choose = (option: OptionView): void => {
-    if (!enabled || sheet !== null) return;
+    if (!enabled || sheet !== null || !takesAnswer()) return;
+    answeredHere.current = true;
     markGesture();
     stop();
     if (acknowledgement(mode) === 'got-it') onAck();
     applyRun({ type: 'answer', optionId: option.id, assisted: revealed });
   };
   const notSure = (): void => {
-    if (sheet !== null) return;
+    if (sheet !== null || !takesAnswer()) return;
+    answeredHere.current = true;
     markGesture();
     stop();
     applyRun({ type: 'notSure' });
@@ -282,28 +296,33 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   ));
 
   const notSureButton = (
-    <Pressable
-      testID="placement-not-sure"
-      onPress={notSure}
-      accessibilityRole="button"
-      accessibilityLabel={copy.notSure}
-      style={({ pressed }) => ({
-        // The same size as a choice (section 3.1 step 5).
-        minHeight: touchTarget.child,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.md,
-        paddingHorizontal: spacing.lg,
-        borderRadius: radii.lg,
-        borderWidth: borderWidth.base,
-        borderColor: colors.border.subtle,
-        backgroundColor: pressed ? colors.surface.sunken : colors.surface.paper,
-      })}
-    >
-      {short ? <Hoya pose="thinking" size={spacing.xxl} /> : null}
-      <Body weight="semibold">{copy.notSure}</Body>
-    </Pressable>
+    <TapTarget testID="placement-not-sure" onCommit={notSure} accessibilityLabel={copy.notSure}>
+      {({ pressed }) => {
+        // The press look (AMENDMENTS-TOUCH 4.3) on the drawn box; the box keeps its size.
+        const p = pressed ? press : null;
+        return (
+          <View
+            style={{
+              // The same size as a choice (section 3.1 step 5).
+              minHeight: touchTarget.child,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing.md,
+              paddingHorizontal: spacing.lg - pressInset(p, borderWidth.base),
+              borderRadius: radii.lg,
+              borderWidth: p?.borderWidth ?? borderWidth.base,
+              borderColor: p?.borderColor ?? colors.border.subtle,
+              backgroundColor: colors.surface.paper,
+              transform: pressTransform(p),
+            }}
+          >
+            {short ? <Hoya pose="thinking" size={spacing.xxl} /> : null}
+            <Body weight="semibold">{copy.notSure}</Body>
+          </View>
+        );
+      }}
+    </TapTarget>
   );
 
   // Short (wireframe E2): Hoya beside the speaker, nothing to read; the instruction and cheers are spoken.
@@ -344,6 +363,24 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
 
   if (arrangement !== 'portrait') {
     const grid = <ChoiceGrid columns={2}>{cards}</ChoiceGrid>;
+    // A scrolling column takes the choices on their own board (it fills the column, under "not sure"); both boards
+    // share the app lock, so a bounce from one to the other is still one answer.
+    const answers =
+      arrangement === 'landscape-scroll' ? (
+        <>
+          <ChoiceScroller>
+            <TapBoard lock="board">{grid}</TapBoard>
+          </ChoiceScroller>
+          <TapBoard lock="board">{notSureButton}</TapBoard>
+        </>
+      ) : (
+        <TapBoard lock="board">
+          <View style={{ gap: spacing.md }}>
+            {grid}
+            {notSureButton}
+          </View>
+        </TapBoard>
+      );
     return (
       // Side by side, the header sits at the top of the left column, so the choices keep the whole height.
       <Screen tone="canvas" scrollable={false} testID="placement-item" header={{ ...header, drawnByScreen: true }}>
@@ -352,10 +389,7 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
             <LearnerScreenHeader options={header} inLayout />
             {hoya}
           </View>
-          <View style={{ flex: 1, gap: spacing.md }}>
-            {arrangement === 'landscape-scroll' ? <ScrollView style={{ flex: 1 }}>{grid}</ScrollView> : grid}
-            {notSureButton}
-          </View>
+          <View style={{ flex: 1, gap: spacing.md }}>{answers}</View>
         </View>
         {pause}
       </Screen>
@@ -372,9 +406,11 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
         </>
       )}
       <Spacer size={short ? 'md' : 'lg'} />
-      <ChoiceGrid columns={columns}>{cards}</ChoiceGrid>
-      <Spacer size="md" />
-      {notSureButton}
+      <TapBoard lock="board">
+        <ChoiceGrid columns={columns}>{cards}</ChoiceGrid>
+        <Spacer size="md" />
+        {notSureButton}
+      </TapBoard>
       {pause}
     </Screen>
   );

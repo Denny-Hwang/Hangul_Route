@@ -171,7 +171,10 @@ async function finishFromLastScene(page: Page): Promise<void> {
   if (await recapDone.isVisible()) await recapDone.click();
   await expect(sequence).toBeVisible();
   await page.getByRole('button', { name: 'Play minigame' }).click();
-  for (const scene of ORDER) await page.getByTestId(`story-sequence-card-${scene}`).click();
+  for (const scene of ORDER) {
+    await pastTapLock(page);
+    await page.getByTestId(`story-sequence-card-${scene}`).click();
+  }
   await page.getByRole('button', { name: 'Skip replay' }).click();
   await page.getByRole('button', { name: 'See results' }).click();
   await expect(page.getByTestId('story-results-extras')).toBeVisible();

@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { colors } from '@hangul-route/design-system/tokens';
 import { availableLocales, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack, headerClose } from './helpers';
+import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack, headerClose, pastTapLock } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -441,6 +441,8 @@ test.describe('the level check entry (LR-10 case b)', () => {
     await page.getByTestId('placement-next').click();
     await page.getByTestId('placement-warmup-speaker').click();
     await page.getByTestId('placement-warmup-option-rice').click();
+    // Past the answer lock of the last tap (AMENDMENTS-TOUCH 6.4).
+    await pastTapLock(page);
     await page.locator('[data-testid^="placement-option-"]').first().click();
     await headerClose(page).click();
     await page.getByTestId('placement-enough').click();

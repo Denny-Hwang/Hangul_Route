@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, headerClose, pastTapLock } from './helpers';
 import { nextPage, position } from './story-reader-helpers';
 
 /**
@@ -85,7 +85,10 @@ async function finishFromLastScene(page: Page, order: boolean): Promise<void> {
   await expect(page.getByText('4 / 5', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   if (order) {
-    for (const scene of ['s1', 's2', 's4', 's5']) await page.getByTestId(`story-sequence-card-${scene}`).click();
+    for (const scene of ['s1', 's2', 's4', 's5']) {
+      await pastTapLock(page);
+      await page.getByTestId(`story-sequence-card-${scene}`).click();
+    }
     await page.getByRole('button', { name: 'Skip replay' }).click();
   } else {
     await page.getByRole('button', { name: 'Skip this one' }).click();
@@ -176,7 +179,10 @@ test.describe('story resume (fixture bundle)', () => {
     await page.getByRole('button', { name: 'Skip for now' }).click();
     await expect(page.getByText('4 / 5', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Play minigame' }).click();
-    for (const scene of ['s1', 's2', 's4', 's5']) await page.getByTestId(`story-sequence-card-${scene}`).click();
+    for (const scene of ['s1', 's2', 's4', 's5']) {
+      await pastTapLock(page);
+      await page.getByTestId(`story-sequence-card-${scene}`).click();
+    }
     await page.getByRole('button', { name: 'Skip replay' }).click();
 
     // The bookmark is still there until the score is written.

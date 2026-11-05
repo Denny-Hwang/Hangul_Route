@@ -122,7 +122,7 @@ async function buildCheck(page: Page, rounds: readonly (readonly string[])[]): P
   for (const tiles of rounds) {
     const tray = page.getByTestId('sentence-builder-tray');
     for (const name of tiles) {
-      await page.waitForTimeout(120);
+      await pastTapLock(page);
       await tray.getByRole('button', { name, exact: true }).click();
     }
     await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
@@ -142,7 +142,7 @@ async function pickClozeCheck(page: Page, answers: ReadonlyArray<readonly [round
     const option = page.getByTestId(`listen-pick-option-${round}:t${tile}`);
     await expect(option).toBeVisible({ timeout: 5_000 });
     if (i === 0 && screenshot !== undefined) await shot(page, screenshot);
-    await page.waitForTimeout(120);
+    await pastTapLock(page);
     await option.click();
   }
 }
@@ -297,7 +297,7 @@ async function replyTurns(page: Page, turns: readonly string[], last: 'minigame'
     const current = page.getByText(`${i + 1} / ${turns.length}`, { exact: true });
     await expect(async () => {
       if (await after.isVisible()) return;
-      await page.waitForTimeout(120);
+      await pastTapLock(page);
       if ((await current.isVisible()) && !(await after.isVisible())) await reply(page, line);
       await expect(after).toBeVisible({ timeout: 1500 });
     }).toPass();
@@ -306,20 +306,23 @@ async function replyTurns(page: Page, turns: readonly string[], last: 'minigame'
 
 /** Story Sequence: place the lesson lines in order by card id, then leave the replay. */
 async function orderLines(page: Page, ids: readonly string[]): Promise<void> {
-  for (const id of ids) await page.getByTestId(`story-sequence-card-${id}`).click();
+  for (const id of ids) {
+    await pastTapLock(page);
+    await page.getByTestId(`story-sequence-card-${id}`).click();
+  }
   await page.getByTestId('story-sequence-skip-replay').or(page.getByTestId('story-sequence-done')).first().click();
 }
 
 /**
  * Sentence Builder: build round `n` of `total` by tapping its tiles by accessible name
- * ("<ko>, <romanization>"), past the 50 ms touch window between taps; the built sentence
+ * ("<ko>, <romanization>"), past the tray's answer lock between taps; the built sentence
  * moves on by itself (silent engine).
  */
 async function build(page: Page, n: number, total: number, tiles: readonly string[]): Promise<void> {
   await expect(page.getByText(`${n} / ${total}`, { exact: true })).toBeVisible({ timeout: 5_000 });
   const tray = page.getByTestId('sentence-builder-tray');
   for (const name of tiles) {
-    await page.waitForTimeout(120);
+    await pastTapLock(page);
     await tray.getByRole('button', { name, exact: true }).click();
   }
   await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
@@ -329,8 +332,8 @@ async function build(page: Page, n: number, total: number, tiles: readonly strin
 async function buildSentence(page: Page, tiles: readonly string[]): Promise<void> {
   const tray = page.getByTestId('sentence-builder-tray');
   for (const name of tiles) {
-    // A tap inside the game's touch window is dropped: wait it out before each tile.
-    await page.waitForTimeout(120);
+    // A tap inside the tray's answer lock is dropped: wait it out before each tile.
+    await pastTapLock(page);
     await tray.getByRole('button', { name, exact: true }).click();
   }
   await expect(page.getByTestId('sentence-builder-done')).toBeVisible();
@@ -440,11 +443,11 @@ async function playCardMatch(page: Page, pairs: readonly (readonly [romanization
   }
 }
 
-/** Sentence Builder: tap a tray tile by its accessible name ("Korean, romanization"), past the game's touch window. */
+/** Sentence Builder: tap a tray tile by its accessible name ("Korean, romanization"), past the tray's answer lock. */
 async function placeTile(page: Page, name: string): Promise<void> {
   const tile = page.getByTestId('sentence-builder-tray').getByRole('button', { name, exact: true });
   await expect(tile).toBeVisible();
-  await page.waitForTimeout(120);
+  await pastTapLock(page);
   await tile.click();
 }
 

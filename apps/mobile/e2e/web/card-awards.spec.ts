@@ -283,7 +283,10 @@ test.describe('card awards (F-STORY-006 6.9, release bundle)', () => {
     if (await recapDone.isVisible()) await recapDone.click();
     await expect(sequence).toBeVisible();
     await page.getByRole('button', { name: 'Play minigame' }).click();
-    for (const sceneId of listen.sequenceSceneIds) await page.getByTestId(`story-sequence-card-${sceneId}`).click();
+    for (const sceneId of listen.sequenceSceneIds) {
+      await pastTapLock(page);
+      await page.getByTestId(`story-sequence-card-${sceneId}`).click();
+    }
     await page.getByRole('button', { name: 'Skip replay' }).click();
     await page.getByRole('button', { name: 'See results' }).click();
     await expect(page.getByTestId('story-results-extras')).toBeVisible();

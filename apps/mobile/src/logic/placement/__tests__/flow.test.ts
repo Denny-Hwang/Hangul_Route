@@ -1,9 +1,11 @@
-import { IDLE_PAUSE_MS, hashSeed, type PlacementRunState } from '@hangul-route/content-schema';
+import { IDLE_PAUSE_MS, apply, currentQuestion, hashSeed, startRun, type PlacementRunState } from '@hangul-route/content-schema';
+import { PLACEMENT_BANK } from '../../../content/placement.generated';
 import { describe, expect, it } from 'vitest';
 import {
   FALLBACK_MAX_MS,
   RESUME_WINDOW_MS,
   acknowledgement,
+  answersItem,
   appStateEvent,
   canProceed,
   choicesEnabled,
@@ -824,5 +826,30 @@ describe('retakeFlow (section 3.1 step 7: "Try it with the sound guide hidden" i
     expect(retakeFlow(options, 'short', capability)).toBe(options);
     const invite = start({ source: 'onboarding' });
     expect(retakeFlow(invite, 'standard', capability)).toBe(invite);
+  });
+});
+
+describe('answersItem: one answer per item (AMENDMENTS-TOUCH 6.4, F6)', () => {
+  const CONFIG = { mode: 'standard', revealMode: 'tap', audio: true, visual: true, takeMyTime: true, seed: 11, exclude: [], resolvesPicture: () => true } as const;
+
+  it('takes an answer or a "not sure" for the open item, never a second one for an item already answered', () => {
+    const first = startRun(PLACEMENT_BANK, { ...CONFIG, exclude: [] }, 0);
+    const itemId = currentQuestion(first)!.id;
+    expect(answersItem(first, itemId)).toBe(true);
+    const answered = apply(first, { type: 'notSure' }, 1_000);
+    // The item has its answer: a bounce that still names it is ignored.
+    expect(answered.responses.map((r) => r.questionId)).toContain(itemId);
+    expect(answersItem(answered, itemId)).toBe(false);
+    // The next item is open and takes its own answer.
+    const next = currentQuestion(answered)!.id;
+    expect(next).not.toBe(itemId);
+    expect(answersItem(answered, next)).toBe(true);
+  });
+
+  it('an item that is not the open one, or a run that stopped, takes nothing', () => {
+    const first = startRun(PLACEMENT_BANK, { ...CONFIG, exclude: [] }, 0);
+    expect(answersItem(first, 'q:not-asked')).toBe(false);
+    const quit = apply(first, { type: 'quit', by: 'learner' }, 10);
+    expect(answersItem(quit, currentQuestion(first)!.id)).toBe(false);
   });
 });

@@ -120,7 +120,11 @@ async function finishQuest(page: Page, missFirst = false): Promise<void> {
   await page.getByRole('button', { name: 'Play minigame' }).click();
   await expect(page.getByRole('heading', { name: 'Put the story in order' })).toBeVisible();
   for (const [i, caption] of ORDER.entries()) {
-    if (missFirst && i === 0) await sequenceCard(page, ORDER[1]!).click();
+    if (missFirst && i === 0) {
+      await pastTapLock(page);
+      await sequenceCard(page, ORDER[1]!).click();
+    }
+    await pastTapLock(page);
     await sequenceCard(page, caption).click();
   }
   await page.getByRole('button', { name: 'Skip replay' }).click();
