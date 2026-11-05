@@ -42,7 +42,7 @@ export function shapeHint(shape: BlockShape, copy: Messages['learner']['minigame
   return shape.hasFinal ? copy.besideFinal : copy.beside;
 }
 
-/** The Undo button (a backspace): the placed tiles without the last one. Returns the same array when none is placed. */
+/** The Undo button (a backspace): the placed tiles without the last one, always a new array (none placed: an empty one). */
 export function removeLastTile(placed: readonly string[]): string[] {
-  return placed.length === 0 ? (placed as string[]) : placed.slice(0, -1);
+  return placed.slice(0, -1);
 }

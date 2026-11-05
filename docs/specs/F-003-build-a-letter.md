@@ -10,6 +10,8 @@
 
 > **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): a placed tile can be taken back by tapping its filled slot (the tiles after it shift left); the used tray tile stays disabled, so tapping it again never removes it, and taps during the 900 ms wrong reset are swallowed instead of accepted and wiped (section 6.5; row KT-6).
 
+> **Amended 2026-11-05 (OW-1-undo, owner request: a tile placed by mistake could not be taken back; `AMENDMENTS-TOUCH.md` 6.5)**: an **Undo** button (a backspace icon and the word "Undo") sits between the slots and the tray. One tap takes back the last placed tile, one tile per tap, down to an empty board; its tray tile is enabled again. It is a take-back, not an attempt: it scores nothing, shows nothing of the answer and never counts as a miss. It is dimmed and inert while nothing is placed, during the right block and during the 900 ms wrong reset (it waits like a slot tap). At least 64 x 64 dp, with a short key bounce (`KEY_BOUNCE_MS`) so quick taps clear tile after tile. A tap on a filled slot still takes that slot's tile back; the wrong full fill still resets by itself. New string `buildLetter.undo` (label and screen-reader name) in en, es and ko.
+
 ## 1. Context
 
 Build a Letter is the Construction-family counterpart to F-001's Recognition game. Where Match Sound teaches *which letter is this sound*, Build a Letter teaches *how letters combine to form syllables*. The child is shown a target Korean syllable (e.g., `가`, `gа`) and must tap the constituent jamo (`ㄱ` then `ㅏ`) in left-to-right order.
@@ -51,6 +53,7 @@ Companion stories:
 - Each round shows 4 jamo tiles: the 2 (or 3) correct components + 2 distractors of opposite kind family (vowel distractors for consonant target, consonant distractors for vowel target).
 - Tapping a tile that's already in a slot is a no-op (no duplicate adds).
 - Once both slots are filled, no more tile taps are accepted until clear/advance.
+- The **Undo** button (OW-1-undo) removes the last placed tile; tapping a filled slot removes that slot's tile. Neither scores or reveals anything.
 
 ### 3.4 Skip path
 
@@ -94,6 +97,7 @@ Companion stories:
 │                                    │
 │ Slots:                             │
 │   [   ] [   ]                      │ ← dashed-border empty slots
+│        [ <x Undo ]                 │ ← takes back the last placed tile (OW-1-undo)
 │                                    │
 │ Tiles                              │
 │   [ㄱ] [ㅏ] [ㄴ] [ㅓ]              │ ← 4 tiles (2 correct + 2 distractors)
