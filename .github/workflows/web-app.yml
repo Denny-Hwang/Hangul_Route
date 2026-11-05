@@ -223,7 +223,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
