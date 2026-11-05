@@ -116,6 +116,7 @@ import { blendWeekOf, refreshRouteOf, refreshShows, refreshStartedEvent } from '
 import type { RefreshStep } from '../../logic/route/refresh';
 import { useToday } from '../route/use-today';
 import { firstFreeTopicKey, pickerTopics, topicWords, wordsOffered } from '../vocab/topic-data';
+import { CardsChip, PlainChip } from './CardsChip';
 import { FreeEndCard } from './FreeEndCard';
 import { freeTopicsInBuild, samplerStoryOf } from './free-end-inputs';
 import { RouteStrip } from './RouteStrip';
@@ -833,10 +834,13 @@ export function HomeScreen(): ReactElement {
   const layoutClass = useLayoutClass();
   const hoyaSize = useMediaSize(HOYA_SIZE);
 
-  // See my cards: the Library, and those cards are seen, so the catch-up card goes for good.
+  // The Library on its Cards section (the learner's own cards first, the All filter), wherever the tab was left.
+  const openYourCards = (): void => navigation.navigate('Main', { screen: 'Library', params: { section: 'cards' } });
+
+  // See my cards: the same way in, and those cards are seen, so the catch-up card goes for good.
   const seeCaughtUpCards = (): void => {
     if (profile && catchUp) markCardsSeen(profile.id, catchUp.cardIds);
-    navigation.navigate('Main', { screen: 'Library' });
+    openYourCards();
   };
 
   // Always mounted, so the web's assistive tech is watching when a later sync adds the card. A live
@@ -1035,13 +1039,14 @@ export function HomeScreen(): ReactElement {
         />
       ) : null}
       <Spacer size="lg" />
-      <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+      <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', alignItems: 'center' }}>
         {/* The streak pill waits for the first day: never "Streak 0 days". Once the goals strip is drawn, the streak is its line;
             while its chunk loads or cannot load (offline before the precache), the pill stays. */}
-        {!(goals && profile) && showStreakPill(streak) ? <Pill tone="primary" label={m.learner.home.streak.pill(streak)} /> : null}
-        {wordsKnown >= 1 ? <Pill tone="neutral" label={m.learner.wordsKnown.pill(wordsKnown, formatNumber(locale, wordsKnown))} testID="home-words-known" /> : null}
-        <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
-        <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
+        {!(goals && profile) && showStreakPill(streak) ? <PlainChip><Pill tone="primary" label={m.learner.home.streak.pill(streak)} /></PlainChip> : null}
+        {wordsKnown >= 1 ? <PlainChip><Pill tone="neutral" label={m.learner.wordsKnown.pill(wordsKnown, formatNumber(locale, wordsKnown))} testID="home-words-known" /></PlainChip> : null}
+        {/* The Cards chip is the one pill with a destination: the learner's cards in the Library (owner request OW-2). */}
+        <CardsChip cards={cardsUnlocked} onOpen={openYourCards} />
+        <PlainChip><Pill tone="success" label={m.learner.home.stars.pill(stars3)} /></PlainChip>
       </View>
 
       {guestSaved !== null && profile ? (
