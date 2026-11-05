@@ -400,7 +400,7 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
         )}
       </View>
       <Spacer size="lg" />
-      <TapBoard lock="board">
+      <TapBoard lock="board" held={!slot.settled}>
         {/* One board for the answers (AMENDMENTS-TOUCH section 6, row KT-3): a graze still counts, a bounce never counts twice. */}
         <View testID="quest-review-options" style={{ gap: spacing.md }}>
           {round.options.map((option) => {

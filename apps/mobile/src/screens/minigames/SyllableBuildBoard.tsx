@@ -23,6 +23,7 @@ import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { heldAnswers } from '../../components/held-answers';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
@@ -309,7 +310,7 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
       {helpOpen ? <VoiceHelpSheet visible onClose={() => setHelpOpen(false)} /> : null}
 
       {rows.map((row) => (
-        <View key={row.zone} role="group" aria-label={row.caption} style={{ gap: spacing.xxs }}>
+        <View key={row.zone} role="group" aria-label={row.caption} style={[{ gap: spacing.xxs }, heldAnswers(!slot.settled)]}>
           <Caption>{row.caption}</Caption>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {row.tiles.map((t) => {

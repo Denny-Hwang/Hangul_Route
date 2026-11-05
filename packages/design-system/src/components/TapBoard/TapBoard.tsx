@@ -28,7 +28,7 @@ function windowScroll(): { x: number; y: number } {
   return { x: w?.scrollX ?? 0, y: w?.scrollY ?? 0 };
 }
 
-export function TapBoard({ lock, scroll = 'auto', multiTouch = 'latest', disabled = false, testID, children }: TapBoardProps): ReactElement {
+export function TapBoard({ lock, scroll = 'auto', multiTouch = 'latest', disabled = false, held = false, testID, children }: TapBoardProps): ReactElement {
   const fit = useScreenFit();
   const scroller = useTapScroller();
   const app = useContext(TapLockContext);
@@ -57,11 +57,11 @@ export function TapBoard({ lock, scroll = 'auto', multiTouch = 'latest', disable
         setTimer: (fn, ms) => setTimeout(fn, ms),
         clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
       },
-      { lock, multiTouch, disabled, scroll },
+      { lock, multiTouch, disabled: disabled || held, scroll },
     );
   }
   const controller = controllerRef.current;
-  controller.configure({ lock, multiTouch, disabled, scroll });
+  controller.configure({ lock, multiTouch, disabled: disabled || held, scroll });
   useEffect(() => () => controller.dispose(), [controller]);
   // Native `scrollEnabled` is opt-in: a Screen turns it off only while it fits and holds a board (section 5).
   const registerBoard = fit.registerBoard;
@@ -102,7 +102,10 @@ export function TapBoard({ lock, scroll = 'auto', multiTouch = 'latest', disable
   );
   // Web only: the board pans along its scroller only while it can scroll (KT-D3). Not a native style.
   const scrollState = scroller === null ? null : { axis: scroller.axis, canScroll: scroller.canScroll };
-  const style = web ? ({ touchAction: boardTouchAction(scrollState, supportsPinchZoom()) } as unknown as ViewStyle) : undefined;
+  const touchStyle = web ? ({ touchAction: boardTouchAction(scrollState, supportsPinchZoom()) } as unknown as ViewStyle) : undefined;
+  // Held: not drawn at all, so the answers first show in the place they keep (a hidden board would still be tappable
+  // by keyboard and found by a screen reader).
+  const style = held ? [touchStyle, { display: 'none' as const }] : touchStyle;
   // The responder events of both platforms carry what the controller reads (`changedTouches`, `pageX`, `pageY`).
   const responder = controller.handlers as unknown as ViewProps;
 

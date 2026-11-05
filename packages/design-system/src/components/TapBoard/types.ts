@@ -21,6 +21,12 @@ export interface TapBoardProps {
   multiTouch?: TapMultiTouch;
   /** No target commits; touches are still claimed, so nothing under them fires. */
   disabled?: boolean;
+  /**
+   * The answers are not shown yet: the board is not drawn (no space, no focus, no screen-reader stop) and nothing
+   * commits. A screen holds its answers while something above them may still appear, so they first show where they stay
+   * and never move under a finger (the "No sound? Read it here." text while the voice check runs, AMENDMENTS-TOUCH).
+   */
+  held?: boolean;
   testID?: string;
   children: ReactNode;
 }

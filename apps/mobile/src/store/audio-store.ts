@@ -28,6 +28,12 @@ interface State {
   /** Any bundled clip exists (A-6). */
   clips: boolean;
   unlocked: boolean;
+  /**
+   * The platform is still finding out whether a Korean voice exists (its first report was `unknown`). While it is, a
+   * round holds its answers back, so the "No sound? Read it here." text that may follow never moves them under a
+   * finger (AMENDMENTS-TOUCH, no layout shift under the finger). Ends with the check or at `VOICE_CHECK_HOLD_MAX_MS`.
+   */
+  voiceCheckPending: boolean;
   lastFailure: { reason: FallbackReason; at: number } | null;
 }
 
@@ -39,6 +45,15 @@ interface Actions {
   reportFailure: (reason: FallbackReason) => void;
 }
 
+/**
+ * The longest a voice check holds the answers back. The web check settles by its own 1.5 s timeout and native by its
+ * third read at 1.5 s; this cap only covers an engine that never answers.
+ */
+export const VOICE_CHECK_HOLD_MAX_MS = 2000;
+
+let voiceCheckOpened = false;
+let voiceCheckCap: ReturnType<typeof setTimeout> | null = null;
+
 export const useAudioStore = create<State & Actions>((set, get) => ({
   muted: false,
   hydrated: false,
@@ -46,6 +61,7 @@ export const useAudioStore = create<State & Actions>((set, get) => ({
   tts: { state: 'unknown' },
   clips: false,
   unlocked: false,
+  voiceCheckPending: false,
   lastFailure: null,
 
   // A missing or corrupt value means sound on, which is what every learner had
@@ -65,10 +81,38 @@ export const useAudioStore = create<State & Actions>((set, get) => ({
 
   setLevelOrder: (order) => set({ levelOrder: order }),
 
-  setCapability: (capability) => set({ tts: capability.tts, clips: capability.clips, unlocked: capability.unlocked }),
+  setCapability: (capability) => {
+    const unknown = capability.tts.state === 'unknown';
+    // Only the first unknown report opens the hold (once per app run); the cap closes it if the engine never answers.
+    // Once closed, it stays closed.
+    const opening = unknown && !voiceCheckOpened;
+    if (opening) {
+      voiceCheckOpened = true;
+      voiceCheckCap = setTimeout(() => {
+        voiceCheckCap = null;
+        set({ voiceCheckPending: false });
+      }, VOICE_CHECK_HOLD_MAX_MS);
+    }
+    if (!unknown && voiceCheckCap !== null) {
+      clearTimeout(voiceCheckCap);
+      voiceCheckCap = null;
+    }
+    set({ tts: capability.tts, clips: capability.clips, unlocked: capability.unlocked, voiceCheckPending: unknown && (opening || get().voiceCheckPending) });
+  },
 
   reportFailure: (reason) => set({ lastFailure: { reason, at: Date.now() } }),
 }));
+
+/**
+ * Ends the voice check's hold now, for good (tests whose fake clock never reaches the check's end; a screen test that
+ * is not about the hold). The next unknown report does not open it again.
+ */
+export function endVoiceCheckHold(): void {
+  voiceCheckOpened = true;
+  if (voiceCheckCap !== null) clearTimeout(voiceCheckCap);
+  voiceCheckCap = null;
+  useAudioStore.setState({ voiceCheckPending: false });
+}
 
 /**
  * Keeps `levelOrder` in step with the active profile's level (§3.3), so game
