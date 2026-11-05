@@ -51,9 +51,22 @@ export function parseShardArg(arg) {
   return { current, total };
 }
 
-/** Round-robin: the tests at positions current-1, current-1+total, … */
+/**
+ * Round-robin: the tests at positions current-1, current-1+total, ... With four shards, shard 2 also runs the weekly
+ * plan bundle's specs, which put it at the 20-minute job limit (main 19m06s, 2026-11-05; the CM tail integration timed
+ * out twice there with every test passing). So of the tests round-robin deals to shard 2, every fifth one
+ * (floor(k / 4) mod 5 = 4) goes to shard 3, the lightest shard (about 15 minutes). Every listed test still lands in
+ * exactly one shard.
+ */
 export function pickShard(tests, { current, total }) {
-  return tests.filter((_, k) => k % total === current - 1);
+  return tests.filter((_, k) => shardOf(k, total) === current);
+}
+
+/** The shard (1-based) that test k of a list goes to. */
+export function shardOf(k, total) {
+  const dealt = (k % total) + 1;
+  if (total === 4 && dealt === 2 && Math.floor(k / 4) % 5 === 4) return 3;
+  return dealt;
 }
 
 function main(argv) {

@@ -7,7 +7,7 @@ import { dirname, resolve } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { listedTotal, parseListOutput, pickShard, parseShardArg } from "../e2e-shard-list.mjs";
+import { listedTotal, parseListOutput, pickShard, parseShardArg, shardOf } from "../e2e-shard-list.mjs";
 
 const SCRIPT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "e2e-shard-list.mjs");
 
@@ -82,6 +82,25 @@ describe("pickShard", () => {
       const all = [];
       for (let current = 1; current <= total; current++) all.push(...pickShard(tests, { current, total }));
       assert.deepEqual([...all].sort(), [...tests].sort(), `total ${total}`);
+    }
+  });
+});
+
+describe("four shards: shard 2 sheds one in five to shard 3", () => {
+  test("shard 2 loses every fifth of its tests to shard 3, and only those", () => {
+    const tests = Array.from({ length: 80 }, (_, i) => `t${i}`);
+    const two = pickShard(tests, { current: 2, total: 4 });
+    const three = pickShard(tests, { current: 3, total: 4 });
+    assert.equal(two.length, 16);
+    assert.equal(three.length, 24);
+    assert.equal(pickShard(tests, { current: 1, total: 4 }).length, 20);
+    assert.equal(pickShard(tests, { current: 4, total: 4 }).length, 20);
+    assert.deepEqual(three.filter((t) => Number(t.slice(1)) % 4 === 1), ["t17", "t37", "t57", "t77"]);
+  });
+
+  test("the other shard counts are plain round-robin", () => {
+    for (const total of [1, 2, 3, 5, 6]) {
+      for (let k = 0; k < 60; k++) assert.equal(shardOf(k, total), (k % total) + 1);
     }
   });
 });
