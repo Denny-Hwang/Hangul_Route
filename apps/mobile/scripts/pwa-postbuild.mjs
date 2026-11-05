@@ -27,6 +27,8 @@
 // learner precache. They are runtime-cached on first use (`hr-later-v1`, cache-first) and a grown-up can save a stage
 // for offline ahead of time from offline-packs.json (precached), which lists each stage's later chunks and the clips of
 // its audio pack with their bytes. The build fails if a later chunk is precached or missing from the index.
+// Install-only icons (pwa/install-icons.mjs): the manifest's 1024 px icon (about 363 KB) is fetched by the install alone, so
+// it is outside the precache and the touch icon is the precached 512 px file; the build fails if it comes back in.
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
 import { readFileSync, readdirSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import * as nodeModule from 'node:module';
@@ -56,6 +58,7 @@ import {
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
+import { APPLE_TOUCH_ICON_FILE, installIconGlobIgnores, installIconProblems } from './pwa/install-icons.mjs';
 import {
   OFFLINE_PACKS_FILE,
   laterBundles,
@@ -128,7 +131,7 @@ const head = `
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Hangul Route">
-  <link rel="apple-touch-icon" href="/icon-1024.png">
+  <link rel="apple-touch-icon" href="/${APPLE_TOUCH_ICON_FILE}">
   <meta name="description" content="Learn the Korean alphabet with Hoya the tiger — one heritage card at a time. Works offline.">
   <style>
     /* Shell rules for a learning app in a browser (wireframe pwa/system-banners):
@@ -250,7 +253,7 @@ const precache = {
   globPatterns: ['**/*.{js,html,ico,png,json,webmanifest,svg,mp3,woff2}'],
   // Workbox's default ignore, every clip outside the precached pack (served by the runtime rules below), and
   // every console file (grown-up paths and _next/): never in the learner's offline bundle.
-  globIgnores: ['**/node_modules/**/*', ...audioPrecacheIgnores(clipPacks), ...grownUpGlobIgnores(GROWN_UP_PREFIXES), ...laterGlobIgnores(laterBuilt)],
+  globIgnores: ['**/node_modules/**/*', ...audioPrecacheIgnores(clipPacks), ...grownUpGlobIgnores(GROWN_UP_PREFIXES), ...laterGlobIgnores(laterBuilt), ...installIconGlobIgnores()],
   // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
   // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
   // anyway; the limit only decides whether it is kept for offline use.
@@ -306,6 +309,17 @@ const precachedClips = precachedClipBytes(
 assertLearnerPrecache(manifestUrls, isGrownUpPath, (url) => readFileSync(join(dist, url), 'utf8'));
 // The lecture presenter's Hangul font works offline (F-TCH-004 §3.6, §3.8).
 assertPresenterFontPrecached(manifestUrls);
+// The install-only icon (icon-1024.png, the manifest's largest) stays out of the precache; the 192 and 512 px icons and
+// the touch icon stay in (pwa/install-icons.mjs), so a cold offline start and an offline add-to-home-screen lose nothing.
+const webManifestPath = join(dist, 'manifest.webmanifest');
+const iconProblems = installIconProblems({
+  manifestUrls,
+  html,
+  webManifest: existsSync(webManifestPath) ? JSON.parse(readFileSync(webManifestPath, 'utf8')) : null,
+  bundles,
+  exists: (file) => existsSync(join(dist, file)),
+});
+if (iconProblems.length > 0) throw new Error(`pwa-postbuild: icons:\n  ${iconProblems.join('\n  ')}`);
 // The app's own JS bundle works offline: Workbox only warns when a file is over the size limit.
 const laterUrls = new Set(laterBuilt.map((b) => b.url));
 const unprecachedJs = existsSync(jsDir)
