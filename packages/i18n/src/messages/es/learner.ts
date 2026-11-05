@@ -520,7 +520,7 @@ export const learner = {
     cardWaiting: {
       title: (card: string) => `La tarjeta ${card} te espera`,
       line: (card: string, episode: string) =>
-        `Consigue 2 estrellas en esta misión para ganar la tarjeta ${card}. También la ganas al terminar todas las misiones de ${episode}.`,
+        `Consigue 2 estrellas en esta misión para ganar la tarjeta ${card}. También la ganas al terminar todas las misiones del episodio «${episode}».`,
     },
     keepGoing: '¡Sigamos!',
     launcher: {
