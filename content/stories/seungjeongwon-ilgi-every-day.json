@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:seungjeongwon-ilgi-every-day",
   "state": "ready",
-  "contentVer": 3,
+  "contentVer": 4,
   "title": {
     "ko": "날마다 쓴 승정원 일기",
     "romanization": "Nalmada sseun Seungjeongwon Ilgi",
@@ -34,7 +34,7 @@
     ],
     "advisoryNoteEn": "Mentions fires at the Royal Secretariat that destroyed many old diaries, told briefly and calmly.",
     "reviewedBy": "MAR",
-    "reviewedAt": "2026-10-14"
+    "reviewedAt": "2026-10-31"
   },
   "keywords": [
     {
@@ -113,6 +113,27 @@
       "romanization": "Seungjeongwon Ilgi",
       "en": "the Diaries of the Royal Secretariat",
       "kind": "term"
+    },
+    {
+      "id": "sseosseoyo",
+      "ko": "썼어요",
+      "romanization": "sseosseoyo",
+      "en": "wrote",
+      "kind": "word"
+    },
+    {
+      "id": "wang",
+      "ko": "왕",
+      "romanization": "wang",
+      "en": "king",
+      "kind": "word"
+    },
+    {
+      "id": "eoryeowoyo",
+      "ko": "어려워요",
+      "romanization": "eoryeowoyo",
+      "en": "is hard; difficult",
+      "kind": "word"
     }
   ],
   "cultureNotes": [],
@@ -558,6 +579,457 @@
         "maeil",
         "choseo"
       ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s2",
+          "narrationEn": "Two scribes called {kw:juseo} worked here with six royal secretaries. The scribes wrote the office diary, the {kw:seungjeongwon-ilgi}.",
+          "captionEn": "Scribes write the office diary",
+          "keyword": {
+            "id": "sseosseoyo",
+            "ko": "썼어요",
+            "romanization": "sseosseoyo",
+            "en": "wrote",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "주서가 일기를 썼어요.",
+            "romanization": "Juseoga ilgireul sseosseoyo.",
+            "en": "The scribes wrote the diary.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A row of six senior officials and two junior officials in formal court dress and black hats; the two junior ones hold brushes and paper.",
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:fig-official",
+                "x": 200,
+                "y": 258,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 118,
+                "y": 258,
+                "s": 0.95
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 282,
+                "y": 258,
+                "s": 0.95,
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 200,
+                "y": 294,
+                "s": 0.9,
+                "z": "front"
+              }
+            ],
+            "altEn": "Royal secretaries in court robes and winged caps stand in a row while a scribe kneels in front, writing with a brush."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Each day, a scribe sat in front of the king, {kw:wang}, with a historian and took quick notes of the talks. Later, a neat copy was made.",
+          "captionEn": "Quick notes in front of the king",
+          "keyword": {
+            "id": "wang",
+            "ko": "왕",
+            "romanization": "wang",
+            "en": "king",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "주서는 왕 앞에서 썼어요.",
+            "romanization": "Juseoneun wang apeseo sseosseoyo.",
+            "en": "The scribe wrote in front of the king.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A scribe and a historian kneeling side by side, writing fast while the king talks with ministers; in the corner, a finished thread-bound book.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king",
+                "x": 200,
+                "y": 186,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 92,
+                "y": 266,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 250,
+                "y": 294,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 342,
+                "y": 294,
+                "s": 0.9,
+                "flip": true
+              }
+            ],
+            "altEn": "A scribe and a historian kneel side by side, writing fast while the king talks with a minister in the palace hall."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The diary noted the weather, {kw:nalssi}, every day. Researchers can use these notes to study nature in the past.",
+          "captionEn": "Every entry notes the weather",
+          "keyword": {
+            "id": "nalssi",
+            "ko": "날씨",
+            "romanization": "nalssi",
+            "en": "weather",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "매일 날씨를 썼어요.",
+            "romanization": "Maeil nalssireul sseosseoyo.",
+            "en": "They wrote the weather every day.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A diary page drawn as simple brush lines beside a small sun symbol and a rain-cloud symbol; a modern researcher with a laptop comparing notes.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:fig-researcher",
+                "x": 128,
+                "y": 288,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 262,
+                "y": 292,
+                "s": 1,
+                "z": "front"
+              },
+              {
+                "ref": "prop:weather-signs",
+                "x": 336,
+                "y": 244,
+                "s": 0.8
+              }
+            ],
+            "altEn": "A researcher today turns the weather notes of an old diary, sunshine and rain, into a chart on a computer."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The original diaries are written in a flowing cursive script, {kw:choseo}, which is hard to read. Later, the National Institute of Korean History rewrote them in regular script.",
+          "captionEn": "Cursive script, rewritten clearly",
+          "keyword": {
+            "id": "eoryeowoyo",
+            "ko": "어려워요",
+            "romanization": "eoryeowoyo",
+            "en": "is hard; difficult",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "초서는 어려워요.",
+            "romanization": "Choseoneun eoryeowoyo.",
+            "en": "Cursive script is hard.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two sheets side by side: one with loose, swirling brush strokes, the other with tidy, upright brush strokes (no readable characters).",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:desk-low",
+                "x": 200,
+                "y": 296,
+                "s": 2.2
+              },
+              {
+                "ref": "prop:sheet-cursive",
+                "x": 150,
+                "y": 196,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 252,
+                "y": 196,
+                "s": 1.5
+              }
+            ],
+            "altEn": "Two sheets on a desk: one in flowing cursive brush strokes that are hard to read, one rewritten in neat upright strokes."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Fires in 1744 and 1888 destroyed many diaries. Officials rebuilt part of them, using other records such as the court gazette.",
+          "captionEn": "Fires, then diaries partly rebuilt",
+          "keyword": {
+            "id": "ilgi",
+            "ko": "일기",
+            "romanization": "ilgi",
+            "en": "diary",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "일기를 다시 썼어요.",
+            "romanization": "Ilgireul dasi sseosseoyo.",
+            "en": "They wrote the diaries again.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Officials at desks surrounded by stacks of other records, carefully copying entries into new blank books; a calm scene with no flames.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-historian",
+                "x": 150,
+                "y": 262,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 150,
+                "y": 292,
+                "s": 1.3,
+                "z": "front"
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 216,
+                "y": 234,
+                "s": 1,
+                "z": "front"
+              },
+              {
+                "ref": "prop:paper-stack",
+                "x": 58,
+                "y": 292,
+                "s": 1.3,
+                "z": "front"
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 310,
+                "y": 262,
+                "s": 1,
+                "flip": true
+              },
+              {
+                "ref": "prop:paper-stack",
+                "x": 335,
+                "y": 294,
+                "s": 1.2,
+                "z": "front"
+              }
+            ],
+            "altEn": "Officials work calmly at low desks, copying entries from other records into new blank books to rebuild lost diaries."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Today 3,243 books survive, covering 1623 to 1910. The diaries are a National Treasure, {kw:gukbo}, and since 2001 on UNESCO's Memory of the World Register.",
+          "captionEn": "Kept today as a National Treasure",
+          "keyword": {
+            "id": "gukbo",
+            "ko": "국보",
+            "romanization": "gukbo",
+            "en": "National Treasure",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "승정원 일기는 국보예요.",
+            "romanization": "Seungjeongwon ilgineun gukboyeyo.",
+            "en": "The Seungjeongwon Ilgi is a National Treasure.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7",
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Long wooden shelves filled with tall old books in a quiet modern archive, soft light, Hoya gazing up in wonder.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:archive-shelf",
+                "x": 130,
+                "y": 272,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:archive-shelf",
+                "x": 300,
+                "y": 272,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 212,
+                "y": 294,
+                "s": 0.75
+              }
+            ],
+            "altEn": "Hoya gazes up in wonder at tall archive shelves where the surviving diary books are kept safe today."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "어려워요",
+            "romanization": "eoryeowoyo",
+            "en": "is hard; difficult"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Is easy",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Is hard",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Is new",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Is short",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f5"
+          ],
+          "explainEn": "Eoryeowoyo means is hard. The original diaries are in cursive script, which is hard to read."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "왕",
+            "romanization": "wang",
+            "en": "king"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Scribe",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Historian",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "King",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Secretary",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Wang means king. The scribe took notes in front of the king."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "What did every day's entry note?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The weather",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Ship voyages",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Market prices",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Exam scores",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f4"
+          ],
+          "explainEn": "Every day's entry noted the weather, which researchers can use today."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s6",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "sseosseoyo",
+        "wang",
+        "eoryeowoyo"
+      ],
+      "grammarFocusEn": "Past -eosseoyo (wrote); ap-eseo (in front of); -eun/-neun (topic)"
     }
   ],
   "coverSceneId": "s1",
@@ -854,7 +1326,7 @@
     "passes": 3,
     "checkedAt": "2026-10-10",
     "scope": "cluster",
-    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR."
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification. MAR 2026-10-13 language review (F-STORY-001 PR 1.9): Korean strings, romanization and glosses read; findings and outcomes in the PR. MAR 2026-10-13 culture review (F-STORY-001 PR 1.9): heritage accuracy, framing, tone and advisories read; review.advisory confirmed; findings and outcomes in the PR. MAR 2026-10-14 es / ko overlay language review (content/i18n/es|ko/stories-records.json, PR #694): two independent lenses (es, ko) read every es and ko overlay field of this story against the English (narration, captions, glosses, checks, facts, title, Hoya lines and the quest, episode and card text built from them); findings and outcomes in the PR. MAR 2026-10-31 read tier (F-CURR-002 CM-46a): author, then three parallel checkers (language with the F-CNT-002 converter; culture and facts against the cited facts and their allowlisted sources; learning design with story-coverage), reviser, third pass; facts and sources unchanged and the cited sources not re-opened in this pass, so checkedAt stays the date of the last source check; findings and outcomes in the PR."
   },
   "authorNotes": "Character counts are omitted because sources differ (UNESCO nomination: about 242.5 million; NIKH table: 243 million). Transcription start year differs (NIKH: 1960; Encyclopedia and UNESCO nomination: 1961), so narration says 'in modern times'. Specific weather categories are not asserted; the Korean line '날씨가 맑아요' is a language example, not a quoted entry. 'Largest/greatest record in the world' claims are avoided. Revision: (1) 'one special job' removed - sources only say the juseo wrote the diary, not that it was their only duty ('junior' also dropped; juseo are 7th rank); (2) 'there is only one original set' REMOVED - it rests only on the UNESCO nomination form's rarity statement ('There is only one set of original diaries...') and no second authoritative source states it; replaced by the sourced fact that the originals are kept at Seoul National University's Gyujanggak; (3) 'rebuilt them ... and noted which sources they had used' softened to 'worked to rebuild them, partly using other records such as the court gazette' - the 1744 rebuilding restored only 548 volumes (< 1/3 of the loss) per NIKH and the Encyclopedia, and the 'sources noted' statement exists only in the UNESCO nomination form (§3.4) so it was dropped; (4) robe colours removed from the illustration brief; (5) 'scribes wrote fast' removed (not in sources); (6) goal pattern changed to 일기를 다시 써요 to match scene 6. Changes of office name after 1894 are omitted.",
   "errata": []

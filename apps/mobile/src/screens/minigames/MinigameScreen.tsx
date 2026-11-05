@@ -47,8 +47,8 @@ import { WriteFrameGame } from './WriteFrameGame';
 import { useSwitchedScope } from './dictation-entry';
 import { RolePlayStep } from './role-play/role-play-entry';
 import { MyStoryRoute } from './my-story-entry';
-import { LessonWaiting, useLessonQuestReady } from '../lesson-content';
-import { useStoryQuestReady } from '../story-content';
+import { LaterNeedsInternet, LessonWaiting, combinedChunkState, useLessonQuestState } from '../lesson-content';
+import { useStoryQuestState } from '../story-content';
 import { useLessonClips } from '../../platform/audio-assets-store';
 
 /**
@@ -75,13 +75,17 @@ export function MinigameScreen(props: Props): ReactElement {
   // A lesson game's scope and its quest's steps come from the cell's chunk, and a story game's story from the
   // story's chunk (F-CURR-002 §10): until it is in, the screen draws only its header (and a calm status line if it
   // takes longer), so the way back is always there.
-  const lessonReady = useLessonQuestReady(props.route.params.questId);
-  const storyReady = useStoryQuestReady(questById(props.route.params.questId));
+  const state = combinedChunkState(useLessonQuestState(props.route.params.questId), useStoryQuestState(questById(props.route.params.questId)));
   // The game's clip packs (AMENDMENTS-AUDIO-CLIPS AC-B6), also when it is opened straight (a resume, a reload).
   useLessonClips(props.route.params.questId, props.route.params.episodeId);
   // One body per step: the step's `game.<kind>` switches and its dictation chunk are decided once, as it opens (row CM-31).
   const { questId, stepIndex } = props.route.params;
-  return lessonReady && storyReady ? <MinigameBody key={`${questId}:${stepIndex}`} {...props} /> : <LessonWaiting />;
+  // A later volume that is not on the device and cannot load (row CM-5B) says so calmly, with a way back.
+  if (state === 'needs-internet') {
+    const nav = props.navigation;
+    return <LaterNeedsInternet onBack={props.onBack ?? (nav === undefined ? undefined : () => nav.goBack())} />;
+  }
+  return state === 'ready' ? <MinigameBody key={`${questId}:${stepIndex}`} {...props} /> : <LessonWaiting />;
 }
 
 function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false, ...exitProps }: Props): ReactElement {

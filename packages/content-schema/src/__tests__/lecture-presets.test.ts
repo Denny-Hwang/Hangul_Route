@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CATALOG,
+  laterVolumeStoryIds,
   LECTURE_MAX_BLOCKS,
   LECTURE_PRESETS,
   LectureDeckSchema,
@@ -427,7 +428,21 @@ describe('by-stage', () => {
 });
 
 describe('story-time', () => {
-  const ready = CATALOG.stories.filter((st) => st.status === 'ready').sort((x, y) => x.order - y.order);
+  // A book 2 tale (F-CURR-002 row CM-46) is Volume 2 content, never in a preset.
+  const laterVolume = laterVolumeStoryIds(CATALOG);
+  const ready = CATALOG.stories.filter((st) => st.status === 'ready' && !laterVolume.has(st.id)).sort((x, y) => x.order - y.order);
+
+  it('leaves out the book 2 tales, which only a later volume holds (row CM-46)', () => {
+    // The shipped catalogue lists the Food, Nature and Play book 2 tales in their books only, so none is a catalogue
+    // story; the Letters book 2's read-tier stories stay shelf stories, offered as before.
+    expect([...laterVolume]).toEqual([]);
+    for (const id of ['story:jang-fermented-sauces', 'story:tteok-through-the-seasons', 'story:jeju-volcanic-island']) {
+      expect(CATALOG.stories.some((st) => st.id === id), id).toBe(false);
+    }
+    expect(ready.map((st) => st.id)).toContain('story:tripitaka-koreana');
+    const all = resolvePreset('story-time', 30, { catalog: CATALOG, shown: { questIds: [], storyIds: ready.map((st) => st.id) } });
+    for (const id of laterVolume) expect(all.blocks.some((bl) => bl.kind === 'story' && bl.storyId === id), id).toBe(false);
+  });
   const storiesOf = (r: ResolvedPreset): string[] => r.blocks.flatMap((bl) => (bl.kind === 'story' ? [bl.storyId] : []));
 
   it('the catalogue has ready stories enough to fill 30 minutes', () => {
@@ -655,10 +670,27 @@ describe('learnerPosition (N3)', () => {
     expect(outline(resolvePreset('next-lesson', 10, { catalog: CATALOG, position }))).toBe('stage1-life-q3 · stage1-rites-q1 · air-write 2');
   });
 
+  it('never steps into a cell\'s later volume: a Volume 2 is off the route (F-CURR-002 row CM-40, CM-43 S3)', () => {
+    expect(CATALOG.quests.some((q) => q.id === 'quest:stage3-life-v2-q1')).toBe(true);
+    expect(learnerPosition('quest:stage3-life-v2-q1', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    const stage3 = resolvePreset('by-stage', 120, { catalog: CATALOG, stage: 'stage3' });
+    expect(outline(stage3).includes('-v2-')).toBe(false);
+  });
+
   it('none done: the first route quest; no routeNext quest reads the same; the last route quest done: null (the fallback)', () => {
     expect(learnerPosition('quest:homework-x', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
     expect(learnerPosition(null, [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
     expect(learnerPosition(null, ['quest:stage7-crafts-q3'], CATALOG)).toBeNull();
+  });
+
+  it('a later volume is off the route (F-CURR-002 rows CM-40, CM-41 S6): its quests are never a position, and a stage stays one run', () => {
+    // Stage 6 Nature ships a Volume 2; the route still ends at the last Stage 7 quest of each cell's first volume.
+    expect(CATALOG.cells.find((c) => c.episodeId === 'episode:stage6-nature')?.episodeIds).toContain('episode:stage6-nature-v2');
+    expect(learnerPosition('quest:stage6-nature-v2-q1', [], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    expect(learnerPosition(null, ['quest:stage6-nature-v2-q3'], CATALOG)).toEqual({ questId: 'quest:stage1-letters-q1' });
+    // 15 Stage 6 quests on the route: the 16th place of the stage is the first Stage 7 quest, not a Volume 2 one.
+    expect(classPosition([{ journey: journey('stage6', [['stage6', 14, 0]]) }], CATALOG)?.questId).toBe('quest:stage6-crafts-q3');
+    expect(classPosition([{ journey: journey('stage6', [['stage6', 15, 0]]) }], CATALOG)?.questId).toBe('quest:stage7-letters-q1');
   });
 });
 
@@ -729,6 +761,14 @@ describe('classPosition (N2)', () => {
     expect(at([{ journey: journey('stage1', [['stage1', 15, 0]]) }])).toBe('quest:stage1-crafts-q4');
     expect(at([{ journey: journey('stage1', [['stage1', 16, 0]]) }])).toBe('quest:stage2-letters-q1');
     expect(at([{ journey: journey('stage7', [['stage7', 15, 0]]) }])).toBeNull();
+  });
+
+  it('reads the first volumes only: a shipped Volume 2 (row CM-41 S2) is never a class place, and Stage 2 still ends at its last first-volume lesson', () => {
+    expect(CATALOG.quests.some((q) => q.id === 'quest:stage2-nature-v2-q1')).toBe(true);
+    const stage2 = CATALOG.cells.filter((c) => c.stage === 'stage2').flatMap((c) => c.questIds);
+    expect(at([{ journey: journey('stage2', [['stage2', stage2.length - 1, 0]]) }])).toBe(stage2[stage2.length - 1]);
+    expect(at([{ journey: journey('stage2', [['stage2', stage2.length, 0]]) }])).toBe('quest:stage3-letters-q1');
+    for (let n = 0; n <= stage2.length; n += 1) expect(at([{ journey: journey('stage2', [['stage2', n, 0]]) }])).not.toMatch(/-v2-/);
   });
 
   it('no usable summary: null (absent, another version, no here, an unknown stage); bad counts read 0', () => {

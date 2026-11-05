@@ -5,12 +5,14 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { questById } from '../../content';
 import { playerGuard } from '../../logic/episode-access';
+import { isLaterVolumeQuest } from '../../logic/episode/volumes';
 import { learnerQuestExits, learnerQuestSession, type QuestPlayerPorts } from '../../logic/quest-flow/quest-player-ports';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { useActiveLearnerId } from '../../store/active-learner';
 import { holdLearnerSession } from '../../store/learner-session';
 import { settledPlayerGuard } from '../../store/player-guard-settle';
+import { useFrozenCurrFlag } from '../../store/remote-config-store';
 import { useStoryStore } from '../../store/story-store';
 import { useQuestAccess } from '../../store/tier-store';
 import { QuestPlayerView } from './QuestPlayerView';
@@ -49,9 +51,18 @@ export function QuestPlayerScreen({ route, navigation }: Props): ReactElement | 
       live = false;
     };
   }, [settled, learnerId, questId, episodeId]);
+  // A later volume plays only while `volumes` is on (F-CURR-002 row CM-41 S2): the switch is read once it can be
+  // decided and kept for the run, so a copy that arrives mid-run never stops it; while it is off the player shows the
+  // episode page, which shows the cell's first volume.
+  const laterVolume = isLaterVolumeQuest(questId, episodeId);
+  const volumesOn = useFrozenCurrFlag('volumes');
+  const volumeClosed = laterVolume && volumesOn === false;
   useEffect(() => {
-    if (settled && guard) navigation.replace('EpisodeDetail', guard);
-  }, [settled, guard, navigation]);
+    if (volumeClosed) navigation.replace('EpisodeDetail', { episodeId, from: 'player' });
+  }, [volumeClosed, episodeId, navigation]);
+  useEffect(() => {
+    if (settled && guard && !volumeClosed) navigation.replace('EpisodeDetail', guard);
+  }, [settled, guard, volumeClosed, navigation]);
 
   // Stable while the learner and the resume flag stay the same, so the run is not restarted.
   const session = useMemo(
@@ -84,7 +95,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): ReactElement | 
     }),
   };
 
-  if (!settled || guard) return null;
+  if (!settled || guard || (laterVolume && volumesOn !== true)) return null;
 
   return (
     <QuestPlayerView

@@ -161,6 +161,8 @@ export interface LessonStore {
   /** True when the quest's body is in (always true for a quest that is not a lesson quest). */
   isQuestReady: (questId: string) => boolean;
   isAllReady: () => boolean;
+  /** True when the cell's body chunk is in, or the cell is not in the manifest (row CM-5B loads the later volumes apart). */
+  isCellReady: (cellId: string) => boolean;
   /** True when each of the locale's text chunks is in, has failed (the English stays), or has run past `titlesGraceMs`. */
   titlesSettled: (locale: UiLocale) => boolean;
   /** Loads the locale's titles and resolves once they are settled (`titlesSettled`): within `titlesGraceMs` at most. Never rejects. */
@@ -384,6 +386,7 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
       return cell === undefined || cells.has(cell);
     },
     isAllReady: () => Object.keys(manifest.cells).every((id) => cells.has(id)),
+    isCellReady: (cellId) => manifest.cells[cellId] === undefined || cells.has(cellId),
     titlesSettled,
     untilTitlesSettled,
     titlesVersion: () => titleChanges,

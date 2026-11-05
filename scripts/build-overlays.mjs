@@ -12,7 +12,10 @@
 //   packages/content-schema/src/i18n-overlays-<locale>.generated.ts
 //       OVERLAYS_ES / OVERLAYS_KO   the same table of one locale, for the learner PWA, which loads the active
 //   locale's table as a precached chunk instead of carrying both in its start bundle (the
-//   `@hangul-route/content-schema/overlays-<locale>` subpaths, F-CURR-002 §10).
+//   `@hangul-route/content-schema/overlays-<locale>` subpaths, F-CURR-002 §10). A story's scene text
+//   (narration, caption, alt, of every tier: `isStoryChunkField`) is left out of these two: it rides in
+//   the story's own chunk (build-stories.mjs, `storyChunkOverlays`), which the app installs when it
+//   loads the story (row CM-8b's overlay half, F-CURR-002 §10). The both-locale module keeps it all.
 //
 // This is a shaper. It emits only what the app may apply (fields allowed by
 // OVERLAY_FIELDS for the id prefix, non-blank strings, well-formed ids), sorted, so a
@@ -55,8 +58,10 @@ const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v)
  * files: [{ rel: "content/i18n/<locale>/<name>.json", json }] -> { es: {...}, ko: {...} },
  * entity ids and field names sorted. Throws ContentError on a file that is not an
  * overlay of its folder's locale and on an entity that sits in two files of one locale.
+ * `withheld` (entity ids) are checked like any other entry but left out of the tables: the stories no
+ * learner path offers yet (`withheldStoryIds`).
  */
-export function buildOverlays(files) {
+export function buildOverlays(files, { withheld = new Set() } = {}) {
   const merged = Object.fromEntries(OVERLAY_LOCALES.map((l) => [l, new Map()]));
   const owner = new Map();
   for (const { rel, json } of files) {
@@ -69,6 +74,7 @@ export function buildOverlays(files) {
       const key = `${locale}\u0000${id}`;
       if (owner.has(key)) throw new ContentError(`${id} is also in ${owner.get(key)}; an entity belongs to one overlay file`, rel);
       owner.set(key, rel);
+      if (withheld.has(id)) continue;
       const fields = Object.entries(entry)
         .filter(([field, text]) => isOverlayFieldAllowed(id, field) && typeof text === "string" && text.trim() !== "")
         .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
@@ -88,13 +94,78 @@ export function renderOverlays(model) {
   );
 }
 
-/** The table of one locale as its own module (`OVERLAYS_ES: Overlays['es']`), for the learner PWA's locale chunk. */
+/**
+ * True for an overlay field that rides in its story's chunk, not in the locale chunk (row CM-8b's overlay half,
+ * F-CURR-002 §10): a story's scene narration, caption and alt, untiered or tier-qualified. Only a screen that
+ * has the story's body (its tiers and scenes, in the same chunk) reads them.
+ */
+export const isStoryChunkField = (id, field) =>
+  id.startsWith("story:") && /^(?:tiers\.[^.]+\.)?scenes\.[^.]+\.(?:narration|caption|alt)$/.test(field);
+
+/** A locale's table without the fields that ride in the story chunks (`isStoryChunkField`); an entity left empty is dropped. */
+export function localeTable(model, locale) {
+  const table = {};
+  for (const [id, fields] of Object.entries(model[locale])) {
+    const kept = Object.entries(fields).filter(([field]) => !isStoryChunkField(id, field));
+    if (kept.length > 0) table[id] = Object.fromEntries(kept);
+  }
+  return table;
+}
+
+/**
+ * The scene text of one story for its chunk: `{ es?: { [storyId]: fields }, ko?: ... }`, only the locales
+ * that have any (build-stories.mjs, row CM-8b's overlay half). Field order is the model's (sorted).
+ */
+export function storyChunkOverlays(model, storyId) {
+  const out = {};
+  for (const locale of OVERLAY_LOCALES) {
+    const fields = Object.entries(model[locale]?.[storyId] ?? {}).filter(([field]) => isStoryChunkField(storyId, field));
+    if (fields.length > 0) out[locale] = { [storyId]: Object.fromEntries(fields) };
+  }
+  return out;
+}
+
+/**
+ * The table of one locale as its own module (`OVERLAYS_ES: Overlays['es']`), for the learner PWA's locale chunk:
+ * every field but a story's scene text, which is in that story's chunk (`localeTable`).
+ */
 export function renderLocaleOverlays(model, locale) {
   return (
     GENERATED_HEADER +
     "import type { Overlays } from './schemas/locale-overlay';\n\n" +
-    `export const OVERLAYS_${locale.toUpperCase()}: Overlays['${locale}'] = ${JSON.stringify(model[locale], null, 2)};\n`
+    `export const OVERLAYS_${locale.toUpperCase()}: Overlays['${locale}'] = ${JSON.stringify(localeTable(model, locale), null, 2)};\n`
   );
+}
+
+/**
+ * The overlay entity ids of the story files no learner path offers yet (F-CURR-002 row CM-46): `story:<slug>` and its
+ * `quest:story-<slug>-listen` / `-read`. A story is offered
+ * once it is `ready`, has a `shelf` block and both review sign-offs (`catalogStatusOfStory` in the catalogue, the
+ * same rule as build-lessons.mjs). Their es / ko text stays in content/i18n (validate-content checks it), but it
+ * joins the locale chunks only with the sign-off, so an unsigned tale never adds to what every es or ko learner
+ * loads before the first screen (`PRECACHE_BUDGET.localeChunkRaw`, F-CURR-002 section 10).
+ */
+export function withheldStoryIds(root) {
+  const dir = join(root, "content", "stories");
+  const ids = new Set();
+  if (!existsSync(dir)) return ids;
+  for (const name of readdirSync(dir).filter((n) => n.endsWith(".json")).sort()) {
+    let story;
+    try {
+      story = JSON.parse(readFileSync(join(dir, name), "utf8"));
+    } catch {
+      continue; // build-stories.mjs and validate-content report a broken story file
+    }
+    if (!isObject(story) || typeof story.id !== "string") continue;
+    const review = isObject(story.review) ? story.review : {};
+    const offered =
+      story.state === "ready" && isObject(story.shelf) && review.language === "native-reviewed" && review.culture === "culture-reviewed";
+    if (offered) continue;
+    // The story and its two quests (its shelf listen quest and its book read quest, F-STORY-004 / F-STORY-005).
+    const slug = story.id.replace(/^story:/, "");
+    for (const id of [story.id, `quest:story-${slug}-listen`, `quest:story-${slug}-read`]) ids.add(id);
+  }
+  return ids;
 }
 
 const relOf = (root, file) => relative(root, file).split(sep).join("/");
@@ -107,7 +178,8 @@ export const isLessonOverlay = (name) => /^lessons-stage\d-[a-z]+(?:-v2)?\.json$
 /** `weekly-<monday>.json`: the "This week in Korea" drops' text, read by build-week-drops.mjs into their own chunk (F-CURR-002 row CM-48). */
 export const isWeekOverlay = (name) => /^weekly-\d{4}-\d{2}-\d{2}\.json$/.test(name);
 
-function readFiles(root) {
+/** The overlay files the locale tables are built from (not the lesson or week overlays). */
+export function readFiles(root) {
   const dir = join(root, "content", "i18n");
   const files = [];
   for (const locale of OVERLAY_LOCALES) {
@@ -148,7 +220,7 @@ export function main(argv, root) {
 
   let model;
   try {
-    model = buildOverlays(readFiles(root));
+    model = buildOverlays(readFiles(root), { withheld: withheldStoryIds(root) });
   } catch (error) {
     if (!(error instanceof ContentError)) throw error;
     process.stdout.write(`::error file=${error.file}::${error.message}\n`);

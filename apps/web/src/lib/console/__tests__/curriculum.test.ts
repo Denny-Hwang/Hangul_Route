@@ -1,5 +1,6 @@
 import {
   CATALOG,
+  CATALOG_QUEST_ADDITIONS,
   CurriculumParamsSchema,
   PACES,
   StageKeySchema,
@@ -587,7 +588,37 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     const plan = classPlan();
     expect(isStaleCatalog(plan.meta)).toBe(false);
     expect(isStaleCatalog({ ...plan.meta, catalogVersion: 0 })).toBe(true);
-    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: CATALOG.version + 1 })).toBe(true);
+    // A later catalogue asks only when it adds a quest a plan can hold (a first-volume lesson or a ready story).
+    const next = CATALOG.version + 1;
+    const added = (ids: string[]) => ({ ...CATALOG_QUEST_ADDITIONS, [next]: ids });
+    const firstVolume = CATALOG.cells.find((cell) => cell.stage === 'stage2' && cell.questIds.length > 0)!.questIds[0]!;
+    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, added([firstVolume]))).toBe(true);
+  });
+
+  it('offers no Refresh route for a later volume that merges dark (F-CURR-002 row CM-46)', () => {
+    const plan = classPlan();
+    const next = CATALOG.version + 1;
+    // The Letters book 2's quests are a later volume of their cell: off the route days, never in a plan.
+    const book2 = CATALOG.cells.flatMap((cell) => cell.volumes ?? []).flatMap((volume) => volume.questIds);
+    expect(book2).toContain('quest:story-jikji-metal-type-read');
+    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, { ...CATALOG_QUEST_ADDITIONS, [next]: book2 })).toBe(false);
+    // A first-volume lesson stamped beside them still asks.
+    const firstVolume = CATALOG.cells.find((cell) => cell.stage === 'stage2' && cell.questIds.length > 0)!.questIds[0]!;
+    expect(isStaleCatalog(plan.meta, { ...CATALOG, version: next }, { ...CATALOG_QUEST_ADDITIONS, [next]: [...book2, firstVolume] })).toBe(true);
+  });
+
+  it('does not flag a route when the catalogue since added only a later volume: Refresh route would add nothing (F-CURR-002 CM-40, CM-43 S4)', () => {
+    const laterVolumes = new Set(CATALOG.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds)));
+    expect(laterVolumes.has('quest:stage4-life-v2-q1')).toBe(true);
+    const plan = classPlan();
+    // The newest stamp of only later volumes (the Stage 4 Food Volume 2 first): a route made the day before it is current
+    // unless a Volume 1 quest came later.
+    const stamps = Object.entries(CATALOG_QUEST_ADDITIONS).map(([v, ids]) => [Number(v), ids] as const);
+    const volumeOnly = stamps.filter(([, ids]) => ids.length > 0 && ids.every((id) => laterVolumes.has(id))).map(([v]) => v);
+    expect(volumeOnly.length).toBeGreaterThan(0);
+    const before = Math.min(...volumeOnly) - 1;
+    const routeLater = stamps.some(([v, ids]) => v > before && ids.some((id) => !laterVolumes.has(id)));
+    expect(isStaleCatalog({ ...plan.meta, catalogVersion: before })).toBe(routeLater);
   });
 
   /** The catalogue every route saved before F-QUEST-002 Q-6a was made from: version 1, no lesson teaches anything. */
@@ -1181,10 +1212,10 @@ describe('Update the plan: a family learner card after a newer level check (rese
     expect(planUpdateOffer('family', check, [newer, older], LATER, FROZEN)?.plan.id).toBe('plan:older');
   });
 
-  it('every placement level places out no more lessons than the params hold (120 since F-CURR-001 S2-3 made it 41), so the seed never throws', () => {
+  it('every placement level places out no more lessons than the params hold (300 since F-CURR-002 Volume 2; 120 since F-CURR-001 S2-3 made it 41), so the seed never throws', () => {
     for (const stage of StageKeySchema.options) {
       for (const band of [0, 1, 2, 3]) {
-        expect(questsPlacedOutAtLevel({ stage, band }, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(120);
+        expect(questsPlacedOutAtLevel({ stage, band }, routeCatalogOf(CATALOG)).length).toBeLessThanOrEqual(300);
       }
     }
   });

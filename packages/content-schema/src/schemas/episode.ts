@@ -51,6 +51,15 @@ export const themeOrder = (theme: ThemeKey): number => ThemeKeySchema.options.in
 export const BOOK_STAGE: StageKey = 'stage5';
 export const BOOK_MIN_QUESTS = 2;
 export const BOOK_MAX_QUESTS = 3;
+/**
+ * A book 2 (volume 2, F-CURR-002 §5.2 S5, row CM-46) holds the cell's read-tier stories and its new tales: the Letters
+ * book 2 plans ten (the eight listen-only Letters stories of row CM-46a and two new tales). It is off the route days
+ * (row CM-40), so its length never stretches a plan; the cap only keeps a book a book.
+ */
+export const BOOK2_MAX_QUESTS = 10;
+
+/** The most quests a story book of this volume holds. */
+export const bookMaxQuests = (volume: number): number => (volume >= 2 ? BOOK2_MAX_QUESTS : BOOK_MAX_QUESTS);
 
 /** The parsed fields the rules read (defaults already applied). */
 export type EpisodeRuleInput = Pick<
@@ -109,8 +118,9 @@ export const episodeRules = (episode: EpisodeRuleInput, ctx: z.RefinementCtx): v
         issue(['stage'], `a story episode on the grid is a ${BOOK_STAGE} book at launch, not ${episode.stage}`);
       }
       const n = episode.questIds.length;
-      if (!preview && (n < BOOK_MIN_QUESTS || n > BOOK_MAX_QUESTS)) {
-        issue(['questIds'], `a story book holds ${BOOK_MIN_QUESTS}-${BOOK_MAX_QUESTS} quests, not ${n}`);
+      const max = bookMaxQuests(episode.volume);
+      if (!preview && (n < BOOK_MIN_QUESTS || n > max)) {
+        issue(['questIds'], `a story book of volume ${episode.volume} holds ${BOOK_MIN_QUESTS}-${max} quests, not ${n}`);
       }
     }
   }

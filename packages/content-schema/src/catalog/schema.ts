@@ -28,11 +28,30 @@ export const CatalogCellSchema = z.object({
    * still parses; the assembled catalogue fills it on every cell.
    */
   episodeIds: z.array(z.string()).optional(),
+  /**
+   * The cell's later volumes, as `episodeIds` lists them after the first (row CM-40, its part 2): each one's own title,
+   * minutes and quests, which the lesson chooser and the console's titles read. Absent while a cell has one volume.
+   */
+  volumes: z.array(z.object({ episodeId: z.string(), title: z.string(), minutes: z.number().int(), questIds: z.array(z.string()) })).optional(),
 });
 export type CatalogCell = z.infer<typeof CatalogCellSchema>;
+export type CatalogCellVolume = NonNullable<CatalogCell['volumes']>[number];
 
 /** A cell's grid episodes ordered by volume: `episodeIds`, or the first volume alone when a catalogue has none. */
 export const cellEpisodeIds = (cell: Pick<CatalogCell, 'episodeId' | 'episodeIds'>): readonly string[] => cell.episodeIds ?? [cell.episodeId];
+
+/**
+ * An episode of the catalogue by id, any volume (row CM-40): a cell's first volume (the cell itself) or one of its later
+ * volumes, with its minutes and quests; undefined for an id the catalogue does not know.
+ */
+export function catalogEpisode(catalog: Pick<Catalog, 'cells'>, episodeId: string): { cell: CatalogCell; minutes: number; questIds: readonly string[] } | undefined {
+  for (const cell of catalog.cells) {
+    if (cell.episodeId === episodeId) return { cell, minutes: cell.minutes, questIds: cell.questIds };
+    const later = cell.volumes?.find((v) => v.episodeId === episodeId);
+    if (later !== undefined) return { cell, minutes: later.minutes, questIds: later.questIds };
+  }
+  return undefined;
+}
 
 /** The id of volume `volume` of the cell whose first volume is `episodeId` (`episode:stage2-life`, 2 -> `episode:stage2-life-v2`). */
 export const volumeEpisodeId = (episodeId: string, volume: number): string => (volume <= 1 ? episodeId : `${episodeId}-v${volume}`);
@@ -133,6 +152,9 @@ export const CatalogSchema = z
       if (volumes.some((id, i) => id !== volumeEpisodeId(cell.episodeId, i + 1))) {
         fail(`Cell ${key} must list its episodes by volume: ${cell.episodeId}, then ${volumeEpisodeId(cell.episodeId, 2)}`);
       }
+      if ((cell.volumes ?? []).map((v) => v.episodeId).join() !== volumes.slice(1).join()) {
+        fail(`Cell ${key} must describe each later volume its episodeIds lists, in order`);
+      }
     }
 
     // Unique ids inside each list.
@@ -168,6 +190,9 @@ export const CatalogSchema = z
       }
       // A later volume's quests sit on its own episode, never in the first volume's list.
       if (later === undefined && !cell.questIds.includes(quest.id)) fail(`Lesson quest ${quest.id} is not listed by its cell`);
+      if (later !== undefined && !(cell.volumes ?? []).some((v) => v.episodeId === quest.episodeId && v.questIds.includes(quest.id))) {
+        fail(`Lesson quest ${quest.id} is not listed by its volume ${quest.episodeId}`);
+      }
       if (later !== undefined && cell.questIds.includes(quest.id)) fail(`Lesson quest ${quest.id} of ${quest.episodeId} is listed by the first volume`);
       if (quest.stage !== cell.stage || quest.theme !== cell.theme) {
         fail(`Quest ${quest.id} must carry the stage and theme of its cell`);
@@ -214,6 +239,32 @@ export const cellIsReady = (cell: Pick<CatalogCell, 'status'>): boolean =>
 
 /** A story is offered only when a reviewer has signed it (F-STORY-004). */
 export const storyIsReady = (story: Pick<CatalogStory, 'status'>): boolean => story.status === 'ready';
+
+/**
+ * The stories of the frozen shelf table (`STORY_SHELF` in catalog/data.ts, the stories that shipped up to version 32):
+ * they hold shelf orders 1 to this number. A story added later takes the next order.
+ */
+export const FROZEN_SHELF_STORY_COUNT = 24;
+
+/**
+ * The stories that only a cell's later volume holds (F-CURR-002 §4.3, §5.1, row CM-46): a Stage 5 book 2 tale, whose
+ * read quest is in a later volume of its cell and in no first volume, and that is a new tale (added after the frozen
+ * shelf). They are Volume 2 content, behind the learner switch `volumes`, so a surface that reads no learner switch
+ * (the presets, the console chooser) leaves them out. A shelf story that joined a book 2 through its read tier (the
+ * Letters book 2's, row CM-46a) stays a shelf story.
+ */
+export function laterVolumeStoryIds(catalog: Pick<Catalog, 'cells' | 'stories'>): ReadonlySet<string> {
+  const first = new Set(catalog.cells.flatMap((c) => c.questIds));
+  const later = new Set(catalog.cells.flatMap((c) => (c.volumes ?? []).flatMap((v) => v.questIds)));
+  return new Set(
+    catalog.stories
+      .filter((s) => {
+        const read = `quest:story-${s.id.replace(/^story:/, '')}-read`;
+        return s.order > FROZEN_SHELF_STORY_COUNT && later.has(read) && !first.has(read);
+      })
+      .map((s) => s.id),
+  );
+}
 
 /** The fields of a story file (F-STORY-001 section 3.2) that decide its catalogue status. */
 export interface StoryOfferFields {

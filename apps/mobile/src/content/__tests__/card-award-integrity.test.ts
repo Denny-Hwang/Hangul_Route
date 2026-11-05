@@ -35,7 +35,7 @@ import { storyCoverArt } from '../../logic/story/scene-view';
 import type { AwardWorld } from '../../logic/awards/types';
 import { playableEpisodes } from '../../logic/next-quest';
 import { albumCardSets, awardWorld } from '../award-world';
-import { episodesAll } from '../episodes';
+import { episodesAll, episodesWithVolumes } from '../episodes';
 import { albumLegendCards, heritageCardsAll, stage1Cards, stage2Cards, stage4Cards, upperCellCards } from '../heritage-cards';
 import { questsAll } from '../quests';
 import { heldStoryCards, storiesAll, storyById } from '../stories';
@@ -364,6 +364,8 @@ describe('heritage story cards (F-STORY-006 T-AWARD-6, T-AWARD-7)', () => {
     expect(heritageCardsAll).toEqual([...handWritten, ...storyCards]);
     // Row CM-23 part 3: the five album sets follow the story sets.
     expect(awardWorld.sets).toEqual([...storySets, ...albumCardSets]);
+    // Row CM-40: the award world reads every shipped episode, a cell's later volume too, whatever `volumes` says.
+    expect(awardWorld.episodes).toBe(episodesWithVolumes);
   });
 
   it('T-AWARD-6: every bundled story card carries its story fact verbatim, the first source and a story keyword', () => {

@@ -264,3 +264,22 @@ describe('sets never count another set card derived in the same pass (§3.2)', (
     expect(find(derivedAwards(nested('outer-first'), s, PROFILE), 'card:set-outer')?.unlockedAt).toBe(T3);
   });
 });
+
+describe('a cell of two volumes (F-CURR-002 row CM-40)', () => {
+  // A fixture Volume 2 of Meet the Letters with its own episode card.
+  const v2 = { ...(WORLD.episodes[0] as AwardWorld['episodes'][number]), id: 'episode:stage1-letters-v2', volume: 2, questIds: ['quest:l1v2'], rewardCardIds: ['card:v2'] };
+  const v2Card = { ...(WORLD.cards[0] as AwardWorld['cards'][number]), id: 'card:v2', unlockedBy: 'episode:stage1-letters-v2' };
+  const world: AwardWorld = { ...WORLD, episodes: [...WORLD.episodes, v2], cards: [...WORLD.cards, v2Card], quests: [...WORLD.quests, { id: 'quest:l1v2' }] };
+  const v2Run = { questId: 'quest:l1v2', episodeId: v2.id, startedAt: T1, completedAt: T4, stars: 3 as const, attempts: 1, accuracy: 1 };
+
+  it('the Volume 2 episode card comes when its quests are done', () => {
+    expect(find(derivedAwards(world, snapshot({ quests: [v2Run] }), PROFILE), 'card:v2')).toEqual({ cardId: 'card:v2', source: 'episode', via: v2.id, unlockedAt: T4 });
+    expect(find(derivedAwards(world, snapshot(), PROFILE), 'card:v2')).toBeUndefined();
+  });
+
+  it('the stage card reads the first volumes: a Volume 2 not started never holds it back', () => {
+    const firsts = [done('quest:l1', 3, T1), done('quest:l2', 3, T2), done('quest:f1', 3, T3)];
+    expect(find(derivedAwards(world, snapshot({ quests: firsts }), PROFILE), 'card:lantern')?.unlockedAt).toBe(T3);
+    expect(isStageComplete('stage1', world, completedEpisodes(world, snapshot({ quests: [v2Run] })))).toEqual({ complete: false });
+  });
+});
