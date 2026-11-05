@@ -915,6 +915,21 @@ export const consoleMsgs = {
         classDay: (weekday: string, n: number) => plural('es', n, { one: `Día de clase: ${weekday} · ${n} lección`, other: `Día de clase: ${weekday} · ${n} lecciones` }),
         classLength: (minutes: number) => `Duración de la clase: ${minutes} min`,
       },
+      family: {
+        weekdayList: (names: string[]) => {
+          const plural = names.map((name) => name.replace(/^(sábado|domingo)$/u, '$1s'));
+          return plural.length <= 1 ? (plural[0] ?? '') : `${plural.slice(0, -1).join(', ')} y ${plural[plural.length - 1] ?? ''}`;
+        },
+        classLine: (className: string, days: string, n: number) =>
+          plural('es', n, { one: `En: ${className} · clase los ${days}, práctica ${n} vez por semana`, other: `En: ${className} · clase los ${days}, práctica ${n} veces por semana` }),
+        classHasPractice: (name: string, weekdays: string) => `La clase de ${name} tiene días de práctica los ${weekdays}.`,
+        pause: 'Pausar el plan semanal de la familia mientras dure la clase',
+        resume: 'Reanudar el plan semanal de la familia',
+        failed: 'Ahora no se pudo cambiar el plan semanal de la familia. Reintenta.',
+      },
+      report: {
+        practiceWeek: (n: number) => plural('es', n, { one: `Practicó ${n} día esta semana`, other: `Practicó ${n} días esta semana` }),
+      },
     },
   },
   placement: {
