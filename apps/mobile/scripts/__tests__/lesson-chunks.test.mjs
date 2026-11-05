@@ -653,12 +653,13 @@ describe('precacheReport and its budget lines', () => {
     // AMENDMENTS-TOUCH KT-1 (#943) measures 4,860,944 B (CI release build, +22,893 B over main 1bfda3fc8): 4,866,000 B.
     // KT-2 (#949) on KT-1 and main 377d44291 measures 4,863,471 B (CI release build): the line stays.
     // The KT integration (KT-1, KT-10, KT-2, KT-3, KT-4a, KT-8, KT-9 on main 25e108b5e) measures 4,870,372 B: 4,875,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_875_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372]) {
+    // The CM tail integration (Stage 2 Holidays and Stage 4 Letters Volume 2, on main 2a18608bb) measures 4,877,941 B: 4,885,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_885_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_877_941]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_870_372).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_877_941).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
@@ -738,7 +739,7 @@ describe('the review-item chunk of row CM-10 (the same checks, its own budget li
     const { BUDGET } = await import('../../../../scripts/build-review-items.mjs');
     expect(PRECACHE_BUDGET.reviewItemsRaw).toBe(BUDGET.raw);
     expect(PRECACHE_BUDGET.reviewItemsGzip).toBe(BUDGET.gzip);
-    expect(BUDGET).toEqual({ raw: 205_000, gzip: 41_000 });
+    expect(BUDGET).toEqual({ raw: 215_000, gzip: 41_000 });
   });
 });
 
