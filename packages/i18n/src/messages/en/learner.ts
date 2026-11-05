@@ -3087,6 +3087,18 @@ export const learner = {
       ownBack: 'Your own weekly plan is back.',
       /** B6: instead of the weekly plan proposal while the class plan has practice days. */
       proposalInstead: "Your class's weekly plan has practice days for you.",
+      /**
+       * B7 (row BL-8): My practice days, Profile -> weekly plan. The learner (a grown-up, for a child) moves the days and
+       * their count; the lessons never change. The count chips are choices 1 to 7, not counts of work.
+       */
+      practiceDays: {
+        title: 'My practice days',
+        hint: 'Pick the days you practice. Your lessons stay the same.',
+        /** The count chips' group name. */
+        count: 'Days a week',
+        /** A child profile on a gated device: a tap opens the grown-up gate first. */
+        gate: 'PIN required',
+      },
     },
   },
 } as const;

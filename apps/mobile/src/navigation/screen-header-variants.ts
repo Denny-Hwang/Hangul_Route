@@ -98,6 +98,8 @@ export const SCREEN_HEADER_VARIANTS: Readonly<Record<ScreenHeaderRouteName, Scre
   RouteSetup: 'back',
   RoutePreview: 'back',
   RouteOverview: 'back',
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days.
+  PracticeDays: 'back',
   // Profile, the grown-up area and its screens.
   Profile: 'back',
   EditProfile: 'back',

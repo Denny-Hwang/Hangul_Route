@@ -107,3 +107,26 @@ describe('learner.route.blend and a11y.route.blend (BL-7)', () => {
     }
   });
 });
+
+describe('learner.route.blend.practiceDays (BL-8, wireframe B7)', () => {
+  it('English is the section 19 text, in the US spelling of packages/i18n en ("practice" as the verb)', () => {
+    const p = getMessages('en').learner.route.blend.practiceDays;
+    expect(p.title).toBe('My practice days');
+    expect(p.hint).toBe('Pick the days you practice. Your lessons stay the same.');
+    expect(p.count).toBe('Days a week');
+    expect(p.gate).toBe('PIN required');
+  });
+
+  it('the gate line says what the grown-up gate says in each locale', () => {
+    for (const locale of LOCALES) {
+      const m = getMessages(locale);
+      expect(m.caregiver.audience.gated('x', true)).toBe(`x (${m.learner.route.blend.practiceDays.gate.replace(/^Requiere PIN$/, 'requiere PIN')})`);
+    }
+  });
+
+  it('es and ko use the glossary: práctica / 연습, and never promise a change to the lessons', () => {
+    expect(getMessages('es').learner.route.blend.practiceDays.title).toBe('Mis días de práctica');
+    expect(getMessages('ko').learner.route.blend.practiceDays.title).toBe('내 연습 요일');
+    for (const locale of LOCALES) expect(getMessages(locale).learner.route.blend.practiceDays.hint.length).toBeGreaterThan(0);
+  });
+});

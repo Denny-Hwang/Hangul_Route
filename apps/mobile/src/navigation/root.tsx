@@ -49,6 +49,7 @@ import { RouteOverviewScreen } from '../screens/route/RouteOverviewScreen';
 import { RoutePreviewScreen } from '../screens/route/RoutePreviewScreen';
 import { RouteProposalScreen } from '../screens/route/RouteProposalScreen';
 import { RouteSetupScreen } from '../screens/route/RouteSetupScreen';
+import { PracticeDaysRoute } from '../screens/route/practice-days-entry';
 import { NoteDetailScreen } from '../screens/notes/NoteDetailScreen';
 import { NotesScreen } from '../screens/notes/NotesScreen';
 import { NoteReportScreen } from '../screens/parent/NoteReportScreen';
@@ -201,6 +202,7 @@ export function RootNavigator(): ReactElement {
             plan slot, the Profile row, Open plan, the placement strip and the report card read routeEnabledFor(locale). */}
         {flags.routeEnabled ? <Stack.Screen name="RouteProposal" component={RouteProposalScreen} /> : null}
         {flags.routeEnabled ? <Stack.Screen name="RouteSetup" component={RouteSetupScreen} /> : null}
+        {flags.routeBlendEnabled ? <Stack.Screen name="PracticeDays" component={PracticeDaysRoute} /> : null}
         {flags.routeEnabled ? <Stack.Screen name="RoutePreview" component={RoutePreviewScreen} /> : null}
         {flags.routeEnabled ? <Stack.Screen name="RouteOverview" component={RouteOverviewScreen} /> : null}
         {/* Notes from grown-ups (F-FEEDBACK-001 FB-8): My notes and the note page, only with flags.notesEnabled. */}
