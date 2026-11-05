@@ -2,7 +2,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { LEGACY, NOW, STEADY, response } from '@/lib/console/__tests__/fixtures/report';
+import { LEGACY, NOW, STALE, STEADY, response } from '@/lib/console/__tests__/fixtures/report';
 import Page from '@/app/(console)/teach/space/learner/page';
 
 /**
@@ -37,11 +37,12 @@ vi.mock('next/navigation', () => ({
 type Result = { ok: true; data: unknown } | { ok: false; error: string; status: number };
 const ok = (data: unknown): Result => ({ ok: true, data });
 const calls: { name: string; args: unknown[] }[] = [];
-const responses: { report: () => Result; spaces: () => Result; roster: () => Result; plans: () => Result } = {
+const responses: { report: () => Result; spaces: () => Result; roster: () => Result; plans: () => Result; transfers: () => Result } = {
   report: () => ok(response(STEADY, { kind: 'class' })),
   spaces: () => ok([{ space: { id: 'space:sunflower', kind: 'class' }, role: 'owner', counts: { learners: 1, accounts: 1, classes: 0 } }]),
   roster: () => ({ ok: false, error: 'network', status: 0 }),
   plans: () => ok([]),
+  transfers: () => ok({ requests: [] }),
 };
 const api = new Proxy(
   {},
@@ -54,6 +55,7 @@ const api = new Proxy(
         if (name === 'listSpaces') return responses.spaces();
         if (name === 'roster') return responses.roster();
         if (name === 'listPlans') return responses.plans();
+        if (name === 'transferRequests') return responses.transfers();
         return ok([]);
       },
   },
@@ -91,6 +93,7 @@ afterEach(() => {
   responses.report = () => ok(response(STEADY, { kind: 'class' }));
   responses.spaces = () => ok([{ space: { id: 'space:sunflower', kind: 'class' }, role: 'owner', counts: { learners: 1, accounts: 1, classes: 0 } }]);
   responses.roster = () => ({ ok: false, error: 'network', status: 0 });
+  responses.transfers = () => ok({ requests: [] });
   // Each test is a new account, so the page's in-tab report cache never carries over.
   account += 1;
   session.accountId = `teacher-${account}`;
@@ -148,17 +151,47 @@ describe('the learner report page, switched on', () => {
     expect(fakeDocument.title).not.toContain('Mina');
   });
 
-  it('draws the header: the back link to the roster and Print described by its hint, enabled once loaded', async () => {
+  it('draws the back link to the roster and Print, enabled once loaded; the print hint waits for Print (GX-13)', async () => {
     // Send a note (on by default since F-FEEDBACK-001 FB-14) has its own suite, report-send-note-wiring.test.tsx.
     vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
+    const printed = vi.fn();
+    vi.stubGlobal('window', { location: { pathname: '/teach/space/learner', search: `?${START}` }, print: printed });
     const root = await page();
     expect(byTestId(root, 'report-back')[0]?.props.href).toBe('/teach/space?id=space%3Asunflower');
     expect(textOf(byTestId(root, 'report-back')[0] as ReactTestInstance)).toBe('Back to Sunflower');
     const print = byTestId(root, 'report-print')[0] as ReactTestInstance;
     expect(print.props.disabled).toBe(false);
-    const hint = root.find((n) => n.type === 'p' && n.props.id === print.props['aria-describedby']);
-    expect(textOf(hint)).toBe(en.report.print.hint);
     expect(textOf(root)).not.toContain(en.report.action.sendNote);
+    // Before Print: no hint on screen and nothing names it.
+    expect(textOf(byTestId(root, 'report-print-hint')[0] as ReactTestInstance)).toBe('');
+    expect(print.props['aria-describedby']).toBeUndefined();
+    expect(textOf(root)).not.toContain(en.report.print.hint);
+    await act(async () => {
+      print.props.onClick();
+    });
+    // The hint is drawn first, in a polite status line that Print now names; the dialog opens after the paint.
+    const after = byTestId(root, 'report-print')[0] as ReactTestInstance;
+    const hint = root.find((n) => n.type === 'p' && n.props.id === after.props['aria-describedby']);
+    expect(textOf(hint)).toBe(en.report.print.hint);
+    expect(hint.props.role).toBe('status');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    });
+    expect(printed).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads top down: the back link, the h1, the status lines, then the actions, then the tabs (GX-13)', async () => {
+    responses.report = () => ok(response(STALE, { kind: 'class' }));
+    const root = await page();
+    const order = root.findAll((n) => typeof n.type === 'string' && (n.type === 'h1' || ['report-back', 'report-state', 'report-actions', 'report-tab-week'].includes(n.props['data-testid'] as string)));
+    const keys = order.map((n) => (n.type === 'h1' ? 'h1' : (n.props['data-testid'] as string)));
+    expect(keys.filter((k, i) => keys.indexOf(k) === i)).toEqual(['report-back', 'h1', 'report-state', 'report-actions', 'report-tab-week']);
+  });
+
+  it('the minutes tile reads with its unit (GX-13)', async () => {
+    const root = await page();
+    const tile = byTestId(root, 'report-figure-minutes')[0] as ReactTestInstance;
+    expect(textOf(tile)).toContain('36 min');
   });
 
   it('draws four tabs controlling one panel, the selected one in the tab order, and the stepper', async () => {
@@ -252,9 +285,10 @@ describe('the Learning Route seam', () => {
     const root = await page();
     expect(calls.filter((c) => c.name === 'roster' || c.name === 'listPlans').map((c) => c.name).sort()).toEqual(['listPlans', 'roster']);
     expect(byTestId(root, 'report-open-route')[0]?.props.href).toBe('/teach/space/route?id=space%3Asunflower&learner=profile%3Amina');
-    expect(textOf(byTestId(root, 'report-goal')[0] as ReactTestInstance)).toBe('Next open stage: Stage 1 · Hangul');
-    // Case 3 names no goal, so it has no flag.
-    expect(byTestId(root, 'report-goal')[0]?.findAll((n) => n.type === 'svg')).toHaveLength(0);
+    // Case 3 here is Stage 1, the stage "Now on" already names: the line is not repeated (GX-13).
+    expect(textOf(root)).toContain('Now on Stage 1: Hangul');
+    expect(byTestId(root, 'report-goal')).toHaveLength(0);
+    expect(textOf(root)).not.toContain('Next open stage');
   });
 
   it('a failed roster read draws no goal line', async () => {
@@ -419,6 +453,8 @@ describe('RP-7b: the growth line and the printed footer', () => {
     const marked = root.findAll((n) => typeof n.props.className === 'string' && n.props.className.split(' ').includes('hr-report-actions'));
     expect(marked.length).toBeGreaterThanOrEqual(3);
     expect(byTestId(root, 'report-print')[0] && marked.some((n) => n.findAll((c) => c.props['data-testid'] === 'report-print').length > 0)).toBe(true);
+    // The back link sits apart from the actions since GX-13, and still prints nowhere.
+    expect(marked.some((n) => n.findAll((c) => c.props['data-testid'] === 'report-back').length > 0)).toBe(true);
   });
 });
 
@@ -457,5 +493,71 @@ describe('Browse links on the report (RP-13, behind browseEnabled() on the app o
     vi.stubGlobal('window', appWindow('https://hangulroute.com'));
     const root = await page();
     expect(browseHrefs(root)).toEqual([]);
+  });
+});
+
+describe('AMENDMENTS-GROWNUP-UX GX-13: the classes line on a family report', () => {
+  const family = (): Result => ok(response(STEADY, { kind: 'family' }));
+  const options = (classes: { spaceId: string; name: string }[]): Result =>
+    ok({ requests: [], options: [{ learnerId: 'profile:mina', name: 'Mina', classes, selfManaged: false, blockTeacherRequests: false }, { learnerId: 'profile:jun', name: 'Jun', classes: [{ spaceId: 'space:x', name: 'Other' }], selfManaged: false, blockTeacherRequests: false }] });
+  const transferCalls = (): unknown[][] => calls.filter((c) => c.name === 'transferRequests').map((c) => c.args);
+
+  it("reads the family's transfer options once and lists this learner's classes, in order", async () => {
+    nav.query = 'id=space%3Akim-family&learner=profile%3Amina&period=week&from=home';
+    responses.report = family;
+    responses.transfers = () => options([{ spaceId: 'space:sunflower', name: 'Sunflower' }, { spaceId: 'space:sat', name: 'Saturday B' }]);
+    const root = await page();
+    expect(transferCalls()).toEqual([['space:kim-family']]);
+    expect(textOf(byTestId(root, 'report-classes')[0] as ReactTestInstance)).toBe('Classes: Sunflower, Saturday B');
+    expect(textOf(root)).not.toContain('Other');
+    // Another period keeps the line and reads nothing again.
+    await act(async () => {
+      byTestId(root, 'report-tab-month')[0]?.props.onClick();
+    });
+    await follow();
+    expect(transferCalls()).toHaveLength(1);
+    expect(textOf(byTestId(root, 'report-classes')[0] as ReactTestInstance)).toBe('Classes: Sunflower, Saturday B');
+  });
+
+  it('no line when the read fails, lists no class, or the moves are switched off (never "Family only" on a guess)', async () => {
+    responses.report = family;
+    responses.transfers = () => ({ ok: false, error: 'network', status: 0 });
+    let root = await page();
+    expect(byTestId(root, 'report-classes')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    mounted = null;
+    responses.transfers = () => options([]);
+    root = await page();
+    expect(byTestId(root, 'report-classes')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    mounted = null;
+    calls.length = 0;
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'false');
+    responses.transfers = () => options([{ spaceId: 'space:sunflower', name: 'Sunflower' }]);
+    root = await page();
+    expect(transferCalls()).toEqual([]);
+    expect(byTestId(root, 'report-classes')).toHaveLength(0);
+  });
+
+  it('skips a class item with no name (or a null item) and never throws on it', async () => {
+    nav.query = 'id=space%3Akim-family&learner=profile%3Amina&period=week&from=home';
+    responses.report = family;
+    const malformed = [null, { spaceId: 'space:x' }, { spaceId: 'space:y', name: '' }, { spaceId: 'space:sunflower', name: 'Sunflower' }];
+    responses.transfers = () => options(malformed as unknown as { spaceId: string; name: string }[]);
+    let root = await page();
+    expect(textOf(byTestId(root, 'report-classes')[0] as ReactTestInstance)).toBe('Classes: Sunflower');
+    act(() => mounted?.unmount());
+    mounted = null;
+    // Only malformed items: nothing named, so no line (never "Classes: " with nothing after it).
+    responses.transfers = () => options([null, { spaceId: 'space:x' }] as unknown as { spaceId: string; name: string }[]);
+    root = await page();
+    expect(byTestId(root, 'report-classes')).toHaveLength(0);
+  });
+
+  it("a class report never reads the family's moves and draws no classes line", async () => {
+    responses.transfers = () => options([{ spaceId: 'space:sunflower', name: 'Sunflower' }]);
+    const root = await page();
+    expect(transferCalls()).toEqual([]);
+    expect(byTestId(root, 'report-classes')).toHaveLength(0);
   });
 });

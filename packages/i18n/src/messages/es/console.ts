@@ -152,6 +152,7 @@ export const consoleMsgs = {
     },
     navAttention: {
       classes: (n: number) => `Clases, ${n} por aprobar`,
+      home: (n: number) => `Inicio, ${n} por revisar`,
     },
     noApi: 'La consola necesita una dirección de API (NEXT_PUBLIC_API_BASE_URL) en esta versión.',
   },
@@ -293,6 +294,12 @@ export const consoleMsgs = {
       cta: (count: number) => plural('es', count, { one: `${count} dispositivo nuevo por aprobar`, other: `${count} dispositivos nuevos por aprobar` }),
     },
     settings: { cta: 'Ajustes' },
+    more: 'Más',
+    invite: (code: string) => `Invitar estudiantes · código ${code}`,
+    firstRun: {
+      title: 'Primeros pasos',
+      steps: ['Muestra el código de la clase o el código QR.', 'Los estudiantes tocan Unirme a una clase en la app.', 'Planea esta semana.'],
+    },
     studentsLabel: 'Estudiantes',
     recentFirst: 'Primero la actividad más reciente',
     rosterHeadingFamily: 'Quienes aprenden',
@@ -303,6 +310,7 @@ export const consoleMsgs = {
         plural('es', cards, { one: `Misiones de la Etapa 1: ${done} de ${total} · ${cards} tarjeta`, other: `Misiones de la Etapa 1: ${done} de ${total} · ${cards} tarjetas` }),
       firstQuest: 'En la primera misión',
       minutesThisWeek: (minutes: number) => `${minutes} min esta semana`,
+      practiced: (when: string, minutes: number) => `Última práctica: ${when} · ${minutes} min esta semana`,
       revisit: (jamo: string) => `Repasar: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `se unió ${when}`,

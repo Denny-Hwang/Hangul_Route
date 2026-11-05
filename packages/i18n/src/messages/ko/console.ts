@@ -113,6 +113,7 @@ export const consoleMsgs = {
     nav: { home: '홈', reports: '리포트', notes: '쪽지', classes: '반', lessons: '레슨', billing: '결제', classReports: '반 리포트', lecture: '강의 모드' },
     navAttention: {
       classes: (n: number) => `반, 승인 대기 ${n}건`,
+      home: (n: number) => `홈, 확인할 일 ${n}건`,
     },
     noApi: '이 버전에서 콘솔을 쓰려면 API 주소(NEXT_PUBLIC_API_BASE_URL)가 필요해요.',
   },
@@ -253,6 +254,12 @@ export const consoleMsgs = {
       cta: (count: number) => `새 기기 승인 대기 ${count}건`,
     },
     settings: { cta: '설정' },
+    more: '더 보기',
+    invite: (code: string) => `학생 초대하기 · 코드 ${code}`,
+    firstRun: {
+      title: '처음 할 일',
+      steps: ['반 코드나 QR 코드를 보여 주세요.', "학생이 앱에서 '반에 참여하기'를 눌러요.", '이번 주 계획을 세워 주세요.'],
+    },
     studentsLabel: '학생',
     recentFirst: '최근 활동 순서',
     rosterHeadingFamily: '우리 가족 학습자',
@@ -262,6 +269,7 @@ export const consoleMsgs = {
       questsCards: (done: number, total: number, cards: number) => `1단계 퀘스트 ${done}/${total} · 카드 ${cards}장`,
       firstQuest: '첫 퀘스트 진행 중',
       minutesThisWeek: (minutes: number) => `이번 주 ${minutes}분`,
+      practiced: (when: string, minutes: number) => `마지막 연습: ${when} · 이번 주 ${minutes}분`,
       revisit: (jamo: string) => `다시 볼 것: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `참여: ${when}`,

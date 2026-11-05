@@ -249,7 +249,7 @@ test.describe("a teacher reads a student's words (TV-D2)", () => {
 // AMENDMENTS-GROWNUP-UX GX-4 (section 7; section 14 "class-moves.spec.ts (extend)"; wireframe
 // design/wireframes/parent/needs-you.md, mock design/screens/approvals/mock/parent-*.html): the family's Needs you strip
 // above the first child, the fold rule, a status chip and a class line on each child card, the move notice inside its
-// child's card, consent in 2 taps, a re-link approved through the re-link pop-up (GX-D12) and denied in one tap, a
+// child's card, consent in 2 taps, a re-link approved through the re-link pop-up (GX-D12; it also opens on its own, GX-5) and denied in one tap, a
 // self-managed learner's move as the quiet Move waiting chip with no strip row, and Read and OK. ko, en and es at 360 x 740 and 1280 x 800.
 
 const GX_NOW = new Date('2026-10-31T12:00:00.000Z');
@@ -292,23 +292,37 @@ const OPTIONS = [
 
 interface FamilyMock {
   calls: Call[];
+  /** GX-5: what the next re-link read answers (a new request arriving while the page is open). */
+  setRelinks: (next: unknown[]) => void;
 }
 
-async function mockFamily(page: Page, over: { relinks?: unknown[]; moves?: unknown[]; scopeNeeded?: string[]; notice?: boolean } = {}): Promise<FamilyMock> {
-  const mock: FamilyMock = { calls: [] };
+/** GX-5: the re-link pop-up's per-tab "shown" set (`hr:console:relinkShown`), for cases about something else. */
+const RELINK_SHOWN_KEY = 'hr:console:relinkShown';
+
+async function mockFamily(
+  page: Page,
+  over: { relinks?: unknown[]; moves?: unknown[]; scopeNeeded?: string[]; notice?: boolean; shown?: string[]; attention?: { relinks: number; moves: number; relinkExpiresAt: string | null } } = {},
+): Promise<FamilyMock> {
   let relinks = over.relinks ?? [relinkOf('profile:mina', 'Mina', 7.5), relinkOf('profile:sora', 'Sora', 9.5)];
+  const mock: FamilyMock = {
+    calls: [],
+    setRelinks: (next) => {
+      relinks = next;
+    },
+  };
   let moves = over.moves ?? [JUN_MOVE];
   let needed = over.scopeNeeded ?? [];
   let noticeSeen = over.notice === false;
   await page.clock.install({ time: GX_NOW });
   await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
+  if (over.shown) await page.addInitScript(([key, ids]) => window.sessionStorage.setItem(key as string, ids as string), [RELINK_SHOWN_KEY, JSON.stringify(over.shown)]);
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
     const path = decodeURIComponent(new URL(request.url()).pathname);
     const method = request.method();
     mock.calls.push({ method, path, body: request.postData() ? (JSON.parse(request.postData() ?? '{}') as unknown) : null });
-    if (path === '/api/spaces') return json(route, 200, { spaces: [{ space: FAMILY, role: 'owner', counts: { learners: 3, accounts: 1, classes: 0 } }] });
+    if (path === '/api/spaces') return json(route, 200, { spaces: [{ space: FAMILY, role: 'owner', counts: { learners: 3, accounts: 1, classes: 0 }, ...(over.attention ? { attention: over.attention } : {}) }] });
     if (path.endsWith('/roster')) return json(route, 200, { space: FAMILY, learners: KIDS, joinCode: 'KIM123', joinCodeExpiresAt: gxAt(60 * 24 * 30) });
     const decided = /\/relink-requests\/([^/]+)\/(approve|deny)$/.exec(path);
     if (decided) {
@@ -317,6 +331,15 @@ async function mockFamily(page: Page, over: { relinks?: unknown[]; moves?: unkno
       return json(route, 200, { request: { ...found, status: decided[2] === 'approve' ? 'approved' : 'denied' } });
     }
     if (path.endsWith('/relink-requests')) return json(route, 200, { requests: relinks });
+    // GX-5: the family settings page (another parent page, where the frame draws the re-link bar).
+    if (path.endsWith('/members')) {
+      return json(route, 200, {
+        members: [
+          { memberKind: 'account', memberId: 'acct-e2e', role: 'owner', joinedAt: '2026-09-01T00:00:00.000Z', name: 'Ms Kim', isOwner: true },
+          ...KIDS.map((k) => ({ memberKind: 'learner', memberId: k.id, role: 'student', joinedAt: k.joinedAt, name: k.displayName, isOwner: false })),
+        ],
+      });
+    }
     if (/\/transfer-requests\/[^/]+\/approve$/.test(path)) {
       moves = [];
       return json(route, 200, { request: { ...JUN_MOVE, learnerState: 'consented' } });
@@ -360,6 +383,14 @@ for (const { locale, browser } of GX_LOCALES) {
         await page.setViewportSize(size);
         await mockFamily(page);
         await page.goto('/parent');
+        // GX-5: each new device request opens the pop-up on its own, one at a time, soonest-closing first; Later puts
+        // each off (its row and chip stay).
+        for (const name of ['Mina', 'Sora']) {
+          const dialog = page.getByRole('alertdialog', { name: c.relinkPopup.title(name) });
+          await expect(dialog).toBeVisible();
+          await dialog.getByRole('button', { name: c.relinkPopup.later.cta }).click();
+        }
+        await expect(page.getByRole('alertdialog')).toHaveCount(0);
         const strip = page.getByRole('region', { name: p.needsYou.title });
         await expect(strip).toBeVisible();
         // Fold rule: the soonest-closing item keeps its row, the other two fold into one row with See all.
@@ -401,10 +432,11 @@ test.describe('en: answering from Needs you (GX-4)', () => {
   const c = en.console;
   const p = c.parentHome;
 
-  test('a re-link is approved through the pop-up: platform, request time and safety hint, then the row and the chip leave', async ({ page }) => {
-    const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], moves: [] });
+  test('a re-link is approved through the pop-up (GX-5, GX-D12): the strip\'s Approve opens it with the hint; the result is said, the row and the chip leave', async ({ page }) => {
+    const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], moves: [], shown: ['relink:mina'] });
     await page.goto('/parent');
     const strip = page.getByRole('region', { name: p.needsYou.title });
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
     await strip.getByRole('button', { name: c.relink.approve.cta, exact: true }).click();
     // GX-D12: no surface approves a re-link in one tap. The strip's Approve opens the pop-up and sends nothing yet.
     const popup = page.getByTestId('relink-popup');
@@ -425,7 +457,8 @@ test.describe('en: answering from Needs you (GX-4)', () => {
   });
 
   test('a re-link is denied in one tap from the strip, with no pop-up', async ({ page }) => {
-    const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], moves: [] });
+    // The pop-up already showed Mina's request in this tab (GX-5's auto-open), so the page opens on the strip.
+    const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], moves: [], shown: ['relink:mina'] });
     await page.goto('/parent');
     const strip = page.getByRole('region', { name: p.needsYou.title });
     await strip.getByRole('button', { name: c.relink.deny.cta, exact: true }).click();
@@ -452,7 +485,8 @@ test.describe('en: answering from Needs you (GX-4)', () => {
   }
 
   test('consent in 2 taps: Review opens the consent sheet directly, Yes agrees for the family', async ({ page }) => {
-    const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)] });
+    // The pop-up already showed Mina's request in this tab, so the page opens on the strip.
+    const mock = await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], shown: ['relink:mina'] });
     await page.goto('/parent');
     const strip = page.getByRole('region', { name: p.needsYou.title });
     await expect(strip.getByTestId('needs-you-row')).toHaveCount(2);
@@ -485,8 +519,9 @@ test.describe('en: answering from Needs you (GX-4)', () => {
 
   test('Read and OK from the See all sheet: the sheet closes and the class-scope card keeps focus and stays in view', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
-    // Three items: the re-link keeps its row, the move and the class-scope update fold behind See all.
-    await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], scopeNeeded: ['profile:sora'], notice: false });
+    // Three items: the re-link keeps its row, the move and the class-scope update fold behind See all. The pop-up already
+    // showed Mina's request in this tab (GX-5's auto-open), so the page opens on the strip.
+    await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], scopeNeeded: ['profile:sora'], notice: false, shown: ['relink:mina'] });
     await page.goto('/parent');
     const strip = page.getByRole('region', { name: p.needsYou.title });
     await strip.getByRole('button', { name: p.needsYou.seeAll.cta }).click();
@@ -497,5 +532,99 @@ test.describe('en: answering from Needs you (GX-4)', () => {
     const card = page.getByTestId('class-scope-card');
     await expect(card).toBeFocused();
     await expect(card).toBeInViewport();
+  });
+});
+
+// AMENDMENTS-GROWNUP-UX GX-5 (sections 5.3 to 5.5 and 7.4; owner request 2026-10-31: "make it obvious: a pop-up or a
+// clearer alert"): on the family home a child's new device request opens the re-link pop-up on its own, once per request
+// per tab and once more at 2 minutes left after Later; a request that arrives while the page is open shows within one
+// 20 s re-link read; on every other parent page the re-link bar names the family and Review opens the family home; the
+// Home tab carries the number of things to check. ko, en and es at 360 x 740 and 1280 x 800.
+
+for (const { locale, browser } of GX_LOCALES) {
+  const c = getMessages(locale).console;
+  const p = c.parentHome;
+  test.describe(`${locale}: the family home's re-link pop-up and the parent re-link bar (GX-5)`, () => {
+    test.use({ locale: browser });
+    for (const { label, size } of GX_VIEWPORTS) {
+      test(`${label}: the pop-up opens on its own, Later puts it off, it comes back once at 2 minutes left`, async ({ page }) => {
+        await page.setViewportSize(size);
+        await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], moves: [] });
+        await page.goto('/parent');
+        const dialog = page.getByRole('alertdialog', { name: c.relinkPopup.title('Mina') });
+        await expect(dialog).toBeVisible();
+        await expect(dialog).toContainText(c.relinkApproveHint);
+        await expect(dialog).toContainText(c.relinkPopup.closes(8));
+        await expect(dialog.getByRole('heading', { name: c.relinkPopup.title('Mina') })).toBeFocused();
+        for (const name of [c.relink.approve.cta, c.relink.deny.cta, c.relinkPopup.later.cta]) {
+          const box = await dialog.getByRole('button', { name, exact: true }).boundingBox();
+          expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+        }
+        // The tab count and the title carry the page's count (one new device), never a name.
+        await expect(page.getByTestId('nav-count')).toHaveText('1');
+        await expect(page.getByTestId('nav-home')).toHaveAttribute('aria-label', c.shell.navAttention.home(1));
+        await expect(page).toHaveTitle(/^\(1\) /);
+        expect(await page.title()).not.toContain('Mina');
+        if (label === '360') await noSidewaysScroll(page);
+        await page.screenshot({ path: test.info().outputPath(`relink-popup-${locale}-${label}.png`) });
+        await page.keyboard.press('Escape');
+        await expect(page.getByRole('alertdialog')).toHaveCount(0);
+        await expect(page.getByRole('region', { name: p.needsYou.title }).getByTestId('needs-you-row')).toHaveCount(1);
+        await expect(kidCard(page, 'Mina').getByTestId('child-status')).toHaveText(p.status.relink);
+        // A reload in this tab does not bring it back (shown once per request per tab).
+        await page.reload();
+        await expect(page.getByRole('region', { name: p.needsYou.title })).toBeVisible();
+        await expect(page.getByRole('alertdialog')).toHaveCount(0);
+        // At 2 minutes left the reminder opens once, on a 20 s re-link read.
+        await page.clock.fastForward('05:40');
+        const again = page.getByRole('alertdialog', { name: c.relinkPopup.title('Mina') });
+        await expect(again).toBeVisible();
+        await expect(again).toContainText(c.relinkPopup.closes(2));
+        await page.screenshot({ path: test.info().outputPath(`relink-popup-reminder-${locale}-${label}.png`) });
+        await again.getByRole('button', { name: c.relinkPopup.later.cta }).click();
+        await page.clock.fastForward('01:00');
+        await expect(page.getByRole('alertdialog')).toHaveCount(0);
+      });
+
+      test(`${label}: on another parent page the re-link bar names the family; Review opens the family home and its pop-up`, async ({ page }) => {
+        await page.setViewportSize(size);
+        await mockFamily(page, { relinks: [relinkOf('profile:mina', 'Mina', 7.5)], moves: [], attention: { relinks: 1, moves: 0, relinkExpiresAt: gxAt(7.5) } });
+        await page.goto(`/parent/space/settings?id=${encodeURIComponent(FAMILY.id)}`);
+        const bar = page.getByTestId('relink-bar');
+        await expect(bar).toBeVisible();
+        await expect(bar.getByTestId('relink-bar-text')).toHaveText(c.relinkBar.one(FAMILY.name));
+        await expect(bar.getByTestId('relink-bar-minutes')).toHaveText(c.status.minutesLeft(8));
+        await expect(bar).not.toContainText('Mina');
+        await expect(page.getByTestId('nav-count')).toHaveText('1');
+        await expect(page.getByTestId('nav-home')).toHaveAttribute('aria-label', c.shell.navAttention.home(1));
+        if (label === '360') await noSidewaysScroll(page);
+        await page.screenshot({ path: test.info().outputPath(`relink-bar-parent-${locale}-${label}.png`) });
+        await bar.getByRole('link', { name: c.status.review.cta }).click();
+        await expect(page).toHaveURL(/\/parent\/?$/);
+        await expect(page.getByRole('alertdialog', { name: c.relinkPopup.title('Mina') })).toBeVisible();
+      });
+    }
+  });
+}
+
+test.describe('en: the family home reads its re-links every 20 s (GX-5)', () => {
+  const c = en.console;
+
+  test('with nothing pending at load, a new request opens the pop-up within one 20 s read; each read asks for the re-links alone', async ({ page }) => {
+    const mock = await mockFamily(page, { relinks: [], moves: [] });
+    await page.goto('/parent');
+    await expect(page.getByTestId('learner-card')).toHaveCount(3);
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+    const before = mock.calls.length;
+    mock.setRelinks([relinkOf('profile:sora', 'Sora', 10)]);
+    await page.clock.fastForward('00:21');
+    await expect(page.getByRole('alertdialog', { name: c.relinkPopup.title('Sora') })).toBeVisible();
+    const during = mock.calls.slice(before).map((call) => call.path);
+    expect(during.length).toBeGreaterThan(0);
+    for (const path of during) expect(path).toBe('/api/spaces/space:kim/relink-requests');
+    await page.getByRole('alertdialog').getByRole('button', { name: c.relink.approve.cta, exact: true }).click();
+    await expect(page.getByTestId('needs-you-result')).toHaveText(c.relink.approved('Sora'));
+    expect(mock.calls.some((call) => call.method === 'POST' && call.path === '/api/spaces/space:kim/relink-requests/relink:sora/approve')).toBe(true);
+    for (const call of mock.calls) expect(call.path).not.toMatch(/Mina|Jun|Sora/);
   });
 });

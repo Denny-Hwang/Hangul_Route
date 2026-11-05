@@ -50,6 +50,7 @@ const state = vi.hoisted(() => ({
   signedOutTo: null as string | null,
   locale: 'en' as 'en' | 'es' | 'ko',
   calls: [] as string[],
+  learners: [] as unknown[],
 }));
 vi.mock('@/components/console/auth-context', () => ({
   useConsoleAuth: () => ({
@@ -74,7 +75,7 @@ vi.mock('@/components/console/use-console', async () => {
       roster: async (id: string) => {
         state.calls.push(`roster:${id}`);
         if (state.rosterError) return { ok: false, ...state.rosterError };
-        return { ok: true, data: { space: space(id, state.kind, id === 'space:a' ? 'Sunday Class A' : 'Kim family'), learners: [], joinCode: null, joinCodeExpiresAt: null } };
+        return { ok: true, data: { space: space(id, state.kind, id === 'space:a' ? 'Sunday Class A' : 'Kim family'), learners: state.learners, joinCode: null, joinCodeExpiresAt: null } };
       },
       listSpaces: async () => (state.spacesFail ? { ok: false, error: 'network', status: -1 } : { ok: true, data: state.spaces }),
       transferRequests: async (id: string) => {
@@ -123,7 +124,7 @@ afterEach(() => {
   renderer = null;
   vi.unstubAllEnvs();
   resetTransferLockForTests();
-  Object.assign(state, { kind: 'class', archived: false, rosterError: null, listError: null, requests: {}, counts: [], spaces: [], spacesFail: false, signedOutTo: null, calls: [] });
+  Object.assign(state, { kind: 'class', archived: false, rosterError: null, listError: null, requests: {}, counts: [], spaces: [], spacesFail: false, signedOutTo: null, calls: [], learners: [] });
 });
 
 async function render(node: JSX.Element): Promise<ReactTestInstance> {
@@ -136,6 +137,11 @@ async function render(node: JSX.Element): Promise<ReactTestInstance> {
 }
 const textOf = (node: ReactTestInstance): string => node.findAll((n) => typeof n.type === 'string').map((n) => n.children.filter((c) => typeof c === 'string').join('')).join(' ');
 const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => root.findAll((n) => n.props['data-testid'] === id && typeof n.type === 'string');
+/** GX-7 (section 8 T3): Class moves sits under the class page's More; a tap on More shows it. */
+const openMore = (root: ReactTestInstance): void => {
+  const [toggle] = byTestId(root, 'class-more-toggle');
+  if (toggle && toggle.props['aria-expanded'] === false) act(() => toggle.props.onClick());
+};
 
 const waitingView = (over: Partial<TransferSourceView> = {}): TransferView => ({
   id: 'transfer:1',
@@ -264,23 +270,34 @@ describe('the roster chip (beside Re-link requests)', () => {
   it('without the flag: no button and no list read', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
     const root = await render(<SpacePage />);
+    openMore(root);
     expect(byTestId(root, 'class-moves')).toEqual([]);
     expect(state.calls.some((c) => c.startsWith('transfers:'))).toBe(false);
   });
 
-  it('a class with nothing waiting: the permanent Class moves button, to this page', async () => {
+  it('a class with nothing waiting: the permanent Class moves button (under More, GX-7), to this page', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    state.learners = [{ id: 'profile:mina', displayName: 'Mina', ageGroup: '5-7', avatar: 'tiger', joinedAt: '2026-09-02T00:00:00.000Z', lastActiveAt: null, lastSyncedAt: null, summary: null }];
     const root = await render(<SpacePage />);
+    openMore(root);
     const [button] = byTestId(root, 'class-moves');
     expect(textOf(button as ReactTestInstance)).toBe(t.entry.cta);
     const link = root.find((n) => n.type === 'a' && n.props.href === '/teach/space/transfers?id=space%3Aa');
     expect(link).toBeTruthy();
   });
 
+  it('an empty class with nothing waiting: no Class moves button (GX-7, section 8 T5)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
+    const root = await render(<SpacePage />);
+    openMore(root);
+    expect(byTestId(root, 'class-moves')).toEqual([]);
+  });
+
   it('two waiting for this class: "2 class moves waiting"; a request waiting on others does not count', async () => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'enabled');
     state.requests['space:a'] = [waitingView({ id: 'a' }), waitingView({ id: 'b' }), waitingView({ id: 'c', steps: { learner: 'yes', source: 'yes', destination: 'waiting' } })];
     const root = await render(<SpacePage />);
+    openMore(root);
     expect(textOf(byTestId(root, 'class-moves')[0] as ReactTestInstance)).toBe(t.waiting(2));
   });
 

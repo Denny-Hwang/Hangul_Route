@@ -171,11 +171,12 @@ describe('the class plan goal line on the roster header (LR-9)', () => {
     expect(textOf(line)).not.toMatch(/student|learner|\d+ ?\/ ?\d+|%/i);
   });
 
-  it('sits in the header: after the join code, before the plan actions', async () => {
+  it('sits right above the plan actions (GX-7, section 8 T3: after This week; the join code moved to Invite students at the end)', async () => {
     plans = [LIVE];
     const root = await roster();
-    const order = root.findAll((node) => typeof node.type === 'string' && (node.props['data-testid'] === 'join-code' || node.props['data-testid'] === 'class-goal-line' || node.props['data-testid'] === 'plan-term'));
-    expect(order.map((node) => node.props['data-testid'])).toEqual(['join-code', 'class-goal-line', 'plan-term']);
+    const ids = ['this-week', 'class-goal-line', 'plan-term', 'invite'];
+    const order = root.findAll((node) => typeof node.type === 'string' && ids.includes(String(node.props['data-testid'])));
+    expect(order.map((node) => node.props['data-testid'])).toEqual(ids);
   });
 
   it('a plan for some students, a draft, an archived plan or a classic plan: no line', async () => {

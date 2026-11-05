@@ -120,30 +120,49 @@ function makeApi(): MockApi {
   } as MockApi;
 }
 
-async function renderStrip(state: FamilyAsks, opts: { api?: ReturnType<typeof makeApi>; onChanged?: () => Promise<void>; onReadScope?: (id: string) => void; online?: boolean } = {}) {
+type StripOptions = {
+  api?: ReturnType<typeof makeApi>;
+  onChanged?: () => Promise<void>;
+  onReadScope?: (id: string) => void;
+  onApproveRelink?: (id: string) => void;
+  onDialog?: (open: boolean) => void;
+  result?: { key: number; text: string } | null;
+  online?: boolean;
+};
+function strip(state: FamilyAsks, opts: StripOptions, api: ReturnType<typeof makeApi>, onChanged: () => Promise<void>, onReadScope: (id: string) => void, onApproveRelink: (id: string) => void): JSX.Element {
+  return (
+    <FamilyNeedsYou
+      familyId="space:f"
+      familyName="Kim family"
+      items={needsYou(state, NOW)}
+      views={(state.transfers?.requests ?? []) as TransferLearnerSideView[]}
+      avatars={{ 'profile:mina': 'cub', 'profile:jun': 'tiger' }}
+      api={api as unknown as NeedsYouApi}
+      online={opts.online ?? true}
+      now={NOW}
+      onChanged={onChanged}
+      onReadScope={onReadScope}
+      onApproveRelink={onApproveRelink}
+      onDialog={opts.onDialog}
+      result={opts.result ?? null}
+    />
+  );
+}
+async function renderStrip(state: FamilyAsks, opts: StripOptions = {}) {
   const api = opts.api ?? makeApi();
   const onChanged = opts.onChanged ?? vi.fn(async () => undefined);
   const onReadScope = opts.onReadScope ?? vi.fn();
+  const onApproveRelink = opts.onApproveRelink ?? vi.fn();
+  const rerender = async (next: StripOptions): Promise<void> => {
+    await act(async () => {
+      renderer?.update(strip(state, { ...opts, ...next }, api, onChanged, onReadScope, onApproveRelink));
+    });
+  };
   await act(async () => {
-    renderer = create(
-      <FamilyNeedsYou
-        familyId="space:f"
-        familyName="Kim family"
-        items={needsYou(state, NOW)}
-        views={(state.transfers?.requests ?? []) as TransferLearnerSideView[]}
-        avatars={{ 'profile:mina': 'cub', 'profile:jun': 'tiger' }}
-        api={api as unknown as NeedsYouApi}
-        online={opts.online ?? true}
-        now={NOW}
-        onChanged={onChanged}
-        onReadScope={onReadScope}
-      />,
-      { createNodeMock: () => ({ focus: () => undefined }) },
-    );
+    renderer = create(strip(state, opts, api, onChanged, onReadScope, onApproveRelink), { createNodeMock: () => ({}) });
   });
-  return { api, onChanged, onReadScope };
+  return { api, onChanged, onReadScope, onApproveRelink, rerender };
 }
-
 const p = getMessages('en').console.parentHome;
 const t = getMessages('en').console.transfer;
 
@@ -194,46 +213,41 @@ describe('FamilyNeedsYou: the strip', () => {
     expect(sheet.findAll((n) => n.props['data-testid'] === 'needs-you-row' && typeof n.type === 'string').map((r) => r.props['data-kind'])).toEqual(['relink', 'move', 'scope']);
   });
 
-  it('a re-link Approve never answers in one tap: it opens the re-link pop-up with the safety hint (GX-D12)', async () => {
-    const { api, onChanged } = await renderStrip(asks({ relinks: [relink()] }));
-    expect(all('relink-popup')).toHaveLength(0);
+  it('a re-link\'s Approve opens the pop-up with the safety hint (GX-D12): it never approves from the strip; Deny is one tap', async () => {
+    const { api, onChanged, onApproveRelink } = await renderStrip(asks({ relinks: [relink()] }));
     await click('needs-you-approve');
+    expect(onApproveRelink).toHaveBeenCalledWith('relink:1');
     expect(api.decideRelink).not.toHaveBeenCalled();
-    const en = getMessages('en').console;
-    expect(text(one('relink-popup'))).toContain(en.relinkPopup.title('Mina'));
-    expect(text(one('relink-popup-hint'))).toBe(en.relinkApproveHint);
-    expect(text(one('relink-popup-closes'))).toBe(en.relinkPopup.closes(7));
-    // Approve inside the pop-up answers by request id; the pop-up closes, the result is said, the page reads again.
-    await click('relink-popup-approve');
-    expect(api.decideRelink).toHaveBeenCalledWith('space:f', 'relink:1', true);
-    expect(all('relink-popup')).toHaveLength(0);
-    expect(text(one('needs-you-result')).trim()).toBe(en.relink.approved('Mina'));
+    await click('needs-you-deny');
+    expect(api.decideRelink).toHaveBeenCalledWith('space:f', 'relink:1', false);
+    expect(text(one('needs-you-result')).trim()).toBe(getMessages('en').console.relink.denied('Mina'));
     expect(onChanged).toHaveBeenCalledTimes(1);
   });
 
-  it('Later closes the pop-up and answers nothing; Deny stays one tap in the row', async () => {
-    const { api } = await renderStrip(asks({ relinks: [relink()] }));
-    await click('needs-you-approve');
-    await click('relink-popup-later');
-    expect(all('relink-popup')).toHaveLength(0);
-    expect(api.decideRelink).not.toHaveBeenCalled();
-    await click('needs-you-deny');
-    expect(api.decideRelink).toHaveBeenLastCalledWith('space:f', 'relink:1', false);
-    expect(text(one('needs-you-result')).trim()).toBe(getMessages('en').console.relink.denied('Mina'));
+  it('the pop-up\'s result (`result`) is said in the strip\'s polite region, which outlives the row', async () => {
+    const { rerender } = await renderStrip(asks({ relinks: [relink()] }));
+    expect(text(one('needs-you-result')).trim()).toBe('');
+    await rerender({ result: { key: 1, text: getMessages('en').console.relink.approved('Mina') } });
+    expect(text(one('needs-you-result')).trim()).toBe(getMessages('en').console.relink.approved('Mina'));
   });
 
-  it('a failed answer keeps the row and says it did not go through (Deny in the row; Approve in the pop-up)', async () => {
+  it('tells the page while one of its sheets is open, so the pop-up waits (one dialog at a time)', async () => {
+    const onDialog = vi.fn();
+    await renderStrip(asks({ relinks: [relink(), relink({ id: 'relink:2', learnerId: 'profile:jun', learnerName: 'Jun' })], scope: SCOPE }), { onDialog });
+    expect(onDialog).toHaveBeenLastCalledWith(false);
+    await click('needs-you-see-all');
+    expect(onDialog).toHaveBeenLastCalledWith(true);
+    await act(async () => root().find((n) => n.props.className === 'hr-move-scrim').props.onClick());
+    expect(onDialog).toHaveBeenLastCalledWith(false);
+  });
+
+  it('a failed answer keeps the row and says it did not go through', async () => {
     const api = makeApi();
-    api.decideRelink.mockResolvedValue({ ok: false, error: 'network', status: -1 });
+    api.decideRelink.mockResolvedValueOnce({ ok: false, error: 'network', status: -1 });
     await renderStrip(asks({ relinks: [relink()] }), { api });
     await click('needs-you-deny');
     expect(all('needs-you-row')).toHaveLength(1);
     expect(text(one('needs-you-result')).length).toBeGreaterThan(0);
-    // The pop-up keeps its buttons and shows the line under them while the request is still open.
-    await click('needs-you-approve');
-    await click('relink-popup-approve');
-    expect(all('relink-popup')).toHaveLength(1);
-    expect(text(one('relink-popup-failed')).length).toBeGreaterThan(0);
   });
 
   it('offline: the answers wait (disabled)', async () => {
@@ -337,7 +351,7 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
     return { log, doc, node, createNodeMock };
   }
 
-  type Extra = { onReadScope?: (id: string) => void; onReviewing?: (open: boolean) => void; api?: MockApi };
+  type Extra = { onReadScope?: (id: string) => void; onReviewing?: (open: boolean) => void; onApproveRelink?: (id: string) => void; api?: MockApi };
   const strip = (state: FamilyAsks, extra: Extra) => (
     <FamilyNeedsYou
       familyId="space:f"
@@ -350,6 +364,7 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
       now={NOW}
       onChanged={async () => undefined}
       onReadScope={extra.onReadScope ?? (() => undefined)}
+      onApproveRelink={extra.onApproveRelink ?? (() => undefined)}
       onReviewing={extra.onReviewing}
     />
   );
@@ -381,6 +396,7 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
       renderer = create(strip(three(), { api }), { createNodeMock: world.createNodeMock });
     });
     await click('needs-you-see-all');
+    // GX-5: Approve leaves the sheet for the page's pop-up (the safety hint); Deny answers here, in one tap.
     const deny = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-deny' && typeof n.type === 'string');
     await act(async () => deny.props.onClick());
     expect(text(one('needs-you-sheet-result')).trim()).toBe(getMessages('en').console.relink.denied('Mina'));
@@ -394,16 +410,17 @@ describe('FamilyNeedsYou: focus, the sheet result and the held reads (GX-4 revie
     expect(world.log[world.log.length - 1]).toBe('sheet-first-button');
   });
 
-  it('Approve in the See all sheet closes the sheet and opens the re-link pop-up, so one dialog is open at a time', async () => {
+  it('Approve in the See all sheet closes the sheet and asks the page for its re-link pop-up, so one dialog is open at a time', async () => {
     const api = makeApi();
+    const onApproveRelink = vi.fn();
     await act(async () => {
-      renderer = create(strip(three(), { api }), { createNodeMock: focusWorld().createNodeMock });
+      renderer = create(strip(three(), { api, onApproveRelink }), { createNodeMock: focusWorld().createNodeMock });
     });
     await click('needs-you-see-all');
     const approve = one('needs-you-sheet').find((n) => n.props['data-testid'] === 'needs-you-approve' && typeof n.type === 'string');
     await act(async () => approve.props.onClick());
     expect(all('needs-you-sheet')).toHaveLength(0);
-    expect(all('relink-popup')).toHaveLength(1);
+    expect(onApproveRelink).toHaveBeenCalledWith('relink:1');
     expect(api.decideRelink).not.toHaveBeenCalled();
   });
 
