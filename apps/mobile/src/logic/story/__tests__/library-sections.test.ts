@@ -1,6 +1,6 @@
 import type { CultureNote } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { DRAWN_LIBRARY_SECTIONS, LIBRARY_SECTIONS, librarySectionTabs, selectedSection, visibleSections } from '../library-sections';
+import { DRAWN_LIBRARY_SECTIONS, LIBRARY_SECTIONS, librarySectionTabs, opensYourCards, selectedSection, visibleSections } from '../library-sections';
 import { shelfIndex, story } from './shelf-fixture';
 
 const note: CultureNote = {
@@ -119,5 +119,17 @@ describe('librarySectionTabs (the tab row the Library draws)', () => {
   it('with Words off the tab row is what it was (behaviour 1: the Library renders exactly as before)', () => {
     expect(librarySectionTabs({ entries: [], words: false })).toEqual([]);
     expect(librarySectionTabs({ entries: shelfIndex([tale('tiger')]) })).toEqual(['cards', 'story-time']);
+  });
+});
+
+describe('opensYourCards (a link to the Cards section shows the learner’s own cards first, OW-2)', () => {
+  it('is true for a Cards request, with or without a tab row', () => {
+    expect(opensYourCards('cards', [])).toBe(true);
+    expect(opensYourCards('cards', ['cards', 'story-time'])).toBe(true);
+  });
+
+  it('is false for another offered section, and true for one that is not offered (the Library opens on Cards)', () => {
+    expect(opensYourCards('story-time', ['cards', 'story-time'])).toBe(false);
+    expect(opensYourCards('theme-packs', ['cards', 'story-time'])).toBe(true);
   });
 });
