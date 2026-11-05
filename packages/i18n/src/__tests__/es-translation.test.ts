@@ -166,6 +166,7 @@ const LITERALLY_SHARED: readonly string[] = [
   'a11y.minigame.finalTile',
   'learner.storyShelf.episode.minutes.pill',
   'learner.weeklyPlan.proposal.minutes',
+  'report.minutesTile', // the report's minutes tile (GX-13)
   'console.space.openPlan.label',
   'console.curriculum.rhythm.minutesOption',
   'console.curriculum.preview.table.extras',
