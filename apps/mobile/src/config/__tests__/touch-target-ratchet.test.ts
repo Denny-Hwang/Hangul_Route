@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import {
   AUDIT_SCREENS,
   AUDIT_VIEWPORTS,
+  GAME_AUDIT_BOARDS,
+  GAME_AUDIT_VIEWPORT,
   isOffender,
   occurrenceKeys,
   offenderKey,
@@ -125,6 +127,16 @@ describe('the audit walks what the spec names (§3.8)', () => {
 
   it('measures button, link and checkbox, plus switch (a checkbox per ARIA) and the other tappable roles', () => {
     expect(TARGET_ROLES).toEqual(['button', 'link', 'checkbox', 'switch', 'radio', 'tab', 'menuitem']);
+  });
+});
+
+describe('the game answer boards the ratchet measures (AMENDMENTS-TOUCH KT-D8, section 11.2)', () => {
+  it('at 320x640 with the largest text', () => {
+    expect(viewportKey(GAME_AUDIT_VIEWPORT)).toBe('320x640');
+  });
+
+  it('Card Match: both columns (row KT-4b); no allowlist, every answer at least 64 x 64', () => {
+    expect(GAME_AUDIT_BOARDS).toEqual({ 'Card Match': ['card-match-ko-board', 'card-match-en-board'] });
   });
 });
 

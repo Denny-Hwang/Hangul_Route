@@ -586,3 +586,26 @@ export async function phoneHasRail(page: Page): Promise<boolean> {
   await expect(page.getByTestId('presenter-stage')).toBeVisible();
   return (await page.getByTestId('presenter-rail').count()) > 0;
 }
+
+/**
+ * A fresh child (PIN `E2E_PIN`), with the largest text size when asked, in the first quest of Stage 2 Play & Crafts
+ * (Playground Words, At the Playground) past its Discover pages: on its Practice launcher, whose game is Pic-Word Match;
+ * the next step is Card Match (AMENDMENTS-TOUCH rows KT-4b and KT-11, the touch suites and the target ratchet).
+ */
+export async function openPlaygroundWordsQuest(page: Page, o: { largest: boolean }): Promise<void> {
+  await onboardChild(page, { name: 'Dami' });
+  if (o.largest) await seedStored(page, 'device:settings', { uiLocale: 'en', uiLocaleAt: '2026-10-16T09:00:00.000Z', textSize: 'largest' });
+  await page.goto('/');
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await page.getByRole('button', { name: journeyCellName(2, 'Play & Crafts') }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(headerClose(page)).toBeVisible();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
+}

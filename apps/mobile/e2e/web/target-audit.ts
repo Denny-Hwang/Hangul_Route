@@ -33,6 +33,16 @@ export const AUDIT_VIEWPORTS = [
 /** §3.8: the screens it walks, in the order it walks them. */
 export const AUDIT_SCREENS: readonly AuditScreen[] = ['Home', 'Journey', 'Library', 'Profile'];
 
+/**
+ * AMENDMENTS-TOUCH KT-D8 and section 11.2: every answer target of a game reaches 64 x 64 at 320 px with the largest
+ * text. The window, and each game's answer boards (by `testID`) measured there; a game has no allowlist. Rows add their
+ * games (KT-4b: Card Match; KT-11: every game, en, es and ko).
+ */
+export const GAME_AUDIT_VIEWPORT = { width: 320, height: 640 } as const;
+export const GAME_AUDIT_BOARDS: Readonly<Record<string, readonly string[]>> = {
+  'Card Match': ['card-match-ko-board', 'card-match-en-board'],
+};
+
 export interface TouchTargetAllowlist {
   /** Why the file exists and how to change it (kept in the JSON for whoever opens it). */
   note: string;

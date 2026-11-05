@@ -187,3 +187,17 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
     }
   });
 });
+
+describe('ChoiceCard targetStyle: a frame drawn by the caller is inside the hit area (AMENDMENTS-TOUCH 6, row KT-4b)', () => {
+  it('goes on the TapTarget after the default stretch, so a ring or padding around the card is part of the target', () => {
+    const ring = { padding: spacing.xs, borderRadius: radii.xl, borderWidth: borderWidth.thick, borderColor: colors.brand.primary };
+    const el = ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', label: 'apple', targetStyle: ring }) as El;
+    expect(el.type).toBe('TapTarget');
+    expect(el.props.style).toEqual([{ alignSelf: 'stretch' }, ring]);
+  });
+
+  it('without it, the target keeps only the stretch (every other caller is unchanged)', () => {
+    const el = ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', label: 'apple' }) as El;
+    expect(el.props.style).toEqual({ alignSelf: 'stretch' });
+  });
+});
