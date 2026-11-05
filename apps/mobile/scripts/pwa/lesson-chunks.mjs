@@ -161,7 +161,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // (release `build:web --budget`; on main 74332fac1 it was 4,901,256 B with main alone at 4,873,332 B): +27,924 B, the four
   // rows' device code that is not flagged out of the bundle, plus the voice-check hold that landed on main since. The line is
   // the measurement plus a 2,843 B margin; main's own line (4,875,000 B) does not hold the four rows.
-  startBundleRaw: 4_905_000,
+  // The CM tail integration (integrate/cm-tail-1105: Stage 2 Holidays and Stage 4 Letters Volume 2 and the Holidays book 2) on
+  // main e93044853 (with the BL tail integration) measures 4,905,865 B raw / 1,314,322 B gzip (release `build:web`, CI=1;
+  // main alone 4,902,157 B): +3,708 B, 865 B over the line, because main's BL tail line left 2,843 B of margin. The
+  // cells' start-loaded manifest entries and catalogue rows and the Holidays book definition are the growth. The line is
+  // the measurement plus a 4,135 B margin.
+  startBundleRaw: 4_910_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -232,7 +237,10 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 19,475 B gzip as built; on main 8dfb8a43c 733 items, 105,189 B raw / 19,478 B gzip as built.
   // The F-CURR-002 Volume 2 integration (integrate/cm-1105, rows CM-40..CM-46 and CM-5B) measures 1,222 items,
   // 181,677 B raw / 39,133 B gzip as generated and 197,401 B raw / 38,616 B gzip as built: one measured raise.
-  reviewItemsRaw: 205_000,
+  // The CM tail integration (Stage 2 Holidays and Stage 4 Letters Volume 2, the Holidays book 2) measures 1,265 items,
+  // 190,655 B raw / 40,460 B gzip as generated and 207,348 B raw / 39,918 B gzip as built: the raw line moves, the gzip
+  // line holds.
+  reviewItemsRaw: 215_000,
   reviewItemsGzip: 41_000,
   // "This week in Korea" (F-CURR-002 §5.7, §10, row CM-48): the week drops, one content-hashed chunk of
   // scripts/build-week-drops.mjs, lazy and precached, held here on its built bundle and there on its module (`BUDGET`,

@@ -43,3 +43,6 @@ Two new tales for the Stage 5 Food cell's book 2 (`episode:stage5-life-v2`, Volu
 
 ## Letters book 2 tales (F-CURR-002 row CM-46, 2026-11-04)
 `eongan-letters` and `hangul-name` were authored straight from allowlisted public-institution pages (no cluster research file): each fact cites the page it restates, with the quote and the access date. `letters-book2.changes.md` lists the sources and the author decisions; the multi-agent review appends its findings there and writes `letters-book2.signoff.md` before the two stories are signed.
+
+## Holidays book 2 tales (F-CURR-002 row CM-46, 2026-11-04)
+`gyeonu-jingnyeo` and `daeboreum-full-moon` were authored straight from public reference pages (no cluster research file): each fact cites the page it restates, with the quote and the access date. `rites-book2.changes.md` lists the sources, the National Folk Museum gap and the author decisions; the multi-agent review appends its findings there and writes `rites-book2.signoff.md` before the two stories are signed.

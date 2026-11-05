@@ -491,6 +491,24 @@ export const SWALLOW: ItemDef = {
   ],
 };
 
+/** The Korean magpie (까치) of the Chilseok bridge (F-CURR-002 row CM-46, Holidays book 2): black with white belly and shoulders. */
+export const MAGPIE: ItemDef = {
+  id: 'prop:magpie',
+  kind: 'nature',
+  box: { w: 52, h: 28 },
+  z: 'mid',
+  tags: { sky: true },
+  alt: 'A flying magpie, black with a white belly and shoulders',
+  accuracyNote: 'Korean magpie (kkachi): black head, back and long tail; white belly and shoulders.',
+  nodes: [
+    { t: 'path', d: 'M18 14L0 9L2 14L0 19L18 17ZM22 12L18 0L34 10Z', fill: 'text.primary' },
+    { t: 'path', d: 'M16 15Q24 8 36 10Q44 11 46 14Q38 19 24 19Z', fill: 'text.primary' },
+    { t: 'circle', cx: 44, cy: 12, r: 4, fill: 'text.primary' },
+    { t: 'path', d: 'M47.5 11L52 12.5L47.5 14Z', fill: 'text.secondary' },
+    { t: 'path', d: 'M26 18Q34 19.5 41 15.5Q33 15.5 26 18ZM23 10L21.5 4.5L28 9Z', fill: 'surface.paper' },
+  ],
+};
+
 export const GOURDS: ItemDef = {
   id: 'prop:gourds',
   kind: 'nature',

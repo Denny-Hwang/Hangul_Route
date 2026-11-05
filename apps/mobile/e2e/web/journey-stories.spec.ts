@@ -375,9 +375,9 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
       await expect(page.getByTestId('journey-volumes-stage2-nature-1-done')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-nature-2-open')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-nature')).toHaveAttribute('aria-hidden', 'true');
-      // Only a cell with two volumes has dots: Stage 2 Food & Daily Life and Play & Crafts ship their Volume 2 (rows CM-43
-      // S2, CM-42 S2); Holidays & Traditions has none.
-      await expect(page.getByTestId('journey-volumes-stage2-rites')).toHaveCount(0);
+      // Only a cell with two volumes has dots: Stage 2 Food & Daily Life, Play & Crafts and Holidays & Traditions ship their
+      // Volume 2 (rows CM-43 S2, CM-42 S2, CM-45 S2).
+      await expect(page.getByTestId('journey-volumes-stage2-rites')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-crafts')).toHaveCount(1);
       await expect(page.getByTestId('journey-volumes-stage2-life')).toHaveCount(1);
       if (label === '320') {

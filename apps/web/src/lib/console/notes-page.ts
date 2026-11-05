@@ -1,4 +1,4 @@
-import { APP_ROUTES, CATALOG, type AdultPersona, type Catalog, type NoteReactionId, type SpaceKind, type SpaceRole, type StageKey } from '@hangul-route/content-schema';
+import { APP_ROUTES, CATALOG, laterVolumeQuestIds, type AdultPersona, type Catalog, type NoteReactionId, type SpaceKind, type SpaceRole, type StageKey } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, type UiLocale } from '@hangul-route/i18n';
 import { catalogTitle } from '@/data/catalog';
 import type { iconNames } from '@hangul-route/design-system/icon-glyphs';
@@ -67,9 +67,14 @@ export function composerPrefill(rows: readonly RecipientRow[], kind: SpaceKind, 
   return [];
 }
 
-/** The `&quest` id when it names a catalogue quest; the preset is never prefilled (section 9). */
+/**
+ * The `&quest` id when it names a catalogue quest a note can suggest; the preset is never prefilled (section 9). A cell's
+ * later volume is left out: the learner's device opens a suggestion from its first volumes only, so a Volume 2 quest
+ * would arrive with a Start that does nothing (F-CURR-002 row CM-40, review of #922).
+ */
 export function questPrefill(quest: string | null, catalog: Catalog = CATALOG): string | null {
-  return quest !== null && catalog.quests.some((q) => q.id === quest) ? quest : null;
+  if (quest === null || laterVolumeQuestIds(catalog).has(quest)) return null;
+  return catalog.quests.some((q) => q.id === quest) ? quest : null;
 }
 
 export interface QuestOptionGroup {
@@ -80,11 +85,14 @@ export interface QuestOptionGroup {
 
 /**
  * The quest picker: every catalogue quest, grouped by stage in catalogue order (never by a learner's progress), each
- * titled in the console language (`catalogTitle`, English where no overlay has one; owner report 2026-10-16).
+ * titled in the console language (`catalogTitle`, English where no overlay has one; owner report 2026-10-16). A cell's
+ * later volume is left out, as `questPrefill` leaves it out.
  */
 export function questOptions(stageTitle: (stage: StageKey) => string, catalog: Catalog = CATALOG, locale: UiLocale = DEFAULT_LOCALE): QuestOptionGroup[] {
   const groups: QuestOptionGroup[] = [];
+  const later = laterVolumeQuestIds(catalog);
   for (const quest of catalog.quests) {
+    if (later.has(quest.id)) continue;
     let group = groups.find((g) => g.stage === quest.stage);
     if (!group) {
       group = { stage: quest.stage, title: stageTitle(quest.stage), quests: [] };

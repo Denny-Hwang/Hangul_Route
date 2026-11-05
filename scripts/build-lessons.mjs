@@ -115,8 +115,11 @@ export const BUDGET = Object.freeze({
   // chunks are lazy, and since CM-5B a cell's Volume 2 is a later chunk, out of the learner precache.
   stageRaw: 380_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000, then 220,000)
   stageGzip: 48_000, // F-CURR-002 CM-5 (OD-5): was 32,000, then 40,000
-  totalRaw: 2_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000, then 1,400,000)
-  totalGzip: 400_000, // F-CURR-002 CM-5 (OD-5): was 140,000, then 210,000
+  // The CM tail integration (integrate/cm-tail-1105: Stage 2 Holidays and Stage 4 Letters Volume 2, twenty-five Volume 2
+  // cells in all) measures 2,391,687 B raw / 403,814 B gzip in total, the gzip line crossed; Stage 4 measures
+  // 360,233 B raw / 43,096 B gzip, inside its lines. Only the total moves, to the measurement plus a rounding margin.
+  totalRaw: 2_450_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000, then 1,400,000, then 2,400,000)
+  totalGzip: 420_000, // F-CURR-002 CM-5 (OD-5): was 140,000, then 210,000, then 400,000
 });
 
 export class ContentError extends Error {
