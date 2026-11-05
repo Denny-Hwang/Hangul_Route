@@ -170,7 +170,7 @@ describe('placedOutGrowth', () => {
       'quest:stage2-crafts-q1',
       'quest:stage2-crafts-q2',
       'quest:stage2-crafts-q3',
-      // The Stage 2 Volume 2 cells (F-CURR-002 rows CM-44 S2, CM-43 S2, CM-41 S2, CM-42 S2), in grid order: placed out
+      // The Stage 2 Volume 2 cells (F-CURR-002 rows CM-44 S2, CM-43 S2, CM-45 S2, CM-41 S2, CM-42 S2), in grid order: placed out
       // like Volume 1.
       'quest:stage2-letters-v2-q1',
       'quest:stage2-letters-v2-q2',
@@ -178,6 +178,9 @@ describe('placedOutGrowth', () => {
       'quest:stage2-life-v2-q1',
       'quest:stage2-life-v2-q2',
       'quest:stage2-life-v2-q3',
+      'quest:stage2-rites-v2-q1',
+      'quest:stage2-rites-v2-q2',
+      'quest:stage2-rites-v2-q3',
       'quest:stage2-nature-v2-q1',
       'quest:stage2-nature-v2-q2',
       'quest:stage2-nature-v2-q3',

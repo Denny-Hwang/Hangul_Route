@@ -667,13 +667,15 @@ describe('precacheReport and its budget lines', () => {
     // measures 4,859,564 B: the line stays.
     // The BL tail integration (BL-6 to BL-9 on main 74332fac1) measures 4,901,256 B (main alone 4,873,332 B): 4,905,000 B.
     // On main e800154ec (with the voice-check hold) it measures 4,902,157 B: the line stays.
-    // The KT tail integration (KT-4b, KT-5, KT-6 and KT-7 on main e93044853) measures 4,909,345 B (main alone 4,902,157 B): 4,912,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_912_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_859_564, 4_901_256, 4_902_157, 4_909_345]) {
+    // The CM tail integration (Stage 2 Holidays and Stage 4 Letters Volume 2, on main e93044853 with the BL tail) measures
+    // 4,905,865 B (main alone 4,902,157 B): 4,910,000 B.
+    // The KT tail integration (KT-4b, KT-5, KT-6 and KT-7) on that main (c2555a293) measures 4,913,000 B (main alone 4,905,865 B): 4,916,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_916_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_913_000]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_909_345).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_913_000).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
@@ -753,7 +755,7 @@ describe('the review-item chunk of row CM-10 (the same checks, its own budget li
     const { BUDGET } = await import('../../../../scripts/build-review-items.mjs');
     expect(PRECACHE_BUDGET.reviewItemsRaw).toBe(BUDGET.raw);
     expect(PRECACHE_BUDGET.reviewItemsGzip).toBe(BUDGET.gzip);
-    expect(BUDGET).toEqual({ raw: 205_000, gzip: 41_000 });
+    expect(BUDGET).toEqual({ raw: 215_000, gzip: 41_000 });
   });
 });
 

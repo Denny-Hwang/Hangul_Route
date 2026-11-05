@@ -68,6 +68,13 @@ function others(item: ReviewItem, ctx: EngineContext, face: Face, heard: boolean
     .sort((a, b) => rank(a) - rank(b) || jitter(seed, a.id) - jitter(seed, b.id) || (a.id < b.id ? -1 : 1));
   const chosen: ReviewItem[] = [];
   const faces = new Set([mine.toLowerCase()]);
+  // Another item with the same line is a second right answer to it (an exchange taught with two good replies): its
+  // face is never offered as a wrong option.
+  for (const c of ctx.index.items) {
+    if (c.kind !== item.kind || c.id === item.id || normalizeAskedKo(c.ko) !== normalizeAskedKo(item.ko)) continue;
+    const f = face(c);
+    if (f !== undefined) faces.add(f.toLowerCase());
+  }
   for (const c of pool) {
     const f = face(c);
     if (f === undefined || faces.has(f.toLowerCase())) continue;

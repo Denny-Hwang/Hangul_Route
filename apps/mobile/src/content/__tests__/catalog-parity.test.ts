@@ -232,10 +232,10 @@ const rawStories = readdirSync(STORY_DIR)
  */
 describe('stories and content/stories', () => {
   it('lists a book 2 tale only inside its book 2: its read quests, never a shelf story (row CM-46)', () => {
-    // The app's Volume 2 tales are the catalogue's, and the two Letters book 2 tales that wait for their sign-off, which
-    // the catalogue lists as draft stories (offered nowhere) until then.
+    // The app's Volume 2 tales are the catalogue's, and the Letters and Holidays book 2 tales that wait for their sign-off,
+    // which the catalogue lists as draft stories (offered nowhere) until then.
     const waiting = CATALOG.stories.filter((s) => s.status === 'draft').map((s) => s.id);
-    expect(waiting).toEqual(['story:eongan-letters', 'story:hangul-name']);
+    expect(waiting).toEqual(['story:eongan-letters', 'story:hangul-name', 'story:daeboreum-full-moon', 'story:gyeonu-jingnyeo']);
     expect([...VOLUME_TWO_STORY_SLUGS].map((slug) => `story:${slug}`).sort()).toEqual([...VOLUME_TWO_STORY_IDS].filter((id) => !waiting.includes(id)).sort());
     for (const slug of VOLUME_TWO_STORY_SLUGS) {
       expect(CATALOG.stories.some((s) => s.id === `story:${slug}`), slug).toBe(false);

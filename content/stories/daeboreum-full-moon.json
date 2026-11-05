@@ -1,0 +1,1166 @@
+{
+  "v": 1,
+  "id": "story:daeboreum-full-moon",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261107,
+  "title": {
+    "ko": "정월 대보름",
+    "romanization": "Jeongwol Daeboreum",
+    "en": "Daeboreum: The First Full Moon"
+  },
+  "summaryEn": "Hoya spends Daeboreum, the first full moon of the lunar year: cracking hard nuts called bureom at dawn, eating five-grain rice, playing the heat-selling joke, greeting the moon with a wish and watching the moon house burn from a safe distance.",
+  "hoyaIntroEn": "The first full moon of the year is here! Let's try the Daeboreum customs together.",
+  "hoyaOutroEn": "Now you know how people welcome the first full moon of the year!",
+  "theme": "rites",
+  "kind": "intangible",
+  "recommendedStage": 5,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Know that Daeboreum is the holiday of the first full moon of the lunar year, on the fifteenth day of the first month.",
+    "Know the Daeboreum customs of the story: bureom at dawn, ogokbap, selling the heat, greeting the moon and the moon house.",
+    "Put the day in order: the morning nuts, the five-grain rice, the rising moon, the wish.",
+    "Read and recognize 부럼 (bureom), 오곡밥 (ogokbap), 보름달 (boreumdal), 소원 (sowon) and 달집 (daljip)."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Seasonal customs, researched from the sources listed on the Sources screen. Customs differ from village to village."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "daeboreum",
+      "ko": "대보름",
+      "romanization": "Daeboreum",
+      "en": "the holiday of the first full moon of the lunar year",
+      "kind": "term"
+    },
+    {
+      "id": "bureom",
+      "ko": "부럼",
+      "romanization": "bureom",
+      "en": "hard nuts cracked on the first full moon",
+      "kind": "word"
+    },
+    {
+      "id": "hodu",
+      "ko": "호두",
+      "romanization": "hodu",
+      "en": "walnut",
+      "kind": "word"
+    },
+    {
+      "id": "ogokbap",
+      "ko": "오곡밥",
+      "romanization": "ogokbap",
+      "en": "five-grain rice",
+      "kind": "word"
+    },
+    {
+      "id": "deowi",
+      "ko": "더위",
+      "romanization": "deowi",
+      "en": "summer heat",
+      "kind": "word"
+    },
+    {
+      "id": "boreumdal",
+      "ko": "보름달",
+      "romanization": "boreumdal",
+      "en": "full moon",
+      "kind": "word"
+    },
+    {
+      "id": "daljip",
+      "ko": "달집",
+      "romanization": "daljip",
+      "en": "a moon house, a heap of branches set alight at the full moon",
+      "kind": "term"
+    },
+    {
+      "id": "saehae",
+      "ko": "새해",
+      "romanization": "saehae",
+      "en": "new year",
+      "kind": "word"
+    },
+    {
+      "id": "sowon",
+      "ko": "소원",
+      "romanization": "sowon",
+      "en": "wish",
+      "kind": "word"
+    },
+    {
+      "id": "kkaemureoyo",
+      "ko": "깨물어요",
+      "romanization": "kkaemureoyo",
+      "en": "bite; crack with the teeth",
+      "kind": "word"
+    },
+    {
+      "id": "ttakttakhaeyo",
+      "ko": "딱딱해요",
+      "romanization": "ttakttakhaeyo",
+      "en": "is hard",
+      "kind": "word"
+    },
+    {
+      "id": "tteoyo",
+      "ko": "떠요",
+      "romanization": "tteoyo",
+      "en": "rises (the moon, the sun)",
+      "kind": "word"
+    },
+    {
+      "id": "bireoyo",
+      "ko": "빌어요",
+      "romanization": "bireoyo",
+      "en": "make (a wish)",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Look at the big round moon! Daeboreum is the holiday of the first full moon of the lunar year, on the fifteenth day of the first month. Hoya wants to try every custom!",
+          "captionEn": "The first full moon",
+          "keyword": {
+            "id": "daeboreum",
+            "ko": "대보름",
+            "romanization": "Daeboreum",
+            "en": "the holiday of the first full moon of the lunar year",
+            "kind": "term"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A big full moon over the countryside at night; Hoya cheers.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 200,
+                "y": 300,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 288,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya cheers on a rock under a big full moon."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Early in the morning, people crack hard nuts with their teeth: peanuts, walnuts, pine nuts and chestnuts. These nuts are called bureom.",
+          "captionEn": "Bureom in the morning",
+          "keyword": {
+            "id": "bureom",
+            "ko": "부럼",
+            "romanization": "bureom",
+            "en": "hard nuts cracked on the first full moon",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1",
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A low table with a basket of mixed nuts; a child sits beside it.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 220,
+                "y": 292,
+                "s": 1.8
+              },
+              {
+                "ref": "prop:basket",
+                "x": 140,
+                "y": 262,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 330,
+                "y": 288,
+                "s": 1.0,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "A child sits by a low table with a basket of nuts."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Crack! People say that cracking bureom keeps skin boils away all year. Hoya taps a walnut. It is very hard! A grown-up cracks it for him.",
+          "captionEn": "A very hard walnut",
+          "keyword": {
+            "id": "hodu",
+            "ko": "호두",
+            "romanization": "hodu",
+            "en": "walnut",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya holds a walnut and thinks hard; a basket of nuts beside him.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:basket",
+                "x": 133,
+                "y": 280,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 250,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya looks at a hard walnut beside a basket of nuts."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Then comes ogokbap, rice cooked with five grains: sticky rice mixed with millet, sticky sorghum, black beans and red beans.",
+          "captionEn": "Five-grain rice",
+          "keyword": {
+            "id": "ogokbap",
+            "ko": "오곡밥",
+            "romanization": "ogokbap",
+            "en": "five-grain rice",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1",
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A low table with bowls of five-grain rice; the family gathers to eat.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:feast-table",
+                "x": 200,
+                "y": 280,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 80,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 320,
+                "y": 288,
+                "s": 1.0
+              }
+            ],
+            "altEn": "A family gathers at a table with bowls of rice."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "That morning, people play deowipalgi, selling the heat. If someone calls your name and you answer, they say, 'Buy my heat!' People say the seller won't suffer from the heat that summer. So nobody answers!",
+          "captionEn": "Selling the summer heat",
+          "keyword": {
+            "id": "deowi",
+            "ko": "더위",
+            "romanization": "deowi",
+            "en": "summer heat",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two villagers in a lane, one calling out and the other covering a grin; Hoya laughs.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 150,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 240,
+                "y": 288,
+                "s": 1.0,
+                "tint": "surface.paper",
+                "flip": true
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 320,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Two people in a lane play a joke while Hoya laughs."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "In the evening, people go out to a hill or a field and wait for the moon to rise. This is dalmaji, greeting the moon. When the full moon comes up, they make a wish.",
+          "captionEn": "Greeting the full moon",
+          "keyword": {
+            "id": "boreumdal",
+            "ko": "보름달",
+            "romanization": "boreumdal",
+            "en": "full moon",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "People on a hilltop look up at the rising full moon.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 160,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 240,
+                "y": 288,
+                "s": 0.9,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Two people on a hill look up at the full moon."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In some villages, people pile up pine branches and bamboo into a tall daljip, a moon house. When the moon rises, they set it alight. Hoya stays back and watches from a safe distance.",
+          "captionEn": "The moon house",
+          "keyword": {
+            "id": "daljip",
+            "ko": "달집",
+            "romanization": "daljip",
+            "en": "a moon house, a heap of branches set alight at the full moon",
+            "kind": "term"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A tall cone of branches glowing under the full moon, villagers standing well back; Hoya watches from far away.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:glow-burst",
+                "x": 110,
+                "y": 236,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 250,
+                "y": 300,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 250,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "A big fire glows under the full moon while Hoya watches from far back."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "People say that when the daljip burns well, the village will be peaceful and the harvest good. It holds a hope for a bright new year without illness or worry.",
+          "captionEn": "A bright new year",
+          "keyword": {
+            "id": "saehae",
+            "ko": "새해",
+            "romanization": "saehae",
+            "en": "new year",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A village under the full moon, glowing softly; Hoya waves.",
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya waves in a village lane under the full moon."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What are bureom?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Rice cakes",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Hard nuts",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Paper lanterns",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Kites",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Bureom are hard nuts, like peanuts and walnuts, that people crack on the morning of Daeboreum."
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What is ogokbap made with?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Noodles",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Seaweed and fish",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Five grains",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Fruit",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ],
+          "explainEn": "Ogokbap is rice cooked with five grains: sticky rice, millet, sticky sorghum, black beans and red beans."
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What do people do when the full moon comes up?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Go to sleep",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Plant rice",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Fly kites",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Make a wish",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f5"
+          ],
+          "explainEn": "People greet the rising moon and make a wish."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s6",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "bureom",
+        "ogokbap",
+        "boreumdal",
+        "daljip"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "{kw:daeboreum} is the holiday of the first full moon of the lunar year.",
+          "captionEn": "The first full moon",
+          "keyword": {
+            "id": "daeboreum",
+            "ko": "대보름",
+            "romanization": "Daeboreum",
+            "en": "the holiday of the first full moon of the lunar year",
+            "kind": "term"
+          },
+          "line": {
+            "ko": "오늘은 대보름이에요.",
+            "romanization": "Oneureun Daeboreumieyo.",
+            "en": "Today is Daeboreum.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A big full moon over the countryside at night; Hoya cheers.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 200,
+                "y": 300,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 288,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya cheers on a rock under a big full moon."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "In the morning, people crack hard nuts called {kw:bureom}.",
+          "captionEn": "Bureom in the morning",
+          "keyword": {
+            "id": "kkaemureoyo",
+            "ko": "깨물어요",
+            "romanization": "kkaemureoyo",
+            "en": "bite; crack with the teeth",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "부럼을 깨물어요.",
+            "romanization": "Bureomeul kkaemureoyo.",
+            "en": "People crack bureom with their teeth.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A low table with a basket of mixed nuts; a child sits beside it.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:soban",
+                "x": 220,
+                "y": 292,
+                "s": 1.8
+              },
+              {
+                "ref": "prop:basket",
+                "x": 140,
+                "y": 262,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 330,
+                "y": 288,
+                "s": 1.0,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "A child sits by a low table with a basket of nuts."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Hoya taps a {kw:hodu}. It is very hard!",
+          "captionEn": "A very hard walnut",
+          "keyword": {
+            "id": "ttakttakhaeyo",
+            "ko": "딱딱해요",
+            "romanization": "ttakttakhaeyo",
+            "en": "is hard",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "호두가 딱딱해요.",
+            "romanization": "Hoduga ttakttakhaeyo.",
+            "en": "The walnut is hard.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya holds a walnut and thinks hard; a basket of nuts beside him.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:basket",
+                "x": 133,
+                "y": 280,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 250,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya looks at a hard walnut beside a basket of nuts."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Then comes {kw:ogokbap}, rice cooked with five grains.",
+          "captionEn": "Five-grain rice",
+          "keyword": {
+            "id": "ogokbap",
+            "ko": "오곡밥",
+            "romanization": "ogokbap",
+            "en": "five-grain rice",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "오곡밥을 먹어요.",
+            "romanization": "Ogokbabeul meogeoyo.",
+            "en": "People eat five-grain rice.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A low table with bowls of five-grain rice; the family gathers to eat.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:feast-table",
+                "x": 200,
+                "y": 280,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-woman",
+                "x": 80,
+                "y": 286,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 320,
+                "y": 288,
+                "s": 1.0
+              }
+            ],
+            "altEn": "A family gathers at a table with bowls of rice."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "In the evening, people wait on a hill for the {kw:boreumdal}.",
+          "captionEn": "Greeting the full moon",
+          "keyword": {
+            "id": "tteoyo",
+            "ko": "떠요",
+            "romanization": "tteoyo",
+            "en": "rises (the moon, the sun)",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "보름달이 떠요.",
+            "romanization": "Boreumdari tteoyo.",
+            "en": "The full moon rises.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "People on a hilltop look up at the rising full moon.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 160,
+                "y": 286,
+                "s": 1.1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 240,
+                "y": 288,
+                "s": 0.9,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "Two people on a hill look up at the full moon."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "They look at the moon and make a {kw:sowon}.",
+          "captionEn": "A wish to the moon",
+          "keyword": {
+            "id": "bireoyo",
+            "ko": "빌어요",
+            "romanization": "bireoyo",
+            "en": "make (a wish)",
+            "kind": "word"
+          },
+          "line": {
+            "ko": "소원을 빌어요.",
+            "romanization": "Sowoneul bireoyo.",
+            "en": "People make a wish.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "People on a hilltop look up at the rising full moon.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1.0
+              },
+              {
+                "ref": "prop:full-moon",
+                "x": 320,
+                "y": 96,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:glow-burst",
+                "x": 110,
+                "y": 236,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 250,
+                "y": 300,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 250,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "A big fire glows under the full moon while Hoya watches from far back."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "소원",
+            "romanization": "sowon",
+            "en": "wish"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Song",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Wish",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Moon",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Gift",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f5"
+          ],
+          "explainEn": "Sowon means wish. People look at the full moon and make a wish."
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "깨물어요",
+            "romanization": "kkaemureoyo",
+            "en": "bite; crack with the teeth"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Throw",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Plant",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Wash",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Crack with the teeth",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "Kkaemureoyo means to bite or crack with the teeth. On Daeboreum morning, people crack bureom."
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "When do people crack bureom?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Early in the morning",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "At noon",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "At midnight",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "After the moon sets",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ],
+          "explainEn": "People crack bureom early in the morning of Daeboreum."
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s6",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "sowon",
+        "kkaemureoyo",
+        "ttakttakhaeyo",
+        "tteoyo"
+      ],
+      "grammarFocusEn": "Topic -eun / -neun; subject -i / -ga; object -eul / -reul"
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "topicTags": [
+    "daeboreum",
+    "bureom",
+    "daljip-taeugi",
+    "ogokbap"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Daeboreum is the holiday of the fifteenth day of the first lunar month, the first full moon of the year. At dawn people drink gwibalgisul, crack bureom with their teeth, and eat yakbap, ogokbap and other foods.",
+      "claimKo": "대보름은 음력 정월 보름날을 명절로 이르는 말이다. 새벽에 귀밝이술을 마시고 부럼을 깨물며 약밥, 오곡밥 따위를 먹는다.",
+      "sources": [
+        {
+          "title": "대보름 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8C%80%EB%B3%B4%EB%A6%84",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"음력 정월 보름날을 명절로 이르는 말. 새벽에 귀밝이술을 마시고 부럼을 깨물며 약밥, 오곡밥 따위를 먹는다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Bureom are the hard nuts, such as peanuts, walnuts, pine nuts, chestnuts and ginkgo nuts, that people crack with their teeth at dawn on Daeboreum. People say that cracking them keeps skin boils away all year.",
+      "claimKo": "부럼은 정월 대보름날 새벽에 깨물어 먹는 딱딱한 열매류인 땅콩, 호두, 잣, 밤, 은행 따위를 통틀어 이르는 말이다. 이런 것을 깨물면 한 해 동안 부스럼이 생기지 않는다고 한다.",
+      "sources": [
+        {
+          "title": "부럼 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B6%80%EB%9F%BC",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"음력 정월 대보름날 새벽에 깨물어 먹는 딱딱한 열매류인 땅콩, 호두, 잣, 밤, 은행 따위를 통틀어 이르는 말. 이런 것을 깨물면 한 해 동안 부스럼이 생기지 않는다고 한다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Ogokbap is rice cooked with five grains: sticky rice mixed with millet, sticky sorghum, black beans and red beans. It is usually made and eaten at the first full moon of the lunar year.",
+      "claimKo": "오곡밥은 찹쌀에 기장, 찰수수, 검정콩, 붉은팥의 다섯 가지 곡식을 섞어 지은 밥으로, 대개 음력 정월 보름에 지어 먹는다.",
+      "sources": [
+        {
+          "title": "오곡밥 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%98%A4%EA%B3%A1%EB%B0%A5",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"찹쌀에 기장, 찰수수, 검정콩, 붉은팥의 다섯 가지 곡식을 섞어 지은 밥. 대개 음력 정월 보름에 지어 먹는다.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Deowipalgi, selling the heat, is a Daeboreum custom. That morning people do not answer when someone calls their name; if they do answer, the caller says 'My heat!' or 'Buy my heat!' and sells the heat to them. People say the seller then will not suffer from the heat that summer.",
+      "claimKo": "더위팔기는 정월 대보름날의 풍속이다. 이날 오전에는 남이 이름을 불러도 대답하지 않는데, 대답하면 \"내 더위.\" 또는 \"내 더위 사 가게.\"라고 말하여 대답한 사람에게 더위를 판다. 그러면 그해 여름에 더위를 먹지 않는다고 한다.",
+      "sources": [
+        {
+          "title": "더위팔기 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8D%94%EC%9C%84%ED%8C%94%EA%B8%B0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"음력 정월 대보름날 하는 풍속의 하나. 이날 오전에는 남을 만나 이름을 부르더라도 대답을 하지 않는데, 만약 대답을 하면 ‘내 더위.’, ‘내 덕새.’ 또는 ‘내 더위 사 가게.’라고 말하여 대답한 사람에게 더위를 판다. 이렇게 하면 그해 여름에 더위를 먹지 않는다고 한다.\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Dalmaji, greeting the moon, is going out to a hill or a field on the evening of Daeboreum to wait for the moon to rise. People also look at the moon and make a wish.",
+      "claimKo": "달맞이는 음력 정월 대보름날 저녁에 산이나 들에 나가 달이 뜨기를 기다려 맞이하는 일이다. 달을 보고 소원을 빌기도 한다.",
+      "sources": [
+        {
+          "title": "달맞이 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8B%AC%EB%A7%9E%EC%9D%B4",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"음력 정월 대보름날 또는 팔월 보름날 저녁에 산이나 들에 나가 달이 뜨기를 기다려 맞이하는 일. 달을 보고 소원을 빌기도 하고, 달빛에 따라 1년 농사를 미리 점치기도 한다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Daljip-taeugi is a Daeboreum custom: when the moon rises, people set alight a daljip, a heap built up of pine branches and other wood. In the village of Songcheon, the daljip is a cone of whole bamboo poles wound with vines and filled with straw and pine branches.",
+      "claimKo": "달집태우기는 정월 대보름날 달이 떠오를 때 솔가지 등을 쌓아 올린 무더기에 불을 지르며 노는 세시풍속이다. 송천 마을에서는 통대나무를 원뿔 모양으로 세우고 넝쿨로 휘감은 뒤 짚다발과 솔가지를 쌓는다.",
+      "sources": [
+        {
+          "title": "달집태우기 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8B%AC%EC%A7%91%ED%83%9C%EC%9A%B0%EA%B8%B0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"음력 정월 대보름날 달이 떠오를 때에 달집에 불을 지르며 노는 풍속. 달집이 훨훨 타야만 마을이 태평하고 풍년이 든다고 한다.\""
+        },
+        {
+          "title": "송천달집태우기 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=2223600240000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"달집태우기는 정월 대보름날 달이 떠오를 때 솔가지 등을 쌓아올린 무더기에 불을 지르며 노는 세시풍속의 하나이다.\" / \"마을 앞 넓은 마당에 통대나무를 원뿔 모양으로 세우고 넝쿨로 휘감는다.\" / \"달집 속에는 각 집에서 거둬온 짚다발을 쌓고, 솔가지를 올려 불이 잘 붙도록 한다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "People say that only when the daljip burns well will the village be peaceful and the harvest good. Daljip-taeugi carries the hope of a bright new year with plenty and without illness or worry.",
+      "claimKo": "달집이 훨훨 타야만 마을이 태평하고 풍년이 든다고 한다. 달집태우기에는 부족함이 없는 넉넉한 새해, 질병도 근심도 없는 밝은 새해를 맞는다는 희망이 담겨 있다.",
+      "sources": [
+        {
+          "title": "달집태우기 — 표준국어대사전",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8B%AC%EC%A7%91%ED%83%9C%EC%9A%B0%EA%B8%B0",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"달집이 훨훨 타야만 마을이 태평하고 풍년이 든다고 한다.\""
+        },
+        {
+          "title": "송천달집태우기 — 국가유산포털",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=2223600240000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"달집태우기에는 부족함이 없는 넉넉한 새해, 질병도 근심도 없는 밝은 새해를 맞는다는 희망이 담겨 있다.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국립국어원 표준국어대사전(대보름, 부럼, 오곡밥, 더위팔기, 달맞이, 달집태우기); 국가유산청 국가유산포털(송천달집태우기)",
+  "verification": {
+    "passes": 1,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Author pass (F-CURR-002 CM-46, 2026-11-04): every cited page was fetched on the access date and each quoteOrLocator was compared with the page text; claims restate only what the quotes say. The multi-agent review (three parallel checkers, a reviser and a third pass, F-CURR-002 §9.2) has not run yet, so passes stays 1 and review stays draft."
+  },
+  "authorNotes": "Documented customs, no tale. The spec names the National Folk Museum of Korea's Encyclopedia of Korean Seasonal Customs as the source; its site serves its text only through a script interface, which was not used for this pass, so every fact cites the NIKL Standard Korean Language Dictionary and the Korea Heritage Service, and the review should compare the customs with the Folk Museum's entries (부럼, 달집태우기, 대보름). Left out on purpose: gwibalgisul (an alcoholic drink, named only in f1, never in narration); jwibulnori (spinning fire, so no scene shows a learner handling fire); the daljip customs of burning clothing collars or written birth dates, of raiding the next village's bamboo and of fortune-telling by the way the daljip falls. Fire (§5.1 non-graphic): the daljip is lit by \"people\", never by Hoya or a learner; s7 shows Hoya standing back, and the art places the people well away from the glow. The 송천달집태우기 page is cited for one village's daljip (bamboo cone, straw, pine) and for the hope of a bright new year; its designation (a provincial intangible heritage) and its dates are not used, so no designation number or digit appears. The Korea Heritage Service element 설과 대보름 is the seollal-new-year story's source and is not reused (story-topic-unique). Number words (first, fifteenth, five) echo f1 and f3.",
+  "errata": []
+}

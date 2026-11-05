@@ -335,7 +335,8 @@ export function EpisodeDetailView({
   return (
     <View style={{ flex: 1 }}>
       <Screen tone="canvas" scrollable>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        {/* Wraps: at the Largest text size a long theme title does not fit beside the stage pill at 320 px. */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
           <Pill tone="primary" label={stage?.titleEn ?? ''} size="sm" />
           <Pill tone="secondary" label={theme?.titleEn ?? ''} size="sm" />
           {isPreview ? <Pill tone="neutral" label={m.comingSoon.pill} size="sm" /> : null}
