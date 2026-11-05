@@ -7,7 +7,7 @@ import { dirname, resolve } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { listedTotal, parseListOutput, pickShard, parseShardArg, shardOf } from "../e2e-shard-list.mjs";
+import { dealByWeight, listedTotal, parseListOutput, pickShard, parseShardArg, shardOf, specFileOf, testKeyOf, weightsFor } from "../e2e-shard-list.mjs";
 
 const SCRIPT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "e2e-shard-list.mjs");
 
@@ -86,25 +86,56 @@ describe("pickShard", () => {
   });
 });
 
-describe("four shards: shards 3 and 4 shed one in ten each, to shards 1 and 2", () => {
-  test("shard 3 loses every tenth of its tests to shard 1 and shard 4 every tenth to shard 2, and only those", () => {
-    const tests = Array.from({ length: 160 }, (_, i) => `t${i}`);
-    const one = pickShard(tests, { current: 1, total: 4 });
-    const two = pickShard(tests, { current: 2, total: 4 });
-    const three = pickShard(tests, { current: 3, total: 4 });
-    const four = pickShard(tests, { current: 4, total: 4 });
-    assert.equal(one.length, 44);
-    assert.equal(two.length, 44);
-    assert.equal(three.length, 36);
-    assert.equal(four.length, 36);
-    assert.deepEqual(one.filter((t) => Number(t.slice(1)) % 4 === 2), ["t38", "t78", "t118", "t158"]);
-    assert.deepEqual(two.filter((t) => Number(t.slice(1)) % 4 === 3), ["t35", "t75", "t115", "t155"]);
+describe("four shards dealt by weight", () => {
+  const weigh = (t) => ({ "long.spec.ts": 10, "mid.spec.ts": 3 })[specFileOf(t)] ?? 0.25;
+
+  test("the spec file of a listed test", () => {
+    assert.equal(specFileOf("journey-upper-cell.spec.ts:12:3 › a › b"), "journey-upper-cell.spec.ts");
+    assert.equal(specFileOf("[chromium] › layout.spec.ts:20:5 › another one"), "layout.spec.ts");
+    assert.equal(specFileOf("no file here"), "");
   });
 
-  test("the other shard counts are plain round-robin", () => {
-    for (const total of [1, 2, 3, 5, 6]) {
-      for (let k = 0; k < 60; k++) assert.equal(shardOf(k, total), (k % total) + 1);
-    }
+  test("a test weighs its own seconds when the table lists it, else its file's mean, else 0.25 seconds; the run picks its set", () => {
+    const table = {
+      release: { files: { "a.spec.ts": 5 }, tests: { "a.spec.ts › slow one": 40 } },
+      fixture: { files: { "a.spec.ts": 1, "b.spec.ts": 2 } },
+    };
+    assert.equal(weightsFor("release", table)("a.spec.ts:1:1 › x"), 5);
+    assert.equal(weightsFor("release", table)("a.spec.ts:9:3 › slow one"), 40);
+    assert.equal(weightsFor("release", table)("b.spec.ts:1:1 › x"), 0.25);
+    assert.equal(weightsFor("fixture", table)("b.spec.ts:1:1 › x"), 2);
+    assert.equal(weightsFor("fixture", undefined)("b.spec.ts:1:1 › x"), 0.25);
+  });
+
+  test("a test's key is its file and the first 70 characters of its title, without the line", () => {
+    assert.equal(testKeyOf("a.spec.ts:12:3 › group › title"), "a.spec.ts › group › title");
+    assert.equal(testKeyOf(`a.spec.ts:1:1 › ${"x".repeat(100)}`), `a.spec.ts › ${"x".repeat(70)}`);
+    assert.equal(testKeyOf("nothing"), "");
+  });
+
+  test("the heavy file is spread evenly and the totals come out level", () => {
+    const tests = [
+      ...Array.from({ length: 12 }, (_, i) => `long.spec.ts:${i + 1}:1 › t`),
+      ...Array.from({ length: 20 }, (_, i) => `mid.spec.ts:${i + 1}:1 › t`),
+      ...Array.from({ length: 40 }, (_, i) => `tiny.spec.ts:${i + 1}:1 › t`),
+    ];
+    const shares = [1, 2, 3, 4].map((current) => pickShard(tests, { current, total: 4 }, weigh));
+    assert.deepEqual([...shares.flat()].sort(), [...tests].sort());
+    const weights = shares.map((share) => share.reduce((n, t) => n + weigh(t), 0));
+    assert.ok(Math.max(...weights) - Math.min(...weights) <= 10, `weights ${weights}`);
+    for (const share of shares) assert.equal(share.filter((t) => t.startsWith("long")).length, 3);
+  });
+
+  test("equal weights deal in turn, and the dealing is the same on every run", () => {
+    const tests = Array.from({ length: 9 }, (_, i) => `t${i}`);
+    assert.deepEqual(dealByWeight(tests, 4, () => 1), [1, 2, 3, 4, 1, 2, 3, 4, 1]);
+    assert.deepEqual(dealByWeight(tests, 4, () => 1), dealByWeight(tests, 4, () => 1));
+  });
+
+  test("without a table four shards are plain round-robin, and so is any other count", () => {
+    const tests = Array.from({ length: 8 }, (_, i) => `t${i}`);
+    assert.deepEqual(pickShard(tests, { current: 2, total: 4 }), ["t1", "t5"]);
+    assert.deepEqual(pickShard(tests, { current: 2, total: 3 }, weigh), ["t1", "t4", "t7"]);
   });
 });
 
