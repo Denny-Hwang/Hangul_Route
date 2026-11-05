@@ -249,9 +249,10 @@ describe('the attention banner and the review sheet (sections 5.1, 5.2)', () => 
     expect(textOf(banner.find((n) => n.props.role === 'status'))).toBe('3 requests need your OK1 new device · 2 class moves');
     // Under the title, above everything else of the page (the asks to join come next, before the class code: GX-1).
     const order = root()
-      .findAll((n) => typeof n.type === 'string' && ['space-head', 'attention-banner', 'join-code', 'asking-to-join'].includes(String(n.props['data-testid'])))
+      .findAll((n) => typeof n.type === 'string' && ['space-head', 'attention-banner', 'class-actions', 'asking-to-join', 'invite'].includes(String(n.props['data-testid'])))
       .map((n) => n.props['data-testid']);
-    expect(order).toEqual(['space-head', 'attention-banner', 'asking-to-join', 'join-code']);
+    // GX-7 (section 8 T3): the actions follow, and the join code sits in the Invite students disclosure at the end.
+    expect(order).toEqual(['space-head', 'attention-banner', 'asking-to-join', 'class-actions', 'invite']);
   });
 
   it('Review now opens the sheet with the device, both learners asking to join and Accept first; nothing waiting: no banner', async () => {

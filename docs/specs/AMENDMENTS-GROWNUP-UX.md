@@ -390,14 +390,14 @@ The parent's **Moving {date}** chip reuses `status.moving(date)`; the minutes li
 | `space.week.practicedFamily(p, n)` (new) | {p} of {n} learners practiced this week | {p} de {n} practicaron esta semana | 이번 주 연습한 학습자: {p}명 / {n}명 |
 | `space.learner.questsCards(d, t, c)` (changed) | Stage 1 quests: {d} of {t} · {c} cards | Misiones de la Etapa 1: {d} de {t} · {c} tarjetas | 1단계 퀘스트 {d}/{t} · 카드 {c}장 |
 | `space.learner.firstQuest` (new) | Working on the first quest | En la primera misión | 첫 퀘스트 진행 중 |
-| `space.learner.practiced(when, n)` (new) | Practiced {when} · {n} min this week | Practicó {when} · {n} min esta semana | 연습: {when} · 이번 주 {n}분 |
+| `space.learner.practiced(when, n)` (new) | Practiced {when} · {n} min this week | Última práctica: {when} · {n} min esta semana | 마지막 연습: {when} · 이번 주 {n}분 |
 | `plan.readout.notDelivered` (new) | Gets this plan next time the app opens | Recibe este plan al abrir la app | 앱을 다시 열면 이 계획을 받아요 |
 | `plan.readout.notStarted(t)` (new) | Not started yet (0 / {t}) | Aún sin empezar (0 / {t}) | 아직 시작 전 (0 / {t}) |
 | `space.rosterHeadingFamily` (new) | Learners | Quienes aprenden | 우리 가족 학습자 |
 | `space.joinedOn(date)` (new) | Joined {date} | Se unió el {date} | 참여한 날: {date} |
 | `space.invite(code)` (new) | Invite students · code {code} | Invitar estudiantes · código {code} | 학생 초대하기 · 코드 {code} |
 | `space.more` (new) | More | Más | 더 보기 |
-| `space.firstRun.steps` (new) | 1. Show the class code or QR. 2. Students tap Join a class in the app. 3. Plan this week. | 1. Muestra el código o el QR. 2. Los estudiantes tocan Unirme a una clase en la app. 3. Planea esta semana. | 1. 반 코드나 QR을 보여 주세요. 2. 학생이 앱에서 '반에 참여하기'를 눌러요. 3. 이번 주 계획을 만들어요. |
+| `space.firstRun.steps` (new) | 1. Show the class code or QR. 2. Students tap Join a class in the app. 3. Plan this week. | 1. Muestra el código o el QR. 2. Los estudiantes tocan Unirme a una clase en la app. 3. Planea esta semana. | 1. 반 코드나 QR을 보여 주세요. 2. 학생이 앱에서 '반에 참여하기'를 눌러요. 3. 이번 주 계획을 세워 주세요. |
 | `classReport.didntPractice(n)` (new) | Didn't practice: {n} | No practicaron: {n} | 연습하지 않은 학생: {n}명 |
 | `relink.askingToBe(name)` (changed) | {name} · on a new device | {name} · desde un dispositivo nuevo | {name} · 새 기기에서 요청 |
 | `relink.deniedFamily(name)` (new) | Closed. {name}'s device will say "ask your grown-up". | Cerrada. El dispositivo de {name} dirá "pregúntale a un adulto". | 닫았어요. {name}의 기기에는 "어른에게 물어보세요"라고 보여요. |

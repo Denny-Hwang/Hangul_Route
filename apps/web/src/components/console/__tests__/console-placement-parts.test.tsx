@@ -2,7 +2,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { PlacementSummary } from '@hangul-route/content-schema';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { StartingSpot } from '@/components/console/PlacementParts';
+import { StartingSpot, SuggestStartLink } from '@/components/console/PlacementParts';
 import { expectAllPseudo } from './pseudo-text';
 
 /**
@@ -55,6 +55,17 @@ describe('StartingSpot (console/roster)', () => {
     const html = render({ placement: placement() });
     expect(html).toContain('aria-label="Suggest a different start for Sam"');
     expect(html).not.toContain('<button');
+  });
+
+  it('link={false}: the line alone; SuggestStartLink is the same named link, for the card\'s button row (GX-7 review)', () => {
+    const lineOnly = renderToStaticMarkup(<StartingSpot summary={{ placement: placement() }} spaceId="space:c1" learnerId="learner:sam" learnerName=" Sam " link={false} />);
+    expect(lineOnly).toContain('Starting spot: Stage 1 · Letters and sounds · Oct 9');
+    expect(lineOnly).not.toContain('suggest-start');
+    const link = renderToStaticMarkup(<SuggestStartLink summary={{ placement: placement() }} spaceId="space:c1" learnerId="learner:sam" learnerName=" Sam " />);
+    expect(link).toContain('data-testid="suggest-start"');
+    expect(link).toContain('aria-label="Suggest a different start for Sam"');
+    expect(link).toContain('href="/teach/space/plan?id=space%3Ac1&amp;suggest=learner%3Asam"');
+    expect(renderToStaticMarkup(<SuggestStartLink summary={null} spaceId="space:c1" learnerId="learner:sam" learnerName="Sam" />)).toBe('');
   });
 
   it('adds the quiet note when a grown-up changed the start', () => {

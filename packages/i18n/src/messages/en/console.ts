@@ -404,6 +404,17 @@ export const consoleMsgs = {
       cta: (count: number) => plural('en', count, { one: `${count} new device needs your OK`, other: `${count} new devices need your OK` }),
     },
     settings: { cta: 'Settings' },
+    /**
+     * AMENDMENTS-GROWNUP-UX GX-7 (section 8 T3, T5): the class page's action bar keeps the plan, term plan, lecture and
+     * class report in view and folds the rest under More; the join code sits in the Invite students disclosure at the
+     * end of the page (open only while the class is empty); an empty class shows the three first steps.
+     */
+    more: 'More',
+    invite: (code: string) => `Invite students · code ${code}`,
+    firstRun: {
+      title: 'First steps',
+      steps: ['Show the class code or QR code.', 'Students tap Join a class in the app.', 'Plan this week.'],
+    },
     studentsLabel: 'Students',
     recentFirst: 'Most recent activity first',
     /** GX-8 P4: a family roster's heading (it keeps join order, so it never says "most recent activity first"). */
@@ -423,6 +434,8 @@ export const consoleMsgs = {
       /** GX-8 T10: no quest finished yet but minutes this week, instead of "0 of 15". */
       firstQuest: 'Working on the first quest',
       minutesThisWeek: (minutes: number) => `${minutes} min this week`,
+      /** GX-7 (section 8 T4): the card's one activity line; the day words come from `relativeDay`. */
+      practiced: (when: string, minutes: number) => `Practiced ${when} · ${minutes} min this week`,
       revisit: (jamo: string) => `Revisit: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
       joined: (when: string) => `joined ${when}`,
