@@ -134,6 +134,9 @@ describe('romanization content scanner (a bad file would fail)', () => {
     expect(scanFixture(frame('___에 ___을/를 먹었어요', '___e ___eul/reul meogeosseoyo')).errors).toEqual([]);
     expect(scanFixture(frame('저는 ___을/를 좋아해요', 'jeonun ___eul/reul joahaeyo')).errors[0]).toContain('romanization-mismatch');
     expect(scanFixture(frame('저는 ___을/를 좋아해요', 'jeoneun joahaeyo')).errors[0]).toContain('1 slot(s), the romanization has 0');
+    // A vocative slot keeps its comma, which is punctuation, not a word (F-CURR-002 row CM-45 S7).
+    expect(scanFixture(frame('___, 새해 복 많이 받으세요.', '___ saehae bok mani badeuseyo')).errors).toEqual([]);
+    expect(scanFixture(frame('___, 새해 복 많이 받으세요.', '___ saehaebok mani badeuseyo')).errors[0]).toContain('romanization-spacing');
   });
 
   it('skips a bare isolated jamo outside a jamo record (C6)', () => {

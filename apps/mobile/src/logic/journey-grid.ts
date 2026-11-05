@@ -59,8 +59,13 @@ export interface JourneyCellView {
   key: string;
   stage: StageKey;
   theme: ThemeKey;
-  /** The cell's first grid episode (by volume), or null for an empty cell. */
+  /** The cell's first grid episode (by volume), or null for an empty cell: the cell's own id, which its marks read. */
   episodeId: string | null;
+  /**
+   * The episode a tap opens: the cell's first volume not complete, else its first (F-STORY-005 PR 5.8, `CellModel`);
+   * the cell's own episode for a cell of one volume, and null for an empty cell.
+   */
+  openId: string | null;
   state: JourneyCellState;
   /** Two panes only: this cell's episode is the one the right pane shows. */
   selected: boolean;
@@ -142,8 +147,10 @@ export function journeyCell(i: JourneyCellInput): JourneyCellView {
     stage: i.stage,
     theme: i.theme,
     episodeId: episode?.id ?? null,
+    openId: model.episodeId ?? episode?.id ?? null,
     state,
-    selected: i.paneMode && !storiesOnly && !!episode && episode.id === i.selectedId,
+    // Two panes: the cell is selected while the pane shows any of its volumes.
+    selected: i.paneMode && !storiesOnly && !!episode && (episode.id === i.selectedId || model.volumes.some((v) => v.episodeId === i.selectedId)),
     // One pane: a later cell does nothing. Two panes: it is selectable (its page says "coming soon").
     disabled: !storiesOnly && (!episode || (state === 'later' && !i.paneMode)),
     marks: i.marksOf ? i.marksOf(i.stage, i.theme, episode) : NO_CELL_MARKS,

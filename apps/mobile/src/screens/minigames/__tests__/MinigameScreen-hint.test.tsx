@@ -33,8 +33,13 @@ vi.mock('@react-navigation/native', async () => {
 vi.mock('../TraceStrokeGame', () => ({ TraceStrokeGame: () => null }));
 vi.mock('../TraceWordGame', () => ({ TraceWordGame: () => null }));
 vi.mock('../../use-practice-session', () => ({ usePracticeSession: () => undefined }));
-vi.mock('../../lesson-content', () => ({ useLessonQuestReady: () => true, LessonWaiting: () => null }));
-vi.mock('../../story-content', () => ({ useStoryQuestReady: () => true }));
+vi.mock('../../lesson-content', () => ({
+  useLessonQuestState: () => 'ready',
+  combinedChunkState: () => 'ready',
+  LessonWaiting: () => null,
+  LaterNeedsInternet: () => null,
+}));
+vi.mock('../../story-content', () => ({ useStoryQuestState: () => 'ready' }));
 vi.mock('../../../content', () => ({
   questById: (id: string) => ({ id, steps: [{ kind: 'check', minigameRef: `mg-${id}` }] }),
 }));

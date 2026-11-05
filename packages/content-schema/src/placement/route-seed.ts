@@ -23,7 +23,14 @@ export interface RouteQuest {
   teaches: readonly string[];
   playable: boolean;
   grid: boolean;
+  /**
+   * A quest of a cell's later volume (F-CURR-002 row CM-40): a level below its stage places it out like the first
+   * volume's, but the route is each cell's first volume, so it is never a route start, a next card or a start choice.
+   * Absent on a first volume's quest and on a story quest.
+   */
+  laterVolume?: true;
 }
+
 export interface RouteCatalog {
   quests: readonly RouteQuest[];
 }
@@ -104,6 +111,12 @@ export const priorityTokensOf = (
   return tokens.slice(0, MAX_PRIORITY_TOKENS);
 };
 
+/**
+ * A grid quest the route can start on or name next: every grid quest but a cell's later volume (F-CURR-002 row CM-41),
+ * so a learner who has done or placed out every Volume 1 quest gets no start, never a Volume 2 quest while `volumes` is off.
+ */
+export const isRouteStartQuest = (quest: Pick<RouteQuest, 'grid' | 'laterVolume'>): boolean => quest.grid && quest.laterVolume !== true;
+
 interface SeedInput {
   level: PlacementLevel;
   oralStage: StageKey | null;
@@ -115,7 +128,7 @@ interface SeedInput {
 const buildSeed = (input: SeedInput, catalog: RouteCatalog, opts: RouteOptions): RouteSeed => {
   const placedOut = new Set(input.placedOut);
   const remaining = inRouteOrder(catalog).filter(
-    (quest) => quest.grid && quest.playable && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
+    (quest) => isRouteStartQuest(quest) && quest.playable && !placedOut.has(quest.id) && !opts.completedQuestIds.has(quest.id),
   );
   const start = remaining.find((quest) => opts.isEntitled(quest.stage)) ?? null;
   let needsStage: StageKey | null = null;
@@ -195,8 +208,15 @@ export const effectiveRoute = (
   }
 
   const override = overrideInForce(placements);
-  const grid = inRouteOrder(catalog).filter((quest) => quest.grid);
+  // The override's chosen start is a first-volume grid quest (a later volume is never a start, F-CURR-002 row CM-40). A
+  // later volume's quest sits with its own cell for the override: placed out when its cell's first volume is before the
+  // chosen start, put back otherwise, so an earlier start never leaves a later stage's Volume 2 placed out.
+  const grid = inRouteOrder(catalog).filter((quest) => quest.grid && quest.laterVolume !== true);
   const chosen = override === undefined ? -1 : grid.findIndex((quest) => quest.id === override.startQuestId);
+  const cellKey = (quest: RouteQuest): string => `${quest.stage}/${quest.theme}`;
+  const cellEnd = new Map<string, number>();
+  grid.forEach((quest, index) => cellEnd.set(cellKey(quest), index));
+  const laterVolumes = inRouteOrder(catalog).filter((quest) => quest.grid && quest.laterVolume === true);
   // Stage Jump Ahead (F-CURR-002 row CM-25, F-PLC-001 section 3.6 as amended): each jumped stage adds the grid quests of
   // the cells it marked (a cell shipped later in that stage is not one). The newer of a jump and a grown-up override
   // wins: a jump latched before the override in force is folded in before it, so the grown-up's put-back covers it; a
@@ -215,6 +235,11 @@ export const effectiveRoute = (
       if (index < chosen) placedOut.add(quest.id);
       else placedOut.delete(quest.id);
     });
+    for (const quest of laterVolumes) {
+      const end = cellEnd.get(cellKey(quest));
+      if (end !== undefined && end < chosen) placedOut.add(quest.id);
+      else placedOut.delete(quest.id);
+    }
   }
   foldJumps(false);
 

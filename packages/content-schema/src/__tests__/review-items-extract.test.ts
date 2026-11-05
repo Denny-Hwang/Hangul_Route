@@ -211,6 +211,29 @@ describe('lessonOccurrences: every Discover item and every scored round answer',
     ]);
   });
 
+  it('reads a Syllable Build block as a word with its meaning (row CM-44 S2); its tiles are no items', () => {
+    const body = {
+      ...cell,
+      quests: [
+        {
+          id: 'quest:stage2-life-q3',
+          steps: [step('s1', 'apply', 'minigame:s2-life-q3-a')],
+          scopes: [
+            {
+              ref: 'minigame:s2-life-q3-a',
+              kind: 'syllable-build',
+              rounds: [{ id: 'son', target: kt('손', 'son', 'hand'), firstTiles: ['ㅅ', 'ㅈ', 'ㄴ'], vowelTiles: ['ㅗ', 'ㅜ', 'ㅏ'], finalTiles: ['ㄴ', 'ㅁ', 'ㅇ'] }],
+            },
+          ],
+        },
+      ],
+    };
+    const got = lessonOccurrences({ ...source, body }, SYMBOLS).map((o) => [o.kind, o.ko, o.glossKey ?? '', o.loose === true ? 'loose' : '', o.at]);
+    expect(got).toEqual([
+      ['lex', '손', 'minigame:s2-life-q3-a#syllableBuild.rounds.son.target.gloss', 'loose', 'content/episodes/stage-2/life.json quests[0].scopes[0].rounds[0]'],
+    ]);
+  });
+
   it('places each occurrence in its cell, at its file and path', () => {
     expect(new Set(occs.map((o) => `${o.cell} ${o.home} ${o.stage} ${o.volume}`))).toEqual(new Set(['episode:stage2-life life 2 1']));
     expect(occs[0]?.at).toBe('content/episodes/stage-2/life.json quests[0].steps[1].discover.pages[0].items[0]');
@@ -362,13 +385,24 @@ describe('the sources of a content tree (shared by the generator and the lint)',
     ['content/notes.txt', 'x'],
   ]);
 
-  it('takes the ready cells of every volume and the ready pack levels', () => {
+  it('takes the ready cells of every volume and the ready pack levels, every later volume after every first volume', () => {
     expect(lessonSourcesOfTree(tree).map((s) => [s.file, s.cellId, s.stage, s.home, s.volume])).toEqual([
       ['content/episodes/stage-2/life.json', 'episode:stage2-life', 2, 'life', 1],
+      ['content/packs/numbers-time/stage-2.json', 'episode:pack-numbers-time-s2', 2, 'pack:numbers-time', 1],
       ['content/episodes/stage-3/life.v2.json', 'episode:stage3-life-v2', 3, 'life', 2],
       ['content/episodes/stage-3/rites.json', 'episode:stage3-rites-v2', 3, 'rites', 2],
-      ['content/packs/numbers-time/stage-2.json', 'episode:pack-numbers-time-s2', 2, 'pack:numbers-time', 1],
     ]);
+  });
+
+  it('a Volume 2 file that sorts before a Volume 1 file of its stage still comes after it (CM-40 route order)', () => {
+    const order = lessonSourcesOfTree(
+      new Map<string, unknown>([
+        ['content/episodes/stage-6/letters.v2.json', ready],
+        ['content/episodes/stage-6/nature.json', ready],
+        ['content/episodes/stage-7/crafts.json', ready],
+      ]),
+    ).map((s) => s.cellId);
+    expect(order).toEqual(['episode:stage6-nature', 'episode:stage7-crafts', 'episode:stage6-letters-v2']);
   });
 
   it('takes the ready stories, the topic words and the sense groups', () => {

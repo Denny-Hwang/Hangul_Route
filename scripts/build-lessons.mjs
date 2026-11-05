@@ -109,10 +109,14 @@ export const BUDGET = Object.freeze({
   headersChunkRaw: 40_000, // F-CURR-002 CM-40: one locale's headers chunk (the display lines; Volume 1: en 15,095, es 14,800, ko 15,751 B; about 31 KB projected with Volume 2)
   cellChunkRaw: 90_000, // F-CURR-002 CM-5: one cell's body chunk module as emitted (largest at CM-5: stage2-letters, 61,381 B for six quests)
   cellChunkGzip: 16_000, // F-CURR-002 CM-5: the same, gzip (largest at CM-5: stage2-letters, 11,070 B)
-  stageRaw: 220_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000 for the stage module)
-  stageGzip: 40_000, // F-CURR-002 CM-5 (OD-5): was 32,000
-  totalRaw: 1_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000)
-  totalGzip: 210_000, // F-CURR-002 CM-5 (OD-5): was 140,000
+  // The F-CURR-002 Volume 2 integration (integrate/cm-1105: rows CM-41..CM-45, twenty-three Volume 2 cells, on CM-5B)
+  // measures Stage 6 361,807 B raw / 45,094 B gzip (the largest stage), and in total 2,284,376 B raw / 385,617 B gzip:
+  // past the CM-5 lines, so each line is that measurement plus a rounding margin. No weight on start-up (OD-5): the
+  // chunks are lazy, and since CM-5B a cell's Volume 2 is a later chunk, out of the learner precache.
+  stageRaw: 380_000, // F-CURR-002 CM-5 (OD-5): a stage's game scopes and their glosses (was 150,000, then 220,000)
+  stageGzip: 48_000, // F-CURR-002 CM-5 (OD-5): was 32,000, then 40,000
+  totalRaw: 2_400_000, // F-CURR-002 CM-5 (OD-5): Volume 1 and 2, manifest and all chunks (was 950,000, then 1,400,000)
+  totalGzip: 400_000, // F-CURR-002 CM-5 (OD-5): was 140,000, then 210,000
 });
 
 export class ContentError extends Error {
@@ -265,6 +269,9 @@ export function runtimeScope(scope, where) {
     // F-CURR-002 row CM-38: the chain's frames; off (`game.my-story`), the app plays the first in Write Frame.
     case "my-story":
       return { kind, rounds: scope.frames.length, myStory: { frames: scope.frames } };
+    // F-CURR-002 row CM-44 S2: one round per block; off (`game.syllable-build`), the app plays Listen & Pick on the block.
+    case "syllable-build":
+      return { kind, rounds: scope.rounds.length, syllableBuild: { rounds: scope.rounds } };
     default:
       throw new ContentError(`scope kind ${JSON.stringify(kind)} has no lesson scope (lesson-no-speaking for voice-echo)`, where);
   }
@@ -479,6 +486,20 @@ const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== und
 const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 
 /**
+ * Fields the content carries for the build only, never read by the app: `soundChange: true` marks a sound change the
+ * converter cannot see (liaison, F-CURR-002 section 4.2, row CM-44 S2) on a round or its Korean, and goes into the review
+ * items (`extract.ts`); the lesson modules leave it out, so their literals keep the runtime schema's shape.
+ */
+export const BUILD_ONLY_FIELDS = Object.freeze(["soundChange"]);
+
+/** Pure: the value with every `BUILD_ONLY_FIELDS` key removed, at any depth. */
+export function withoutBuildOnly(value) {
+  if (Array.isArray(value)) return value.map(withoutBuildOnly);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).filter(([k]) => !BUILD_ONLY_FIELDS.includes(k)).map(([k, v]) => [k, withoutBuildOnly(v)]));
+}
+
+/**
  * Pure: ready shaped cells -> what each chunk holds and its hash.
  *   manifest  the episodes and the quest headers, English, without steps or display lines
  *   cells     one body per cell and volume: steps by quest id, scopes by ref, the es / ko glosses of both, and each
@@ -503,8 +524,8 @@ export function planChunks(cells) {
         if (line.length > 0) lines[locale][id] = Object.fromEntries(line);
       }
     }
-    const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, q.steps])));
-    const scopes = literal(sortedKeys(cell.scopes));
+    const steps = literal(Object.fromEntries(cell.quests.map((q) => [q.id, withoutBuildOnly(q.steps)])));
+    const scopes = literal(withoutBuildOnly(sortedKeys(cell.scopes)));
     const glosses = overlaysLiteral(overlays);
     const notes = literal(cell.notes ?? {});
     return {
@@ -958,6 +979,68 @@ export async function lessonReviewOccurrences(root, symbols, cells = readCells(r
   return lessonSourcesOfTree(lessonReviewTree(root, cells)).flatMap((source) => lessonOccurrences(source, symbols));
 }
 
+// ---- the e2e fixture (--include-fixtures, row CM-40) ------------------------------------------------
+
+/**
+ * The cell the e2e bundle gives a Volume 2 (F-CURR-002 row CM-40: no Volume 2 content ships with the row): Stage 2
+ * Nature & Animals, whose Volume 1 is Outdoor Words.
+ */
+export const FIXTURE_VOLUME2 = Object.freeze({ stageNo: 2, theme: "nature" });
+
+/**
+ * Pure: a Volume 1 cell file (and its overlay files) as its Volume 2 fixture: every id of the cell gains `-v2`, the file
+ * says `volume: 2`, and its English title says Volume 2, so an e2e run can tell the two apart. Its content is Volume 1's:
+ * the fixture checks the plumbing (the ids, the chunk, the catalogue, the app's volume surfaces), never the teaching.
+ */
+export function volume2Fixture(cell, files = []) {
+  const stage = `stage${FIXTURE_VOLUME2.stageNo}`;
+  const { theme } = FIXTURE_VOLUME2;
+  const rename = (value) =>
+    JSON.parse(
+      JSON.stringify(value)
+        .split(`episode:${stage}-${theme}"`)
+        .join(`episode:${stage}-${theme}-v2"`)
+        .split(`quest:${stage}-${theme}-q`)
+        .join(`quest:${stage}-${theme}-v2-q`)
+        .split(`minigame:s${FIXTURE_VOLUME2.stageNo}-${theme}-q`)
+        .join(`minigame:s${FIXTURE_VOLUME2.stageNo}-${theme}-v2-q`),
+    );
+  const body = rename(cell);
+  return {
+    cell: { ...body, volume: 2, titleEn: `${body.titleEn} 2`.slice(0, 28) },
+    files: files.map((f) => ({ ...f, rel: f.rel.replace(/\.json$/, "-v2.json"), json: rename(f.json) })),
+  };
+}
+
+/**
+ * The cells of an e2e build (`--include-fixtures`): `readCells` with the fixture Volume 2 right after its Volume 1. The
+ * PWA post-build of the fixture bundle reads the same list, so it checks the chunks the bundle was built from.
+ */
+export function readCellsWithFixtures(root) {
+  const cells = readCells(root);
+  const fixtures = fixtureCells(root);
+  const at = cells.findIndex((c) => c.stageNo === FIXTURE_VOLUME2.stageNo && c.episode.theme === FIXTURE_VOLUME2.theme);
+  return at === -1 ? [...cells, ...fixtures] : [...cells.slice(0, at + 1), ...fixtures, ...cells.slice(at + 1)];
+}
+
+/**
+ * The e2e fixture cell, shaped with its overlays, read from the Volume 1 file it copies; none when that file is absent,
+ * and none once the cell ships a Volume 2 of its own (row CM-41 S2, `nature.v2.json`): the shipped Volume 2 is then the
+ * one the e2e plays, so the bundle never holds two cells of one id.
+ */
+export function fixtureCells(root) {
+  const { stageNo, theme } = FIXTURE_VOLUME2;
+  const full = join(root, "content", "episodes", `stage-${stageNo}`, `${theme}.json`);
+  if (!existsSync(full) || existsSync(join(root, "content", "episodes", `stage-${stageNo}`, `${theme}.v2.json`))) return [];
+  const files = OVERLAY_LOCALES.flatMap((locale) => {
+    const overlay = join(root, cellOverlayFile(locale, stageNo, theme));
+    return existsSync(overlay) ? [{ ...readJson(root, overlay), locale }] : [];
+  });
+  const fixture = volume2Fixture(readJson(root, full).json, files);
+  const shaped = shapeCell(fixture.cell, `content/episodes/stage-${stageNo}/${theme}.v2.json`);
+  return [{ ...shaped, overlays: cellOverlays(shaped, fixture.files) }];
+}
+
 // ---- budget -------------------------------------------------------------------------------
 
 const measure = (name, text) => ({ name, raw: bytes(text), gzip: gzipSync(text).length });
@@ -1095,7 +1178,7 @@ export function staleFiles(root, modules) {
   return out.filter((name) => modules[name] === undefined);
 }
 
-const USAGE = "Usage: node scripts/build-lessons.mjs [--check] [--report]";
+const USAGE = "Usage: node scripts/build-lessons.mjs [--check] [--report] [--include-fixtures]";
 
 /** Every file this generator writes, by path relative to the root: the lesson modules and the catalogue. */
 export async function generatedOutputs(root, cells = readCells(root)) {
@@ -1114,19 +1197,25 @@ export async function generatedOutputs(root, cells = readCells(root)) {
 }
 
 export async function main(argv, root) {
-  const opts = { check: false, report: false };
+  const opts = { check: false, report: false, includeFixtures: false };
   for (const arg of argv) {
     if (arg === "--check") opts.check = true;
     else if (arg === "--report") opts.report = true;
+    else if (arg === "--include-fixtures") opts.includeFixtures = true;
     else {
       process.stderr.write(`unknown argument ${arg}\n${USAGE}\n`);
       return 2;
     }
   }
+  if (opts.includeFixtures && (opts.check || opts.report)) {
+    process.stderr.write(`--include-fixtures builds an e2e bundle only; it does not combine with --check or --report\n${USAGE}\n`);
+    return 2;
+  }
   let cells;
   let generated;
   try {
-    cells = readCells(root);
+    // The e2e bundle (apps/mobile/scripts/build-web-fixtures.mjs) adds the fixture Volume 2 right after its Volume 1.
+    cells = opts.includeFixtures ? readCellsWithFixtures(root) : readCells(root);
     generated = await generatedOutputs(root, cells);
   } catch (error) {
     if (!(error instanceof ContentError)) throw error;
@@ -1183,6 +1272,7 @@ export async function main(argv, root) {
   for (const [name, source] of Object.entries(outputs)) {
     writeIfChanged(join(root, name), source);
   }
+  if (opts.includeFixtures) process.stdout.write("E2E FIXTURE MODULES (--include-fixtures): never commit; run node scripts/build-lessons.mjs to restore.\n");
   process.stdout.write(
     `wrote ${Object.keys(modules).length} lesson modules (ready cells: ${ready}, drafts left out: ${cells.length - ready}) and the catalogue rows` +
       (stale.length > 0 ? `, removed ${stale.length} no longer built\n` : "\n"),

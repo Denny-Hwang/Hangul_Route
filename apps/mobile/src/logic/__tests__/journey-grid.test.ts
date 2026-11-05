@@ -76,12 +76,22 @@ describe('journeyCell', () => {
       stage: 'stage1',
       theme: 'letters',
       episodeId: 'episode:s1-letters',
+      openId: 'episode:s1-letters',
       state: 'open',
       selected: false,
       disabled: false,
       marks: NO_CELL_MARKS,
       access: NO_CELL_ACCESS,
-      model: { stage: 'stage1', theme: 'letters', kind: 'lesson', episodeId: 'episode:s1-letters', completed: false, storyCount: 0, storiesFinished: 0 },
+      model: {
+        stage: 'stage1',
+        theme: 'letters',
+        kind: 'lesson',
+        episodeId: 'episode:s1-letters',
+        completed: false,
+        storyCount: 0,
+        storiesFinished: 0,
+        volumes: [{ episodeId: 'episode:s1-letters', volume: 1, complete: false }],
+      },
     });
   });
 
@@ -524,7 +534,7 @@ describe('route marks (F-ENT-003 E3-5)', () => {
 
     it('a closed placed-out cell drops "still open to play": the label says only what is true', () => {
       const j = getMessages('en').a11y.journeyCell;
-      const model = { stage: 'stage2', theme: 'life', kind: 'lesson', episodeId: 'episode:s2-life', completed: false, storyCount: 0, storiesFinished: 0 } as const;
+      const model = { stage: 'stage2', theme: 'life', kind: 'lesson', episodeId: 'episode:s2-life', completed: false, storyCount: 0, storiesFinished: 0, volumes: [] } as const;
       const stage = { order: 2, titleEn: 'Words' };
       const theme = { titleEn: 'Life' };
       const closed = { marks: { completed: false, placedOut: true, isStart: false }, access: { next: false, inPlan: false, notOpen: true } };

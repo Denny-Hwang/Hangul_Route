@@ -1,5 +1,5 @@
 import type { Episode, Overlays, Quest, SceneArt, SpeechLang, Story, ThemeKey, UiLocale } from '@hangul-route/content-schema';
-import { episodesAll } from '../../../content/episodes';
+import { episodesWithVolumes } from '../../../content/episodes';
 import { questsAll } from '../../../content/quests';
 import { storiesAll } from '../../../content/stories';
 import { localizeStory } from '../../content-locale';
@@ -78,5 +78,7 @@ export function lectureStoriesFrom(input: LectureStoryInput, locale: UiLocale, o
 
 /** The bundled stories, in the presenter's language. */
 export function lectureStories(locale: UiLocale, overlays?: Overlays): LectureStorySource {
-  return lectureStoriesFrom({ stories: storiesAll, episodes: episodesAll, quests: questsAll }, locale, overlays);
+  // The later volumes too (rows CM-40, CM-46): a book 2 the presenter was given plays its tales. The chooser offers a
+  // Volume 2 only while `volumes` is on, and the console offers no book 2 tale as a story of its own.
+  return lectureStoriesFrom({ stories: storiesAll, episodes: episodesWithVolumes, quests: questsAll }, locale, overlays);
 }

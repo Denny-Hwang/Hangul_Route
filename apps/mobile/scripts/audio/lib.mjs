@@ -125,7 +125,8 @@ export const WORD_BUILDER_UNIT = 'episode:stage2-letters';
 
 /**
  * The warm unit of a manifest source (AC-B6, warming): a Stage 1 quest or game (`quest:<id>`, `minigame:<ref>`), a
- * lesson cell (`content/episodes/stage-2/life.json` => `episode:stage2-life`, the id its quests are opened under), a
+ * lesson cell (`content/episodes/stage-2/life.json` => `episode:stage2-life`, the id its quests are opened under; its
+ * Volume 2, `life.v2.json` => `episode:stage2-life-v2`), a
  * story (`content/stories/<slug>.json` => `story:<slug>`), the level check (`placement`), a vocabulary topic
  * (`content/vocab/<topic>.json` => `topic:<topic>`, the topic screen's), a card (`card:<id>`, its detail page's) and,
  * for a `jamo-wb` clip (`jamo:<id>#sound|letter`), the Word Builder cell (`WORD_BUILDER_UNIT`). Any other source (a
@@ -136,8 +137,9 @@ export const WORD_BUILDER_UNIT = 'episode:stage2-letters';
  * @param {string} [pack] the row's pack
  */
 export function clipUnitOfSource(source, pack) {
-  const cell = /^content\/episodes\/stage-(\d+)\/([a-z0-9-]+)\.json$/.exec(source);
-  if (cell !== null) return `episode:stage${cell[1]}-${cell[2]}`;
+  // A cell's Volume 2 file, `<theme>.v2.json`, is its own episode, `episode:stage<n>-<theme>-v2` (F-CURR-002 row CM-40).
+  const cell = /^content\/episodes\/stage-(\d+)\/([a-z0-9-]+)(?:\.v([2-9]))?\.json$/.exec(source);
+  if (cell !== null) return `episode:stage${cell[1]}-${cell[2]}${cell[3] === undefined ? '' : `-v${cell[3]}`}`;
   const story = /^content\/stories\/([a-z0-9-]+)\.json$/.exec(source);
   if (story !== null) return `story:${story[1]}`;
   const topic = /^content\/vocab\/([a-z0-9][a-z0-9-]*)\.json$/.exec(source);
@@ -300,6 +302,22 @@ export const SAY_AUDIO_GROUP = 'say';
 export const REF_RUNTIME_CACHE = Object.freeze({ cacheName: 'hr-audio-v1', maxEntries: 400 });
 /** The say-clip runtime cache (AC-B6): about 1,213 text-keyed clips in all packs, so room for every one of them. */
 export const SAY_RUNTIME_CACHE = Object.freeze({ cacheName: 'hr-audio-say-v1', maxEntries: 1_600 });
+/**
+ * The clips a grown-up saved for offline (F-CURR-002 row CM-5B, a stage's audio pack): a cache of their own with no
+ * expiry, so playing other clips never pushes a saved one out of the bounded caches above. The page writes it; both
+ * clip rules read it when their own cache misses (`savedClipFallback`). Its name never changes with a build.
+ */
+export const OFFLINE_AUDIO_CACHE = 'hr-offline-audio-v1';
+
+/**
+ * A Workbox plugin for the clip rules: on a miss in the rule's own (bounded) cache, the clip saved for offline
+ * (`OFFLINE_AUDIO_CACHE`) answers before the network. Listed after the expiration plugin, so a saved clip never enters
+ * the bounded cache's count. Serialized into the service worker, so it names the cache literally (a test holds it equal).
+ */
+export const savedClipFallback = Object.freeze({
+  cachedResponseWillBeUsed: async ({ cachedResponse, request }) =>
+    cachedResponse || (await (await caches.open('hr-offline-audio-v1')).match(request.url)) || null,
+});
 
 const CLIP_GROUPS = ['jamo', ...RUNTIME_AUDIO_GROUPS, SAY_AUDIO_GROUP];
 // `audio/<group>/<id>[.<anything, such as Expo's content hash>].mp3[?query]`, anywhere in a dist path or a URL.
@@ -374,6 +392,7 @@ const cacheable = { statuses: [200], headers: { 'content-type': 'audio/mpeg' } }
  * - `hr-audio-say-v1` (the say group, maxEntries 1,600);
  * - `hr-audio-v1` (maxEntries 400) for vocabulary, story, card and dialogue refs, and the jamo clips outside the
  *   precached pack (`jamo-wb`). A precached `jamo-s1` clip never reaches it: the precache route is registered first.
+ * Both read a clip saved for offline (`OFFLINE_AUDIO_CACHE`, row CM-5B) on a miss, before the network.
  * Same-origin only (never opaque), and only a real clip: a single-page host answers a missing file with index.html
  * and status 200, which must never be cached as a clip.
  */
@@ -382,12 +401,22 @@ export function audioRuntimeCaching() {
     {
       urlPattern: /\/audio\/say\/[0-9a-f]{16}(?:\.[^/]*)?\.mp3$/i,
       handler: 'CacheFirst',
-      options: { cacheName: SAY_RUNTIME_CACHE.cacheName, expiration: { maxEntries: SAY_RUNTIME_CACHE.maxEntries }, cacheableResponse: cacheable },
+      options: {
+        cacheName: SAY_RUNTIME_CACHE.cacheName,
+        expiration: { maxEntries: SAY_RUNTIME_CACHE.maxEntries },
+        cacheableResponse: cacheable,
+        plugins: [savedClipFallback],
+      },
     },
     {
       urlPattern: new RegExp(`/audio/(?:jamo|${RUNTIME_AUDIO_GROUPS.join('|')})/.+\\.mp3$`, 'i'),
       handler: 'CacheFirst',
-      options: { cacheName: REF_RUNTIME_CACHE.cacheName, expiration: { maxEntries: REF_RUNTIME_CACHE.maxEntries }, cacheableResponse: cacheable },
+      options: {
+        cacheName: REF_RUNTIME_CACHE.cacheName,
+        expiration: { maxEntries: REF_RUNTIME_CACHE.maxEntries },
+        cacheableResponse: cacheable,
+        plugins: [savedClipFallback],
+      },
     },
   ];
 }

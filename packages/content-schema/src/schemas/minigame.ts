@@ -410,9 +410,30 @@ export function realiaReadIssues(realia: Realia, rounds: readonly RealiaReadRoun
       out.push({ path: ['rounds', i, 'answerEntryId'], message: 'every round names its answer entry (answerEntryId)' });
     } else if (!ids.includes(round.answerEntryId)) {
       out.push({ path: ['rounds', i, 'answerEntryId'], message: `answerEntryId "${round.answerEntryId}" is not an entry of the realia` });
+    } else {
+      const issue = directionAnswerIssue(realia, round);
+      if (issue !== undefined) out.push({ path: ['rounds', i, 'answerId'], message: issue });
     }
   });
   return out;
+}
+
+/** The Korean direction words a Realia Read answer may be, and the `dir` a sign board draws for each. */
+const DIRECTION_WORDS: Readonly<Record<string, 'left' | 'right'>> = { 왼쪽: 'left', 오른쪽: 'right' };
+
+/**
+ * A direction answer (왼쪽 / 오른쪽) must be readable on the sheet (F-CURR-002 row CM-41 S6): only a sign's board
+ * draws `dir` (its arrow and side); every other kind, a map included, shows the direction as the line's text or value
+ * (the CM-47 rule "a map places its direction in its name"). Without it only a screen reader hears the answer.
+ */
+function directionAnswerIssue(realia: Realia, round: RealiaReadRound): string | undefined {
+  const answer = round.options.find((o) => o.id === round.answerId)?.text?.ko;
+  const dir = answer === undefined ? undefined : DIRECTION_WORDS[answer];
+  const entry = realia.entries.find((e) => e.id === round.answerEntryId);
+  if (dir === undefined || entry === undefined) return undefined;
+  if (realia.kind === 'sign' && entry.dir === dir) return undefined;
+  if (entry.text.ko.includes(answer as string) || entry.value?.ko.includes(answer as string)) return undefined;
+  return `the answer "${answer}" is a direction the sheet does not show: on a ${realia.kind ?? 'plain'} sheet the answer entry "${entry.id}" carries it as its text or value (only a sign's board draws dir)`;
 }
 
 /** Type Hangul: type a short word or phrase on the in-app keyboard; checked by syllable after Done (F-CURR-001 §3.7). */
@@ -570,12 +591,19 @@ export type ClozeGapKind = z.infer<typeof ClozeGapKindSchema>;
  * particle links to the word before it: `mul___` with `eul` reads `mureul`); a particle gap needs it.
  * Tiles show Korean and romanization only; their `en` is the content gloss every Korean item carries.
  */
+/**
+ * A Cloze Pick tile: taught Korean, and `soundChange: true` when its standard pronunciation differs from the spelling in a
+ * way `hasSoundChange` does not model (할게 [할께], tensification after the -ㄹ ending; row CM-42 S4 review fix), so the
+ * review item it teaches is never offered as Dictation (F-CURR-002 section 4.5). The game itself ignores the flag.
+ */
+export const ClozePickTileSchema = KoTextShape.extend({ soundChange: z.literal(true).optional() }).superRefine(refineKoText);
+
 export const ClozePickRoundSchema = z
   .object({
     id: z.string().min(1),
     sentence: KoTextSchema,
     gapKind: ClozeGapKindSchema.default('word'),
-    tiles: z.array(KoTextSchema).min(3).max(4),
+    tiles: z.array(ClozePickTileSchema).min(3).max(4),
     answerIndex: z.number().int().min(0),
     filledRomanization: z.string().trim().min(1).optional(),
   })

@@ -1,6 +1,6 @@
 import type { AwardWorld, CardSet } from '../logic/awards/types';
 import { withUpperCards } from '../logic/awards/upper-cards';
-import { episodesAll } from './episodes';
+import { episodesWithVolumes } from './episodes';
 import { UPPER_CARD_GATED_IDS, albumLegendCards, cardById, heritageCardsAll } from './heritage-cards';
 import { questsAll } from './quests';
 import { storySets } from './story-cards';
@@ -23,10 +23,14 @@ export const albumCardSets: readonly CardSet[] = albumLegendCards.map((c) => ({
  * The shipped bundle as the award engine reads it (F-STORY-006 §3.2): every
  * card, every grid and shelf episode, every quest, and the collections of
  * story cards whose member stories are all bundled (`content/story-cards.ts`).
+ * A cell's later volume is one of its episodes (F-CURR-002 row CM-40), so an
+ * `episode:` card of a Volume 2 or a Stage 5 book 2 is derived whether
+ * `volumes` is on or off; a stage's completion still reads each cell's first
+ * volume (`derive.ts` `stageCells`).
  */
 export const awardWorld: AwardWorld = {
   cards: heritageCardsAll,
-  episodes: episodesAll,
+  episodes: episodesWithVolumes,
   quests: questsAll,
   sets: [...storySets, ...albumCardSets],
   // F-CURR-002 §4.8 step 7 (row CM-23): the upper-cell cards are dated by the cells' first finishes.

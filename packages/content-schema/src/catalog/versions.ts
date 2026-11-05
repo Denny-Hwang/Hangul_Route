@@ -3,6 +3,7 @@ import { questsPlacedOutAtLevel } from '../placement/level-map';
 import type { RouteCatalog } from '../placement/route-seed';
 import { GENERATED_QUEST_ADDITIONS } from './catalog.generated';
 import { CATALOG_VERSION } from './data';
+import type { CatalogCell } from './schema';
 
 /**
  * The catalogue-growth rule (F-CURR-001 §3.13, row C-2). A stored placement
@@ -189,4 +190,21 @@ export function placedOutGrowth(
   if (at >= history.version) return [];
   const known = history.idsAt(at);
   return questsPlacedOutAtLevel(level, catalog).filter((id) => !known.has(id) && !completed.has(id));
+}
+
+/**
+ * Whether a plan made at catalogue `storedAt` is on an older catalogue than `catalog` (the console's Refresh route and the
+ * learner's New lessons line). Older only: a plan synced from a device on a newer catalogue is not stale. A catalogue
+ * that has since added only cells' later volumes is not newer for a plan (F-CURR-002 row CM-40: a later volume adds no
+ * route day and no plan item, so a refresh would add nothing). A version with no listed additions still counts.
+ */
+export function planCatalogStale(
+  storedAt: number,
+  catalog: { version: number; cells: readonly Pick<CatalogCell, 'volumes'>[] },
+  additions: Readonly<Record<number, readonly string[]>> = CATALOG_QUEST_ADDITIONS,
+): boolean {
+  if (storedAt >= catalog.version) return false;
+  const later = new Set(catalog.cells.flatMap((cell) => (cell.volumes ?? []).flatMap((v) => v.questIds)));
+  const added = Object.entries(additions).flatMap(([v, ids]) => (Number(v) > storedAt && Number(v) <= catalog.version ? ids : []));
+  return added.length === 0 || added.some((id) => !later.has(id));
 }

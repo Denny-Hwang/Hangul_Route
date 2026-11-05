@@ -1,0 +1,1120 @@
+{
+  "v": 1,
+  "id": "story:hanji-korean-paper",
+  "state": "ready",
+  "contentVer": 1,
+  "addedIn": 20261104,
+  "title": {
+    "ko": "닥나무 종이, 한지",
+    "romanization": "Dangnamu jongi, hanji",
+    "en": "Hanji: Paper from the Paper Mulberry"
+  },
+  "summaryEn": "Hoya follows hanji, Korean paper, from the bark of the paper mulberry to a thin sheet scooped by hand. He learns why it was called hundred paper, how famous it was in Goryeo times, and that master papermakers still make it today.",
+  "hoyaIntroEn": "Light glows through the paper window. Let's find out how hanji is made!",
+  "hoyaOutroEn": "From bark to a thin sheet, step by step. Next time you see a paper window, say hanji!",
+  "theme": "crafts",
+  "kind": "intangible",
+  "recommendedStage": 2,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Read and recognize 종이 (jongi, paper) and 한지 (hanji, Korean paper).",
+    "Know that hanji is made by hand from the bark of the paper mulberry and was used for windows, doors, floors and books.",
+    "Follow the main steps of making hanji: cutting and steaming the branches, peeling and beating the bark, and scooping sheets from water with a screen.",
+    "Know that hanji was famous in Goryeo times and that its makers, hanjijang, are a National Intangible Heritage today."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [],
+    "reviewedBy": "MAR",
+    "reviewedAt": "2026-11-04"
+  },
+  "keywords": [
+    {
+      "id": "hanji",
+      "ko": "한지",
+      "romanization": "hanji",
+      "en": "Korean paper",
+      "kind": "word"
+    },
+    {
+      "id": "dangnamu",
+      "ko": "닥나무",
+      "romanization": "dangnamu",
+      "en": "paper mulberry (a tree)",
+      "kind": "word"
+    },
+    {
+      "id": "jongi",
+      "ko": "종이",
+      "romanization": "jongi",
+      "en": "paper",
+      "kind": "word"
+    },
+    {
+      "id": "kkeopjil",
+      "ko": "껍질",
+      "romanization": "kkeopjil",
+      "en": "bark; peel",
+      "kind": "word"
+    },
+    {
+      "id": "mul",
+      "ko": "물",
+      "romanization": "mul",
+      "en": "water",
+      "kind": "word"
+    },
+    {
+      "id": "baek",
+      "ko": "백",
+      "romanization": "baek",
+      "en": "hundred",
+      "kind": "word"
+    },
+    {
+      "id": "goryeo",
+      "ko": "고려",
+      "romanization": "goryeo",
+      "en": "Goryeo (a Korean kingdom)",
+      "kind": "word"
+    },
+    {
+      "id": "hanjijang",
+      "ko": "한지장",
+      "romanization": "hanjijang",
+      "en": "master hanji maker",
+      "kind": "word"
+    },
+    {
+      "id": "mandeureoyo",
+      "ko": "만들어요",
+      "romanization": "mandeureoyo",
+      "en": "make",
+      "kind": "word"
+    },
+    {
+      "id": "dudeuryeoyo",
+      "ko": "두드려요",
+      "romanization": "dudeuryeoyo",
+      "en": "beat; pound",
+      "kind": "word"
+    },
+    {
+      "id": "tteoyo",
+      "ko": "떠요",
+      "romanization": "tteoyo",
+      "en": "scoop (paper from water)",
+      "kind": "word"
+    },
+    {
+      "id": "yumyeonghaesseoyo",
+      "ko": "유명했어요",
+      "romanization": "yumyeonghaesseoyo",
+      "en": "was famous",
+      "kind": "word"
+    },
+    {
+      "id": "jigeum",
+      "ko": "지금",
+      "romanization": "jigeum",
+      "en": "now",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya touches a paper window in a hanok, and soft light glows through it. \"This paper is {kw:hanji}, Korean paper,\" he says. Long ago, people used it for windows and doors, for floors and walls, and for books.",
+          "captionEn": "Light glows through a paper window",
+          "keyword": {
+            "id": "hanji",
+            "ko": "한지",
+            "romanization": "hanji",
+            "en": "Korean paper",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1",
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya in a wooden room with a paper window and door; warm light glows through the paper.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 190,
+                "s": 1.1,
+                "z": "back"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 230,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands in a wooden room where soft light glows through the paper of the window and door."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Hanji is made by hand from the bark of a tree, {kw:dangnamu}, the paper mulberry. A sticky liquid from the root of another plant is mixed in too.",
+          "captionEn": "Hanji comes from the paper mulberry",
+          "keyword": {
+            "id": "dangnamu",
+            "ko": "닥나무",
+            "romanization": "dangnamu",
+            "en": "paper mulberry (a tree)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1",
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya under a leafy paper mulberry tree in the countryside, looking up at its branches.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 170,
+                "y": 236,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 300,
+                "y": 292,
+                "s": 0.7,
+                "flip": true
+              }
+            ],
+            "altEn": "Hoya looks up at a leafy paper mulberry tree, whose bark becomes hanji."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "No one knows for sure when people in Korea began to make {kw:jongi}, paper. Many people think the skill came from China long ago, through contact between Korea and China.",
+          "captionEn": "Where did papermaking come from?",
+          "keyword": {
+            "id": "jongi",
+            "ko": "종이",
+            "romanization": "jongi",
+            "en": "paper",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A plain sheet of paper on a paper background; Hoya wonders where papermaking began.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:blank-sheet",
+                "x": 170,
+                "y": 230,
+                "s": 2.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 300,
+                "y": 292,
+                "s": 0.65,
+                "flip": true
+              }
+            ],
+            "altEn": "A plain sheet of paper on a paper background, and Hoya wonders where papermaking began."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In the cold months after the harvest, papermakers cut the branches and steam them. They peel off the {kw:kkeopjil}, the bark, scrape and dry it, boil it, rinse it and beat it until it is soft.",
+          "captionEn": "Peeling and beating the bark",
+          "keyword": {
+            "id": "kkeopjil",
+            "ko": "껍질",
+            "romanization": "kkeopjil",
+            "en": "bark; peel",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A papermaker kneels outdoors near a bare tree, beating soft bark; Hoya watches.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 320,
+                "y": 230,
+                "s": 0.9,
+                "z": "back",
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-artisan",
+                "x": 170,
+                "y": 288,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 292,
+                "y": 294,
+                "s": 0.55
+              }
+            ],
+            "altEn": "A papermaker kneels outdoors in the cold, beating soft bark, and Hoya watches."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Next, they stir the soft fibres into {kw:mul}, water, with the sticky liquid. With a bamboo screen they scoop up a thin layer. Some hang one screen from a string and swing it front to back and side to side!",
+          "captionEn": "Scooping a sheet from the water",
+          "keyword": {
+            "id": "mul",
+            "ko": "물",
+            "romanization": "mul",
+            "en": "water",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "In a wooden workshop a papermaker lifts a thin wet sheet on a screen; Hoya waves.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 170,
+                "y": 286,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 260,
+                "y": 250,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 336,
+                "y": 292,
+                "s": 0.55
+              }
+            ],
+            "altEn": "In a workshop a papermaker lifts a thin wet sheet of paper from the water, and Hoya waves."
+          }
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Hanji was also called baekji, 'hundred paper'. People said the makers handle it ninety-nine times, and the person who uses it touches it for the hundredth time. In Korean, a hundred is {kw:baek}.",
+          "captionEn": "Hanji was called hundred paper",
+          "keyword": {
+            "id": "baek",
+            "ko": "백",
+            "romanization": "baek",
+            "en": "hundred",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Plain finished sheets of paper; Hoya holds a paper and thinks.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:blank-sheet",
+                "x": 150,
+                "y": 250,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 210,
+                "y": 256,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 316,
+                "y": 292,
+                "s": 0.65
+              }
+            ],
+            "altEn": "Finished sheets of hanji, and Hoya thinks about the many steps it took to make them."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "In the time of {kw:goryeo}, hanji was so famous that people in China called the best paper Goryeo paper. A writer of China's Song dynasty praised it as bright white and glossy.",
+          "captionEn": "Goryeo paper was famous",
+          "keyword": {
+            "id": "goryeo",
+            "ko": "고려",
+            "romanization": "goryeo",
+            "en": "Goryeo (a Korean kingdom)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Old thread-bound books rest on a low wooden desk; Hoya looks at them.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:desk-low",
+                "x": 200,
+                "y": 292,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 170,
+                "y": 246,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 250,
+                "y": 250,
+                "s": 0.7
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 330,
+                "y": 292,
+                "s": 0.55,
+                "flip": true
+              }
+            ],
+            "altEn": "Old thread-bound books of fine white paper rest on a low desk, and Hoya looks at them."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Today, master papermakers, the {kw:hanjijang}, still make hanji by hand; their craft is a National Intangible Heritage of Korea. Hoya holds a new sheet up to the light. \"Hello, hanji!\"",
+          "captionEn": "Master papermakers make hanji today",
+          "keyword": {
+            "id": "hanjijang",
+            "ko": "한지장",
+            "romanization": "hanjijang",
+            "en": "master hanji maker",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A papermaker of today shows fresh sheets of hanji in a bright room; Hoya waves.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 150,
+                "y": 288,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 250,
+                "y": 250,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 334,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Today a master papermaker shows fresh sheets of hanji, and Hoya waves hello."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "종이",
+            "romanization": "jongi",
+            "en": "paper"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Paper",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Water",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Tree",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Jongi means paper. Hanji is Korean paper.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What is hanji made from?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Rice straw only",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "The bark of the paper mulberry tree",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Cotton cloth",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Hanji is made by hand from the bark of the paper mulberry, with a sticky liquid from a plant root.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "Why was hanji also called baekji, 'hundred paper'?",
+          "options": [
+            {
+              "id": "a",
+              "en": "It cost a hundred coins",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A hundred sheets came from one tree",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "People said it was touched a hundred times in all",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "People said the makers handle hanji ninety-nine times, and the person who uses it touches it for the hundredth time.",
+          "factIds": [
+            "f5"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s4",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "hanji",
+        "dangnamu",
+        "jongi",
+        "kkeopjil"
+      ]
+    },
+    {
+      "level": "read",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "This paper is {kw:hanji}, Korean paper. Soft light glows through it.",
+          "captionEn": "Hanji, Korean paper",
+          "line": {
+            "ko": "한지예요!",
+            "romanization": "Hanjiyeyo!",
+            "en": "It's hanji!",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya in a wooden room with a paper window and door; warm light glows through the paper.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 190,
+                "s": 1.1,
+                "z": "back"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 230,
+                "y": 292,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Hoya stands in a wooden room where soft light glows through the paper of the window and door."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "People {kw:mandeureoyo}, make, hanji by hand from the bark of the paper mulberry, {kw:dangnamu}.",
+          "captionEn": "First, the paper mulberry tree",
+          "line": {
+            "ko": "닥나무로 만들어요.",
+            "romanization": "Dangnamuro mandeureoyo.",
+            "en": "They make it from the paper mulberry.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya under a leafy paper mulberry tree in the countryside, looking up at its branches.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 170,
+                "y": 236,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 300,
+                "y": 292,
+                "s": 0.7,
+                "flip": true
+              }
+            ],
+            "altEn": "Hoya looks up at a leafy paper mulberry tree, whose bark becomes hanji."
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Papermakers peel the bark and {kw:dudeuryeoyo}, beat, it until it is soft.",
+          "captionEn": "Then, beating the soft bark",
+          "line": {
+            "ko": "껍질을 두드려요.",
+            "romanization": "Kkeopjireul dudeuryeoyo.",
+            "en": "They beat the bark.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A papermaker kneels outdoors near a bare tree, beating soft bark; Hoya watches.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 320,
+                "y": 230,
+                "s": 0.9,
+                "z": "back",
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-artisan",
+                "x": 170,
+                "y": 288,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 292,
+                "y": 294,
+                "s": 0.55
+              }
+            ],
+            "altEn": "A papermaker kneels outdoors in the cold, beating soft bark, and Hoya watches."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "They stir the fibres into water and {kw:tteoyo}, scoop, a thin sheet of paper with a screen.",
+          "captionEn": "Next, scooping a thin sheet",
+          "line": {
+            "ko": "종이를 떠요.",
+            "romanization": "Jongireul tteoyo.",
+            "en": "They scoop the paper.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "In a wooden workshop a papermaker lifts a thin wet sheet on a screen; Hoya waves.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 170,
+                "y": 286,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 260,
+                "y": 250,
+                "s": 1.1
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 336,
+                "y": 292,
+                "s": 0.55
+              }
+            ],
+            "altEn": "In a workshop a papermaker lifts a thin wet sheet of paper from the water, and Hoya waves."
+          }
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Goryeo paper {kw:yumyeonghaesseoyo}: it was famous, and in China the best paper was called Goryeo paper.",
+          "captionEn": "Goryeo paper was famous",
+          "line": {
+            "ko": "고려 종이가 유명했어요.",
+            "romanization": "Goryeo jongiga yumyeonghaesseoyo.",
+            "en": "Goryeo paper was famous.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Old thread-bound books rest on a low wooden desk; Hoya looks at them.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:desk-low",
+                "x": 200,
+                "y": 292,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 170,
+                "y": 246,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 250,
+                "y": 250,
+                "s": 0.7
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 330,
+                "y": 292,
+                "s": 0.55,
+                "flip": true
+              }
+            ],
+            "altEn": "Old thread-bound books of fine white paper rest on a low desk, and Hoya looks at them."
+          }
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Even {kw:jigeum}, now, master papermakers make hanji by hand.",
+          "captionEn": "Last, hanji is still made today",
+          "line": {
+            "ko": "지금도 한지를 만들어요.",
+            "romanization": "Jigeumdo hanjireul mandeureoyo.",
+            "en": "People still make hanji now.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A papermaker of today shows fresh sheets of hanji in a bright room; Hoya waves.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:fig-artisan",
+                "x": 150,
+                "y": 288,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 250,
+                "y": 250,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 334,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Today a master papermaker shows fresh sheets of hanji, and Hoya waves hello."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "r1",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "껍질",
+            "romanization": "kkeopjil",
+            "en": "bark"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Water",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Bark",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Paper",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Hundred",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Kkeopjil means bark or peel. Papermakers beat the bark until it is soft.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "r2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "떠요",
+            "romanization": "tteoyo",
+            "en": "scoop"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Beat",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Make",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Was famous",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Scoop (paper from water)",
+              "isCorrect": true
+            }
+          ],
+          "explainEn": "Tteoyo here means scoop. Jongireul tteoyo: they scoop the paper from the water with a screen.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "r3",
+          "kind": "detail",
+          "promptEn": "In the story, what do papermakers do with the bark?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Beat it until it is soft",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Paint it red",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Throw it away",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Burn it for heat",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Papermakers peel the bark and beat it until it is soft, then scoop the fibres into paper.",
+          "factIds": [
+            "f3"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s2",
+        "s4",
+        "s5",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "hanji",
+        "dangnamu",
+        "dudeuryeoyo",
+        "tteoyo"
+      ],
+      "grammarFocusEn": "-ro (from) with a verb; object -eul/-reul; the past -aesseoyo; -do (even, still)"
+    }
+  ],
+  "coverSceneId": "s1",
+  "shelf": {
+    "category": "culture",
+    "order": 20,
+    "sampler": false,
+    "minutes": 5
+  },
+  "pillarTags": [
+    "E1"
+  ],
+  "topicTags": [
+    "hanji",
+    "korean-paper",
+    "papermaking"
+  ],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Hanji is the traditional paper of Korea, made by hand. Today all traditional paper made from the bark of the paper mulberry (dak) is called hanji. Its main materials are the paper mulberry and hwangchokgyu (sunset hibiscus).",
+      "claimKo": "한지는 손으로 떠서 만든 우리나라 전래의 종이로, 오늘날 닥나무 껍질로 만든 전래의 종이를 모두 한지라 부른다. 주재료는 닥나무와 황촉규이다.",
+      "sources": [
+        {
+          "title": "한지 (韓紙)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0061987",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "정의: \"손으로 떠서 만든 우리나라 전래의 종이.\" 내용: \"오늘날 닥나무 껍질로 만든 전래의 종이를 모두 한지로 통칭되고 있으나\""
+        },
+        {
+          "title": "국가무형유산 한지장 (韓紙匠)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273101170000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명(국가유산청 공공데이터 SearchKindOpenapiDt.do로 읽음): \"한지는 닥나무와 황촉규(黃蜀葵)를 주재료 하여 고도의 숙련된 기술과 장인의 오랜 경험을 바탕으로 완성된다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "There is no concrete evidence of when hanji began to be used in Korea. The common view is that, because Korea lies next to China, Chinese papermaking techniques came in through exchanges from ancient times.",
+      "claimKo": "우리나라에서 한지가 언제부터 쓰였는지 구체적인 증거는 없으며, 중국과 인접해 있어 고대부터 문물 교류를 통해 중국의 제지 기술이 들어왔을 것으로 보는 견해가 일반적이다.",
+      "sources": [
+        {
+          "title": "한지 (韓紙)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0061987",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"우리나라에서 한지가 언제부터 사용되었는지 구체적인 증거는 없다. 다만 지리적으로 중국과 인접해 있어 고대부터 문물교류를 통해 중국의 제지기술이 유입되었을 것으로 보는 견해가 일반적이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Traditional hanji-making begins with cutting paper mulberry branches in the cold months after the harvest. The branches are steamed so the bark can be peeled; the outer skin is scraped off to make white bark, which is dried, boiled in lye made from ash, rinsed and beaten into pulp. The fibres are stirred in water with dakpul, a sticky liquid from the root of hwangchokgyu, and sheets are scooped with a bamboo screen, pressed and dried.",
+      "claimKo": "전통 한지 만들기는 추수가 끝난 추운 때에 닥나무를 베는 데서 시작한다. 닥나무를 쪄서 껍질을 벗기고, 겉껍질을 벗겨 낸 백피를 말린 뒤 잿물에 삶고 씻어 두드려 섬유로 만든다. 닥 섬유를 황촉규 뿌리의 끈끈한 닥풀과 함께 물에 풀고 대발로 종이를 떠서 물기를 빼고 말린다.",
+      "sources": [
+        {
+          "title": "자연이 만들어낸 우리 한지 (국가유산사랑, 2010-06-10)",
+          "publisher": "국가유산청 소식지 「국가유산사랑」 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=5998&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"우리 전통한지 제작의 시작은 추수가 끝나고 찬바람이 불기 시작하는 11월에서 2월까지 닥나무를 베는 작업부터 시작 된다. … 푹 쪄낸 닥나무는 껍질을 벗겨낸다. … 백피를 섬유로 만들기 위해서는 잿물에 삶아야 한다. … 백피가 곤죽이 될 때까지 두드려 … 황촉규 뿌리를 치대어 얻어낸 끈끈한 점액 닥풀을 첨가한다.\""
+        },
+        {
+          "title": "국가무형유산 한지장 (韓紙匠)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273101170000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명: \"닥나무를 베고, 찌고, 삶고, 말리고, 벗기고, 다시 삶고, 두들기고, 고르게 섞고, 뜨고, 말리는\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In one way of scooping, oebal-tteugi, the papermaker relies on a single screen hung from a string and swings it front to back and side to side.",
+      "claimKo": "외발뜨기는 공중에 매단 줄 하나에 의지해 발을 앞뒤 좌우로 흔들어 종이를 뜨는 방법이다.",
+      "sources": [
+        {
+          "title": "자연이 만들어낸 우리 한지 (국가유산사랑, 2010-06-10)",
+          "publisher": "국가유산청 소식지 「국가유산사랑」 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=5998&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"공중에 매단 줄 하나에 의지해 발을 앞뒤 좌우로 흔들어 종이를 뜨는 것을 발틀이 하나밖에 없다고 해서 외발뜨기\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Traditional hanji was also called baekji, 'hundred paper' (百紙): people said that after ninety-nine handlings by the makers, the person who uses it touches it for the hundredth time, or that it took a hundred steps to make.",
+      "claimKo": "옛사람들은 한지를 백지(百紙)라고도 불렀다. 아흔아홉 번의 손질을 거친 뒤 마지막 사람이 백 번째로 만진다고 하여, 또는 백 번의 과정을 거쳐야 만들어진다고 하여 붙은 이름이다.",
+      "sources": [
+        {
+          "title": "국가무형유산 한지장 (韓紙匠)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273101170000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명: \"아흔아홉 번의 손질을 거친 후 마지막 사람이 백번째로 만진다 하여 옛사람들은 한지를 '백지(百紙)'라 부르기도 하였다.\""
+        },
+        {
+          "title": "자연이 만들어낸 우리 한지 (국가유산사랑, 2010-06-10)",
+          "publisher": "국가유산청 소식지 「국가유산사랑」 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=5998&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"옛날에는 전통 한지를 백지百紙라고도 하였다. … 마무리 하는데 까지 백 번이라는 과정을 거쳐야만 한지가 만들어진다고 하여 백지百紙라고 한 것이다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Korean hanji was famous from the Goryeo period: Chinese people called the best paper Goryeoji, 'Goryeo paper', and Sun Mu of the Song dynasty praised Goryeo's paper mulberry paper in the Gyerim yusa as bright white and glossy.",
+      "claimKo": "우리나라 한지는 고려 시대부터 이름이 높아 중국인들도 가장 좋은 종이를 고려지라 불렀고, 송나라 손목은 『계림유사』에서 고려의 닥종이가 빛이 희고 윤이 난다고 칭찬하였다.",
+      "sources": [
+        {
+          "title": "국가무형유산 한지장 (韓紙匠)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273101170000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "설명: \"우리나라의 한지는 고려시대부터 그 명성이 높아 중국인들도 제일 좋은 종이를 '고려지(高麗紙)'라 불렀다. 송나라 손목(孫穆)은 『계림유사(鷄林類事)』에서 고려의 닥종이는 빛이 희고 윤이 나서 사랑스러울 정도라고 극찬하였다.\""
+        },
+        {
+          "title": "한지 (韓紙)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0061987",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "내용: \"중국 등지에서는 시대에 따라 계림지(鷄林紙) · 고려지 또는 조선지라 하였다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the past hanji was used all through daily life: as floor paper (jangpanji), wallpaper and paper for windows and doors (changhoji), and as the paper of books written and printed on it.",
+      "claimKo": "예전에는 장판지, 벽지, 문창호지처럼 생활 곳곳에 한지를 썼고, 한지 위에 쓰고 인쇄한 책을 가까이하였다.",
+      "sources": [
+        {
+          "title": "자연이 만들어낸 우리 한지 (국가유산사랑, 2010-06-10)",
+          "publisher": "국가유산청 소식지 「국가유산사랑」 (Korea Heritage Service, khs.go.kr)",
+          "url": "https://www.khs.go.kr/cop/bbs/selectBoardArticle.do?nttId=5998&bbsId=BBSMSTR_1008&mn=NS_01_09_01",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "\"한지 위에 태어나는 것은 한지 장판지 위에서 태어남을 말함이며, 그 속에서 산다는 것은 한지 벽지韓紙壁紙와 문창호지門窓戶紙에 싸여 생활하는 것을 말하는 것이다. 그것을 만진다는 것은 한지 위에 쓰여 지고 인쇄된 서책을 가까이하는 생활을 말하는 것이고\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Hanjijang, the craftspeople who make traditional hanji, are a National Intangible Heritage of Korea.",
+      "claimKo": "전통 한지를 만드는 장인인 한지장은 국가무형유산이다.",
+      "sources": [
+        {
+          "title": "국가무형유산 한지장 (韓紙匠)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1273101170000",
+          "accessed": "2026-11-04",
+          "quoteOrLocator": "종목 국가무형유산, 명칭 \"한지장 (韓紙匠) Hanjijang (Korean Paper Making)\". 설명: \"'한지장(韓紙匠)'이란 전통한지를 제작하는 장인을 말한다.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털(한지장)·「국가유산사랑」; 한국민족문화대백과사전(한지)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-11-04",
+    "scope": "story",
+    "notes": "Sources opened and quotes read on 2026-11-04: the Korea Heritage Service heritage portal page of 한지장 (description read through the khs.go.kr open API SearchKindOpenapiDt.do, as the page renders it with JavaScript), the Korea Heritage Service newsletter article 자연이 만들어낸 우리 한지 (국가유산사랑, 2010-06-10, on khs.go.kr) and encykorea E0061987. MAR 2026-11-04 (F-CURR-002 §9.2, row CM-46): author, three checker passes (language with the F-CNT-002 converter; culture and facts against the cited facts and the §5.1 fact conventions; learning design with story-coverage and the §9.3 rules), a reviser and a third pass, run by the authoring session as separate passes; every finding and its outcome is in content/stories/research/crafts-book2.changes.md and the third pass in crafts-book2.signoff.md. MAR 2026-11-04 language review (F-CURR-002 CM-46): the Korean strings of both tiers, their romanization (machine-checked) and glosses read. MAR 2026-11-04 culture review (F-CURR-002 CM-46): every sentence and check compared with the facts it cites, framing and tone read; review.advisory none. MAR 2026-11-04 language review of the read tier (F-CURR-002 CM-46): six lines, romanization machine-checked, glosses read for spelling, naturalness and level. MAR 2026-11-04 culture review of the read tier (F-CURR-002 CM-46): every line and check compared with its cited facts, no new claim. The independent MAR reviewer of the PR's fix stage re-reads the story and its es and ko text."
+  },
+  "authorNotes": "Topic: hanji, Korean paper, and its makers (F-CURR-002 §5.6 S5); no UNESCO status is claimed. Origin is stated neutrally from encykorea (no evidence of when it began in Korea; the common view is that Chinese papermaking techniques came in through exchange); no first, oldest or best-in-the-world claim. Left out: the newsletter's lines on hanji at funerals and paper armour, the saying 'paper a thousand years, silk five hundred', the Hanjijang designation date (2005-09-23 on the portal) and the doching finishing step (it cites the Mugujeonggwang sutra, a printing topic). 백지 means a blank sheet in Korean today; the story gives it only as the old name 'hundred paper' (百紙) with the KHS explanation and teaches 백 (hundred) as its keyword. The Tripitaka and printing stories already cover paper for printing, so this tale stays with the paper itself. No reward card in this row: 한지 is already the word of a Stage 1 card (card:hanji), and Volume 2 cards are F-CARD scope.",
+  "errata": []
+}

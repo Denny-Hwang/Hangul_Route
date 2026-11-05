@@ -15,7 +15,7 @@ const SCRIPT = join(REPO, "scripts", "build-lecture-catalogue.mjs");
 const OUT_REL = join("apps", "web", "src", "data", "lecture-catalogue.generated.ts");
 const TITLES_OUT_REL = join("apps", "web", "src", "data", "catalogue-titles.generated.ts");
 
-const { GENERATED_HEADER, STORIES_IN_LECTURE, TITLES_HEADER, TITLE_ID_RE, buildCatalogue, buildTitles, isListedStory, renderCatalogue, renderTitles } = await import(SCRIPT);
+const { GENERATED_HEADER, STORIES_IN_LECTURE, TITLES_HEADER, TITLE_ID_RE, buildCatalogue, buildTitles, isListedStory, renderCatalogue, renderTitles, volumeTwoStoryIds } = await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -281,4 +281,17 @@ describe("lecture catalogue CLI", () => {
     const check = spawnSync("node", [SCRIPT, "--check"], { encoding: "utf8", env: { ...process.env, HANGUL_ROUTE_ROOT: REPO } });
     assert.equal(check.status, 0, check.stdout);
   });
+});
+
+// F-CURR-002 row CM-46: a book 2 tale is Volume 2 content; the console offers it only once `volumes` opens.
+
+test("a book 2 tale (a read quest of a hand-written later volume) is not offered as a console story", () => {
+  const ids = volumeTwoStoryIds([
+    { cellId: "episode:stage5-crafts", episodeId: "episode:stage5-crafts-v2", volume: 2, title: "x", minutes: 10, questIds: ["quest:story-a-tale-read", "quest:stage2-life-v2-q1"] },
+  ]);
+  assert.deepEqual([...ids], ["story:a-tale"]);
+  const story = (id, en) => ({ name: `${id}.json`, json: { id: `story:${id}`, state: "ready", minutes: 5, title: { en }, review: { language: "native-reviewed", culture: "culture-reviewed" } } });
+  const model = buildCatalogue({ stories: [story("a-tale", "A"), story("b-tale", "B")], topicFiles: [], volumeTwoStories: ids });
+  assert.deepEqual(model.stories.map((s) => s.id), ["story:b-tale"]);
+  assert.throws(() => volumeTwoStoryIds({}), /an array of later volumes/);
 });

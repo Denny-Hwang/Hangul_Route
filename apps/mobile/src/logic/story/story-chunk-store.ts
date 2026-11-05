@@ -1,9 +1,9 @@
-import type { Story, StoryKeyword, StoryLevel } from '@hangul-route/content-schema';
+import type { HeldStoryCard, Overlays, Story, StoryLevel } from '@hangul-route/content-schema';
 
 /**
- * The stories at runtime (F-CURR-002 §10, row CM-8). The start bundle holds only the story shelf
- * (`__generated__/stories-index.ts`): each story's id, titles, theme, stage, minutes, review gate,
- * shelf, card and reward blocks, Hoya lines, the levels of its tiers and its card's keyword. The
+ * The stories at runtime (F-CURR-002 §10, rows CM-8 and CM-8b). The story shelf (`__generated__/stories-shelf.ts`,
+ * a chunk the web app loads before its first screen) holds each story's id, titles, theme, stage, minutes, review
+ * gate, shelf, card and reward blocks, Hoya lines, the levels of its tiers and its card's Korean word. The
  * rest of a story (its tiers with their scenes and art, facts, keywords, summary, verification and
  * the other fields of `STORY_BODY_FIELDS`) is one content-hashed chunk per story, reached through
  * an injected loader (the manifest's literal `import()`s), on demand, once each. The web build
@@ -17,7 +17,7 @@ import type { Story, StoryKeyword, StoryLevel } from '@hangul-route/content-sche
 
 /**
  * The fields of a story that live in its body chunk; every other field is in the shelf, and
- * `review` is in both (the shelf keeps the gate only, `ShelfReview`).
+ * `review` is in both (the shelf keeps the gate only, `ShelfReview`). Row CM-8b moved `coverSceneId` here.
  */
 export const STORY_BODY_FIELDS = [
   'v',
@@ -33,6 +33,7 @@ export const STORY_BODY_FIELDS = [
   'authorNotes',
   'errata',
   'review',
+  'coverSceneId',
 ] as const satisfies readonly (keyof Story)[];
 
 export type StoryBodyField = (typeof STORY_BODY_FIELDS)[number];
@@ -44,10 +45,21 @@ export type StoryBody = Pick<Story, StoryBodyField>;
 export interface StoryTierHeader {
   level: StoryLevel;
   scenes: number;
+  /** The tier has a Story Order (F-CURR-002 row CM-46: a book 2 tale's read tier); absent otherwise. */
+  storyOrder?: true;
 }
 
-/** The review gate as the shelf keeps it: the two sign-offs, and the advisory when there is one. */
-export type ShelfReview = Pick<Story['review'], 'language' | 'culture' | 'advisoryNoteEn'> & { advisory?: Story['review']['advisory'] };
+/**
+ * The review gate as the shelf keeps it: the two sign-offs, and the advisory when there is one. The advisory note is
+ * in the body's review block (row CM-8b): only the reader, Sources and the presenter read it, and they wait for the chunk.
+ */
+export type ShelfReview = Pick<Story['review'], 'language' | 'culture'> & { advisory?: Story['review']['advisory'] };
+
+/** The face of a story's card: its keyword's Korean word and romanization (the whole keyword is in the body). */
+export interface StoryCardWord {
+  ko: string;
+  romanization: string;
+}
 
 /**
  * Shelf fields the generator leaves out when they hold the schema default (`StorySchema`); the
@@ -63,8 +75,8 @@ export type StoryShelfEntry = Omit<Story, StoryBodyField | DefaultedField> &
   review: ShelfReview;
   /** The tiers in file order, without their scenes. */
   levels: readonly StoryTierHeader[];
-  /** The keyword the story's card shows (`card.keywordId`), so the card's face needs no chunk. */
-  cardKeyword?: StoryKeyword;
+  /** The Korean word the story's card shows (`card.keywordId`'s), so the card's face needs no chunk. */
+  cardWord?: StoryCardWord;
   /** The hash the story's chunk carries as `CHUNK_HASH`. */
   chunk: string;
 };
@@ -73,6 +85,23 @@ export type StoryShelfEntry = Omit<Story, StoryBodyField | DefaultedField> &
 export interface StoryBodyChunk {
   CHUNK_HASH: string;
   STORY_BODY: StoryBody;
+  /**
+   * The es / ko text of the story's scenes (narration, caption, alt), which the learner PWA's locale chunks leave
+   * out (row CM-8b's overlay half, F-CURR-002 §10); absent when the story has none.
+   */
+  STORY_OVERLAYS?: Partial<Overlays>;
+}
+
+/**
+ * The module of the story shelf chunk (`stories-shelf.ts`, row CM-8b). An e2e build's shelf also carries the
+ * test fixtures' bodies and ids (`build-stories.mjs --include-fixtures`).
+ */
+export interface StoryShelfChunk {
+  CHUNK_HASH: string;
+  STORY_SHELF: StoryShelfEntry[];
+  HELD_STORY_CARDS: HeldStoryCard[];
+  STORY_INLINE_BODIES?: Readonly<Record<string, StoryBody>>;
+  STORY_FIXTURE_IDS?: readonly string[];
 }
 
 export interface StoryManifest {
@@ -121,6 +150,11 @@ export interface StoryStoreOptions {
    * pending script and the next ensure asks again (`platform/lesson-chunk-abandon`).
    */
   abandon?: (bundleName: string) => void;
+  /**
+   * Lays a loaded chunk's scene text (`STORY_OVERLAYS`) into the content overlays, before the body is ready, so no
+   * screen draws the story's scenes without it (`content/stories.ts` binds `installContentOverlay`).
+   */
+  installOverlays?: (overlays: Partial<Overlays>) => void;
 }
 
 /**
@@ -152,7 +186,7 @@ export interface StoryStore {
 }
 
 export function createStoryStore(manifest: StoryManifest, load: StoryLoader, options: StoryStoreOptions = {}): StoryStore {
-  const { timeoutMs, abandon } = options;
+  const { timeoutMs, abandon, installOverlays } = options;
   const entries = new Map(manifest.entries.map((e) => [e.id, e]));
   const bodies = new Map<string, StoryBody>(Object.entries(manifest.inline ?? {}));
   const loads = new Map<string, Promise<void>>();
@@ -196,6 +230,7 @@ export function createStoryStore(manifest: StoryManifest, load: StoryLoader, opt
       (mod) => {
         loads.delete(storyId);
         if (mod.CHUNK_HASH !== entry.chunk) throw new StoryChunkMismatch(storyId, entry.chunk, mod.CHUNK_HASH);
+        if (mod.STORY_OVERLAYS !== undefined) installOverlays?.(mod.STORY_OVERLAYS);
         bodies.set(storyId, mod.STORY_BODY);
         changed();
       },
@@ -233,7 +268,8 @@ export function createStoryStore(manifest: StoryManifest, load: StoryLoader, opt
 
 /**
  * What a body field reads before its chunk is in: empty lists and blank text, the card's keyword
- * alone (so a card's face is drawn at start), and a schema-valid stand-in for the two objects.
+ * alone with the shelf's Korean word (so a card's face is drawn at start; its gloss is blank until the
+ * chunk is in), no cover scene, and a schema-valid stand-in for the two objects.
  * Screens that read a body wait for the chunk (`useStoryReady`); this keeps every other reader safe.
  */
 function placeholder(entry: StoryShelfEntry, field: StoryBodyField): StoryBody[StoryBodyField] {
@@ -244,9 +280,12 @@ function placeholder(entry: StoryShelfEntry, field: StoryBodyField): StoryBody[S
       return 1;
     case 'summaryEn':
     case 'referenceDisplay':
+    case 'coverSceneId':
       return '';
     case 'keywords':
-      return entry.cardKeyword === undefined ? [] : [entry.cardKeyword];
+      return entry.card === undefined || entry.cardWord === undefined
+        ? []
+        : [{ id: entry.card.keywordId, ko: entry.cardWord.ko, romanization: entry.cardWord.romanization, en: '', kind: 'word' }];
     case 'origin':
       return { type: 'original', noteEn: '' };
     case 'verification':
@@ -263,7 +302,7 @@ function placeholder(entry: StoryShelfEntry, field: StoryBodyField): StoryBody[S
   }
 }
 
-const SHELF_ONLY = new Set(['levels', 'cardKeyword', 'chunk']);
+const SHELF_ONLY = new Set(['levels', 'cardWord', 'chunk']);
 
 /** The shelf entry each story of `storiesOverStore` was made from (by identity: a copy reads its own tiers). */
 const shelfOf = new WeakMap<object, StoryShelfEntry>();
@@ -307,6 +346,16 @@ export function storyTierLevels(story: Pick<Story, 'tiers'>): StoryLevel[] {
 }
 
 /**
+ * Whether a story's tier at this level has a Story Order (F-CURR-002 row CM-46): the shelf's header for a story of
+ * `storiesOverStore` (known before its chunk loads), else its own tier.
+ */
+export function storyTierHasOrder(story: Pick<Story, 'tiers'>, level: StoryLevel): boolean {
+  const header = shelfOf.get(story)?.levels.find((t) => t.level === level);
+  if (header !== undefined) return header.storyOrder === true;
+  return story.tiers.find((t) => t.level === level)?.storyOrder !== undefined;
+}
+
+/**
  * A full story split into its shelf entry and its body: the TypeScript twin of `planChunks` in
  * scripts/build-stories.mjs, used for stories parsed at runtime (the test fixtures of an e2e build)
  * and kept equal to the generator by `content/__tests__/story-chunks.test.ts`.
@@ -318,20 +367,19 @@ export function splitStory(story: Story, chunk: string): { entry: StoryShelfEntr
   const shelf = Object.fromEntries(
     Object.entries(story).filter(([key, value]) => !(STORY_BODY_FIELDS as readonly string[]).includes(key) && !isDefault(key, value)),
   );
-  const { language, culture, advisory, advisoryNoteEn } = story.review;
+  const { language, culture, advisory } = story.review;
   const review: ShelfReview = {
     language,
     culture,
     ...(advisory.length > 0 ? { advisory } : {}),
-    ...(advisoryNoteEn === undefined ? {} : { advisoryNoteEn }),
   };
   const cardKeyword = story.card === undefined ? undefined : story.keywords.find((k) => k.id === story.card?.keywordId);
   // `shelf` is the story less its body fields and its defaults: a StoryShelfEntry once these are added.
   const entry = {
-    ...(shelf as Omit<StoryShelfEntry, 'review' | 'levels' | 'cardKeyword' | 'chunk'>),
+    ...(shelf as Omit<StoryShelfEntry, 'review' | 'levels' | 'cardWord' | 'chunk'>),
     review,
-    levels: story.tiers.map((t) => ({ level: t.level, scenes: t.scenes.length })),
-    ...(cardKeyword === undefined ? {} : { cardKeyword }),
+    levels: story.tiers.map((t) => ({ level: t.level, scenes: t.scenes.length, ...(t.storyOrder ? { storyOrder: true as const } : {}) })),
+    ...(cardKeyword === undefined ? {} : { cardWord: { ko: cardKeyword.ko, romanization: cardKeyword.romanization } }),
     chunk,
   };
   return { entry, body };

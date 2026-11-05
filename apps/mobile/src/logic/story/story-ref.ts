@@ -1,4 +1,4 @@
-import type { Quest, StoryLevel } from '@hangul-route/content-schema';
+import type { Quest, StoryLevel, StoryOrderRound } from '@hangul-route/content-schema';
 import { storyById } from '../../content/stories';
 import { storyTierLevels } from './story-chunk-store';
 import type { MinigameScope } from '../minigame-config';
@@ -7,13 +7,13 @@ import type { MinigameScope } from '../minigame-config';
  * Story minigame refs (F-STORY-003 §3.1):
  *
  *   minigame:story-<step>-<level>-<slug>
- *     step  = read | check | seq
+ *     step  = read | check | seq | order   (order: a book 2 tale's Story Order, F-CURR-002 row CM-46)
  *     level = listen | along | read      (along = read-along)
  *     slug  = the story id without "story:", kebab-case; last, so it may
  *             itself contain "read", "check" and so on.
  */
 
-export type StoryRefStep = 'read' | 'check' | 'seq';
+export type StoryRefStep = 'read' | 'check' | 'seq' | 'order';
 
 export interface StoryRef {
   step: StoryRefStep;
@@ -21,7 +21,7 @@ export interface StoryRef {
   storyId: string;
 }
 
-const REF = /^minigame:story-(read|check|seq)-(listen|along|read)-([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+const REF = /^minigame:story-(read|check|seq|order)-(listen|along|read)-([a-z0-9]+(?:-[a-z0-9]+)*)$/;
 
 const LEVEL_OF_CODE: Record<string, StoryLevel> = {
   listen: 'listen',
@@ -39,6 +39,7 @@ const KIND_OF_STEP: Record<StoryRefStep, MinigameScope['kind']> = {
   read: 'story-read',
   check: 'story-check',
   seq: 'story-sequence',
+  order: 'story-order',
 };
 
 /** Splits a story ref into its parts; null on anything that is not one. */
@@ -57,8 +58,13 @@ export function storyMinigameRef(step: StoryRefStep, level: StoryLevel, storyId:
   return `minigame:story-${step}-${CODE_OF_LEVEL[level]}-${storyId.replace(/^story:/, '')}`;
 }
 
-/** The part of the content bundle `storyScopeFor` needs: which levels a story has. */
-export type StoryLookup = (id: string) => { tiers: ReadonlyArray<{ level: StoryLevel }> } | undefined;
+/**
+ * The part of the content bundle `storyScopeFor` needs: which levels a story has, and for a Story Order step the
+ * tier's rounds (from its body, which the minigame screen waits for, F-CURR-002 §10).
+ */
+export type StoryLookup = (
+  id: string,
+) => { tiers: ReadonlyArray<{ level: StoryLevel; storyOrder?: { rounds: readonly StoryOrderRound[] } }> } | undefined;
 
 /**
  * Resolves a story ref to a scope, or undefined when the ref is malformed or
@@ -68,18 +74,26 @@ export type StoryLookup = (id: string) => { tiers: ReadonlyArray<{ level: StoryL
 /** The shelf's view of a bundled story: its levels are known before its chunk loads (F-CURR-002 §10). */
 const shelfLookup: StoryLookup = (id) => {
   const story = storyById(id);
-  return story === undefined ? undefined : { tiers: storyTierLevels(story).map((level) => ({ level })) };
+  if (story === undefined) return undefined;
+  // A tier's Story Order is in its body: read once the chunk is in (an empty tier list before it).
+  const orders = new Map(story.tiers.map((t) => [t.level, t.storyOrder] as const));
+  return { tiers: storyTierLevels(story).map((level) => ({ level, ...(orders.get(level) ? { storyOrder: orders.get(level) } : {}) })) };
 };
 
 export function storyScopeFor(ref: string, find: StoryLookup = shelfLookup): MinigameScope | undefined {
   const parsed = parseStoryMinigameRef(ref);
   if (!parsed) return undefined;
   const story = find(parsed.storyId);
-  if (!story?.tiers.some((t) => t.level === parsed.level)) return undefined;
-  return {
+  const tier = story?.tiers.find((t) => t.level === parsed.level);
+  if (tier === undefined) return undefined;
+  const scope: MinigameScope = {
     kind: KIND_OF_STEP[parsed.step],
     story: { storyId: parsed.storyId, level: parsed.level },
   };
+  if (parsed.step !== 'order') return scope;
+  // Row CM-46: the tier's rounds as authored; a tier without them (or a body not yet in) has no such step.
+  if (tier.storyOrder === undefined) return undefined;
+  return { ...scope, storyOrder: { rounds: tier.storyOrder.rounds.map((r) => ({ ...r, panels: r.panels.map((p) => ({ ...p })) })) } };
 }
 
 /** A quest's `story-read` step: its index in `steps` and its parsed ref; null for any other quest. */

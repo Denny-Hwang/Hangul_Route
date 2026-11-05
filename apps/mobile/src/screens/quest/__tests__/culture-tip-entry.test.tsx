@@ -76,7 +76,15 @@ describe('the CultureTip door (row CM-3C)', () => {
   it('on: the chunk loads once and the tip is drawn', async () => {
     useRemoteConfigStore.setState({ hydrated: true, cache: { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags: { upperCards: { on: true, pct: 100 } } } });
     const r = await door();
-    expect(byTestId(r.root, 'culture-tip-stub')).toHaveLength(1);
+    // The door's `import()` resolves through the mocked factory (itself awaiting an import), which takes a varying
+    // number of ticks on a loaded runner, so wait for the stub rather than a fixed count.
+    await vi.waitFor(
+      async () => {
+        await idle();
+        expect(byTestId(r.root, 'culture-tip-stub')).toHaveLength(1);
+      },
+      { timeout: 5000, interval: 20 },
+    );
     expect(chunk.loads).toBe(1);
   });
 });

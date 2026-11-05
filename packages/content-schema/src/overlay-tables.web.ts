@@ -10,7 +10,11 @@ import type { OverlayLocale, Overlays } from './schemas/locale-overlay';
 
 export const OVERLAYS: Overlays = { es: {}, ko: {} };
 
-/** Lays one locale's table into `OVERLAYS`, once its chunk is in. */
+/**
+ * Lays one locale's table into `OVERLAYS`, once its chunk is in. An entity's fields merge with the ones already in: a story's scene text
+ * arrives with its story chunk, its title and card text with the locale chunk, in either order (row CM-8b's overlay half).
+ */
 export function installContentOverlay(locale: OverlayLocale, table: Overlays[OverlayLocale]): void {
-  Object.assign(OVERLAYS[locale], table);
+  const into = OVERLAYS[locale] as Record<string, Overlays[OverlayLocale][string]>;
+  for (const [id, fields] of Object.entries(table)) into[id] = id in into ? { ...into[id], ...fields } : fields;
 }

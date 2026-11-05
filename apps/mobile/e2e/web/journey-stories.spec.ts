@@ -1,12 +1,15 @@
 import type { Page } from '@playwright/test';
 import { CATALOG } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked, headerBack } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, headerBack, openGrownUpZone, readStored, seedStoredAll, unlockWithPin } from './helpers';
+import { shot } from './shots';
+import { expectTextFits } from './text-fit';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
 /**
  * F-STORY-005 PR 5.5b: heritage stories on the Journey (wireframes journey/grid-with-stories A,
- * story/cell-stories B, episode/detail-cell-stories-row C). Needs the fixture bundle:
+ * story/cell-stories B, episode/detail-cell-stories-row C), and PR 5.8: two volumes in a cell (journey/volumes, at the
+ * end of this file, F-CURR-002 row CM-40). Needs the fixture bundle:
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web journey-stories
@@ -316,5 +319,224 @@ test.describe('heritage stories on the Journey, two panes (fixture bundle, 1180x
     await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
     await expect(page.getByRole('button', { name: LESSON_CELL, exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('button', { name: LESSON_ROW, exact: true })).toBeVisible();
+  });
+});
+
+/**
+ * F-STORY-005 PR 5.8 and F-CURR-002 row CM-40 (wireframe `journey/volumes.md`): two volumes in a cell. Stage 2 Nature &
+ * Animals ships its Volume 2, Seasons and Animals (row CM-41 S2), so the fixture copy of Outdoor Words that row CM-40
+ * gave the e2e bundle (`build-lessons.mjs --include-fixtures`) is no longer made. `volumes` is at built-in pct 0, so each
+ * case turns it on through the stored remote copy, as a ramp would; with it off the cell is its Volume 1 alone.
+ */
+const NATURE_V1 = CATALOG.cells.find((c) => c.episodeId === 'episode:stage2-nature');
+const V2_TITLE = NATURE_V1?.volumes?.[0]?.title ?? 'Seasons and Animals';
+const VOLUMES_ON = { volumes: { on: true, pct: 100 } };
+const V2_BUNDLE = /\/_expo\/static\/js\/web\/lessons-cell-stage2-nature-v2-[0-9a-f]{32}\.js$/;
+const natureCell = (page: Page) => page.getByRole('button', { name: /^Stage 2 [^,]+, Nature & Animals/ });
+
+/** A learner with Stage 2 Nature's Volume 1 done, and `volumes` as given. */
+async function volumesLearner(page: Page, flags: Record<string, { on: boolean; pct: number }>, settings?: { uiLocale: 'en'; textSize: 'largest' }): Promise<void> {
+  const AT = '2026-10-01T10:00:00.000Z';
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await page.getByRole('button', { name: "Let's start" }).click();
+  await completeChildForm(page, { name: 'Dami' });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const id = (await readStored<string>(page, 'profiles:active')) as string;
+  const questIds = NATURE_V1?.questIds ?? [];
+  const quests = questIds.map((questId) => ({ questId, episodeId: 'episode:stage2-nature', startedAt: AT, completedAt: AT, stars: 3, attempts: 1, accuracy: 1 }));
+  const questDoneAt = Object.fromEntries(questIds.map((q) => [q, AT]));
+  await seedStoredAll(page, {
+    [`progress:${id}`]: { profileId: id, updatedAt: AT, episodes: [], quests, cards: [], sessions: [], homework: [], reviews: [], streakDays: 0, questDoneAt },
+    'remote-config': { v: 1, fetchedAt: Date.now(), maxAgeS: 300, flags },
+    ...(settings ? { 'device:settings': { ...settings, uiLocaleAt: '2026-10-16T09:00:00.000Z' } } : {}),
+  });
+  await page.reload();
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+}
+
+test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR-002 CM-40)', () => {
+  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle (STORY_FIXTURES=1)');
+
+  for (const [label, size] of [
+    ['320', { width: 320, height: 800 }],
+    ['wide', { width: 1280, height: 900 }],
+  ] as const) {
+    test(`${label}: volume dots on the cell, it opens Volume 2 once Volume 1 is done, and Vol 1 / Vol 2 on its page`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await volumesLearner(page, VOLUMES_ON);
+      await expect(natureCell(page)).toHaveAccessibleName(/Opens Volume 2\.$/);
+      await expect(page.getByTestId('journey-volumes-stage2-nature-1-done')).toHaveCount(1);
+      await expect(page.getByTestId('journey-volumes-stage2-nature-2-open')).toHaveCount(1);
+      await expect(page.getByTestId('journey-volumes-stage2-nature')).toHaveAttribute('aria-hidden', 'true');
+      // Only a cell with two volumes has dots: Stage 2 Food & Daily Life and Play & Crafts ship their Volume 2 (rows CM-43
+      // S2, CM-42 S2); Holidays & Traditions has none.
+      await expect(page.getByTestId('journey-volumes-stage2-rites')).toHaveCount(0);
+      await expect(page.getByTestId('journey-volumes-stage2-crafts')).toHaveCount(1);
+      await expect(page.getByTestId('journey-volumes-stage2-life')).toHaveCount(1);
+      if (label === '320') {
+        // The dots never make a cell wider than its neighbours (54 dp at 320).
+        const nature = await natureCell(page).boundingBox();
+        const life = await page.getByRole('button', { name: /^Stage 2 [^,]+, Food & Daily Life/ }).boundingBox();
+        expect(nature?.width).toBeCloseTo(life?.width ?? 0, 1);
+        await expectNoHorizontalOverflow(page);
+      }
+      await natureCell(page).scrollIntoViewIfNeeded();
+      await shot(page, `volumes-grid-${label}`);
+      await natureCell(page).click();
+      await expect(page.getByText(V2_TITLE).first()).toBeVisible();
+      const tabs = page.getByRole('tablist', { name: 'Volumes' });
+      await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+      await expect(tabs.getByRole('tab', { name: 'Volume 1' })).toHaveAttribute('aria-selected', 'false');
+      await expect(tabs.getByText('Vol 1', { exact: true })).toBeVisible();
+      await shot(page, `volumes-page-${label}`);
+      await tabs.getByRole('tab', { name: 'Volume 1' }).click();
+      await expect(page.getByRole('tablist', { name: 'Volumes' }).getByRole('tab', { name: 'Volume 1' })).toHaveAttribute('aria-selected', 'true');
+      await expect(page.getByText('Outdoor Words', { exact: true }).first()).toBeVisible();
+      if (label === '320') await expectNoHorizontalOverflow(page);
+    });
+  }
+
+  test('320 at the Largest text size: the dots stay inside the cell, the cell keeps its width, Vol 1 / Vol 2 fit at 48 dp', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await volumesLearner(page, VOLUMES_ON, { uiLocale: 'en', textSize: 'largest' });
+    await natureCell(page).scrollIntoViewIfNeeded();
+    await expect(natureCell(page)).toHaveAccessibleName(/Opens Volume 2\.$/);
+    const cell = await natureCell(page).boundingBox();
+    const dots = await page.getByTestId('journey-volumes-stage2-nature').boundingBox();
+    const life = await page.getByRole('button', { name: /^Stage 2 [^,]+, Food & Daily Life/ }).boundingBox();
+    expect(cell && dots).toBeTruthy();
+    if (cell && dots) {
+      // Inside the cell, below its top band (where the corner marks sit) and above its bottom edge.
+      expect(dots.x).toBeGreaterThanOrEqual(cell.x);
+      expect(dots.x + dots.width).toBeLessThanOrEqual(cell.x + cell.width + 0.5);
+      expect(dots.y).toBeGreaterThan(cell.y);
+      expect(dots.y + dots.height).toBeLessThanOrEqual(cell.y + cell.height + 0.5);
+    }
+    expect(cell?.width).toBeCloseTo(life?.width ?? 0, 1);
+    await expectTextFits(page, 'the Journey grid with volume dots at Largest');
+    await shot(page, 'volumes-grid-320-largest');
+    await natureCell(page).click();
+    const tabs = page.getByRole('tablist', { name: 'Volumes' });
+    await expect(tabs.getByRole('tab', { name: 'Volume 2' })).toHaveAttribute('aria-selected', 'true');
+    for (const name of ['Volume 1', 'Volume 2']) {
+      const box = await tabs.getByRole('tab', { name }).boundingBox();
+      expect(box?.height ?? 0, name).toBeGreaterThanOrEqual(48);
+    }
+    await expectTextFits(page, 'the cell page with Vol 1 / Vol 2 at Largest');
+    await shot(page, 'volumes-page-320-largest');
+  });
+
+  test('volumes off: no dots, no volume sentence, the cell opens Volume 1 and its page has no tabs', async ({ page }) => {
+    await volumesLearner(page, {});
+    await expect(page.getByTestId('journey-volumes-stage2-nature')).toHaveCount(0);
+    await expect(natureCell(page)).not.toHaveAccessibleName(/Volume/);
+    await natureCell(page).click();
+    await expect(page.getByText('Outdoor Words', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('tablist', { name: 'Volumes' })).toHaveCount(0);
+    await expect(page.getByText(V2_TITLE)).toHaveCount(0);
+  });
+
+  /** Every cached URL path, by cache name. */
+  const cachedPaths = (page: Page): Promise<Record<string, string[]>> =>
+    page.evaluate(async () => {
+      const out: Record<string, string[]> = {};
+      for (const name of await caches.keys()) out[name] = (await (await caches.open(name)).keys()).map((req) => new URL(req.url).pathname);
+      return out;
+    });
+  const workerInControl = (page: Page) =>
+    expect
+      .poll(() => page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration())?.active && !!navigator.serviceWorker.controller), { timeout: 30_000 })
+      .toBe(true);
+  /** Online: Home, Journey, the Nature cell (it opens Volume 2), Start on its first quest, the quest's first screen. */
+  async function playVolumeTwo(page: Page): Promise<void> {
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await natureCell(page).click();
+    await expect(page.getByText(V2_TITLE).first()).toBeVisible();
+    await expect(page.getByTestId('episode-later-needs-internet')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    const anyway = page.getByRole('button', { name: 'Play anyway' });
+    await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+    if (await anyway.isVisible()) await anyway.click();
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  }
+
+  // F-CURR-002 row CM-5B: Volume 2 is a later chunk, out of the learner precache, cached on first use or saved.
+  test('offline: Volume 2 is not precached; unsaved it says it needs the internet; saved in the Grown-up area it plays offline; Remove takes it out', async ({ page, context }) => {
+    await volumesLearner(page, VOLUMES_ON);
+    await workerInControl(page);
+    // Neither the precache nor the background load fetched it: no learner downloads a later volume unasked.
+    const before = await cachedPaths(page);
+    expect(Object.values(before).flat().filter((p) => V2_BUNDLE.test(p))).toEqual([]);
+    expect(Object.values(before).flat()).toContain('/offline-packs.json');
+
+    // Offline and not saved: a calm line on the Volume 2 page, and words in place of Start.
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await page.getByText('Journey', { exact: true }).last().click();
+    await natureCell(page).click();
+    await expect(page.getByText(V2_TITLE).first()).toBeVisible();
+    await expect(page.getByTestId('episode-later-needs-internet')).toHaveText('This volume needs the internet the first time. After that, it works offline too.');
+    await expect(page.getByTestId('episode-quest-needs-internet').first()).toHaveText('Needs the internet');
+    await expect(page.getByRole('button', { name: 'Start', exact: true })).toHaveCount(0);
+    await shot(page, 'cm5b-volume2-needs-internet');
+
+    // Back online, a grown-up saves Stage 2 from the Offline lessons card.
+    await context.setOffline(false);
+    await openGrownUpZone(page, 'Dami');
+    await unlockWithPin(page);
+    const card = page.getByTestId('dashboard-offline');
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('heading', { name: 'Offline lessons' })).toBeVisible();
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/^About 0\.\d MB · Not saved yet$/);
+    await shot(page, 'cm5b-offline-card-not-saved');
+    await page.getByRole('button', { name: 'Save: Stage 2: Words' }).click();
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Saved on this device$/);
+    await expect(page.getByRole('button', { name: 'Remove: Stage 2: Words' })).toBeVisible();
+    await shot(page, 'cm5b-offline-card-saved');
+    const saved = await cachedPaths(page);
+    expect((saved['hr-later-v1'] ?? []).filter((p) => V2_BUNDLE.test(p))).toHaveLength(1);
+    expect(await readStored(page, 'device:offline-saved')).toEqual(['stage2']);
+
+    // Offline again: Volume 2's first quest plays from the saved chunk.
+    await context.setOffline(true);
+    await page.goto('/');
+    await playVolumeTwo(page);
+    const loaded = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => new URL(e.name).pathname));
+    expect(loaded.filter((p) => V2_BUNDLE.test(p))).toHaveLength(1);
+
+    // Remove: the chunk leaves the device and the choice is forgotten.
+    await context.setOffline(false);
+    await openGrownUpZone(page, 'Dami');
+    await unlockWithPin(page);
+    await page.getByRole('button', { name: 'Remove: Stage 2: Words' }).click();
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Not saved yet$/);
+    expect(((await cachedPaths(page))['hr-later-v1'] ?? []).filter((p) => V2_BUNDLE.test(p))).toEqual([]);
+    expect(await readStored(page, 'device:offline-saved')).toEqual([]);
+  });
+
+  test('first use: a Volume 2 opened online is runtime-cached and then plays offline with nothing saved', async ({ page, context }) => {
+    await volumesLearner(page, VOLUMES_ON);
+    await workerInControl(page);
+    await page.reload();
+    await playVolumeTwo(page);
+    await expect.poll(async () => ((await cachedPaths(page))['hr-later-v1'] ?? []).filter((p) => V2_BUNDLE.test(p)).length).toBe(1);
+    await context.setOffline(true);
+    await page.goto('/');
+    await playVolumeTwo(page);
+    // The card counts it: Stage 2 holds four Volume 2 cells, and the one opened is on the device, so Stage 2 is partly
+    // saved, though nobody chose it.
+    await context.setOffline(false);
+    await openGrownUpZone(page, 'Dami');
+    await unlockWithPin(page);
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Partly saved$/);
   });
 });

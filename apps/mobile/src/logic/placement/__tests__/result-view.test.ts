@@ -135,6 +135,12 @@ describe('resultView: headline, cards and route lines (section 3.1 step 7)', () 
     expect(mid.cards.next).toEqual(['quest:q4', 'quest:s2']);
   });
 
+  it('a cell\'s later volume is never a Next card (F-CURR-002 row CM-41)', () => {
+    const later: RouteCatalog = { quests: [...CATALOG.quests.slice(0, 4), q('quest:v2', 'stage1', 5, { laterVolume: true }), ...CATALOG.quests.slice(4)] };
+    const view = resultView(input({ catalog: later, after: seed({ startQuestId: 'quest:q4' }) }));
+    expect(view.cards.next).toEqual(['quest:s2', 'quest:s4']);
+  });
+
   it('a start quest unknown to this catalogue still shows its card, with the whole route after it', () => {
     const view = resultView(input({ after: seed({ startQuestId: 'quest:gone' }) }));
     expect(view.cards).toEqual({ startHere: 'quest:gone', next: ['quest:q1', 'quest:q2'], laterStage: 'stage1' });

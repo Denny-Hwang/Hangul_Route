@@ -1,6 +1,6 @@
 import { LectureDeckSchema, discoverItemTexts, sayRef, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodeById, episodesAll, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
+import { episodeById, episodesAll, episodesWithVolumes, jamoAll, jamoKnown, questById, questsAll } from '../../../content';
 import { storiesAll } from '../../../content/stories';
 import { buildStoryIndex } from '../../story/story-index';
 import { scopeFor } from '../../minigame-config';
@@ -8,7 +8,7 @@ import { expandDeck } from '../deck-builder';
 import { PAUSE_WORD, SOUND_CHECK_WORD, lectureBundle, soundCheckSpec } from '../content';
 import { UNKNOWN_CAPABILITY, type AudioCapability } from '../../audio/capability';
 import { VOCAB_ITEMS, VOCAB_TOPICS } from '../../../content/__generated__/vocab';
-import { bookQuests } from '../../../content/books';
+import { VOLUME_TWO_STORY_IDS, bookQuests } from '../../../content/books';
 import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
 import { WORD_ART_KEYS } from '@hangul-route/design-system/word-art';
 import { vocabArt } from '../slide-view';
@@ -19,7 +19,7 @@ const deck = (blocks: LectureBlock[]) =>
   LectureDeckSchema.parse({ v: 1, id: 'lecture:ship01', title: 'All of it', createdAt: '2026-10-11T09:00:00Z', seed: 1, blocks });
 
 const listedStoryIds = [
-  ...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId)),
+  ...new Set(buildStoryIndex({ stories: storiesAll, episodes: episodesWithVolumes, quests: questsAll, showUnreviewed: false }).map((e) => e.storyId)),
 ];
 
 const shippedEpisodes = episodesAll.filter((e) => e.status !== 'preview' && e.questIds.length > 0);
@@ -379,7 +379,8 @@ describe('the console story catalogue and the presenter gate (F-TCH-004 PR 11)',
   it('the console offers exactly the stories the presenter shows as slides', () => {
     // Two gates in two places: the catalogue script's review rule and the Library story index the
     // presenter expands through. A story the console offers is never skipped as not ready.
-    expect(LECTURE_STORIES.map((s) => s.id).sort()).toEqual([...listedStoryIds].sort());
+    // A book 2 tale (row CM-46) is Volume 2 content: the presenter plays it inside its book 2, the console never lists it.
+    expect(LECTURE_STORIES.map((s) => s.id).sort()).toEqual([...listedStoryIds].filter((id) => !VOLUME_TWO_STORY_IDS.has(id)).sort());
     const expanded = expandDeck(deck(LECTURE_STORIES.map((s) => ({ kind: 'story', storyId: s.id, checks: true }))), lectureBundle('en'), { canPlayKorean: true });
     expect(expanded.skipped.filter((p) => p.reason === 'not-ready' || p.reason === 'unknown-id')).toEqual([]);
   });

@@ -126,7 +126,8 @@ describe('romanization exceptions are self-cleaning (R8)', () => {
   });
 
   it('flags an exception that matches no registered source or content file', () => {
-    const exceptions = [{ ko: '꽃잎', allowed: ['kkonnip'], reason: 'n-insertion' }];
+    // A word no content holds (꽃잎 now appears in a Food book 2 source quote, row CM-46).
+    const exceptions = [{ ko: '솜이불', allowed: ['somnibul'], reason: 'n-insertion' }];
     expect(checkExceptions(exceptions, seenExceptionKo(exceptions))[0]?.rule).toBe('romanization-exception-stale');
   });
 

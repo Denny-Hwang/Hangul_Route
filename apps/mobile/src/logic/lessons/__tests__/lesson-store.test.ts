@@ -84,6 +84,10 @@ describe('createLessonStore (F-CURR-002 §10: chunks load on demand, once each)'
     expect(store.scopeFor(REF)).toBe(scope);
     expect(store.loadedScopes()).toEqual({ [REF]: scope });
     expect(store.isAllReady()).toBe(false);
+    // Row CM-5B: one cell at a time; a cell outside the manifest counts as ready.
+    expect(store.isCellReady('episode:stage2-rites')).toBe(true);
+    expect(store.isCellReady('episode:stage3-life')).toBe(false);
+    expect(store.isCellReady('episode:nope')).toBe(true);
   });
 
   it('a quest outside the manifest is always ready and never loads anything', async () => {
