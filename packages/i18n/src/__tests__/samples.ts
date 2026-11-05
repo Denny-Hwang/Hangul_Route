@@ -1067,6 +1067,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.curriculum.blend.readout.classDays': [[2, 23], [0, 1]],
   'console.curriculum.blend.readout.moveAsk': [['Tue, Nov 17']],
   'console.curriculum.blend.warn.itemCap': [[24]],
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-7: the weekly plan line's parts (long weekday names, the locale's list).
+  'learner.route.blend.planLine': [['Tuesday', 'practice on Wednesday, Friday, and Sunday'], ['Monday and Thursday', 'practice every day']],
+  'learner.route.blend.practiceOn': [['Wednesday'], ['Wednesday, Friday, and Sunday']],
+  'learner.route.blend.practiceAllBut': [['Monday'], ['Sunday']],
+  'learner.route.blend.dayList': [[['Tuesday']], [['Monday', 'Thursday']], [['Wednesday', 'Friday', 'Sunday']]],
+  'a11y.route.blend.practiceDay': [['Tuesday'], ['Sunday']],
   // AMENDMENTS-GROWNUP-UX GX-1: the learner status chip's accessible name, its reason lines (minutes 1 and many, a class
   // name, a formatted date) and the asking-to-join card's source class.
   'console.status.chipName': [['Needs your OK', 'New device · 8 min left']],

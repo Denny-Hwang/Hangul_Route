@@ -7,6 +7,11 @@ import type { DeepPartial, Messages } from '../../types';
  * titles, blurbs and glosses are content (overlays), never here.
  */
 const count = (n: number, one: string, other: string): string => `${n} ${plural('es', n, { one, other })}`;
+/**
+ * A weekly habit (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7): plural weekday names after "los" ("los martes", "los
+ * sábados y domingos"); lunes to viernes are the same in the plural. "el martes" would be one coming Tuesday.
+ */
+const esWeekly = (names: string): string => names.replace(/(sábado|domingo)(?!s)/g, '$1s');
 
 const ALBUM_NAMES = { letters: 'Letras', life: 'Comida', rites: 'Fiestas', nature: 'Naturaleza', crafts: 'Juegos' };
 type AlbumTheme = keyof typeof ALBUM_NAMES;
@@ -2237,5 +2242,23 @@ export const learner = {
     practice: { cta: 'Practica las palabras' },
     done: 'Listo por esta semana',
     next: 'La semana que viene habrá uno nuevo.',
+  },
+  route: {
+    blend: {
+      // A weekly habit takes the plural article and plural names: "los martes", "los sábados y domingos".
+      planLine: (classDays: string, practice: string) => `Plan semanal de tu clase: clase los ${esWeekly(classDays)}, ${practice}.`,
+      practiceOn: (days: string) => `práctica los ${esWeekly(days)}`,
+      practiceMost: 'práctica casi todos los días',
+      practiceAllBut: (weekday: string) => `práctica todos los días menos los ${esWeekly(weekday)}`,
+      practiceEvery: 'práctica todos los días',
+      dayList: (names: readonly string[]) => (names.length <= 2 ? names.join(' y ') : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1] ?? ''}`),
+      refresh: 'Repasar',
+      refreshLine: 'Vuelve a mirar lo que enseñó la clase.',
+      classToday: 'Hoy hay clase.',
+      ownResting: 'Tu propio plan semanal descansa mientras el plan de tu clase tiene días de práctica.',
+      seeIt: 'Verlo',
+      ownBack: 'Tu propio plan semanal volvió.',
+      proposalInstead: 'El plan semanal de tu clase tiene días de práctica para ti.',
+    },
   },
 } satisfies DeepPartial<Messages['learner']>;

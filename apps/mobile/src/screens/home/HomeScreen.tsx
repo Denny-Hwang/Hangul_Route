@@ -109,6 +109,10 @@ import { learnerProfiles, switchOffered } from '../../store/who-chooser';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
+import { ClassTodayLine, RefreshCard } from '../route/BlendParts';
+import { useRouteBlendHome } from '../route/use-route-blend';
+import { blendWeekOf, refreshRouteOf, refreshShows, refreshStartedEvent } from '../../logic/route/blend-view';
+import type { RefreshStep } from '../../logic/route/refresh';
 import { useToday } from '../route/use-today';
 import { firstFreeTopicKey, pickerTopics, topicWords, wordsOffered } from '../vocab/topic-data';
 import { FreeEndCard } from './FreeEndCard';
@@ -501,6 +505,9 @@ export function HomeScreen(): ReactElement {
     [profile, snap, today, plans, tier, questOpen],
   );
   const next = useMemo(() => (routeInput ? routeNext(routeInput) : null), [routeInput]);
+  // Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7): "Class today." and Refresh;
+  // nothing while `flags.routeBlendEnabled` is off.
+  const blendHome = useRouteBlendHome(profile?.id ?? null, snap, routeInput?.sources, today, questOpen);
   // Quests done (grid and shelf alike): the hero's Start or Continue, the tip and the class-code link read it.
   const questsDone = questsDoneOf(snap?.quests);
   const nextLesson = useMemo(
@@ -602,7 +609,10 @@ export function HomeScreen(): ReactElement {
       // The same F-ENT-003 input as card (2), so the strip's goal is the Learning Route's (LR-5a).
       const model = buildMyRoute(routeModelInput({ snapshot, tier, localized: routeContent, now: new Date(), ...(routeInput ? { next: routeInput } : {}) }));
       // The same week as the Learning Route's plan line (R-7b): the goal's plan, the class's or the learner's own.
-      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: routeWeekOf(model, routeInput ?? undefined) });
+      // A class plan with practice days has no "Week n" line (AMENDMENTS-ROUTE-CLASS-BLEND section 7, row BL-7): the
+      // same check as the Route tab, which shows its weekly plan line in place of the week only when the days are named.
+      const blended = flags.routeBlendEnabled && routeInput !== null && blendWeekOf(routeInput.sources, routeInput.today, snapshot.practiceDays) !== null;
+      return homeStripView({ model, messages: m, goalStage: model.goal?.stage ?? null, week: routeWeekOf(model, routeInput !== null && !blended ? routeInput : undefined) });
     } catch {
       // Content that cannot be read leaves the slot empty; the page itself shows the retry.
       return null;
@@ -683,6 +693,16 @@ export function HomeScreen(): ReactElement {
     return true;
   };
 
+  // Refresh (section 6.4): the Cell Check of the first open cell class taught, else Daily Review with Keep going.
+  const openRefresh = (step: RefreshStep): void => {
+    void track(refreshStartedEvent(step));
+    const to = refreshRouteOf(step);
+    if (to.name === 'CellCheck') navigation.navigate('CellCheck', to.params);
+    else navigation.navigate('DailyReview');
+  };
+  // Card (2) is Refresh once the day's lessons are done, or when there are none (B3); never a to-do.
+  const refreshNow = refreshShows(blendHome.refresh, homeworkDue) ? blendHome.refresh : null;
+
   const openCard = (card: MissionCard): void => {
     // The Daily Review (row CM-14): its rounds, or the done-today page once it is collected.
     if (card.kind === 'daily-review') {
@@ -704,7 +724,7 @@ export function HomeScreen(): ReactElement {
     }
     // Card (2) naming the one next starts it from Home (F-ENT-003 section 3.12); a day-pinned older pick does not.
     if (profile && card.slot === 2 && next?.kind === 'quest' && card.questId === next.questId) {
-      void track(nextStartedEvent(profile.id, next.source, 'home'));
+      void track(nextStartedEvent(profile.id, next.source, 'home', next.fromClass === true));
     }
     if (card.questId && card.episodeId) {
       navigation.navigate('QuestPlayer', { questId: card.questId, episodeId: card.episodeId });
@@ -716,7 +736,7 @@ export function HomeScreen(): ReactElement {
   // The hero's Start or Continue: the one next, as card (2) starts it (F-ENT-003 section 3.12, `next.started`).
   const startNextLesson = (): void => {
     if (!profile || !nextLesson || next?.kind !== 'quest') return;
-    void track(nextStartedEvent(profile.id, next.source, 'home'));
+    void track(nextStartedEvent(profile.id, next.source, 'home', next.fromClass === true));
     navigation.navigate('QuestPlayer', { questId: nextLesson.questId, episodeId: nextLesson.episodeId });
   };
   // The Home route strip is folded into the hero (AMENDMENTS-DISPLAY-NAV section 9.1): its goal line (a weekly plan's
@@ -845,8 +865,15 @@ export function HomeScreen(): ReactElement {
             <Spacer size="sm" />
           </>
         ) : null}
+        {blendHome.classToday ? (
+          <>
+            <ClassTodayLine />
+            <Spacer size="sm" />
+          </>
+        ) : null}
         <View testID="home-missions" style={{ gap: spacing.sm }}>
           {mission.cards.map((card) => {
+            if (card.slot === 2 && refreshNow !== null) return <RefreshCard key={card.slot} onPress={() => openRefresh(refreshNow)} />;
             if (card.kind === 'free-end') {
               return (
                 <FreeEndCard

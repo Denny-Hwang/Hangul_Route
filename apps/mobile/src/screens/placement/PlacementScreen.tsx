@@ -502,7 +502,7 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
               ? placementStart({ start: startQuest, isQuestOpen: () => true, next: { kind: 'rest' }, freeTopicKey })
               : placementStart({ start: startQuest, isQuestOpen: input.isQuestOpen, next: routeNext(input), freeTopicKey });
           if (start.kind === 'quest') {
-            if (start.source !== null && profileId !== null) void track(nextStartedEvent(profileId, start.source, 'placement'));
+            if (start.source !== null && profileId !== null) void track(nextStartedEvent(profileId, start.source, 'placement', start.fromClass === true));
             resetTo([{ name: 'Main' }, { name: 'QuestPlayer', params: { questId: start.questId, episodeId: start.episodeId } }]);
           } else if (start.kind === 'topic') {
             resetTo([{ name: 'Main' }, { name: 'VocabTopic', params: { topicKey: start.topicKey } }]);

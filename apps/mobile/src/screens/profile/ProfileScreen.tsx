@@ -29,6 +29,12 @@ import { placementEntriesOn } from '../../logic/placement/entry';
 import { effectiveLearnerType } from '../../logic/profiles/learner-type';
 import { profileRowOpens } from '../../logic/route/proposal-flow';
 import { activeSelfRoute } from '../../logic/route/self-route';
+import { planRowBlendOf } from '../../logic/route/blend-view';
+import { layerOf } from '../../logic/route/layer';
+import { sourcesOf } from '../../logic/homework/plan-derivation';
+import { usePlanStore } from '../../store/plan-store';
+import { useToday } from '../route/use-today';
+import { PlanRowBlendLine } from '../route/BlendParts';
 import { planCardView } from '../../logic/paywall';
 import { effectiveTier } from '../../store/tier-store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -71,6 +77,13 @@ export function ProfileScreen(): ReactElement {
   // [OA] Row OA-5: locks are enforced on these tiles whatever the chooser flag says (fail safe, section 16).
   const locks = useLocks(profiles);
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
+  // Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND sections 7 and 8, row BL-7): the weekly plan row's
+  // resting line or proposal line while the class plan has practice days; nothing while the switch is off.
+  const blendPlans = usePlanStore((s) => (active ? s.byLearner[active.id] : undefined));
+  const planDay = useToday();
+  const planRowBlend = flags.routeBlendEnabled
+    ? planRowBlendOf({ layerWithPractice: layerOf(sourcesOf(blendPlans ?? [], null), planDay) === 'class-with-practice', hasOwnPlan: activeSelfRoute(snap) !== null })
+    : null;
   const cachedTier = useTierStore((s) => (active ? s.byLearner[active.id] : undefined));
   const entitled = effectiveTier(active?.id ?? '', new Date());
   // The free line follows the real tier model: everything is open while content gating is off (owner request 2026-10-16, item 8).
@@ -397,6 +410,12 @@ export function ProfileScreen(): ReactElement {
                 </Body>
                 <Icon name="arrow-right" size={24} color={colors.text.muted} />
               </Pressable>
+              {planRowBlend !== null ? (
+                <>
+                  <Spacer size="sm" />
+                  <PlanRowBlendLine kind={planRowBlend} onSeeIt={() => navigation.navigate('RouteOverview', { profileId: active.id })} />
+                </>
+              ) : null}
             </Card>
           </>
         ) : null}

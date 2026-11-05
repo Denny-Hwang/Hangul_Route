@@ -94,7 +94,7 @@ export function previewOpenedEvent(profileId: string | undefined, stage: StageKe
 /** `route.next_started { surface: 'episode' }` when the quest started is the one next, else null. */
 export function startedFromEpisode(profileId: string | undefined, next: RouteNext | null, questId: string): TelemetryEvent | null {
   if (profileId === undefined || next?.kind !== 'quest' || next.questId !== questId) return null;
-  return nextStartedEvent(profileId, next.source, 'episode');
+  return nextStartedEvent(profileId, next.source, 'episode', next.fromClass === true);
 }
 
 /**
