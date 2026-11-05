@@ -3,7 +3,7 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, seedStored } from './helpers';
 import { Touchscreen } from './touch';
-import { clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
+import { FULL_MATRIX, MATRIX, clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
 
 /**
  * AMENDMENTS-TOUCH row KT-11, section 11.2: the graze matrix (`touch-matrix.ts`) on the answer boards that only the
@@ -15,20 +15,25 @@ import { clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test type-hangul-touch-matrix
  *
  * Named under `type-hangul` so the fixture e2e run in web-app.yml selects it (the precedent of the KT-1 and KT-2 specs).
+ * CI runs the smoke set (`smoke` on a board below), as in `touch-matrix.spec.ts`; `E2E_TOUCH_MATRIX=full` runs every board
+ * at both profiles with all nine grazes, and the fit audit.
+ *
  * Profiles of section 11.2: 320 x 640 with touch and the largest text size, and the 820 x 1180 tablet.
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 
 interface Profile {
+  /** `phone` or `tablet`. */
+  key: 'phone' | 'tablet';
   name: string;
   viewport: { width: number; height: number };
   largest: boolean;
 }
 
 const PROFILES: readonly [Profile, Profile] = [
-  { name: 'phone 320, largest text', viewport: { width: 320, height: 640 }, largest: true },
-  { name: 'tablet 820', viewport: { width: 820, height: 1180 }, largest: false },
+  { key: 'phone', name: 'phone 320, largest text', viewport: { width: 320, height: 640 }, largest: true },
+  { key: 'tablet', name: 'tablet 820', viewport: { width: 820, height: 1180 }, largest: false },
 ];
 
 type E2eWindow = Window & {
@@ -95,8 +100,8 @@ async function storyCheckNext(page: Page): Promise<boolean> {
   return true;
 }
 
-const BOARDS: ReadonlyArray<{ name: string; open: (page: Page, profile: Profile) => Promise<void>; stateful?: boolean; onIdle?: (page: Page) => Promise<boolean>; maxRestarts?: number }> = [
-  { name: 'Cloze Pick', open: openClozePick, stateful: true },
+const BOARDS: ReadonlyArray<{ name: string; open: (page: Page, profile: Profile) => Promise<void>; stateful?: boolean; smoke?: ReadonlyArray<Profile['key']>; onIdle?: (page: Page) => Promise<boolean>; maxRestarts?: number }> = [
+  { name: 'Cloze Pick', open: openClozePick, stateful: true, smoke: ['phone'] },
   { name: 'Vocabulary question', open: openVocabQuestion, stateful: true, maxRestarts: 4 },
   { name: 'Story Check', open: openStoryCheck, stateful: true, onIdle: storyCheckNext, maxRestarts: 3 },
 ];
@@ -106,7 +111,7 @@ for (const profile of PROFILES) {
     test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
     test.use({ viewport: profile.viewport, hasTouch: true, isMobile: true });
 
-    for (const board of BOARDS) {
+    for (const board of BOARDS.filter((b) => FULL_MATRIX || b.smoke?.includes(profile.key))) {
       test(`${board.name}: every distance of the matrix commits; outside, slide and drag commit nothing`, async ({ page }) => {
         test.setTimeout(240_000);
         await board.open(page, profile);
@@ -114,6 +119,7 @@ for (const profile of PROFILES) {
         await runMatrix(page, touch, {
           name: board.name,
           statefulAnswers: board.stateful,
+          grazes: FULL_MATRIX ? MATRIX.length : undefined,
           maxRestarts: board.maxRestarts,
           onIdle: board.onIdle === undefined ? undefined : () => board.onIdle!(page),
           restart: () => board.open(page, profile),
@@ -150,7 +156,7 @@ for (const locale of ['es', 'ko'] as const) {
 
 /** The fit audit (section 11.2, report only) for these boards: fits or scrolls at 320 x 640, at the default and the largest text. */
 test.describe('answer boards on fixtures, the fit audit at 320 x 640 (AMENDMENTS-TOUCH KT-11, section 11.2)', () => {
-  test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
+  test.skip(!FIXTURE_BUILD || !FULL_MATRIX, 'needs the fixture bundle (STORY_FIXTURES=1) and E2E_TOUCH_MATRIX=full: a report, not a check');
   test.use({ viewport: PROFILES[0].viewport, hasTouch: true, isMobile: true });
 
   for (const board of BOARDS) {

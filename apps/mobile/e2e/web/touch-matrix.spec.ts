@@ -4,7 +4,7 @@ import { expect, test } from './fixtures';
 import { REVIEW_ITEM_ROWS } from '../../src/content/__generated__/review-item-chunks/review-items';
 import { journeyCellName, keepSidewaysIfAsked, onboardChild, passDiscover, readStored, seedStoredAll, seedStored } from './helpers';
 import { Touchscreen } from './touch';
-import { clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
+import { FULL_MATRIX, MATRIX, clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
 
 /**
  * AMENDMENTS-TOUCH row KT-11, section 11.2: the graze matrix on every answer board that is on main, found by what the
@@ -13,6 +13,9 @@ import { clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
  * allow); a move that ends 40 px outside an answer commits nothing and leaves no press look; a slide into the
  * neighbour commits nothing; on a scrolling board a 72 px drag scrolls the page and commits nothing. Release build.
  *
+ * CI runs the smoke set (`smoke` on a board below): the PWA e2e shards have 20 minutes and the suite already uses most
+ * of them. `E2E_TOUCH_MATRIX=full` runs every board at both profiles with all nine grazes, and the fit audit.
+ *
  * Boards of the pick-one family that the KT-3 spec (`pick-one-graze.spec.ts`) already runs in the guest's first quest
  * (Match Sound, Listen & Pick) are not repeated. Each later KT row adds its own boards here.
  */
@@ -20,14 +23,16 @@ import { clearDevice, expectTargets, fitOf, runMatrix } from './touch-matrix';
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 
 interface Profile {
+  /** `phone` or `tablet`. */
+  key: 'phone' | 'tablet';
   name: string;
   viewport: { width: number; height: number };
   largest: boolean;
 }
 
 const PROFILES: readonly [Profile, Profile] = [
-  { name: 'phone 320, largest text', viewport: { width: 320, height: 640 }, largest: true },
-  { name: 'tablet 820', viewport: { width: 820, height: 1180 }, largest: false },
+  { key: 'phone', name: 'phone 320, largest text', viewport: { width: 320, height: 640 }, largest: true },
+  { key: 'tablet', name: 'tablet 820', viewport: { width: 820, height: 1180 }, largest: false },
 ];
 
 /** A fresh device: nothing stored, the profile's text size, a learner named Dami on Home. */
@@ -145,13 +150,15 @@ async function openDailyReview(page: Page, profile: Profile): Promise<void> {
   await expect(page.getByTestId('daily-review-dots')).toBeVisible();
 }
 
-const BOARDS: ReadonlyArray<{ name: string; open: (page: Page, profile: Profile) => Promise<void>; stateful?: boolean }> = [
-  { name: 'Culture Quiz', open: openCultureQuiz },
+const MATRIX_ALL = MATRIX.length;
+
+const BOARDS: ReadonlyArray<{ name: string; open: (page: Page, profile: Profile) => Promise<void>; stateful?: boolean; smoke?: ReadonlyArray<Profile['key']> }> = [
+  { name: 'Culture Quiz', open: openCultureQuiz, smoke: ['phone', 'tablet'] },
   { name: 'Tap & Respond', open: openTapRespond },
-  { name: 'Odd One Out', open: openOddOneOut, stateful: true },
+  { name: 'Odd One Out', open: openOddOneOut, stateful: true, smoke: ['phone'] },
   { name: 'Read Pick', open: openReadPick, stateful: true },
   { name: 'Realia Read', open: openRealiaRead, stateful: true },
-  { name: 'Daily Review', open: openDailyReview, stateful: true },
+  { name: 'Daily Review', open: openDailyReview, stateful: true, smoke: ['phone'] },
 ];
 
 for (const profile of PROFILES) {
@@ -159,7 +166,7 @@ for (const profile of PROFILES) {
     test.skip(FIXTURE_BUILD, 'the release build: the learner journey');
     test.use({ viewport: profile.viewport, hasTouch: true, isMobile: true });
 
-    for (const board of BOARDS) {
+    for (const board of BOARDS.filter((b) => FULL_MATRIX || b.smoke?.includes(profile.key))) {
       test(`${board.name}: every distance of the matrix commits; outside, slide and drag commit nothing`, async ({ page }) => {
         test.setTimeout(240_000);
         await board.open(page, profile);
@@ -167,6 +174,7 @@ for (const profile of PROFILES) {
         await runMatrix(page, touch, {
           name: board.name,
           statefulAnswers: board.stateful,
+          grazes: FULL_MATRIX ? MATRIX_ALL : undefined,
           restart: () => board.open(page, profile),
           note: (type, description) => test.info().annotations.push({ type, description }),
         });
@@ -181,7 +189,7 @@ for (const profile of PROFILES) {
  * keeps a touch in a gap safe from a vertical pan.
  */
 test.describe('answer boards, the fit audit at 320 x 640 (AMENDMENTS-TOUCH KT-11, section 11.2)', () => {
-  test.skip(FIXTURE_BUILD, 'the release build: the learner journey');
+  test.skip(FIXTURE_BUILD || !FULL_MATRIX, 'the release build, and E2E_TOUCH_MATRIX=full: a report, not a check');
   test.use({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true });
 
   for (const board of BOARDS) {
@@ -206,7 +214,7 @@ test.describe('answer boards, the fit audit at 320 x 640 (AMENDMENTS-TOUCH KT-11
  * Listen & Pick without an account, so each is measured at 320 x 640 with the largest text in en, es and ko (the longest
  * labels). The journey boards above are measured in en, whose recipes name their buttons in English.
  */
-for (const locale of ['en', 'es', 'ko'] as const) {
+for (const locale of FULL_MATRIX ? (['en', 'es', 'ko'] as const) : (['es', 'ko'] as const)) {
   test.describe(`guest quest boards, the 64 px floor, ${locale} (AMENDMENTS-TOUCH KT-11, section 11.2)`, () => {
     test.skip(FIXTURE_BUILD, 'the release build: the guest quest');
     test.use({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true });
