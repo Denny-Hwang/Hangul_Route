@@ -1,5 +1,5 @@
 import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from '../schemas/heritage-card';
-import { cellIsReady, type Catalog } from './schema';
+import { cellEpisodeIds, cellIsReady, type Catalog } from './schema';
 
 /**
  * Route days (F-ENT-003 section 3.1). A route day is one playable cell of the
@@ -42,7 +42,10 @@ const themeRank = (theme: ThemeKey): number => ThemeKeySchema.options.indexOf(th
 /** The catalogue is immutable bundled data, so its route is built once per catalogue object. */
 const routeCache = new WeakMap<Catalog, readonly RouteDay[]>();
 
-/** Every route day of the catalogue: one per ready cell that holds at least one lesson quest. */
+/**
+ * Every route day of the catalogue: one per ready cell that holds at least one lesson quest, read from the cell's first
+ * volume (`questIds`). A later volume (F-CURR-002 row CM-40) adds no route day and no quest to one.
+ */
 export function routeDaysOf(catalog: Catalog): RouteDay[] {
   let days = routeCache.get(catalog);
   if (days === undefined) {
@@ -91,9 +94,14 @@ export function freeRouteQuestIds(catalog: Catalog, stages: readonly StageKey[] 
   return new Set(freeRouteDays(catalog, stages).flatMap((day) => day.questIds));
 }
 
-/** Every quest of every route day: the grid lessons. */
+/**
+ * The grid lessons: every quest of every route day, and every quest of a ready cell's later volume (F-CURR-002 row
+ * CM-40), which is a grid lesson off the route days, so the free plan (`freeRouteQuestIds`) never opens it.
+ */
 export function gridLessonIds(catalog: Catalog): ReadonlySet<string> {
-  return new Set(routeDaysOf(catalog).flatMap((day) => day.questIds));
+  const later = new Set(catalog.cells.filter(cellIsReady).flatMap((cell) => cellEpisodeIds(cell).slice(1)));
+  const volumes = catalog.quests.filter((quest) => quest.kind === 'lesson' && later.has(quest.episodeId)).map((quest) => quest.id);
+  return new Set([...routeDaysOf(catalog).flatMap((day) => day.questIds), ...volumes]);
 }
 
 /** The route day that holds a quest; null when the quest is not a grid lesson. */

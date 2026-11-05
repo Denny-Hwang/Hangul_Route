@@ -115,6 +115,9 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {
   'learner.library.albums.names.nature': '"Naturaleza" (10) against "Nature" (6), one letter over the 9 the floor allows: the one Spanish word for nature (the themeNames form; the Journey cell word is Campo); drawn on its own line in an album row that wraps at 320',
   // F-CURR-002 row CM-20: the level word of the mastery ring, the same word the grown-up report's mastery line uses.
   'learner.mastery.level.done': '"Terminado" (9) against "Done" (4), one letter over the 8-character floor: the report\'s level word ("1 terminado"); drawn only in a line that wraps (the level-up banner) and read in a cell label',
+  // AMENDMENTS-ROUTE-CLASS-BLEND row BL-4: the MAR language review's wording.
+  'console.curriculum.blend.classLength': '"Duración de la clase" (20) against "Class length" (12): the MAR review keeps the article Spanish wants between the two nouns; a block label above its select that wraps',
+  'console.curriculum.blend.practice.afterClass': '"también después de la clase de los …" against "also after class on …", one letter over: the MAR review chose "después de" over the bookish "tras"; the end of the practice line, which wraps',
   // AMENDMENTS-GROWNUP-UX GX-1 (section 10.1, the one date order of the PR #917 review): status chips beside a learner's name.
   'console.status.moving': '"Cambia de clase el {date}" against "Moving {date}": Spanish needs the verb phrase and its article before a date; a chip that wraps under the name on a phone',
   // AMENDMENTS-GROWNUP-UX GX-2 (section 10.1): the banner's second line and the sheet's first heading.
@@ -144,6 +147,11 @@ const WIDER_BUDGET: Readonly<Record<string, { max: number; reason: string }>> = 
   'console.pinOwner.cta': {
     max: 48,
     reason: 'the one action of the persona-home PIN-owner card, a full-width button (400 px column) that wraps its words; en 35, es 48, ko 29 as measured in the OA-0b lengths board',
+  },
+  // AMENDMENTS-ROUTE-CLASS-BLEND sections 14 and 19 (row BL-4; BL-D mock strings.js): the spec's wording keeps "to this plan".
+  'console.curriculum.blend.readout.addPractice.cta': {
+    max: 36,
+    reason: 'the spec and BL-D mock wording "Add practice days to this plan" (en 30, es 35, ko 17); a console readout button in a wrapping flex row (Button wraps its words, no nowrap), the only control on a Class only plan',
   },
   // AMENDMENTS-GROWNUP-UX section 10.1 (review of PR #933): the class page's waiting count in the one action wording.
   'console.space.relinkPending.cta': {

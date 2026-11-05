@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LESSON_EPISODES, LESSON_QUESTS, LESSON_TEACHES } from '../../../content/__generated__/lessons-index';
 import { LESSON_CELL_MODULES } from '../../../content/__tests__/helpers/lesson-stages';
+import { lessonEpisodes } from '../../../content/lessons';
 import { taughtLetters } from '../../episode-access';
 import { placementRouteCatalog } from '../../placement/catalog';
 import { resultsTeaser } from '../../quest-flow/results-teaser';
@@ -70,7 +71,7 @@ describe('lesson quest letters before the chunk loads', () => {
   });
 
   it('the placement catalogue is the same over cold and loaded lesson quests', () => {
-    const episodes = LESSON_EPISODES;
+    const episodes = lessonEpisodes;
     const warm = questsOverStore(LESSON_QUESTS, { stepsOf: (id) => Object.values(LESSON_CELL_MODULES).find((m) => m.LESSON_STEPS[id])?.LESSON_STEPS[id] });
     expect(placementRouteCatalog(cold, episodes)).toEqual(placementRouteCatalog(warm, episodes));
     expect(placementRouteCatalog(cold, episodes).quests.find((q) => q.id === LETTERS_Q1)?.teaches).toEqual(['ㅐ', 'ㅔ', 'ㅒ', 'ㅖ']);
