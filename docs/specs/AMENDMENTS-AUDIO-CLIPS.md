@@ -52,7 +52,7 @@ F-AUDIO-004 AD1 ("sound first, name second") made every prompt that asks "which 
 | G1 | The voice says what the question asks | Surfaces x jamo pairs whose spoken text differs from the rule of section 3 | **0** of all (55 jamo x every surface in section 5) | `voice-surfaces.test.ts` (JV-2), e2e (JV-4) |
 | G2 | No tile is right by ear except the answer | Rounds in any shipped scope where a non-answer tile is a component of the prompt (sound questions), or, in a letter question, shares its spoken text, is a vowel heard inside the target consonant's name (rule 1b), or is ㅇ beside a ㅣ or ㅡ target (rule 1c) | **0** | `voice-pools.test.ts` (JV-3) |
 | G3 | Clear Korean on every device | Share of Korean prompts that play a clip, from the new counts-only `audio.source_summary` (AC-B9) | Stage 1 100 % after AC-8; every stage at least 98 % after AC-12 | telemetry, `audio:status` |
-| G4 | Clips are right before they ship | Clips that pass both acoustic passes and the review of section 9 | **100 %** of shipped clips. First-take exact match (after normalization, against `text` or an authored accepted variant) at least 98 % of words and sentences in each recognizer; every miss is regenerated or overridden until it matches, so no shipped clip is a near miss | QA report in each content PR |
+| G4 | Clips are right before they ship | Clips that pass Pass 1, the shared checks and the review of section 9 (Pass 2 is advisory) | **100 %** of shipped clips. First-take exact match (after normalization, against `text` or an authored accepted variant) at least 98 % of words and sentences in Pass 1; every miss is regenerated or overridden until it matches, so no shipped clip is a near miss | QA report in each content PR |
 | G5 | Offline budget kept | Learner precache growth | at most the measured bytes of the Stage 1 jamo pack (about 0.35 MB); every other pack lazy. The budget line `learnerPrecacheRaw` (11,287,329 B, `scripts/pwa/lesson-chunks.mjs:126`) **stays where it is**: the precache is re-measured with the clips in it and must stay under the line (about 0.35 MB against the roughly 1.9 MB of headroom last measured), so CM-5B is not triggered by audio (2026-11-04: the install-only `icon-1024.png` left the precache, F-CURR-002 section 10 decision record "perf(pwa) headroom": 365,660 B under the line with the whole pack) | `lesson-chunks.mjs` budget assertion |
 | G6 | No new failure | `audio.playback_failed` rate per prompt | not above the TTS-only baseline of the week before AC-7 | telemetry |
 | G7 | Fast start | Clip start after the round appears (web, warmed) | under 150 ms | e2e timing assertion with a fixture clip |
@@ -440,7 +440,7 @@ Google (https://cloud.google.com/text-to-speech/pricing, read 2026-10-29 by the 
 
 "Twice" means two recognizers that **listen to the audio independently**: different model families, so one model's error is not repeated by the other. Reviewer agents cannot hear audio, so a review that only re-reads one recognizer's transcript is not a second check. Both acoustic passes run locally, with no network and no vendor speech-to-text (a vendor's own STT may share the TTS model's blind spots). The QA script is `audio:tts:qa` (AC-4), run by an agent on the owner's machine folder.
 
-**Normalization** (both passes): NFC, punctuation and spaces removed. A word or sentence **passes only on an exact match** against the manifest `text`, or against an authored accepted variant in `pronunciation-overrides.json` (`accept: [...]`, for example the pronounced form 궁물 for 국물). There is no free one-syllable slack: 가방 heard as 가반 fails.
+**Normalization** (both passes): NFC, punctuation and spaces removed. A word or sentence **passes Pass 1 only on an exact match** against the manifest `text`, or against an authored accepted variant in `pronunciation-overrides.json` (`accept: [...]`, for example the pronounced form 궁물 for 국물). There is no free one-syllable slack: 가방 heard as 가반 fails. Two spelling variants are the same spoken form and are folded in the code (`qa-lib.mjs`, `isExactMatch`), not by `accept` rows: a digit run up to 99 that Whisper writes for a number is read aloud (사과 3개 = 사과 세 개, the native numeral before a counter such as 개 or 명, the Sino-Korean one otherwise; 5월 = 오월), and 에요 = 예요 (얼마에요 = 얼마예요). The AC-5 pilot saw both on all three voices. A larger number, or any other respelling, still needs an `accept` variant.
 
 ### Pass 1: Whisper (`whisper.cpp`, MIT, `large-v3`, language `ko`)
 
@@ -455,8 +455,8 @@ A Korean wav2vec2-style CTC acoustic model, run locally under a licence that per
 
 | Check | Rule | Fails when |
 |---|---|---|
-| Free transcription | greedy CTC decoding of every clip | a word or sentence is not an exact match |
-| Per-candidate score (jamo and 1-2 syllable clips) | forced-alignment log-likelihood of **each** closed-set candidate (same set as Pass 1) | the target is not the highest-scoring candidate, **or** its margin over the best confusable is under the threshold. The starting threshold is 2.0 nats; AC-5 calibrates it on the pilot and records it in section 13 |
+| Free transcription | greedy CTC decoding of every clip | advisory only: a word or sentence that is not an exact match is a flag, not a failure (see the AC-5 pilot below) |
+| Per-candidate score (jamo and 1-2 syllable clips) | forced-alignment log-likelihood of **each** closed-set candidate (same set as Pass 1) | advisory only: the target is not the highest-scoring candidate, **or** its margin over the best confusable is under the threshold, is a flag for the owner listen and the reviewers, never alone a reason to regenerate. The threshold is 0.5 nats (`--margin`); the AC-5 pilot calibrated it (section 13) |
 
 ### Checks shared by both passes (signal, not speech)
 
@@ -467,11 +467,11 @@ A Korean wav2vec2-style CTC acoustic model, run locally under a licence that per
 | Loudness and peak | -16 LUFS plus or minus 1.5, true peak at most -1.5 dBTP, size limits of F-AUDIO-004 section 3.11 | out of bounds |
 | Identity | every manifest row has exactly one clip; every clip's sha256 is in the lock; no two jamo clips that must differ are byte-identical; every surface's spoken text resolves to the clip of the same id and type (`voice-surfaces.test.ts` with the real map) | a missing, extra or swapped clip |
 
-A clip passes only when **both** acoustic passes and the shared checks pass. A clip that fails is regenerated (another take, or an AC-B3 override) and goes through both passes again.
+A clip passes when **Pass 1** and the shared checks pass. **Pass 2 is advisory**: the AC-5 pilot showed the pinned model cannot gate (section 13), so its free decode and margins are flags in the report, and a clip is never failed or regenerated on Pass 2 alone. A clip that fails is regenerated (another take, or an AC-B3 override) and goes through the QA again.
 
 ### Review: multi-agent review (MAR) of both reports
 
-- At least two independent reviewer agents read both pass reports: both transcripts, the forced choice, the per-candidate scores and margins, durations and the onset summary. Each marks every jamo clip and every flagged word or sentence clip "keep" or "regenerate" with a reason. They look for what the numbers alone miss: a pass that only one recognizer gave narrowly, a margin close to the threshold, two candidates that both recognizers rank close together.
+- At least two independent reviewer agents read both pass reports (Pass 2 as a flag, not a verdict): both transcripts, the forced choice, the per-candidate scores and margins, durations and the onset summary. Each marks every jamo clip and every flagged word or sentence clip "keep" or "regenerate" with a reason. They look for what the numbers alone miss: a Pass 1 pass with a Pass 2 flag, a margin close to the threshold, two candidates that both recognizers rank close together.
 - A clip ships only when both reviewers say keep. A disagreement regenerates the clip and repeats both acoustic passes for that row.
 - The review is recorded in the content PR body as a table (clip, Pass 1 transcript and forced choice, Pass 2 transcript and margin, verdicts). No copy anywhere calls this a native-speaker or expert review.
 - **Optional owner listen (recommended, about 10 minutes):** the owner plays the 65 jamo clips back to back with `pnpm audio:tts:listen --pack jamo-s1,jamo-wb` and may veto any clip. This is not a gate (the owner's "finish without waiting on my review" rule), but a veto is honoured.
@@ -562,6 +562,13 @@ Part A (JV-1 to JV-4) does not wait for Part B and ships first: it fixes the own
 ## 13. Pilot result and voice lock
 
 The terms and price pages of each vendor, read by AC-3 on 2026-10-29 with the clauses quoted, are in `docs/launch/tts-vendor-terms.md`; AC-5 adds a dated entry there if it reads them again.
+
+**Pass 2 calibration (AC-5 pilot, 2026-11-06).** 216 closed-set clips (72 per voice: Polly Seoyeon and Jihye, Google Neural2-A), Whisper's forced choice as the reference label, offline margin sweep with the same `evaluatePass2`:
+
+- The pinned `Kkonjeong/wav2vec2-base-korean` ranked the target top in 86 of 216 clips (chance about 48) and separates Whisper-ok from Whisper-fail clips with AUC 0.64. Its greedy decode matched 0 of 27 words and sentences exactly. At the starting 2.0 nats it rejected 75 % of the clips Whisper accepted (accepts 25 % of them, and 5 % of Whisper's failures).
+- `kresnik/wav2vec2-large-xlsr-korean` is better (target top in 103 of 189 scorable clips, AUC 0.76) but cannot spell nine closed-set candidates per voice and also decodes 0 of 27 words and sentences exactly.
+- Decision: Pass 2 is **advisory**, not a gate. The exact-match rule for words and sentences is dropped from the gate, and the default margin is **0.5 nats** (Youden J is flat between 0 and 1 nats; 0.5 loses the fewest good clips per bad clip flagged). Pass 1 (Whisper forced choice and free transcript), the shared checks and the review decide; kresnik may be run as a second advisory opinion.
+- Whisper writes numerals and 에요 (사과 3개 주세요, 얼마에요), which cost every voice the same sentences. The QA now treats those as the same spoken form (section 9, Normalization).
 
 Filled by AC-5: engine, voice, model, rate, the "아" vs "아." rule, the Pass 2 model and its calibrated margin threshold, whether 48 kbps at 24 kHz passed the listen, the overrides the pilot needed, the QA summary per candidate, the terms and price pages read with their dates, and the date.
 

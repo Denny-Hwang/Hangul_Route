@@ -2,16 +2,21 @@
 // so every rule is tested on synthetic recognizer output, with no model, no audio and no network.
 //
 //   normalizeTranscript, targetFormsOf, isExactMatch    the exact-match rule (NFC, punctuation and spaces removed;
-//                                                       the manifest text or an authored `accept` variant only)
+//                                                       the manifest text or an authored `accept` variant only; a
+//                                                       digit run read aloud and 에요/예요 are the same spoken form)
 //   syllableConfusables, closedSetOf                    the closed set of a jamo or 1-2 syllable clip
 //   whisperGrammar, evaluatePass1                       Pass 1: whisper.cpp free transcription and forced choice
-//   ctcVocabOf ... scoreCtcClip, evaluatePass2          Pass 2: CTC greedy decode and forced-alignment margins
-//   clipVerdict                                         a clip passes only when both passes and the shared checks do
+//   ctcVocabOf ... scoreCtcClip, evaluatePass2          Pass 2: CTC greedy decode and forced-alignment margins (advisory)
+//   clipVerdict                                         a clip passes when Pass 1 and the shared checks do; Pass 2 only flags
 //
 // The shared signal and identity checks and the report are in qa-report.mjs; the recognizers in recognizers.mjs.
 
-/** The Pass 2 margin threshold in nats (section 9): the starting value; AC-5 calibrates it and records it in section 13. */
-export const CTC_MARGIN_NATS = 2.0;
+/**
+ * The Pass 2 margin threshold in nats for the advisory flag (section 9, 13). The AC-5 pilot (216 closed-set clips, three
+ * voices) put the pinned model's AUC at 0.64 and the target on top in 86 of 216 clips; at 2.0 nats it rejected 75 % of the
+ * clips Whisper accepted. 0.5 nats loses the fewest good clips per bad clip flagged.
+ */
+export const CTC_MARGIN_NATS = 0.5;
 
 // --- Normalization and the exact-match rule -------------------------------------------------------------------
 
@@ -69,9 +74,80 @@ export function targetFormsOf(row, overrides) {
   return unique([text, ...(name ? [name.heard] : []), ...accept].map(normalizeTranscript));
 }
 
-/** Whether a transcript is one of the target forms after normalization: an exact match, no slack. */
+// --- Spoken-equivalent spellings (Whisper writes digits; 에요 and 예요 sound the same) ---------------------------
+
+const SINO_DIGIT = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+const NATIVE_ONES = ['', '하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉'];
+const NATIVE_ONES_BEFORE_COUNTER = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉'];
+const NATIVE_TENS = ['', '열', '스물', '서른', '마흔', '쉰', '예순', '일흔', '여든', '아흔'];
+const NATIVE_TENS_BEFORE_COUNTER = ['', '열', '스무', '서른', '마흔', '쉰', '예순', '일흔', '여든', '아흔'];
+/** Counters said with the native numerals (한 개, 두 명, 세 시); every other counter takes the Sino-Korean numeral. */
+const NATIVE_COUNTERS = ['개', '명', '분', '마리', '살', '권', '잔', '병', '송이', '그릇', '장', '대', '번', '켤레', '시', '곳', '가지', '사람'];
+
+/** 0 to 99 in Sino-Korean (3 -> 삼, 12 -> 십이, 40 -> 사십). */
+export function sinoNumeral(n) {
+  if (n === 0) return '영';
+  const tens = Math.floor(n / 10);
+  const ones = n % 10;
+  return `${tens === 0 ? '' : tens === 1 ? '십' : `${SINO_DIGIT[tens]}십`}${SINO_DIGIT[ones]}`;
+}
+
+/** 1 to 99 in native Korean; `beforeCounter` is the short form (1 -> 한, 2 -> 두, 3 -> 세, 4 -> 네, 20 -> 스무). */
+export function nativeNumeral(n, beforeCounter) {
+  const tens = Math.floor(n / 10);
+  const ones = n % 10;
+  const t = (beforeCounter && ones === 0 ? NATIVE_TENS_BEFORE_COUNTER : NATIVE_TENS)[tens];
+  return `${t}${(beforeCounter ? NATIVE_ONES_BEFORE_COUNTER : NATIVE_ONES)[ones]}`;
+}
+
+/**
+ * The readings of a digit run followed by `rest` (what is left of the transcript): before a native counter the short
+ * native numeral (3개 -> 세) and the Sino-Korean one (for 분, 번, 시 ...); otherwise the Sino-Korean numeral, plus
+ * the plain native one when nothing follows (3 -> 셋).
+ */
+function numeralReadings(digits, rest) {
+  const n = Number(digits);
+  if (!Number.isInteger(n) || n > 99 || (digits.length > 1 && digits.startsWith('0'))) return [];
+  const counted = NATIVE_COUNTERS.some((c) => rest.startsWith(c));
+  const out = [sinoNumeral(n)];
+  if (n >= 1 && counted) out.push(nativeNumeral(n, true));
+  if (n >= 1 && rest === '') out.push(nativeNumeral(n, false));
+  return out;
+}
+
+/**
+ * The normalized spoken forms a transcript may stand for: itself, with every digit run (up to 99) also read aloud
+ * (사과 3개 -> 사과세개, the native numeral before a counter such as 개 or 명, the Sino-Korean one otherwise). Whisper
+ * writes numerals as digits, which is a spelling choice and not a pronunciation miss. The result is never empty.
+ */
+export function spokenVariantsOf(transcript) {
+  const base = normalizeTranscript(transcript);
+  if (!/\d/u.test(base)) return [base];
+  const parts = base.split(/(\d+)/u);
+  let variants = [''];
+  for (let i = 0; i < parts.length; i += 1) {
+    if (i % 2 === 0) {
+      variants = variants.map((v) => v + parts[i]);
+      continue;
+    }
+    const rest = parts.slice(i + 1).join('');
+    const readings = numeralReadings(parts[i], rest);
+    variants = variants.flatMap((v) => (readings.length === 0 ? [v + parts[i]] : readings.map((r) => v + r)));
+    if (variants.length > 64) variants = variants.slice(0, 64);
+  }
+  return variants;
+}
+
+/** 얼마에요 and 얼마예요 are one spoken form (에요 after a vowel is a spelling variant of 예요); compare them as one. */
+const foldSpelling = (normalized) => normalized.replaceAll('예요', '에요');
+
+/**
+ * Whether a transcript is one of the target forms after normalization: an exact match with only two kinds of slack, both
+ * spelling and not sound: a digit run read aloud (3개 = 세 개) and 에요 = 예요. 가반 for 가방 still fails.
+ */
 export function isExactMatch(transcript, forms) {
-  return forms.includes(normalizeTranscript(transcript));
+  const folded = new Set(forms.map(foldSpelling));
+  return spokenVariantsOf(transcript).some((v) => folded.has(foldSpelling(v)));
 }
 
 /** A whisper.cpp `-otxt` output: its segments joined by one space. */
@@ -450,26 +526,32 @@ const round = (n, places = 3) => (Number.isFinite(n) ? Math.round(n * 10 ** plac
 const finite = (n) => typeof n === 'number' && Number.isFinite(n);
 
 /**
- * Pass 2 on one clip: the greedy decode must match exactly (a flag for a closed-set clip), and for a closed-set clip
- * the best target form must score highest by at least `threshold` nats over the best confusable.
+ * Pass 2 on one clip, as an ADVISORY opinion: it never fails a clip. The AC-5 pilot found the pinned model cannot gate
+ * (AUC 0.64, the target on top in 86 of 216 clips, 0 of 27 words and sentences decoded exactly), so the greedy decode
+ * (any kind of clip) and the closed-set margin are reported in `flags`, and `advisory` says whether the old gate would
+ * have rejected the clip. The owner listen and the MAR reviewers read these; they are never alone a reason to regenerate.
+ * For a closed-set clip the best target form is compared with the best confusable, against `threshold` nats.
  *
  * @param {{ forms: string[], closedSet: { targets: string[], confusables: string[] } | null, free?: string,
  *   scores?: Record<string, number | null>, threshold?: number }} input
  */
 export function evaluatePass2({ forms, closedSet, free, scores = {}, threshold = CTC_MARGIN_NATS }) {
-  const failures = [];
   const flags = [];
   const freeText = free === undefined ? undefined : String(free).trim();
   const freeMatch = freeText !== undefined && isExactMatch(freeText, forms);
-  if (freeText === undefined) failures.push('no greedy decode');
+  if (freeText === undefined) flags.push('no greedy decode');
   else if (!freeMatch) {
-    if (closedSet === null) failures.push(`greedy decode "${freeText}" is not ${shownForms(forms)}`);
-    else flags.push(`greedy decode "${freeText}" differs from ${shownForms(forms)} (the margins decide)`);
+    flags.push(
+      closedSet === null
+        ? `greedy decode "${freeText}" differs from ${shownForms(forms)}`
+        : `greedy decode "${freeText}" differs from ${shownForms(forms)} (the margins decide)`,
+    );
   }
   let target = null;
   let best = null;
   let margin = null;
   let ranking = [];
+  let lowMargin = false;
   if (closedSet !== null) {
     const candidates = [...closedSet.targets, ...closedSet.confusables];
     ranking = candidates
@@ -479,33 +561,47 @@ export function evaluatePass2({ forms, closedSet, free, scores = {}, threshold =
     const top = (list) => list.reduce((acc, c) => (finite(scores[c]) && (acc === null || scores[c] > scores[acc]) ? c : acc), null);
     target = top(closedSet.targets);
     best = top(closedSet.confusables);
-    if (target === null) failures.push(`cannot score the target ${shownForms(closedSet.targets)} (outside the model vocabulary, or no alignment)`);
-    else if (best === null) failures.push('no confusable could be scored, so there is no margin');
-    else {
+    if (target === null) {
+      lowMargin = true;
+      flags.push(`cannot score the target ${shownForms(closedSet.targets)} (outside the model vocabulary, or no alignment)`);
+    } else if (best === null) {
+      lowMargin = true;
+      flags.push('no confusable could be scored, so there is no margin');
+    } else {
       margin = round(scores[target] - scores[best]);
-      if (margin <= 0) failures.push(`target is not top: ${best} scores ${round(scores[best], 2)} against ${target} ${round(scores[target], 2)}`);
-      else if (margin < threshold) failures.push(`margin ${margin} nats over ${best} is under ${threshold} (top but narrow)`);
+      if (margin <= 0) {
+        lowMargin = true;
+        flags.push(`target is not top: ${best} scores ${round(scores[best], 2)} against ${target} ${round(scores[target], 2)}`);
+      } else if (margin < threshold) {
+        lowMargin = true;
+        flags.push(`margin ${margin} nats over ${best} is under ${threshold} (top but narrow)`);
+      }
     }
   }
-  return { ok: failures.length === 0, free: freeText ?? null, freeMatch, target, best, margin, ranking, failures, flags };
+  const advisory = closedSet === null ? freeText === undefined || !freeMatch : lowMargin;
+  return { ok: true, advisory, free: freeText ?? null, freeMatch, target, best, margin, ranking, failures: [], flags };
 }
 
 // --- The verdict --------------------------------------------------------------------------------------------------
 
 const PARTS = [
-  ['pass1', 'Pass 1', 'did not run'],
-  ['pass2', 'Pass 2', 'did not run'],
-  ['signal', 'signal', 'not measured'],
-  ['identity', 'identity', 'not checked'],
+  ['pass1', 'Pass 1', 'did not run', true],
+  ['pass2', 'Pass 2', 'did not run', false],
+  ['signal', 'signal', 'not measured', true],
+  ['identity', 'identity', 'not checked', true],
 ];
 
-/** A clip passes only when Pass 1, Pass 2, the signal checks and the identity checks all ran and passed. */
+/**
+ * A clip passes when Pass 1 and the signal and identity checks all ran and passed. Pass 2 is advisory (its findings are
+ * flags; section 9 and the AC-5 pilot): it adds no reason, and a clip passes whether or not it ran.
+ */
 export function clipVerdict(parts) {
   const reasons = [];
-  for (const [key, label, missing] of PARTS) {
+  for (const [key, label, missing, required] of PARTS) {
     const part = parts[key];
-    if (part === undefined || part === null) reasons.push(`${label}: ${missing}`);
-    else if (!part.ok) reasons.push(...part.failures.map((f) => `${label}: ${f}`));
+    if (part === undefined || part === null) {
+      if (required) reasons.push(`${label}: ${missing}`);
+    } else if (!part.ok) reasons.push(...part.failures.map((f) => `${label}: ${f}`));
   }
   return { verdict: reasons.length === 0 ? 'pass' : 'fail', reasons };
 }

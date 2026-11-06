@@ -9,7 +9,7 @@ import { sayKey, sayRef } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
 import { answerOf, parseListenArgs, runListen } from '../audio/tts/listen-lib.mjs';
 import { saySha256 } from '../audio/tts/lock-lib.mjs';
-import { clipFilesOf, parseQaArgs, qaRefusalOf, runQa } from '../audio/tts/qa-run.mjs';
+import { clipFilesOf, clipRowMatcher, parseQaArgs, qaRefusalOf, runQa } from '../audio/tts/qa-run.mjs';
 
 const APP_ROOT = join(__dirname, '..', '..');
 const REPO = '/repo';
@@ -91,7 +91,7 @@ describe('audio:tts:qa arguments and refusals', () => {
     expect(parseQaArgs(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'nope']).error).toMatch(/unknown pack nope/);
     expect(parseQaArgs([...ARGS, '--margin', '0']).error).toMatch(/--margin/);
     expect(parseQaArgs([...ARGS, '--margin', '1.5'])).toMatchObject({ engine: 'polly', voice: 'Seoyeon', packs: ['jamo-s1'], threshold: 1.5 });
-    expect(parseQaArgs(ARGS).threshold).toBe(2);
+    expect(parseQaArgs(ARGS).threshold).toBe(0.5);
     expect(parseQaArgs([...ARGS, '--say-bitrate', '64']).sayBitrate).toBe(64);
     expect(parseQaArgs([...ARGS, '--say-bitrate', '32']).error).toMatch(/--say-bitrate: --bitrate must be 64 or 48/);
   });
@@ -117,6 +117,17 @@ describe('audio:tts:qa arguments and refusals', () => {
       { name: 'a.mp3', key: 'a', ext: 'mp3' },
     ]);
   });
+
+  it('matches a pilot-only probe word (not a manifest row) through the selected rows, in the masters and in say/', () => {
+    const probe = { ref: sayRef('신라'), key: sayKey('신라'), kind: 'word', text: '신라', say: '신라', rate: 0.9, pack: 'pilot', sources: ['pilot'] };
+    const withoutSelection = clipRowMatcher(MANIFEST.rows);
+    expect(withoutSelection(probe.key, MASTERS)).toBeNull();
+    const matcher = clipRowMatcher(MANIFEST.rows, [probe]);
+    expect(matcher(probe.key, MASTERS)).toBe(probe.key);
+    expect(matcher(probe.key, `${ASSETS}/say`)).toBe(probe.key);
+    expect(matcher('giyeok', MASTERS)).toBe('giyeok');
+    expect(matcher('stray', MASTERS)).toBeNull();
+  });
 });
 
 describe('audio:tts:qa end to end, recognizers mocked', () => {
@@ -134,14 +145,24 @@ describe('audio:tts:qa end to end, recognizers mocked', () => {
     expect(h.pass1.transcribe).toHaveBeenCalledTimes(1);
   });
 
-  it('a clip that only one recognizer passes fails, with the exact --only command to regenerate it', async () => {
-    const h = harness({ heard: { kieuk: { free: '카', forced: '카', margin: 1.1 } } });
-    expect(await runQa(ARGS.slice(0, 4).concat(['--only', 'giyeok,kieuk']), {}, h.deps)).toBe(1);
+  it('a clip that only Pass 1 passes still passes: Pass 2 is advisory and only flags a narrow margin', async () => {
+    const h = harness({ heard: { kieuk: { free: '카', forced: '카', margin: 0.2 } } });
+    expect(await runQa(ARGS.slice(0, 4).concat(['--only', 'giyeok,kieuk']), {}, h.deps)).toBe(0);
     const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
     const kieuk = report.clips.find((c) => c.key === 'kieuk');
     expect(kieuk.pass1.ok).toBe(true);
-    expect(kieuk.pass2.ok).toBe(false);
-    expect(kieuk.verdict).toBe('fail');
+    expect(kieuk.pass2).toMatchObject({ ok: true, advisory: true, failures: [] });
+    expect(kieuk.pass2.flags[0]).toMatch(/margin 0.2 nats .* is under 0.5/);
+    expect(kieuk.verdict).toBe('pass');
+    expect(report.regenerate.keys).toEqual([]);
+    expect(report.summary).toMatchObject({ pass: 2, fail: 0, pass2Advisory: 1 });
+  });
+
+  it('a clip that Pass 1 fails is regenerated, with the exact --only command, whatever Pass 2 says', async () => {
+    const h = harness({ heard: { kieuk: { free: '카', forced: '가', margin: 3 } } });
+    expect(await runQa(ARGS.slice(0, 4).concat(['--only', 'giyeok,kieuk']), {}, h.deps)).toBe(1);
+    const report = JSON.parse(h.fs.get(`${MASTERS}/qa-report.json`));
+    expect(report.clips.find((c) => c.key === 'kieuk').verdict).toBe('fail');
     expect(report.regenerate.keys).toEqual(['kieuk']);
     expect(h.out).toContain('  pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --voice Seoyeon --only kieuk');
     expect(h.out.some((l) => l.includes(`mv ${'apps/mobile/recordings/tts/polly/Seoyeon'}/kieuk.wav`))).toBe(true);

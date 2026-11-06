@@ -19,7 +19,10 @@ import {
   evaluatePass2,
   isClosedSetRow,
   isExactMatch,
+  nativeNumeral,
   normalizeTranscript,
+  sinoNumeral,
+  spokenVariantsOf,
   parseWhisperText,
   sameSoundSpellingsOf,
   scoreCtcClip,
@@ -46,6 +49,43 @@ describe('normalization and the exact-match rule (section 9)', () => {
     expect(isExactMatch('가방.', forms)).toBe(true);
     expect(isExactMatch('가반', forms)).toBe(false);
     expect(isExactMatch('가방이', forms)).toBe(false);
+  });
+
+  it('Whisper digits are read aloud: 사과 3개 주세요 is 사과 세 개 주세요 (the native numeral before a counter)', () => {
+    const forms = targetFormsOf(row('sentence', '사과 세 개 주세요.'), NO_OVERRIDES);
+    expect(isExactMatch('사과 3개 주세요.', forms)).toBe(true);
+    expect(isExactMatch('사과 3 개 주세요', forms)).toBe(true);
+    expect(isExactMatch('사과 세 개 주세요', forms)).toBe(true);
+    expect(isExactMatch('사과 4개 주세요', forms)).toBe(false);
+    expect(isExactMatch('사과 33개 주세요', forms)).toBe(false);
+  });
+
+  it('numerals: native before a counter (한 두 세 네 스무), Sino-Korean otherwise', () => {
+    expect([1, 2, 3, 4, 5, 10, 11, 20, 21, 99].map((n) => nativeNumeral(n, true))).toEqual(['한', '두', '세', '네', '다섯', '열', '열한', '스무', '스물한', '아흔아홉']);
+    expect([0, 3, 10, 12, 40, 99].map(sinoNumeral)).toEqual(['영', '삼', '십', '십이', '사십', '구십구']);
+    expect(spokenVariantsOf('5월')).toEqual(['오월']);
+    expect(spokenVariantsOf('2명')).toEqual(['이명', '두명']);
+    expect(spokenVariantsOf('안녕')).toEqual(['안녕']);
+    expect(isExactMatch('이거 3000원', targetFormsOf(row('sentence', '이거 삼천 원'), NO_OVERRIDES))).toBe(false);
+    expect(isExactMatch('오 월', targetFormsOf(row('word', '오 월'), NO_OVERRIDES))).toBe(true);
+    expect(isExactMatch('5 월', targetFormsOf(row('word', '오 월'), NO_OVERRIDES))).toBe(true);
+    expect(isExactMatch('3시', targetFormsOf(row('word', '세 시'), NO_OVERRIDES))).toBe(true);
+  });
+
+  it('얼마에요 is 얼마예요: a spelling variant of one sound (the sound itself still has to match)', () => {
+    const forms = targetFormsOf(row('sentence', '이거 얼마예요?'), NO_OVERRIDES);
+    expect(isExactMatch('이거 얼마에요', forms)).toBe(true);
+    expect(isExactMatch('이거 얼마예요.', forms)).toBe(true);
+    expect(isExactMatch('이거 얼마애요', forms)).toBe(false);
+    expect(isExactMatch('이거 얼마예', forms)).toBe(false);
+    const reverse = targetFormsOf(row('sentence', '학생이에요'), NO_OVERRIDES);
+    expect(isExactMatch('학생이예요', reverse)).toBe(true);
+  });
+
+  it('digits and 에요 slack does not loosen a miss: 가반 and 가방이 still fail', () => {
+    const forms = targetFormsOf(row('word', '가방'), NO_OVERRIDES);
+    expect(isExactMatch('가반', forms)).toBe(false);
+    expect(isExactMatch('가방 3개', forms)).toBe(false);
   });
 
   it('an authored accept variant passes; the text still passes', () => {
@@ -248,33 +288,34 @@ describe('Pass 1: Whisper free transcription and forced choice', () => {
   });
 });
 
-describe('Pass 2: CTC free decode and per-candidate margins', () => {
+describe('Pass 2: CTC free decode and per-candidate margins (advisory)', () => {
   const ga = row('jamo-sound', '가', { say: '가.' });
   const gaSet = closedSetOf(ga, NO_OVERRIDES);
   const gaForms = targetFormsOf(ga, NO_OVERRIDES);
   const scores = (target, ...others) => ({ 가: target, 카: others[0] ?? -30, 까: others[1] ?? -31, 의: -40, 아: -50 });
 
-  it('passes when the target is top by at least the threshold (default 2.0 nats)', () => {
-    expect(CTC_MARGIN_NATS).toBe(2.0);
+  it('the default margin is 0.5 nats (AC-5 pilot calibration), and a margin over it is not advisory', () => {
+    expect(CTC_MARGIN_NATS).toBe(0.5);
     const out = evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '가', scores: scores(-10, -12.5) });
-    expect(out).toMatchObject({ ok: true, margin: 2.5, best: '카', failures: [] });
+    expect(out).toMatchObject({ ok: true, advisory: false, margin: 2.5, best: '카', failures: [], flags: [] });
   });
 
-  it('fails when the target is not top', () => {
+  it('never fails a clip: a target that is not top is an advisory flag', () => {
     const out = evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '카', scores: scores(-12, -10) });
-    expect(out.ok).toBe(false);
-    expect(out.failures[0]).toMatch(/target is not top: 카 scores -10/);
+    expect(out).toMatchObject({ ok: true, advisory: true, failures: [] });
+    expect(out.flags.some((f) => /target is not top: 카 scores -10/.test(f))).toBe(true);
   });
 
-  it('fails a top-but-narrow target (margin under the threshold)', () => {
-    const out = evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '가', scores: scores(-10, -11.2) });
-    expect(out.ok).toBe(false);
-    expect(out.margin).toBe(1.2);
-    expect(out.failures[0]).toMatch(/margin 1.2 nats over 카 is under 2/);
+  it('flags a top-but-narrow target (margin under the threshold)', () => {
+    const out = evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '가', scores: scores(-10, -10.3) });
+    expect(out).toMatchObject({ ok: true, advisory: true, margin: 0.3 });
+    expect(out.flags[0]).toMatch(/margin 0.3 nats over 카 is under 0.5/);
   });
 
-  it('the threshold is configurable (AC-5 calibrates it)', () => {
-    expect(evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '가', scores: scores(-10, -11.2), threshold: 1.0 }).ok).toBe(true);
+  it('the threshold is configurable', () => {
+    const s = scores(-10, -11.2);
+    expect(evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '가', scores: s }).advisory).toBe(false);
+    expect(evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '가', scores: s, threshold: 2.0 }).advisory).toBe(true);
   });
 
   it('an accepted form counts as the target, not as a confusable', () => {
@@ -285,25 +326,27 @@ describe('Pass 2: CTC free decode and per-candidate margins', () => {
     s.시옷 = -15;
     s.시온 = -12;
     const out = evaluatePass2({ forms: targetFormsOf(r, NO_OVERRIDES), closedSet: set, free: '시옫', scores: s });
-    expect(out).toMatchObject({ ok: true, target: '시옫', best: '시온', margin: 3 });
+    expect(out).toMatchObject({ ok: true, advisory: false, target: '시옫', best: '시온', margin: 3 });
   });
 
-  it('fails when the target cannot be scored (a syllable outside the model vocabulary)', () => {
+  it('a target that cannot be scored (outside the model vocabulary) is an advisory flag, not a failure', () => {
     const out = evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '가', scores: { ...scores(-10), 가: null } });
-    expect(out.ok).toBe(false);
-    expect(out.failures[0]).toMatch(/cannot score the target/);
+    expect(out).toMatchObject({ ok: true, advisory: true, failures: [] });
+    expect(out.flags[0]).toMatch(/cannot score the target/);
   });
 
-  it('a word or sentence needs an exact greedy decode', () => {
+  it('a word or sentence is no longer gated on an exact greedy decode: a miss is a flag', () => {
     const r = row('sentence', '안녕히 가세요.');
     const forms = targetFormsOf(r, NO_OVERRIDES);
-    expect(evaluatePass2({ forms, closedSet: null, free: '안녕히 가세요' }).ok).toBe(true);
-    expect(evaluatePass2({ forms, closedSet: null, free: '안녕이 가세요' }).failures[0]).toMatch(/greedy decode "안녕이 가세요" is not/);
+    expect(evaluatePass2({ forms, closedSet: null, free: '안녕히 가세요' })).toMatchObject({ ok: true, advisory: false, freeMatch: true });
+    const miss = evaluatePass2({ forms, closedSet: null, free: '안명이 가세요' });
+    expect(miss).toMatchObject({ ok: true, advisory: true, freeMatch: false, failures: [] });
+    expect(miss.flags[0]).toMatch(/greedy decode "안명이 가세요" differs from/);
   });
 
   it('a short clip whose greedy decode differs is a flag; the margins decide', () => {
     const out = evaluatePass2({ forms: gaForms, closedSet: gaSet, free: '각', scores: scores(-10, -13) });
-    expect(out.ok).toBe(true);
+    expect(out).toMatchObject({ ok: true, advisory: false });
     expect(out.flags[0]).toMatch(/greedy decode "각" differs/);
   });
 });
@@ -316,10 +359,13 @@ describe('the verdict: both passes and the shared checks', () => {
     expect(clipVerdict({ pass1: ok, pass2: ok, signal: ok, identity: ok })).toEqual({ verdict: 'pass', reasons: [] });
   });
 
-  it('a clip that passes only one recognizer fails', () => {
-    expect(clipVerdict({ pass1: ok, pass2: bad('margin 1.2 nats') })).toEqual({ verdict: 'fail', reasons: ['Pass 2: margin 1.2 nats', 'signal: not measured', 'identity: not checked'] });
-    expect(clipVerdict({ pass1: ok, pass2: undefined, signal: ok, identity: ok })).toEqual({ verdict: 'fail', reasons: ['Pass 2: did not run'] });
+  it('Pass 1 gates; Pass 2 is advisory, so a clip passes without it and its advisory result does not fail it', () => {
+    const advisory = { ok: true, advisory: true, failures: [], flags: ['margin 0.1 nats'] };
+    expect(clipVerdict({ pass1: ok, pass2: advisory, signal: ok, identity: ok })).toEqual({ verdict: 'pass', reasons: [] });
+    expect(clipVerdict({ pass1: ok, pass2: undefined, signal: ok, identity: ok })).toEqual({ verdict: 'pass', reasons: [] });
+    expect(clipVerdict({ pass1: undefined, pass2: ok, signal: ok, identity: ok })).toEqual({ verdict: 'fail', reasons: ['Pass 1: did not run'] });
     expect(clipVerdict({ pass1: bad('forced choice "카"'), pass2: ok, signal: ok, identity: ok }).verdict).toBe('fail');
+    expect(clipVerdict({ pass1: ok })).toEqual({ verdict: 'fail', reasons: ['signal: not measured', 'identity: not checked'] });
   });
 
   it('a signal or identity failure fails the clip even when both recognizers agree', () => {

@@ -97,11 +97,14 @@ export function clipFilesOf(names) {
  * Which manifest row a clip file belongs to, by its name (without the extension) and its folder: in a processed
  * group folder (`.../audio/jamo`, `.../audio/vocab`, `.../audio/say`), the row whose ref has that file id; in any other
  * folder (the masters), the row of that key. null: no row (an extra file).
+ * `selectedRows` are the rows of this run: the pilot's probe words (신라, 같이, 좋다) are generated for the pilot only and
+ * are not manifest rows, so they must be matched through the selection or their masters read as extra and the rows missing.
  */
-export function clipRowMatcher(manifestRows) {
-  const keys = new Set(manifestRows.map((r) => r.key));
+export function clipRowMatcher(manifestRows, selectedRows = []) {
+  const known = [...manifestRows, ...selectedRows];
+  const keys = new Set(known.map((r) => r.key));
   const byFileId = new Map();
-  for (const r of manifestRows) {
+  for (const r of known) {
     const group = recordingGroupOf(r.ref);
     if (group !== null) byFileId.set(`${group}/${fileIdOf(r.ref)}`, r.key);
   }
@@ -183,7 +186,7 @@ export async function runQa(argv, env, deps) {
   // unless the selection is a whole pack (then a stray file of no row is reported as extra). A processed clip is
   // named by its ref's file id (audio/vocab/gangaji.mp3 for a hash-keyed vocab row), so in a folder that ends in
   // its ref's group folder (assets/audio/vocab) it is matched by that id as well.
-  const rowKeyOf = clipRowMatcher(manifest.rows);
+  const rowKeyOf = clipRowMatcher(manifest.rows, rows);
   const clips = [];
   for (const dir of dirs) {
     if (!deps.exists(dir)) {
