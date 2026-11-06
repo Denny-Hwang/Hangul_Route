@@ -1,6 +1,6 @@
 # Clip QA: local setup and run (AMENDMENTS-AUDIO-CLIPS section 9, row AC-4)
 
-`audio:tts:qa` checks every generated Korean clip twice, with two speech recognizers from different model families that listen to the audio independently, plus signal and identity checks. A clip ships only when both recognizers and the shared checks pass and two MAR reviewer agents say keep (spec section 9).
+`audio:tts:qa` checks every generated Korean clip twice, with two speech recognizers from different model families that listen to the audio independently, plus signal and identity checks. A clip ships only when Pass 1 and the shared checks pass and two MAR reviewer agents say keep; Pass 2 is advisory and only flags (spec sections 9 and 13).
 
 - **Local only.** Both recognizers run on this machine. There is no network call at run time and no vendor speech-to-text. The command refuses to run when `CI` is set.
 - **No account, no key.** Setup downloads public files: the whisper.cpp source, the Whisper model and the CTC model. None of them needs an account or a credential. An agent can do the setup on the owner's machine.
@@ -35,7 +35,9 @@ What the QA asks of Whisper:
 - **Free transcription** of every clip: `-l ko -nt -otxt`. All clips run in one call.
 - **Forced choice** for every jamo clip and every clip of one or two syllables: `--grammar <file> --grammar-rule root --grammar-penalty 100`. The grammar allows only the clip's closed set: the target and its confusables. Clips that share a closed set run in one call.
 
-## 3. Pass 2: a Korean wav2vec2 CTC model
+## 3. Pass 2: a Korean wav2vec2 CTC model (advisory)
+
+Pass 2 is a second opinion, not a gate. In the AC-5 pilot (216 closed-set clips, three voices) the pinned model ranked the target top in only 86 clips (AUC 0.64), decoded 0 of 27 words and sentences exactly, and at 2.0 nats rejected 75 % of the clips Whisper accepted. `kresnik/wav2vec2-large-xlsr-korean` is better (AUC 0.76) but is not good enough to gate either. So its findings appear in the report as flags, they never fail a clip, and a clip is never regenerated on Pass 2 alone. The owner listen and the reviewers read them. Pass 1, the signal checks and the identity checks decide.
 
 The default model is `Kkonjeong/wav2vec2-base-korean`, pinned at revision `fa03d1a7138f1900131393cc7cb74f77926f177a`. Its model card was read on 2026-10-30:
 
@@ -62,7 +64,7 @@ The QA checks the model before it runs:
 
 To use another model, pass `--ctc-model <folder> --ctc-model-id <id>`. When its card states the licence only in its body, as the default model's does, read it yourself and pass `--ctc-licence <spdx>`.
 
-An alternative is `kresnik/wav2vec2-large-xlsr-korean`: also Apache-2.0, and more accurate on free decoding. Its vocabulary is 1,205 whole syllables, though, so it cannot spell some letter-name syllables (읔, 읕, 읖). Those clips then fail with "cannot score the target".
+An alternative is `kresnik/wav2vec2-large-xlsr-korean`: also Apache-2.0, and more accurate on free decoding. Its vocabulary is 1,205 whole syllables, though, so it cannot spell some letter-name syllables (읔, 읕, 읖). Those clips then carry the advisory flag "cannot score the target".
 
 How Pass 2 runs:
 
@@ -83,15 +85,15 @@ pnpm --filter @hangul-route/mobile audio:tts:qa --engine polly --voice Seoyeon -
 
 - **Input:** the clips in `apps/mobile/recordings/tts/<engine>/<voice>/` (`<key>.wav` or `<key>.mp3`), or in the folders named by `--dir`. The QA also reads three committed files: `content/audio/tts-manifest.json`, `content/audio/pronunciation-overrides.json` (its `accept` variants) and `content/audio/tts-lock.json`.
 - **Selection:** the same as the generator: `--pack`, `--pilot` or `--only <keys>`.
-- **Margin:** `--margin <nats>` sets the Pass 2 threshold. The default is 2.0, and AC-5 calibrates it.
+- **Margin:** `--margin <nats>` sets the threshold of the advisory Pass 2 flag. The default is 0.5 nats, from the AC-5 pilot calibration (spec section 13). It does not change any verdict.
 - **Bitrate:** each clip is checked at its group's bitrate (`GROUP_BITRATES`): jamo and vocab at 64 kbps and 44.1 kHz, say at 48 kbps and 24 kHz, or at 64 kbps if the pilot listen of spec section 13 ruled 48 out. Pass `--say-bitrate 48` or `--say-bitrate 64` as section 13 records it. Without it, a say clip is checked at the allowed bitrate its sample rate encodes.
 - **Processed folders:** in `apps/mobile/assets/audio/<group>/` a clip is named by its ref's file id, so a hash-keyed vocab row is found as `gangaji.mp3`. A recorded clip there that the manifest does not generate is listed and not checked.
 - **Output:** `qa-report.json` and `qa-report.md` in the master folder, or in `--out` (it must be gitignored).
-- **Exit code:** 0 when every selected row passes. 1 when any clip fails, is missing or was vetoed, when a master folder holds a file of no manifest row (extra), or when a selected jamo pack is over its set total. 2 on a usage error or a refusal.
+- **Exit code:** 0 when every selected row passes (Pass 2 flags do not count). 1 when any clip fails, is missing or was vetoed, when a master folder holds a file of no manifest row (extra), or when a selected jamo pack is over its set total. 2 on a usage error or a refusal.
 
 ### What is checked
 
-- **Exact match.** Before any comparison, both passes apply NFC and remove punctuation and spaces. A transcript passes only if it equals the manifest `text` or an authored `accept` variant. 가방 heard as 가반 fails. A letter name also passes on its isolated pronunciation from the AC-B3 table (시옷 as [시옫]).
+- **Exact match.** Before any comparison, both passes apply NFC and remove punctuation and spaces. A transcript passes only if it equals the manifest `text` or an authored `accept` variant. 가방 heard as 가반 fails. A letter name also passes on its isolated pronunciation from the AC-B3 table (시옷 as [시옫]). Two spelling variants of one spoken form are folded in the code and need no `accept` row: a number Whisper writes in digits is read aloud (사과 3개 주세요 = 사과 세 개 주세요, with the native numeral before a counter such as 개 or 명 and the Sino-Korean one otherwise, up to 99), and 에요 = 예요 (얼마에요 = 얼마예요).
 - **Closed set.** This applies to jamo clips and to clips of one or two syllables. The target is swapped one syllable at a time for:
   - the other members of its plain / aspirated / tense series (가/카/까, 다/타/따, 바/파/빠, 자/차/짜, 사/싸);
   - the other final sounds (악 안 알 암 압 앙 앋). A final that sounds the same as the target's own, such as 옷 and 옫, is never a confusable;
@@ -103,9 +105,9 @@ pnpm --filter @hangul-route/mobile audio:tts:qa --engine polly --voice Seoyeon -
 - **Pass 1.**
   - A word or sentence fails unless its free transcript matches exactly.
   - A closed-set clip fails when its forced choice is not the target. A free-transcript mismatch on a closed-set clip is only a flag.
-- **Pass 2.**
-  - A word or sentence fails unless its greedy decode matches exactly.
-  - A closed-set clip fails when the target does not score highest, or when its margin over the best confusable is under the threshold (top but narrow).
+- **Pass 2 (advisory, never fails a clip).**
+  - A word or sentence whose greedy decode is not an exact match gets a flag.
+  - A closed-set clip gets a flag when the target does not score highest, cannot be scored, or has a margin over the best confusable under the threshold (top but narrow). The report counts these clips ("Pass 2 advises a listen on N clips").
 - **Shared checks.**
   - Duration and size by class, from `CLIP_LIMITS`:
     - jamo: 0.6-1.5 s and 12 KB;

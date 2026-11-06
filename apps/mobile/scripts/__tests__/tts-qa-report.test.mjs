@@ -293,8 +293,8 @@ function sampleReport(ownerListen = null, packTotals = []) {
   const s = (target, conf) => ({ 가: target, 카: conf, 까: conf - 3, 의: -50, 갸: -50, 아: -50 });
   const clips = [
     entry(ga, { free: '가.', forced: '가' }, { free: '가', scores: s(-8.4, -12.9) }),
-    entry(ka, { free: '가', forced: '카' }, { free: '카', scores: { 카: -9.1, 가: -10.0, 까: -14, 키: -40 } }),
-    entry(ak, { free: '악.', forced: '악' }, { free: '악', scores: { 악: -7, 안: -9.5, 알: -12, 암: -11, 압: -8.2, 앙: -13, 앋: -10 } }),
+    entry(ka, { free: '가', forced: '카' }, { free: '카', scores: { 카: -9.1, 가: -10.0, 까: -14, 키: -40 }, threshold: 1 }),
+    entry(ak, { free: '압.', forced: '압' }, { free: '악', scores: { 악: -7, 안: -9.5, 알: -12, 암: -11, 압: -8.2, 앙: -13, 앋: -10 } }),
     entry(gukmul, { free: '궁물', forced: '궁물' }, { free: '궁물', scores: { 궁물: -12, 국물: -12.5, 굼물: -30, 쿡물: -30, 꾹물: -30, 국믈: -30, 국묵: -30, 국문: -30, 국물: -12.5, 국뭄: -30, 국뭅: -30, 국뭉: -30, 국묻: -30, 궁믈: -30 } }, 'processed'),
   ];
   return buildReport({
@@ -326,26 +326,28 @@ describe('the report', () => {
     expect(report.summary).toEqual({
       rows: 5,
       clips: 4,
-      pass: 2,
-      fail: 2,
+      pass: 3,
+      fail: 1,
       missing: 1,
       extra: 1,
       vetoed: 0,
-      flagged: 0,
+      flagged: 1,
+      pass2Advisory: 1,
       packTotalsOk: true,
       firstTake: { pass1: { matched: 1, total: 1, rate: 1, meetsG4: true }, pass2: { matched: 1, total: 1, rate: 1, meetsG4: true } },
     });
     // 카: Pass 1's forced choice is right but its free transcript is 가 (a flag), and Pass 2's margin over 가 is 0.9
-    // nats (top but narrow): it fails on one pass. 악: both recognizers agree, but its margin over 압 is 1.2 nats.
+    // nats against a 1.0 threshold: an advisory flag that does not fail it. 악: Pass 1 hears 압, which fails it.
     // 국물: heard as its accepted variant 궁물 in both passes.
-    expect(report.clips.map((c) => c.reasons)).toEqual([[], ['Pass 2: margin 0.9 nats over 가 is under 2 (top but narrow)'], ['Pass 2: margin 1.2 nats over 압 is under 2 (top but narrow)'], []]);
+    expect(report.clips.map((c) => c.reasons)).toEqual([[], [], ['Pass 1: forced choice "압" is not the target 악 or 앆 or 앇 or 앍 or 앜'], []]);
+    expect(report.clips[1].pass2.flags).toEqual(['margin 0.9 nats over 가 is under 1 (top but narrow)']);
     expect(report.clips.map((c) => [c.key, c.verdict])).toEqual([
       ['giyeok', 'pass'],
-      ['kieuk', 'fail'],
+      ['kieuk', 'pass'],
       ['giyeok-batchim', 'fail'],
       ['0123456789abcdef', 'pass'],
     ]);
-    expect(report.regenerate.keys).toEqual(['kieuk', 'giyeok-batchim', 'nieun']);
+    expect(report.regenerate.keys).toEqual(['giyeok-batchim', 'nieun']);
     // An extra file (no manifest row) is an identity failure: the run does not pass.
     expect(reportPasses(report)).toBe(false);
     expect(reportPasses({ ...report, regenerate: { keys: [], commands: [] }, extra: [] })).toBe(true);
@@ -354,8 +356,8 @@ describe('the report', () => {
   it('honours an owner veto of the clip that was played: regenerated, shown as vetoed, not counted as a pass', () => {
     const report = sampleReport({ date: '2026-11-03', played: 3, vetoes: [{ key: 'giyeok', text: '가', note: 'sounds like a question', sha256s: ['0'.repeat(64)] }] });
     expect(report.summary.vetoed).toBe(1);
-    expect(report.summary.pass).toBe(1);
-    expect(report.regenerate.keys).toEqual(['kieuk', 'giyeok-batchim', 'nieun', 'giyeok']);
+    expect(report.summary.pass).toBe(2);
+    expect(report.regenerate.keys).toEqual(['giyeok-batchim', 'nieun', 'giyeok']);
     const md = renderReportMarkdown(report);
     expect(md).toMatch(/vetoed giyeok \(sounds like a question\)\./);
     expect(md).toMatch(/\| giyeok \| 가 \|.*\| vetoed in the owner listen \(pass\) \|/);
@@ -364,8 +366,8 @@ describe('the report', () => {
   it('drops a veto once the clip is regenerated (another sha256)', () => {
     const report = sampleReport({ date: '2026-11-03', played: 3, vetoes: [{ key: 'giyeok', text: '가', note: '', sha256s: ['f'.repeat(64)] }] });
     expect(report.summary.vetoed).toBe(0);
-    expect(report.summary.pass).toBe(2);
-    expect(report.regenerate.keys).toEqual(['kieuk', 'giyeok-batchim', 'nieun']);
+    expect(report.summary.pass).toBe(3);
+    expect(report.regenerate.keys).toEqual(['giyeok-batchim', 'nieun']);
     expect(renderReportMarkdown(report)).toMatch(/vetoed giyeok \(clip since replaced, veto no longer applies\)/);
   });
 
