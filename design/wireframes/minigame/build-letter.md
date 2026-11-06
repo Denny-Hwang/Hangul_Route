@@ -35,6 +35,7 @@ Target 물 (mul): initial + vowel under + final        Target 밥 (bap): vowel b
 |          +-----+             |                      |                              |
 |          |  3  |  final      |                      |                              |
 |          +-----+  (lower)    |                      |                              |
+|       [ <x|  Undo ]          |                      |       [ <x|  Undo ]          |
 |                              |                      |                              |
 |  Tiles:                      |                      |  Tiles:                      |
 |  [ㅁ] [ㅜ] [ㄹ] [ㅅ] [ㄴ]     |                      |  [ㅂ][ㅏ][ㅂ][ㅈ][ㅁ]         |
@@ -68,7 +69,8 @@ Wrong answer (the round stays open; the slots clear after a short pause):
 
 ## Interaction points
 
-- Tile tap fills the next empty slot in reading order; tapping a placed tile removes it (unchanged).
+- Tile tap fills the next empty slot in reading order; tapping a filled slot takes its tile back (KT-6).
+- **[ Undo ]** (OW-1-undo, a backspace icon and the word "Undo", between the slots and the tray, 64 x 64 or more, always on screen) takes back the LAST placed tile, one tile per tap, down to an empty board. It is not an attempt: it scores nothing and shows nothing of the answer. The tray tile it frees is enabled again.
 - Slots full and in the right order: correct look, success haptic, auto-advance (unchanged). Otherwise wrong: nudge haptic, Hoya bubble with the shape hint and the shape diagram.
 - The target block replays its sound on tap (unchanged). [ Skip ] unchanged.
 
@@ -80,6 +82,7 @@ Enter from: `quest/player` via `minigame/shell` · Exit to: `quest/player` (unch
 
 - **success**: rounds advance as in the shell.
 - **empty** / **error**: unchanged (shell.md).
+- **Undo**: inert (dimmed, `aria-disabled`) while nothing is placed, while the right block shows and during the 900 ms wrong reset; a tap then does nothing. A tap right after another waits a short key bounce.
 - **wrong**: the bubble text depends on the block: vowel beside / under, plus "The last letter sits at the bottom." when there is a final.
 
 ## Data needs

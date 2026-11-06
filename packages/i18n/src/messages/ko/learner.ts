@@ -555,6 +555,7 @@ export const learner = {
         underFinal: '모음은 첫 글자 아래에 와요. 마지막 글자는 맨 아래에 와요.',
       },
       takeBack: (name: string) => `${name} 빼기`,
+      undo: { label: '지우기', name: '마지막 타일 지우기' },
     },
     trace: {
       heading: (romanization: string) => `글자 따라 쓰기: ${romanization}`,

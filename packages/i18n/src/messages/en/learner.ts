@@ -816,6 +816,8 @@ export const learner = {
       },
       /** A filled slot's screen-reader name (AMENDMENTS-TOUCH 6.5): a tap takes that tile back. `name` is the tile's own label. */
       takeBack: (name: string) => `Take back ${name}`,
+      /** The Undo button beside the slots (OW-1-undo): `label` is what it shows, `name` what a screen reader says; a tap removes the last placed tile. */
+      undo: { label: 'Undo', name: 'Undo last tile' },
     },
     /** Trace Stroke (F-004 to F-008): coverage passes; order and direction only surface as "next time" nudges. */
     trace: {

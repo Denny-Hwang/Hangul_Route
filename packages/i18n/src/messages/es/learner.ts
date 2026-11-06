@@ -580,6 +580,7 @@ export const learner = {
         underFinal: 'La vocal va debajo de la primera letra. La última letra va abajo.',
       },
       takeBack: (name: string) => `Quitar ${name}`,
+      undo: { label: 'Borrar', name: 'Borrar última ficha' },
     },
     trace: {
       heading: (romanization: string) => `Traza la letra ${romanization}`,
