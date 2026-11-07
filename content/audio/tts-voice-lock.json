@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "engine": "polly",
+  "voice": "Seoyeon",
+  "model": "neural",
+  "lockedOn": "2026-11-06",
+  "decision": "AMENDMENTS-AUDIO-CLIPS AC-5, AU-OD-5: owner decision 2026-11-06, Amazon Polly Neural Seoyeon (ko-KR, female) for every generated clip (AD11, one adult voice)"
+}

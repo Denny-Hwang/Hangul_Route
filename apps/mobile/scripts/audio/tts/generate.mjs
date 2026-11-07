@@ -15,6 +15,9 @@
 // (gitignored; refused otherwise), and content/audio/tts-lock.json, written after every clip so an interrupted run
 // keeps what it paid for. Rows already in the lock with the same say, voice and rate are skipped.
 //
+// Voice lock: outside --pilot the voice must be the one in content/audio/tts-voice-lock.json (polly Seoyeon, owner decision
+// 2026-11-06; AD11 one adult voice); --allow-other-voice overrides it for an experiment whose clips are never committed.
+//
 // Spend guard: --max-chars defaults to the dry-run count of the same command plus 10 %, and neither the default nor
 // an explicit --max-chars can pass the $50 budget ceiling; the run stops before the request that would cross the cap
 // (exit 3). --manifest, --lock and --out must stay inside the repository. A real Azure run is refused until its terms
@@ -24,6 +27,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, w
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { registerTsLoader, repoRoot } from '../content-sources.mjs';
+import { VOICE_LOCK_FILE, parseVoiceLock } from './lock-lib.mjs';
 
 /** Writes through a temporary file in the same folder, so a crash never leaves half a lock or half a WAV. */
 function writeAtomic(path, data) {
@@ -52,13 +56,27 @@ async function toWav(bytes, format, sampleRate) {
   }
 }
 
+/** The committed voice lock; a missing or non-JSON file fails with its path only. */
+function parseVoiceLockFile(path) {
+  let json;
+  try {
+    json = JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    throw new Error(`${VOICE_LOCK_FILE} is missing or not valid JSON`);
+  }
+  return parseVoiceLock(json);
+}
+
 async function main(argv) {
   // generate-lib.mjs reads the pack list and the say key from packages/content-schema (TypeScript).
   await registerTsLoader();
   const { runGenerate } = await import('./generate-lib.mjs');
   const { sayKey, sayRef } = await import('@hangul-route/content-schema');
+  // Fail closed: a missing or malformed voice lock stops the command, so the one-voice rule can never be skipped by accident.
+  const voiceLock = parseVoiceLockFile(join(repoRoot, VOICE_LOCK_FILE));
   return runGenerate(argv, process.env, {
     repoRoot,
+    voiceLock,
     readText: (p) => readFileSync(p, 'utf8'),
     exists: existsSync,
     writeAtomic,

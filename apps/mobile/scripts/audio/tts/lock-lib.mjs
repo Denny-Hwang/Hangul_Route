@@ -110,3 +110,50 @@ export function renderLock(lock) {
   const line = (r) => `    ${JSON.stringify(Object.fromEntries(LOCK_KEYS.map((k) => [k, r[k] ?? null])))}`;
   return `${[...head, '  "rows": [', rows.map(line).join(',\n'), '  ]', '}'].join('\n')}\n`;
 }
+
+// --- The voice lock (AMENDMENTS-AUDIO-CLIPS AC-B2 and section 13; owner decision 2026-11-06) -------------------------
+//
+// content/audio/tts-voice-lock.json names the one voice every shipped clip is generated with (AD11: one adult voice).
+// The generator reads it and refuses any other voice outside the pilot unless --allow-other-voice is given, so a stray
+// `--voice Jihye` cannot mix speakers into the jamo set or a later pack. It holds no credential and no pilot data.
+export const VOICE_LOCK_FILE = 'content/audio/tts-voice-lock.json';
+export const VOICE_LOCK_SCHEMA_VERSION = 1;
+const VOICE_LOCK_KEYS = ['schemaVersion', 'engine', 'voice', 'model', 'lockedOn', 'decision'];
+
+const voiceLockFail = (message) => {
+  throw new Error(`${VOICE_LOCK_FILE}: ${message}`);
+};
+
+/** Validates a parsed voice lock and returns it; throws naming the bad field. */
+export function parseVoiceLock(json) {
+  if (json === null || typeof json !== 'object' || Array.isArray(json)) voiceLockFail('not an object');
+  const extra = Object.keys(json).filter((k) => !VOICE_LOCK_KEYS.includes(k));
+  if (extra.length > 0) voiceLockFail(`unknown fields ${extra.join(', ')}`);
+  if (json.schemaVersion !== VOICE_LOCK_SCHEMA_VERSION) voiceLockFail(`schemaVersion must be ${VOICE_LOCK_SCHEMA_VERSION}`);
+  for (const k of ['engine', 'voice', 'model', 'decision']) {
+    if (typeof json[k] !== 'string' || json[k] === '') voiceLockFail(`${k} must be a non-empty string`);
+  }
+  if (typeof json.lockedOn !== 'string' || !DAY.test(json.lockedOn)) voiceLockFail('lockedOn must be YYYY-MM-DD');
+  return json;
+}
+
+/** Whether a lock row (or any { engine, voice }) is the locked voice. */
+export function isLockedVoice(voiceLock, { engine, voice }) {
+  return voiceLock.engine === engine && voiceLock.voice === voice;
+}
+
+/**
+ * Why a command may not generate with these voices, or null. The pilot compares candidates and ships nothing, so it
+ * is exempt; so is a run with --allow-other-voice (the owner's explicit override). A null `voiceLock` is the tests'
+ * way of switching the rule off; generate.mjs always loads the committed file.
+ */
+export function voiceLockProblem(voiceLock, { engine, voices, pilot, allowOtherVoice }) {
+  if (voiceLock === null || voiceLock === undefined || pilot || allowOtherVoice) return null;
+  const others = voices.filter((voice) => !isLockedVoice(voiceLock, { engine, voice }));
+  if (others.length === 0) return null;
+  return (
+    `refused: ${engine}/${others.join(', ')} is not the locked voice ${voiceLock.engine}/${voiceLock.voice} ` +
+    `(${VOICE_LOCK_FILE}, locked ${voiceLock.lockedOn}). Every shipped clip uses one adult voice (AD11), so a clip in another ` +
+    'voice would mix speakers. Use the locked voice; --allow-other-voice overrides this only for an experiment whose clips are not committed.'
+  );
+}

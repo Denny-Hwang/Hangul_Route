@@ -16,7 +16,9 @@ import {
   SILENCEDETECT_FILTER,
   buildReport,
   evaluateSignal,
+  MERGED_SOUND_GROUPS,
   identityChecks,
+  isMergedSoundPair,
   measureArgs,
   onsetRiseOf,
   parseFrameLevels,
@@ -140,7 +142,7 @@ describe('identity checks', () => {
   const lockRow = (r, mp3Sha256 = null, sayText = r.say) => ({ ref: r.ref, key: r.key, engine: 'polly', voice: 'Seoyeon', model: 'neural', rate: 0.85, generated: '2026-11-02', saySha256: say(sayText), mp3Sha256 });
   const clip = (key, ext, sha) => ({ key, file: `${key}.${ext}`, ext, sha256: sha });
 
-  it('passes one clip per row, each in the lock', () => {
+  it('three different jamo sharing bytes (a swapped clip) fail', () => {
     const lock = { rows: rows.map((r) => lockRow(r, 'a'.repeat(64))) };
     const out = identityChecks({ rows, clips: rows.map((r, i) => clip(r.key, 'mp3', i === 0 ? 'a'.repeat(64) : 'a'.repeat(64))), lock, engine: 'polly', voice: 'Seoyeon' });
     // Same bytes for 가, 카 and 아 is the swap the byte-identity check exists for.
@@ -168,6 +170,49 @@ describe('identity checks', () => {
     const lock = { rows: [{ ...lockRow(rows[0]), voice: 'Jihye' }] };
     const out = identityChecks({ rows: [rows[0]], clips: [clip('giyeok', 'wav', 'f'.repeat(64))], lock, engine: 'polly', voice: 'Seoyeon' });
     expect(out.byKey.get('giyeok').failures).toEqual(['not in the lock for polly/Seoyeon']);
+  });
+
+  // Owner decision 2026-11-06 (AC-5): 애/에, 얘/예 and 외/왜/웨 are one sound in modern Korean, so a voice that says them
+  // the same gives byte-identical clips. That must not fail; ㄱ/ㅋ/ㄲ and the rest stay enforced.
+  describe('merged sounds may be byte-identical (애/에, 얘/예, 외/왜/웨)', () => {
+    const merged = (...texts) => texts.map((t, i) => row('jamo-sound', `m${i}`, t, { say: `${t}.` }));
+    const same = (rs, sha = '7'.repeat(64)) => rs.map((r) => clip(r.key, 'mp3', sha));
+    const check = (rs, clips) => identityChecks({ rows: rs, clips, lock: { rows: rs.map((r) => lockRow(r, '7'.repeat(64))) }, engine: 'polly', voice: 'Seoyeon' });
+
+    it.each([['애', '에'], ['얘', '예'], ['외', '왜', '웨'], ['웨', '외']])('%j share one master without failing', (...texts) => {
+      const rs = merged(...texts);
+      const out = check(rs, same(rs));
+      for (const r of rs) {
+        expect(out.byKey.get(r.key).failures).toEqual([]);
+        expect(out.byKey.get(r.key).ok).toBe(true);
+        expect(out.byKey.get(r.key).flags[0]).toMatch(/byte-identical to .*one merged sound in modern Korean, allowed/);
+      }
+    });
+
+    it('a merged sound sharing bytes with a different sound still fails, naming only the real clash', () => {
+      const rs = merged('애', '에', '가');
+      const out = check(rs, same(rs));
+      expect(out.byKey.get('m0').failures).toEqual(['byte-identical to m2 (가), which must sound different']);
+      expect(out.byKey.get('m1').failures).toEqual(['byte-identical to m2 (가), which must sound different']);
+      expect(out.byKey.get('m2').failures).toEqual(['byte-identical to m0 (애), m1 (에), which must sound different']);
+    });
+
+    it('pairs that really differ stay enforced: 가/카/까, 애/얘, 외/위, 에/예', () => {
+      for (const texts of [['가', '카', '까'], ['애', '얘'], ['외', '위'], ['에', '예'], ['애', '왜']]) {
+        const rs = merged(...texts);
+        const out = check(rs, same(rs));
+        for (const r of rs) expect(out.byKey.get(r.key).failures.join(' ')).toMatch(/byte-identical to .*which must sound different/);
+      }
+    });
+
+    it('lists the merged groups and nothing else', () => {
+      expect(MERGED_SOUND_GROUPS.map((g) => [...g].join('/'))).toEqual(['애/에', '얘/예', '외/왜/웨']);
+      expect(isMergedSoundPair('애.', '에')).toBe(true);
+      expect(isMergedSoundPair('웨', '왜')).toBe(true);
+      expect(isMergedSoundPair('가', '카')).toBe(false);
+      expect(isMergedSoundPair('애', '얘')).toBe(false);
+      expect(isMergedSoundPair('애', '가')).toBe(false);
+    });
   });
 
   it('jamo clips with the same text may share bytes; different texts may not', () => {

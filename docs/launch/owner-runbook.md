@@ -693,7 +693,9 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 ## M. 한국어 음성 클립 만들기 (AMENDMENTS-AUDIO-CLIPS AC-3, 사양 section 12 의 오너 단계 2-5)
 
-> 2026-10-29 오너 결정 (권장 기본값 모두 확정): 업체는 **Amazon Polly Neural 과 Google Neural2 를 파일럿으로 비교해서** 고른다 (같으면 Polly). 생성 클립이 먼저이고 오너 녹음은 선택이다. 형식은 MP3 (자모 64 kbps, 나머지 48 kbps). 예산은 **$50** (결제 알림 + 스크립트의 `--max-chars` 상한). 앱에는 생성된 목소리라는 크레딧 한 줄이 들어간다.
+> **2026-11-06 오너 결정 (파일럿 끝, AC-5): 목소리는 Amazon Polly Neural `Seoyeon` (ko-KR, 여성) 하나로 확정.** 모든 클립을 이 목소리로만 만든다 (AD11, 한 사람의 목소리). 스크립트가 `content/audio/tts-voice-lock.json` 의 목소리가 아니면 실제 실행도 미리보기도 거부한다 (`refused: ... is not the locked voice ...`). 그래서 Google 계정과 Google 단계는 더 이상 필요 없다. 또 애/에, 얘/예, 외/왜/웨 는 현대 한국어에서 같은 소리라서, 이 쌍의 클립이 바이트까지 같아도 QA 가 떨어뜨리지 않는다 (클립 id 는 그대로 따로 있다). 각 사양은 `AMENDMENTS-AUDIO-CLIPS.md` section 13.
+>
+> 2026-10-29 오너 결정 (권장 기본값 모두 확정): 생성 클립이 먼저이고 오너 녹음은 선택이다. 형식은 MP3 (자모 64 kbps, 나머지 48 kbps). 예산은 **$50** (결제 알림 + 스크립트의 `--max-chars` 상한). 앱에는 생성된 목소리라는 크레딧 한 줄이 들어간다.
 >
 > **키 안전 규칙.** 업체 자격 증명 (키, 토큰, 로그인 세션) 은 이 컴퓨터에만 있고, 저장소·채팅·이슈·PR 에 절대 들어가지 않는다. 에이전트 (Claude Code) 셸은 오너의 셸 프로필 (`~/.zshrc`, `~/.zprofile`) 에서 시작하므로, 거기에 넣은 것은 모든 에이전트에게 보인다. 그래서 생성은 **Claude Code 가 아닌 별도 터미널** 에서, **그 명령 하나에만** 자격 증명을 주고 실행하며, 끝나면 바로 로그아웃하거나 키를 지운다. 스크립트도 Claude Code 나 CI 안에서는 실제 생성을 거부하고 (`refused: CLAUDECODE ...`), 에이전트는 미리보기 (`--dry-run`) 만 돌린다. 각 업체의 약관과 가격을 읽은 기록 (2026-10-29) 은 [`tts-vendor-terms.md`](tts-vendor-terms.md) 에 있다.
 
@@ -702,54 +704,62 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 2. `pnpm hooks:install` 을 한 번 실행한다. 이제 커밋할 때마다 `scripts/check-no-secrets.mjs` 가 올라가는 파일에 Google 서비스 계정 키, AWS 액세스 키, Azure Speech 키가 있는지 보고, 있으면 커밋을 막는다 (CI 도 같은 검사를 한다). 이 설정 (`core.hooksPath`) 은 같은 저장소의 모든 worktree 가 함께 쓰므로, 메인 폴더에서 한 번만 하면 에이전트의 worktree 에도 적용된다. 새로 clone 한 폴더에서는 다시 한 번 한다.
 3. Polly 결과를 WAV 로 바꾸는 데 ffmpeg 가 필요하다: `brew install ffmpeg` (이미 있으면 건너뛴다).
 
-**M-1. 계정 두 개, 음성만 켜고 $50 알림 (오너 단계 2, 각 20분)**
+**M-1. AWS 계정 하나, 음성만 켜고 $50 알림 (오너 단계 2, 20분)**
 1. **AWS (Polly)**: 권장은 IAM Identity Center (SSO). 권한 세트에 아래 정책 하나만 넣고, 프로필 이름을 `hr-tts` 로 만든다 (`aws configure sso --profile hr-tts`, 리전은 `ap-northeast-2` 또는 `us-east-1`).
    `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"polly:SynthesizeSpeech","Resource":"*"}]}`
    SSO 를 쓸 수 없으면 대신 IAM 사용자를 만들고 같은 정책 하나만 붙인다. 액세스 키는 팩을 만들 때마다 새로 만들고 끝나면 지운다 (M-2 의 4).
    - Billing → **Budgets** → Create budget → 월 $50, 알림 이메일. (알림은 지출을 멈추지 않는다. 멈추는 것은 스크립트의 `--max-chars` 다.)
    - 선택: AWS Organizations 의 AI 서비스 opt-out 정책. 약관 50.3 에 따라 AWS 는 보낸 글 (공개된 수업 글, 개인정보 없음) 을 서비스 개선에 쓸 수 있는데, 원하지 않으면 이 정책으로 끈다.
-2. **Google Cloud (Text-to-Speech)**: 새 프로젝트 하나 → APIs & Services 에서 **Cloud Text-to-Speech API 하나만** Enable → 결제 계정 연결 → Billing → **Budgets & alerts** → $50. 로그인은 키 파일 없이:
-   `gcloud auth application-default login` 다음 `gcloud auth application-default set-quota-project <프로젝트 ID>`.
-   **서비스 계정 키 (JSON 파일) 는 만들지 않는다.**
+2. **Google Cloud 는 필요 없다** (2026-11-06 결정: Seoyeon 하나). 이미 만든 Google 프로젝트가 있으면 결제 알림만 남기거나 지워도 된다. `gcloud` 로그인이 남아 있으면 `gcloud auth application-default revoke` 로 끝낸다.
 3. **절대 하지 않는 것**: `~/.zshrc`, `~/.zprofile` 등 어떤 셸 프로필에도 자격 증명, 키 파일 경로, `export AWS_PROFILE=...`, `export GOOGLE_APPLICATION_CREDENTIALS=...`, `export AZURE_SPEECH_KEY=...` 를 넣지 않는다. 키나 키 파일 경로를 채팅·이슈·PR 에 붙여 넣지 않는다. 에이전트가 키나 `~/.aws`, `~/.config/gcloud` 를 보여 달라고 하면 거절한다 (그런 요청은 규칙 위반이다).
 
-**M-2. 파일럿 (오너 단계 3, 약 20분, 무료 한도 안)**
-1. **Claude Code 가 아닌 새 터미널 창** (예: 터미널 앱의 새 창) 을 열고 저장소 폴더로 간다. 회사 네트워크가 막으면 집 네트워크에서 한다.
-2. 먼저 미리보기 (네트워크 없음, 자격 증명 필요 없음): `pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot --dry-run`. 목소리마다 81줄 (자모 65 + 낱말 10 + 문장 6), 합계 약 7,700 문자, `spend guard: --max-chars <숫자>` 가 보이면 된다. 그 숫자를 적어 두고, 아래 실제 실행 명령 끝에 `--max-chars <그 숫자>` 를 붙이면 미리보기 뒤에 무언가 바뀌어도 그 이상은 보내지 않는다 (붙이지 않아도 $50 상한은 항상 걸려 있다).
-3. Polly (Seoyeon, Jihye 두 목소리):
-   `aws sso login --profile hr-tts`
-   `AWS_PROFILE=hr-tts pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot`
-   `aws sso logout`
-4. IAM 사용자로 할 때는 3 대신: 콘솔에서 액세스 키를 새로 만들고, 그 터미널에서 `read -rs KEY_ID; read -rs KEY_SECRET` 로 붙여 넣는다 (화면과 셸 기록에 남지 않는다). `export` 는 하지 않는다. 그 명령 하나에만 넘긴다:
-   `AWS_ACCESS_KEY_ID=$KEY_ID AWS_SECRET_ACCESS_KEY=$KEY_SECRET AWS_REGION=ap-northeast-2 pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --pilot`
-   → `unset KEY_ID KEY_SECRET` → 터미널 창을 닫고 → 콘솔에서 **그 액세스 키를 삭제**한다. `aws configure` 로 키를 `~/.aws/credentials` 에 저장하지 않는다.
-5. Google (ko-KR-Neural2-A, -C 두 목소리):
-   `gcloud auth application-default login` (필요하면 `set-quota-project` 다시)
-   `pnpm --filter @hangul-route/mobile audio:tts:generate --engine google --pilot`
-   `gcloud auth application-default revoke`
-6. 결과: WAV 원본이 `apps/mobile/recordings/tts/<engine>/<voice>/` (git 이 무시하는 폴더, 커밋되지 않음) 에, 무엇을 만들었는지가 `content/audio/tts-lock.json` 에 남는다. 이 파일들은 직접 커밋하지 않는다.
-7. 에이전트에게는 **"pilot generated" 와 폴더 경로 (`apps/mobile/recordings/tts/`) 만** 알린다. 키, 프로필 이름, 계정 번호는 보내지 않는다. 다음은 에이전트가 두 번의 음향 검사와 MAR 을 하고 목소리를 사양 section 13 에 기록한다 (AC-5).
+**M-2. 팩 하나씩 만들기: 목소리는 Polly Seoyeon 하나 (오너 단계 3-4)**
 
-**M-3. 팩 하나씩 만들기 (오너 단계 4, AC-5 가 목소리를 기록한 뒤)**
-1. M-2 와 같은 방식 (별도 터미널, 그 명령에만 자격 증명, 끝나면 로그아웃·삭제) 으로, 사양 section 13 에 적힌 목소리 하나로 만든다. 처음은 자모 두 팩:
-   `AWS_PROFILE=hr-tts pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --voice <13장의 목소리> --pack jamo-s1,jamo-wb`
-   (Google 이 이겼으면 `--engine google --voice ko-KR-Neural2-A` 처럼.) 실행 전에 같은 명령에 `--dry-run` 을 붙여 문자 수를 먼저 본다.
-2. 그다음 팩 순서는 `stage1,placement` → `stage2` … (사양 AC-B8). 팩마다 에이전트에게 "<팩> generated" 와 폴더 경로만 알린다.
-3. 이미 만든 줄 (같은 글, 같은 목소리, 같은 빠르기) 은 다시 돌려도 건너뛴다. 그래서 중간에 멈췄으면 같은 명령을 다시 실행하면 이어서 만든다.
+파일럿은 2026-11-06 에 끝났다 (결과와 목소리 확정: 사양 section 13). 아래 명령은 **모두 `--engine polly --voice Seoyeon`** 이다. 다른 목소리 (`Jihye`, Google 등) 를 쓰면 스크립트가 거부한다. `--allow-other-voice` 는 쓰지 않는다 (실험용이고 그 클립은 커밋하지 않는다).
+
+1. **Claude Code 가 아닌 새 터미널 창** (예: 터미널 앱의 새 창) 을 열고 저장소 폴더로 간다. 회사 네트워크가 막으면 집 네트워크에서 한다.
+2. 먼저 미리보기 (네트워크 없음, 자격 증명 필요 없음). 첫 팩 `jamo-s1` (43개):
+   `pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --voice Seoyeon --pack jamo-s1 --dry-run`
+   끝에 `43 requests, 2,021 billed characters`, 약 $0.03, `spend guard: --max-chars 2,224` 가 나오면 된다. 그 숫자 (`2224`) 를 실제 실행 명령 끝에 `--max-chars 2224` 로 붙이면 미리보기 뒤에 무언가 바뀌어도 그 이상은 보내지 않는다 (붙이지 않아도 $50 상한은 항상 걸려 있다).
+3. Polly (SSO):
+   `aws sso login --profile hr-tts`
+   `AWS_PROFILE=hr-tts pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --voice Seoyeon --pack jamo-s1 --max-chars 2224`
+   `aws sso logout`
+4. IAM 사용자로 할 때는 3 대신: 콘솔에서 액세스 키를 **새로** 만들고, 그 터미널에서 `read -rs KEY_ID; read -rs KEY_SECRET` 로 붙여 넣는다 (화면과 셸 기록에 남지 않는다). `export` 는 하지 않는다. 그 명령 하나에만 넘긴다:
+   `AWS_ACCESS_KEY_ID=$KEY_ID AWS_SECRET_ACCESS_KEY=$KEY_SECRET AWS_REGION=ap-northeast-2 pnpm --filter @hangul-route/mobile audio:tts:generate --engine polly --voice Seoyeon --pack jamo-s1 --max-chars 2224`
+   → `unset KEY_ID KEY_SECRET` → 터미널 창을 닫고 → 콘솔에서 **그 액세스 키를 삭제**한다. `aws configure` 로 키를 `~/.aws/credentials` 에 저장하지 않는다.
+5. 결과: WAV 원본이 `apps/mobile/recordings/tts/polly/Seoyeon/` (git 이 무시하는 폴더, 커밋되지 않음) 에, 무엇을 만들었는지가 `content/audio/tts-lock.json` 에 남는다. 이 파일들은 직접 커밋하지 않는다.
+6. 에이전트에게는 **"jamo-s1 generated" 와 폴더 경로 (`apps/mobile/recordings/tts/`) 만** 알린다. 키, 프로필 이름, 계정 번호는 보내지 않는다. 다음은 에이전트가 두 번의 음향 검사와 MAR 을 하고 `content(audio)` PR 을 연다.
+7. **팩 순서** (한 번에 하나, 팩마다 위 1-6 을 같게 한다. `--pack` 값과 미리보기의 `--max-chars` 만 바꾼다):
+
+| 순서 | `--pack` | PR | 미리보기 (2026-11-06) |
+|---|---|---|---|
+| 1 | `jamo-s1` | AC-7 | 43개, 2,021자, `--max-chars 2224` |
+| 2 | `jamo-wb` | AC-7 | 22개, 1,039자, `--max-chars 1143` |
+| 3 | `stage1,placement` | AC-8 | 252개, 12,052자, `--max-chars 13258` |
+| 4 | `stories` | AC-12a | 570개, 30,276자, `--max-chars 33304` |
+| 5 | 나머지: `stage2`, `stage3`, `stage4,stage6`, `stage7`, `vocab`, `review`, `cards` | AC-9 ~ AC-12 | 사양 AC-B8 순서. 실행 직전에 `--dry-run` 으로 다시 본다 |
+
+   `jamo-s1,jamo-wb` 를 한 번에 해도 된다 (65개, 3,060자, `--max-chars 3366`). 모든 팩의 합계는 약 106,833자, 약 $1.71 이고 Polly 첫 12개월 무료 한도 (월 100만 자) 안이다. 숫자는 매번 직접 `--dry-run` 으로 확인한다. 위 표는 그날의 값이다.
+8. 이미 만든 줄 (같은 글, 같은 목소리, 같은 빠르기) 은 다시 돌려도 건너뛴다. 그래서 중간에 멈췄으면 같은 명령을 다시 실행하면 이어서 만든다. 파일럿 때 만든 WAV 는 잠금 파일에 올라 있지 않아서 새로 만든다 (몇 센트).
+
+**M-3. 애/에, 얘/예, 외/왜/웨 가 같은 소리로 들려도 정상**
+- 현대 한국어에서 이 쌍은 같은 소리라서, Seoyeon 이 같은 소리로 읽어 파일이 바이트까지 같아도 QA (`audio:tts:qa`) 가 떨어뜨리지 않는다. 보고서에 "one merged sound in modern Korean, allowed" 표시만 남는다. 클립 id (`ae`, `e`, `yae`, `ye`, `oe`, `wae`, `we`) 는 그대로 7개다. ㄱ/ㅋ/ㄲ 처럼 정말 다른 쌍이 같은 파일이면 여전히 떨어진다.
 
 **M-4. 선택: 자모 클립 듣기 (오너 단계 5, 약 10분)**
-- `pnpm audio:tts:listen --pack jamo-s1,jamo-wb --engine polly --voice <13장의 목소리>` 로 65개를 이어서 듣는다. 클립마다 id, 한글, 로마자가 나온다. Enter 는 통과, `v` 는 거부 (이유는 적어도 되고 안 적어도 된다), `r` 은 다시 듣기, `q` 는 멈춤. 거부한 것은 `owner-listen.json` 과 QA 보고서에 남고 다시 만들 목록에 들어간다. 필수가 아니다 (오너 검토를 기다리지 않는 규칙). 다만 거부 (veto) 는 지킨다.
+- `pnpm audio:tts:listen --pack jamo-s1,jamo-wb --engine polly --voice Seoyeon` 로 65개를 이어서 듣는다. 클립마다 id, 한글, 로마자가 나온다. Enter 는 통과, `v` 는 거부 (이유는 적어도 되고 안 적어도 된다), `r` 은 다시 듣기, `q` 는 멈춤. 거부한 것은 `owner-listen.json` 과 QA 보고서에 남고 다시 만들 목록에 들어간다. 필수가 아니다 (오너 검토를 기다리지 않는 규칙). 다만 거부 (veto) 는 지킨다.
 - 기록은 git 이 무시하는 `apps/mobile/recordings/tts/<엔진>/<목소리>/owner-listen.json` 에 남는다. 다른 팩을 나중에 들어도 앞에서 거부한 것은 그대로 남는다. 거부한 클립을 다시 만들면 그 거부는 저절로 풀린다.
 
 **M-5. 메시지가 나오면**
 - `refused: CLAUDECODE ...` 또는 `refused: CI ...`: Claude Code 터미널이나 CI 안이다. 별도 터미널에서 다시 한다.
+- `refused: ... is not the locked voice polly/Seoyeon`: Seoyeon 이 아닌 목소리를 썼다. `--voice Seoyeon` 으로 바꾼다 (`--allow-other-voice` 로 넘기지 않는다).
 - `refused: ... is a generative voice`: 생성형 (generative) 목소리다. 18세 미만도 쓰는 앱이라 약관상 쓰지 않는다 (AC-B1). 위의 목소리 이름을 쓴다.
 - `refused: ... is not gitignored`: 출력 폴더를 바꾼 경우다. `--out` 을 빼고 기본 폴더를 쓴다.
 - `spend guard: stopped before ...` (종료 코드 3): 상한에 닿았다. 붙인 `--max-chars` (미리보기 숫자) 이거나, $50 상한 (`the $50 budget ceiling`) 이다. `--max-chars` 를 붙이지 않았을 때의 기본값은 그 실행의 문자 수 + 10 % 라서 그것만으로는 멈추지 않는다. 쓴 것까지는 남아 있다. 이유를 모르면 멈추고 에이전트에게 메시지만 보낸다. 상한을 올릴 때만 더 큰 `--max-chars <숫자>` 를 붙인다 ($50 상한은 넘길 수 없다).
 - `refused: --manifest ... is outside the repository` (또는 `--lock`, `--out`): 저장소 밖의 경로다. 그 옵션을 빼고 기본 경로를 쓴다.
 - `refused: the Azure Product Terms ...`: 아래 Azure 항목을 먼저 해야 한다.
-- 인증 오류 (`security token ... invalid`, `Could not load the default credentials`): 로그인이 끝났다. M-2 의 로그인부터 다시 한다. 오류 문구에는 키가 들어 있지 않으니 그대로 보내도 된다.
-- Azure 는 예비 (fallback) 다. 쓰기 전에 Microsoft Product Terms 의 Azure Speech 항목을 브라우저에서 읽고 [`tts-vendor-terms.md`](tts-vendor-terms.md) 에 날짜와 함께 기록해야 한다 (에이전트가 2026-10-29 에 직접 읽지 못했다). 그 기록이 들어가기 전에는 스크립트가 실제 Azure 실행을 거부한다 (미리보기는 된다). 쓸 때는 S0 (유료) 리소스만, 키는 `read -rs SPEECH_KEY` 로 붙여 넣고 (`export` 하지 않는다) 그 명령 하나에만 넘긴다: `AZURE_SPEECH_KEY=$SPEECH_KEY AZURE_SPEECH_REGION=koreacentral pnpm --filter @hangul-route/mobile audio:tts:generate --engine azure --voice ko-KR-SunHiNeural --pilot` → `unset SPEECH_KEY` → 창을 닫는다. 끝나면 포털에서 키를 다시 만든다 (regenerate).
+- 인증 오류 (`security token ... invalid`, `Could not load the default credentials`): 로그인이 끝났다. M-2 의 3 (SSO 로그인) 부터 다시 한다. 오류 문구에는 키가 들어 있지 않으니 그대로 보내도 된다.
+- Azure 는 예비 (fallback) 다. 잠긴 목소리가 아니라서 쓰려면 먼저 사양 section 13 의 목소리 잠금을 바꾸는 오너 결정이 필요하다 (모든 클립이 한 목소리여야 한다, AD11). 쓰기 전에 Microsoft Product Terms 의 Azure Speech 항목을 브라우저에서 읽고 [`tts-vendor-terms.md`](tts-vendor-terms.md) 에 날짜와 함께 기록해야 한다 (에이전트가 2026-10-29 에 직접 읽지 못했다). 그 기록이 들어가기 전에는 스크립트가 실제 Azure 실행을 거부한다 (미리보기는 된다). 쓸 때는 S0 (유료) 리소스만, 키는 `read -rs SPEECH_KEY` 로 붙여 넣고 (`export` 하지 않는다) 그 명령 하나에만 넘긴다: `AZURE_SPEECH_KEY=$SPEECH_KEY AZURE_SPEECH_REGION=koreacentral pnpm --filter @hangul-route/mobile audio:tts:generate --engine azure --voice ko-KR-SunHiNeural --pilot` → `unset SPEECH_KEY` → 창을 닫는다. 끝나면 포털에서 키를 다시 만든다 (regenerate).
 
 **M-6. 두 번 확인 (QA, AC-4): 에이전트가 이 컴퓨터에서 한다 (오너 할 일 없음)**
 - 클립을 만들었다고 알리면 에이전트가 `audio:tts:qa` 로 두 음성 인식기 (Whisper 와 다른 계열의 CTC 모델) 를 **이 컴퓨터 안에서만** 돌린다. 네트워크 호출, 업체 음성 인식, CI 실행은 없다. 계정과 키도 필요 없다.
@@ -770,7 +780,7 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 | Step 11 빨간 항목 캡처 | 성능 수정 |
 | §E S-2 M2 결과 (여섯 조합) · S-0 확인 · §E2 의 M3 날짜 | F-APP-001 S-3 시점 결정, A-10 과 F-SITE-002 S-10 (M3 후 14일) |
 | Step 12 녹음 폴더 (`audio-recording-script.md` 의 file id 이름, 저장소 밖 공유) + 동의서는 본인 보관, attribution 표기만 전달 | `content(audio): jamo clips` (F-AUDIO-004 A-9): 처리된 MP3 30개 + `audio:map`, 오프라인 e2e 활성화, 랜딩의 오프라인 발음 문구 복원 |
-| §M "pilot generated" (또는 "<팩> generated") 와 폴더 경로 `apps/mobile/recordings/tts/` 만 (키·프로필 이름·계정 번호는 보내지 않음) | 파일럿이면 AC-5 (두 번의 음향 검사, MAR, 사양 section 13 에 목소리 기록), 팩이면 그 팩의 `content(audio)` PR (처리된 MP3, `audio:map`, 잠금 줄, 라이선스 줄) |
+| §M "<팩> generated" (예: "jamo-s1 generated") 와 폴더 경로 `apps/mobile/recordings/tts/` 만 (키·프로필 이름·계정 번호는 보내지 않음) | 그 팩의 `content(audio)` PR (처리된 MP3, `audio:map`, 잠금 줄, 라이선스 줄) |
 
 ## 문제가 생기면
 - 빌드 실패: 프로젝트 → Deployments → 실패한 빌드 → 로그 **마지막 30줄**을 보낸다.
