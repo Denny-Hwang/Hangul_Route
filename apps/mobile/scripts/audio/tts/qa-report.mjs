@@ -4,7 +4,8 @@
 //                                                               span, the closure of a final, loudness and peak, from
 //                                                               ffprobe and one ffmpeg pass (silencedetect + ebur128)
 //   identityChecks                                              one clip per manifest row, every clip in the lock, no
-//                                                               two jamo clips that must differ byte-identical
+//                                                               two jamo clips that must differ byte-identical (the
+//                                                               merged pairs of MERGED_SOUND_GROUPS may be identical)
 //   buildReport, renderReportMarkdown, regenerationCommands     the JSON and Markdown report, in the format the
 //                                                               content PR body pastes (with the two MAR verdict columns)
 //
@@ -182,9 +183,30 @@ export function sha256Hex(data) {
 }
 
 /**
+ * Jamo that modern standard Korean no longer tells apart (owner decision 2026-11-06, AC-5; section 9, Identity): a
+ * voice says the members of a group the same, so their clips may be byte-identical and the check does not fail them.
+ * The clips and their ids stay separate rows (the app maps each jamo to its own id), only the "must sound different"
+ * rule is relaxed. Pairs that really differ (ㄱ/ㅋ/ㄲ, ㅓ/ㅗ) are not listed here and stay enforced.
+ */
+export const MERGED_SOUND_GROUPS = Object.freeze([
+  Object.freeze(['애', '에']),
+  Object.freeze(['얘', '예']),
+  Object.freeze(['외', '왜', '웨']),
+]);
+
+const bareText = (text) => String(text).normalize('NFC').replace(/[\s.,!?]/g, '');
+
+/** Whether two different jamo texts are one merged sound (애 and 에, 외 and 웨 ...). */
+export function isMergedSoundPair(a, b) {
+  const [x, y] = [bareText(a), bareText(b)];
+  return MERGED_SOUND_GROUPS.some((group) => group.includes(x) && group.includes(y));
+}
+
+/**
  * The identity checks (section 9): every manifest row has exactly one clip, every clip is in the lock (a processed
  * MP3 by its sha256; a WAV master, whose hash the lock does not hold, by its row's sha256 of the exact text sent), and
- * no two jamo clips that must differ (different texts) are byte-identical.
+ * no two jamo clips that must differ (different texts) are byte-identical. Texts of one merged sound
+ * (MERGED_SOUND_GROUPS) are allowed to be identical: that is a flag in the report, never a failure.
  *
  * @param {{ rows: readonly { ref: string, key: string, kind: string, text: string, say: string }[],
  *   clips: readonly { key: string, file: string, ext: 'wav' | 'mp3', sha256: string }[],
@@ -224,8 +246,11 @@ export function identityChecks({ rows, clips, lock, engine, voice }) {
   for (const same of jamoByHash.values()) {
     if (new Set(same.map((r) => r.text)).size < 2) continue;
     for (const row of same) {
-      const others = same.filter((r) => r !== row).map((r) => `${r.key} (${r.text})`);
-      byKey.get(row.key).failures.push(`byte-identical to ${others.join(', ')}, which must sound different`);
+      const differing = same.filter((r) => r !== row && r.text !== row.text);
+      const real = differing.filter((r) => !isMergedSoundPair(row.text, r.text)).map((r) => `${r.key} (${r.text})`);
+      const merged = differing.filter((r) => isMergedSoundPair(row.text, r.text)).map((r) => `${r.key} (${r.text})`);
+      if (real.length > 0) byKey.get(row.key).failures.push(`byte-identical to ${real.join(', ')}, which must sound different`);
+      if (merged.length > 0) byKey.get(row.key).flags.push(`byte-identical to ${merged.join(', ')}: one merged sound in modern Korean, allowed`);
     }
   }
   for (const v of byKey.values()) v.ok = v.failures.length === 0;
@@ -304,7 +329,7 @@ export function buildReport({ meta, clips, missing, extra, notGenerated = [], ow
       missing: missing.length,
       extra: extra.length,
       vetoed: vetoed.length,
-      flagged: passing.filter((c) => c.pass1?.flags.length || c.pass2?.flags.length || c.signal?.flags.length).length,
+      flagged: passing.filter((c) => c.pass1?.flags.length || c.pass2?.flags.length || c.signal?.flags.length || c.identity?.flags?.length).length,
       pass2Advisory: marked.filter((c) => c.pass2?.advisory === true).length,
       packTotalsOk: packTotals.every((p) => p.ok),
       firstTake: { pass1: firstTake(clips, 'pass1'), pass2: firstTake(clips, 'pass2') },
@@ -369,7 +394,7 @@ export function renderReportMarkdown(report) {
     '|---|---|---|---|---|---|---|---|---|---|',
   ];
   for (const c of report.clips) {
-    const flags = [...(c.pass1?.flags ?? []), ...(c.pass2?.flags ?? []), ...(c.signal?.flags ?? [])];
+    const flags = [...(c.pass1?.flags ?? []), ...(c.pass2?.flags ?? []), ...(c.signal?.flags ?? []), ...(c.identity?.flags ?? [])];
     let qa = c.verdict === 'pass' ? (flags.length > 0 ? `pass (flag: ${flags.join('; ')})` : 'pass') : `fail: ${c.reasons.join('; ')}`;
     if (c.vetoed) qa = `vetoed in the owner listen (${qa})`;
     out.push(

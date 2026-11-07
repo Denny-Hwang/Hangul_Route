@@ -121,7 +121,7 @@ pnpm --filter @hangul-route/mobile audio:tts:qa --engine polly --voice Seoyeon -
   - Identity:
     - each row has exactly one clip;
     - each clip is in the lock: an MP3 by its sha256, a WAV master by its row's sha256 of the text sent. The lock holds no WAV hash, so on masters this checks the row, not the file. The content PR pastes the run on the processed MP3s, where the file's own hash is compared;
-    - no two jamo clips that must sound different are byte-identical;
+    - no two jamo clips that must sound different are byte-identical. The merged sounds are exempt (owner decision 2026-11-06): 애/에, 얘/예 and 외/왜/웨 may be byte-identical, the report shows a flag and not a failure, and the clip ids stay separate (`MERGED_SOUND_GROUPS` in `qa-report.mjs`). 가/카/까 and every other pair stay enforced;
     - a master folder holds no file of no manifest row.
   - Set totals (AC-B6), on processed MP3s with `--pack`: `jamo-s1` at most 43 clips and 520,000 B, `jamo-wb` at most 22 clips and 420,000 B.
 - **WAV masters.** Masters are not processed yet. Format, size, loudness and edge silence are listed as pending until the processed MP3s are checked. Before the content PR, run the QA again on those MP3s.

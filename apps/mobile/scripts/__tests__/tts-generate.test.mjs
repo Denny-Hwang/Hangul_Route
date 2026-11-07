@@ -28,7 +28,7 @@ import {
   selectRows,
   wavInfo,
 } from '../audio/tts/generate-lib.mjs';
-import { LOCK_FILE, parseLock, saySha256 } from '../audio/tts/lock-lib.mjs';
+import { LOCK_FILE, VOICE_LOCK_FILE, parseLock, parseVoiceLock, saySha256 } from '../audio/tts/lock-lib.mjs';
 import { MANIFEST_FILE } from '../audio/tts/manifest-lib.mjs';
 
 const APP_ROOT = join(__dirname, '..', '..');
@@ -36,6 +36,7 @@ const REPO_ROOT = join(APP_ROOT, '..', '..');
 const GENERATE = join(APP_ROOT, 'scripts/audio/tts/generate.mjs');
 const MANIFEST = JSON.parse(readFileSync(join(REPO_ROOT, MANIFEST_FILE), 'utf8'));
 const keys = { sayKey, sayRef };
+const VOICE_LOCK = parseVoiceLock(JSON.parse(readFileSync(join(REPO_ROOT, VOICE_LOCK_FILE), 'utf8')));
 const TIMEOUT = 120_000;
 
 /** A minimal RIFF/WAVE header (PCM, 16-bit) with no samples. */
@@ -61,7 +62,7 @@ const row = (key, say, extra = {}) => ({ ref: `audio/say/${key}.mp3`, key, kind:
 const SMALL = { schemaVersion: 1, rows: [row('aaaaaaaaaaaaaaaa', '가방'), row('bbbbbbbbbbbbbbbb', '나무'), row('cccccccccccccccc', '다리'), row('dddddddddddddddd', '학교', { pack: 'stage6' })] };
 
 /** In-memory effects for runGenerate: a fake file system and a mocked vendor client. */
-function harness({ manifest = SMALL, files = {}, ignored = true, synth, rateOut, decoder = true, engines } = {}) {
+function harness({ manifest = SMALL, files = {}, ignored = true, synth, rateOut, decoder = true, engines, voiceLock = null } = {}) {
   const fs = new Map(Object.entries(files));
   fs.set(`/repo/${MANIFEST_FILE}`, JSON.stringify(manifest));
   const sent = [];
@@ -78,6 +79,7 @@ function harness({ manifest = SMALL, files = {}, ignored = true, synth, rateOut,
   };
   const deps = {
     repoRoot: '/repo',
+    voiceLock,
     readText: vi.fn((p) => {
       if (!fs.has(p)) throw new Error(`ENOENT ${p}`);
       return String(fs.get(p));
@@ -182,6 +184,61 @@ describe('refusals before any request (AC-B5 key safety)', () => {
     expect(r.status).toBe(0);
     const tracked = spawnSync('git', ['-C', REPO_ROOT, 'check-ignore', '-q', join(REPO_ROOT, 'apps/mobile/assets/audio/say')]);
     expect(tracked.status).toBe(1);
+  });
+});
+
+describe('the voice lock (AD11, owner decision 2026-11-06: polly Seoyeon)', () => {
+  const dry = (argv, voiceLock = VOICE_LOCK) => {
+    const h = harness({ voiceLock });
+    return runGenerate([...argv, '--dry-run'], {}, h.deps).then((code) => ({ code, ...h }));
+  };
+
+  it('the committed lock is Amazon Polly Neural Seoyeon, dated 2026-11-06', () => {
+    expect(VOICE_LOCK).toMatchObject({ engine: 'polly', voice: 'Seoyeon', model: 'neural', lockedOn: '2026-11-06' });
+    expect(engineOf('polly').modelOf('Seoyeon')).toBe(VOICE_LOCK.model);
+  });
+
+  it('the locked voice is accepted, in a dry run and in a real run', async () => {
+    expect((await dry(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'stage2'])).code).toBe(0);
+    const h = harness({ voiceLock: VOICE_LOCK });
+    expect(await runGenerate(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'stage2'], {}, h.deps)).toBe(0);
+    expect(h.client.synthesize).toHaveBeenCalledTimes(3);
+  });
+
+  it.each([
+    [['--engine', 'polly', '--voice', 'Jihye', '--pack', 'stage2'], /polly\/Jihye is not the locked voice polly\/Seoyeon/],
+    [['--engine', 'polly', '--voice', 'Seoyeon,Jihye', '--pack', 'stage2'], /polly\/Jihye is not the locked voice/],
+    [['--engine', 'google', '--voice', 'ko-KR-Neural2-A', '--pack', 'stage2'], /google\/ko-KR-Neural2-A is not the locked voice polly\/Seoyeon/],
+    [['--engine', 'polly', '--voice', 'Jihye', '--only', 'aaaaaaaaaaaaaaaa'], /is not the locked voice/],
+  ])('%j is refused before the manifest is read or a client exists', async (argv, message) => {
+    const real = harness({ voiceLock: VOICE_LOCK });
+    expect(await runGenerate(argv, {}, real.deps)).toBe(2);
+    expect(real.err.join('\n')).toMatch(message);
+    expect(real.err.join('\n')).toMatch(/--allow-other-voice overrides/);
+    expect(real.deps.readText).not.toHaveBeenCalled();
+    expect(real.deps.createClient).not.toHaveBeenCalled();
+    const d = await dry(argv);
+    expect(d.code).toBe(2);
+    expect(d.out).toEqual([]);
+  });
+
+  it('--allow-other-voice lets another valid voice through and says so; a generative voice stays refused', async () => {
+    const d = await dry(['--engine', 'polly', '--voice', 'Jihye', '--pack', 'stage2', '--allow-other-voice']);
+    expect(d.code).toBe(0);
+    expect(d.out[0]).toMatch(/^note: --allow-other-voice: polly\/Jihye may differ from the locked voice polly\/Seoyeon; do not commit/);
+    const g = await dry(['--engine', 'polly', '--voice', 'Seoyeon', '--model', 'generative', '--pack', 'stage2', '--allow-other-voice']);
+    expect(g.code).toBe(2);
+    expect(g.err.join('\n')).toMatch(/generative voice/);
+  });
+
+  it('the pilot compares candidates and ships nothing, so it is exempt', async () => {
+    const big = harness({ voiceLock: VOICE_LOCK, manifest: MANIFEST });
+    expect(await runGenerate(['--engine', 'polly', '--pilot', '--dry-run'], {}, big.deps)).toBe(0);
+    expect(big.out.join('\n')).toMatch(/Jihye/);
+  });
+
+  it('--voice is still required outside the pilot, and the message names the locked voice', () => {
+    expect(parseArgs(['--engine', 'polly', '--pack', 'jamo-s1']).error).toMatch(/polly Seoyeon/);
   });
 });
 
@@ -492,11 +549,22 @@ describe('the command (its own process, as the package script runs it)', () => {
   };
 
   it('--dry-run runs on the committed manifest and lock and sends nothing', () => {
-    const r = run(['--engine', 'google', '--voice', 'ko-KR-Neural2-A', '--pack', 'jamo-s1', '--dry-run'], { CI: 'true' });
+    const r = run(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'jamo-s1', '--dry-run'], { CI: 'true' });
     expect(r.stderr).toBe('');
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/No network: nothing is sent/);
-    expect(r.stdout.split('\n').filter((l) => l.startsWith('request google/ko-KR-Neural2-A audio/jamo/'))).toHaveLength(43);
+    expect(r.stdout.split('\n').filter((l) => l.startsWith('request polly/Seoyeon audio/jamo/'))).toHaveLength(43);
+  }, TIMEOUT);
+
+  it('refuses a voice other than the locked one, and --allow-other-voice is the explicit override', () => {
+    const other = ['--engine', 'polly', '--voice', 'Jihye', '--pack', 'jamo-s1', '--dry-run'];
+    const refused = run(other, { CI: 'true' });
+    expect(refused.status).toBe(2);
+    expect(refused.stdout).toBe('');
+    expect(refused.stderr).toMatch(/^refused: polly\/Jihye is not the locked voice polly\/Seoyeon/);
+    const allowed = run([...other, '--allow-other-voice'], { CI: 'true' });
+    expect(allowed.status).toBe(0);
+    expect(allowed.stdout).toMatch(/note: --allow-other-voice: polly\/Jihye may differ from the locked voice polly\/Seoyeon/);
   }, TIMEOUT);
 
   it('without --dry-run it refuses in CI and in an agent shell, before anything else', () => {

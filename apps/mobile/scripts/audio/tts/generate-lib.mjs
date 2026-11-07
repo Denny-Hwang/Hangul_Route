@@ -3,6 +3,8 @@
 //
 //   parseArgs        the command line
 //   refusalOf        agent and CI shells are refused (CI, CLAUDECODE, CLAUDE_CODE_ENTRYPOINT): they run --dry-run only
+//   voiceLockProblem (lock-lib.mjs) every command outside the pilot must use the voice content/audio/tts-voice-lock.json
+//                    names (AD11), unless --allow-other-voice is given
 //   outputProblem    the WAV masters must go to a gitignored folder (git check-ignore)
 //   selectRows       --pack, --pilot (about 81 rows) and --only over the committed manifest
 //   planRequests     one request per row and voice, minus the rows tts-lock.json already holds
@@ -12,7 +14,7 @@
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { AUDIO_PACKS } from '@hangul-route/content-schema';
 import { ENGINE_IDS, VoiceRefused, engineOf } from './engines/index.mjs';
-import { LOCK_FILE, emptyLock, lockMatches, lockRowOf, parseLock, renderLock, saySha256, upsertLockRow } from './lock-lib.mjs';
+import { LOCK_FILE, emptyLock, lockMatches, lockRowOf, parseLock, renderLock, saySha256, upsertLockRow, voiceLockProblem } from './lock-lib.mjs';
 import { KIND_RATES, MANIFEST_FILE } from './manifest-lib.mjs';
 
 export const OUTPUT_ROOT = 'apps/mobile/recordings/tts';
@@ -41,18 +43,20 @@ export const PILOT_PACK = 'pilot';
 
 export const USAGE =
   'usage: generate.mjs --engine polly|google|azure [--voice <name>[,<name>]] (--pack <pack>[,<pack>] | --pilot | --only <key>[,<key>])\n' +
-  '                    [--max-chars <n>] [--dry-run] [--model <id>] [--manifest <path>] [--lock <path>] [--out <dir>]';
+  '                    [--max-chars <n>] [--dry-run] [--model <id>] [--manifest <path>] [--lock <path>] [--out <dir>]\n' +
+  '                    [--allow-other-voice]  (experiments only: outside the pilot the voice must be the one in content/audio/tts-voice-lock.json)';
 
 const VALUE_FLAGS = new Set(['--engine', '--voice', '--pack', '--only', '--max-chars', '--model', '--manifest', '--lock', '--out']);
 const list = (value) => value.split(',').map((s) => s.trim()).filter((s) => s !== '');
 
 /** The command line, or { error } with a usage message. */
 export function parseArgs(argv) {
-  const opts = { dryRun: false, pilot: false };
+  const opts = { dryRun: false, pilot: false, allowOtherVoice: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--dry-run') opts.dryRun = true;
     else if (arg === '--pilot') opts.pilot = true;
+    else if (arg === '--allow-other-voice') opts.allowOtherVoice = true;
     else if (VALUE_FLAGS.has(arg)) {
       const value = argv[i + 1];
       if (value === undefined || value.startsWith('--')) return { error: `${arg} needs a value` };
@@ -64,7 +68,7 @@ export function parseArgs(argv) {
   }
   if (opts.engine === undefined) return { error: '--engine is required' };
   if (engineOf(opts.engine) === undefined) return { error: `--engine must be one of ${ENGINE_IDS.join(', ')}` };
-  const out = { engine: opts.engine, dryRun: opts.dryRun, pilot: opts.pilot, model: opts.model, manifest: opts.manifest, lock: opts.lock, out: opts.out };
+  const out = { engine: opts.engine, dryRun: opts.dryRun, pilot: opts.pilot, allowOtherVoice: opts.allowOtherVoice, model: opts.model, manifest: opts.manifest, lock: opts.lock, out: opts.out };
   out.voices = opts.voice === undefined ? undefined : list(opts.voice);
   out.packs = opts.pack === undefined ? undefined : list(opts.pack);
   out.only = opts.only === undefined ? undefined : list(opts.only);
@@ -76,7 +80,7 @@ export function parseArgs(argv) {
   }
   if (out.voices !== undefined && out.voices.length === 0) return { error: '--voice needs a name' };
   if (out.voices === undefined && !out.pilot) {
-    return { error: '--voice is required outside the pilot: use the voice AMENDMENTS-AUDIO-CLIPS section 13 records' };
+    return { error: '--voice is required outside the pilot: use the locked voice (polly Seoyeon: AMENDMENTS-AUDIO-CLIPS section 13, content/audio/tts-voice-lock.json)' };
   }
   if (opts.maxChars !== undefined) {
     if (!/^\d+$/.test(opts.maxChars) || Number(opts.maxChars) <= 0) return { error: '--max-chars must be a positive whole number' };
@@ -262,7 +266,7 @@ function readJson(deps, path, shown) {
  * The whole command. `deps` carries every effect so tests run with no network, no SDK and no credential:
  *   repoRoot, readText(path), exists(path), writeAtomic(path, text|Buffer), mkdirp(dir), isIgnored(dir),
  *   createClient(engine, { env }), canDecode() -> boolean, toWav(bytes, format, sampleRate) -> Buffer, now() -> Date,
- *   keys { sayKey, sayRef },
+ *   keys { sayKey, sayRef }, voiceLock (the parsed content/audio/tts-voice-lock.json; null switches the rule off, tests only),
  *   out(line), err(line), and optionally engineOf(id) (tests only: an engine with a gate lifted)
  * Exit codes: 0 done, 1 a request or the content failed, 2 a usage error or a refusal, 3 the spend guard stopped it.
  */
@@ -289,6 +293,15 @@ export async function runGenerate(argv, env, deps) {
       return 2;
     }
     throw e;
+  }
+
+  const lockedVoice = voiceLockProblem(deps.voiceLock, { engine: engine.id, voices, pilot: opts.pilot, allowOtherVoice: opts.allowOtherVoice });
+  if (lockedVoice !== null) {
+    deps.err(lockedVoice);
+    return 2;
+  }
+  if (opts.allowOtherVoice && !opts.pilot && deps.voiceLock) {
+    deps.out(`note: --allow-other-voice: ${engine.id}/${voices.join(', ')} may differ from the locked voice ${deps.voiceLock.engine}/${deps.voiceLock.voice}; do not commit these clips (AD11).`);
   }
 
   const abs = (p) => resolve(deps.repoRoot, p);
