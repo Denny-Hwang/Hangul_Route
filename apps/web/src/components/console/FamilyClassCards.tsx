@@ -6,7 +6,7 @@ import { useId, useState, type CSSProperties } from 'react';
 import type { ConsoleApi } from '@/lib/console/api';
 import type { ClassScopeState, MoveNotice as MoveNoticeView } from '@/lib/console/class-moves';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
-import { MoveButton } from './TransferParts';
+import { MoveButton, TransferSheet } from './TransferParts';
 import { rem } from '@/lib/console/rem';
 
 /**
@@ -17,7 +17,9 @@ import { rem } from '@/lib/console/rem';
  *   of content-schema `CLASS_SCOPE_TEXT` in the console's language (the same ids, in the same order, as the app's
  *   screen), the list of what a teacher sees always open, and **OK**, which records the acknowledgement. Until then
  *   teachers keep the earlier scope for that learner. The card is unchanged by GX-4; the Needs you strip's **Read and
- *   OK** scrolls to it and focuses it (`scopeCardDomId`) until the owner answers GX-OD-3 (row GX-5b).
+ *   OK** scrolls to it and focuses it (`scopeCardDomId`) until the owner answers GX-OD-3. Row GX-5b adds
+ *   `FamilyScopeSheet` (the same lines and OK in a sheet), which the page uses instead of the card only with
+ *   `familyScopeSheetEnabled()` on (off by default).
  * - The notice of a move a teacher made in the last 30 days that no grown-up has dismissed: "{name} moved to a new
  *   class: {class}." and **OK** (`MoveNotice`). GX-4 (AMENDMENTS-GROWNUP-UX section 7.1) draws it inside the card of the
  *   child it is about, after the child's lines and before the buttons.
@@ -58,6 +60,64 @@ export function scopeCardDomId(familyId: string, learnerId: string): string {
   return `class-scope-${familyId}-${learnerId}`;
 }
 
+/** The keyed lines of `CLASS_SCOPE_TEXT` for one learner, verbatim, with the list of what a teacher sees always open. */
+function ScopeLines({ name, textLocale }: { name: string; textLocale: TransferConsentLocale }): JSX.Element {
+  const text = CLASS_SCOPE_TEXT[textLocale];
+  const items = classScopeItems(textLocale);
+  return (
+    <>
+      {CLASS_SCOPE_LINE_IDS.map((id) =>
+        id === 'list' ? (
+          <div key={id} data-line={id}>
+            <p style={{ ...line, fontWeight: typography.weight.semibold }}>{text.lines.list}</p>
+            <ul style={{ margin: `${spacing.xs}px 0 0`, paddingInlineStart: spacing.lg, color: colors.text.primary, lineHeight: typography.leading.relaxed }}>
+              {items.map((item) => (
+                <li key={item.id} data-item={item.id}>
+                  {fill(item.text, name)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p key={id} data-line={id} style={line}>
+            {fill(text.lines[id], name)}
+          </p>
+        ),
+      )}
+    </>
+  );
+}
+
+/**
+ * The acknowledgement write, shared by the card and the sheet: OK records the current version for the learner; a stale
+ * version reads again (`onStale`), any other failure says so beside OK. Resolves true when it was recorded.
+ */
+function useAcknowledge({ familyId, api, scope, onScope, onStale }: { familyId: string; api: FamilyClassCardsApi; scope: ClassScopeState | null; onScope: (next: ClassScopeState) => void; onStale: () => void }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const acknowledge = async (learnerId: string): Promise<boolean> => {
+    if (!scope || busy) return false;
+    setBusy(learnerId);
+    setFailed(null);
+    const r = await api.acknowledgeClassScope(familyId, learnerId, scope.current).catch(() => null);
+    setBusy(null);
+    if (r?.ok) {
+      onScope({ ...scope, learners: scope.learners.map((l) => (l.learnerId === learnerId ? { ...l, needed: false } : l)) });
+      return true;
+    }
+    if (r && !r.ok && r.code === 'class_scope_stale') onStale();
+    else setFailed(learnerId);
+    return false;
+  };
+  return { busy, failed, acknowledge };
+}
+
+/** The text's language: the console's when the class-scope text has it, else English. */
+function useScopeLocale(): TransferConsentLocale {
+  const { locale } = useConsoleLocale();
+  return isTransferConsentLocale(locale) ? locale : 'en';
+}
+
 export function FamilyClassCards({
   familyId,
   api,
@@ -73,25 +133,11 @@ export function FamilyClassCards({
   /** The version moved on meanwhile: the page reads again. */
   onStale: () => void;
 }): JSX.Element | null {
-  const { messages, locale } = useConsoleLocale();
+  const { messages } = useConsoleLocale();
   const t = messages.console.classScope;
-  const textLocale: TransferConsentLocale = isTransferConsentLocale(locale) ? locale : 'en';
-  const text = CLASS_SCOPE_TEXT[textLocale];
-  const items = classScopeItems(textLocale);
+  const textLocale = useScopeLocale();
   const listId = useId();
-  const [busy, setBusy] = useState<string | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
-
-  const acknowledge = async (learnerId: string): Promise<void> => {
-    if (!scope || busy) return;
-    setBusy(learnerId);
-    setFailed(null);
-    const r = await api.acknowledgeClassScope(familyId, learnerId, scope.current);
-    setBusy(null);
-    if (r.ok) onScope({ ...scope, learners: scope.learners.map((l) => (l.learnerId === learnerId ? { ...l, needed: false } : l)) });
-    else if (r.code === 'class_scope_stale') onStale();
-    else setFailed(learnerId);
-  };
+  const { busy, failed, acknowledge } = useAcknowledge({ familyId, api, scope, onScope, onStale });
 
   const needed = scope?.learners.filter((l) => l.needed) ?? [];
   if (needed.length === 0) return null;
@@ -111,24 +157,7 @@ export function FamilyClassCards({
           <h3 id={`${listId}-${l.learnerId}`} style={{ margin: 0, fontSize: rem(typography.size.bodyLg), fontWeight: typography.weight.bold }}>
             {t.title(l.name)}
           </h3>
-          {CLASS_SCOPE_LINE_IDS.map((id) =>
-            id === 'list' ? (
-              <div key={id} data-line={id}>
-                <p style={{ ...line, fontWeight: typography.weight.semibold }}>{text.lines.list}</p>
-                <ul style={{ margin: `${spacing.xs}px 0 0`, paddingInlineStart: spacing.lg, color: colors.text.primary, lineHeight: typography.leading.relaxed }}>
-                  {items.map((item) => (
-                    <li key={item.id} data-item={item.id}>
-                      {fill(item.text, l.name)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p key={id} data-line={id} style={line}>
-                {fill(text.lines[id], l.name)}
-              </p>
-            ),
-          )}
+          <ScopeLines name={l.name} textLocale={textLocale} />
           {failed === l.learnerId ? (
             <p role="alert" style={{ ...line, color: colors.text.secondary }}>
               {t.failed}
@@ -142,6 +171,73 @@ export function FamilyClassCards({
         </section>
       ))}
     </div>
+  );
+}
+
+/**
+ * The class-scope text in a sheet (AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b; wireframe
+ * `design/wireframes/parent/needs-you.md` "class-scope sheet"). Owner-blocked on GX-OD-3: the page opens it only with
+ * `familyScopeSheetEnabled()` on (off by default), from the Needs you strip's **Read and OK** and from the child's
+ * **Class info to read** chip; with it off the shipped card above stays. The text is the card's, unchanged and in full,
+ * with its list always open; **OK** writes the same acknowledgement (`CLASS_SCOPE_TEXT_VERSION` unchanged). While unread
+ * a backdrop tap does nothing: Close is a button (Escape still closes, as on every sheet). After OK the page closes it
+ * and says the result (`onDone`); a stale version reads again and keeps the sheet open.
+ */
+export function FamilyScopeSheet({
+  familyId,
+  learnerId,
+  api,
+  scope,
+  onScope,
+  onStale,
+  onClose,
+  onDone,
+  fallbackFocus,
+}: {
+  familyId: string;
+  learnerId: string;
+  api: FamilyClassCardsApi;
+  scope: ClassScopeState | null;
+  onScope: (next: ClassScopeState) => void;
+  onStale: () => void;
+  onClose: () => void;
+  /** The acknowledgement was recorded for the learner of this name. */
+  onDone: (name: string) => void;
+  /** Where focus goes on close when the opener left the page (the strip row answered). */
+  fallbackFocus?: () => void;
+}): JSX.Element | null {
+  const { messages } = useConsoleLocale();
+  const t = messages.console.classScope;
+  const textLocale = useScopeLocale();
+  const { busy, failed, acknowledge } = useAcknowledge({ familyId, api, scope, onScope, onStale });
+  const learner = scope?.learners.find((l) => l.learnerId === learnerId) ?? null;
+  if (!learner) return null;
+  const waiting = busy === learner.learnerId;
+  return (
+    <TransferSheet title={t.title(learner.name)} onClose={onClose} testId="class-scope-sheet" lang={textLocale} closeOnScrim={!learner.needed} fallbackFocus={fallbackFocus}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+        <ScopeLines name={learner.name} textLocale={textLocale} />
+        {failed === learner.learnerId ? (
+          <p role="alert" style={{ ...line, color: colors.text.secondary }}>
+            {t.failed}
+          </p>
+        ) : null}
+        <div style={{ marginTop: spacing.sm }}>
+          <MoveButton
+            primary
+            waiting={waiting}
+            onClick={() =>
+              void acknowledge(learner.learnerId).then((done) => {
+                if (done) onDone(learner.name);
+              })
+            }
+            testId="class-scope-ok"
+          >
+            {waiting ? t.saving.cta : messages.common.buttons.ok}
+          </MoveButton>
+        </div>
+      </div>
+    </TransferSheet>
   );
 }
 
