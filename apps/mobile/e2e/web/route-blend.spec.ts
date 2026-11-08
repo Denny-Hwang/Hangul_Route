@@ -348,6 +348,7 @@ for (const locale of ['es', 'ko'] as const) {
     await learner(page, { now: TUESDAY, locale, selfRoute: ownPlan() });
     await expect(page.getByTestId('home-class-today')).toHaveText(m.learner.route.blend.classToday);
     await expectNoSidewaysScroll(page, `Home in ${locale}`);
+    await expectNoClippedText(page, `Home in ${locale}`);
     await shot(page, `route-blend-launch-home-${locale}-320`);
     await page.getByRole('tablist').getByRole('link', { name: m.a11y.myRoute.tab }).click();
     const line = page.getByTestId('my-route-blend-line');

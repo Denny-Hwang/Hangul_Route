@@ -920,7 +920,7 @@ export default function ParentHomePage(): JSX.Element {
             });
             const family = view?.state === 'families' ? view.families.find((f) => f.space.id === popupFamily) : undefined;
             void loadAsks(popupFamily, true);
-            if (family) void loadRoster(popupFamily, family.role, true);
+            if (family) void loadRoster(popupFamily, family.role, true, isArchivedFamily(family));
           }}
         />
       ) : null}

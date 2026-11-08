@@ -448,6 +448,13 @@ describe('the family home (F-APP-001 A-5b)', () => {
     expect(byTestId(r, 'family-settings')).toHaveLength(1);
   });
 
+  it('an archived family never reads its plans, the live one does (BL-9 Pause and Resume: an archived family asks nothing)', async () => {
+    const archived: SpaceListItem = { ...family, space: { ...family.space, archivedAt: '2026-10-09T00:00:00Z' } };
+    data.rosters = { sp_f: roster(archived, [sam]) };
+    await render([archived]);
+    expect(data.calls.some((c) => c.startsWith('plans:'))).toBe(false);
+  });
+
   it('a caregiver (not the owner) gets no Create a code: a line asks the family owner instead (the API answers 403)', async () => {
     data.rosters = { sp_g: roster(grandma, [], null) };
     const r = await render([grandma]);
