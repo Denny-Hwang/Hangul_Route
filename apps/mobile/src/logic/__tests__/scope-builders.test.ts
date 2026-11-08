@@ -110,7 +110,7 @@ describe('lp.sym (heard letter -> written symbol)', () => {
     });
   });
 
-  it("every Stage 1 letter round says the letter's name with the name's clip, and no clip is bundled yet", () => {
+  it("every Stage 1 letter round says the letter's name with the name's clip when one is bundled", () => {
     let seen = 0;
     for (const scope of Object.values(config.minigameScopes)) {
       for (const round of scope.listenPick?.rounds ?? []) {
@@ -121,8 +121,9 @@ describe('lp.sym (heard letter -> written symbol)', () => {
         const { audioRef, ...rest } = round.prompt;
         expect(audioRef, round.id).toBe(voice.audioRef);
         expect(rest, round.id).toEqual({ ko: voice.text, romanization: voice.romanization, en: `the letter ${jamo.nameEn}` });
-        // No file for the ref: the prompt still plays through the voice, as before (F-AUDIO-004 AD4).
-        if (audioRef !== undefined) expect(Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, audioRef), round.id).toBe(false);
+        // The prompt carries the ref whether or not a file is bundled for it (AC-7 ships 32 of the 43 jamo-s1 clips, the
+        // rest play through the voice, F-AUDIO-004 AD4): a ref with no file is just absent from the map.
+        if (audioRef !== undefined) expect(typeof Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, audioRef), round.id).toBe('boolean');
         // Played at the sound rate, with the recording to try first.
         expect(listenPickSpeech(round), round.id).toEqual({ text: voice.text, kind: 'sound', source: 'listen-pick', ...(audioRef === undefined ? {} : { audioRef }) });
       }

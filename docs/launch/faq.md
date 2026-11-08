@@ -99,6 +99,9 @@ purchases only.
 **Q. Ads?**
 A. Never. No ads, ever.
 
+**Q. Where does the Korean audio come from?**
+A. Korean audio is computer-generated (Amazon Polly) and checked by automated speech recognition and a multi-agent review.
+
 **Q. Offline play?**
 A. Yes. After your first visit the app works offline. Letter sounds need a Korean voice on your device until our own recordings arrive.
 

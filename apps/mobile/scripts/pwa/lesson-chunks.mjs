@@ -177,7 +177,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // start bundle) would give back about 5 KB at most and is a separate change: `blend-view`'s functions are read
   // synchronously by five screens. The line is the measurement plus a 3,013 B margin (one measured raise, 10,000 B over the
   // previous line).
-  startBundleRaw: 4_920_000,
+  // AC-7 (the `jamo-s1` clips, AMENDMENTS-AUDIO-CLIPS AC-B6): the 32 shipped clips put 32 entries in the start-side audio map
+  // (the pack that is precached is the only one whose refs are in the start bundle). The release `build:web` (CI=1, Metro
+  // cache cleared) measures 4,924,620 B raw, 4,620 B over the previous line; the spec projected about 215 B per entry (6.9 KB
+  // for 32), and the line before the clips left about 2.3 KB. The line is the measurement plus a 3,380 B margin
+  // (one measured raise, 8,000 B over the previous line). The 11 held clips add about 2.4 KB when they ship.
+  startBundleRaw: 4_928_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

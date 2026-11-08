@@ -20,7 +20,32 @@ import { expect, test as base } from '@playwright/test';
  * `Object.defineProperty(window, 'speechSynthesis', ...)` in its own init
  * script; that runs after this one and wins (the property is configurable).
  */
-export const test = base.extend<{ silentSpeech: void }>({
+const RELEASE_BUILD = process.env.STORY_FIXTURES !== '1' && process.env.STORY_FIXTURES_GATED !== '1' && process.env.E2E_ROUTE !== '1';
+
+export const test = base.extend<{ silentSpeech: void; clipsOn: boolean; clipsSwitch: void }>({
+  /**
+   * Whether the spec wants the bundled clips (AMENDMENTS-AUDIO-CLIPS). The release build ships real clips from AC-7,
+   * so a spec that pins the device voice, the "no voice" text or the quiz wiring would hear clips instead. By default
+   * the page has no Web Audio (`AudioContext`), which is how the clip player decides it is unsupported
+   * (`supported: createContext !== null`, platform/audio.web.ts): the capability says no clips from the first
+   * prompt, on the learner app and on the presenter alike, and the device voice plays as it did before the clips.
+   * A spec or describe that tests the clips says `test.use({ clipsOn: true })`. The other bundles (story fixtures,
+   * gating, weekly plan) keep the clips on: they carry the e2e fixture clips their specs expect.
+   */
+  clipsOn: [!RELEASE_BUILD, { option: true }],
+  clipsSwitch: [
+    async ({ context, clipsOn }, use) => {
+      if (!clipsOn) {
+        await context.addInitScript(() => {
+          for (const name of ['AudioContext', 'webkitAudioContext']) {
+            Object.defineProperty(window, name, { configurable: true, writable: true, value: undefined });
+          }
+        });
+      }
+      await use();
+    },
+    { auto: true },
+  ],
   silentSpeech: [
     async ({ context }, use) => {
       await context.addInitScript(() => {
