@@ -37,7 +37,7 @@ export default defineConfig({
     ],
     passWithNoTests: true,
     // The lesson chunks load on demand in the app; every test starts with all of them loaded.
-    setupFiles: ['src/test-support/lesson-content-setup.ts'],
+    setupFiles: ['src/test-support/audio-assets-setup.ts', 'src/test-support/lesson-content-setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary'],

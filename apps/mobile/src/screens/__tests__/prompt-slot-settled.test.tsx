@@ -1,10 +1,15 @@
 import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { act } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useAudioStore } from '../../store/audio-store';
 import { byTestId, render, unmount } from '../../test-support/render';
+
+// Reporting a shown fallback starts the real audio platform, whose first capability report (unknown) would overwrite the
+// store state these tests set. With clips bundled (AMENDMENTS-AUDIO-CLIPS AC-7) the platform now starts here, so the test
+// leaves the report out; what it pins is the slot's own settled/text logic.
+vi.mock('../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<typeof import('../../platform/audio')>()), noteFallbackShown: () => undefined }));
 
 /**
  * `slot.settled` (AMENDMENTS-TOUCH: nothing moves under a finger): while the voice check runs, the "No sound? Read it

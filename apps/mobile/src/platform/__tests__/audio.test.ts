@@ -536,7 +536,8 @@ describe('platform/audio (native): the module-level API', RELOAD_SUITE, () => {
     mod.installGestureUnlock()();
     await mod.warmClips([]);
     mod.noteFallbackShown('x', 'muted');
-    expect(mod.hasClip('audio/jamo/giyeok.mp3')).toBe(false);
+    // A ref with no bundled file (the clips of AC-7 are real now, so giyeok.mp3 would be found).
+    expect(mod.hasClip('audio/jamo/no-such-clip.mp3')).toBe(false);
     await expect(mod.playJamo({ char: 'ㅏ', romanization: 'a', nameEn: 'a', spokenKo: '아', spokenKind: 'sound' })).resolves.toBe('played');
   });
 });
