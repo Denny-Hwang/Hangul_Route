@@ -6,7 +6,7 @@ import type { ApiResult } from '@/lib/console/api';
 import type { ClassScopeState } from '@/lib/console/class-moves';
 
 /**
- * AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b (owner-blocked on GX-OD-3; behind `NEXT_PUBLIC_FAMILY_SCOPE_SHEET`, off):
+ * AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b (on by default since GX-OD-3 yes, 2026-11-07; `NEXT_PUBLIC_FAMILY_SCOPE_SHEET=false` is the kill switch):
  * the class-scope text in a sheet. Every `CLASS_SCOPE_TEXT` line verbatim, its list always open, OK writes the
  * acknowledgement as the shipped card does, and while unread the sheet never closes on a backdrop tap (Close is a button).
  */

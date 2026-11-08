@@ -1,6 +1,6 @@
 # Parent/Needs-you — the family's approvals first, a status and a class line on each child (wireframe v3)
 
-Spec: `docs/specs/AMENDMENTS-GROWNUP-UX.md` section 7 (rows GX-4, GX-5, GX-5b owner-blocked, GX-11; v3 after the second PR #917 review round) · `AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md` TV-D5, TV-D10 · F-SPACE-002 §4.8 (family badge)
+Spec: `docs/specs/AMENDMENTS-GROWNUP-UX.md` section 7 (rows GX-4, GX-5, GX-5b, GX-11; v3 after the second PR #917 review round) · `AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md` TV-D5, TV-D10 · F-SPACE-002 §4.8 (family badge)
 Revises: `design/screens/app-shell/parent-home.md` (order of the family block), `design/wireframes/console/class-transfer.md` (family entry point)
 Audience: **parent / caregiver** on `/parent`
 
@@ -56,7 +56,7 @@ Then: the first screen shows a compact **Needs you** strip (the soonest-closing 
 - Measured on the mock (Chromium, 360 x 740, three items and the notice, no unread class-scope update): the first child's name starts at 516 px (en, es) / 495 px (ko); the week line ends at 638 / 659 / 582 px.
 - A move the family cannot answer from the console (the learner manages their own classes, or the caregiver route is off: `learnerRoute !== 'caregiver'`) is no strip row and no count; its child shows the quiet chip **(Move waiting)** on `surface.sunken`.
 
-## Box diagram: an unread class-scope update before GX-5b (owner-blocked GX-OD-3)
+## Box diagram: an unread class-scope update with the class-scope sheet off (the kill switch; the shipped card)
 
 ```
 +--------------------------------------------+
@@ -77,7 +77,7 @@ Then: the first screen shows a compact **Needs you** strip (the soonest-closing 
 +--------------------------------------------+
 ```
 
-## Box diagram: class-scope sheet (proposed; owner-blocked on GX-OD-3, row GX-5b)
+## Box diagram: class-scope sheet (row GX-5b; Decided 2026-11-07: GX-OD-3 yes, on by default)
 
 ```
 +--------------------------------------------+
@@ -96,8 +96,8 @@ Then: the first screen shows a compact **Needs you** strip (the soonest-closing 
 - [[ REVIEW ]] → the shipped consent sheet for that transfer (Agree / Not now); on Agree the row leaves and the child chip turns to **Moving {date}** when a date is set.
 - [[ SEE ALL ]] → the items in the review-sheet frame (title "Needs you"), each with its own action.
 - [[ APPROVE ]] → the re-link pop-up (platform, request time, the shipped safety hint); its Approve → `POST /:familyId/relink-requests/:rid/approve`. [ Deny ] (one tap) → `…/deny`; result line (family denial: "…will say "ask your grown-up".").
-- [[ READ AND OK ]] → until the owner answers GX-OD-3, scrolls to the shipped class-scope card (in place under the strip) and focuses its heading; with GX-5b, the class-scope sheet; [[ OK ]] → `POST …/learners/:learnerId/class-scope`; the row and the chip leave.
-- Child chip → no action (a status span); the strip owns the buttons. Exception (GX-5b, only with `NEXT_PUBLIC_FAMILY_SCOPE_SHEET` on): the **Class info to read** chip is a button in the action-chip look (amber border, dot, bold) that opens the same class-scope sheet as [[ READ AND OK ]]; after its OK, focus goes to the child's card, scrolled into view.
+- [[ READ AND OK ]] → opens the class-scope sheet (the default since GX-OD-3 yes, 2026-11-07); with the kill switch off, it scrolls to the shipped class-scope card (in place under the strip) and focuses its heading; [[ OK ]] → `POST …/learners/:learnerId/class-scope`; the row and the chip leave.
+- Child chip → no action (a status span); the strip owns the buttons. Exception (GX-5b, only while the class-scope sheet is on (the default; `NEXT_PUBLIC_FAMILY_SCOPE_SHEET=false` is the kill switch)): the **Class info to read** chip is a button in the action-chip look (amber border, dot, bold) that opens the same class-scope sheet as [[ READ AND OK ]]; after its OK, focus goes to the child's card, scrolled into view.
 - Re-link pop-up: opened by Approve from GX-4; from GX-5 it also opens by itself when a quiet load finds a new re-link id (the alertdialog of `console/approvals.md`: Approve / Deny / Later).
 
 ## Navigation graph
@@ -121,4 +121,4 @@ Exit to: `console/class-transfer` (family transfers page) · `parent/learner-det
 
 ## Open questions
 
-- GX-OD-3 (class-scope text in a sheet instead of an always-shown card): owner-blocked, no default applied (a consent surface); the shipped card stays until the owner answers.
+- GX-OD-3 (class-scope text in a sheet instead of an always-shown card): Decided 2026-11-07: GX-OD-3 yes (owner); on by default, the shipped card only behind the kill switch.

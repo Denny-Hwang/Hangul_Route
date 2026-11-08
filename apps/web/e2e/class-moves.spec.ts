@@ -15,16 +15,17 @@ import { en, getMessages, type UiLocale } from '@hangul-route/i18n';
  * Like notes.spec.ts and reports.spec.ts, no CI lane runs it yet (a lane is a workflow change); each PR runs that build
  * and suite locally.
  *
- * GX-5b (the class-scope sheet, owner-blocked on GX-OD-3, off by default): its cases need a second export with the
- * sheet on, and run instead of the two shipped-card cases:
+ * GX-5b (the class-scope sheet; on by default since GX-OD-3 yes, 2026-11-07): the default export above runs the sheet cases.
+ * The three shipped-card cases need a second export with the kill switch (`NEXT_PUBLIC_FAMILY_SCOPE_SHEET=false`), and
+ * run instead of the sheet cases:
  *
- *   NEXT_PUBLIC_API_BASE_URL=https://api.moves-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true NEXT_PUBLIC_CLASS_TRANSFER=enabled NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on pnpm --filter @hangul-route/web build
- *   CLASS_MOVES_E2E=1 FAMILY_SCOPE_SHEET_E2E=1 pnpm --filter @hangul-route/web exec playwright test class-moves.spec
+ *   NEXT_PUBLIC_API_BASE_URL=https://api.moves-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true NEXT_PUBLIC_CLASS_TRANSFER=enabled NEXT_PUBLIC_FAMILY_SCOPE_SHEET=false pnpm --filter @hangul-route/web build
+ *   CLASS_MOVES_E2E=1 FAMILY_SCOPE_SHEET_E2E=0 pnpm --filter @hangul-route/web exec playwright test class-moves.spec
  */
 test.skip(process.env.CLASS_MOVES_E2E !== '1', 'needs the export built against the mocked API (CLASS_MOVES_E2E=1)');
 
-/** The export was built with `NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on` (GX-5b): no class-scope card on the family home. */
-const SCOPE_SHEET = process.env.FAMILY_SCOPE_SHEET_E2E === '1';
+/** The export has the class-scope sheet (GX-5b, the default): no class-scope card on the family home. `FAMILY_SCOPE_SHEET_E2E=0` marks the kill-switch export (`NEXT_PUBLIC_FAMILY_SCOPE_SHEET=false`), which keeps the shipped card. */
+const SCOPE_SHEET = process.env.FAMILY_SCOPE_SHEET_E2E !== '0';
 
 const API = 'https://api.moves-e2e.test';
 const SESSION_KEY = 'hr:console:session';
@@ -195,7 +196,7 @@ test.describe('the receiving class accepts (TV-D8)', () => {
 
 test.describe('the family reads the class-scope update and the move notice (TV-D5, TV-D10)', () => {
   test('the parent home shows both cards; OK on each records it and the card goes', async ({ page }) => {
-    test.skip(SCOPE_SHEET, 'the shipped card is not drawn with the class-scope sheet on (GX-5b)');
+    test.skip(SCOPE_SHEET, 'the shipped card is not drawn with the class-scope sheet on, the default (GX-5b); run it on the kill-switch export (FAMILY_SCOPE_SHEET_E2E=0)');
     const calls = await mockConsole(page, 'family');
     await page.goto('/parent');
     const update = page.getByTestId('class-scope-card');
@@ -513,7 +514,7 @@ test.describe('en: answering from Needs you (GX-4)', () => {
   });
 
   test('Read and OK brings the shipped class-scope card into view and focuses it (GX-OD-3 open)', async ({ page }) => {
-    test.skip(SCOPE_SHEET, 'the shipped card is not drawn with the class-scope sheet on (GX-5b)');
+    test.skip(SCOPE_SHEET, 'the shipped card is not drawn with the class-scope sheet on, the default (GX-5b); run it on the kill-switch export (FAMILY_SCOPE_SHEET_E2E=0)');
     await page.setViewportSize({ width: 360, height: 740 });
     await mockFamily(page, { relinks: [], moves: [], scopeNeeded: ['profile:jun'], notice: false });
     await page.goto('/parent');
@@ -529,6 +530,7 @@ test.describe('en: answering from Needs you (GX-4)', () => {
   });
 
   test('Read and OK from the See all sheet: the sheet closes and the class-scope card keeps focus and stays in view', async ({ page }) => {
+    test.skip(SCOPE_SHEET, 'the shipped card is not drawn with the class-scope sheet on, the default (GX-5b; its sheet case covers See all); run it on the kill-switch export (FAMILY_SCOPE_SHEET_E2E=0)');
     await page.setViewportSize({ width: 360, height: 740 });
     // Three items: the re-link keeps its row, the move and the class-scope update fold behind See all. The pop-up already
     // showed Mina's request in this tab (GX-5's auto-open), so the page opens on the strip.
@@ -640,8 +642,8 @@ test.describe('en: the family home reads its re-links every 20 s (GX-5)', () => 
   });
 });
 
-// AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b (owner-blocked on GX-OD-3, so behind NEXT_PUBLIC_FAMILY_SCOPE_SHEET, off by
-// default; owner request 2026-10-31: "make what needs the grown-up obvious"): the class-scope text moves from an
+// AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b (GX-OD-3 yes, 2026-11-07, so NEXT_PUBLIC_FAMILY_SCOPE_SHEET is on by
+// default and false is the kill switch; owner request 2026-10-31: "make what needs the grown-up obvious"): the class-scope text moves from an
 // always-shown card into a sheet opened from the strip's Read and OK or the child's Class info to read chip. With three
 // items including an unread class-scope update, the first child's name and lines stay on the first 360 x 740 screen; the
 // sheet shows the text verbatim with its list open, ignores a backdrop tap while unread, and OK writes the shipped
@@ -652,7 +654,7 @@ for (const { locale, browser } of GX_LOCALES) {
   const p = c.parentHome;
   const fill = (text: string, name: string): string => text.split('{learner}').join(name);
   test.describe(`${locale}: the class-scope sheet (GX-5b)`, () => {
-    test.skip(!SCOPE_SHEET, 'needs the export built with NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on (FAMILY_SCOPE_SHEET_E2E=1)');
+    test.skip(!SCOPE_SHEET, 'needs the default export; the kill-switch export (FAMILY_SCOPE_SHEET_E2E=0) has no sheet');
     test.use({ locale: browser });
     for (const { label, size } of GX_VIEWPORTS) {
       test(`${label}: no card on the home, the first child on the first screen; the chip opens the sheet, OK records it`, async ({ page }) => {
@@ -708,7 +710,7 @@ for (const { locale, browser } of GX_LOCALES) {
 }
 
 test.describe('en: Read and OK opens the class-scope sheet (GX-5b)', () => {
-  test.skip(!SCOPE_SHEET, 'needs the export built with NEXT_PUBLIC_FAMILY_SCOPE_SHEET=on (FAMILY_SCOPE_SHEET_E2E=1)');
+  test.skip(!SCOPE_SHEET, 'needs the default export; the kill-switch export (FAMILY_SCOPE_SHEET_E2E=0) has no sheet');
   const c = en.console;
   const p = c.parentHome;
 

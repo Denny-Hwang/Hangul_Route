@@ -239,6 +239,8 @@ beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'false');
   // Lecture mode is on by default since AMENDMENTS-LECTURE-V2 LV-7; its card has its own suite (lecture-mode-card.test.tsx).
   vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'off');
+  // The class-scope sheet is on by default since GX-OD-3 (yes, 2026-11-07); the cases here that read the shipped class-scope card run with its kill switch off.
+  vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', 'off');
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
 });
@@ -1221,7 +1223,7 @@ describe('the family home: a class with practice days (BL-9)', () => {
   });
 });
 
-describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-3)', () => {
+describe('the family home: the class-scope sheet (GX-5b, on by default since GX-OD-3 yes, 2026-11-07)', () => {
   const jun = learner('profile:jun', 'Jun', '2026-09-08T00:00:00Z', 5);
   const scopeFor = (learnerId: string, name: string) => ({ ok: true, data: { current: 'class-scope-2026-10', learners: [{ learnerId, name, needed: true }] } });
   const card = (r: ReactTestRenderer, name: string): ReactTestInstance => byTestId(r, 'learner-card').find((c) => c.props['aria-label'] === name) as ReactTestInstance;
@@ -1233,6 +1235,8 @@ describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-
   const focusTarget = { scrollIntoView: vi.fn(), focus: vi.fn() };
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_CLASS_TRANSFER', 'disabled');
+    // Back to the build's default (no value): the sheet is on.
+    vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', undefined);
     focusTarget.scrollIntoView.mockClear();
     focusTarget.focus.mockClear();
     vi.stubGlobal('document', { getElementById: vi.fn(() => focusTarget), activeElement: null, visibilityState: 'visible', addEventListener: () => undefined, removeEventListener: () => undefined });
@@ -1246,7 +1250,8 @@ describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-
     vi.unstubAllGlobals();
   });
 
-  it('off by default: the shipped card stays under the strip, the chip is text, and no sheet opens', async () => {
+  it('kill switch (NEXT_PUBLIC_FAMILY_SCOPE_SHEET=false): the shipped card stays under the strip, the chip is text, and no sheet opens', async () => {
+    vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', 'false');
     const r = await render([family]);
     expect(byTestId(r, 'class-scope-card')).toHaveLength(1);
     expect(chipOf(r, 'Jun').type).toBe('span');
@@ -1255,11 +1260,7 @@ describe('the family home: the class-scope sheet (GX-5b, owner-blocked on GX-OD-
     expect(focusTarget.scrollIntoView).toHaveBeenCalled();
   });
 
-  describe('with NEXT_PUBLIC_FAMILY_SCOPE_SHEET on', () => {
-    beforeEach(() => {
-      vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', 'on');
-    });
-
+  describe('with the build default (no NEXT_PUBLIC_FAMILY_SCOPE_SHEET value)', () => {
     it('the home draws no class-scope card, so the children follow the strip; the strip still lists the update', async () => {
       const r = await render([family]);
       expect(byTestId(r, 'class-scope-card')).toHaveLength(0);
