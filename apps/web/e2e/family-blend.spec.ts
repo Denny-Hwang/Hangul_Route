@@ -12,12 +12,13 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
  * static export with the account API mocked through `page.route` (nothing leaves the machine):
  *
  *   NEXT_PUBLIC_API_BASE_URL=https://api.blend-e2e.test NEXT_PUBLIC_CONSOLE_DEV_AUTH=true NEXT_PUBLIC_CLASS_TRANSFER=enabled \
- *     NEXT_PUBLIC_ROUTE_BLEND_ENABLED=true pnpm --filter @hangul-route/web build
+ *     pnpm --filter @hangul-route/web build
  *   ROUTE_BLEND_E2E=1 pnpm --filter @hangul-route/web exec playwright test family-blend.spec
  *
- * No CI lane builds this export (a workflow change, outside this row); BL-10's flag-on e2e is where it joins one.
+ * Class days and practice days are on by default since BL-10, so the export needs no blend setting. No CI lane builds
+ * this export yet: BL-10's row defers its flag-on lane to issue #990 (a workflow change), so each PR runs it locally.
  */
-test.skip(process.env.ROUTE_BLEND_E2E !== '1', 'needs the flag-on export built against the mocked API (ROUTE_BLEND_E2E=1)');
+test.skip(process.env.ROUTE_BLEND_E2E !== '1', 'needs the export built against the mocked API (ROUTE_BLEND_E2E=1)');
 
 const API = 'https://api.blend-e2e.test';
 const SESSION_KEY = 'hr:console:session';

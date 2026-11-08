@@ -3,13 +3,79 @@
 import type { AudioPack } from '@hangul-route/content-schema';
 import type { AudioPackChunk } from '../../logic/audio/clip-assets';
 
-export const AUDIO_ASSETS: Readonly<Record<string, number | string>> = {};
+export const AUDIO_ASSETS: Readonly<Record<string, number | string>> = {
+  'audio/jamo/a.mp3': require('../../../assets/audio/jamo/a.mp3'),
+  'audio/jamo/chieut-name.mp3': require('../../../assets/audio/jamo/chieut-name.mp3'),
+  'audio/jamo/chieut.mp3': require('../../../assets/audio/jamo/chieut.mp3'),
+  'audio/jamo/digeut.mp3': require('../../../assets/audio/jamo/digeut.mp3'),
+  'audio/jamo/eu.mp3': require('../../../assets/audio/jamo/eu.mp3'),
+  'audio/jamo/giyeok-name.mp3': require('../../../assets/audio/jamo/giyeok-name.mp3'),
+  'audio/jamo/giyeok.mp3': require('../../../assets/audio/jamo/giyeok.mp3'),
+  'audio/jamo/hieut-name.mp3': require('../../../assets/audio/jamo/hieut-name.mp3'),
+  'audio/jamo/hieut.mp3': require('../../../assets/audio/jamo/hieut.mp3'),
+  'audio/jamo/i.mp3': require('../../../assets/audio/jamo/i.mp3'),
+  'audio/jamo/ieung-batchim.mp3': require('../../../assets/audio/jamo/ieung-batchim.mp3'),
+  'audio/jamo/ieung.mp3': require('../../../assets/audio/jamo/ieung.mp3'),
+  'audio/jamo/jieut.mp3': require('../../../assets/audio/jamo/jieut.mp3'),
+  'audio/jamo/kieuk.mp3': require('../../../assets/audio/jamo/kieuk.mp3'),
+  'audio/jamo/mieum-batchim.mp3': require('../../../assets/audio/jamo/mieum-batchim.mp3'),
+  'audio/jamo/mieum-name.mp3': require('../../../assets/audio/jamo/mieum-name.mp3'),
+  'audio/jamo/mieum.mp3': require('../../../assets/audio/jamo/mieum.mp3'),
+  'audio/jamo/nieun-batchim.mp3': require('../../../assets/audio/jamo/nieun-batchim.mp3'),
+  'audio/jamo/nieun-name.mp3': require('../../../assets/audio/jamo/nieun-name.mp3'),
+  'audio/jamo/nieun.mp3': require('../../../assets/audio/jamo/nieun.mp3'),
+  'audio/jamo/o.mp3': require('../../../assets/audio/jamo/o.mp3'),
+  'audio/jamo/pieup.mp3': require('../../../assets/audio/jamo/pieup.mp3'),
+  'audio/jamo/rieul-batchim.mp3': require('../../../assets/audio/jamo/rieul-batchim.mp3'),
+  'audio/jamo/siot-name.mp3': require('../../../assets/audio/jamo/siot-name.mp3'),
+  'audio/jamo/siot.mp3': require('../../../assets/audio/jamo/siot.mp3'),
+  'audio/jamo/tieut-name.mp3': require('../../../assets/audio/jamo/tieut-name.mp3'),
+  'audio/jamo/tieut.mp3': require('../../../assets/audio/jamo/tieut.mp3'),
+  'audio/jamo/u.mp3': require('../../../assets/audio/jamo/u.mp3'),
+  'audio/jamo/ya.mp3': require('../../../assets/audio/jamo/ya.mp3'),
+  'audio/jamo/yeo.mp3': require('../../../assets/audio/jamo/yeo.mp3'),
+  'audio/jamo/yo.mp3': require('../../../assets/audio/jamo/yo.mp3'),
+  'audio/jamo/yu.mp3': require('../../../assets/audio/jamo/yu.mp3'),
+};
 
 /** The pack of each clip (AMENDMENTS-AUDIO-CLIPS AC-B6, AC-B8); a clip with no pack is governed by `audioClips` alone. */
-export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {};
+export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {
+  'audio/jamo/a.mp3': 'jamo-s1',
+  'audio/jamo/chieut-name.mp3': 'jamo-s1',
+  'audio/jamo/chieut.mp3': 'jamo-s1',
+  'audio/jamo/digeut.mp3': 'jamo-s1',
+  'audio/jamo/eu.mp3': 'jamo-s1',
+  'audio/jamo/giyeok-name.mp3': 'jamo-s1',
+  'audio/jamo/giyeok.mp3': 'jamo-s1',
+  'audio/jamo/hieut-name.mp3': 'jamo-s1',
+  'audio/jamo/hieut.mp3': 'jamo-s1',
+  'audio/jamo/i.mp3': 'jamo-s1',
+  'audio/jamo/ieung-batchim.mp3': 'jamo-s1',
+  'audio/jamo/ieung.mp3': 'jamo-s1',
+  'audio/jamo/jieut.mp3': 'jamo-s1',
+  'audio/jamo/kieuk.mp3': 'jamo-s1',
+  'audio/jamo/mieum-batchim.mp3': 'jamo-s1',
+  'audio/jamo/mieum-name.mp3': 'jamo-s1',
+  'audio/jamo/mieum.mp3': 'jamo-s1',
+  'audio/jamo/nieun-batchim.mp3': 'jamo-s1',
+  'audio/jamo/nieun-name.mp3': 'jamo-s1',
+  'audio/jamo/nieun.mp3': 'jamo-s1',
+  'audio/jamo/o.mp3': 'jamo-s1',
+  'audio/jamo/pieup.mp3': 'jamo-s1',
+  'audio/jamo/rieul-batchim.mp3': 'jamo-s1',
+  'audio/jamo/siot-name.mp3': 'jamo-s1',
+  'audio/jamo/siot.mp3': 'jamo-s1',
+  'audio/jamo/tieut-name.mp3': 'jamo-s1',
+  'audio/jamo/tieut.mp3': 'jamo-s1',
+  'audio/jamo/u.mp3': 'jamo-s1',
+  'audio/jamo/ya.mp3': 'jamo-s1',
+  'audio/jamo/yeo.mp3': 'jamo-s1',
+  'audio/jamo/yo.mp3': 'jamo-s1',
+  'audio/jamo/yu.mp3': 'jamo-s1',
+};
 
 /** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */
-export const AUDIO_CLIP_COUNT = 0;
+export const AUDIO_CLIP_COUNT = 32;
 
 /** The packs whose clips are a map chunk of their own (`loadAudioPackChunk`), loaded with their lesson or story, never at start. */
 export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = [];

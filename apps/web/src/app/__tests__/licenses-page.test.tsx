@@ -52,8 +52,17 @@ describe('licenseGroups and assetLicenses', () => {
   it('the generated data names every license its packages and assets use', () => {
     const ids = new Set(THIRD_PARTY_NOTICES.licenses.map((l) => l.id));
     for (const p of THIRD_PARTY_NOTICES.packages) expect(ids.has(p.license), `${p.name}@${p.version}`).toBe(true);
-    for (const a of THIRD_PARTY_NOTICES.assets) expect(ids.has(a.license), a.path).toBe(true);
+    // The generated speech clips (`tts:` rows, AMENDMENTS-AUDIO-CLIPS AC-B1) are under vendor terms, not a license text.
+    for (const a of THIRD_PARTY_NOTICES.assets.filter((x) => !x.source.startsWith('tts:'))) expect(ids.has(a.license), a.path).toBe(true);
     expect(THIRD_PARTY_NOTICES.licenses.every((l) => l.text.length > 0)).toBe(true);
+  });
+});
+
+describe('the Korean audio credit (AMENDMENTS-AUDIO-CLIPS AC-B10)', () => {
+  it.each(['en', 'es', 'ko'] as const)('%s: names Amazon Polly and never the voice or a native speaker (AD12)', (locale) => {
+    const credit = getMessages(locale).landing.licenses.audioCredit;
+    expect(credit).toContain('Amazon Polly');
+    expect(credit).not.toMatch(/Seoyeon|native|nativ|원어민/i);
   });
 });
 
@@ -63,6 +72,7 @@ describe('LicensesPage', () => {
     expect(html).toContain(`<h1 style="`);
     expect(html).toContain(escapeText(en.licenses.title));
     expect(html).toContain(escapeText(`${en.licenses.notOpen} ${en.licenses.copyright}`));
+    expect(html).toContain(escapeText(en.licenses.audioCredit));
     expect(html).toContain('<strong>b-lib</strong> 2.0.0');
     expect(html).toContain(escapeText('Copyright (c) 2020 B'));
     expect(html).toContain(escapeText(`${en.licenses.usedIn}: ${en.licenses.where.app}, ${en.licenses.where.web}`));
@@ -90,6 +100,7 @@ describe('LicensesPage', () => {
     expect(html).toContain('data-testid="english-authoritative"');
     expect(html).toContain(escapeText(t.legal.englishAuthoritative));
     expect(html).toContain(escapeText(t.licenses.title));
+    expect(html).toContain(escapeText(t.licenses.audioCredit));
     expect(html).toContain(`<section lang="en" data-license="MIT"`);
     expect(html).toContain(`lang="${locale}">${escapeText(`${t.licenses.usedIn}: ${t.licenses.where.app}`)}`);
   });

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, browseEnabled, browseEntryShown, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, routeBlendEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, browseEnabled, browseEntryShown, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, familyScopeSheetEnabled, lectureModeEnabled, learningRouteEnabled, notesEnabled, REPORT_REVIEWED_LOCALES, reportsEnabled, routeBlendEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -218,23 +218,49 @@ describe('browseEnabled and browseEntryShown (F-BROWSE-001 section 5.4; F-APP-00
   });
 });
 
-/** AMENDMENTS-ROUTE-CLASS-BLEND section 14 (rows BL-4, BL-5; BL-10 flips it): class days and practice days on the console, default off. */
+/** AMENDMENTS-ROUTE-CLASS-BLEND section 14 and BL-OD-12 (rows BL-4, BL-5; BL-10 flipped it): on by default, a kill switch. */
 describe('routeBlendEnabled', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it('is off unless NEXT_PUBLIC_ROUTE_BLEND_ENABLED is "true" or "1"', () => {
-    expect(routeBlendEnabled({})).toBe(false);
-    expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: 'true' })).toBe(true);
-    expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: '1' })).toBe(true);
-    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
-    expect(routeBlendEnabled()).toBe(false);
+  it('is on unless NEXT_PUBLIC_ROUTE_BLEND_ENABLED is "false", "0", "off", "no" or "disabled" (case and spaces ignored)', () => {
+    expect(routeBlendEnabled({})).toBe(true);
+    expect(routeBlendEnabled()).toBe(true);
+    for (const on of ['true', '1', 'enabled', 'TRUE', '', ' true', 'maybe']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: on }), on).toBe(true);
+    for (const off of ['false', '0', 'off', 'no', 'disabled', 'FALSE', ' false ', 'Off', 'NO']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
   });
 
   it('reads the build value by its literal name', () => {
-    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', '1');
-    expect(buildEnv().NEXT_PUBLIC_ROUTE_BLEND_ENABLED).toBe('1');
-    expect(routeBlendEnabled()).toBe(true);
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
+    expect(buildEnv().NEXT_PUBLIC_ROUTE_BLEND_ENABLED).toBe('false');
+    expect(routeBlendEnabled()).toBe(false);
+  });
+
+  it('turns off on every value that turns the app side off (parseLectureSwitch), so one value works on both', () => {
+    for (const off of ['false', '0', 'off', 'no', 'disabled']) expect(routeBlendEnabled({ NEXT_PUBLIC_ROUTE_BLEND_ENABLED: off }), off).toBe(false);
+  });
+});
+
+/** AMENDMENTS-GROWNUP-UX row GX-5b: the class-scope sheet is on by default (GX-OD-3 answered yes on 2026-11-07); the build value is a kill switch. */
+describe('familyScopeSheetEnabled', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('is on by default (GX-OD-3 yes): no value, a blank or an unknown value keep the launch default', () => {
+    expect(familyScopeSheetEnabled({})).toBe(true);
+    for (const raw of ['', ' ', 'maybe', 'shown']) expect(familyScopeSheetEnabled({ NEXT_PUBLIC_FAMILY_SCOPE_SHEET: raw })).toBe(true);
+  });
+
+  it('the kill switch: false, 0, off, no or disabled turn it off (case and spaces ignored); the on values stay on', () => {
+    for (const raw of ['false', '0', 'off', 'no', 'disabled', ' OFF ', 'False', 'Disabled\n']) expect(familyScopeSheetEnabled({ NEXT_PUBLIC_FAMILY_SCOPE_SHEET: raw }), raw).toBe(false);
+    for (const raw of ['true', '1', 'on', 'yes', 'enabled', ' TRUE ', 'On', 'Enabled\n']) expect(familyScopeSheetEnabled({ NEXT_PUBLIC_FAMILY_SCOPE_SHEET: raw }), raw).toBe(true);
+  });
+
+  it('reads the build value through buildEnv()', () => {
+    vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', undefined);
+    expect(familyScopeSheetEnabled()).toBe(true);
+    vi.stubEnv('NEXT_PUBLIC_FAMILY_SCOPE_SHEET', 'off');
+    expect(buildEnv().NEXT_PUBLIC_FAMILY_SCOPE_SHEET).toBe('off');
+    expect(familyScopeSheetEnabled()).toBe(false);
   });
 });

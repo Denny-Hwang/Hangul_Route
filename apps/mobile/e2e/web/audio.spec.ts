@@ -647,6 +647,9 @@ async function clipGapAfter(page: Page, mark: '__tapAt'): Promise<number | null>
 }
 
 test.describe('bundled clips (A-6)', () => {
+  // The clips are what these specs test: the release build ships them from AC-7, so the remote `audioClips` switch stays on.
+  test.use({ clipsOn: true });
+
   test('the service worker precaches every letter clip and runtime-caches the other clip groups', async ({ page }) => {
     if (FIXTURE_BUILD) {
       expect(letterClips.length, 'fixture letter clips').toBeGreaterThan(0);
@@ -703,9 +706,11 @@ test.describe('bundled clips (A-6)', () => {
     await page.getByTestId('home-next-lesson-start').click();
     await openMatchSound(page);
 
-    // A vowel round's clip started, served by the service worker; a consonant's name has no clip yet, so it showed as text.
+    // A vowel round's clip started, served by the service worker. A round before it may be a letter with no clip: the
+    // consonant names the pack does not ship (기역, 니은 have one; the held ones play the voice or show the text) and 어,
+    // whose first take was held back (AC-7 part 1), so it showed as text.
     const names = await playUntilClip(page);
-    expect(names.filter((n) => !['기역', '니은'].includes(n))).toEqual([]);
+    expect(names.filter((n) => !['기역', '니은', '어'].includes(n))).toEqual([]);
     // A recording plays, so the round is not switched to the "no Korean voice" text prompt.
     await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
     await expect(page.getByText('Tap the letter you hear')).toBeVisible();

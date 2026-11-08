@@ -135,6 +135,8 @@ test.describe('the console wizard: steps, preview, draft, publish (F-PLAN-002 P2
         // Step 2: pace and length, pre-selected from the proposal (P2-6b); step 3: goals.
         await expect(page.getByText(c.step(2, 4), { exact: true })).toBeVisible();
         await page.getByTestId('length-12-week').click();
+        // A class needs a class day to go on once the route blend is on (BL-10): the meeting block replaces the day chips.
+        if (kind === 'class') await page.getByTestId('class-day-tue').click();
         await noSidewaysScroll(page);
         await page.getByTestId('route-next').click();
         await expect(page.getByText(c.step(3, 4), { exact: true })).toBeVisible();
