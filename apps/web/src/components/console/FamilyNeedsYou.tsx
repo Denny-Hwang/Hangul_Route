@@ -27,8 +27,9 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
  *   a re-link is never approved without it) · **Deny** inline (`decideRelink`, one tap). Every result goes to a polite
  *   region that outlives the row; the pop-up's arrives through `result`.
  * - A move: **Review** opens the shipped consent sheet directly (2 taps; was 3 to 4 through the moves page).
- * - A class-scope update: **Read and OK** hands the learner to the page, which scrolls to and focuses the shipped card
- *   (until the owner answers GX-OD-3; row GX-5b may open a sheet instead).
+ * - A class-scope update: **Read and OK** hands the learner to the page. With `familyScopeSheetEnabled()` off (the
+ *   default until the owner answers GX-OD-3) the page scrolls to and focuses the shipped card; on (row GX-5b) it opens
+ *   the class-scope sheet (`FamilyScopeSheet`) instead, and the card is not drawn.
  * Amber is the family's action only (a light fill and an inline-start bar); text is always `text.primary`; never red.
  */
 
@@ -81,7 +82,7 @@ export function FamilyNeedsYou({
   now: Date;
   /** After an answer: the page reads its family again (quietly). */
   onChanged: () => Promise<void>;
-  /** Read and OK: the page scrolls to and focuses that learner's class-scope card. */
+  /** Read and OK: the page scrolls to and focuses that learner's class-scope card, or, with the class-scope sheet on (GX-5b), opens the sheet. */
   onReadScope: (learnerId: string) => void;
   /** A re-link's Approve: the page opens its pop-up for that request (GX-D12). */
   onApproveRelink: (requestId: string) => void;

@@ -101,8 +101,50 @@ export function StatusChip({ words, onActivate, testId = 'learner-status' }: { w
  * A chip that is only text (GX-4 section 7.2, the child card on the family home): a `<span>` read with the name, never a
  * button (the Needs you strip owns the actions). `action` is the family's own action, in the amber light fill (no border,
  * no dot: the card keeps its shipped border); `info` a dated move.
+ *
+ * With `onActivate` (only the **Class info to read** chip, with the class-scope sheet on: AMENDMENTS-GROWNUP-UX row
+ * GX-5b) it is a button at least `touchTarget.min` tall in the look of `StatusChip`'s action button (amber border,
+ * amber dot, bold), so "this needs you and opens something" looks the same on the family and the class pages and
+ * differs from the plain text chips beside it; named `label` ("{chip}: {reason}"), it opens the class-scope sheet.
  */
-export function TextChip({ text, tone, testId = 'child-status' }: { text: string; tone: 'action' | 'info' | 'quiet'; testId?: string }): JSX.Element {
+export function TextChip({
+  text,
+  tone,
+  testId = 'child-status',
+  onActivate,
+  label,
+}: {
+  text: string;
+  tone: 'action' | 'info' | 'quiet';
+  testId?: string;
+  onActivate?: () => void;
+  label?: string;
+}): JSX.Element {
+  if (onActivate) {
+    return (
+      <button
+        type="button"
+        data-testid={testId}
+        data-tone={tone}
+        aria-label={label}
+        onClick={onActivate}
+        style={{
+          ...chipBase,
+          whiteSpace: 'normal',
+          minHeight: touchTarget.min,
+          padding: `${spacing.sm}px ${spacing.lg}px`,
+          border: `${borderWidth.base}px solid ${colors.feedback.nudge}`,
+          backgroundColor: TONE_FILL[tone],
+          fontWeight: typography.weight.bold,
+          fontFamily: 'inherit',
+          cursor: 'pointer',
+        }}
+      >
+        <Dot color={colors.feedback.nudge} />
+        {text}
+      </button>
+    );
+  }
   return (
     <span data-testid={testId} data-tone={tone} style={{ ...chipBase, whiteSpace: 'normal', backgroundColor: TONE_FILL[tone] }}>
       {text}
