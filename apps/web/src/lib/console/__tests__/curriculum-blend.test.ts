@@ -50,9 +50,9 @@ function published(state: WizardState): { id: string; meta: CurriculumMeta; item
 }
 
 describe('defaultsFor and the meeting block (section 10.1)', () => {
-  it('a class starts with class days to pick, 30 minutes, 0 practice days (BL-OD-12), 10 minutes, overlap, no average kept', () => {
+  it('a class starts with class days to pick, 30 minutes, 3 practice days (BL-OD-12, since BL-10), 10 minutes, overlap, no average kept', () => {
     const state = defaultsFor('class', [], TODAY);
-    expect(state).toMatchObject({ blendMode: 'overlap', lectureDays: [], lectureMinutes: 30, practicePerWeek: 0, practiceMinutes: 10, practiceDays: null, keepAverage: false });
+    expect(state).toMatchObject({ blendMode: 'overlap', lectureDays: [], lectureMinutes: 30, practicePerWeek: 3, practiceMinutes: 10, practiceDays: null, keepAverage: false });
     expect(CLASS_LENGTH_CHOICES).toEqual([15, 20, 30, 45, 60]);
     expect(PRACTICE_COUNT_CHOICES).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
   });
@@ -63,7 +63,7 @@ describe('defaultsFor and the meeting block (section 10.1)', () => {
       { id: 'b', ageGroup: '5-7', summary: null },
       { id: 'c', ageGroup: '8-9', summary: null },
     ];
-    expect(defaultsFor('class', learners, TODAY)).toMatchObject({ practiceMinutes: 5, lectureMinutes: 30, practicePerWeek: 0 });
+    expect(defaultsFor('class', learners, TODAY)).toMatchObject({ practiceMinutes: 5, lectureMinutes: 30, practicePerWeek: 3 });
     expect(PRACTICE_MINUTES_PICTURES_FIRST).toBe(5);
     expect(defaultsFor('class', learners.slice(1), TODAY).practiceMinutes).toBe(10);
   });
@@ -82,7 +82,7 @@ describe('defaultsFor and the meeting block (section 10.1)', () => {
 
 describe('toParams with the meeting block', () => {
   it('0 practice days writes no blend: the class days are the session days (Class only, unchanged generation)', () => {
-    const params = toParams(classState({ lectureDays: ['thu', 'tue'], lectureMinutes: 45 }), ['stage1'], true);
+    const params = toParams(classState({ lectureDays: ['thu', 'tue'], lectureMinutes: 45, practicePerWeek: 0 }), ['stage1'], true);
     expect(params?.blend).toBeUndefined();
     expect(params).toMatchObject({ sessionsPerWeek: 2, sessionDays: ['tue', 'thu'], minutesPerSession: 30 });
   });
@@ -178,8 +178,8 @@ describe('the preview (section 10.2)', () => {
     expect(blendPreviewText(every, 'en')?.header).toMatch(/^About 8 sessions a week on all 7 days: 1 class day \(30 min\) and 7 practice days/);
   });
 
-  it('has nothing to say about a plan without class days', () => {
-    expect(blendPreviewText(generateCurriculum(toParams(classState({ lectureDays: ['tue'] }), ['stage1'], true) ?? (undefined as never), CATALOG))).toBeNull();
+  it('has nothing to say about a Class only plan (0 practice days)', () => {
+    expect(blendPreviewText(generateCurriculum(toParams(classState({ lectureDays: ['tue'], practicePerWeek: 0 }), ['stage1'], true) ?? (undefined as never), CATALOG))).toBeNull();
   });
 
   it('lays one row per class cycle: the class cell with its lessons, the practice cell with lessons and Refresh', () => {

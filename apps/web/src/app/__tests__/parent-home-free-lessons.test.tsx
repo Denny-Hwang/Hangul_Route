@@ -2,7 +2,7 @@ import { getMessages } from '@hangul-route/i18n';
 import type { SpaceRole } from '@hangul-route/content-schema';
 import type { ReactNode } from 'react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import Page from '@/app/(console)/parent/page';
 
 /**
@@ -173,6 +173,12 @@ const cards = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((no
 const lines = (root: ReactTestInstance): ReactTestInstance[] => root.findAll((node) => node.type === 'div' && node.props['data-testid'] === 'free-lessons-line');
 
 describe('the parent home child card with the free-plan switch (F-ENT-003 E3-12c)', () => {
+  // The free-plan switch's own plan reads: class days and practice days (on since AMENDMENTS-ROUTE-CLASS-BLEND BL-10)
+  // also read a family's plans for Pause and Resume, which `parent-home.test.tsx` covers.
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
+  });
+
   it('off: no plans or entitlements read, and no line on the card', async () => {
     const root = await home();
     expect(cards(root)).toHaveLength(1);

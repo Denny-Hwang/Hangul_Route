@@ -111,7 +111,11 @@ async function stepTwo(): Promise<ReactTestInstance> {
   return mounted.root;
 }
 
-describe('the class wizard with the flag off (today exactly)', () => {
+describe('the class wizard with the flag off (the kill switch; the launch state before BL-10)', () => {
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
+  });
+
   it('keeps the class-day and homework-day chips and the pace chips; no meeting block', async () => {
     const root = await stepTwo();
     expect(byTestId(root, 'meeting-block')).toHaveLength(0);
@@ -126,10 +130,7 @@ describe('the class wizard with the flag off (today exactly)', () => {
   });
 });
 
-describe('the class wizard with the flag on (section 10.1)', () => {
-  beforeEach(() => {
-    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
-  });
+describe('the class wizard with the flag on (section 10.1; the launch state since BL-10)', () => {
 
   it('replaces the day and pace chips with the meeting block and asks for a class day first', async () => {
     const root = await stepTwo();
@@ -139,9 +140,10 @@ describe('the class wizard with the flag on (section 10.1)', () => {
     expect(textOf(root)).not.toContain(c.rhythm.daysHint.class);
     expect(textOf(one(root, 'route-problem'))).toBe(c.blend.meeting.pickClassDay);
     expect(one(root, 'route-next').props.disabled).toBe(true);
-    // 0 practice days: no suggested days, no mode cards (a Class only plan).
+    // 3 practice days by default (BL-OD-12), with no class day yet: no suggested days, and the mode cards.
+    expect(one(root, 'practice-count').props.value).toBe(3);
     expect(byTestId(root, 'practice-line')).toHaveLength(0);
-    expect(byTestId(root, 'blend-mode-overlap')).toHaveLength(0);
+    expect(one(root, 'blend-mode-overlap').props['aria-checked']).toBe(true);
     // The pace chips are hidden, so no length line or Suggested tag is read from them.
     expect(byTestId(root, 'length-line-12-week')).toHaveLength(0);
     expect(byTestId(one(root, 'length-12-week'), 'suggested-tag')).toHaveLength(0);
@@ -187,6 +189,7 @@ describe('the class wizard with the flag on (section 10.1)', () => {
   it('with 0 practice days saves a Class only plan on the class days, without blend', async () => {
     const root = await stepTwo();
     await click(root, 'class-day-thu');
+    await choose(root, 'practice-count', '0');
     await click(root, 'route-next');
     await click(root, 'route-see');
     expect(byTestId(root, 'blend-preview-header')).toHaveLength(0);
