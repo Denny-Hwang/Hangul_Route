@@ -137,17 +137,16 @@ describe('RouteReadout: the class practice total of a class plan with practice d
     expect(line).toBe(pseudoText(getMessages('en').console.curriculum.readout.line(4, 7, items.length * 3)));
     expect(line).not.toContain(inPseudo('Mina'));
     expect(html).not.toMatch(/%/);
-    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', '');
   });
 
   it('is not drawn with the flag off, on a class-only route, or with nobody reached', () => {
     const { meta, items } = blended();
+    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'false');
     expect(readout(meta, items, '2026-10-26', rows)).not.toContain('readout-class-practice');
     vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', 'true');
     const plain = route();
     expect(readout(plain.meta, plain.items, '2026-10-26', rows)).not.toContain('readout-class-practice');
     expect(readout(meta, items, '2026-10-26', [])).not.toContain('readout-class-practice');
-    vi.stubEnv('NEXT_PUBLIC_ROUTE_BLEND_ENABLED', '');
   });
 });
 

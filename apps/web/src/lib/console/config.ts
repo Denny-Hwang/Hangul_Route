@@ -27,6 +27,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_PIN_RESET_SIGNIN?: string;
   /** Class days and practice days on the console (AMENDMENTS-ROUTE-CLASS-BLEND section 14): off unless `true` or `1`. */
   NEXT_PUBLIC_ROUTE_BLEND_ENABLED?: string;
+  /** The class-scope text in a sheet on the family home (AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b): on by default (GX-OD-3 yes, 2026-11-07); `false`, `0`, `off`, `no` or `disabled` is the kill switch. */
+  NEXT_PUBLIC_FAMILY_SCOPE_SHEET?: string;
   NODE_ENV?: string;
 }
 
@@ -54,6 +56,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_LOCK_PASSKEY: process.env.NEXT_PUBLIC_LOCK_PASSKEY,
     NEXT_PUBLIC_PIN_RESET_SIGNIN: process.env.NEXT_PUBLIC_PIN_RESET_SIGNIN,
     NEXT_PUBLIC_ROUTE_BLEND_ENABLED: process.env.NEXT_PUBLIC_ROUTE_BLEND_ENABLED,
+    NEXT_PUBLIC_FAMILY_SCOPE_SHEET: process.env.NEXT_PUBLIC_FAMILY_SCOPE_SHEET,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -233,13 +236,36 @@ export function pinResetSignInEnabled(env: ConsoleEnv = buildEnv()): boolean {
 
 /**
  * Class days and practice days on the console (AMENDMENTS-ROUTE-CLASS-BLEND section 14, the one definition every BL
- * row shares): the wizard's meeting block, the readout controls and the lecture card's class-day pick (BL-5). On only
- * with `NEXT_PUBLIC_ROUTE_BLEND_ENABLED` set to `'true'` or `'1'` (the `learningRouteEnabled()` parse); off by default
- * until BL-10 flips it after its end-to-end run.
+ * row shares): the wizard's meeting block, the readout controls and the lecture card's class-day pick (BL-5). On by
+ * default since row BL-10 (BL-OD-12: both switches flip after the end-to-end run and the multi-agent review): exactly
+ * `false`, `0`, `off`, `no` or `disabled` (case and spaces ignored) switches it off on a build, the same values as the
+ * app's `parseLectureSwitch`, so one value turns both sides off. Off, no new blended plan can be made; a published one still derives on every device (section 14).
  */
 export function routeBlendEnabled(env: ConsoleEnv = buildEnv()): boolean {
-  const raw = env.NEXT_PUBLIC_ROUTE_BLEND_ENABLED;
-  return raw === 'true' || raw === '1';
+  const value = env.NEXT_PUBLIC_ROUTE_BLEND_ENABLED?.trim().toLowerCase();
+  return !(value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled');
+}
+
+/**
+ * The class-scope sheet when the build sets no value: on. It moves a consent surface (the class-scope text, TV-D5);
+ * the owner answered AMENDMENTS-GROWNUP-UX GX-OD-3 yes on 2026-11-07, so the default is the sheet. The build can still
+ * turn it off (`NEXT_PUBLIC_FAMILY_SCOPE_SHEET=false`, a kill switch that needs no code change).
+ */
+const FAMILY_SCOPE_SHEET_LAUNCH_DEFAULT = true;
+
+/**
+ * The class-scope text in a sheet (AMENDMENTS-GROWNUP-UX section 7.3, row GX-5b). On, the family home draws no
+ * class-scope card: the Needs you strip's **Read and OK** and the child's **Class info to read** chip open the same
+ * text, verbatim and with its list open, in a sheet whose **OK** writes the acknowledgement. Off (the kill switch), the
+ * shipped card stays under the strip and Read and OK scrolls to it. `false`, `0`, `off`, `no` or `disabled` turns it off
+ * and `true`, `1`, `on`, `yes` or `enabled` on (case and spaces ignored); anything else, or none, is the launch default
+ * (on, GX-OD-3 yes).
+ */
+export function familyScopeSheetEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const value = env.NEXT_PUBLIC_FAMILY_SCOPE_SHEET?.trim().toLowerCase();
+  if (value === 'true' || value === '1' || value === 'on' || value === 'yes' || value === 'enabled') return true;
+  if (value === 'false' || value === '0' || value === 'off' || value === 'no' || value === 'disabled') return false;
+  return FAMILY_SCOPE_SHEET_LAUNCH_DEFAULT;
 }
 
 export const DEFAULT_APP_URL = 'https://app.hangulroute.com';
