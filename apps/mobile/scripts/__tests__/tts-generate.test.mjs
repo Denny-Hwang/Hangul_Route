@@ -553,7 +553,12 @@ describe('the command (its own process, as the package script runs it)', () => {
     expect(r.stderr).toBe('');
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/No network: nothing is sent/);
-    expect(r.stdout.split('\n').filter((l) => l.startsWith('request polly/Seoyeon audio/jamo/'))).toHaveLength(43);
+    // AC-7: the 43 jamo-s1 rows are in the committed lock (generated 2026-11-07), so a rerun sends nothing; jamo-wb is next.
+    expect(r.stdout).toMatch(/Seoyeon: 0 requests, 43 skipped/);
+    expect(r.stdout.split('\n').filter((l) => l.startsWith('request polly/Seoyeon audio/jamo/'))).toHaveLength(0);
+    const wb = run(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'jamo-wb', '--dry-run'], { CI: 'true' });
+    expect(wb.status).toBe(0);
+    expect(wb.stdout.split('\n').filter((l) => l.startsWith('request polly/Seoyeon audio/jamo/'))).toHaveLength(22);
   }, TIMEOUT);
 
   it('refuses a voice other than the locked one, and --allow-other-voice is the explicit override', () => {

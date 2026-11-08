@@ -912,6 +912,8 @@ export const landing = {
     lead: 'Hangul Route uses open-source software and a font made by other people. Each one keeps its own license. This page lists them, with their copyright lines and the full license texts.',
     notOpen: 'Hangul Route itself is not open source.',
     copyright: 'Copyright (c) 2026 Sungjoo Hwang. All rights reserved.',
+    /** AMENDMENTS-AUDIO-CLIPS AC-B10 (owner decision 2026-11-06: the vendor is Amazon Polly). No copy names the voice or says "native speaker" (AD12). */
+    audioCredit: 'Korean audio is computer-generated (Amazon Polly) and checked by automated speech recognition and a multi-agent review.',
     softwareTitle: 'Software',
     fontsTitle: 'Fonts',
     noticesTitle: 'NOTICE files',

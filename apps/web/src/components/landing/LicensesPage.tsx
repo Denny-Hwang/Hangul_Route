@@ -50,6 +50,9 @@ export function LicensesPage({ locale = DEFAULT_LOCALE, notices = THIRD_PARTY_NO
         >
           {t.notOpen} {t.copyright}
         </p>
+        <p data-testid="licenses-audio-credit" style={{ color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
+          {t.audioCredit}
+        </p>
 
         <section aria-labelledby="licenses-software" style={{ marginTop: spacing.xl }}>
           <h2 id="licenses-software" style={{ fontSize: rem(typography.size.title) }}>

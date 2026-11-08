@@ -390,6 +390,7 @@ export const landing = {
     lead: 'Hangul Route는 다른 사람들이 만든 오픈소스 소프트웨어와 글꼴을 써요. 각각 자기 라이선스를 따라요. 이 페이지에서 저작권 표시와 라이선스 전문을 볼 수 있어요.',
     notOpen: 'Hangul Route 자체는 오픈소스가 아니에요.',
     copyright: '© 2026 Sungjoo Hwang. 모든 권리 보유.',
+    audioCredit: '한국어 음성은 컴퓨터로 생성한 것(Amazon Polly)이며, 자동 음성 인식과 여러 에이전트의 검토로 확인해요.',
     softwareTitle: '소프트웨어',
     fontsTitle: '글꼴',
     noticesTitle: 'NOTICE 파일',

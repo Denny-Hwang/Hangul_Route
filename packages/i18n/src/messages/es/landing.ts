@@ -391,6 +391,7 @@ export const landing = {
     lead: 'Hangul Route usa software de código abierto y una fuente tipográfica que hicieron otras personas. Cada uno mantiene su propia licencia. Esta página los muestra con sus avisos de copyright y el texto completo de cada licencia.',
     notOpen: 'Hangul Route en sí no es de código abierto.',
     copyright: 'Copyright (c) 2026 Sungjoo Hwang. Todos los derechos reservados.',
+    audioCredit: 'El audio en coreano está generado por computadora (Amazon Polly) y se comprueba con reconocimiento automático de voz y una revisión de varios agentes.',
     softwareTitle: 'Software',
     fontsTitle: 'Fuentes',
     noticesTitle: 'Archivos NOTICE',
