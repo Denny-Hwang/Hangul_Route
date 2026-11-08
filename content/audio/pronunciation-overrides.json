@@ -1,4 +1,95 @@
 {
   "schemaVersion": 1,
-  "overrides": {}
+  "overrides": {
+    "디귿": {
+      "say": "디귿.",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 티귿 / 티켓 (the lenis onset reads as aspirated); a full stop asks for a calm falling statement; 디긋 is the same sound as [디귿]",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "디긋"
+      ]
+    },
+    "라": {
+      "say": "라!",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 나 (the flap onset is too soft); an exclamation gives the onset more energy",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "리을": {
+      "say": "리을.",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 리 / 띠을 (the final 을 is dropped and the onset is tense); a full stop closes the name",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "바": {
+      "say": "바…",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 파 (the lenis onset reads as aspirated); a trailing ellipsis slows the syllable; 파 keeps its own text, so the two stay different clips",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "비읍": {
+      "say": "비읍.",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 피읍 (the lenis onset reads as aspirated); a full stop asks for a calm falling statement",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "지읒": {
+      "say": "지읃",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 치읓 (the aspirated onset); sent as the isolated pronunciation [지읃] (AC-B3 table), which the QA accepts for 지읒",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "지읃"
+      ]
+    },
+    "키읔": {
+      "say": "키윽",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 키 (the final is dropped); sent as the isolated pronunciation [키윽] (AC-B3 table), which the QA accepts for 키읔",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "키윽"
+      ]
+    },
+    "피읖": {
+      "say": "피읍",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 피윽 (the final is mistaken); sent as the isolated pronunciation [피읍] (AC-B3 table), which the QA accepts for 피읖",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "피읍"
+      ]
+    },
+    "악": {
+      "say": "악!",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 압 (the unreleased final is not closed); the interjection form 악! closes the stop; 압 keeps its own text, so the two stay different clips",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "압": {
+      "say": "압!",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 앞 / 아 (the unreleased final is weak); the interjection form 압! closes the stop; 악 keeps its own text, so the two stay different clips",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "어": {
+      "say": "어!",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): free transcript 아 and Pass 2 prefers 오 (MAR split on the first take); an exclamation opens the vowel",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "까": {
+      "say": "까!",
+      "reason": "2026-11-06 pilot QA (Whisper large-v3 Pass 1; failed for Seoyeon, Jihye and Google alike): heard 가 (the tense onset is lost); an exclamation gives the onset more energy; 가 and 카 keep their own text",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "짜": {
+      "say": "짜!",
+      "reason": "2026-11-06 pilot QA (Whisper large-v3 Pass 1; failed for Seoyeon, Jihye and Google alike): heard 자 (the tense onset is lost); an exclamation gives the onset more energy; 자 and 차 keep their own text",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    }
+  }
 }

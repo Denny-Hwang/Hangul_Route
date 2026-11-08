@@ -9,8 +9,16 @@ const entry = { say: '궁물', reason: 'nasal assimilation (QA heard 국물 as �
 const file = (overrides) => ({ schemaVersion: 1, overrides });
 
 describe('content/audio/pronunciation-overrides.json', () => {
-  it('the committed file is valid and starts with no entries (none is applied by default)', () => {
-    expect(parseOverrides(JSON.parse(readFileSync(FILE, 'utf8')))).toEqual({});
+  it('the committed file is valid and holds only the second-take overrides of the real jamo runs (Polly Seoyeon)', () => {
+    const overrides = parseOverrides(JSON.parse(readFileSync(FILE, 'utf8')));
+    expect(Object.keys(overrides).sort()).toEqual(['까', '디귿', '라', '리을', '바', '비읍', '악', '압', '어', '지읒', '짜', '키읔', '피읖'].sort());
+    for (const o of Object.values(overrides)) expect([o.engine, o.voice]).toEqual(['polly', 'Seoyeon']);
+  });
+
+  it('the pairs that must sound different keep their own text and so their own clip: 악 / 압, 바 / 파 (and 가 / 카, 자 / 차)', () => {
+    const overrides = parseOverrides(JSON.parse(readFileSync(FILE, 'utf8')));
+    const say = (t) => overrides[t]?.say ?? `${t}.`;
+    for (const [a, b] of [['악', '압'], ['바', '파'], ['가', '카'], ['자', '차'], ['까', '가'], ['짜', '자']]) expect(say(a)).not.toBe(say(b));
   });
 });
 
