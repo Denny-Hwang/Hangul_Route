@@ -72,7 +72,10 @@ const CANT_CHECK: GateStep = { kind: 'locked', cause: 'unknown', action: 'try_ag
 export function gateStep(input: GateDecisionInput): GateStep {
   const { gate } = input;
   // Row NS-4 review: an open screen whose session lapsed closes the session (the area goes; the next entry asks again).
-  if (input.opened && input.sessionLapsed) return { kind: 'close' };
+  // Row NS-7 (CS-N2, found by the child-safety suite): so does a page opened from inside the account routes on a `pin`
+  // device once that session is over (OA-D5b: moving inside keeps the 15 minutes, and no longer), before it shows or
+  // reads anything. A device with no PIN starts over as a new visit instead (the close ends its sign-in, ND-9).
+  if (input.sessionLapsed && (input.opened || (!input.enteredFromOutside && gate.state === 'pin'))) return { kind: 'close' };
   // `unknown` and `nopin` are decided by `accountLock` before anything Clerk says; any other state needs Clerk.
   if (gate.state !== 'unknown' && gate.state !== 'nopin') {
     if (input.clerk === 'off') return CANT_CHECK;

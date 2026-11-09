@@ -115,8 +115,22 @@ describe('the 15-minute session (OA-D5, row NS-4 review)', () => {
     expect(step({ opened: true, sessionLapsed: true, gate: { state: 'open' }, signedInThisVisit: true })).toEqual({ kind: 'close' });
   });
 
-  it('before the first open it is not read (the entry’s own proof decides)', () => {
+  it('before the first open of a screen entered from outside it is not read (the entry’s own proof decides)', () => {
     expect(step({ sessionLapsed: true })).toEqual({ kind: 'open' });
+    expect(step({ sessionLapsed: true, fresh: false })).toEqual({ kind: 'ask_pin' });
+  });
+
+  it('row NS-7 (CS-N2): a page opened from inside the account routes after the session ended closes it on pin, before anything opens', () => {
+    const inside = { enteredFromOutside: false, fresh: false, sessionLapsed: true };
+    expect(step(inside)).toEqual({ kind: 'close' });
+    expect(step({ ...inside, screen: 'sign_in', signedIn: false })).toEqual({ kind: 'close' });
+    expect(step({ ...inside, trust: null })).toEqual({ kind: 'close' });
+    // Inside the session it opens without a new PIN (OA-D5b).
+    expect(step({ ...inside, sessionLapsed: false })).toEqual({ kind: 'open' });
+    // A device with no PIN starts over as a new visit (the sign-in), never a close loop; unknown and nopin decide first.
+    expect(step({ ...inside, gate: { state: 'open' } })).toEqual({ kind: 'to_sign_in' });
+    expect(step({ ...inside, gate: { state: 'unknown' } })).toEqual({ kind: 'locked', cause: 'unknown', action: 'try_again' });
+    expect(step({ ...inside, gate: { state: 'nopin' } })).toEqual({ kind: 'setup' });
   });
 });
 
