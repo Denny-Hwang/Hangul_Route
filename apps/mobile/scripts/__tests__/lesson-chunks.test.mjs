@@ -671,13 +671,13 @@ describe('precacheReport and its budget lines', () => {
     // 4,905,865 B (main alone 4,902,157 B): 4,910,000 B.
     // The KT tail integration (KT-4b, KT-5, KT-6 and KT-7) on main dc09f0faa measures 4,916,987 B (main alone 4,909,799 B): 4,920,000 B.
     // AC-7 (the 32 shipped `jamo-s1` clips) measures 4,924,620 B (release build, CI=1): 4,928,000 B.
-    // PR #1022 (Welcome's Korean title ceiling) measures 4,927,992 B release and 4,928,148 B on the CI app-host build: 4,928,300 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_928_300);
-    for (const measured of [4_927_992, 4_928_148, 4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987]) {
+    // AC-8 (stage1 and placement clips, with AC-7 part 2) measures 4,928,160 B (release build, CI=1): 4,932,000 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_932_000);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_924_620).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_928_160).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

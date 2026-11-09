@@ -367,6 +367,23 @@ export type DeviceUses = z.infer<typeof DeviceUsesSchema>;
 const PinEpoch = z.number().finite().positive();
 
 /**
+ * F-AUTH-004 sections 7.3 and 13.1 (row NS-1): the native trust record (`hr:grownup:trust`), the device's PIN epoch
+ * (a positive whole number) at the last native grown-up sign-in. The account rows open with the PIN only while the
+ * device's epoch equals it; epoch `0` never qualifies. Device-local, never sent, and holds no account id (unknown keys
+ * are stripped).
+ */
+export const AccountTrustSchema = z.object({ v: z.literal(1), epoch: PinEpoch.int() });
+export type AccountTrust = z.infer<typeof AccountTrustSchema>;
+
+/**
+ * F-AUTH-004 sections 9.4 and 13.2 (row NS-1): the header the native app sends on every account request. The Worker
+ * answers it with the billing status view, refuses it on every money route (`403 not_in_app`, `NATIVE_MONEY_GUARD`) and,
+ * with `NATIVE_ACCOUNT` off, on every account route (`403 native_off`). The app's own statement, never an authentication.
+ */
+export const NATIVE_CLIENT_HEADER = 'X-HR-Client';
+export const NATIVE_CLIENT_VALUE = 'native';
+
+/**
  * [OA] Section 7.2: shell store `pinOwner`. `owner` is the first 16 hex digits of SHA-256 of the Clerk user id;
  * `epoch` is the marker's `pinEpoch` it was recorded for. Local only, never sent.
  */
@@ -481,7 +498,8 @@ export const OA_TELEMETRY_PAYLOADS = {
     .object({
       // [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12: `try` (Try the first quest) and `guest` (the guest's tile).
       kind: z.enum(['learner', 'locked_learner', 'grown_up', 'add', 'cancel_reset', 'try', 'guest']),
-      use: z.enum(['family', 'teacher', 'school', 'area', 'signin']).optional(),
+      // F-AUTH-004 section 7.1 (row NS-1, Worker first): `account`, the native Grown-up account row of a uses record with no use.
+      use: z.enum(['family', 'teacher', 'school', 'area', 'signin', 'account']).optional(),
     })
     .strict(),
   'pin.paused': z.object({ step: wholeIn(1, PIN_PAUSE_STEPS_MS.length) }).strict(),
