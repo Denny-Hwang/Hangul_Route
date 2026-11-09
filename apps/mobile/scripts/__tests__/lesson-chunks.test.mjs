@@ -430,7 +430,7 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[3]], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
   });
 
-  it('a pack\'s clip map is a marked chunk too: never in the start bundle, precached (AC-B6)', () => {
+  it('a pack\'s clip map is a marked chunk too: never in the start bundle; precached, or runtime-cached when asked (AC-B6, AC-10)', () => {
     const pack = { name: 'audio-pack-stage1', marker: 'audio-pack:stage1' };
     const text = `__d(function(){var m="${pack.marker}"})`;
     const chunk = { url: `${WEB_JS_DIR}/audio-pack-stage1-${md5(text)}.js`, text };
@@ -438,6 +438,11 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(markedChunkProblems({ chunks: [pack], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
     expect(markedChunkProblems({ chunks: [pack], bundles: [{ url: START, text: `${text};` }, chunk], precached: all([chunk]) })).toEqual([
       `audio-pack-stage1 is in the start bundle ${START}: a static import pulled it in`,
+    ]);
+    // AC-10: the clip map chunks are runtime-cached like the later chunks (the clips they map are), never precached.
+    expect(markedChunkProblems({ chunks: [pack], bundles: [start, chunk], precached: all([start]), runtime: true })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [pack], bundles: [start, chunk], precached: all([start, chunk]), runtime: true })).toEqual([
+      `${chunk.url} is a runtime-cached chunk in the learner precache`,
     ]);
     const report = precacheReport({ manifest: [], audioPacks: [pack], clips: { count: 43, bytes: 350_000 }, bundles: [start, chunk], precache: { count: 3, size: 99 } });
     expect(report.audioPackChunks.count).toBe(1);

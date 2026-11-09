@@ -484,9 +484,11 @@ export const SCENE_CHUNKS = Object.freeze([
  * has exactly one bundle, named after it, whose file name is the md5 of its content, that carries its marker and is
  * precached, and no start bundle carries a marker (a static import would pull the chunk back in: Metro then leaves
  * an empty bundle behind).
- * @param {{ chunks?: readonly { name: string, marker: string }[], bundles: { url: string, text: string }[], precached: string[] }} input
+ * With `runtime`, the chunks are runtime-cached instead (the clip map chunks of the packs outside the precache,
+ * AMENDMENTS-AUDIO-CLIPS AC-B6 as amended by AC-10): each must then be left out of the precache.
+ * @param {{ chunks?: readonly { name: string, marker: string }[], bundles: { url: string, text: string }[], precached: string[], runtime?: boolean }} input
  */
-export function markedChunkProblems({ chunks = [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...SCREEN_CHUNKS], bundles, precached }) {
+export function markedChunkProblems({ chunks = [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...SCREEN_CHUNKS], bundles, precached, runtime = false }) {
   const problems = [];
   const listed = new Set(precached.map((u) => u.replace(/^\/+/, '')));
   const starts = bundles.filter((b) => isStartBundle(b.url));
@@ -504,7 +506,8 @@ export function markedChunkProblems({ chunks = [...LOCALE_CHUNKS, ...ROOT_CHUNKS
     for (const bundle of own) {
       if (!quoted.some((q) => bundle.text.includes(q))) problems.push(`${bundle.url} does not carry ${marker}: it is not ${name}'s chunk (or it is empty)`);
       if (NAMED.exec(bundle.url)?.[2] !== md5(bundle.text)) problems.push(`${bundle.url}: its file name is not the md5 of its content`);
-      if (!listed.has(bundle.url)) problems.push(`${bundle.url} is missing from the precache`);
+      if (runtime && listed.has(bundle.url)) problems.push(`${bundle.url} is a runtime-cached chunk in the learner precache`);
+      if (!runtime && !listed.has(bundle.url)) problems.push(`${bundle.url} is missing from the precache`);
     }
   }
   return problems;
@@ -629,7 +632,7 @@ export function reportLines(report, budget = PRECACHE_BUDGET) {
     );
   }
   if (report.audioPackChunks !== undefined && report.audioPackChunks.count > 0) {
-    lines.push(`  clip map chunks  ${report.audioPackChunks.count} bundles  ${report.audioPackChunks.raw} B raw  ${report.audioPackChunks.gzip} B gzip`);
+    lines.push(`  clip map chunks  ${report.audioPackChunks.count} bundles  ${report.audioPackChunks.raw} B raw  ${report.audioPackChunks.gzip} B gzip  (runtime-cached, not in the learner precache)`);
   }
   if (report.clips !== undefined && report.clips.count > 0) {
     lines.push(`  precached clips  ${report.clips.count} files  ${report.clips.bytes} B  (ceiling ${budget.precachedClipsRaw} B, jamo-s1 only)`);
