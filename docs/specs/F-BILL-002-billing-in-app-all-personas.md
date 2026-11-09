@@ -236,6 +236,7 @@ What this means in code (B-9), enforced by tests:
 2. The Profile card on native never shows "Unlock" or "Buy" wording; it shows **Plan details**.
 3. Native builds keep reading the inbox tier for every source (family, class, school), as today (`store/tier-store.ts`). The constraint in OD-5 is a release rule, not a code switch.
 4. Nothing in the native app takes a promo code (F-ENT-002 §3.4, unchanged).
+5. The in-app learner report (F-REPORT-001 section 3.9, `logic/reports/report-view.ts`) leaves out the free-end line `report.insight.free_days_done` ("{name} finished the free lessons." / "You finished the free lessons.") on `ios` and `android`. Where nothing can be bought, a line saying the free part is over points to buying elsewhere; this is the same reasoning as F-AUTH-004 NS-0b decision D14, which drops the line from the native account report and adds `free lessons`, `lecciones gratuitas` and `무료레슨` to the section 9.2 deny list. **As built (2026-11-09):** `inAppReportView` takes `platform` (`Platform.OS`), and `insightView` words the line only on `web`. A practice-next section that is left empty loses its heading, as every empty report section does. The web and the PWA are unchanged. Unit tests in `logic/reports/__tests__/report-view.test.ts` cover `web`, `ios` and `android` in both voices.
 
 ### 4.9 Test mode, live mode, prices
 
