@@ -157,6 +157,19 @@ describe('offlinePacksIndex', () => {
     expect(s5).toEqual({ stage: 'stage5', bytes: 45_000, files: [{ url: `/${later[1].url}`, bytes: 45_000, cache: LATER_CACHE }] });
   });
 
+  it('a listed stage also carries its clip map chunk (runtime-cached, AC-10); a pack chunk of a stage with nothing to save is left out', () => {
+    const packChunks = [
+      { stage: 'stage2', url: `_expo/static/js/web/audio-pack-stage2-${'b'.repeat(32)}.js`, bytes: 14_000 },
+      { stage: 'stage3', url: `_expo/static/js/web/audio-pack-stage3-${'c'.repeat(32)}.js`, bytes: 31_000 },
+      { stage: 'stories', url: `_expo/static/js/web/audio-pack-stories-${'d'.repeat(32)}.js`, bytes: 60_000 },
+    ];
+    const withMaps = offlinePacksIndex({ later, clips, packOf: (ref) => packs.get(ref), packChunks });
+    expect(withMaps.stages.map((s) => s.stage)).toEqual(['stage2', 'stage5']);
+    expect(withMaps.stages[0].files).toContainEqual({ url: `/${packChunks[0].url}`, bytes: 14_000, cache: LATER_CACHE });
+    expect(withMaps.stages[0].bytes).toBe(45_000 + 14_000);
+    expect(withMaps.stages[1]).toEqual(index.stages[1]);
+  });
+
   it('is empty with no later content (a build before any Volume 2 ships)', () => {
     expect(offlinePacksIndex({ later: [] })).toEqual({ version: OFFLINE_PACKS_VERSION, stages: [] });
   });

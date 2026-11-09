@@ -139,9 +139,12 @@ export function laterRuntimeCaching(later) {
  * the clips of the stage's audio pack, `stage<n>`), each with its bytes and its cache, and the stage's total. A stage
  * with clips and no later chunk is left out: its lessons are precached and its clips warm on first use (AC-6), so
  * there is nothing a grown-up needs to save.
- * @param {{ later: readonly { stage: string, url: string, bytes: number }[], clips?: readonly { url: string, bytes: number }[], packOf?: (ref: string) => string | undefined }} input
+ * A stage that is listed also gets its clip map chunk (`audio-pack-stage<n>`, `packChunks`): it is runtime-cached like
+ * the later chunks (AMENDMENTS-AUDIO-CLIPS AC-B6 as amended by AC-10), so a saved stage carries the map its saved clips
+ * are found through.
+ * @param {{ later: readonly { stage: string, url: string, bytes: number }[], clips?: readonly { url: string, bytes: number }[], packOf?: (ref: string) => string | undefined, packChunks?: readonly { stage: string, url: string, bytes: number }[] }} input
  */
-export function offlinePacksIndex({ later, clips = [], packOf = () => undefined }) {
+export function offlinePacksIndex({ later, clips = [], packOf = () => undefined, packChunks = [] }) {
   const stages = new Map();
   const add = (stage, file) => {
     const list = stages.get(stage) ?? [];
@@ -157,6 +160,7 @@ export function offlinePacksIndex({ later, clips = [], packOf = () => undefined 
     // playing other clips never pushes a saved one out of the bounded runtime caches.
     add(pack, { url: `/${clip.url.replace(/^\/+/, '')}`, bytes: clip.bytes, cache: OFFLINE_AUDIO_CACHE });
   }
+  for (const c of packChunks) if (stages.has(c.stage)) add(c.stage, { url: `/${c.url}`, bytes: c.bytes, cache: LATER_CACHE });
   return {
     version: OFFLINE_PACKS_VERSION,
     stages: [...stages.entries()]
