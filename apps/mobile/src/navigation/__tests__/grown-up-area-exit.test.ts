@@ -303,3 +303,58 @@ describe('leaveGrownUpAreaOnClose', () => {
     }
   });
 });
+
+// F-AUTH-004 row NS-2 (section 6.1): with the native account on, the root route `ParentDashboard` is a nested stack
+// whose first route is the dashboard under the same name. The session rules read it unchanged.
+describe('the nested Grown-up area stack (F-AUTH-004 NS-2)', () => {
+  const nested = { name: 'ParentDashboard', key: 'area', state: { index: 0, routes: [{ name: 'ParentDashboard', key: 'area-dashboard' }] } };
+
+  it('leaving the nested dashboard for a learner screen closes the session; moving to an area page above it does not', () => {
+    const nav = fakeNav();
+    const close = vi.fn();
+    const stop = watchGrownUpAreaExit(nav, close);
+    // getCurrentRoute() names the focused leaf: the nested dashboard.
+    nav.go('ParentDashboard');
+    nav.go('LearnerReport', { profileId: 'p' });
+    nav.go('ParentDashboard');
+    expect(close).not.toHaveBeenCalled();
+    nav.go('Home');
+    expect(close).toHaveBeenCalledTimes(1);
+    stop();
+  });
+
+  it('a close takes the whole nested route off the root stack (its provider unmounts with it)', () => {
+    let routes: { name: string; key?: string; params?: unknown; state?: unknown }[] = [{ name: 'Main', key: 'm' }, nested];
+    const dispatched: ResetAction[] = [];
+    const nav: AreaLeaveTarget = {
+      getCurrentRoute: () => ({ name: 'ParentDashboard', key: 'area-dashboard' }),
+      getRootState: () => ({ routes }),
+      dispatch: (action) => {
+        dispatched.push(action);
+        routes = action.payload.routes;
+      },
+    };
+    opensWithoutPin.value = false;
+    const stop = leaveGrownUpAreaOnClose(nav, () => false);
+    fire();
+    expect(dispatched[0]?.payload.routes).toEqual([{ name: 'Main', key: 'm' }, { name: 'PinEntry', params: { next: 'ParentDashboard' } }]);
+    stop();
+  });
+
+  it('a learner screen in front: the nested route under it goes, the screen stays', () => {
+    let routes: { name: string; key?: string; params?: unknown; state?: unknown }[] = [{ name: 'Main', key: 'm' }, nested, { name: 'Placement', key: 'pl' }];
+    const dispatched: ResetAction[] = [];
+    const nav: AreaLeaveTarget = {
+      getCurrentRoute: () => ({ name: 'Placement', key: 'pl' }),
+      getRootState: () => ({ routes }),
+      dispatch: (action) => {
+        dispatched.push(action);
+        routes = action.payload.routes;
+      },
+    };
+    const stop = leaveGrownUpAreaOnClose(nav, () => false, undefined, (task) => task());
+    fire({ reason: 'exit' });
+    expect(dispatched[0]?.payload.routes).toEqual([{ name: 'Main', key: 'm' }, { name: 'Placement', key: 'pl' }]);
+    stop();
+  });
+});
