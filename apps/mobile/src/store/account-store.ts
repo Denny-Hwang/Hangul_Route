@@ -558,6 +558,10 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     const record: PinResetByWait = { v: 1, at };
     set({ pinResetByWait: record });
     void writeJson(PIN_RESET_BY_WAIT_KEY, record);
+    // F-AUTH-004 section 7.3 (row NS-3; R-1, CS-N3): on iOS and Android the native account keeps its own copy
+    // (`hr:grownup:retrustRequired`, `RETRUST_REQUIRED_KEY`), which the Grown-up area's notice never deletes and only a
+    // sign-in that writes the trust does, whatever the native account's switch says. Folded away on the web.
+    if (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') void writeJson('grownup:retrustRequired', record);
   },
 
   clearPinResetByWait: () => {

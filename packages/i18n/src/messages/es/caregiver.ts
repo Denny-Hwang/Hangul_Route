@@ -899,4 +899,45 @@ export const caregiver = {
     guestRemoveAsk: '¿Quitar la primera misión?',
     guestConfirm: 'La tarjeta y las estrellas de esta misión se quitan de este navegador.',
   },
+  /** F-AUTH-004 17.1 y 17.2 (NS-3): el acceso de adultos en iOS y Android, sus líneas, la tarjeta de cuenta y Salir. */
+  account: {
+    signIn: {
+      title: 'Acceso para adultos',
+      intro: 'Inicia sesión con la cuenta de adulto de tu familia, clase o escuela.',
+      learners: 'Los estudiantes no necesitan cuenta.',
+      noNewAccounts: 'Esta app no crea cuentas nuevas de adulto.',
+      email: 'Correo',
+      codeSent: (email: string) => `Enviamos un código de 6 dígitos a ${email}.`,
+      deviceCheck: 'Te enviamos un código para verificar este dispositivo nuevo.',
+      code: 'Código',
+      password: 'Contraseña',
+      secondStep: 'Escribe el código de tu segundo paso de acceso.',
+      submit: { cta: 'Entrar' },
+      resend: { cta: 'Enviar otro código' },
+      usePassword: { cta: 'Usar mi contraseña' },
+      useCode: { cta: 'Enviarme un código' },
+      useBackup: { cta: 'Usar código de respaldo' },
+      changeEmail: { cta: 'Usar otro correo' },
+    },
+    errors: {
+      wrongCode: 'Ese código no funcionó. Revísalo e inténtalo de nuevo.',
+      codeExpired: 'Ese código ya no sirve. Pide otro código.',
+      wrongPassword: 'La contraseña no funcionó. Revísala e inténtalo de nuevo.',
+      cantSignIn: 'No pudimos iniciar sesión con ese correo.',
+      tooMany: 'Demasiados intentos. Espera unos minutos y reinténtalo.',
+      unsupported: 'Esta cuenta necesita un paso de acceso que esta app no tiene.',
+      generic: 'Ahora no se puede iniciar sesión. Reinténtalo en un momento.',
+    },
+    lock: {
+      cantCheck: 'Ahora no podemos verificar este dispositivo. Reinténtalo en un momento.',
+      retrustPassword: 'Este PIN cambió desde tu último acceso aquí. Inicia sesión con tu contraseña para usarlo.',
+    },
+    card: {
+      title: 'Cuenta de adulto',
+      signedOut: 'Inicia sesión para ver aquí tu familia, tus clases y tu escuela.',
+    },
+    signOut: {
+      ask: '¿Salir de esta cuenta en este dispositivo?',
+    },
+  },
 } satisfies DeepPartial<Messages['caregiver']>;

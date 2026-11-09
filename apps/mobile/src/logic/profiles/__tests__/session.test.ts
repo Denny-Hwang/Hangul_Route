@@ -1,5 +1,5 @@
 import { GROWN_UP_BACKGROUND_MS, GROWN_UP_FRESH_PIN_MS } from '@hangul-route/content-schema';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   PARENT_SESSION_MS,
   areaExitTracker,
@@ -229,5 +229,28 @@ describe('[OA] closeOnChooser (CS-2)', () => {
 
   it('with nothing open it still clears the tab and posts the lock, and says nothing was closed', () => {
     expect(closeOnChooser({ parentGateOpenedAt: null, lastPinVerifiedAt: null })).toMatchObject({ closed: false, clearTab: true, postLock: true });
+  });
+});
+
+describe('F-AUTH-004 (row NS-3): the native account routes are Grown-up area routes on iOS and Android only', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it.each(['ios', 'android'])('%s: SignIn is in the area, so opening it from the dashboard closes no session', async (os) => {
+    vi.stubEnv('EXPO_OS', os);
+    vi.resetModules();
+    const fresh = await import('../session');
+    expect(fresh.routeZone('SignIn')).toBe('area');
+    const left = fresh.areaExitTracker();
+    expect(left(fresh.routeZone('ParentDashboard'))).toBe(false);
+    expect(left(fresh.routeZone('SignIn'))).toBe(false);
+  });
+
+  it('web: the route does not exist there, and an unknown name stays a learner screen (the safe side)', async () => {
+    vi.stubEnv('EXPO_OS', 'web');
+    vi.resetModules();
+    expect((await import('../session')).routeZone('SignIn')).toBe('learner');
   });
 });

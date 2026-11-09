@@ -14,7 +14,7 @@ import {
 import { type StageKey } from '@hangul-route/content-schema';
 import { formatDate, levelWords, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useMemo, useRef } from 'react';
+import { createElement, useEffect, useMemo, useRef } from 'react';
 import type { ReactElement } from 'react';
 import { Platform, View, type TextStyle } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
@@ -147,9 +147,26 @@ export function ParentDashboardScreen({ navigation, route }: Props): ReactElemen
             onPress={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })}
             testID="dashboard-switch-user"
           />
+          {/* F-AUTH-004 section 7.1, design D7 (row NS-3): on iOS and Android the Grown-up account card sits here, after
+              Switch user and before People on this device (it draws nothing while the native account is off, CS-N13).
+              babel-preset-expo inlines EXPO_OS and Metro drops the dead branch, so the web bundle keeps the Spacer alone,
+              byte for byte, and never carries the card's module (web-bundle-guard.test.ts). */}
+          {process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? (
+            <>
+              <Spacer size="lg" />
+              {createElement((require('../account/AccountCard') as typeof import('../account/AccountCard')).AccountCard, { navigation })}
+            </>
+          ) : (
+            <Spacer size="lg" />
+          )}
           {/* [OA] People on this device (row OA-7a, section 10.1): every learner on the device, each opening its person page. */}
-          <Spacer size="lg" />
           <PeopleOnDeviceCard profiles={profiles} onOpen={(profileId) => navigation.navigate('PersonOnDevice', { profileId })} guest={guestRow} />
+        </>
+      ) : process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? (
+        // F-AUTH-004 section 7.1 (row NS-3): the account card does not depend on the chooser's switch (folded away on the web).
+        <>
+          <Spacer size="lg" />
+          {createElement((require('../account/AccountCard') as typeof import('../account/AccountCard')).AccountCard, { navigation })}
         </>
       ) : null}
       <Spacer size="lg" />

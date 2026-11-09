@@ -389,4 +389,10 @@ export const a11y = {
     },
   },
   journeyVolume: (n: number) => `Abre el volumen ${n}`,
+  /** F-AUTH-004 17.4 (NS-3, NS-5). */
+  account: {
+    codeField: 'Código de acceso, 6 dígitos',
+    joinCode: (code: string) => `Código ${code}. Cópialo para compartir.`,
+    planBlock: 'Plan de este espacio',
+  },
 } satisfies DeepPartial<Messages['a11y']>;

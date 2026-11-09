@@ -668,7 +668,13 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
   // [OA] The console's sign-in reset ticket opens setup titled Choose a new grown-up PIN (section 8.5 step 5).
   const setupTitle = route.params.via === 'sign_in' ? m.reset.signIn.newPinTitle : copy.pinCreateTitle;
   // [OA] A chooser row's PIN screen is titled with that row's label (mock pin-entry-v2.md, "Title per destination").
-  const useTitle = forUse ? messages.learner.who.use[rowLabelKey(route.params.use ?? 'signin')] : null;
+  // F-AUTH-004 D6 (row NS-3): the account card's typed PIN (no use) is titled Grown-up account; native only, so the
+  // web build folds this branch away.
+  const useTitle = forUse
+    ? messages.learner.who.use[rowLabelKey(route.params.use ?? 'signin')]
+    : (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && route.params.typedOnly === true
+      ? messages.caregiver.account.card.title
+      : null;
   const title = cancelReset
     ? messages.learner.who.resetCancel
     : lockedProfile && mode === 'verify' && lockedName !== null
@@ -730,6 +736,8 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
     !verifiedGoesToSetup(route.params) &&
     // [GU] The guest's save asks the typed PIN only (CS-G2).
     !saveGuest &&
+    // F-AUTH-004 ND-5, CS-N11 (row NS-3): an account entry asks the typed PIN only (native; folded away on the web).
+    (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? route.params.typedOnly !== true : true) &&
     shortcutOffered({
       flagOn: flags.biometricShortcutEnabled,
       available,

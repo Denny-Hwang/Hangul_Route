@@ -141,6 +141,10 @@ const AREA_ROUTES: ReadonlySet<string> = new Set([
   'RoutePreview',
   // [OA] Row OA-7a: People on this device, one person's page.
   'PersonOnDevice',
+  // F-AUTH-004 (rows NS-3 to NS-6): the native account routes, which live in the nested Grown-up area stack of iOS and
+  // Android only (`navigation/grown-up-stack.native.tsx`). babel-preset-expo inlines EXPO_OS, so the web build folds
+  // this entry away and its start bundle is unchanged.
+  ...(process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? ['SignIn'] : []),
 ]);
 // The onboarding stack's own screens are the focused routes while it shows (`getCurrentRoute` names the leaf).
 const GATE_ROUTES: ReadonlySet<string> = new Set(['PinEntry', 'PinReset', 'Onboarding', 'Welcome', 'CreateProfile', 'FirstQuestPreview', 'PlacementInvite']);

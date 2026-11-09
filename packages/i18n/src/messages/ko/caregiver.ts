@@ -864,4 +864,45 @@ export const caregiver = {
     guestRemoveAsk: '첫 퀘스트를 지울까요?',
     guestConfirm: '이 퀘스트의 카드와 별이 이 브라우저에서 지워져요.',
   },
+  /** F-AUTH-004 17.1, 17.2 (NS-3): iOS와 Android의 어른 로그인, 오류 줄, 계정 잠금 줄, 어른 공간 계정 카드, 로그아웃. */
+  account: {
+    signIn: {
+      title: '어른 로그인',
+      intro: '가족, 반, 학교에서 쓰는 어른 계정으로 로그인해 주세요.',
+      learners: '학습자는 계정이 필요 없어요.',
+      noNewAccounts: '이 앱에서는 새 어른 계정을 만들지 않아요.',
+      email: '이메일',
+      codeSent: (email: string) => `6자리 코드를 보냈어요: ${email}`,
+      deviceCheck: '새 기기 확인 코드를 보냈어요.',
+      code: '코드',
+      password: '비밀번호',
+      secondStep: '2단계 인증 코드를 입력해 주세요.',
+      submit: { cta: '로그인' },
+      resend: { cta: '새 코드 보내기' },
+      usePassword: { cta: '비밀번호로 로그인' },
+      useCode: { cta: '이메일로 코드 받기' },
+      useBackup: { cta: '백업 코드 사용하기' },
+      changeEmail: { cta: '다른 이메일 사용하기' },
+    },
+    errors: {
+      wrongCode: '코드가 맞지 않아요. 확인하고 다시 해 보세요.',
+      codeExpired: '코드 유효 시간이 지났어요. 새 코드를 받아 주세요.',
+      wrongPassword: '비밀번호가 맞지 않아요. 확인하고 다시 해 보세요.',
+      cantSignIn: '그 이메일로는 로그인할 수 없었어요.',
+      tooMany: '너무 많이 시도했어요. 몇 분 뒤에 다시 해 보세요.',
+      unsupported: '이 계정에는 이 앱에 없는 로그인 단계가 필요해요.',
+      generic: '지금은 로그인할 수 없어요. 잠시 뒤에 다시 해 보세요.',
+    },
+    lock: {
+      cantCheck: '지금은 이 기기를 확인할 수 없어요. 잠시 뒤에 다시 해 보세요.',
+      retrustPassword: '지난번 로그인한 뒤에 어른용 PIN이 바뀌었어요. 쓰려면 비밀번호로 로그인해 주세요.',
+    },
+    card: {
+      title: '어른 계정',
+      signedOut: '로그인하면 여기서 가족, 반, 학교를 볼 수 있어요.',
+    },
+    signOut: {
+      ask: '이 기기에서 이 계정을 로그아웃할까요?',
+    },
+  },
 } satisfies DeepPartial<Messages['caregiver']>;

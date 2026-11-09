@@ -224,6 +224,12 @@ export type RootStackParamList = {
     lockedFrom?: { via: 'chooser'; trigger: WhoTrigger } | { via: 'profile' };
     /** [OA] `next: 'GrownUpUse'`: the chooser row that asked for the PIN (a code, never an id); its page is `grownUpTarget(use)`. */
     use?: GrownUpUse | 'signin';
+    /**
+     * F-AUTH-004 ND-5, CS-N11, D6, D17 (row NS-3; iOS and Android only): the typed PIN an account entry asks for (the
+     * Grown-up area account card's Sign in and Sign in again, through `next: 'FreshPin'`): no face or fingerprint
+     * button, titled **Grown-up account**.
+     */
+    typedOnly?: true;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: {
@@ -463,6 +469,21 @@ export type GuestStackParamList = {
   CreateProfile: { firstRun: boolean; from: 'guest' };
   PinEntry: { next: 'SaveGuest' };
 };
+
+/**
+ * F-AUTH-004 sections 6.1 and 8.1 (rows NS-3 to NS-6): the native account routes. They live only in the nested Grown-up
+ * area stack of iOS and Android (`navigation/grown-up-stack.native.tsx`), never in the root stack, so the web's route
+ * tables (the header registry, the session zones) carry none of them: a route the header registry does not name reads
+ * as a stack screen (`back`), and the session rules count these as Grown-up area routes on native builds only
+ * (`logic/profiles/session.ts`). Params live in memory only (section 8.1); the `use` is a code, never an id.
+ */
+export type AccountStackParamList = {
+  /** Section 6.3: the grown-up sign-in, for the use the grown-up came for (`account`: the row of a record with no use). */
+  SignIn: { use?: GrownUpUse | 'account' } | undefined;
+};
+
+/** The nested Grown-up area stack's routes: the dashboard under the root's name, then the account routes. */
+export type GrownUpStackParamList = RootStackParamList & AccountStackParamList;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

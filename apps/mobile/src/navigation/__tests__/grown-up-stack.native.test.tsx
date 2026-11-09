@@ -64,8 +64,10 @@ const clerk = vi.hoisted(() => ({
   throwOnRender: false,
   log: [] as string[],
   signOut: vi.fn(async (_callback?: () => void) => undefined),
+  /** How many times Clerk's Expo SDK module was loaded (its factory runs once per load, after `vi.resetModules`). */
+  loads: 0,
 }));
-vi.mock('@clerk/clerk-expo', () => ({
+vi.mock('@clerk/clerk-expo', () => (clerk.loads += 1, {
   getClerkInstance: () => ({ signOut: clerk.signOut }),
   ClerkProvider: ({ children, ...props }: { children: ReactNode } & Record<string, unknown>): ReactElement => {
     if (clerk.throwOnRender) throw new TypeError('Clerk: something with user@example.com');
@@ -79,6 +81,11 @@ vi.mock('@clerk/clerk-expo', () => ({
     return createElement('clerk-provider', null, children);
   },
 }));
+
+// Row NS-3: the 24-hour wait's record, and its copy for the account (section 7.3).
+const wait = vi.hoisted(() => ({ record: null as unknown, copied: [] as number[] }));
+vi.mock('../../store/account-store', () => ({ useAccountStore: { getState: () => ({ pinResetByWait: wait.record }) } }));
+vi.mock('../../platform/account-records', () => ({ writeRetrustRequired: async (at: number) => void wait.copied.push(at) }));
 
 vi.mock('../../screens/parent/ParentDashboardScreen', () => ({
   ParentDashboardScreen: ({ route }: { route?: { params?: unknown } }) => createElement('dashboard', { params: route?.params }),
@@ -145,6 +152,44 @@ describe('CS-N13: the native account off is the basis', () => {
     const { GrownUpArea } = await load();
     const { ParentDashboardScreen } = await import('../../screens/parent/ParentDashboardScreen');
     expect(GrownUpArea).toBe(ParentDashboardScreen);
+  });
+});
+
+describe('ND-11, CS-N13 (row NS-3): Clerk’s Expo SDK loads only with its provider', () => {
+  it('loading the area (the switch off or on) loads nothing of Clerk’s; the sign-in screen is registered lazily', async () => {
+    clerk.loads = 0;
+    env.config = { flag: false, publishableKey: null, enabled: false };
+    await load();
+    expect(clerk.loads).toBe(0);
+    env.config = { flag: true, publishableKey: 'pk_live_key', enabled: true };
+    await load();
+    expect(clerk.loads).toBe(0);
+  });
+
+  it('a visit that decides on no provider (gate unknown) loads nothing of Clerk’s either', async () => {
+    gate.state = { state: 'unknown' };
+    const { GrownUpStack } = await load();
+    clerk.loads = 0;
+    const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
+    await settle(() => renderer.root.findAllByType('inner-navigator' as never).length === 1);
+    expect(clerk.loads).toBe(0);
+    await unmount(renderer);
+  });
+});
+
+describe('section 7.3 (row NS-3): the 24-hour wait’s record is copied for the account when the area opens', () => {
+  it('copied before the dashboard (and its notice, which deletes the original) mounts', async () => {
+    wait.record = { v: 1, at: 1 };
+    wait.copied = [];
+    const { GrownUpStack } = await load();
+    const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
+    expect(wait.copied).toHaveLength(1);
+    await unmount(renderer);
+    wait.record = null;
+    wait.copied = [];
+    const again = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
+    expect(wait.copied).toEqual([]);
+    await unmount(again);
   });
 });
 

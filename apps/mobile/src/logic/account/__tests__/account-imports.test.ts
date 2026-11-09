@@ -140,8 +140,58 @@ describe('section 9.3: the account folders import no purchase, link, web view, s
   it('only the account screens and platform/clerk*.native.* import @clerk/clerk-expo', () => {
     const files = [join(APP_ROOT, 'App.tsx'), join(APP_ROOT, 'index.ts'), join(APP_ROOT, 'BrowseApp.tsx'), join(APP_ROOT, 'PresenterApp.tsx'), ...sources(SRC)].filter(existsSync);
     const importers = files.filter((file) => [...readFileSync(file, 'utf8').matchAll(SPECIFIER)].some((m) => /^@clerk\/clerk-expo(\/|$)/.test(m[1] ?? '')));
-    expect(importers.map(rel)).toEqual(['src/platform/clerk.native.tsx']);
+    expect(importers.map(rel).sort()).toEqual([
+      'src/platform/clerk.native.tsx',
+      // Row NS-3: the account card's Clerk part (`useAuth`, `useUser`) and the sign-in screen (`useSignIn`, `useAuth`).
+      'src/screens/account/AccountCardClerk.native.tsx',
+      'src/screens/account/SignInScreen.native.tsx',
+    ]);
     expect(importers.every(clerkAllowed)).toBe(true);
+  });
+
+  /** Static imports only (`import … from`, `export … from`, side-effect imports): what loads with a module, at once. */
+  const STATIC_IMPORT = /^\s*(?:import|export)\s+(?:type\s+)?(?:[^'";]*?\sfrom\s*)?['"]([^'"]+)['"]/gm;
+
+  /** Every package a module loads at once with `entry`, following its static imports (native resolution). */
+  function staticPackages(entry: string): Map<string, string> {
+    const packages = new Map<string, string>();
+    const seen = new Set<string>();
+    const queue = [entry];
+    while (queue.length > 0) {
+      const file = queue.pop() as string;
+      if (seen.has(file)) continue;
+      seen.add(file);
+      for (const match of readFileSync(file, 'utf8').matchAll(STATIC_IMPORT)) {
+        if (/^\s*(import|export)\s+type\s/.test(match[0])) continue;
+        const spec = match[1] ?? '';
+        if (!spec.startsWith('.')) {
+          if (!packages.has(spec)) packages.set(spec, rel(file));
+          continue;
+        }
+        const target = resolveNative(file, spec);
+        if (target !== null && target.startsWith(SRC)) queue.push(target);
+      }
+    }
+    return packages;
+  }
+
+  it('ND-11, CS-N13 (row NS-3): Clerk’s Expo SDK never loads with the app, the Grown-up area or the dashboard: only lazily, under its provider', () => {
+    for (const entry of [
+      join(APP_ROOT, 'App.tsx'),
+      join(SRC, 'navigation', 'root.tsx'),
+      join(SRC, 'navigation', 'grown-up-stack.native.tsx'),
+      join(SRC, 'screens', 'parent', 'ParentDashboardScreen.tsx'),
+      join(SRC, 'screens', 'account', 'AccountCard.native.tsx'),
+      join(SRC, 'screens', 'account', 'AccountCardBody.native.tsx'),
+    ]) {
+      const hits = [...staticPackages(entry)].filter(([name]) => /^(@clerk\/|expo-web-browser|expo-auth-session)/.test(name)).map(([name, from]) => `${from}: ${name}`);
+      expect(hits, `${rel(entry)}\n${hits.join('\n')}`).toEqual([]);
+    }
+    // The walk sees it where it is imported.
+    expect([...staticPackages(join(SRC, 'screens', 'account', 'SignInScreen.native.tsx')).keys()]).toContain('@clerk/clerk-expo');
+    // The two modules that do import it are reached only by a require at the moment they are drawn.
+    expect(readFileSync(join(SRC, 'navigation', 'grown-up-stack.native.tsx'), 'utf8')).toMatch(/getComponent=\{loadSignInScreen\}/);
+    expect(readFileSync(join(SRC, 'screens', 'account', 'AccountCard.native.tsx'), 'utf8')).toMatch(/lazy\(\(\) => import\('\.\/AccountCardClerk\.native'\)/);
   });
 
   it('the guard sees every forbidden form', () => {

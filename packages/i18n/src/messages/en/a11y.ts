@@ -595,4 +595,13 @@ export const a11y = {
    * label adds the full stop), the volume a tap opens (the first one not finished). The volume dots are decorative.
    */
   journeyVolume: (n: number) => `Opens Volume ${n}`,
+  /**
+   * F-AUTH-004 section 17.4 (rows NS-3, NS-5): the native account screens. `codeField` contains the field's visible
+   * label "Code" (WCAG 2.5.3); `joinCode` gets the code's characters spaced, so they are spelled out (D11).
+   */
+  account: {
+    codeField: 'Sign-in code, 6 digits',
+    joinCode: (code: string) => `Code ${code}. Copy it to share.`,
+    planBlock: 'Plan for this space',
+  },
 } as const;

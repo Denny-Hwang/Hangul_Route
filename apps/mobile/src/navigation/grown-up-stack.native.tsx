@@ -1,18 +1,22 @@
 import { Screen } from '@hangul-route/design-system';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, useEffect, useState, type ComponentType, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentType, type ReactElement, type ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { nativeSignInConfig, type NativeSignInConfig } from '../config/native-signin';
 import type { NativeGateState } from '../logic/account/gate-state';
 import { clearAccountQueries, type AccountQueryClient } from '../logic/account/queries';
 import type { ClerkHost, ClerkHostProviderProps } from '../platform/clerk-host';
-import { applyGateChange, applyGateToTokens, ensureInstallSweep } from '../platform/clerk-token-cache.native';
+import { applyGateChange, applyGateToTokens, clerkTokens, ensureInstallSweep } from '../platform/clerk-token-cache.native';
+import { writeRetrustRequired } from '../platform/account-records';
 import { reportCrash } from '../platform/crash-report';
+import { AccountHostContext, ClerkMountContext, OFF_HOST, type AccountHost } from '../screens/account/account-host';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
+import { useAccountStore } from '../store/account-store';
+import { useAccountVisit } from '../store/account-visit';
 import { onGrownUpSessionClosed } from '../store/grown-up-session';
 import { nativeGateState, watchNativeGateState } from '../store/native-gate-state';
-import type { RootStackParamList } from './types';
+import type { GrownUpStackParamList, RootStackParamList } from './types';
 
 /**
  * F-AUTH-004 sections 6.1, 6.2 and 7.4 (row NS-2; ND-9, ND-11, CS-N1, CS-N4, CS-N13): the Grown-up area on iOS and
@@ -49,8 +53,8 @@ export type ClerkMount =
   | { state: 'off' }
   | { state: 'ready'; Provider: ComponentType<ClerkHostProviderProps>; publishableKey: string; endSession: () => Promise<boolean> };
 
-/** Whether Clerk's provider is above the Grown-up area's screens: a screen reads it before it calls a Clerk hook. */
-export const ClerkMountContext = createContext<ClerkMount['state']>('off');
+/** Whether Clerk's provider is above the Grown-up area's screens (defined beside the account screens, which read it). */
+export { ClerkMountContext };
 
 const OFF: ClerkMount = { state: 'off' };
 
@@ -116,15 +120,27 @@ export const CLERK_MOUNT_WAIT_MS = 2000;
  */
 let accountQueries: AccountQueryClient | null = null;
 
-/** Every session close clears the account queries (CS-N4); registered once, with the native account on. */
+/**
+ * Every session close clears the account queries (CS-N4) and ends the visit's memory (the sign-in time and this
+ * visit's sign-in, section 13.1); registered once, with the native account on.
+ */
 export function bindAccountQueryClearing(): () => void {
   return onGrownUpSessionClosed(() => {
+    useAccountVisit.getState().endVisit();
     if (accountQueries !== null) void clearAccountQueries(accountQueries);
   });
 }
 
-/** The nested stack (its routes keep the root's names, so the header registry and the session rules read them as before). */
-const Stack = createNativeStackNavigator<RootStackParamList>();
+/**
+ * The nested stack (its routes keep the root's names, so the header registry and the session rules read them as before),
+ * with the account routes of rows NS-3 to NS-6 (`AccountStackParamList`): row NS-3's `SignIn`.
+ */
+const Stack = createNativeStackNavigator<GrownUpStackParamList>();
+
+/** The sign-in screen's module, required when the route is first shown (never at launch, CS-N13). */
+function loadSignInScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'SignIn'>> {
+  return (require('../screens/account/SignInScreen.native') as typeof import('../screens/account/SignInScreen.native')).SignInScreen;
+}
 
 /** A Clerk render error: the area goes on without Clerk; the crash report names the class only (CS-N15). */
 function reportClerkError(error: unknown): void {
@@ -144,9 +160,16 @@ function WithClerk({ mount, fallback }: { mount: Extract<ClerkMount, { state: 'r
 
 export function GrownUpStack({ route }: Props): ReactElement {
   const [mount, setMount] = useState<ClerkMount>({ state: 'pending' });
+  // Bumped by the account card's Try again: the provider is decided again (the navigator below remounts with it).
+  const [attempt, setAttempt] = useState(0);
   const queryClient = useQueryClient();
   useEffect(() => {
     accountQueries = queryClient;
+    // A new visit: an earlier visit's sign-in no longer counts (ND-9), nor its sign-in time (ND-5).
+    useAccountVisit.getState().endVisit();
+    // Section 7.3 (R-1): the 24-hour wait's record, copied for the account before the dashboard's OA-D21 notice deletes
+    // it (the dashboard mounts only after this area decided its Clerk provider, so this runs first).
+    if (useAccountStore.getState().pinResetByWait !== null) void writeRetrustRequired(Date.now()).catch(() => undefined);
     return () => {
       void clearAccountQueries(queryClient);
     };
@@ -164,18 +187,38 @@ export function GrownUpStack({ route }: Props): ReactElement {
       settled = true;
       clearTimeout(timer);
     };
-  }, []);
+  }, [attempt]);
   const endSession = mount.state === 'ready' ? mount.endSession : null;
   useEffect(() => (endSession === null ? undefined : watchNativeGateState((gate) => void applyGateChange(gate, endSession))), [endSession]);
+  // The card calls it only while it reads `off` (no provider for this visit, or the provider fell back after an error).
+  const retry = useCallback(() => {
+    setMount({ state: 'pending' });
+    setAttempt((n) => n + 1);
+  }, []);
+  const host = useMemo<AccountHost>(
+    () => ({
+      mount: mount.state,
+      endSession: endSession ?? OFF_HOST.endSession,
+      // Read at the call: the token cache of this run (section 6.2).
+      wipeTokens: () => clerkTokens.wipe(),
+      retry,
+    }),
+    [mount.state, endSession, retry],
+  );
 
   if (mount.state === 'pending') return <Screen tone="canvas">{null}</Screen>;
   const navigator = (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} initialParams={route.params} />
+      {/* F-AUTH-004 section 6.3 (row NS-3): the grown-up sign-in, reached from the account card (and the rows of NS-4).
+          Loaded only when it is first shown: it imports Clerk's Expo SDK, which never loads before the provider (ND-11). */}
+      <Stack.Screen name="SignIn" getComponent={loadSignInScreen} />
     </Stack.Navigator>
   );
   return (
-    <ClerkMountContext.Provider value={mount.state}>{mount.state === 'ready' ? <WithClerk mount={mount} fallback={navigator} /> : navigator}</ClerkMountContext.Provider>
+    <AccountHostContext.Provider value={host}>
+      <ClerkMountContext.Provider value={mount.state}>{mount.state === 'ready' ? <WithClerk mount={mount} fallback={navigator} /> : navigator}</ClerkMountContext.Provider>
+    </AccountHostContext.Provider>
   );
 }
 
