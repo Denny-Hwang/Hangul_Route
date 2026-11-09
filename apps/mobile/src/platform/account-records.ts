@@ -1,11 +1,11 @@
 import type { AccountTrust, DeviceUses } from '@hangul-route/content-schema';
-import { DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY, TRUST_RECORD_KEY, trustReadOf, type TrustRead } from '../logic/account/sign-in-records';
+import { DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY, RETRUST_REQUIRED_KEY, TRUST_RECORD_KEY, retrustRequiredOf, trustReadOf, type TrustRead } from '../logic/account/sign-in-records';
 import { readJsonExact, removeKey, writeJson } from './storage';
 
 /**
  * F-AUTH-004 sections 6.5, 6.6 and 13.1 (row NS-3): the native account's device records, through the `hr:` storage
- * wrapper (never AsyncStorage directly): the uses record `hr:grownup:deviceUses`, the trust `hr:grownup:trust` and the
- * re-trust notice `hr:grownup:retrustNotice`. None holds a name, an email, an account or space id, or anything of
+ * wrapper (never AsyncStorage directly): the uses record `hr:grownup:deviceUses`, the trust `hr:grownup:trust`, the
+ * re-trust notice `hr:grownup:retrustNotice` and the 24-hour wait's copy `hr:grownup:retrustRequired`. None holds a name, an email, an account or space id, or anything of
  * Clerk's (CS-N7). Only native code imports this module.
  */
 
@@ -34,4 +34,22 @@ export function writeRetrustNotice(at: number): Promise<void> {
 /** Deletes one of the records above (`recordsToDelete` names them). */
 export function removeRecord(key: string): Promise<void> {
   return removeKey(key);
+}
+
+/** Whether the 24-hour wait's copy is kept (read exactly; a failed or odd read counts as kept: fail closed). */
+export async function readRetrustRequired(): Promise<boolean> {
+  try {
+    return retrustRequiredOf(await readJsonExact<unknown>(RETRUST_REQUIRED_KEY), false);
+  } catch {
+    return retrustRequiredOf(null, true);
+  }
+}
+
+/** Copies the 24-hour wait's record for the account (section 7.3); `clearRetrustRequired` after a trusting sign-in. */
+export function writeRetrustRequired(at: number): Promise<void> {
+  return writeJson(RETRUST_REQUIRED_KEY, { v: 1, at });
+}
+
+export function clearRetrustRequired(): Promise<void> {
+  return removeKey(RETRUST_REQUIRED_KEY);
 }

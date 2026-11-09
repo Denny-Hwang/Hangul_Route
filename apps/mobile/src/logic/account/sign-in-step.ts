@@ -28,7 +28,8 @@ import type { NATIVE_SIGNIN_RESULTS } from '@hangul-route/content-schema/native-
  *   `email_code`; none of those is `unsupported`. The device check takes `email_code` or `phone_code`. Email links,
  *   OAuth, passkeys and sign-up are never prepared or offered.
  * - **Errors** map by Clerk's error code to one line (`classifySignInError`); Clerk's own messages are never shown. A
- *   wrong code or password keeps the step and clears the field (`clearField`).
+ *   wrong, expired or used-up code, or a wrong password, keeps the step and clears the field (`clearField`); every
+ *   line is counted (`lineSeq`), so the same line twice is announced twice.
  * - **Telemetry** (section 15): one `auth.native.signin` per flow (one sign-in screen visit), `ok` on completion,
  *   otherwise the flow's last result (or `cancelled`) when the screen is left (`signInFlowPayload`, `ended`).
  */
@@ -120,6 +121,8 @@ export interface SignInState {
   busy: boolean;
   /** The error line under the field, or null. */
   line: SignInLine | null;
+  /** Bumped with every line (the screen announces each one, the same line twice included). */
+  lineSeq: number;
   /** Bumped when the step's field is to be cleared and focused (a wrong code or password, a new code, a new step). */
   clearField: number;
   /** A re-trust is pending on this device (D21, section 7.3): Continue opens the password step first when it can. */
@@ -155,6 +158,7 @@ export function initialSignInState(retrustPending: boolean): SignInState {
     second: null,
     busy: false,
     line: null,
+    lineSeq: 0,
     clearField: 0,
     retrustPending,
     secondDone: null,
@@ -191,7 +195,8 @@ export function secondStepOf(view: ClerkSignInView): SecondStep | null {
   const strategy = factor.strategy as SecondStrategy;
   const factorId = strategy === 'email_code' ? (factor.emailAddressId ?? null) : strategy === 'phone_code' ? (factor.phoneNumberId ?? null) : null;
   const device = deviceStatus || (view.clientTrustState === 'new' && strategy === 'email_code');
-  return { kind: device ? 'device' : 'second', strategy, factorId, backupOffered, usingBackup: false };
+  // Board 14: the device check is Clerk's, not the account's second factor, so no backup code is offered on it.
+  return { kind: device ? 'device' : 'second', strategy, factorId, backupOffered: backupOffered && !device, usingBackup: false };
 }
 
 /** Whether the second step's code was sent to the grown-up (so **Send a new code** shows and prepares it again). */
@@ -204,7 +209,7 @@ export function secondCodeSent(second: SecondStep): boolean {
  *
  * | Clerk answer                                          | Line            | `result`         |
  * | `form_code_incorrect`                                 | `wrongCode`     | `wrong_code`     |
- * | `verification_expired`                                | `codeExpired`   | `expired`        |
+ * | `verification_expired`, `verification_failed`         | `codeExpired`   | `expired`        |
  * | `form_password_incorrect`                             | `wrongPassword` | `wrong_password` |
  * | `form_identifier_not_found`, any refusal of the email | `cantSignIn`    | `refused`        |
  * | HTTP 429, `too_many_requests`, `user_locked`          | `tooMany`       | `too_many`       |
@@ -218,7 +223,8 @@ export function classifySignInError(error: unknown, phase: 'identify' | 'other')
   const status = typeof e.status === 'number' ? e.status : null;
   if (status === 429 || codes.includes('too_many_requests') || codes.includes('user_locked')) return { line: 'tooMany', result: 'too_many' };
   if (codes.includes('form_code_incorrect')) return { line: 'wrongCode', result: 'wrong_code' };
-  if (codes.includes('verification_expired')) return { line: 'codeExpired', result: 'expired' };
+  // A code whose tries are used up (`verification_failed`) cannot work again either: Send a new code.
+  if (codes.includes('verification_expired') || codes.includes('verification_failed')) return { line: 'codeExpired', result: 'expired' };
   if (codes.includes('form_password_incorrect')) return { line: 'wrongPassword', result: 'wrong_password' };
   if (codes.includes('form_identifier_not_found')) return { line: 'cantSignIn', result: 'refused' };
   const refusal = codes.length > 0 || (status !== null && status >= 400 && status < 500);
@@ -228,7 +234,8 @@ export function classifySignInError(error: unknown, phase: 'identify' | 'other')
 
 function failure(error: unknown, phase: 'identify' | 'other'): SignInEvent {
   const { line, result } = classifySignInError(error, phase);
-  return { type: 'failed', line, result, clear: result === 'wrong_code' || result === 'wrong_password' };
+  // Board 9: an expired code's field is cleared too (the next code is a new one).
+  return { type: 'failed', line, result, clear: result === 'wrong_code' || result === 'wrong_password' || result === 'expired' };
 }
 
 /** A completed attempt: activate the session, or move to the step Clerk asks for (preparing a sent code first). */
@@ -361,9 +368,16 @@ export function signInReducer(state: SignInState, event: SignInEvent): SignInSta
     case 'unsupported':
       return { ...state, step: 'unsupported', second: null, busy: false, line: null, flow: { ...state.flow, result: 'unsupported' } };
     case 'failed':
-      return { ...state, busy: false, line: event.line, clearField: event.clear ? state.clearField + 1 : state.clearField, flow: { ...state.flow, result: event.result } };
+      return {
+        ...state,
+        busy: false,
+        line: event.line,
+        lineSeq: state.lineSeq + 1,
+        clearField: event.clear ? state.clearField + 1 : state.clearField,
+        flow: { ...state.flow, result: event.result },
+      };
     case 'use_password':
-      return state.factors.password && (state.step === 'code' || state.step === 'email') ? { ...state, step: 'password', line: null, clearField: state.clearField + 1 } : state;
+      return state.factors.password && state.step === 'code' ? { ...state, step: 'password', line: null, clearField: state.clearField + 1 } : state;
     case 'use_backup':
       return state.step === 'second' && state.second !== null && state.second.backupOffered && !state.second.usingBackup
         ? { ...state, second: { ...state.second, usingBackup: true }, line: null, clearField: state.clearField + 1 }
@@ -373,7 +387,8 @@ export function signInReducer(state: SignInState, event: SignInEvent): SignInSta
     case 'second_done':
       return { ...state, secondDone: event.strategy };
     case 'done':
-      return { ...state, step: 'done', busy: false, line: null, flow: { ...state.flow, result: 'ok' } };
+      // The screen keeps the step it drew, waiting, until it leaves (section 6.5 runs meanwhile).
+      return { ...state, step: 'done', busy: true, line: null, flow: { ...state.flow, result: 'ok' } };
     case 'ended':
       return { ...state, flow: { ...state.flow, ended: true } };
   }

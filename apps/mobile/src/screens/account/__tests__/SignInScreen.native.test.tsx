@@ -1,14 +1,14 @@
 import { ScreenHeaderSlotContext, type ScreenHeaderSlotProps } from '@hangul-route/design-system';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { createElement, type ReactElement } from 'react';
-import { AccessibilityInfo, TextInput } from 'react-native';
+import { AccessibilityInfo, Linking, TextInput } from 'react-native';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { accountDenyHits } from '../../../logic/account/deny-list';
-import { byTestId, buttonsNamed, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
+import { byTestId, buttonsNamed, hostNodes, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
 import { useAccountVisit } from '../../../store/account-visit';
 import { useLocaleStore } from '../../../store/locale-store';
-import { ClerkMountContext, type ClerkMountState } from '../account-host';
+import { AccountHostContext, ClerkMountContext, OFF_HOST, type ClerkMountState } from '../account-host';
 import { SignInScreen } from '../SignInScreen.native';
 
 /**
@@ -27,6 +27,7 @@ const clerk = vi.hoisted(() => ({
   setActive: vi.fn(async (_p: { session: string }) => undefined),
   getToken: vi.fn(async () => 'token'),
   loaded: true,
+  signedIn: false,
   hook: null as unknown,
 }));
 
@@ -43,7 +44,7 @@ vi.mock('@clerk/clerk-expo', () => {
   clerk.hook = { isLoaded: true, signIn: resource({ status: null, supportedFirstFactors: null, supportedSecondFactors: null, createdSessionId: null }), setActive: clerk.setActive };
   return {
     useSignIn: () => (clerk.loaded ? clerk.hook : { isLoaded: false, signIn: undefined, setActive: clerk.setActive }),
-    useAuth: () => ({ isLoaded: true, isSignedIn: false, getToken: clerk.getToken }),
+    useAuth: () => ({ isLoaded: true, isSignedIn: clerk.signedIn, getToken: clerk.getToken }),
   };
 });
 
@@ -51,6 +52,9 @@ const env = vi.hoisted(() => ({
   gate: { state: 'pin', epoch: 7 } as { state: string; epoch?: number },
   trust: { kind: 'none' } as { kind: string; trust?: unknown },
   pinResetByWait: null as unknown,
+  retrustRequired: false,
+  spacesGate: null as null | Promise<void>,
+  trustGate: null as null | Promise<void>,
   online: true,
   onlineListener: null as null | ((online: boolean) => void),
   writes: [] as string[],
@@ -61,10 +65,15 @@ const env = vi.hoisted(() => ({
 vi.mock('../../../store/native-gate-state', () => ({ nativeGateState: async () => env.gate }));
 vi.mock('../../../store/account-store', () => ({ useAccountStore: { getState: () => ({ pinResetByWait: env.pinResetByWait }) } }));
 vi.mock('../../../platform/account-records', () => ({
-  readTrust: async () => env.trust,
+  readTrust: async () => {
+    if (env.trustGate !== null) await env.trustGate;
+    return env.trust;
+  },
   writeTrust: async (r: unknown) => void env.writes.push(`trust ${JSON.stringify(r)}`),
   writeDeviceUses: async (r: { uses: unknown }) => void env.writes.push(`uses ${JSON.stringify(r.uses)}`),
   writeRetrustNotice: async () => void env.writes.push('notice'),
+  readRetrustRequired: async () => env.retrustRequired,
+  clearRetrustRequired: async () => void env.writes.push('clear retrustRequired'),
 }));
 vi.mock('../../../platform/account-online', () => ({
   readAccountOnline: async () => env.online,
@@ -74,7 +83,14 @@ vi.mock('../../../platform/account-online', () => ({
   },
 }));
 vi.mock('../../../platform/telemetry', () => ({ track: async (event: { name: string; payload: unknown }) => void env.tracked.push(event) }));
-vi.mock('../../../logic/account/api', () => ({ createAccountApi: () => ({ spaces: async () => env.spaces }) }));
+vi.mock('../../../logic/account/api', () => ({
+  createAccountApi: () => ({
+    spaces: async () => {
+      if (env.spacesGate !== null) await env.spacesGate;
+      return env.spaces;
+    },
+  }),
+}));
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ setQueryData: (key: unknown, data: unknown) => void env.cached.push({ key, data }) }) }));
 
 const view = (over: Partial<View> = {}): View => ({
@@ -94,6 +110,7 @@ function navigation(): { goBack: ReturnType<typeof vi.fn>; navigate: ReturnType<
 }
 
 let nav = navigation();
+const endSession = vi.fn(async () => true);
 
 function HeaderTitle({ options }: ScreenHeaderSlotProps): ReactElement {
   return createElement('header-title', null, options?.title ?? null);
@@ -103,7 +120,12 @@ async function mount(state: ClerkMountState = 'ready'): Promise<ReactTestRendere
   nav = navigation();
   const screen = createElement(SignInScreen, { navigation: nav, route: { key: 'SignIn-1', name: 'SignIn', params: undefined } } as never);
   // The route's header slot (App provides LearnerScreenHeader): here a stand-in that draws the title the screen passes.
-  const element: ReactElement = createElement(ScreenHeaderSlotContext.Provider, { value: HeaderTitle }, createElement(ClerkMountContext.Provider, { value: state }, screen));
+  const host = { ...OFF_HOST, mount: state, endSession };
+  const element: ReactElement = createElement(
+    ScreenHeaderSlotContext.Provider,
+    { value: HeaderTitle },
+    createElement(AccountHostContext.Provider, { value: host }, createElement(ClerkMountContext.Provider, { value: state }, screen)),
+  );
   const r = await render(element);
   await settle();
   return r;
@@ -147,7 +169,7 @@ beforeEach(() => {
   setPlatform('ios');
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
   useLocaleStore.setState({ device: 'en', byProfile: {} });
-  useAccountVisit.getState().forget();
+  useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
   clerk.calls = [];
   clerk.loaded = true;
   clerk.answers = {};
@@ -160,6 +182,11 @@ beforeEach(() => {
   env.gate = { state: 'pin', epoch: 7 };
   env.trust = { kind: 'none' };
   env.pinResetByWait = null;
+  env.retrustRequired = false;
+  env.spacesGate = null;
+  env.trustGate = null;
+  clerk.signedIn = false;
+  endSession.mockClear();
   env.online = true;
   env.onlineListener = null;
   env.writes = [];
@@ -400,13 +427,38 @@ describe('section 6.5: a completed sign-in', () => {
     expect(useAccountVisit.getState().retrustPending).toBe(true);
   });
 
+  it('R-1: the wait’s record, gone from the store once the area’s notice showed, still holds through the account’s copy', async () => {
+    // The notice deleted `account:pinResetByWait`; the area copied it first (grown-up-stack.native.tsx).
+    env.pinResetByWait = null;
+    env.retrustRequired = true;
+    answer('create', async () => view());
+    const r = await mount();
+    await toCode(r);
+    // D21: the password step first, no code sent.
+    expect(step(r.root)).toBe('password');
+    await tap(r.root, 'sign-in-use-code');
+    await type(r.root, 'code', '482139');
+    await tap(r.root, 'sign-in-submit');
+    expect(env.writes).toEqual([]);
+    expect(useAccountVisit.getState().retrustPending).toBe(true);
+  });
+
+  it('a password sign-in after the wait trusts the new PIN and deletes the account’s copy', async () => {
+    env.retrustRequired = true;
+    const r = await mount();
+    await toCode(r);
+    await type(r.root, 'password', 'hunter2');
+    await tap(r.root, 'sign-in-submit');
+    expect(env.writes).toEqual(['trust {"v":1,"epoch":7}', 'notice', 'clear retrustRequired', 'uses ["family","teacher"]']);
+  });
+
   it('the password re-trusts and leaves the home’s notice', async () => {
     env.trust = { kind: 'trust', trust: { v: 1, epoch: 3 } };
     const r = await mount();
     await toCode(r);
     await type(r.root, 'password', 'hunter2');
     await tap(r.root, 'sign-in-submit');
-    expect(env.writes).toEqual(['trust {"v":1,"epoch":7}', 'uses ["family","teacher"]', 'notice']);
+    expect(env.writes).toEqual(['trust {"v":1,"epoch":7}', 'notice', 'uses ["family","teacher"]']);
     expect(useAccountVisit.getState().retrustPending).toBe(false);
   });
 
@@ -421,6 +473,141 @@ describe('section 6.5: a completed sign-in', () => {
     expect(env.cached).toEqual([]);
     expect(useAccountVisit.getState().signedInThisVisit).toBe(true);
     expect(nav.goBack).toHaveBeenCalled();
+  });
+});
+
+describe('the review round (row NS-3)', () => {
+  it('D21: Continue waits until the re-trust state is read', async () => {
+    let release: () => void = () => undefined;
+    env.trustGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const r = await mount();
+    await type(r.root, 'email', 'dana@example.com');
+    expect(softDisabled(r.root, 'sign-in-submit')).toBe(true);
+    release();
+    await settle();
+    expect(softDisabled(r.root, 'sign-in-submit')).toBe(false);
+  });
+
+  it('the submit is announced busy with the same words while Clerk answers; every other button waits (D2)', async () => {
+    let release: (v: unknown) => void = () => undefined;
+    answer('attemptFirstFactor', () => new Promise((resolve) => {
+      release = resolve as (v: unknown) => void;
+    }) as never);
+    const r = await mount();
+    await toCode(r);
+    await type(r.root, 'code', '482139');
+    await press(byTestId(r.root, 'sign-in-submit')[0]!);
+    const submit = byTestId(r.root, 'sign-in-submit')[0]!;
+    expect(submit.props['aria-busy']).toBe(true);
+    expect(submit.props['aria-disabled']).toBe(true);
+    expect(screenTexts(submit)).toContain(m.signIn.submit.cta);
+    for (const id of ['sign-in-resend', 'sign-in-use-password', 'sign-in-change-email']) expect(softDisabled(r.root, id), id).toBe(true);
+    await act(async () => release(view({ status: 'complete', createdSessionId: 'sess_1' })));
+    await settle();
+  });
+
+  it('m5: once done, the step stays drawn, waiting, while the records are written', async () => {
+    let release: () => void = () => undefined;
+    env.spacesGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const r = await mount();
+    await toCode(r);
+    await type(r.root, 'code', '482139');
+    await tap(r.root, 'sign-in-submit');
+    expect(step(r.root)).toBe('code');
+    expect(byTestId(r.root, 'sign-in-submit')[0]!.props['aria-busy']).toBe(true);
+    // The trust is written before the spaces read answers (m8).
+    expect(env.writes).toEqual(['trust {"v":1,"epoch":7}']);
+    release();
+    await settle();
+    expect(nav.goBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('M1: leaving while the records are written sends ok once, never twice', async () => {
+    let release: () => void = () => undefined;
+    env.spacesGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const r = await mount();
+    await toCode(r);
+    await type(r.root, 'code', '482139');
+    await tap(r.root, 'sign-in-submit');
+    await unmount(r);
+    release();
+    await settle();
+    expect(env.tracked).toEqual([{ name: 'auth.native.signin', payload: { os: 'ios', method: 'email_code', result: 'ok', second: false } }]);
+    expect(nav.goBack).not.toHaveBeenCalled();
+  });
+
+  it('M1: leaving while Clerk answers a sign-in that completes still records it (one ok, the sign-in time)', async () => {
+    let release: (v: unknown) => void = () => undefined;
+    answer('attemptFirstFactor', () => new Promise((resolve) => {
+      release = resolve as (v: unknown) => void;
+    }) as never);
+    const r = await mount();
+    await toCode(r);
+    await type(r.root, 'code', '482139');
+    await press(byTestId(r.root, 'sign-in-submit')[0]!);
+    await unmount(r);
+    expect(env.tracked).toEqual([]);
+    await act(async () => release(view({ status: 'complete', createdSessionId: 'sess_1' })));
+    await settle();
+    expect(clerk.setActive).toHaveBeenCalledWith({ session: 'sess_1' });
+    expect(useAccountVisit.getState().signedInThisVisit).toBe(true);
+    expect(env.writes[0]).toBe('trust {"v":1,"epoch":7}');
+    expect(env.tracked).toEqual([{ name: 'auth.native.signin', payload: { os: 'ios', method: 'email_code', result: 'ok', second: false } }]);
+    expect(nav.goBack).not.toHaveBeenCalled();
+  });
+
+  it('leaving while Clerk answers a refusal sends that refusal once', async () => {
+    let fail: (e: unknown) => void = () => undefined;
+    answer('attemptFirstFactor', () => new Promise((_resolve, reject) => {
+      fail = reject;
+    }) as never);
+    const r = await mount();
+    await toCode(r);
+    await type(r.root, 'code', '1');
+    await press(byTestId(r.root, 'sign-in-submit')[0]!);
+    await unmount(r);
+    await act(async () => fail(clerkError('form_code_incorrect')));
+    await settle();
+    expect(env.tracked).toEqual([{ name: 'auth.native.signin', payload: { os: 'ios', method: 'email_code', result: 'wrong_code', second: false } }]);
+  });
+
+  it('ND-14: a session Clerk still holds (its sign-out could not reach Clerk) is ended before a new sign-in', async () => {
+    clerk.signedIn = true;
+    const r = await mount();
+    await toCode(r);
+    expect(endSession).toHaveBeenCalledTimes(1);
+    expect(clerk.calls[0]).toBe('create:{"identifier":"dana@example.com"}');
+  });
+
+  it('the same line twice is announced twice; unsupported and going offline are announced', async () => {
+    const announce = vi.spyOn(AccessibilityInfo, 'announceForAccessibility');
+    answer('create', async () => Promise.reject(clerkError('too_many_requests', 429)));
+    const r = await mount();
+    await toCode(r);
+    await tap(r.root, 'sign-in-submit');
+    expect(announce.mock.calls.filter(([t]) => t === m.errors.tooMany)).toHaveLength(2);
+    await act(async () => env.onlineListener?.(false));
+    expect(announce).toHaveBeenCalledWith(en.learner.welcome.grownUps.needsInternet);
+    answer('create', async () => view({ supportedFirstFactors: [] }));
+    await act(async () => env.onlineListener?.(true));
+    await tap(r.root, 'sign-in-submit');
+    expect(announce).toHaveBeenCalledWith(m.errors.unsupported);
+  });
+
+  it('button looks: the submit is the filled one, the others paper, Use another email quiet', async () => {
+    const r = await mount();
+    await toCode(r);
+    const tones = (id: string): string => String(r.root.findAll((n) => n.props.testID === id && typeof n.props.tone === 'string')[0]?.props.tone);
+    expect(tones('sign-in-submit')).toBe('primary');
+    expect(tones('sign-in-resend')).toBe('paper');
+    expect(tones('sign-in-use-password')).toBe('paper');
+    expect(tones('sign-in-change-email')).toBe('quiet');
   });
 });
 
@@ -527,7 +714,19 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
       await toCode(r);
       await act(async () => env.onlineListener?.(false));
     },
+    networkFail: async (r) => {
+      answer('create', async () => Promise.reject(Object.assign(new Error('x'), { code: 'network_error' })));
+      await toCode(r);
+    },
+    busy: async (r) => {
+      answer('attemptFirstFactor', () => new Promise(() => undefined) as never);
+      await toCode(r);
+      await type(r.root, 'code', '1');
+      await press(byTestId(r.root, 'sign-in-submit')[0]!);
+    },
   };
+  /** The states drawn without Clerk for this visit (`lock.cantCheck` and Back). */
+  const WITHOUT_CLERK: ClerkMountState[] = ['off', 'pending'];
 
   for (const platform of ['ios', 'android'] as const) {
     it(`${platform}: every state, every language`, async () => {
@@ -541,14 +740,31 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
           env.online = true;
           const r = await mount();
           await reach(r);
-          const texts = screenTexts(r.root);
-          expect(texts, `${locale} ${name}`).toContain(getMessages(locale).caregiver.account.signIn.title);
-          // The fixture's email is typed by a grown-up (section 9.2: not checked).
-          const hits = texts.flatMap((t) => accountDenyHits(t.replace('dana@example.com', ''), locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
-          expect(hits).toEqual([]);
+          await expectClean(r, platform, locale, name);
+          await unmount(r);
+        }
+        for (const state of WITHOUT_CLERK) {
+          setPlatform(platform);
+          vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
+          useLocaleStore.setState({ device: locale, byProfile: {} });
+          const r = await mount(state);
+          await expectClean(r, platform, locale, `unavailable ${state}`);
           await unmount(r);
         }
       }
+      expect(openURL).not.toHaveBeenCalled();
     });
+  }
+
+  const openURL = vi.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
+
+  /** No denied word in the text tree or any label, hint or value; no link (no host node with an href). */
+  async function expectClean(r: ReactTestRenderer, platform: string, locale: UiLocale, name: string): Promise<void> {
+    const texts = screenTexts(r.root);
+    expect(texts, `${locale} ${name}`).toContain(getMessages(locale).caregiver.account.signIn.title);
+    // The fixture's email is typed by a grown-up (section 9.2: not checked).
+    const hits = texts.flatMap((t) => accountDenyHits(t.replace('dana@example.com', ''), locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
+    expect(hits).toEqual([]);
+    expect(hostNodes(r.root, (n) => n.props.href !== undefined), `${locale} ${name}: a link`).toEqual([]);
   }
 });

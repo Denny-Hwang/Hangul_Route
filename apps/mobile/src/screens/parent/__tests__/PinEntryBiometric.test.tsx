@@ -1,3 +1,4 @@
+import { ScreenHeaderSlotContext, type ScreenHeaderSlotProps } from '@hangul-route/design-system';
 import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { AccessibilityInfo } from 'react-native';
@@ -68,7 +69,7 @@ function nav() {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-async function show(params: { next: 'ParentDashboard' | 'AddProfile' | 'BiometricShortcut'; mode?: 'setup' | 'change' }, navigation = nav()) {
+async function show(params: { next: 'ParentDashboard' | 'AddProfile' | 'BiometricShortcut' | 'FreshPin'; mode?: 'setup' | 'change'; typedOnly?: true }, navigation = nav()) {
   const route = { key: 'pin', name: 'PinEntry' as const, params };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides
   const r = await render(<PinEntryScreen route={route} navigation={navigation as any} />);
@@ -345,5 +346,47 @@ describe('[OA] destination BiometricShortcut (the Grown-up area switch asked for
     await settle();
     expect(port.write).not.toHaveBeenCalled();
     expect(navigation.goBack).not.toHaveBeenCalled();
+  });
+});
+
+/** The PIN screen inside a stand-in header slot, so the title it passes is drawn. */
+async function showTitled(params: { next: 'FreshPin'; typedOnly?: true }) {
+  const route = { key: 'pin', name: 'PinEntry' as const, params };
+  const Title = ({ options }: ScreenHeaderSlotProps) => <>{options?.title ?? null}</>;
+  const r = await render(
+    <ScreenHeaderSlotContext.Provider value={Title}>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides */}
+      <PinEntryScreen route={route} navigation={nav() as any} />
+    </ScreenHeaderSlotContext.Provider>,
+  );
+  await settle();
+  await settle();
+  return r;
+}
+
+describe('F-AUTH-004 ND-5, CS-N11, D6, D17 (row NS-3): the account card’s typed PIN', () => {
+  const accountTitle = getMessages('en').caregiver.account.card.title;
+
+  it('iOS and Android: no face or fingerprint button, titled Grown-up account', async () => {
+    for (const os of ['ios', 'android'] as const) {
+      setPlatform(os);
+      const r = await showTitled({ next: 'FreshPin', typedOnly: true });
+      expect(cta(r.root), os).toHaveLength(0);
+      expect(buttonsNamed(r.root, a11y.pinDigit(1))).toHaveLength(1);
+      expect(screenTexts(r.root)).toContain(accountTitle);
+      await cleanup();
+    }
+  });
+
+  it('the same screen without it keeps the button and its own title (the Edit profile lock switch, OA-5)', async () => {
+    const r = await showTitled({ next: 'FreshPin' });
+    expect(cta(r.root)).toHaveLength(1);
+    expect(screenTexts(r.root)).not.toContain(accountTitle);
+  });
+
+  it('the web never reads it (the native branch folds away there)', async () => {
+    setPlatform('web');
+    const r = await showTitled({ next: 'FreshPin', typedOnly: true });
+    expect(screenTexts(r.root)).not.toContain(accountTitle);
   });
 });

@@ -162,6 +162,12 @@ export function ParentDashboardScreen({ navigation, route }: Props): ReactElemen
           {/* [OA] People on this device (row OA-7a, section 10.1): every learner on the device, each opening its person page. */}
           <PeopleOnDeviceCard profiles={profiles} onOpen={(profileId) => navigation.navigate('PersonOnDevice', { profileId })} guest={guestRow} />
         </>
+      ) : process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? (
+        // F-AUTH-004 section 7.1 (row NS-3): the account card does not depend on the chooser's switch (folded away on the web).
+        <>
+          <Spacer size="lg" />
+          {createElement((require('../account/AccountCard') as typeof import('../account/AccountCard')).AccountCard, { navigation })}
+        </>
       ) : null}
       <Spacer size="lg" />
       <ResetByWaitNotice

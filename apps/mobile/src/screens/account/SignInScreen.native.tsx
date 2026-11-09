@@ -4,7 +4,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, TextInput, View, type TextInputProps } from 'react-native';
-import { LinkButton } from '../../components/LinkButton';
 import { useMessages } from '../../i18n/use-messages';
 import { createAccountApi } from '../../logic/account/api';
 import { accountQueryKey } from '../../logic/account/queries';
@@ -27,13 +26,15 @@ import {
   type SignInLine,
   type SignInPort,
   type SignInState,
+  type SignInStep,
 } from '../../logic/account/sign-in-step';
 import type { GrownUpStackParamList } from '../../navigation/types';
-import { readTrust, writeDeviceUses, writeRetrustNotice, writeTrust } from '../../platform/account-records';
+import { clearRetrustRequired, readRetrustRequired, readTrust, writeDeviceUses, writeRetrustNotice, writeTrust } from '../../platform/account-records';
 import { useAccountStore } from '../../store/account-store';
 import { useAccountVisit } from '../../store/account-visit';
 import { nativeGateState } from '../../store/native-gate-state';
-import { ClerkMountContext } from './account-host';
+import { AccountButton } from './AccountButton';
+import { AccountHostContext, ClerkMountContext } from './account-host';
 import { nativeOs, trackSignIn, useAccountOnline } from './account-session.native';
 
 /**
@@ -102,8 +103,9 @@ function SignInFlow({ navigation }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.account;
   const online = useAccountOnline();
+  const host = useContext(AccountHostContext);
   const { isLoaded, signIn, setActive } = useSignIn();
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const [state, dispatchState] = useReducer(signInReducer, false, initialSignInState);
   const stateRef = useRef<SignInState>(state);
@@ -113,6 +115,10 @@ function SignInFlow({ navigation }: Props): ReactElement {
   const [passwordText, setPasswordText] = useState('');
   const field = useRef<TextInput | null>(null);
   const live = useRef(true);
+  /** The flow's one `auth.native.signin` was sent (section 15): neither the completion nor the leave sends a second. */
+  const sent = useRef(false);
+  /** The last step drawn before `done`, kept on screen (waiting) until the screen leaves. */
+  const shown = useRef<Exclude<SignInStep, 'done'>>('email');
   const layoutClass = useLayoutClass();
 
   const dispatch = useCallback((event: SignInEvent) => {
@@ -120,23 +126,32 @@ function SignInFlow({ navigation }: Props): ReactElement {
     dispatchState(event);
   }, []);
 
-  // D21: a re-trust pending on this device sends Continue to the password step first (a code cannot re-trust).
-  const [retrustPending, setRetrustPending] = useState(false);
+  /** Section 15: the flow's one event (`ok` once done, else its last result or `cancelled`). */
+  const sendFlow = useCallback(() => {
+    if (sent.current) return;
+    sent.current = true;
+    const os = nativeOs();
+    const payload = os === null ? null : signInFlowPayload(stateRef.current, os);
+    if (payload !== null) trackSignIn(payload);
+  }, []);
+
+  // D21: a re-trust pending on this device sends Continue to the password step first (a code cannot re-trust). Continue
+  // waits until it is read, so a quick Continue never sends a code that cannot re-trust.
+  const [retrust, setRetrust] = useState<boolean | null>(null);
   useEffect(() => {
-    void Promise.all([nativeGateState(), readTrust()]).then(([gate, trust]) => {
-      if (live.current) setRetrustPending(retrustPendingFor(gate, trust, useAccountStore.getState().pinResetByWait !== null));
+    void readRetrustInputs().then(({ gate, trust, waitReset }) => {
+      if (live.current) setRetrust(retrustPendingFor(gate, trust, waitReset));
     });
   }, []);
 
-  // Section 15: one event per flow. Leaving the screen before completion sends the flow's last result (or `cancelled`).
+  // Leaving the screen ends the flow: its last result, or `cancelled` (section 15). A Clerk call still out finishes it
+  // instead (`run`), so a sign-in that completes as the screen goes is still recorded, once.
   useEffect(
     () => () => {
       live.current = false;
-      const os = nativeOs();
-      const payload = os === null ? null : signInFlowPayload(stateRef.current, os);
-      if (payload !== null) trackSignIn(payload);
+      if (!stateRef.current.busy) sendFlow();
     },
-    [],
+    [sendFlow],
   );
 
   // The port to Clerk: each call goes to the latest sign-in resource Clerk answered with.
@@ -167,65 +182,87 @@ function SignInFlow({ navigation }: Props): ReactElement {
 
   const lineText = (line: SignInLine): string => (line === 'offline' ? messages.learner.welcome.grownUps.needsInternet : m.errors[line]);
 
-  // Every error line is announced (section 14).
+  // Every error line is announced, the same line twice included (section 14); so are unsupported and going offline.
   useEffect(() => {
     if (state.line !== null) AccessibilityInfo.announceForAccessibility(lineText(state.line));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- announced when the line changes, in the locale drawn
-  }, [state.line, state.clearField]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- announced once per line, in the locale drawn
+  }, [state.lineSeq]);
+  useEffect(() => {
+    if (state.step === 'unsupported') AccessibilityInfo.announceForAccessibility(m.errors.unsupported);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- announced when the step is reached
+  }, [state.step]);
+  const wasOnline = useRef(true);
+  useEffect(() => {
+    if (wasOnline.current && !online) AccessibilityInfo.announceForAccessibility(messages.learner.welcome.grownUps.needsInternet);
+    wasOnline.current = online;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- announced when the network goes
+  }, [online]);
 
-  /** Section 6.5: the records, the sign-in time and the event of a completed sign-in; then back to where it opened. */
+  /**
+   * Section 6.5, once the session is active: the event, the trust (with the re-trust rule) and the sign-in time first,
+   * then `GET /api/spaces` for the uses record, then back to where the sign-in was opened (only while the screen is
+   * still shown: a sign-in that completes as the screen goes is still recorded).
+   */
   const finish = async (): Promise<void> => {
-    const done = stateRef.current;
-    const proof = signInProof(done);
-    const os = nativeOs();
+    const proof = signInProof(stateRef.current);
     const at = Date.now();
-    let retrust = false;
+    sendFlow();
+    let keep = false;
+    let retrustPending = false;
     try {
-      const [gate, trust] = await Promise.all([nativeGateState(), readTrust()]);
-      const plan = proof === null ? null : afterSignInPlan(gate, trust, useAccountStore.getState().pinResetByWait !== null, proof);
+      const inputs = await readRetrustInputs();
+      const plan = proof === null ? null : afterSignInPlan(inputs.gate, inputs.trust, inputs.waitReset, proof);
+      retrustPending = plan?.retrustPending ?? false;
+      if (plan !== null && plan.writeTrust && keepsRecords(inputs.gate)) {
+        await writeTrust(trustRecord(inputs.gate.epoch));
+        keep = true;
+        if (plan.retrustNotice) await writeRetrustNotice(at);
+        if (inputs.waitReset) await clearRetrustRequired();
+      }
+    } catch {
+      // A failed read or write leaves the records to the next sign-in; the lock decides what opens (CS-N3).
+    }
+    useAccountVisit.getState().markSignedIn(at, retrustPending);
+    try {
       const api = createAccountApi({ baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL, dev: devBuild(), getToken: () => getToken(), fetch: (url, init) => fetch(url, init) });
       const spaces = await api.spaces();
       // In memory only, cleared with the session (ND-10): the account's spaces for this visit.
       if (spaces.ok) queryClient.setQueryData(accountQueryKey('spaces'), spaces.data);
-      if (plan !== null && plan.writeTrust && keepsRecords(gate)) {
-        await writeTrust(trustRecord(gate.epoch));
-        const uses = spaces.ok ? usesOfSpaces(spaces.data) : null;
-        if (uses !== null) await writeDeviceUses(deviceUsesRecord(uses, at));
-        if (plan.retrustNotice) await writeRetrustNotice(at);
-      }
-      retrust = plan?.retrustPending ?? false;
+      const uses = spaces.ok ? usesOfSpaces(spaces.data) : null;
+      if (keep && uses !== null) await writeDeviceUses(deviceUsesRecord(uses, at));
     } catch {
-      // A failed read or write leaves the records to the next sign-in; the lock decides what opens (CS-N3).
+      // The uses record waits for the home's next successful load (section 6.5).
     }
-    useAccountVisit.getState().markSignedIn(at, retrust);
-    if (os !== null) {
-      const payload = signInFlowPayload(stateRef.current, os);
-      if (payload !== null) trackSignIn(payload);
-    }
-    dispatch({ type: 'ended' });
     if (live.current) navigation.goBack();
   };
 
   /** Runs one Clerk step: busy first, then its events, then the completion when the flow is done. */
   const run = async (task: (p: SignInPort) => Promise<SignInEvent | SignInEvent[]>, method?: 'email_code' | 'password'): Promise<void> => {
     if (port === null || stateRef.current.busy) return;
+    if (stateRef.current.step !== 'done') shown.current = stateRef.current.step;
     dispatch({ type: 'start' });
     if (method !== undefined) dispatch({ type: 'attempt', method });
     const result = await task(port);
-    if (!live.current) return;
     for (const event of Array.isArray(result) ? result : [result]) dispatch(event);
     if (stateRef.current.step === 'done') await finish();
+    // The screen went while Clerk answered: the flow ends with this answer.
+    else if (!live.current) sendFlow();
   };
 
+  const step = state.step === 'done' ? shown.current : state.step;
   const busy = state.busy;
   const waits = busy || !online || port === null;
-  const step = state.step;
 
   const submit = (): void => {
     if (waits) return;
     if (step === 'email') {
-      if (!emailReady(emailText)) return;
-      void run((p) => submitEmail(p, emailText, retrustPending));
+      if (!emailReady(emailText) || retrust === null) return;
+      const pending = retrust;
+      // ND-14, one account at a time: a session Clerk still holds (its sign-out could not reach Clerk) ends first.
+      void run(async (p) => {
+        if (isSignedIn === true) await host.endSession();
+        return submitEmail(p, emailText, pending);
+      });
     } else if (step === 'code') void run((p) => submitCode(p, codeText), 'email_code');
     else if (step === 'password') void run((p) => submitPassword(p, passwordText), 'password');
     else if (step === 'second' && state.second !== null) {
@@ -237,15 +274,18 @@ function SignInFlow({ navigation }: Props): ReactElement {
   const fieldInvalid = state.line !== null;
   const hint = state.line === null ? undefined : lineText(state.line);
   const column = layoutClass.width === 'compact' ? { width: '100%' as const } : { width: '100%' as const, maxWidth: layout.pane.master, alignSelf: 'center' as const };
+  const offlineHint = online ? undefined : messages.learner.welcome.grownUps.needsInternet;
 
   const submitButton = (label: string, ready: boolean): ReactElement => (
-    <Button label={label} tone="primary" size="md" fullWidth softDisabled={waits || !ready} onPress={submit} testID="sign-in-submit" />
+    <AccountButton label={label} tone="primary" fullWidth waiting={waits || !ready} busy={busy} hint={offlineHint} onPress={submit} testID="sign-in-submit" />
   );
   const changeEmail = (
-    <LinkButton
+    <AccountButton
       label={m.signIn.changeEmail.cta}
+      tone="quiet"
+      fullWidth
+      waiting={busy}
       onPress={() => {
-        if (busy) return;
         setEmailText(state.email);
         dispatch({ type: 'change_email' });
       }}
@@ -253,17 +293,7 @@ function SignInFlow({ navigation }: Props): ReactElement {
     />
   );
   const resend = (
-    <Button
-      label={m.signIn.resend.cta}
-      tone="ghost"
-      size="md"
-      fullWidth
-      softDisabled={waits}
-      onPress={() => {
-        if (!waits) void run((p) => resendCode(p, stateRef.current));
-      }}
-      testID="sign-in-resend"
-    />
+    <AccountButton label={m.signIn.resend.cta} tone="paper" fullWidth waiting={waits} hint={offlineHint} onPress={() => void run((p) => resendCode(p, stateRef.current))} testID="sign-in-resend" />
   );
 
   return (
@@ -275,7 +305,7 @@ function SignInFlow({ navigation }: Props): ReactElement {
             <Body tone="secondary">{m.signIn.intro}</Body>
             <AccountField ref={field} kind="email" label={m.signIn.email} value={emailText} onChange={setEmailText} invalid={fieldInvalid} hint={hint} onSubmit={submit} />
             {state.line !== null ? <Strip tone="nudge" text={lineText(state.line)} testID="sign-in-error" /> : null}
-            {submitButton(messages.common.buttons.continue, emailReady(emailText))}
+            {submitButton(messages.common.buttons.continue, emailReady(emailText) && retrust !== null)}
             <View style={{ borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle, paddingTop: spacing.md, gap: spacing.xs }}>
               <Body size="sm" tone="secondary">
                 {m.signIn.learners}
@@ -304,17 +334,7 @@ function SignInFlow({ navigation }: Props): ReactElement {
             {submitButton(m.signIn.submit.cta, codeText.trim() !== '')}
             {resend}
             {state.factors.password ? (
-              <Button
-                label={m.signIn.usePassword.cta}
-                tone="ghost"
-                size="md"
-                fullWidth
-                softDisabled={busy}
-                onPress={() => {
-                  if (!busy) dispatch({ type: 'use_password' });
-                }}
-                testID="sign-in-use-password"
-              />
+              <AccountButton label={m.signIn.usePassword.cta} tone="paper" fullWidth waiting={busy} onPress={() => dispatch({ type: 'use_password' })} testID="sign-in-use-password" />
             ) : null}
             {changeEmail}
           </>
@@ -325,15 +345,13 @@ function SignInFlow({ navigation }: Props): ReactElement {
             {state.line !== null ? <Strip tone="nudge" text={lineText(state.line)} testID="sign-in-error" /> : null}
             {submitButton(m.signIn.submit.cta, passwordText !== '')}
             {state.factors.emailAddressId !== null ? (
-              <Button
+              <AccountButton
                 label={m.signIn.useCode.cta}
-                tone="ghost"
-                size="md"
+                tone="paper"
                 fullWidth
-                softDisabled={waits}
-                onPress={() => {
-                  if (!waits) void run((p) => switchToCode(p, stateRef.current));
-                }}
+                waiting={waits}
+                hint={offlineHint}
+                onPress={() => void run((p) => switchToCode(p, stateRef.current))}
                 testID="sign-in-use-code"
               />
             ) : null}
@@ -358,17 +376,7 @@ function SignInFlow({ navigation }: Props): ReactElement {
             {submitButton(m.signIn.submit.cta, codeText.trim() !== '')}
             {secondCodeSent(state.second) ? resend : null}
             {state.second.backupOffered && !state.second.usingBackup ? (
-              <Button
-                label={m.signIn.useBackup.cta}
-                tone="ghost"
-                size="md"
-                fullWidth
-                softDisabled={busy}
-                onPress={() => {
-                  if (!busy) dispatch({ type: 'use_backup' });
-                }}
-                testID="sign-in-use-backup"
-              />
+              <AccountButton label={m.signIn.useBackup.cta} tone="paper" fullWidth waiting={busy} onPress={() => dispatch({ type: 'use_backup' })} testID="sign-in-use-backup" />
             ) : null}
             {changeEmail}
           </>
@@ -376,10 +384,9 @@ function SignInFlow({ navigation }: Props): ReactElement {
         {step === 'unsupported' ? (
           <>
             <Strip tone="info" text={m.errors.unsupported} testID="sign-in-unsupported" />
-            <Button
+            <AccountButton
               label={m.signIn.changeEmail.cta}
-              tone="ghost"
-              size="md"
+              tone="paper"
               fullWidth
               onPress={() => {
                 setEmailText(state.email);
@@ -392,6 +399,12 @@ function SignInFlow({ navigation }: Props): ReactElement {
       </View>
     </Screen>
   );
+}
+
+/** What the re-trust rule reads (section 7.3): the gate state, the trust, and the 24-hour wait's record or its copy. */
+async function readRetrustInputs(): Promise<{ gate: Awaited<ReturnType<typeof nativeGateState>>; trust: Awaited<ReturnType<typeof readTrust>>; waitReset: boolean }> {
+  const [gate, trust, required] = await Promise.all([nativeGateState(), readTrust(), readRetrustRequired()]);
+  return { gate, trust, waitReset: required || useAccountStore.getState().pinResetByWait !== null };
 }
 
 /** A strip (D5): an error line in amber (`feedback.nudgeLight`, a `feedback.nudge` edge), a notice, or offline. */

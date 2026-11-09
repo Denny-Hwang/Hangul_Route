@@ -68,8 +68,10 @@ export function accountCardView(input: AccountCardInput): AccountCardView {
 /**
  * ND-5, CS-N11: a card button that opens an account screen or signs in (Sign in, Sign in again) on a `pin` device
  * needs a typed PIN or a native sign-in within 2 minutes; without one it asks the typed PIN first (`verify_pin`). On
- * an `open` device there is no PIN to ask.
+ * an `open` device there is no PIN to ask; a gate not read yet fails closed.
  */
 export function cardEntry(gate: NativeGateState | null, fresh: boolean): 'go' | 'verify_pin' {
-  return gate !== null && gate.state === 'pin' && !fresh ? 'verify_pin' : 'go';
+  // Only an `open` device goes without a PIN; a gate not read yet (or any other state) fails closed.
+  if (gate !== null && gate.state === 'open') return 'go';
+  return fresh && gate !== null && gate.state === 'pin' ? 'go' : 'verify_pin';
 }

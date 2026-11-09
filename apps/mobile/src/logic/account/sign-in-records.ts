@@ -10,7 +10,8 @@ import type { SignInProof } from './sign-in-step';
  *   `hr:grownup:deviceUses` (`{ v: 1, uses, at }`, no names, no ids) and the trust `hr:grownup:trust` (`{ v: 1, epoch }`).
  *   Anywhere else nothing is written.
  * - **Re-trust** (section 7.3, R-1): when the device holds a trust record for another epoch (or one that cannot be read
- *   or parsed), or the OA-D21 record `account:pinResetByWait` is set, a sign-in writes the new trust only if it used
+ *   or parsed), or the OA-D21 record `account:pinResetByWait` is set, or the account's own copy of it
+ *   (`hr:grownup:retrustRequired`) is, a sign-in writes the new trust only if it used
  *   the password or a second factor of the account. An email code alone signs in but leaves the lock
  *   (`retrustPending`, the `retrust_password` line). An account with no password re-trusts with the code (R-1). As
  *   built, a second factor that is itself an emailed code, and Clerk's new-device check (also an emailed code), do not
@@ -24,6 +25,19 @@ import type { SignInProof } from './sign-in-step';
 export const DEVICE_USES_RECORD_KEY = 'grownup:deviceUses';
 export const TRUST_RECORD_KEY = 'grownup:trust';
 export const RETRUST_NOTICE_KEY = 'grownup:retrustNotice';
+/**
+ * The account's own copy of the 24-hour wait's record (`{ v: 1, at }`). The Grown-up area's OA-D21 notice deletes
+ * `account:pinResetByWait` as soon as it shows, which is before the account card below it can be pressed, so the
+ * native area copies it here when it opens; only a sign-in that writes the trust deletes it. Sign out never does: it
+ * holds no account data, only that the PIN changed without the old one (section 7.3, R-1).
+ */
+export const RETRUST_REQUIRED_KEY = 'grownup:retrustRequired';
+
+/** `hr:grownup:retrustRequired` as read: absent is false; a record, a value that does not parse or a failed read is true. */
+export function retrustRequiredOf(raw: unknown, failed: boolean): boolean {
+  if (failed) return true;
+  return raw !== null && raw !== undefined;
+}
 
 /** The trust record as read: none, a valid record, or one that could not be read or does not parse. */
 export type TrustRead = { kind: 'none' } | { kind: 'trust'; trust: AccountTrust } | { kind: 'damaged' };
@@ -48,11 +62,12 @@ export function keepsRecords(gate: NativeGateState): gate is { state: 'pin'; epo
 
 /**
  * Section 7.3, D21: a re-trust is pending on this device: a trust record for another epoch (or one that cannot be
- * read), or `account:pinResetByWait` set. Only on a device that keeps records.
+ * read), or the 24-hour wait's record (`account:pinResetByWait`, or the account's copy, `retrustRequiredOf`). Only on
+ * a device that keeps records.
  */
-export function retrustPendingFor(gate: NativeGateState, trust: TrustRead, pinResetByWait: boolean): boolean {
+export function retrustPendingFor(gate: NativeGateState, trust: TrustRead, waitReset: boolean): boolean {
   if (!keepsRecords(gate)) return false;
-  if (pinResetByWait || trust.kind === 'damaged') return true;
+  if (waitReset || trust.kind === 'damaged') return true;
   return trust.kind === 'trust' && trust.trust.epoch !== gate.epoch;
 }
 
@@ -71,11 +86,12 @@ export interface AfterSignInPlan {
   /** Write `hr:grownup:retrustNotice` (the home's once-only notice after a re-trust). */
   retrustNotice: boolean;
 }
+// A plan that writes the trust also deletes `hr:grownup:retrustRequired` (the PIN is trusted again).
 
 /** What a completed sign-in writes (sections 6.5 and 7.3). */
-export function afterSignInPlan(gate: NativeGateState, trust: TrustRead, pinResetByWait: boolean, proof: SignInProof): AfterSignInPlan {
+export function afterSignInPlan(gate: NativeGateState, trust: TrustRead, waitReset: boolean, proof: SignInProof): AfterSignInPlan {
   if (!keepsRecords(gate)) return { writeTrust: false, retrustPending: false, retrustNotice: false };
-  const retrust = retrustPendingFor(gate, trust, pinResetByWait);
+  const retrust = retrustPendingFor(gate, trust, waitReset);
   if (retrust && !proofRetrusts(proof)) return { writeTrust: false, retrustPending: true, retrustNotice: false };
   return { writeTrust: true, retrustPending: false, retrustNotice: retrust };
 }

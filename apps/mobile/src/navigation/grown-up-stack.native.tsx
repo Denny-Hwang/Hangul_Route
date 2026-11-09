@@ -8,10 +8,11 @@ import type { NativeGateState } from '../logic/account/gate-state';
 import { clearAccountQueries, type AccountQueryClient } from '../logic/account/queries';
 import type { ClerkHost, ClerkHostProviderProps } from '../platform/clerk-host';
 import { applyGateChange, applyGateToTokens, clerkTokens, ensureInstallSweep } from '../platform/clerk-token-cache.native';
+import { writeRetrustRequired } from '../platform/account-records';
 import { reportCrash } from '../platform/crash-report';
 import { AccountHostContext, ClerkMountContext, OFF_HOST, type AccountHost } from '../screens/account/account-host';
-import { SignInScreen } from '../screens/account/SignInScreen.native';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
+import { useAccountStore } from '../store/account-store';
 import { useAccountVisit } from '../store/account-visit';
 import { onGrownUpSessionClosed } from '../store/grown-up-session';
 import { nativeGateState, watchNativeGateState } from '../store/native-gate-state';
@@ -136,6 +137,11 @@ export function bindAccountQueryClearing(): () => void {
  */
 const Stack = createNativeStackNavigator<GrownUpStackParamList>();
 
+/** The sign-in screen's module, required when the route is first shown (never at launch, CS-N13). */
+function loadSignInScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'SignIn'>> {
+  return (require('../screens/account/SignInScreen.native') as typeof import('../screens/account/SignInScreen.native')).SignInScreen;
+}
+
 /** A Clerk render error: the area goes on without Clerk; the crash report names the class only (CS-N15). */
 function reportClerkError(error: unknown): void {
   const scrubbed = new Error('');
@@ -161,6 +167,9 @@ export function GrownUpStack({ route }: Props): ReactElement {
     accountQueries = queryClient;
     // A new visit: an earlier visit's sign-in no longer counts (ND-9), nor its sign-in time (ND-5).
     useAccountVisit.getState().endVisit();
+    // Section 7.3 (R-1): the 24-hour wait's record, copied for the account before the dashboard's OA-D21 notice deletes
+    // it (the dashboard mounts only after this area decided its Clerk provider, so this runs first).
+    if (useAccountStore.getState().pinResetByWait !== null) void writeRetrustRequired(Date.now()).catch(() => undefined);
     return () => {
       void clearAccountQueries(queryClient);
     };
@@ -201,8 +210,9 @@ export function GrownUpStack({ route }: Props): ReactElement {
   const navigator = (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} initialParams={route.params} />
-      {/* F-AUTH-004 section 6.3 (row NS-3): the grown-up sign-in, reached from the account card (and the rows of NS-4). */}
-      <Stack.Screen name="SignIn" component={SignInScreen} />
+      {/* F-AUTH-004 section 6.3 (row NS-3): the grown-up sign-in, reached from the account card (and the rows of NS-4).
+          Loaded only when it is first shown: it imports Clerk's Expo SDK, which never loads before the provider (ND-11). */}
+      <Stack.Screen name="SignIn" getComponent={loadSignInScreen} />
     </Stack.Navigator>
   );
   return (

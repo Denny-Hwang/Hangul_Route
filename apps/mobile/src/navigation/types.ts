@@ -224,6 +224,12 @@ export type RootStackParamList = {
     lockedFrom?: { via: 'chooser'; trigger: WhoTrigger } | { via: 'profile' };
     /** [OA] `next: 'GrownUpUse'`: the chooser row that asked for the PIN (a code, never an id); its page is `grownUpTarget(use)`. */
     use?: GrownUpUse | 'signin';
+    /**
+     * F-AUTH-004 ND-5, CS-N11, D6, D17 (row NS-3; iOS and Android only): the typed PIN an account entry asks for (the
+     * Grown-up area account card's Sign in and Sign in again, through `next: 'FreshPin'`): no face or fingerprint
+     * button, titled **Grown-up account**.
+     */
+    typedOnly?: true;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: {

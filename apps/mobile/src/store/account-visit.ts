@@ -11,6 +11,8 @@ import { create } from 'zustand';
  *   next mount of the area.
  * - `retrustPending`: this run's sign-in used only an email code after a PIN change, so it wrote no trust and the lock
  *   stays (`retrust_password`, section 7.3). Kept for the run; forgotten at sign-out or at a sign-in that re-trusts.
+ * - `signedOutThisRun`: Sign out ran in this run and no sign-in followed. Offline, Clerk's own sign-out cannot reach
+ *   Clerk and its in-memory session may stay (R-2); the account then reads as signed out all the same.
  *
  * Section 6.5 names `ui-store.lastAccountSignInAt`; it lives here instead so the web start bundle, which loads
  * `ui-store`, carries none of it: only native code (the Grown-up area stack and the account screens) imports this.
@@ -20,6 +22,7 @@ interface AccountVisitState {
   lastAccountSignInAt: number | null;
   signedInThisVisit: boolean;
   retrustPending: boolean;
+  signedOutThisRun: boolean;
 }
 
 interface AccountVisitActions {
@@ -27,15 +30,15 @@ interface AccountVisitActions {
   markSignedIn: (at: number, retrustPending: boolean) => void;
   /** The visit ended (the session closed, or the area mounts again): the sign-in time and the visit's sign-in go. */
   endVisit: () => void;
-  /** Sign out: everything goes. */
+  /** Sign out: everything goes, and the account reads as signed out until the next sign-in. */
   forget: () => void;
 }
 
-const EMPTY: AccountVisitState = { lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false };
+const EMPTY: AccountVisitState = { lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false };
 
 export const useAccountVisit = create<AccountVisitState & AccountVisitActions>((set) => ({
   ...EMPTY,
-  markSignedIn: (at, retrustPending) => set({ lastAccountSignInAt: at, signedInThisVisit: true, retrustPending }),
+  markSignedIn: (at, retrustPending) => set({ lastAccountSignInAt: at, signedInThisVisit: true, retrustPending, signedOutThisRun: false }),
   endVisit: () => set({ lastAccountSignInAt: null, signedInThisVisit: false }),
-  forget: () => set(EMPTY),
+  forget: () => set({ ...EMPTY, signedOutThisRun: true }),
 }));

@@ -11,6 +11,7 @@ import {
   nativeHomeFor,
   proofRetrusts,
   recordsToDelete,
+  retrustRequiredOf,
   retrustPendingFor,
   trustOfRead,
   trustReadOf,
@@ -79,6 +80,14 @@ describe('section 7.3: the re-trust rule (R-1)', () => {
     expect(retrustPendingFor(PIN, OTHER, false)).toBe(true);
     expect(retrustPendingFor(PIN, DAMAGED, false)).toBe(true);
     expect(retrustPendingFor(PIN, NONE, true)).toBe(true);
+  });
+
+  it('the account’s copy of the 24-hour wait’s record: absent no; present, odd or unreadable yes (fail closed)', () => {
+    expect(retrustRequiredOf(null, false)).toBe(false);
+    expect(retrustRequiredOf(undefined, false)).toBe(false);
+    expect(retrustRequiredOf({ v: 1, at: 5 }, false)).toBe(true);
+    expect(retrustRequiredOf('junk', false)).toBe(true);
+    expect(retrustRequiredOf(null, true)).toBe(true);
   });
 
   it('a first sign-in (no record) trusts with the email code alone', () => {

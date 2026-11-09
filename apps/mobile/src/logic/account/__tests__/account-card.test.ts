@@ -59,10 +59,12 @@ describe('the account card (D7)', () => {
 });
 
 describe('ND-5, CS-N11: the card’s Sign in and Sign in again ask the typed PIN without a fresh proof', () => {
-  it('on pin: verify_pin unless fresh; on open and before the gate is read: go', () => {
+  it('on pin: verify_pin unless fresh; on open: go; a gate not read yet or any other state fails closed', () => {
     expect(cardEntry({ state: 'pin', epoch: 7 }, false)).toBe('verify_pin');
     expect(cardEntry({ state: 'pin', epoch: 7 }, true)).toBe('go');
     expect(cardEntry({ state: 'open' }, false)).toBe('go');
-    expect(cardEntry(null, false)).toBe('go');
+    expect(cardEntry(null, true)).toBe('verify_pin');
+    expect(cardEntry({ state: 'unknown' }, true)).toBe('verify_pin');
+    expect(cardEntry({ state: 'nopin' }, true)).toBe('verify_pin');
   });
 });

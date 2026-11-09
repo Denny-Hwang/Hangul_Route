@@ -119,6 +119,7 @@ describe('the error table (section 6.3): Clerk’s English never shows', () => {
   it.each([
     [clerkError('form_code_incorrect'), 'other', 'wrongCode', 'wrong_code'],
     [clerkError('verification_expired'), 'other', 'codeExpired', 'expired'],
+    [clerkError('verification_failed'), 'other', 'codeExpired', 'expired'],
     [clerkError('form_password_incorrect'), 'other', 'wrongPassword', 'wrong_password'],
     [clerkError('form_identifier_not_found'), 'other', 'cantSignIn', 'refused'],
     [clerkError('form_identifier_not_found', 404), 'identify', 'cantSignIn', 'refused'],
@@ -152,9 +153,9 @@ describe('the code and password steps', () => {
     expect(port.calls).toEqual(['attemptFirstFactor:{"strategy":"email_code","code":"482139"}', 'setActive:"sess_1"']);
   });
 
-  it('a wrong code keeps the step and clears the field; an expired one says so', async () => {
+  it('a wrong code keeps the step and clears the field; an expired one says so and clears it too (board 9)', async () => {
     expect(await submitCode(fakePort({ attemptFirstFactor: async () => Promise.reject(clerkError('form_code_incorrect')) }), '1')).toEqual({ type: 'failed', line: 'wrongCode', result: 'wrong_code', clear: true });
-    expect(await submitCode(fakePort({ attemptFirstFactor: async () => Promise.reject(clerkError('verification_expired')) }), '1')).toEqual({ type: 'failed', line: 'codeExpired', result: 'expired', clear: false });
+    expect(await submitCode(fakePort({ attemptFirstFactor: async () => Promise.reject(clerkError('verification_expired')) }), '1')).toEqual({ type: 'failed', line: 'codeExpired', result: 'expired', clear: true });
   });
 
   it('a wrong password clears the field; the password goes as typed (never trimmed)', async () => {
@@ -193,13 +194,13 @@ describe('the second step and the new-device check', () => {
     const port = fakePort({
       attemptFirstFactor: async () => view({ status: 'needs_second_factor', clientTrustState: 'new', supportedSecondFactors: [{ strategy: 'email_code', emailAddressId: 'ea_1' }] }),
     });
-    expect(await submitPassword(port, 'p')).toMatchObject({ type: 'to_second', second: { kind: 'device', strategy: 'email_code', factorId: 'ea_1' } });
+    expect(await submitPassword(port, 'p')).toMatchObject({ type: 'to_second', second: { kind: 'device', strategy: 'email_code', factorId: 'ea_1', backupOffered: false } });
     expect(port.calls).toContain('prepareSecondFactor:{"strategy":"email_code","emailAddressId":"ea_1"}');
   });
 
   it('a raw needs_client_trust status (a later SDK) is the device check, by email or text only', async () => {
     const trust = (factors: { strategy: string; emailAddressId?: string; phoneNumberId?: string }[]): ClerkSignInView => view({ status: 'needs_client_trust', supportedSecondFactors: factors });
-    expect(secondStepOf(trust([{ strategy: 'totp' }, { strategy: 'phone_code', phoneNumberId: 'pn' }]))).toMatchObject({ kind: 'device', strategy: 'phone_code', factorId: 'pn' });
+    expect(secondStepOf(trust([{ strategy: 'totp' }, { strategy: 'phone_code', phoneNumberId: 'pn' }, { strategy: 'backup_code' }]))).toMatchObject({ kind: 'device', strategy: 'phone_code', factorId: 'pn', backupOffered: false });
     expect(secondStepOf(trust([{ strategy: 'email_code' }]))).toMatchObject({ kind: 'device', strategy: 'email_code', factorId: null });
     expect(secondStepOf(trust([{ strategy: 'totp' }, { strategy: 'email_link', emailAddressId: 'ea' }]))).toBeNull();
     expect(await submitCode(fakePort({ attemptFirstFactor: async () => trust([{ strategy: 'totp' }]) }), '1')).toEqual({ type: 'unsupported' });
@@ -301,9 +302,10 @@ describe('the reducer', () => {
     expect(apply(failed, { type: 'start' })).toMatchObject({ busy: true, line: null });
   });
 
-  it('a wrong code or password bumps the field (cleared and focused); other lines keep it', () => {
+  it('a wrong code or password bumps the field (cleared and focused); other lines keep it; every line is counted', () => {
     expect(apply(start, { type: 'failed', line: 'wrongCode', result: 'wrong_code', clear: true }).clearField).toBe(1);
-    expect(apply(start, { type: 'failed', line: 'tooMany', result: 'too_many', clear: false }).clearField).toBe(0);
+    const twice = apply(start, { type: 'failed', line: 'tooMany', result: 'too_many', clear: false }, { type: 'failed', line: 'tooMany', result: 'too_many', clear: false });
+    expect(twice).toMatchObject({ clearField: 0, lineSeq: 2 });
   });
 
   it('every step change: the new step, its factors, a fresh field; the second step marks the flow', () => {
@@ -322,6 +324,8 @@ describe('the reducer', () => {
     expect(apply(codeOnly, { type: 'use_password' })).toBe(codeOnly);
     const second = apply(code, { type: 'to_second', second: SECOND });
     expect(apply(second, { type: 'use_password' })).toBe(second);
+    const email = { ...start, factors: { emailAddressId: 'e', password: true } };
+    expect(apply(email, { type: 'use_password' })).toBe(email);
   });
 
   it('Use a backup code once, where offered: a plain field (D4)', () => {
@@ -342,7 +346,8 @@ describe('the reducer', () => {
 
   it('done: the flow result is ok; ended marks the event sent', () => {
     const done = apply(start, { type: 'attempt', method: 'password' }, { type: 'failed', line: 'wrongPassword', result: 'wrong_password', clear: true }, { type: 'done' });
-    expect(done).toMatchObject({ step: 'done', flow: { method: 'password', result: 'ok' } });
+    // The screen keeps its last step drawn, waiting, while section 6.5 runs.
+    expect(done).toMatchObject({ step: 'done', busy: true, flow: { method: 'password', result: 'ok' } });
     expect(apply(done, { type: 'ended' }).flow.ended).toBe(true);
   });
 });

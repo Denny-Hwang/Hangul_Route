@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { readTrust, removeRecord, writeDeviceUses, writeRetrustNotice, writeTrust } from '../account-records';
+import { clearRetrustRequired, readRetrustRequired, readTrust, removeRecord, writeDeviceUses, writeRetrustNotice, writeRetrustRequired, writeTrust } from '../account-records';
 
 /** F-AUTH-004 section 13.1 (row NS-3): the account's records go through the `hr:` storage wrapper, and nothing else. */
 
@@ -44,5 +44,18 @@ describe('the account records', () => {
     data.set('hr:grownup:trust', '{}');
     await removeRecord('grownup:trust');
     expect(data.has('hr:grownup:trust')).toBe(false);
+  });
+
+  it('keeps the 24-hour wait’s copy until a trusting sign-in clears it; an unreadable copy counts (fail closed)', async () => {
+    expect(await readRetrustRequired()).toBe(false);
+    await writeRetrustRequired(42);
+    expect(data.get('hr:grownup:retrustRequired')).toBe('{"v":1,"at":42}');
+    expect(await readRetrustRequired()).toBe(true);
+    data.set('hr:grownup:retrustRequired', '{bad');
+    expect(await readRetrustRequired()).toBe(true);
+    vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('read'));
+    expect(await readRetrustRequired()).toBe(true);
+    await clearRetrustRequired();
+    expect(await readRetrustRequired()).toBe(false);
   });
 });

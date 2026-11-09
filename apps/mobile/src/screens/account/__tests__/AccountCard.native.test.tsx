@@ -1,13 +1,14 @@
 import { ConfirmSheet, type ConfirmSheetProps } from '@hangul-route/design-system';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { createElement, type ReactElement } from 'react';
+import { Linking } from 'react-native';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { accountDenyHits } from '../../../logic/account/deny-list';
 import { useAccountVisit } from '../../../store/account-visit';
 import { useLocaleStore } from '../../../store/locale-store';
 import { useUiStore } from '../../../store/ui-store';
-import { byTestId, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
+import { byTestId, hostNodes, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
 import { AccountHostContext, ClerkMountContext, type AccountHost, type ClerkMountState } from '../account-host';
 import { AccountCard } from '../AccountCard.native';
 
@@ -64,10 +65,11 @@ let host = makeHost();
 let focus: (() => void)[] = [];
 let navigate = vi.fn();
 
+/** Lets the card's parts load (`import()`) and its decisions answer. */
 async function settle(): Promise<void> {
-  for (let i = 0; i < 4; i += 1) {
+  for (let i = 0; i < 12; i += 1) {
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 2));
     });
   }
 }
@@ -101,11 +103,17 @@ const tap = async (root: ReactTestInstance, id: string): Promise<void> => {
   await settle();
 };
 
+// The card's parts load with `import()` when drawn; loaded once here, so a test never waits on the module graph.
+beforeAll(async () => {
+  await import('../AccountCardBody.native');
+  await import('../AccountCardClerk.native');
+});
+
 beforeEach(() => {
   setPlatform('ios');
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
   useLocaleStore.setState({ device: 'en', byProfile: {} });
-  useAccountVisit.getState().forget();
+  useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
   useUiStore.setState({ lastPinTypedAt: Date.now(), lastPinVerifiedAt: Date.now() });
   env.enabled = true;
   env.gate = { state: 'pin', epoch: 7 };
@@ -169,7 +177,7 @@ describe('signed out (boards 8 and 13)', () => {
     useUiStore.setState({ lastPinTypedAt: Date.now() - 3 * 60_000 });
     const r = await mount();
     await tap(r.root, 'account-card-sign-in');
-    expect(navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin' });
+    expect(navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin', typedOnly: true });
     useUiStore.setState({ lastPinTypedAt: Date.now() });
     await refocus();
     expect(navigate).toHaveBeenLastCalledWith('SignIn', undefined);
@@ -278,6 +286,9 @@ describe('signed in (boards 9, 10, 12b, 14)', () => {
     await settle();
     expect(host.wipeTokens).toHaveBeenCalled();
     expect(env.removed).toContain('grownup:trust');
+    // Clerk still holds its session (its sign-out could not reach Clerk): the card reads signed out all the same.
+    expect(screenTexts(r.root)).toContain(m.card.signedOut);
+    expect(screenTexts(r.root)).not.toContain(en.console.lock.firstSignIn);
   });
 });
 
@@ -317,7 +328,7 @@ describe('locked (board 11)', () => {
     useUiStore.setState({ lastPinTypedAt: Date.now() - 3 * 60_000 });
     const r = await mount();
     await tap(r.root, 'account-card-sign-in-again');
-    expect(navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin' });
+    expect(navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin', typedOnly: true });
     expect(host.endSession).not.toHaveBeenCalled();
     useUiStore.setState({ lastPinTypedAt: Date.now() });
     await refocus();
@@ -327,12 +338,15 @@ describe('locked (board 11)', () => {
 });
 
 describe('section 9.2: no purchase, price, renewal, web or sign-up word in any state, in en, es and ko, on iOS and Android', () => {
-  type Setup = { gate?: { state: string; epoch?: number }; trust?: { kind: string; trust?: unknown }; signedIn?: boolean; mount?: ClerkMountState; online?: boolean; retrust?: boolean; sheet?: boolean };
+  type Setup = { gate?: { state: string; epoch?: number }; trust?: { kind: string; trust?: unknown }; signedIn?: boolean; mount?: ClerkMountState; online?: boolean; retrust?: boolean; sheet?: boolean; fresh?: boolean };
+  const openURL = vi.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
   const STATES: Record<string, Setup> = {
     signedOut: { signedIn: false },
     signedOutOffline: { signedIn: false, online: false },
     signedIn: {},
     signedInOffline: { online: false },
+    signedInNoEmail: { fresh: false },
+    lockedOffline: { trust: { kind: 'none' }, online: false },
     signOutSheet: { sheet: true },
     noTrust: { trust: { kind: 'none' } },
     pinChanged: { trust: { kind: 'trust', trust: { v: 1, epoch: 3 } } },
@@ -349,9 +363,9 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
           setPlatform(platform);
           vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
           useLocaleStore.setState({ device: locale, byProfile: {} });
-          useAccountVisit.getState().forget();
+          useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
           if (s.retrust === true) useAccountVisit.getState().markSignedIn(Date.now() - 10 * 60_000, true);
-          useUiStore.setState({ lastPinTypedAt: Date.now() });
+          useUiStore.setState({ lastPinTypedAt: s.fresh === false ? Date.now() - 3 * 60_000 : Date.now() });
           env.gate = s.gate ?? { state: 'pin', epoch: 7 };
           env.trust = s.trust ?? { kind: 'trust', trust: { v: 1, epoch: 7 } };
           env.clerk = { isLoaded: true, isSignedIn: s.signedIn ?? true, email: 'dana@example.com' };
@@ -362,9 +376,11 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
           expect(texts, `${locale} ${name}`).toContain(getMessages(locale).caregiver.account.card.title);
           const hits = texts.flatMap((t) => accountDenyHits(t.replace('dana@example.com', ''), locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
           expect(hits).toEqual([]);
+          expect(hostNodes(r.root, (n) => n.props.href !== undefined), `${locale} ${name}: a link`).toEqual([]);
           await unmount(r);
         }
       }
+      expect(openURL).not.toHaveBeenCalled();
     });
   }
 });
