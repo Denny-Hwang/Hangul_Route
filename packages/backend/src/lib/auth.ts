@@ -21,7 +21,8 @@ import { devFallbacksAllowed, environmentName, notConfigured, type RuntimeEnv } 
  * local dev server and workers.dev leniency that CORS keeps without an
  * explicit list never applies to tokens there, since a Clerk Production
  * instance serves only its own domain. A token with no `azp` (not minted by a
- * browser) follows Clerk's default and is checked for signature and expiry only.
+ * browser) follows Clerk's default and is checked for signature and expiry only; F-AUTH-004 (row NS-1) lets it read
+ * the account routes (the native app's token) but never a money route (`lib/native-client`).
  */
 export async function getAuthUserId(c: Context): Promise<string | null> {
   return (await getAuthClaims(c))?.sub ?? null;
@@ -42,6 +43,12 @@ export interface AuthClaims {
   sub: string;
   fva: FactorVerificationAge | null;
   verified: boolean;
+  /**
+   * F-AUTH-004 section 9.4 (row NS-1): the site that minted the verified token (`azp`), or null when it names none
+   * (a missing, empty or non-string claim): only a non-browser client, such as the native app's Clerk SDK, mints one
+   * without it, so the money routes refuse it (`lib/native-client`). Null on the dev fallback, which has no token.
+   */
+  azp: string | null;
 }
 
 const claimsByRequest = new WeakMap<object, Promise<AuthClaims | null>>();
@@ -67,7 +74,7 @@ async function readAuthClaims(c: Context): Promise<AuthClaims | null> {
   const token = header.slice('Bearer '.length).trim();
   if (token.length === 0) return null;
 
-  if (!keyBound) return { sub: token, fva: null, verified: false }; // DEV FALLBACK — opted in explicitly, never in production.
+  if (!keyBound) return { sub: token, fva: null, verified: false, azp: null }; // DEV FALLBACK — opted in explicitly, never in production.
 
   // Production: the allow-list alone, never widened by what the token claims.
   const previewParty = environmentName(env) === 'production' ? undefined : claimedParty(token);
@@ -77,7 +84,9 @@ async function readAuthClaims(c: Context): Promise<AuthClaims | null> {
       jwtKey: env.CLERK_JWT_KEY,
       authorizedParties: authorizedPartiesFor(env.ALLOWED_ORIGINS, previewParty),
     });
-    return typeof payload.sub === 'string' ? { sub: payload.sub, fva: factorAges((payload as { fva?: unknown }).fva), verified: true } : null;
+    if (typeof payload.sub !== 'string') return null;
+    const azp = (payload as { azp?: unknown }).azp;
+    return { sub: payload.sub, fva: factorAges((payload as { fva?: unknown }).fva), verified: true, azp: typeof azp === 'string' && azp.length > 0 ? azp : null };
   } catch {
     return null;
   }

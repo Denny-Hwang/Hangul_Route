@@ -1,7 +1,7 @@
 import { TELEMETRY_DAILY_KEEP_DAYS, TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryDb, type Db } from '../../db';
-import { GUEST_PAYLOAD_RULES, OA_PAYLOAD_RULES } from '../server-events';
+import { GUEST_PAYLOAD_RULES, NATIVE_AUTH_PAYLOAD_RULES, OA_PAYLOAD_RULES } from '../server-events';
 import {
   ONBOARDING_STARTED_DIM_KEYS,
   TELEMETRY_DAILY_PURGE_LIMIT,
@@ -38,9 +38,12 @@ describe('telemetryDailyEnabled', () => {
 });
 
 describe('isDailyCountedName', () => {
-  it('counts the section 15 names, session.start, [GU] the guest.* names and onboarding.started, nothing else', () => {
+  it('counts the section 15 names, session.start, [GU] the guest.* names, onboarding.started and the auth.native.* names, nothing else', () => {
     const counted = TELEMETRY_EVENT_NAMES.filter(isDailyCountedName);
-    expect([...counted].sort()).toEqual(['session.start', 'onboarding.started', ...Object.keys(OA_PAYLOAD_RULES), ...Object.keys(GUEST_PAYLOAD_RULES)].sort());
+    expect([...counted].sort()).toEqual(['session.start', 'onboarding.started', ...Object.keys(OA_PAYLOAD_RULES), ...Object.keys(GUEST_PAYLOAD_RULES), ...Object.keys(NATIVE_AUTH_PAYLOAD_RULES)].sort());
+    for (const name of ['auth.native.signin', 'auth.native.signout', 'auth.native.lock', 'auth.native.home']) expect(isDailyCountedName(name), name).toBe(true);
+    expect(isDailyCountedName('auth.native.signup')).toBe(false);
+    expect(isDailyCountedName('app.crash')).toBe(false);
     for (const name of ['guest.started', 'guest.first_letter', 'guest.quest_done', 'guest.left', 'guest.saved', 'guest.expired', 'onboarding.started']) expect(isDailyCountedName(name), name).toBe(true);
     expect(isDailyCountedName('guest.peeked')).toBe(false);
     expect(isDailyCountedName('onboarding.consent_given')).toBe(false);
