@@ -411,61 +411,68 @@ test.describe('story check step (fixture bundle)', () => {
     expect(errors).toEqual([]);
   });
 
-  test('word recap with a Korean voice: a speaker says its word in Korean, no "Say it yourself" chip, word_played once per word, and the last item audio is cut', async ({ page }) => {
-    // This spec's own engine with one ko-KR voice (it wins over the silent one of fixtures.ts).
-    await page.addInitScript(() => {
-      const spoken: string[] = [];
-      const w = window as Window & { __spoken?: string[]; __cancels?: number };
-      w.__spoken = spoken;
-      w.__cancels = 0;
-      const voice = { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false };
-      Object.defineProperty(window, 'speechSynthesis', {
-        configurable: true,
-        value: {
-          speaking: false,
-          pending: false,
-          speak: (u: SpeechSynthesisUtterance) => {
-            if (u.volume !== 0) spoken.push(u.text);
-            setTimeout(() => {
-              u.onstart?.call(u, new Event('start') as SpeechSynthesisEvent);
-              u.onend?.call(u, new Event('end') as SpeechSynthesisEvent);
-            }, 0);
-          },
-          cancel: () => {
-            w.__cancels = (w.__cancels ?? 0) + 1;
-          },
-          getVoices: () => [voice],
-          addEventListener: () => undefined,
-          removeEventListener: () => undefined,
-        },
-      });
-    });
-    await openChecks(page);
-    await answer(page, C1);
-    await answer(page, C2);
-    await pick(page, C3.right);
-    await expect(page.getByText(C3.explain)).toBeVisible();
-    // Whatever the last item was saying is cut when the recap opens (no Korean under the recap heading).
-    const cancelsBefore = await page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0);
-    await nextButton(page).click();
-    await expect(page.getByTestId('story-recap-title')).toBeVisible();
-    await expect
-      .poll(() => page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0))
-      .toBeGreaterThan(cancelsBefore);
-    await expect(page.getByTestId('story-recap-say-it')).toHaveCount(0);
-    await page.getByTestId('story-recap-hear-hangeullal').click();
-    await expect
-      .poll(() => page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken ?? []))
-      .toContain('한글날');
+  // This spec counts device-voice utterances: with the story clips bundled (AC-12a), a word with a clip plays it
+  // instead, so it runs with Web Audio off (the e2e fixture's clipsOn: false).
+  test.describe('with the device voice only', () => {
+    test.use({ clipsOn: false });
 
-    // story.recap.word_played once per word per visit.
-    await page.getByTestId('story-recap-hear-sejong').click();
-    await page.getByTestId('story-recap-hear-sejong').click();
-    const played = (await storyEvents(page)).filter((e) => e.name === 'story.recap.word_played').map((e) => e.payload);
-    expect(played).toEqual([
-      { storyId: 'story:hangul-day', wordId: 'hangeullal' },
-      { storyId: 'story:hangul-day', wordId: 'sejong' },
-    ]);
+    test('word recap with a Korean voice: a speaker says its word in Korean, no "Say it yourself" chip, word_played once per word, and the last item audio is cut', async ({ page }) => {
+      // This spec's own engine with one ko-KR voice (it wins over the silent one of fixtures.ts).
+      await page.addInitScript(() => {
+        const spoken: string[] = [];
+        const w = window as Window & { __spoken?: string[]; __cancels?: number };
+        w.__spoken = spoken;
+        w.__cancels = 0;
+        const voice = { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false };
+        Object.defineProperty(window, 'speechSynthesis', {
+          configurable: true,
+          value: {
+            speaking: false,
+            pending: false,
+            speak: (u: SpeechSynthesisUtterance) => {
+              if (u.volume !== 0) spoken.push(u.text);
+              setTimeout(() => {
+                u.onstart?.call(u, new Event('start') as SpeechSynthesisEvent);
+                u.onend?.call(u, new Event('end') as SpeechSynthesisEvent);
+              }, 0);
+            },
+            cancel: () => {
+              w.__cancels = (w.__cancels ?? 0) + 1;
+            },
+            getVoices: () => [voice],
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+          },
+        });
+      });
+      await openChecks(page);
+      await answer(page, C1);
+      await answer(page, C2);
+      await pick(page, C3.right);
+      await expect(page.getByText(C3.explain)).toBeVisible();
+      // Whatever the last item was saying is cut when the recap opens (no Korean under the recap heading).
+      const cancelsBefore = await page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0);
+      await nextButton(page).click();
+      await expect(page.getByTestId('story-recap-title')).toBeVisible();
+      await expect
+        .poll(() => page.evaluate(() => (window as Window & { __cancels?: number }).__cancels ?? 0))
+        .toBeGreaterThan(cancelsBefore);
+      await expect(page.getByTestId('story-recap-say-it')).toHaveCount(0);
+      await page.getByTestId('story-recap-hear-hangeullal').click();
+      await expect
+        .poll(() => page.evaluate(() => (window as Window & { __spoken?: string[] }).__spoken ?? []))
+        .toContain('한글날');
+
+      // story.recap.word_played once per word per visit.
+      await page.getByTestId('story-recap-hear-sejong').click();
+      await page.getByTestId('story-recap-hear-sejong').click();
+      const played = (await storyEvents(page)).filter((e) => e.name === 'story.recap.word_played').map((e) => e.payload);
+      expect(played).toEqual([
+        { storyId: 'story:hangul-day', wordId: 'hangeullal' },
+        { storyId: 'story:hangul-day', wordId: 'sejong' },
+      ]);
+    });
+
   });
 
   test('Close on the word recap ends the step like Done: every item was answered, and the recap is unscored', async ({ page }) => {
