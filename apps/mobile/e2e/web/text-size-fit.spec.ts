@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { touchTarget } from '@hangul-route/design-system/tokens';
-import { TEXT_SIZE_FACTORS } from '@hangul-route/design-system/text-size';
+import { TEXT_SIZE_FACTORS, typeScale } from '@hangul-route/design-system/text-size';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
 import { onboardSelf, openForGrownUps, openLettersEpisode, passDiscover, readStored, seedStored, journeyCellName, onboardChild, openGrownUpZone, seedRescueCode, unlockWithPin } from './helpers';
@@ -305,4 +305,65 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     await expectTextFits(page, 'an All lessons item page');
     await shot(page, 'dn3b-browse-item-largest-320x568');
   });
+});
+
+/**
+ * Welcome's title at 320, at 320 with 200 % text (a 160 px layout: React Native Web sets text in px, so 200 % browser
+ * zoom of 320 px is this window, WCAG 1.4.10) and at Largest, in en, es and ko. Korean wraps only between words
+ * (`keep-all`), so the Korean title's size stops where its longest word ("안녕하세요!") still fits a line: every line
+ * break falls at a space. In every language every character lies inside the window and the page does not scroll
+ * sideways, and en and es keep the display size. (Only the title is checked here: at 160 px other Welcome rows are wider than the window.)
+ * Before the fix the 160 px layout broke the Korean title inside its words ("안녕하세" / "요! 저는" / "호야예요" / ".").
+ */
+test.describe("Welcome's title fits 320 at 200 % text in every language, Korean words whole", () => {
+  const VIEWPORTS = [
+    { name: '320 px', width: 320, height: 568, largest: false },
+    { name: '320 px at 200 % text (a 160 px layout)', width: 160, height: 284, largest: false },
+    { name: '320 px at the Largest text size', width: 320, height: 568, largest: true },
+    { name: '320 px at 200 % text and Largest', width: 160, height: 284, largest: true },
+  ] as const;
+  const display = (largest: boolean): number => typeScale(largest ? TEXT_SIZE_FACTORS.largest : 1).size.display;
+  for (const locale of ['en', 'es', 'ko'] as const) {
+    for (const vp of VIEWPORTS) {
+      test(`${locale}, ${vp.name}`, async ({ page }) => {
+        const title = getMessages(locale).learner.welcome.title;
+        await page.setViewportSize({ width: 320, height: 568 });
+        await page.goto('/');
+        await seedStored(page, 'device:settings', { uiLocale: locale, uiLocaleAt: '2026-10-16T09:00:00.000Z', ...(vp.largest ? { textSize: 'largest' } : {}) });
+        await page.goto('/');
+        const heading = page.getByRole('heading', { name: title });
+        await expect(heading).toBeVisible();
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        // The lines the title is drawn in, read from where each character sits: each one breaks at a space and lies
+        // inside the window, and the page does not scroll sideways.
+        await expect
+          .poll(() =>
+            heading.evaluate((el, hangul) => {
+              const node = el.firstChild;
+              const text = node?.textContent ?? '';
+              const range = document.createRange();
+              const lines: string[] = [];
+              let top: number | null = null;
+              let outside = document.documentElement.scrollWidth > window.innerWidth;
+              for (let i = 0; i < text.length; i += 1) {
+                range.setStart(node!, i);
+                range.setEnd(node!, i + 1);
+                const box = range.getBoundingClientRect();
+                if (text[i] !== ' ' && (box.left < -1 || box.right > window.innerWidth + 1)) outside = true;
+                if (top === null || Math.abs(box.top - top) > 2) lines.push('');
+                top = box.top;
+                lines[lines.length - 1] += text[i];
+              }
+              // Only Korean is held to whole words here: en and es wrap as the browser's fonts allow (unchanged).
+              const whole = !hangul || lines.every((line, i) => i === lines.length - 1 || line.endsWith(' '));
+              return whole && !outside ? 'whole words, inside the window' : JSON.stringify({ lines, outside });
+            }, locale === 'ko'),
+          )
+          .toBe('whole words, inside the window');
+        if (locale !== 'ko') expect(await fontSizeOf(heading), `${locale} keeps the display size`).toBe(display(vp.largest));
+        else if (vp.width === 320) expect(await fontSizeOf(heading), 'ko keeps the display size where its words fit').toBe(display(vp.largest));
+        if (locale === 'ko' && vp.width === 160 && !vp.largest) await shot(page, 'welcome-ko-320-text200');
+      });
+    }
+  }
 });

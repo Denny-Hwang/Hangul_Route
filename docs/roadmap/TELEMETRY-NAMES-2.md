@@ -303,3 +303,18 @@ These are shape checks, so `questId`, `stampId` and `questKind` could still carr
 | 1 | `app.crash` | F-APP-001 (the crash screen, `learner.oops`) | `{ surface: 'learner' \| 'browse' \| 'presenter', route, errorName, message, chunk: boolean, appVersion }`: the root's error boundary caught an error and drew "Hoya tripped over a rock"; `chunk` is true when a lesson, screen or root chunk could not load | `App.tsx`, `BrowseApp.tsx` and `PresenterApp.tsx` (`onError` of each top-level `ErrorBoundary`, `platform/crash-report.ts`) |
 
 **All lessons.** The `/browse` root's telemetry fence (F-BROWSE-001 section 4.10) lets `app.crash` through beside the five `browse.*` names; it carries nothing of a learner, and it is sent through the browse queue, never the learner's.
+
+## V. Native grown-up sign-in names (F-AUTH-004 section 15; added by its NS-1 PR)
+
+> Four new names. Row **NS-1** adds them to `TELEMETRY_EVENT_NAMES` (after section U), the exact-list tests (`packages/content-schema/src/__tests__/telemetry.test.ts`, `native-auth-telemetry.test.ts` and `packages/backend/src/__tests__/telemetry-native-auth.test.ts`) and, in the same Worker-first deploy, their storage rule to `keptEventFields` (`packages/backend/src/lib/server-events.ts`, `NATIVE_AUTH_PAYLOAD_RULES`, checked beside `OA_PAYLOAD_RULES`): each payload key is kept only when its documented schema (`NATIVE_AUTH_TELEMETRY_PAYLOADS`, `packages/content-schema/src/schemas/native-auth-telemetry.ts`, reached by the `@hangul-route/content-schema/native-auth-telemetry` subpath so the schemas stay out of the start bundle; strict) accepts the value, any other key is dropped, and the event is stored **without a profile id**. Each is also counted in `telemetry_daily` (`isDailyCountedName`, AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1) with the codes its rules kept, for F-AUTH-004's NG2 and NG5. The emitting rows (NS-3 to NS-6) send them only after that Worker is deployed (rule 1). None collides with sections A to U.
+
+**Payload rules:** the OS and codes, plus one boolean. No email, account, space or learner id, code, period or error text is sent or stored.
+
+| # | Name | Owning spec | Payload | Emitted by |
+|---|---|---|---|---|
+| 1 | `auth.native.signin` | F-AUTH-004 §6.3, §15 | `{ os: 'ios' \| 'android', method: 'none' \| 'email_code' \| 'password', result: 'ok' \| 'wrong_code' \| 'wrong_password' \| 'expired' \| 'refused' \| 'too_many' \| 'unsupported' \| 'offline' \| 'error' \| 'cancelled', second: boolean }`: once per sign-in flow, when it ends | NS-3 |
+| 2 | `auth.native.signout` | F-AUTH-004 §6.6, §15 | `{ os, via: 'user' \| 'lock' }` | NS-3 |
+| 3 | `auth.native.lock` | F-AUTH-004 §7.2, §15 | `{ os, cause: 'unknown' \| 'needs_pin' \| 'epoch_zero' \| 'no_trust' \| 'pin_changed' \| 'retrust_password' }`: at most once per screen mount | NS-4 |
+| 4 | `auth.native.home` | F-AUTH-004 §8, §15 | `{ os, use: 'family' \| 'teacher' \| 'school' \| 'account', spaces: '0' \| '1' \| '2-4' \| '5+' }`: once per home mount, after its first load | NS-5, NS-6 |
+
+**Payload widening of an existing name (Worker first, same PR).** `who.picked` (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15) gains the `use` value `'account'` (appended), the native **Grown-up account** row of F-AUTH-004 section 7.1. Its rule comes from `OA_TELEMETRY_PAYLOADS`, so the Worker keeps and counts the new value in the same deploy; an older Worker drops only the `use` key.

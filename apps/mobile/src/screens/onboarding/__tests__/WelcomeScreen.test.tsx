@@ -1,3 +1,4 @@
+import { LayoutProvider, layoutClassFor, typography } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
 import type { ComponentProps } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
@@ -90,5 +91,32 @@ describe('Welcome from the class join link (a device with no profile)', () => {
     const renderer = await render(welcome({ classLink: true, code: 'ABC234' }));
     expect(screenTexts(byTestId(renderer.root, 'welcome-class-link')[0] as ReactTestInstance)).toEqual([words.code('ABC234'), words.next, words.inApp]);
     await unmount(renderer);
+  });
+});
+
+describe("Welcome's title keeps its Korean words whole (320 px at 200 % text, a 160 px layout)", () => {
+  const titleSize = async (locale: 'en' | 'es' | 'ko', width: number): Promise<number> => {
+    vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
+    useLocaleStore.setState({ device: locale, byProfile: {} });
+    const renderer = await render(<LayoutProvider value={layoutClassFor({ width, height: width * 1.775 })}>{welcome(undefined)}</LayoutProvider>);
+    const title = getMessages(locale).learner.welcome.title;
+    // The `Text` the design-system Heading draws: the header role and the title as its child.
+    const heading = renderer.root.findAll((node) => typeof node.type !== 'string' && node.props.accessibilityRole === 'header' && node.props.children === title)[0];
+    const style = [heading?.props.style].flat(Infinity).reduce((all, part) => ({ ...all, ...(part ?? {}) }), {}) as { fontSize: number; lineHeight: number };
+    await unmount(renderer);
+    expect(style.lineHeight).toBeCloseTo(style.fontSize * typography.leading.tight);
+    return style.fontSize;
+  };
+
+  it('ko: at 160 px the size stops where "안녕하세요!" (5 syllables and the "!") fits the line between the gutters', async () => {
+    expect(await titleSize('ko', 160)).toBeCloseTo((160 - 2 * 16) / 6);
+  });
+
+  it('ko at 320 px, and en and es at any width, keep the display size', async () => {
+    expect(await titleSize('ko', 320)).toBe(typography.size.display);
+    for (const locale of ['en', 'es'] as const) {
+      expect(await titleSize(locale, 160), locale).toBe(typography.size.display);
+      expect(await titleSize(locale, 320), locale).toBe(typography.size.display);
+    }
   });
 });

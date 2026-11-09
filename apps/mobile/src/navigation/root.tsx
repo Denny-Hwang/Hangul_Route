@@ -179,7 +179,18 @@ export function RootNavigator(): ReactElement {
         <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />
-        <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
+        {/* F-AUTH-004 section 6.1 (row NS-2): on iOS and Android the route is `GrownUpArea` (grown-up-stack.native.tsx: the
+            dashboard while the native account is off, else the Grown-up area stack that Clerk's provider wraps).
+            babel-preset-expo inlines EXPO_OS and Metro drops the dead branch, so the web bundle keeps the dashboard
+            alone, byte for byte, and never carries that module (web-bundle-guard.test.ts). */}
+        <Stack.Screen
+          name="ParentDashboard"
+          component={
+            process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android'
+              ? (require('./grown-up-stack') as typeof import('./grown-up-stack')).GrownUpArea
+              : ParentDashboardScreen
+          }
+        />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="Homework" component={HomeworkScreen} />

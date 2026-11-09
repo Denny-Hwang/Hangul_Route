@@ -20,6 +20,8 @@ One grown-up use on the chooser, visibly secondary to the learner tiles: a row w
 
 Never an account name, email, space name or count (CS-7).
 
+**[NS-0b] Native account rows (F-AUTH-004 section 7.1, row NS-4).** `use` gains `'account'` (label `caregiver.account.card.title`, "Grown-up account": an account record with no use); `disabled` (offline, caption `needsInternet`) applies on native too for every account use; on `nopin` an account row carries `caregiver.pin.needsPinFirst` as its caption and is named by its label alone (offline wins over `nopin`). The same row is reused in the Grown-up area's account card. Mocks: `design/screens/account/mock/entries.html`, `lock.html` boards 9 to 14 (`design/screens/account/entries.md`, `lock.md`).
+
 ## Anatomy and tokens
 
 ```

@@ -25,8 +25,10 @@ const pluginOptions = (name: string) => {
 };
 
 describe('[OA] Face ID permission string (Info.plist)', () => {
-  it('the expo-secure-store plugin sets the English string', () => {
-    expect(pluginOptions('expo-secure-store')).toEqual({ faceIDPermission: EN });
+  it('the expo-secure-store plugin sets the English string, and keeps SecureStore out of Android backups', () => {
+    // F-AUTH-004 section 6.2 (row NS-2, CS-N7, assumption U4): `configureAndroidBackup` excludes SecureStore's values
+    // (the Clerk items under `hr.clerk`, the face or fingerprint shortcut) from Android Auto Backup and device transfer.
+    expect(pluginOptions('expo-secure-store')).toEqual({ faceIDPermission: EN, configureAndroidBackup: true });
   });
 
   it('nothing else sets another string', () => {

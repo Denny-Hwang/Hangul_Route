@@ -112,7 +112,7 @@ Both variants show the same layers; nothing else differs. Neither shows a class 
 | a month older than the day rows | totals only: figures from `activity.months` (no letters), no calendar; only W0, W3, W5, W6 (W3 skipped under the `practiced` headline, so the board shows W5 and W6) |
 | getting started | `headline.gettingStarted`; practice next holds only P4 |
 | stage finished | `headline.stageDone`, then W3, W5 and W9 in table order: W1 is skipped under a `stage_done` headline, which already names the stage (spec section 3.6, RP-2b2); finishing a stage finishes its last quest, so `quests_new` always fires; with no new letters there is no W2 |
-| free-end | P4 `free_days_done` (family and device only); no price, no link, no lock |
+| free-end | P4 `free_days_done` (family and device only; the device report on the web and the PWA only, never in a native iOS or Android build, F-BILL-002 section 4.8 item 5); no price, no link, no lock |
 | unavailable / flag off | the back link and one block whose sentence is the page's `h1` (`report.state.unavailable` / `report.state.flagOff`; no learner name is known). No actions |
 | network error, no cached report | `report.state.error` as the `h1` (the first load failed, so no name is known) and `common.buttons.tryAgain`; Print disabled (the board draws this case) |
 | network error, cached report | the cached report stays as it was, with its own `h1`; `report.state.error` and `common.buttons.tryAgain` are a neutral state line (a paragraph, never a heading) under the glance, so the page keeps one `h1`; Print is disabled while the load failed (print.md States, #511) |

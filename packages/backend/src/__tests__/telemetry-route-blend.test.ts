@@ -21,7 +21,8 @@ beforeEach(() => store.reset());
 describe('route blend telemetry names (section T)', () => {
   it('adds exactly the two names, in the shared list (just before `app.crash`), each with a payload rule', () => {
     expect(ROUTE_BLEND_TELEMETRY_NAMES).toEqual(['route.practice_days_changed', 'route.refresh_started']);
-    expect(TELEMETRY_EVENT_NAMES.slice(-3, -1)).toEqual(['route.practice_days_changed', 'route.refresh_started']);
+    const at = TELEMETRY_EVENT_NAMES.indexOf('app.crash');
+    expect(TELEMETRY_EVENT_NAMES.slice(at - 2, at)).toEqual(['route.practice_days_changed', 'route.refresh_started']);
     expect(Object.keys(ROUTE_BLEND_PAYLOAD_RULES)).toEqual(['route.practice_days_changed', 'route.refresh_started']);
     expect(Object.keys(ROUTE_BLEND_PAYLOAD_RULES['route.practice_days_changed'] ?? {})).toEqual(['days', 'by']);
     expect(Object.keys(ROUTE_BLEND_PAYLOAD_RULES['route.refresh_started'] ?? {})).toEqual(['via']);

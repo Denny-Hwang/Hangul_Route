@@ -69,7 +69,7 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false, stripeLive: false, billingLiveAllowed: false },
-      features: { notesSend: false, classScopeFull: true, classTransfer: true, memorySummary: true },
+      features: { notesSend: false, classScopeFull: true, classTransfer: true, memorySummary: true, nativeAccount: true, nativeMoneyGuard: true },
     });
     expect(healthReport({ DB: {} }).status).toBe('misconfigured');
     expect(healthReport({ CLERK_SECRET_KEY: 'sk_live_secret' }).status).toBe('misconfigured');
@@ -83,10 +83,10 @@ describe('healthReport (booleans only)', () => {
       environment: 'production',
       devFallbacks: false,
       bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true, rescuePepper: true, stripeLive: true, billingLiveAllowed: false }, // 'sk_stripe' has no test prefix: read as live (fail closed)
-      features: { notesSend: false, classScopeFull: true, classTransfer: true, memorySummary: true },
+      features: { notesSend: false, classScopeFull: true, classTransfer: true, memorySummary: true, nativeAccount: true, nativeMoneyGuard: true },
     });
     // the owner's NOTES_SEND switch (F-FEEDBACK-001 section 7.8), as a boolean only
-    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' }).features).toEqual({ notesSend: true, classScopeFull: true, classTransfer: true, memorySummary: true });
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NOTES_SEND: 'enabled' }).features).toEqual({ notesSend: true, classScopeFull: true, classTransfer: true, memorySummary: true, nativeAccount: true, nativeMoneyGuard: true });
     // [TV] TV-D15: full-scope teacher visibility is on unless the kill switch is set; any other value fails closed.
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: 'disabled' }).features.classScopeFull).toBe(false);
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', CLASS_SCOPE_FULL: 'typo' }).features.classScopeFull).toBe(false);
@@ -96,6 +96,11 @@ describe('healthReport (booleans only)', () => {
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', MEMORY_SUMMARY: 'disabled' }).features.memorySummary).toBe(false);
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', MEMORY_SUMMARY: 'typo' }).features.memorySummary).toBe(false);
     expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', MEMORY_SUMMARY: 'enabled' }).features.memorySummary).toBe(true);
+    // F-AUTH-004 section 9.4: both native switches are on by default; each fails to its closed side.
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NATIVE_ACCOUNT: 'disabled' }).features.nativeAccount).toBe(false);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NATIVE_ACCOUNT: 'typo' }).features.nativeAccount).toBe(false);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NATIVE_MONEY_GUARD: 'off' }).features.nativeMoneyGuard).toBe(false);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', NATIVE_MONEY_GUARD: 'typo' }).features.nativeMoneyGuard).toBe(true);
     expect(JSON.stringify(report)).not.toMatch(/sk_live_secret|sk_stripe|whsec_x|pepper_do_not_echo/);
     expect(healthReport({ DB: {}, CLERK_JWT_KEY: '-----BEGIN PUBLIC KEY-----' }).bindings.clerk).toBe(true);
   });

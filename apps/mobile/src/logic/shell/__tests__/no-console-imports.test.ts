@@ -8,6 +8,12 @@ import { describe, expect, it } from 'vitest';
  * (`apps/web`, `@hangul-route/web`) or Clerk (`@clerk/*`), and never reads a Clerk session.
  * The console's pages reach the app host only through the merged build (A-3), never through an
  * import; the service worker keeps them out of the precache (A-2).
+ *
+ * [AU] F-AUTH-004 sections 6.1 and 9.3 (row NS-2): the one exception is Clerk's Expo SDK
+ * (`@clerk/clerk-expo`) in the native grown-up account's own files, `src/platform/clerk*.native.*`
+ * and `src/screens/account/**`, which only iOS and Android bundle and only the Grown-up area stack
+ * loads (`web-bundle-guard.test.ts` holds the web bundle free of it; `account-imports.test.ts` the
+ * rest of the app).
  */
 const APP_ROOT = join(__dirname, '..', '..', '..', '..');
 
@@ -34,10 +40,17 @@ function isConsoleModule(specifier: string): boolean {
   return /(^|\/)apps\/web(\/|$)/.test(specifier) || /^(\.\.\/)+web(\/|$)/.test(specifier);
 }
 
+/** [AU] F-AUTH-004 section 9.3: the native account's own files may import `@clerk/clerk-expo`, and only that. */
+function nativeClerkAllowed(file: string, specifier: string): boolean {
+  if (!/^@clerk\/clerk-expo(\/|$)/.test(specifier)) return false;
+  const path = relative(APP_ROOT, file).split(sep).join('/');
+  return /^src\/platform\/clerk[^/]*\.native\.tsx?$/.test(path) || /^src\/screens\/account\/.*\.native\.tsx?$/.test(path);
+}
+
 function consoleImports(files: readonly string[]): string[] {
   return files.flatMap((file) =>
     specifiers(readFileSync(file, 'utf8'))
-      .filter(isConsoleModule)
+      .filter((spec) => isConsoleModule(spec) && !nativeClerkAllowed(file, spec))
       .map((spec) => `${relative(APP_ROOT, file).split(sep).join('/')}: ${spec}`),
   );
 }
@@ -58,6 +71,16 @@ describe('the learner bundle never imports console code (F-APP-001 section 3.17)
   it('nothing under apps/mobile imports apps/web or @clerk/*', () => {
     const found = consoleImports(files);
     expect(found, found.join('\n')).toEqual([]);
+  });
+
+  it('[AU] only the native account files may import @clerk/clerk-expo, and nothing else of Clerk', () => {
+    const at = (path: string) => join(APP_ROOT, path);
+    expect(nativeClerkAllowed(at('src/platform/clerk.native.tsx'), '@clerk/clerk-expo')).toBe(true);
+    expect(nativeClerkAllowed(at('src/screens/account/SignInScreen.native.tsx'), '@clerk/clerk-expo')).toBe(true);
+    expect(nativeClerkAllowed(at('src/platform/clerk.native.tsx'), '@clerk/clerk-react')).toBe(false);
+    expect(nativeClerkAllowed(at('src/platform/clerk.tsx'), '@clerk/clerk-expo')).toBe(false);
+    expect(nativeClerkAllowed(at('src/screens/account/SignInScreen.tsx'), '@clerk/clerk-expo')).toBe(false);
+    expect(nativeClerkAllowed(at('src/screens/parent/ParentDashboardScreen.tsx'), '@clerk/clerk-expo')).toBe(false);
   });
 
   it('the scan sees every way of importing a console module', () => {
