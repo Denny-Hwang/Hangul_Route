@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accountCardView, cardEntry, type AccountCardInput } from '../account-card';
+import { accountCardView, cardUses, type AccountCardInput } from '../account-card';
 
 /**
  * F-AUTH-004 sections 7.1, 7.2 and 6.6, design D7 (row NS-3; CS-N2, CS-N9, CS-N11): what the Grown-up area's account
@@ -58,13 +58,17 @@ describe('the account card (D7)', () => {
   });
 });
 
-describe('ND-5, CS-N11: the card’s Sign in and Sign in again ask the typed PIN without a fresh proof', () => {
-  it('on pin: verify_pin unless fresh; on open: go; a gate not read yet or any other state fails closed', () => {
-    expect(cardEntry({ state: 'pin', epoch: 7 }, false)).toBe('verify_pin');
-    expect(cardEntry({ state: 'pin', epoch: 7 }, true)).toBe('go');
-    expect(cardEntry({ state: 'open' }, false)).toBe('go');
-    expect(cardEntry(null, true)).toBe('verify_pin');
-    expect(cardEntry({ state: 'unknown' }, true)).toBe('verify_pin');
-    expect(cardEntry({ state: 'nopin' }, true)).toBe('verify_pin');
+describe('row NS-4, D7: the card’s use rows', () => {
+  it('pin: the uses record in the order family, teacher, school; without one, this visit’s spaces', () => {
+    expect(cardUses({ state: 'pin', epoch: 7 }, ['school', 'family'], ['teacher'])).toEqual(['family', 'school']);
+    expect(cardUses({ state: 'pin', epoch: 7 }, null, ['teacher'])).toEqual(['teacher']);
+    expect(cardUses({ state: 'pin', epoch: 7 }, [], ['teacher'])).toEqual([]);
+  });
+
+  it('open (no record is kept, ND-9): this visit’s spaces only; nothing known, or no space: no row', () => {
+    expect(cardUses({ state: 'open' }, ['family'], ['teacher', 'family'])).toEqual(['family', 'teacher']);
+    expect(cardUses({ state: 'open' }, ['family'], null)).toEqual([]);
+    expect(cardUses(null, ['family'], null)).toEqual([]);
+    expect(cardUses({ state: 'pin', epoch: 7 }, null, null)).toEqual([]);
   });
 });

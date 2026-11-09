@@ -28,4 +28,14 @@ describe('the account visit', () => {
     useAccountVisit.getState().markSignedIn(2000, false);
     expect(useAccountVisit.getState().signedOutThisRun).toBe(false);
   });
+
+  it('row NS-4: a sign-in that completes after its visit ended counts for no later visit, only for the re-trust flag', () => {
+    const started = useAccountVisit.getState().visit;
+    useAccountVisit.getState().endVisit();
+    expect(useAccountVisit.getState().visit).toBe(started + 1);
+    useAccountVisit.getState().markSignedIn(1000, true, started);
+    expect(useAccountVisit.getState()).toMatchObject({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: true });
+    useAccountVisit.getState().markSignedIn(2000, false, started + 1);
+    expect(useAccountVisit.getState()).toMatchObject({ lastAccountSignInAt: 2000, signedInThisVisit: true, retrustPending: false });
+  });
 });

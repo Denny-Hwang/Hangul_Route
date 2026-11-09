@@ -1,7 +1,8 @@
 import type { GuestRecord, Profile } from '@hangul-route/content-schema';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import React from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { provideForRequire, srcPath } from '../../../test-support/native-require';
 
 /**
  * [GU] AMENDMENTS-GUEST-FIRST-LESSON row GU-5, section 19 (component tests): the chooser's guest tiles (section 9.1).
@@ -81,6 +82,10 @@ async function renderChooser(params: Params) {
   const r = await render(<WhoIsUsingScreen navigation={navigation as never} route={{ key: 'who-1', name: 'WhoIsUsing', params } as never} />);
   return { r, navigation };
 }
+
+
+// F-AUTH-004 (row NS-4): the chooser requires its native account entries on iOS and Android (folded away on the web).
+beforeAll(async () => provideForRequire(srcPath('screens/account/account-entries'), await import('../../account/account-entries.native')));
 
 beforeEach(() => {
   setPlatform('ios');

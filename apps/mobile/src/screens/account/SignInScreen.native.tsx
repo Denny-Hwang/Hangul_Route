@@ -1,5 +1,6 @@
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
-import { Body, Button, Screen, Spacer, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useLayoutClass, useTypeScale } from '@hangul-route/design-system';
+import type { GrownUpUse } from '@hangul-route/content-schema';
+import { Body, Screen, borderWidth, colors, layout, radii, spacing, touchTarget, typography, useLayoutClass, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
 import { forwardRef, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactElement } from 'react';
@@ -7,7 +8,7 @@ import { AccessibilityInfo, TextInput, View, type TextInputProps } from 'react-n
 import { useMessages } from '../../i18n/use-messages';
 import { createAccountApi } from '../../logic/account/api';
 import { accountQueryKey } from '../../logic/account/queries';
-import { afterSignInPlan, deviceUsesRecord, keepsRecords, retrustPendingFor, trustRecord, usesOfSpaces } from '../../logic/account/sign-in-records';
+import { afterSignInPlan, deviceUsesRecord, keepsRecords, nativeHomeFor, retrustPendingFor, trustRecord, usesOfSpaces } from '../../logic/account/sign-in-records';
 import {
   emailReady,
   initialSignInState,
@@ -34,7 +35,8 @@ import { useAccountStore } from '../../store/account-store';
 import { useAccountVisit } from '../../store/account-visit';
 import { nativeGateState } from '../../store/native-gate-state';
 import { AccountButton } from './AccountButton';
-import { AccountHostContext, ClerkMountContext } from './account-host';
+import { AccountGate, type AccountGateNavigation } from './AccountGate.native';
+import { AccountHostContext } from './account-host';
 import { nativeOs, trackSignIn, useAccountOnline } from './account-session.native';
 
 /**
@@ -52,29 +54,25 @@ import { nativeOs, trackSignIn, useAccountOnline } from './account-session.nativ
  *   Back waits, with the same words.
  * - A completed sign-in (section 6.5) reads `GET /api/spaces`, writes the uses record and the trust on a `pin` device
  *   with a real epoch (with the re-trust rule of 7.3), notes the sign-in time in memory, sends
- *   `auth.native.signin { result: 'ok' }`, and goes back to where it was opened (the use's home opens here once row
- *   NS-5 lands the homes). Leaving earlier sends the flow's last result, or `cancelled` (one event per flow).
- * - Without Clerk's provider for this visit the screen shows `lock.cantCheck` and Back, and calls nothing.
+ *   `auth.native.signin { result: 'ok' }`, and opens the home of the use the grown-up came for, else the account's
+ *   first use (`AccountHome`, in this screen's place; row NS-4). Leaving earlier sends the flow's last result, or
+ *   `cancelled` (one event per flow).
+ * - Row NS-4: the screen renders inside `AccountGate` (sections 7.2 and 7.4: the gate state, the typed PIN within 2
+ *   minutes, the trust, capture protection). Without Clerk's provider for this visit the gate shows `lock.cantCheck`
+ *   with Try again and Back, and nothing calls Clerk.
  */
 
 type Props = NativeStackScreenProps<GrownUpStackParamList, 'SignIn'>;
 
 export function SignInScreen(props: Props): ReactElement {
-  const messages = useMessages();
-  const mount = useContext(ClerkMountContext);
-  const title = messages.caregiver.account.signIn.title;
-  if (mount !== 'ready') {
-    return (
-      <Screen tone="canvas" scrollable header={{ title }}>
-        <View testID="sign-in-unavailable">
-          <Body>{messages.caregiver.account.lock.cantCheck}</Body>
-          <Spacer size="md" />
-          <Button label={messages.common.buttons.back} tone="ghost" size="md" fullWidth onPress={() => props.navigation.goBack()} testID="sign-in-back" />
-        </View>
-      </Screen>
-    );
-  }
-  return <SignInFlow {...props} />;
+  const { navigation, route } = props;
+  // Row NS-4: the sign-in renders inside AccountGate, which decides first (the gate state, the typed PIN within 2
+  // minutes, the trust) and opens the flow only on its `sign_in` result, so only under Clerk's provider (section 7.2).
+  return (
+    <AccountGate screen="sign_in" use={route.params?.use} again={route.params?.again === true} navigation={navigation as unknown as AccountGateNavigation} routeKey={route.key}>
+      <SignInFlow {...props} />
+    </AccountGate>
+  );
 }
 
 /** Clerk's sign-in resource as the step machine reads it. */
@@ -99,7 +97,7 @@ function devBuild(): boolean {
   return (globalThis as { __DEV__?: unknown }).__DEV__ === true;
 }
 
-function SignInFlow({ navigation }: Props): ReactElement {
+function SignInFlow({ navigation, route }: Props): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.account;
   const online = useAccountOnline();
@@ -120,6 +118,8 @@ function SignInFlow({ navigation }: Props): ReactElement {
   /** The last step drawn before `done`, kept on screen (waiting) until the screen leaves. */
   const shown = useRef<Exclude<SignInStep, 'done'>>('email');
   const layoutClass = useLayoutClass();
+  // Row NS-4: the visit this flow started in; a sign-in that completes after it ended counts for no later visit.
+  const visitAtStart = useRef(useAccountVisit.getState().visit);
 
   const dispatch = useCallback((event: SignInEvent) => {
     stateRef.current = signInReducer(stateRef.current, event);
@@ -223,21 +223,24 @@ function SignInFlow({ navigation }: Props): ReactElement {
     } catch {
       // A failed read or write leaves the records to the next sign-in; the lock decides what opens (CS-N3).
     }
-    useAccountVisit.getState().markSignedIn(at, retrustPending);
+    useAccountVisit.getState().markSignedIn(at, retrustPending, visitAtStart.current);
     // The screen went (the grown-up session may have closed, and cleared the account queries, CS-N4): nothing is read
     // into the cache now; the uses record waits for the home's next successful load (section 6.5).
     if (!live.current) return;
+    let uses: GrownUpUse[] | null = null;
     try {
       const api = createAccountApi({ baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL, dev: devBuild(), getToken: () => getToken(), fetch: (url, init) => fetch(url, init) });
       const spaces = await api.spaces();
       // In memory only, cleared with the session (ND-10): the account's spaces for this visit.
       if (spaces.ok) queryClient.setQueryData(accountQueryKey('spaces'), spaces.data);
-      const uses = spaces.ok ? usesOfSpaces(spaces.data) : null;
+      uses = spaces.ok ? usesOfSpaces(spaces.data) : null;
       if (keep && uses !== null) await writeDeviceUses(deviceUsesRecord(uses, at));
     } catch {
       // The uses record waits for the home's next successful load (section 6.5).
     }
-    if (live.current) navigation.goBack();
+    // Section 6.5 step 5: the home of the use the grown-up came for, else the first of the account's uses (Family,
+    // Teacher, School; Family's "no family yet" for an account with none), which its AccountGate then decides.
+    if (live.current) navigation.replace('AccountHome', { use: route.params?.use ?? nativeHomeFor(uses ?? []) });
   };
 
   /** Runs one Clerk step: busy first, then its events, then the completion when the flow is done. */

@@ -120,26 +120,66 @@ export const CLERK_MOUNT_WAIT_MS = 2000;
  */
 let accountQueries: AccountQueryClient | null = null;
 
+/** Clerk's sign-out of the last visit that mounted its provider (Clerk's instance lives for the run). */
+let lastEndSession: (() => Promise<boolean>) | null = null;
+
+export interface MemorySessionEndDeps {
+  /** Where Clerk's items live this visit (`clerkTokens.storage()`): `memory` on a device with no PIN (ND-9). */
+  storage: () => 'memory' | 'secure';
+  endSession: (() => Promise<boolean>) | null;
+  dropMemoryItems: () => void;
+}
+
 /**
- * Every session close clears the account queries (CS-N4) and ends the visit's memory (the sign-in time and this
- * visit's sign-in, section 13.1); registered once, with the native account on.
+ * ND-9, CS-N4, CS-N14 (row NS-4; the NS-2 and NS-3 hand-off): on a device with no grown-up PIN a sign-in lasts one
+ * visit, so the session close and the area's unmount end it: Clerk's own session first (while its token can still
+ * reach Clerk), then this run's memory items. Decided by where the token cache keeps Clerk's items this visit (memory
+ * on every device that is not `pin`), not by a gate read, which a store write in flight can make `unknown`. A kept
+ * session (`secure`, behind the PIN) stays. Never throws.
+ */
+export async function endMemorySession(deps: MemorySessionEndDeps): Promise<void> {
+  try {
+    if (deps.endSession === null || deps.storage() !== 'memory') return;
+    await deps.endSession().catch(() => false);
+    deps.dropMemoryItems();
+  } catch {
+    // The next Grown-up area mount ends an earlier visit's session on these devices anyway (`prepareClerkMount`).
+  }
+}
+
+const memorySessionDeps = (): MemorySessionEndDeps => ({
+  storage: () => clerkTokens.storage(),
+  endSession: lastEndSession,
+  dropMemoryItems: () => clerkTokens.endMemorySession(),
+});
+
+/**
+ * Every session close clears the account queries (CS-N4), ends the visit's memory (the sign-in time and this visit's
+ * sign-in, section 13.1) and, on a device with no PIN, the memory session (ND-9); registered once, with the native
+ * account on.
  */
 export function bindAccountQueryClearing(): () => void {
   return onGrownUpSessionClosed(() => {
     useAccountVisit.getState().endVisit();
     if (accountQueries !== null) void clearAccountQueries(accountQueries);
+    void endMemorySession(memorySessionDeps());
   });
 }
 
 /**
  * The nested stack (its routes keep the root's names, so the header registry and the session rules read them as before),
- * with the account routes of rows NS-3 to NS-6 (`AccountStackParamList`): row NS-3's `SignIn`.
+ * with the account routes of rows NS-3 to NS-6 (`AccountStackParamList`): row NS-3's `SignIn`, row NS-4's `AccountHome`.
  */
 const Stack = createNativeStackNavigator<GrownUpStackParamList>();
 
 /** The sign-in screen's module, required when the route is first shown (never at launch, CS-N13). */
 function loadSignInScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'SignIn'>> {
   return (require('../screens/account/SignInScreen.native') as typeof import('../screens/account/SignInScreen.native')).SignInScreen;
+}
+
+/** Row NS-4: a use's home (inside AccountGate), required when the route is first shown, as the sign-in is. */
+function loadAccountHomeScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'AccountHome'>> {
+  return (require('../screens/account/AccountHomeScreen.native') as typeof import('../screens/account/AccountHomeScreen.native')).AccountHomeScreen;
 }
 
 /** A Clerk render error: the area goes on without Clerk; the crash report names the class only (CS-N15). */
@@ -158,6 +198,11 @@ function WithClerk({ mount, fallback }: { mount: Extract<ClerkMount, { state: 'r
   );
 }
 
+/** The root route's params the dashboard reads (`browseBlocked`), without a nested entry's `screen` (row NS-4). */
+export function dashboardParams(params: Props['route']['params']): { browseBlocked?: true } | undefined {
+  return params !== undefined && 'browseBlocked' in params && params.browseBlocked === true ? { browseBlocked: true } : undefined;
+}
+
 export function GrownUpStack({ route }: Props): ReactElement {
   const [mount, setMount] = useState<ClerkMount>({ state: 'pending' });
   // Bumped by the account card's Try again: the provider is decided again (the navigator below remounts with it).
@@ -172,6 +217,8 @@ export function GrownUpStack({ route }: Props): ReactElement {
     if (useAccountStore.getState().pinResetByWait !== null) void writeRetrustRequired(Date.now()).catch(() => undefined);
     return () => {
       void clearAccountQueries(queryClient);
+      // A visit that leaves without a session close (back to Welcome, a gate route) still ends a no-PIN session (ND-9).
+      void endMemorySession(memorySessionDeps());
     };
   }, [queryClient]);
   useEffect(() => {
@@ -189,6 +236,7 @@ export function GrownUpStack({ route }: Props): ReactElement {
     };
   }, [attempt]);
   const endSession = mount.state === 'ready' ? mount.endSession : null;
+  if (endSession !== null) lastEndSession = endSession;
   useEffect(() => (endSession === null ? undefined : watchNativeGateState((gate) => void applyGateChange(gate, endSession))), [endSession]);
   // The card calls it only while it reads `off` (no provider for this visit, or the provider fell back after an error).
   const retry = useCallback(() => {
@@ -209,10 +257,13 @@ export function GrownUpStack({ route }: Props): ReactElement {
   if (mount.state === 'pending') return <Screen tone="canvas">{null}</Screen>;
   const navigator = (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} initialParams={route.params} />
+      {/* The dashboard keeps its own params only: an account entry's `screen` and `params` are for this navigator (row NS-4). */}
+      <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} initialParams={dashboardParams(route.params)} />
       {/* F-AUTH-004 section 6.3 (row NS-3): the grown-up sign-in, reached from the account card (and the rows of NS-4).
           Loaded only when it is first shown: it imports Clerk's Expo SDK, which never loads before the provider (ND-11). */}
       <Stack.Screen name="SignIn" getComponent={loadSignInScreen} />
+      {/* Row NS-4: a use's home, behind AccountGate (row NS-5 draws the homes). Loaded when first shown, as SignIn is. */}
+      <Stack.Screen name="AccountHome" getComponent={loadAccountHomeScreen} />
     </Stack.Navigator>
   );
   return (

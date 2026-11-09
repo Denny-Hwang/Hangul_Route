@@ -110,15 +110,32 @@ export function WhoIsUsingScreen({ navigation, route }: Props): ReactElement {
   const wait = resetWaitState(pinResetRequestedAt, Date.now());
   // [OA] Row OA-4b: the uses known on this browser, as read at launch, then read again on every opening.
   const [uses, setUses] = useState(() => knownUses());
+  // F-AUTH-004 section 7.1 (row NS-4): the native account's rows (the native uses record, the network). babel-preset-expo
+  // inlines EXPO_OS, so the web build folds this away with the module it requires (a hook whose call order never
+  // changes within a build), and its rows and start bundle are unchanged.
+  const nativeEntries =
+    process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android'
+      ? (require('../account/account-entries') as typeof import('../account/account-entries')).useNativeAccountEntries(navigation, route.params)
+      : undefined;
   const rowsFor = (known: typeof uses) =>
-    grownUpRows({
-      os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
-      uses: known,
-      online,
-      marker,
-      // A wait only exists beside a PIN (Forgot PIN starts from one); none is shown without a PIN to cancel it.
-      resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
-    });
+    (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && nativeEntries !== undefined
+      ? // F-AUTH-004 (row NS-4): the native rows, with the account's network state (folded away on the web).
+        grownUpRows({
+          os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
+          uses: known,
+          online: nativeEntries.online,
+          marker,
+          resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
+          native: nativeEntries,
+        })
+      : grownUpRows({
+          os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
+          uses: known,
+          online,
+          marker,
+          // A wait only exists beside a PIN (Forgot PIN starts from one); none is shown without a PIN to cancel it.
+          resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
+        });
   const grownUps = rowsFor(uses);
   const joining = heldJoin() !== null;
   // [GU] Section 9.1: the one guest tile, after Add a learner (the guest switch on), or none.
@@ -233,10 +250,16 @@ export function WhoIsUsingScreen({ navigation, route }: Props): ReactElement {
   const pickUse = (use: Exclude<GrownUpRowUse, 'area'>): void => {
     void track(whoPickedEvent('grown_up', use));
     clearUnder();
+    // F-AUTH-004 section 7.1 (row NS-4): a native account row: the typed PIN (`pin`), PIN setup (`nopin`), or the account
+    // route at once with no PIN; the route's AccountGate decides. Folded away on the web.
+    if (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') {
+      (require('../account/account-entries') as typeof import('../account/account-entries')).openAccountEntry(navigation, use, marker);
+      return;
+    }
     if (opensDirectly(false)) {
       trackGateOpened('GrownUpUse', 'open');
       leaving.current = true;
-      void openGrownUpArea(chooserHandoff(use)).then((result) => {
+      void openGrownUpArea(chooserHandoff(use as Exclude<typeof use, 'account'>)).then((result) => {
         // The hand-off's own device gate still asks a PIN (a stale marker): the PIN screen, never a dead tap, and
         // the chooser keeps holding back (CS-5).
         if (result === 'pin') {
@@ -434,8 +457,21 @@ export function WhoIsUsingScreen({ navigation, route }: Props): ReactElement {
         <View testID="who-rows" style={{ flexDirection: rowsAcross ? 'row' : 'column', flexWrap: 'wrap', gap: rowGap }}>
           {grownUps.rows.map((row) => {
             const { use } = row;
-            const label = use === 'area' ? copy.zoneLabel : w.use[rowLabelKey(use)];
-            const caption = row.caption === 'nopin' ? w.nopinCaption : row.caption === 'offline' ? messages.learner.welcome.grownUps.needsInternet : null;
+            // F-AUTH-004 (row NS-4, native only, folded away on the web): Grown-up account, and an account row's `nopin` caption.
+            const label =
+              use === 'area'
+                ? copy.zoneLabel
+                : (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && use === 'account'
+                  ? messages.caregiver.account.card.title
+                  : w.use[rowLabelKey(use as Exclude<typeof use, 'account'>)];
+            const caption =
+              row.caption === 'nopin'
+                ? w.nopinCaption
+                : row.caption === 'offline'
+                  ? messages.learner.welcome.grownUps.needsInternet
+                  : (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && row.caption === 'needs_pin'
+                    ? messages.caregiver.pin.needsPinFirst
+                    : null;
             // A row no PIN guards is named by its label alone (marker `none`, and `nopin`, where no PIN exists yet).
             const named = marker === 'pin' ? messages.a11y.who.grownUpRow(label) : label;
             return (

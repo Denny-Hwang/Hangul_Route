@@ -119,6 +119,14 @@ describe('plugins/with-account-cover.js (CS-N12, assumption U7)', () => {
     expect(out).toContain('[UIColor systemBackgroundColor]');
   });
 
+  it('row NS-4: the keyboard (a window the cover does not reach) goes first, without animation, while the flag is on', () => {
+    const out = plugin.addAccountCover(APP_DELEGATE, '#FCF8F1');
+    const show = out.slice(out.indexOf('+ (void)show'), out.indexOf('+ (void)hide'));
+    expect(show).toContain('[UIView performWithoutAnimation:^{\n    [window endEditing:YES];\n  }];');
+    expect(show.indexOf('boolForKey:HRAccountCoverKey')).toBeLessThan(show.indexOf('endEditing'));
+    expect(show.indexOf('endEditing')).toBeLessThan(show.indexOf('addSubview:cover'));
+  });
+
   it('is idempotent: a second prebuild replaces the block, it never doubles it', () => {
     const once = plugin.addAccountCover(APP_DELEGATE, '#FCF8F1');
     const twice = plugin.addAccountCover(once, '#FCF8F1');

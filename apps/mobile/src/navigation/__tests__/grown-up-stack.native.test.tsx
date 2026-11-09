@@ -20,9 +20,11 @@ const tokens = vi.hoisted(() => ({
   sweep: vi.fn(async (): Promise<boolean> => true),
   apply: vi.fn(async (_gate: unknown, _phase: 'mount' | 'change') => true),
   change: vi.fn(async (_gate: unknown, _end: () => Promise<boolean>) => true),
+  dropMemory: vi.fn(),
+  storage: 'secure' as 'memory' | 'secure',
 }));
 vi.mock('../../platform/clerk-token-cache.native', () => ({
-  clerkTokens: { cache: tokens.cache },
+  clerkTokens: { cache: tokens.cache, endMemorySession: tokens.dropMemory, storage: () => tokens.storage },
   ensureInstallSweep: tokens.sweep,
   applyGateToTokens: tokens.apply,
   applyGateChange: tokens.change,
@@ -329,6 +331,72 @@ describe('CS-N1: Clerk only inside the Grown-up area stack', () => {
     queries.closed.at(-1)?.();
     await Promise.resolve();
     expect(queries.client.removeQueries).toHaveBeenCalledWith({ queryKey: ['account'] });
+  });
+});
+
+describe('ND-9, CS-N4 (row NS-4): a no-PIN device’s memory session ends at the session close and the area’s unmount', () => {
+  it('open: the session close signs Clerk out, then drops this run’s memory items; so does the unmount', async () => {
+    gate.state = { state: 'open' };
+    tokens.storage = 'memory';
+    const { GrownUpStack, bindAccountQueryClearing } = await load();
+    bindAccountQueryClearing();
+    const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
+    await settle(() => clerk.mounted === 1);
+    clerk.signOut.mockClear();
+    tokens.dropMemory.mockClear();
+    await act(async () => {
+      queries.closed.at(-1)?.();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    });
+    expect(clerk.signOut).toHaveBeenCalledTimes(1);
+    expect(tokens.dropMemory).toHaveBeenCalledTimes(1);
+    await unmount(renderer);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    });
+    expect(clerk.signOut).toHaveBeenCalledTimes(2);
+    expect(tokens.dropMemory).toHaveBeenCalledTimes(2);
+  });
+
+  it('pin: the kept session stays behind the PIN (nothing ends at the close)', async () => {
+    tokens.storage = 'secure';
+    const { GrownUpStack, bindAccountQueryClearing } = await load();
+    bindAccountQueryClearing();
+    const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
+    await settle(() => clerk.mounted === 1);
+    clerk.signOut.mockClear();
+    await act(async () => {
+      queries.closed.at(-1)?.();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    });
+    expect(clerk.signOut).not.toHaveBeenCalled();
+    expect(tokens.dropMemory).not.toHaveBeenCalled();
+    await unmount(renderer);
+  });
+
+  it('endMemorySession: only a memory session ends (whatever the gate reads then); a failed sign-out still drops the items; nothing throws', async () => {
+    const { endMemorySession } = await load();
+    const run = async (storage: 'memory' | 'secure', endSession: (() => Promise<boolean>) | null = vi.fn(async () => true)) => {
+      const drop = vi.fn();
+      await endMemorySession({ storage: () => storage, endSession, dropMemoryItems: drop });
+      return { drop, endSession };
+    };
+    const memory = await run('memory');
+    expect(memory.endSession).toHaveBeenCalledTimes(1);
+    expect(memory.drop).toHaveBeenCalledTimes(1);
+    const kept = await run('secure');
+    expect(kept.endSession).not.toHaveBeenCalled();
+    expect(kept.drop).not.toHaveBeenCalled();
+    expect((await run('memory', null)).drop).not.toHaveBeenCalled();
+    expect((await run('memory', vi.fn(async () => Promise.reject(new Error('offline'))))).drop).toHaveBeenCalledTimes(1);
+    await expect(endMemorySession({ storage: () => { throw new Error('x'); }, endSession: async () => true, dropMemoryItems: () => undefined })).resolves.toBeUndefined();
+  });
+
+  it('an account entry’s nested route is not the dashboard’s param (dashboardParams)', async () => {
+    const { dashboardParams } = await load();
+    expect(dashboardParams({ browseBlocked: true })).toEqual({ browseBlocked: true });
+    expect(dashboardParams({ screen: 'AccountHome', params: { use: 'family' } } as never)).toBeUndefined();
+    expect(dashboardParams(undefined)).toBeUndefined();
   });
 });
 

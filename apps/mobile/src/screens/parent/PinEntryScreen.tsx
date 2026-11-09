@@ -363,7 +363,7 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
   const handOff = async (): Promise<HandoffResult> => {
     const { url, grownUpVia, use } = route.params;
     // [OA] A chooser row (row OA-4b): its own page, `via: 'chooser'`; the target is derived here, never read from the route.
-    const request = forUse ? chooserHandoff(use ?? 'signin') : { via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) };
+    const request = forUse ? chooserHandoff((use ?? 'signin') as Exclude<typeof use, 'account' | undefined>) : { via: grownUpVia ?? 'lock', ...(url === undefined ? {} : { target: url }) };
     // The PIN screen already sent `parent.gate.opened` for this gate.
     const result = await openGrownUpArea(request, undefined, { gateSent: true });
     // The tab is leaving; a return through the back/forward cache lands on the start screen. [OA] From the chooser the
@@ -523,7 +523,18 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
     if (route.params.next === 'BiometricShortcut' && via === 'pin') await enableBiometricShortcut(m.biometric.cta);
     // [OA] Row OA-5: the fresh PIN a control asked for; the control applies the change on the way back.
     if (freshPin) leave();
-    else if (forUse) {
+    else if ((process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && forUse) {
+      // F-AUTH-004 section 7.2 (row NS-4; ND-5, CS-N11): a native account row after its typed PIN opens its account route
+      // in the Grown-up area stack, whose AccountGate decides; face or fingerprint never opens one (it goes back).
+      // Native only: babel-preset-expo inlines EXPO_OS and the web build folds this branch away.
+      if (via !== 'pin') leave();
+      else {
+        openParentGate();
+        // `accountRouteFor` (logic/account/account-entry.ts) written out: that module is native-only (web-bundle-guard).
+        const use = route.params.use ?? 'signin';
+        navigation.replace('ParentDashboard', use === 'signin' ? { screen: 'SignIn', params: {} } : { screen: 'AccountHome', params: { use } });
+      }
+    } else if (forUse) {
       if ((await handOff()) === 'opened') setLeavingTab(true);
     } else if (forGrownUpArea) await handOff();
     else proceed();
@@ -670,11 +681,18 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
   // [OA] A chooser row's PIN screen is titled with that row's label (mock pin-entry-v2.md, "Title per destination").
   // F-AUTH-004 D6 (row NS-3): the account card's typed PIN (no use) is titled Grown-up account; native only, so the
   // web build folds this branch away.
-  const useTitle = forUse
-    ? messages.learner.who.use[rowLabelKey(route.params.use ?? 'signin')]
-    : (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && route.params.typedOnly === true
-      ? messages.caregiver.account.card.title
-      : null;
+  // Row NS-4: on iOS and Android a native account row (and an AccountGate's typed PIN) is titled with its use, or
+  // Grown-up account with none (D6).
+  const useTitle =
+    process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android'
+      ? forUse || route.params.typedOnly === true
+        ? route.params.use === undefined || route.params.use === 'account'
+          ? messages.caregiver.account.card.title
+          : messages.learner.who.use[rowLabelKey(route.params.use)]
+        : null
+      : forUse
+        ? messages.learner.who.use[rowLabelKey((route.params.use ?? 'signin') as Exclude<typeof route.params.use, 'account' | undefined>)]
+        : null;
   const title = cancelReset
     ? messages.learner.who.resetCancel
     : lockedProfile && mode === 'verify' && lockedName !== null
@@ -737,7 +755,8 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
     // [GU] The guest's save asks the typed PIN only (CS-G2).
     !saveGuest &&
     // F-AUTH-004 ND-5, CS-N11 (row NS-3): an account entry asks the typed PIN only (native; folded away on the web).
-    (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? route.params.typedOnly !== true : true) &&
+    // Row NS-4: a native account row (`GrownUpUse`) is typed only too, whatever its params say.
+    (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? route.params.typedOnly !== true && !forUse : true) &&
     shortcutOffered({
       flagOn: flags.biometricShortcutEnabled,
       available,

@@ -1,5 +1,5 @@
-import type { AccountTrust, DeviceUses } from '@hangul-route/content-schema';
-import { DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY, RETRUST_REQUIRED_KEY, TRUST_RECORD_KEY, retrustRequiredOf, trustReadOf, type TrustRead } from '../logic/account/sign-in-records';
+import type { AccountTrust, DeviceUses, GrownUpUse } from '@hangul-route/content-schema';
+import { DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY, RETRUST_REQUIRED_KEY, TRUST_RECORD_KEY, retrustRequiredOf, trustReadOf, usesRecordOf, type TrustRead } from '../logic/account/sign-in-records';
 import { readJsonExact, removeKey, writeJson } from './storage';
 
 /**
@@ -20,6 +20,15 @@ export async function readTrust(): Promise<TrustRead> {
 
 export function writeTrust(record: AccountTrust): Promise<void> {
   return writeJson(TRUST_RECORD_KEY, record);
+}
+
+/** Row NS-4: the uses record's uses (`usesRecordOf`), or null for none; a failed read is none. Never throws. */
+export async function readUsesRecord(now: number = Date.now()): Promise<GrownUpUse[] | null> {
+  try {
+    return usesRecordOf(await readJsonExact<unknown>(DEVICE_USES_RECORD_KEY), now);
+  } catch {
+    return null;
+  }
 }
 
 export function writeDeviceUses(record: DeviceUses): Promise<void> {

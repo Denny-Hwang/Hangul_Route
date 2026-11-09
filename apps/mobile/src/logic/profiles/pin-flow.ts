@@ -124,6 +124,11 @@ export function showForgotPin(mode: PinMode, params: PinRouteParams = {}): boole
  */
 export function voidWithoutPin(params: PinRouteParams, storedHash: string | null, hashReadFailed = false): boolean {
   // [GU] The guest's save with no PIN stored is refused (CS-G10): the screen goes back, it never opens setup.
+  // F-AUTH-004 (row NS-4; ND-7, CS-N2): a native account row's PIN with no PIN stored (it went since the row was drawn)
+  // opens nothing: back to the chooser, never the web's sign-in page. babel-preset-expo inlines EXPO_OS, so the web
+  // build folds this line away.
+  // A hash that could not be read goes back too (fail closed: nothing opens, and the web's no-PIN line never shows).
+  if ((process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && forGrownUpUse(params)) return storedHash === null;
   return storedHash === null && !hashReadFailed && (forFreshPin(params) || forSaveGuest(params) || (forLockedProfile(params) && params.mode !== 'setup'));
 }
 

@@ -12,8 +12,9 @@ import { nativeGateState } from '../../store/native-gate-state';
 import { AccountHostContext } from './account-host';
 
 /**
- * F-AUTH-004 sections 6.6, 12 and 15 (row NS-3): what the sign-in screen and the account card share on iOS and
- * Android: the network state, the decision moments (mount, focus, return to `active`), Sign out, and the two events.
+ * F-AUTH-004 sections 6.6, 12 and 15 (rows NS-3, NS-4): what the sign-in screen, the account card and `AccountGate`
+ * share on iOS and Android: the network state, the decision moments (mount, focus, return to `active`), Sign out, and
+ * the `auth.native.signin`, `.signout` and `.lock` events.
  */
 
 /** The OS an `auth.native.*` event names, or null where none is sent (a render of another platform). */
@@ -34,10 +35,22 @@ export function trackSignOut(via: 'user' | 'lock'): void {
   void track({ name: 'auth.native.signout', payload: { ...payload } });
 }
 
-/** Whether the device has a network (`expo-network`), kept current; online until the first answer. */
-export function useAccountOnline(): boolean {
+/** `auth.native.lock { os, cause }` (section 15, row NS-4: at most once per account screen mount). */
+export function trackLock(cause: NativeAuthTelemetryPayload<'auth.native.lock'>['cause']): void {
+  const os = nativeOs();
+  if (os === null) return;
+  const payload: NativeAuthTelemetryPayload<'auth.native.lock'> = { os, cause };
+  void track({ name: 'auth.native.lock', payload: { ...payload } });
+}
+
+/**
+ * Whether the device has a network (`expo-network`), kept current; online until the first answer. `active` false
+ * (the native account off, row NS-4) subscribes to nothing and answers online.
+ */
+export function useAccountOnline(active = true): boolean {
   const [online, setOnline] = useState(true);
   useEffect(() => {
+    if (!active) return undefined;
     let live = true;
     void readAccountOnline().then((value) => {
       if (live) setOnline(value);
@@ -49,8 +62,8 @@ export function useAccountOnline(): boolean {
       live = false;
       stop();
     };
-  }, []);
-  return online;
+  }, [active]);
+  return active ? online : true;
 }
 
 /** The part of the navigation object the decision moments need. */

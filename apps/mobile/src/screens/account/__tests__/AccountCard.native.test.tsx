@@ -15,8 +15,9 @@ import { AccountCard } from '../AccountCard.native';
 /**
  * F-AUTH-004 sections 6.6, 7.1 and 7.2, design D7 and D8 (`lock.md` boards 8 to 15; row NS-3; CS-N2, CS-N9, CS-N11,
  * CS-N13), in the `native` project: the Grown-up area's account card signed out, signed in (with and without a fresh
- * proof), locked, `unknown` and offline; Sign out clears the records, the keys and the queries, offline too; the
- * typed PIN before Sign in; and the deny list of section 9.2 over every state in en, es and ko on iOS and Android.
+ * proof), locked, `unknown` and offline; Sign out clears the records, the keys and the queries, offline too; row
+ * NS-4's use rows and its entries through AccountGate (Sign in, a use row, Sign in again); and the deny list of
+ * section 9.2 over every state in en, es and ko on iOS and Android (the text tree, every label and hint).
  */
 
 const env = vi.hoisted(() => ({
@@ -29,11 +30,14 @@ const env = vi.hoisted(() => ({
   tracked: [] as { name: string; payload: unknown }[],
   queries: [] as string[],
   clerk: { isLoaded: true, isSignedIn: true, email: 'dana@example.com' as string | null },
+  record: ['family', 'teacher'] as string[] | null,
+  spaces: undefined as unknown,
 }));
 vi.mock('../../../config/native-signin', () => ({ nativeSignInConfig: () => ({ flag: env.enabled, publishableKey: env.enabled ? 'pk_live_x' : null, enabled: env.enabled }) }));
 vi.mock('../../../store/native-gate-state', () => ({ nativeGateState: async () => env.gate }));
 vi.mock('../../../platform/account-records', () => ({
   readTrust: async () => env.trust,
+  readUsesRecord: async () => env.record,
   removeRecord: async (key: string) => void env.removed.push(key),
 }));
 vi.mock('../../../platform/account-online', () => ({
@@ -47,6 +51,7 @@ vi.mock('../../../platform/telemetry', () => ({ track: async (event: { name: str
 const client = vi.hoisted(() => ({
   cancelQueries: async () => void env.queries.push('cancel'),
   removeQueries: () => void env.queries.push('remove'),
+  getQueryData: () => env.spaces,
 }));
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => client }));
 vi.mock('@clerk/clerk-expo', () => ({
@@ -123,6 +128,8 @@ beforeEach(() => {
   env.tracked = [];
   env.queries = [];
   env.clerk = { isLoaded: true, isSignedIn: true, email: 'dana@example.com' };
+  env.record = ['family', 'teacher'];
+  env.spaces = undefined;
 });
 
 afterEach(() => resetPlatform());
@@ -173,24 +180,13 @@ describe('signed out (boards 8 and 13)', () => {
     expect(navigate).toHaveBeenCalledWith('SignIn', undefined);
   });
 
-  it('ND-5: without a fresh proof, the typed PIN first; a typed PIN on the way back goes on to the sign-in', async () => {
-    useUiStore.setState({ lastPinTypedAt: Date.now() - 3 * 60_000 });
+  it('row NS-4: Sign in opens the sign-in whatever the proof: its AccountGate asks the typed PIN (ND-5, CS-N11)', async () => {
+    useUiStore.setState({ lastPinTypedAt: null, lastPinVerifiedAt: Date.now() });
     const r = await mount();
     await tap(r.root, 'account-card-sign-in');
-    expect(navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin', typedOnly: true });
-    useUiStore.setState({ lastPinTypedAt: Date.now() });
-    await refocus();
-    expect(navigate).toHaveBeenLastCalledWith('SignIn', undefined);
-  });
-
-  it('CS-N11: a face or fingerprint on the way back is not a typed PIN: nothing opens', async () => {
-    useUiStore.setState({ lastPinTypedAt: null, lastPinVerifiedAt: null });
-    const r = await mount();
-    await tap(r.root, 'account-card-sign-in');
-    useUiStore.getState().markPinVerified('biometric');
-    await refocus();
     expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate).not.toHaveBeenCalledWith('SignIn', undefined);
+    expect(navigate).toHaveBeenCalledWith('SignIn', undefined);
+    expect(navigate).not.toHaveBeenCalledWith('PinEntry', expect.anything());
   });
 
   it('an open device has no PIN to ask', async () => {
@@ -220,6 +216,53 @@ describe('signed out (boards 8 and 13)', () => {
 });
 
 describe('signed in (boards 9, 10, 12b, 14)', () => {
+  it('row NS-4, board 9: one row per known use, in order, each opening its home through AccountGate', async () => {
+    env.record = ['teacher', 'family'];
+    const r = await mount();
+    const rows = hostNodes(r.root, (n) => String(n.props['data-testid'] ?? '').startsWith('account-card-use-')).map((n) => n.props['data-testid']);
+    expect(rows).toEqual(['account-card-use-family', 'account-card-use-teacher']);
+    expect(byTestId(r.root, 'account-card-use-family')[0]!.props['aria-label']).toBe(en.a11y.who.grownUpRow(en.learner.who.use.family));
+    await tap(r.root, 'account-card-use-teacher');
+    expect(navigate).toHaveBeenCalledWith('AccountHome', { use: 'teacher' });
+  });
+
+  it('board 10: without a fresh proof the rows stay (each asks the typed PIN in its gate), with no email', async () => {
+    useUiStore.setState({ lastPinTypedAt: Date.now() - 3 * 60_000 });
+    const r = await mount();
+    expect(has(r.root, 'account-card-use-family')).toBe(true);
+    expect(has(r.root, 'account-card-email')).toBe(false);
+  });
+
+  it('board 12b: an account with no space shows no use row', async () => {
+    env.record = [];
+    const r = await mount();
+    expect(has(r.root, 'account-card-uses')).toBe(false);
+    expect(screenTexts(r.root)).toContain(en.console.shell.signOut.cta);
+  });
+
+  it('board 14: offline the rows wait with Needs the internet; Sign out stays enabled', async () => {
+    const r = await mount();
+    await act(async () => env.onlineListener?.(false));
+    const row = byTestId(r.root, 'account-card-use-family')[0]!;
+    expect(row.props['aria-disabled']).toBe(true);
+    expect(screenTexts(row)).toContain(en.learner.welcome.grownUps.needsInternet);
+    await press(row);
+    expect(navigate).not.toHaveBeenCalled();
+    expect(byTestId(r.root, 'account-card-sign-out')[0]!.props['aria-disabled']).not.toBe(true);
+  });
+
+  it('an open device: the rows come from this visit’s spaces in memory (no record is kept, ND-9), with no lock glyph', async () => {
+    env.gate = { state: 'open' };
+    env.trust = { kind: 'none' };
+    env.record = ['school'];
+    env.spaces = { spaces: [{ space: { kind: 'class' }, role: 'teacher' }] };
+    useAccountVisit.getState().markSignedIn(Date.now(), false);
+    const r = await mount();
+    expect(has(r.root, 'account-card-use-teacher')).toBe(true);
+    expect(has(r.root, 'account-card-use-school')).toBe(false);
+    expect(byTestId(r.root, 'account-card-use-teacher')[0]!.props['aria-label']).toBe(en.learner.who.use.teacher);
+  });
+
   it('a fresh proof: the email line, the shared-device line, Sign out', async () => {
     const r = await mount();
     expect(screenTexts(r.root)).toEqual(expect.arrayContaining([en.console.adminInvite.signedInAs('dana@example.com'), en.console.billing.help.sharedDevice, en.console.shell.signOut.cta]));
@@ -313,32 +356,20 @@ describe('locked (board 11)', () => {
     expect(has(r.root, 'account-card-sign-in-again')).toBe(false);
   });
 
-  it('Sign in again: signs out (keeping the other epoch’s trust, so the re-trust rule holds), then the sign-in', async () => {
+  it('row NS-4: Sign in again opens the sign-in with `again`; its AccountGate asks the typed PIN, then signs out', async () => {
     env.trust = { kind: 'trust', trust: { v: 1, epoch: 3 } };
-    const r = await mount();
-    await tap(r.root, 'account-card-sign-in-again');
-    expect(host.endSession).toHaveBeenCalled();
-    expect(env.removed).toEqual(['grownup:deviceUses', 'grownup:retrustNotice']);
-    expect(env.tracked).toEqual([{ name: 'auth.native.signout', payload: { os: 'ios', via: 'lock' } }]);
-    expect(navigate).toHaveBeenCalledWith('SignIn', undefined);
-  });
-
-  it('Sign in again without a fresh proof asks the typed PIN before it signs anything out', async () => {
-    env.trust = { kind: 'none' };
     useUiStore.setState({ lastPinTypedAt: Date.now() - 3 * 60_000 });
     const r = await mount();
     await tap(r.root, 'account-card-sign-in-again');
-    expect(navigate).toHaveBeenCalledWith('PinEntry', { next: 'FreshPin', typedOnly: true });
+    expect(navigate).toHaveBeenCalledWith('SignIn', { again: true });
+    // The card itself signs nothing out: the gate does, after the typed PIN.
     expect(host.endSession).not.toHaveBeenCalled();
-    useUiStore.setState({ lastPinTypedAt: Date.now() });
-    await refocus();
-    expect(host.endSession).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenLastCalledWith('SignIn', undefined);
+    expect(env.removed).toEqual([]);
   });
 });
 
 describe('section 9.2: no purchase, price, renewal, web or sign-up word in any state, in en, es and ko, on iOS and Android', () => {
-  type Setup = { gate?: { state: string; epoch?: number }; trust?: { kind: string; trust?: unknown }; signedIn?: boolean; mount?: ClerkMountState; online?: boolean; retrust?: boolean; sheet?: boolean; fresh?: boolean };
+  type Setup = { gate?: { state: string; epoch?: number }; trust?: { kind: string; trust?: unknown }; signedIn?: boolean; mount?: ClerkMountState; online?: boolean; retrust?: boolean; sheet?: boolean; fresh?: boolean; record?: string[] };
   const openURL = vi.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
   const STATES: Record<string, Setup> = {
     signedOut: { signedIn: false },
@@ -346,6 +377,7 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
     signedIn: {},
     signedInOffline: { online: false },
     signedInNoEmail: { fresh: false },
+    signedInNoSpace: { record: [] },
     lockedOffline: { trust: { kind: 'none' }, online: false },
     signOutSheet: { sheet: true },
     noTrust: { trust: { kind: 'none' } },
@@ -370,9 +402,12 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
           env.trust = s.trust ?? { kind: 'trust', trust: { v: 1, epoch: 7 } };
           env.clerk = { isLoaded: true, isSignedIn: s.signedIn ?? true, email: 'dana@example.com' };
           env.online = s.online ?? true;
+          env.record = s.record ?? ['family', 'teacher', 'school'];
           const r = await mount(s.mount ?? 'ready');
           if (s.sheet === true) await tap(r.root, 'account-card-sign-out');
-          const texts = [...screenTexts(r.root), ...(s.sheet === true ? [sheetOf(r.root).title, sheetOf(r.root).confirmLabel, sheetOf(r.root).cancelLabel] : [])];
+          // Every accessible name and description too (react-native-web: `aria-label`; a hint is a described-by caption).
+          const labels = hostNodes(r.root, (n) => typeof n.props['aria-label'] === 'string').map((n) => n.props['aria-label'] as string);
+          const texts = [...screenTexts(r.root), ...labels, ...(s.sheet === true ? [sheetOf(r.root).title, sheetOf(r.root).confirmLabel, sheetOf(r.root).cancelLabel] : [])];
           expect(texts, `${locale} ${name}`).toContain(getMessages(locale).caregiver.account.card.title);
           const hits = texts.flatMap((t) => accountDenyHits(t.replace('dana@example.com', ''), locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
           expect(hits).toEqual([]);

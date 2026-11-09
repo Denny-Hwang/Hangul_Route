@@ -10,6 +10,8 @@
 // - The flag is the `NSUserDefaults` boolean `hr.accountCover` (`ACCOUNT_COVER_KEY`, the key React Native's
 //   `Settings.set` writes on iOS). It is cleared at every launch, so a flag left on by a run that ended on an
 //   account screen covers nothing later.
+// - Row NS-4: before covering, the window ends editing without animation, so the keyboard (a window of its own, which
+//   the cover does not reach) is gone from the snapshot; the account screens also dismiss it from JavaScript.
 // - The code lives in `AppDelegate.mm` (Expo SDK 52's Objective-C++ app delegate) as notification observers added in
 //   `didFinishLaunchingWithOptions`, so no app delegate method is overridden. The cover is hidden from VoiceOver.
 // - Idempotent: the generated block is marked and replaced on every `expo prebuild`. A Swift app delegate (a later
@@ -64,6 +66,11 @@ function coverClass(hex) {
     '  if (![[NSUserDefaults standardUserDefaults] boolForKey:HRAccountCoverKey]) return;',
     '  UIWindow *window = [self window];',
     '  if (window == nil || [window viewWithTag:HRAccountCoverTag] != nil) return;',
+    '  // Row NS-4: the keyboard is a window of its own, which this cover does not reach, and its suggestion bar may hold',
+    '  // what was typed (an email, a code): it goes first, at once, before the snapshot is taken.',
+    '  [UIView performWithoutAnimation:^{',
+    '    [window endEditing:YES];',
+    '  }];',
     '  UIView *cover = [[UIView alloc] initWithFrame:window.bounds];',
     '  cover.tag = HRAccountCoverTag;',
     '  cover.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;',

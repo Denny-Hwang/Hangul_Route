@@ -243,14 +243,19 @@ describe('F-AUTH-004 (row NS-3): the native account routes are Grown-up area rou
     vi.resetModules();
     const fresh = await import('../session');
     expect(fresh.routeZone('SignIn')).toBe('area');
+    // Row NS-4: the account home too.
+    expect(fresh.routeZone('AccountHome')).toBe('area');
     const left = fresh.areaExitTracker();
     expect(left(fresh.routeZone('ParentDashboard'))).toBe(false);
     expect(left(fresh.routeZone('SignIn'))).toBe(false);
+    expect(left(fresh.routeZone('AccountHome'))).toBe(false);
   });
 
   it('web: the route does not exist there, and an unknown name stays a learner screen (the safe side)', async () => {
     vi.stubEnv('EXPO_OS', 'web');
     vi.resetModules();
-    expect((await import('../session')).routeZone('SignIn')).toBe('learner');
+    const fresh = await import('../session');
+    expect(fresh.routeZone('SignIn')).toBe('learner');
+    expect(fresh.routeZone('AccountHome')).toBe('learner');
   });
 });
