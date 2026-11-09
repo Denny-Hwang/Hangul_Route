@@ -54,6 +54,8 @@ describe('paths: an allow list of account paths of the base; never sync, recover
     expect(accountUrl(BASE, '/api/spaces/space%3Aa/roster')).toBe(`${BASE}/api/spaces/space%3Aa/roster`);
     expect(accountUrl(BASE, '/api/spaces/s/learners/l/report?period=week')).toBe(`${BASE}/api/spaces/s/learners/l/report?period=week`);
     expect(accountUrl(BASE, '/api/billing/summary?view=status')).toBe(`${BASE}/api/billing/summary?view=status`);
+    // Row NS-6: the class report's past window, a day key after the period.
+    expect(accountUrl(BASE, '/api/spaces/s/class-report?period=week&at=2026-11-01')).toBe(`${BASE}/api/spaces/s/class-report?period=week&at=2026-11-01`);
   });
 
   it('refuses every other route, money routes included, and any other query', () => {
@@ -72,6 +74,11 @@ describe('paths: an allow list of account paths of the base; never sync, recover
       '/api/spaces//roster',
       '/api/spaces?debug=1',
       '/api/spaces/s/class-report?period=year',
+      '/api/spaces/s/class-report?at=2026-11-01',
+      '/api/spaces/s/class-report?period=week&at=soon',
+      '/api/spaces/s/class-report?period=week&at=2026-11-01&x=1',
+      '/api/spaces/s/class-report?period=week&at=2026-11-01T00:00',
+      '/api/spaces/s/class-report?period=week&learner=l',
       '/api/spaces/%2e%2e/billing/receipts',
     ]) {
       expect(accountUrl(BASE, path), path).toBeNull();
@@ -143,6 +150,11 @@ describe('every request', () => {
     await api.makeCode('space:f');
     await api.learnerReport('space:f', 'learner:1', 'week');
     await api.classReport('space:c', 'all');
+    // Row NS-6: a past window travels as `at` (a day key only, and never with `all`).
+    await api.classReport('space:c', 'week', '2026-11-01');
+    await api.classReport('space:c', 'all', '2026-11-01');
+    await api.classReport('space:c', 'month', 'nope');
+    await api.classReport('space:c', 'day', null);
     await api.school('space:s');
     await api.planStatus();
     expect(fetch.mock.calls.map(([url, init]) => `${init.method} ${url.replace(BASE, '')}`)).toEqual([
@@ -150,6 +162,10 @@ describe('every request', () => {
       'POST /api/spaces/space%3Af/code',
       'GET /api/spaces/space%3Af/learners/learner%3A1/report?period=week',
       'GET /api/spaces/space%3Ac/class-report?period=all',
+      'GET /api/spaces/space%3Ac/class-report?period=week&at=2026-11-01',
+      'GET /api/spaces/space%3Ac/class-report?period=all',
+      'GET /api/spaces/space%3Ac/class-report?period=month',
+      'GET /api/spaces/space%3Ac/class-report?period=day',
       'GET /api/spaces/space%3As/school',
       'GET /api/billing/summary?view=status',
     ]);

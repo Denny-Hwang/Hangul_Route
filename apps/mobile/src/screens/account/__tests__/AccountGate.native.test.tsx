@@ -90,6 +90,12 @@ vi.mock('../FamilyHome.native', async () => {
   const { createElement: h } = await import('react');
   return { FamilyHome: ({ use }: { use: string }) => h('family-home', { 'data-testid': 'family-home', use }) };
 });
+// Row NS-6: the Teacher home is the open content of `AccountHome { use: 'teacher' | 'school' }` (its own tests are
+// `TeacherHome.native.test.tsx`); a host node stands in for it here too.
+vi.mock('../TeacherHome.native', async () => {
+  const { createElement: h } = await import('react');
+  return { TeacherHome: ({ use }: { use: string }) => h('teacher-home', { 'data-testid': 'teacher-home', use }) };
+});
 // react-native-web's Image needs a browser window: the cover stands in as a host node that says whether it draws the splash.
 vi.mock('../AccountCover', async () => {
   const { createElement: h } = await import('react');
@@ -686,7 +692,7 @@ describe('D6: titled with the use the grown-up came for', () => {
   });
 });
 
-describe('row NS-5: the Family home opens in the gate; Teacher and School keep the interim home until row NS-6', () => {
+describe('rows NS-5 and NS-6: the home of each use opens in the gate (no interim landing on the Grown-up area)', () => {
   async function mountHome(below: string | null, use: 'family' | 'teacher' | 'school' | 'account' = 'teacher'): Promise<ReactTestRenderer> {
     nav = makeNav(below);
     host = { mount: 'ready', endSession: vi.fn(async () => true), wipeTokens: vi.fn(async () => true), retry: vi.fn() };
@@ -702,37 +708,30 @@ describe('row NS-5: the Family home opens in the gate; Teacher and School keep t
     const r = await mountHome('ParentDashboard', use);
     const home = r.root.findAll((n) => (n.type as unknown) === 'family-home');
     expect(home.map((n) => n.props.use)).toEqual([use]);
+    expect(r.root.findAll((n) => (n.type as unknown) === 'teacher-home')).toEqual([]);
     expect(nav.navigate).not.toHaveBeenCalledWith('ParentDashboard');
     expect(nav.replace).not.toHaveBeenCalled();
   });
 
-  it('the Family home is never drawn behind a lock', async () => {
-    env.trust = { kind: 'none' };
-    const r = await mountHome('ParentDashboard', 'family');
+  it.each(['teacher', 'school'] as const)('%s: the Teacher home, open inside the gate; no landing on the Grown-up area', async (use) => {
+    const r = await mountHome('ParentDashboard', use);
+    expect(r.root.findAll((n) => (n.type as unknown) === 'teacher-home').map((n) => n.props.use)).toEqual([use]);
     expect(r.root.findAll((n) => (n.type as unknown) === 'family-home')).toEqual([]);
-  });
-
-  it.each(['teacher', 'school'] as const)('%s, the dashboard under it: back to it', async (use) => {
-    await mountHome('ParentDashboard', use);
-    expect(nav.navigate).toHaveBeenCalledWith('ParentDashboard');
+    expect(nav.navigate).not.toHaveBeenCalledWith('ParentDashboard');
     expect(nav.replace).not.toHaveBeenCalled();
   });
 
-  it('the dashboard under it: back to it', async () => {
-    await mountHome('ParentDashboard');
-    expect(nav.navigate).toHaveBeenCalledWith('ParentDashboard');
-    expect(nav.replace).not.toHaveBeenCalled();
-  });
-
-  it('first in its stack (a chooser row): the dashboard in its place, so Back still goes to the chooser', async () => {
+  it('first in its stack (a chooser row), with a fresh typed PIN: the Teacher home in place, never the dashboard', async () => {
     useUiStore.setState({ lastPinTypedAt: Date.now() });
-    await mountHome(null);
-    expect(nav.replace).toHaveBeenCalledWith('ParentDashboard');
+    const r = await mountHome(null, 'school');
+    expect(r.root.findAll((n) => (n.type as unknown) === 'teacher-home')).toHaveLength(1);
+    expect(nav.replace).not.toHaveBeenCalledWith('ParentDashboard');
   });
 
-  it('locked: no landing', async () => {
+  it.each(['family', 'teacher', 'school'] as const)('the %s home is never drawn behind a lock', async (use) => {
     env.trust = { kind: 'none' };
-    await mountHome('ParentDashboard');
+    const r = await mountHome('ParentDashboard', use);
+    expect(r.root.findAll((n) => (n.type as unknown) === 'family-home' || (n.type as unknown) === 'teacher-home')).toEqual([]);
     expect(nav.navigate).not.toHaveBeenCalledWith('ParentDashboard');
   });
 });

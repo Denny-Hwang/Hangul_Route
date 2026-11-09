@@ -1,11 +1,17 @@
 import {
+  ClassReportSchema,
   CoverageSchema,
   JOIN_CODE_RE,
   ProgressSummarySchema,
+  ReportPeriodSchema,
   ReportSummarySchema,
   SpaceKindSchema,
   SpaceRoleSchema,
   UsageSchema,
+  isDateKey,
+  readSpaceAttention,
+  type ClassReport,
+  type ReportPeriod,
   type ReportSummary,
   type SpaceKind,
   type SpaceRole,
@@ -13,11 +19,12 @@ import {
 import type { NativePlanCard } from './plan-lines';
 
 /**
- * F-AUTH-004 sections 8.1, 8.2, 8.5 and 8.7 (row NS-5; ND-10, CS-N5): what the native homes read of the Worker's answers
+ * F-AUTH-004 sections 8.1 to 8.5 and 8.7 (rows NS-5, NS-6; ND-10, CS-N5): what the native homes read of the Worker's answers
  * (`logic/account/api.ts` hands every `data` back as `unknown`). Pure and tolerant, as the console's readers are
  * (`apps/web/src/lib/console/api.ts`): each item, row and summary key is checked on its own and one this bundle cannot
  * read is dropped, so a Worker deployed first with a wider answer never fails a home. Only the fields a home draws are
- * kept: never a plan's actions, receipts, payer or mode, never an avatar or an age group.
+ * kept: never a plan's actions, receipts, payer or mode, never an avatar or an age group, never a teacher's name or a
+ * school's licence (row NS-6).
  */
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -33,6 +40,12 @@ export interface AccountSpaceItem {
   counts: { learners: number };
   /** Sent only to a grown-up with `space.manage`, and only while the code is live. */
   joinCode: string | null;
+  /**
+   * Row NS-6 (section 8.3, AMENDMENTS-GROWNUP-UX section 12): what waits for this grown-up's OK on the space, as one
+   * count (its re-links and its moves; the Worker counts moves only while class moves are on), or null when the Worker
+   * sent no readable `attention` (never read as zero). Counts only: never a learner's name.
+   */
+  attention: number | null;
 }
 
 function spaceItemOf(raw: unknown): AccountSpaceItem | null {
@@ -43,11 +56,13 @@ function spaceItemOf(raw: unknown): AccountSpaceItem | null {
   if (!kind.success || !role.success) return null;
   if (typeof space.id !== 'string' || space.id === '' || typeof space.name !== 'string' || typeof space.createdAt !== 'string' || !isStringOrNull(space.archivedAt)) return null;
   const counts = isRecord(raw.counts) ? raw.counts : {};
+  const attention = readSpaceAttention(raw.attention);
   return {
     space: { id: space.id, kind: kind.data, name: space.name, createdAt: space.createdAt, archivedAt: space.archivedAt },
     role: role.data,
     counts: { learners: countOf(counts.learners) },
     joinCode: codeOf(raw.joinCode),
+    attention: attention === null ? null : attention.relinks + attention.moves,
   };
 }
 
@@ -98,7 +113,24 @@ export interface AccountRosterLearner {
   summary: ReportSummary | null;
 }
 
+/** The space a roster or a report is of, as far as a page reads it (its title, its kind, whether it is archived). */
+export interface AccountSpaceRef {
+  id: string;
+  kind: SpaceKind;
+  name: string;
+  archivedAt: string | null;
+}
+
+function spaceRefOf(raw: unknown): AccountSpaceRef | null {
+  if (!isRecord(raw)) return null;
+  const kind = SpaceKindSchema.safeParse(raw.kind);
+  if (!kind.success || typeof raw.id !== 'string' || raw.id === '' || typeof raw.name !== 'string' || !isStringOrNull(raw.archivedAt ?? null)) return null;
+  return { id: raw.id, kind: kind.data, name: raw.name, archivedAt: (raw.archivedAt ?? null) as string | null };
+}
+
 export interface AccountRoster {
+  /** Row NS-6: the roster's own space (the class page's title and kind); null when the Worker sent none it can read. */
+  space: AccountSpaceRef | null;
   learners: AccountRosterLearner[];
   /** Sent only under `space.manage`, while live. */
   joinCode: string | null;
@@ -115,6 +147,7 @@ function rosterLearnerOf(raw: unknown): AccountRosterLearner | null {
 export function rosterOf(data: unknown): AccountRoster | null {
   if (!isRecord(data) || !Array.isArray(data.learners)) return null;
   return {
+    space: spaceRefOf(data.space),
     learners: data.learners.flatMap((raw) => {
       const learner = rosterLearnerOf(raw);
       return learner === null ? [] : [learner];
@@ -165,4 +198,71 @@ export function reportBodyOf(data: unknown): AccountReportBody | null {
   if (data.summary === null || data.summary === undefined) return { ...envelope, summary: null };
   const summary = reportSummaryOf(data.summary);
   return summary === null ? null : { ...envelope, summary };
+}
+
+/** One class of a school page (`GET /api/spaces/:id/school`), as the native school page reads it. */
+export interface AccountSchoolClass {
+  space: { id: string; name: string; createdAt: string; archivedAt: string | null };
+  /** Its learner members (`students`). */
+  students: number;
+}
+
+/**
+ * Row NS-6 (section 8.4): the school page. Only the school's name, its classes (name, learner count) and how many
+ * teachers it has; never a teacher's name, the licence, its seats or dates, the invite code or a week's figures, which
+ * the Worker's answer also carries for the console.
+ */
+export interface AccountSchoolPage {
+  school: AccountSpaceRef;
+  classes: AccountSchoolClass[];
+  /** `usage.teachers`; null when the Worker sent none it can read. */
+  teachers: number | null;
+}
+
+function schoolClassOf(raw: unknown): AccountSchoolClass | null {
+  if (!isRecord(raw) || !isRecord(raw.space)) return null;
+  const { space } = raw;
+  if (typeof space.id !== 'string' || space.id === '' || typeof space.name !== 'string' || typeof space.createdAt !== 'string' || !isStringOrNull(space.archivedAt ?? null)) return null;
+  if (space.kind !== undefined && space.kind !== 'class') return null;
+  return { space: { id: space.id, name: space.name, createdAt: space.createdAt, archivedAt: (space.archivedAt ?? null) as string | null }, students: countOf(raw.students) };
+}
+
+/** `GET /api/spaces/:id/school`: what the school page draws, or null for an answer it cannot read (or not a school's). */
+export function schoolPageOf(data: unknown): AccountSchoolPage | null {
+  if (!isRecord(data)) return null;
+  const school = spaceRefOf(data.school);
+  if (school === null || school.kind !== 'school' || !Array.isArray(data.classes)) return null;
+  const usage = isRecord(data.usage) ? data.usage : {};
+  const teachers = typeof usage.teachers === 'number' && Number.isInteger(usage.teachers) && usage.teachers >= 0 ? usage.teachers : null;
+  return {
+    school,
+    classes: data.classes.flatMap((raw) => {
+      const row = schoolClassOf(raw);
+      return row === null ? [] : [row];
+    }),
+    teachers,
+  };
+}
+
+/** Row NS-6 (section 8.7): a class report's answer (`GET /api/spaces/:id/class-report`), as the console reads it. */
+export interface AccountClassReportBody {
+  space: AccountSpaceRef;
+  period: ReportPeriod;
+  /** The window the figures read: a day key, or null for the current one (or a Worker from before the echo). */
+  at: string | null;
+  report: ClassReport;
+}
+
+/**
+ * The class report's envelope and figures, checked whole against `ClassReportSchema` (aggregates only: no learner id,
+ * name or row can be in it), or null for a body it cannot read. The console's `parseClassReport`.
+ */
+export function classReportBodyOf(data: unknown): AccountClassReportBody | null {
+  if (!isRecord(data)) return null;
+  const space = spaceRefOf(data.space);
+  const period = ReportPeriodSchema.safeParse(data.period);
+  const report = ClassReportSchema.safeParse(data.report);
+  if (space === null || !period.success || !report.success) return null;
+  const at = typeof data.at === 'string' && isDateKey(data.at) ? data.at : null;
+  return { space, period: period.data, at, report: report.data };
 }

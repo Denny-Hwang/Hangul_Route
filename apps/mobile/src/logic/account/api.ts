@@ -1,4 +1,4 @@
-import { NATIVE_CLIENT_HEADER, NATIVE_CLIENT_VALUE } from '@hangul-route/content-schema';
+import { NATIVE_CLIENT_HEADER, NATIVE_CLIENT_VALUE, isDateKey } from '@hangul-route/content-schema';
 
 /**
  * F-AUTH-004 sections 8.1, 8.8 and 11 (row NS-2; CS-N8): the one client the native grown-up homes call the Worker
@@ -13,7 +13,8 @@ import { NATIVE_CLIENT_HEADER, NATIVE_CLIENT_VALUE } from '@hangul-route/content
  * - Every request carries `Authorization: Bearer`, `X-HR-Client: native` and asks for no cache (`Cache-Control:
  *   no-store`, and `cache: 'no-store'`, which React Native's fetch turns into a `_=<time>` query on a GET).
  * - An allow list of paths on the base's own origin, read after the URL is normalised (`%2e%2e` and `%2F` included):
- *   `/api/spaces` and its sub-paths (with no query but `period`), and `/api/billing/summary?view=status`. So the
+ *   `/api/spaces` and its sub-paths (with no query but `period`, and after it a day `at` for the class report's
+ *   stepper, row NS-6: a date key, nothing else), and `/api/billing/summary?view=status`. So the
  *   account token never rides on the learner's sync or restore paths, on a money route or anywhere else, and no
  *   device secret is sent on an account route (section 11; the Worker refuses them too, section 9.4).
  * - `redirect: 'manual'` asks for no redirect to be followed with the bearer. React Native's fetch ignores it (its
@@ -61,7 +62,8 @@ export function accountApiBase(raw: string | undefined, dev: boolean): string | 
 /** The account paths (section 8.1), as normalised and decoded: the spaces routes, and the plan status view. */
 const SPACES_PATH = /^\/api\/spaces(\/[^/;]+)*$/;
 const STATUS_PATH = '/api/billing/summary';
-const PERIOD_QUERY = /^\?period=(day|week|month|all)$/;
+/** Row NS-6: a class report's past window is one day key (`at`), as the console's class report asks for it. */
+const PERIOD_QUERY = /^\?period=(day|week|month|all)(&at=\d{4}-\d{2}-\d{2})?$/;
 
 /** The full URL of `path` on `base`, or null when the path is not one of the account paths of that origin. */
 export function accountUrl(base: string, path: string): string | null {
@@ -121,7 +123,11 @@ export interface AccountApi {
   roster: (spaceId: string) => Promise<AccountApiResult>;
   makeCode: (spaceId: string) => Promise<AccountApiResult>;
   learnerReport: (spaceId: string, learnerId: string, period: ReportPeriod) => Promise<AccountApiResult>;
-  classReport: (spaceId: string, period: ReportPeriod) => Promise<AccountApiResult>;
+  /**
+   * Row NS-6: one window of a class's statistics (the Worker computes one per read): the current one, or the window at
+   * the day `at` (the stepper's step). `at` is sent only when it is a day key and the period is not `all`.
+   */
+  classReport: (spaceId: string, period: ReportPeriod, at?: string | null) => Promise<AccountApiResult>;
   school: (spaceId: string) => Promise<AccountApiResult>;
   /** Section 8.5: always the status view (the Worker sends it to a native request whatever the query says). */
   planStatus: () => Promise<AccountApiResult>;
@@ -179,7 +185,8 @@ export function createAccountApi(opts: AccountApiOptions): AccountApi {
     roster: (spaceId) => withId([spaceId], ([s]) => `/api/spaces/${s}/roster`),
     makeCode: (spaceId) => withId([spaceId], ([s]) => `/api/spaces/${s}/code`, 'POST'),
     learnerReport: (spaceId, learnerId, period) => withId([spaceId, learnerId], ([s, l]) => `/api/spaces/${s}/learners/${l}/report?period=${period}`),
-    classReport: (spaceId, period) => withId([spaceId], ([s]) => `/api/spaces/${s}/class-report?period=${period}`),
+    classReport: (spaceId, period, at = null) =>
+      withId([spaceId], ([s]) => `/api/spaces/${s}/class-report?period=${period}${period !== 'all' && at !== null && isDateKey(at) ? `&at=${at}` : ''}`),
     school: (spaceId) => withId([spaceId], ([s]) => `/api/spaces/${s}/school`),
     planStatus: () => request('GET', '/api/billing/summary?view=status'),
   };

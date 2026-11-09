@@ -169,7 +169,7 @@ export function bindAccountQueryClearing(): () => void {
 /**
  * The nested stack (its routes keep the root's names, so the header registry and the session rules read them as before),
  * with the account routes of rows NS-3 to NS-6 (`AccountStackParamList`): row NS-3's `SignIn`, row NS-4's `AccountHome`,
- * row NS-5's `AccountLearnerReport`.
+ * row NS-5's `AccountLearnerReport`, row NS-6's `AccountSpace`, `AccountSchool` and `AccountClassReport`.
  */
 const Stack = createNativeStackNavigator<GrownUpStackParamList>();
 
@@ -186,6 +186,21 @@ function loadAccountHomeScreen(): ComponentType<NativeStackScreenProps<GrownUpSt
 /** Row NS-5: a learner's account report (inside AccountGate), required when the route is first shown, as the home is. */
 function loadAccountLearnerReportScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'AccountLearnerReport'>> {
   return (require('../screens/account/AccountLearnerReportScreen.native') as typeof import('../screens/account/AccountLearnerReportScreen.native')).AccountLearnerReportScreen;
+}
+
+/** Row NS-6: a class page (inside AccountGate), required when the route is first shown. */
+function loadAccountSpaceScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'AccountSpace'>> {
+  return (require('../screens/account/AccountSpaceScreen.native') as typeof import('../screens/account/AccountSpaceScreen.native')).AccountSpaceScreen;
+}
+
+/** Row NS-6: a school page (inside AccountGate), required when the route is first shown. */
+function loadAccountSchoolScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'AccountSchool'>> {
+  return (require('../screens/account/AccountSchoolScreen.native') as typeof import('../screens/account/AccountSchoolScreen.native')).AccountSchoolScreen;
+}
+
+/** Row NS-6: a class's report (inside AccountGate), required when the route is first shown. */
+function loadAccountClassReportScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'AccountClassReport'>> {
+  return (require('../screens/account/AccountClassReportScreen.native') as typeof import('../screens/account/AccountClassReportScreen.native')).AccountClassReportScreen;
 }
 
 /** A Clerk render error: the area goes on without Clerk; the crash report names the class only (CS-N15). */
@@ -268,10 +283,14 @@ export function GrownUpStack({ route }: Props): ReactElement {
       {/* F-AUTH-004 section 6.3 (row NS-3): the grown-up sign-in, reached from the account card (and the rows of NS-4).
           Loaded only when it is first shown: it imports Clerk's Expo SDK, which never loads before the provider (ND-11). */}
       <Stack.Screen name="SignIn" getComponent={loadSignInScreen} />
-      {/* Row NS-4: a use's home, behind AccountGate (row NS-5 draws the Family home). Loaded when first shown, as SignIn is. */}
+      {/* Row NS-4: a use's home, behind AccountGate (row NS-5 draws the Family home, row NS-6 Teacher and School). Loaded when first shown, as SignIn is. */}
       <Stack.Screen name="AccountHome" getComponent={loadAccountHomeScreen} />
       {/* Row NS-5: a learner's account report, behind AccountGate. Loaded when first shown. */}
       <Stack.Screen name="AccountLearnerReport" getComponent={loadAccountLearnerReportScreen} />
+      {/* Row NS-6: a class page, a school page and a class's report, each behind AccountGate. Loaded when first shown. */}
+      <Stack.Screen name="AccountSpace" getComponent={loadAccountSpaceScreen} />
+      <Stack.Screen name="AccountSchool" getComponent={loadAccountSchoolScreen} />
+      <Stack.Screen name="AccountClassReport" getComponent={loadAccountClassReportScreen} />
     </Stack.Navigator>
   );
   return (

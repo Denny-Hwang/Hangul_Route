@@ -511,6 +511,15 @@ export type AccountStackParamList = {
    * `use` is the home it was opened from (its gate's title, and the use a sign-in after a `401` goes back to).
    */
   AccountLearnerReport: { spaceId: string; learnerId: string; period: 'day' | 'week' | 'month' | 'all'; use?: GrownUpUse | 'account' };
+  /**
+   * Section 8.3 (row NS-6): a class page (Class report, the roster with See report, the class code, the plan block),
+   * opened from a class row of the Teacher home or of a school page. `use` is the home it was opened from.
+   */
+  AccountSpace: { spaceId: string; use?: GrownUpUse | 'account' };
+  /** Section 8.4 (row NS-6): a school page (its classes, how many teachers, the plan block), for an owner or admin. */
+  AccountSchool: { spaceId: string; use?: GrownUpUse | 'account' };
+  /** Section 8.7 (row NS-6): a class's report from the Worker's class statistics, opened by Class report. */
+  AccountClassReport: { spaceId: string; period: 'day' | 'week' | 'month' | 'all'; use?: GrownUpUse | 'account' };
 };
 
 /** The nested Grown-up area stack's routes: the dashboard under the root's name, then the account routes. */
