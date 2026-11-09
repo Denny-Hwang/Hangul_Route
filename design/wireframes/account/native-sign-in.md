@@ -22,7 +22,7 @@ Panel A — email step (phone 360)
 ```
 +--------------------------------+
 | < Back   Grown-up sign-in ( Aa)|  <- ScreenHeader; Back cancels to where sign-in was opened
-| Sign in with the grown-up      |  <- intro, text.secondary
+| Sign in with the grown-up      |  <- intro, secondary text
 | account of your family, class  |
 | or school.                     |
 | Email                          |  <- visible label (not a placeholder)
@@ -41,11 +41,11 @@ Panel B — code step (the account has the email code; Use my password only when
 | < Back   Grown-up sign-in ( Aa)|
 | We sent a 6-digit code to      |
 | dana@example.com.              |
-| Code                           |  <- oneTimeCode / one-time-code, digits, mono; name "Sign-in code, 6 digits"
+| Code                           |  <- oneTimeCode / one-time-code, digits; name "Sign-in code, 6 digits"
 | [ 482139    ]                  |
 | (         Sign in           )  |  <- primary
-| (      Send a new code      )  |  <- paper secondary
-| (      Use my password      )  |  <- paper secondary, password accounts only
+| (      Send a new code      )  |  <- secondary
+| (      Use my password      )  |  <- secondary, password accounts only
 |        Use another email       |  <- quiet text button: back to Panel A, field kept
 ```
 
@@ -68,13 +68,14 @@ Panel D — second step or new-device check
 | [           ]                  |
 | (         Sign in           )  |
 | (     Use a backup code     )  |  <- only when the account has backup codes; then a plain text field
+| (      Send a new code      )  |  <- only when this step's code was sent (device check, emailed or texted step)
 |        Use another email       |
 ```
 
 Panel E — an error line (every step)
 
 ```
-| [ 482130    ]                  |  <- aria-invalid, amber edge (feedback.nudge), never danger
+| [ 482130    ]                  |  <- aria-invalid; the line below carries the words, never a danger look
 | | That code didn't work. Check |  <- the strip: role alert, tied to the field (aria-describedby),
 | | it and try again.            |     announced; the field cleared and focused on a wrong code or password
 | (         Sign in           )  |
@@ -88,7 +89,9 @@ Panel F — offline (any step)
 | < Back   Grown-up sign-in ( Aa)|
 | | Needs the internet           |  <- learner.welcome.grownUps.needsInternet, a status strip
 | ... the step as it was ...     |  <- typed values kept
-| (    Continue / Sign in     )  |  <- aria-disabled; enabled again when the network returns
+| (    Continue / Sign in     )  |  <- every button that calls Clerk aria-disabled (also Send a new code,
+|                                |     Email me a code); Use my password, Use a backup code, Use another
+|                                |     email stay enabled; all back when the network returns
 ```
 
 Panel G — "Who is using this?", Grown-ups section on native (switch on)
@@ -118,7 +121,7 @@ Panel H — `nopin` (child profiles, no PIN) and offline
 ```
 
 ```
-| [L] Family         (disabled)  |  <- offline: aria-disabled, sunken, no chevron
+| [L] Family         (disabled)  |  <- offline: aria-disabled, no chevron
 |     Needs the internet         |     (offline wins over nopin: the row's purpose is the account)
 | [L] Grown-up area            > |  <- works offline
 ```
@@ -176,7 +179,7 @@ flowchart LR
 
 ## Open questions
 
-- None open. The decisions this pass took (Continue dimmed until the field holds an @, no busy string, offline wins over `nopin`, backup codes in a plain field) are D1 to D5 in `design/screens/account/README.md`.
+- None open. The decisions this pass took (Continue dimmed until the field holds an @, no busy string and offline per button, offline wins over `nopin`, backup codes in a plain field, amber strips with a `border.shape` field) are D1 to D5, and the password step first while a re-trust is pending is D21, in `design/screens/account/README.md`.
 
 ## Accessibility
 

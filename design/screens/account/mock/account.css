@@ -19,7 +19,8 @@
   --acc-form-max: var(--pane-master); /* layout.pane.master (400): the sign-in fields and buttons column on a tablet */
   --acc-code-field: 12rem;   /* the 6-digit code field: six mono digits at size.prompt with tracking, in rem so it grows with the text size */
   --acc-card-min: 18rem;     /* learner and class cards side by side from this width (two on a tablet, one on a phone) */
-  --acc-strip-edge: 4px;     /* spacing.xs: the coloured left edge of a notice, error or offline strip (a second cue beside the words) */
+  --acc-strip-edge: var(--spacing-xs); /* the coloured left edge of a notice, error or offline strip (a second cue beside the words) */
+  --rp-fig-min: 7rem;        /* the reports' figure tile minimum (design/screens/reports/README.md, Constants) */
   --len-col: 21rem;          /* design board only: three language columns of the lengths board side by side at 1280 */
   --acc-cover-img: 180px;    /* the splash image's drawn width on a 360 board, as app.json "contain" scales it */
 }
@@ -39,7 +40,7 @@
 .acc-input { min-height: var(--touch-min); width: 100%; padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-base) solid var(--colors-border-shape); border-radius: var(--radii-md); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-bodyLg); }
 .acc-input.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
 .acc-input.code { max-width: var(--acc-code-field); font-family: var(--family-mono); font-size: var(--size-prompt); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); }
-.acc-input[aria-invalid="true"] { border-color: var(--colors-feedback-nudge); }
+.acc-input[aria-invalid="true"] { border-width: var(--border-width-thick); border-color: var(--colors-border-shape); } /* a thicker border.shape edge (4.55:1), never a low-contrast amber edge; the strip carries the words */
 .acc-input[disabled] { background: var(--colors-surface-sunken); border-color: var(--colors-border-subtle); color: var(--colors-text-muted); }
 .acc-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 .acc-actions .rn-btn { width: 100%; }
@@ -133,7 +134,7 @@
 .rp-sec h2 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
 .rp-sec ul { display: flex; flex-direction: column; gap: var(--spacing-xs); list-style: disc; padding-left: var(--spacing-xl); }
 .rp-sec li { overflow-wrap: anywhere; }
-.rp-sec ul.rp-figs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 7rem), 1fr)); gap: var(--spacing-sm); list-style: none; padding-left: 0; }
+.rp-sec ul.rp-figs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--rp-fig-min)), 1fr)); gap: var(--spacing-sm); list-style: none; padding-left: 0; }
 .rp-figs li { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); }
 .rp-figs .f-val { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
 .rp-figs .f-lbl { color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }

@@ -8,7 +8,7 @@ The shipped `PinEntry` in verify mode (`design/screens/profiles/pin-entry-v2.md`
 
 ## Locked results (boards 2 to 7)
 
-One screen: the `ScreenHeader` (Back, the title of the use the grown-up came for: `learner.who.use.*` or **Grown-up account**, Display) and one **lock card** (`surface.paper`, `border.subtle`, `radii.lg`, padding `spacing.xl` / `spacing.lg`): the lock glyph in a `surface.sunken` circle, the line (`text.primary`, relaxed leading) and the buttons full width (D6). No email, name, space or number anywhere.
+One screen: the `ScreenHeader` (Back, the title of the use the grown-up came for: `learner.who.use.*`, or **Grown-up account** for an entry with no use, Display) and one **lock card** (`surface.paper`, `border.subtle`, `radii.lg`, padding `spacing.xl` / `spacing.lg`): the lock glyph in a `surface.sunken` circle, the line (`text.primary`, relaxed leading) and the buttons full width (D6). No email, name, space or number anywhere.
 
 | Board | Result | Line | Buttons |
 |---|---|---|---|
@@ -25,15 +25,16 @@ The first card of the native Grown-up area, after **Switch user** and before Peo
 
 | Board | State | Content |
 |---|---|---|
-| 8 | signed out | `card.signedOut`, **Sign in** (`caregiver.account.signIn.submit`, paper) |
-| 9 | signed in, past the gate | `console.adminInvite.signedInAs(email)` (semibold), one `GrownUpRow` per known use (each through `AccountGate`), `console.billing.help.sharedDevice` (`size.bodySm`, secondary), **Sign out** (paper) |
-| 10 | signed in, no space | the email line, no use row, the shared-device line, Sign out |
-| 11 | signed in, locked by the gate | the lock line and its button (here `pinChanged`, **Sign in again**); no email |
+| 8 | signed out | `card.signedOut`, **Sign in** (`caregiver.account.signIn.submit.cta`, paper; through `AccountGate`) |
+| 9 | signed in, trust matches, fresh proof (PIN typed or signed in within 2 min) | `console.adminInvite.signedInAs(email)` (semibold), one `GrownUpRow` per known use (each through `AccountGate`), `console.billing.help.sharedDevice` (`size.bodySm`, secondary), **Sign out** (paper) |
+| 10 | signed in, trust matches, no fresh proof (face or fingerprint, or a PIN older than 2 min) | no email line; the use rows (each asks the typed PIN), the shared-device line, Sign out (D7, CS-N9) |
+| 12b | signed in, fresh, no space | the email line, no use row, the shared-device line, Sign out |
+| 11 | signed in, locked by the gate | the lock line and its button (here `pinChanged`, **Sign in again**, which asks the typed PIN before it signs out); no email |
 | 12 | gate `unknown` | `lock.cantCheck`, **Try again**; no email |
 | 13 | offline, signed out | Sign in `aria-disabled`, `needsInternet` as its description |
 | 14 | offline, signed in | use rows `aria-disabled` with `needsInternet`; **Sign out** enabled (6.6) |
 
-The card never shows on `nopin`: entering the Grown-up area there runs PIN setup first. On an `open` device the signed-in card lists the uses of this run's memory session (no record is kept, ND-9).
+The card never shows on `nopin`: entering the Grown-up area there runs PIN setup first. On an `open` device the signed-in card lists the uses from this run's in-memory spaces query (no record is kept, ND-9); there is no PIN, so the email shows within the sign-in's 2 minutes only. Sign out never asks a PIN (it only deletes).
 
 ## Sign out (board 15)
 
@@ -41,7 +42,7 @@ The shipped ConfirmSheet: title `caregiver.account.signOut.ask`, no message, **C
 
 ## The covers (boards 16, 17)
 
-Both covers draw the app's own splash: `app.json` `splash.image` (`assets/splash.png`) on `splash.backgroundColor` (`surface.canvas`), contain (D12). The iOS native cover is added in `applicationWillResignActive` while an account screen is focused; the JS cover is a `surface.canvas` view with the same image on `AppState` change; Android `FLAG_SECURE` makes the system blank the recents thumbnail and blocks screenshots. Covers are `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"`. A decision on focus that locks an open home draws the cover, then the lock card (board 17).
+Both covers draw the app's own splash: `app.json` `splash.image` (`assets/splash.png`, which carries the app name and its English tagline, as at launch) on `splash.backgroundColor` (`surface.canvas`), contain (D12). The iOS native cover is added in `applicationWillResignActive` while an account screen is focused; the JS cover is a `surface.canvas` view with the same image on `AppState` change; Android `FLAG_SECURE` makes the system blank the recents thumbnail and blocks screenshots. Covers are `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"`. A decision on focus that locks an open home draws the cover, then the lock card (board 17).
 
 ## Accessibility
 

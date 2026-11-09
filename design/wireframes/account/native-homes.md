@@ -3,7 +3,7 @@
 Spec: `docs/specs/F-AUTH-004-native-sign-in.md` sections 8.1 to 8.8, 9.1, 9.2, 14, 17.3, 17.4 (rows NS-5, NS-6)
 Audience: **grown-up** (parent or caregiver, teacher, school owner or admin), signed in and past `AccountGate`
 Route: `AccountHome { use: 'family' | 'teacher' | 'school' | 'account' }`, `AccountSpace { spaceId }`, `AccountSchool { spaceId }`, `AccountLearnerReport { spaceId, learnerId, period }`, `AccountClassReport { spaceId, period }` (ids in memory only; no URL)
-Mock: `design/screens/account/homes.md` (`mock/homes.html` boards 1 to 19, `mock/plan-block.html` boards 1 to 9, `mock/tablet.html`), `design/screens/account/reports.md` (`mock/reports.html`) (row NS-0b)
+Mock: `design/screens/account/homes.md` (`mock/homes.html` boards 1 to 19, `mock/plan-block.html` boards 1 to 9, `mock/tablet.html`), `design/screens/account/account-reports.md` (`mock/reports.html`) (row NS-0b)
 
 ## Scenario (Given-When-Then)
 
@@ -23,7 +23,7 @@ Panel A — Family home (phone 360)
 | < Back   Family           ( Aa)|
 | | The grown-up PIN on this   | |  <- once after a re-trust (7.3); no button
 | | device changed since ...   | |
-| Kim family                     |  <- family name, prompt size
+| Kim family                     |  <- family name, a heading
 | +----------------------------+ |
 | | Mina                       | |  <- learner card, join order (never activity)
 | | Last active today          | |
@@ -33,11 +33,11 @@ Panel A — Family home (phone 360)
 | | Jun ...                    | |
 | +----------------------------+ |
 | | Family code                | |  <- code panel: only when the server sends joinCode (space.manage)
-| |        K7M PQ4             | |  <- display mono; wraps by groups of three, never below body size
+| |        K7M PQ4             | |  <- the code, large; wraps by groups of three, never smaller than body text
 | | (  Copy  ) (Join on this   | |
 | |             device       ) | |
 | +----------------------------+ |
-| | Family Plan                | |  <- plan block: plain text, sunken, no border, not pressable
+| | Family Plan                | |  <- plan block: plain text, set apart, not pressable
 | | 2 of 6 learners            | |
 |--------------------------------|
 | Some grown-up tools aren't in  |  <- the quiet line: no link, no place
@@ -58,7 +58,7 @@ Panel B — Teacher home (and School: the same page titled School, focus on the 
 | | 2 need your OK             | |  <- attention: plain text, no action
 | | ( Class report )           | |  <- its own button
 | +----------------------------+ |
-| | Spring 2026 class          | |  <- archived after live, sunken
+| | Spring 2026 class          | |  <- archived after live, set apart
 | | (archived) ...             | |
 | School                         |
 | | Maple Heritage School    > | |  <- owner or admin: AccountSchool
@@ -79,7 +79,7 @@ Panel C — class page (`AccountSpace`) and school page (`AccountSchool`)
 | +----------------------------+ |      | Teachers: 6                    |
 | | Class code   H3T RW9 ...   | |      | | School Contract            | |
 | | Covered by Maple Heritage  | |      | | 6 of 20 teachers           | |
-| | School's license until ... | |
+| | School's license           | |
 ```
 
 Panel D — the plan block, every coverage (`nativePlanLines`)
@@ -88,11 +88,11 @@ Panel D — the plan block, every coverage (`nativePlanLines`)
 | Free plan                      |   free, or own and expired
 | Family Plan / Group License /  |   own: active, trial, past_due, cancelled -> the name only
 |   School Contract              |
-| 2 of 6 learners                |   the usage line, only when the card carries usage
-| Covered by {school}'s license  |   school coverage (with "until {date}" when expiresAt)
+| 2 of 6 learners                |   the usage line, only when the card carries usage and the plan is not free
+| Covered by {school}'s license  |   school coverage; never its end date on native
 ```
 
-Never: a renewal or end date of the space's own plan, a payment state, "manage", a payer, a price, a button.
+Never: any date (the school's end date included), a free plan's cap, a payment state, "manage", a payer, a price, a button.
 
 Panel E — reports (the in-app report's blocks over the server's answer)
 
@@ -158,7 +158,7 @@ Exit to: `account/report` (learner, class) · `account/space` · `account/school
 
 ## Open questions
 
-- None open. The last-active words, the class page's Class report, the plan block's accessible value, the report's left-out blocks and the card words of the deny list are D9, D10, D13, D14 and D15 in `design/screens/account/README.md` (spec sections 8.2, 8.3, 8.5, 8.7 and 9.2 amended in NS-0b).
+- None open. The last-active words, the class page's Class report, the plan block's accessible value, the report's left-out blocks and the card words of the deny list are D9, D10, D13, D14, D15 and D20 (no date and no free cap on the plan block) in `design/screens/account/README.md` (spec sections 8.2, 8.3, 8.5, 8.7 and 9.2 amended in NS-0b).
 
 ## Accessibility
 

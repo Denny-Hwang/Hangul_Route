@@ -40,7 +40,7 @@ Panel B — a locked result (one card under the ScreenHeader)
 | < Back   Family           ( Aa)|  <- the use the grown-up came for
 | +----------------------------+ |
 | | (lock)                     | |
-| | The grown-up PIN changed   | |  <- the result's line, text.primary
+| | The grown-up PIN changed   | |  <- the result's line
 | | on this device. Sign in    | |
 | | again to use it.           | |
 | | (     Sign in again      ) | |  <- primary: signs out on this device, then SignIn
@@ -65,7 +65,7 @@ Panel C — Grown-up area, the account card (first card on native)
 | | Grown-up account           | |  <- signed out
 | | Sign in to see your family,| |
 | | classes and school here.   | |
-| | (        Sign in         ) | |  <- paper secondary; through AccountGate
+| | (        Sign in         ) | |  <- secondary; through AccountGate
 | +----------------------------+ |
 | - People on this device ...  - |  <- unchanged
 ```
@@ -73,7 +73,8 @@ Panel C — Grown-up area, the account card (first card on native)
 ```
 | | Grown-up account           | |  <- signed in, past the gate
 | | Signed in as               | |
-| | dana@example.com           | |  <- only here and only past the gate (CS-N9)
+| | dana@example.com           | |  <- only past the gate AND with a PIN typed (or a sign-in) in the last
+|                                |     2 minutes; after face or fingerprint the card has no email line (CS-N9)
 | | [L] Family               > | |  <- one row per known use, each through AccountGate
 | | [L] Teacher              > | |
 | | On a shared device? Sign   | |
@@ -141,7 +142,7 @@ Exit to: `account/sign-in` (Sign in again, card Sign in) · `account/home` (an o
 
 ## Open questions
 
-- None open. The card with no use row, the lock screen titled with the use, Sign out without the danger colour and the splash as the cover are D6 to D8 and D12 in `design/screens/account/README.md`.
+- None open. The card with no use row, the lock screen titled with the use, Sign out without the danger colour and the splash as the cover are D6 to D8 and D12 (the email only with a fresh proof is D7, Sign in again on the password step D21) in `design/screens/account/README.md`.
 
 ## Accessibility
 

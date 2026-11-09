@@ -12,7 +12,7 @@ Only the Grown-ups section of "Who is using this?" and the grown-up group of Wel
 | 2 | `pin`, record with no use | **Grown-up account** (`caregiver.account.card.title`, use code `account`), Grown-up area | as 1 | — |
 | 3 | `pin`, no record | **Sign in as a grown-up** (`learner.who.use.signIn`), Grown-up area | as 1 | — |
 | 4 | `nopin` | Sign in as a grown-up, Grown-up area | the label alone (entering runs PIN setup) | `caregiver.pin.needsPinFirst`; Grown-up area keeps `learner.who.nopinCaption` |
-| 5 | offline (`pin`, Family and Teacher known) | Family, Teacher (`aria-disabled`, `surface.sunken`, `text.muted` label, no chevron), Grown-up area (enabled) | as 1 | `learner.welcome.grownUps.needsInternet` |
+| 5 | offline (`pin`, Family and Teacher known; D3) | Family, Teacher (`aria-disabled`, `surface.sunken`, `text.muted` label, no chevron), Grown-up area (enabled) | as 1 | `learner.welcome.grownUps.needsInternet` |
 | 6 | `open` (self-only, marker `none`) | Sign in as a grown-up, the zone row (`caregiver.audience.self.zoneLabel`) | the label alone, no lock glyph | — |
 | 7 | switch off or no valid key | Grown-up area only (CS-N13) | as today | — |
 
