@@ -179,7 +179,7 @@ flowchart LR
 
 ## Open questions
 
-- None open. The decisions this pass took (Continue dimmed until the field holds an @, no busy string and offline per button, offline wins over `nopin`, backup codes in a plain field, amber strips with a `border.shape` field) are D1 to D5, and the password step first while a re-trust is pending is D21, in `design/screens/account/README.md`.
+- None open. The decisions this pass took (Continue dimmed until the field holds an @, no busy string and offline per button, offline wins over `nopin`, backup codes in a plain field, the error line under its field) are D1 to D5, and the password step first while a re-trust is pending is D21, in `design/screens/account/README.md`.
 
 ## Accessibility
 
