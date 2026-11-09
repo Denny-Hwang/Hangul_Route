@@ -141,6 +141,7 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
         askedPin: askedPin.current,
         again: againNow.current,
         sessionLapsed: !isParentSessionValid(ui.parentGateOpenedAt === null ? null : { openedAt: ui.parentGateOpenedAt, profileId: 'family' }, now),
+        sessionExpired: ui.parentGateOpenedAt !== null && !isParentSessionValid({ openedAt: ui.parentGateOpenedAt, profileId: 'family' }, now),
       });
       // Sign in again waits through a decision that waited for Clerk; any other step drops it.
       if (next.kind !== 'ask_pin' && next.kind !== 'sign_out_then_sign_in' && next.kind !== 'wait') againNow.current = false;
@@ -255,6 +256,14 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
     if (stepNow.current?.kind === 'wait' && !askedPin.current && clerk !== 'loading' && navigation.isFocused()) decideRef.current();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Clerk's answer is the moment; the navigation object is this mount's
   }, [clerk]);
+
+  // Row NS-7 (security review): Clerk's session ended while a page is open (revoked or expired elsewhere, a sign-out):
+  // the page in front decides again at once instead of keeping the account on screen until the next focus or `401`.
+  // A page under it decides at its own focus, so a run of account pages never stacks one sign-in on another.
+  useEffect(() => {
+    if (screen === 'home' && !clerkSignedIn && stepNow.current?.kind === 'open' && navigation.isFocused()) decideRef.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the change of Clerk's session is the moment
+  }, [clerkSignedIn]);
 
   // An open screen left in front decides again when its 15 minutes end (as `useGateLapse` does for the area's pages),
   // so it never stays open past its session waiting for a focus or a return to `active`.

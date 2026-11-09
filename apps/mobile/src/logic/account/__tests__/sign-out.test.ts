@@ -8,7 +8,7 @@ import { signOutOfAccount, type SignOutPorts } from '../sign-out';
  * included: Clerk first, then every Clerk item, the records, the account queries, the visit's memory, the event.
  */
 
-function ports(over: Partial<SignOutPorts> = {}, gate: NativeGateState = { state: 'pin', epoch: 7 }, trust: TrustRead = { kind: 'trust', trust: { v: 1, epoch: 3 } }): SignOutPorts & { log: string[] } {
+function ports(over: Partial<SignOutPorts> = {}, gate: NativeGateState = { state: 'pin', epoch: 7 }, trust: TrustRead = { kind: 'trust', trust: { v: 1, epoch: 7 } }): SignOutPorts & { log: string[] } {
   const log: string[] = [];
   return {
     log,
@@ -40,9 +40,15 @@ describe('section 6.6: Sign out', () => {
   });
 
   it('Sign in again on the lock keeps a trust of another epoch (the re-trust rule still holds)', async () => {
-    const p = ports();
+    const p = ports({}, undefined, { kind: 'trust', trust: { v: 1, epoch: 3 } });
     await signOutOfAccount(p, 'lock');
     expect(p.log).toEqual(['endSession', 'wipeTokens', 'remove grownup:deviceUses', 'remove grownup:retrustNotice', 'clearQueries', 'forgetVisit', 'track lock']);
+  });
+
+  it('row NS-7 (security review): Sign out keeps a trust of another epoch too (it asks no PIN), so an email code alone never re-trusts after it', async () => {
+    const p = ports({}, undefined, { kind: 'trust', trust: { v: 1, epoch: 3 } });
+    await signOutOfAccount(p, 'user');
+    expect(p.log).toEqual(['endSession', 'wipeTokens', 'remove grownup:deviceUses', 'remove grownup:retrustNotice', 'clearQueries', 'forgetVisit', 'track user']);
   });
 
   it('offline: Clerk cannot be reached, the local items still go at once (R-2)', async () => {
@@ -76,11 +82,11 @@ describe('section 6.6: Sign out', () => {
     expect(await signOutOfAccount(ports({ wipeTokens: vi.fn(async () => false) }), 'user')).toBe(false);
   });
 
-  it('a gate or trust read that fails: Sign out deletes the trust; the lock path keeps it', async () => {
+  it('a gate or trust read that fails: both paths keep the trust (deleting it could only weaken the re-trust rule)', async () => {
     const failing = { gate: vi.fn(async () => Promise.reject(new Error('g'))), readTrust: vi.fn(async () => Promise.reject(new Error('t'))) };
     const user = ports(failing);
     await signOutOfAccount(user, 'user');
-    expect(user.log).toContain('remove grownup:trust');
+    expect(user.log).not.toContain('remove grownup:trust');
     const lock = ports(failing);
     await signOutOfAccount(lock, 'lock');
     expect(lock.log).not.toContain('remove grownup:trust');

@@ -47,6 +47,8 @@ vi.mock('../../../platform/account-online', () => ({
     return () => undefined;
   },
 }));
+// Row NS-7: the card holds the account's capture protection while it draws the email (the native module stands in here).
+vi.mock('../../../platform/account-capture', () => ({ holdAccountCapture: () => () => undefined }));
 vi.mock('../../../platform/telemetry', () => ({ track: async (event: { name: string; payload: unknown }) => void env.tracked.push(event) }));
 const client = vi.hoisted(() => ({
   cancelQueries: async () => void env.queries.push('cancel'),

@@ -9,8 +9,8 @@ import { recordsToDelete, type TrustRead } from './sign-in-records';
  *    keeps one instance for the run, so unmounting its provider is not a sign-out). Offline it fails: the session then
  *    ends on Clerk's side only at its normal end (accepted risk R-2), and nothing below waits for it.
  * 2. Every Clerk item goes (`wipeTokens`: every indexed and named `hr.clerk` key, and this run's memory items).
- * 3. The account's records go (`recordsToDelete`: the uses record, the trust, the re-trust notice; the lock path keeps
- *    a trust of another epoch, so the re-trust rule still holds for the next sign-in).
+ * 3. The account's records go (`recordsToDelete`: the uses record, the trust, the re-trust notice; both paths keep a
+ *    trust of another epoch, so the re-trust rule still holds for the next sign-in; row NS-7).
  * 4. The account queries are cancelled and removed (`clearQueries`), and this visit's memory (the sign-in time, the
  *    re-trust flag) is forgotten (`forgetVisit`).
  * 5. `auth.native.signout { os, via }` (section 15).

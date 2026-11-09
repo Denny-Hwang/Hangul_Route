@@ -169,9 +169,16 @@ describe('the uses record (section 6.5): no names, no ids', () => {
 });
 
 describe('section 6.6: what Sign out deletes', () => {
-  it('Sign out deletes the uses record, the trust and the notice; the keys are device-level', () => {
-    expect(recordsToDelete('user', PIN, OTHER)).toEqual([DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, RETRUST_NOTICE_KEY]);
+  it('Sign out deletes the uses record, the trust of this epoch and the notice; the keys are device-level', () => {
+    expect(recordsToDelete('user', PIN, SAME)).toEqual([DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, RETRUST_NOTICE_KEY]);
+    expect(recordsToDelete('user', PIN, NONE)).toEqual([DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, RETRUST_NOTICE_KEY]);
     expect([DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, RETRUST_NOTICE_KEY]).toEqual(['grownup:deviceUses', 'grownup:trust', 'grownup:retrustNotice']);
+  });
+
+  it('row NS-7 (security review): Sign out keeps a trust of another epoch, a damaged one, or any while the gate is unknown, as the lock does (CS-N3)', () => {
+    expect(recordsToDelete('user', PIN, OTHER)).toEqual([DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY]);
+    expect(recordsToDelete('user', PIN, DAMAGED)).toEqual([DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY]);
+    expect(recordsToDelete('user', { state: 'unknown' }, SAME)).toEqual([DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY]);
   });
 
   it('Sign in again on the lock keeps a trust of another epoch, a damaged one, or any while the gate is unknown (CS-N3)', () => {

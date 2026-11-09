@@ -51,6 +51,11 @@ export interface GateDecisionInput {
    * only once the screen has opened: an open account screen never outlives its session.
    */
   sessionLapsed: boolean;
+  /**
+   * Row NS-7: a session was opened and its 15 minutes are over (`parentGateOpenedAt` set and too old), as opposed to no
+   * session at all. Read before the first open too: nothing opens on an expired session, whatever the entry.
+   */
+  sessionExpired: boolean;
 }
 
 export type GateLockCause = Exclude<AccountLockCause, 'needs_pin'>;
@@ -73,6 +78,13 @@ export function gateStep(input: GateDecisionInput): GateStep {
   const { gate } = input;
   // Row NS-4 review: an open screen whose session lapsed closes the session (the area goes; the next entry asks again).
   if (input.opened && input.sessionLapsed) return { kind: 'close' };
+  // Row NS-7 (CS-N2, CS-N14; found by the child-safety suite and its review): a screen never opens on a session whose 15
+  // minutes are over, whatever the device and the entry: the session closes before anything shows or is read. On a
+  // device with no PIN the screen then starts over as a new visit (the close ended its sign-in, ND-9).
+  if (input.sessionExpired) return { kind: 'close' };
+  // Moving inside the account routes keeps the session (OA-D5b), and no longer: on a `pin` device a page opened from
+  // inside with no session at all (the close above, or one that ran meanwhile) leaves, so it never loops on closes.
+  if (input.sessionLapsed && !input.enteredFromOutside && gate.state === 'pin') return { kind: 'leave' };
   // `unknown` and `nopin` are decided by `accountLock` before anything Clerk says; any other state needs Clerk.
   if (gate.state !== 'unknown' && gate.state !== 'nopin') {
     if (input.clerk === 'off') return CANT_CHECK;

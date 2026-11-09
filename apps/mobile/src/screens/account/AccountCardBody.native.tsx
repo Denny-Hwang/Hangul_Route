@@ -11,6 +11,7 @@ import { accountCardView, cardUses, type AccountCardView } from '../../logic/acc
 import type { NativeGateState } from '../../logic/account/gate-state';
 import { accountQueryKey } from '../../logic/account/queries';
 import { trustOfRead, usesOfSpaces, type TrustRead } from '../../logic/account/sign-in-records';
+import { holdAccountCapture } from '../../platform/account-capture';
 import { readTrust, readUsesRecord } from '../../platform/account-records';
 import type { GrownUpStackParamList } from '../../navigation/types';
 import { useAccountVisit } from '../../store/account-visit';
@@ -101,6 +102,11 @@ export function AccountCardBody({ navigation, side }: { navigation: CardNavigati
     retrustPending: visit.retrustPending,
     fresh: decided.fresh,
   });
+  // Row NS-7 (security review; NS-4 had left the line uncovered for device check D5): while the signed-in email is drawn,
+  // the account's capture protection is held as on an account screen (Android FLAG_SECURE, the iOS cover), so the app
+  // switcher, recents and a screenshot never carry it.
+  const emailDrawn = view.kind === 'signed_in' && view.email && side.email !== null;
+  useEffect(() => (emailDrawn ? holdAccountCapture() : undefined), [emailDrawn]);
   if (view.kind === 'hidden') return null;
 
   const confirmSignOut = async (): Promise<void> => {
