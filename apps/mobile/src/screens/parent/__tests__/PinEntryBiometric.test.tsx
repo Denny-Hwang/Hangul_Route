@@ -4,8 +4,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { AccessibilityInfo } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { act } from 'react-test-renderer';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { provideForRequire, srcPath } from '../../../test-support/native-require';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-9 (section 8.6; CS-8, CS-13, CS-18; mock
@@ -395,7 +394,6 @@ describe('F-AUTH-004 ND-5, CS-N11, D6, D17 (row NS-3): the account card’s type
 describe('F-AUTH-004 sections 7.1 and 7.2, ND-5, CS-N11, D6, D17 (row NS-4): a native account row’s typed PIN', () => {
   const who = getMessages('en').learner.who;
   const accountTitle = getMessages('en').caregiver.account.card.title;
-  beforeAll(async () => provideForRequire(srcPath('logic/account/account-entry'), await import('../../../logic/account/account-entry')));
 
   const typePin = async (root: ReactTestInstance, pin: string): Promise<void> => {
     for (const digit of pin) await press(buttonsNamed(root, a11y.pinDigit(Number(digit)))[0] as ReactTestInstance);

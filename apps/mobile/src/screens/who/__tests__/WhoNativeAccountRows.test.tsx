@@ -99,7 +99,7 @@ const rowIds = (root: ReactTestInstance): string[] =>
   hostNodes(root, (n) => /^who-row-[a-z]+$/.test(String(n.props['data-testid'] ?? ''))).map((n) => n.props['data-testid'] as string);
 const row = (root: ReactTestInstance, use: string): ReactTestInstance => byTestId(root, `who-row-${use}`)[0]!;
 
-beforeAll(async () => provideForRequire(srcPath('screens/account/account-entries'), await import('../../account/account-entries')));
+beforeAll(async () => provideForRequire(srcPath('screens/account/account-entries'), await import('../../account/account-entries.native')));
 
 beforeEach(() => {
   setPlatform('ios');

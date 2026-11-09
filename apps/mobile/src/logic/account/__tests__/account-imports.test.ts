@@ -144,6 +144,8 @@ describe('section 9.3: the account folders import no purchase, link, web view, s
       'src/platform/clerk.native.tsx',
       // Row NS-3: the account card's Clerk part (`useAuth`, `useUser`) and the sign-in screen (`useSignIn`, `useAuth`).
       'src/screens/account/AccountCardClerk.native.tsx',
+      // Row NS-4: AccountGate (`useAuth`, only under the provider), loaded only with the account routes (`getComponent`).
+      'src/screens/account/AccountGate.native.tsx',
       'src/screens/account/SignInScreen.native.tsx',
     ]);
     expect(importers.every(clerkAllowed)).toBe(true);
@@ -191,6 +193,14 @@ describe('section 9.3: the account folders import no purchase, link, web view, s
     expect([...staticPackages(join(SRC, 'screens', 'account', 'SignInScreen.native.tsx')).keys()]).toContain('@clerk/clerk-expo');
     // The two modules that do import it are reached only by a require at the moment they are drawn.
     expect(readFileSync(join(SRC, 'navigation', 'grown-up-stack.native.tsx'), 'utf8')).toMatch(/getComponent=\{loadSignInScreen\}/);
+    // Row NS-4: AccountGate comes with the account routes only, both registered lazily; the chooser's and Welcome's
+    // native entries load nothing of Clerk's.
+    expect(readFileSync(join(SRC, 'navigation', 'grown-up-stack.native.tsx'), 'utf8')).toMatch(/getComponent=\{loadAccountHomeScreen\}/);
+    expect([...staticPackages(join(SRC, 'screens', 'account', 'AccountHomeScreen.native.tsx')).keys()]).toContain('@clerk/clerk-expo');
+    for (const entry of ['account-entries.native.ts', 'WelcomeAccountRow.native.tsx']) {
+      const hits = [...staticPackages(join(SRC, 'screens', 'account', entry))].filter(([name]) => /^(@clerk\/|expo-web-browser|expo-auth-session)/.test(name));
+      expect(hits, entry).toEqual([]);
+    }
     expect(readFileSync(join(SRC, 'screens', 'account', 'AccountCard.native.tsx'), 'utf8')).toMatch(/lazy\(\(\) => import\('\.\/AccountCardClerk\.native'\)/);
   });
 

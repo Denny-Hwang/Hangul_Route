@@ -21,9 +21,10 @@ const tokens = vi.hoisted(() => ({
   apply: vi.fn(async (_gate: unknown, _phase: 'mount' | 'change') => true),
   change: vi.fn(async (_gate: unknown, _end: () => Promise<boolean>) => true),
   dropMemory: vi.fn(),
+  storage: 'secure' as 'memory' | 'secure',
 }));
 vi.mock('../../platform/clerk-token-cache.native', () => ({
-  clerkTokens: { cache: tokens.cache, endMemorySession: tokens.dropMemory },
+  clerkTokens: { cache: tokens.cache, endMemorySession: tokens.dropMemory, storage: () => tokens.storage },
   ensureInstallSweep: tokens.sweep,
   applyGateToTokens: tokens.apply,
   applyGateChange: tokens.change,
@@ -336,6 +337,7 @@ describe('CS-N1: Clerk only inside the Grown-up area stack', () => {
 describe('ND-9, CS-N4 (row NS-4): a no-PIN device’s memory session ends at the session close and the area’s unmount', () => {
   it('open: the session close signs Clerk out, then drops this run’s memory items; so does the unmount', async () => {
     gate.state = { state: 'open' };
+    tokens.storage = 'memory';
     const { GrownUpStack, bindAccountQueryClearing } = await load();
     bindAccountQueryClearing();
     const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
@@ -357,6 +359,7 @@ describe('ND-9, CS-N4 (row NS-4): a no-PIN device’s memory session ends at the
   });
 
   it('pin: the kept session stays behind the PIN (nothing ends at the close)', async () => {
+    tokens.storage = 'secure';
     const { GrownUpStack, bindAccountQueryClearing } = await load();
     bindAccountQueryClearing();
     const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
@@ -371,26 +374,22 @@ describe('ND-9, CS-N4 (row NS-4): a no-PIN device’s memory session ends at the
     await unmount(renderer);
   });
 
-  it('endMemorySession: only open and nopin end it; a failed sign-out still drops the items; nothing throws', async () => {
+  it('endMemorySession: only a memory session ends (whatever the gate reads then); a failed sign-out still drops the items; nothing throws', async () => {
     const { endMemorySession } = await load();
-    const run = async (state: { state: string; epoch?: number }, endSession: (() => Promise<boolean>) | null = vi.fn(async () => true)) => {
+    const run = async (storage: 'memory' | 'secure', endSession: (() => Promise<boolean>) | null = vi.fn(async () => true)) => {
       const drop = vi.fn();
-      await endMemorySession({ gate: async () => state as never, endSession, dropMemoryItems: drop });
+      await endMemorySession({ storage: () => storage, endSession, dropMemoryItems: drop });
       return { drop, endSession };
     };
-    for (const state of [{ state: 'open' }, { state: 'nopin' }]) {
-      const { drop, endSession } = await run(state);
-      expect(endSession).toHaveBeenCalledTimes(1);
-      expect(drop).toHaveBeenCalledTimes(1);
-    }
-    for (const state of [{ state: 'pin', epoch: 3 }, { state: 'unknown' }]) {
-      const { drop, endSession } = await run(state);
-      expect(endSession).not.toHaveBeenCalled();
-      expect(drop).not.toHaveBeenCalled();
-    }
-    expect((await run({ state: 'open' }, null)).drop).not.toHaveBeenCalled();
-    expect((await run({ state: 'open' }, vi.fn(async () => Promise.reject(new Error('offline'))))).drop).toHaveBeenCalledTimes(1);
-    await expect(endMemorySession({ gate: async () => Promise.reject(new Error('read')), endSession: async () => true, dropMemoryItems: () => undefined })).resolves.toBeUndefined();
+    const memory = await run('memory');
+    expect(memory.endSession).toHaveBeenCalledTimes(1);
+    expect(memory.drop).toHaveBeenCalledTimes(1);
+    const kept = await run('secure');
+    expect(kept.endSession).not.toHaveBeenCalled();
+    expect(kept.drop).not.toHaveBeenCalled();
+    expect((await run('memory', null)).drop).not.toHaveBeenCalled();
+    expect((await run('memory', vi.fn(async () => Promise.reject(new Error('offline'))))).drop).toHaveBeenCalledTimes(1);
+    await expect(endMemorySession({ storage: () => { throw new Error('x'); }, endSession: async () => true, dropMemoryItems: () => undefined })).resolves.toBeUndefined();
   });
 
   it('an account entry’s nested route is not the dashboard’s param (dashboardParams)', async () => {

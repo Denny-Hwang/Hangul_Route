@@ -32,15 +32,23 @@ const env = vi.hoisted(() => ({
   holds: 0,
   releases: 0,
   gateRead: null as null | Promise<void>,
+  gateFails: false,
+  record: null as string[] | null,
+  spaces: undefined as unknown,
+  closed: [] as string[],
+  focused: true,
 }));
+vi.mock('../../../store/grown-up-session', () => ({ closeGrownUpSession: (reason: string) => void env.closed.push(reason) }));
 vi.mock('../../../store/native-gate-state', () => ({
   nativeGateState: async () => {
     if (env.gateRead !== null) await env.gateRead;
+    if (env.gateFails) throw new Error('read');
     return env.gate;
   },
 }));
 vi.mock('../../../platform/account-records', () => ({
   readTrust: async () => env.trust,
+  readUsesRecord: async () => env.record,
   removeRecord: async (key: string) => void env.removed.push(key),
 }));
 vi.mock('../../../platform/account-online', () => ({
@@ -62,7 +70,7 @@ vi.mock('../../../platform/account-capture', () => ({
   },
 }));
 vi.mock('../../../platform/telemetry', () => ({ track: async (event: { name: string; payload: unknown }) => void env.tracked.push(event) }));
-vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ cancelQueries: async () => undefined, removeQueries: () => undefined }) }));
+vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ cancelQueries: async () => undefined, removeQueries: () => undefined, getQueryData: () => env.spaces }) }));
 vi.mock('@clerk/clerk-expo', () => ({ useAuth: () => ({ isLoaded: env.clerk.isLoaded, isSignedIn: env.clerk.isSignedIn }) }));
 // react-native-web's Image needs a browser window: the cover stands in as a host node that says whether it draws the splash.
 vi.mock('../AccountCover', async () => {
@@ -80,6 +88,7 @@ interface Nav {
   parentReplace: ReturnType<typeof vi.fn>;
   getState: () => { routes: { key: string; name: string }[] };
   getParent: () => { replace: ReturnType<typeof vi.fn> };
+  isFocused: () => boolean;
   addListener: (event: 'focus' | 'blur', listener: () => void) => () => void;
 }
 
@@ -100,6 +109,7 @@ function makeNav(below: string | null): Nav {
     parentReplace,
     getState: () => ({ routes }),
     getParent: () => ({ replace: parentReplace }),
+    isFocused: () => env.focused,
     addListener: (event, listener) => {
       listeners[event].push(listener);
       return () => {
@@ -179,7 +189,15 @@ beforeEach(() => {
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
   useLocaleStore.setState({ device: 'en', byProfile: {} });
   useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
-  useUiStore.setState({ lastPinTypedAt: Date.now(), lastPinVerifiedAt: Date.now() });
+  // A typed PIN and the 15-minute session just now.
+  useUiStore.setState({ lastPinTypedAt: Date.now(), lastPinVerifiedAt: Date.now(), parentGateOpenedAt: Date.now() });
+  env.gateFails = false;
+  env.record = null;
+  env.spaces = undefined;
+  env.closed = [];
+  env.focused = true;
+  // react-native-web's keyboard reads a browser document.
+  vi.spyOn(Keyboard, 'dismiss').mockImplementation(() => undefined);
   env.gate = { state: 'pin', epoch: 7 };
   env.trust = { kind: 'trust', trust: { v: 1, epoch: 7 } };
   env.online = true;
@@ -263,6 +281,15 @@ describe('section 7.2: every row of the table', () => {
     expect(nav.navigate).not.toHaveBeenCalled();
   });
 
+  it('ND-9: on an open device the opened visit gets a session of its own, so the 15- and 5-minute rules end it', async () => {
+    env.gate = { state: 'open' };
+    env.trust = { kind: 'none' };
+    useUiStore.setState({ lastPinTypedAt: null, parentGateOpenedAt: null });
+    useAccountVisit.getState().markSignedIn(Date.now(), false);
+    await mountGate();
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+  });
+
   it('pin, epoch 0: the renew line and Back only', async () => {
     env.gate = { state: 'pin', epoch: 0 };
     const r = await mountGate();
@@ -298,6 +325,34 @@ describe('section 7.2: every row of the table', () => {
     const r = await mountGate({ screen: 'sign_in', use: 'school' });
     expect(opened(r)).toBe(false);
     expect(nav.replace).toHaveBeenCalledWith('AccountHome', { use: 'school' });
+  });
+
+  it('section 6.5 step 5: with no use, the account’s first use (the record, else this visit’s spaces)', async () => {
+    env.record = ['teacher', 'school'];
+    await mountGate({ screen: 'sign_in', use: undefined });
+    expect(nav.replace).toHaveBeenCalledWith('AccountHome', { use: 'teacher' });
+    env.record = null;
+    env.spaces = { spaces: [{ space: { kind: 'school' }, role: 'admin' }] };
+    await mountGate({ screen: 'sign_in', use: undefined });
+    expect(nav.replace).toHaveBeenCalledWith('AccountHome', { use: 'school' });
+  });
+
+  it('a read that fails opens nothing: the cantCheck lock (CS-N14)', async () => {
+    env.gateFails = true;
+    const r = await mountGate();
+    expect(opened(r)).toBe(false);
+    expect(screenTexts(r.root)).toContain(m.lock.cantCheck);
+    expect(locks()).toEqual([{ name: 'auth.native.lock', payload: { os: 'ios', cause: 'unknown' } }]);
+  });
+
+  it('a step that leaves the screen draws nothing of it on the way (a return that sends an open home to the sign-in)', async () => {
+    const r = await mountGate();
+    expect(opened(r)).toBe(true);
+    env.clerk = { isLoaded: true, isSignedIn: false };
+    await act(async () => r.update(rebuild()));
+    await focus();
+    expect(nav.replace).toHaveBeenCalledWith('SignIn', { use: 'family' });
+    expect(opened(r)).toBe(false);
   });
 
   it('Clerk still loading: nothing of the account; it decides once Clerk has loaded', async () => {
@@ -376,7 +431,42 @@ describe('ND-5, CS-N11: the typed PIN within 2 minutes', () => {
   });
 });
 
+describe('the 15-minute session around an open screen (OA-D5, row NS-4 review)', () => {
+  it('a decision after the session lapsed closes it (the area goes), whatever the proof', async () => {
+    const r = await mountGate();
+    expect(opened(r)).toBe(true);
+    useUiStore.setState({ parentGateOpenedAt: Date.now() - 16 * 60_000 });
+    await toApp('active');
+    await settle();
+    expect(env.closed).toEqual(['exit']);
+    expect(opened(r)).toBe(false);
+  });
+
+  it('a decision inside the 15 minutes keeps it open', async () => {
+    const r = await mountGate();
+    useUiStore.setState({ parentGateOpenedAt: Date.now() - 10 * 60_000, lastPinTypedAt: Date.now() - 10 * 60_000 });
+    await focus();
+    expect(opened(r)).toBe(true);
+    expect(env.closed).toEqual([]);
+  });
+});
+
 describe('decides on mount, every focus and every return to active', () => {
+  it('a return to active while another screen is in front (its own typed PIN) decides nothing; its focus does', async () => {
+    useUiStore.setState({ lastPinTypedAt: null });
+    const r = await mountGate();
+    expect(nav.navigate).toHaveBeenCalledTimes(1);
+    env.focused = false;
+    await toApp('background');
+    await toApp('active');
+    await settle();
+    expect(nav.goBack).not.toHaveBeenCalled();
+    env.focused = true;
+    useUiStore.getState().markPinVerified('pin');
+    await focus();
+    expect(opened(r)).toBe(true);
+  });
+
   it('a PIN changed while the home was below another screen: the focus locks it', async () => {
     const r = await mountGate();
     expect(opened(r)).toBe(true);
@@ -514,7 +604,7 @@ describe('section 7.4 (CS-N12): capture protection and the covers', () => {
   });
 
   it('the JS cover while the app is not active: the splash (D12); the keyboard goes (its window is beyond the covers)', async () => {
-    const dismiss = vi.spyOn(Keyboard, 'dismiss').mockImplementation(() => undefined);
+    const dismiss = vi.mocked(Keyboard.dismiss);
     const r = await mountGate();
     await toApp('inactive');
     expect(byTestId(r.root, 'account-cover')[0]!.props.image).toBe(true);

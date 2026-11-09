@@ -247,11 +247,11 @@ describe('[GU] destination SaveGuest (AMENDMENTS-GUEST-FIRST-LESSON section 8.2,
 describe('F-AUTH-004 (row NS-4; ND-7, CS-N2): a native account row with no PIN stored opens nothing', () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it.each(['ios', 'android'])('%s: void (the screen goes back to the chooser), unless the hash could not be read', (os) => {
+  it.each(['ios', 'android'])('%s: void (the screen goes back to the chooser), a hash that could not be read too (fail closed)', (os) => {
     vi.stubEnv('EXPO_OS', os);
     expect(voidWithoutPin({ next: 'GrownUpUse' }, null)).toBe(true);
     expect(voidWithoutPin({ next: 'GrownUpUse' }, 'hash')).toBe(false);
-    expect(voidWithoutPin({ next: 'GrownUpUse' }, null, true)).toBe(false);
+    expect(voidWithoutPin({ next: 'GrownUpUse' }, null, true)).toBe(true);
   });
 
   it('web: unchanged (the no-PIN line and Continue to the sign-in page)', () => {

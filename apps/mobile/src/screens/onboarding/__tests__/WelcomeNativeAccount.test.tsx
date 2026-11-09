@@ -51,7 +51,7 @@ async function settle(): Promise<void> {
   }
 }
 
-beforeAll(async () => provideForRequire(srcPath('screens/account/WelcomeAccountRow'), await import('../../account/WelcomeAccountRow')));
+beforeAll(async () => provideForRequire(srcPath('screens/account/WelcomeAccountRow'), await import('../../account/WelcomeAccountRow.native')));
 
 beforeEach(() => {
   setPlatform('ios');

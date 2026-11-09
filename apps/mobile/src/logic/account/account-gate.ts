@@ -14,7 +14,8 @@ import type { NativeGateState } from './gate-state';
  *   (`to_sign_in`, `to_home`). Once the sign-in screen has opened in this mount it stays open on `home` too: its own
  *   completion moves on (section 6.5), so a decision while it finishes never races it.
  * - **Freshness** (ND-5): `fromOutside` holds only until the screen first opened in this mount; moving inside the
- *   account routes keeps the 15-minute session (OA-D5b). `verify_pin` asks the typed PIN once (`ask_pin`); a return
+ *   account routes keeps the 15-minute session (OA-D5b), and no longer: once that session lapsed, an open screen
+ *   closes it (`close`: `closeGrownUpSession` pops the area, so the next entry asks the typed PIN again). `verify_pin` asks the typed PIN once (`ask_pin`); a return
  *   still without one (Cancel, Close, face or fingerprint, which never counts: CS-N11) leaves the screen (`leave`).
  * - **Sign in again** (`again`: the lock card's button, or the account card's, which opens the sign-in with it): only
  *   on a lock whose action is Sign in again; it needs a typed PIN or a sign-in within 2 minutes first, then signs out
@@ -45,6 +46,11 @@ export interface GateDecisionInput {
   askedPin: boolean;
   /** Sign in again is waiting (the lock's button, or `SignIn { again }`). */
   again: boolean;
+  /**
+   * The grown-up session's 15 minutes from the PIN are over (`parentGateOpenedAt` absent or too old, OA-D5). Read
+   * only once the screen has opened: an open account screen never outlives its session.
+   */
+  sessionLapsed: boolean;
 }
 
 export type GateLockCause = Exclude<AccountLockCause, 'needs_pin'>;
@@ -58,12 +64,15 @@ export type GateStep =
   | { kind: 'leave' }
   | { kind: 'setup' }
   | { kind: 'sign_out_then_sign_in' }
+  | { kind: 'close' }
   | { kind: 'locked'; cause: GateLockCause; action: 'try_again' | 'back' | 'sign_in_again' };
 
 const CANT_CHECK: GateStep = { kind: 'locked', cause: 'unknown', action: 'try_again' };
 
 export function gateStep(input: GateDecisionInput): GateStep {
   const { gate } = input;
+  // Row NS-4 review: an open screen whose session lapsed closes the session (the area goes; the next entry asks again).
+  if (input.opened && input.sessionLapsed) return { kind: 'close' };
   if (gate.state === 'unknown') return CANT_CHECK;
   if (gate.state === 'nopin') return { kind: 'setup' };
   if (input.clerk === 'off') return CANT_CHECK;

@@ -1,38 +1,18 @@
 import type { GrownUpUse } from '@hangul-route/content-schema';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { nativeSignInConfig } from '../../config/native-signin';
-import { accountEntryFor, type AccountEntryUse } from '../../logic/account/account-entry';
 import type { NativeAccountRowsInput, WhoMarker } from '../../logic/profiles/who';
 import type { RootStackParamList } from '../../navigation/types';
-import { readUsesRecord } from '../../platform/account-records';
-import { trackGateOpened } from '../../store/gate-telemetry';
-import { useAccountOnline } from './account-session.native';
 
 /**
- * F-AUTH-004 sections 7.1, 12 and ND-5, ND-7, ND-9 (row NS-4; design `entries.md`): the native account entries outside
- * the Grown-up area, on iOS and Android only: the chooser's Grown-ups rows and Welcome's **Sign in as a grown-up**.
- * Reached only through an `EXPO_OS` test the web build folds away (`WhoIsUsingScreen`, `WelcomeScreen`), so the web
- * bundle never carries this module. It imports nothing of Clerk's: the chooser and Welcome never read Clerk (ND-11).
+ * F-AUTH-004 section 7.1 (row NS-4): the native account entries exist on iOS and Android only
+ * (`account-entries.native.ts`, which takes its types from here). This twin is what the web build's import walk and the
+ * type checker resolve: the chooser reaches the native module only through an `EXPO_OS` test the web build folds away,
+ * so the web bundle carries neither file. It imports types only, and none from a native-only module (the web
+ * bundle guard walks type imports too).
  */
 
 /** The navigation an entry needs (the root stack's, or its parent's from Welcome). */
 export interface EntryNavigation {
   navigate: <K extends 'PinEntry' | 'ParentDashboard'>(name: K, params: RootStackParamList[K]) => void;
-}
-
-/**
- * A native account entry pressed (a chooser row, Welcome's button): the typed PIN on a `pin` device (no face or
- * fingerprint, CS-N11), PIN setup on a `nopin` device (ND-7), or the account route at once where no PIN exists (the
- * route's `AccountGate` then decides on the exact gate state; `parent.gate.opened { dest: 'use', via: 'open' }`).
- */
-export function openAccountEntry(navigation: EntryNavigation, use: AccountEntryUse, marker: WhoMarker): void {
-  const entry = accountEntryFor(use, marker);
-  if (entry.kind === 'pin') navigation.navigate('PinEntry', entry.params);
-  else if (entry.kind === 'setup') navigation.navigate('PinEntry', { next: 'ParentDashboard' });
-  else {
-    trackGateOpened('GrownUpUse', 'open');
-    navigation.navigate('ParentDashboard', entry.route);
-  }
 }
 
 /** What the native chooser's rows read (`grownUpRows`'s `native` input) and the network the account rows need. */
@@ -46,30 +26,11 @@ export interface FocusEvents {
   addListener: (event: 'focus', callback: () => void) => () => void;
 }
 
-/**
- * The chooser's native inputs: whether the native account is on (`nativeSignInConfig`, read once), the uses record
- * (read at every opening and every focus: a sign-in in the Grown-up area just wrote it), and the network.
- */
-export function useNativeAccountEntries(navigation: FocusEvents, opening: unknown): NativeAccountEntries {
-  const nativeAccount = useMemo(() => nativeSignInConfig().enabled, []);
-  const online = useAccountOnline();
-  const [record, setRecord] = useState<GrownUpUse[] | null>(null);
-  const live = useRef(true);
-  useEffect(
-    () => () => {
-      live.current = false;
-    },
-    [],
-  );
-  const read = useCallback(() => {
-    if (!nativeAccount) return;
-    void readUsesRecord().then((uses) => {
-      if (live.current) setRecord(uses);
-    });
-  }, [nativeAccount]);
-  useEffect(() => {
-    read();
-  }, [read, opening]);
-  useEffect(() => navigation.addListener('focus', read), [navigation, read]);
-  return { nativeAccount, record, online };
+export function openAccountEntry(_navigation: EntryNavigation, _use: GrownUpUse | 'signin' | 'account', _marker: WhoMarker): void {
+  // No native account on the web (its grown-up account is the console, F-APP-001).
+}
+
+/** None on the web: the native account is iOS and Android only (none either while it is off there). */
+export function useNativeAccountEntries(_navigation: FocusEvents, _opening: unknown): NativeAccountEntries | undefined {
+  return undefined;
 }

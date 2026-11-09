@@ -20,6 +20,7 @@ const base: GateDecisionInput = {
   opened: false,
   askedPin: false,
   again: false,
+  sessionLapsed: false,
 };
 const step = (over: Partial<GateDecisionInput> = {}) => gateStep({ ...base, ...over });
 
@@ -107,11 +108,23 @@ describe('Sign in again (`again`)', () => {
   });
 });
 
+describe('the 15-minute session (OA-D5, row NS-4 review)', () => {
+  it('an open screen whose session lapsed closes it, whatever else holds', () => {
+    expect(step({ opened: true, sessionLapsed: true })).toEqual({ kind: 'close' });
+    expect(step({ opened: true, sessionLapsed: true, gate: { state: 'unknown' } })).toEqual({ kind: 'close' });
+    expect(step({ opened: true, sessionLapsed: true, gate: { state: 'open' }, signedInThisVisit: true })).toEqual({ kind: 'close' });
+  });
+
+  it('before the first open it is not read (the entry’s own proof decides)', () => {
+    expect(step({ sessionLapsed: true })).toEqual({ kind: 'open' });
+  });
+});
+
 describe('auth.native.lock’s cause (section 15)', () => {
   it('a locked step or PIN setup; nothing else', () => {
     expect(lockCauseOf({ kind: 'locked', cause: 'pin_changed', action: 'sign_in_again' })).toBe('pin_changed');
     expect(lockCauseOf({ kind: 'setup' })).toBe('needs_pin');
-    for (const kind of ['wait', 'open', 'to_sign_in', 'to_home', 'ask_pin', 'leave', 'sign_out_then_sign_in'] as const) expect(lockCauseOf({ kind })).toBeNull();
+    for (const kind of ['wait', 'open', 'to_sign_in', 'to_home', 'ask_pin', 'leave', 'sign_out_then_sign_in', 'close'] as const) expect(lockCauseOf({ kind })).toBeNull();
   });
 });
 

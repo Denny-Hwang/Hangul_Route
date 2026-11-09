@@ -124,22 +124,22 @@ let accountQueries: AccountQueryClient | null = null;
 let lastEndSession: (() => Promise<boolean>) | null = null;
 
 export interface MemorySessionEndDeps {
-  gate: () => Promise<NativeGateState>;
+  /** Where Clerk's items live this visit (`clerkTokens.storage()`): `memory` on a device with no PIN (ND-9). */
+  storage: () => 'memory' | 'secure';
   endSession: (() => Promise<boolean>) | null;
   dropMemoryItems: () => void;
 }
 
 /**
- * ND-9, CS-N4, CS-N14 (row NS-4; the NS-2 and NS-3 hand-off): on a device with no grown-up PIN (`open`, `nopin`) a
- * sign-in lasts one visit, so the session close and the area's unmount end it: Clerk's own session first (while its
- * token can still reach Clerk), then this run's memory items. A `pin` device keeps its session behind the PIN, and a
- * gate state that cannot be read ends nothing here (the next area mount decides again). Never throws.
+ * ND-9, CS-N4, CS-N14 (row NS-4; the NS-2 and NS-3 hand-off): on a device with no grown-up PIN a sign-in lasts one
+ * visit, so the session close and the area's unmount end it: Clerk's own session first (while its token can still
+ * reach Clerk), then this run's memory items. Decided by where the token cache keeps Clerk's items this visit (memory
+ * on every device that is not `pin`), not by a gate read, which a store write in flight can make `unknown`. A kept
+ * session (`secure`, behind the PIN) stays. Never throws.
  */
 export async function endMemorySession(deps: MemorySessionEndDeps): Promise<void> {
   try {
-    if (deps.endSession === null) return;
-    const gate = await deps.gate();
-    if (gate.state !== 'open' && gate.state !== 'nopin') return;
+    if (deps.endSession === null || deps.storage() !== 'memory') return;
     await deps.endSession().catch(() => false);
     deps.dropMemoryItems();
   } catch {
@@ -148,7 +148,7 @@ export async function endMemorySession(deps: MemorySessionEndDeps): Promise<void
 }
 
 const memorySessionDeps = (): MemorySessionEndDeps => ({
-  gate: () => nativeGateState(),
+  storage: () => clerkTokens.storage(),
   endSession: lastEndSession,
   dropMemoryItems: () => clerkTokens.endMemorySession(),
 });

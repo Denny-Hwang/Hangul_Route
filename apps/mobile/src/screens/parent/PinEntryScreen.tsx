@@ -530,8 +530,9 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
       if (via !== 'pin') leave();
       else {
         openParentGate();
-        const target = (require('../../logic/account/account-entry') as typeof import('../../logic/account/account-entry')).accountRouteFor(route.params.use ?? 'signin');
-        navigation.replace('ParentDashboard', target);
+        // `accountRouteFor` (logic/account/account-entry.ts) written out: that module is native-only (web-bundle-guard).
+        const use = route.params.use ?? 'signin';
+        navigation.replace('ParentDashboard', use === 'signin' ? { screen: 'SignIn', params: {} } : { screen: 'AccountHome', params: { use } });
       }
     } else if (forUse) {
       if ((await handOff()) === 'opened') setLeavingTab(true);

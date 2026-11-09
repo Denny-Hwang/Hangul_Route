@@ -203,7 +203,8 @@ export interface GrownUpRowView {
  */
 export interface NativeAccountRowsInput {
   nativeAccount: boolean;
-  record: readonly GrownUpUse[] | null;
+  /** `undefined` while the record has not been read yet: no account row is drawn before it answers. */
+  record: readonly GrownUpUse[] | null | undefined;
 }
 
 /** The Grown-ups section of the chooser: the pending 24-hour wait (OA-D21), then the rows. */
@@ -260,7 +261,8 @@ export function grownUpRows(input: {
  * | `nopin`               | **Sign in as a grown-up**, captioned **Set a grown-up PIN first.** (it opens setup) |
  * | `none` (`open`)       | **Sign in as a grown-up**, no lock glyph (no session is kept there, ND-9)           |
  *
- * The uses record exists only on a PIN device (ND-9), so on `nopin` and `none` it is never read. Offline every account
+ * The uses record exists only on a PIN device (ND-9), so on `nopin` and `none` it is never read; on `pin` no account
+ * row is drawn until it has been read (`record` undefined), so a first frame never offers the wrong row. Offline every account
  * row is disabled with **Needs the internet**, which wins over the `nopin` caption (D3); the Grown-up area row stays
  * enabled and keeps its own `nopin` caption. Codes only: never a name or an email (CS-7, CS-N9).
  */
@@ -268,8 +270,9 @@ function nativeGrownUpRows(input: { uses: readonly GrownUpUse[]; online: boolean
   const { online, marker, resetPending } = input;
   const locked = marker !== 'none';
   let accountRows: (GrownUpUse | 'signin' | 'account')[] = [];
-  if (native.nativeAccount) {
-    const known = marker === 'pin' && native.record !== null ? USE_ORDER.filter((use) => native.record!.includes(use)) : null;
+  if (native.nativeAccount && (marker !== 'pin' || native.record !== undefined)) {
+    const record = native.record;
+    const known = marker === 'pin' && record !== null && record !== undefined ? USE_ORDER.filter((use) => record.includes(use)) : null;
     accountRows = known === null ? ['signin'] : known.length > 0 ? known : ['account'];
   }
   const accountCaption: GrownUpRowView['caption'] = !online ? 'offline' : marker === 'nopin' ? 'needs_pin' : null;

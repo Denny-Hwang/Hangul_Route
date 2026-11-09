@@ -271,7 +271,14 @@ export type RootStackParamList = {
    * row on a device with no PIN, Welcome's row) opens the Grown-up area stack on one of its account routes
    * (`accountRouteFor`), which `AccountGate` then decides.
    */
-  ParentDashboard: { browseBlocked?: true } | NavigatorScreenParams<AccountStackParamList> | undefined;
+  ParentDashboard:
+    | {
+        browseBlocked?: true;
+        /** Row NS-4: the account route of the nested Grown-up area stack an entry opens, and its params. */
+        screen?: keyof AccountStackParamList;
+        params?: AccountStackParamList[keyof AccountStackParamList];
+      }
+    | undefined;
   Profile: undefined;
   /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */
   EditProfile: { profileId: string };

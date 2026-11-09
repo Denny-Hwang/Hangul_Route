@@ -93,7 +93,7 @@ async function renderChooser(routes: FakeRoute[] = [CHOOSER], trigger: 'launch' 
 
 
 // F-AUTH-004 (row NS-4): the chooser requires its native account entries on iOS and Android (folded away on the web).
-beforeAll(async () => provideForRequire(srcPath('screens/account/account-entries'), await import('../../account/account-entries')));
+beforeAll(async () => provideForRequire(srcPath('screens/account/account-entries'), await import('../../account/account-entries.native')));
 
 beforeEach(() => {
   setPlatform('ios');

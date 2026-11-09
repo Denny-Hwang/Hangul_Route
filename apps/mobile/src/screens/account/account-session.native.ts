@@ -43,10 +43,14 @@ export function trackLock(cause: NativeAuthTelemetryPayload<'auth.native.lock'>[
   void track({ name: 'auth.native.lock', payload: { ...payload } });
 }
 
-/** Whether the device has a network (`expo-network`), kept current; online until the first answer. */
-export function useAccountOnline(): boolean {
+/**
+ * Whether the device has a network (`expo-network`), kept current; online until the first answer. `active` false
+ * (the native account off, row NS-4) subscribes to nothing and answers online.
+ */
+export function useAccountOnline(active = true): boolean {
   const [online, setOnline] = useState(true);
   useEffect(() => {
+    if (!active) return undefined;
     let live = true;
     void readAccountOnline().then((value) => {
       if (live) setOnline(value);
@@ -58,8 +62,8 @@ export function useAccountOnline(): boolean {
       live = false;
       stop();
     };
-  }, []);
-  return online;
+  }, [active]);
+  return active ? online : true;
 }
 
 /** The part of the navigation object the decision moments need. */

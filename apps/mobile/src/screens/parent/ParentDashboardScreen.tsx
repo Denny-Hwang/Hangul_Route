@@ -295,7 +295,7 @@ export function ParentDashboardScreen({ navigation, route }: Props): ReactElemen
       {Platform.OS === 'web' ? (
         <>
           <Spacer size="md" />
-          <GateLessonsButton kind="open" testID="dashboard-open-all-lessons" initialBlocked={(route.params as { browseBlocked?: true } | undefined)?.browseBlocked === true} />
+          <GateLessonsButton kind="open" testID="dashboard-open-all-lessons" initialBlocked={route.params?.browseBlocked === true} />
         </>
       ) : null}
 

@@ -118,15 +118,24 @@ export function WhoIsUsingScreen({ navigation, route }: Props): ReactElement {
       ? (require('../account/account-entries') as typeof import('../account/account-entries')).useNativeAccountEntries(navigation, route.params)
       : undefined;
   const rowsFor = (known: typeof uses) =>
-    grownUpRows({
-      os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
-      uses: known,
-      online: (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && nativeEntries !== undefined ? nativeEntries.online : online,
-      marker,
-      // A wait only exists beside a PIN (Forgot PIN starts from one); none is shown without a PIN to cancel it.
-      resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
-      ...((process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && nativeEntries !== undefined ? { native: nativeEntries } : {}),
-    });
+    (process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && nativeEntries !== undefined
+      ? // F-AUTH-004 (row NS-4): the native rows, with the account's network state (folded away on the web).
+        grownUpRows({
+          os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
+          uses: known,
+          online: nativeEntries.online,
+          marker,
+          resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
+          native: nativeEntries,
+        })
+      : grownUpRows({
+          os: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
+          uses: known,
+          online,
+          marker,
+          // A wait only exists beside a PIN (Forgot PIN starts from one); none is shown without a PIN to cancel it.
+          resetPending: wait.status === 'idle' || parentPinHash === null ? null : wait.readyAt,
+        });
   const grownUps = rowsFor(uses);
   const joining = heldJoin() !== null;
   // [GU] Section 9.1: the one guest tile, after Add a learner (the guest switch on), or none.

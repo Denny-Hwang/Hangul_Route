@@ -2,23 +2,27 @@ import { useAuth } from '@clerk/clerk-expo';
 import type { GrownUpUse } from '@hangul-route/content-schema';
 import { Body, Caption, Icon, Screen, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useContext, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { AppState, Keyboard, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { accountTitleUse } from '../../logic/account/account-entry';
 import { freshProof } from '../../logic/account/account-lock';
 import { enteredFromOutside, gateStep, lockCauseOf, type GateScreen, type GateStep } from '../../logic/account/account-gate';
-import { trustOfRead } from '../../logic/account/sign-in-records';
+import { accountQueryKey } from '../../logic/account/queries';
+import { nativeHomeFor, trustOfRead, usesOfSpaces } from '../../logic/account/sign-in-records';
+import { isParentSessionValid } from '../../logic/profiles/session';
 import type { GrownUpStackParamList, RootStackParamList } from '../../navigation/types';
 import { holdAccountCapture } from '../../platform/account-capture';
-import { readTrust } from '../../platform/account-records';
+import { readTrust, readUsesRecord } from '../../platform/account-records';
 import { useAccountVisit } from '../../store/account-visit';
+import { closeGrownUpSession } from '../../store/grown-up-session';
 import { nativeGateState } from '../../store/native-gate-state';
 import { useUiStore } from '../../store/ui-store';
 import { AccountButton } from './AccountButton';
 import { AccountCover } from './AccountCover';
 import { AccountHostContext, ClerkMountContext } from './account-host';
-import { trackLock, useAccountOnline, useAccountSignOut, useDecisionMoments } from './account-session.native';
+import { trackLock, useAccountOnline, useAccountSignOut } from './account-session.native';
 
 /**
  * F-AUTH-004 sections 7.2, 7.3 and 7.4, design `lock.md` boards 1 to 7, 16 and 17 and D6 (row NS-4; CS-N2, CS-N3,
@@ -77,6 +81,7 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
   const host = useContext(AccountHostContext);
   const online = useAccountOnline();
   const signOut = useAccountSignOut();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<GateStep | null>(null);
   const [cover, setCover] = useState<Cover>(() => (AppState.currentState === 'active' || AppState.currentState === undefined ? 'none' : 'image'));
   const [working, setWorking] = useState(false);
@@ -115,10 +120,12 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
     const mine = generation.current;
     // A decision over an open screen hides it until it answers (7.2): a lock decided now never shows the content first.
     if (stepNow.current?.kind === 'open') setCover((c) => (c === 'none' ? 'plain' : c));
-    void Promise.all([nativeGateState(), readTrust()]).then(([gate, trust]) => {
+    const decided = Promise.all([nativeGateState(), readTrust()]).then(([gate, trust]) => {
       if (!live.current || mine !== generation.current) return;
       const visit = useAccountVisit.getState();
-      const fresh = freshProof(Date.now(), useUiStore.getState().lastPinTypedAt, visit.lastAccountSignInAt);
+      const now = Date.now();
+      const ui = useUiStore.getState();
+      const fresh = freshProof(now, ui.lastPinTypedAt, visit.lastAccountSignInAt);
       const next = gateStep({
         screen,
         gate,
@@ -133,29 +140,43 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
         opened: opened.current,
         askedPin: askedPin.current,
         again: againNow.current,
+        sessionLapsed: !isParentSessionValid(ui.parentGateOpenedAt === null ? null : { openedAt: ui.parentGateOpenedAt, profileId: 'family' }, now),
       });
-      if (next.kind !== 'ask_pin' && next.kind !== 'sign_out_then_sign_in') againNow.current = false;
+      // Sign in again waits through a decision that waited for Clerk; any other step drops it.
+      if (next.kind !== 'ask_pin' && next.kind !== 'sign_out_then_sign_in' && next.kind !== 'wait') againNow.current = false;
       if (next.kind !== 'ask_pin') askedPin.current = false;
       const cause = lockCauseOf(next);
       if (cause !== null && !lockSent.current) {
         lockSent.current = true;
         trackLock(cause);
       }
+      // A step that leaves this screen draws nothing of it on the way (no content while the next screen comes in).
+      if (next.kind !== 'open' && next.kind !== 'locked') show({ kind: 'wait' });
       if (AppState.currentState === 'active' || AppState.currentState === undefined) setCover('none');
       switch (next.kind) {
         case 'open':
           opened.current = true;
+          // ND-9 (row NS-4 review): on a device with no PIN the visit gets a session of its own, so the 15-minute and
+          // 5-minute background rules end it, and with it this visit's sign-in and Clerk's memory session.
+          if (gate.state === 'open' && ui.parentGateOpenedAt === null) ui.openParentGate();
           show(next);
           return;
         case 'wait':
+          return;
         case 'locked':
           show(next);
+          return;
+        case 'close':
+          // The 15 minutes are over: the session closes and the area goes (`leaveGrownUpAreaOnClose`).
+          closeGrownUpSession('exit');
           return;
         case 'to_sign_in':
           navigation.replace('SignIn', use === undefined ? {} : { use });
           return;
         case 'to_home':
-          navigation.replace('AccountHome', { use: use ?? 'account' });
+          // Section 6.5 step 5: the use the grown-up came for, else the account's first use.
+          if (use !== undefined) navigation.replace('AccountHome', { use });
+          else void homeUse().then((home) => live.current && navigation.replace('AccountHome', { use: home }));
           return;
         case 'ask_pin':
           askedPin.current = true;
@@ -171,7 +192,6 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
           return;
         case 'sign_out_then_sign_in':
           againNow.current = false;
-          show({ kind: 'wait' });
           setWorking(true);
           void signOut('lock')
             .catch(() => false)
@@ -184,12 +204,41 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
           return;
       }
     });
+    // A read that fails decides nothing: the `unknown` lock (it opens nothing, CS-N14), and the cover comes off it.
+    decided.catch(() => {
+      if (!live.current || mine !== generation.current) return;
+      show({ kind: 'locked', cause: 'unknown', action: 'try_again' });
+      if (!lockSent.current) {
+        lockSent.current = true;
+        trackLock('unknown');
+      }
+      if (AppState.currentState === 'active' || AppState.currentState === undefined) setCover('none');
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reads the latest values through refs; `screen` and `use` are this mount's
   }, [navigation, screen, use, signOut]);
+
+  /** Section 6.5 step 5 for a sign-in screen with no use: the account's first use (uses record, else this visit's spaces). */
+  const homeUse = async (): Promise<GrownUpUse> => {
+    const record = await readUsesRecord().catch(() => null);
+    const memory = usesOfSpaces(queryClient.getQueryData(accountQueryKey('spaces')) ?? null);
+    return nativeHomeFor(record ?? memory ?? []);
+  };
   const decideRef = useRef(decide);
   decideRef.current = decide;
 
-  useDecisionMoments(navigation, decide);
+  // Mount, every focus, and every return to `active` while this screen is in front (row NS-4 review): a return under
+  // another screen (the gate's own typed PIN, a page above) decides at that screen's focus instead, never from behind it.
+  useEffect(() => {
+    decideRef.current();
+    const offFocus = navigation.addListener('focus', () => decideRef.current());
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && navigation.isFocused()) decideRef.current();
+    });
+    return () => {
+      offFocus();
+      sub.remove();
+    };
+  }, [navigation]);
 
   // Clerk answered after a decision that waited for it.
   useEffect(() => {

@@ -325,6 +325,13 @@ describe('F-AUTH-004 section 7.1 (row NS-4; design entries.md boards 1 to 7, D3)
         expect(grownUpRows({ ...base, os, marker: 'nopin', native: { nativeAccount: false, record: null } }).rows).toEqual([row('area', { caption: 'nopin' })]);
       });
 
+      it('pin, the record not read yet: no account row before it answers (never the wrong row first)', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, native: { nativeAccount: true, record: undefined } }).rows).toEqual([row('area')]);
+        // nopin and open never read it: their row shows at once.
+        expect(grownUpRows({ ...base, os, marker: 'none', native: { nativeAccount: true, record: undefined } }).rows.map((r) => r.use)).toEqual(['signin', 'area']);
+      });
+
       it('a running Forgot PIN wait still comes first', () => {
         vi.stubEnv('EXPO_OS', os);
         expect(grownUpRows({ ...base, os, resetPending: 123, native: on(null) }).pending).toEqual({ readyAt: 123 });

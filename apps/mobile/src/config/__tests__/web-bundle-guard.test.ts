@@ -138,6 +138,28 @@ describe('no native account module is reachable from a web entry', () => {
     expect([...twin.matchAll(/^import (?!type )/gm)]).toEqual([]);
     // The session rules count the native account routes as Grown-up area routes through the same folded test.
     const session = readFileSync(join(SRC, 'logic', 'profiles', 'session.ts'), 'utf8');
-    expect(session).toContain("...(process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? ['SignIn'] : []),");
+    expect(session).toContain("...(process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? ['SignIn', 'AccountHome'] : []),");
+  });
+
+  it('row NS-4: the chooser, Welcome and the PIN screen reach the native account only through folded EXPO_OS tests', () => {
+    const NATIVE = "process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android'";
+    const chooser = readFileSync(join(SRC, 'screens', 'who', 'WhoIsUsingScreen.tsx'), 'utf8');
+    // The native entries: a require behind the test (the web walk resolves it to the types-only twin below).
+    expect(chooser).toContain(`${NATIVE}\n      ? (require('../account/account-entries') as typeof import('../account/account-entries')).useNativeAccountEntries(navigation, route.params)\n      : undefined;`);
+    expect(chooser).toContain(`if (${NATIVE}) {\n      (require('../account/account-entries') as typeof import('../account/account-entries')).openAccountEntry(navigation, use, marker);\n      return;\n    }`);
+    // The rows: the web branch is the call that stood there before, so the folded web output is the same.
+    expect(chooser).toMatch(/\(process\.env\.EXPO_OS === 'ios' \|\| process\.env\.EXPO_OS === 'android'\) && nativeEntries !== undefined\n\s*\? \/\/[^\n]*\n\s*grownUpRows\(\{[\s\S]*?native: nativeEntries,\n\s*\}\)\n\s*: grownUpRows\(\{\n\s*os: [^\n]*\n\s*uses: known,\n\s*online,\n\s*marker,\n\s*\/\/[^\n]*\n\s*resetPending: [^\n]*\n\s*\}\);/);
+    expect(chooser).not.toMatch(/^import .*account\/account-entries/m);
+    const welcome = readFileSync(join(SRC, 'screens', 'onboarding', 'WelcomeScreen.tsx'), 'utf8');
+    expect(welcome).toMatch(/\{process\.env\.EXPO_OS === 'ios' \|\| process\.env\.EXPO_OS === 'android'\s*\? createElement\(\(require\('\.\.\/account\/WelcomeAccountRow'\) as typeof import\('\.\.\/account\/WelcomeAccountRow'\)\)\.WelcomeAccountRow, \{ navigation: root\(\) \}\)\s*: grownUps\s*\? <WelcomeGrownUps \/>\s*: null\}/);
+    // The web twins the walk takes import types only and do nothing.
+    for (const twin of ['account-entries.ts', 'WelcomeAccountRow.tsx']) {
+      const text = readFileSync(join(SRC, 'screens', 'account', twin), 'utf8');
+      expect([...text.matchAll(/^import (?!type )/gm)], twin).toEqual([]);
+    }
+    // The PIN screen writes the account route out instead of requiring a native-only module.
+    const pin = readFileSync(join(SRC, 'screens', 'parent', 'PinEntryScreen.tsx'), 'utf8');
+    expect(pin).toContain(`else if ((${NATIVE}) && forUse) {`);
+    expect(pin).not.toMatch(/require\('[^']*logic\/account/);
   });
 });
