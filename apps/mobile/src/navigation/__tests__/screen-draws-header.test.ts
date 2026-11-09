@@ -353,6 +353,11 @@ function registered(path: string): { route: string; decl: Decl | null }[] {
         if (name === 'component' && ts.isJsxExpression(attr.initializer) && attr.initializer.expression) component = attr.initializer.expression;
       }
       if (route !== null && component !== null && ts.isIdentifier(component)) out.push({ route, decl: declarationOf(src, component.text) });
+      // F-AUTH-004 row NS-2: a component chosen per platform (`EXPO_OS` test ? native : web, root's `ParentDashboard`):
+      // the branch that names a component here is scanned; the native branch's own navigator is in NAVIGATORS.
+      if (route !== null && component !== null && ts.isConditionalExpression(component)) {
+        for (const branch of [component.whenTrue, component.whenFalse]) if (ts.isIdentifier(branch)) out.push({ route, decl: declarationOf(src, branch.text) });
+      }
     }
     // A table of routes (the four tabs' SCREENS, the level check's ROUTES): `Name: Component` or `Name: hoc(...)`.
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && (node.name.text === 'SCREENS' || node.name.text === 'ROUTES')) {
@@ -374,7 +379,7 @@ function registered(path: string): { route: string; decl: Decl | null }[] {
   return out;
 }
 
-const NAVIGATORS = ['navigation/root.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx', 'navigation/guest-chunk.tsx'];
+const NAVIGATORS = ['navigation/root.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx', 'navigation/guest-chunk.tsx', 'navigation/grown-up-stack.native.tsx'];
 /** Containers: the nested navigators, whose own routes are in the list. */
 const CONTAINERS = new Set(['Onboarding', 'Main', 'Guest']);
 

@@ -3,6 +3,7 @@ import { LOCALES, findBannedWord, getMessages, type UiLocale } from '@hangul-rou
 import { useEffect } from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PLAN_SCREEN_DENY, planScreenHasWord } from '../../../logic/account/deny-list';
 import { useAccountStore } from '../../../store/account-store';
 import { flags } from '../../../config/flags';
 import { useLocaleStore } from '../../../store/locale-store';
@@ -76,12 +77,8 @@ const COVERED_CLASS: TierCase = { key: 'covered-class', tier: 'premium', source:
 const COVERED_SCHOOL: TierCase = { key: 'covered-school', tier: 'premium', source: school };
 const TIERS: readonly TierCase[] = [FREE, PREMIUM_FAMILY, PREMIUM_LEGACY, COVERED_CLASS, COVERED_SCHOOL];
 
-/** Section 4.8 rule 1: no native string mentions the web, a website or buying elsewhere. */
-const DENY: Record<UiLocale, readonly string[]> = {
-  en: ['web', 'website', 'browser', 'hangulroute.com', 'billing page', 'console'],
-  es: ['web', 'sitio', 'navegador', 'hangulroute.com', 'página de facturación', 'consola'],
-  ko: ['웹', '사이트', '브라우저', 'hangulroute.com', '결제 페이지', '콘솔'],
-};
+/** Section 4.8 rule 1: no native string mentions the web, a website or buying elsewhere (`logic/account/deny-list.ts`, F-AUTH-004 section 9.2). */
+const DENY = PLAN_SCREEN_DENY;
 
 const LEARNER_ID = 'profile:mina';
 
@@ -122,11 +119,7 @@ async function renderPlan(navigation = nav()): Promise<{ root: ReactTestInstance
 }
 
 /** Whole-word match in en and es, substring in ko (as the copy checks read words). */
-function hasWord(text: string, word: string, locale: UiLocale): boolean {
-  const lower = text.toLowerCase();
-  if (locale === 'ko') return lower.includes(word);
-  return new RegExp(`(^|[^a-zà-ɏ])${word.replace(/\./g, '\\.')}([^a-zà-ɏ]|$)`).test(lower);
-}
+const hasWord = planScreenHasWord;
 
 beforeEach(() => {
   billing.openBilling.mockReset();

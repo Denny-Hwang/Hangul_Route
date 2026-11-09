@@ -25,6 +25,7 @@ import {
   exceptionFor,
   nativeEntries,
   parseCsv,
+  removedDependencies,
   renderJson,
   renderMarkdown,
   summarizeTtsAssets,
@@ -218,6 +219,39 @@ describe("third-party-notices: the walk", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  test("does not follow a dependency a pnpm override removes (F-AUTH-004 NS-2)", () => {
+    const root = fixtureRepo();
+    try {
+      const leftJson = join(root, "node_modules", ".pnpm", "left@1.0.0", "node_modules", "left", "package.json");
+      const left = JSON.parse(readFileSync(leftJson, "utf8"));
+      writeFileSync(leftJson, JSON.stringify({ ...left, dependencies: { ...left.dependencies, wallet: "1" } }));
+      const missing = walk(root, [{ dir: "apps/app", label: "app" }]);
+      assert.deepEqual(missing.problems.map((p) => p.message), ["left needs wallet, which is not installed (run pnpm install)"]);
+      writeFileSync(join(root, "pnpm-workspace.yaml"), 'packages:\n  - "apps/*"\n\noverrides:\n  "left>wallet": "-"\n  "left>shared": "2.0.0"\n');
+      assert.deepEqual(walk(root, [{ dir: "apps/app", label: "app" }]).problems, []);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("removedDependencies reads only the removing overrides", () => {
+    const yaml = [
+      "packages:",
+      '  - "apps/*"',
+      "neverBuiltDependencies:",
+      '  - "a>b"',
+      "overrides:",
+      '  "@clerk/clerk-js>@solana/wallet-adapter-base": "-"',
+      "  '@clerk/clerk-js>@stripe/stripe-js': '-'",
+      "  plain>dep: \"-\"",
+      '  "kept>dep": "1.2.3"',
+      '  "nofrom": "-"',
+      "other:",
+      '  "x>y": "-"',
+    ].join("\n");
+    assert.deepEqual([...removedDependencies(yaml)].sort(), ["@clerk/clerk-js>@solana/wallet-adapter-base", "@clerk/clerk-js>@stripe/stripe-js", "plain>dep"]);
   });
 
   test("walks code shipped from a devDependency (EXTRA_SHIPPED), resolved from that package's real path", () => {
