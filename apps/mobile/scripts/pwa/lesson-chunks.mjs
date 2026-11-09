@@ -182,7 +182,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // cache cleared) measures 4,924,620 B raw, 4,620 B over the previous line; the spec projected about 215 B per entry (6.9 KB
   // for 32), and the line before the clips left about 2.3 KB. The line is the measurement plus a 3,380 B margin
   // (one measured raise, 8,000 B over the previous line). The 11 held clips add about 2.4 KB when they ship.
-  startBundleRaw: 4_928_000,
+  // F-BILL-002 4.8 item 5 / Welcome's Korean title (PR #1022): the title's size ceiling (`Heading` `maxSize`, the
+  // Welcome computation) adds 152 B. Main measured 4,927,840 B (release) and 4,927,996 B (the CI app-host build, grown-up
+  // home on), 4 B under the old line; with the change 4,927,992 B and 4,928,148 B. The line is the app-host measurement
+  // plus a 152 B margin (one measured raise, 300 B over the previous line).
+  startBundleRaw: 4_928_300,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
