@@ -374,31 +374,38 @@ test.describe('Words flashcards (fixture bundle)', () => {
     await expectFront(page, 'vocab:uyu');
   });
 
-  test('a voice plays each new front once, the speaker replays it; sound off offers Turn sound on', async ({ page }) => {
-    await voicedSpeech(page);
-    await newLearner(page);
-    await learnFood(page);
-    await expect.poll(async () => (await spoken(page)).length).toBe(1);
-    await expect(page.getByTestId('vocab-card-no-sound')).toHaveCount(0);
-    await page.getByTestId('vocab-card-speaker').click();
-    await expect.poll(async () => (await spoken(page)).length).toBe(2);
-    await flip(page);
-    await mark(page, 'got-it');
-    await expect.poll(async () => (await spoken(page)).length).toBe(3);
-    await page.waitForTimeout(300);
-    expect((await spoken(page)).length).toBe(3);
+  // This spec counts device-voice utterances: with real say clips bundled (AC-8 on), a front with a clip would play
+  // the clip instead, so it runs with Web Audio off (the e2e fixture's clipsOn: false).
+  test.describe('with the device voice only', () => {
+    test.use({ clipsOn: false });
 
-    await seedStored(page, 'device:audio', { muted: true });
-    await learnFood(page);
-    const speaker = page.getByTestId('vocab-card-speaker');
-    await expect(speaker).toHaveAccessibleName('Play sound, sound is off');
-    await expect(page.getByTestId('vocab-card-no-sound')).toBeVisible();
-    await speaker.click();
-    const turnOn = page.getByTestId('vocab-card-sound').getByRole('button', { name: 'Turn sound on' });
-    await expect(turnOn).toBeVisible();
-    const before = (await spoken(page)).length;
-    await turnOn.click();
-    await expect.poll(async () => (await spoken(page)).length).toBe(before + 1);
+    test('a voice plays each new front once, the speaker replays it; sound off offers Turn sound on', async ({ page }) => {
+      await voicedSpeech(page);
+      await newLearner(page);
+      await learnFood(page);
+      await expect.poll(async () => (await spoken(page)).length).toBe(1);
+      await expect(page.getByTestId('vocab-card-no-sound')).toHaveCount(0);
+      await page.getByTestId('vocab-card-speaker').click();
+      await expect.poll(async () => (await spoken(page)).length).toBe(2);
+      await flip(page);
+      await mark(page, 'got-it');
+      await expect.poll(async () => (await spoken(page)).length).toBe(3);
+      await page.waitForTimeout(300);
+      expect((await spoken(page)).length).toBe(3);
+
+      await seedStored(page, 'device:audio', { muted: true });
+      await learnFood(page);
+      const speaker = page.getByTestId('vocab-card-speaker');
+      await expect(speaker).toHaveAccessibleName('Play sound, sound is off');
+      await expect(page.getByTestId('vocab-card-no-sound')).toBeVisible();
+      await speaker.click();
+      const turnOn = page.getByTestId('vocab-card-sound').getByRole('button', { name: 'Turn sound on' });
+      await expect(turnOn).toBeVisible();
+      const before = (await spoken(page)).length;
+      await turnOn.click();
+      await expect.poll(async () => (await spoken(page)).length).toBe(before + 1);
+    });
+
   });
 
   test('an engine that gives the silent unlock no event still autoplays the first front after a tap (F-AUDIO-004 section 3.6 fail-safe)', async ({ page }) => {

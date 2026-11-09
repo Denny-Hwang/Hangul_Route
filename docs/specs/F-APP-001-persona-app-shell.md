@@ -8,6 +8,8 @@ Status: ready
 
 > **Amended 2026-10-21 by `AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` [OA]**: section 3.10 is replaced by that amendment's section 5.3 (one "Who is using this?" chooser in the learner app; the **Learner app** exit and Open the app on this device open it with a `who=1` boot intent); section 3.9 gains the browser's PIN owner (`hr-shell` `pinOwner`, the account that last proved the current PIN), a reset leg that writes no trusted epoch, a reset by signing in (`/account/pin-reset`, `gate=pin-reset`) and **Use a passkey** on the lock; the console writes the account's grown-up uses for the chooser (`hr-shell` `deviceUses`, no names). Rows OA-3, OA-4b, OA-6.
 
+> **Amended 2026-11-08 by `F-AUTH-004-native-sign-in.md` [AU]** (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-11): native iOS and Android builds get a grown-up sign-in of their own (Clerk Expo; email code, password, a second-step code; no account creation) and native Family, Teacher and School homes inside the Grown-up area, never the console in a web view, with no price, purchase or billing link anywhere. OD-6 ("Hidden until F-AUTH-004") holds until F-AUTH-004 row NS-8 turns `EXPO_PUBLIC_NATIVE_SIGNIN` on; the console, its sign-in, lock and billing page do not change.
+
 # F-APP-001 — One product app: app.hangulroute.com with persona sign-in (learner, family, teacher) and a home per persona
 
 > **Amendment 2026-10-15 (`AMENDMENTS-LECTURE-V2.md`).** Lecture mode gets a nav item for both personas (section 3.8 table, row `lecture`) and a card at the top of the teacher home and the family home; the learner app's grown-up area gains a Lecture mode card (web only, behind the grown-up gate and the learner app's own `EXPO_PUBLIC_LECTURE_MODE` kill switch). Rows LV-5 and LV-6 build them; the wireframe is `design/wireframes/classroom/lecture-entry-points.md`.
@@ -548,7 +550,7 @@ Names added to `TELEMETRY_EVENT_NAMES` (`packages/content-schema/src/schemas/tel
 - The **lesson browser** ("see the lessons exactly as the learner sees them") → F-BROWSE-001; this spec reserves `/browse` and registers the Lessons entry; the `/browse` root clears neither `hr:grownup:unlock` nor `hr:console:session` in a tab that can go back, and `BrowseApp` removes both at boot only in a tab with nothing to go back to (F-BROWSE-001 BD1, BR-6; section 3.9).
 - **LEARNING ROUTE** pages and the free / subscriber learning flow → the Learning Route amendment to F-ROUTE-001 and F-ENT-003 (entries here).
 - **The marketing site content, IA and the redirects from hangulroute.com** → F-SITE-002 (contract in section 6.4).
-- Mobile (native) Clerk sign-in → F-AUTH-004 (not written). Account page (email change, consent record, delete data, the adult affirmation shown) → F-AUTH-005.
+- Mobile (native) Clerk sign-in → F-AUTH-004 (`F-AUTH-004-native-sign-in.md`, written 2026-11-08: native screens, never the console in the app). Account page (email change, consent record, delete data, the adult affirmation shown) → F-AUTH-005.
 - An `api.hangulroute.com` custom domain for the API (not needed: CORS and Clerk already work).
 
 ## 5. Tests
@@ -659,7 +661,7 @@ Each row states what the sibling must use or change so the specs agree. The sibl
 | OD-3 | Grown-up lock on shared devices | **On** when the device has learner profiles behind a gate; 15 idle minutes; unlock by a fresh device PIN (entered in the last 2 minutes, epoch confirmed by a grown-up sign-in) or a secret-proving sign-in (OAuth needs reverification on such a device) | A-4a, A-4b, A-6 |
 | OD-4 | The `/parent` demo on mock data | **Removed** from the product; the marketing spec may show a static picture instead | A-5b |
 | OD-5 | Who moves old hangulroute.com grown-up URLs? | **This spec** (re-answered 2026-10-13, owner decision to do the move now): `site-redirects.mjs` writes the site's `_redirects` from `GROWN_UP_PREFIXES` behind `CONSOLE_ORIGIN` (302, query kept); no stub page, no `out-site/` | M3-prep (owner step S-3b) |
-| OD-6 | Grown-up entry in native iOS / Android builds | **Hidden** until F-AUTH-004; the local PIN dashboard stays | A-7 |
+| OD-6 | Grown-up entry in native iOS / Android builds | **Hidden** until F-AUTH-004; the local PIN dashboard stays. [AU] F-AUTH-004 (2026-11-08) adds native sign-in and native homes, never a link to these pages; hidden until its row NS-8 | A-7 |
 | OD-7 | Path names | `/signin`, `/start`, `/parent`, `/teach`, `/account` (billing at `/account/billing`; keeps every existing `/teach/*` URL and test) | A-4b, A-5 |
 | OD-8 | Where the persona choice sits for a new visitor | A **secondary row on Welcome** under "Let's start"; no separate chooser screen, so a learner starts in one tap; on devices with profiles, the **Grown-up home** row on Profile | A-7 |
 | OD-9 | Telemetry from grown-up pages | **None** (the console has no telemetry client); learner-side `shell.*` events only | — |
