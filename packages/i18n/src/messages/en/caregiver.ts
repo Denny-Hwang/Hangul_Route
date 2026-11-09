@@ -1215,4 +1215,65 @@ export const caregiver = {
     /** The ConfirmSheet's message: only this browser's unsaved record and its results go; nobody's saved data. */
     guestConfirm: 'The card and stars of this quest are removed from this browser.',
   },
+  /**
+   * F-AUTH-004 sections 17.1 and 17.2 (row NS-3; the gate's lines are read by row NS-4 too): the native grown-up sign-in
+   * on iOS and Android, its error lines, the account's own lock lines, the Grown-up area account card and the Sign out
+   * question. No line says where accounts are made, names a place outside the app, or says "yet", "soon" or "coming"
+   * (sections 9.1 and 17, Guideline 2.1). Buttons are `{ cta }` objects, so the length budget holds them (D16).
+   */
+  account: {
+    signIn: {
+      /** The sign-in screen's header title. */
+      title: 'Grown-up sign-in',
+      /** Under the title on the email step. */
+      intro: 'Sign in with the grown-up account of your family, class or school.',
+      /** The first of the two quiet lines under the email step (no link). */
+      learners: "Learners don't need an account.",
+      /** The second quiet line: the app signs in only (ND-4); it never says where accounts are made. */
+      noNewAccounts: "This app doesn't make new grown-up accounts.",
+      /** The email field's visible label. */
+      email: 'Email',
+      /** The code step's line: the address the code went to (only inside the Grown-up area, past the gate). */
+      codeSent: (email: string) => `We sent a 6-digit code to ${email}.`,
+      /** The second step when Clerk checks a new device. */
+      deviceCheck: 'We sent a code to check this new device.',
+      /** The code field's visible label (also the backup-code field's accessible name, D4). */
+      code: 'Code',
+      /** The password field's visible label. */
+      password: 'Password',
+      /** The second step of an account with a second factor. */
+      secondStep: 'Enter the code from your second sign-in step.',
+      submit: { cta: 'Sign in' },
+      resend: { cta: 'Send a new code' },
+      usePassword: { cta: 'Use my password' },
+      useCode: { cta: 'Email me a code' },
+      useBackup: { cta: 'Use a backup code' },
+      changeEmail: { cta: 'Use another email' },
+    },
+    /** One line per Clerk answer (section 6.3); Clerk's own English never shows. */
+    errors: {
+      wrongCode: "That code didn't work. Check it and try again.",
+      codeExpired: 'That code has expired. Send a new code.',
+      wrongPassword: "That password didn't work. Check it and try again.",
+      cantSignIn: "We couldn't sign in with that email.",
+      tooMany: 'Too many tries. Wait a few minutes, then try again.',
+      unsupported: "This account needs a sign-in step this app doesn't have.",
+      generic: "Can't sign in right now. Try again in a moment.",
+    },
+    lock: {
+      /** The gate state could not be read (section 7.2): nothing of the account opens. */
+      cantCheck: "Can't check this device right now. Try again in a moment.",
+      /** A sign-in with an email code alone after the PIN changed (section 7.3, R-1). */
+      retrustPassword: 'This PIN changed since your last sign-in here. Sign in with your password to use it.',
+    },
+    card: {
+      /** The Grown-up area card's heading (also the chooser row of an account with no space, row NS-4). */
+      title: 'Grown-up account',
+      signedOut: 'Sign in to see your family, classes and school here.',
+    },
+    signOut: {
+      /** The Sign out ConfirmSheet's title (no message; Cancel first and focused). */
+      ask: 'Sign out of this account on this device?',
+    },
+  },
 } as const;

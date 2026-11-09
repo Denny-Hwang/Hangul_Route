@@ -80,6 +80,9 @@ vi.mock('@clerk/clerk-expo', () => ({
   },
 }));
 
+// Row NS-3: the sign-in route of the nested stack (its own tests are `screens/account/__tests__`).
+vi.mock('../../screens/account/SignInScreen.native', () => ({ SignInScreen: () => createElement('sign-in') }));
+
 vi.mock('../../screens/parent/ParentDashboardScreen', () => ({
   ParentDashboardScreen: ({ route }: { route?: { params?: unknown } }) => createElement('dashboard', { params: route?.params }),
 }));

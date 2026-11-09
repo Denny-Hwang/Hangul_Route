@@ -140,7 +140,12 @@ describe('section 9.3: the account folders import no purchase, link, web view, s
   it('only the account screens and platform/clerk*.native.* import @clerk/clerk-expo', () => {
     const files = [join(APP_ROOT, 'App.tsx'), join(APP_ROOT, 'index.ts'), join(APP_ROOT, 'BrowseApp.tsx'), join(APP_ROOT, 'PresenterApp.tsx'), ...sources(SRC)].filter(existsSync);
     const importers = files.filter((file) => [...readFileSync(file, 'utf8').matchAll(SPECIFIER)].some((m) => /^@clerk\/clerk-expo(\/|$)/.test(m[1] ?? '')));
-    expect(importers.map(rel)).toEqual(['src/platform/clerk.native.tsx']);
+    expect(importers.map(rel).sort()).toEqual([
+      'src/platform/clerk.native.tsx',
+      // Row NS-3: the sign-in screen (`useSignIn`, `useAuth`) and the Grown-up area's account card (`useAuth`, `useUser`).
+      'src/screens/account/AccountCard.native.tsx',
+      'src/screens/account/SignInScreen.native.tsx',
+    ]);
     expect(importers.every(clerkAllowed)).toBe(true);
   });
 

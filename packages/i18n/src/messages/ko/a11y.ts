@@ -389,4 +389,10 @@ export const a11y = {
     },
   },
   journeyVolume: (n: number) => `${n}권이 열려요`,
+  /** F-AUTH-004 17.4 (NS-3, NS-5). */
+  account: {
+    codeField: '로그인 코드, 6자리',
+    joinCode: (code: string) => `코드: ${code}. 복사해서 알려 주세요.`,
+    planBlock: '이 공간의 플랜',
+  },
 } satisfies DeepPartial<Messages['a11y']>;

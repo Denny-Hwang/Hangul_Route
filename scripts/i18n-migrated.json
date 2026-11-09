@@ -139,7 +139,8 @@
     "apps/mobile/src/screens/parent/PinResetExpiredNotice.tsx",
     "apps/mobile/src/screens/sync/JoinBatch.tsx",
     "apps/mobile/src/screens/sync/JoinNameField.tsx",
-    "apps/mobile/src/screens/guest/**"
+    "apps/mobile/src/screens/guest/**",
+    "apps/mobile/src/screens/account/**"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

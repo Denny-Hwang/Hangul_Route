@@ -1147,4 +1147,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // Owner request OW-3: the quest card is earned at 2 stars, kept for later under that; the Library hint names the quest and the episode.
   'learner.quest.cardWaiting.title': [['Lunar New Year']],
   'learner.quest.cardWaiting.line': [['Lunar New Year', 'New Year & Festivals']],
+  // F-AUTH-004 sections 17.1 and 17.4 (row NS-3): the code step's address, and the join code with its characters spaced (D11).
+  'caregiver.account.signIn.codeSent': [['dana@example.com'], ['jin.cho@example.org']],
+  'a11y.account.joinCode': [['K 7 M P Q 4'], ['H 3 T R W 9']],
 };

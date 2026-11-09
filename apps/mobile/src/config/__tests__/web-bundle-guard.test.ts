@@ -71,7 +71,12 @@ const NATIVE_ONLY_FILES = (path: string): boolean =>
   path === 'src/config/native-signin.ts' ||
   path === 'src/store/native-gate-state.ts' ||
   path === 'src/platform/clerk-host.ts' ||
-  path.startsWith('src/logic/account/');
+  path.startsWith('src/logic/account/') ||
+  // Row NS-3: the account's memory, records, network state and host context.
+  path === 'src/store/account-visit.ts' ||
+  path === 'src/platform/account-records.ts' ||
+  path === 'src/platform/account-online.ts' ||
+  path === 'src/screens/account/account-host.ts';
 
 describe('no native account module is reachable from a web entry', () => {
   const graph = webGraph(join(APP, 'index.ts'));
@@ -118,5 +123,21 @@ describe('no native account module is reachable from a web entry', () => {
     expect(root).not.toMatch(/^import .*grown-up-stack/m);
     // The web twin the walk takes is the dashboard itself.
     expect(readFileSync(join(SRC, 'navigation', 'grown-up-stack.tsx'), 'utf8')).toMatch(/export const GrownUpArea = ParentDashboardScreen;/);
+  });
+
+  it('the dashboard reaches the account card only through the EXPO_OS test the web build folds away (row NS-3)', () => {
+    const dashboard = readFileSync(join(SRC, 'screens', 'parent', 'ParentDashboardScreen.tsx'), 'utf8');
+    // The web branch is the Spacer that stood there before, so the folded web output is the same, byte for byte.
+    expect(dashboard).toMatch(
+      /\{process\.env\.EXPO_OS === 'ios' \|\| process\.env\.EXPO_OS === 'android' \? \(\s*<>\s*<Spacer size="lg" \/>\s*\{createElement\(\(require\('\.\.\/account\/AccountCard'\) as typeof import\('\.\.\/account\/AccountCard'\)\)\.AccountCard, \{ navigation \}\)\}\s*<\/>\s*\) : \(\s*<Spacer size="lg" \/>\s*\)\}/,
+    );
+    expect(dashboard).not.toMatch(/^import .*account\/AccountCard/m);
+    // The web twin the walk takes draws nothing and imports types only.
+    const twin = readFileSync(join(SRC, 'screens', 'account', 'AccountCard.tsx'), 'utf8');
+    expect(twin).toMatch(/export function AccountCard\(_props: AccountCardProps\): null \{\s*return null;\s*\}/);
+    expect([...twin.matchAll(/^import (?!type )/gm)]).toEqual([]);
+    // The session rules count the native account routes as Grown-up area routes through the same folded test.
+    const session = readFileSync(join(SRC, 'logic', 'profiles', 'session.ts'), 'utf8');
+    expect(session).toContain("...(process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? ['SignIn'] : []),");
   });
 });

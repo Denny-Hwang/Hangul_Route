@@ -464,6 +464,21 @@ export type GuestStackParamList = {
   PinEntry: { next: 'SaveGuest' };
 };
 
+/**
+ * F-AUTH-004 sections 6.1 and 8.1 (rows NS-3 to NS-6): the native account routes. They live only in the nested Grown-up
+ * area stack of iOS and Android (`navigation/grown-up-stack.native.tsx`), never in the root stack, so the web's route
+ * tables (the header registry, the session zones) carry none of them: a route the header registry does not name reads
+ * as a stack screen (`back`), and the session rules count these as Grown-up area routes on native builds only
+ * (`logic/profiles/session.ts`). Params live in memory only (section 8.1); the `use` is a code, never an id.
+ */
+export type AccountStackParamList = {
+  /** Section 6.3: the grown-up sign-in, for the use the grown-up came for (`account`: the row of a record with no use). */
+  SignIn: { use?: GrownUpUse | 'account' } | undefined;
+};
+
+/** The nested Grown-up area stack's routes: the dashboard under the root's name, then the account routes. */
+export type GrownUpStackParamList = RootStackParamList & AccountStackParamList;
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace ReactNavigation {
