@@ -767,6 +767,27 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 - 처음 한 번만 공개 모델을 내려받는다 (약 5 GB, 모두 git 이 무시하는 `apps/mobile/recordings/models/` 안). 설치 방법은 [`tts-qa-setup.md`](tts-qa-setup.md) (영문) 에 있다.
 - 결과는 같은 폴더의 `qa-report.md` 다. 떨어진 클립은 다시 만들 명령 (`... audio:tts:generate ... --only <키>`) 이 함께 나온다. 그 명령은 M-2 처럼 **별도 터미널** 에서, 그 명령 하나에만 자격 증명을 주고 실행한다.
 
+## N. 네이티브 앱의 어른 로그인 — API Worker 스위치 (F-AUTH-004 NS-1, section 9.4)
+
+> NS-1 은 iOS·Android 앱이 어른 로그인을 하기 **전에** API Worker 에 먼저 나간다. 대시보드에서 할 일은 **없다**: 두 변수 모두 없으면 켜짐이고, 그것이 기본값이다. Stripe 와는 무관하다 (Live 는 계속 꺼 둔다, `BILLING_LIVE_ALLOWED` 는 그대로 비워 둔다). 네이티브 앱의 로그인 자체는 앱 빌드 변수 `EXPO_PUBLIC_NATIVE_SIGNIN` 이 켜는데, 그것은 NS-8 까지 꺼져 있다 (오너 단계 O-1 ~ O-6 은 NS-2 가 이 런북에 넣는다).
+
+**N-1. 무엇이 켜져 있나 (배포 불필요)**
+- `NATIVE_MONEY_GUARD` (없으면 켜짐): 네이티브 앱의 요청 (헤더 `X-HR-Client: native`, 또는 사이트 이름 `azp` 가 없는 Clerk 토큰 — 브라우저 토큰에는 항상 있다) 이 결제 경로 (checkout, portal, promo, 영수증 목록, 영수증 링크) 에 오면 `403 not_in_app` 으로 거절한다. step-up, Live 가드, Stripe 호출보다 먼저다. 웹 콘솔과 Stripe webhook 은 그대로다.
+- `NATIVE_ACCOUNT` (없으면 켜짐): 네이티브 앱이 계정 경로 (`/api/spaces`, `/api/billing`, `/api/entitlements`, `/api/admin-invites`) 를 읽을 수 있다.
+- 항상 (스위치와 무관): `GET /api/billing/summary` 는 네이티브 요청과 `?view=status` 에 영수증·금액·구매 버튼이 없는 "상태만" 보기를 주고, 모든 응답이 `Cache-Control: no-store` 다.
+- 확인: `https://api.hangulroute.com/health` 의 `features.nativeAccount` 와 `features.nativeMoneyGuard` 가 둘 다 `true`.
+
+**N-2. 네이티브 어른 화면을 즉시 끄기 (`NATIVE_ACCOUNT` kill switch, 1분) — 사양 section 1 의 멈춤 기준 중 하나라도 해당하면**
+1. Cloudflare 대시보드 → **Workers & Pages** → `hangul-route-api` → Settings → **Variables and Secrets** → Add → Type **Text**, 이름 `NATIVE_ACCOUNT`, 값 `disabled` → **Deploy**. (`keep_vars = true` 라서 이후 배포에도 남는다.) `enabled`, `on`, `true`, `1` 이 아닌 다른 값도 모두 꺼짐이다 (오타는 닫힌 쪽).
+2. 이미 설치된 앱의 계정 요청이 모두 `403 native_off` 를 받고, 앱은 "not available" 화면만 보인다. 웹 콘솔은 헤더를 보내지 않으므로 그대로다.
+3. 확인: `/health` 의 `features.nativeAccount` 가 `false`.
+4. 그다음 빌드에서 `EXPO_PUBLIC_NATIVE_SIGNIN` 을 끈다 (사양 section 16.1 의 되돌리기 순서). 고칠 데이터는 없다.
+5. 다시 켜기: 변수를 지우고 Deploy.
+
+**N-3. 결제 경로 거절을 끄기 (`NATIVE_MONEY_GUARD`, 보통은 쓰지 않는다)**
+- 웹 콘솔에서 결제가 막혔는데 원인이 이 거절로 보일 때만 (가정 U8: 브라우저 토큰은 항상 `azp` 를 가진다; 기기 확인 D14): 같은 화면에서 이름 `NATIVE_MONEY_GUARD`, 값 `off` → **Deploy**. 거절을 끄는 값은 `false`, `0`, `off`, `disabled` 뿐이고, 다른 값은 모두 거절을 유지한다 (오타는 닫힌 쪽). 끄더라도 요약의 "상태만" 보기는 그대로 남는다.
+- 확인: `/health` 의 `features.nativeMoneyGuard` 가 `false`. 원인을 고친 뒤 변수를 지우고 Deploy 해서 다시 켠다.
+
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
 

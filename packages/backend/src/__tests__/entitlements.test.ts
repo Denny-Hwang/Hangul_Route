@@ -623,7 +623,8 @@ describe('checkout and portal hardening (F-BILL-002 B-5)', () => {
     });
     /** A deployment with a Clerk key bound (tokens verified) and the in-memory Db of the test environment. */
     const clerkEnv = (extra: Record<string, string> = {}) => ({ ...FAMILY_ENV, ENVIRONMENT: 'test', CLERK_JWT_KEY: keys.jwtKey, ...extra });
-    const signedIn = async (sub: string, claims: Record<string, unknown>) => ({ ...json, authorization: `Bearer ${await keys.token(sub, claims)}` });
+    // The console's browser token: Clerk always names the site that minted it (`azp`); F-AUTH-004 refuses a token with none on money routes.
+    const signedIn = async (sub: string, claims: Record<string, unknown>) => ({ ...json, authorization: `Bearer ${await keys.token(sub, { azp: 'https://app.hangulroute.com', ...claims })}` });
     async function ownedFamily(sub: string): Promise<string> {
       const r = await call('POST', '/api/spaces', await signedIn(sub, { fva: [0, -1] }), { kind: 'family', name: 'Kim family' }, clerkEnv());
       return (r.body.data as { space: { id: string } }).space.id;

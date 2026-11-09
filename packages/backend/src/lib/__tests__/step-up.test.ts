@@ -26,21 +26,21 @@ function ctx(authHeader: string | undefined, env: Record<string, unknown>): Cont
 describe('step-up before money moves (F-BILL-002 B-5, section 4.4, OD-7)', () => {
   it('allows a first factor verified at most STEP_UP_MAX_AGE_MIN minutes ago', () => {
     expect(STEP_UP_MAX_AGE_MIN).toBe(10);
-    for (const age of [0, 1, 9, 10]) expect(stepUpVerdict({ sub: 'u', fva: [age, -1], verified: true })).toBe('ok');
+    for (const age of [0, 1, 9, 10]) expect(stepUpVerdict({ sub: 'u', fva: [age, -1], verified: true, azp: null })).toBe('ok');
   });
 
   it('asks again when the first factor is older, whatever the second factor says', () => {
-    for (const fva of [[11, -1], [11, 0], [600, 2]] as const) expect(stepUpVerdict({ sub: 'u', fva, verified: true })).toBe('reverify');
+    for (const fva of [[11, -1], [11, 0], [600, 2]] as const) expect(stepUpVerdict({ sub: 'u', fva, verified: true, azp: null })).toBe('reverify');
   });
 
   it('fails closed: no fva, or a negative or non-finite first-factor age, asks again', () => {
-    expect(stepUpVerdict({ sub: 'u', fva: null, verified: true })).toBe('reverify');
-    expect(stepUpVerdict({ sub: 'u', fva: [-1, -1], verified: true })).toBe('reverify');
-    expect(stepUpVerdict({ sub: 'u', fva: [Number.POSITIVE_INFINITY, 0], verified: true })).toBe('reverify');
+    expect(stepUpVerdict({ sub: 'u', fva: null, verified: true, azp: null })).toBe('reverify');
+    expect(stepUpVerdict({ sub: 'u', fva: [-1, -1], verified: true, azp: null })).toBe('reverify');
+    expect(stepUpVerdict({ sub: 'u', fva: [Number.POSITIVE_INFINITY, 0], verified: true, azp: null })).toBe('reverify');
   });
 
   it('skips step-up on the dev fallback, where no token exists to read (never in production)', () => {
-    expect(stepUpVerdict({ sub: 'u', fva: null, verified: false })).toBe('ok');
+    expect(stepUpVerdict({ sub: 'u', fva: null, verified: false, azp: null })).toBe('ok');
   });
 
   it('answers with the Clerk reverification hint the hook recognises, plus our own code', async () => {

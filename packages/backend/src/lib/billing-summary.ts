@@ -265,6 +265,35 @@ export async function billingSummaryFor(db: Db, env: StripeEnv, accountId: strin
   return { mode, purchasesOpen: purchasesOpen(env), cards: cards.map((c) => c.card), account };
 }
 
+/**
+ * F-AUTH-004 section 8.5 (row NS-1): the status view of a summary, the only one the native app reads (`?view=status`,
+ * and every native request whatever its query). The same `BillingSummarySchema`, built field by field so nothing new
+ * on a card can slip through: each card keeps who it is for, its coverage and usage, and loses every receipt, amount
+ * and action; the summary says no purchase is open, no Stripe mode, and carries no account card.
+ */
+export function billingStatusView(summary: BillingSummary): BillingSummary {
+  return {
+    mode: 'none',
+    purchasesOpen: false,
+    cards: summary.cards.map((card) => ({
+      spaceId: card.spaceId,
+      kind: card.kind,
+      name: card.name,
+      role: card.role,
+      archived: card.archived,
+      payer: card.payer,
+      readOnlyReason: card.readOnlyReason,
+      coverage: card.coverage,
+      usage: card.usage,
+      actions: { buy: null, manage: false, contact: false },
+      receipts: [],
+      hasReceipts: false,
+      legacyNoHistory: false,
+    })),
+    account: [],
+  };
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** `GET` one Stripe object, pinned to the same API version as the webhook lookups; null on any trouble. */

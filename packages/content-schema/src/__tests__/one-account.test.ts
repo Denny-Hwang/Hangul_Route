@@ -296,7 +296,8 @@ describe('telemetry (section 15)', () => {
     expect(shape['who.shown'].shape.trigger.options).toEqual([...WHO_TRIGGERS]);
     expect(shape['who.shown'].shape.learners.options).toEqual(['1', '2', '3-4', '5-12', '13+']);
     expect(shape['who.picked'].shape.kind.options).toEqual(['learner', 'locked_learner', 'grown_up', 'add', 'cancel_reset', 'try', 'guest']);
-    expect(shape['who.picked'].shape.use.unwrap().options).toEqual(['family', 'teacher', 'school', 'area', 'signin']);
+    // F-AUTH-004 row NS-1 appends `account` (the native Grown-up account row).
+    expect(shape['who.picked'].shape.use.unwrap().options).toEqual(['family', 'teacher', 'school', 'area', 'signin', 'account']);
     expect(shape['pin.biometric_changed'].shape.reason.options).toEqual(['user', 'pin_changed', 'enrolment_changed']);
     expect(shape['pin.reset_requested'].shape.method.options).toEqual(['rescue_code', 'wait', 'sign_in', 'wait_cancelled']);
     expect(shape['pin.reset_completed'].shape.method.options).toEqual(['rescue_code', 'wait', 'sign_in']);

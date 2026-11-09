@@ -219,12 +219,12 @@ describe('getAuthClaims exposes fva next to sub (F-BILL-002 B-5)', () => {
   const claimsFor = async (claims: Record<string, unknown>) => getAuthClaims(ctx(`Bearer ${await keys.token('user_fva', claims)}`, { CLERK_JWT_KEY: keys.jwtKey }));
 
   it('returns the verified sub and fva', async () => {
-    expect(await claimsFor({ fva: [3, -1] })).toEqual({ sub: 'user_fva', fva: [3, -1], verified: true });
-    expect(await claimsFor({ fva: [0, 0] })).toEqual({ sub: 'user_fva', fva: [0, 0], verified: true });
+    expect(await claimsFor({ fva: [3, -1] })).toEqual({ sub: 'user_fva', fva: [3, -1], verified: true, azp: null });
+    expect(await claimsFor({ fva: [0, 0] })).toEqual({ sub: 'user_fva', fva: [0, 0], verified: true, azp: null });
   });
 
   it('reads fva as null when the token has none or it is malformed', async () => {
-    expect(await claimsFor({})).toEqual({ sub: 'user_fva', fva: null, verified: true });
+    expect(await claimsFor({})).toEqual({ sub: 'user_fva', fva: null, verified: true, azp: null });
     for (const fva of ['3,-1', [3], [3, -1, 2], ['3', '-1'], [Number.NaN, 0], null, { 0: 3, 1: -1 }]) {
       expect((await claimsFor({ fva }))?.fva).toBeNull();
     }
@@ -237,7 +237,7 @@ describe('getAuthClaims exposes fva next to sub (F-BILL-002 B-5)', () => {
   });
 
   it('marks the dev fallback as unverified, with no fva (no token to read)', async () => {
-    expect(await getAuthClaims(ctx('Bearer user_abc', { ENVIRONMENT: 'development' }))).toEqual({ sub: 'user_abc', fva: null, verified: false });
+    expect(await getAuthClaims(ctx('Bearer user_abc', { ENVIRONMENT: 'development' }))).toEqual({ sub: 'user_abc', fva: null, verified: false, azp: null });
   });
 
   it('returns null for no bearer or a token that does not verify', async () => {
@@ -245,6 +245,17 @@ describe('getAuthClaims exposes fva next to sub (F-BILL-002 B-5)', () => {
     expect(await getAuthClaims(ctx('Bearer plain', { CLERK_JWT_KEY: keys.jwtKey }))).toBeNull();
     const otherKeys = await clerkTestKeys();
     expect(await getAuthClaims(ctx(`Bearer ${await otherKeys.token('user_fva', { fva: [1, -1] })}`, { CLERK_JWT_KEY: keys.jwtKey }))).toBeNull();
+  });
+
+  it('F-AUTH-004 row NS-1: carries the verified azp, and null when the token names no site (a native token)', async () => {
+    const env = { CLERK_JWT_KEY: keys.jwtKey, ENVIRONMENT: 'test' };
+    const read = async (claims: Record<string, unknown>) => getAuthClaims(ctx(`Bearer ${await keys.token('user_azp', claims)}`, env));
+    expect(await read({ azp: 'https://app.hangulroute.com' })).toEqual({ sub: 'user_azp', fva: null, verified: true, azp: 'https://app.hangulroute.com' });
+    // No azp, or an empty one Clerk does not check: verified, and named by no site.
+    expect((await read({}))?.azp).toBeNull();
+    expect((await read({ azp: '' }))?.azp).toBeNull();
+    // An unlisted site is still refused outright (F-APP-001 A-9).
+    expect(await read({ azp: 'https://evil.example' })).toBeNull();
   });
 
   it('verifies a request once, however many times its claims are read', async () => {

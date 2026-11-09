@@ -129,6 +129,28 @@ keep_vars = true
 #                                    kill switch: the evaluator reads and writes nothing, the purge
 #                                    still runs, and Workers Logs show guardrail.run disabled: true.
 #                                    Keep it out of [vars].
+# NATIVE_MONEY_GUARD                 F-AUTH-004 section 9.4 (row NS-1): leave UNSET (on). On, a native
+#                                    app request (the header X-HR-Client: native, or a verified Clerk
+#                                    token naming no site, `azp`, which a browser never sends) gets
+#                                    403 not_in_app on every money route: POST /api/entitlements/stripe/
+#                                    checkout, /portal and /promo, GET /api/billing/receipts and POST
+#                                    /api/billing/receipt-link, before step-up, the live guard or any
+#                                    Stripe call. The webhook and the web are untouched. Only "false",
+#                                    "0", "off" or "disabled" (any case) turns the refusals off; any
+#                                    other value keeps them (a typo fails closed). It never turns off
+#                                    the status view: GET /api/billing/summary answers a native request
+#                                    (and ?view=status) with no receipt, amount or action, always
+#                                    Cache-Control: no-store. Keep it out of [vars]. GET /health shows
+#                                    features.nativeMoneyGuard. Runbook: owner-runbook.md section N.
+# NATIVE_ACCOUNT                     F-AUTH-004 section 9.4 (row NS-1): leave UNSET (on). Unset, empty,
+#                                    "enabled", "on", "true" or "1" lets the native app read the account
+#                                    routes. Any other value ("disabled"; a typo too) is the kill switch
+#                                    of the native grown-up homes: every request carrying X-HR-Client:
+#                                    native under /api/spaces, /api/billing, /api/entitlements and
+#                                    /api/admin-invites answers 403 native_off at once, so installed
+#                                    builds lose the homes without an app update. The web never sends
+#                                    the header and is untouched. Keep it out of [vars]. GET /health
+#                                    shows features.nativeAccount. Runbook: owner-runbook.md section N.
 # ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
 #                                    D1 binding → 503). Only "development" / "test" turn on
 #                                    the dev fallbacks (bearer = account id, in-memory Db
