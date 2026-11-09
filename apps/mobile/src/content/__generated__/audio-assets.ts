@@ -79,10 +79,10 @@ export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {
 };
 
 /** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */
-export const AUDIO_CLIP_COUNT = 1282;
+export const AUDIO_CLIP_COUNT = 1706;
 
 /** The packs whose clips are a map chunk of their own (`loadAudioPackChunk`), loaded with their lesson or story, never at start. */
-export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['cards', 'jamo-wb', 'placement', 'review', 'stage1', 'stage2', 'stage3', 'stage4', 'stage6', 'stage7', 'vocab'];
+export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['cards', 'jamo-wb', 'placement', 'review', 'stage1', 'stage2', 'stage3', 'stage4', 'stage6', 'stage7', 'stories', 'vocab'];
 
 /** A pack's map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6); undefined for a pack with none. */
 export function loadAudioPackChunk(pack: AudioPack): Promise<{ AUDIO_PACK: AudioPackChunk }> | undefined {
@@ -107,6 +107,8 @@ export function loadAudioPackChunk(pack: AudioPack): Promise<{ AUDIO_PACK: Audio
       return import('./audio-packs/audio-pack-stage6');
     case 'stage7':
       return import('./audio-packs/audio-pack-stage7');
+    case 'stories':
+      return import('./audio-packs/audio-pack-stories');
     case 'vocab':
       return import('./audio-packs/audio-pack-vocab');
     default:
