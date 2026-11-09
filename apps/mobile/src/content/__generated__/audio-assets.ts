@@ -5,10 +5,12 @@ import type { AudioPackChunk } from '../../logic/audio/clip-assets';
 
 export const AUDIO_ASSETS: Readonly<Record<string, number | string>> = {
   'audio/jamo/a.mp3': require('../../../assets/audio/jamo/a.mp3'),
+  'audio/jamo/bieup.mp3': require('../../../assets/audio/jamo/bieup.mp3'),
   'audio/jamo/chieut-name.mp3': require('../../../assets/audio/jamo/chieut-name.mp3'),
   'audio/jamo/chieut.mp3': require('../../../assets/audio/jamo/chieut.mp3'),
   'audio/jamo/digeut.mp3': require('../../../assets/audio/jamo/digeut.mp3'),
   'audio/jamo/eu.mp3': require('../../../assets/audio/jamo/eu.mp3'),
+  'audio/jamo/giyeok-batchim.mp3': require('../../../assets/audio/jamo/giyeok-batchim.mp3'),
   'audio/jamo/giyeok-name.mp3': require('../../../assets/audio/jamo/giyeok-name.mp3'),
   'audio/jamo/giyeok.mp3': require('../../../assets/audio/jamo/giyeok.mp3'),
   'audio/jamo/hieut-name.mp3': require('../../../assets/audio/jamo/hieut-name.mp3'),
@@ -41,10 +43,12 @@ export const AUDIO_ASSETS: Readonly<Record<string, number | string>> = {
 /** The pack of each clip (AMENDMENTS-AUDIO-CLIPS AC-B6, AC-B8); a clip with no pack is governed by `audioClips` alone. */
 export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {
   'audio/jamo/a.mp3': 'jamo-s1',
+  'audio/jamo/bieup.mp3': 'jamo-s1',
   'audio/jamo/chieut-name.mp3': 'jamo-s1',
   'audio/jamo/chieut.mp3': 'jamo-s1',
   'audio/jamo/digeut.mp3': 'jamo-s1',
   'audio/jamo/eu.mp3': 'jamo-s1',
+  'audio/jamo/giyeok-batchim.mp3': 'jamo-s1',
   'audio/jamo/giyeok-name.mp3': 'jamo-s1',
   'audio/jamo/giyeok.mp3': 'jamo-s1',
   'audio/jamo/hieut-name.mp3': 'jamo-s1',
@@ -75,16 +79,38 @@ export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {
 };
 
 /** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */
-export const AUDIO_CLIP_COUNT = 456;
+export const AUDIO_CLIP_COUNT = 1706;
 
 /** The packs whose clips are a map chunk of their own (`loadAudioPackChunk`), loaded with their lesson or story, never at start. */
-export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['stories'];
+export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['cards', 'jamo-wb', 'placement', 'review', 'stage1', 'stage2', 'stage3', 'stage4', 'stage6', 'stage7', 'stories', 'vocab'];
 
 /** A pack's map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6); undefined for a pack with none. */
 export function loadAudioPackChunk(pack: AudioPack): Promise<{ AUDIO_PACK: AudioPackChunk }> | undefined {
   switch (pack) {
+    case 'cards':
+      return import('./audio-packs/audio-pack-cards');
+    case 'jamo-wb':
+      return import('./audio-packs/audio-pack-jamo-wb');
+    case 'placement':
+      return import('./audio-packs/audio-pack-placement');
+    case 'review':
+      return import('./audio-packs/audio-pack-review');
+    case 'stage1':
+      return import('./audio-packs/audio-pack-stage1');
+    case 'stage2':
+      return import('./audio-packs/audio-pack-stage2');
+    case 'stage3':
+      return import('./audio-packs/audio-pack-stage3');
+    case 'stage4':
+      return import('./audio-packs/audio-pack-stage4');
+    case 'stage6':
+      return import('./audio-packs/audio-pack-stage6');
+    case 'stage7':
+      return import('./audio-packs/audio-pack-stage7');
     case 'stories':
       return import('./audio-packs/audio-pack-stories');
+    case 'vocab':
+      return import('./audio-packs/audio-pack-vocab');
     default:
       return undefined;
   }
