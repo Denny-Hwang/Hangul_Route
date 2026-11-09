@@ -899,6 +899,31 @@ describe('CS-N2: every account screen sits in AccountGate, which decides before 
     expect(nav.replace).toHaveBeenCalledWith('SignIn', { use: 'family' });
   });
 
+  it('a session Clerk ended elsewhere: the report in front goes at once; the page under it waits for its own focus (no sign-in on a sign-in)', async () => {
+    typedPinNow();
+    const front = makeNav(['ParentDashboard', 'AccountHome', 'AccountClassReport']);
+    const under = makeNav(['ParentDashboard', 'AccountHome']);
+    under.isFocused = () => false;
+    const tree = (): ReactElement =>
+      providers(
+        createElement(
+          React.Fragment,
+          null,
+          createElement(AccountHomeScreen, { navigation: under, route: { key: 'me', name: 'AccountHome', params: { use: 'teacher' } } } as never),
+          createElement(AccountClassReportScreen, { navigation: front, route: { key: 'me', name: 'AccountClassReport', params: ROUTES.AccountClassReport.params } } as never),
+        ),
+      );
+    const r = await render(tree());
+    await settle();
+    expect(has(r.root, 'account-class-report-headline')).toBe(true);
+    clerk.signedIn = false;
+    await act(async () => r.update(tree()));
+    await settle();
+    expect(has(r.root, 'account-class-report-headline')).toBe(false);
+    expect(front.replace).toHaveBeenCalledWith('SignIn', { use: 'teacher' });
+    expect(under.replace).not.toHaveBeenCalled();
+  });
+
   it('a decision on focus and on the return to active: a PIN changed meanwhile locks an open home at once', async () => {
     typedPinNow();
     const { r, nav } = await mountRoute('AccountHome');
@@ -1032,6 +1057,7 @@ describe('CS-N4: closing the grown-up session clears the account and asks the ga
       await act(async () => closeGrownUpSession(reason));
       await act(async () => answer(standardAnswer('GET', '/api/spaces', '')));
       await settle();
+      await until(() => accountQueries().length === 0);
       expect(accountQueries(), reason).toEqual([]);
       expect(useAccountVisit.getState()).toMatchObject({ signedInThisVisit: false, lastAccountSignInAt: null });
       expect(useUiStore.getState()).toMatchObject({ parentGateOpenedAt: null, lastPinTypedAt: null, lastPinVerifiedAt: null });
@@ -1070,9 +1096,23 @@ describe('CS-N4: closing the grown-up session clears the account and asks the ga
     clerk.calls = [];
     await act(async () => closeGrownUpSession('exit'));
     await settle();
+    await until(() => clerk.calls.includes('signOut'));
     expect(clerk.calls).toContain('signOut');
     expect(await clerkTokens.cache.getToken('__clerk_client_jwt')).toBeFalsy();
     expect([...env.secure.keys()]).toEqual([]);
+  });
+
+  it('a device with no PIN: leaving the area without a close (back to Welcome) ends Clerk’s session and its memory items too', async () => {
+    await device('open');
+    const area = await mountArea();
+    expect(clerk.used).toContain('ClerkProvider');
+    await clerkTokens.cache.saveToken('__clerk_client_jwt', 'this-visit-only');
+    clerk.calls = [];
+    await unmount(area);
+    await settle();
+    await until(() => clerk.calls.includes('signOut'));
+    expect(clerk.calls).toContain('signOut');
+    expect(await clerkTokens.cache.getToken('__clerk_client_jwt')).toBeFalsy();
   });
 
   for (const kind of ['pin', 'open'] as const) {
@@ -1089,6 +1129,7 @@ describe('CS-N4: closing the grown-up session clears the account and asks the ga
       expect(has(r.root, 'sign-in-step-code')).toBe(true);
       await act(async () => closeGrownUpSession('exit'));
       await settle(20);
+      await until(() => !has(r.root, 'sign-in-step-code') && (kind !== 'open' || has(r.root, 'sign-in-step-email')));
       expect(has(r.root, 'sign-in-step-code')).toBe(false);
       // A device with no PIN starts over on the email step; a pin device asks the typed PIN first.
       if (kind === 'open') expect(has(r.root, 'sign-in-step-email')).toBe(true);
@@ -1615,7 +1656,9 @@ describe('CS-N14: a device with no PIN keeps no session; a failed profile read o
     await act(async () => closeGrownUpSession('exit'));
     await settle();
     expect(useAccountVisit.getState().signedInThisVisit).toBe(false);
-    expect(await clerkTokens.cache.getToken('__clerk_client_jwt')).toBeFalsy();
+    const token = async (): Promise<unknown> => clerkTokens.cache.getToken('__clerk_client_jwt');
+    for (let i = 0; i < 50 && (await token()); i += 1) await settle(2);
+    expect(await token()).toBeFalsy();
     const again = makeNav(['Welcome']);
     const second = await render(providers(createElement(WelcomeAccountRow, { navigation: again as never })));
     await settle();
@@ -2170,7 +2213,7 @@ const SWEEP: Sweep[] = [
     env.answer = failing(403, 'native_off');
     fresh();
   }, { below: inside }),
-  screenState('class report, loading', 'AccountClassReport', 'account-class-report', () => {
+  screenState('class report, loading', 'AccountClassReport', 'learner-report-loading', () => {
     env.answer = (method, path, query) => (/class-report$/.test(path) ? new Promise<Answer>(() => undefined) : standardAnswer(method, path, query));
     fresh();
   }, { below: inside }),

@@ -258,9 +258,10 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
   }, [clerk]);
 
   // Row NS-7 (security review): Clerk's session ended while a page is open (revoked or expired elsewhere, a sign-out):
-  // the page decides again at once instead of keeping the account on screen until the next focus or `401`.
+  // the page in front decides again at once instead of keeping the account on screen until the next focus or `401`.
+  // A page under it decides at its own focus, so a run of account pages never stacks one sign-in on another.
   useEffect(() => {
-    if (screen === 'home' && !clerkSignedIn && stepNow.current?.kind === 'open') decideRef.current();
+    if (screen === 'home' && !clerkSignedIn && stepNow.current?.kind === 'open' && navigation.isFocused()) decideRef.current();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the change of Clerk's session is the moment
   }, [clerkSignedIn]);
 
