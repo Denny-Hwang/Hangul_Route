@@ -36,11 +36,11 @@ app.use(
   }),
 );
 
-// F-AUTH-004 section 9.4 (row NS-1): the NATIVE_ACCOUNT kill switch. Off, every account route answers a request that
-// carries `X-HR-Client: native` with 403 native_off, before any route runs; the web never sends the header. The spaces
-// and billing routes are the ones the native homes read (section 8); entitlements and admin invites are account routes too.
+// F-AUTH-004 section 9.4 (row NS-1): the NATIVE_ACCOUNT kill switch. Off, every native request (`X-HR-Client: native`,
+// or a verified token with no `azp`) under the routes the native homes read (section 8) answers 403 native_off, before
+// any route runs; the web is untouched. The money routes refuse native requests on their own (NATIVE_MONEY_GUARD).
 // Hono's `/*` also matches the bare mount (`/api/spaces`) and a percent-encoded path, exactly as the routes do.
-for (const mount of ['/api/spaces', '/api/billing', '/api/entitlements', '/api/admin-invites']) app.use(`${mount}/*`, nativeAccountSwitch);
+for (const mount of ['/api/spaces', '/api/billing']) app.use(`${mount}/*`, nativeAccountSwitch);
 
 // Console reads carry learner names that a device can change at any time: never cached by a browser or proxy.
 // `/api/spaces` itself is matched by the wildcard too (F-AUTH-004 section 9.4, a test pins it).

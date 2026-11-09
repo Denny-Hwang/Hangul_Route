@@ -10,23 +10,27 @@ import { getAuthClaims } from './auth';
  * in the dashboard in a minute without a deploy or an app build (`keep_vars = true`):
  *
  * - `NATIVE_MONEY_GUARD` (on): checkout, portal, promo, the receipts list and receipt links answer `403 not_in_app` to
- *   a native request, before the account upsert, step-up, the live guard or any Stripe call. Only `false`, `0`, `off`
+ *   a native request, before the account upsert, step-up, the live guard or any Stripe call; so does the raw
+ *   entitlement list (`GET /api/entitlements`: Stripe customer and subscription ids, payment states and end dates,
+ *   none of which a native screen may show, section 9.1). Only `false`, `0`, `off`
  *   or `disabled` (trimmed, any case) turns the refusals off; anything else, a typo included, keeps them (fail closed).
  *   It never turns off the billing status view (`routes/billing.ts`).
- * - `NATIVE_ACCOUNT` (on): the kill switch of the native homes. Off, every account route answers a request carrying
- *   the native header with `403 native_off`, so installed builds lose the homes at once. Unset, empty, `enabled`, `on`,
- *   `true` or `1` (trimmed, any case) is on; any other value, a typo included, is off (fail closed, the
- *   `TELEMETRY_DAILY` pattern). The web never sends the header and is untouched either way.
+ * - `NATIVE_ACCOUNT` (on): the kill switch of the native homes. Off, every request of the native app under
+ *   `/api/spaces` and `/api/billing` (the routes the homes read, section 8) answers `403 native_off`, so installed
+ *   builds lose the homes at once. Unset, empty, `enabled`, `on`, `true` or `1` (trimmed, any case) is on; any other
+ *   value, a typo or a non-text value included, is off (fail closed, the `TELEMETRY_DAILY` pattern). The web is
+ *   untouched either way.
  *
- * A native request is one that carries `X-HR-Client: native` (the app's own statement, never an authentication), or,
- * for the money routes and the billing view, one whose bearer is a verified Clerk token naming no site (`azp`): a
- * browser always gets one with `azp` (assumption U8, device check D14), so the rule catches a native call that forgot
- * the header. The dev fallback has no token to read, so there only the header counts.
+ * A native request is one that carries `X-HR-Client: native` (the app's own statement, never an authentication), or
+ * one whose bearer is a verified Clerk token naming no site (`azp`): a browser always gets one with `azp` (assumption
+ * U8, device check D14), so the rule catches a native call that forgot the header. It applies wherever a Clerk key is
+ * bound (production, preview and test deployments alike); the dev fallback has no token to read, so there only the
+ * header counts.
  */
 export interface NativeClientEnv {
   /** Dashboard text variable; unset = on. `false`, `0`, `off` or `disabled` lets native requests reach the money routes. */
   NATIVE_MONEY_GUARD?: string;
-  /** Dashboard text variable; unset = on. Any value but `enabled`, `on`, `true` or `1` refuses native account requests. */
+  /** Dashboard text variable; unset = on. Any other value but `enabled`, `on`, `true` or `1` refuses native account requests. */
   NATIVE_ACCOUNT?: string;
 }
 
@@ -39,10 +43,11 @@ export function nativeMoneyGuardEnabled(env: NativeClientEnv | undefined): boole
   return typeof value !== 'string' || !GUARD_OFF_WORDS.has(value.trim().toLowerCase());
 }
 
-/** Whether the account routes serve native requests: on when unset or one of the on words; any other value is off. */
+/** Whether the account routes serve native requests: on when unset or one of the on words; any other value (not text included) is off. */
 export function nativeAccountEnabled(env: NativeClientEnv | undefined): boolean {
-  const value = env?.NATIVE_ACCOUNT;
-  return typeof value !== 'string' || ACCOUNT_ON_WORDS.has(value.trim().toLowerCase());
+  const value: unknown = env?.NATIVE_ACCOUNT;
+  if (value === undefined) return true;
+  return typeof value === 'string' && ACCOUNT_ON_WORDS.has(value.trim().toLowerCase());
 }
 
 const NATIVE_VALUE = NATIVE_CLIENT_VALUE.toLowerCase();
@@ -67,8 +72,8 @@ export async function isNativeRequest(c: Context): Promise<boolean> {
 
 /**
  * The money-route guard: `403 not_in_app` for a native request while `NATIVE_MONEY_GUARD` is on, else null. Call it
- * first in every money route (checkout, portal, promo, receipts, receipt link), before `requireAccount`. The Stripe
- * webhook is never guarded.
+ * first in every money route (checkout, portal, promo, receipts, receipt link, the entitlement list), before
+ * `requireAccount`. The Stripe webhook is never guarded.
  */
 export async function nativeMoneyRefusal(c: Context): Promise<Response | null> {
   if (!nativeMoneyGuardEnabled(c.env as NativeClientEnv | undefined)) return null;
@@ -77,12 +82,13 @@ export async function nativeMoneyRefusal(c: Context): Promise<Response | null> {
 }
 
 /**
- * The `NATIVE_ACCOUNT` switch as middleware for the account routes: off, a request carrying the native header gets
- * `403 native_off` before any route runs; anything else goes on unchanged. The header alone decides, so a browser
- * request is never read for a token here.
+ * The `NATIVE_ACCOUNT` switch as middleware for the account routes the native homes read: off, a native request (the
+ * header, or a verified token with no `azp`) gets `403 native_off`, `no-store`, before any route runs; anything else
+ * goes on unchanged. On, nothing is read: the token is looked at only while the switch is off.
  */
 export const nativeAccountSwitch: MiddlewareHandler = async (c, next) => {
-  if (hasNativeHeader(c) && !nativeAccountEnabled(c.env as NativeClientEnv | undefined)) {
+  if (!nativeAccountEnabled(c.env as NativeClientEnv | undefined) && (await isNativeRequest(c))) {
+    c.header('Cache-Control', 'no-store');
     return fail(c, 'native_off', 'Grown-up accounts are not available in the app right now', 403);
   }
   await next();

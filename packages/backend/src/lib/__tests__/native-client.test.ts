@@ -23,6 +23,10 @@ describe('nativeAccountEnabled', () => {
     expect(nativeAccountEnabled({})).toBe(true);
     for (const on of ['', ' ', 'enabled', 'on', 'true', '1', 'ENABLED', ' On ']) expect(nativeAccountEnabled({ NATIVE_ACCOUNT: on }), on).toBe(true);
     for (const off of ['disabled', 'off', 'false', '0', 'no', 'enable', 'typo']) expect(nativeAccountEnabled({ NATIVE_ACCOUNT: off }), off).toBe(false);
+    // A non-text value (a [vars] boolean or number) is not an on word either: off.
+    for (const off of [false, true, 0, 1, null]) expect(nativeAccountEnabled({ NATIVE_ACCOUNT: off as unknown as string }), String(off)).toBe(false);
+    // The money guard reads a non-text value as on (its closed side).
+    for (const on of [false, 0, null]) expect(nativeMoneyGuardEnabled({ NATIVE_MONEY_GUARD: on as unknown as string }), String(on)).toBe(true);
   });
 });
 

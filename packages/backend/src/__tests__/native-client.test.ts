@@ -81,8 +81,10 @@ function expectStatusView(summary: BillingSummary) {
     expect(card.legacyNoHistory).toBe(false);
     expect(card.actions).toEqual({ buy: null, manage: false, contact: false });
   }
-  // Who the card is for, its coverage and usage stay (section 8.5's plan block).
-  expect(summary.cards[0]).toMatchObject({ spaceId: fam, kind: 'family', name: 'Kim family', role: 'owner', coverage: { state: 'own', planKey: 'family_lifetime', status: 'active' } });
+  // Who the card is for, its plan as a fact and its usage stay (section 8.5's plan block); no payment state, own end
+  // date, pending cancellation, payer or "manages this plan" line (section 9.1).
+  expect(summary.cards[0]).toMatchObject({ spaceId: fam, kind: 'family', name: 'Kim family', role: 'owner', payer: false, readOnlyReason: null });
+  expect(summary.cards[0]?.coverage).toEqual({ state: 'own', planKey: 'family_lifetime', status: 'active', expiresAt: null, statusSince: expect.any(String), endsAtPeriodEnd: false });
   expect(summary.cards[0]?.usage).not.toBeNull();
   expect(JSON.stringify(summary)).not.toMatch(/1530|amountCents|currency|usd|in_1|pi_1|cus_|sub_/);
 }
@@ -122,6 +124,30 @@ describe('GET /api/billing/summary: the status view (section 8.5)', () => {
     expectStatusView(BillingSummarySchema.parse(token.body.data));
   });
 
+  it('never carries a payment state or an own end date: past due and cancelled read as active, expired stays expired', async () => {
+    const at = new Date();
+    for (const [status, shown] of [['past_due', 'active'], ['cancelled', 'active'], ['trial', 'active'], ['expired', 'expired']] as const) {
+      await db.applyEntitlement({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status, provider: 'stripe', providerRef: 'sub_fam', customerRef: 'cus_fam', expiresAt: new Date(Date.now() + (status === 'expired' ? -DAY : 30 * DAY)).toISOString() }, at);
+      const r = await call('GET', '/api/billing/summary', await nativeToken());
+      const cards = BillingSummarySchema.parse(r.body.data).cards;
+      for (const card of cards) {
+        if (card.coverage.state === 'own') expect([card.coverage.status, card.coverage.expiresAt, card.coverage.endsAtPeriodEnd], status).toEqual([shown, null, false]);
+        expect(JSON.stringify(card), status).not.toMatch(/past_due|cancelled|trial/);
+      }
+    }
+  });
+
+  it('keeps a school coverage line as section 8.5 shows it (the school name and its end date)', async () => {
+    const school = (await call('POST', '/api/spaces', await browser('user_principal'), { kind: 'school', name: 'Hana School' })).body.data as { space: { id: string } };
+    const until = new Date(Date.now() + 200 * DAY).toISOString();
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: school.space.id, planKey: 'group_license', status: 'past_due', provider: 'stripe', providerRef: 'sub_sch', customerRef: 'cus_sch', expiresAt: until }, new Date());
+    await call('POST', '/api/spaces', await browser('user_principal'), { kind: 'class', name: 'Room 2', parentSpaceId: school.space.id });
+    const r = await call('GET', '/api/billing/summary?view=status', await browser('user_principal'));
+    const cls = BillingSummarySchema.parse(r.body.data).cards.find((card) => card.kind === 'class');
+    expect(cls?.coverage).toMatchObject({ state: 'school', schoolName: 'Hana School', planKey: 'group_license' });
+    expect(BillingSummarySchema.parse(r.body.data).cards.every((card) => card.payer === false && card.readOnlyReason === null)).toBe(true);
+  });
+
   it('answers no-store on a refusal too', async () => {
     const r = await call('GET', '/api/billing/summary', { 'content-type': 'application/json' });
     expect([r.status, r.cache]).toEqual([401, 'no-store']);
@@ -135,6 +161,7 @@ const MONEY: ReadonlyArray<readonly [string, string, string, () => unknown]> = [
   ['promo', 'POST', '/api/entitlements/stripe/promo', () => ({ code: 'HOYA20', planKey: 'family_lifetime' })],
   ['receipts', 'GET', '/api/billing/receipts?id=__FAM__', () => undefined],
   ['receipt link', 'POST', '/api/billing/receipt-link', () => ({ id: receiptId })],
+  ['entitlement list', 'GET', '/api/entitlements', () => undefined],
 ];
 let classId = '';
 const pathOf = (path: string) => path.replace('__FAM__', encodeURIComponent(fam));
@@ -221,15 +248,24 @@ describe('the money routes refuse the native app (section 9.4)', () => {
 });
 
 describe('the account switch NATIVE_ACCOUNT (section 9.4)', () => {
-  const READS = ['/api/spaces', '/api/spaces/__FAM__/roster', '/api/billing/summary', '/api/billing/summary?view=status', '/api/entitlements', '/api/entitlements/browse'];
+  const READS = ['/api/spaces', '/api/spaces/__FAM__/roster', '/api/billing/summary', '/api/billing/summary?view=status'];
 
-  it.each(READS)('off: %s answers 403 native_off to the native header only', async (path) => {
+  it.each(READS)('off: %s answers 403 native_off, no-store, to native requests only (the header or a token with no azp)', async (path) => {
     for (const off of ['disabled', 'off', 'false', '0', 'typo']) {
       const r = await call('GET', pathOf(path), { ...(await browser()), ...NATIVE }, undefined, env({ NATIVE_ACCOUNT: off }));
-      expect([r.status, r.body.error?.code], off).toEqual([403, 'native_off']);
+      expect([r.status, r.body.error?.code, r.cache], off).toEqual([403, 'native_off', 'no-store']);
+      const token = await call('GET', pathOf(path), await nativeToken(), undefined, env({ NATIVE_ACCOUNT: off }));
+      expect([token.status, token.body.error?.code, token.cache], off).toEqual([403, 'native_off', 'no-store']);
       const web = await call('GET', pathOf(path), await browser(), undefined, env({ NATIVE_ACCOUNT: off }));
       expect(web.status, off).toBe(200);
     }
+  });
+
+  it('off: leaves the entitlement routes and the Stripe webhook to their own rules', async () => {
+    const browse = await call('GET', '/api/entitlements/browse', { ...(await browser()), ...NATIVE }, undefined, env({ NATIVE_ACCOUNT: 'disabled' }));
+    expect(browse.status).toBe(200);
+    const hook = await call('POST', '/api/entitlements/stripe/webhook', { ...NATIVE, 'stripe-signature': 't=1,v1=bad' }, { type: 'x' }, env({ NATIVE_ACCOUNT: 'disabled', STRIPE_WEBHOOK_SECRET: 'whsec_test' }));
+    expect([hook.status, hook.body.error?.code]).toEqual([400, 'bad_signature']);
   });
 
   it('off: writes refuse the native header too, before any route runs', async () => {
