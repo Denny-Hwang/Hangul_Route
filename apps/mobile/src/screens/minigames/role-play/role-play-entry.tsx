@@ -3,6 +3,7 @@ import type { MinigameScope } from '../../../logic/minigame-config';
 import { LessonWaiting } from '../../lesson-content';
 import { OopsScreen } from '../../system/OopsScreen';
 import type { MinigameHost } from '../host';
+import { retryLoad } from '../../../logic/lessons/chunk-retry';
 
 /*
  * The start bundle's door to Role Play (F-CURR-002 sections 7.1 F6, 10 and 12.2, row CM-35). The game (its branch
@@ -17,7 +18,7 @@ let loading: Promise<Chunk> | null = null;
 let loaded: Chunk | null = null;
 
 function loadChunk(): Promise<Chunk> {
-  loading ??= import('./role-play-chunk').then(
+  loading ??= retryLoad(() => import('./role-play-chunk')).then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;

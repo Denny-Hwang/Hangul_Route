@@ -584,3 +584,54 @@ describe('core and later chunks (row CM-5B)', () => {
     });
   });
 });
+
+describe('a quest chunk that fails is asked again before the crash screen (chunk-retry.ts)', () => {
+  /** A store whose loader fails its first `fails` asks, with the store's own two short retries. */
+  function retrying(fails: number) {
+    let asks = 0;
+    const store = createLessonStore(
+      manifest,
+      {
+        cell: (id) => {
+          asks += 1;
+          return asks <= fails ? Promise.reject(scriptError()) : Promise.resolve(chunkOf(id));
+        },
+        titles: () => Promise.resolve({ CHUNK_HASH: 'h-es', LESSON_TITLE_OVERLAYS: {} }),
+      },
+      { retryDelaysMs: [1, 1] },
+    );
+    const reload = vi.fn(() => false);
+    const b = lessonContentBindings({ store, locale: () => 'en', reloadForNewBuild: reload, isNewBuildAnswer: async () => false });
+    return { ...b, asks: () => asks, reload };
+  }
+  function Player({ hook }: { hook: (id: string) => boolean }): ReactElement {
+    return hook('quest:stage2-rites-q1') ? <Text testID="body">steps</Text> : <Text testID="waiting">waiting</Text>;
+  }
+  const boundary = (child: ReactElement): ReactElement => (
+    <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>{child}</ErrorBoundary>
+  );
+
+  it('fails twice then loads: the quest opens and the crash screen never shows', async () => {
+    const t = retrying(2);
+    const r = await render(boundary(<Player hook={t.useLessonQuestReady} />));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(t.asks()).toBe(3);
+    expect(byTestId(r.root, 'body')).toHaveLength(1);
+    expect(buttonsNamed(r.root, TRY_AGAIN)).toHaveLength(0);
+  });
+
+  it('fails every ask: after the retries the crash screen shows, as before', async () => {
+    const t = retrying(99);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const r = await render(boundary(<Player hook={t.useLessonQuestReady} />));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(t.asks()).toBe(3);
+    expect(buttonsNamed(r.root, TRY_AGAIN)).toHaveLength(1);
+    expect(byTestId(r.root, 'body')).toHaveLength(0);
+    errors.mockRestore();
+  });
+});

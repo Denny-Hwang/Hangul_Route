@@ -1,5 +1,6 @@
 import type { Episode, EntityOverlay, OverlayLocale, Overlays, Quest, QuestStep, UiLocale } from '@hangul-route/content-schema';
 import type { MinigameScope } from '../minigame-config';
+import { retryLoad } from './chunk-retry';
 
 /**
  * The upper-stage lesson content at runtime (F-CURR-002 §10, rows CM-5 and CM-40). The start bundle
@@ -147,6 +148,11 @@ export interface LessonStoreOptions {
    * (`titlesVersion`). None when omitted: settled only when in or failed.
    */
   titlesGraceMs?: number;
+  /**
+   * A cell's body chunk that fails to load is asked again after each of these delays (ms) before the load rejects
+   * (`logic/lessons/chunk-retry.ts`); never for a chunk of another build or a timeout. None when omitted.
+   */
+  retryDelaysMs?: readonly number[];
 }
 
 export interface LessonStore {
@@ -203,7 +209,7 @@ export function cellOfScopeRef(ref: string): string | undefined {
 type TextChunk = `titles-${OverlayLocale}` | `headers-${UiLocale}`;
 
 export function createLessonStore(manifest: LessonManifest, load: LessonLoaders, options: LessonStoreOptions = {}): LessonStore {
-  const { timeoutMs, abandon, titlesGraceMs } = options;
+  const { timeoutMs, abandon, titlesGraceMs, retryDelaysMs } = options;
   const questCell = new Map<string, string>();
   for (const e of manifest.episodes) {
     if (manifest.cells[e.id] === undefined) continue;
@@ -261,10 +267,16 @@ export function createLessonStore(manifest: LessonManifest, load: LessonLoaders,
     if (expected === undefined || cells.has(cellId)) return Promise.resolve();
     const pending = cellLoads.get(cellId);
     if (pending !== undefined) return pending;
-    const started = load.cell(cellId);
-    if (started === undefined) return Promise.reject(new Error(`no loader for the lesson chunk of ${cellId}`));
-    const promise = withinTime(cellId, started)
-      .then((mod) => checked(cellId, expected, mod))
+    const first = load.cell(cellId);
+    if (first === undefined) return Promise.reject(new Error(`no loader for the lesson chunk of ${cellId}`));
+    // The first ask is the one already started; each retry asks the loader again (a failed script is not kept).
+    let asked = false;
+    const ask = (): Promise<LessonCellChunk> => {
+      const started = asked ? load.cell(cellId) : first;
+      asked = true;
+      return started === undefined ? Promise.reject(new Error(`no loader for the lesson chunk of ${cellId}`)) : withinTime(cellId, started).then((mod) => checked(cellId, expected, mod));
+    };
+    const promise = retryLoad(ask, retryDelaysMs ?? [])
       .then(
         (mod) => {
           cells.set(cellId, mod);

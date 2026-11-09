@@ -220,6 +220,9 @@ export const TELEMETRY_EVENT_NAMES = [
   // never a plan, space, cell or learner id, a date or a weekday list)
   'route.practice_days_changed',
   'route.refresh_started',
+  // TELEMETRY-NAMES-2 section U (Worker first; payload: CRASH_TELEMETRY_PAYLOADS in crash-telemetry.ts: the root, the route
+  // name, the error class, a scrubbed 120-character message, a chunk flag and the app version; stored without a profileId)
+  'app.crash',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

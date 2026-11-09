@@ -14,6 +14,7 @@ import { ConfirmHost } from './src/components/ConfirmHost';
 import { LearnerScreenHeader } from './src/components/LearnerScreenHeader';
 import { PortraitGuard } from './src/components/PortraitGuard';
 import { PwaBanners } from './src/components/PwaBanners';
+import { reportCrash } from './src/platform/crash-report';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
@@ -223,7 +224,10 @@ export default function App(): ReactElement {
           <TextSizeProvider step={textSize}>
           {/* Production crash guard — a thrown render error shows OopsScreen
               instead of closing the app; Try again remounts the navigator. */}
-          <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
+          <ErrorBoundary
+            onError={(error) => reportCrash(error, 'learner', navigation.isReady() ? navigation.getCurrentRoute()?.name : undefined)}
+            fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}
+          >
             {/* Every screen's top row (Back, its title, the Aa control) comes from its route (AMENDMENTS-DISPLAY-NAV section 7.1). */}
             {/* One tap lock clock for every answer board and guarded press (AMENDMENTS-TOUCH KT-D5, rule 10). */}
             <TapLockProvider>

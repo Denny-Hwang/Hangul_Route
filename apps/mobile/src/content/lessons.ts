@@ -10,6 +10,7 @@ import {
   loadLessonTitles,
 } from './__generated__/lessons-index';
 import { createLessonStore, episodesOverStore, questsOverStore } from '../logic/lessons/lesson-store';
+import { CHUNK_RETRY_DELAYS_MS } from '../logic/lessons/chunk-retry';
 import { abandonPendingChunk } from '../platform/lesson-chunk-abandon';
 
 /**
@@ -36,6 +37,8 @@ export const lessonContent = createLessonStore(
     // A chunk comes from the precache in a frame or two; a request that hangs fails into the retry path,
     // and its pending script is given up so the retry asks again.
     timeoutMs: 15_000,
+    // A load that fails (flaky network, a worker waking) is asked again twice before the quest player shows the crash screen.
+    retryDelaysMs: CHUNK_RETRY_DELAYS_MS,
     abandon: (bundleName) => {
       abandonPendingChunk(bundleName);
     },

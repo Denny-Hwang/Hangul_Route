@@ -6,6 +6,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
+import { retryLoad } from '../../logic/lessons/chunk-retry';
 
 /*
  * The start bundle's door to "This week in Korea" (F-CURR-002 §5.7, §10 and §12.2, row CM-48;
@@ -21,7 +22,7 @@ let loading: Promise<Chunk> | null = null;
 let loaded: Chunk | null = null;
 
 function loadChunk(): Promise<Chunk> {
-  loading ??= import('./week-drop-chunk').then(
+  loading ??= retryLoad(() => import('./week-drop-chunk')).then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;

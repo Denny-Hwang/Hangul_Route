@@ -31,6 +31,7 @@ import { PortraitGuard } from './src/components/PortraitGuard';
 import { ConfirmHost } from './src/components/ConfirmHost';
 import { BrowseScreenHeader } from './src/components/LearnerScreenHeader';
 import { installHistoryBridge } from './src/platform/history-bridge';
+import { reportCrash } from './src/platform/crash-report';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { BrowseSessionProvider, type BrowseSession } from './src/screens/browse/browse-session';
 import { BrowseSettingsProvider } from './src/screens/browse/BrowseSettings';
@@ -292,7 +293,7 @@ export default function BrowseApp(): ReactElement {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <TextSizeProvider step={textSize}>
-        <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
+        <ErrorBoundary onError={(error) => reportCrash(error, 'browse', 'BrowseApp')} fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
           {visit.status === 'ready' && session ? (
             <BrowseSessionProvider value={session}>
               <BrowseSettingsProvider>

@@ -6,6 +6,7 @@ import { useProfileStore } from '../../store/profile-store';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
+import { retryLoad } from '../../logic/lessons/chunk-retry';
 
 /*
  * The start bundle's door to the Stages 2-7 ceremony, the Stage Check and the one retroactive summary (F-CURR-002
@@ -25,7 +26,7 @@ let loaded: Chunk | null = null;
 
 /** The Stage Check's chunk, loaded once (a failed load is tried again on the next ask). */
 export function loadStageCheckChunk(): Promise<Chunk> {
-  loading ??= import('./stage-check-chunk').then(
+  loading ??= retryLoad(() => import('./stage-check-chunk')).then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;

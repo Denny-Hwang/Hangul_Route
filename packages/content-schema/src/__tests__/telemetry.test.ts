@@ -5,6 +5,7 @@ describe('telemetry event names (one list for the client type and the API whitel
   it('covers every event the learner app sends, including spaces and paywall', () => {
     expect([...TELEMETRY_EVENT_NAMES].sort()).toEqual(
       [
+        'app.crash',
         'audio.capability_checked',
         'audio.fallback_shown',
         'audio.mute_changed',

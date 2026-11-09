@@ -29,9 +29,12 @@ export function isBrowseWritableKey(key: string): boolean {
   return WRITABLE.has(key);
 }
 
-/** Only the five `browse.*` names (section 9); learner events from reused screens are dropped. */
+/**
+ * Only the five `browse.*` names (section 9) and `app.crash` (TELEMETRY-NAMES-2 section U: the root, the route name, the
+ * error class, a scrubbed message; no profile id, nothing of a learner); learner events from reused screens are dropped.
+ */
 export function isBrowseEventName(name: string): boolean {
-  return EVENT_NAMES.has(name);
+  return EVENT_NAMES.has(name) || name === 'app.crash';
 }
 
 /** The browse root's boot step, before any write or event: write fence, telemetry fence, own queue. */

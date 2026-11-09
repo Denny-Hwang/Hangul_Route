@@ -34,6 +34,7 @@ import {
   isTelemetryEventName,
   type TelemetryEventName,
 } from '@hangul-route/content-schema';
+import { CRASH_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema/crash-telemetry';
 import { id, store, type TelemetryEvent } from '../store';
 
 /**
@@ -306,6 +307,13 @@ const GUEST_EVENT_PREFIX = 'guest.';
 export const GUEST_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(GUEST_TELEMETRY_PAYLOADS);
 
 /**
+ * `app.crash` (TELEMETRY-NAMES-2 section U, Worker first): keeps per key only a value `CRASH_TELEMETRY_PAYLOADS` accepts
+ * (the root, route and error class names, a scrubbed 120-character message, a chunk flag, the app version) and is
+ * stored without a profile id, whatever a client sends.
+ */
+export const CRASH_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(CRASH_TELEMETRY_PAYLOADS);
+
+/**
  * AMENDMENTS-ROUTE-CLASS-BLEND section 18 (TELEMETRY-NAMES-2 section T, row BL-W, Worker first):
  * `route.practice_days_changed` keeps `days` (1 to 7) and `by`, `route.refresh_started` keeps `via`, and both are
  * stored without a profile id. Any other key or value is dropped (a weekday list, a date, a plan or cell id), whatever
@@ -380,6 +388,7 @@ export function keptEventFields(
   profileId: unknown,
 ): Pick<TelemetryEvent, 'profileId' | 'payload'> {
   if (Object.hasOwn(OA_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(OA_PAYLOAD_RULES[name], payload) };
+  if (Object.hasOwn(CRASH_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(CRASH_PAYLOAD_RULES[name], payload) };
   if (Object.hasOwn(ROUTE_BLEND_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(ROUTE_BLEND_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(GUEST_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(Object.hasOwn(GUEST_PAYLOAD_RULES, name) ? GUEST_PAYLOAD_RULES[name] : undefined, payload) };
   if (isCurrTelemetryName(name)) {

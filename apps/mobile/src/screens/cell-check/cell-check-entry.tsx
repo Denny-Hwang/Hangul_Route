@@ -6,6 +6,7 @@ import type { RootStackParamList } from '../../navigation/types';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
+import { retryLoad } from '../../logic/lessons/chunk-retry';
 
 /*
  * The start bundle's door to the Cell Check (F-CURR-002 sections 4.5, 10 and 12.2, row CM-21). The session logic is the
@@ -20,7 +21,7 @@ let loading: Promise<Chunk> | null = null;
 let loaded: Chunk | null = null;
 
 function loadChunk(): Promise<Chunk> {
-  loading ??= import('./cell-check-chunk').then(
+  loading ??= retryLoad(() => import('./cell-check-chunk')).then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;
