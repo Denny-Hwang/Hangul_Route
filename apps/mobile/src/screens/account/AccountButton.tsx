@@ -1,6 +1,6 @@
-import { KOREAN_LINE_BREAK, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
+import { GuardedPressable, KOREAN_LINE_BREAK, borderWidth, colors, radii, spacing, touchTarget, typography, useTypeScale } from '@hangul-route/design-system';
 import type { ReactElement } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
 
 /**
  * F-AUTH-004 design D2 and the mocks' `rn-btn` variants (`design/screens/profiles/mock/profiles.css`, used by
@@ -53,7 +53,9 @@ export function AccountButton({ label, onPress, tone, waiting = false, busy = fa
   const scale = useTypeScale();
   const off = waiting || busy;
   return (
-    <Pressable
+    // The app's tap guard (AMENDMENTS-TOUCH 4.4), as the design-system Button and LinkButton have: a bounce never lands
+    // on the next step's button at the same spot.
+    <GuardedPressable
       onPress={() => {
         if (!off) onPress();
       }}
@@ -92,6 +94,6 @@ export function AccountButton({ label, onPress, tone, waiting = false, busy = fa
       >
         {label}
       </Text>
-    </Pressable>
+    </GuardedPressable>
   );
 }

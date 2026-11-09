@@ -557,7 +557,9 @@ describe('the review round (row NS-3)', () => {
     await settle();
     expect(clerk.setActive).toHaveBeenCalledWith({ session: 'sess_1' });
     expect(useAccountVisit.getState().signedInThisVisit).toBe(true);
-    expect(env.writes[0]).toBe('trust {"v":1,"epoch":7}');
+    expect(env.writes).toEqual(['trust {"v":1,"epoch":7}']);
+    // CS-N4: the session may have closed meanwhile, so nothing of the account is read into the cache.
+    expect(env.cached).toEqual([]);
     expect(env.tracked).toEqual([{ name: 'auth.native.signin', payload: { os: 'ios', method: 'email_code', result: 'ok', second: false } }]);
     expect(nav.goBack).not.toHaveBeenCalled();
   });

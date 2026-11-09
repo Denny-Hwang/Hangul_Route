@@ -145,7 +145,8 @@ function SignInFlow({ navigation }: Props): ReactElement {
   }, []);
 
   // Leaving the screen ends the flow: its last result, or `cancelled` (section 15). A Clerk call still out finishes it
-  // instead (`run`), so a sign-in that completes as the screen goes is still recorded, once.
+  // instead (`run`), so a sign-in that completes as the screen goes is still recorded, once (a call that never answers
+  // sends nothing).
   useEffect(
     () => () => {
       live.current = false;
@@ -223,6 +224,9 @@ function SignInFlow({ navigation }: Props): ReactElement {
       // A failed read or write leaves the records to the next sign-in; the lock decides what opens (CS-N3).
     }
     useAccountVisit.getState().markSignedIn(at, retrustPending);
+    // The screen went (the grown-up session may have closed, and cleared the account queries, CS-N4): nothing is read
+    // into the cache now; the uses record waits for the home's next successful load (section 6.5).
+    if (!live.current) return;
     try {
       const api = createAccountApi({ baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL, dev: devBuild(), getToken: () => getToken(), fetch: (url, init) => fetch(url, init) });
       const spaces = await api.spaces();
@@ -415,6 +419,8 @@ function Strip({ tone, text, testID }: { tone: 'nudge' | 'info' | 'offline'; tex
     <View
       testID={testID}
       accessibilityRole={tone === 'offline' ? undefined : 'alert'}
+      // The offline strip is a status (announced when the network goes, and polite on Android).
+      accessibilityLiveRegion={tone === 'offline' ? 'polite' : undefined}
       style={{ backgroundColor: background, borderLeftWidth: spacing.xs, borderLeftColor: edge, borderRadius: radii.md, padding: spacing.md, marginBottom: tone === 'offline' ? spacing.md : 0 }}
     >
       <Body weight="semibold">{text}</Body>
