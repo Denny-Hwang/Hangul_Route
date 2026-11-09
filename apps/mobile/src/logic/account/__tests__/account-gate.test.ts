@@ -134,6 +134,11 @@ describe('where an account screen was entered from', () => {
     expect(enteredFromOutside([{ key: 'me', name: 'SignIn' }], 'me')).toBe(true);
     expect(enteredFromOutside([{ key: 's', name: 'SignIn' }, { key: 'me', name: 'AccountHome' }], 'me')).toBe(false);
     expect(enteredFromOutside([{ key: 'h', name: 'AccountHome' }, { key: 'me', name: 'SignIn' }], 'me')).toBe(false);
+    // Row NS-5: a report opened from a home moves inside the account routes (the 15-minute session, OA-D5b).
+    expect(enteredFromOutside([{ key: 'd', name: 'ParentDashboard' }, { key: 'h', name: 'AccountHome' }, { key: 'me', name: 'AccountLearnerReport' }], 'me')).toBe(false);
+    expect(enteredFromOutside([{ key: 'r', name: 'AccountLearnerReport' }, { key: 'me', name: 'SignIn' }], 'me')).toBe(false);
+    expect(enteredFromOutside([{ key: 'me', name: 'AccountLearnerReport' }], 'me')).toBe(true);
+    expect([...ACCOUNT_ROUTE_NAMES]).toEqual(['SignIn', 'AccountHome', 'AccountLearnerReport']);
   });
 
   it('a screen not in the state counts as outside (fail closed)', () => {

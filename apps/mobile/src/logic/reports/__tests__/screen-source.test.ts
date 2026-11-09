@@ -7,7 +7,9 @@ import { describe, expect, it } from 'vitest';
  * change that breaks them fails the unit run. Screens have no renderer harness in vitest (vitest.config.ts).
  */
 const src = (path: string): string => readFileSync(join(__dirname, '../../..', path), 'utf8');
-const screen = src('screens/parent/LearnerReportScreen.tsx');
+// F-AUTH-004 row NS-5 split the report's blocks into `report-blocks.tsx` (shared with the native account report): the
+// in-app report is the two files together, and every rule below holds over them unchanged.
+const screen = `${src('screens/parent/LearnerReportScreen.tsx')}\n${src('screens/parent/report-blocks.tsx')}`;
 /** The code without its comments, for the "never" checks (the doc comment names what the screen must not do). */
 const screenCode = screen.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/^\s*\/\/.*$/gm, '');
 const dashboard = src('screens/parent/ParentDashboardScreen.tsx');

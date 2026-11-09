@@ -43,27 +43,50 @@ export function trackLock(cause: NativeAuthTelemetryPayload<'auth.native.lock'>[
   void track({ name: 'auth.native.lock', payload: { ...payload } });
 }
 
+/** `auth.native.home { os, use, spaces }` (section 15, row NS-5: once per home mount, after its first successful load). */
+export function trackHome(use: NativeAuthTelemetryPayload<'auth.native.home'>['use'], spaces: NativeAuthTelemetryPayload<'auth.native.home'>['spaces']): void {
+  const os = nativeOs();
+  if (os === null) return;
+  const payload: NativeAuthTelemetryPayload<'auth.native.home'> = { os, use, spaces };
+  void track({ name: 'auth.native.home', payload: { ...payload } });
+}
+
 /**
  * Whether the device has a network (`expo-network`), kept current; online until the first answer. `active` false
  * (the native account off, row NS-4) subscribes to nothing and answers online.
  */
 export function useAccountOnline(active = true): boolean {
+  return useAccountNetwork(active).online;
+}
+
+/**
+ * Row NS-5: the network state with a way to read it again now (a home's Try again while offline asks once more,
+ * besides the subscription that reloads it when the network returns).
+ */
+export function useAccountNetwork(active = true): { online: boolean; recheck: () => void } {
   const [online, setOnline] = useState(true);
+  const live = useRef(true);
   useEffect(() => {
+    live.current = true;
     if (!active) return undefined;
-    let live = true;
     void readAccountOnline().then((value) => {
-      if (live) setOnline(value);
+      if (live.current) setOnline(value);
     });
     const stop = subscribeAccountOnline((value) => {
-      if (live) setOnline(value);
+      if (live.current) setOnline(value);
     });
     return () => {
-      live = false;
+      live.current = false;
       stop();
     };
   }, [active]);
-  return active ? online : true;
+  const recheck = useCallback(() => {
+    if (!active) return;
+    void readAccountOnline().then((value) => {
+      if (live.current) setOnline(value);
+    });
+  }, [active]);
+  return { online: active ? online : true, recheck };
 }
 
 /** The part of the navigation object the decision moments need. */
@@ -97,6 +120,20 @@ export function useDecisionMoments(navigation: FocusSource, decide: () => void):
  * and query client (`signOutOfAccount` holds the order). Resolves to whether every local delete answered.
  */
 export function useAccountSignOut(): (via: 'user' | 'lock') => Promise<boolean> {
+  return useSignOutWith(trackSignOut);
+}
+
+/**
+ * Sections 6.6 and 8.8 (row NS-5): a session Clerk ended elsewhere (an account route answered `401`) reads as signed
+ * out: the same steps as Sign out (Clerk's session, every kept item, the uses record, the trust and the notice, the
+ * queries, this visit's memory), and no `auth.native.signout`: nobody signed out here.
+ */
+export function useAccountSessionEnded(): () => Promise<boolean> {
+  const signOut = useSignOutWith(() => undefined);
+  return useCallback(() => signOut('user'), [signOut]);
+}
+
+function useSignOutWith(trackVia: (via: 'user' | 'lock') => void): (via: 'user' | 'lock') => Promise<boolean> {
   const host = useContext(AccountHostContext);
   const queryClient = useQueryClient();
   return useCallback(
@@ -110,10 +147,12 @@ export function useAccountSignOut(): (via: 'user' | 'lock') => Promise<boolean> 
           removeRecord,
           clearQueries: () => clearAccountQueries(queryClient),
           forgetVisit: () => useAccountVisit.getState().forget(),
-          track: trackSignOut,
+          track: trackVia,
         },
         via,
       ),
+    // `trackVia` is one of this module's two functions, fixed for the hook's caller.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [host, queryClient],
   );
 }

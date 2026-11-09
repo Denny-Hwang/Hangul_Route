@@ -5,12 +5,12 @@ import { accountDenyHits } from '../deny-list';
 import { nativePlanLines, type NativePlanCard } from '../plan-lines';
 
 /**
- * F-AUTH-004 section 8.5 (row NS-2; ND-8, CS-N5): the plan block, a fact and never an action, over every coverage and
- * status, with an input type that cannot hold an action, a receipt, a payer or a "manages" reason.
+ * F-AUTH-004 section 8.5 (rows NS-2, NS-5; ND-8, D20, CS-N5): the plan block, a fact and never an action, over every
+ * coverage and status, with an input type that cannot hold an action, a receipt, a payer or a "manages" reason; no line
+ * ever holds a date (the school's end date included) or a free plan's cap.
  */
 
 const en = getMessages('en').console.billing;
-const day = (iso: string): string => `day(${iso})`;
 const DATE = '2027-01-31T00:00:00.000Z';
 
 const own = (planKey: 'family_lifetime' | 'group_license' | 'school_seat', status: 'trial' | 'active' | 'past_due' | 'cancelled' | 'expired'): Coverage => ({
@@ -53,47 +53,70 @@ describe('the input type (a type test pins it)', () => {
       hasReceipts: true,
       legacyNoHistory: false,
     } as BillingSpaceCard;
-    expect(nativePlanLines(card, en, day)).toEqual({ plan: en.coverage.family, usage: en.usage.learners(2, 6) });
+    expect(nativePlanLines(card, en)).toEqual({ plan: en.coverage.family, usage: en.usage.learners(2, 6) });
   });
 });
 
 describe('section 8.5 rows', () => {
-  it('free: the free line and the usage line', () => {
-    expect(nativePlanLines({ kind: 'family', coverage: { state: 'free' }, usage }, en, day)).toEqual({ plan: en.coverage.free, usage: en.usage.learners(3, 30) });
-    expect(nativePlanLines({ kind: 'class', coverage: { state: 'free' }, usage: null }, en, day)).toEqual({ plan: en.coverage.free, usage: null });
+  it('free: the free line and no usage line (D20: no free cap on a build where nothing can be bought)', () => {
+    expect(nativePlanLines({ kind: 'family', coverage: { state: 'free' }, usage }, en)).toEqual({ plan: en.coverage.free, usage: null });
+    expect(nativePlanLines({ kind: 'class', coverage: { state: 'free' }, usage: null }, en)).toEqual({ plan: en.coverage.free, usage: null });
+    expect(nativePlanLines({ kind: 'school', coverage: { state: 'free' }, usage }, en)).toEqual({ plan: en.coverage.free, usage: null });
   });
 
   it('own, any live status: the plan name only, never a date or a payment state', () => {
     for (const status of ['trial', 'active', 'past_due', 'cancelled'] as const) {
-      expect(nativePlanLines({ kind: 'family', coverage: own('family_lifetime', status), usage: null }, en, day).plan, status).toBe(en.coverage.family);
-      expect(nativePlanLines({ kind: 'class', coverage: own('group_license', status), usage: null }, en, day).plan).toBe(en.coverage.license);
-      expect(nativePlanLines({ kind: 'school', coverage: own('school_seat', status), usage: null }, en, day).plan).toBe(en.coverage.contract);
+      expect(nativePlanLines({ kind: 'family', coverage: own('family_lifetime', status), usage: null }, en).plan, status).toBe(en.coverage.family);
+      expect(nativePlanLines({ kind: 'class', coverage: own('group_license', status), usage: null }, en).plan).toBe(en.coverage.license);
+      expect(nativePlanLines({ kind: 'school', coverage: own('school_seat', status), usage: null }, en).plan).toBe(en.coverage.contract);
     }
   });
 
-  it('own, expired: the free line', () => {
-    expect(nativePlanLines({ kind: 'family', coverage: own('family_lifetime', 'expired'), usage }, en, day)).toEqual({ plan: en.coverage.free, usage: en.usage.learners(3, 30) });
+  it('own, expired: the free line, no usage line (D20)', () => {
+    expect(nativePlanLines({ kind: 'family', coverage: own('family_lifetime', 'expired'), usage }, en)).toEqual({ plan: en.coverage.free, usage: null });
   });
 
-  it('school coverage on a class: the school line, with its date when there is one; no usage line', () => {
-    expect(nativePlanLines({ kind: 'class', coverage: school(DATE), usage }, en, day)).toEqual({ plan: en.coverage.schoolUntil('Maple School', day(DATE)), usage: null });
-    expect(nativePlanLines({ kind: 'class', coverage: school(null), usage }, en, day)).toEqual({ plan: en.coverage.school('Maple School'), usage: null });
+  it('school coverage on a class or a family: the school line, never its end date (D20); no usage line', () => {
+    for (const kind of ['class', 'family'] as const) {
+      expect(nativePlanLines({ kind, coverage: school(DATE), usage }, en)).toEqual({ plan: en.coverage.school('Maple School'), usage: null });
+      expect(nativePlanLines({ kind, coverage: school(null), usage }, en)).toEqual({ plan: en.coverage.school('Maple School'), usage: null });
+    }
   });
 
   it('school coverage on the school itself (an admin, SA-D11): the plan name, no own date, the usage line', () => {
-    expect(nativePlanLines({ kind: 'school', coverage: school(DATE, 'school_seat'), usage }, en, day)).toEqual({
+    expect(nativePlanLines({ kind: 'school', coverage: school(DATE, 'school_seat'), usage }, en)).toEqual({
       plan: en.coverage.contract,
       usage: `${en.usage.students(3, 30)} · ${en.usage.teachers(2, 5)}`,
     });
-    expect(nativePlanLines({ kind: 'school', coverage: school(null), usage: null }, en, day)).toEqual({ plan: en.coverage.license, usage: null });
+    expect(nativePlanLines({ kind: 'school', coverage: school(null), usage: null }, en)).toEqual({ plan: en.coverage.license, usage: null });
   });
 
-  it('the usage line: learners on a family, students on a class, students and teachers on a school', () => {
-    const free = { state: 'free' } as const;
-    expect(nativePlanLines({ kind: 'family', coverage: free, usage }, en, day).usage).toBe(en.usage.learners(3, 30));
-    expect(nativePlanLines({ kind: 'class', coverage: free, usage }, en, day).usage).toBe(en.usage.students(3, 30));
-    expect(nativePlanLines({ kind: 'school', coverage: free, usage }, en, day).usage).toBe(`${en.usage.students(3, 30)} · ${en.usage.teachers(2, 5)}`);
-    expect(nativePlanLines({ kind: 'school', coverage: free, usage: { ...usage, teachers: null } }, en, day).usage).toBe(en.usage.students(3, 30));
+  it('the usage line on a paid plan: learners on a family, students on a class, students and teachers on a school', () => {
+    expect(nativePlanLines({ kind: 'family', coverage: own('family_lifetime', 'active'), usage }, en).usage).toBe(en.usage.learners(3, 30));
+    expect(nativePlanLines({ kind: 'class', coverage: own('group_license', 'active'), usage }, en).usage).toBe(en.usage.students(3, 30));
+    expect(nativePlanLines({ kind: 'school', coverage: own('school_seat', 'active'), usage }, en).usage).toBe(`${en.usage.students(3, 30)} · ${en.usage.teachers(2, 5)}`);
+    expect(nativePlanLines({ kind: 'school', coverage: own('school_seat', 'active'), usage: { ...usage, teachers: null } }, en).usage).toBe(en.usage.students(3, 30));
+  });
+});
+
+describe('D20: no line holds a date, in any language', () => {
+  it('over every coverage, status and kind', () => {
+    const coverages: Coverage[] = [
+      { state: 'free' },
+      ...(['trial', 'active', 'past_due', 'cancelled', 'expired'] as const).flatMap((s) => [own('family_lifetime', s), own('group_license', s), own('school_seat', s)]),
+      school(DATE),
+      school(DATE, 'school_seat'),
+    ];
+    const digitsOfDate = /2027|\b31\b|Jan/;
+    for (const locale of LOCALES) {
+      const words = getMessages(locale).console.billing;
+      for (const coverage of coverages) {
+        for (const kind of ['family', 'class', 'school'] as const) {
+          const lines = nativePlanLines({ kind, coverage, usage }, words);
+          for (const line of [lines.plan, lines.usage ?? '']) expect(line, `${locale} ${kind}`).not.toMatch(digitsOfDate);
+        }
+      }
+    }
   });
 });
 
@@ -109,7 +132,7 @@ describe('every line passes the section 9.2 deny list in en, es and ko', () => {
       const words = getMessages(locale).console.billing;
       for (const coverage of coverages) {
         for (const kind of ['family', 'class', 'school'] as const) {
-          const lines = nativePlanLines({ kind, coverage, usage }, words, () => '31/01/2027');
+          const lines = nativePlanLines({ kind, coverage, usage }, words);
           for (const line of [lines.plan, lines.usage ?? '']) expect(accountDenyHits(line, locale), `${locale} ${kind} ${JSON.stringify(coverage)}: ${line}`).toEqual([]);
         }
       }

@@ -27,11 +27,17 @@ export function planScreenHasWord(text: string, word: string, locale: UiLocale):
 
 /**
  * Section 9.2: the native grown-up screens' words, as built in NS-2 (the spec's list, with the forms its whole words
- * missed: "manages", "renews", "prices", "paid", "Subscriptions"). en: whole words, any case, and an entry ending in
- * `*` is a stem that catches every ending (`manag*`: manage, manages, managed, managing). `card` is singular only: the
- * account screens never show heritage cards, and "cards" in a learner line is not a purchase word. es: word starts,
- * any case and any accent, so a stem (`suscrib`, `renov`, `renuev`, `gestion`, `administr`) catches every form. ko:
- * substrings (Korean attaches particles to the word).
+ * missed: "manages", "renews", "prices", "paid", "Subscriptions"), and as amended by D14 and D15 in row NS-5 (the
+ * account reports reuse `report.*`, which counts heritage cards in every language: "1 card", "Tarjetas nuevas",
+ * "새 카드"). So the card words are payment-card phrases, never the bare word, and the free-lessons phrases are added.
+ * en: whole words, any case, and an entry ending in `*` is a stem that catches every ending (`manag*`: manage,
+ * manages, managed, managing). es: word starts, any case and any accent, so a stem (`suscrib`, `renov`, `renuev`,
+ * `gestion`, `administr`) catches every form. In en and es every word of an entry takes an optional plural ending
+ * (`s`, `es`), and the words of a phrase may be apart by spaces or a hyphen, so "credit cards", "credit-card" and
+ * "tarjetas de crédito" match. Charging a card stays caught without the bare card word (`charg*`, `card ending`,
+ * `saved card`; es `cobr`, `rechaz`; ko `결제`), as the NS-5 review asked. ko: substrings (Korean attaches particles to the
+ * word), with every space removed from both the text and the entry, so "신용 카드" meets `신용카드`. `카드 정보` is not
+ * on the list: the shipped heritage-card detail pane says it.
  */
 export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> = {
   en: [
@@ -64,7 +70,19 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'paid',
     'paying',
     'payer*',
-    'card',
+    'credit card',
+    'debit card',
+    'gift card',
+    'prepaid card',
+    'card number',
+    'card details',
+    'card on file',
+    'add a card',
+    'update your card',
+    'card ending',
+    'saved card',
+    'charg*',
+    'declined',
     'premium',
     'unlock*',
     'web',
@@ -80,6 +98,7 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'sign up',
     'signup',
     'create an account',
+    'free lessons',
   ],
   es: [
     'comprar',
@@ -101,7 +120,18 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'pago',
     'pagar',
     'pagad',
-    'tarjeta',
+    'tarjeta de crédito',
+    'tarjeta de débito',
+    'tarjeta regalo',
+    'tarjeta de regalo',
+    'tarjeta prepago',
+    'número de tarjeta',
+    'datos de la tarjeta',
+    'agregar una tarjeta',
+    'añadir una tarjeta',
+    'cobr',
+    'rechaz',
+    'lecciones gratuitas',
     'premium',
     'desbloque',
     'web',
@@ -112,7 +142,39 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'ordenador',
     'regístrate',
   ],
-  ko: ['구매', '결제', '가격', '요금', '업그레이드', '구독', '갱신', '환불', '청구', '영수증', '프로모', '카드', '유료', '프리미엄', '잠금 해제', '웹', '사이트', '브라우저', '콘솔', '컴퓨터', '가입', '관리'],
+  ko: [
+    '구매',
+    '결제',
+    '가격',
+    '요금',
+    '업그레이드',
+    '구독',
+    '갱신',
+    '환불',
+    '청구',
+    '영수증',
+    '프로모',
+    '신용카드',
+    '체크카드',
+    '기프트카드',
+    '선불카드',
+    '카드번호',
+    '카드결제',
+    '카드등록',
+    '카드변경',
+    '상품권',
+    '무료레슨',
+    '유료',
+    '프리미엄',
+    '잠금 해제',
+    '웹',
+    '사이트',
+    '브라우저',
+    '콘솔',
+    '컴퓨터',
+    '가입',
+    '관리',
+  ],
 };
 
 /** Section 9.2: substrings in every language, in any case (money, the site's address, any link). */
@@ -130,13 +192,22 @@ const escape = (word: string): string => word.replace(/[.*+?^${}()|[\]\\]/g, '\\
 
 const LETTER = '[\\p{L}\\p{N}]';
 
+/** D15: an optional plural ending after each word of an entry. */
+const PLURAL = '(?:e?s)?';
+
 function wordPattern(word: string, locale: UiLocale): RegExp {
-  const stem = locale === 'es' || word.endsWith('*');
-  const body = escape(fold(word.replace(/\*$/, ''))).replace(/ /g, '\\s+');
+  const star = word.endsWith('*');
+  const words = fold(word.replace(/\*$/, '')).split(' ');
+  // Every word takes an optional plural, but a stem's last word (it already catches every ending).
+  // Words of a phrase are apart by spaces or a hyphen ("credit-card").
+  const body = words.map((part, k) => escape(part) + (star && k === words.length - 1 ? '' : PLURAL)).join('[\\s-]+');
   // es entries and en entries ending in `*` are word starts (stems); other en entries are whole words.
-  const end = stem ? '' : `(?!${LETTER})`;
+  const end = locale === 'es' || star ? '' : `(?!${LETTER})`;
   return new RegExp(`(?<!${LETTER})${body}${end}`, 'u');
 }
+
+/** Korean is compared with every space removed (D15), so spacing variants meet. */
+const unspaced = (text: string): string => text.replace(/\s+/gu, '');
 
 const PATTERNS: Readonly<Record<'en' | 'es', readonly { word: string; re: RegExp }[]>> = {
   en: ACCOUNT_DENY_WORDS.en.map((word) => ({ word, re: wordPattern(word, 'en') })),
@@ -150,7 +221,8 @@ const PATTERNS: Readonly<Record<'en' | 'es', readonly { word: string; re: RegExp
 export function accountDenyHits(text: string, locale: UiLocale): string[] {
   const hits: string[] = [];
   if (locale === 'ko') {
-    for (const word of ACCOUNT_DENY_WORDS.ko) if (text.includes(word)) hits.push(word);
+    const compact = unspaced(text);
+    for (const word of ACCOUNT_DENY_WORDS.ko) if (compact.includes(unspaced(word))) hits.push(word);
   } else {
     const folded = fold(text);
     for (const { word, re } of PATTERNS[locale]) if (re.test(folded)) hits.push(word);

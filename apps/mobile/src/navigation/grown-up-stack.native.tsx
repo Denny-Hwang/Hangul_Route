@@ -168,7 +168,8 @@ export function bindAccountQueryClearing(): () => void {
 
 /**
  * The nested stack (its routes keep the root's names, so the header registry and the session rules read them as before),
- * with the account routes of rows NS-3 to NS-6 (`AccountStackParamList`): row NS-3's `SignIn`, row NS-4's `AccountHome`.
+ * with the account routes of rows NS-3 to NS-6 (`AccountStackParamList`): row NS-3's `SignIn`, row NS-4's `AccountHome`,
+ * row NS-5's `AccountLearnerReport`.
  */
 const Stack = createNativeStackNavigator<GrownUpStackParamList>();
 
@@ -180,6 +181,11 @@ function loadSignInScreen(): ComponentType<NativeStackScreenProps<GrownUpStackPa
 /** Row NS-4: a use's home (inside AccountGate), required when the route is first shown, as the sign-in is. */
 function loadAccountHomeScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'AccountHome'>> {
   return (require('../screens/account/AccountHomeScreen.native') as typeof import('../screens/account/AccountHomeScreen.native')).AccountHomeScreen;
+}
+
+/** Row NS-5: a learner's account report (inside AccountGate), required when the route is first shown, as the home is. */
+function loadAccountLearnerReportScreen(): ComponentType<NativeStackScreenProps<GrownUpStackParamList, 'AccountLearnerReport'>> {
+  return (require('../screens/account/AccountLearnerReportScreen.native') as typeof import('../screens/account/AccountLearnerReportScreen.native')).AccountLearnerReportScreen;
 }
 
 /** A Clerk render error: the area goes on without Clerk; the crash report names the class only (CS-N15). */
@@ -262,8 +268,10 @@ export function GrownUpStack({ route }: Props): ReactElement {
       {/* F-AUTH-004 section 6.3 (row NS-3): the grown-up sign-in, reached from the account card (and the rows of NS-4).
           Loaded only when it is first shown: it imports Clerk's Expo SDK, which never loads before the provider (ND-11). */}
       <Stack.Screen name="SignIn" getComponent={loadSignInScreen} />
-      {/* Row NS-4: a use's home, behind AccountGate (row NS-5 draws the homes). Loaded when first shown, as SignIn is. */}
+      {/* Row NS-4: a use's home, behind AccountGate (row NS-5 draws the Family home). Loaded when first shown, as SignIn is. */}
       <Stack.Screen name="AccountHome" getComponent={loadAccountHomeScreen} />
+      {/* Row NS-5: a learner's account report, behind AccountGate. Loaded when first shown. */}
+      <Stack.Screen name="AccountLearnerReport" getComponent={loadAccountLearnerReportScreen} />
     </Stack.Navigator>
   );
   return (

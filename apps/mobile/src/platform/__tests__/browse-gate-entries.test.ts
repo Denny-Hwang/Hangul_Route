@@ -15,6 +15,9 @@ const code = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').rep
 const button = read('screens/parent/GateLessonsButton.tsx');
 const dashboard = read('screens/parent/ParentDashboardScreen.tsx');
 const report = read('screens/parent/LearnerReportScreen.tsx');
+// F-AUTH-004 row NS-5: the report's blocks are `report-blocks.tsx`; the in-app screen passes Preview lessons in as the
+// What to practice next section's footer, which the blocks draw at the end of that section.
+const blocks = read('screens/parent/report-blocks.tsx');
 const route = read('screens/my-route/MyRouteScreen.tsx');
 const trail = read('screens/my-route/TrailRow.tsx');
 
@@ -80,15 +83,22 @@ describe('the three entries', () => {
   });
 
   it('the in-app report has one Preview lessons row at the end of What to practice next, with the journey.here stage', () => {
-    const section = code(report).slice(code(report).indexOf('testID="learner-report-practice-next"'));
+    // The blocks draw the footer last inside What to practice next (and only there).
+    const section = code(blocks).slice(code(blocks).indexOf('testID="learner-report-practice-next"'));
     const inSection = section.slice(0, section.indexOf('</InsightSection>'));
-    expect(inSection).toMatch(/<GateLessonsButton kind="preview" target=\{\{ kind: 'stage', stage: view\.previewStage \}\}/);
-    // Web only with its spacing, so off web the section ends with its lines.
-    expect(inSection.slice(inSection.indexOf("Platform.OS === 'web'"))).toContain('<Spacer');
-    expect(inSection.indexOf("Platform.OS === 'web'")).toBeLessThan(inSection.indexOf('<Spacer'));
+    expect(inSection.trim().endsWith('{practiceNextFooter}')).toBe(true);
+    expect(code(blocks).match(/\{practiceNextFooter\}/g)).toHaveLength(1);
+    // The screen's footer: the row, web only with its spacing, so off web the section ends with its lines.
+    const footer = code(report).slice(code(report).indexOf('practiceNextFooter={'));
+    const row = footer.slice(0, footer.indexOf('detailFooter='));
+    expect(row).toMatch(/<GateLessonsButton kind="preview" target=\{\{ kind: 'stage', stage: view\.previewStage \}\}/);
+    expect(row.slice(row.indexOf("Platform.OS === 'web'"))).toContain('<Spacer');
+    expect(row.indexOf("Platform.OS === 'web'")).toBeLessThan(row.indexOf('<Spacer'));
     expect(code(report).match(/<GateLessonsButton/g)).toHaveLength(1);
+    expect(code(blocks)).not.toMatch(/GateLessonsButton/);
     // No letter or quest links: the letter chips stay disclosures (F-REPORT-001 section 3.9).
     expect(code(report)).not.toMatch(/kind: '(char|quest|jamo)'/);
+    expect(code(blocks)).not.toMatch(/kind: '(char|quest|jamo)'/);
   });
 
   it('the read-only Learning Route page has a Preview lessons row per stage row, for a grown-up only', () => {

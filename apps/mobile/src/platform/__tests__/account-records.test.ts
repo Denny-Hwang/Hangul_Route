@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearRetrustRequired, readRetrustRequired, readTrust, readUsesRecord, removeRecord, writeDeviceUses, writeRetrustNotice, writeRetrustRequired, writeTrust } from '../account-records';
+import { clearRetrustRequired, readRetrustNotice, readRetrustRequired, readTrust, readUsesRecord, removeRecord, writeDeviceUses, writeRetrustNotice, writeRetrustRequired, writeTrust } from '../account-records';
 
 /** F-AUTH-004 section 13.1 (row NS-3): the account's records go through the `hr:` storage wrapper, and nothing else. */
 
@@ -57,6 +57,20 @@ describe('the account records', () => {
     expect(await readRetrustRequired()).toBe(true);
     await clearRetrustRequired();
     expect(await readRetrustRequired()).toBe(false);
+  });
+});
+
+describe('row NS-5: the re-trust notice the home shows once', () => {
+  it('waits only as a record that reads; a bad value or a failed read shows nothing', async () => {
+    expect(await readRetrustNotice()).toBe(false);
+    await writeRetrustNotice(9);
+    expect(await readRetrustNotice()).toBe(true);
+    data.set('hr:grownup:retrustNotice', '{bad');
+    expect(await readRetrustNotice()).toBe(false);
+    vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('read'));
+    expect(await readRetrustNotice()).toBe(false);
+    await removeRecord('grownup:retrustNotice');
+    expect(await readRetrustNotice()).toBe(false);
   });
 });
 

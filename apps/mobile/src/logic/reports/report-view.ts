@@ -19,6 +19,7 @@ import {
   type ReportCalendarKind,
   type ReportMemory,
   type ReportPeriod,
+  type ReportViewer,
   type ReportVoice,
   type StageKey,
 } from '@hangul-route/content-schema';
@@ -177,6 +178,15 @@ export interface InAppReportInput {
   learningRoute: boolean;
   /** `Platform.OS`: only `web` words the free-end line (F-BILL-002 section 4.8). */
   platform: string;
+  /**
+   * F-AUTH-004 section 8.7 (row NS-5): who reads the summary. `device` (the default) is this device's own summary, the
+   * in-app report as it always was; `family` and `class` are the server's roster projection that the native account
+   * report reads (`GET /api/spaces/:id/learners/:learnerId/report`), as the console's report reads it: the third
+   * voice, the stale and no-data lines of the console, "All devices", and the plan rows of that kind of space.
+   */
+  viewer?: ReportViewer;
+  /** The server's last sync of this learner (a `family` or `class` viewer); null on the device. */
+  lastSyncedAt?: string | null;
 }
 
 export interface ReportWords {
@@ -611,13 +621,15 @@ function detailView(report: LearnerReport, summary: InsightSummary, w: ReportWor
   }
   const plan = detail.plan;
   if (plan !== null) {
-    // The device reads every plan on it and its own route (section 3.5 item 10).
+    // The device reads every plan on it and its own route (section 3.5 item 10); a family or class viewer (the native
+    // account report, F-AUTH-004 row NS-5) reads that space's plans, as the console does.
     const rows = d.planRow;
+    const own = rows[plan.kind];
     blocks.push({
       kind: 'lines',
       key: 'plan',
       heading: d.plan,
-      lines: [...(plan.plans ? [rows.device(plan.plans.done, plan.plans.ready)] : []), ...(plan.self ? [rows.self(plan.self.done, plan.self.ready)] : [])],
+      lines: [...(plan.plans ? [own(plan.plans.done, plan.plans.ready)] : []), ...(plan.self ? [rows.self(plan.self.done, plan.self.ready)] : [])],
     });
   }
   return { button: m.report.section.moreDetail, blocks };
@@ -640,6 +652,13 @@ function emptyStageOf(summary: InsightSummary): { stage: StageKey; n: number } |
 
 function noticesOf(report: LearnerReport, w: ReportWords): string[] {
   const s = w.m.report.state;
+  if (report.viewer !== 'device') {
+    // F-AUTH-004 section 8.7 (row NS-5): the server's projection reads the console's lines (its `noticesOf`).
+    if (report.state === 'no_data') return [s.noData(w.name), s.noDataAction];
+    if (report.state === 'empty') return [s.empty(w.name)];
+    const lines = [...(report.stale ? [s.stale(dayText(report.stale.lastSaved, w.locale, w.today))] : []), ...(report.state === 'legacy' ? [s.legacy] : [])];
+    return lines.length ? [...lines, s.updateAction(w.name)] : [];
+  }
   if (report.state === 'no_data') return [s.error];
   if (report.state === 'empty') return [w.voice === 'second' ? w.m.report.you.state.empty : s.empty(w.name)];
   // A build's own summary always carries `activity`; a legacy summary means the activity could not be built.
@@ -650,7 +669,7 @@ function noticesOf(report: LearnerReport, w: ReportWords): string[] {
 export function inAppReportView(input: InAppReportInput): InAppReportView {
   const { summary, messages: m, now } = input;
   const make = (at: string | null): LearnerReport =>
-    learnerReport({ summary, viewer: 'device', voice: input.voice, period: input.period, at, now, catalog: input.catalog, lastSyncedAt: null });
+    learnerReport({ summary, viewer: input.viewer ?? 'device', voice: input.voice, period: input.period, at, now, catalog: input.catalog, lastSyncedAt: input.lastSyncedAt ?? null });
   const report = make(input.at);
   const clockOk = !Number.isNaN(now.getTime());
   // The learner-local today (section 3.2); an invalid clock reads the last saved day (the module's own rule).
@@ -706,7 +725,7 @@ export function inAppReportView(input: InAppReportInput): InAppReportView {
         : { text: headline, horizon: report.horizon?.partial && report.headline?.code !== 'none_saved' ? m.report.horizon(dayText(report.horizon.asOf, w.locale, today)) : null },
     wentWell: section(m.report.section.wentWell, wentWell(ctx)),
     practiceNext: section(m.report.section.practiceNext, practiceNext(ctx)),
-    thisPeriod: ready ? { heading: m.report.section.thisPeriod, scope: m.report.scope.device, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) } : null,
+    thisPeriod: ready ? { heading: m.report.section.thisPeriod, scope: report.viewer === 'device' ? m.report.scope.device : m.report.scope.allDevices, figures: figuresView(report, w), calendar: calendarView(report, w), growth: growthView(report, w) } : null,
     moreDetail: summary === null ? null : detailView(report, summary, w),
     previewStage: (summary === null ? null : emptyStageOf(summary))?.stage ?? 'stage1',
   };

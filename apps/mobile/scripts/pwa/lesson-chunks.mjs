@@ -187,7 +187,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 160 B over the line (#1013 measured 4,927,840 B). The rest of the clip PRs (stages 2-7, vocabulary, cards, review,
   // stories: five more packs) each add about 150 B, so the line is the measurement plus a 3,840 B margin (one measured
   // raise, 4,000 B over the previous line).
-  startBundleRaw: 4_932_000,
+  // F-AUTH-004 NS-5 (the native homes' strings, section 17.3): the English strings of `caregiver.account.home.*` are in
+  // the start bundle with the dictionary; no code of the row is (its screens are iOS and Android files, and the report
+  // viewer split lives in the reports chunk). The release `build:web` (CI=1) measures 4,932,010 B raw, 10 B over the
+  // line, and a build of origin/main with the row's strings alone measures the same 4,932,010 B: the row's code adds no
+  // byte (the two files differ only in the hashed names of 19 lazily loaded chunks, whose module ids moved by one with
+  // `report-blocks.tsx`). The line is the measurement plus a 3,990 B margin (one measured raise, 4,000 B over the
+  // previous line).
+  startBundleRaw: 4_936_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

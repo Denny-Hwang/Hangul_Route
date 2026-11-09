@@ -939,5 +939,18 @@ export const caregiver = {
     signOut: {
       ask: '¿Salir de esta cuenta en este dispositivo?',
     },
+    home: {
+      noFamily: 'Esta cuenta no tiene espacio familiar.',
+      noClass: 'Esta cuenta no tiene ninguna clase.',
+      noSchool: 'Esta cuenta no tiene escuela.',
+      moreTools: 'Algunas herramientas de adultos no están en esta app.',
+      joinHere: { cta: 'Unirse en este dispositivo' },
+      codeLabel: { family: 'Código familiar', class: 'Código de clase' },
+      teachers: (n: number) => `Docentes: ${n}`,
+      retrustNotice: 'El PIN de adultos de este dispositivo cambió desde tu último acceso aquí. Si no fuiste tú, cámbialo en la Zona de adultos.',
+      offline: 'No tienes conexión. Estas páginas la necesitan.',
+      cantLoad: 'No se puede cargar ahora.',
+      unavailable: 'Esto no está disponible ahora.',
+    },
   },
 } satisfies DeepPartial<Messages['caregiver']>;

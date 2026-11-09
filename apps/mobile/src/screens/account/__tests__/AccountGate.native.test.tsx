@@ -17,7 +17,8 @@ import { AccountHomeScreen } from '../AccountHomeScreen.native';
  * F-AUTH-004 sections 7.2, 7.3, 7.4 and 15, design `lock.md` boards 1 to 7, 16 and 17, D6 (row NS-4; CS-N2, CS-N3,
  * CS-N11, CS-N12, CS-N14), in the `native` project: AccountGate over every row of the 7.2 table, on mount, focus and
  * the return to `active`; the typed PIN within 2 minutes (and face or fingerprint never counting); Sign in again after
- * the typed PIN; `auth.native.lock` once per mount; capture protection and the covers; the interim home of row NS-4;
+ * the typed PIN; `auth.native.lock` once per mount; capture protection and the covers; the Family home (row NS-5) and the
+ * interim home of row NS-4 that the Teacher and School uses keep until row NS-6;
  * and the deny list of section 9.2 over every lock in en, es and ko on iOS and Android.
  */
 
@@ -83,6 +84,12 @@ vi.mock('../../../platform/account-capture', () => ({
 vi.mock('../../../platform/telemetry', () => ({ track: async (event: { name: string; payload: unknown }) => void env.tracked.push(event) }));
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ cancelQueries: async () => undefined, removeQueries: () => undefined, getQueryData: () => env.spaces }) }));
 vi.mock('@clerk/clerk-expo', () => ({ useAuth: () => ({ isLoaded: env.clerk.isLoaded, isSignedIn: env.clerk.isSignedIn }) }));
+// Row NS-5: the Family home is the open content of `AccountHome { use: 'family' | 'account' }` (its own tests are
+// `FamilyHome.native.test.tsx`); here a host node stands in for it.
+vi.mock('../FamilyHome.native', async () => {
+  const { createElement: h } = await import('react');
+  return { FamilyHome: ({ use }: { use: string }) => h('family-home', { 'data-testid': 'family-home', use }) };
+});
 // react-native-web's Image needs a browser window: the cover stands in as a host node that says whether it draws the splash.
 vi.mock('../AccountCover', async () => {
   const { createElement: h } = await import('react');
@@ -679,17 +686,37 @@ describe('D6: titled with the use the grown-up came for', () => {
   });
 });
 
-describe('row NS-4: the interim home lands on the Grown-up area', () => {
-  async function mountHome(below: string | null): Promise<ReactTestRenderer> {
+describe('row NS-5: the Family home opens in the gate; Teacher and School keep the interim home until row NS-6', () => {
+  async function mountHome(below: string | null, use: 'family' | 'teacher' | 'school' | 'account' = 'teacher'): Promise<ReactTestRenderer> {
     nav = makeNav(below);
     host = { mount: 'ready', endSession: vi.fn(async () => true), wipeTokens: vi.fn(async () => true), retry: vi.fn() };
-    const screen = createElement(AccountHomeScreen, { navigation: nav, route: { key: 'me', name: 'AccountHome', params: { use: 'family' } } } as never);
+    const screen = createElement(AccountHomeScreen, { navigation: nav, route: { key: 'me', name: 'AccountHome', params: { use } } } as never);
     const r = await render(
       createElement(ScreenHeaderSlotContext.Provider, { value: HeaderTitle }, createElement(AccountHostContext.Provider, { value: host }, createElement(ClerkMountContext.Provider, { value: 'ready' }, screen))),
     );
     await settle();
     return r;
   }
+
+  it.each(['family', 'account'] as const)('%s: the Family home, open inside the gate; no landing', async (use) => {
+    const r = await mountHome('ParentDashboard', use);
+    const home = r.root.findAll((n) => (n.type as unknown) === 'family-home');
+    expect(home.map((n) => n.props.use)).toEqual([use]);
+    expect(nav.navigate).not.toHaveBeenCalledWith('ParentDashboard');
+    expect(nav.replace).not.toHaveBeenCalled();
+  });
+
+  it('the Family home is never drawn behind a lock', async () => {
+    env.trust = { kind: 'none' };
+    const r = await mountHome('ParentDashboard', 'family');
+    expect(r.root.findAll((n) => (n.type as unknown) === 'family-home')).toEqual([]);
+  });
+
+  it.each(['teacher', 'school'] as const)('%s, the dashboard under it: back to it', async (use) => {
+    await mountHome('ParentDashboard', use);
+    expect(nav.navigate).toHaveBeenCalledWith('ParentDashboard');
+    expect(nav.replace).not.toHaveBeenCalled();
+  });
 
   it('the dashboard under it: back to it', async () => {
     await mountHome('ParentDashboard');

@@ -1275,5 +1275,33 @@ export const caregiver = {
       /** The Sign out ConfirmSheet's title (no message; Cancel first and focused). */
       ask: 'Sign out of this account on this device?',
     },
+    /**
+     * F-AUTH-004 section 17.3 (rows NS-5, NS-6): the native grown-up homes. Facts only: no line says where a tool or a
+     * plan is, and none says "yet", "soon" or "coming" (Guideline 2.1).
+     */
+    home: {
+      /** The Family home of an account with no family space (also the Grown-up account row's home). */
+      noFamily: 'This account has no family space.',
+      /** The Teacher home with no class and no school. */
+      noClass: 'This account has no class.',
+      /** The School use when the account no longer holds a school (a stale uses record), above the Teacher home. */
+      noSchool: 'This account has no school.',
+      /** The quiet line at the end of every home (section 8.6): no link, no place, no "web", no "yet". */
+      moreTools: "Some grown-up tools aren't in this app.",
+      /** The code panel's button: the code is held in memory and the learner app's Join takes it on this device. */
+      joinHere: { cta: 'Join on this device' },
+      /** The code panel's label. */
+      codeLabel: { family: 'Family code', class: 'Class code' },
+      /** A school page's teacher count. */
+      teachers: (n: number) => `Teachers: ${n}`,
+      /** Once at the top of the home after a re-trust (section 8.2, R-1); no button. */
+      retrustNotice: "The grown-up PIN on this device changed since your last sign-in here. If that wasn't you, change it in the Grown-up area.",
+      /** No network: the account pages are online only (ND-10); they reload by themselves when it returns. */
+      offline: "You're offline. These pages need a connection.",
+      /** An error while online, or one space the server refused. */
+      cantLoad: "Can't load this right now.",
+      /** The Worker's switch turned the native account off (`403 native_off`): Back only. */
+      unavailable: "This isn't available right now.",
+    },
   },
 } as const;
