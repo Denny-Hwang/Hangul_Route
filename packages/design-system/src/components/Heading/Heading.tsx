@@ -29,10 +29,11 @@ export function Heading({
   tone = 'primary',
   align = 'left',
   weight = 'bold',
+  maxSize = Infinity,
   style,
   testID,
 }: HeadingProps): ReactElement {
-  const fontSize = useTypeScale().size[sizeOf[level]];
+  const fontSize = Math.min(useTypeScale().size[sizeOf[level]], maxSize);
   return (
     <Text {...KOREAN_LINE_BREAK}
       testID={testID}

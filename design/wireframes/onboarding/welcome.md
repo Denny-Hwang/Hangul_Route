@@ -54,6 +54,7 @@ Exit to:    `profiles/create-parent` · `sync/restore` (future)
 - **success**: as drawn.
 - **empty**: this screen *is* the app's empty state — nothing loads, no spinner.
 - **error** (profile store fails to hydrate): still render; first run must never block on storage. The root navigator waits on `hydrated` so a device that *does* have profiles is not shown Welcome by mistake.
+- **narrow window or large text** (as built 2026-11-09): the display line keeps whole words. Korean wraps only between words (`keep-all` on the web, `hangul-word` on iOS), so the Korean title's size stops where its longest word ("안녕하세요!") still fits the line between the gutters, at one em per syllable plus one for the punctuation after it (`Heading` `maxSize`). At 320 px with 200 % text (a 160 px layout) it is drawn at about 21 px on two or three lines, every break at a space; at 320 px, also at Largest, nothing changes. en and es keep the display size. Trade-off on record: there the Korean title grows only about 1.2 times under 200 % zoom instead of 2 times, chosen over breaking "안녕하세요!" inside the word. The native OS text size is not counted yet (follow-up). Checked in `e2e/web/text-size-fit.spec.ts` and `WelcomeScreen.test.tsx`. F-AUTH-004 NS-0b (#1021) left this to the owner as pre-existing.
 
 ## Data needs
 
