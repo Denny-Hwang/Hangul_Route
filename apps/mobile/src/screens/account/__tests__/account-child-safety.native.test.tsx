@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Profile } from '@hangul-route/content-schema';
-import { ScreenHeaderSlotContext, type ScreenHeaderSlotProps } from '@hangul-route/design-system';
+import { ConfirmSheet, ScreenHeaderSlotContext, type ScreenHeaderSlotProps } from '@hangul-route/design-system';
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -8,6 +8,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import React, { createElement, type ReactElement } from 'react';
 import { AppState, Keyboard, Linking, TextInput } from 'react-native';
+import { ErrorBoundary } from 'react-error-boundary';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -32,6 +33,15 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 // ---- Stand-ins at the edges ----
 
+// The build this suite stands for: an iOS bundle with the native account on (`EXPO_OS` and the `EXPO_PUBLIC_*` values
+// are read when modules load, as babel-preset-expo inlines them). So the root's `GrownUpArea` is the nested stack, the
+// session listener of section 7.4 is bound at load as in the app, and the account routes are Grown-up area routes.
+vi.hoisted(() => {
+  process.env.EXPO_OS = 'ios';
+  process.env.EXPO_PUBLIC_NATIVE_SIGNIN = 'on';
+  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsuZXhhbXBsZS5jb20k';
+});
+
 type Answer = { status: number; body: unknown } | 'offline';
 
 const env = vi.hoisted(() => ({
@@ -46,6 +56,8 @@ const env = vi.hoisted(() => ({
   secureFails: false,
   copied: [] as string[],
   externalLinks: [] as unknown[],
+  /** What the Grown-up area's nested navigator draws here (a stand-in; null draws nothing). */
+  areaContent: null as null | (() => unknown),
 }));
 
 const clerk = vi.hoisted(() => ({
@@ -57,6 +69,7 @@ const clerk = vi.hoisted(() => ({
   calls: [] as string[],
   answers: {} as Record<string, (params: unknown) => Promise<Record<string, unknown>>>,
   resource: null as unknown,
+  providerProps: [] as Record<string, unknown>[],
 }));
 
 vi.mock('@clerk/clerk-expo', () => {
@@ -87,10 +100,17 @@ vi.mock('@clerk/clerk-expo', () => {
       clerk.used.push('useSignIn');
       return { isLoaded: true, signIn, setActive };
     },
-    ClerkProvider: ({ children }: { children?: unknown }) => {
+    ClerkProvider: ({ children, ...props }: { children?: unknown } & Record<string, unknown>) => {
       clerk.used.push('ClerkProvider');
+      clerk.providerProps.push(props);
       return children;
     },
+    getClerkInstance: () => ({
+      signOut: async () => {
+        clerk.calls.push('signOut');
+        clerk.signedIn = false;
+      },
+    }),
   };
 });
 vi.mock('../../../platform/account-online', () => ({
@@ -167,7 +187,7 @@ vi.mock('@react-navigation/native', async () => {
     StackActions: { replace: (name: string, params?: unknown) => ({ type: 'REPLACE', payload: { name, params } }), push: (name: string, params?: unknown) => ({ type: 'PUSH', payload: { name, params } }), pop: () => ({ type: 'POP' }), popToTop: () => ({ type: 'POP_TO_TOP' }) },
   };
 });
-vi.mock('@react-navigation/native-stack', () => ({ createNativeStackNavigator: () => ({ Navigator: () => null, Screen: () => null }) }));
+vi.mock('@react-navigation/native-stack', () => ({ createNativeStackNavigator: () => ({ Navigator: () => (env.areaContent === null ? null : env.areaContent()), Screen: () => null }) }));
 // react-native-web's Image needs a browser window: the covers stand in as host nodes that say what they draw.
 vi.mock('../AccountCover', async () => {
   const { createElement: h } = await import('react');
@@ -184,10 +204,11 @@ import { ACCOUNT_ROUTE_NAMES } from '../../../logic/account/account-gate';
 import { accountUrl, createAccountApi } from '../../../logic/account/api';
 import { INSTALLED_KEY, runInstallSweep } from '../../../logic/account/install-sweep';
 import { nativeAccountEnabled } from '../../../logic/account/native-account';
-import { DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, afterSignInPlan } from '../../../logic/account/sign-in-records';
+import { DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, afterSignInPlan, recordsToDelete } from '../../../logic/account/sign-in-records';
 import { CLERK_INDEX_KEY, CLERK_KEYCHAIN_SERVICE } from '../../../logic/account/token-cache';
 import { grownUpRows } from '../../../logic/profiles/who';
-import { GrownUpStack, bindAccountQueryClearing, endMemorySession, prepareClerkMount, type ClerkMountDeps } from '../../../navigation/grown-up-stack.native';
+import { GrownUpStack, endMemorySession, prepareClerkMount, type ClerkMountDeps } from '../../../navigation/grown-up-stack.native';
+import { APP_VERSION } from '../../../config/app-version';
 import { pinHashFingerprint } from '../../../logic/shell/device-gate';
 import { useAccountStore, PIN_HASH_KEY } from '../../../store/account-store';
 import { useAccountVisit } from '../../../store/account-visit';
@@ -202,7 +223,7 @@ import { bindGrownUpBackgroundRule } from '../../parent/use-gate-lapse';
 import { PinEntryScreen } from '../../parent/PinEntryScreen';
 import { WhoIsUsingScreen } from '../../who/WhoIsUsingScreen';
 import { provideForRequire, srcPath } from '../../../test-support/native-require';
-import { byTestId, hostNodes, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
+import { byTestId, cleanup, hostNodes, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
 import { AccountCard } from '../AccountCard.native';
 import { AccountClassReportScreen } from '../AccountClassReportScreen.native';
 import { AccountHomeScreen } from '../AccountHomeScreen.native';
@@ -554,13 +575,33 @@ async function mountRoute(route: AccountRoute, o: { below?: string[]; params?: R
  * the same query client as the account screens: the module-level session listener clears that client's account
  * queries (CS-N4). Its nested navigator is a stand-in here; the account routes are mounted one by one.
  */
-async function mountArea(): Promise<ReactTestRenderer> {
-  const area = await render(providers(createElement(GrownUpStack, { navigation: makeNav(['Main', 'ParentDashboard']), route: { key: 'area', name: 'ParentDashboard', params: {} } } as never)));
+async function mountArea(o: { wrap?: (area: ReactElement) => ReactElement } = {}): Promise<ReactTestRenderer> {
+  const area = createElement(GrownUpStack, { navigation: makeNav(['Main', 'ParentDashboard']), route: { key: 'area', name: 'ParentDashboard', params: {} } } as never);
+  const r = await render(providers(o.wrap ? o.wrap(area) : area));
   await settle();
-  return area;
+  // The provider decision (install sweep, gate state, Clerk's host loaded with import()) settles within its 2 s wait.
+  await until(() => clerk.used.includes('ClerkProvider'), 500);
+  return r;
 }
 const accountQueries = (): unknown[] => client.getQueryCache().findAll({ queryKey: ['account'] });
 const chooserRows = (root: ReactTestInstance): string[] => hostNodes(root, (n) => /^who-row-[a-z]+$/.test(String(n.props['data-testid'] ?? ''))).map((n) => String(n.props['data-testid']));
+
+/** The sign-in screen, entered from the area, completed with an emailed code (Clerk answers at its hooks). */
+async function signInWithCode(o: { typed?: boolean } = {}): Promise<{ r: ReactTestRenderer; nav: Nav }> {
+  clerk.signedIn = false;
+  clerk.answers.create = async () => ({ status: 'needs_first_factor', supportedFirstFactors: [{ strategy: 'email_code', emailAddressId: 'ea_1' }, { strategy: 'password' }], supportedSecondFactors: null, createdSessionId: null });
+  clerk.answers.prepareFirstFactor = async () => ({ status: 'needs_first_factor', supportedFirstFactors: [{ strategy: 'email_code', emailAddressId: 'ea_1' }], supportedSecondFactors: null, createdSessionId: null });
+  clerk.answers.attemptFirstFactor = async () => ({ status: 'complete', createdSessionId: 'sess_1', supportedFirstFactors: null, supportedSecondFactors: null });
+  if (o.typed !== false) typedPinNow();
+  const mounted = await mountRoute('SignIn', { params: {} });
+  const field = (kind: string): ReactTestInstance => mounted.r.root.findAll((n) => n.type === TextInput && n.props.testID === `sign-in-field-${kind}`)[0]!;
+  await act(async () => field('email').props.onChangeText(EMAIL));
+  await tap(mounted.r.root, 'sign-in-submit');
+  await act(async () => field('code').props.onChangeText('123456'));
+  await tap(mounted.r.root, 'sign-in-submit');
+  await settle();
+  return mounted;
+}
 
 const has = (root: ReactTestInstance, id: string): boolean => byTestId(root, id).length > 0;
 const tap = async (root: ReactTestInstance, id: string): Promise<void> => {
@@ -605,7 +646,8 @@ beforeEach(async () => {
   resetChooserState();
   Object.assign(env, { online: true, onlineListeners: [], tracked: [], fetches: [], answer: null, capture: [], secureOptions: [], secureFails: false, copied: [], externalLinks: [] });
   env.secure.clear();
-  Object.assign(clerk, { loaded: true, signedIn: true, email: EMAIL, used: [], calls: [], answers: {} });
+  Object.assign(clerk, { loaded: true, signedIn: true, email: EMAIL, used: [], calls: [], answers: {}, providerProps: [] });
+  env.areaContent = null;
   spaces = ALL_SPACES;
   schoolUsage = { students: 34, teachers: 6 };
   planCards = PLAN_VARIANTS.own!;
@@ -630,7 +672,9 @@ beforeEach(async () => {
   await device('pin', { trust: TRUSTED(), uses: usesRecord(['family', 'teacher', 'school']) });
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // Unmount while the app-state and keyboard stand-ins are still in place (their subscriptions are removed on unmount).
+  await cleanup();
   vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -699,13 +743,27 @@ describe('CS-N1: no learner screen renders the sign-in, an account name or email
     expect((await run({ gate: async () => ({ state: 'nopin' }) })).state).toBe('off');
   });
 
-  it('the root stack’s only way to Clerk is the Grown-up area route; no learner screen module imports Clerk or its host', () => {
+  it('ClerkProvider mounts with the Grown-up area, with its telemetry off, and is gone with it; a learner root after it calls no Clerk hook', async () => {
+    const area = await mountArea();
+    expect(clerk.used).toContain('ClerkProvider');
+    expect(clerk.providerProps.at(-1)).toMatchObject({ publishableKey: 'pk_live_Y2xlcmsuZXhhbXBsZS5jb20k', telemetry: false });
+    await unmount(area);
+    clerk.used = [];
+    const chooser = await render(createElement(QueryClientProvider, { client }, createElement(WhoIsUsingScreen, { navigation: makeNav(['WhoIsUsing']), route: { key: 'me', name: 'WhoIsUsing', params: { trigger: 'launch' } } } as never)));
+    await settle();
+    expect(chooserRows(chooser.root).length).toBeGreaterThan(1);
+    expect(clerk.used).toEqual([]);
+  });
+
+  it('the root stack’s only way to Clerk is the Grown-up area route; no learner screen module imports or requires Clerk or its host', () => {
     const root = readFileSync(join(SRC, 'navigation/root.tsx'), 'utf8');
     expect(root).toMatch(/require\('\.\/grown-up-stack'\)[^\n]*\.GrownUpArea/);
-    const offenders = sourcesUnder(SRC)
-      .filter((file) => !/\/screens\/account\/|\/platform\/clerk[^/]*\.native\.tsx?$|\/navigation\/grown-up-stack\.native\.tsx$|__tests__/.test(file))
-      .filter((file) => /(from|import\()\s*'(@clerk\/clerk-expo|[^']*platform\/clerk(\.native)?|[^']*clerk-token-cache(\.native)?)'/.test(readFileSync(file, 'utf8')));
-    expect(offenders.map((f) => relative(APP, f))).toEqual([]);
+    const clerkImport = /(from|import\(|require\()\s*'(@clerk\/clerk-expo|[^']*platform\/clerk(\.native)?|[^']*clerk-token-cache(\.native)?)'/;
+    // The account folder lives inside the area, except the two modules a learner root (the chooser, Welcome) draws.
+    const insideArea = (file: string): boolean => /\/screens\/account\/(?!WelcomeAccountRow|account-entries)|\/platform\/clerk[^/]*\.native\.tsx?$|\/navigation\/grown-up-stack\.native\.tsx$|__tests__/.test(file);
+    const scanned = sourcesUnder(SRC).filter((file) => !insideArea(file));
+    expect(scanned.map((f) => relative(SRC, f).split(sep).join('/'))).toEqual(expect.arrayContaining(['screens/account/WelcomeAccountRow.native.tsx', 'screens/account/account-entries.native.ts', 'screens/who/WhoIsUsingScreen.tsx']));
+    expect(scanned.filter((file) => clerkImport.test(readFileSync(file, 'utf8'))).map((f) => relative(APP, f))).toEqual([]);
   });
 });
 
@@ -789,15 +847,57 @@ describe('CS-N2: every account screen sits in AccountGate, which decides before 
           expect(has(r.root, ROUTES[route].content)).toBe(true);
         });
 
-        it('pin, opened from another account page after the 15-minute session ended: no content, no account call', async () => {
-          useUiStore.setState({ parentGateOpenedAt: null, lastPinTypedAt: null, lastPinVerifiedAt: null });
-          const { r } = await mountRoute(route, { below: ['ParentDashboard', 'AccountHome'] });
+        it('pin, opened from another account page after the 15-minute session ended: the session closes, no content, no account call', async () => {
+          useUiStore.setState({ parentGateOpenedAt: Date.now() - 16 * 60_000, lastPinTypedAt: Date.now() - 16 * 60_000, lastPinVerifiedAt: Date.now() - 16 * 60_000 });
+          const { r, nav } = await mountRoute(route, { below: ['ParentDashboard', 'AccountHome'] });
+          expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
           expect(has(r.root, ROUTES[route].content)).toBe(false);
           expect(accountRequests()).toEqual([]);
+          // With the session gone the page leaves (in the app the area goes with the close): one leave, no loop.
+          expect(nav.goBack).toHaveBeenCalledTimes(1);
+        });
+
+        it('pin, opened from another account page with no session at all: it leaves, no content, no account call', async () => {
+          useUiStore.setState({ parentGateOpenedAt: null, lastPinTypedAt: null, lastPinVerifiedAt: null });
+          const { r, nav } = await mountRoute(route, { below: ['ParentDashboard', 'AccountHome'] });
+          expect(has(r.root, ROUTES[route].content)).toBe(false);
+          expect(accountRequests()).toEqual([]);
+          expect(nav.goBack).toHaveBeenCalledTimes(1);
         });
       }
+
+      it('pin, entered from outside with a native sign-in 3 minutes old and no typed PIN: the typed PIN first', async () => {
+        useUiStore.setState({ parentGateOpenedAt: Date.now() - 3 * 60_000 });
+        useAccountVisit.getState().markSignedIn(Date.now() - 3 * 60_000, false);
+        const { r, nav } = await mountRoute(route);
+        expect(nav.navigate).toHaveBeenCalledWith('PinEntry', expect.objectContaining({ next: 'FreshPin', typedOnly: true }));
+        expect(has(r.root, ROUTES[route].content)).toBe(false);
+        expect(accountRequests()).toEqual([]);
+      });
     });
   }
+
+  it('pin, entered from outside with a native sign-in just now and no typed PIN: the home opens (ND-5)', async () => {
+    useUiStore.setState({ parentGateOpenedAt: Date.now() });
+    useAccountVisit.getState().markSignedIn(Date.now(), false);
+    const { r, nav } = await mountRoute('AccountHome');
+    expect(nav.navigate).not.toHaveBeenCalledWith('PinEntry', expect.anything());
+    expect(has(r.root, 'account-home-family')).toBe(true);
+  });
+
+  it('a session Clerk ended elsewhere (revoked, expired) takes an open home down at once, without waiting for a focus', async () => {
+    typedPinNow();
+    const nav = makeNav(['ParentDashboard', 'AccountHome']);
+    const element = (): ReactElement => providers(createElement(AccountHomeScreen, { navigation: nav, route: { key: 'me', name: 'AccountHome', params: { use: 'family' } } } as never));
+    const r = await render(element());
+    await settle();
+    expect(has(r.root, 'account-home-family')).toBe(true);
+    clerk.signedIn = false;
+    await act(async () => r.update(element()));
+    await settle();
+    expect(has(r.root, 'account-home-family')).toBe(false);
+    expect(nav.replace).toHaveBeenCalledWith('SignIn', { use: 'family' });
+  });
 
   it('a decision on focus and on the return to active: a PIN changed meanwhile locks an open home at once', async () => {
     typedPinNow();
@@ -886,6 +986,10 @@ describe('CS-N3: a changed PIN, epoch 0 or an unreadable trust never opens; a re
     expect(afterSignInPlan(gate, stale, false, { method: 'email_code', second: 'totp', hasPassword: true })).toMatchObject({ writeTrust: true });
     // An account with no password re-trusts with its code (R-1 records it).
     expect(afterSignInPlan(gate, stale, false, { method: 'email_code', second: null, hasPassword: false })).toMatchObject({ writeTrust: true });
+    // Row NS-7 (security review): the card's and the homes' Sign out (no PIN asked) keeps a trust of another epoch as the
+    // lock's Sign in again does, so signing out never clears the way for an email code alone.
+    expect(recordsToDelete('user', gate, stale)).not.toContain(TRUST_RECORD_KEY);
+    expect(recordsToDelete('user', gate, { kind: 'trust', trust: { v: 1, epoch: EPOCH } })).toContain(TRUST_RECORD_KEY);
     // Epoch 0 is never written as a trust.
     expect(afterSignInPlan({ state: 'pin', epoch: 0 }, { kind: 'none' }, false, { method: 'password', second: null, hasPassword: true })).toMatchObject({ writeTrust: false });
   });
@@ -913,66 +1017,83 @@ describe('CS-N3: a changed PIN, epoch 0 or an unreadable trust never opens; a re
 // =====================================================================================================================
 
 describe('CS-N4: closing the grown-up session clears the account and asks the gate again', () => {
-  it('every close (chooser, learner change, leaving the area, 15 minutes, background) cancels and clears the account queries and ends the visit', async () => {
-    const unbind = bindAccountQueryClearing();
-    try {
-      for (const reason of ['exit', 'switch', 'background'] as const) {
-        const area = await mountArea();
-        typedPinNow();
-        useAccountVisit.getState().markSignedIn(Date.now(), false);
-        const { r } = await mountRoute('AccountHome');
-        expect(has(r.root, 'account-home-family')).toBe(true);
-        expect(client.getQueryData(['account', 'spaces'])).toBeDefined();
-        // A read still on its way when the session closes must not refill the cache.
-        let answer: (a: Answer) => void = () => undefined;
-        env.answer = (method, path, query) => (path === '/api/spaces' ? new Promise<Answer>((resolve) => (answer = resolve)) : standardAnswer(method, path, query));
-        await act(async () => void client.refetchQueries({ queryKey: ['account', 'spaces'] }));
-        await act(async () => closeGrownUpSession(reason));
-        await act(async () => answer(standardAnswer('GET', '/api/spaces', '')));
-        await settle();
-        expect(accountQueries(), reason).toEqual([]);
-        expect(useAccountVisit.getState()).toMatchObject({ signedInThisVisit: false, lastAccountSignInAt: null });
-        expect(useUiStore.getState()).toMatchObject({ parentGateOpenedAt: null, lastPinTypedAt: null, lastPinVerifiedAt: null });
-        env.answer = null;
-        await unmount(r);
-        await unmount(area);
-        // Reopening asks the gate again: the typed PIN first, before any account call.
-        env.fetches = [];
-        const again = await mountRoute('AccountHome');
-        expect(again.nav.navigate).toHaveBeenCalledWith('PinEntry', expect.objectContaining({ next: 'FreshPin', typedOnly: true }));
-        expect(accountRequests()).toEqual([]);
-        await unmount(again.r);
-      }
-    } finally {
-      unbind();
+  it('every close (chooser, learner change, leaving the area, background) cancels and clears the account queries, a read on its way included, and ends the visit', async () => {
+    for (const reason of ['exit', 'switch', 'background'] as const) {
+      const area = await mountArea();
+      typedPinNow();
+      useAccountVisit.getState().markSignedIn(Date.now(), false);
+      const { r } = await mountRoute('AccountHome');
+      expect(has(r.root, 'account-home-family')).toBe(true);
+      expect(client.getQueryData(['account', 'spaces'])).toBeDefined();
+      // A read still on its way when the session closes must not refill the cache.
+      let answer: (a: Answer) => void = () => undefined;
+      env.answer = (method, path, query) => (path === '/api/spaces' ? new Promise<Answer>((resolve) => (answer = resolve)) : standardAnswer(method, path, query));
+      await act(async () => void client.refetchQueries({ queryKey: ['account', 'spaces'] }));
+      await act(async () => closeGrownUpSession(reason));
+      await act(async () => answer(standardAnswer('GET', '/api/spaces', '')));
+      await settle();
+      expect(accountQueries(), reason).toEqual([]);
+      expect(useAccountVisit.getState()).toMatchObject({ signedInThisVisit: false, lastAccountSignInAt: null });
+      expect(useUiStore.getState()).toMatchObject({ parentGateOpenedAt: null, lastPinTypedAt: null, lastPinVerifiedAt: null });
+      env.answer = null;
+      await unmount(r);
+      await unmount(area);
+      // Reopening asks the gate again: the typed PIN first, before any account call.
+      env.fetches = [];
+      const again = await mountRoute('AccountHome');
+      expect(again.nav.navigate).toHaveBeenCalledWith('PinEntry', expect.objectContaining({ next: 'FreshPin', typedOnly: true }));
+      expect(accountRequests()).toEqual([]);
+      await unmount(again.r);
     }
   });
 
-  it('a session whose 15 minutes end while a home is open closes, and the home does not stay', async () => {
+  it('15 minutes: a home left open past its session closes it on the return, its queries cleared, and does not stay', async () => {
+    await mountArea();
     typedPinNow();
     const { r } = await mountRoute('AccountHome');
     expect(has(r.root, 'account-home-family')).toBe(true);
+    expect(accountQueries().length).toBeGreaterThan(0);
     vi.setSystemTime(Date.parse(NOW) + 15 * 60_000 + 1);
     await toApp('background');
     await toApp('active');
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+    expect(accountQueries()).toEqual([]);
     expect(has(r.root, 'account-home-family')).toBe(false);
   });
 
-  it('a device with no PIN: the close ends Clerk’s memory session and drops its items (ND-9)', async () => {
-    const order: string[] = [];
-    await endMemorySession({ storage: () => 'memory', endSession: async () => {
-        order.push('clerk sign-out');
-        return true;
-      }, dropMemoryItems: () => void order.push('drop items') });
-    expect(order).toEqual(['clerk sign-out', 'drop items']);
-    order.length = 0;
-    await endMemorySession({ storage: () => 'secure', endSession: async () => {
-        order.push('clerk sign-out');
-        return true;
-      }, dropMemoryItems: () => void order.push('drop items') });
-    expect(order).toEqual([]);
+  it('a device with no PIN: the close ends Clerk’s session for the visit and drops its memory items (ND-9)', async () => {
+    await device('open');
+    await mountArea();
+    expect(clerk.used).toContain('ClerkProvider');
+    expect(clerkTokens.storage()).toBe('memory');
+    await clerkTokens.cache.saveToken('__clerk_client_jwt', 'this-visit-only');
+    clerk.calls = [];
+    await act(async () => closeGrownUpSession('exit'));
+    await settle();
+    expect(clerk.calls).toContain('signOut');
+    expect(await clerkTokens.cache.getToken('__clerk_client_jwt')).toBeFalsy();
+    expect([...env.secure.keys()]).toEqual([]);
   });
+
+  for (const kind of ['pin', 'open'] as const) {
+    it(`${kind}: the close resets the sign-in steps (a code step in progress starts over)`, async () => {
+      await device(kind, kind === 'pin' ? { trust: TRUSTED() } : {});
+      clerk.signedIn = false;
+      clerk.answers.create = async () => ({ status: 'needs_first_factor', supportedFirstFactors: [{ strategy: 'email_code', emailAddressId: 'ea_1' }], supportedSecondFactors: null, createdSessionId: null });
+      clerk.answers.prepareFirstFactor = async () => ({ status: 'needs_first_factor', supportedFirstFactors: null, supportedSecondFactors: null, createdSessionId: null });
+      typedPinNow();
+      const { r } = await mountRoute('SignIn', { params: {} });
+      const email = r.root.findAll((n) => n.type === TextInput && n.props.testID === 'sign-in-field-email')[0]!;
+      await act(async () => email.props.onChangeText(EMAIL));
+      await tap(r.root, 'sign-in-submit');
+      expect(has(r.root, 'sign-in-step-code')).toBe(true);
+      await act(async () => closeGrownUpSession('exit'));
+      await settle(20);
+      expect(has(r.root, 'sign-in-step-code')).toBe(false);
+      // A device with no PIN starts over on the email step; a pin device asks the typed PIN first.
+      if (kind === 'open') expect(has(r.root, 'sign-in-step-email')).toBe(true);
+    });
+  }
 });
 
 // =====================================================================================================================
@@ -1110,12 +1231,18 @@ describe('CS-N7: Clerk’s items stay in SecureStore hr.clerk, on a PIN device o
       order.push('wipe');
       return clerkTokens.wipe();
     };
-    expect(await runInstallSweep({ readRecord: async () => null, writeRecord: async () => void order.push('record'), wipe, now: () => Date.now() })).toBe('swept');
+    let record: unknown = null;
+    const writeRecord = async (value: unknown): Promise<void> => {
+      order.push('record');
+      record = value;
+    };
+    expect(await runInstallSweep({ readRecord: async () => null, writeRecord, wipe, now: () => Date.now() })).toBe('swept');
+    // The record holds no account data: the version and the time only.
+    expect(record).toEqual({ v: 1, at: Date.now() });
     expect(order).toEqual(['wipe', 'record']);
     expect([...env.secure.keys()]).toEqual([]);
-    // Through the platform module: the record in the storage wrapper holds no account data.
+    expect(INSTALLED_KEY).toBe('grownup:installed');
     expect(await ensureInstallSweep()).toBe(true);
-    expect(JSON.parse((await AsyncStorage.getItem(`hr:${INSTALLED_KEY}`))!)).toEqual({ v: 1, at: expect.any(Number) });
   });
 
   it('Android backups leave SecureStore out (configureAndroidBackup); an Android restore therefore reads as signed out', () => {
@@ -1134,22 +1261,6 @@ describe('CS-N7: Clerk’s items stay in SecureStore hr.clerk, on a PIN device o
 // =====================================================================================================================
 
 describe('CS-N8: a sign-in never touches a learner, and the account token never rides with learner data', () => {
-  const signInWithCode = async (): Promise<{ r: ReactTestRenderer; nav: Nav }> => {
-    clerk.signedIn = false;
-    clerk.answers.create = async () => ({ status: 'needs_first_factor', supportedFirstFactors: [{ strategy: 'email_code', emailAddressId: 'ea_1' }, { strategy: 'password' }], supportedSecondFactors: null, createdSessionId: null });
-    clerk.answers.prepareFirstFactor = async () => ({ status: 'needs_first_factor', supportedFirstFactors: [{ strategy: 'email_code', emailAddressId: 'ea_1' }], supportedSecondFactors: null, createdSessionId: null });
-    clerk.answers.attemptFirstFactor = async () => ({ status: 'complete', createdSessionId: 'sess_1', supportedFirstFactors: null, supportedSecondFactors: null });
-    typedPinNow();
-    const mounted = await mountRoute('SignIn', { params: {} });
-    const field = (kind: string): ReactTestInstance => mounted.r.root.findAll((n) => n.type === TextInput && n.props.testID === `sign-in-field-${kind}`)[0]!;
-    await act(async () => field('email').props.onChangeText(EMAIL));
-    await tap(mounted.r.root, 'sign-in-submit');
-    await act(async () => field('code').props.onChangeText('123456'));
-    await tap(mounted.r.root, 'sign-in-submit');
-    await settle();
-    return mounted;
-  };
-
   it('a completed sign-in reads GET /api/spaces only, with the Clerk token and never a device secret; no learner changes', async () => {
     await device('pin');
     const profilesBefore = structuredClone(useProfileStore.getState().profiles);
@@ -1208,22 +1319,22 @@ describe('CS-N9 and CS-7: generic labels on the chooser and Welcome; the email o
         vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
         useLocaleStore.setState({ device: locale, byProfile: {} });
         const l = getMessages(locale);
-        const cases: [DeviceKind, unknown, boolean][] = [
-          ['pin', usesRecord(['family', 'teacher', 'school']), true],
-          ['pin', usesRecord([]), true],
-          ['pin', undefined, true],
-          ['nopin', undefined, true],
-          ['open', undefined, true],
-          ['pin', usesRecord(['family']), false],
+        const cases: [DeviceKind, unknown, boolean, string[]][] = [
+          ['pin', usesRecord(['family', 'teacher', 'school']), true, ['family', 'teacher', 'school', 'area']],
+          ['pin', usesRecord([]), true, ['account', 'area']],
+          ['pin', undefined, true, ['signin', 'area']],
+          ['nopin', undefined, true, ['signin', 'area']],
+          ['open', undefined, true, ['signin', 'area']],
+          ['pin', usesRecord(['family']), false, ['family', 'area']],
         ];
-        for (const [kind, uses, online] of cases) {
+        for (const [kind, uses, online, expected] of cases) {
           await device(kind, uses === undefined ? {} : { uses });
           env.online = online;
           resetChooserState();
           const r = await render(createElement(QueryClientProvider, { client }, createElement(WhoIsUsingScreen, { navigation: makeNav(['WhoIsUsing']), route: { key: 'me', name: 'WhoIsUsing', params: { trigger: 'launch' } } } as never)));
           await settle();
+          expect(chooserRows(r.root), `${kind}`).toEqual(expected.map((use) => `who-row-${use}`));
           const rows = hostNodes(r.root, (n) => /^who-row-[a-z]+$/.test(String(n.props['data-testid'] ?? '')));
-          expect(rows.length, `${kind}`).toBeGreaterThan(0);
           for (const row of rows) {
             for (const text of screenTexts(row)) {
               const known = [...allowed(locale), ...captions(locale), ...allowed(locale).map((label) => l.a11y.who.grownUpRow(label))];
@@ -1269,6 +1380,10 @@ describe('CS-N9 and CS-7: generic labels on the chooser and Welcome; the email o
     ['face or fingerprint alone', () => useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinVerifiedAt: Date.now(), lastPinTypedAt: null })],
     ['a typed PIN 3 minutes ago', () => useUiStore.setState({ parentGateOpenedAt: Date.now() - 180_000, lastPinVerifiedAt: Date.now() - 180_000, lastPinTypedAt: Date.now() - 180_000 })],
     ['a typed PIN in the future (the clock went back)', () => useUiStore.setState({ parentGateOpenedAt: Date.now(), lastPinTypedAt: Date.now() + 60_000 })],
+    ['a native sign-in 3 minutes ago', () => {
+      useUiStore.setState({ parentGateOpenedAt: Date.now() - 180_000 });
+      useAccountVisit.getState().markSignedIn(Date.now() - 180_000, false);
+    }],
   ])('the card never shows the email after %s', async (_name, arrange) => {
     arrange();
     const r = await mountCard();
@@ -1402,6 +1517,24 @@ describe('CS-N12: no account screen’s content reaches the app switcher, a scre
     });
   }
 
+  it('the Grown-up area card holds the protection while it draws the signed-in email, and not otherwise', async () => {
+    typedPinNow();
+    const shown = await render(providers(createElement(AccountCard, { navigation: makeNav(['ParentDashboard']) as never })));
+    await settle(14);
+    await until(() => has(shown.root, 'account-card-email'));
+    expect(has(shown.root, 'account-card-email')).toBe(true);
+    expect(accountCaptureHolders()).toBe(1);
+    await unmount(shown);
+    expect(accountCaptureHolders()).toBe(0);
+    // Face or fingerprint only: no email line, nothing held.
+    useUiStore.setState({ lastPinTypedAt: null });
+    const plain = await render(providers(createElement(AccountCard, { navigation: makeNav(['ParentDashboard']) as never })));
+    await settle(14);
+    await until(() => has(plain.root, 'account-card-sign-out'));
+    expect(has(plain.root, 'account-card-email')).toBe(false);
+    expect(accountCaptureHolders()).toBe(0);
+  });
+
   it('the iOS cover plugin is configured and reads the flag the screens set', () => {
     const app = JSON.parse(readFileSync(join(APP, 'app.json'), 'utf8')) as { expo: { plugins: unknown[] } };
     expect(app.expo.plugins).toContain('./plugins/with-account-cover');
@@ -1461,39 +1594,57 @@ describe('CS-N13: switch off or no valid key: exactly the basis, Grown-up area o
 // =====================================================================================================================
 
 describe('CS-N14: a device with no PIN keeps no session; a failed profile read opens nothing', () => {
-  it('Welcome’s row leads to the sign-in every time (no PIN on an empty device), and nothing of a sign-in is kept on disk', async () => {
+  it('Welcome’s device: a real sign-in keeps nothing on disk or in SecureStore, and after the close the row leads to the sign-in again', async () => {
     await device('empty');
-    for (let i = 0; i < 2; i += 1) {
-      const nav = makeNav(['Welcome']);
-      const r = await render(providers(createElement(WelcomeAccountRow, { navigation: nav as never })));
-      await settle();
-      await tap(r.root, 'welcome-account-sign-in');
-      expect(nav.navigate.mock.calls).toEqual([['ParentDashboard', { screen: 'SignIn', params: {} }]]);
-      await unmount(r);
-    }
-    await applyGateToTokens({ state: 'open' }, 'mount');
+    expect(await nativeGateState()).toEqual({ state: 'open' });
+    await mountArea();
+    const nav = makeNav(['Welcome']);
+    const row = await render(providers(createElement(WelcomeAccountRow, { navigation: nav as never })));
+    await settle();
+    await tap(row.root, 'welcome-account-sign-in');
+    expect(nav.navigate.mock.calls).toEqual([['ParentDashboard', { screen: 'SignIn', params: {} }]]);
+    await unmount(row);
+    // The sign-in that row opens, completed with the email code.
+    const { nav: signInNav } = await signInWithCode({ typed: false });
+    expect(signInNav.replace).toHaveBeenCalledWith('AccountHome', expect.anything());
     await clerkTokens.cache.saveToken('__clerk_client_jwt', 'this-visit-only');
     expect([...env.secure.keys()]).toEqual([]);
     expect(await AsyncStorage.getItem(`hr:${TRUST_RECORD_KEY}`)).toBeNull();
     expect(await AsyncStorage.getItem(`hr:${DEVICE_USES_RECORD_KEY}`)).toBeNull();
-    clerkTokens.endMemorySession();
+    expect(useAccountVisit.getState().signedInThisVisit).toBe(true);
+    await act(async () => closeGrownUpSession('exit'));
+    await settle();
+    expect(useAccountVisit.getState().signedInThisVisit).toBe(false);
+    expect(await clerkTokens.cache.getToken('__clerk_client_jwt')).toBeFalsy();
+    const again = makeNav(['Welcome']);
+    const second = await render(providers(createElement(WelcomeAccountRow, { navigation: again as never })));
+    await settle();
+    await tap(second.root, 'welcome-account-sign-in');
+    expect(again.navigate.mock.calls).toEqual([['ParentDashboard', { screen: 'SignIn', params: {} }]]);
+    // And a home opened now reads as a new visit: the sign-in, no account call.
+    env.fetches = [];
+    const home = await mountRoute('AccountHome');
+    expect(home.nav.replace).toHaveBeenCalledWith('SignIn', expect.anything());
+    expect(accountRequests()).toEqual([]);
   });
 
-  it('on an open device the home opens only for this visit’s sign-in; the session close ends it and the next mount asks again', async () => {
+  it('on an open device the home opens only for this visit’s sign-in, and opens the visit’s session so the time rules end it', async () => {
     await device('open');
     useAccountVisit.getState().markSignedIn(Date.now(), false);
     const first = await mountRoute('AccountHome');
     expect(has(first.r.root, 'account-home-family')).toBe(true);
-    // The gate opened a session for the visit, so the 15-minute and background rules end it.
     expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
-    await unmount(first.r);
-    const unbind = bindAccountQueryClearing();
-    await act(async () => closeGrownUpSession('exit'));
-    unbind();
-    env.fetches = [];
-    const second = await mountRoute('AccountHome');
-    expect(second.nav.replace).toHaveBeenCalledWith('SignIn', expect.anything());
+  });
+
+  it('on an open device a session whose 15 minutes are over opens nothing, even for this visit’s sign-in: it closes and asks for the sign-in', async () => {
+    await device('open');
+    useUiStore.setState({ parentGateOpenedAt: Date.now() - 16 * 60_000 });
+    useAccountVisit.getState().markSignedIn(Date.now() - 16 * 60_000, false);
+    const { r, nav } = await mountRoute('AccountHome');
+    expect(has(r.root, 'account-home-family')).toBe(false);
     expect(accountRequests()).toEqual([]);
+    expect(useAccountVisit.getState().signedInThisVisit).toBe(false);
+    expect(nav.replace).toHaveBeenCalledWith('SignIn', expect.anything());
   });
 
   it('a profile read that fails at boot (the app looks empty and shows Welcome) reads unknown and opens nothing', async () => {
@@ -1516,7 +1667,7 @@ describe('CS-N14: a device with no PIN keeps no session; a failed profile read o
 describe('CS-N15: a crash on an account route sends app.crash with an empty message', () => {
   it.each([...ACCOUNT_ROUTE_NAMES])('%s: only the route and the error class leave the device', (route) => {
     reportCrash(new TypeError('Cannot read Mina’s report in Saturday class 3B (code H3TRW9, dana.kim@example.com)'), 'learner', route);
-    expect(env.tracked).toEqual([{ name: 'app.crash', payload: expect.objectContaining({ route, errorName: 'TypeError', message: '' }) }]);
+    expect(env.tracked).toEqual([{ name: 'app.crash', payload: { surface: 'learner', route, errorName: 'TypeError', message: '', chunk: false, appVersion: APP_VERSION } }]);
   });
 
   it('a learner route keeps the scrubbed message (unchanged)', () => {
@@ -1524,10 +1675,35 @@ describe('CS-N15: a crash on an account route sends app.crash with an empty mess
     expect(env.tracked).toEqual([{ name: 'app.crash', payload: expect.objectContaining({ route: 'Home', message: 'x is undefined' }) }]);
   });
 
-  it('the app’s root boundary reports the focused leaf route, and the Clerk boundary reports an empty message', () => {
+  it('the app’s root boundary reports the focused leaf route (App.tsx), as the account routes are leaves of the nested stack', () => {
     expect(readFileSync(join(APP, 'App.tsx'), 'utf8')).toMatch(/onError=\{\(error\) => reportCrash\(error, 'learner', navigation\.isReady\(\) \? navigation\.getCurrentRoute\(\)\?\.name : undefined\)\}/);
-    expect(readFileSync(join(SRC, 'navigation/grown-up-stack.native.tsx'), 'utf8')).toMatch(/const scrubbed = new Error\(''\);/);
   });
+
+  const crashCases = [
+    // The area's Clerk boundary catches a render error under the provider and shows the area again without it.
+    { name: 'once under Clerk’s provider', arrange: () => typedPinNow(), throws: 1, expected: ['ParentDashboard'] },
+    // An error that the area's fallback meets again goes on to the app's boundary (the inner boundary never commits).
+    { name: 'again and again under Clerk’s provider', arrange: () => typedPinNow(), throws: Infinity, expected: ['AccountHome'] },
+    { name: 'without Clerk (the gate state cannot be read)', arrange: () => void useProfileStore.setState({ hydrated: false }), throws: Infinity, expected: ['AccountHome'] },
+  ];
+  for (const c of crashCases) {
+    it(`a render error on an account route, ${c.name}: every report has an empty message`, async () => {
+      c.arrange();
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      let left = c.throws;
+      env.areaContent = () => {
+        if (left <= 0) return null;
+        left -= 1;
+        throw new TypeError('Cannot read the report of Mina in Saturday class 3B (H3TRW9, dana.kim@example.com)');
+      };
+      // As App.tsx's root boundary does, with the leaf the navigation container names (the account route).
+      const app = (area: ReactElement): ReactElement => createElement(ErrorBoundary, { fallback: null, onError: (error: unknown) => reportCrash(error, 'learner', 'AccountHome') } as never, area);
+      await mountArea({ wrap: app });
+      await settle();
+      const crashes = env.tracked.filter((e) => e.name === 'app.crash').map((e) => e.payload);
+      expect(crashes).toEqual(c.expected.map((route) => ({ surface: 'learner', route, errorName: 'TypeError', message: '', chunk: false, appVersion: APP_VERSION })));
+    });
+  }
 });
 
 // =====================================================================================================================
@@ -1622,10 +1798,9 @@ describe('OA CS-4 as amended by ND-7 (native): the account’s PIN screens never
 
 describe('OA CS-14 (native): five minutes in the background close the session, and the account screen asks again', () => {
   for (const os of OSES) {
-    it(`${os}: an open home, 5 minutes in the background: the session closes and the area’s account cannot be reopened without the PIN`, async () => {
+    it(`${os}: an open home, 5 minutes in the background: the session closes, the account is cleared, and reopening asks the typed PIN`, async () => {
       setPlatform(os);
       const unbind = bindGrownUpBackgroundRule();
-      const unbindQueries = bindAccountQueryClearing();
       try {
         await mountArea();
         typedPinNow();
@@ -1637,9 +1812,13 @@ describe('OA CS-14 (native): five minutes in the background close the session, a
         expect(useUiStore.getState()).toMatchObject({ parentGateOpenedAt: null, lastPinTypedAt: null });
         expect(accountQueries()).toEqual([]);
         expect(has(r.root, 'account-home-family')).toBe(false);
+        await unmount(r);
+        env.fetches = [];
+        const again = await mountRoute('AccountHome');
+        expect(again.nav.navigate).toHaveBeenCalledWith('PinEntry', expect.objectContaining({ next: 'FreshPin', typedOnly: true }));
+        expect(accountRequests()).toEqual([]);
       } finally {
         unbind();
-        unbindQueries();
       }
     });
 
@@ -1673,35 +1852,45 @@ describe('OA CS-15 (native): every learner change and every exit from the area c
         track(session.routeZone('ParentDashboard'));
         track(session.routeZone(route));
         expect(track(session.routeZone('Home')), `${os} ${route} → Home`).toBe(true);
+        // Through a PIN screen on the way out counts as leaving too.
+        const via = session.areaExitTracker();
+        via(session.routeZone(route));
+        via(session.routeZone('PinEntry'));
+        expect(via(session.routeZone('Home')), `${os} ${route} → PinEntry → Home`).toBe(true);
       }
       const inside = session.areaExitTracker();
       inside(session.routeZone('AccountHome'));
       expect(inside(session.routeZone('AccountSpace'))).toBe(false);
       expect(inside(session.routeZone('PinEntry'))).toBe(false);
       expect(session.areaLeaveRoutes([{ name: 'Main' }, { name: 'ParentDashboard' }, { name: 'AccountHome' }, { name: 'AccountClassReport' }])).toEqual([{ name: 'Main' }]);
+      expect(session.areaLeaveRoutes([{ name: 'Main' }, { name: 'WhoIsUsing' }, { name: 'ParentDashboard' }, { name: 'AccountSpace' }])).toEqual([{ name: 'Main' }, { name: 'WhoIsUsing' }]);
     }
   });
 
-  it('a change of the active learner closes the session and clears the account (switch)', async () => {
-    const unbind = bindAccountQueryClearing();
-    try {
-      await mountArea();
-      typedPinNow();
-      const { r } = await mountRoute('AccountHome');
-      expect(has(r.root, 'account-home-family')).toBe(true);
-      await act(async () => useProfileStore.getState().setActive('profile:jun'));
-      await settle();
-      expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
-      expect(accountQueries()).toEqual([]);
-      await unmount(r);
-      env.fetches = [];
-      const again = await mountRoute('AccountHome');
-      expect(again.nav.navigate).toHaveBeenCalledWith('PinEntry', expect.objectContaining({ typedOnly: true }));
-      expect(accountRequests()).toEqual([]);
-    } finally {
-      unbind();
+  for (const os of OSES) {
+    for (const change of ['a pick of another learner', 'removing the active learner'] as const) {
+      it(`${os}: ${change} closes the session and clears the account; the account asks the typed PIN again`, async () => {
+        setPlatform(os);
+        await mountArea();
+        typedPinNow();
+        const { r } = await mountRoute('AccountHome');
+        expect(has(r.root, 'account-home-family')).toBe(true);
+        await act(async () => {
+          if (change === 'a pick of another learner') useProfileStore.getState().setActive('profile:jun');
+          else useProfileStore.getState().remove('profile:mina');
+        });
+        await settle();
+        expect(useProfileStore.getState().activeId).toBe('profile:jun');
+        expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+        expect(accountQueries()).toEqual([]);
+        await unmount(r);
+        env.fetches = [];
+        const again = await mountRoute('AccountHome');
+        expect(again.nav.navigate).toHaveBeenCalledWith('PinEntry', expect.objectContaining({ typedOnly: true }));
+        expect(accountRequests()).toEqual([]);
+      });
     }
-  });
+  }
 });
 
 // =====================================================================================================================
@@ -1849,6 +2038,11 @@ const SWEEP: Sweep[] = [
     await AsyncStorage.setItem('hr:grownup:retrustNotice', JSON.stringify({ v: 1, at: Date.now() }));
     fresh();
   }),
+  screenState('family home, loading', 'AccountHome', 'account-home-loading', () => {
+    env.answer = (method, path, query) => (path === '/api/spaces' ? new Promise<Answer>(() => undefined) : standardAnswer(method, path, query));
+    fresh();
+  }),
+  screenState('family home, Sign out asked', 'AccountHome', 'account-home-sign-out-sheet', fresh, { then: (r) => tap(r.root, 'account-home-sign-out') }),
   screenState('family home, no family', 'AccountHome', 'account-home-no-family', () => {
     spaces = [];
     fresh();
@@ -1920,7 +2114,7 @@ const SWEEP: Sweep[] = [
   }, { below: inside, params: { spaceId: 'space:sunflower', use: 'teacher' } }),
   screenState('class page, archived', 'AccountSpace', 'account-space', fresh, { below: inside, params: { spaceId: 'space:old', use: 'teacher' } }),
   screenState('class page, no learner yet', 'AccountSpace', 'account-space-empty', fresh, { below: inside, params: { spaceId: 'space:empty', use: 'teacher' } }),
-  screenState('class page, refused', 'AccountSpace', 'account-space-state', () => {
+  screenState('class page, refused', 'AccountSpace', 'account-space-state-cant_load', () => {
     env.answer = failing(403, 'forbidden', /roster$/);
     fresh();
   }, { below: inside }),
@@ -1941,7 +2135,7 @@ const SWEEP: Sweep[] = [
     schoolUsage = null;
     fresh();
   }, { below: inside }),
-  screenState('school page, cannot load', 'AccountSchool', 'account-school-state', () => {
+  screenState('school page, cannot load', 'AccountSchool', 'account-school-state-cant_load', () => {
     env.answer = failing(500, 'error', /school$/);
     fresh();
   }, { below: inside }),
@@ -1968,8 +2162,16 @@ const SWEEP: Sweep[] = [
     env.answer = failing(500, 'error', /class-report$/);
     fresh();
   }, { below: inside }),
-  screenState('class report, offline', 'AccountClassReport', 'account-class-report-state', () => {
+  screenState('class report, offline', 'AccountClassReport', 'account-class-report-state-offline', () => {
     env.answer = offlineAnswer;
+    fresh();
+  }, { below: inside }),
+  screenState('class report, not available', 'AccountClassReport', 'account-class-report-state-unavailable', () => {
+    env.answer = failing(403, 'native_off');
+    fresh();
+  }, { below: inside }),
+  screenState('class report, loading', 'AccountClassReport', 'account-class-report', () => {
+    env.answer = (method, path, query) => (/class-report$/.test(path) ? new Promise<Answer>(() => undefined) : standardAnswer(method, path, query));
     fresh();
   }, { below: inside }),
 ];
@@ -1992,6 +2194,18 @@ const CARD_SWEEP: Sweep[] = [
   }),
   cardState('signed in, fresh', 'account-card-email', fresh),
   cardState('signed in, not fresh', 'account-card-sign-out', () => void useUiStore.setState({ parentGateOpenedAt: Date.now() })),
+  {
+    name: 'card Sign out asked',
+    marker: 'account-sign-out-sheet',
+    mount: async () => {
+      fresh();
+      const r = await render(providers(createElement(AccountCard, { navigation: makeNav(['ParentDashboard']) as never })));
+      await settle(14);
+      await until(() => has(r.root, 'account-card-sign-out'));
+      await tap(r.root, 'account-card-sign-out');
+      return r;
+    },
+  },
   cardState('first sign-in here', 'account-card-sign-in-again', async () => {
     await device('pin');
     fresh();
@@ -2007,36 +2221,47 @@ const CARD_SWEEP: Sweep[] = [
   }),
   cardState('cannot check', 'account-card-try-again', () => void useProfileStore.setState({ hydrated: false })),
   cardState('no Clerk', 'account-card-try-again', fresh, 'off'),
-  cardState('offline', 'account-card', () => {
+  cardState('offline, signed out', 'account-card-sign-in', () => {
     env.online = false;
     clerk.signedIn = false;
+    fresh();
+  }),
+  cardState('offline, signed in', 'account-card-uses', () => {
+    env.online = false;
+    fresh();
   }),
 ];
 
-const rowState = (name: string, arrange: () => Promise<void>): Sweep => ({
+const rowState = (name: string, rows: string[], arrange: () => Promise<void>): Sweep => ({
   name: `chooser ${name}`,
-  marker: 'who-row-area',
+  marker: 'who-rows',
   mount: async () => {
     await arrange();
     resetChooserState();
     const r = await render(createElement(QueryClientProvider, { client }, createElement(WhoIsUsingScreen, { navigation: makeNav(['WhoIsUsing']), route: { key: 'me', name: 'WhoIsUsing', params: { trigger: 'launch' } } } as never)));
     await settle();
+    // The exact rows of the state (the Grown-up area row alone would read as the switch off).
+    expect(chooserRows(r.root), name).toEqual(rows.map((use) => `who-row-${use}`));
     return r;
   },
 });
 const ROW_SWEEP: Sweep[] = [
-  rowState('known uses', () => device('pin', { uses: usesRecord(['family', 'teacher', 'school']) })),
-  rowState('Grown-up account', () => device('pin', { uses: usesRecord([]) })),
-  rowState('sign in', () => device('pin')),
-  rowState('nopin', () => device('nopin')),
-  rowState('open', () => device('open')),
-  rowState('offline', async () => {
+  rowState('known uses', ['family', 'teacher', 'school', 'area'], () => device('pin', { uses: usesRecord(['family', 'teacher', 'school']) })),
+  rowState('Grown-up account', ['account', 'area'], () => device('pin', { uses: usesRecord([]) })),
+  rowState('sign in', ['signin', 'area'], () => device('pin')),
+  rowState('nopin', ['signin', 'area'], () => device('nopin')),
+  rowState('nopin offline', ['signin', 'area'], async () => {
+    await device('nopin');
+    env.online = false;
+  }),
+  rowState('open', ['signin', 'area'], () => device('open')),
+  rowState('offline', ['family', 'area'], async () => {
     await device('pin', { uses: usesRecord(['family']) });
     env.online = false;
   }),
   ...[true, false].map((online) => ({
     name: `welcome ${online ? 'online' : 'offline'}`,
-    marker: 'welcome-account',
+    marker: online ? 'welcome-account-sign-in' : 'welcome-account-offline',
     mount: async () => {
       await device('empty');
       env.online = online;
@@ -2047,6 +2272,34 @@ const ROW_SWEEP: Sweep[] = [
   })),
 ];
 
+/**
+ * Section 9.1: no renewal or end date of a plan. The fixture's plan and code dates (2027-01-31, 2026-12-01) in every
+ * form a screen could draw them in the locale: the year, and the day with its month, long and short.
+ */
+const PLAN_DATES = ['2027-01-31', '2026-12-01'];
+const datesIn = (locale: UiLocale): string[] =>
+  PLAN_DATES.flatMap((iso) => {
+    const at = new Date(`${iso}T12:00:00.000Z`);
+    const forms: Intl.DateTimeFormatOptions[] = [{ month: 'long', day: 'numeric' }, { month: 'short', day: 'numeric' }, { year: 'numeric', month: 'numeric', day: 'numeric' }, { dateStyle: 'medium' }];
+    return [iso, ...forms.map((options) => new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(at))];
+  }).concat(['2027']);
+
+/** Resets what one state changes, so each state starts from the trusted pin device. */
+async function freshState(os: (typeof OSES)[number], locale: UiLocale): Promise<void> {
+  await device('pin', { trust: TRUSTED(), uses: usesRecord(['family', 'teacher', 'school']) });
+  setPlatform(os);
+  vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
+  useLocaleStore.setState({ device: locale, byProfile: {} });
+  useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, lastPinTypedAt: null });
+  useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
+  Object.assign(env, { online: true, answer: null, fetches: [] });
+  Object.assign(clerk, { signedIn: true, answers: {} });
+  spaces = ALL_SPACES;
+  schoolUsage = { students: 34, teachers: 6 };
+  planCards = PLAN_VARIANTS.own!;
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+}
+
 describe('section 9.2: the deny-list sweep over every account state, in en, es and ko, on iOS and Android', () => {
   const openURL = () => vi.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
 
@@ -2055,22 +2308,20 @@ describe('section 9.2: the deny-list sweep over every account state, in en, es a
       it(`${os} ${locale}: ${SWEEP.length + CARD_SWEEP.length + ROW_SWEEP.length} states, no denied word, symbol or link`, async () => {
         const spy = openURL();
         const hits: string[] = [];
+        const dates = datesIn(locale);
         for (const state of [...SWEEP, ...CARD_SWEEP, ...ROW_SWEEP]) {
-          await device('pin', { trust: TRUSTED(), uses: usesRecord(['family', 'teacher', 'school']) });
-          setPlatform(os);
-          vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
-          useLocaleStore.setState({ device: locale, byProfile: {} });
-          useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, lastPinTypedAt: null });
-          useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
-          Object.assign(env, { online: true, answer: null, fetches: [] });
-          Object.assign(clerk, { signedIn: true, answers: {} });
-          spaces = ALL_SPACES;
-          schoolUsage = { students: 34, teachers: 6 };
-          planCards = PLAN_VARIANTS.own!;
-          client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+          await freshState(os, locale);
           const r = await state.mount();
-          expect(hostNodes(r.root, (n) => n.props['data-testid'] === state.marker || String(n.props['data-testid'] ?? '').startsWith(`${state.marker}-`)).length, `${os} ${locale} ${state.name}: reached`).toBeGreaterThan(0);
-          for (const text of screenTexts(r.root)) for (const hit of accountDenyHits(withoutTyped(text), locale)) hits.push(`${state.name}: "${text}" has ${hit}`);
+          // A confirm sheet draws in a Modal (a portal react-native-web cannot open here): its words are its props.
+          const sheets = r.root.findAllByType(ConfirmSheet).filter((n) => n.props.visible === true);
+          const sheetTexts = sheets.flatMap((n) => [n.props.title, n.props.message, n.props.detail, n.props.confirmLabel, n.props.cancelLabel].filter((t): t is string => typeof t === 'string'));
+          expect(has(r.root, state.marker) || sheets.some((n) => n.props.testID === state.marker), `${os} ${locale} ${state.name}: reached`).toBe(true);
+          for (const text of [...screenTexts(r.root), ...sheetTexts]) {
+            const own = withoutTyped(text);
+            // The locale's own list, and the English one too: an English fallback on an es or ko screen is caught.
+            for (const hit of new Set([...accountDenyHits(own, locale), ...(locale === 'en' ? [] : accountDenyHits(own, 'en'))])) hits.push(`${state.name}: "${text}" has ${hit}`);
+            for (const date of dates) if (text.includes(date)) hits.push(`${state.name}: "${text}" has the date ${date}`);
+          }
           if (hostNodes(r.root, (n) => n.props.href !== undefined).length > 0) hits.push(`${state.name}: a link`);
           await unmount(r);
         }
@@ -2081,29 +2332,24 @@ describe('section 9.2: the deny-list sweep over every account state, in en, es a
     }
   }
 
-  it('no control on any open account screen opens a URL when pressed', async () => {
-    const spy = openURL();
-    for (const state of [...SWEEP, ...CARD_SWEEP].filter((s) => !s.name.startsWith('lock'))) {
-      await device('pin', { trust: TRUSTED(), uses: usesRecord(['family', 'teacher', 'school']) });
-      Object.assign(env, { online: true, answer: null });
-      Object.assign(clerk, { signedIn: true, answers: {} });
-      spaces = ALL_SPACES;
-      planCards = PLAN_VARIANTS.own!;
-      client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-      const r = await state.mount();
-      for (const button of hostNodes(r.root, (n) => n.props.role === 'button')) {
-        try {
+  for (const os of OSES) {
+    it(`${os}: every control of every state, pressed, opens no URL and no link out`, async () => {
+      const spy = openURL();
+      for (const state of [...SWEEP, ...CARD_SWEEP, ...ROW_SWEEP]) {
+        await freshState(os, 'en');
+        const r = await state.mount();
+        for (const button of hostNodes(r.root, (n) => n.props.role === 'button' && typeof n.props.onClick === 'function')) {
+          // A control the press before took out of the tree is skipped; anything else a press throws fails the test.
+          if (!r.root.findAll((n) => n === button).length) continue;
           await press(button);
-        } catch {
-          // A press whose element left the tree with the one before it.
         }
+        await settle(4);
+        await unmount(r);
       }
-      await settle(4);
-      await unmount(r);
-    }
-    expect(spy).not.toHaveBeenCalled();
-    expect(env.externalLinks).toEqual([]);
-  });
+      expect(spy).not.toHaveBeenCalled();
+      expect(env.externalLinks).toEqual([]);
+    });
+  }
 });
 
 // ---- Sources ----

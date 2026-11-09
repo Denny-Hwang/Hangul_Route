@@ -21,6 +21,7 @@ const base: GateDecisionInput = {
   askedPin: false,
   again: false,
   sessionLapsed: false,
+  sessionExpired: false,
 };
 const step = (over: Partial<GateDecisionInput> = {}) => gateStep({ ...base, ...over });
 
@@ -120,14 +121,22 @@ describe('the 15-minute session (OA-D5, row NS-4 review)', () => {
     expect(step({ sessionLapsed: true, fresh: false })).toEqual({ kind: 'ask_pin' });
   });
 
-  it('row NS-7 (CS-N2): a page opened from inside the account routes after the session ended closes it on pin, before anything opens', () => {
+  it('row NS-7 (CS-N2, CS-N14): nothing opens on an expired session, whatever the device or the entry: it closes first', () => {
+    for (const gate of [{ state: 'pin' as const, epoch: 7 }, { state: 'open' as const }]) {
+      for (const enteredFromOutside of [true, false]) {
+        expect(step({ gate, enteredFromOutside, sessionLapsed: true, sessionExpired: true, signedInThisVisit: true })).toEqual({ kind: 'close' });
+      }
+    }
+    expect(step({ screen: 'sign_in', signedIn: false, sessionLapsed: true, sessionExpired: true })).toEqual({ kind: 'close' });
+  });
+
+  it('row NS-7 (CS-N2): a page opened from inside the account routes with no session on pin leaves (no close loop)', () => {
     const inside = { enteredFromOutside: false, fresh: false, sessionLapsed: true };
-    expect(step(inside)).toEqual({ kind: 'close' });
-    expect(step({ ...inside, screen: 'sign_in', signedIn: false })).toEqual({ kind: 'close' });
-    expect(step({ ...inside, trust: null })).toEqual({ kind: 'close' });
+    expect(step(inside)).toEqual({ kind: 'leave' });
+    expect(step({ ...inside, trust: null })).toEqual({ kind: 'leave' });
     // Inside the session it opens without a new PIN (OA-D5b).
     expect(step({ ...inside, sessionLapsed: false })).toEqual({ kind: 'open' });
-    // A device with no PIN starts over as a new visit (the sign-in), never a close loop; unknown and nopin decide first.
+    // A device with no PIN starts over as a new visit (the sign-in); unknown and nopin decide as always.
     expect(step({ ...inside, gate: { state: 'open' } })).toEqual({ kind: 'to_sign_in' });
     expect(step({ ...inside, gate: { state: 'unknown' } })).toEqual({ kind: 'locked', cause: 'unknown', action: 'try_again' });
     expect(step({ ...inside, gate: { state: 'nopin' } })).toEqual({ kind: 'setup' });

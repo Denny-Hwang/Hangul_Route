@@ -154,12 +154,14 @@ export function retrustNoticeOf(raw: unknown): boolean {
 }
 
 /**
- * Section 6.6: the records Sign out deletes. **Sign in again** on the lock (`via: 'lock'`) keeps a trust record of
- * another epoch (or a damaged one, or any while the gate state cannot be read), so the next sign-in still meets the
- * re-trust rule of 7.3 (CS-N3); every other sign-out deletes it.
+ * Section 6.6: the records Sign out deletes. A trust record of another epoch (or a damaged one, or any while the gate
+ * state cannot be read) is kept, so the next sign-in still meets the re-trust rule of 7.3 (CS-N3): **Sign in again** on
+ * the lock (`via: 'lock'`, row NS-3) and, from row NS-7 (security review), the card's and the homes' **Sign out** too,
+ * which needs no PIN: deleting that record would let an email code alone trust a PIN changed since. A trust of this
+ * epoch is deleted as before. `via` stays for the caller's telemetry.
  */
-export function recordsToDelete(via: 'user' | 'lock', gate: NativeGateState, trust: TrustRead): string[] {
-  // On the lock path a gate state that cannot be read keeps the trust too: deleting it could only weaken the rule.
-  const keepTrust = via === 'lock' && (gate.state === 'unknown' || retrustPendingFor(gate, trust, false));
+export function recordsToDelete(_via: 'user' | 'lock', gate: NativeGateState, trust: TrustRead): string[] {
+  // A gate state that cannot be read keeps the trust too: deleting it could only weaken the rule.
+  const keepTrust = gate.state === 'unknown' || retrustPendingFor(gate, trust, false);
   return keepTrust ? [DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY] : [DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, RETRUST_NOTICE_KEY];
 }
