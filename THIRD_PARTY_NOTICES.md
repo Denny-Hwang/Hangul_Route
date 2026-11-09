@@ -923,7 +923,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | Asset | Source | License | Attribution |
 |---|---|---|---|
 | apps/mobile/public/fonts/hr-presenter-kr.woff2 | Noto Sans KR Bold 2.004 (Google / Adobe; notofonts/noto-cjk release Sans2.004, 17_NotoSansKR.zip), subset by scripts/build-presenter-font.mjs (https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/17_NotoSansKR.zip) | OFL-1.1 | Copyright 2014-2021 Adobe (http://www.adobe.com/); licence text in apps/mobile/public/fonts/OFL.txt |
-| apps/mobile/assets/audio (32 computer-generated speech clips) | tts:polly/neural/Seoyeon (https://aws.amazon.com/service-terms/) | Vendor terms recorded in source (not under the repository licence) | Amazon Polly, computer-generated voice Seoyeon |
+| apps/mobile/assets/audio (209 computer-generated speech clips) | tts:polly/neural/Seoyeon (https://aws.amazon.com/service-terms/) | Vendor terms recorded in source (not under the repository licence) | Amazon Polly, computer-generated voice Seoyeon |
 
 ## NOTICE files
 
