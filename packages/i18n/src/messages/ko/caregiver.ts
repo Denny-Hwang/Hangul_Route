@@ -904,5 +904,18 @@ export const caregiver = {
     signOut: {
       ask: '이 기기에서 이 계정을 로그아웃할까요?',
     },
+    home: {
+      noFamily: '이 계정에는 가족 공간이 없어요.',
+      noClass: '이 계정에는 반이 없어요.',
+      noSchool: '이 계정에는 학교가 없어요.',
+      moreTools: '어른용 도구 중 일부는 이 앱에 없어요.',
+      joinHere: { cta: '이 기기에서 참여하기' },
+      codeLabel: { family: '가족 코드', class: '반 코드' },
+      teachers: (n: number) => `선생님: ${n}명`,
+      retrustNotice: '지난번 로그인한 뒤에 이 기기의 어른용 PIN이 바뀌었어요. 직접 바꾼 게 아니면 어른 공간에서 바꿔 주세요.',
+      offline: '오프라인이에요. 이 페이지는 인터넷이 필요해요.',
+      cantLoad: '지금은 불러올 수 없어요.',
+      unavailable: '지금은 쓸 수 없어요.',
+    },
   },
 } satisfies DeepPartial<Messages['caregiver']>;

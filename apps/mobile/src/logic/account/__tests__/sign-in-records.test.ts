@@ -11,6 +11,7 @@ import {
   nativeHomeFor,
   proofRetrusts,
   recordsToDelete,
+  retrustNoticeOf,
   retrustRequiredOf,
   retrustPendingFor,
   trustOfRead,
@@ -88,6 +89,11 @@ describe('section 7.3: the re-trust rule (R-1)', () => {
     expect(retrustRequiredOf({ v: 1, at: 5 }, false)).toBe(true);
     expect(retrustRequiredOf('junk', false)).toBe(true);
     expect(retrustRequiredOf(null, true)).toBe(true);
+  });
+
+  it('row NS-5: the re-trust notice waits only as `{ v: 1, at }`', () => {
+    expect(retrustNoticeOf({ v: 1, at: 5 })).toBe(true);
+    for (const raw of [null, undefined, 'x', { v: 2, at: 5 }, { v: 1 }, { v: 1, at: Number.NaN }, { v: 1, at: '5' }]) expect(retrustNoticeOf(raw)).toBe(false);
   });
 
   it('a first sign-in (no record) trusts with the email code alone', () => {

@@ -2,24 +2,25 @@ import type { Coverage, PlanKey, SpaceKind, Usage } from '@hangul-route/content-
 import type { Messages } from '@hangul-route/i18n';
 
 /**
- * F-AUTH-004 section 8.5 (row NS-2; ND-8, CS-N5): the plan block of a native grown-up home, a fact and never an action.
- * Pure: the screen passes one status card of `GET /api/billing/summary?view=status`, its words and a day formatter.
+ * F-AUTH-004 section 8.5 (rows NS-2, NS-5; ND-8, D20, CS-N5): the plan block of a native grown-up home, a fact and
+ * never an action. Pure: the screen passes one status card of `GET /api/billing/summary?view=status` and its words.
  *
  * The input type holds only `kind`, `coverage` and `usage`: never `actions`, `receipts`, `mode`, `purchasesOpen`,
  * `payer` or `readOnlyReason`, so no buy or manage control, receipt, payer line or "manages this plan" line can reach
  * the block, whatever the Worker sends (a type test pins it).
  *
- * | Coverage                                       | Plan line                                    | Second line          |
- * | `free`                                         | `coverage.free`                              | the usage line       |
- * | `own`, `active` `trial` `past_due` `cancelled` | the plan's name (`family`, `license`, `contract`) | the usage line  |
- * | `own`, `expired`                               | `coverage.free`                              | the usage line       |
- * | `school` on a class or family, with a date     | `coverage.schoolUntil(name, date)`           | -                    |
- * | `school` on a class or family, without one     | `coverage.school(name)`                      | -                    |
- * | `school` on the school itself (an admin)       | the plan's name, no date                     | the usage line       |
+ * | Coverage                                       | Plan line                                         | Second line    |
+ * | `free`                                         | `coverage.free`                                   | none (D20)     |
+ * | `own`, `active` `trial` `past_due` `cancelled` | the plan's name (`family`, `license`, `contract`) | the usage line |
+ * | `own`, `expired`                               | `coverage.free`                                   | none (D20)     |
+ * | `school` on a class or family                  | `coverage.school(name)`, with or without a date   | none           |
+ * | `school` on the school itself (an admin)       | the plan's name                                   | the usage line |
  *
- * Never a renewal or end date of the space's own plan and never a payment state. The last row: the Worker gives a
- * school's admin the school's own plan as `school` coverage (AMENDMENTS-SEATS-ADMINS SA-D11); its date is the space's
- * own plan date, so it is not shown (ND-8) and the plan's name stands alone, as on an `own` card.
+ * **Never a date** (D20, row NS-5): not the renewal or end date of the space's own plan, and not the school's end date
+ * either (`coverage.schoolUntil` is never used here: for a school's own admin it is the contract's end, a date to act
+ * on). **Never a free plan's cap** (D20): "3 of 3 learners" on a build where nothing can be bought reads as a limit to
+ * lift elsewhere. Never a payment state. The last row: the Worker gives a school's admin the school's own plan as
+ * `school` coverage (AMENDMENTS-SEATS-ADMINS SA-D11), so the plan's name stands alone, as on an `own` card.
  */
 
 /** Exactly what the block may read of a status card. */
@@ -51,13 +52,12 @@ function usageLine(kind: SpaceKind, usage: Usage | null, words: BillingWords): s
   return `${students} · ${words.usage.teachers(usage.teachers, usage.teacherCap)}`;
 }
 
-/** Section 8.5: the block's two lines. `formatDay` turns an ISO time into the UI locale's day (UTC). */
-export function nativePlanLines(card: NativePlanCard, words: BillingWords, formatDay: (iso: string) => string): NativePlanLines {
+/** Section 8.5: the block's two lines. Takes no date formatter: no line it draws holds a date (D20). */
+export function nativePlanLines(card: NativePlanCard, words: BillingWords): NativePlanLines {
   const { coverage } = card;
+  if (coverage.state === 'free' || (coverage.state === 'own' && coverage.status === 'expired')) return { plan: words.coverage.free, usage: null };
   const usage = usageLine(card.kind, card.usage, words);
-  if (coverage.state === 'free') return { plan: words.coverage.free, usage };
-  if (coverage.state === 'own') return { plan: coverage.status === 'expired' ? words.coverage.free : planName(coverage.planKey, words), usage };
+  if (coverage.state === 'own') return { plan: planName(coverage.planKey, words), usage };
   if (card.kind === 'school') return { plan: planName(coverage.planKey, words), usage };
-  const plan = coverage.expiresAt ? words.coverage.schoolUntil(coverage.schoolName, formatDay(coverage.expiresAt)) : words.coverage.school(coverage.schoolName);
-  return { plan, usage: null };
+  return { plan: words.coverage.school(coverage.schoolName), usage: null };
 }

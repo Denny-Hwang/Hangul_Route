@@ -501,10 +501,15 @@ export type AccountStackParamList = {
    */
   SignIn: { use?: GrownUpUse | 'account'; again?: true } | undefined;
   /**
-   * Section 8.1 (row NS-4 lands the route and its `AccountGate`; row NS-5 draws the homes): the home of a use. Until
-   * NS-5 an open result lands on the Grown-up area, whose account card shows the account.
+   * Section 8.1 (row NS-4 lands the route and its `AccountGate`; row NS-5 draws the Family home, row NS-6 the Teacher
+   * and School homes): the home of a use.
    */
   AccountHome: { use: GrownUpUse | 'account' };
+  /**
+   * Section 8.7 (row NS-5): one learner's report from the server's roster projection, opened by See report. The ids
+   * are opaque server ids held in memory only (no URL is built from them, 6.4); `period` is the report's first period.
+   */
+  AccountLearnerReport: { spaceId: string; learnerId: string; period: 'day' | 'week' | 'month' | 'all' };
 };
 
 /** The nested Grown-up area stack's routes: the dashboard under the root's name, then the account routes. */

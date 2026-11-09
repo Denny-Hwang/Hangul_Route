@@ -1,5 +1,5 @@
 import type { AccountTrust, DeviceUses, GrownUpUse } from '@hangul-route/content-schema';
-import { DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY, RETRUST_REQUIRED_KEY, TRUST_RECORD_KEY, retrustRequiredOf, trustReadOf, usesRecordOf, type TrustRead } from '../logic/account/sign-in-records';
+import { DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY, RETRUST_REQUIRED_KEY, TRUST_RECORD_KEY, retrustNoticeOf, retrustRequiredOf, trustReadOf, usesRecordOf, type TrustRead } from '../logic/account/sign-in-records';
 import { readJsonExact, removeKey, writeJson } from './storage';
 
 /**
@@ -38,6 +38,18 @@ export function writeDeviceUses(record: DeviceUses): Promise<void> {
 /** The home's once-only notice after a re-trust (section 8.2; row NS-5 shows it and deletes it). */
 export function writeRetrustNotice(at: number): Promise<void> {
   return writeJson(RETRUST_NOTICE_KEY, { v: 1, at });
+}
+
+/**
+ * Row NS-5: whether the re-trust notice waits to be shown (section 8.2: once, then the home deletes it). A record
+ * that does not parse, or a failed read, shows nothing: the notice is a courtesy, the lock is the rule (7.3).
+ */
+export async function readRetrustNotice(): Promise<boolean> {
+  try {
+    return retrustNoticeOf(await readJsonExact<unknown>(RETRUST_NOTICE_KEY));
+  } catch {
+    return false;
+  }
 }
 
 /** Deletes one of the records above (`recordsToDelete` names them). */

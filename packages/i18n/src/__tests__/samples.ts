@@ -1150,4 +1150,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   // F-AUTH-004 sections 17.1 and 17.4 (row NS-3): the code step's address, and the join code with its characters spaced (D11).
   'caregiver.account.signIn.codeSent': [['dana@example.com'], ['jin.cho@example.org']],
   'a11y.account.joinCode': [['K 7 M P Q 4'], ['H 3 T R W 9']],
+  // F-AUTH-004 section 17.3 (row NS-5): a school page's teacher count.
+  'caregiver.account.home.teachers': [[1], [6], [20]],
 };

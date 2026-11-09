@@ -146,6 +146,13 @@ export function nativeHomeFor(uses: readonly GrownUpUse[]): GrownUpUse {
   return GrownUpUseSchema.options.find((use) => uses.includes(use)) ?? 'family';
 }
 
+/** Row NS-5: the re-trust notice record (`{ v: 1, at }`, section 13.1) waits to be shown; anything else does not. */
+export function retrustNoticeOf(raw: unknown): boolean {
+  if (typeof raw !== 'object' || raw === null) return false;
+  const { v, at } = raw as { v?: unknown; at?: unknown };
+  return v === 1 && typeof at === 'number' && Number.isFinite(at);
+}
+
 /**
  * Section 6.6: the records Sign out deletes. **Sign in again** on the lock (`via: 'lock'`) keeps a trust record of
  * another epoch (or a damaged one, or any while the gate state cannot be read), so the next sign-in still meets the

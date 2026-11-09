@@ -140,7 +140,8 @@
     "apps/mobile/src/screens/sync/JoinBatch.tsx",
     "apps/mobile/src/screens/sync/JoinNameField.tsx",
     "apps/mobile/src/screens/guest/**",
-    "apps/mobile/src/screens/account/**"
+    "apps/mobile/src/screens/account/**",
+    "apps/mobile/src/screens/parent/report-blocks.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1

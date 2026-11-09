@@ -3,15 +3,27 @@ import { describe, expect, it } from 'vitest';
 import { ACCOUNT_DENY_SYMBOLS, ACCOUNT_DENY_WORDS, PLAN_SCREEN_DENY, accountDenyHits, planScreenHasWord } from '../deny-list';
 
 /**
- * F-AUTH-004 section 9.2 (row NS-2; CS-N5, CS-N10): one module for the Plan screen's list and the native grown-up
- * screens' list. Pins the section 9.2 entries and how each language matches.
+ * F-AUTH-004 section 9.2 (rows NS-2, NS-5; CS-N5, CS-N10; D14, D15): one module for the Plan screen's list and the
+ * native grown-up screens' list. Pins the section 9.2 entries and how each language matches.
  */
 
-/** Every word section 9.2 names, per language. */
+/** Every word section 9.2 names, per language (as amended by D14 and D15: payment-card phrases, the free lessons). */
 const SPEC_WORDS = {
-  en: ['buy', 'purchase', 'price', 'cost', 'upgrade', 'subscribe', 'subscription', 'renew', 'manage', 'trial', 'refund', 'invoice', 'checkout', 'receipt', 'promo', 'billing', 'payment', 'pay', 'card', 'premium', 'unlock', 'web', 'website', 'browser', 'console', 'computer', 'laptop', 'desktop', 'Stripe', 'App Store', 'Google Play', 'sign up', 'create an account'],
-  es: ['comprar', 'compra', 'precio', 'costo', 'mejorar', 'suscribirse', 'renovar', 'gestión', 'prueba gratis', 'reembolso', 'factura', 'recibo', 'promo', 'facturación', 'pago', 'pagar', 'tarjeta', 'premium', 'desbloquear', 'web', 'sitio', 'navegador', 'consola', 'computadora', 'ordenador', 'regístrate'],
-  ko: ['구매', '결제', '가격', '요금', '업그레이드', '구독', '갱신', '환불', '청구', '영수증', '프로모', '카드', '유료', '프리미엄', '잠금 해제', '웹', '사이트', '브라우저', '콘솔', '컴퓨터', '가입'],
+  en: [
+    'buy', 'purchase', 'price', 'cost', 'upgrade', 'subscribe', 'subscription', 'renew', 'manage', 'trial', 'refund', 'invoice', 'checkout', 'receipt', 'promo', 'billing', 'payment', 'pay',
+    'credit card', 'debit card', 'gift card', 'prepaid card', 'card number', 'card details', 'card on file', 'add a card', 'update your card', 'declined',
+    'premium', 'unlock', 'web', 'website', 'browser', 'console', 'computer', 'laptop', 'desktop', 'Stripe', 'App Store', 'Google Play', 'sign up', 'create an account', 'free lessons',
+  ],
+  es: [
+    'comprar', 'compra', 'precio', 'costo', 'mejorar', 'suscribirse', 'renovar', 'gestión', 'prueba gratis', 'reembolso', 'factura', 'recibo', 'promo', 'facturación', 'pago', 'pagar',
+    'tarjeta de crédito', 'tarjeta de débito', 'tarjeta regalo', 'tarjeta de regalo', 'tarjeta prepago', 'número de tarjeta', 'datos de la tarjeta', 'agregar una tarjeta', 'añadir una tarjeta', 'lecciones gratuitas',
+    'premium', 'desbloquear', 'web', 'sitio', 'navegador', 'consola', 'computadora', 'ordenador', 'regístrate',
+  ],
+  ko: [
+    '구매', '결제', '가격', '요금', '업그레이드', '구독', '갱신', '환불', '청구', '영수증', '프로모',
+    '신용카드', '체크카드', '기프트카드', '선불카드', '카드번호', '카드결제', '카드등록', '카드변경', '상품권', '무료레슨',
+    '유료', '프리미엄', '잠금 해제', '웹', '사이트', '브라우저', '콘솔', '컴퓨터', '가입',
+  ],
 } as const;
 
 describe('the lists of section 9.2', () => {
@@ -60,12 +72,38 @@ describe('accountDenyHits', () => {
     expect(accountDenyHits('Manage it on the WEB', 'en')).toEqual(['manag*', 'web']);
     expect(accountDenyHits('Sign  up today', 'en')).toEqual(['sign up']);
     expect(accountDenyHits('Open the App Store', 'en')).toEqual(['app store']);
-    expect(accountDenyHits('Paid by card.', 'en')).toEqual(['paid', 'card']);
+    expect(accountDenyHits('Paid by credit card.', 'en')).toEqual(['paid', 'credit card']);
   });
 
-  it('en: not inside other words, and `card` is singular only', () => {
-    for (const clean of ['Your cards stay', 'A payload', 'Webster', 'costume', 'Sign in', 'Signed in as Mina', 'Billie', 'Trialogue']) {
+  it('en: not inside other words', () => {
+    for (const clean of ['A payload', 'Webster', 'costume', 'Sign in', 'Signed in as Mina', 'Billie', 'Trialogue']) {
       expect(accountDenyHits(clean, 'en'), clean).toEqual([]);
+    }
+  });
+
+  it('D15: heritage cards are learning facts (the reports say them); payment-card phrases are caught, plural or not', () => {
+    for (const locale of LOCALES) {
+      const report = getMessages(locale).report;
+      for (const line of [report.figure.cards, report.detail.totals(3, 1), report.detail.totals(3, 2), report.insight.cards_new(1), report.insight.cards_new(2)]) {
+        expect(accountDenyHits(line, locale), `${locale}: ${line}`).toEqual([]);
+      }
+    }
+    expect(accountDenyHits('Your cards stay. 1 card.', 'en')).toEqual([]);
+    expect(accountDenyHits('1 tarjeta nueva del patrimonio. Tarjetas nuevas', 'es')).toEqual([]);
+    expect(accountDenyHits('새 카드 · 카드 정보', 'ko')).toEqual([]);
+    expect(accountDenyHits('Add your credit cards', 'en')).toEqual(['credit card']);
+    expect(accountDenyHits('Card numbers', 'en')).toEqual(['card number']);
+    expect(accountDenyHits('Tus tarjetas de crédito', 'es')).toEqual(['tarjeta de crédito']);
+    expect(accountDenyHits('Números de tarjeta', 'es')).toEqual(['número de tarjeta']);
+    expect(accountDenyHits('신용 카드로', 'ko')).toEqual(['신용카드']);
+    expect(accountDenyHits('카드 번호를', 'ko')).toEqual(['카드번호']);
+    expect(accountDenyHits('잠금해제', 'ko')).toEqual(['잠금 해제']);
+  });
+
+  it('D14: the free-end line is caught in every language', () => {
+    for (const locale of LOCALES) {
+      const insight = getMessages(locale).report.insight.free_days_done('Mina');
+      expect(accountDenyHits(insight, locale), `${locale}: ${insight}`).not.toEqual([]);
     }
   });
 

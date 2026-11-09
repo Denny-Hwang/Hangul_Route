@@ -147,6 +147,8 @@ describe('section 9.3: the account folders import no purchase, link, web view, s
       // Row NS-4: AccountGate (`useAuth`, only under the provider), loaded only with the account routes (`getComponent`).
       'src/screens/account/AccountGate.native.tsx',
       'src/screens/account/SignInScreen.native.tsx',
+      // Row NS-5: the homes' and reports' account client (`useAuth().getToken`), drawn only inside an open AccountGate.
+      'src/screens/account/home-parts.native.tsx',
     ]);
     expect(importers.every(clerkAllowed)).toBe(true);
   });

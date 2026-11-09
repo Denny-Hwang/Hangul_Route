@@ -48,7 +48,7 @@ import { trackLock, useAccountOnline, useAccountSignOut } from './account-sessio
  * the `unknown` lock shows, whose Try again asks the area to decide its provider again.
  */
 
-export type AccountGateNavigation = NativeStackNavigationProp<GrownUpStackParamList, 'SignIn' | 'AccountHome'>;
+export type AccountGateNavigation = NativeStackNavigationProp<GrownUpStackParamList, 'SignIn' | 'AccountHome' | 'AccountLearnerReport'>;
 
 export interface AccountGateProps {
   screen: GateScreen;
