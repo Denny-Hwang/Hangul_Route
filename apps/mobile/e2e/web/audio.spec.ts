@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
@@ -541,7 +541,11 @@ function builtClips(): string[] {
  * Clips the precache must not hold (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6): the record groups, the text-keyed say
  * clips and the fixture Word Builder letter `ae` (pack jamo-wb, although it lives under audio/jamo/ too).
  */
-const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue|say)\/|(^|\/)audio\/jamo\/ae\./;
+// The jamo-wb pack's files live under audio/jamo/ too: the shipped ones (manifest pack `jamo-wb`) are runtime-cached, never precached.
+const WORD_BUILDER_IDS = (JSON.parse(readFileSync(join(__dirname, '..', '..', '..', '..', 'content', 'audio', 'tts-manifest.json'), 'utf8')) as { rows: Array<{ ref: string; pack: string }> }).rows
+  .filter((r) => r.pack === 'jamo-wb')
+  .map((r) => r.ref.replace(/^audio\/jamo\//, '').replace(/\.mp3$/, ''));
+const RUNTIME_CLIP = new RegExp(`(^|/)audio/(vocab|story|card|dialogue|say)/|(^|/)audio/jamo/(ae|${WORD_BUILDER_IDS.join('|')})\\.`);
 const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p) && !RUNTIME_CLIP.test(p));
 const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
 const vocabClips = runtimeClips.filter((p) => /\/audio\/vocab\//.test(p));
@@ -550,6 +554,8 @@ const wordBuilderClips = builtClips().filter((p) => /\/audio\/jamo\/ae\./.test(p
 const SAY_NA = '1098bbe54520ab2a';
 const SAY_NEO = '734dae8e9d9a8f8b';
 const sayClips = builtClips().filter((p) => /\/audio\/say\//.test(p));
+/** Once real say clips ship (AC-8 on), the fixture say clips (나, 너) are two among hundreds: the specs that count them or rely on one never being warmed do not hold. */
+const REAL_SAY_CLIPS = sayClips.length > 2;
 // The fixture build must hold its clips: a silent skip there would leave the clip path unchecked in CI.
 const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has six.';
 
@@ -732,6 +738,7 @@ test.describe('bundled clips (A-6)', () => {
   });
   test('only the jamo-s1 letters are precached: a Word Builder letter and the say clips are runtime-cached (AC-B6)', async ({ page }) => {
     test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    test.skip(REAL_SAY_CLIPS, 'Real say clips are bundled: this spec is written for the two fixture say clips.');
     if (FIXTURE_BUILD) {
       expect(wordBuilderClips.length, 'fixture jamo-wb letter').toBeGreaterThan(0);
       expect(sayClips.length, 'fixture say clips').toBe(2);
@@ -745,6 +752,7 @@ test.describe('bundled clips (A-6)', () => {
 
   test('offline after one online lesson: a precached letter, a warmed say clip, and a say clip never warmed falls back to the voice', async ({ page, context }) => {
     test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    test.skip(REAL_SAY_CLIPS, 'Real say clips are bundled: this spec is written for the two fixture say clips.');
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await fakeSpeech(page, 'korean');
@@ -867,6 +875,7 @@ test.describe('bundled clips (A-6)', () => {
 
   test('a warmed say clip from a pack map chunk starts within 150 ms of the tap (G7, AC-B6)', async ({ page }) => {
     test.skip(sayClips.length === 0 && !FIXTURE_BUILD, 'No say clips in this build; the fixture build has two.');
+    test.skip(REAL_SAY_CLIPS, 'Real say clips are bundled: this spec is written for the two fixture say clips.');
     await fakeSpeech(page, 'korean');
     await recordClipStarts(page);
     await recordClipTimes(page);

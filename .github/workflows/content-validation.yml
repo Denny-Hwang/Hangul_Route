@@ -63,7 +63,9 @@ jobs:
   validate:
     name: zod schema + language policy
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The mobile romanization step alone takes about 7 minutes on a loaded runner (it loads every mobile suite before the -t filter), so 10 was
+    # cancelling the job on content PRs that add nothing to it; the offline e2e shards got 30 the same way (#1003).
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
