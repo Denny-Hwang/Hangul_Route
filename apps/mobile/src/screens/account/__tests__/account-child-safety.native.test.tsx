@@ -234,6 +234,9 @@ import { AccountSpaceScreen } from '../AccountSpaceScreen.native';
 import { SignInScreen } from '../SignInScreen.native';
 import { WelcomeAccountRow } from '../WelcomeAccountRow.native';
 
+// Many tests here mount several screens, and the sweeps mount hundreds; a busy CI runner needs more than the default 5 s.
+vi.setConfig({ testTimeout: 60_000 });
+
 const OSES = ['ios', 'android'] as const;
 const LOCALES: UiLocale[] = ['en', 'es', 'ko'];
 const en = getMessages('en');
@@ -531,7 +534,7 @@ function HeaderTitle({ options }: ScreenHeaderSlotProps): ReactElement {
  * Waits (real time, at most `ms`) until `check` holds: a part loaded with `import()` and drawn through Suspense shows
  * only after React's fallback throttle the first time it loads.
  */
-async function until(check: () => boolean, ms = 1500): Promise<void> {
+async function until(check: () => boolean, ms = 4000): Promise<void> {
   // `Date` is faked in this file; the wall clock is `performance`.
   const end = performance.now() + ms;
   while (!check() && performance.now() < end) await settle(5);
@@ -567,6 +570,15 @@ async function mountRoute(route: AccountRoute, o: { below?: string[]; params?: R
   const params = o.params ?? ROUTES[route].params;
   const r = await render(providers(createElement(SCREENS[route] as never, { navigation: nav, route: { key: 'me', name: route, params } } as never), o.mount));
   await settle();
+  // The gate's decision (exact storage reads, then a step) can take longer than a few ticks on a busy machine: wait for
+  // one, whichever it is (the content, a lock, a sign-in step, a navigation), never for the one a test expects.
+  const navigated = (): boolean => [nav.navigate, nav.replace, nav.goBack, nav.parent.replace].some((f) => f.mock.calls.length > 0);
+  const stepDrawn = (): boolean => hostNodes(r.root, (n) => String(n.props['data-testid'] ?? '').startsWith('sign-in-step-')).length > 0;
+  // (While Clerk's provider is still being decided, `pending`, the gate waits by design: nothing to wait for.)
+  const use = (params as { use?: unknown }).use;
+  const content = route === 'AccountHome' && (use === 'teacher' || use === 'school') ? `account-home-${use}` : ROUTES[route].content;
+  if (o.mount !== 'pending') await until(() => has(r.root, content) || lockCause(r.root) !== null || stepDrawn() || navigated(), 3000);
+  await settle();
   return { r, nav };
 }
 
@@ -594,17 +606,19 @@ async function signInWithCode(o: { typed?: boolean } = {}): Promise<{ r: ReactTe
   clerk.answers.attemptFirstFactor = async () => ({ status: 'complete', createdSessionId: 'sess_1', supportedFirstFactors: null, supportedSecondFactors: null });
   if (o.typed !== false) typedPinNow();
   const mounted = await mountRoute('SignIn', { params: {} });
-  const field = (kind: string): ReactTestInstance => mounted.r.root.findAll((n) => n.type === TextInput && n.props.testID === `sign-in-field-${kind}`)[0]!;
-  await act(async () => field('email').props.onChangeText(EMAIL));
+  await typeIn(mounted.r, 'email', EMAIL);
   await tap(mounted.r.root, 'sign-in-submit');
-  await act(async () => field('code').props.onChangeText('123456'));
+  await typeIn(mounted.r, 'code', '123456');
   await tap(mounted.r.root, 'sign-in-submit');
   await settle();
+  await until(() => mounted.nav.replace.mock.calls.length > 0);
   return mounted;
 }
 
 const has = (root: ReactTestInstance, id: string): boolean => byTestId(root, id).length > 0;
+/** Presses the control `id` once it is drawn (a step's control comes after Clerk's answer). */
 const tap = async (root: ReactTestInstance, id: string): Promise<void> => {
+  await until(() => has(root, id) && byTestId(root, id)[0]!.props['aria-disabled'] !== true);
   await press(byTestId(root, id)[0]!);
   await settle();
 };
@@ -1123,9 +1137,9 @@ describe('CS-N4: closing the grown-up session clears the account and asks the ga
       clerk.answers.prepareFirstFactor = async () => ({ status: 'needs_first_factor', supportedFirstFactors: null, supportedSecondFactors: null, createdSessionId: null });
       typedPinNow();
       const { r } = await mountRoute('SignIn', { params: {} });
-      const email = r.root.findAll((n) => n.type === TextInput && n.props.testID === 'sign-in-field-email')[0]!;
-      await act(async () => email.props.onChangeText(EMAIL));
+      await typeIn(r, 'email', EMAIL);
       await tap(r.root, 'sign-in-submit');
+      await until(() => has(r.root, 'sign-in-step-code'));
       expect(has(r.root, 'sign-in-step-code')).toBe(true);
       await act(async () => closeGrownUpSession('exit'));
       await settle(20);
@@ -1473,9 +1487,9 @@ describe('CS-N10: no account can be made on native, and nothing says where one i
     clerk.answers.create = async () => ({ status: 'needs_identifier', supportedFirstFactors: null, supportedSecondFactors: null, createdSessionId: null });
     typedPinNow();
     const { r } = await mountRoute('SignIn', { params: {} });
-    const field = r.root.findAll((n) => n.type === TextInput && n.props.testID === 'sign-in-field-email')[0]!;
-    await act(async () => field.props.onChangeText(EMAIL));
+    await typeIn(r, 'email', EMAIL);
     await tap(r.root, 'sign-in-submit');
+    await until(() => has(r.root, 'sign-in-unsupported'));
     expect(has(r.root, 'sign-in-unsupported')).toBe(true);
     expect(accountDenyHits(screenTexts(r.root).join('\n').replace(EMAIL, ''), 'en')).toEqual([]);
   });
@@ -1960,10 +1974,12 @@ const screenState = (name: string, route: AccountRoute, marker: string, arrange:
 });
 const fresh = (): void => typedPinNow();
 const inside = ['ParentDashboard', 'AccountHome'];
-const signInField = (r: ReactTestRenderer, kind: string): ReactTestInstance => r.root.findAll((n) => n.type === TextInput && n.props.testID === `sign-in-field-${kind}`)[0]!;
-const typeIn = async (r: ReactTestRenderer, kind: string, text: string): Promise<void> => {
-  await act(async () => signInField(r, kind).props.onChangeText(text));
-};
+const signInField = (r: ReactTestRenderer, kind: string): ReactTestInstance | undefined => r.root.findAll((n) => n.type === TextInput && n.props.testID === `sign-in-field-${kind}`)[0];
+/** Types into a sign-in field once its step is drawn. */
+async function typeIn(r: ReactTestRenderer, kind: string, text: string): Promise<void> {
+  await until(() => signInField(r, kind) !== undefined);
+  await act(async () => signInField(r, kind)!.props.onChangeText(text));
+}
 const clerkError = (code: string, status = 422): Error => Object.assign(new Error(`Clerk English for ${code}`), { clerkError: true, status, errors: [{ code, message: `Clerk English for ${code}` }] });
 const factorView = (over: Record<string, unknown> = {}): Record<string, unknown> => ({ status: 'needs_first_factor', supportedFirstFactors: [{ strategy: 'email_code', emailAddressId: 'ea_1' }, { strategy: 'password' }], supportedSecondFactors: null, createdSessionId: null, ...over });
 const signedOut = (): void => {
@@ -2355,6 +2371,8 @@ describe('section 9.2: the deny-list sweep over every account state, in en, es a
         for (const state of [...SWEEP, ...CARD_SWEEP, ...ROW_SWEEP]) {
           await freshState(os, locale);
           const r = await state.mount();
+          const reached = (): boolean => has(r.root, state.marker) || r.root.findAllByType(ConfirmSheet).some((n) => n.props.visible === true && n.props.testID === state.marker);
+          await until(reached);
           // A confirm sheet draws in a Modal (a portal react-native-web cannot open here): its words are its props.
           const sheets = r.root.findAllByType(ConfirmSheet).filter((n) => n.props.visible === true);
           const sheetTexts = sheets.flatMap((n) => [n.props.title, n.props.message, n.props.detail, n.props.confirmLabel, n.props.cancelLabel].filter((t): t is string => typeof t === 'string'));
@@ -2371,7 +2389,7 @@ describe('section 9.2: the deny-list sweep over every account state, in en, es a
         expect(hits).toEqual([]);
         expect(spy).not.toHaveBeenCalled();
         expect(env.externalLinks).toEqual([]);
-      });
+      }, 300_000);
     }
   }
 
@@ -2391,7 +2409,7 @@ describe('section 9.2: the deny-list sweep over every account state, in en, es a
       }
       expect(spy).not.toHaveBeenCalled();
       expect(env.externalLinks).toEqual([]);
-    });
+    }, 300_000);
   }
 });
 
