@@ -233,6 +233,19 @@ const newTales = new Set(
     .filter((s) => s.addedIn !== undefined)
     .map((s) => s.id),
 );
+// The per-pack clip map chunks the map generator wrote (AC-B6): one marked chunk per pack. The clips they map are all
+// runtime-cached (only jamo-s1 is precached, and it is in the start map), so the chunks are runtime-cached too, like the
+// later chunks (AC-10: with every pack shipped they would put the learner precache over its line, G5). A stage pack's
+// chunk goes into Save for offline with the stage.
+const packChunkDir = join(here, '..', 'src', 'content', '__generated__', PACK_CHUNK_DIR);
+const AUDIO_PACK_CHUNKS = existsSync(packChunkDir)
+  ? readdirSync(packChunkDir)
+      .filter((f) => f.endsWith('.ts'))
+      .map((f) => f.replace(/^audio-pack-/, '').replace(/\.ts$/, ''))
+      .sort()
+      .map((pack) => ({ name: packChunkName(pack), marker: packChunkMarker(pack), stage: pack }))
+  : [];
+const audioPackBuilt = laterBundles(AUDIO_PACK_CHUNKS, bundles);
 // Row CM-5B: the later chunks, out of the precache, and the index Save for offline reads (written before the glob, so it is precached).
 const later = laterChunks({
   lessons: lessonManifest,
@@ -244,16 +257,17 @@ const offlinePacks = offlinePacksIndex({
   later: laterBuilt,
   clips: builtMp3s(dist).map((url) => ({ url, bytes: statSync(join(dist, url)).size })),
   packOf: (ref) => clipPacks.get(ref),
+  packChunks: audioPackBuilt,
 });
 writeFileSync(join(dist, OFFLINE_PACKS_FILE), `${JSON.stringify(offlinePacks)}\n`);
-const laterRule = laterRuntimeCaching(later);
+const laterRule = laterRuntimeCaching([...later, ...AUDIO_PACK_CHUNKS]);
 
 const precache = {
   globDirectory: dist,
   globPatterns: ['**/*.{js,html,ico,png,json,webmanifest,svg,mp3,woff2}'],
   // Workbox's default ignore, every clip outside the precached pack (served by the runtime rules below), and
   // every console file (grown-up paths and _next/): never in the learner's offline bundle.
-  globIgnores: ['**/node_modules/**/*', ...audioPrecacheIgnores(clipPacks), ...grownUpGlobIgnores(GROWN_UP_PREFIXES), ...laterGlobIgnores(laterBuilt), ...installIconGlobIgnores()],
+  globIgnores: ['**/node_modules/**/*', ...audioPrecacheIgnores(clipPacks), ...grownUpGlobIgnores(GROWN_UP_PREFIXES), ...laterGlobIgnores(laterBuilt), ...laterGlobIgnores(audioPackBuilt), ...installIconGlobIgnores()],
   // 8 MiB (was 6 MiB): with the F-CURR-001 lesson cells the app bundle is about 6.6 MB, and a file over this
   // limit is silently left out of the precache, so the app would not start offline. The bundle is downloaded
   // anyway; the limit only decides whether it is kept for offline use.
@@ -321,7 +335,8 @@ const iconProblems = installIconProblems({
 });
 if (iconProblems.length > 0) throw new Error(`pwa-postbuild: icons:\n  ${iconProblems.join('\n  ')}`);
 // The app's own JS bundle works offline: Workbox only warns when a file is over the size limit.
-const laterUrls = new Set(laterBuilt.map((b) => b.url));
+// The later chunks and the clip map chunks are runtime-cached on purpose (CM-5B, AC-10).
+const laterUrls = new Set([...laterBuilt, ...audioPackBuilt].map((b) => b.url));
 const unprecachedJs = existsSync(jsDir)
   ? readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((f) => `_expo/static/js/web/${f}`).filter((url) => !manifestUrls.includes(url) && !laterUrls.has(url))
   : [];
@@ -341,21 +356,14 @@ const reviewItemManifest = await reviewItemBuild.readChunkManifest(repo);
 // "This week in Korea" (F-CURR-002 row CM-48): the week drops, one chunk, under the same checks.
 const weekDropManifest = await weekDropBuild.readChunkManifest(repo);
 const chunkManifest = [...lessonManifest, ...storyManifest, ...reviewItemManifest, ...weekDropManifest];
-// The per-pack clip map chunks the map generator wrote (AC-B6): one marked chunk per pack outside the precache.
-const packChunkDir = join(here, '..', 'src', 'content', '__generated__', PACK_CHUNK_DIR);
-const AUDIO_PACK_CHUNKS = existsSync(packChunkDir)
-  ? readdirSync(packChunkDir)
-      .filter((f) => f.endsWith('.ts'))
-      .map((f) => f.replace(/^audio-pack-/, '').replace(/\.ts$/, ''))
-      .sort()
-      .map((pack) => ({ name: packChunkName(pack), marker: packChunkMarker(pack) }))
-  : [];
 const chunkProblems = lessonChunkProblems({ manifest: chunkManifest, bundles, precached: manifestUrls, runtime: later.map((c) => c.name) });
 // Row CM-5B: no later chunk precached, each in the index, and the index precached.
 chunkProblems.push(...laterChunkProblems({ built: laterBuilt, precached: manifestUrls, index: offlinePacks }));
 // The locale chunks (the es / ko UI messages and content text, one per locale), the grown-up roots and the learner
 // screen chunks ([GU] the guest's first quest stack), under the same rules.
-chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS, ...AUDIO_PACK_CHUNKS], bundles, precached: manifestUrls }));
+chunkProblems.push(...markedChunkProblems({ chunks: [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS], bundles, precached: manifestUrls }));
+// The clip map chunks, under the same rules but runtime-cached (AC-10).
+chunkProblems.push(...markedChunkProblems({ chunks: AUDIO_PACK_CHUNKS, bundles, precached: manifestUrls, runtime: true }));
 // A chunk URL of an older build must reach the app as the fallback HTML page it can run, not as a refused script (nosniff).
 const headersFile = join(dist, '_headers');
 for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS, ...AUDIO_PACK_CHUNKS], bundles))) {
