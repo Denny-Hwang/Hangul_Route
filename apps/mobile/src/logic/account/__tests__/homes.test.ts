@@ -33,6 +33,7 @@ const item = (id: string, over: Partial<AccountSpaceItem> & { kind?: AccountSpac
   role: over.role ?? 'owner',
   counts: { learners: 0 },
   joinCode: over.joinCode ?? null,
+  attention: null,
 });
 
 const learner = (id: string, joinedAt: string, over: Partial<AccountRosterLearner> = {}): AccountRosterLearner => ({
@@ -61,11 +62,11 @@ describe('familiesOf: owner and caregiver families, live then archived, each old
 describe('the code panel (section 8.2: only the owner manages a family code)', () => {
   it('owner with a code: the code (the spaces item first, else the roster)', () => {
     expect(codePanelOf(item('a', { joinCode: 'K7MPQ4' }), null)).toEqual({ kind: 'code', code: 'K7MPQ4' });
-    expect(codePanelOf(item('a'), { learners: [], joinCode: 'H3TRW9' })).toEqual({ kind: 'code', code: 'H3TRW9' });
+    expect(codePanelOf(item('a'), { space: null, learners: [], joinCode: 'H3TRW9' })).toEqual({ kind: 'code', code: 'H3TRW9' });
   });
 
   it('owner with no live code: Make a code', () => {
-    expect(codePanelOf(item('a'), { learners: [], joinCode: null })).toEqual({ kind: 'make' });
+    expect(codePanelOf(item('a'), { space: null, learners: [], joinCode: null })).toEqual({ kind: 'make' });
     expect(codePanelOf(item('a'), null)).toEqual({ kind: 'make' });
   });
 
@@ -101,6 +102,7 @@ describe('learner cards (D10): join order, never activity; the console words', (
   const NOW = new Date('2026-11-08T12:00:00.000Z');
   it('sorted by joinedAt then id, whatever the server (last activity) sent', () => {
     const roster: AccountRoster = {
+      space: null,
       joinCode: null,
       learners: [
         learner('profile:jun', '2026-03-01T00:00:00.000Z', { summary: { minutesLast7d: 90, lastActiveAt: '2026-11-08T11:00:00.000Z' } }),
@@ -112,18 +114,18 @@ describe('learner cards (D10): join order, never activity; the console words', (
   });
 
   it('a learner who practised: last active (relative day) and minutes, last 7 days', () => {
-    const [card] = learnerCards({ joinCode: null, learners: [learner('profile:mina', '2026-02-01T00:00:00.000Z', { summary: { minutesLast7d: 34, lastActiveAt: '2026-11-08T10:00:00.000Z' } })] }, NOW, 'en', en);
+    const [card] = learnerCards({ space: null, joinCode: null, learners: [learner('profile:mina', '2026-02-01T00:00:00.000Z', { summary: { minutesLast7d: 34, lastActiveAt: '2026-11-08T10:00:00.000Z' } })] }, NOW, 'en', en);
     expect(card).toEqual({ id: 'profile:mina', name: 'profile:mina', lastActive: en.console.space.learner.lastActive(en.common.time.today), minutes: en.console.parentHome.minutes7d(34) });
   });
 
   it('falls back to the roster last-active and 0 minutes when the summary has none', () => {
-    const [card] = learnerCards({ joinCode: null, learners: [learner('p', '2026-02-01T00:00:00.000Z', { lastActiveAt: '2026-11-07T10:00:00.000Z', summary: { cardsUnlocked: 1 } })] }, NOW, 'en', en);
+    const [card] = learnerCards({ space: null, joinCode: null, learners: [learner('p', '2026-02-01T00:00:00.000Z', { lastActiveAt: '2026-11-07T10:00:00.000Z', summary: { cardsUnlocked: 1 } })] }, NOW, 'en', en);
     expect(card?.lastActive).toBe(en.console.space.learner.lastActive(en.common.time.yesterday));
     expect(card?.minutes).toBe(en.console.parentHome.minutes7d(0));
   });
 
   it('a learner who never practised: Not started yet, no minutes line', () => {
-    const [card] = learnerCards({ joinCode: null, learners: [learner('p', '2026-02-01T00:00:00.000Z', { summary: null })] }, NOW, 'en', en);
+    const [card] = learnerCards({ space: null, joinCode: null, learners: [learner('p', '2026-02-01T00:00:00.000Z', { summary: null })] }, NOW, 'en', en);
     expect(card).toEqual({ id: 'p', name: 'p', lastActive: en.console.parentHome.lastActive.notStarted, minutes: null });
   });
 });
@@ -198,8 +200,8 @@ describe('sections 6.6 and 8.8: the stack after a 401 on a page above a home', (
     expect(routesAfterEndedSession([r('d', 'ParentDashboard'), r('me', 'AccountLearnerReport')], 'me')).toEqual([r('d', 'ParentDashboard')]);
   });
 
-  it('a page not found keeps the stack', () => {
-    expect(routesAfterEndedSession([r('d', 'ParentDashboard')], 'me')).toEqual([r('d', 'ParentDashboard')]);
+  it('a page no longer in the stack (another page of the run reset it first): null, nothing more is done', () => {
+    expect(routesAfterEndedSession([r('d', 'ParentDashboard'), r('SignIn-h', 'SignIn')], 'me')).toBeNull();
   });
 });
 

@@ -113,7 +113,7 @@ export function lockCauseOf(step: GateStep): AccountLockCause | null {
 }
 
 /** The account routes of the nested Grown-up area stack (rows NS-3 to NS-6 add theirs). */
-export const ACCOUNT_ROUTE_NAMES: ReadonlySet<string> = new Set(['SignIn', 'AccountHome', 'AccountLearnerReport']);
+export const ACCOUNT_ROUTE_NAMES: ReadonlySet<string> = new Set(['SignIn', 'AccountHome', 'AccountLearnerReport', 'AccountSpace', 'AccountSchool', 'AccountClassReport']);
 
 /**
  * Whether the account screen with `key` was entered from outside the account routes (ND-5): the route under it in

@@ -138,7 +138,7 @@ describe('no native account module is reachable from a web entry', () => {
     expect([...twin.matchAll(/^import (?!type )/gm)]).toEqual([]);
     // The session rules count the native account routes as Grown-up area routes through the same folded test.
     const session = readFileSync(join(SRC, 'logic', 'profiles', 'session.ts'), 'utf8');
-    expect(session).toContain("...(process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? ['SignIn', 'AccountHome', 'AccountLearnerReport'] : []),");
+    expect(session).toContain("...(process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android' ? ['SignIn', 'AccountHome', 'AccountLearnerReport', 'AccountSpace', 'AccountSchool', 'AccountClassReport'] : []),");
   });
 
   it('row NS-4: the chooser, Welcome and the PIN screen reach the native account only through folded EXPO_OS tests', () => {

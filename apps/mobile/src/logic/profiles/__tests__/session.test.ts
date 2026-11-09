@@ -246,11 +246,14 @@ describe('F-AUTH-004 (row NS-3): the native account routes are Grown-up area rou
     // Row NS-4: the account home too; row NS-5: the account learner report.
     expect(fresh.routeZone('AccountHome')).toBe('area');
     expect(fresh.routeZone('AccountLearnerReport')).toBe('area');
+    // Row NS-6: the class page, the school page and the class report.
+    for (const name of ['AccountSpace', 'AccountSchool', 'AccountClassReport']) expect(fresh.routeZone(name)).toBe('area');
     const left = fresh.areaExitTracker();
     expect(left(fresh.routeZone('ParentDashboard'))).toBe(false);
     expect(left(fresh.routeZone('SignIn'))).toBe(false);
     expect(left(fresh.routeZone('AccountHome'))).toBe(false);
     expect(left(fresh.routeZone('AccountLearnerReport'))).toBe(false);
+    for (const name of ['AccountSpace', 'AccountSchool', 'AccountClassReport']) expect(left(fresh.routeZone(name))).toBe(false);
   });
 
   it('web: the route does not exist there, and an unknown name stays a learner screen (the safe side)', async () => {
@@ -260,5 +263,6 @@ describe('F-AUTH-004 (row NS-3): the native account routes are Grown-up area rou
     expect(fresh.routeZone('SignIn')).toBe('learner');
     expect(fresh.routeZone('AccountHome')).toBe('learner');
     expect(fresh.routeZone('AccountLearnerReport')).toBe('learner');
+    for (const name of ['AccountSpace', 'AccountSchool', 'AccountClassReport']) expect(fresh.routeZone(name)).toBe('learner');
   });
 });

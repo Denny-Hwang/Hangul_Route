@@ -151,11 +151,13 @@ export function signOutLanding(routes: readonly { name: string }[], hasLearnerPr
  * Sections 6.6 and 8.8 (`401` on a page above a home): the stack after the session ended elsewhere. The run of account
  * routes the page sits in (a home and the report above it) gives way to one sign-in, so the sign-in that follows opens
  * a fresh home in their place and Back never returns to a page of the ended session. Routes below (the Grown-up area)
- * stay. A page not found keeps the whole stack and adds the sign-in.
+ * stay. Null when the page is no longer in the stack: another page of the same run answered `401` first and its reset
+ * already removed it (row NS-6 review: a second sign-in stacked on the first would read as entered from inside the
+ * account routes and skip the typed PIN), so nothing more is done.
  */
-export function routesAfterEndedSession<R extends { key: string; name: string }>(routes: readonly R[], key: string): R[] {
+export function routesAfterEndedSession<R extends { key: string; name: string }>(routes: readonly R[], key: string): R[] | null {
   const index = routes.findIndex((route) => route.key === key);
-  if (index < 0) return [...routes];
+  if (index < 0) return null;
   let start = index;
   while (start > 0 && ACCOUNT_ROUTE_NAMES.has(routes[start - 1]!.name)) start -= 1;
   return routes.slice(0, start);

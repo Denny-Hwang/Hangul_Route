@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planCardsOf, reportBodyOf, reportSummaryOf, rosterOf, spaceItemsOf } from '../account-data';
+import { classReportBodyOf, planCardsOf, reportBodyOf, reportSummaryOf, rosterOf, schoolPageOf, spaceItemsOf } from '../account-data';
 
 /**
  * F-AUTH-004 sections 8.1, 8.2, 8.5 and 8.7 (row NS-5): the native homes read the Worker's answers leniently, item by
@@ -22,8 +22,18 @@ describe('spaceItemsOf (GET /api/spaces)', () => {
         role: 'owner',
         counts: { learners: 2 },
         joinCode: 'K7MPQ4',
+        attention: null,
       },
     ]);
+  });
+
+  it('row NS-6: attention is one count (re-links and moves), or null when absent or unreadable (never zero)', () => {
+    const read = (attention: unknown): number | null | undefined => spaceItemsOf({ spaces: [{ ...space(), attention }] })?.[0]?.attention;
+    expect(read({ relinks: 2, moves: 1, relinkExpiresAt: null })).toBe(3);
+    expect(read({ relinks: 0, moves: 0, relinkExpiresAt: null })).toBe(0);
+    expect(read(undefined)).toBeNull();
+    expect(read({ relinks: -1, moves: 0, relinkExpiresAt: null })).toBeNull();
+    expect(read('2')).toBeNull();
   });
 
   it('drops an item it cannot read (unknown kind or role, missing fields), keeps the rest', () => {
@@ -72,6 +82,7 @@ describe('rosterOf (GET /api/spaces/:id/roster)', () => {
 
   it('reads each learner (no avatar, no age group) and the code', () => {
     expect(rosterOf({ learners: [learner()], joinCode: 'K7MPQ4' })).toEqual({
+      space: null,
       learners: [{ id: 'profile:mina', displayName: 'Mina', joinedAt: '2026-02-01T00:00:00.000Z', lastActiveAt: '2026-11-08T10:00:00.000Z', summary: { minutesLast7d: 34, lastActiveAt: '2026-11-08T10:00:00.000Z' } }],
       joinCode: 'K7MPQ4',
     });
@@ -193,5 +204,108 @@ describe('reportBodyOf (GET /api/spaces/:id/learners/:learnerId/report)', () => 
     expect(reportBodyOf(body({ learner: { id: 4, displayName: 'x' } }))).toBeNull();
     expect(reportBodyOf(body({ lastSyncedAt: 5 }))).toBeNull();
     expect(reportBodyOf(body({ summary: 'x' }))).toBeNull();
+  });
+});
+
+describe('row NS-6: the roster names its space', () => {
+  it('its id, kind, name and archived time; nothing else; null when unreadable', () => {
+    const space = { id: 'space:c', kind: 'class', name: 'Saturday class 3B', archivedAt: null, settings: { x: 1 }, parentSpaceId: 'space:s', createdAt: '2026-01-01T00:00:00.000Z' };
+    expect(rosterOf({ space, learners: [], joinCode: null })?.space).toEqual({ id: 'space:c', kind: 'class', name: 'Saturday class 3B', archivedAt: null });
+    expect(rosterOf({ space: { ...space, archivedAt: undefined }, learners: [] })?.space?.archivedAt).toBeNull();
+    for (const bad of [{ ...space, kind: 'guild' }, { ...space, id: '' }, { ...space, name: 1 }, { ...space, archivedAt: 3 }, 'x', null]) expect(rosterOf({ space: bad, learners: [] })?.space).toBeNull();
+  });
+});
+
+describe('row NS-6: schoolPageOf (GET /api/spaces/:id/school)', () => {
+  const cls = (id: string, over: Record<string, unknown> = {}): Record<string, unknown> => ({
+    space: { id, kind: 'class', name: id, parentSpaceId: 'space:s', settings: {}, archivedAt: null, createdAt: '2026-01-01T00:00:00.000Z', ...over },
+    teacher: { accountId: 'acct:1', name: 'Ms Lee' },
+    students: 24,
+    practiced: 18,
+    lastActiveAt: '2026-11-08T10:00:00.000Z',
+    hasPublishedPlan: true,
+    canRename: true,
+    openMoves: false,
+  });
+  const answer = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
+    school: { id: 'space:s', kind: 'school', name: 'Maple Heritage School', parentSpaceId: null, settings: {}, archivedAt: null, createdAt: '2025-01-01T00:00:00.000Z' },
+    invite: { joinCode: 'K7MPQ4', joinCodeExpiresAt: '2026-12-01T00:00:00.000Z' },
+    license: { planKey: 'school_seat', status: 'active', seats: 20, expiresAt: '2027-01-31T00:00:00.000Z', updatedAt: 'x', active: true, subjectName: 'Maple' },
+    limits: { licensed: true, students: 500, teachers: 20 },
+    canRename: true,
+    usage: { students: 42, teachers: 6 },
+    thisWeek: { students: 42, practiced: 30, classes: 2, classesWithPlan: 1 },
+    classes: [cls('space:c1'), cls('space:c2', { archivedAt: '2026-01-01T00:00:00.000Z' })],
+    ...over,
+  });
+
+  it('keeps the name, the classes (name and learner count) and the teacher count: never a teacher name, the licence or the invite', () => {
+    const page = schoolPageOf(answer());
+    expect(page).toEqual({
+      school: { id: 'space:s', kind: 'school', name: 'Maple Heritage School', archivedAt: null },
+      classes: [
+        { space: { id: 'space:c1', name: 'space:c1', createdAt: '2026-01-01T00:00:00.000Z', archivedAt: null }, students: 24 },
+        { space: { id: 'space:c2', name: 'space:c2', createdAt: '2026-01-01T00:00:00.000Z', archivedAt: '2026-01-01T00:00:00.000Z' }, students: 24 },
+      ],
+      teachers: 6,
+    });
+    expect(JSON.stringify(page)).not.toMatch(/Ms Lee|K7MPQ4|school_seat|2027|seats/);
+  });
+
+  it('drops a class it cannot read; an unreadable teacher count is none; a count below 0 reads 0', () => {
+    const page = schoolPageOf(answer({ usage: { teachers: -1 }, classes: [cls('', {}), cls('space:x', { kind: 'family' }), { space: 'x' }, 'x', { ...cls('space:ok'), students: -2 }, cls('space:noarch', { archivedAt: undefined })] }));
+    expect(page?.classes.map((row) => [row.space.id, row.students, row.space.archivedAt])).toEqual([
+      ['space:ok', 0, null],
+      ['space:noarch', 24, null],
+    ]);
+    expect(page?.teachers).toBeNull();
+    expect(schoolPageOf(answer({ usage: null }))?.teachers).toBeNull();
+    expect(schoolPageOf(answer({ usage: { teachers: 1.5 } }))?.teachers).toBeNull();
+  });
+
+  it('an answer of another shape, or not a school, is null', () => {
+    expect(schoolPageOf(null)).toBeNull();
+    expect(schoolPageOf(answer({ classes: 'x' }))).toBeNull();
+    expect(schoolPageOf(answer({ school: { id: 'space:c', kind: 'class', name: 'c', archivedAt: null } }))).toBeNull();
+    expect(schoolPageOf(answer({ school: null }))).toBeNull();
+  });
+});
+
+describe('row NS-6: classReportBodyOf (GET /api/spaces/:id/class-report)', () => {
+  const report = {
+    v: 1,
+    period: 'week',
+    headline: { code: 'class_practiced', practiced: 2, learners: 3 },
+    class: { learners: 3, withActivity: 3, olderApp: 0, notSaved7d: 0 },
+    wentWell: { lettersNew: [], questsNew: { count: 1 }, cardsNew: 0, milestones: [] },
+    revisit: [],
+    practice: { dayBands: [{ band: '0', learners: 1 }, { band: '1-2', learners: 2 }, { band: '3-4', learners: 0 }, { band: '5-7', learners: 0 }], notSaved: 0 },
+    time: { minutesTotal: { count: 40 }, minutesMedian: null },
+    levelCheck: [],
+    plans: [],
+  };
+  const body = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
+    space: { id: 'space:c', kind: 'class', name: 'Saturday class 3B', archivedAt: null, settings: {}, parentSpaceId: null, createdAt: 'x' },
+    period: 'week',
+    at: '2026-11-01',
+    serverTime: '2026-11-08T12:00:00.000Z',
+    report,
+    ...over,
+  });
+
+  it('reads the envelope and the whole class report (aggregates only)', () => {
+    expect(classReportBodyOf(body())).toEqual({ space: { id: 'space:c', kind: 'class', name: 'Saturday class 3B', archivedAt: null }, period: 'week', at: '2026-11-01', report });
+  });
+
+  it('a window that is not a day key is the current one', () => {
+    expect(classReportBodyOf(body({ at: 'soon' }))?.at).toBeNull();
+    expect(classReportBodyOf(body({ at: undefined }))?.at).toBeNull();
+  });
+
+  it('a body it cannot read is null (space, period or report)', () => {
+    expect(classReportBodyOf('x')).toBeNull();
+    expect(classReportBodyOf(body({ space: null }))).toBeNull();
+    expect(classReportBodyOf(body({ period: 'year' }))).toBeNull();
+    expect(classReportBodyOf(body({ report: { ...report, v: 2 } }))).toBeNull();
   });
 });

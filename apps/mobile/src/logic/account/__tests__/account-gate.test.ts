@@ -138,7 +138,10 @@ describe('where an account screen was entered from', () => {
     expect(enteredFromOutside([{ key: 'd', name: 'ParentDashboard' }, { key: 'h', name: 'AccountHome' }, { key: 'me', name: 'AccountLearnerReport' }], 'me')).toBe(false);
     expect(enteredFromOutside([{ key: 'r', name: 'AccountLearnerReport' }, { key: 'me', name: 'SignIn' }], 'me')).toBe(false);
     expect(enteredFromOutside([{ key: 'me', name: 'AccountLearnerReport' }], 'me')).toBe(true);
-    expect([...ACCOUNT_ROUTE_NAMES]).toEqual(['SignIn', 'AccountHome', 'AccountLearnerReport']);
+    expect([...ACCOUNT_ROUTE_NAMES]).toEqual(['SignIn', 'AccountHome', 'AccountLearnerReport', 'AccountSpace', 'AccountSchool', 'AccountClassReport']);
+    // Row NS-6: moving from a home to a class page, a school page or a class report stays inside the account routes.
+    expect(enteredFromOutside([{ key: 'h', name: 'AccountHome' }, { key: 's', name: 'AccountSchool' }, { key: 'c', name: 'AccountSpace' }, { key: 'me', name: 'AccountClassReport' }], 'me')).toBe(false);
+    expect(enteredFromOutside([{ key: 'h', name: 'AccountHome' }, { key: 'me', name: 'AccountSchool' }], 'me')).toBe(false);
   });
 
   it('a screen not in the state counts as outside (fail closed)', () => {
