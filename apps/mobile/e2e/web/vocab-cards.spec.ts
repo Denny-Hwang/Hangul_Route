@@ -223,6 +223,9 @@ async function playFirstChunk(page: Page, opts: { shots?: boolean } = {}): Promi
 
 test.describe('Words flashcards (fixture bundle)', () => {
   test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
+  // These specs pin the device voice and the no-voice line: with real say clips bundled (AC-8 on), words such as 사과 play
+  // their clip, so the whole group runs with Web Audio off (the e2e fixture's clipsOn: false).
+  test.use({ clipsOn: false });
 
   test('Learn: flip four cards, got it and show me again, the quick check, then "4 new words collected"', async ({ page }) => {
     const errors: string[] = [];
