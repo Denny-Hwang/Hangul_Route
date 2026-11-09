@@ -75,14 +75,16 @@ export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {
 };
 
 /** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */
-export const AUDIO_CLIP_COUNT = 32;
+export const AUDIO_CLIP_COUNT = 456;
 
 /** The packs whose clips are a map chunk of their own (`loadAudioPackChunk`), loaded with their lesson or story, never at start. */
-export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = [];
+export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['stories'];
 
 /** A pack's map chunk (AMENDMENTS-AUDIO-CLIPS AC-B6); undefined for a pack with none. */
 export function loadAudioPackChunk(pack: AudioPack): Promise<{ AUDIO_PACK: AudioPackChunk }> | undefined {
   switch (pack) {
+    case 'stories':
+      return import('./audio-packs/audio-pack-stories');
     default:
       return undefined;
   }
