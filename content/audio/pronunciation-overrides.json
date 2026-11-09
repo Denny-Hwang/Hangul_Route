@@ -23,8 +23,8 @@
       "voice": "Seoyeon"
     },
     "바": {
-      "say": "바…",
-      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 파 (the lenis onset reads as aspirated); a trailing ellipsis slows the syllable; 파 keeps its own text, so the two stay different clips",
+      "say": "바!",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 파 (the lenis onset reads as aspirated); an exclamation (the first take with an ellipsis was read aloud as 쩜쩜쩜); 파 keeps its own text, so the two stay different clips",
       "engine": "polly",
       "voice": "Seoyeon"
     },
