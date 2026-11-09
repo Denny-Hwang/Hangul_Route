@@ -13,19 +13,19 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | License | Packages |
 |---|---|
 | 0BSD | 2 |
-| Apache-2.0 | 18 |
+| Apache-2.0 | 25 |
 | BSD-2-Clause | 19 |
 | BSD-3-Clause | 27 |
 | BSL-1.0 | 1 |
 | BlueOak-1.0.0 | 6 |
 | CC-BY-4.0 | 1 |
 | CC0-1.0 | 1 |
-| ISC | 63 |
-| MIT | 743 |
+| ISC | 65 |
+| MIT | 804 |
 | MPL-2.0 | 1 |
 | Python-2.0 | 1 |
 | Unlicense | 3 |
-| **Total** | **886** |
+| **Total** | **956** |
 
 ## Packages
 
@@ -165,12 +165,30 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | @babel/types | 7.29.0 | MIT | Copyright (c) 2014-present Sebastian McKenzie and other contributors | app |
 | @clerk/backend | 2.33.3 | MIT | Copyright (c) 2022 Clerk, Inc. | server |
 | @clerk/backend | 3.4.12 | MIT | Copyright (c) 2022 Clerk, Inc. | server |
+| @clerk/clerk-expo | 2.20.2 | MIT | Copyright (c) 2022 Clerk, Inc. | app |
+| @clerk/clerk-js | 5.128.1 | MIT | Copyright (c) 2022 Clerk, Inc. | app |
+| @clerk/clerk-react | 5.61.11 | MIT | Copyright (c) 2022 Clerk, Inc. | app |
 | @clerk/clerk-react | 5.61.3 | MIT | Copyright (c) 2022 Clerk, Inc. | web |
+| @clerk/localizations | 3.37.10 | MIT | Copyright (c) 2022 Clerk, Inc. | app |
 | @clerk/localizations | 3.37.2 | MIT | Copyright (c) 2022 Clerk, Inc. | web |
 | @clerk/shared | 3.47.5 | MIT | Copyright (c) 2022 Clerk Inc | server, web |
+| @clerk/shared | 3.48.0 | MIT | Copyright (c) 2022 Clerk Inc | app |
 | @clerk/shared | 4.13.0 | MIT | Copyright (c) 2022 Clerk Inc | server |
 | @clerk/types | 4.101.23 | MIT | Copyright (c) 2022 Clerk, Inc. | server, web |
+| @clerk/types | 4.101.28 | MIT | Copyright (c) 2022 Clerk, Inc. | app |
 | @egjs/hammerjs | 2.0.17 | MIT | Copyright (c) 2018-present NAVER Corp.; Copyright (C) 2011-2017 by Jorik Tangelder (Eight Media) | app |
+| @emotion/babel-plugin | 11.13.5 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/cache | 11.11.0 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/hash | 0.9.2 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/memoize | 0.8.1 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/memoize | 0.9.0 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/react | 11.11.1 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/serialize | 1.3.3 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/sheet | 1.4.0 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/unitless | 0.10.0 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/use-insertion-effect-with-fallbacks | 1.2.0 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/utils | 1.4.2 | MIT | Copyright (c) Emotion team and other contributors | app |
+| @emotion/weak-memoize | 0.3.1 | MIT | Copyright (c) Emotion team and other contributors | app |
 | @expo/bunyan | 4.0.1 | MIT | Copyright 2016 Trent Mick; Copyright 2016 Joyent Inc. | app |
 | @expo/cli | 0.22.28 | MIT | (no copyright line in the package; author: Expo) | app |
 | @expo/code-signing-certificates | 0.0.6 | MIT | Copyright (c) 2020-present 650 Industries, Inc. (aka Expo) | app |
@@ -197,6 +215,12 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | @expo/vector-icons | 14.0.4 | MIT | Copyright (c) 2015 Joel Arvidsson; Copyright (c) 2020 650 Industries | app |
 | @expo/ws-tunnel | 1.0.6 | MIT | (no copyright line in the package) | app |
 | @expo/xcpretty | 4.4.4 | BSD-3-Clause | (no copyright line in the package; author: Evan Bacon) | app |
+| @floating-ui/core | 1.8.0 | MIT | Copyright (c) 2021-present Floating UI contributors | app |
+| @floating-ui/dom | 1.8.0 | MIT | Copyright (c) 2021-present Floating UI contributors | app |
+| @floating-ui/react | 0.27.12 | MIT | Copyright (c) 2021-present Floating UI contributors | app |
+| @floating-ui/react-dom | 2.1.9 | MIT | Copyright (c) 2021-present Floating UI contributors | app |
+| @floating-ui/utils | 0.2.12 | MIT | Copyright (c) 2021-present Floating UI contributors | app |
+| @formkit/auto-animate | 0.8.4 | MIT | Copyright 2022 FormKit Inc. | app |
 | @hono/clerk-auth | 3.1.1 | MIT | (no copyright line in the package) | server |
 | @isaacs/cliui | 8.0.2 | ISC | Copyright (c) 2015, Contributors | app |
 | @isaacs/ttlcache | 1.4.1 | ISC | Copyright (c) 2022-2023 - Isaac Z. Schlueter and Contributors | app |
@@ -252,8 +276,10 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | @sinonjs/fake-timers | 10.3.0 | BSD-3-Clause | Copyright (c) 2010-2014, Christian Johansen, christian@cjohansen.no. All rights reserved. | app |
 | @stablelib/base64 | 1.0.1 | MIT | Copyright (C) 2016 Dmitry Chestnykh | server |
 | @swc/counter | 0.1.3 | Apache-2.0 | (no copyright line in the package; author: 강동윤) | web |
+| @swc/helpers | 0.5.24 | Apache-2.0 | Copyright 2024 SWC contributors. | app |
 | @swc/helpers | 0.5.5 | Apache-2.0 | (no copyright line in the package; author: 강동윤) | web |
 | @tanstack/query-core | 5.100.10 | MIT | Copyright (c) 2021-present Tanner Linsley | app, server |
+| @tanstack/query-core | 5.87.4 | MIT | Copyright (c) 2021-present Tanner Linsley | app |
 | @tanstack/react-query | 5.100.10 | MIT | Copyright (c) 2021-present Tanner Linsley | app |
 | @types/babel__core | 7.20.5 | MIT | Copyright (c) Microsoft Corporation. | app |
 | @types/babel__generator | 7.27.0 | MIT | Copyright (c) Microsoft Corporation. | app |
@@ -266,13 +292,22 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | @types/istanbul-reports | 3.0.4 | MIT | Copyright (c) Microsoft Corporation. | app |
 | @types/node | 22.19.19 | MIT | Copyright (c) Microsoft Corporation. | app |
 | @types/node-forge | 1.3.14 | MIT | Copyright (c) Microsoft Corporation. | app |
+| @types/parse-json | 4.0.2 | MIT | Copyright (c) Microsoft Corporation. | app |
 | @types/stack-utils | 2.0.3 | MIT | Copyright (c) Microsoft Corporation. | app |
 | @types/yargs | 17.0.35 | MIT | Copyright (c) Microsoft Corporation. | app |
 | @types/yargs-parser | 21.0.3 | MIT | Copyright (c) Microsoft Corporation. | app |
 | @urql/core | 5.2.0 | MIT | Copyright (c) 2018–2020 Formidable,; Copyright (c) urql GraphQL Team and other contributors | app |
 | @urql/exchange-retry | 1.3.2 | MIT | Copyright (c) 2018–2020 Formidable,; Copyright (c) urql GraphQL Team and other contributors | app |
+| @wallet-standard/app | 1.1.1 | Apache-2.0 | (no copyright line in the package; author: Solana Maintainers) | app |
+| @wallet-standard/base | 1.1.1 | Apache-2.0 | (no copyright line in the package; author: Solana Maintainers) | app |
+| @wallet-standard/core | 1.1.1 | Apache-2.0 | (no copyright line in the package; author: Solana Maintainers) | app |
+| @wallet-standard/errors | 0.1.2 | Apache-2.0 | (no copyright line in the package; author: Solana Maintainers) | app |
+| @wallet-standard/features | 1.1.1 | Apache-2.0 | (no copyright line in the package; author: Solana Maintainers) | app |
+| @wallet-standard/wallet | 1.1.1 | Apache-2.0 | (no copyright line in the package; author: Solana Maintainers) | app |
 | @xmldom/xmldom | 0.7.13 | MIT | Copyright 2019 - present Christopher J. Brody and other contributors, as listed in: https://github.com/xmldom/xmldom/graphs/contributors; Copyright 2012 - 2017 @jindw <jindw@xidea.org> and other contributors, as listed in: https://github.com/jindw/xmldom/graphs/contributors | app |
 | @xmldom/xmldom | 0.9.10 | MIT | Copyright 2019 - present Christopher J. Brody and other contributors, as listed in: https://github.com/xmldom/xmldom/graphs/contributors; Copyright 2012 - 2017 @jindw <jindw@xidea.org> and other contributors, as listed in: https://github.com/jindw/xmldom/graphs/contributors | app |
+| @zxcvbn-ts/core | 3.0.4 | MIT | Copyright (c) 2012-2016 Dan Wheeler and Dropbox, Inc. | app |
+| @zxcvbn-ts/language-common | 3.0.4 | MIT | Copyright (c) 2012-2016 Dan Wheeler and Dropbox, Inc. | app |
 | DoubleConversion | 1.1.6 | BSD-3-Clause (iOS native library, not an npm package; source: https://github.com/google/double-conversion; the podspec says MIT; the upstream LICENSE file is BSD-3-Clause, which is applied) | Copyright 2006-2011, the V8 project authors. All rights reserved. | ios |
 | RCT-Folly | 2024.01.01.00 | Apache-2.0 (iOS native library, not an npm package; source: https://github.com/facebook/folly) | Copyright (c) Meta Platforms, Inc. and affiliates. | ios |
 | SocketRocket | 0.7.1 | BSD-3-Clause (iOS native library, not an npm package; source: https://github.com/facebook/SocketRocket) | Copyright (c) 2016-present, Facebook, Inc. All rights reserved. | ios |
@@ -280,6 +315,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | accepts | 1.3.8 | MIT | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2015 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | acorn | 8.16.0 | MIT | Copyright (C) 2012-2022 by various contributors (see AUTHORS) | app |
 | aggregate-error | 3.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
+| alien-signals | 2.0.6 | MIT | Copyright (c) 2024-present Johnson Chu | app |
 | anser | 1.4.10 | MIT | Copyright (c) 2012-20 Ionică Bizău <bizauionica@gmail.com> (https://ionicabizau.net) | app |
 | ansi-escapes | 4.3.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | ansi-regex | 4.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
@@ -304,6 +340,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | babel-jest | 29.7.0 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | app |
 | babel-plugin-istanbul | 6.1.1 | BSD-3-Clause | Copyright (c) 2016, Istanbul Code Coverage | app |
 | babel-plugin-jest-hoist | 29.6.3 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | app |
+| babel-plugin-macros | 3.1.0 | MIT | Copyright (c) 2020 Kent C. Dodds | app |
 | babel-plugin-polyfill-corejs2 | 0.4.17 | MIT | Copyright (c) 2014-present Nicolò Ribaudo and other contributors | app |
 | babel-plugin-polyfill-corejs3 | 0.13.0 | MIT | Copyright (c) 2014-present Nicolò Ribaudo and other contributors | app |
 | babel-plugin-polyfill-corejs3 | 0.14.2 | MIT | Copyright (c) 2014-present Nicolò Ribaudo and other contributors | app |
@@ -316,6 +353,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | babel-preset-expo | 12.0.12 | MIT | (no copyright line in the package; author: Expo) | app |
 | babel-preset-jest | 29.6.3 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | app |
 | balanced-match | 1.0.2 | MIT | Copyright (c) 2013 Julian Gruber &lt;julian@juliangruber.com&gt; | app |
+| base-64 | 1.0.0 | MIT | Copyright Mathias Bynens <https://mathiasbynens.be/> | app |
 | base64-arraybuffer | 1.0.2 | MIT | Copyright (c) 2012 Niklas von Hertzen | app |
 | base64-js | 1.5.1 | MIT | Copyright (c) 2014 Jameson Little | app |
 | baseline-browser-mapping | 2.10.29 | Apache-2.0 | (no copyright line in the package) | app |
@@ -330,6 +368,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | brace-expansion | 1.1.14 | MIT | Copyright (c) 2013 Julian Gruber <julian@juliangruber.com> | app |
 | brace-expansion | 2.1.0 | MIT | Copyright (c) 2013 Julian Gruber <julian@juliangruber.com> | app |
 | braces | 3.0.3 | MIT | Copyright (c) 2014-present, Jon Schlinkert. | app |
+| browser-tabs-lock | 1.3.0 | MIT | Copyright (c) 2019 SuperTokens, VRAI Labs Pvt. Ltd, India | app |
 | browserslist | 4.28.2 | MIT | Copyright 2014 Andrey Sitnik <andrey@sitnik.es> and other contributors | app |
 | bser | 2.1.1 | Apache-2.0 | Copyright 2015-present Facebook, Inc. | app |
 | buffer | 5.7.1 | MIT | Copyright (c) Feross Aboukhadijeh, and other contributors. | app |
@@ -344,11 +383,13 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | caller-callsite | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | caller-path | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | callsites | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
+| callsites | 3.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | camelcase | 5.3.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | camelcase | 6.3.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | caniuse-lite | 1.0.30001792 | CC-BY-4.0 | (no copyright line in the package; author: Ben Briggs) | app, web |
 | chalk | 2.4.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | chalk | 4.1.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
+| chalk | 5.6.2 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | charenc | 0.0.2 | BSD-3-Clause | Copyright © 2011, Paul Vorbach. All rights reserved.; Copyright © 2009, Jeff Mott. All rights reserved. | app |
 | chownr | 2.0.0 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
 | chrome-launcher | 0.15.2 | Apache-2.0 | Copyright 2014 Google Inc. | app |
@@ -370,6 +411,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | color-string | 1.9.1 | MIT | Copyright (c) 2011 Heather Arthur <fayearthur@gmail.com> | app |
 | combined-stream | 1.0.8 | MIT | Copyright (c) 2011 Debuggable Limited <felix@debuggable.com> | app |
 | commander | 12.1.0 | MIT | Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca> | app |
+| commander | 13.1.0 | MIT | Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca> | app |
 | commander | 2.20.3 | MIT | Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca> | app |
 | commander | 4.1.1 | MIT | Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca> | app |
 | commander | 7.2.0 | MIT | Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca> | app |
@@ -379,20 +421,26 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | compression | 1.8.1 | MIT | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | concat-map | 0.0.1 | MIT | (no copyright line in the package; author: James Halliday) | app |
 | connect | 3.7.0 | MIT | Copyright (c) 2010 Sencha Inc.; Copyright (c) 2011 LearnBoost; Copyright (c) 2011-2014 TJ Holowaychuk | app |
+| convert-source-map | 1.9.0 | MIT | Copyright 2013 Thorsten Lorenz. | app |
 | convert-source-map | 2.0.0 | MIT | Copyright 2013 Thorsten Lorenz. | app |
+| copy-to-clipboard | 3.3.3 | MIT | Copyright (c) 2017 sudodoki <smd.deluzion@gmail.com> | app |
+| core-js | 3.41.0 | MIT | Copyright (c) 2014-2025 Denis Pushkarev | app |
 | core-js-compat | 3.49.0 | MIT | Copyright (c) 2013–2025 Denis Pushkarev (zloirock.ru); Copyright (c) 2025–2026 CoreJS Company (core-js.io) | app |
 | cosmiconfig | 5.2.1 | MIT | Copyright (c) 2015 David Clark | app |
+| cosmiconfig | 7.1.0 | MIT | Copyright (c) 2015 David Clark | app |
 | cross-fetch | 3.2.0 | MIT | Copyright (c) 2017 Leonardo Quixadá | app |
 | cross-spawn | 6.0.6 | MIT | Copyright (c) 2018 Made With MOXY Lda <hello@moxy.studio> | app |
 | cross-spawn | 7.0.6 | MIT | Copyright (c) 2018 Made With MOXY Lda <hello@moxy.studio> | app |
 | crypt | 0.0.2 | BSD-3-Clause | Copyright © 2011, Paul Vorbach. All rights reserved.; Copyright © 2009, Jeff Mott. All rights reserved. | app |
+| crypto-js | 4.2.0 | MIT | Copyright (c) 2009-2013 Jeff Mott; Copyright (c) 2013-2016 Evan Vosberg | app |
 | crypto-random-string | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | css-in-js-utils | 3.1.0 | MIT | Copyright (c) 2017 Robin Frischmann | app |
 | css-line-break | 2.1.0 | MIT | Copyright (c) 2017 Niklas von Hertzen | app |
 | css-select | 5.2.2 | BSD-2-Clause | Copyright (c) Felix Böhm | app |
 | css-tree | 1.1.3 | MIT | Copyright (C) 2016-2019 by Roman Dvornov | app |
 | css-what | 6.2.2 | BSD-2-Clause | Copyright (c) Felix Böhm | app |
-| csstype | 3.1.3 | MIT | Copyright (c) 2017-2018 Fredrik Nicol | server, web |
+| csstype | 3.1.3 | MIT | Copyright (c) 2017-2018 Fredrik Nicol | app, server, web |
+| csstype | 3.2.3 | MIT | Copyright (c) 2017-2018 Fredrik Nicol | app |
 | debug | 2.6.9 | MIT | Copyright (c) 2014 TJ Holowaychuk <tj@vision-media.ca> | app |
 | debug | 3.2.7 | MIT | Copyright (c) 2014 TJ Holowaychuk <tj@vision-media.ca> | app |
 | debug | 4.4.3 | MIT | Copyright (c) 2014-2017 TJ Holowaychuk <tj@vision-media.ca>; Copyright (c) 2018-2021 Josh Junon | app |
@@ -405,7 +453,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | del | 6.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | delayed-stream | 1.0.0 | MIT | Copyright (c) 2011 Debuggable Limited <felix@debuggable.com> | app |
 | depd | 2.0.0 | MIT | Copyright (c) 2014-2018 Douglas Christopher Wilson | app |
-| dequal | 2.0.3 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | server, web |
+| dequal | 2.0.3 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | app, server, web |
 | destroy | 1.2.0 | MIT | Copyright (c) 2014 Jonathan Ong me@jongleberry.com; Copyright (c) 2015-2022 Douglas Christopher Wilson doug@somethingdoug.com | app |
 | detect-libc | 1.0.3 | Apache-2.0 | (no copyright line in the package; author: Lovell Fuller) | app |
 | dir-glob | 3.0.1 | MIT | Copyright (c) Kevin Mårtensson <kevinmartensson@gmail.com> (github.com/kevva) | app |
@@ -444,7 +492,9 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | execa | 1.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | execa | 5.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | expo | 52.0.49 | MIT | (no copyright line in the package; author: Expo) | app |
+| expo-application | 6.0.2 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-asset | 11.0.5 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
+| expo-auth-session | 6.0.3 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-av | 15.0.2 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-clipboard | 7.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-constants | 17.0.8 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
@@ -454,21 +504,25 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | expo-font | 13.0.4 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-haptics | 14.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-keep-awake | 14.0.3 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
+| expo-linking | 7.0.5 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-local-authentication | 15.0.2 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-localization | 16.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-modules-autolinking | 2.0.8 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-modules-core | 2.2.3 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-network | 7.0.5 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
+| expo-screen-capture | 7.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-secure-store | 14.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-sharing | 13.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-speech | 13.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | expo-status-bar | 2.0.1 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
+| expo-web-browser | 14.0.2 | MIT | (no copyright line in the package; author: 650 Industries, Inc.) | app |
 | exponential-backoff | 3.1.3 | Apache-2.0 | Copyright 2019 Coveo Solutions Inc. | app |
 | fast-deep-equal | 3.1.3 | MIT | Copyright (c) 2017 Evgeny Poberezkin | app |
 | fast-glob | 3.3.3 | MIT | Copyright (c) Denis Malinochkin | app |
 | fast-json-stable-stringify | 2.1.0 | MIT | Copyright (c) 2017 Evgeny Poberezkin; Copyright (c) 2013 James Halliday | app |
 | fast-loops | 1.1.4 | MIT | Copyright (c) 2017 Robin Frischmann | app |
 | fast-sha256 | 1.3.0 | Unlicense | (no copyright line in the package; author: Dmitry Chestnykh) | server |
+| fastest-levenshtein | 1.0.16 | MIT | Copyright (c) 2020 Kasper Unn Weihe | app |
 | fastq | 1.20.1 | ISC | Copyright (c) 2015-2020, Matteo Collina <matteo.collina@gmail.com> | app |
 | fb-watchman | 2.0.2 | Apache-2.0 | Copyright (c) Meta Platforms, Inc. and affiliates. | app |
 | fbemitter | 3.0.0 | BSD-3-Clause | Copyright (c) 2013-present, Facebook, Inc. | app |
@@ -479,6 +533,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | filter-obj | 1.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | finalhandler | 1.1.2 | MIT | Copyright (c) 2014-2017 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | find-cache-dir | 2.1.0 | MIT | Copyright (c) James Talmage <james@talmage.io> (github.com/jamestalmage) | app |
+| find-root | 1.1.0 | MIT | Copyright © 2017 jsdnxx | app |
 | find-up | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | find-up | 4.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | find-up | 5.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
@@ -508,7 +563,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | glob | 10.5.0 | ISC | Copyright (c) 2009-2023 Isaac Z. Schlueter and Contributors | app |
 | glob | 7.2.3 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
 | glob-parent | 5.1.2 | ISC | Copyright (c) 2015, 2019 Elan Shanker | app |
-| glob-to-regexp | 0.4.1 | BSD-2-Clause | (no copyright line in the package; author: Nick Fitzgerald) | server, web |
+| glob-to-regexp | 0.4.1 | BSD-2-Clause | (no copyright line in the package; author: Nick Fitzgerald) | app, server, web |
 | globby | 11.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | glog | 0.3.5 | BSD-3-Clause (iOS native library, not an npm package; source: https://github.com/google/glog) | Copyright (c) 2008, Google Inc. All rights reserved. | ios |
 | gopd | 1.2.0 | MIT | Copyright (c) 2022 Jordan Harband | app |
@@ -536,12 +591,14 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | ignore | 5.3.2 | MIT | Copyright (c) 2013 Kael Zhang <i@kael.me>, contributors | app |
 | image-size | 1.2.1 | MIT | Copyright © 2013-Present Aditya Yadav, http://netroy.in | app |
 | import-fresh | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
+| import-fresh | 3.3.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | imurmurhash | 0.1.4 | MIT | (no copyright line in the package; author: Jens Taylor) | app |
 | indent-string | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | inflight | 1.0.6 | ISC | Copyright (c) Isaac Z. Schlueter | app |
 | inherits | 2.0.4 | ISC | Copyright (c) Isaac Z. Schlueter | app |
 | ini | 1.3.8 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
 | inline-style-prefixer | 6.0.4 | MIT | Copyright (c) 2015 Robin Frischmann | app |
+| input-otp | 1.4.2 | MIT | (no copyright line in the package; author: Guilherme Rodz) | app |
 | internal-ip | 4.3.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | invariant | 2.2.4 | MIT | Copyright (c) 2013-present, Facebook, Inc. | app |
 | ip-regex | 2.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
@@ -580,6 +637,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | jimp-compact | 0.16.1 | MIT | (no copyright line in the package) | app |
 | join-component | 1.1.0 | MIT | (no copyright line in the package) | app |
 | js-cookie | 3.0.5 | MIT | Copyright (c) 2018 Copyright 2018 Klaus Hartl, Fagner Brack, GitHub Contributors | server, web |
+| js-cookie | 3.0.7 | MIT | Copyright (c) 2018 Copyright 2018 Klaus Hartl, Fagner Brack, GitHub Contributors | app |
 | js-tokens | 4.0.0 | MIT | Copyright (c) 2014, 2015, 2016, 2017, 2018 Simon Lydell | app, server, web |
 | js-yaml | 3.14.2 | MIT | Copyright (C) 2011-2015 by Vitaly Puzrin | app |
 | js-yaml | 4.1.1 | MIT | Copyright (C) 2011-2015 by Vitaly Puzrin | app |
@@ -588,6 +646,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | jscodeshift | 0.14.0 | MIT | Copyright (c) Facebook, Inc. and its affiliates. | app |
 | jsesc | 3.1.0 | MIT | Copyright Mathias Bynens <https://mathiasbynens.be/> | app |
 | json-parse-better-errors | 1.0.2 | MIT | Copyright 2017 Kat Marchán | app |
+| json-parse-even-better-errors | 2.3.1 | MIT | Copyright 2017 Kat Marchán; Copyright npm, Inc. | app |
 | json5 | 2.2.3 | MIT | Copyright (c) 2012-2018 Aseem Kishore, and [others]. | app |
 | jsonfile | 4.0.0 | MIT | Copyright (c) 2012-2015, JP Richardson <jprichardson@gmail.com> | app |
 | jsonfile | 6.2.1 | MIT | Copyright (c) 2012-2015, JP Richardson <jprichardson@gmail.com> | app |
@@ -600,6 +659,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | locate-path | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | locate-path | 5.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | locate-path | 6.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
+| lodash | 4.18.1 | MIT | Copyright OpenJS Foundation and other contributors <https://openjsf.org/> | app |
 | lodash.debounce | 4.0.8 | MIT | Copyright jQuery Foundation and other contributors <https://jquery.org/> | app |
 | lodash.throttle | 4.1.1 | MIT | Copyright jQuery Foundation and other contributors <https://jquery.org/> | app |
 | log-symbols | 2.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
@@ -692,7 +752,9 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | p-map | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | p-try | 2.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | package-json-from-dist | 1.0.1 | BlueOak-1.0.0 | (no copyright line in the package; author: Isaac Z. Schlueter) | app |
+| parent-module | 1.0.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | parse-json | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
+| parse-json | 5.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | parse-png | 2.1.0 | MIT | Copyright (c) Kevin Mårtensson <kevinmartensson@gmail.com> (github.com/kevva) | app |
 | parseurl | 1.3.3 | MIT | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2014-2017 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | path-exists | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
@@ -726,6 +788,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | punycode | 2.3.1 | MIT | Copyright Mathias Bynens <https://mathiasbynens.be/> | app |
 | qrcode-generator | 2.0.4 | MIT | Copyright (c) 2009 Kazuhiko Arase | web |
 | qrcode-terminal | 0.11.0 | Apache-2.0 | Copyright (c) 2009 Kazuhiko Arase | app |
+| qrcode.react | 4.2.0 | ISC | Copyright (c) 2015, Paul O’Shannessy | app |
 | query-string | 7.1.3 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (http://sindresorhus.com) | app |
 | queue | 6.0.2 | MIT | Copyright (c) 2014 Jesse Tane <jesse.tane@gmail.com> | app |
 | queue-microtask | 1.2.3 | MIT | Copyright (c) Feross Aboukhadijeh | app |
@@ -744,6 +807,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | react-native-safe-area-context | 4.12.0 | MIT | Copyright (c) 2019 Th3rd Wave | app |
 | react-native-screens | 4.1.0 | MIT | Copyright (c) 2018 Software Mansion <swmansion.com> | app |
 | react-native-svg | 15.8.0 | MIT | Copyright (c) [2015-2016] [Horcrux] | app |
+| react-native-url-polyfill | 2.0.0 | MIT | Copyright (c) 2019 Nicolas Charpentier | app |
 | react-native-view-shot | 4.0.3 | MIT | Copyright (c) 2016 Gaëtan Renaudeau | app |
 | react-native-web | 0.19.13 | MIT | Copyright (c) Nicolas Gallagher.; Copyright (c) Meta Platforms, Inc. and affiliates. | app |
 | react-refresh | 0.14.2 | MIT | Copyright (c) Facebook, Inc. and its affiliates. | app |
@@ -752,6 +816,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | regenerate | 1.4.2 | MIT | Copyright Mathias Bynens <https://mathiasbynens.be/> | app |
 | regenerate-unicode-properties | 10.2.2 | MIT | Copyright Mathias Bynens <https://mathiasbynens.be/> | app |
 | regenerator-runtime | 0.13.11 | MIT | Copyright (c) 2014-present, Facebook, Inc. | app |
+| regenerator-runtime | 0.14.1 | MIT | Copyright (c) 2014-present, Facebook, Inc. | app |
 | regexpu-core | 6.4.0 | MIT | Copyright Mathias Bynens <https://mathiasbynens.be/> | app |
 | regjsgen | 0.8.0 | MIT | Copyright 2014-2020 Benjamin Tan <https://ofcr.se/> | app |
 | regjsparser | 0.13.1 | BSD-2-Clause | Copyright (c) Julian Viereck and Contributors, All Rights Reserved. | app |
@@ -762,6 +827,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | resolve | 1.22.12 | MIT | Copyright (c) 2012 James Halliday | app |
 | resolve | 1.7.1 | MIT | (no copyright line in the package; author: James Halliday) | app |
 | resolve-from | 3.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
+| resolve-from | 4.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | resolve-from | 5.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | resolve-workspace-root | 2.0.1 | MIT | Copyright (c) 2024-present Cedric van Putten <me@cedric.dev> | app |
 | resolve.exports | 2.0.3 | MIT | Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com) | app |
@@ -811,7 +877,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | standardwebhooks | 1.0.0 | MIT | (no copyright line in the package; author: Standard Webhooks) | server |
 | statuses | 1.5.0 | MIT | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2016 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | statuses | 2.0.2 | MIT | Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>; Copyright (c) 2016 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
-| std-env | 3.10.0 | MIT | Copyright (c) Pooya Parsa <pooya@pi0.io> | server, web |
+| std-env | 3.10.0 | MIT | Copyright (c) Pooya Parsa <pooya@pi0.io> | app, server, web |
 | stream-buffers | 2.2.0 | Unlicense | (no copyright line in the package; author: Sam Day) | app |
 | streamsearch | 1.1.0 | MIT | Copyright Brian White. All rights reserved. | web |
 | strict-uri-encode | 2.0.0 | MIT | Copyright (c) Kevin Martensson <kevinmartensson@gmail.com> (github.com/kevva) | app |
@@ -826,13 +892,15 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | structured-headers | 0.4.1 | MIT | (no copyright line in the package; author: Evert Pot) | app |
 | styled-jsx | 5.1.1 | MIT | Copyright (c) 2016-present Vercel, Inc. | web |
 | styleq | 0.1.3 | MIT | Copyright (c) Nicolas Gallagher | app |
+| stylis | 4.2.0 | MIT | Copyright (c) 2016-present Sultan Tarimo | app |
 | sucrase | 3.35.0 | MIT | Copyright (c) 2012-2018 various contributors (see AUTHORS) | app |
 | supports-color | 5.5.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | supports-color | 7.2.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
 | supports-color | 8.1.1 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |
 | supports-hyperlinks | 2.3.0 | MIT | Copyright (c) James Talmage <james@talmage.io> (github.com/jamestalmage) | app |
 | supports-preserve-symlinks-flag | 1.0.0 | MIT | Copyright (c) 2022 Inspect JS | app |
-| swr | 2.3.4 | MIT | Copyright (c) 2023 Vercel, Inc. | server, web |
+| swr | 2.3.4 | MIT | Copyright (c) 2023 Vercel, Inc. | app, server, web |
+| tabbable | 6.5.1 | MIT | Copyright (c) 2015 David Clark | app |
 | tar | 6.2.1 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
 | temp | 0.8.4 | MIT | Copyright (c) 2010-2014 Bruce Williams | app |
 | temp-dir | 2.0.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com) | app |
@@ -846,6 +914,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | throat | 5.0.0 | MIT | Copyright (c) 2013 Forbes Lindesay | app |
 | tmpl | 1.0.5 | BSD-3-Clause | Copyright (c) 2014, Naitik Shah. All rights reserved. | app |
 | to-regex-range | 5.0.1 | MIT | Copyright (c) 2015-present, Jon Schlinkert. | app |
+| toggle-selection | 1.0.6 | MIT | (no copyright line in the package; author: sudodoki) | app |
 | toidentifier | 1.0.1 | MIT | Copyright (c) 2016 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | tr46 | 0.0.3 | MIT | (no copyright line in the package; author: Sebastian Mayr) | app |
 | ts-interface-checker | 0.1.13 | Apache-2.0 | (no copyright line in the package; author: Dmitry S, Grist Labs) | app |
@@ -870,7 +939,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | unpipe | 1.0.0 | MIT | Copyright (c) 2015 Douglas Christopher Wilson <doug@somethingdoug.com> | app |
 | update-browserslist-db | 1.2.3 | MIT | Copyright 2022 Andrey Sitnik <andrey@sitnik.ru> and other contributors | app |
 | use-latest-callback | 0.2.6 | MIT | Copyright (c) 2023 Satyajit Sahoo | app |
-| use-sync-external-store | 1.6.0 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | server, web |
+| use-sync-external-store | 1.6.0 | MIT | Copyright (c) Meta Platforms, Inc. and affiliates. | app, server, web |
 | utils-merge | 1.0.1 | MIT | Copyright (c) 2013-2017 Jared Hanson | app |
 | utrie | 1.0.2 | MIT | Copyright (c) 2021 Niklas von Hertzen | app |
 | uuid | 7.0.3 | MIT | Copyright (c) 2010-2016 Robert Kieffer and other contributors | app |
@@ -912,6 +981,7 @@ Platform-specific binary builds (for example `@esbuild/linux-x64`) are published
 | y18n | 5.0.8 | ISC | Copyright (c) 2015, Contributors | app |
 | yallist | 3.1.1 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
 | yallist | 4.0.0 | ISC | Copyright (c) Isaac Z. Schlueter and Contributors | app |
+| yaml | 1.10.3 | ISC | Copyright 2018 Eemeli Aro <eemeli@gmail.com> | app |
 | yargs | 17.7.2 | MIT | Copyright 2010 James Halliday (mail@substack.net); Modified work Copyright 2014 Contributors (ben@npmjs.com) | app |
 | yargs-parser | 21.1.1 | ISC | Copyright (c) 2016, Contributors | app |
 | yocto-queue | 0.1.0 | MIT | Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com) | app |

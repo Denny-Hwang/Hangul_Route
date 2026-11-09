@@ -37,6 +37,22 @@
             "NSPrivacyCollectedDataTypePurposes": [
               "NSPrivacyCollectedDataTypePurposeAnalytics"
             ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
           }
         ],
         "NSPrivacyAccessedAPITypes": [
@@ -76,7 +92,8 @@
       },
       "permissions": [],
       "blockedPermissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.DETECT_SCREEN_CAPTURE"
       ]
     },
     "web": {
@@ -94,9 +111,11 @@
       [
         "expo-secure-store",
         {
-          "faceIDPermission": "Face ID opens the grown-up area when a grown-up turns it on."
+          "faceIDPermission": "Face ID opens the grown-up area when a grown-up turns it on.",
+          "configureAndroidBackup": true
         }
-      ]
+      ],
+      "./plugins/with-account-cover"
     ],
     "locales": {
       "es": "./locales/es.json",

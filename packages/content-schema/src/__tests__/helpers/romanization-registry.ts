@@ -120,6 +120,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'apps/mobile/src/logic/reviews/review-rounds.ts', reason: 'a doc comment showing a frame with a blank (F-CURR-002 CM-14); no shipped text: rounds read their Korean and romanization from the review items' },
   { path: 'apps/mobile/src/screens/minigames/WriteFrameGame.tsx', reason: 'the cast name 호야 prefilled in the grown-up preview of the name round (F-CURR-001 §3.7), drawn with the romanization the converter gives' },
   { path: 'apps/mobile/src/logic/profiles/profile-model.ts', reason: 'character-class regex and a comment for the allowed name characters' },
+  { path: 'apps/mobile/src/logic/account/deny-list.ts', reason: 'the Korean words no native grown-up screen may show (F-AUTH-004 section 9.2, the deny list the render tests scan with), never shown to anyone' },
   { path: 'packages/content-schema/src/romanization/', reason: 'the converter: golden-vector comments and doc examples, no shipped content' },
   { path: 'packages/content-schema/src/schemas/jamo.ts', reason: 'Hangul character-class regexes and comments' },
   { path: 'packages/content-schema/src/schemas/story-check.ts', reason: 'the Hangul detection regex' },

@@ -788,6 +788,28 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 - 웹 콘솔에서 결제가 막혔는데 원인이 이 거절로 보일 때만 (가정 U8: 브라우저 토큰은 항상 `azp` 를 가진다; 기기 확인 D14): 같은 화면에서 이름 `NATIVE_MONEY_GUARD`, 값 `off` → **Deploy**. 거절을 끄는 값은 `false`, `0`, `off`, `disabled` 뿐이고, 다른 값은 모두 거절을 유지한다 (오타는 닫힌 쪽). 끄더라도 요약의 "상태만" 보기는 그대로 남는다.
 - 확인: `/health` 의 `features.nativeMoneyGuard` 가 `false`. 원인을 고친 뒤 변수를 지우고 Deploy 해서 다시 켠다.
 
+## O. 네이티브 앱의 어른 로그인 — 오너 단계 O-1 ~ O-6 (F-AUTH-004 NS-2, section 16.2)
+
+> NS-2 부터 iOS·Android 빌드에 Clerk 의 Expo SDK (`@clerk/clerk-expo` 2.20.2) 와 `expo-screen-capture`, `expo-web-browser`, `expo-auth-session` 이 들어간다. 모두 **꺼진 채로** 나간다: 앱 빌드 변수 `EXPO_PUBLIC_NATIVE_SIGNIN` 이 없으면 꺼짐이고, 꺼진 빌드는 NS-2 전과 똑같다 (어른 공간만, Clerk 코드는 실행되지 않음). 웹 (PWA) 은 바뀌지 않는다. 대시보드·빌드 변수에서 지금 할 일은 **없다**. 아래 O-1 ~ O-6 은 NS-8 (켜기) 전에, 표의 시점에 한다. Stripe 는 계속 Test mode 다.
+
+**O-0. 다음 Xcode 빌드 전에 한 번 (NS-2 머지 후, 5분)** — 네이티브 모듈이 새로 들어왔다.
+1. `main` 을 받은 뒤 `pnpm install` (루트).
+2. `cd apps/mobile && npx expo prebuild --platform ios --clean` (iOS 폴더를 새로 만든다: `plugins/with-account-cover.js` 가 `AppDelegate.mm` 에 화면 가림막 코드를 넣고, expo-secure-store 플러그인이 Android 백업 제외를 넣는다). 그다음 `cd ios && pod install`.
+3. Xcode 로 평소처럼 빌드한다 (EAS 는 쓰지 않는다). 빌드가 되면 **앱 크기**를 적어 보낸다: Xcode → Product → Archive → Distribute App → (Custom) Development → Export 의 "App Thinning Size Report.txt" 에서 iPhone 한 기종의 "App size … uncompressed" 값, 그리고 NS-2 직전 빌드의 같은 값 (없으면 이번 값만). 사양 6.1 의 "binary size before and after" 칸에 들어간다. (JS 번들 크기는 NS-2 PR 이 이미 쟀다.)
+4. 꺼진 빌드이므로 앱은 전과 같아야 한다: 어른 공간이 열리고, 학습 화면이 그대로다. 다르면 로그 마지막 30줄을 보낸다.
+5. Android 빌드도 같은 순서 (`npx expo prebuild --platform android --clean` → Android Studio / Gradle).
+
+| # | 할 일 | 시점 |
+|---|---|---|
+| O-1 | Clerk 대시보드 (Production 인스턴스) → **Native applications** 에서 **Native API** 를 켠다. **User & authentication → Email** 에서 "Email verification code" 가 로그인 방법으로 켜져 있는지 확인한다 (웹 `/signin` 이 이미 첫 번째로 쓴다). **Device Trust** (새 기기 확인) 가 켜져 있는지, **Sessions** 의 세션 수명이 얼마인지 적어 보낸다 (사양 R-2). | 기기 확인 D1 전 |
+| O-2 | Clerk 의 비밀번호 로그인 설정은 **그대로 둔다**. 앱은 비밀번호가 있는 계정에만 비밀번호를 보여 준다. | 할 일 없음 |
+| O-3 | 네이티브 빌드 환경 (Xcode 로 빌드하는 맥의 셸, 또는 `apps/mobile/.env.local` — 커밋하지 않는다) 에 `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (웹과 같은 `pk_live_` 키), `EXPO_PUBLIC_API_BASE_URL=https://api.hangulroute.com` 을 둔다. `EXPO_PUBLIC_NATIVE_SIGNIN=true` 는 **기기 확인용 빌드에만** 둔다 (NS-8 전까지). `sk_` 로 시작하는 키는 절대 두지 않는다 (앱은 무시하지만, 빌드에 들어간다). 릴리스 빌드는 `pk_test_` 키를 받지 않는다. 값은 Metro 가 번들을 만들 때 들어가므로, 바꾼 뒤에는 Metro 캐시를 비우고 (`npx expo start --clear` 또는 `TMPDIR=$(mktemp -d)`) 다시 빌드한다. | D1 전 |
+| O-4 | App Store Connect → App Privacy, Google Play Console → Data safety: **Email address** 와 **User ID** 를 "수집, 사용자와 연결, 앱 기능, 추적 아님" 으로 추가한다. Clerk 가 세션마다 받는 것 (IP 주소, 기기·user-agent 정보) 과, 문자 메시지 두 번째 단계를 쓰는 계정의 전화번호를 검토해 필요한 항목을 고른다. Play 의 대상 연령 (Families) 답변이 그대로 맞는지 본다. (앱의 iOS privacy manifest 에는 NS-2 가 Email address 와 User ID 를 이미 넣었다.) | 스위치가 켜진 빌드를 TestFlight 외부 테스트나 스토어에 처음 낼 때 전 |
+| O-5 | App Review 데모 계정: **Production** Clerk 인스턴스에 비밀번호가 있는 어른 계정을 만들고, Stripe 샌드박스에 가족 하나와 반 하나 (예시 학습자 포함) 를 둔다. App Review Information 에 아이디·비밀번호와 이 문장을 넣는다: "Tap Sign in as a grown-up on the first screen, then Use my password. Grown-up accounts are made by families and schools outside the app." **새로 설치한 기기에서 D13 이 통과해야 한다**: Clerk 의 새 기기 확인이 이 계정에 이메일 코드를 묻는다면, 그때 (스토어 제출 때만) Device Trust 를 끌지 (웹에도 적용된다), 다른 심사 경로를 쓸지 오너가 정한다. | O-4 와 같음 |
+| O-6 | 기기 확인 D1 ~ D14 (사양 section 20.2) — iPhone (Xcode 빌드), Android 폰, 데스크톱 브라우저 (D14). 결과는 NS-8 PR 본문에 들어간다. | NS-8 전 (NS-8 을 막는 단계) |
+
+**O-7. 되돌리기**: 앱의 어른 로그인을 즉시 끄려면 §N-2 (`NATIVE_ACCOUNT=disabled`, API Worker, 배포 불필요) 를 먼저 하고, 다음 네이티브 빌드에서 `EXPO_PUBLIC_NATIVE_SIGNIN` 을 지운다. 기기에 남은 것 (`hr:grownup:*` 기록, 키체인 `hr.clerk`) 은 스위치가 꺼진 빌드에서 읽히지 않으며 고칠 데이터는 없다.
+
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
 
@@ -803,6 +825,8 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 | §E S-2 M2 결과 (여섯 조합) · S-0 확인 · §E2 의 M3 날짜 | F-APP-001 S-3 시점 결정, A-10 과 F-SITE-002 S-10 (M3 후 14일) |
 | Step 12 녹음 폴더 (`audio-recording-script.md` 의 file id 이름, 저장소 밖 공유) + 동의서는 본인 보관, attribution 표기만 전달 | `content(audio): jamo clips` (F-AUDIO-004 A-9): 처리된 MP3 30개 + `audio:map`, 오프라인 e2e 활성화, 랜딩의 오프라인 발음 문구 복원 |
 | §M "<팩> generated" (예: "jamo-s1 generated") 와 폴더 경로 `apps/mobile/recordings/tts/` 만 (키·프로필 이름·계정 번호는 보내지 않음) | 그 팩의 `content(audio)` PR (처리된 MP3, `audio:map`, 잠금 줄, 라이선스 줄) |
+| §O O-0 의 앱 크기 (NS-2 전·후 "App size … uncompressed") · O-1 의 Device Trust 여부와 세션 수명 | 사양 F-AUTH-004 6.1 의 크기 기록, R-2 와 O-5 의 판단 자료 (docs PR) |
+| §O O-6 의 D1 ~ D14 결과 | NS-8 (`EXPO_PUBLIC_NATIVE_SIGNIN` 기본값 켜기) |
 
 ## 문제가 생기면
 - 빌드 실패: 프로젝트 → Deployments → 실패한 빌드 → 로그 **마지막 30줄**을 보낸다.
