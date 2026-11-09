@@ -297,6 +297,7 @@ function ReportBody({ profileId, name, voice, navigation, locale, messages }: Bo
         },
         // L1 (the grown-up read-only Learning Route) is on this build with the Learning Route itself.
         learningRoute: flags.myRouteEnabled,
+        platform: Platform.OS,
       });
       let skills: ReportSkillsView | null = null;
       try {

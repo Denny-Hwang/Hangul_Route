@@ -1,4 +1,4 @@
-import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-route/design-system';
+import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing, useLayoutClass } from '@hangul-route/design-system';
 import { availableLocales } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect } from 'react';
@@ -53,6 +53,13 @@ export function WelcomeScreen({ navigation, route }: Props): ReactElement {
   const device = useLocaleStore((s) => s.device);
   const setDeviceLocale = useLocaleStore((s) => s.setDeviceLocale);
   const grownUps = grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs());
+  // Korean wraps only between words (`keep-all` on the web), so the title's size stops where its longest Korean word
+  // still fits the line: one em per syllable (a run of characters outside Latin-1) plus one for the punctuation after
+  // it (320 px at 200 % text, a 160 px layout). en and es have no such run, so they keep their size; an unknown window
+  // width sets no ceiling. The native OS text size is not counted (follow-up): at the largest accessibility sizes iOS
+  // still breaks a Korean word that is wider than the line, as before.
+  const { windowWidth, gutter } = useLayoutClass();
+  const titleMax = ((windowWidth || Infinity) - 2 * gutter) / (1 + Math.max(...w.title.split(/[\0-\xff]/).map((run) => run.length)));
   const classLink = route.params?.classLink === true;
   const linkCode = route.params?.code;
   // Start (and "Got a class code?") is the learner's way in: `shell.persona_chosen { learner }` on the grown-up entries'
@@ -89,7 +96,7 @@ export function WelcomeScreen({ navigation, route }: Props): ReactElement {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Hoya pose="waving" size={180} />
         <Spacer size="xl" />
-        <Heading level="display" align="center">
+        <Heading level="display" align="center" maxSize={titleMax}>
           {w.title}
         </Heading>
         <Spacer size="md" />
@@ -147,7 +154,7 @@ export function WelcomeScreen({ navigation, route }: Props): ReactElement {
           label={w.restore}
           tone="ghost"
           size="md"
-          onPress={() => (navigation.getParent() as NavigationProp<RootStackParamList> | undefined)?.navigate('Restore', { from: 'welcome' })}
+          onPress={() => root()?.navigate('Restore', { from: 'welcome' })}
         />
         {/* A quiet way in for a learner with a class code (owner request 2026-10-16, item 8): the profile and consent steps
             run unchanged, then Join a class opens. The join link's card already says it, so the link then stays away. */}

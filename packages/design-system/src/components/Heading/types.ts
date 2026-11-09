@@ -11,6 +11,8 @@ export interface HeadingProps {
   tone?: TextTone;
   align?: TextAlign;
   weight?: 'regular' | 'medium' | 'semibold' | 'bold';
+  /** A ceiling on the level's size at the chosen text size (a title whose longest word must fit one line). */
+  maxSize?: number;
   style?: TextStyle;
   testID?: string;
 }
