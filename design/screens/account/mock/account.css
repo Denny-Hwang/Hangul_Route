@@ -1,0 +1,148 @@
+/*
+ * F-AUTH-004 design row NS-0b: static design mocks of the native grown-up sign-in, the native gate (AccountGate) and
+ * its lock lines, the Grown-up area account card, the native chooser and Welcome rows, the native grown-up homes
+ * (Family, Teacher, School, the space and school pages), the two account reports, the code panel, the plan block and
+ * the covers. Design mock, not shipped code: react-native screens of the learner app drawn as HTML in rem.
+ *
+ * Loaded after ../../app-shell/mock/app-shell.css (whose first :root block holds the token custom properties),
+ * ../../app-shell/mock/display-nav.css (text size, ScreenHeader, Display control, ConfirmSheet) and
+ * ../../profiles/mock/profiles.css (the chooser's rows, the PIN pad, rn-btn variants, the board helpers). The first
+ * block below copies, once, the tokens of packages/design-system/src/tokens.ts that those sheets do not carry, named
+ * after them. Nothing here redefines a token. The second block names the few numbers that are not tokens;
+ * ../README.md "Constants" says what each derives from.
+ */
+:root {
+  --colors-feedback-nudge: #F2B33D;      /* colors.feedback.nudge: the error strip's edge (amber, never danger) */
+  --colors-feedback-info: #5B8DEF;       /* colors.feedback.info: the notice strip's edge */
+}
+:root {
+  --acc-form-max: var(--pane-master); /* layout.pane.master (400): the sign-in fields and buttons column on a tablet */
+  --acc-code-field: 12rem;   /* the 6-digit code field: six mono digits at size.prompt with tracking, in rem so it grows with the text size */
+  --acc-card-min: 18rem;     /* learner and class cards side by side from this width (two on a tablet, one on a phone) */
+  --acc-strip-edge: 4px;     /* spacing.xs: the coloured left edge of a notice, error or offline strip (a second cue beside the words) */
+  --len-col: 21rem;          /* design board only: three language columns of the lengths board side by side at 1280 */
+  --acc-cover-img: 180px;    /* the splash image's drawn width on a 360 board, as app.json "contain" scales it */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* The account screens (Grown-up area stack, native only)                                      */
+/* ------------------------------------------------------------------------------------------ */
+.acc-screen { gap: var(--spacing-lg); container-type: inline-size; }
+.acc-screen.wide { max-width: var(--max-width-full); }
+.acc-form { width: 100%; max-width: var(--acc-form-max); display: flex; flex-direction: column; gap: var(--spacing-md); }
+@container (min-width: 600px) { .acc-form { align-self: center; } } /* layout.breakpoint.regular: one centred column on a tablet */
+.acc-intro { color: var(--colors-text-secondary); line-height: var(--leading-relaxed); overflow-wrap: anywhere; }
+.acc-line { color: var(--colors-text-primary); line-height: var(--leading-relaxed); overflow-wrap: anywhere; }
+.acc-line b { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.acc-field { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.acc-field label { font-weight: var(--weight-semibold); }
+.acc-input { min-height: var(--touch-min); width: 100%; padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-base) solid var(--colors-border-shape); border-radius: var(--radii-md); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-size: var(--size-bodyLg); }
+.acc-input.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+.acc-input.code { max-width: var(--acc-code-field); font-family: var(--family-mono); font-size: var(--size-prompt); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); }
+.acc-input[aria-invalid="true"] { border-color: var(--colors-feedback-nudge); }
+.acc-input[disabled] { background: var(--colors-surface-sunken); border-color: var(--colors-border-subtle); color: var(--colors-text-muted); }
+.acc-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.acc-actions .rn-btn { width: 100%; }
+.acc-notes { display: flex; flex-direction: column; gap: var(--spacing-xs); padding-top: var(--spacing-md); border-top: var(--border-width-thin) solid var(--colors-border-subtle); color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); overflow-wrap: anywhere; }
+
+/* Strips: words first, a coloured edge second; never the danger colour (spec section 14). */
+.acc-strip { padding: var(--spacing-sm) var(--spacing-md); border-left: var(--acc-strip-edge) solid var(--colors-feedback-info); border-radius: var(--radii-sm); background: var(--colors-feedback-infoLight); color: var(--colors-text-primary); overflow-wrap: anywhere; }
+.acc-strip.err { border-left-color: var(--colors-feedback-nudge); background: var(--colors-feedback-nudgeLight); font-weight: var(--weight-semibold); }
+.acc-strip.off { border-left-color: var(--colors-border-shape); background: var(--colors-surface-sunken); }
+
+/* The lock card (AccountGate's locked results) */
+.lock-card { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-md); padding: var(--spacing-xl) var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.lock-card .lock-glyph { align-self: flex-start; display: inline-flex; align-items: center; justify-content: center; width: var(--spacing-xxxl); height: var(--spacing-xxxl); border-radius: var(--radii-circle); background: var(--colors-surface-sunken); }
+.lock-card .rn-btn { width: 100%; }
+
+/* The Grown-up area account card */
+.acc-card { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.acc-card > h2 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.acc-card .who-line { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.acc-card .rn-btn { width: 100%; }
+.acc-card .gr-list { container-type: normal; }
+.acc-card .hint { color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }
+
+/* Homes */
+.home-notice { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.space-sec { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.space-sec > h2 { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.space-sec > h2 .arch { font-size: var(--size-body); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); }
+.group-head { font-size: var(--size-body); font-weight: var(--weight-bold); color: var(--colors-text-secondary); line-height: var(--leading-tight); }
+.acc-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--acc-card-min)), 1fr)); gap: var(--spacing-md); list-style: none; margin: 0; padding: 0; }
+.l-card { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); box-shadow: var(--shadow-card); }
+.l-card .l-name { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.l-card .l-facts { display: flex; flex-direction: column; gap: var(--spacing-xxs); color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }
+.l-card .rn-btn { align-self: stretch; }
+.l-card.archived { background: var(--colors-surface-sunken); box-shadow: none; }
+.l-card.cant { background: var(--colors-surface-sunken); box-shadow: none; }
+.roster { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.roster li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-xs) var(--spacing-md); min-height: var(--touch-min); padding: var(--spacing-xs) var(--spacing-lg); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.roster li:first-child { border-top: none; }
+.roster .r-name { flex: 1 1 8rem; min-width: 0; font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+
+/* A class or school row: the top is one pressable (name, count, chevron); Class report is its own button below. */
+.c-row { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.c-row.archived { background: var(--colors-surface-sunken); }
+.c-open { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); width: 100%; padding: 0; border: none; background: transparent; color: var(--colors-text-primary); font: inherit; text-align: left; cursor: pointer; }
+.c-open.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); border-radius: var(--radii-md); }
+.c-open .c-text, .c-plain .c-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xxs); }
+.c-name { font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.c-sub { color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }
+.c-row.archived .c-name { color: var(--colors-text-secondary); }
+.c-plain { display: flex; align-items: center; min-height: var(--touch-min); }
+.c-row .rn-btn { align-self: flex-start; }
+.c-list { display: flex; flex-direction: column; gap: var(--spacing-sm); list-style: none; margin: 0; padding: 0; }
+@container (min-width: 900px) { .c-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* The code panel */
+.code-panel { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-md); padding: var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.code-panel .code-label { font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-secondary); }
+.code-panel .code { font-size: calc(var(--size-display) * var(--hr-head-ratio)); text-align: center; }
+.code-panel .code .cg { display: inline-block; white-space: nowrap; } /* a group of three never breaks; the two groups wrap at the space between them */
+.code-panel .row-wrap .rn-btn { flex: 1 1 10rem; }
+.code-panel .acc-strip { font-weight: var(--weight-regular); }
+
+/* The plan block: plain text, never a button; no chevron, no border colour that reads as a control. */
+.plan-block { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-md) var(--spacing-lg); border-radius: var(--radii-md); background: var(--colors-surface-sunken); overflow-wrap: anywhere; }
+.plan-block .p-line { font-weight: var(--weight-semibold); color: var(--colors-text-primary); }
+.plan-block .p-usage { color: var(--colors-text-secondary); font-size: var(--size-bodySm); }
+
+/* The quiet line and Sign out at the end of every home */
+.home-end { display: flex; flex-direction: column; gap: var(--spacing-md); padding-top: var(--spacing-lg); border-top: var(--border-width-thin) solid var(--colors-border-subtle); }
+.quiet-line { color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }
+.home-end .rn-btn { align-self: flex-start; }
+
+/* States */
+.state-box { display: flex; flex-direction: column; align-items: flex-start; gap: var(--spacing-md); padding: var(--spacing-xl) var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.state-box p { overflow-wrap: anywhere; }
+.sk { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-lg); }
+.sk span { display: block; height: var(--spacing-lg); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); }
+.sk span.short { width: 50%; }
+.sk span.btn { height: var(--touch-min); width: 60%; }
+
+/* Reports (the blocks of design/screens/reports/in-app-report.md; only what differs is drawn) */
+.rp-glance { display: flex; flex-direction: column; gap: var(--spacing-xxs); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.rp-tabs { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); list-style: none; margin: 0; padding: 0; }
+.rp-tab { min-height: var(--touch-min); min-width: var(--touch-min); padding: var(--spacing-xs) var(--spacing-lg); border-radius: var(--radii-pill); border: var(--border-width-base) solid var(--colors-border-strong); background: var(--colors-surface-paper); color: var(--colors-text-primary); font: inherit; font-weight: var(--weight-semibold); cursor: pointer; }
+.rp-tab[aria-selected="true"] { background: var(--colors-brand-primary); border-color: var(--colors-brand-primary); color: var(--colors-text-onPrimary); font-weight: var(--weight-bold); }
+.rp-step { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm) var(--spacing-md); }
+.rp-step .range { color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.rp-head { font-size: calc(var(--size-prompt) * var(--hr-head-ratio)); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.rp-sec { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.rp-sec h2 { font-size: var(--size-bodyLg); font-weight: var(--weight-bold); }
+.rp-sec ul { display: flex; flex-direction: column; gap: var(--spacing-xs); list-style: disc; padding-left: var(--spacing-xl); }
+.rp-sec li { overflow-wrap: anywhere; }
+.rp-sec ul.rp-figs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 7rem), 1fr)); gap: var(--spacing-sm); list-style: none; padding-left: 0; }
+.rp-figs li { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-md); background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); }
+.rp-figs .f-val { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.rp-figs .f-lbl { color: var(--colors-text-secondary); font-size: var(--size-bodySm); overflow-wrap: anywhere; }
+.gone { padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-thin) dashed var(--colors-border-shape); border-radius: var(--radii-md); color: var(--colors-text-muted); font-family: var(--family-mono); font-size: var(--size-caption); text-decoration: line-through; overflow-wrap: anywhere; }
+
+/* The covers (CS-N12): the app's own splash, nothing else, hidden from assistive tech. */
+.cover { display: flex; align-items: center; justify-content: center; min-height: var(--demo-min); background: var(--colors-surface-canvas); }
+.cover img { width: var(--acc-cover-img); height: auto; }
+
+/* Lengths board */
+.len-cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--len-col)), 1fr)); gap: var(--spacing-xl); align-items: start; }
+.len-cols > .board-item { min-width: 0; }

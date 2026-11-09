@@ -18,6 +18,7 @@
 | `onboarding/setup-steps.md` | R | F-LEARN-001 §3.15 (Who is learning, Profile, Privacy as three steps; amends the layout of `onboarding/all-ages-onboarding.md` A to C, E) |
 | `profiles/picker.md` · `pin-entry.md` · `switch-button.md` · `create-parent.md` · `create-learner.md` | S | F-PROF-001 |
 | `profiles/who-is-using.md` · `pin-entry-v2.md` · `people-on-device.md` · `console-pin.md` | R | AMENDMENTS-ONE-ACCOUNT-MANY-USERS (OA-0, OA-0b; `who-is-using.md` supersedes `picker.md`; mocks in `design/screens/profiles/`) |
+| `account/native-sign-in.md` · `native-lock.md` · `native-homes.md` | R | F-AUTH-004 (NS-0b: native grown-up sign-in, AccountGate, the account card and the native homes, iOS and Android only; mocks in `design/screens/account/`) |
 | `home/todays-mission.md` · `homework/list.md` | S | F-HW-001 |
 | `home/story-time-card.md` | S | F-STORY-004 §3.7 (PR 4.0; built in PR 4.4a) |
 | `episode/detail-story.md` | R | F-STORY-004 §3.6 (PR 4.0; brief `screens/25-story-episode-detail`; screen in PR 4.6) |
