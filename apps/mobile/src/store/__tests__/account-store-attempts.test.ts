@@ -279,3 +279,27 @@ describe('pinResetByWait (OA-D21)', () => {
     }
   });
 });
+
+describe('F-AUTH-004 section 7.3 (row NS-3): the 24-hour wait’s record, copied for the native account at the source', () => {
+  it.each(['ios', 'android'])('%s: the copy is written beside the record, whatever the native account’s switch says', async (os) => {
+    vi.stubEnv('EXPO_OS', os);
+    useAccountStore.getState().markPinResetByWait(T0);
+    await Promise.resolve();
+    const { RETRUST_REQUIRED_KEY } = await import('../../logic/account/sign-in-records');
+    expect(disk.get('account:pinResetByWait')).toEqual({ v: 1, at: T0 });
+    expect(disk.get(RETRUST_REQUIRED_KEY)).toEqual({ v: 1, at: T0 });
+    // The notice deletes the original only; the copy stays.
+    useAccountStore.getState().clearPinResetByWait();
+    await Promise.resolve();
+    expect(disk.get(RETRUST_REQUIRED_KEY)).toEqual({ v: 1, at: T0 });
+    vi.unstubAllEnvs();
+  });
+
+  it('web: no copy (the web has no native account)', async () => {
+    vi.stubEnv('EXPO_OS', 'web');
+    useAccountStore.getState().markPinResetByWait(T0);
+    await Promise.resolve();
+    expect(disk.has('grownup:retrustRequired')).toBe(false);
+    vi.unstubAllEnvs();
+  });
+});
