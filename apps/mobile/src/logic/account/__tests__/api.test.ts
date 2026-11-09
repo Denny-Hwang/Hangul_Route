@@ -48,10 +48,34 @@ describe('the base: https only (a development build may use http://localhost)', 
   });
 });
 
-describe('paths: account paths of the base only; never sync or recovery (CS-N8)', () => {
-  it('builds paths under /api/ on the base origin', () => {
+describe('paths: an allow list of account paths of the base; never sync, recovery or money (CS-N8)', () => {
+  it('builds the account paths on the base origin', () => {
     expect(accountUrl(BASE, '/api/spaces')).toBe(`${BASE}/api/spaces`);
+    expect(accountUrl(BASE, '/api/spaces/space%3Aa/roster')).toBe(`${BASE}/api/spaces/space%3Aa/roster`);
+    expect(accountUrl(BASE, '/api/spaces/s/learners/l/report?period=week')).toBe(`${BASE}/api/spaces/s/learners/l/report?period=week`);
     expect(accountUrl(BASE, '/api/billing/summary?view=status')).toBe(`${BASE}/api/billing/summary?view=status`);
+  });
+
+  it('refuses every other route, money routes included, and any other query', () => {
+    for (const path of [
+      '/api/entitlements',
+      '/api/entitlements/stripe/checkout',
+      '/api/billing/receipts',
+      '/api/billing/receipt-link',
+      '/api/billing/summary',
+      '/api/billing/summary?view=full',
+      '/api/billing/summary?view=status&x=1',
+      '/api/telemetry',
+      '/api//sync/push',
+      '/api/sync;x',
+      '/api/spaces;x',
+      '/api/spaces//roster',
+      '/api/spaces?debug=1',
+      '/api/spaces/s/class-report?period=year',
+      '/api/spaces/%2e%2e/billing/receipts',
+    ]) {
+      expect(accountUrl(BASE, path), path).toBeNull();
+    }
   });
 
   it('refuses sync and recovery, in any spelling', () => {
@@ -137,7 +161,17 @@ describe('every request', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('a token call that throws is an error, never a sign-out', async () => {
+  it('a token call that fails for the network is offline, never a sign-out (section 8.8)', async () => {
+    const { api, fetch } = client({
+      token: async () => {
+        throw Object.assign(new Error('Network request failed'), { code: 'network_error' });
+      },
+    });
+    expect(await api.spaces()).toEqual({ ok: false, error: 'offline', status: -1 });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('a token call that throws for another reason is an error, never a sign-out', async () => {
     const { api, fetch } = client({
       token: async () => {
         throw new Error('network');

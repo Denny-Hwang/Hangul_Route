@@ -10,7 +10,7 @@ import type { NativeGateState } from './gate-state';
  * | `unknown`        | any       | any                    | locked `unknown`: Try again, Back; no account call       |
  * | `nopin`          | any       | any                    | `needs_pin`: the Grown-up area destination (PIN setup)   |
  * | `open`           | no        | -                      | the sign-in screen                                       |
- * | `open`           | yes       | -                      | the use's home (the session is this run's, ND-9)         |
+ * | `open`           | yes       | -                      | the use's home, when signed in during this visit (ND-9) |
  * | `pin`, epoch `0` | any       | -                      | locked `epoch_zero`: Back                                |
  * | `pin`            | no        | any                    | the sign-in screen                                       |
  * | `pin`            | yes       | absent                 | locked `no_trust`: Sign in again                         |
@@ -37,8 +37,14 @@ export type AccountLock =
 
 export interface AccountLockInput {
   gate: NativeGateState;
-  /** A Clerk session exists (on a device that is not `pin`, only this run's memory session can). */
+  /** A Clerk session exists (Clerk's own state: its instance lives for the whole run, across visits). */
   signedIn: boolean;
+  /**
+   * A sign-in completed during this visit of the Grown-up area and its session is the one Clerk holds. On a device
+   * that is not `pin` only this counts: Clerk's own state may still hold an earlier visit's session when its sign-out
+   * could not reach Clerk (offline), and no session may outlive a visit there (ND-9).
+   */
+  signedInThisVisit: boolean;
   /** `hr:grownup:trust` read exactly and parsed (`trustOf`); null when absent, unreadable or damaged. */
   trust: AccountTrust | null;
   /** This run's sign-in used only an email code after a PIN change, so it did not write the trust (7.3). */
@@ -69,7 +75,7 @@ export function accountLock(input: AccountLockInput): AccountLock {
   const { gate } = input;
   if (gate.state === 'unknown') return { kind: 'locked', cause: 'unknown', action: 'try_again' };
   if (gate.state === 'nopin') return { kind: 'needs_pin', cause: 'needs_pin' };
-  if (gate.state === 'open') return input.signedIn ? { kind: 'home' } : { kind: 'sign_in' };
+  if (gate.state === 'open') return input.signedIn && input.signedInThisVisit ? { kind: 'home' } : { kind: 'sign_in' };
   if (gate.epoch === 0) return { kind: 'locked', cause: 'epoch_zero', action: 'back' };
   const stale = input.fromOutside && !input.fresh;
   if (!input.signedIn) return stale ? { kind: 'verify_pin' } : { kind: 'sign_in' };

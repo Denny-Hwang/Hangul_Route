@@ -1,16 +1,22 @@
 import { Screen } from '@hangul-route/design-system';
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useState, type ComponentType, type ReactElement } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { createContext, useEffect, useState, type ComponentType, type ReactElement, type ReactNode } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { nativeSignInConfig, type NativeSignInConfig } from '../config/native-signin';
 import type { NativeGateState } from '../logic/account/gate-state';
+import { clearAccountQueries, type AccountQueryClient } from '../logic/account/queries';
 import type { ClerkHost, ClerkHostProviderProps } from '../platform/clerk-host';
-import { applyGateToTokens, ensureInstallSweep } from '../platform/clerk-token-cache.native';
+import { applyGateChange, applyGateToTokens, ensureInstallSweep } from '../platform/clerk-token-cache.native';
+import { reportCrash } from '../platform/crash-report';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
+import { onGrownUpSessionClosed } from '../store/grown-up-session';
 import { nativeGateState, watchNativeGateState } from '../store/native-gate-state';
 import type { RootStackParamList } from './types';
 
 /**
- * F-AUTH-004 sections 6.1, 6.2 and 7.4 (row NS-2; ND-11, CS-N1, CS-N13): the Grown-up area on iOS and Android.
+ * F-AUTH-004 sections 6.1, 6.2 and 7.4 (row NS-2; ND-9, ND-11, CS-N1, CS-N4, CS-N13): the Grown-up area on iOS and
+ * Android.
  *
  * With the native account off (`EXPO_PUBLIC_NATIVE_SIGNIN` off, or no key this build accepts) the root stack's
  * `ParentDashboard` route is the dashboard itself, exactly as at the basis: no nested navigator, no Clerk.
@@ -24,9 +30,13 @@ import type { RootStackParamList } from './types';
  * once:
  * 1. the install sweep is complete in this run (section 6.2, CS-N7);
  * 2. the gate state is known and is `pin` or `open` (section 7.2; `nopin` never opens the account, `unknown` decides
- *    nothing), and the token storage follows it (a kept session only on `pin`, ND-9).
- * Until then the dashboard shows without Clerk; a learner screen never mounts it. While the area is open, a change of
- * the gate state that leaves `pin` deletes the kept session (`applyGateToTokens(..., 'change')`).
+ *    nothing), and the token storage follows it (a kept session only on `pin`, ND-9). On `open`, Clerk's session from
+ *    an earlier visit is signed out first: Clerk's Expo SDK keeps one instance for the whole run, so unmounting the
+ *    provider is not a sign-out (`ClerkHost.endSession`).
+ * Until then the dashboard shows without Clerk (`ClerkMountContext` says which), and a learner screen never mounts it.
+ * A Clerk render error falls back to the dashboard without Clerk, so the local tools stay. While the area is open, a
+ * change of the gate state that leaves `pin` signs out and deletes the kept session (`applyGateChange`). Every session
+ * close, and the area's unmount, clears the account queries (CS-N4).
  *
  * The same-named nested route makes React Navigation print a development-only warning about nested screens sharing
  * a name; it is intended here (section 6.1: "route names unchanged").
@@ -34,7 +44,13 @@ import type { RootStackParamList } from './types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ParentDashboard'>;
 
-export type ClerkMount = { state: 'pending' } | { state: 'off' } | { state: 'ready'; Provider: ComponentType<ClerkHostProviderProps>; publishableKey: string };
+export type ClerkMount =
+  | { state: 'pending' }
+  | { state: 'off' }
+  | { state: 'ready'; Provider: ComponentType<ClerkHostProviderProps>; publishableKey: string; endSession: () => Promise<boolean> };
+
+/** Whether Clerk's provider is above the Grown-up area's screens: a screen reads it before it calls a Clerk hook. */
+export const ClerkMountContext = createContext<ClerkMount['state']>('off');
 
 const OFF: ClerkMount = { state: 'off' };
 
@@ -55,18 +71,32 @@ const defaultDeps: ClerkMountDeps = {
   load: () => import('../platform/clerk'),
 };
 
-/** Whether Clerk may mount for this visit of the Grown-up area, and with which provider. Never throws. */
-export async function prepareClerkMount(deps: ClerkMountDeps = defaultDeps): Promise<ClerkMount> {
+/**
+ * Whether Clerk may mount for this visit of the Grown-up area, and with which provider. Never throws. `current` says
+ * whether this visit still waits for the answer: once it does not (the wait ran out, the area closed), nothing more
+ * is done, so a late answer never changes the token storage another visit set.
+ */
+export async function prepareClerkMount(deps: ClerkMountDeps = defaultDeps, current: () => boolean = () => true): Promise<ClerkMount> {
   try {
     const key = deps.config.publishableKey;
     if (!deps.config.enabled || key === null) return OFF;
-    if (!(await deps.sweep())) return OFF;
+    if (!(await deps.sweep()) || !current()) return OFF;
     const gate = await deps.gate();
-    if (gate.state === 'unknown') return OFF;
-    await deps.applyGate(gate, 'mount');
-    if (gate.state === 'nopin') return OFF;
+    if (gate.state === 'unknown' || !current()) return OFF;
+    if (gate.state === 'pin') {
+      await deps.applyGate(gate, 'mount');
+    } else {
+      // `open` or `nopin`: no session outlives a visit here (ND-9). Clerk's own session first, while its token can
+      // still reach Clerk; then every kept or memory item goes.
+      const { clerkHost } = await deps.load();
+      if (!current()) return OFF;
+      await clerkHost.endSession();
+      await deps.applyGate(gate, 'mount');
+      if (gate.state === 'nopin') return OFF;
+    }
+    if (!current()) return OFF;
     const { clerkHost } = await deps.load();
-    return clerkHost.Provider === null ? OFF : { state: 'ready', Provider: clerkHost.Provider, publishableKey: key };
+    return clerkHost.Provider === null ? OFF : { state: 'ready', Provider: clerkHost.Provider, publishableKey: key, endSession: clerkHost.endSession };
   } catch {
     return OFF;
   }
@@ -79,11 +109,48 @@ export async function prepareClerkMount(deps: ClerkMountDeps = defaultDeps): Pro
  */
 export const CLERK_MOUNT_WAIT_MS = 2000;
 
+/**
+ * The query client of the Grown-up area last mounted. Kept at module level so a session close that runs after the
+ * area unmounted (the chooser, leaving the stack: the navigation state event comes after the commit) still clears
+ * the account queries.
+ */
+let accountQueries: AccountQueryClient | null = null;
+
+/** Every session close clears the account queries (CS-N4); registered once, with the native account on. */
+export function bindAccountQueryClearing(): () => void {
+  return onGrownUpSessionClosed(() => {
+    if (accountQueries !== null) void clearAccountQueries(accountQueries);
+  });
+}
+
 /** The nested stack (its routes keep the root's names, so the header registry and the session rules read them as before). */
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+/** A Clerk render error: the area goes on without Clerk; the crash report names the class only (CS-N15). */
+function reportClerkError(error: unknown): void {
+  const scrubbed = new Error('');
+  scrubbed.name = error instanceof Error ? error.name : 'Error';
+  reportCrash(scrubbed, 'learner', 'ParentDashboard');
+}
+
+function WithClerk({ mount, fallback }: { mount: Extract<ClerkMount, { state: 'ready' }>; fallback: ReactNode }): ReactElement {
+  const { Provider, publishableKey } = mount;
+  return (
+    <ErrorBoundary fallback={<ClerkMountContext.Provider value="off">{fallback}</ClerkMountContext.Provider>} onError={reportClerkError}>
+      <Provider publishableKey={publishableKey}>{fallback}</Provider>
+    </ErrorBoundary>
+  );
+}
+
 export function GrownUpStack({ route }: Props): ReactElement {
   const [mount, setMount] = useState<ClerkMount>({ state: 'pending' });
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    accountQueries = queryClient;
+    return () => {
+      void clearAccountQueries(queryClient);
+    };
+  }, [queryClient]);
   useEffect(() => {
     let settled = false;
     const settle = (next: ClerkMount): void => {
@@ -92,14 +159,14 @@ export function GrownUpStack({ route }: Props): ReactElement {
       setMount(next);
     };
     const timer = setTimeout(() => settle(OFF), CLERK_MOUNT_WAIT_MS);
-    void prepareClerkMount().then(settle);
+    void prepareClerkMount(defaultDeps, () => !settled).then(settle);
     return () => {
       settled = true;
       clearTimeout(timer);
     };
   }, []);
-  const ready = mount.state === 'ready';
-  useEffect(() => (ready ? watchNativeGateState((gate) => void applyGateToTokens(gate, 'change')) : undefined), [ready]);
+  const endSession = mount.state === 'ready' ? mount.endSession : null;
+  useEffect(() => (endSession === null ? undefined : watchNativeGateState((gate) => void applyGateChange(gate, endSession))), [endSession]);
 
   if (mount.state === 'pending') return <Screen tone="canvas">{null}</Screen>;
   const navigator = (
@@ -107,10 +174,12 @@ export function GrownUpStack({ route }: Props): ReactElement {
       <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} initialParams={route.params} />
     </Stack.Navigator>
   );
-  if (mount.state !== 'ready') return navigator;
-  const { Provider, publishableKey } = mount;
-  return <Provider publishableKey={publishableKey}>{navigator}</Provider>;
+  return (
+    <ClerkMountContext.Provider value={mount.state}>{mount.state === 'ready' ? <WithClerk mount={mount} fallback={navigator} /> : navigator}</ClerkMountContext.Provider>
+  );
 }
 
 /** The root stack's `ParentDashboard` component on iOS and Android (decided once: the build's values never change). */
 export const GrownUpArea: ComponentType<Props> = defaultDeps.config.enabled ? GrownUpStack : ParentDashboardScreen;
+
+if (defaultDeps.config.enabled) bindAccountQueryClearing();

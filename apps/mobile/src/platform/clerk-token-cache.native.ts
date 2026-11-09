@@ -2,7 +2,7 @@ import { WHEN_UNLOCKED_THIS_DEVICE_ONLY, deleteItemAsync, getItemAsync, setItemA
 import type { NativeGateState } from '../logic/account/gate-state';
 import { INSTALLED_KEY, runInstallSweep, sweepComplete, type InstallSweepResult } from '../logic/account/install-sweep';
 import { CLERK_KEYCHAIN_SERVICE, createTokenCache, tokenStepFor, type SecureItemPort, type TokenCacheController } from '../logic/account/token-cache';
-import { readJsonExact, writeJson } from './storage';
+import { readJsonStrict, writeJson } from './storage';
 
 /**
  * F-AUTH-004 section 6.2 (row NS-2; CS-N7): Clerk's token cache on iOS and Android, the install sweep, and the rule
@@ -39,7 +39,8 @@ let sweep: Promise<InstallSweepResult> | null = null;
 export function ensureInstallSweep(): Promise<boolean> {
   if (sweep === null) {
     sweep = runInstallSweep({
-      readRecord: () => readJsonExact<unknown>(INSTALLED_KEY),
+      // A failed read throws (nothing is known: no sweep); a record that does not parse reads as none (sweep, rewrite).
+      readRecord: () => readJsonStrict<unknown>(INSTALLED_KEY),
       writeRecord: (record) => writeJson(INSTALLED_KEY, record),
       wipe: () => clerkTokens.wipe(),
       now: () => Date.now(),
@@ -64,7 +65,22 @@ export async function applyGateToTokens(gate: NativeGateState, phase: 'mount' | 
     clerkTokens.endMemorySession();
     return clerkTokens.useSecure();
   }
-  if (step === 'use_memory') return clerkTokens.useMemory();
+  if (step === 'use_memory') {
+    // A memory session from an earlier visit of the Grown-up area ends here (ND-9: it lasts one visit).
+    clerkTokens.endMemorySession();
+    return clerkTokens.useMemory();
+  }
   if (step === 'wipe') return clerkTokens.wipe().then(async (wiped) => (await clerkTokens.useMemory()) && wiped);
   return true;
+}
+
+/**
+ * A change of the gate state while the Grown-up area is open. When it ends a kept session (the PIN went: step `wipe`),
+ * Clerk's own in-memory session is signed out first (`endSession`, while its token can still reach Clerk), since the
+ * Clerk instance outlives its provider for the whole run; then the items are deleted. Resolves to whether both held.
+ */
+export async function applyGateChange(gate: NativeGateState, endSession: () => Promise<boolean>): Promise<boolean> {
+  const ends = tokenStepFor(gate.state, 'change', clerkTokens.storage()) === 'wipe';
+  const ended = ends ? await endSession().catch(() => false) : true;
+  return (await applyGateToTokens(gate, 'change')) && ended;
 }

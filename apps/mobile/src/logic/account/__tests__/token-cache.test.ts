@@ -129,32 +129,28 @@ describe('secure mode (a `pin` device)', () => {
     expect(await c.cache.getToken(JWT)).toBe('jwt-1');
   });
 
-  it('a damaged index is deleted and rebuilt with the new key', async () => {
+  it('a damaged index is never written over: no key is kept until a wipe deleted it', async () => {
     const store = fakeStore({ [CLERK_INDEX_KEY]: '{not json' });
-    const c = createTokenCache(store.port);
-    await c.useSecure();
-    await c.cache.saveToken(JWT, 'jwt-1');
-    expect(JSON.parse(store.items.get(CLERK_INDEX_KEY)!)).toEqual([JWT]);
-    expect(store.log).toContain(`remove ${CLERK_INDEX_KEY}`);
-  });
-
-  it('a damaged index that cannot be deleted refuses the write', async () => {
-    const store = fakeStore({ [CLERK_INDEX_KEY]: '{not json' });
-    store.fail.remove.add(CLERK_INDEX_KEY);
     const c = createTokenCache(store.port);
     await c.useSecure();
     await c.cache.saveToken(JWT, 'jwt-1');
     expect(store.items.has(JWT)).toBe(false);
+    expect(store.items.get(CLERK_INDEX_KEY)).toBe('{not json');
+    expect(await c.cache.getToken(JWT)).toBe('jwt-1');
+    // A wipe of a damaged index deletes the named keys and the index, and counts as done (Clerk writes only those).
+    expect(await c.wipe()).toBe(true);
+    expect(store.items.size).toBe(0);
+    await c.cache.saveToken(JWT, 'jwt-2');
+    expect(JSON.parse(store.items.get(CLERK_INDEX_KEY)!)).toEqual([JWT]);
   });
 
-  it('an unreadable item deletes that item and the index, and reads as signed out', async () => {
-    const store = fakeStore({ [JWT]: 'old', [CLERK_INDEX_KEY]: JSON.stringify([JWT]) });
+  it('an unreadable item deletes every kept item and the index, and reads as signed out', async () => {
+    const store = fakeStore({ [JWT]: 'old', other: 'x', [CLERK_INDEX_KEY]: JSON.stringify([JWT, 'other']) });
     store.fail.get.add(JWT);
     const c = createTokenCache(store.port);
     await c.useSecure();
     expect(await c.cache.getToken(JWT)).toBeNull();
-    expect(store.items.has(JWT)).toBe(false);
-    expect(store.items.has(CLERK_INDEX_KEY)).toBe(false);
+    expect(store.items.size).toBe(0);
   });
 
   it('a read of a key SecureStore cannot hold answers null without a call', async () => {
@@ -208,7 +204,8 @@ describe('wipe and useMemory (sign-out, the install sweep, a gate state that is 
     await c.cache.saveToken('m', 'memory');
     expect(await c.wipe()).toBe(true);
     expect([...store.items.keys()]).toEqual([]);
-    expect(store.log.slice(-3)).toEqual(['remove a', `remove ${JWT}`, `remove ${CLERK_INDEX_KEY}`]);
+    // Every delete, then every key read back (on iOS a delete never reports a failure).
+    expect(store.log.slice(-6)).toEqual(['remove a', `remove ${JWT}`, `remove ${CLERK_INDEX_KEY}`, 'get a', `get ${JWT}`, `get ${CLERK_INDEX_KEY}`]);
     expect(await c.cache.getToken('m')).toBeNull();
   });
 
@@ -224,6 +221,18 @@ describe('wipe and useMemory (sign-out, the install sweep, a gate state that is 
     const index = fakeStore();
     index.fail.remove.add(CLERK_INDEX_KEY);
     expect(await createTokenCache(index.port).wipe()).toBe(false);
+  });
+
+  it('a delete that answers but leaves the item (iOS ignores SecItemDelete failures) is caught by the read-back', async () => {
+    const store = fakeStore({ [JWT]: 'jwt' });
+    (store.port.remove as ReturnType<typeof vi.fn>).mockImplementation(async () => undefined);
+    expect(await createTokenCache(store.port).wipe()).toBe(false);
+    const unreadable = fakeStore({ [JWT]: 'jwt' });
+    const c = createTokenCache(unreadable.port);
+    (unreadable.port.remove as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      unreadable.fail.get.add(JWT);
+    });
+    expect(await c.wipe()).toBe(false);
   });
 
   it('a device that never had an item wipes cleanly (a not-found delete is a success)', async () => {

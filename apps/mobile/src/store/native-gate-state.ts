@@ -52,25 +52,37 @@ export async function nativeGateState(read: Read = readJsonExact): Promise<Nativ
   return nativeGateStateOf({ ...memoryInput(), stored });
 }
 
+/** How long after an `unknown` answer the watch reads once more (a PIN write still on its way settles in this time). */
+export const GATE_RECHECK_MS = 250;
+
 /**
  * Calls `listener` with the gate state after any change of the profiles, the account or the guest record (each change
- * reads the state again; answers that arrive out of order are dropped). Returns the unsubscribe.
+ * reads the state again; answers that arrive out of order are dropped). An `unknown` answer is read once more after
+ * `GATE_RECHECK_MS`, since a store writes memory before storage and no later change may come to settle it. Returns the
+ * unsubscribe.
  */
 export function watchNativeGateState(listener: (state: NativeGateState) => void, read: Read = readJsonExact): () => void {
   let generation = 0;
   let live = true;
-  const check = (): void => {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const check = (recheck: boolean): void => {
     generation += 1;
     const mine = generation;
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
     void nativeGateState(read).then((state) => {
-      if (live && mine === generation) listener(state);
+      if (!live || mine !== generation) return;
+      listener(state);
+      if (state.state === 'unknown' && !recheck) timer = setTimeout(() => check(true), GATE_RECHECK_MS);
     });
   };
-  const offProfiles = useProfileStore.subscribe(check);
-  const offAccount = useAccountStore.subscribe(check);
-  const offGuest = useGuestStore.subscribe(check);
+  const onChange = (): void => check(false);
+  const offProfiles = useProfileStore.subscribe(onChange);
+  const offAccount = useAccountStore.subscribe(onChange);
+  const offGuest = useGuestStore.subscribe(onChange);
   return () => {
     live = false;
+    if (timer !== null) clearTimeout(timer);
     offProfiles();
     offAccount();
     offGuest();

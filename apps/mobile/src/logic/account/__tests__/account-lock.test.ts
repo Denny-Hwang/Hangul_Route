@@ -10,7 +10,7 @@ import { accountLock, freshProof, trustOf, type AccountLockInput } from '../acco
 const EPOCH = 1_762_000_000_000;
 const PIN = { state: 'pin', epoch: EPOCH } as const;
 
-const base: AccountLockInput = { gate: PIN, signedIn: true, trust: { v: 1, epoch: EPOCH }, retrustPending: false, fresh: true, fromOutside: true };
+const base: AccountLockInput = { gate: PIN, signedIn: true, signedInThisVisit: false, trust: { v: 1, epoch: EPOCH }, retrustPending: false, fresh: true, fromOutside: true };
 const lock = (over: Partial<AccountLockInput>) => accountLock({ ...base, ...over });
 
 describe('section 7.2: the table', () => {
@@ -24,9 +24,18 @@ describe('section 7.2: the table', () => {
     for (const signedIn of [true, false]) expect(lock({ gate: { state: 'nopin' }, signedIn })).toEqual({ kind: 'needs_pin', cause: 'needs_pin' });
   });
 
-  it('open: the sign-in screen, or the home with this run’s session; no PIN to ask', () => {
+  it('open: the sign-in screen, or the home with a session signed in during this visit; no PIN to ask', () => {
     expect(lock({ gate: { state: 'open' }, signedIn: false, fresh: false })).toEqual({ kind: 'sign_in' });
-    expect(lock({ gate: { state: 'open' }, signedIn: true, fresh: false, trust: null })).toEqual({ kind: 'home' });
+    expect(lock({ gate: { state: 'open' }, signedIn: true, signedInThisVisit: true, fresh: false, trust: null })).toEqual({ kind: 'home' });
+  });
+
+  it('open: a session Clerk still holds from an earlier visit opens nothing (ND-9)', () => {
+    expect(lock({ gate: { state: 'open' }, signedIn: true, signedInThisVisit: false })).toEqual({ kind: 'sign_in' });
+    expect(lock({ gate: { state: 'open' }, signedIn: false, signedInThisVisit: true })).toEqual({ kind: 'sign_in' });
+  });
+
+  it('pin: a kept session counts (it is behind the PIN, the trust and freshness)', () => {
+    expect(lock({ signedInThisVisit: false })).toEqual({ kind: 'home' });
   });
 
   it('pin with epoch 0: locked, Back (never trusted)', () => {

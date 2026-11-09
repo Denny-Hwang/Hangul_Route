@@ -17,7 +17,7 @@ export const NATIVE_SIGNIN_LAUNCH_DEFAULT = false;
 /**
  * `EXPO_PUBLIC_NATIVE_SIGNIN` read with `parseKillSwitch`'s words (`config/flags.ts`): trimmed and in any case,
  * `false`, `0`, `off` and `no` are off; `true`, `1`, `on` and `yes` are on; anything else (unset, a typo) is the
- * launch default. `flags.test.ts` holds the two word lists equal.
+ * launch default. `config/__tests__/native-signin.test.ts` holds the words equal to a `flags.ts` kill switch's.
  */
 export function nativeSignInSwitch(raw: string | undefined, fallback: boolean = NATIVE_SIGNIN_LAUNCH_DEFAULT): boolean {
   if (raw === undefined) return fallback;

@@ -11,7 +11,7 @@ import { pinHashFingerprint } from '../../logic/shell/device-gate';
 import { readJsonExact } from '../../platform/storage';
 import { PIN_HASH_KEY, useAccountStore } from '../account-store';
 import { useGuestStore } from '../guest-store';
-import { nativeGateState, watchNativeGateState } from '../native-gate-state';
+import { GATE_RECHECK_MS, nativeGateState, watchNativeGateState } from '../native-gate-state';
 import { PROFILES_KEY, useProfileStore } from '../profile-store';
 
 /**
@@ -96,6 +96,25 @@ describe('watchNativeGateState', () => {
     await vi.waitFor(() => expect(seen.length).toBeGreaterThan(0));
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(seen).toEqual([{ state: 'pin', epoch: 42 }]);
+    stop();
+  });
+
+  it('reads once more after an unknown answer (a PIN write on its way), and only once', async () => {
+    const values: Record<string, unknown> = { [PROFILES_KEY]: [CHILD], [PIN_HASH_KEY]: null, [GUEST_KEY]: null };
+    device(HASH);
+    const read = vi.fn(async (key: string) => values[key] ?? null);
+    const seen: unknown[] = [];
+    const stop = watchNativeGateState((state) => seen.push(state), read);
+    useAccountStore.setState({ pinSetAt: 42 });
+    await vi.waitFor(() => expect(seen).toEqual([{ state: 'unknown' }]));
+    values[PIN_HASH_KEY] = HASH;
+    await vi.waitFor(() => expect(seen).toEqual([{ state: 'unknown' }, { state: 'pin', epoch: 42 }]), { timeout: GATE_RECHECK_MS * 4 });
+    values[PIN_HASH_KEY] = null;
+    useAccountStore.setState({ pinSetAt: 42.5 });
+    await vi.waitFor(() => expect(seen).toHaveLength(3));
+    await new Promise((resolve) => setTimeout(resolve, GATE_RECHECK_MS * 2));
+    // The recheck of the second unknown ran once; a third unknown starts no new timer of its own.
+    expect(seen.length).toBeLessThanOrEqual(4);
     stop();
   });
 });

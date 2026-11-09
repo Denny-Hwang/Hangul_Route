@@ -12,7 +12,8 @@
  * - **Wipe** (sign-out, the install sweep, a gate state that is not `pin`): every indexed key, every key the pinned
  *   Clerk version is known to use (`CLERK_NAMED_KEYS`), then the index; true only when every delete answered.
  * - **Unreadable items**: a read that throws (an Android decrypt error after a restore, a damaged item) deletes that
- *   item and the index and reads as signed out.
+ *   item and every kept item with the index, and reads as signed out. A damaged index is never written over: no key
+ *   is kept until a wipe has deleted it.
  *
  * Every SecureStore call runs one at a time, so two saves never read the same index and lose a key.
  */
@@ -78,7 +79,7 @@ export interface TokenCacheController {
  *
  * | Phase    | Gate state      | Step                                                                          |
  * | `mount`  | `pin`           | `use_secure`: read the kept session (a memory item from a non-PIN run is dropped) |
- * | `mount`  | `open`, `nopin` | `use_memory`: delete every kept item; this run's items stay in memory only      |
+ * | `mount`  | `open`, `nopin` | `use_memory`: delete every kept item and an earlier visit's memory items (ND-9) |
  * | `change` | `open`, `nopin` | `wipe` when items are kept (the PIN went: the kept session ends), else `keep`   |
  * | `change` | `pin`           | `keep`: a session made before the PIN existed is not kept (7.3: sign in again)  |
  * | any      | `unknown`       | `keep`: nothing is decided, and Clerk does not mount on `unknown`               |
@@ -118,29 +119,23 @@ export function createTokenCache(port: SecureItemPort): TokenCacheController {
     return run;
   };
 
-  /** The index as stored; `null` when the read failed. A damaged index is deleted and reads as empty. */
-  const readIndex = async (): Promise<string[] | null> => {
-    let raw: string | null;
+  /**
+   * The index as stored; `null` when the read failed, `damaged` when it does not parse (the keys it named are not known
+   * any more: no key is kept again until a wipe deletes the damaged index).
+   */
+  const readIndex = async (): Promise<string[] | 'damaged' | null> => {
     try {
-      raw = await port.get(CLERK_INDEX_KEY);
+      return indexKeysOf(await port.get(CLERK_INDEX_KEY));
     } catch {
       return null;
     }
-    const keys = indexKeysOf(raw);
-    if (keys !== 'damaged') return keys;
-    try {
-      await port.remove(CLERK_INDEX_KEY);
-    } catch {
-      return null;
-    }
-    return [];
   };
 
   /** Writes one item to SecureStore, index first; false when it could not be indexed or written. */
   const keep = async (key: string, value: string): Promise<boolean> => {
     if (!isStorableKey(key)) return false;
     const keys = await readIndex();
-    if (keys === null) return false;
+    if (keys === null || keys === 'damaged') return false;
     if (!keys.includes(key)) {
       try {
         await port.set(CLERK_INDEX_KEY, JSON.stringify([...keys, key]));
@@ -156,21 +151,29 @@ export function createTokenCache(port: SecureItemPort): TokenCacheController {
     }
   };
 
-  /** Deletes every kept item and then the index; true when every delete answered and the index could be read. */
+  /**
+   * Deletes every kept item and then the index, and reads each one back: true only when the index could be read and
+   * every key reads back as absent. (On iOS a delete never reports a failure, so the read-back is what proves it.) A
+   * damaged index cannot name its keys: the named keys and the index go, and the wipe counts as done, since Clerk's
+   * cache writes only the named key (`CLERK_NAMED_KEYS`).
+   */
   const wipeKept = async (): Promise<boolean> => {
     const indexed = await readIndex();
     let ok = indexed !== null;
-    for (const key of new Set([...(indexed ?? []), ...CLERK_NAMED_KEYS])) {
+    const keys = [...new Set([...(Array.isArray(indexed) ? indexed : []), ...CLERK_NAMED_KEYS]), CLERK_INDEX_KEY];
+    for (const key of keys) {
       try {
         await port.remove(key);
       } catch {
         ok = false;
       }
     }
-    try {
-      await port.remove(CLERK_INDEX_KEY);
-    } catch {
-      ok = false;
+    for (const key of keys) {
+      try {
+        if ((await port.get(key)) !== null) ok = false;
+      } catch {
+        ok = false;
+      }
     }
     return ok;
   };
@@ -184,9 +187,10 @@ export function createTokenCache(port: SecureItemPort): TokenCacheController {
         try {
           return await port.get(key);
         } catch {
-          // An item that cannot be read is gone for good: delete it and the index, and read as signed out.
+          // An item that cannot be read is gone for good: delete it and every other kept item with the index (so no
+          // indexed key is left behind without an index), and read as signed out.
           await port.remove(key).catch(() => undefined);
-          await port.remove(CLERK_INDEX_KEY).catch(() => undefined);
+          await wipeKept();
           return null;
         }
       });

@@ -7,13 +7,18 @@ import { NATIVE_CLIENT_HEADER, NATIVE_CLIENT_VALUE } from '@hangul-route/content
  * - The base is `EXPO_PUBLIC_API_BASE_URL`, refused unless it is `https:` (a development build may use
  *   `http://localhost`); a base with a user, a query or a fragment is refused too. A refused base sends nothing.
  * - Every call asks Clerk for a fresh token (`getToken`); no token (signed out mid-flight) answers `unauthorized`
- *   and no request leaves, as the console's `createConsoleApi` does.
- * - Every request carries `Authorization: Bearer`, `X-HR-Client: native` and asks for no cache (`cache: 'no-store'`).
- * - Only paths under `/api/` on the base's own origin; any path under `/api/sync` or `/api/recovery` is refused,
- *   checked after the URL is normalised (`%2e%2e` segments included), so the account token never rides on the
- *   learner's sync or restore paths and no device secret is sent on an account route (section 11).
- * - Redirects are not followed with the bearer (`redirect: 'manual'`); an answer that was redirected anyway (React
- *   Native's fetch follows them) reads as `error`.
+ *   and no request leaves, as the console's `createConsoleApi` does. A token call that fails for the network (Clerk
+ *   throws `network_error`, `rethrowOfflineNetworkErrors` in `platform/clerk.native.tsx`) answers `offline`, never
+ *   `unauthorized`, so a dropped connection never deletes the records (section 8.8).
+ * - Every request carries `Authorization: Bearer`, `X-HR-Client: native` and asks for no cache (`Cache-Control:
+ *   no-store`, and `cache: 'no-store'`, which React Native's fetch turns into a `_=<time>` query on a GET).
+ * - An allow list of paths on the base's own origin, read after the URL is normalised (`%2e%2e` and `%2F` included):
+ *   `/api/spaces` and its sub-paths (with no query but `period`), and `/api/billing/summary?view=status`. So the
+ *   account token never rides on the learner's sync or restore paths, on a money route or anywhere else, and no
+ *   device secret is sent on an account route (section 11; the Worker refuses them too, section 9.4).
+ * - `redirect: 'manual'` asks for no redirect to be followed with the bearer. React Native's fetch ignores it (its
+ *   request follows a redirect, and the platform decides whether `Authorization` goes along); an answer that came from
+ *   another URL reads as `error`. The Worker never redirects these routes; device check D11 covers the rest.
  *
  * The Worker's envelope is `{ data }` on success and `{ error: { code } }` otherwise. `data` comes back as `unknown`:
  * each screen parses what it reads (row NS-5).
@@ -53,24 +58,33 @@ export function accountApiBase(raw: string | undefined, dev: boolean): string | 
   return secure || local ? url.origin : null;
 }
 
-/** Paths the account token must never reach (section 11): the learner's sync and restore. */
-const REFUSED_PATHS = /^\/api\/(sync|recovery)(\/|$)/i;
+/** The account paths (section 8.1), as normalised and decoded: the spaces routes, and the plan status view. */
+const SPACES_PATH = /^\/api\/spaces(\/[^/;]+)*$/;
+const STATUS_PATH = '/api/billing/summary';
+const PERIOD_QUERY = /^\?period=(day|week|month|all)$/;
 
-/** The full URL of `path` on `base`, or null when the path is not an account path of that origin. */
+/** The full URL of `path` on `base`, or null when the path is not one of the account paths of that origin. */
 export function accountUrl(base: string, path: string): string | null {
   if (!path.startsWith('/api/') || path.includes('\\') || path.includes('#')) return null;
   // `base` is an origin `accountApiBase` parsed and `path` starts with `/`, so this cannot throw.
   const url = new URL(path, base);
-  if (url.origin !== base || !url.pathname.startsWith('/api/') || REFUSED_PATHS.test(url.pathname)) return null;
+  if (url.origin !== base) return null;
   // An encoded slash or dot (`%2F`, `%2e`) is not a segment to the URL but may be one to the Worker's router: read the
-  // path decoded and with its dot segments resolved too.
+  // path decoded and with its dot segments resolved too, and require both readings to be the same account path.
   let decoded: string;
   try {
     decoded = new URL(decodeURIComponent(url.pathname), base).pathname;
   } catch {
     return null;
   }
-  return decoded.startsWith('/api/') && !REFUSED_PATHS.test(decoded) ? url.toString() : null;
+  const spaces = SPACES_PATH.test(url.pathname) && SPACES_PATH.test(decoded) && (url.search === '' || PERIOD_QUERY.test(url.search));
+  const status = url.pathname === STATUS_PATH && decoded === STATUS_PATH && url.search === '?view=status';
+  return spaces || status ? url.toString() : null;
+}
+
+/** A Clerk error for a request that failed for the network (`ClerkRuntimeError` with code `network_error`). */
+function networkError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: unknown }).code === 'network_error';
 }
 
 /** Whether an answer came from somewhere other than the URL asked (a redirect React Native's fetch followed). */
@@ -125,8 +139,8 @@ export function createAccountApi(opts: AccountApiOptions): AccountApi {
     let token: string | null;
     try {
       token = await opts.getToken();
-    } catch {
-      return { ok: false, error: 'error', status: 0 };
+    } catch (error) {
+      return networkError(error) ? { ok: false, error: 'offline', status: -1 } : { ok: false, error: 'error', status: 0 };
     }
     if (!token) return { ok: false, error: 'unauthorized', status: 401 };
     let res: Awaited<ReturnType<FetchLike>>;

@@ -5,4 +5,4 @@ import type { ClerkHost } from './clerk-host';
  * its own Clerk (F-AUTH-002); the learner bundle never carries Clerk's Expo SDK. iOS and Android resolve
  * `clerk.native.tsx` instead.
  */
-export const clerkHost: ClerkHost = { Provider: null };
+export const clerkHost: ClerkHost = { Provider: null, endSession: async () => true };

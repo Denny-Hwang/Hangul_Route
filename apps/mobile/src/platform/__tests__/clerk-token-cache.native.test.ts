@@ -25,7 +25,8 @@ vi.mock('expo-secure-store', () => ({ ...store, WHEN_UNLOCKED_THIS_DEVICE_ONLY: 
 
 const storage = vi.hoisted(() => ({ values: new Map<string, unknown>(), failRead: false }));
 vi.mock('../storage', () => ({
-  readJsonExact: vi.fn(async (key: string) => {
+  // The strict read: a failed read throws, a value that does not parse reads as none.
+  readJsonStrict: vi.fn(async (key: string) => {
     if (storage.failRead) throw new Error('io');
     return storage.values.get(key) ?? null;
   }),
@@ -104,6 +105,16 @@ describe('ensureInstallSweep (section 6.2)', () => {
     expect(storage.values.get('grownup:installed')).toEqual({ v: 1, at: expect.any(Number) });
   });
 
+  it('a record that does not parse reads as none: the sweep runs and writes it again', async () => {
+    // readJsonStrict answers null for a value that does not parse.
+    storage.values.set('grownup:installed', null);
+    store.items.set(JWT, 'x');
+    const { ensureInstallSweep } = await load();
+    expect(await ensureInstallSweep()).toBe(true);
+    expect(store.items.size).toBe(0);
+    expect(storage.values.get('grownup:installed')).toEqual({ v: 1, at: expect.any(Number) });
+  });
+
   it('a record read that fails deletes nothing and is not complete', async () => {
     storage.failRead = true;
     store.items.set(JWT, 'x');
@@ -125,14 +136,42 @@ describe('applyGateToTokens (ND-9)', () => {
     expect(store.items.has('memory-only')).toBe(false);
   });
 
-  it('mount on `open` or `nopin`: deletes every kept item and keeps nothing', async () => {
+  it('mount on `open` or `nopin`: deletes every kept item and an earlier visit’s memory items (ND-9)', async () => {
     for (const state of ['open', 'nopin'] as const) {
       store.items.set(JWT, 'kept');
       const { applyGateToTokens, clerkTokens } = await load();
+      await clerkTokens.cache.saveToken('earlier-visit', 'x');
       expect(await applyGateToTokens({ state }, 'mount')).toBe(true);
       expect(clerkTokens.storage()).toBe('memory');
       expect(store.items.has(JWT)).toBe(false);
+      expect(await clerkTokens.cache.getToken('earlier-visit')).toBeNull();
     }
+  });
+
+  it('applyGateChange: leaving `pin` signs Clerk out first, then deletes; other changes sign nothing out', async () => {
+    const { applyGateChange, applyGateToTokens, clerkTokens } = await load();
+    await applyGateToTokens({ state: 'pin', epoch: 5 }, 'mount');
+    await clerkTokens.cache.saveToken(JWT, 'kept');
+    const order: string[] = [];
+    const endSession = vi.fn(async () => {
+      order.push(store.items.has(JWT) ? 'end with the token' : 'end without');
+      return true;
+    });
+    expect(await applyGateChange({ state: 'pin', epoch: 6 }, endSession)).toBe(true);
+    expect(endSession).not.toHaveBeenCalled();
+    expect(await applyGateChange({ state: 'open' }, endSession)).toBe(true);
+    expect(order).toEqual(['end with the token']);
+    expect(store.items.has(JWT)).toBe(false);
+    expect(await applyGateChange({ state: 'nopin' }, endSession)).toBe(true);
+    expect(endSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('applyGateChange reports a sign-out that failed (offline), and still deletes', async () => {
+    const { applyGateChange, applyGateToTokens, clerkTokens } = await load();
+    await applyGateToTokens({ state: 'pin', epoch: 5 }, 'mount');
+    await clerkTokens.cache.saveToken(JWT, 'kept');
+    expect(await applyGateChange({ state: 'open' }, async () => Promise.reject(new Error('offline')))).toBe(false);
+    expect(store.items.has(JWT)).toBe(false);
   });
 
   it('a change that leaves `pin` ends the kept session, memory items too', async () => {

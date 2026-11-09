@@ -12,10 +12,11 @@
  * - A delete that fails (for example while the device has not been unlocked since a restart): `failed`, the record
  *   stays unwritten and the sweep runs again next time.
  * - The deletes answered but the record could not be written: `swept` (nothing is left in this run), and the next
- *   launch sweeps again, which deletes nothing more.
+ *   launch sweeps again (which also ends a session kept in this run: the safe side).
  *
- * An Android restore brings `hr:grownup:installed` back with no keystore item (the backup excludes SecureStore), so it
- * reads as signed out and no sweep is needed.
+ * An Android restore brings back no keystore item and no AsyncStorage (the backup rules expo-secure-store installs
+ * include shared preferences only, and exclude SecureStore's), so a restored device reads as a fresh install: it sweeps
+ * (deleting nothing) and reads as signed out.
  */
 
 /** Device key (through `platform/storage`, so `hr:grownup:installed`); never ends in a profile id (section 13.1). */
@@ -62,7 +63,7 @@ export async function runInstallSweep(deps: InstallSweepDeps): Promise<InstallSw
   try {
     await deps.writeRecord({ v: 1, at: deps.now() });
   } catch {
-    // Every item is gone in this run; the next launch finds no record and sweeps again (it deletes nothing more).
+    // Every item is gone in this run; the next launch finds no record and sweeps again.
   }
   return 'swept';
 }

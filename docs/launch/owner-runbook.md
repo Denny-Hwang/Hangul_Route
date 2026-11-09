@@ -794,10 +794,10 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 **O-0. 다음 Xcode 빌드 전에 한 번 (NS-2 머지 후, 5분)** — 네이티브 모듈이 새로 들어왔다.
 1. `main` 을 받은 뒤 `pnpm install` (루트).
-2. `cd apps/mobile && npx expo prebuild --platform ios --clean` (iOS 폴더를 새로 만든다: `plugins/with-account-cover.js` 가 `AppDelegate.mm` 에 화면 가림막 코드를 넣고, expo-secure-store 플러그인이 Android 백업 제외를 넣는다). 그다음 `cd ios && pod install`.
+2. `cd apps/mobile && npx expo prebuild --platform ios --clean` (iOS 폴더를 새로 만든다: `plugins/with-account-cover.js` 가 `AppDelegate.mm` 에 화면 가림막 코드를 넣는다). 그다음 `cd ios && pod install`.
 3. Xcode 로 평소처럼 빌드한다 (EAS 는 쓰지 않는다). 빌드가 되면 **앱 크기**를 적어 보낸다: Xcode → Product → Archive → Distribute App → (Custom) Development → Export 의 "App Thinning Size Report.txt" 에서 iPhone 한 기종의 "App size … uncompressed" 값, 그리고 NS-2 직전 빌드의 같은 값 (없으면 이번 값만). 사양 6.1 의 "binary size before and after" 칸에 들어간다. (JS 번들 크기는 NS-2 PR 이 이미 쟀다.)
 4. 꺼진 빌드이므로 앱은 전과 같아야 한다: 어른 공간이 열리고, 학습 화면이 그대로다. 다르면 로그 마지막 30줄을 보낸다.
-5. Android 빌드도 같은 순서 (`npx expo prebuild --platform android --clean` → Android Studio / Gradle).
+5. Android 빌드도 같은 순서 (`npx expo prebuild --platform android --clean` → Android Studio / Gradle). 이때 expo-secure-store 플러그인이 Android 백업 제외 규칙을 넣는다. 합쳐진 AndroidManifest 의 권한 목록에 `DETECT_SCREEN_CAPTURE` 가 **없는지**, `READ_EXTERNAL_STORAGE` 는 전과 같은지 (expo-file-system 이 이미 넣던 것) 한 번 본다.
 
 | # | 할 일 | 시점 |
 |---|---|---|

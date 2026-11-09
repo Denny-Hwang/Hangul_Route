@@ -1,4 +1,4 @@
-import { Children, createElement, isValidElement, useEffect, type ComponentType, type ReactElement, type ReactNode } from 'react';
+import { Children, createElement, isValidElement, useContext, useEffect, type ComponentType, type ReactElement, type ReactNode } from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, unmount } from '../../test-support/render';
@@ -19,12 +19,29 @@ const tokens = vi.hoisted(() => ({
   cache: { getToken: async () => null, saveToken: async () => undefined },
   sweep: vi.fn(async (): Promise<boolean> => true),
   apply: vi.fn(async (_gate: unknown, _phase: 'mount' | 'change') => true),
+  change: vi.fn(async (_gate: unknown, _end: () => Promise<boolean>) => true),
 }));
 vi.mock('../../platform/clerk-token-cache.native', () => ({
   clerkTokens: { cache: tokens.cache },
   ensureInstallSweep: tokens.sweep,
   applyGateToTokens: tokens.apply,
+  applyGateChange: tokens.change,
 }));
+
+/** The query client the area clears (CS-N4), and the session-close listeners. */
+const queries = vi.hoisted(() => ({
+  client: { cancelQueries: vi.fn(async () => undefined), removeQueries: vi.fn() },
+  closed: [] as (() => void)[],
+}));
+vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => queries.client }));
+vi.mock('../../store/grown-up-session', () => ({
+  onGrownUpSessionClosed: (listener: () => void) => {
+    queries.closed.push(listener);
+    return () => undefined;
+  },
+}));
+const crash = vi.hoisted(() => ({ report: vi.fn() }));
+vi.mock('../../platform/crash-report', () => ({ reportCrash: crash.report }));
 
 const gate = vi.hoisted(() => ({
   state: { state: 'pin', epoch: 5 } as { state: string; epoch?: number },
@@ -41,9 +58,17 @@ vi.mock('../../store/native-gate-state', () => ({
 }));
 
 /** Clerk's provider, counted: CS-N1 asks when it is mounted. */
-const clerk = vi.hoisted(() => ({ mounted: 0, props: [] as Record<string, unknown>[] }));
+const clerk = vi.hoisted(() => ({
+  mounted: 0,
+  props: [] as Record<string, unknown>[],
+  throwOnRender: false,
+  log: [] as string[],
+  signOut: vi.fn(async (_callback?: () => void) => undefined),
+}));
 vi.mock('@clerk/clerk-expo', () => ({
+  getClerkInstance: () => ({ signOut: clerk.signOut }),
   ClerkProvider: ({ children, ...props }: { children: ReactNode } & Record<string, unknown>): ReactElement => {
+    if (clerk.throwOnRender) throw new TypeError('Clerk: something with user@example.com');
     clerk.props.push(props);
     useEffect(() => {
       clerk.mounted += 1;
@@ -98,6 +123,7 @@ beforeEach(() => {
   gate.listener = null;
   clerk.mounted = 0;
   clerk.props = [];
+  clerk.throwOnRender = false;
   vi.clearAllMocks();
   tokens.sweep.mockImplementation(async () => true);
 });
@@ -134,7 +160,7 @@ describe('CS-N1: Clerk only inside the Grown-up area stack', () => {
     // The dashboard keeps its route params under the same route name.
     expect(navigator.findByType('dashboard' as never).props.params).toEqual({ browseBlocked: true });
     expect(clerk.mounted).toBe(1);
-    expect(clerk.props.at(-1)).toEqual({ publishableKey: 'pk_live_key', tokenCache: tokens.cache, telemetry: false });
+    expect(clerk.props.at(-1)).toEqual({ publishableKey: 'pk_live_key', tokenCache: tokens.cache, telemetry: false, experimental: { rethrowOfflineNetworkErrors: true } });
     expect(tokens.apply).toHaveBeenCalledWith({ state: 'pin', epoch: 5 }, 'mount');
     await unmount(renderer);
     expect(clerk.mounted).toBe(0);
@@ -157,7 +183,11 @@ describe('CS-N1: Clerk only inside the Grown-up area stack', () => {
     await act(async () => {
       gate.listener?.({ state: 'open' });
     });
-    expect(tokens.apply).toHaveBeenLastCalledWith({ state: 'open' }, 'change');
+    // The change goes through applyGateChange with Clerk's own sign-out (the instance outlives the provider).
+    expect(tokens.change).toHaveBeenCalledWith({ state: 'open' }, expect.any(Function));
+    const end = tokens.change.mock.calls[0]![1];
+    await end();
+    expect(clerk.signOut).toHaveBeenCalledTimes(1);
     await unmount(renderer);
   });
 
@@ -199,12 +229,61 @@ describe('CS-N1: Clerk only inside the Grown-up area stack', () => {
       vi.advanceTimersByTime(CLERK_MOUNT_WAIT_MS);
     });
     expect(renderer.root.findAllByType('dashboard' as never)).toHaveLength(1);
-    await act(async () => {
-      finish(true);
-      await Promise.resolve();
-    });
+    vi.useRealTimers();
+    finish(true);
+    // The late answer goes no further: the visit no longer waits, so no gate read, no token change, no provider.
+    await settle(() => false);
+    expect(gate.read).not.toHaveBeenCalled();
+    expect(tokens.apply).not.toHaveBeenCalled();
     expect(clerk.mounted).toBe(0);
+    expect(renderer.root.findAllByType('clerk-provider' as never)).toHaveLength(0);
     await unmount(renderer);
+  });
+
+  it('says whether Clerk is mounted (ClerkMountContext) to the screens below', async () => {
+    const mod = await load();
+    const seen: string[] = [];
+    const Probe = (): null => {
+      seen.push(useContext(mod.ClerkMountContext));
+      return null;
+    };
+    const renderer = await render(createElement(mod.ClerkMountContext.Provider, { value: 'ready' }, createElement(Probe)));
+    expect(seen.at(-1)).toBe('ready');
+    await unmount(renderer);
+    const stack = await render(createElement(asComponent(mod.GrownUpStack), { route: ROUTE, navigation: {} }));
+    await settle(() => clerk.mounted === 1);
+    expect(stack.root.findAllByType('clerk-provider' as never)).toHaveLength(1);
+    await unmount(stack);
+  });
+
+  it('a Clerk render error falls back to the dashboard without Clerk, and reports the class only (CS-N15)', async () => {
+    clerk.throwOnRender = true;
+    const { GrownUpStack } = await load();
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
+    await settle(() => crash.report.mock.calls.length > 0);
+    spy.mockRestore();
+    expect(renderer.root.findAllByType('clerk-provider' as never)).toHaveLength(0);
+    expect(renderer.root.findAllByType('dashboard' as never)).toHaveLength(1);
+    const [error, surface, route] = crash.report.mock.calls[0]!;
+    expect((error as Error).message).toBe('');
+    expect((error as Error).name).toBe('TypeError');
+    expect([surface, route]).toEqual(['learner', 'ParentDashboard']);
+    await unmount(renderer);
+  });
+
+  it('clears the account queries when the area unmounts and at every session close (CS-N4)', async () => {
+    const { GrownUpStack, bindAccountQueryClearing } = await load();
+    const renderer = await render(createElement(asComponent(GrownUpStack), { route: ROUTE, navigation: {} }));
+    await settle(() => clerk.mounted === 1);
+    await unmount(renderer);
+    expect(queries.client.removeQueries).toHaveBeenCalledWith({ queryKey: ['account'] });
+    queries.client.removeQueries.mockClear();
+    // A close that comes after the unmount (the chooser: the navigation event runs after the commit) still clears.
+    bindAccountQueryClearing();
+    queries.closed.at(-1)?.();
+    await Promise.resolve();
+    expect(queries.client.removeQueries).toHaveBeenCalledWith({ queryKey: ['account'] });
   });
 });
 
@@ -214,7 +293,7 @@ describe('prepareClerkMount', () => {
     sweep: async () => true,
     gate: async () => ({ state: 'pin', epoch: 1 }),
     applyGate: async () => true,
-    load: async () => ({ clerkHost: { Provider: () => null } }),
+    load: async () => ({ clerkHost: { Provider: () => null, endSession: async () => true } }),
     ...over,
   });
 
@@ -222,23 +301,92 @@ describe('prepareClerkMount', () => {
     const { prepareClerkMount } = await load();
     expect(await prepareClerkMount(deps({ config: { flag: true, publishableKey: null, enabled: true } }) as never)).toEqual({ state: 'off' });
     expect(await prepareClerkMount(deps({ config: { flag: false, publishableKey: 'k', enabled: false } }) as never)).toEqual({ state: 'off' });
-    expect(await prepareClerkMount(deps({ load: async () => ({ clerkHost: { Provider: null } }) }) as never)).toEqual({ state: 'off' });
+    expect(await prepareClerkMount(deps({ load: async () => ({ clerkHost: { Provider: null, endSession: async () => true } }) }) as never)).toEqual({ state: 'off' });
     expect(await prepareClerkMount(deps({ load: async () => Promise.reject(new Error('module')) }) as never)).toEqual({ state: 'off' });
   });
 
   it('loads Clerk only after the sweep and a known gate', async () => {
     const { prepareClerkMount } = await load();
-    const loadClerk = vi.fn(async () => ({ clerkHost: { Provider: () => null } }));
+    const loadClerk = vi.fn(async () => ({ clerkHost: { Provider: () => null, endSession: async () => true } }));
     await prepareClerkMount(deps({ sweep: async () => false, load: loadClerk }) as never);
     await prepareClerkMount(deps({ gate: async () => ({ state: 'unknown' }), load: loadClerk }) as never);
-    await prepareClerkMount(deps({ gate: async () => ({ state: 'nopin' }), load: loadClerk }) as never);
     expect(loadClerk).not.toHaveBeenCalled();
+    // `nopin` loads the host only to sign out an earlier session; it never mounts the provider.
+    expect(await prepareClerkMount(deps({ gate: async () => ({ state: 'nopin' }), load: loadClerk }) as never)).toEqual({ state: 'off' });
+    loadClerk.mockClear();
     expect(await prepareClerkMount(deps({ load: loadClerk }) as never)).toMatchObject({ state: 'ready', publishableKey: 'pk_live_key' });
     expect(loadClerk).toHaveBeenCalledTimes(1);
   });
 
-  it('the default loader is the native Clerk host', async () => {
+  it('on `open`: Clerk’s session from an earlier visit is signed out before the storage is reset (ND-9)', async () => {
+    const { prepareClerkMount } = await load();
+    const order: string[] = [];
+    const host = { Provider: () => null, endSession: async () => (order.push('end session'), true) };
+    const result = await prepareClerkMount(
+      deps({ gate: async () => ({ state: 'open' }), applyGate: async () => (order.push('apply mount'), true), load: async () => ({ clerkHost: host }) }) as never,
+    );
+    expect(order).toEqual(['end session', 'apply mount']);
+    expect(result).toMatchObject({ state: 'ready' });
+    order.length = 0;
+    expect(await prepareClerkMount(deps({ gate: async () => ({ state: 'nopin' }), applyGate: async () => (order.push('apply mount'), true), load: async () => ({ clerkHost: host }) }) as never)).toEqual({ state: 'off' });
+    expect(order).toEqual(['end session', 'apply mount']);
+    order.length = 0;
+    await prepareClerkMount(deps({ applyGate: async () => (order.push('apply mount'), true), load: async () => ({ clerkHost: host }) }) as never);
+    // A kept session on `pin` is not signed out.
+    expect(order).toEqual(['apply mount']);
+  });
+
+  it('a visit that stopped waiting changes nothing more', async () => {
+    const { prepareClerkMount } = await load();
+    const applyGate = vi.fn(async () => true);
+    const loadClerk = vi.fn(async () => ({ clerkHost: { Provider: () => null, endSession: async () => true } }));
+    let waiting = true;
+    const result = prepareClerkMount(
+      deps({
+        sweep: async () => {
+          waiting = false;
+          return true;
+        },
+        applyGate,
+        load: loadClerk,
+      }) as never,
+      () => waiting,
+    );
+    expect(await result).toEqual({ state: 'off' });
+    expect(applyGate).not.toHaveBeenCalled();
+    expect(loadClerk).not.toHaveBeenCalled();
+    for (const stopAt of ['gate', 'load'] as const) {
+      let live = true;
+      const r = await prepareClerkMount(
+        deps({
+          gate: async () => {
+            if (stopAt === 'gate') live = false;
+            return { state: 'open' };
+          },
+          load: async () => {
+            if (stopAt === 'load') live = false;
+            return { clerkHost: { Provider: () => null, endSession: async () => true } };
+          },
+        }) as never,
+        () => live,
+      );
+      expect(r, stopAt).toEqual({ state: 'off' });
+    }
+  });
+
+  it('the default loader is the native Clerk host, whose endSession signs out only after a provider mounted', async () => {
     const { clerkHost } = await import('../../platform/clerk');
+    expect(await clerkHost.endSession()).toBe(true);
+    expect(clerk.signOut).not.toHaveBeenCalled();
     expect(clerkHost.Provider).not.toBeNull();
+    const Provider = clerkHost.Provider as ComponentType<{ publishableKey: string; children: ReactNode }>;
+    const renderer = await render(createElement(Provider, { publishableKey: 'pk_live_key', children: null }));
+    expect(await clerkHost.endSession()).toBe(true);
+    expect(clerk.signOut).toHaveBeenCalledTimes(1);
+    // The callback form, so Clerk never tries to navigate a browser window.
+    expect(typeof clerk.signOut.mock.calls[0]![0]).toBe('function');
+    clerk.signOut.mockRejectedValueOnce(new Error('offline'));
+    expect(await clerkHost.endSession()).toBe(false);
+    await unmount(renderer);
   });
 });

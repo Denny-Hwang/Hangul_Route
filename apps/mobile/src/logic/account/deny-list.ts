@@ -26,45 +26,59 @@ export function planScreenHasWord(text: string, word: string, locale: UiLocale):
 }
 
 /**
- * Section 9.2: the native grown-up screens' words. en: whole words, any case (`card` is singular only: the account
- * screens never show heritage cards, and "cards" in a learner line is not a purchase word). es: word starts, any case
- * and any accent, so a stem (`suscrib`, `renov`, `gestion`) catches every form. ko: substrings (Korean attaches
- * particles to the word).
+ * Section 9.2: the native grown-up screens' words, as built in NS-2 (the spec's list, with the forms its whole words
+ * missed: "manages", "renews", "prices", "paid", "Subscriptions"). en: whole words, any case, and an entry ending in
+ * `*` is a stem that catches every ending (`manag*`: manage, manages, managed, managing). `card` is singular only: the
+ * account screens never show heritage cards, and "cards" in a learner line is not a purchase word. es: word starts,
+ * any case and any accent, so a stem (`suscrib`, `renov`, `renuev`, `gestion`, `administr`) catches every form. ko:
+ * substrings (Korean attaches particles to the word).
  */
 export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> = {
   en: [
     'buy',
-    'purchase',
-    'price',
+    'buys',
+    'buying',
+    'bought',
+    'purchas*',
+    'pric*',
     'cost',
-    'upgrade',
-    'subscribe',
-    'subscription',
-    'renew',
-    'manage',
+    'costs',
+    'upgrad*',
+    'subscri*',
+    'renew*',
+    'manag*',
     'trial',
-    'refund',
-    'invoice',
+    'trials',
+    'refund*',
+    'invoic*',
     'checkout',
-    'receipt',
-    'promo',
+    'receipt*',
+    'promo*',
     'billing',
-    'payment',
+    'bill',
+    'bills',
+    'billed',
+    'payment*',
     'pay',
+    'pays',
+    'paid',
+    'paying',
+    'payer*',
     'card',
     'premium',
-    'unlock',
+    'unlock*',
     'web',
-    'website',
-    'browser',
-    'console',
-    'computer',
-    'laptop',
-    'desktop',
+    'website*',
+    'browser*',
+    'console*',
+    'computer*',
+    'laptop*',
+    'desktop*',
     'stripe',
     'app store',
     'google play',
     'sign up',
+    'signup',
     'create an account',
   ],
   es: [
@@ -75,7 +89,9 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'mejorar',
     'suscrib',
     'renov',
+    'renuev',
     'gestion',
+    'administr',
     'prueba gratis',
     'reembolso',
     'factura',
@@ -84,9 +100,10 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'facturación',
     'pago',
     'pagar',
+    'pagad',
     'tarjeta',
     'premium',
-    'desbloquear',
+    'desbloque',
     'web',
     'sitio',
     'navegador',
@@ -95,10 +112,10 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'ordenador',
     'regístrate',
   ],
-  ko: ['구매', '결제', '가격', '요금', '업그레이드', '구독', '갱신', '환불', '청구', '영수증', '프로모', '카드', '유료', '프리미엄', '잠금 해제', '웹', '사이트', '브라우저', '콘솔', '컴퓨터', '가입'],
+  ko: ['구매', '결제', '가격', '요금', '업그레이드', '구독', '갱신', '환불', '청구', '영수증', '프로모', '카드', '유료', '프리미엄', '잠금 해제', '웹', '사이트', '브라우저', '콘솔', '컴퓨터', '가입', '관리'],
 };
 
-/** Section 9.2: substrings in every language (money, the site's address, any link). */
+/** Section 9.2: substrings in every language, in any case (money, the site's address, any link). */
 export const ACCOUNT_DENY_SYMBOLS: readonly string[] = ['$', '€', '£', '₩', 'USD', 'hangulroute.com', 'http'];
 
 /** A digit followed by 원 (a won amount), in every language. */
@@ -114,9 +131,10 @@ const escape = (word: string): string => word.replace(/[.*+?^${}()|[\]\\]/g, '\\
 const LETTER = '[\\p{L}\\p{N}]';
 
 function wordPattern(word: string, locale: UiLocale): RegExp {
-  const body = escape(fold(word)).replace(/ /g, '\\s+');
-  // es entries are word starts (stems); en entries are whole words.
-  const end = locale === 'es' ? '' : `(?!${LETTER})`;
+  const stem = locale === 'es' || word.endsWith('*');
+  const body = escape(fold(word.replace(/\*$/, ''))).replace(/ /g, '\\s+');
+  // es entries and en entries ending in `*` are word starts (stems); other en entries are whole words.
+  const end = stem ? '' : `(?!${LETTER})`;
   return new RegExp(`(?<!${LETTER})${body}${end}`, 'u');
 }
 
@@ -137,7 +155,8 @@ export function accountDenyHits(text: string, locale: UiLocale): string[] {
     const folded = fold(text);
     for (const { word, re } of PATTERNS[locale]) if (re.test(folded)) hits.push(word);
   }
-  for (const symbol of ACCOUNT_DENY_SYMBOLS) if (text.includes(symbol)) hits.push(symbol);
+  const lower = text.toLowerCase();
+  for (const symbol of ACCOUNT_DENY_SYMBOLS) if (lower.includes(symbol.toLowerCase())) hits.push(symbol);
   if (WON_AMOUNT.test(text)) hits.push('<digit>원');
   return hits;
 }
