@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import type { RootStackParamList } from '../../navigation/types';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
+import { retryLoad } from '../../logic/lessons/chunk-retry';
 
 /*
  * The start bundle's door to the grown-up reports (F-CURR-002 section 10): the learner report (`LearnerReport`, behind
@@ -17,7 +18,7 @@ let loading: Promise<Chunk> | null = null;
 let loaded: Chunk | null = null;
 
 function loadChunk(): Promise<Chunk> {
-  loading ??= import('./reports-chunk').then(
+  loading ??= retryLoad(() => import('./reports-chunk')).then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;

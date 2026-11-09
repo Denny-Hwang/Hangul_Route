@@ -123,6 +123,7 @@ import {
 } from './src/platform/presenter';
 import { applyUpdate, isOfflineReady, subscribePwa } from './src/platform/pwa';
 import { readJson, readJsonExact, writeJson } from './src/platform/storage';
+import { reportCrash } from './src/platform/crash-report';
 import { flushQueue, track } from './src/platform/telemetry';
 import { ControlBar, type RailMeasure } from './src/screens/presenter/ControlBar';
 import { ExitConfirm } from './src/screens/presenter/ExitConfirm';
@@ -1699,6 +1700,7 @@ function Presenter(): ReactElement {
     <PresenterViewProvider value={view}>
       {/* The presenter's own fallback, in the presenter locale (not the app's OopsScreen, which reads the profile locale). */}
       <ErrorBoundary
+        onError={(error) => reportCrash(error, 'presenter', 'PresenterApp')}
         fallbackRender={({ resetErrorBoundary }) => (
           <StatePage
             testID="presenter-oops"

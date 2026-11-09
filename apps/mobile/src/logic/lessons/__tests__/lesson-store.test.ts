@@ -524,3 +524,79 @@ describe('isNewBuildError (a page older than its chunks: only a reload mends it)
     expect(isNewBuildError(undefined)).toBe(false);
   });
 });
+
+describe('a failed cell load is asked again before it rejects (retryDelaysMs, chunk-retry.ts)', () => {
+  /** A loader that fails its first `fails` asks with `error`, then gives the chunk. */
+  function flaky(fails: number, error: () => Error = () => new Error('Loading module failed')) {
+    let asks = 0;
+    return {
+      asks: () => asks,
+      cell: (id: string): Promise<LessonCellChunk> | undefined => {
+        asks += 1;
+        if (id !== 'episode:stage3-life') return undefined;
+        return asks <= fails ? Promise.reject(error()) : Promise.resolve(life);
+      },
+      titles: (locale: OverlayLocale): Promise<LessonTitleChunk> => Promise.resolve(titles(locale)),
+    };
+  }
+
+  it('two failures then success: the load resolves, the quest is ready, nothing rejected', async () => {
+    const load = flaky(2);
+    const store = createLessonStore(manifest, load, { retryDelaysMs: [400, 1500] });
+    vi.useFakeTimers();
+    try {
+      const loading = store.ensureCells(['episode:stage3-life']);
+      await vi.advanceTimersByTimeAsync(400);
+      expect(load.asks()).toBe(2);
+      await vi.advanceTimersByTimeAsync(1500);
+      await loading;
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(load.asks()).toBe(3);
+    expect(store.isQuestReady('quest:stage3-life-q1')).toBe(true);
+  });
+
+  it('a failure on every ask rejects with the last error after one try and each retry, and a later ensure asks again', async () => {
+    const load = flaky(99);
+    const store = createLessonStore(manifest, load, { retryDelaysMs: [1, 1] });
+    await expect(store.ensureCells(['episode:stage3-life'])).rejects.toThrow('Loading module failed');
+    expect(load.asks()).toBe(3);
+    expect(store.isQuestReady('quest:stage3-life-q1')).toBe(false);
+    await expect(store.ensureCells(['episode:stage3-life'])).rejects.toThrow('Loading module failed');
+    expect(load.asks()).toBe(6);
+  });
+
+  it('no retry for a chunk of another build or a timeout', async () => {
+    const mismatch = flaky(99, () => new LessonChunkMismatch('episode:stage3-life', 'h-life', 'h-old'));
+    await expect(createLessonStore(manifest, mismatch, { retryDelaysMs: [1, 1] }).ensureCells(['episode:stage3-life'])).rejects.toBeInstanceOf(LessonChunkMismatch);
+    expect(mismatch.asks()).toBe(1);
+    const unknownModule = flaky(99, () => new Error('Requiring unknown module "9"'));
+    await expect(createLessonStore(manifest, unknownModule, { retryDelaysMs: [1, 1] }).ensureCells(['episode:stage3-life'])).rejects.toThrow('Requiring unknown module');
+    expect(unknownModule.asks()).toBe(1);
+    const hung = flaky(99, () => new LessonChunkTimeout('episode:stage3-life', 15_000));
+    await expect(createLessonStore(manifest, hung, { retryDelaysMs: [1, 1] }).ensureCells(['episode:stage3-life'])).rejects.toBeInstanceOf(LessonChunkTimeout);
+    expect(hung.asks()).toBe(1);
+  });
+
+  it('a manifest cell with no loader still rejects at once, and without retryDelaysMs nothing is retried', async () => {
+    const none = flaky(0);
+    await expect(createLessonStore(manifest, none, { retryDelaysMs: [1, 1] }).ensureCells(['episode:stage2-rites'])).rejects.toThrow('no loader for the lesson chunk of episode:stage2-rites');
+    expect(none.asks()).toBe(1);
+    const once = flaky(99);
+    await expect(createLessonStore(manifest, once).ensureCells(['episode:stage3-life'])).rejects.toThrow();
+    expect(once.asks()).toBe(1);
+  });
+
+  it('a retry that finds no loader for the chunk rejects instead of looping', async () => {
+    let asks = 0;
+    const load = {
+      cell: (): Promise<LessonCellChunk> | undefined => {
+        asks += 1;
+        return asks === 1 ? Promise.reject(new Error('offline')) : undefined;
+      },
+      titles: (locale: OverlayLocale): Promise<LessonTitleChunk> => Promise.resolve(titles(locale)),
+    };
+    await expect(createLessonStore(manifest, load, { retryDelaysMs: [1, 1] }).ensureCells(['episode:stage3-life'])).rejects.toThrow('no loader for the lesson chunk of episode:stage3-life');
+  });
+});

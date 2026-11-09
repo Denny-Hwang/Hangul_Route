@@ -9,6 +9,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./lint": "./src/lesson-lint.ts",
+    "./crash-telemetry": "./src/schemas/crash-telemetry.ts",
     "./review-items": "./src/review-items/review-item.ts",
     "./letter-names": "./src/hangul/letter-names.ts",
     "./memory": "./src/memory/memory-sync.ts",

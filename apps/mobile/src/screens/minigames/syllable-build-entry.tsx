@@ -6,6 +6,7 @@ import { useCurrFlag } from '../../store/remote-config-store';
 import { LessonWaiting } from '../lesson-content';
 import { OopsScreen } from '../system/OopsScreen';
 import type { MinigameHost } from './host';
+import { retryLoad } from '../../logic/lessons/chunk-retry';
 
 /*
  * The start bundle's door to Syllable Build and the Block Sprint (F-CURR-002 sections 7.1 F3 and F9, 10 and 12.2, row
@@ -26,7 +27,7 @@ let loaded: Chunk | null = null;
 /** The Syllable Build chunk, loaded once; the Daily Review chunk reaches the review round here. */
 export function syllableBuildChunk(): Promise<Chunk> {
   if (loaded !== null) return Promise.resolve(loaded);
-  loading ??= import('./syllable-build-chunk').then(
+  loading ??= retryLoad(() => import('./syllable-build-chunk')).then(
     (chunk) => (loaded = chunk),
     (error: unknown) => {
       loading = null;

@@ -49,9 +49,11 @@ describe('browse fences', () => {
     }
   });
 
-  it('allows the five browse.* names and no learner name', () => {
+  it('allows the five browse.* names and app.crash, and no learner name', () => {
     for (const name of BROWSE_EVENT_NAMES) expect(isBrowseEventName(name), name).toBe(true);
-    for (const name of TELEMETRY_EVENT_NAMES.filter((n) => !n.startsWith('browse.'))) expect(isBrowseEventName(name), name).toBe(false);
+    for (const name of TELEMETRY_EVENT_NAMES.filter((n) => !n.startsWith('browse.') && n !== 'app.crash')) expect(isBrowseEventName(name), name).toBe(false);
+    expect(isBrowseEventName('app.crash')).toBe(true);
+    expect(isBrowseEventName('app.crashed')).toBe(false);
     expect(isBrowseEventName('browse.unknown')).toBe(false);
   });
 

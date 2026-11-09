@@ -291,3 +291,15 @@ These are shape checks, so `questId`, `stampId` and `questKind` could still carr
 | 2 | `route.refresh_started` | AMENDMENTS-ROUTE-CLASS-BLEND §18 | `{ via: 'cell-check' \| 'daily-review' }`: a Refresh started, through the Cell Check of a listed cell or through Daily Review | BL-W | BL-7 |
 
 **Payload widening (no Worker change).** `route.next_started` (section N) gains `fromClass: boolean` (BL-7): true when the next item came from a class plan item with a `lectureDate`. The Worker stores that name's payload as sent (it has no payload allowlist), so no rule changes; a test pins that the field survives. `route.created` is unchanged.
+
+## U. Crash name (the top-level error boundaries; added by the crash-telemetry PR)
+
+> One new name. It is added to `TELEMETRY_EVENT_NAMES` (after section T), the exact-list tests (`packages/content-schema/src/__tests__/telemetry.test.ts`, `crash-telemetry.test.ts` and `packages/backend/src/__tests__/telemetry-crash.test.ts`) and, in the same change, its storage rule to `keptEventFields` (`packages/backend/src/lib/server-events.ts`, `CRASH_PAYLOAD_RULES`): each payload key is kept only when its documented schema (`CRASH_TELEMETRY_PAYLOADS`, `packages/content-schema/src/schemas/crash-telemetry.ts`, reached by the `@hangul-route/content-schema/crash-telemetry` subpath so the schema stays out of the start bundle; strict) accepts the value, any other key is dropped, and the event is stored **without a profile id**. An older Worker answers 422 and the client drops the event, so the app may ship first with no harm; the names are not shared with sections A to T.
+
+**Payload rules:** a root code, a route name, an error class name, a scrubbed message of at most 120 printable ASCII characters (no link, address or run of six digits), a chunk flag and the app version. No learner, profile, space, plan or content id; no stack; no route parameters.
+
+| # | Name | Owning spec | Payload | Emitted by |
+|---|---|---|---|---|
+| 1 | `app.crash` | F-APP-001 (the crash screen, `learner.oops`) | `{ surface: 'learner' \| 'browse' \| 'presenter', route, errorName, message, chunk: boolean, appVersion }`: the root's error boundary caught an error and drew "Hoya tripped over a rock"; `chunk` is true when a lesson, screen or root chunk could not load | `App.tsx`, `BrowseApp.tsx` and `PresenterApp.tsx` (`onError` of each top-level `ErrorBoundary`, `platform/crash-report.ts`) |
+
+**All lessons.** The `/browse` root's telemetry fence (F-BROWSE-001 section 4.10) lets `app.crash` through beside the five `browse.*` names; it carries nothing of a learner, and it is sent through the browse queue, never the learner's.

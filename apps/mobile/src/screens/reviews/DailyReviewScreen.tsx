@@ -196,6 +196,9 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
         recorded.current = [];
         if (plan !== null && yutOnRef.current) setYut({ seed: sessionSeed([plan.kind, ...plan.rounds.map((r) => r.question.itemId)]), finished: 0 });
         setPhase(plan === null ? { kind: 'nothing' } : { kind: 'playing', plan, index: 0 });
+      } catch {
+        // A session that cannot be planned is the same calm page, not a loading frame with no way on.
+        setPhase({ kind: 'nothing' });
       } finally {
         starting.current = false;
       }
@@ -288,10 +291,15 @@ export function DailyReviewScreen({ navigation }: Props): ReactElement {
         holdTimer.current = setTimeout(resolve, hold);
       });
     void (hold === 0 ? finish : Promise.all([finish, wait()]).then(([done]) => done))
-      .then(({ finished, world: next }) => {
-        world.current = next;
-        setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
-      })
+      .then(
+        ({ finished, world: next }) => {
+          world.current = next;
+          setPhase({ kind: 'result', session: p.plan.kind, stars: finished.stars, stronger: finished.stronger, after: finished.after });
+        },
+        // The session could not be written (a store that rejects): as a store that cannot be read, the calm "Nothing is
+        // waiting right now" page with its way home, never a loading frame with no way on (the Stage Check does the same).
+        () => setPhase({ kind: 'nothing' }),
+      )
       .finally(() => {
         finishing.current = false;
       });
