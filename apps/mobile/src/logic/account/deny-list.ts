@@ -33,7 +33,9 @@ export function planScreenHasWord(text: string, word: string, locale: UiLocale):
  * en: whole words, any case, and an entry ending in `*` is a stem that catches every ending (`manag*`: manage,
  * manages, managed, managing). es: word starts, any case and any accent, so a stem (`suscrib`, `renov`, `renuev`,
  * `gestion`, `administr`) catches every form. In en and es every word of an entry takes an optional plural ending
- * (`s`, `es`), so "credit cards" and "tarjetas de crédito" match. ko: substrings (Korean attaches particles to the
+ * (`s`, `es`), and the words of a phrase may be apart by spaces or a hyphen, so "credit cards", "credit-card" and
+ * "tarjetas de crédito" match. Charging a card stays caught without the bare card word (`charg*`, `card ending`,
+ * `saved card`; es `cobr`, `rechaz`; ko `결제`), as the NS-5 review asked. ko: substrings (Korean attaches particles to the
  * word), with every space removed from both the text and the entry, so "신용 카드" meets `신용카드`. `카드 정보` is not
  * on the list: the shipped heritage-card detail pane says it.
  */
@@ -77,6 +79,9 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'card on file',
     'add a card',
     'update your card',
+    'card ending',
+    'saved card',
+    'charg*',
     'declined',
     'premium',
     'unlock*',
@@ -124,6 +129,8 @@ export const ACCOUNT_DENY_WORDS: Readonly<Record<UiLocale, readonly string[]>> =
     'datos de la tarjeta',
     'agregar una tarjeta',
     'añadir una tarjeta',
+    'cobr',
+    'rechaz',
     'lecciones gratuitas',
     'premium',
     'desbloque',
@@ -192,7 +199,8 @@ function wordPattern(word: string, locale: UiLocale): RegExp {
   const star = word.endsWith('*');
   const words = fold(word.replace(/\*$/, '')).split(' ');
   // Every word takes an optional plural, but a stem's last word (it already catches every ending).
-  const body = words.map((part, k) => escape(part) + (star && k === words.length - 1 ? '' : PLURAL)).join('\\s+');
+  // Words of a phrase are apart by spaces or a hyphen ("credit-card").
+  const body = words.map((part, k) => escape(part) + (star && k === words.length - 1 ? '' : PLURAL)).join('[\\s-]+');
   // es entries and en entries ending in `*` are word starts (stems); other en entries are whole words.
   const end = locale === 'es' || star ? '' : `(?!${LETTER})`;
   return new RegExp(`(?<!${LETTER})${body}${end}`, 'u');

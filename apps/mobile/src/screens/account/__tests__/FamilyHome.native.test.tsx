@@ -156,10 +156,11 @@ async function settle(): Promise<void> {
   }
 }
 
-async function mountHome(o: { use?: 'family' | 'account'; routes?: string[] } = {}): Promise<ReactTestRenderer> {
+async function mountHome(o: { use?: 'family' | 'account'; routes?: string[]; seed?: unknown } = {}): Promise<ReactTestRenderer> {
   nav = makeNav(o.routes ?? ['ParentDashboard', 'AccountHome']);
   host = { mount: 'ready', endSession: vi.fn(async () => true), wipeTokens: vi.fn(async () => true), retry: vi.fn() };
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  if (o.seed !== undefined) client.setQueryData(['account', 'spaces'], o.seed);
   const use = o.use ?? 'family';
   rebuild = () =>
     createElement(
@@ -231,7 +232,7 @@ describe('ready (boards 1 to 5): families, learners, the code panel, the plan bl
   it('See report opens the learner report on the week (ids in memory only)', async () => {
     const r = await mountHome();
     await tap(r.root, 'account-learner-profile:mina-report');
-    expect(nav.navigate).toHaveBeenCalledWith('AccountLearnerReport', { spaceId: 'space:kim', learnerId: 'profile:mina', period: 'week' });
+    expect(nav.navigate).toHaveBeenCalledWith('AccountLearnerReport', { spaceId: 'space:kim', learnerId: 'profile:mina', period: 'week', use: 'family' });
   });
 
   it('the owner sees the code in two groups, read spelled out (D11); a caregiver reads askOwner; an archived family no panel', async () => {
@@ -299,6 +300,52 @@ describe('ready (boards 1 to 5): families, learners, the code panel, the plan bl
   });
 });
 
+describe('the spaces cache is shared with the sign-in, the account card and the gate (NS-5 review)', () => {
+  it('a home opened right after a sign-in (the raw answer cached) draws, and the cache keeps the raw answer', async () => {
+    const r = await mountHome({ seed: SPACES });
+    expect(has(r.root, 'account-learner-profile:mina')).toBe(true);
+    // What the card and the gate read with `usesOfSpaces`.
+    expect(client.getQueryData(['account', 'spaces'])).toEqual(SPACES);
+  });
+
+  it('a seeded answer of another shape draws no family, never a crash', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.stubGlobal('fetch', async () => {
+      await gate;
+      return { status: 500, url: 'https://api.example.test/api/spaces', type: 'basic', json: async () => ({}) };
+    });
+    const r = await mountHome({ seed: { odd: true } });
+    expect(has(r.root, 'account-home-no-family')).toBe(true);
+    release();
+    await settle();
+  });
+
+  it('a spaces answer that arrives after Sign out never writes the uses record back', async () => {
+    let release!: () => void;
+    const late = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const r = await mountHome();
+    env.uses = [];
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
+      const path = new URL(url).pathname;
+      if (path === '/api/spaces') await late;
+      const answer = standardAnswer(String(init.method), path) as { status: number; body: unknown };
+      return { status: answer.status, url, type: 'basic', json: async () => answer.body };
+    });
+    await act(async () => void client.refetchQueries({ queryKey: ['account', 'spaces'] }));
+    await tap(r.root, 'account-home-sign-out');
+    await act(async () => sheetOf(r.root).onConfirm());
+    await settle();
+    release();
+    await settle();
+    expect(env.uses).toEqual([]);
+  });
+});
+
 describe('the code panel: Copy, Make a code, Join on this device', () => {
   it('Copy: Copied for about 2 seconds; a refused copy keeps the code and says so', async () => {
     vi.useRealTimers();
@@ -306,6 +353,8 @@ describe('the code panel: Copy, Make a code, Join on this device', () => {
     const r = await mountHome();
     await tap(r.root, 'account-family-space:kim-code-copy');
     expect(textsOf(r.root, 'account-family-space:kim-code-copy')).toContain(en.console.joinCode.copied.cta);
+    // The polite status holds Copied only while it shows (Android reads it; iOS announces).
+    expect(textsOf(r.root, 'account-family-space:kim-code-status')).toEqual([en.console.joinCode.copied.cta]);
     await act(async () => {
       vi.advanceTimersByTime(COPIED_MS + 10);
     });
@@ -489,6 +538,13 @@ describe('section 8.8: states', () => {
     expect(has(r.root, 'account-home-state-offline')).toBe(true);
   });
 
+  it('the network drops during a roster read: the whole home reads offline, not one family refused', async () => {
+    env.answer = (method, path) => (path === '/api/spaces/space%3Apark/roster' ? 'offline' : standardAnswer(method, path));
+    const r = await mountHome();
+    expect(has(r.root, 'account-home-state-offline')).toBe(true);
+    expect(has(r.root, 'account-family-space:park-refused')).toBe(false);
+  });
+
   it('a request that fails for the network reads offline', async () => {
     env.answer = () => 'offline';
     const r = await mountHome();
@@ -603,7 +659,13 @@ describe('Sign out (section 6.6): the sheet, then where it lands', () => {
 });
 
 describe('section 9.2: no purchase, price, renewal, web or sign-up word in any state, in en, es and ko, on iOS and Android', () => {
-  type Setup = { answer?: typeof env.answer; online?: boolean; notice?: boolean; use?: 'family' | 'account'; act?: (root: ReactTestInstance) => Promise<void>; plan?: unknown[] };
+  type Setup = { answer?: typeof env.answer; online?: boolean; notice?: boolean; use?: 'family' | 'account'; act?: (root: ReactTestInstance) => Promise<void>; plan?: unknown[]; pending?: boolean };
+  /** The owner's family with no live code (Make a code). */
+  const noCode: typeof env.answer = (method, path) => {
+    if (path === '/api/spaces') return { status: 200, body: { data: { spaces: SPACES.spaces.map((item) => ({ ...item, joinCode: null })) } } };
+    if (path === '/api/spaces/space%3Akim/roster') return { status: 200, body: { data: { ...(ROSTERS['space:kim'] as object), joinCode: null } } };
+    return standardAnswer(method, path);
+  };
   const failing = (path: string, status: number, code: string): typeof env.answer => (method, p) => (p === path ? { status, body: { error: { code } } } : standardAnswer(method, p));
   const STATES: Record<string, Setup> = {
     ready: { notice: true },
@@ -623,6 +685,13 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
       },
     },
     signOutSheet: { act: async (root) => tap(root, 'account-home-sign-out') },
+    freePlan: { plan: [card('space:kim', 'family', { state: 'free' }, { learners: 3, learnerCap: 3, teachers: null, teacherCap: null })] },
+    makeCode: { answer: noCode },
+    makeFailed: {
+      answer: (method, path) => (method === 'POST' ? { status: 500, body: { error: { code: 'x' } } } : noCode(method, path)),
+      act: async (root) => tap(root, 'account-family-space:kim-make-code'),
+    },
+    loading: { answer: () => 'offline', online: true, act: async () => undefined, pending: true },
     offline: { online: false },
     cantLoad: { answer: failing('/api/spaces', 500, 'x') },
     unavailable: { answer: () => ({ status: 403, body: { error: { code: 'native_off' } } }) },
@@ -631,6 +700,7 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
 
   for (const platform of ['ios', 'android'] as const) {
     it(`${platform}: every state, every language`, async () => {
+      const realFetch = globalThis.fetch;
       const openURL = vi.spyOn(Linking, 'openURL').mockImplementation((async () => undefined) as never);
       for (const locale of ['en', 'es', 'ko'] as UiLocale[]) {
         for (const [name, s] of Object.entries(STATES)) {
@@ -640,16 +710,19 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
           useLocaleStore.setState({ device: locale, byProfile: {} });
           Object.assign(env, { online: s.online ?? true, notice: s.notice ?? false, answer: s.answer ?? standardAnswer, copyOk: true });
           if (s.plan !== undefined) planCards = s.plan;
+          if (s.pending === true) vi.stubGlobal('fetch', () => new Promise(() => undefined));
           const r = await mountHome({ use: s.use });
+          if (s.pending === true) expect(has(r.root, 'account-home-loading')).toBe(true);
           if (s.act) await s.act(r.root);
           const sheet = r.root.findAllByType(ConfirmSheet).map((n) => n.props as ConfirmSheetProps).filter((p) => p.visible);
           const texts = [...screenTexts(r.root), ...sheet.flatMap((p) => [p.title, p.cancelLabel, p.confirmLabel])];
-          // The fixture's names are typed by grown-ups (section 9.2: not checked).
-          const own = texts.filter((t) => !/Kim family|Grandma Park|Spring family|Maple/.test(t));
+          // The fixture's names are typed by grown-ups (section 9.2: not checked); the app's words around them are.
+          const own = texts.map((t) => t.replace(/Kim family|Grandma Park family|Spring family|Maple|Mina|Jun|Sora/g, 'NAME'));
           const hits = own.flatMap((t) => accountDenyHits(t, locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
           expect(hits).toEqual([]);
           expect(hostNodes(r.root, (n) => n.props.href !== undefined), `${locale} ${name}: a link`).toEqual([]);
           await unmount(r);
+          if (s.pending === true) vi.stubGlobal('fetch', realFetch);
         }
       }
       expect(openURL).not.toHaveBeenCalled();

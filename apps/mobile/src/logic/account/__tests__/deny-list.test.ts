@@ -100,6 +100,19 @@ describe('accountDenyHits', () => {
     expect(accountDenyHits('잠금해제', 'ko')).toEqual(['잠금 해제']);
   });
 
+  it('charging a card stays caught without the bare card word (NS-5 review), hyphens too', () => {
+    for (const locale of LOCALES) {
+      const line = getMessages(locale).console.billing.testMode;
+      expect(accountDenyHits(line, locale), `${locale}: ${line}`).not.toEqual([]);
+    }
+    expect(accountDenyHits('Your card will be charged.', 'en')).toEqual(['charg*']);
+    expect(accountDenyHits('Card ending in 4242', 'en')).toEqual(['card ending']);
+    expect(accountDenyHits('Use a saved card', 'en')).toEqual(['saved card']);
+    expect(accountDenyHits('A credit-card form', 'en')).toEqual(['credit card']);
+    expect(accountDenyHits('Tu tarjeta fue rechazada.', 'es')).toEqual(['rechaz']);
+    expect(accountDenyHits('No se cobra nada', 'es')).toEqual(['cobr']);
+  });
+
   it('D14: the free-end line is caught in every language', () => {
     for (const locale of LOCALES) {
       const insight = getMessages(locale).report.insight.free_days_done('Mina');

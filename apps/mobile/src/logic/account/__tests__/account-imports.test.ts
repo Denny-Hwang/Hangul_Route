@@ -129,6 +129,20 @@ describe('section 9.3: the account folders import no purchase, link, web view, s
     expect(hits, hits.join('\n')).toEqual([]);
   });
 
+  it('row NS-5: nothing they reach reads Linking; the shared report blocks and their view model name no money route', () => {
+    const files = reached(guardedFiles());
+    expect(files.map(rel)).toContain('src/screens/parent/report-blocks.tsx');
+    // Every reached module (the boot intent's shared hand-off rules name the web's billing route for the web build, and
+    // never open it on iOS or Android, so the route names are held to the report's own modules below).
+    const report = /^src\/(screens\/parent\/report-blocks\.tsx|logic\/reports\/)/;
+    const hits = files.flatMap((file) => {
+      const source = readFileSync(file, 'utf8');
+      const strings = report.test(rel(file)) ? FORBIDDEN_STRINGS.filter((text) => source.includes(text)).map((text) => `${rel(file)}: ${text}`) : [];
+      return [...(RN_LINKING.test(source) ? [`${rel(file)}: Linking`] : []), ...strings];
+    });
+    expect(hits, hits.join('\n')).toEqual([]);
+  });
+
   it('only the Grown-up area stack imports Clerk’s host and token cache (platform/clerk*)', () => {
     const files = [join(APP_ROOT, 'App.tsx'), join(APP_ROOT, 'index.ts'), ...sources(SRC)].filter(existsSync);
     const importers = files

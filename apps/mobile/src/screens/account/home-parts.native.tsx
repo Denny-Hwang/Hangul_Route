@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Body, Card, ConfirmSheet, Spacer, borderWidth, colors, radii, spacing, typography, useTypeScale, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { AccessibilityInfo, Platform, Text, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Platform, Text, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { createAccountApi, type AccountApi } from '../../logic/account/api';
 import { codeFontSize, codeGroups, spelledCode, type LoadFailure } from '../../logic/account/homes';
@@ -30,15 +30,15 @@ export function useAccountApi(): AccountApi {
 }
 
 /** A strip (D5's shape): the re-trust notice (info) or a refused copy (info), with its words; never the danger colour. */
-export function InfoStrip({ text, testID, status = false }: { text: string; testID: string; status?: boolean }): ReactElement {
+export function InfoStrip({ text, testID }: { text: string; testID: string }): ReactElement {
   return (
     <View
       testID={testID}
-      // A status (polite), not an alert: nothing went wrong that needs an answer now.
-      accessibilityLiveRegion={status ? 'polite' : undefined}
-      style={{ backgroundColor: colors.feedback.infoLight, borderLeftWidth: spacing.xs, borderLeftColor: colors.feedback.info, borderRadius: radii.md, padding: spacing.md }}
+      // A status (polite), not an alert: nothing went wrong that needs an answer now (VoiceOver: the caller announces).
+      accessibilityLiveRegion="polite"
+      style={{ backgroundColor: colors.feedback.infoLight, borderLeftWidth: spacing.xs, borderLeftColor: colors.feedback.info, borderRadius: radii.sm, paddingVertical: spacing.sm, paddingHorizontal: spacing.md }}
     >
-      <Body weight="semibold">{text}</Body>
+      <Body>{text}</Body>
     </View>
   );
 }
@@ -97,9 +97,10 @@ export function PlanBlock({ lines, testID = 'account-plan-block' }: { lines: Nat
     <View
       testID={testID}
       accessible={grouped}
+      accessibilityRole={grouped ? 'text' : undefined}
       accessibilityLabel={grouped ? messages.a11y.account.planBlock : undefined}
       accessibilityValue={grouped ? { text: visible.join(', ') } : undefined}
-      style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, padding: spacing.md, gap: spacing.xxs }}
+      style={{ backgroundColor: colors.surface.sunken, borderRadius: radii.md, paddingVertical: spacing.md, paddingHorizontal: spacing.lg, gap: spacing.xxs }}
     >
       <Body weight="semibold">{lines.plan}</Body>
       {lines.usage !== null ? (
@@ -110,6 +111,11 @@ export function PlanBlock({ lines, testID = 'account-plan-block' }: { lines: Nat
     </View>
   );
 }
+
+/** The code panel's buttons side by side, each at least 10rem, wrapping to two rows (`account.css`). */
+const BUTTON_MIN = 160;
+/** Read by assistive tech, drawn nowhere (the report's sr-only box). */
+const SR_ONLY = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
 
 /** How long Copied stays (D11: about 2 seconds). */
 export const COPIED_MS = 2000;
@@ -145,21 +151,26 @@ export function CodePanel({ label, code, onJoinHere, testID = 'account-code-pane
     if (!live.current) return;
     setFailed(!ok);
     setCopied(ok);
-    // VoiceOver reads no live region: iOS announces Copied (Android's button below is a polite live region).
-    if (ok && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(messages.console.joinCode.copied.cta);
+    // VoiceOver reads no live region: iOS announces Copied, or the refusal (Android: the polite status below, the strip).
+    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(ok ? messages.console.joinCode.copied.cta : messages.console.parentHome.copyFailed);
   };
-  const size = codeFontSize(width, scale.size.display, scale.size.body, typography.tracking.wide);
+  // The group Texts do not scale with the system text size by themselves: the system scale is folded into both ends
+  // here, so the size that fits the measured width is the size drawn, and a group never breaks inside (D11, spec 14).
+  const { fontScale } = useWindowDimensions();
+  const system = Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1;
+  const size = codeFontSize(width, scale.size.display * system, scale.size.body * system, typography.tracking.wide);
   const [first, second] = codeGroups(code);
   const group = (text: string): ReactElement => (
     <Text
       {...KOREAN_LINE_BREAK}
+      allowFontScaling={false}
       style={{ fontFamily: typography.family.mono, fontSize: size, lineHeight: size * typography.leading.tight, fontWeight: typography.weight.bold, letterSpacing: typography.tracking.wide, color: colors.text.primary }}
     >
       {text}
     </Text>
   );
   return (
-    <View testID={testID} accessibilityLabel={label} style={{ backgroundColor: colors.surface.paper, borderRadius: radii.lg, borderWidth: borderWidth.thin, borderColor: colors.border.subtle, padding: spacing.lg, gap: spacing.md }}>
+    <View testID={testID} style={{ backgroundColor: colors.surface.paper, borderRadius: radii.lg, borderWidth: borderWidth.thin, borderColor: colors.border.subtle, padding: spacing.lg, gap: spacing.md }}>
       <Body size="sm" weight="bold" tone="secondary">
         {label}
       </Body>
@@ -176,10 +187,16 @@ export function CodePanel({ label, code, onJoinHere, testID = 'account-code-pane
       </View>
       {failed ? <InfoStrip text={messages.console.parentHome.copyFailed} testID={`${testID}-copy-failed`} /> : null}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        <View accessibilityLiveRegion="polite">
-          <AccountButton label={copied ? messages.console.joinCode.copied.cta : messages.console.joinCode.copy.cta} tone="paper" onPress={() => void copy()} testID={`${testID}-copy`} />
+        <View style={{ flexGrow: 1, flexBasis: BUTTON_MIN }}>
+          <AccountButton label={copied ? messages.console.joinCode.copied.cta : messages.console.joinCode.copy.cta} tone="paper" fullWidth onPress={() => void copy()} testID={`${testID}-copy`} />
         </View>
-        <AccountButton label={messages.caregiver.account.home.joinHere.cta} tone="paper" onPress={onJoinHere} testID={`${testID}-join-here`} />
+        <View style={{ flexGrow: 1, flexBasis: BUTTON_MIN }}>
+          <AccountButton label={messages.caregiver.account.home.joinHere.cta} tone="paper" fullWidth onPress={onJoinHere} testID={`${testID}-join-here`} />
+        </View>
+      </View>
+      {/* Copied as a polite status on Android (only while it shows, so the button's return to Copy is not announced). */}
+      <View style={SR_ONLY} accessibilityLiveRegion="polite" testID={`${testID}-status`}>
+        <Text {...KOREAN_LINE_BREAK}>{copied ? messages.console.joinCode.copied.cta : ''}</Text>
       </View>
     </View>
   );

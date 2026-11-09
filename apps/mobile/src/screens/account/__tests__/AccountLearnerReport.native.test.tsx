@@ -89,9 +89,13 @@ const report = (summary: unknown = { lastActiveAt: '2026-10-12T14:00:00.000Z', s
   },
 });
 
+/** A report body with some envelope fields replaced. */
+const withEnvelope = (body: unknown, over: Record<string, unknown>): unknown => ({ data: { ...(body as { data: object }).data, ...over } });
+
 const standard = (path: string): { status: number; body: unknown } => (path === '/api/spaces/space%3Akim/learners/profile%3Amina/report' ? { status: 200, body: report() } : { status: 404, body: { error: { code: 'not_found' } } });
 
 interface Nav {
+  dispatch: ReturnType<typeof vi.fn>;
   navigate: ReturnType<typeof vi.fn>;
   replace: ReturnType<typeof vi.fn>;
   goBack: ReturnType<typeof vi.fn>;
@@ -115,19 +119,22 @@ async function settle(): Promise<void> {
   }
 }
 
-async function mountReport(): Promise<ReactTestRenderer> {
+const ROUTES = [{ key: 'd', name: 'ParentDashboard' }, { key: 'h', name: 'AccountHome', params: { use: 'family' } }, { key: 'me', name: 'AccountLearnerReport' }];
+
+async function mountReport(use: 'family' | 'account' | undefined = 'family'): Promise<ReactTestRenderer> {
   nav = {
+    dispatch: vi.fn(),
     navigate: vi.fn(),
     replace: vi.fn(),
     goBack: vi.fn(),
-    getState: () => ({ routes: [{ key: 'd', name: 'ParentDashboard' }, { key: 'h', name: 'AccountHome' }, { key: 'me', name: 'AccountLearnerReport' }] }),
+    getState: () => ({ routes: ROUTES }),
     getParent: () => ({ replace: vi.fn() }),
     isFocused: () => true,
     addListener: () => () => undefined,
   };
   host = { mount: 'ready', endSession: vi.fn(async () => true), wipeTokens: vi.fn(async () => true), retry: vi.fn() };
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const screen = createElement(AccountLearnerReportScreen, { navigation: nav, route: { key: 'me', name: 'AccountLearnerReport', params: { spaceId: 'space:kim', learnerId: 'profile:mina', period: 'week' } } } as never);
+  const screen = createElement(AccountLearnerReportScreen, { navigation: nav, route: { key: 'me', name: 'AccountLearnerReport', params: { spaceId: 'space:kim', learnerId: 'profile:mina', period: 'week', ...(use === undefined ? {} : { use }) } } } as never);
   const r = await render(
     createElement(
       QueryClientProvider,
@@ -217,10 +224,11 @@ describe('the account learner report (section 8.7, board 1)', () => {
     expect(screenTexts(byTestId(r.root, 'learner-report-notices')[0]!)).toEqual([en.report.state.noData('Mina'), en.report.state.noDataAction]);
   });
 
-  it('a lock (the PIN changed): no report, nothing read', async () => {
+  it('a lock (the PIN changed): no report, nothing read; the lock titled with the home it came from', async () => {
     env.trust = { kind: 'trust', trust: { v: 1, epoch: 3 } };
     const r = await mountReport();
     expect(has(r.root, 'account-learner-report')).toBe(false);
+    expect(screenTexts(r.root)).toContain(en.learner.who.use.family);
     expect(has(r.root, 'account-lock-pin_changed')).toBe(true);
     expect(env.fetches).toEqual([]);
   });
@@ -272,13 +280,43 @@ describe('section 8.8: states (board 3)', () => {
     await unmount(r);
   });
 
-  it('401: the records go and the sign-in opens', async () => {
+  /** The stack the 401 leaves: what `navigation.dispatch` builds from the current one. */
+  const stackAfter = (): { name: string; params?: unknown }[] => {
+    const builder = nav.dispatch.mock.calls[0]![0] as (state: unknown) => { payload: { routes: { name: string; params?: unknown }[]; index: number } };
+    const action = builder({ key: 'stack', index: 2, routes: ROUTES, routeNames: [], type: 'stack', stale: false });
+    expect(action.payload.index).toBe(action.payload.routes.length - 1);
+    return action.payload.routes.map(({ name, params }) => ({ name, params }));
+  };
+
+  it('401: the records go; the home and the report give way to one sign-in for the use (Back never reaches them)', async () => {
     env.answer = () => ({ status: 401, body: { error: { code: 'unauthorized' } } });
     await mountReport();
     expect(env.removed).toEqual(expect.arrayContaining([DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY]));
     expect(host.endSession).toHaveBeenCalled();
-    expect(nav.replace).toHaveBeenCalledWith('SignIn', {});
+    expect(stackAfter()).toEqual([{ name: 'ParentDashboard', params: undefined }, { name: 'SignIn', params: { use: 'family' } }]);
+    expect(nav.replace).not.toHaveBeenCalled();
     expect(env.tracked.filter((e) => e.name === 'auth.native.signout')).toEqual([]);
+  });
+
+  it('401 on a refetch after a report was shown: the report goes at once', async () => {
+    const r = await mountReport();
+    expect(has(r.root, 'learner-report-title')).toBe(true);
+    env.answer = () => ({ status: 401, body: { error: { code: 'unauthorized' } } });
+    await press(hostNodes(r.root, (n) => n.props.role === 'tab' && screenTexts(n).includes(en.report.period.week))[0]!);
+    await act(async () => {
+      env.online = true;
+      env.onlineListener?.(false);
+    });
+    await act(async () => env.onlineListener?.(true));
+    await settle();
+    expect(has(r.root, 'learner-report-title')).toBe(false);
+    expect(nav.dispatch).toHaveBeenCalled();
+  });
+
+  it('opened from the Grown-up account home: the gate is titled with it, and the sign-in after a 401 keeps it', async () => {
+    env.answer = () => ({ status: 401, body: { error: { code: 'unauthorized' } } });
+    await mountReport('account');
+    expect(stackAfter().at(-1)).toEqual({ name: 'SignIn', params: { use: 'account' } });
   });
 
   it('403 native_off: unavailable with Back only', async () => {
@@ -299,6 +337,10 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
   const STATES: Record<string, { answer?: typeof env.answer; online?: boolean; open?: boolean }> = {
     ready: { open: true },
     noData: { answer: () => ({ status: 200, body: report(null) }) },
+    empty: { answer: () => ({ status: 200, body: report({ lastActiveAt: '', activity: activity({ days: [], months: [], total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 }, next: undefined }) }) }) },
+    legacyStale: { answer: () => ({ status: 200, body: withEnvelope(report({ lastActiveAt: '2026-08-01T00:00:00.000Z', cardsUnlocked: 2, minutesLast7d: 0 }), { lastSyncedAt: '2026-08-01T00:00:00.000Z' }) }) },
+    archived: { answer: () => ({ status: 200, body: withEnvelope(report(), { space: { id: 'space:kim', kind: 'family', name: 'Kim family', archivedAt: '2026-10-01T00:00:00.000Z' } }) }) },
+    classViewer: { open: true, answer: () => ({ status: 200, body: withEnvelope(report(), { space: { id: 'space:kim', kind: 'class', name: 'Saturday class 3B', archivedAt: null } }) }) },
     offline: { online: false },
     error: { answer: () => ({ status: 500, body: {} }) },
     unavailable: { answer: () => ({ status: 403, body: { error: { code: 'native_off' } } }) },
@@ -314,7 +356,7 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
           useLocaleStore.setState({ device: locale, byProfile: {} });
           Object.assign(env, { online: s.online ?? true, answer: s.answer ?? standard });
           const r = await mountReport();
-          const scan = (): string[] => screenTexts(r.root).flatMap((t) => accountDenyHits(t, locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
+          const scan = (): string[] => screenTexts(r.root).map((t) => t.replace(/Mina|Kim family|Saturday class 3B/g, 'NAME')).flatMap((t) => accountDenyHits(t, locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
           if (s.open === true) {
             // Every period, with More detail open.
             await press(byTestId(r.root, 'learner-report-more-detail-toggle')[0]!);

@@ -65,8 +65,12 @@ export function accountReportView(input: AccountReportInput): InAppReportView | 
     viewer: body.space.kind,
     lastSyncedAt: body.lastSyncedAt,
   });
+  // An archived space's report says so, neutrally (the console's line for a viewer who cannot unarchive: nobody can
+  // here, ND-2), after the report's own lines.
+  const archived = body.space.archivedAt !== null ? [input.messages.report.state.archived[body.space.kind]] : [];
   return {
     ...view,
+    notices: [...view.notices, ...archived],
     glance: view.glance === null ? null : { ...view.glance, nowOn: null, openRoute: null },
     wentWell: withoutFreeEnd(view.wentWell),
     practiceNext: withoutFreeEnd(view.practiceNext),

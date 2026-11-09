@@ -1,5 +1,5 @@
 import { Body, Screen, Spacer } from '@hangul-route/design-system';
-import { CATALOG, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
+import { CATALOG, type GrownUpUse, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
@@ -8,7 +8,7 @@ import { jamoAll, questsAll, stages } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { reportBodyOf, type AccountReportBody } from '../../logic/account/account-data';
 import { accountReportView } from '../../logic/account/account-report';
-import { AccountLoadError, failureOf } from '../../logic/account/homes';
+import { AccountLoadError, failureOf, routesAfterEndedSession } from '../../logic/account/homes';
 import { accountQueryKey } from '../../logic/account/queries';
 import { localizeJamo, localizeQuest, localizeStage } from '../../logic/content-locale';
 import type { GrownUpStackParamList } from '../../navigation/types';
@@ -37,15 +37,24 @@ type Props = NativeStackScreenProps<GrownUpStackParamList, 'AccountLearnerReport
 type ReportNavigation = NativeStackNavigationProp<GrownUpStackParamList, 'AccountLearnerReport'>;
 
 export function AccountLearnerReportScreen({ navigation, route }: Props): ReactElement {
-  const { spaceId, learnerId, period } = route.params;
+  const { spaceId, learnerId, period, use } = route.params;
   return (
-    <AccountGate screen="home" use={undefined} navigation={navigation as unknown as AccountGateNavigation} routeKey={route.key}>
-      <AccountLearnerReport spaceId={spaceId} learnerId={learnerId} initialPeriod={period} navigation={navigation} />
+    <AccountGate screen="home" use={use} navigation={navigation as unknown as AccountGateNavigation} routeKey={route.key}>
+      <AccountLearnerReport spaceId={spaceId} learnerId={learnerId} initialPeriod={period} use={use} routeKey={route.key} navigation={navigation} />
     </AccountGate>
   );
 }
 
-function AccountLearnerReport({ spaceId, learnerId, initialPeriod, navigation }: { spaceId: string; learnerId: string; initialPeriod: ReportPeriod; navigation: ReportNavigation }): ReactElement {
+interface ReportProps {
+  spaceId: string;
+  learnerId: string;
+  initialPeriod: ReportPeriod;
+  use: GrownUpUse | 'account' | undefined;
+  routeKey: string;
+  navigation: ReportNavigation;
+}
+
+function AccountLearnerReport({ spaceId, learnerId, initialPeriod, use, routeKey, navigation }: ReportProps): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const titles = useLessonTitlesVersion();
@@ -111,15 +120,24 @@ function AccountLearnerReport({ spaceId, learnerId, initialPeriod, navigation }:
     ending.current = true;
     void sessionEnded()
       .catch(() => false)
-      .then(() => navigation.replace('SignIn', {}));
-  }, [failure, sessionEnded, navigation]);
+      .then(() => {
+        // The home under this report and the report give way to one sign-in for the use (Back never reaches them).
+        navigation.dispatch((state) => {
+          const routes = [...routesAfterEndedSession(state.routes, routeKey), { key: `SignIn-${routeKey}`, name: 'SignIn' as const, params: use === undefined ? {} : { use } }];
+          // `CommonActions.reset`, written out (as `navigation/grown-up-area-exit.ts` does) so the module loads without the navigation package.
+          return { type: 'RESET', payload: { ...state, routes, index: routes.length - 1 } } as never;
+        });
+      });
+  }, [failure, sessionEnded, navigation, routeKey, use]);
 
   const retry = (): void => {
     recheck();
     if (online) void report.refetch();
   };
   let body: ReactElement;
-  if (failure === 'offline' || failure === 'unavailable') body = <StateBox failure={failure} onRetry={retry} onBack={() => navigation.goBack()} testID="account-report-state" />;
+  // A session that ended shows nothing of the report while the records go (a refetch keeps the last answer otherwise).
+  if (failure === 'unauthorized') body = <ReportSkeleton label={messages.a11y.report.loading} />;
+  else if (failure === 'offline' || failure === 'unavailable') body = <StateBox failure={failure} onRetry={retry} onBack={() => navigation.goBack()} testID="account-report-state" />;
   else if (failure === 'cant_load' || (report.data !== undefined && view === null)) {
     body = (
       <>

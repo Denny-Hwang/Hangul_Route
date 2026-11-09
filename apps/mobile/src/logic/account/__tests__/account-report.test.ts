@@ -109,6 +109,12 @@ describe('the account learner report (section 8.7)', () => {
     expect(legacy?.notices).toEqual([en.report.state.legacy, en.report.state.updateAction('Mina')]);
   });
 
+  it('an archived space says so, neutrally, after the report lines (nobody can unarchive here)', () => {
+    const view = accountReportView(input({ body: body({ space: { id: 'space:a', kind: 'family', name: 'Kim family', archivedAt: '2026-10-01T00:00:00.000Z' } }) }));
+    expect(view?.notices.at(-1)).toBe(en.report.state.archived.family);
+    expect(accountReportView(input())?.notices).toEqual([]);
+  });
+
   it('a class space reads as the class viewer (row NS-6 opens it); a school has no learner report', () => {
     const view = accountReportView(input({ body: body({ space: { id: 'space:c', kind: 'class', name: '3B', archivedAt: null } }) }));
     const plan = view?.moreDetail?.blocks.find((block) => block.kind === 'lines' && block.key === 'plan');

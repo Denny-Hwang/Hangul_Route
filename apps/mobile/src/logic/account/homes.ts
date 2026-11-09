@@ -1,6 +1,7 @@
 import { describeRelativeDay, type Messages, type UiLocale } from '@hangul-route/i18n';
 import type { AccountApiError } from './api';
 import type { AccountRoster, AccountRosterLearner, AccountSpaceItem } from './account-data';
+import { ACCOUNT_ROUTE_NAMES } from './account-gate';
 import { orderLearners, orderSpaces } from './order';
 
 /**
@@ -144,6 +145,20 @@ export type SignOutLanding = 'area_below' | 'welcome' | 'area_here';
 export function signOutLanding(routes: readonly { name: string }[], hasLearnerProfile: boolean): SignOutLanding {
   if (routes.some((route) => route.name === 'ParentDashboard')) return 'area_below';
   return hasLearnerProfile ? 'area_here' : 'welcome';
+}
+
+/**
+ * Sections 6.6 and 8.8 (`401` on a page above a home): the stack after the session ended elsewhere. The run of account
+ * routes the page sits in (a home and the report above it) gives way to one sign-in, so the sign-in that follows opens
+ * a fresh home in their place and Back never returns to a page of the ended session. Routes below (the Grown-up area)
+ * stay. A page not found keeps the whole stack and adds the sign-in.
+ */
+export function routesAfterEndedSession<R extends { key: string; name: string }>(routes: readonly R[], key: string): R[] {
+  const index = routes.findIndex((route) => route.key === key);
+  if (index < 0) return [...routes];
+  let start = index;
+  while (start > 0 && ACCOUNT_ROUTE_NAMES.has(routes[start - 1]!.name)) start -= 1;
+  return routes.slice(0, start);
 }
 
 /** `auth.native.home`'s `spaces`: how many spaces the home listed, as a bucket, never the count (section 15). */

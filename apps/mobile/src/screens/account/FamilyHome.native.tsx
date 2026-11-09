@@ -3,7 +3,7 @@ import type { GrownUpUse } from '@hangul-route/content-schema';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { View } from 'react-native';
+import { AccessibilityInfo, Platform, View } from 'react-native';
 import { flags } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { planCardsOf, rosterOf, spaceItemsOf, type AccountRoster, type AccountSpaceItem } from '../../logic/account/account-data';
@@ -22,9 +22,10 @@ import {
 import { joinHereTarget } from '../../logic/account/join-here';
 import { nativePlanLines } from '../../logic/account/plan-lines';
 import { accountQueryKey } from '../../logic/account/queries';
-import { deviceUsesRecord, keepsRecords, usesOfSpaces, RETRUST_NOTICE_KEY } from '../../logic/account/sign-in-records';
+import { deviceUsesRecord, keepsRecords, trustOfRead, usesOfSpaces, RETRUST_NOTICE_KEY } from '../../logic/account/sign-in-records';
 import type { GrownUpStackParamList, RootStackParamList } from '../../navigation/types';
-import { readRetrustNotice, removeRecord, writeDeviceUses } from '../../platform/account-records';
+import { readRetrustNotice, readTrust, removeRecord, writeDeviceUses } from '../../platform/account-records';
+import { useAccountVisit } from '../../store/account-visit';
 import { closeGrownUpSession } from '../../store/grown-up-session';
 import { nativeGateState } from '../../store/native-gate-state';
 import { useProfileStore } from '../../store/profile-store';
@@ -62,6 +63,23 @@ async function read<T>(call: () => ReturnType<AccountApi['spaces']>, parse: (dat
   return parsed;
 }
 
+/**
+ * Section 8.1: the uses record rewritten from a spaces answer, on a PIN device whose trust matches its epoch, while the
+ * visit that asked is still the one open and no Sign out ran since. Never throws.
+ */
+async function rewriteUsesRecord(data: unknown, visit: number): Promise<void> {
+  try {
+    const uses = usesOfSpaces(data);
+    const [gate, trust] = await Promise.all([nativeGateState(), readTrust()]);
+    const now = useAccountVisit.getState();
+    if (uses === null || now.visit !== visit || now.signedOutThisRun || !keepsRecords(gate)) return;
+    if (trustOfRead(trust)?.epoch !== gate.epoch) return;
+    await writeDeviceUses(deviceUsesRecord(uses, Date.now()));
+  } catch {
+    // The uses record waits for the next successful read.
+  }
+}
+
 /** Every account page is read fresh when shown, and never retried by itself (8.8: Try again, or the network's return). */
 const ONLINE_PAGE = { retry: false, staleTime: 0 } as const;
 
@@ -76,21 +94,23 @@ export function FamilyHome({ use, navigation }: { use: Extract<GrownUpUse, 'fami
   const m = messages.caregiver.account;
   const title = use === 'account' ? m.card.title : messages.learner.who.use.family;
 
+  // The cache holds the Worker's answer as it came (`{ spaces: [...] }`), the shape the sign-in stores under the same key
+  // and the account card and the gate read (`usesOfSpaces`); the home reads its own form through `select`.
   const spaces = useQuery({
     queryKey: accountQueryKey('spaces'),
-    queryFn: async () => {
+    queryFn: async (): Promise<unknown> => {
+      // The visit this read belongs to: a Sign out, a `401` or a session close while it is out must not see the uses
+      // record written back after it deleted it (13.1, CS-N4).
+      const visit = useAccountVisit.getState().visit;
       const result = await api.spaces();
       if (!result.ok) throw new AccountLoadError(result.error);
-      const items = spaceItemsOf(result.data);
-      if (items === null) throw new AccountLoadError('error');
-      // Section 8.1: on a PIN device each successful read rewrites the uses record (no names, no ids). The home is open
-      // only past the gate, where the trust matches the epoch.
-      const uses = usesOfSpaces(result.data);
-      void nativeGateState()
-        .then((gate) => (keepsRecords(gate) && uses !== null ? writeDeviceUses(deviceUsesRecord(uses, Date.now())) : undefined))
-        .catch(() => undefined);
-      return items;
+      if (spaceItemsOf(result.data) === null) throw new AccountLoadError('error');
+      // Section 8.1: on a PIN device each successful read rewrites the uses record (no names, no ids), only while the
+      // trust still matches the epoch (the home is open only past the gate) and this visit is still the one open.
+      void rewriteUsesRecord(result.data, visit);
+      return result.data;
     },
+    select: (data: unknown): AccountSpaceItem[] => spaceItemsOf(data) ?? [],
     enabled: online,
     ...ONLINE_PAGE,
   });
@@ -112,8 +132,10 @@ export function FamilyHome({ use, navigation }: { use: Extract<GrownUpUse, 'fami
     ? 'offline'
     : worstFailure([
         ...(spaces.isError ? [failureOf(spaces.error)] : []),
-        ...rosterFailures.filter((failure) => failure === 'unauthorized' || failure === 'unavailable'),
-        ...(plans.isError && (failureOf(plans.error) === 'unauthorized' || failureOf(plans.error) === 'unavailable') ? [failureOf(plans.error)] : []),
+        // A family's own refusal stays in its section; a session that ended, the switch, or a network that dropped
+        // during the read is the whole screen's (8.8).
+        ...rosterFailures.filter((failure) => failure !== 'cant_load'),
+        ...(plans.isError && failureOf(plans.error) !== 'cant_load' ? [failureOf(plans.error)] : []),
       ]);
 
   // `401`: the session ended elsewhere. The records go, then the sign-in opens (its AccountGate decides it).
@@ -193,7 +215,7 @@ export function FamilyHome({ use, navigation }: { use: Extract<GrownUpUse, 'fami
     if (spaces.data === undefined) return <HomeSkeleton />;
     return (
       <View style={{ gap: spacing.lg }}>
-        {notice ? <InfoStrip text={m.home.retrustNotice} testID="account-home-retrust" status /> : null}
+        {notice ? <InfoStrip text={m.home.retrustNotice} testID="account-home-retrust" /> : null}
         {families.length === 0 ? (
           <Body testID="account-home-no-family">{m.home.noFamily}</Body>
         ) : (
@@ -212,6 +234,7 @@ export function FamilyHome({ use, navigation }: { use: Extract<GrownUpUse, 'fami
                 onJoinHere={joinHere}
                 api={api}
                 locale={locale}
+                use={use}
               />
             );
           })
@@ -239,10 +262,11 @@ interface FamilySectionProps {
   onJoinHere: (code: string) => void;
   api: AccountApi;
   locale: ReturnType<typeof useLocale>;
+  use: 'family' | 'account';
 }
 
 /** One family (board 1): its name as a heading, its learners, its code panel and its plan block. */
-function FamilySection({ family, roster, rosterState, onRetryRoster, plan, navigation, onJoinHere, api, locale }: FamilySectionProps): ReactElement {
+function FamilySection({ family, roster, rosterState, onRetryRoster, plan, navigation, onJoinHere, api, locale, use }: FamilySectionProps): ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.account;
   const archived = family.space.archivedAt !== null;
@@ -267,7 +291,7 @@ function FamilySection({ family, roster, rosterState, onRetryRoster, plan, navig
       ) : null}
       {rosterState === 'ready' && roster !== null ? (
         <>
-          {roster.learners.length === 0 ? <Body testID={`account-family-${id}-empty`}>{messages.console.parentHome.empty.title}</Body> : <LearnerCards familyId={id} roster={roster} navigation={navigation} locale={locale} />}
+          {roster.learners.length === 0 ? <Body testID={`account-family-${id}-empty`}>{messages.console.parentHome.empty.title}</Body> : <LearnerCards familyId={id} roster={roster} navigation={navigation} locale={locale} use={use} />}
           <CodeSlot familyId={id} panel={panel} onJoinHere={onJoinHere} api={api} />
         </>
       ) : null}
@@ -279,7 +303,7 @@ function FamilySection({ family, roster, rosterState, onRetryRoster, plan, navig
 /** The learner cards (D10): join order; one column on a phone, two across from 18rem (`acc-card-min`). */
 const CARD_MIN = 288;
 
-function LearnerCards({ familyId, roster, navigation, locale }: { familyId: string; roster: AccountRoster; navigation: HomeNavigation; locale: ReturnType<typeof useLocale> }): ReactElement {
+function LearnerCards({ familyId, roster, navigation, locale, use }: { familyId: string; roster: AccountRoster; navigation: HomeNavigation; locale: ReturnType<typeof useLocale>; use: 'family' | 'account' }): ReactElement {
   const messages = useMessages();
   const cards = learnerCards(roster, new Date(), locale, messages);
   return (
@@ -306,7 +330,7 @@ function LearnerCards({ familyId, roster, navigation, locale }: { familyId: stri
             label={messages.console.parentHome.child.seeReport}
             tone="paper"
             fullWidth
-            onPress={() => navigation.navigate('AccountLearnerReport', { spaceId: familyId, learnerId: card.id, period: 'week' })}
+            onPress={() => navigation.navigate('AccountLearnerReport', { spaceId: familyId, learnerId: card.id, period: 'week', use })}
             testID={`account-learner-${card.id}-report`}
           />
         </View>
@@ -322,6 +346,13 @@ function CodeSlot({ familyId, panel, onJoinHere, api }: { familyId: string; pane
   const queryClient = useQueryClient();
   const [making, setMaking] = useState(false);
   const [failed, setFailed] = useState(false);
+  const live = useRef(true);
+  useEffect(
+    () => () => {
+      live.current = false;
+    },
+    [],
+  );
   if (panel.kind === 'none') return null;
   if (panel.kind === 'ask') {
     return (
@@ -335,9 +366,12 @@ function CodeSlot({ familyId, panel, onJoinHere, api }: { familyId: string; pane
     setMaking(true);
     setFailed(false);
     const result = await api.makeCode(familyId);
+    if (!live.current) return;
     setMaking(false);
     if (!result.ok) {
       setFailed(true);
+      // VoiceOver reads no live region (the strip is one on Android).
+      if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(m.home.cantLoad);
       return;
     }
     // The new code comes back with the space's next reads (the spaces item and the roster carry it).
@@ -349,7 +383,8 @@ function CodeSlot({ familyId, panel, onJoinHere, api }: { familyId: string; pane
       <Body size="sm" weight="bold" tone="secondary">
         {m.home.codeLabel.family}
       </Body>
-      {failed ? <Body testID={`account-family-${familyId}-make-failed`}>{m.home.cantLoad}</Body> : null}
+      {/* No string of its own: the write that failed reads as the home's cantLoad line (a write, but the same fact). */}
+      {failed ? <InfoStrip text={m.home.cantLoad} testID={`account-family-${familyId}-make-failed`} /> : null}
       <AccountButton label={messages.console.confirm.issueCode} tone="paper" busy={making} onPress={() => void make()} testID={`account-family-${familyId}-make-code`} />
     </View>
   );

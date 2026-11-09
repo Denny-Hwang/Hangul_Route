@@ -13,6 +13,7 @@ import {
   loadFailureOf,
   managesCode,
   notStarted,
+  routesAfterEndedSession,
   signOutLanding,
   spacesBucket,
   spelledCode,
@@ -186,6 +187,19 @@ describe('section 6.6: where a home Sign out lands', () => {
     expect(signOutLanding([{ name: 'ParentDashboard' }, { name: 'AccountHome' }], false)).toBe('area_below');
     expect(signOutLanding([{ name: 'AccountHome' }], false)).toBe('welcome');
     expect(signOutLanding([{ name: 'AccountHome' }], true)).toBe('area_here');
+  });
+});
+
+describe('sections 6.6 and 8.8: the stack after a 401 on a page above a home', () => {
+  const r = (key: string, name: string): { key: string; name: string } => ({ key, name });
+  it('the run of account routes the page sits in goes; the Grown-up area below stays', () => {
+    expect(routesAfterEndedSession([r('d', 'ParentDashboard'), r('h', 'AccountHome'), r('me', 'AccountLearnerReport')], 'me')).toEqual([r('d', 'ParentDashboard')]);
+    expect(routesAfterEndedSession([r('h', 'AccountHome'), r('me', 'AccountLearnerReport')], 'me')).toEqual([]);
+    expect(routesAfterEndedSession([r('d', 'ParentDashboard'), r('me', 'AccountLearnerReport')], 'me')).toEqual([r('d', 'ParentDashboard')]);
+  });
+
+  it('a page not found keeps the stack', () => {
+    expect(routesAfterEndedSession([r('d', 'ParentDashboard')], 'me')).toEqual([r('d', 'ParentDashboard')]);
   });
 });
 
