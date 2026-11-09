@@ -3,7 +3,8 @@ import { getMessages } from '@hangul-route/i18n';
 import React from 'react';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { BackHandler } from 'react-native';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { provideForRequire, srcPath } from '../../../test-support/native-require';
 
 /**
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4a, section 20 (component tests): "Who is using this?" shows no
@@ -89,6 +90,10 @@ async function renderChooser(routes: FakeRoute[] = [CHOOSER], trigger: 'launch' 
   const r = await render(<WhoIsUsingScreen navigation={navigation as never} route={{ key: 'who-1', name: 'WhoIsUsing', params: { trigger } } as never} />);
   return { r, navigation };
 }
+
+
+// F-AUTH-004 (row NS-4): the chooser requires its native account entries on iOS and Android (folded away on the web).
+beforeAll(async () => provideForRequire(srcPath('screens/account/account-entries'), await import('../../account/account-entries')));
 
 beforeEach(() => {
   setPlatform('ios');

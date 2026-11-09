@@ -175,9 +175,10 @@ export function tileTints(profiles: readonly { id: string; avatar: string }[]): 
 
 /**
  * A grown-up row on the chooser (GrownUpRow spec): a use of the signed-in account known on this device (web), the
- * **Sign in as a grown-up** row (web, no use known), or the device's own Grown-up area.
+ * **Sign in as a grown-up** row (web, no use known), or the device's own Grown-up area. F-AUTH-004 section 7.1 (row
+ * NS-4, iOS and Android only): `account`, the **Grown-up account** row of a native uses record that holds no use.
  */
-export type GrownUpRowUse = GrownUpUse | 'signin' | 'area';
+export type GrownUpRowUse = GrownUpUse | 'signin' | 'account' | 'area';
 
 /** One grown-up row (GrownUpRow spec, rows OA-4a and OA-4b). */
 export interface GrownUpRowView {
@@ -188,9 +189,21 @@ export interface GrownUpRowView {
   disabled: boolean;
   /**
    * The line under the label: `nopin` (**A grown-up sets a PIN here.**, the Grown-up area on a `nopin` device) or
-   * `offline` (**Needs the internet**, a disabled use row).
+   * `offline` (**Needs the internet**, a disabled use row). F-AUTH-004 ND-7 (row NS-4, native): `needs_pin` (**Set a
+   * grown-up PIN first.**, an account row on a `nopin` device, which opens PIN setup).
    */
-  caption: 'nopin' | 'offline' | null;
+  caption: 'nopin' | 'offline' | 'needs_pin' | null;
+}
+
+/**
+ * F-AUTH-004 sections 7.1 and 12 (row NS-4): what the native chooser adds to the rows on iOS and Android. `nativeAccount`
+ * is `nativeAccountEnabled` (the build switch and a key this build accepts); `record` the uses of the native uses
+ * record `hr:grownup:deviceUses` (an empty list for a record that holds no use), or `null` with no record (absent,
+ * stale, unreadable or not parsing).
+ */
+export interface NativeAccountRowsInput {
+  nativeAccount: boolean;
+  record: readonly GrownUpUse[] | null;
 }
 
 /** The Grown-ups section of the chooser: the pending 24-hour wait (OA-D21), then the rows. */
@@ -217,7 +230,12 @@ export function grownUpRows(input: {
   online: boolean;
   marker: WhoMarker;
   resetPending: number | null;
+  /** F-AUTH-004 (row NS-4): the native account's inputs, iOS and Android only (`nativeGrownUpRows`). */
+  native?: NativeAccountRowsInput;
 }): GrownUpsView {
+  // F-AUTH-004 section 7.1 (row NS-4): babel-preset-expo inlines EXPO_OS, so the web build folds this branch away and
+  // drops `nativeGrownUpRows` with it: the web's rows and its start bundle are unchanged.
+  if ((process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android') && input.os !== 'web' && input.native !== undefined) return nativeGrownUpRows(input, input.native);
   const { os, uses, online, marker, resetPending } = input;
   const locked = marker !== 'none';
   const known = USE_ORDER.filter((use) => uses.includes(use));
@@ -226,6 +244,39 @@ export function grownUpRows(input: {
     pending: resetPending === null ? null : { readyAt: resetPending },
     rows: [
       ...accountRows.map((use): GrownUpRowView => ({ use, locked, disabled: !online, caption: online ? null : 'offline' })),
+      { use: 'area', locked, disabled: false, caption: marker === 'nopin' ? 'nopin' : null },
+    ],
+  };
+}
+
+/**
+ * F-AUTH-004 sections 7.1, 12 and ND-7, ND-9 (row NS-4; design `entries.md` boards 1 to 7, D3): the Grown-ups rows of a
+ * native build. With `nativeAccount` false, the Grown-up area only, exactly as at the basis (CS-N13). With it on:
+ *
+ * | Device                | Account rows (then the Grown-up area)                                               |
+ * | `pin`, record of uses | the known uses in the order family, teacher, school                                 |
+ * | `pin`, empty record   | **Grown-up account** (`account`)                                                    |
+ * | `pin`, no record      | **Sign in as a grown-up**                                                           |
+ * | `nopin`               | **Sign in as a grown-up**, captioned **Set a grown-up PIN first.** (it opens setup) |
+ * | `none` (`open`)       | **Sign in as a grown-up**, no lock glyph (no session is kept there, ND-9)           |
+ *
+ * The uses record exists only on a PIN device (ND-9), so on `nopin` and `none` it is never read. Offline every account
+ * row is disabled with **Needs the internet**, which wins over the `nopin` caption (D3); the Grown-up area row stays
+ * enabled and keeps its own `nopin` caption. Codes only: never a name or an email (CS-7, CS-N9).
+ */
+function nativeGrownUpRows(input: { uses: readonly GrownUpUse[]; online: boolean; marker: WhoMarker; resetPending: number | null }, native: NativeAccountRowsInput): GrownUpsView {
+  const { online, marker, resetPending } = input;
+  const locked = marker !== 'none';
+  let accountRows: (GrownUpUse | 'signin' | 'account')[] = [];
+  if (native.nativeAccount) {
+    const known = marker === 'pin' && native.record !== null ? USE_ORDER.filter((use) => native.record!.includes(use)) : null;
+    accountRows = known === null ? ['signin'] : known.length > 0 ? known : ['account'];
+  }
+  const accountCaption: GrownUpRowView['caption'] = !online ? 'offline' : marker === 'nopin' ? 'needs_pin' : null;
+  return {
+    pending: resetPending === null ? null : { readyAt: resetPending },
+    rows: [
+      ...accountRows.map((use): GrownUpRowView => ({ use, locked, disabled: !online, caption: accountCaption })),
       { use: 'area', locked, disabled: false, caption: marker === 'nopin' ? 'nopin' : null },
     ],
   };
@@ -293,7 +344,8 @@ export function whoShownEvent(input: { trigger: WhoTrigger; learners: number; gr
 
 /** [GU] Row GU-5, section 12: `try` (Try the first quest) and `guest` (the guest's own tile). */
 export type WhoPickKind = 'learner' | 'locked_learner' | 'grown_up' | 'add' | 'cancel_reset' | 'try' | 'guest';
-export type WhoPickUse = 'family' | 'teacher' | 'school' | 'area' | 'signin';
+/** F-AUTH-004 section 7.1 (row NS-4): `account`, the native **Grown-up account** row (NS-1 appended it to the payload rules). */
+export type WhoPickUse = 'family' | 'teacher' | 'school' | 'area' | 'signin' | 'account';
 
 /** `who.picked` (section 15): what was picked, and for a grown-up row which use. */
 export function whoPickedEvent(kind: WhoPickKind, use?: WhoPickUse): { name: 'who.picked'; payload: { kind: WhoPickKind; use?: WhoPickUse } } {

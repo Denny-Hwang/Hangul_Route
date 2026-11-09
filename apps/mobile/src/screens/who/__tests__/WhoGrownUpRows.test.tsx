@@ -2,7 +2,8 @@ import type { Profile } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { provideForRequire, srcPath } from '../../../test-support/native-require';
 
 /**
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-4b, section 20 (sections 5.3, 6.1 items 4 and 5, 7.1, 12; CS-1, CS-7):
@@ -92,6 +93,10 @@ const row = (root: ReactTestInstance, use: string): ReactTestInstance => {
 };
 /** What the row shows and reads out: its label, its accessible name and its caption (the hint). */
 const rowTexts = (root: ReactTestInstance, use: string): string[] => screenTexts(row(root, use));
+
+
+// F-AUTH-004 (row NS-4): the chooser requires its native account entries on iOS and Android (folded away on the web).
+beforeAll(async () => provideForRequire(srcPath('screens/account/account-entries'), await import('../../account/account-entries')));
 
 beforeEach(() => {
   setPlatform('web');

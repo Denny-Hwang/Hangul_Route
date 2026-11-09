@@ -1,5 +1,5 @@
 import { CHOOSER_RESUME_MS, GROWN_UP_BACKGROUND_MS, OA_TELEMETRY_PAYLOADS, safeNextPath } from '@hangul-route/content-schema';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   TILE_TINTS,
   chooserHandoff,
@@ -273,5 +273,72 @@ describe('pickLanding (section 6.2, OA-D20)', () => {
   it('a held join sends the picked learner to Join with the code', () => {
     expect(pickLanding({ same: true, under: 'learner', join: { code: 'ABC234' } })).toEqual({ kind: 'join', code: 'ABC234' });
     expect(pickLanding({ same: false, under: null, join: { code: null } })).toEqual({ kind: 'join', code: null });
+  });
+});
+
+describe('F-AUTH-004 section 7.1 (row NS-4; design entries.md boards 1 to 7, D3): grownUpRows with nativeAccount', () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const base = { uses: [] as const, online: true, marker: 'pin' as const, resetPending: null };
+  const row = (use: string, extra: Record<string, unknown> = {}) => ({ use, locked: true, disabled: false, caption: null, ...extra });
+  const on = (record: readonly ('family' | 'teacher' | 'school')[] | null) => ({ nativeAccount: true, record });
+
+  for (const os of ['ios', 'android'] as const) {
+    describe(os, () => {
+      it('board 1: pin and a record of uses: those uses in the order family, teacher, school, then the Grown-up area', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, native: on(['school', 'family', 'teacher']) }).rows).toEqual([row('family'), row('teacher'), row('school'), row('area')]);
+      });
+
+      it('board 2: pin and a record with no use: Grown-up account', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, native: on([]) }).rows).toEqual([row('account'), row('area')]);
+      });
+
+      it('board 3: pin and no record: Sign in as a grown-up', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, native: on(null) }).rows).toEqual([row('signin'), row('area')]);
+      });
+
+      it('board 4: nopin: Sign in captioned Set a grown-up PIN first (whatever record), the area keeps its own caption', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, marker: 'nopin', native: on(['family']) }).rows).toEqual([row('signin', { caption: 'needs_pin' }), row('area', { caption: 'nopin' })]);
+      });
+
+      it('board 5, D3: offline every account row waits with Needs the internet, which wins over nopin; the area stays enabled', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, online: false, native: on(['family', 'teacher']) }).rows).toEqual([
+          row('family', { disabled: true, caption: 'offline' }),
+          row('teacher', { disabled: true, caption: 'offline' }),
+          row('area'),
+        ]);
+        expect(grownUpRows({ ...base, os, online: false, marker: 'nopin', native: on(null) }).rows).toEqual([row('signin', { disabled: true, caption: 'offline' }), row('area', { caption: 'nopin' })]);
+      });
+
+      it('board 6: open (no PIN): Sign in as a grown-up with no lock glyph, never a use (no record is kept, ND-9)', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, marker: 'none', native: on(['family']) }).rows).toEqual([row('signin', { locked: false }), row('area', { locked: false })]);
+      });
+
+      it('board 7, CS-N13: the native account off is the basis: the Grown-up area only', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, native: { nativeAccount: false, record: ['family'] } }).rows).toEqual([row('area')]);
+        expect(grownUpRows({ ...base, os, marker: 'nopin', native: { nativeAccount: false, record: null } }).rows).toEqual([row('area', { caption: 'nopin' })]);
+      });
+
+      it('a running Forgot PIN wait still comes first', () => {
+        vi.stubEnv('EXPO_OS', os);
+        expect(grownUpRows({ ...base, os, resetPending: 123, native: on(null) }).pending).toEqual({ readyAt: 123 });
+      });
+    });
+  }
+
+  it('the web never takes the native branch, whatever is passed (its rows are unchanged)', () => {
+    vi.stubEnv('EXPO_OS', 'web');
+    expect(grownUpRows({ ...base, os: 'web', uses: ['family'], native: on(null) }).rows).toEqual([row('family'), row('area')]);
+  });
+
+  it('who.picked carries account (NS-1 appended it to the payload rules)', () => {
+    expect(whoPickedEvent('grown_up', 'account')).toEqual({ name: 'who.picked', payload: { kind: 'grown_up', use: 'account' } });
+    expect(OA_TELEMETRY_PAYLOADS['who.picked'].safeParse({ kind: 'grown_up', use: 'account' }).success).toBe(true);
   });
 });

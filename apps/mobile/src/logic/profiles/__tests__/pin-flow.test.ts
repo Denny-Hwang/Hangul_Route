@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CANCEL_RESET,
   FRESH_PIN,
@@ -241,5 +241,21 @@ describe('[GU] destination SaveGuest (AMENDMENTS-GUEST-FIRST-LESSON section 8.2,
 
   it('is not the grown-up area\'s no-PIN path (no Continue to a page)', () => {
     expect(grownUpAreaNoPin(params, null)).toBe(false);
+  });
+});
+
+describe('F-AUTH-004 (row NS-4; ND-7, CS-N2): a native account row with no PIN stored opens nothing', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each(['ios', 'android'])('%s: void (the screen goes back to the chooser), unless the hash could not be read', (os) => {
+    vi.stubEnv('EXPO_OS', os);
+    expect(voidWithoutPin({ next: 'GrownUpUse' }, null)).toBe(true);
+    expect(voidWithoutPin({ next: 'GrownUpUse' }, 'hash')).toBe(false);
+    expect(voidWithoutPin({ next: 'GrownUpUse' }, null, true)).toBe(false);
+  });
+
+  it('web: unchanged (the no-PIN line and Continue to the sign-in page)', () => {
+    vi.stubEnv('EXPO_OS', 'web');
+    expect(voidWithoutPin({ next: 'GrownUpUse' }, null)).toBe(false);
   });
 });

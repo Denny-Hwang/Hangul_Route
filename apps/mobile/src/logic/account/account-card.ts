@@ -1,4 +1,4 @@
-import type { AccountTrust } from '@hangul-route/content-schema';
+import type { AccountTrust, GrownUpUse } from '@hangul-route/content-schema';
 import { accountLock, type AccountLockCause } from './account-lock';
 import type { NativeGateState } from './gate-state';
 
@@ -18,8 +18,9 @@ import type { NativeGateState } from './gate-state';
  * | `accountLock` says `locked`                        | `locked`: the lock's line and its button; no email         |
  *
  * The card is not an account screen: it reads `accountLock` as entered from inside the area (no `verify_pin`), and
- * every button of it that opens an account screen or signs in asks the typed PIN first without a fresh proof
- * (`cardEntry`). Sign out only deletes, so it never asks one.
+ * every button of it that opens an account screen or signs in (Sign in, a use row, Sign in again) opens that screen,
+ * whose `AccountGate` asks the typed PIN first without a fresh proof (row NS-4). Sign out only deletes, so it never
+ * asks one.
  */
 
 export type AccountCardView =
@@ -66,12 +67,14 @@ export function accountCardView(input: AccountCardInput): AccountCardView {
 }
 
 /**
- * ND-5, CS-N11: a card button that opens an account screen or signs in (Sign in, Sign in again) on a `pin` device
- * needs a typed PIN or a native sign-in within 2 minutes; without one it asks the typed PIN first (`verify_pin`). On
- * an `open` device there is no PIN to ask; a gate not read yet fails closed.
+ * Section 7.1, design D7 (row NS-4): the card's use rows, in the order family, teacher, school. On a `pin` device the
+ * uses record (`hr:grownup:deviceUses`), else this visit's in-memory `['account', 'spaces']` answer; on any other
+ * device only the in-memory answer (no record is kept there, ND-9). An account with no space shows no row: a button
+ * would only open "This account has no family space.", and the card already has Sign out.
  */
-export function cardEntry(gate: NativeGateState | null, fresh: boolean): 'go' | 'verify_pin' {
-  // Only an `open` device goes without a PIN; a gate not read yet (or any other state) fails closed.
-  if (gate !== null && gate.state === 'open') return 'go';
-  return fresh && gate !== null && gate.state === 'pin' ? 'go' : 'verify_pin';
+export function cardUses(gate: NativeGateState | null, record: readonly GrownUpUse[] | null, memory: readonly GrownUpUse[] | null): GrownUpUse[] {
+  const uses = gate !== null && gate.state === 'pin' ? (record ?? memory) : memory;
+  return USE_ORDER.filter((use) => uses?.includes(use) === true);
 }
+
+const USE_ORDER: readonly GrownUpUse[] = ['family', 'teacher', 'school'];

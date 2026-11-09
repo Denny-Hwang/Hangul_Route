@@ -1,7 +1,7 @@
 import { Body, Button, Card, Heading, Hoya, Screen, Spacer, spacing, useLayoutClass } from '@hangul-route/design-system';
 import { availableLocales } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect } from 'react';
+import { createElement, useEffect } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { LanguageChips } from '../../components/LanguageChips';
@@ -161,7 +161,14 @@ export function WelcomeScreen({ navigation, route }: Props): ReactElement {
         {classLink ? null : (
           <LinkButton label={m.learner.home.classCode.cta} onPress={() => startFirstRun({ firstRun: true, then: 'join' })} testID="welcome-class-code" />
         )}
-        {grownUps ? <WelcomeGrownUps /> : null}
+        {/* F-AUTH-004 section 7.1 (row NS-4): on iOS and Android, Sign in as a grown-up (it draws nothing while the native
+            account is off, CS-N13). babel-preset-expo inlines EXPO_OS and Metro drops the dead branch, so the web build
+            keeps its row alone, byte for byte, and never carries the native row's module. */}
+        {process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'android'
+          ? createElement((require('../account/WelcomeAccountRow') as typeof import('../account/WelcomeAccountRow')).WelcomeAccountRow, { navigation: root() })
+          : grownUps
+            ? <WelcomeGrownUps />
+            : null}
         {showLanguagePickers(available) ? (
           <LanguageChips
             testID="welcome-language"

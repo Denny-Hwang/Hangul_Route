@@ -4,7 +4,8 @@ import { getMessages } from '@hangul-route/i18n';
 import { AccessibilityInfo } from 'react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { act } from 'react-test-renderer';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { provideForRequire, srcPath } from '../../../test-support/native-require';
 
 /**
  * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-9 (section 8.6; CS-8, CS-13, CS-18; mock
@@ -350,13 +351,13 @@ describe('[OA] destination BiometricShortcut (the Grown-up area switch asked for
 });
 
 /** The PIN screen inside a stand-in header slot, so the title it passes is drawn. */
-async function showTitled(params: { next: 'FreshPin'; typedOnly?: true }) {
+async function showTitled(params: { next: 'FreshPin' | 'GrownUpUse'; typedOnly?: true; use?: 'family' | 'teacher' | 'school' | 'signin' | 'account' }, navigation = nav()) {
   const route = { key: 'pin', name: 'PinEntry' as const, params };
   const Title = ({ options }: ScreenHeaderSlotProps) => <>{options?.title ?? null}</>;
   const r = await render(
     <ScreenHeaderSlotContext.Provider value={Title}>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- the screen reads only what `nav()` provides */}
-      <PinEntryScreen route={route} navigation={nav() as any} />
+      <PinEntryScreen route={route} navigation={navigation as any} />
     </ScreenHeaderSlotContext.Provider>,
   );
   await settle();
@@ -388,5 +389,70 @@ describe('F-AUTH-004 ND-5, CS-N11, D6, D17 (row NS-3): the account card’s type
     setPlatform('web');
     const r = await showTitled({ next: 'FreshPin', typedOnly: true });
     expect(screenTexts(r.root)).not.toContain(accountTitle);
+  });
+});
+
+describe('F-AUTH-004 sections 7.1 and 7.2, ND-5, CS-N11, D6, D17 (row NS-4): a native account row’s typed PIN', () => {
+  const who = getMessages('en').learner.who;
+  const accountTitle = getMessages('en').caregiver.account.card.title;
+  beforeAll(async () => provideForRequire(srcPath('logic/account/account-entry'), await import('../../../logic/account/account-entry')));
+
+  const typePin = async (root: ReactTestInstance, pin: string): Promise<void> => {
+    for (const digit of pin) await press(buttonsNamed(root, a11y.pinDigit(Number(digit)))[0] as ReactTestInstance);
+    await press(buttonsNamed(root, m.entry.unlock.cta)[0] as ReactTestInstance);
+    await settle();
+    await settle();
+  };
+
+  it('iOS and Android: no face or fingerprint (even without `typedOnly`), titled with the row’s label', async () => {
+    for (const os of ['ios', 'android'] as const) {
+      setPlatform(os);
+      for (const [use, title] of [['family', who.use.family], ['teacher', who.use.teacher], ['school', who.use.school], ['signin', who.use.signIn], ['account', accountTitle]] as const) {
+        const r = await showTitled({ next: 'GrownUpUse', use });
+        expect(cta(r.root), `${os} ${use}`).toHaveLength(0);
+        expect(screenTexts(r.root)).toContain(title);
+        await cleanup();
+      }
+    }
+  });
+
+  it('an AccountGate’s typed PIN (`FreshPin`, `typedOnly`, `use`) is titled with that use', async () => {
+    const r = await showTitled({ next: 'FreshPin', typedOnly: true, use: 'teacher' });
+    expect(cta(r.root)).toHaveLength(0);
+    expect(screenTexts(r.root)).toContain(who.use.teacher);
+  });
+
+  it('a typed PIN opens the Grown-up area stack on the row’s account route, gate open, a typed PIN noted', async () => {
+    for (const [use, target] of [
+      ['family', { screen: 'AccountHome', params: { use: 'family' } }],
+      ['account', { screen: 'AccountHome', params: { use: 'account' } }],
+      ['signin', { screen: 'SignIn', params: {} }],
+    ] as const) {
+      useUiStore.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, lastPinTypedAt: null });
+      tracked.length = 0;
+      const navigation = nav();
+      const r = await showTitled({ next: 'GrownUpUse', use, typedOnly: true }, navigation);
+      await typePin(r.root, '1234');
+      expect(navigation.replace).toHaveBeenCalledWith('ParentDashboard', target);
+      expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+      expect(useUiStore.getState().lastPinTypedAt).not.toBeNull();
+      expect(tracked).toContainEqual(expect.objectContaining({ name: 'parent.gate.opened', payload: expect.objectContaining({ dest: 'use', via: 'pin' }) }));
+      await cleanup();
+    }
+  });
+
+  it('a wrong PIN opens nothing', async () => {
+    const navigation = nav();
+    const r = await showTitled({ next: 'GrownUpUse', use: 'family', typedOnly: true }, navigation);
+    await typePin(r.root, '9999');
+    expect(navigation.replace).not.toHaveBeenCalled();
+  });
+
+  it('no PIN stored (it went since the row was drawn): back to the chooser, never the web’s sign-in page', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const navigation = nav();
+    await showTitled({ next: 'GrownUpUse', use: 'family', typedOnly: true }, navigation);
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(navigation.replace).not.toHaveBeenCalled();
   });
 });

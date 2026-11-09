@@ -8,6 +8,7 @@ import { accountDenyHits } from '../../../logic/account/deny-list';
 import { byTestId, buttonsNamed, hostNodes, press, render, resetPlatform, screenTexts, setPlatform, unmount } from '../../../test-support/render';
 import { useAccountVisit } from '../../../store/account-visit';
 import { useLocaleStore } from '../../../store/locale-store';
+import { useUiStore } from '../../../store/ui-store';
 import { AccountHostContext, ClerkMountContext, OFF_HOST, type ClerkMountState } from '../account-host';
 import { SignInScreen } from '../SignInScreen.native';
 
@@ -55,6 +56,7 @@ const env = vi.hoisted(() => ({
   retrustRequired: false,
   spacesGate: null as null | Promise<void>,
   trustGate: null as null | Promise<void>,
+  retrustGate: null as null | Promise<void>,
   online: true,
   onlineListener: null as null | ((online: boolean) => void),
   writes: [] as string[],
@@ -72,7 +74,10 @@ vi.mock('../../../platform/account-records', () => ({
   writeTrust: async (r: unknown) => void env.writes.push(`trust ${JSON.stringify(r)}`),
   writeDeviceUses: async (r: { uses: unknown }) => void env.writes.push(`uses ${JSON.stringify(r.uses)}`),
   writeRetrustNotice: async () => void env.writes.push('notice'),
-  readRetrustRequired: async () => env.retrustRequired,
+  readRetrustRequired: async () => {
+    if (env.retrustGate !== null) await env.retrustGate;
+    return env.retrustRequired;
+  },
   clearRetrustRequired: async () => void env.writes.push('clear retrustRequired'),
 }));
 vi.mock('../../../platform/account-online', () => ({
@@ -92,6 +97,8 @@ vi.mock('../../../logic/account/api', () => ({
   }),
 }));
 vi.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ setQueryData: (key: unknown, data: unknown) => void env.cached.push({ key, data }) }) }));
+// Row NS-4: the screen renders inside AccountGate, which holds capture protection while it is focused.
+vi.mock('../../../platform/account-capture', () => ({ holdAccountCapture: () => () => undefined }));
 
 const view = (over: Partial<View> = {}): View => ({
   status: 'needs_first_factor',
@@ -105,8 +112,10 @@ const answer = (name: string, fn: Step): void => {
   clerk.answers[name] = fn;
 };
 
-function navigation(): { goBack: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn>; addListener: () => () => void } {
-  return { goBack: vi.fn(), navigate: vi.fn(), addListener: () => () => undefined };
+function navigation(): { goBack: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn>; replace: ReturnType<typeof vi.fn>; addListener: () => () => void; getState: () => unknown; getParent: () => undefined } {
+  // Opened from the Grown-up area's account card: the dashboard under it (entered from outside the account routes).
+  const state = { routes: [{ key: 'ParentDashboard-1', name: 'ParentDashboard' }, { key: 'SignIn-1', name: 'SignIn' }] };
+  return { goBack: vi.fn(), navigate: vi.fn(), replace: vi.fn(), addListener: () => () => undefined, getState: () => state, getParent: () => undefined };
 }
 
 let nav = navigation();
@@ -170,6 +179,8 @@ beforeEach(() => {
   vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
   useLocaleStore.setState({ device: 'en', byProfile: {} });
   useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
+  // A PIN typed just now (the account card's Sign in after the typed PIN): AccountGate opens the sign-in.
+  useUiStore.setState({ lastPinTypedAt: Date.now() });
   clerk.calls = [];
   clerk.loaded = true;
   clerk.answers = {};
@@ -185,6 +196,7 @@ beforeEach(() => {
   env.retrustRequired = false;
   env.spacesGate = null;
   env.trustGate = null;
+  env.retrustGate = null;
   clerk.signedIn = false;
   endSession.mockClear();
   env.online = true;
@@ -399,7 +411,7 @@ describe('offline (boards 17 and 18, D2)', () => {
 });
 
 describe('section 6.5: a completed sign-in', () => {
-  it('on a pin device: the session, the trust and the uses records, the sign-in time, ok once, then back', async () => {
+  it('on a pin device: the session, the trust and the uses records, the sign-in time, ok once, then the home (row NS-4)', async () => {
     const r = await mount();
     await toCode(r);
     await type(r.root, 'code', '482139');
@@ -409,7 +421,10 @@ describe('section 6.5: a completed sign-in', () => {
     expect(env.cached).toEqual([{ key: ['account', 'spaces'], data: env.spaces && (env.spaces as { data: unknown }).data }]);
     expect(useAccountVisit.getState()).toMatchObject({ signedInThisVisit: true, retrustPending: false });
     expect(useAccountVisit.getState().lastAccountSignInAt).not.toBeNull();
-    expect(nav.goBack).toHaveBeenCalledTimes(1);
+    // Section 6.5 step 5: no row's use, so the account's first use (Family), in this screen's place.
+    expect(nav.replace).toHaveBeenCalledTimes(1);
+    expect(nav.replace).toHaveBeenCalledWith('AccountHome', { use: 'family' });
+    expect(nav.goBack).not.toHaveBeenCalled();
     await unmount(r);
     expect(env.tracked).toEqual([{ name: 'auth.native.signin', payload: { os: 'ios', method: 'email_code', result: 'ok', second: false } }]);
   });
@@ -472,14 +487,16 @@ describe('section 6.5: a completed sign-in', () => {
     expect(env.writes).toEqual([]);
     expect(env.cached).toEqual([]);
     expect(useAccountVisit.getState().signedInThisVisit).toBe(true);
-    expect(nav.goBack).toHaveBeenCalled();
+    // A failed spaces read: Family (the home's own error state follows, section 6.5).
+    expect(nav.replace).toHaveBeenCalledWith('AccountHome', { use: 'family' });
   });
 });
 
 describe('the review round (row NS-3)', () => {
   it('D21: Continue waits until the re-trust state is read', async () => {
     let release: () => void = () => undefined;
-    env.trustGate = new Promise<void>((resolve) => {
+    // The flow's own re-trust read (the gate in front of it has decided already).
+    env.retrustGate = new Promise<void>((resolve) => {
       release = resolve;
     });
     const r = await mount();
@@ -523,7 +540,7 @@ describe('the review round (row NS-3)', () => {
     expect(env.writes).toEqual(['trust {"v":1,"epoch":7}']);
     release();
     await settle();
-    expect(nav.goBack).toHaveBeenCalledTimes(1);
+    expect(nav.replace).toHaveBeenCalledTimes(1);
   });
 
   it('M1: leaving while the records are written sends ok once, never twice', async () => {
@@ -539,7 +556,7 @@ describe('the review round (row NS-3)', () => {
     release();
     await settle();
     expect(env.tracked).toEqual([{ name: 'auth.native.signin', payload: { os: 'ios', method: 'email_code', result: 'ok', second: false } }]);
-    expect(nav.goBack).not.toHaveBeenCalled();
+    expect(nav.replace).not.toHaveBeenCalled();
   });
 
   it('M1: leaving while Clerk answers a sign-in that completes still records it (one ok, the sign-in time)', async () => {
@@ -561,7 +578,7 @@ describe('the review round (row NS-3)', () => {
     // CS-N4: the session may have closed meanwhile, so nothing of the account is read into the cache.
     expect(env.cached).toEqual([]);
     expect(env.tracked).toEqual([{ name: 'auth.native.signin', payload: { os: 'ios', method: 'email_code', result: 'ok', second: false } }]);
-    expect(nav.goBack).not.toHaveBeenCalled();
+    expect(nav.replace).not.toHaveBeenCalled();
   });
 
   it('leaving while Clerk answers a refusal sends that refusal once', async () => {
@@ -581,6 +598,8 @@ describe('the review round (row NS-3)', () => {
 
   it('ND-14: a session Clerk still holds (its sign-out could not reach Clerk) is ended before a new sign-in', async () => {
     clerk.signedIn = true;
+    // Sign out ran in this run (offline, R-2): the account reads as signed out, so AccountGate opens the sign-in.
+    useAccountVisit.setState({ signedOutThisRun: true });
     const r = await mount();
     await toCode(r);
     expect(endSession).toHaveBeenCalledTimes(1);
@@ -640,11 +659,19 @@ describe('section 15: one auth.native.signin per flow', () => {
 });
 
 describe('without Clerk for this visit', () => {
-  it.each(['off', 'pending'] as const)('%s: cantCheck and Back, and no Clerk call', async (state) => {
-    const r = await mount(state);
+  it('off: AccountGate’s cantCheck lock with Try again and Back, and no Clerk call', async () => {
+    const r = await mount('off');
     expect(screenTexts(r.root)).toContain(m.lock.cantCheck);
+    expect(byTestId(r.root, 'account-lock-try-again')).toHaveLength(1);
     await press(buttonsNamed(r.root, en.common.buttons.back)[0]!);
     expect(nav.goBack).toHaveBeenCalled();
+    expect(clerk.calls).toEqual([]);
+  });
+
+  it('pending (not decided yet): nothing of the account, and no Clerk call', async () => {
+    const r = await mount('pending');
+    expect(byTestId(r.root, 'sign-in-step-email')).toEqual([]);
+    expect(screenTexts(r.root)).not.toContain(m.signIn.intro);
     expect(clerk.calls).toEqual([]);
   });
 
@@ -763,7 +790,9 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
   /** No denied word in the text tree or any label, hint or value; no link (no host node with an href). */
   async function expectClean(r: ReactTestRenderer, platform: string, locale: UiLocale, name: string): Promise<void> {
     const texts = screenTexts(r.root);
-    expect(texts, `${locale} ${name}`).toContain(getMessages(locale).caregiver.account.signIn.title);
+    // Without Clerk the AccountGate's lock shows, titled with the use (none: Grown-up account, D6).
+    const title = name.startsWith('unavailable') ? getMessages(locale).caregiver.account.card.title : getMessages(locale).caregiver.account.signIn.title;
+    expect(texts, `${locale} ${name}`).toContain(title);
     // The fixture's email is typed by a grown-up (section 9.2: not checked).
     const hits = texts.flatMap((t) => accountDenyHits(t.replace('dana@example.com', ''), locale).map((h) => `${platform} ${locale} ${name}: "${t}" has ${h}`));
     expect(hits).toEqual([]);

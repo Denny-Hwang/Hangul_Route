@@ -222,12 +222,16 @@ export type RootStackParamList = {
     browseTarget?: BrowseTarget;
     /** [OA] `next: 'LockedProfile'`: the surface of the locked tile (the chooser and its trigger, or the Profile tiles), for `profile.switch`. */
     lockedFrom?: { via: 'chooser'; trigger: WhoTrigger } | { via: 'profile' };
-    /** [OA] `next: 'GrownUpUse'`: the chooser row that asked for the PIN (a code, never an id); its page is `grownUpTarget(use)`. */
-    use?: GrownUpUse | 'signin';
     /**
-     * F-AUTH-004 ND-5, CS-N11, D6, D17 (row NS-3; iOS and Android only): the typed PIN an account entry asks for (the
-     * Grown-up area account card's Sign in and Sign in again, through `next: 'FreshPin'`): no face or fingerprint
-     * button, titled **Grown-up account**.
+     * [OA] `next: 'GrownUpUse'`: the chooser row that asked for the PIN (a code, never an id); its page is `grownUpTarget(use)`.
+     * F-AUTH-004 (row NS-4, iOS and Android): `account`, the native **Grown-up account** row; and with `next: 'FreshPin'`
+     * and `typedOnly`, the use of the account screen whose `AccountGate` asked (the screen's title, D6).
+     */
+    use?: GrownUpUse | 'signin' | 'account';
+    /**
+     * F-AUTH-004 ND-5, CS-N11, D6, D17 (rows NS-3, NS-4; iOS and Android only): the typed PIN an account entry asks
+     * for (a native chooser row, `next: 'GrownUpUse'`; an account screen's `AccountGate`, `next: 'FreshPin'`): no face
+     * or fingerprint button, titled with the row's label, or **Grown-up account** with no use.
      */
     typedOnly?: true;
   };
@@ -262,7 +266,12 @@ export type RootStackParamList = {
   /** billing/plan-status — the learner Plan screen: status only, no PIN (F-BILL-002 §4.7; F-ENT-003's "Ask a grown-up" still arrives through the gate). */
   Paywall: { from: 'journey' | 'settings' | AskFrom } | undefined;
   /** `browseBlocked`: the browser refused the All lessons gate pass, so the storage line shows under Open all lessons (F-BROWSE-001 BR-12a). */
-  ParentDashboard: { browseBlocked?: true } | undefined;
+  /**
+   * F-AUTH-004 section 7.1 (row NS-4, iOS and Android): a native account entry (a chooser row after its typed PIN, or a
+   * row on a device with no PIN, Welcome's row) opens the Grown-up area stack on one of its account routes
+   * (`accountRouteFor`), which `AccountGate` then decides.
+   */
+  ParentDashboard: { browseBlocked?: true } | NavigatorScreenParams<AccountStackParamList> | undefined;
   Profile: undefined;
   /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */
   EditProfile: { profileId: string };
@@ -478,8 +487,17 @@ export type GuestStackParamList = {
  * (`logic/profiles/session.ts`). Params live in memory only (section 8.1); the `use` is a code, never an id.
  */
 export type AccountStackParamList = {
-  /** Section 6.3: the grown-up sign-in, for the use the grown-up came for (`account`: the row of a record with no use). */
-  SignIn: { use?: GrownUpUse | 'account' } | undefined;
+  /**
+   * Section 6.3: the grown-up sign-in, for the use the grown-up came for (`account`: the row of a record with no use).
+   * Row NS-4: `again`, the account card's **Sign in again** (its `AccountGate` signs out on this device first, after
+   * the typed PIN, as the lock card's own button does).
+   */
+  SignIn: { use?: GrownUpUse | 'account'; again?: true } | undefined;
+  /**
+   * Section 8.1 (row NS-4 lands the route and its `AccountGate`; row NS-5 draws the homes): the home of a use. Until
+   * NS-5 an open result lands on the Grown-up area, whose account card shows the account.
+   */
+  AccountHome: { use: GrownUpUse | 'account' };
 };
 
 /** The nested Grown-up area stack's routes: the dashboard under the root's name, then the account routes. */

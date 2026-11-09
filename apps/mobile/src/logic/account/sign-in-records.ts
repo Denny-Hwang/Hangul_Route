@@ -1,4 +1,4 @@
-import { AccountTrustSchema, GrownUpUseSchema, SpaceKindSchema, SpaceRoleSchema, usesFor, type AccountTrust, type DeviceUses, type GrownUpUse, type SpaceKind, type SpaceRole } from '@hangul-route/content-schema';
+import { AccountTrustSchema, DEVICE_USES_TTL_MS, DeviceUsesSchema, GrownUpUseSchema, SpaceKindSchema, SpaceRoleSchema, usesFor, type AccountTrust, type DeviceUses, type GrownUpUse, type SpaceKind, type SpaceRole } from '@hangul-route/content-schema';
 import type { NativeGateState } from './gate-state';
 import type { SignInProof } from './sign-in-step';
 
@@ -127,6 +127,18 @@ export function usesOfSpaces(data: unknown): GrownUpUse[] | null {
 /** The uses record: no names, no ids (section 13.1). */
 export function deviceUsesRecord(uses: readonly GrownUpUse[], at: number): DeviceUses {
   return { v: 1, uses: GrownUpUseSchema.options.filter((use) => uses.includes(use)), at };
+}
+
+/**
+ * Section 7.1 (row NS-4): the uses record as the native chooser and the account card read it: the uses, in the fixed
+ * order family, teacher, school (an empty list for a record that holds no use), or null for no record (absent, a value
+ * that does not parse, or a record seen more than `DEVICE_USES_TTL_MS` (30 days) ago or dated as far ahead).
+ */
+export function usesRecordOf(raw: unknown, now: number): GrownUpUse[] | null {
+  if (raw === null || raw === undefined) return null;
+  const parsed = DeviceUsesSchema.safeParse(raw);
+  if (!parsed.success || Math.abs(now - parsed.data.at) > DEVICE_USES_TTL_MS) return null;
+  return GrownUpUseSchema.options.filter((use) => parsed.data.uses.includes(use));
 }
 
 /** Section 6.5 step 5: the home a sign-in opens with no row's use: Family, then Teacher, then School; no space: Family. */

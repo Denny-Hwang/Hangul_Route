@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearRetrustRequired, readRetrustRequired, readTrust, removeRecord, writeDeviceUses, writeRetrustNotice, writeRetrustRequired, writeTrust } from '../account-records';
+import { clearRetrustRequired, readRetrustRequired, readTrust, readUsesRecord, removeRecord, writeDeviceUses, writeRetrustNotice, writeRetrustRequired, writeTrust } from '../account-records';
 
 /** F-AUTH-004 section 13.1 (row NS-3): the account's records go through the `hr:` storage wrapper, and nothing else. */
 
@@ -57,5 +57,20 @@ describe('the account records', () => {
     expect(await readRetrustRequired()).toBe(true);
     await clearRetrustRequired();
     expect(await readRetrustRequired()).toBe(false);
+  });
+});
+
+describe('row NS-4: the uses record as the native chooser and the account card read it', () => {
+  it('none, the uses in order, an empty list for a record with no use; stale, damaged or a failed read is none', async () => {
+    expect(await readUsesRecord(1000)).toBeNull();
+    data.set('hr:grownup:deviceUses', '{"v":1,"uses":["school","family"],"at":1000}');
+    expect(await readUsesRecord(1000)).toEqual(['family', 'school']);
+    data.set('hr:grownup:deviceUses', '{"v":1,"uses":[],"at":1000}');
+    expect(await readUsesRecord(1000)).toEqual([]);
+    expect(await readUsesRecord(1000 + 31 * 24 * 3600 * 1000)).toBeNull();
+    data.set('hr:grownup:deviceUses', '{not json');
+    expect(await readUsesRecord(1000)).toBeNull();
+    vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('read'));
+    expect(await readUsesRecord(1000)).toBeNull();
   });
 });
