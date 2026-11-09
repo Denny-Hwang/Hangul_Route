@@ -51,7 +51,7 @@ and only the parent account maps to Clerk. Child PII never leaves our D1.
 
 ## 4. Out of scope
 
-- Mobile Clerk sign-in UI (`@clerk/clerk-expo`) + sending the token on requests → F-AUTH-004 (F-AUTH-002 became the web console sign-in, shipped 2026-10-07).
+- Mobile Clerk sign-in UI (`@clerk/clerk-expo`) + sending the token on requests → F-AUTH-004 (F-AUTH-002 became the web console sign-in, shipped 2026-10-07). [AU] Written 2026-11-08 as `F-AUTH-004-native-sign-in.md`: the native app sends the token only on the account's space and billing-status routes, never on the learner sync or restore routes.
 - Ownership gates on profiles / progress / telemetry → F-AUTH-003.
 - Real Clerk keys (provisioned by the operator via `wrangler secret`).
 
