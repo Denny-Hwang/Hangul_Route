@@ -11,7 +11,7 @@ import { freshProof } from '../../logic/account/account-lock';
 import { enteredFromOutside, gateStep, lockCauseOf, type GateScreen, type GateStep } from '../../logic/account/account-gate';
 import { accountQueryKey } from '../../logic/account/queries';
 import { nativeHomeFor, trustOfRead, usesOfSpaces } from '../../logic/account/sign-in-records';
-import { isParentSessionValid } from '../../logic/profiles/session';
+import { isParentSessionValid, parentSessionRemainingMs } from '../../logic/profiles/session';
 import type { GrownUpStackParamList, RootStackParamList } from '../../navigation/types';
 import { holdAccountCapture } from '../../platform/account-capture';
 import { readTrust, readUsesRecord } from '../../platform/account-records';
@@ -167,8 +167,15 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
           show(next);
           return;
         case 'close':
-          // The 15 minutes are over: the session closes and the area goes (`leaveGrownUpAreaOnClose`).
+          // The 15 minutes are over: the session closes. On a `pin` device the area goes (`leaveGrownUpAreaOnClose`);
+          // on a device with no PIN the gate opens directly, so nothing leaves: the screen starts over, and with the
+          // visit's sign-in gone (the close ended it) it reads as a new visit (the sign-in, ND-9).
           closeGrownUpSession('exit');
+          setTimeout(() => {
+            if (!live.current || mine !== generation.current) return;
+            opened.current = false;
+            decideRef.current();
+          }, 0);
           return;
         case 'to_sign_in':
           navigation.replace('SignIn', use === undefined ? {} : { use });
@@ -176,7 +183,10 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
         case 'to_home':
           // Section 6.5 step 5: the use the grown-up came for, else the account's first use.
           if (use !== undefined) navigation.replace('AccountHome', { use });
-          else void homeUse().then((home) => live.current && navigation.replace('AccountHome', { use: home }));
+          else
+            void homeUse().then((home) => {
+              if (live.current && mine === generation.current) navigation.replace('AccountHome', { use: home });
+            });
           return;
         case 'ask_pin':
           askedPin.current = true;
@@ -242,8 +252,20 @@ function GateCore({ screen, use, again = false, navigation, routeKey, children, 
 
   // Clerk answered after a decision that waited for it.
   useEffect(() => {
-    if (stepNow.current?.kind === 'wait' && !askedPin.current && clerk !== 'loading') decideRef.current();
+    if (stepNow.current?.kind === 'wait' && !askedPin.current && clerk !== 'loading' && navigation.isFocused()) decideRef.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Clerk's answer is the moment; the navigation object is this mount's
   }, [clerk]);
+
+  // An open screen left in front decides again when its 15 minutes end (as `useGateLapse` does for the area's pages),
+  // so it never stays open past its session waiting for a focus or a return to `active`.
+  const parentGateOpenedAt = useUiStore((st) => st.parentGateOpenedAt);
+  const isOpen = step?.kind === 'open';
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const left = parentSessionRemainingMs(parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' }, Date.now());
+    const timer = setTimeout(() => decideRef.current(), left + 1);
+    return () => clearTimeout(timer);
+  }, [isOpen, parentGateOpenedAt]);
 
   // The JavaScript cover while the app is not `active` (the decision on the return to `active` takes it away). The
   // keyboard goes too: it is a window of its own, which neither cover reaches (the NS-2 limitation), and its

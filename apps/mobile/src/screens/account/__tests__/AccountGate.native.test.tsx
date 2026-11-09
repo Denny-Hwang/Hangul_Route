@@ -38,7 +38,18 @@ const env = vi.hoisted(() => ({
   closed: [] as string[],
   focused: true,
 }));
-vi.mock('../../../store/grown-up-session', () => ({ closeGrownUpSession: (reason: string) => void env.closed.push(reason) }));
+// What the real close does to the stores here (the area's leave is the navigator's, and a no-PIN device never leaves).
+vi.mock('../../../store/grown-up-session', async () => {
+  const { useUiStore: ui } = await import('../../../store/ui-store');
+  const { useAccountVisit: visit } = await import('../../../store/account-visit');
+  return {
+    closeGrownUpSession: (reason: string) => {
+      env.closed.push(reason);
+      ui.setState({ parentGateOpenedAt: null, lastPinVerifiedAt: null, lastPinTypedAt: null });
+      visit.getState().endVisit();
+    },
+  };
+});
 vi.mock('../../../store/native-gate-state', () => ({
   nativeGateState: async () => {
     if (env.gateRead !== null) await env.gateRead;
@@ -440,6 +451,42 @@ describe('the 15-minute session around an open screen (OA-D5, row NS-4 review)',
     await settle();
     expect(env.closed).toEqual(['exit']);
     expect(opened(r)).toBe(false);
+  });
+
+  it('a device with no PIN (nothing leaves there): the screen starts over as a new visit, the sign-in (ND-9)', async () => {
+    env.gate = { state: 'open' };
+    env.trust = { kind: 'none' };
+    useAccountVisit.getState().markSignedIn(Date.now(), false);
+    const home = await mountGate({ use: 'teacher' });
+    expect(opened(home)).toBe(true);
+    useUiStore.setState({ parentGateOpenedAt: Date.now() - 16 * 60_000 });
+    await focus();
+    await settle();
+    expect(env.closed).toEqual(['exit']);
+    expect(nav.replace).toHaveBeenCalledWith('SignIn', { use: 'teacher' });
+    // The sign-in screen itself opens again, a fresh flow, with a session of its own.
+    await unmount(home);
+    env.closed = [];
+    env.clerk = { isLoaded: true, isSignedIn: false };
+    const signIn = await mountGate({ screen: 'sign_in', use: undefined });
+    expect(opened(signIn)).toBe(true);
+    useUiStore.setState({ parentGateOpenedAt: Date.now() - 16 * 60_000 });
+    await focus();
+    await settle();
+    expect(env.closed).toEqual(['exit']);
+    expect(opened(signIn)).toBe(true);
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+  });
+
+  it('a screen left in front decides again when its 15 minutes end (no focus needed)', async () => {
+    useUiStore.setState({ parentGateOpenedAt: Date.now() - 15 * 60_000 + 30 });
+    const r = await mountGate();
+    expect(opened(r)).toBe(true);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 60));
+    });
+    await settle();
+    expect(env.closed).toEqual(['exit']);
   });
 
   it('a decision inside the 15 minutes keeps it open', async () => {

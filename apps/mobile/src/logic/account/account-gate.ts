@@ -73,10 +73,11 @@ export function gateStep(input: GateDecisionInput): GateStep {
   const { gate } = input;
   // Row NS-4 review: an open screen whose session lapsed closes the session (the area goes; the next entry asks again).
   if (input.opened && input.sessionLapsed) return { kind: 'close' };
-  if (gate.state === 'unknown') return CANT_CHECK;
-  if (gate.state === 'nopin') return { kind: 'setup' };
-  if (input.clerk === 'off') return CANT_CHECK;
-  if (input.clerk === 'loading') return { kind: 'wait' };
+  // `unknown` and `nopin` are decided by `accountLock` before anything Clerk says; any other state needs Clerk.
+  if (gate.state !== 'unknown' && gate.state !== 'nopin') {
+    if (input.clerk === 'off') return CANT_CHECK;
+    if (input.clerk === 'loading') return { kind: 'wait' };
+  }
   const lock = accountLock({
     gate,
     signedIn: input.signedIn,

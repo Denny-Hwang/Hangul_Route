@@ -60,3 +60,6 @@ export function WelcomeAccountRow({ navigation }: { navigation: EntryNavigation 
     </View>
   );
 }
+
+/** The web twin's shape is this module's: callers are type-checked against the twin (no `moduleSuffixes`). */
+export const NATIVE_SHAPE: typeof import('./WelcomeAccountRow') = { WelcomeAccountRow };

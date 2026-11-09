@@ -5,7 +5,6 @@ import { accountEntryFor, type AccountEntryUse } from '../../logic/account/accou
 import type { WhoMarker } from '../../logic/profiles/who';
 import { readUsesRecord } from '../../platform/account-records';
 import { trackGateOpened } from '../../store/gate-telemetry';
-import { useUiStore } from '../../store/ui-store';
 import type { EntryNavigation, FocusEvents, NativeAccountEntries } from './account-entries';
 import { useAccountOnline } from './account-session.native';
 
@@ -27,9 +26,8 @@ export function openAccountEntry(navigation: EntryNavigation, use: AccountEntryU
   else if (entry.kind === 'setup') navigation.navigate('PinEntry', { next: 'ParentDashboard' });
   else {
     trackGateOpened('GrownUpUse', 'open');
-    // A session for this visit (ND-9): the 15-minute and 5-minute background rules then end it, and with it the
-    // visit's sign-in and Clerk's memory session (the close ends them, `bindAccountQueryClearing`).
-    useUiStore.getState().openParentGate();
+    // No session is opened here, from the in-memory marker: AccountGate opens one on its first open result, and only
+    // where the exact gate state is `open` (ND-9), so a device that should ask a PIN or set one never gets one.
     navigation.navigate('ParentDashboard', entry.route);
   }
 }
@@ -64,3 +62,6 @@ export function useNativeAccountEntries(navigation: FocusEvents, opening: unknow
   useEffect(() => navigation.addListener('focus', read), [navigation, read]);
   return nativeAccount ? { nativeAccount, record, online } : undefined;
 }
+
+/** The web twin's shape is this module's: callers are type-checked against the twin (no `moduleSuffixes`). */
+export const NATIVE_SHAPE: typeof import('./account-entries') = { openAccountEntry, useNativeAccountEntries };

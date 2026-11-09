@@ -180,7 +180,7 @@ beforeEach(() => {
   useLocaleStore.setState({ device: 'en', byProfile: {} });
   useAccountVisit.setState({ lastAccountSignInAt: null, signedInThisVisit: false, retrustPending: false, signedOutThisRun: false });
   // A PIN typed just now (the account card's Sign in after the typed PIN): AccountGate opens the sign-in.
-  useUiStore.setState({ lastPinTypedAt: Date.now() });
+  useUiStore.setState({ lastPinTypedAt: Date.now(), parentGateOpenedAt: Date.now() });
   clerk.calls = [];
   clerk.loaded = true;
   clerk.answers = {};
