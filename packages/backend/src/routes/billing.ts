@@ -3,8 +3,9 @@ import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
-import { billingSummaryFor, hasStripeReceipt, receiptUrl, receiptView, rowInMode } from '../lib/billing-summary';
+import { billingStatusView, billingSummaryFor, hasStripeReceipt, receiptUrl, receiptView, rowInMode } from '../lib/billing-summary';
 import { can } from '../lib/can';
+import { isNativeRequest, nativeMoneyRefusal } from '../lib/native-client';
 import { recordServerEvent } from '../lib/server-events';
 import { requireStepUp } from '../lib/step-up';
 import { billingLiveAllowed, stripeMode, type StripeEnv } from '../lib/stripe';
@@ -19,6 +20,8 @@ import type { Account } from '../store';
  * never get receipts), and a receipt link fetched fresh from Stripe behind
  * step-up and the live guard. Only the receipt link calls Stripe; nothing
  * here writes besides `requireAccount`'s first-sign-in upsert.
+ * F-AUTH-004 section 9.4 (row NS-1): the native app gets only the summary's status view (`no-store`); the receipts list
+ * and receipt links refuse it (`403 not_in_app`, `NATIVE_MONEY_GUARD`).
  */
 type Env = { Bindings: StripeEnv };
 export const billingRoutes = new Hono<Env>();
@@ -47,16 +50,24 @@ function refusal(c: Context, verdict: 'forbidden' | 'not_found'): Response {
 }
 
 billingRoutes.get('/summary', async (c) => {
+  // F-AUTH-004 section 9.4: never cached by a browser, a proxy or the app, whatever the answer.
+  c.header('Cache-Control', 'no-store');
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const env = c.env ?? {};
   const summary = await billingSummaryFor(dbFor(c), env, account.id, new Date());
+  // F-AUTH-004 section 8.5: the status view for `view=status` and for every native request (the header, or a token with
+  // no `azp`), whatever the query and whatever `NATIVE_MONEY_GUARD` says. It is not a visit to the billing page.
+  if (c.req.query('view') === 'status' || (await isNativeRequest(c))) return ok(c, billingStatusView(summary));
   // A checkout-return poll is not a visit (section 10).
   if (c.req.query('poll') !== '1') recordServerEvent('billing.summary_viewed', { cards: summary.cards.length, payerCards: summary.cards.filter((card) => card.payer).length, mode: summary.mode });
   return ok(c, summary);
 });
 
 billingRoutes.get('/receipts', async (c) => {
+  // F-AUTH-004 section 9.4: never to the native app.
+  const native = await nativeMoneyRefusal(c);
+  if (native) return native;
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const spaceId = c.req.query('id');
@@ -71,6 +82,9 @@ billingRoutes.get('/receipts', async (c) => {
 });
 
 billingRoutes.post('/receipt-link', async (c) => {
+  // F-AUTH-004 section 9.4: never to the native app, before step-up, the live guard or Stripe.
+  const native = await nativeMoneyRefusal(c);
+  if (native) return native;
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const receiptId = receiptIdOf(await c.req.json().catch(() => null));

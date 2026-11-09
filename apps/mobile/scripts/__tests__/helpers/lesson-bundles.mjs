@@ -3,8 +3,10 @@
 // manifests but the story bodies', which the story shelf chunk names (row CM-8b), and each chunk is its own
 // `<name>-<md5>.js` bundle carrying its hash, so pwa-postbuild.mjs's chunk check passes. The locale chunks, the grown-up roots and the learner screen chunks ([GU] GU-3) are bundles
 // of their own too, each carrying its marker. `skip` leaves one chunk out.
+import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PACK_CHUNK_DIR, packChunkMarker, packChunkName } from '../../audio/lib.mjs';
 import { LEARNER_CHUNKS, LOCALE_CHUNKS, MEMORY_CHUNKS, QUEST_REVIEW_CHUNKS, REVIEW_CHUNKS, ROOT_CHUNKS, SCENE_CHUNKS, SCREEN_CHUNKS, md5 } from '../../pwa/lesson-chunks.mjs';
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..');
@@ -25,6 +27,17 @@ export const REVIEW_ITEM_MANIFEST = await reviewItems.readChunkManifest(repo);
 /** The repository's week-drop chunk (its name and hash, row CM-48). */
 export const WEEK_DROP_MANIFEST = await weekDrops.readChunkManifest(repo);
 
+/** The per-pack clip map chunks the map generator wrote (AC-B6): one marked chunk per pack outside the start map, as pwa-postbuild.mjs reads them. */
+function audioPackChunks() {
+  const dir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'src', 'content', '__generated__', PACK_CHUNK_DIR);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.ts'))
+    .map((f) => f.replace(/^audio-pack-/, '').replace(/\.ts$/, ''))
+    .sort()
+    .map((pack) => ({ name: packChunkName(pack), marker: packChunkMarker(pack) }));
+}
+
 /** The stand-in start bundle and lesson and story chunk bundles, by export path. */
 export function lessonBundles(skip) {
   const all = [...LESSON_MANIFEST, ...STORY_MANIFEST, ...REVIEW_ITEM_MANIFEST, ...WEEK_DROP_MANIFEST];
@@ -36,7 +49,7 @@ export function lessonBundles(skip) {
     const text = `__d(function(g,r,i,a,m,e,d){e.CHUNK_HASH="${hash}"${named.length > 0 ? `;e.NAMES=${JSON.stringify(named)}` : ''}});`;
     files[`_expo/static/js/web/${name}-${md5(text)}.js`] = text;
   }
-  for (const { name, marker } of [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS]) {
+  for (const { name, marker } of [...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS, ...audioPackChunks()]) {
     if (name === skip) continue;
     const text = `__d(function(g,r,i,a,m,e,d){e.MARKER="${marker}"});`;
     files[`_expo/static/js/web/${name}-${md5(text)}.js`] = text;

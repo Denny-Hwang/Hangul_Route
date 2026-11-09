@@ -10,6 +10,7 @@ import { accountBrowseScope, isEntitlementActive } from '../lib/entitlement';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { recordServerEvent } from '../lib/server-events';
 import { liveRefusal } from '../lib/live-guard';
+import { nativeMoneyRefusal } from '../lib/native-client';
 import { requireStepUp } from '../lib/step-up';
 import { checkoutForm, checkoutSuccessSuffix, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, stripeMode, verifyStripeSignature, type StripeEnv } from '../lib/stripe';
 
@@ -23,7 +24,9 @@ const PLAN_SPACE_KINDS: Record<'family_lifetime' | 'group_license', readonly Spa
 /**
  * /api/entitlements — F-ENT-001 §3.3. Stripe and contracts land in
  * `store.applyEntitlement` (store receipts: not yet, see /verify); nothing
- * here talks to a child.
+ * here talks to a child. F-AUTH-004 section 9.4 (row NS-1): the entitlement
+ * list, checkout, portal and promo refuse the native app (`403 not_in_app`,
+ * `NATIVE_MONEY_GUARD`); the webhook is never guarded.
  */
 type Env = { Bindings: StripeEnv & { CONSOLE_URL?: string } };
 export const entitlementRoutes = new Hono<Env>();
@@ -39,6 +42,9 @@ async function withSpaceName(db: Db, e: Entitlement): Promise<Entitlement & { su
 }
 
 entitlementRoutes.get('/', async (c) => {
+  // F-AUTH-004 section 9.4: the raw rows (Stripe ids, payment states, end dates) never go to the native app.
+  const native = await nativeMoneyRefusal(c);
+  if (native) return native;
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const db = dbFor(c);
@@ -86,6 +92,9 @@ function refusedCheckout(planKey: PurchasablePlanKey, reason: CheckoutRefusal, r
 entitlementRoutes.post('/verify', (c) => fail(c, 'receipt_verification_not_configured', 'receipt verification not configured', 501));
 
 entitlementRoutes.post('/stripe/checkout', async (c) => {
+  // F-AUTH-004 section 9.4: never to the native app, before step-up, the live guard or any Stripe call.
+  const native = await nativeMoneyRefusal(c);
+  if (native) return native;
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const parsed = CheckoutCreateSchema.safeParse(await c.req.json().catch(() => null));
@@ -127,6 +136,9 @@ entitlementRoutes.post('/stripe/checkout', async (c) => {
 
 /** Check a promotion / referral code before checkout — F-ENT-002 §3.2. Returns what it is worth on the chosen plan. */
 entitlementRoutes.post('/stripe/promo', async (c) => {
+  // F-AUTH-004 section 9.4: never to the native app, before the rate limit, the live guard or any Stripe call.
+  const native = await nativeMoneyRefusal(c);
+  if (native) return native;
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const decision = promoLimiter.check(clientKey((n) => c.req.header(n)));
@@ -147,6 +159,9 @@ entitlementRoutes.post('/stripe/promo', async (c) => {
 });
 
 entitlementRoutes.post('/stripe/portal', async (c) => {
+  // F-AUTH-004 section 9.4: never to the native app, before step-up, the live guard or any Stripe call.
+  const native = await nativeMoneyRefusal(c);
+  if (native) return native;
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
   const body = (await c.req.json().catch(() => ({}))) as { subjectKind?: string; subjectId?: string };
