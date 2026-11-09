@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
@@ -541,7 +541,11 @@ function builtClips(): string[] {
  * Clips the precache must not hold (AMENDMENTS-AUDIO-CLIPS AC-B6, row AC-6): the record groups, the text-keyed say
  * clips and the fixture Word Builder letter `ae` (pack jamo-wb, although it lives under audio/jamo/ too).
  */
-const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue|say)\/|(^|\/)audio\/jamo\/ae\./;
+// The jamo-wb pack's files live under audio/jamo/ too: the shipped ones (manifest pack `jamo-wb`) are runtime-cached, never precached.
+const WORD_BUILDER_IDS = (JSON.parse(readFileSync(join(__dirname, '..', '..', '..', '..', 'content', 'audio', 'tts-manifest.json'), 'utf8')) as { rows: Array<{ ref: string; pack: string }> }).rows
+  .filter((r) => r.pack === 'jamo-wb')
+  .map((r) => r.ref.replace(/^audio\/jamo\//, '').replace(/\.mp3$/, ''));
+const RUNTIME_CLIP = new RegExp(`(^|/)audio/(vocab|story|card|dialogue|say)/|(^|/)audio/jamo/(ae|${WORD_BUILDER_IDS.join('|')})\\.`);
 const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p) && !RUNTIME_CLIP.test(p));
 const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
 const vocabClips = runtimeClips.filter((p) => /\/audio\/vocab\//.test(p));
