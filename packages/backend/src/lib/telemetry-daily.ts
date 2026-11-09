@@ -1,7 +1,7 @@
 import { TELEMETRY_DAILY_KEEP_DAYS } from '@hangul-route/content-schema';
 import type { Db, TelemetryDailyRow } from '../db';
 import type { TelemetryEvent } from '../store';
-import { GUEST_PAYLOAD_RULES, OA_PAYLOAD_RULES } from './server-events';
+import { GUEST_PAYLOAD_RULES, NATIVE_AUTH_PAYLOAD_RULES, OA_PAYLOAD_RULES } from './server-events';
 
 /**
  * [OA] Anonymous daily counters (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1, OA-D18, migration 0015). After
@@ -12,6 +12,8 @@ import { GUEST_PAYLOAD_RULES, OA_PAYLOAD_RULES } from './server-events';
  * [GU] AMENDMENTS-GUEST-FIRST-LESSON section 12 (row GU-1): every `guest.*` name is counted too, with the payload its
  * rules kept, and `onboarding.started` with only `firstRun` and `fromGuest` as dims (its other keys stay in the event,
  * not in the count; the G5 query). They share the same write budget.
+ * F-AUTH-004 section 15 (row NS-1): every `auth.native.*` name is counted too, with the codes its rules kept (NG2's
+ * sign-in rate, NG5's homes per day), under the same budget.
  *
  * The route is anonymous and has no rate limit, and the D1 write quota is shared with every other table, so the
  * writes are bounded per isolate. Each counted event is written through at once, together with anything held, in one
@@ -66,9 +68,15 @@ export function telemetryDailyEnabled(env: TelemetryDailyEnv | undefined): boole
  */
 export const ONBOARDING_STARTED_DIM_KEYS = ['firstRun', 'fromGuest'] as const;
 
-/** Whether a name is counted: a section 15 name, `session.start`, [GU] a `guest.*` name or `onboarding.started`. */
+/** Whether a name is counted: a section 15 name, `session.start`, [GU] a `guest.*` name, `onboarding.started` or an F-AUTH-004 `auth.native.*` name. */
 export function isDailyCountedName(name: string): boolean {
-  return name === 'session.start' || name === 'onboarding.started' || Object.hasOwn(OA_PAYLOAD_RULES, name) || Object.hasOwn(GUEST_PAYLOAD_RULES, name);
+  return (
+    name === 'session.start' ||
+    name === 'onboarding.started' ||
+    Object.hasOwn(OA_PAYLOAD_RULES, name) ||
+    Object.hasOwn(GUEST_PAYLOAD_RULES, name) ||
+    Object.hasOwn(NATIVE_AUTH_PAYLOAD_RULES, name)
+  );
 }
 
 /** The payload a count keeps: [GU] `onboarding.started` keeps its boolean `firstRun` and `fromGuest` only; any other name all its kept payload. */

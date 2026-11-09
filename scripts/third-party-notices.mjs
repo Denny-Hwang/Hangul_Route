@@ -395,6 +395,31 @@ function authorName(pkg) {
 }
 
 /**
+ * The dependencies pnpm never installs because an override removes them (`"parent>child": "-"` under `overrides:` in
+ * pnpm-workspace.yaml), as `parent>child`. The walk does not follow them: no code of theirs is installed or shipped
+ * (F-AUTH-004 NS-2: the web-only crypto-wallet stacks and Stripe.js of @clerk/clerk-js).
+ */
+export function removedDependencies(yamlText) {
+  const removed = new Set();
+  let inOverrides = false;
+  for (const line of yamlText.split("\n")) {
+    if (/^\S/.test(line)) {
+      inOverrides = /^overrides:\s*$/.test(line);
+      continue;
+    }
+    if (!inOverrides) continue;
+    const match = /^\s+(["']?)([^"'\s]+>[^"'\s]+)\1\s*:\s*(["'])-\3\s*$/.exec(line);
+    if (match) removed.add(match[2]);
+  }
+  return removed;
+}
+
+function removedIn(root) {
+  const file = join(root, "pnpm-workspace.yaml");
+  return existsSync(file) ? removedDependencies(readFileSync(file, "utf8")) : new Set();
+}
+
+/**
  * Walks the production tree from each root. Returns { packages, platform, problems } where `packages` is the
  * sorted, de-duplicated list of listed packages and `platform` the platform builds (policy-checked, not listed).
  */
@@ -403,6 +428,7 @@ export function walk(root = DEFAULT_ROOT, roots = ROOTS, extras = roots === ROOT
   const platform = new Map();
   const problems = [];
   const seen = new Map(); // real dir -> Set(labels) already walked with
+  const removed = removedIn(root);
 
   const starts = roots.map(({ dir, label }) => ({ label, stack: [{ dir: realpathSync(join(root, dir)), workspace: true }] }));
   for (const { from, through, label, packages: names } of extras) {
@@ -447,6 +473,7 @@ export function walk(root = DEFAULT_ROOT, roots = ROOTS, extras = roots === ROOT
       for (const name of peers) if (!(name in deps)) deps[name] = pkg.peerDependencies[name];
 
       for (const name of Object.keys(deps).sort()) {
+        if (removed.has(`${pkg.name}>${name}`)) continue;
         const found = resolvePackage(name, pkgDir);
         if (found) {
           stack.push({ dir: found, workspace: false });

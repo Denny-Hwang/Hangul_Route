@@ -100,6 +100,7 @@ const input = (over: Partial<InAppReportInput> = {}): InAppReportInput => ({
   questTitle: (id) => CATALOG.quests.find((q) => q.id === id)?.title ?? null,
   letterInfo: (letter) => GLOSS[letter] ?? null,
   learningRoute: true,
+  platform: 'web',
   ...over,
 });
 
@@ -436,6 +437,22 @@ describe('inAppReportView: states', () => {
     expect(texts(view.practiceNext?.lines)).toEqual(['Next in the plan: Family at the Table.']);
   });
 
+  it('free lessons finished: the web keeps the free-end line; iOS and Android leave it out, and an emptied section has no heading', () => {
+    const codes = (view: ReturnType<typeof inAppReportView>): string[] => (view.practiceNext?.lines ?? []).map((line) => line.code);
+    const ended = summary({ needsPractice: [], planProgress: {}, activity: activity({ next: { end: true } }) });
+    expect(codes(inAppReportView(input({ summary: ended })))).toContain('free_days_done');
+    expect(texts(inAppReportView(input({ summary: ended })).practiceNext?.lines)).toContain('Sam finished the free lessons.');
+    const fresh = summary({ activity: activity({ days: [], months: [], total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 }, next: { end: true } }), lastActiveAt: '' });
+    expect(texts(inAppReportView(input({ summary: fresh })).practiceNext?.lines)).toEqual(['Sam finished the free lessons.']);
+    for (const platform of ['ios', 'android']) {
+      const view = inAppReportView(input({ summary: ended, platform }));
+      expect(codes(view), platform).not.toContain('free_days_done');
+      expect(codes(view).length, platform).toBeGreaterThan(0);
+      expect(JSON.stringify(view), platform).not.toMatch(/free lessons/i);
+      expect(inAppReportView(input({ summary: fresh, platform })).practiceNext, platform).toBeNull();
+    }
+  });
+
   it('empty with a stage this build cannot read draws no Now on; without the route page, no link', () => {
     const s = summary({ activity: activity({ days: [], months: [], total: { since: null, min: 0, q: 0, c: 0, w: 0, days: 0 } }), journey: { v: 1, here: 'stage9', stages: [] } });
     expect(inAppReportView(input({ summary: s, learningRoute: false })).glance).toEqual({ nowOn: null, openRoute: null, lastPractice: null });
@@ -512,6 +529,19 @@ describe('insightView: every code the app words', () => {
     expect(insightView({ code: 'next_in_plan', params: { questId: 'quest:stage1-gone-q9' } }, third)).toBeNull();
     expect(say({ code: 'free_days_done', params: {} })).toBe('Sam finished the free lessons.');
     expect(say({ code: 'free_days_done', params: {} }, second)).toBe('You finished the free lessons.');
+  });
+
+  it('the free-end line: worded on the web, never on a native build (F-BILL-002 section 4.8, App Review 3.1.1)', () => {
+    const end: InsightLine = { code: 'free_days_done', params: {} };
+    const on = (platform: string, voice: 'third' | 'second' = 'third') => reportWordsOf({ ...report, voice }, input({ platform }), '2026-10-12');
+    expect(insightView(end, on('web'))?.sentence.text).toBe('Sam finished the free lessons.');
+    expect(insightView(end, on('web', 'second'))?.sentence.text).toBe('You finished the free lessons.');
+    for (const platform of ['ios', 'android']) {
+      expect(insightView(end, on(platform)), platform).toBeNull();
+      expect(insightView(end, on(platform, 'second')), platform).toBeNull();
+      // Every other P4 line is still worded there.
+      expect(insightView({ code: 'next_on_route', params: { questId: 'quest:stage1-letters-q1' } }, on(platform))?.sentence.text).toBe('Next on the Learning Route: Meet a, eo, g, n.');
+    }
   });
 
   it('word lines are never worded on the device (words stay hidden until F-VOC-005 P-4b)', () => {

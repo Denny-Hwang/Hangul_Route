@@ -12,6 +12,8 @@ packages:
 #   - sharp    : binary from @img/sharp-*; Next only needs it for image
 #                optimization, which the static export turns off.
 #   - @clerk/shared : postinstall prints a notice, nothing is built.
+#   - core-js, browser-tabs-lock : (through @clerk/clerk-js, the native app's
+#                Clerk, F-AUTH-004 NS-2) postinstalls only print a notice.
 # `neverBuiltDependencies` records that decision (pnpm then skips the scripts
 # silently); `ignoredBuiltDependencies` still prints the warning on pnpm 10.33.
 neverBuiltDependencies:
@@ -19,3 +21,20 @@ neverBuiltDependencies:
   - workerd
   - sharp
   - "@clerk/shared"
+  - core-js
+  - browser-tabs-lock
+
+# Dependencies of @clerk/clerk-js that the native app never loads (F-AUTH-004
+# NS-2). @clerk/clerk-expo uses only `@clerk/clerk-js/headless`, a
+# self-contained build that requires no package at run time (the native
+# export would fail if one were missing). These are the web UI's crypto-wallet
+# sign-in stacks (Solana, Coinbase, Base: some 200 packages, one under
+# LGPL-3.0) and Stripe.js; the native app has no wallet sign-in and no billing
+# (F-AUTH-004 section 9), so none is installed.
+overrides:
+  "@clerk/clerk-js>@solana/wallet-adapter-base": "-"
+  "@clerk/clerk-js>@solana/wallet-adapter-react": "-"
+  "@clerk/clerk-js>@solana/wallet-standard": "-"
+  "@clerk/clerk-js>@coinbase/wallet-sdk": "-"
+  "@clerk/clerk-js>@base-org/account": "-"
+  "@clerk/clerk-js>@stripe/stripe-js": "-"

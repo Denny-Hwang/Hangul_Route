@@ -37,6 +37,8 @@ import { bandLabel } from '../placement/copy';
  * - **Device rules** (section 3.9): no line actions (no plan builder in the app), no Browse link on a letter (letters
  *   in a sentence are plain text with their romanization; the More detail tiles expand to the content romanization
  *   and gloss), words hidden until F-VOC-005 P-4b, plan rows in the `device` variant.
+ * - **Native builds** (F-BILL-002 section 4.8, App Review 3.1.1): no free-end line ("{name} finished the free
+ *   lessons."), since nothing can be bought there; the web and the PWA keep it.
  * - **Anti-shame** (CLAUDE.md section 1): one learner only, "more than" only when a figure grew, no percentage, no
  *   word about speaking, an empty section has no heading.
  */
@@ -173,6 +175,8 @@ export interface InAppReportInput {
   letterInfo: (letter: string) => { romanization: string; gloss: string | null } | null;
   /** The grown-up read-only Learning Route (L1) is on this build: the glance links to it. */
   learningRoute: boolean;
+  /** `Platform.OS`: only `web` words the free-end line (F-BILL-002 section 4.8). */
+  platform: string;
 }
 
 export interface ReportWords {
@@ -266,7 +270,8 @@ function tipOf(strand: PlacementStrand, w: ReportWords): string {
 
 /**
  * The sentence of one insight line (section 3.6) in the report's voice; null for a line the app does not word: a
- * quest this build cannot title, and word lines (words stay hidden on the device until F-VOC-005 P-4b).
+ * quest this build cannot title, word lines (words stay hidden on the device until F-VOC-005 P-4b), and the free-end
+ * line on a native build (F-BILL-002 section 4.8).
  */
 export function insightView(line: InsightLine, w: ReportWords): ReportLineView | null {
   const { m, name } = w;
@@ -321,6 +326,8 @@ export function insightView(line: InsightLine, w: ReportWords): ReportLineView |
       return { code: line.code, sentence: sentenceOf((put) => message(put({ kind: 'quest', id, title }))), tip: null };
     }
     case 'free_days_done':
+      // Native builds sell nothing, so "finished the free lessons" would point to buying elsewhere (App Review 3.1.1).
+      if (w.input.platform !== 'web') return null;
       return plain(you ? you.free_days_done : i.free_days_done(name));
     default:
       // `words_new` and `words_revisit`: words stay hidden on the device too (section 3.9).

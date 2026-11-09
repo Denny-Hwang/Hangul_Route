@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { allowedOrigin } from './lib/cors';
 import { adminInviteRoutes, adminSpaceRoutes } from './routes/admins';
+import { nativeAccountSwitch } from './lib/native-client';
 import { healthReport, type RuntimeEnv } from './lib/runtime';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
@@ -35,7 +36,14 @@ app.use(
   }),
 );
 
+// F-AUTH-004 section 9.4 (row NS-1): the NATIVE_ACCOUNT kill switch. Off, every native request (`X-HR-Client: native`,
+// or a verified token with no `azp`) under the routes the native homes read (section 8) answers 403 native_off, before
+// any route runs; the web is untouched. The money routes refuse native requests on their own (NATIVE_MONEY_GUARD).
+// Hono's `/*` also matches the bare mount (`/api/spaces`) and a percent-encoded path, exactly as the routes do.
+for (const mount of ['/api/spaces', '/api/billing']) app.use(`${mount}/*`, nativeAccountSwitch);
+
 // Console reads carry learner names that a device can change at any time: never cached by a browser or proxy.
+// `/api/spaces` itself is matched by the wildcard too (F-AUTH-004 section 9.4, a test pins it).
 app.use('/api/spaces/*', async (c, next) => {
   await next();
   if (c.req.method === 'GET') c.header('Cache-Control', 'no-store');
