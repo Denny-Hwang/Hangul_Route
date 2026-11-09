@@ -24,7 +24,7 @@ export function AccountHomeScreen({ navigation, route }: Props): ReactElement {
   const { use } = route.params;
   return (
     <AccountGate screen="home" use={use} navigation={nav} routeKey={route.key}>
-      {use === 'family' || use === 'account' ? <FamilyHome use={use} navigation={navigation as unknown as HomeNavigation} /> : <LandOnArea navigation={nav} />}
+      {use === 'family' || use === 'account' ? <FamilyHome use={use} navigation={navigation as unknown as HomeNavigation} routeKey={route.key} /> : <LandOnArea navigation={nav} />}
     </AccountGate>
   );
 }

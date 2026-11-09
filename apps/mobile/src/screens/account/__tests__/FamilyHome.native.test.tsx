@@ -127,6 +127,7 @@ function standardAnswer(method: string, path: string): { status: number; body: u
 // ---- The harness ----
 
 interface Nav {
+  dispatch: ReturnType<typeof vi.fn>;
   navigate: ReturnType<typeof vi.fn>;
   replace: ReturnType<typeof vi.fn>;
   goBack: ReturnType<typeof vi.fn>;
@@ -141,7 +142,7 @@ let rebuild: () => ReactElement;
 
 function makeNav(routes: string[]): Nav {
   const root = { navigate: vi.fn(), goBack: vi.fn() };
-  return { navigate: vi.fn(), replace: vi.fn(), goBack: vi.fn(), root, getState: () => ({ routes: routes.map((name, k) => ({ key: `r${k}`, name })) }), getParent: () => root };
+  return { dispatch: vi.fn(), navigate: vi.fn(), replace: vi.fn(), goBack: vi.fn(), root, getState: () => ({ routes: routes.map((name, k) => ({ key: `r${k}`, name })) }), getParent: () => root };
 }
 
 function HeaderTitle({ options }: ScreenHeaderSlotProps): ReactElement {
@@ -166,7 +167,7 @@ async function mountHome(o: { use?: 'family' | 'account'; routes?: string[]; see
     createElement(
       QueryClientProvider,
       { client },
-      createElement(ScreenHeaderSlotContext.Provider, { value: HeaderTitle }, createElement(AccountHostContext.Provider, { value: host }, createElement(FamilyHome, { use, navigation: nav as never }))),
+      createElement(ScreenHeaderSlotContext.Provider, { value: HeaderTitle }, createElement(AccountHostContext.Provider, { value: host }, createElement(FamilyHome, { use, navigation: nav as never, routeKey: `r${(o.routes ?? ['ParentDashboard', 'AccountHome']).length - 1}` }))),
     );
   const r = await render(rebuild());
   await settle();
@@ -183,6 +184,11 @@ const textsOf = (root: ReactTestInstance, id: string): string[] => [...new Set(s
 /** The React Native props of the component that carries `testID` (what VoiceOver and TalkBack read). */
 const nativeProps = (root: ReactTestInstance, id: string): Record<string, unknown> => root.findAll((n) => typeof n.type !== 'string' && n.props.testID === id).at(-1)!.props as Record<string, unknown>;
 const homes = (): unknown[] => env.tracked.filter((e) => e.name === 'auth.native.home').map((e) => e.payload);
+/** The stack a 401 leaves: what `navigation.dispatch` builds from the current one. */
+const stackAfter = (): { name: string; params?: unknown }[] => {
+  const builder = nav.dispatch.mock.calls[0]![0] as (state: unknown) => { payload: { routes: { name: string; params?: unknown }[] } };
+  return builder({ key: 'stack', index: 1, routes: nav.getState().routes, routeNames: [], type: 'stack', stale: false }).payload.routes.map(({ name, params }) => ({ name, params }));
+};
 const sheetOf = (root: ReactTestInstance): ConfirmSheetProps => root.findByType(ConfirmSheet).props as ConfirmSheetProps;
 
 beforeEach(() => {
@@ -198,7 +204,7 @@ beforeEach(() => {
     env.fetches.push({ method: String(init.method), path: parsed.pathname });
     const answer = env.answer(String(init.method), parsed.pathname);
     if (answer === 'offline') throw new TypeError('Network request failed');
-    return { status: answer.status, url, type: 'basic', json: async () => answer.body };
+    return { status: answer.status, url, type: 'basic', json: async () => structuredClone(answer.body) };
   });
 });
 
@@ -334,12 +340,35 @@ describe('the spaces cache is shared with the sign-in, the account card and the 
       const path = new URL(url).pathname;
       if (path === '/api/spaces') await late;
       const answer = standardAnswer(String(init.method), path) as { status: number; body: unknown };
-      return { status: answer.status, url, type: 'basic', json: async () => answer.body };
+      return { status: answer.status, url, type: 'basic', json: async () => structuredClone(answer.body) };
     });
     await act(async () => void client.refetchQueries({ queryKey: ['account', 'spaces'] }));
     await tap(r.root, 'account-home-sign-out');
     await act(async () => sheetOf(r.root).onConfirm());
     await settle();
+    release();
+    await settle();
+    expect(env.uses).toEqual([]);
+  });
+});
+
+describe('the uses record and another sign-in', () => {
+  it('a spaces answer that arrives after another account signed in never writes over its record', async () => {
+    let release!: () => void;
+    const late = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const { useAccountVisit } = await import('../../../store/account-visit');
+    await mountHome();
+    env.uses = [];
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
+      const path = new URL(url).pathname;
+      if (path === '/api/spaces') await late;
+      const answer = standardAnswer(String(init.method), path) as { status: number; body: unknown };
+      return { status: answer.status, url, type: 'basic', json: async () => structuredClone(answer.body) };
+    });
+    await act(async () => void client.refetchQueries({ queryKey: ['account', 'spaces'] }));
+    act(() => useAccountVisit.getState().markSignedIn(Date.parse(NOW) + 1000, false));
     release();
     await settle();
     expect(env.uses).toEqual([]);
@@ -501,7 +530,7 @@ describe('section 8.8: states', () => {
     vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
       await gate;
       const answer = standardAnswer(String(init.method), new URL(url).pathname) as { status: number; body: unknown };
-      return { status: answer.status, url, type: 'basic', json: async () => answer.body };
+      return { status: answer.status, url, type: 'basic', json: async () => structuredClone(answer.body) };
     });
     const r = await mountHome();
     expect(has(r.root, 'account-home-loading')).toBe(true);
@@ -572,8 +601,9 @@ describe('section 8.8: states', () => {
     expect(host.endSession).toHaveBeenCalled();
     expect(host.wipeTokens).toHaveBeenCalled();
     expect(env.removed).toEqual(expect.arrayContaining([DEVICE_USES_RECORD_KEY, TRUST_RECORD_KEY, RETRUST_NOTICE_KEY]));
-    expect(nav.replace).toHaveBeenCalledWith('SignIn', { use: 'family' });
-    expect(nav.replace).toHaveBeenCalledTimes(1);
+    expect(stackAfter()).toEqual([{ name: 'ParentDashboard', params: undefined }, { name: 'SignIn', params: { use: 'family' } }]);
+    expect(nav.dispatch).toHaveBeenCalledTimes(1);
+    expect(nav.replace).not.toHaveBeenCalled();
     expect(env.tracked.filter((e) => e.name === 'auth.native.signout')).toEqual([]);
     expect(homes()).toEqual([]);
   });
@@ -581,7 +611,7 @@ describe('section 8.8: states', () => {
   it('401 on a roster counts the same', async () => {
     env.answer = (method, path) => (path.endsWith('/roster') ? { status: 401, body: { error: { code: 'unauthorized' } } } : standardAnswer(method, path));
     await mountHome({ use: 'account' });
-    expect(nav.replace).toHaveBeenCalledWith('SignIn', { use: 'account' });
+    expect(stackAfter().at(-1)).toEqual({ name: 'SignIn', params: { use: 'account' } });
   });
 
   it('403 native_off: unavailable with Back only (no quiet line, no Sign out)', async () => {

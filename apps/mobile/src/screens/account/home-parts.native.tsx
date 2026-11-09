@@ -195,7 +195,8 @@ export function CodePanel({ label, code, onJoinHere, testID = 'account-code-pane
         </View>
       </View>
       {/* Copied as a polite status on Android (only while it shows, so the button's return to Copy is not announced). */}
-      <View style={SR_ONLY} accessibilityLiveRegion="polite" testID={`${testID}-status`}>
+      {/* iOS announces it instead, so VoiceOver never meets a second "Copied" beside the button. */}
+      <View style={SR_ONLY} accessibilityLiveRegion="polite" accessibilityElementsHidden={Platform.OS === 'ios'} testID={`${testID}-status`}>
         <Text {...KOREAN_LINE_BREAK}>{copied ? messages.console.joinCode.copied.cta : ''}</Text>
       </View>
     </View>

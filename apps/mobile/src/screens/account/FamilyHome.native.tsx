@@ -14,6 +14,7 @@ import {
   failureOf,
   familiesOf,
   learnerCards,
+  routesAfterEndedSession,
   signOutLanding,
   spacesBucket,
   worstFailure,
@@ -22,7 +23,7 @@ import {
 import { joinHereTarget } from '../../logic/account/join-here';
 import { nativePlanLines } from '../../logic/account/plan-lines';
 import { accountQueryKey } from '../../logic/account/queries';
-import { deviceUsesRecord, keepsRecords, trustOfRead, usesOfSpaces, RETRUST_NOTICE_KEY } from '../../logic/account/sign-in-records';
+import { DEVICE_USES_RECORD_KEY, deviceUsesRecord, keepsRecords, trustOfRead, usesOfSpaces, RETRUST_NOTICE_KEY } from '../../logic/account/sign-in-records';
 import type { GrownUpStackParamList, RootStackParamList } from '../../navigation/types';
 import { readRetrustNotice, readTrust, removeRecord, writeDeviceUses } from '../../platform/account-records';
 import { useAccountVisit } from '../../store/account-visit';
@@ -63,18 +64,38 @@ async function read<T>(call: () => ReturnType<AccountApi['spaces']>, parse: (dat
   return parsed;
 }
 
+/** The visit a read was asked in: its number, and the sign-in it ran under (another account's sign-in moves it). */
+interface VisitMark {
+  visit: number;
+  signedInAt: number | null;
+}
+
+function visitMark(): VisitMark {
+  const { visit, lastAccountSignInAt } = useAccountVisit.getState();
+  return { visit, signedInAt: lastAccountSignInAt };
+}
+
+function sameVisit(asked: VisitMark): boolean {
+  const now = useAccountVisit.getState();
+  return now.visit === asked.visit && now.lastAccountSignInAt === asked.signedInAt && !now.signedOutThisRun;
+}
+
+/** The home's form of the cached spaces answer (module level, so a render never parses again for nothing). */
+const selectSpaceItems = (data: unknown): AccountSpaceItem[] => spaceItemsOf(data) ?? [];
+
 /**
  * Section 8.1: the uses record rewritten from a spaces answer, on a PIN device whose trust matches its epoch, while the
  * visit that asked is still the one open and no Sign out ran since. Never throws.
  */
-async function rewriteUsesRecord(data: unknown, visit: number): Promise<void> {
+async function rewriteUsesRecord(data: unknown, asked: VisitMark): Promise<void> {
   try {
     const uses = usesOfSpaces(data);
     const [gate, trust] = await Promise.all([nativeGateState(), readTrust()]);
-    const now = useAccountVisit.getState();
-    if (uses === null || now.visit !== visit || now.signedOutThisRun || !keepsRecords(gate)) return;
+    if (uses === null || !sameVisit(asked) || !keepsRecords(gate)) return;
     if (trustOfRead(trust)?.epoch !== gate.epoch) return;
     await writeDeviceUses(deviceUsesRecord(uses, Date.now()));
+    // A Sign out or a 401 that landed while the record was written deletes it again (NS-5 review).
+    if (!sameVisit(asked)) await removeRecord(DEVICE_USES_RECORD_KEY);
   } catch {
     // The uses record waits for the next successful read.
   }
@@ -83,7 +104,7 @@ async function rewriteUsesRecord(data: unknown, visit: number): Promise<void> {
 /** Every account page is read fresh when shown, and never retried by itself (8.8: Try again, or the network's return). */
 const ONLINE_PAGE = { retry: false, staleTime: 0 } as const;
 
-export function FamilyHome({ use, navigation }: { use: Extract<GrownUpUse, 'family'> | 'account'; navigation: HomeNavigation }): ReactElement {
+export function FamilyHome({ use, navigation, routeKey }: { use: Extract<GrownUpUse, 'family'> | 'account'; navigation: HomeNavigation; routeKey: string }): ReactElement {
   const messages = useMessages();
   const locale = useLocale();
   const api = useAccountApi();
@@ -101,16 +122,16 @@ export function FamilyHome({ use, navigation }: { use: Extract<GrownUpUse, 'fami
     queryFn: async (): Promise<unknown> => {
       // The visit this read belongs to: a Sign out, a `401` or a session close while it is out must not see the uses
       // record written back after it deleted it (13.1, CS-N4).
-      const visit = useAccountVisit.getState().visit;
+      const asked = visitMark();
       const result = await api.spaces();
       if (!result.ok) throw new AccountLoadError(result.error);
       if (spaceItemsOf(result.data) === null) throw new AccountLoadError('error');
       // Section 8.1: on a PIN device each successful read rewrites the uses record (no names, no ids), only while the
       // trust still matches the epoch (the home is open only past the gate) and this visit is still the one open.
-      void rewriteUsesRecord(result.data, visit);
+      void rewriteUsesRecord(result.data, asked);
       return result.data;
     },
-    select: (data: unknown): AccountSpaceItem[] => spaceItemsOf(data) ?? [],
+    select: selectSpaceItems,
     enabled: online,
     ...ONLINE_PAGE,
   });
@@ -143,10 +164,17 @@ export function FamilyHome({ use, navigation }: { use: Extract<GrownUpUse, 'fami
   useEffect(() => {
     if (screenFailure !== 'unauthorized' || ending.current) return;
     ending.current = true;
+    const key = routeKey;
     void sessionEnded()
       .catch(() => false)
-      .then(() => navigation.replace('SignIn', { use }));
-  }, [screenFailure, sessionEnded, navigation, use]);
+      .then(() => {
+        // As the report does: the run of account routes gives way to one sign-in (a report's own 401 may have run first).
+        navigation.dispatch((state) => {
+          const routes = [...routesAfterEndedSession(state.routes, key), { key: `SignIn-${key}`, name: 'SignIn' as const, params: { use } }];
+          return { type: 'RESET', payload: { ...state, routes, index: routes.length - 1 } } as never;
+        });
+      });
+  }, [screenFailure, sessionEnded, navigation, use, routeKey]);
 
   // `auth.native.home` once per mount, after the first successful spaces read of this mount (section 15).
   const mountedAt = useRef(Date.now());
