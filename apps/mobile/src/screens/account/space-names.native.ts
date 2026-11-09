@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useCallback, useSyncExternalStore } from 'react';
-import { schoolPageOf, spaceItemsOf } from '../../logic/account/account-data';
+import { spaceItemsOf, type AccountSchoolPage } from '../../logic/account/account-data';
 import { AccountLoadError } from '../../logic/account/homes';
 import { ACCOUNT_QUERY_ROOT } from '../../logic/account/queries';
 import { refusedClass } from '../../logic/account/teacher-home';
@@ -19,8 +19,9 @@ import { refusedClass } from '../../logic/account/teacher-home';
 export function knownSpaceName(client: Pick<QueryClient, 'getQueryData' | 'getQueriesData'>, spaceId: string): string | null {
   const listed = spaceItemsOf(client.getQueryData([ACCOUNT_QUERY_ROOT, 'spaces']))?.find((item) => item.space.id === spaceId);
   if (listed !== undefined) return listed.space.name;
-  for (const [, data] of client.getQueriesData({ queryKey: [ACCOUNT_QUERY_ROOT, 'school'] })) {
-    const row = schoolPageOf(data)?.classes.find((cls) => cls.space.id === spaceId);
+  // A school page's query holds its parsed page (`schoolPageOf` ran in the read).
+  for (const [, data] of client.getQueriesData<AccountSchoolPage>({ queryKey: [ACCOUNT_QUERY_ROOT, 'school'] })) {
+    const row = data?.classes.find((cls) => cls.space.id === spaceId);
     if (row !== undefined) return row.space.name;
   }
   return null;

@@ -200,8 +200,8 @@ describe('sections 6.6 and 8.8: the stack after a 401 on a page above a home', (
     expect(routesAfterEndedSession([r('d', 'ParentDashboard'), r('me', 'AccountLearnerReport')], 'me')).toEqual([r('d', 'ParentDashboard')]);
   });
 
-  it('a page not found keeps the stack', () => {
-    expect(routesAfterEndedSession([r('d', 'ParentDashboard')], 'me')).toEqual([r('d', 'ParentDashboard')]);
+  it('a page no longer in the stack (another page of the run reset it first): null, nothing more is done', () => {
+    expect(routesAfterEndedSession([r('d', 'ParentDashboard'), r('SignIn-h', 'SignIn')], 'me')).toBeNull();
   });
 });
 

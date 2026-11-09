@@ -62,8 +62,10 @@ export function accountApiBase(raw: string | undefined, dev: boolean): string | 
 /** The account paths (section 8.1), as normalised and decoded: the spaces routes, and the plan status view. */
 const SPACES_PATH = /^\/api\/spaces(\/[^/;]+)*$/;
 const STATUS_PATH = '/api/billing/summary';
-/** Row NS-6: a class report's past window is one day key (`at`), as the console's class report asks for it. */
-const PERIOD_QUERY = /^\?period=(day|week|month|all)(&at=\d{4}-\d{2}-\d{2})?$/;
+const PERIOD_QUERY = /^\?period=(day|week|month|all)$/;
+/** Row NS-6: a class report's past window is one day key (`at`), as the console's class report asks for it; that route only. */
+const WINDOW_QUERY = /^\?period=(day|week|month|all)&at=\d{4}-\d{2}-\d{2}$/;
+const CLASS_REPORT_PATH = /^\/api\/spaces\/[^/;]+\/class-report$/;
 
 /** The full URL of `path` on `base`, or null when the path is not one of the account paths of that origin. */
 export function accountUrl(base: string, path: string): string | null {
@@ -79,7 +81,8 @@ export function accountUrl(base: string, path: string): string | null {
   } catch {
     return null;
   }
-  const spaces = SPACES_PATH.test(url.pathname) && SPACES_PATH.test(decoded) && (url.search === '' || PERIOD_QUERY.test(url.search));
+  const pastWindow = WINDOW_QUERY.test(url.search) && CLASS_REPORT_PATH.test(url.pathname) && CLASS_REPORT_PATH.test(decoded);
+  const spaces = SPACES_PATH.test(url.pathname) && SPACES_PATH.test(decoded) && (url.search === '' || PERIOD_QUERY.test(url.search) || pastWindow);
   const status = url.pathname === STATUS_PATH && decoded === STATUS_PATH && url.search === '?view=status';
   return spaces || status ? url.toString() : null;
 }

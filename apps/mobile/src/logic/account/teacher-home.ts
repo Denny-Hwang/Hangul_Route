@@ -44,11 +44,11 @@ export function attentionOf(item: AccountSpaceItem): number | null {
 export interface TeacherHomeView {
   classes: AccountSpaceItem[];
   schools: AccountSpaceItem[];
-  /** Section 8.4: the School use on an account with no school (a stale uses record): `noSchool` at the top. */
+  /** Section 8.4: the School use on an account that owns or administers no school (a stale uses record): `noSchool` at the top. */
   noSchool: boolean;
   /** Section 8.3: no class and no school: `noClass` and the home's end. */
   noClass: boolean;
-  /** Section 8.4: the School use moves the screen reader's focus to this school row (the first one), once drawn. */
+  /** Section 8.4: the School use moves the screen reader's focus to this school row (the first one it opens), once drawn. */
   focusId: string | null;
 }
 
@@ -58,9 +58,11 @@ export function teacherHomeView(items: readonly AccountSpaceItem[], use: 'teache
   return {
     classes,
     schools,
-    noSchool: use === 'school' && schools.length === 0,
+    // The School use comes from a school the account owns or administers (`usesFor`); a school where it only teaches
+    // is the Teacher use's, so it neither answers the School use nor takes its focus (row NS-6 review).
+    noSchool: use === 'school' && !schools.some(opensSchool),
     noClass: classes.length === 0 && schools.length === 0,
-    focusId: use === 'school' ? (schools[0]?.space.id ?? null) : null,
+    focusId: use === 'school' ? (schools.find(opensSchool)?.space.id ?? null) : null,
   };
 }
 

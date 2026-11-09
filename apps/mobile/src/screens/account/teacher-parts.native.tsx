@@ -1,4 +1,4 @@
-import { Body, Heading, Icon, borderWidth, colors, layout, radii, spacing, touchTarget } from '@hangul-route/design-system';
+import { Body, Heading, Icon, KOREAN_LINE_BREAK, borderWidth, colors, layout, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import type { ReactElement, ReactNode, Ref } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { AccountButton } from './AccountButton';
@@ -70,7 +70,7 @@ function RowText({ name, archivedWord, lines }: { name: string; archivedWord: st
     <View style={{ flex: 1, gap: spacing.xxs }}>
       <Body weight="bold" tone={archivedWord === null ? 'primary' : 'secondary'}>
         {name}
-        {archivedWord === null ? null : <Text> {archivedWord}</Text>}
+        {archivedWord === null ? null : <Text {...KOREAN_LINE_BREAK}> {archivedWord}</Text>}
       </Body>
       {lines.map((line) => (
         <Body key={line} size="sm" tone="secondary">
@@ -82,7 +82,6 @@ function RowText({ name, archivedWord, lines }: { name: string; archivedWord: st
 }
 
 export interface ClassRowProps {
-  id: string;
   name: string;
   /** `console.home.archived` for an archived class; null for a live one. */
   archivedWord: string | null;

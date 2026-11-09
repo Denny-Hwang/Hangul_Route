@@ -101,6 +101,15 @@ describe('the Teacher home and the School use (sections 8.3, 8.4)', () => {
   it('only schools: no noClass', () => {
     expect(teacherHomeView([item('s', 'school', 'teacher')], 'teacher').noClass).toBe(false);
   });
+
+  it('the School use answers only a school the account owns or administers (usesFor): a teacher member\'s school is stale', () => {
+    // Demoted from admin to teacher, the record still says School: noSchool, and no focus on a row it cannot open.
+    expect(teacherHomeView([item('s', 'school', 'teacher')], 'school')).toMatchObject({ noSchool: true, focusId: null });
+    // An older school where it teaches comes first in the list; the focus still goes to the school it administers.
+    const both = [item('t', 'school', 'teacher', { createdAt: '2025-01-01T00:00:00.000Z' }), item('a', 'school', 'admin', { createdAt: '2026-01-01T00:00:00.000Z' })];
+    expect(ids(teacherHomeView(both, 'school').schools)).toEqual(['t', 'a']);
+    expect(teacherHomeView(both, 'school')).toMatchObject({ noSchool: false, focusId: 'a' });
+  });
 });
 
 const learner = (id: string, joinedAt: string): AccountRoster['learners'][number] => ({ id, displayName: id.toUpperCase(), joinedAt, lastActiveAt: '2026-11-08T10:00:00.000Z', summary: null });

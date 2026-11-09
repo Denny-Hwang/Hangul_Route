@@ -80,7 +80,6 @@ export function TeacherHome({ use, navigation, routeKey }: { use: 'teacher' | 's
                 return (
                   <ClassRow
                     key={id}
-                    id={id}
                     name={item.space.name}
                     archivedWord={item.space.archivedAt === null ? null : c.home.archived}
                     count={c.spaceCounts.students(item.counts.learners)}

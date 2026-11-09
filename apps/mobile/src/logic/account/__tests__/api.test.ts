@@ -79,6 +79,9 @@ describe('paths: an allow list of account paths of the base; never sync, recover
       '/api/spaces/s/class-report?period=week&at=2026-11-01&x=1',
       '/api/spaces/s/class-report?period=week&at=2026-11-01T00:00',
       '/api/spaces/s/class-report?period=week&learner=l',
+      '/api/spaces/s/roster?period=week&at=2026-11-01',
+      '/api/spaces/s/learners/l/report?period=week&at=2026-11-01',
+      '/api/spaces/s/class-report/x?period=week&at=2026-11-01',
       '/api/spaces/%2e%2e/billing/receipts',
     ]) {
       expect(accountUrl(BASE, path), path).toBeNull();

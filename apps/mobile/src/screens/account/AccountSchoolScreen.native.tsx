@@ -86,7 +86,6 @@ function AccountSchool({ spaceId, use, routeKey, navigation }: { spaceId: string
                 return (
                   <ClassRow
                     key={id}
-                    id={id}
                     name={row.space.name}
                     archivedWord={row.space.archivedAt === null ? null : c.home.archived}
                     count={c.spaceCounts.students(row.students)}

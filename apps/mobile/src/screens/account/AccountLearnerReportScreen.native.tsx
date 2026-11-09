@@ -2,20 +2,21 @@ import { Body, Screen, Spacer } from '@hangul-route/design-system';
 import { CATALOG, type GrownUpUse, type ReportPeriod, type StageKey } from '@hangul-route/content-schema';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { jamoAll, questsAll, stages } from '../../content';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { reportBodyOf, type AccountReportBody } from '../../logic/account/account-data';
 import { accountReportView } from '../../logic/account/account-report';
-import { AccountLoadError, failureOf, routesAfterEndedSession } from '../../logic/account/homes';
+import { AccountLoadError, failureOf } from '../../logic/account/homes';
 import { accountQueryKey } from '../../logic/account/queries';
 import { localizeJamo, localizeQuest, localizeStage } from '../../logic/content-locale';
 import type { GrownUpStackParamList } from '../../navigation/types';
 import { ReportSkeleton, ReportView } from '../parent/report-blocks';
 import { AccountButton } from './AccountButton';
 import { AccountGate, type AccountGateNavigation } from './AccountGate.native';
-import { useAccountNetwork, useAccountSessionEnded } from './account-session.native';
+import { useAccountNetwork } from './account-session.native';
+import { useEndedSession, type AccountPageNavigation } from './ended-session.native';
 import { StateBox, useAccountApi } from './home-parts.native';
 
 /**
@@ -60,7 +61,6 @@ function AccountLearnerReport({ spaceId, learnerId, initialPeriod, use, routeKey
   const titles = useLessonTitlesVersion();
   const api = useAccountApi();
   const { online, recheck } = useAccountNetwork();
-  const sessionEnded = useAccountSessionEnded();
   const [period, setPeriod] = useState<ReportPeriod>(initialPeriod);
   const [at, setAt] = useState<string | null>(null);
   // The live region speaks only after the grown-up changed the period or stepped, never on open.
@@ -113,22 +113,9 @@ function AccountLearnerReport({ spaceId, learnerId, initialPeriod, use, routeKey
 
   const failure = !online ? 'offline' : report.isError && !report.isFetching ? failureOf(report.error) : null;
 
-  // `401`: the session ended elsewhere; the records go and the sign-in opens (its AccountGate decides it).
-  const ending = useRef(false);
-  useEffect(() => {
-    if (failure !== 'unauthorized' || ending.current) return;
-    ending.current = true;
-    void sessionEnded()
-      .catch(() => false)
-      .then(() => {
-        // The home under this report and the report give way to one sign-in for the use (Back never reaches them).
-        navigation.dispatch((state) => {
-          const routes = [...routesAfterEndedSession(state.routes, routeKey), { key: `SignIn-${routeKey}`, name: 'SignIn' as const, params: use === undefined ? {} : { use } }];
-          // `CommonActions.reset`, written out (as `navigation/grown-up-area-exit.ts` does) so the module loads without the navigation package.
-          return { type: 'RESET', payload: { ...state, routes, index: routes.length - 1 } } as never;
-        });
-      });
-  }, [failure, sessionEnded, navigation, routeKey, use]);
+  // `401`: the session ended elsewhere; the records go and the sign-in opens (its AccountGate decides it). The home under
+  // this report and the report give way to one sign-in for the use (Back never reaches them; row NS-6 shares the steps).
+  useEndedSession(failure, navigation as unknown as AccountPageNavigation, routeKey, use);
 
   const retry = (): void => {
     recheck();

@@ -464,6 +464,16 @@ describe('section 8.8: the pages states', () => {
     expect(routes).toEqual([{ name: 'ParentDashboard', params: undefined }, { name: 'SignIn', params: { use: (params as { use: string }).use } }]);
   });
 
+  it('401 on two pages of one run (the home under the page read again too): one sign-in, never two (NS-6 review)', async () => {
+    env.answer = failing('/api/spaces/space%3Asaturday/roster', 401, 'unauthorized');
+    await mountPage('AccountSpace', { spaceId: 'space:saturday', use: 'teacher' });
+    const builder = nav.dispatch.mock.calls[0]![0] as (state: unknown) => { payload: { routes: { key: string; name: string }[] } };
+    // The home's own 401 reset the run first: this page is gone from the stack, so its reset keeps that stack as it is.
+    const afterHome = { key: 'stack', index: 1, routes: [{ key: 'd', name: 'ParentDashboard' }, { key: 'SignIn-h', name: 'SignIn', params: { use: 'teacher' } }], routeNames: [], type: 'stack', stale: false };
+    expect(builder(afterHome).payload).toBe(afterHome);
+    expect(builder(afterHome).payload.routes.filter((route) => route.name === 'SignIn')).toHaveLength(1);
+  });
+
   it.each([
     ['AccountSpace', { spaceId: 'space:saturday', use: 'teacher' }, '/api/spaces/space%3Asaturday/roster', 'account-space-state'],
     ['AccountSchool', { spaceId: 'space:maple', use: 'school' }, '/api/spaces/space%3Amaple/school', 'account-school-state'],
@@ -485,7 +495,15 @@ describe('section 8.8: the pages states', () => {
 });
 
 describe('section 9.2: no purchase, price, renewal, web or sign-up word in any state, in en, es and ko, on iOS and Android', () => {
-  type Setup = { page: Page; params: Record<string, unknown>; answer?: typeof env.answer; online?: boolean; plan?: unknown[]; act?: (root: ReactTestInstance) => Promise<void>; pending?: boolean };
+  type Setup = { page: Page; params: Record<string, unknown>; answer?: typeof env.answer; online?: boolean; plan?: unknown[]; act?: (root: ReactTestInstance) => Promise<void>; pending?: boolean; seed?: (c: QueryClient) => Promise<void> };
+  /** The class report answered with some figures (or the envelope) replaced, for every period. */
+  const classReportWith =
+    (report: Record<string, unknown>, envelope: Record<string, unknown> = {}): typeof env.answer =>
+    (path, query) => {
+      if (!path.endsWith('/class-report')) return standard(path, query);
+      const base = classReportBody(query) as { data: { report: Record<string, unknown> } };
+      return { status: 200, body: { data: { ...base.data, report: { ...base.data.report, ...report }, ...envelope } } };
+    };
   const space = { spaceId: 'space:saturday', use: 'teacher' };
   const school = { spaceId: 'space:maple', use: 'school' };
   const report = { spaceId: 'space:saturday', period: 'week', use: 'teacher' };
@@ -511,6 +529,21 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
     reportUnavailable: { page: 'AccountClassReport', params: report, answer: failing('/api/spaces/space%3Asaturday/class-report', 403, 'native_off') },
     reportOffline: { page: 'AccountClassReport', params: report, online: false },
     reportLoading: { page: 'AccountClassReport', params: report, pending: true },
+    reportOlder: { page: 'AccountClassReport', params: report, act: async (root) => {
+      await tap(root, 'account-class-report-step-prev');
+      await tap(root, 'account-class-report-step-prev');
+    } },
+    reportEveryLine: { page: 'AccountClassReport', params: report, answer: classReportWith({ class: { learners: 24, withActivity: 20, olderApp: 4, notSaved7d: 2 }, wentWell: { lettersNew: [], questsNew: { count: 3, up: true }, cardsNew: 1, milestones: [{ stage: 'stage1', count: 2 }] }, practice: { ...CLASS_REPORT.practice, notSaved: 3 }, memory: { learners: 5, wordsKnown: 40, readyToRefresh: 3, levels: [2, 1, 1], stageChecks: 1 } }), act: async (root) => tap(root, 'account-class-report-more-detail-toggle') },
+    reportNoPractice: { page: 'AccountClassReport', params: report, answer: classReportWith({ headline: { code: 'class_practiced', practiced: 0, learners: 24 } }) },
+    reportNoPracticePast: { page: 'AccountClassReport', params: report, answer: classReportWith({ headline: { code: 'class_practiced', practiced: 0, learners: 24 } }), act: async (root) => {
+      await tap(root, 'account-class-report-step-prev');
+      await tap(root, 'account-class-report-step-prev');
+    } },
+    reportOlderApps: { page: 'AccountClassReport', params: report, answer: classReportWith({ class: { learners: 4, withActivity: 0, olderApp: 4, notSaved7d: 0 } }) },
+    reportEmpty: { page: 'AccountClassReport', params: report, answer: classReportWith({ class: { learners: 0, withActivity: 0, olderApp: 0, notSaved7d: 0 }, headline: { code: 'class_practiced', practiced: 0, learners: 0 } }) },
+    reportArchived: { page: 'AccountClassReport', params: report, answer: classReportWith({}, { space: pub('space:saturday', 'class', 'Saturday class 3B', { archivedAt: '2026-06-01T00:00:00.000Z' }) }) },
+    reportNotClass: { page: 'AccountClassReport', params: report, answer: classReportWith({}, { space: pub('space:saturday', 'family', 'Kim family') }) },
+    schoolRefusedClass: { page: 'AccountSchool', params: school, seed: (c) => c.prefetchQuery({ queryKey: ['account', 'roster', 'space:room12'], queryFn: () => { throw new AccountLoadError('forbidden'); } }) },
   };
 
   for (const platform of ['ios', 'android'] as const) {
@@ -528,8 +561,10 @@ describe('section 9.2: no purchase, price, renewal, web or sign-up word in any s
           Object.assign(env, { online: s.online ?? true, answer: s.answer ?? standard });
           planCards = s.plan ?? plans;
           if (s.pending === true) vi.stubGlobal('fetch', () => new Promise(() => undefined));
-          const r = await mountPage(s.page, s.params);
+          const r = await mountPage(s.page, s.params, s.seed ? { seed: s.seed } : {});
           if (s.act) await s.act(r.root);
+          if (name === 'schoolRefusedClass') expect(has(r.root, 'account-school-class-space:room12-plain')).toBe(true);
+          if (name === 'reportEveryLine') expect(has(r.root, 'account-class-report-homework')).toBe(true);
           const labels = hostNodes(r.root, (n) => typeof n.props['aria-label'] === 'string').map((n) => n.props['aria-label'] as string);
           const texts = [...screenTexts(r.root), ...labels];
           // The fixture's names are typed by grown-ups (section 9.2: not checked); the app's words around them are.

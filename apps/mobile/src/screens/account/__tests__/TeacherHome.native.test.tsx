@@ -254,10 +254,12 @@ describe('the School use (section 8.4, boards 9 and 10)', () => {
     expect(homes()).toEqual([{ os: 'ios', use: 'school', spaces: '5+' }]);
   });
 
-  it('a teacher member only: the focus goes to its plain row', async () => {
+  it('a teacher member only (the School use came from an admin role it no longer holds): noSchool, its row plain, no focus', async () => {
     env.answer = spacesAnswer([item('space:lakeside', 'school', 'Lakeside Korean School', 'teacher')]);
-    await mountHome({ use: 'school' });
-    expect(env.focused).toEqual([{ testID: 'account-school-space:lakeside-plain' }]);
+    const r = await mountHome({ use: 'school' });
+    expect(textsOf(r.root, 'account-home-no-school')).toEqual([m.home.noSchool]);
+    expect(has(r.root, 'account-school-space:lakeside-plain')).toBe(true);
+    expect(env.focused).toEqual([]);
   });
 
   it('a stale record (no school any more): noSchool above the Teacher home, no focus', async () => {

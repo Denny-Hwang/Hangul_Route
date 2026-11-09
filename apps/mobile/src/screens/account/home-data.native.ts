@@ -1,23 +1,25 @@
-import type { GrownUpUse } from '@hangul-route/content-schema';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { flags } from '../../config/flags';
 import { planCardsOf, spaceItemsOf, type AccountSpaceItem } from '../../logic/account/account-data';
 import type { AccountApi, AccountApiResult } from '../../logic/account/api';
-import { AccountLoadError, routesAfterEndedSession, signOutLanding, spacesBucket, type LoadFailure } from '../../logic/account/homes';
+import { AccountLoadError, signOutLanding, spacesBucket } from '../../logic/account/homes';
 import { joinHereTarget } from '../../logic/account/join-here';
 import type { NativePlanCard } from '../../logic/account/plan-lines';
 import { accountQueryKey } from '../../logic/account/queries';
 import { DEVICE_USES_RECORD_KEY, RETRUST_NOTICE_KEY, deviceUsesRecord, keepsRecords, trustOfRead, usesOfSpaces } from '../../logic/account/sign-in-records';
-import type { GrownUpStackParamList, RootStackParamList } from '../../navigation/types';
+import type { RootStackParamList } from '../../navigation/types';
 import { readRetrustNotice, readTrust, removeRecord, writeDeviceUses } from '../../platform/account-records';
 import { useAccountVisit } from '../../store/account-visit';
 import { closeGrownUpSession } from '../../store/grown-up-session';
 import { nativeGateState } from '../../store/native-gate-state';
 import { useProfileStore } from '../../store/profile-store';
 import { deviceShared, holdJoin } from '../../store/who-chooser';
-import { trackHome, useAccountSessionEnded, useAccountSignOut } from './account-session.native';
+import { trackHome, useAccountSignOut } from './account-session.native';
+import type { AccountPageNavigation } from './ended-session.native';
+
+export { useEndedSession, type AccountPageNavigation } from './ended-session.native';
 
 /**
  * F-AUTH-004 sections 6.6, 8.1, 8.2, 8.5, 8.8 and 15 (rows NS-5, NS-6): what every native home and account page reads
@@ -27,9 +29,6 @@ import { trackHome, useAccountSessionEnded, useAccountSignOut } from './account-
  * and where it lands, and Join on this device. Row NS-5 wrote these for the Family home; row NS-6 shares them with the
  * Teacher and School homes and the class, school and report pages.
  */
-
-/** The navigation every account page drives (a home, a page above it). */
-export type AccountPageNavigation = NativeStackNavigationProp<GrownUpStackParamList, keyof GrownUpStackParamList>;
 
 /** Every account page is read fresh when shown, and never retried by itself (8.8: Try again, or the network's return). */
 export const ONLINE_PAGE = { retry: false, staleTime: 0 } as const;
@@ -109,29 +108,6 @@ export function useAccountSpaces(api: AccountApi, online: boolean): UseQueryResu
 /** Section 8.5: the plan status (a fact beside the page: a read that fails shows no block, and fails nothing else). */
 export function useAccountPlans(api: AccountApi, online: boolean): UseQueryResult<Map<string, NativePlanCard>> {
   return useQuery({ queryKey: accountQueryKey('plan'), queryFn: () => readOrThrow(() => api.planStatus(), planCardsOf), enabled: online, ...ONLINE_PAGE });
-}
-
-/**
- * Sections 6.6 and 8.8: a `401` on any read of the page. The records go (as a Sign out, without its event), then the
- * run of account routes the page sits in gives way to one sign-in for the use, so Back never reaches a page of the
- * ended session; that sign-in's AccountGate decides it.
- */
-export function useEndedSession(failure: LoadFailure | null, navigation: AccountPageNavigation, routeKey: string, use: GrownUpUse | 'account' | undefined): void {
-  const sessionEnded = useAccountSessionEnded();
-  const ending = useRef(false);
-  useEffect(() => {
-    if (failure !== 'unauthorized' || ending.current) return;
-    ending.current = true;
-    void sessionEnded()
-      .catch(() => false)
-      .then(() => {
-        navigation.dispatch((state) => {
-          const routes = [...routesAfterEndedSession(state.routes, routeKey), { key: `SignIn-${routeKey}`, name: 'SignIn' as const, params: use === undefined ? {} : { use } }];
-          // `CommonActions.reset`, written out (as `navigation/grown-up-area-exit.ts` does) so the module loads without the navigation package.
-          return { type: 'RESET', payload: { ...state, routes, index: routes.length - 1 } } as never;
-        });
-      });
-  }, [failure, sessionEnded, navigation, use, routeKey]);
 }
 
 /** `auth.native.home { os, use, spaces }` once per home mount, after the first successful spaces read of it (section 15). */
