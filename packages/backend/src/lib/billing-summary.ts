@@ -265,6 +265,49 @@ export async function billingSummaryFor(db: Db, env: StripeEnv, accountId: strin
   return { mode, purchasesOpen: purchasesOpen(env), cards: cards.map((c) => c.card), account };
 }
 
+/**
+ * The coverage a status view carries: the plan as a fact (section 8.5, ND-8). Own coverage keeps its plan and whether
+ * it has ended (`expired`, which the app shows as free), never a payment state, an end or renewal date, or a pending
+ * cancellation (section 9.1); school coverage keeps the school's name and its end date, which the coverage line shows.
+ */
+function statusCoverage(coverage: Coverage): Coverage {
+  if (coverage.state === 'own') {
+    return { state: 'own', planKey: coverage.planKey, status: coverage.status === 'expired' ? 'expired' : 'active', expiresAt: null, statusSince: coverage.statusSince, endsAtPeriodEnd: false };
+  }
+  return coverage.state === 'school' ? { state: 'school', schoolName: coverage.schoolName, planKey: coverage.planKey, expiresAt: coverage.expiresAt } : { state: 'free' };
+}
+
+/**
+ * F-AUTH-004 section 8.5 (row NS-1): the status view of a summary, the only one the native app reads (`?view=status`,
+ * and every native request whatever its query). The same `BillingSummarySchema`, built field by field so nothing new
+ * on a card can slip through: each card keeps who it is for, its plan as a fact and its usage, and loses every
+ * receipt, amount, action, payment state, own end date and "manages this plan" line (`payer` false,
+ * `readOnlyReason` null), so a client slip can never show one (section 9.1); the summary says no purchase is open,
+ * no Stripe mode, and carries no account card.
+ */
+export function billingStatusView(summary: BillingSummary): BillingSummary {
+  return {
+    mode: 'none',
+    purchasesOpen: false,
+    cards: summary.cards.map((card) => ({
+      spaceId: card.spaceId,
+      kind: card.kind,
+      name: card.name,
+      role: card.role,
+      archived: card.archived,
+      payer: false,
+      readOnlyReason: null,
+      coverage: statusCoverage(card.coverage),
+      usage: card.usage,
+      actions: { buy: null, manage: false, contact: false },
+      receipts: [],
+      hasReceipts: false,
+      legacyNoHistory: false,
+    })),
+    account: [],
+  };
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** `GET` one Stripe object, pinned to the same API version as the webhook lookups; null on any trouble. */

@@ -223,6 +223,13 @@ export const TELEMETRY_EVENT_NAMES = [
   // TELEMETRY-NAMES-2 section U (Worker first; payload: CRASH_TELEMETRY_PAYLOADS in crash-telemetry.ts: the root, the route
   // name, the error class, a scrubbed 120-character message, a chunk flag and the app version; stored without a profileId)
   'app.crash',
+  // F-AUTH-004 section 15, TELEMETRY-NAMES-2 section V (row NS-1, Worker first; payloads: NATIVE_AUTH_TELEMETRY_PAYLOADS in
+  // native-auth-telemetry.ts: the OS and codes only, one boolean; stored without a profileId, counted in telemetry_daily;
+  // never an email, an account, space or learner id, a code or error text)
+  'auth.native.signin',
+  'auth.native.signout',
+  'auth.native.lock',
+  'auth.native.home',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
