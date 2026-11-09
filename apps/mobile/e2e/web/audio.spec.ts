@@ -724,10 +724,10 @@ test.describe('bundled clips (A-6)', () => {
     await openMatchSound(page);
 
     const names = await playUntilClip(page);
-    // The clip played to its end: the Korean voice never spoke the letter. It said only the consonant
-    // names of the rounds before, which have no clip until AC-1.
+    // The clip played to its end: the Korean voice never spoke the letter. It said only the letters with no clip in the
+    // rounds before: the consonant names and 어, whose first take is held back (AC-7 part 1; the round order is random).
     await page.waitForTimeout(1500);
-    expect(names.filter((n) => !['기역', '니은'].includes(n))).toEqual([]);
+    expect(names.filter((n) => !['기역', '니은', '어'].includes(n))).toEqual([]);
     expect((await utterances(page)).filter((u) => u.lang === 'ko-KR' && !names.includes(u.text))).toEqual([]);
   });
   test('only the jamo-s1 letters are precached: a Word Builder letter and the say clips are runtime-cached (AC-B6)', async ({ page }) => {
