@@ -553,16 +553,16 @@ describe('the command (its own process, as the package script runs it)', () => {
     expect(r.stderr).toBe('');
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/No network: nothing is sent/);
-    // AC-7: the 43 jamo-s1 rows are in the committed lock (generated 2026-11-07). The 32 shipped ones (mp3Sha256 set) are
+    // AC-7: the 43 jamo-s1 rows are in the committed lock (generated 2026-11-07). The shipped ones (mp3Sha256 set) are
     // skipped everywhere; the held ones are skipped only where their WAV master is on disk (the owner's machine), so a
-    // clean checkout (CI) asks for exactly those (9 after the second shipment, row AC-7 part 2) and a machine with the masters asks for none.
+    // clean checkout (CI) asks for exactly those (2 after the owner's listen of 2026-11-10: 라 and 리을) and a machine with the masters asks for none.
     const wanted = r.stdout.split('\n').filter((l) => l.startsWith('request polly/Seoyeon audio/jamo/')).length;
-    expect([0, 9]).toContain(wanted);
+    expect([0, 2]).toContain(wanted);
     expect(r.stdout).toMatch(new RegExp(`Seoyeon: ${wanted} requests, ${43 - wanted} skipped`));
-    // jamo-wb shipped 16 of its 22 clips (row AC-7 part 2): a clean checkout asks for the other 6, a machine with the masters for none.
+    // jamo-wb ships 20 of its 22 clips (owner's listen, 2026-11-10): a clean checkout asks for the other 2 (까, 위), a machine with the masters for none.
     const wb = run(['--engine', 'polly', '--voice', 'Seoyeon', '--pack', 'jamo-wb', '--dry-run'], { CI: 'true' });
     expect(wb.status).toBe(0);
-    expect([0, 6]).toContain(wb.stdout.split('\n').filter((l) => l.startsWith('request polly/Seoyeon audio/jamo/')).length);
+    expect([0, 2]).toContain(wb.stdout.split('\n').filter((l) => l.startsWith('request polly/Seoyeon audio/jamo/')).length);
   }, TIMEOUT);
 
   it('refuses a voice other than the locked one, and --allow-other-voice is the explicit override', () => {
