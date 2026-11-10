@@ -17,6 +17,7 @@
 //
 // No network, no file system: build-manifest.mjs reads the content and writes the file.
 import { AUDIO_PACKS, sayKey, sayRef } from '@hangul-route/content-schema';
+import { overrideForKind } from './overrides-schema.mjs';
 
 export const MANIFEST_FILE = 'content/audio/tts-manifest.json';
 export const OVERRIDES_FILE = 'content/audio/pronunciation-overrides.json';
@@ -134,7 +135,7 @@ const byCodePoint = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const uniqueSorted = (values) => [...new Set(values)].sort(byCodePoint);
 
 function rowOf({ ref, key, kind, text, pack, sources }, overrides, normalization) {
-  const override = overrides[text];
+  const override = overrideForKind(overrides[text], kind);
   const row = { ref, key, kind, text, say: sayOf(kind, text, override, normalization) };
   if (override?.ipa !== undefined) row.ipa = override.ipa;
   row.rate = KIND_RATES[kind];
@@ -236,6 +237,11 @@ export function buildManifest({ jamo, occurrences, overrides = {}, normalization
   const unused = Object.keys(overrides).filter((t) => !texts.has(t));
   if (unused.length > 0) {
     throw new Error(`${OVERRIDES_FILE}: no clip says ${unused.map((t) => `"${t}"`).join(', ')}; remove the override or fix its key (keys are the spoken text)`);
+  }
+  const textKinds = new Set([...jamoPart, ...said].map((r) => `${r.kind} ${r.text}`));
+  const unusedKinds = Object.entries(overrides).flatMap(([t, o]) => Object.keys(o.kinds ?? {}).filter((k) => !textKinds.has(`${k} ${t}`)).map((k) => `"${t}" (${k})`));
+  if (unusedKinds.length > 0) {
+    throw new Error(`${OVERRIDES_FILE}: no clip of that kind says ${unusedKinds.join(', ')}; remove the kinds entry or fix its kind`);
   }
   const order = (row) => packIndex(row.pack);
   const jamoSorted = jamoPart.map((row, i) => ({ row, i })).sort((a, b) => order(a.row) - order(b.row) || a.i - b.i).map((x) => x.row);

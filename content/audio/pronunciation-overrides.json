@@ -12,19 +12,26 @@
     },
     "라": {
       "say": "라!",
-      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 나 (the flap onset is too soft); an exclamation gives the onset more energy",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 나 (the flap onset is too soft); an exclamation gives the onset more energy. 2026-11-10 owner listen: the Placement syllable 라 sent as 라! is good and keeps it; the letter sound (jamo-sound, ㄹ) sent as 라! is bad (Whisper again 나), and 라. 라아! 라? were tried before, so the letter sound is sent through an IPA phoneme with a lateral onset [la], which cannot be heard as the nasal 나",
       "engine": "polly",
-      "voice": "Seoyeon"
+      "voice": "Seoyeon",
+      "kinds": {
+        "jamo-sound": {
+          "say": "라.",
+          "ipa": "la"
+        }
+      }
     },
     "리을": {
-      "say": "리을.",
-      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 리 / 띠을 (the final 을 is dropped and the onset is tense); a full stop closes the name",
+      "say": "리을",
+      "ipa": "liɯl",
+      "reason": "2026-11-07 jamo-s1 QA: heard 리 (리을) and 띠을 (리을.: the onset tense). 2026-11-10 owner listen: 리을. is bad. 리을! and 리을… were tried as variants, so the name is sent through an IPA phoneme [liɯl]: a lateral onset (never tense) and the final ㄹ said; the AC-B3 isolated form is [리을], so no accept variant is needed",
       "engine": "polly",
       "voice": "Seoyeon"
     },
     "바": {
       "say": "바!",
-      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 파 (the lenis onset reads as aspirated); an exclamation (the first take with an ellipsis was read aloud as 쩜쩜쩜); 파 keeps its own text, so the two stay different clips",
+      "reason": "2026-11-07 jamo-s1 QA (Whisper large-v3 Pass 1, forced choice): heard 파 (the lenis onset reads as aspirated); an exclamation (the first take with an ellipsis was read aloud as 쩜쩜쩜); 파 keeps its own text, so the two stay different clips. 2026-11-10 owner listen: the Stage 1 syllable 바 was still the first take (바…, read aloud as 쩜쩜쩜) and is bad; it is regenerated with 바!, the spelling that passed for the letter sound",
       "engine": "polly",
       "voice": "Seoyeon"
     },
@@ -80,8 +87,9 @@
       "voice": "Seoyeon"
     },
     "까": {
-      "say": "까!",
-      "reason": "2026-11-06 pilot QA (Whisper large-v3 Pass 1; failed for Seoyeon, Jihye and Google alike): heard 가 (the tense onset is lost); an exclamation gives the onset more energy; 가 and 카 keep their own text",
+      "say": "까.",
+      "ipa": "k͈a",
+      "reason": "Failed Pass 1 for all three pilot voices (heard 가: the tense onset is lost when the syllable is said alone); 까! and 까… 까아. were tried. 2026-11-10 owner listen: 까! is bad. Sent through an IPA phoneme with the tense velar [k͈a] of Polly's ko-KR phoneme table, with a full stop; 가 keeps 가., so the two stay different clips",
       "engine": "polly",
       "voice": "Seoyeon"
     },
@@ -90,6 +98,86 @@
       "reason": "2026-11-06 pilot QA (Whisper large-v3 Pass 1; failed for Seoyeon, Jihye and Google alike): heard 자 (the tense onset is lost); an exclamation gives the onset more energy; 자 and 차 keep their own text",
       "engine": "polly",
       "voice": "Seoyeon"
+    },
+    "위": {
+      "say": "위.",
+      "reason": "2026-11-10 owner listen: the Stage 7 syllable 위 (위., the AC-B3 default) is good and keeps it; the letter sound (jamo-sound, ㅟ) sent as 위. is bad (a MAR reviewer had held it; Whisper wrote b). The letter sound is sent through an IPA phoneme [wi] so the glide and the vowel are both said",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "kinds": {
+        "jamo-sound": {
+          "say": "위",
+          "ipa": "wi"
+        }
+      }
+    },
+    "갑": {
+      "say": "갑!",
+      "reason": "2026-11-09 QA: 갑. heard 각 (the unreleased final ㅂ is heard as ㄱ); 2026-11-10 owner listen: bad. An exclamation, as for 압 (압!), which the owner heard as good",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "밥": {
+      "say": "밥!",
+      "reason": "2026-11-09 QA: 밥. heard 팝 (the lenis onset reads as aspirated, as 바. did); 2026-11-10 owner listen: bad. An exclamation, as for 바 (바!), which passed Pass 1",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "슨": {
+      "say": "슨!",
+      "reason": "2026-11-09 QA: 슨. heard 층; 2026-11-10 owner listen: bad. An exclamation for a stronger onset and a full vowel",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "낮": {
+      "say": "낟.",
+      "reason": "2026-11-09 QA: 낮. heard 나앗 (the vowel drawn out and the final released); 2026-11-10 owner listen: bad. Sent as the isolated pronunciation [낟] (a final ㅈ is said ㄷ), which the QA accepts with the same-sounding 낫",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "낟",
+        "낫"
+      ]
+    },
+    "세 개에 천 원": {
+      "say": "세 개에, 천 원.",
+      "reason": "2026-11-09 QA: heard 3개의 천원 (개에 runs together); 2026-11-10 owner listen: bad. A comma after the count keeps 개에 apart from 천 원 and a full stop closes the phrase; the particle 의 is said [에], so Whisper's 의 spelling is accepted",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "세 개의 천 원"
+      ]
+    },
+    "부": {
+      "say": "부!",
+      "reason": "2026-11-09 QA: 부. heard 구 (Whisper wrote 9); 2026-11-10 owner listen: bad. An exclamation for a clear bilabial onset, as for 바 (바!)",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "책 여기 있어요.": {
+      "say": "책, 여기 있어요.",
+      "reason": "2026-11-09 QA: heard 책력이 있어요 (책 runs into 여기, with a nasal inserted); 2026-11-10 owner listen: bad. A comma after 책 keeps the two words apart",
+      "engine": "polly",
+      "voice": "Seoyeon"
+    },
+    "금줄": {
+      "say": "금쭐",
+      "reason": "2026-11-09 QA: heard 근줄 (the ㅁ assimilated); 2026-11-10 owner listen: bad. Sent as the standard pronunciation [금쭐] (tensing in the compound), which the QA accepts",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "금쭐"
+      ]
+    },
+    "샅바": {
+      "say": "삳빠",
+      "reason": "2026-11-09 QA: heard 사타 (the final ㅌ released onto the next syllable); 2026-11-10 owner listen: bad. Sent as the standard pronunciation [삳빠] (final ㅌ said ㄷ, then the tense ㅃ), which the QA accepts with the same-sounding 삿빠",
+      "engine": "polly",
+      "voice": "Seoyeon",
+      "accept": [
+        "삳빠",
+        "삿빠"
+      ]
     }
   }
 }
