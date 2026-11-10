@@ -496,7 +496,8 @@ test.describe('two volumes in a cell (fixture bundle, F-STORY-005 PR 5.8, F-CURR
     const card = page.getByTestId('dashboard-offline');
     await expect(card).toBeVisible();
     await expect(card.getByRole('heading', { name: 'Offline lessons' })).toBeVisible();
-    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/^About 0\.\d MB · Not saved yet$/);
+    // The size follows the stage's chunks and clips (about 1 MB once the owner-listened Stage 2 clips ship, #1030).
+    await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/^About \d+(\.\d)? MB · Not saved yet$/);
     await shot(page, 'cm5b-offline-card-not-saved');
     await page.getByRole('button', { name: 'Save: Stage 2: Words' }).click();
     await expect(page.getByTestId('dashboard-offline-stage2-state')).toHaveText(/· Saved on this device$/);
