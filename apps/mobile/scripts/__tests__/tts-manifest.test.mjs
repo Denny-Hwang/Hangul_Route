@@ -149,6 +149,22 @@ describe('pronunciation overrides change what is sent, never the text, the key o
     expect(rows.find((r) => r.ref === 'audio/jamo/kieuk-name.mp3')).toMatchObject({ text: '키읔', say: '키윽', key: 'kieuk-name' });
   });
 
+  it('a kinds entry gives the rows of that kind their own say, ipa and accept; other kinds keep the top level (라: letter and syllable)', () => {
+    const overrides = {
+      라: { say: '라!', reason: 'owner listen', engine: 'polly', voice: 'Seoyeon', kinds: { 'jamo-sound': { say: '라.', ipa: 'la' } } },
+    };
+    const { rows } = buildManifest({ jamo: jamoVoices(), occurrences: [occ('라', 'placement')], overrides });
+    expect(rows.find((r) => r.ref === 'audio/jamo/rieul.mp3')).toMatchObject({ kind: 'jamo-sound', text: '라', say: '라.', ipa: 'la', key: 'rieul' });
+    const syllable = rows.find((r) => r.ref === sayRef('라'));
+    expect(syllable).toMatchObject({ kind: 'syllable', text: '라', say: '라!', key: sayKey('라') });
+    expect(syllable).not.toHaveProperty('ipa');
+  });
+
+  it('a kinds entry no row of that kind uses stops the build', () => {
+    const overrides = { 국물: { say: '궁물', reason: 'x', engine: 'polly', voice: 'Seoyeon', kinds: { syllable: { say: '궁.' } } } };
+    expect(() => build([occ('국물')], { overrides })).toThrow(/no clip of that kind says "국물" \(syllable\)/);
+  });
+
   it('an override no clip uses stops the build (its key is the spoken text)', () => {
     const overrides = { 신라: { say: '실라', reason: 'liquidization', engine: 'polly', voice: 'Seoyeon' } };
     expect(() => build([occ('국물')], { overrides })).toThrow(/no clip says "신라"/);

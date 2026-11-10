@@ -44,6 +44,14 @@ describe('normalization and the exact-match rule (section 9)', () => {
     expect(normalizeTranscript('가방'.normalize('NFD'))).toBe('가방');
   });
 
+  it('accept variants follow the kinds entry of the row: a letter row and a word row of one text can accept different forms', () => {
+    const overrides = { 낮: { say: '낟.', accept: ['낟'], reason: 'x', engine: 'polly', voice: 'Seoyeon', kinds: { word: { say: '낮', accept: ['낫'] } } } };
+    expect(isExactMatch('낟', targetFormsOf(row('syllable', '낮'), overrides))).toBe(true);
+    expect(isExactMatch('낫', targetFormsOf(row('syllable', '낮'), overrides))).toBe(false);
+    expect(isExactMatch('낫', targetFormsOf(row('word', '낮'), overrides))).toBe(true);
+    expect(isExactMatch('낟', targetFormsOf(row('word', '낮'), overrides))).toBe(false);
+  });
+
   it('a word passes only on an exact match: 가방 heard as 가반 fails', () => {
     const forms = targetFormsOf(row('word', '가방'), NO_OVERRIDES);
     expect(isExactMatch('가방.', forms)).toBe(true);

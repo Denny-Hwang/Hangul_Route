@@ -64,13 +64,15 @@ const unique = (list) => [...new Set(list)];
  * The transcripts a clip passes on, normalized: the manifest `text`, the heard form of a letter name, and the authored
  * `accept` variants of its pronunciation override. An override's `say` alone is not an accepted transcript.
  *
- * @param {{ text: string }} row a manifest row
+ * @param {{ text: string, kind?: string }} row a manifest row (an override's `kinds` entry applies to rows of its kind)
  * @param {Record<string, { accept?: string[] }>} overrides the parsed pronunciation-overrides.json entries
  */
 export function targetFormsOf(row, overrides) {
   const text = String(row.text).normalize('NFC').trim();
   const name = NAME_BY_TEXT.get(text);
-  const accept = overrides[text]?.accept ?? [];
+  // An override's `kinds` entry replaces its top-level fields for rows of that kind (overrides-schema.mjs, overrideForKind).
+  const entry = overrides[text];
+  const accept = (entry?.kinds?.[row.kind] ?? entry)?.accept ?? [];
   return unique([text, ...(name ? [name.heard] : []), ...accept].map(normalizeTranscript));
 }
 
