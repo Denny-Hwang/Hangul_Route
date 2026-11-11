@@ -36,6 +36,8 @@ export const AUDIO_ASSETS: Readonly<Record<string, number | string>> = {
   'audio/jamo/pieup-name.mp3': require('../../../assets/audio/jamo/pieup-name.mp3'),
   'audio/jamo/pieup.mp3': require('../../../assets/audio/jamo/pieup.mp3'),
   'audio/jamo/rieul-batchim.mp3': require('../../../assets/audio/jamo/rieul-batchim.mp3'),
+  'audio/jamo/rieul-name.mp3': require('../../../assets/audio/jamo/rieul-name.mp3'),
+  'audio/jamo/rieul.mp3': require('../../../assets/audio/jamo/rieul.mp3'),
   'audio/jamo/siot-name.mp3': require('../../../assets/audio/jamo/siot-name.mp3'),
   'audio/jamo/siot.mp3': require('../../../assets/audio/jamo/siot.mp3'),
   'audio/jamo/tieut-name.mp3': require('../../../assets/audio/jamo/tieut-name.mp3'),
@@ -81,6 +83,8 @@ export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {
   'audio/jamo/pieup-name.mp3': 'jamo-s1',
   'audio/jamo/pieup.mp3': 'jamo-s1',
   'audio/jamo/rieul-batchim.mp3': 'jamo-s1',
+  'audio/jamo/rieul-name.mp3': 'jamo-s1',
+  'audio/jamo/rieul.mp3': 'jamo-s1',
   'audio/jamo/siot-name.mp3': 'jamo-s1',
   'audio/jamo/siot.mp3': 'jamo-s1',
   'audio/jamo/tieut-name.mp3': 'jamo-s1',
@@ -93,7 +97,7 @@ export const AUDIO_ASSET_PACKS: Readonly<Record<string, AudioPack>> = {
 };
 
 /** Every clip the build holds: the ones above and the ones of the pack map chunks (AC-B6). */
-export const AUDIO_CLIP_COUNT = 2071;
+export const AUDIO_CLIP_COUNT = 2083;
 
 /** The packs whose clips are a map chunk of their own (`loadAudioPackChunk`), loaded with their lesson or story, never at start. */
 export const AUDIO_CHUNK_PACKS: readonly AudioPack[] = ['cards', 'jamo-wb', 'placement', 'review', 'stage1', 'stage2', 'stage3', 'stage4', 'stage6', 'stage7', 'stories', 'vocab'];

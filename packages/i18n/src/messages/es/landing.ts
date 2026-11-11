@@ -183,7 +183,7 @@ export const landing = {
         },
         offline: {
           q: '¿Funciona sin conexión?',
-          a: 'En la mayoría de los dispositivos, sí: después de tu primera visita la app se abre sin conexión. Los sonidos de las letras pueden necesitar una voz coreana instalada en tu dispositivo.',
+          a: 'En la mayoría de los dispositivos, sí: después de tu primera visita la app se abre y los sonidos de las letras se reproducen sin conexión. Una palabra que aún no has escuchado puede necesitar una conexión la primera vez.',
         },
         adult: FAQ_ADULT,
         korean: FAQ_KOREAN,

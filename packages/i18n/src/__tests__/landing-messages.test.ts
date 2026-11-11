@@ -457,14 +457,17 @@ describe('landing: no emoji in any locale (en, es, ko, en-XA)', () => {
   }
 });
 
-describe('landing: offline claims stay qualified until the recordings ship (F-AUDIO-004 §3.12)', () => {
-  it('says the app works offline on most devices and that letter sounds may need a device voice', () => {
+describe('landing: offline claims (F-AUDIO-004 §3.12, AMENDMENTS-AUDIO-CLIPS AC-B10)', () => {
+  it('says the app works offline on most devices; letter sounds play offline, a new word may need a connection', () => {
     expect(l.home.hero.facts).toMatch(/offline on most devices after your first visit/);
-    expect(l.persona.learners.faq.offline.a).toMatch(/Letter sounds may need a Korean voice installed on your device/);
+    expect(l.persona.learners.faq.offline.a).toMatch(/letter sounds play offline\. A word you have not heard yet may need a connection the first time\./);
   });
 
-  it('never claims that sound plays offline', () => {
-    expect(JSON.stringify({ home: l.home, persona: l.persona })).not.toMatch(/plays offline|plays without a connection/i);
+  it('claims offline sound for letter sounds only (every letter clip ships; words and stories keep the qualifier)', () => {
+    const text = JSON.stringify({ home: l.home, persona: l.persona });
+    // The two words before each "play(s) offline" / "play(s) without a connection": only "letter sounds" may say it.
+    const claims = text.match(/\S+ \S+ plays? (?:offline|without a connection)/gi) ?? [];
+    expect(claims).toEqual(['letter sounds play offline']);
   });
 });
 

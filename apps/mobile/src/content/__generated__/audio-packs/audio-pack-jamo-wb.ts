@@ -18,6 +18,7 @@ export const AUDIO_PACK: AudioPackChunk = {
     'audio/jamo/ssangdigeut-name.mp3': require('../../../../assets/audio/jamo/ssangdigeut-name.mp3'),
     'audio/jamo/ssangdigeut.mp3': require('../../../../assets/audio/jamo/ssangdigeut.mp3'),
     'audio/jamo/ssanggiyeok-name.mp3': require('../../../../assets/audio/jamo/ssanggiyeok-name.mp3'),
+    'audio/jamo/ssanggiyeok.mp3': require('../../../../assets/audio/jamo/ssanggiyeok.mp3'),
     'audio/jamo/ssangjieut-name.mp3': require('../../../../assets/audio/jamo/ssangjieut-name.mp3'),
     'audio/jamo/ssangjieut.mp3': require('../../../../assets/audio/jamo/ssangjieut.mp3'),
     'audio/jamo/ssangsiot-name.mp3': require('../../../../assets/audio/jamo/ssangsiot-name.mp3'),
@@ -26,11 +27,12 @@ export const AUDIO_PACK: AudioPackChunk = {
     'audio/jamo/wa.mp3': require('../../../../assets/audio/jamo/wa.mp3'),
     'audio/jamo/wae.mp3': require('../../../../assets/audio/jamo/wae.mp3'),
     'audio/jamo/we.mp3': require('../../../../assets/audio/jamo/we.mp3'),
+    'audio/jamo/wi.mp3': require('../../../../assets/audio/jamo/wi.mp3'),
     'audio/jamo/wo.mp3': require('../../../../assets/audio/jamo/wo.mp3'),
     'audio/jamo/yae.mp3': require('../../../../assets/audio/jamo/yae.mp3'),
     'audio/jamo/ye.mp3': require('../../../../assets/audio/jamo/ye.mp3'),
   },
   units: {
-    'episode:stage2-letters': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    'episode:stage2-letters': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
   },
 };

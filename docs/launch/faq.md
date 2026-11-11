@@ -103,7 +103,7 @@ A. Never. No ads, ever.
 A. Korean audio is computer-generated (Amazon Polly) and checked by automated speech recognition and a multi-agent review.
 
 **Q. Offline play?**
-A. Yes. After your first visit the app works offline. Letter sounds need a Korean voice on your device until our own recordings arrive.
+A. Yes, on most devices. After your first visit the app works offline, and letter sounds play offline. A word you have not heard yet may need a connection the first time.
 
 ---
 
