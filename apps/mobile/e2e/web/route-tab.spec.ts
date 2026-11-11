@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { colors } from '@hangul-route/design-system/tokens';
 import { availableLocales, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack, headerClose, pastTapLock } from './helpers';
+import { onboardChild, openGrownUpZone, readStored, seedStored, unlockWithPin, headerBack, headerClose, pastTapLock, noClipPlayback } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -426,6 +426,7 @@ test.describe('the level check entry (LR-10 case b)', () => {
   test.skip(!FIXTURE_BUILD, 'the level check opens through the fixture bundle hook (STORY_FIXTURES=1, dist-e2e/)');
 
   test("(b) a finished level check's See Learning Route opens the Route tab", async ({ page }) => {
+    await noClipPlayback(page);
     await page.setViewportSize({ width: 375, height: 667 });
     await learnerOnHome(page);
     type E2eWindow = Window & { __hrPlacementE2E?: { open(source: string): void } };

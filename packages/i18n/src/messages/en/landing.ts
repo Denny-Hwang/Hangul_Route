@@ -318,7 +318,7 @@ export const landing = {
         },
         offline: {
           q: 'Does it work offline?',
-          a: 'On most devices, yes: after your first visit the app opens without a connection. Letter sounds may need a Korean voice installed on your device.',
+          a: 'On most devices, yes: after your first visit the app opens without a connection, and letter sounds play offline. A word you have not heard yet may need a connection the first time.',
         },
         adult: FAQ_ADULT,
         korean: FAQ_KOREAN,

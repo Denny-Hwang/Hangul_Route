@@ -107,7 +107,7 @@ thread alive.
 | Likely comment | Reply (under 60 words) |
 |---|---|
 | "Looks like Duolingo for kids" | "Two big differences: Duolingo teaches vocab, we teach a relationship with heritage. And we never use a red color or 'wrong' — kids 5–11 can't take that." |
-| "Is the audio accurate?" | "Pronunciation is your device's Korean voice today; recordings by a native speaker are in progress. Romanization is Revised, not McCune-Reischauer." |
+| "Is the audio accurate?" | "Korean audio is computer-generated (Amazon Polly) and checked by automated speech recognition and a multi-agent review. Romanization is Revised, not McCune-Reischauer." |
 | "Can I try it on Android?" | "Yes — Expo Go QR + APK are both linked at hangulroute.com/get. Native Play Store build lands D+7." |
 | "What about adults learning Korean?" | "Not yet. The whole design assumes a 5–11 year old. We'll consider an adult mode once Stage 3 (sentences) ships." |
 | "How do you make money?" | "Stage 1 is free. The Family Plan is $15.30 a year for up to 4 learners, cancel any time; classes have a yearly Group License. No ads. No data sold." (Before Stripe Live: "Stage 1 is free. No ads. No data sold. Plans are coming.") |

@@ -619,3 +619,17 @@ export async function openPlaygroundWordsQuest(page: Page, o: { largest: boolean
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
 }
+
+/**
+ * Turns the clip player off for one page, the way the fixture's `clipsOn: false` does for a whole describe: no Web
+ * Audio, so the clip player reports itself unsupported and every prompt goes to the device voice. A test about a run
+ * with no sound at all needs it on a bundle that ships clips: since the owner's second listen (#1032) the
+ * level check's warm-up word 밥 has a clip, which plays even on a device with no Korean voice.
+ */
+export async function noClipPlayback(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    for (const name of ['AudioContext', 'webkitAudioContext']) {
+      Object.defineProperty(window, name, { configurable: true, writable: true, value: undefined });
+    }
+  });
+}

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved, passPlacementLanguage, headerClose, pastTapLock } from './helpers';
+import { answerForkNew, completeChildForm, keepSidewaysIfAsked, readStored, waitForSaved, passPlacementLanguage, headerClose, pastTapLock, noClipPlayback } from './helpers';
 import { next } from './story-reader-helpers';
 
 /**
@@ -91,6 +91,7 @@ test.describe('practice sessions (F-REPORT-001 section 3.3.2)', () => {
   });
 
   test('the level check records a time-only session that ends while the grown-up report is in front', async ({ page }) => {
+    await noClipPlayback(page);
     await page.goto('/');
     await page.getByRole('button', { name: "Let's start" }).click();
     await page.getByRole('radio', { name: /^Me\./ }).click();
