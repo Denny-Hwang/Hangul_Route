@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { completeChildForm, completeSelfForm, homeFor, readStored, seedStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose, pastTapLock } from './helpers';
+import { completeChildForm, completeSelfForm, homeFor, readStored, seedStored, unlockWithPin, waitForSaved, passPlacementLanguage, headerClose, pastTapLock, noClipPlayback } from './helpers';
 import { shot } from './shots';
 import { controlsPastEdge, expectNoHorizontalOverflow } from './viewport';
 
@@ -458,6 +458,7 @@ test.describe('the test language (weekly plan bundle: every UI locale shown)', (
   test.skip(!ROUTE, 'needs a build that shows more than one locale (build:web:route, E2E_ROUTE=1)');
 
   test('the fork opens the language screen; Spanish is the test language for this run only', async ({ page }) => {
+    await noClipPlayback(page);
     await selfToFork(page, 'Sam');
     await page.getByTestId('placement-invite-know').click();
     await expect(page.getByTestId('placement-language')).toBeVisible();

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved, passPlacementLanguage, headerBack, headerClose, pastTapLock } from './helpers';
+import { answerForkNew, onboardChild, readStored, seedStored, waitForSaved, passPlacementLanguage, headerBack, headerClose, pastTapLock, noClipPlayback } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -127,6 +127,7 @@ test.describe('placement report (fixture bundle)', () => {
   test.skip(!FIXTURE_BUILD, 'runs on the fixture bundle (STORY_FIXTURES=1, dist-e2e/)');
 
   test('from the result: the report, a different start, the override stored and announced', async ({ page }) => {
+    await noClipPlayback(page);
     const id = await onboardSelf(page);
     await hook(page);
     await page.evaluate(() => (window as E2eWindow).__hrPlacementE2E?.open('home'));

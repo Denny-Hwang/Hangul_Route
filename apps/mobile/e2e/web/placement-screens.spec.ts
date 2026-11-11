@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, readStored, waitForSaved, passPlacementLanguage, headerClose, pastTapLock } from './helpers';
+import { answerForkNew, readStored, waitForSaved, passPlacementLanguage, headerClose, pastTapLock, noClipPlayback } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -204,6 +204,7 @@ test.describe('level check screens (fixture bundle)', () => {
   test.skip(!FIXTURE_BUILD, 'runs on the fixture bundle (STORY_FIXTURES=1, dist-e2e/)');
 
   test('Standard without sound: options, sound guide, warm-up note, items, pause, result, Start', async ({ page }) => {
+    await noClipPlayback(page);
     await onboard(page);
     const learner = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
     const beforeCheck = await readStored<{ quests?: unknown[]; cards?: unknown[] }>(page, `progress:${learner}`);
@@ -375,6 +376,7 @@ test.describe('level check screens (fixture bundle)', () => {
   });
 
   test('Pictures first without sound: sound-needed, then Check without sound back to the full options', async ({ page }) => {
+    await noClipPlayback(page);
     await noSpeechEngine(page);
     await onboard(page, 'Pictures first');
     await openCheck(page);
@@ -444,6 +446,7 @@ test.describe('level check screens (fixture bundle)', () => {
   });
 
   test('45 seconds untouched opens the pause; For grown-ups: finish now ends the run (no PIN on this device)', async ({ page }) => {
+    await noClipPlayback(page);
     await page.clock.install();
     await onboard(page);
     await openCheck(page);
@@ -517,6 +520,7 @@ test.describe('level check screens (fixture bundle)', () => {
   });
 
   test('the web: "I use a screen reader" pre-sets Take my time and the run leaves out the visual rung', async ({ page }) => {
+    await noClipPlayback(page);
     await onboard(page);
     await openCheck(page);
     await passPlacementLanguage(page);
