@@ -7,6 +7,7 @@ import { NOTES_KEY } from './notes-store';
 import { PLACEMENT_RUN_KEY, PLACEMENT_UI_KEY } from './placement-run-store';
 import { PLANS_KEY } from './plan-store';
 import { PROGRESS_CORRUPT_KEY, PROGRESS_KEY } from './progress-store';
+import { QUEST_RUN_KEY } from './quest-run-saved';
 import { ROUTE_UI_KEY } from './route-store';
 import { STORY_BOOKMARKS_KEY } from './story-store';
 import { SYNC_KEY } from './sync-store';
@@ -45,4 +46,5 @@ export const PER_PROFILE_KEYS: Readonly<Record<string, (profileId: string) => st
   memory: MEMORY_KEY,
   'decode-sprint': DECODE_SPRINT_KEY,
   'week-drop': WEEK_DROP_KEY,
+  'quest-run': QUEST_RUN_KEY,
 };

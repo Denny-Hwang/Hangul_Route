@@ -247,6 +247,57 @@ describe('quest-run-store', () => {
     });
   });
 
+  describe('[AU] a run resumed after a reload (AMENDMENTS-AUDIT-2026-11 row AU-12)', () => {
+    const restore = { stepIndex: 3, correctCount: 2, totalCount: 3, retryCount: 1, scoredRounds: ['2:0', '2:1', '3:0'], skippedSteps: [1], startedAt: '2026-11-16T09:00:00.000Z' };
+
+    it('a new run notes when it began', () => {
+      const before = Date.now();
+      useQuestRunStore.getState().beginQuest('q', 'e');
+      const at = Date.parse(useQuestRunStore.getState().startedAt ?? '');
+      expect(at).toBeGreaterThanOrEqual(before);
+      expect(at).toBeLessThanOrEqual(Date.now());
+    });
+
+    it('beginQuest with a saved run restores its step, tallies, scored rounds, skips and first start', () => {
+      useQuestRunStore.getState().beginQuest('q', 'e', restore.stepIndex, restore);
+      const s = useQuestRunStore.getState();
+      expect([s.questId, s.episodeId, s.stepIndex]).toEqual(['q', 'e', 3]);
+      expect([s.correctCount, s.totalCount, s.retryCount]).toEqual([2, 3, 1]);
+      expect(s.scoredRounds).toEqual(['2:0', '2:1', '3:0']);
+      expect(s.skippedSteps).toEqual([1]);
+      expect(s.startedAt).toBe('2026-11-16T09:00:00.000Z');
+      expect(s.pendingAdvance).toBe(false);
+    });
+
+    it('the step starts again, and a round scored before the reload is not scored twice', () => {
+      const heard: FirstRoundAnswer[] = [];
+      setFirstRoundAnswerListener((answer) => heard.push(answer));
+      const store = useQuestRunStore.getState();
+      store.beginQuest('q', 'e', restore.stepIndex, restore);
+      // Round 0 of step 3 was missed before the reload: playing it again, right this time, is a retry.
+      store.answerRound(0, true, { texts: ['배'] });
+      store.answerRound(1, true, { texts: ['사과'] });
+      const s = useQuestRunStore.getState();
+      expect([s.correctCount, s.totalCount, s.retryCount]).toEqual([3, 4, 2]);
+      expect(s.scoredRounds).toEqual(['2:0', '2:1', '3:0', '3:1']);
+      // Only the new round reaches the memory store.
+      expect(heard.map((a) => a.asked)).toEqual([{ texts: ['사과'] }]);
+      setFirstRoundAnswerListener(null);
+    });
+
+    it('a skipped step restored still caps the stars (row AU-9)', () => {
+      useQuestRunStore.getState().beginQuest('q', 'e', 3, { ...restore, correctCount: 3, scoredRounds: ['2:0', '2:1', '3:0'] });
+      expect(useQuestRunStore.getState().stars()).toBe(2);
+    });
+
+    it('reset forgets the start', () => {
+      useQuestRunStore.getState().beginQuest('q', 'e', 3, restore);
+      useQuestRunStore.getState().reset();
+      expect(useQuestRunStore.getState().startedAt).toBeNull();
+      expect(useQuestRunStore.getState().scoredRounds).toEqual([]);
+    });
+  });
+
   it('reset clears all run state', () => {
     const { beginQuest, answerRound, reset } = useQuestRunStore.getState();
     beginQuest('q', 'e');

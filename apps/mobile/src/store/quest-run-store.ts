@@ -4,6 +4,7 @@ import type { RoundAsked } from '../logic/memory/asked';
 import type { MinigameScope } from '../logic/minigame-config';
 import type { StepTry } from '../logic/quest-flow/quest-adapt';
 import { questOutcome } from '../logic/quest-outcome';
+import type { QuestRunRestore } from '../logic/quest-flow/saved-run';
 import { skipStarCap } from '../logic/quest-flow/skip-cap';
 
 /** The first (scored) answer of a round, with what it asked (F-CURR-002 row CM-12). */
@@ -31,6 +32,8 @@ export function setFirstRoundAnswerListener(listener: ((answer: FirstRoundAnswer
 interface State {
   questId: string | null;
   episodeId: string | null;
+  /** [AU] ISO time the run began (AMENDMENTS-AUDIT-2026-11 row AU-12): a run resumed after a reload keeps its first start. */
+  startedAt: string | null;
   stepIndex: number;
   /** Rounds answered right on the first try (logic/first-try). */
   correctCount: number;
@@ -59,8 +62,10 @@ interface Actions {
    * Start a run. `startStepIndex` (default 0) lets a resumed story quest open
    * on its `story-read` step (F-STORY-004 §3.8); anything that is not a whole
    * number of 0 or more starts at 0.
+   * [AU] `restore` (row AU-12): the run a reload interrupted goes on from its saved step with its tallies, the keys of
+   * the rounds already scored (so none is scored twice) and its skipped steps; the step starts from its beginning.
    */
-  beginQuest: (questId: string, episodeId: string, startStepIndex?: number) => void;
+  beginQuest: (questId: string, episodeId: string, startStepIndex?: number, restore?: QuestRunRestore) => void;
   /**
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
@@ -84,6 +89,7 @@ interface Actions {
 const blankRun = {
   questId: null,
   episodeId: null,
+  startedAt: null,
   stepIndex: 0,
   correctCount: 0,
   totalCount: 0,
@@ -99,12 +105,22 @@ const blankRun = {
 export const useQuestRunStore = create<State & Actions>((set, get) => ({
   ...blankRun,
 
-  beginQuest: (questId, episodeId, startStepIndex = 0) =>
+  beginQuest: (questId, episodeId, startStepIndex = 0, restore) =>
     set({
       ...blankRun,
       questId,
       episodeId,
+      startedAt: restore?.startedAt ?? new Date().toISOString(),
       stepIndex: Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0,
+      ...(restore
+        ? {
+            correctCount: restore.correctCount,
+            totalCount: restore.totalCount,
+            retryCount: restore.retryCount,
+            scoredRounds: restore.scoredRounds,
+            skippedSteps: restore.skippedSteps,
+          }
+        : {}),
     }),
 
   answerRound: (roundKey, correct, asked, hinted = false) => {

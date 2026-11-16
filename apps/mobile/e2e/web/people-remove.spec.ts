@@ -111,6 +111,8 @@ async function device(page: Page, jun: Record<string, unknown> = {}): Promise<st
     [`free-end-seen:${JUN}`]: true,
     [`placement-ui:${JUN}`]: { dismissedAt: now },
     [`story:bookmarks:${JUN}`]: { v: 1, bookmarks: {} },
+    // [AU] A quest run left by a reload (AMENDMENTS-AUDIT-2026-11 row AU-12) goes with the learner too.
+    [`quest-run:${JUN}`]: { v: 1, questId: 'quest:stage1-letters-q1', episodeId: 'episode:stage1-letters', steps: '', stepIndex: 2, correctCount: 0, totalCount: 0, retryCount: 0, scoredRounds: [], skippedSteps: [], startedAt: now },
     ...jun,
   });
   return mina.id as string;

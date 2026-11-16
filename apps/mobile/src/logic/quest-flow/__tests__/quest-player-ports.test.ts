@@ -15,6 +15,7 @@ import {
   runQuestStart,
   type QuestPlayerPorts,
 } from '../quest-player-ports';
+import { savedRunOf } from '../saved-run';
 
 /**
  * F-BROWSE-001 BR-5a (§4.7): the quest player body is `QuestPlayerView`, and everything it does
@@ -124,6 +125,80 @@ describe('learnerQuestSession (questStartStep + a held session, F-REPORT-001 RP-
   });
 });
 
+describe('[AU] learnerQuestSession goes on with the run a reload interrupted (AMENDMENTS-AUDIT-2026-11 row AU-12)', () => {
+  const NOW = Date.parse('2026-11-16T10:00:00.000Z');
+  const lesson: Quest = {
+    id: 'quest:q1',
+    titleEn: 'Meet the letters',
+    estimatedMinutes: 4,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Hi' },
+      { id: 's2', kind: 'practice', titleEn: 'Play', minigameKind: 'listen-pick', minigameRef: 'minigame:a' },
+      { id: 's3', kind: 'apply', titleEn: 'Build', minigameKind: 'build-letter', minigameRef: 'minigame:b' },
+      { id: 's4', kind: 'check', titleEn: 'Check', minigameKind: 'listen-pick', minigameRef: 'minigame:c' },
+      { id: 's5', kind: 'reward', titleEn: 'Yay' },
+    ],
+  };
+  const savedFor = (quest: Quest, over: Record<string, unknown> = {}) => ({
+    ...savedRunOf(
+      { questId: quest.id, episodeId: 'episode:e1', stepIndex: 2, correctCount: 3, totalCount: 4, retryCount: 1, scoredRounds: ['1:0', '1:1', '1:2', '1:3'], skippedSteps: [], startedAt: '2026-11-16T09:00:00.000Z' },
+      quest.steps,
+    ),
+    ...over,
+  });
+  const lessonDeps = (over: Partial<Parameters<typeof learnerQuestSession>[0]> = {}) => sessionDeps({ questById: vi.fn(() => lesson), now: () => NOW, ...over });
+
+  it('the same quest, saved an hour ago: the run goes on from its step with its tallies, and one session is held', () => {
+    const deps = lessonDeps({ savedRun: savedFor(lesson) });
+    expect(learnerQuestSession(deps).start('quest:q1', 'episode:e1')).toEqual({
+      stepIndex: 2,
+      correctCount: 3,
+      totalCount: 4,
+      retryCount: 1,
+      scoredRounds: ['1:0', '1:1', '1:2', '1:3'],
+      skippedSteps: [],
+      startedAt: '2026-11-16T09:00:00.000Z',
+    });
+    expect(deps.holdSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('nothing saved, a run of another quest, a run older than 24 hours or a changed step list: step 0', () => {
+    const other = savedFor({ ...lesson, id: 'quest:q2' });
+    const old = savedFor(lesson, { startedAt: '2026-11-15T09:59:00.000Z' });
+    const changed = savedFor({ ...lesson, steps: lesson.steps.slice(1) });
+    for (const savedRun of [null, other, old, changed, 'junk', { v: 2 }]) {
+      expect(learnerQuestSession(lessonDeps({ savedRun })).start('quest:q1', 'episode:e1')).toBe(0);
+    }
+  });
+
+  it('without a saved-run port (the guest run) every start is fresh', () => {
+    expect(learnerQuestSession(lessonDeps()).start('quest:q1', 'episode:e1')).toBe(0);
+  });
+
+  it('the saved run is read for the first start only', () => {
+    const session = learnerQuestSession(lessonDeps({ savedRun: savedFor(lesson) }));
+    expect(session.start('quest:q1', 'episode:e1')).toMatchObject({ stepIndex: 2 });
+    expect(session.start('quest:q1', 'episode:e1')).toBe(0);
+  });
+
+  it('a story quest goes on from a saved run only when it is opened to keep reading; Start and Start over open step 0', () => {
+    const saved = savedFor(storyQuest, { stepIndex: 2, correctCount: 0, totalCount: 0, retryCount: 0, scoredRounds: [] });
+    const story = (resume: boolean | undefined) => sessionDeps({ resume, savedRun: saved, now: () => NOW });
+    expect(learnerQuestSession(story(undefined)).start(storyQuest.id, 'episode:e1')).toBe(0);
+    expect(learnerQuestSession(story(true)).start(storyQuest.id, 'episode:e1')).toMatchObject({ stepIndex: 2 });
+  });
+
+  it('a story opened to keep reading with a run saved on its intro opens on the read step, as its bookmark says', () => {
+    const saved = savedFor(storyQuest, { stepIndex: 0, correctCount: 0, totalCount: 0, retryCount: 0, scoredRounds: [] });
+    const deps = sessionDeps({ resume: true, savedRun: saved, now: () => NOW, bookmarkOf: vi.fn(() => mark('listen')) });
+    expect(learnerQuestSession(deps).start(storyQuest.id, 'episode:e1')).toBe(1);
+  });
+
+  it('with no active profile nothing starts and nothing is resumed', () => {
+    expect(learnerQuestSession(lessonDeps({ profileId: null, savedRun: savedFor(lesson) })).start('quest:q1', 'episode:e1')).toBeNull();
+  });
+});
+
 describe('questFinish (honest outcome + retries)', () => {
   it('scores first tries and carries retries for telemetry', () => {
     expect(questFinish({ correctCount: 4, totalCount: 5, retryCount: 2 })).toEqual({
@@ -218,6 +293,16 @@ describe("the view's run rules (runQuestStart / runQuestLeave / runQuestFinish)"
     expect(ports.end).not.toHaveBeenCalled();
   });
 
+  it('[AU] start hands a resumed run to begin with its step and its tallies (row AU-12)', () => {
+    const restore = { stepIndex: 3, correctCount: 2, totalCount: 3, retryCount: 0, scoredRounds: ['1:0', '1:1', '2:0'], skippedSteps: [], startedAt: '2026-11-16T09:00:00.000Z' };
+    const ports = { start: vi.fn(() => restore), end: vi.fn() };
+    const begin = vi.fn();
+    const cleanup = runQuestStart(ports, begin, 'quest:q1', 'episode:e1');
+    expect(begin).toHaveBeenCalledWith('quest:q1', 'episode:e1', 3, restore);
+    cleanup?.();
+    expect(ports.end).toHaveBeenCalledTimes(1);
+  });
+
   it('a confirmed Leave discards the run before the ports take the player back', () => {
     const { ports, calls } = stubPorts();
     const reset = vi.fn(() => calls.push('reset'));
@@ -291,6 +376,19 @@ describe('learnerQuestExits', () => {
     const deps = exitDeps({ panes: 2, under: vi.fn(() => 'Homework') });
     learnerQuestExits(deps).leave();
     expect(deps.toEpisodeScreen).toHaveBeenCalledWith('episode:e1');
+  });
+
+  it('[AU] finish and leave forget the saved run first (row AU-12); a telemetry event does not', () => {
+    const order: string[] = [];
+    const clearSavedRun = vi.fn(() => void order.push('clear'));
+    const exits = learnerQuestExits(
+      exitDeps({ clearSavedRun, toResults: vi.fn(() => void order.push('results')), toEpisodeScreen: vi.fn(() => void order.push('episode')) }),
+    );
+    exits.track({ name: 'quest.discover_completed', payload: { questId: 'quest:q1' } });
+    expect(clearSavedRun).not.toHaveBeenCalled();
+    exits.finish({ stars: 2, correct: 4, total: 5, played: true, retries: 0 });
+    exits.leave();
+    expect(order).toEqual(['clear', 'results', 'clear', 'episode']);
   });
 
   it('track sends the event with the active profile id', () => {

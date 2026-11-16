@@ -5,6 +5,8 @@ import { questOutcome, type QuestOutcome } from '../quest-outcome';
 import type { SessionOptions } from '../sessions/hold';
 import type { Bookmark } from '../story/bookmarks';
 import { questStartStep } from '../story/resume';
+import { storyReadStep } from '../story/story-ref';
+import { resumableRun, type QuestRunRestore } from './saved-run';
 import { skipStarCap } from './skip-cap';
 
 /**
@@ -17,8 +19,9 @@ export interface QuestPlayerPorts {
   /**
    * Called once per mount (and again when the quest or the session changes). Returns the step the run
    * starts on, or `null` when no run may start (the learner app with no active profile: nothing begins).
+   * [AU] Or the run a reload interrupted, to go on with (AMENDMENTS-AUDIT-2026-11 row AU-12): its step and tallies.
    */
-  start(questId: string, episodeId: string): number | null;
+  start(questId: string, episodeId: string): number | QuestRunRestore | null;
   /** The cleanup of `start`. */
   end(): void;
   /**
@@ -79,13 +82,14 @@ export function questFinish(run: QuestRunCounters, steps?: QuestRunSteps): Quest
  */
 export function runQuestStart(
   ports: Pick<QuestPlayerPorts, 'start' | 'end'>,
-  begin: (questId: string, episodeId: string, startStep: number) => void,
+  begin: (questId: string, episodeId: string, startStep: number, restore?: QuestRunRestore) => void,
   questId: string,
   episodeId: string,
 ): (() => void) | undefined {
   const startStep = ports.start(questId, episodeId);
   if (startStep === null) return undefined;
-  begin(questId, episodeId, startStep);
+  if (typeof startStep === 'number') begin(questId, episodeId, startStep);
+  else begin(questId, episodeId, startStep.stepIndex, startStep);
   return () => ports.end();
 }
 
@@ -137,6 +141,13 @@ export interface LearnerSessionDeps {
    * returns its release. The quest player's session moves the streak (`streak: true`).
    */
   holdSession: (profileId: string, options: SessionOptions) => () => void;
+  /**
+   * [AU] The value stored for the profile's interrupted run (row AU-12, `store/quest-run-saved.ts`), as read. Absent
+   * (the guest run, which reopens quest 1 from step 1, AMENDMENTS-GUEST-FIRST-LESSON GU-D12): every run starts fresh.
+   */
+  savedRun?: unknown;
+  /** The clock the saved run's age is read against. */
+  now?: () => number;
 }
 
 /**
@@ -144,10 +155,18 @@ export interface LearnerSessionDeps {
  * §3.8); without a usable bookmark it starts at step 0. A study session owned by the quest
  * (`quest:<questId>`) runs for the active profile and moves the streak, as before (F-REPORT-001
  * section 3.3.2); `end` releases it once.
+ *
+ * [AU] Row AU-12: a run of this quest that a reload interrupted goes on from its saved step (`resumableRun`: the same
+ * quest, the same step list, begun at most 24 hours ago). One session is held as for any start, so a resumed run adds
+ * no session of its own. A story quest goes on from a saved run only when it was opened to keep reading (`resume`):
+ * Start and Start over open it from its first step, as they say.
  */
 export function learnerQuestSession(deps: LearnerSessionDeps): Pick<QuestPlayerPorts, 'start' | 'end'> {
   const { profileId } = deps;
   let release: (() => void) | null = null;
+  // The stored run is what the device held when the player opened: it is read for the first start only, so a later
+  // start of this session (another quest on the same screen) never goes back to it.
+  let stored: { value: unknown } | null = deps.savedRun === undefined ? null : { value: deps.savedRun };
   const end = (): void => {
     const held = release;
     release = null;
@@ -156,12 +175,20 @@ export function learnerQuestSession(deps: LearnerSessionDeps): Pick<QuestPlayerP
   return {
     start: (questId) => {
       if (profileId === null) return null;
-      const step = questStartStep(deps.questById(questId), deps.resume, (storyId) =>
+      const quest = deps.questById(questId);
+      const step = questStartStep(quest, deps.resume, (storyId) =>
         deps.bookmarkOf(profileId, storyId),
       );
+      const held = stored;
+      stored = null;
+      const saved =
+        quest && held !== null && (deps.resume === true || !storyReadStep(quest))
+          ? resumableRun(held.value, { id: questId, steps: quest.steps }, (deps.now ?? Date.now)())
+          : null;
       end();
       release = deps.holdSession(profileId, { owner: `quest:${questId}`, streak: true });
-      return step;
+      // A story's bookmark step (past the intro) is never traded for an earlier saved step.
+      return saved !== null && saved.stepIndex >= step ? saved : step;
     },
     end,
   };
@@ -178,6 +205,8 @@ export interface LearnerExitDeps {
   toJourneyPane: (episodeId: string) => void;
   toEpisodeScreen: (episodeId: string) => void;
   track: (event: TelemetryEvent) => unknown;
+  /** [AU] Forget the run saved for a reload (row AU-12): the quest finished, or the learner chose Leave. */
+  clearSavedRun?: () => void;
 }
 
 /**
@@ -186,8 +215,12 @@ export interface LearnerExitDeps {
  */
 export function learnerQuestExits(deps: LearnerExitDeps): Pick<QuestPlayerPorts, 'finish' | 'leave' | 'track'> {
   return {
-    finish: (result) => deps.toResults(resultsReset(deps.questId, deps.episodeId, result)),
+    finish: (result) => {
+      deps.clearSavedRun?.();
+      deps.toResults(resultsReset(deps.questId, deps.episodeId, result));
+    },
     leave: () => {
+      deps.clearSavedRun?.();
       const back = episodeReturn(deps.panes, deps.episodeId, deps.under());
       if (back.to === 'journeyPane') deps.toJourneyPane(back.episodeId);
       else deps.toEpisodeScreen(back.episodeId);
