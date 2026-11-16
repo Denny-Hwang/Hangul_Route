@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Browser, BrowserContext, Page, Request } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, openForGrownUps, passDiscover, playCheckByIds, readStored, seedStored, typeDigits, WHO_CHILD, WHO_SELF } from './helpers';
+import { onboardChild, openForGrownUps, passDiscover, playCheckByIds, readStored, seedStored, typeDigits, buildLetterBlocks, WHO_CHILD, WHO_SELF } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -194,12 +194,12 @@ async function deviceWithPinOnly(page: Page, hash: string): Promise<void> {
   await seedStored(page, 'account:parentPinHash', hash);
 }
 
-/** From Hoya's hello, quest 1 to the guest's Results with every round right (3 stars, the card). */
+/** From Hoya's hello, quest 1 to the guest's Results: Match the Sound skipped, Build a Letter and the Check right (2 stars, the card; [AU] row AU-9). */
 async function playQuestOne(page: Page): Promise<void> {
   await continueButton(page).click();
   await passDiscover(page);
   await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
-  await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
+  await buildLetterBlocks(page);
   await playCheckByIds(page, [{ answer: 'jamo:eo' }, { answer: '너' }]);
   await page.getByRole('button', { name: en.learner.quest.seeResults.cta, exact: true }).click();
   await expect(page.getByTestId('guest-save-card')).toBeVisible();

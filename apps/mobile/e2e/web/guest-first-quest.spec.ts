@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { acceptConfirmSheets, headerBack, headerClose, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
+import { acceptConfirmSheets, headerBack, headerClose, passDiscover, playCheckByIds, readStored, seedStored, buildLetterBlocks } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -153,15 +153,17 @@ test.describe('the guest first quest (GU-3)', () => {
     await continueButton(page).click();
     await passDiscover(page);
     await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
-    await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
+    // [AU] Row AU-9: a skipped game caps the stars, so Build a Letter is played: 2 stars, which earn the card.
+    await buildLetterBlocks(page);
     await playCheckByIds(page, [{ answer: 'jamo:eo' }, { answer: '너' }]);
     await page.getByRole('button', { name: en.learner.quest.seeResults.cta, exact: true }).click();
     // The guest's Results: stars, Hoya's line and the card; no teaser, Back to Journey, Episode page or name row.
-    await expect(page.getByRole('heading', { name: en.learner.results.headline.wonderful })).toBeVisible();
+    await expect(page.getByRole('heading', { name: en.learner.results.headline.great })).toBeVisible();
     await expect(page.getByText(en.learner.results.newCard.title)).toBeVisible();
     await expect(page.getByTestId('next-up-card')).toHaveCount(0);
-    // A perfect run: the cheer invites no replay, so Try this one again is not drawn (GU-0b D3).
-    await expect(page.getByRole('button', { name: en.learner.results.nextUp.again.cta, exact: true })).toHaveCount(0);
+    // Two stars (Match the Sound was skipped): the cheer invites a replay, so Try this one again is drawn (GU-0b D3:
+    // every tier but a perfect run; the perfect tier is held by the unit tests of `guestResultsActions`).
+    await expect(page.getByRole('button', { name: en.learner.results.nextUp.again.cta, exact: true })).toBeVisible();
     for (const label of [en.learner.results.backHome.cta, en.learner.results.episodePage.cta]) await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(0);
     await expect.poll(() => readStored<{ questDone: boolean }>(page, 'guest')).toMatchObject({ questDone: true });
     await shot(page, 'guest-results-360');

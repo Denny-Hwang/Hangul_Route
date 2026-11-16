@@ -146,6 +146,41 @@ describe('questFinish (honest outcome + retries)', () => {
   });
 });
 
+describe('[AU] questFinish caps the stars of a run that skipped a game (AMENDMENTS-AUDIT-2026-11 row AU-9)', () => {
+  const steps = [
+    { kind: 'intro' },
+    { kind: 'practice', minigameKind: 'listen-pick', minigameRef: 'minigame:a' },
+    { kind: 'apply', minigameKind: 'build-letter', minigameRef: 'minigame:b' },
+    { kind: 'check', minigameKind: 'listen-pick', minigameRef: 'minigame:c' },
+    { kind: 'reward' },
+  ] as const;
+
+  it('one perfect game and one skip: 2 stars, the counts as played', () => {
+    expect(questFinish({ correctCount: 6, totalCount: 6, retryCount: 1, skippedSteps: [2] }, steps)).toEqual({
+      stars: 2,
+      correct: 6,
+      total: 6,
+      played: true,
+      retries: 1,
+    });
+  });
+
+  it('every game skipped and a perfect Check: 1 star', () => {
+    expect(questFinish({ correctCount: 2, totalCount: 2, retryCount: 0, skippedSteps: [1, 2] }, steps).stars).toBe(1);
+  });
+
+  it('no skip: the stars are what they were', () => {
+    expect(questFinish({ correctCount: 6, totalCount: 6, retryCount: 0, skippedSteps: [] }, steps).stars).toBe(3);
+    expect(questFinish({ correctCount: 6, totalCount: 6, retryCount: 0 }, steps).stars).toBe(3);
+  });
+
+  it('the finish hands the capped outcome to the ports', () => {
+    const { ports } = stubPorts();
+    runQuestFinish({ correctCount: 5, totalCount: 5, retryCount: 0, skippedSteps: [1] }, ports, steps);
+    expect(ports.finish).toHaveBeenCalledWith({ stars: 2, correct: 5, total: 5, played: true, retries: 0 });
+  });
+});
+
 function stubPorts() {
   const calls: string[] = [];
   const ports = {
@@ -372,7 +407,7 @@ describe('QuestPlayerView extraction (source)', () => {
   });
 
   it('the view runs every exit through the ports', () => {
-    expect(view).toContain('runQuestFinish(useQuestRunStore.getState(), ports)');
+    expect(view).toContain('runQuestFinish(useQuestRunStore.getState(), ports, quest?.steps)');
     expect(view).toContain('runQuestLeave(useQuestRunStore.getState().reset, ports)');
     expect(view).toMatch(/runQuestStart\(\{ start, end \}, begin, questId, episodeId\)/);
     expect(view).toMatch(/ports(Ref\.current)?\.track\(/);

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
-import { completeChildForm, journeyCellName, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
+import { completeChildForm, journeyCellName, passDiscover, pastTapLock, playCheckByIds, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -80,10 +80,14 @@ async function newLearnerAtHome(page: Page): Promise<void> {
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
 }
 
+/** New Year Order's four steps, in the right order (story-order.spec.ts covers the game itself). */
+const NEW_YEAR_ORDER = ['Wear hanbok', 'Bow to elders', 'Eat tteokguk', 'Receive lucky money'];
+
 /**
- * The last quest of New Year & Festivals (Hanbok and the Bow): Discover read, the practice
- * and the story order skipped, the Check played (the vowel yo, then the word 한복). `miss`
- * takes a wrong card first in round 2, so one of two counts: a 1-star run.
+ * The last quest of New Year & Festivals (Hanbok and the Bow): Discover read, the practice skipped, New Year Order
+ * placed right on the first try and the Check played (the vowel yo, then the word 한복): two stars, which earn the
+ * quest card (a skipped game caps the stars at 2, AMENDMENTS-AUDIT-2026-11 row AU-9). With `miss` the story order is
+ * skipped too and a wrong card is taken first in round 2 of the Check, so one of two counts: a 1-star run.
  */
 async function playRitesQuest(page: Page, firstTime: boolean, miss = false): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
@@ -93,7 +97,17 @@ async function playRitesQuest(page: Page, firstTime: boolean, miss = false): Pro
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await page.getByRole('button', { name: 'Skip for now' }).click();
+  if (miss) {
+    await page.getByRole('button', { name: 'Skip for now' }).click();
+  } else {
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(page.getByRole('heading', { name: 'Put the story in order' })).toBeVisible();
+    for (const caption of NEW_YEAR_ORDER) {
+      await pastTapLock(page);
+      await page.getByRole('button', { name: new RegExp(`${caption}(\\.|$)`) }).filter({ hasNotText: 'Skip' }).click();
+    }
+    await page.getByRole('button', { name: 'Skip replay' }).click();
+  }
   await playCheckByIds(page, [{ answer: 'jamo:yo' }, miss ? { answer: '한복', missWith: '한국' } : { answer: '한복' }]);
   await page.getByRole('button', { name: 'See results' }).click();
 }

@@ -397,6 +397,35 @@ export async function passDiscover(page: Page): Promise<void> {
   await expect(pill).toHaveCount(0);
 }
 
+/** One Build a Letter block: the syllable on the speaker, then the accessible names of its tiles in order. */
+export type LetterBlock = readonly [syllable: string, tiles: readonly string[]];
+
+const letterTile = (char: string): string => `Korean letter ${char}, tap to select`;
+
+/** Stage 1 quest 1's Build a Letter blocks (Meet a, eo, g, n), in round order. */
+export const QUEST_ONE_BLOCKS: readonly LetterBlock[] = [
+  ['가', [letterTile('ㄱ'), letterTile('ㅏ')]],
+  ['거', [letterTile('ㄱ'), letterTile('ㅓ')]],
+  ['나', [letterTile('ㄴ'), letterTile('ㅏ')]],
+  ['너', [letterTile('ㄴ'), letterTile('ㅓ')]],
+];
+
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-9: a run that skips every game earns at most 1 star and one that skips any game
+ * at most 2, so a spec that needs the quest's card (2 stars) plays a game. This plays a quest's Build a Letter from
+ * its launcher, every block right on the first try (the blocks come in round order), up to the Check's launcher.
+ */
+export async function buildLetterBlocks(page: Page, blocks: readonly LetterBlock[] = QUEST_ONE_BLOCKS): Promise<void> {
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('Build this letter')).toBeVisible();
+  for (const [syllable, tiles] of blocks) {
+    await expect(page.getByTestId('build-letter-speaker')).toContainText(syllable);
+    for (const name of tiles) await page.getByRole('button', { name, exact: true }).click();
+  }
+  // The last right block ends the game; the Check's launcher follows.
+  await expect(page.getByRole('button', { name: 'Go', exact: true })).toBeVisible();
+}
+
 /**
  * Waits out the answer lock (AMENDMENTS-TOUCH KT-D5, row KT-3): for `TAP_LOCK_MS` after an answer on a pick-one board
  * every answer waits, a click included (rule 9), so a deliberate answer right after another waits first.

@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
-import { journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
+import { buildLetterBlocks, journeyCellName, onboardChild, passDiscover, playCheckByIds, readStored, seedStored, type LetterBlock } from './helpers';
 import { shot } from './shots';
 import { expectTextFits, closeInstallGuide } from './text-fit';
 
@@ -14,7 +14,9 @@ import { expectTextFits, closeInstallGuide } from './text-fit';
  * - one star (one of the Check's two rounds missed): the reward step and Results say the card is waiting and how to
  *   get it, the learner still holds three cards (the report: Hanji, Book, Tiger), Home counts 3, the Library lists the
  *   card under Cards to find with its hint;
- * - a replay with both rounds right (3 stars): the card is celebrated, held, Home counts 4 and the Library lists it.
+ * - a replay with Build a Letter and both Check rounds right (2 stars: the practice is skipped, and a skipped game
+ *   caps the stars, AMENDMENTS-AUDIT-2026-11 row AU-9): the card is celebrated, held, Home counts 4 and the Library
+ *   lists it.
  *
  * Release bundle only: the Library of the fixture bundle differs. Run at 320 px, at the Largest text size and wide.
  */
@@ -66,7 +68,19 @@ async function reportedLearner(page: Page, settings?: { uiLocale: 'en'; textSize
   return profileId;
 }
 
-/** Bow & Eat Tteokguk from the Journey to its reward step; `miss` takes a wrong answer first in round 1 (a 1-star run). */
+/** Bow & Eat Tteokguk's Build a Letter blocks, in round order: the initial and the vowel, then the final as its batchim tile. */
+const CLOSED_BLOCKS: readonly LetterBlock[] = [
+  ['달', ['Korean letter ㄷ, tap to select', 'Korean letter ㅏ, tap to select', 'final l']],
+  ['물', ['Korean letter ㅁ, tap to select', 'Korean letter ㅜ, tap to select', 'final l']],
+  ['문', ['Korean letter ㅁ, tap to select', 'Korean letter ㅜ, tap to select', 'final n']],
+  ['산', ['Korean letter ㅅ, tap to select', 'Korean letter ㅏ, tap to select', 'final n']],
+];
+
+/**
+ * Bow & Eat Tteokguk from the Journey to its reward step. `miss` skips both games and takes a wrong answer first in
+ * round 1 of the Check (a 1-star run); without it the practice is skipped, Build a Letter and the Check are played
+ * right (2 stars: a skipped game caps the stars, row AU-9).
+ */
 async function playToRewardStep(page: Page, first: boolean, miss: boolean): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
   await page.getByRole('button', { name: journeyCellName(1, 'Holidays') }).click();
@@ -81,7 +95,8 @@ async function playToRewardStep(page: Page, first: boolean, miss: boolean): Prom
   await next.click();
   await passDiscover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await page.getByRole('button', { name: 'Skip for now' }).click();
+  if (miss) await page.getByRole('button', { name: 'Skip for now' }).click();
+  else await buildLetterBlocks(page, CLOSED_BLOCKS);
   await playCheckByIds(page, [miss ? { answer: '달', missWith: '다' } : { answer: '달' }, { answer: '설날' }]);
 }
 
@@ -138,7 +153,7 @@ async function journey(page: Page, where: string): Promise<void> {
   await expectTextFits(page, `${where}: the Library at 3 cards`);
   await shot(page, `card-award-quest-library-3-${where}`);
 
-  // The replay with both rounds right: three stars, the card is celebrated, saved once, counted and listed.
+  // The replay with Build a Letter and both rounds right: two stars, the card is celebrated, saved once, counted and listed.
   await playToRewardStep(page, false, false);
   await expect(page.getByText('A Lunar New Year card joins your library!')).toBeVisible();
   await page.getByRole('button', { name: 'See results' }).click();
@@ -167,7 +182,7 @@ test.describe('the quest card is earned at 2 stars and every surface says so (OW
   test.skip(FIXTURE_BUILD, 'the release content: run on the release build');
   test.use({ timezoneId: 'UTC' });
 
-  test('320 px: one star keeps three cards and says how to get the fourth; a three-star replay brings it', async ({ page }) => {
+  test('320 px: one star keeps three cards and says how to get the fourth; a two-star replay brings it', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.setViewportSize({ width: 320, height: 568 });

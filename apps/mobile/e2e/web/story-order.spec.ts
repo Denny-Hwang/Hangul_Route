@@ -191,7 +191,9 @@ test('every slot placed: the story replays in order, pauses, steps, and Done fin
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await playCheckByIds(page, CHECK_RIGHT);
   await page.getByRole('button', { name: 'See results' }).click();
-  await expect(page.getByText('Wonderful!')).toBeVisible(); // four first-try slots and two first-try Check answers
+  // Four first-try slots and two first-try Check answers, with the practice skipped: two stars at most
+  // (AMENDMENTS-AUDIT-2026-11 row AU-9), which keep the card.
+  await expect(page.getByText('Great!')).toBeVisible();
   await expect(page.getByRole('button', { name: /^See my card/ })).toBeVisible();
   expect(errors).toEqual([]);
 });

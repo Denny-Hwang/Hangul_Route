@@ -125,7 +125,8 @@ test('a played quest teases the real next quest, and the CTA goes there', async 
   await answerCheck(page);
   await page.getByRole('button', { name: 'See results' }).click();
 
-  await expect(page.getByText('Wonderful!')).toBeVisible();
+  // Build a Letter was skipped: two stars at most (AMENDMENTS-AUDIT-2026-11 row AU-9).
+  await expect(page.getByText('Great!')).toBeVisible();
   await expect(page.getByText('Next up')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Meet o, u, m and the circle' })).toBeVisible();
   // The other two exits stay one tap away.

@@ -136,7 +136,8 @@ test('the last Stage 1 quest opens the prize: Hoya, every symbol lit, the legend
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   await playLastQuest(page, false);
-  await expect(page.getByText('Wonderful!').or(page.getByText('All done!')).or(page.getByText('Great!'))).toBeVisible();
+  // Both games skipped and the Check right: one star at most (AMENDMENTS-AUDIT-2026-11 row AU-9).
+  await expect(page.getByText('Wonderful!').or(page.getByText('All done!')).or(page.getByText('Great!')).or(page.getByText('You tried!'))).toBeVisible();
   await expect(page.getByRole('button', { name: 'See your Stage 1 prize' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });

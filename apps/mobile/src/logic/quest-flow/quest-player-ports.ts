@@ -5,6 +5,7 @@ import { questOutcome, type QuestOutcome } from '../quest-outcome';
 import type { SessionOptions } from '../sessions/hold';
 import type { Bookmark } from '../story/bookmarks';
 import { questStartStep } from '../story/resume';
+import { skipStarCap } from './skip-cap';
 
 /**
  * The quest player's seam to the outside world (F-BROWSE-001 §4.7, BR-5a). `QuestPlayerView` plays
@@ -54,11 +55,21 @@ export interface QuestRunCounters {
   correctCount: number;
   totalCount: number;
   retryCount: number;
+  /** [AU] The game steps the run skipped (AMENDMENTS-AUDIT-2026-11 row AU-9). */
+  skippedSteps?: readonly number[];
 }
 
-/** Rounds are scored on the first try; a run with every game skipped is 0 / 0, not 5 / 5. */
-export function questFinish(run: QuestRunCounters): QuestFinish {
-  return { ...questOutcome(run.correctCount, run.totalCount), retries: run.retryCount };
+/** The quest's steps, as the star cap reads them (`skip-cap.ts`). */
+export type QuestRunSteps = Parameters<typeof skipStarCap>[0];
+
+/**
+ * Rounds are scored on the first try; a run with every game skipped is 0 / 0, not 5 / 5.
+ * [AU] With the quest's `steps`, a skipped game step caps the stars (row AU-9): at most 2 with any skipped, at most 1
+ * with every one skipped. The counts stay what was played.
+ */
+export function questFinish(run: QuestRunCounters, steps?: QuestRunSteps): QuestFinish {
+  const cap = steps ? skipStarCap(steps, run.skippedSteps ?? []) : 3;
+  return { ...questOutcome(run.correctCount, run.totalCount, cap), retries: run.retryCount };
 }
 
 /**
@@ -85,8 +96,8 @@ export function runQuestLeave(reset: () => void, ports: Pick<QuestPlayerPorts, '
 }
 
 /** The view's finish: the honest outcome of the run in the store, handed to the ports. */
-export function runQuestFinish(run: QuestRunCounters, ports: Pick<QuestPlayerPorts, 'finish'>): void {
-  ports.finish(questFinish(run));
+export function runQuestFinish(run: QuestRunCounters, ports: Pick<QuestPlayerPorts, 'finish'>, steps?: QuestRunSteps): void {
+  ports.finish(questFinish(run, steps));
 }
 
 export interface ResultsResetState {

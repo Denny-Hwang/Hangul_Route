@@ -3,7 +3,8 @@ import { tallyAnswer } from '../logic/first-try';
 import type { RoundAsked } from '../logic/memory/asked';
 import type { MinigameScope } from '../logic/minigame-config';
 import type { StepTry } from '../logic/quest-flow/quest-adapt';
-import { starsForAccuracy } from '../logic/score';
+import { questOutcome } from '../logic/quest-outcome';
+import { skipStarCap } from '../logic/quest-flow/skip-cap';
 
 /** The first (scored) answer of a round, with what it asked (F-CURR-002 row CM-12). */
 export interface FirstRoundAnswer {
@@ -39,6 +40,11 @@ interface State {
   retryCount: number;
   /** `${stepIndex}:${roundKey}` of every round already scored this run. */
   scoredRounds: readonly string[];
+  /**
+   * [AU] The game steps this run skipped with Skip for now on the step's launcher (AMENDMENTS-AUDIT-2026-11 row AU-9).
+   * They cap the run's stars (`quest-flow/skip-cap.ts`). A game ended from inside is a completed step, as before.
+   */
+  skippedSteps: readonly number[];
   pendingAdvance: boolean;
   /** What each round missed on the first try asked, in order: Try these again on the reward step (F-CURR-002 row CM-15). */
   missed: readonly RoundAsked[];
@@ -63,10 +69,16 @@ interface Actions {
    */
   answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked, hinted?: boolean) => void;
   markStepComplete: () => void;
+  /** [AU] Skip for now on the current step's launcher (row AU-9): the step is noted as skipped; the caller moves on. */
+  markStepSkipped: () => void;
   goNextStep: () => void;
   consumePendingAdvance: () => void;
   reset: () => void;
-  stars: () => 0 | 1 | 2 | 3;
+  /**
+   * The run's stars. [AU] With the quest's steps, a skipped game step caps them (row AU-9); without, any noted skip
+   * caps them at 2.
+   */
+  stars: (steps?: Parameters<typeof skipStarCap>[0]) => 0 | 1 | 2 | 3;
 }
 
 const blankRun = {
@@ -77,6 +89,7 @@ const blankRun = {
   totalCount: 0,
   retryCount: 0,
   scoredRounds: [],
+  skippedSteps: [],
   pendingAdvance: false,
   missed: [],
   tries: [],
@@ -127,6 +140,8 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
   markStepComplete: () => set({ pendingAdvance: true }),
 
+  markStepSkipped: () => set((s) => ({ skippedSteps: withStep(s.skippedSteps, s.stepIndex) })),
+
   goNextStep: () => set((s) => ({ stepIndex: s.stepIndex + 1, pendingAdvance: false })),
 
   consumePendingAdvance: () => {
@@ -138,8 +153,16 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
   reset: () => set({ ...blankRun }),
 
-  stars: () => starsForAccuracy(get().correctCount, Math.max(1, get().totalCount)),
+  stars: (steps) => {
+    const { correctCount, totalCount, skippedSteps } = get();
+    const cap = steps ? skipStarCap(steps, skippedSteps) : skippedSteps.length > 0 ? 2 : 3;
+    return questOutcome(correctCount, totalCount, cap).stars;
+  },
 }));
+
+function withStep(steps: readonly number[], step: number): readonly number[] {
+  return steps.includes(step) ? steps : [...steps, step];
+}
 
 /**
  * A round played beside the steps (the scaffold round, F-CURR-002 section 4.6): its first answer goes to the memory

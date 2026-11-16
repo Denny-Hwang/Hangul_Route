@@ -161,6 +161,92 @@ describe('quest-run-store', () => {
     expect(useQuestRunStore.getState().stars()).toBe(0);
   });
 
+  describe('[AU] skipped game steps (AMENDMENTS-AUDIT-2026-11 row AU-9)', () => {
+    const steps = [
+      { kind: 'intro' },
+      { kind: 'practice', minigameKind: 'listen-pick', minigameRef: 'minigame:a' },
+      { kind: 'apply', minigameKind: 'build-letter', minigameRef: 'minigame:b' },
+      { kind: 'check', minigameKind: 'listen-pick', minigameRef: 'minigame:c' },
+      { kind: 'reward' },
+    ] as const;
+
+    it('a new run has skipped nothing', () => {
+      useQuestRunStore.getState().beginQuest('q', 'e');
+      expect(useQuestRunStore.getState().skippedSteps).toEqual([]);
+    });
+
+    it('Skip for now notes the current step once and does not move the run', () => {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('q', 'e', 1);
+      store.markStepSkipped();
+      store.markStepSkipped();
+      expect(useQuestRunStore.getState().skippedSteps).toEqual([1]);
+      expect(useQuestRunStore.getState().stepIndex).toBe(1);
+    });
+
+    it('a game ended from inside (its own Skip, or a reader that scores no round) is a completed step, as before', () => {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('q', 'e', 1);
+      store.answerRound(0, false);
+      store.markStepComplete();
+      store.consumePendingAdvance();
+      store.markStepComplete();
+      store.consumePendingAdvance();
+      const s = useQuestRunStore.getState();
+      expect(s.stepIndex).toBe(3);
+      expect(s.skippedSteps).toEqual([]);
+      expect(s.totalCount).toBe(1);
+    });
+
+    it('one perfect game and one skip is 2 stars, not 3', () => {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('q', 'e', 1);
+      for (let i = 0; i < 4; i += 1) store.answerRound(i, true);
+      store.goNextStep();
+      store.markStepSkipped();
+      store.goNextStep();
+      store.answerRound(0, true);
+      store.answerRound(1, true);
+      expect(useQuestRunStore.getState().stars(steps)).toBe(2);
+      // Without the steps a noted skip still caps at 2.
+      expect(useQuestRunStore.getState().stars()).toBe(2);
+    });
+
+    it('every game skipped and a perfect Check is 1 star', () => {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('q', 'e', 1);
+      store.markStepSkipped();
+      store.goNextStep();
+      store.markStepSkipped();
+      store.goNextStep();
+      store.answerRound(0, true);
+      store.answerRound(1, true);
+      expect(useQuestRunStore.getState().stars(steps)).toBe(1);
+    });
+
+    it('a run with no skip keeps its stars, and the cap never raises them', () => {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('q', 'e', 1);
+      store.answerRound(0, true);
+      expect(useQuestRunStore.getState().stars(steps)).toBe(3);
+      store.goNextStep();
+      store.markStepSkipped();
+      for (let i = 0; i < 9; i += 1) store.answerRound(i, false);
+      expect(useQuestRunStore.getState().stars(steps)).toBe(0);
+    });
+
+    it('a new run and a reset forget the skips', () => {
+      const store = useQuestRunStore.getState();
+      store.beginQuest('q', 'e', 1);
+      store.markStepSkipped();
+      store.beginQuest('q', 'e');
+      expect(useQuestRunStore.getState().skippedSteps).toEqual([]);
+      store.markStepSkipped();
+      store.reset();
+      expect(useQuestRunStore.getState().skippedSteps).toEqual([]);
+    });
+  });
+
   it('reset clears all run state', () => {
     const { beginQuest, answerRound, reset } = useQuestRunStore.getState();
     beginQuest('q', 'e');
