@@ -3,7 +3,7 @@ import { cors } from 'hono/cors';
 import { allowedOrigin } from './lib/cors';
 import { adminInviteRoutes, adminSpaceRoutes } from './routes/admins';
 import { nativeAccountSwitch } from './lib/native-client';
-import { healthReport, type RuntimeEnv } from './lib/runtime';
+import { environmentName, healthReport, type RuntimeEnv } from './lib/runtime';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
 import { recoveryRoutes } from './routes/recovery';
@@ -29,7 +29,8 @@ const app = new Hono<{ Bindings: RuntimeEnv }>();
 app.use(
   '/api/*',
   cors({
-    origin: (origin, c) => allowedOrigin(origin, c.env?.ALLOWED_ORIGINS) ?? '',
+    // [AU] AU-4: localhost and workers.dev pass only outside production (ENVIRONMENT unset = production).
+    origin: (origin, c) => allowedOrigin(origin, c.env?.ALLOWED_ORIGINS, environmentName(c.env)) ?? '',
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // PATCH: console space settings (BUG-1)
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,

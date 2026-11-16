@@ -281,9 +281,19 @@ describe('POST /api/waitlist · CORS and privacy', () => {
     expect(res.headers.get('access-control-allow-headers')?.toLowerCase()).toContain('content-type');
   });
 
-  it('allows localhost and workers.dev previews while ALLOWED_ORIGINS is unset', async () => {
-    for (const origin of ['http://localhost:3000', 'http://127.0.0.1:4173', 'https://hangul-route-web.sungjoo420.workers.dev']) {
-      expect((await preflight(origin)).headers.get('access-control-allow-origin'), origin).toBe(origin);
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-4: the leniency is for non-production deployments only.
+  const PREVIEW_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:4173', 'https://hangul-route-web.sungjoo420.workers.dev'];
+
+  it('allows localhost and workers.dev previews while ALLOWED_ORIGINS is unset, outside production', async () => {
+    for (const origin of PREVIEW_ORIGINS) {
+      expect((await preflight(origin, { ENVIRONMENT: 'development' })).headers.get('access-control-allow-origin'), origin).toBe(origin);
+    }
+  });
+
+  it('refuses localhost and workers.dev previews in production (ENVIRONMENT unset or "production")', async () => {
+    for (const origin of PREVIEW_ORIGINS) {
+      expect((await preflight(origin)).headers.get('access-control-allow-origin'), origin).toBeNull();
+      expect((await preflight(origin, { ENVIRONMENT: 'production' })).headers.get('access-control-allow-origin'), origin).toBeNull();
     }
   });
 
