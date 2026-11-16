@@ -28,6 +28,9 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'logic/lessons/lesson-store.ts': 'the store itself',
   'logic/minigame-config.ts': 'scopeFor delegates to the store; its callers (the game screen, lecture) wait for the chunk',
   'logic/my-route/skills.ts': 'My Route and the reports count through useLessonContentVersion',
+  'logic/quest-flow/quest-player-ports.ts':
+    '[AU] AU-12: start() compares a saved run with the quest steps; QuestPlayerView calls it when its run begins, behind useLessonQuestReady',
+  'logic/quest-flow/saved-run.ts': '[AU] AU-12: pure; its one caller is start() above. Steps read before the chunk would not match the saved signature, and the run starts fresh',
   'logic/sentence-builder/view.ts': 'the game screen, behind useLessonQuestReady',
   'logic/stage1/curriculum.ts': 'a lesson quest reads LESSON_TEACHES from the manifest (questTeaches); steps only for Stage 1',
   'logic/story-order/fallback.ts': 'not a quest: the steps of the Story Sequence round a Story Order round falls back to (row CM-34)',
@@ -37,9 +40,12 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'screens/guest/GuestQuestPlayer.tsx': 'reads quest 1 steps once its run began, which QuestPlayerView starts behind useLessonQuestReady',
   'screens/minigames/MinigameScreen.tsx': 'behind useLessonQuestReady',
   'screens/presenter/slides/SequenceSlide.tsx': 'not a quest: a lecture slide',
+  'screens/quest/QuestPlayerScreen.tsx': '[AU] AU-12: hands keepRunSaved a reader that is called only when a run begins or its step changes, after QuestPlayerView began the run',
   'screens/quest/QuestPlayerView.tsx': 'behind useLessonQuestReady',
   'screens/quest/quest-pacing-chunk.tsx': 'called by QuestPlayerView once its run began, behind useLessonQuestReady (row CM-24)',
   'screens/story/use-reader-audio.ts': 'not a quest: a story reader step list',
+  'store/quest-run-saved.ts': '[AU] AU-12: reads the steps through the reader above, at a save, after the run began',
+  'store/quest-run-store.ts': 'not a quest: the list of skipped step numbers of the run ([AU] AU-9)',
 };
 
 const SRC = join(__dirname, '..', '..', '..');
