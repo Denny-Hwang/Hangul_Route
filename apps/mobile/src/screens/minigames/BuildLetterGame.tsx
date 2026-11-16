@@ -40,7 +40,7 @@ import { useMessages } from '../../i18n/use-messages';
 import { blockShape, removeLastTile, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildBuildLetterRounds, type BuildLetterRound } from '../../logic/round-builder';
-import { playPrompt } from '../../platform/audio';
+import { hasClipFor, playPrompt } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -79,7 +79,13 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
   const hintCell = useMediaSize(HINT_CELL);
   const tile = useMediaSize(touchTarget.child);
   // The syllable is printed in the box, so that is its text; the panel only says why it is silent (F-AUDIO-004 A-5b).
-  const slot = usePromptSlot({ source: 'build-letter', textOnScreen: true });
+  // [AU] AU-13: the speaker plays the syllable's recorded say clip first (`playPrompt`, AMENDMENTS-AUDIO-CLIPS AC-B7), so
+  // the slot is told when there is one: a device with no Korean voice then never says "No Korean voice" over a clip.
+  const slot = usePromptSlot({
+    source: 'build-letter',
+    hasClip: round !== undefined && hasClipFor({ text: round.targetSyllable }),
+    textOnScreen: true,
+  });
   const { play, reset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
   const tapLock = useTapLock();
