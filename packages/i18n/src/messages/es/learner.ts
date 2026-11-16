@@ -591,7 +591,7 @@ export const learner = {
       done: { cta: 'Listo' },
       idle: 'Dibuja la letra despacio. Levanta el dedo para terminar.',
       pass: {
-        order: '¡Lo lograste! La próxima vez, empieza por la línea de arriba.',
+        order: '¡Lo lograste! La próxima vez, dibuja los trazos en orden. Toca Muéstrame para verlo.',
         open: '¡Bien! La próxima vez, dibuja de izquierda a derecha.',
         loop: '¡Bien! La próxima vez, da la vuelta hacia el otro lado.',
         clean: '¡Precioso! Se ve igual que la letra.',

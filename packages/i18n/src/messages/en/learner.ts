@@ -832,7 +832,7 @@ export const learner = {
       idle: 'Slowly draw the letter. Lift your finger to finish.',
       /** After a pass: the order nudge wins, then an open-stroke direction nudge, then a loop one, else praise. */
       pass: {
-        order: 'You got it! Next time, try drawing the top line first.',
+        order: 'You got it! Next time, try the strokes in the right order. Tap Show me to see.',
         open: 'Nice! Try drawing left-to-right next time.',
         loop: 'Nice! Next time, try going around the other way.',
         clean: 'Beautiful! That looks like the letter.',

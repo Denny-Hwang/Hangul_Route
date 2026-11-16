@@ -68,7 +68,7 @@ function signedArea(stroke: JamoStrokePoint[]): number {
   return twice / 2;
 }
 
-/** A loop (ㅁ ㅇ ㅎ's circle) ends where it starts, so its chord is ~zero. */
+/** A loop (ㅇ, ㅎ's circle) ends where it starts, so its chord is ~zero. */
 function isClosedStroke(stroke: JamoStrokePoint[], tolerance: number): boolean {
   return stroke.length >= 3 && distSq(stroke[0]!, stroke[stroke.length - 1]!) <= tolerance * tolerance;
 }
@@ -128,7 +128,7 @@ export interface ScoreTraceResult {
   /** F-006: per-target whether the matching drawn stroke ran the right way. */
   directionsPerTarget?: boolean[];
   /**
-   * F-006: per target, whether it is a closed loop (ㅁ ㅇ ㅎ...). Loops are
+   * F-006: per target, whether it is a closed loop (ㅇ, ㅎ's ring). Loops are
    * judged by winding, not left-to-right, so the UI must not give them the
    * left-to-right nudge. Parallel to `directionsPerTarget`.
    */

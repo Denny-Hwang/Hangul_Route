@@ -13,7 +13,7 @@ import type { ScoreTraceResult } from './stroke-scoring';
 /**
  * Which direction nudge, if any, a pass earns:
  * - `open`: an open stroke (a line, a tick) ran the wrong way, so "left to right" applies.
- * - `loop`: only closed loops (ㅁ ㅇ ㅎ) went round the other way. A loop has no
+ * - `loop`: only closed loops (ㅇ, ㅎ's ring) went round the other way. A loop has no
  *   left-to-right, so it must never get that hint.
  * - `none`: nothing to say.
  * An open-stroke mismatch wins over a loop one, because it is the more actionable.

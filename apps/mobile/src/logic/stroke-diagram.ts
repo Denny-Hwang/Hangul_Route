@@ -184,7 +184,7 @@ export function describeStroke(stroke: readonly JamoStrokePoint[], copy: StrokeO
   if (stroke.length < 2 || total === 0) return copy.dot;
   const first = stroke[0]!;
   const last = stroke[stroke.length - 1]!;
-  // Ends where it starts: a ring (ㅇ, ㅁ), or an out-and-back line.
+  // Ends where it starts: a ring (ㅇ, ㅎ's), or an out-and-back line.
   if (Math.hypot(last.x - first.x, last.y - first.y) < total * 0.1) return copy.loop;
 
   const legs: Array<{ direction: Direction; length: number }> = [];
