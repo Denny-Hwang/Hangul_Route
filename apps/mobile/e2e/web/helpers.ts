@@ -131,8 +131,10 @@ export function waitForSaved(page: Page, keys: string[]): Promise<unknown> {
  * Resolves once a saved run of `questId` at `stepIndex` (0 is the intro) is in IndexedDB, so a reload that follows
  * finds that step and does not race the async write.
  */
-export function waitForSavedRunStep(page: Page, questId: string, stepIndex: number): Promise<unknown> {
-  return page.waitForFunction(
+export async function waitForSavedRunStep(page: Page, questId: string, stepIndex: number): Promise<void> {
+  // A poll over page.evaluate: waitForFunction takes a predicate's pending promise as a truthy value.
+  const saved = (): Promise<boolean> =>
+    page.evaluate(
     ({ quest, step }) =>
       new Promise<boolean>((resolve) => {
         const open = indexedDB.open('keyval-store');
@@ -169,6 +171,7 @@ export function waitForSavedRunStep(page: Page, questId: string, stepIndex: numb
       }),
     { quest: questId, step: stepIndex },
   );
+  await expect.poll(saved, { timeout: 15_000 }).toBe(true);
 }
 
 /** The "Who is learning?" cards (F-LEARN-001 §3.15.2): "Me", or someone a grown-up looks after. */
