@@ -580,12 +580,22 @@ async function recordClipStarts(page: Page): Promise<void> {
 const clipStarts = async (page: Page): Promise<number> =>
   (await page.evaluate(() => (window as ClipWindow).__clipStarts ?? [])).filter((d) => d > 0.1).length;
 
-/** One online visit until the service worker controls the page. */
+/**
+ * One online visit until the service worker controls the page. Polled with `page.evaluate`, as offline.spec and
+ * app-host.spec do: `waitForFunction` does not wait for an async predicate (the promise it returns is already
+ * truthy), so it came back while the worker was still installing and a fetch made right after went past it.
+ */
 async function controlledBySw(page: Page): Promise<void> {
-  await page.waitForFunction(async () => {
-    const reg = await navigator.serviceWorker.getRegistration();
-    return !!reg?.active && !!navigator.serviceWorker.controller;
-  });
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const reg = await navigator.serviceWorker.getRegistration();
+          return !!reg?.active && !!navigator.serviceWorker.controller;
+        }),
+      { timeout: 30_000 },
+    )
+    .toBe(true);
 }
 
 /**
