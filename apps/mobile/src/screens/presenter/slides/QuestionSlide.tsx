@@ -5,7 +5,7 @@ import { Text, View } from 'react-native';
 import type { BuildName, SpokenLine } from '../../../logic/lecture/build-steps';
 import type { Slide } from '../../../logic/lecture/deck-builder';
 import { units } from '../../../logic/lecture/stage-constants';
-import { optionLayout, optionRomShown } from '../../../logic/lecture/tools';
+import { optionLayout, optionRomShown, quizOptionRomanization } from '../../../logic/lecture/tools';
 import { STAGE_BORDER, STAGE_BORDER_MIN, STAGE_GAP_INNER, STAGE_RADIUS } from '../stage-metrics';
 import { TaughtKo, usePresenterView, useStageText } from '../presenter-context';
 import { AnswerLine, OptionRows, QuizOptions } from './QuizParts';
@@ -77,7 +77,8 @@ export function QuestionSlide({
   const say = listen && (sayIt || slide.textPrompt);
   // In the text variant the Say it box shows the prompt's romanization: the options' romanization waits for the
   // answer build there (as with `romanization: 'tap'`), so the room cannot answer by matching letters.
-  const optionRom: RomanizationMode = say ? 'tap' : romanization;
+  // A quest Check's listen question holds it for the answer build too (AMENDMENTS-AUDIT-2026-11 AU-8), as the learner's Check does.
+  const optionRom: RomanizationMode = say ? 'tap' : quizOptionRomanization(romanization, slide);
   const promptSize = size(presenter.size.prompt);
   const gap = units(unit, spacing.md);
   return (

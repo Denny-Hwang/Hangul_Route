@@ -54,6 +54,17 @@ describe('koreanTextView (what the component draws)', () => {
     expect(koreanTextView({ ...base, romanizationShown: undefined }).showRomanization).toBe(true);
   });
 
+  it('romanizationReserved keeps the hidden line\'s room, and only a hidden, non-empty line (AU-8)', () => {
+    expect(koreanTextView(base).reserveRomanization).toBe(false);
+    expect(koreanTextView({ ...base, romanizationShown: false }).reserveRomanization).toBe(false);
+    const held = koreanTextView({ ...base, romanizationShown: false, romanizationReserved: true });
+    expect(held).toMatchObject({ showRomanization: false, reserveRomanization: true, showGloss: true });
+    // The accessible name keeps the romanization (a screen-reader user needs it).
+    expect(held.label).toBe('강아지, gangaji');
+    expect(koreanTextView({ ...base, romanizationReserved: true })).toMatchObject({ showRomanization: true, reserveRomanization: false });
+    expect(koreanTextView({ ...base, romanization: '', romanizationShown: false, romanizationReserved: true }).reserveRomanization).toBe(false);
+  });
+
   it('draws no romanization line for an empty romanization, shown or not', () => {
     expect(koreanTextView({ ...base, romanization: '' }).showRomanization).toBe(false);
     expect(koreanTextView({ ...base, romanization: '  ' }).showRomanization).toBe(false);

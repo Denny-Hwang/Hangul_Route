@@ -654,7 +654,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       }
       // The question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV-S2): one slide per round of the content.
       case 'listen-pick':
-        listenStep(path, ref, validRounds(scope));
+        listenStep(path, ref, validRounds(scope), stepKind === 'check');
         return;
       case 'tap-respond':
         replyStep(path, ref, listOf(scope.dialogue));
@@ -768,7 +768,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
    * round's options are pictures named by their labels. The prompt is played (Sound, the stage
    * speaker) or, with no Korean voice or sound off, read by the teacher (`textPrompt`, section 3.7).
    */
-  const listenStep = (path: string, ref: string, rounds: readonly ListenPickRound[]): void => {
+  const listenStep = (path: string, ref: string, rounds: readonly ListenPickRound[], check = false): void => {
     if (rounds.length === 0) {
       skip(ref, 'scope-too-small');
       return;
@@ -804,6 +804,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
           : { ask: 'listen', line: spokenLine(round.prompt), speech, ...(reply ? { reply: true as const } : {}) },
         options: shuffleSeeded(options, seed()),
         textPrompt: textPrompt && !round.promptShown,
+        // AU-8: the Check's options keep their romanization for the answer build (a shown prompt plays no sound to match).
+        ...(check && !round.promptShown ? { holdRomanization: true as const } : {}),
       });
     });
   };

@@ -1,4 +1,5 @@
-import type { ReactElement } from 'react';
+import { Children, isValidElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { KoreanText } from '../KoreanText';
 
@@ -34,5 +35,32 @@ describe('KoreanText speaker press guard (AMENDMENTS-TOUCH 6.9, row KT-9)', () =
 
   it('a KoreanText with no handler is not a button', () => {
     expect(speaker().type).toBe('View');
+  });
+});
+
+/** Every element of a tree, depth first. */
+function all(el: El): El[] {
+  const kids = Children.toArray(el.props.children as ReactNode).filter((k): k is El => isValidElement(k));
+  return [el, ...kids.flatMap((k) => all(k))];
+}
+
+const romanizationLine = (el: El): El | undefined => all(el).find((e) => e.type === 'Text' && e.props.children === 'namu');
+
+describe('KoreanText reserved romanization line (AMENDMENTS-AUDIT-2026-11 AU-8)', () => {
+  it('shown: the line is drawn and announced', () => {
+    const line = romanizationLine(KoreanText({ ko: '나무', romanization: 'namu' }) as El);
+    expect((line?.props.style as Record<string, unknown>).opacity).toBe(1);
+    expect(line?.props['aria-hidden']).toBeUndefined();
+  });
+
+  it('hidden: no line at all', () => {
+    expect(romanizationLine(KoreanText({ ko: '나무', romanization: 'namu', romanizationShown: false }) as El)).toBeUndefined();
+  });
+
+  it('reserved: the same line keeps its room, invisible and off the accessibility tree', () => {
+    const line = romanizationLine(KoreanText({ ko: '나무', romanization: 'namu', romanizationShown: false, romanizationReserved: true }) as El);
+    expect(line).toBeDefined();
+    expect((line?.props.style as Record<string, unknown>).opacity).toBe(0);
+    expect(line?.props).toMatchObject({ 'aria-hidden': true, accessibilityElementsHidden: true, importantForAccessibility: 'no', selectable: false });
   });
 });

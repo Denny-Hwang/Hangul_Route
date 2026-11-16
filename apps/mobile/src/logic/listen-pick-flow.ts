@@ -236,6 +236,11 @@ export interface OptionView {
   ko: string | undefined;
   /** Empty string draws no line (ChoiceCard). */
   romanization: string;
+  /**
+   * A quest Check's open question (AMENDMENTS-AUDIT-2026-11 AU-8): the romanization that is held back until the
+   * question is answered. The card keeps its line's room and draws nothing; '' when nothing is held.
+   */
+  heldRomanization: string;
   label: string | undefined;
   pictureRef: string | undefined;
   /** English gloss of a picture: its text fallback and accessible name. */
@@ -251,6 +256,22 @@ export interface OptionViewContext {
    * with the letter names, because its options may sound the same. Default: the Korean and its shown romanization.
    */
   labelOf?: (text: { ko: string; romanization: string }) => string;
+  /**
+   * A quest Check that plays a sound (`checkHoldsRomanization`, AU-8): no option shows its romanization while the
+   * question is open, so the sound cannot be matched to Latin letters; every line the learner's mode shows comes at
+   * the answer. The accessible name is unchanged. Absent: unchanged.
+   */
+  holdRomanization?: boolean;
+}
+
+/**
+ * AMENDMENTS-AUDIT-2026-11 AU-8 (audit EDU-3; owner decision 2026-11-15): the quest Check ("Quick check") holds its
+ * options' romanization until the question is answered. Only the Check that plays its prompt: a text prompt round
+ * (Read Pick Meaning, the Cloze Pick fallback) says nothing before the answer, so there is no sound to match. Practice
+ * steps, the Hangul Check (its own "hide the romanization" switch), vocabulary and previews of other steps are not it.
+ */
+export function checkHoldsRomanization(mode: HostMode, textPrompt: boolean): boolean {
+  return mode === 'check' && !textPrompt;
 }
 
 function cardStateOf(round: ListenPickRound, option: ListenPickOption, state: ListenPickFlowState, mode: HostMode): OptionCardState {
@@ -280,16 +301,20 @@ export function optionView(
   if (isPicture) {
     const label = option.labelEn ?? option.text?.en;
     const gloss = label ?? a11y.picture;
-    view = { id: option.id, cardState, ko: undefined, romanization: '', label, pictureRef: option.pictureRef, gloss };
+    view = { id: option.id, cardState, ko: undefined, romanization: '', heldRomanization: '', label, pictureRef: option.pictureRef, gloss };
     base = gloss;
   } else {
     const text = option.text!;
+    // What the learner's mode shows (`tap`, the stricter one: only a touched option), and what the name says.
     const romanization = context.romanizationMode === 'always' || touched ? text.romanization : '';
+    // AU-8: an open Check question shows none of it, a missed option's included; it all comes with the answer.
+    const held = context.holdRomanization === true && state.status === 'asking';
     view = {
       id: option.id,
       cardState,
       ko: text.ko,
-      romanization,
+      romanization: held ? '' : romanization,
+      heldRomanization: held ? romanization : '',
       label: undefined,
       pictureRef: undefined,
       gloss: undefined,

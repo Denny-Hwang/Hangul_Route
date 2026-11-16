@@ -16,6 +16,11 @@ export interface ChoiceCardProps {
   ko?: string;
   /** Revised Romanization for `ko`; an empty string (the default) draws no line. */
   romanization?: string;
+  /**
+   * `true` keeps the romanization line's room but draws it invisible and unannounced (`KoreanText`
+   * `romanizationReserved`): an open question of a quest Check (AMENDMENTS-AUDIT-2026-11 AU-8). Default `false`.
+   */
+  romanizationReserved?: boolean;
   /** Meaning of `ko` in the UI language. */
   gloss?: string;
   /** Picture slot above the texts. Absent or `null`: the texts alone. */

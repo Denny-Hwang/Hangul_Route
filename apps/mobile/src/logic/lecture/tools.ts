@@ -61,6 +61,15 @@ export function optionRomShown(romanization: RomanizationMode, revealed: boolean
   return romanization === 'always' || revealed;
 }
 
+/**
+ * The romanization mode a quiz slide's options follow. A quest Check's listen question holds them for the answer
+ * build (`holdRomanization`, AMENDMENTS-AUDIT-2026-11 AU-8), which is what `tap` already does; any other slide
+ * follows the deck's mode (the live Shift+R flip included).
+ */
+export function quizOptionRomanization(deckMode: RomanizationMode, slide: { holdRomanization?: true }): RomanizationMode {
+  return slide.holdRomanization === true ? 'tap' : deckMode;
+}
+
 /** What one option card draws, and at which presenter size (slide-quiz.md "Options"). */
 export interface OptionContent {
   ko: { text: string; romanization?: string; size: 'display' | 'prompt' } | null;

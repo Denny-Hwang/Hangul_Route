@@ -18,6 +18,7 @@ The design system has no copy and no i18n dependency. The caller passes already-
 | `label` | `string?` | Option text (English or any UI language). Wraps, left-aligned |
 | `ko` | `string?` | Taught Hangul. Drawn with `KoreanText` (size `sm`) |
 | `romanization` | `string?` | Passed to `KoreanText` (empty string draws no line). Required by `KoreanText` when `ko` is set; defaults to `''` |
+| `romanizationReserved` | `boolean?` | `true`: the romanization line keeps its room but is not drawn or announced (`KoreanText` `romanizationReserved`); the open question of a quest Check (AMENDMENTS-AUDIT-2026-11 AU-8). Default `false` |
 | `gloss` | `string?` | Passed to `KoreanText` |
 | `art` | `ReactNode?` | Picture slot above the texts (SVG from F-STORY-002). Absent or `null`: the texts alone, never a broken image |
 | `state` | `'idle' \| 'correct' \| 'wrong' \| 'hint' \| 'disabled'` | See States |

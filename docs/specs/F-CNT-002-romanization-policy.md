@@ -25,6 +25,8 @@ What exists today (verified in the working tree on 2026-10-10; the audit's rule-
 
 Binding: **D13** (Revised Romanization of the National Institute of Korean Language, unhyphenated, pronunciation-based; hyphens only to show syllable splits in teaching UI), **D4** (the validator scans what ships), **D2** (romanization is visible by default; the "hide until tap" setting is F-I18N-001's).
 
+> **[AU] Amended 2026-11-15 by `docs/specs/AMENDMENTS-AUDIT-2026-11.md` AU-8** (audit EDU-3): one display exception. The answer options of a quest Check show no romanization while the question is open and show it once the question is answered; the accessible label keeps it. The data rule is unchanged: every taught Korean string still carries its romanization and the validator still requires it.
+
 Made in this spec:
 
 | # | Decision | Why |

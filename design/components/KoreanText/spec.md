@@ -18,6 +18,7 @@ The design system has no copy and no i18n dependency. The caller passes the alre
 | `gloss` | `string` | - | Meaning in the UI language. Never hidden with the romanization |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Hangul size tier |
 | `romanizationShown` | `boolean` | `true` | `false` hides only the romanization line (reading-practice opt-in, D2) |
+| `romanizationReserved` | `boolean` | `false` | With `romanizationShown: false`: the line keeps its room, drawn at opacity 0 and hidden from assistive tech (as the presenter's quiz options do), so nothing moves when it is shown. Used by a quest Check's open question (AMENDMENTS-AUDIT-2026-11 AU-8) |
 | `onPress` | `() => void` | - | Makes the item a button and shows the speaker icon (play audio / reveal) |
 | `accessibilityLabel` | `string` | `"<ko>, <romanization>"` | Caller supplies the localised "Korean: ..." / "한글: ..." label |
 | `testID` | `string` | - | |
@@ -73,6 +74,7 @@ No new token. If review prefers another chip colour, it goes through the design-
 |---|---|
 | default | chip + romanization + gloss |
 | romanization hidden | chip + gloss (no romanization line) |
+| romanization reserved | chip + an empty line of the romanization's height + gloss (AU-8) |
 | pressable | adds the speaker icon next to the romanization (or under the chip when it is hidden); pressed scale 1.04 (its own press look; `Tile` moved to the AMENDMENTS-TOUCH 4.3 press look in KT-2, and this speaker's press handling is row KT-9's: a `GuardedPressable` with `setsLock={false}` drops its own bounce and waits for the app-level tap lock without setting it, and `delayPressIn` is 0, AMENDMENTS-TOUCH 6.9) |
 | no gloss | chip + romanization only |
 | long gloss | wraps to more lines; chip never grows |

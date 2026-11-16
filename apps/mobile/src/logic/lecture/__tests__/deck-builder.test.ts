@@ -2231,6 +2231,18 @@ describe('expandDeck: the question slides (AMENDMENTS-LECTURE-V2 section 5.1, LV
     for (const q of [...quizzes(run(asked.id).slides, 'listen'), ...quizzes(run(sheetFirst.id).slides, 'listen')]) expect(q.prompt).not.toHaveProperty('reply');
   });
 
+  it("listen: the Check's questions hold their options' romanization for the answer; a practice step's and a shown prompt's do not (AU-8)", () => {
+    const checks = [...quizzes(run(asked.id).slides, 'listen'), ...quizzes(run(sheetFirst.id).slides, 'listen'), ...quizzes(run(replyCheck.id).slides, 'listen')];
+    expect(checks.length).toBeGreaterThan(3);
+    expect(checks.every((q) => q.holdRomanization === true)).toBe(true);
+    // The options still carry their romanization: only the stage holds it back.
+    expect(checks.flatMap((q) => q.options).filter((o) => o.ko !== undefined).every((o) => o.romanization !== undefined)).toBe(true);
+    const practised = quest('practised', [['practice', 'mg:lp'], ['apply', 'mg:lp-sym']], { rewardCardId: undefined });
+    const practice = quizzes(run(practised.id, {}, VOICE, b({ questById: (id) => (id === practised.id ? practised : undefined) })).slides, 'listen');
+    expect(practice.length).toBeGreaterThan(1);
+    expect(practice.some((q) => 'holdRomanization' in q)).toBe(false);
+  });
+
   it('listen: a picture round names each picture by its label and plays at the word rate', () => {
     const [, pictures] = quizzes(run(asked.id).slides, 'listen');
     expect(pictures!.prompt).toMatchObject({ ask: 'listen', line: { ko: '우유', gloss: 'milk' }, speech: 'word' });
