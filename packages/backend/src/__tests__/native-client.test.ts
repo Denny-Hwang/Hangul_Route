@@ -86,7 +86,8 @@ function expectStatusView(summary: BillingSummary) {
   expect(summary.cards[0]).toMatchObject({ spaceId: fam, kind: 'family', name: 'Kim family', role: 'owner', payer: false, readOnlyReason: null });
   expect(summary.cards[0]?.coverage).toEqual({ state: 'own', planKey: 'family_lifetime', status: 'active', expiresAt: null, statusSince: expect.any(String), endsAtPeriodEnd: false });
   expect(summary.cards[0]?.usage).not.toBeNull();
-  expect(JSON.stringify(summary)).not.toMatch(/1530|amountCents|currency|usd|in_1|pi_1|cus_|sub_/);
+  // Record ids are random letters and digits ([AU] AMENDMENTS-AUDIT-2026-11 AU-6) and can spell "usd" or "1530" by chance: left out of the check.
+  expect(JSON.stringify(summary).replace(/\b[a-z]+:[0-9a-z]{12}\b/g, '')).not.toMatch(/1530|amountCents|currency|usd|in_1|pi_1|cus_|sub_/);
 }
 
 describe('GET /api/billing/summary: the status view (section 8.5)', () => {

@@ -187,7 +187,8 @@ describe('GET /api/billing/summary: one card per persona (section 4.2)', () => {
     expect(c).toMatchObject({ role: 'caregiver', payer: false, readOnlyReason: 'family', actions: { buy: null, manage: false, contact: false }, receipts: [], hasReceipts: false, legacyNoHistory: false });
     // Viewers get the learner count only, never the plan's limit (section 5.3).
     expect(c.usage).toEqual({ learners: 3, learnerCap: null, teachers: null, teacherCap: null });
-    expect(JSON.stringify(c)).not.toMatch(/amountCents|1530/);
+    // Record ids are random ([AU] AMENDMENTS-AUDIT-2026-11 AU-6) and can hold "1530" by chance: left out of the check.
+    expect(JSON.stringify(c).replace(/\b[a-z]+:[0-9a-z]{12}\b/g, '')).not.toMatch(/amountCents|1530/);
   });
 
   it('owner, free stand-alone class: the free student cap and the Group License to buy', async () => {
