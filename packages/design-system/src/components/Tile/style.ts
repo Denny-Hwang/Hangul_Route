@@ -31,7 +31,8 @@ export interface TileStyle {
 const LOOKS: Record<TileState, Omit<TileStyle, 'romanizationColor'>> = {
   idle: {
     backgroundColor: colors.surface.paper,
-    borderColor: colors.border.subtle,
+    // [AU] AU-17e (audit A11Y-4): an answer tile's boundary is a UI graphic, 3:1 on its fill and on the canvas around it.
+    borderColor: colors.border.shape,
     labelColor: colors.text.primary,
     mark: null,
   },

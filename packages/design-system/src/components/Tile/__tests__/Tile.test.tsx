@@ -68,7 +68,7 @@ describe('Tile (AMENDMENTS-TOUCH 4.4, row KT-2)', () => {
 
   it('at rest: the state border and no transform, with the card shadow', () => {
     const style = box({ state: 'idle' }, false).props.style as Props;
-    expect(style).toMatchObject({ borderColor: colors.border.subtle, borderWidth: borderWidth.base, ...shadows.card });
+    expect(style).toMatchObject({ borderColor: colors.border.shape, borderWidth: borderWidth.base, ...shadows.card });
     expect(style.transform).toBeUndefined();
     expect((box({ state: 'wrong' }, false).props.style as Props).borderColor).toBe(colors.feedback.nudge);
   });

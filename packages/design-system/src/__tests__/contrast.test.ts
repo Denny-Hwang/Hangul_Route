@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WCAG_AAA_NORMAL, WCAG_AA_LARGE, WCAG_AA_NORMAL, compositeOver, contrastRatio, relativeLuminance } from '../contrast';
 import presenterDoc from '../../../../design/tokens/presenter.v1.md?raw';
+import { CHOICE_CARD_STATES, choiceCardStyle } from '../components/ChoiceCard/style';
 import { PILL_TONES, pillStyle } from '../components/Pill/style';
 import { TILE_STATES, tileStyle } from '../components/Tile/style';
 import { HOYA_VARIANTS, colors, hoyaVariantColors, presenter } from '../tokens';
@@ -218,6 +219,40 @@ describe('token contrast contract (WCAG AA)', () => {
     expect(contrastRatio(look.labelColor, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
     expect(look.mark).not.toBeNull();
     expect(contrastRatio(look.mark!.color, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-17e (audit A11Y-4, WCAG 1.4.11): the boundary of an idle answer tile and of an idle
+  // option card is a UI graphic. It must read against its own fill and against each surface the tile sits on
+  // (`border.subtle` was 1.32:1 on paper). Text inputs in the app use the same token on paper and sunken fills.
+  it.each([
+    ['Tile idle', tileStyle('idle')],
+    ['ChoiceCard idle', choiceCardStyle('idle')],
+  ] as const)('%s: the boundary ≥ 3:1 on its fill and on canvas, paper and sunken (non-text)', (_name, look) => {
+    expect(look.borderColor).toBe(colors.border.shape);
+    for (const bg of [look.backgroundColor, ...Object.values(surfaces)]) {
+      expect(contrastRatio(look.borderColor, bg), bg).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    }
+  });
+
+  // With a stronger idle boundary, no answered or hinted state may rest on its border colour: each differs from idle by
+  // its fill, its mark or its border width as well (the borders themselves are close: success 1.15:1, focus 1.06:1).
+  it('ChoiceCard: every other state differs from idle by more than its border colour', () => {
+    const idle = choiceCardStyle('idle');
+    for (const state of CHOICE_CARD_STATES.filter((s) => s !== 'idle')) {
+      const look = choiceCardStyle(state);
+      const cues = [look.backgroundColor !== idle.backgroundColor, look.mark !== null, look.borderWidth !== idle.borderWidth];
+      expect(cues.some(Boolean), state).toBe(true);
+    }
+  });
+
+  it('Tile: every other state differs from idle by more than its border colour', () => {
+    const idle = tileStyle('idle');
+    for (const state of TILE_STATES.filter((s) => s !== 'idle')) {
+      const look = tileStyle(state);
+      expect(look.backgroundColor !== idle.backgroundColor || look.mark !== null, state).toBe(true);
+      // The fill itself is told from idle paper by the label or mark on it, never by the tint alone.
+      expect(look.labelColor !== idle.labelColor || look.mark !== null, state).toBe(true);
+    }
   });
 
   it('Tile: every colour a state paints is a colour token (no literal)', () => {

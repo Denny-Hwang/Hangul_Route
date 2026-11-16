@@ -184,7 +184,7 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
 
   it('not pressed: the state\'s own border and no shrink (hint keeps its thick focus ring)', () => {
     const idle = body({ state: 'idle', label: 'apple' }).props.style as Props;
-    expect(idle).toMatchObject({ borderColor: colors.border.subtle, borderWidth: borderWidth.base });
+    expect(idle).toMatchObject({ borderColor: colors.border.shape, borderWidth: borderWidth.base });
     expect(idle.transform).toBeUndefined();
     expect(body({ state: 'hint', label: 'apple' }).props.style).toMatchObject({ borderColor: colors.border.focus, borderWidth: borderWidth.thick });
   });

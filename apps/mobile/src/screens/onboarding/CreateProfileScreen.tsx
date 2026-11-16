@@ -71,13 +71,18 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'CreateProfile'>;
 
 const CHECKBOX_SIZE = spacing.xl + spacing.xs;
 
-/** A text field: `fontSize` is the chosen text size's bodyLg (`useTypeScale`). */
-const fieldStyle = (borderColor: string, fontSize: number) =>
+/**
+ * A text field: `fontSize` is the chosen text size's bodyLg (`useTypeScale`).
+ * [AU] AMENDMENTS-AUDIT-2026-11 AU-17e (audit A11Y-4): its boundary is `border.shape` (4.55:1 on paper; `border.subtle`
+ * was 1.32:1, WCAG 1.4.11). A field whose line says it needs another look keeps that border and thickens it, as the
+ * sign-in fields do (F-AUTH-004 D5): the amber border was 1.86:1, weaker than the idle one.
+ */
+const fieldStyle = (fontSize: number, invalid = false) =>
   ({
     backgroundColor: colors.surface.paper,
     borderRadius: radii.lg,
-    borderWidth: borderWidth.base,
-    borderColor,
+    borderWidth: invalid ? borderWidth.thick : borderWidth.base,
+    borderColor: colors.border.shape,
     paddingHorizontal: spacing.lg,
     minHeight: touchTarget.child,
     fontSize,
@@ -457,7 +462,7 @@ export function CreateProfileScreen({ navigation, route }: Props): ReactElement 
         {...(description === undefined ? {} : { accessibilityHint: description })}
         maxLength={NAME_MAX}
         autoCapitalize="words"
-        style={fieldStyle(colors.border.subtle, textScale.size.bodyLg)}
+        style={fieldStyle(textScale.size.bodyLg)}
       />
       {hint !== null && (
         <>
@@ -616,7 +621,7 @@ export function CreateProfileScreen({ navigation, route }: Props): ReactElement 
                 autoCapitalize="none"
                 autoCorrect={false}
                 maxLength={254}
-                style={fieldStyle(emailOk ? colors.border.subtle : colors.feedback.nudge, textScale.size.bodyLg)}
+                style={fieldStyle(textScale.size.bodyLg, !emailOk)}
               />
               {!emailOk ? (
                 <>

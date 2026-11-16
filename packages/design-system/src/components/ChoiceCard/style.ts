@@ -40,7 +40,10 @@ type StateLook = Pick<ChoiceCardStyle, 'backgroundColor' | 'borderColor' | 'bord
 const LOOKS: Record<ChoiceCardState, StateLook> = {
   idle: {
     backgroundColor: colors.surface.paper,
-    borderColor: colors.border.subtle,
+    // [AU] AMENDMENTS-AUDIT-2026-11 AU-17e (audit A11Y-4): an option's boundary is a UI graphic, 3:1 on its fill and on
+    // the canvas around it (`border.subtle` was 1.32:1). The other states keep their own cues: a fill and a mark
+    // (correct, wrong), the thick `border.focus` ring (hint), the sunken fill (disabled).
+    borderColor: colors.border.shape,
     borderWidth: borderWidth.base,
     mark: null,
     interactive: true,

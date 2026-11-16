@@ -18,10 +18,11 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
     }
   });
 
-  it('idle: paper fill, subtle border, base width, tappable, no mark', () => {
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-17e (audit A11Y-4): the idle boundary is border.shape (border.subtle was 1.32:1).
+  it('idle: paper fill, border.shape boundary, base width, tappable, no mark', () => {
     const s = choiceCardStyle('idle');
     expect(s.backgroundColor).toBe(colors.surface.paper);
-    expect(s.borderColor).toBe(colors.border.subtle);
+    expect(s.borderColor).toBe(colors.border.shape);
     expect(s.borderWidth).toBe(borderWidth.base);
     expect(s.interactive).toBe(true);
     expect(s.selected).toBe(false);

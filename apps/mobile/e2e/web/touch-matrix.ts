@@ -45,6 +45,11 @@ export const AFTER_MISS = 1_200;
 export const WATCH_MS = 1_400;
 /** `colors.border.shape`, the press look's outline (section 4.3). */
 export const PRESS_OUTLINE = 'rgb(133, 115, 96)';
+/**
+ * `borderWidth.thick`, the press outline's width. An idle ChoiceCard or Tile is `border.shape` too since
+ * AMENDMENTS-AUDIT-2026-11 AU-17e (at `borderWidth.base`), so the outline is told by its colour and its width together.
+ */
+export const PRESS_OUTLINE_WIDTH = '3px';
 /** The 0.97 shrink of the press look as a computed transform. */
 export const SHRUNK = 'matrix(0.97, 0, 0, 0.97, 0, 0)';
 
@@ -71,7 +76,7 @@ export const identity = (a: Pick<Answer, 'label'>): string => a.label.replace(/^
  */
 export function readAnswers(page: Page): Promise<Answer[]> {
   return page.evaluate(
-    ({ shape, shrunk }) => {
+    ({ shape, thick, shrunk }) => {
       const out: Array<{ x: number; y: number; width: number; height: number; label: string; disabled: boolean; lookedPressed: boolean; paint: string; selected: boolean }> = [];
       const isButton = (el: Element): boolean => el.getAttribute('role') === 'button' || el.tagName === 'BUTTON';
       for (const el of Array.from(document.querySelectorAll('[role="button"], button'))) {
@@ -98,14 +103,14 @@ export function readAnswers(page: Page): Promise<Answer[]> {
             el.getAttribute('aria-disabled') === 'true' ||
             (el as HTMLButtonElement).disabled === true ||
             /^(Right answer|Not this one|Matched, )/.test(el.getAttribute('aria-label') ?? ''),
-          lookedPressed: d !== null && (d.transform === shrunk || d.borderTopColor === shape),
+          lookedPressed: d !== null && (d.transform === shrunk || (d.borderTopColor === shape && d.borderTopWidth === thick)),
           paint: d === null ? '' : `${d.backgroundColor} ${d.borderTopColor}`,
           selected: el.getAttribute('aria-selected') === 'true' || /^Selected: /.test(el.getAttribute('aria-label') ?? ''),
         });
       }
       return out.map((a, index) => ({ ...a, index }));
     },
-    { shape: PRESS_OUTLINE, shrunk: SHRUNK },
+    { shape: PRESS_OUTLINE, thick: PRESS_OUTLINE_WIDTH, shrunk: SHRUNK },
   );
 }
 
