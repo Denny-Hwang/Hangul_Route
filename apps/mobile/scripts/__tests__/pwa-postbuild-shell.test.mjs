@@ -360,7 +360,10 @@ describe('public/_headers', () => {
 
   it('gives the console chunks no year-long rule: the single-page fallback answers a missing chunk with index.html (A-3, section 3.3)', () => {
     expect(headers).not.toMatch(/^\/_next\//m);
-    expect(headers).not.toMatch(/^\/\*$/m);
+    // [AU] AMENDMENTS-AUDIT-2026-11 AU-5: `/*` now carries the baseline security headers, and still no cache rule.
+    const all = parseHeaders(headers).filter((rule) => rule.pattern === '/*');
+    expect(all).toHaveLength(1);
+    expect(all[0].headers.map(([name]) => name.toLowerCase()).filter((name) => name === 'cache-control' || name === 'expires')).toEqual([]);
   });
 
   it('keeps the learner rules (the worker and the shell are never served stale)', () => {

@@ -1,4 +1,24 @@
 # Static-asset headers (Workers assets / Pages convention).
+# Baseline security headers for every path ([AU] AMENDMENTS-AUDIT-2026-11 AU-5,
+# audit SEC-3). No Cache-Control here: this rule also reaches a missing /_next/ file
+# (see the last comment of this file). Rules that match the same path are merged, and
+# a header two of them set is sent as "a, b": a later rule that needs another value
+# for one of these five must detach it first ("! Name"), as the grown-up block that
+# scripts/app-host/merge-console.mjs appends does. A script-source policy is not here:
+# it needs a report-only period first.
+/*
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'
+# The app's own script chunks are the one exception to nosniff (F-CURR-002 section 10,
+# pwa/lesson-chunks.mjs nosniffLessonChunks, which fails the build otherwise): a page
+# of an older build that asks for a chunk the host no longer has gets index.html, and
+# without nosniff the browser runs it and the page reloads onto the new build. The
+# other four headers stay.
+/_expo/static/js/*
+  ! X-Content-Type-Options
 # The service worker and manifest must never be served stale, or an update
 # could take up to a day to reach installed apps.
 /sw.js

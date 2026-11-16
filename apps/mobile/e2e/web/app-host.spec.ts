@@ -145,7 +145,12 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
     expect(learner.status()).toBe(200);
     expect(learner.headers()['content-type']).toContain('text/html');
     expect(await learner.text()).toContain(LEARNER_SHELL_MARK);
-    expect(learner.headers()['x-frame-options']).toBeUndefined();
+    // [AU] AMENDMENTS-AUDIT-2026-11 AU-5: the baseline security headers of every path, each sent once.
+    expect(learner.headers()['x-frame-options']).toBe('SAMEORIGIN');
+    expect(learner.headers()['content-security-policy']).toBe("frame-ancestors 'self'");
+    expect(learner.headers()['x-content-type-options']).toBe('nosniff');
+    expect(learner.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    expect(learner.headers()['strict-transport-security']).toBe('max-age=31536000');
     expect(learner.headers()['cache-control']).not.toBe('no-store');
 
     const pages = consolePages();
@@ -158,6 +163,7 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
       expect(html, path).toContain('/_next/static/');
       expect(html, path).not.toContain(LEARNER_SHELL_MARK);
       for (const [name, value] of Object.entries(GROWN_UP_HEADERS)) expect(res.headers()[name], `${path} ${name}`).toBe(value);
+      expect(res.headers()['strict-transport-security'], path).toBe('max-age=31536000');
 
       // The page's React Server Component payload, which client navigation between console pages reads.
       const payload = await request.get(`${path}.txt`);
