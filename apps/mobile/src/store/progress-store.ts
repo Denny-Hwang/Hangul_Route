@@ -368,6 +368,12 @@ async function withStored(profileId: string, step: StoredStep): Promise<'done' |
     try {
       // A read that failed has nothing to copy and stays unread; a damaged value is kept before anything replaces it.
       if (!(await keepRawCopy(storageKey, PROGRESS_CORRUPT_KEY(profileId), { onlyUnparsable: error !== NOT_A_SNAPSHOT }))) return 'unread';
+      // The learner was removed while the copy was being made (row OA-7a): the removal already deleted both keys, so
+      // the copy that landed after it goes too, and nothing is written for a learner who is no longer here.
+      if (removedNow(profileId)) {
+        await removeKey(PROGRESS_CORRUPT_KEY(profileId)).catch(() => undefined);
+        return 'unread';
+      }
       await updateJson<unknown>(storageKey, (stored) => step(isSnapshot(stored) ? stored : null));
       return 'done';
     } catch {

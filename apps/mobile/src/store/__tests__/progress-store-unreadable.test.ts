@@ -12,6 +12,8 @@ const idb = vi.hoisted(() => ({
   failing: null as RegExp | null,
   /** While set, a write of a key that matches rejects (the read before it works). */
   failingWrite: null as RegExp | null,
+  /** Called with the key right after a plain read took its value, before the reader goes on. */
+  onRead: null as ((key: string) => void) | null,
 }));
 vi.mock('idb-keyval', () => {
   const broken = (k: string): boolean => idb.failing !== null && idb.failing.test(k);
@@ -19,7 +21,9 @@ vi.mock('idb-keyval', () => {
   return {
     get: vi.fn(async (k: string) => {
       if (broken(k)) throw new Error('idb read failed');
-      return idb.mem.get(k);
+      const value = idb.mem.get(k);
+      idb.onRead?.(k);
+      return value;
     }),
     set: vi.fn(async (k: string, v: string) => {
       if (broken(k) || brokenWrite(k)) throw new Error('idb write failed');
@@ -83,6 +87,7 @@ beforeEach(() => {
   idb.mem.clear();
   idb.failing = null;
   idb.failingWrite = null;
+  idb.onRead = null;
   setWriteFence(null);
   setProgressPersistListener(null);
   useProfileStore.setState({ profiles: [], activeId: null });
@@ -172,6 +177,20 @@ describe('[AU] a stored snapshot that does not parse (row AU-3)', () => {
     await settle();
     expect(idb.mem.has('hr:progress-corrupt:p9')).toBe(false);
     expect(idb.mem.has('hr:progress:p9')).toBe(false);
+  });
+
+  it('a learner removed while the copy is being made leaves no copy behind', async () => {
+    idb.mem.set('hr:progress:p8', TRUNCATED);
+    // The copy has read the damaged bytes; the removal deletes both keys before the copy is written.
+    idb.onRead = (k) => {
+      if (k !== 'hr:progress:p8') return;
+      idb.onRead = null;
+      notifyProfileRemoved('p8');
+    };
+    await useProgressStore.getState().hydrate('p8');
+    await settle();
+    expect(idb.mem.has('hr:progress-corrupt:p8')).toBe(false);
+    expect(idb.mem.has('hr:progress:p8')).toBe(false);
   });
 });
 
