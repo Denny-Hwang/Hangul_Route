@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken, journeyCellName, openLettersEpisode, passDiscover, waitForNextListenPickRound, headerClose, acceptConfirmSheets } from './helpers';
+import { completeChildForm, jamoOfSpoken, journeyCellName, openLettersEpisode, passDiscover, waitForNextListenPickRound, headerClose, acceptConfirmSheets, waitForSavedRunStep } from './helpers';
 
 /**
  * F-QUEST-002 Q-5b: the Results "Next up" teaser and the soft prerequisite on
@@ -107,9 +107,14 @@ async function skipAllGames(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'See results' }).click();
 }
 
-/** The Letters episode page with nothing completed: quest 1 is left at its intro. */
+/**
+ * The Letters episode page with nothing completed: quest 1 is left on its Look and learn step, by a reload.
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: that run is kept on the device (step 1, after the intro at step 0).
+ */
 async function lettersEpisodeWithNothingDone(page: Page): Promise<void> {
   await startFirstQuest(page);
+  await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+  await waitForSavedRunStep(page, 'quest:stage1-letters-q1', 1);
   await home(page);
   await openLettersEpisode(page);
 }
@@ -191,6 +196,10 @@ test('soft prerequisite: "Start there" opens the earlier quest', async ({ page }
   await page.getByRole('button', { name: 'Start', exact: true }).nth(1).click();
   await page.getByRole('button', { name: 'Start there' }).click();
   await expect(headerClose(page)).toBeVisible();
-  await expect(page.getByText('Hi from Hoya')).toBeVisible();
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: the earlier quest was left by a reload on its Look and learn step, so it
+  // goes on from that step (its first page), not from the intro ("Hi from Hoya") again.
+  await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+  await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+  await expect(page.getByText('Hi from Hoya')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

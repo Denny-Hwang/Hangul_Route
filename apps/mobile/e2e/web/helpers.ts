@@ -125,6 +125,52 @@ export function waitForSaved(page: Page, keys: string[]): Promise<unknown> {
   );
 }
 
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: a learner's quest run is kept on the device (`hr:quest-run:<profileId>`) when
+ * it begins and at each step change, and starting the same quest again within 24 hours goes on from that step.
+ * Resolves once a saved run of `questId` at `stepIndex` (0 is the intro) is in IndexedDB, so a reload that follows
+ * finds that step and does not race the async write.
+ */
+export function waitForSavedRunStep(page: Page, questId: string, stepIndex: number): Promise<unknown> {
+  return page.waitForFunction(
+    ({ quest, step }) =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => resolve(false);
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains('keyval')) {
+            db.close();
+            return resolve(false);
+          }
+          const all = db.transaction('keyval').objectStore('keyval').openCursor();
+          let found = false;
+          all.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+          all.onsuccess = () => {
+            const cursor = all.result;
+            if (!cursor) {
+              db.close();
+              return resolve(found);
+            }
+            if (String(cursor.key).startsWith('hr:quest-run:') && typeof cursor.value === 'string') {
+              try {
+                const run = JSON.parse(cursor.value) as { questId?: unknown; stepIndex?: unknown } | null;
+                if (run?.questId === quest && run.stepIndex === step) found = true;
+              } catch {
+                // Not a run this spec can read: not the one waited for.
+              }
+            }
+            cursor.continue();
+          };
+        };
+      }),
+    { quest: questId, step: stepIndex },
+  );
+}
+
 /** The "Who is learning?" cards (F-LEARN-001 §3.15.2): "Me", or someone a grown-up looks after. */
 export const WHO_SELF = /^Me\./;
 export const WHO_CHILD = /^Someone I look after/;
