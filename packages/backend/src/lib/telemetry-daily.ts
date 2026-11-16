@@ -1,7 +1,7 @@
 import { TELEMETRY_DAILY_KEEP_DAYS } from '@hangul-route/content-schema';
 import type { Db, TelemetryDailyRow } from '../db';
 import type { TelemetryEvent } from '../store';
-import { GUEST_PAYLOAD_RULES, NATIVE_AUTH_PAYLOAD_RULES, OA_PAYLOAD_RULES } from './server-events';
+import { CRASH_PAYLOAD_RULES, GUEST_PAYLOAD_RULES, NATIVE_AUTH_PAYLOAD_RULES, OA_PAYLOAD_RULES } from './server-events';
 
 /**
  * [OA] Anonymous daily counters (AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1, OA-D18, migration 0015). After
@@ -14,6 +14,9 @@ import { GUEST_PAYLOAD_RULES, NATIVE_AUTH_PAYLOAD_RULES, OA_PAYLOAD_RULES } from
  * not in the count; the G5 query). They share the same write budget.
  * F-AUTH-004 section 15 (row NS-1): every `auth.native.*` name is counted too, with the codes its rules kept (NG2's
  * sign-in rate, NG5's homes per day), under the same budget.
+ * [AU] AMENDMENTS-AUDIT-2026-11 AU-2 (audit PROD-1): `app.crash` is counted too, by name and day only (empty dims,
+ * like `session.start`): its route, error class and message never become a counter key, so the crash count of a day
+ * is one row and a flood of made-up messages cannot add rows.
  *
  * The route is anonymous and has no rate limit, and the D1 write quota is shared with every other table, so the
  * writes are bounded per isolate. Each counted event is written through at once, together with anything held, in one
@@ -68,14 +71,15 @@ export function telemetryDailyEnabled(env: TelemetryDailyEnv | undefined): boole
  */
 export const ONBOARDING_STARTED_DIM_KEYS = ['firstRun', 'fromGuest'] as const;
 
-/** Whether a name is counted: a section 15 name, `session.start`, [GU] a `guest.*` name, `onboarding.started` or an F-AUTH-004 `auth.native.*` name. */
+/** Whether a name is counted: a section 15 name, `session.start`, [GU] a `guest.*` name, `onboarding.started`, an F-AUTH-004 `auth.native.*` name or [AU] `app.crash`. */
 export function isDailyCountedName(name: string): boolean {
   return (
     name === 'session.start' ||
     name === 'onboarding.started' ||
     Object.hasOwn(OA_PAYLOAD_RULES, name) ||
     Object.hasOwn(GUEST_PAYLOAD_RULES, name) ||
-    Object.hasOwn(NATIVE_AUTH_PAYLOAD_RULES, name)
+    Object.hasOwn(NATIVE_AUTH_PAYLOAD_RULES, name) ||
+    Object.hasOwn(CRASH_PAYLOAD_RULES, name)
   );
 }
 
@@ -87,10 +91,11 @@ function dimsPayload(name: string, payload: Record<string, unknown>): Record<str
 
 /**
  * The `dims` of a kept payload: canonical JSON with sorted keys, or `''` when nothing was kept. `session.start`
- * always counts with `''`, whatever its payload; [GU] `onboarding.started` with its boolean `firstRun` and `fromGuest` only.
+ * always counts with `''`, whatever its payload, and so does [AU] `app.crash`; [GU] `onboarding.started` with its
+ * boolean `firstRun` and `fromGuest` only.
  */
 export function dailyDims(name: string, payload: Record<string, unknown> | undefined): string {
-  if (name === 'session.start' || !payload) return '';
+  if (name === 'session.start' || Object.hasOwn(CRASH_PAYLOAD_RULES, name) || !payload) return '';
   const dims = dimsPayload(name, payload);
   const keys = Object.keys(dims).sort();
   if (keys.length === 0) return '';

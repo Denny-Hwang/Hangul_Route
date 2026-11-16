@@ -110,8 +110,10 @@ keep_vars = true
 #                                    again once the switch is back on. GET /health shows
 #                                    features.memorySummary.
 # TELEMETRY_DAILY                    [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 15.1: leave UNSET (on).
-#                                    Unset, empty or "enabled" counts the section 15 events and
-#                                    session.start in the anonymous D1 table telemetry_daily (migration
+#                                    Unset, empty or "enabled" counts the section 15 events,
+#                                    session.start and app.crash ([AU] AU-2: by name and day only,
+#                                    so crashes show as SELECT day, n FROM telemetry_daily WHERE
+#                                    name = 'app.crash') in the anonymous D1 table telemetry_daily (migration
 #                                    0015: day, name, kept codes and a count; never an id). "disabled" (or
 #                                    any other value) is the kill switch: no counter writes, and the
 #                                    telemetry route reads nothing for them; events are still accepted.
@@ -198,3 +200,23 @@ migrations_dir = "migrations"
 # the deploy command is unchanged (wrangler deploy registers the schedule).
 [triggers]
 crons = ["17 11 * * *"]
+
+# ---- Workers Logs ([AU] AMENDMENTS-AUDIT-2026-11 AU-2, audit PROD-1) ----
+# Keeps the lines the Worker itself writes, in the dashboard (hangul-route-api ->
+# Observability -> Logs). An error no route handled writes one JSON line there:
+# {"event":"api.error","method","route","errorName","message"}
+# (packages/backend/src/lib/error-log.ts: the route pattern only and a scrubbed
+# message, never a body, name or id). An uncaught exception and the daily job's
+# guardrail.run line land there too.
+# invocation_logs = false: Cloudflare's own line per request is NOT kept. That line
+# holds the full request URL, and API paths carry learner and space ids
+# (/api/sync/learners/profile:...), so keeping it would put ids in the logs. Request
+# counts and error rates stay in the dashboard under Metrics, which needs no logs.
+# Free plan: 200,000 log lines a day, kept 3 days; the Worker keeps answering past
+# the cap.
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false

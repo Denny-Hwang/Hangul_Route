@@ -1,6 +1,8 @@
 import { TELEMETRY_EVENT_NAMES, isTelemetryEventName } from '@hangul-route/content-schema';
 import { CRASH_TELEMETRY_NAMES } from '@hangul-route/content-schema/crash-telemetry';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { resetTelemetryDailyBudgetForTests } from '../lib/telemetry-daily';
+import { testDb } from './helpers/db';
 import app from '../index';
 import { CRASH_PAYLOAD_RULES, keptEventFields } from '../lib/server-events';
 import { store } from '../store';
@@ -19,7 +21,10 @@ async function post(body: unknown) {
 
 const GOOD = { surface: 'learner', route: 'QuestPlayer', errorName: 'AsyncRequireError', message: 'Loading module failed', chunk: true, appVersion: '1.0.0' };
 
-beforeEach(() => store.reset());
+beforeEach(() => {
+  store.reset();
+  resetTelemetryDailyBudgetForTests();
+});
 
 describe('app.crash telemetry (section U)', () => {
   it('is one name in the shared list, with a rule for each payload key', () => {
@@ -61,5 +66,27 @@ describe('app.crash telemetry (section U)', () => {
 
   it('keeps nothing from a payload that is not an object', () => {
     expect(keptEventFields('app.crash', undefined, 'p')).toEqual({ profileId: undefined, payload: undefined });
+  });
+
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-2 (audit PROD-1): crashes are counted by day, so they outlive the isolate.
+  describe('[AU] the daily count', () => {
+    const postOn = (payload: Record<string, unknown>, env?: Record<string, unknown>) =>
+      app.request('/api/telemetry', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'app.crash', payload, at: new Date().toISOString() }) }, env);
+
+    it('a posted app.crash raises the count of its UTC day by one each time, in one row with empty dims', async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const before = (await testDb.telemetryDailyOf(today)).find((row) => row.name === 'app.crash')?.n ?? 0;
+      expect((await postOn(GOOD)).status).toBe(201);
+      expect((await postOn({ ...GOOD, route: 'Home', errorName: 'TypeError', message: 'another one', surface: 'browse' })).status).toBe(201);
+      const rows = (await testDb.telemetryDailyOf(today)).filter((row) => row.name === 'app.crash');
+      expect(rows).toEqual([{ day: today, name: 'app.crash', dims: '', n: before + 2 }]);
+    });
+
+    it('counts nothing when the TELEMETRY_DAILY kill switch is set; the event is still accepted', async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const before = (await testDb.telemetryDailyOf(today)).find((row) => row.name === 'app.crash')?.n ?? 0;
+      expect((await postOn(GOOD, { TELEMETRY_DAILY: 'disabled' })).status).toBe(201);
+      expect((await testDb.telemetryDailyOf(today)).find((row) => row.name === 'app.crash')?.n ?? 0).toBe(before);
+    });
   });
 });

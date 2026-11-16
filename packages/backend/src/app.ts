@@ -1,5 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
+import { routePath } from 'hono/route';
+import { fail } from './envelope';
+import { errorLogLine } from './lib/error-log';
 import { allowedOrigin } from './lib/cors';
 import { adminInviteRoutes, adminSpaceRoutes } from './routes/admins';
 import { nativeAccountSwitch } from './lib/native-client';
@@ -111,5 +115,15 @@ app.route('/api/config', configRoutes);
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),
 );
+
+// [AU] AMENDMENTS-AUDIT-2026-11 AU-2 (audit PROD-1): an error no route handled. One structured line for Workers Logs
+// (the route pattern, the method, the error class and a scrubbed message: lib/error-log; no body, name or id) and the
+// standard 500 envelope, which never carries the error text. A thrown HTTPException (503 not configured, lib/runtime)
+// is an answer, not a fault: it keeps its own response and is not logged.
+app.onError((error, c) => {
+  if (error instanceof HTTPException) return error.getResponse();
+  console.error(errorLogLine(c.req.method, routePath(c), error));
+  return fail(c, 'internal', 'Something went wrong', 500);
+});
 
 export default app;

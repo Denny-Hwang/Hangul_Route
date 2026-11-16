@@ -310,7 +310,8 @@ export const GUEST_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
 /**
  * `app.crash` (TELEMETRY-NAMES-2 section U, Worker first): keeps per key only a value `CRASH_TELEMETRY_PAYLOADS` accepts
  * (the root, route and error class names, a scrubbed 120-character message, a chunk flag, the app version) and is
- * stored without a profile id, whatever a client sends.
+ * stored without a profile id, whatever a client sends. [AU] AMENDMENTS-AUDIT-2026-11 AU-2: counted in `telemetry_daily`
+ * by name and day only (`isDailyCountedName`, `dailyDims`).
  */
 export const CRASH_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(CRASH_TELEMETRY_PAYLOADS);
 
