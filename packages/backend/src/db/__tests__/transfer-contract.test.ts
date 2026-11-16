@@ -869,6 +869,28 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect(await db.countRateHits(transferRateKey.codeLearner(LEARNER), at(0))).toBe(1);
       });
 
+      // [AU] AMENDMENTS-AUDIT-2026-11 AU-16: the durable per-client limits (lib/durable-rate-limit).
+      it('[AU] takeRateHit records a hit only under the limit in the window; oldestRateHit names the oldest hit in it', async () => {
+        const key = 'rl:claim:0123456789abcdef0123456789abcdef';
+        expect(await db.oldestRateHit(key, at(0))).toBeNull();
+        expect(await db.takeRateHit(key, at(0), at(-HOUR), 2)).toBe(true);
+        expect(await db.takeRateHit(key, at(10_000), at(10_000 - HOUR), 2)).toBe(true);
+        // The window is full: nothing is recorded.
+        expect(await db.takeRateHit(key, at(20_000), at(20_000 - HOUR), 2)).toBe(false);
+        expect(await db.countRateHits(key, at(-HOUR))).toBe(2);
+        expect(await db.oldestRateHit(key, at(-HOUR))).toBe(iso(0));
+        // Another key has its own count.
+        expect(await db.takeRateHit('rl:claim:ffffffffffffffffffffffffffffffff', at(20_000), at(20_000 - HOUR), 2)).toBe(true);
+        // Once the first hit has left the window, one slot is open again, and the oldest hit in the window is the second.
+        expect(await db.takeRateHit(key, at(HOUR + 1), at(1), 2)).toBe(true);
+        expect(await db.oldestRateHit(key, at(1))).toBe(iso(10_000));
+        expect(await db.oldestRateHit(key, at(2 * HOUR + 2))).toBeNull();
+        // A hit exactly at `since` is inside the window, as for countRateHits.
+        expect(await db.oldestRateHit(key, at(10_000))).toBe(iso(10_000));
+        expect(await db.takeRateHit(key, at(HOUR + 2), at(10_000), 2)).toBe(false);
+        expect(await db.takeRateHit(key, at(HOUR + 2), at(10_000), 0)).toBe(false);
+      });
+
       it('prefs default to off; each switch is written alone', async () => {
         expect(await db.getTransferPrefs(LEARNER)).toEqual({ selfManaged: false, blockTeacherRequests: false, updatedAt: null });
         await db.setTransferPref(LEARNER, 'selfManaged', true, at(HOUR));

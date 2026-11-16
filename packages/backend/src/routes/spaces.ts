@@ -20,7 +20,8 @@ import { rosterAttention, rosterGates, schoolAttention, spacesAttention } from '
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { learnerCapOf, schoolUsage } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
-import { clientKey, createRateLimiter } from '../lib/rate-limit';
+import { peekDurableLimit, requestRateKey, takeDurableHit, tooManyAttempts, type DurableLimit } from '../lib/durable-rate-limit';
+import { createRateLimiter } from '../lib/rate-limit';
 import { learnerReadScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
 import { lookupSeat, takeLearnerSeat, type SeatRefusal } from '../lib/seats';
@@ -40,9 +41,19 @@ export function schoolConsentModeEnabled(env: { SCHOOL_CONSENT_MODE?: string } |
   return env?.SCHOOL_CONSENT_MODE === 'enabled';
 }
 
+/**
+ * Join-code lookups per client per hour; every lookup counts. [AU] AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1
+ * (`rate_hits`, through lib/durable-rate-limit), so the limit holds across isolates and regions.
+ */
 export const LOOKUP_LIMIT = 20;
 export const LOOKUP_WINDOW_MS = 60 * 60 * 1000;
-export const lookupLimiter = createRateLimiter(LOOKUP_LIMIT, LOOKUP_WINDOW_MS);
+export const LOOKUP_RATE: DurableLimit = { name: 'lookup', limit: LOOKUP_LIMIT, windowMs: LOOKUP_WINDOW_MS };
+/**
+ * [AU] AU-16: wrong codes sent to `/:id/join` per client per hour. The route had no limit, so a code could be
+ * guessed there instead of on `/lookup`. Only a wrong code counts (an app sends the code `/lookup` just accepted,
+ * so a class joining from one network never reaches it); once the limit is reached every join answers 429.
+ */
+export const JOIN_FAIL_RATE: DurableLimit = { name: 'join-fail', limit: LOOKUP_LIMIT, windowMs: LOOKUP_WINDOW_MS };
 
 /** [SA] Renames per account per hour (AMENDMENTS-SEATS-ADMINS section 5.2). */
 export const RENAME_LIMIT = 30;
@@ -179,16 +190,11 @@ spacesRoutes.get('/', async (c) => {
 });
 
 spacesRoutes.post('/lookup', async (c) => {
-  const decision = lookupLimiter.check(clientKey((n) => c.req.header(n)));
-  if (!decision.allowed) {
-    return c.json(
-      { ok: false, error: { code: 'too_many_attempts', message: 'Too many attempts — try again later', details: { retryAfterSeconds: decision.retryAfterSeconds } } },
-      429,
-    );
-  }
+  const db = dbFor(c);
+  const decision = await takeDurableHit(db, LOOKUP_RATE, await requestRateKey(c, LOOKUP_RATE));
+  if (!decision.allowed) return tooManyAttempts(c, decision);
   const parsed = SpaceLookupSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'invalid_code', 'Join code must be 6 letters or digits', 422);
-  const db = dbFor(c);
   const space = await db.spaceByCode(parsed.data.code);
   if (!space || space.archivedAt) return fail(c, 'code_not_found', 'No class or family has this code', 404);
   const now = new Date();
@@ -414,7 +420,14 @@ spacesRoutes.post('/:id/join', async (c) => {
   if (!parsed.success) return fail(c, 'invalid_code', 'Join code must be 6 letters or digits', 422);
   const { code, learnerId, displayName } = parsed.data;
   const now = new Date();
-  if (space.joinCode !== code) return fail(c, 'code_not_found', 'That code does not open this space', 404);
+  // [AU] AU-16: the wrong-code brake, read before the code is compared so a blocked client learns nothing.
+  const joinKey = await requestRateKey(c, JOIN_FAIL_RATE);
+  const brake = await peekDurableLimit(db, JOIN_FAIL_RATE, joinKey, now);
+  if (!brake.allowed) return tooManyAttempts(c, brake);
+  if (space.joinCode !== code) {
+    await db.recordRateHit(joinKey, now);
+    return fail(c, 'code_not_found', 'That code does not open this space', 404);
+  }
   if (!isJoinCodeLive(space, now)) return fail(c, 'code_expired', 'This code has expired', 404);
 
   if (parseDeviceHeader(c.req.header('Authorization'))) {

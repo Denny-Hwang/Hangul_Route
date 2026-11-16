@@ -4,10 +4,9 @@ import { D1Db, fallbackDb, setFallbackDb } from '../db';
 import type { D1Like, D1PreparedLike } from '../db/d1';
 import { hashSecret } from '../lib/device-auth';
 import { classMoveClientLimiter } from '../routes/class-moves';
-import { lookupLimiter } from '../routes/spaces';
 import { deviceTransferLimiter } from '../routes/transfer-device';
 import { transferClientLimiter } from '../routes/transfers';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 import { openSqliteD1 } from './helpers/sqlite';
 import {
   A,
@@ -67,7 +66,7 @@ beforeEach(async () => {
   transferClientLimiter.reset();
   classMoveClientLimiter.reset();
   deviceTransferLimiter.reset();
-  lookupLimiter.reset();
+  await clearRateHits();
   await seed();
   await db.putSpace(space(D, 'class', 'teacher-a', { name: 'Evening Class D', joinCode: CODE_D, joinCodeExpiresAt: ahead(20 * DAY) }));
   await member(D, 'account', 'teacher-a', 'owner');

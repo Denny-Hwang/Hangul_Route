@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { routePath } from 'hono/route';
 import { fail } from './envelope';
+import { requestBodyLimit } from './lib/body-limit';
 import { errorLogLine } from './lib/error-log';
 import { allowedOrigin } from './lib/cors';
 import { adminInviteRoutes, adminSpaceRoutes } from './routes/admins';
@@ -40,6 +41,10 @@ app.use(
     maxAge: 86400,
   }),
 );
+
+// [AU] AMENDMENTS-AUDIT-2026-11 AU-16 (audit SEC-6): no route reads a body over its cap (256 KB; 2 MB for the
+// snapshot upload and the Stripe webhook, lib/body-limit). After CORS, so a browser can read the 413.
+app.use('*', requestBodyLimit);
 
 // F-AUTH-004 section 9.4 (row NS-1): the NATIVE_ACCOUNT kill switch. Off, every native request (`X-HR-Client: native`,
 // or a verified token with no `azp`) under the routes the native homes read (section 8) answers 403 native_off, before

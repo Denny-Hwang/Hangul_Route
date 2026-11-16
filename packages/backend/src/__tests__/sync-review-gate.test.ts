@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
-import { claimLimiter } from '../routes/recovery';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 
 /*
  * F-CURR-002 section 13 (row CM-15, Worker first): the minimum-app-version gate of the `warmup` review kind. An app
@@ -72,7 +71,7 @@ describe('the warm-up review gate (F-CURR-002 section 13, row CM-15)', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-22T12:00:00.000Z'));
     await db.reset();
-    claimLimiter.reset();
+    await clearRateHits();
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -155,7 +154,7 @@ describe('the Cell Check review gate (F-CURR-002 section 13, row CM-21, Worker f
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-22T12:00:00.000Z'));
     await db.reset();
-    claimLimiter.reset();
+    await clearRateHits();
   });
   afterEach(() => {
     vi.useRealTimers();

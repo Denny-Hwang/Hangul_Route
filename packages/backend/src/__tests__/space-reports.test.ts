@@ -4,9 +4,8 @@ import { D1Db } from '../db';
 import type { D1Like, D1PreparedLike } from '../db/d1';
 import app from '../index';
 import { setDevFallbacksDefaultForTests } from '../lib/runtime';
-import { lookupLimiter } from '../routes/spaces';
 import { store } from '../store';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 import { openSqliteD1 } from './helpers/sqlite';
 
 /**
@@ -84,7 +83,7 @@ const viewed = () => store.events.filter((e) => e.name === 'report.viewed');
 beforeEach(async () => {
   await db.reset();
   store.reset();
-  lookupLimiter.reset();
+  await clearRateHits();
 });
 afterEach(() => vi.restoreAllMocks());
 

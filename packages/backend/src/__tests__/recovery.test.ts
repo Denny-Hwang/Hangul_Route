@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
 import { hashSecret } from '../lib/device-auth';
 import { RESCUE_CODE_BITS, RESCUE_WORDS, randomRescueCode } from '../lib/rescue-words';
-import { CLAIM_LIMIT, claimLimiter, setRescueCodeSourceForTests } from '../routes/recovery';
-import { testDb as db } from './helpers/db';
+import { CLAIM_LIMIT, setRescueCodeSourceForTests } from '../routes/recovery';
+import { clearRateHits, testDb as db } from './helpers/db';
 
 const DEVICE_A = 'device-aaaaaaaa';
 const DEVICE_B = 'device-bbbbbbbb';
@@ -54,7 +54,7 @@ async function hmacHex(key: string, message: string): Promise<string> {
 describe('/api/recovery (F-RESTORE-001)', () => {
   beforeEach(async () => {
     await db.reset();
-    claimLimiter.reset();
+    await clearRateHits();
   });
 
   afterEach(() => {
@@ -158,14 +158,14 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     // every way a parent writes it down, before and after RESCUE_PEPPER is set
     for (const env of [undefined, { RESCUE_PEPPER: 'set-after-launch' }]) {
       for (const typed of ['PADDLE-GLACIER-4992', 'paddle glacier 4992', ' Paddle-Glacier 4992 ']) {
-        claimLimiter.reset();
+        await clearRateHits();
         const res = await claim(typed, {}, env);
         expect(res.status).toBe(200);
         expect((res.body.data as { learner: { id: string }; snapshot: { rev: number } }).learner.id).toBe('profile:suni');
       }
     }
     // a near miss is still just not found
-    claimLimiter.reset();
+    await clearRateHits();
     expect((await claim('PADDLE-GLACIER-4993')).status).toBe(404);
   });
 
@@ -187,7 +187,7 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     expect(((await claim('TIGER-MOON-RIVER-APPLE-222222')).body.data as { learner: { id: string } }).learner.id).toBe('profile:mina');
 
     // a source that keeps colliding gives up cleanly and leaves the current code in place
-    claimLimiter.reset();
+    await clearRateHits();
     setRescueCodeSourceForTests(() => 'TIGER-MOON-RIVER-APPLE-111111');
     const stuck = await app.request('/api/recovery/issue', { method: 'POST', headers: mina, body: JSON.stringify({ learnerId: 'profile:mina' }) });
     expect(stuck.status).toBe(500);
@@ -266,7 +266,7 @@ describe('/api/recovery (F-RESTORE-001)', () => {
 describe('rescue re-issue by an adult — only who may read the snapshot (SEC-4)', () => {
   beforeEach(async () => {
     await db.reset();
-    claimLimiter.reset();
+    await clearRateHits();
   });
 
   const T = '2026-10-09T00:00:00.000Z';

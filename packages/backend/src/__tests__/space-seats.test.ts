@@ -1,10 +1,8 @@
 import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, GROUP_LICENSE_LEARNERS, LookupSeatSchema, SCHOOL_LEARNER_CAP, type EntitlementApply } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
-import { relinkLimiter } from '../routes/relink';
-import { lookupLimiter } from '../routes/spaces';
 import { store } from '../store';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 import { countDbCalls } from './helpers/transfer-world';
 
 /**
@@ -52,8 +50,8 @@ const seatEvents = () => store.events.filter((e) => e.name === 'space.seat_refus
 
 beforeEach(async () => {
   await db.reset();
-  lookupLimiter.reset();
-  relinkLimiter.reset();
+  await clearRateHits();
+  await clearRateHits();
   store.events.length = 0;
 });
 

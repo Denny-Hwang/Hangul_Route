@@ -8,7 +8,7 @@ import { hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { publicLearner } from '../lib/learners';
 import { isJoinCodeLive } from '../lib/join-code';
 import { expireIfDue, liveRelinks } from '../lib/relinks';
-import { clientKey, createRateLimiter } from '../lib/rate-limit';
+import { requestRateKey, takeDurableHit, tooManyAttempts, type DurableLimit } from '../lib/durable-rate-limit';
 import { id, type Account } from '../store';
 import { rosterName } from './spaces';
 
@@ -19,8 +19,12 @@ import { rosterName } from './spaces';
  */
 export const relinkRoutes = new Hono();
 
+/**
+ * Re-link requests per client per hour; every request counts. [AU] AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1
+ * (`rate_hits`, through lib/durable-rate-limit), so the limit holds across isolates and regions.
+ */
 export const RELINK_LIMIT = 10;
-export const relinkLimiter = createRateLimiter(RELINK_LIMIT, 60 * 60 * 1000);
+export const RELINK_RATE: DurableLimit = { name: 'relink', limit: RELINK_LIMIT, windowMs: 60 * 60 * 1000 };
 
 function publicRequest(req: StoredRelink): RelinkRequest {
   const { secret: _secret, ...rest } = req;
@@ -37,11 +41,9 @@ async function requireManager(c: Context, db: Db, spaceId: string): Promise<Resp
 }
 
 relinkRoutes.post('/:id/relink-requests', async (c) => {
-  const decision = relinkLimiter.check(clientKey((n) => c.req.header(n)));
-  if (!decision.allowed) {
-    return c.json({ ok: false, error: { code: 'too_many_attempts', message: 'Too many attempts — try again later', details: { retryAfterSeconds: decision.retryAfterSeconds } } }, 429);
-  }
   const db = dbFor(c);
+  const decision = await takeDurableHit(db, RELINK_RATE, await requestRateKey(c, RELINK_RATE));
+  if (!decision.allowed) return tooManyAttempts(c, decision);
   const space = await db.getSpace(c.req.param('id'));
   if (!space || space.archivedAt) return fail(c, 'not_found', 'Space not found', 404);
   const parsed = RelinkCreateSchema.safeParse(await c.req.json().catch(() => null));

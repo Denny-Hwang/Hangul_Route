@@ -2,9 +2,8 @@ import { SyncInboxSchema } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
 import { hashSecret } from '../lib/device-auth';
-import { lookupLimiter } from '../routes/spaces';
 import { store } from '../store';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 
 /**
  * A learner renamed on their own device shows the new name everywhere a grown-up reads it: PATCH
@@ -106,7 +105,7 @@ async function reportedWorld() {
 beforeEach(async () => {
   await db.reset();
   store.reset();
-  lookupLimiter.reset();
+  await clearRateHits();
 });
 afterEach(() => vi.restoreAllMocks());
 

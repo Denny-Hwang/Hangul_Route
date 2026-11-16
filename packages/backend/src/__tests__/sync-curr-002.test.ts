@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
-import { claimLimiter } from '../routes/recovery';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 
 /*
  * F-CURR-002 row CM-3b, Worker first: the snapshot routes accept the new
@@ -84,7 +83,7 @@ describe('/api/sync snapshot, F-CURR-002 section 4.8 (Worker first)', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-22T12:00:00.000Z'));
     await db.reset();
-    claimLimiter.reset();
+    await clearRateHits();
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -275,7 +274,7 @@ describe('/api/sync snapshot: `daily` retention of 14 local days (F-CURR-002 sec
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-22T12:00:00.000Z'));
     await db.reset();
-    claimLimiter.reset();
+    await clearRateHits();
   });
   afterEach(() => {
     vi.useRealTimers();

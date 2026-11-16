@@ -352,6 +352,13 @@ export interface Db {
   recordRateHit(key: string, at: Date): Promise<void>;
   /** Hits of `key` at or after `since`. */
   countRateHits(key: string, since: Date): Promise<number>;
+  /**
+   * [AU] AMENDMENTS-AUDIT-2026-11 AU-16: records a hit of `key` at `at` unless `limit` hits already exist at or
+   * after `since`, in one statement (two callers cannot both take the last slot). True when the hit was recorded.
+   */
+  takeRateHit(key: string, at: Date, since: Date, limit: number): Promise<boolean>;
+  /** [AU] AU-16: the time of the oldest hit of `key` at or after `since`, or null when there is none. */
+  oldestRateHit(key: string, since: Date): Promise<string | null>;
   /** Bounded purge of counter rows older than `before`. */
   purgeRateHits(before: Date, limit: number): Promise<number>;
   getTransferPrefs(learnerId: string): Promise<TransferPrefs>;

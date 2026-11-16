@@ -2,9 +2,8 @@ import { CLASS_SCOPE_TEXT_VERSION, LearnerReportResponseSchema, type MemorySumma
 import { LearningSummaryResponseSchema } from '@hangul-route/content-schema/learning-summary';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
-import { lookupLimiter } from '../routes/spaces';
 import { store } from '../store';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 
 /**
  * GET /api/spaces/:id/learning-summary — F-CURR-002 section 8 (row CM-16, Worker first): each learner's `memory`
@@ -82,7 +81,7 @@ const keysOf = (value: unknown): string[] =>
 beforeEach(async () => {
   await db.reset();
   store.reset();
-  lookupLimiter.reset();
+  await clearRateHits();
 });
 
 describe('GET /api/spaces/:id/learning-summary (F-CURR-002 section 8, row CM-16)', () => {

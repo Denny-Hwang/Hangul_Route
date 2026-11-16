@@ -784,6 +784,15 @@ export class MemoryDb implements Db {
     const from = since.toISOString();
     return this.rateHits.filter((h) => h.key === key && h.at >= from).length;
   }
+  async takeRateHit(key: string, at: Date, since: Date, limit: number): Promise<boolean> {
+    if ((await this.countRateHits(key, since)) >= limit) return false;
+    await this.recordRateHit(key, at);
+    return true;
+  }
+  async oldestRateHit(key: string, since: Date): Promise<string | null> {
+    const from = since.toISOString();
+    return this.rateHits.filter((h) => h.key === key && h.at >= from).reduce<string | null>((oldest, h) => (oldest === null || h.at < oldest ? h.at : oldest), null);
+  }
   async purgeRateHits(before: Date, limit: number): Promise<number> {
     const cutoff = before.toISOString();
     const doomed = new Set(this.rateHits.filter((h) => h.at < cutoff).slice(0, limit).map((h) => h.id));
