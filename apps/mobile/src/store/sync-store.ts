@@ -420,6 +420,9 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     await useProgressStore.getState().hydrate(learnerId);
     const local = useProgressStore.getState().byProfile[learnerId];
     if (!profile || !local) return state;
+    // [AU] AMENDMENTS-AUDIT-2026-11 row AU-3: the saved snapshot could not be read, so what is in memory was built on
+    // a blank record: it is not uploaded, and no server answer is written over the record that could not be read.
+    if (!useProgressStore.getState().hydratedFor.has(learnerId)) return state;
 
     update(learnerId, { status: 'syncing' });
     const registered = await ensureRegistered(profile, state, client);

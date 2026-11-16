@@ -17,7 +17,7 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setWriteFence } from '../storage-fence';
-import { listKeys, readJson, readJsonExact, readJsonExactFresh, readJsonStrict, removeKey, updateJson, writeJson } from '../storage';
+import { keepRawCopy, listKeys, readJson, readJsonExact, readJsonExactFresh, readJsonStrict, removeKey, updateJson, writeJson } from '../storage';
 
 describe('platform/storage (AsyncStorage wrapper)', () => {
   beforeEach(() => {
@@ -124,5 +124,43 @@ describe('platform/storage (AsyncStorage wrapper)', () => {
     expect(await readJsonExactFresh('nope')).toBeNull();
     vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('disk'));
     await expect(readJsonExactFresh('profiles:locks')).rejects.toThrow('disk');
+  });
+  describe('[AU] keepRawCopy (AMENDMENTS-AUDIT-2026-11 row AU-3)', () => {
+    it('copies the raw stored string, byte for byte, and keeps the first copy when one is already held', async () => {
+      mem.set('hr:progress:p1', '{"quests":[{"questId":"q1"');
+      expect(await keepRawCopy('progress:p1', 'progress-corrupt:p1')).toBe(true);
+      expect(mem.get('hr:progress-corrupt:p1')).toBe('{"quests":[{"questId":"q1"');
+      // A second damaged value never replaces the first copy.
+      mem.set('hr:progress:p1', '{"later":');
+      expect(await keepRawCopy('progress:p1', 'progress-corrupt:p1')).toBe(true);
+      expect(mem.get('hr:progress-corrupt:p1')).toBe('{"quests":[{"questId":"q1"');
+      expect(mem.get('hr:progress:p1')).toBe('{"later":');
+    });
+
+    it('has nothing to keep for a missing or empty value; with onlyUnparsable, a value that parses is not copied', async () => {
+      expect(await keepRawCopy('nope', 'kept')).toBe(false);
+      mem.set('hr:empty', '');
+      expect(await keepRawCopy('empty', 'kept')).toBe(false);
+      mem.set('hr:fine', '[1,2]');
+      expect(await keepRawCopy('fine', 'kept', { onlyUnparsable: true })).toBe(false);
+      expect(mem.has('hr:kept')).toBe(false);
+      // Without the option a value that parses is copied too (a value of the wrong shape).
+      expect(await keepRawCopy('fine', 'kept')).toBe(true);
+      expect(mem.get('hr:kept')).toBe('[1,2]');
+      mem.set('hr:bad', '{not json');
+      expect(await keepRawCopy('bad', 'kept-bad', { onlyUnparsable: true })).toBe(true);
+      expect(mem.get('hr:kept-bad')).toBe('{not json');
+    });
+
+    it('a failed read rejects and copies nothing; a fenced target is never written', async () => {
+      mem.set('hr:bad', '{not json');
+      vi.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error('disk'));
+      await expect(keepRawCopy('bad', 'kept')).rejects.toThrow('disk');
+      expect(mem.has('hr:kept')).toBe(false);
+      setWriteFence((key) => key !== 'kept');
+      expect(await keepRawCopy('bad', 'kept')).toBe(false);
+      setWriteFence(null);
+      expect(mem.has('hr:kept')).toBe(false);
+    });
   });
 });

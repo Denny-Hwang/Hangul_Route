@@ -2,7 +2,7 @@ import { ActivitySummarySchema, JourneySummarySchema, ProgressSummarySchema, typ
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
-vi.mock('../../platform/storage', () => ({
+vi.mock('../../platform/storage', async () => (await import('../../test-support/storage-transactions')).withTransactions({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
   readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
@@ -511,6 +511,37 @@ describe('sync-store (F-SYNC-002)', () => {
     const body = putSnapshot.mock.calls[0]?.[1];
     expect(body?.baseRev).toBe(3);
     expect(body?.snapshot.quests.map((q) => q.questId)).toEqual(['q1', 'q2']);
+  });
+
+  it('[AU] a saved snapshot that cannot be read is never uploaded as a blank-based one, and no server answer is written over it (row AU-3)', async () => {
+    mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
+    const saved = snap(['q1', 'q2']);
+    mem.set('progress:profile:a', saved);
+    // Cold start with a storage read that fails; the learner plays on, so memory holds a record built on a blank one.
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
+    const storage = await import('../../platform/storage');
+    vi.mocked(storage.updateJson).mockRejectedValue(new Error('idb read failed'));
+    try {
+      useProgressStore.getState().recordQuestComplete('profile:a', { questId: 'q9', episodeId: 'e', stars: 1, accuracy: 0.5, attempts: 1 });
+      const putSnapshot = vi.fn(async () => ({ status: 'merged', rev: 4, snapshot: snap(['q9']) }));
+      const api = fakeApi({ putSnapshot });
+      setSyncApiForTests(api as never);
+      const state = await useSyncStore.getState().syncNow('profile:a');
+      expect(putSnapshot).not.toHaveBeenCalled();
+      expect(api.register).not.toHaveBeenCalled();
+      expect(state.rev).toBe(3);
+      expect(useProgressStore.getState().hydratedFor.has('profile:a')).toBe(false);
+      expect(mem.get('progress:profile:a')).toBe(saved);
+    } finally {
+      vi.mocked(storage.updateJson).mockReset();
+      const { withTransactions } = await import('../../test-support/storage-transactions');
+      vi.mocked(storage.updateJson).mockImplementation(withTransactions({ readJson: storage.readJson, writeJson: storage.writeJson }).updateJson);
+    }
+    // The storage answers again: the next pass reads the saved copy, merges what was played and uploads the union.
+    const putSnapshot = vi.fn(async (_id: string, _body: { baseRev: number; snapshot: ProgressSnapshot }) => ({ status: 'ok', rev: 4 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(putSnapshot.mock.calls[0]?.[1].snapshot.quests.map((q) => q.questId).sort()).toEqual(['q1', 'q2', 'q9']);
   });
 
   it('a learner with no progress record in memory (nothing saved, nothing written) is not registered or uploaded', async () => {

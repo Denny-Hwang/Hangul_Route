@@ -81,6 +81,31 @@ export function updateJson<T>(key: string, next: (current: T | null) => T | unde
   return run;
 }
 
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-3: keeps a stored value that cannot be used (the same contract as the web
+ * variant). The raw stored string of `from` is copied to `to` exactly as it is, unless `to` already holds one (the
+ * first copy is the one kept). With `onlyUnparsable`, a value that parses is not copied. Resolves to whether `from`
+ * held such a value and `to` holds a copy now; false when there was nothing to keep or the write fence rejects `to`.
+ * A failed read or write rejects, so the caller writes nothing over a value it could not keep.
+ */
+export async function keepRawCopy(from: string, to: string, options?: { onlyUnparsable?: boolean }): Promise<boolean> {
+  if (!writePasses(to, 'write')) return false;
+  const raw = await AsyncStorage.getItem(KEY_PREFIX + from);
+  if (raw === null || raw === undefined || raw === '') return false;
+  if (options?.onlyUnparsable && parses(raw)) return false;
+  if (!(await AsyncStorage.getItem(KEY_PREFIX + to))) await AsyncStorage.setItem(KEY_PREFIX + to, raw);
+  return true;
+}
+
+function parses(raw: string): boolean {
+  try {
+    JSON.parse(raw);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Removes `key`; a key the write fence rejects is left untouched. */
 export async function removeKey(key: string): Promise<void> {
   if (!writePasses(key, 'remove')) return;

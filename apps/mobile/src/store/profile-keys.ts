@@ -6,7 +6,7 @@ import { MEMBERSHIPS_KEY, TRANSFERS_ON_KEY, TRANSFER_SCOPE_KEY, TRANSFER_SELF_SE
 import { NOTES_KEY } from './notes-store';
 import { PLACEMENT_RUN_KEY, PLACEMENT_UI_KEY } from './placement-run-store';
 import { PLANS_KEY } from './plan-store';
-import { PROGRESS_KEY } from './progress-store';
+import { PROGRESS_CORRUPT_KEY, PROGRESS_KEY } from './progress-store';
 import { ROUTE_UI_KEY } from './route-store';
 import { STORY_BOOKMARKS_KEY } from './story-store';
 import { SYNC_KEY } from './sync-store';
@@ -24,6 +24,8 @@ import { seenKey as ROUTE_MAP_UI_KEY } from '../logic/my-route/seen';
  */
 export const PER_PROFILE_KEYS: Readonly<Record<string, (profileId: string) => string>> = {
   progress: PROGRESS_KEY,
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-3: the kept copy of a snapshot that could not be read.
+  'progress-corrupt': PROGRESS_CORRUPT_KEY,
   sync: SYNC_KEY,
   memberships: MEMBERSHIPS_KEY,
   plans: PLANS_KEY,

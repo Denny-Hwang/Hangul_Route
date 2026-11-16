@@ -2,7 +2,13 @@ import { ProgressSnapshotSchema, VocabProgressSchema, requiredQuestIds, type Pro
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
-vi.mock('../../platform/storage', () => ({
+/**
+ * The storage wrapper over a map. [AU] Row AU-3: the store reads and writes a snapshot in one `updateJson`
+ * transaction (`withTransactions`); its read is counted on `readJson` and its write on `writeJson`, so the tests below
+ * keep saying "one read", "one write" and "nothing written". As in IndexedDB, the callback runs after the call
+ * returned, so a test waits (`settle`) before it looks at what is stored.
+ */
+vi.mock('../../platform/storage', async () => (await import('../../test-support/storage-transactions')).withTransactions({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
@@ -41,7 +47,7 @@ function resetStore(): void {
 
 /** Let fire-and-forget hydrations and storage writes settle. */
 async function settle(): Promise<void> {
-  for (let i = 0; i < 5; i += 1) await Promise.resolve();
+  for (let i = 0; i < 20; i += 1) await Promise.resolve();
 }
 
 describe('progress-store', () => {
@@ -213,6 +219,7 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
     mem.set('progress:p1', savedSnapshot());
     await useProgressStore.getState().hydrate('p1');
     useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:b', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
+    await settle();
     expect(stored()?.quests.map((q) => q.questId)).toEqual(['quest:a', 'quest:b']);
     expect(stored()?.cards.map((c) => c.cardId)).toEqual(['card:book']);
     expect(notified).toEqual(['p1']);
@@ -223,6 +230,7 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
     expect(mem.get('progress:p1')).not.toHaveProperty('placements');
     await useProgressStore.getState().hydrate('p1');
     useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:b', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
+    await settle();
     expect(stored()?.quests.map((q) => q.questId)).toEqual(['quest:a', 'quest:b']);
     expect(stored()).not.toHaveProperty('placements');
   });
@@ -297,10 +305,15 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
   it('hydrate does not re-read storage once loaded', async () => {
     mem.set('progress:p1', savedSnapshot());
     await useProgressStore.getState().hydrate('p1');
-    useProgressStore.getState().unlockCard('p1', 'card:hanji');
     await useProgressStore.getState().hydrate('p1');
     expect(readJson).toHaveBeenCalledTimes(1);
+    useProgressStore.getState().unlockCard('p1', 'card:hanji');
+    await useProgressStore.getState().hydrate('p1');
     expect(useProgressStore.getState().byProfile['p1']?.cards).toHaveLength(2);
+    // [AU] Row AU-3: the write is one transaction that reads the stored record first (never a blind write).
+    await settle();
+    expect(readJson).toHaveBeenCalledTimes(2);
+    expect(writeJson).toHaveBeenCalledTimes(1);
   });
 
   it('hydrates that overlap share one storage read', async () => {
@@ -376,6 +389,7 @@ describe('stars never go down (F-STORY-003 PR 3.6, D3)', () => {
     await useProgressStore.getState().hydrate('p1');
     useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:a', episodeId: 'episode:e', stars: 1, accuracy: 0.3, attempts: 1 });
     expect(stored()?.quests).toHaveLength(1);
+    await settle();
     expect(stored()?.quests[0]).toMatchObject({ stars: 3, accuracy: 1, startedAt: '2026-10-01T09:00:00.000Z', attempts: 2 });
   });
 
@@ -414,6 +428,7 @@ describe('recordPlacement (F-PLC-001 section 3.8)', () => {
     const { placements: _p, updatedAt: _u, selfRoute: _r, ...restAfter } = after;
     const { placements: _q, updatedAt: _v, ...restBefore } = before;
     expect(restAfter).toEqual(restBefore);
+    await settle();
     expect(stored()?.placements).toEqual([result]);
     expect(notified).toEqual(['p1']);
   });
@@ -425,6 +440,7 @@ describe('recordPlacement (F-PLC-001 section 3.8)', () => {
     const second = placementResult({ id: 'placement:two', completedAt: '2026-10-02T00:00:00Z' });
     useProgressStore.getState().recordPlacement('p1', second);
     useProgressStore.getState().recordPlacement('p1', first);
+    await settle();
     expect(stored()?.placements?.map((r) => r.id)).toEqual(['placement:one', 'placement:two']);
   });
 
@@ -503,6 +519,7 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
     expect(streakLocal).toEqual({ run: 1, lastDay: TODAY });
     expect(streakBest).toBe(1);
     expect(after.streakDays).toBe(before.streakDays);
+    await settle();
     expect(stored()).toEqual(after);
     expect(notified).toEqual(['p1']);
   });
@@ -637,6 +654,7 @@ describe('recordVocab (F-VOC-005 section 3.2)', () => {
     await useProgressStore.getState().hydrate('p1');
     useProgressStore.getState().reset('p1');
     expect(useProgressStore.getState().byProfile['p1']?.vocab).toEqual({ v: 1, items: [], topics: [] });
+    await settle();
     expect(stored()?.vocab).toEqual({ v: 1, items: [], topics: [] });
     expect(stored()?.quests).toEqual([]);
   });
@@ -682,6 +700,7 @@ describe('applyPlacementOverride (F-PLC-001 section 3.9)', () => {
     const { placements: _p, updatedAt: _u, ...restAfter } = after;
     const { placements: _q, updatedAt: _v, ...restBefore } = before;
     expect(restAfter).toEqual(restBefore);
+    await settle();
     expect(stored()?.placements?.find((r) => r.id === 'placement:new')?.override?.startQuestId).toBe('quest:q2');
     expect(notified).toEqual(['p1']);
   });
@@ -741,6 +760,7 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
     expect(stored()).not.toHaveProperty('stageDoneAt');
     vi.mocked(writeJson).mockClear();
     finish('p1', stage1[stage1.length - 1] as (typeof stage1)[number]);
+    await settle();
     expect(writeJson).toHaveBeenCalledTimes(1);
     const at = stored()?.stageDoneAt?.stage1;
     expect(at).toMatch(ISO);
@@ -781,16 +801,18 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
     expect(stored()?.stageDoneAt?.stage1).toMatch(ISO);
   });
 
-  it('latches a completed stage that arrives by sync or restore (replaceSnapshot) and announces it so it uploads', () => {
+  it('latches a completed stage that arrives by sync or restore (replaceSnapshot) and announces it so it uploads', async () => {
     useProgressStore.getState().replaceSnapshot('p1', savedWith(stage1));
+    await settle();
     expect(stored()?.stageDoneAt?.stage1).toMatch(ISO);
     expect(useProgressStore.getState().byProfile['p1']?.stageDoneAt?.stage1).toMatch(ISO);
     expect(notified).toEqual(['p1']);
   });
 
-  it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', () => {
+  it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', async () => {
     const latch = { stage1: '2026-10-01T09:10:00.000Z' };
     useProgressStore.getState().replaceSnapshot('p1', savedWith(stage1, { stageDoneAt: latch }));
+    await settle();
     expect(stored()?.stageDoneAt).toEqual(latch);
     expect(notified).toEqual([]);
   });
@@ -846,6 +868,7 @@ describe('quest latch writer (F-REPORT-001 section 3.3.1, RP-3a, M5)', () => {
     await useProgressStore.getState().hydrate('p1');
     vi.mocked(writeJson).mockClear();
     finish('p1', 'quest:b');
+    await settle();
     expect(writeJson).toHaveBeenCalledTimes(1);
     const completedAt = stored()?.quests.find((q) => q.questId === 'quest:b')?.completedAt;
     expect(completedAt).toMatch(ISO);
@@ -857,6 +880,7 @@ describe('quest latch writer (F-REPORT-001 section 3.3.1, RP-3a, M5)', () => {
     mem.set('progress:p1', savedSnapshot());
     await useProgressStore.getState().hydrate('p1');
     finish('p1', 'quest:a', 3);
+    await settle();
     expect(stored()?.quests[0]?.completedAt).not.toBe(SAVED_DONE);
     expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
   });
@@ -884,9 +908,10 @@ describe('quest latch writer (F-REPORT-001 section 3.3.1, RP-3a, M5)', () => {
     expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
   });
 
-  it('a record held in memory without the latch is backfilled before a replay moves completedAt', () => {
+  it('a record held in memory without the latch is backfilled before a replay moves completedAt', async () => {
     useProgressStore.setState({ byProfile: { p1: savedBeforeLatch() }, hydratedFor: new Set(['p1']) });
     finish('p1', 'quest:a', 3);
+    await settle();
     expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
   });
 
@@ -909,12 +934,14 @@ describe('quest latch writer (F-REPORT-001 section 3.3.1, RP-3a, M5)', () => {
     mem.set('progress:p1', savedSnapshot());
     await useProgressStore.getState().hydrate('p1');
     useProgressStore.getState().reset('p1');
+    await settle();
     expect(stored()?.questDoneAt).toEqual({});
     expect(stored()?.quests).toEqual([]);
   });
 
-  it('latches a completed quest that arrives by sync or restore (replaceSnapshot) and announces it so it uploads', () => {
+  it('latches a completed quest that arrives by sync or restore (replaceSnapshot) and announces it so it uploads', async () => {
     useProgressStore.getState().replaceSnapshot('p1', savedBeforeLatch());
+    await settle();
     expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
     expect(useProgressStore.getState().byProfile['p1']?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
     expect(notified).toEqual(['p1']);
@@ -930,21 +957,24 @@ describe('quest latch writer (F-REPORT-001 section 3.3.1, RP-3a, M5)', () => {
     // The merge with the server copy keeps another device's earlier finish as completedAt.
     const merged = { ...(useProgressStore.getState().byProfile['p1'] as ProgressSnapshot), quests: savedSnapshot().quests };
     useProgressStore.getState().replaceSnapshot('p1', merged);
+    await settle();
     expect(stored()?.questDoneAt).toEqual({ 'quest:a': SAVED_DONE });
     expect(notified).toEqual(['p1']);
   });
 
-  it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', () => {
+  it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', async () => {
     const latch = { 'quest:a': '2026-09-30T08:00:00.000Z', 'quest:elsewhere': '2026-09-29T08:00:00.000Z' };
     useProgressStore.getState().replaceSnapshot('p1', { ...savedBeforeLatch(), questDoneAt: latch });
+    await settle();
     expect(stored()?.questDoneAt).toEqual(latch);
     expect(notified).toEqual([]);
   });
 
-  it('after a reset, entries the server unions back are kept and a quest finished again keeps its old entry (known approximation, M5)', () => {
+  it('after a reset, entries the server unions back are kept and a quest finished again keeps its old entry (known approximation, M5)', async () => {
     useProgressStore.getState().reset('p1');
     const old = { 'quest:a': SAVED_DONE };
     useProgressStore.getState().replaceSnapshot('p1', { ...(useProgressStore.getState().byProfile['p1'] as ProgressSnapshot), questDoneAt: old });
+    await settle();
     expect(stored()?.quests).toEqual([]);
     expect(stored()?.questDoneAt).toEqual(old);
     finish('p1', 'quest:a');
@@ -1050,6 +1080,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith() }, hydratedFor: new Set(['profile:a']) });
       const added = useProgressStore.getState().unlockCards('profile:a', [{ cardId: 'card:rice', unlockedAt: T }, { cardId: 'card:kimbap' }]);
       expect(added).toEqual(['card:rice', 'card:kimbap']);
+      await settle();
       expect(writesTo('profile:a')).toBe(1);
       expect(notified).toEqual(['profile:a']);
       const cards = storedA()?.cards ?? [];
@@ -1085,13 +1116,14 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
   });
 
   describe('reconcileAwards', () => {
-    it('adds every derived card the snapshot lacks, with deterministic times, and returns them', () => {
+    it('adds every derived card the snapshot lacks, with deterministic times, and returns them', async () => {
       useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
       const added = useProgressStore.getState().reconcileAwards('profile:a');
       expect(added.map((a) => a.cardId).sort()).toEqual([...RITES, 'card:tiger'].sort());
       const cards = useProgressStore.getState().byProfile['profile:a']?.cards ?? [];
       for (const id of RITES) expect(cards.find((c) => c.cardId === id)).toEqual({ cardId: id, unlockedAt: T, newSinceLastView: true });
       expect(cards.find((c) => c.cardId === 'card:tiger')).toEqual({ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: true });
+      await settle();
       expect(cardsOf(storedA())).toEqual(cardsOf(useProgressStore.getState().byProfile['profile:a']));
       expect(writesTo('profile:a')).toBe(1);
       expect(notified).toEqual(['profile:a']);
@@ -1277,9 +1309,10 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
   });
 
   describe('replaceSnapshot', () => {
-    it('reconciles the merged snapshot a sync or restore hands back', () => {
+    it('reconciles the merged snapshot a sync or restore hands back', async () => {
       useProgressStore.getState().replaceSnapshot('profile:a', ritesDone(1));
       expect(cardsOf(useProgressStore.getState().byProfile['profile:a'])).toEqual([...RITES, 'card:tiger'].sort());
+      await settle();
       expect(cardsOf(storedA())).toEqual([...RITES, 'card:tiger'].sort());
       expect(vi.mocked(track).mock.calls.map(([e]) => e.name)).toEqual(['card.catchup_granted']);
     });
@@ -1301,8 +1334,9 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(track).not.toHaveBeenCalled();
     });
 
-    it('a replacement that adds cards is saved with one write and asks sync once; the next pass adds nothing', () => {
+    it('a replacement that adds cards is saved with one write and asks sync once; the next pass adds nothing', async () => {
       useProgressStore.getState().replaceSnapshot('profile:a', ritesDone(1));
+      await settle();
       expect(writesTo('profile:a')).toBe(1);
       expect(notified).toEqual(['profile:a']);
       const merged = useProgressStore.getState().byProfile['profile:a'] as ProgressSnapshot;
@@ -1335,10 +1369,11 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(track).not.toHaveBeenCalled();
     });
 
-    it('the first real write saves the welcome card with it', () => {
+    it('the first real write saves the welcome card with it', async () => {
       useProgressStore.setState({ hydratedFor: new Set(['profile:a']) });
       useProgressStore.getState().ensure('profile:a');
       useProgressStore.getState().beginSession('profile:a', QUEST);
+      await settle();
       expect(storedA()?.cards).toEqual([{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: true }]);
       expect(storedA()?.sessions).toHaveLength(1);
     });
@@ -1381,11 +1416,12 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
   describe('markCardsSeen', () => {
     const fresh = (cardId: string, newSinceLastView = true) => ({ cardId, unlockedAt: T, newSinceLastView });
 
-    it('clears the New flag of the listed owned cards with one write', () => {
+    it('clears the New flag of the listed owned cards with one write', async () => {
       useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: [fresh('card:rice'), fresh('card:kimbap'), fresh('card:hanbok')] }) }, hydratedFor: new Set(['profile:a']) });
       useProgressStore.getState().markCardsSeen('profile:a', ['card:rice', 'card:kimbap', 'card:not-owned']);
       const cards = useProgressStore.getState().byProfile['profile:a']?.cards ?? [];
       expect(cards).toEqual([fresh('card:rice', false), fresh('card:kimbap', false), fresh('card:hanbok')]);
+      await settle();
       expect(storedA()?.cards).toEqual(cards);
       expect(writesTo('profile:a')).toBe(1);
       expect(notified).toEqual(['profile:a']);
@@ -1651,6 +1687,7 @@ describe('recordReview (F-QUEST-002 §3.9)', () => {
     const { reviews: _r, updatedAt: _u, selfRoute: _s, placements: _p, ...restAfter } = after;
     const { reviews: _q, updatedAt: _v, placements: _w, ...restBefore } = before;
     expect(restAfter).toEqual(restBefore);
+    await settle();
     expect(stored()?.reviews).toHaveLength(1);
     expect(notified).toEqual(['p1']);
   });
@@ -1662,6 +1699,7 @@ describe('recordReview (F-QUEST-002 §3.9)', () => {
     s.recordReview('p1', entry('2026-10-13T09:00:00.000Z', 3));
     s.recordReview('p1', entry('2026-10-12T09:00:00.000Z', 2));
     s.recordReview('p1', entry('2026-10-13T09:00:00.000Z', 1));
+    await settle();
     expect(stored()?.reviews.map((r) => [r.id, r.resultStars])).toEqual([
       ['review:stage1:2026-10-12T09:00:00.000Z', 2],
       ['review:stage1:2026-10-13T09:00:00.000Z', 3],
@@ -1676,6 +1714,7 @@ describe('recordReview (F-QUEST-002 §3.9)', () => {
     s.recordReview('p1', daily('2026-10-01'));
     s.recordReview('p1', daily('2026-10-09'));
     s.recordReview('p1', daily('2026-10-22'));
+    await settle();
     expect(stored()?.reviews.map((r) => r.id)).toEqual(['review:stage1:2026-09-01T09:00:00.000Z', 'daily:2026-10-09:a', 'daily:2026-10-22:a']);
   });
 
@@ -1687,6 +1726,7 @@ describe('recordReview (F-QUEST-002 §3.9)', () => {
       const daily = (scope: string) => ({ id: `daily:${scope}:a`, kind: 'daily' as const, generatedAt: `${scope}T09:00:00.000Z`, scope, itemIds: ['lex:sagwa'], resultStars: 3 as const });
       s.recordReview('p1', daily('2027-02-01'));
       s.recordReview('p1', daily('2026-10-22'));
+      await settle();
       expect(stored()?.reviews.map((r) => r.id)).toEqual(['daily:2027-02-01:a', 'daily:2026-10-22:a']);
     } finally {
       vi.useRealTimers();
@@ -1720,6 +1760,7 @@ describe('setSelfRoute (F-PLAN-002 section 3.9)', () => {
     const route = selfRoute({ id: 'route:abc-0001' });
     expect(useProgressStore.getState().setSelfRoute('p1', route)).toBe(true);
     expect(useProgressStore.getState().byProfile['p1']?.selfRoute).toEqual(route);
+    await settle();
     expect(stored()?.selfRoute).toEqual(route);
     expect(notified).toEqual(['p1']);
   });

@@ -2,7 +2,7 @@ import { CURR_TELEMETRY_PAYLOADS, mergeGoals, type InboxPlan, type ProgressSnaps
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
-vi.mock('../../platform/storage', () => ({
+vi.mock('../../platform/storage', async () => (await import('../../test-support/storage-transactions')).withTransactions({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
   readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
