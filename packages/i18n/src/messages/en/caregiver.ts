@@ -715,7 +715,7 @@ export const caregiver = {
      * `goal.reachedStage`, `goal.tasteLine`) come from `learner.myRoute`.
      */
     goal: {
-      first: 'First goal: read every Hangul letter.',
+      first: 'First goal: read the basic Hangul letters.',
       inGoal: (name: string, n: number, title: string) => `Stage ${n} · ${title}: ${name} is in the goal stage`,
       exploreInGoal: (name: string, n: number, title: string) => `Explore Stage ${n} · ${title}: ${name} is in the goal stage`,
       reached: (name: string, n: number, title: string) => `${name} reached the goal: Stage ${n} · ${title}.`,

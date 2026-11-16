@@ -537,7 +537,7 @@ export const caregiver = {
     tiles: (n: number) => `Deletrear con fichas: ${plural('es', n, { one: '1 misión', other: `${n} misiones` })}`,
     start: (name: string) => `La Ruta de aprendizaje de ${name} empieza aquí.`,
     goal: {
-      first: 'Primera meta: leer cada letra del hangul.',
+      first: 'Primera meta: leer las letras básicas del hangul.',
       inGoal: (name: string, n: number, title: string) => `Etapa ${n} · ${title}: ${name} está en la etapa meta`,
       exploreInGoal: (name: string, n: number, title: string) => `Explora la Etapa ${n} · ${title}: ${name} está en la etapa meta`,
       reached: (name: string, n: number, title: string) => `${name} llegó a la meta: Etapa ${n} · ${title}.`,

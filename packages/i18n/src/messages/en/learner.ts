@@ -1633,7 +1633,7 @@ export const learner = {
     open: { cta: 'See Learning Route' },
     hero: {
       start: 'Your Learning Route starts here.',
-      goal: 'Your first goal: read every Hangul letter.',
+      goal: 'Your first goal: read the basic Hangul letters.',
       here: (n: number, title: string) => `You are on Stage ${n}: ${title}.`,
       next: (title: string) => `Next: ${title}`,
       rest: 'You did everything that is open right now. More is coming.',
@@ -1693,7 +1693,7 @@ export const learner = {
     /** One line per stage (Appendix A), no number and no target. */
     stage: {
       canDo: {
-        1: 'Read any Hangul letter and syllable and know its sound.',
+        1: 'Read the basic Hangul letters and simple syllables, and know their sounds.',
         2: 'Read everyday words and know what they mean.',
         3: 'Read and build short, simple sentences.',
         4: 'Follow a short everyday conversation and pick a reply.',
@@ -2062,8 +2062,8 @@ export const learner = {
    */
   stageComplete: {
     title: 'Hangul complete!',
-    headline: 'You can read Hangul now!',
-    canDo: 'You know every letter and every final sound. Hoya is so proud of you.',
+    headline: 'You can read basic Hangul now!',
+    canDo: 'You know the basic letters and six final sounds. Hoya is so proud of you.',
     wallTitle: 'Every letter you learned',
     cardsTitle: 'Legendary cards for you',
     seeCards: { cta: 'See my cards' },
@@ -2106,7 +2106,7 @@ export const learner = {
     },
     result: {
       headline: { three: 'Wonderful!', two: 'Great work!', one: 'You did it!' },
-      cheer: 'You looked at every letter of Hangul. Hoya is proud of you.',
+      cheer: 'You looked at every letter you learned. Hoya is proud of you.',
       certificate: { title: 'Certificate', stage: 'Stage 1: Hangul' },
       wallTitle: 'Your Hangul cards',
       tipTitle: "Hoya's tip",

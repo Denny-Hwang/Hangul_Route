@@ -758,7 +758,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.weeklyPlan.checkIn.done': [[2], [4]],
   'caregiver.browse.home.stages.line': [[7]],
   'caregiver.browse.home.stages.item': [[1, 'Hangul']],
-  'caregiver.browse.home.routeRowA11y': [['Stage 1, Hangul. Open. Meet every Korean letter and the sound it makes.']],
+  'caregiver.browse.home.routeRowA11y': [['Stage 1, Hangul. Open. Meet the basic Korean letters and the sounds they make.']],
   'caregiver.browse.home.cardSlotA11y': [['Common', 'Book', 'x', 'chaek']],
   'caregiver.browse.home.wordCount': [[1], [12]],
   'caregiver.browse.home.wordsRowA11y': [['Food', 1], ['Food', 12]],

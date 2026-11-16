@@ -16,7 +16,7 @@ export const DRAFT_EN: MyRouteMessages = {
     title: 'Learning Route',
     hero: {
       start: 'Your Learning Route starts here.',
-      goal: 'Your first goal: read every Hangul letter.',
+      goal: 'Your first goal: read the basic Hangul letters.',
       here: (n, title) => `You are on Stage ${n}: ${title}.`,
       next: (title) => `Next: ${title}`,
       rest: 'You did everything that is open right now. More is coming.',
@@ -58,7 +58,7 @@ export const DRAFT_EN: MyRouteMessages = {
     canDoLead: 'By the end of this stage you can:',
     stage: {
       canDo: {
-        1: 'Read any Hangul letter and syllable and know its sound.',
+        1: 'Read the basic Hangul letters and simple syllables, and know their sounds.',
         2: 'Read everyday words and know what they mean.',
         3: 'Read and build short, simple sentences.',
         4: 'Follow a short everyday conversation and pick a reply.', // F-CURR-001 OD-12 (S4-4)
@@ -89,7 +89,7 @@ export const DRAFT_EN: MyRouteMessages = {
     tiles: (n) => `Spelling with tiles: ${quests(n)}`,
     start: (name) => `${name}'s Learning Route starts here.`,
     goal: {
-      first: 'First goal: read every Hangul letter.',
+      first: 'First goal: read the basic Hangul letters.',
       inGoal: (name, n, title) => `Stage ${n} · ${title}: ${name} is in the goal stage`,
       exploreInGoal: (name, n, title) => `Explore Stage ${n} · ${title}: ${name} is in the goal stage`,
       reached: (name, n, title) => `${name} reached the goal: Stage ${n} · ${title}.`,

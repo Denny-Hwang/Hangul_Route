@@ -4,7 +4,7 @@
   "entries": {
     "stage:stage1": {
       "title": "Hangul",
-      "oneLiner": "Conoce cada letra coreana y su sonido.",
+      "oneLiner": "Conoce las letras coreanas básicas y sus sonidos.",
       "anchorSkill": "Reconoce 24 jamo y 6 batchim con ≥90 % de acierto"
     },
     "stage:stage2": {

@@ -505,7 +505,7 @@ export const caregiver = {
     tiles: (n: number) => `타일로 글자 만들기: 퀘스트 ${n}개`,
     start: (name: string) => `${name}: 학습 루트가 여기서 시작돼요.`,
     goal: {
-      first: '첫 목표: 한글 글자를 모두 읽기.',
+      first: '첫 목표: 한글 기본 글자 읽기.',
       inGoal: (name: string, n: number, title: string) => `${n}단계 · ${title}: ${name}, 목표 단계에 와 있어요`,
       exploreInGoal: (name: string, n: number, title: string) => `둘러보기: ${n}단계 · ${title}: ${name}, 목표 단계에 와 있어요`,
       reached: (name: string, n: number, title: string) => `${name}: 목표에 도착했어요. ${n}단계 · ${title}.`,
