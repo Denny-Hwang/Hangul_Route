@@ -20,7 +20,7 @@ import { rosterAttention, rosterGates, schoolAttention, spacesAttention } from '
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { learnerCapOf, schoolUsage } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
-import { peekDurableLimit, requestRateKey, takeDurableHit, tooManyAttempts, type DurableLimit } from '../lib/durable-rate-limit';
+import { peekDurableLimit, requestRateKey, tooManyAttempts, type DurableLimit } from '../lib/durable-rate-limit';
 import { createRateLimiter } from '../lib/rate-limit';
 import { learnerReadScopes, type ClassScopeEnv } from '../lib/class-scope';
 import { rosterSummary } from '../lib/roster-summary';
@@ -42,8 +42,11 @@ export function schoolConsentModeEnabled(env: { SCHOOL_CONSENT_MODE?: string } |
 }
 
 /**
- * Join-code lookups per client per hour; every lookup counts. [AU] AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1
- * (`rate_hits`, through lib/durable-rate-limit), so the limit holds across isolates and regions.
+ * Join-code lookups that do not resolve (a wrong or an expired code) per client per hour. [AU]
+ * AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1 (`rate_hits`, through lib/durable-rate-limit), so the limit holds
+ * across isolates and regions. A lookup that resolves writes no row and never counts: a class of 30 behind one
+ * school address all look up the same code within minutes. Once a client has 20 failures in the hour, every
+ * lookup from it answers 429 before the code is read (the brake on guessing).
  */
 export const LOOKUP_LIMIT = 20;
 export const LOOKUP_WINDOW_MS = 60 * 60 * 1000;
@@ -191,14 +194,21 @@ spacesRoutes.get('/', async (c) => {
 
 spacesRoutes.post('/lookup', async (c) => {
   const db = dbFor(c);
-  const decision = await takeDurableHit(db, LOOKUP_RATE, await requestRateKey(c, LOOKUP_RATE));
-  if (!decision.allowed) return tooManyAttempts(c, decision);
+  const now = new Date();
+  const lookupKey = await requestRateKey(c, LOOKUP_RATE);
+  const brake = await peekDurableLimit(db, LOOKUP_RATE, lookupKey, now);
+  if (!brake.allowed) return tooManyAttempts(c, brake);
   const parsed = SpaceLookupSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'invalid_code', 'Join code must be 6 letters or digits', 422);
   const space = await db.spaceByCode(parsed.data.code);
-  if (!space || space.archivedAt) return fail(c, 'code_not_found', 'No class or family has this code', 404);
-  const now = new Date();
-  if (!isJoinCodeLive(space, now)) return fail(c, 'code_expired', 'This code has expired', 404);
+  if (!space || space.archivedAt) {
+    await db.recordRateHit(lookupKey, now);
+    return fail(c, 'code_not_found', 'No class or family has this code', 404);
+  }
+  if (!isJoinCodeLive(space, now)) {
+    await db.recordRateHit(lookupKey, now);
+    return fail(c, 'code_expired', 'This code has expired', 404);
+  }
   // Class rosters (names only) let a returning student pick themselves (F-TCH-001 §10.1).
   const roster: Array<{ learnerId: string; name: string }> = [];
   if (space.kind === 'class') {

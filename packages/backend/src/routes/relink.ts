@@ -8,7 +8,7 @@ import { hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { publicLearner } from '../lib/learners';
 import { isJoinCodeLive } from '../lib/join-code';
 import { expireIfDue, liveRelinks } from '../lib/relinks';
-import { requestRateKey, takeDurableHit, tooManyAttempts, type DurableLimit } from '../lib/durable-rate-limit';
+import { peekDurableLimit, requestRateKey, tooManyAttempts, type DurableLimit } from '../lib/durable-rate-limit';
 import { id, type Account } from '../store';
 import { rosterName } from './spaces';
 
@@ -20,8 +20,11 @@ import { rosterName } from './spaces';
 export const relinkRoutes = new Hono();
 
 /**
- * Re-link requests per client per hour; every request counts. [AU] AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1
- * (`rate_hits`, through lib/durable-rate-limit), so the limit holds across isolates and regions.
+ * Re-link requests that fail on the code or the learner (a wrong or an expired code, a learner not in the class)
+ * per client per hour. [AU] AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1 (`rate_hits`, through
+ * lib/durable-rate-limit), so the limit holds across isolates and regions. A request that names a live code and a
+ * learner of the class never counts: a class that moves to new devices asks from one school address, one request
+ * per student. Once a client has 10 failures in the hour, every request from it answers 429 before anything is read.
  */
 export const RELINK_LIMIT = 10;
 export const RELINK_RATE: DurableLimit = { name: 'relink', limit: RELINK_LIMIT, windowMs: 60 * 60 * 1000 };
@@ -42,17 +45,22 @@ async function requireManager(c: Context, db: Db, spaceId: string): Promise<Resp
 
 relinkRoutes.post('/:id/relink-requests', async (c) => {
   const db = dbFor(c);
-  const decision = await takeDurableHit(db, RELINK_RATE, await requestRateKey(c, RELINK_RATE));
-  if (!decision.allowed) return tooManyAttempts(c, decision);
+  const now = new Date();
+  const relinkKey = await requestRateKey(c, RELINK_RATE);
+  const brake = await peekDurableLimit(db, RELINK_RATE, relinkKey, now);
+  if (!brake.allowed) return tooManyAttempts(c, brake);
+  const failed = async (code: string, message: string): Promise<Response> => {
+    await db.recordRateHit(relinkKey, now);
+    return fail(c, code, message, 404);
+  };
   const space = await db.getSpace(c.req.param('id'));
   if (!space || space.archivedAt) return fail(c, 'not_found', 'Space not found', 404);
   const parsed = RelinkCreateSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Invalid re-link body', 422, { issues: parsed.error.issues });
   const { code, learnerId, deviceId, platform } = parsed.data;
-  const now = new Date();
-  if (space.joinCode !== code) return fail(c, 'code_not_found', 'That code does not open this space', 404);
-  if (!isJoinCodeLive(space, now)) return fail(c, 'code_expired', 'This code has expired', 404);
-  if (!(await db.membership(space.id, 'learner', learnerId)) || !(await db.getLearner(learnerId))) return fail(c, 'learner_not_found', 'That name is not in this class', 404);
+  if (space.joinCode !== code) return failed('code_not_found', 'That code does not open this space');
+  if (!isJoinCodeLive(space, now)) return failed('code_expired', 'This code has expired');
+  if (!(await db.membership(space.id, 'learner', learnerId)) || !(await db.getLearner(learnerId))) return failed('learner_not_found', 'That name is not in this class');
   if (await db.getDevice(learnerId, deviceId)) return fail(c, 'already_bound', 'This device already has this learner', 409);
 
   const existing = (await liveRelinks(db, space.id, now)).find((r) => r.learnerId === learnerId && r.deviceId === deviceId && r.status === 'pending');

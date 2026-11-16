@@ -22,7 +22,9 @@ export const recoveryRoutes = new Hono();
 
 /**
  * Claims per client per hour. [AU] AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1 (`rate_hits`, through
- * lib/durable-rate-limit), so the limit holds across isolates and regions. Every claim counts, right or wrong.
+ * lib/durable-rate-limit), so the limit holds across isolates and regions. Every claim counts, right or wrong:
+ * a Rescue Code is one family's restore on one device, not a classroom step (a class device uses re-link), so a
+ * shared address does not plausibly make five claims in an hour.
  */
 export const CLAIM_LIMIT = 5;
 export const CLAIM_WINDOW_MS = 60 * 60 * 1000;
