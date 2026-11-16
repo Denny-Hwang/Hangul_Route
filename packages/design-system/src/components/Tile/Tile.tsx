@@ -1,33 +1,14 @@
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
-import { borderWidth, colors, radii, shadows, spacing, typography } from '../../tokens';
+import { borderWidth, radii, shadows, spacing, typography } from '../../tokens';
 import { pressInset, pressTransform } from '../../press-look';
 import { TapTarget, usePressLook } from '../TapBoard';
 import { useTypeScale } from '../TextSize';
+import { Icon } from '../Icon';
 import { tileMetrics } from './metrics';
-import type { TileProps, TileState } from './types';
+import { TILE_MARK, tileStyle } from './style';
+import type { TileProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
-
-const stateBg: Record<TileState, string> = {
-  idle: colors.surface.paper,
-  correct: colors.feedback.successLight,
-  wrong: colors.feedback.nudgeLight,
-  disabled: colors.surface.sunken,
-};
-
-const stateBorder: Record<TileState, string> = {
-  idle: colors.border.subtle,
-  correct: colors.feedback.success,
-  wrong: colors.feedback.nudge,
-  disabled: colors.border.subtle,
-};
-
-const stateLabel: Record<TileState, string> = {
-  idle: colors.text.primary,
-  correct: colors.feedback.success,
-  wrong: '#B5862A',
-  disabled: colors.text.muted,
-};
 
 export function Tile({
   label,
@@ -44,6 +25,22 @@ export function Tile({
   const scale = useTypeScale().size;
   const { dim, glyph } = tileMetrics(size, dimension, scale);
   const press = usePressLook();
+  const look = tileStyle(state);
+
+  // [AU] AU-17a: a miss is not told by colour alone. Out of the flow on the top corner, so the tile keeps its size and
+  // the mark never reaches the glyph or the romanization line (`TILE_MARK`). Decorative: the caller's name has the state.
+  const mark =
+    look.mark === null ? null : (
+      <View
+        aria-hidden
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+        pointerEvents="none"
+        style={{ position: 'absolute', top: TILE_MARK.inset, right: TILE_MARK.inset }}
+      >
+        <Icon name={look.mark.icon} size={TILE_MARK.size} color={look.mark.color} />
+      </View>
+    );
 
   const inner = (
     <View
@@ -57,7 +54,7 @@ export function Tile({
         style={{
           fontSize: glyph,
           fontWeight: typography.weight.bold,
-          color: stateLabel[state],
+          color: look.labelColor,
           lineHeight: glyph * 1.05,
         }}
       >
@@ -68,7 +65,7 @@ export function Tile({
           style={{
             marginTop: spacing.xxs,
             fontSize: scale.bodySm,
-            color: colors.text.muted,
+            color: look.romanizationColor,
             fontWeight: typography.weight.medium,
           }}
         >
@@ -87,15 +84,16 @@ export function Tile({
           minWidth: dim,
           minHeight: dim,
           padding: spacing.md,
-          backgroundColor: stateBg[state],
+          backgroundColor: look.backgroundColor,
           borderRadius: radii.lg,
-          borderWidth: 2,
-          borderColor: stateBorder[state],
+          borderWidth: borderWidth.base,
+          borderColor: look.borderColor,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
         {inner}
+        {mark}
       </View>
     );
   }
@@ -123,10 +121,10 @@ export function Tile({
                 minHeight: dim,
                 // A thicker press outline grows inward (off the padding), so the tile keeps its size and nothing moves.
                 padding: spacing.md - pressInset(pressed ? press : null, borderWidth.base),
-                backgroundColor: stateBg[state],
+                backgroundColor: look.backgroundColor,
                 borderRadius: radii.lg,
                 borderWidth: pressed ? press.borderWidth : borderWidth.base,
-                borderColor: pressed ? press.borderColor : stateBorder[state],
+                borderColor: pressed ? press.borderColor : look.borderColor,
                 alignItems: 'center',
                 justifyContent: 'center',
                 transform: pressTransform(pressed ? press : null),
@@ -134,6 +132,7 @@ export function Tile({
               }}
             >
               {inner}
+              {mark}
             </View>
         );
       }}
