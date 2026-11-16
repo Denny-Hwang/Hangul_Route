@@ -108,7 +108,7 @@ for (const size of [
       await shot(page, `route-blend-home-class-${size.width}`);
       await page.screenshot({ path: test.info().outputPath(`home-class-${size.width}.png`), fullPage: true });
 
-      await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+      await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
       const line = page.getByTestId('my-route-blend-line');
       await expect(line).toHaveText("Your class's weekly plan: class on Tuesday, practice on Wednesday, Friday, and Sunday.");
       await line.scrollIntoViewIfNeeded();
@@ -119,7 +119,7 @@ for (const size of [
       await shot(page, `route-blend-line-${size.width}`);
       await page.screenshot({ path: test.info().outputPath(`route-line-${size.width}.png`), fullPage: true });
 
-      await page.getByRole('tablist').getByRole('link', { name: en.a11y.tabs.home }).click();
+      await page.getByRole('tablist').getByRole('tab', { name: en.a11y.tabs.home }).click();
       await page.getByRole('button', { name: en.a11y.openHomework }).click();
       const pill = page.getByTestId('homework-row-pill').first();
       await pill.scrollIntoViewIfNeeded();

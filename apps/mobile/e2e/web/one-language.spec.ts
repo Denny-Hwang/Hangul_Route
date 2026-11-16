@@ -309,7 +309,7 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     await learnerAtLargest(page);
     await expectTextFits(page, 'Home');
     await shot(page, 'or67-home-largest-320x568');
-    const tabs = page.getByRole('tablist').getByRole('link');
+    const tabs = page.getByRole('tablist').getByRole('tab');
     await expect(tabs).toHaveCount(4);
     for (const [index, name] of [
       [1, 'Route'],

@@ -303,7 +303,7 @@ test.describe('Open plan on the Learning Route (flags on)', () => {
     await expect(page.getByText('Hi, Noa!')).toBeVisible();
     await expect.poll(async () => (await storedRoute(page, profileId))?.id ?? null).not.toBeNull();
 
-    await page.getByRole('tablist').getByRole('link', { name: 'Learning Route' }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: 'Learning Route' }).click();
     await expect(page.getByTestId('my-route-plan-line')).toHaveText('Week 1 of your weekly plan');
     const open = page.getByRole('button', { name: 'Open plan', exact: true });
     await expect(open).toBeVisible();

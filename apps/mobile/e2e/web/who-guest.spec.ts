@@ -315,7 +315,7 @@ test.describe('the owner keeps or removes the first quest (GU-5)', () => {
     await page.getByTestId('dashboard-switch-user').click();
     await page.getByRole('button', { name: en.a11y.who.tile('Sam'), exact: true }).click();
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
-    await page.getByRole('tablist').getByRole('link', { name: 'Library', exact: true }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: 'Library', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
     const cardsTab = page.getByRole('tab', { name: 'Cards', exact: true });
     if ((await cardsTab.count()) > 0) await cardsTab.click();

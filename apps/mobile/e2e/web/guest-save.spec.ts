@@ -258,7 +258,7 @@ test.describe('the save after the first quest (GU-4)', () => {
     // The card is in the Library.
     const questCard = progress!.cards.find((card) => card.cardId === questCardId(progress!.quests[0]!.questId))!;
     expect(questCard).toBeDefined();
-    await page.getByRole('tablist').getByRole('link', { name: 'Library', exact: true }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: 'Library', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
     const cardsTab = page.getByRole('tab', { name: 'Cards', exact: true });
     if ((await cardsTab.count()) > 0) await cardsTab.click();

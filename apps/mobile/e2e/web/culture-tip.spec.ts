@@ -85,7 +85,7 @@ async function openCard(page: Page, profileId: string): Promise<void> {
   });
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  await page.getByRole('tablist').getByRole('link', { name: 'Library', exact: true }).click();
+  await page.getByRole('tablist').getByRole('tab', { name: 'Library', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
   const cards = page.getByRole('tab', { name: 'Cards', exact: true });
   if ((await cards.count()) > 0) await cards.click();

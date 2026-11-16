@@ -30,7 +30,7 @@ const snapshotWith = (profileId: string): ProgressSnapshot => ({
   streakDays: 0,
 });
 
-const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
+const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('tab', { name, exact: true });
 const chip = (page: Page) => page.getByTestId('home-cards-chip');
 
 /** A learner on Home holding four cards, as a child's profile (a grown-up's choice for a child) or a self learner's. */

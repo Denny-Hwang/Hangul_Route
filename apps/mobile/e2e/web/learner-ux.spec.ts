@@ -123,7 +123,7 @@ test.describe('Home, Library and Profile for a brand-new learner', () => {
     const l = getMessages('en').learner.library;
     await newLearnerHome(page);
     await dismissInstallGuide(page);
-    await page.getByRole('tablist').getByRole('link', { name: /Library/ }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: /Library/ }).click();
     const yours = page.getByTestId('library-your-cards');
     await expect(page.getByRole('heading', { name: l.yours.title })).toBeVisible();
     await expect(yours).toBeVisible();

@@ -252,12 +252,12 @@ for (const size of [
       await expectNoSidewaysScroll(page, 'Home on the class day');
       await shot(page, `route-blend-launch-home-${size.width}`);
 
-      await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+      await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
       await expect(page.getByTestId('my-route-blend-line')).toHaveText("Your class's weekly plan: class on Tuesday, practice on Wednesday, Friday, and Sunday.");
       await expectNoSidewaysScroll(page, 'the Route line');
       await shot(page, `route-blend-launch-line-${size.width}`);
 
-      await page.getByRole('tablist').getByRole('link', { name: en.a11y.tabs.home }).click();
+      await page.getByRole('tablist').getByRole('tab', { name: en.a11y.tabs.home }).click();
       await page.getByRole('button', { name: en.a11y.openHomework }).click();
       const pill = page.getByTestId('homework-row-pill').first();
       await expect(pill).toHaveAccessibleName(en.a11y.route.blend.fromClassMet);
@@ -333,7 +333,7 @@ test('320 at the Largest text size: Class today and the Route line fit, nothing 
   await expect(page.getByTestId('home-class-today')).toHaveText(words.classToday);
   await expectNoSidewaysScroll(page, 'Home at Largest');
   await expectNoClippedText(page, 'Home at Largest');
-  await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+  await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
   await expect(page.getByTestId('my-route-blend-line')).toBeVisible();
   await expectNoSidewaysScroll(page, 'the Route line at Largest');
   await expectNoClippedText(page, 'the Route line at Largest');
@@ -350,14 +350,14 @@ for (const locale of ['es', 'ko'] as const) {
     await expectNoSidewaysScroll(page, `Home in ${locale}`);
     await expectNoClippedText(page, `Home in ${locale}`);
     await shot(page, `route-blend-launch-home-${locale}-320`);
-    await page.getByRole('tablist').getByRole('link', { name: m.a11y.myRoute.tab }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: m.a11y.myRoute.tab }).click();
     const line = page.getByTestId('my-route-blend-line');
     await expect(line).toBeVisible();
     expect(await line.innerText()).not.toMatch(/\{|\}|undefined/);
     await expectNoSidewaysScroll(page, `the Route line in ${locale}`);
     await expectNoClippedText(page, `the Route line in ${locale}`);
     await shot(page, `route-blend-launch-line-${locale}-320`);
-    await page.getByRole('tablist').getByRole('link', { name: m.a11y.tabs.home }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: m.a11y.tabs.home }).click();
     await page.getByRole('button', { name: m.a11y.profileEntry }).click();
     const resting = page.getByTestId('profile-plan-resting');
     await resting.scrollIntoViewIfNeeded();
