@@ -1,6 +1,6 @@
 import type { Messages } from '@hangul-route/i18n';
 import { passMessage, type DirectionNudge } from '../trace-copy';
-import { traceCanvasSize } from '../trace-layout';
+import { TRACE_CANVAS_MIN, traceCanvasSize, type TraceLayoutMode } from '../trace-layout';
 import type { TraceWordPhase } from './flow';
 import type { TraceWordMode } from './rounds';
 
@@ -73,4 +73,18 @@ export function traceWordCanvases({
     if (pair >= TRACE_WORD_PAIR_MIN) return { count: 2, size: pair };
   }
   return { count: 1, size: traceCanvasSize(slotWidth, slotHeight, max) };
+}
+
+/** A stacked content box shorter than this cannot fit the helpers' own row over Done and Skip (a 320 x 568 phone). */
+export const TRACE_WORD_SHORT_HEIGHT = 500;
+
+/**
+ * [AU] On a short phone the row of Show me and Clear left the canvas slot shorter than the canvas
+ * floor, so the two buttons lay over the canvas's lower edge and took the strokes drawn there
+ * (AMENDMENTS-AUDIT-2026-11 AU-14: a letter's own bottom bar is drawn at that edge). There the two
+ * helpers stand beside the canvas, in the width the canvas floor leaves. `null` keeps their row.
+ */
+export function traceWordHelperColumn({ mode, width, height, gap }: { mode: TraceLayoutMode; width: number; height: number; gap: number }): number | null {
+  if (mode !== 'compact' || height >= TRACE_WORD_SHORT_HEIGHT) return null;
+  return Math.max(0, Math.floor(width - TRACE_CANVAS_MIN - gap));
 }

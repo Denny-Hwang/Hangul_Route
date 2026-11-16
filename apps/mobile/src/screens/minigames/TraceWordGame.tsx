@@ -52,7 +52,7 @@ import {
   type TraceWordState,
 } from '../../logic/trace-word/flow';
 import { buildTraceWordRounds, letterCounts, type TraceWordBlock, type TraceWordPlayRound } from '../../logic/trace-word/rounds';
-import { traceWordCanvases, traceWordMessage, traceWordTone, type TraceWordCoaching, type TraceWordTone } from '../../logic/trace-word/view';
+import { traceWordCanvases, traceWordHelperColumn, traceWordMessage, traceWordTone, type TraceWordCoaching, type TraceWordTone } from '../../logic/trace-word/view';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import type { MinigameHost } from './host';
@@ -295,6 +295,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
 
   const mode = box ? traceLayoutMode(box) : 'compact';
   const stacked = mode === 'roomy';
+  const helperColumn = box ? traceWordHelperColumn({ mode, width: box.width, height: box.height, gap: spacing.sm }) : null;
   const canvases = slot
     ? traceWordCanvases({
         blocks: round.blocks.length,
@@ -468,11 +469,12 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   );
 
   const helpers = (
-    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md }}>
+    <View style={helperColumn === null ? { flexDirection: 'row', justifyContent: 'center', gap: spacing.md } : { width: helperColumn, justifyContent: 'center', gap: spacing.sm }}>
       <Button
         label={copy.trace.showMe.cta}
         tone="secondary"
         size="sm"
+        fullWidth={helperColumn !== null}
         disabled={hintPlaying || phase !== 'drawing'}
         onPress={() => {
           setHintToken((t) => t + 1);
@@ -484,6 +486,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
         label={copy.trace.clear.cta}
         tone="ghost"
         size="sm"
+        fullWidth={helperColumn !== null}
         disabled={strokes.length === 0 || phase !== 'drawing'}
         onPress={() => {
           setStrokes([]);
@@ -520,7 +523,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
 
   const controls = (
     <View style={{ gap: spacing.sm }}>
-      {helpers}
+      {helperColumn === null ? helpers : null}
       <HoyaStrip tone={traceWordTone(phase)} message={traceWordMessage(phase, round.mode, coaching, copy)} lines={mode === 'side' ? 3 : 2} showHoya={stacked} />
       {actions}
     </View>
@@ -557,7 +560,14 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
               {strip}
               {soundStatus}
             </View>
-            {canvasSlot}
+            {helperColumn === null ? (
+              canvasSlot
+            ) : (
+              <View style={{ flex: 1, minHeight: 0, flexDirection: 'row', gap: spacing.sm }}>
+                {canvasSlot}
+                {helpers}
+              </View>
+            )}
             {controls}
           </View>
         )}
