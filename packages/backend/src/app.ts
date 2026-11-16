@@ -1,9 +1,13 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
+import { routePath } from 'hono/route';
+import { fail } from './envelope';
+import { errorLogLine } from './lib/error-log';
 import { allowedOrigin } from './lib/cors';
 import { adminInviteRoutes, adminSpaceRoutes } from './routes/admins';
 import { nativeAccountSwitch } from './lib/native-client';
-import { healthReport, type RuntimeEnv } from './lib/runtime';
+import { environmentName, healthReport, type RuntimeEnv } from './lib/runtime';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
 import { recoveryRoutes } from './routes/recovery';
@@ -29,7 +33,8 @@ const app = new Hono<{ Bindings: RuntimeEnv }>();
 app.use(
   '/api/*',
   cors({
-    origin: (origin, c) => allowedOrigin(origin, c.env?.ALLOWED_ORIGINS) ?? '',
+    // [AU] AU-4: localhost and workers.dev pass only outside production (ENVIRONMENT unset = production).
+    origin: (origin, c) => allowedOrigin(origin, c.env?.ALLOWED_ORIGINS, environmentName(c.env)) ?? '',
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // PATCH: console space settings (BUG-1)
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,
@@ -110,5 +115,15 @@ app.route('/api/config', configRoutes);
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),
 );
+
+// [AU] AMENDMENTS-AUDIT-2026-11 AU-2 (audit PROD-1): an error no route handled. One structured line for Workers Logs
+// (the route pattern, the method, the error class and a scrubbed message: lib/error-log; no body, name or id) and the
+// standard 500 envelope, which never carries the error text. A thrown HTTPException (503 not configured, lib/runtime)
+// is an answer, not a fault: it keeps its own response and is not logged.
+app.onError((error, c) => {
+  if (error instanceof HTTPException) return error.getResponse();
+  console.error(errorLogLine(c.req.method, routePath(c), error));
+  return fail(c, 'internal', 'Something went wrong', 500);
+});
 
 export default app;

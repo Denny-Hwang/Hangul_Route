@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../platform/storage', () => ({
+vi.mock('../../platform/storage', async () => (await import('../../test-support/storage-transactions')).withTransactions({
   readJson: vi.fn(async () => null),
   writeJson: vi.fn(async () => undefined),
 }));
@@ -123,9 +123,10 @@ describe('Results award through the real progress store', () => {
     });
   });
 
-  it('the last quest of Meet the Letters at 1 star brings the episode cards as extras with one write, and the reconcile finds nothing left', () => {
+  it('the last quest of Meet the Letters at 1 star brings the episode cards as extras with one write, and the reconcile finds nothing left', async () => {
     visit('quest:stage1-letters-q1', 'card:book', 1);
     visit('quest:stage1-letters-q2', 'card:hanji', 1);
+    for (let i = 0; i < 20; i += 1) await Promise.resolve();
     vi.mocked(writeJson).mockClear();
     const last = visit('quest:stage1-letters-q3', 'card:brush', 1);
     const lettersCards = episodeById(LETTERS)?.rewardCardIds ?? [];
@@ -134,8 +135,14 @@ describe('Results award through the real progress store', () => {
     expect(last.outcome.extras.every((e) => e.source === 'episode')).toBe(true);
     expect(last.outcome.episodeCompleted).toBe(LETTERS);
     expect(owned().sort()).toEqual([...lettersCards, 'card:tiger'].sort());
-    // One write for the score, one for the cards.
-    expect(vi.mocked(writeJson).mock.calls.filter(([k]) => k === 'progress:p1')).toHaveLength(2);
+    // [AU] Row AU-3: the score and the cards are saved in the same tick, each asking for a storage transaction; the
+    // one in flight and at most one waiting store them (a waiting write is not queued twice), and the last holds both.
+    for (let i = 0; i < 20; i += 1) await Promise.resolve();
+    const writes = vi.mocked(writeJson).mock.calls.filter(([k]) => k === 'progress:p1') as unknown as [string, { quests: { questId: string }[]; cards: { cardId: string }[] }][];
+    expect(writes.length).toBeGreaterThanOrEqual(1);
+    expect(writes.length).toBeLessThanOrEqual(2);
+    expect(writes.at(-1)?.[1].quests.map((q) => q.questId)).toContain('quest:stage1-letters-q3');
+    expect(writes.at(-1)?.[1].cards.map((c) => c.cardId).sort()).toEqual([...lettersCards, 'card:tiger'].sort());
     expect(names(last.track)).toContain('episode.complete');
     expect(useProgressStore.getState().reconcileAwards('p1')).toEqual([]);
     expect(useProgressStore.getState().catchUp['p1']).toBeUndefined();

@@ -32,6 +32,11 @@ export const GROWN_UP_HEADERS_MARKER = '# Grown-up pages (F-APP-001 section 3.17
  * never kept by a cache (`no-store`, which also keeps most browsers from putting them in the
  * back/forward cache), never framed and never indexed.
  *
+ * [AU] AU-5: each rule first detaches (`! Name`) every header it sets. `public/_headers` now gives every path the
+ * baseline (its `/*` rule), and Workers join a header that two matching rules set ("SAMEORIGIN, DENY",
+ * "nosniff, nosniff"). Workers apply a rule's detaches before its headers, so a grown-up path gets each of the six
+ * once, with the stricter value of this block, plus the baseline's Strict-Transport-Security.
+ *
  * @param {readonly string[]} prefixes GROWN_UP_PREFIXES of packages/content-schema
  * @returns {string}
  */
@@ -48,7 +53,7 @@ export function grownUpHeadersBlock(prefixes) {
   ];
   for (const prefix of prefixes) {
     for (const pattern of [prefix, `${prefix}/*`, `${prefix}.*`]) {
-      lines.push(pattern, ...GROWN_UP_HEADERS.map(([name, value]) => `  ${name}: ${value}`));
+      lines.push(pattern, ...GROWN_UP_HEADERS.map(([name]) => `  ! ${name}`), ...GROWN_UP_HEADERS.map(([name, value]) => `  ${name}: ${value}`));
     }
   }
   return `${lines.join('\n')}\n`;
@@ -112,6 +117,30 @@ export function headersFor(rules, pathname) {
     }
   }
   return out;
+}
+
+/**
+ * [AU] AU-5: headers that would be sent joined ("a, b") on one of these paths, as `path: Name (pattern + pattern)`
+ * (empty = none): two matching rules set the header and the later one did not detach it first.
+ * @param {ReturnType<typeof parseHeaders>} rules
+ * @param {readonly string[]} paths
+ * @returns {string[]}
+ */
+export function joinedHeaders(rules, paths) {
+  const problems = [];
+  for (const path of paths) {
+    const setBy = {};
+    for (const rule of rules) {
+      if (!patternMatches(rule.pattern, path)) continue;
+      for (const [name, value] of rule.headers) {
+        const key = name.toLowerCase();
+        if (value === null) delete setBy[key];
+        else if (key in setBy) problems.push(`${path}: ${name} (${setBy[key]} + ${rule.pattern})`);
+        else setBy[key] = rule.pattern;
+      }
+    }
+  }
+  return problems;
 }
 
 /** Console files that are not there, one per kind Next writes: what the single-page fallback answers with index.html. */

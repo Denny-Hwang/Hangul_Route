@@ -25,7 +25,10 @@ import * as nodeModule from 'node:module';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CONSOLE_ASSET_DIR } from '../pwa/grown-ups.mjs';
-import { GROWN_UP_HEADERS_MARKER, grownUpHeadersBlock, longCacheConsoleRules, parseHeaders } from './headers.mjs';
+import { GROWN_UP_HEADERS_MARKER, grownUpHeadersBlock, joinedHeaders, longCacheConsoleRules, parseHeaders } from './headers.mjs';
+
+/** [AU] AU-5: learner paths whose merged headers are checked for joined values, one per kind of rule in `public/_headers`. */
+export const JOIN_CHECK_PATHS = ['/', '/index.html', '/sw.js', '/manifest.webmanifest', '/journey', '/assets/assets/audio/a.mp3', '/_expo/static/js/web/a.js', '/_next/static/chunks/a.js'];
 
 /** `pnpm` arguments of the console role build (apps/web `build:console`, section 3.3). */
 export const CONSOLE_BUILD_ARGS = ['--filter', '@hangul-route/web', 'build:console'];
@@ -147,14 +150,19 @@ export function mergeConsole({ dist, consoleOut, isGrownUpPath, prefixes }) {
     );
   }
   const block = grownUpHeadersBlock(prefixes);
+  const separator = learnerHeaders === '' ? '' : learnerHeaders.endsWith('\n') ? '\n' : '\n\n';
+  const merged = `${learnerHeaders}${separator}${block}`;
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-5: no path gets a header twice. Workers join the values of a header that two
+  // matching rules set, so a rule that repeats a baseline header of `/*` without detaching it first is refused.
+  const joined = joinedHeaders(parseHeaders(merged), [...JOIN_CHECK_PATHS, ...prefixes.flatMap((prefix) => [prefix, `${prefix}/home`, `${prefix}.txt`])]);
+  if (joined.length > 0) throw new Error(`${headersPath} would send a header with two joined values: ${joined.join('; ')}`);
 
   for (const rel of files) {
     const target = join(dist, rel);
     mkdirSync(dirname(target), { recursive: true });
     copyFileSync(join(consoleOut, rel), target);
   }
-  const separator = learnerHeaders === '' ? '' : learnerHeaders.endsWith('\n') ? '\n' : '\n\n';
-  writeFileSync(headersPath, `${learnerHeaders}${separator}${block}`);
+  writeFileSync(headersPath, merged);
   return { files, pages: files.filter(isPage).length };
 }
 

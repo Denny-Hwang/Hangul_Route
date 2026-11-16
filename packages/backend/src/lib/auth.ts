@@ -18,9 +18,9 @@ import { devFallbacksAllowed, environmentName, notConfigured, type RuntimeEnv } 
  * claim is checked against the CORS allow-list (`authorizedPartiesFor`), so a
  * token minted on another subdomain of the same Clerk instance is refused.
  * Production (ENVIRONMENT unset or "production") uses the list alone: the
- * local dev server and workers.dev leniency that CORS keeps without an
- * explicit list never applies to tokens there, since a Clerk Production
- * instance serves only its own domain. A token with no `azp` (not minted by a
+ * local dev server and workers.dev leniency that CORS keeps outside
+ * production without an explicit list never applies there ([AU] AU-4), since
+ * a Clerk Production instance serves only its own domain. A token with no `azp` (not minted by a
  * browser) follows Clerk's default and is checked for signature and expiry only; F-AUTH-004 (row NS-1) lets it read
  * the account routes (the native app's token) but never a money route (`lib/native-client`).
  */
@@ -76,13 +76,14 @@ async function readAuthClaims(c: Context): Promise<AuthClaims | null> {
 
   if (!keyBound) return { sub: token, fva: null, verified: false, azp: null }; // DEV FALLBACK — opted in explicitly, never in production.
 
-  // Production: the allow-list alone, never widened by what the token claims.
-  const previewParty = environmentName(env) === 'production' ? undefined : claimedParty(token);
+  // Production: the allow-list alone, never widened by what the token claims ([AU] AU-4: `authorizedPartiesFor` refuses it too).
+  const environment = environmentName(env);
+  const previewParty = environment === 'production' ? undefined : claimedParty(token);
   try {
     const payload = await verifyToken(token, {
       secretKey: env.CLERK_SECRET_KEY,
       jwtKey: env.CLERK_JWT_KEY,
-      authorizedParties: authorizedPartiesFor(env.ALLOWED_ORIGINS, previewParty),
+      authorizedParties: authorizedPartiesFor(env.ALLOWED_ORIGINS, previewParty, environment),
     });
     if (typeof payload.sub !== 'string') return null;
     const azp = (payload as { azp?: unknown }).azp;

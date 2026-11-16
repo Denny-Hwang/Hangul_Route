@@ -5,12 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  * network. Storage is an in-memory map; the network is a spy.
  */
 const disk = vi.hoisted(() => new Map<string, string>());
-vi.mock('../../../platform/storage', () => ({
+vi.mock('../../../platform/storage', async () => (await import('../../../test-support/storage-transactions')).withTransactions({
   readJson: vi.fn(async (k: string) => (disk.has(k) ? JSON.parse(disk.get(k)!) : null)),
   readJsonStrict: vi.fn(async (k: string) => (disk.has(k) ? JSON.parse(disk.get(k)!) : null)),
   readJsonExact: vi.fn(async (k: string) => (disk.has(k) ? JSON.parse(disk.get(k)!) : null)),
   writeJson: vi.fn(async (k: string, v: unknown) => void disk.set(k, JSON.stringify(v))),
-  updateJson: vi.fn(async () => true),
   removeKey: vi.fn(async (k: string) => void disk.delete(k)),
   listKeys: vi.fn(async () => [...disk.keys()]),
   setWriteFence: vi.fn(),

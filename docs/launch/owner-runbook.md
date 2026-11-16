@@ -810,6 +810,40 @@ SELECT text_version, basis, COUNT(*) AS learners FROM class_scope_acks GROUP BY 
 
 **O-7. 되돌리기**: 앱의 어른 로그인을 즉시 끄려면 §N-2 (`NATIVE_ACCOUNT=disabled`, API Worker, 배포 불필요) 를 먼저 하고, 다음 네이티브 빌드에서 `EXPO_PUBLIC_NATIVE_SIGNIN` 을 지운다. 기기에 남은 것 (`hr:grownup:*` 기록, 키체인 `hr.clerk`) 은 스위치가 꺼진 빌드에서 읽히지 않으며 고칠 데이터는 없다.
 
+## P. 백업 · 복구 · 롤백 (AMENDMENTS-AUDIT-2026-11 AU-7, audit PROD-4)
+
+`main` 에 머지하면 API Worker 가 마이그레이션과 함께 바로 운영에 배포된다. 스테이징이 없으므로 아래 세 가지를 **공개 확대 전에 한 번 직접 연습**해 둔다. 명령은 `apps/api/` 에서 실행한다 (`pnpm exec wrangler ...`). 로컬에서 wrangler 를 쓸 수 없는 환경이면 P-2 는 대시보드로 하고, P-1 과 P-3 은 wrangler 가 되는 기기에서 한다.
+
+### P-1. D1 을 과거 시점으로 되돌리기 (Time Travel)
+D1 은 최근 변경 이력을 보관한다 (무료 플랜 7일, 유료 플랜 30일). 잘못된 `UPDATE` / `DELETE` 나 잘못된 데이터 마이그레이션 뒤에 쓴다.
+1. 사고 시각을 UTC 로 적는다. 그 직전 시각이 복구 지점이다.
+2. 지금 상태의 북마크를 먼저 적어 둔다 (복구를 되돌릴 때 쓴다): `wrangler d1 time-travel info hangul-route`
+3. 복구: `wrangler d1 time-travel restore hangul-route --timestamp=<RFC3339 시각, 예: 2026-11-16T02:10:00Z>`
+4. `/health` 와 D1 Console 에서 행 수를 확인한다.
+- 복구 지점 **이후에 들어온 쓰기는 모두 사라진다** (그 사이의 진도 백업, 새 반, 쪽지). 학습자 기기는 다음 동기화 때 자기 진도를 다시 올리므로 진도는 대부분 돌아오지만, 반 참여·쪽지·결제 기록은 돌아오지 않는다. 그래서 사고를 알면 바로 한다.
+- 복구는 스키마도 그 시점으로 되돌린다. 그 뒤에 추가된 마이그레이션이 있으면 P-2 로 Worker 도 같은 시점의 버전으로 맞추거나, 다음 배포가 마이그레이션을 다시 적용하게 둔다.
+
+### P-2. Worker 를 이전 버전으로 되돌리기
+- 대시보드: Workers & Pages → `hangul-route-api` (또는 `-app`, `-web`) → Deployments → 되돌릴 버전 → **Rollback**.
+- 명령: `wrangler rollback <version-id>` (버전 목록은 `wrangler deployments list`).
+- 롤백은 코드만 되돌린다. D1 스키마와 데이터는 그대로다. 이 저장소의 마이그레이션은 추가만 하므로 (컬럼·테이블 추가) 이전 코드는 새 스키마에서 그대로 돈다.
+- **되돌리면 안 되는 지점이 있다.** 아래 "문제가 생기면" 의 롤백 줄 (F-PLC-001 P-3b, F-PLAN-002 P2-4, BL-W) 을 먼저 읽는다.
+- 롤백한 뒤에는 원인 PR 을 되돌리는 PR 을 `main` 에 넣는다. 그러지 않으면 다음 머지가 같은 코드를 다시 배포한다.
+
+### P-3. 주기적 내보내기 (주 1회 권장)
+`wrangler d1 export hangul-route --remote --output=hangul-route-$(date +%F).sql`
+- 파일에는 학습자 별명·진도·어른 계정 이메일이 들어 있다. 암호화된 저장소에만 두고, 90일이 지난 파일은 지운다 (개인정보처리방침의 보존 기간).
+- Time Travel 보관 기간보다 오래된 사고에 쓰는 마지막 수단이다.
+
+### P-4. 연습 기록
+처음 한 번: 테스트용 행 하나를 넣고 → P-1 로 그 전으로 되돌려 행이 사라지는지 보고 → P-2 로 Worker 를 한 버전 되돌렸다가 다시 올린다. 날짜와 걸린 시간을 여기에 적는다: (아직 없음)
+
+### P-5. API 를 부를 수 있는 사이트 목록 `ALLOWED_ORIGINS` (AU-4, audit SEC-2)
+AU-4 부터 운영 API 는 `ALLOWED_ORIGINS` 가 비어 있으면 `hangulroute.com`, `www.hangulroute.com`, `app.hangulroute.com` 세 곳만 받는다. `*.workers.dev` 미리보기 주소나 `localhost` 에서 운영 API 를 부르려면 `hangul-route-api` → Settings → Variables and Secrets 에 `ALLOWED_ORIGINS` 를 쉼표로 구분해 넣는다 (예: `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com,https://hangul-route-app.<계정>.workers.dev`). 목록을 넣으면 그 목록만 받는다.
+
+### P-6. 오류 로그 보기 (AU-2, audit PROD-1)
+AU-2 부터 API Worker 는 처리하지 못한 오류마다 한 줄을 남긴다. 대시보드 → `hangul-route-api` → Observability (Logs) 에서 `api.error` 로 찾는다 (경로 패턴·메서드·오류 종류만 있고 이름이나 id 는 없다). 요청마다 남는 Cloudflare 기본 로그는 주소에 학습자 id 가 들어가므로 꺼 두었다 (`invocation_logs = false`). 앱 크래시 수는 D1 `telemetry_daily` 의 `app.crash` 행이다. 외부 가동 감시 (예: 5분마다 `/health` 를 불러 `status` 가 `ok` 가 아니면 메일) 는 대시보드나 외부 서비스에서 따로 건다.
+
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
 

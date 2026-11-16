@@ -32,7 +32,7 @@ import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { emitGoalEvent } from '../logic/goals/goal-events';
 import { sessionDayNow } from '../platform/goal-clock';
 import { applyVocabEvents, emptyVocab, localDay, vocabOf, type VocabEvent } from '../logic/vocab/progress';
-import { readJson, removeKey, writeJson } from '../platform/storage';
+import { keepRawCopy, readJsonStrict, removeKey, updateJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { isLiveGuestId } from './guest-store';
 import { onProfileRemoved } from './profile-removal';
@@ -42,6 +42,13 @@ import { upperCardsOnFor } from './upper-cards-switch';
 /** The learner's progress snapshot (`hr:progress:<id>`); exported for the removal sweep (row OA-7a). */
 export const PROGRESS_KEY = (profileId: string): string => `progress:${profileId}`;
 const key = PROGRESS_KEY;
+
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-3: where a stored snapshot that cannot be used is kept, byte for byte
+ * (`hr:progress-corrupt:<id>`), before anything is written in its place. The first copy is the one kept. It goes
+ * with the learner (the removal sweep, row OA-7a).
+ */
+export const PROGRESS_CORRUPT_KEY = (profileId: string): string => `progress-corrupt:${profileId}`;
 
 /**
  * [OA] Learners removed from this device in this session (row OA-7a, CS-20): a read or a derive still in flight
@@ -162,6 +169,10 @@ interface Actions {
    * that overlap share one read). Writes made before it lands are merged with
    * the saved copy, never written over it (audit UX-01 / L16). Leaves no
    * record when nothing is saved or written.
+   * [AU] Row AU-3: never rejects. A storage read that fails leaves the profile
+   * un-hydrated (nothing is written for it; the next call reads again). A
+   * stored value that cannot be used is first copied to
+   * `hr:progress-corrupt:<id>`, and the profile then starts from a fresh snapshot.
    */
   hydrate: (profileId: string) => Promise<void>;
   ensure: (profileId: string) => ProgressSnapshot;
@@ -308,9 +319,107 @@ function blankSnapshot(profileId: string): ProgressSnapshot {
   };
 }
 
-function save(profileId: string, snap: ProgressSnapshot): void {
+/**
+ * Whether a stored value can be a snapshot at all: an object, not a list or a bare value. A record that is an object
+ * is read back as it is, unvalidated, as before (an old or malformed one must never stop a hydrate or a sync);
+ * anything else is kept aside, never worked on (AU-3).
+ */
+function isSnapshot(value: unknown): value is ProgressSnapshot {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Thrown inside a storage transaction to end it with no write: the stored value parses but is no snapshot. */
+const NOT_A_SNAPSHOT = new Error('progress: the stored value is not a snapshot');
+
+/** What one storage transaction does with the stored snapshot (null: nothing stored): the snapshot to store, or `undefined` to store nothing. */
+type StoredStep = (stored: ProgressSnapshot | null) => ProgressSnapshot | undefined;
+
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-3: every read and every write of `hr:progress:<id>` is one storage transaction
+ * (`updateJson`) that reads the stored record first, so a record that cannot be read is never written over.
+ * - The storage read fails: nothing is written and the answer is `unread` (`step` did not run).
+ * - The stored value does not parse, or parses to something that is no snapshot: its raw bytes are first copied to
+ *   `hr:progress-corrupt:<id>` (kept as it is when that key already holds a copy), and only then does `step` run, with
+ *   null for "nothing usable stored". When the copy cannot be made, nothing is written (`unread`).
+ * Under the write fence (All lessons) the transaction is not run at all; `step` then gets what a plain read finds and
+ * its answer is not stored. Never throws.
+ */
+async function withStored(profileId: string, step: StoredStep): Promise<'done' | 'unread'> {
+  const storageKey = key(profileId);
+  let ran = false;
+  try {
+    await updateJson<unknown>(
+      storageKey,
+      (stored) => {
+        if (stored !== null && !isSnapshot(stored)) throw NOT_A_SNAPSHOT;
+        ran = true;
+        return step(stored);
+      },
+      { exact: true },
+    );
+    if (!ran) {
+      const stored = await readJsonStrict<unknown>(storageKey);
+      step(isSnapshot(stored) ? stored : null);
+    }
+    return 'done';
+  } catch (error) {
+    // `step` itself failed after it ran (a write that did not land, or a snapshot the merge cannot read): it does not run twice.
+    if (ran) return 'unread';
+    try {
+      // A read that failed has nothing to copy and stays unread; a damaged value is kept before anything replaces it.
+      if (!(await keepRawCopy(storageKey, PROGRESS_CORRUPT_KEY(profileId), { onlyUnparsable: error !== NOT_A_SNAPSHOT }))) return 'unread';
+      // The learner was removed while the copy was being made (row OA-7a): the removal already deleted both keys, so
+      // the copy that landed after it goes too, and nothing is written for a learner who is no longer here.
+      if (removedNow(profileId)) {
+        await removeKey(PROGRESS_CORRUPT_KEY(profileId)).catch(() => undefined);
+        return 'unread';
+      }
+      await updateJson<unknown>(storageKey, (stored) => step(isSnapshot(stored) ? stored : null));
+      return 'done';
+    } catch {
+      return 'unread';
+    }
+  }
+}
+
+/**
+ * The storage work of one profile runs one step after another, so a write never passes the read before it. A step
+ * for a profile with nothing running starts at once.
+ */
+const chains = new Map<string, Promise<unknown>>();
+function enqueue<T>(profileId: string, job: () => Promise<T>): Promise<T> {
+  const before = chains.get(profileId);
+  const run = before ? before.then(job) : job();
+  const tail: Promise<unknown> = run.catch(() => undefined).then(() => {
+    if (chains.get(profileId) === tail) chains.delete(profileId);
+  });
+  chains.set(profileId, tail);
+  return run;
+}
+
+/** Profiles with a write waiting for its turn: it stores the snapshot held when it runs, so a second one is not queued. */
+const writeWaiting = new Set<string>();
+
+/**
+ * [AU] Profiles whose stored snapshot could not be read by the last `hydrate` (row AU-3). They stay un-hydrated:
+ * nothing is written for them, and the next `hydrate` reads again.
+ */
+const unread = new Set<string>();
+
+/** Stores the snapshot the profile holds in memory now (`withStored`: never over a record that cannot be read). */
+function writeStored(profileId: string): void {
+  if (writeWaiting.has(profileId)) return;
+  const write = (): Promise<unknown> => {
+    writeWaiting.delete(profileId);
+    return withStored(profileId, () => (removedNow(profileId) ? undefined : useProgressStore.getState().byProfile[profileId]));
+  };
+  if (chains.has(profileId)) writeWaiting.add(profileId);
+  void enqueue(profileId, write);
+}
+
+function save(profileId: string): void {
   if (removedNow(profileId)) return;
-  void writeJson(key(profileId), snap);
+  writeStored(profileId);
   notifyProgressPersisted(profileId);
 }
 
@@ -385,7 +494,7 @@ function without(ids: Set<string>, id: string): Set<string> {
 function persist(profileId: string, snap: ProgressSnapshot): void {
   const store = useProgressStore.getState();
   if (store.hydratedFor.has(profileId)) {
-    save(profileId, snap);
+    save(profileId);
     return;
   }
   useProgressStore.setState((s) => ({ pendingFor: new Set([...s.pendingFor, profileId]) }));
@@ -500,36 +609,50 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
     const running = inFlight.get(profileId);
     if (running) return running;
-    const load = (async () => {
-      const loaded = await readJson<ProgressSnapshot>(key(profileId));
-      // A restore or a reset landed first; this read is stale.
-      if (get().hydratedFor.has(profileId)) return;
-      const { byProfile, pendingFor, pendingVocabEvents } = get();
-      const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
-      const queued = pendingVocabEvents[profileId];
-      const found =
-        unsaved && loaded
-          ? queued
-            ? replayVocab(replayUnsaved(mergeSnapshots(withoutVocab(unsaved), loaded, { now: new Date() }), unsaved), queued)
-            : replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
-          : (unsaved ?? loaded ?? byProfile[profileId]);
-      const latched = found ? withLatches(found, new Date()) : found;
-      // Reconcile after the merge with the saved copy, never before (F-STORY-006 §3.5).
-      const { snap, added } = latched ? withAwards(profileId, latched) : { snap: undefined, added: [] };
-      set((s) => ({
-        byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
-        hydratedFor: new Set([...s.hydratedFor, profileId]),
-        pendingFor: without(s.pendingFor, profileId),
-        pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
-        ...catchUpAfter(s, profileId, added),
-      }));
-      announceCatchUp(profileId, added);
-      // One write for the pending writes, an added latch and the cards they
-      // earned. Cards are saved only onto a record that was read or written:
-      // nothing loaded also means "the read failed", and a blank record holding
-      // only the welcome card would replace real progress (it stays in memory).
-      if (snap && (unsaved || latched !== found || (loaded && added.length > 0))) save(profileId, snap);
-    })().finally(() => inFlight.delete(profileId));
+    const load = enqueue(profileId, async () => {
+      let after: (() => void) | undefined;
+      const outcome = await withStored(profileId, (loaded) => {
+        // A restore or a reset landed first; this read is stale.
+        if (get().hydratedFor.has(profileId)) return undefined;
+        const { byProfile, pendingFor, pendingVocabEvents } = get();
+        const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
+        const queued = pendingVocabEvents[profileId];
+        const found =
+          unsaved && loaded
+            ? queued
+              ? replayVocab(replayUnsaved(mergeSnapshots(withoutVocab(unsaved), loaded, { now: new Date() }), unsaved), queued)
+              : replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
+            : (unsaved ?? loaded ?? byProfile[profileId]);
+        const latched = found ? withLatches(found, new Date()) : found;
+        // Reconcile after the merge with the saved copy, never before (F-STORY-006 §3.5).
+        const { snap, added } = latched ? withAwards(profileId, latched) : { snap: undefined, added: [] };
+        set((s) => ({
+          byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
+          hydratedFor: new Set([...s.hydratedFor, profileId]),
+          pendingFor: without(s.pendingFor, profileId),
+          pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
+          ...catchUpAfter(s, profileId, added),
+        }));
+        unread.delete(profileId);
+        // One write for the pending writes, an added latch and the cards they
+        // earned. Cards are saved only onto a record that was read or written:
+        // a blank record holding only the welcome card stays in memory until
+        // the next real write (nothing is stored for a learner who did nothing).
+        const write = snap !== undefined && (unsaved !== undefined || latched !== found || (loaded !== null && added.length > 0)) && !removedNow(profileId);
+        after = () => {
+          announceCatchUp(profileId, added);
+          if (write) notifyProgressPersisted(profileId);
+        };
+        return write ? snap : undefined;
+      });
+      // [AU] Row AU-3: a stored record that could not be read (or a damaged one that could not be kept aside) leaves
+      // the profile un-hydrated, so nothing is written for it; the writes made meanwhile stay in memory and the next
+      // `hydrate` reads again.
+      if (outcome === 'unread' && !get().hydratedFor.has(profileId)) unread.add(profileId);
+      after?.();
+    })
+      .catch(() => undefined)
+      .finally(() => inFlight.delete(profileId));
     inFlight.set(profileId, load);
     return load;
   },
@@ -761,12 +884,19 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     settle(profileId, fresh);
     // The open session went with the old record: its owner's end is now a no-op.
     set((s) => ({ ...withoutCatchUp(s, profileId), openSession: s.openSession?.profileId === profileId ? null : s.openSession }));
-    save(profileId, fresh);
+    save(profileId);
   },
 
   replaceSnapshot: (profileId, snapshot) => {
     // [OA] A plan derivation or sync that lands after the learner was removed changes nothing (row OA-7a).
     if (removedNow(profileId)) return;
+    // [AU] Row AU-3: the stored record could not be read, so a replacement is not final here: it is held like any
+    // write made before the saved copy loaded, and the next read merges the two (nothing is written until then).
+    if (unread.has(profileId) && !get().hydratedFor.has(profileId)) {
+      set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snapshot } }));
+      persist(profileId, snapshot);
+      return;
+    }
     // Every sync, restore and plan derivation lands here. A completion that
     // arrived by sync or restore is latched now, not at the next cold start,
     // and the cards it earned are reconciled after the merge (F-STORY-006
@@ -776,7 +906,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     settle(profileId, snap);
     if (added.length > 0) set((s) => catchUpAfter(s, profileId, added));
     announceCatchUp(profileId, added);
-    void writeJson(key(profileId), snap);
+    writeStored(profileId);
     if (snap !== snapshot) notifyProgressPersisted(profileId);
     // The steady-weeks latch runs after every merge (F-CURR-002 row CM-17).
     emitGoalEvent({ type: 'merged', profileId });
@@ -840,7 +970,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const updated = update(snap);
     if (updated === snap) return true;
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
-    save(profileId, updated);
+    save(profileId);
     return true;
   },
 }));
@@ -856,6 +986,9 @@ onProfileRemoved((profileId) => {
     pendingFor: without(s.pendingFor, profileId),
     pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
   }));
+  unread.delete(profileId);
   removeKey(key(profileId)).catch(() => undefined);
+  // [AU] Row AU-3: the copy of a damaged record goes with the learner.
+  removeKey(PROGRESS_CORRUPT_KEY(profileId)).catch(() => undefined);
 });
 

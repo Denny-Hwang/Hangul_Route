@@ -69,7 +69,7 @@ export function transferDeviceConsentEnabled(env: TransferEnv | undefined): bool
 // ---------------------------------------------------------------------------
 // New requests (§4.1)
 
-/** `transfer:<crypto.randomUUID()>`; never the Math.random `id()` of store.ts. */
+/** `transfer:<crypto.randomUUID()>`, not the shorter `id()` of store.ts. */
 export function newTransferId(): string {
   return `transfer:${crypto.randomUUID()}`;
 }

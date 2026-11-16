@@ -17,12 +17,14 @@ import {
   GROWN_UP_HEADERS_MARKER,
   grownUpHeadersBlock,
   headersFor,
+  joinedHeaders,
   longCacheConsoleRules,
   parseHeaders,
   patternMatches,
 } from '../app-host/headers.mjs';
 import {
   CONSOLE_BUILD_ARGS,
+  JOIN_CHECK_PATHS,
   consoleBuildEnv,
   listFiles,
   mergeConsole,
@@ -47,6 +49,16 @@ const SECTION_3_17 = [
   ['Referrer-Policy', 'strict-origin-when-cross-origin'],
   ['X-Robots-Tag', 'noindex, nofollow'],
 ];
+
+/** [AU] AMENDMENTS-AUDIT-2026-11 AU-5: what `public/_headers` gives every path, in its order. */
+const BASELINE = [
+  ['Strict-Transport-Security', 'max-age=31536000'],
+  ['X-Content-Type-Options', 'nosniff'],
+  ['Referrer-Policy', 'strict-origin-when-cross-origin'],
+  ['X-Frame-Options', 'SAMEORIGIN'],
+  ['Content-Security-Policy', "frame-ancestors 'self'"],
+];
+const lower = (pairs) => Object.fromEntries(pairs.map(([k, v]) => [k.toLowerCase(), v]));
 
 const LEARNER_DIST = {
   'index.html': '<!doctype html><html><head><meta name="viewport" content="width=device-width"></head><body><div id="root"></div></body></html>',
@@ -114,9 +126,18 @@ describe('the grown-up _headers block (section 3.17)', () => {
     expect(rules.map((r) => r.pattern)).toEqual(GROWN_UP_PREFIXES.flatMap((p) => [p, `${p}/*`, `${p}.*`]));
   });
 
-  it('gives every pattern every header of section 3.17', () => {
+  it('gives every pattern every header of section 3.17, each detached first so an earlier rule never joins it ([AU] AU-5)', () => {
     expect(GROWN_UP_HEADERS).toEqual(SECTION_3_17);
-    for (const rule of rules) expect(rule.headers, rule.pattern).toEqual(SECTION_3_17);
+    for (const rule of rules) expect(rule.headers, rule.pattern).toEqual([...SECTION_3_17.map(([name]) => [name, null]), ...SECTION_3_17]);
+  });
+
+  it('[AU] AU-5: after any earlier rule, a grown-up path gets each header of section 3.17 once, with its own value', () => {
+    const earlier = '/*\n  X-Frame-Options: SAMEORIGIN\n  Content-Security-Policy: frame-ancestors \'self\'\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Cache-Control: no-cache\n  X-Robots-Tag: all\n  X-Other: kept\n';
+    const merged = parseHeaders(`${earlier}${block}`);
+    for (const path of ['/teach', '/teach/home', '/teach.txt', '/account/billing']) {
+      expect(headersFor(merged, path), path).toEqual({ ...lower(SECTION_3_17), 'x-other': 'kept' });
+    }
+    expect(headersFor(merged, '/')['x-frame-options']).toBe('SAMEORIGIN');
   });
 
   it('reaches every grown-up page, deep pages and payloads included', () => {
@@ -181,6 +202,19 @@ describe('parseHeaders, patternMatches and headersFor (the Workers assets _heade
     expect(headersFor(rules, '/')).toEqual({ 'x-a': '1' });
   });
 
+  it('[AU] AU-5: a detach and a new value in one rule leave the new value alone, as Workers apply a rule (detaches first)', () => {
+    const rules = parseHeaders('/*\n  X-Frame-Options: SAMEORIGIN\n/teach/*\n  ! X-Frame-Options\n  X-Frame-Options: DENY\n');
+    expect(headersFor(rules, '/teach/home')).toEqual({ 'x-frame-options': 'DENY' });
+    expect(headersFor(rules, '/')).toEqual({ 'x-frame-options': 'SAMEORIGIN' });
+  });
+
+  it('[AU] AU-5: joinedHeaders names a header two matching rules set without a detach', () => {
+    const rules = parseHeaders('/*\n  X-A: 1\n  X-B: 1\n/teach/*\n  x-a: 2\n  ! X-B\n  X-B: 2\n/sw.js\n  X-C: 1\n');
+    expect(joinedHeaders(rules, ['/', '/sw.js', '/teach/home'])).toEqual(['/teach/home: x-a (/* + /teach/*)']);
+    expect(joinedHeaders(rules, ['/', '/sw.js'])).toEqual([]);
+    expect(joinedHeaders([], ['/'])).toEqual([]);
+  });
+
   it('finds a rule that would let a browser keep a missing /_next/ file (section 3.3)', () => {
     expect(longCacheConsoleRules(parseHeaders('/_next/static/*\n  Cache-Control: public, max-age=31536000, immutable\n'))).toEqual(['/_next/static/*']);
     expect(longCacheConsoleRules(parseHeaders('/*\n  Cache-Control: max-age=31536000, IMMUTABLE\n'))).toEqual(['/*']);
@@ -218,6 +252,28 @@ describe('apps/mobile/public/_headers', () => {
 
   it('is not the grown-up block (only the merge appends it)', () => {
     expect(LEARNER_HEADERS).not.toContain(GROWN_UP_HEADERS_MARKER);
+  });
+
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-5 (audit SEC-3).
+  it('[AU] AU-5: one /* rule sets the five baseline security headers and nothing else', () => {
+    expect(rules.filter((r) => r.pattern === '/*')).toEqual([{ pattern: '/*', headers: BASELINE }]);
+  });
+
+  it('[AU] AU-5: every learner path gets the five headers, each once', () => {
+    for (const path of ['/', '/index.html', '/journey', '/sw.js', '/manifest.webmanifest', '/assets/assets/audio/a.mp3', '/fonts/hr-presenter-kr.woff2', '/_next/static/chunks/a.js', '/present', '/browse']) {
+      const got = headersFor(rules, path);
+      for (const [name, value] of BASELINE) expect(got[name.toLowerCase()], `${path} ${name}`).toBe(value);
+    }
+    expect(joinedHeaders(rules, JOIN_CHECK_PATHS)).toEqual([]);
+  });
+
+  it('[AU] AU-5: the app\'s own script chunks get four of the five: nosniff stays off them (F-CURR-002 section 10)', () => {
+    const { 'x-content-type-options': _nosniff, ...rest } = lower(BASELINE);
+    for (const path of ['/_expo/static/js/web/index-0123.js', '/_expo/static/js/web/lessons-a-0123.js']) {
+      expect(headersFor(rules, path), path).toEqual(rest);
+    }
+    // Only the script folder: other /_expo files keep nosniff.
+    expect(headersFor(rules, '/_expo/static/css/a.css')['x-content-type-options']).toBe('nosniff');
   });
 });
 
@@ -328,7 +384,26 @@ describe('mergeConsole', () => {
     expect(headers.slice(LEARNER_HEADERS.length)).toBe(`\n${grownUpHeadersBlock(GROWN_UP_PREFIXES)}`);
     const rules = parseHeaders(headers);
     expect(headersFor(rules, '/teach/home')['x-frame-options']).toBe('DENY');
-    expect(headersFor(rules, '/sw.js')).toEqual({ 'cache-control': 'no-cache' });
+    expect(headersFor(rules, '/sw.js')).toEqual({ ...lower(BASELINE), 'cache-control': 'no-cache' });
+  });
+
+  it('[AU] AU-5: the merged file sends each header once on every path: grown-up pages the stricter six plus HSTS, learner pages the baseline', () => {
+    merge();
+    const rules = parseHeaders(readFileSync(join(dist, '_headers'), 'utf8'));
+    const grownUp = { ...lower(SECTION_3_17), 'strict-transport-security': 'max-age=31536000' };
+    for (const prefix of GROWN_UP_PREFIXES) {
+      for (const path of [prefix, `${prefix}/home`, `${prefix}.txt`]) expect(headersFor(rules, path), path).toEqual(grownUp);
+    }
+    expect(headersFor(rules, '/')).toEqual(lower(BASELINE));
+    expect(headersFor(rules, '/index.html')).toEqual({ ...lower(BASELINE), 'cache-control': 'no-cache' });
+    expect(joinedHeaders(rules, [...JOIN_CHECK_PATHS, ...GROWN_UP_PREFIXES.flatMap((p) => [p, `${p}/home`, `${p}.txt`])])).toEqual([]);
+  });
+
+  it('[AU] AU-5: refuses learner rules that would send a header with two joined values, and writes nothing', () => {
+    writeFileSync(join(dist, '_headers'), `${LEARNER_HEADERS}/sw.js\n  X-Frame-Options: DENY\n`);
+    const before = snapshot(dist);
+    expect(merge).toThrow(/two joined values: \/sw\.js: X-Frame-Options \(\/\* \+ \/sw\.js\)/);
+    expect(snapshot(dist)).toEqual(before);
   });
 
   it('writes the block alone when dist has no _headers', () => {

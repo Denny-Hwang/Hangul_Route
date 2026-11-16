@@ -707,6 +707,9 @@ describe('nosniffLessonChunks', () => {
   it('passes the shipped rules: public/_headers plus the grown-up block merge-console.mjs appends', () => {
     const shipped = readFileSync(new URL('../../public/_headers', import.meta.url), 'utf8');
     expect(nosniffLessonChunks(`${shipped}\n${grownUpHeadersBlock(GROWN_UP_PREFIXES)}`, urls)).toEqual([]);
+    // [AU] AMENDMENTS-AUDIT-2026-11 AU-5: the baseline `/*` rule sends nosniff; the `/_expo/static/js/*` detach is what keeps it off the chunks.
+    expect(shipped).toMatch(/^\/\*\n(?:  .+\n)*  X-Content-Type-Options: nosniff$/m);
+    expect(nosniffLessonChunks(shipped.replace('/_expo/static/js/*\n  ! X-Content-Type-Options\n', ''), urls)).toEqual(urls);
   });
 
   it('fails a rule that would serve the chunks with nosniff, so a chunk request of an older build keeps reaching the reload', () => {

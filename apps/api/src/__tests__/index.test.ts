@@ -108,6 +108,15 @@ describe("apps/api router", () => {
     expect(toml.indexOf("[triggers]")).toBeGreaterThan(toml.indexOf("[[d1_databases]]"));
   });
 
+  it("wrangler.toml turns Workers Logs on without the per-request line, in top-level tables after the triggers ([AU] AMENDMENTS-AUDIT-2026-11 AU-2)", () => {
+    const toml = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../wrangler.toml"), "utf8");
+    expect(toml).toMatch(/^\[observability\]\nenabled = true$/m);
+    // No line per request: its URL would carry learner and space ids.
+    expect(toml).toMatch(/^\[observability\.logs\]\nenabled = true\ninvocation_logs = false$/m);
+    expect(toml.match(/^\[observability\]$/gm)).toHaveLength(1);
+    expect(toml.indexOf("\n[observability]")).toBeGreaterThan(toml.indexOf("\n[triggers]"));
+  });
+
   it("the scheduled handler fails closed without D1 on a production Worker: it purges nothing from memory", async () => {
     const waitUntil = vi.fn();
     await expect(worker.scheduled({ scheduledTime: Date.now() }, {}, { waitUntil })).rejects.toMatchObject({ status: 503 });

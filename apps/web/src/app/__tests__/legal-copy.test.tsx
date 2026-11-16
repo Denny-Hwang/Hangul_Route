@@ -163,8 +163,9 @@ describe('privacy policy', () => {
     expect(privacy).toContain('is saved with the learner\'s progress reports.');
   });
 
-  it('says the privacy page was last updated 2026-10-23 ([GU] GU-7: the first-quest bullet; SN-2 moved it to 2026-10-22)', () => {
-    expect(privacy).toContain('Effective October 23, 2026');
+  it('says the privacy page was last updated 2026-11-16 ([AU] AU-1: the consent sentences; [GU] GU-7 moved it to 2026-10-23)', () => {
+    expect(privacy).toContain('Effective November 16, 2026');
+    expect(privacy).not.toContain('Effective October 23, 2026');
     expect(privacy).not.toContain('Effective October 22, 2026');
   });
 
@@ -218,7 +219,16 @@ describe('privacy policy', () => {
 
   it('keeps every child-privacy protection', () => {
     expect(privacy).toContain("Children's privacy (COPPA / GDPR-K)");
-    expect(privacy).toContain('verifiable parental consent');
+    // [AU] AMENDMENTS-AUDIT-2026-11 AU-1 (audit PRIV-1): the Policy names the step the product runs (the grown-up's
+    // agreement and PIN on the device, F-LEARN-001 3.3), never a consent method it does not run.
+    expect(privacy).not.toMatch(/verifiable/i);
+    expect(privacy).toContain(
+      'A learner profile needs no sign-in and is not an account; only grown-ups create accounts. Before a child’s profile is saved or backed up, a parent, guardian or teacher agrees to this policy on the device and sets a grown-up PIN. A learner who sets up their own profile confirms that they are 13 or older.',
+    );
+    expect(privacy).toContain(
+      'We practice data minimization, ask a parent, guardian or teacher to agree to this policy on the device and set a grown-up PIN before a child’s profile is saved or backed up, and give parents the right to review or delete their child’s data at any time.',
+    );
+    expect(privacy).toContain('Hangul Route is designed to comply with the U.S. Children’s Online Privacy Protection Act (COPPA) and similar rules for minors.');
     expect(privacy).toContain('parent-gate');
     expect(privacy).toContain('No advertising identifiers');
     expect(privacy).toMatch(/A parent can review, export, correct, or delete/);
@@ -336,8 +346,8 @@ describe('privacy policy', () => {
       expect(on).toContain(sentence);
     });
 
-    it('with the claim on: the Policy carries its effective date (GU-7\'s merge day, a merge gate), and the rest of the Policy is the claim-off Policy', () => {
-      expect(on).toContain('Effective October 23, 2026');
+    it('with the claim on: the Policy carries its effective date (now [AU] AU-1\'s, 2026-11-16), and the rest of the Policy is the claim-off Policy', () => {
+      expect(on).toContain('Effective November 16, 2026');
       expect(on.replace(SENTENCES.join(' '), ' ').replace(/\s+/g, ' ')).toBe(off);
       expect(on).not.toMatch(/\bdraft\b|legal counsel|pending review|reviewed by counsel/i);
     });
@@ -570,11 +580,11 @@ describe('payment facts (F-SITE-002 S-7)', () => {
       }
     });
 
-    it('both documents moved to 2026-10-22 with the SN-2 fact fixes and the banner removed; the Privacy Policy to 2026-10-23 with [GU] GU-7', () => {
+    it('both documents moved to 2026-10-22 with the SN-2 fact fixes and the banner removed; the Privacy Policy to 2026-10-23 with [GU] GU-7, then to 2026-11-16 with [AU] AU-1', () => {
       expect(terms).toContain('Effective October 22, 2026');
       expect(terms).not.toContain('Effective October 20, 2026');
       expect(terms).not.toContain('Effective May 22, 2026');
-      expect(privacy).toContain('Effective October 23, 2026');
+      expect(privacy).toContain('Effective November 16, 2026');
       expect(privacy).not.toContain('Effective October 20, 2026');
     });
 

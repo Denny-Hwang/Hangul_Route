@@ -4,7 +4,7 @@ import type { InboxPlan, Profile, ProgressSnapshot } from '@hangul-route/content
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
-vi.mock('../../platform/storage', () => ({
+vi.mock('../../platform/storage', async () => (await import('../../test-support/storage-transactions')).withTransactions({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
   readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
   // [OA] Row OA-5: the locks are read exactly (and once more on a fresh connection when that fails).
@@ -151,6 +151,8 @@ describe('cold start (audit UX-01 / L16)', () => {
 
     await hydrateLearnerData();
     useProgressStore.getState().beginSession('profile:a', { owner: 'quest:quest:a', streak: true });
+    // [AU] Row AU-3: a write is a storage transaction that reads the stored record first; it lands after the call.
+    for (let i = 0; i < 20; i += 1) await Promise.resolve();
 
     const stored = mem.get('progress:profile:a') as ProgressSnapshot;
     expect(stored.cards.map((c) => c.cardId)).toEqual(['card:book', 'card:tiger']);

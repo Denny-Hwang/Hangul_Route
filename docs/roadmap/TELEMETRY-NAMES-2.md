@@ -302,6 +302,8 @@ These are shape checks, so `questId`, `stampId` and `questKind` could still carr
 |---|---|---|---|---|
 | 1 | `app.crash` | F-APP-001 (the crash screen, `learner.oops`) | `{ surface: 'learner' \| 'browse' \| 'presenter', route, errorName, message, chunk: boolean, appVersion }`: the root's error boundary caught an error and drew "Hoya tripped over a rock"; `chunk` is true when a lesson, screen or root chunk could not load | `App.tsx`, `BrowseApp.tsx` and `PresenterApp.tsx` (`onError` of each top-level `ErrorBoundary`, `platform/crash-report.ts`) |
 
+**Daily count ([AU] AMENDMENTS-AUDIT-2026-11 AU-2, audit PROD-1).** The Worker counts `app.crash` in `telemetry_daily` by UTC day and name only (`dims` is always `''`: the route, error class and message are never a counter key), under the same write budget and the `TELEMETRY_DAILY` kill switch as the other counted names. Crashes per day: `SELECT day, n FROM telemetry_daily WHERE name = 'app.crash' ORDER BY day DESC;`
+
 **All lessons.** The `/browse` root's telemetry fence (F-BROWSE-001 section 4.10) lets `app.crash` through beside the five `browse.*` names; it carries nothing of a learner, and it is sent through the browse queue, never the learner's.
 
 ## V. Native grown-up sign-in names (F-AUTH-004 section 15; added by its NS-1 PR)

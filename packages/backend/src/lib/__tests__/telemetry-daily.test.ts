@@ -38,12 +38,13 @@ describe('telemetryDailyEnabled', () => {
 });
 
 describe('isDailyCountedName', () => {
-  it('counts the section 15 names, session.start, [GU] the guest.* names, onboarding.started and the auth.native.* names, nothing else', () => {
+  it('counts the section 15 names, session.start, [GU] the guest.* names, onboarding.started, the auth.native.* names and [AU] app.crash, nothing else', () => {
     const counted = TELEMETRY_EVENT_NAMES.filter(isDailyCountedName);
-    expect([...counted].sort()).toEqual(['session.start', 'onboarding.started', ...Object.keys(OA_PAYLOAD_RULES), ...Object.keys(GUEST_PAYLOAD_RULES), ...Object.keys(NATIVE_AUTH_PAYLOAD_RULES)].sort());
+    expect([...counted].sort()).toEqual(['session.start', 'onboarding.started', ...Object.keys(OA_PAYLOAD_RULES), ...Object.keys(GUEST_PAYLOAD_RULES), ...Object.keys(NATIVE_AUTH_PAYLOAD_RULES), 'app.crash'].sort());
     for (const name of ['auth.native.signin', 'auth.native.signout', 'auth.native.lock', 'auth.native.home']) expect(isDailyCountedName(name), name).toBe(true);
     expect(isDailyCountedName('auth.native.signup')).toBe(false);
-    expect(isDailyCountedName('app.crash')).toBe(false);
+    expect(isDailyCountedName('app.crash')).toBe(true); // [AU] AMENDMENTS-AUDIT-2026-11 AU-2
+    expect(isDailyCountedName('app.crashed')).toBe(false);
     for (const name of ['guest.started', 'guest.first_letter', 'guest.quest_done', 'guest.left', 'guest.saved', 'guest.expired', 'onboarding.started']) expect(isDailyCountedName(name), name).toBe(true);
     expect(isDailyCountedName('guest.peeked')).toBe(false);
     expect(isDailyCountedName('onboarding.consent_given')).toBe(false);
@@ -59,6 +60,11 @@ describe('dailyDims', () => {
     expect(dailyDims('who.picked', undefined)).toBe('');
     expect(dailyDims('who.picked', {})).toBe('');
     expect(dailyDims('session.start', { source: 'pwa' })).toBe('');
+  });
+
+  it('[AU] app.crash counts by name and day only: no route, error class or message becomes a key', () => {
+    expect(dailyDims('app.crash', { surface: 'learner', route: 'QuestPlayer', errorName: 'TypeError', message: 'boom', chunk: false, appVersion: '1.0.0' })).toBe('');
+    expect(dailyDims('app.crash', undefined)).toBe('');
   });
 
   it('[GU] onboarding.started keeps only boolean firstRun and fromGuest as dims', () => {
