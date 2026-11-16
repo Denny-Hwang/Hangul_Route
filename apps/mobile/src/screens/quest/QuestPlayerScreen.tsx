@@ -143,6 +143,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): ReactElement | 
       onOpenGame={(stepIndex) => navigation.navigate('Minigame', { questId, episodeId, stepIndex })}
       onBack={() => navigation.goBack()}
       reviewsFor={learnerId}
+      autoHear
     />
   );
 }

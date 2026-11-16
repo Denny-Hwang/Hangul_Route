@@ -88,20 +88,26 @@ async function skipGamesToCheck(page: Page): Promise<void> {
   await expect(page.getByText('Quick check', { exact: true }).first()).toBeVisible();
 }
 
-test('Discover teaches before it asks; nothing autoplays and Continue never waits', async ({ page }) => {
+test('Discover teaches before it asks; the first letter says itself once and Continue never waits', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await stubVoice(page);
   await openDiscover(page);
 
-  // Nothing played by itself, and Continue is enabled before anything was heard.
-  expect(await spokenCount(page)).toBe(0);
+  // Continue is enabled at once, whatever is heard.
   await expect(page.getByRole('button', { name: 'Continue' })).toBeEnabled();
-
-  // Hear it says the SOUND of the symbol (one syllable), never the letter name.
-  await page.getByRole('button', { name: /^Hear it\. / }).first().click();
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: the page's first letter says itself once as the page opens (the Continue
+  // that opened it is the tap the browser needs), and nothing else plays by itself.
   await expect.poll(() => spokenCount(page)).toBe(1);
   expect(await lastSpoken(page)).toMatch(/^[가-힣]$/);
+  const first = await lastSpoken(page);
+  await page.waitForTimeout(500);
+  expect(await spokenCount(page)).toBe(1);
+
+  // Hear it says the same thing: the SOUND of the symbol (one syllable), never the letter name.
+  await page.getByRole('button', { name: /^Hear it\. / }).first().click();
+  await expect.poll(() => spokenCount(page)).toBe(2);
+  expect(await lastSpoken(page)).toBe(first);
   await expect(page.getByText('Heard', { exact: true }).first()).toBeVisible();
 
   const pages = await continueThroughDiscover(page);

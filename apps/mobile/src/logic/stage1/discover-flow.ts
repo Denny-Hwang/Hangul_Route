@@ -372,6 +372,11 @@ export interface DiscoverState {
 
 export type DiscoverEvent =
   | { type: 'hear'; id: string }
+  /**
+   * [AU] The page's first letter sounding by itself as the page opens (AMENDMENTS-AUDIT-2026-11 row AU-10). It plays as
+   * Hear it does, but it is not a tap: `tapped` (the `heard` of `quest.discover_completed`) does not move.
+   */
+  | { type: 'autoHear'; id: string }
   /** A play finished; `run` is the one its `play` effect carried (a line of an exchange item). */
   | { type: 'audio'; id: string; result: PlayResult; run?: number }
   | { type: 'reveal'; key: string }
@@ -395,6 +400,25 @@ export type DiscoverEffect =
 export interface DiscoverStepOut {
   state: DiscoverState;
   effects: DiscoverEffect[];
+}
+
+/**
+ * [AU] Row AU-10 (audit UX-7): the Hear it that plays by itself when a page opens, or undefined. It is the page's
+ * first item when that item is a letter: a letter page says its first letter once. A page that opens on a word or on
+ * an exchange stays quiet until a tap, as before.
+ */
+export function autoHearId(model: DiscoverModel, page: number): string | undefined {
+  const first = model.pages[page]?.items[0];
+  return first?.kind === 'symbol' ? first.hear.id : undefined;
+}
+
+/**
+ * [AU] Whether the page may sound by itself now (row AU-10). Not with sound off; not while a screen reader is on (it
+ * is reading the new page, and a letter's sound over it would be lost or would hide its words); and only when the
+ * sound can play (a recording of it, or a Korean voice), so a device that cannot say it shows nothing new.
+ */
+export function autoHearAllowed(input: { muted: boolean; screenReader: boolean; hasClip: boolean; voiceReady: boolean }): boolean {
+  return !input.muted && !input.screenReader && (input.hasClip || input.voiceReady);
 }
 
 export function startDiscover(model: DiscoverModel): DiscoverState {
@@ -455,6 +479,9 @@ export function stepDiscover(
         effects: [...stopping, { type: 'play', id: event.id }],
       };
     }
+    case 'autoHear':
+      // Never over a Read along or a sound the learner asked for: the page has only just opened, so there is none.
+      return state.readAlong ? { state, effects: [] } : { state, effects: [{ type: 'play', id: event.id }] };
     case 'audio': {
       const base: DiscoverState =
         event.result === 'played'

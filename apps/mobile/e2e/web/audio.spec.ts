@@ -794,6 +794,9 @@ test.describe('bundled clips (A-6)', () => {
     await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
     const examples = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]');
     await expect(examples).toHaveCount(2);
+    // [AU] The page's first letter says itself as the page opens (AMENDMENTS-AUDIT-2026-11 row AU-10): let it finish,
+    // so the clip starts counted below are the taps' own.
+    await page.waitForTimeout(1_000);
 
     // The precached letter ㅏ (jamo-s1) plays its clip offline.
     const before = await clipStarts(page);
@@ -904,6 +907,9 @@ test.describe('bundled clips (A-6)', () => {
       .toBe(true);
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    // [AU] The page's first letter says itself as the page opens (AMENDMENTS-AUDIT-2026-11 row AU-10): let it finish,
+    // so the clip starts counted below are the taps' own.
+    await page.waitForTimeout(1_000);
     // 나 (the first example word): its say clip lives in the stage1 pack chunk, not the start map. Tapped twice, a
     // second apart: on a shared CI runner the faster tap is held to the 150 ms goal, and neither may be slow.
     const example = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]').nth(0);

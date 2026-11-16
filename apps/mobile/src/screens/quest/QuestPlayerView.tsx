@@ -83,6 +83,11 @@ export interface QuestPlayerViewProps {
    * draws Close, which asks the same leave question as every back.
    */
   ownClose?: boolean;
+  /**
+   * [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: a Look and learn page says its first letter once as it opens. The learner's
+   * and the guest's player set it; absent (the All lessons preview), a page stays quiet until a tap.
+   */
+  autoHear?: boolean;
 }
 
 type QuestReviewPlan = NonNullable<Awaited<ReturnType<QuestReviewChunk['planQuestWarmup']>>>;
@@ -143,7 +148,7 @@ export function QuestPlayerView(props: QuestPlayerViewProps): ReactElement {
   return state === 'ready' ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
 }
 
-function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false }: QuestPlayerViewProps): ReactElement {
+function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false, autoHear = false }: QuestPlayerViewProps): ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
@@ -403,6 +408,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           hoyaLine={step.hoyaLineEn}
           onDone={discoverDone}
           compact={pacing?.plan.compact === true}
+          autoHear={autoHear}
         />
       ) : step.minigameKind && step.minigameRef ? (
         <MinigameLauncher
