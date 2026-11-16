@@ -1,4 +1,4 @@
-Status: ready; rows AU-1 to AU-17 open
+Status: ready; rows AU-1 to AU-7 done (stage 1); rows AU-8 to AU-17 open
 
 # Amendment: fixes from the 2026-11-15 readiness audit
 
@@ -87,4 +87,14 @@ The limiters on Rescue Code claim, join-code lookup, join and relink move from p
 
 ## As built
 
-(Filled in per row when it merges.)
+**Stage 1 (rows AU-1 to AU-7).**
+
+- **AU-1.** The Privacy Policy is English in every locale, so only `en/landing.ts` changed; the es and ko `landing` ledger entries were re-signed. Effective date: November 16, 2026. The two sentences now say that a learner profile is not an account, that a parent, guardian or teacher agrees to the policy on the device and sets a grown-up PIN before a child's profile is saved or backed up, and that a learner who sets up their own profile confirms they are 13 or older.
+- **AU-2.** `app.onError` logs one `api.error` JSON line (method, route pattern, error class, a scrubbed message) and answers the 500 envelope with code `internal`; a thrown `HTTPException` keeps its own response. `[observability] enabled = true`, with `invocation_logs = false` because the per-request line holds the full URL and API paths carry learner and space ids. `app.crash` is counted in `telemetry_daily` by name and day.
+- **AU-3.** Every read and write of `progress:<id>` is one guarded storage transaction. A read error leaves the profile un-hydrated: writes stay in memory and the next hydrate reads again; sync uploads nothing meanwhile. A value that does not parse (or parses to a non-object) is copied to `progress-corrupt:<id>` first; if the copy cannot be made, nothing is written. A malformed object still loads as before (existing tests pin that). The copy is removed with the learner.
+- **AU-4.** `allowedOrigin` and `authorizedPartiesFor` take the environment; `localhost` and `*.workers.dev` pass only outside production, and an unset `ENVIRONMENT` is production.
+- **AU-5.** Both sites send the five headers on `/*`. Grown-up rules detach before they set, so each header is sent once (grown-up pages keep `DENY` and `frame-ancestors 'none'`). One exception: `/_expo/static/js/*` detaches `X-Content-Type-Options`, because the stale-build reload (F-CURR-002 section 10) needs a missing chunk's `index.html` answer to run.
+- **AU-6.** `id()` draws 12 characters of `0-9a-z` from `crypto.getRandomValues`; the shape is unchanged.
+- **AU-7.** `docs/launch/owner-runbook.md` section P.
+
+Also in the audit's first PR (#1033): `apps/mobile` typecheck runs with an explicit 4 GB heap, and the audio e2e helper `controlledBySw` polls with `page.evaluate`.
