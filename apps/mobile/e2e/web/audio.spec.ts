@@ -637,16 +637,28 @@ const clipStarts = async (page: Page): Promise<number> =>
  * truthy), so it came back while the worker was still installing and a fetch made right after went past it.
  */
 async function controlledBySw(page: Page): Promise<void> {
+  // [AU] A worker whose install failed (one precache fetch lost on a busy runner) leaves a registration with no
+  // worker at all, and nothing installs again until the next visit. After 5 s in that state the page is visited
+  // once more, as a learner's next visit would; the state is the poll's value, so a timeout names what was missing.
+  const started = Date.now();
+  let visitedAgain = false;
   await expect
     .poll(
-      () =>
-        page.evaluate(async () => {
+      async () => {
+        const state = await page.evaluate(async () => {
           const reg = await navigator.serviceWorker.getRegistration();
-          return !!reg?.active && !!navigator.serviceWorker.controller;
-        }),
+          return { active: !!reg?.active, pending: !!(reg?.installing || reg?.waiting), controlled: !!navigator.serviceWorker.controller };
+        });
+        if (state.active && state.controlled) return 'controlled';
+        if (!state.active && !state.pending && !visitedAgain && Date.now() - started > 5_000) {
+          visitedAgain = true;
+          await page.reload();
+        }
+        return JSON.stringify({ ...state, visitedAgain });
+      },
       { timeout: 30_000 },
     )
-    .toBe(true);
+    .toBe('controlled');
 }
 
 /**
