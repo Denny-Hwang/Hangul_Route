@@ -593,8 +593,11 @@ export const landing = {
        * October 22, 2026: the SN-2 fact fixes (level check, contact, media, school admins, date line) and the draft banner
        * removed (owner decision 2026-10-21 (c)); the date the fixes merge. October 23, 2026 ([GU] AMENDMENTS-GUEST-FIRST-LESSON
        * row GU-7, section 13.3): the first-quest bullet shows with the `guestLesson` claim on; GU-7's merge date.
+       * November 16, 2026 ([AU] AMENDMENTS-AUDIT-2026-11 row AU-1, audit PRIV-1): the two sentences that named a consent
+       * method the product does not run now say what the profile form does (F-LEARN-001 sections 3.3 and 3.15: the
+       * grown-up's agreement and PIN on the device, or the learner's own "13 or older" agreement).
        */
-      effective: 'Effective October 23, 2026',
+      effective: 'Effective November 16, 2026',
       /** Footer link to the other document. */
       otherDocument: 'Terms of Service',
       sections: {
@@ -608,7 +611,7 @@ export const landing = {
         account: {
           heading: 'Who creates the account',
           paragraphs: {
-            p1: 'Accounts are created and managed by the account holder (a parent or legal guardian when the learner is a child). When the learner is a child, the child uses the app, but a grown-up sets it up, enters any billing details, and confirms consent behind a parent-gate. We do not knowingly let a child under 13 create an account without verifiable parental consent.',
+            p1: 'Accounts are created and managed by the account holder (a parent or legal guardian when the learner is a child). When the learner is a child, the child uses the app, but a grown-up sets it up, enters any billing details, and confirms consent behind a parent-gate. A learner profile needs no sign-in and is not an account; only grown-ups create accounts. Before a child’s profile is saved or backed up, a parent, guardian or teacher agrees to this policy on the device and sets a grown-up PIN. A learner who sets up their own profile confirms that they are 13 or older.',
           },
         },
         collect: {
@@ -700,7 +703,7 @@ export const landing = {
         children: {
           heading: "Children's privacy (COPPA / GDPR-K)",
           paragraphs: {
-            p1: 'Many of our learners are children. Hangul Route is designed to comply with the U.S. Children’s Online Privacy Protection Act (COPPA) and similar rules for minors. We practice data minimization, require verifiable parental consent before any personal data is linked to an account, and give parents the right to review or delete their child’s data at any time.',
+            p1: 'Many of our learners are children. Hangul Route is designed to comply with the U.S. Children’s Online Privacy Protection Act (COPPA) and similar rules for minors. We practice data minimization, ask a parent, guardian or teacher to agree to this policy on the device and set a grown-up PIN before a child’s profile is saved or backed up, and give parents the right to review or delete their child’s data at any time.',
           },
         },
         emailList: {

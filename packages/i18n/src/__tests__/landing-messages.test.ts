@@ -354,7 +354,9 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
     // October 20, 2026 ([SA] AMENDMENTS-SEATS-ADMINS section 6.7): the school administrators bullet.
     // October 22, 2026 (SN-2): the fact fixes and the draft banner removed (owner decision 2026-10-21 (c)).
     // October 23, 2026 ([GU] GU-7, AMENDMENTS-GUEST-FIRST-LESSON 13.3): the first-quest bullet shows (the guestLesson claim on), and the same UTC day its usage-events sentence (a later merge day moves this pin).
-    expect(l.legal.privacy.effective).toBe('Effective October 23, 2026');
+    // November 16, 2026 ([AU] AMENDMENTS-AUDIT-2026-11 AU-1): the two consent sentences say what the profile form does.
+    expect(l.legal.privacy.effective).toBe('Effective November 16, 2026');
+    expect(JSON.stringify(l.legal.privacy.sections.account) + JSON.stringify(l.legal.privacy.sections.children)).not.toMatch(/verifiable/i);
     // October 12, 2026: the payment facts of F-SITE-002 S-7 (both channels, the web renewal, store terms marked in-app).
     // October 14, 2026 ([TV] TV-D14): who sees progress, class moves and the Classes and teachers section, as the owner's decision.
     // October 20, 2026 ([SA] SA-6): the Terms say how many learners each plan holds; the Privacy Policy is unchanged.
