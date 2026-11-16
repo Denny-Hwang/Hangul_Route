@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WCAG_AAA_NORMAL, WCAG_AA_LARGE, WCAG_AA_NORMAL, compositeOver, contrastRatio, relativeLuminance } from '../contrast';
 import presenterDoc from '../../../../design/tokens/presenter.v1.md?raw';
+import { PILL_TONES, pillStyle } from '../components/Pill/style';
 import { TILE_STATES, tileStyle } from '../components/Tile/style';
 import { HOYA_VARIANTS, colors, hoyaVariantColors, presenter } from '../tokens';
 
@@ -190,6 +191,13 @@ describe('token contrast contract (WCAG AA)', () => {
   it('hoya.furDark reads on surface.paper (≥ 3:1) but not on feedback.nudgeLight (< 3:1)', () => {
     expect(contrastRatio(colors.hoya.furDark, colors.surface.paper)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
     expect(contrastRatio(colors.hoya.furDark, colors.feedback.nudgeLight)).toBeLessThan(WCAG_AA_LARGE);
+  });
+
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-17b (audit A11Y-1): Pill labels are caption-size text, so every tone is held to
+  // 4.5:1 on its tint, read from the component's own style (the nudge label was a literal amber, 2.85:1).
+  it.each(PILL_TONES)('Pill %s: the label on its tint ≥ 4.5:1', (tone) => {
+    const look = pillStyle(tone);
+    expect(contrastRatio(look.textColor, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
   });
 
   // [AU] AMENDMENTS-AUDIT-2026-11 AU-17a (audit A11Y-1): the Tile state pairs are read from the component's own style, so
