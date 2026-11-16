@@ -842,7 +842,7 @@ D1 은 최근 변경 이력을 보관한다 (무료 플랜 7일, 유료 플랜 3
 AU-4 부터 운영 API 는 `ALLOWED_ORIGINS` 가 비어 있으면 `hangulroute.com`, `www.hangulroute.com`, `app.hangulroute.com` 세 곳만 받는다. `*.workers.dev` 미리보기 주소나 `localhost` 에서 운영 API 를 부르려면 `hangul-route-api` → Settings → Variables and Secrets 에 `ALLOWED_ORIGINS` 를 쉼표로 구분해 넣는다 (예: `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com,https://hangul-route-app.<계정>.workers.dev`). 목록을 넣으면 그 목록만 받는다.
 
 ### P-6. 오류 로그 보기 (AU-2, audit PROD-1)
-AU-2 부터 API Worker 는 처리하지 못한 오류마다 한 줄을 남긴다. 대시보드 → `hangul-route-api` → Observability (Logs) 에서 `"level":"error"` 로 찾는다. 앱 크래시 수는 D1 `telemetry_daily` 의 `app.crash` 행이다. 외부 가동 감시 (예: 5분마다 `/health` 를 불러 `status` 가 `ok` 가 아니면 메일) 는 대시보드나 외부 서비스에서 따로 건다.
+AU-2 부터 API Worker 는 처리하지 못한 오류마다 한 줄을 남긴다. 대시보드 → `hangul-route-api` → Observability (Logs) 에서 `api.error` 로 찾는다 (경로 패턴·메서드·오류 종류만 있고 이름이나 id 는 없다). 요청마다 남는 Cloudflare 기본 로그는 주소에 학습자 id 가 들어가므로 꺼 두었다 (`invocation_logs = false`). 앱 크래시 수는 D1 `telemetry_daily` 의 `app.crash` 행이다. 외부 가동 감시 (예: 5분마다 `/health` 를 불러 `status` 가 `ok` 가 아니면 메일) 는 대시보드나 외부 서비스에서 따로 건다.
 
 ## 나중에 (법률 검토 후)
 변호사에게 넘길 검토 자료: `docs/legal/counsel-packet-2026-10.md` (영문 — 반 이동 T-8 · G2/G6 와 낱말 동의 항목 P-4b 의 질문·초안 문구·요약표). 2026-10-14 오너 결정으로 T-8 과 P-4b 는 법률 검토 없이 진행했다 (위 §H). 변호사 답을 받으면 새 문구 버전 (`class-scope-…`, `transfer-…`) 으로 반영한다.
