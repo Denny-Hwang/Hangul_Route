@@ -24,7 +24,6 @@ import { localizeQuest } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import { cardWaits } from '../../logic/reward';
-import { questOutcome } from '../../logic/quest-outcome';
 import {
   checkCompletedPayload,
   discoverCompletedPayload,
@@ -33,6 +32,7 @@ import {
   type CheckWatch,
 } from '../../logic/quest-flow/check-launcher';
 import {
+  questFinish,
   runQuestFinish,
   runQuestLeave,
   runQuestStart,
@@ -83,6 +83,11 @@ export interface QuestPlayerViewProps {
    * draws Close, which asks the same leave question as every back.
    */
   ownClose?: boolean;
+  /**
+   * [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: a Look and learn page says its first letter once as it opens. The learner's
+   * and the guest's player set it; absent (the All lessons preview), a page stays quiet until a tap.
+   */
+  autoHear?: boolean;
 }
 
 type QuestReviewPlan = NonNullable<Awaited<ReturnType<QuestReviewChunk['planQuestWarmup']>>>;
@@ -143,7 +148,7 @@ export function QuestPlayerView(props: QuestPlayerViewProps): ReactElement {
   return state === 'ready' ? <QuestPlayerBody {...props} /> : <LessonWaiting />;
 }
 
-function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false }: QuestPlayerViewProps): ReactElement {
+function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskLeave, reviewsFor = null, introNote, ownClose = false, autoHear = false }: QuestPlayerViewProps): ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
   const locale = useLocale();
@@ -243,6 +248,9 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // The All lessons preview has no `ownsCard` and keeps the authored lines.
   const runCorrect = useQuestRunStore((s) => s.correctCount);
   const runTotal = useQuestRunStore((s) => s.totalCount);
+  // [AU] A skipped game caps the run's stars (AMENDMENTS-AUDIT-2026-11 row AU-9), so the card lines read the same outcome Results will.
+  const runSkipped = useQuestRunStore((s) => s.skippedSteps);
+  const runOutcome = questFinish({ correctCount: runCorrect, totalCount: runTotal, retryCount: 0, skippedSteps: runSkipped }, quest?.steps);
   const rewardCardId = quest?.rewardCardId;
   const cardLines = useQuestCardLines(
     questId,
@@ -250,9 +258,9 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
       !!ports.ownsCard &&
       cardWaits({
         rewardCardId,
-        stars: questOutcome(runCorrect, runTotal).stars,
+        stars: runOutcome.stars,
         held: !!rewardCardId && ports.ownsCard(rewardCardId),
-        played: questOutcome(runCorrect, runTotal).played,
+        played: runOutcome.played,
         episodeCompletes: ports.completesEpisode?.(episodeId, questId) ?? false,
       }),
   );
@@ -298,7 +306,7 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   // Honest outcome: a quest with every game skipped is 0 / 0, not 5 / 5.
   // Rounds are scored on the first try; retries ride along for telemetry.
   const finishQuest = (): void => {
-    runQuestFinish(useQuestRunStore.getState(), ports);
+    runQuestFinish(useQuestRunStore.getState(), ports, quest?.steps);
   };
 
   // Quit control (wireframe quest/player): one-line confirm, then the run is discarded and the ports
@@ -400,13 +408,18 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           hoyaLine={step.hoyaLineEn}
           onDone={discoverDone}
           compact={pacing?.plan.compact === true}
+          autoHear={autoHear}
         />
       ) : step.minigameKind && step.minigameRef ? (
         <MinigameLauncher
           copy={q}
           kind={step.kind}
           onLaunch={() => onOpenGame(stepIndex)}
-          onSkip={advance}
+          onSkip={() => {
+            // [AU] Skip for now is noted on the run: a skipped game caps the stars (row AU-9).
+            useQuestRunStore.getState().markStepSkipped();
+            advance();
+          }}
         />
       ) : (
         <NarrativeStepBody

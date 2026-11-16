@@ -80,7 +80,7 @@ describe('Trace Stroke (English wording as shipped)', () => {
 
   it('keeps the pass praise, the next-time nudges and the retry lines', () => {
     expect(t.pass).toEqual({
-      order: 'You got it! Next time, try drawing the top line first.',
+      order: 'You got it! Next time, try the strokes in the right order. Tap Show me to see.',
       open: 'Nice! Try drawing left-to-right next time.',
       loop: 'Nice! Next time, try going around the other way.',
       clean: 'Beautiful! That looks like the letter.',

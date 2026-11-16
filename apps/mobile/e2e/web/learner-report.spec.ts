@@ -23,6 +23,11 @@ import { expectNoHorizontalOverflow } from './viewport';
  */
 
 const r = en.report;
+/**
+ * A period tab, inside the report's own tablist: the learner tab bar's tabs are tabs too (AMENDMENTS-AUDIT-2026-11 AU-17c),
+ * and its first one is also named "Today".
+ */
+const periodTab = (page: Page, name: string) => page.getByRole('tablist', { name: en.a11y.report.periods }).getByRole('tab', { name });
 const TELEMETRY_BUILD = process.env.E2E_TELEMETRY === '1';
 const WEBKIT = process.env.E2E_WEBKIT === '1';
 
@@ -157,7 +162,7 @@ test.describe('the in-app report on a family device', () => {
 
     await expect(page.getByTestId('learner-report-title')).toHaveText(r.title.learner('Mina'));
     await expect(page.getByTestId('learner-report-headline')).toHaveText(r.headline.practiced('Mina', 2, r.when.week));
-    await expect(page.getByRole('tab', { name: r.period.week })).toHaveAttribute('aria-selected', 'true');
+    await expect(periodTab(page, r.period.week)).toHaveAttribute('aria-selected', 'true');
     await expectPracticed(page, await localToday(page));
     await expectNoHorizontalOverflow(page, 'report at 320');
     await shot(page, 'learner-report-week-320');
@@ -179,21 +184,21 @@ test.describe('the in-app report on a family device', () => {
     const headline = page.getByTestId('learner-report-headline');
     await expect(headline).toHaveText(r.headline.practiced('Mina', 2, r.when.week));
 
-    await page.getByRole('tab', { name: r.period.day }).click();
-    await expect(page.getByRole('tab', { name: r.period.day })).toHaveAttribute('aria-selected', 'true');
+    await periodTab(page, r.period.day).click();
+    await expect(periodTab(page, r.period.day)).toHaveAttribute('aria-selected', 'true');
     await expect(headline).toHaveText(r.headline.practicedOn('Mina', r.when.day));
     // The first step back from today is yesterday, the onboarding day.
     await page.getByTestId('learner-report-step-prev').click();
     await expect(headline).toHaveText(r.headline.practicedOn('Mina', r.when.prevDay));
 
-    await page.getByRole('tab', { name: r.period.month }).click();
+    await periodTab(page, r.period.month).click();
     await expect(headline).toHaveText(r.headline.practiced('Mina', (await yesterdayThisMonth(page)) ? 2 : 1, r.when.month));
-    await page.getByRole('tab', { name: r.period.all }).click();
+    await periodTab(page, r.period.all).click();
     await expect(headline).toHaveText(r.headline.practiced('Mina', 2, r.when.all));
     // All time has no stepper.
     await expect(page.getByTestId('learner-report-step-prev')).toHaveCount(0);
 
-    await page.getByRole('tab', { name: r.period.week }).click();
+    await periodTab(page, r.period.week).click();
     await expect(headline).toHaveText(r.headline.practiced('Mina', 2, r.when.week));
     // Next is hidden on the current window; the first step back is named.
     await expect(page.getByTestId('learner-report-step-next')).toHaveCount(0);
@@ -309,7 +314,7 @@ test.describe('report.viewed from the app (section 3.13)', () => {
     await expect(page.getByTestId('learner-report-headline')).toBeVisible();
     await expect.poll(() => viewed.length).toBe(1);
 
-    await page.getByRole('tab', { name: r.period.month }).click();
+    await periodTab(page, r.period.month).click();
     await expect.poll(() => viewed.length).toBe(2);
     // Nothing more arrives for the same choice (a re-render is not a view).
     await page.waitForTimeout(1500);
@@ -333,7 +338,7 @@ for (const timezoneId of ['Pacific/Kiritimati', 'Pacific/Pago_Pago'] as const) {
       await page.getByTestId(`dashboard-see-report-${id}`).click();
       await expectPracticed(page, await localToday(page));
       await expectPracticed(page, await localToday(page, 1));
-      await page.getByRole('tab', { name: r.period.day }).click();
+      await periodTab(page, r.period.day).click();
       await expect(page.getByTestId('learner-report-headline')).toHaveText(r.headline.practicedOn('Mina', r.when.day));
     });
   });

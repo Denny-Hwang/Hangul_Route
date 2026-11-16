@@ -175,8 +175,9 @@ export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessi
     <Screen tone="canvas" scrollable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
-          {/* Fill-only dots: how far, never right or wrong; no count, no clock. */}
-          <Progress variant="dots" value={roundIdx} max={plan.rounds.length} tone="primary" testID="quest-review-dots" />
+          {/* Fill-only dots: how far, never right or wrong; no count, no clock. Decorative, so no count is read aloud
+              either and no unnamed progressbar is left (AMENDMENTS-AUDIT-2026-11 AU-17d). */}
+          <Progress variant="dots" value={roundIdx} max={plan.rounds.length} tone="primary" decorative testID="quest-review-dots" />
         </View>
         <Pill label={title} tone="primary" size="sm" />
       </View>

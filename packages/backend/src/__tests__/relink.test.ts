@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
-import { RELINK_LIMIT, relinkLimiter } from '../routes/relink';
-import { testDb as db } from './helpers/db';
+import { RELINK_LIMIT } from '../routes/relink';
+import { clearRateHits, testDb as db } from './helpers/db';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string } };
 const json = { 'content-type': 'application/json' };
@@ -32,7 +32,7 @@ const poll = (spaceId: string, rid: string, deviceId: string) => call('GET', `/a
 
 beforeEach(async () => {
   await db.reset();
-  relinkLimiter.reset();
+  await clearRateHits();
 });
 
 describe('re-link requests (F-TCH-001 §10.1)', () => {
@@ -136,7 +136,7 @@ describe('re-link requests (F-TCH-001 §10.1)', () => {
     const space = await db.getSpace(s.spaceId);
     if (space) await db.putSpace({ ...space, joinCodeExpiresAt: '2020-01-01T00:00:00.000Z' });
     expect((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_B })).body.error?.code).toBe('code_expired');
-    relinkLimiter.reset();
+    await clearRateHits();
     for (let i = 0; i < RELINK_LIMIT; i += 1) await create(s.spaceId, { code: 'K7M2X9', learnerId: s.learnerId, deviceId: DEVICE_B });
     expect((await create(s.spaceId, { code: 'K7M2X9', learnerId: s.learnerId, deviceId: DEVICE_B })).status).toBe(429);
   });

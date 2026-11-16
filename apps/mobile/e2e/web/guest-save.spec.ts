@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import type { Browser, BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { acceptConfirmSheets, answerForkNew, headerBack, headerClose, onboardChild, openLettersEpisode, passDiscover, playCheckByIds, readStored, typeDigits, WHO_CHILD, WHO_SELF } from './helpers';
+import { acceptConfirmSheets, answerForkNew, headerBack, headerClose, onboardChild, openLettersEpisode, passDiscover, playCheckByIds, readStored, typeDigits, buildLetterBlocks, WHO_CHILD, WHO_SELF } from './helpers';
 import { shot } from './shots';
 import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { questsAll } from '../../src/content/quests';
@@ -96,14 +96,19 @@ const notNow = (page: Page) => page.getByRole('button', { name: g.results.notNow
 const cont = (page: Page) => page.getByRole('button', { name: c.cta, exact: true });
 const digit = (page: Page) => page.getByRole('button', { name: 'Digit 1', exact: true });
 
-/** `/?try=1`, then quest 1 to the guest's Results: every check round right (3 stars), or round 1 missed first. */
+/**
+ * `/?try=1`, then quest 1 to the guest's Results. [AU] Row AU-9: Match the Sound is skipped, Build a Letter and the
+ * Check are played right (2 stars, the card: a skipped game caps the stars at 2); or, with `missFirst`, both games are
+ * skipped and the Check's round 1 is missed first (1 star).
+ */
 async function playToResults(page: Page, missFirst = false): Promise<void> {
   await page.goto('/?try=1');
   await expect(page.getByText('Hi from Hoya', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: en.learner.quest.continue.cta, exact: true }).click();
   await passDiscover(page);
   await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
-  await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
+  if (missFirst) await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
+  else await buildLetterBlocks(page);
   await playCheckByIds(page, [{ answer: 'jamo:eo', ...(missFirst ? { missWith: 'jamo:a' } : {}) }, { answer: '너' }]);
   await page.getByRole('button', { name: en.learner.quest.seeResults.cta, exact: true }).click();
   await expect(page.getByTestId('guest-save-card')).toBeVisible();
@@ -253,14 +258,14 @@ test.describe('the save after the first quest (GU-4)', () => {
     // The card is in the Library.
     const questCard = progress!.cards.find((card) => card.cardId === questCardId(progress!.quests[0]!.questId))!;
     expect(questCard).toBeDefined();
-    await page.getByRole('tablist').getByRole('link', { name: 'Library', exact: true }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: 'Library', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
     const cardsTab = page.getByRole('tab', { name: 'Cards', exact: true });
     if ((await cardsTab.count()) > 0) await cardsTab.click();
     await expect(page.getByRole('button', { name: new RegExp(`^${titleOf(questCard.cardId)}`) }).first()).toBeVisible();
     // Quest 1 is done on the Journey: its row on the episode page shows the stars the guest earned (G2).
     await openLettersEpisode(page);
-    await expect(page.getByTestId(`episode-quest-${progress!.quests[0]!.questId}`).locator(`[aria-label="${en.a11y.stars(3)}"]`).first()).toBeVisible();
+    await expect(page.getByTestId(`episode-quest-${progress!.quests[0]!.questId}`).locator(`[aria-label="${en.a11y.stars(2)}"]`).first()).toBeVisible();
     // The bubble is shown once.
     await page.reload();
     await expect(page.getByText('Hi, Sam!')).toBeVisible();

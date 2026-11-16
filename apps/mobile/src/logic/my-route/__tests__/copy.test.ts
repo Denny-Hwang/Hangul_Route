@@ -53,7 +53,7 @@ const ALL_8 = BUNDLE_8.quests.map((q) => q.id);
 describe('heroCopy (F-ROUTE-001 section 3.5)', () => {
   it('start: the route line, the goal line and Start', () => {
     expect(heroCopy(model([]), self, { nextTitle: 'Meet the First Letters', hasStories: false })).toEqual({
-      lines: ['Your Learning Route starts here.', 'Your first goal: read every Hangul letter.'],
+      lines: ['Your Learning Route starts here.', 'Your first goal: read the basic Hangul letters.'],
       cta: { action: 'quest', label: 'Start' },
     });
   });
@@ -79,7 +79,7 @@ describe('heroCopy (F-ROUTE-001 section 3.5)', () => {
 
   it('read-only (a grown-up viewing a child): third person and no button', () => {
     expect(heroCopy(model([]), grownup, { nextTitle: null, hasStories: true })).toEqual({
-      lines: ["Sam's Learning Route starts here.", 'First goal: read every Hangul letter.'],
+      lines: ["Sam's Learning Route starts here.", 'First goal: read the basic Hangul letters.'],
       cta: null,
     });
     expect(heroCopy(model(APPENDIX_C), grownup, { nextTitle: 'Family at the Table', hasStories: true })).toEqual({
@@ -194,7 +194,7 @@ describe('stage words, captions and tags (sections 3.3, 3.11)', () => {
   });
 
   it('the can-do line of the expanded stage, for the learner and about the child', () => {
-    expect(canDoCopy(row(model([]), 'stage1'), self)).toEqual({ lead: 'By the end of this stage you can:', line: 'Read any Hangul letter and syllable and know its sound.' });
+    expect(canDoCopy(row(model([]), 'stage1'), self)).toEqual({ lead: 'By the end of this stage you can:', line: 'Read the basic Hangul letters and simple syllables, and know their sounds.' });
     expect(canDoCopy(row(model([]), 'stage7'), grownup)).toEqual({ lead: 'By the end of this stage, Sam can:', line: 'Write a few sentences about daily life and favorite things.' });
   });
 
@@ -561,7 +561,7 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
     const card = routeCardCopy(m, withGoal(self, m), { nextTitle: 'Family at the Table' });
     expect(card.where).toEqual({ kind: 'collapsed', line: 'Stage 1 · Hangul: you are in your goal stage' });
     expect(card.from).toBe("From your family's weekly plan");
-    expect(card.canDo).toEqual({ lead: 'By the end of this stage you can:', line: 'Read any Hangul letter and syllable and know its sound.' });
+    expect(card.canDo).toEqual({ lead: 'By the end of this stage you can:', line: 'Read the basic Hangul letters and simple syllables, and know their sounds.' });
     expect(card.tasteLine).toBeNull();
     expect(card.a11yLabel).toBe(
       "Stage 1, Hangul: you are in your goal stage. From your family's weekly plan. Some quests done, more are ready. Next: Family at the Table.",
@@ -588,7 +588,7 @@ describe('routeCardCopy (Learning Route amendment sections 4.3, 6.2 and 10; LR-3
     const card = routeCardCopy(m, withGoal(self, m), { nextTitle: 'Meet the First Letters' });
     expect(card.hoya).toBe('Your Learning Route starts here.');
     expect(card.where).toEqual({ kind: 'split', now: null, goal: { label: 'Goal', line: 'Stage 1 · Hangul' } });
-    expect(card.canDo?.line).toBe('Read any Hangul letter and syllable and know its sound.');
+    expect(card.canDo?.line).toBe('Read the basic Hangul letters and simple syllables, and know their sounds.');
     expect(card.next).toBe('Next: Meet the First Letters');
     expect(card.a11yLabel).toBe("Your Learning Route starts here. Goal: Stage 1, Hangul. Hoya's suggestion. Ready when you are. Next: Meet the First Letters.");
   });

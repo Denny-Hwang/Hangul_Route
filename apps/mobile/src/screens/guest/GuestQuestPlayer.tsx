@@ -96,6 +96,8 @@ export function GuestQuestPlayer({ route, navigation }: GuestQuestPlayerProps): 
       onBack={() => leaveGuestRun(navigation, null)}
       introNote={memoryOnly ? note : undefined}
       ownClose
+      // [AU] Row AU-10: Hoya's hello has a Continue, the tap the browser needs before the first letter sounds (GU-D6).
+      autoHear
     />
   );
 }

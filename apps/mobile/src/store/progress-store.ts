@@ -29,9 +29,11 @@ import { elapsedSeconds, keepsRun, lastStreakDay, newSessionId } from '../logic/
 import { sessionDay, withLocalStreak } from '../logic/streak';
 import { mergePlacements, mergeReview, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
+import { mergeWithStored } from '../logic/sync/stored-merge';
 import { emitGoalEvent } from '../logic/goals/goal-events';
 import { sessionDayNow } from '../platform/goal-clock';
 import { applyVocabEvents, emptyVocab, localDay, vocabOf, type VocabEvent } from '../logic/vocab/progress';
+import { postProgressChanged, subscribeProgressChanged } from '../platform/progress-channel';
 import { keepRawCopy, readJsonStrict, removeKey, updateJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 import { isLiveGuestId } from './guest-store';
@@ -341,10 +343,10 @@ type StoredStep = (stored: ProgressSnapshot | null) => ProgressSnapshot | undefi
  * - The stored value does not parse, or parses to something that is no snapshot: its raw bytes are first copied to
  *   `hr:progress-corrupt:<id>` (kept as it is when that key already holds a copy), and only then does `step` run, with
  *   null for "nothing usable stored". When the copy cannot be made, nothing is written (`unread`).
- * Under the write fence (All lessons) the transaction is not run at all; `step` then gets what a plain read finds and
- * its answer is not stored. Never throws.
+ * Under the write fence (All lessons) the transaction is not run at all; `step` then gets what a plain read finds,
+ * its answer is not stored, and the outcome is `fenced`. Never throws.
  */
-async function withStored(profileId: string, step: StoredStep): Promise<'done' | 'unread'> {
+async function withStored(profileId: string, step: StoredStep): Promise<'done' | 'fenced' | 'unread'> {
   const storageKey = key(profileId);
   let ran = false;
   try {
@@ -359,7 +361,9 @@ async function withStored(profileId: string, step: StoredStep): Promise<'done' |
     );
     if (!ran) {
       const stored = await readJsonStrict<unknown>(storageKey);
+      ran = true;
       step(isSnapshot(stored) ? stored : null);
+      return 'fenced';
     }
     return 'done';
   } catch (error) {
@@ -397,8 +401,11 @@ function enqueue<T>(profileId: string, job: () => Promise<T>): Promise<T> {
   return run;
 }
 
-/** Profiles with a write waiting for its turn: it stores the snapshot held when it runs, so a second one is not queued. */
-const writeWaiting = new Set<string>();
+/**
+ * Profiles with a write waiting for its turn: it stores the snapshot held when it runs, so a second one is not
+ * queued. `replace` (a reset) is kept over `merge`.
+ */
+const writeWaiting = new Map<string, WriteMode>();
 
 /**
  * [AU] Profiles whose stored snapshot could not be read by the last `hydrate` (row AU-3). They stay un-hydrated:
@@ -406,21 +413,138 @@ const writeWaiting = new Set<string>();
  */
 const unread = new Set<string>();
 
-/** Stores the snapshot the profile holds in memory now (`withStored`: never over a record that cannot be read). */
-function writeStored(profileId: string): void {
-  if (writeWaiting.has(profileId)) return;
-  const write = (): Promise<unknown> => {
-    writeWaiting.delete(profileId);
-    return withStored(profileId, () => (removedNow(profileId) ? undefined : useProgressStore.getState().byProfile[profileId]));
-  };
-  if (chains.has(profileId)) writeWaiting.add(profileId);
-  void enqueue(profileId, write);
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-11 (audit FUNC-1): the stored snapshot this tab last read or wrote, per
+ * profile, as the JSON it was stored as (null: nothing was stored). A write compares it with what is stored now: the
+ * same means no other tab wrote meanwhile, and this tab's snapshot is stored as it is (so a reset, a sync or a plan
+ * reconcile still replaces exactly what it means to). No entry means this tab never read the record: a replacement
+ * that lands before the read is final, as it always was (a restore wins over the read still in flight).
+ */
+const seen = new Map<string, string | null>();
+
+/** `merge`: a write another tab made meanwhile is folded in, never written over. `replace`: a reset, which clears. */
+type WriteMode = 'merge' | 'replace';
+
+/** What one write transaction did, for the steps that follow it once the write has landed. */
+interface WriteOutcome {
+  /** The stored snapshot after the transaction, as JSON (`seen`); `undefined` when the step did not look. */
+  stored: string | null | undefined;
+  /** A snapshot was stored. */
+  wrote: boolean;
+  /** Both tabs had written: the cards the award rules added to the union, when memory took it. */
+  merged: DerivedAward[] | null;
 }
 
-function save(profileId: string): void {
+/** The snapshot memory holds from now on; a subscriber that throws never ends the storage transaction. */
+function adopt(profileId: string, snapshot: ProgressSnapshot, added: readonly DerivedAward[] = []): void {
+  try {
+    useProgressStore.setState((s) => ({ byProfile: { ...s.byProfile, [profileId]: snapshot }, ...catchUpAfter(s, profileId, added) }));
+  } catch {
+    // The snapshot is in the store; only a listener failed.
+  }
+}
+
+/**
+ * [AU] Row AU-11: one write, inside the storage transaction (`withStored`). The stored snapshot is compared with the
+ * one this tab last saw (`seen`):
+ * - the same, or nothing stored: no other tab wrote, and this tab's snapshot is stored as it is;
+ * - changed, and this tab holds nothing new: the other tab's snapshot is taken into memory, nothing is written;
+ * - changed on both sides: the two are merged (`mergeWithStored`, the union the sync merge makes: stars never go
+ *   down, a card or a finished quest of either tab is kept), latched and reconciled like any merged snapshot, stored,
+ *   and memory takes the result.
+ * The snapshot is read from memory when the transaction runs, so one transaction stores every write made before it.
+ */
+function writeStep(profileId: string, mode: WriteMode, out: WriteOutcome): StoredStep {
+  return (stored) => {
+    out.stored = undefined;
+    out.wrote = false;
+    out.merged = null;
+    const state = useProgressStore.getState();
+    // A removed learner, and one whose saved snapshot was not read (row AU-3), are never written.
+    if (removedNow(profileId) || !state.hydratedFor.has(profileId)) return undefined;
+    const theirs = stored === null ? null : JSON.stringify(stored);
+    out.stored = theirs;
+    const ours = state.byProfile[profileId];
+    if (ours === undefined) {
+      // Nothing held here: what another tab stored is what this tab shows.
+      if (stored !== null && mode === 'merge') adopt(profileId, stored);
+      return undefined;
+    }
+    const mine = JSON.stringify(ours);
+    // What is stored is what this tab holds: nothing to do, whoever wrote it.
+    if (mine === theirs) return undefined;
+    const base = seen.get(profileId);
+    if (stored === null || theirs === base || base === undefined || mode === 'replace') {
+      out.stored = mine;
+      out.wrote = true;
+      return ours;
+    }
+    if (mine === base) {
+      adopt(profileId, stored);
+      return undefined;
+    }
+    const now = new Date();
+    const union = mergeWithStored(base === null ? null : (JSON.parse(base) as ProgressSnapshot), ours, stored, { now });
+    const { snap, added } = withAwards(profileId, withLatches(union, now));
+    const result = JSON.stringify(snap);
+    if (result !== mine) {
+      adopt(profileId, snap, added);
+      out.merged = added;
+    }
+    out.stored = result;
+    if (result === theirs) return undefined;
+    out.wrote = true;
+    return snap;
+  };
+}
+
+/**
+ * Stores the snapshot the profile holds in memory now, merged with what another tab stored meanwhile (`writeStep`;
+ * `withStored`: never over a record that cannot be read), then tells the other tabs. Also how this tab reads a
+ * snapshot again after another tab's write: with nothing new here, the transaction only takes theirs.
+ */
+function writeStored(profileId: string, mode: WriteMode = 'merge'): void {
+  const waiting = writeWaiting.get(profileId);
+  if (waiting !== undefined) {
+    if (mode === 'replace') writeWaiting.set(profileId, mode);
+    return;
+  }
+  const write = async (): Promise<void> => {
+    const turn = writeWaiting.get(profileId) ?? mode;
+    writeWaiting.delete(profileId);
+    const out: WriteOutcome = { stored: undefined, wrote: false, merged: null };
+    const outcome = await withStored(profileId, writeStep(profileId, turn, out));
+    if (outcome === 'done' && out.stored !== undefined) {
+      seen.set(profileId, out.stored);
+      if (out.wrote) postProgressChanged();
+    }
+    // Memory took the union even when the write did not land (it holds more, never less).
+    if (out.merged === null) return;
+    // The union holds what the other tab earned: it goes up with the next sync, the cards the rules added to it are
+    // announced as a catch-up, and the steady-weeks latch runs as after any merge (F-CURR-002 row CM-17).
+    announceCatchUp(profileId, out.merged);
+    notifyProgressPersisted(profileId);
+    emitGoalEvent({ type: 'merged', profileId });
+  };
+  if (chains.has(profileId)) writeWaiting.set(profileId, mode);
+  void enqueue(profileId, write).catch(() => undefined);
+}
+
+function save(profileId: string, mode: WriteMode = 'merge'): void {
   if (removedNow(profileId)) return;
-  writeStored(profileId);
+  writeStored(profileId, mode);
   notifyProgressPersisted(profileId);
+}
+
+/**
+ * [AU] Row AU-11: another tab stored a snapshot (`hr-progress`), or this page is back in front: every snapshot this
+ * tab has read is read again, inside the same transaction a write uses, so what the other tab earned shows here and
+ * nothing unsaved here is lost. Bound once by App.tsx; returns the unsubscribe. A no-op on native (one window).
+ */
+export function followProgressChanges(): () => void {
+  return subscribeProgressChanged(() => {
+    for (const profileId of useProgressStore.getState().hydratedFor) writeStored(profileId);
+  });
 }
 
 /**
@@ -557,6 +681,9 @@ function unionIds(a: readonly string[], b: readonly string[]): string[] {
 
 /** A wholesale replacement (restore, sync, reset) is final: no read still in flight may bring older data back. */
 function settle(profileId: string, snapshot: ProgressSnapshot): void {
+  // [AU] Row AU-11: a profile this tab never read has no copy to compare the stored record with: the replacement is
+  // stored as it is (final, as before), whatever an earlier session of this tab saw.
+  if (!useProgressStore.getState().hydratedFor.has(profileId)) seen.delete(profileId);
   useProgressStore.setState((s) => ({
     byProfile: { ...s.byProfile, [profileId]: snapshot },
     hydratedFor: new Set([...s.hydratedFor, profileId]),
@@ -611,6 +738,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (running) return running;
     const load = enqueue(profileId, async () => {
       let after: (() => void) | undefined;
+      let loadedJson: string | null | undefined;
+      let writtenJson: string | undefined;
       const outcome = await withStored(profileId, (loaded) => {
         // A restore or a reset landed first; this read is stale.
         if (get().hydratedFor.has(profileId)) return undefined;
@@ -639,12 +768,20 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         // a blank record holding only the welcome card stays in memory until
         // the next real write (nothing is stored for a learner who did nothing).
         const write = snap !== undefined && (unsaved !== undefined || latched !== found || (loaded !== null && added.length > 0)) && !removedNow(profileId);
+        // [AU] Row AU-11: the record as it is stored after this transaction, for the next write to compare with.
+        loadedJson = loaded === null ? null : JSON.stringify(loaded);
+        writtenJson = write ? JSON.stringify(snap) : undefined;
         after = () => {
           announceCatchUp(profileId, added);
           if (write) notifyProgressPersisted(profileId);
         };
         return write ? snap : undefined;
       });
+      if (outcome !== 'unread' && loadedJson !== undefined) {
+        const wrote = outcome === 'done' && writtenJson !== undefined;
+        seen.set(profileId, wrote ? (writtenJson as string) : loadedJson);
+        if (wrote) postProgressChanged();
+      }
       // [AU] Row AU-3: a stored record that could not be read (or a damaged one that could not be kept aside) leaves
       // the profile un-hydrated, so nothing is written for it; the writes made meanwhile stay in memory and the next
       // `hydrate` reads again.
@@ -884,7 +1021,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     settle(profileId, fresh);
     // The open session went with the old record: its owner's end is now a no-op.
     set((s) => ({ ...withoutCatchUp(s, profileId), openSession: s.openSession?.profileId === profileId ? null : s.openSession }));
-    save(profileId);
+    // [AU] Row AU-11: a reset clears; it is the one write that is not merged with what is stored.
+    save(profileId, 'replace');
   },
 
   replaceSnapshot: (profileId, snapshot) => {
@@ -987,6 +1125,8 @@ onProfileRemoved((profileId) => {
     pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
   }));
   unread.delete(profileId);
+  seen.delete(profileId);
+  writeWaiting.delete(profileId);
   removeKey(key(profileId)).catch(() => undefined);
   // [AU] Row AU-3: the copy of a damaged record goes with the learner.
   removeKey(PROGRESS_CORRUPT_KEY(profileId)).catch(() => undefined);

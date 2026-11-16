@@ -150,6 +150,29 @@ describe('QuestionSlide: listen (LV-S2)', () => {
   });
 });
 
+describe("QuestionSlide: a quest Check's listen question holds the options' romanization (AMENDMENTS-AUDIT-2026-11 AU-8)", () => {
+  const romNodes = (root: Parameters<typeof hostNodes>[0], slide: ListenBody) =>
+    hostNodes(byTestId(root, 'presenter-quiz-options')[0]!, (n) => n.children.length === 1 && typeof n.children[0] === 'string' && slide.options.some((o) => o.romanization === n.children[0]));
+
+  it("with the deck's romanization 'always' it still waits for the answer build, in the room it keeps", async () => {
+    const slide: ListenBody = { ...listenOf(stage3, true), holdRomanization: true };
+    const open = await render(inView(<QuestionSlide slide={slide} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(romNodes(open.root, slide).length).toBeGreaterThan(0);
+    expect(romNodes(open.root, slide).every((n) => n.props['aria-hidden'] === true)).toBe(true);
+    const answered = await render(inView(<QuestionSlide slide={slide} shown={ANSWER} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(romNodes(answered.root, slide).length).toBeGreaterThan(0);
+    expect(romNodes(answered.root, slide).every((n) => n.props['aria-hidden'] !== true)).toBe(true);
+  });
+
+  it('a question that is not a Check shows it with the question, as before', async () => {
+    const slide = listenOf(stage3, true);
+    expect(slide.holdRomanization).toBeUndefined();
+    const open = await render(inView(<QuestionSlide slide={slide} shown={QUESTION} romanization="always" sayIt={false} onPlaySound={() => undefined} />));
+    expect(romNodes(open.root, slide).length).toBeGreaterThan(0);
+    expect(romNodes(open.root, slide).every((n) => n.props['aria-hidden'] !== true)).toBe(true);
+  });
+});
+
 describe('QuestionSlide: a listen round that asks for the reply (a heard line, a reply it does not hold)', () => {
   it('asks "Which answer fits?"; what was heard still waits for the answer build', async () => {
     // Row CM-3A S4 moved the Stage 4 Checks off Listen & Pick, so no shipped lesson asks one now: a heard sentence round

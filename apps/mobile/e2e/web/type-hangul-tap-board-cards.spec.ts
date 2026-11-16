@@ -18,6 +18,11 @@ import { Touchscreen, pointIn } from './touch';
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 /** `colors.border.shape`, the press look's outline (section 4.3). */
 const PRESS_OUTLINE = 'rgb(133, 115, 96)';
+/**
+ * `borderWidth.thick`, the press outline's width. An idle card or tile is `border.shape` too since
+ * AMENDMENTS-AUDIT-2026-11 AU-17e (at `borderWidth.base`, 2px), so the width tells a press from rest, not the colour.
+ */
+const PRESS_WIDTH = '3px';
 /** `colors.border.focus`, the old press border (and the `hint` ring): never the press look. */
 const FOCUS_BLUE = 'rgb(58, 127, 181)';
 /** The 0.97 shrink of the press look as a computed transform. */
@@ -51,7 +56,7 @@ async function open(page: Page, params: Omit<Params, 'kind'>): Promise<Touchscre
 const log = (page: Page): Promise<Log> => page.evaluate(() => (window as E2eWindow).__hrTapBoardE2E!.log());
 const commits = async (page: Page): Promise<number[]> => (await log(page)).commits.map((c) => c.index);
 /** The drawn box inside a target (the press look is painted there, never on the hit area the board measures). */
-const drawn = (page: Page, testId: string, prop: 'borderTopColor' | 'transform'): Promise<string> =>
+const drawn = (page: Page, testId: string, prop: 'borderTopColor' | 'borderTopWidth' | 'transform'): Promise<string> =>
   page.getByTestId(testId).evaluate((el, p) => getComputedStyle(el.firstElementChild as Element)[p], prop);
 const settle = (page: Page): Promise<void> => page.waitForTimeout(120);
 
@@ -83,13 +88,14 @@ test.describe('ChoiceCard, Tile and Button under touch (AMENDMENTS-TOUCH KT-2)',
           const centre = await pointIn(page, id);
           const hit = (await page.getByTestId(id).boundingBox())!;
           await touch.start({ id: 1, ...centre });
-          await expect.poll(() => drawn(page, id, 'borderTopColor')).toBe(PRESS_OUTLINE);
+          await expect.poll(() => drawn(page, id, 'borderTopWidth')).toBe(PRESS_WIDTH);
+          expect(await drawn(page, id, 'borderTopColor')).toBe(PRESS_OUTLINE);
           expect(await drawn(page, id, 'transform')).toBe(SHRUNK);
           // The hit area keeps its box while the drawn card shrinks.
           expect((await page.getByTestId(id).boundingBox())!).toEqual(hit);
           await touch.end(1);
           await settle(page);
-          await expect.poll(() => drawn(page, id, 'borderTopColor')).not.toBe(PRESS_OUTLINE);
+          await expect.poll(() => drawn(page, id, 'borderTopWidth')).not.toBe(PRESS_WIDTH);
           expect(await drawn(page, id, 'borderTopColor')).not.toBe(FOCUS_BLUE);
           expect(await drawn(page, id, 'transform')).toBe('none');
           expect((await commits(page)).at(-1)).toBe(index);
@@ -116,7 +122,7 @@ test.describe('ChoiceCard, Tile and Button under touch (AMENDMENTS-TOUCH KT-2)',
         await touch.graze(tile, 0, 120);
         await settle(page);
         expect(await commits(page)).toEqual([11, 11, 20, 20]);
-        expect(await drawn(page, 'tap-tile-0', 'borderTopColor')).not.toBe(PRESS_OUTLINE);
+        expect(await drawn(page, 'tap-tile-0', 'borderTopWidth')).not.toBe(PRESS_WIDTH);
         expect((await log(page)).buttons).toBe(0);
       });
 
@@ -136,6 +142,7 @@ test.describe('ChoiceCard, Tile and Button under touch (AMENDMENTS-TOUCH KT-2)',
         await touch.start({ id: 1, ...centre });
         await page.waitForTimeout(100);
         expect(await drawn(page, 'tap-card-0', 'borderTopColor')).not.toBe(PRESS_OUTLINE);
+        expect(await drawn(page, 'tap-card-0', 'borderTopWidth')).not.toBe(PRESS_WIDTH);
         await touch.end(1);
         await settle(page);
         expect(await commits(page)).toEqual([]);
@@ -194,7 +201,8 @@ test.describe('ChoiceCard, Tile and Button under touch (AMENDMENTS-TOUCH KT-2)',
       const touch = await open(page, { lock: 'board', layout: 'fit' });
       const centre = await pointIn(page, 'tap-card-0');
       await touch.start({ id: 1, ...centre });
-      await expect.poll(() => drawn(page, 'tap-card-0', 'borderTopColor')).toBe(PRESS_OUTLINE);
+      await expect.poll(() => drawn(page, 'tap-card-0', 'borderTopWidth')).toBe(PRESS_WIDTH);
+      expect(await drawn(page, 'tap-card-0', 'borderTopColor')).toBe(PRESS_OUTLINE);
       expect(await drawn(page, 'tap-card-0', 'transform')).toBe('none');
       await touch.end(1);
       await settle(page);

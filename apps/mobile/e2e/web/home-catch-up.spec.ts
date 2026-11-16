@@ -54,7 +54,7 @@ const stage1Done = (profileId: string): ProgressSnapshot => ({
   streakDays: 0,
 });
 
-const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
+const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('tab', { name, exact: true });
 const catchUp = (page: Page) => page.getByTestId('home-catch-up');
 
 /** The install guide shows from the third cached open and covers Home. */

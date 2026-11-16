@@ -50,7 +50,8 @@ describe('passMessage on closed loops', () => {
     },
   );
 
-  it.each(['jamo:ieung', 'jamo:mieum', 'jamo:ieung-batchim', 'jamo:mieum-batchim'])(
+  // ㅁ is three open strokes since AU-14 (left bar; top and right; bottom bar), so only the rings are loops.
+  it.each(['jamo:ieung', 'jamo:ieung-batchim'])(
     '%s drawn round the other way never gets the left-to-right nudge',
     (id) => {
       const target = strokesForJamo(id)!;
@@ -67,6 +68,24 @@ describe('passMessage on closed loops', () => {
 });
 
 describe('passMessage on open strokes', () => {
+  it.each(['jamo:mieum', 'jamo:mieum-batchim'])('%s has no closed stroke: its bars are open strokes (AU-14)', (id) => {
+    const target = strokesForJamo(id)!;
+    const r = scoreTrace({ target, drawn: target.map(walk), checkOrder: true, checkDirection: true });
+    expect(r.closedPerTarget).toEqual([false, false, false]);
+    expect(r.orderCorrect).toBe(true);
+    expect(r.directionsCorrect).toBe(true);
+    // Every bar drawn backwards (right to left, bottom to top) is an open-stroke nudge, never the loop one.
+    const reversed = target.map((s) => walk([...s].reverse()));
+    expect(directionNudgeFor(scoreTrace({ target, drawn: reversed, checkDirection: true }))).toBe('open');
+  });
+
+  it('ㅁ with the top drawn before the left bar gets the order line, which names no stroke', () => {
+    const [left, topRight, bottom] = strokesForJamo('jamo:mieum')!.map(walk);
+    const msg = messageFor('jamo:mieum', [topRight!, left!, bottom!]);
+    expect(msg).toBe(COPY.pass.order);
+    expect(msg).not.toMatch(/top line/i);
+  });
+
   it('a backwards open stroke keeps the left-to-right nudge', () => {
     const target = strokesForJamo('jamo:giyeok')!;
     const msg = messageFor('jamo:giyeok', target.map((s) => walk([...s].reverse())));
@@ -101,8 +120,8 @@ describe('directionNudgeFor', () => {
 
 describe('passMessage / failMessage precedence', () => {
   it('order beats any direction nudge', () => {
-    expect(passMessage(false, 'loop')).toMatch(/top line first/);
-    expect(passMessage(false, 'open')).toMatch(/top line first/);
+    expect(passMessage(false, 'loop')).toMatch(/Next time, try the strokes in the right order/);
+    expect(passMessage(false, 'open')).toMatch(/Next time, try the strokes in the right order/);
   });
   it('failMessage coaches order only in strict mode', () => {
     expect(failMessage(true, false)).toMatch(/right order/);

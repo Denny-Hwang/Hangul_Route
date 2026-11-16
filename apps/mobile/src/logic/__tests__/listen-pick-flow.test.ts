@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
   LISTEN_PICK_TIMING,
+  checkHoldsRomanization,
   headerView as headerViewWith,
   listenPickSpeech,
   optionColumns,
@@ -497,6 +498,83 @@ describe('optionView', () => {
     expect(bare.label).toBeUndefined();
     expect(bare.gloss).toBe('Picture');
     expect(bare.accessibilityLabel).toBe('Picture');
+  });
+});
+
+describe('a quest Check holds its options\' romanization until the answer (AMENDMENTS-AUDIT-2026-11 AU-8)', () => {
+  const asking = startFlow(2);
+  const check = { mode: 'check', romanizationMode: 'always', holdRomanization: checkHoldsRomanization('check', false) } as const;
+
+  it('only the quest Check that plays its prompt holds it', () => {
+    expect(checkHoldsRomanization('check', false)).toBe(true);
+    // A text prompt round (Read Pick Meaning, the Cloze Pick fallback) plays nothing before the answer.
+    expect(checkHoldsRomanization('check', true)).toBe(false);
+    for (const mode of ['quest', 'review', 'vocab', 'preview'] as const) expect(checkHoldsRomanization(mode, false)).toBe(false);
+  });
+
+  it('an open question draws no romanization on any option and keeps each line\'s room', () => {
+    for (const option of textRound.options) {
+      const view = optionView(textRound, option, asking, check);
+      expect(view.romanization).toBe('');
+      expect(view.heldRomanization).toBe(option.text!.romanization);
+      expect(view.cardState).toBe('idle');
+    }
+  });
+
+  it('the accessible name keeps the romanization while it is held', () => {
+    expect(optionView(textRound, textRound.options[1]!, asking, check).accessibilityLabel).toBe('나, na');
+    expect(optionView(textRound, textRound.options[1]!, asking, check).accessibilityLabel).toBe(
+      optionView(textRound, textRound.options[1]!, asking, { mode: 'quest', romanizationMode: 'always' }).accessibilityLabel,
+    );
+  });
+
+  it('a missed option, and the ringed answer after two misses, stay without it while the question is open', () => {
+    const missed = run(asking, [tap('b', 100)]).state;
+    const wrong = optionView(textRound, textRound.options[1]!, missed, check);
+    expect(wrong).toMatchObject({ cardState: 'wrong', romanization: '', heldRomanization: 'na' });
+    expect(wrong.accessibilityLabel).toBe('Not this one: 나, na');
+    const twice = run(asking, [tap('b', 100), tap('c', 900)]).state;
+    expect(optionView(textRound, textRound.options[0]!, twice, check)).toMatchObject({ cardState: 'hint', romanization: '', heldRomanization: 'ga' });
+  });
+
+  it('once the question is answered every option shows its romanization and nothing is held', () => {
+    const resolved = run(asking, [tap('b', 100), tap('a', 900)]).state;
+    expect(resolved.status).toBe('resolved');
+    expect(textRound.options.map((o) => optionView(textRound, o, resolved, check).romanization)).toEqual(['ga', 'na', 'da', 'ra']);
+    expect(textRound.options.every((o) => optionView(textRound, o, resolved, check).heldRomanization === '')).toBe(true);
+    const done = { ...resolved, status: 'done' as const };
+    expect(optionView(textRound, textRound.options[2]!, done, check).romanization).toBe('da');
+  });
+
+  it('the next question is held again', () => {
+    const next = run(asking, [tap('a', 100), { type: 'advance' }]).state;
+    expect(next).toMatchObject({ status: 'asking', roundIdx: 1 });
+    expect(optionView(textRound, textRound.options[0]!, next, check)).toMatchObject({ romanization: '', heldRomanization: 'ga' });
+  });
+
+  it('the stricter tap mode keeps winning: nothing untouched is shown or held, and a touched option waits for the answer', () => {
+    const tapCheck = { ...check, romanizationMode: 'tap' } as const;
+    expect(optionView(textRound, textRound.options[1]!, asking, tapCheck)).toMatchObject({ romanization: '', heldRomanization: '' });
+    expect(optionView(textRound, textRound.options[1]!, asking, tapCheck).accessibilityLabel).toBe('나');
+    const missed = run(asking, [tap('b', 100)]).state;
+    expect(optionView(textRound, textRound.options[1]!, missed, tapCheck)).toMatchObject({ romanization: '', heldRomanization: 'na' });
+    const resolved = run(asking, [tap('b', 100), tap('a', 900)]).state;
+    expect(textRound.options.map((o) => optionView(textRound, o, resolved, tapCheck).romanization)).toEqual(['ga', 'na', '', '']);
+  });
+
+  it('a picture option has no romanization to hold', () => {
+    expect(optionView(pictureRound, pictureRound.options[0]!, startFlow(1), check)).toMatchObject({ romanization: '', heldRomanization: '', label: 'rice' });
+  });
+
+  it('every other host is unchanged: a practice step, the Hangul Check, vocabulary and a preview show it from the start', () => {
+    for (const mode of ['quest', 'review', 'vocab', 'preview'] as const) {
+      const context = { mode, romanizationMode: 'always', holdRomanization: checkHoldsRomanization(mode, false) } as const;
+      for (const option of textRound.options) {
+        expect(optionView(textRound, option, asking, context)).toMatchObject({ romanization: option.text!.romanization, heldRomanization: '' });
+      }
+    }
+    // A Check context without the flag (Cloze Pick's own option cards) is unchanged too.
+    expect(optionView(textRound, textRound.options[1]!, asking, { mode: 'check', romanizationMode: 'always' })).toMatchObject({ romanization: 'na', heldRomanization: '' });
   });
 });
 

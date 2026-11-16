@@ -1,7 +1,7 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { createGateIn, onboardSelf, passDiscover, playCheckByIds, readStored, seedStored, WHO_CHILD } from './helpers';
+import { createGateIn, onboardSelf, passDiscover, playCheckByIds, readStored, seedStored, WHO_CHILD, buildLetterBlocks } from './helpers';
 import { shot } from './shots';
 import { heritageCardsAll } from '../../src/content/heritage-cards';
 import { questsAll } from '../../src/content/quests';
@@ -74,12 +74,12 @@ const openSession = (page: Page): Promise<void> =>
     sessionStorage.setItem('hr:console:session', '{"v":1}');
   });
 
-/** Quest 1 to the guest's Results with every round right (3 stars, the card), from Hoya's hello. */
+/** Quest 1 to the guest's Results from Hoya's hello: Match the Sound skipped, Build a Letter and the Check right (2 stars, the card; [AU] row AU-9). */
 async function playQuestOne(page: Page): Promise<void> {
   await page.getByRole('button', { name: en.learner.quest.continue.cta, exact: true }).click();
   await passDiscover(page);
   await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
-  await page.getByRole('button', { name: en.learner.quest.launcher.game.skip.cta, exact: true }).click();
+  await buildLetterBlocks(page);
   await playCheckByIds(page, [{ answer: 'jamo:eo' }, { answer: '너' }]);
   await page.getByRole('button', { name: en.learner.quest.seeResults.cta, exact: true }).click();
   await expect(page.getByTestId('guest-save-card')).toBeVisible();
@@ -315,7 +315,7 @@ test.describe('the owner keeps or removes the first quest (GU-5)', () => {
     await page.getByTestId('dashboard-switch-user').click();
     await page.getByRole('button', { name: en.a11y.who.tile('Sam'), exact: true }).click();
     await expect(page.getByText('Hi, Sam!')).toBeVisible();
-    await page.getByRole('tablist').getByRole('link', { name: 'Library', exact: true }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: 'Library', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
     const cardsTab = page.getByRole('tab', { name: 'Cards', exact: true });
     if ((await cardsTab.count()) > 0) await cardsTab.click();

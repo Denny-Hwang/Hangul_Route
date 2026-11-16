@@ -183,7 +183,7 @@ const cell = (page: Page, theme: string, stage: number) => page.getByRole('butto
 const THEME_LABEL: Record<string, string> = { letters: 'Letters & Books', life: 'Food & Daily Life', rites: 'Holidays & Traditions', nature: 'Nature & Animals', crafts: 'Play & Crafts' };
 const detailPane = (page: Page) => page.getByRole('region', { name: 'Episode details' });
 const mapPane = (page: Page) => page.getByRole('region', { name: 'Journey map' });
-const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
+const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('tab', { name, exact: true });
 /** Skips every game of the open quest (however many it has) until "See results" shows; a Check has no Skip, so it is played. */
 async function skipToResults(page: Page): Promise<void> {
   const results = page.getByRole('button', { name: 'See results' });
@@ -430,7 +430,7 @@ for (const vp of TAB_BAR_VIEWPORTS) {
   test(`tab bar row is centred inside maxWidth.full and its items are >= 64 at ${vp.width}x${vp.height}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await openHome(page);
-    const items = page.getByRole('tablist').getByRole('link');
+    const items = page.getByRole('tablist').getByRole('tab');
     // Today, Route, Journey, Library (F-ROUTE-001 R-10b: the Route tab is on by default).
     await expect(items).toHaveCount(4);
     const boxes = await Promise.all((await items.all()).map((i) => i.boundingBox()));

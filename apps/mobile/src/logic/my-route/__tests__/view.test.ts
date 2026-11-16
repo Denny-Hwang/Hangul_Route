@@ -144,7 +144,7 @@ describe('myRouteView: wireframe A (Appendix C, today mid-progress)', () => {
     expect(s1.groups[0]?.map((p) => p.state)).toEqual(['done', 'done', 'done', 'done', 'open', 'open', 'open', 'open']);
     expect(s1.groups[0]?.filter((p) => p.isCursor).map((p) => p.key)).toEqual(['quest:stage1-life-q2']);
     expect(s1.fill).toEqual({ value: 4, max: 8 });
-    expect(s1.canDo).toEqual({ lead: 'By the end of this stage you can:', line: 'Read any Hangul letter and syllable and know its sound.' });
+    expect(s1.canDo).toEqual({ lead: 'By the end of this stage you can:', line: 'Read the basic Hangul letters and simple syllables, and know their sounds.' });
     expect(s1.builds.map((b) => [b.label, b.icon])).toEqual([
       ['Read', 'book'],
       ['Listen', 'ear'],
@@ -209,7 +209,7 @@ describe('myRouteView: wireframe A (Appendix C, today mid-progress)', () => {
 describe('myRouteView: other states', () => {
   it('a new learner: Start with the goal line; skills read "Ready when you are" with no slot', () => {
     const v = view(model([]), { nextTitle: 'Meet the First Letters' });
-    expect(v.heroCopy.lines).toEqual(['Your Learning Route starts here.', 'Your first goal: read every Hangul letter.']);
+    expect(v.heroCopy.lines).toEqual(['Your Learning Route starts here.', 'Your first goal: read the basic Hangul letters.']);
     expect(v.heroCopy.cta).toEqual({ action: 'quest', label: 'Start' });
     expect(v.skills.map((s) => [s.detail, s.marks.length])).toEqual([
       ['Ready when you are', 0],

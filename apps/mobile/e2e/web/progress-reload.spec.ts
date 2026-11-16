@@ -128,14 +128,15 @@ test('progress earned before a reload survives it and the next write', async ({ 
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
 
-  // Quest 1: intro, Discover, Match Sound and the Check played perfectly, Build a Letter skipped → 3 stars and the Book card.
+  // Quest 1: intro, Discover, Match Sound and the Check played perfectly, Build a Letter skipped → 2 stars (a skipped
+  // game caps the stars, AMENDMENTS-AUDIT-2026-11 row AU-9) and the Book card.
   await page.getByRole('button', { name: 'Continue' }).click();
   await passDiscover(page);
   await playMatchSound(page, 6);
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await answerCheck(page);
   await page.getByRole('button', { name: 'See results' }).click();
-  await expect(page.getByText('Wonderful!')).toBeVisible();
+  await expect(page.getByText('Great!')).toBeVisible();
   await page.getByRole('button', { name: 'Back home' }).click();
   // The Book card, plus Hoya's welcome card every new profile holds (F-STORY-006 §3.3).
   await expect(page.getByText(/^2 cards$/)).toBeVisible();

@@ -9,7 +9,7 @@ export const stages: StageDef[] = [
     key: 'stage1',
     order: 1,
     titleEn: 'Hangul',
-    oneLinerEn: 'Meet every Korean letter and the sound it makes.',
+    oneLinerEn: 'Meet the basic Korean letters and the sounds they make.',
     anchorSkillEn: 'Recognize 24 jamo + 6 batchim at ≥90% accuracy',
     unlockedByDefault: true,
   },

@@ -125,6 +125,55 @@ export function waitForSaved(page: Page, keys: string[]): Promise<unknown> {
   );
 }
 
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: a learner's quest run is kept on the device (`hr:quest-run:<profileId>`) when
+ * it begins and at each step change, and starting the same quest again within 24 hours goes on from that step.
+ * Resolves once a saved run of `questId` at `stepIndex` (0 is the intro) is in IndexedDB, so a reload that follows
+ * finds that step and does not race the async write.
+ */
+export async function waitForSavedRunStep(page: Page, questId: string, stepIndex: number): Promise<void> {
+  // A poll over page.evaluate: waitForFunction takes a predicate's pending promise as a truthy value.
+  const saved = (): Promise<boolean> =>
+    page.evaluate(
+    ({ quest, step }) =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => resolve(false);
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains('keyval')) {
+            db.close();
+            return resolve(false);
+          }
+          const all = db.transaction('keyval').objectStore('keyval').openCursor();
+          let found = false;
+          all.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+          all.onsuccess = () => {
+            const cursor = all.result;
+            if (!cursor) {
+              db.close();
+              return resolve(found);
+            }
+            if (String(cursor.key).startsWith('hr:quest-run:') && typeof cursor.value === 'string') {
+              try {
+                const run = JSON.parse(cursor.value) as { questId?: unknown; stepIndex?: unknown } | null;
+                if (run?.questId === quest && run.stepIndex === step) found = true;
+              } catch {
+                // Not a run this spec can read: not the one waited for.
+              }
+            }
+            cursor.continue();
+          };
+        };
+      }),
+    { quest: questId, step: stepIndex },
+  );
+  await expect.poll(saved, { timeout: 15_000 }).toBe(true);
+}
+
 /** The "Who is learning?" cards (F-LEARN-001 §3.15.2): "Me", or someone a grown-up looks after. */
 export const WHO_SELF = /^Me\./;
 export const WHO_CHILD = /^Someone I look after/;
@@ -395,6 +444,35 @@ export async function passDiscover(page: Page): Promise<void> {
     await page.getByRole('button', { name: 'Continue' }).click();
   }
   await expect(pill).toHaveCount(0);
+}
+
+/** One Build a Letter block: the syllable on the speaker, then the accessible names of its tiles in order. */
+export type LetterBlock = readonly [syllable: string, tiles: readonly string[]];
+
+const letterTile = (char: string): string => `Korean letter ${char}, tap to select`;
+
+/** Stage 1 quest 1's Build a Letter blocks (Meet a, eo, g, n), in round order. */
+export const QUEST_ONE_BLOCKS: readonly LetterBlock[] = [
+  ['가', [letterTile('ㄱ'), letterTile('ㅏ')]],
+  ['거', [letterTile('ㄱ'), letterTile('ㅓ')]],
+  ['나', [letterTile('ㄴ'), letterTile('ㅏ')]],
+  ['너', [letterTile('ㄴ'), letterTile('ㅓ')]],
+];
+
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-9: a run that skips every game earns at most 1 star and one that skips any game
+ * at most 2, so a spec that needs the quest's card (2 stars) plays a game. This plays a quest's Build a Letter from
+ * its launcher, every block right on the first try (the blocks come in round order), up to the Check's launcher.
+ */
+export async function buildLetterBlocks(page: Page, blocks: readonly LetterBlock[] = QUEST_ONE_BLOCKS): Promise<void> {
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('Build this letter')).toBeVisible();
+  for (const [syllable, tiles] of blocks) {
+    await expect(page.getByTestId('build-letter-speaker')).toContainText(syllable);
+    for (const name of tiles) await page.getByRole('button', { name, exact: true }).click();
+  }
+  // The last right block ends the game; the Check's launcher follows.
+  await expect(page.getByRole('button', { name: 'Go', exact: true })).toBeVisible();
 }
 
 /**

@@ -31,6 +31,7 @@ export function ChoiceCard({
   label,
   ko,
   romanization = '',
+  romanizationReserved = false,
   gloss,
   art,
   state,
@@ -74,7 +75,14 @@ export function ChoiceCard({
         ) : null}
         {hasKorean ? (
           <View style={{ alignSelf: tile ? 'center' : 'flex-start' }}>
-            <KoreanText ko={ko} romanization={romanization} gloss={gloss} size="sm" />
+            <KoreanText
+              ko={ko}
+              romanization={romanization}
+              romanizationShown={!romanizationReserved}
+              romanizationReserved={romanizationReserved}
+              gloss={gloss}
+              size="sm"
+            />
           </View>
         ) : null}
         {hasLabel ? (

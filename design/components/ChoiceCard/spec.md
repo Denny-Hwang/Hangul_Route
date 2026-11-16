@@ -5,6 +5,8 @@ Code: `packages/design-system/src/components/ChoiceCard/` (`ChoiceCard.tsx` pain
 
 > **Amended 2026-10-31 by `docs/specs/AMENDMENTS-TOUCH.md` [KT]** (row KT-2, applied): while pressed the card shows a thick `border.shape` outline and shrinks to 0.97 (no shrink under reduced motion) instead of the `border.focus` border, which is also the `hint` ring; inside a `TapBoard` (`design/components/TapBoard/spec.md`) the card commits on release with a 24 px reach, fills gaps to the nearest card and ignores a bounce for 400 ms; the web-dead `hitSlop` is gone. The "While pressed" line, the touch-target bullet and the reduced-motion bullet below say so.
 
+> **Amended 2026-11-16 by `docs/specs/AMENDMENTS-AUDIT-2026-11.md` [AU]** (row AU-17e, audit A11Y-4): the `idle` border is `border.shape` (4.55:1 on `surface.paper`, 4.29:1 on `surface.canvas`), not `border.subtle` (1.32:1), so an option's boundary meets WCAG 1.4.11. `Tile` idle and the app's text fields follow. `disabled` keeps `border.subtle` (an inactive control). With the stronger idle border no state rests on its border colour: `correct` and `wrong` have their fill and mark, `hint` its `borderWidth.thick` ring in `border.focus` (a different hue, but only 1.06:1 against `border.shape` in luminance, so the ring's width and the accessible name carry it), the press look its thicker outline and shrink. The contrast test holds the idle boundary to 3:1 and checks each state has a second cue.
+
 ## What it is
 
 The one option card for "pick one" questions: a text option, a Korean option, or a picture option. It is **the only definition other specs reuse** (F-QUEST-002 Listen & Pick, Pic-Word Match, Hangul Check; F-VOC). A wrong tap is a nudge, never a failure: amber, no red, no X.
@@ -18,6 +20,7 @@ The design system has no copy and no i18n dependency. The caller passes already-
 | `label` | `string?` | Option text (English or any UI language). Wraps, left-aligned |
 | `ko` | `string?` | Taught Hangul. Drawn with `KoreanText` (size `sm`) |
 | `romanization` | `string?` | Passed to `KoreanText` (empty string draws no line). Required by `KoreanText` when `ko` is set; defaults to `''` |
+| `romanizationReserved` | `boolean?` | `true`: the romanization line keeps its room but is not drawn or announced (`KoreanText` `romanizationReserved`); the open question of a quest Check (AMENDMENTS-AUDIT-2026-11 AU-8). Default `false` |
 | `gloss` | `string?` | Passed to `KoreanText` |
 | `art` | `ReactNode?` | Picture slot above the texts (SVG from F-STORY-002). Absent or `null`: the texts alone, never a broken image |
 | `state` | `'idle' \| 'correct' \| 'wrong' \| 'hint' \| 'disabled'` | See States |
@@ -71,7 +74,7 @@ State styles (the pure `choiceCardStyle(state)`):
 
 | State | Background | Border | Text | Mark | Tappable | `selected` | `disabled` |
 |---|---|---|---|---|---|---|---|
-| `idle` | `surface.paper` | `border.subtle` | `text.primary` | none | yes | no | no |
+| `idle` | `surface.paper` | `border.shape` | `text.primary` | none | yes | no | no |
 | `correct` | `feedback.successLight` | `feedback.success` | `text.primary` | `check` in `feedback.success` | no | yes | no |
 | `wrong` | `feedback.nudgeLight` | `feedback.nudge` | `text.primary` | `replay` ("try another") in `text.primary`; `dash` with `wrongMark="dash"` | no (locked) | yes | no |
 | `hint` | `surface.paper` | `border.focus`, thick | `text.primary` | none | yes | no | no |
@@ -85,6 +88,7 @@ No new token. `disabled` uses `surface.sunken` (the existing Tile convention) so
 
 - The spec lists `colors.hoya.furDark` as the replacement for the Tile literal `#B5862A`. `furDark` on `feedback.nudgeLight` is 2.85:1, under both the 4.5 text bar and the 3 non-text bar, so it is **not** used for text or the mark there. The wrong-state label stays `text.primary` (14:1) and the mark is `text.primary`. `furDark` is 3.28:1 on `surface.paper` and remains the documented accent for any other surface.
 - `feedback.nudge` on `surface.paper` is 1.86:1, so the amber border alone cannot signal the state (WCAG 1.4.1 / 1.4.11). The `replay` (or `dash`) mark and the caller's accessible name carry it; `correct` has the `check` mark; `hint` has the thick `border.focus` ring (4.30:1 on paper).
+- **[AU] 2026-11-16, `docs/specs/AMENDMENTS-AUDIT-2026-11.md` row AU-17a (audit A11Y-1):** `Tile` (the jamo tile of Match Sound, Odd One Out and Build a Letter; it has no spec of its own) now follows this card on a miss. Its literal `#B5862A` label (2.85:1 on `feedback.nudgeLight`) is gone: the wrong-state glyph is `text.primary` (14.02:1) and the tile carries the same `replay` mark in `text.primary`, 16 dp (`spacing.lg`), on its top corner 2 dp in (`spacing.xxs`), out of the flow. The glyph and the romanization line start 20 dp from the tile's inner edge (`spacing.md` + `spacing.sm`), so the mark covers neither at any text size and the tile keeps its size. Code: `packages/design-system/src/components/Tile/style.ts` (pure `tileStyle`, read by the contrast contract test).
 
 ## Contrast (enforced in `packages/design-system/src/__tests__/contrast.test.ts`)
 

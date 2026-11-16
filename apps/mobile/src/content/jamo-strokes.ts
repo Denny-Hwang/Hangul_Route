@@ -1,18 +1,26 @@
 /**
- * Jamo stroke skeletons — hand-authored ordered polygonal approximations
- * of each of the 30 Stage 1 jamo (loops are sampled from true circles, see
- * `loop`). Coordinates are in a 200 × 200 viewBox.
+ * Jamo stroke skeletons — hand-authored ordered polylines for each of the
+ * 30 Stage 1 jamo (loops are sampled from true circles, see `loop`).
+ * Coordinates are in a 200 × 200 viewBox.
  *
- * F-004 Trace Stroke uses these to score the child's finger-drawn path
+ * F-004 Trace Stroke uses these to score the learner's finger-drawn path
  * against the expected stroke skeleton (coverage scoring with 24-unit
- * tolerance).
+ * tolerance); F-005 / F-006 compare the drawn order and direction with them,
+ * and the Show-me demo (F-007) walks them in this order.
  *
  * Each jamo's `strokes` is an array of strokes (each stroke = ordered
  * points). A stroke is a continuous line; lifting the finger means
- * starting a new stroke. Multi-stroke jamo: ㅂ ㅍ etc.
+ * starting a new stroke.
  *
- * Hand-authored for pedagogical clarity — not perfectly anatomical
- * Hangul stroke order. Refinement deferred to F-005 (stroke order).
+ * [AU] AMENDMENTS-AUDIT-2026-11 AU-14: the data follows the standard school
+ * stroke order and stroke counts. Strokes are listed in writing order; a
+ * horizontal stroke runs left to right, a vertical stroke top to bottom, and
+ * ㅇ is one counter-clockwise stroke from the top. A final consonant is
+ * written exactly like the same consonant. Double consonants and compound
+ * vowels are not listed here: Trace a Word builds them from these letters,
+ * in writing order (`logic/trace-word/block-strokes.ts`).
+ * `content/__tests__/jamo-stroke-order.test.ts` pins every count and
+ * direction.
  */
 
 export interface JamoStrokePoint {
@@ -60,17 +68,48 @@ const IEUNG_CIRCLE = loop(100, 95, 57.5, 57.5);
 const HIEUT_LOOP = loop(100, 120, 60, 35);
 
 // Padding from viewBox edges: keep strokes between (30, 30) and (170, 170)
-// so the child has a comfortable margin to draw within.
+// so the learner has a comfortable margin to draw within.
+
+// The six consonants that are also Stage 1 finals: one stroke list each, so a
+// final can never drift from the consonant it is. Each entry below gets its
+// own copy (`copy`), so no two jamo share an array.
+
+/** ㄱ giyeok — 1 stroke: across, then down. */
+const GIYEOK: JamoStrokePoint[][] = [[p(40, 50), p(160, 50), p(160, 150)]];
+/** ㄴ nieun — 1 stroke: down, then across. */
+const NIEUN: JamoStrokePoint[][] = [[p(50, 40), p(50, 150), p(160, 150)]];
+/** ㄹ rieul — 3 strokes: the ㄱ shape, the middle bar, the ㄴ shape. */
+const RIEUL: JamoStrokePoint[][] = [
+  [p(40, 40), p(160, 40), p(160, 95)],
+  [p(40, 95), p(160, 95)],
+  [p(40, 95), p(40, 150), p(160, 150)],
+];
+/** ㅁ mieum — 3 strokes: the left bar; the top and the right side as one stroke; the bottom bar. */
+const MIEUM: JamoStrokePoint[][] = [
+  [p(50, 40), p(50, 150)],
+  [p(50, 40), p(150, 40), p(150, 150)],
+  [p(50, 150), p(150, 150)],
+];
+/** ㅂ bieup — 4 strokes: left bar, right bar (both start at the same height), middle bar, bottom bar. */
+const BIEUP: JamoStrokePoint[][] = [
+  [p(50, 30), p(50, 150)],
+  [p(150, 30), p(150, 150)],
+  [p(50, 100), p(150, 100)],
+  [p(50, 150), p(150, 150)],
+];
+/** ㅇ ieung — 1 stroke: a true circle, from the top, counter-clockwise. */
+const IEUNG: JamoStrokePoint[][] = [IEUNG_CIRCLE];
+
+const copy = (strokes: JamoStrokePoint[][]): JamoStrokePoint[][] =>
+  strokes.map((stroke) => stroke.map((point) => ({ ...point })));
 
 export const jamoStrokes: JamoStrokes[] = [
   // ─────────────────────────────────────────
   // CONSONANTS (14)
   // ─────────────────────────────────────────
-  // ㄱ giyeok — top horizontal + right vertical (L-shape mirrored)
-  { jamoId: 'jamo:giyeok', strokes: [[p(40, 50), p(160, 50), p(160, 150)]] },
-  // ㄴ nieun — left vertical + bottom horizontal (L-shape)
-  { jamoId: 'jamo:nieun', strokes: [[p(50, 40), p(50, 150), p(160, 150)]] },
-  // ㄷ digeut — top horizontal + left vertical + bottom horizontal
+  { jamoId: 'jamo:giyeok', strokes: copy(GIYEOK) },
+  { jamoId: 'jamo:nieun', strokes: copy(NIEUN) },
+  // ㄷ digeut — 2 strokes: the top bar, then the ㄴ shape
   {
     jamoId: 'jamo:digeut',
     strokes: [
@@ -78,33 +117,10 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(50, 50), p(50, 150), p(160, 150)],
     ],
   },
-  // ㄹ rieul — top H + right V + middle H + left V + bottom H
-  {
-    jamoId: 'jamo:rieul',
-    strokes: [
-      [p(40, 40), p(160, 40), p(160, 95)],
-      [p(40, 95), p(160, 95)],
-      [p(40, 95), p(40, 150), p(160, 150)],
-    ],
-  },
-  // ㅁ mieum — 4-sided rectangle
-  {
-    jamoId: 'jamo:mieum',
-    strokes: [
-      [p(50, 40), p(150, 40), p(150, 150), p(50, 150), p(50, 40)],
-    ],
-  },
-  // ㅂ bieup — left V + right V + 2 horizontal cross-bars
-  {
-    jamoId: 'jamo:bieup',
-    strokes: [
-      [p(50, 30), p(50, 150)],
-      [p(150, 60), p(150, 150)],
-      [p(50, 100), p(150, 100)],
-      [p(50, 150), p(150, 150)],
-    ],
-  },
-  // ㅅ siot — left diagonal + right diagonal (inverted V)
+  { jamoId: 'jamo:rieul', strokes: copy(RIEUL) },
+  { jamoId: 'jamo:mieum', strokes: copy(MIEUM) },
+  { jamoId: 'jamo:bieup', strokes: copy(BIEUP) },
+  // ㅅ siot — 2 strokes: the left leg, then the right leg
   {
     jamoId: 'jamo:siot',
     strokes: [
@@ -112,33 +128,26 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(110, 80), p(160, 150)],
     ],
   },
-  // ㅇ ieung — a true circle, from the top, counter-clockwise as written
-  {
-    jamoId: 'jamo:ieung',
-    strokes: [
-      IEUNG_CIRCLE,
-    ],
-  },
-  // ㅈ jieut — top horizontal + left diagonal + right diagonal
+  { jamoId: 'jamo:ieung', strokes: copy(IEUNG) },
+  // ㅈ jieut — 2 strokes: the bar running into the left leg without a lift,
+  // then the right leg, which leaves from the left leg
   {
     jamoId: 'jamo:jieut',
     strokes: [
-      [p(40, 50), p(160, 50)],
-      [p(110, 50), p(50, 150)],
-      [p(110, 80), p(160, 150)],
+      [p(40, 50), p(160, 50), p(50, 150)],
+      [p(116, 90), p(160, 150)],
     ],
   },
-  // ㅊ chieut — top tiny vertical + horizontal + left diag + right diag
+  // ㅊ chieut — 3 strokes: the tick, then ㅈ's two strokes
   {
     jamoId: 'jamo:chieut',
     strokes: [
       [p(100, 30), p(100, 55)],
-      [p(40, 70), p(160, 70)],
-      [p(110, 70), p(50, 150)],
-      [p(110, 100), p(160, 150)],
+      [p(40, 70), p(160, 70), p(50, 150)],
+      [p(116, 102), p(160, 150)],
     ],
   },
-  // ㅋ kieuk — top H + right V + middle short H
+  // ㅋ kieuk — 2 strokes: the ㄱ shape, then the middle bar
   {
     jamoId: 'jamo:kieuk',
     strokes: [
@@ -146,17 +155,16 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(40, 95), p(160, 95)],
     ],
   },
-  // ㅌ tieut — top H + middle H + left V + bottom H
+  // ㅌ tieut — 3 strokes: the top bar, the middle bar, then the ㄴ shape
   {
     jamoId: 'jamo:tieut',
     strokes: [
       [p(40, 40), p(160, 40)],
-      [p(50, 40), p(50, 95)],
       [p(40, 95), p(160, 95)],
-      [p(50, 95), p(50, 150), p(160, 150)],
+      [p(50, 40), p(50, 150), p(160, 150)],
     ],
   },
-  // ㅍ pieup — top H + 2 verticals + bottom H
+  // ㅍ pieup — 4 strokes: the top bar, the left leg, the right leg, the bottom bar
   {
     jamoId: 'jamo:pieup',
     strokes: [
@@ -166,7 +174,7 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(40, 150), p(160, 150)],
     ],
   },
-  // ㅎ hieut — top tiny + horizontal + circle (from the top, counter-clockwise)
+  // ㅎ hieut — 3 strokes: the tick, the bar, the ring (from the top, counter-clockwise)
   {
     jamoId: 'jamo:hieut',
     strokes: [
@@ -179,7 +187,7 @@ export const jamoStrokes: JamoStrokes[] = [
   // ─────────────────────────────────────────
   // VOWELS (10)
   // ─────────────────────────────────────────
-  // ㅏ a — vertical + right horizontal tick
+  // ㅏ a — the long bar, then the tick
   {
     jamoId: 'jamo:a',
     strokes: [
@@ -187,7 +195,7 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(80, 100), p(140, 100)],
     ],
   },
-  // ㅑ ya — vertical + 2 right ticks
+  // ㅑ ya — the long bar, then the two ticks, upper one first
   {
     jamoId: 'jamo:ya',
     strokes: [
@@ -196,7 +204,7 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(80, 120), p(140, 120)],
     ],
   },
-  // ㅓ eo — vertical + left tick
+  // ㅓ eo — the tick, then the long bar
   {
     jamoId: 'jamo:eo',
     strokes: [
@@ -204,7 +212,7 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(120, 30), p(120, 170)],
     ],
   },
-  // ㅕ yeo — vertical + 2 left ticks
+  // ㅕ yeo — the two ticks, upper one first, then the long bar
   {
     jamoId: 'jamo:yeo',
     strokes: [
@@ -213,24 +221,24 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(120, 30), p(120, 170)],
     ],
   },
-  // ㅗ o — horizontal + downward tick
+  // ㅗ o — the tick, then the long bar
   {
     jamoId: 'jamo:o',
     strokes: [
-      [p(30, 100), p(170, 100)],
       [p(100, 60), p(100, 100)],
+      [p(30, 100), p(170, 100)],
     ],
   },
-  // ㅛ yo — horizontal + 2 downward ticks
+  // ㅛ yo — the two ticks, left one first, then the long bar
   {
     jamoId: 'jamo:yo',
     strokes: [
-      [p(30, 110), p(170, 110)],
       [p(75, 70), p(75, 110)],
       [p(125, 70), p(125, 110)],
+      [p(30, 110), p(170, 110)],
     ],
   },
-  // ㅜ u — horizontal + upward tick
+  // ㅜ u — the long bar, then the tick
   {
     jamoId: 'jamo:u',
     strokes: [
@@ -238,7 +246,7 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(100, 100), p(100, 140)],
     ],
   },
-  // ㅠ yu — horizontal + 2 upward ticks
+  // ㅠ yu — the long bar, then the two ticks, left one first
   {
     jamoId: 'jamo:yu',
     strokes: [
@@ -247,43 +255,20 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(125, 90), p(125, 130)],
     ],
   },
-  // ㅡ eu — single horizontal
+  // ㅡ eu — 1 stroke, left to right
   { jamoId: 'jamo:eu', strokes: [[p(30, 100), p(170, 100)]] },
-  // ㅣ i — single vertical
+  // ㅣ i — 1 stroke, top to bottom
   { jamoId: 'jamo:i', strokes: [[p(100, 30), p(100, 170)]] },
 
   // ─────────────────────────────────────────
-  // BATCHIM (6) — same shapes as their base consonants
+  // BATCHIM (6) — written exactly like the same consonant
   // ─────────────────────────────────────────
-  { jamoId: 'jamo:giyeok-batchim', strokes: [[p(40, 50), p(160, 50), p(160, 150)]] },
-  { jamoId: 'jamo:nieun-batchim', strokes: [[p(50, 40), p(50, 150), p(160, 150)]] },
-  {
-    jamoId: 'jamo:rieul-batchim',
-    strokes: [
-      [p(40, 40), p(160, 40), p(160, 95)],
-      [p(40, 95), p(160, 95)],
-      [p(40, 95), p(40, 150), p(160, 150)],
-    ],
-  },
-  {
-    jamoId: 'jamo:mieum-batchim',
-    strokes: [[p(50, 40), p(150, 40), p(150, 150), p(50, 150), p(50, 40)]],
-  },
-  {
-    jamoId: 'jamo:bieup-batchim',
-    strokes: [
-      [p(50, 30), p(50, 150)],
-      [p(150, 60), p(150, 150)],
-      [p(50, 100), p(150, 100)],
-      [p(50, 150), p(150, 150)],
-    ],
-  },
-  {
-    jamoId: 'jamo:ieung-batchim',
-    strokes: [
-      IEUNG_CIRCLE,
-    ],
-  },
+  { jamoId: 'jamo:giyeok-batchim', strokes: copy(GIYEOK) },
+  { jamoId: 'jamo:nieun-batchim', strokes: copy(NIEUN) },
+  { jamoId: 'jamo:rieul-batchim', strokes: copy(RIEUL) },
+  { jamoId: 'jamo:mieum-batchim', strokes: copy(MIEUM) },
+  { jamoId: 'jamo:bieup-batchim', strokes: copy(BIEUP) },
+  { jamoId: 'jamo:ieung-batchim', strokes: copy(IEUNG) },
 ];
 
 export function strokesForJamo(jamoId: string): JamoStrokePoint[][] | undefined {

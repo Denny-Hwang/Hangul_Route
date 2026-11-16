@@ -3,6 +3,8 @@ import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
   DISCOVER_AUDIO_SOURCE,
+  autoHearAllowed,
+  autoHearId,
   buildDiscover as buildDiscoverWith,
   pageRender as pageRenderWith,
   startDiscover,
@@ -397,6 +399,57 @@ describe('stepDiscover: pages, hearing, reveal', () => {
 
   it('the first item of a page pulses once', () => {
     expect(pageRender(model, startDiscover(model), 'always').items.map((i) => i.pulse)).toEqual([true, false]);
+  });
+});
+
+describe('[AU] the first letter sounds by itself on a letter page (AMENDMENTS-AUDIT-2026-11 row AU-10)', () => {
+  const model = buildDiscover([pageOne, wordsPage, pageTwo]);
+  const first = model.pages[0]!.items[0]!.hear.id;
+
+  it('a letter page names its first letter\'s Hear it; a page that opens on a word, or no page, names none', () => {
+    expect(autoHearId(model, 0)).toBe(first);
+    expect(first).toBe('jamo:a|sound');
+    expect(autoHearId(model, 1)).toBeUndefined();
+    expect(autoHearId(model, 2)).toBe('jamo:giyeok|sound');
+    expect(autoHearId(model, 3)).toBeUndefined();
+    expect(autoHearId(buildDiscover([]), 0)).toBeUndefined();
+  });
+
+  it('it plays as Hear it does, and is not a tap: heard stays the number of taps', () => {
+    const auto = stepDiscover(startDiscover(model), { type: 'autoHear', id: first });
+    expect(auto.effects).toEqual([{ type: 'play', id: first }]);
+    expect(auto.state.tapped).toEqual([]);
+    // It played: the item shows its heard mark, as after a tap.
+    const played = stepDiscover(auto.state, { type: 'audio', id: first, result: 'played' });
+    expect(played.state.played).toEqual([first]);
+    expect(played.state.tapped).toEqual([]);
+    const done = run(played.state, { type: 'next' }, { type: 'next' }, { type: 'next' });
+    expect(done.effects).toEqual([{ type: 'done', pages: 3, heard: 0 }]);
+  });
+
+  it('a tap after it still counts once', () => {
+    const out = run(startDiscover(model), { type: 'autoHear', id: first }, { type: 'hear', id: first }, { type: 'next' }, { type: 'next' }, { type: 'next' });
+    expect(out.effects).toEqual([{ type: 'done', pages: 3, heard: 1 }]);
+  });
+
+  it('Continue never waits for it', () => {
+    const auto = stepDiscover(startDiscover(model), { type: 'autoHear', id: first });
+    expect(pageRender(model, auto.state, 'always').continueEnabled).toBe(true);
+    expect(stepDiscover(auto.state, { type: 'next' }).state.page).toBe(1);
+  });
+
+  it('it never starts over a Read along', () => {
+    const reading: DiscoverState = { ...startDiscover(model), readAlong: { item: 'x', line: 0, last: 0, run: 1, single: false } };
+    expect(stepDiscover(reading, { type: 'autoHear', id: first })).toEqual({ state: reading, effects: [] });
+  });
+
+  it('allowed only with sound on, no screen reader, and a recording or a Korean voice to say it', () => {
+    const ok = { muted: false, screenReader: false, hasClip: true, voiceReady: false };
+    expect(autoHearAllowed(ok)).toBe(true);
+    expect(autoHearAllowed({ ...ok, hasClip: false, voiceReady: true })).toBe(true);
+    expect(autoHearAllowed({ ...ok, muted: true })).toBe(false);
+    expect(autoHearAllowed({ ...ok, screenReader: true })).toBe(false);
+    expect(autoHearAllowed({ ...ok, hasClip: false })).toBe(false);
   });
 });
 

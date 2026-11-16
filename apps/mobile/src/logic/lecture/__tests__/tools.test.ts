@@ -12,6 +12,7 @@ import {
   optionLayout,
   optionRomShown,
   presetLabel,
+  quizOptionRomanization,
   radioMove,
   sayItShown,
   statusChips,
@@ -91,6 +92,20 @@ describe('optionRomShown (D2)', () => {
     expect(optionRomShown('tap', false)).toBe(false);
     expect(optionRomShown('tap', true)).toBe(true);
     expect(optionRomShown('always', true)).toBe(true);
+  });
+});
+
+describe('quizOptionRomanization (AMENDMENTS-AUDIT-2026-11 AU-8)', () => {
+  it("a quest Check's listen question holds its options' romanization for the answer build, whatever the deck's mode", () => {
+    expect(quizOptionRomanization('always', { holdRomanization: true })).toBe('tap');
+    expect(quizOptionRomanization('tap', { holdRomanization: true })).toBe('tap');
+    expect(optionRomShown(quizOptionRomanization('always', { holdRomanization: true }), false)).toBe(false);
+    expect(optionRomShown(quizOptionRomanization('always', { holdRomanization: true }), true)).toBe(true);
+  });
+
+  it("any other slide follows the deck's mode", () => {
+    expect(quizOptionRomanization('always', {})).toBe('always');
+    expect(quizOptionRomanization('tap', {})).toBe('tap');
   });
 });
 

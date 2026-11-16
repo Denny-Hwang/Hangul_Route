@@ -1,6 +1,8 @@
-import type { ReactElement } from 'react';
+import { Children, isValidElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { borderWidth, colors, shadows } from '../../../tokens';
+import { borderWidth, colors, shadows, spacing } from '../../../tokens';
+import { TILE_MARK, TILE_STATES, tileStyle } from '../style';
 import { Tile } from '../Tile';
 import type { TileProps } from '../types';
 
@@ -12,6 +14,7 @@ import type { TileProps } from '../types';
  * shrink on the drawn box (none under reduced motion), so the hit area the board measures never changes.
  */
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable' }));
+vi.mock('../../Icon', () => ({ Icon: 'Icon' }));
 const motion = vi.hoisted(() => ({ reduced: false }));
 vi.mock('../../TapBoard', async () => {
   const { pressLook } = await import('../../../press-look');
@@ -65,7 +68,7 @@ describe('Tile (AMENDMENTS-TOUCH 4.4, row KT-2)', () => {
 
   it('at rest: the state border and no transform, with the card shadow', () => {
     const style = box({ state: 'idle' }, false).props.style as Props;
-    expect(style).toMatchObject({ borderColor: colors.border.subtle, borderWidth: borderWidth.base, ...shadows.card });
+    expect(style).toMatchObject({ borderColor: colors.border.shape, borderWidth: borderWidth.base, ...shadows.card });
     expect(style.transform).toBeUndefined();
     expect((box({ state: 'wrong' }, false).props.style as Props).borderColor).toBe(colors.feedback.nudge);
   });
@@ -95,5 +98,82 @@ describe('Tile (AMENDMENTS-TOUCH 4.4, row KT-2)', () => {
   it('the hit area is the TapTarget with no style of its own: the shrink is on the drawn box inside it', () => {
     expect(tile({}).props.style).toBeUndefined();
     expect(box({ size: 'lg' }, true).props.style).toMatchObject({ minWidth: 96, minHeight: 96 });
+  });
+});
+
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 AU-17a (audit A11Y-1): a miss reads without colour. The wrong label is `text.primary`
+ * (the old literal amber was 2.85:1 on the nudge tint) and the tile carries ChoiceCard's "try another" mark on its top
+ * corner, out of the flow, clear of the glyph and the romanization line.
+ */
+describe('Tile wrong state (AU-17a)', () => {
+  const kids = (el: El): El[] => (Children.toArray(el.props.children as ReactNode) as El[]).filter((k) => isValidElement(k));
+  const all = (el: El): El[] => [el, ...kids(el).flatMap((k) => all(k))];
+  const icons = (el: El): El[] => all(el).filter((e) => e.type === 'Icon');
+  const texts = (el: El): El[] => all(el).filter((e) => e.type === 'Text');
+
+  it('the pure look: the wrong label is text.primary on the amber tint, with the try-another mark; no other state has a mark', () => {
+    expect(tileStyle('wrong')).toEqual({
+      backgroundColor: colors.feedback.nudgeLight,
+      borderColor: colors.feedback.nudge,
+      labelColor: colors.text.primary,
+      romanizationColor: colors.text.muted,
+      mark: { icon: 'replay', color: colors.text.primary },
+    });
+    for (const state of TILE_STATES.filter((s) => s !== 'wrong')) expect(tileStyle(state).mark, state).toBeNull();
+  });
+
+  it('never red: no state uses a danger colour', () => {
+    for (const state of TILE_STATES) {
+      const values = JSON.stringify(tileStyle(state));
+      expect(values).not.toContain(colors.feedback.danger);
+      expect(values).not.toContain(colors.feedback.dangerLight);
+    }
+  });
+
+  it('a wrong tile paints its glyph in text.primary and keeps the muted romanization line', () => {
+    const [glyph, romanization] = texts(box({ state: 'wrong', romanization: 'g' }, false));
+    expect((glyph!.props.style as Props).color).toBe(colors.text.primary);
+    expect((romanization!.props.style as Props).color).toBe(colors.text.muted);
+  });
+
+  it('a wrong tile draws the same mark ChoiceCard draws on a miss, hidden from assistive tech', () => {
+    const drawn = box({ state: 'wrong', disabled: true }, false);
+    const [mark, ...rest] = icons(drawn);
+    expect(rest).toEqual([]);
+    expect(mark!.props).toMatchObject({ name: 'replay', color: colors.text.primary, size: TILE_MARK.size });
+    const corner = kids(drawn).at(-1)!;
+    expect(icons(corner)).toEqual([mark]);
+    expect(corner.props['aria-hidden']).toBe(true);
+    expect(corner.props.pointerEvents).toBe('none');
+  });
+
+  it('the mark is out of the flow on the top corner, so the tile keeps its size', () => {
+    const wrong = box({ state: 'wrong', size: 'lg' }, false);
+    const idle = box({ state: 'idle', size: 'lg' }, false);
+    expect(kids(wrong).at(-1)!.props.style).toEqual({ position: 'absolute', top: TILE_MARK.inset, right: TILE_MARK.inset });
+    const { backgroundColor: _b, borderColor: _c, ...wrongBox } = wrong.props.style as Props;
+    const { backgroundColor: _d, borderColor: _e, ...idleBox } = idle.props.style as Props;
+    expect(wrongBox).toEqual(idleBox);
+  });
+
+  it('the mark ends inside the padding around the glyph and the romanization line, so it covers neither', () => {
+    // Tile padding (spacing.md) plus the text block's own side padding (spacing.sm) keep both lines this far from the edge.
+    expect(TILE_MARK.inset + TILE_MARK.size).toBeLessThanOrEqual(spacing.md + spacing.sm);
+    const drawn = box({ state: 'wrong', romanization: 'g' }, false);
+    expect((drawn.props.style as Props).padding).toBe(spacing.md);
+    expect((kids(drawn)[0]!.props.style as Props).paddingHorizontal).toBe(spacing.sm);
+  });
+
+  it('a wrong tile with no handler (a plain View) carries the mark too', () => {
+    const el = tile({ state: 'wrong', onPress: undefined });
+    expect(el.type).toBe('View');
+    expect(icons(el).map((i) => i.props.name)).toEqual(['replay']);
+  });
+
+  it('idle, correct and disabled tiles draw no mark', () => {
+    expect(icons(box({ state: 'idle' }, false))).toEqual([]);
+    expect(icons(box({ state: 'correct' }, false))).toEqual([]);
+    expect(icons(tile({ state: 'disabled' }))).toEqual([]);
   });
 });

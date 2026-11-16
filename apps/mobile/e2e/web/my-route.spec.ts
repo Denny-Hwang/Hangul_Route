@@ -153,7 +153,7 @@ async function firstStep(page: Page): Promise<{ heading: string; text: string }>
 }
 
 async function openRouteTab(page: Page): Promise<Locator> {
-  await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+  await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
   const screen = page.getByTestId('my-route-screen');
   await expect(screen).toBeVisible();
   return screen;
@@ -165,7 +165,7 @@ test.describe('the Route tab and its route card (LR-10)', () => {
     test(`${size.width} x ${size.height}: four tabs, the route card's words, the next lessons, no side scroll`, async ({ page }) => {
       await page.setViewportSize(size);
       await learnerOnHome(page);
-      await expect(page.getByRole('tablist').getByRole('link')).toHaveCount(4);
+      await expect(page.getByRole('tablist').getByRole('tab')).toHaveCount(4);
       await openRouteTab(page);
 
       const card = page.getByTestId('my-route-card');
@@ -186,7 +186,7 @@ test.describe('the Route tab and its route card (LR-10)', () => {
       await shot(page, `my-route-card-${size.width}`);
       // The 5-second check (LR-OD-3) sets the two first screens side by side: Route, then Journey.
       await page.screenshot({ path: test.info().outputPath(`route-first-${size.width}.png`) });
-      await page.getByRole('tablist').getByRole('link', { name: en.a11y.tabs.journey }).click();
+      await page.getByRole('tablist').getByRole('tab', { name: en.a11y.tabs.journey }).click();
       await expect(page.getByText(en.learner.journey.intro, { exact: true })).toBeVisible();
       await page.screenshot({ path: test.info().outputPath(`journey-first-${size.width}.png`) });
     });
@@ -407,7 +407,7 @@ test.describe('the Home entry, folded into the Next lesson hero (R-10, AMENDMENT
     await expect(screen).toBeVisible();
     await expect(screen.getByText(m.purpose, { exact: true })).toBeVisible();
     await expect(headerBack(page)).toHaveCount(0);
-    await expect(page.getByRole('tablist').getByRole('link')).toHaveCount(4);
+    await expect(page.getByRole('tablist').getByRole('tab')).toHaveCount(4);
     await shot(page, 'home-hero-opens-route-320');
   });
 

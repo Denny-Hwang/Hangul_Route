@@ -45,7 +45,7 @@ const SHRINK_FREE: readonly UiLocale[] = ['en'];
 const SHRINK_MAX_ITEM = 92;
 const en = getMessages('en');
 
-const tabLinks = (page: Page) => page.getByRole('tablist').getByRole('link');
+const tabLinks = (page: Page) => page.getByRole('tablist').getByRole('tab');
 
 /** Each tab's label text, and whether it fits its item: not cut, not wider than the item. */
 function labelFit(page: Page): Promise<Array<{ text: string; fits: boolean; inItem: boolean; lines: number }>> {
@@ -217,7 +217,7 @@ test.describe('the Route tab (LR-4)', () => {
   test('the tab is a root page: the name and the purpose line, no back button', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await learnerOnHome(page);
-    await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
     const screen = page.getByTestId('my-route-screen');
     await expect(screen).toBeVisible();
     await expect(screen.getByText(en.learner.myRoute.title, { exact: true })).toBeVisible();
@@ -233,7 +233,7 @@ test.describe('the Route tab (LR-4)', () => {
   test('where you are now, your next three lessons and the goal; the seven stages are in Journey (owner decision 2026-10-17)', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 640 });
     await learnerOnHome(page);
-    await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
     const screen = page.getByTestId('my-route-screen');
     // Where you are and the goal: the route card with its one button.
     await expect(page.getByTestId('my-route-card')).toBeVisible();
@@ -268,7 +268,7 @@ test.describe('the Route tab (LR-4)', () => {
   test('a next-lesson row opens its lesson: the second row starts the lesson after the card\'s', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await learnerOnHome(page);
-    await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
     const rows = page.getByTestId('my-route-next-lessons').getByRole('button');
     await expect(rows).toHaveCount(3);
     const second = await rows.nth(1).getAttribute('data-testid');
@@ -286,13 +286,13 @@ test.describe('the Route tab (LR-4)', () => {
     await learnerOnHome(page);
     const purpose = page.getByText(en.learner.myRoute.purpose, { exact: true });
 
-    await page.getByRole('tablist').getByRole('link', { name: en.a11y.tabs.journey }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: en.a11y.tabs.journey }).click();
     await expect(page.getByText(en.learner.journey.intro, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: en.learner.myRoute.open.cta, exact: true }).click();
     await expect(purpose).toBeVisible();
     await expect(headerBack(page)).toHaveCount(0);
 
-    await page.getByRole('tablist').getByRole('link', { name: en.a11y.tabs.home }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: en.a11y.tabs.home }).click();
     // The route strip is folded into the Next lesson hero (AMENDMENTS-DISPLAY-NAV 9.1): its link opens the tab.
     await expect(page.getByTestId('home-route-strip')).toHaveCount(0);
     await page.getByTestId('home-next-lesson-route').click();
@@ -343,7 +343,7 @@ test.describe('the Route tab (LR-4)', () => {
       ],
     });
     await closeInstallGuide(page);
-    await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+    await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
     const wall = page.getByTestId('my-route-letter-wall');
     const toggle = wall.getByRole('button', { name: en.learner.myRoute.wall.title, exact: true });
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -384,7 +384,7 @@ test.describe('the Route tab (LR-4)', () => {
         expect(label.fits, label.text).toBe(true);
         expect(label.inItem, label.text).toBe(true);
       }
-      await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+      await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
       await expect(page.getByText(en.learner.myRoute.purpose, { exact: true })).toBeVisible();
       expect(await noSideScroll(page)).toBe(true);
       await shot(page, `route-tab-${size.width}`);

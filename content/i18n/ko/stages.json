@@ -4,7 +4,7 @@
   "entries": {
     "stage:stage1": {
       "title": "한글",
-      "oneLiner": "모든 한글 글자와 그 소리를 만나요.",
+      "oneLiner": "한글 기본 글자와 그 소리를 만나요.",
       "anchorSkill": "자모 24개와 받침 6개를 90% 이상 알아보기"
     },
     "stage:stage2": {

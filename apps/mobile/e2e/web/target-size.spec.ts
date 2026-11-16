@@ -68,7 +68,7 @@ async function settledOffenders(page: Page, screen: AuditScreen): Promise<Screen
   throw new Error(`${screen}: the controls never settled`);
 }
 
-const tabLink = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
+const tabLink = (page: Page, name: string) => page.getByRole('tablist').getByRole('tab', { name, exact: true });
 
 /** Opens each audited screen of a fresh learner in turn and hands back its offenders. */
 async function walk(page: Page): Promise<ScreenOffenders> {

@@ -317,7 +317,8 @@ export function EditProfileScreen({ navigation, route }: Props): ReactElement {
           backgroundColor: classDevice ? colors.surface.sunken : colors.surface.paper,
           borderRadius: radii.lg,
           borderWidth: borderWidth.base,
-          borderColor: colors.border.subtle,
+          // [AU] AU-17e (audit A11Y-4): a text field's boundary is `border.shape` (4.55:1 on paper; `border.subtle` was 1.32:1, WCAG 1.4.11).
+          borderColor: colors.border.shape,
           paddingHorizontal: spacing.lg,
           minHeight: touchTarget.child,
           fontSize: textScale.size.bodyLg,

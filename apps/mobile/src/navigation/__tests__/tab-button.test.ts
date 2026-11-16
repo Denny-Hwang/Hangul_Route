@@ -29,8 +29,9 @@ vi.mock('react', async (importOriginal) => {
 type El = ReactElement<Record<string, unknown>>;
 type Click = { button?: number; metaKey?: boolean; preventDefault: () => void };
 
-function tab(onPress: (e: unknown) => void, to?: string): El {
-  return GuardedTabButton({ children: null, onPress, to, accessibilityRole: 'tab' } as never) as El;
+function tab(onPress: (e: unknown) => void, to?: string, selected?: boolean): El {
+  const state = selected === undefined ? {} : { accessibilityState: { selected } };
+  return GuardedTabButton({ children: null, onPress, to, accessibilityRole: 'tab', ...state } as never) as El;
 }
 
 describe('GuardedTabButton (AMENDMENTS-TOUCH 6.9, row KT-9)', () => {
@@ -61,6 +62,27 @@ describe('GuardedTabButton (AMENDMENTS-TOUCH 6.9, row KT-9)', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
     expect(first.preventDefault).toHaveBeenCalled();
     expect(bounce.preventDefault).toHaveBeenCalled();
+  });
+
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-17c (audit A11Y-3): the navigator's `tablist` owns tabs, not links.
+  it('web: the link takes the tab role (after the link props, so it wins over the link role) and says which tab is selected', () => {
+    const on = tab(vi.fn(), '/library', true);
+    expect(on.type).toBe('Link');
+    expect(on.props.to).toBe('/library');
+    expect(on.props.accessibilityRole).toBe('tab');
+    expect(on.props['aria-selected']).toBe(true);
+    const off = tab(vi.fn(), '/home', false);
+    expect(off.props.accessibilityRole).toBe('tab');
+    expect(off.props['aria-selected']).toBe(false);
+    expect(tab(vi.fn(), '/home').props['aria-selected']).toBe(false);
+  });
+
+  it('native: the tab keeps the role the navigator gives it (a button on iOS, a tab on Android)', () => {
+    platform.OS = 'ios';
+    const el = GuardedTabButton({ children: null, onPress: vi.fn(), accessibilityRole: 'button', accessibilityState: { selected: true } } as never) as El;
+    expect(el.type).toBe('Pressable');
+    expect(el.props.accessibilityRole).toBe('button');
+    expect(el.props.accessibilityState).toEqual({ selected: true });
   });
 
   it('web: a modified click is left to the browser (a new tab) and switches nothing', () => {

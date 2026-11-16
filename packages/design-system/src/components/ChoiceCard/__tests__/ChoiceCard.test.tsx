@@ -83,6 +83,16 @@ describe('ChoiceCard element tree (F-VOC-004 S-4b additions)', () => {
     expect((korean(body({ ko: '사과', romanization: 'sagwa' }))?.props.style as Props).alignSelf).toBe('flex-start');
   });
 
+  it('romanizationReserved: the Korean block hides its romanization line but keeps its room (AU-8)', () => {
+    const korean = (card: El) => all(card).find((e) => e.type === 'KoreanText');
+    expect(korean(body({ ko: '사과', romanization: 'sagwa' }))?.props).toMatchObject({ romanization: 'sagwa', romanizationShown: true, romanizationReserved: false });
+    expect(korean(body({ ko: '사과', romanization: 'sagwa', romanizationReserved: true }))?.props).toMatchObject({
+      romanization: 'sagwa',
+      romanizationShown: false,
+      romanizationReserved: true,
+    });
+  });
+
   it('a miss carries the try-another mark by default and the dash with wrongMark="dash", in either layout', () => {
     expect(icons(body({ state: 'wrong', label: 'pear' }))[0]?.props.name).toBe('replay');
     expect(icons(body({ state: 'wrong', label: 'pear', wrongMark: 'dash' }))[0]?.props.name).toBe('dash');
@@ -174,7 +184,7 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
 
   it('not pressed: the state\'s own border and no shrink (hint keeps its thick focus ring)', () => {
     const idle = body({ state: 'idle', label: 'apple' }).props.style as Props;
-    expect(idle).toMatchObject({ borderColor: colors.border.subtle, borderWidth: borderWidth.base });
+    expect(idle).toMatchObject({ borderColor: colors.border.shape, borderWidth: borderWidth.base });
     expect(idle.transform).toBeUndefined();
     expect(body({ state: 'hint', label: 'apple' }).props.style).toMatchObject({ borderColor: colors.border.focus, borderWidth: borderWidth.thick });
   });

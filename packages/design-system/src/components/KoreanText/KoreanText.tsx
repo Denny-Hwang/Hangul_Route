@@ -13,6 +13,15 @@ import { KOREAN_LINE_BREAK } from '../../line-break';
 // web-only prop does not need a type the native Text props lack.
 const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
 
+/** A line that keeps its room but is not shown: off the accessibility tree on every platform and not selectable. */
+const RESERVED = {
+  'aria-hidden': true,
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no',
+  selectable: false,
+  testID: 'korean-text-romanization-reserved',
+} as const;
+
 /**
  * KoreanText — the one renderer for taught Korean (F-I18N-001 §3.5).
  * A target chip (Hangul on a sky-blue tint with a border), the romanization
@@ -27,6 +36,7 @@ export function KoreanText({
   gloss,
   size = 'md',
   romanizationShown = true,
+  romanizationReserved = false,
   onPress,
   accessibilityLabel,
   testID,
@@ -39,6 +49,7 @@ export function KoreanText({
     gloss,
     size,
     romanizationShown,
+    romanizationReserved,
     pressable: onPress !== undefined,
     accessibilityLabel,
   });
@@ -73,7 +84,7 @@ export function KoreanText({
           {ko}
         </Text>
       </View>
-      {view.showRomanization || speaker ? (
+      {view.showRomanization || view.reserveRomanization || speaker ? (
         <View
           style={{
             marginTop: spacing.xs,
@@ -83,13 +94,16 @@ export function KoreanText({
             gap: spacing.sm,
           }}
         >
-          {view.showRomanization ? (
+          {view.showRomanization || view.reserveRomanization ? (
+            // Reserved (AU-8): the same line, invisible and unannounced, so its room is kept until it is shown.
             <Text {...KOREAN_LINE_BREAK}
+              {...(view.reserveRomanization ? RESERVED : null)}
               style={{
                 fontSize: view.romanizationSize,
                 fontWeight: typography.weight.medium,
                 fontStyle: 'italic',
                 color: colors.text.secondary,
+                opacity: view.reserveRomanization ? 0 : 1,
               }}
             >
               {romanization}

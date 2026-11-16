@@ -35,6 +35,8 @@ import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { hasPicture } from '../../logic/picture-ref';
 import {
   DISCOVER_AUDIO_SOURCE,
+  autoHearAllowed,
+  autoHearId,
   buildDiscover,
   pageRender,
   startDiscover,
@@ -51,13 +53,16 @@ import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { exampleWordLabel } from '../../logic/stage1/example-label';
 import { hasClipFor, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
-import { announceAndWait } from '../../platform/screen-reader';
+import { announceAndWait, isScreenReaderEnabled } from '../../platform/screen-reader';
+import { useAudioStore } from '../../store/audio-store';
 import { PICTURE_CONTEXT, PictureArt } from '../minigames/PictureArt';
 
 /**
  * Discover (F-QUEST-002 §3.2): teach before play. One or two new things per
- * page, each shown, named and heard on request; nothing autoplays and
- * Continue is enabled at once. The behaviour lives in
+ * page, each shown, named and heard on request; Continue is enabled at once.
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: with `autoHear` (a learner's or a guest's quest), a letter page says its
+ * first letter once as it opens (the page opens after a tap, so the browser lets it sound); nothing else autoplays,
+ * and Continue never waits for it. The behaviour lives in
  * `logic/stage1/discover-flow.ts` (view model, reducer, effects); this file
  * renders it and runs the effects.
  * Design: design/wireframes/quest/discover.md (S1, S2), design/components/SyllableBlock/spec.md;
@@ -82,11 +87,16 @@ interface Props {
   onDone: (result: { pages: number; heard: number }) => void;
   /** A strong round earlier in the cell: the second page, when it holds two words, draws both on one card (F-CURR-002 section 4.6). */
   compact?: boolean;
+  /**
+   * [AU] Row AU-10: each letter page plays its first letter's sound once when it opens, through the same play as its
+   * Hear it. Off by default (the All lessons preview, where a grown-up is looking, not learning).
+   */
+  autoHear?: boolean;
 }
 
 type DiscoverMessages = Messages['learner']['quest']['discover'];
 
-export function DiscoverStep({ pages, hoyaLine, onDone, compact = false }: Props): ReactElement {
+export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHear = false }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.quest.discover;
   const locale = useLocale();
@@ -214,6 +224,35 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false }: Props
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [state.page]);
+
+  // [AU] Row AU-10: a letter page says its first letter once as it opens. Once per page, whatever re-renders (a new
+  // locale rebuilds the model); never with sound off, with a screen reader on or when the sound cannot play; and when
+  // the page changes before it has finished, it stops.
+  const autoHeard = useRef(new Set<number>());
+  const modelRef = useRef(model);
+  modelRef.current = model;
+  const actionsRef = useRef(actions);
+  actionsRef.current = actions;
+  useEffect(() => {
+    if (!autoHear || autoHeard.current.has(state.page)) return undefined;
+    autoHeard.current.add(state.page);
+    const id = autoHearId(modelRef.current, state.page);
+    if (id === undefined) return undefined;
+    let live = true;
+    let started = false;
+    void isScreenReaderEnabled().then((screenReader) => {
+      const action = actionsRef.current.get(id);
+      if (!live || !action) return;
+      const audio = useAudioStore.getState();
+      if (!autoHearAllowed({ muted: audio.muted, screenReader, hasClip: hasClipFor(action.spec), voiceReady: audio.tts.state === 'ready' })) return;
+      started = true;
+      dispatchRef.current({ type: 'autoHear', id });
+    });
+    return () => {
+      live = false;
+      if (started) stopAudio();
+    };
+  }, [autoHear, state.page]);
 
   const render = pageRender(model, state, romanizationMode, copy);
   const page = model.pages[state.page];

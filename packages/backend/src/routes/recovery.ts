@@ -6,7 +6,7 @@ import { accountActor, learnerContexts, requireAccount } from '../lib/access';
 import { can } from '../lib/can';
 import { authorizeDevice, hashSecret, newDeviceSecret, parseDeviceHeader } from '../lib/device-auth';
 import { publicLearner } from '../lib/learners';
-import { clientKey, createRateLimiter } from '../lib/rate-limit';
+import { requestRateKey, takeDurableHit, tooManyAttempts, type DurableLimit } from '../lib/durable-rate-limit';
 import { rescueHash, rescueLookupHashes } from '../lib/rescue-hash';
 import { randomRescueCode } from '../lib/rescue-words';
 import { reviewCapsOf, servedSnapshot } from '../lib/review-kinds';
@@ -21,13 +21,14 @@ import type { Learner } from '../store';
 export const recoveryRoutes = new Hono();
 
 /**
- * Per client key, per isolate (lib/rate-limit). Not durable across isolates;
- * with >= 50-bit codes online guessing is out of reach regardless, so a
- * D1-backed counter is left for later (F-RESTORE-001 §3.2).
+ * Claims per client per hour. [AU] AMENDMENTS-AUDIT-2026-11 AU-16: counted in D1 (`rate_hits`, through
+ * lib/durable-rate-limit), so the limit holds across isolates and regions. Every claim counts, right or wrong:
+ * a Rescue Code is one family's restore on one device, not a classroom step (a class device uses re-link), so a
+ * shared address does not plausibly make five claims in an hour.
  */
 export const CLAIM_LIMIT = 5;
 export const CLAIM_WINDOW_MS = 60 * 60 * 1000;
-export const claimLimiter = createRateLimiter(CLAIM_LIMIT, CLAIM_WINDOW_MS);
+export const CLAIM_RATE: DurableLimit = { name: 'claim', limit: CLAIM_LIMIT, windowMs: CLAIM_WINDOW_MS };
 
 /** Draws per issue before giving up: a collision needs two equal ~52-bit codes, so a second draw is already rare. */
 export const ISSUE_ATTEMPTS = 3;
@@ -82,20 +83,12 @@ recoveryRoutes.post('/issue', async (c) => {
 });
 
 recoveryRoutes.post('/claim', async (c) => {
-  const decision = claimLimiter.check(clientKey((n) => c.req.header(n)));
-  if (!decision.allowed) {
-    return c.json(
-      {
-        ok: false,
-        error: { code: 'too_many_attempts', message: 'Too many attempts — try again later', details: { retryAfterSeconds: decision.retryAfterSeconds } },
-      },
-      429,
-    );
-  }
+  const db = dbFor(c);
+  const decision = await takeDurableHit(db, CLAIM_RATE, await requestRateKey(c, CLAIM_RATE));
+  if (!decision.allowed) return tooManyAttempts(c, decision);
   const parsed = RescueClaimSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Rescue code must look like WORD-WORD-WORD-WORD-123456', 422);
   const { code, deviceId } = parsed.data;
-  const db = dbFor(c);
   let learner: Learner | null = null;
   for (const hash of await rescueLookupHashes(code, rescuePepper(c.env as RuntimeEnv | undefined))) {
     learner = await db.learnerByRecoveryHash(hash);

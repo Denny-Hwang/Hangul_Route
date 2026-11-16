@@ -322,6 +322,8 @@ describe('sync-store (F-SYNC-002)', () => {
         const state = await useSyncStore.getState().syncNow('profile:a');
         expect(state).toMatchObject({ status: 'idle', rev: 9, lastError: 'conflict' });
         expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
+        // [AU] Row AU-3: the write is a storage transaction; it lands after the call.
+        for (let i = 0; i < 20; i += 1) await Promise.resolve();
         expect((mem.get('progress:profile:a') as ProgressSnapshot).quests.map((q) => q.questId)).toEqual(['q1', 'q2', 'q3']);
         expect(requestSync).toHaveBeenCalledWith('profile:a');
       } finally {

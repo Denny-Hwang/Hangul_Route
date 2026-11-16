@@ -440,7 +440,8 @@ export function JoinSpaceScreen({ navigation, route }: Props): ReactElement {
               color: colors.text.primary,
               backgroundColor: colors.surface.paper,
               borderWidth: borderWidth.base,
-              borderColor: colors.border.subtle,
+              // [AU] AU-17e (audit A11Y-4): a text field's boundary is `border.shape` (4.55:1 on paper; `border.subtle` was 1.32:1, WCAG 1.4.11).
+              borderColor: colors.border.shape,
               borderRadius: radii.lg,
             }}
           />

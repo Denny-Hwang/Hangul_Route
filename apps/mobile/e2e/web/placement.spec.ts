@@ -171,7 +171,7 @@ async function learningRouteShowsThePlan(page: Page, name: string): Promise<void
   // [OA] Row OA-10: a device with 2 learners opens on Who is using this? at launch; the learner's tile opens Home.
   await homeFor(page, name);
   await closeInstallGuide(page);
-  await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+  await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
   await expect(page.getByTestId('my-route-screen')).toBeVisible();
   await expect(page.getByTestId('my-route-plan-line')).toHaveText(en.learner.myRoute.home.strip.week(1));
   await expect(page.getByTestId('my-route-plan-open')).toBeVisible();

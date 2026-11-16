@@ -1,8 +1,8 @@
 import { JOIN_CODE_RE, TEACHER_ROSTER_ADDRESS_FIELDS, TEACHER_VISIBLE_ROSTER_FIELDS, TEACHER_VISIBLE_SUMMARY_KEYS } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
-import { LOOKUP_LIMIT, lookupLimiter } from '../routes/spaces';
-import { testDb as db } from './helpers/db';
+import { LOOKUP_LIMIT } from '../routes/spaces';
+import { clearRateHits, testDb as db } from './helpers/db';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string; details?: Record<string, unknown> } };
 const json = { 'content-type': 'application/json' };
@@ -52,7 +52,7 @@ const summary = { schemaVersion: 1, lastActiveAt: '2026-09-21T00:00:00.000Z', st
 
 beforeEach(async () => {
   await db.reset();
-  lookupLimiter.reset();
+  await clearRateHits();
 });
 
 describe('POST /api/spaces + GET /api/spaces (F-SPACE-001 §3.1, §3.3)', () => {
@@ -135,7 +135,7 @@ describe('join code lifecycle (§3.2)', () => {
     if (space) await db.putSpace({ ...space, joinCodeExpiresAt: '2020-01-01T00:00:00.000Z' });
     expect((await post('/api/spaces/lookup', json, { code: cls.joinCode })).body.error?.code).toBe('code_expired');
     expect((await post('/api/spaces/lookup', json, { code: 'nope' })).status).toBe(422);
-    lookupLimiter.reset();
+    await clearRateHits();
     for (let i = 0; i < LOOKUP_LIMIT; i += 1) await post('/api/spaces/lookup', json, { code: 'K7M2X9' });
     const blocked = await post('/api/spaces/lookup', json, { code: 'K7M2X9' });
     expect(blocked.status).toBe(429);

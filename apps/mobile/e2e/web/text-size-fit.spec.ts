@@ -4,7 +4,7 @@ import { touchTarget } from '@hangul-route/design-system/tokens';
 import { TEXT_SIZE_FACTORS, typeScale } from '@hangul-route/design-system/text-size';
 import { getMessages } from '@hangul-route/i18n';
 import { expect, test } from './fixtures';
-import { onboardSelf, openForGrownUps, openLettersEpisode, passDiscover, readStored, seedStored, journeyCellName, onboardChild, openGrownUpZone, seedRescueCode, unlockWithPin } from './helpers';
+import { onboardSelf, openForGrownUps, openLettersEpisode, passDiscover, readStored, seedStored, journeyCellName, onboardChild, openGrownUpZone, seedRescueCode, unlockWithPin, waitForSavedRunStep } from './helpers';
 import { shot } from './shots';
 import { closeInstallGuide, expectTextFits, fontSizeOf } from './text-fit';
 
@@ -144,12 +144,16 @@ test.describe('text size Largest at 320 x 568: the screens of row DN-3b', () => 
     await shot(page, 'dn3b-match-sound-largest-320x568');
 
     // Quest 1, step 4: Build a Letter (construction).
+    // [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: the reload left quest 1 at its Match Sound step, so Start goes on from
+    // that step's launcher: no intro and no Look and learn a second time.
+    await waitForSavedRunStep(page, 'quest:stage1-letters-q1', 2);
     await page.goto('/');
     await closeInstallGuide(page);
     await openLettersEpisode(page);
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
-    await page.getByRole('button', { name: 'Continue' }).click();
-    await passDiscover(page);
+    await expect(page.getByRole('button', { name: 'Play minigame' })).toBeVisible();
+    await expect(page.getByText('Look and learn', { exact: true })).toHaveCount(0);
+    await expectTextFits(page, 'the Match Sound launcher, resumed');
     await page.getByRole('button', { name: 'Skip for now' }).click();
     await page.getByRole('button', { name: 'Play minigame' }).click();
     await expect(page.getByText('Build this letter')).toBeVisible();

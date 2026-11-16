@@ -11,6 +11,7 @@ import { useDocumentLang } from './src/i18n/use-messages';
 import { RootNavigator } from './src/navigation/root';
 import type { RootStackParamList } from './src/navigation/types';
 import { ConfirmHost } from './src/components/ConfirmHost';
+import { ProgressLabelsHost } from './src/components/ProgressLabelsHost';
 import { LearnerScreenHeader } from './src/components/LearnerScreenHeader';
 import { PortraitGuard } from './src/components/PortraitGuard';
 import { PwaBanners } from './src/components/PwaBanners';
@@ -20,6 +21,7 @@ import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { leaveGrownUpAreaOnClose, watchGrownUpAreaExit } from './src/navigation/grown-up-area-exit';
 import { followProfileChanges } from './src/store/profile-store';
+import { followProgressChanges } from './src/store/progress-store';
 import { followGuestChanges } from './src/store/guest-store';
 import { bindChooserResume, bindRemovedElsewhere } from './src/store/who-chooser';
 import { bindGrownUpBackgroundRule } from './src/screens/parent/use-gate-lapse';
@@ -128,6 +130,8 @@ export default function App(): ReactElement {
     const unbindBackground = bindGrownUpBackgroundRule();
     // [OA] OA-D19: a profile list another tab changed is read again here (always on).
     const unfollowProfiles = followProfileChanges();
+    // [AU] AMENDMENTS-AUDIT-2026-11 row AU-11: a snapshot another tab stored is read again here (always on).
+    const unfollowProgress = followProgressChanges();
     // [GU] Row GU-2 (section 6.4): a guest record another tab wrote or saved is read again here (always on).
     const unfollowGuest = followGuestChanges();
     void countVisit();
@@ -206,6 +210,7 @@ export default function App(): ReactElement {
       unfollow();
       unbindBackground();
       unfollowProfiles();
+      unfollowProgress();
       unfollowGuest();
       off();
       offInbox();
@@ -231,12 +236,15 @@ export default function App(): ReactElement {
             {/* Every screen's top row (Back, its title, the Aa control) comes from its route (AMENDMENTS-DISPLAY-NAV section 7.1). */}
             {/* One tap lock clock for every answer board and guarded press (AMENDMENTS-TOUCH KT-D5, rule 10). */}
             <TapLockProvider>
-              <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
-                <NavigationContainer ref={navigation} onReady={startBridge}>
-                  {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
-                  <StatusBar style="dark" />
-                </NavigationContainer>
-              </ScreenHeaderSlotContext.Provider>
+              {/* Every progress meter is named and read in the UI language (AMENDMENTS-AUDIT-2026-11 AU-17d). */}
+              <ProgressLabelsHost>
+                <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
+                  <NavigationContainer ref={navigation} onReady={startBridge}>
+                    {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
+                    <StatusBar style="dark" />
+                  </NavigationContainer>
+                </ScreenHeaderSlotContext.Provider>
+              </ProgressLabelsHost>
             </TapLockProvider>
             {/* The web's confirm step in the UI language, in place of the browser's confirm() (section 8). */}
             <ConfirmHost />

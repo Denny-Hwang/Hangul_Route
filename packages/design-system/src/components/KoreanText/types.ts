@@ -12,6 +12,11 @@ export interface KoreanTextProps {
   size?: KoreanTextSize;
   /** `false` hides only the romanization line. Default `true`. */
   romanizationShown?: boolean;
+  /**
+   * With `romanizationShown: false`, keep the line's room: it is drawn invisible and hidden from assistive
+   * tech, so the layout does not move when the line is shown (a quest Check's open question, AU-8). Default `false`.
+   */
+  romanizationReserved?: boolean;
   /** Makes the item a button and shows the speaker affordance. */
   onPress?: () => void;
   /** Already-localised label (`m.a11y.koreanItem`); default is "ko, romanization". */

@@ -13,6 +13,11 @@ const hoyaPose = { idle: 'idle', cheering: 'cheering', thinking: 'thinking', rea
 export const a11y = {
   tile: (label: string) => `Korean letter ${label}, tap to select`,
   stars: (earned: number) => `${earned} of 3 stars earned`,
+  /**
+   * A progress meter's accessible name and its value in words (AMENDMENTS-AUDIT-2026-11 AU-17d): a lesson's step dots, a
+   * game's round bar, a collection meter. Read aloud, never drawn. Counts only: `done` of `total`.
+   */
+  progress: { name: 'Progress', value: (done: number, total: number) => `${done} of ${total}` },
   /** Hoya's label with the pose word of `hoyaPose`; a pose missing from the map is read as given. */
   hoya: (pose: string) => `Hoya the tiger, ${Object.prototype.hasOwnProperty.call(hoyaPose, pose) ? hoyaPose[pose as keyof typeof hoyaPose] : pose}`,
   hoyaPose,

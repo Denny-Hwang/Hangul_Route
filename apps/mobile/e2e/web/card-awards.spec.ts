@@ -77,7 +77,7 @@ const record = (
   streakDays: 0,
 });
 
-const tab = (page: Page, name: string): Locator => page.getByRole('tablist').getByRole('link', { name, exact: true });
+const tab = (page: Page, name: string): Locator => page.getByRole('tablist').getByRole('tab', { name, exact: true });
 const catchUp = (page: Page): Locator => page.getByTestId('home-catch-up');
 const shown = (page: Page, testId: string): Locator => page.getByTestId(testId).filter({ visible: true });
 

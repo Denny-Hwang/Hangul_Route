@@ -40,3 +40,5 @@ Code (planned): `navigation/tabs.tsx`, `navigation/types.ts` (LR-4); glyph `rout
 ## Observation (not changed here)
 
 In greyscale, the selected tab differs from the others only by its tint, which is the bar's existing behaviour; the navigator does report the selected state to screen readers. The glyph sheet shows this. A second cue (a heavier label weight, or an indicator) would be a change to the existing bar for all tabs, so it is left to a later layout PR, not to LR-4.
+
+**[AU] 2026-11-16, `docs/specs/AMENDMENTS-AUDIT-2026-11.md` row AU-17c (audit A11Y-3):** on the web each tab is still the navigator's link (`<a href>`), now with the `tab` role and `aria-selected`, so the navigator's `tablist` owns tabs (axe: aria-required-children) and the selected tab is announced. No visual change. The second, non-colour cue for the selected tab (audit A11Y-5) is still open: the icon set has no filled variants and an indicator needs a mock first.

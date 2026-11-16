@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, openForGrownUps, openLettersEpisode, passDiscover, unlockWithPin } from './helpers';
+import { completeChildForm, openForGrownUps, openLettersEpisode, passDiscover, unlockWithPin, waitForSavedRunStep } from './helpers';
 
 /**
  * F-LAYOUT-001 PR 6 (§3.6 game rows, PIN row, LD4 "media scales, text does not"):
@@ -92,11 +92,14 @@ for (const c of CASES) {
       }
 
       // Quest 1, step 4: Build a Letter tiles (base touchTarget.child).
+      // [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: the reload left quest 1 at its Match Sound step, so Start goes on
+      // from that step's launcher: no intro and no Look and learn a second time.
+      await waitForSavedRunStep(page, 'quest:stage1-letters-q1', 2);
       await home(page, name);
       await openLettersEpisode(page);
       await page.getByRole('button', { name: 'Start' }).first().click();
-      await page.getByRole('button', { name: 'Continue' }).click();
-      await passDiscover(page);
+      await expect(page.getByRole('button', { name: 'Play minigame' })).toBeVisible();
+      await expect(page.getByText('Look and learn', { exact: true })).toHaveCount(0);
       await page.getByRole('button', { name: 'Skip for now' }).click();
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await expect(page.getByText('Build this letter')).toBeVisible();

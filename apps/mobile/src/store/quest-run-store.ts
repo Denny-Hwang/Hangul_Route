@@ -3,7 +3,9 @@ import { tallyAnswer } from '../logic/first-try';
 import type { RoundAsked } from '../logic/memory/asked';
 import type { MinigameScope } from '../logic/minigame-config';
 import type { StepTry } from '../logic/quest-flow/quest-adapt';
-import { starsForAccuracy } from '../logic/score';
+import { questOutcome } from '../logic/quest-outcome';
+import type { QuestRunRestore } from '../logic/quest-flow/saved-run';
+import { skipStarCap } from '../logic/quest-flow/skip-cap';
 
 /** The first (scored) answer of a round, with what it asked (F-CURR-002 row CM-12). */
 export interface FirstRoundAnswer {
@@ -30,6 +32,8 @@ export function setFirstRoundAnswerListener(listener: ((answer: FirstRoundAnswer
 interface State {
   questId: string | null;
   episodeId: string | null;
+  /** [AU] ISO time the run began (AMENDMENTS-AUDIT-2026-11 row AU-12): a run resumed after a reload keeps its first start. */
+  startedAt: string | null;
   stepIndex: number;
   /** Rounds answered right on the first try (logic/first-try). */
   correctCount: number;
@@ -39,6 +43,11 @@ interface State {
   retryCount: number;
   /** `${stepIndex}:${roundKey}` of every round already scored this run. */
   scoredRounds: readonly string[];
+  /**
+   * [AU] The game steps this run skipped with Skip for now on the step's launcher (AMENDMENTS-AUDIT-2026-11 row AU-9).
+   * They cap the run's stars (`quest-flow/skip-cap.ts`). A game ended from inside is a completed step, as before.
+   */
+  skippedSteps: readonly number[];
   pendingAdvance: boolean;
   /** What each round missed on the first try asked, in order: Try these again on the reward step (F-CURR-002 row CM-15). */
   missed: readonly RoundAsked[];
@@ -53,8 +62,10 @@ interface Actions {
    * Start a run. `startStepIndex` (default 0) lets a resumed story quest open
    * on its `story-read` step (F-STORY-004 §3.8); anything that is not a whole
    * number of 0 or more starts at 0.
+   * [AU] `restore` (row AU-12): the run a reload interrupted goes on from its saved step with its tallies, the keys of
+   * the rounds already scored (so none is scored twice) and its skipped steps; the step starts from its beginning.
    */
-  beginQuest: (questId: string, episodeId: string, startStepIndex?: number) => void;
+  beginQuest: (questId: string, episodeId: string, startStepIndex?: number, restore?: QuestRunRestore) => void;
   /**
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
@@ -63,20 +74,28 @@ interface Actions {
    */
   answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked, hinted?: boolean) => void;
   markStepComplete: () => void;
+  /** [AU] Skip for now on the current step's launcher (row AU-9): the step is noted as skipped; the caller moves on. */
+  markStepSkipped: () => void;
   goNextStep: () => void;
   consumePendingAdvance: () => void;
   reset: () => void;
-  stars: () => 0 | 1 | 2 | 3;
+  /**
+   * The run's stars. [AU] With the quest's steps, a skipped game step caps them (row AU-9); without, any noted skip
+   * caps them at 2.
+   */
+  stars: (steps?: Parameters<typeof skipStarCap>[0]) => 0 | 1 | 2 | 3;
 }
 
 const blankRun = {
   questId: null,
   episodeId: null,
+  startedAt: null,
   stepIndex: 0,
   correctCount: 0,
   totalCount: 0,
   retryCount: 0,
   scoredRounds: [],
+  skippedSteps: [],
   pendingAdvance: false,
   missed: [],
   tries: [],
@@ -86,12 +105,22 @@ const blankRun = {
 export const useQuestRunStore = create<State & Actions>((set, get) => ({
   ...blankRun,
 
-  beginQuest: (questId, episodeId, startStepIndex = 0) =>
+  beginQuest: (questId, episodeId, startStepIndex = 0, restore) =>
     set({
       ...blankRun,
       questId,
       episodeId,
+      startedAt: restore?.startedAt ?? new Date().toISOString(),
       stepIndex: Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0,
+      ...(restore
+        ? {
+            correctCount: restore.correctCount,
+            totalCount: restore.totalCount,
+            retryCount: restore.retryCount,
+            scoredRounds: restore.scoredRounds,
+            skippedSteps: restore.skippedSteps,
+          }
+        : {}),
     }),
 
   answerRound: (roundKey, correct, asked, hinted = false) => {
@@ -127,6 +156,8 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
   markStepComplete: () => set({ pendingAdvance: true }),
 
+  markStepSkipped: () => set((s) => ({ skippedSteps: withStep(s.skippedSteps, s.stepIndex) })),
+
   goNextStep: () => set((s) => ({ stepIndex: s.stepIndex + 1, pendingAdvance: false })),
 
   consumePendingAdvance: () => {
@@ -138,8 +169,16 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
   reset: () => set({ ...blankRun }),
 
-  stars: () => starsForAccuracy(get().correctCount, Math.max(1, get().totalCount)),
+  stars: (steps) => {
+    const { correctCount, totalCount, skippedSteps } = get();
+    const cap = steps ? skipStarCap(steps, skippedSteps) : skippedSteps.length > 0 ? 2 : 3;
+    return questOutcome(correctCount, totalCount, cap).stars;
+  },
 }));
+
+function withStep(steps: readonly number[], step: number): readonly number[] {
+  return steps.includes(step) ? steps : [...steps, step];
+}
 
 /**
  * A round played beside the steps (the scaffold round, F-CURR-002 section 4.6): its first answer goes to the memory

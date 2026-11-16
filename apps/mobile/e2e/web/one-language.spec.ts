@@ -309,7 +309,9 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
     await learnerAtLargest(page);
     await expectTextFits(page, 'Home');
     await shot(page, 'or67-home-largest-320x568');
-    const tabs = page.getByRole('tablist').getByRole('link');
+    // [AU] AMENDMENTS-AUDIT-2026-11 AU-17c: the bar's items are tabs (they were links), and so are a page's own
+    // section tabs (the Library's). The bar's are the ones that keep their link (`<a href>`).
+    const tabs = page.getByRole('tablist').locator('a[role="tab"]');
     await expect(tabs).toHaveCount(4);
     for (const [index, name] of [
       [1, 'Route'],
@@ -321,7 +323,9 @@ test.describe('text size Largest at 320 x 568 (the fit rule, AMENDMENTS-DISPLAY-
       await expectTextFits(page, name);
       await shot(page, `or67-${name.toLowerCase()}-largest-320x568`);
     }
+    await expect(tabs).toHaveCount(4);
     await tabs.nth(0).click();
+    await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
     await page.getByRole('button', { name: 'Profile and settings' }).click();
     await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
     await expectTextFits(page, 'Profile');

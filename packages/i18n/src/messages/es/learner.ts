@@ -591,7 +591,7 @@ export const learner = {
       done: { cta: 'Listo' },
       idle: 'Dibuja la letra despacio. Levanta el dedo para terminar.',
       pass: {
-        order: '¡Lo lograste! La próxima vez, empieza por la línea de arriba.',
+        order: '¡Lo lograste! La próxima vez, dibuja los trazos en orden. Toca Muéstrame para verlo.',
         open: '¡Bien! La próxima vez, dibuja de izquierda a derecha.',
         loop: '¡Bien! La próxima vez, da la vuelta hacia el otro lado.',
         clean: '¡Precioso! Se ve igual que la letra.',
@@ -1187,7 +1187,7 @@ export const learner = {
     open: { cta: 'Ver la Ruta de aprendizaje' },
     hero: {
       start: 'Tu Ruta de aprendizaje empieza aquí.',
-      goal: 'Tu primera meta: leer cada letra del hangul.',
+      goal: 'Tu primera meta: leer las letras básicas del hangul.',
       here: (n: number, title: string) => `Estás en la Etapa ${n}: ${title}.`,
       next: (title: string) => `Siguiente: ${title}`,
       rest: 'Hiciste todo lo que está abierto ahora. Viene más.',
@@ -1236,7 +1236,7 @@ export const learner = {
     canDoLead: 'Al final de esta etapa podrás:',
     stage: {
       canDo: {
-        1: 'Leer cualquier letra y sílaba del hangul y saber su sonido.',
+        1: 'Leer las letras básicas y sílabas simples del hangul, y saber sus sonidos.',
         2: 'Leer palabras de todos los días y saber qué significan.',
         3: 'Leer y armar oraciones cortas y simples.',
         4: 'Seguir una conversación corta de todos los días y elegir una respuesta.',
@@ -1500,8 +1500,8 @@ export const learner = {
   /** The Stage 1 ceremony (F-QUEST-002 §3.8): no number, no fraction, no percent, no price, no plan word. */
   stageComplete: {
     title: '¡Hangul completo!',
-    headline: '¡Ya puedes leer hangul!',
-    canDo: 'Conoces cada letra y cada sonido final. Hoya está muy orgulloso de ti.',
+    headline: '¡Ya puedes leer hangul básico!',
+    canDo: 'Conoces las letras básicas y seis sonidos finales. Hoya está muy orgulloso de ti.',
     wallTitle: 'Todas las letras que aprendiste',
     cardsTitle: 'Tarjetas legendarias para ti',
     seeCards: { cta: 'Ver mis tarjetas' },
@@ -1538,7 +1538,7 @@ export const learner = {
     },
     result: {
       headline: { three: '¡Maravilloso!', two: '¡Buen trabajo!', one: '¡Lo lograste!' },
-      cheer: 'Miraste cada letra del hangul. Hoya está orgulloso de ti.',
+      cheer: 'Miraste cada letra que aprendiste. Hoya está orgulloso de ti.',
       certificate: { title: 'Certificado', stage: 'Etapa 1: Hangul' },
       wallTitle: 'Tus tarjetas de hangul',
       tipTitle: 'Consejo de Hoya',

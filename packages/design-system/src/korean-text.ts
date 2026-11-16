@@ -45,6 +45,11 @@ export interface KoreanTextViewInput {
   size?: KoreanTextSize;
   /** `false` hides only the romanization line; the gloss stays. Default `true` (D2). */
   romanizationShown?: boolean;
+  /**
+   * With `romanizationShown: false`: keep the romanization line's room (drawn invisible, hidden from
+   * assistive tech), so nothing moves when it is shown later (AMENDMENTS-AUDIT-2026-11 AU-8). Default `false`.
+   */
+  romanizationReserved?: boolean;
   /** `true` when the component has an `onPress`. */
   pressable?: boolean;
   accessibilityLabel?: string;
@@ -55,6 +60,8 @@ export interface KoreanTextViewInput {
 export interface KoreanTextView {
   label: string;
   showRomanization: boolean;
+  /** The romanization line is hidden but keeps its room (never together with `showRomanization`). */
+  reserveRomanization: boolean;
   showGloss: boolean;
   pressable: boolean;
   showSpeaker: boolean;
@@ -82,9 +89,11 @@ export function koreanTextLabel(ko: string, romanization: string, accessibilityL
 export function koreanTextView(input: KoreanTextViewInput): KoreanTextView {
   const tier = (input.scale ? koreanTextSizes(input.scale) : KOREAN_TEXT_SIZES)[input.size ?? 'md'];
   const pressable = input.pressable === true;
+  const showRomanization = (input.romanizationShown ?? true) && present(input.romanization);
   return {
     label: koreanTextLabel(input.ko, input.romanization, input.accessibilityLabel),
-    showRomanization: (input.romanizationShown ?? true) && present(input.romanization),
+    showRomanization,
+    reserveRomanization: !showRomanization && input.romanizationReserved === true && present(input.romanization),
     showGloss: present(input.gloss),
     pressable,
     showSpeaker: pressable,

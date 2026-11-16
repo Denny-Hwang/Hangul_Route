@@ -36,6 +36,7 @@ import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
 import {
   LISTEN_PICK_AUDIO_SOURCE,
+  checkHoldsRomanization,
   headerView,
   listenPickSpeech,
   optionColumns,
@@ -335,7 +336,13 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </View>
   ) : null;
-  const optionContext = { mode: host.mode, romanizationMode, ...(spellingKit === null ? {} : { labelOf: spellingKit.spellingOptionLabel }) };
+  const optionContext = {
+    mode: host.mode,
+    romanizationMode,
+    // AU-8: a quest Check that plays its prompt shows no romanization on its options until the answer.
+    holdRomanization: checkHoldsRomanization(host.mode, textMode),
+    ...(spellingKit === null ? {} : { labelOf: spellingKit.spellingOptionLabel }),
+  };
 
   return (
     <Screen tone="canvas">
@@ -454,7 +461,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
                       testID={`listen-pick-option-${option.id}`}
                       state={view.cardState}
                       ko={view.ko}
-                      romanization={view.romanization}
+                      // A held line (AU-8) keeps its room, so the cards do not move when the answer shows it.
+                      romanization={view.heldRomanization === '' ? view.romanization : view.heldRomanization}
+                      romanizationReserved={view.heldRomanization !== ''}
                       label={view.label}
                       art={
                         view.pictureRef !== undefined ? (

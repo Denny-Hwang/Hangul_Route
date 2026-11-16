@@ -566,7 +566,7 @@ export const learner = {
       done: { cta: '완료' },
       idle: '천천히 글자를 써 봐요. 다 쓰면 손가락을 떼요.',
       pass: {
-        order: '잘했어요! 다음에는 위쪽 획부터 써 봐요.',
+        order: '잘했어요! 다음에는 획을 차례대로 써 봐요. 보여 주기를 누르면 볼 수 있어요.',
         open: '좋아요! 다음에는 왼쪽에서 오른쪽으로 그어 봐요.',
         loop: '좋아요! 다음에는 반대 방향으로 돌려 봐요.',
         clean: '멋져요! 글자 모양이 정말 똑같아요.',
@@ -1154,7 +1154,7 @@ export const learner = {
     open: { cta: '학습 루트 보기' },
     hero: {
       start: '내 학습 루트가 여기서 시작돼요.',
-      goal: '첫 목표: 한글 글자를 모두 읽기.',
+      goal: '첫 목표: 한글 기본 글자 읽기.',
       here: (n: number, title: string) => `지금 ${n}단계, ${title}에 있어요.`,
       next: (title: string) => `다음: ${title}`,
       rest: '지금 열린 것을 모두 했어요. 더 많은 내용이 곧 나와요.',
@@ -1203,7 +1203,7 @@ export const learner = {
     canDoLead: '이 단계를 마치면 할 수 있는 것:',
     stage: {
       canDo: {
-        1: '한글 글자와 글자 덩어리를 읽고 소리를 알아요.',
+        1: '한글 기본 글자와 쉬운 글자 덩어리를 읽고 소리를 알아요.',
         2: '자주 쓰는 낱말을 읽고 뜻을 알아요.',
         3: '짧고 쉬운 문장을 읽고 만들어요.',
         4: '짧은 일상 대화를 따라가고 대답을 골라요.',
@@ -1465,8 +1465,8 @@ export const learner = {
   },
   stageComplete: {
     title: '한글 완성!',
-    headline: '이제 한글을 읽을 수 있어요!',
-    canDo: '모든 글자와 모든 받침 소리를 알아요. 호야가 정말 뿌듯해해요.',
+    headline: '이제 기본 한글을 읽을 수 있어요!',
+    canDo: '기본 글자와 받침 소리 여섯 개를 알아요. 호야가 정말 뿌듯해해요.',
     wallTitle: '내가 배운 모든 글자',
     cardsTitle: '나를 위한 전설 카드',
     seeCards: { cta: '내 카드 보기' },
@@ -1499,7 +1499,7 @@ export const learner = {
     },
     result: {
       headline: { three: '정말 멋져요!', two: '잘했어요!', one: '해냈어요!' },
-      cheer: '한글 글자를 하나도 빠짐없이 살펴봤어요. 호야가 뿌듯해해요.',
+      cheer: '배운 글자를 하나도 빠짐없이 살펴봤어요. 호야가 뿌듯해해요.',
       certificate: { title: '수료증', stage: '1단계: 한글' },
       wallTitle: '내 한글 카드',
       tipTitle: '호야의 팁',

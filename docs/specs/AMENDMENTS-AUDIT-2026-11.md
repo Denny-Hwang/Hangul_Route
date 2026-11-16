@@ -1,4 +1,4 @@
-Status: ready; rows AU-1 to AU-7 done (stage 1); rows AU-8 to AU-17 open
+Status: ready; rows AU-1 to AU-17 done (stage 1 in #1034, stage 2 in the PR that adds this line)
 
 # Amendment: fixes from the 2026-11-15 readiness audit
 
@@ -98,3 +98,25 @@ The limiters on Rescue Code claim, join-code lookup, join and relink move from p
 - **AU-7.** `docs/launch/owner-runbook.md` section P.
 
 Also in the audit's first PR (#1033): `apps/mobile` typecheck runs with an explicit 4 GB heap, and the audio e2e helper `controlledBySw` polls with `page.evaluate`.
+
+**Stage 2 (rows AU-8 to AU-17).**
+
+- **AU-8.** In a quest Check that plays a sound, every option's romanization is held (drawn at opacity 0, room kept, off the accessibility tree) until the right option is tapped; options already missed wait too. The accessible name is unchanged. Practice games, the Hangul Check, vocabulary, text-prompt Checks and the no-sound path are unchanged. The presenter does the same on a Check's listen question. No new mode: a flag on the option view (`heldRomanization`) and a `romanizationReserved` prop on `KoreanText` and `ChoiceCard`. CLAUDE.md section 1 names the exception. Not covered: the prompt of a Read Pick Meaning Check still shows its romanization, and Checks built on other games are unchanged.
+- **AU-9.** "Skip for now" on a game step's launcher counts as a skipped step: any skipped game step caps the run at 2 stars, all skipped caps it at 1. A game's own Skip inside a round is not a skipped step (rounds answered are scored as before). The story reader is not a game step. `recordBestQuest` never lowers saved stars.
+- **AU-10.** On a "Look and learn" page whose first item is a letter, that letter's sound plays once when the page opens. Skipped when sound is off, a screen reader is on, or nothing can say it. `heard` in telemetry stays the count of taps. Learner and guest players only.
+- **AU-11.** A progress write is a three-way merge inside the storage transaction: stored unchanged, this tab's snapshot is stored as it is; stored changed and nothing new here, memory takes the stored snapshot; both changed, `rebaseSnapshot` (the function sync uses). Channel `hr-progress` tells other tabs to read again; a tab also re-reads when it becomes visible. `reset` replaces and is not merged.
+- **AU-12.** `quest-run:<profileId>` holds the quest id, a signature of its step list, the step index, tallies, scored-round keys, skipped steps and the start time; written at run start and at each step change. A run for another quest, with a changed step list, or older than 24 hours from its start is discarded. Cleared on finish and on Leave. A guest run is unchanged (GU-D6, GU-D12: a guest reload reopens quest 1 from step 1). A story quest resumes a saved run only when opened with Keep reading.
+- **AU-13.** The recorded clip already played; the screen still showed "No Korean voice on this device." because Build a Letter did not tell its prompt slot that the syllable has a clip. It does now. All 27 Stage 1 target syllables have a clip in the `stage1` pack.
+- **AU-14.** Stroke data rewritten to the row's table: ㅁ 3 strokes, ㅌ 3, ㅈ 2, ㅊ 3, ㅗ and ㅛ ticks first, ㅂ's bars from the same height; the six finals share their consonant's definition. ㅈ and ㅊ now draw the bar into the left leg without a lift, which changes the look of their guide slightly. The line shown after a pass with the strokes out of order no longer says "the top line first" (en, es, ko). `reviewedStrokeIds` stays empty, so the presenter still says "Simplified stroke guide" until a teacher has reviewed the data (F-TCH-004). A letter's own bottom bar now lies at the canvas's lower edge, which showed an older layout fault on a 320 x 568 phone: Trace a Word's canvas kept its 160 floor in a shorter slot, so Show me and Clear lay over its lower edge and took those strokes. On a stacked content box under 500 tall the two helpers now stand beside the canvas (`traceWordHelperColumn`); every other size is unchanged. No mock was made for this move of two existing buttons.
+- **AU-15.** Six dictionary lines, the Stage 1 one-liner and the Stage 2 Letters Volume 2 intro now say "the basic letters" and "six final sounds" in en, es and ko.
+- **AU-16.** Rescue Code claim (5 an hour, every attempt), join-code lookup (20 an hour) and relink create (10 an hour) count in `rate_hits`; lookup and relink count only attempts that fail, so a class on one school address is not locked out. `/join` had no limit and now counts wrong codes (20 an hour). The key is a hash of the client address, never the address. Bodies over 256 KB get 413; the snapshot PUT and the Stripe webhook allow 2 MB. No migration.
+- **AU-17.** (a) Tile's wrong state: primary text colour and ChoiceCard's replay mark. (b) Pill's nudge text: primary text colour. (c) Tab bar: `tab` children with `aria-selected` inside the `tablist`. (d) Every progress bar has a name and a value text ("2 of 6"); the warm-up dots are decorative. (e) Text fields and idle Tile and ChoiceCard are outlined in `border.shape`. Not done: a non-colour cue for the active tab (it needs a mock first).
+
+Also in the stage 2 PR: the start bundle line moves to 4,952,000 B (measured 4,948,154 B).
+
+**Follow-ups found on the way (not done).**
+
+- Other screens create a prompt slot without `hasClip` (Trace Stroke, Card Match, Pic-Word Match and more) and may show the same false no-voice line as AU-13.
+- Specs that still describe the old behaviour and are read by no test: F-005 and F-008 ("top line first"), F-006 (ㅁ as a closed loop), F-TCH-004 TD4, F-QUEST-002 section 3.2 ("nothing autoplays"), F-I18N-001 D2.
+- The hint ring and the press look of an option are weaker cues next to the new idle border (AU-17e) and want a design look.
+- `apps/web` design-preview pages still hard-code the old Tile and Pill amber.

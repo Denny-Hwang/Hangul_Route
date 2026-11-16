@@ -2,6 +2,8 @@
 export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.tile': [['x']],
   'a11y.stars': [[2]],
+  // AMENDMENTS-AUDIT-2026-11 AU-17d: a progress meter's value in words.
+  'a11y.progress.value': [[2, 6], [0, 1]],
   'a11y.hoya': [['waving']],
   'a11y.cardArt': [['Book']],
   'a11y.tabPosition': [['Learning Route', 2, 4]],
@@ -758,7 +760,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.weeklyPlan.checkIn.done': [[2], [4]],
   'caregiver.browse.home.stages.line': [[7]],
   'caregiver.browse.home.stages.item': [[1, 'Hangul']],
-  'caregiver.browse.home.routeRowA11y': [['Stage 1, Hangul. Open. Meet every Korean letter and the sound it makes.']],
+  'caregiver.browse.home.routeRowA11y': [['Stage 1, Hangul. Open. Meet the basic Korean letters and the sounds they make.']],
   'caregiver.browse.home.cardSlotA11y': [['Common', 'Book', 'x', 'chaek']],
   'caregiver.browse.home.wordCount': [[1], [12]],
   'caregiver.browse.home.wordsRowA11y': [['Food', 1], ['Food', 12]],

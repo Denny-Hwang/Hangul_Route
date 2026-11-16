@@ -86,6 +86,34 @@ function savedAudioPrefs(page: Page): Promise<string | null> {
   );
 }
 
+/**
+ * [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: Discover page by page, counting what it says by itself. A page that opens
+ * on a letter says that letter once as it opens (here by the voice: `said` grows by one, in Korean); a page that
+ * opens on a word or an exchange says nothing. Each page is held until its own sound was said and half a second more
+ * passed with no second one, so the count is exact. `before` is how many utterances were logged when Discover opened
+ * (none, in a fresh learner's first quest). Returns how many sounds Discover played by itself.
+ */
+async function passDiscoverHearingItsLetters(page: Page, before = 0): Promise<number> {
+  const pill = page.getByText('Look and learn', { exact: true });
+  await expect(pill).toBeVisible();
+  const label = await page.getByText(/^Page \d+ of \d+$/).first().innerText();
+  const pages = Number(/of (\d+)$/.exec(label)?.[1] ?? '1');
+  let own = 0;
+  for (let i = 1; i <= pages; i += 1) {
+    await expect(page.getByText(`Page ${i} of ${pages}`, { exact: true })).toBeVisible();
+    const first = await page.locator('[data-testid^="discover-item-"]').first().getAttribute('data-testid');
+    if (first?.startsWith('discover-item-jamo:')) own += 1;
+    await expect.poll(async () => (await utterances(page)).length, { message: `Discover page ${i}: its own sound` }).toBe(before + own);
+    await page.waitForTimeout(500);
+    const said = await utterances(page);
+    expect(said, `Discover page ${i}: one sound at most by itself`).toHaveLength(before + own);
+    for (const u of said.slice(before)) expect(u).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  await expect(pill).toHaveCount(0);
+  return own;
+}
+
 test('the Korean prompt is spoken with Yuna, the sound, never a novelty voice', async ({ page }) => {
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
@@ -102,14 +130,17 @@ test('an idle game speaks once when the round starts, and not again on a timer o
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
   await page.getByRole('button', { name: 'Continue' }).click();
-  await passDiscover(page);
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: each of quest 1's two Look and learn pages opens on a letter and says it
+  // once; the game's own count starts after those two.
+  const discover = await passDiscoverHearingItsLetters(page);
+  expect(discover).toBe(2);
   await page.getByRole('button', { name: 'Play minigame' }).click();
   await expect(page.getByText('1 / 6')).toBeVisible();
-  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+  await expect.poll(async () => (await utterances(page)).length).toBe(discover + 1);
 
   // No input: nothing more is said while the learner thinks (a Trace/Match idle timer must not speak).
   await page.waitForTimeout(8000);
-  expect(await utterances(page)).toHaveLength(1);
+  expect(await utterances(page)).toHaveLength(discover + 1);
 
   // The tab goes to the background and comes back: still nothing.
   await page.evaluate(() => {
@@ -123,7 +154,7 @@ test('an idle game speaks once when the round starts, and not again on a timer o
     window.dispatchEvent(new Event('online'));
   });
   await page.waitForTimeout(3000);
-  expect(await utterances(page)).toHaveLength(1);
+  expect(await utterances(page)).toHaveLength(discover + 1);
 });
 
 test('switching the sound off is saved on this device and still off after a reload', async ({ page }) => {
@@ -144,9 +175,9 @@ test('switching the sound off is saved on this device and still off after a relo
 });
 
 /** From the first-quest preview, past its Discover step, to the first Match Sound round. */
-async function openMatchSound(page: Page): Promise<void> {
+async function openMatchSound(page: Page, discover: (page: Page) => Promise<unknown> = passDiscover): Promise<void> {
   await page.getByRole('button', { name: 'Continue' }).click();
-  await passDiscover(page);
+  await discover(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
   await expect(page.getByText('1 / 6')).toBeVisible();
 }
@@ -215,9 +246,14 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
 test('a wrong tap names the letter: a letter question says the name, not a syllable (AMENDMENTS-AUDIO-CLIPS JV-A1)', async ({ page }) => {
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
-  await openMatchSound(page);
-  await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
-  const [first] = await utterances(page);
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: the two Look and learn pages each said their first letter on the way, so
+  // the round's own prompt is the next thing said.
+  let discover = 0;
+  await openMatchSound(page, async (p) => {
+    discover = await passDiscoverHearingItsLetters(p);
+  });
+  await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(discover);
+  const first = (await utterances(page))[discover];
   // Quest 1 asks among ㅏ ㅓ ㄱ ㄴ: 기역 or 니은 (never 가 or 나), or a vowel's name, its sound (아, 어).
   expect(['아', '어', '기역', '니은']).toContain(first!.text);
   const answer = jamoOfSpoken(first!.text);
@@ -295,9 +331,9 @@ test('a ready voice never shows the how-to link in Match Sound', async ({ page }
 });
 
 /** F-AUDIO-004 A-5b: from the first-quest preview, past Discover and the Match Sound game, to Build a Letter. */
-async function openBuildLetter(page: Page): Promise<void> {
+async function openBuildLetter(page: Page, discover: (page: Page) => Promise<unknown> = passDiscover): Promise<void> {
   await page.getByRole('button', { name: 'Continue' }).click();
-  await passDiscover(page);
+  await discover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   await expect(page.getByText('Build this letter')).toBeVisible();
@@ -308,14 +344,21 @@ const buildSpeaker = (page: Page) => page.getByTestId('build-letter-speaker');
 test('Build a Letter says the syllable with Yuna when it is tapped, and shows no panel while sound works', async ({ page }) => {
   await fakeSpeech(page, 'korean');
   await onboardChild(page, { name: 'Dami' });
-  await openBuildLetter(page);
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: on the way, each of the two Look and learn pages said its first letter
+  // once (ㅏ by its sound, ㄱ by its name, as their Hear it does).
+  let discover = 0;
+  await openBuildLetter(page, async (p) => {
+    discover = await passDiscoverHearingItsLetters(p);
+  });
+  expect((await utterances(page)).map((u) => u.text)).toEqual(['아', '기역']);
+  expect(discover).toBe(2);
   // Nothing autoplays here, not even after the controller's capability wait (up to 1.5 s).
   await page.waitForTimeout(1600);
-  expect(await utterances(page)).toEqual([]);
+  expect(await utterances(page)).toHaveLength(discover);
 
   await buildSpeaker(page).click();
-  await expect.poll(async () => (await utterances(page)).length).toBe(1);
-  const [said] = await utterances(page);
+  await expect.poll(async () => (await utterances(page)).length).toBe(discover + 1);
+  const said = (await utterances(page)).at(-1);
   expect(said).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
   expect(said!.text).toMatch(/^[가-힣]$/);
   await expect(buildSpeaker(page)).toContainText(said!.text);
@@ -399,7 +442,7 @@ async function openTapRespond(page: Page, name = 'Dami'): Promise<void> {
  * tastes became lesson cells (F-CURR-001 T-1): Discover, Match the Sound (skipped), then step 4 is
  * the Culture Quiz. Its soft prerequisite sheet ("Play anyway") opens on a fresh learner.
  */
-async function openCultureQuiz(page: Page, name = 'Dami'): Promise<void> {
+async function openCultureQuiz(page: Page, name = 'Dami', discover: (page: Page) => Promise<unknown> = passDiscover): Promise<void> {
   await openJourneyTab(page, name);
   await page.getByRole('button', { name: journeyCellName(1, 'Food & Daily Life') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).nth(2).click();
@@ -407,7 +450,7 @@ async function openCultureQuiz(page: Page, name = 'Dami'): Promise<void> {
   await anyway.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await anyway.isVisible()) await anyway.click();
   await page.getByRole('button', { name: 'Continue' }).click();
-  await passDiscover(page);
+  await discover(page);
   await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Play minigame' }).click();
 }
@@ -493,16 +536,24 @@ test('Tap & Respond with sound off: the turn opens quietly, and Hear it says sou
 test('Culture Quiz: Hear it says the prompt word, and nothing plays before the tap', async ({ page }) => {
   await fakeSpeech(page, 'korean');
   await onboardChild(page, { name: 'Dami', startJourney: false });
-  await openCultureQuiz(page);
+  // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: on the way, the one Look and learn page that opens on a letter (ㅋ) said
+  // it once by itself; the pages that open on a word said nothing.
+  let discover = 0;
+  await openCultureQuiz(page, 'Dami', async (p) => {
+    discover = await passDiscoverHearingItsLetters(p);
+  });
+  expect((await utterances(page)).map((u) => u.text)).toEqual(['키읔']);
+  expect(discover).toBe(1);
   const hear = page.getByTestId('culture-quiz-hear');
   await expect(hear).toBeVisible();
+  // In the quiz itself nothing plays before the tap.
   await page.waitForTimeout(1600);
-  expect(await utterances(page)).toEqual([]);
+  expect(await utterances(page)).toHaveLength(discover);
   await expect(hear).toHaveAccessibleName(/^Hear /);
 
   await hear.click();
-  await expect.poll(async () => (await utterances(page)).length).toBe(1);
-  const [said] = await utterances(page);
+  await expect.poll(async () => (await utterances(page)).length).toBe(discover + 1);
+  const said = (await utterances(page)).at(-1);
   expect(said).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
   // The word that was said is the one printed above the button.
   await expect(page.getByRole('heading', { name: said!.text, exact: true })).toBeVisible();
@@ -586,16 +637,28 @@ const clipStarts = async (page: Page): Promise<number> =>
  * truthy), so it came back while the worker was still installing and a fetch made right after went past it.
  */
 async function controlledBySw(page: Page): Promise<void> {
+  // [AU] A worker whose install failed (one precache fetch lost on a busy runner) leaves a registration with no
+  // worker at all, and nothing installs again until the next visit. After 5 s in that state the page is visited
+  // once more, as a learner's next visit would; the state is the poll's value, so a timeout names what was missing.
+  const started = Date.now();
+  let visitedAgain = false;
   await expect
     .poll(
-      () =>
-        page.evaluate(async () => {
+      async () => {
+        const state = await page.evaluate(async () => {
           const reg = await navigator.serviceWorker.getRegistration();
-          return !!reg?.active && !!navigator.serviceWorker.controller;
-        }),
+          return { active: !!reg?.active, pending: !!(reg?.installing || reg?.waiting), controlled: !!navigator.serviceWorker.controller };
+        });
+        if (state.active && state.controlled) return 'controlled';
+        if (!state.active && !state.pending && !visitedAgain && Date.now() - started > 5_000) {
+          visitedAgain = true;
+          await page.reload();
+        }
+        return JSON.stringify({ ...state, visitedAgain });
+      },
       { timeout: 30_000 },
     )
-    .toBe(true);
+    .toBe('controlled');
 }
 
 /**
@@ -794,6 +857,9 @@ test.describe('bundled clips (A-6)', () => {
     await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
     const examples = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]');
     await expect(examples).toHaveCount(2);
+    // [AU] The page's first letter says itself as the page opens (AMENDMENTS-AUDIT-2026-11 row AU-10): let it finish,
+    // so the clip starts counted below are the taps' own.
+    await page.waitForTimeout(1_000);
 
     // The precached letter ㅏ (jamo-s1) plays its clip offline.
     const before = await clipStarts(page);
@@ -904,6 +970,9 @@ test.describe('bundled clips (A-6)', () => {
       .toBe(true);
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByText('Page 1 of 2', { exact: true })).toBeVisible();
+    // [AU] The page's first letter says itself as the page opens (AMENDMENTS-AUDIT-2026-11 row AU-10): let it finish,
+    // so the clip starts counted below are the taps' own.
+    await page.waitForTimeout(1_000);
     // 나 (the first example word): its say clip lives in the stage1 pack chunk, not the start map. Tapped twice, a
     // second apart: on a shared CI runner the faster tap is held to the 150 ms goal, and neither may be slow.
     const example = page.locator('[data-testid^="discover-hear-"][data-testid$="|example"]').nth(0);

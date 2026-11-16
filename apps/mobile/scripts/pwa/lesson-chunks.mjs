@@ -194,7 +194,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // byte (the two files differ only in the hashed names of 19 lazily loaded chunks, whose module ids moved by one with
   // `report-blocks.tsx`). The line is the measurement plus a 3,990 B margin (one measured raise, 4,000 B over the
   // previous line).
-  startBundleRaw: 4_936_000,
+  // [AU] AMENDMENTS-AUDIT-2026-11 stage 2 (rows AU-8 to AU-17): code that runs before or around the first quest, so it
+  // is in the start bundle: the saved quest run and the skip cap (AU-9, AU-12), the merge of a progress write with the
+  // stored record and its channel (AU-11), the first sound of a letter page (AU-10), the held romanization of a Check
+  // (AU-8), the progress bar's name and the tab role (AU-17). The release `build:web` (CI=1, Metro cache cleared)
+  // measures 4,948,154 B raw, 12,154 B over the line. The line is the measurement plus a 3,846 B margin (one measured
+  // raise, 16,000 B over the previous line). The audit's ARCH-2 (a fixed ceiling and a smaller start bundle) is not
+  // part of these rows.
+  startBundleRaw: 4_952_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

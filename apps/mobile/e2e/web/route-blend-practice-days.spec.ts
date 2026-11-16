@@ -137,7 +137,7 @@ for (const size of [
 
       // The Route line names the learner's days now.
       await page.goto('/');
-      await page.getByRole('tablist').getByRole('link', { name: en.a11y.myRoute.tab }).click();
+      await page.getByRole('tablist').getByRole('tab', { name: en.a11y.myRoute.tab }).click();
       await expect(page.getByTestId('my-route-blend-line')).toHaveText("Your class's weekly plan: class on Tuesday, practice on Wednesday and Friday.");
     });
   });

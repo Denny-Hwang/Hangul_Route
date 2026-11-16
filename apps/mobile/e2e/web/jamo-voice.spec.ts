@@ -64,8 +64,9 @@ test.describe('the voice matches the letter (release build, device voice)', () =
     page.on('pageerror', (e) => errors.push(String(e)));
     await captureSpeech(page);
     await openQuestOneDiscover(page);
-    // Nothing plays before a tap.
-    expect(await said(page)).toEqual([]);
+    // [AU] AMENDMENTS-AUDIT-2026-11 row AU-10: only the page's first letter may sound before a tap (ㅏ says 아 once as the
+    // page opens, by its recording or by the voice); nothing else does.
+    for (const u of await said(page)) expect(u.text).toBe('아');
 
     // Page 1: a vowel. Its name is its sound, so one Hear it (아) and no second button.
     await discoverPageOf(page, 'jamo:a');

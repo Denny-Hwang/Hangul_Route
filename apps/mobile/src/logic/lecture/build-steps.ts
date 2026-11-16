@@ -266,6 +266,11 @@ export type SlideBody =
       textPrompt: boolean;
       /** A story check's explanation, shown at the answer. */
       explain?: string;
+      /**
+       * A quest Check's listen question (AMENDMENTS-AUDIT-2026-11 AU-8): the options' romanization waits for the
+       * answer build whatever the deck's romanization mode, as in the learner's Check (`quizOptionRomanization`).
+       */
+      holdRomanization?: true;
     }
   | { kind: 'card'; cardId: string; title: string; ko?: string; romanization?: string; fact?: string }
   /** A Discover sentence (LV-S1, section 5.1): the Korean, its meaning and, when it has one, its picture (`card:` / `word:`). */

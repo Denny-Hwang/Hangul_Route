@@ -103,6 +103,8 @@ test.describe('the way back (AMENDMENTS-DISPLAY-NAV section 7)', () => {
     await page.getByRole('button', { name: es.learner.episode.quests.start.cta, exact: true }).first().click();
     const close = headerClose(page);
     await expect(close).toHaveAccessibleName(es.common.buttons.close);
+    // [AU] The quest opens after its saved run is read (AMENDMENTS-AUDIT-2026-11 AU-12); the guard belongs to the quest, not to that wait.
+    await expect(page.getByTestId('lesson-waiting')).toHaveCount(0);
 
     // The browser back asks first (the quest's guard), in Spanish, with the safe choice first.
     await page.goBack();

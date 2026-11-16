@@ -1385,6 +1385,13 @@ export class D1Db implements Db {
   countRateHits(key: string, since: Date): Promise<number> {
     return this.count('SELECT COUNT(*) AS n FROM rate_hits WHERE key = ? AND at >= ?', [key, since.toISOString()]);
   }
+  async takeRateHit(key: string, at: Date, since: Date, limit: number): Promise<boolean> {
+    const taken = await this.changes('INSERT INTO rate_hits (key, at) SELECT ?, ? WHERE (SELECT COUNT(*) FROM rate_hits WHERE key = ? AND at >= ?) < ?', [key, at.toISOString(), key, since.toISOString(), limit]);
+    return taken === 1;
+  }
+  oldestRateHit(key: string, since: Date): Promise<string | null> {
+    return this.one('SELECT MIN(at) AS oldest FROM rate_hits WHERE key = ? AND at >= ?', [key, since.toISOString()], (r) => nstr(r.oldest));
+  }
   purgeRateHits(before: Date, limit: number): Promise<number> {
     return this.changes('DELETE FROM rate_hits WHERE id IN (SELECT id FROM rate_hits WHERE at < ? ORDER BY id LIMIT ?)', [before.toISOString(), limit]);
   }

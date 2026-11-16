@@ -3,8 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { D1Db } from '../db';
 import app from '../index';
 import { hashSecret } from '../lib/device-auth';
-import { claimLimiter } from '../routes/recovery';
-import { testDb as db } from './helpers/db';
+import { clearRateHits, testDb as db } from './helpers/db';
 import { openSqliteD1 } from './helpers/sqlite';
 
 /*
@@ -78,7 +77,7 @@ describe('/api/sync/learners/:id/memory (F-CURR-002 section 4.8, Worker first)',
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(NOW);
     await db.reset();
-    claimLimiter.reset();
+    await clearRateHits();
     phone = await register(PHONE);
   });
   afterEach(() => vi.useRealTimers());

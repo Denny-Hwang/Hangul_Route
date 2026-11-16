@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { WCAG_AAA_NORMAL, WCAG_AA_LARGE, WCAG_AA_NORMAL, compositeOver, contrastRatio, relativeLuminance } from '../contrast';
 import presenterDoc from '../../../../design/tokens/presenter.v1.md?raw';
+import { CHOICE_CARD_STATES, choiceCardStyle } from '../components/ChoiceCard/style';
+import { PILL_TONES, pillStyle } from '../components/Pill/style';
+import { TILE_STATES, tileStyle } from '../components/Tile/style';
 import { HOYA_VARIANTS, colors, hoyaVariantColors, presenter } from '../tokens';
 
 describe('contrastRatio (WCAG 2.x)', () => {
@@ -184,14 +187,82 @@ describe('token contrast contract (WCAG AA)', () => {
     expect(contrastRatio(colors.brand.primary, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
   });
 
-  // hoya.furDark replaces the Tile literal elsewhere; on the nudge tint it is under 3:1, so ChoiceCard does not use it there.
+  // hoya.furDark was named as the replacement for the old Tile literal; on the nudge tint it is under 3:1, so neither
+  // ChoiceCard nor Tile uses it there.
   it('hoya.furDark reads on surface.paper (≥ 3:1) but not on feedback.nudgeLight (< 3:1)', () => {
     expect(contrastRatio(colors.hoya.furDark, colors.surface.paper)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
     expect(contrastRatio(colors.hoya.furDark, colors.feedback.nudgeLight)).toBeLessThan(WCAG_AA_LARGE);
   });
 
-  it('a correct tile label (large text) reads on its success tint', () => {
-    expect(contrastRatio(colors.feedback.success, colors.feedback.successLight)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-17b (audit A11Y-1): Pill labels are caption-size text, so every tone is held to
+  // 4.5:1 on its tint, read from the component's own style (the nudge label was a literal amber, 2.85:1).
+  it.each(PILL_TONES)('Pill %s: the label on its tint ≥ 4.5:1', (tone) => {
+    const look = pillStyle(tone);
+    expect(contrastRatio(look.textColor, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+  });
+
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-17a (audit A11Y-1): the Tile state pairs are read from the component's own style, so
+  // a colour that is not a passing token pair cannot ship again (the wrong label was a literal amber, 2.85:1).
+  // The glyph is large text (28 dp bold at the least): 3:1. The romanization line is normal text: 4.5:1.
+  it.each(TILE_STATES)('Tile %s: the glyph on its fill ≥ 3:1 (large text)', (state) => {
+    const look = tileStyle(state);
+    expect(contrastRatio(look.labelColor, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  it.each(TILE_STATES)('Tile %s: the romanization line on its fill ≥ 4.5:1', (state) => {
+    const look = tileStyle(state);
+    expect(contrastRatio(look.romanizationColor, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+  });
+
+  it('Tile wrong: the glyph is body-text strong (≥ 4.5:1) and the miss mark reads on the amber tint (≥ 3:1, non-text)', () => {
+    const look = tileStyle('wrong');
+    expect(contrastRatio(look.labelColor, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+    expect(look.mark).not.toBeNull();
+    expect(contrastRatio(look.mark!.color, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // [AU] AMENDMENTS-AUDIT-2026-11 AU-17e (audit A11Y-4, WCAG 1.4.11): the boundary of an idle answer tile and of an idle
+  // option card is a UI graphic. It must read against its own fill and against each surface the tile sits on
+  // (`border.subtle` was 1.32:1 on paper). Text inputs in the app use the same token on paper and sunken fills.
+  it.each([
+    ['Tile idle', tileStyle('idle')],
+    ['ChoiceCard idle', choiceCardStyle('idle')],
+  ] as const)('%s: the boundary ≥ 3:1 on its fill and on canvas, paper and sunken (non-text)', (_name, look) => {
+    expect(look.borderColor).toBe(colors.border.shape);
+    for (const bg of [look.backgroundColor, ...Object.values(surfaces)]) {
+      expect(contrastRatio(look.borderColor, bg), bg).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    }
+  });
+
+  // With a stronger idle boundary, no answered or hinted state may rest on its border colour: each differs from idle by
+  // its fill, its mark or its border width as well (the borders themselves are close: success 1.15:1, focus 1.06:1).
+  it('ChoiceCard: every other state differs from idle by more than its border colour', () => {
+    const idle = choiceCardStyle('idle');
+    for (const state of CHOICE_CARD_STATES.filter((s) => s !== 'idle')) {
+      const look = choiceCardStyle(state);
+      const cues = [look.backgroundColor !== idle.backgroundColor, look.mark !== null, look.borderWidth !== idle.borderWidth];
+      expect(cues.some(Boolean), state).toBe(true);
+    }
+  });
+
+  it('Tile: every other state differs from idle by more than its border colour', () => {
+    const idle = tileStyle('idle');
+    for (const state of TILE_STATES.filter((s) => s !== 'idle')) {
+      const look = tileStyle(state);
+      expect(look.backgroundColor !== idle.backgroundColor || look.mark !== null, state).toBe(true);
+      // The fill itself is told from idle paper by the label or mark on it, never by the tint alone.
+      expect(look.labelColor !== idle.labelColor || look.mark !== null, state).toBe(true);
+    }
+  });
+
+  it('Tile: every colour a state paints is a colour token (no literal)', () => {
+    const tokenValues = new Set(Object.values(colors).flatMap((group) => Object.values(group as Record<string, string>)));
+    for (const state of TILE_STATES) {
+      const look = tileStyle(state);
+      for (const value of [look.backgroundColor, look.borderColor, look.labelColor, look.romanizationColor, look.mark?.color]) {
+        if (value !== undefined) expect(tokenValues.has(value), `${state}: ${value}`).toBe(true);
+      }
+    }
   });
 
   it('pressed fills stay darker than resting fills (visible press feedback)', () => {

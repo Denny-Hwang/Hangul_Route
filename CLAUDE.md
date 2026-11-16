@@ -28,6 +28,7 @@
   - Which UI locales are public is set by `LOCALE_STATUS` (`packages/i18n/src/locales.ts`): English is shipped; Spanish and Korean were translated and reviewed in F-I18N-001 PR 15 / PR 16 and become public when rows 15b / 16b flip them to `'shipped'`.
   - UI copy stays plain and short (English at CEFR Pre-A1), so a young reader and an adult beginner both read it easily.
 - **Taught Korean content** (자모, 단어, 문장) always shows **romanization** (pronunciation guide) and a **gloss in the UI language** (plus a visual where possible).
+  - One exception: the answer options of a quest Check show no romanization until the question is answered, so the Check measures reading (the accessible label keeps it; owner decision 2026-11-15, `docs/specs/AMENDMENTS-AUDIT-2026-11.md` AU-8).
 - Korean as taught content is not the same thing as Korean as a UI locale: in the Korean UI the menus are Korean, and taught items still carry romanization and a gloss.
 
 ### Feedback & motivation — anti-shame rules (revised 2026-10-09)

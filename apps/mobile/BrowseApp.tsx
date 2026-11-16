@@ -29,6 +29,7 @@ import { resolveEntry } from './src/logic/browse/target';
 import { BROWSE_REGISTERED_ROUTES, BrowseNavigator, type BrowseStackParamList } from './src/navigation/browse';
 import { PortraitGuard } from './src/components/PortraitGuard';
 import { ConfirmHost } from './src/components/ConfirmHost';
+import { ProgressLabelsHost } from './src/components/ProgressLabelsHost';
 import { BrowseScreenHeader } from './src/components/LearnerScreenHeader';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { reportCrash } from './src/platform/crash-report';
@@ -299,18 +300,21 @@ export default function BrowseApp(): ReactElement {
               <BrowseSettingsProvider>
                 {/* One tap lock clock for every answer board and guarded press (AMENDMENTS-TOUCH KT-D5, rule 10). */}
                 <TapLockProvider>
-                  <ScreenHeaderSlotContext.Provider value={BrowseScreenHeader}>
-                    <NavigationContainer
-                      ref={navigation}
-                      initialState={routesOf(visit.initial)}
-                      documentTitle={{ formatter: () => messages.caregiver.browse.documentTitle }}
-                      onReady={onReady}
-                      onStateChange={onNavigate}
-                    >
-                      <BrowseNavigator />
-                      <StatusBar style="dark" />
-                    </NavigationContainer>
-                  </ScreenHeaderSlotContext.Provider>
+                  {/* Every progress meter is named and read in the UI language (AMENDMENTS-AUDIT-2026-11 AU-17d). */}
+                  <ProgressLabelsHost>
+                    <ScreenHeaderSlotContext.Provider value={BrowseScreenHeader}>
+                      <NavigationContainer
+                        ref={navigation}
+                        initialState={routesOf(visit.initial)}
+                        documentTitle={{ formatter: () => messages.caregiver.browse.documentTitle }}
+                        onReady={onReady}
+                        onStateChange={onNavigate}
+                      >
+                        <BrowseNavigator />
+                        <StatusBar style="dark" />
+                      </NavigationContainer>
+                    </ScreenHeaderSlotContext.Provider>
+                  </ProgressLabelsHost>
                 </TapLockProvider>
                 <ConfirmHost />
               </BrowseSettingsProvider>
