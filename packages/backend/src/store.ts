@@ -127,8 +127,25 @@ class Store {
 
 export const store = new Store();
 
+const ID_ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
+const ID_LENGTH = 12;
+/** Bytes from here up are thrown away: 252 = 7 x 36, so every character is equally likely. */
+const ID_BYTE_LIMIT = 252;
+
+/**
+ * A record id, `prefix:` plus 12 characters of 0-9 a-z (about 62 bits) from
+ * `crypto.getRandomValues`. [AU] AMENDMENTS-AUDIT-2026-11 AU-6 (audit SEC-8):
+ * it was Math.random plus a clock suffix, which can be guessed. Same shape and
+ * length as before, so stored ids and every id pattern keep matching.
+ */
 export function id(prefix: string): string {
-  return `${prefix}:${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;
+  let out = '';
+  while (out.length < ID_LENGTH) {
+    for (const byte of crypto.getRandomValues(new Uint8Array(ID_LENGTH * 2))) {
+      if (byte < ID_BYTE_LIMIT && out.length < ID_LENGTH) out += ID_ALPHABET[byte % ID_ALPHABET.length];
+    }
+  }
+  return `${prefix}:${out}`;
 }
 
 /** [SA] A `space_events` id: `sev:<uuid>` (AMENDMENTS-SEATS-ADMINS section 6.2), so a primary-key clash cannot fail a guarded batch. */
