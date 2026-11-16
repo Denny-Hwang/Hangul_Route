@@ -12,6 +12,7 @@ const hoyaPose = { idle: '가만히 있어요', cheering: '응원해요', thinki
 export const a11y = {
   tile: (label: string) => `한글 글자 ${label}, 눌러서 고르기`,
   stars: (earned: number) => `별 3개 중 ${earned}개 받음`,
+  progress: { name: '진행 상황', value: (done: number, total: number) => `${total}개 중 ${done}개` },
   /** A pose missing from the map adds no word, so no English token reaches the label. */
   hoya: (pose: string) => (Object.prototype.hasOwnProperty.call(hoyaPose, pose) ? `호랑이 호야, ${hoyaPose[pose as keyof typeof hoyaPose]}` : '호랑이 호야'),
   hoyaPose,

@@ -11,6 +11,7 @@ import { useDocumentLang } from './src/i18n/use-messages';
 import { RootNavigator } from './src/navigation/root';
 import type { RootStackParamList } from './src/navigation/types';
 import { ConfirmHost } from './src/components/ConfirmHost';
+import { ProgressLabelsHost } from './src/components/ProgressLabelsHost';
 import { LearnerScreenHeader } from './src/components/LearnerScreenHeader';
 import { PortraitGuard } from './src/components/PortraitGuard';
 import { PwaBanners } from './src/components/PwaBanners';
@@ -235,12 +236,15 @@ export default function App(): ReactElement {
             {/* Every screen's top row (Back, its title, the Aa control) comes from its route (AMENDMENTS-DISPLAY-NAV section 7.1). */}
             {/* One tap lock clock for every answer board and guarded press (AMENDMENTS-TOUCH KT-D5, rule 10). */}
             <TapLockProvider>
-              <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
-                <NavigationContainer ref={navigation} onReady={startBridge}>
-                  {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
-                  <StatusBar style="dark" />
-                </NavigationContainer>
-              </ScreenHeaderSlotContext.Provider>
+              {/* Every progress meter is named and read in the UI language (AMENDMENTS-AUDIT-2026-11 AU-17d). */}
+              <ProgressLabelsHost>
+                <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
+                  <NavigationContainer ref={navigation} onReady={startBridge}>
+                    {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
+                    <StatusBar style="dark" />
+                  </NavigationContainer>
+                </ScreenHeaderSlotContext.Provider>
+              </ProgressLabelsHost>
             </TapLockProvider>
             {/* The web's confirm step in the UI language, in place of the browser's confirm() (section 8). */}
             <ConfirmHost />

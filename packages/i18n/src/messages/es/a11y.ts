@@ -8,6 +8,7 @@ const hoyaPose = { idle: 'quieto', cheering: 'celebrando', thinking: 'pensando',
 export const a11y = {
   tile: (label: string) => `Letra coreana ${label}, toca para elegir`,
   stars: (earned: number) => `${earned} de 3 estrellas ganadas`,
+  progress: { name: 'Progreso', value: (done: number, total: number) => `${done} de ${total}` },
   /** A pose missing from the map adds no word, so no English token reaches the label. */
   hoya: (pose: string) => (Object.prototype.hasOwnProperty.call(hoyaPose, pose) ? `Hoya, el tigre, ${hoyaPose[pose as keyof typeof hoyaPose]}` : 'Hoya, el tigre'),
   hoyaPose,

@@ -2,6 +2,8 @@
 export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.tile': [['x']],
   'a11y.stars': [[2]],
+  // AMENDMENTS-AUDIT-2026-11 AU-17d: a progress meter's value in words.
+  'a11y.progress.value': [[2, 6], [0, 1]],
   'a11y.hoya': [['waving']],
   'a11y.cardArt': [['Book']],
   'a11y.tabPosition': [['Learning Route', 2, 4]],
