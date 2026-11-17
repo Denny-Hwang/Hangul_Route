@@ -18,7 +18,7 @@ import { RoundView } from '../ReviewRounds';
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), playPrompt: vi.fn(async () => 'played'), stop: vi.fn() }));
+vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), playPrompt: vi.fn(async () => 'played'), stop: vi.fn(), hasClipFor: () => false }));
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({ ...(await importOriginal<object>()), track: vi.fn(async () => undefined) }));
 
 const question = (itemId: string, format: 'read-pick' | 'cloze-pick') =>

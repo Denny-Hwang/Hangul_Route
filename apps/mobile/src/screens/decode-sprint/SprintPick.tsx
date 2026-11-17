@@ -8,7 +8,7 @@ import { heldAnswers } from '../../components/held-answers';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { PickRoundPlan } from '../../logic/syllable-build/sprint';
-import { playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 
 /**
@@ -42,7 +42,8 @@ interface Props {
 
 export function SprintPick({ round, onAnswer, onDone, reveal = true, testID = 'sprint-pick' }: Props): ReactElement {
   const m = useMessages();
-  const slot = usePromptSlot({ source: 'decoding-sprint' });
+  // [FU] FU-3: the target word's say clip counts as sound (a clip heard is a heard answer, not a read one).
+  const slot = usePromptSlot({ source: 'decoding-sprint', hasClip: hasClipFor({ text: round.target }) });
   const { play } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
   const [tapped, setTapped] = useState<string | null>(null);

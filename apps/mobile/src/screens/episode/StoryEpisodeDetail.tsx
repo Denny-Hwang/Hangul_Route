@@ -184,13 +184,13 @@ export function StoryEpisodeDetail({
       if (last === null || last.at !== at || last.spec.text !== spec.text) slotReset();
       lastSpec.current = { spec, at };
       setSoundAt(at);
-      void slotPlay(() => playPrompt(spec));
+      void slotPlay(() => playPrompt(spec), spec);
     },
     [slotPlay, slotReset],
   );
   const replayLast = (): void => {
     const last = lastSpec.current;
-    if (last) void slotPlay(() => playPrompt(last.spec));
+    if (last) void slotPlay(() => playPrompt(last.spec), last.spec);
   };
   /** The panel at one place: quiet (nothing shown, the live region kept) unless the last tap was there. */
   const soundPanel = (at: string, testID: string): ReactElement => (

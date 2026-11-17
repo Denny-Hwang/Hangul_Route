@@ -39,7 +39,7 @@ import type { ShapeSource } from '../../logic/match-shape/facts';
 import { shapeHoyaLine, startShape, stepShape, type ShapeEffect, type ShapeEvent, type ShapeState } from '../../logic/match-shape/flow';
 import { originTiles, pairHeading, pairTiles, type ShapeTileLook } from '../../logic/match-shape/view';
 import { TRACE_CANVAS_MIN } from '../../logic/trace-layout';
-import { hasClip, playJamo, stop } from '../../platform/audio';
+import { hasClipFor, playJamo, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 
 /**
@@ -161,7 +161,7 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   // The pair board is a letter question (AMENDMENTS-AUDIO-CLIPS JV-A1, section 6.1): the letter's name (ㄴ is nieun), from
   // its name clip when the build has one, else the device voice or the same name as text (section 3.8).
   const voice = target ? jamoVoice(target, 'letter') : undefined;
-  const slot = usePromptSlot({ source, hasClip: hasClip(voice?.audioRef), reportFallback: true });
+  const slot = usePromptSlot({ source, hasClip: voice !== undefined && hasClipFor(voice), reportFallback: true });
   const { play: slotPlay } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
   const [state, setState] = useState<ShapeState>(() => startShape(round));

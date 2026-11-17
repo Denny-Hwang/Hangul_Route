@@ -35,6 +35,8 @@ vi.mock('../../../platform/audio', async (importOriginal) => ({
     return 'played';
   }),
   stop: vi.fn(),
+  // Asking the real platform about clips would start it, and its voice check would hold the boards.
+  hasClipFor: () => false,
 }));
 
 const M = getMessages('en');

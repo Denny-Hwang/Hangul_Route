@@ -28,7 +28,7 @@ import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { pageLine, soFarFolds, storyLines, type StoryLine } from '../../logic/my-story/page';
 import type { WrittenFrame } from '../../logic/write-frame/flow';
-import { playPrompt } from '../../platform/audio';
+import { playPrompt, type PlaySpec } from '../../platform/audio';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
 import { koreanSpeech, type Focusable } from './TypeHangulGame';
@@ -80,7 +80,8 @@ export function MyStoryGame({ scope, host, onBack }: Props): ReactElement {
     slotReset();
     setSoundAt(at);
     lastSaid.current = line.ko;
-    void slotPlay(() => playPrompt({ text: line.ko, kind: 'sentence', source: MY_STORY_AUDIO_SOURCE }));
+    const spec: PlaySpec = { text: line.ko, kind: 'sentence', source: MY_STORY_AUDIO_SOURCE };
+    void slotPlay(() => playPrompt(spec), spec);
   };
   const statusPanel = (at: SoundAt, testID: string): ReactElement => (
     <PromptPanel
@@ -89,7 +90,9 @@ export function MyStoryGame({ scope, host, onBack }: Props): ReactElement {
       onAction={(action) =>
         slot.act(action, () => {
           const text = lastSaid.current;
-          if (text !== null) void slotPlay(() => playPrompt({ text, kind: 'sentence', source: MY_STORY_AUDIO_SOURCE }));
+          if (text === null) return;
+          const spec: PlaySpec = { text, kind: 'sentence', source: MY_STORY_AUDIO_SOURCE };
+          void slotPlay(() => playPrompt(spec), spec);
         })
       }
       onHelp={() => setHelpOpen(true)}

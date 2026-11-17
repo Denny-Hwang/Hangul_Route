@@ -23,7 +23,7 @@ import { Svg, Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
-import { finalLine, loneLetterQuestion } from '../../logic/audio/jamo-lines';
+import { finalLine, loneLetterQuestion, loneLetterVoice } from '../../logic/audio/jamo-lines';
 import type { LayoutChangeEvent } from 'react-native';
 import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -330,7 +330,7 @@ export function TraceStrokeGame({
         variant="status"
         compact
         view={soundView}
-        onAction={(action) => sound.act(action, () => void pacing.track(soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo)))))}
+        onAction={(action) => sound.act(action, () => void pacing.track(soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo)), loneLetterVoice(round.jamo))))}
         onHelp={() => setHelpOpen(true)}
         testID="trace-stroke-sound"
       />
@@ -416,7 +416,7 @@ export function TraceStrokeGame({
           setHintPlaying(true);
           // F-009 §3.1 (revised by AMENDMENTS-AUDIO-CLIPS M11): say the letter at demo start (its name; a final its
           // closed syllable); muting is enforced inside the audio controller.
-          void pacing.track(soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo))));
+          void pacing.track(soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo)), loneLetterVoice(round.jamo)));
         }}
       />
       <Button label={copy.trace.clear.cta} tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />

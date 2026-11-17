@@ -152,7 +152,8 @@ export function StoryOrderGame({ scope, host, sequenceId = '', nonce }: Props): 
     (card: StoryOrderCard): Promise<void> => {
       if (lastLine.current?.id !== card.id) slotReset();
       lastLine.current = card;
-      return slotPlay(() => playPrompt(lineSpeech(card.line))).then(
+      const spec = lineSpeech(card.line);
+      return slotPlay(() => playPrompt(spec), spec).then(
         () => undefined,
         () => undefined,
       );

@@ -114,10 +114,11 @@ describe('no direct speak from screens', () => {
     const word = files.find((f) => f.rel === 'minigames/TraceWordGame.tsx')!;
     expect(word.source).toMatch(/onPress=\{\(\) => say\(b\.syllable\)\}/);
     // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the slot's play is handed to the screen's sound pacing (a tap drops the opening sound).
-    expect(word.source).toMatch(/void pacing\.track\(soundPlay\(\(\) => playPrompt\(blockSpeech\(syllable\)\)\)\)/);
+    // [FU] FU-3: and the play tells the slot what it says, so the syllable's say clip counts as sound.
+    expect(word.source).toMatch(/const spec = blockSpeech\(syllable\);\s*void pacing\.track\(soundPlay\(\(\) => playPrompt\(spec\), spec\)\)/);
     const stroke = files.find((f) => f.rel === 'minigames/TraceStrokeGame.tsx')!;
     // A letter says its name and a final its closed syllable (AMENDMENTS-AUDIO-CLIPS M11).
-    expect(stroke.source).toMatch(/setHintPlaying\(true\);[\s\S]{0,300}void pacing\.track\(soundPlay\(\(\) => playJamo\(round\.jamo, loneLetterQuestion\(round\.jamo\)\)\)\)/);
+    expect(stroke.source).toMatch(/setHintPlaying\(true\);[\s\S]{0,300}void pacing\.track\(soundPlay\(\(\) => playJamo\(round\.jamo, loneLetterQuestion\(round\.jamo\)\), loneLetterVoice\(round\.jamo\)\)\)/);
   });
 
   it('the quest player stops the speech when its step changes, and Discover when it unmounts', () => {
@@ -181,10 +182,10 @@ describe('no direct speak from screens', () => {
     expect(cards.source).toMatch(/hasClip: hasClipFor\(\{ text: item\.spokenKo \?\? item\.ko, audioRef: item\.audioRef \}\)/);
   });
 
-  it('Match Sound passes hasClip to its prompt slot', () => {
+  it('Match Sound passes hasClip (the letter voice it plays) to its prompt slot', () => {
     const file = files.find((f) => f.rel === 'minigames/MatchSoundGame.tsx');
-    expect(audioImports(file!.source)).toContain('hasClip');
-    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: 'match-sound',\s*hasClip: hasClip\(/);
+    expect(audioImports(file!.source)).toContain('hasClipFor');
+    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: 'match-sound',\s*hasClip: voice !== undefined && hasClipFor\(voice\)/);
   });
 
   /**
@@ -203,5 +204,80 @@ describe('no direct speak from screens', () => {
     expect(file!.source).toMatch(/warmClips\(clipRefsOf\(rounds\.map\(\(r\) => sentenceSpeech\(r\.sentence\)\)\)\)/);
     // What the slot asks about is what plays.
     expect(file!.source).toMatch(/playPrompt\(sentenceSpeech\(sentence\)\)/);
+  });
+});
+
+/**
+ * [FU] AMENDMENTS-FOLLOWUPS-2026-11 FU-3: every Korean sound plays the recording when one exists (F-AUDIO-004 AD4, clip
+ * then voice then text). `playPrompt` / `playJamo` already try the record's clip and then the say clip of the spoken
+ * text (AMENDMENTS-AUDIO-CLIPS AC-B7), so a screen keeps that order by (1) never speaking past them and (2) telling its
+ * prompt slot when what plays has a recording, else the slot shows "No Korean voice on this device.", skips its
+ * replays and, on a screen that decides from it (dictation, Syllable Build), switches the sound off (AU-13).
+ */
+describe('[FU] FU-3: every Korean sound asks for the recording first', () => {
+  const APP_ROOT = join(__dirname, '..', '..', '..');
+  /** Every source file of the learner app, the presenter and the browse app, outside the audio platform itself. */
+  const appFiles = [
+    ...sourceFiles(join(APP_ROOT, 'src')).filter((f) => !/[\\/]src[\\/](platform|test-support)[\\/]/.test(f)),
+    ...['App.tsx', 'PresenterApp.tsx', 'BrowseApp.tsx'].map((f) => join(APP_ROOT, f)),
+  ].map((f) => ({ rel: relative(APP_ROOT, f).split('\\').join('/'), source: readFileSync(f, 'utf8') }));
+
+  it('nothing outside platform/audio speaks through the device voice directly', () => {
+    const direct = /\bspeechSynthesis\s*\.\s*speak\b|new\s+SpeechSynthesisUtterance\b|from\s+['"]expo-speech['"]|\bSpeech\.speak\(|new\s+Audio\(/;
+    expect(appFiles.length).toBeGreaterThan(100);
+    expect(appFiles.filter((f) => direct.test(f.source)).map((f) => f.rel)).toEqual([]);
+  });
+
+  it('a screen asks hasClipFor with what plays, never hasClip of a bare record ref (which misses the say clip of the text)', () => {
+    expect(files.filter((f) => audioImports(f.source).includes('hasClip')).map((f) => f.rel)).toEqual([]);
+  });
+
+  /** The names a file calls its prompt slots' play by: `slot.play`, or a destructured `play` / `play: slotPlay`. */
+  function playNames(source: string): string[] {
+    const names: string[] = [];
+    for (const m of source.matchAll(/const\s+(\w+)\s*=\s*usePromptSlot\(/g)) names.push(`${m[1]!}.play`);
+    for (const m of source.matchAll(/const\s*\{([^}]*)\}\s*=\s*(?:\w+|usePromptSlot\([^)]*\))\s*;/g)) {
+      for (const part of m[1]!.split(',')) {
+        const [key, alias] = part.split(':').map((t) => t.trim());
+        if (key === 'play') names.push(alias ?? 'play');
+      }
+    }
+    return [...new Set(names)];
+  }
+
+  /** The calls of `name(...)` in a source, each with whether it passes a second argument (top-level comma). */
+  function callsOf(source: string, name: string): Array<{ at: number; says: boolean }> {
+    const calls: Array<{ at: number; says: boolean }> = [];
+    const re = new RegExp(`(?<![\\w.])${name.replace('.', '\\.')}\\(`, 'g');
+    for (const m of source.matchAll(re)) {
+      let depth = 0;
+      let says = false;
+      for (let i = m.index + m[0].length - 1; i < source.length; i += 1) {
+        const c = source[i]!;
+        if (c === '(' || c === '[' || c === '{') depth += 1;
+        else if (c === ')' || c === ']' || c === '}') {
+          depth -= 1;
+          if (depth === 0) break;
+        } else if (c === ',' && depth === 1) says = true;
+      }
+      calls.push({ at: source.slice(0, m.index).split('\n').length, says });
+    }
+    return calls;
+  }
+
+  /**
+   * Each prompt slot learns whether what plays has a recording: from `hasClip` (its one word, `hasClipFor(<spec>)`), or
+   * from each play, which passes what it says (`slot.play(run, spec)`). Allow-list: none.
+   */
+  it('every prompt slot is told whether what plays has a recording', () => {
+    const gaps: string[] = [];
+    for (const f of [...files.map((x) => ({ rel: `src/screens/${x.rel}`, source: x.source })), ...appFiles.filter((x) => !x.rel.startsWith('src/screens/'))]) {
+      const slots = [...f.source.matchAll(/usePromptSlot\(\{([^}]*)\}\)/g)];
+      if (slots.length === 0 || slots.every((m) => /\bhasClip:/.test(m[1]!))) continue;
+      const names = playNames(f.source);
+      if (names.length === 0) gaps.push(`${f.rel}: a prompt slot without hasClip whose play is not found`);
+      for (const name of names) for (const call of callsOf(f.source, name)) if (!call.says) gaps.push(`${f.rel}:${call.at} ${name}(...) does not say what plays`);
+    }
+    expect(gaps).toEqual([]);
   });
 });

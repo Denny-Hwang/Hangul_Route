@@ -26,6 +26,8 @@ vi.mock('../../../platform/audio', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   playPrompt: async () => voice.result,
   stop: () => undefined,
+  // Asking the real platform about clips would start it, and its voice check would hold the board.
+  hasClipFor: () => false,
 }));
 const app = vi.hoisted(() => ({ listeners: [] as Array<(active: boolean) => void> }));
 vi.mock('../../../platform/app-state', () => ({

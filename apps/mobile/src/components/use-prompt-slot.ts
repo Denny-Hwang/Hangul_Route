@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useReducer, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
+import type { ClipLookup } from '../logic/audio/controller';
 import {
   INITIAL_PROMPT_STATE,
   promptReducer,
@@ -7,7 +8,7 @@ import {
 } from '../logic/audio/prompt-state';
 import { failureFromStore, fallbackVisible, promptPanelView, type PromptPanelView } from '../logic/audio/prompt-view';
 import { useMessages } from '../i18n/use-messages';
-import { noteFallbackShown } from '../platform/audio';
+import { hasClipFor, noteFallbackShown } from '../platform/audio';
 import { clipRegistry } from '../platform/audio-assets-store';
 import { useAudioStore } from '../store/audio-store';
 
@@ -21,8 +22,13 @@ import { useAudioStore } from '../store/audio-store';
  */
 export interface PromptSlot {
   view: PromptPanelView;
-  /** Run a play (`playJamo` or `playPrompt`) and feed its result to the slot. */
-  play: (run: () => Promise<PlayResult>) => Promise<PlayResult>;
+  /**
+   * Run a play (`playJamo` or `playPrompt`) and feed its result to the slot. `says`: what this play says (its spec, or
+   * a chain's specs), for a slot whose word changes from play to play (Card Match, a story page, a word list): the slot
+   * then counts a bundled recording of that word (its own or the say clip of its text) as sound, as `hasClip` does
+   * for a slot with one word ([FU] AMENDMENTS-FOLLOWUPS-2026-11 FU-3). Kept until the next play that says or `reset()`.
+   */
+  play: (run: () => Promise<PlayResult>, says?: ClipLookup | readonly ClipLookup[]) => Promise<PlayResult>;
   /** New round: forget the text and any play still in flight. */
   reset: () => void;
   /** The panel button: Turn sound on / Try again / Tap to hear. `replay` plays the prompt once. */
@@ -38,7 +44,10 @@ export interface PromptSlot {
 export interface PromptSlotOptions {
   /** Surface id for telemetry: 'match-sound' | 'discover' | 'listen-pick' | ... */
   source: string;
-  /** The item has a bundled recording (so a missing voice is not a missing sound). */
+  /**
+   * The item has a bundled recording (so a missing voice is not a missing sound): `hasClipFor(<the spec that plays>)`.
+   * A slot whose word changes from play to play passes what each play says to `play` instead.
+   */
   hasClip?: boolean;
   /**
    * The screen already prints the Korean next to its speaker and renders `<PromptPanel variant="status">`
@@ -71,9 +80,11 @@ export function usePromptSlot({
   // Answers once shown are never hidden again, whatever the store says later.
   const revealed = useRef(false);
   const copy = useMessages().learner.audio;
+  // What the last play said, when the screen told the slot ([FU] FU-3); read against the clip registry on every render.
+  const [said, setSaid] = useState<readonly ClipLookup[] | null>(null);
 
   const capability = { tts, clips, unlocked };
-  const clip = hasClip && clips;
+  const clip = (said !== null ? recorded(said) : hasClip) && clips;
   const view = promptPanelView(state, capability, muted, clip, copy);
   const settled = revealed.current || muted || clip || !voiceCheckPending;
   revealed.current = settled;
@@ -92,8 +103,9 @@ export function usePromptSlot({
     if (shown && view.reason !== null) noteFallbackShown(source, view.reason);
   }, [shown, view.reason, source]);
 
-  const play = useCallback((run: () => Promise<PlayResult>): Promise<PlayResult> => {
+  const play = useCallback((run: () => Promise<PlayResult>, says?: ClipLookup | readonly ClipLookup[]): Promise<PlayResult> => {
     const mine = epoch.current;
+    if (says !== undefined) setSaid(isLookupList(says) ? says : [says]);
     dispatch('play');
     return run().then((result) => {
       if (mine === epoch.current) {
@@ -105,6 +117,7 @@ export function usePromptSlot({
 
   const reset = useCallback((): void => {
     epoch.current += 1;
+    setSaid(null);
     dispatch('reset');
     // The new round starts from what is true now.
     dispatch({ muted: useAudioStore.getState().muted });
@@ -116,4 +129,14 @@ export function usePromptSlot({
   }, []);
 
   return { view, play, reset, act, settled };
+}
+
+function isLookupList(says: ClipLookup | readonly ClipLookup[]): says is readonly ClipLookup[] {
+  return Array.isArray(says);
+}
+
+/** Every Korean step of what played has a bundled recording (a step in another language is the device voice's). */
+function recorded(said: readonly ClipLookup[]): boolean {
+  const korean = said.filter((s) => (s.language ?? 'ko-KR') === 'ko-KR' && s.text.trim() !== '');
+  return korean.length > 0 && korean.every((s) => hasClipFor(s));
 }

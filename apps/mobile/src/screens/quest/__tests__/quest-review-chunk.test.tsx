@@ -22,7 +22,7 @@ import { QuestReviewSession } from '../quest-review-chunk';
 
 vi.mock('../../../logic/memory/boot', async (importOriginal) => ({ ...(await importOriginal<object>()), recordAnswers: async () => undefined }));
 vi.mock('../../../platform/telemetry', async (importOriginal) => ({ ...(await importOriginal<object>()), track: vi.fn(async () => undefined) }));
-vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), playPrompt: vi.fn(async () => 'played'), stop: vi.fn() }));
+vi.mock('../../../platform/audio', async (importOriginal) => ({ ...(await importOriginal<object>()), playPrompt: vi.fn(async () => 'played'), stop: vi.fn(), hasClipFor: () => false }));
 
 const A11Y = getMessages('en').a11y.minigame.option;
 const TODAY = '2026-10-10';
