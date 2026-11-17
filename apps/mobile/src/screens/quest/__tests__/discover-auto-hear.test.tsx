@@ -2,6 +2,7 @@ import type { DiscoverPage } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import { useAudioStore } from '../../../store/audio-store';
 import { useLocaleStore } from '../../../store/locale-store';
 import { KO_VOICE, createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
@@ -60,6 +61,8 @@ const MORE_LETTERS: DiscoverPage = {
 const WORDS: DiscoverPage = { items: [{ type: 'word', word: { ko: '나무', romanization: 'namu', en: 'tree' } }] };
 const mounted: ReactTestRenderer[] = [];
 
+/** [QS-3] The page's own sound waits for the screen: this long covers the wait and the play's start. */
+const AUTO_MS = SCREEN_SETTLE_MS + 60;
 const settle = async (ms = 30): Promise<void> => {
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, ms));
@@ -75,7 +78,7 @@ const pressable = (root: ReactTestInstance, id: string): ReactTestInstance => {
 async function open(pages: DiscoverPage[], autoHear: boolean, onDone: (result: { pages: number; heard: number }) => void = () => undefined): Promise<ReactTestRenderer> {
   const r = await render(<DiscoverStep pages={pages} onDone={onDone} autoHear={autoHear} />);
   mounted.push(r);
-  await settle();
+  await settle(AUTO_MS);
   return r;
 }
 
@@ -119,10 +122,10 @@ describe('[AU] the first letter sounds by itself on a letter page (row AU-10)', 
     const r = await open([LETTERS, WORDS, MORE_LETTERS], true);
     expect(spoken()).toEqual(['아']);
     await press(buttonsNamed(r.root, COPY.continue.cta)[0]!);
-    await settle();
+    await settle(AUTO_MS);
     expect(spoken()).toEqual(['아']);
     await press(buttonsNamed(r.root, COPY.continue.cta)[0]!);
-    await settle();
+    await settle(AUTO_MS);
     expect(spoken()).toEqual(['아', '니은']);
   });
 
@@ -131,11 +134,11 @@ describe('[AU] the first letter sounds by itself on a letter page (row AU-10)', 
     await act(async () => {
       useLocaleStore.setState({ device: 'es' });
     });
-    await settle();
+    await settle(AUTO_MS);
     await act(async () => {
       r.update(<DiscoverStep pages={[LETTERS]} onDone={() => undefined} autoHear />);
     });
-    await settle();
+    await settle(AUTO_MS);
     expect(spoken()).toEqual(['아']);
   });
 
@@ -163,7 +166,7 @@ describe('[AU] the first letter sounds by itself on a letter page (row AU-10)', 
     const r = await open([LETTERS, WORDS], true);
     const before = rig.stops;
     await press(buttonsNamed(r.root, COPY.continue.cta)[0]!);
-    await settle();
+    await settle(AUTO_MS);
     expect(rig.stops).toBeGreaterThan(before);
     expect(spoken()).toEqual(['아']);
   });
@@ -211,7 +214,73 @@ describe('[AU] the first letter sounds by itself on a letter page (row AU-10)', 
     const r = await render(<DiscoverStep pages={[LETTERS]} onDone={() => undefined} autoHear />);
     await unmount(r);
     answer();
+    await settle(AUTO_MS);
+    expect(spoken()).toEqual([]);
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: a sound played by itself waits for the screen. */
+describe('[QS] the page\'s own sound waits 350 ms for the page (QS-3)', () => {
+  const openNow = async (pages: DiscoverPage[]): Promise<ReactTestRenderer> => {
+    const r = await render(<DiscoverStep pages={pages} onDone={() => undefined} autoHear />);
+    mounted.push(r);
+    return r;
+  };
+
+  it('nothing sounds while the page is arriving; the letter is said once the wait is over', async () => {
+    await openNow([LETTERS]);
+    await settle(SCREEN_SETTLE_MS - 150);
+    expect(spoken()).toEqual([]);
+    await settle(150 + 60);
+    expect(spoken()).toEqual(['아']);
+  });
+
+  it('a tap on Hear it during the wait plays at once, and the page does not say it a second time', async () => {
+    const r = await openNow([LETTERS]);
+    await settle(50);
+    await press(pressable(r.root, 'discover-hear-jamo:a|sound'));
     await settle();
+    expect(spoken()).toEqual(['아']);
+    await settle(AUTO_MS);
+    expect(spoken()).toEqual(['아']);
+  });
+
+  it('a tap on another speaker during the wait is not cut by the page\'s own sound', async () => {
+    const r = await openNow([LETTERS]);
+    await settle(50);
+    await press(pressable(r.root, 'discover-hear-jamo:eo|sound'));
+    await settle(AUTO_MS);
+    expect(spoken()).toEqual(['어']);
+  });
+
+  it('a page left during the wait says nothing, and the next page waits its own 350 ms', async () => {
+    const r = await openNow([LETTERS, MORE_LETTERS]);
+    await settle(100);
+    const before = rig.stops;
+    await press(buttonsNamed(r.root, COPY.continue.cta)[0]!);
+    await settle(SCREEN_SETTLE_MS - 150);
+    expect(spoken()).toEqual([]);
+    await settle(150 + 60);
+    expect(spoken()).toEqual(['니은']);
+    // Nothing of page 1 had started, so leaving it had nothing of its own to stop (the page change's stop is the flow's).
+    expect(rig.stops).toBeGreaterThanOrEqual(before);
+  });
+
+  it('a step left during the wait says nothing', async () => {
+    const r = await render(<DiscoverStep pages={[LETTERS]} onDone={() => undefined} autoHear />);
+    await settle(100);
+    await unmount(r);
+    await settle(AUTO_MS);
+    expect(spoken()).toEqual([]);
+  });
+
+  it('sound turned off during the wait: nothing plays', async () => {
+    await openNow([LETTERS]);
+    await settle(100);
+    await act(async () => {
+      useAudioStore.setState({ muted: true });
+    });
+    await settle(AUTO_MS);
     expect(spoken()).toEqual([]);
   });
 });
