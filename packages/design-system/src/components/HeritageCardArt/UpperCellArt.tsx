@@ -401,28 +401,31 @@ function GachiArt(p: ArtProps): ReactElement {
 }
 
 // ---- Stages 6-7 ----------------------------------------------------------------------------------------
-// F-CARD-S6-001 and F-CARD-S7-001 as amended (row CM-23 part 3): a Stage 6 card is a thing read in the world, with its
-// Korean drawn in it (a menu, a call, a ticket, a sign, a price card; amounts are round practice amounts in won); a
-// Stage 7 card is writing: the word as a word-bank tile over a ruled page with a sentence the cell builds from its bank.
+// F-CARD-S6-001 and F-CARD-S7-001 as amended (row CM-23 part 3; [PX] row PX-3): a Stage 6 card is a thing read in the
+// world (a price, a call, a ticket, a sign), drawn so the thing names itself, with its Korean small on it; a Stage 7
+// card is its word's own subject, with the cell's sentence written small on a note strip below.
 
 /** Korean (or a sign) drawn in a picture, centred on `x`. */
-const word = (x: number, y: number, text: string, size = 18, fill: string = colors.text.primary): ReactElement => (
+const word = (x: number, y: number, text: string, size = 14, fill: string = colors.text.primary): ReactElement => (
   <SvgText x={x} y={y} fontSize={size} fontWeight="700" fill={fill} textAnchor="middle">
     {text}
   </SvgText>
 );
 
 function WonArt(p: ArtProps): ReactElement {
-  // Won: a menu board of two dishes and their prices, a won coin at its corner.
+  // Won: a big gold coin with the ₩ sign over a blue banknote, a small price card above.
   return (
     <Card theme="letters" p={p}>
-      {shadow(178, 70)}
-      <Rect x={30} y={36} width={140} height={132} rx={12} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} />
-      <Rect x={30} y={36} width={140} height={26} rx={12} fill={colors.theme.letters} />
-      {word(100, 98, '김밥 이천 원')}
-      {word(100, 132, '라면 삼천 원')}
-      <Circle cx={160} cy={160} r={20} fill={colors.feedback.nudge} stroke={colors.hoya.furDark} strokeWidth={2.5} />
-      {word(160, 167, '₩', 20, colors.hoya.furDark)}
+      <Rect x={12} y={12} width={112} height={40} rx={8} fill={colors.surface.paper} {...DET} />
+      {word(68, 38, '김밥 이천 원', 14)}
+      <G transform="rotate(-10 92 106)">
+        <Rect x={18} y={68} width={150} height={76} rx={6} fill={colors.vocab.blue} {...INK} />
+        <Rect x={30} y={80} width={126} height={52} rx={4} fill={NONE} stroke={colors.brand.secondaryLight} strokeWidth={4} />
+        <Circle cx={60} cy={106} r={16} fill={colors.brand.secondaryLight} {...DET} />
+      </G>
+      <Circle cx={128} cy={140} r={48} fill={colors.feedback.nudge} {...INK} />
+      <Circle cx={128} cy={140} r={36} fill={NONE} stroke={colors.hoya.furDark} strokeWidth={4} />
+      <Path d="M108 118L117 162L128 132L139 162L148 118M104 136H152M106 147H150" stroke={colors.text.primary} strokeWidth={7} fill={NONE} strokeLinecap="round" strokeLinejoin="round" />
     </Card>
   );
 }
@@ -474,38 +477,26 @@ function JeongsangArt(p: ArtProps): ReactElement {
   );
 }
 
+/** An apple with its stem and leaf at (x, y), radius r. */
+const apple = (x: number, y: number, r: number): ReactElement => (
+  <G key={x}>
+    <Path d={`M${x} ${y - r * 0.7}Q${x + r * 1.2} ${y - r * 1.3} ${x + r} ${y + r * 0.2}Q${x + r * 0.6} ${y + r} ${x} ${y + r * 0.8}Q${x - r * 0.6} ${y + r} ${x - r} ${y + r * 0.2}Q${x - r * 1.2} ${y - r * 1.3} ${x} ${y - r * 0.7}Z`} fill={colors.vocab.red} {...INK} />
+    <Path d={`M${x} ${y - r * 0.6}V${y - r * 1.2}`} {...DET} />
+    <Path d={`M${x + 2} ${y - r * 1.1}Q${x + r * 0.6} ${y - r * 1.6} ${x + r * 0.9} ${y - r * 1.1}Q${x + r * 0.4} ${y - r * 0.8} ${x + 2} ${y - r * 1.1}Z`} fill={colors.vocab.green} {...DET} />
+  </G>
+);
+
 function DeomArt(p: ArtProps): ReactElement {
-  // A little extra: a market price card for three apples, and one more apple added beside them.
+  // A little extra: three apples under their price card, a "+" and one more apple set apart with sparkles.
   return (
     <Card theme="crafts" p={p}>
-      {shadow(176, 70)}
-      <Rect x={30} y={30} width={140} height={64} rx={10} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} />
-      {word(100, 58, '사과 세 개')}
-      {word(100, 84, '이천 원', 18, colors.brand.primary)}
-      {[56, 92, 128].map((x) => (
-        <Circle key={x} cx={x} cy={146} r={17} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} />
-      ))}
-      <Circle cx={164} cy={150} r={13} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} />
-      {word(164, 126, '덤', 16, colors.feedback.success)}
-    </Card>
-  );
-}
-
-/** Stage 7: the word as a word-bank tile, over a ruled page with the cell's sentence written on it. */
-function Page({ theme, p, tile, line, children }: { theme: ThemeKey; p: ArtProps; tile: string; line: string; children?: ReactNode }): ReactElement {
-  return (
-    <Card theme={theme} p={p}>
-      {shadow(184, 72)}
-      <Rect x={14} y={88} width={172} height={90} rx={8} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2.5} />
-      <G stroke={colors.brand.secondaryLight} strokeWidth={2}>
-        <Line x1={26} y1={136} x2={174} y2={136} />
-        <Line x1={26} y1={162} x2={174} y2={162} />
-      </G>
-      {/* A Hangul syllable is about one font size wide: a long sentence gets a smaller size so it stays on the page. */}
-      {word(100, 130, line, Math.min(16, Math.floor(150 / line.length)), colors.brand.secondaryDark)}
-      <Rect x={58} y={30} width={84} height={40} rx={12} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={3} />
-      {word(100, 57, tile, 20)}
-      {children}
+      <Rect x={14} y={14} width={110} height={52} rx={8} fill={colors.surface.paper} {...DET} />
+      {word(69, 36, '사과 세 개', 14)}
+      {word(69, 56, '이천 원', 14)}
+      {[34, 76, 56].map((x, i) => apple(x, i === 2 ? 106 : 142, 22))}
+      <Path d="M112 128H136M124 116V140" stroke={colors.vocab.green} strokeWidth={8} strokeLinecap="round" />
+      {apple(164, 142, 26)}
+      <Path d={sparkle(186, 100, 9) + sparkle(140, 96, 7)} fill={colors.vocab.yellow} {...DET} />
     </Card>
   );
 }
@@ -578,23 +569,35 @@ function SaengilArt(p: ArtProps): ReactElement {
 }
 
 function TokkiArt(p: ArtProps): ReactElement {
-  // Rabbit: two long ears peek over the tile; the sentence about it below.
+  // Rabbit: a whole white rabbit sitting in the grass, long ears up, a round tail, smiling.
   return (
-    <Page theme="nature" p={p} tile="토끼" line="토끼는 작아요.">
-      <G fill={colors.surface.canvas} stroke={colors.text.muted} strokeWidth={2.5}>
-        <Ellipse cx={86} cy={22} rx={7} ry={16} />
-        <Ellipse cx={114} cy={22} rx={7} ry={16} />
-      </G>
-    </Page>
+    <Note theme="nature" p={p} line="토끼는 작아요.">
+      <Path d="M20 160Q30 146 40 160M150 160Q160 144 172 160" stroke={colors.vocab.green} strokeWidth={6} fill={NONE} strokeLinecap="round" />
+      <Circle cx={156} cy={128} r={16} fill={colors.vocab.white} {...INK} />
+      <Ellipse cx={120} cy={122} rx={46} ry={38} fill={colors.vocab.white} {...INK} />
+      <Ellipse cx={58} cy={54} rx={12} ry={38} fill={colors.vocab.white} {...INK} transform="rotate(-14 58 54)" />
+      <Ellipse cx={88} cy={50} rx={12} ry={38} fill={colors.vocab.white} {...INK} transform="rotate(12 88 50)" />
+      <Ellipse cx={58} cy={56} rx={5} ry={26} fill={colors.vocab.pink} transform="rotate(-14 58 56)" />
+      <Ellipse cx={88} cy={52} rx={5} ry={26} fill={colors.vocab.pink} transform="rotate(12 88 52)" />
+      <Circle cx={72} cy={106} r={34} fill={colors.vocab.white} {...INK} />
+      <Ellipse cx={92} cy={154} rx={18} ry={9} fill={colors.vocab.white} {...INK} />
+      <Circle cx={60} cy={100} r={5} fill={colors.text.primary} />
+      <Circle cx={44} cy={112} r={5} fill={colors.vocab.pink} />
+      <Path d="M50 120Q56 126 62 120" {...DET} fill={NONE} />
+    </Note>
   );
 }
 
 function BihaenggiArt(p: ArtProps): ReactElement {
-  // Plane: a folded paper plane flies past the tile; the folding step written below.
+  // Plane: a big folded paper plane with its fold lines, on a dashed flight arc.
   return (
-    <Page theme="crafts" p={p} tile="비행기" line="비행기를 접어요.">
-      <Path d="M150 52 L192 36 L168 74 L162 60 Z" fill={colors.surface.paper} stroke={colors.brand.secondary} strokeWidth={2.5} strokeLinejoin="round" />
-    </Page>
+    <Note theme="crafts" p={p} line="비행기를 접어요.">
+      <Path d="M10 152Q30 110 64 120" stroke={colors.brand.secondary} strokeWidth={5} strokeDasharray="10 9" fill={NONE} strokeLinecap="round" />
+      <Polygon points="190,18 84,118 116,154" fill={colors.vocab.skyBlue} {...INK} />
+      <Polygon points="190,18 14,86 84,118" fill={colors.surface.paper} {...INK} />
+      <Polygon points="190,18 84,118 96,138" fill={colors.surface.paper} {...INK} />
+      <Path d="M190 18L52 98" {...DET} />
+    </Note>
   );
 }
 

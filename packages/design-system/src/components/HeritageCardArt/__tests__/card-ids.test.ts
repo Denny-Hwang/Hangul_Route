@@ -106,14 +106,14 @@ describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
   // Row CM-23 part 2 adds Stage 4's five talks, drawn with the shared two friends and bubbles (`Pal`, `Bubble`): the
   // module line moved from 16,000 B to 22,000 B. Part 3 adds Stages 6-7's ten and the five legendary cards on three
   // shared frames (`word`, `Page`, `Legend`): the module line moves to 34,000 B (about 32,000 B); the per-drawing line stays.
-  // AMENDMENTS-PICTURES-2026-11 PX-3 redraws the cards as their own subjects with an ink outline (so far: and Stage 4):
-  // the module measures 37,272 B, so its line moves to 37,300 B; the largest drawing (AchimArt)
-  // measures 1,217 B, so the per-drawing lines did not move.
-  it('art budget: each drawing at most 2,000 B of source, the module at most 37,300 B', () => {
+  // AMENDMENTS-PICTURES-2026-11 PX-3 redraws the cards as their own subjects with an ink outline (so far: and Stages 6-7):
+  // the module measures 38,287 B, so its line moves to 38,300 B; the largest drawing (TokkiArt)
+  // measures 1,327 B, so the per-drawing lines did not move.
+  it('art budget: each drawing at most 2,000 B of source, the module at most 38,300 B', () => {
     const fns = [...art.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1], bytes: Buffer.byteLength(m[0]) }));
     expect(fns).toHaveLength(30);
     for (const f of fns) expect(f.bytes, f.name).toBeLessThanOrEqual(2_000);
-    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(37_300);
+    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(38_300);
   });
 
   it('art budget, Stages 6-7 and the legendary cards: the shared frames at most 3,200 B, each new drawing at most 1,700 B (row CM-23 part 3)', () => {
@@ -129,12 +129,14 @@ describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
     expect(Buffer.byteLength(frames)).toBeLessThanOrEqual(3_200);
   });
 
+  // AMENDMENTS-PICTURES-2026-11 R5 (PX-3): the text stays, small and secondary, on cards never used as a question picture
+  // (`text-cards.test.ts`); R4 allows the vocab tones (a red apple, a red umbrella), never `feedback.danger`.
   it('Stage 6 and 7 cards draw their Korean in the picture; the legendary cards draw their name in a legendary frame', () => {
     const block = art.slice(art.indexOf('// ---- Stages 6-7'), art.indexOf('/** True for a card id'));
     for (const ko of ['김밥 이천 원', '여기요!', '서울 → 부산', '정상 ↑', '사과 세 개', '제 이름은 호야예요.', '아침에 빵을 먹어요.', '토끼는 작아요.', '비행기를 접어요.']) expect(block, ko).toContain(ko);
     for (const name of ['훈민정음', '장 담그기', '한가위', '지리산', '씨름']) expect(block, name).toContain(`name="${name}"`);
     expect(block).toMatch(/function Legend[\s\S]*stroke=\{colors\.rarity\.legendary\}/);
-    expect(block).not.toMatch(/colors\.feedback\.danger|colors\.vocab\.red/);
+    expect(block).not.toMatch(/colors\.feedback\.danger/);
   });
 
   it('art budget, Stage 4: the shared friends and bubble at most 2,600 B, each talk at most 1,600 B (row CM-23 part 2)', () => {
