@@ -100,6 +100,15 @@ describe('checkItem', () => {
     expect(ids(checkItem(makeProp({ tintable: 'brand.secondary' })))).not.toContain('I-color');
   });
 
+  it('allows the vocab tones only when the hidden-heritage profile asks ([PX] R4)', () => {
+    const red = makeProp({ nodes: [{ t: 'rect', x: 0, y: 0, w: 1, h: 1, fill: 'vocab.red' as ColorToken, stroke: 'vocab.green' as ColorToken }] });
+    expect(ids(checkItem(red))).toContain('I-color');
+    expect(ids(checkItem(red, { vocabTones: true }))).not.toContain('I-color');
+    // never the reserved tokens, and never a vocab tone as the tint target
+    expect(ids(checkItem(makeProp({ nodes: [{ t: 'rect', x: 0, y: 0, w: 1, h: 1, fill: 'feedback.danger' as ColorToken }] }), { vocabTones: true }))).toContain('I-color');
+    expect(ids(checkItem(makeProp({ tintable: 'vocab.red' as ColorToken }), { vocabTones: true }))).toContain('I-color');
+  });
+
   it('allows only the eight shape kinds', () => {
     const f = checkItem(makeProp({ nodes: [{ t: 'text', x: 0, y: 0 } as unknown as Shape, { t: 'image' } as unknown as Shape] }));
     expect(f.filter((x) => x.rule === 'I-kind')).toHaveLength(2);

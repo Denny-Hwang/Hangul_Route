@@ -200,15 +200,17 @@ const TTEOKGUK: ItemDef = {
 const CUSHION: ItemDef = {
   id: 'prop:hh-bangseok',
   kind: 'object',
-  box: { w: 100, h: 40 },
+  box: { w: 100, h: 44 },
   z: 'mid',
-  alt: 'A square purple floor cushion',
-  accuracyNote: 'A plain square floor cushion seen from the front, with a button at its centre.',
+  alt: 'A square purple floor cushion with tassels at its corners',
+  accuracyNote: 'A plain square floor cushion seen from the front: its padded thickness, a button at its centre and a tassel at each corner.',
   nodes: [
-    { t: 'rect', x: 2, y: 32, w: 96, h: 6, r: 2, fill: 'text.secondary' },
-    { t: 'path', d: 'M10 4H90L98 34H2Z', fill: 'theme.rites', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M18 9H82L88 29H12Z', fill: 'none', stroke: 'surface.paper', sw: 'thin', det: true },
-    { t: 'circle', cx: 50, cy: 19, r: 4, fill: 'theme.letters' },
+    { t: 'path', d: 'M2 30H98V38C98 40 96 42 94 42H6C4 42 2 40 2 38Z', fill: 'theme.rites', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M3 36H97V38C97 40 96 41 94 41H6C4 41 3 40 3 38Z', fill: 'text.secondary', o: 0.35 },
+    { t: 'path', d: 'M12 4H88C92 12 95 22 98 30H2C5 22 8 12 12 4Z', fill: 'theme.rites', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M18 9H82L88 26H12Z', fill: 'none', stroke: 'surface.paper', sw: 'thin', det: true },
+    { t: 'circle', cx: 50, cy: 17, r: 4, fill: 'theme.letters', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M13 5L4 1L7 11ZM87 5L96 1L93 11ZM4 31L0 43L10 38ZM96 31L100 43L90 38Z', fill: 'theme.letters', stroke: 'text.secondary', sw: 'base' },
   ],
 };
 
@@ -221,12 +223,25 @@ const YUT: ItemDef = {
   alt: 'Four wooden yut sticks lying on the floor, three flat side up',
   tags: { heritage: true },
   sourceRef: ref(SRC.yutSeason, KHS),
-  accuracyNote: 'Four long sticks (garangnyut), round on one side and flat on the other; the flat side is drawn light. Three up and one down is the throw called geol.',
+  accuracyNote:
+    'Four long sticks (garangnyut) with rounded ends, round on one side and flat on the other: a flat side up is drawn light over the dark edge of its round back, a round back up is drawn dark. Three up and one down is the throw called geol.',
   nodes: [
-    { t: 'path', d: 'M4 6L64 2L65 11L5 15Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M20 20L82 18L82 27L20 29Z', fill: 'text.secondary', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M6 31L66 35L65 43L5 39Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M24 46L84 44L84 53L24 55Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'group', tx: 4, ty: 6, rot: -4, kids: [
+      { t: 'rect', x: 0, y: 3, w: 60, h: 9, r: 4.5, fill: 'border.strong', stroke: 'text.secondary', sw: 'base' },
+      { t: 'rect', x: 0, y: 0, w: 60, h: 8, r: 4, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    ] },
+    { t: 'group', tx: 22, ty: 19, rot: -2, kids: [
+      { t: 'rect', x: 0, y: 0, w: 60, h: 11, r: 5.5, fill: 'text.secondary', stroke: 'text.secondary', sw: 'base' },
+      { t: 'path', d: 'M6 3.5H54', stroke: 'border.strong', sw: 'base', det: true },
+    ] },
+    { t: 'group', tx: 5, ty: 31, rot: 4, kids: [
+      { t: 'rect', x: 0, y: 3, w: 60, h: 9, r: 4.5, fill: 'border.strong', stroke: 'text.secondary', sw: 'base' },
+      { t: 'rect', x: 0, y: 0, w: 60, h: 8, r: 4, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    ] },
+    { t: 'group', tx: 24, ty: 43, rot: -2, kids: [
+      { t: 'rect', x: 0, y: 3, w: 60, h: 9, r: 4.5, fill: 'border.strong', stroke: 'text.secondary', sw: 'base' },
+      { t: 'rect', x: 0, y: 0, w: 60, h: 8, r: 4, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    ] },
   ],
 };
 

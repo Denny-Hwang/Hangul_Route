@@ -7,7 +7,7 @@
  * Not exported from the package barrel: a scene and its items ride in the app's lazy scene chunk (§10), and the profile
  * checks (`./profile.ts`) run in tests and on the contact sheet only, so the start bundle carries none of them.
  */
-import type { ColorToken, ItemDef, SceneArtLike } from '../types';
+import type { ArtColorToken, ColorToken, ItemDef, SceneArtLike } from '../types';
 
 /** A thing's hit area on the 400 x 300 canvas. Structural twin of content-schema `HiddenHeritageSpot`. */
 export interface HiddenHeritageSpotLike {
@@ -63,8 +63,11 @@ export interface HiddenHeritageScene {
   /** `scene:<key>`, the round's `sceneId`. */
   id: string;
   art: SceneArtLike;
-  /** The setting and props this scene adds to the registry (they live in its chunk only). */
-  items: readonly ItemDef[];
+  /**
+   * The setting and props this scene adds to the registry (they live in its chunk only). [PX] R4: these may draw in
+   * WordArt's vocab tones (`ArtColorToken`), the only items outside WordArt that may.
+   */
+  items: readonly ItemDef<ArtColorToken>[];
   /** The layer (index into `art.layers`) that draws each named thing. */
   things: Readonly<Record<string, number>>;
   /** The reference round: the targets and other things with their spots, as a lesson writes them. */

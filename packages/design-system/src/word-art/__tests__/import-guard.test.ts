@@ -13,10 +13,10 @@ import { colors } from '../../tokens';
  * (`scene-art/hidden-heritage/`), so kimchi can be red in all three. Every
  * other file, feedback and UI chrome first, stays forbidden: the story
  * settings and props beside the hidden-heritage scenes keep their own palette.
- * The scan is the only gate loosened here: scene art's `ColorToken` type and
- * `isColorToken` (scene-art/tokens-map.ts) still leave the vocab group out for
- * every scene, so a hidden-heritage thing gets a vocab tone only once row PX-4
- * opens that type for those scenes. Tests are left
+ * Row PX-4 opened the type for those scenes only: a hidden-heritage item is
+ * `ItemDef<ArtColorToken>`, the tone table is `scene-art/hidden-heritage/tones.ts`
+ * (inside the allowed folder), and `scene-art/tokens-map.ts` resolves a tone
+ * through it without reading the group itself. Tests are left
  * out (they hold the token tests and the negative samples); `tokens.ts`
  * defines the group and reads nothing.
  */

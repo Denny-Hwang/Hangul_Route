@@ -15,6 +15,17 @@ export type ReservedColorGroup = 'vocab';
 /** A path into `colors`, e.g. `'theme.rites'`, minus the reserved tokens and groups. */
 export type ColorToken = Exclude<Leaves<typeof colors>, ReservedColorToken | `${ReservedColorGroup}.${string}`>;
 
+/** WordArt's content tones as token paths (the group name, a dot, a tone name). */
+export type VocabColorToken = `${ReservedColorGroup}.${keyof (typeof colors)[ReservedColorGroup] & string}`;
+
+/**
+ * [PX] R4 (AMENDMENTS-PICTURES-2026-11): a thing inside a hidden-heritage scene may draw in a real colour, so kimchi
+ * is red. The renderer draws every `ArtColorToken`; who may author one is set by the item's type: shared registry
+ * items are `ItemDef` (scene tokens only), hidden-heritage items `ItemDef<ArtColorToken>`, and `checkItem` refuses a
+ * vocab tone unless the hidden-heritage profile asks for it.
+ */
+export type ArtColorToken = ColorToken | VocabColorToken;
+
 /** Stroke width names; `borderWidth.thin/base/thick` = 1/2/3 canvas units. */
 export type StrokeToken = 'thin' | 'base' | 'thick';
 
@@ -24,9 +35,9 @@ export type OpacityStep = (typeof OPACITY_STEPS)[number];
 /** Canvas 400 x 300 (4:3), origin top-left. Mirrors content-schema `ART_CANVAS`. */
 export const SCENE_CANVAS = { width: 400, height: 300 } as const;
 
-export interface Paint {
-  fill?: ColorToken | 'none';
-  stroke?: ColorToken;
+export interface Paint<C extends string = ColorToken> {
+  fill?: C | 'none';
+  stroke?: C;
   sw?: StrokeToken;
   o?: OpacityStep;
   /**
@@ -36,7 +47,7 @@ export interface Paint {
   det?: true;
 }
 
-type Geometry =
+type Geometry<C extends string> =
   | { t: 'rect'; x: number; y: number; w: number; h: number; r?: number }
   | { t: 'circle'; cx: number; cy: number; r: number }
   | { t: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
@@ -45,16 +56,17 @@ type Geometry =
   | { t: 'path'; d: string }
   /** Closed polygon, 3 to 16 points. */
   | { t: 'poly'; pts: Array<[number, number]> }
-  | { t: 'group'; tx?: number; ty?: number; s?: number; rot?: number; flip?: true; kids: Shape[] };
+  | { t: 'group'; tx?: number; ty?: number; s?: number; rot?: number; flip?: true; kids: Shape<C>[] };
 
-export type Shape = Paint & Geometry;
-export type LeafShape = Paint & Exclude<Geometry, { t: 'group' }>;
-export type GroupShape = Paint & Extract<Geometry, { t: 'group' }>;
+/** `C` widens the colours for hidden-heritage things only (`ArtColorToken`, [PX] R4); everything else keeps the default. */
+export type Shape<C extends string = ColorToken> = Paint<C> & Geometry<C>;
+export type LeafShape<C extends string = ColorToken> = Paint<C> & Exclude<Geometry<C>, { t: 'group' }>;
+export type GroupShape<C extends string = ColorToken> = Paint<C> & Extract<Geometry<C>, { t: 'group' }>;
 
 export type Band = 'back' | 'mid' | 'front';
 export type ItemKind = 'figure' | 'object' | 'architecture' | 'nature' | 'furniture' | 'symbol' | 'setting';
 
-export interface ItemDef {
+export interface ItemDef<C extends string = ColorToken> {
   /** `'prop:fig-historian'`, `'scene:palace-hall'`, `'hoya:idle'`. */
   id: string;
   kind: ItemKind;
@@ -63,7 +75,7 @@ export interface ItemDef {
   z: Band;
   /** The one colour a layer's `tint` replaces. */
   tintable?: ColorToken;
-  nodes: Shape[];
+  nodes: Shape<C>[];
   /** Contact-sheet label and default alt fragment. */
   alt: string;
   /** Required for heritage artefacts. */

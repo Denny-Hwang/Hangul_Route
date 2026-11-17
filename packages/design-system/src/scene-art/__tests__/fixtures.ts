@@ -1,5 +1,4 @@
 import type { ItemDef, SceneArtLike } from '../types';
-import type { Registry } from '../resolve';
 
 /** Shared builders for the scene-art suites. Not a test file. */
 
@@ -55,7 +54,7 @@ export function makeHoya(overrides: Partial<ItemDef> = {}): ItemDef {
   };
 }
 
-export function makeRegistry(extra: ItemDef[] = []): Registry {
+export function makeRegistry(extra: ItemDef[] = []): Readonly<Record<string, ItemDef>> {
   const items = [makeSetting(), makeProp(), makeHoya(), ...extra];
   return Object.fromEntries(items.map((i) => [i.id, i]));
 }

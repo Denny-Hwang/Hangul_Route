@@ -60,7 +60,7 @@ function entryOf(item: ItemDef): LibraryEntry {
   };
 }
 
-export function buildLibrary(registry: Registry): Library {
+export function buildLibrary(registry: Readonly<Record<string, ItemDef>>): Library {
   const items = Object.values(registry);
   const byId = (a: LibraryEntry, b: LibraryEntry): number => a.id.localeCompare(b.id);
   return {

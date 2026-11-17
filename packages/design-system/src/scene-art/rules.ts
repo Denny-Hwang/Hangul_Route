@@ -20,8 +20,14 @@ import {
   type ResolvedScene,
 } from './resolve';
 import { HOYA_POSES, hoyaItem } from './hoya';
-import { isColorToken } from './tokens-map';
-import { OPACITY_STEPS, SCENE_CANVAS, type ColorToken, type ItemDef, type SceneArtLike, type Shape } from './types';
+import { isArtColorToken, isColorToken } from './tokens-map';
+import { OPACITY_STEPS, SCENE_CANVAS, type ArtColorToken, type SceneArtLike } from './types';
+import type { ItemDef as AnyItemDef, Shape as AnyShape } from './types';
+
+/** The rules read any drawable item; `checkItem` decides whether a vocab tone is allowed ([PX] R4). */
+type ColorToken = ArtColorToken;
+type ItemDef = AnyItemDef<ArtColorToken>;
+type Shape = AnyShape<ArtColorToken>;
 
 export interface Finding {
   rule: string;
@@ -131,7 +137,16 @@ function walk(shapes: readonly Shape[], depth: number, detail: boolean, visit: (
   }
 }
 
-export function checkItem(item: ItemDef): Finding[] {
+export interface CheckItemOptions {
+  /**
+   * [PX] R4: allow WordArt's vocab tones. Only the hidden-heritage profile passes it, for the things a learner finds
+   * in its scenes (kimchi is red); every shared registry item keeps the scene tokens.
+   */
+  vocabTones?: boolean;
+}
+
+export function checkItem(item: ItemDef, options: CheckItemOptions = {}): Finding[] {
+  const usable = options.vocabTones === true ? isArtColorToken : isColorToken;
   const out: Finding[] = [];
   const err = (rule: string, message: string): void => {
     out.push({ rule, severity: 'error', message: `${item.id}: ${message}`, ref: item.id });
@@ -153,9 +168,11 @@ export function checkItem(item: ItemDef): Finding[] {
   );
 
   const tokens = leaves.flatMap(({ shape }) => [shape.fill === 'none' ? undefined : shape.fill, shape.stroke]).filter((t): t is ColorToken => t !== undefined);
-  for (const token of new Set([...tokens, ...(item.tintable ? [item.tintable] : [])])) {
-    if (!isColorToken(token)) err('I-color', `"${String(token)}" is not a usable colour token`);
+  for (const token of new Set(tokens)) {
+    if (!usable(token)) err('I-color', `"${String(token)}" is not a usable colour token`);
   }
+  // a layer tint is always a scene token, so the colour it replaces is one too
+  if (item.tintable !== undefined && !isColorToken(item.tintable)) err('I-color', `"${String(item.tintable)}" is not a usable colour token`);
 
   const total = nodeCount(item.nodes);
   const maxShapes = setting ? LIMITS.settingShapes : LIMITS.propShapes;
