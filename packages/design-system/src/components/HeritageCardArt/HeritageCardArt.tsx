@@ -781,77 +781,43 @@ function YutnoriArt(p: ArtProps): ReactElement {
   );
 }
 
-function JegiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Feather shuttlecock: warm-grey coin base + cream feathers radiating up + purple wrap.
+function JegiArt(p: ArtProps): ReactElement {
+  // Jegi: a fan of bright paper strands rising from a brass coin with a square hole, and a kick arc.
+  const strands: [number, string][] = [
+    [-52, colors.vocab.red],
+    [-30, colors.vocab.yellow],
+    [-10, colors.vocab.blue],
+    [10, colors.vocab.green],
+    [30, colors.vocab.pink],
+    [52, colors.vocab.orange],
+  ];
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="crafts">
-        {/* Floor shadow */}
-        <Ellipse cx={100} cy={170} rx={40} ry={4} fill={colors.hoya.furDark} opacity={0.18} />
-        {/* Coin base */}
-        <Ellipse cx={100} cy={150} rx={26} ry={10} fill={colors.text.muted} stroke={colors.text.secondary} strokeWidth={2} />
-        {/* Purple wrap on top of coin */}
-        <Path
-          d="M82 144 Q100 134 118 144 L116 150 Q100 142 84 150 Z"
-          fill={colors.theme.rites}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={1.5}
-          strokeLinejoin="round"
-        />
-        {/* Feathers radiating up */}
-        <G fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={1.5} strokeLinejoin="round">
-          <Path d="M86 144 Q72 110 78 75 Q86 110 94 144 Z" />
-          <Path d="M95 144 Q92 90 100 50 Q108 90 105 144 Z" />
-          <Path d="M105 144 Q108 105 120 75 Q108 110 113 144 Z" />
-          <Path d="M114 144 Q126 120 135 95 Q120 120 117 144 Z" />
-        </G>
-        {/* Subtle feather striations */}
-        <G stroke={colors.text.muted} strokeWidth={0.5} fill="none">
-          <Path d="M82 130 Q90 110 86 90" />
-          <Path d="M100 130 Q103 100 100 70" />
-          <Path d="M118 130 Q115 105 122 88" />
-        </G>
-      </Frame>
-    </Svg>
+    <Card theme="crafts" p={p}>
+      {shadow(184, 40)}
+      <Path d="M40 140Q20 90 46 52M160 140Q180 90 154 52" {...DET} stroke={colors.text.muted} fill={NONE} strokeDasharray="10 10" />
+      {strands.map(([a, c]) => (
+        <Path key={a} d="M100 140Q86 90 100 30Q114 90 100 140Z" fill={c} {...DET} transform={`rotate(${a} 100 140)`} />
+      ))}
+      <Ellipse cx={100} cy={156} rx={38} ry={16} fill={colors.hoya.fur} {...INK} />
+      <Rect x={92} y={150} width={16} height={12} fill={colors.text.primary} />
+    </Card>
   );
 }
 
-function KiteArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Diamond kite with central hole + tiger face + 2 tassels.
+function KiteArt(p: ArtProps): ReactElement {
+  // Bangpaeyeon: the rectangular shield kite with its round centre hole, bamboo sticks, the red circle at the top,
+  // and the string.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="crafts">
-        {/* String trailing */}
-        <Path d="M100 130 Q115 145 130 155 Q150 162 170 165" stroke={colors.text.secondary} strokeWidth={1.5} fill="none" strokeLinecap="round" />
-        {/* Diamond kite body */}
-        <Polygon
-          points="100,30 150,90 100,150 50,90"
-          fill={colors.surface.canvas}
-          stroke={colors.brand.secondary}
-          strokeWidth={3}
-          strokeLinejoin="round"
-        />
-        {/* Horizontal + vertical cross frame */}
-        <Line x1={50} y1={90} x2={150} y2={90} stroke={colors.brand.secondary} strokeWidth={2} />
-        <Line x1={100} y1={30} x2={100} y2={150} stroke={colors.brand.secondary} strokeWidth={2} />
-        {/* Central hole */}
-        <Circle cx={100} cy={90} r={12} fill={colors.brand.secondaryLight} stroke={colors.brand.secondary} strokeWidth={2} />
-        {/* Tiger face in the hole */}
-        <Circle cx={100} cy={90} r={9} fill={colors.hoya.fur} />
-        {/* Eyes */}
-        <Circle cx={97} cy={89} r={1.5} fill={colors.hoya.stripes} />
-        <Circle cx={103} cy={89} r={1.5} fill={colors.hoya.stripes} />
-        {/* Nose */}
-        <Path d="M98 91 H102 L100 93 Z" fill={colors.hoya.stripes} />
-        {/* Tassels hanging at top */}
-        <G stroke={colors.brand.primary} strokeWidth={2} strokeLinecap="round">
-          <Line x1={70} y1={45} x2={62} y2={60} />
-          <Line x1={66} y1={56} x2={58} y2={68} />
-          <Line x1={130} y1={45} x2={138} y2={60} />
-          <Line x1={134} y1={56} x2={142} y2={68} />
-        </G>
-      </Frame>
-    </Svg>
+    <Card theme="crafts" p={p}>
+      <Path d="M100 162Q120 176 150 172Q170 168 188 186" {...DET} fill={NONE} />
+      <Rect x={38} y={22} width={124} height={146} rx={6} fill={colors.surface.paper} {...INK} />
+      <Path d="M38 22Q100 64 162 22Z" fill={colors.vocab.blue} {...DET} />
+      <Path d="M100 22A20 20 0 0 1 100 62A20 20 0 0 1 100 22Z" fill={colors.vocab.red} {...DET} />
+      <Path d="M100 22V168M38 22L162 168M162 22L38 168M38 94H162" stroke={colors.vocab.brown} strokeWidth={4} strokeLinecap="round" />
+      <Circle cx={100} cy={102} r={24} fill={colors.surface.canvas} {...INK} />
+      <Path d="M38 150H162" stroke={colors.vocab.green} strokeWidth={10} />
+      <Rect x={38} y={22} width={124} height={146} rx={6} fill={NONE} {...INK} />
+    </Card>
   );
 }
 
@@ -893,51 +859,23 @@ function TopArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   );
 }
 
-function PotteryArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Round-bellied celadon vase with crackle pattern + curved crane etching.
+function PotteryArt(p: ArtProps): ReactElement {
+  // Goryeo celadon: a maebyeong vase (small mouth, broad shoulder, narrow foot) with one inlaid white crane in a
+  // roundel and inlaid clouds.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="crafts">
-        {/* Floor shadow */}
-        <Ellipse cx={100} cy={172} rx={40} ry={4} fill={colors.hoya.furDark} opacity={0.18} />
-        {/* Vase shape — neck + belly */}
-        <Path
-          d="M85 50 Q95 48 115 50 L113 65 Q126 70 138 90 Q145 115 130 145 Q115 165 100 168 Q85 165 70 145 Q55 115 62 90 Q74 70 87 65 Z"
-          fill={colors.theme.nature}
-          opacity={0.7}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        {/* Vase mouth (top opening) */}
-        <Ellipse cx={100} cy={50} rx={15} ry={4} fill={colors.text.secondary} opacity={0.4} stroke={colors.brand.primaryDark} strokeWidth={2} />
-        {/* Crackle pattern */}
-        <G stroke={colors.text.muted} strokeWidth={0.7} fill="none" opacity={0.6}>
-          <Path d="M70 90 Q80 100 75 115" />
-          <Path d="M85 100 L92 130" />
-          <Path d="M105 95 Q112 110 108 130" />
-          <Path d="M125 105 Q128 125 120 140" />
-          <Path d="M80 140 Q90 145 100 145" />
-          <Path d="M75 105 H92" />
-        </G>
-        {/* Curved crane etching */}
-        <G stroke={colors.brand.primaryDark} strokeWidth={1.5} fill="none" strokeLinecap="round" opacity={0.85}>
-          {/* Body curve */}
-          <Path d="M85 110 Q100 100 120 105" />
-          {/* Wing arc */}
-          <Path d="M90 108 Q105 95 118 100" />
-          {/* Neck */}
-          <Path d="M120 105 Q125 95 128 88" />
-          {/* Head */}
-          <Circle cx={128} cy={86} r={2.5} fill={colors.brand.primaryDark} />
-          {/* Beak */}
-          <Path d="M130 85 L134 84" />
-          {/* Legs */}
-          <Path d="M95 115 L92 125" />
-          <Path d="M105 115 L102 125" />
-        </G>
-      </Frame>
-    </Svg>
+    <Card theme="crafts" p={p}>
+      {shadow(184, 46)}
+      <Path d="M86 18H114V30Q160 40 164 82Q164 122 128 162L126 178H74L72 162Q36 122 36 82Q40 40 86 30Z" fill={colors.stage.stage7} fillOpacity={0.55} {...INK} />
+      <Path d="M86 30H114" {...DET} />
+      <Circle cx={100} cy={94} r={40} fill={NONE} stroke={colors.vocab.white} strokeWidth={5} />
+      <G fill={colors.vocab.white} stroke={colors.vocab.black} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M112 106L138 116M84 104L68 94" />
+        <Path d="M90 100Q92 64 128 58Q118 86 106 104Z" />
+        <Ellipse cx={98} cy={104} rx={18} ry={9} transform="rotate(-12 98 104)" />
+        <Circle cx={66} cy={92} r={5} />
+      </G>
+      <Path d="M54 150Q62 140 72 148M128 148Q138 140 146 150M58 62Q66 52 76 60" stroke={colors.vocab.white} strokeWidth={5} strokeLinecap="round" fill={NONE} />
+    </Card>
   );
 }
 

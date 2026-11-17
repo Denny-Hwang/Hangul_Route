@@ -17,7 +17,7 @@ const code = art.replace(/^\s*(\/\/|\/\*\*|\*).*$/gm, '');
 const drawings = [...code.matchAll(/^function (\w+Art)\([\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] })).filter((d) => d.name !== 'FallbackArt');
 const bytesOf = (name: string): number => Buffer.byteLength(new RegExp(`^function ${name}\\([\\s\\S]*?^}$`, 'm').exec(art)?.[0] ?? '');
 /** The drawings brought to the rules by PX-2 so far; the row's later commits add the rest. */
-const CHECKED: readonly string[] = ['BrushArt', 'ChopsticksArt', 'ChuseokArt', 'FamilyTableArt', 'GayageumArt', 'HangulDayArt', 'HanjiArt', 'InkArt', 'KimchiArt', 'MoonArt', 'MugunghwaArt', 'OrigamiArt', 'SeaArt', 'SebaeArt', 'SeollalArt', 'TteokgukArt', 'YutnoriArt'];
+const CHECKED: readonly string[] = ['BrushArt', 'ChopsticksArt', 'ChuseokArt', 'FamilyTableArt', 'GayageumArt', 'HangulDayArt', 'HanjiArt', 'InkArt', 'JegiArt', 'KimchiArt', 'KiteArt', 'MoonArt', 'MugunghwaArt', 'OrigamiArt', 'PotteryArt', 'SeaArt', 'SebaeArt', 'SeollalArt', 'TteokgukArt', 'YutnoriArt'];
 
 /** What a picture must (`has`) and must not (`not`) draw, from the triage's "what to change" (R3, R4). */
 const PINS: Record<string, { has?: RegExp[]; not?: RegExp[] }> = {
