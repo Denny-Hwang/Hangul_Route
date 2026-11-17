@@ -84,10 +84,11 @@ export const PAPER_STACK: ItemDef = {
     'A squared-up pile of plain sheets, the top one showing rows of short brush strokes (no letters). Generic paper, not any particular record; the sources behind the stories do not describe the drafts as objects.',
   nodes: [
     { t: 'ellipse', cx: 32, cy: 32, rx: 30, ry: 2, fill: 'text.secondary', o: 0.08, det: true },
-    { t: 'rect', x: 4, y: 18, w: 56, h: 14, fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
-    { t: 'path', d: 'M6 23 H58 M6 27 H58', stroke: 'border.strong', sw: 'thin', det: true },
-    { t: 'poly', pts: [[4, 18], [60, 18], [56, 6], [8, 6]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
-    { t: 'path', d: 'M18 9 V15 M26 9 V14 M34 9 V16 M42 9 V13', stroke: 'text.secondary', sw: 'base' },
+    // [FU-2] sheets lying one on another, each a little offset and outlined in ink brown, so it reads as a pile of
+    // paper and not a crate
+    { t: 'path', d: 'M5 28.5 H59 V32 H5 Z M2 25 H56 V28.5 H2 Z M6 21.5 H60 V25 H6 Z M3 18 H57 V21.5 H3 Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'poly', pts: [[3, 18], [57, 18], [54, 9], [8, 9]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M18 11 V16 M26 11 V15 M34 11 V16 M42 11 V14', stroke: 'text.secondary', sw: 'base' },
   ],
 };
 
@@ -101,9 +102,10 @@ export const PAPERS_LOOSE: ItemDef = {
     'Loose sheets lying at different angles, each with a few brush strokes (no letters), standing for rough drafts. Generic paper; no particular record is copied.',
   nodes: [
     { t: 'ellipse', cx: 35, cy: 38, rx: 33, ry: 2, fill: 'text.secondary', o: 0.08, det: true },
-    { t: 'poly', pts: [[4, 30], [50, 24], [54, 36], [8, 38]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
-    { t: 'poly', pts: [[16, 22], [60, 18], [66, 32], [20, 34]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
-    { t: 'poly', pts: [[10, 12], [50, 6], [56, 22], [14, 26]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    // [FU-2] ink-brown outlines, so the white sheets read on a cream ground
+    { t: 'poly', pts: [[4, 30], [50, 24], [54, 36], [8, 38]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[16, 22], [60, 18], [66, 32], [20, 34]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[10, 12], [50, 6], [56, 22], [14, 26]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M22 13 L23 21 M30 12 L31 19 M38 11 L39 20 M46 26 L47 31', stroke: 'text.secondary', sw: 'base' },
   ],
 };

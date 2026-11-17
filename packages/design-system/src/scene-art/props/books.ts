@@ -121,7 +121,8 @@ export const BOOK_CHEST_OPEN: ItemDef = {
     { t: 'rect', x: 6, y: 30, w: 84, h: 40, r: 2, fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },
     { t: 'rect', x: 11, y: 30, w: 74, h: 10, fill: 'text.primary', o: 0.6 },
     // two bundles wrapped in red cloth, drawn as one shape
-    { t: 'path', d: 'M14 26 Q14 22 18 22 L44 22 Q48 22 48 26 L48 38 L14 38 Z M50 24 Q50 20 54 20 L78 20 Q82 20 82 24 L82 38 L50 38 Z', fill: 'brand.primary', stroke: 'text.primary', sw: 'thin' },
+    // [FU-2] each with the bojagi knot standing up on top, so they read as wrapped bundles and not seat cushions
+    { t: 'path', d: 'M14 26 Q14 22 18 22 L44 22 Q48 22 48 26 L48 38 L14 38 Z M50 24 Q50 20 54 20 L78 20 Q82 20 82 24 L82 38 L50 38 Z M31 22 L24 13 L31 17 L38 13 Z M66 20 L59 11 L66 15 L73 11 Z', fill: 'brand.primary', stroke: 'text.primary', sw: 'base' },
     { t: 'path', d: 'M31 22 V38 M66 20 V38', stroke: 'text.primary', sw: 'thin', o: 0.35, det: true },
     // herb pouches
     { t: 'ellipse', cx: 20, cy: 40, rx: 6, ry: 4, fill: 'feedback.nudgeLight', stroke: 'text.primary', sw: 'thin' },
@@ -145,9 +146,10 @@ export const BOOKS_AIRING: ItemDef = {
   nodes: [
     { t: 'poly', pts: [[14, 16], [136, 16], [150, 42], [0, 42]], fill: 'feedback.nudgeLight', stroke: 'border.strong', sw: 'base' },
     { t: 'path', d: 'M10 24 H140 M5 33 H145', stroke: 'border.strong', sw: 'thin', det: true },
-    { t: 'poly', pts: [[16, 22], [58, 22], [56, 36], [12, 36]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'poly', pts: [[56, 20], [96, 20], [96, 34], [54, 34]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'poly', pts: [[96, 24], [136, 24], [140, 38], [96, 38]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    // [FU-2] the open books outlined at base, so they stand out from the mat
+    { t: 'poly', pts: [[16, 22], [58, 22], [56, 36], [12, 36]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[56, 20], [96, 20], [96, 34], [54, 34]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[96, 24], [136, 24], [140, 38], [96, 38]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M35 22 L34 36 M75 20 V34 M117 24 L118 38', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M20 26 V32 M25 26 V33 M29 26 V31 M41 26 V32 M46 26 V31 M61 24 V31 M66 24 V30 M83 24 V31 M88 24 V30 M101 28 V34 M106 28 V35 M124 28 V34 M129 28 V33', stroke: 'text.secondary', sw: 'thin', det: true },
   ],

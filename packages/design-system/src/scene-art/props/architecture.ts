@@ -193,7 +193,8 @@ export const TEMPLE_SITE: ItemDef = {
   sourceRef: HEUNGDEOKSA_REF,
   accuracyNote: 'Excavation found only the main hall, lecture hall and west corridor remains (encykorea). A low earth platform with two rows of stone bases, not measured; no rebuilt hall or sign is drawn.',
   nodes: [
-    { t: 'path', d: 'M0 44 Q6 24 24 22 H176 Q194 24 200 44 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    // [FU-2] the platform outlined in ink brown, so the low site reads on a pale ground
+    { t: 'path', d: 'M0 44 Q6 24 24 22 H176 Q194 24 200 44 Z', fill: 'surface.sunken', stroke: 'text.secondary', sw: 'base' },
     { t: 'rect', x: 30, y: 26, w: 140, h: 14, fill: 'none', stroke: 'border.strong', sw: 'base', o: 0.6, det: true },
     { t: 'path', d: 'M30 24 H40 V30 H30 Z M65 24 H75 V30 H65 Z M100 24 H110 V30 H100 Z M135 24 H145 V30 H135 Z M160 24 H170 V30 H160 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },
     { t: 'path', d: 'M26 36 H38 V43 H26 Z M63 36 H75 V43 H63 Z M100 36 H112 V43 H100 Z M137 36 H149 V43 H137 Z M162 36 H174 V43 H162 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },

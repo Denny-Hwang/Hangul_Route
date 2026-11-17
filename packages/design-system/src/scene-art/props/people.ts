@@ -467,17 +467,18 @@ export const FIG_CARVER: ItemDef = {
   sourceRef: { title: '포 (袍)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0060121', accessed: ACCESSED },
   accuracyNote: 'In Goryeo even the king at leisure wore a black head cloth and a white ramie robe like commoners (encykorea, from the Goryeo dogyeong). Who the carvers were is not described, so no monk dress is given. Robe tintable; the face is blank on purpose.',
   nodes: [
-    { t: 'path', d: 'M14 82 Q14 58 34 52 L76 52 Q96 58 96 82 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
-    { t: 'path', d: 'M38 54 L34 30 Q55 24 76 30 L72 54 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    // [FU-2] the white robe outlined in ink, so it reads on a cream ground
+    { t: 'path', d: 'M14 82 Q14 58 34 52 L76 52 Q96 58 96 82 Z', fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M38 54 L34 30 Q55 24 76 30 L72 54 Z', fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
     face(55, 18, 10, 12),
     { t: 'path', d: 'M44 15 Q44 2 55 2 Q66 2 66 15 Q55 10 44 15 Z', fill: 'text.primary' },
     { t: 'path', d: 'M64 12 Q70 18 72 26 M66 10 Q74 14 78 20', stroke: 'text.primary', sw: 'thin', det: true },
     { t: 'poly', pts: [[22, 86], [88, 86], [82, 68], [28, 68]], fill: 'border.strong', stroke: 'text.primary', sw: 'thin' },
     { t: 'path', d: 'M36 74 H40 M44 74 H48 M52 74 H56 M60 74 H64 M68 74 H72 M34 80 H38 M42 80 H46 M50 80 H54 M58 80 H62 M66 80 H70 M74 80 H78', stroke: 'text.primary', sw: 'thin', det: true },
-    { t: 'path', d: 'M36 32 Q24 48 40 66 L50 64 Q42 50 44 40 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
-    { t: 'path', d: 'M74 32 Q86 48 70 66 L60 64 Q68 50 66 40 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
-    { t: 'circle', cx: 46, cy: 66, r: 4, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
-    { t: 'circle', cx: 64, cy: 66, r: 4, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M36 32 Q24 48 40 66 L50 64 Q42 50 44 40 Z', fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M74 32 Q86 48 70 66 L60 64 Q68 50 66 40 Z', fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
+    { t: 'circle', cx: 46, cy: 66, r: 4, fill: 'surface.paper', stroke: 'text.primary', sw: 'thin' },
+    { t: 'circle', cx: 64, cy: 66, r: 4, fill: 'surface.paper', stroke: 'text.primary', sw: 'thin' },
     { t: 'line', x1: 64, y1: 66, x2: 70, y2: 74, stroke: 'text.primary', sw: 'base' },
   ],
 };
@@ -517,8 +518,9 @@ export const FIG_WRESTLERS: ItemDef = {
   sourceRef: SSIREUM_REF,
   accuracyNote: "After the centre of Kim Hongdo's Ssireum: two men in plain cotton grappling. The waist and thigh belts (satba) follow ssireum today; grips simplified. Clothes tintable, faces blank.",
   nodes: [
-    { t: 'path', d: 'M10 88 L20 62 L42 56 L50 74 L42 88 L33 88 L37 74 L28 70 L19 88 Z M120 88 L110 62 L88 56 L80 74 L88 88 L97 88 L93 74 L102 70 L111 88 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
-    { t: 'path', d: 'M20 63 L43 57 L67 38 L58 27 L38 33 Z M110 63 L87 57 L63 38 L72 27 L92 33 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    // [FU-2] the white clothes outlined in ink, so the pair reads on a cream ground and on sand
+    { t: 'path', d: 'M10 88 L20 62 L42 56 L50 74 L42 88 L33 88 L37 74 L28 70 L19 88 Z M120 88 L110 62 L88 56 L80 74 L88 88 L97 88 L93 74 L102 70 L111 88 Z', fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M20 63 L43 57 L67 38 L58 27 L38 33 Z M110 63 L87 57 L63 38 L72 27 L92 33 Z', fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
     { t: 'path', d: 'M21 63 L43 57 M37 74 L46 70 M109 63 L87 57 M93 74 L84 70', stroke: 'feedback.nudge', sw: 'thick' },
     { t: 'path', d: 'M64 35 Q80 42 88 56 M66 35 Q50 42 42 56', stroke: 'border.strong', sw: 'thick' },
     face(56, 20, 8, 9),
