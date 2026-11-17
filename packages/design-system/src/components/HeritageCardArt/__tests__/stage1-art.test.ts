@@ -16,8 +16,8 @@ const art = readFileSync(join(__dirname, '..', 'HeritageCardArt.tsx'), 'utf8');
 const code = art.replace(/^\s*(\/\/|\/\*\*|\*).*$/gm, '');
 const drawings = [...code.matchAll(/^function (\w+Art)\([\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] })).filter((d) => d.name !== 'FallbackArt');
 const bytesOf = (name: string): number => Buffer.byteLength(new RegExp(`^function ${name}\\([\\s\\S]*?^}$`, 'm').exec(art)?.[0] ?? '');
-/** The drawings brought to the rules by PX-2 so far; the row's later commits add the rest. */
-const CHECKED: readonly string[] = ['BrushArt', 'ChopsticksArt', 'ChuseokArt', 'FamilyTableArt', 'GayageumArt', 'HangulDayArt', 'HanjiArt', 'InkArt', 'JegiArt', 'KimchiArt', 'KiteArt', 'MoonArt', 'MugunghwaArt', 'OrigamiArt', 'PotteryArt', 'SeaArt', 'SebaeArt', 'SeollalArt', 'TteokgukArt', 'YutnoriArt'];
+/** The drawings brought to the rules by PX-2. */
+const CHECKED: readonly string[] = drawings.map((d) => d.name);
 
 /** What a picture must (`has`) and must not (`not`) draw, from the triage's "what to change" (R3, R4). */
 const PINS: Record<string, { has?: RegExp[]; not?: RegExp[] }> = {
@@ -76,7 +76,8 @@ describe('Stage 1 card art (HeritageCardArt.tsx, AMENDMENTS-PICTURES-2026-11 PX-
 
   // PX-2 measured: the largest drawing (TigerArt) 1,715 B; the module 39,311 B (57,446 B before PX-2, which
   // repeated the outline props on every shape; the shared `INK`, `DET` and `Card` made it smaller).
-  it('art budget: each drawing at most 1,800 B of source', () => {
+  it('art budget: each drawing at most 1,800 B of source, the module at most 40,000 B', () => {
     for (const name of CHECKED) expect(bytesOf(name), name).toBeLessThanOrEqual(1_800);
+    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(40_000);
   });
 });
