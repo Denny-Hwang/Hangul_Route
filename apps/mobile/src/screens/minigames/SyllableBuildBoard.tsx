@@ -39,7 +39,7 @@ import { hoyaLine, startBuild, stepBuild, type BuildEffect, type BuildEvent, typ
 import { partsOf } from '../../logic/syllable-build/pool';
 import type { TileRows } from '../../logic/syllable-build/tiles';
 import { promptView, rowViews, zoneViews, type TileLook, type ZoneLook } from '../../logic/syllable-build/view';
-import { hasClip, playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 
 /**
@@ -131,6 +131,11 @@ function tileColors(zone: SyllableZone, look: TileLook): { backgroundColor: stri
   return { backgroundColor: colors.surface.paper, borderColor: colors.border.subtle, borderWidth: borderWidth.base };
 }
 
+/** What the built word's speaker plays: its recording, else the device voice on its spoken text. */
+function targetSpeech(target: SyllableBuildBoardProps['target'], source: string): PlaySpec {
+  return { text: target.spokenKo ?? target.ko, ...(target.audioRef ? { audioRef: target.audioRef } : {}), kind: 'word', source };
+}
+
 export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, onRight, autoplay, source, testID = 'syllable-build' }: SyllableBuildBoardProps): ReactElement {
   const m = useMessages();
   const copy = m.learner.minigame.syllableBuild;
@@ -140,7 +145,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   const zoneTop = useMediaSize(touchTarget.min) > touchTarget.min ? touchTarget.hero : touchTarget.min;
   const parts = useMemo(() => partsOf(target.ko), [target.ko]);
 
-  const slot = usePromptSlot({ source, hasClip: hasClip(target.audioRef) });
+  // [FU] FU-3: the slot asks about what plays (the target's recording, else the say clip of its spoken text).
+  const slot = usePromptSlot({ source, hasClip: hasClipFor(targetSpeech(target, source)) });
   const { play: slotPlay } = slot;
   const viewRef = useRef(slot.view);
   viewRef.current = slot.view;
@@ -160,8 +166,8 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   handlers.current = { onFirst, onSolved, onRight };
 
   const say = useCallback((): void => {
-    void pacing.track(slotPlay(() => playPrompt({ text: target.spokenKo ?? target.ko, ...(target.audioRef ? { audioRef: target.audioRef } : {}), kind: 'word', source })));
-  }, [slotPlay, target.spokenKo, target.ko, target.audioRef, source, pacing]);
+    void pacing.track(slotPlay(() => playPrompt(targetSpeech(target, source))));
+  }, [slotPlay, target, source, pacing]);
 
   const dispatchRef = useRef<(e: BuildEvent) => void>(() => undefined);
   const run = useCallback(

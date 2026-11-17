@@ -38,6 +38,7 @@ import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
+import type { ClozePickRound } from '@hangul-route/content-schema';
 import { koSpeech } from '../../logic/audio/ko-speech';
 import { startCloze, stepCloze, type ClozeEffect, type ClozeEvent, type ClozeFlowState } from '../../logic/cloze-pick/flow';
 import { clozeToListenPick, filledSentence, validClozeRounds } from '../../logic/cloze-pick/round';
@@ -46,7 +47,7 @@ import { pictureTextArrangement } from '../../logic/layout/game-layout';
 import { shuffleOptions } from '../../logic/listen-pick';
 import { headerView, optionView } from '../../logic/listen-pick-flow';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { hasClip, playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop, type PlaySpec } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { ClozeRealia } from './ClozeRealia';
@@ -85,6 +86,11 @@ interface Focusable {
   focus?: () => void;
 }
 
+/** What a round says once answered: the filled sentence (its say clip is bundled; the gapped one has no recording). */
+function clozeSpeech(round: ClozePickRound): PlaySpec {
+  return koSpeech(filledSentence(round), 'sentence', CLOZE_PICK_AUDIO_SOURCE);
+}
+
 export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   // Each round with its tiles as Listen & Pick options, shuffled per round: the option ids and states are the shared ones.
@@ -112,7 +118,12 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
   const dispatchRef = useRef<(event: ClozeEvent) => void>(() => undefined);
 
   const current = rounds[state.roundIdx];
-  const slot = usePromptSlot({ source: CLOZE_PICK_AUDIO_SOURCE, hasClip: hasClip(current?.round.sentence.audioRef), textOnScreen: true });
+  const slot = usePromptSlot({
+    source: CLOZE_PICK_AUDIO_SOURCE,
+    // [FU] FU-3: what plays is the filled sentence, whose say clip is bundled (the gapped sentence has no recording of its own).
+    hasClip: current !== undefined && hasClipFor(clozeSpeech(current.round)),
+    textOnScreen: true,
+  });
   const { play: slotPlay, reset: slotReset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
 
@@ -121,7 +132,7 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
       const entry = roundsRef.current[stateRef.current.roundIdx];
       switch (effect.type) {
         case 'say':
-          if (entry) void pacing.track(slotPlay(() => playPrompt(koSpeech(filledSentence(entry.round), 'sentence', CLOZE_PICK_AUDIO_SOURCE))));
+          if (entry) void pacing.track(slotPlay(() => playPrompt(clozeSpeech(entry.round))));
           return;
         case 'answer': {
           const round = roundsRef.current[effect.roundKey]?.round;

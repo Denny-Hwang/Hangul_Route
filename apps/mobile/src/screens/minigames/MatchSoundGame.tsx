@@ -32,7 +32,7 @@ import { jamoTileA11yLabel } from '../../logic/korean-labels';
 import { gameArrangement, tileGridWidth } from '../../logic/layout/game-layout';
 import { buildMatchSoundRounds, type MatchSoundRound } from '../../logic/round-builder';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { hasClip, playJamo, warmClips } from '../../platform/audio';
+import { hasClipFor, playJamo, warmClips } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { GameColumns } from './GameColumns';
@@ -71,7 +71,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A1): the letter's name (ㄴ is nieun), or the same name as
   // text (§3.8). A final, never asked by name, says its closed syllable (an).
   const voice = round ? loneLetterVoice(round.promptJamo) : undefined;
-  const slot = usePromptSlot({ source: 'match-sound', hasClip: hasClip(voice?.audioRef) });
+  const slot = usePromptSlot({ source: 'match-sound', hasClip: voice !== undefined && hasClipFor(voice) });
   const { view, play, reset } = slot;
   const viewRef = useRef(view);
   viewRef.current = view;

@@ -181,10 +181,10 @@ describe('no direct speak from screens', () => {
     expect(cards.source).toMatch(/hasClip: hasClipFor\(\{ text: item\.spokenKo \?\? item\.ko, audioRef: item\.audioRef \}\)/);
   });
 
-  it('Match Sound passes hasClip to its prompt slot', () => {
+  it('Match Sound passes hasClip (the letter voice it plays) to its prompt slot', () => {
     const file = files.find((f) => f.rel === 'minigames/MatchSoundGame.tsx');
-    expect(audioImports(file!.source)).toContain('hasClip');
-    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: 'match-sound',\s*hasClip: hasClip\(/);
+    expect(audioImports(file!.source)).toContain('hasClipFor');
+    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: 'match-sound',\s*hasClip: voice !== undefined && hasClipFor\(voice\)/);
   });
 
   /**
@@ -203,5 +203,31 @@ describe('no direct speak from screens', () => {
     expect(file!.source).toMatch(/warmClips\(clipRefsOf\(rounds\.map\(\(r\) => sentenceSpeech\(r\.sentence\)\)\)\)/);
     // What the slot asks about is what plays.
     expect(file!.source).toMatch(/playPrompt\(sentenceSpeech\(sentence\)\)/);
+  });
+});
+
+/**
+ * [FU] AMENDMENTS-FOLLOWUPS-2026-11 FU-3: every Korean sound plays the recording when one exists (F-AUDIO-004 AD4, clip
+ * then voice then text). `playPrompt` / `playJamo` already try the record's clip and then the say clip of the spoken
+ * text (AMENDMENTS-AUDIO-CLIPS AC-B7), so a screen keeps that order by (1) never speaking past them and (2) telling its
+ * prompt slot when what plays has a recording, else the slot shows "No Korean voice on this device.", skips its
+ * replays and, on a screen that decides from it (dictation, Syllable Build), switches the sound off (AU-13).
+ */
+describe('[FU] FU-3: every Korean sound asks for the recording first', () => {
+  const APP_ROOT = join(__dirname, '..', '..', '..');
+  /** Every source file of the learner app, the presenter and the browse app, outside the audio platform itself. */
+  const appFiles = [
+    ...sourceFiles(join(APP_ROOT, 'src')).filter((f) => !/[\\/]src[\\/](platform|test-support)[\\/]/.test(f)),
+    ...['App.tsx', 'PresenterApp.tsx', 'BrowseApp.tsx'].map((f) => join(APP_ROOT, f)),
+  ].map((f) => ({ rel: relative(APP_ROOT, f).split('\\').join('/'), source: readFileSync(f, 'utf8') }));
+
+  it('nothing outside platform/audio speaks through the device voice directly', () => {
+    const direct = /\bspeechSynthesis\s*\.\s*speak\b|new\s+SpeechSynthesisUtterance\b|from\s+['"]expo-speech['"]|\bSpeech\.speak\(|new\s+Audio\(/;
+    expect(appFiles.length).toBeGreaterThan(100);
+    expect(appFiles.filter((f) => direct.test(f.source)).map((f) => f.rel)).toEqual([]);
+  });
+
+  it('a screen asks hasClipFor with what plays, never hasClip of a bare record ref (which misses the say clip of the text)', () => {
+    expect(files.filter((f) => audioImports(f.source).includes('hasClip')).map((f) => f.rel)).toEqual([]);
   });
 });
