@@ -4,27 +4,31 @@ import { colors } from '../../tokens';
 import type { HeritageCardArtProps } from './types';
 
 /**
- * HeritageCardArt — geometric SVG illustrations for all 30 Stage 1
- * Heritage cards. Visual language locked by
- * design/brief/illustrations/heritage-card-art.md:
- *   - Geometric minhwa primitives (rounded shapes only)
- *   - ~3px stroke with hand-painted feel
- *   - Max 5 colors per card from theme tint + brand + cream
- *   - No red except dancheong orange accents
- *   - Smiling rule: any face smiles
- *
- * Real illustrator output will replace each card in
- * `design/illustrations/heritage-cards/{theme}/{card-id}__YYYY-MM-DD.png`
- * in a later sprint.
+ * HeritageCardArt — geometric SVG illustrations for all 30 Stage 1 Heritage cards, on a 200 x 200 grid in a light
+ * theme-tinted frame. Visual language: design/brief/illustrations/heritage-card-art.md, with the [PX] rules of
+ * docs/specs/AMENDMENTS-PICTURES-2026-11.md section 3 (row PX-2):
+ *   - R1 every subject is outlined in `text.primary`, 6 units (`INK`); inner detail 4 units (`DET`); nothing thinner
+ *   - R2 one subject fills 60-70 % of the frame, at most two supporting things
+ *   - R3 told by shape inside the Stage 1 set (the bowls, the moons, the bows each have their own silhouette)
+ *   - R4 real colours for real things: the `colors.vocab.*` tones are allowed; never `feedback.danger`
+ *   - Smiling rule: any face smiles. No picture prints its own word (R5).
  */
 
 export { supportedCardIds } from './card-ids';
+
+type ThemeKey = keyof typeof colors.theme;
 
 interface ArtProps {
   size: number;
   testID?: string;
   accessibilityLabel: string;
 }
+
+/** The subject's outline (R1): `text.primary`, 6 units on the 200 grid. */
+const INK = { stroke: colors.text.primary, strokeWidth: 6, strokeLinejoin: 'round', strokeLinecap: 'round' } as const;
+/** Inner detail lines (R1): 4 units. */
+const DET = { ...INK, strokeWidth: 4 } as const;
+const NONE = 'none';
 
 function Frame({ themeKey, children }: { themeKey: keyof typeof colors.theme; children: ReactNode }): ReactElement {
   return (
@@ -34,6 +38,20 @@ function Frame({ themeKey, children }: { themeKey: keyof typeof colors.theme; ch
     </>
   );
 }
+
+function Card({ theme, p, children }: { theme: ThemeKey; p: ArtProps; children: ReactNode }): ReactElement {
+  return (
+    <Svg width={p.size} height={p.size} viewBox="0 0 200 200" testID={p.testID} accessibilityLabel={p.accessibilityLabel}>
+      <Rect x={0} y={0} width={200} height={200} fill={colors.theme[theme]} opacity={0.08} rx={8} />
+      {children}
+    </Svg>
+  );
+}
+
+const shadow = (cy: number, rx: number): ReactElement => <Ellipse cx={100} cy={cy} rx={rx} ry={6} fill={colors.hoya.furDark} opacity={0.18} />;
+
+/** A four-point sparkle (stars, festive marks). */
+const sparkle = (x: number, y: number, r: number): string => `M${x} ${y - r}Q${x} ${y} ${x + r} ${y}Q${x} ${y} ${x} ${y + r}Q${x} ${y} ${x - r} ${y}Q${x} ${y} ${x} ${y - r}Z`;
 
 // ---------------------------------------------------------------------------
 // LETTERS & BOOKS
@@ -121,28 +139,22 @@ function BrushArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement 
   );
 }
 
-function InkArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Rectangular black ink stick on a stone slab.
+function InkArt(p: ArtProps): ReactElement {
+  // Meok and byeoru: a black ink stick standing upright on a rectangular inkstone seen at three-quarter view, the
+  // dark ink pool in its well.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="letters">
-        {/* Stone slab */}
-        <Path
-          d="M30 90 Q35 80 50 78 L150 78 Q165 80 170 90 L170 150 Q165 160 150 162 L50 162 Q35 160 30 150 Z"
-          fill={colors.surface.sunken}
-          stroke={colors.text.secondary}
-          strokeWidth={2.5}
-        />
-        {/* Cream grinding area inset */}
-        <Ellipse cx={100} cy={140} rx={50} ry={14} fill={colors.surface.canvas} stroke={colors.text.muted} strokeWidth={1.5} />
-        {/* Ink stick */}
-        <Rect x={70} y={62} width={60} height={28} fill={colors.text.primary} stroke={colors.hoya.furDark} strokeWidth={2} rx={2} />
-        {/* Tiny highlight on the ink stick */}
-        <Rect x={76} y={66} width={48} height={3} fill={colors.text.secondary} rx={1} />
-        {/* Ink residue on grinding area */}
-        <Ellipse cx={100} cy={142} rx={20} ry={4} fill={colors.text.primary} opacity={0.5} />
-      </Frame>
-    </Svg>
+    <Card theme="letters" p={p}>
+      {shadow(184, 80)}
+      <Polygon points="20,124 82,152 82,178 20,150" fill={colors.text.muted} {...INK} />
+      <Polygon points="82,152 182,112 182,138 82,178" fill={colors.text.secondary} {...INK} />
+      <Polygon points="20,124 120,86 182,112 82,152" fill={colors.vocab.gray} {...INK} />
+      <Ellipse cx={136} cy={110} rx={28} ry={11} fill={colors.vocab.black} {...DET} transform="rotate(-20 136 110)" />
+      <Ellipse cx={128} cy={108} rx={7} ry={2.5} fill={colors.surface.paper} opacity={0.7} transform="rotate(-20 128 108)" />
+      <Polygon points="60,30 76,24 76,120 60,126" fill={colors.text.secondary} {...INK} />
+      <Polygon points="44,24 60,30 60,126 44,120" fill={colors.vocab.black} {...INK} />
+      <Polygon points="44,24 60,18 76,24 60,30" fill={colors.text.muted} {...INK} />
+      <Rect x={48} y={52} width={8} height={36} fill={colors.hoya.fur} />
+    </Card>
   );
 }
 
@@ -177,40 +189,22 @@ function OrigamiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElemen
   );
 }
 
-function HangulDayArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Bold "한글" glyph with 6 amber sparkles + faint calendar page background.
+function HangulDayArt(p: ArtProps): ReactElement {
+  // Hangul Day: a tear-off calendar page whose big mark is three letters drawn as shapes (ㅎ, ㄱ, ㄹ), with sparkles.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="letters">
-        {/* Faint calendar page */}
-        <Rect x={28} y={28} width={144} height={144} fill={colors.surface.canvas} opacity={0.85} stroke={colors.border.subtle} strokeWidth={1} rx={4} />
-        {/* "10/9" calendar mark top-left */}
-        <Path d="M40 50 H70" stroke={colors.text.muted} strokeWidth={2} strokeLinecap="round" />
-        <Path d="M40 60 H60" stroke={colors.text.muted} strokeWidth={1.5} strokeLinecap="round" />
-        {/* Sparkles around — 6 sparkle markers */}
-        <G fill={colors.feedback.nudge} opacity={0.9}>
-          <Path d="M30 90 L34 100 L30 110 L26 100 Z" />
-          <Path d="M170 90 L174 100 L170 110 L166 100 Z" />
-          <Path d="M50 130 L54 138 L50 146 L46 138 Z" />
-          <Path d="M150 130 L154 138 L150 146 L146 138 Z" />
-          <Path d="M100 30 L104 38 L100 46 L96 38 Z" />
-          <Path d="M88 38 L100 36 L112 38 L100 40 Z" />
-        </G>
-        {/* The 한글 glyphs — bold paths suggesting the letters */}
-        <G fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2}>
-          {/* 한 - simplified to a rectangular block with a strike */}
-          <Rect x={56} y={80} width={36} height={36} rx={4} />
-          <Line x1={62} y1={92} x2={86} y2={92} stroke={colors.surface.canvas} strokeWidth={4} />
-          <Line x1={62} y1={104} x2={86} y2={104} stroke={colors.surface.canvas} strokeWidth={4} />
-          {/* 글 - a stacked block beside */}
-          <Rect x={108} y={80} width={36} height={36} rx={4} />
-          <Line x1={114} y1={92} x2={138} y2={92} stroke={colors.surface.canvas} strokeWidth={4} />
-          <Path d="M114 104 H138 V112 H114 Z" fill={colors.surface.canvas} />
-        </G>
-        {/* Underline / brush stroke */}
-        <Path d="M44 140 Q100 148 156 140" stroke={colors.brand.primary} strokeWidth={4} strokeLinecap="round" fill="none" />
-      </Frame>
-    </Svg>
+    <Card theme="letters" p={p}>
+      {shadow(184, 66)}
+      <Rect x={34} y={34} width={132} height={144} rx={8} fill={colors.surface.paper} {...INK} />
+      <Rect x={34} y={34} width={132} height={30} rx={8} fill={colors.vocab.red} {...INK} />
+      <Path d="M62 24V44M138 24V44" stroke={colors.text.primary} strokeWidth={8} strokeLinecap="round" />
+      <G stroke={colors.vocab.blue} strokeWidth={11} strokeLinecap="round" strokeLinejoin="round" fill={NONE}>
+        <Path d="M64 82H80M52 98H92" />
+        <Circle cx={72} cy={130} r={18} />
+        <Path d="M108 84H148V118" />
+        <Path d="M108 132H148V146H108V160H148" />
+      </G>
+      <Path d={sparkle(176, 76, 14) + sparkle(24, 140, 12)} fill={colors.vocab.yellow} {...DET} />
+    </Card>
   );
 }
 
@@ -218,41 +212,29 @@ function HangulDayArt({ size, testID, accessibilityLabel }: ArtProps): ReactElem
 // FOOD & DAILY LIFE
 // ---------------------------------------------------------------------------
 
-function KimchiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
+function KimchiArt(p: ArtProps): ReactElement {
+  // Pogi-kimchi: half a napa cabbage lying on a plate, stem end on the left; white ribs fan out under the red
+  // seasoning, a frilly green leaf edge, chili flakes. Wider than tall, on a flat plate (the rice is a tall bowl).
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="life">
-        <Path
-          d="M50 90 Q60 70 80 70 Q100 60 120 70 Q140 70 150 90 Q150 110 100 110 Q50 110 50 90 Z"
-          fill={colors.brand.primary}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2.5}
-        />
-        <Path
-          d="M60 95 Q75 80 100 80 Q125 80 140 95 Q140 110 100 112 Q60 110 60 95 Z"
-          fill={colors.feedback.nudge}
-          opacity={0.95}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-        />
-        <Path
-          d="M75 100 Q85 92 100 92 Q115 92 125 100 Q120 108 100 110 Q80 108 75 100 Z"
-          fill={colors.brand.primaryLight}
-          opacity={0.9}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={1.5}
-        />
-        <Path
-          d="M40 110 Q40 150 100 158 Q160 150 160 110 Z"
-          fill={colors.surface.paper}
-          stroke={colors.text.secondary}
-          strokeWidth={2.5}
-          strokeLinejoin="round"
-        />
-        <Path d="M40 110 Q100 120 160 110" fill="none" stroke={colors.text.secondary} strokeWidth={2} />
-        <Ellipse cx={100} cy={165} rx={50} ry={4} fill={colors.hoya.furDark} opacity={0.18} />
-      </Frame>
-    </Svg>
+    <Card theme="life" p={p}>
+      <Ellipse cx={100} cy={146} rx={86} ry={28} fill={colors.vocab.white} {...INK} />
+      <Path d="M104 62Q120 40 140 50Q158 38 170 54Q188 56 184 76Q196 92 182 104Q188 122 168 126L112 118Z" fill={colors.vocab.green} {...INK} />
+      <Path d="M26 142Q28 116 50 100Q78 74 106 66Q134 56 156 68Q176 82 170 106Q164 126 140 134Q96 148 26 142Z" fill={colors.vocab.red} {...INK} />
+      <G fill={colors.vocab.white} {...DET}>
+        <Path d="M34 136Q66 96 112 74Q80 106 34 136Z" />
+        <Path d="M34 138Q86 100 148 84Q94 118 34 138Z" />
+        <Path d="M34 140Q96 120 160 110Q100 136 34 140Z" />
+      </G>
+      <Ellipse cx={30} cy={138} rx={14} ry={12} fill={colors.vocab.white} {...INK} />
+      <G fill={colors.brand.primaryDark}>
+        <Circle cx={118} cy={92} r={3.5} />
+        <Circle cx={140} cy={100} r={3.5} />
+        <Circle cx={96} cy={122} r={3.5} />
+        <Circle cx={150} cy={120} r={3.5} />
+        <Circle cx={74} cy={104} r={3.5} />
+      </G>
+      <Path d="M128 78L136 74M110 132L118 128M62 126L70 122" stroke={colors.vocab.green} strokeWidth={5} strokeLinecap="round" />
+    </Card>
   );
 }
 
@@ -450,6 +432,26 @@ function FamilyTableArt({ size, testID, accessibilityLabel }: ArtProps): ReactEl
 // HOLIDAYS & TRADITIONS
 // ---------------------------------------------------------------------------
 
+/**
+ * A child in hanbok in the deep New Year bow, side view: legs folded under, back rounded, head lowered to the floor,
+ * hands flat on the floor in front. `k` is the scale the caller draws it at, so the outline stays 6 / 4 units (R1).
+ */
+function Bower({ k }: { k: number }): ReactElement {
+  const ink = { ...INK, strokeWidth: 6 / k };
+  return (
+    <G>
+      <Path d="M100 168Q96 96 140 90Q182 94 180 168Z" fill={colors.vocab.red} {...ink} />
+      <Path d="M152 98Q118 96 94 112Q70 130 48 162L66 170Q90 152 110 142Q134 134 156 132Z" fill={colors.vocab.yellow} {...ink} />
+      <Path d="M108 114Q118 122 114 140" stroke={colors.vocab.blue} strokeWidth={8 / k} strokeLinecap="round" fill={NONE} />
+      <Ellipse cx={42} cy={166} rx={16} ry={7} fill={colors.surface.paper} {...ink} />
+      <Circle cx={70} cy={130} r={24} fill={colors.surface.paper} {...ink} />
+      <Path d="M53 113A24 24 0 0 1 87 147Z" fill={colors.text.primary} {...ink} />
+      <Circle cx={56} cy={142} r={5} fill={colors.hoya.cheek} />
+      <Path d="M58 128Q62 132 66 129" {...ink} strokeWidth={4 / k} fill={NONE} />
+    </G>
+  );
+}
+
 function SeollalArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   return (
     <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
@@ -609,45 +611,15 @@ function SongpyeonArt({ size, testID, accessibilityLabel }: ArtProps): ReactElem
   );
 }
 
-function SebaeArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Pair of folded hands resting on a tiny silk bag.
+function SebaeArt(p: ArtProps): ReactElement {
+  // Sebae: one child in hanbok in the deep kneeling New Year bow, side view, hands on the floor, on a mat.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="rites">
-        {/* Folded hands (cream rounded shapes) */}
-        <G fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2}>
-          {/* Lower (right) hand */}
-          <Path d="M50 80 Q100 60 150 80 Q160 100 140 120 L60 120 Q40 100 50 80 Z" strokeLinejoin="round" />
-          {/* Upper (left) hand — slightly elevated */}
-          <Path
-            d="M60 70 Q100 50 140 70 Q150 88 130 108 L70 108 Q50 88 60 70 Z"
-            fill={colors.surface.paper}
-            strokeLinejoin="round"
-          />
-          {/* Thumb on upper hand */}
-          <Ellipse cx={140} cy={80} rx={6} ry={9} />
-        </G>
-        {/* Finger creases */}
-        <G stroke={colors.text.secondary} strokeWidth={1} opacity={0.5}>
-          <Path d="M85 75 V108" fill="none" />
-          <Path d="M100 70 V108" fill="none" />
-          <Path d="M115 75 V108" fill="none" />
-        </G>
-        {/* Silk bag (lucky money pouch) below */}
-        <Path
-          d="M70 120 Q70 150 100 158 Q130 150 130 120 Z"
-          fill={colors.brand.primary}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        {/* Bag drawstring */}
-        <Path d="M70 122 Q100 116 130 122" stroke={colors.brand.primaryDark} strokeWidth={2} fill="none" strokeLinecap="round" />
-        {/* Bag tassel */}
-        <Line x1={100} y1={158} x2={100} y2={170} stroke={colors.brand.primaryDark} strokeWidth={2} strokeLinecap="round" />
-        <Circle cx={100} cy={172} r={3} fill={colors.feedback.nudge} />
-      </Frame>
-    </Svg>
+    <Card theme="rites" p={p}>
+      <Rect x={14} y={168} width={176} height={14} rx={7} fill={colors.feedback.nudge} {...DET} />
+      <G transform="translate(-8 -6) scale(1.06)">
+        <Bower k={1.06} />
+      </G>
+    </Card>
   );
 }
 
@@ -846,48 +818,18 @@ function MountainArt({ size, testID, accessibilityLabel }: ArtProps): ReactEleme
   );
 }
 
-function SeaArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // 3 wavy lines bottom 40% + cream sailboat with orange sail.
+function SeaArt(p: ArtProps): ReactElement {
+  // The sea: three rows of big waves with curling crests and white foam fill the tile, the sun low over the water
+  // and one gull; no boat.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="nature">
-        {/* Sky (light) — already from frame */}
-        {/* Sun */}
-        <Circle cx={160} cy={45} r={16} fill={colors.feedback.nudge} opacity={0.7} />
-        {/* Boat hull */}
-        <Path
-          d="M70 130 L130 130 L120 145 L80 145 Z"
-          fill={colors.surface.canvas}
-          stroke={colors.text.secondary}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        {/* Mast */}
-        <Line x1={100} y1={70} x2={100} y2={130} stroke={colors.text.secondary} strokeWidth={3} strokeLinecap="round" />
-        {/* Sail — orange triangle */}
-        <Path
-          d="M100 70 L130 125 L100 125 Z"
-          fill={colors.brand.primary}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        {/* Mini sail (jib) */}
-        <Path
-          d="M100 80 L78 122 L100 122 Z"
-          fill={colors.brand.primaryLight}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={1.5}
-          strokeLinejoin="round"
-        />
-        {/* Three wavy lines (sea) */}
-        <G stroke={colors.brand.secondary} strokeWidth={3} fill="none" strokeLinecap="round">
-          <Path d="M10 150 Q40 145 70 150 T130 150 T190 150" />
-          <Path d="M10 165 Q40 160 70 165 T130 165 T190 165" />
-          <Path d="M10 180 Q40 175 70 180 T130 180 T190 180" />
-        </G>
-      </Frame>
-    </Svg>
+    <Card theme="nature" p={p}>
+      <Circle cx={140} cy={54} r={22} fill={colors.vocab.yellow} {...INK} />
+      <Path d="M34 46Q44 36 54 46Q64 36 74 46" {...DET} fill={NONE} />
+      <Path d="M12 92Q30 64 54 84Q66 92 76 80Q96 58 118 80Q130 92 140 80Q160 58 188 88V122H12Z" fill={colors.vocab.skyBlue} {...INK} />
+      <Path d="M12 122Q24 96 52 106Q68 112 74 100Q92 84 114 104Q126 116 134 104Q152 86 188 112V152H12Z" fill={colors.vocab.blue} {...INK} />
+      <Path d="M12 152Q30 126 54 142Q66 150 76 138Q96 120 118 142Q130 150 140 138Q160 120 188 146V172Q188 186 174 186H26Q12 186 12 172Z" fill={colors.vocab.skyBlue} {...INK} />
+      <Path d="M30 104Q40 98 50 104M92 102Q104 96 114 104M150 102Q160 98 170 106M34 168Q48 162 62 168M100 166Q114 160 128 168" stroke={colors.surface.paper} strokeWidth={6} strokeLinecap="round" fill={NONE} />
+    </Card>
   );
 }
 
@@ -928,29 +870,44 @@ function MoonArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
 // PLAY & CRAFTS
 // ---------------------------------------------------------------------------
 
-function YutnoriArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
+/** One yut stick: flat face up (light, `mark` adds the back-do X), or round back up (brown, with its ridge). */
+function Stick({ x, y, a, flat, mark }: { x: number; y: number; a: number; flat: boolean; mark?: boolean }): ReactElement {
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="crafts">
-        <Ellipse cx={100} cy={170} rx={70} ry={6} fill={colors.hoya.furDark} opacity={0.15} />
-        <G transform="rotate(-15 60 80)">
-          <Rect x={28} y={73} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={6} />
-          <Path d="M40 77 Q60 75 80 77" stroke={colors.text.muted} strokeWidth={1.5} fill="none" />
-        </G>
-        <G transform="rotate(20 140 80)">
-          <Rect x={108} y={73} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={3} />
-          <Circle cx={140} cy={80} r={4} fill={colors.brand.primary} />
-        </G>
-        <G transform="rotate(10 70 130)">
-          <Rect x={38} y={123} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={6} />
-          <Path d="M50 127 Q70 125 90 127" stroke={colors.text.muted} strokeWidth={1.5} fill="none" />
-        </G>
-        <G transform="rotate(-25 130 135)">
-          <Rect x={98} y={128} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={6} />
-          <Path d="M110 132 Q130 130 150 132" stroke={colors.text.muted} strokeWidth={1.5} fill="none" />
-        </G>
-      </Frame>
-    </Svg>
+    <G transform={`translate(${x} ${y}) rotate(${a})`}>
+      <Rect x={-40} y={-11} width={80} height={22} rx={flat ? 6 : 11} fill={flat ? colors.feedback.nudgeLight : colors.vocab.brown} {...INK} />
+      {flat ? null : <Path d="M-30 -3H30" {...DET} stroke={colors.feedback.nudge} />}
+      {mark ? <Path d="M-6 -5L6 5M6 -5L-6 5" {...DET} /> : null}
+    </G>
+  );
+}
+
+function YutnoriArt(p: ArtProps): ReactElement {
+  // The yut game: the round board with its ring of stations and the cross inside, two tokens on it, and the four
+  // half-round sticks thrown beside it, three flat faces up (one with the back-do mark) and one round back up.
+  const ring = Array.from({ length: 20 }, (_, i) => (i * Math.PI) / 10);
+  return (
+    <Card theme="crafts" p={p}>
+      <Circle cx={72} cy={72} r={60} fill={colors.feedback.nudgeLight} {...INK} />
+      <Path d="M72 28V116M28 72H116" {...DET} stroke={colors.border.strong} />
+      <G fill={colors.text.primary}>
+        {ring.map((t) => (
+          <Circle key={t} cx={72 + 44 * Math.cos(t)} cy={72 + 44 * Math.sin(t)} r={t % (Math.PI / 2) < 0.01 ? 7 : 4} />
+        ))}
+        {[-30, -15, 15, 30].map((d) => (
+          <G key={d}>
+            <Circle cx={72 + d} cy={72} r={4} />
+            <Circle cx={72} cy={72 + d} r={4} />
+          </G>
+        ))}
+        <Circle cx={72} cy={72} r={7} />
+      </G>
+      <Circle cx={57} cy={42} r={9} fill={colors.vocab.red} {...DET} />
+      <Circle cx={102} cy={87} r={9} fill={colors.vocab.blue} {...DET} />
+      <Stick x={120} y={142} a={-72} flat />
+      <Stick x={143} y={138} a={-72} flat mark />
+      <Stick x={166} y={134} a={-72} flat />
+      <Stick x={96} y={180} a={-6} flat={false} />
+    </Card>
   );
 }
 
@@ -1114,51 +1071,28 @@ function PotteryArt({ size, testID, accessibilityLabel }: ArtProps): ReactElemen
   );
 }
 
-function GayageumArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Horizontal long zither with 12 strings + 2 movable bridges + subtle glow.
+function GayageumArt(p: ArtProps): ReactElement {
+  // The gayageum at three-quarter view: the long wooden body on a slant with its side showing, five bold strings,
+  // each over its own movable bridge (anjok) in a slanting row, the fixed bridge at the head, cords coiled at the tail.
+  const at = (t: number, w: number): [number, number] => [24 + 150 * t + 0.5 * w, 146 - 86 * t + 0.87 * w];
+  const xy = (t: number, w: number): string => at(t, w).join(' ');
+  const strings = [-24, -12, 0, 12, 24];
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="crafts">
-        {/* Body shadow */}
-        <Ellipse cx={100} cy={150} rx={75} ry={5} fill={colors.hoya.furDark} opacity={0.18} />
-        {/* Subtle warm glow around the strings */}
-        <Ellipse cx={100} cy={100} rx={80} ry={14} fill={colors.feedback.nudge} opacity={0.15} />
-        {/* Body (wood) */}
-        <Path
-          d="M20 80 Q15 100 25 120 L175 120 Q185 100 180 80 Z"
-          fill={colors.brand.secondary}
-          opacity={0.4}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        <Path
-          d="M20 80 Q15 100 25 120"
-          fill="none"
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-        />
-        <Path
-          d="M180 80 Q185 100 175 120"
-          fill="none"
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-        />
-        {/* 12 strings */}
-        <G stroke={colors.surface.canvas} strokeWidth={1.5} strokeLinecap="round">
-          {Array.from({ length: 12 }).map((_, i) => {
-            const y = 84 + i * 3;
-            return <Line key={i} x1={28} y1={y} x2={172} y2={y} />;
-          })}
-        </G>
-        {/* 2 movable bridges (small angled wood) */}
-        <Path d="M60 80 L66 84 L60 88 L54 84 Z" fill={colors.text.primary} stroke={colors.brand.primaryDark} strokeWidth={1.5} strokeLinejoin="round" />
-        <Path d="M140 116 L146 120 L140 124 L134 120 Z" fill={colors.text.primary} stroke={colors.brand.primaryDark} strokeWidth={1.5} strokeLinejoin="round" />
-        {/* End-caps */}
-        <Rect x={20} y={76} width={8} height={48} fill={colors.text.secondary} rx={2} />
-        <Rect x={172} y={76} width={8} height={48} fill={colors.text.secondary} rx={2} />
-      </Frame>
-    </Svg>
+    <Card theme="crafts" p={p}>
+      {shadow(186, 80)}
+      <Path d={`M${xy(0, 36)}L${xy(1, 32)}v14L${at(0, 36)[0]} ${at(0, 36)[1] + 14}Z`} fill={colors.vocab.brown} {...INK} />
+      <Path d={`M${xy(0, -36)}L${xy(1, -32)}L${xy(1, 32)}L${xy(0, 36)}Z`} fill={colors.stage.stage2} {...INK} />
+      <Path d={`M${xy(0.1, -32)}L${xy(0.1, 32)}`} stroke={colors.vocab.brown} strokeWidth={8} strokeLinecap="round" />
+      <Path d={strings.map((w) => `M${xy(0.1, w)}L${xy(0.88, w)}`).join('')} {...DET} strokeWidth={5} />
+      {strings.map((w, i) => {
+        const [x, y] = at(0.3 + 0.12 * i, w);
+        return <Path key={w} d={`M${x - 9} ${y + 8}L${x} ${y - 12}L${x + 9} ${y + 8}Z`} fill={colors.vocab.white} {...DET} />;
+      })}
+      {strings.map((w) => {
+        const [x, y] = at(0.93, w);
+        return <Circle key={w} cx={x} cy={y} r={5} fill={colors.vocab.white} {...DET} />;
+      })}
+    </Card>
   );
 }
 
