@@ -34,6 +34,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { PromptPanel } from '../../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../../components/use-prompt-slot';
+import { useSoundPacing } from '../../../components/use-sound-pacing';
 import { useMessages } from '../../../i18n/use-messages';
 import { koSpeech } from '../../../logic/audio/ko-speech';
 import { afterReply } from '../../../logic/audio/reply-advance';
@@ -146,13 +147,16 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
     };
   }, []);
 
+  const pacing = useSoundPacing();
+  /** True only while the chat's opening effects run (QS-3). */
+  const opening = useRef(false);
   const sayLine = useCallback(
     (nodeId: string): void => {
       const node = turnOf(scene, { node: nodeId });
       if (node === undefined || replying.current) return;
-      void play(() => playPrompt(koSpeech(node.line, 'sentence', SOURCE)));
+      void pacing.track(play(() => playPrompt(koSpeech(node.line, 'sentence', SOURCE))));
     },
-    [scene, play],
+    [scene, play, pacing],
   );
 
   const runRef = useRef<(event: RpEvent) => void>(() => undefined);
@@ -181,7 +185,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
             const reply = node?.replies.find((r) => r.id === effect.reply);
             if (!reply) break;
             replying.current = true;
-            const said = play(() => playPrompt(koSpeech(reply.text, 'sentence', SOURCE)));
+            const said = pacing.track(play(() => playPrompt(koSpeech(reply.text, 'sentence', SOURCE))));
             // The reply is said in full (at least 900 ms, at most 6 s) before the partner answers.
             void afterReply(said).then(() => {
               replying.current = false;
@@ -192,7 +196,10 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
           case 'sayLine':
             // A new turn: the panel starts from what is true now, except that "no Korean voice" stays once shown.
             if (slot.view.reason !== 'no_voice') reset();
-            if (!useAudioStore.getState().muted) sayLine(effect.node);
+            if (useAudioStore.getState().muted) break;
+            // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the chat's first line waits for the screen; Hear it first drops it.
+            if (opening.current) pacing.opening(() => sayLine(effect.node));
+            else sayLine(effect.node);
             break;
           case 'end':
             setTimeout(() => focusNode(endRef.current as Focusable | null), 0);
@@ -200,7 +207,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
         }
       }
     },
-    [host, scene, play, reset, sayLine, slot.view.reason],
+    [host, scene, play, reset, sayLine, slot.view.reason, pacing],
   );
 
   const run = useCallback(
@@ -217,7 +224,9 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
 
   // The chat opens with the start line, said once (with sound switched off it waits for a tap on Hear it).
   useEffect(() => {
+    opening.current = true;
     runEffects(first.effects, first.state);
+    opening.current = false;
     // Once per chat.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [first]);
@@ -305,7 +314,7 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
 
   const onHear = (b: BubbleView): void => {
     if (replying.current) return;
-    void play(() => playPrompt(koSpeech(b.speech, 'sentence', SOURCE)));
+    void pacing.track(play(() => playPrompt(koSpeech(b.speech, 'sentence', SOURCE))));
   };
 
   return (

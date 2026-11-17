@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { byTestId, hostNodes, press, screenTexts } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
 import { RolePlayGame } from '../role-play/RolePlayGame';
+import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import { RolePlayStep } from '../role-play/role-play-entry';
 
 /**
@@ -42,7 +43,8 @@ function host(): Host {
 const scope = { rolePlay: { scene: LIBRARY_SCENE } };
 let renderers: ReactTestRenderer[] = [];
 
-async function open(h: Host = host(), size = { width: 320, height: 568 }): Promise<{ r: ReactTestRenderer; h: Host }> {
+/** Opens the chat and, unless `settled` is false, lets the first line's wait for the screen pass (QS-3). */
+async function open(h: Host = host(), size = { width: 320, height: 568 }, settled = true): Promise<{ r: ReactTestRenderer; h: Host }> {
   let r!: ReactTestRenderer;
   await act(async () => {
     r = TestRenderer.create(
@@ -53,6 +55,11 @@ async function open(h: Host = host(), size = { width: 320, height: 568 }): Promi
     );
   });
   renderers.push(r);
+  if (settled) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SCREEN_SETTLE_MS);
+    });
+  }
   return { r, h };
 }
 
@@ -175,5 +182,43 @@ describe('Role Play (row CM-35)', () => {
       });
       expect(byTestId(r.root, 'role-play')).toHaveLength(1);
     });
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the chat's first line waits for the screen; later lines and taps do not. */
+describe('[QS] the first line waits 350 ms for the screen (QS-3)', () => {
+  const tick = async (ms: number): Promise<void> => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  };
+
+  it('nothing is said while the chat arrives; the line is said once the wait is over', async () => {
+    await open(host(), undefined, false);
+    await tick(SCREEN_SETTLE_MS - 1);
+    expect(audio.said).toEqual([]);
+    await tick(1);
+    expect(audio.said).toEqual(['안녕하세요!']);
+  });
+
+  it('a reply tapped during the wait is said at once and the first line does not cut in', async () => {
+    const { r } = await open(host(), undefined, false);
+    await tick(100);
+    await press(reply(r, 'hello'));
+    expect(audio.said).toEqual(['안녕하세요!']); // the reply (the same words as the greeting), once
+    await tick(SCREEN_SETTLE_MS);
+    expect(audio.said).toEqual(['안녕하세요!']);
+    // The partner's next line is said as it comes, with no wait of its own.
+    await tick(1000);
+    expect(audio.said).toEqual(['안녕하세요!', '무슨 책을 찾아요?']);
+  });
+
+  it('a chat left during the wait says nothing', async () => {
+    const { r } = await open(host(), undefined, false);
+    await tick(100);
+    await act(async () => r.unmount());
+    renderers = [];
+    await tick(2_000);
+    expect(audio.said).toEqual([]);
   });
 });

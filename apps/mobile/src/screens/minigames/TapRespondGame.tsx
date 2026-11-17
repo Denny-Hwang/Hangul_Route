@@ -20,6 +20,7 @@ import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { replyOptionLabel } from '../../logic/korean-labels';
 import { koSpeech } from '../../logic/audio/ko-speech';
@@ -65,18 +66,22 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
     };
   }, []);
 
+  const pacing = useSoundPacing();
   const hearLine = useCallback((): void => {
     if (!turn || replying.current) return;
     const line = { ko: turn.npcKo, spokenKo: turn.npcSpokenKo, audioRef: turn.npcAudioRef };
-    void play(() => playPrompt(koSpeech(line, 'sentence', 'tap-respond')));
-  }, [turn, play]);
+    void pacing.track(play(() => playPrompt(koSpeech(line, 'sentence', 'tap-respond'))));
+  }, [turn, play, pacing]);
 
   // Each turn opens with the NPC line, said once. With sound switched off it waits for a tap, as on the
   // other A-5b screens, so a muted learner is not told "Sound is off" again on every turn.
   useEffect(() => {
     reset();
-    if (!useAudioStore.getState().muted) hearLine();
-  }, [hearLine, reset]);
+    if (useAudioStore.getState().muted) return;
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the first line waits for the screen; a tap on Hear it first drops it.
+    if (turnIdx === 0) pacing.opening(hearLine);
+    else hearLine();
+  }, [hearLine, reset, turnIdx, pacing]);
 
   if (!turn) {
     return (
@@ -95,7 +100,7 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
       answerRound(turnIdx, true, { texts: [turn.npcKo], rung: 'read' });
       setFeedback('correct');
       replying.current = true;
-      const reply = play(() => playPrompt(koSpeech(option, 'sentence', 'tap-respond')));
+      const reply = pacing.track(play(() => playPrompt(koSpeech(option, 'sentence', 'tap-respond'))));
       // The reply is said in full before the next line starts (a newer prompt would cut it off).
       void afterReply(reply).then(() => {
         replying.current = false;

@@ -2,7 +2,10 @@ import { TAP_LOCK_MS, TapLockProvider, motion } from '@hangul-route/design-syste
 import { getMessages } from '@hangul-route/i18n';
 import { act, type ReactTestInstance } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import type { PickRound, QuestReviewPlan } from '../../../logic/reviews/quest-review-session';
+import { playPrompt } from '../../../platform/audio';
+import { useAudioStore } from '../../../store/audio-store';
 import { useProgressStore } from '../../../store/progress-store';
 import { byTestId, render } from '../../../test-support/render';
 import { QuestReviewSession } from '../quest-review-chunk';
@@ -93,5 +96,46 @@ describe('Daily Review pick round on a board (AMENDMENTS-TOUCH KT-3, KT-D5)', ()
     await tick(100);
     await click(r.root, 'lex:san');
     expect(label(r.root, 'lex:san')).toBe(A11Y.wrong('san'));
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the first heard round's sound waits for the screen; later rounds do not. */
+describe('[QS] the first heard round waits 350 ms for the screen (QS-3)', () => {
+  const heard = (r: PickRound, ko: string): PickRound => ({ ...r, key: `${r.key}:hear`, mode: 'hear', instruction: 'hearPick', ko });
+  const heardPlan: QuestReviewPlan = { ...plan, rounds: [heard(FIRST, '물'), heard(SECOND, '강')] };
+  const said = (): string[] => vi.mocked(playPrompt).mock.calls.map(([spec]) => spec.text);
+  const open = () =>
+    render(
+      <TapLockProvider>
+        <QuestReviewSession plan={heardPlan} profileId="profile:mina" onDone={() => undefined} />
+      </TapLockProvider>,
+    );
+
+  beforeEach(() => {
+    vi.mocked(playPrompt).mockClear();
+    useAudioStore.setState({ muted: false, unlocked: true });
+  });
+
+  it('round 1 says its sound once the wait is over; round 2 says its sound as it opens', async () => {
+    const r = await open();
+    await tick(SCREEN_SETTLE_MS - 1);
+    expect(said()).toEqual([]);
+    await tick(1);
+    expect(said()).toEqual(['물']);
+    await click(r.root, 'lex:mul');
+    await tick(motion.duration.slow);
+    expect(said()).toEqual(['물', '강']);
+  });
+
+  it('a tap on the speaker during the wait plays at once, and the sound is not said a second time', async () => {
+    const r = await open();
+    await tick(100);
+    const speaker = byTestId(r.root, 'quest-review-speaker').find((n) => typeof n.props.onClick === 'function')!;
+    await act(async () => {
+      (speaker.props.onClick as (e: unknown) => void)({ altKey: false, currentTarget: { getAttribute: () => null, tagName: 'div' }, nativeEvent: {}, preventDefault: () => undefined, stopPropagation: () => undefined });
+    });
+    expect(said()).toEqual(['물']);
+    await tick(2_000);
+    expect(said()).toEqual(['물']);
   });
 });

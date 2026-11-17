@@ -6,6 +6,7 @@ import { RomanizationModeOverride } from '../../../i18n/use-romanization-mode';
 import { scopeFor, type MinigameScope } from '../../../logic/minigame-config';
 import { validBoards } from '../../../logic/pic-word-flow';
 import { REALIA_FIXTURES } from '../../../navigation/realia-read-e2e-fixture';
+import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import { useAudioStore } from '../../../store/audio-store';
 import { KO_VOICE, createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
 import { buttonsNamed, byTestId, press, render, textOf, unmount } from '../../../test-support/render';
@@ -302,7 +303,10 @@ describe('Trace Stroke says the letter (AMENDMENTS-AUDIO-CLIPS M11)', () => {
     const r = await render(<TraceStrokeGame scope={{ kind: 'trace-stroke', jamoIds: ['jamo:mieum'], rounds: 1 }} onFinish={() => undefined} />);
     mounted.push(r);
     await layOut(r);
-    await settle();
+    // [QS-3] The first letter's own sound waits for the screen.
+    await settle(100);
+    expect(rig.current.synth.spoken.map((u) => u.text)).toEqual([]);
+    await settle(SCREEN_SETTLE_MS);
     expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['미음']);
     expect(byTestId(r.root, 'trace-stroke-final-line')).toHaveLength(0);
   });
@@ -312,13 +316,61 @@ describe('Trace Stroke says the letter (AMENDMENTS-AUDIO-CLIPS M11)', () => {
     const r = await render(<TraceStrokeGame scope={{ kind: 'trace-stroke', jamoIds: ['jamo:mieum-batchim'], rounds: 1 }} onFinish={() => undefined} />);
     mounted.push(r);
     await layOut(r);
-    await settle();
+    await settle(SCREEN_SETTLE_MS + 40);
     expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['암']);
     expect(textOf(byTestId(r.root, 'trace-stroke-final-line')[0]!)).toBe('ㅁ at the bottom: 암 · am');
     const [showMe] = buttonsNamed(r.root, getMessages('en').learner.minigame.trace.showMe.cta);
     await press(showMe!);
     await settle();
     expect(rig.current.synth.spoken.map((u) => u.text)).toEqual(['암', '암']);
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: a trace game's first sound waits for the screen; a tap first drops it. */
+describe('[QS] the trace games\' first sound waits 350 ms for the screen (QS-3)', () => {
+  it('Trace Stroke: Show me during the wait says the letter at once, and it is not said a second time', async () => {
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    const r = await render(<TraceStrokeGame scope={{ kind: 'trace-stroke', jamoIds: ['jamo:mieum'], rounds: 1 }} onFinish={() => undefined} />);
+    mounted.push(r);
+    await layOut(r);
+    const [showMe] = buttonsNamed(r.root, getMessages('en').learner.minigame.trace.showMe.cta);
+    await press(showMe!);
+    await settle();
+    expect(said()).toEqual(['미음']);
+    await settle(SCREEN_SETTLE_MS + 40);
+    expect(said()).toEqual(['미음']);
+  });
+
+  it('Trace a Word: the first block is said once the wait is over; a game left during it says nothing', async () => {
+    const scope: MinigameScope = { kind: 'trace-word', rounds: 1, traceWord: { rounds: [{ id: 'hoya', word: { ko: '호야', romanization: 'hoya', en: 'Hoya' } }] } };
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    const r = await render(<TraceWordGame scope={scope} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    await settle(100);
+    expect(said()).toEqual([]);
+    await settle(SCREEN_SETTLE_MS);
+    expect(said()).toEqual(['호']);
+
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    const gone = await render(<TraceWordGame scope={scope} host={host()} />);
+    await layOut(gone);
+    await settle(100);
+    await unmount(gone);
+    await settle(SCREEN_SETTLE_MS + 40);
+    expect(said()).toEqual([]);
+  });
+
+  it('Trace a Word: a block speaker tapped during the wait plays at once, and the block is not said again', async () => {
+    const scope: MinigameScope = { kind: 'trace-word', rounds: 1, traceWord: { rounds: [{ id: 'hoya', word: { ko: '호야', romanization: 'hoya', en: 'Hoya' } }] } };
+    rig.current = createAudioRig({ voices: [KO_VOICE] });
+    const r = await render(<TraceWordGame scope={scope} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    const speaker = byTestId(r.root, 'trace-word-strip')[0]!.findAll((n) => n.props.role === 'button' && typeof n.props.onClick === 'function')[0]!;
+    await press(speaker);
+    await settle(SCREEN_SETTLE_MS + 60);
+    expect(said()).toHaveLength(1);
   });
 });
 

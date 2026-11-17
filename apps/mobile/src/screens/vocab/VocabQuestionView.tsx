@@ -23,6 +23,7 @@ import type { ReactElement } from 'react';
 import { AccessibilityInfo, Platform, Text, View, type LayoutChangeEvent } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { localizedGloss, vocabItem, vocabTopic } from '../../content/vocab';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import type { VocabQuestion } from '../../logic/vocab/question-builder';
@@ -175,17 +176,21 @@ export function VocabQuestionView({
   }, []);
 
   const { play: slotPlay, reset: slotReset } = slot;
+  const pacing = useSoundPacing();
+  /** The question whose word was last started, by the view or by a tap (QS-3: the opening sound is not a second one). */
+  const heardKey = useRef<string | null>(null);
   const playPromptWord = useCallback(
     (forKey: string): void => {
       const { question: q, mode: currentMode } = latest.current;
       if (q.prompt.ko === undefined) return;
       const spec = { text: q.prompt.spokenKo ?? q.prompt.ko, audioRef: q.prompt.audioRef, kind: 'word' as const, source: QUESTION_AUDIO_SOURCE[currentMode] };
-      void slotPlay(() => track(() => playPrompt(spec))).then((result) => {
+      heardKey.current = forKey;
+      void slotPlay(() => track(() => pacing.track(playPrompt(spec)))).then((result) => {
         // A sound question whose voice fails shows its word as text (F-AUDIO-004 §3.8); it scores normally.
         if (q.prompt.kind === 'audio' && result !== 'played') dispatchRef.current({ type: 'audio-failed' }, forKey);
       });
     },
-    [slotPlay, track],
+    [slotPlay, track, pacing],
   );
 
   const runEffect = useCallback(
@@ -210,7 +215,7 @@ export function VocabQuestionView({
           const words = speechFor(current.question, vocabItem(current.question.itemId));
           if (words) {
             const spec = { text: words.text, audioRef: words.audioRef, kind: 'word' as const, source: QUESTION_AUDIO_SOURCE[current.mode] };
-            void track(() => playPrompt(spec));
+            void track(() => pacing.track(playPrompt(spec)));
           }
           return;
         }
@@ -225,7 +230,7 @@ export function VocabQuestionView({
         }
       }
     },
-    [track],
+    [track, pacing],
   );
 
   const dispatch = useCallback(
@@ -269,9 +274,16 @@ export function VocabQuestionView({
   useEffect(() => {
     if (autoplayed.current === key || !canPlay || promptKind === 'image') return;
     if (!unlocked || screenReader !== false || flowRef.current.state.status !== 'asking') return;
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the first question's word waits for the screen; a tap on the speaker
+    // first plays at once and the word is not said a second time. Later questions say theirs as they open.
+    const first = autoplayed.current === null;
     autoplayed.current = key;
-    playPromptWord(key);
-  }, [key, canPlay, promptKind, unlocked, screenReader, playPromptWord]);
+    if (!first) return playPromptWord(key);
+    if (heardKey.current === key) return;
+    pacing.opening(() => {
+      if (flowRef.current.key === key && flowRef.current.state.status === 'asking' && heardKey.current !== key) playPromptWord(key);
+    });
+  }, [key, canPlay, promptKind, unlocked, screenReader, playPromptWord, pacing]);
 
   useEffect(
     () => () => {

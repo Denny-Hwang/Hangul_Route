@@ -3,6 +3,7 @@ import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { jamoAll } from '../../../content/jamo';
 import { jamoVoice } from '../../../logic/audio/jamo-voice';
+import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { useAudioStore } from '../../../store/audio-store';
 import { KO_VOICE, createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
@@ -65,7 +66,8 @@ const spoken = (): string[] => rig.current!.synth.spoken.map((u) => u.text);
 async function play(scope: MinigameScope): Promise<ReactTestRenderer> {
   const r = await render(<MatchSoundGame scope={scope} onFinish={() => undefined} />);
   mounted.push(r);
-  await tick(0);
+  // [QS-3] Round 1's own prompt waits for the screen.
+  await tick(SCREEN_SETTLE_MS);
   return r;
 }
 
@@ -141,5 +143,55 @@ describe('R3: a locked wrong tile takes no tap (AMENDMENTS-TOUCH row KT-3)', () 
     await press(tile(r.root, target));
     await tick(700);
     expect(spoken()).toHaveLength(3);
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the first round's prompt waits for the screen; later rounds and taps do not. */
+describe('[QS] round 1 waits 350 ms for the screen (QS-3)', () => {
+  const open = async (scope: MinigameScope): Promise<ReactTestRenderer> => {
+    const r = await render(<MatchSoundGame scope={scope} onFinish={() => undefined} />);
+    mounted.push(r);
+    return r;
+  };
+  const speaker = (root: ReactTestInstance): ReactTestInstance => {
+    const node = byTestId(root, 'match-sound-speaker').find((n) => typeof n.props.onClick === 'function');
+    if (!node) throw new Error('no speaker');
+    return node;
+  };
+
+  it('nothing is said while the screen arrives; the prompt is said once the wait is over', async () => {
+    await open({ kind: 'match-sound', jamoIds: L1, rounds: 1, focusJamoIds: ['jamo:nieun'] });
+    await tick(SCREEN_SETTLE_MS - 1);
+    expect(spoken()).toEqual([]);
+    await tick(1);
+    expect(spoken()).toEqual(['니은']);
+  });
+
+  it('a tap on the speaker during the wait plays at once, and the round does not say it again', async () => {
+    const r = await open({ kind: 'match-sound', jamoIds: L1, rounds: 1, focusJamoIds: ['jamo:nieun'] });
+    await tick(100);
+    await press(speaker(r.root));
+    await tick(0);
+    expect(spoken()).toEqual(['니은']);
+    await tick(2_000);
+    expect(spoken()).toEqual(['니은']);
+  });
+
+  it('a game left during the wait says nothing', async () => {
+    const r = await render(<MatchSoundGame scope={{ kind: 'match-sound', jamoIds: L1, rounds: 2 }} onFinish={() => undefined} />);
+    await tick(100);
+    await unmount(r);
+    await tick(2_000);
+    expect(spoken()).toEqual([]);
+  });
+
+  it('round 2 says its prompt as it opens, with no wait', async () => {
+    const r = await open({ kind: 'match-sound', jamoIds: L1, rounds: 2 });
+    await tick(SCREEN_SETTLE_MS);
+    const [first] = spoken();
+    await press(tile(r.root, NAME_OF.get(first!)!));
+    // The prompt has long ended, so the advance is the game's own 700 ms; round 2 speaks in that same tick.
+    await tick(700);
+    expect(spoken()).toHaveLength(2);
   });
 });
