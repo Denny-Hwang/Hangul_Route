@@ -46,6 +46,7 @@ import { LaterNeedsInternet, LessonWaiting, combinedChunkState, useLessonQuestSt
 import { useStoryQuestState } from '../story-content';
 import { useRouteBackGuard } from '../use-back-guard';
 import { DiscoverStep } from './DiscoverStep';
+import { PREVIOUS_TEST_ID, StepActions } from './StepActions';
 import { CultureTip } from './culture-tip-entry';
 import { useQuestCardLines } from './reward-card-note';
 import { handTryAgainToResults, preloadQuestReviews, questReviewChunk, tryAgainWanted, warmupWanted, type QuestReviewChunk } from './quest-reviews';
@@ -164,6 +165,11 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   const asking = useRef(false);
   const consumePending = useQuestRunStore((s) => s.consumePendingAdvance);
   const stepIndex = useQuestRunStore((s) => s.stepIndex);
+  // [QB] AMENDMENTS-QUEST-SOUND-BACK QB-2: Previous shows the step before. The run keeps the furthest step it reached,
+  // so a step behind it is a revisit (a step shown again), and `cameBack` says the step on screen was reached by Previous.
+  const furthestStep = useQuestRunStore((s) => s.furthestStep);
+  const cameBack = useQuestRunStore((s) => s.cameBack);
+  const revisit = stepIndex < furthestStep;
 
   // Telemetry effects read the latest committed ports (updated after commit, never during render);
   // only `start` / `end` decide when a run begins again.
@@ -293,9 +299,12 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
       kind: stepKind,
       correct: run.correctCount,
       retries: run.retryCount,
+      furthestStep: run.furthestStep,
     });
+    const checkAt = checkWatch.current?.index;
     checkWatch.current = out.watch;
-    if (out.completed) {
+    // [QB] Once per step per run (QB-3), whatever the way the Check is left and shown again.
+    if (out.completed && checkAt !== undefined && run.reportOnce('quest.check_completed', checkAt)) {
       portsRef.current.track({
         name: 'quest.check_completed',
         payload: checkCompletedPayload(questId, out.completed),
@@ -356,6 +365,10 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
     }
   };
 
+  // [QB] Previous (QB-2): from the second step on. It is the run's own move, never the navigation's back, so the
+  // header's Close and the browser's back keep asking the leave question. The step-change effect above stops any sound.
+  const goPrevious = stepIndex > 0 ? (): void => useQuestRunStore.getState().goPrevStep() : undefined;
+
   if (!quest || !step) {
     return (
       <Screen>
@@ -367,10 +380,13 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   }
 
   const discoverDone = (result: { pages: number; heard: number }): void => {
-    ports.track({
-      name: 'quest.discover_completed',
-      payload: discoverCompletedPayload(questId, result),
-    });
+    // [QB] Once per step per run (QB-3): Continue on the last page of a step shown again reports nothing.
+    if (useQuestRunStore.getState().reportOnce('quest.discover_completed', stepIndex)) {
+      ports.track({
+        name: 'quest.discover_completed',
+        payload: discoverCompletedPayload(questId, result),
+      });
+    }
     advance();
   };
 
@@ -390,7 +406,15 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
     <Screen tone="canvas" scrollable={step.kind !== 'discover'} header={ownClose ? { leading: { kind: 'close', onPress: askLeave } } : undefined}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
-          <Progress value={stepIndex + 1} max={quest.steps.length} tone="primary" variant="dots" />
+          {/* [QB] The dots keep the furthest step (they only fill); a step shown again is ringed, and the pill and the meter's words name it (QB-2). */}
+          <Progress
+            value={Math.max(furthestStep, stepIndex) + 1}
+            max={quest.steps.length}
+            tone="primary"
+            variant="dots"
+            testID="quest-step-dots"
+            {...(revisit ? { current: stepIndex + 1, accessibilityValueText: m.a11y.progress.value(stepIndex + 1, quest.steps.length) } : {})}
+          />
         </View>
         <Pill tone="neutral" label={q.progress(stepIndex + 1, quest.steps.length)} size="sm" />
       </View>
@@ -409,11 +433,17 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           onDone={discoverDone}
           compact={pacing?.plan.compact === true}
           autoHear={autoHear}
+          // [QB] On page 1 Previous is the step's; reached by Previous the step opens on its last page (QB-2).
+          onPrevious={goPrevious}
+          start={{ lastPage: cameBack, seen: revisit }}
         />
       ) : step.minigameKind && step.minigameRef ? (
         <MinigameLauncher
           copy={q}
           kind={step.kind}
+          revisit={revisit}
+          onContinue={advance}
+          onPrevious={goPrevious}
           onLaunch={() => onOpenGame(stepIndex)}
           onSkip={() => {
             // [AU] Skip for now is noted on the run: a skipped game caps the stars (row AU-9).
@@ -426,19 +456,29 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
           copy={q}
           line={cardLines ? { ...narrativeLine(step, q.keepGoing), message: cardLines.line } : narrativeLine(step, q.keepGoing)}
           onContinue={advance}
+          onPrevious={goPrevious}
           isReward={step.kind === 'reward'}
           actions={
             onReward && again.kind === 'deciding' ? (
               <View style={{ minHeight: touchTarget.hero }} testID="quest-try-again-deciding" />
             ) : onReward && again.kind === 'offer' ? (
-              <again.chunk.TryAgainOffer
-                onTry={() => {
-                  // The quest is done: Results writes its score and card first, then plays Try these again over it.
-                  if (reviewsFor !== null) handTryAgainToResults({ questId, profileId: reviewsFor, chunk: again.chunk, plan: again.plan });
-                  advance();
-                }}
-                onSeeResults={advance}
-              />
+              <>
+                <again.chunk.TryAgainOffer
+                  onTry={() => {
+                    // The quest is done: Results writes its score and card first, then plays Try these again over it.
+                    if (reviewsFor !== null) handTryAgainToResults({ questId, profileId: reviewsFor, chunk: again.chunk, plan: again.plan });
+                    advance();
+                  }}
+                  onSeeResults={advance}
+                />
+                {/* [QB] The offer keeps its two buttons; Previous sits under them (QB-2), and not while the offer is being planned, so no button moves under a finger. */}
+                {goPrevious ? (
+                  <>
+                    <Spacer size="md" />
+                    <Button label={q.previous.cta} tone="ghost" size="md" fullWidth onPress={goPrevious} testID={PREVIOUS_TEST_ID} />
+                  </>
+                ) : null}
+              </>
             ) : undefined
           }
           note={stepIndex === 0 ? introNote : undefined}
@@ -454,6 +494,7 @@ function NarrativeStepBody({
   copy,
   line,
   onContinue,
+  onPrevious,
   isReward,
   actions,
   note,
@@ -462,6 +503,8 @@ function NarrativeStepBody({
   copy: QuestMessages;
   line: NarrativeLine;
   onContinue: () => void;
+  /** [QB] Previous beside the step's button (QB-2); absent on the first step. */
+  onPrevious?: () => void;
   isReward: boolean;
   /** In place of the step's own button: the reward step's Try these again, offered or being planned (F-CURR-002 row CM-15). */
   actions?: ReactNode;
@@ -500,7 +543,9 @@ function NarrativeStepBody({
         </>
       ) : null}
       <View style={{ flex: 1 }} />
-      {actions ?? <Button label={isReward ? copy.seeResults.cta : copy.continue.cta} tone="primary" size="hero" fullWidth onPress={onContinue} />}
+      {actions ?? (
+        <StepActions main={{ label: isReward ? copy.seeResults.cta : copy.continue.cta, size: 'hero', onPress: onContinue }} previousLabel={copy.previous.cta} onPrevious={onPrevious} />
+      )}
       <Spacer size="lg" />
     </View>
   );
@@ -509,15 +554,24 @@ function NarrativeStepBody({
 function MinigameLauncher({
   copy,
   kind,
+  revisit,
   onLaunch,
   onSkip,
+  onContinue,
+  onPrevious,
 }: {
   copy: QuestMessages;
   kind: QuestStepKind;
+  /** [QB] The step is shown again after Previous (QB-2): Continue is the main button and Play again opens the game. */
+  revisit: boolean;
   onLaunch: () => void;
   onSkip: () => void;
+  /** [QB] Forward from a revisit. */
+  onContinue: () => void;
+  /** [QB] Previous beside the main button; absent on the first step. */
+  onPrevious?: () => void;
 }): ReactElement {
-  const view = launcherView(kind, copy.launcher);
+  const view = launcherView(kind, copy.launcher, revisit);
   return (
     <View style={{ flex: 1 }}>
       {view.hoya ? (
@@ -534,8 +588,17 @@ function MinigameLauncher({
         </>
       ) : null}
       <View style={{ flex: 1 }} />
-      <Button label={view.primaryLabel} tone="primary" size="hero" fullWidth onPress={onLaunch} />
-      {view.showSkip ? (
+      <StepActions
+        main={view.revisit ? { label: copy.continue.cta, size: 'hero', onPress: onContinue } : { label: view.primaryLabel, size: 'hero', onPress: onLaunch }}
+        previousLabel={copy.previous.cta}
+        onPrevious={onPrevious}
+      />
+      {view.revisit ? (
+        <>
+          <Spacer size="md" />
+          <Button label={view.againLabel} tone="ghost" size="md" onPress={onLaunch} testID="quest-play-again" />
+        </>
+      ) : view.showSkip ? (
         <>
           <Spacer size="md" />
           <Button label={view.skipLabel} tone="ghost" size="md" onPress={onSkip} />

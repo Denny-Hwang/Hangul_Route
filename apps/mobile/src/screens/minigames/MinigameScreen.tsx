@@ -8,7 +8,7 @@ import { questById } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeScope } from '../../logic/content-locale';
 import { gameFlagOf, playedScope as fallbackScope } from '../../logic/game-fallback';
-import { minigameFinishedEvent } from '../../logic/minigame-finished';
+import { gameFinishIsReported, minigameFinishedEvent } from '../../logic/minigame-finished';
 import { scopeFor, type MinigameScope } from '../../logic/minigame-config';
 import { resolveOptionalExit, resolveScreenExits, type ScreenExitProps } from '../../logic/navigation/screen-exits';
 import { playedScope } from '../../logic/role-play/fallback';
@@ -147,8 +147,11 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     navigation ? (noteId: string): void => navigation.push('CultureNotes', { noteId, from: 'quest' }) : undefined,
   );
 
+  // [QB] AMENDMENTS-QUEST-SOUND-BACK QB-3: `minigame.finished` goes out once per step per run. A game played again on a
+  // step shown after Previous sends nothing; a skipped game played after all sends it then, for the first time.
+  const finishIsSent = (): boolean => gameFinishIsReported(useQuestRunStore.getState(), questId, stepIndex);
   const close = (): void => {
-    if (scope) {
+    if (scope && finishIsSent()) {
       void track(minigameFinishedEvent(fellBackTo.current?.kind ?? renderedKind.current ?? scope.kind, questId, stepIndex, activeProfileId));
     }
     exits.back();
@@ -159,7 +162,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
    */
   const closeAs = (played: MinigameKind): void => {
     if (played === scope?.kind) return close();
-    void track(minigameFinishedEvent(played, questId, stepIndex, activeProfileId));
+    if (finishIsSent()) void track(minigameFinishedEvent(played, questId, stepIndex, activeProfileId));
     exits.back();
   };
 

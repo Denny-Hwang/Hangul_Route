@@ -91,7 +91,26 @@ Final consonant page:                 Words page:
 - **Hear it**: plays the symbol's sound or the word via `playPrompt` (never the letter name of a consonant; ㅇ by its name 이응); a result of `unavailable` / `muted` shows the line "Say it out loud: <spoken romanization>", no error. A tiny "heard" mark appears on the item (fill-only, never a gate).
 - **Letter name** (optional, second button): plays the letter's name.
 - **CONTINUE**: next page; on the last page the step ends (`quest.discover_completed { questId, pages, heard }`). Always enabled.
+- **Previous**: the page before, or the step before on page 1; see "[QB] Previous inside the step" below.
 - **[x leave]**: the quest's leave sheet (run discarded after confirm), as on every step.
+
+## [QB] Previous inside the step (AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2)
+
+```
+Page 2 of 2:                              Page 1 of 2, after Previous:
++--------------------------------+       +--------------------------------+
+| page 2 of 2   (*) (*)          |       | page 1 of 2   ((*)) (*)        |  <- dots keep the furthest page;
+| ( the page's cards )           |       | ( the page's cards )           |     ((*)) = the page shown
+|                                |       |                                |
+| [ Previous ] [[ CONTINUE ]]    |       | [ Previous ] [[ CONTINUE ]]    |  <- on page 1, Previous is the step's
++--------------------------------+       +--------------------------------+     (the step before; none on step 1)
+```
+
+- **Previous** (page 2 or later): the page before; any sound and any Read along stop. The page dots only fill; the caption names the page shown.
+- **Previous** on page 1: the step before (`quest/player.md`, "[QB] Previous"); a quest whose first step is Look and learn shows none there.
+- Arriving on this step by Previous from the next step opens the **last** page, with every dot filled.
+- `quest.discover_completed` is sent once per step per run, the first time Continue leaves the last page (QB-3).
+- Narrow window or Largest text: the row wraps, CONTINUE first.
 
 ## Navigation graph
 

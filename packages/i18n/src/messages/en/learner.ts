@@ -728,6 +728,8 @@ export const learner = {
       reward: { pill: 'Finish' },
     },
     continue: { cta: 'Continue' },
+    /** [QB] Beside the main button from the second step on, and inside Look and learn from its second page on: shows the step or page before (AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2). Never "Back": Back leaves a screen. */
+    previous: { cta: 'Previous' },
     seeResults: { cta: 'See results' },
     /**
      * The reward step and Results when the run did not earn the quest's card (F-STORY-006 §3.1, F-MOTION-003 §3.5): the card
@@ -753,6 +755,8 @@ export const learner = {
         heading: 'Two quick ones',
         go: { cta: 'Go' },
       },
+      /** [QB] The launcher's second button when a game step or the Check is shown again after Previous (QB-2); the main button is then `continue`. */
+      again: { cta: 'Play again' },
     },
     /** Discover (F-QUEST-002 §3.2); the symbols, sounds and words on the pages are taught content. */
     discover: {

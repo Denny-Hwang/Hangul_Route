@@ -351,6 +351,11 @@ export interface ReadAlongState {
 
 export interface DiscoverState {
   page: number;
+  /**
+   * [QB] The furthest page reached (AMENDMENTS-QUEST-SOUND-BACK QB-1): Previous shows an earlier page, and the page
+   * dots keep this one (they only fill).
+   */
+  furthest: number;
   pageCount: number;
   /**
    * Distinct Hear it buttons tapped, and exchange lines played by Read along (keyed by the line, so a
@@ -384,7 +389,9 @@ export type DiscoverEvent =
   | { type: 'readAlong'; item: string }
   /** The pause between two lines is over (the screen waits `motion.duration.slow`). */
   | { type: 'readAlongNext'; run: number }
-  | { type: 'next' };
+  | { type: 'next' }
+  /** [QB] Previous (QB-1): the page before, with every sound stopped. On the first page nothing moves (the step's own Previous is the player's). */
+  | { type: 'prev' };
 
 export type DiscoverEffect =
   /** Play a button's audio; a line of an exchange item carries its run, which the `audio` result echoes. */
@@ -421,9 +428,19 @@ export function autoHearAllowed(input: { muted: boolean; screenReader: boolean; 
   return !input.muted && !input.screenReader && (input.hasClip || input.voiceReady);
 }
 
-export function startDiscover(model: DiscoverModel): DiscoverState {
+export interface DiscoverStart {
+  /** [QB] Open on the last page: the step was reached by Previous from the step after it (QB-2). */
+  lastPage?: boolean;
+  /** [QB] Every page was seen before (a step shown again): the dots start full. */
+  seen?: boolean;
+}
+
+export function startDiscover(model: DiscoverModel, start: DiscoverStart = {}): DiscoverState {
+  const last = Math.max(0, model.pages.length - 1);
+  const page = start.lastPage ? last : 0;
   return {
-    page: 0,
+    page,
+    furthest: start.seen ? last : page,
     pageCount: model.pages.length,
     tapped: [],
     played: [],
@@ -518,9 +535,14 @@ export function stepDiscover(
     case 'next': {
       const stopping: DiscoverEffect[] = state.readAlong ? [{ type: 'stopAudio' }] : [];
       const quiet = { ...state, readAlong: null };
-      if (state.page < state.pageCount - 1) return { state: { ...quiet, page: state.page + 1 }, effects: stopping };
+      if (state.page < state.pageCount - 1) {
+        return { state: { ...quiet, page: state.page + 1, furthest: Math.max(state.furthest, state.page + 1) }, effects: stopping };
+      }
       return { state: quiet, effects: [...stopping, { type: 'done', pages: state.pageCount, heard: state.tapped.length }] };
     }
+    case 'prev':
+      // [QB] Whatever is sounding stops (a word, a sentence, a Read along); what was heard and revealed stays.
+      return { state: { ...state, readAlong: null, page: Math.max(0, state.page - 1) }, effects: [{ type: 'stopAudio' }] };
   }
 }
 
@@ -565,8 +587,15 @@ export interface DiscoverPageRender {
   /** The page's exchange, drawn before the items. */
   exchange?: DiscoverExchangeRender;
   items: DiscoverItemRender[];
-  /** Page dots: they only fill. */
-  dots: { value: number; max: number };
+  /**
+   * Page dots: they only fill. [QB] `value` is the furthest page reached and `page` the one shown; `current` is set
+   * (to `page`) only while the page shown is behind the furthest one, so the dots mark it (QB-1).
+   */
+  dots: { value: number; max: number; current?: number };
+  /** The page shown, 1-based ("Page 1 of 2"). */
+  page: number;
+  /** [QB] The page has one before it: Previous shows it (QB-1). */
+  hasPrevious: boolean;
   isLast: boolean;
   /** Always true: nobody is held on a page (heritage learners already know the letters). */
   continueEnabled: true;
@@ -580,7 +609,7 @@ export function pageRender(
 ): DiscoverPageRender {
   const page = model.pages[state.page];
   if (!page) {
-    return { empty: true, emptyLine: copy.empty, items: [], dots: { value: 0, max: 0 }, isLast: true, continueEnabled: true };
+    return { empty: true, emptyLine: copy.empty, items: [], dots: { value: 0, max: 0 }, page: 0, hasPrevious: false, isLast: true, continueEnabled: true };
   }
   const items = page.items.map((item, index): DiscoverItemRender => {
     const ids = [item.hear.id, item.soundWith?.action.id, item.example?.hear.id];
@@ -604,7 +633,13 @@ export function pageRender(
     ...(page.title === undefined ? {} : { title: page.title }),
     ...(page.exchange === undefined ? {} : { exchange: exchangeRender(page.exchange, state, mode, copy) }),
     items,
-    dots: { value: state.page + 1, max: state.pageCount },
+    dots: {
+      value: Math.max(state.furthest, state.page) + 1,
+      max: state.pageCount,
+      ...(state.page < state.furthest ? { current: state.page + 1 } : {}),
+    },
+    page: state.page + 1,
+    hasPrevious: state.page > 0,
     isLast: state.page >= state.pageCount - 1,
     continueEnabled: true,
   };

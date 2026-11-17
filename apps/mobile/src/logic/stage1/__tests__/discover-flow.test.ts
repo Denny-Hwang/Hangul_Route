@@ -397,6 +397,70 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     expect(last.title).toBe('The sound ga');
   });
 
+  describe('[QB] Previous inside Look and learn (AMENDMENTS-QUEST-SOUND-BACK QB-1)', () => {
+    it('Previous shows the page before and stops any sound; what was heard stays', () => {
+      const id = model.pages[0]!.items[0]!.hear.id;
+      const onTwo = run(startDiscover(model), { type: 'hear', id }, { type: 'audio', id, result: 'played' }, { type: 'next' });
+      expect(onTwo.state.page).toBe(1);
+      const back = stepDiscover(onTwo.state, { type: 'prev' });
+      expect(back.state.page).toBe(0);
+      expect(back.effects).toEqual([{ type: 'stopAudio' }]);
+      expect(back.state.tapped).toEqual([id]);
+      expect(back.state.played).toEqual([id]);
+    });
+
+    it('on the first page Previous moves nothing (the step before is the player\'s)', () => {
+      const out = stepDiscover(startDiscover(model), { type: 'prev' });
+      expect(out.state.page).toBe(0);
+      expect(out.effects.some((e) => e.type === 'done')).toBe(false);
+    });
+
+    it('the dots keep the furthest page and mark the page shown; the page label names the page shown', () => {
+      const onTwo = stepDiscover(startDiscover(model), { type: 'next' }).state;
+      expect(pageRender(model, onTwo, 'always')).toMatchObject({ dots: { value: 2, max: 2 }, page: 2, hasPrevious: true });
+      const back = stepDiscover(onTwo, { type: 'prev' }).state;
+      const shown = pageRender(model, back, 'always');
+      expect(shown.dots).toEqual({ value: 2, max: 2, current: 1 });
+      expect(shown.page).toBe(1);
+      expect(shown.hasPrevious).toBe(false);
+      expect(shown.isLast).toBe(false);
+      // Forward again: the furthest page is the page shown, so no dot is marked.
+      const again = stepDiscover(back, { type: 'next' }).state;
+      expect(pageRender(model, again, 'always').dots).toEqual({ value: 2, max: 2 });
+    });
+
+    it('Continue on the last page still finishes after a Previous, with the same counts', () => {
+      const out = run(startDiscover(model), { type: 'next' }, { type: 'prev' }, { type: 'next' }, { type: 'next' });
+      expect(out.effects).toEqual([{ type: 'done', pages: 2, heard: 0 }]);
+    });
+
+    it('Previous stops a Read along', () => {
+      const exchange = buildDiscover([pageOne, exchangePage('이게 뭐예요?', '지우개예요.')]);
+      const key = exchange.pages[1]!.exchange!.key;
+      const reading = run(startDiscover(exchange), { type: 'next' }, { type: 'readAlong', item: key });
+      expect(reading.state.readAlong).not.toBeNull();
+      const back = stepDiscover(reading.state, { type: 'prev' });
+      expect(back.state.readAlong).toBeNull();
+      expect(back.effects).toEqual([{ type: 'stopAudio' }]);
+    });
+
+    it('a step reached by Previous opens on its last page with every dot filled (QB-2)', () => {
+      const s = startDiscover(model, { lastPage: true, seen: true });
+      expect(s).toMatchObject({ page: 1, furthest: 1 });
+      expect(pageRender(model, s, 'always')).toMatchObject({ dots: { value: 2, max: 2 }, isLast: true, hasPrevious: true });
+    });
+
+    it('a step shown again from its first page keeps every dot filled and marks page 1', () => {
+      const s = startDiscover(model, { seen: true });
+      expect(s).toMatchObject({ page: 0, furthest: 1 });
+      expect(pageRender(model, s, 'always').dots).toEqual({ value: 2, max: 2, current: 1 });
+    });
+
+    it('a model with no page starts on page 0 whatever the start', () => {
+      expect(startDiscover(buildDiscover([]), { lastPage: true, seen: true })).toMatchObject({ page: 0, furthest: 0, pageCount: 0 });
+    });
+  });
+
   it('the first item of a page pulses once', () => {
     expect(pageRender(model, startDiscover(model), 'always').items.map((i) => i.pulse)).toEqual([true, false]);
   });

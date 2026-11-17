@@ -15,5 +15,11 @@ export interface ProgressProps {
    * `progressbar`, so it needs no name.
    */
   decorative?: boolean;
+  /**
+   * [QB] Dots only: the dot shown now (1-based), ringed. For a meter that only fills while the screen shows an
+   * earlier step or page (`value` is the furthest one reached; AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2). Absent, the
+   * dots are drawn as always.
+   */
+  current?: number;
   testID?: string;
 }

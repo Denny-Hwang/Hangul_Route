@@ -51,6 +51,7 @@ Step sequence (content-skill): intro (narrative) → present → practice → ap
 ## Interaction points
 
 - [[ CONTINUE ]] → next step (`goNextStep`); on the last step → `results/celebrate`
+- [ Previous ] (step 2 or later) → the step before; see "[QB] Previous" below
 - [[ PLAY MINIGAME ]] → `minigame/shell` `{ questId, episodeId, stepIndex }` (push). The shell records rounds into the run store, calls `markStepComplete`, then `goBack()`; on re-focus the player consumes the pending advance and shows the next step. The launcher card is therefore never seen twice for one step.
 - [ Skip for now ] → next step without recording rounds
 - Hand-off to `results/celebrate`: the stack is **reset** to `Main` → `Results { stars, correct, total }` so hardware back from results cannot re-enter a finished quest
@@ -72,6 +73,30 @@ Exit to:    `minigame/shell` (push, returns) · `results/celebrate` (reset) · `
 - reads: `questById(id).steps[]` (kind, titleEn, bodyEn, hoyaLineEn, minigameKind, minigameRef, durationSeconds) · active profile
 - writes: `quest-run-store` (stepIndex, correct/total, pendingAdvance) · `progress-store.beginSession/endSession(profileId)`
 - telemetry: none on this screen; `minigame.finished` fires in the shell, `quest.complete` on results
+
+## [QB] Previous: a step can be taken back (AMENDMENTS-QUEST-SOUND-BACK QB-2, QB-3)
+
+Owner request 2026-11-17: "I sometimes move on without meaning to." From the second step on, every step has [ Previous ] beside its main button. It is not the header's [x leave] and not the browser's back: those still ask the leave question.
+
+```
+Narrative step, step 2 or later:        Play step, first visit:               Play step or Check, shown again (revisit):
++--------------------------------+     +--------------------------------+    +--------------------------------+
+| [x]  o o o . . .      (3 / 6)  |     | [x]  o o o . . .      (3 / 6)  |    | [x]  o o (o) o o .    (3 / 6)  |  <- dots: furthest step;
+|  Step title  [step pill]       |     |  Step title  [step pill]       |    |  Step title  [step pill]       |     (o) = the step shown
+|  ( Hoya's card )               |     |  "Ready for a quick game?"     |    |  "Ready for a quick game?"     |
+|                                |     |                                |    |                                |
+| [ Previous ] [[ CONTINUE ]]    |     | [ Previous ] [[ PLAY ]]        |    | [ Previous ] [[ CONTINUE ]]    |
++--------------------------------+     | [ Skip for now ]               |    | [ Play again ]                 |  <- no Skip for now
+                                       +--------------------------------+    +--------------------------------+
+```
+
+- [ Previous ] -> the step before (`goPrevStep`), whatever its kind; a Look and learn step opens on its last page. Any sound stops.
+- A step behind the furthest step reached is a **revisit**: a teaching step looks as it did; a game step or the Check shows [[ CONTINUE ]] (forward, `goNextStep`) and [ Play again ] (opens the game). The Check still has no Skip.
+- Step 1 has no Previous; Results has none; a game in play has none (its Close returns to the launcher).
+- Nothing tallied changes: stars, right answers, misses and retries stay; a game played again scores nothing; a skipped game stays skipped unless it is played in full on the revisit (QB-3). The step dots never go down.
+- A reload resumes at the furthest step (QB-4).
+- Narrow window or Largest text: the row wraps, main button first, then Previous.
+- Mock: `design/screens/quest-previous/`.
 
 ## Open questions
 

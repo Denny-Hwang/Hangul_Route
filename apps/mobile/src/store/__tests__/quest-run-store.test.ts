@@ -1,5 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { gameFinishIsReported as finishIsReported } from '../../logic/minigame-finished';
 import { answerAside, setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } from '../quest-run-store';
+
+const gameFinishIsReported = (questId: string, stepIndex: number): boolean => finishIsReported(useQuestRunStore.getState(), questId, stepIndex);
 
 describe('quest-run-store', () => {
   beforeEach(() => {
@@ -440,5 +443,298 @@ describe('quest-run-store', () => {
     } finally {
       setFirstRoundAnswerListener(null);
     }
+  });
+});
+
+describe('[QB] taking a step back (AMENDMENTS-QUEST-SOUND-BACK QB-2)', () => {
+  beforeEach(() => {
+    useQuestRunStore.getState().reset();
+  });
+
+  it('goPrevStep shows the step before and keeps the furthest step', () => {
+    const { beginQuest, goNextStep, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 2, furthestStep: 2, cameBack: false });
+    goPrevStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 1, furthestStep: 2, cameBack: true });
+    goPrevStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 0, furthestStep: 2, cameBack: true });
+  });
+
+  it('never goes under the first step', () => {
+    const { beginQuest, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goPrevStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 0, furthestStep: 0, cameBack: false });
+  });
+
+  it('forward from a revisit is the normal step forward; the furthest step grows only past itself', () => {
+    const { beginQuest, goNextStep, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    goPrevStep();
+    goPrevStep();
+    goNextStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 1, furthestStep: 2, cameBack: false });
+    goNextStep();
+    goNextStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 3, furthestStep: 3 });
+  });
+
+  it('Previous drops a pending advance, so a game that ended a moment ago does not move the step again', () => {
+    const { beginQuest, goNextStep, markStepComplete, goPrevStep, consumePendingAdvance } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    markStepComplete();
+    goPrevStep();
+    expect(useQuestRunStore.getState().pendingAdvance).toBe(false);
+    consumePendingAdvance();
+    expect(useQuestRunStore.getState().stepIndex).toBe(0);
+  });
+
+  it('a game finished on a revisit moves one step forward as usual', () => {
+    const { beginQuest, goNextStep, goPrevStep, markStepComplete, consumePendingAdvance } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    goNextStep();
+    goPrevStep();
+    goPrevStep();
+    markStepComplete();
+    consumePendingAdvance();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 2, furthestStep: 3, cameBack: false });
+  });
+
+  it('nothing tallied changes when a step is taken back', () => {
+    const { beginQuest, goNextStep, answerRound, markStepSkipped, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    answerRound(0, true);
+    answerRound(1, false);
+    answerRound(1, true);
+    goNextStep();
+    markStepSkipped();
+    goNextStep();
+    const before = useQuestRunStore.getState();
+    goPrevStep();
+    goPrevStep();
+    const after = useQuestRunStore.getState();
+    for (const key of ['correctCount', 'totalCount', 'retryCount', 'scoredRounds', 'skippedSteps', 'missed', 'tries'] as const) {
+      expect(after[key]).toEqual(before[key]);
+    }
+    expect(after.stars()).toBe(before.stars());
+  });
+
+  it('a run that starts past the first step (a story bookmark) has that step as its furthest', () => {
+    useQuestRunStore.getState().beginQuest('q', 'e', 2);
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 2, furthestStep: 2, cameBack: false });
+  });
+
+  it('a new run forgets the furthest step of the last one', () => {
+    const { beginQuest, goNextStep, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    goPrevStep();
+    beginQuest('q2', 'e');
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 0, furthestStep: 0, cameBack: false });
+  });
+});
+
+describe('[QB] going back changes no score (AMENDMENTS-QUEST-SOUND-BACK QB-3)', () => {
+  const heard: FirstRoundAnswer[] = [];
+  const asked = (id: string) => ({ texts: [id], rung: 'read' as const });
+  const tallies = () => {
+    const s = useQuestRunStore.getState();
+    return { correct: s.correctCount, total: s.totalCount, retries: s.retryCount, scored: s.scoredRounds, missed: s.missed, tries: s.tries, skipped: s.skippedSteps, stars: s.stars() };
+  };
+  /** Step 1 played (2 right of 3, one retry), step 2 skipped, the run now on step 3. */
+  const playedRun = (): void => {
+    const { beginQuest, goNextStep, answerRound, markStepComplete, consumePendingAdvance, markStepSkipped } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    answerRound(0, true, asked('a'));
+    answerRound(1, false, asked('b'));
+    answerRound(1, true, asked('b'));
+    answerRound(2, true, asked('c'));
+    markStepComplete();
+    consumePendingAdvance();
+    markStepSkipped();
+    goNextStep();
+    heard.length = 0;
+  };
+
+  beforeEach(() => {
+    useQuestRunStore.getState().reset();
+    heard.length = 0;
+    setFirstRoundAnswerListener((answer) => heard.push(answer));
+  });
+  afterEach(() => {
+    setFirstRoundAnswerListener(null);
+  });
+
+  it('a game played again on a step shown after Previous adds nothing: no right answer, no miss, no retry, no memory event', () => {
+    playedRun();
+    const before = tallies();
+    expect(before).toMatchObject({ correct: 2, total: 3, retries: 1, skipped: [2] });
+    const { goPrevStep, answerRound, markStepComplete, consumePendingAdvance } = useQuestRunStore.getState();
+    goPrevStep();
+    goPrevStep();
+    expect(useQuestRunStore.getState().stepIndex).toBe(1);
+    // The same rounds again (all wrong this time, with second taps), and a round key the first play never used.
+    answerRound(0, false, asked('a'));
+    answerRound(0, true, asked('a'));
+    answerRound(1, false, asked('b'));
+    answerRound(2, false, asked('c'));
+    answerRound('extra', false, asked('d'));
+    answerRound('extra-2', true, asked('e'));
+    markStepComplete();
+    consumePendingAdvance();
+    expect(tallies()).toEqual(before);
+    expect(heard).toEqual([]);
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 2, furthestStep: 3 });
+  });
+
+  it('a better replay does not raise the stars either: the first play is the score', () => {
+    const { beginQuest, goNextStep, answerRound, markStepComplete, consumePendingAdvance, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    answerRound(0, false);
+    answerRound(1, false);
+    markStepComplete();
+    consumePendingAdvance();
+    const stars = useQuestRunStore.getState().stars();
+    goPrevStep();
+    answerRound(0, true);
+    answerRound(1, true);
+    expect(useQuestRunStore.getState().stars()).toBe(stars);
+    expect(useQuestRunStore.getState()).toMatchObject({ correctCount: 0, totalCount: 2, retryCount: 0 });
+  });
+
+  it('a skipped step stays skipped while it is only looked at again', () => {
+    playedRun();
+    const { goPrevStep, goNextStep } = useQuestRunStore.getState();
+    goPrevStep();
+    goNextStep();
+    expect(useQuestRunStore.getState().skippedSteps).toEqual([2]);
+    // Any skip caps a run at 2 stars (row AU-9).
+    expect(useQuestRunStore.getState().stars()).toBe(2);
+  });
+
+  it('a skipped step played on the revisit scores as a first play and is no longer skipped once it ends', () => {
+    playedRun();
+    const { goPrevStep, answerRound, markStepComplete, consumePendingAdvance } = useQuestRunStore.getState();
+    goPrevStep();
+    expect(useQuestRunStore.getState().stepIndex).toBe(2);
+    answerRound(0, true, asked('x'));
+    answerRound(1, false, asked('y'));
+    answerRound(1, true, asked('y'));
+    // Not ended yet: still a skipped step.
+    expect(useQuestRunStore.getState().skippedSteps).toEqual([2]);
+    markStepComplete();
+    expect(useQuestRunStore.getState().skippedSteps).toEqual([]);
+    consumePendingAdvance();
+    expect(tallies()).toMatchObject({ correct: 3, total: 5, retries: 2, skipped: [] });
+    expect(heard.map((a) => [a.asked.texts?.[0], a.correct])).toEqual([
+      ['x', true],
+      ['y', false],
+    ]);
+    expect(useQuestRunStore.getState().missed).toHaveLength(2);
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 3, furthestStep: 3 });
+  });
+
+  it('once it was played, the step that had been skipped scores nothing on a second replay', () => {
+    playedRun();
+    const { goPrevStep, answerRound, markStepComplete, consumePendingAdvance } = useQuestRunStore.getState();
+    goPrevStep();
+    answerRound(0, true);
+    markStepComplete();
+    consumePendingAdvance();
+    const before = tallies();
+    goPrevStep();
+    answerRound(0, false);
+    answerRound(5, true);
+    expect(tallies()).toEqual(before);
+  });
+
+  it('the furthest step itself still scores after a look back: a game left open is taken up again', () => {
+    const { beginQuest, goNextStep, answerRound, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    answerRound(0, true);
+    goPrevStep();
+    answerRound(9, true);
+    expect(useQuestRunStore.getState().totalCount).toBe(1);
+    goNextStep();
+    answerRound(1, false);
+    answerRound(0, true);
+    expect(useQuestRunStore.getState()).toMatchObject({ correctCount: 1, totalCount: 2, retryCount: 1 });
+  });
+
+  it('markStepComplete leaves the skipped steps alone when the step on screen was not one', () => {
+    const { beginQuest, goNextStep, markStepSkipped, markStepComplete } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    markStepSkipped();
+    goNextStep();
+    const before = useQuestRunStore.getState().skippedSteps;
+    markStepComplete();
+    expect(useQuestRunStore.getState().skippedSteps).toBe(before);
+  });
+
+  describe('step events once per step per run', () => {
+    it('reportOnce answers yes the first time for an event of a step, then no', () => {
+      const { beginQuest, reportOnce } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      expect(reportOnce('quest.discover_completed', 1)).toBe(true);
+      expect(reportOnce('quest.discover_completed', 1)).toBe(false);
+      expect(reportOnce('quest.discover_completed', 2)).toBe(true);
+      expect(reportOnce('minigame.finished', 1)).toBe(true);
+      expect(useQuestRunStore.getState().reported).toEqual(['quest.discover_completed:1', 'quest.discover_completed:2', 'minigame.finished:1']);
+    });
+
+    it('a new run reports again; with no run nothing is noted', () => {
+      const { beginQuest, reportOnce, reset } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      reportOnce('minigame.finished', 2);
+      beginQuest('q', 'e');
+      expect(useQuestRunStore.getState().reportOnce('minigame.finished', 2)).toBe(true);
+      reset();
+      expect(useQuestRunStore.getState().reportOnce('minigame.finished', 2)).toBe(true);
+      expect(useQuestRunStore.getState().reportOnce('minigame.finished', 2)).toBe(true);
+      expect(useQuestRunStore.getState().reported).toEqual([]);
+    });
+
+    it('minigame.finished: sent on the first play, not for a game played again, and for a skipped game played after all', () => {
+      const { beginQuest, goNextStep, goPrevStep, markStepSkipped } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      goNextStep();
+      expect(gameFinishIsReported('q', 1)).toBe(true);
+      goNextStep();
+      markStepSkipped();
+      goNextStep();
+      goPrevStep();
+      goPrevStep();
+      expect(gameFinishIsReported('q', 1)).toBe(false);
+      expect(gameFinishIsReported('q', 2)).toBe(true);
+      expect(gameFinishIsReported('q', 2)).toBe(false);
+    });
+
+    it('minigame.finished on the furthest step is sent each time, as before (a story told in parts)', () => {
+      const { beginQuest, goNextStep } = useQuestRunStore.getState();
+      beginQuest('q', 'e');
+      goNextStep();
+      expect(gameFinishIsReported('q', 1)).toBe(true);
+      expect(gameFinishIsReported('q', 1)).toBe(true);
+    });
+
+    it('a game of another quest than the run in the store is not counted', () => {
+      useQuestRunStore.getState().beginQuest('q', 'e');
+      expect(gameFinishIsReported('other', 0)).toBe(true);
+      expect(gameFinishIsReported('other', 0)).toBe(true);
+      expect(useQuestRunStore.getState().reported).toEqual([]);
+    });
   });
 });

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" class="ts-largest">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quest: Previous at 320 with Largest text (QB-2) - design mock</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="../../learner-shell/mock/learner-shell.css">
+<link rel="stylesheet" href="quest-previous.css">
+</head>
+<body>
+<!-- Design mock (owner request 2026-11-17, docs/specs/AMENDMENTS-QUEST-SOUND-BACK.md rows QB-1 and QB-2), not shipped code; view at 320 wide. Largest text: the row wraps, main button first. Every UI string is a dictionary value (learner.quest.*) or one of the two new keys of the amendment. -->
+<div class="app-screen qp-screen">
+<div class="qp-head"><div class="qp-dots" aria-hidden="true"><span class="on"></span><span class="on"></span><span class="on now"></span><span class="on"></span><span class="on"></span><span></span></div><span class="qp-count">3 / 6</span></div>
+<p class="rn-heading">Match the sounds</p><span class="qp-pill">Practice</span>
+<div class="qp-body"><p class="rn-row-title">Ready for a quick game?</p><p class="rn-body-secondary">Tap to play. When the game is done you'll come right back.</p></div>
+<div class="qp-actions"><button class="rn-btn rn-secondary qp-prev" type="button">Previous</button><button class="rn-btn rn-primary qp-main" type="button">Continue</button></div>
+<button class="rn-btn rn-ghost qp-second" type="button">Play again</button>
+</div>
+</body>
+</html>
