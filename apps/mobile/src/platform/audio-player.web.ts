@@ -23,13 +23,30 @@ interface BufferSourceLike {
   onended: (() => void) | null;
   connect(destination: unknown): void;
   start(when?: number): void;
-  stop(): void;
+  stop(when?: number): void;
+}
+
+/** The slice of `AudioParam` the fades use. */
+interface GainParamLike {
+  setValueAtTime(value: number, time: number): void;
+  linearRampToValueAtTime(value: number, time: number): void;
+  setTargetAtTime(value: number, time: number, timeConstant: number): void;
+  cancelScheduledValues(time: number): void;
+}
+
+interface GainNodeLike {
+  readonly gain: GainParamLike;
+  connect(destination: unknown): void;
 }
 
 /** The slice of `AudioContext` the player uses (old Safari: `webkitAudioContext`). */
 export interface AudioContextLike {
   readonly state: string;
   readonly destination: unknown;
+  /** The context clock in seconds. Missing on an old engine or a test fake: then a clip plays with no lead and no fade. */
+  readonly currentTime?: number;
+  /** Missing on an old engine: then the source is wired straight to the output. */
+  createGain?: () => GainNodeLike;
   resume(): Promise<void>;
   /** Promise form, plus the callback form older Safari needs (it returns nothing there). */
   decodeAudioData(
@@ -70,6 +87,14 @@ const DEFAULT_CACHE_BYTES = 32 * 1024 * 1024;
 const DEFAULT_LOAD_TIMEOUT_MS = 3000;
 /** A started clip that never reports `ended` (an interrupted context) still settles this long after its end. */
 const END_SAFETY_MS = 1500;
+
+// --- [QS] room at the start of a clip (AMENDMENTS-QUEST-SOUND-BACK QS-1) ------
+/** A clip is scheduled this far ahead of the call, so its first samples are not lost while the output starts. */
+export const CLIP_LEAD_MS = 60;
+/** The lead when the context had to be resumed for this play: the output device is waking. */
+export const CLIP_WAKE_LEAD_MS = 180;
+/** The gain rises from 0 to 1 over this long from the scheduled start. */
+export const CLIP_FADE_IN_MS = 20;
 
 /** Decoded float32 PCM bytes of a buffer (0 when the browser does not say). */
 function bufferBytes(buffer: AudioBufferLike): number {
@@ -120,6 +145,17 @@ function decode(ctx: AudioContextLike, data: ArrayBuffer): Promise<AudioBufferLi
       fail();
     }
   });
+}
+
+/** A gain node and the clock's reading, or `null` where the engine has neither (then no lead and no fade) [QS-1]. */
+function fadedOutput(audio: AudioContextLike): { node: GainNodeLike; now: number } | null {
+  const now = audio.currentTime;
+  if (typeof audio.createGain !== 'function' || typeof now !== 'number' || !Number.isFinite(now)) return null;
+  try {
+    return { node: audio.createGain(), now };
+  } catch {
+    return null;
+  }
 }
 
 const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
@@ -254,7 +290,9 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
     // A tap reaches here synchronously, inside the gesture: ask the context to run now,
     // before any await, or iOS refuses once a backgrounded page has suspended it (§3.6).
     const audio = context();
-    if (audio !== null && audio.state !== 'running') void safeResume(audio);
+    // [QS-1] A context that had to be woken for this play gets the longer lead.
+    const woke = audio !== null && audio.state !== 'running';
+    if (woke) void safeResume(audio);
 
     void (async (): Promise<void> => {
       if (audio === null) return settle(() => h.onError('blocked'));
@@ -268,18 +306,31 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
       if (stopped) return;
       if (!(await running(audio))) return settle(() => h.onError('blocked'));
       if (stopped) return;
+      let leadMs = 0;
       try {
         const node = audio.createBufferSource();
         node.buffer = buffer;
-        node.connect(audio.destination);
         node.onended = () => settle(() => h.onDone());
-        node.start(0);
+        const faded = fadedOutput(audio);
+        if (faded === null) {
+          // An old engine (no gain node or no clock): straight to the output, at once, as before [QS-1].
+          node.connect(audio.destination);
+          node.start(0);
+        } else {
+          leadMs = woke ? CLIP_WAKE_LEAD_MS : CLIP_LEAD_MS;
+          const startAt = faded.now + leadMs / 1000;
+          faded.node.gain.setValueAtTime(0, startAt);
+          faded.node.gain.linearRampToValueAtTime(1, startAt + CLIP_FADE_IN_MS / 1000);
+          node.connect(faded.node);
+          faded.node.connect(audio.destination);
+          node.start(startAt);
+        }
         source = node;
       } catch {
         return settle(() => h.onError('blocked'));
       }
       const seconds = Number.isFinite(buffer.duration) ? Math.max(0, buffer.duration) : 0;
-      safety = setTimeout(() => settle(() => h.onDone()), seconds * 1000 + END_SAFETY_MS);
+      safety = setTimeout(() => settle(() => h.onDone()), seconds * 1000 + END_SAFETY_MS + leadMs);
       h.onStart();
     })().catch(() => settle(() => h.onError('blocked')));
 

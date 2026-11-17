@@ -1,10 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   FakeAudioContext,
+  FakeLegacyAudioContext,
   makeFakeFetch,
   type FakeFetch,
 } from '../../test-support/fake-speech-synthesis';
-import { createWebClipPlayer, webAudioGlobals, type WebClipEnv } from '../audio-player.web';
+import {
+  CLIP_FADE_IN_MS,
+  CLIP_LEAD_MS,
+  CLIP_WAKE_LEAD_MS,
+  createWebClipPlayer,
+  webAudioGlobals,
+  type WebClipEnv,
+} from '../audio-player.web';
 
 /** F-AUDIO-004 §3.10, AD9: web clips are fetched and decoded into Web Audio, never an <audio> element. */
 
@@ -508,7 +516,8 @@ describe('platform/audio-player.web: review fixes (a tap resumes, nothing hangs,
     const p = play(r, 'audio/jamo/giyeok.mp3');
     await vi.advanceTimersByTimeAsync(0);
     expect(p.outcome.started).toBe(true);
-    await vi.advanceTimersByTimeAsync(900 + 1499);
+    // [QS-1] the margin grows by the lead the clip was scheduled with
+    await vi.advanceTimersByTimeAsync(900 + 1499 + CLIP_LEAD_MS);
     expect(p.outcome.result).toBeNull();
     await vi.advanceTimersByTimeAsync(1);
     expect(p.outcome.result).toBe('done');
@@ -613,5 +622,95 @@ describe('platform/audio-player.web: review fixes (a tap resumes, nothing hangs,
       expect(() => r.player.unlock()).not.toThrow();
       await expect(play(r, 'audio/jamo/giyeok.mp3').settled).resolves.toEqual({ started: false, result: 'blocked' });
     }
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-1: a clip starts a moment after it is asked for, and fades in. */
+describe('platform/audio-player.web: room at the start of a clip (QS-1)', () => {
+  it('the values the amendment names', () => {
+    expect([CLIP_LEAD_MS, CLIP_WAKE_LEAD_MS, CLIP_FADE_IN_MS]).toEqual([60, 180, 20]);
+  });
+
+  it('on a running context the source goes through a gain node and is scheduled 60 ms ahead, rising over 20 ms', async () => {
+    const r = rig();
+    r.player.unlock();
+    const ctx = r.contexts[0]!;
+    ctx.currentTime = 12;
+    const p = play(r, 'audio/jamo/giyeok.mp3');
+    await flush();
+    expect(p.outcome.started).toBe(true);
+    const source = lastSource(r);
+    const gain = ctx.gains.at(-1)!;
+    expect(source.connectedTo).toBe(gain);
+    expect(gain.connectedTo).toBe(ctx.destination);
+    const startAt = 12 + CLIP_LEAD_MS / 1000;
+    expect(source.startAt).toBeCloseTo(startAt, 6);
+    expect(gain.events).toEqual([
+      { type: 'set', value: 0, time: source.startAt },
+      { type: 'ramp', value: 1, time: source.startAt! + CLIP_FADE_IN_MS / 1000 },
+    ]);
+  });
+
+  it('a context that had to be resumed for this play gets the 180 ms lead (the output is waking)', async () => {
+    const r = rig();
+    const p = play(r, 'audio/jamo/giyeok.mp3'); // no unlock: this play wakes the suspended context
+    await flush();
+    const ctx = r.contexts[0]!;
+    expect(ctx.resumeCalls).toBeGreaterThan(0);
+    expect(p.outcome.started).toBe(true);
+    expect(lastSource(r).startAt).toBeCloseTo(CLIP_WAKE_LEAD_MS / 1000, 6);
+    // the next play finds it running: the short lead again
+    play(r, 'audio/jamo/nieun.mp3');
+    await flush();
+    expect(lastSource(r).startAt).toBeCloseTo(CLIP_LEAD_MS / 1000, 6);
+  });
+
+  it('the safety timer grows by the lead', async () => {
+    vi.useFakeTimers();
+    const r = rig();
+    const p = play(r, 'audio/jamo/giyeok.mp3'); // woken by this play: 180 ms lead
+    await vi.advanceTimersByTimeAsync(0);
+    expect(p.outcome.started).toBe(true);
+    await vi.advanceTimersByTimeAsync(900 + 1499 + CLIP_WAKE_LEAD_MS);
+    expect(p.outcome.result).toBeNull();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(p.outcome.result).toBe('done');
+  });
+
+  it('an engine with no gain node or clock plays as before: straight to the output, at once', async () => {
+    vi.useFakeTimers();
+    const r = rig({ context: () => new FakeLegacyAudioContext() });
+    r.player.unlock();
+    const p = play(r, 'audio/jamo/giyeok.mp3');
+    await vi.advanceTimersByTimeAsync(0);
+    const ctx = r.contexts[0]!;
+    const source = lastSource(r);
+    expect(p.outcome.started).toBe(true);
+    expect(source.connectedTo).toBe(ctx.destination);
+    expect(source.startAt).toBe(0);
+    expect(ctx.gains).toHaveLength(0);
+    // no lead, so the old margin holds
+    await vi.advanceTimersByTimeAsync(900 + 1499);
+    expect(p.outcome.result).toBeNull();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(p.outcome.result).toBe('done');
+  });
+
+  it('a gain node the engine refuses to make falls back the same way', async () => {
+    const r = rig({
+      context: () => {
+        const ctx = new FakeAudioContext();
+        ctx.createGain = () => {
+          throw new Error('no gain');
+        };
+        return ctx;
+      },
+    });
+    r.player.unlock();
+    const p = play(r, 'audio/jamo/giyeok.mp3');
+    await flush();
+    expect(p.outcome.started).toBe(true);
+    expect(lastSource(r).connectedTo).toBe(r.contexts[0]!.destination);
+    expect(lastSource(r).startAt).toBe(0);
   });
 });

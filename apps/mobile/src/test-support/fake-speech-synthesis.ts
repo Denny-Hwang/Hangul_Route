@@ -273,13 +273,52 @@ export class FakeBufferSource {
   buffer: FakeAudioBuffer | null = null;
   started = false;
   stopped = false;
+  /** The `when` of `start` / `stop` (context seconds); `undefined` when called with none. */
+  startAt: number | undefined = undefined;
+  stopAt: number | undefined = undefined;
+  /** What the source was wired to: the output, or a gain node (QS-1). */
+  connectedTo: unknown = null;
   onended: (() => void) | null = null;
-  connect(): void {}
-  start(): void {
-    this.started = true;
+  connect(destination?: unknown): void {
+    this.connectedTo = destination ?? null;
   }
-  stop(): void {
+  start(when?: number): void {
+    this.started = true;
+    this.startAt = when;
+  }
+  stop(when?: number): void {
     this.stopped = true;
+    this.stopAt = when;
+  }
+}
+
+/** One scheduled change of a gain value, in the order it was asked for (QS-1, QS-2). */
+export type FakeGainEvent =
+  | { type: 'set'; value: number; time: number }
+  | { type: 'ramp'; value: number; time: number }
+  | { type: 'target'; value: number; time: number; timeConstant: number }
+  | { type: 'cancel'; time: number };
+
+export class FakeGainNode {
+  readonly events: FakeGainEvent[] = [];
+  connectedTo: unknown = null;
+  readonly gain = {
+    value: 1,
+    setValueAtTime: (value: number, time: number): void => {
+      this.events.push({ type: 'set', value, time });
+    },
+    linearRampToValueAtTime: (value: number, time: number): void => {
+      this.events.push({ type: 'ramp', value, time });
+    },
+    setTargetAtTime: (value: number, time: number, timeConstant: number): void => {
+      this.events.push({ type: 'target', value, time, timeConstant });
+    },
+    cancelScheduledValues: (time: number): void => {
+      this.events.push({ type: 'cancel', time });
+    },
+  };
+  connect(destination?: unknown): void {
+    this.connectedTo = destination ?? null;
   }
 }
 
@@ -289,7 +328,16 @@ export class FakeAudioContext {
   /** 'resolve' / 'reject' settle at once; 'manual' waits for `settleDecode`. */
   decodeMode: 'resolve' | 'reject' | 'manual' = 'resolve';
   readonly sources: FakeBufferSource[] = [];
+  readonly gains: FakeGainNode[] = [];
   readonly destination = {};
+  /** The context clock in seconds; a test moves it by hand. `undefined` on an engine with no clock. */
+  currentTime: number | undefined = 0;
+  /** `undefined` on an engine with no gain node (`FakeLegacyAudioContext`). */
+  createGain: (() => FakeGainNode) | undefined = () => {
+    const node = new FakeGainNode();
+    this.gains.push(node);
+    return node;
+  };
   private readonly waiting: Array<{ resolve: (b: FakeAudioBuffer) => void; reject: (e: Error) => void; byteLength: number }> = [];
 
   get pendingDecodes(): number {
@@ -326,6 +374,15 @@ export class FakeAudioContext {
     const source = new FakeBufferSource();
     this.sources.push(source);
     return source;
+  }
+}
+
+/** An old engine: no gain node and no clock, so the player wires the source straight to the output (QS-1). */
+export class FakeLegacyAudioContext extends FakeAudioContext {
+  constructor() {
+    super();
+    this.createGain = undefined;
+    this.currentTime = undefined;
   }
 }
 
