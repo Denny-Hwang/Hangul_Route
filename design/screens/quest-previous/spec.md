@@ -3,7 +3,7 @@
 Spec: `docs/specs/AMENDMENTS-QUEST-SOUND-BACK.md` rows **QB-1** (Previous inside Look and learn), **QB-2** (Previous between steps), **QB-3** (no score changes)
 Wireframes: `design/wireframes/quest/player.md` (section "[QB] Previous"), `design/wireframes/quest/discover.md` (section "[QB] Previous inside the step"), `design/wireframes/quest/check.md` (launcher on a revisit)
 Mock: `mock/quest-previous.html` (a board of five cases), `mock/quest-previous-largest.html` (320 wide, Largest text), rules in `mock/quest-previous.css` (token variables of `design/screens/app-shell/mock/app-shell.css` only)
-Shots: `shots/mock-board-1280.png`, `shots/mock-board-390.png`, `shots/mock-largest-320.png` (the mock); the shots of the app are added by the PR that builds the rows
+Shots: `shots/mock-board-1280.png`, `shots/mock-board-390.png`, `shots/mock-largest-320.png` (the mock); the app (release `build:web`, `apps/mobile/e2e/web/quest-previous.spec.ts` with `HR_SHOTS=1`): `shots/app-look-and-learn-page2-390x844.png`, `app-look-and-learn-page1-after-previous-390x844.png`, `app-launcher-revisit-390x844.png`, `app-look-and-learn-largest-320x568.png`, `app-launcher-revisit-largest-320x568.png`
 Code: `apps/mobile/src/screens/quest/StepActions.tsx` (the row), `QuestPlayerView.tsx`, `DiscoverStep.tsx`; the current-dot marker is `Progress`'s `current` (`packages/design-system/src/components/Progress/`)
 
 ## What it is
