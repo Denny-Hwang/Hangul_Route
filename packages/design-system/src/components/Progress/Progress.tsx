@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
-import { colors, radii, spacing, typography } from '../../tokens';
+import { borderWidth, colors, radii, spacing, typography } from '../../tokens';
 import { useTypeScale } from '../TextSize';
 import { progressA11y } from '../../labels';
 import { ProgressLabelsContext } from './labels-context';
@@ -13,6 +13,16 @@ const toneColor = {
   secondary: colors.brand.secondary,
   success: colors.feedback.success,
 } as const;
+
+/** The ring of the dot shown now (`current`), per tone. */
+const toneDark = {
+  primary: colors.brand.primaryDark,
+  secondary: colors.brand.secondaryDark,
+  success: colors.feedback.successDark,
+} as const;
+
+/** How far the ring of the current dot stands out from the dot: a gap and the ring, each `borderWidth.base`. */
+const RING = borderWidth.base * 2;
 
 /** A decorative meter: no role, no name, no value; skipped by VoiceOver, TalkBack and the web's accessibility tree. */
 const HIDDEN = {
@@ -31,6 +41,7 @@ export function Progress({
   accessibilityLabel,
   accessibilityValueText,
   decorative = false,
+  current,
   testID,
 }: ProgressProps): ReactElement {
   const textScale = useTypeScale();
@@ -60,17 +71,42 @@ export function Progress({
         {...a11y}
         style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}
       >
-        {Array.from({ length: max }).map((_, i) => (
-          <View
-            key={i}
-            style={{
-              width: height,
-              height,
-              borderRadius: radii.circle,
-              backgroundColor: i < clamped ? toneColor[tone] : colors.surface.sunken,
-            }}
-          />
-        ))}
+        {Array.from({ length: max }).map((_, i) => {
+          const dot = (
+            <View
+              key={i}
+              style={{
+                width: height,
+                height,
+                borderRadius: radii.circle,
+                backgroundColor: i < clamped ? toneColor[tone] : colors.surface.sunken,
+              }}
+            />
+          );
+          // [QB] The dot shown now, when the meter is ahead of it (a step or page taken back, AMENDMENTS-QUEST-SOUND-BACK
+          // QB-1, QB-2): a ring around the same dot. The ring's room is given back as a negative margin, so the row
+          // keeps its size and no dot moves.
+          return current !== undefined && i === current - 1 ? (
+            <View
+              key={i}
+              testID={testID === undefined ? undefined : `${testID}-current`}
+              style={{
+                width: height + RING * 2,
+                height: height + RING * 2,
+                margin: -RING,
+                borderRadius: radii.circle,
+                borderWidth: borderWidth.base,
+                borderColor: toneDark[tone],
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {dot}
+            </View>
+          ) : (
+            dot
+          );
+        })}
         {label ? (
           <Text {...KOREAN_LINE_BREAK}
             style={{

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_PROGRESS_LABELS, progressA11y, type ProgressLabels } from '../../../labels';
 import { Progress } from '../Progress';
 import type { ProgressProps } from '../types';
+import { borderWidth, colors } from '../../../tokens';
 
 /**
  * [AU] AMENDMENTS-AUDIT-2026-11 AU-17d (audit A11Y-3: axe "progressbar without an accessible name"). Every `Progress`
@@ -86,6 +87,53 @@ describe('Progress accessible name and value (AU-17d)', () => {
 
   it('keeps its testID', () => {
     expect(bar({ testID: 'quest-dots', variant: 'dots' }).testID).toBe('quest-dots');
+  });
+});
+
+describe('[QB] the dot shown now (AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2)', () => {
+  const dots = (props: Partial<ProgressProps>): ReactElement<Props>[] => (bar({ variant: 'dots', ...props }).children as [ReactElement<Props>[], unknown])[0];
+  const style = (el: ReactElement<Props>): Record<string, unknown> => el.props.style as Record<string, unknown>;
+
+  it('without `current` every dot is the plain dot, as always', () => {
+    const all = dots({ value: 3, max: 6, testID: 'steps' });
+    expect(all).toHaveLength(6);
+    expect(all.every((d) => d.props.testID === undefined && style(d).borderWidth === undefined)).toBe(true);
+  });
+
+  it('the current dot is the same filled dot inside a ring; the meter keeps the furthest value', () => {
+    const props = bar({ variant: 'dots', value: 5, max: 6, current: 3, testID: 'steps' });
+    expect(props).toMatchObject({ 'aria-valuenow': 5 });
+    const all = dots({ value: 5, max: 6, current: 3, testID: 'steps' });
+    const ringed = all.filter((d) => d.props.testID === 'steps-current');
+    expect(ringed).toHaveLength(1);
+    expect(all.indexOf(ringed[0]!)).toBe(2);
+    const ring = style(ringed[0]!);
+    expect(ring.borderWidth).toBe(borderWidth.base);
+    expect(ring.borderColor).toBe(colors.brand.primaryDark);
+    const inner = ringed[0]!.props.children as ReactElement<Props>;
+    expect(style(inner).backgroundColor).toBe(colors.brand.primary);
+    // Filled dots: the furthest value, not the current one.
+    expect(all.filter((d) => (d.props.testID === 'steps-current' ? style(d.props.children as ReactElement<Props>) : style(d)).backgroundColor === colors.brand.primary)).toHaveLength(5);
+  });
+
+  it('the ring takes no room: its extra size is given back as a negative margin', () => {
+    const ring = style(dots({ value: 2, max: 2, current: 1, height: 12, testID: 'pages' })[0]!);
+    const extra = (ring.width as number) - 12;
+    expect(extra).toBeGreaterThan(0);
+    expect(ring.height).toBe(ring.width);
+    expect(ring.margin).toBe(-extra / 2);
+  });
+
+  it.each([
+    ['secondary', colors.brand.secondaryDark],
+    ['success', colors.feedback.successDark],
+  ] as const)('the ring is the dark colour of the %s tone', (tone, dark) => {
+    const ring = dots({ value: 2, max: 3, current: 1, tone, testID: 't' })[0]!;
+    expect(style(ring).borderColor).toBe(dark);
+  });
+
+  it('the bar has no dots, so `current` changes nothing there', () => {
+    expect(JSON.stringify(Progress({ value: 2, max: 6, current: 1 }))).toBe(JSON.stringify(Progress({ value: 2, max: 6 })));
   });
 });
 
