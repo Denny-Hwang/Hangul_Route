@@ -187,4 +187,22 @@ export const ANIMAL_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ellipse(50, 54, 5, 21, { f: 'text.primary' }),
     circle(50, 32, 6.5, { f: 'text.primary' }),
   ],
+
+  // [PX-1] a tiger's face: gold fur, round ears, ink stripes on the brow and cheeks, a pale muzzle. Hoya's colours,
+  // not Hoya's figure: a face like the other animals of the topic
+  'animal-tiger': [
+    circle(26, 28, 11, { f: 'hoya.fur', ...INK }),
+    circle(74, 28, 11, { f: 'hoya.fur', ...INK }),
+    circle(26, 28, 5, { f: 'hoya.cheek' }),
+    circle(74, 28, 5, { f: 'hoya.cheek' }),
+    ellipse(50, 54, 32, 28, { f: 'hoya.fur', ...INK }),
+    ellipse(50, 60, 14, 10, { f: 'hoya.belly', ...DETAIL }),
+    leaf(50, 27, 50, 40, 3, { f: 'text.primary' }),
+    leaf(38, 29, 41, 39, 2.5, { f: 'text.primary' }),
+    leaf(62, 29, 59, 39, 2.5, { f: 'text.primary' }),
+    ...pair(pts(18, 50, 28, 52, 19, 55), { f: 'text.primary' }),
+    ...pair(pts(19, 61, 29, 61, 21, 66), { f: 'text.primary' }),
+    ...face(50, 50, 1, { cheeks: true }),
+    ellipse(50, 54.5, 4.5, 3, { f: 'text.primary' }),
+  ],
 };

@@ -101,17 +101,19 @@ const TREE: ItemDef = {
   ],
 };
 
-/** A mountain beyond the yard (산), an other thing. */
+/** A mountain beyond the yard (산), an other thing: green with a snow cap, as in the four-seasons scene ([PX] PX-4; blue misled). */
 const MOUNTAIN: ItemDef = {
   id: 'prop:hh-far-mountain',
   kind: 'nature',
   box: { w: 90, h: 56 },
   z: 'back',
-  alt: 'A blue mountain with two peaks beyond the yard',
-  accuracyNote: 'A generic two-peaked mountain seen far off; no named mountain.',
+  alt: 'A green mountain with two peaks and a snow cap beyond the yard',
+  accuracyNote: 'A generic two-peaked mountain seen far off, green with snow on the higher peak; no named mountain.',
   nodes: [
-    { t: 'poly', pts: [[1, 55], [30, 10], [46, 28], [62, 3], [89, 55]], fill: 'theme.crafts', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M30 10L36 30M62 3L58 26', stroke: 'text.secondary', sw: 'thin', det: true },
+    { t: 'poly', pts: [[1, 55], [30, 10], [46, 28], [62, 3], [89, 55]], fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[52, 22], [62, 3], [73, 24], [67, 20], [62, 25], [57, 19]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[23, 21], [30, 10], [38, 19], [33, 17], [28, 21]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M46 28L44 40M62 25L60 38M30 21L34 34', stroke: 'text.secondary', sw: 'thin', det: true },
   ],
 };
 
@@ -132,20 +134,23 @@ const BIRD: ItemDef = {
   ],
 };
 
-/** A clump of yellow flowers in the yard (꽃), an other thing. */
+/** A clump of yellow flowers in the yard (꽃), an other thing: round petals and leaves ([PX] PX-4; pointed stars read as sparkles). */
 const FLOWERS: ItemDef = {
   id: 'prop:hh-yard-flowers',
   kind: 'nature',
   box: { w: 64, h: 72 },
   z: 'mid',
   alt: 'A clump of yellow flowers on green stems',
-  accuracyNote: 'Generic four-petalled yellow flowers on green stems; no species is meant.',
+  accuracyNote: 'Generic five-petalled yellow flowers with round petals on leafy green stems; no species is meant.',
   nodes: [
     { t: 'path', d: 'M20 72L18 30M32 72V20M44 72L48 34', stroke: 'theme.nature', sw: 'thick' },
-    { t: 'poly', pts: [[18, 17], [21, 25], [29, 28], [21, 31], [18, 39], [15, 31], [7, 28], [15, 25]], fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
-    { t: 'poly', pts: [[32, 4], [35, 12], [43, 15], [35, 18], [32, 26], [29, 18], [21, 15], [29, 12]], fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
-    { t: 'poly', pts: [[48, 21], [51, 29], [59, 32], [51, 35], [48, 43], [45, 35], [37, 32], [45, 29]], fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M18 28V29M32 15V16M48 32V33', stroke: 'text.secondary', sw: 'thick', det: true },
+    { t: 'path', d: 'M19 58C10 54 8 46 10 42C16 44 20 50 19 58ZM45 56C54 52 58 44 56 40C50 42 46 48 45 56Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M20.5 22.5A4.5 4.5 0 1 1 22.5 27.5A4.5 4.5 0 1 1 18 30.5A4.5 4.5 0 1 1 13.5 27.5A4.5 4.5 0 1 1 15.5 22.5A4.5 4.5 0 1 1 20.5 22.5Z', fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M35.5 9.5A4.5 4.5 0 1 1 37.5 14.5A4.5 4.5 0 1 1 33 17.5A4.5 4.5 0 1 1 28.5 14.5A4.5 4.5 0 1 1 30.5 9.5A4.5 4.5 0 1 1 35.5 9.5Z', fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M50.5 26.5A4.5 4.5 0 1 1 52.5 31.5A4.5 4.5 0 1 1 48 34.5A4.5 4.5 0 1 1 43.5 31.5A4.5 4.5 0 1 1 45.5 26.5A4.5 4.5 0 1 1 50.5 26.5Z', fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
+    { t: 'circle', cx: 18, cy: 26, r: 3, fill: 'text.secondary' },
+    { t: 'circle', cx: 33, cy: 13, r: 3, fill: 'text.secondary' },
+    { t: 'circle', cx: 48, cy: 30, r: 3, fill: 'text.secondary' },
   ],
 };
 

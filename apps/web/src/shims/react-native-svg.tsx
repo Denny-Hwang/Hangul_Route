@@ -2,10 +2,11 @@
  * `react-native-svg` for the web console: the design system's
  * HeritageCardArt is written against react-native-svg, whose shapes take the
  * same props as DOM SVG. next.config.js, vitest.config.ts and tsconfig.json
- * point `react-native-svg` here, so the WordArt contact sheet can draw the
- * real card art beside the words that reuse it (F-VOC-002 §3.11) without
- * react-native. Only the elements HeritageCardArt uses are mapped; nothing
- * else in apps/web imports react-native-svg.
+ * point `react-native-svg` here, so the contact sheets can draw the real card
+ * art (/design-preview/cards, AMENDMENTS-PICTURES-2026-11 PX-0; F-VOC-002
+ * §3.11) without react-native. Only the elements HeritageCardArt and
+ * UpperCellArt use are mapped; nothing else in apps/web imports
+ * react-native-svg.
  */
 import type { ReactNode, SVGProps } from 'react';
 
@@ -49,4 +50,9 @@ export function Polygon(props: ShapeProps<SVGPolygonElement>): JSX.Element {
 
 export function Rect(props: ShapeProps<SVGRectElement>): JSX.Element {
   return <rect {...props} />;
+}
+
+/** The upper-cell card art draws a card's own word with `Text` (`UpperCellArt.tsx`); the card-art sheet shows it. */
+export function Text(props: ShapeProps<SVGTextElement>): JSX.Element {
+  return <text {...props} />;
 }

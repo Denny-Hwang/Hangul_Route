@@ -11,8 +11,12 @@ import { HOYA_POSES } from '../hoya';
 import { SCENE_ART_REGISTRY } from '../registry';
 import { boundsOf, nodeCount, resolveScene, thumbVariant, type Bounds, type Registry, type ResolvedScene } from '../resolve';
 import { cappedPalette, checkItem, LIMITS, serializedBytes, type Finding } from '../rules';
-import { isColorToken, resolveColor } from '../tokens-map';
-import { SCENE_CANVAS, type ColorToken, type ItemDef } from '../types';
+import { isArtColorToken, resolveColor } from '../tokens-map';
+import { SCENE_CANVAS, type ArtColorToken, type ItemDef as AnyItemDef } from '../types';
+
+/** A hidden-heritage thing may carry a vocab tone ([PX] R4), so the profile reads every art colour. */
+type ColorToken = ArtColorToken;
+type ItemDef = AnyItemDef<ArtColorToken>;
 import { HIDDEN_HERITAGE_RINGS, type HiddenHeritageRings, type HiddenHeritageRoundLike, type HiddenHeritageScene, type HiddenHeritageSpotLike } from './types';
 
 export const HIDDEN_HERITAGE_LIMITS = {
@@ -76,7 +80,7 @@ function outlined(item: ItemDef): boolean {
     shapes.some((s) =>
       s.t === 'group'
         ? walk(s.kids)
-        : s.stroke !== undefined && isColorToken(s.stroke) && (s.sw === 'base' || s.sw === 'thick') && relativeLuminance(resolveColor(s.stroke)) <= limit,
+        : s.stroke !== undefined && isArtColorToken(s.stroke) && (s.sw === 'base' || s.sw === 'thick') && relativeLuminance(resolveColor(s.stroke)) <= limit,
     );
   return walk(item.nodes);
 }
@@ -89,7 +93,7 @@ export function checkHiddenHeritageScene(scene: HiddenHeritageScene, base: Regis
   };
   for (const item of scene.items) {
     if (Object.prototype.hasOwnProperty.call(base, item.id)) err('H-item', `${item.id} is already in the shared registry; a scene adds items of its own`);
-    for (const f of checkItem(item)) if (f.severity === 'error') out.push(f);
+    for (const f of checkItem(item, { vocabTones: true })) if (f.severity === 'error') out.push(f);
   }
   const registry = sceneRegistry(scene, base);
   const resolved = resolveScene(scene.art, registry);

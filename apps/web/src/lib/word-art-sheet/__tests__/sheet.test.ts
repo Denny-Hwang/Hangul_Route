@@ -72,12 +72,12 @@ describe('cardArtReuses: the words that reuse a heritage card picture (F-VOC-002
     expect(list[1]!.words).toEqual([{ id: 'vocab:dal', ko: '달', romanization: 'dal', en: 'moon', topic: 'nature' }]);
   });
 
-  it('finds the 13 launch reuses in the shipped catalog', () => {
-    const list = cardArtReuses(VOCAB_CATALOG);
-    expect(list.map((r) => r.cardId).sort()).toEqual(
-      ['book', 'chuseok', 'gayageum', 'hanbok', 'kimbap', 'kimchi', 'moon', 'mountain', 'rice', 'sea', 'seollal', 'tiger', 'yutnori'].map((c) => `card:${c}`),
-    );
-    for (const r of list) expect(r.words.length).toBeGreaterThan(0);
+  it('finds no reuse in the shipped catalog: the 13 launch reuses have their own glyphs (AMENDMENTS-PICTURES-2026-11 rule R6)', () => {
+    expect(cardArtReuses(VOCAB_CATALOG)).toEqual([]);
+    const was = ['rice', 'kimchi', 'kimbap', 'tiger', 'book', 'mountain', 'sea', 'moon', 'hanbok', 'seollal', 'chuseok', 'yutnori', 'gayageum'];
+    const now = ['food-rice', 'food-kimchi', 'food-kimbap', 'animal-tiger', 'school-book', 'nature-mountain', 'nature-sea', 'nature-moon', 'culture-hanbok', 'culture-seollal', 'culture-chuseok', 'culture-yutnori', 'culture-gayageum'];
+    expect(was).toHaveLength(13);
+    for (const key of now) expect(VOCAB_CATALOG.filter((e) => e.visual === `word:${key}`), key).toHaveLength(1);
   });
 });
 

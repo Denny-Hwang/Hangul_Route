@@ -43,7 +43,7 @@ interface TopicSpec {
 }
 
 const ANIMALS: Row[] = [
-  { id: 'vocab:horangi', ko: '호랑이', romanization: 'horangi', en: 'tiger', es: 'tigre', visual: 'card:tiger', level: 2 },
+  { id: 'vocab:horangi', ko: '호랑이', romanization: 'horangi', en: 'tiger', es: 'tigre', visual: 'word:animal-tiger', level: 2 },
   { id: 'vocab:goyangi', ko: '고양이', romanization: 'goyangi', en: 'cat', es: 'gato', visual: 'word:animal-cat', level: 2 },
   { id: 'vocab:gangaji', ko: '강아지', romanization: 'gangaji', en: 'puppy', es: 'perrito', visual: 'word:animal-puppy', level: 2, note: { en: 'Also the everyday word for a pet dog. The plain word for dog is gae.', es: 'También se usa para cualquier perro de casa. La palabra general para perro es gae.' } },
   { id: 'vocab:tokki', ko: '토끼', romanization: 'tokki', en: 'rabbit', es: 'conejo', visual: 'word:animal-rabbit', level: 1 },
@@ -188,10 +188,12 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-5)', (spec) => {
 });
 
 describe('topic-specific rules', () => {
-  it('Animals: 8 or more hand-drawn or card pictures, exactly one card (the tiger)', () => {
+  // AMENDMENTS-PICTURES-2026-11 row PX-1: the tiger has its own glyph
+  it('Animals: every picture is a drawn animal glyph, the tiger included (no card picture)', () => {
     const file = VocabTopicFileSchema.parse(readJson('vocab/animals.json'));
-    expect(file.items.filter((i) => /^(card|word):animal-|^card:/.test(i.visual)).length).toBeGreaterThanOrEqual(8);
-    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual(['card:tiger']);
+    expect(file.items.filter((i) => i.visual.startsWith('word:animal-')).length).toBe(file.items.length);
+    expect(file.items.find((i) => i.id === 'vocab:horangi')?.visual).toBe('word:animal-tiger');
+    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual([]);
   });
 
   it('Colors: every picture is a generated colour key (the topic is exempt from the drawn count)', () => {

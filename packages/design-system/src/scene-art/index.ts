@@ -4,7 +4,7 @@
  * `drawScene` returns.
  */
 export * from './types';
-export { COLOR_TOKENS, isColorToken, resolveColor, resolveStroke } from './tokens-map';
+export { COLOR_TOKENS, isArtColorToken, isColorToken, resolveColor, resolveStroke } from './tokens-map';
 export {
   boundsOf,
   nodeCount,
@@ -22,7 +22,7 @@ export {
   type ResolvedNode,
   type ResolvedScene,
 } from './resolve';
-export { LIMITS, cappedPalette, checkItem, checkScene, serializedBytes, type Finding } from './rules';
+export { LIMITS, cappedPalette, checkItem, checkScene, serializedBytes, type CheckItemOptions, type Finding } from './rules';
 export { CARD_SIZE, drawProp, drawScene, type DrawCard, type DrawItem, type DrawNode, type DrawPaint, type DrawnScene } from './draw';
 export { HOYA_BOX, HOYA_POSES, hoyaFigure, hoyaItem, hoyaNodes, hoyaPaintProps, type HoyaFur, type HoyaPaint, type HoyaPart, type HoyaPose } from './hoya';
 export { SCENE_ART_REGISTRY, hasItem } from './registry';

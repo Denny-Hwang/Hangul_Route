@@ -34,9 +34,9 @@ const TABLE: Row[] = [
   { id: 'vocab:banana', ko: '바나나', romanization: 'banana', en: 'banana', es: 'banana', visual: 'word:food-banana', level: 2 },
   { id: 'vocab:uyu', ko: '우유', romanization: 'uyu', en: 'milk', es: 'leche', visual: 'word:food-milk', level: 1 },
   { id: 'vocab:ppang', ko: '빵', romanization: 'ppang', en: 'bread', es: 'pan', visual: 'word:food-bread', level: 1 },
-  { id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'cooked rice', es: 'arroz cocido', visual: 'card:rice', level: 1, note: { en: 'It also means a meal. Uncooked rice is ssal.', es: 'También significa una comida. El arroz sin cocinar es ssal.' } },
-  { id: 'vocab:gimchi', ko: '김치', romanization: 'gimchi', en: 'kimchi', es: 'kimchi', visual: 'card:kimchi', level: 1, note: { en: 'A Korean side dish of fermented vegetables, often spicy.', es: 'Acompañamiento coreano de verduras fermentadas, a menudo picante.' } },
-  { id: 'vocab:gimbap', ko: '김밥', romanization: 'gimbap', en: 'seaweed rice roll', es: 'rollo de arroz con alga', visual: 'card:kimbap', level: 2 },
+  { id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'cooked rice', es: 'arroz cocido', visual: 'word:food-rice', level: 1, note: { en: 'It also means a meal. Uncooked rice is ssal.', es: 'También significa una comida. El arroz sin cocinar es ssal.' } },
+  { id: 'vocab:gimchi', ko: '김치', romanization: 'gimchi', en: 'kimchi', es: 'kimchi', visual: 'word:food-kimchi', level: 1, note: { en: 'A Korean side dish of fermented vegetables, often spicy.', es: 'Acompañamiento coreano de verduras fermentadas, a menudo picante.' } },
+  { id: 'vocab:gimbap', ko: '김밥', romanization: 'gimbap', en: 'seaweed rice roll', es: 'rollo de arroz con alga', visual: 'word:food-kimbap', level: 2 },
   { id: 'vocab:ramyeon', ko: '라면', romanization: 'ramyeon', en: 'instant noodles', es: 'fideos instantáneos', visual: 'word:food-ramyeon', level: 2 },
   { id: 'vocab:mul', ko: '물', romanization: 'mul', en: 'water', es: 'agua', visual: 'word:food-water', level: 1 },
   { id: 'vocab:dalgyal', ko: '달걀', romanization: 'dalgyal', en: 'egg', es: 'huevo', visual: 'word:food-egg', level: 2, note: { en: 'Also called gyeran, which is just as common.', es: 'También se dice gyeran, igual de común.' } },
@@ -106,11 +106,12 @@ describe('content/vocab/food.json (F-VOC-001 V-2b)', () => {
     ]);
   });
 
-  it('keeps at most four culturally Korean items and 8 or more hand-drawn or card pictures', () => {
+  // AMENDMENTS-PICTURES-2026-11 row PX-1: rice, kimchi and kimbap have their own glyph, so no food word borrows a card picture
+  it('keeps at most four culturally Korean items, and every picture is a drawn food glyph (no card picture)', () => {
     const korean = new Set(['vocab:gimchi', 'vocab:gimbap', 'vocab:tteok', 'vocab:ramyeon']);
     expect(file.items.filter((i) => korean.has(i.id))).toHaveLength(4);
-    expect(file.items.filter((i) => /^(card|word):/.test(i.visual))).toHaveLength(12);
-    expect(file.items.filter((i) => i.visual.startsWith('card:'))).toHaveLength(3);
+    expect(file.items.filter((i) => i.visual.startsWith('word:food-'))).toHaveLength(12);
+    expect(file.items.filter((i) => i.visual.startsWith('card:'))).toHaveLength(0);
   });
 });
 

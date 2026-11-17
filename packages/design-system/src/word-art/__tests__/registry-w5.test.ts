@@ -21,8 +21,9 @@ describe('batch W-5 (§3.12)', () => {
     // the reserved lesson pictures (registry-lessons.test.ts) are not part of the batch
     const of = (f: string) => WORD_ART_KEYS.filter((k) => k.startsWith(`${f}-`) && WORD_ART[k]!.meta.reserved !== true).sort();
     expect(of('family')).toEqual([...W5_FAMILY].sort());
-    expect(of('school')).toEqual(['school-chair', ...W5_SCHOOL].sort());
-    expect(of('nature')).toEqual(['nature-cloud', 'nature-flower', ...W5_NATURE].sort());
+    // row PX-1 (registry-px1.test.ts) added the book, and the mountain, the sea and the moon
+    expect(of('school')).toEqual(['school-chair', 'school-book', ...W5_SCHOOL].sort());
+    expect(of('nature')).toEqual(['nature-cloud', 'nature-flower', 'nature-mountain', 'nature-sea', 'nature-moon', ...W5_NATURE].sort());
   });
 
   it('draws the four sibling words with the siblings() composition, each a different pair', () => {

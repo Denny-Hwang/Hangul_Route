@@ -254,6 +254,14 @@ describe('story scene art', () => {
     }
   });
 
+  // AMENDMENTS-PICTURES-2026-11 PX-4: the evening-sky overlay is a 400-wide wash with hard edges, so every use spans
+  // the canvas (centred, unscaled, unflipped) and none shows an edge inside the picture.
+  it('lays the night-sky overlay across the whole canvas width', () => {
+    const uses = withArt.flatMap(({ story, scene }) => scene.art!.layers.filter((l) => l.ref === 'prop:night-sky').map((l) => ({ id: `${story.id} ${scene.id}`, l })));
+    expect(uses.length).toBeGreaterThan(0);
+    for (const { id, l } of uses) expect({ x: l.x, s: l.s ?? 1 }, id).toEqual({ x: 200, s: 1 });
+  });
+
   // §3.9.10: the pansori drummer (gosu) sits beside his drum; the seated
   // writer figure carries paper and a brush, so it is not used for him.
   it('draws the pansori drummer without paper and brush', () => {

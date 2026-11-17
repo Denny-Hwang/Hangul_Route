@@ -77,7 +77,7 @@
         "food"
       ],
       "level": 1,
-      "visual": "card:rice",
+      "visual": "word:food-rice",
       "senseNote": "It also means a meal. Uncooked rice is ssal."
     },
     {
@@ -90,7 +90,7 @@
         "food"
       ],
       "level": 1,
-      "visual": "card:kimchi",
+      "visual": "word:food-kimchi",
       "senseNote": "A Korean side dish of fermented vegetables, often spicy."
     },
     {
@@ -103,7 +103,7 @@
         "food"
       ],
       "level": 2,
-      "visual": "card:kimbap"
+      "visual": "word:food-kimbap"
     },
     {
       "id": "vocab:ramyeon",

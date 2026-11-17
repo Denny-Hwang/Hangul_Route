@@ -56,7 +56,8 @@ describe('lectureVocabTopics (F-TCH-004 PR 12)', () => {
       ko: '김치',
       romanization: 'gimchi',
       gloss: 'kimchi',
-      cardId: 'card:kimchi',
+      // its own glyph since AMENDMENTS-PICTURES-2026-11 PX-1 (it was card:kimchi); a card: picture still maps to cardId (below)
+      wordArt: 'food-kimchi',
       audioRef: 'audio/vocab/gimchi.mp3',
     });
   });

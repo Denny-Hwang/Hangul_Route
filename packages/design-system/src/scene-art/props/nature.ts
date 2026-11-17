@@ -59,8 +59,10 @@ export const FLAT_ROCK: ItemDef = {
   alt: 'A broad flat rock',
   accuracyNote: 'A generic flat grey rock of the kind found in a clear mountain stream, wide enough to sit on or to spread paper on.',
   nodes: [
-    { t: 'path', d: 'M2 24 Q0 12 14 8 Q34 2 56 6 Q70 10 68 24 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'path', d: 'M14 12 Q34 6 54 10', stroke: 'surface.paper', sw: 'base', o: 0.6, det: true },
+    { t: 'path', d: 'M2 24 L3 15 L12 8 L28 4 L48 3 L60 7 L68 15 L68 24 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M2.5 19 L20 20 L36 18 L54 17 L68 18.5 V24 H2 Z', fill: 'text.secondary', o: 0.6 },
+    { t: 'path', d: 'M12 8 L22 18 M48 3 L40 17 M60 7 L58 17', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M14 12 Q30 6 44 8', stroke: 'surface.paper', sw: 'base', o: 0.6, det: true },
   ],
 };
 
@@ -73,11 +75,11 @@ export const FULL_MOON: ItemDef = {
   z: 'back',
   tags: { sky: true },
   alt: 'A round full moon with a soft glow',
-  accuracyNote: 'A plain full moon with a pale halo; it marks the night or the lunar calendar and copies no real view.',
+  accuracyNote: 'A plain full moon with a dark rim and a stronger warm halo, so it shows on a light ground at small sizes ([PX] PX-4); it marks the night or the lunar calendar and copies no real view.',
   nodes: [
-    { t: 'circle', cx: 25, cy: 25, r: 24, fill: 'feedback.nudgeLight', o: 0.35 },
-    { t: 'circle', cx: 25, cy: 25, r: 16, fill: 'feedback.nudgeLight', stroke: 'border.strong', sw: 'thin' },
-    { t: 'path', d: 'M18 20 Q21 18 24 21 M27 30 Q31 28 33 31', stroke: 'border.strong', sw: 'thin', det: true },
+    { t: 'circle', cx: 25, cy: 25, r: 24, fill: 'feedback.nudgeLight', o: 0.85 },
+    { t: 'circle', cx: 25, cy: 25, r: 17, fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M15 22A4 4 0 1 0 23 22A4 4 0 1 0 15 22ZM27 31A3 3 0 1 0 33 31A3 3 0 1 0 27 31ZM29 17A2 2 0 1 0 33 17A2 2 0 1 0 29 17Z', fill: 'border.strong', o: 0.6, det: true },
   ],
 };
 
@@ -189,14 +191,17 @@ export const HOODED_CRANE: ItemDef = {
   kind: 'nature',
   box: { w: 60, h: 90 },
   z: 'mid',
-  alt: 'A hooded crane: dark grey body, white head and neck',
-  accuracyNote: 'Per encykorea: grey body, white neck, red crown.',
+  alt: 'A hooded crane: a white S-curved neck and head with a small red crown, a grey body, dark flight feathers and long legs',
+  accuracyNote: 'Per encykorea: grey body, white neck, red crown. Drawn with the S-curved neck, long legs and dark flight feathers of a crane ([PX] PX-4).',
   nodes: [
-    { t: 'path', d: 'M28 86L30 58M38 86L36 58', stroke: 'text.primary', sw: 'base' },
-    { t: 'path', d: 'M14 52Q16 34 34 34Q52 36 54 54Q46 62 30 60Q18 60 14 52Z', fill: 'text.secondary' },
-    { t: 'path', d: 'M22 38Q16 22 18 10', stroke: 'surface.paper', sw: 'thick' },
-    { t: 'circle', cx: 18, cy: 9, r: 5, fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'path', d: 'M14 7L2 11H14Z', fill: 'feedback.nudge' },
-    { t: 'circle', cx: 17, cy: 5, r: 2, fill: 'theme.rites', det: true },
+    { t: 'path', d: 'M30 88L32 58M40 88L38 58M27 88H33M37 88H43', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M42 40Q56 44 58 58Q50 52 44 56Z', fill: 'text.secondary', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M14 46Q16 34 30 34Q46 34 54 46Q50 60 32 60Q16 60 14 46Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M30 40Q44 42 54 50L56 58Q44 52 30 48Z', fill: 'text.secondary' },
+    { t: 'path', d: 'M20 38Q10 30 16 22Q24 14 18 6', stroke: 'text.secondary', sw: 'thick' },
+    { t: 'path', d: 'M20 38Q10 30 16 22Q24 14 18 6', stroke: 'surface.paper', sw: 'base' },
+    { t: 'circle', cx: 17, cy: 7, r: 5, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M13 6L2 10L13 9Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'circle', cx: 18, cy: 3.5, r: 2, fill: 'brand.primary' },
   ],
 };

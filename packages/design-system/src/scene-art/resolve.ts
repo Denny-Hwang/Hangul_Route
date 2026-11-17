@@ -4,16 +4,13 @@
  * no react-native; both renderers draw what this returns.
  */
 import { isColorToken } from './tokens-map';
-import {
-  SCENE_CANVAS,
-  type Band,
-  type ColorToken,
-  type ItemDef,
-  type ItemKind,
-  type LeafShape,
-  type SceneArtLike,
-  type Shape,
-} from './types';
+import { SCENE_CANVAS, type ArtColorToken, type Band, type ColorToken, type ItemKind, type SceneArtLike, type Shape as AnyShape } from './types';
+import type { ItemDef as AnyItemDef, LeafShape as AnyLeafShape } from './types';
+
+/** The renderer draws every art colour; hidden-heritage things may carry a vocab tone ([PX] R4, `types.ts`). */
+type Shape = AnyShape<ArtColorToken>;
+type LeafShape = AnyLeafShape<ArtColorToken>;
+type ItemDef = AnyItemDef<ArtColorToken>;
 
 export type Registry = Readonly<Record<string, ItemDef>>;
 
@@ -72,7 +69,7 @@ export interface ResolvedScene {
   layers: ResolvedLayer[];
   cards: ResolvedCard[];
   issues: ResolveIssue[];
-  stats: { layers: number; shapes: number; colors: ColorToken[]; bounds: Bounds | null };
+  stats: { layers: number; shapes: number; colors: ArtColorToken[]; bounds: Bounds | null };
 }
 
 const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
@@ -308,7 +305,7 @@ export function nodeCount(shapes: readonly Shape[]): number {
   return shapes.reduce((n, s) => n + (s.t === 'group' ? nodeCount(s.kids) : 1), 0);
 }
 
-function addPalette(shapes: readonly Shape[], into: Set<ColorToken>): void {
+function addPalette<C extends string>(shapes: readonly AnyShape<C>[], into: Set<C>): void {
   for (const s of shapes) {
     if (s.t === 'group') {
       addPalette(s.kids, into);
@@ -320,15 +317,15 @@ function addPalette(shapes: readonly Shape[], into: Set<ColorToken>): void {
 }
 
 /** Distinct colour tokens an item uses, sorted. */
-export function paletteOf(item: Pick<ItemDef, 'nodes'>): ColorToken[] {
-  const set = new Set<ColorToken>();
+export function paletteOf<C extends string = ColorToken>(item: { nodes: readonly AnyShape<C>[] }): C[] {
+  const set = new Set<C>();
   addPalette(item.nodes, set);
   return [...set].sort();
 }
 
 /** The cheap picture for small sizes: no detail shapes, no hairline strokes. */
-export function thumbVariant(nodes: readonly Shape[]): Shape[] {
-  const out: Shape[] = [];
+export function thumbVariant<C extends string = ColorToken>(nodes: readonly AnyShape<C>[]): AnyShape<C>[] {
+  const out: AnyShape<C>[] = [];
   for (const shape of nodes) {
     if (shape.det) continue;
     if (shape.t === 'group') {
@@ -339,7 +336,7 @@ export function thumbVariant(nodes: readonly Shape[]): Shape[] {
     if (shape.sw === 'thin' && shape.stroke) {
       const { stroke: _stroke, sw: _sw, ...rest } = shape;
       if (rest.fill === undefined || rest.fill === 'none') continue;
-      out.push(rest as Shape);
+      out.push(rest as AnyShape<C>);
     } else {
       out.push(shape);
     }
@@ -437,7 +434,7 @@ export function resolveScene(art: SceneArtLike, registry: Registry, options: { v
     layers.push({ layerIndex: e.index, ref: e.ref, band: e.band, rank, kind: e.def.kind, shapes: nodeCount(e.shapes), bounds: b });
   });
 
-  const colors = new Set<ColorToken>();
+  const colors = new Set<ArtColorToken>();
   addPalette(
     nodes.map((n) => n.shape),
     colors,

@@ -681,12 +681,13 @@ describe('precacheReport and its budget lines', () => {
     // [AU] AMENDMENTS-AUDIT-2026-11 stage 2 (AU-8 to AU-17) measures 4,948,154 B (release build, CI=1): 4,952,000 B.
     // [QB] AMENDMENTS-QUEST-SOUND-BACK QB-1 to QB-4 (a quest step can be taken back) measures 4,953,393 B (release build, CI=1): 4,957,400 B.
     // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-1 to QS-5 (sounds get room at both ends) on top of QB measures 4,957,992 B (release build, CI=1): 4,962,000 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_962_000);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992]) {
+    // [PX] AMENDMENTS-PICTURES-2026-11 PX-4 and PX-5 (scenes, props, realia and Hoya) measures 4,965,473 B (release build, CI=1): 4,969,500 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_969_500);
+    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_957_992).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_965_473).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

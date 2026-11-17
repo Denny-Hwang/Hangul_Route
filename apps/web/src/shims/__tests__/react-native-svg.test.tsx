@@ -1,7 +1,7 @@
 import { HeritageCardArt } from '@hangul-route/design-system/components/HeritageCardArt';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect, Svg as NamedSvg } from '../react-native-svg';
+import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect, Svg as NamedSvg, Text } from '../react-native-svg';
 
 /**
  * The web's `react-native-svg` (aliased in next.config.js, vitest.config.ts
@@ -43,7 +43,19 @@ describe('react-native-svg on the web', () => {
     );
   });
 
-  it('renders the real HeritageCardArt of every launch reuse, each its own drawing and not the fallback', () => {
+  it('maps Text to a text element, for the card arts that draw their own word', () => {
+    const html = renderToStaticMarkup(
+      <Svg>
+        <Text x={10} y={20} fontSize={18} fontWeight="700" textAnchor="middle">
+          a
+        </Text>
+      </Svg>,
+    );
+    expect(html).toBe('<svg><text x="10" y="20" font-size="18" font-weight="700" text-anchor="middle">a</text></svg>');
+  });
+
+  // the 13 cards vocabulary words borrowed until AMENDMENTS-PICTURES-2026-11 PX-1; they stay collectibles, drawn on /design-preview/cards
+  it('renders the real HeritageCardArt of the 13 cards that were the launch reuses, each its own drawing and not the fallback', () => {
     const fallback = renderToStaticMarkup(<HeritageCardArt cardId="card:none" size={64} accessibilityLabel="x" />);
     const ids = ['rice', 'kimchi', 'kimbap', 'tiger', 'mountain', 'sea', 'moon', 'book', 'hanbok', 'seollal', 'chuseok', 'yutnori', 'gayageum'].map((c) => `card:${c}`);
     const drawn = ids.map((cardId) => renderToStaticMarkup(<HeritageCardArt cardId={cardId} size={64} accessibilityLabel="x" />));

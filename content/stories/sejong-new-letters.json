@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:sejong-new-letters",
   "state": "ready",
-  "contentVer": 5,
+  "contentVer": 6,
   "title": {
     "ko": "세종대왕의 새 글자",
     "romanization": "Sejongdaewangui sae geulja",
@@ -472,8 +472,8 @@
               {
                 "ref": "hoya:waving",
                 "x": 92,
-                "y": 288,
-                "s": 0.5
+                "y": 260,
+                "s": 0.65
               }
             ],
             "altEn": "Today Hoya waves beside a child at a little desk with a notebook, because people in Korea read and write Hangul every day."
@@ -877,8 +877,8 @@
               {
                 "ref": "hoya:waving",
                 "x": 92,
-                "y": 288,
-                "s": 0.5
+                "y": 260,
+                "s": 0.65
               }
             ],
             "altEn": "Today Hoya waves beside a child at a little desk with a notebook, because people in Korea read and write Hangul every day."

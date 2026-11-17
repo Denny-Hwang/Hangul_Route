@@ -50,7 +50,8 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'packages/backend/src/routes/content.ts', cls: 'B3', suite: BACKEND_SUITE, needle: 'routes/content' },
   // C. Inline literals in pages
   { path: 'apps/web/src/app/(console)/design-preview/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/page.tsx' },
-  { path: 'apps/web/src/app/(console)/design-preview/cards/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/cards/page.tsx' },
+  // the card-art sheet's rows (the page itself holds no Korean since AMENDMENTS-PICTURES-2026-11 PX-0)
+  { path: 'apps/web/src/data/card-art-sheet.ts', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'data/card-art-sheet.ts' },
   { path: 'apps/web/src/app/(console)/design-preview/components/page.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'design-preview/components/page.tsx' },
   { path: 'apps/mobile/src/screens/minigames/VoiceEchoGame.tsx', cls: 'C', suite: WEB_SOURCES_SUITE, needle: 'minigames/VoiceEchoGame.tsx' },
 ];

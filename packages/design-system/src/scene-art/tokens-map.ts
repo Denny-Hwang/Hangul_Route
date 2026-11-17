@@ -4,7 +4,8 @@
  * names.
  */
 import { borderWidth, colors } from '../tokens';
-import type { ColorToken, ReservedColorGroup, StrokeToken } from './types';
+import { VOCAB_TONES } from './hidden-heritage/tones';
+import type { ArtColorToken, ColorToken, ReservedColorGroup, StrokeToken, VocabColorToken } from './types';
 
 const RESERVED: ReadonlySet<string> = new Set(['surface.overlay', 'surface.inkScrim', 'feedback.danger']);
 
@@ -26,11 +27,22 @@ export function isColorToken(value: unknown): value is ColorToken {
   return typeof value === 'string' && TOKEN_SET.has(value);
 }
 
+/** WordArt's content tones as token paths: drawable, authored only by hidden-heritage things ([PX] R4). */
+export const VOCAB_COLOR_TOKENS: readonly VocabColorToken[] = Object.keys(VOCAB_TONES) as VocabColorToken[];
+
+const isVocabTone = (value: unknown): value is VocabColorToken => typeof value === 'string' && Object.prototype.hasOwnProperty.call(VOCAB_TONES, value);
+
+/** A token the renderer draws: a scene token, or a vocab tone a hidden-heritage thing carries. */
+export function isArtColorToken(value: unknown): value is ArtColorToken {
+  return isColorToken(value) || isVocabTone(value);
+}
+
 /**
  * Hex value of a token. An unknown or reserved token throws; renderers guard
- * with `isColorToken` and draw nothing for it in production.
+ * with `isArtColorToken` and draw nothing for it in production.
  */
-export function resolveColor(token: ColorToken): string {
+export function resolveColor(token: ArtColorToken): string {
+  if (isVocabTone(token)) return VOCAB_TONES[token];
   if (!isColorToken(token)) throw new RangeError(`Unknown colour token: ${String(token)}`);
   const [group, name] = (token as string).split('.') as [keyof typeof colors, string];
   return (colors[group] as Record<string, string>)[name]!;

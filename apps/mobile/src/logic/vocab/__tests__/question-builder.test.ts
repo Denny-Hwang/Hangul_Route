@@ -35,6 +35,16 @@ const topicOf = (key: string): readonly RuntimeVocabItem[] =>
   VOCAB_ITEMS.filter((i) => (i.topics as readonly string[]).includes(key));
 const FOOD = topicOf('food');
 const ANIMALS = topicOf('animals');
+/**
+ * The topics as they shipped before AMENDMENTS-PICTURES-2026-11 row PX-1, when rice, kimchi and kimbap (Food) and the
+ * tiger (Animals) borrowed a heritage card picture. No word does now (rule R6), but the builder still handles a
+ * `card:` picture, so the card-art rules are tested on these copies.
+ */
+const withCards = (items: readonly RuntimeVocabItem[], cards: Readonly<Record<string, string>>): RuntimeVocabItem[] =>
+  items.map((i) => (cards[i.id] === undefined ? i : { ...i, visual: cards[i.id]! }));
+const FOOD_CARDS = withCards(FOOD, { 'vocab:bap': 'card:rice', 'vocab:gimchi': 'card:kimchi', 'vocab:gimbap': 'card:kimbap' });
+const ANIMALS_CARD = withCards(ANIMALS, { 'vocab:horangi': 'card:tiger' });
+const inCards = (items: readonly RuntimeVocabItem[], id: string): RuntimeVocabItem => items.find((i) => i.id === id)!;
 const COLORS = topicOf('colors');
 const NUMBERS = topicOf('numbers');
 const byId = (id: string): RuntimeVocabItem => {
@@ -545,14 +555,15 @@ describe('distractor rules (§3.3)', () => {
   });
 
   it('rule 5: prefers the answer picture family, so card art does not give the answer away', () => {
-    const cards = FOOD.filter((f) => f.visual.startsWith('card:'));
+    expect(FOOD.filter((f) => f.visual.startsWith('card:'))).toHaveLength(0);
+    const cards = FOOD_CARDS.filter((f) => f.visual.startsWith('card:'));
     expect(cards.length).toBe(3);
     for (let seed = 0; seed < 100; seed++) {
-      const picked = distractorsFor(byId('vocab:gimchi'), 'word-to-image', input({ pool: FOOD, seed }));
+      const picked = distractorsFor(inCards(FOOD_CARDS, 'vocab:gimchi'), 'word-to-image', input({ pool: FOOD_CARDS, seed }));
       const ids = picked.map((p) => p.id);
       expect(ids).toContain('vocab:bap');
       expect(ids).toContain('vocab:gimbap');
-      const apple = distractorsFor(byId('vocab:sagwa-apple'), 'word-to-image', input({ pool: FOOD, seed }));
+      const apple = distractorsFor(byId('vocab:sagwa-apple'), 'word-to-image', input({ pool: FOOD_CARDS, seed }));
       expect(apple.every((p) => p.visual.startsWith('word:food-'))).toBe(true);
     }
   });
@@ -596,9 +607,9 @@ describe('distractor rules (§3.3)', () => {
 
   it('rule 7 breaks ties inside one picture family: same-topic card art first', () => {
     const mask = item('vocab:tal', '탈', 'card:mask', { topics: ['k-culture'] });
-    const universe = [...FOOD, mask];
+    const universe = [...FOOD_CARDS, mask];
     for (let seed = 0; seed < 100; seed++) {
-      const picked = distractorsFor(byId('vocab:gimchi'), 'word-to-image', input({ pool: FOOD, universe, optionCount: 3, seed }));
+      const picked = distractorsFor(inCards(FOOD_CARDS, 'vocab:gimchi'), 'word-to-image', input({ pool: FOOD_CARDS, universe, optionCount: 3, seed }));
       expect(picked.map((p) => p.id).sort()).toEqual(['vocab:bap', 'vocab:gimbap']);
     }
   });
@@ -651,8 +662,8 @@ describe('review follow-ups (F-VOC-004 S-2)', () => {
   });
 
   it('rule 6 still reserves a confusable from another family for a word that is not a colour', () => {
-    // 호랑이 is the only card art in Animals: its ㅎ partner comes from another family.
-    const picked = distractorsFor(byId('vocab:horangi'), 'image-to-word', input({ pool: ANIMALS, universe: VOCAB_ITEMS, levelOrder: 2, seed: 4 }));
+    // 호랑이 as the only card art in Animals (the pre-PX-1 copy): its ㅎ partner comes from another family.
+    const picked = distractorsFor(inCards(ANIMALS_CARD, 'vocab:horangi'), 'image-to-word', input({ pool: ANIMALS_CARD, universe: VOCAB_ITEMS, levelOrder: 2, seed: 4 }));
     const initial = (ko: string): string | undefined => decomposeSyllable(ko[0]!)?.initial;
     expect(picked.some((p) => initial(p.ko) === 'ㅎ')).toBe(true);
   });
@@ -661,7 +672,7 @@ describe('review follow-ups (F-VOC-004 S-2)', () => {
     for (const levelOrder of [1, 2] as const) {
       for (let seed = 0; seed < 40; seed++) {
         for (const box of [0, 1, 2]) {
-          const questions = buildQuestions(input({ pool: ANIMALS, levelOrder, seed, count: ANIMALS.length, boxOf: () => box }));
+          const questions = buildQuestions(input({ pool: ANIMALS_CARD, levelOrder, seed, count: ANIMALS_CARD.length, boxOf: () => box }));
           const tiger = questions.find((q) => q.itemId === 'vocab:horangi')!;
           expect(tiger.format).toBe('image-to-word');
         }
@@ -670,14 +681,14 @@ describe('review follow-ups (F-VOC-004 S-2)', () => {
   });
 
   it('a card art answer with other cards in its options keeps its box format (Food has three cards)', () => {
-    const questions = buildQuestions(input({ pool: FOOD, boxOf: () => 0, count: FOOD.length }));
+    const questions = buildQuestions(input({ pool: FOOD_CARDS, boxOf: () => 0, count: FOOD_CARDS.length }));
     const kimchi = questions.find((q) => q.itemId === 'vocab:gimchi')!;
     expect(kimchi.format).toBe('word-to-image');
     expect(kimchi.options.filter((o) => o.pictureRef?.startsWith('card:')).length).toBeGreaterThan(1);
   });
 
   it('at Pictures first (no image-to-word) the lone card art is still asked rather than dropped', () => {
-    const questions = buildQuestions(input({ pool: ANIMALS, levelOrder: 0, optionCount: 3, count: ANIMALS.length }));
+    const questions = buildQuestions(input({ pool: ANIMALS_CARD, levelOrder: 0, optionCount: 3, count: ANIMALS_CARD.length }));
     const tiger = questions.find((q) => q.itemId === 'vocab:horangi')!;
     expect(tiger.format).toBe('word-to-image');
   });

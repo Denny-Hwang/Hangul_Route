@@ -109,6 +109,8 @@ Every builder returns a `WordArtShape` (or a list) and rounds coordinates to one
 
 ### 3.3 Tones and colours
 
+> **[PX] Who may use the `vocab` tones (AMENDMENTS-PICTURES-2026-11 rule R4, row PX-0).** The source scan (`import-guard.test.ts`, behaviour 6) now lets the heritage card art (`components/HeritageCardArt/`) and the hidden-heritage scene art (`scene-art/hidden-heritage/`) read `colors.vocab`, beside `src/word-art/` and `components/WordArt/`; every other file stays forbidden, and `feedback.danger` stays out of every picture. Scene art's own `ColorToken` type still leaves the group out until row PX-4.
+
 **Tone vocabulary.** `WordArtTone` is the union of `'<group>.<key>'` for every key of `colors` (`tokens.ts:21-103`) in the groups **brand, surface (canvas, paper, sunken), text, feedback (success, `successDark`, nudge, info and their Light variants), theme, stage, hoya, border, vocab** (the list is generated from `colors` minus the exclusions, so a token added later joins it) — and **not** `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim`, or any `rarity.*` (rarity colours carry card-rarity meaning). `word-art/tones.ts` exports:
 
 ```ts
@@ -263,6 +265,10 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 - The page imports from `@hangul-route/design-system/word-art` only (no react-native); it is part of the static `out/` export, so it works on the Cloudflare Pages preview of every PR.
 
 ### 3.11 Reuse of HeritageCardArt, and its exit
+
+> **[PX] The reuse list is now empty (AMENDMENTS-PICTURES-2026-11 rule R6, row PX-1).** The picture review of 2026-11-17 walked the exit route below for all 13 launch reuses: the cards read poorly at 64 px beside the glyphs (thin pale outlines, cream on cream, kimchi as an amber mound), so each word now has its own glyph, and **a vocabulary word no longer borrows a card**. The new keys: 밥 `word:food-rice`, 김치 `word:food-kimchi`, 김밥 `word:food-kimbap`, 호랑이 `word:animal-tiger`, 산 `word:nature-mountain`, 바다 `word:nature-sea`, 달 `word:nature-moon`, 책 `word:school-book`, 한복 `word:culture-hanbok`, 설날 `word:culture-seollal`, 추석 `word:culture-chuseok`, 윷놀이 `word:culture-yutnori`, 가야금 `word:culture-gayageum`. The cards and their ids are unchanged: they stay collectibles and lesson pictures (rows PX-2 and PX-3 redraw them). The `card:` path of `picture-ref.ts` stays in the code, and the contact sheet's "Card-art reuses" section now reads "none" and would draw any `card:` visual that came back. The rule, the table and the exit text below are kept as the record of what shipped before.
+> The family plan (§3.8, §3.9) is 12 glyphs for every topic family (food was 9, animal 11, school 11, nature 9, culture 7): 108 hand glyphs, 148 planned keys.
+> Five glyphs were redrawn in the same row because they were too abstract to name: `food-egg` (a fried egg beside the egg), `food-tteok` (a slab of layered rainbow rice cake), `science-shadow` (a person and the shadow they cast), `science-seed` (three seeds, one sprouting) and `nature-cloud` (a cloud tinted light blue with a white highlight). All 18 are `review` in the registry until the owner or a teacher has looked at the sheet.
 
 **Rule.** A vocabulary word uses `card:<id>` when (a) the card's subject **is** the word, (b) it reads at 96 px and 64 px on the contact sheet (the faint tint background is part of the art, `HeritageCardArt.tsx:65-73`), and (c) the owner accepts it. The contact sheet's "Card-art reuses" section (§3.10) is where (b) is checked. The 13 launch reuses (F-VOC-001 §3.4):
 

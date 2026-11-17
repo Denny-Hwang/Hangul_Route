@@ -765,7 +765,8 @@ test.describe('PR 12 word topic slides at 1280 x 720', () => {
     await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
     await shot(page, 'presenter-topic-word-1280x720');
 
-    // A topic word whose picture is a heritage card (kimchi): the card art at the same build, no WordArt.
+    // [PX] Kimchi borrowed its heritage card's picture until AMENDMENTS-PICTURES-2026-11 PX-1 (rule R6: a word's picture
+    // is a glyph); it now has its own WordArt, drawn at the same build as every other word.
     const word = page.getByTestId('presenter-word');
     const atKimchi = async () => (await word.count()) > 0 && (await word.textContent()) === '김치';
     for (let i = 0; i < 40 && !(await atKimchi()); i++) {
@@ -778,8 +779,8 @@ test.describe('PR 12 word topic slides at 1280 x 720', () => {
     await page.keyboard.press('PageDown');
     await expectDrawn(page, 'presenter-word-gloss', true);
     await page.keyboard.press('PageDown');
+    await expectDrawn(page, 'presenter-word-art', true);
     await expect(page.getByRole('img', { name: 'kimchi' })).toBeVisible();
-    await expect(page.getByTestId('presenter-word-art')).toHaveCount(0);
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1280);
     expect(errors).toEqual([]);

@@ -1,4 +1,4 @@
-import type { ItemDef } from '../types';
+import type { ArtColorToken, ItemDef } from '../types';
 import type { HiddenHeritageScene } from './types';
 
 /**
@@ -69,19 +69,26 @@ const SOUP_BOWL: ItemDef = {
   ],
 };
 
-/** A dish of kimchi (김치). */
-const KIMCHI_DISH: ItemDef = {
+/** Kimchi (김치): half a napa cabbage on a plate, white ribs under red seasoning ([PX] PX-4, R4: a real red). */
+const KIMCHI_DISH: ItemDef<ArtColorToken> = {
   id: 'prop:hh-kimchi-dish',
   kind: 'object',
-  box: { w: 82, h: 46 },
+  box: { w: 82, h: 60 },
   z: 'mid',
-  alt: 'A small white dish of cabbage kimchi',
-  accuracyNote: 'A small side dish of cabbage kimchi drawn as red leaves with a green rib; no recipe or region is implied.',
+  alt: 'Half a napa cabbage of red kimchi on a white plate',
+  accuracyNote:
+    'Whole-cabbage kimchi (half a napa cabbage) lying on a plate: white ribs fanning from the stem end, red seasoning on the leaves, green leaf tips. No recipe or region is implied.',
   nodes: [
-    { t: 'ellipse', cx: 41, cy: 36, rx: 36, ry: 8, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M14 34C16 18 34 12 44 20C54 12 70 18 68 34Z', fill: 'theme.letters', stroke: 'text.secondary', sw: 'base' },
-    { t: 'ellipse', cx: 41, cy: 26, rx: 9, ry: 5, fill: 'theme.nature' },
-    { t: 'path', d: 'M24 28C30 22 36 22 40 26', stroke: 'surface.paper', sw: 'thin', det: true },
+    { t: 'ellipse', cx: 41, cy: 48, rx: 39, ry: 10, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[40, 5.5], [44.5, 1.5], [51.5, 4.5], [57.5, 2.5], [61.5, 7.5], [66.5, 9], [67.5, 15], [72.5, 17.5], [71, 23], [74.5, 28], [69.5, 32], [69, 37], [63, 38.5], [58.5, 43.5], [46, 25.5]], fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M9 42L8.5 34.5L15 25.5L23 18L26.5 14L31 13.5L35 9.5L40 10L44.5 7.5L49 9L53 8L56.5 11.5L61 13L62 17.5L66 19.5L65 23.5L66.5 27.5L63.5 31L62.5 35.5L58.5 37L55.5 41L51 41L47 45L42 44.5L35.5 47L24.5 47.5L14 46.5Z', fill: 'vocab.red', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M10.5 36.5Q26.5 28.5 38.5 15Q22.5 23 10.5 36.5ZM14 44.5Q32 44.5 48.5 37.5Q30.5 37.5 14 44.5ZM12.5 39Q31 32.5 46.5 20.5Q28 27 12.5 39ZM13.5 41.5Q33 38 50 28.5Q30.5 32 13.5 41.5Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'poly', pts: [[6, 43.5], [6, 37], [11.5, 33.5], [17, 38.5], [17.5, 46], [10.5, 48]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'circle', cx: 46, cy: 13, r: 1.5, fill: 'text.secondary', det: true },
+    { t: 'circle', cx: 55.5, cy: 17.5, r: 1.5, fill: 'text.secondary', det: true },
+    { t: 'circle', cx: 56, cy: 31.5, r: 1.5, fill: 'text.secondary', det: true },
+    { t: 'circle', cx: 45, cy: 25, r: 1.5, fill: 'text.secondary', det: true },
+    { t: 'circle', cx: 60, cy: 26, r: 1.5, fill: 'text.secondary', det: true },
   ],
 };
 
@@ -116,20 +123,30 @@ const SPOON: ItemDef = {
   ],
 };
 
-/** A plate of layered rice cakes for sale (떡), a target (row CM-43 S2). */
-const TTEOK_PLATE: ItemDef = {
+/**
+ * A layered rice cake on a plate (떡), a target (row CM-43 S2): one round cake of coloured layers with a wedge cut
+ * out, so its layers show on the cut ([PX] PX-4; three loose slabs read as a sandwich).
+ */
+const TTEOK_PLATE: ItemDef<ArtColorToken> = {
   id: 'prop:hh-tteok-plate',
   kind: 'object',
-  box: { w: 80, h: 56 },
+  box: { w: 80, h: 60 },
   z: 'mid',
-  alt: 'A white plate with a stack of pink, white and green rice cakes',
-  accuracyNote: 'Three plain layers of rice cake on a plate, in the colours rice cakes are often coloured; no kind, recipe, region or shop is implied.',
+  alt: 'A round layered rice cake on a white plate, a wedge cut out to show its coloured layers',
+  accuracyNote: 'A layered rice cake in the colours rice cakes are often coloured, cut like a cake; no kind, recipe, region or shop is implied.',
   nodes: [
-    { t: 'ellipse', cx: 40, cy: 48, rx: 38, ry: 7, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'rect', x: 14, y: 32, w: 52, h: 12, r: 3, fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
-    { t: 'rect', x: 14, y: 20, w: 52, h: 12, r: 3, fill: 'surface.canvas', stroke: 'text.secondary', sw: 'base' },
-    { t: 'rect', x: 14, y: 8, w: 52, h: 12, r: 3, fill: 'theme.letters', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M22 14H58', stroke: 'surface.paper', sw: 'thin', o: 0.6, det: true },
+    { t: 'ellipse', cx: 40, cy: 49, rx: 39, ry: 10, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M8 20V42A32 9 0 0 0 72 42V20Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M8 20V27.5A32 9 0 0 0 72 27.5V20Z', fill: 'theme.life' },
+    { t: 'path', d: 'M8 27.5V35A32 9 0 0 0 72 35V27.5A32 9 0 0 1 8 27.5Z', fill: 'theme.nature' },
+    { t: 'path', d: 'M8 35V42A32 9 0 0 0 72 42V35A32 9 0 0 1 8 35Z', fill: 'vocab.red', o: 0.6 },
+    { t: 'path', d: 'M8 20V42A32 9 0 0 0 72 42V20', fill: 'none', stroke: 'text.secondary', sw: 'base' },
+    { t: 'ellipse', cx: 40, cy: 20, rx: 32, ry: 9, fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
+    { t: 'poly', pts: [[24, 28], [40, 42], [56, 28], [56, 52], [24, 52]], fill: 'surface.paper' },
+    { t: 'path', d: 'M40 20L24 28V35.5L40 27.5ZM40 20L56 28V35.5L40 27.5Z', fill: 'theme.life' },
+    { t: 'path', d: 'M40 27.5L24 35.5V43L40 35ZM40 27.5L56 35.5V43L40 35Z', fill: 'theme.nature' },
+    { t: 'path', d: 'M40 35L24 43V50L40 42ZM40 35L56 43V50L40 42Z', fill: 'vocab.red', o: 0.6 },
+    { t: 'path', d: 'M40 20L24 28V50L40 42ZM40 20L56 28V50L40 42ZM40 20V42', fill: 'none', stroke: 'text.secondary', sw: 'base' },
   ],
 };
 

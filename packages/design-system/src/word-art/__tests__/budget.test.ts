@@ -10,6 +10,11 @@ import { measureWordArtSource, overBudget, wordArtSourceFiles, type WordArtSourc
  * since W-5 (120 / 30 KB before; the §8.1 (b) decision). The limits and
  * the walk live in `src/word-art-budget.ts`, shared with the web contact
  * sheet. The measured numbers go in each PR description.
+ *
+ * AMENDMENTS-PICTURES-2026-11 row PX-1 (13 new glyphs, five redrawn) measured
+ * 157,177 B raw and 46,674 B gzip (141,841 / 41,851 before), inside the
+ * budget of 163,840 / 49,152, so the line did not move. About 6.6 KB raw and
+ * 2.4 KB gzip are left: the next art batch has to raise it (§8.1 (b)).
  */
 
 const WORD_ART_DIR = join(__dirname, '..');

@@ -3,15 +3,21 @@
  * sample `food-apple`; batch W-3 draws the other eight. Keys are written
  * without the `word:` prefix. Outlines are flat `pts(...)` lists (W7).
  */
-import { blob, circle, curve, drop, ellipse, groundShadow, leaf, line, poly, pts, rect, star } from '../builders';
+import { blob, circle, curve, drop, ellipse, groundShadow, leaf, line, path, poly, pts, rect, star } from '../builders';
 import type { WordArtGlyph } from '../types';
 
 const INK = { s: 'text.primary', sw: 3 } as const;
 const DETAIL = { s: 'text.primary', sw: 2 } as const;
 const HIGHLIGHT = { f: 'surface.paper', o: 0.55 } as const;
 
-/** One rice-cake slice: a disc seen from above, its side showing below. */
-const slice = (x: number, y: number) => [ellipse(x, y + 6, 15, 8, { f: 'surface.sunken', ...INK }), ellipse(x, y, 15, 8, { f: 'vocab.white', ...INK })];
+/** One kimbap slice seen from the cut side: the seaweed ring, the rice, and three fillings (pickled radish, carrot, spinach). */
+const kimbapSlice = (x: number, y: number, r: number) => [
+  circle(x, y, r, { f: 'text.primary', ...INK }),
+  circle(x, y, r * 0.74, { f: 'vocab.white' }),
+  rect(x - r * 0.36, y - r * 0.4, r * 0.4, r * 0.44, 1, { f: 'vocab.yellow', ...DETAIL }),
+  rect(x + r * 0.04, y - r * 0.3, r * 0.36, r * 0.4, 1, { f: 'vocab.orange', ...DETAIL }),
+  circle(x - r * 0.02, y + r * 0.24, r * 0.22, { f: 'vocab.green', ...DETAIL }),
+];
 
 export const FOOD_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
   // red apple, leaf, highlight
@@ -102,12 +108,14 @@ export const FOOD_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     leaf(35, 24, 38, 76, 2.5, HIGHLIGHT),
   ],
 
-  // pale oval egg, highlight
+  // [PX-1] a whole pale egg, and beside it one cracked into a fried egg (white with a round yolk), so it is not only an oval
   'food-egg': [
-    groundShadow(50, 86, 22),
-    blob(pts(50, 18, 63, 23, 72, 40, 74, 58, 68, 75, 50, 84, 32, 75, 26, 58, 28, 40, 37, 23), { f: 'brand.primaryLight', ...INK }),
-    leaf(36, 33, 33, 55, 4, HIGHLIGHT),
-    circle(38, 62, 2.5, HIGHLIGHT),
+    groundShadow(50, 85, 36),
+    blob(pts(36, 16, 47, 21, 54, 35, 55, 50, 50, 63, 36, 69, 22, 63, 17, 50, 18, 35, 25, 21), { f: 'brand.primaryLight', ...INK }),
+    leaf(25, 30, 23, 46, 3, HIGHLIGHT),
+    blob(pts(38, 70, 46, 62, 58, 63, 66, 57, 78, 60, 86, 69, 84, 79, 72, 85, 58, 82, 46, 85, 37, 79), { f: 'vocab.white', ...INK }),
+    circle(64, 71, 9, { f: 'vocab.yellow', ...INK }),
+    leaf(59, 68, 63, 65, 1.6, HIGHLIGHT),
   ],
 
   // red heart-shaped berry, green cap, seed dots
@@ -120,13 +128,56 @@ export const FOOD_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     leaf(29, 41, 33, 55, 2.5, HIGHLIGHT),
   ],
 
-  // three white rice-cake slices on a small plate
+  // [PX-1] rice cake on a plate: a cut slab of layered rainbow rice cake (mujigae-tteok), its white, pink, yellow and
+  // green layers showing on both cut sides
   'food-tteok': [
-    groundShadow(50, 78, 34),
-    ellipse(50, 66, 36, 11, { f: 'brand.secondaryLight', ...INK }),
-    ellipse(50, 64, 25, 6.5, DETAIL),
-    ...slice(36, 54),
-    ...slice(64, 54),
-    ...slice(50, 38),
+    groundShadow(50, 84, 36),
+    ellipse(50, 70, 38, 12, { f: 'vocab.white', ...INK }),
+    ellipse(50, 69, 28, 7.5, DETAIL),
+    poly(pts(24, 34, 40, 24, 76, 30, 60, 40), { f: 'vocab.white', ...INK }, 1.5),
+    ...(['vocab.white', 'vocab.pink', 'vocab.yellow', 'vocab.green'] as const).flatMap((f, i) => [
+      poly(pts(24, 34 + i * 8, 60, 40 + i * 8, 60, 48 + i * 8, 24, 42 + i * 8), { f, ...DETAIL }),
+      poly(pts(60, 40 + i * 8, 76, 30 + i * 8, 76, 38 + i * 8, 60, 48 + i * 8), { f, ...DETAIL }),
+    ]),
+    poly(pts(24, 34, 60, 40, 76, 30, 76, 62, 60, 72, 24, 66), INK, 1.5),
+  ],
+
+  // [PX-1] a tall rice bowl heaped with white rice: a high dome with grain ticks, steam
+  'food-rice': [
+    groundShadow(50, 87, 24),
+    curve(pts(40, 25, 37, 20, 41, 15, 38, 10), { s: 'border.strong', sw: 3 }),
+    curve(pts(58, 25, 55, 20, 59, 15, 56, 10), { s: 'border.strong', sw: 3 }),
+    blob(pts(26, 52, 28, 38, 38, 28, 50, 25, 62, 28, 72, 38, 74, 52, 50, 57), { f: 'vocab.white', ...INK }),
+    path('M 35 42 L 38 39 M 46 34 L 50 33 M 59 38 L 62 41 M 42 47 L 46 46 M 54 46 L 58 48 M 49 40 L 52 42', DETAIL),
+    path('M 22 51 H 78 L 72 76 Q 70 81 64 81 H 36 Q 30 81 28 76 Z', { f: 'vocab.blue', ...INK }),
+    path('M 24.5 60 H 75.5', { s: 'surface.paper', sw: 3 }),
+    rect(38, 80, 24, 6, 2, { f: 'vocab.blue', ...INK }),
+  ],
+
+  // [PX-1] half a napa cabbage (pogi-kimchi) lying on a plate, stem end on the left: white ribs fan out
+  // from the stem, the leaves are coated red with darker flecks, and green shows at the leaf tips
+  'food-kimchi': [
+    groundShadow(50, 86, 36),
+    ellipse(50, 72, 38, 12, { f: 'vocab.white', ...INK }),
+    blob(pts(48.9, 29.7, 53.7, 25.6, 60.5, 28.3, 66.3, 26.6, 70.4, 31.4, 75.7, 32.8, 76.6, 39, 81.5, 41.5, 80.1, 46.8, 83.3, 52, 78.5, 56, 77.9, 61, 72, 62.6, 67.6, 67.5, 54.9, 49.6), { f: 'vocab.green', ...INK }),
+    blob(pts(18, 66, 17.6, 58.7, 23.8, 49.3, 31.8, 42, 35.6, 37.9, 40.2, 37.7, 44.1, 33.7, 48.9, 33.9, 53.4, 31.4, 58, 33.1, 62.2, 32.2, 65.6, 35.4, 70.1, 37.2, 71.1, 41.4, 74.8, 43.5, 73.9, 47.7, 75.6, 51.6, 72.4, 55, 71.6, 59.5, 67.5, 60.9, 64.6, 65, 60, 65.2, 56, 68.9, 51.2, 68.6, 44.7, 71, 33.5, 71.3, 22.8, 70.5), { f: 'vocab.red', ...INK }),
+    leaf(19.4, 60.7, 47.3, 38.8, 3.4, { f: 'vocab.white', ...DETAIL }),
+    leaf(22.9, 68.5, 57.5, 61.6, 3.4, { f: 'vocab.white', ...DETAIL }),
+    leaf(21.3, 62.9, 55.5, 44.6, 3.4, { f: 'vocab.white', ...DETAIL }),
+    leaf(22.5, 65.6, 59, 52.4, 3.4, { f: 'vocab.white', ...DETAIL }),
+    blob(pts(14.9, 67.4, 14.8, 60.9, 20.7, 57.3, 25.9, 62.5, 26.3, 69.8, 19.7, 71.8), { f: 'vocab.white', ...INK }),
+    ...pts(55.1, 37.2, 64.5, 41.5, 65.1, 55.4, 53.8, 49.1, 69.2, 49.8).map(([x, y]) => circle(x, y, 1.7, { f: 'brand.primaryDark' })),
+    ...pts(31, 55, 38.6, 48.8, 37, 58, 47.5, 56.2, 37.4, 63, 47.6, 62.7).map(([x, y]) => circle(x, y, 1.5, { f: 'vocab.red' })),
+  ],
+
+  // [PX-1] cut kimbap: the roll behind, three slices in front showing the seaweed ring, the rice and the fillings
+  'food-kimbap': [
+    groundShadow(50, 86, 34),
+    rect(14, 26, 62, 26, 13, { f: 'text.primary', ...INK }),
+    line(26, 33, 58, 33, { s: 'border.strong', sw: 2 }),
+    ...kimbapSlice(76, 39, 12),
+    ...kimbapSlice(27, 67, 15),
+    ...kimbapSlice(73, 67, 15),
+    ...kimbapSlice(50, 71, 15),
   ],
 };

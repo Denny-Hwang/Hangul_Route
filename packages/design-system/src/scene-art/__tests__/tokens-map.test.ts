@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { borderWidth, colors } from '../../tokens';
-import { COLOR_TOKENS, isColorToken, resolveColor, resolveStroke } from '../tokens-map';
+import { COLOR_TOKENS, isArtColorToken, isColorToken, resolveColor, resolveStroke, VOCAB_COLOR_TOKENS } from '../tokens-map';
 import { OPACITY_STEPS } from '../types';
 
 /** WordArt's content colours (F-VOC-002 §3.4); named once so this file never spells the guarded path. */
@@ -41,12 +41,19 @@ describe('COLOR_TOKENS / isColorToken', () => {
     }
   });
 
-  it('refuses the WordArt content tones: the vocab group is drawn only inside WordArt (F-VOC-002 §3.4)', () => {
-    for (const name of contentNames) {
-      const token = `${CONTENT_GROUP}.${name}`;
-      expect(isColorToken(token)).toBe(false);
-      expect(() => resolveColor(token as never)).toThrow(/Unknown colour token/);
+  it('keeps the WordArt content tones out of the scene tokens (F-VOC-002 §3.4)', () => {
+    for (const name of contentNames) expect(isColorToken(`${CONTENT_GROUP}.${name}`)).toBe(false);
+  });
+
+  it('draws the content tones as art colours, for the hidden-heritage things only ([PX] R4)', () => {
+    expect(VOCAB_COLOR_TOKENS).toEqual(contentNames.map((name) => `${CONTENT_GROUP}.${name}`));
+    for (const token of VOCAB_COLOR_TOKENS) {
+      expect(isArtColorToken(token)).toBe(true);
+      expect(resolveColor(token)).toBe((colors[CONTENT_GROUP] as Record<string, string>)[token.split('.')[1]!]);
     }
+    expect(isArtColorToken('theme.rites')).toBe(true);
+    expect(isArtColorToken('feedback.danger')).toBe(false);
+    expect(isArtColorToken(`${CONTENT_GROUP}.nope`)).toBe(false);
   });
 
   it('guards unknown input', () => {

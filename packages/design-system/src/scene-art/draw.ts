@@ -11,8 +11,8 @@
  */
 import { borderWidth } from '../tokens';
 import { parsePath, resolveScene, type Matrix, type Registry, type ResolveIssue } from './resolve';
-import { isColorToken, resolveColor, resolveStroke } from './tokens-map';
-import { SCENE_CANVAS, type LeafShape, type SceneArtLike, type StrokeToken } from './types';
+import { isArtColorToken, resolveColor, resolveStroke } from './tokens-map';
+import { SCENE_CANVAS, type ArtColorToken, type LeafShape, type SceneArtLike, type StrokeToken } from './types';
 
 /** Side of a `card:<id>` layer's square, in canvas units at scale 1. */
 export const CARD_SIZE = 80;
@@ -62,11 +62,11 @@ export interface DrawnScene {
 const round4 = (v: number): number => Math.round(v * 1e4) / 1e4 + 0; // + 0 turns -0 into 0
 const matrixString = (m: Matrix): string => `matrix(${m.map(round4).join(' ')})`;
 
-function paintOf(shape: LeafShape): DrawPaint | null {
+function paintOf(shape: LeafShape<ArtColorToken>): DrawPaint | null {
   const { fill, stroke, sw, o } = shape;
   const hasFill = fill !== undefined && fill !== 'none';
-  if (hasFill && !isColorToken(fill)) return null;
-  if (stroke !== undefined && !isColorToken(stroke)) return null;
+  if (hasFill && !isArtColorToken(fill)) return null;
+  if (stroke !== undefined && !isArtColorToken(stroke)) return null;
   if (!hasFill && stroke === undefined) return null;
   if (sw !== undefined && !Object.prototype.hasOwnProperty.call(borderWidth, sw)) return null;
   const paint: DrawPaint = { fill: hasFill ? resolveColor(fill) : 'none' };
@@ -80,7 +80,7 @@ function paintOf(shape: LeafShape): DrawPaint | null {
   return paint;
 }
 
-function geometryOf(shape: LeafShape): Pick<DrawNode, 'tag' | 'geometry'> | null {
+function geometryOf(shape: LeafShape<ArtColorToken>): Pick<DrawNode, 'tag' | 'geometry'> | null {
   switch (shape.t) {
     case 'rect':
       return { tag: 'rect', geometry: { x: shape.x, y: shape.y, width: shape.w, height: shape.h, ...(shape.r === undefined ? {} : { rx: shape.r }) } };

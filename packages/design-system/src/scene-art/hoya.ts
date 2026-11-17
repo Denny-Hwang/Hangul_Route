@@ -12,10 +12,10 @@
  *   - circle, ellipse, rect and line numbers snap to half units, so the eye
  *     glints and the cheering slits move by a fraction of a unit;
  *   - a few parts carry a hand-made scene stand-in (`scene`): the 10-unit
- *     limbs become filled outlines (the waving hand one unit in, so every
- *     shape stays inside the box), the stripes and the book's strokes become
- *     one path each (the first stroke of the book carries the whole row), and
- *     the sparkles become polygons.
+ *     limbs become filled outlines (the waving paw half a unit smaller, so
+ *     every shape stays inside the box), the stripes, the waving ticks and
+ *     the book's strokes become one path each (the first stroke of the book
+ *     carries the whole row), and the sparkles become polygons.
  *
  * Contract (anti-shame, F-002 section 3): `thinking` looks up and to the
  * right; cheeks only in idle, cheering and waving; no sharp teeth, no angry
@@ -86,8 +86,9 @@ function mouthFor(pose: HoyaPose): HoyaPart {
       // A wider open smile filled with cheek pink.
       return { t: 'path', d: 'M44 92 Q60 110 76 92 Q60 100 44 92 Z', fill: 'hoya.cheek', ...SOFT, strokeLinejoin: 'round' };
     case 'thinking':
-      // A small neutral curve: not sad, not smiling, just thinking.
-      return { t: 'path', d: 'M53 96 Q60 92 67 96', ...SOFT, fill: 'none' };
+      // A small level mouth that lifts a little at the right, the side he looks to: curious, never a frown
+      // (AMENDMENTS-PICTURES-2026-11 PX-5; the old arc bent down at both ends).
+      return { t: 'path', d: 'M54 95 Q60 96 66 93', ...SOFT, fill: 'none' };
     case 'reading':
       // A tiny flat line: concentrating.
       return { t: 'line', x1: 56, y1: 95, x2: 64, y2: 95, ...SOFT };
@@ -110,6 +111,9 @@ function raisedArmScene(): Shape[] {
   ];
 }
 
+/** Two short motion arcs either side of the waving paw. */
+const WAVE_TICKS = ['M105 6 Q102 11 105 16', 'M126 4 Q128 9 126 14'];
+
 function armsFor(pose: HoyaPose): HoyaPart[] {
   if (pose === 'cheering') {
     // Both arms raised up and out. The scene draws the left one and its mirror about x = 64.
@@ -117,12 +121,20 @@ function armsFor(pose: HoyaPose): HoyaPart[] {
     return [{ t: 'group', kids: [limb('M22 78 Q14 60 8 46'), limb('M106 78 Q114 60 120 46'), paw(8, 46, 7), paw(120, 46, 7)], scene }];
   }
   if (pose === 'waving') {
-    // The right arm raised in a wave.
+    // The right arm raised high, the paw above the ear, with two motion ticks beside it, so the wave reads at 48 px
+    // and is never the idle figure (AMENDMENTS-PICTURES-2026-11 PX-5).
     const scene: Shape[] = [
-      { t: 'path', d: 'M107.5 79.5 Q120 67 126 56 L117.5 51.5 Q112 61 100.5 72.5 A5 5 0 0 0 107.5 79.5 Z', fill: 'hoya.fur' },
-      { t: 'circle', cx: 121.5, cy: 54, r: 6.5, fill: 'hoya.fur' },
+      { t: 'path', d: 'M108.5 78 Q123 49 123 16 L113 16 Q113 47 99.5 74 A5 5 0 0 0 108.5 78 Z', fill: 'hoya.fur' },
+      { t: 'circle', cx: 118, cy: 15, r: 6.5, fill: 'hoya.fur' },
     ];
-    return [{ t: 'group', kids: [limb('M104 76 Q116 64 122 54'), paw(122, 54, 7)], scene }];
+    const ticks: HoyaPart = {
+      t: 'group',
+      ...SOFT,
+      fill: 'none',
+      kids: WAVE_TICKS.map((d): HoyaPart => ({ t: 'path', d })),
+      scene: [{ t: 'path', d: WAVE_TICKS.join(' '), stroke: 'hoya.stripes', sw: 'thick' }],
+    };
+    return [{ t: 'group', kids: [limb('M104 76 Q118 48 118 16'), paw(118, 15, 7)], scene }, ticks];
   }
   if (pose === 'reading') {
     // Two small front paws holding the book.

@@ -86,7 +86,7 @@ describe('hoya data port: the character contract (Hoya.tsx header)', () => {
   it.each([
     ['idle', 'M50 92 Q60 100 70 92'],
     ['waving', 'M48 92 Q60 104 72 92'],
-    ['thinking', 'M53 96 Q60 92 67 96'],
+    ['thinking', 'M54 95 Q60 96 66 93'],
   ] as const)('%s: a soft stroked mouth', (pose, d) => {
     expect(leaves(hoyaNodes(pose))).toContainEqual({ t: 'path', d, stroke: 'hoya.stripes', sw: 'thick' });
   });
@@ -131,10 +131,30 @@ describe('hoya data port: the character contract (Hoya.tsx header)', () => {
       return b.map((s) => (s.t === 'circle' ? s.cx : -1)).sort((x, y) => x - y);
     };
     expect(mids('cheering')).toEqual([8, 8]); // the second is the flipped group (x -> 128 - x)
-    expect(mids('waving')).toEqual([121.5]);
+    expect(mids('waving')).toEqual([118]);
     expect(mids('reading')).toEqual([42, 86]);
     expect(mids('idle')).toEqual([]);
     expect(mids('thinking')).toEqual([]);
+  });
+
+  // AMENDMENTS-PICTURES-2026-11 PX-5: thinking is never a frown, and waving differs from idle at 48 px.
+  it('thinking: the mouth never bends down at both ends (no frown)', () => {
+    const mouth = leaves(hoyaNodes('thinking')).find((s) => s.t === 'path' && s.stroke === 'hoya.stripes' && /^M5\d 9\d Q/.test(s.d));
+    expect(mouth?.t).toBe('path');
+    const [x0, y0, , cy, x1, y1] = (mouth as { d: string }).d.match(/-?\d+(\.\d+)?/g)!.map(Number);
+    expect(x0).toBeLessThan(x1!);
+    // a frown's control point sits above both ends; this one sits below at least one end
+    expect(cy! >= Math.min(y0!, y1!)).toBe(true);
+    expect(y1!).toBeLessThanOrEqual(y0!);
+  });
+
+  it('waving: the paw is raised above the ear, with two motion ticks', () => {
+    const paw = leaves(hoyaNodes('waving')).find((s) => s.t === 'circle' && s.fill === 'hoya.fur' && s.cx === 118);
+    expect(paw?.t === 'circle' && paw.cy + paw.r).toBeLessThan(32 - 12 + 4); // above the ear's top (ear centre y 32, r 12), give or take a paw's edge
+    const ticks = leaves(hoyaNodes('waving')).filter((s) => s.t === 'path' && s.stroke === 'hoya.stripes' && s.d.startsWith('M105 6'));
+    expect(ticks).toHaveLength(1);
+    expect((ticks[0] as { d: string }).d.match(/M/g)).toHaveLength(2);
+    expect(leaves(hoyaNodes('idle')).some((s) => s.t === 'path' && s.d.startsWith('M105 6'))).toBe(false);
   });
 
   it('mirrors the cheering arm about the middle of the box', () => {

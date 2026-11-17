@@ -4,9 +4,9 @@
  * lazy realia kinds chunk and the presenter import this file by its own path. Every item passes `checkItem`.
  */
 import { REALIA_KIND_PROPS } from './props/realia-kinds';
-import type { Registry } from './resolve';
+import type { ItemDef } from './types';
 
-export const REALIA_KIND_REGISTRY: Registry = Object.freeze(Object.fromEntries(REALIA_KIND_PROPS.map((item) => [item.id, item])));
+export const REALIA_KIND_REGISTRY: Readonly<Record<string, ItemDef>> = Object.freeze(Object.fromEntries(REALIA_KIND_PROPS.map((item) => [item.id, item])));
 
 /** Raw JSON budget of the CM-47 dressings, alt and accuracy notes included (the row's art budget; 6,873 B at the row). */
 export const REALIA_KIND_REGISTRY_RAW_MAX = 8 * 1024;

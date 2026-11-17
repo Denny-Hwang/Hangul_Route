@@ -187,27 +187,21 @@ const MOON_BEAR: ItemDef = {
   ],
 };
 
-/** Winter snow (눈): large snowflakes falling over the white winter ground, an other thing. */
+/** Winter snow (눈): round flakes and a six-armed flake falling on a snow bank, an other thing ([PX] PX-4; ringed flakes read as wheels). */
 const SNOW: ItemDef = {
   id: 'prop:hh-winter-snow',
   kind: 'nature',
   box: { w: 84, h: 96 },
   z: 'mid',
-  alt: 'Large white snowflakes falling',
-  accuracyNote: 'Snowflakes drawn large and round with a six-armed star, so they read at thumb size.',
+  alt: 'Snow falling on a snow bank',
+  accuracyNote: 'Round snowflakes and two six-armed flakes falling on a white snow bank, drawn large so they read at thumb size.',
   nodes: [
-    { t: 'circle', cx: 16, cy: 14, r: 10, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'circle', cx: 58, cy: 12, r: 10, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'circle', cx: 36, cy: 46, r: 11, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'circle', cx: 72, cy: 52, r: 9, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'circle', cx: 14, cy: 80, r: 9, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'circle', cx: 54, cy: 84, r: 10, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M16 7V21 M10 10.5L22 17.5 M10 17.5L22 10.5', stroke: 'text.secondary', sw: 'thin', det: true },
-    { t: 'path', d: 'M36 38V54 M29 42L43 50 M29 50L43 42', stroke: 'text.secondary', sw: 'thin', det: true },
-    { t: 'path', d: 'M54 77V91 M48 80.5L60 87.5 M48 87.5L60 80.5', stroke: 'text.secondary', sw: 'thin', det: true },
-    { t: 'path', d: 'M58 5V19 M52 8.5L64 15.5 M52 15.5L64 8.5', stroke: 'text.secondary', sw: 'thin', det: true },
-    { t: 'path', d: 'M72 46V58 M67 49L77 55 M67 55L77 49', stroke: 'text.secondary', sw: 'thin', det: true },
-    { t: 'path', d: 'M14 74V86 M9 77L19 83 M9 83L19 77', stroke: 'text.secondary', sw: 'thin', det: true },
+    { t: 'path', d: 'M24 8L24 36M36 15L12 29M36 29L12 15M62 42L62 66M72.5 48L51.5 60M72.5 60L51.5 48', stroke: 'text.secondary', sw: 'thick' },
+    { t: 'path', d: 'M24 8L24 36M36 15L12 29M36 29L12 15M62 42L62 66M72.5 48L51.5 60M72.5 60L51.5 48', stroke: 'surface.paper', sw: 'thin' },
+    { t: 'path', d: 'M59.5 14A6.5 6.5 0 1 0 72.5 14A6.5 6.5 0 1 0 59.5 14ZM4.5 52A5.5 5.5 0 1 0 15.5 52A5.5 5.5 0 1 0 4.5 52ZM30 46A6 6 0 1 0 42 46A6 6 0 1 0 30 46ZM73 34A5 5 0 1 0 83 34A5 5 0 1 0 73 34Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M19 72A5 5 0 1 0 29 72A5 5 0 1 0 19 72ZM73.5 70A4.5 4.5 0 1 0 82.5 70A4.5 4.5 0 1 0 73.5 70ZM44 14A4 4 0 1 0 52 14A4 4 0 1 0 44 14Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M0 96C4 86 14 82 26 86C36 78 52 78 62 84C70 80 80 82 84 88V96Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M10 92C18 88 26 89 32 91M50 89C58 86 66 87 72 90', stroke: 'border.strong', sw: 'thin', det: true },
   ],
 };
 

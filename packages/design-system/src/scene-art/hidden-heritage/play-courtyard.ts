@@ -58,20 +58,25 @@ const KITE: ItemDef = {
   ],
 };
 
-/** A kite reel (얼레) wound with string, an other thing. */
+/** A kite reel (얼레) wound with string, an other thing: the frame, the string wound round it and the handle ([PX] PX-4; a plain block read as a barrel). */
 const REEL: ItemDef = {
   id: 'prop:hh-kite-reel',
   kind: 'object',
-  box: { w: 70, h: 62 },
+  box: { w: 70, h: 72 },
   z: 'mid',
-  alt: 'A wooden reel wound with string, with a handle below',
-  accuracyNote: 'A plain four-sided reel (eolle) of the kind a kite string is wound on; its wood is drawn dark and the wound string gold.',
+  alt: 'A wooden kite reel wound with string, with a long handle below',
+  accuracyNote:
+    'A plain four-sided reel (eolle) of the kind a kite string is wound on, held by a handle through its axle; its wood is drawn dark and the wound string gold.',
   nodes: [
-    { t: 'rect', x: 10, y: 8, w: 50, h: 42, fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M12 19H58M12 29H58M12 39H58', stroke: 'text.secondary', sw: 'thin', o: 0.35, det: true },
-    { t: 'rect', x: 4, y: 2, w: 8, h: 52, r: 2, fill: 'text.secondary' },
-    { t: 'rect', x: 58, y: 2, w: 8, h: 52, r: 2, fill: 'text.secondary' },
-    { t: 'rect', x: 31, y: 50, w: 8, h: 12, r: 2, fill: 'text.secondary' },
+    { t: 'rect', x: 31, y: 0, w: 8, h: 10, r: 2, fill: 'text.secondary' },
+    { t: 'rect', x: 30, y: 46, w: 10, h: 26, r: 4, fill: 'text.secondary', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M12 10C7 20 7 38 12 48H58C63 38 63 20 58 10Z', fill: 'theme.life', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M11 17C28 20 42 20 59 17M9 25C28 28 42 28 61 25M9 33C28 36 42 36 61 33M11 41C28 44 42 44 59 41', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'rect', x: 4, y: 6, w: 62, h: 6, r: 2, fill: 'text.secondary' },
+    { t: 'rect', x: 4, y: 46, w: 62, h: 6, r: 2, fill: 'text.secondary' },
+    { t: 'rect', x: 4, y: 6, w: 7, h: 46, r: 2, fill: 'text.secondary' },
+    { t: 'rect', x: 59, y: 6, w: 7, h: 46, r: 2, fill: 'text.secondary' },
+    { t: 'path', d: 'M50 17L62 2', stroke: 'text.secondary', sw: 'thin' },
   ],
 };
 

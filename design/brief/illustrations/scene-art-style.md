@@ -41,6 +41,19 @@ Hoya is a character, not a prop: his five poses keep the fixed palette of `Hoya.
 9. **Alt text**: one sentence, at most 140 characters, saying what is shown and what it means; never "Image of", never Hangul.
 10. **No violence or fear**: no weapon pointed at a figure, no fire consuming anything, no frightened face. A scene whose narration carries a grown-up advisory (war, loss, mild peril) shows the setting and objects, not the event.
 
+## 3a. [PX] Rules for a picture a question can show
+
+`docs/specs/AMENDMENTS-PICTURES-2026-11.md` section 3 (owner request of 2026-11-17) sets one standard for every picture a question can show: the vocabulary glyphs, the heritage cards, and the things a learner looks for inside a hidden-heritage scene.
+
+- **R1 Ink outline.** The subject's outline is `text.primary` and at least 3 % of the grid's width (3 units on a 100 grid, 6 on a 200 grid); inner detail lines are at least 2 % (2 on 100, 4 on 200). Nothing the picture needs is drawn thinner.
+- **R2 The subject fills the tile.** 60 to 70 % of the frame, one subject, at most two supporting things.
+- **R3 Told by shape.** A picture that is told from another one of its set only by colour is rejected (WordArt C9, now for cards too). Sets: a vocabulary topic, the cards of one stage and theme, and the look-alike groups of the amendment's section 4 (the bowls, the moons, the bows).
+- **R4 Real colours for real things.** Card art and hidden-heritage things may use the `colors.vocab.*` tones, as WordArt does (kimchi is red). `feedback.danger` stays out of every picture. Scene settings and story props keep their own palette rule.
+- **R5 No picture names itself in print** where it can be a question's picture. A card that shows its own word as text is never used as a question picture (a test holds this).
+- **R6 A word's picture is a glyph.** A vocabulary word no longer borrows a card: each has its own `word:` glyph. The cards stay as collectibles.
+
+What applies here: the **things inside a hidden-heritage scene** follow R1 to R4 (a dark outline, one nameable subject, told by shape, and the `colors.vocab.*` tones where the thing has a real colour: kimchi is red). **Story settings and story props** are backdrops and trim, not question pictures: they keep the palette and outline rules of section 2 (R4 says so), and take from this amendment only the fixes listed in its row PX-4 (no cream figure on a cream ground, a full moon that shows on the canvas).
+
 ## 4. When the kit cannot draw the brief
 
 Each scene keeps its `artBrief` sentence as provenance. If the brief asks for something the kit cannot draw (a close-up of hands, a crowd of twelve), draw what carries the meaning (a brush, an inkstone and sheets; four figures) and list the deviation in the art PR. If the simplification would change a fact (the number of historians), the narration says the number, never the picture.

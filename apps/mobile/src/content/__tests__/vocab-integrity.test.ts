@@ -28,12 +28,13 @@ describe('__generated__/vocab.ts (F-VOC-001 §3.4 counts)', () => {
     for (const item of VOCAB_ITEMS) expect(item.visual, item.id).toMatch(/^(card|word):/);
   });
 
-  it('has 13 card pictures and 131 word pictures: 95 hand-drawn glyphs and 36 generated (colours, counts, body)', () => {
+  // AMENDMENTS-PICTURES-2026-11 row PX-1 (rule R6): the 13 card pictures became word pictures (108 hand-drawn, 95 before)
+  it('has no card picture and 144 word pictures: 108 hand-drawn glyphs and 36 generated (colours, counts, body)', () => {
     const word = VOCAB_ITEMS.filter((i) => i.visual.startsWith('word:'));
     const generated = word.filter((i) => /^word:(color|count|body)-/.test(i.visual));
-    expect(VOCAB_ITEMS.filter((i) => i.visual.startsWith('card:'))).toHaveLength(13);
-    expect(word).toHaveLength(131);
+    expect(VOCAB_ITEMS.filter((i) => i.visual.startsWith('card:'))).toHaveLength(0);
+    expect(word).toHaveLength(144);
     expect(generated).toHaveLength(36);
-    expect(word.length - generated.length).toBe(95);
+    expect(word.length - generated.length).toBe(108);
   });
 });

@@ -210,7 +210,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // fades, the screen wait and the answer's sound wait are audio code every quest uses, so they are in the start bundle.
   // On top of the QB rows the release `build:web` (CI=1) measures 4,957,992 B raw, 592 B over the line. The line is the
   // measurement plus a 4,008 B margin (one measured raise, 4,600 B over the previous line).
-  startBundleRaw: 4_962_000,
+  // [PX] AMENDMENTS-PICTURES-2026-11 rows PX-4 and PX-5 (scenes, props, realia and Hoya): the story-scene registry,
+  // the realia dressings, Hoya's figure and the scene-art renderer (which now draws the vocab tones of the hidden-heritage
+  // things) are in the start bundle, and the redrawn settings and props carry more shapes. The release `build:web`
+  // (CI=1) measures 4,965,473 B raw, 3,473 B over the line. The line is the measurement plus a 4,027 B margin (one
+  // measured raise, 7,500 B over the previous line).
+  startBundleRaw: 4_969_500,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

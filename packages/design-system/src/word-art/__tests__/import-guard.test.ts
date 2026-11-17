@@ -6,10 +6,19 @@ import { colors } from '../../tokens';
 /**
  * F-VOC-002 §3.4 and behaviour 6: `vocab.red` is a just-noticeable 3.4 from
  * `feedback.danger`, so the hue cannot keep a content red out of feedback; this
- * scan does. Only `src/word-art/` and `components/WordArt/` may read
- * `colors.vocab` or write a `'vocab.<key>'` tone. Tests are left out (they hold
- * the token tests and the negative samples); `tokens.ts` defines the group and
- * reads nothing.
+ * scan does. Only pictures may read `colors.vocab` or write a `'vocab.<key>'`
+ * tone: `src/word-art/` and `components/WordArt/`, and since
+ * AMENDMENTS-PICTURES-2026-11 rule R4 (row PX-0) the heritage card art
+ * (`components/HeritageCardArt/`) and the hidden-heritage scene art
+ * (`scene-art/hidden-heritage/`), so kimchi can be red in all three. Every
+ * other file, feedback and UI chrome first, stays forbidden: the story
+ * settings and props beside the hidden-heritage scenes keep their own palette.
+ * Row PX-4 opened the type for those scenes only: a hidden-heritage item is
+ * `ItemDef<ArtColorToken>`, the tone table is `scene-art/hidden-heritage/tones.ts`
+ * (inside the allowed folder), and `scene-art/tokens-map.ts` resolves a tone
+ * through it without reading the group itself. Tests are left
+ * out (they hold the token tests and the negative samples); `tokens.ts`
+ * defines the group and reads nothing.
  */
 
 const REPO = join(__dirname, '..', '..', '..', '..', '..');
@@ -19,7 +28,17 @@ const ROOTS = ['packages', 'apps'];
 
 const SKIP_DIRS = new Set(['node_modules', '__tests__', '__golden__', 'dist', 'build', 'out', 'coverage', '.next', '.expo', '.turbo', '.wrangler', 'ios', 'android', 'e2e']);
 
-const ALLOWED = [join('packages', 'design-system', 'src', 'word-art') + sep, join('packages', 'design-system', 'src', 'components', 'WordArt') + sep];
+/** The places a picture is drawn: each a folder, with its separator, so a sibling folder with a longer name stays out. */
+export const ALLOWED: readonly string[] = [
+  join('packages', 'design-system', 'src', 'word-art') + sep,
+  join('packages', 'design-system', 'src', 'components', 'WordArt') + sep,
+  // rule R4 (PX-0): real colours for real things in card art and hidden-heritage things
+  join('packages', 'design-system', 'src', 'components', 'HeritageCardArt') + sep,
+  join('packages', 'design-system', 'src', 'scene-art', 'hidden-heritage') + sep,
+];
+
+/** True where a picture may use the vocab tones: inside an allowed folder. */
+export const mayReadVocab = (rel: string): boolean => ALLOWED.some((folder) => rel.startsWith(folder));
 
 const VOCAB_KEYS = Object.keys(colors.vocab).join('|');
 
@@ -108,10 +127,30 @@ describe('the source tree (behaviour 6)', () => {
     expect(rel.some((f) => f.startsWith(join('packages', 'design-system', 'src', 'word-art') + sep))).toBe(true);
   });
 
-  it('only src/word-art/ and components/WordArt/ read colors.vocab or write a vocab tone', () => {
+  it('lets the card art and the hidden-heritage scene art through (R4), and nothing beside them', () => {
+    const ds = join('packages', 'design-system', 'src');
+    expect(mayReadVocab(join(ds, 'components', 'HeritageCardArt', 'HeritageCardArt.tsx'))).toBe(true);
+    expect(mayReadVocab(join(ds, 'components', 'HeritageCardArt', 'UpperCellArt.tsx'))).toBe(true);
+    expect(mayReadVocab(join(ds, 'scene-art', 'hidden-heritage', 'food-market.ts'))).toBe(true);
+    // the app screen that paints the scene, a folder whose name only starts the same, the story scene art and feedback UI stay out
+    expect(mayReadVocab(join('apps', 'mobile', 'src', 'screens', 'minigames', 'HiddenHeritageScene.tsx'))).toBe(false);
+    expect(mayReadVocab(join(ds, 'components', 'HeritageCardArtExtras', 'x.tsx'))).toBe(false);
+    expect(mayReadVocab(join(ds, 'scene-art', 'props', 'food.ts'))).toBe(false);
+    expect(mayReadVocab(join(ds, 'scene-art', 'settings', 'seashore.ts'))).toBe(false);
+    expect(mayReadVocab(join(ds, 'components', 'Card', 'Card.tsx'))).toBe(false);
+    expect(mayReadVocab(join(ds, 'components', 'HoyaBubble', 'HoyaBubble.tsx'))).toBe(false);
+    expect(mayReadVocab(join(ds, 'scene-art', 'tokens-map.ts'))).toBe(false);
+    expect(mayReadVocab(join(ds, 'tokens.ts'))).toBe(false);
+  });
+
+  it('the allowed folders exist, so a rename cannot leave a dead entry', () => {
+    for (const folder of ALLOWED) expect(statSync(join(REPO, folder)).isDirectory(), folder).toBe(true);
+  });
+
+  it('only the pictures (word-art, WordArt, the card art, the hidden-heritage scene art) read colors.vocab or write a vocab tone', () => {
     const offenders = files
       .map((f) => relative(REPO, f))
-      .filter((rel) => !ALLOWED.some((prefix) => rel.startsWith(prefix)))
+      .filter((rel) => !mayReadVocab(rel))
       .filter((rel) => readsVocab(readFileSync(join(REPO, rel), 'utf8')));
     expect(offenders).toEqual([]);
   });

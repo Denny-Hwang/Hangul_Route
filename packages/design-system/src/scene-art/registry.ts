@@ -143,7 +143,6 @@ import {
   YUT_STICKS,
   YUT_THROWS,
 } from './props/seasons';
-import type { Registry } from './resolve';
 import { COUNTRYSIDE } from './settings/countryside';
 import { HANJI_BACKDROP } from './settings/hanji-backdrop';
 import { HANOK_ROOM } from './settings/hanok-room';
@@ -315,7 +314,8 @@ export const LIBRARY: readonly ItemDef[] = [
   HOODED_CRANE,
 ];
 
-export const SCENE_ART_REGISTRY: Registry = Object.freeze({
+/** Typed with the scene tokens only: a shared item never carries a vocab tone ([PX] R4); it still fits `Registry`. */
+export const SCENE_ART_REGISTRY: Readonly<Record<string, ItemDef>> = Object.freeze({
   ...Object.fromEntries(HOYA_POSES.map((pose) => [`hoya:${pose}`, hoyaItem(pose)])),
   ...Object.fromEntries(LIBRARY.map((item) => [item.id, item])),
 });

@@ -144,13 +144,13 @@ export const GLOW_BURST: ItemDef = {
   kind: 'symbol',
   box: { w: 160, h: 160 },
   z: 'back',
-  alt: 'A warm burst of light: a bright round glow with rays, for a sunrise or for something precious shining',
-  accuracyNote: 'A sign of light (halo, rays, disc) for a sunrise or for an honoured object shining. No emblem or logo.',
+  alt: 'A warm burst of light: rays and glints around an empty centre, for something precious shining or for a sunrise',
+  accuracyNote: 'A sign of light (a halo, rays and glints around an empty centre, so it is not a sun and the thing in front of it shows) for an honoured object shining or a sunrise ([PX] PX-4). No emblem or logo.',
   nodes: [
     { t: 'circle', cx: 80, cy: 80, r: 76, fill: 'feedback.nudge', o: 0.2 },
-    { t: 'path', d: 'M122.5 91.5 L147.5 98 M111 111 L129.5 129.5 M91.5 122.5 L98 147.5 M68.5 122.5 L62 147.5 M49 111 L30.5 129.5 M37.5 91.5 L12.5 98', stroke: 'feedback.nudge', sw: 'thick' },
-    { t: 'path', d: 'M37.5 68.5 L12.5 62 M49 49 L30.5 30.5 M68.5 37.5 L62 12.5 M91.5 37.5 L98 12.5 M111 49 L129.5 30.5 M122.5 68.5 L147.5 62', stroke: 'feedback.nudge', sw: 'thick' },
-    { t: 'circle', cx: 80, cy: 80, r: 34, fill: 'feedback.nudge', o: 0.85 },
+    { t: 'path', d: 'M124.5 92L147.5 98M115.5 115.5L124 124M92 124.5L98 147.5M67 128.5L64 140M47.5 112.5L30.5 129.5M31.5 93L20 96', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M35.5 68L12.5 62M44.5 44.5L36 36M68 35.5L62 12.5M93 31.5L96 20M112.5 47.5L129.5 30.5M128.5 67L140 64', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M26 22L28.5 27.5L34 30L28.5 32.5L26 38L23.5 32.5L18 30L23.5 27.5ZM136 117L138 122L143 124L138 126L136 131L134 126L129 124L134 122ZM132 29L133.5 32.5L137 34L133.5 35.5L132 39L130.5 35.5L127 34L130.5 32.5Z', fill: 'feedback.nudge' },
   ],
 };
 
@@ -211,10 +211,10 @@ export const BLANK_SHEET: ItemDef = {
   box: { w: 36, h: 46 },
   z: 'mid',
   alt: 'A small blank sheet of paper',
-  accuracyNote: 'A plain sheet with a folded corner, blank on purpose.',
+  accuracyNote: 'A plain sheet of paper with its lower corner curling up, blank on purpose (no folded-corner file icon, [PX] PX-4).',
   nodes: [
-    { t: 'poly', pts: [[2, 2], [26, 2], [34, 10], [34, 44], [2, 44]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
-    { t: 'poly', pts: [[26, 2], [26, 10], [34, 10]], fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M2 2H34V34Q30 44 22 44H2Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M34 34Q24 34 22 44Q30 42 34 34Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
   ],
 };
 
