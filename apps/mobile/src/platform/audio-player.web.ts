@@ -95,6 +95,11 @@ export const CLIP_LEAD_MS = 60;
 export const CLIP_WAKE_LEAD_MS = 180;
 /** The gain rises from 0 to 1 over this long from the scheduled start. */
 export const CLIP_FADE_IN_MS = 20;
+// --- [QS] room at the end of a stopped clip (QS-2) ------------------------------
+/** A stopped clip's gain falls to 0 over about this long, and the source stops then. */
+export const CLIP_FADE_OUT_MS = 80;
+/** The time constant of that fall: after four of them (80 ms) under 2% of the level is left. */
+export const CLIP_FADE_OUT_TIME_CONSTANT_S = 0.02;
 
 /** Decoded float32 PCM bytes of a buffer (0 when the browser does not say). */
 function bufferBytes(buffer: AudioBufferLike): number {
@@ -257,6 +262,8 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
     let stopped = false;
     let settled = false;
     let source: BufferSourceLike | null = null;
+    /** Set once the clip is scheduled through a gain node: what a stop needs to fade it out [QS-2]. */
+    let fade: { audio: AudioContextLike; gain: GainParamLike; startAt: number } | null = null;
     let safety: ReturnType<typeof setTimeout> | undefined;
 
     const handle = {
@@ -264,11 +271,27 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
         if (stopped) return;
         stopped = true;
         clearTimeout(safety);
+        // Off the books at once, so `stopAll` and the next play never wait for the fade.
         active.delete(handle);
+        const cut = (): void => {
+          try {
+            source?.stop();
+          } catch {
+            // already ended
+          }
+        };
+        const now = fade?.audio.currentTime;
+        if (fade === null || typeof now !== 'number' || !Number.isFinite(now) || now < fade.startAt) {
+          // Not heard yet (still inside its lead), or an engine with no gain node: a plain stop.
+          return cut();
+        }
         try {
-          source?.stop();
+          // [QS-2] Sounding: fall to silence over about 80 ms and stop the source then, never a hard cut.
+          fade.gain.cancelScheduledValues(now);
+          fade.gain.setTargetAtTime(0, now, CLIP_FADE_OUT_TIME_CONSTANT_S);
+          source?.stop(now + CLIP_FADE_OUT_MS / 1000);
         } catch {
-          // already ended
+          cut(); // an engine that refuses the ramp still goes quiet
         }
       },
     };
@@ -324,6 +347,7 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
           node.connect(faded.node);
           faded.node.connect(audio.destination);
           node.start(startAt);
+          fade = { audio, gain: faded.node.gain, startAt };
         }
         source = node;
       } catch {
