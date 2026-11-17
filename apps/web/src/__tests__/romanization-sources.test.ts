@@ -17,7 +17,8 @@ const read = (rel: string): string => readFileSync(new URL(rel, REPO), 'utf8');
 /** Files with the least number of pairs the scanner must find in them (0: Korean without a paired romanization). */
 const FILES: ReadonlyArray<{ path: string; minPairs: number }> = [
   { path: 'apps/web/src/app/(console)/design-preview/page.tsx', minPairs: 6 },
-  { path: 'apps/web/src/app/(console)/design-preview/cards/page.tsx', minPairs: 30 },
+  // the card-art sheet's rows moved to its data file with the real card art (AMENDMENTS-PICTURES-2026-11 PX-0)
+  { path: 'apps/web/src/data/card-art-sheet.ts', minPairs: 30 },
   { path: 'apps/web/src/app/(console)/design-preview/components/page.tsx', minPairs: 0 },
   { path: 'apps/web/src/components/landing/HomePage.tsx', minPairs: 0 },
   { path: 'apps/mobile/src/screens/minigames/VoiceEchoGame.tsx', minPairs: 0 },

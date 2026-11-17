@@ -1,7 +1,7 @@
 import { HeritageCardArt } from '@hangul-route/design-system/components/HeritageCardArt';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect, Svg as NamedSvg } from '../react-native-svg';
+import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect, Svg as NamedSvg, Text } from '../react-native-svg';
 
 /**
  * The web's `react-native-svg` (aliased in next.config.js, vitest.config.ts
@@ -41,6 +41,17 @@ describe('react-native-svg on the web', () => {
         '<line x1="0" y1="0" x2="5" y2="5" stroke-linecap="round"></line><path d="M0 0 L1 1" stroke-width="2" stroke-linejoin="round"></path>' +
         '<polygon points="0,0 1,1 2,0"></polygon><rect x="0" y="0" width="4" height="4" rx="1"></rect></g></svg>',
     );
+  });
+
+  it('maps Text to a text element, for the card arts that draw their own word', () => {
+    const html = renderToStaticMarkup(
+      <Svg>
+        <Text x={10} y={20} fontSize={18} fontWeight="700" textAnchor="middle">
+          a
+        </Text>
+      </Svg>,
+    );
+    expect(html).toBe('<svg><text x="10" y="20" font-size="18" font-weight="700" text-anchor="middle">a</text></svg>');
   });
 
   it('renders the real HeritageCardArt of every launch reuse, each its own drawing and not the fallback', () => {

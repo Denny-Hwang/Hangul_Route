@@ -120,7 +120,7 @@ function Header(): JSX.Element {
             fontSize: typography.size.bodySm,
           }}
         >
-          → All 30 Heritage cards
+          → All 60 heritage cards
         </Link>
         <Link
           href="/design-preview/scenes"
