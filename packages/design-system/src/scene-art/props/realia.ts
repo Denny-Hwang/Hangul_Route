@@ -75,10 +75,11 @@ export const REALIA_TICKET_STUB: ItemDef = {
   box: { w: 64, h: 120 },
   z: 'mid',
   alt: 'The tear-off stub of a ticket with a punched hole and plain marks',
-  accuracyNote: 'A generic ticket stub after a dotted cut: a punched hole and three plain bars that stand for print. No words, numbers, barcode or company layout.',
+  accuracyNote: 'A generic ticket stub after a dotted cut: a punched hole and three plain bars that stand for print, drawn in the dark shape-outline brown so they show on the paper ([PX] PX-4), and the dotted tear line. No words, numbers, barcode or company layout.',
   nodes: [
-    { t: 'circle', cx: 32, cy: 24, r: 8, fill: 'surface.canvas', stroke: 'border.strong', sw: 'base' },
-    { t: 'path', d: 'M18 52 H46 M18 64 H46 M18 76 H38', stroke: 'border.strong', sw: 'thick' },
+    { t: 'circle', cx: 32, cy: 24, r: 8, fill: 'surface.canvas', stroke: 'border.shape', sw: 'thick' },
+    { t: 'path', d: 'M18 52 H46 M18 64 H46 M18 76 H38', stroke: 'border.shape', sw: 'thick' },
+    { t: 'path', d: 'M8 100 H14 M20 100 H26 M32 100 H38 M44 100 H50', stroke: 'border.strong', sw: 'base' },
   ],
 };
 
@@ -148,13 +149,19 @@ export const REALIA_GOODS_HANJI: ItemDef = {
   kind: 'object',
   box: { w: 120, h: 56 },
   z: 'mid',
-  alt: 'A small stack of sheets of paper in three soft colours',
-  accuracyNote: 'A generic stack of three sheets of handmade paper in soft colours, with a faint fibre line on the top sheet. No maker, brand or label is drawn.',
+  alt: 'Three sheets of handmade paper fanned out, with fibres in the top sheet',
+  accuracyNote: 'Three sheets of handmade paper (hanji) in soft colours fanned out, with deckled edges and fibres showing in the top sheet ([PX] PX-4; a neat stack read as cards or soap). No maker, brand or label is drawn.',
   nodes: [
-    { t: 'rect', x: 26, y: 34, w: 68, h: 18, r: 2, fill: 'brand.primaryLight', stroke: 'border.shape', sw: 'thin' },
-    { t: 'rect', x: 22, y: 24, w: 68, h: 14, r: 2, fill: 'feedback.nudgeLight', stroke: 'border.shape', sw: 'thin' },
-    { t: 'rect', x: 30, y: 12, w: 68, h: 16, r: 2, fill: 'surface.paper', stroke: 'border.shape', sw: 'thin' },
-    { t: 'path', d: 'M40 20 Q48 16 56 20 M62 22 Q70 18 78 22', stroke: 'border.strong', sw: 'thin' },
+    { t: 'group', tx: 20, ty: 18, rot: -12, kids: [
+      { t: 'path', d: 'M0 2 L20 0 L40 2 L60 0 L70 2 V34 L50 36 L30 34 L10 36 L0 34 Z', fill: 'brand.primaryLight', stroke: 'border.shape', sw: 'base' },
+    ] },
+    { t: 'group', tx: 30, ty: 14, rot: -3, kids: [
+      { t: 'path', d: 'M0 2 L20 0 L40 2 L60 0 L70 2 V34 L50 36 L30 34 L10 36 L0 34 Z', fill: 'feedback.nudgeLight', stroke: 'border.shape', sw: 'base' },
+    ] },
+    { t: 'group', tx: 40, ty: 12, rot: 6, kids: [
+      { t: 'path', d: 'M0 2 L20 0 L40 2 L60 0 L70 2 V34 L50 36 L30 34 L10 36 L0 34 Z', fill: 'surface.paper', stroke: 'border.shape', sw: 'base' },
+      { t: 'path', d: 'M8 10 Q16 6 24 11 M34 8 Q42 12 52 8 M12 22 Q22 18 30 23 M40 20 Q50 25 60 20 M20 30 Q28 27 36 30', stroke: 'border.strong', sw: 'base' },
+    ] },
   ],
 };
 
