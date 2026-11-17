@@ -33,12 +33,14 @@ const PINS: Record<string, { has?: RegExp[]; not?: RegExp[] }> = {
   SeaArt: { has: [/vocab\.skyBlue/, /vocab\.blue/], not: [/[Ss]ail|[Bb]oat|[Mm]ast/] },
   // the New Year bow is the kneeling child; Lunar New Year adds the seated elder
   SebaeArt: { has: [/<Bower /] },
-  SeollalArt: { has: [/<Bower /, /vocab\.purple/] },
+  // [FU-2] the child is larger and faces the grandparent (mirrored), with no pouch on the floor
+  SeollalArt: { has: [/<Bower k=\{0\.72\}/, /scale\(-0\.72 0\.72\)/, /vocab\.purple/], not: [/vocab\.pink/] },
   // the shield kite: a rectangle with the round centre hole, not a diamond
   KiteArt: { has: [/<Rect x=\{38\} y=\{22\} width=\{124\} height=\{146\}/, /<Circle cx=\{100\} cy=\{102\} r=\{24\}/], not: [/<Polygon/] },
   // a bridge on every string; the four yut sticks; Hangul Day's letters are shapes, never text (R5)
   GayageumArt: { has: [/strings\.map\(\(w, i\)/] },
-  YutnoriArt: { has: [/(<Stick [\s\S]*){4}/] },
+  // [FU-2] the board at the top, the four sticks in two pairs below it (y 140 and lower), none over the board
+  YutnoriArt: { has: [/<Circle cx=\{100\} cy=\{64\} r=\{54\}/, /(<Stick x=\{\d+\} y=\{1[4-9]\d\} [\s\S]*){4}/] },
   // Hangul Day spells 한글 correctly in drawn strokes: ㅎ (two bars and a ring), ㅏ, ㄴ; ㄱ, ㅡ, ㄹ
   HangulDayArt: { has: [/M58 78H72M48 90H82M90 76V128M90 102H100M52 134V160H98/, /M110 80H148V100M104 114H154M110 126H148V139H110V152H150/], not: [/SvgText|<Text/] },
   InkArt: { has: [/vocab\.black/, /<Polygon/] },

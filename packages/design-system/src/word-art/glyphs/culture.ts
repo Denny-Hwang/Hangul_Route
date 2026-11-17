@@ -8,6 +8,7 @@
 import { blob, circle, ellipse, groundShadow, leaf, line, path, poly, pts, rect } from '../builders';
 import type { Pt } from '../builders';
 import { formatNumber as n } from '../path';
+import { placeGlyph } from '../place';
 import type { WordArtGlyph, WordArtShape, WordArtTone } from '../types';
 import { hand, head, limb } from './pose';
 
@@ -69,8 +70,8 @@ function yutStick(a: Pt, b: Pt, flat: boolean): WordArtShape[] {
 
 /** A point on the gayageum: `t` along the body from the head (0) to the tail (1), `w` units across it. */
 const gaya = (t: number, w: number): Pt => [20 + 60 * t + 0.514 * w, 72 - 36 * t + 0.857 * w];
-/** Where its strings lie across the body: four, drawn bold (a real gayageum has twelve). */
-const GAYA_STRINGS = [-9, -3, 3, 9] as const;
+/** Where its strings lie across the body: three, drawn bold with wide gaps so they stay apart at 54 px (a real gayageum has twelve) [FU-2]. */
+const GAYA_STRINGS = [-8, 0, 8] as const;
 
 /** A rice-cake piece (garae-tteok, a short white cylinder) lying from a to b. */
 const tteok = (a: readonly [number, number], b: readonly [number, number]): WordArtShape => limb(a, b, 7.5, { f: 'vocab.white', ...DETAIL });
@@ -184,20 +185,23 @@ export const CULTURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     rect(50.5, 34.5, 8, 6, 2, { f: 'vocab.blue', ...DETAIL }),
   ],
 
-  // [PX-1] Seollal (Lunar New Year): a child in hanbok kneels in the deep New Year bow (sebae), head lowered and hands
-  // on the floor, with a lucky pouch (bokjumeoni) for the New Year's money
+  // [PX-1] Seollal (Lunar New Year): a child in hanbok kneels in the deep New Year bow (sebae), head lowered onto the
+  // hands on the floor. [FU-2] Larger and simpler: the body folded over the knees, so the figure fills the tile; the
+  // lucky pouch that floated above it is gone
   'culture-seollal': [
-    groundShadow(52, 87, 38),
-    path('M 54 85 Q 51 52 71 49 Q 89 51 88 85 Z', { f: 'vocab.red', ...INK }),
-    blob(pts(77, 51, 62, 52, 48, 58, 40, 68, 27, 78, 30, 86, 45, 81, 56, 75, 70, 71, 79, 63), { f: 'vocab.yellow', ...INK }),
-    ellipse(22, 83.5, 6, 3.5, { f: 'surface.paper', ...INK }),
-    circle(33, 64, 11, { f: 'surface.paper', ...INK }),
-    path('M 25.2 56.2 A 11 11 0 0 1 40.8 71.8 Z', { f: 'text.primary', ...INK }),
-    path('M 25 66.5 Q 27.5 69 30 67', DETAIL),
-    circle(26.5, 71.5, 2.5, { f: 'hoya.cheek' }),
-    blob(pts(18, 30, 24, 24, 34, 24, 40, 30, 39, 40, 29, 45, 19, 40), { f: 'vocab.red', ...INK }),
-    path('M 22 26 L 19 17 L 25 20 L 29 15 L 33 20 L 39 17 L 36 26 Z', { f: 'vocab.red', ...INK }),
-    rect(21, 23.5, 16, 4, 2, { f: 'vocab.yellow', ...DETAIL }),
+    groundShadow(50, 76, 40),
+    ...placeGlyph(
+      [
+        path('M 50 84 Q 50 50 70 48 Q 88 50 87 84 Z', { f: 'vocab.red', ...INK }),
+        blob(pts(76, 50, 62, 50, 50, 56, 43, 65, 40, 78, 50, 83, 58, 74, 70, 68, 78, 60), { f: 'vocab.yellow', ...INK }),
+        ellipse(29, 84, 7, 3.5, { f: 'surface.paper', ...INK }),
+        circle(37, 71, 12, { f: 'surface.paper', ...INK }),
+        path('M 28.5 62.5 A 12 12 0 0 1 45.5 79.5 Z', { f: 'text.primary', ...INK }),
+        path('M 28 73 Q 31 76 34 74', DETAIL),
+        circle(31, 78.5, 2.5, { f: 'hoya.cheek' }),
+      ],
+      { dx: -8, dy: -26, scale: 1.16 },
+    ),
   ],
 
   // [PX-1] Chuseok: a plate of songpyeon (half-moon rice cakes in white, pink and green) under the big full harvest moon
@@ -225,17 +229,18 @@ export const CULTURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ...yutStick([66, 73], [85, 62], true),
   ],
 
-  // [PX-1] gayageum: the long wooden zither at a slight angle, four bold strings each over its own movable bridge
-  // (anjok) set in a slanting row, the fixed bridge at the head and the coiled tail cords
+  // [PX-1] gayageum: the long wooden zither at a slight angle, bold strings each over its own movable bridge
+  // (anjok) set in a slanting row, the fixed bridge at the head and the coiled tail cords. [FU-2] Three strings
+  // with wide gaps (four merged at 54 px) and bigger bridges
   'culture-gayageum': [
     groundShadow(50, 86, 36),
-    poly([gaya(0, -14), gaya(1, -12), gaya(1, 12), gaya(0, 14)], { f: 'stage.stage2', ...INK }, 5),
-    poly([gaya(0.06, -14), gaya(0.12, -13.8), gaya(0.12, 13.8), gaya(0.06, 14)], { f: 'vocab.brown', ...DETAIL }),
+    poly([gaya(0, -15), gaya(1, -13), gaya(1, 13), gaya(0, 15)], { f: 'stage.stage2', ...INK }, 5),
+    poly([gaya(0.06, -15), gaya(0.12, -14.8), gaya(0.12, 14.8), gaya(0.06, 15)], { f: 'vocab.brown', ...DETAIL }),
     path(GAYA_STRINGS.map((w) => `M ${gaya(0.12, w).map(n).join(' ')} L ${gaya(0.84, w).map(n).join(' ')}`).join(' '), INK),
     ...GAYA_STRINGS.map((w, i) => {
-      const [x, y] = gaya(0.26 + 0.15 * i, w);
-      return poly(pts(x - 5.5, y + 3, x - 0.5, y - 9, x + 5, y - 0.5), { f: 'vocab.white', ...DETAIL }, 1);
+      const [x, y] = gaya(0.3 + 0.2 * i, w);
+      return poly(pts(x - 7, y + 3.9, x - 0.7, y - 11.2, x + 6.3, y - 0.7), { f: 'vocab.white', ...DETAIL }, 1);
     }),
-    ...GAYA_STRINGS.map((w) => circle(...gaya(0.91, w), 3.4, { f: 'vocab.white', ...DETAIL })),
+    ...GAYA_STRINGS.map((w) => circle(...gaya(0.91, w), 3.6, { f: 'vocab.white', ...DETAIL })),
   ],
 };

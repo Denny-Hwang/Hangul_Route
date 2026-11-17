@@ -80,8 +80,9 @@ describe('batch PX-1: what each picture shows', () => {
   it('rice is white rice heaped over a bowl, with steam; kimbap shows its fillings in a seaweed ring', () => {
     expect(fills('food-rice')).toContain('vocab.white');
     expect(glyph('food-rice').filter((s) => s.s === 'border.strong')).toHaveLength(2);
-    for (const tone of ['vocab.white', 'vocab.yellow', 'vocab.orange', 'vocab.green']) expect(count('food-kimbap', tone)).toBe(4);
-    expect(count('food-kimbap', 'text.primary')).toBe(5);
+    // [FU-2] the roll's cut end and two slices in front (registry-fu2.test.ts pins the gap between them)
+    for (const tone of ['vocab.white', 'vocab.yellow', 'vocab.orange', 'vocab.green']) expect(count('food-kimbap', tone)).toBe(3);
+    expect(count('food-kimbap', 'text.primary')).toBe(4);
   });
 
   it('the tiger wears Hoya gold with ink stripes and round ears, and is a face like the other animals', () => {
@@ -90,8 +91,9 @@ describe('batch PX-1: what each picture shows', () => {
     expect(glyph('animal-tiger').filter((s) => s.t === 'circle' && s.f === 'hoya.fur')).toHaveLength(2);
   });
 
-  it('the sea has no boat: three bands of water and a sun; the moon is a crescent, not a disc', () => {
-    expect(fills('nature-sea').filter((f) => f === 'vocab.blue' || f === 'vocab.skyBlue')).toHaveLength(3);
+  it('the sea has no boat: water and a sun; the moon is a crescent, not a disc', () => {
+    // [FU-2] one curling wave over a band of water (registry-fu2.test.ts)
+    expect(fills('nature-sea').filter((f) => f === 'vocab.blue' || f === 'vocab.skyBlue')).toHaveLength(2);
     expect(fills('nature-sea')).not.toContain('vocab.brown');
     expect(glyph('nature-moon').some((s) => s.t === 'circle' && s.f === 'vocab.yellow')).toBe(false);
     expect(glyph('nature-moon').some((s) => s.t === 'path' && s.f === 'vocab.yellow')).toBe(true);
@@ -112,17 +114,19 @@ describe('batch PX-1: what each picture shows', () => {
 
   it('the gayageum has a bridge under every string and its tail cords; the hanbok has its tie and collar', () => {
     const white = glyph('culture-gayageum').filter((s) => s.f === 'vocab.white');
-    expect(white.filter((s) => s.t === 'path')).toHaveLength(4);
-    expect(white.filter((s) => s.t === 'circle')).toHaveLength(4);
+    // [FU-2] three strings, each with its bridge and its tail cord
+    expect(white.filter((s) => s.t === 'path')).toHaveLength(3);
+    expect(white.filter((s) => s.t === 'circle')).toHaveLength(3);
     expect(count('culture-hanbok', 'vocab.white')).toBe(2);
     expect(count('culture-hanbok', 'vocab.blue')).toBe(5);
   });
 
-  it('the five cues: a fried egg beside the egg, layered rice cake, a person with a shadow, three seeds, a tinted cloud', () => {
+  it('the five cues: a fried egg beside the egg, layered rice cake, a person with a shadow, seeds, a tinted cloud', () => {
     expect(fills('food-egg')).toEqual(expect.arrayContaining(['brand.primaryLight', 'vocab.white', 'vocab.yellow']));
     for (const tone of ['vocab.pink', 'vocab.yellow', 'vocab.green']) expect(count('food-tteok', tone)).toBe(2);
     expect(fills('science-shadow')).toEqual(expect.arrayContaining(['vocab.gray', 'vocab.yellow', 'surface.paper']));
-    expect(count('science-seed', 'vocab.brown')).toBe(3);
+    // [FU-2] four golden teardrop seeds, not brown nuts (registry-fu2.test.ts)
+    expect(count('science-seed', 'stage.stage2')).toBe(4);
     expect(fills('nature-cloud')).toEqual(expect.arrayContaining(['brand.secondaryLight']));
     expect(fills('nature-cloud')).not.toContain('surface.paper');
     // no sky patch behind it: that is nature-sky (told by shape, R3)

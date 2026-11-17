@@ -108,15 +108,17 @@ describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
   // shared frames (`word`, `Page`, `Legend`): the module line moves to 34,000 B (about 32,000 B); the per-drawing line stays.
   // AMENDMENTS-PICTURES-2026-11 PX-3 gives every card its own subject with an ink outline (no shared Stage 4 and Stage 7
   // templates): the module measures 38,561 B, so its line moves to 38,600 B; the largest drawing (HunminjeongeumArt)
-  // measures 1,367 B, so the per-drawing lines did not move.
-  it('art budget: each drawing at most 2,000 B of source, the module at most 38,600 B', () => {
+  // measures 1,367 B, so the per-drawing lines did not move. AMENDMENTS-FOLLOWUPS-2026-11 FU-2 redraws ssireum as two
+  // wrestlers in the hold (a shared `Wrestler`) and touches insa and jirisan: the module measures 40,775 B, so its line
+  // moves to 40,800 B; the legendary frames with `Wrestler` measure 3,514 B, so that line moves to 3,550 B.
+  it('art budget: each drawing at most 2,000 B of source, the module at most 40,800 B', () => {
     const fns = [...art.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1], bytes: Buffer.byteLength(m[0]) }));
     expect(fns).toHaveLength(30);
     for (const f of fns) expect(f.bytes, f.name).toBeLessThanOrEqual(2_000);
-    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(38_600);
+    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(40_800);
   });
 
-  it('art budget, Stages 6-7 and the legendary cards: the shared frames at most 3,200 B, each new drawing at most 1,700 B (row CM-23 part 3)', () => {
+  it('art budget, Stages 6-7 and the legendary cards: the shared frames at most 3,550 B, each new drawing at most 1,700 B (row CM-23 part 3, FU-2)', () => {
     const block = art.slice(art.indexOf('// ---- Stages 6-7'), art.indexOf('/** True for a card id'));
     const fnOf = (name: string): string => new RegExp(`^function ${name}\\(p: ArtProps\\)[\\s\\S]*?^}$`, 'm').exec(art)?.[0] ?? '';
     const names = ['Won', 'Yeogiyo', 'Gichapyo', 'Jeongsang', 'Deom', 'Ireum', 'Achim', 'Saengil', 'Tokki', 'Bihaenggi', 'Hunminjeongeum', 'Jang', 'Hangawi', 'Jirisan', 'Ssireum'].map((n) => `${n}Art`);
@@ -126,7 +128,7 @@ describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
       expect(Buffer.byteLength(fn), names[i]).toBeLessThanOrEqual(1_700);
     }
     const frames = drawings.reduce((rest, fn) => rest.replace(fn, ''), block).replace(/^\s*\/\/.*$/gm, '');
-    expect(Buffer.byteLength(frames)).toBeLessThanOrEqual(3_200);
+    expect(Buffer.byteLength(frames)).toBeLessThanOrEqual(3_550);
   });
 
   // AMENDMENTS-PICTURES-2026-11 R5 (PX-3): the text stays, small and secondary, on cards never used as a question picture

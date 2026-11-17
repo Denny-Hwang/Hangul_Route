@@ -170,14 +170,14 @@ export const FOOD_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ...pts(31, 55, 38.6, 48.8, 37, 58, 47.5, 56.2, 37.4, 63, 47.6, 62.7).map(([x, y]) => circle(x, y, 1.5, { f: 'vocab.red' })),
   ],
 
-  // [PX-1] cut kimbap: the roll behind, three slices in front showing the seaweed ring, the rice and the fillings
+  // [PX-1] cut kimbap: the roll behind, its cut end showing the seaweed ring, the rice and the fillings.
+  // [FU-2] Two big slices stand apart in front, so the outline is a roll over two rounds, not one block
   'food-kimbap': [
-    groundShadow(50, 86, 34),
-    rect(14, 26, 62, 26, 13, { f: 'text.primary', ...INK }),
-    line(26, 33, 58, 33, { s: 'border.strong', sw: 2 }),
-    ...kimbapSlice(76, 39, 12),
-    ...kimbapSlice(27, 67, 15),
-    ...kimbapSlice(73, 67, 15),
-    ...kimbapSlice(50, 71, 15),
+    groundShadow(50, 87, 36),
+    rect(14, 18, 56, 24, 12, { f: 'text.primary', ...INK }),
+    line(24, 25, 54, 25, { s: 'border.strong', sw: 2 }),
+    ...kimbapSlice(70, 30, 12),
+    ...kimbapSlice(30, 69, 15),
+    ...kimbapSlice(70, 69, 15),
   ],
 };

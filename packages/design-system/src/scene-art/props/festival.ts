@@ -111,9 +111,10 @@ export const SILK_BOLTS: ItemDef = {
     'The Annals record that elderly people who took part in the 1795 feast were each given one bolt (pil) of silk. Drawn as three folded bolts in pale colours; the colours and folding are generic, the record does not give them.',
   nodes: [
     { t: 'ellipse', cx: 32, cy: 36, rx: 30, ry: 2, fill: 'text.primary', o: 0.08, det: true },
-    { t: 'rect', x: 4, y: 24, w: 56, h: 12, r: 3, fill: 'brand.secondaryLight', stroke: 'border.strong', sw: 'base' },
-    { t: 'rect', x: 8, y: 13, w: 50, h: 11, r: 3, fill: 'feedback.nudgeLight', stroke: 'border.strong', sw: 'base' },
-    { t: 'rect', x: 6, y: 3, w: 52, h: 10, r: 3, fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    // [FU-2] ink outlines, so the pale bolts read as cloth on a cream ground
+    { t: 'rect', x: 4, y: 24, w: 56, h: 12, r: 3, fill: 'brand.secondaryLight', stroke: 'text.primary', sw: 'base' },
+    { t: 'rect', x: 8, y: 13, w: 50, h: 11, r: 3, fill: 'feedback.nudgeLight', stroke: 'text.primary', sw: 'base' },
+    { t: 'rect', x: 6, y: 3, w: 52, h: 10, r: 3, fill: 'surface.paper', stroke: 'text.primary', sw: 'base' },
     { t: 'path', d: 'M14 24 V36 M16 13 V24 M14 3 V13', stroke: 'border.strong', sw: 'thin', det: true },
   ],
 };
@@ -129,11 +130,12 @@ export const CEREMONY_GOODS: ItemDef = {
     'A uigwe lists the goods used and their cost (the portal page). Here a few such goods, as the story brief names them, are laid out for checking: cloth, bowls, a furled flag on its pole and a lantern. They are generic, not items of one recorded event.',
   nodes: [
     { t: 'ellipse', cx: 65, cy: 68, rx: 62, ry: 2, fill: 'text.secondary', o: 0.08, det: true },
-    { t: 'rect', x: 2, y: 54, w: 36, h: 12, r: 3, fill: 'brand.secondaryLight', stroke: 'border.strong', sw: 'base' },
-    { t: 'rect', x: 6, y: 44, w: 32, h: 10, r: 3, fill: 'feedback.nudgeLight', stroke: 'border.strong', sw: 'base' },
-    { t: 'path', d: 'M46 56 H70 L66 66 H50 Z M48 50 H68 L65 56 H51 Z M50 45 H66 L63 50 H53 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    // [FU-2] ink-brown outlines, so the cloth, the bowls and the flag read on a cream ground
+    { t: 'rect', x: 2, y: 54, w: 36, h: 12, r: 3, fill: 'brand.secondaryLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 6, y: 44, w: 32, h: 10, r: 3, fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M46 56 H70 L66 66 H50 Z M48 50 H68 L65 56 H51 Z M50 45 H66 L63 50 H53 Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M82 66 V4', stroke: 'text.secondary', sw: 'thick' },
-    { t: 'path', d: 'M84 8 Q92 10 90 34 Q86 36 84 34 Z', fill: 'brand.secondaryLight', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M84 8 Q92 10 90 34 Q86 36 84 34 Z', fill: 'brand.secondaryLight', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M112 26 V20 M104 30 Q104 26 112 26 Q120 26 120 30 L122 50 Q122 56 112 56 Q102 56 102 50 Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M102 40 H122', stroke: 'text.secondary', sw: 'thin', det: true },
   ],

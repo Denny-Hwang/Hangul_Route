@@ -17,12 +17,13 @@ const code = art.replace(/^\s*(\/\/|\/\*\*|\*).*$/gm, '').replace(/\{\/\*[\s\S]*
 const drawings = [...code.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] }));
 const body = (name: string): string => drawings.find((d) => d.name === name)?.body ?? '';
 /** The shared figures, frames and the apple a drawing may reach its ink outline through. */
-const SHARED = /<Pal |<Bowing |<Note |<Legend |apple\(/;
+const SHARED = /<Pal |<Bowing |<Note |<Legend |<Wrestler |apple\(/;
 
 /** What a picture must (`has`) and must not (`not`) draw, from the triage's "what to change" (R2, R3). */
 const PINS: Record<string, { has?: RegExp[]; not?: RegExp[] }> = {
   // the four redraws: each its own subject, the text small and not the subject
-  InsaArt: { has: [/(<Bowing [\s\S]*){2}/, /flip/], not: [/<Bubble/] },
+  // [FU-2] insa drawn larger without the motion arcs
+  InsaArt: { has: [/(<Bowing [\s\S]*){2}/, /flip/, /scale\(1\.1\)/], not: [/<Bubble/, /M10 92Q18 68/] },
   IreumArt: { has: [/vocab\.blue/, /'호야'/], not: [/<Page/] },
   AchimArt: { has: [/A44 44 0 0 1/, /vocab\.green/, /vocab\.brown/] },
   SaengilArt: { has: [/vocab\.pink/, /\[66, 100, 134\]\.map/, /vocab\.yellow/] },
@@ -46,7 +47,10 @@ const PINS: Record<string, { has?: RegExp[]; not?: RegExp[] }> = {
   // clouds and the summit stone
   HunminjeongeumArt: { has: [/(\[34, 60, 87, 114, 140\][\s\S]*){2}/, /vocab\.red/, /surface\.paper/] },
   HangawiArt: { has: [/<Circle cx=\{152\} cy=\{42\} r=\{26\}/, /vocab\.red/, /vocab\.green/] },
-  JirisanArt: { has: [/vocab\.gray/, /surface\.paper/], not: [/vocab\.yellow|feedback\.nudge/] },
+  // [FU-2] two cloud bands, the front peak rising out of the lower one; ssireum is two crouched wrestlers in the hold
+  // with white satba belts, each arm gripping the other's thigh band, not two friends leaning in
+  JirisanArt: { has: [/vocab\.gray/, /(surface\.paper[\s\S]*){2}/], not: [/vocab\.yellow|feedback\.nudge/] },
+  SsireumArt: { has: [/(<Wrestler [\s\S]*){4}/, /flip arm/], not: [/<Pal /] },
 };
 
 describe('upper-stage and legendary card art (UpperCellArt.tsx, AMENDMENTS-PICTURES-2026-11 PX-3)', () => {

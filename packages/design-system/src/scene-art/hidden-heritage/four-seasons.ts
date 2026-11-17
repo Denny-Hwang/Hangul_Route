@@ -187,17 +187,22 @@ const MOON_BEAR: ItemDef = {
   ],
 };
 
-/** Winter snow (눈): round flakes and a six-armed flake falling on a snow bank, an other thing ([PX] PX-4; ringed flakes read as wheels). */
+/** Winter snow (눈): round flakes and a six-armed flake falling on a snow bank, an other thing ([PX] PX-4; ringed flakes read as wheels).
+ * [FU] FU-2: the two six-armed flakes are larger, each arm with a pair of branches, so they read as flakes at 64 px. */
 const SNOW: ItemDef = {
   id: 'prop:hh-winter-snow',
   kind: 'nature',
   box: { w: 84, h: 96 },
   z: 'mid',
   alt: 'Snow falling on a snow bank',
-  accuracyNote: 'Round snowflakes and two six-armed flakes falling on a white snow bank, drawn large so they read at thumb size.',
+  accuracyNote: 'Round snowflakes and two six-armed flakes with branched arms falling on a white snow bank, drawn large so they read at thumb size.',
   nodes: [
-    { t: 'path', d: 'M24 8L24 36M36 15L12 29M36 29L12 15M62 42L62 66M72.5 48L51.5 60M72.5 60L51.5 48', stroke: 'text.secondary', sw: 'thick' },
-    { t: 'path', d: 'M24 8L24 36M36 15L12 29M36 29L12 15M62 42L62 66M72.5 48L51.5 60M72.5 60L51.5 48', stroke: 'surface.paper', sw: 'thin' },
+    { t: 'path', d: 'M24 7L24 37M37 14.5L11 29.5M37 29.5L11 14.5M61 42L61 66M71.5 48L50.5 60M71.5 60L50.5 48', stroke: 'text.secondary', sw: 'thick' },
+    { t: 'path', d: 'M20 34.5L24 30.5L28 34.5M11 25L16.5 26.5L15 32M15 12L16.5 17.5L11 19M28 9.5L24 13.5L20 9.5M37 19L31.5 17.5L33 12M33 32L31.5 26.5L37 25', stroke: 'text.secondary', sw: 'thick' },
+    { t: 'path', d: 'M58 64L61 61L64 64M50.5 56.5L55 57.5L54 62M54 46L55 50.5L50.5 51.5M64 44L61 47L58 44M71.5 51.5L67 50.5L68 46M68 62L67 57.5L71.5 56.5', stroke: 'text.secondary', sw: 'thick' },
+    { t: 'path', d: 'M24 7L24 37M37 14.5L11 29.5M37 29.5L11 14.5M61 42L61 66M71.5 48L50.5 60M71.5 60L50.5 48', stroke: 'surface.paper', sw: 'thin' },
+    { t: 'path', d: 'M20 34.5L24 30.5L28 34.5M11 25L16.5 26.5L15 32M15 12L16.5 17.5L11 19M28 9.5L24 13.5L20 9.5M37 19L31.5 17.5L33 12M33 32L31.5 26.5L37 25', stroke: 'surface.paper', sw: 'thin' },
+    { t: 'path', d: 'M58 64L61 61L64 64M50.5 56.5L55 57.5L54 62M54 46L55 50.5L50.5 51.5M64 44L61 47L58 44M71.5 51.5L67 50.5L68 46M68 62L67 57.5L71.5 56.5', stroke: 'surface.paper', sw: 'thin' },
     { t: 'path', d: 'M59.5 14A6.5 6.5 0 1 0 72.5 14A6.5 6.5 0 1 0 59.5 14ZM4.5 52A5.5 5.5 0 1 0 15.5 52A5.5 5.5 0 1 0 4.5 52ZM30 46A6 6 0 1 0 42 46A6 6 0 1 0 30 46ZM73 34A5 5 0 1 0 83 34A5 5 0 1 0 73 34Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M19 72A5 5 0 1 0 29 72A5 5 0 1 0 19 72ZM73.5 70A4.5 4.5 0 1 0 82.5 70A4.5 4.5 0 1 0 73.5 70ZM44 14A4 4 0 1 0 52 14A4 4 0 1 0 44 14Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M0 96C4 86 14 82 26 86C36 78 52 78 62 84C70 80 80 82 84 88V96Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },

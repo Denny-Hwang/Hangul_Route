@@ -100,8 +100,9 @@ export const CRAFT_WOOD: ItemDef = {
   nodes: [
     { t: 'path', d: 'M10 34 L14 18 H22 L26 34 Z M54 34 L58 18 H66 L70 34 Z', fill: 'text.secondary' },
     { t: 'rect', x: 2, y: 12, w: 76, h: 8, r: 1, fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
-    { t: 'path', d: 'M34 6 H52 L54 12 H32 Z', fill: 'text.secondary' },
-    { t: 'path', d: 'M58 10 Q62 4 66 8 M64 30 Q68 26 72 30', stroke: 'border.strong', sw: 'base', det: true },
+    // [FU-2] the hand plane with its rear grip and front knob, and curled shavings outlined in ink brown
+    { t: 'path', d: 'M32 7 H52 L54 12 H30 Z M46 7 Q46 1 51 1 M36 7 V4', fill: 'text.secondary', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M58 11 Q58 3 64 4 Q69 6 65 10 Q62 11 62 8 M66 32 Q66 25 71 26 Q75 28 72 31', stroke: 'text.secondary', sw: 'base', det: true },
   ],
 };
 
@@ -145,12 +146,12 @@ export const GLOW_BURST: ItemDef = {
   box: { w: 160, h: 160 },
   z: 'back',
   alt: 'A warm burst of light: rays and glints around an empty centre, for something precious shining or for a sunrise',
-  accuracyNote: 'A sign of light (a halo, rays and glints around an empty centre, so it is not a sun and the thing in front of it shows) for an honoured object shining or a sunrise ([PX] PX-4). No emblem or logo.',
+  accuracyNote: 'A sign of light (rays and glints around an empty centre, so it is not a sun and the thing in front of it shows) for an honoured object shining or a sunrise ([PX] PX-4). [FU] FU-2: no halo disc (it read as a pale sun), twelve rays long and short in turn, four big glints. No emblem or logo.',
   nodes: [
-    { t: 'circle', cx: 80, cy: 80, r: 76, fill: 'feedback.nudge', o: 0.2 },
-    { t: 'path', d: 'M124.5 92L147.5 98M115.5 115.5L124 124M92 124.5L98 147.5M67 128.5L64 140M47.5 112.5L30.5 129.5M31.5 93L20 96', stroke: 'feedback.nudge', sw: 'thick' },
-    { t: 'path', d: 'M35.5 68L12.5 62M44.5 44.5L36 36M68 35.5L62 12.5M93 31.5L96 20M112.5 47.5L129.5 30.5M128.5 67L140 64', stroke: 'feedback.nudge', sw: 'thick' },
-    { t: 'path', d: 'M26 22L28.5 27.5L34 30L28.5 32.5L26 38L23.5 32.5L18 30L23.5 27.5ZM136 117L138 122L143 124L138 126L136 131L134 126L129 124L134 122ZM132 29L133.5 32.5L137 34L133.5 35.5L132 39L130.5 35.5L127 34L130.5 32.5Z', fill: 'feedback.nudge' },
+    { t: 'path', d: 'M118.5 90.5L149.5 98.5M90.5 118.5L98.5 149.5M51.5 108.5L29 131M41.5 69.5L10.5 61.5M69.5 41.5L61.5 10.5M108.5 51.5L131 29', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M112.5 112.5L124 124M68 124.5L64 140M35.5 92L20 96M47.5 47.5L36 36M92 35.5L96 20M124.5 68L140 64', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M22 11L25 21L35 24L25 27L22 37L19 27L9 24L19 21ZM140 107L142.5 115.5L151 118L142.5 120.5L140 129L137.5 120.5L129 118L137.5 115.5Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M136 21L138 28L145 30L138 32L136 39L134 32L127 30L134 28ZM26 122L28 128L34 130L28 132L26 138L24 132L18 130L24 128Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
   ],
 };
 
@@ -259,10 +260,14 @@ export const DRUM: ItemDef = {
   alt: 'A round barrel drum (buk) resting on its side',
   accuracyNote: 'A generic Korean barrel drum (buk): wooden body, skin head and a row of tacks; no particular paint or pattern.',
   nodes: [
-    { t: 'path', d: 'M10 8 Q35 2 60 8 V48 Q35 54 10 48 Z', fill: 'text.secondary', stroke: 'text.primary', sw: 'base' },
-    { t: 'ellipse', cx: 10, cy: 28, rx: 6, ry: 20, fill: 'text.secondary', stroke: 'text.primary', sw: 'base' },
-    { t: 'ellipse', cx: 60, cy: 28, rx: 8, ry: 20, fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
-    { t: 'path', d: 'M18 7 V9 M26 5.5 V7.5 M34 5 V7 M42 5 V7 M50 6 V8 M18 48 V50 M26 49.5 V51.5 M34 50 V52 M42 50 V52 M50 49 V51', stroke: 'surface.paper', sw: 'base', det: true },
+    // [FU-2] a shorter body between two big skin heads, the near head with its rim, and a drumstick (bukchae) lying
+    // across the top, so it reads as a drum and not a barrel
+    { t: 'path', d: 'M16 10 Q37 5 58 10 V50 Q37 55 16 50 Z', fill: 'text.secondary', stroke: 'text.primary', sw: 'base' },
+    { t: 'ellipse', cx: 16, cy: 30, rx: 7, ry: 20, fill: 'text.secondary', stroke: 'text.primary', sw: 'base' },
+    { t: 'ellipse', cx: 58, cy: 30, rx: 10, ry: 20, fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
+    { t: 'ellipse', cx: 58, cy: 30, rx: 6, ry: 15, fill: 'none', stroke: 'text.secondary', sw: 'thin', det: true },
+    { t: 'path', d: 'M22 6 L62 1', stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M24 9 V11 M32 7.5 V9.5 M40 7.5 V9.5 M48 8 V10 M24 50 V52 M32 51.5 V53.5 M40 51.5 V53.5 M48 51 V53', stroke: 'surface.paper', sw: 'base', det: true },
   ],
 };
 
@@ -290,8 +295,12 @@ export const TAFFY_TRAY: ItemDef = {
   alt: 'A wooden tray of taffy (yeot) sticks',
   accuracyNote: "A plain tray of pale taffy sticks for the seller in Kim Hongdo's Ssireum; his tray is not described, so it is generic.",
   nodes: [
-    { t: 'path', d: 'M6 6 H50 M6 10 H50 M6 14 H50', stroke: 'feedback.nudgeLight', sw: 'thick' },
-    { t: 'path', d: 'M2 4 V18 H54 V4 M2 20 H54', stroke: 'text.secondary', sw: 'thick' },
+    // [FU-2] a shallow tray with five outlined taffy sticks lying on it, two of them across the others, so it is a
+    // tray of sticks and not a bed
+    { t: 'path', d: 'M2 14 H54 L51 21 H5 Z', fill: 'text.secondary' },
+    { t: 'path', d: 'M6 8.5 H50 V13 H6 Z M8 3 H44 V7.5 H8 Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M20 4 L48 12 M30 2 L54 8', stroke: 'text.secondary', sw: 'thick' },
+    { t: 'path', d: 'M20 4 L48 12 M30 2 L54 8', stroke: 'feedback.nudgeLight', sw: 'thin' },
   ],
 };
 
@@ -303,7 +312,10 @@ export const SHOES: ItemDef = {
   alt: 'A pair of shoes taken off and left on the ground',
   accuracyNote: "Plain low shoes, after those left at the right edge of Kim Hongdo's Ssireum; material not described.",
   nodes: [
-    { t: 'path', d: 'M2 12 Q2 6 8 6 L18 7 Q21 12 17 13 L4 13 Z M20 10 Q20 4 26 4 L36 5 Q39 10 35 11 L22 11 Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    // [FU-2] gomusin in side view, set side by side: a low sole, a rounded heel with the dark opening behind and the
+    // toe turned up to a point, so the pair reads as shoes and not as two rings
+    { t: 'path', d: 'M1 8 Q0.5 13.5 4 13.5 H14 Q18 13 18.5 6 Q14 9.5 9 8.5 Q4 6.5 1 8 Z M21 6 Q20.5 11.5 24 11.5 H34 Q38 11 38.5 4 Q34 7.5 29 6.5 Q24 4.5 21 6 Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M2.5 8 Q6 6 11 8.5 Q6 10 2.5 8 Z M22.5 6 Q26 4 31 6.5 Q26 8 22.5 6 Z', fill: 'text.secondary' },
   ],
 };
 

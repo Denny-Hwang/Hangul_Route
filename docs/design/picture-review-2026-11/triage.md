@@ -137,7 +137,7 @@ Counts: keep 30, tweak 10, redraw 0. People are faceless by rule; that reads fin
 | prop:feast-table | feast table | 6 | tweak | Cones read "traffic cones". Stack round layers (fruit, rice cakes) with visible units. |
 | the other 30 | | 8 to 10 | keep | fig-child, fig-villager, fig-woman, leafy-tree, desk-low, soban, fig-historian, crowd-seated, fig-official, books-stack, fig-modern, book-thread-bound, writing-set, writing-lines, fig-king, pine-tree, kimchi-jars, janggyeong-hall, fig-scholar, fig-king-seated, book-open, oil-lamp, fig-grandmother, basket, sundial, museum-case, persimmon-tree, night-window, fig-monk, swallow. |
 
-Not judged: the roughly 110 props below the top 40.
+Not judged here: the props below the top 40. **[FU]** They are judged in section 8 (FU-2): 96 of them.
 
 ## 6. Realia dressings (17)
 
@@ -162,6 +162,121 @@ Hoya: keep 3 (idle 10, cheering 9, reading 8), tweak 2.
 | hoya:waving | Hoya waving | 7 | tweak | Differs from idle by one raised paw; identical at 48 px. Raise the arm above the ear and add two motion ticks. |
 
 Stickers: `pin` 9 keep, `check-circle` 9 keep (the only two used as stickers). The paper edge works at 16 px.
+
+## 8. Story props, the rest (FU-2)
+
+**[FU]** `AMENDMENTS-FOLLOWUPS-2026-11.md` row FU-2 (b), 2026-11-17. Every `prop:` id in the scene-art registry
+(`SCENE_ART_REGISTRY`, 136 props) less the 40 of section 5 and Hoya's poses: 96 props. Each was drawn by the real
+`drawProp` on contact sheets, fit in 200x150 and 64x48 on `surface.canvas`, with its alt text, box and the stories that
+use it; ground strips and overlays (`rice-field`, `sand-ring`, `rain-cloud`) were also looked at inside their story
+scenes at 380 and 120 px. Scored on the same five questions (s/f/l/c/a, 0 to 2 each; keep 8+, tweak 5 to 7, redraw 4
+or less). "Uses" counts the scene layers in `content/stories/**` that draw the prop. Same limits as above: one
+reviewer, no learner test.
+
+Counts: keep 76, tweak 20, redraw 0. All 20 tweaks are done in the FU-2 PR (pins in
+`packages/design-system/src/scene-art/__tests__/fu2-props.test.ts`). Two causes cover most of them: a pale thing in a
+pale `border.strong` outline on a cream ground (the cure of PX-4's figures: an ink outline, `text.primary` or
+`text.secondary`, from the prop's own palette, so no scene gains a colour), and a shape that names something else (a
+crate, a barrel, a bed, two rings, planks, cushions).
+
+| id | uses | shows | score (s/f/l/c/a) | verdict | what was wrong, and what changed |
+|---|---|---|---|---|---|
+| prop:archive-shelf | 9 | Archive shelf of boxed books | 10 (2/2/2/2/2) | keep |  |
+| prop:bronze-jar | 9 | Bronze water-clock jar on a stand | 9 (2/2/1/2/2) | keep |  |
+| prop:paper-stack | 9 | Neat stack of written sheets | 6 (1/1/1/2/1) | tweak | Read as a crate (a box with a tall lid). Now four offset sheets under the top one, outlined in ink brown. |
+| prop:display-case | 8 | Empty glass museum case | 8 (1/2/2/1/2) | keep | Pale at 64 px, but the frame and plinth carry it; always behind a thing. |
+| prop:fig-commander | 8 | Joseon commander, red sash, felt hat | 10 (2/2/2/2/2) | keep |  |
+| prop:fig-officials-kneeling | 8 | Three officials kneeling, from behind | 9 (2/2/2/1/2) | keep |  |
+| prop:fig-writer-seated | 8 | Young man writing on the floor | 9 (2/2/2/1/2) | keep |  |
+| prop:magpie | 8 | Flying magpie | 6 (1/0/2/2/1) | tweak | A black dart: the white belly and shoulders of the alt were too small to see. Belly and shoulder patch larger, outlined. |
+| prop:rain-gauge | 8 | Cheugugi on its stone stand | 9 (2/2/2/1/2) | keep |  |
+| prop:woodblock-shelves | 8 | Shelves of Tripitaka blocks | 9 (2/2/1/2/2) | keep |  |
+| prop:breeze | 7 | Curved arrows of a breeze | 9 (2/2/2/2/1) | keep | A sign, by design. |
+| prop:fig-bowing | 7 | Person in a deep kneeling bow | 8 (1/2/2/1/2) | keep |  |
+| prop:papers-loose | 7 | Untidy pile of sheets | 7 (1/1/2/2/1) | tweak | White sheets in pale outlines vanished on the canvas. Outlined in ink brown. |
+| prop:rice-field | 7 | Rows of ripe rice (ground strip) | 7 (1/1/2/1/2) | tweak | A ground strip, read as a field in its scenes, but alone a plank with straight ticks. Each stalk now bows under its ear of grain. |
+| prop:sheet-cursive | 7 | Sheet of flowing brush strokes | 9 (2/2/2/2/1) | keep |  |
+| prop:type-tray | 7 | Frame of movable type | 10 (2/2/2/2/2) | keep |  |
+| prop:book-open-entry | 6 | Open diary, a bold headline stroke | 9 (2/2/1/2/2) | keep |  |
+| prop:drum | 6 | Barrel drum (buk) on its side | 6 (1/1/1/2/1) | tweak | Read as a barrel. Shorter body between two big skin heads, a rim on the near head, a drumstick (bukchae) across the top. |
+| prop:fig-carver | 6 | Goryeo woodblock carver | 7 (1/1/2/1/2) | tweak | White robe in a pale thin outline: cream on cream. Robe and arms outlined in ink. |
+| prop:fortress-gate | 6 | Hwaseong gate tower | 10 (2/2/2/2/2) | keep |  |
+| prop:sago-archive | 6 | Mountain archive storehouses | 10 (2/2/2/2/2) | keep |  |
+| prop:sand-ring | 6 | Sand ring for wrestling (ground) | 8 (1/1/2/2/2) | keep | Ground shape: judged in its scenes, where it reads as the ring. |
+| prop:sorghum | 6 | Three sorghum stalks | 9 (2/2/2/1/2) | keep |  |
+| prop:weather-signs | 6 | Sun and rain-cloud symbols | 10 (2/2/2/2/2) | keep |  |
+| prop:fig-wrestlers | 5 | Two wrestlers crouched in the hold | 7 (1/1/2/1/2) | tweak | White clothes in a pale outline faded into sand and cream floors. Outlined in ink. |
+| prop:rain-cloud | 5 | Grey rain clouds overlay | 8 (1/2/2/1/2) | keep | An overlay; it spans its scenes. |
+| prop:turtle | 5 | Turtle in a small black hat | 10 (2/2/2/2/2) | keep |  |
+| prop:book-bundle | 4 | Books wrapped in cloth, knot on top | 9 (2/2/2/1/2) | keep |  |
+| prop:cabbages | 4 | Heap of napa cabbages, one cut | 7 (1/1/2/1/2) | tweak | The cut cabbage was a pale egg. Green leaf tops over its white heart, ribs, base outlines; the whole cabbages are two shapes so the heart stays the largest fill (the gimjang scene would otherwise blend into its green ground). |
+| prop:calendar-page | 4 | Wall calendar with a paw print | 10 (2/2/2/2/2) | keep |  |
+| prop:craft-wood | 4 | Beam on trestles, hand plane, shavings | 6 (1/1/1/2/1) | tweak | Read as a bench. The plane has its grip and knob; the shavings curl, outlined. |
+| prop:fig-dancer | 4 | Court dancer, flower crown | 10 (2/2/2/2/2) | keep |  |
+| prop:fig-girl | 4 | Girl in saekdong sleeves | 10 (2/2/2/2/2) | keep |  |
+| prop:fig-researcher | 4 | Researcher at a computer | 9 (2/2/2/2/1) | keep |  |
+| prop:fig-worker | 4 | Restoration worker, hard hat | 10 (2/2/2/2/2) | keep |  |
+| prop:float-vessel | 4 | Water-clock cylinder with rod | 8 (1/2/2/1/2) | keep |  |
+| prop:hall-section | 4 | Cutaway of the Panjeon hall | 9 (2/2/2/1/2) | keep | A diagram, by design. |
+| prop:ox | 4 | Calm golden-brown ox | 8 (2/2/2/1/1) | keep | Horns faint; the body carries it. |
+| prop:palanquin | 4 | Royal palanquin between two horses | 8 (2/2/2/1/1) | keep |  |
+| prop:procession-row | 4 | Marchers with red flags | 8 (1/2/2/2/1) | keep | A crowd strip. |
+| prop:rabbit | 4 | White rabbit mid-hop | 7 (0/2/2/1/2) | tweak | White on cream in a pale outline. Outlined in ink. |
+| prop:ruler | 4 | Measuring stick with ticks | 8 (1/2/2/2/1) | keep |  |
+| prop:songpyeon | 4 | Steamer of songpyeon on pine needles | 9 (2/2/2/1/2) | keep |  |
+| prop:tablet | 4 | Tablet with two columns of marks | 10 (2/2/2/2/2) | keep |  |
+| prop:water-stream | 4 | Pipe pouring drops | 8 (2/2/2/1/1) | keep |  |
+| prop:books-case | 3 | Case of thread-bound books | 10 (2/2/2/2/2) | keep |  |
+| prop:fig-pansori | 3 | Pansori singer with a fan | 7 (1/1/2/1/2) | tweak | White hanbok in a pale outline: cream on cream. Outlined in ink brown. |
+| prop:herbs | 3 | Bellflowers, mugwort, a root | 8 (2/1/2/1/2) | keep |  |
+| prop:museum-building | 3 | Modern museum building | 10 (2/2/2/2/2) | keep |  |
+| prop:signpost | 3 | Signpost with three pictured boards | 10 (2/2/2/2/2) | keep |  |
+| prop:silk-bolts | 3 | Folded silk bolts stacked | 6 (1/1/1/2/1) | tweak | Pale bolts in pale outlines read as towels. Outlined in ink. |
+| prop:woodblock | 3 | One Tripitaka woodblock | 8 (2/2/2/1/1) | keep |  |
+| prop:yut-board | 3 | Cloth yut board | 9 (2/2/2/1/2) | keep |  |
+| prop:banchado-strip | 2 | Procession pages in a strip | 8 (1/2/2/2/1) | keep | A diagram, by design. |
+| prop:bead-curtain | 2 | Hanging curtain with a tassel | 8 (2/2/2/1/1) | keep |  |
+| prop:book-geojunggi | 2 | Book with the lifting machine | 8 (2/2/2/1/1) | keep |  |
+| prop:books-airing | 2 | Old books open on a straw mat | 6 (0/1/2/2/1) | tweak | Small books in thin outlines lost on the mat. Book outlines at base. Still small at 64 x 48 (a wide prop); it reads in its scene. |
+| prop:bronze-mirror | 2 | Bronze mirror on a stand | 8 (2/2/2/1/1) | keep |  |
+| prop:changpo | 2 | Sweet flag leaves | 9 (2/2/2/1/2) | keep |  |
+| prop:craft-embroidery | 2 | Embroidery frame, half a flower | 8 (2/2/2/1/1) | keep |  |
+| prop:craft-painting | 2 | Painted panel on a stand, a brush | 8 (2/2/2/1/1) | keep |  |
+| prop:dance-circle | 2 | Ganggangsullae ring of dancers | 8 (1/2/2/1/2) | keep |  |
+| prop:document-box | 2 | Wooden box tied with red cord | 10 (2/2/2/2/2) | keep |  |
+| prop:dug-soil | 2 | Hole in the earth, a heap of soil | 8 (1/2/2/1/2) | keep |  |
+| prop:fig-child-back | 2 | Schoolboy from behind, a braid | 9 (2/2/2/1/2) | keep |  |
+| prop:fig-monk-seated | 2 | Monk in a red gasa writing | 10 (2/2/2/2/2) | keep |  |
+| prop:fortress-wall | 2 | Stone wall with a missing block | 10 (2/2/2/2/2) | keep |  |
+| prop:gourds | 2 | Two gourds and a split one with coins | 6 (1/1/1/1/2) | tweak | White domes in a green outline read as bells. Ink-brown outlines and a vine leaf at each stem. |
+| prop:ground-shadow | 2 | Long soft shadow | 8 (1/2/2/1/2) | keep | A shadow, by design. |
+| prop:horse | 2 | Brown horse grazing | 9 (2/2/2/1/2) | keep |  |
+| prop:lanterns | 2 | String of lanterns and flags | 8 (2/2/2/1/1) | keep |  |
+| prop:organ-stones | 2 | Five stepping stones of speech organs | 8 (1/2/2/1/2) | keep | A diagram, by design. |
+| prop:panokseon | 2 | Panokseon warship | 8 (2/2/2/1/1) | keep |  |
+| prop:print-sheet | 2 | Printed page with a hall | 10 (2/2/2/2/2) | keep |  |
+| prop:ribbon-trails | 2 | Glowing trails shaped ㄴ, ㄷ, ㅌ | 8 (2/2/2/1/1) | keep | The jamo are drawn correctly; they look like Latin L, C, E only because those jamo do. |
+| prop:shoes | 2 | Pair of shoes left on the ground | 5 (0/1/1/2/1) | tweak | Two rounded rings. Now two gomusin in side view, low sole, rounded heel, toe turned up to a point. |
+| prop:sky-rope | 2 | Golden rope beside a frayed one | 8 (1/2/2/2/1) | keep |  |
+| prop:speech-g | 2 | Head diagram, tongue root raised | 9 (2/2/2/1/2) | keep |  |
+| prop:speech-nm | 2 | Tongue-tip and mouth diagrams | 9 (2/2/2/1/2) | keep |  |
+| prop:striking-figures | 2 | Water-clock striking figures | 8 (2/2/2/1/1) | keep |  |
+| prop:stroke-sparks | 2 | Letter pieces floating as sparks | 8 (2/1/2/2/1) | keep | A sign, by design. |
+| prop:sun-moon-screen | 2 | Sun, moon and five peaks screen | 10 (2/2/2/2/2) | keep |  |
+| prop:swing | 2 | Woman on a rope swing | 8 (2/2/2/1/1) | keep |  |
+| prop:taffy-tray | 2 | Tray of taffy (yeot) sticks | 5 (1/0/1/2/1) | tweak | Read as a bed. A shallow tray with outlined sticks, two lying across the others. |
+| prop:tiger-trickster | 2 | Roly-poly trickster tiger | 10 (2/2/2/2/2) | keep |  |
+| prop:uigwe-open | 2 | Open uigwe, painted page | 8 (2/2/2/1/1) | keep |  |
+| prop:yut-sticks | 2 | Four yut sticks tumbling | 5 (1/1/1/1/1) | tweak | Flat planks. Round ends, a base outline, X marks on a flat face, a light line along each round back. |
+| prop:zodiac-ring | 2 | Twelve zodiac animals in a ring | 8 (1/1/2/2/2) | keep | Faces are small at 64 px; the ring and the gold tiger carry it in the sundial scene. |
+| prop:album-open | 1 | Album of small ink paintings | 8 (2/2/2/1/1) | keep |  |
+| prop:blank-tiles | 1 | Blank tiles tossed in an arc | 8 (2/2/2/1/1) | keep |  |
+| prop:book-chest-open | 1 | Open chest with books in red cloth | 7 (1/1/1/2/2) | tweak | The red bundles read as seat cushions. Each has its bojagi knot standing on top (one red shape, so the red share holds), base outline. |
+| prop:ceremony-goods | 1 | Cloth, bowls, a flag, a lantern | 7 (1/1/2/1/2) | tweak | Pale goods in pale outlines. Outlined in ink brown. |
+| prop:panjeon-plan | 1 | Panjeon seen from above | 8 (2/2/2/1/1) | keep | A plan, by design. |
+| prop:stick-dot | 1 | Stick and dot of ㅏ | 8 (2/2/2/1/1) | keep |  |
+| prop:temple-site | 1 | Excavated temple site | 7 (0/1/2/2/2) | tweak | A pale platform in a thin outline. Outlined in ink brown at base. |
+| prop:yut-throws | 1 | Five panels of yut throws | 9 (1/2/2/2/2) | keep | The five throws are right: one to four flat faces up, then none (mo). |
 
 ---
 

@@ -8,6 +8,7 @@
  */
 import { blob, circle, curve, drop, face, groundShadow, leaf, path, poly, pts, rect, star } from '../builders';
 import type { Pt } from '../builders';
+import { placeGlyph } from '../place';
 import type { WordArtGlyph, WordArtPaint, WordArtShape } from '../types';
 import { limb } from './pose';
 
@@ -191,14 +192,18 @@ export const NATURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     path('M 50 54 L 45 68 M 56 58 L 63 72 M 29 58 L 26 67 M 73 62 L 77 71', DETAIL),
   ],
 
-  // [PX-1] the sea: three rows of big waves with curling crests, a small sun low over the water; no boat
-  'nature-sea': [
-    circle(68, 30, 11, { f: 'vocab.yellow', ...INK }),
-    path('M 12 46 Q 20 34 30 42 Q 36 46 40 40 Q 48 30 58 40 Q 64 46 68 40 Q 76 30 88 44 V 60 H 12 Z', { f: 'vocab.skyBlue', ...INK }),
-    path('M 12 60 Q 16 48 28 52 Q 36 56 38 50 Q 46 42 56 52 Q 62 58 66 52 Q 74 44 88 56 V 74 H 12 Z', { f: 'vocab.blue', ...INK }),
-    path('M 12 74 Q 20 62 30 70 Q 36 74 40 68 Q 48 60 58 70 Q 64 74 68 68 Q 76 60 88 72 V 80 Q 88 86 82 86 H 18 Q 12 86 12 80 Z', { f: 'vocab.skyBlue', ...INK }),
-    path('M 20 60 Q 26 56 31 60 M 48 58 Q 54 55 59 60 M 22 79 Q 30 76 38 79 M 54 79 Q 62 76 70 79', { s: 'surface.paper', sw: 3 }),
-  ],
+  // [PX-1] the sea: waves and a small sun, no boat. [FU-2] One big wave curls over at its crest above a band of
+  // water with foam, so the outline is a curling wave and not a block
+  'nature-sea': placeGlyph(
+    [
+      circle(24, 22, 9, { f: 'vocab.yellow', ...INK }),
+      path('M 12 84 V 64 Q 14 38 38 28 Q 60 18 78 26 Q 92 34 88 48 Q 84 58 74 56 Q 66 54 68 46 Q 70 40 76 41 Q 66 34 58 44 Q 52 54 58 68 Q 62 78 70 84 Z', { f: 'vocab.blue', ...INK }),
+      path('M 20 62 Q 22 44 38 35 M 64 28 Q 76 28 82 38', { s: 'surface.paper', sw: 3 }),
+      path('M 12 72 Q 22 62 32 70 Q 40 76 48 68 Q 58 60 68 70 Q 76 76 88 66 V 82 Q 88 88 82 88 H 18 Q 12 88 12 82 Z', { f: 'vocab.skyBlue', ...INK }),
+      path('M 20 80 Q 28 76 36 80 M 56 80 Q 64 76 72 80', { s: 'surface.paper', sw: 3 }),
+    ],
+    { dx: 2.5, dy: 2, scale: 0.95 },
+  ),
 
   // [PX-1] a crescent moon with two stars and a small night cloud across its lower horn, so it is neither the sun nor a star
   'nature-moon': [

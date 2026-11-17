@@ -24,13 +24,12 @@ const face = (cx: number, cy: number, rx: number, ry: number): Shape => ({ t: 'e
 /** Round-capped pips: a half-unit stroke at each point, drawn with a thick stroke. */
 const pips = (pts: ReadonlyArray<readonly [number, number]>): string => pts.map(([x, y]) => `M${g(x)} ${g(y)}H${g(x) + 0.5}`).join('');
 
-/** A closed rectangle path rotated by `deg` about its centre, on the 0.5 grid. */
-const bar = (cx: number, cy: number, w: number, h: number, deg: number): string => {
+/** [FU-2] A yut stick from above: a bar with round ends, centred on (cx, cy), turned deg degrees. */
+const stick = (cx: number, cy: number, w: number, h: number, deg: number): string => {
   const a = (deg * Math.PI) / 180;
-  const c = Math.cos(a);
-  const sn = Math.sin(a);
-  const pt = (x: number, y: number): string => `${g(cx + x * c - y * sn)} ${g(cy + x * sn + y * c)}`;
-  return `M${pt(-w / 2, -h / 2)}L${pt(w / 2, -h / 2)}L${pt(w / 2, h / 2)}L${pt(-w / 2, h / 2)}Z`;
+  const pt = (x: number, y: number): string => `${g(cx + x * Math.cos(a) - y * Math.sin(a))} ${g(cy + x * Math.sin(a) + y * Math.cos(a))}`;
+  const r = h / 2;
+  return `M${pt(r - w / 2, -r)}L${pt(w / 2 - r, -r)}A${r} ${r} 0 0 1 ${pt(w / 2 - r, r)}L${pt(r - w / 2, r)}A${r} ${r} 0 0 1 ${pt(r - w / 2, -r)}Z`;
 };
 
 /** A closed dot path (a circle of radius r at each point), for merged rows of small round things. */
@@ -136,7 +135,8 @@ export const FIG_PANSORI: ItemDef = {
   accuracyNote: 'The heritage page: the singer needs only a fan. Costume not described: plain white hanbok. Face blank.',
   nodes: [
     { t: 'circle', cx: 30, cy: 19, r: 5, fill: 'text.primary' },
-    { t: 'path', d: 'M15 42L35 42Q44 70 48 120L2 120Q6 70 15 42ZM16 27L34 27L40 33L56 18L62 24L40 46L14 46L9 58L2 56L8 33Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    // [FU-2] the white hanbok outlined in ink brown, so it reads on a cream ground
+    { t: 'path', d: 'M15 42L35 42Q44 70 48 120L2 120Q6 70 15 42ZM16 27L34 27L40 33L56 18L62 24L40 46L14 46L9 58L2 56L8 33Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
     face(25, 16, 9, 10),
     { t: 'path', d: 'M16 15Q16 4 25 4Q34 4 34 15Q25 9 16 15Z', fill: 'text.primary' },
     { t: 'path', d: 'M59 22L46 6Q58 0 70 10Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'thin' },
@@ -151,15 +151,16 @@ export const FIG_YANGBAN_MASK: ItemDef = {
   z: 'mid',
   alt: 'Mask-play nobleman in a blue Joseon-style robe and black hat, a white mask with slit eyes, a hinged jaw and a long beard',
   sourceRef: MASK_REF,
-  accuracyNote: "The Gwanno play's yangban per the entry: a hat, a blue dopo and a long hemp beard. The long pipe is left out. The mask is white with the yangban mask's marks: crescent slit eyes and the line of its separate jaw, above the beard ([PX] PX-4).",
+  accuracyNote: "The Gwanno play's yangban per the entry: a hat, a blue dopo and a long hemp beard. The long pipe is left out. The mask is white with the yangban mask's marks: crescent slit eyes and the line of its separate jaw, above the beard ([PX] PX-4), drawn larger ([FU] FU-2).",
   nodes: [
     { t: 'path', d: 'M22 42L46 42Q54 80 58 120L10 120Q14 80 22 42ZM22 28L46 28L54 34L66 12L70 20L54 52L16 52L8 64L2 60L14 34Z', fill: 'brand.secondary', stroke: 'text.primary', sw: 'thin' },
-    face(34, 17, 10, 11),
-    { t: 'path', d: 'M26 27Q34 54 42 27M30 28Q34 48 38 28', stroke: 'border.strong', sw: 'thick' },
+    // [FU-2] a larger mask, so its ink marks read at thumb size
+    face(34, 19, 12, 13),
+    { t: 'path', d: 'M27 30Q34 58 41 30M30.5 31Q34 52 37.5 31', stroke: 'border.strong', sw: 'thick' },
     // [PX] PX-4: the yangban mask's crescent slit eyes and its separate hinged jaw
-    { t: 'path', d: 'M26.5 14Q30 18 33 14M35 14Q38 18 41.5 14', stroke: 'text.primary', sw: 'thick' },
-    { t: 'path', d: 'M25 21Q34 25 43 21', stroke: 'text.primary', sw: 'base' },
-    { t: 'path', d: 'M24 9L44 9L42 0L26 0ZM20 9H48V12H20Z', fill: 'text.primary' },
+    { t: 'path', d: 'M25.5 16Q29.5 21 33 16M35 16Q38.5 21 42.5 16', stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M23.5 24Q34 30 44.5 24', stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M25 7L43 7L41 0L27 0ZM19 7H49V10H19Z', fill: 'text.primary' },
     { t: 'path', d: 'M30 120V123H24M38 120V123H44', stroke: 'text.primary', sw: 'base' },
   ],
 };
@@ -254,8 +255,12 @@ export const YUT_STICKS: ItemDef = {
   sourceRef: YUT_REF,
   accuracyNote: 'Four hardwood sticks, round on one side and nearly flat on the other (entry). Plain: round side dark, flat side light.',
   nodes: [
-    { t: 'path', d: bar(28, 20, 44, 10, -30) + bar(72, 52, 44, 10, -40), fill: 'feedback.nudgeLight', stroke: 'text.primary', sw: 'thin' },
-    { t: 'path', d: bar(70, 16, 44, 10, 20) + bar(30, 50, 44, 10, 15), fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },
+    // [FU-2] rounded ends and a base outline, X marks on one flat face, a light line along each round back, so
+    // they read as half-round yut sticks and not planks
+    { t: 'path', d: stick(28, 20, 44, 11, -30) + stick(72, 52, 44, 11, -40), fill: 'feedback.nudgeLight', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: stick(70, 16, 44, 11, 20) + stick(30, 50, 44, 11, 15), fill: 'text.secondary', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M19 22L23 26M23 22L19 26M33 14L37 18M37 14L33 18', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M55.5 8.5L85.5 19.5M15 44L46 52', stroke: 'feedback.nudgeLight', sw: 'thin', det: true },
     { t: 'path', d: 'M50 4Q56 0 62 4M8 40Q4 34 8 28M94 34Q98 40 94 46', stroke: 'border.strong', sw: 'thin', det: true },
   ],
 };
@@ -355,10 +360,14 @@ export const CABBAGES: ItemDef = {
   alt: 'A heap of napa cabbages, some cut to show the inner leaves',
   accuracyNote: 'Napa cabbage, the main gimjang vegetable. The inner leaves are tintable: pale when salted, red when seasoned.',
   nodes: [
-    { t: 'path', d: 'M4 46Q2 32 12 28Q24 26 28 36Q30 44 26 46ZM70 46Q68 30 80 26Q92 26 94 36Q94 44 90 46Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'path', d: 'M24 46Q18 14 44 6Q70 2 74 26Q76 40 68 46Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'path', d: 'M34 22Q46 4 68 12Q56 16 52 24Q44 18 34 22Z', fill: 'theme.nature' },
-    { t: 'path', d: 'M36 44Q40 32 50 26M46 44Q50 34 60 28M56 44Q58 36 64 32', stroke: 'text.secondary', sw: 'thin', det: true },
+    // [FU-2] outlines at base, and the green leaf tops cover the upper half of the cut cabbage, so it is a napa
+    // cabbage (white ribs, green leaves) and not a pale egg; the two whole cabbages are two shapes, so the white heart
+    // stays the largest fill and the heap does not blend into a green ground
+    { t: 'path', d: 'M4 46Q2 32 12 28Q24 26 28 36Q30 44 26 46Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M70 46Q68 30 80 26Q92 26 94 36Q94 44 90 46Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M24 46Q18 14 44 6Q70 2 74 26Q76 40 68 46Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M24 26Q30 6 46 5Q68 3 74 24Q66 20 60 26Q54 18 46 24Q38 18 32 26Q28 22 24 26Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M34 44Q36 34 38 28M46 44V26M58 44Q58 34 60 28', stroke: 'text.secondary', sw: 'thin', det: true },
   ],
 };
 
@@ -444,7 +453,8 @@ export const RICE_FIELD: ItemDef = {
   nodes: [
     { t: 'path', d: 'M0 14Q100 4 200 10Q300 4 400 14V90H0Z', fill: 'feedback.nudge' },
     { t: 'path', d: 'M0 30Q200 20 400 30M0 50Q200 40 400 50M0 72Q200 62 400 72', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'path', d: 'M20 14V6M60 12V4M100 10V2M140 10V2M180 10V2M220 10V2M260 10V2M300 9V1M340 10V2M380 12V4', stroke: 'text.secondary', sw: 'base', det: true },
+    // [FU-2] each stalk bows under its ear of grain, so the strip reads as ripe rice and not a plank
+    { t: 'path', d: 'M20 14V6Q24 4 26 9M60 12V4Q64 2 66 7M100 10V2Q104 0 106 5M140 10V2Q144 0 146 5M180 10V2Q184 0 186 5M220 10V2Q224 0 226 5M260 10V2Q264 0 266 5M300 9V1Q304 0 306 4M340 10V2Q344 0 346 5M380 12V4Q384 2 386 7', stroke: 'text.secondary', sw: 'base', det: true },
   ],
 };
 
@@ -508,7 +518,8 @@ export const MAGPIE: ItemDef = {
     { t: 'path', d: 'M16 15Q24 8 36 10Q44 11 46 14Q38 19 24 19Z', fill: 'text.primary' },
     { t: 'circle', cx: 44, cy: 12, r: 4, fill: 'text.primary' },
     { t: 'path', d: 'M47.5 11L52 12.5L47.5 14Z', fill: 'text.secondary' },
-    { t: 'path', d: 'M26 18Q34 19.5 41 15.5Q33 15.5 26 18ZM23 10L21.5 4.5L28 9Z', fill: 'surface.paper' },
+    // [FU-2] the white belly and shoulder patch drawn larger, so it reads as a magpie and not a black dart
+    { t: 'path', d: 'M22 18.5Q34 21.5 42 15Q32 14 22 18.5ZM22 11L20 3L30 9.5Z', fill: 'surface.paper', stroke: 'text.primary', sw: 'thin' },
   ],
 };
 
@@ -520,9 +531,11 @@ export const GOURDS: ItemDef = {
   alt: 'Two big round pale gourds and a third split open with rice and gold coins',
   accuracyNote: 'Bottle gourds for Heungbo-ga; money and rice pour from the split one in the tale. Treasure is plain coins and rice.',
   nodes: [
-    { t: 'path', d: 'M6 62Q0 30 26 26Q52 30 46 62ZM88 62Q82 34 106 30Q130 34 124 62Z', fill: 'surface.paper', stroke: 'theme.nature', sw: 'base' },
-    { t: 'path', d: 'M50 62Q48 44 66 42Q84 44 82 62Z', fill: 'surface.sunken', stroke: 'theme.nature', sw: 'base' },
+    // [FU-2] ink-brown outlines and a vine leaf at each stem, so they read as gourds on the vine, not bells
+    { t: 'path', d: 'M6 62Q0 30 26 26Q52 30 46 62ZM88 62Q82 34 106 30Q130 34 124 62Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M50 62Q48 44 66 42Q84 44 82 62Z', fill: 'surface.sunken', stroke: 'text.secondary', sw: 'base' },
     { t: 'path', d: 'M26 26Q24 20 28 16M106 30Q104 24 108 20', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M28 17Q38 6 46 14Q38 22 28 17ZM108 21Q118 10 126 18Q118 26 108 21Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'thin' },
     { t: 'path', d: dots([[60, 42], [70, 36], [64, 30], [76, 44], [58, 22]], 4), fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
     { t: 'path', d: 'M48 64Q56 54 64 60Q72 54 84 64Z', fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
   ],
@@ -552,10 +565,11 @@ export const RABBIT: ItemDef = {
   alt: 'A white rabbit in mid-hop with long upright ears',
   accuracyNote: 'A generic white rabbit for the clever tokki of Sugung-ga. Calm open eye, no teeth.',
   nodes: [
-    { t: 'path', d: 'M36 20Q34 0 40 0Q44 2 42 20ZM42 22Q46 2 52 4Q54 8 46 22Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    // [FU-2] an ink outline, so the white rabbit reads on a cream ground
+    { t: 'path', d: 'M36 20Q34 0 40 0Q44 2 42 20ZM42 22Q46 2 52 4Q54 8 46 22Z', fill: 'surface.paper', stroke: 'text.primary', sw: 'base' },
     { t: 'path', d: 'M39 18Q38 6 40 4M45 18Q48 8 50 7', stroke: 'feedback.nudgeLight', sw: 'thick' },
-    { t: 'path', d: 'M6 36Q8 24 24 24Q34 18 44 20Q56 22 56 32Q54 38 46 38L34 44L48 52L42 54L24 46Q10 46 6 36Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
-    { t: 'path', d: 'M2 34A4 4 0 1 0 10 34A4 4 0 1 0 2 34Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M6 36Q8 24 24 24Q34 18 44 20Q56 22 56 32Q54 38 46 38L34 44L48 52L42 54L24 46Q10 46 6 36Z', fill: 'surface.paper', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M2 34A4 4 0 1 0 10 34A4 4 0 1 0 2 34Z', fill: 'surface.paper', stroke: 'text.primary', sw: 'thin' },
     { t: 'circle', cx: 48, cy: 28, r: 2, fill: 'text.primary' },
     { t: 'path', d: 'M54 34Q52 36 50 34', stroke: 'text.primary', sw: 'thin' },
   ],

@@ -84,7 +84,7 @@ Each entry: `id` · `ko (romanization)` · `theme` · `rarity` · 1-line visual 
 - `card:family-table` · 가족 식탁 (gajok siktak) · life · uncommon — **[PX]** A low round table seen from the side, curved wooden legs, set with a rice bowl, a soup bowl, a plate of kimchi and a spoon with chopsticks at the front.
 
 ### Holidays & Traditions (6)
-- `card:seollal` · 설날 (seollal) · rites · rare — **[PX]** A child in hanbok in the deep kneeling bow (the `card:sebae` figure, smaller) to a smiling grandparent seated on a red cushion, a lucky pouch on the floor between them. The elder is what tells it from `card:sebae`.
+- `card:seollal` · 설날 (seollal) · rites · rare — **[PX]** A child in hanbok in the deep kneeling bow (the `card:sebae` figure, smaller) to a smiling grandparent seated on a red cushion, a lucky pouch on the floor between them. The elder is what tells it from `card:sebae`. **[FU]** The child is drawn larger and faces the grandparent (it had its back to her); the pouch is left out to make room.
 - `card:chuseok` · 추석 (chuseok) · rites · rare — **[PX]** A plate of songpyeon (pink, white, green) in front of the full yellow harvest moon with a clean two-eared moon-rabbit silhouette, a ripe rice ear on either side. What is in front of the moon (the songpyeon plate) tells it from the other moon cards; the `culture-chuseok` glyph shows the same.
 - `card:tteokguk` · 떡국 (tteokguk) · rites · uncommon — **[PX]** A wide white bowl seen open, large oval rice-cake slices outlined in ink in the broth, yellow egg strips and dark gim strips on top, a spoon resting in it. Wide and low, unlike the tall rice bowl.
 - `card:songpyeon` · 송편 (songpyeon) · rites · uncommon — Three half-moon rice cakes on a pine-needle bed: one white, one pink, one green. **[PX]** ink outline, needles 5 units.
@@ -100,7 +100,7 @@ Each entry: `id` · `ko (romanization)` · `theme` · `rarity` · 1-line visual 
 - `card:moon` · 달 (dal) · nature · uncommon — **[PX]** A yellow crescent moon on a deep blue night sky, three white sparkle stars and a small pale cloud across its lower horn, as the `nature-moon` glyph. A crescent, so it is not one more full moon beside Chuseok and the upper-stage moon cards.
 
 ### Play & Crafts (6)
-- `card:yutnori` · 윷놀이 (yunnori) · crafts · rare — **[PX]** The round yut board with its ring of twenty stations and the cross of stations inside (bigger dots at the corners and centre), a red and a blue token on it, and the four half-round sticks thrown beside it: three flat faces up (one with the back-do X), one round back up. The `culture-yutnori` glyph shows the same.
+- `card:yutnori` · 윷놀이 (yunnori) · crafts · rare — **[PX]** The round yut board with its ring of twenty stations and the cross of stations inside (bigger dots at the corners and centre), a red and a blue token on it, and the four half-round sticks thrown beside it: three flat faces up (one with the back-do X), one round back up. The `culture-yutnori` glyph shows the same. **[FU]** The board sits at the top and the sticks lie in two pairs below it, none over the board (they crowded its corner at 54 px).
 - `card:jegi` · 제기 (jegi) · crafts · uncommon — **[PX]** A fan of bright paper strands (red, yellow, blue, green, pink, orange) rising from a brass coin with a square hole, dashed kick arcs either side.
 - `card:kite` · 연 (yeon) · crafts · uncommon — **[PX]** The rectangular shield kite (bangpaeyeon), as the card's fact says: a white rectangle with the round centre hole, a red circle at the top on a blue band, bamboo sticks (upright, crossbar, two diagonals), a green band near the foot, the string trailing. (Was a diamond kite.)
 - `card:top` · 팽이 (paengi) · crafts · common — A wooden spinning top mid-spin (motion lines either side), gold body with an orange band, a point below. Soft floor shadow. **[PX]** ink outline.
@@ -130,7 +130,7 @@ Stage 3 (all rare):
 Stage 4 (all rare):
 - `card:mwoyeyo` · 이게 뭐예요? (ige mwoyeyo) · letters — **[PX]** A friend beside a big purple wrapped box with a red ribbon; one bubble with a big question mark.
 - `card:masisseoyo` · 맛있어요 (masisseoyo) · life — **[PX]** One friend with pink cheeks behind a big white bowl of rice, a spoon in hand, red hearts rising.
-- `card:insa` · 인사 (insa) · rites — **[PX]** Two friends in side view bowing to each other: bodies bent at the waist, heads lowered, eyes shut, smiling; no bubbles. (Was two smiley bubbles over two standing friends.)
+- `card:insa` · 인사 (insa) · rites — **[PX]** Two friends in side view bowing to each other: bodies bent at the waist, heads lowered, eyes shut, smiling; no bubbles. (Was two smiley bubbles over two standing friends.) **[FU]** Drawn a tenth larger, heads close over the middle, no motion arcs.
 - `card:biga-wayo` · 비가 와요 (biga wayo) · nature — **[PX]** A grey-blue cloud with big drops over a friend under a red umbrella, a puddle at the feet; no bubbles.
 - `card:gachi` · 같이 할까요? (gachi halkkayo) · crafts — **[PX]** Two friends hold one big red-and-white ball between them, a paw on each side; no bubbles.
 
@@ -152,8 +152,8 @@ Legendary (gold frame, the Korean name small on a label):
 - `card:hunminjeongeum` · 훈민정음 (hunminjeongeum) · letters — **[PX]** An old thread-bound book: aged patterned cover, a white title slip at the upper left, the five-hole red binding along the right edge. (Was a blue slab that read as a notebook.)
 - `card:jang` · 장 담그기 (jang damgeugi) · life — Three round brown onggi jars with lids on a stone terrace. **[PX]** ink outline.
 - `card:hangawi` · 한가위 (hangawi) · rites — **[PX]** A white plate heaped with songpyeon (white, green, yellow) in front, a footed dish piled with red apples and yellow pears behind, a small full moon in the corner. (Was a moon over a small plate.)
-- `card:jirisan` · 지리산 (jirisan) · nature — **[PX]** Ridges one behind another with a white sea of clouds between them and the grey summit stone on the top peak; no sun.
-- `card:ssireum` · 씨름 (ssireum) · crafts — Two friends lean in over the cloth belt in a sand ring. **[PX]** ink outline.
+- `card:jirisan` · 지리산 (jirisan) · nature — **[PX]** Ridges one behind another with a white sea of clouds between them and the grey summit stone on the top peak; no sun. **[FU]** The front peak rises out of a second cloud band; the stone is an angular rock with facets (a straight-sided slab read as a chimney).
+- `card:ssireum` · 씨름 (ssireum) · crafts — **[FU]** Two wrestlers crouched in the hold on a sand ring: legs bent wide, bodies leaning in to heads on each other's shoulder, white satba belts at waist and thigh, each hand gripping the other's thigh band. (Was two friends leaning in, which read as a hug.)
 
 ## 5. Card back layout (universal)
 
