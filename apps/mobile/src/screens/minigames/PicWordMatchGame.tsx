@@ -27,6 +27,7 @@ import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { koSpeech } from '../../logic/audio/ko-speech';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -126,7 +127,8 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
   );
   const stateRef = useRef(state);
   const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the next board, or the end of the step, waits for the matched word to be said.
+  const pacing = useSoundPacing();
   const hostRef = useRef(host);
   hostRef.current = host;
   const boardsRef = useRef(boards);
@@ -146,9 +148,9 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
       const last = lastPair.current;
       if (last === null || last.boardIdx !== boardIdx || last.pairId !== pairId) slotReset();
       lastPair.current = { boardIdx, pairId };
-      void slotPlay(() => playPrompt(koSpeech(pair.word, 'word', PIC_WORD_AUDIO_SOURCE)));
+      void pacing.track(slotPlay(() => playPrompt(koSpeech(pair.word, 'word', PIC_WORD_AUDIO_SOURCE))));
     },
-    [slotPlay, slotReset],
+    [slotPlay, slotReset, pacing],
   );
 
   const runEffect = useCallback((effect: FlowEffect): void => {
@@ -175,13 +177,13 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
         clearTimer.current = setTimeout(() => dispatchRef.current({ type: 'clear-flash' }), effect.ms);
         return;
       case 'schedule-advance':
-        advanceTimer.current = setTimeout(() => dispatchRef.current({ type: 'advance' }), effect.ms);
+        pacing.after(effect.ms, () => dispatchRef.current({ type: 'advance' }));
         return;
       case 'complete':
         hostRef.current.complete();
         return;
     }
-  }, [sayPair]);
+  }, [sayPair, pacing]);
 
   const dispatch = useCallback(
     (event: FlowEvent): void => {
@@ -200,7 +202,6 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
   useEffect(
     () => () => {
       if (clearTimer.current) clearTimeout(clearTimer.current);
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
       stop();
     },
     [],

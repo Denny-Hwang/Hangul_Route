@@ -14,6 +14,7 @@ import { resetRemoteConfigForTests, useRemoteConfigStore } from '../../../store/
 import { HiddenHeritageStep } from '../hidden-heritage-entry';
 import * as scenes from '../hidden-heritage-scenes';
 import type { MinigameHost } from '../host';
+import { ANSWER_SOUND_MAX_MS } from '../../../logic/audio/reply-advance';
 
 /**
  * F-CURR-002 §17 Phase 4 (row CM-44 S2): a Volume 2 cell that places a Hidden Heritage scene renders the scene's
@@ -70,7 +71,9 @@ async function findAll(r: ReactTestRenderer): Promise<ReactTestInstance> {
     const id = targets.find((t) => t.word.ko === ko)!.id;
     const spot = r.root.findAll((n) => n.type === Pressable && n.props.testID === `hh-spot-${id}`)[0]!;
     await act(async () => spot.props.onPress());
-    await wait(800);
+    // [QS-4] The next word comes once the found one has been said (700 ms at least, the cap at most).
+    const asked = (): string | undefined => r.root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]?.props.ko as string | undefined;
+    for (let waited = 0; waited < ANSWER_SOUND_MAX_MS + 400 && asked() === ko && r.root.findAll((n) => n.props.testID === 'hh-end').length === 0; waited += 100) await wait(100);
   }
   return r.root;
 }

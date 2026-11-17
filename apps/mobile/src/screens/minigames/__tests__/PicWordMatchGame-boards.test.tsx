@@ -137,3 +137,24 @@ describe('Pic-Word Match on two target boards (row KT-4b)', () => {
     expect(lockSeen.at(-1)).toBe(false);
   });
 });
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the matched word is said to its end before the board moves on. */
+describe('[QS-4] the next board waits for the matched word', () => {
+  it('held past the 700 ms while the word is being said, released when it ends', async () => {
+    let completes = 0;
+    const counting: MinigameHost = { mode: 'quest', answer: () => undefined, complete: () => void (completes += 1) };
+    rig.current!.synth.endDelayMs = 1_500; // each word takes 1.5 s to say
+    const r = await render(<PicWordMatchGame scope={scope} host={counting} />);
+    mounted.push(r);
+    const wait = (ms: number) => act(async () => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+    for (const p of pairs) {
+      await press(pressable(r.root, `pic-word-picture-${p.id}`));
+      await press(pressable(r.root, `pic-word-word-${p.id}`));
+    }
+    const moved = (): boolean => completes > 0 || byTestId(r.root, `pic-word-picture-${pairs[0]!.id}`).length === 0;
+    await wait(1_000);
+    expect(moved(), 'held while the last word is being said').toBe(false);
+    await wait(900);
+    expect(moved(), 'released once it has ended').toBe(true);
+  });
+});

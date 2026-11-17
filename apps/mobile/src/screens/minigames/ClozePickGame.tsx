@@ -33,7 +33,9 @@ import { Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { SENTENCE_SOUND_MAX_MS } from '../../logic/audio/sound-pacing';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { koSpeech } from '../../logic/audio/ko-speech';
@@ -100,7 +102,8 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
 
   const [state, setState] = useState<ClozeFlowState>(() => startCloze(rounds.length));
   const stateRef = useRef(state);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the next round, or the end of the step, waits for the sentence to be said (up to the sentence cap).
+  const pacing = useSoundPacing();
   const cardRef = useRef<Focusable | null>(null);
   const hostRef = useRef(host);
   hostRef.current = host;
@@ -118,7 +121,7 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
       const entry = roundsRef.current[stateRef.current.roundIdx];
       switch (effect.type) {
         case 'say':
-          if (entry) void slotPlay(() => playPrompt(koSpeech(filledSentence(entry.round), 'sentence', CLOZE_PICK_AUDIO_SOURCE)));
+          if (entry) void pacing.track(slotPlay(() => playPrompt(koSpeech(filledSentence(entry.round), 'sentence', CLOZE_PICK_AUDIO_SOURCE))));
           return;
         case 'answer': {
           const round = roundsRef.current[effect.roundKey]?.round;
@@ -134,14 +137,14 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
           }
           return;
         case 'schedule-advance':
-          advanceTimer.current = setTimeout(() => dispatchRef.current({ type: 'advance' }), effect.ms);
+          pacing.after(effect.ms, () => dispatchRef.current({ type: 'advance' }), SENTENCE_SOUND_MAX_MS);
           return;
         case 'complete':
           hostRef.current.complete();
           return;
       }
     },
-    [slotPlay],
+    [slotPlay, pacing],
   );
 
   const dispatch = useCallback(
@@ -157,7 +160,6 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
 
   useEffect(
     () => () => {
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
       stop();
     },
     [],

@@ -570,6 +570,8 @@ test('Culture Quiz: Hear it says the prompt word, and nothing plays before the t
  * (Only this group: in the fixture build those six letters play a tone, not the voice, so the
  * voice tests above expect the regular build.)
  */
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3 (`logic/audio/settle.ts`): a sound the app starts by itself waits this long for the screen. */
+const SCREEN_SETTLE_MS = 350;
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const DIST = join(__dirname, '..', '..', FIXTURE_BUILD ? 'dist-e2e' : 'dist');
 
@@ -885,15 +887,16 @@ test.describe('bundled clips (A-6)', () => {
     await fakeSpeech(page, 'none');
     await recordClipStarts(page);
     await recordClipTimes(page);
-    // When each later round of Match Sound is in the DOM, on the page's own clock. The rounds after the first were warmed
-    // when the game opened (round 1 plays while its warm-up is still on its way). The observer takes only a text that
+    // When each round of Match Sound is in the DOM, on the page's own clock. The rounds after the first were warmed
+    // when the game opened and are due as they appear; round 1's own prompt is due 350 ms after the screen appears
+    // ([QS] AMENDMENTS-QUEST-SOUND-BACK QS-3), so it is measured from then. The observer takes only a text that
     // changed to "n / 6" (the round pill), never a container that merely holds such a text, from the mutation records
     // themselves (no layout is forced).
     await page.addInitScript(() => {
       const w = window as Window & { __roundIn?: Record<number, number> };
       w.__roundIn = {};
       const roundOf = (text: string | null): number | undefined => {
-        const m = /^([2-6]) \/ 6$/.exec((text ?? '').trim());
+        const m = /^([1-6]) \/ 6$/.exec((text ?? '').trim());
         return m ? Number(m[1]) : undefined;
       };
       const mark = (text: string | null): void => {
@@ -926,6 +929,13 @@ test.describe('bundled clips (A-6)', () => {
     // (giyeok-name) is not, so a ㄱ round shows its name as text (no voice here) and plays no clip. Round 1 has spoken
     // either way before the tiles are tried.
     await expect.poll(async () => (await clipStarts(page)) > 0 || (await panelText(page).isVisible())).toBe(true);
+    // [QS-3] Round 1, when it played a clip: not while the screen was still arriving (350 ms, less the observer's and
+    // the timer's slack), and within 150 ms of when it was due.
+    const firstGap = await roundGap(1);
+    if (firstGap !== null) {
+      expect(firstGap, 'round 1 waits for the screen').toBeGreaterThanOrEqual(SCREEN_SETTLE_MS - 50);
+      expect(firstGap, 'round 1 starts within 150 ms of when it is due').toBeLessThan(SCREEN_SETTLE_MS + 150);
+    }
     // The right tile is not known from outside (every fixture letter is the same tone): try them in turn.
     const tiles = page.getByRole('button', { name: /^Korean letter / });
     const gaps: number[] = [];
@@ -947,6 +957,135 @@ test.describe('bundled clips (A-6)', () => {
     }
     expect(gaps, 'a later round played a warmed clip').toHaveLength(1);
     expect(gaps[0]).toBeLessThan(150);
+  });
+
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: a sound played by itself waits for the screen.
+  test('a Look and learn page says its first letter 350 ms after it appears, and a tap is immediate (QS-3, G7)', async ({ page }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'none');
+    await recordClipStarts(page);
+    await recordClipTimes(page);
+    // When page 1 of Look and learn is in the DOM, and each tap, on the page's own clock.
+    await page.addInitScript(() => {
+      const w = window as Window & { __pageIn?: number; __tapAt?: number };
+      // The page arrives as one subtree: its text nodes are looked through, never the layout.
+      const mark = (node: Node): void => {
+        if (w.__pageIn !== undefined) return;
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        for (let t: Node | null = node.nodeType === Node.TEXT_NODE ? node : walker.nextNode(); t !== null; t = walker.nextNode()) {
+          if (/^Page 1 of \d+$/.test((t.textContent ?? '').trim())) {
+            w.__pageIn = performance.now();
+            return;
+          }
+        }
+      };
+      new MutationObserver((records) => {
+        for (const r of records) {
+          if (r.type === 'characterData') mark(r.target);
+          else for (const node of r.addedNodes) mark(node);
+        }
+      }).observe(document, { subtree: true, childList: true, characterData: true });
+      document.addEventListener('pointerdown', () => (w.__tapAt = performance.now()), true);
+    });
+    await onboardChild(page, { name: 'Dami' });
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText(/^Page 1 of \d+$/)).toBeVisible();
+    // The page's own sound: the first letter (ㅏ, a precached jamo-s1 clip), once.
+    await expect.poll(() => clipStarts(page)).toBe(1);
+    const own = await page.evaluate(() => {
+      const w = window as Window & { __pageIn?: number; __clipAt?: number[] };
+      return w.__pageIn === undefined || w.__clipAt?.[0] === undefined ? null : w.__clipAt[0] - w.__pageIn;
+    });
+    expect(own, 'the page and its first clip were both seen').not.toBeNull();
+    // Not while the page was still arriving (350 ms, less the observer's and the timer's slack), and within 150 ms of
+    // when it was due.
+    expect(own!).toBeGreaterThanOrEqual(SCREEN_SETTLE_MS - 50);
+    expect(own!).toBeLessThan(SCREEN_SETTLE_MS + 150);
+    await page.waitForTimeout(1_000);
+    expect(await clipStarts(page), 'nothing else plays by itself').toBe(1);
+    // A tap on the same letter's Hear it is immediate: its clip starts within 150 ms of the tap.
+    await page.locator('[data-testid^="discover-hear-"][data-testid$="|sound"]').first().click();
+    await expect.poll(() => clipStarts(page)).toBe(2);
+    await expect.poll(() => clipGapAfter(page, '__tapAt')).not.toBeNull();
+    expect((await clipGapAfter(page, '__tapAt'))!).toBeLessThan(150);
+  });
+
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the answer's sound ends before the quest moves on.
+  test('a Listen and Pick right answer plays its clip to the end: the next round does not stop it (QS-4)', async ({ page }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'none');
+    await recordClipStarts(page);
+    // The life of every clip, on the page's clock: when `start` was called, when `stop` was called on it while it had
+    // not ended (a fade-out or a cut), and when it ended.
+    await page.addInitScript(() => {
+      type Life = { startedAt: number; seconds: number; stoppedAt: number | null; endedAt: number | null };
+      const w = window as Window & { __clipLife?: Life[] };
+      const lives: Life[] = [];
+      w.__clipLife = lives;
+      const proto = window.AudioBufferSourceNode?.prototype;
+      if (!proto) return;
+      const lifeOf = new WeakMap<AudioBufferSourceNode, Life>();
+      const start = proto.start;
+      const stop = proto.stop;
+      proto.start = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['start']>) {
+        const seconds = this.buffer?.duration ?? 0;
+        if (seconds > 0.1) {
+          const life: Life = { startedAt: performance.now(), seconds, stoppedAt: null, endedAt: null };
+          lifeOf.set(this, life);
+          lives.push(life);
+          this.addEventListener('ended', () => {
+            life.endedAt = performance.now();
+          });
+        }
+        return start.apply(this, args);
+      };
+      proto.stop = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['stop']>) {
+        const life = lifeOf.get(this);
+        if (life && life.endedAt === null && life.stoppedAt === null) life.stoppedAt = performance.now();
+        return stop.apply(this, args);
+      };
+    });
+    type Life = { startedAt: number; seconds: number; stoppedAt: number | null; endedAt: number | null };
+    const lives = (): Promise<Life[]> => page.evaluate(() => (window as Window & { __clipLife?: Life[] }).__clipLife ?? []);
+    const now = (): Promise<number> => page.evaluate(() => performance.now());
+
+    await onboardChild(page, { name: 'Dami' });
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await passDiscover(page);
+    for (let i = 0; i < 2; i += 1) await page.getByRole('button', { name: 'Skip for now' }).click();
+    await page.getByRole('button', { name: 'Go', exact: true }).click();
+    await expect(page.getByText('Listen, then pick')).toBeVisible();
+
+    // Round 1: hear the prompt, then find the right card. The right tap says the prompt once more (the confirm).
+    await page.getByTestId('listen-pick-speaker').click();
+    const options = page.locator('[data-testid^="listen-pick-option-"]');
+    await expect(options.first()).toBeVisible();
+    let rightAt = 0;
+    for (let i = 0, count = await options.count(); i < count; i += 1) {
+      const option = options.nth(i);
+      await expect(async () => {
+        rightAt = await now();
+        await option.click();
+        await expect(option).toHaveAttribute('aria-label', /^(Right answer|Not this one)/, { timeout: 250 });
+      }).toPass();
+      if ((await option.getAttribute('aria-label'))?.startsWith('Right answer')) break;
+    }
+    // Round 2 is on screen: the card marked right has left.
+    await expect(page.locator('[data-testid^="listen-pick-option-"][aria-label^="Right answer"]')).toHaveCount(0);
+    const roundTwoAt = await now();
+
+    const confirm = (await lives()).find((life) => life.startedAt >= rightAt);
+    expect(confirm, 'the right answer played a clip').toBeDefined();
+    // Played to its end, never stopped: neither cut nor faded out by the next round.
+    expect(confirm!.stoppedAt, 'stop() was not called on the answer\'s clip while it played').toBeNull();
+    expect(confirm!.endedAt, 'the answer\'s clip ended by itself').not.toBeNull();
+    expect(confirm!.endedAt! - confirm!.startedAt, 'its whole length was heard').toBeGreaterThanOrEqual(confirm!.seconds * 1000 * 0.9);
+    // The quest moved on only after it: round 2 came no sooner than the clip's end, and no sooner than the game's 700 ms.
+    expect(roundTwoAt).toBeGreaterThanOrEqual(confirm!.endedAt! - 20);
+    expect(roundTwoAt - rightAt).toBeGreaterThanOrEqual(650);
+    // Round 2's own prompt, when it is a clip, started after the answer's clip had ended.
+    const next = (await lives()).find((life) => life.startedAt > confirm!.startedAt);
+    if (next) expect(next.startedAt).toBeGreaterThanOrEqual(confirm!.endedAt! - 20);
   });
 
   test('a warmed say clip from a pack map chunk starts within 150 ms of the tap (G7, AC-B6)', async ({ page }) => {

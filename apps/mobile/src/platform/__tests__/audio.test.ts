@@ -76,6 +76,7 @@ import * as Speech from 'expo-speech';
 import { useAudioStore } from '../../store/audio-store';
 import type { ClipFailure, ClipPlayer } from '../../logic/audio/controller';
 import { createNativeAudio, type NativeClipSetup, type NativeSpeechApi } from '../audio';
+import { FIRST_UTTERANCE_DEFER_MS } from '../../logic/audio/controller';
 
 /**
  * The suites that reset the module registry and import the module again (the default instance is made when the
@@ -214,7 +215,8 @@ function clipSetup(opts: ClipRigOptions): NativeClipSetup {
 function rig(voices: NativeVoice[] = [...NOVELTY, YUNA, SAMANTHA], platform: 'ios' | 'android' = 'ios', clips?: ClipRigOptions) {
   const speech = new FakeSpeech();
   speech.voices = voices;
-  const audio = createNativeAudio({ speech, platform, ...(clips === undefined ? {} : { clips: clipSetup(clips) }) });
+  // The engine timings these tests pin start from the speak itself; the voice's start room (QS-5) has its own tests.
+  const audio = createNativeAudio({ speech, platform, firstUtteranceDeferMs: 0, ...(clips === undefined ? {} : { clips: clipSetup(clips) }) });
   return { speech, audio };
 }
 
@@ -289,7 +291,10 @@ describe('platform/audio (native): the voice list is read lazily (Android)', () 
     speech.reads = [[], [YUNA]];
     const audio = createNativeAudio({ speech, platform: 'android' });
     const result = audio.playPrompt({ text: '가' });
-    await vi.advanceTimersByTimeAsync(600);
+    // The voice is known at 500 ms; the first utterance then gets its start room (QS-5, the app's default).
+    await vi.advanceTimersByTimeAsync(500 + FIRST_UTTERANCE_DEFER_MS - 1);
+    expect(speech.calls).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
     await expect(result).resolves.toBe('played');
     expect(speech.readCount).toBe(2);
     expect(speech.calls[0]?.opts.voice).toBe(YUNA.identifier);
@@ -304,7 +309,9 @@ describe('platform/audio (native): the voice list is read lazily (Android)', () 
     await vi.advanceTimersByTimeAsync(1600);
     expect(speech.readCount).toBe(3);
     expect(audio.getCapability().tts).toMatchObject({ state: 'ready', voiceName: 'Yuna' });
-    await expect(audio.playPrompt({ text: '가' })).resolves.toBe('played');
+    const result = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS);
+    await expect(result).resolves.toBe('played');
     audio.dispose();
   });
 

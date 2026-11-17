@@ -21,6 +21,8 @@ export interface AudioRig {
 }
 
 export interface AudioRigOptions {
+  /** The voice's start room (QS-5); 0 by default here, the app's default is `FIRST_UTTERANCE_DEFER_MS`. */
+  firstUtteranceDeferMs?: number;
   /** Korean voices on the device; none = the no-voice case. */
   voices?: readonly FakeVoice[];
   /** iOS: a speak outside a user gesture is dropped with no event (the blocked case). */
@@ -39,6 +41,9 @@ export function createAudioRig(opts: AudioRigOptions = {}): AudioRig {
     doc: new FakeDoc() as unknown as WebAudioEnv['doc'],
     win: new EventTarget() as unknown as WebAudioEnv['win'],
     isOnline: () => true,
+    // The render tests read what was said right after a tap; the voice's start room (QS-5, 150 ms before the first
+    // utterance after a pause) is the controller's and the adapters' own tests.
+    firstUtteranceDeferMs: opts.firstUtteranceDeferMs ?? 0,
   };
   const audio = createWebAudio(env);
   synth.fireVoicesChanged();

@@ -57,6 +57,8 @@ F-AUDIO-004 AD1 ("sound first, name second") made every prompt that asks "which 
 | G6 | No new failure | `audio.playback_failed` rate per prompt | not above the TTS-only baseline of the week before AC-7 | telemetry |
 | G7 | Fast start | Clip start after the round appears (web, warmed) | under 150 ms | e2e timing assertion with a fixture clip |
 
+> **[QS]** G7 as amended by `AMENDMENTS-QUEST-SOUND-BACK.md` (QS-1, QS-3): the 150 ms is from the moment the sound is due to the call that schedules the clip. A tap and a later round are due at once; a game's first-round prompt and a Look and learn page's own first sound are due 350 ms after the screen appears. The clip itself is then scheduled 60 ms ahead (180 ms after a resume) with a 20 ms fade in.
+
 ## 3. Part A rule: one source of truth for what a letter says
 
 ### JV-A1 Two question types, never mixed (replaces AD1; keeps AD2 as the definition of a letter's sound)

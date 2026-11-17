@@ -233,6 +233,8 @@ export function canPlayKorean(cap: AudioCapability): boolean;      // tts.ready 
 
 Both platform files export the same surface; `logic/audio/controller.ts` holds all decisions and takes the engine, the clip player, the asset map and the clock as arguments (so it is a 100 % logic-lane module and the platform files stay thin adapters).
 
+> **[QS]** Amended by `AMENDMENTS-QUEST-SOUND-BACK.md` (QS-1, QS-2, QS-5): a web clip starts 60 ms after it is asked for (180 ms when the context had to be resumed) and fades in over 20 ms; a stopped clip fades out over about 80 ms instead of being cut; the device voice's first utterance after the engine was idle is deferred 150 ms (an utterance after a cancel keeps its 50 ms).
+
 ```ts
 export type PlayResult = 'played' | 'muted' | 'unavailable';                    // unchanged from F-QUEST-002 §3.12
 export interface PlaySpec {

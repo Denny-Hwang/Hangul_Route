@@ -113,10 +113,11 @@ describe('no direct speak from screens', () => {
   it('the trace games play their block speakers and Show me through the slot', () => {
     const word = files.find((f) => f.rel === 'minigames/TraceWordGame.tsx')!;
     expect(word.source).toMatch(/onPress=\{\(\) => say\(b\.syllable\)\}/);
-    expect(word.source).toMatch(/void soundPlay\(\(\) => playPrompt\(blockSpeech\(syllable\)\)\)/);
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the slot's play is handed to the screen's sound pacing (a tap drops the opening sound).
+    expect(word.source).toMatch(/void pacing\.track\(soundPlay\(\(\) => playPrompt\(blockSpeech\(syllable\)\)\)\)/);
     const stroke = files.find((f) => f.rel === 'minigames/TraceStrokeGame.tsx')!;
     // A letter says its name and a final its closed syllable (AMENDMENTS-AUDIO-CLIPS M11).
-    expect(stroke.source).toMatch(/setHintPlaying\(true\);[\s\S]{0,300}void soundPlay\(\(\) => playJamo\(round\.jamo, loneLetterQuestion\(round\.jamo\)\)\)/);
+    expect(stroke.source).toMatch(/setHintPlaying\(true\);[\s\S]{0,300}void pacing\.track\(soundPlay\(\(\) => playJamo\(round\.jamo, loneLetterQuestion\(round\.jamo\)\)\)\)/);
   });
 
   it('the quest player stops the speech when its step changes, and Discover when it unmounts', () => {

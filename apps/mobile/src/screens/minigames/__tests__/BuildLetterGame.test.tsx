@@ -6,6 +6,8 @@ import type { MinigameScope } from '../../../logic/minigame-config';
 import { useQuestRunStore } from '../../../store/quest-run-store';
 import { byTestId, render } from '../../../test-support/render';
 import { BuildLetterGame } from '../BuildLetterGame';
+import { ANSWER_SOUND_MAX_MS } from '../../../logic/audio/reply-advance';
+import { playPrompt } from '../../../platform/audio';
 
 /**
  * AMENDMENTS-TOUCH 6.5 (row KT-6, R2): Build a Letter's tray and slots sit on one `target` board. A used tray tile stays
@@ -310,3 +312,60 @@ function round1Distractors(root: ReactTestInstance): string[] {
   const ids = new Set(root.findAll((n) => typeof n.props['data-testid'] === 'string' && String(n.props['data-testid']).startsWith('build-letter-tile-')).map((n) => String(n.props['data-testid']).slice('build-letter-tile-'.length)));
   return [...ids].filter((id) => id !== G && id !== A);
 }
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: nothing is said on an answer, so a syllable that is still sounding ends first. */
+describe('[QS-4] the next round waits for the syllable that is still sounding', () => {
+  const ONE = scope([{ ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] }]);
+  const finishing = async (onFinish: () => void): Promise<ReactTestRenderer> =>
+    render(
+      <LayoutProvider value={layoutClassFor({ width: 320, height: 640 })}>
+        <TapLockProvider>
+          <BuildLetterGame scope={ONE} onFinish={onFinish} />
+        </TapLockProvider>
+      </LayoutProvider>,
+      { createNodeMock: nodeMock },
+    );
+  const buildGa = async (r: ReactTestRenderer): Promise<void> => {
+    await tick(TAP_LOCK_MS);
+    await click(r.root, 'build-letter-speaker');
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${G}`);
+    await tick(TAP_LOCK_MS);
+    await click(r.root, `build-letter-tile-${A}`);
+  };
+
+  it('held past the 900 ms while the syllable is being said, released when it ends', async () => {
+    let end: () => void = () => undefined;
+    vi.mocked(playPrompt).mockImplementationOnce(() => new Promise((resolve) => (end = () => resolve('played'))));
+    const finish = vi.fn();
+    const r = await finishing(finish);
+    await buildGa(r);
+    await tick(900 + 600);
+    expect(finish).not.toHaveBeenCalled();
+    end();
+    await tick(0);
+    expect(finish).toHaveBeenCalledTimes(1);
+  });
+
+  it('released at the cap when it never ends; with nothing sounding the 900 ms stands', async () => {
+    vi.mocked(playPrompt).mockImplementationOnce(() => new Promise(() => undefined));
+    const finish = vi.fn();
+    const r = await finishing(finish);
+    await buildGa(r);
+    await tick(ANSWER_SOUND_MAX_MS - 1);
+    expect(finish).not.toHaveBeenCalled();
+    await tick(1);
+    expect(finish).toHaveBeenCalledTimes(1);
+
+    const quick = vi.fn();
+    const q = await finishing(quick);
+    await tick(TAP_LOCK_MS);
+    await click(q.root, `build-letter-tile-${G}`);
+    await tick(TAP_LOCK_MS);
+    await click(q.root, `build-letter-tile-${A}`);
+    await tick(899);
+    expect(quick).not.toHaveBeenCalled();
+    await tick(1);
+    expect(quick).toHaveBeenCalledTimes(1);
+  });
+});

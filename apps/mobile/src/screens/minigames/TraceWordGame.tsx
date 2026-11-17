@@ -32,6 +32,7 @@ import { tracePanGesture } from '../../components/trace-pan';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { useHeldWhile } from '../../components/use-held-while';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -141,6 +142,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   // The block's sound: the syllable is printed in the strip, so the panel only says why it is silent (A-5b).
   const sound = usePromptSlot({ source: TRACE_WORD_AUDIO_SOURCE, textOnScreen: true });
   const { play: soundPlay, reset: soundReset } = sound;
+  const pacing = useSoundPacing();
   const [helpOpen, setHelpOpen] = useState(false);
   // A finger is on the canvas: the status row keeps what it showed when the stroke began, so a late result
   // never adds or removes the row (and moves the canvas) mid-stroke; it catches up when the stroke ends.
@@ -151,7 +153,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     // Another syllable is a new prompt: the last one's "Tap to hear" or "Try again" does not carry over.
     if (lastSyllable.current !== null && lastSyllable.current !== syllable) soundReset();
     lastSyllable.current = syllable;
-    void soundPlay(() => playPrompt(blockSpeech(syllable)));
+    void pacing.track(soundPlay(() => playPrompt(blockSpeech(syllable))));
   };
   // Leaving the game mid-syllable (Done on the last word, Skip, Back) stops it.
   useEffect(() => () => stop(), []);
@@ -224,7 +226,14 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   useEffect(() => {
     soundReset();
     lastSyllable.current = null;
-    if (block && state.phase === 'drawing' && state.letter === 0) void playPrompt(blockSpeech(block.syllable));
+    if (block && state.phase === 'drawing' && state.letter === 0) {
+      // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the first block's own sound waits for the screen; a tap on a block
+      // speaker or Show me first plays at once and drops it. Later blocks play as they open.
+      const { syllable } = block;
+      const open = (): void => void playPrompt(blockSpeech(syllable));
+      if (state.round === 0 && state.block === 0) pacing.opening(open);
+      else open();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.round, state.block]);
 

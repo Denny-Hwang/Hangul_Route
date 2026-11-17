@@ -52,6 +52,7 @@ import {
 import { discoverCards } from '../../logic/quest-flow/pacing-view';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { exampleWordLabel } from '../../logic/stage1/example-label';
+import { afterScreenSettles } from '../../logic/audio/settle';
 import { hasClipFor, playPrompt, stop as stopAudio, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { announceAndWait, isScreenReaderEnabled } from '../../platform/screen-reader';
@@ -150,6 +151,8 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
   const scrollRef = useRef<ScrollView | null>(null);
 
   const pauseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** [QS-3] Drops the page's own first sound while it still waits for the screen; `null` when none waits. */
+  const pendingAutoHear = useRef<(() => void) | null>(null);
   // Leaving the step (Continue on the last page, Leave, Back) stops a word or sentence mid-way.
   useEffect(
     () => () => {
@@ -191,6 +194,8 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
         case 'play': {
           const action = actions.get(effect.id);
           if (!action) return;
+          pendingAutoHear.current?.(); // [QS-3] a tap came first
+          pendingAutoHear.current = null;
           const card = cardKeyOf(effect.id);
           lastPlayed.current.set(card, effect.id);
           const run = () => playPrompt({ ...action.spec, kind: action.kind, source: DISCOVER_AUDIO_SOURCE });
@@ -249,16 +254,28 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
     if (id === undefined) return undefined;
     let live = true;
     let started = false;
-    void isScreenReaderEnabled().then((screenReader) => {
-      const action = actionsRef.current.get(id);
-      if (!live || !action) return;
-      const audio = useAudioStore.getState();
-      if (!autoHearAllowed({ muted: audio.muted, screenReader, hasClip: hasClipFor(action.spec), voiceReady: audio.tts.state === 'ready' })) return;
-      started = true;
-      dispatchRef.current({ type: 'autoHear', id });
+    const reader = isScreenReaderEnabled();
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the page has just appeared, so the sound waits for it. A tap on any
+    // Hear it during the wait plays at once and drops this one (`pendingAutoHear`), so nothing is said twice.
+    const cancelWait = afterScreenSettles(() => {
+      pendingAutoHear.current = null;
+      void reader.then((screenReader) => {
+        const action = actionsRef.current.get(id);
+        if (!live || !action) return;
+        const audio = useAudioStore.getState();
+        if (!autoHearAllowed({ muted: audio.muted, screenReader, hasClip: hasClipFor(action.spec), voiceReady: audio.tts.state === 'ready' })) return;
+        started = true;
+        dispatchRef.current({ type: 'autoHear', id });
+      });
     });
+    pendingAutoHear.current = () => {
+      live = false;
+      cancelWait();
+    };
     return () => {
       live = false;
+      cancelWait();
+      pendingAutoHear.current = null;
       if (started) stopAudio();
     };
   }, [autoHear, state.page]);

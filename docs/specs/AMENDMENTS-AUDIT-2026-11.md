@@ -63,6 +63,7 @@ Stars are computed over played rounds only, so one perfect game and two skips gi
 
 **AU-10 The first sound plays by itself on a letter page (audit UX-7).**
 On each "Look and learn" page, the first letter's sound plays once when the page opens (after the tap that opened it), unless sound is off or reduced by the existing settings. Continue is never held back.
+**[QS]** `AMENDMENTS-QUEST-SOUND-BACK.md` QS-3: the sound waits 350 ms for the page; a tap on a speaker during the wait plays at once and drops it.
 
 **AU-11 Two tabs do not write over each other's progress (audit FUNC-1).**
 A progress write merges with the stored record inside one storage transaction (the same union the sync merge uses), and other tabs re-read after a write (a broadcast channel, as the profile list does). Stars, cards and completions earned in either tab survive.

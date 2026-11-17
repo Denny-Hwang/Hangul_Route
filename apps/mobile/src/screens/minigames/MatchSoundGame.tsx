@@ -23,6 +23,7 @@ import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { loneLetterQuestion, loneLetterVoice } from '../../logic/audio/jamo-lines';
@@ -61,7 +62,6 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [lockedWrongIds, setLockedWrongIds] = useState<string[]>([]);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // F-LAYOUT-001 §3.6: tiles scale with the window; prompt left, tiles right on a wide landscape window.
   const layoutClass = useLayoutClass();
   const tile = useMediaSize(touchTarget.hero);
@@ -84,9 +84,12 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
     replayTimer.current = null;
   };
 
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: round 1's own prompt waits for the screen; a tap on the speaker first
+  // plays at once and drops it. Later rounds play as they open.
+  const pacing = useSoundPacing();
   const hear = (): Promise<unknown> | undefined => {
     const now = roundRef.current;
-    return now ? play(() => playJamo(now.promptJamo, loneLetterQuestion(now.promptJamo))) : undefined;
+    return now ? pacing.track(play(() => playJamo(now.promptJamo, loneLetterQuestion(now.promptJamo)))) : undefined;
   };
 
   useEffect(() => {
@@ -96,8 +99,10 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
     setLockedWrongIds([]);
     setFeedback('idle');
     reset();
-    void play(() => playJamo(round.promptJamo, loneLetterQuestion(round.promptJamo)));
-  }, [roundIdx, round, play, reset]);
+    const say = (): void => void pacing.track(play(() => playJamo(round.promptJamo, loneLetterQuestion(round.promptJamo))));
+    if (roundIdx === 0) pacing.opening(say);
+    else say();
+  }, [roundIdx, round, play, reset, pacing]);
 
   // Recordings for this game's letters are fetched and decoded before their round (§3.10).
   useEffect(() => {
@@ -107,7 +112,6 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   useEffect(() => {
     return () => {
       if (replayTimer.current) clearTimeout(replayTimer.current);
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
     };
   }, []);
 
@@ -129,15 +133,15 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
       setFeedback('correct');
       // Answered: the replay a miss just scheduled would say this prompt again over the next round (M6).
       clearReplay();
-      advanceTimer.current = setTimeout(() => {
-        advanceTimer.current = null;
+      // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: nothing is said on an answer here, so the wait is for a prompt that is still sounding.
+      pacing.after(700, () => {
         if (roundIdx >= rounds.length - 1) {
           markStepComplete();
           onFinish();
         } else {
           setRoundIdx(roundIdx + 1);
         }
-      }, 700);
+      });
     } else {
       nudge();
       answerRound(roundIdx, false, { jamoIds: [round.promptJamo.id], rung: 'recognize' });

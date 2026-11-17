@@ -9,6 +9,7 @@ import { tileId } from '../../../logic/cloze-pick/round';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { ClozePickGame } from '../ClozePickGame';
 import type { MinigameHost } from '../host';
+import { SENTENCE_SOUND_MAX_MS } from '../../../logic/audio/sound-pacing';
 
 /**
  * F-CURR-002 row CM-30 (design/wireframes/minigame/cloze-pick.md): Cloze Pick rendered through react-native-web. A
@@ -189,3 +190,34 @@ describe('Cloze Pick', () => {
 function textsOf(r: ReactTestRenderer, id: string): string[] {
   return byTestId(r.root, id).flatMap((n) => screenTexts(n));
 }
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the completed sentence is said to its end before the next round. */
+describe('[QS-4] the next round waits for the sentence', () => {
+  const advance = async (ms: number): Promise<void> => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  };
+
+  it('held past the cloze delay while the sentence is being said, released when it ends', async () => {
+    let end: () => void = () => undefined;
+    audio.playPrompt.mockImplementationOnce(() => new Promise((resolve) => (end = () => resolve('played' as const))));
+    const { r } = await play(['word', 'particle']);
+    await tap(r, tileId('e2e-cloze-word', 0));
+    await advance(CLOZE_ADVANCE_MS + 2_500); // past the word cap too: a sentence gets the long one
+    expect(texts(r)).not.toContain('Pick the piece that fits.');
+    end();
+    await advance(0);
+    expect(texts(r)).toContain('Pick the piece that fits.');
+  });
+
+  it('released at the sentence cap, and the last round completes the step the same way', async () => {
+    audio.playPrompt.mockImplementationOnce(() => new Promise(() => undefined));
+    const { r, h } = await play(['word']);
+    await tap(r, tileId('e2e-cloze-word', 0));
+    await advance(SENTENCE_SOUND_MAX_MS - 1);
+    expect(h.completes).toBe(0);
+    await advance(1);
+    expect(h.completes).toBe(1);
+  });
+});

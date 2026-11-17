@@ -31,6 +31,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { koSpeech, promptKindOf } from '../../logic/audio/ko-speech';
@@ -195,6 +196,7 @@ export function QuestReviewSession({ plan, profileId, onDone }: QuestReviewSessi
       <PickRoundView
         key={round.key}
         round={round}
+        first={roundIdx === 0}
         onFirstTap={(optionId) => played.current.answers.push(firstTryAnswer(round, optionId))}
         onRetry={() => {
           played.current.retries += 1;
@@ -262,6 +264,8 @@ export function TryAgainOffer({ onTry, onSeeResults }: { onTry: () => void; onSe
 
 interface PickRoundViewProps {
   round: PickRound;
+  /** The plan's first round: its own sound waits for the screen (QS-3). */
+  first: boolean;
   /** The round's first tap: its answer. */
   onFirstTap: (optionId: string) => void;
   onRetry: () => void;
@@ -288,7 +292,7 @@ function instructionOf(round: PickRound, m: Messages): string {
   }
 }
 
-function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProps): ReactElement {
+function PickRoundView({ round, first, onFirstTap, onRetry, onDone }: PickRoundViewProps): ReactElement {
   const m = useMessages();
   const a11y = m.a11y.minigame;
   const romanizationMode = useRomanizationMode();
@@ -305,17 +309,26 @@ function PickRoundView({ round, onFirstTap, onRetry, onDone }: PickRoundViewProp
   const slot = usePromptSlot({ source: AUDIO_SOURCE });
   const { play: slotPlay } = slot;
   const speech = useMemo(() => koSpeech({ ko: round.ko }, round.instruction === 'hearPick' && round.itemId.startsWith('syl:') ? 'sound' : promptKindOf(round.ko), AUDIO_SOURCE), [round]);
+  const pacing = useSoundPacing();
+  const heardOnce = useRef(false);
   const hear = useCallback((): void => {
-    void slotPlay(() => playPrompt(speech));
-  }, [slotPlay, speech]);
+    heardOnce.current = true;
+    void pacing.track(slotPlay(() => playPrompt(speech)));
+  }, [slotPlay, speech, pacing]);
 
   // A heard round plays once by itself when the page may play sound (the first gesture unlocks it on the web).
   const autoplayed = useRef(false);
   useEffect(() => {
     if (!heard || autoplayed.current || !unlocked) return;
     autoplayed.current = true;
-    hear();
-  }, [heard, unlocked, hear]);
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the first round's sound waits for the screen; a tap on the speaker
+    // first plays at once and it is not said a second time. Later rounds say theirs as they open.
+    if (!first) return hear();
+    if (heardOnce.current) return;
+    pacing.opening(() => {
+      if (!heardOnce.current) hear();
+    });
+  }, [heard, unlocked, hear, first, pacing]);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);

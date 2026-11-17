@@ -12,6 +12,7 @@ import {
   type NetworkLike,
 } from '../logic/audio/capability';
 import {
+  FIRST_UTTERANCE_DEFER_MS,
   clipRefsFor,
   createAudioController,
   type AudioController,
@@ -83,6 +84,8 @@ export interface NativeAudioEnv {
   clips?: NativeClipSetup;
   /** Calls `fn` each time the app leaves the foreground (the session ends: `audio.source_summary`); returns the unsubscribe. */
   onHidden?: (fn: () => void) => () => void;
+  /** [QS-5] The start room of the voice's first utterance after a pause; default `FIRST_UTTERANCE_DEFER_MS`. */
+  firstUtteranceDeferMs?: number;
 }
 
 export interface NativeClipSetup {
@@ -192,6 +195,8 @@ export function createNativeAudio(env: NativeAudioEnv) {
     isMuted: () => store.getState().muted,
     levelOrder: () => store.getState().levelOrder,
     platform,
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-5: the voice's first utterance after a pause gets start room.
+    firstUtteranceDeferMs: env.firstUtteranceDeferMs ?? FIRST_UTTERANCE_DEFER_MS,
     emit: (event) => {
       void track({ name: event.name, payload: { ...event.payload } });
     },

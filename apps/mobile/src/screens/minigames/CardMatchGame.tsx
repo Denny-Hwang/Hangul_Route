@@ -31,6 +31,7 @@ import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import type { RoundAsked } from '../../logic/memory/asked';
@@ -105,7 +106,9 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The Korean pick the running flash lets go of when it ends; a re-tap on that pick keeps it (sets this to null).
   const flashRelease = useRef<number | null>(null);
-  const finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the step ends once a word that is still being said has ended.
+  const pacing = useSoundPacing();
+  const finishing = useRef(false);
   // F-LAYOUT-001 §3.6: the cards grow with the window (their padding scales; the words keep their type size).
   const cardPadding = useMediaSize(spacing.md);
   // Each Korean word is printed on its card; the panel only says why it is silent (F-AUDIO-004 A-5b).
@@ -119,27 +122,26 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
     // A different word is a new prompt slot: what the last one could not play no longer applies.
     if (idx !== heardIdx) slot.reset();
     setHeardIdx(idx);
-    void slot.play(() => playPrompt(koSpeech(pair, 'word', 'card-match')));
+    void pacing.track(slot.play(() => playPrompt(koSpeech(pair, 'word', 'card-match'))));
   };
 
   useEffect(() => {
     // Scheduled once: a re-render with a new `onFinish` must not finish the step twice.
-    if (finishTimer.current !== null) return;
+    if (finishing.current) return;
     if (matched.size === pairs.length && pairs.length > 0) {
-      finishTimer.current = setTimeout(() => {
+      finishing.current = true;
+      pacing.after(FINISH_DELAY_MS, () => {
         markStepComplete();
         onFinish();
-      }, FINISH_DELAY_MS);
+      });
     }
-  }, [matched, pairs.length, markStepComplete, onFinish]);
+  }, [matched, pairs.length, markStepComplete, onFinish, pacing]);
 
-  // Leaving the game (Back, Skip, the end) stops both timers.
+  // Leaving the game (Back, Skip, the end) stops the flash timer (the finish wait is the pacing's, dropped with the screen).
   useEffect(
     () => () => {
       if (flashTimer.current !== null) clearTimeout(flashTimer.current);
-      if (finishTimer.current !== null) clearTimeout(finishTimer.current);
       flashTimer.current = null;
-      finishTimer.current = null;
     },
     [],
   );

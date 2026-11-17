@@ -7,6 +7,7 @@ import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { MinigameScreen } from '../MinigameScreen';
 import { endVoiceCheckHold } from '../../../store/audio-store';
+import { SENTENCE_SOUND_MAX_MS } from '../../../logic/audio/sound-pacing';
 
 /**
  * F-CURR-002 row CM-3A S2 through the real quest host: a Listen & Pick Check whose rounds show their Korean prompt
@@ -94,6 +95,14 @@ const mount = async (mode: 'always' | 'tap' = 'always'): Promise<ReactTestRender
   return r;
 };
 
+/** [QS-4] The flow's delay is the least wait; the completed prompt is said to its end first, within the sentence cap. */
+const afterAnswer = async (): Promise<void> => {
+  expect(LISTEN_PICK_TIMING.advanceDelayMs).toBeLessThan(SENTENCE_SOUND_MAX_MS);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(SENTENCE_SOUND_MAX_MS);
+  });
+};
+
 beforeEach(() => {
   // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
   endVoiceCheckHold();
@@ -119,14 +128,10 @@ describe('a Read Pick Meaning Check (row CM-3A S2)', () => {
     expect(texts).not.toContain('Listen, then pick');
     await tap(r, 'listen-pick-option-bi');
     await tap(r, 'listen-pick-option-gureum');
-    await act(async () => {
-      vi.advanceTimersByTime(LISTEN_PICK_TIMING.advanceDelayMs);
-    });
+    await afterAnswer();
     expect(screenTexts(r.root)).toContain('바람');
     await tap(r, 'listen-pick-option-baram');
-    await act(async () => {
-      vi.advanceTimersByTime(LISTEN_PICK_TIMING.advanceDelayMs);
-    });
+    await afterAnswer();
     expect(runStore.answers.map((a) => [a[0], a[1], (a[2] as { itemId?: string } | undefined)?.itemId])).toEqual([
       [0, false, 'pic-gureum'],
       [0, true, 'pic-gureum'],

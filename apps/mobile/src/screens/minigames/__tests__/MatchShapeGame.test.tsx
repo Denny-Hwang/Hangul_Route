@@ -12,6 +12,7 @@ import { MatchShapeGame } from '../MatchShapeGame';
 import { MatchShapeStepBody } from '../MatchShapeStepBody';
 import { ReadPickGame } from '../ReadPickGame';
 import { ShapeRoundView } from '../ShapeRoundView';
+import { ANSWER_SOUND_MAX_MS } from '../../../logic/audio/reply-advance';
 
 /**
  * F-CURR-002 section 7.1 F4 and 12.2, row CM-33 (design/wireframes/minigame/match-shape.md): Match Shape rendered through
@@ -219,5 +220,52 @@ describe('the review round at the produce rung', () => {
     });
     expect(first).toEqual([false]);
     expect(solved).toBe(1);
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the letter's name is said to its end before the pair round moves on. */
+describe('[QS-4] a pair round waits for the letter name', () => {
+  const advance = async (ms: number): Promise<void> => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  };
+  const ends: Array<() => void> = [];
+  const holdSound = (): void => {
+    audio.playJamo.mockImplementation(() => new Promise((resolve) => ends.push(() => resolve('played' as const))));
+  };
+  afterEach(() => {
+    ends.length = 0;
+    audio.playJamo.mockImplementation(() => Promise.resolve('played' as const));
+  });
+
+  const toPair = async (h: Host): Promise<ReactTestRenderer> => {
+    const r = await draw(<MatchShapeGame scope={PLAY} host={h} />);
+    for (const id of ['jamo:nieun', 'jamo:giyeok']) {
+      await tapId(r.root, `match-shape-tile-${id}`);
+      await tapId(r.root, 'match-shape-continue');
+    }
+    return r;
+  };
+
+  it('held past the pause while the name is being said, released when it ends', async () => {
+    const r = await toPair(host());
+    holdSound();
+    for (const i of [0, 3, 5]) await tapId(r.root, `match-shape-tile-${i}`);
+    await advance(PAIR_SOLVED_PAUSE_MS + 600);
+    expect(screenTexts(r.root)).not.toContain('The shape of the mouth.');
+    for (const end of ends.splice(0)) end();
+    await advance(0);
+    expect(screenTexts(r.root)).toContain('The shape of the mouth.');
+  });
+
+  it('released at the cap when it never ends', async () => {
+    const r = await toPair(host());
+    holdSound();
+    for (const i of [0, 3, 5]) await tapId(r.root, `match-shape-tile-${i}`);
+    await advance(ANSWER_SOUND_MAX_MS - 1);
+    expect(screenTexts(r.root)).not.toContain('The shape of the mouth.');
+    await advance(1);
+    expect(screenTexts(r.root)).toContain('The shape of the mouth.');
   });
 });

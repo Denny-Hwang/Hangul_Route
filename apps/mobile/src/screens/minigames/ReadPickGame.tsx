@@ -9,6 +9,7 @@ import { soundSpoken } from '../../logic/match-shape/view';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { shuffleSeeded } from '../../logic/story/seeded-order';
 import { playJamo, stop } from '../../platform/audio';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { nudge, success } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import type { MinigameHost } from './host';
@@ -43,15 +44,10 @@ export function ReadPickGame({ scope, host, onBack }: Props): ReactElement {
   const [wrong, setWrong] = useState<readonly string[]>([]);
   const [solved, setSolved] = useState(false);
   const answered = useRef(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the next round, or the end of the step, waits for the letter's sound (dropped with the screen).
+  const pacing = useSoundPacing();
   const done = useRef(false);
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-      stop();
-    },
-    [],
-  );
+  useEffect(() => () => stop(), []);
 
   const round = rounds[index];
   if (round === undefined) {
@@ -70,7 +66,6 @@ export function ReadPickGame({ scope, host, onBack }: Props): ReactElement {
   const letter = findJamo(round.target);
 
   const next = (): void => {
-    timer.current = null;
     answered.current = false;
     setWrong([]);
     setSolved(false);
@@ -93,8 +88,9 @@ export function ReadPickGame({ scope, host, onBack }: Props): ReactElement {
       setSolved(true);
       // Read Pick is a sound question (AMENDMENTS-AUDIO-CLIPS JV-A1, section 6.1): the learner saw the letter and picked
       // its sound, so the confirmation says the letter's sound syllable (ㄴ is na, ㅏ is a), never a name on a sound pick.
-      if (letter) void playJamo(letter, 'sound');
-      timer.current = setTimeout(next, reduced ? 0 : motion.duration.celebration);
+      pacing.track(letter ? playJamo(letter, 'sound') : undefined);
+      // Reduced motion drops the celebration pause, never the sound: the least wait is 0, the sound still ends first.
+      pacing.after(reduced ? 0 : motion.duration.celebration, next);
     } else if (!wrong.includes(option.id)) {
       nudge();
       setWrong([...wrong, option.id]);

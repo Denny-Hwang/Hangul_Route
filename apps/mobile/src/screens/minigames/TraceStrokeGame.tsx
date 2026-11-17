@@ -46,6 +46,7 @@ import { tracePanGesture } from '../../components/trace-pan';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { useHeldWhile } from '../../components/use-held-while';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { playJamo, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -100,6 +101,7 @@ export function TraceStrokeGame({
   // The letter's sound: the letter is the heading, so the panel only says why it is silent (F-AUDIO-004 A-5b).
   const sound = usePromptSlot({ source: TRACE_STROKE_AUDIO_SOURCE, textOnScreen: true });
   const { play: soundPlay, reset: soundReset } = sound;
+  const pacing = useSoundPacing();
   const [helpOpen, setHelpOpen] = useState(false);
   // A finger is on the canvas: the status row keeps what it showed when the stroke began, so a late result
   // never adds or removes the row (and moves the canvas) mid-stroke; it catches up when the stroke ends.
@@ -161,8 +163,13 @@ export function TraceStrokeGame({
     // finger. Show me plays through the slot and says why when it is silent.
     soundReset();
     // An initial or a vowel says its name (ㅁ is mieum), a final its closed syllable (am): AMENDMENTS-AUDIO-CLIPS M11.
-    if (round) void playJamo(round.jamo, loneLetterQuestion(round.jamo));
-  }, [roundIdx, round, soundReset]);
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3: the first letter's own sound waits for the screen; Show me first drops it.
+    if (round) {
+      const say = (): void => void playJamo(round.jamo, loneLetterQuestion(round.jamo));
+      if (roundIdx === 0) pacing.opening(say);
+      else say();
+    }
+  }, [roundIdx, round, soundReset, pacing]);
 
   if (!round) {
     return (
@@ -323,7 +330,7 @@ export function TraceStrokeGame({
         variant="status"
         compact
         view={soundView}
-        onAction={(action) => sound.act(action, () => void soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo))))}
+        onAction={(action) => sound.act(action, () => void pacing.track(soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo)))))}
         onHelp={() => setHelpOpen(true)}
         testID="trace-stroke-sound"
       />
@@ -409,7 +416,7 @@ export function TraceStrokeGame({
           setHintPlaying(true);
           // F-009 §3.1 (revised by AMENDMENTS-AUDIO-CLIPS M11): say the letter at demo start (its name; a final its
           // closed syllable); muting is enforced inside the audio controller.
-          void soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo)));
+          void pacing.track(soundPlay(() => playJamo(round.jamo, loneLetterQuestion(round.jamo))));
         }}
       />
       <Button label={copy.trace.clear.cta} tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />
