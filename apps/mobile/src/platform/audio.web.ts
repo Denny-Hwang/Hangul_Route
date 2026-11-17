@@ -426,6 +426,17 @@ export function createWebAudio(env: WebAudioEnv) {
         };
 
   const store = useAudioStore;
+  /** [QS-5] Set by a tap's capture listener and cleared once its task is over: a prompt asked then is never deferred. */
+  let gestureTask = false;
+  let gestureTaskTimer: ReturnType<typeof setTimeout> | null = null;
+  const markGestureTask = (): void => {
+    gestureTask = true;
+    if (gestureTaskTimer !== null) clearTimeout(gestureTaskTimer);
+    gestureTaskTimer = setTimeout(() => {
+      gestureTask = false;
+      gestureTaskTimer = null;
+    }, 0);
+  };
   const controller: AudioController = createAudioController({
     engine,
     clips: clipSetup?.player ?? null,
@@ -440,6 +451,7 @@ export function createWebAudio(env: WebAudioEnv) {
     platform: 'web',
     // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-5: the voice's first utterance after a pause gets start room.
     firstUtteranceDeferMs: env.firstUtteranceDeferMs ?? FIRST_UTTERANCE_DEFER_MS,
+    inGestureTask: () => gestureTask,
     emit: (event) => {
       void track({ name: event.name, payload: { ...event.payload } });
     },
@@ -601,10 +613,12 @@ export function createWebAudio(env: WebAudioEnv) {
       removeUnlockListeners = removeSpeechListeners;
     }
     for (const type of CLIP_GESTURE_EVENTS) doc.addEventListener(type, unlockClips, CAPTURE);
+    for (const type of ACTIVATION_EVENTS) doc.addEventListener(type, markGestureTask, CAPTURE);
     doc.addEventListener('visibilitychange', onVisibility);
     const uninstall = (): void => {
       removeSpeechListeners();
       for (const type of CLIP_GESTURE_EVENTS) doc.removeEventListener(type, unlockClips, CAPTURE);
+      for (const type of ACTIVATION_EVENTS) doc.removeEventListener(type, markGestureTask, CAPTURE);
       doc.removeEventListener('visibilitychange', onVisibility);
       uninstallGesture = null;
     };
@@ -659,6 +673,8 @@ export function createWebAudio(env: WebAudioEnv) {
       unlockAhead = null;
       if (unlockTimer !== null) clearTimeout(unlockTimer);
       unlockTimer = null;
+      if (gestureTaskTimer !== null) clearTimeout(gestureTaskTimer);
+      gestureTaskTimer = null;
       uninstallGesture?.();
       detachVoices();
       offCapability();

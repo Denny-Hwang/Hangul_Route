@@ -228,6 +228,11 @@ export interface ControllerDeps {
    * the voice gets the start room a clip has. The app's adapters pass `FIRST_UTTERANCE_DEFER_MS`; absent: no defer.
    */
   firstUtteranceDeferMs?: number;
+  /**
+   * The prompt is being asked inside the task of a tap (web: the click that is still running). Such a prompt is
+   * never deferred: iOS Safari speaks only inside the tap's own task. Absent: never inside one.
+   */
+  inGestureTask?(): boolean;
 }
 
 export interface AudioController {
@@ -512,7 +517,7 @@ export function createAudioController(deps: ControllerDeps): AudioController {
       };
     });
 
-  const speakTts = async (t: Ticket, spec: PlaySpec, wasBusy: boolean): Promise<PlayResult | Superseded> => {
+  const speakTts = async (t: Ticket, spec: PlaySpec, wasBusy: boolean, inTap: boolean): Promise<PlayResult | Superseded> => {
     const engine = deps.engine;
     if (engine === null) return fail('unavailable', 'no_voice');
     const lang = spec.language ?? 'ko-KR';
@@ -533,9 +538,9 @@ export function createAudioController(deps: ControllerDeps): AudioController {
 
     if (wasBusy) {
       if ((await drain(t, engine)) === SUPERSEDED) return SUPERSEDED;
-    } else if (firstDeferMs > 0 && engineWasIdle(engine)) {
-      // [QS-5] The first utterance after the engine was idle gets start room. Not in the tap that unlocks speech:
-      // that prompt must reach the engine inside the gesture, and it queues behind the silent warm-up anyway.
+    } else if (firstDeferMs > 0 && !inTap && engineWasIdle(engine)) {
+      // [QS-5] The first utterance after the engine was idle gets start room. Never for a prompt asked inside a tap
+      // (iOS Safari speaks only inside the tap's own task), nor behind the speech unlock's silent warm-up.
       const waited = await waitFor<'ready'>(t, (resolve) => {
         const handle = clock.setTimeout(() => resolve('ready'), firstDeferMs);
         return () => clock.clearTimeout(handle);
@@ -623,6 +628,8 @@ export function createAudioController(deps: ControllerDeps): AudioController {
     const previous = current;
     current = ticket;
     const wasBusy = previous !== null || (deps.engine?.busy() ?? false);
+    // Read at once: by the time the clip path has given way to the voice the tap's task is over.
+    const inTap = deps.inGestureTask?.() ?? false;
     if (previous !== null) supersede(previous);
     if (wasBusy) {
       deps.engine?.cancelAll();
@@ -636,7 +643,7 @@ export function createAudioController(deps: ControllerDeps): AudioController {
         count(viaClip);
         return 'played';
       }
-      const viaTts = await speakTts(ticket, spec, wasBusy);
+      const viaTts = await speakTts(ticket, spec, wasBusy, inTap);
       // An interrupted prompt never drives the fallback, and is not counted.
       if (viaTts === SUPERSEDED) return 'played';
       count(viaTts === 'played' ? 'tts' : 'text');

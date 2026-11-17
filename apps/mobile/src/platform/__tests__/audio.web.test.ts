@@ -35,7 +35,7 @@ vi.mock('../telemetry', () => ({
 
 import { useAudioStore } from '../../store/audio-store';
 import { createWebAudio, type WebAudioEnv } from '../audio.web';
-import { FIRST_UTTERANCE_DEFER_MS } from '../../logic/audio/controller';
+import { FIRST_UTTERANCE_DEFER_MS, SPEECH_IDLE_AFTER_MS } from '../../logic/audio/controller';
 
 /**
  * The suites that reset the module registry and import the module again (the default instance is made when the
@@ -1573,6 +1573,32 @@ describe('platform/audio.web: the voice\'s start room (QS-5)', () => {
     await vi.advanceTimersByTimeAsync(1);
     expect(r.synth.spoken.map((u) => u.text)).toEqual(['가']);
     await expect(p).resolves.toBe('played');
+    r.audio.dispose();
+  });
+
+  it('a prompt asked inside a tap\'s task is spoken at once, in that task; once the task is over the next first utterance waits', async () => {
+    vi.useFakeTimers();
+    const r = rig({ firstUtteranceDeferMs: FIRST_UTTERANCE_DEFER_MS });
+    r.synth.fireVoicesChanged();
+    r.audio.installGestureUnlock();
+    await vi.advanceTimersByTimeAsync(2_000);
+    const before = r.synth.spoken.length;
+    // A later tap on a speaker: the click's capture listener runs first, then the speaker's handler asks.
+    r.doc.dispatchEvent(new Event('click'));
+    void r.audio.playPrompt({ text: '가' });
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    // The click also sends the page's silent speech unlock (' '); the prompt follows it in the same task.
+    expect(r.synth.spoken.slice(before).map((u) => u.text).filter((t) => t.trim() !== '')).toEqual(['가']);
+    // A prompt the app asks by itself, after a pause: the start room.
+    await vi.advanceTimersByTimeAsync(SPEECH_IDLE_AFTER_MS + 100);
+    const at = r.synth.spoken.length;
+    void r.audio.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS - 1);
+    expect(r.synth.spoken).toHaveLength(at);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.synth.spoken.slice(at).map((u) => u.text).filter((t) => t.trim() !== '')).toEqual(['나']);
     r.audio.dispose();
   });
 

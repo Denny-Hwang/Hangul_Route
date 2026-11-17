@@ -1759,6 +1759,39 @@ describe('controller: the first utterance after the engine was idle is deferred 
     expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
   });
 
+  it('a prompt asked inside a tap is never deferred (iOS speaks only in the tap\'s own task)', async () => {
+    let inTap = true;
+    const engine = new ScriptEngine();
+    const tracker = createCapabilityTracker({ online: true, clips: false });
+    tracker.setVoices([YUNA]);
+    const ctl = createAudioController({
+      engine,
+      clips: null,
+      assets: { has: () => false },
+      clipsEnabled: () => false,
+      appVersion: '1.0.0',
+      voices: tracker,
+      isMuted: () => false,
+      levelOrder: () => 1,
+      platform: 'web',
+      emit: () => undefined,
+      reportFailure: () => undefined,
+      firstUtteranceDeferMs: FIRST_UTTERANCE_DEFER_MS,
+      inGestureTask: () => inTap,
+    });
+    void ctl.playPrompt({ text: '가' });
+    inTap = false; // the tap's task is over before the voice is reached: the reading at the ask is what counts
+    await vi.advanceTimersByTimeAsync(0);
+    expect(engine.requests.map((q) => q.text)).toEqual(['가']);
+    // The same engine idle again, asked outside a tap: the start room.
+    await vi.advanceTimersByTimeAsync(SPEECH_IDLE_AFTER_MS);
+    void ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS - 1);
+    expect(engine.requests).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(engine.requests).toHaveLength(2);
+  });
+
   it('without the setting (a caller that passes none) nothing is deferred, as before', async () => {
     const r = rig();
     void r.ctl.playPrompt({ text: '가' });
