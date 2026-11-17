@@ -298,21 +298,23 @@ function Bower({ k }: { k: number }): ReactElement {
 }
 
 function SeollalArt(p: ArtProps): ReactElement {
-  // Lunar New Year: a child bows deeply to a grandparent seated on a cushion, a lucky pouch on the floor between.
+  // Lunar New Year: a child bows deeply to a grandparent seated on a cushion. [FU] The child is drawn larger and faces
+  // the grandparent (it had its back to her), and the lucky pouch is left out to make room.
   return (
     <Card theme="rites" p={p}>
-      <Rect x={10} y={174} width={180} height={10} rx={5} fill={colors.feedback.nudge} {...DET} />
-      <G transform="translate(-6 66) scale(0.6)">
-        <Bower k={0.6} />
+      <Rect x={6} y={174} width={188} height={10} rx={5} fill={colors.feedback.nudge} {...DET} />
+      <G transform="translate(134 51) scale(-0.72 0.72)">
+        <Bower k={0.72} />
       </G>
-      <Ellipse cx={150} cy={172} rx={42} ry={10} fill={colors.vocab.red} {...INK} />
-      <Path d="M112 166Q112 98 150 92Q188 98 188 166Z" fill={colors.vocab.purple} {...INK} />
-      <Path d="M126 132Q150 146 174 132" {...DET} fill={NONE} />
-      <Circle cx={150} cy={66} r={24} fill={colors.surface.paper} {...INK} />
-      <Path d="M126 64Q128 40 150 40Q172 40 174 64Q160 52 150 54Q140 52 126 64Z" fill={colors.vocab.gray} {...DET} />
-      <Circle cx={150} cy={36} r={9} fill={colors.vocab.gray} {...DET} />
-      <Path d="M140 70Q143 66 146 70M154 70Q157 66 160 70M144 78Q150 84 156 78" {...DET} fill={NONE} />
-      <Path d="M86 160Q86 146 96 144Q106 146 106 160Q96 166 86 160Z" fill={colors.vocab.pink} {...DET} />
+      <G transform="translate(18 26) scale(0.88)">
+        <Ellipse cx={150} cy={172} rx={42} ry={10} fill={colors.vocab.red} {...INK} strokeWidth={6 / 0.88} />
+        <Path d="M112 166Q112 98 150 92Q188 98 188 166Z" fill={colors.vocab.purple} {...INK} strokeWidth={6 / 0.88} />
+        <Path d="M126 132Q150 146 174 132" {...DET} fill={NONE} />
+        <Circle cx={150} cy={66} r={24} fill={colors.surface.paper} {...INK} strokeWidth={6 / 0.88} />
+        <Path d="M126 64Q128 40 150 40Q172 40 174 64Q160 52 150 54Q140 52 126 64Z" fill={colors.vocab.gray} {...DET} />
+        <Circle cx={150} cy={36} r={9} fill={colors.vocab.gray} {...DET} />
+        <Path d="M140 70Q143 66 146 70M154 70Q157 66 160 70M144 78Q150 84 156 78" {...DET} fill={NONE} />
+      </G>
     </Card>
   );
 }
@@ -550,29 +552,31 @@ function Stick({ x, y, a, flat, mark }: { x: number; y: number; a: number; flat:
 function YutnoriArt(p: ArtProps): ReactElement {
   // The yut game: the round board with its ring of stations and the cross inside, two tokens on it, and the four
   // half-round sticks thrown beside it, three flat faces up (one with the back-do mark) and one round back up.
+  // [FU] The board sits at the top and the sticks lie in two pairs below it, none over the board (they crowded its
+  // corner at 54 px).
   const ring = Array.from({ length: 20 }, (_, i) => (i * Math.PI) / 10);
   return (
     <Card theme="crafts" p={p}>
-      <Circle cx={72} cy={72} r={60} fill={colors.feedback.nudgeLight} {...INK} />
-      <Path d="M72 28V116M28 72H116" {...DET} stroke={colors.border.strong} />
+      <Circle cx={100} cy={64} r={54} fill={colors.feedback.nudgeLight} {...INK} />
+      <Path d="M100 24V104M60 64H140" {...DET} stroke={colors.border.strong} />
       <G fill={colors.text.primary}>
         {ring.map((t) => (
-          <Circle key={t} cx={72 + 44 * Math.cos(t)} cy={72 + 44 * Math.sin(t)} r={t % (Math.PI / 2) < 0.01 ? 7 : 4} />
+          <Circle key={t} cx={100 + 40 * Math.cos(t)} cy={64 + 40 * Math.sin(t)} r={t % (Math.PI / 2) < 0.01 ? 7 : 4} />
         ))}
-        {[-30, -15, 15, 30].map((d) => (
+        {[-27, -13.5, 13.5, 27].map((d) => (
           <G key={d}>
-            <Circle cx={72 + d} cy={72} r={4} />
-            <Circle cx={72} cy={72 + d} r={4} />
+            <Circle cx={100 + d} cy={64} r={4} />
+            <Circle cx={100} cy={64 + d} r={4} />
           </G>
         ))}
-        <Circle cx={72} cy={72} r={7} />
+        <Circle cx={100} cy={64} r={7} />
       </G>
-      <Circle cx={57} cy={42} r={9} fill={colors.vocab.red} {...DET} />
-      <Circle cx={102} cy={87} r={9} fill={colors.vocab.blue} {...DET} />
-      <Stick x={120} y={142} a={-72} flat />
-      <Stick x={143} y={138} a={-72} flat mark />
-      <Stick x={166} y={134} a={-72} flat />
-      <Stick x={96} y={180} a={-6} flat={false} />
+      <Circle cx={86} cy={36} r={9} fill={colors.vocab.red} {...DET} />
+      <Circle cx={128} cy={78} r={9} fill={colors.vocab.blue} {...DET} />
+      <Stick x={52} y={146} a={-6} flat />
+      <Stick x={148} y={146} a={6} flat mark />
+      <Stick x={52} y={176} a={4} flat />
+      <Stick x={148} y={176} a={-4} flat={false} />
     </Card>
   );
 }

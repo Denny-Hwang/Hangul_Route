@@ -314,13 +314,17 @@ function Bowing({ fur, flip }: { fur: string; flip?: boolean }): ReactElement {
 }
 
 function InsaArt(p: ArtProps): ReactElement {
-  // Greeting: two friends bow to each other, bodies bent at the waist, heads lowered; no bubbles.
+  // Greeting: two friends bow to each other, bodies bent at the waist, heads lowered; no bubbles. [FU] Drawn larger,
+  // heads close over the middle, and without the motion arcs, so the pair reads at 54 px.
   return (
     <Card theme="rites" p={p}>
-      {shadow(184, 90)}
-      <Bowing fur={colors.hoya.fur} />
-      <Bowing fur={colors.hoya.furBlue} flip />
-      <Path d="M10 92Q18 68 42 64M190 92Q182 68 158 64" stroke={colors.theme.rites} strokeWidth={5} fill={NONE} strokeLinecap="round" />
+      {shadow(186, 92)}
+      <G transform="translate(0 -18) scale(1.1)">
+        <Bowing fur={colors.hoya.fur} />
+      </G>
+      <G transform="translate(-20 -18) scale(1.1)">
+        <Bowing fur={colors.hoya.furBlue} flip />
+      </G>
     </Card>
   );
 }
@@ -647,29 +651,70 @@ function HangawiArt(p: ArtProps): ReactElement {
 
 function JirisanArt(p: ArtProps): ReactElement {
   // Jirisan: long ridges one behind another with a sea of clouds between them, the summit stone on the top peak.
+  // [FU] The front peak rises out of a second cloud band, and the summit stone is a short rounded stele with a facet,
+  // an angular rock with facets, not a straight-sided slab (it read as a chimney).
   return (
     <Legend theme="nature" p={p} name="지리산">
       <Path d="M12 92Q40 58 66 78Q96 40 128 70Q156 50 188 82V120H12Z" fill={colors.theme.nature} {...INK} />
       <Path d="M12 112Q28 98 46 108Q62 94 82 106Q100 94 120 106Q140 94 160 106Q176 96 188 108V128H12Z" fill={colors.surface.paper} {...DET} />
       <Path d="M12 156L74 82L100 110L120 96L188 156Z" fill={colors.feedback.success} {...INK} />
-      <Path d="M62 88L64 50Q72 40 86 46L90 88Z" fill={colors.vocab.gray} {...INK} />
+      <Path d="M12 144Q26 132 42 140Q56 128 72 138Q86 130 100 140Q116 128 132 138Q148 128 162 138Q178 130 188 140V156H12Z" fill={colors.surface.paper} {...DET} />
+      <Path d="M58 86L62 62L70 50L82 47L88 58L90 86Z" fill={colors.vocab.gray} {...INK} />
+      <Path d="M70 52L74 62L72 84M74 62L88 60" {...DET} fill={NONE} />
     </Legend>
   );
 }
 
+// [FU] A wrestler in the crouched ssireum hold, facing right: legs bent wide, hips low, the body leaning in to the head
+// on the other's shoulder, the white satba at the waist and the front thigh. `arm` draws only the arm that grips the
+// other's thigh band, so both arms lie over both bodies.
+function Wrestler({ fur, flip, arm }: { fur: string; flip?: boolean; arm?: boolean }): ReactElement {
+  const limb = (d: string): ReactElement => (
+    <G>
+      <Path d={d} stroke={colors.text.primary} strokeWidth={22} strokeLinecap="round" strokeLinejoin="round" fill={NONE} />
+      <Path d={d} stroke={fur} strokeWidth={10} strokeLinecap="round" strokeLinejoin="round" fill={NONE} />
+    </G>
+  );
+  const band = (d: string): ReactElement => (
+    <G>
+      <Path d={d} stroke={colors.text.primary} strokeWidth={16} strokeLinecap="round" fill={NONE} />
+      <Path d={d} stroke={colors.vocab.white} strokeWidth={6} strokeLinecap="round" fill={NONE} />
+    </G>
+  );
+  return (
+    <G transform={flip ? 'matrix(-1 0 0 1 200 0)' : undefined}>
+      {arm ? (
+        <G>
+          {limb('M78 96Q100 116 126 122')}
+          <Circle cx={130} cy={122} r={8} fill={fur} {...DET} />
+        </G>
+      ) : (
+        <G>
+          {limb('M44 116L24 132L22 148')}
+          {limb('M60 120L70 136L64 150')}
+          <Ellipse cx={60} cy={102} rx={32} ry={21} fill={fur} {...INK} transform="rotate(-30 60 102)" />
+          {band('M38 94L50 124')}
+          {band('M52 118Q60 128 70 124')}
+          <Circle cx={70} cy={56} r={8} fill={fur} {...INK} />
+          <Circle cx={82} cy={72} r={17} fill={fur} {...INK} />
+          <Path d="M85 72Q89 76 93 72" {...DET} fill={NONE} />
+        </G>
+      )}
+    </G>
+  );
+}
+
 function SsireumArt(p: ArtProps): ReactElement {
-  // Ssireum: two friends lean in and hold each other's cloth belt in a round sand ring.
+  // Ssireum: [FU] two wrestlers crouched in the hold on the sand ring, legs bent wide, bodies leaning in to heads on
+  // each other's shoulder, white satba belts at waist and thigh, each hand gripping the other's thigh band (two friends
+  // leaning in read as a hug).
   return (
     <Legend theme="crafts" p={p} name="씨름">
-      <Ellipse cx={100} cy={146} rx={86} ry={14} fill={colors.feedback.nudge} opacity={0.4} />
-      <G transform="rotate(16 56 150)">
-        <Pal x={56} y={76} fur={colors.hoya.fur} />
-      </G>
-      <G transform="rotate(-16 144 150)">
-        <Pal x={144} y={76} fur={colors.hoya.furBlue} />
-      </G>
-      <Path d="M76 128H124" stroke={colors.text.primary} strokeWidth={18} strokeLinecap="round" />
-      <Path d="M76 128H124" stroke={colors.brand.primary} strokeWidth={8} strokeLinecap="round" />
+      <Ellipse cx={100} cy={150} rx={88} ry={12} fill={colors.feedback.nudge} opacity={0.4} />
+      <Wrestler fur={colors.hoya.fur} />
+      <Wrestler fur={colors.hoya.furBlue} flip />
+      <Wrestler fur={colors.hoya.fur} arm />
+      <Wrestler fur={colors.hoya.furBlue} flip arm />
     </Legend>
   );
 }
