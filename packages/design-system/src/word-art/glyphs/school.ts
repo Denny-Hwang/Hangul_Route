@@ -175,4 +175,14 @@ export const SCHOOL_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     rect(15, 68, 70, 6, 3, { f: 'vocab.brown', ...INK }),
     rect(26, 64, 13, 5, 2, { f: 'surface.paper', ...DETAIL }),
   ],
+
+  // [PX-1] an open book: two white pages over a red cover, rows of marks for the writing (no letters), a ribbon bookmark
+  'school-book': [
+    groundShadow(50, 84, 36),
+    path('M 12 34 L 50 40 L 88 34 V 76 L 50 82 L 12 76 Z', { f: 'vocab.red', ...INK }),
+    path('M 50 36 Q 34 24 16 30 V 70 Q 34 64 50 76 Z', { f: 'vocab.white', ...INK }),
+    path('M 50 36 Q 66 24 84 30 V 70 Q 66 64 50 76 Z', { f: 'vocab.white', ...INK }),
+    path('M 23 38 Q 33 35 43 41 M 23 47 Q 33 44 43 50 M 23 56 Q 33 53 43 59 M 57 41 Q 67 35 77 38 M 57 50 Q 67 44 77 47 M 57 59 Q 67 53 77 56', DETAIL),
+    poly(pts(64, 68, 71, 66, 71, 88, 67.5, 84, 64, 89), { f: 'vocab.yellow', ...DETAIL }, 1),
+  ],
 };

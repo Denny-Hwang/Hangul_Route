@@ -14,8 +14,13 @@ const W6_SPORT = ['baseball', 'basketball', 'volleyball', 'tabletennis', 'swimmi
 const W6_CULTURE = ['hangul', 'hanok', 'bibimbap', 'tteokbokki', 'song', 'dance', 'drama'].map((k) => `culture-${k}`);
 const W6_SCIENCE = ['fire', 'ice', 'stone', 'magnet', 'earth', 'space', 'robot', 'seed', 'rainbow', 'shadow', 'wind', 'light'].map((k) => `science-${k}`);
 
+/** Redrawn in AMENDMENTS-PICTURES-2026-11 row PX-1, so back in review (registry-px1.test.ts). */
+const PX1_REDRAWN = ['science-seed', 'science-shadow'];
+/** The five K-Culture words that borrowed a card picture until row PX-1 drew them (registry-px1.test.ts). */
+const PX1_CULTURE = ['hanbok', 'seollal', 'chuseok', 'yutnori', 'gayageum'].map((k) => `culture-${k}`);
+
 describe('batch W-6 (§3.12)', () => {
-  it.each([...W6_TRAVEL, ...W6_SPORT, ...W6_CULTURE, ...W6_SCIENCE])('%s is registered and approved after review', (key) => {
+  it.each([...W6_TRAVEL, ...W6_SPORT, ...W6_CULTURE, ...W6_SCIENCE].filter((k) => !PX1_REDRAWN.includes(k)))('%s is registered and approved after review', (key) => {
     const { meta } = WORD_ART[key] ?? {};
     expect(meta?.family).toBe(key.split('-')[0]);
     expect(meta?.status).toBe('approved');
@@ -26,7 +31,7 @@ describe('batch W-6 (§3.12)', () => {
     const of = (f: string) => WORD_ART_KEYS.filter((k) => k.startsWith(`${f}-`) && WORD_ART[k]!.meta.reserved !== true).sort();
     expect(of('travel')).toEqual(['travel-bus', ...W6_TRAVEL].sort());
     expect(of('sport')).toEqual(['sport-soccer', ...W6_SPORT].sort());
-    expect(of('culture')).toEqual([...W6_CULTURE].sort());
+    expect(of('culture')).toEqual([...W6_CULTURE, ...PX1_CULTURE].sort());
     expect(of('science')).toEqual([...W6_SCIENCE].sort());
   });
 

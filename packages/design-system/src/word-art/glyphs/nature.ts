@@ -54,25 +54,21 @@ function river(extra: number, paint: WordArtPaint): WordArtShape {
 }
 
 export const NATURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
-  // cloud (prototype)
+  // [PX-1] a big cloud tinted light blue, a white highlight on its top and a deeper underside, so it never reads white
+  // on white; no sky behind it (that is nature-sky), and paler than the gray rain cloud
   'nature-cloud': [
     ...puffs(
       [
-        [33, 55, 14],
-        [50, 44, 19],
-        [68, 52, 15],
+        [33, 52, 14],
+        [50, 41, 19],
+        [68, 49, 15],
       ],
-      [18, 52, 66, 20],
-      { f: 'surface.paper' },
+      [16, 50, 70, 22],
+      { f: 'brand.secondaryLight' },
     ),
-    curve(
-      [
-        [56, 64],
-        [63, 66],
-        [70, 63],
-      ],
-      { s: 'brand.secondaryLight', sw: 3 },
-    ),
+    curve(pts(38, 34, 44, 28.5, 52, 27), { s: 'surface.paper', sw: 3 }),
+    curve(pts(24, 45, 27, 41, 31, 40), { s: 'surface.paper', sw: 3 }),
+    curve(pts(26, 66, 50, 68, 76, 66), { s: 'vocab.skyBlue', sw: 3 }),
   ],
   // pink flower on a stem (the pink swatch's object, §3.6.1): five petals round a yellow centre, two leaves
   'nature-flower': [
@@ -183,5 +179,39 @@ export const NATURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ...pts(30, 70, 40, 62, 48, 72, 62, 70, 74, 74, 36, 76).map(([x, y]) => circle(x, y, 1.5, { f: 'stage.stage2' })),
     path('M 16 64 H 34 L 31 84 H 19 Z', { f: 'vocab.red', ...INK }),
     path('M 18 64 Q 25 54 32 64', DETAIL),
+  ],
+
+  // [PX-1] three green peaks, the tall middle one with a snow cap, ridge lines on the slopes
+  'nature-mountain': [
+    groundShadow(50, 84, 38),
+    poly(pts(12, 82, 30, 46, 48, 82), { f: 'stage.stage3', ...INK }, 3),
+    poly(pts(54, 82, 72, 50, 88, 82), { f: 'stage.stage3', ...INK }, 3),
+    poly(pts(22, 82, 50, 18, 78, 82), { f: 'vocab.green', ...INK }, 3),
+    poly(pts(50, 18, 60.5, 42, 55, 38, 50, 45, 45, 38, 39.5, 42), { f: 'vocab.white', ...INK }, 2),
+    path('M 50 54 L 45 68 M 56 58 L 63 72 M 29 58 L 26 67 M 73 62 L 77 71', DETAIL),
+  ],
+
+  // [PX-1] the sea: three rows of big waves with curling crests, a small sun low over the water; no boat
+  'nature-sea': [
+    circle(68, 30, 11, { f: 'vocab.yellow', ...INK }),
+    path('M 12 46 Q 20 34 30 42 Q 36 46 40 40 Q 48 30 58 40 Q 64 46 68 40 Q 76 30 88 44 V 60 H 12 Z', { f: 'vocab.skyBlue', ...INK }),
+    path('M 12 60 Q 16 48 28 52 Q 36 56 38 50 Q 46 42 56 52 Q 62 58 66 52 Q 74 44 88 56 V 74 H 12 Z', { f: 'vocab.blue', ...INK }),
+    path('M 12 74 Q 20 62 30 70 Q 36 74 40 68 Q 48 60 58 70 Q 64 74 68 68 Q 76 60 88 72 V 80 Q 88 86 82 86 H 18 Q 12 86 12 80 Z', { f: 'vocab.skyBlue', ...INK }),
+    path('M 20 60 Q 26 56 31 60 M 48 58 Q 54 55 59 60 M 22 79 Q 30 76 38 79 M 54 79 Q 62 76 70 79', { s: 'surface.paper', sw: 3 }),
+  ],
+
+  // [PX-1] a crescent moon with two stars and a small night cloud across its lower horn, so it is neither the sun nor a star
+  'nature-moon': [
+    path('M 56 14 A 37 37 0 1 0 86 62 A 29 29 0 0 1 56 14 Z', { f: 'vocab.yellow', ...INK }),
+    star(70, 30, 10, 4, 4, { f: 'vocab.white', ...INK }, 1),
+    star(84, 46, 5.5, 2.2, 4, { f: 'vocab.white', ...DETAIL }, 1),
+    ...puffs(
+      [
+        [64, 76, 8],
+        [75, 73, 9],
+      ],
+      [54, 74, 34, 11],
+      { f: 'brand.secondaryDark' },
+    ),
   ],
 };

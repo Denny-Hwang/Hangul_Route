@@ -74,15 +74,15 @@ const SPORTS: Row[] = [
 ];
 
 const K_CULTURE: Row[] = [
-  { id: 'vocab:hanbok', ko: '한복', romanization: 'hanbok', en: 'traditional Korean clothes', es: 'ropa tradicional coreana', visual: 'card:hanbok', level: 1, note: { en: 'Often worn on holidays such as Seollal and Chuseok.', es: 'Se suele llevar en fiestas como Seollal y Chuseok.' } },
+  { id: 'vocab:hanbok', ko: '한복', romanization: 'hanbok', en: 'traditional Korean clothes', es: 'ropa tradicional coreana', visual: 'word:culture-hanbok', level: 1, note: { en: 'Often worn on holidays such as Seollal and Chuseok.', es: 'Se suele llevar en fiestas como Seollal y Chuseok.' } },
   { id: 'vocab:hangeul', ko: '한글', romanization: 'hangeul', en: 'Hangul (the Korean alphabet)', es: 'hangul (el alfabeto coreano)', visual: 'word:culture-hangul', level: 1, note: { en: 'The alphabet you are learning here.', es: 'El alfabeto que estás aprendiendo aquí.' } },
   { id: 'vocab:hanok', ko: '한옥', romanization: 'hanok', en: 'traditional Korean house', es: 'casa tradicional coreana', visual: 'word:culture-hanok', level: 1 },
   { id: 'vocab:bibimbap', ko: '비빔밥', romanization: 'bibimbap', en: 'mixed rice bowl', es: 'tazón de arroz mezclado', visual: 'word:culture-bibimbap', level: 2, note: { en: 'Rice topped with vegetables, mixed together before you eat.', es: 'Arroz con verduras encima, que se mezcla antes de comer.' } },
   { id: 'vocab:tteokbokki', ko: '떡볶이', romanization: 'tteokbokki', en: 'spicy rice cakes', es: 'pasteles de arroz picantes', visual: 'word:culture-tteokbokki', level: 2 },
-  { id: 'vocab:seollal', ko: '설날', romanization: 'seollal', en: 'Lunar New Year', es: 'Año Nuevo lunar', visual: 'card:seollal', level: 1, note: { en: 'Many people wear hanbok and bow to their elders.', es: 'Mucha gente lleva hanbok y hace una reverencia a los mayores.' } },
-  { id: 'vocab:chuseok', ko: '추석', romanization: 'chuseok', en: 'Chuseok (harvest festival)', es: 'Chuseok (fiesta de la cosecha)', visual: 'card:chuseok', level: 1, note: { en: 'Families gather and share songpyeon, half-moon rice cakes.', es: 'Las familias se reúnen y comparten songpyeon, pasteles de arroz en forma de media luna.' } },
-  { id: 'vocab:yunnori', ko: '윷놀이', romanization: 'yunnori', en: 'yut game (board game with sticks)', es: 'juego de yut (tablero y palitos)', visual: 'card:yutnori', level: 2, note: { en: 'Players throw four wooden sticks, often at Lunar New Year.', es: 'Se lanzan cuatro palitos de madera, sobre todo en el Año Nuevo lunar.' } },
-  { id: 'vocab:gayageum', ko: '가야금', romanization: 'gayageum', en: 'Korean zither', es: 'cítara coreana', visual: 'card:gayageum', level: 2, note: { en: 'A long string instrument, plucked with the fingers.', es: 'Un instrumento largo de cuerdas que se toca con los dedos.' } },
+  { id: 'vocab:seollal', ko: '설날', romanization: 'seollal', en: 'Lunar New Year', es: 'Año Nuevo lunar', visual: 'word:culture-seollal', level: 1, note: { en: 'Many people wear hanbok and bow to their elders.', es: 'Mucha gente lleva hanbok y hace una reverencia a los mayores.' } },
+  { id: 'vocab:chuseok', ko: '추석', romanization: 'chuseok', en: 'Chuseok (harvest festival)', es: 'Chuseok (fiesta de la cosecha)', visual: 'word:culture-chuseok', level: 1, note: { en: 'Families gather and share songpyeon, half-moon rice cakes.', es: 'Las familias se reúnen y comparten songpyeon, pasteles de arroz en forma de media luna.' } },
+  { id: 'vocab:yunnori', ko: '윷놀이', romanization: 'yunnori', en: 'yut game (board game with sticks)', es: 'juego de yut (tablero y palitos)', visual: 'word:culture-yutnori', level: 2, note: { en: 'Players throw four wooden sticks, often at Lunar New Year.', es: 'Se lanzan cuatro palitos de madera, sobre todo en el Año Nuevo lunar.' } },
+  { id: 'vocab:gayageum', ko: '가야금', romanization: 'gayageum', en: 'Korean zither', es: 'cítara coreana', visual: 'word:culture-gayageum', level: 2, note: { en: 'A long string instrument, plucked with the fingers.', es: 'Un instrumento largo de cuerdas que se toca con los dedos.' } },
   { id: 'vocab:norae', ko: '노래', romanization: 'norae', en: 'song', es: 'canción', visual: 'word:culture-song', level: 1 },
   { id: 'vocab:chum', ko: '춤', romanization: 'chum', en: 'dance', es: 'baile', visual: 'word:culture-dance', level: 1 },
   { id: 'vocab:deurama', ko: '드라마', romanization: 'deurama', en: 'TV drama', es: 'serie de televisión', visual: 'word:culture-drama', level: 2 },
@@ -270,16 +270,12 @@ describe('topic-specific rules', () => {
     ]);
   });
 
-  it('K-Culture: exactly five card pictures (hanbok, Seollal, Chuseok, yut game, gayageum) and seven drawn culture glyphs', () => {
+  // AMENDMENTS-PICTURES-2026-11 row PX-1: hanbok, Seollal, Chuseok, the yut game and the gayageum have their own glyphs
+  it('K-Culture: twelve drawn culture glyphs, the five that used a card picture included (no card picture)', () => {
     const file = parse('k-culture');
-    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual([
-      'card:hanbok',
-      'card:seollal',
-      'card:chuseok',
-      'card:yutnori',
-      'card:gayageum',
-    ]);
-    expect(file.items.filter((i) => i.visual.startsWith('word:culture-')).length).toBe(7);
+    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual([]);
+    expect(file.items.filter((i) => i.visual.startsWith('word:culture-')).length).toBe(12);
+    expect(['hanbok', 'seollal', 'chuseok', 'yutnori', 'gayageum'].every((k) => file.items.some((i) => i.visual === `word:culture-${k}`))).toBe(true);
     expect(file.items.every((i) => i.senseGroup === undefined)).toBe(true);
   });
 
@@ -334,9 +330,10 @@ describe('topic-specific rules', () => {
     for (const id of reserved) expect(ids, id).not.toContain(id);
   });
 
-  it('the launch set has the section 3.4 picture counts: 13 card pictures and 131 word pictures', () => {
-    expect(catalogItems.filter((i) => i.visual.startsWith('card:'))).toHaveLength(13);
-    expect(catalogItems.filter((i) => i.visual.startsWith('word:'))).toHaveLength(131);
+  // AMENDMENTS-PICTURES-2026-11 row PX-1 (rule R6): the 13 card pictures of section 3.4 became word pictures
+  it('the launch set has no card picture and 144 word pictures', () => {
+    expect(catalogItems.filter((i) => i.visual.startsWith('card:'))).toHaveLength(0);
+    expect(catalogItems.filter((i) => i.visual.startsWith('word:'))).toHaveLength(144);
   });
 
   it('every romanized word inside a note (English and Spanish) is listed and is the converter output', () => {

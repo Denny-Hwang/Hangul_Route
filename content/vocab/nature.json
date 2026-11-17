@@ -28,7 +28,7 @@
         "nature"
       ],
       "level": 1,
-      "visual": "card:mountain"
+      "visual": "word:nature-mountain"
     },
     {
       "id": "vocab:bada",
@@ -40,7 +40,7 @@
         "nature"
       ],
       "level": 1,
-      "visual": "card:sea"
+      "visual": "word:nature-sea"
     },
     {
       "id": "vocab:haneul",
@@ -77,7 +77,7 @@
         "nature"
       ],
       "level": 1,
-      "visual": "card:moon",
+      "visual": "word:nature-moon",
       "senseGroup": "dal"
     },
     {

@@ -1,10 +1,12 @@
 /**
  * WordArt K-Culture glyphs (F-VOC-002 §3.9, briefs in §3.12), drawn in batch
  * W-6 under the heritage accuracy bar (C11). Keys are written without the
- * `word:` prefix. The other five K-Culture words reuse Heritage card art
- * (hanbok, seollal, chuseok, yutnori, gayageum; §3.11).
+ * `word:` prefix. The other five K-Culture words (hanbok, seollal, chuseok,
+ * yutnori, gayageum) borrowed Heritage card art until AMENDMENTS-PICTURES-2026-11
+ * row PX-1 drew them here (rule R6: a word's picture is a glyph).
  */
-import { circle, ellipse, groundShadow, leaf, line, path, poly, pts, rect } from '../builders';
+import { blob, circle, ellipse, groundShadow, leaf, line, path, poly, pts, rect } from '../builders';
+import type { Pt } from '../builders';
 import { formatNumber as n } from '../path';
 import type { WordArtGlyph, WordArtShape, WordArtTone } from '../types';
 import { hand, head, limb } from './pose';
@@ -42,6 +44,33 @@ function wedge(cx: number, cy: number, rx: number, ry: number, a0: number, a1: n
   const steps = [0, 1, 2, 3].map((i) => a0 + ((a1 - a0) * i) / 3);
   return path(`M ${p(a0, 0.4)} L ${steps.map((a) => p(a, 0.95)).join(' L ')} L ${p(a1, 0.4)} Z`, { f, ...DETAIL });
 }
+
+/** One songpyeon, a plump half-moon rice cake, centred on (x, y). */
+const songpyeon = (x: number, y: number, f: WordArtTone): WordArtShape => blob(pts(x - 11, y + 3, x - 8, y - 5, x, y - 8, x + 8, y - 5, x + 11, y + 3, x, y + 5), { f, ...INK });
+
+/** A filled dot of radius r as one closed sub-path, so a board's stations are a single shape. */
+const dot = (x: number, y: number, r: number): string => `M ${n(x - r)} ${n(y)} A ${n(r)} ${n(r)} 0 1 0 ${n(x + r)} ${n(y)} A ${n(r)} ${n(r)} 0 1 0 ${n(x - r)} ${n(y)} Z`;
+
+/** The 29 stations of a yut board centred on (cx, cy): 20 round the ring (the four corners larger), two on each spoke, the centre. */
+function yutStations(cx: number, cy: number, r: number): string {
+  const at = (deg: number, rr: number): [number, number] => [cx + rr * Math.cos((deg * Math.PI) / 180), cy + rr * Math.sin((deg * Math.PI) / 180)];
+  const ring = Array.from({ length: 20 }, (_, i) => dot(...at(i * 18 - 90, r), i % 5 === 0 ? 3.2 : 2));
+  const spokes = [0, 90, 180, 270].flatMap((a) => [dot(...at(a - 90, r / 3), 2), dot(...at(a - 90, (2 * r) / 3), 2)]);
+  return [...ring, ...spokes, dot(cx, cy, 3.2)].join(' ');
+}
+
+/** One yut stick from a to b: the flat face up (pale, with its three marks) or the round back up (brown). */
+function yutStick(a: Pt, b: Pt, flat: boolean): WordArtShape[] {
+  if (!flat) return [limb(a, b, 8, { f: 'vocab.brown', ...INK })];
+  const at = (t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const marks = [0.3, 0.5, 0.7].map((t) => at(t)).map(([x, y]) => `M ${n(x - 1.8)} ${n(y - 1.8)} L ${n(x + 1.8)} ${n(y + 1.8)} M ${n(x + 1.8)} ${n(y - 1.8)} L ${n(x - 1.8)} ${n(y + 1.8)}`);
+  return [limb(a, b, 8, { f: 'feedback.nudgeLight', ...INK }), path(marks.join(' '), DETAIL)];
+}
+
+/** A point on the gayageum: `t` along the body from the head (0) to the tail (1), `w` units across it. */
+const gaya = (t: number, w: number): Pt => [20 + 60 * t + 0.514 * w, 72 - 36 * t + 0.857 * w];
+/** Where its strings lie across the body: four, drawn bold (a real gayageum has twelve). */
+const GAYA_STRINGS = [-9, -3, 3, 9] as const;
 
 /** A rice-cake piece (garae-tteok, a short white cylinder) lying from a to b. */
 const tteok = (a: readonly [number, number], b: readonly [number, number]): WordArtShape => limb(a, b, 7.5, { f: 'vocab.white', ...DETAIL });
@@ -137,5 +166,76 @@ export const CULTURE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     rect(20, 28, 60, 40, 4, { f: 'brand.secondary', ...DETAIL }),
     poly(pts(43, 37, 61, 48, 43, 59), { f: 'surface.paper', ...DETAIL }, 2),
     line(14, 84, 86, 84, INK),
+  ],
+
+  // [PX-1] a hanbok laid out flat: a yellow jeogori (top) with its white collar and the long blue goreum tie, wide
+  // sleeves with blue cuffs, and a full red chima (skirt)
+  'culture-hanbok': [
+    groundShadow(50, 87, 34),
+    path('M 37 42 Q 26 60 18 82 Q 50 91 82 82 Q 74 60 63 42 Z', { f: 'vocab.red', ...INK }),
+    path('M 40 50 L 33 84 M 60 50 L 67 84', DETAIL),
+    path('M 41 17 L 28 22 L 12 37 L 18 50 Q 28 46 34 38 V 48 H 66 V 38 Q 72 46 82 50 L 88 37 L 72 22 L 59 17 L 50 27 Z', { f: 'vocab.yellow', ...INK }),
+    poly(pts(12, 37, 18, 50, 23.5, 48.5, 17, 33), { f: 'vocab.blue', ...DETAIL }, 1),
+    poly(pts(88, 37, 82, 50, 76.5, 48.5, 83, 33), { f: 'vocab.blue', ...DETAIL }, 1),
+    poly(pts(41, 17, 45.5, 15.5, 56, 37, 51, 39), { f: 'vocab.white', ...DETAIL }, 1),
+    poly(pts(59, 17, 54.5, 15.5, 49, 25, 52, 30), { f: 'vocab.white', ...DETAIL }, 1),
+    poly(pts(52, 38, 57, 40, 53, 70, 47, 68), { f: 'vocab.blue', ...DETAIL }, 1.5),
+    poly(pts(55, 38, 60, 37, 65, 60, 60, 62), { f: 'vocab.blue', ...DETAIL }, 1.5),
+    rect(50.5, 34.5, 8, 6, 2, { f: 'vocab.blue', ...DETAIL }),
+  ],
+
+  // [PX-1] Seollal (Lunar New Year): a child in hanbok kneels in the deep New Year bow (sebae), head lowered and hands
+  // on the floor, with a lucky pouch (bokjumeoni) for the New Year's money
+  'culture-seollal': [
+    groundShadow(52, 87, 38),
+    path('M 54 85 Q 51 52 71 49 Q 89 51 88 85 Z', { f: 'vocab.red', ...INK }),
+    blob(pts(77, 51, 62, 52, 48, 58, 40, 68, 27, 78, 30, 86, 45, 81, 56, 75, 70, 71, 79, 63), { f: 'vocab.yellow', ...INK }),
+    ellipse(22, 83.5, 6, 3.5, { f: 'surface.paper', ...INK }),
+    circle(33, 64, 11, { f: 'surface.paper', ...INK }),
+    path('M 25.2 56.2 A 11 11 0 0 1 40.8 71.8 Z', { f: 'text.primary', ...INK }),
+    path('M 25 66.5 Q 27.5 69 30 67', DETAIL),
+    circle(26.5, 71.5, 2.5, { f: 'hoya.cheek' }),
+    blob(pts(18, 30, 24, 24, 34, 24, 40, 30, 39, 40, 29, 45, 19, 40), { f: 'vocab.red', ...INK }),
+    path('M 22 26 L 19 17 L 25 20 L 29 15 L 33 20 L 39 17 L 36 26 Z', { f: 'vocab.red', ...INK }),
+    rect(21, 23.5, 16, 4, 2, { f: 'vocab.yellow', ...DETAIL }),
+  ],
+
+  // [PX-1] Chuseok: a plate of songpyeon (half-moon rice cakes in white, pink and green) under the big full harvest moon
+  'culture-chuseok': [
+    groundShadow(50, 87, 36),
+    circle(50, 33, 22, { f: 'vocab.yellow', ...INK }),
+    leaf(35, 26, 33, 38, 3, { f: 'vocab.white', o: 0.55 }),
+    ellipse(50, 74, 38, 11, { f: 'vocab.white', ...INK }),
+    songpyeon(37, 63, 'vocab.pink'),
+    songpyeon(63, 63, 'vocab.green'),
+    songpyeon(26, 72, 'vocab.white'),
+    songpyeon(74, 72, 'vocab.pink'),
+    songpyeon(50, 73, 'vocab.white'),
+  ],
+
+  // [PX-1] yut game: the round board with its ring of stations and the cross inside, and the four half-round sticks
+  // thrown beside it, three flat faces up and one round back up
+  'culture-yutnori': [
+    groundShadow(50, 87, 36),
+    circle(41, 42, 28, { f: 'feedback.nudgeLight', ...INK }),
+    path(yutStations(41, 42, 21.5), { f: 'text.primary' }),
+    ...yutStick([30, 80], [60, 74], true),
+    ...yutStick([62, 60], [83, 42], true),
+    ...yutStick([50, 86], [82, 81], false),
+    ...yutStick([66, 73], [85, 62], true),
+  ],
+
+  // [PX-1] gayageum: the long wooden zither at a slight angle, four bold strings each over its own movable bridge
+  // (anjok) set in a slanting row, the fixed bridge at the head and the coiled tail cords
+  'culture-gayageum': [
+    groundShadow(50, 86, 36),
+    poly([gaya(0, -14), gaya(1, -12), gaya(1, 12), gaya(0, 14)], { f: 'stage.stage2', ...INK }, 5),
+    poly([gaya(0.06, -14), gaya(0.12, -13.8), gaya(0.12, 13.8), gaya(0.06, 14)], { f: 'vocab.brown', ...DETAIL }),
+    path(GAYA_STRINGS.map((w) => `M ${gaya(0.12, w).map(n).join(' ')} L ${gaya(0.84, w).map(n).join(' ')}`).join(' '), INK),
+    ...GAYA_STRINGS.map((w, i) => {
+      const [x, y] = gaya(0.26 + 0.15 * i, w);
+      return poly(pts(x - 5.5, y + 3, x - 0.5, y - 9, x + 5, y - 0.5), { f: 'vocab.white', ...DETAIL }, 1);
+    }),
+    ...GAYA_STRINGS.map((w) => circle(...gaya(0.91, w), 3.4, { f: 'vocab.white', ...DETAIL })),
   ],
 };

@@ -63,7 +63,7 @@ const SCHOOL: Row[] = [
   { id: 'vocab:hakgyo', ko: '학교', romanization: 'hakgyo', en: 'school', es: 'escuela', visual: 'word:school-school', level: 1 },
   { id: 'vocab:seonsaengnim', ko: '선생님', romanization: 'seonsaengnim', en: 'teacher', es: 'maestro o maestra', visual: 'word:school-teacher', level: 2, note: { en: 'Also how you address a teacher; the ending nim shows respect.', es: 'También se usa para dirigirse a un maestro o una maestra; el sufijo nim muestra respeto.' } },
   { id: 'vocab:chingu', ko: '친구', romanization: 'chingu', en: 'friend', es: 'amigo o amiga', visual: 'word:school-friend', level: 1 },
-  { id: 'vocab:chaek', ko: '책', romanization: 'chaek', en: 'book', es: 'libro', visual: 'card:book', level: 1 },
+  { id: 'vocab:chaek', ko: '책', romanization: 'chaek', en: 'book', es: 'libro', visual: 'word:school-book', level: 1 },
   { id: 'vocab:yeonpil', ko: '연필', romanization: 'yeonpil', en: 'pencil', es: 'lápiz', visual: 'word:school-pencil', level: 1 },
   { id: 'vocab:gabang', ko: '가방', romanization: 'gabang', en: 'bag', es: 'bolsa o mochila', visual: 'word:school-bag', level: 1 },
   { id: 'vocab:gongchaek', ko: '공책', romanization: 'gongchaek', en: 'notebook', es: 'cuaderno', visual: 'word:school-notebook', level: 1 },
@@ -90,11 +90,11 @@ const BODY: Row[] = [
 ];
 
 const NATURE: Row[] = [
-  { id: 'vocab:san', ko: '산', romanization: 'san', en: 'mountain', es: 'montaña', visual: 'card:mountain', level: 1 },
-  { id: 'vocab:bada', ko: '바다', romanization: 'bada', en: 'sea', es: 'mar', visual: 'card:sea', level: 1 },
+  { id: 'vocab:san', ko: '산', romanization: 'san', en: 'mountain', es: 'montaña', visual: 'word:nature-mountain', level: 1 },
+  { id: 'vocab:bada', ko: '바다', romanization: 'bada', en: 'sea', es: 'mar', visual: 'word:nature-sea', level: 1 },
   { id: 'vocab:haneul', ko: '하늘', romanization: 'haneul', en: 'sky', es: 'cielo', visual: 'word:nature-sky', level: 1 },
   { id: 'vocab:hae-sun', ko: '해', romanization: 'hae', en: 'sun', es: 'sol', visual: 'word:nature-sun', level: 1, senseGroup: 'hae' },
-  { id: 'vocab:dal-moon', ko: '달', romanization: 'dal', en: 'moon', es: 'luna', visual: 'card:moon', level: 1, senseGroup: 'dal' },
+  { id: 'vocab:dal-moon', ko: '달', romanization: 'dal', en: 'moon', es: 'luna', visual: 'word:nature-moon', level: 1, senseGroup: 'dal' },
   { id: 'vocab:byeol', ko: '별', romanization: 'byeol', en: 'star', es: 'estrella', visual: 'word:nature-star', level: 1 },
   { id: 'vocab:namu', ko: '나무', romanization: 'namu', en: 'tree', es: 'árbol', visual: 'word:nature-tree', level: 1 },
   { id: 'vocab:kkot', ko: '꽃', romanization: 'kkot', en: 'flower', es: 'flor', visual: 'word:nature-flower', level: 1 },
@@ -294,10 +294,11 @@ describe('topic-specific rules', () => {
     expect(file.items.filter((i) => i.pos === 'pronoun').map((i) => i.id)).toEqual(['vocab:na']);
   });
 
-  it('School: eleven drawn school glyphs and exactly one card (the book)', () => {
+  // AMENDMENTS-PICTURES-2026-11 row PX-1: the book has its own glyph
+  it('School: twelve drawn school glyphs, the book included (no card picture)', () => {
     const file = parse('school');
-    expect(file.items.filter((i) => i.visual.startsWith('word:school-')).length).toBe(11);
-    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual(['card:book']);
+    expect(file.items.filter((i) => i.visual.startsWith('word:school-')).length).toBe(12);
+    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual([]);
     expect(file.items.every((i) => i.senseGroup === undefined)).toBe(true);
   });
 
@@ -313,10 +314,12 @@ describe('topic-specific rules', () => {
     ]);
   });
 
-  it('Nature: exactly three card pictures (mountain, sea, moon) and the rest drawn nature glyphs', () => {
+  // AMENDMENTS-PICTURES-2026-11 row PX-1: the mountain, the sea and the moon have their own glyphs
+  it('Nature: every picture is a drawn nature glyph, the mountain, the sea and the moon included (no card picture)', () => {
     const file = parse('nature');
-    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual(['card:mountain', 'card:sea', 'card:moon']);
-    expect(file.items.filter((i) => !i.visual.startsWith('card:')).every((i) => i.visual.startsWith('word:nature-'))).toBe(true);
+    expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual([]);
+    expect(file.items.every((i) => i.visual.startsWith('word:nature-'))).toBe(true);
+    expect(['vocab:san', 'vocab:bada', 'vocab:dal-moon'].map((id) => file.items.find((i) => i.id === id)?.visual)).toEqual(['word:nature-mountain', 'word:nature-sea', 'word:nature-moon']);
     expect(file.items.filter((i) => i.senseGroup !== undefined).map((i) => [i.id, i.senseGroup])).toEqual([
       ['vocab:hae-sun', 'hae'],
       ['vocab:dal-moon', 'dal'],

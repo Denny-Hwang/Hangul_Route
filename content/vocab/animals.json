@@ -28,7 +28,7 @@
         "animals"
       ],
       "level": 2,
-      "visual": "card:tiger"
+      "visual": "word:animal-tiger"
     },
     {
       "id": "vocab:goyangi",

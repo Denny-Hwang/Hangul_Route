@@ -20,7 +20,9 @@ describe('supportedCardIds (card-ids.ts)', () => {
     for (const id of supportedCardIds) expect(id).toMatch(/^card:[a-z0-9-]+$/);
   });
 
-  it('includes the 13 card arts vocabulary reuses (F-VOC-002 §3.11)', () => {
+  // The cards and their ids are untouched by AMENDMENTS-PICTURES-2026-11 PX-1: the 13 words got their own glyphs
+  // (rule R6), and these cards stay collectibles and lesson pictures.
+  it('still draws the 13 card arts vocabulary words borrowed until row PX-1 (F-VOC-002 §3.11)', () => {
     const reused = [
       'card:rice',
       'card:kimchi',

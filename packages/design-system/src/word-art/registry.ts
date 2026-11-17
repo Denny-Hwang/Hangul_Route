@@ -43,18 +43,20 @@ export const WORD_ART_FAMILIES: readonly WordArtFamily[] = Object.freeze([
 export const WORD_ART_KEY_RE = new RegExp(`^(${WORD_ART_FAMILIES.join('|')})-[a-z0-9-]+$`);
 
 /**
- * Planned glyphs per family (F-VOC-001 §3.4 counts; F-VOC-002 §3.8): 95 hand + 4 props + 36 generated.
+ * Planned glyphs per family (F-VOC-001 §3.4 counts; F-VOC-002 §3.8): 108 hand + 4 props + 36 generated.
  * A `reserved` key (a lesson picture outside the vocabulary topics) is not counted.
+ * AMENDMENTS-PICTURES-2026-11 row PX-1 added 13 hand glyphs (95 before): the words that borrowed a heritage card
+ * picture now have their own (food +3, animal +1, school +1, nature +3, culture +5), so every family is 12.
  */
 export const WORD_ART_PLAN: Readonly<Record<WordArtFamily, number>> = Object.freeze({
-  food: 9,
-  animal: 11,
+  food: 12,
+  animal: 12,
   family: 12,
-  school: 11,
-  nature: 9,
+  school: 12,
+  nature: 12,
   travel: 12,
   sport: 12,
-  culture: 7,
+  culture: 12,
   science: 12,
   color: 12,
   count: 12,
@@ -103,6 +105,12 @@ const META: WordArtMetaOverrides = {
   // batch W-6: travel, sport, K-Culture and science, approved by the batch review that stands in for the owner's (2026-10-11)
   ...Object.fromEntries([...['airplane', 'train', 'taxi', 'subway', 'car', 'boat', 'map', 'passport', 'ticket', 'airport', 'hotel'].map((k) => `travel-${k}`), ...['baseball', 'basketball', 'volleyball', 'tabletennis', 'swimming', 'taekwondo', 'running', 'jumprope', 'bicycle', 'skiing', 'ball'].map((k) => `sport-${k}`), ...['hangul', 'hanok', 'bibimbap', 'tteokbokki', 'song', 'dance', 'drama'].map((k) => `culture-${k}`), ...['fire', 'ice', 'stone', 'magnet', 'earth', 'space', 'robot', 'seed', 'shadow', 'wind', 'light'].map((k) => `science-${k}`)].map((k) => [k, { status: 'approved' }])),
   'science-rainbow': { status: 'approved', maxTones: 7, reason: 'A rainbow needs its six arc colours, and the two clouds at its feet are a seventh, white (§3.12 brief: six arcs, two clouds).' },
+  // batch PX-1 (AMENDMENTS-PICTURES-2026-11): the 13 words that borrowed a heritage card picture get their own glyph, and
+  // five glyphs get a second cue. All 18 wait for the owner's or a teacher's look at the sheet, so the five redrawn
+  // ones go back from `approved` to `review` (they are listed after the W-3 to W-6 lines above, so this status wins).
+  ...Object.fromEntries(
+    ['food-rice', 'food-kimchi', 'food-kimbap', 'animal-tiger', 'school-book', 'nature-mountain', 'nature-sea', 'nature-moon', 'culture-hanbok', 'culture-seollal', 'culture-chuseok', 'culture-yutnori', 'culture-gayageum', 'food-egg', 'food-tteok', 'science-shadow', 'science-seed', 'nature-cloud'].map((k) => [k, { status: 'review' }]),
+  ),
   // lesson pictures outside the vocabulary topics (Stage 2 Playground Words, F-CURR-001 S2-3): reserved, so outside the family plan
   ...Object.fromEntries(['sport-swing', 'sport-slide', 'nature-sand'].map((k) => [k, { status: 'approved', reserved: true }])),
 };

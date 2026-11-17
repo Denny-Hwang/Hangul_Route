@@ -34,6 +34,9 @@ import type { WordArtFamily } from '../types';
  * parts, so animal and body left the map.
  * Batch W-5 drew family, school and nature, so they left the map.
  * Batch W-6 drew travel, sport, culture and science, so they left the map.
+ * AMENDMENTS-PICTURES-2026-11 row PX-1 drew the 13 words that used a card
+ * picture (three food, the tiger, the book, three nature, five K-Culture), so
+ * no topic word has a `card:` visual any more (rule R6).
  */
 interface Awaiting {
   /** The PR that draws the family (F-VOC-002 §6). */
@@ -75,9 +78,15 @@ describe('content/vocab against the registry', () => {
     for (const item of wordRefs) expect(wordArtKeyOf(item.visual), `${item.file} ${item.id}`).not.toBeNull();
   });
 
-  it('every card: visual is a drawn heritage card (supportedCardIds)', () => {
-    expect(cardRefs.length).toBeGreaterThan(0);
+  it('no word borrows a heritage card picture: every visual is a word: glyph (AMENDMENTS-PICTURES-2026-11 rule R6)', () => {
+    expect(cardRefs.map((i) => `${i.file} ${i.id} ${i.visual}`)).toEqual([]);
+    expect(wordRefs).toHaveLength(items.length);
+  });
+
+  it('a card: visual, should the exit route of §3.11 ever be walked back, must be a drawn heritage card', () => {
+    // the check that held the 13 launch reuses; kept so the card: path of picture-ref stays guarded
     for (const item of cardRefs) expect(supportedCardIds, `${item.file} ${item.id}`).toContain(item.visual);
+    expect(supportedCardIds).toContain('card:kimchi');
   });
 
   it('every word: visual resolves, except in a family still waiting for its batch', () => {

@@ -28,7 +28,7 @@
         "k-culture"
       ],
       "level": 1,
-      "visual": "card:hanbok",
+      "visual": "word:culture-hanbok",
       "senseNote": "Often worn on holidays such as Seollal and Chuseok."
     },
     {
@@ -91,7 +91,7 @@
         "k-culture"
       ],
       "level": 1,
-      "visual": "card:seollal",
+      "visual": "word:culture-seollal",
       "senseNote": "Many people wear hanbok and bow to their elders."
     },
     {
@@ -104,7 +104,7 @@
         "k-culture"
       ],
       "level": 1,
-      "visual": "card:chuseok",
+      "visual": "word:culture-chuseok",
       "senseNote": "Families gather and share songpyeon, half-moon rice cakes."
     },
     {
@@ -117,7 +117,7 @@
         "k-culture"
       ],
       "level": 2,
-      "visual": "card:yutnori",
+      "visual": "word:culture-yutnori",
       "senseNote": "Players throw four wooden sticks, often at Lunar New Year."
     },
     {
@@ -130,7 +130,7 @@
         "k-culture"
       ],
       "level": 2,
-      "visual": "card:gayageum",
+      "visual": "word:culture-gayageum",
       "senseNote": "A long string instrument, plucked with the fingers."
     },
     {

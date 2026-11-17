@@ -16,9 +16,9 @@ describe('batch W-4 (§3.12)', () => {
     for (const key of W4_ANIMALS) expect(WORD_ART[key]?.meta, key).toEqual({ family: 'animal', status: 'approved' });
   });
 
-  it('completes the animal family: the W-1b cat, the W-3 bear and elephant and the eight of W-4', () => {
+  it('completes the animal family: the W-1b cat, the W-3 bear and elephant, the eight of W-4 and the PX-1 tiger', () => {
     const animals = WORD_ART_KEYS.filter((k) => k.startsWith('animal-')).sort();
-    expect(animals).toEqual(['animal-cat', 'animal-bear', 'animal-elephant', ...W4_ANIMALS].sort());
+    expect(animals).toEqual(['animal-cat', 'animal-bear', 'animal-elephant', 'animal-tiger', ...W4_ANIMALS].sort());
   });
 
   it('registers the twelve body parts as the generator draws them, approved after review', () => {

@@ -5,7 +5,7 @@
  */
 import { blob, circle, curve, face, groundShadow, leaf, line, path, poly, pts, rect, star } from '../builders';
 import type { WordArtGlyph, WordArtShape, WordArtTone } from '../types';
-import { limb } from './pose';
+import { head, limb } from './pose';
 
 const INK = { s: 'text.primary', sw: 3 } as const;
 const DETAIL = { s: 'text.primary', sw: 2 } as const;
@@ -106,13 +106,19 @@ export const SCIENCE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ...face(50, 35, 0.75),
   ],
 
-  // seed with a green sprout, on a little mound of soil
+  // [PX-1] seeds are the subject: three brown seeds, the big one in front just splitting, with a tiny root and its first leaf
   'science-seed': [
-    path('M 16 80 Q 50 58 84 80 Z', { f: 'hoya.furDark', ...INK }),
-    curve(pts(50, 70, 49, 58, 50, 44), { s: 'vocab.green', sw: 3 }),
-    leaf(50, 47, 32, 36, 7, { f: 'vocab.green', ...INK }),
-    leaf(50, 45, 68, 32, 7, { f: 'vocab.green', ...INK }),
-    blob(pts(41, 72, 50, 66, 60, 70, 58, 76, 46, 77), { f: 'stage.stage2', ...INK }),
+    groundShadow(50, 86, 34),
+    blob(pts(14, 76, 18, 68, 28, 66, 36, 71, 34, 80, 24, 83), { f: 'vocab.brown', ...INK }),
+    leaf(19, 73, 28, 70, 1.8, HIGHLIGHT),
+    blob(pts(66, 72, 74, 66, 84, 68, 88, 76, 82, 83, 70, 81), { f: 'vocab.brown', ...INK }),
+    leaf(72, 72, 80, 71, 1.8, HIGHLIGHT),
+    curve(pts(50, 60, 48, 69, 53, 76, 50, 83), INK),
+    curve(pts(50, 26, 52, 21, 58, 18), INK),
+    leaf(57, 19, 72, 17, 4, { f: 'vocab.green', ...INK }),
+    blob(pts(50, 22, 64, 26, 71, 40, 66, 54, 50, 62, 34, 54, 29, 40, 36, 26), { f: 'vocab.brown', ...INK }),
+    path('M 50 22 L 47 30 L 52 36 L 49 43', DETAIL),
+    leaf(37, 36, 37, 50, 3, HIGHLIGHT),
   ],
 
   // six arcs and two clouds (the six arc colours and the cloud white: allowance of 7, see the registry)
@@ -123,13 +129,15 @@ export const SCIENCE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ...cloud(72, 66),
   ],
 
-  // ball and its long gray shadow, the sun behind
+  // [PX-1] a person standing in the sun and the long gray shadow they cast on the ground: the shadow is the subject
   'science-shadow': [
-    path('M 40 72 Q 60 65 84 69 Q 85 77 64 78 Q 44 79 40 72 Z', { f: 'vocab.gray', ...INK }),
-    circle(24, 28, 7, { f: 'vocab.yellow', ...INK }),
-    path('M 24 15 V 17.5 M 37 28 H 34.5 M 11 28 H 13.5 M 33 19 L 31.5 20.5 M 15 19 L 16.5 20.5 M 15 37 L 16.5 35.5 M 33 37 L 31.5 35.5', { s: 'vocab.orange', sw: 3 }),
-    circle(38, 58, 15, { f: 'brand.primary', ...INK }),
-    leaf(30, 50, 36, 46, 2.5, HIGHLIGHT),
+    path('M 38 77 L 50 73 L 77 76 Q 84.5 78 83 82 Q 80 85 72 84 L 40 81 Z', { f: 'vocab.gray', ...INK }),
+    circle(22, 22, 8, { f: 'vocab.yellow', ...INK }),
+    path('M 22 8 V 10.5 M 36 22 H 33.5 M 8 22 H 10.5 M 31.9 12.1 L 30.1 13.9 M 12.1 12.1 L 13.9 13.9 M 12.1 31.9 L 13.9 30.1 M 31.9 31.9 L 30.1 30.1', { s: 'vocab.orange', sw: 3 }),
+    limb([41, 62], [40, 78], 7, { f: 'text.primary', ...INK }),
+    limb([51, 62], [52, 76], 7, { f: 'text.primary', ...INK }),
+    poly(pts(37, 42, 55, 42, 57, 64, 35, 64), { f: 'brand.primary', ...INK }, 5),
+    ...head(46, 31, 10, 'text.primary'),
   ],
 
   // three swirls and a leaf
