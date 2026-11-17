@@ -669,39 +669,26 @@ function MagpieArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement
   );
 }
 
-function MugunghwaArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // 5-petal pink flower with purple center on green stem.
+function MugunghwaArt(p: ArtProps): ReactElement {
+  // Rose of Sharon: five pink petals, each with the dark red eye radiating up from the centre, the long pale stamen
+  // column, two lobed leaves.
+  const turns = [0, 72, 144, 216, 288];
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="nature">
-        {/* Stem */}
-        <Path d="M100 170 Q98 150 100 130 Q102 120 100 110" stroke={colors.theme.nature} strokeWidth={4} fill="none" strokeLinecap="round" />
-        {/* Leaves */}
-        <Path d="M100 150 Q88 142 78 148" stroke={colors.theme.nature} strokeWidth={3} fill={colors.theme.nature} strokeLinejoin="round" />
-        <Path d="M100 140 Q112 134 124 138" stroke={colors.theme.nature} strokeWidth={3} fill={colors.theme.nature} strokeLinejoin="round" />
-        {/* 5 petals around center */}
-        <G fill={colors.hoya.cheek} stroke={colors.brand.primaryDark} strokeWidth={1.5} strokeLinejoin="round">
-          {/* Top petal */}
-          <Ellipse cx={100} cy={55} rx={14} ry={22} />
-          {/* Top-right petal (72° rotation) */}
-          <Ellipse cx={130} cy={75} rx={14} ry={22} transform="rotate(72 130 75)" />
-          {/* Bottom-right petal (144°) */}
-          <Ellipse cx={122} cy={108} rx={14} ry={22} transform="rotate(144 122 108)" />
-          {/* Bottom-left petal (216°) */}
-          <Ellipse cx={78} cy={108} rx={14} ry={22} transform="rotate(216 78 108)" />
-          {/* Top-left petal (288°) */}
-          <Ellipse cx={70} cy={75} rx={14} ry={22} transform="rotate(288 70 75)" />
-        </G>
-        {/* Center — deep purple */}
-        <Circle cx={100} cy={80} r={12} fill={colors.theme.rites} stroke={colors.brand.primaryDark} strokeWidth={1.5} />
-        {/* Stamen dots */}
-        <G fill={colors.feedback.nudge}>
-          <Circle cx={97} cy={76} r={2} />
-          <Circle cx={103} cy={76} r={2} />
-          <Circle cx={100} cy={83} r={2} />
-        </G>
-      </Frame>
-    </Svg>
+    <Card theme="nature" p={p}>
+      <Path d="M100 140V190" stroke={colors.vocab.green} strokeWidth={8} strokeLinecap="round" />
+      <Path d="M100 168Q80 150 52 160Q40 150 26 162Q42 176 60 172Q78 184 100 170Z" fill={colors.vocab.green} {...INK} />
+      <Path d="M102 160Q124 140 150 150Q160 138 176 148Q164 164 146 164Q126 176 102 160Z" fill={colors.vocab.green} {...INK} />
+      {turns.map((a) => (
+        <Ellipse key={a} cx={100} cy={46} rx={28} ry={36} fill={colors.vocab.pink} {...INK} transform={`rotate(${a} 100 82)`} />
+      ))}
+      <Circle cx={100} cy={82} r={20} fill={colors.vocab.red} />
+      {turns.map((a) => (
+        <Path key={a} d="M100 82L94 54L100 46L106 54Z" fill={colors.vocab.red} transform={`rotate(${a} 100 82)`} />
+      ))}
+      <Path d="M100 82L124 42" stroke={colors.text.primary} strokeWidth={12} strokeLinecap="round" />
+      <Path d="M100 82L124 42" stroke={colors.vocab.white} strokeWidth={5} strokeLinecap="round" />
+      <Circle cx={125} cy={40} r={7} fill={colors.vocab.yellow} {...DET} />
+    </Card>
   );
 }
 
@@ -736,36 +723,16 @@ function SeaArt(p: ArtProps): ReactElement {
   );
 }
 
-function MoonArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Full cream moon with 3 crater shadows + purple sky + 5 stars.
+function MoonArt(p: ArtProps): ReactElement {
+  // Dal: a crescent moon in the night sky with stars and a small cloud across its lower horn (the full moon belongs
+  // to the harvest cards, the sun to the sea and the mountain).
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      {/* Deep night sky */}
-      <Rect x={0} y={0} width={200} height={200} fill={colors.theme.rites} opacity={0.18} rx={8} />
-      {/* Stars */}
-      <G fill={colors.feedback.nudge}>
-        <Circle cx={40} cy={40} r={2} />
-        <Circle cx={170} cy={50} r={2.5} />
-        <Circle cx={30} cy={140} r={1.5} />
-        <Circle cx={160} cy={150} r={2} />
-        <Circle cx={70} cy={170} r={1.5} />
-      </G>
-      {/* Sparkle accents around stars */}
-      <G fill={colors.feedback.nudge} opacity={0.6}>
-        <Path d="M40 32 L42 40 L40 48 L38 40 Z" />
-        <Path d="M170 42 L172 50 L170 58 L168 50 Z" />
-      </G>
-      {/* Moon glow */}
-      <Circle cx={100} cy={100} r={60} fill={colors.feedback.nudge} opacity={0.25} />
-      {/* Moon body */}
-      <Circle cx={100} cy={100} r={50} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} />
-      {/* Crater shadows */}
-      <G fill={colors.text.muted} opacity={0.5}>
-        <Circle cx={85} cy={88} r={8} />
-        <Circle cx={115} cy={108} r={6} />
-        <Circle cx={92} cy={120} r={5} />
-      </G>
-    </Svg>
+    <Card theme="nature" p={p}>
+      <Rect x={0} y={0} width={200} height={200} rx={8} fill={colors.brand.secondaryDark} />
+      <Path d="M112 24A76 76 0 1 0 176 128A60 60 0 0 1 112 24Z" fill={colors.vocab.yellow} {...INK} />
+      <Path d={sparkle(148, 56, 16) + sparkle(176, 90, 10) + sparkle(36, 34, 9)} fill={colors.vocab.white} {...DET} />
+      <Path d="M86 178Q78 160 96 156Q102 140 120 146Q134 136 146 150Q164 150 160 168Q160 180 146 180Z" fill={colors.brand.secondaryLight} {...INK} />
+    </Card>
   );
 }
 
