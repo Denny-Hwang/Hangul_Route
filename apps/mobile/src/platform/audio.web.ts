@@ -13,6 +13,7 @@ import {
   type WebVoiceLike,
 } from '../logic/audio/capability';
 import {
+  FIRST_UTTERANCE_DEFER_MS,
   classifySpeechError,
   clipRefsFor,
   createAudioController,
@@ -96,6 +97,8 @@ export interface WebAudioEnv {
   now?: () => number;
   /** `navigator.userActivation.isActive`: the page is inside a user activation; null where the browser has no such API. */
   userActive?: () => boolean | null;
+  /** [QS-5] The start room of the voice's first utterance after a pause; default `FIRST_UTTERANCE_DEFER_MS`. */
+  firstUtteranceDeferMs?: number;
 }
 
 export interface WebClipSetup {
@@ -435,6 +438,8 @@ export function createWebAudio(env: WebAudioEnv) {
     isMuted: () => store.getState().muted,
     levelOrder: () => store.getState().levelOrder,
     platform: 'web',
+    // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-5: the voice's first utterance after a pause gets start room.
+    firstUtteranceDeferMs: env.firstUtteranceDeferMs ?? FIRST_UTTERANCE_DEFER_MS,
     emit: (event) => {
       void track({ name: event.name, payload: { ...event.payload } });
     },

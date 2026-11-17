@@ -35,6 +35,7 @@ vi.mock('../telemetry', () => ({
 
 import { useAudioStore } from '../../store/audio-store';
 import { createWebAudio, type WebAudioEnv } from '../audio.web';
+import { FIRST_UTTERANCE_DEFER_MS } from '../../logic/audio/controller';
 
 /**
  * The suites that reset the module registry and import the module again (the default instance is made when the
@@ -129,6 +130,8 @@ function rig(
     clips?: ClipRigOptions;
     /** `navigator.userActivation.isActive` as the browser reports it (absent: a browser with no such API). */
     userActive?: () => boolean | null;
+    /** The voice's start room (QS-5); absent, 0 here (the engine timings below start from the speak itself). */
+    firstUtteranceDeferMs?: number;
   } = {},
 ): Rig {
   const synth = new FakeSpeechSynthesis();
@@ -143,7 +146,10 @@ function rig(
     doc: doc as unknown as WebAudioEnv['doc'],
     win: win as unknown as WebAudioEnv['win'],
     isOnline: () => online.value,
+    // The engine timings these tests pin start from the speak itself; the voice's start room (QS-5) has its own tests.
+    firstUtteranceDeferMs: 0,
   };
+  if (opts.firstUtteranceDeferMs !== undefined) env.firstUtteranceDeferMs = opts.firstUtteranceDeferMs;
   if (opts.userActive) env.userActive = opts.userActive;
   if (opts.clips) {
     const refs = new Set(opts.clips.refs ?? [GIYEOK_CLIP]);
@@ -1552,5 +1558,36 @@ describe('platform/audio.web: hasVoiceFor (F-PLC-001 section 3.1 step 2)', () =>
     await flush();
     expect(audio.hasVoiceFor('en-US')).toBe(false);
     audio.dispose();
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-5: the speech voice gets the same start room as a clip. */
+describe('platform/audio.web: the voice\'s start room (QS-5)', () => {
+  it('the first utterance after the engine was idle is spoken 150 ms after it is asked for', async () => {
+    vi.useFakeTimers();
+    const r = rig({ firstUtteranceDeferMs: FIRST_UTTERANCE_DEFER_MS });
+    r.synth.fireVoicesChanged();
+    const p = r.audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS - 1);
+    expect(r.synth.spoken).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.synth.spoken.map((u) => u.text)).toEqual(['가']);
+    await expect(p).resolves.toBe('played');
+    r.audio.dispose();
+  });
+
+  it('the tap that unlocks speech is not held back: its prompt reaches the engine inside the gesture', async () => {
+    vi.useFakeTimers();
+    const r = rig({ firstUtteranceDeferMs: FIRST_UTTERANCE_DEFER_MS, requireGesture: true });
+    r.synth.fireVoicesChanged();
+    r.audio.installGestureUnlock();
+    // One tap: the unlock listener runs first (capture), then the speaker's own handler asks for the prompt.
+    r.synth.markUserGesture();
+    r.doc.dispatchEvent(new Event('touchend'));
+    void r.audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(r.synth.dropped).toEqual([]);
+    expect(r.synth.spoken.map((u) => u.text)).toContain('가');
+    r.audio.dispose();
   });
 });

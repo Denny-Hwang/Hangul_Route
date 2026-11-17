@@ -8,7 +8,9 @@ import {
   type NetworkLike,
 } from '../capability';
 import {
+  FIRST_UTTERANCE_DEFER_MS,
   PACK_WAIT_MS,
+  SPEECH_IDLE_AFTER_MS,
   classifySpeechError,
   createAudioController,
   type AudioController,
@@ -201,7 +203,7 @@ interface Rig {
   };
 }
 
-function rig(opts: { voices?: VoiceCandidate[] | 'unknown'; engine?: boolean; clips?: boolean; keepInitial?: boolean } = {}): Rig {
+function rig(opts: { voices?: VoiceCandidate[] | 'unknown'; engine?: boolean; clips?: boolean; keepInitial?: boolean; firstUtteranceDeferMs?: number } = {}): Rig {
   const engine = new ScriptEngine();
   const clips = new ScriptClips();
   const tracker = createCapabilityTracker({ online: true, clips: false });
@@ -232,6 +234,7 @@ function rig(opts: { voices?: VoiceCandidate[] | 'unknown'; engine?: boolean; cl
     platform: 'web',
     emit: (e) => events.push(e),
     reportFailure: (r) => failures.push(r),
+    ...(opts.firstUtteranceDeferMs === undefined ? {} : { firstUtteranceDeferMs: opts.firstUtteranceDeferMs }),
   });
   if (opts.keepInitial !== true) events.length = 0;
   return { ctl, engine, clips, tracker, events, failures, state };
@@ -1631,5 +1634,170 @@ describe('controller: a pack map chunk still on its way (AC-B6)', () => {
     await expect(second).resolves.toBe('played');
     expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
     expect(r.engine.requests).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [QS] AMENDMENTS-QUEST-SOUND-BACK QS-5: the speech voice gets the same start room
+// ---------------------------------------------------------------------------
+
+describe('controller: the first utterance after the engine was idle is deferred 150 ms (QS-5)', () => {
+  const idle = () => rig({ firstUtteranceDeferMs: FIRST_UTTERANCE_DEFER_MS });
+
+  it('the values the amendment names', () => {
+    expect(FIRST_UTTERANCE_DEFER_MS).toBe(150);
+    expect(SPEECH_IDLE_AFTER_MS).toBe(1000);
+  });
+
+  it('the first utterance waits 150 ms, not 50', async () => {
+    const r = idle();
+    const p = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(50);
+    expect(r.engine.requests).toEqual([]);
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS - 51);
+    expect(r.engine.requests).toEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+    await expect(p).resolves.toBe('played');
+    expect(r.failures).toEqual([]);
+  });
+
+  it('the first utterance only: the next line of a chain is spoken at once', async () => {
+    const r = idle();
+    const first = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS);
+    await first;
+    const second = r.ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '나']);
+    await second;
+    // Still inside the idle window a moment later.
+    await vi.advanceTimersByTimeAsync(SPEECH_IDLE_AFTER_MS - 1);
+    void r.ctl.playPrompt({ text: '다' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '나', '다']);
+  });
+
+  it('once the engine has been idle again for a second, the next utterance gets the start room again', async () => {
+    const r = idle();
+    const first = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS);
+    await first;
+    await vi.advanceTimersByTimeAsync(SPEECH_IDLE_AFTER_MS);
+    void r.ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS - 1);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '나']);
+  });
+
+  it('a prompt that supersedes a speaking one keeps the 50 ms after the cancel', async () => {
+    const r = idle();
+    r.engine.script = ['start-only'];
+    void r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS);
+    expect(r.engine.requests).toHaveLength(1);
+    void r.ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(49);
+    expect(r.engine.requests).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가', '나']);
+  });
+
+  it('a prompt superseded during the start room is never spoken, and resolves played', async () => {
+    const r = idle();
+    const first = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(100);
+    const second = r.ctl.playPrompt({ text: '나' });
+    await expect(first).resolves.toBe('played');
+    await vi.advanceTimersByTimeAsync(50);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['나']);
+    await expect(second).resolves.toBe('played');
+    expect(r.failures).toEqual([]);
+  });
+
+  it('stop() during the start room drops the utterance', async () => {
+    const r = idle();
+    const p = r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(100);
+    r.ctl.stop();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(r.engine.requests).toEqual([]);
+    await expect(p).resolves.toBe('played');
+  });
+
+  it("the engine's own warm-up ahead (the tap that unlocks speech): no defer, the prompt reaches the engine at once", async () => {
+    const r = idle();
+    r.engine.warmingFlag = true;
+    void r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+  });
+
+  it('text fallback is unchanged: no Korean voice fails at once, with no wait', async () => {
+    const r = rig({ firstUtteranceDeferMs: FIRST_UTTERANCE_DEFER_MS, voices: [] });
+    await expect(r.ctl.playPrompt({ text: '가' })).resolves.toBe('unavailable');
+    expect(r.failures).toEqual(['no_voice']);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("a clip is not held back by it (its own lead is the player's, QS-1)", async () => {
+    const r = idle();
+    await expect(r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', kind: 'sound' })).resolves.toBe('played');
+    expect(r.clips.played).toEqual(['audio/jamo/giyeok.mp3']);
+    expect(r.engine.requests).toEqual([]);
+  });
+
+  it('a clip that fails falls through to the voice, which then gets its start room', async () => {
+    const r = idle();
+    r.clips.script = ['decode'];
+    const p = r.ctl.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3', kind: 'sound' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS - 1);
+    expect(r.engine.requests).toEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(p).resolves.toBe('played');
+    expect(r.engine.requests.map((q) => q.text)).toEqual(['가']);
+  });
+
+  it('without the setting (a caller that passes none) nothing is deferred, as before', async () => {
+    const r = rig();
+    void r.ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(r.engine.requests).toHaveLength(1);
+  });
+
+  it('reads the clock it was given', async () => {
+    let at = 0;
+    const engine = new ScriptEngine();
+    const tracker = createCapabilityTracker({ online: true, clips: false });
+    tracker.setVoices([YUNA]);
+    const ctl = createAudioController({
+      engine,
+      clips: null,
+      assets: { has: () => false },
+      clipsEnabled: () => false,
+      appVersion: '1.0.0',
+      voices: tracker,
+      isMuted: () => false,
+      levelOrder: () => 1,
+      platform: 'web',
+      emit: () => undefined,
+      reportFailure: () => undefined,
+      firstUtteranceDeferMs: FIRST_UTTERANCE_DEFER_MS,
+      clock: { setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (h) => clearTimeout(h as ReturnType<typeof setTimeout>), now: () => at },
+    });
+    const first = ctl.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS);
+    await first;
+    at = SPEECH_IDLE_AFTER_MS - 1; // the given clock says the engine is not idle yet
+    void ctl.playPrompt({ text: '나' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(engine.requests).toHaveLength(2);
+    at += SPEECH_IDLE_AFTER_MS + 1;
+    void ctl.playPrompt({ text: '다' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(engine.requests).toHaveLength(2);
+    await vi.advanceTimersByTimeAsync(FIRST_UTTERANCE_DEFER_MS);
+    expect(engine.requests).toHaveLength(3);
   });
 });
