@@ -81,61 +81,40 @@ function BookArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   );
 }
 
-function HanjiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Square cream sheet of fibrous paper with slightly torn corner.
+function HanjiArt(p: ArtProps): ReactElement {
+  // Mulberry paper: a sheet with deckled edges and a curled corner over a second sheet, a roll lying in front.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="letters">
-        <Rect x={30} y={30} width={140} height={140} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2.5} rx={6} />
-        {/* Mulberry fibers */}
-        <G stroke={colors.border.subtle} strokeWidth={1.5} strokeLinecap="round">
-          <Line x1={40} y1={50} x2={75} y2={62} />
-          <Line x1={85} y1={45} x2={140} y2={55} />
-          <Line x1={50} y1={90} x2={110} y2={84} />
-          <Line x1={130} y1={100} x2={165} y2={108} />
-          <Line x1={45} y1={130} x2={95} y2={138} />
-          <Line x1={110} y1={148} x2={160} y2={155} />
-          <Line x1={70} y1={70} x2={85} y2={120} />
-          <Line x1={120} y1={70} x2={130} y2={115} />
-        </G>
-        {/* Specks */}
-        <G fill={colors.text.muted}>
-          <Circle cx={60} cy={75} r={1} />
-          <Circle cx={120} cy={130} r={1} />
-          <Circle cx={155} cy={75} r={1} />
-          <Circle cx={80} cy={155} r={1} />
-        </G>
-        {/* Slightly torn top-right corner */}
-        <Path
-          d="M170 30 L150 30 L160 38 L155 48 L170 50 Z"
-          fill={colors.surface.sunken}
-          stroke={colors.text.secondary}
-          strokeWidth={1.5}
-        />
-      </Frame>
-    </Svg>
+    <Card theme="letters" p={p}>
+      {shadow(178, 70)}
+      <Rect x={50} y={30} width={120} height={112} rx={3} fill={colors.surface.sunken} {...INK} transform="rotate(7 110 86)" />
+      <Path
+        d="M28 40q8-6 16 0t16 0t16 0t16 0t16 0t16 0t16 0t14 0q-4 10 0 18t0 18t0 18t0 18L130 140q-12 0-24-2t-24 0t-24 0t-26 0q4-10 0-18t0-18t0-18t0-18t-4-18Z"
+        fill={colors.surface.paper}
+        {...INK}
+      />
+      <Path d="M152 112L130 140Q126 118 152 112Z" fill={colors.surface.sunken} {...DET} />
+      <Path d="M44 60Q62 54 78 64M92 54Q112 50 132 58M52 92Q76 84 98 94M112 86Q128 82 142 90M60 120Q80 114 104 122M70 72Q74 90 70 108M120 66Q126 84 122 104" stroke={colors.border.strong} strokeWidth={4} strokeLinecap="round" fill={NONE} />
+      <Rect x={36} y={146} width={128} height={30} rx={15} fill={colors.surface.paper} {...INK} />
+      <Ellipse cx={149} cy={161} rx={9} ry={15} fill={colors.surface.sunken} {...DET} />
+      <Path d="M149 156Q153 161 149 166" {...DET} fill={NONE} />
+    </Card>
   );
 }
 
-function BrushArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Vertical brush + drop of ink above empty page.
+function BrushArt(p: ArtProps): ReactElement {
+  // A calligraphy brush at a slant: hanging loop, bamboo handle with joints, a long black tip that ends in a point,
+  // and the ink stroke it has just made.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="letters">
-        {/* Page beneath */}
-        <Rect x={50} y={140} width={100} height={36} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2} rx={3} />
-        {/* Brush handle (cream wood) */}
-        <Rect x={92} y={30} width={16} height={70} fill={colors.feedback.nudge} stroke={colors.hoya.furDark} strokeWidth={2} rx={3} />
-        {/* Brush ferrule (metal collar) */}
-        <Rect x={88} y={96} width={24} height={8} fill={colors.text.muted} rx={2} />
-        {/* Brush bristles */}
-        <Path d="M88 104 Q100 110 112 104 L108 134 Q100 138 92 134 Z" fill={colors.text.primary} />
-        {/* Bristle tip */}
-        <Path d="M96 134 Q100 142 104 134 L101 138 Z" fill={colors.text.primary} />
-        {/* Ink drop suspended above page */}
-        <Ellipse cx={100} cy={150} rx={4} ry={6} fill={colors.text.primary} opacity={0.85} />
-      </Frame>
-    </Svg>
+    <Card theme="letters" p={p}>
+      <Path d="M34 172Q70 150 104 168T170 160" stroke={colors.text.primary} strokeWidth={14} strokeLinecap="round" fill={NONE} />
+      <G transform="rotate(34 100 96)">
+        <Circle cx={100} cy={14} r={8} fill={NONE} {...DET} />
+        <Rect x={90} y={22} width={20} height={88} rx={5} fill={colors.hoya.fur} {...INK} />
+        <Path d="M90 50H110M90 80H110" {...DET} />
+        <Rect x={87} y={108} width={26} height={12} rx={3} fill={colors.text.secondary} {...INK} />
+        <Path d="M88 120H112Q122 150 100 186Q78 150 88 120Z" fill={colors.text.primary} {...INK} />
+      </G>
+    </Card>
   );
 }
 
@@ -158,34 +137,20 @@ function InkArt(p: ArtProps): ReactElement {
   );
 }
 
-function OrigamiArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Folded paper crane in dancheong orange, mid-flight.
+function OrigamiArt(p: ArtProps): ReactElement {
+  // A folded paper crane: two raised wings with crease lines, a long neck with the bent beak, a pointed raised tail.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="letters">
-        {/* Floor shadow (suggests flight) */}
-        <Ellipse cx={100} cy={170} rx={36} ry={4} fill={colors.hoya.furDark} opacity={0.15} />
-        {/* Body */}
-        <Path
-          d="M60 110 L100 60 L140 110 L100 130 Z"
-          fill={colors.brand.primary}
-          stroke={colors.brand.primaryDark}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        {/* Right wing crease */}
-        <Path d="M100 60 L120 130" stroke={colors.brand.primaryDark} strokeWidth={1.5} />
-        {/* Left wing crease */}
-        <Path d="M100 60 L80 130" stroke={colors.brand.primaryDark} strokeWidth={1.5} />
-        {/* Tail */}
-        <Path d="M140 110 L165 95 L155 115 Z" fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} strokeLinejoin="round" />
-        {/* Head + beak */}
-        <Path d="M60 110 L40 100 L52 115 Z" fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} strokeLinejoin="round" />
-        <Circle cx={48} cy={108} r={2.5} fill={colors.text.primary} />
-        {/* Belly */}
-        <Path d="M80 130 Q100 138 120 130 L100 145 Z" fill={colors.brand.primaryLight} opacity={0.85} stroke={colors.brand.primaryDark} strokeWidth={1.5} strokeLinejoin="round" />
-      </Frame>
-    </Svg>
+    <Card theme="letters" p={p}>
+      {shadow(178, 54)}
+      <Polygon points="100,120 70,26 124,124" fill={colors.brand.primary} {...INK} />
+      <Polygon points="100,120 150,30 120,130" fill={colors.vocab.orange} {...INK} />
+      <Path d="M98 116L78 52M110 120L140 54" {...DET} stroke={colors.brand.primaryDark} />
+      <Polygon points="58,134 30,66 80,126" fill={colors.vocab.orange} {...INK} />
+      <Polygon points="24,60 44,66 12,86" fill={colors.vocab.orange} {...INK} />
+      <Polygon points="142,134 186,64 120,126" fill={colors.vocab.orange} {...INK} />
+      <Polygon points="56,134 100,114 144,134 100,160" fill={colors.brand.primary} {...INK} />
+      <Path d="M100 114V160" {...DET} />
+    </Card>
   );
 }
 
@@ -281,39 +246,21 @@ function RiceArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
   );
 }
 
-function ChopsticksArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Pair of slim metal chopsticks crossed at the bottom on a holder.
+function ChopsticksArt(p: ArtProps): ReactElement {
+  // Sujeo: a flat metal spoon and a pair of flat grey metal chopsticks laid side by side on a wooden rest.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="life">
-        {/* Chopstick holder */}
-        <Path
-          d="M55 140 Q100 130 145 140 Q145 152 100 156 Q55 152 55 140 Z"
-          fill={colors.surface.paper}
-          stroke={colors.text.secondary}
-          strokeWidth={2}
-          strokeLinejoin="round"
-        />
-        {/* Chopstick 1 — slight diagonal */}
-        <Path
-          d="M68 40 L86 140"
-          stroke={colors.text.muted}
-          strokeWidth={6}
-          strokeLinecap="round"
-        />
-        <Path d="M83 132 L88 142" stroke={colors.text.secondary} strokeWidth={3} strokeLinecap="round" />
-        {/* Chopstick 2 — mirror diagonal (crossing) */}
-        <Path
-          d="M132 40 L114 140"
-          stroke={colors.text.muted}
-          strokeWidth={6}
-          strokeLinecap="round"
-        />
-        <Path d="M117 132 L112 142" stroke={colors.text.secondary} strokeWidth={3} strokeLinecap="round" />
-        {/* Floor shadow */}
-        <Ellipse cx={100} cy={165} rx={50} ry={3} fill={colors.hoya.furDark} opacity={0.15} />
-      </Frame>
-    </Svg>
+    <Card theme="life" p={p}>
+      {shadow(184, 70)}
+      <Rect x={92} y={118} width={84} height={20} rx={10} fill={colors.vocab.brown} {...INK} transform="rotate(-52 134 128)" />
+      <G transform="rotate(38 100 100)">
+        <Rect x={68} y={14} width={14} height={112} rx={7} fill={colors.vocab.gray} {...INK} />
+        <Ellipse cx={75} cy={150} rx={22} ry={32} fill={colors.vocab.gray} {...INK} />
+        <Ellipse cx={75} cy={152} rx={12} ry={20} fill={colors.surface.paper} opacity={0.5} />
+        <Polygon points="104,10 118,10 116,186 106,186" fill={colors.vocab.gray} {...INK} />
+        <Polygon points="128,10 142,10 140,186 130,186" fill={colors.vocab.gray} {...INK} />
+        <Path d="M106 34H116M130 34H140" {...DET} />
+      </G>
+    </Card>
   );
 }
 
@@ -400,31 +347,23 @@ function KimbapArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement
   );
 }
 
-function FamilyTableArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Round wooden table top-down with 4 bowls at cardinal points + central rice.
+function FamilyTableArt(p: ArtProps): ReactElement {
+  // The family table seen from the side: a low round table with curved legs, a rice bowl, soup, kimchi and a spoon
+  // with chopsticks laid at the front.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="life">
-        {/* Round table */}
-        <Circle cx={100} cy={100} r={72} fill={colors.feedback.nudge} stroke={colors.brand.primaryDark} strokeWidth={2.5} />
-        <Circle cx={100} cy={100} r={68} fill="none" stroke={colors.brand.primaryDark} strokeWidth={1} opacity={0.6} />
-        {/* Central rice bowl */}
-        <Circle cx={100} cy={100} r={18} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} />
-        <Circle cx={100} cy={100} r={13} fill={colors.surface.paper} />
-        {/* 4 side bowls */}
-        {[
-          { cx: 100, cy: 50, color: colors.brand.primary }, // top — kimchi red
-          { cx: 150, cy: 100, color: colors.theme.nature }, // right — green
-          { cx: 100, cy: 150, color: colors.surface.canvas }, // bottom — rice
-          { cx: 50, cy: 100, color: colors.brand.primaryLight }, // left — light
-        ].map((b, i) => (
-          <G key={i}>
-            <Circle cx={b.cx} cy={b.cy} r={15} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2} />
-            <Circle cx={b.cx} cy={b.cy} r={10} fill={b.color} opacity={0.85} />
-          </G>
-        ))}
-      </Frame>
-    </Svg>
+    <Card theme="life" p={p}>
+      {shadow(184, 78)}
+      <Path d="M44 128Q36 160 50 178M156 128Q164 160 150 178M100 140V182" stroke={colors.text.primary} strokeWidth={16} strokeLinecap="round" fill={NONE} />
+      <Path d="M44 128Q36 160 50 178M156 128Q164 160 150 178M100 140V182" stroke={colors.vocab.brown} strokeWidth={6} strokeLinecap="round" fill={NONE} />
+      <Path d="M14 108V122Q100 150 186 122V108Z" fill={colors.vocab.brown} {...INK} />
+      <Ellipse cx={100} cy={108} rx={86} ry={22} fill={colors.feedback.nudge} {...INK} />
+      <Path d="M30 98Q32 72 54 72Q76 72 78 98Z" fill={colors.surface.paper} {...INK} />
+      <Path d="M70 92Q72 54 100 52Q128 54 130 92Z" fill={colors.vocab.white} {...INK} />
+      <Path d="M66 90H134Q132 112 100 116Q68 112 66 90Z" fill={colors.brand.secondary} {...INK} />
+      <Ellipse cx={150} cy={100} rx={26} ry={9} fill={colors.vocab.white} {...INK} />
+      <Path d="M134 98Q142 80 152 88Q160 78 166 98Z" fill={colors.vocab.red} {...DET} />
+      <Path d="M84 124L134 116M88 130L138 122" {...DET} stroke={colors.text.secondary} />
+    </Card>
   );
 }
 
