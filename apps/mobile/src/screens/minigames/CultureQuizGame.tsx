@@ -73,7 +73,8 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
 
   const hear = (): void => {
     const word = { ko: round.promptKo, spokenKo: round.promptSpokenKo, audioRef: round.promptAudioRef };
-    sounding.current = slot.play(() => playPrompt(koSpeech(word, 'word', 'culture-quiz')));
+    const spec = koSpeech(word, 'word', 'culture-quiz');
+    sounding.current = slot.play(() => playPrompt(spec), spec);
   };
 
   const handleTap = (en: string, isAnswer: boolean): void => {

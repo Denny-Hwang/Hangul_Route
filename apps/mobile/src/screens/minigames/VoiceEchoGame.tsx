@@ -71,7 +71,8 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): ReactElement 
   const [helpOpen, setHelpOpen] = useState(false);
   const hear = (): void => {
     // The pair's spoken form and recording when the content has them; the default word has neither.
-    void slot.play(() => playPrompt(koSpeech(pair ?? { ko: target }, 'word', 'voice-echo')));
+    const spec = koSpeech(pair ?? { ko: target }, 'word', 'voice-echo');
+    void slot.play(() => playPrompt(spec), spec);
   };
 
   const onDone = (): void => {

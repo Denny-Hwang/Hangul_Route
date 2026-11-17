@@ -166,13 +166,13 @@ function CultureNotesContent({
     if (soundAt !== n.note.id) slot.reset();
     lastSpec.current = spec;
     setSoundAt(n.note.id);
-    void slot.play(() => playPrompt(spec));
+    void slot.play(() => playPrompt(spec), spec);
     // Hearing the term shows how to say it (hide-until-tap, D2).
     setRevealed((r) => (r.has(n.note.id) ? r : new Set([...r, n.note.id])));
   };
   const replayLast = (): void => {
     const spec = lastSpec.current;
-    if (spec) void slot.play(() => playPrompt(spec));
+    if (spec) void slot.play(() => playPrompt(spec), spec);
   };
   /** A note's panel: quiet (nothing shown, the live region kept) unless its term was tapped last. */
   const soundPanel = (noteId: string): ReactElement => (

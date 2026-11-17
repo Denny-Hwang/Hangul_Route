@@ -51,7 +51,7 @@ import {
   type QuestReviewPlan,
 } from '../../logic/reviews/quest-review-session';
 import { resultHeadline } from '../../logic/stage1/review-flow';
-import { playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { track } from '../../platform/telemetry';
 import { useAudioStore } from '../../store/audio-store';
@@ -306,9 +306,10 @@ function PickRoundView({ round, first, onFirstTap, onRetry, onDone }: PickRoundV
   const unlocked = useAudioStore((s) => s.unlocked);
 
   const heard = round.mode === 'hear';
-  const slot = usePromptSlot({ source: AUDIO_SOURCE });
-  const { play: slotPlay } = slot;
   const speech = useMemo(() => koSpeech({ ko: round.ko }, round.instruction === 'hearPick' && round.itemId.startsWith('syl:') ? 'sound' : promptKindOf(round.ko), AUDIO_SOURCE), [round]);
+  // [FU] FU-3: the round's word has a say clip (review pack), so a device with no Korean voice hears it, not the text.
+  const slot = usePromptSlot({ source: AUDIO_SOURCE, hasClip: hasClipFor(speech) });
+  const { play: slotPlay } = slot;
   const pacing = useSoundPacing();
   const heardOnce = useRef(false);
   const hear = useCallback((): void => {

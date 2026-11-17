@@ -137,7 +137,7 @@ export function CardDetailView({ cardId, showHowToEarn = false, state = 'learner
   // recording once it is bundled (cardSpeech), else the device voice says the name.
   const hear = (): void => {
     const spec = cardSpeech(card, visibleItems);
-    if (spec) void slot.play(() => playPrompt(spec));
+    if (spec) void slot.play(() => playPrompt(spec), spec);
   };
 
   return (

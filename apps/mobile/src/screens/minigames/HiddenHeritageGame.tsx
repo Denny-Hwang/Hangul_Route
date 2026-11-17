@@ -253,7 +253,9 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   const say = useCallback(
     (targetId: string): void => {
       const target = rounds[stateRef.current.roundIdx]?.targets.find((t) => t.id === targetId);
-      if (target) void pacing.track(slotPlay(() => playPrompt(koSpeech(target.word, 'word', AUDIO_SOURCE))));
+      if (!target) return;
+      const spec = koSpeech(target.word, 'word', AUDIO_SOURCE);
+      void pacing.track(slotPlay(() => playPrompt(spec), spec));
     },
     [rounds, slotPlay, pacing],
   );

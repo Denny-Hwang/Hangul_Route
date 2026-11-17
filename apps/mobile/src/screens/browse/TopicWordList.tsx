@@ -37,7 +37,7 @@ export function TopicWordList({ words, hear }: { words: readonly TopicWordFact[]
 
   const play = (word: TopicWordFact): void => {
     setLast(word);
-    void slot.play(() => playPrompt(topicHearSpec(word)));
+    void slot.play(() => playPrompt(topicHearSpec(word)), topicHearSpec(word));
   };
 
   return (

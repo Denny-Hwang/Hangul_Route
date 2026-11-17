@@ -70,7 +70,8 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
   const hearLine = useCallback((): void => {
     if (!turn || replying.current) return;
     const line = { ko: turn.npcKo, spokenKo: turn.npcSpokenKo, audioRef: turn.npcAudioRef };
-    void pacing.track(play(() => playPrompt(koSpeech(line, 'sentence', 'tap-respond'))));
+    const spec = koSpeech(line, 'sentence', 'tap-respond');
+    void pacing.track(play(() => playPrompt(spec), spec));
   }, [turn, play, pacing]);
 
   // Each turn opens with the NPC line, said once. With sound switched off it waits for a tap, as on the
@@ -100,7 +101,8 @@ export function TapRespondGame({ scope, onFinish }: Props): ReactElement {
       answerRound(turnIdx, true, { texts: [turn.npcKo], rung: 'read' });
       setFeedback('correct');
       replying.current = true;
-      const reply = pacing.track(play(() => playPrompt(koSpeech(option, 'sentence', 'tap-respond'))));
+      const said = koSpeech(option, 'sentence', 'tap-respond');
+      const reply = pacing.track(play(() => playPrompt(said), said));
       // The reply is said in full before the next line starts (a newer prompt would cut it off).
       void afterReply(reply).then(() => {
         replying.current = false;

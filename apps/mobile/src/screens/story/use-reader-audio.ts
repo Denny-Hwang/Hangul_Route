@@ -77,12 +77,13 @@ export function useReaderAudio(
         });
         return;
       }
+      // [FU] FU-3: the chain's Korean steps (story pack clips) tell the slot whether a missing voice is a missing sound.
       void slotPlay(async () => {
         const result = await runner.play(chain, options);
         if (result === 'played') played.current += 1;
         // A superseded chain says nothing about the sound: the newer one reports.
         return result === 'superseded' ? 'played' : result;
-      });
+      }, chain);
     },
     [slotPlay],
   );

@@ -32,7 +32,7 @@ import type { RoundAnswer } from '../../logic/reviews/daily-review';
 import type { TypedGrade } from '../../logic/reviews/engine';
 import type { BuildRound, ClozeRound, OrderRound, PickOption, PickRound, ReviewRound, ShapeRound, TypeRound } from '../../logic/reviews/review-rounds';
 import { keySound } from '../../logic/type-hangul/sounds';
-import { playPrompt, stop } from '../../platform/audio';
+import { hasClipFor, playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { PictureArt } from '../minigames/PictureArt';
 import type { HearRound } from '../minigames/dictation-chunk';
@@ -90,7 +90,8 @@ function useAdvance(onSolved: () => void, reduced: boolean): () => void {
 
 /** The sound of a round, through the shared prompt slot (F-AUDIO-004 §3.8): text with why and one action when it cannot play. */
 function useRoundSound(text: string | null, heard: boolean) {
-  const slot = usePromptSlot({ source: 'daily-review', textOnScreen: !heard });
+  // [FU] FU-3: the item's say clip (review pack) counts as sound, so a device with no Korean voice hears it.
+  const slot = usePromptSlot({ source: 'daily-review', hasClip: text !== null && hasClipFor({ text }), textOnScreen: !heard });
   const { play, reset } = slot;
   const hear = useCallback(() => {
     if (text === null) return;

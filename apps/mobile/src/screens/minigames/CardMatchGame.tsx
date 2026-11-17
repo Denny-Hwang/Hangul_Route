@@ -122,7 +122,8 @@ export function CardMatchGame({ scope, onFinish }: Props): ReactElement {
     // A different word is a new prompt slot: what the last one could not play no longer applies.
     if (idx !== heardIdx) slot.reset();
     setHeardIdx(idx);
-    void pacing.track(slot.play(() => playPrompt(koSpeech(pair, 'word', 'card-match'))));
+    const spec = koSpeech(pair, 'word', 'card-match');
+    void pacing.track(slot.play(() => playPrompt(spec), spec));
   };
 
   useEffect(() => {

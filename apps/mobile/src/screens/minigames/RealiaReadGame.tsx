@@ -108,7 +108,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
       if (lastSaid.current?.key !== key) slotReset();
       lastSaid.current = { key, spec };
       setSoundAt(at);
-      void slotPlay(() => playPrompt(spec));
+      void slotPlay(() => playPrompt(spec), spec);
     },
     [slotPlay, slotReset],
   );
@@ -186,7 +186,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
       onAction={(action) =>
         slot.act(action, () => {
           const last = lastSaid.current;
-          if (last) void slotPlay(() => playPrompt(last.spec));
+          if (last) void slotPlay(() => playPrompt(last.spec), last.spec);
         })
       }
       onHelp={() => setHelpOpen(true)}

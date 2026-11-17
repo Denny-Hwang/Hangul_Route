@@ -154,7 +154,8 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
     (nodeId: string): void => {
       const node = turnOf(scene, { node: nodeId });
       if (node === undefined || replying.current) return;
-      void pacing.track(play(() => playPrompt(koSpeech(node.line, 'sentence', SOURCE))));
+      const spec = koSpeech(node.line, 'sentence', SOURCE);
+      void pacing.track(play(() => playPrompt(spec), spec));
     },
     [scene, play, pacing],
   );
@@ -185,7 +186,8 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
             const reply = node?.replies.find((r) => r.id === effect.reply);
             if (!reply) break;
             replying.current = true;
-            const said = pacing.track(play(() => playPrompt(koSpeech(reply.text, 'sentence', SOURCE))));
+            const spec = koSpeech(reply.text, 'sentence', SOURCE);
+            const said = pacing.track(play(() => playPrompt(spec), spec));
             // The reply is said in full (at least 900 ms, at most 6 s) before the partner answers.
             void afterReply(said).then(() => {
               replying.current = false;
@@ -314,7 +316,8 @@ function Chat({ scene, host }: { scene: RolePlayScene; host: MinigameHost }): Re
 
   const onHear = (b: BubbleView): void => {
     if (replying.current) return;
-    void pacing.track(play(() => playPrompt(koSpeech(b.speech, 'sentence', SOURCE))));
+    const spec = koSpeech(b.speech, 'sentence', SOURCE);
+    void pacing.track(play(() => playPrompt(spec), spec));
   };
 
   return (

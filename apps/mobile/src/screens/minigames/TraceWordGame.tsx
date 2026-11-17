@@ -153,7 +153,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     // Another syllable is a new prompt: the last one's "Tap to hear" or "Try again" does not carry over.
     if (lastSyllable.current !== null && lastSyllable.current !== syllable) soundReset();
     lastSyllable.current = syllable;
-    void pacing.track(soundPlay(() => playPrompt(blockSpeech(syllable))));
+    const spec = blockSpeech(syllable);
+    void pacing.track(soundPlay(() => playPrompt(spec), spec));
   };
   // Leaving the game mid-syllable (Done on the last word, Skip, Back) stops it.
   useEffect(() => () => stop(), []);

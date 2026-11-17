@@ -148,7 +148,8 @@ export function PicWordMatchGame({ scope, host, onBack, showCount = true }: Prop
       const last = lastPair.current;
       if (last === null || last.boardIdx !== boardIdx || last.pairId !== pairId) slotReset();
       lastPair.current = { boardIdx, pairId };
-      void pacing.track(slotPlay(() => playPrompt(koSpeech(pair.word, 'word', PIC_WORD_AUDIO_SOURCE))));
+      const spec = koSpeech(pair.word, 'word', PIC_WORD_AUDIO_SOURCE);
+      void pacing.track(slotPlay(() => playPrompt(spec), spec));
     },
     [slotPlay, slotReset, pacing],
   );

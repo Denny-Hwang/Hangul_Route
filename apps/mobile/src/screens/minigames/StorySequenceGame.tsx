@@ -247,6 +247,11 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
   const lineSlot = usePromptSlot({ source: SEQUENCE_AUDIO_SOURCE, textOnScreen: true });
   const { play: linePlayIn, reset: lineReset } = lineSlot;
   const [helpOpen, setHelpOpen] = useState(false);
+  /** The replay line's speaker and its panel's action: says the line again. */
+  const replayLine = (card: SequenceCard): void => {
+    const spec = lineSpeech(card);
+    void linePlayIn(() => playPrompt(spec), spec);
+  };
   const linePlay = useRef<{ index: number; startedAt: number; settled: Promise<void> } | null>(null);
   const replayIndex = state.replayIndex;
   useEffect(() => {
@@ -256,7 +261,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
       return;
     }
     const spec = lineSpeech(replayCard);
-    const settled = linePlayIn(() => playPrompt(spec)).then(
+    const settled = linePlayIn(() => playPrompt(spec), spec).then(
       () => undefined,
       () => undefined,
     );
@@ -340,14 +345,14 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce, cha
                 romanization={sequenceCardRomanization(replayCard, romanizationMode, true)}
                 size="md"
                 testID="story-sequence-replay-ko"
-                onPress={() => void linePlayIn(() => playPrompt(lineSpeech(replayCard)))}
+                onPress={() => replayLine(replayCard)}
               />
             ) : null}
             {replayCard?.ko ? (
               <PromptPanel
                 variant="status"
                 view={lineSlot.view}
-                onAction={(action) => lineSlot.act(action, () => void linePlayIn(() => playPrompt(lineSpeech(replayCard))))}
+                onAction={(action) => lineSlot.act(action, () => replayLine(replayCard))}
                 onHelp={() => setHelpOpen(true)}
                 testID="story-sequence-replay-sound"
               />
