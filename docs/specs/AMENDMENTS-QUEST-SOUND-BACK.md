@@ -1,4 +1,4 @@
-Status: ready; rows QS-1 to QS-5 and QB-1 to QB-4 open
+Status: done; rows QB-1 to QB-4 done (#1037), rows QS-1 to QS-5 done (the PR that adds this line)
 
 # Amendment: sounds get room at both ends, and a quest step can be taken back
 
@@ -82,6 +82,7 @@ The run saved for a reload (AU-12) stores the furthest step, so a reload after g
 - **QS-4** `logic/audio/reply-advance.ts` `afterSound(sound, { minMs, maxMs })` (`afterReply` is now `afterSound` with 900 / 6000; `ANSWER_SOUND_MAX_MS` 2500); `sound-pacing.ts` `after(minMs, run, maxMs)` waits for the last tracked sound (`SENTENCE_SOUND_MAX_MS` 6000 for Cloze Pick and a Listen and Pick sentence). The flows keep their effects and constants (700, 600 / 700 / 1000, 800, 900, `FOUND_ADVANCE_MS`, `CLOZE_ADVANCE_MS`, `SOLVED_PAUSE_MS`, `PAIR_SOLVED_PAUSE_MS`) as the least wait; the last round's completion waits the same way. Read Pick keeps 0 under reduced motion and still waits for the sound. Match Sound, Build a Letter and Culture Quiz wait for a prompt still sounding.
 - **QS-5** `logic/audio/controller.ts`: `FIRST_UTTERANCE_DEFER_MS` 150 before the first utterance after the engine was idle (`SPEECH_IDLE_AFTER_MS` 1000 with nothing said or stopped); after a cancel the 50 ms drain stays. Deviation: a prompt asked inside a tap's own task (`inGestureTask`, set by the web adapter's capture listeners) and one behind the speech unlock's warm-up are not deferred, because iOS Safari speaks only inside the tap's task (`learner-audio.spec.ts` checks `inTask`).
 
+- Start bundle: QS on top of QB measures 4,957,992 B raw (release build, CI=1); `PRECACHE_BUDGET.startBundleRaw` is 4,962,000 B.
 
 ### QB-1 to QB-4 (taking a step back)
 
