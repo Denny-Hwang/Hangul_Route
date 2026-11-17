@@ -291,21 +291,21 @@ export const FIG_ARTISAN: ItemDef = {
   kind: 'figure',
   box: { w: 80, h: 84 },
   z: 'mid',
-  tintable: 'surface.sunken',
+  tintable: 'border.strong',
   alt: 'A Joseon craftsperson kneeling at work in a plain jacket and trousers, a cloth tied round the head',
   sourceRef: CLOTHING_REF,
   accuracyNote:
-    "A kneeling craftsperson in the basic jacket (jeogori) and trousers (baji) the source names, sleeves pushed forward to work, with a plain cloth band tied round the head over a topknot (drawn from general knowledge, not the source). Garment colour is tintable so carpenter, painter and embroiderer can differ. Tools are separate props. No rank, guild sign or name is drawn. The face is blank on purpose.",
+    "A kneeling craftsperson in the basic jacket (jeogori) and trousers (baji) the source names, sleeves pushed forward to work, with a plain cloth band tied round the head over a topknot (drawn from general knowledge, not the source). Garment colour (a muted grey-brown by default, so the figure does not vanish on a cream ground, [PX] PX-4) is tintable so carpenter, painter and embroiderer can differ. Tools and work are separate props placed at the hands (craft-wood, craft-painting, craft-embroidery), so none is drawn into the figure. No rank, guild sign or name is drawn. The face is blank on purpose.",
   nodes: [
     { t: 'ellipse', cx: 40, cy: 82, rx: 34, ry: 2, fill: 'text.primary', o: 0.08, det: true },
-    { t: 'rect', x: 36, y: 30, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'rect', x: 36, y: 30, w: 8, h: 8, fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
     // kneeling legs, body and the arms reaching forward as one garment shape
-    { t: 'path', d: 'M10 82 Q8 62 24 58 L26 38 Q40 32 54 38 L56 50 L74 60 L70 68 L54 62 L56 58 Q72 62 70 82 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M10 82 Q8 62 24 58 L26 38 Q40 32 54 38 L56 50 L74 60 L70 68 L54 62 L56 58 Q72 62 70 82 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'base' },
     face(40, 21, 10, 12),
     { t: 'path', d: 'M30 18 Q30 6 40 6 Q50 6 50 18 Q40 13 30 18 Z', fill: 'text.primary' },
     { t: 'circle', cx: 40, cy: 5, r: 4, fill: 'text.primary' },
     { t: 'rect', x: 30, y: 13, w: 20, h: 3, r: 1, fill: 'text.secondary' },
-    { t: 'path', d: 'M33 40 L40 50 L47 40', stroke: 'border.strong', sw: 'base', det: true },
+    { t: 'path', d: 'M33 40 L40 50 L47 40', stroke: 'text.secondary', sw: 'base', det: true },
     { t: 'rect', x: 26, y: 56, w: 30, h: 3, fill: 'text.secondary' },
   ],
 };
