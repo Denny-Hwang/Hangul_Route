@@ -136,20 +136,19 @@ function OrigamiArt(p: ArtProps): ReactElement {
 }
 
 function HangulDayArt(p: ArtProps): ReactElement {
-  // Hangul Day: a tear-off calendar page whose big mark is three letters drawn as shapes (ㅎ, ㄱ, ㄹ), with sparkles.
+  // Hangul Day: a tear-off calendar page whose big mark is the word 한글 drawn as shapes (ㅎ+ㅏ+ㄴ, ㄱ+ㅡ+ㄹ; no font
+  // text), with sparkles.
   return (
     <Card theme="letters" p={p}>
       {shadow(184, 66)}
       <Rect x={34} y={34} width={132} height={144} rx={8} fill={colors.surface.paper} {...INK} />
       <Rect x={34} y={34} width={132} height={30} rx={8} fill={colors.vocab.red} {...INK} />
       <Path d="M62 24V44M138 24V44" stroke={colors.text.primary} strokeWidth={8} strokeLinecap="round" />
-      <G stroke={colors.vocab.blue} strokeWidth={11} strokeLinecap="round" strokeLinejoin="round" fill={NONE}>
-        <Path d="M64 82H80M52 98H92" />
-        <Circle cx={72} cy={130} r={18} />
-        <Path d="M108 84H148V118" />
-        <Path d="M108 132H148V146H108V160H148" />
-      </G>
-      <Path d={sparkle(176, 76, 14) + sparkle(24, 140, 12)} fill={colors.vocab.yellow} {...DET} />
+      <G stroke={colors.vocab.blue} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" fill={NONE}>
+        <Path d="M58 78H72M48 90H82M90 76V128M90 102H100M52 134V160H98" />
+        <Circle cx={65} cy={109} r={11} />
+        <Path d="M110 80H148V100M104 114H154M110 126H148V139H110V152H150" />
+      </G>      <Path d={sparkle(176, 76, 14) + sparkle(24, 140, 12)} fill={colors.vocab.yellow} {...DET} />
     </Card>
   );
 }

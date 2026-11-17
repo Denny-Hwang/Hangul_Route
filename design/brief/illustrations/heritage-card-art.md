@@ -73,7 +73,7 @@ Each entry: `id` · `ko (romanization)` · `theme` · `rarity` · 1-line visual 
 - `card:brush` · 붓 (but) · letters · uncommon — **[PX]** A calligraphy brush at a slant: hanging loop, bamboo handle with two joints, a long black tip ending in a point, over the black stroke it has just made (no box, no page).
 - `card:ink` · 먹 (meok) · letters · common — **[PX]** A black rectangular ink stick standing upright (a small gold label) on a rectangular grey inkstone (byeoru) seen at three-quarter view, a dark ink pool in its well.
 - `card:origami` · 종이접기 (jongijeopgi) · letters · rare — **[PX]** A folded paper crane in orange: two raised wings with a crease line each, a long neck with the bent beak, a pointed raised tail.
-- `card:hangul-day` · 한글날 (hangeullal) · letters · legendary — **[PX]** A tear-off calendar page with a red top band and two rings; its big mark is three letters drawn as blue shapes (ㅎ, ㄱ, ㄹ; never font text, R5), two yellow sparkles.
+- `card:hangul-day` · 한글날 (hangeullal) · letters · legendary — **[PX]** A tear-off calendar page with a red top band and two rings; its big mark is the word 한글 spelled correctly in drawn blue strokes (ㅎ+ㅏ+ㄴ, ㄱ+ㅡ+ㄹ; never font text, and never a misspelling a learner would read), two yellow sparkles.
 
 ### Food & Daily Life (6)
 - `card:kimchi` · 김치 (gimchi) · life · common — **[PX]** Half a napa cabbage (pogi-kimchi) lying on a white plate, stem end on the left: white ribs fanning from the stem under red seasoning (`vocab.red`), a frilly green leaf edge, chili flakes and green-onion bits. On a flat plate, never a bowl (the rice and the soup are bowls); the same subject as the `food-kimchi` glyph.

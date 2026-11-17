@@ -39,7 +39,8 @@ const PINS: Record<string, { has?: RegExp[]; not?: RegExp[] }> = {
   // a bridge on every string; the four yut sticks; Hangul Day's letters are shapes, never text (R5)
   GayageumArt: { has: [/strings\.map\(\(w, i\)/] },
   YutnoriArt: { has: [/(<Stick [\s\S]*){4}/] },
-  HangulDayArt: { not: [/SvgText|<Text/] },
+  // Hangul Day spells 한글 correctly in drawn strokes: ㅎ (two bars and a ring), ㅏ, ㄴ; ㄱ, ㅡ, ㄹ
+  HangulDayArt: { has: [/M58 78H72M48 90H82M90 76V128M90 102H100M52 134V160H98/, /M110 80H148V100M104 114H154M110 126H148V139H110V152H150/], not: [/SvgText|<Text/] },
   InkArt: { has: [/vocab\.black/, /<Polygon/] },
   PotteryArt: { has: [/stage\.stage7/, /vocab\.white/] },
   MugunghwaArt: { has: [/vocab\.pink/, /vocab\.red/] },
@@ -74,7 +75,7 @@ describe('Stage 1 card art (HeritageCardArt.tsx, AMENDMENTS-PICTURES-2026-11 PX-
     }
   });
 
-  // PX-2 measured: the largest drawing (TigerArt) 1,715 B; the module 39,311 B (57,446 B before PX-2, which
+  // PX-2 measured: the largest drawing (TigerArt) 1,715 B; the module 39,366 B (57,446 B before PX-2, which
   // repeated the outline props on every shape; the shared `INK`, `DET` and `Card` made it smaller).
   it('art budget: each drawing at most 1,800 B of source, the module at most 40,000 B', () => {
     for (const name of CHECKED) expect(bytesOf(name), name).toBeLessThanOrEqual(1_800);
