@@ -442,3 +442,101 @@ describe('quest-run-store', () => {
     }
   });
 });
+
+describe('[QB] taking a step back (AMENDMENTS-QUEST-SOUND-BACK QB-2)', () => {
+  beforeEach(() => {
+    useQuestRunStore.getState().reset();
+  });
+
+  it('goPrevStep shows the step before and keeps the furthest step', () => {
+    const { beginQuest, goNextStep, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 2, furthestStep: 2, cameBack: false });
+    goPrevStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 1, furthestStep: 2, cameBack: true });
+    goPrevStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 0, furthestStep: 2, cameBack: true });
+  });
+
+  it('never goes under the first step', () => {
+    const { beginQuest, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goPrevStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 0, furthestStep: 0, cameBack: false });
+  });
+
+  it('forward from a revisit is the normal step forward; the furthest step grows only past itself', () => {
+    const { beginQuest, goNextStep, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    goPrevStep();
+    goPrevStep();
+    goNextStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 1, furthestStep: 2, cameBack: false });
+    goNextStep();
+    goNextStep();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 3, furthestStep: 3 });
+  });
+
+  it('Previous drops a pending advance, so a game that ended a moment ago does not move the step again', () => {
+    const { beginQuest, goNextStep, markStepComplete, goPrevStep, consumePendingAdvance } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    markStepComplete();
+    goPrevStep();
+    expect(useQuestRunStore.getState().pendingAdvance).toBe(false);
+    consumePendingAdvance();
+    expect(useQuestRunStore.getState().stepIndex).toBe(0);
+  });
+
+  it('a game finished on a revisit moves one step forward as usual', () => {
+    const { beginQuest, goNextStep, goPrevStep, markStepComplete, consumePendingAdvance } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    goNextStep();
+    goPrevStep();
+    goPrevStep();
+    markStepComplete();
+    consumePendingAdvance();
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 2, furthestStep: 3, cameBack: false });
+  });
+
+  it('nothing tallied changes when a step is taken back', () => {
+    const { beginQuest, goNextStep, answerRound, markStepSkipped, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    answerRound(0, true);
+    answerRound(1, false);
+    answerRound(1, true);
+    goNextStep();
+    markStepSkipped();
+    goNextStep();
+    const before = useQuestRunStore.getState();
+    goPrevStep();
+    goPrevStep();
+    const after = useQuestRunStore.getState();
+    for (const key of ['correctCount', 'totalCount', 'retryCount', 'scoredRounds', 'skippedSteps', 'missed', 'tries'] as const) {
+      expect(after[key]).toEqual(before[key]);
+    }
+    expect(after.stars()).toBe(before.stars());
+  });
+
+  it('a run that starts past the first step (a story bookmark) has that step as its furthest', () => {
+    useQuestRunStore.getState().beginQuest('q', 'e', 2);
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 2, furthestStep: 2, cameBack: false });
+  });
+
+  it('a new run forgets the furthest step of the last one', () => {
+    const { beginQuest, goNextStep, goPrevStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    goNextStep();
+    goPrevStep();
+    beginQuest('q2', 'e');
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 0, furthestStep: 0, cameBack: false });
+  });
+});

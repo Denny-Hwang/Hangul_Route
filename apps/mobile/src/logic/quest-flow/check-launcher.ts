@@ -16,9 +16,16 @@ export interface LauncherView {
   skipLabel: string;
   /** The heading is said by a small Hoya (the Check card); the generic card is plain text. */
   hoya: boolean;
+  /**
+   * [QB] The step is shown again after Previous (AMENDMENTS-QUEST-SOUND-BACK QB-2): the card's main button is the
+   * quest's Continue (forward), `againLabel` (Play again) opens the game, and there is no Skip: the step is already
+   * done or already skipped.
+   */
+  revisit: boolean;
+  againLabel: string;
 }
 
-export function launcherView(kind: QuestStepKind, copy: Messages['learner']['quest']['launcher']): LauncherView {
+export function launcherView(kind: QuestStepKind, copy: Messages['learner']['quest']['launcher'], revisit = false): LauncherView {
   if (kind === 'check') {
     return {
       heading: copy.check.heading,
@@ -26,15 +33,19 @@ export function launcherView(kind: QuestStepKind, copy: Messages['learner']['que
       showSkip: false,
       skipLabel: copy.game.skip.cta,
       hoya: true,
+      revisit,
+      againLabel: copy.again.cta,
     };
   }
   return {
     heading: copy.game.heading,
     body: copy.game.body,
     primaryLabel: copy.game.play.cta,
-    showSkip: true,
+    showSkip: !revisit,
     skipLabel: copy.game.skip.cta,
     hoya: false,
+    revisit,
+    againLabel: copy.again.cta,
   };
 }
 

@@ -39,6 +39,22 @@ describe('launcherView (F-QUEST-002 §3.3: the Check launcher variant)', () => {
     expect(kinds.filter((k) => !launcherView(k, launcher).showSkip)).toEqual(['check']);
   });
 
+  it('[QB] a game step shown again has no Skip and offers Play again; the Check too (AMENDMENTS-QUEST-SOUND-BACK QB-2)', () => {
+    const kinds: QuestStepKind[] = ['present', 'practice', 'apply', 'check'];
+    for (const kind of kinds) {
+      const first = launcherView(kind, launcher);
+      expect(first.revisit).toBe(false);
+      const again = launcherView(kind, launcher, true);
+      expect(again.revisit).toBe(true);
+      expect(again.showSkip).toBe(false);
+      expect(again.againLabel).toBe('Play again');
+      // The card's words stay as they were.
+      expect(again.heading).toBe(first.heading);
+      expect(again.body).toBe(first.body);
+      expect(again.hoya).toBe(first.hoya);
+    }
+  });
+
   it('the learner-facing step labels are plain English', () => {
     expect(questStepLabel('discover', step)).toBe('Look and learn');
     expect(questStepLabel('check', step)).toBe('Quick check');

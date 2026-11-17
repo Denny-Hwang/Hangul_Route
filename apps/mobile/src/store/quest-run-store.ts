@@ -35,6 +35,13 @@ interface State {
   /** [AU] ISO time the run began (AMENDMENTS-AUDIT-2026-11 row AU-12): a run resumed after a reload keeps its first start. */
   startedAt: string | null;
   stepIndex: number;
+  /**
+   * [QB] The furthest step this run reached (AMENDMENTS-QUEST-SOUND-BACK QB-2, QB-3). Previous lowers `stepIndex` and
+   * never this, so a step with `stepIndex < furthestStep` is a revisit: a step shown again.
+   */
+  furthestStep: number;
+  /** [QB] The step on screen was reached by Previous (QB-2): a Look and learn step then opens on its last page. */
+  cameBack: boolean;
   /** Rounds answered right on the first try (logic/first-try). */
   correctCount: number;
   /** Rounds scored — one per round, whatever the number of taps. */
@@ -77,6 +84,11 @@ interface Actions {
   /** [AU] Skip for now on the current step's launcher (row AU-9): the step is noted as skipped; the caller moves on. */
   markStepSkipped: () => void;
   goNextStep: () => void;
+  /**
+   * [QB] Previous (QB-2): the step before, never under the first. Nothing tallied changes, the furthest step stays,
+   * and a game's pending advance is dropped (the learner chose where to go).
+   */
+  goPrevStep: () => void;
   consumePendingAdvance: () => void;
   reset: () => void;
   /**
@@ -91,6 +103,8 @@ const blankRun = {
   episodeId: null,
   startedAt: null,
   stepIndex: 0,
+  furthestStep: 0,
+  cameBack: false,
   correctCount: 0,
   totalCount: 0,
   retryCount: 0,
@@ -105,13 +119,15 @@ const blankRun = {
 export const useQuestRunStore = create<State & Actions>((set, get) => ({
   ...blankRun,
 
-  beginQuest: (questId, episodeId, startStepIndex = 0, restore) =>
+  beginQuest: (questId, episodeId, startStepIndex = 0, restore) => {
+    const stepIndex = Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0;
     set({
       ...blankRun,
       questId,
       episodeId,
       startedAt: restore?.startedAt ?? new Date().toISOString(),
-      stepIndex: Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0,
+      stepIndex,
+      furthestStep: stepIndex,
       ...(restore
         ? {
             correctCount: restore.correctCount,
@@ -121,7 +137,8 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
             skippedSteps: restore.skippedSteps,
           }
         : {}),
-    }),
+    });
+  },
 
   answerRound: (roundKey, correct, asked, hinted = false) => {
     const before = get();
@@ -158,12 +175,14 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
   markStepSkipped: () => set((s) => ({ skippedSteps: withStep(s.skippedSteps, s.stepIndex) })),
 
-  goNextStep: () => set((s) => ({ stepIndex: s.stepIndex + 1, pendingAdvance: false })),
+  goNextStep: () => set(stepForward),
+
+  goPrevStep: () => set((s) => ({ stepIndex: Math.max(0, s.stepIndex - 1), pendingAdvance: false, cameBack: s.stepIndex > 0 })),
 
   consumePendingAdvance: () => {
     const { pendingAdvance } = get();
     if (pendingAdvance) {
-      set((s) => ({ stepIndex: s.stepIndex + 1, pendingAdvance: false }));
+      set(stepForward);
     }
   },
 
@@ -175,6 +194,12 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
     return questOutcome(correctCount, totalCount, cap).stars;
   },
 }));
+
+/** One step forward, from a first visit or a revisit alike; the furthest step only grows. */
+function stepForward(s: State): Pick<State, 'stepIndex' | 'furthestStep' | 'pendingAdvance' | 'cameBack'> {
+  const stepIndex = s.stepIndex + 1;
+  return { stepIndex, furthestStep: Math.max(s.furthestStep, stepIndex), pendingAdvance: false, cameBack: false };
+}
 
 function withStep(steps: readonly number[], step: number): readonly number[] {
   return steps.includes(step) ? steps : [...steps, step];

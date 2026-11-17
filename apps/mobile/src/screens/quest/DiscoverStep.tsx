@@ -45,6 +45,7 @@ import {
   type DiscoverEvent,
   type DiscoverExchangeRender,
   type DiscoverItemRender,
+  type DiscoverStart,
   type DiscoverState,
   type HearAction,
 } from '../../logic/stage1/discover-flow';
@@ -93,11 +94,18 @@ interface Props {
    * Hear it. Off by default (the All lessons preview, where a grown-up is looking, not learning).
    */
   autoHear?: boolean;
+  /**
+   * [QB] The step before (AMENDMENTS-QUEST-SOUND-BACK QB-2): Previous on the first page calls it. Absent when this is
+   * the quest's first step, and page 1 then has no Previous.
+   */
+  onPrevious?: () => void;
+  /** [QB] How the step opens (QB-2): on its last page when it was reached by Previous, with full dots when it is shown again. Read once. */
+  start?: DiscoverStart;
 }
 
 type DiscoverMessages = Messages['learner']['quest']['discover'];
 
-export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHear = false }: Props): ReactElement {
+export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHear = false, onPrevious, start }: Props): ReactElement {
   const m = useMessages();
   const copy = m.learner.quest.discover;
   const locale = useLocale();
@@ -134,7 +142,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
 
   const romanizationMode = useRomanizationMode();
 
-  const [state, setState] = useState<DiscoverState>(() => startDiscover(model));
+  const [state, setState] = useState<DiscoverState>(() => startDiscover(model, start));
   const stateRef = useRef(state);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -350,11 +358,11 @@ export function DiscoverStep({ pages, hoyaLine, onDone, compact = false, autoHea
         )}
       </ScrollView>
       <View style={{ paddingTop: spacing.md }}>
-        {/* [QB] From the second page on, Previous shows the page before (QB-1). */}
+        {/* [QB] From the second page on, Previous shows the page before (QB-1); on the first page, the step before (QB-2). */}
         <StepActions
           main={{ label: copy.continue.cta, size: 'lg', disabled: !render.continueEnabled, onPress: () => dispatch({ type: 'next' }), testID: 'discover-continue' }}
           previousLabel={m.learner.quest.previous.cta}
-          onPrevious={render.hasPrevious ? () => dispatch({ type: 'prev' }) : undefined}
+          onPrevious={render.hasPrevious ? () => dispatch({ type: 'prev' }) : onPrevious}
         />
         <Spacer size="lg" />
       </View>

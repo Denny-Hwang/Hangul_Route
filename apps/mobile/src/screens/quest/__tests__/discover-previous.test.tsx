@@ -166,3 +166,36 @@ describe('[QB] Previous inside Look and learn (row QB-1)', () => {
     expect(buttonsNamed(r.root, label)).toHaveLength(1);
   });
 });
+
+describe('[QB] the step before and after (row QB-2)', () => {
+  it('with a step before it, page 1 shows Previous and it is the step\'s: the page does not change', async () => {
+    const onPrevious = vi.fn();
+    const r = await open([LETTERS, WORDS], { onPrevious });
+    expect(previous(r.root)).toHaveLength(1);
+    await tap(r, QUEST.previous.cta);
+    expect(onPrevious).toHaveBeenCalledTimes(1);
+    expect(texts(r)).toContain(COPY.pageLabel(1, 2));
+    // From page 2, Previous is the page's, not the step's.
+    await tap(r, COPY.continue.cta);
+    await tap(r, QUEST.previous.cta);
+    expect(onPrevious).toHaveBeenCalledTimes(1);
+    expect(texts(r)).toContain(COPY.pageLabel(1, 2));
+  });
+
+  it('reached by Previous, the step opens on its last page with every dot filled', async () => {
+    const done = vi.fn();
+    const r = await open([LETTERS, WORDS, MORE_WORDS], { start: { lastPage: true, seen: true }, onDone: done });
+    expect(texts(r)).toContain(COPY.pageLabel(3, 3));
+    expect(dots(r).props['aria-valuenow']).toBe(3);
+    expect(byTestId(r.root, 'discover-page-dots-current')).toHaveLength(0);
+    await tap(r, COPY.continue.cta);
+    expect(done).toHaveBeenCalledWith({ pages: 3, heard: 0 });
+  });
+
+  it('shown again from the step before, it opens on page 1 with the dots still full', async () => {
+    const r = await open([LETTERS, WORDS], { start: { seen: true } });
+    expect(texts(r)).toContain(COPY.pageLabel(1, 2));
+    expect(dots(r).props['aria-valuenow']).toBe(2);
+    expect(byTestId(r.root, 'discover-page-dots-current')).toHaveLength(1);
+  });
+});
