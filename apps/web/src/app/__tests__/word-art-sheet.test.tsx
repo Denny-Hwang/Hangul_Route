@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { VOCAB_CATALOG } from '../../data/vocab-catalog';
 import { BUDGET_GZIP, BUDGET_RAW, measureWordArtSource } from '../../lib/word-art-sheet/budget';
+import { CardReuses } from '../../components/design-preview/CardReuses';
 import WordArtPreviewPage, { metadata } from '../(console)/design-preview/word-art/page';
 import DesignPreviewPage from '../(console)/design-preview/page';
 
@@ -42,27 +43,31 @@ describe('/design-preview/word-art', () => {
 
   it('lets each background row wrap, so the four sizes fit a 320 px screen', () => {
     const rows = [...html.matchAll(/<div data-(?:reuse-)?bg="[a-z]+" style="([^"]*)"/g)].map((m) => m[1]!);
-    expect(rows).toHaveLength((keys.length + 13) * 3);
+    // no reuse row: no word borrows a card picture any more (rule R6)
+    expect(rows).toHaveLength(keys.length * 3);
     for (const style of rows) expect(style).toContain('flex-wrap:wrap');
   });
 
-  it('shows each card: reuse at 96 and 64 px on the three backgrounds, beside its catalog word (§3.11)', () => {
-    const reuses = [...new Set(VOCAB_CATALOG.filter((e) => e.visual.startsWith('card:')).map((e) => e.visual))];
-    expect(reuses.length).toBe(13);
-    expect(count(html, 'data-testid="card-reuse"')).toBe(reuses.length);
-    for (const cardId of reuses) {
-      const at = html.indexOf(`data-card="${cardId}"`);
-      expect(at).toBeGreaterThan(-1);
-      const cell = html.slice(at, html.indexOf('</article>', at));
-      expect(count(cell, 'viewBox="0 0 200 200"')).toBe(6);
-      expect(count(cell, '<svg width="96" height="96"')).toBe(3);
-      expect(count(cell, '<svg width="64" height="64"')).toBe(3);
-      for (const bg of ['paper', 'sunken', 'canvas']) expect(cell).toContain(`data-reuse-bg="${bg}"`);
-      for (const word of VOCAB_CATALOG.filter((e) => e.visual === cardId)) {
-        expect(cell).toContain(`<span lang="ko">${word.ko}</span>`);
-        expect(cell).toContain(word.en);
-      }
-    }
+  it('has no card: reuse to show: the section says none and links the card-art sheet (rule R6)', () => {
+    expect(VOCAB_CATALOG.filter((e) => e.visual.startsWith('card:'))).toEqual([]);
+    expect(count(html, 'data-testid="card-reuse"')).toBe(0);
+    expect(count(html, 'data-testid="card-reuse-none"')).toBe(1);
+    expect(html).toContain('Card-art reuses');
+    expect(html).toContain('href="/design-preview/cards"');
+    expect(html).not.toContain('viewBox="0 0 200 200"');
+  });
+
+  it('would still draw a card: reuse at 96 and 64 px on the three backgrounds beside its word, should one come back (§3.11)', () => {
+    const word = { id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'cooked rice', topic: 'food' };
+    const cell = renderToStaticMarkup(<CardReuses reuses={[{ cardId: 'card:rice', words: [word] }]} />);
+    expect(count(cell, 'data-testid="card-reuse"')).toBe(1);
+    expect(count(cell, 'data-testid="card-reuse-none"')).toBe(0);
+    expect(count(cell, 'viewBox="0 0 200 200"')).toBe(6);
+    expect(count(cell, '<svg width="96" height="96"')).toBe(3);
+    expect(count(cell, '<svg width="64" height="64"')).toBe(3);
+    for (const bg of ['paper', 'sunken', 'canvas']) expect(cell).toContain(`data-reuse-bg="${bg}"`);
+    expect(cell).toContain('<span lang="ko">밥</span>');
+    expect(cell).toContain('cooked rice');
   });
 
   it('defines the three colour-vision filters once and uses each on every card', () => {

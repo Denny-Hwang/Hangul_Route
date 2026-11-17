@@ -49,15 +49,21 @@ test('?topic= keeps only that family and marks its filter link', async ({ page }
   expect(errors).toEqual([]);
 });
 
-test('the card-art reuses draw the real heritage card art at 96 and 64 px', async ({ page }) => {
+test('no word reuses a card picture, and the card-art sheet draws all 60 real cards at 200, 64 and 54 px', async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto('/design-preview/word-art');
   await expect(page.getByRole('heading', { level: 2, name: 'Card-art reuses' })).toBeVisible();
-  const reuse = page.locator('[data-testid="card-reuse"][data-card="card:rice"]');
-  await expect(reuse).toBeVisible();
-  const sizes = await reuse.locator('svg[viewBox="0 0 200 200"]').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
-  expect(sizes).toEqual([96, 64, 96, 64, 96, 64]);
-  expect(await reuse.locator('path, circle, ellipse').count()).toBeGreaterThan(6);
+  await expect(page.getByTestId('card-reuse')).toHaveCount(0);
+  await expect(page.getByTestId('card-reuse-none')).toBeVisible();
+  await page.getByTestId('card-reuse-none').getByRole('link', { name: 'card-art sheet' }).click();
+  await expect(page).toHaveURL(/\/design-preview\/cards$/);
+  await expect(page.getByTestId('card-art')).toHaveCount(60);
+  for (const id of ['card:kimchi', 'card:won']) {
+    const cell = page.locator(`[data-testid="card-art"][data-card="${id}"]`);
+    const sizes = await cell.locator('svg[viewBox="0 0 200 200"]').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
+    expect(sizes).toEqual([200, 64, 54]);
+    expect(await cell.locator('svg[viewBox="0 0 200 200"]').first().locator('path, circle, ellipse, rect').count()).toBeGreaterThan(3);
+  }
   expect(errors).toEqual([]);
 });
 
