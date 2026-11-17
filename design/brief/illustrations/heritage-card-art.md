@@ -57,7 +57,7 @@ What this changes in this brief:
 - **Outline.** "About 3 px at 600 x 800" was 1 unit on the 200 grid, too thin and too pale to read at 64 px. The outline is now `text.primary`, 6 units on the 200 grid, details 4 (R1). No wobble.
 - **Palette.** "Theme tint plus cream" put cream subjects on a cream ground. A subject has a real colour of its own, and the `colors.vocab.*` tones are allowed in card art (R4).
 - **Red.** The "no red except dancheong orange" lines in sections 6 to 8 are withdrawn for content colours: red in a picture is the colour of a thing (kimchi, an apple), not feedback. The anti-shame rule is about feedback on a miss, and `feedback.danger` still never appears in a picture.
-- **Per-card briefs.** The briefs in section 4 are rewritten card by card in rows PX-2 and PX-3 of the amendment; until then, where a brief asks for a picture these rules reject (a sailboat for "sea", hands on a pouch for the New Year bow, amber kimchi), the rules win. **[PX]** Row PX-2 rewrote the 30 Stage 1 briefs below (each marked **[PX]**) to match the drawings; the upper-stage cards follow in PX-3. Where the art-language prompts of sections 6 and 7 still say "no red", a diamond kite or amber kimchi, section 3.1 wins.
+- **Per-card briefs.** The briefs in section 4 are rewritten card by card in rows PX-2 and PX-3 of the amendment; until then, where a brief asks for a picture these rules reject (a sailboat for "sea", hands on a pouch for the New Year bow, amber kimchi), the rules win. **[PX]** Row PX-2 rewrote the 30 Stage 1 briefs below (each marked **[PX]**) to match the drawings; row PX-3 added the 30 upper-stage and legendary briefs (section 4.1). Where the art-language prompts of sections 6 and 7 still say "no red", a diamond kite or amber kimchi, section 3.1 wins.
 
 Review surface: `/design-preview/cards` draws all 60 real card arts at 200, 64 and 54 px.
 
@@ -106,6 +106,54 @@ Each entry: `id` · `ko (romanization)` · `theme` · `rarity` · 1-line visual 
 - `card:top` · 팽이 (paengi) · crafts · common — A wooden spinning top mid-spin (motion lines either side), gold body with an orange band, a point below. Soft floor shadow. **[PX]** ink outline.
 - `card:pottery` · 청자 (cheongja) · crafts · rare — **[PX]** A Goryeo celadon maebyeong (small mouth, broad shoulder, narrow foot) in soft jade (`stage.stage7` at half strength), one inlaid white crane flying in a white roundel and white inlaid cloud marks. Told by the shape and the crane, not only the colour.
 - `card:gayageum` · 가야금 (gayageum) · crafts · legendary — **[PX]** The long wooden body at three-quarter view on a slant (its side showing), five bold dark strings, each over its own white movable bridge (anjok) in a slanting row, the fixed bridge at the head and the cords coiled at the tail. (Was a flat zither with two bridges for twelve hairline strings.) The `culture-gayageum` glyph shows the same.
+
+### 4.1 [PX] Upper stages and legendary cards (30)
+
+Added by row PX-3 of `docs/specs/AMENDMENTS-PICTURES-2026-11.md` (`UpperCellArt.tsx`, reviewed on `/design-preview/cards`). These cards had no entry here: their pictures followed the stage specs, and two of those asked for the weak picture, which the entries below replace. F-CARD-S4-001 section 3.2 asked for "two figures facing each other" with "one or two speech bubbles" on every Stage 4 talk (five cards, one silhouette); F-CARD-S7-001 drew every Stage 7 card as "the card's word as a word-bank tile over a ruled page" (the picture was the printed word). Row PX-3 of the amendment replaces both templates with one subject per card, so those lines no longer bind the drawings. Now each card is its own subject in the section 3.1 rules: ink outline 6 / 4 units, one subject at 60-70 %, told from the rest of the upper set by shape. The Stage 6 and 7 cards and the legendary cards still print their Korean, small and secondary (R5 allows it: a test keeps every text card out of the question pictures), and the picture carries the meaning without it.
+
+The four moons of the whole set are told apart by what stands in front of the moon: `card:moon` is a crescent with stars and a cloud, `card:chuseok` the full moon with its rabbit behind a songpyeon plate and rice ears, `card:full-moon` the full moon behind a tiled hanok roof, `card:hangawi` a small moon behind a heap of songpyeon and a fruit pyramid.
+
+Stage 2 (all rare):
+- `card:norae` · 노래 (norae) · letters — Two beamed notes, heads in orange, over two orange sound waves, two yellow sparkles. **[PX]** ink outline.
+- `card:dosirak` · 도시락 (dosirak) · life — An open white lunch box with its blue lid leaning behind: four rice balls, a rolled egg, greens. **[PX]** ink outline.
+- `card:bokjumeoni` · 복주머니 (bokjumeoni) · rites — A round purple silk pouch with an orange band, gold tie cords and a round gold knot. **[PX]** ink outline.
+- `card:byeol` · 별 (byeol) · nature — One big smiling yellow five-point star on a dusk sky, two white twinkles. **[PX]** ink outline.
+- `card:swing` · 그네 (geune) · crafts — A seat on two ropes hung from a willow branch, swung forward, green willow strands, motion arcs. **[PX]** ink outline.
+
+Stage 3 (all rare):
+- `card:hangeul` · 한글 (hangeul) · letters — **[PX]** An open book with the first four letters ㄱ ㄴ (left page) and ㄷ ㄹ (right page) in bold strokes, each a letter on its own. (The right page drew ㄱ over ㅡ, which reads as the syllable 그.)
+- `card:tteok` · 떡 (tteok) · life — **[PX]** A cut block of rainbow rice cake (mujigae-tteok) at three-quarter view on a white plate: pink, yellow, green and white layers on the front and the side. (Was pastel cubes that read as marshmallows.)
+- `card:full-moon` · 보름달 (boreumdal) · rites — **[PX]** The big full moon on a deep blue night sky, rising behind the dark tiled roof of a hanok with its upturned eaves and white wall. (Was a moon over hills, the fourth look-alike full moon.)
+- `card:gom` · 곰 (gom) · nature — A round black bear with the white half-moon mark on its chest, smiling. **[PX]** ink outline.
+- `card:yut` · 윷 (yut) · crafts — **[PX]** Four half-round sticks lying side by side, each showing its half-round end: three round backs up, one flat face up with its X marks. (Was a fan of sticks that read as ice-lolly sticks.) The board belongs to `card:yutnori`.
+
+Stage 4 (all rare):
+- `card:mwoyeyo` · 이게 뭐예요? (ige mwoyeyo) · letters — **[PX]** A friend beside a big purple wrapped box with a red ribbon; one bubble with a big question mark.
+- `card:masisseoyo` · 맛있어요 (masisseoyo) · life — **[PX]** One friend with pink cheeks behind a big white bowl of rice, a spoon in hand, red hearts rising.
+- `card:insa` · 인사 (insa) · rites — **[PX]** Two friends in side view bowing to each other: bodies bent at the waist, heads lowered, eyes shut, smiling; no bubbles. (Was two smiley bubbles over two standing friends.)
+- `card:biga-wayo` · 비가 와요 (biga wayo) · nature — **[PX]** A grey-blue cloud with big drops over a friend under a red umbrella, a puddle at the feet; no bubbles.
+- `card:gachi` · 같이 할까요? (gachi halkkayo) · crafts — **[PX]** Two friends hold one big red-and-white ball between them, a paw on each side; no bubbles.
+
+Stage 6 (all rare; the Korean is drawn small):
+- `card:won` · 원 (won) · letters — **[PX]** A big gold coin with the ₩ sign drawn as strokes over a blue banknote; a small price card above (김밥 이천 원). (Was a menu board that only the printed Korean named.)
+- `card:yeogiyo` · 여기요 (yeogiyo) · life — A friend at a table raises a paw and calls; one bubble (여기요!). **[PX]** ink outline.
+- `card:gichapyo` · 기차표 (gichapyo) · rites — A ticket with a notch at each side, a purple top band (기차표), a small blue train on the left and the stations and time on the right. **[PX]** ink outline and the train, so it reads without its text.
+- `card:jeongsang` · 정상 (jeongsang) · nature — A green mountain with a white peak, a trail sign on a post pointing up (정상 ↑). **[PX]** ink outline.
+- `card:deom` · 덤 (deom) · crafts — **[PX]** Three red apples with stems and leaves under a small price card, a green "+" and a fourth apple set apart with sparkles. (Was brown discs.)
+
+Stage 7 (all rare; the cell's sentence on a small note strip under the subject):
+- `card:ireum` · 이름 (ireum) · letters — **[PX]** A name badge on a blue lanyard with a clip: a blue top band, Hoya's face on the left and the name 호야 on the right. (Was a word tile over a page.)
+- `card:achim` · 아침 (achim) · life — **[PX]** The orange sun rising over a green ridge, seen through a wooden window, a slice of toast in front of the sill. (Was the same page as `ireum` plus a small sun.)
+- `card:saengil` · 생일 (saengil) · rites — **[PX]** A round pink cake with white cream on top and drips, three blue candles alight, on a white plate. (Was a pink box beside a word tile.)
+- `card:tokki` · 토끼 (tokki) · nature — **[PX]** The whole white rabbit sitting in the grass, long pink-lined ears up, a round tail, smiling. (Was two ears over a word tile.)
+- `card:bihaenggi` · 비행기 (bihaenggi) · crafts — **[PX]** A big folded paper plane with its fold line, a sky-blue underside, on a dashed flight arc.
+
+Legendary (gold frame, the Korean name small on a label):
+- `card:hunminjeongeum` · 훈민정음 (hunminjeongeum) · letters — **[PX]** An old thread-bound book: aged patterned cover, a white title slip at the upper left, the five-hole red binding along the right edge. (Was a blue slab that read as a notebook.)
+- `card:jang` · 장 담그기 (jang damgeugi) · life — Three round brown onggi jars with lids on a stone terrace. **[PX]** ink outline.
+- `card:hangawi` · 한가위 (hangawi) · rites — **[PX]** A white plate heaped with songpyeon (white, green, yellow) in front, a footed dish piled with red apples and yellow pears behind, a small full moon in the corner. (Was a moon over a small plate.)
+- `card:jirisan` · 지리산 (jirisan) · nature — **[PX]** Ridges one behind another with a white sea of clouds between them and the grey summit stone on the top peak; no sun.
+- `card:ssireum` · 씨름 (ssireum) · crafts — Two friends lean in over the cloth belt in a sand ring. **[PX]** ink outline.
 
 ## 5. Card back layout (universal)
 
@@ -257,6 +305,6 @@ Backs (Phase 2):
 
 ## 10. Out of scope (this PR)
 
-- Stage 2–7 cards (separate brief per stage when content lands)
+- Stage 2–7 cards (separate brief per stage when content lands). **[PX]** The 25 upper-stage album cards and the 5 legendary cards now have their entries in section 4.1.
 - Animated card-reveal sequences (separate animation brief)
 - Print-quality high-DPI exports (deferred until parents request physical merch)
