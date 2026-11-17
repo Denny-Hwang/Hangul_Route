@@ -151,15 +151,16 @@ export const FIG_YANGBAN_MASK: ItemDef = {
   z: 'mid',
   alt: 'Mask-play nobleman in a blue Joseon-style robe and black hat, a white mask with slit eyes, a hinged jaw and a long beard',
   sourceRef: MASK_REF,
-  accuracyNote: "The Gwanno play's yangban per the entry: a hat, a blue dopo and a long hemp beard. The long pipe is left out. The mask is white with the yangban mask's marks: crescent slit eyes and the line of its separate jaw, above the beard ([PX] PX-4).",
+  accuracyNote: "The Gwanno play's yangban per the entry: a hat, a blue dopo and a long hemp beard. The long pipe is left out. The mask is white with the yangban mask's marks: crescent slit eyes and the line of its separate jaw, above the beard ([PX] PX-4), drawn larger ([FU] FU-2).",
   nodes: [
     { t: 'path', d: 'M22 42L46 42Q54 80 58 120L10 120Q14 80 22 42ZM22 28L46 28L54 34L66 12L70 20L54 52L16 52L8 64L2 60L14 34Z', fill: 'brand.secondary', stroke: 'text.primary', sw: 'thin' },
-    face(34, 17, 10, 11),
-    { t: 'path', d: 'M26 27Q34 54 42 27M30 28Q34 48 38 28', stroke: 'border.strong', sw: 'thick' },
+    // [FU-2] a larger mask, so its ink marks read at thumb size
+    face(34, 19, 12, 13),
+    { t: 'path', d: 'M27 30Q34 58 41 30M30.5 31Q34 52 37.5 31', stroke: 'border.strong', sw: 'thick' },
     // [PX] PX-4: the yangban mask's crescent slit eyes and its separate hinged jaw
-    { t: 'path', d: 'M26.5 14Q30 18 33 14M35 14Q38 18 41.5 14', stroke: 'text.primary', sw: 'thick' },
-    { t: 'path', d: 'M25 21Q34 25 43 21', stroke: 'text.primary', sw: 'base' },
-    { t: 'path', d: 'M24 9L44 9L42 0L26 0ZM20 9H48V12H20Z', fill: 'text.primary' },
+    { t: 'path', d: 'M25.5 16Q29.5 21 33 16M35 16Q38.5 21 42.5 16', stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M23.5 24Q34 30 44.5 24', stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M25 7L43 7L41 0L27 0ZM19 7H49V10H19Z', fill: 'text.primary' },
     { t: 'path', d: 'M30 120V123H24M38 120V123H44', stroke: 'text.primary', sw: 'base' },
   ],
 };

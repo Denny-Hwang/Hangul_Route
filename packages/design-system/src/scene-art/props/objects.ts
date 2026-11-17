@@ -145,12 +145,12 @@ export const GLOW_BURST: ItemDef = {
   box: { w: 160, h: 160 },
   z: 'back',
   alt: 'A warm burst of light: rays and glints around an empty centre, for something precious shining or for a sunrise',
-  accuracyNote: 'A sign of light (a halo, rays and glints around an empty centre, so it is not a sun and the thing in front of it shows) for an honoured object shining or a sunrise ([PX] PX-4). No emblem or logo.',
+  accuracyNote: 'A sign of light (rays and glints around an empty centre, so it is not a sun and the thing in front of it shows) for an honoured object shining or a sunrise ([PX] PX-4). [FU] FU-2: no halo disc (it read as a pale sun), twelve rays long and short in turn, four big glints. No emblem or logo.',
   nodes: [
-    { t: 'circle', cx: 80, cy: 80, r: 76, fill: 'feedback.nudge', o: 0.2 },
-    { t: 'path', d: 'M124.5 92L147.5 98M115.5 115.5L124 124M92 124.5L98 147.5M67 128.5L64 140M47.5 112.5L30.5 129.5M31.5 93L20 96', stroke: 'feedback.nudge', sw: 'thick' },
-    { t: 'path', d: 'M35.5 68L12.5 62M44.5 44.5L36 36M68 35.5L62 12.5M93 31.5L96 20M112.5 47.5L129.5 30.5M128.5 67L140 64', stroke: 'feedback.nudge', sw: 'thick' },
-    { t: 'path', d: 'M26 22L28.5 27.5L34 30L28.5 32.5L26 38L23.5 32.5L18 30L23.5 27.5ZM136 117L138 122L143 124L138 126L136 131L134 126L129 124L134 122ZM132 29L133.5 32.5L137 34L133.5 35.5L132 39L130.5 35.5L127 34L130.5 32.5Z', fill: 'feedback.nudge' },
+    { t: 'path', d: 'M118.5 90.5L149.5 98.5M90.5 118.5L98.5 149.5M51.5 108.5L29 131M41.5 69.5L10.5 61.5M69.5 41.5L61.5 10.5M108.5 51.5L131 29', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M112.5 112.5L124 124M68 124.5L64 140M35.5 92L20 96M47.5 47.5L36 36M92 35.5L96 20M124.5 68L140 64', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M22 11L25 21L35 24L25 27L22 37L19 27L9 24L19 21ZM140 107L142.5 115.5L151 118L142.5 120.5L140 129L137.5 120.5L129 118L137.5 115.5Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M136 21L138 28L145 30L138 32L136 39L134 32L127 30L134 28ZM26 122L28 128L34 130L28 132L26 138L24 132L18 130L24 128Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
   ],
 };
 
