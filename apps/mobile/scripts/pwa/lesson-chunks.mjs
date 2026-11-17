@@ -201,7 +201,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measures 4,948,154 B raw, 12,154 B over the line. The line is the measurement plus a 3,846 B margin (one measured
   // raise, 16,000 B over the previous line). The audit's ARCH-2 (a fixed ceiling and a smaller start bundle) is not
   // part of these rows.
-  startBundleRaw: 4_952_000,
+  // [QB] AMENDMENTS-QUEST-SOUND-BACK rows QB-1 to QB-4 (a quest step can be taken back): code of the quest player, so it
+  // is in the start bundle: Previous and the row it sits in, the run's furthest step and its score-neutral replays, the
+  // Look and learn page back, the step events sent once, and the saved run's furthest step. The release `build:web`
+  // (CI=1, Metro cache cleared) measures 4,953,393 B raw, 1,393 B over the line. The line is the measurement plus a
+  // 4,007 B margin (one measured raise, 5,400 B over the previous line).
+  startBundleRaw: 4_957_400,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
