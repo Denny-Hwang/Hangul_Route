@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { MinigameKindSchema } from '@hangul-route/content-schema';
 import { questsAll } from '../../../content/quests';
-import { SKILLS, SKILL_OF_KIND, SKILL_THRESHOLDS, TILE_KINDS, marksFor, questSkills, skillRows, tilesCount } from '../skills';
+import type { QuestStep } from '@hangul-route/content-schema';
+import { SKILLS, SKILL_OF_KIND, SKILL_THRESHOLDS, TILE_KINDS, marksFor, questSkills, questSkillsOnce, skillRows, tilesCount } from '../skills';
 import { BUNDLE_8, quest } from './fixtures/bundle-2026-10';
 
 const ALL_8 = new Set(BUNDLE_8.quests.map((q) => q.id));
@@ -102,5 +103,41 @@ describe('invariant on the live bundle (no counts pinned)', () => {
         if (row.nextReachable) expect(counting).toBeGreaterThanOrEqual(SKILL_THRESHOLDS[row.marks] as number);
       }
     }
+  });
+});
+
+describe('questSkillsOnce (AMENDMENTS-FOLLOWUPS-2026-11 FU-4)', () => {
+  const listen: QuestStep[] = [{ id: 's1', kind: 'check', titleEn: 'Listen', minigameKind: 'listen-pick' }];
+  const trace: QuestStep[] = [{ id: 's1', kind: 'practice', titleEn: 'Trace', minigameKind: 'trace-stroke' }];
+
+  it('answers what questSkills answers, and works each steps list out once', () => {
+    const first = questSkillsOnce({ steps: listen });
+    expect(first).toEqual(questSkills({ steps: listen }));
+    // Another quest object with the same steps list gets the same set: no new work.
+    expect(questSkillsOnce({ steps: listen })).toBe(first);
+  });
+
+  it('follows a quest whose steps arrive later (a lesson cell chunk): a new steps list is a new answer', () => {
+    let steps: QuestStep[] = [];
+    const lazy = {
+      get steps() {
+        return steps;
+      },
+    };
+    expect(questSkillsOnce(lazy)).toEqual(new Set());
+    steps = trace;
+    expect(questSkillsOnce(lazy)).toEqual(new Set(['write']));
+  });
+
+  it('keeps skillRows equal to counting with questSkills on the live bundle', () => {
+    const finished = new Set(questsAll.slice(0, 40).map((q) => q.id));
+    const open = new Set(questsAll.map((q) => q.id));
+    const rows = skillRows({ finished, open, quests: questsAll });
+    for (const row of rows) {
+      const counting = questsAll.filter((q) => questSkills(q).has(row.skill));
+      expect(row.quests).toBe(counting.filter((q) => finished.has(q.id)).length);
+    }
+    // A second build of the same rows (Home, then the Route tab) reads the cache and answers the same.
+    expect(skillRows({ finished, open, quests: questsAll })).toEqual(rows);
   });
 });
