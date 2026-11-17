@@ -807,7 +807,7 @@
       {
        "type": "Path",
        "props": {
-        "d": "M53 96 Q60 92 67 96",
+        "d": "M54 95 Q60 96 66 93",
         "fill": "none",
         "stroke": "#2A1F14",
         "strokeLinecap": "round",
@@ -1254,7 +1254,7 @@
         {
          "type": "Path",
          "props": {
-          "d": "M104 76 Q116 64 122 54",
+          "d": "M104 76 Q118 48 118 16",
           "fill": "none",
           "stroke": "#F2B33D",
           "strokeLinecap": "round",
@@ -1265,10 +1265,35 @@
         {
          "type": "Circle",
          "props": {
-          "cx": 122,
-          "cy": 54,
+          "cx": 118,
+          "cy": 15,
           "fill": "#F2B33D",
           "r": 7
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "G",
+       "props": {
+        "fill": "none",
+        "stroke": "#2A1F14",
+        "strokeLinecap": "round",
+        "strokeWidth": 3
+       },
+       "children": [
+        {
+         "type": "Path",
+         "props": {
+          "d": "M105 6 Q102 11 105 16"
+         },
+         "children": []
+        },
+        {
+         "type": "Path",
+         "props": {
+          "d": "M126 4 Q128 9 126 14"
          },
          "children": []
         }
@@ -2305,7 +2330,7 @@
       {
        "type": "Path",
        "props": {
-        "d": "M53 96 Q60 92 67 96",
+        "d": "M54 95 Q60 96 66 93",
         "fill": "none",
         "stroke": "#2A1F14",
         "strokeLinecap": "round",
@@ -2752,7 +2777,7 @@
         {
          "type": "Path",
          "props": {
-          "d": "M104 76 Q116 64 122 54",
+          "d": "M104 76 Q118 48 118 16",
           "fill": "none",
           "stroke": "#4891CB",
           "strokeLinecap": "round",
@@ -2763,10 +2788,35 @@
         {
          "type": "Circle",
          "props": {
-          "cx": 122,
-          "cy": 54,
+          "cx": 118,
+          "cy": 15,
           "fill": "#4891CB",
           "r": 7
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "G",
+       "props": {
+        "fill": "none",
+        "stroke": "#2A1F14",
+        "strokeLinecap": "round",
+        "strokeWidth": 3
+       },
+       "children": [
+        {
+         "type": "Path",
+         "props": {
+          "d": "M105 6 Q102 11 105 16"
+         },
+         "children": []
+        },
+        {
+         "type": "Path",
+         "props": {
+          "d": "M126 4 Q128 9 126 14"
          },
          "children": []
         }
@@ -3803,7 +3853,7 @@
       {
        "type": "Path",
        "props": {
-        "d": "M53 96 Q60 92 67 96",
+        "d": "M54 95 Q60 96 66 93",
         "fill": "none",
         "stroke": "#2A1F14",
         "strokeLinecap": "round",
@@ -4250,7 +4300,7 @@
         {
          "type": "Path",
          "props": {
-          "d": "M104 76 Q116 64 122 54",
+          "d": "M104 76 Q118 48 118 16",
           "fill": "none",
           "stroke": "#5E9E3E",
           "strokeLinecap": "round",
@@ -4261,10 +4311,35 @@
         {
          "type": "Circle",
          "props": {
-          "cx": 122,
-          "cy": 54,
+          "cx": 118,
+          "cy": 15,
           "fill": "#5E9E3E",
           "r": 7
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "G",
+       "props": {
+        "fill": "none",
+        "stroke": "#2A1F14",
+        "strokeLinecap": "round",
+        "strokeWidth": 3
+       },
+       "children": [
+        {
+         "type": "Path",
+         "props": {
+          "d": "M105 6 Q102 11 105 16"
+         },
+         "children": []
+        },
+        {
+         "type": "Path",
+         "props": {
+          "d": "M126 4 Q128 9 126 14"
          },
          "children": []
         }
@@ -5301,7 +5376,7 @@
       {
        "type": "Path",
        "props": {
-        "d": "M53 96 Q60 92 67 96",
+        "d": "M54 95 Q60 96 66 93",
         "fill": "none",
         "stroke": "#2A1F14",
         "strokeLinecap": "round",
@@ -5748,7 +5823,7 @@
         {
          "type": "Path",
          "props": {
-          "d": "M104 76 Q116 64 122 54",
+          "d": "M104 76 Q118 48 118 16",
           "fill": "none",
           "stroke": "#7C57C0",
           "strokeLinecap": "round",
@@ -5759,10 +5834,35 @@
         {
          "type": "Circle",
          "props": {
-          "cx": 122,
-          "cy": 54,
+          "cx": 118,
+          "cy": 15,
           "fill": "#7C57C0",
           "r": 7
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "G",
+       "props": {
+        "fill": "none",
+        "stroke": "#2A1F14",
+        "strokeLinecap": "round",
+        "strokeWidth": 3
+       },
+       "children": [
+        {
+         "type": "Path",
+         "props": {
+          "d": "M105 6 Q102 11 105 16"
+         },
+         "children": []
+        },
+        {
+         "type": "Path",
+         "props": {
+          "d": "M126 4 Q128 9 126 14"
          },
          "children": []
         }
@@ -6799,7 +6899,7 @@
       {
        "type": "Path",
        "props": {
-        "d": "M53 96 Q60 92 67 96",
+        "d": "M54 95 Q60 96 66 93",
         "fill": "none",
         "stroke": "#2A1F14",
         "strokeLinecap": "round",
@@ -7246,7 +7346,7 @@
         {
          "type": "Path",
          "props": {
-          "d": "M104 76 Q116 64 122 54",
+          "d": "M104 76 Q118 48 118 16",
           "fill": "none",
           "stroke": "#D0527F",
           "strokeLinecap": "round",
@@ -7257,10 +7357,35 @@
         {
          "type": "Circle",
          "props": {
-          "cx": 122,
-          "cy": 54,
+          "cx": 118,
+          "cy": 15,
           "fill": "#D0527F",
           "r": 7
+         },
+         "children": []
+        }
+       ]
+      },
+      {
+       "type": "G",
+       "props": {
+        "fill": "none",
+        "stroke": "#2A1F14",
+        "strokeLinecap": "round",
+        "strokeWidth": 3
+       },
+       "children": [
+        {
+         "type": "Path",
+         "props": {
+          "d": "M105 6 Q102 11 105 16"
+         },
+         "children": []
+        },
+        {
+         "type": "Path",
+         "props": {
+          "d": "M126 4 Q128 9 126 14"
          },
          "children": []
         }
