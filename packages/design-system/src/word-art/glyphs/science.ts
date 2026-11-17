@@ -4,6 +4,7 @@
  * `pts(...)` lists (W7).
  */
 import { blob, circle, curve, face, groundShadow, leaf, line, path, poly, pts, rect, star } from '../builders';
+import { formatNumber as n } from '../path';
 import type { WordArtGlyph, WordArtShape, WordArtTone } from '../types';
 import { head, limb } from './pose';
 
@@ -17,6 +18,17 @@ const RAINBOW: readonly WordArtTone[] = ['vocab.red', 'vocab.orange', 'vocab.yel
 /** One rainbow band: the half ring between radius r and r - w over (cx, cy). */
 const band = (cx: number, cy: number, r: number, w: number, f: WordArtTone): WordArtShape =>
   path(`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy} L ${cx + r - w} ${cy} A ${r - w} ${r - w} 0 0 0 ${cx - r + w} ${cy} Z`, { f });
+
+/**
+ * [FU-2] A teardrop seed centred on (x, y), `len` long and `wide` across, its tip turned `deg` degrees from straight
+ * up: pointed at one end, so it is never read as a round nut.
+ */
+function seed(x: number, y: number, len: number, wide: number, deg: number): WordArtShape {
+  const a = (deg * Math.PI) / 180;
+  const [c, s, r] = [Math.cos(a), Math.sin(a), wide / 2];
+  const p = (u: number, v: number): string => `${n(x + u * c - v * s)} ${n(y + u * s + v * c)}`;
+  return path(`M ${p(0, -len / 2)} Q ${p(r * 1.15, -len * 0.12)} ${p(r, len / 2 - r)} A ${n(r)} ${n(r)} 0 0 1 ${p(-r, len / 2 - r)} Q ${p(-r * 1.15, -len * 0.12)} ${p(0, -len / 2)} Z`, { f: 'stage.stage2', ...INK });
+}
 
 /** A small cloud of three puffs on a flat base, one outline (the inner outlines are covered). */
 function cloud(x: number, y: number): WordArtShape[] {
@@ -106,19 +118,21 @@ export const SCIENCE_GLYPHS: Readonly<Record<string, WordArtGlyph>> = {
     ...face(50, 35, 0.75),
   ],
 
-  // [PX-1] seeds are the subject: three brown seeds, the big one in front just splitting, with a tiny root and its first leaf
+  // [PX-1] seeds are the subject. [FU-2] Redrawn so it is never a chestnut: four pointed teardrop seeds in a pale
+  // golden tan, the big one in the middle split at its tip, where a stem rises with its first two leaves
   'science-seed': [
-    groundShadow(50, 86, 34),
-    blob(pts(14, 76, 18, 68, 28, 66, 36, 71, 34, 80, 24, 83), { f: 'vocab.brown', ...INK }),
-    leaf(19, 73, 28, 70, 1.8, HIGHLIGHT),
-    blob(pts(66, 72, 74, 66, 84, 68, 88, 76, 82, 83, 70, 81), { f: 'vocab.brown', ...INK }),
-    leaf(72, 72, 80, 71, 1.8, HIGHLIGHT),
-    curve(pts(50, 60, 48, 69, 53, 76, 50, 83), INK),
-    curve(pts(50, 26, 52, 21, 58, 18), INK),
-    leaf(57, 19, 72, 17, 4, { f: 'vocab.green', ...INK }),
-    blob(pts(50, 22, 64, 26, 71, 40, 66, 54, 50, 62, 34, 54, 29, 40, 36, 26), { f: 'vocab.brown', ...INK }),
-    path('M 50 22 L 47 30 L 52 36 L 49 43', DETAIL),
-    leaf(37, 36, 37, 50, 3, HIGHLIGHT),
+    groundShadow(50, 87, 36),
+    seed(21, 71, 21, 16, -35),
+    leaf(17, 68, 20, 63, 1.6, HIGHLIGHT),
+    seed(79, 71, 21, 16, 35),
+    leaf(79, 63, 82, 68, 1.6, HIGHLIGHT),
+    seed(34, 85, 17, 13, 78),
+    curve(pts(50, 54, 50, 44, 50, 34), INK),
+    leaf(50, 34, 31, 23, 7, { f: 'vocab.green', ...INK }),
+    leaf(50, 34, 69, 23, 7, { f: 'vocab.green', ...INK }),
+    seed(52, 69, 32, 25, 6),
+    path('M 47 56 L 51 61 L 55 56', DETAIL),
+    leaf(44, 66, 45, 76, 2, HIGHLIGHT),
   ],
 
   // six arcs and two clouds (the six arc colours and the cloud white: allowance of 7, see the registry)
