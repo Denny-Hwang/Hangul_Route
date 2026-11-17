@@ -6,6 +6,7 @@ import { LISTEN_PICK_TIMING } from '../../../logic/listen-pick-flow';
 import { byTestId, press, render, unmount } from '../../../test-support/render';
 import { MinigameScreen } from '../MinigameScreen';
 import { endVoiceCheckHold } from '../../../store/audio-store';
+import { SENTENCE_SOUND_MAX_MS } from '../../../logic/audio/sound-pacing';
 
 /**
  * F-CURR-002 row CM-30 through the real quest host: a `cloze-pick` step plays its Listen & Pick fallback while
@@ -67,6 +68,16 @@ const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
   await press(node!);
 };
 
+const finished = (): unknown[] => track.mock.calls.map((call) => call[0] as { name: string }).filter((event) => event.name === 'minigame.finished');
+
+/** [QS-4] The flow's delay is the least wait; the completed prompt is said to its end first, within the sentence cap. */
+const afterAnswer = async (): Promise<void> => {
+  expect(LISTEN_PICK_TIMING.advanceDelayMs).toBeLessThan(SENTENCE_SOUND_MAX_MS);
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(SENTENCE_SOUND_MAX_MS);
+  });
+};
+
 beforeEach(() => {
   // The screen, not the voice check's answer hold (`use-prompt-slot.ts` settled): the fake clock never ends the check.
   endVoiceCheckHold();
@@ -91,16 +102,16 @@ describe('a Cloze Pick step with game.cloze-pick off', () => {
     expect(byTestId(r.root, 'listen-pick-text-prompt').length).toBeGreaterThan(0);
     await tap(r, `listen-pick-option-${tileId('e2e-cloze-word', 2)}`);
     await tap(r, `listen-pick-option-${tileId('e2e-cloze-word', 0)}`);
-    await act(async () => {
-      vi.advanceTimersByTime(LISTEN_PICK_TIMING.advanceDelayMs);
-    });
+    await afterAnswer();
     expect(runStore.answers.map((a) => [a[0], a[1], (a[2] as { itemId?: string } | undefined)?.itemId])).toEqual([
       [0, false, 'e2e-cloze-word'],
       [0, true, 'e2e-cloze-word'],
     ]);
     expect(runStore.completes).toBe(1);
-    expect(track).toHaveBeenCalledTimes(1);
-    const event = track.mock.calls[0]?.[0] as { name: string; payload: unknown };
+    // The game's own event, once (the voice, which has no Korean voice in this lane, may report its own `audio.*` events
+    // now that the screen waits for it to settle, QS-4).
+    expect(finished()).toHaveLength(1);
+    const event = finished()[0] as { name: string; payload: unknown };
     expect(event).toMatchObject({ name: 'minigame.finished', payload: { kind: 'listen-pick', questId: 'q-cloze', stepIndex: 0 } });
     expect(JSON.stringify(event)).not.toMatch(/[ㄱ-ㆎ가-힣]/);
   });
@@ -114,9 +125,8 @@ describe('a Cloze Pick step with game.cloze-pick off', () => {
     });
     expect(byTestId(r.root, 'cloze-pick-sentence').length).toBeGreaterThan(0);
     await tap(r, `cloze-pick-tile-${tileId('e2e-cloze-word', 0)}`);
-    await act(async () => {
-      vi.advanceTimersByTime(LISTEN_PICK_TIMING.advanceDelayMs);
-    });
-    expect((track.mock.calls[0]?.[0] as { payload: { kind: string } }).payload.kind).toBe('cloze-pick');
+    await afterAnswer();
+    expect(finished()).toHaveLength(1);
+    expect((finished()[0] as { payload: { kind: string } }).payload.kind).toBe('cloze-pick');
   });
 });

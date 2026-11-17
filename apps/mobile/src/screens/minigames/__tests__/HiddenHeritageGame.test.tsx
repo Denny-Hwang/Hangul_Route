@@ -15,6 +15,9 @@ import { HiddenHeritageStep } from '../hidden-heritage-entry';
 import * as scenes from '../hidden-heritage-scenes';
 import type { MinigameHost } from '../host';
 import { passTapLock } from '../../../test-support/render';
+import { SCREEN_SETTLE_MS } from '../../../logic/audio/settle';
+import { ANSWER_SOUND_MAX_MS } from '../../../logic/audio/reply-advance';
+import { FOUND_ADVANCE_MS } from '../../../logic/hidden-heritage-flow';
 
 /**
  * F-CURR-002 row CM-36: the Hidden Heritage step (design/wireframes/minigame/hidden-heritage.md). The game and each scene
@@ -206,8 +209,13 @@ describe('with game.hidden-heritage on', () => {
     await draw(SCOPE, 288, 255);
     expect(audio.playPrompt).not.toHaveBeenCalled();
     await draw(SCOPE, 320, 288);
+    // [QS-3] The scene has just appeared: its first word waits for it.
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, SCREEN_SETTLE_MS - 150));
+    });
+    expect(audio.playPrompt).not.toHaveBeenCalled();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 150 + 40));
     });
     expect(audio.playPrompt).toHaveBeenCalledTimes(1);
   });
@@ -265,5 +273,42 @@ describe('with game.hidden-heritage on', () => {
     const root = await draw({ ...SCOPE, hiddenHeritage: { rounds: [{ ...ROUND, sceneId: 'scene:not-in-this-build' }] } });
     expect(byTestId(root, 'hh-scene')).toHaveLength(0);
     expect(root.findAll((n) => n.props.testID === 'pic-word-picture-bap').length).toBeGreaterThan(0);
+  });
+});
+
+/** [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the found word is said to its end before the next word is asked. */
+describe('[QS-4] the next word waits for the found one', () => {
+  const wait = (ms: number) => act(async () => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const askedKo = (root: ReactTestInstance): string => root.findAll((n) => n.props.testID === 'hh-prompt' && n.props.ko !== undefined)[0]!.props.ko as string;
+  const find = async (root: ReactTestInstance): Promise<string> => {
+    const ko = askedKo(root);
+    const id = ROUND.targets.find((t) => t.word.ko === ko)!.id;
+    passTapLock();
+    await act(async () => spots(root).find((s) => s.props.testID === `hh-spot-${id}`)!.props.onPress());
+    return ko;
+  };
+
+  it('held past the 700 ms while the word is being said, released when it ends', async () => {
+    gameSwitch(true);
+    const root = await draw(SCOPE, 320, 288);
+    let end: () => void = () => undefined;
+    audio.playPrompt.mockImplementationOnce(() => new Promise((resolve) => (end = () => resolve('played' as const))));
+    const first = await find(root);
+    await wait(FOUND_ADVANCE_MS + 400);
+    expect(askedKo(root)).toBe(first);
+    end();
+    await wait(20);
+    expect(askedKo(root)).not.toBe(first);
+  });
+
+  it('released at the cap when the word never ends', async () => {
+    gameSwitch(true);
+    const root = await draw(SCOPE, 320, 288);
+    audio.playPrompt.mockImplementationOnce(() => new Promise(() => undefined));
+    const first = await find(root);
+    await wait(ANSWER_SOUND_MAX_MS - 300);
+    expect(askedKo(root)).toBe(first);
+    await wait(400);
+    expect(askedKo(root)).not.toBe(first);
   });
 });

@@ -32,6 +32,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } 
 import { ScrollView, Text, View, type LayoutChangeEvent, type ViewProps } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
@@ -242,7 +243,9 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   const stateRef = useRef(state);
   const hostRef = useRef(host);
   hostRef.current = host;
-  const timers = useRef<{ clear: ReturnType<typeof setTimeout> | null; advance: ReturnType<typeof setTimeout> | null }>({ clear: null, advance: null });
+  const timers = useRef<{ clear: ReturnType<typeof setTimeout> | null; advance: (() => void) | null }>({ clear: null, advance: null });
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-3, QS-4: the first word waits for the scene; the next word waits for the found one.
+  const pacing = useSoundPacing();
   const dispatchRef = useRef<(e: FlowEvent) => void>(() => undefined);
 
   const slot = usePromptSlot({ source: AUDIO_SOURCE, textOnScreen: true });
@@ -250,9 +253,9 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   const say = useCallback(
     (targetId: string): void => {
       const target = rounds[stateRef.current.roundIdx]?.targets.find((t) => t.id === targetId);
-      if (target) void slotPlay(() => playPrompt(koSpeech(target.word, 'word', AUDIO_SOURCE)));
+      if (target) void pacing.track(slotPlay(() => playPrompt(koSpeech(target.word, 'word', AUDIO_SOURCE))));
     },
-    [rounds, slotPlay],
+    [rounds, slotPlay, pacing],
   );
 
   const runEffect = useCallback(
@@ -278,21 +281,23 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
           timers.current.clear = setTimeout(() => dispatchRef.current({ type: 'clear-flash' }), effect.ms);
           return;
         case 'cancel-advance':
-          if (timers.current.advance) clearTimeout(timers.current.advance);
+          timers.current.advance?.();
           timers.current.advance = null;
           return;
         case 'schedule-advance':
-          timers.current.advance = setTimeout(() => {
+          // The flow's delay is the least wait; the found word is said to its end first (QS-4).
+          timers.current.advance = pacing.after(effect.ms, () => {
+            timers.current.advance = null;
             setRevealed(false);
             dispatchRef.current({ type: 'advance' });
-          }, effect.ms);
+          });
           return;
         case 'complete':
           hostRef.current.complete();
           return;
       }
     },
-    [say],
+    [say, pacing],
   );
 
   const dispatch = useCallback(
@@ -310,7 +315,7 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
     const t = timers.current;
     return () => {
       if (t.clear) clearTimeout(t.clear);
-      if (t.advance) clearTimeout(t.advance);
+      t.advance?.();
       stop();
     };
   }, []);
@@ -334,13 +339,14 @@ export function HiddenHeritageGame({ scope, scenes, host, onBack }: Props): Reac
   useEffect(() => {
     if (sceneFits && !started.current) {
       started.current = true;
-      dispatchRef.current({ type: 'start' });
+      // [QS-3] The scene has just appeared: its first word waits for it. A tap on Hear it first plays at once.
+      pacing.opening(() => dispatchRef.current({ type: 'start' }));
     } else if (narrowed && started.current) {
       const t = timers.current;
       if (t.clear) clearTimeout(t.clear);
-      if (t.advance) clearTimeout(t.advance);
       t.clear = null;
       t.advance = null;
+      pacing.dispose();
       stop();
     }
   }, [sceneFits, narrowed]);

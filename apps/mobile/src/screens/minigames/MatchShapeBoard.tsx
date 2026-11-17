@@ -30,6 +30,7 @@ import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { findJamo } from '../../content/jamo';
 import { useMessages } from '../../i18n/use-messages';
 import { jamoVoice } from '../../logic/audio/jamo-voice';
@@ -165,15 +166,16 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
   const [helpOpen, setHelpOpen] = useState(false);
   const [state, setState] = useState<ShapeState>(() => startShape(round));
   const stateRef = useRef(state);
-  const solvedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the next round waits for the letter's name to be said.
+  const pacing = useSoundPacing();
   const handlers = useRef({ onFirst, onSolved });
   handlers.current = { onFirst, onSolved };
 
   const say = useCallback((): void => {
     // Said by its name (giyeok, nieun, ieung), every letter alike, never a carrier syllable (na, ba): the tiles name letters,
     // and a lone letter's carrier syllable is the confusion of the owner's audio report of 2026-10-29.
-    if (target) void slotPlay(() => playJamo(target, 'letter'));
-  }, [slotPlay, target]);
+    if (target) void pacing.track(slotPlay(() => playJamo(target, 'letter')));
+  }, [slotPlay, target, pacing]);
 
   const run = useCallback(
     (effect: ShapeEffect): void => {
@@ -192,12 +194,12 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
           return;
         case 'solved':
           // A pair moves on by itself after the pause; an origin round's Continue is the learner's own tap.
-          if (round.shape === 'pair') solvedTimer.current = setTimeout(() => handlers.current.onSolved(), PAIR_SOLVED_PAUSE_MS);
+          if (round.shape === 'pair') pacing.after(PAIR_SOLVED_PAUSE_MS, () => handlers.current.onSolved());
           else handlers.current.onSolved();
           return;
       }
     },
-    [say, round.shape],
+    [say, round.shape, pacing],
   );
 
   const dispatch = useCallback(
@@ -212,7 +214,6 @@ export function MatchShapeBoard({ round, sources = [], onFirst, onSolved, source
 
   useEffect(
     () => () => {
-      if (solvedTimer.current) clearTimeout(solvedTimer.current);
       stop();
     },
     [],

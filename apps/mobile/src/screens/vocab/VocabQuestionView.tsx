@@ -159,7 +159,7 @@ export function VocabQuestionView({
 
   const latest = useRef({ question, mode, host, onAnswer, onAdvance, canPlay });
   latest.current = { question, mode, host, onAnswer, onAdvance, canPlay };
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceTimer = useRef<(() => void) | null>(null);
   const promptRef = useRef<View | null>(null);
   const dispatchRef = useRef<(event: QuestionFlowEvent, key: string) => void>(() => undefined);
   // Plays this view started that have not settled: only those are stopped when the view goes away.
@@ -221,11 +221,13 @@ export function VocabQuestionView({
         }
         case 'schedule-advance': {
           const forKey = current.question.key;
-          if (advanceTimer.current) clearTimeout(advanceTimer.current);
-          advanceTimer.current = setTimeout(() => {
+          advanceTimer.current?.();
+          // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the flow's delay is the least wait; the word being said (the
+          // reveal, or a sound question's prompt) ends before the next question.
+          advanceTimer.current = pacing.after(effect.ms, () => {
             advanceTimer.current = null;
             if (flowRef.current.key === forKey) latest.current.onAdvance();
-          }, effect.ms);
+          });
           return;
         }
       }
@@ -287,7 +289,7 @@ export function VocabQuestionView({
 
   useEffect(
     () => () => {
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
+      advanceTimer.current?.();
       // Only this view's own speech: the next screen may already be speaking.
       if (inFlight.current > 0) stop();
     },

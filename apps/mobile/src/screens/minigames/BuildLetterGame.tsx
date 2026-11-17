@@ -29,12 +29,13 @@ import {
   KEY_BOUNCE_MS,
   useTypeScale,
 } from '@hangul-route/design-system';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { afterSound } from '../../logic/audio/reply-advance';
 import { jamoAll } from '../../content/jamo';
 import { useMessages } from '../../i18n/use-messages';
 import { blockShape, removeLastTile, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
@@ -87,6 +88,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
     textOnScreen: true,
   });
   const { play, reset } = slot;
+  /** The syllable's play that may still be sounding when the answer comes (QS-4). */
+  const sounding = useRef<Promise<unknown> | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const tapLock = useTapLock();
   const press = usePressLook();
@@ -107,7 +110,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
   }
 
   const hear = (): void => {
-    void play(() => playPrompt({ text: round.targetSyllable, kind: 'sound', source: 'build-letter' }));
+    sounding.current = play(() => playPrompt({ text: round.targetSyllable, kind: 'sound', source: 'build-letter' }));
   };
 
   const isCorrectWhenComplete = (sel: string[]): boolean => {
@@ -131,14 +134,15 @@ export function BuildLetterGame({ scope, onFinish }: Props): ReactElement {
         setFeedback('correct');
         // The round-ending commit locks the app clock, so the next round's board mounts locked (KT-D5).
         tapLock.lock(TAP_LOCK_MS);
-        setTimeout(() => {
+        // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: nothing is said on an answer here, so the wait is for a prompt that is still sounding.
+        void afterSound(sounding.current, { minMs: 900 }).then(() => {
           if (roundIdx >= rounds.length - 1) {
             markStepComplete();
             onFinish();
           } else {
             setRoundIdx(roundIdx + 1);
           }
-        }, 900);
+        });
       } else {
         nudge();
         answerRound(roundIdx, false, { texts: [round.targetSyllable], rung: 'produce' });

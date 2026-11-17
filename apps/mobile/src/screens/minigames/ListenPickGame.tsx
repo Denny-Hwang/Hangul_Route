@@ -30,7 +30,9 @@ import { View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { soundCapMs } from '../../logic/audio/sound-pacing';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
@@ -141,7 +143,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   const [state, setState] = useState<ListenPickFlowState>(() => ({ ...startFlow(rounds.length), hint: hint !== undefined }));
   const stateRef = useRef(state);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the next round, or the end of the step, waits for the sound that is playing.
+  const pacing = useSoundPacing();
+  const lastCap = useRef(soundCapMs(undefined));
   const speakerRef = useRef<Focusable | null>(null);
   const hostRef = useRef(host);
   hostRef.current = host;
@@ -206,7 +210,9 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         // The autoplay opens a new round: a new prompt slot, so last round's text does not carry over.
         if (effect.why === 'autoplay') slotReset();
         const roundIdx = current.roundIdx;
-        void slotPlay(() => playPrompt(listenPickSpeech(round))).then((result) =>
+        const speech = listenPickSpeech(round);
+        lastCap.current = soundCapMs(speech.kind);
+        void pacing.track(slotPlay(() => playPrompt(speech))).then((result) =>
           dispatchRef.current({ type: 'audio', round: roundIdx, result }),
         );
         return;
@@ -233,13 +239,14 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
         replayTimer.current = setTimeout(() => dispatchRef.current({ type: 'replay-due' }), effect.ms);
         return;
       case 'schedule-advance':
-        advanceTimer.current = setTimeout(() => dispatchRef.current({ type: 'advance' }), effect.ms);
+        // The flow's delay is the least wait; the confirm's sound ends first (QS-4), within the cap for its kind.
+        pacing.after(effect.ms, () => dispatchRef.current({ type: 'advance' }), lastCap.current);
         return;
       case 'complete':
         hostRef.current.complete();
         return;
     }
-  }, [slotPlay, slotReset]);
+  }, [slotPlay, slotReset, pacing]);
 
   const dispatch = useCallback(
     (event: FlowEvent): void => {
@@ -255,7 +262,6 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
   useEffect(
     () => () => {
       if (replayTimer.current) clearTimeout(replayTimer.current);
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
       stop();
     },
     [],

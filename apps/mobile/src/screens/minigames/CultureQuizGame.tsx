@@ -13,12 +13,13 @@ import {
   useLayoutClass,
   TapBoard,
 } from '@hangul-route/design-system';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { afterSound } from '../../logic/audio/reply-advance';
 import { useMessages } from '../../i18n/use-messages';
 import { gameArrangement } from '../../logic/layout/game-layout';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -55,6 +56,8 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
   // The word is printed above its Hear-it button (audit AUD-13 / F16); the panel only says why it is silent (F-AUDIO-004 A-5b).
   const slot = usePromptSlot({ source: 'culture-quiz', textOnScreen: true });
   const { reset } = slot;
+  /** The word's play that may still be sounding when the answer comes (QS-4). */
+  const sounding = useRef<Promise<unknown> | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   useEffect(() => {
     reset();
@@ -70,7 +73,7 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
 
   const hear = (): void => {
     const word = { ko: round.promptKo, spokenKo: round.promptSpokenKo, audioRef: round.promptAudioRef };
-    void slot.play(() => playPrompt(koSpeech(word, 'word', 'culture-quiz')));
+    sounding.current = slot.play(() => playPrompt(koSpeech(word, 'word', 'culture-quiz')));
   };
 
   const handleTap = (en: string, isAnswer: boolean): void => {
@@ -80,7 +83,8 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
       success();
       answerRound(roundIdx, true);
       setFeedback('correct');
-      setTimeout(() => {
+      // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: nothing is said on an answer here, so the wait is for a word that is still sounding.
+      void afterSound(sounding.current, { minMs: 700 }).then(() => {
         if (roundIdx >= rounds.length - 1) {
           markStepComplete();
           onFinish();
@@ -89,7 +93,7 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
           setFeedback('idle');
           setLockedWrong([]);
         }
-      }, 700);
+      });
     } else {
       nudge();
       answerRound(roundIdx, false);

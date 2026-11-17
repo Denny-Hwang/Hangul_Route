@@ -32,6 +32,7 @@ import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { heldAnswers } from '../../components/held-answers';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useSoundPacing } from '../../components/use-sound-pacing';
 import { useMessages } from '../../i18n/use-messages';
 import { shouldAutoReplay } from '../../logic/audio/prompt-view';
 import { hoyaLine, startBuild, stepBuild, type BuildEffect, type BuildEvent, type BuildState } from '../../logic/syllable-build/flow';
@@ -153,13 +154,14 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
   const [state, setState] = useState<BuildState>(() => (parts ? startBuild(parts, fixed ?? null) : startBuild({ first: '', vowel: '', final: null })));
   const stateRef = useRef(state);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const solvedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: the next round waits for the built word to be said.
+  const pacing = useSoundPacing();
   const handlers = useRef({ onFirst, onSolved, onRight });
   handlers.current = { onFirst, onSolved, onRight };
 
   const say = useCallback((): void => {
-    void slotPlay(() => playPrompt({ text: target.spokenKo ?? target.ko, ...(target.audioRef ? { audioRef: target.audioRef } : {}), kind: 'word', source }));
-  }, [slotPlay, target.spokenKo, target.ko, target.audioRef, source]);
+    void pacing.track(slotPlay(() => playPrompt({ text: target.spokenKo ?? target.ko, ...(target.audioRef ? { audioRef: target.audioRef } : {}), kind: 'word', source })));
+  }, [slotPlay, target.spokenKo, target.ko, target.audioRef, source, pacing]);
 
   const dispatchRef = useRef<(e: BuildEvent) => void>(() => undefined);
   const run = useCallback(
@@ -189,11 +191,11 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
           // The round-ending commit locks the app clock, so the next round's keyed board mounts locked (KT-D5).
           lockRef.current(TAP_LOCK_MS);
           handlers.current.onRight?.();
-          solvedTimer.current = setTimeout(() => handlers.current.onSolved(), SOLVED_PAUSE_MS);
+          pacing.after(SOLVED_PAUSE_MS, () => handlers.current.onSolved());
           return;
       }
     },
-    [say],
+    [say, pacing],
   );
 
   const dispatch = useCallback(
@@ -212,7 +214,6 @@ export function SyllableBuildBoard({ target, tiles, fixed, onFirst, onSolved, on
     if (autoplay) say();
     return () => {
       if (replayTimer.current) clearTimeout(replayTimer.current);
-      if (solvedTimer.current) clearTimeout(solvedTimer.current);
       stop();
     };
     // Once per round: the board is keyed by its round.

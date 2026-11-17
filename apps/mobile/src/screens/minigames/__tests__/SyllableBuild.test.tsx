@@ -8,6 +8,7 @@ import { byTestId, press, screenTexts } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
 import { SOLVED_PAUSE_MS, SyllableBuildBoard } from '../SyllableBuildBoard';
 import { SyllableBuildStep, syllableBuildChunk } from '../syllable-build-entry';
+import { ANSWER_SOUND_MAX_MS } from '../../../logic/audio/reply-advance';
 
 /**
  * F-CURR-002 section 7.1 F3 and section 12.2, row CM-32 (design/wireframes/minigame/syllable-build.md): the board at
@@ -79,8 +80,14 @@ describe('the Syllable Build board', () => {
     expect(texts(r)).toContain('You built it!');
     expect(texts(r).join(' ')).toMatch(/\bbap\b/);
     expect(onSolved).not.toHaveBeenCalled();
+    // [QS-4] The pause is the least wait; the built word (here a voice that is still being looked for) ends first,
+    // within the cap.
     await act(async () => {
-      vi.advanceTimersByTime(SOLVED_PAUSE_MS);
+      await vi.advanceTimersByTimeAsync(SOLVED_PAUSE_MS - 1);
+    });
+    expect(onSolved).not.toHaveBeenCalled();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ANSWER_SOUND_MAX_MS - SOLVED_PAUSE_MS + 1);
     });
     expect(onSolved).toHaveBeenCalledTimes(1);
   });

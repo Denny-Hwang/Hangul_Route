@@ -62,7 +62,6 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [lockedWrongIds, setLockedWrongIds] = useState<string[]>([]);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // F-LAYOUT-001 §3.6: tiles scale with the window; prompt left, tiles right on a wide landscape window.
   const layoutClass = useLayoutClass();
   const tile = useMediaSize(touchTarget.hero);
@@ -113,7 +112,6 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   useEffect(() => {
     return () => {
       if (replayTimer.current) clearTimeout(replayTimer.current);
-      if (advanceTimer.current) clearTimeout(advanceTimer.current);
     };
   }, []);
 
@@ -135,15 +133,15 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
       setFeedback('correct');
       // Answered: the replay a miss just scheduled would say this prompt again over the next round (M6).
       clearReplay();
-      advanceTimer.current = setTimeout(() => {
-        advanceTimer.current = null;
+      // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-4: nothing is said on an answer here, so the wait is for a prompt that is still sounding.
+      pacing.after(700, () => {
         if (roundIdx >= rounds.length - 1) {
           markStepComplete();
           onFinish();
         } else {
           setRoundIdx(roundIdx + 1);
         }
-      }, 700);
+      });
     } else {
       nudge();
       answerRound(roundIdx, false, { jamoIds: [round.promptJamo.id], rung: 'recognize' });
