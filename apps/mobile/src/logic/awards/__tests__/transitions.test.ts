@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as completion from '../../stage1/completion';
 import { completedEpisodes, isStageComplete } from '../derive';
-import { completionState, completionTransition, stageCompleteFor } from '../transitions';
+import { completedEpisodesOnce, completionState, completionTransition, stageCompleteFor } from '../transitions';
 import { done, EPISODES, snapshot, T1, T2, T3, WORLD } from './fixtures';
 
 /**
@@ -50,5 +50,23 @@ describe('logic/stage1/completion.ts', () => {
     expect(completion.completionState).toBe(completionState);
     expect(completion.completionTransition).toBe(completionTransition);
     expect(completion.isStageComplete).toBe(stageCompleteFor);
+  });
+});
+
+describe('completedEpisodesOnce (AMENDMENTS-FOLLOWUPS-2026-11 FU-4)', () => {
+  it('answers what completedEpisodes answers, once per episode list and quest list', () => {
+    const first = completedEpisodesOnce(EPISODES, STAGE1_ALL);
+    expect(new Map(first)).toEqual(completedEpisodes(WORLD, STAGE1_ALL));
+    // The same two arrays (every stage of one route model): the same answer, not worked out again.
+    expect(completedEpisodesOnce(EPISODES, { quests: STAGE1_ALL.quests })).toBe(first);
+  });
+
+  it('a new quest list (a progress write) or a new episode list is a new answer', () => {
+    const before = snapshot({ quests: [done('quest:l1', 1, T1)] });
+    expect([...completedEpisodesOnce(EPISODES, before).keys()]).toEqual([]);
+    const after = snapshot({ quests: [...before.quests, done('quest:l2', 3, T3)] });
+    expect([...completedEpisodesOnce(EPISODES, after).keys()]).toEqual(['episode:stage1-letters']);
+    expect(completionState('stage1', EPISODES, before).completedEpisodeIds).toEqual([]);
+    expect(completedEpisodesOnce([...EPISODES], STAGE1_ALL)).not.toBe(completedEpisodesOnce(EPISODES, STAGE1_ALL));
   });
 });
