@@ -10,3 +10,22 @@ import type { TelemetryEvent } from '../platform/telemetry';
 export function minigameFinishedEvent(kind: MinigameKind, questId: string, stepIndex: number, profileId?: string): TelemetryEvent {
   return { name: 'minigame.finished', profileId, payload: { kind, questId, stepIndex } };
 }
+
+/** The run fields `gameFinishIsReported` reads (`quest-run-store`). */
+export interface FinishRun {
+  questId: string | null;
+  furthestStep: number;
+  reportOnce: (event: string, step: number) => boolean;
+}
+
+/**
+ * [QB] Whether `minigame.finished` is sent for a game of `questId` that just ended on `stepIndex` (AMENDMENTS-QUEST-SOUND-BACK
+ * QB-3): once per step per run. A game played again on a step shown after Previous sends nothing; a skipped game
+ * played after all sends it then, for the first time. On the furthest step it is sent as it always was (a story told
+ * in parts ends once per part), and a game that is not of the run in the store is not counted.
+ */
+export function gameFinishIsReported(run: FinishRun, questId: string, stepIndex: number): boolean {
+  if (run.questId !== questId) return true;
+  const first = run.reportOnce('minigame.finished', stepIndex);
+  return first || stepIndex >= run.furthestStep;
+}

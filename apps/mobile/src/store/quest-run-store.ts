@@ -55,6 +55,11 @@ interface State {
    * They cap the run's stars (`quest-flow/skip-cap.ts`). A game ended from inside is a completed step, as before.
    */
   skippedSteps: readonly number[];
+  /**
+   * [QB] The step events already sent in this run, as `<event>:<step>` (QB-3): `quest.discover_completed`,
+   * `quest.check_completed` and `minigame.finished` go out once per step per run, however often the step is shown.
+   */
+  reported: readonly string[];
   pendingAdvance: boolean;
   /** What each round missed on the first try asked, in order: Try these again on the reward step (F-CURR-002 row CM-15). */
   missed: readonly RoundAsked[];
@@ -78,9 +83,22 @@ interface Actions {
    * only the first answer for a round key (within the current step) scores.
    * `hinted`: answered with help (Dictation's hint or a one-letter slip, row CM-31; Story Order's Show meanings, row
    * CM-34, which passes it with a right answer only): the memory store records it as a hinted right answer.
+   * [QB] On a step shown again after Previous (AMENDMENTS-QUEST-SOUND-BACK QB-3) an answer changes nothing: no right
+   * answer, no miss, no retry, nothing for Try these again or the pacing rules, and no event for the memory store. The
+   * step was scored when it was first played. The one exception is a step that was skipped: it was never played, so
+   * its rounds score as on a first play.
    */
   answerRound: (roundKey: string | number, correct: boolean, asked?: RoundAsked, hinted?: boolean) => void;
+  /**
+   * The game of the current step ended. [QB] A skipped step that is played to its end on a revisit is no longer a
+   * skipped step (QB-3), so it stops capping the stars.
+   */
   markStepComplete: () => void;
+  /**
+   * [QB] Whether `event` of `step` is sent now for the first time in this run (QB-3); it is noted as sent. With no run
+   * in the store there is nothing to note and the answer is yes.
+   */
+  reportOnce: (event: string, step: number) => boolean;
   /** [AU] Skip for now on the current step's launcher (row AU-9): the step is noted as skipped; the caller moves on. */
   markStepSkipped: () => void;
   goNextStep: () => void;
@@ -110,6 +128,7 @@ const blankRun = {
   retryCount: 0,
   scoredRounds: [],
   skippedSteps: [],
+  reported: [],
   pendingAdvance: false,
   missed: [],
   tries: [],
@@ -142,6 +161,8 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
 
   answerRound: (roundKey, correct, asked, hinted = false) => {
     const before = get();
+    // [QB] A step played again scores nothing new (QB-3); a skipped step was never played, so it scores.
+    if (before.stepIndex < before.furthestStep && !before.skippedSteps.includes(before.stepIndex)) return;
     const first = !before.scoredRounds.includes(`${before.stepIndex}:${roundKey}`);
     set((s) => {
       const next = tallyAnswer(
@@ -171,7 +192,20 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
     }
   },
 
-  markStepComplete: () => set({ pendingAdvance: true }),
+  markStepComplete: () =>
+    set((s) => ({
+      pendingAdvance: true,
+      ...(s.skippedSteps.includes(s.stepIndex) ? { skippedSteps: s.skippedSteps.filter((step) => step !== s.stepIndex) } : {}),
+    })),
+
+  reportOnce: (event, step) => {
+    const { questId, reported } = get();
+    if (questId === null) return true;
+    const key = `${event}:${step}`;
+    if (reported.includes(key)) return false;
+    set({ reported: [...reported, key] });
+    return true;
+  },
 
   markStepSkipped: () => set((s) => ({ skippedSteps: withStep(s.skippedSteps, s.stepIndex) })),
 

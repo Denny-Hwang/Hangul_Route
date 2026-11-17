@@ -129,3 +129,42 @@ describe('watchCheck: when the player leaves the Check step', () => {
     });
   });
 });
+
+describe('[QB] watchCheck when a step is taken back (AMENDMENTS-QUEST-SOUND-BACK QB-3)', () => {
+  const at = (stepIndex: number, kind: QuestStepKind | undefined, correct: number, retries: number, furthestStep: number) => ({ stepIndex, kind, correct, retries, furthestStep });
+
+  it('Previous from a Check in progress keeps what it counted; back on the Check the baseline is taken again', () => {
+    // The Check opens at 5 right, 1 retry; one round is played (6, 2), then Previous.
+    const open = watchCheck(null, at(4, 'check', 5, 1, 4));
+    const away = watchCheck(open.watch, at(3, 'apply', 6, 2, 4));
+    expect(away).toEqual({ watch: { index: 4, correct: 5, retries: 1, away: { correct: 1, retries: 1 } }, completed: null });
+    // Further back changes nothing.
+    const further = watchCheck(away.watch, at(2, 'practice', 6, 2, 4));
+    expect(further.watch).toEqual(away.watch);
+    expect(further.completed).toBeNull();
+    // A skipped game played on the way adds 3 right answers and a retry to the run: none of them the Check's.
+    const forward = watchCheck(further.watch, at(3, 'apply', 9, 3, 4));
+    expect(forward.watch).toEqual(away.watch);
+    const back = watchCheck(forward.watch, at(4, 'check', 9, 3, 4));
+    expect(back).toEqual({ watch: { index: 4, correct: 8, retries: 2 }, completed: null });
+    // The second round is played (10, 3) and the Check ends: 2 first-try right answers, 1 retry.
+    expect(watchCheck(back.watch, at(5, 'reward', 10, 3, 5))).toEqual({ watch: null, completed: { firstTryCorrect: 2, retries: 1 } });
+  });
+
+  it('a Check that has ended is not watched again when it is shown after Previous, so it never reports twice', () => {
+    const done = watchCheck({ index: 4, correct: 5, retries: 1 }, at(5, 'reward', 7, 1, 5));
+    expect(done.completed).toEqual({ firstTryCorrect: 2, retries: 0 });
+    const shownAgain = watchCheck(done.watch, at(4, 'check', 7, 1, 5));
+    expect(shownAgain).toEqual({ watch: null, completed: null });
+    expect(watchCheck(shownAgain.watch, at(5, 'reward', 7, 1, 5))).toEqual({ watch: null, completed: null });
+  });
+
+  it('a run that started again from an earlier step still drops the baseline', () => {
+    const watch = { index: 4, correct: 5, retries: 1 };
+    expect(watchCheck(watch, at(0, 'intro', 0, 0, 0))).toEqual({ watch: null, completed: null });
+  });
+
+  it('a run resumed on its Check (the furthest step) takes the baseline as before', () => {
+    expect(watchCheck(null, at(4, 'check', 5, 1, 4))).toEqual({ watch: { index: 4, correct: 5, retries: 1 }, completed: null });
+  });
+});

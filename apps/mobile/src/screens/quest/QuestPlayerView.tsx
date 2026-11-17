@@ -299,9 +299,12 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
       kind: stepKind,
       correct: run.correctCount,
       retries: run.retryCount,
+      furthestStep: run.furthestStep,
     });
+    const checkAt = checkWatch.current?.index;
     checkWatch.current = out.watch;
-    if (out.completed) {
+    // [QB] Once per step per run (QB-3), whatever the way the Check is left and shown again.
+    if (out.completed && checkAt !== undefined && run.reportOnce('quest.check_completed', checkAt)) {
       portsRef.current.track({
         name: 'quest.check_completed',
         payload: checkCompletedPayload(questId, out.completed),
@@ -377,10 +380,13 @@ function QuestPlayerBody({ questId, episodeId, ports, onOpenGame, onBack, onAskL
   }
 
   const discoverDone = (result: { pages: number; heard: number }): void => {
-    ports.track({
-      name: 'quest.discover_completed',
-      payload: discoverCompletedPayload(questId, result),
-    });
+    // [QB] Once per step per run (QB-3): Continue on the last page of a step shown again reports nothing.
+    if (useQuestRunStore.getState().reportOnce('quest.discover_completed', stepIndex)) {
+      ports.track({
+        name: 'quest.discover_completed',
+        payload: discoverCompletedPayload(questId, result),
+      });
+    }
     advance();
   };
 

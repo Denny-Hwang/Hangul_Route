@@ -75,11 +75,19 @@ export function checkCompletedPayload(
 /** Run totals at the moment the Check step opened. */
 export interface CheckWatch extends RunCounts {
   index: number;
+  /**
+   * [QB] The learner went back from the Check with Previous before it ended (AMENDMENTS-QUEST-SOUND-BACK QB-3): what
+   * the Check had counted so far. The baseline is taken again when the Check is back on screen, so what is played on
+   * the way (a skipped game, played after all) is not counted as the Check's.
+   */
+  away?: RunCounts;
 }
 
 export interface CheckWatchInput extends RunCounts {
   stepIndex: number;
   kind: QuestStepKind | undefined;
+  /** [QB] The furthest step the run reached (`quest-run-store`). Absent: the step on screen is the furthest. */
+  furthestStep?: number;
 }
 
 export interface CheckWatchOut {
@@ -93,6 +101,8 @@ export interface CheckWatchOut {
  * moves past it (all of its rounds answered, `markStepComplete`), so the
  * event rides the step change: no double firing when the learner leaves the
  * game and comes back to the launcher, none when the run is discarded.
+ * [QB] Nor when the Check is shown again after Previous (QB-3): a Check behind the furthest step has ended and is not
+ * watched again, and a Check left by Previous before it ended keeps its counts until the learner is back on it.
  */
 export function watchCheck(watch: CheckWatch | null, at: CheckWatchInput): CheckWatchOut {
   let completed: CheckWatchOut['completed'] = null;
@@ -101,9 +111,18 @@ export function watchCheck(watch: CheckWatch | null, at: CheckWatchInput): Check
     completed = { firstTryCorrect: at.correct - current.correct, retries: at.retries - current.retries };
     current = null;
   } else if (current && at.stepIndex < current.index) {
-    current = null;
+    if ((at.furthestStep ?? at.stepIndex) >= current.index) {
+      // Previous from the Check: its counts so far are kept (once: further steps back change nothing).
+      current = current.away ? current : { ...current, away: { correct: at.correct - current.correct, retries: at.retries - current.retries } };
+    } else {
+      // The run started again from an earlier step.
+      current = null;
+    }
+  } else if (current?.away && at.stepIndex === current.index) {
+    current = { index: current.index, correct: at.correct - current.away.correct, retries: at.retries - current.away.retries };
   }
-  if (current === null && at.kind === 'check') {
+  const ended = at.furthestStep !== undefined && at.stepIndex < at.furthestStep;
+  if (current === null && at.kind === 'check' && !ended) {
     current = { index: at.stepIndex, correct: at.correct, retries: at.retries };
   }
   return { watch: current, completed };

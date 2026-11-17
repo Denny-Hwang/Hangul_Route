@@ -269,3 +269,123 @@ describe('[QB] Previous between steps (row QB-2)', () => {
     expect(named(r, again)).toHaveLength(1);
   });
 });
+
+describe('[QB] going back changes no score (row QB-3)', () => {
+  const sent = (ports: { track: ReturnType<typeof vi.fn> }, name: string): unknown[] =>
+    ports.track.mock.calls.map((c) => c[0] as { name: string; payload: unknown }).filter((e) => e.name === name).map((e) => e.payload);
+
+  it('a game played again on a revisit leaves the result as it was: same stars, same counts, same retries', async () => {
+    const { r, ports } = await playerAt(PRACTICE);
+    await playGame(3, 4);
+    await playGame(3, 3);
+    await playGame(2, 2);
+    expect(run().stepIndex).toBe(REWARD);
+    const before = { correct: run().correctCount, total: run().totalCount, retries: run().retryCount, stars: run().stars(QUEST.steps) };
+    // Back to Practice, play it again all wrong with second taps, forward, play Apply again all right, forward to the end.
+    await tap(r, 'Previous');
+    await tap(r, 'Previous');
+    await tap(r, 'Previous');
+    expect(run().stepIndex).toBe(PRACTICE);
+    await act(async () => {
+      const store = run();
+      for (let i = 0; i < 4; i += 1) {
+        store.answerRound(i, false);
+        store.answerRound(i, true);
+      }
+      store.markStepComplete();
+      store.consumePendingAdvance();
+    });
+    await settle();
+    await playGame(3, 3);
+    await tap(r, 'Continue');
+    expect(run().stepIndex).toBe(REWARD);
+    expect({ correct: run().correctCount, total: run().totalCount, retries: run().retryCount, stars: run().stars(QUEST.steps) }).toEqual(before);
+    await tap(r, 'See results');
+    expect(ports.finish).toHaveBeenCalledWith({ stars: before.stars, correct: 8, total: 9, played: true, retries: 0 });
+  });
+
+  it('a skipped game stays skipped (2 stars at most) when it is only looked at again', async () => {
+    const { r, ports } = await playerAt(PRACTICE);
+    await playGame(4, 4);
+    await tap(r, 'Skip for now');
+    await playGame(2, 2);
+    await tap(r, 'Previous');
+    await tap(r, 'Previous');
+    expect(run().stepIndex).toBe(APPLY);
+    await tap(r, 'Continue');
+    await tap(r, 'Continue');
+    await tap(r, 'See results');
+    expect(ports.finish).toHaveBeenCalledWith({ stars: 2, correct: 6, total: 6, played: true, retries: 0 });
+  });
+
+  it('a skipped game played in full on the revisit is no longer skipped: its rounds score and the cap is gone', async () => {
+    const { r, ports } = await playerAt(PRACTICE);
+    await playGame(4, 4);
+    await tap(r, 'Skip for now');
+    await playGame(2, 2);
+    expect(run().skippedSteps).toEqual([APPLY]);
+    await tap(r, 'Previous');
+    await tap(r, 'Previous');
+    await playGame(3, 3);
+    expect(run().skippedSteps).toEqual([]);
+    expect(run().stepIndex).toBe(CHECK);
+    await tap(r, 'Continue');
+    await tap(r, 'See results');
+    expect(ports.finish).toHaveBeenCalledWith({ stars: 3, correct: 9, total: 9, played: true, retries: 0 });
+  });
+
+  it('quest.discover_completed is sent once, however often Look and learn is passed', async () => {
+    const { r, ports } = await playerAt(DISCOVER);
+    for (let i = 0; i < PAGES; i += 1) await tap(r, 'Continue');
+    expect(sent(ports, 'quest.discover_completed')).toHaveLength(1);
+    await tap(r, 'Previous');
+    expect(run().stepIndex).toBe(DISCOVER);
+    await tap(r, 'Continue');
+    expect(run().stepIndex).toBe(PRACTICE);
+    // And once more from the intro, through every page.
+    await tap(r, 'Previous');
+    for (let i = 1; i < PAGES; i += 1) await tap(r, 'Previous');
+    await tap(r, 'Previous');
+    expect(run().stepIndex).toBe(INTRO);
+    await tap(r, 'Continue');
+    for (let i = 0; i < PAGES; i += 1) await tap(r, 'Continue');
+    expect(run().stepIndex).toBe(PRACTICE);
+    expect(sent(ports, 'quest.discover_completed')).toEqual([{ questId: QUEST.id, pages: PAGES, heard: 0 }]);
+  });
+
+  it('quest.check_completed is sent once, with the first play\'s counts, also after the Check is played again', async () => {
+    const { r, ports } = await playerAt(CHECK);
+    await playGame(1, 2);
+    expect(sent(ports, 'quest.check_completed')).toEqual([{ questId: QUEST.id, firstTryCorrect: 1, retries: 0 }]);
+    await tap(r, 'Previous');
+    expect(run().stepIndex).toBe(CHECK);
+    await playGame(2, 2);
+    expect(run().stepIndex).toBe(REWARD);
+    await tap(r, 'Previous');
+    await tap(r, 'Continue');
+    expect(sent(ports, 'quest.check_completed')).toHaveLength(1);
+  });
+
+  it('a Check left by Previous half-way reports all of its rounds when it ends', async () => {
+    const { r, ports } = await playerAt(APPLY);
+    await tap(r, 'Skip for now');
+    expect(run().stepIndex).toBe(CHECK);
+    // Round 1 of the Check, then the game is closed and the learner goes back to the skipped game and plays it.
+    await act(async () => {
+      run().answerRound(0, true);
+    });
+    await tap(r, 'Previous');
+    await playGame(3, 3);
+    expect(run().stepIndex).toBe(CHECK);
+    await act(async () => {
+      const store = run();
+      store.answerRound(1, false);
+      store.answerRound(1, true);
+      store.markStepComplete();
+      store.consumePendingAdvance();
+    });
+    await settle();
+    expect(sent(ports, 'quest.check_completed')).toEqual([{ questId: QUEST.id, firstTryCorrect: 1, retries: 1 }]);
+  });
+});
+
