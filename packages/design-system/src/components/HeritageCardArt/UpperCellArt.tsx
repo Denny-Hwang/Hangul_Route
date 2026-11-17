@@ -1,5 +1,5 @@
 import type { ReactNode, ReactElement } from 'react';
-import { Svg, Circle, Ellipse, G, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
+import { Svg, Circle, Ellipse, G, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { colors } from '../../tokens';
 import { albumLegendArtIds, upperCellCardArtIds } from './upper-card-ids';
 import type { HeritageCardArtProps } from './types';
@@ -51,86 +51,64 @@ const sparkle = (x: number, y: number, r: number): string => `M${x} ${y - r}Q${x
 // ---- Stage 2 ------------------------------------------------------------------------------------------
 
 function NoraeArt(p: ArtProps): ReactElement {
-  // Song: two beamed notes rising over three soft sound waves.
+  // Song: two beamed notes rising over two sound waves.
   return (
     <Card theme="letters" p={p}>
-      <G stroke={colors.theme.letters} strokeWidth={3} fill="none" strokeLinecap="round" opacity={0.6}>
-        <Path d="M30 150 Q60 130 90 150 T150 150" />
-        <Path d="M40 166 Q70 148 100 166 T160 166" />
-      </G>
-      <Path d="M78 58 L138 44 L138 112" stroke={colors.text.primary} strokeWidth={5} fill="none" strokeLinejoin="round" />
-      <Path d="M78 58 L78 126" stroke={colors.text.primary} strokeWidth={5} strokeLinecap="round" />
-      <Ellipse cx={66} cy={128} rx={15} ry={11} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2.5} />
-      <Ellipse cx={126} cy={114} rx={15} ry={11} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2.5} />
-      <Circle cx={160} cy={60} r={4} fill={colors.feedback.nudge} />
-      <Circle cx={44} cy={70} r={3} fill={colors.feedback.nudge} />
+      <Path d="M22 160Q52 140 82 160T142 160T182 156M34 182Q64 164 94 182T154 182" stroke={colors.theme.letters} strokeWidth={6} fill={NONE} strokeLinecap="round" />
+      <Path d="M70 50L146 30" stroke={colors.text.primary} strokeWidth={16} strokeLinecap="round" />
+      <Path d="M70 50V124M146 30V106" {...INK} strokeWidth={8} />
+      <Ellipse cx={54} cy={126} rx={21} ry={15} fill={colors.brand.primary} {...INK} transform="rotate(-20 54 126)" />
+      <Ellipse cx={130} cy={108} rx={21} ry={15} fill={colors.brand.primary} {...INK} transform="rotate(-20 130 108)" />
+      <Path d={sparkle(176, 74, 10) + sparkle(30, 62, 8)} fill={colors.vocab.yellow} {...DET} />
     </Card>
   );
 }
 
 function DosirakArt(p: ArtProps): ReactElement {
-  // Lunch box: an open box with rice, a rolled egg and greens, the lid leaning behind.
+  // Lunch box: an open box with rice balls, a rolled egg and greens, the lid leaning behind.
   return (
     <Card theme="life" p={p}>
-      {shadow(166, 70)}
-      <Rect x={44} y={38} width={112} height={44} rx={10} fill={colors.brand.secondaryLight} stroke={colors.brand.secondaryDark} strokeWidth={2.5} />
-      <Rect x={32} y={78} width={136} height={84} rx={12} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} />
-      <Line x1={100} y1={84} x2={100} y2={156} stroke={colors.text.secondary} strokeWidth={2.5} />
-      <G fill={colors.surface.canvas} stroke={colors.text.muted} strokeWidth={1.5}>
-        <Circle cx={56} cy={104} r={9} />
-        <Circle cx={76} cy={104} r={9} />
-        <Circle cx={56} cy={134} r={9} />
-        <Circle cx={76} cy={134} r={9} />
+      {shadow(172, 76)}
+      <Rect x={40} y={26} width={120} height={48} rx={10} fill={colors.brand.secondaryLight} {...INK} />
+      <Rect x={22} y={66} width={156} height={100} rx={12} fill={colors.surface.paper} {...INK} />
+      <Path d="M100 72V160" {...DET} />
+      <G fill={colors.surface.paper} {...DET}>
+        <Circle cx={46} cy={96} r={14} />
+        <Circle cx={76} cy={96} r={14} />
+        <Circle cx={46} cy={136} r={14} />
+        <Circle cx={76} cy={136} r={14} />
       </G>
-      <Rect x={110} y={92} width={48} height={24} rx={8} fill={colors.feedback.nudge} stroke={colors.hoya.furDark} strokeWidth={2} />
-      <Path d="M112 140 Q124 124 134 140 Q146 124 156 140 Z" fill={colors.theme.nature} />
+      <Rect x={110} y={80} width={58} height={34} rx={10} fill={colors.vocab.yellow} {...DET} />
+      <Path d="M126 97Q134 88 142 97Q134 106 126 97" {...DET} fill={NONE} />
+      <Path d="M110 152Q124 120 138 152Q152 120 168 152Z" fill={colors.vocab.green} {...DET} />
     </Card>
   );
 }
 
 function BokjumeoniArt(p: ArtProps): ReactElement {
-  // Lucky pouch: a round silk pouch gathered at the top with a tie cord, a few grains beside it.
+  // Lucky pouch: a round silk pouch gathered at the top with a tie cord, a gold 'luck' knot on its front.
   return (
     <Card theme="rites" p={p}>
-      {shadow(170, 56)}
-      <Path
-        d="M62 78 Q40 120 58 152 Q100 176 142 152 Q160 120 138 78 Z"
-        fill={colors.theme.rites}
-        stroke={colors.text.secondary}
-        strokeWidth={3}
-        strokeLinejoin="round"
-      />
-      <Path d="M70 78 Q100 64 130 78 L124 88 Q100 80 76 88 Z" fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} />
-      <Path d="M100 76 Q86 50 70 44 M100 76 Q114 50 130 44" stroke={colors.feedback.nudge} strokeWidth={3.5} fill="none" strokeLinecap="round" />
-      <Circle cx={100} cy={124} r={16} fill={colors.feedback.nudgeLight} stroke={colors.feedback.nudge} strokeWidth={2.5} />
-      <Path d="M92 124 H108 M100 116 V132" stroke={colors.hoya.furDark} strokeWidth={2.5} strokeLinecap="round" />
-      <G fill={colors.feedback.nudge}>
-        <Ellipse cx={156} cy={162} rx={4} ry={3} />
-        <Ellipse cx={166} cy={156} rx={4} ry={3} />
-      </G>
+      {shadow(178, 62)}
+      <Path d="M100 74Q82 40 62 32M100 74Q118 40 138 32" stroke={colors.feedback.nudge} strokeWidth={8} fill={NONE} strokeLinecap="round" />
+      <Path d="M56 76Q26 124 50 160Q100 188 150 160Q174 124 144 76Z" fill={colors.theme.rites} {...INK} />
+      <Path d="M58 76Q100 58 142 76L134 92Q100 82 66 92Z" fill={colors.brand.primary} {...INK} />
+      <Circle cx={100} cy={128} r={22} fill={colors.feedback.nudgeLight} {...INK} />
+      <Path d="M88 128H112M100 116V140" {...DET} />
     </Card>
   );
 }
 
 function ByeolArt(p: ArtProps): ReactElement {
-  // Star: one big rounded five-point star with two small twinkles on a dusk sky.
+  // Star: one big rounded five-point star with a smile and two small twinkles on a dusk sky.
   return (
     <Card theme="nature" p={p}>
       <Rect x={0} y={0} width={200} height={200} rx={8} fill={colors.theme.rites} opacity={0.14} />
-      <Path
-        d="M100 34 L118 78 L164 80 L128 108 L140 154 L100 128 L60 154 L72 108 L36 80 L82 78 Z"
-        fill={colors.feedback.nudge}
-        stroke={colors.hoya.furDark}
-        strokeWidth={3}
-        strokeLinejoin="round"
-      />
-      <Circle cx={88} cy={100} r={4} fill={colors.text.primary} />
-      <Circle cx={112} cy={100} r={4} fill={colors.text.primary} />
-      <Path d="M90 114 Q100 122 110 114" stroke={colors.text.primary} strokeWidth={3} fill="none" strokeLinecap="round" />
-      <G fill={colors.surface.canvas}>
-        <Path d="M40 40 L43 48 L40 56 L37 48 Z" />
-        <Path d="M164 150 L167 158 L164 166 L161 158 Z" />
-      </G>
+      <Path d="M100 22L122 76L178 78L134 112L150 168L100 136L50 168L66 112L22 78L78 76Z" fill={colors.vocab.yellow} {...INK} />
+      <Circle cx={86} cy={102} r={5} fill={colors.text.primary} />
+      <Circle cx={114} cy={102} r={5} fill={colors.text.primary} />
+      <Path d="M88 118Q100 128 112 118" {...DET} fill={NONE} />
+      <Path d={sparkle(34, 30, 10) + sparkle(170, 172, 10)} fill={colors.surface.paper} {...DET} />
     </Card>
   );
 }
@@ -139,22 +117,13 @@ function SwingArt(p: ArtProps): ReactElement {
   // Swing: a seat on two ropes hung from a willow branch, swung forward.
   return (
     <Card theme="crafts" p={p}>
-      {shadow(176, 50)}
-      <Path d="M24 40 Q100 22 176 40" stroke={colors.hoya.furDark} strokeWidth={8} fill="none" strokeLinecap="round" />
-      <G stroke={colors.theme.nature} strokeWidth={3} strokeLinecap="round" fill="none">
-        <Path d="M40 40 Q36 70 44 96" />
-        <Path d="M160 40 Q166 70 158 96" />
-        <Path d="M56 36 Q54 58 60 76" />
-      </G>
-      <G stroke={colors.text.secondary} strokeWidth={3} strokeLinecap="round">
-        <Line x1={84} y1={34} x2={112} y2={142} />
-        <Line x1={118} y1={34} x2={146} y2={136} />
-      </G>
-      <Rect x={100} y={134} width={56} height={12} rx={5} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} transform="rotate(-8 128 140)" />
-      <G stroke={colors.theme.crafts} strokeWidth={2.5} strokeLinecap="round" opacity={0.6}>
-        <Path d="M70 150 Q80 158 92 160" fill="none" />
-        <Path d="M64 132 Q74 142 88 146" fill="none" />
-      </G>
+      {shadow(182, 50)}
+      <Path d="M16 40Q100 18 184 40" stroke={colors.text.primary} strokeWidth={16} fill={NONE} strokeLinecap="round" />
+      <Path d="M16 40Q100 18 184 40" stroke={colors.vocab.brown} strokeWidth={8} fill={NONE} strokeLinecap="round" />
+      <Path d="M36 38Q30 72 40 104M164 38Q172 72 160 104M54 34Q50 60 58 82" stroke={colors.vocab.green} strokeWidth={6} fill={NONE} strokeLinecap="round" />
+      <Path d="M84 30L114 146M120 30L150 140" {...DET} />
+      <Rect x={96} y={136} width={66} height={16} rx={6} fill={colors.brand.primary} {...INK} transform="rotate(-8 128 144)" />
+      <Path d="M62 158Q74 168 88 170M56 136Q68 148 84 152" stroke={colors.theme.crafts} strokeWidth={4} fill={NONE} strokeLinecap="round" />
     </Card>
   );
 }
@@ -162,25 +131,14 @@ function SwingArt(p: ArtProps): ReactElement {
 // ---- Stage 3 ------------------------------------------------------------------------------------------
 
 function HangeulArt(p: ArtProps): ReactElement {
-  // Hangeul: an open page with the shapes of ㅎ, ㄱ and ㅡ drawn as bold strokes.
+  // Hangeul: an open book with the first four letters ㄱ ㄴ / ㄷ ㄹ drawn as bold strokes, each a letter of its own
+  // (no syllable a learner could misread).
   return (
     <Card theme="letters" p={p}>
-      {shadow(168, 70)}
-      <Path
-        d="M30 56 Q100 44 170 56 L170 156 Q100 146 30 156 Z"
-        fill={colors.surface.paper}
-        stroke={colors.text.secondary}
-        strokeWidth={2.5}
-        strokeLinejoin="round"
-      />
-      <Path d="M100 50 V150" stroke={colors.text.secondary} strokeWidth={2} />
-      <G stroke={colors.brand.primary} strokeWidth={6} strokeLinecap="round" fill="none">
-        <Path d="M58 72 H74" />
-        <Path d="M50 84 H82" />
-        <Circle cx={66} cy={108} r={12} />
-        <Path d="M116 76 H150 V112" />
-        <Path d="M116 132 H152" />
-      </G>
+      {shadow(176, 80)}
+      <Path d="M18 44Q100 30 182 44V162Q100 150 18 162Z" fill={colors.surface.paper} {...INK} />
+      <Path d="M100 38V156" {...DET} />
+      <Path d="M38 62H76V94M40 110V142H80M156 62H120V94H156M120 108H156V125H120V142H158" stroke={colors.brand.primary} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" fill={NONE} />
     </Card>
   );
 }
@@ -230,16 +188,16 @@ function GomArt(p: ArtProps): ReactElement {
   // Bear: a round black bear, smiling, with the white half-moon mark on its chest.
   return (
     <Card theme="nature" p={p}>
-      <Ellipse cx={100} cy={160} rx={62} ry={34} fill={colors.text.primary} />
-      <Path d="M70 150 Q100 170 130 150 Q100 160 70 150 Z" fill={colors.surface.canvas} stroke={colors.surface.canvas} strokeWidth={5} strokeLinejoin="round" />
-      <Circle cx={64} cy={40} r={16} fill={colors.text.primary} />
-      <Circle cx={136} cy={40} r={16} fill={colors.text.primary} />
-      <Circle cx={100} cy={80} r={48} fill={colors.text.primary} />
-      <Ellipse cx={100} cy={98} rx={22} ry={16} fill={colors.text.secondary} />
-      <Ellipse cx={100} cy={90} rx={8} ry={5} fill={colors.surface.canvas} opacity={0.35} />
-      <Circle cx={82} cy={72} r={5} fill={colors.surface.canvas} />
-      <Circle cx={118} cy={72} r={5} fill={colors.surface.canvas} />
-      <Path d="M90 104 Q100 112 110 104" stroke={colors.surface.canvas} strokeWidth={3} fill="none" strokeLinecap="round" />
+      <Ellipse cx={100} cy={160} rx={62} ry={34} fill={colors.vocab.black} {...INK} />
+      <Path d="M68 150Q100 172 132 150Q100 162 68 150Z" fill={colors.surface.paper} stroke={colors.surface.paper} strokeWidth={6} strokeLinejoin="round" />
+      <Circle cx={62} cy={40} r={17} fill={colors.vocab.black} {...INK} />
+      <Circle cx={138} cy={40} r={17} fill={colors.vocab.black} {...INK} />
+      <Circle cx={100} cy={82} r={50} fill={colors.vocab.black} {...INK} />
+      <Ellipse cx={100} cy={100} rx={24} ry={17} fill={colors.vocab.brown} />
+      <Ellipse cx={100} cy={91} rx={9} ry={6} fill={colors.vocab.black} />
+      <Circle cx={80} cy={72} r={6} fill={colors.surface.paper} />
+      <Circle cx={120} cy={72} r={6} fill={colors.surface.paper} />
+      <Path d="M90 106Q100 114 110 106" stroke={colors.vocab.black} strokeWidth={4} fill={NONE} strokeLinecap="round" />
     </Card>
   );
 }
@@ -446,20 +404,18 @@ function YeogiyoArt(p: ArtProps): ReactElement {
 }
 
 function GichapyoArt(p: ArtProps): ReactElement {
-  // Train ticket: a ticket with its stations and its time, a notch at each side.
+  // Train ticket: a ticket with a train on it, its stations and its time, a notch at each side.
   return (
     <Card theme="rites" p={p}>
-      {shadow(160, 74)}
-      <Path
-        d="M26 54 H174 V86 A12 12 0 0 0 174 110 V146 H26 V110 A12 12 0 0 0 26 86 Z"
-        fill={colors.surface.paper}
-        stroke={colors.theme.rites}
-        strokeWidth={3}
-        strokeLinejoin="round"
-      />
-      {word(100, 82, '기차표', 16, colors.theme.rites)}
-      {word(100, 112, '서울 → 부산', 20)}
-      {word(100, 136, '두 시', 16, colors.text.secondary)}
+      {shadow(166, 80)}
+      <Path d="M14 42H186V84A14 14 0 0 0 186 112V156H14V112A14 14 0 0 0 14 84Z" fill={colors.surface.paper} {...INK} />
+      <Path d="M14 42H186V68H14Z" fill={colors.theme.rites} {...DET} />
+      {word(100, 61, '기차표', 15, colors.surface.paper)}
+      <Rect x={30} y={86} width={46} height={54} rx={10} fill={colors.vocab.blue} {...DET} />
+      <Rect x={38} y={94} width={30} height={18} rx={4} fill={colors.surface.paper} />
+      <Path d="M40 124h2M64 124h2M36 148l8-8M70 148l-8-8" {...DET} />
+      {word(128, 108, '서울 → 부산', 14)}
+      {word(128, 134, '두 시', 14)}
     </Card>
   );
 }
@@ -468,11 +424,12 @@ function JeongsangArt(p: ArtProps): ReactElement {
   // Summit: a trail sign before a green mountain, its board pointing up to the top.
   return (
     <Card theme="nature" p={p}>
-      <Path d="M0 170 L84 52 L130 108 L150 86 L200 150 V192 Q200 200 192 200 H8 Q0 200 0 192 Z" fill={colors.theme.nature} opacity={0.8} />
-      <Rect x={96} y={96} width={8} height={90} rx={3} fill={colors.hoya.furDark} />
-      <Path d="M44 104 H140 L156 120 L140 136 H44 Z" fill={colors.surface.paper} stroke={colors.hoya.furDark} strokeWidth={3} strokeLinejoin="round" />
-      {word(94, 127, '정상 ↑', 20)}
-      {word(56, 176, '한 시간', 16, colors.surface.canvas)}
+      <Path d="M0 176L80 40L126 100L150 74L200 150V192Q200 200 192 200H8Q0 200 0 192Z" fill={colors.vocab.green} {...INK} />
+      <Path d="M80 40L64 68L80 62L94 70Z" fill={colors.surface.paper} {...DET} />
+      <Rect x={94} y={100} width={12} height={90} rx={3} fill={colors.vocab.brown} {...DET} />
+      <Path d="M40 104H140L158 122L140 140H40Z" fill={colors.surface.paper} {...INK} />
+      {word(94, 129, '정상 ↑', 20)}
+      {word(52, 180, '한 시간', 14, colors.surface.paper)}
     </Card>
   );
 }

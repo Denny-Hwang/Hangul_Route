@@ -14,10 +14,7 @@ import { albumLegendArtIds, upperCellCardArtIds } from '../upper-card-ids';
 const art = readFileSync(join(__dirname, '..', 'UpperCellArt.tsx'), 'utf8');
 /** The source without its comments, so a comment ("no bubbles") is not read as drawing. */
 const code = art.replace(/^\s*(\/\/|\/\*\*|\*).*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
-const all = [...code.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] }));
-/** The drawings brought to the rules by PX-3 so far; the row's later commits add the rest. */
-const CHECKED: readonly string[] = ['InsaArt', 'IreumArt', 'AchimArt', 'SaengilArt', 'TteokArt', 'FullMoonArt', 'YutArt', 'MwoyeyoArt', 'MasisseoyoArt', 'BigaWayoArt', 'GachiArt', 'YeogiyoArt', 'SsireumArt', 'WonArt', 'DeomArt', 'TokkiArt', 'BihaenggiArt', 'HunminjeongeumArt', 'HangawiArt', 'JirisanArt', 'JangArt'];
-const drawings = all.filter((d) => CHECKED.includes(d.name));
+const drawings = [...code.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] }));
 const body = (name: string): string => drawings.find((d) => d.name === name)?.body ?? '';
 /** The shared figures, frames and the apple a drawing may reach its ink outline through. */
 const SHARED = /<Pal |<Bowing |<Note |<Legend |apple\(/;
@@ -54,7 +51,7 @@ const PINS: Record<string, { has?: RegExp[]; not?: RegExp[] }> = {
 
 describe('upper-stage and legendary card art (UpperCellArt.tsx, AMENDMENTS-PICTURES-2026-11 PX-3)', () => {
   it('has one drawing per album and legendary card', () => {
-    expect(all).toHaveLength(upperCellCardArtIds.length + albumLegendArtIds.length);
+    expect(drawings).toHaveLength(upperCellCardArtIds.length + albumLegendArtIds.length);
   });
 
   it('uses tokens only: no colour literal, never feedback.danger (R4)', () => {
@@ -63,10 +60,10 @@ describe('upper-stage and legendary card art (UpperCellArt.tsx, AMENDMENTS-PICTU
     expect(code).not.toMatch(/feedback\.danger/);
   });
 
-  it('R1: the outline is text.primary at 6 units, detail at 4, and no stroke in a checked drawing is drawn thinner than 4', () => {
+  it('R1: the outline is text.primary at 6 units, detail at 4, and no stroke in the module is drawn thinner than 4', () => {
     expect(code).toMatch(/const INK = \{ stroke: colors\.text\.primary, strokeWidth: 6,/);
     expect(code).toMatch(/const DET = \{ \.\.\.INK, strokeWidth: 4 \}/);
-    const widths = [...drawings.map((d) => d.body).join('').matchAll(/strokeWidth=\{([\d.]+)\}/g)].map((m) => Number(m[1]));
+    const widths = [...code.matchAll(/strokeWidth=\{([\d.]+)\}/g)].map((m) => Number(m[1]));
     for (const w of widths) expect(w).toBeGreaterThanOrEqual(4);
     // a scaled friend keeps its outline: its widths are divided by its scale
     expect(code).toMatch(/strokeWidth: 6 \/ s/);
@@ -77,7 +74,7 @@ describe('upper-stage and legendary card art (UpperCellArt.tsx, AMENDMENTS-PICTU
   });
 
   it('each picture draws what the triage asked for (R2, R3)', () => {
-    for (const [name, pin] of Object.entries(PINS).filter(([n]) => CHECKED.includes(n))) {
+    for (const [name, pin] of Object.entries(PINS)) {
       expect(body(name), name).not.toBe('');
       for (const re of pin.has ?? []) expect(body(name), name).toMatch(re);
       for (const re of pin.not ?? []) expect(body(name), name).not.toMatch(re);
