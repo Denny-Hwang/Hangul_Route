@@ -90,6 +90,61 @@ describe('keepRunSaved', () => {
     expect(stored('p2')).toBeNull();
   });
 
+  it('[QB] a step taken back stores the furthest step again, so a reload resumes there (AMENDMENTS-QUEST-SOUND-BACK QB-4)', async () => {
+    const store = useQuestRunStore.getState();
+    store.beginQuest('quest:q1', 'episode:e1');
+    keep('p1', 'quest:q1');
+    store.goNextStep();
+    store.answerRound(0, true);
+    store.markStepComplete();
+    store.consumePendingAdvance();
+    store.markStepSkipped();
+    store.goNextStep();
+    await settleSavedRunsForTests();
+    expect(stored('p1')).toMatchObject({ stepIndex: 3, skippedSteps: [2] });
+
+    store.goPrevStep();
+    store.goPrevStep();
+    await settleSavedRunsForTests();
+    expect(useQuestRunStore.getState().stepIndex).toBe(1);
+    expect(stored('p1')).toMatchObject({ stepIndex: 3, skippedSteps: [2], totalCount: 1 });
+    const restore = resumableRun(await readSavedRun('p1'), quest, Date.now());
+    expect(restore).toMatchObject({ stepIndex: 3, skippedSteps: [2] });
+
+    // The reload: the run begins again from what was stored, on the furthest step, which is its furthest step again.
+    useQuestRunStore.getState().beginQuest('quest:q1', 'episode:e1', restore!.stepIndex, restore!);
+    expect(useQuestRunStore.getState()).toMatchObject({ stepIndex: 3, furthestStep: 3, cameBack: false, skippedSteps: [2], totalCount: 1 });
+  });
+
+  it('[QB] a skipped game played after all on a revisit is stored as played when the run moves on (QB-3, QB-4)', async () => {
+    const store = useQuestRunStore.getState();
+    store.beginQuest('quest:q1', 'episode:e1', 2);
+    keep('p1', 'quest:q1');
+    store.markStepSkipped();
+    store.goNextStep();
+    store.goPrevStep();
+    store.answerRound(0, true);
+    store.markStepComplete();
+    store.consumePendingAdvance();
+    await settleSavedRunsForTests();
+    expect(stored('p1')).toMatchObject({ stepIndex: 3, skippedSteps: [], totalCount: 1, scoredRounds: ['2:0'] });
+  });
+
+  it('[QB] the step events already sent are stored and restored, so a resumed run does not send them again (QB-3)', async () => {
+    const store = useQuestRunStore.getState();
+    store.beginQuest('quest:q1', 'episode:e1');
+    keep('p1', 'quest:q1');
+    store.goNextStep();
+    expect(store.reportOnce('quest.discover_completed', 1)).toBe(true);
+    store.goNextStep();
+    await settleSavedRunsForTests();
+    expect(stored('p1')).toMatchObject({ stepIndex: 2, reported: ['quest.discover_completed:1'] });
+    const restore = resumableRun(await readSavedRun('p1'), quest, Date.now())!;
+    useQuestRunStore.getState().beginQuest('quest:q1', 'episode:e1', restore.stepIndex, restore);
+    expect(useQuestRunStore.getState().reportOnce('quest.discover_completed', 1)).toBe(false);
+    expect(useQuestRunStore.getState().reportOnce('minigame.finished', 2)).toBe(true);
+  });
+
   it('a run that begins after the player opened is stored too (a lesson whose steps arrive late)', async () => {
     let loaded = false;
     keep('p1', 'quest:q1', () => (loaded ? steps : undefined));

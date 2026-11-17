@@ -144,3 +144,48 @@ describe('resumableRun', () => {
     expect(resumableRun({ ...saved, skippedSteps: [3, 3] }, quest, NOW)?.skippedSteps).toEqual([3]);
   });
 });
+
+describe('[QB] the saved run follows the furthest step (AMENDMENTS-QUEST-SOUND-BACK QB-4)', () => {
+  it('stores the furthest step, not the step shown after Previous', () => {
+    const back = savedRunOf({ ...run, stepIndex: 2, furthestStep: 4 }, steps)!;
+    expect(back.stepIndex).toBe(4);
+    expect(back).toEqual(saved);
+  });
+
+  it('so a reload after going back resumes at the furthest step, with the skipped step still behind it', () => {
+    const back = savedRunOf({ ...run, stepIndex: 1, furthestStep: 4 }, steps);
+    expect(resumableRun(JSON.parse(JSON.stringify(back)), quest, NOW)).toMatchObject({ stepIndex: 4, skippedSteps: [3], totalCount: 4 });
+  });
+
+  it('a run that never went back stores the step on screen, as before', () => {
+    expect(savedRunOf({ ...run, furthestStep: 4 }, steps)!.stepIndex).toBe(4);
+    expect(savedRunOf(run, steps)!.stepIndex).toBe(4);
+  });
+
+  it('a skipped step played after all on a revisit is stored as not skipped, with its rounds', () => {
+    const played = savedRunOf({ ...run, stepIndex: 4, furthestStep: 4, skippedSteps: [], correctCount: 5, totalCount: 6, scoredRounds: [...run.scoredRounds, '3:0', '3:1'] }, steps);
+    expect(resumableRun(played, quest, NOW)).toMatchObject({ stepIndex: 4, skippedSteps: [], correctCount: 5, totalCount: 6 });
+  });
+
+  it('keeps the step events already sent, and leaves the field out while there is none', () => {
+    expect('reported' in saved).toBe(false);
+    expect('reported' in savedRunOf({ ...run, reported: [] }, steps)!).toBe(false);
+    const sent = ['quest.discover_completed:1', 'minigame.finished:2'];
+    const withEvents = savedRunOf({ ...run, reported: sent }, steps)!;
+    expect(withEvents.reported).toEqual(sent);
+    expect(withEvents.reported).not.toBe(sent);
+    expect(resumableRun(JSON.parse(JSON.stringify(withEvents)), quest, NOW)?.reported).toEqual(sent);
+  });
+
+  it('a value stored before this row (no events field) is still resumed', () => {
+    const restored = resumableRun(saved, quest, NOW);
+    expect(restored).not.toBeNull();
+    expect(restored && 'reported' in restored).toBe(false);
+  });
+
+  it('an events field that is not a list of strings is dropped with the run, never repaired', () => {
+    for (const reported of ['x', 3, [1], [null], {}]) expect(resumableRun({ ...saved, reported }, quest, NOW), JSON.stringify(reported)).toBeNull();
+    expect(resumableRun({ ...saved, reported: ['a:1', 'a:1'] }, quest, NOW)?.reported).toEqual(['a:1']);
+  });
+});
+

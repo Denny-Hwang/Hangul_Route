@@ -12,6 +12,10 @@ import type { QuestStepKind } from '@hangul-route/content-schema';
  * Pure rules: what is stored, and whether a stored value may be resumed. `store/quest-run-saved.ts` reads and writes.
  * Not kept: what each missed round asked (Try these again offers the misses made after the resume), the adaptive
  * pacing's tries and its shorter Apply, and a pending advance.
+ *
+ * [QB] AMENDMENTS-QUEST-SOUND-BACK row QB-4: the step that is stored is the furthest step the run reached, not the step
+ * on screen, so a reload after Previous resumes at the furthest step, not behind it. The step events already sent
+ * (row QB-3) are stored with it, so a resumed run does not send them a second time.
  */
 
 /** How long after its start a saved run may be resumed. */
@@ -30,6 +34,7 @@ export interface SavedQuestRun {
   episodeId: string;
   /** The quest's step list when the run was saved (`stepsSignature`): a changed list discards the run. */
   steps: string;
+  /** [QB] The furthest step the run reached (row QB-4): the step a resumed run opens on. */
   stepIndex: number;
   correctCount: number;
   totalCount: number;
@@ -38,6 +43,8 @@ export interface SavedQuestRun {
   skippedSteps: number[];
   /** ISO time the run began; a resumed run keeps it. */
   startedAt: string;
+  /** [QB] The step events already sent, as `<event>:<step>` (row QB-3). Left out while there is none (and in a value stored before the row). */
+  reported?: string[];
 }
 
 /** What `quest-run-store.beginQuest` restores. */
@@ -49,6 +56,8 @@ export interface QuestRunRestore {
   scoredRounds: readonly string[];
   skippedSteps: readonly number[];
   startedAt: string;
+  /** [QB] The step events already sent (row QB-3). */
+  reported?: readonly string[];
 }
 
 /** The run fields the saved value is made from (`quest-run-store`). */
@@ -56,6 +65,10 @@ export interface RunToSave {
   questId: string | null;
   episodeId: string | null;
   stepIndex: number;
+  /** [QB] The furthest step reached (row QB-4); absent, the step on screen is the furthest. */
+  furthestStep?: number;
+  /** [QB] The step events already sent (row QB-3). */
+  reported?: readonly string[];
   correctCount: number;
   totalCount: number;
   retryCount: number;
@@ -77,13 +90,14 @@ export function savedRunOf(run: RunToSave, steps: readonly StepLike[]): SavedQue
     questId: run.questId,
     episodeId: run.episodeId,
     steps: stepsSignature(steps),
-    stepIndex: run.stepIndex,
+    stepIndex: Math.max(run.stepIndex, run.furthestStep ?? run.stepIndex),
     correctCount: run.correctCount,
     totalCount: run.totalCount,
     retryCount: run.retryCount,
     scoredRounds: [...run.scoredRounds],
     skippedSteps: [...run.skippedSteps],
     startedAt: run.startedAt,
+    ...(run.reported && run.reported.length > 0 ? { reported: [...run.reported] } : {}),
   };
 }
 
@@ -109,7 +123,10 @@ export function resumableRun(saved: unknown, quest: { id: string; steps: readonl
   if (!isCount(correctCount) || !isCount(totalCount) || !isCount(retryCount) || correctCount > totalCount) return null;
   if (!Array.isArray(scoredRounds) || scoredRounds.length !== totalCount || !scoredRounds.every((key) => typeof key === 'string')) return null;
   if (new Set(scoredRounds).size !== scoredRounds.length) return null;
+  // [QB] The stored step is the furthest one (row QB-4), and a step is skipped by moving past it: every skipped step is behind it.
   if (!Array.isArray(skippedSteps) || !skippedSteps.every((step) => isCount(step) && step < stepIndex)) return null;
+  const { reported } = run;
+  if (reported !== undefined && !(Array.isArray(reported) && reported.every((key) => typeof key === 'string'))) return null;
   return {
     stepIndex,
     correctCount,
@@ -118,5 +135,6 @@ export function resumableRun(saved: unknown, quest: { id: string; steps: readonl
     scoredRounds: scoredRounds as string[],
     skippedSteps: [...new Set(skippedSteps as number[])],
     startedAt: run.startedAt,
+    ...(reported === undefined ? {} : { reported: [...new Set(reported as string[])] }),
   };
 }

@@ -75,6 +75,8 @@ type StepsOf = () => Parameters<typeof savedRunOf>[1] | undefined;
  * begins (which replaces a saved run of another quest) and at each step change. `stepsOf` reads the quest's steps
  * when a save is made (a lesson's steps arrive with its chunk). Returns the stop, for the player's unmount; the run
  * stays stored after it, which is what lets a reload go on.
+ * [QB] AMENDMENTS-QUEST-SOUND-BACK row QB-4: what is stored is the furthest step the run reached, so a step taken back
+ * with Previous stores the same step again and a reload resumes at the furthest step.
  */
 export function keepRunSaved(profileId: string, questId: string, stepsOf: StepsOf): () => void {
   const save = (): void => {

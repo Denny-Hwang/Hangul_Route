@@ -76,6 +76,7 @@ interface Actions {
    * number of 0 or more starts at 0.
    * [AU] `restore` (row AU-12): the run a reload interrupted goes on from its saved step with its tallies, the keys of
    * the rounds already scored (so none is scored twice) and its skipped steps; the step starts from its beginning.
+   * [QB] The saved step is the furthest step the run reached (AMENDMENTS-QUEST-SOUND-BACK QB-4): the run opens there.
    */
   beginQuest: (questId: string, episodeId: string, startStepIndex?: number, restore?: QuestRunRestore) => void;
   /**
@@ -154,6 +155,8 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
             retryCount: restore.retryCount,
             scoredRounds: restore.scoredRounds,
             skippedSteps: restore.skippedSteps,
+            // [QB] The step events the run already sent (QB-3, QB-4): a resumed run does not send them again.
+            reported: restore.reported ?? [],
           }
         : {}),
     });
