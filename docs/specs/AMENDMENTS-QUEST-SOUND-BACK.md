@@ -74,4 +74,34 @@ The run saved for a reload (AU-12) stores the furthest step, so a reload after g
 
 ## As built
 
-_Filled in by the PR that closes the rows._
+_The QS rows are filled in by the PR that closes them._
+
+### QB-1 to QB-4 (taking a step back)
+
+Design pass first: `design/wireframes/quest/player.md`, `discover.md` and `check.md` (sections marked [QB]) and the mock and spec under `design/screens/quest-previous/`.
+
+**QB-1.** `logic/stage1/discover-flow.ts` has a `prev` event (the page before, every sound and any Read along stopped) and keeps the furthest page reached; `pageRender` gives the dots the furthest page and, while the page shown is behind it, the page to mark. `DiscoverStep` draws the row through `screens/quest/StepActions.tsx`. The design system's `Progress` (dots) takes an optional `current` dot, drawn as a ring that takes no room; without it the dots are drawn as before.
+
+**QB-2.** `quest-run-store` keeps `furthestStep` and has `goPrevStep` (never under the first step; it drops a pending advance) and `cameBack`. The player (`QuestPlayerView`) shows Previous from the second step on, on every kind of step. A step behind the furthest step is a revisit: a teaching step is drawn as it was; a game step or the Check shows Continue as its main button and Play again under the row, with no Skip for now (`launcherView(kind, copy, revisit)`). Look and learn reached by Previous opens on its last page with its dots full. The step dots keep the furthest step and ring the step shown; the count pill and the meter's words name the step shown. Previous is the run's own move: the header's Close and the browser's back still ask the leave question.
+
+**QB-3.** On a revisit `answerRound` changes nothing (no right answer, no miss, no retry, nothing for Try these again or the pacing rules, no event for the memory store), unless the step is in the skipped steps: a skipped game was never played, so its rounds score as a first play, and when it ends (`markStepComplete`) it leaves the skipped steps and stops capping the stars. `reportOnce` keeps the step events already sent: `quest.discover_completed` and `quest.check_completed` go out once per step per run, and `minigame.finished` is not sent for a game played again (`logic/minigame-finished.ts`, `gameFinishIsReported`). `watchCheck` keeps what a Check had counted when the learner leaves it by Previous half-way and takes its baseline again when the Check is back on screen, so its event still carries all of its rounds and only its rounds.
+
+**QB-4.** `savedRunOf` stores the furthest step as the run's step, and the step events already sent, so a reload after Previous resumes at the furthest step and sends nothing twice. A value stored before this row is still resumed.
+
+**Strings.** `learner.quest.previous.cta` (Previous / Anterior / 이전) and `learner.quest.launcher.again.cta` (Play again / Jugar otra vez / 다시 하기). The existing "Play again" is the episode page's (`learner.episode.quests.playAgain`), not the quest's, so the quest got its own key.
+
+**Layout as built.** In the row both buttons are `lg` (80 high): Previous `secondary` on the left with one share, the main button `primary` on the right with two. A step with no Previous (the first step) keeps its button as it was (hero, full width). The row wraps upward when the two labels cannot share a line, so the main button is the first line (seen at 320 wide with Largest text; at 390 wide with the standard size the two share a line). The second button (Skip for now, or Play again on a revisit) stays under the row, `ghost`, 64 high.
+
+**Decisions made while building, beyond the row text.**
+
+- On the finish page with Try these again offered, the offer keeps its two buttons and Previous sits under them (`ghost`, 64 high, full width); it is not drawn during the moment the offer is being planned, so no button moves under a finger.
+- A game left open on the furthest step (closed half-way, then Previous and forward again) is taken up as before: only steps behind the furthest step are score-neutral.
+- A skipped game that is opened on a revisit and closed half-way keeps the rounds it answered (scored on the first try, as any game closed half-way) and stays a skipped step until it is played to its end. A game's own Skip button ends the step as it always did (AU-9), so it also ends a skipped step.
+- On the furthest step `minigame.finished` is sent as before, including once per part of a story told in parts; only a revisit is held to once per step.
+- A replay is score-neutral for the run store. What a game writes by itself outside the run (a story's bookmark, practice time) is unchanged by this amendment.
+- Look and learn says its first letter again when the step is opened again by Previous (the step is a new page opening, AU-10); going back a page inside the step does not.
+- A Close on a revisit asks the leave question as on any step before the finish page; only the finish page itself ends the run on Close (NB-1), as before.
+
+**Tests.** Unit: `store/__tests__/quest-run-store.test.ts`, `quest-run-saved.test.ts`, `logic/quest-flow/__tests__/saved-run.test.ts`, `logic/__tests__/check-launcher.test.ts`, `logic/stage1/__tests__/discover-flow.test.ts`, the design system's `Progress.test.tsx`. Render: `screens/quest/__tests__/discover-previous.test.tsx`, `quest-previous.test.tsx`. E2E: `apps/mobile/e2e/web/quest-previous.spec.ts` (Previous inside Look and learn and back to the intro; a revisited launcher and a bad replay that leaves three stars; a reload after going back, and the browser back; the row at 320 x 568 with Largest text). Shots of the app: `design/screens/quest-previous/shots/app-*.png`.
+
+**Start bundle.** The rows are quest player code, so they are in the start bundle: the release `build:web` (CI=1, Metro cache cleared) measures 4,953,393 B raw, 1,393 B over the line; the line is raised to 4,957,400 B (`apps/mobile/scripts/pwa/lesson-chunks.mjs`).
