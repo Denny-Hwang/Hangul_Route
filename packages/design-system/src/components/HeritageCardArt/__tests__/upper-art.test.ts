@@ -16,7 +16,7 @@ const art = readFileSync(join(__dirname, '..', 'UpperCellArt.tsx'), 'utf8');
 const code = art.replace(/^\s*(\/\/|\/\*\*|\*).*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 const all = [...code.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] }));
 /** The drawings brought to the rules by PX-3 so far; the row's later commits add the rest. */
-const CHECKED: readonly string[] = ['InsaArt', 'IreumArt', 'AchimArt', 'SaengilArt'];
+const CHECKED: readonly string[] = ['InsaArt', 'IreumArt', 'AchimArt', 'SaengilArt', 'TteokArt', 'FullMoonArt', 'YutArt'];
 const drawings = all.filter((d) => CHECKED.includes(d.name));
 const body = (name: string): string => drawings.find((d) => d.name === name)?.body ?? '';
 /** The shared figures, frames and the apple a drawing may reach its ink outline through. */

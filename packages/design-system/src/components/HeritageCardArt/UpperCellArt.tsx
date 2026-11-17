@@ -1,5 +1,5 @@
 import type { ReactNode, ReactElement } from 'react';
-import { Svg, Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import { Svg, Circle, Ellipse, G, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { colors } from '../../tokens';
 import { albumLegendArtIds, upperCellCardArtIds } from './upper-card-ids';
 import type { HeritageCardArtProps } from './types';
@@ -186,41 +186,42 @@ function HangeulArt(p: ArtProps): ReactElement {
 }
 
 function TteokArt(p: ArtProps): ReactElement {
-  // Rice cake: a plate of soft rounded tteok, white, green and amber.
+  // Rice cake: a cut block of rainbow rice cake (mujigae-tteok) at three-quarter view on a plate, its layers showing
+  // on the front and the side.
+  const bands = [colors.vocab.pink, colors.vocab.yellow, colors.vocab.green, colors.vocab.white];
   return (
     <Card theme="life" p={p}>
-      {shadow(160, 72)}
-      <Ellipse cx={100} cy={136} rx={74} ry={22} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} />
-      <G stroke={colors.text.muted} strokeWidth={2}>
-        <Rect x={46} y={98} width={36} height={30} rx={12} fill={colors.surface.canvas} />
-        <Rect x={84} y={90} width={36} height={34} rx={12} fill={colors.theme.nature} opacity={0.85} />
-        <Rect x={122} y={98} width={36} height={30} rx={12} fill={colors.feedback.nudge} />
-        <Rect x={66} y={70} width={34} height={28} rx={12} fill={colors.surface.canvas} />
-        <Rect x={102} y={68} width={34} height={28} rx={12} fill={colors.brand.primaryLight} />
-      </G>
-      <G fill={colors.hoya.furDark} opacity={0.6}>
-        <Circle cx={80} cy={82} r={1.8} />
-        <Circle cx={116} cy={80} r={1.8} />
-        <Circle cx={60} cy={110} r={1.8} />
-      </G>
+      <Ellipse cx={100} cy={160} rx={88} ry={24} fill={colors.surface.paper} {...INK} />
+      {bands.map((c, i) => (
+        <G key={c} fill={c}>
+          <Rect x={30} y={78 + 18 * i} width={100} height={18} />
+          <Polygon points={`130,${78 + 18 * i} 172,${54 + 18 * i} 172,${72 + 18 * i} 130,${96 + 18 * i}`} />
+        </G>
+      ))}
+      <Polygon points="30,78 72,54 172,54 130,78" fill={colors.vocab.pink} />
+      <Path d="M30 96H130L172 72M30 114H130L172 90M30 132H130L172 108" {...DET} fill={NONE} />
+      <Path d="M30 78L72 54H172V126L130 150H30ZM30 78H130L172 54M130 78V150" {...INK} fill={NONE} />
     </Card>
   );
 }
 
 function FullMoonArt(p: ArtProps): ReactElement {
-  // Full moon: a big round moon rising over two low hills on a holiday night.
+  // Full moon (boreumdal): a big round moon on the night sky, rising behind the dark tiled roof of a hanok.
   return (
     <Card theme="rites" p={p}>
-      <Rect x={0} y={0} width={200} height={200} rx={8} fill={colors.theme.rites} opacity={0.18} />
-      <Circle cx={100} cy={86} r={58} fill={colors.feedback.nudge} opacity={0.25} />
-      <Circle cx={100} cy={86} r={46} fill={colors.feedback.nudgeLight} stroke={colors.feedback.nudge} strokeWidth={3} />
-      <Path d="M0 160 Q50 120 100 150 Q150 118 200 156 L200 192 Q200 200 192 200 L8 200 Q0 200 0 192 Z" fill={colors.theme.nature} opacity={0.75} />
-      <Path d="M0 176 Q60 150 120 172 Q160 160 200 172" stroke={colors.feedback.success} strokeWidth={3} fill="none" opacity={0.6} />
-      <G fill={colors.surface.canvas}>
-        <Circle cx={36} cy={40} r={2.5} />
-        <Circle cx={170} cy={34} r={2} />
-        <Circle cx={162} cy={110} r={1.8} />
+      <Rect x={0} y={0} width={200} height={200} rx={8} fill={colors.brand.secondaryDark} />
+      <Circle cx={100} cy={92} r={68} fill={colors.vocab.yellow} {...INK} />
+      <G fill={colors.feedback.nudge}>
+        <Circle cx={74} cy={70} r={11} />
+        <Circle cx={126} cy={96} r={8} />
+        <Circle cx={92} cy={118} r={6} />
       </G>
+      <Path d={sparkle(26, 28, 9) + sparkle(178, 40, 7)} fill={colors.surface.paper} />
+      <Rect x={24} y={160} width={152} height={44} fill={colors.surface.paper} {...INK} />
+      <Path d="M50 166V200M100 166V200M150 166V200" stroke={colors.vocab.black} strokeWidth={8} />
+      <Path d="M52 132H148Q156 150 198 146Q186 170 100 170Q14 170 2 146Q44 150 52 132Z" fill={colors.vocab.black} {...INK} />
+      <Path d="M44 128H156" {...INK} strokeWidth={12} />
+      <Path d="M22 158Q100 172 178 158" stroke={colors.vocab.gray} strokeWidth={5} strokeDasharray="2 10" strokeLinecap="round" fill={NONE} />
     </Card>
   );
 }
@@ -244,25 +245,27 @@ function GomArt(p: ArtProps): ReactElement {
 }
 
 function YutArt(p: ArtProps): ReactElement {
-  // Yut sticks: four sticks standing in a fan, three flat faces and one round back.
+  // Yut sticks: four half-round sticks lying side by side, each showing its half-round end: three with the round
+  // back up, one with the flat face up and its X marks.
   return (
     <Card theme="crafts" p={p}>
-      {shadow(172, 60)}
-      {[-24, -8, 8, 24].map((angle, i) => (
-        <G key={angle} transform={`rotate(${angle} 100 164)`}>
-          <Rect
-            x={90}
-            y={44}
-            width={20}
-            height={118}
-            rx={i === 3 ? 10 : 5}
-            fill={i === 3 ? colors.hoya.fur : colors.surface.canvas}
-            stroke={colors.text.secondary}
-            strokeWidth={2.5}
-          />
-          {i === 3 ? null : <Path d="M95 70 L105 76 M95 100 L105 106 M95 130 L105 136" stroke={colors.brand.primary} strokeWidth={2.5} strokeLinecap="round" />}
-        </G>
-      ))}
+      {shadow(186, 80)}
+      <G transform="rotate(-14 100 110)">
+        {[54, 92, 130, 168].map((b, i) =>
+          i === 1 ? (
+            <G key={b}>
+              <Path d={`M136 ${b - 22}A22 22 0 0 0 180 ${b - 22}Z`} fill={colors.feedback.nudgeLight} {...INK} />
+              <Rect x={26} y={b - 22} width={132} height={22} rx={8} fill={colors.feedback.nudgeLight} {...INK} />
+              <Path d={`M46 ${b - 17}l12 12m0-12l-12 12M84 ${b - 17}l12 12m0-12l-12 12M122 ${b - 17}l12 12m0-12l-12 12`} {...DET} />
+            </G>
+          ) : (
+            <G key={b}>
+              <Rect x={26} y={b - 22} width={132} height={22} rx={8} fill={colors.vocab.brown} {...INK} />
+              <Path d={`M136 ${b}A22 22 0 0 1 180 ${b}Z`} fill={colors.feedback.nudgeLight} {...INK} />
+            </G>
+          ),
+        )}
+      </G>
     </Card>
   );
 }

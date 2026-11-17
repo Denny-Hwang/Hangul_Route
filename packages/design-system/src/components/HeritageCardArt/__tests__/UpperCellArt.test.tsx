@@ -10,7 +10,7 @@ import { UpperCellCardArt, hasUpperCellArt } from '../UpperCellArt';
  * replaced by plain tags (as Hoya.test.tsx does): every album card draws a named 200 x 200 picture on its theme tint,
  * in token colours only, with at most five fill colours besides the theme tint and the shadow (heritage-card-art.md).
  */
-vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', G: 'G', Line: 'Line', Path: 'Path', Rect: 'Rect', Text: 'Text' }));
+vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', Ellipse: 'Ellipse', G: 'G', Line: 'Line', Path: 'Path', Polygon: 'Polygon', Rect: 'Rect', Text: 'Text' }));
 
 type Node = ReactElement<Record<string, unknown>>;
 
