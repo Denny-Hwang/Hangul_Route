@@ -6,13 +6,18 @@ import type { HeritageCardArtProps } from './types';
 
 /**
  * The upper-cell card art (F-CURR-002 §7.2, row CM-23; F-CARD-S2-001 and F-CARD-S3-001 as amended): one drawing per
- * album card of Stages 2 to 7 and per album legendary card, in the shipped geometric minhwa language of `HeritageCardArt`
- * (design/brief/illustrations/heritage-card-art.md): rounded primitives, a ~3 px stroke, at most five colours from
- * the theme tint, the brand and cream, every face smiling, theme tokens only. A sibling of `HeritageCardArt.tsx`,
- * never exported by the package barrel: the app loads it in its own chunk by this file's path
- * (`@hangul-route/design-system/src/components/HeritageCardArt/UpperCellArt`), so the start bundle carries none of
- * these drawings. The ids are `upperCellCardArtIds`
- * (`card-ids.ts`, pure).
+ * album card of Stages 2 to 7 and per album legendary card, on the 200 grid of `HeritageCardArt`, with the [PX] rules
+ * of docs/specs/AMENDMENTS-PICTURES-2026-11.md section 3 (row PX-3):
+ *   - R1 every subject is outlined in `text.primary`, 6 units (`INK`); inner detail 4 units (`DET`); nothing thinner
+ *   - R2 one subject fills 60-70 % of the frame, at most two supporting things
+ *   - R3 told by shape within the upper set: every Stage 4 talk and every Stage 7 word has its own subject (no shared
+ *     template), and the four moons of the whole set differ by what stands in front of the moon
+ *   - R4 real colours for real things: the `colors.vocab.*` tones are allowed; never `feedback.danger`
+ *   - R5 the Stage 6 and 7 cards and the legendary cards still print their Korean, small and secondary: the picture
+ *     carries the meaning, and a test keeps every text card out of the question pictures (`text-cards.test.ts`)
+ * A sibling of `HeritageCardArt.tsx`, never exported by the package barrel: the app loads it in its own chunk by this
+ * file's path (`@hangul-route/design-system/src/components/HeritageCardArt/UpperCellArt`), so the start bundle carries
+ * none of these drawings. The ids are `upperCellCardArtIds` (`upper-card-ids.ts`, pure).
  */
 
 type ThemeKey = keyof typeof colors.theme;
@@ -23,6 +28,12 @@ interface ArtProps {
   accessibilityLabel: string;
 }
 
+/** The subject's outline (R1): `text.primary`, 6 units on the 200 grid. */
+const INK = { stroke: colors.text.primary, strokeWidth: 6, strokeLinejoin: 'round', strokeLinecap: 'round' } as const;
+/** Inner detail lines (R1): 4 units. */
+const DET = { ...INK, strokeWidth: 4 } as const;
+const NONE = 'none';
+
 function Card({ theme, p, children }: { theme: ThemeKey; p: ArtProps; children: ReactNode }): ReactElement {
   return (
     <Svg width={p.size} height={p.size} viewBox="0 0 200 200" testID={p.testID} accessibilityLabel={p.accessibilityLabel}>
@@ -32,9 +43,10 @@ function Card({ theme, p, children }: { theme: ThemeKey; p: ArtProps; children: 
   );
 }
 
-const shadow = (cy: number, rx: number): ReactElement => (
-  <Ellipse cx={100} cy={cy} rx={rx} ry={5} fill={colors.hoya.furDark} opacity={0.18} />
-);
+const shadow = (cy: number, rx: number): ReactElement => <Ellipse cx={100} cy={cy} rx={rx} ry={6} fill={colors.hoya.furDark} opacity={0.18} />;
+
+/** A four-point sparkle. */
+const sparkle = (x: number, y: number, r: number): string => `M${x} ${y - r}Q${x} ${y} ${x + r} ${y}Q${x} ${y} ${x} ${y + r}Q${x} ${y} ${x - r} ${y}Q${x} ${y} ${x} ${y - r}Z`;
 
 // ---- Stage 2 ------------------------------------------------------------------------------------------
 
@@ -330,27 +342,29 @@ function MasisseoyoArt(p: ArtProps): ReactElement {
   );
 }
 
+/** A friend bowing in side view, facing right: legs, a body bent forward at the waist, the head lowered, eyes shut. */
+function Bowing({ fur, flip }: { fur: string; flip?: boolean }): ReactElement {
+  return (
+    <G transform={flip ? 'matrix(-1 0 0 1 200 0)' : undefined}>
+      <Rect x={12} y={140} width={30} height={42} rx={12} fill={fur} {...INK} />
+      <Ellipse cx={36} cy={128} rx={34} ry={24} fill={fur} {...INK} transform="rotate(-48 36 128)" />
+      <Circle cx={72} cy={100} r={10} fill={fur} {...INK} />
+      <Circle cx={64} cy={124} r={24} fill={fur} {...INK} />
+      <Path d="M62 128Q68 132 74 128" {...DET} fill={NONE} />
+      <Ellipse cx={78} cy={142} rx={10} ry={8} fill={fur} {...DET} transform="rotate(40 78 142)" />
+      <Ellipse cx={46} cy={150} rx={8} ry={16} fill={fur} {...DET} transform="rotate(-20 46 150)" />
+    </G>
+  );
+}
+
 function InsaArt(p: ArtProps): ReactElement {
-  // Greeting: the two friends bow a little toward each other, a warm hello in each bubble.
+  // Greeting: two friends bow to each other, bodies bent at the waist, heads lowered; no bubbles.
   return (
     <Card theme="rites" p={p}>
-      <G transform="rotate(8 58 186)">
-        <Pal x={58} fur={colors.hoya.fur} />
-      </G>
-      <G transform="rotate(-8 142 186)">
-        <Pal x={142} fur={colors.hoya.furBlue} />
-      </G>
-      {(
-        [
-          [22, 62],
-          [106, 138],
-        ] as const
-      ).map(([x, tx]) => (
-        <Bubble key={x} x={x} w={72} tx={tx}>
-          <Circle cx={x + 36} cy={46} r={11} fill={colors.feedback.nudgeLight} stroke={colors.feedback.nudge} strokeWidth={2.5} />
-          <Path d={`M${x + 31} 47 Q${x + 36} 52 ${x + 41} 47`} stroke={colors.hoya.furDark} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-        </Bubble>
-      ))}
+      {shadow(184, 90)}
+      <Bowing fur={colors.hoya.fur} />
+      <Bowing fur={colors.hoya.furBlue} flip />
+      <Path d="M10 92Q18 68 42 64M190 92Q182 68 158 64" stroke={colors.theme.rites} strokeWidth={5} fill={NONE} strokeLinecap="round" />
     </Card>
   );
 }
@@ -508,27 +522,70 @@ function Page({ theme, p, tile, line, children }: { theme: ThemeKey; p: ArtProps
   );
 }
 
+/** Stage 7: the card's own subject, with the cell's sentence written small on a note strip below. */
+function Note({ theme, p, line, children }: { theme: ThemeKey; p: ArtProps; line: string; children: ReactNode }): ReactElement {
+  return (
+    <Card theme={theme} p={p}>
+      {children}
+      <Rect x={16} y={166} width={168} height={26} rx={6} fill={colors.surface.paper} {...DET} />
+      {/* A Hangul syllable is about one font size wide: a long sentence gets a smaller size so it stays on the strip. */}
+      {word(100, 184, line, Math.min(13, Math.floor(150 / line.length)))}
+    </Card>
+  );
+}
+
 function IreumArt(p: ArtProps): ReactElement {
-  // Name: Hoya's name, written the way the cell's word bank builds it.
-  return <Page theme="letters" p={p} tile="이름" line="제 이름은 호야예요." />;
+  // Name: a name badge on a lanyard, Hoya's face on the left and the name on the right.
+  return (
+    <Note theme="letters" p={p} line="제 이름은 호야예요.">
+      <Path d="M54 0L96 58M146 0L104 58" stroke={colors.text.primary} strokeWidth={14} strokeLinecap="round" />
+      <Path d="M54 0L96 58M146 0L104 58" stroke={colors.vocab.blue} strokeWidth={6} strokeLinecap="round" />
+      <Rect x={28} y={64} width={144} height={92} rx={10} fill={colors.surface.paper} {...INK} />
+      <Path d="M28 74Q28 64 38 64H162Q172 64 172 74V88H28Z" fill={colors.vocab.blue} {...DET} />
+      <Rect x={84} y={52} width={32} height={22} rx={5} fill={colors.vocab.gray} {...DET} />
+      <Circle cx={50} cy={108} r={8} fill={colors.hoya.fur} {...DET} />
+      <Circle cx={78} cy={108} r={8} fill={colors.hoya.fur} {...DET} />
+      <Circle cx={64} cy={124} r={20} fill={colors.hoya.fur} {...DET} />
+      <Path d="M57 122h0M71 122h0" stroke={colors.text.primary} strokeWidth={6} strokeLinecap="round" />
+      <Path d="M58 131Q64 136 70 131" {...DET} fill={NONE} />
+      {word(132, 126, '호야', 24)}
+      <Path d="M100 142H162" {...DET} />
+    </Note>
+  );
 }
 
 function AchimArt(p: ArtProps): ReactElement {
-  // Morning: the sun rises at the tile's side; Hoya's morning written below.
+  // Morning: the sun rises over a green ridge, seen through a window; a slice of toast stands in front of the sill.
   return (
-    <Page theme="life" p={p} tile="아침" line="아침에 빵을 먹어요.">
-      <Circle cx={168} cy={44} r={14} fill={colors.feedback.nudge} />
-    </Page>
+    <Note theme="life" p={p} line="아침에 빵을 먹어요.">
+      <Rect x={14} y={8} width={172} height={100} rx={6} fill={colors.theme.life} opacity={0.4} />
+      <Path d="M44 38L34 26M108 38L118 26M76 28V14M128 64H140" stroke={colors.vocab.orange} strokeWidth={6} strokeLinecap="round" />
+      <Path d="M32 84A44 44 0 0 1 120 84Z" fill={colors.vocab.orange} {...INK} />
+      <Path d="M14 90Q56 66 100 84Q144 68 186 88V108H14Z" fill={colors.vocab.green} {...INK} />
+      <Rect x={14} y={8} width={172} height={100} rx={6} fill={NONE} stroke={colors.vocab.brown} strokeWidth={10} />
+      <Rect x={14} y={8} width={172} height={100} rx={6} fill={NONE} {...DET} />
+      <Rect x={6} y={104} width={188} height={14} rx={4} fill={colors.vocab.brown} {...INK} />
+      <Path d="M116 162V116Q106 112 108 100Q112 86 148 86Q184 86 188 100Q190 112 180 116V162Z" fill={colors.vocab.brown} {...INK} />
+      <Path d="M126 153V110Q117 107 118 101Q121 95 148 95Q175 95 178 101Q179 107 170 110V153Z" fill={colors.theme.life} />
+    </Note>
   );
 }
 
 function SaengilArt(p: ArtProps): ReactElement {
-  // Birthday: a small cake with a candle beside the tile; the day written below.
+  // Birthday: a round pink cake with white cream on top, three candles alight, on a plate.
   return (
-    <Page theme="rites" p={p} tile="생일" line="생일에 케이크를 먹었어요.">
-      <Rect x={152} y={48} width={34} height={22} rx={5} fill={colors.brand.primaryLight} stroke={colors.brand.primary} strokeWidth={2} />
-      <Path d="M169 48 V38" stroke={colors.brand.primary} strokeWidth={3} strokeLinecap="round" />
-    </Page>
+    <Note theme="rites" p={p} line="생일에 케이크를 먹었어요.">
+      <Ellipse cx={100} cy={152} rx={84} ry={12} fill={colors.surface.paper} {...INK} />
+      <Path d="M30 94V140Q100 162 170 140V94Z" fill={colors.vocab.pink} {...INK} />
+      <Ellipse cx={100} cy={94} rx={70} ry={18} fill={colors.surface.paper} {...INK} />
+      <Path d="M36 104Q44 122 52 108Q60 124 70 110M130 110Q140 124 148 108Q156 122 164 104" stroke={colors.surface.paper} strokeWidth={8} fill={NONE} strokeLinecap="round" />
+      {[66, 100, 134].map((x) => (
+        <G key={x}>
+          <Rect x={x - 7} y={50} width={14} height={40} rx={4} fill={colors.vocab.skyBlue} {...DET} />
+          <Path d={`M${x} 18Q${x + 11} 34 ${x} 44Q${x - 11} 34 ${x} 18Z`} fill={colors.vocab.yellow} {...DET} />
+        </G>
+      ))}
+    </Note>
   );
 }
 

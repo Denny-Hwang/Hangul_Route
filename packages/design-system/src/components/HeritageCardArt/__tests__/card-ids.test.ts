@@ -106,11 +106,14 @@ describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
   // Row CM-23 part 2 adds Stage 4's five talks, drawn with the shared two friends and bubbles (`Pal`, `Bubble`): the
   // module line moved from 16,000 B to 22,000 B. Part 3 adds Stages 6-7's ten and the five legendary cards on three
   // shared frames (`word`, `Page`, `Legend`): the module line moves to 34,000 B (about 32,000 B); the per-drawing line stays.
-  it('art budget: each drawing at most 2,000 B of source, the module at most 34,000 B', () => {
+  // AMENDMENTS-PICTURES-2026-11 PX-3 redraws the cards as their own subjects with an ink outline (so far: the four redraws):
+  // the module measures 36,336 B, so its line moves to 36,400 B; the largest drawing (AchimArt)
+  // measures 1,217 B, so the per-drawing lines did not move.
+  it('art budget: each drawing at most 2,000 B of source, the module at most 36,400 B', () => {
     const fns = [...art.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1], bytes: Buffer.byteLength(m[0]) }));
     expect(fns).toHaveLength(30);
     for (const f of fns) expect(f.bytes, f.name).toBeLessThanOrEqual(2_000);
-    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(34_000);
+    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(36_400);
   });
 
   it('art budget, Stages 6-7 and the legendary cards: the shared frames at most 3,200 B, each new drawing at most 1,700 B (row CM-23 part 3)', () => {
