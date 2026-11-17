@@ -16,7 +16,7 @@ const art = readFileSync(join(__dirname, '..', 'UpperCellArt.tsx'), 'utf8');
 const code = art.replace(/^\s*(\/\/|\/\*\*|\*).*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 const all = [...code.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] }));
 /** The drawings brought to the rules by PX-3 so far; the row's later commits add the rest. */
-const CHECKED: readonly string[] = ['InsaArt', 'IreumArt', 'AchimArt', 'SaengilArt', 'TteokArt', 'FullMoonArt', 'YutArt'];
+const CHECKED: readonly string[] = ['InsaArt', 'IreumArt', 'AchimArt', 'SaengilArt', 'TteokArt', 'FullMoonArt', 'YutArt', 'MwoyeyoArt', 'MasisseoyoArt', 'BigaWayoArt', 'GachiArt', 'YeogiyoArt', 'SsireumArt'];
 const drawings = all.filter((d) => CHECKED.includes(d.name));
 const body = (name: string): string => drawings.find((d) => d.name === name)?.body ?? '';
 /** The shared figures, frames and the apple a drawing may reach its ink outline through. */
@@ -68,6 +68,9 @@ describe('upper-stage and legendary card art (UpperCellArt.tsx, AMENDMENTS-PICTU
     expect(code).toMatch(/const DET = \{ \.\.\.INK, strokeWidth: 4 \}/);
     const widths = [...drawings.map((d) => d.body).join('').matchAll(/strokeWidth=\{([\d.]+)\}/g)].map((m) => Number(m[1]));
     for (const w of widths) expect(w).toBeGreaterThanOrEqual(4);
+    // a scaled friend keeps its outline: its widths are divided by its scale
+    expect(code).toMatch(/strokeWidth: 6 \/ s/);
+    expect(code).toMatch(/strokeWidth=\{4 \/ s\}/);
     // every drawing outlines its subject in ink, itself or through a shared figure or frame
     const outlined = new RegExp(`\\{\\.\\.\\.INK\\}|${SHARED.source}`);
     for (const d of drawings) expect(d.body, d.name).toMatch(outlined);
@@ -79,5 +82,11 @@ describe('upper-stage and legendary card art (UpperCellArt.tsx, AMENDMENTS-PICTU
       for (const re of pin.has ?? []) expect(body(name), name).toMatch(re);
       for (const re of pin.not ?? []) expect(body(name), name).not.toMatch(re);
     }
+  });
+
+  it('Stage 4 drops the shared two-friends-with-bubbles template: at most one bubble in the five talks together', () => {
+    const talks = ['MwoyeyoArt', 'MasisseoyoArt', 'InsaArt', 'BigaWayoArt', 'GachiArt'].map(body);
+    expect(talks.join('').match(/<Bubble /g)).toHaveLength(1);
+    expect(code).not.toMatch(/const pair =/);
   });
 });

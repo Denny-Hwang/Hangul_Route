@@ -271,20 +271,22 @@ function YutArt(p: ArtProps): ReactElement {
 }
 
 // ---- Stage 4 ------------------------------------------------------------------------------------------
-// F-CARD-S4-001 3.2 as amended: each card is a moment of a talk, two round friends facing each other with speech
-// bubbles in the HoyaBubble language (cream fill, sky-blue border, never red).
+// [PX] Each talk has its own subject (AMENDMENTS-PICTURES-2026-11 PX-3): the round friends in the HoyaBubble language,
+// at most one bubble (cream fill, sky-blue border, never a danger colour).
 
-/** A round friend standing at `x`: ears, a head with a smiling face, and a body in its `fur` colour. */
-function Pal({ x, fur }: { x: number; fur: string }): ReactElement {
+/** A round friend: head centred at (x, y), body below, `s` its scale, `fur` its colour. */
+function Pal({ x, y, s = 1, fur }: { x: number; y: number; s?: number; fur: string }): ReactElement {
+  // the outline keeps its 6 and 4 units at any scale (R1)
+  const ink = { ...INK, strokeWidth: 6 / s };
   return (
-    <G>
-      <Ellipse cx={x} cy={164} rx={26} ry={22} fill={fur} />
-      <Circle cx={x - 19} cy={92} r={9} fill={fur} />
-      <Circle cx={x + 19} cy={92} r={9} fill={fur} />
-      <Circle cx={x} cy={116} r={28} fill={fur} />
-      <Circle cx={x - 9} cy={112} r={3.5} fill={colors.text.primary} />
-      <Circle cx={x + 9} cy={112} r={3.5} fill={colors.text.primary} />
-      <Path d={`M${x - 8} 124 Q${x} 132 ${x + 8} 124`} stroke={colors.text.primary} strokeWidth={3} fill="none" strokeLinecap="round" />
+    <G transform={`translate(${x} ${y}) scale(${s})`}>
+      <Ellipse cx={0} cy={50} rx={28} ry={24} fill={fur} {...ink} />
+      <Circle cx={-20} cy={-22} r={10} fill={fur} {...ink} />
+      <Circle cx={20} cy={-22} r={10} fill={fur} {...ink} />
+      <Circle cx={0} cy={0} r={29} fill={fur} {...ink} />
+      <Circle cx={-10} cy={-4} r={4} fill={colors.text.primary} />
+      <Circle cx={10} cy={-4} r={4} fill={colors.text.primary} />
+      <Path d="M-8 8Q0 16 8 8" {...ink} strokeWidth={4 / s} fill={NONE} />
     </G>
   );
 }
@@ -293,54 +295,47 @@ function Pal({ x, fur }: { x: number; fur: string }): ReactElement {
 function Bubble({ x, w, tx, children }: { x: number; w: number; tx: number; children?: ReactNode }): ReactElement {
   return (
     <G>
-      <Path d={`M${tx - 7} 66 L${tx} 84 L${tx + 8} 66 Z`} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={2.5} strokeLinejoin="round" />
-      <Rect x={x} y={22} width={w} height={48} rx={16} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={2.5} />
+      <Path d={`M${tx - 8} 64L${tx} 84L${tx + 9} 64Z`} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={4} strokeLinejoin="round" />
+      <Rect x={x} y={16} width={w} height={52} rx={16} fill={colors.surface.canvas} stroke={colors.brand.secondary} strokeWidth={4} />
       {children}
     </G>
   );
 }
 
-/** The two friends of every Stage 4 card: Hoya's gold on the left, a blue friend on the right. */
-const pair = (
-  <>
-    <Pal x={58} fur={colors.hoya.fur} />
-    <Pal x={142} fur={colors.hoya.furBlue} />
-  </>
-);
-
-/** A question mark drawn in a bubble centred on `x`. */
-const ask = (x: number): ReactElement => (
-  <G>
-    <Path d={`M${x - 9} 37 Q${x - 9} 29 ${x} 29 Q${x + 9} 29 ${x + 9} 37 Q${x + 9} 44 ${x} 47 V52`} stroke={colors.brand.primary} strokeWidth={4} fill="none" strokeLinecap="round" />
-    <Circle cx={x} cy={60} r={2.5} fill={colors.brand.primary} />
-  </G>
-);
-
 function MwoyeyoArt(p: ArtProps): ReactElement {
-  // What is this?: one friend asks, the other names a thing; the answer bubble holds an eraser.
+  // What is this?: a friend points at a big wrapped box; one bubble holds a big question mark.
   return (
     <Card theme="letters" p={p}>
-      {pair}
-      <Bubble x={22} w={72} tx={56}>{ask(58)}</Bubble>
-      <Bubble x={106} w={72} tx={144}>
-        <Rect x={124} y={36} width={36} height={20} rx={5} fill={colors.hoya.furBlue} stroke={colors.brand.secondary} strokeWidth={2.5} />
-        <Line x1={138} y1={36} x2={138} y2={56} stroke={colors.brand.secondary} strokeWidth={2.5} />
+      {shadow(186, 84)}
+      <Pal x={46} y={118} s={0.85} fur={colors.hoya.fur} />
+      <Bubble x={10} w={72} tx={42}>
+        <Path d="M34 34Q34 24 46 24Q58 24 58 34Q58 42 46 46V52" stroke={colors.brand.primary} strokeWidth={6} fill={NONE} strokeLinecap="round" />
+        <Path d="M46 61h0" stroke={colors.brand.primary} strokeWidth={8} strokeLinecap="round" />
       </Bubble>
+      <Rect x={92} y={96} width={96} height={86} rx={6} fill={colors.vocab.purple} {...INK} />
+      <Rect x={86} y={80} width={108} height={26} rx={6} fill={colors.vocab.purple} {...INK} />
+      <Path d="M140 80V182" stroke={colors.vocab.red} strokeWidth={14} />
+      <Path d="M140 80V182M134 80H146" {...DET} fill={NONE} />
+      <Path d="M140 78Q112 50 118 74Q122 86 140 78Q158 86 162 74Q168 50 140 78Z" fill={colors.vocab.red} {...DET} />
     </Card>
   );
 }
 
 function MasisseoyoArt(p: ArtProps): ReactElement {
-  // It is tasty: a steaming bowl between the friends; one asks how it tastes, the other answers with a heart.
+  // It is tasty: a friend with pink cheeks behind a big bowl of rice, a spoon in hand, hearts rising.
   return (
     <Card theme="life" p={p}>
-      {pair}
-      <Path d="M76 160 H124 Q122 184 100 184 Q78 184 76 160 Z" fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={3} strokeLinejoin="round" />
-      <Path d="M92 152 Q88 146 92 140 M108 152 Q104 146 108 140" stroke={colors.text.muted} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-      <Bubble x={22} w={72} tx={56}>{ask(58)}</Bubble>
-      <Bubble x={106} w={72} tx={144}>
-        <Path d="M142 60 L128 46 Q124 34 134 34 Q140 34 142 41 Q144 34 150 34 Q160 34 156 46 Z" fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2} strokeLinejoin="round" />
-      </Bubble>
+      <Pal x={100} y={74} fur={colors.hoya.fur} />
+      <G fill={colors.hoya.cheek}>
+        <Circle cx={80} cy={82} r={7} />
+        <Circle cx={120} cy={82} r={7} />
+      </G>
+      <Path d="M44 116Q100 92 156 116Z" fill={colors.vocab.white} {...INK} />
+      <Path d="M24 116H176Q172 174 100 182Q28 174 24 116Z" fill={colors.vocab.white} {...INK} />
+      <Path d="M36 134H164" stroke={colors.vocab.blue} strokeWidth={8} />
+      <Path d="M150 72L132 112" stroke={colors.vocab.gray} strokeWidth={10} strokeLinecap="round" />
+      <Ellipse cx={154} cy={64} rx={10} ry={14} fill={colors.vocab.white} {...DET} transform="rotate(24 154 64)" />
+      <Path d="M30 52L20 42Q16 32 25 32Q30 32 30 37Q30 32 35 32Q44 32 40 42ZM176 38L168 30Q165 22 172 22Q176 22 176 26Q176 22 180 22Q187 22 184 30Z" fill={colors.vocab.red} {...DET} />
     </Card>
   );
 }
@@ -373,46 +368,34 @@ function InsaArt(p: ArtProps): ReactElement {
 }
 
 /** A raindrop with its tip at (x, y). */
-const drop = (x: number, y: number, fill: string): ReactElement => (
-  <Path key={`${x}-${y}`} d={`M${x} ${y} Q${x + 6} ${y + 9} ${x} ${y + 12} Q${x - 6} ${y + 9} ${x} ${y} Z`} fill={fill} />
-);
+const drop = (x: number, y: number): string => `M${x} ${y}Q${x + 9} ${y + 13} ${x} ${y + 18}Q${x - 9} ${y + 13} ${x} ${y}Z`;
 
 function BigaWayoArt(p: ArtProps): ReactElement {
-  // It is raining: rain falls behind the friends; one says it rains, the other answers with a little house.
+  // It is raining: a grey cloud with big drops over a friend under a red umbrella, a puddle at the feet.
   return (
     <Card theme="nature" p={p}>
-      {(
-        [
-          [30, 88],
-          [100, 80],
-          [170, 92],
-          [100, 116],
-        ] as const
-      ).map(([x, y]) => drop(x, y, colors.brand.secondary))}
-      {pair}
-      <Bubble x={22} w={72} tx={56}>
-        {drop(44, 32, colors.brand.secondary)}
-        {drop(58, 40, colors.brand.secondary)}
-        {drop(72, 32, colors.brand.secondary)}
-      </Bubble>
-      <Bubble x={106} w={72} tx={144}>
-        <Path d="M128 44 L142 32 L156 44 M132 42 V58 H152 V42 M139 58 V50 H145 V58" stroke={colors.brand.primary} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </Bubble>
+      <Path d="M30 54Q16 34 38 26Q46 6 72 14Q90 0 112 12Q138 2 150 22Q178 20 174 44Q178 60 156 60H44Q28 62 30 54Z" fill={colors.brand.secondaryLight} {...INK} />
+      <Path d={drop(24, 74) + drop(178, 70) + drop(26, 120) + drop(176, 118)} fill={colors.vocab.blue} {...DET} />
+      <Ellipse cx={100} cy={190} rx={60} ry={8} fill={colors.vocab.blue} opacity={0.4} />
+      <Pal x={80} y={134} s={0.8} fur={colors.hoya.fur} />
+      <Path d="M100 76V160Q100 172 88 170" stroke={colors.text.primary} strokeWidth={7} fill={NONE} strokeLinecap="round" />
+      <Path d="M36 104Q40 66 100 62Q160 66 164 104Q153 94 142 104Q131 94 121 104Q110 94 100 104Q90 94 79 104Q69 94 58 104Q47 94 36 104Z" fill={colors.vocab.red} {...INK} />
+      <Path d="M100 64Q86 80 79 104M100 64Q114 80 121 104" {...DET} fill={NONE} />
     </Card>
   );
 }
 
 function GachiArt(p: ArtProps): ReactElement {
-  // Shall we do it together?: a ball between the friends; one asks, the other answers with a bright star.
+  // Shall we do it together?: two friends hold one big ball between them, a paw on each side.
   return (
     <Card theme="crafts" p={p}>
-      {pair}
-      <Circle cx={100} cy={172} r={14} fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={2.5} />
-      <Path d="M88 166 Q100 174 112 166" stroke={colors.surface.canvas} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-      <Bubble x={22} w={72} tx={56}>{ask(58)}</Bubble>
-      <Bubble x={106} w={72} tx={144}>
-        <Path d="M142 31 L146 41 L157 42 L149 49 L151 60 L142 54 L133 60 L135 49 L127 42 L138 41 Z" fill={colors.feedback.nudge} stroke={colors.hoya.furDark} strokeWidth={2} strokeLinejoin="round" />
-      </Bubble>
+      {shadow(186, 84)}
+      <Pal x={38} y={92} s={0.9} fur={colors.hoya.fur} />
+      <Pal x={162} y={92} s={0.9} fur={colors.hoya.furBlue} />
+      <Circle cx={100} cy={126} r={40} fill={colors.vocab.white} {...INK} />
+      <Path d="M100 86Q76 126 100 166Q84 126 100 86ZM62 114Q100 130 138 114Q100 120 62 114Z" fill={colors.vocab.red} {...DET} />
+      <Circle cx={64} cy={130} r={12} fill={colors.hoya.fur} {...INK} />
+      <Circle cx={136} cy={130} r={12} fill={colors.hoya.furBlue} {...INK} />
     </Card>
   );
 }
@@ -448,11 +431,13 @@ function YeogiyoArt(p: ArtProps): ReactElement {
   // Over here!: a friend at a table raises a paw and calls the server.
   return (
     <Card theme="life" p={p}>
-      <Pal x={64} fur={colors.hoya.fur} />
-      <Circle cx={100} cy={96} r={10} fill={colors.hoya.fur} />
-      <Rect x={20} y={166} width={160} height={14} rx={6} fill={colors.hoya.furDark} />
-      <Path d="M120 166 H164 Q162 146 142 146 Q122 146 120 166 Z" fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2.5} />
-      <Bubble x={96} w={88} tx={112}>{word(140, 54, '여기요!')}</Bubble>
+      <Path d="M80 140L106 96" stroke={colors.text.primary} strokeWidth={20} strokeLinecap="round" />
+      <Path d="M80 140L106 96" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" />
+      <Circle cx={108} cy={92} r={10} fill={colors.hoya.fur} {...INK} />
+      <Pal x={60} y={118} fur={colors.hoya.fur} />
+      <Rect x={14} y={164} width={172} height={20} rx={6} fill={colors.vocab.brown} {...INK} />
+      <Path d="M118 164H170Q168 138 144 138Q120 138 118 164Z" fill={colors.surface.paper} {...INK} />
+      <Bubble x={96} w={94} tx={112}>{word(143, 50, '여기요!', 18)}</Bubble>
     </Card>
   );
 }
@@ -695,14 +680,15 @@ function SsireumArt(p: ArtProps): ReactElement {
   // Ssireum: two friends lean in and hold each other's cloth belt in a round sand ring.
   return (
     <Legend theme="crafts" p={p} name="씨름">
-      <Ellipse cx={100} cy={136} rx={82} ry={14} fill={colors.feedback.nudge} opacity={0.3} />
-      <G transform="rotate(10 58 186) translate(0 -46)">
-        <Pal x={64} fur={colors.hoya.fur} />
+      <Ellipse cx={100} cy={146} rx={86} ry={14} fill={colors.feedback.nudge} opacity={0.4} />
+      <G transform="rotate(16 56 150)">
+        <Pal x={56} y={76} fur={colors.hoya.fur} />
       </G>
-      <G transform="rotate(-10 142 186) translate(0 -46)">
-        <Pal x={136} fur={colors.hoya.furBlue} />
+      <G transform="rotate(-16 144 150)">
+        <Pal x={144} y={76} fur={colors.hoya.furBlue} />
       </G>
-      <Rect x={58} y={112} width={84} height={8} rx={4} fill={colors.brand.primary} />
+      <Path d="M76 128H124" stroke={colors.text.primary} strokeWidth={18} strokeLinecap="round" />
+      <Path d="M76 128H124" stroke={colors.brand.primary} strokeWidth={8} strokeLinecap="round" />
     </Legend>
   );
 }
