@@ -6,7 +6,7 @@
 
 ## 1. Context
 
-Heritage cards are the primary reward in Hangul Route. The child earns them by completing quests. A card visually represents one piece of Korean culture — kimchi, tiger, hanji paper, etc. — with:
+Heritage cards are the primary reward in Hangul Route. A learner earns them by completing quests. A card visually represents one piece of Korean culture — kimchi, tiger, hanji paper, etc. — with:
 
 - A **front face** (the art + Korean word + romanization)
 - A **back face** (English meaning + 1-line fun fact)
@@ -40,6 +40,26 @@ All 30 cards share this layout (front face):
 - **Background**: always hanji cream + optional 4% paper texture.
 - **Centered subject**: object occupies 60–70% of the illustration zone. Generous margin.
 - **Smiling rule**: if the subject has a face (animals, characters), it smiles. Always.
+
+### 3.1 [PX] Rules for every picture a question can show
+
+Added by `docs/specs/AMENDMENTS-PICTURES-2026-11.md` section 3 (owner request of 2026-11-17: some pictures were too abstract to name). These rules come from what already reads well in WordArt, and they win over any older line of this brief that says otherwise:
+
+- **R1 Ink outline.** The subject's outline is `text.primary` and at least 3 % of the grid's width (3 units on a 100 grid, 6 on a 200 grid); inner detail lines are at least 2 % (2 on 100, 4 on 200). Nothing the picture needs is drawn thinner.
+- **R2 The subject fills the tile.** 60 to 70 % of the frame, one subject, at most two supporting things.
+- **R3 Told by shape.** A picture that is told from another one of its set only by colour is rejected (WordArt C9, now for cards too). Sets: a vocabulary topic, the cards of one stage and theme, and the look-alike groups of the amendment's section 4 (the bowls, the moons, the bows).
+- **R4 Real colours for real things.** Card art and hidden-heritage things may use the `colors.vocab.*` tones, as WordArt does (kimchi is red). `feedback.danger` stays out of every picture. Scene settings and story props keep their own palette rule.
+- **R5 No picture names itself in print** where it can be a question's picture. A card that shows its own word as text is never used as a question picture (a test holds this).
+- **R6 A word's picture is a glyph.** A vocabulary word no longer borrows a card: each has its own `word:` glyph. The cards stay as collectibles.
+
+What this changes in this brief:
+
+- **Outline.** "About 3 px at 600 x 800" was 1 unit on the 200 grid, too thin and too pale to read at 64 px. The outline is now `text.primary`, 6 units on the 200 grid, details 4 (R1). No wobble.
+- **Palette.** "Theme tint plus cream" put cream subjects on a cream ground. A subject has a real colour of its own, and the `colors.vocab.*` tones are allowed in card art (R4).
+- **Red.** The "no red except dancheong orange" lines in sections 6 to 8 are withdrawn for content colours: red in a picture is the colour of a thing (kimchi, an apple), not feedback. The anti-shame rule is about feedback on a miss, and `feedback.danger` still never appears in a picture.
+- **Per-card briefs.** The briefs in section 4 are rewritten card by card in rows PX-2 and PX-3 of the amendment; until then, where a brief asks for a picture these rules reject (a sailboat for "sea", hands on a pouch for the New Year bow, amber kimchi), the rules win.
+
+Review surface: `/design-preview/cards` draws all 60 real card arts at 200, 64 and 54 px.
 
 ## 4. Per-card briefs
 
@@ -102,7 +122,7 @@ Run this first. It locks the style before producing the 30 individual cards.
 
 ```prompt
 Create an art-language style sheet for "Heritage Cards" — collectible
-culture cards in Hangul Route (Korean learning app for kids 5–11).
+culture cards in Hangul Route (a Korean learning app for learners of any age).
 
 Output: one 1600 × 1200 PNG showing 6 sample cards in a 3 × 2 grid, with
 a 100px title bar at top reading "Heritage Card — Art Language v1" in

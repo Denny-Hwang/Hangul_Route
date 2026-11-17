@@ -32,11 +32,24 @@ The audience is anyone learning Hangul from zero, at any age. The art is friendl
 | No effects | No gradients, filters, clip paths, masks, images or `<use>`: the data model cannot express them, and the tests re-check. |
 | Readable | Recognisable at 48 px and in silhouette. A picture that is only identifiable by its colour, or by a detail thinner than 3 units, goes back for rework. |
 
+### [PX] The same rules now hold for every picture a question can show
+
+`docs/specs/AMENDMENTS-PICTURES-2026-11.md` section 3 (owner request of 2026-11-17) takes the contract above as the standard for card art and hidden-heritage things too:
+
+- **R1 Ink outline.** The subject's outline is `text.primary` and at least 3 % of the grid's width (3 units on a 100 grid, 6 on a 200 grid); inner detail lines are at least 2 % (2 on 100, 4 on 200). Nothing the picture needs is drawn thinner.
+- **R2 The subject fills the tile.** 60 to 70 % of the frame, one subject, at most two supporting things.
+- **R3 Told by shape.** A picture that is told from another one of its set only by colour is rejected (WordArt C9, now for cards too). Sets: a vocabulary topic, the cards of one stage and theme, and the look-alike groups of the amendment's section 4 (the bowls, the moons, the bows).
+- **R4 Real colours for real things.** Card art and hidden-heritage things may use the `colors.vocab.*` tones, as WordArt does (kimchi is red). `feedback.danger` stays out of every picture. Scene settings and story props keep their own palette rule.
+- **R5 No picture names itself in print** where it can be a question's picture. A card that shows its own word as text is never used as a question picture (a test holds this).
+- **R6 A word's picture is a glyph.** A vocabulary word no longer borrows a card: each has its own `word:` glyph. The cards stay as collectibles.
+
+For WordArt, R1 to R3 restate the table above (outline, size, "readable"); R4 opens the `colors.vocab` tones to card art and hidden-heritage art (the source scan allows those two places and nothing else); R6 ends the card reuse of section 8.
+
 ### The one deliberate difference from the Heritage card art
 
-The pictures share the card art's language (`heritage-card-art.md` §3: geometric minhwa, rounded primitives, a 3-unit outline, a centred subject, smiling faces), with one deliberate deviation: the card brief allows **no red except dancheong orange**, and WordArt draws content reds, blacks and pinks from the `colors.vocab` group. That group is used **only inside WordArt** (a source scan test enforces it): `vocab.red` is the colour of an apple, never a feedback colour, and it never replaces `feedback.nudge` on a learner's miss.
+The pictures share the card art's language (`heritage-card-art.md` §3: geometric minhwa, rounded primitives, a 3-unit outline, a centred subject, smiling faces), and, since **[PX]** R4, the content colours too: the card brief used to allow **no red except dancheong orange**, while WordArt draws content reds, blacks and pinks from the `colors.vocab` group. That group is used **only inside WordArt, the card art and the hidden-heritage scene art** (a source scan test enforces it): `vocab.red` is the colour of an apple, never a feedback colour, and it never replaces `feedback.nudge` on a learner's miss.
 
-Two smaller differences follow from the format: a picture has no background (the caller's tile is the background), and the lines are clean vector lines (no wobble or paper texture), so they stay crisp at 32 px.
+Two differences remain, and they follow from the format: a picture has no background (the caller's tile is the background), and the lines are clean vector lines (no wobble or paper texture), so they stay crisp at 32 px.
 
 ### Colour is never the only cue
 
