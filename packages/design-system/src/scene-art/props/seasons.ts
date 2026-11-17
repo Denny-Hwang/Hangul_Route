@@ -453,7 +453,8 @@ export const RICE_FIELD: ItemDef = {
   nodes: [
     { t: 'path', d: 'M0 14Q100 4 200 10Q300 4 400 14V90H0Z', fill: 'feedback.nudge' },
     { t: 'path', d: 'M0 30Q200 20 400 30M0 50Q200 40 400 50M0 72Q200 62 400 72', stroke: 'text.secondary', sw: 'thin' },
-    { t: 'path', d: 'M20 14V6M60 12V4M100 10V2M140 10V2M180 10V2M220 10V2M260 10V2M300 9V1M340 10V2M380 12V4', stroke: 'text.secondary', sw: 'base', det: true },
+    // [FU-2] each stalk bows under its ear of grain, so the strip reads as ripe rice and not a plank
+    { t: 'path', d: 'M20 14V6Q24 4 26 9M60 12V4Q64 2 66 7M100 10V2Q104 0 106 5M140 10V2Q144 0 146 5M180 10V2Q184 0 186 5M220 10V2Q224 0 226 5M260 10V2Q264 0 266 5M300 9V1Q304 0 306 4M340 10V2Q344 0 346 5M380 12V4Q384 2 386 7', stroke: 'text.secondary', sw: 'base', det: true },
   ],
 };
 

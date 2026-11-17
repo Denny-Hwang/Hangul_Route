@@ -33,7 +33,7 @@ describe('row FU-2: the rest of the story props', () => {
   });
 
   it('every tweaked prop still passes every item rule', () => {
-    for (const id of [...Object.keys(INKED), 'magpie', 'drum', 'cabbages', 'craft-wood', 'shoes', 'taffy-tray', 'yut-sticks', 'book-chest-open']) expect(checkItem(item(id)), id).toEqual([]);
+    for (const id of [...Object.keys(INKED), 'magpie', 'drum', 'cabbages', 'craft-wood', 'shoes', 'taffy-tray', 'yut-sticks', 'book-chest-open', 'rice-field']) expect(checkItem(item(id)), id).toEqual([]);
   });
 
   it('the paper stack is offset sheets, not a box', () => {
@@ -78,6 +78,11 @@ describe('row FU-2: the rest of the story props', () => {
     const sticks = shapes('yut-sticks').filter((s) => s.t === 'path' && s.d.includes('A5.5 5.5'));
     expect(sticks).toHaveLength(2);
     expect(shapes('yut-sticks').some((s) => s.t === 'path' && s.d.startsWith('M19 22L23 26'))).toBe(true);
+  });
+
+  it('every rice stalk on the field strip bows under its ear', () => {
+    const stalks = shapes('rice-field').find((s) => s.t === 'path' && s.det === true && s.sw === 'base');
+    expect(stalks?.t === 'path' ? stalks.d.match(/Q/g)?.length : 0).toBe(10);
   });
 
   it('the books in the chest are wrapped bundles with their knots, in one red shape (red share)', () => {
