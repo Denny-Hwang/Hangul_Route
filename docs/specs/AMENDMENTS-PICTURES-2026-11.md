@@ -1,4 +1,4 @@
-Status: ready; rows PX-0 to PX-5 open
+Status: done; rows PX-0 to PX-2 done (#1039), rows PX-3 to PX-5 done (the PR that adds this line)
 
 # Amendment: pictures a learner can name at a glance
 
