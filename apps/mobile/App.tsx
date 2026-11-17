@@ -35,6 +35,7 @@ import { lessonContent } from './src/content/lessons';
 import { LOCALE_BOOT_GRACE_MS, localePacks } from './src/content/locale-packs';
 import { storyContent } from './src/content/stories';
 import { prefetchWhenIdle } from './src/platform/lesson-prefetch';
+import { runPool } from './src/logic/lessons/prefetch-pool';
 import { contentScope } from './src/content/later-content';
 import { offlinePacks } from './src/store/offline-packs-store';
 import { onWorkerChange } from './src/platform/offline-cache';
@@ -65,10 +66,12 @@ const prefetchContent = async (): Promise<void> => {
   await offlinePacks.getState().init();
   const scope = contentScope();
   const later = scope.later(false);
-  await Promise.allSettled([
-    lessonContent.ensureCells([...scope.core.cells, ...later.cells]),
-    storyContent.ensureStories([...scope.core.stories, ...later.stories]),
-    localePacks.ensureAll(),
+  // A few at a time (AMENDMENTS-FOLLOWUPS-2026-11 FU-4, `runPool`), so a chunk the screen asks for meanwhile is not
+  // queued behind all of them on a slow link; the locale chunks, the largest, last.
+  await runPool([
+    ...[...scope.core.cells, ...later.cells].map((cell) => () => lessonContent.ensureCells([cell])),
+    ...[...scope.core.stories, ...later.stories].map((story) => () => storyContent.ensureStories([story])),
+    () => localePacks.ensureAll(),
   ]);
 };
 
