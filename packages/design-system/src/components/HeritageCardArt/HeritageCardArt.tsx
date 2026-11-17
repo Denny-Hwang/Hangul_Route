@@ -391,114 +391,78 @@ function Bower({ k }: { k: number }): ReactElement {
   );
 }
 
-function SeollalArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
+function SeollalArt(p: ArtProps): ReactElement {
+  // Lunar New Year: a child bows deeply to a grandparent seated on a cushion, a lucky pouch on the floor between.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="rites">
-        <Rect x={20} y={20} width={160} height={60} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2} rx={4} />
-        <Line x1={60} y1={20} x2={60} y2={80} stroke={colors.text.secondary} strokeWidth={2} />
-        <Line x1={100} y1={20} x2={100} y2={80} stroke={colors.text.secondary} strokeWidth={2} />
-        <Line x1={140} y1={20} x2={140} y2={80} stroke={colors.text.secondary} strokeWidth={2} />
-        <Rect x={20} y={150} width={160} height={6} fill={colors.theme.life} opacity={0.4} rx={2} />
-        <G>
-          <Path d="M60 120 Q56 140 50 152 H92 Q86 140 82 120 Z" fill={colors.theme.rites} />
-          <Path d="M58 100 Q70 95 82 100 L82 122 Q70 118 60 122 Z" fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={1.5} />
-          <Circle cx={70} cy={92} r={12} fill={colors.hoya.belly} stroke={colors.text.secondary} strokeWidth={1.5} />
-          <Line x1={64} y1={92} x2={68} y2={92} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
-          <Line x1={72} y1={92} x2={76} y2={92} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
-          <Path d="M66 96 Q70 98 74 96" stroke={colors.text.primary} strokeWidth={1.5} strokeLinecap="round" fill="none" />
-        </G>
-        <G>
-          <Path d="M125 130 Q121 140 117 150 H143 Q139 140 135 130 Z" fill={colors.brand.secondary} />
-          <Path d="M123 115 Q130 112 137 115 L137 132 Q130 128 123 132 Z" fill={colors.feedback.nudge} stroke={colors.brand.primaryDark} strokeWidth={1.5} />
-          <Circle cx={130} cy={108} r={10} fill={colors.hoya.belly} stroke={colors.text.secondary} strokeWidth={1.5} />
-          <Line x1={126} y1={108} x2={128} y2={108} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
-          <Line x1={132} y1={108} x2={134} y2={108} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
-          <Path d="M127 112 Q130 114 133 112" stroke={colors.text.primary} strokeWidth={1.5} strokeLinecap="round" fill="none" />
-        </G>
-      </Frame>
-    </Svg>
+    <Card theme="rites" p={p}>
+      <Rect x={10} y={174} width={180} height={10} rx={5} fill={colors.feedback.nudge} {...DET} />
+      <G transform="translate(-6 66) scale(0.6)">
+        <Bower k={0.6} />
+      </G>
+      <Ellipse cx={150} cy={172} rx={42} ry={10} fill={colors.vocab.red} {...INK} />
+      <Path d="M112 166Q112 98 150 92Q188 98 188 166Z" fill={colors.vocab.purple} {...INK} />
+      <Path d="M126 132Q150 146 174 132" {...DET} fill={NONE} />
+      <Circle cx={150} cy={66} r={24} fill={colors.surface.paper} {...INK} />
+      <Path d="M126 64Q128 40 150 40Q172 40 174 64Q160 52 150 54Q140 52 126 64Z" fill={colors.vocab.gray} {...DET} />
+      <Circle cx={150} cy={36} r={9} fill={colors.vocab.gray} {...DET} />
+      <Path d="M140 70Q143 66 146 70M154 70Q157 66 160 70M144 78Q150 84 156 78" {...DET} fill={NONE} />
+      <Path d="M86 160Q86 146 96 144Q106 146 106 160Q96 166 86 160Z" fill={colors.vocab.pink} {...DET} />
+    </Card>
   );
 }
 
-function ChuseokArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Large warm cream full moon + rabbit silhouette + 3 rice stalks.
+function ChuseokArt(p: ArtProps): ReactElement {
+  // Chuseok: a plate of songpyeon in front of the full harvest moon with the moon rabbit, ripe rice ears either side.
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="rites">
-        {/* Night sky tint */}
-        <Rect x={0} y={0} width={200} height={200} fill={colors.theme.rites} opacity={0.04} rx={8} />
-        {/* Cream moon */}
-        <Circle cx={100} cy={85} r={50} fill={colors.feedback.nudge} opacity={0.95} />
-        <Circle cx={100} cy={85} r={50} fill="none" stroke={colors.brand.primaryDark} strokeWidth={2} />
-        {/* Rabbit silhouette inside the moon */}
-        <G fill={colors.text.primary} opacity={0.8}>
-          {/* Body */}
-          <Ellipse cx={100} cy={92} rx={14} ry={9} />
-          {/* Head */}
-          <Circle cx={88} cy={88} r={7} />
-          {/* Ears */}
-          <Ellipse cx={84} cy={76} rx={2.5} ry={7} />
-          <Ellipse cx={91} cy={76} rx={2.5} ry={7} />
-          {/* Tail */}
-          <Circle cx={113} cy={90} r={3} fill={colors.surface.canvas} />
-        </G>
-        {/* Rice stalks (3) */}
-        <G stroke={colors.theme.nature} strokeWidth={2.5} strokeLinecap="round" fill="none">
-          <Path d="M50 175 Q52 160 58 145" />
-          <Path d="M55 156 Q60 155 64 152" />
-          <Path d="M55 162 Q60 162 64 160" />
-          <Path d="M100 178 Q100 160 102 145" />
-          <Path d="M102 154 Q108 152 112 150" />
-          <Path d="M102 160 Q108 160 112 158" />
-          <Path d="M148 175 Q146 160 142 145" />
-          <Path d="M144 154 Q140 154 136 152" />
-          <Path d="M144 160 Q140 160 136 158" />
-        </G>
-        {/* Ground */}
-        <Rect x={0} y={170} width={200} height={30} fill={colors.theme.life} opacity={0.25} />
-      </Frame>
-    </Svg>
+    <Card theme="rites" p={p}>
+      <Circle cx={100} cy={70} r={54} fill={colors.vocab.yellow} {...INK} />
+      <G fill={colors.hoya.furDark}>
+        <Ellipse cx={110} cy={84} rx={20} ry={14} />
+        <Circle cx={88} cy={74} r={11} />
+        <Ellipse cx={80} cy={50} rx={5} ry={16} transform="rotate(-14 80 50)" />
+        <Ellipse cx={92} cy={50} rx={5} ry={16} transform="rotate(10 92 50)" />
+      </G>
+      <G stroke={colors.hoya.furDark} strokeWidth={5} strokeLinecap="round" fill={NONE}>
+        <Path d="M22 184Q20 130 36 100M178 184Q180 130 164 100" />
+      </G>
+      <G fill={colors.feedback.nudge} {...DET}>
+        {[110, 124, 138, 152].map((y) => (
+          <G key={y}>
+            <Ellipse cx={(y - 100) / 6 + 28} cy={y} rx={7} ry={4} transform={`rotate(-50 ${(y - 100) / 6 + 28} ${y})`} />
+            <Ellipse cx={172 - (y - 100) / 6} cy={y} rx={7} ry={4} transform={`rotate(50 ${172 - (y - 100) / 6} ${y})`} />
+          </G>
+        ))}
+      </G>
+      <Ellipse cx={100} cy={164} rx={66} ry={18} fill={colors.vocab.white} {...INK} />
+      <G {...DET}>
+        <Path d="M54 158Q70 128 86 158Z" fill={colors.vocab.pink} />
+        <Path d="M114 158Q130 128 146 158Z" fill={colors.vocab.green} />
+        <Path d="M82 162Q100 130 118 162Z" fill={colors.surface.paper} />
+      </G>
+    </Card>
   );
 }
 
-function TteokgukArt({ size, testID, accessibilityLabel }: ArtProps): ReactElement {
-  // Bowl with broth + 4 oval rice cake slices + green dot + yellow ribbon.
+function TteokgukArt(p: ArtProps): ReactElement {
+  // Rice cake soup: a wide white bowl open to view, oval rice cake slices with yellow egg and dark gim strips on
+  // top, a spoon resting in it (wide and low, unlike the tall rice bowl).
   return (
-    <Svg width={size} height={size} viewBox="0 0 200 200" testID={testID} accessibilityLabel={accessibilityLabel}>
-      <Frame themeKey="rites">
-        {/* Bowl */}
-        <Path
-          d="M30 90 Q30 150 100 158 Q170 150 170 90 Z"
-          fill={colors.surface.paper}
-          stroke={colors.text.secondary}
-          strokeWidth={2.5}
-          strokeLinejoin="round"
-        />
-        {/* Bowl rim */}
-        <Path d="M30 90 Q100 100 170 90" fill="none" stroke={colors.text.secondary} strokeWidth={2} />
-        {/* Light broth */}
-        <Path
-          d="M40 95 Q100 105 160 95 Q160 130 100 134 Q40 130 40 95 Z"
-          fill={colors.feedback.nudge}
-          opacity={0.35}
-        />
-        {/* 4 oval rice cake slices */}
-        <G fill={colors.surface.canvas} stroke={colors.text.muted} strokeWidth={1.5}>
-          <Ellipse cx={70} cy={110} rx={12} ry={6} />
-          <Ellipse cx={100} cy={104} rx={12} ry={6} />
-          <Ellipse cx={130} cy={110} rx={12} ry={6} />
-          <Ellipse cx={85} cy={120} rx={12} ry={6} />
-        </G>
-        {/* Green scallion dot */}
-        <Circle cx={120} cy={120} r={3} fill={colors.theme.nature} />
-        <Circle cx={108} cy={128} r={2} fill={colors.theme.nature} />
-        {/* Yellow egg ribbon */}
-        <Path d="M55 115 Q70 122 90 118" stroke={colors.feedback.nudge} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-        {/* Floor shadow */}
-        <Ellipse cx={100} cy={165} rx={60} ry={4} fill={colors.hoya.furDark} opacity={0.18} />
-      </Frame>
-    </Svg>
+    <Card theme="rites" p={p}>
+      {shadow(178, 66)}
+      <Path d="M20 96Q24 164 100 170Q176 164 180 96Z" fill={colors.vocab.white} {...INK} />
+      <Ellipse cx={100} cy={96} rx={80} ry={26} fill={colors.feedback.nudgeLight} {...INK} />
+      <G fill={colors.vocab.white} {...DET}>
+        <Ellipse cx={62} cy={96} rx={18} ry={10} />
+        <Ellipse cx={100} cy={86} rx={18} ry={10} />
+        <Ellipse cx={92} cy={108} rx={18} ry={10} />
+        <Ellipse cx={130} cy={104} rx={18} ry={10} />
+      </G>
+      <Path d="M70 84L84 80M112 98L124 92M58 108L72 106" stroke={colors.vocab.yellow} strokeWidth={6} strokeLinecap="round" />
+      <Path d="M80 96L92 92M118 82L132 86M138 96L146 108" stroke={colors.vocab.black} strokeWidth={5} strokeLinecap="round" />
+      <Circle cx={108} cy={118} r={4} fill={colors.vocab.green} />
+      <Path d="M146 94L184 30" stroke={colors.text.primary} strokeWidth={16} strokeLinecap="round" />
+      <Path d="M146 94L184 30" stroke={colors.vocab.gray} strokeWidth={6} strokeLinecap="round" />
+    </Card>
   );
 }
 
