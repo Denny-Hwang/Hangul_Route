@@ -1,0 +1,18 @@
+/* Quest step actions with Previous (AMENDMENTS-QUEST-SOUND-BACK QB-1, QB-2). Token variables only (app-shell.css). */
+.qp-screen { min-height: 0; gap: var(--spacing-md); }
+.qp-head { display: flex; align-items: center; gap: var(--spacing-md); }
+.qp-dots { flex: 1; display: flex; align-items: center; gap: var(--spacing-sm); }
+.qp-dots span { width: var(--spacing-md); height: var(--spacing-md); border-radius: var(--radii-circle); background: var(--colors-surface-sunken); }
+.qp-dots span.on { background: var(--colors-brand-primary); }
+/* The step (or page) shown now, when it is behind the furthest one: the same filled dot with a dark ring. */
+.qp-dots span.now { box-shadow: 0 0 0 var(--border-width-base) var(--colors-surface-canvas), 0 0 0 calc(var(--border-width-base) * 2) var(--colors-brand-primaryDark); }
+.qp-count { padding: var(--spacing-xxs) var(--spacing-md); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); }
+.qp-pill { align-self: flex-start; padding: var(--spacing-xxs) var(--spacing-md); border-radius: var(--radii-pill); background: var(--colors-brand-primaryLight); color: var(--colors-brand-primaryDark); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); }
+.qp-body { flex: 1; min-height: var(--touch-hero); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+/* The row: Previous on the left, the main button on the right with twice the share. When the two cannot share a
+   line (Largest text at 320) the row wraps upward, so the main button is the first line and Previous the second. */
+.qp-actions { display: flex; flex-wrap: wrap-reverse; gap: var(--spacing-sm); }
+.qp-actions .rn-btn { min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+.qp-actions .qp-prev { flex: 1 0 auto; }
+.qp-actions .qp-main { flex: 2 0 auto; }
+.qp-second { align-self: flex-start; }

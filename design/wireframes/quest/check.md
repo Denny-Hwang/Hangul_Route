@@ -53,6 +53,7 @@ B. Round (Listen & Pick, check mode; see minigame/listen-pick.md)
 - Back from B -> A with the scored keys kept; re-answers count as retries (no double counting)
 - After round 2 -> step 6 `reward`; `quest.check_completed { questId, firstTryCorrect, retries }`
 - [x leave] -> the quest's leave sheet
+- [QB] [ Previous ] on the launcher -> step 4 (AMENDMENTS-QUEST-SOUND-BACK QB-2). When the Check is shown again after it was done (a revisit), the launcher's main button is [[ CONTINUE ]] and [ Play again ] opens the two rounds without scoring them (QB-3); still no Skip. `quest.check_completed` is sent once per run.
 
 ## Navigation graph
 

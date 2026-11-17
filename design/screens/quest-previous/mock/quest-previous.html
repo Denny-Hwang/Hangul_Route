@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quest: Previous beside the main button (QB-1, QB-2) - design mock</title>
+<link rel="stylesheet" href="../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="../../learner-shell/mock/learner-shell.css">
+<link rel="stylesheet" href="quest-previous.css">
+</head>
+<body>
+<!-- Design mock (owner request 2026-11-17, docs/specs/AMENDMENTS-QUEST-SOUND-BACK.md rows QB-1 and QB-2), not shipped code. Every UI string is a dictionary value (learner.quest.*) or one of the two new keys listed with their en / es / ko values in the amendment's Strings paragraph. -->
+<div class="board">
+<h1 class="page-title">Quest: Previous beside the main button</h1>
+<p class="annot">AMENDMENTS-QUEST-SOUND-BACK QB-1 (inside Look and learn) and QB-2 (between steps). Previous: secondary, left, one share. Main button: primary, right, two shares. Both touchTarget.child (80) high. Step 1, page 1 of the first step and Results draw no Previous.</p>
+<div class="board-grid">
+
+<div class="board-item"><p class="board-label">teaching step, step 2 or later</p><p class="board-title">Look and learn, page 2: Previous shows page 1</p>
+<div class="sample"><div class="app-screen qp-screen">
+<div class="qp-head"><div class="qp-dots" aria-hidden="true"><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span></div><span class="qp-count">2 / 6</span></div>
+<p class="rn-heading">Meet the first vowels</p><span class="qp-pill">Look and learn</span>
+<div class="qp-body"><div class="qp-head"><span class="rn-caption">Page 2 of 2</span><div class="qp-dots" aria-hidden="true"><span class="on"></span><span class="on"></span></div></div><div class="unchanged">the page's cards, unchanged</div></div>
+<div class="qp-actions"><button class="rn-btn rn-secondary qp-prev" type="button">Previous</button><button class="rn-btn rn-primary qp-main" type="button">Continue</button></div>
+</div></div></div>
+
+<div class="board-item"><p class="board-label">look and learn, page 1 after Previous</p><p class="board-title">The dots keep the furthest page; the page shown has the ring</p>
+<div class="sample"><div class="app-screen qp-screen">
+<div class="qp-head"><div class="qp-dots" aria-hidden="true"><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span></div><span class="qp-count">2 / 6</span></div>
+<p class="rn-heading">Meet the first vowels</p><span class="qp-pill">Look and learn</span>
+<div class="qp-body"><div class="qp-head"><span class="rn-caption">Page 1 of 2</span><div class="qp-dots" aria-hidden="true"><span class="on now"></span><span class="on"></span></div></div><div class="unchanged">the page's cards, unchanged</div></div>
+<div class="qp-actions"><button class="rn-btn rn-secondary qp-prev" type="button">Previous</button><button class="rn-btn rn-primary qp-main" type="button">Continue</button></div>
+<p class="annot">Step 2: on page 1, Previous shows step 1.</p>
+</div></div></div>
+
+<div class="board-item"><p class="board-label">game launcher, first visit (step 3)</p><p class="board-title">Play and Skip for now as today, with Previous</p>
+<div class="sample"><div class="app-screen qp-screen">
+<div class="qp-head"><div class="qp-dots" aria-hidden="true"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span></div><span class="qp-count">3 / 6</span></div>
+<p class="rn-heading">Match the sounds</p><span class="qp-pill">Practice</span>
+<div class="qp-body"><p class="rn-row-title">Ready for a quick game?</p><p class="rn-body-secondary">Tap to play. When the game is done you'll come right back.</p></div>
+<div class="qp-actions"><button class="rn-btn rn-secondary qp-prev" type="button">Previous</button><button class="rn-btn rn-primary qp-main" type="button">Play minigame</button></div>
+<button class="rn-btn rn-ghost qp-second" type="button">Skip for now</button>
+</div></div></div>
+
+<div class="board-item"><p class="board-label">game launcher, revisit (step 3 shown, step 5 reached)</p><p class="board-title">Continue is the main button; Play again is the second; no Skip for now</p>
+<div class="sample"><div class="app-screen qp-screen">
+<div class="qp-head"><div class="qp-dots" aria-hidden="true"><span class="on"></span><span class="on"></span><span class="on now"></span><span class="on"></span><span class="on"></span><span></span></div><span class="qp-count">3 / 6</span></div>
+<p class="rn-heading">Match the sounds</p><span class="qp-pill">Practice</span>
+<div class="qp-body"><p class="rn-row-title">Ready for a quick game?</p><p class="rn-body-secondary">Tap to play. When the game is done you'll come right back.</p></div>
+<div class="qp-actions"><button class="rn-btn rn-secondary qp-prev" type="button">Previous</button><button class="rn-btn rn-primary qp-main" type="button">Continue</button></div>
+<button class="rn-btn rn-ghost qp-second" type="button">Play again</button>
+</div></div></div>
+
+<div class="board-item"><p class="board-label">step 1</p><p class="board-title">No Previous: the step is drawn as today</p>
+<div class="sample"><div class="app-screen qp-screen">
+<div class="qp-head"><div class="qp-dots" aria-hidden="true"><span class="on"></span><span></span><span></span><span></span><span></span><span></span></div><span class="qp-count">1 / 6</span></div>
+<p class="rn-heading">Hello!</p><span class="qp-pill">Hello</span>
+<div class="qp-body"><div class="unchanged">Hoya's card, unchanged</div></div>
+<button class="rn-btn rn-hero" type="button">Continue</button>
+</div></div></div>
+
+</div></div>
+</body>
+</html>
