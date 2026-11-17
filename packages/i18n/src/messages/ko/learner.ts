@@ -491,6 +491,7 @@ export const learner = {
       reward: { pill: '마무리' },
     },
     continue: { cta: '계속' },
+    previous: { cta: '이전' },
     seeResults: { cta: '결과 보기' },
     cardWaiting: {
       title: (card: string) => `${card} 카드가 기다리고 있어요`,
@@ -509,6 +510,7 @@ export const learner = {
         heading: '짧은 문제 두 개',
         go: { cta: '시작' },
       },
+      again: { cta: '다시 하기' },
     },
     discover: {
       hearIt: { cta: '들어 보기' },

@@ -516,6 +516,7 @@ export const learner = {
       reward: { pill: 'Fin' },
     },
     continue: { cta: 'Continuar' },
+    previous: { cta: 'Anterior' },
     seeResults: { cta: 'Ver resultados' },
     cardWaiting: {
       title: (card: string) => `La tarjeta ${card} te espera`,
@@ -534,6 +535,7 @@ export const learner = {
         heading: 'Dos preguntas rápidas',
         go: { cta: 'Vamos' },
       },
+      again: { cta: 'Jugar otra vez' },
     },
     discover: {
       hearIt: { cta: 'Escuchar' },
