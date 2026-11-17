@@ -42,6 +42,9 @@ const W3_HAND = [
 const W3_COLORS = Object.keys(COLOR_SWATCHES);
 const W3_COUNTS = COUNT_VALUES.map((n) => `count-${n}`);
 
+/** [FU] Glyphs of the earlier batches that AMENDMENTS-PICTURES-2026-11 PX-1 redrew and the owner approved (2026-11-17). */
+const OWNER_APPROVED: ReadonlySet<string> = new Set(['nature-cloud', 'food-egg', 'food-tteok']);
+
 describe('key grammar', () => {
   it('is the spec regex over the thirteen families', () => {
     expect(WORD_ART_KEY_RE.source).toBe('^(food|animal|family|school|nature|travel|sport|culture|science|color|count|body|prop)-[a-z0-9-]+$');
@@ -78,8 +81,9 @@ describe('WORD_ART', () => {
     }
   });
 
-  it('the W-1b samples wait for the owner (status review)', () => {
-    for (const key of W1B_SAMPLES) expect(WORD_ART[key]!.meta.status).toBe('review');
+  it('the W-1b samples wait for the owner (status review), except the ones the owner approved', () => {
+    // [FU] nature-cloud was redrawn in AMENDMENTS-PICTURES-2026-11 PX-1 and approved by the owner on 2026-11-17.
+    for (const key of W1B_SAMPLES) expect(WORD_ART[key]!.meta.status, key).toBe(OWNER_APPROVED.has(key) ? 'approved' : 'review');
   });
 
   it('holds the four W-1c props, waiting for the owner (status review)', () => {
@@ -88,8 +92,9 @@ describe('WORD_ART', () => {
 });
 
 describe('batch W-3 (§3.12)', () => {
-  it('holds the eleven hand glyphs, waiting for the owner (status review)', () => {
-    for (const key of W3_HAND) expect(WORD_ART[key]?.meta, key).toEqual({ family: key.split('-')[0], status: 'review' });
+  it('holds the eleven hand glyphs, waiting for the owner (status review), except the ones the owner approved', () => {
+    // [FU] food-egg and food-tteok were redrawn in AMENDMENTS-PICTURES-2026-11 PX-1 and approved by the owner on 2026-11-17.
+    for (const key of W3_HAND) expect(WORD_ART[key]?.meta, key).toEqual({ family: key.split('-')[0], status: OWNER_APPROVED.has(key) ? 'approved' : 'review' });
   });
 
   it('registers the twelve colour swatches as the generator draws them from the registered objects', () => {
@@ -115,7 +120,7 @@ describe('batch W-3 (§3.12)', () => {
     const generated = new Set(['color', 'count', 'body']);
     for (const [key, { object }] of Object.entries(COLOR_SWATCHES)) {
       expect(generated.has(object.split('-')[0]!), `${key} draws ${object}`).toBe(false);
-      expect(WORD_ART[object]?.meta.status, `${key} needs ${object}`).toBe('review');
+      expect(WORD_ART[object]?.meta.status, `${key} needs ${object}`).toBe(OWNER_APPROVED.has(object) ? 'approved' : 'review');
     }
   });
 

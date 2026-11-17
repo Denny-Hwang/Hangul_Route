@@ -9,9 +9,8 @@ import { fillTones, subjectBox } from './glyph-checks';
 /**
  * AMENDMENTS-PICTURES-2026-11 row PX-1: the 13 vocabulary words that borrowed
  * a heritage card as their picture have a glyph of their own (rule R6), and
- * five glyphs that were too abstract carry a second cue. All 18 are `review`:
- * the owner or a teacher has not looked at the sheet yet (the amendment's
- * section 5). What a picture must show to be named is asserted on its data,
+ * five glyphs that were too abstract carry a second cue. All 18 are `approved`:
+ * the owner looked at the sheet and approved them on 2026-11-17 [FU]. What a picture must show to be named is asserted on its data,
  * so a later edit cannot quietly turn the kimchi back into a bowl.
  */
 const NEW_KEYS: Readonly<Record<string, string>> = {
@@ -45,8 +44,8 @@ const size = (key: string): { w: number; h: number } => {
 };
 
 describe('batch PX-1: the borrowed words get glyphs', () => {
-  it.each(Object.keys(NEW_KEYS))('%s is registered, in review, with no waiver', (key) => {
-    expect(WORD_ART[key]?.meta).toEqual({ family: key.split('-')[0], status: 'review' });
+  it.each(Object.keys(NEW_KEYS))('%s is registered, approved, with no waiver', (key) => {
+    expect(WORD_ART[key]?.meta).toEqual({ family: key.split('-')[0], status: 'approved' });
   });
 
   it.each(Object.entries(NEW_KEYS))('word:%s is the picture of one word, and no word uses %s any more', (key, card) => {
@@ -60,8 +59,8 @@ describe('batch PX-1: the borrowed words get glyphs', () => {
     expect(visuals.filter((v) => v.startsWith('card:'))).toEqual([]);
   });
 
-  it.each(REDRAWN)('%s is redrawn and back in review', (key) => {
-    expect(WORD_ART[key]?.meta).toEqual({ family: key.split('-')[0], status: 'review' });
+  it.each(REDRAWN)('%s is redrawn and approved', (key) => {
+    expect(WORD_ART[key]?.meta).toEqual({ family: key.split('-')[0], status: 'approved' });
   });
 });
 

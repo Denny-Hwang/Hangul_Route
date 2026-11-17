@@ -106,10 +106,10 @@ const META: WordArtMetaOverrides = {
   ...Object.fromEntries([...['airplane', 'train', 'taxi', 'subway', 'car', 'boat', 'map', 'passport', 'ticket', 'airport', 'hotel'].map((k) => `travel-${k}`), ...['baseball', 'basketball', 'volleyball', 'tabletennis', 'swimming', 'taekwondo', 'running', 'jumprope', 'bicycle', 'skiing', 'ball'].map((k) => `sport-${k}`), ...['hangul', 'hanok', 'bibimbap', 'tteokbokki', 'song', 'dance', 'drama'].map((k) => `culture-${k}`), ...['fire', 'ice', 'stone', 'magnet', 'earth', 'space', 'robot', 'seed', 'shadow', 'wind', 'light'].map((k) => `science-${k}`)].map((k) => [k, { status: 'approved' }])),
   'science-rainbow': { status: 'approved', maxTones: 7, reason: 'A rainbow needs its six arc colours, and the two clouds at its feet are a seventh, white (§3.12 brief: six arcs, two clouds).' },
   // batch PX-1 (AMENDMENTS-PICTURES-2026-11): the 13 words that borrowed a heritage card picture get their own glyph, and
-  // five glyphs get a second cue. All 18 wait for the owner's or a teacher's look at the sheet, so the five redrawn
-  // ones go back from `approved` to `review` (they are listed after the W-3 to W-6 lines above, so this status wins).
+  // five glyphs get a second cue. [FU] Approved by the owner on 2026-11-17 (in chat: "I approve the new pictures"); the
+  // line is listed after the W-1b and W-3 lines above, so this status wins for nature-cloud, food-egg and food-tteok.
   ...Object.fromEntries(
-    ['food-rice', 'food-kimchi', 'food-kimbap', 'animal-tiger', 'school-book', 'nature-mountain', 'nature-sea', 'nature-moon', 'culture-hanbok', 'culture-seollal', 'culture-chuseok', 'culture-yutnori', 'culture-gayageum', 'food-egg', 'food-tteok', 'science-shadow', 'science-seed', 'nature-cloud'].map((k) => [k, { status: 'review' }]),
+    ['food-rice', 'food-kimchi', 'food-kimbap', 'animal-tiger', 'school-book', 'nature-mountain', 'nature-sea', 'nature-moon', 'culture-hanbok', 'culture-seollal', 'culture-chuseok', 'culture-yutnori', 'culture-gayageum', 'food-egg', 'food-tteok', 'science-shadow', 'science-seed', 'nature-cloud'].map((k) => [k, { status: 'approved' }]),
   ),
   // lesson pictures outside the vocabulary topics (Stage 2 Playground Words, F-CURR-001 S2-3): reserved, so outside the family plan
   ...Object.fromEntries(['sport-swing', 'sport-slide', 'nature-sand'].map((k) => [k, { status: 'approved', reserved: true }])),
