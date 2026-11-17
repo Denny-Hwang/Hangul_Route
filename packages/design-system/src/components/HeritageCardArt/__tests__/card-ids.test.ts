@@ -106,14 +106,14 @@ describe('upperCellCardArtIds and UpperCellArt.tsx (row CM-23)', () => {
   // Row CM-23 part 2 adds Stage 4's five talks, drawn with the shared two friends and bubbles (`Pal`, `Bubble`): the
   // module line moved from 16,000 B to 22,000 B. Part 3 adds Stages 6-7's ten and the five legendary cards on three
   // shared frames (`word`, `Page`, `Legend`): the module line moves to 34,000 B (about 32,000 B); the per-drawing line stays.
-  // AMENDMENTS-PICTURES-2026-11 PX-3 redraws the cards as their own subjects with an ink outline (so far: and Stages 6-7):
-  // the module measures 38,287 B, so its line moves to 38,300 B; the largest drawing (TokkiArt)
-  // measures 1,327 B, so the per-drawing lines did not move.
-  it('art budget: each drawing at most 2,000 B of source, the module at most 38,300 B', () => {
+  // AMENDMENTS-PICTURES-2026-11 PX-3 redraws the cards as their own subjects with an ink outline (so far: and the legendary cards):
+  // the module measures 39,657 B, so its line moves to 39,700 B; the largest drawing (HangawiArt)
+  // measures 1,367 B, so the per-drawing lines did not move.
+  it('art budget: each drawing at most 2,000 B of source, the module at most 39,700 B', () => {
     const fns = [...art.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1], bytes: Buffer.byteLength(m[0]) }));
     expect(fns).toHaveLength(30);
     for (const f of fns) expect(f.bytes, f.name).toBeLessThanOrEqual(2_000);
-    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(38_300);
+    expect(Buffer.byteLength(art)).toBeLessThanOrEqual(39_700);
   });
 
   it('art budget, Stages 6-7 and the legendary cards: the shared frames at most 3,200 B, each new drawing at most 1,700 B (row CM-23 part 3)', () => {

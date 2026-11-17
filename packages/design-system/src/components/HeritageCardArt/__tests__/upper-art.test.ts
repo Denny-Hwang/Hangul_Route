@@ -16,7 +16,7 @@ const art = readFileSync(join(__dirname, '..', 'UpperCellArt.tsx'), 'utf8');
 const code = art.replace(/^\s*(\/\/|\/\*\*|\*).*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
 const all = [...code.matchAll(/^function (\w+Art)\(p: ArtProps\)[\s\S]*?^}$/gm)].map((m) => ({ name: m[1]!, body: m[0] }));
 /** The drawings brought to the rules by PX-3 so far; the row's later commits add the rest. */
-const CHECKED: readonly string[] = ['InsaArt', 'IreumArt', 'AchimArt', 'SaengilArt', 'TteokArt', 'FullMoonArt', 'YutArt', 'MwoyeyoArt', 'MasisseoyoArt', 'BigaWayoArt', 'GachiArt', 'YeogiyoArt', 'SsireumArt', 'WonArt', 'DeomArt', 'TokkiArt', 'BihaenggiArt'];
+const CHECKED: readonly string[] = ['InsaArt', 'IreumArt', 'AchimArt', 'SaengilArt', 'TteokArt', 'FullMoonArt', 'YutArt', 'MwoyeyoArt', 'MasisseoyoArt', 'BigaWayoArt', 'GachiArt', 'YeogiyoArt', 'SsireumArt', 'WonArt', 'DeomArt', 'TokkiArt', 'BihaenggiArt', 'HunminjeongeumArt', 'HangawiArt', 'JirisanArt', 'JangArt'];
 const drawings = all.filter((d) => CHECKED.includes(d.name));
 const body = (name: string): string => drawings.find((d) => d.name === name)?.body ?? '';
 /** The shared figures, frames and the apple a drawing may reach its ink outline through. */
@@ -94,5 +94,16 @@ describe('upper-stage and legendary card art (UpperCellArt.tsx, AMENDMENTS-PICTU
     expect(code).not.toMatch(/function Page\(/);
     expect(code).toMatch(/function Note\([\s\S]*?Math\.min\(13,/);
     for (const name of ['IreumArt', 'AchimArt', 'SaengilArt', 'TokkiArt', 'BihaenggiArt']) expect(body(name), name).toMatch(/<Note /);
+  });
+
+  // The four moons of the whole set (AMENDMENTS-PICTURES-2026-11 section 4): Stage 1 `moon` is the crescent and
+  // `chuseok` the full moon with its rabbit behind the songpyeon plate (`stage1-art.test.ts`); here the full moon
+  // rises behind a tiled roof and Hangawi is the fruit and songpyeon in front of a small moon.
+  it('the two upper moons differ by what stands in front of the moon', () => {
+    const roof = /M52 132H148Q156 150 198 146/;
+    expect(body('FullMoonArt')).toMatch(roof);
+    expect(body('HangawiArt')).not.toMatch(roof);
+    expect(body('FullMoonArt')).not.toMatch(/Q\$\{x\} \$\{i < 5 \? 116 : 100\}/);
+    expect(body('HangawiArt')).toMatch(/Q\$\{x\} \$\{i < 5 \? 116 : 100\}/);
   });
 });

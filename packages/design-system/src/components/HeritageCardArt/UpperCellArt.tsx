@@ -602,33 +602,39 @@ function BihaenggiArt(p: ArtProps): ReactElement {
 }
 
 // ---- The album legendary cards (row CM-23 part 3) --------------------------------------------------------
-// Each in a gold frame of the legendary rarity token, its Korean name on a label, one emblem of its album.
+// Each in a gold frame of the legendary rarity token, one subject of its album, its Korean name small on a label.
 
 function Legend({ theme, p, name, children }: { theme: ThemeKey; p: ArtProps; name: string; children: ReactNode }): ReactElement {
   return (
     <Card theme={theme} p={p}>
-      <Rect x={8} y={8} width={184} height={184} rx={12} fill="none" stroke={colors.rarity.legendary} strokeWidth={4} />
+      <Rect x={6} y={6} width={188} height={188} rx={12} fill={NONE} stroke={colors.rarity.legendary} strokeWidth={6} />
       {children}
-      <Rect x={44} y={150} width={112} height={32} rx={10} fill={colors.surface.paper} stroke={colors.rarity.legendary} strokeWidth={2.5} />
-      {word(100, 172, name, 18)}
+      <Rect x={52} y={162} width={96} height={26} rx={9} fill={colors.surface.paper} stroke={colors.rarity.legendary} strokeWidth={4} />
+      {word(100, 181, name, 14)}
     </Card>
   );
 }
 
 function HunminjeongeumArt(p: ArtProps): ReactElement {
-  // Hunminjeongeum: a stitch-bound book with its title strip, a ㅎ on its cover.
+  // Hunminjeongeum: an old thread-bound book, its aged patterned cover with a white title slip at the upper left and the
+  // five-hole binding stitched along the right edge.
   return (
     <Legend theme="letters" p={p} name="훈민정음">
-      <Rect x={58} y={26} width={84} height={114} rx={6} fill={colors.brand.secondaryLight} stroke={colors.brand.secondaryDark} strokeWidth={3} />
-      <G fill={colors.brand.secondaryDark}>
-        {[40, 62, 84, 106, 126].map((y) => (
-          <Circle key={y} cx={68} cy={y} r={2.5} />
+      <Path d="M54 26H154V154H54Z" fill={colors.surface.sunken} {...INK} transform="translate(6 6)" />
+      <Rect x={46} y={20} width={108} height={134} rx={3} fill={colors.hoya.furDark} {...INK} />
+      <Path d="M50 50L80 24M50 90L120 24M50 130L136 50M74 150L136 90M114 150L136 130M50 30L136 110M50 70L130 150M50 110L90 150" stroke={colors.feedback.nudge} strokeWidth={4} opacity={0.6} />
+      <Rect x={58} y={32} width={26} height={78} rx={2} fill={colors.surface.paper} {...DET} />
+      <Path d="M71 44V52M71 62V70M71 80V88M71 96V100" {...DET} />
+      <G stroke={colors.vocab.red} strokeWidth={5} fill={NONE} strokeLinecap="round">
+        {[34, 60, 87, 114, 140].map((y) => (
+          <Path key={y} d={`M142 ${y}H160`} />
         ))}
+        <Path d="M160 34V140" />
       </G>
-      <Rect x={98} y={36} width={30} height={60} rx={3} fill={colors.surface.paper} stroke={colors.brand.secondaryDark} strokeWidth={2} />
-      <G stroke={colors.brand.primary} strokeWidth={4} strokeLinecap="round" fill="none">
-        <Path d="M108 48 H118 M104 56 H122" />
-        <Circle cx={113} cy={74} r={8} />
+      <G fill={colors.text.primary}>
+        {[34, 60, 87, 114, 140].map((y) => (
+          <Circle key={y} cx={142} cy={y} r={4} />
+        ))}
       </G>
     </Legend>
   );
@@ -638,17 +644,18 @@ function JangArt(p: ArtProps): ReactElement {
   // Jang making: three round onggi jars in a row on a stone terrace, lids on.
   return (
     <Legend theme="life" p={p} name="장 담그기">
-      <Rect x={22} y={124} width={156} height={14} rx={5} fill={colors.surface.sunken} stroke={colors.text.muted} strokeWidth={2} />
+      <Rect x={16} y={134} width={168} height={18} rx={5} fill={colors.surface.sunken} {...INK} />
       {(
         [
-          [52, 20],
-          [100, 26],
-          [148, 20],
+          [48, 24],
+          [100, 32],
+          [152, 24],
         ] as const
       ).map(([x, r]) => (
         <G key={x}>
-          <Ellipse cx={x} cy={124 - r} rx={r} ry={r} fill={colors.hoya.furDark} stroke={colors.text.secondary} strokeWidth={2.5} />
-          <Ellipse cx={x} cy={124 - 2 * r + 2} rx={r * 0.6} ry={5} fill={colors.text.secondary} />
+          <Ellipse cx={x} cy={134 - r} rx={r} ry={r} fill={colors.vocab.brown} {...INK} />
+          <Ellipse cx={x} cy={134 - 2 * r + 2} rx={r * 0.62} ry={6} fill={colors.text.secondary} {...DET} />
+          <Path d={`M${x - r * 0.7} ${134 - r}Q${x} ${128 - r} ${x + r * 0.7} ${134 - r}`} stroke={colors.surface.sunken} strokeWidth={4} fill={NONE} />
         </G>
       ))}
     </Legend>
@@ -656,25 +663,39 @@ function JangArt(p: ArtProps): ReactElement {
 }
 
 function HangawiArt(p: ArtProps): ReactElement {
-  // Hangawi: a full harvest moon over a plate of half-moon songpyeon.
+  // Hangawi: a plate heaped with songpyeon in front, a footed dish piled with apples and pears behind it, a small full
+  // moon in the corner.
   return (
     <Legend theme="rites" p={p} name="한가위">
-      <Circle cx={100} cy={64} r={40} fill={colors.feedback.nudgeLight} stroke={colors.feedback.nudge} strokeWidth={3} />
-      <Ellipse cx={100} cy={128} rx={52} ry={12} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2.5} />
-      {[74, 100, 126].map((x, i) => (
-        <Path key={x} d={`M${x - 12} 124 Q${x} 104 ${x + 12} 124 Z`} fill={i === 1 ? colors.theme.nature : colors.surface.canvas} stroke={colors.text.muted} strokeWidth={2} />
-      ))}
+      <Circle cx={152} cy={42} r={26} fill={colors.vocab.yellow} {...INK} />
+      <Path d="M60 100H84L90 124H54Z" fill={colors.surface.paper} {...INK} />
+      <Path d="M28 94H116Q110 106 72 106Q34 106 28 94Z" fill={colors.surface.paper} {...INK} />
+      <G {...INK}>
+        <Circle cx={46} cy={78} r={15} fill={colors.vocab.red} />
+        <Circle cx={72} cy={78} r={15} fill={colors.vocab.yellow} />
+        <Circle cx={98} cy={78} r={15} fill={colors.vocab.red} />
+        <Circle cx={59} cy={52} r={15} fill={colors.vocab.yellow} />
+        <Circle cx={85} cy={52} r={15} fill={colors.vocab.red} />
+        <Circle cx={72} cy={26} r={14} fill={colors.vocab.red} />
+      </G>
+      <Ellipse cx={100} cy={146} rx={86} ry={14} fill={colors.surface.paper} {...INK} />
+      <G {...DET}>
+        {[40, 70, 100, 130, 160, 55, 85, 115, 145].map((x, i) => (
+          <Path key={x} d={`M${x - 15} ${i < 5 ? 144 : 128}Q${x} ${i < 5 ? 116 : 100} ${x + 15} ${i < 5 ? 144 : 128}Z`} fill={[colors.surface.paper, colors.vocab.green, colors.vocab.yellow][i % 3]} />
+        )).reverse()}
+      </G>
     </Legend>
   );
 }
 
 function JirisanArt(p: ArtProps): ReactElement {
-  // Jirisan: long ridges one behind another, the sun over the highest peak.
+  // Jirisan: long ridges one behind another with a sea of clouds between them, the summit stone on the top peak.
   return (
     <Legend theme="nature" p={p} name="지리산">
-      <Circle cx={140} cy={44} r={14} fill={colors.feedback.nudge} />
-      <Path d="M12 120 Q56 52 100 92 Q136 40 188 110 V140 H12 Z" fill={colors.theme.nature} opacity={0.55} />
-      <Path d="M12 140 Q60 92 108 124 Q150 92 188 128 V148 H12 Z" fill={colors.feedback.success} />
+      <Path d="M12 92Q40 58 66 78Q96 40 128 70Q156 50 188 82V120H12Z" fill={colors.theme.nature} {...INK} />
+      <Path d="M12 112Q28 98 46 108Q62 94 82 106Q100 94 120 106Q140 94 160 106Q176 96 188 108V128H12Z" fill={colors.surface.paper} {...DET} />
+      <Path d="M12 156L74 82L100 110L120 96L188 156Z" fill={colors.feedback.success} {...INK} />
+      <Path d="M62 88L64 50Q72 40 86 46L90 88Z" fill={colors.vocab.gray} {...INK} />
     </Legend>
   );
 }
