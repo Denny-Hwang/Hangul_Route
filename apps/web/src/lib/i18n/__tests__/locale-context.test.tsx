@@ -108,6 +108,9 @@ function browser(opts: { record?: DeviceSettings | 'unreadable'; hasProfiles?: b
     dropLang: () => {
       dropped += 1;
     },
+    // The server build and the tests carry every language from the start; the lazy cases below override these.
+    hasMessages: () => true,
+    loadMessages: async () => true,
   };
   return {
     deps,
@@ -378,5 +381,121 @@ describe('console LocaleProvider: the device record (owner items 6 and 7)', () =
     await mount({ ...b.deps, readDevice: () => Promise.reject(new Error('closed')) });
     expect(ctx?.locale).toBe('ko');
     expect(ctx?.ready).toBe(true);
+  });
+});
+
+/** Messages that arrive when the test says so (the browser build's language chunks, FN-6). */
+function lazyMessages(inHand: readonly string[] = ['en']) {
+  const loaded = new Set<string>(inHand);
+  const waiting = new Map<string, Array<(ok: boolean) => void>>();
+  const asked: string[] = [];
+  return {
+    hasMessages: (l: string) => loaded.has(l),
+    loadMessages: (l: string) =>
+      new Promise<boolean>((done) => {
+        asked.push(l);
+        waiting.set(l, [...(waiting.get(l) ?? []), done]);
+      }),
+    asked,
+    /** The chunk of `l` arrives (ok) or fails (not ok). */
+    arrive: async (l: string, ok = true) => {
+      if (ok) loaded.add(l);
+      const list = waiting.get(l) ?? [];
+      waiting.delete(l);
+      await act(async () => {
+        for (const done of list) done(ok);
+      });
+    },
+  };
+}
+
+describe('console LocaleProvider: a language is shown once its messages are in (FN-6)', () => {
+  it('the record says es: the page stays on its empty canvas until the Spanish chunk is in, then paints in Spanish', async () => {
+    const b = browser({ record: { uiLocale: 'es' } });
+    const m = lazyMessages();
+    await mount({ ...b.deps, hasMessages: m.hasMessages, loadMessages: m.loadMessages });
+    expect(m.asked).toEqual(['es']);
+    expect(ctx?.ready).toBe(false);
+    expect(ctx?.locale).toBe('en');
+    await m.arrive('es');
+    expect(ctx?.ready).toBe(true);
+    expect(ctx?.locale).toBe('es');
+    expect(b.doc.documentElement.lang).toBe('es');
+  });
+
+  it('the first-paint guess starts loading at once, beside the record read (the record asks again; loadMessageOverlay shares the one fetch)', async () => {
+    const b = browser({ record: { uiLocale: 'ko' }, mirror: { 'hr:console:uiLocale': 'ko' } });
+    const m = lazyMessages();
+    await mount({ ...b.deps, hasMessages: m.hasMessages, loadMessages: m.loadMessages });
+    expect(m.asked).toEqual(['ko', 'ko']);
+    expect(ctx?.ready).toBe(false);
+    await m.arrive('ko');
+    expect(ctx?.locale).toBe('ko');
+    expect(ctx?.ready).toBe(true);
+  });
+
+  it('an English page loads nothing and is ready at once', async () => {
+    const b = browser({ record: { uiLocale: 'en' } });
+    const m = lazyMessages();
+    await mount({ ...b.deps, hasMessages: m.hasMessages, loadMessages: m.loadMessages });
+    expect(m.asked).toEqual([]);
+    expect(ctx?.ready).toBe(true);
+    expect(ctx?.locale).toBe('en');
+  });
+
+  it('a switch keeps the current language on screen until the new one is in; a later choice wins over a slower chunk', async () => {
+    const b = browser({ record: { uiLocale: 'en' } });
+    const m = lazyMessages();
+    await mount({ ...b.deps, hasMessages: m.hasMessages, loadMessages: m.loadMessages });
+    await act(async () => ctx?.setLocale('es'));
+    expect(ctx?.locale).toBe('en');
+    expect(ctx?.ready).toBe(true);
+    // The choice is stored at once; only the drawing waits.
+    expect(b.record()).toMatchObject({ uiLocale: 'es' });
+    await act(async () => ctx?.setLocale('ko'));
+    await m.arrive('es');
+    expect(ctx?.locale).toBe('en');
+    await m.arrive('ko');
+    expect(ctx?.locale).toBe('ko');
+    // Back to a language already in: at once.
+    await act(async () => ctx?.setLocale('es'));
+    expect(ctx?.locale).toBe('es');
+  });
+
+  it('a chunk that cannot load still shows the language (in English words) rather than never', async () => {
+    const b = browser({ record: { uiLocale: 'ko' } });
+    const m = lazyMessages();
+    await mount({ ...b.deps, hasMessages: m.hasMessages, loadMessages: m.loadMessages });
+    await m.arrive('ko', false);
+    expect(ctx?.ready).toBe(true);
+    expect(ctx?.locale).toBe('ko');
+  });
+
+  it('a record another tab wrote in a language not yet in applies once it arrives', async () => {
+    const b = browser({ record: { uiLocale: 'en' } });
+    const m = lazyMessages();
+    await mount({ ...b.deps, hasMessages: m.hasMessages, loadMessages: m.loadMessages });
+    act(() => b.post({ uiLocale: 'ko', uiLocaleAt: '2026-10-16T13:00:00.000Z' }));
+    expect(ctx?.locale).toBe('en');
+    await m.arrive('ko');
+    expect(ctx?.locale).toBe('ko');
+  });
+
+  it('after the record wait, a page whose language is still loading waits for it too', async () => {
+    vi.useFakeTimers();
+    try {
+      const b = browser({ mirror: { 'hr:console:uiLocale': 'es' } });
+      const m = lazyMessages();
+      await mount({ ...b.deps, hasMessages: m.hasMessages, loadMessages: m.loadMessages, readDevice: () => new Promise<DeviceSettingsRead>(() => undefined) });
+      act(() => {
+        vi.advanceTimersByTime(RECORD_WAIT_MS);
+      });
+      expect(ctx?.ready).toBe(false);
+      await m.arrive('es');
+      expect(ctx?.ready).toBe(true);
+      expect(ctx?.locale).toBe('es');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -10,6 +10,7 @@ import type { ApiResult, ConsoleApi, TransferLearnerSideView, TransferOption, Tr
 import { canCancel, daysSince, endsLine, isOpenTransfer, pendingCount, slotLabel, startError, startErrorText, statusLine, stepDone, stepWord, type StartError } from '@/lib/console/transfer';
 import { consentLines, consentRecord, identityLines, type ConsentLine, type ConsentSheetData } from '@/lib/console/transfer-consent';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { withMessages } from '@/lib/i18n/message-overlays';
 import { rem } from '@/lib/console/rem';
 import { announceRosterChange } from '@/lib/console/roster-broadcast';
 
@@ -138,6 +139,14 @@ export interface ConsentSheetProps {
  */
 export function ConsentSheet({ data, initialLocale, notNowEnds, busy, failed, updated, onYes, onNotNow, onClose }: ConsentSheetProps): JSX.Element {
   const [locale, setLocale] = useState<UiLocale>(initialLocale);
+  /** The language last chosen: the consent is drawn in it once its messages are in (FN-6); until then the current one stays. */
+  const chosen = useRef<UiLocale>(initialLocale);
+  const chooseLocale = (next: UiLocale): void => {
+    chosen.current = next;
+    withMessages(next, () => {
+      if (chosen.current === next) setLocale(next);
+    });
+  };
   const [introduce, setIntroduce] = useState(false);
   const [endRef, seen] = useSeenOnce(locale);
   const hintId = useId();
@@ -164,7 +173,7 @@ export function ConsentSheet({ data, initialLocale, notNowEnds, busy, failed, up
           <label htmlFor={switchId} style={{ fontWeight: typography.weight.bold }}>
             {c.language}
           </label>
-          <select id={switchId} name="consentLocale" value={locale} onChange={(e) => setLocale(e.target.value as UiLocale)} style={selectStyle}>
+          <select id={switchId} name="consentLocale" value={locale} onChange={(e) => chooseLocale(e.target.value as UiLocale)} style={selectStyle}>
             {LOCALES.map((l) => (
               <option key={l} value={l} lang={LOCALE_META[l].htmlLang}>
                 {LOCALE_META[l].endonym}

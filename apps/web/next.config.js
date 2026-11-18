@@ -1,3 +1,4 @@
+const fs = require('node:fs');
 const path = require('node:path');
 
 /** Hosts where a plain-http CONSOLE_ORIGIN is allowed: this machine only. */
@@ -37,6 +38,28 @@ function consoleOrigin(raw) {
   return value;
 }
 
+/** @param {string} dir */
+function realPath(dir) {
+  try {
+    return fs.realpathSync(dir);
+  } catch {
+    return path.resolve(dir);
+  }
+}
+
+/** The i18n package's import of its eager es / ko overlays (`packages/i18n/src/resolve.ts`). */
+const BUNDLED_MESSAGES = /^\.\/bundled-messages$/;
+const I18N_SRC = realPath(path.join(__dirname, '..', '..', 'packages', 'i18n', 'src'));
+
+/**
+ * Points `./bundled-messages` of `packages/i18n/src` at `./bundled-messages.web` (an import of that name anywhere
+ * else is left alone).
+ * @param {{ request: string, context?: string }} resource
+ */
+function webBundledMessages(resource) {
+  if (resource.context !== undefined && realPath(resource.context) === I18N_SRC) resource.request = './bundled-messages.web';
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -56,8 +79,13 @@ const nextConfig = {
   // The design system's HeritageCardArt draws with react-native-svg; on the
   // web console its shapes map to DOM SVG (src/shims/react-native-svg.tsx), so
   // /design-preview/word-art can show the real card art (F-VOC-002 §3.11).
-  webpack: (config) => {
+  webpack: (config, { isServer, webpack }) => {
     config.resolve.alias = { ...config.resolve.alias, 'react-native-svg$': path.join(__dirname, 'src/shims/react-native-svg.tsx') };
+    // FN-6 (AMENDMENTS-FINISH-2026-11, finding F5): the browser build carries English only. The i18n package's
+    // `bundled-messages` becomes its `.web` twin (no es / ko overlay), as Metro picks it for the learner PWA, and the
+    // console loads the language it shows as a chunk of its own (src/lib/i18n/message-overlays.ts). The server build
+    // (the static HTML, always English) keeps both overlays.
+    if (!isServer) config.plugins.push(new webpack.NormalModuleReplacementPlugin(BUNDLED_MESSAGES, webBundledMessages));
     return config;
   },
 };
