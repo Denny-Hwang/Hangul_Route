@@ -270,7 +270,8 @@ describe('apps/mobile/public/_headers', () => {
   it('[AU] AU-5: the app\'s own script chunks get four of the five: nosniff stays off them (F-CURR-002 section 10)', () => {
     const { 'x-content-type-options': _nosniff, ...rest } = lower(BASELINE);
     for (const path of ['/_expo/static/js/web/index-0123.js', '/_expo/static/js/web/lessons-a-0123.js']) {
-      expect(headersFor(rules, path), path).toEqual(rest);
+      // [FN] AMENDMENTS-FINISH-2026-11 FN-3: plus the year-long cache (a missing chunk is a 404 from the Worker).
+      expect(headersFor(rules, path), path).toEqual({ ...rest, 'cache-control': 'public, max-age=31536000, immutable' });
     }
     // Only the script folder: other /_expo files keep nosniff.
     expect(headersFor(rules, '/_expo/static/css/a.css')['x-content-type-options']).toBe('nosniff');

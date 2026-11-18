@@ -1,0 +1,79 @@
+/*
+ * AMENDMENTS-FINISH-2026-11 FN-2 design pass: static mock of the learner shell's splash (not shipped code).
+ * Wireframe: design/wireframes/pwa/static-splash.md. Every value is a token of packages/design-system/src/tokens.ts,
+ * copied once as a custom property named after it (the method of design/screens/app-shell/mock/app-shell.css):
+ * --colors-brand-primary is colors.brand.primary, --spacing-jumbo is spacing.jumbo. Text sizes are rem (token / 16),
+ * so a browser text size enlarges them. The shipped page writes the same values from the tokens module at build time
+ * (apps/mobile/scripts/pwa/static-splash.mjs); the numbers that are not tokens are in ../README.md, "Constants".
+ */
+:root {
+  --colors-brand-primary: #B24915;
+  --colors-surface-canvas: #FCF8F1;
+  --colors-text-primary: #2A1F14;
+  --colors-text-secondary: #5C4A36;
+  --colors-text-inverse: #FFFFFF;
+  --spacing-sm: 8px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-jumbo: 64px;
+  --radii-circle: 9999px;
+  --typography-size-body: 1.125rem; /* 18 */
+  --typography-size-prompt: 1.375rem; /* 22 */
+  --typography-size-title: 1.75rem; /* 28 */
+  --typography-weight-bold: 700;
+  --typography-leading-normal: 1.35;
+  --motion-duration-celebration: 900ms;
+  --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+html, body { margin: 0; background: var(--colors-surface-canvas); }
+
+/* The splash: one centred group over the whole window, inside the safe area. */
+.hr-splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--colors-surface-canvas);
+  color: var(--colors-text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: var(--typography-leading-normal);
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.hr-splash-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem; /* spacing.jumbo in rem, so large text cannot split "HR" */
+  height: 4rem;
+  border-radius: var(--radii-circle);
+  background: var(--colors-brand-primary);
+  color: var(--colors-text-inverse);
+  font-size: var(--typography-size-prompt);
+  font-weight: var(--typography-weight-bold);
+  white-space: nowrap;
+}
+.hr-splash-name {
+  margin: 0;
+  font-size: var(--typography-size-title);
+  font-weight: var(--typography-weight-bold);
+  padding: 0 var(--spacing-xl);
+}
+.hr-splash-line {
+  margin: 0;
+  font-size: var(--typography-size-body);
+  color: var(--colors-text-secondary);
+  padding: 0 var(--spacing-xl);
+}
+/* A gentle breathing of the line, only where motion is allowed; reduced motion keeps everything still. Its floor
+   (0.8) keeps the line over 4.5:1 on the canvas (4.7:1). */
+@media (prefers-reduced-motion: no-preference) {
+  .hr-splash-line { animation: hr-splash-breathe calc(var(--motion-duration-celebration) * 2) var(--motion-easing-standard) infinite alternate; }
+}
+@keyframes hr-splash-breathe { from { opacity: 1; } to { opacity: 0.8; } }

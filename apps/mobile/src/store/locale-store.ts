@@ -6,6 +6,7 @@ import {
   DeviceSettingsSchema,
   MIGRATED_AT,
   ProfileSettingsSchema,
+  UI_LOCALE_MIRROR_KEY,
   mergeDeviceSettings,
   type ClockScale,
   type DeviceSettings,
@@ -19,6 +20,7 @@ import { create } from 'zustand';
 import { deviceLanguages, takeLangHandoff } from '../platform/locale';
 import { postDeviceSettings, subscribeDeviceSettings } from '../platform/prefs-channel';
 import { readJson, readJsonStrict, removeKey, updateJson, writeJson } from '../platform/storage';
+import { writeMirror } from '../platform/storage-mirror';
 import { track } from '../platform/telemetry';
 import { onProfileRemoved } from './profile-removal';
 
@@ -160,6 +162,17 @@ function settingsOf(raw: unknown): DeviceSettings {
   return parsed.success ? parsed.data : {};
 }
 
+/**
+ * Copies the language of a record this tab read or wrote into the grown-up pages' synchronous mirror
+ * (`UI_LOCALE_MIRROR_KEY`), so the HTML shell's static splash paints in it on the next open (AMENDMENTS-FINISH-2026-11
+ * FN-2). A record with no language leaves the mirror alone: the console folds an old choice it holds only into such a
+ * record, and no surface removes a language from the record. Never read here: the learner app's language never comes
+ * from it ([FN] amends AMENDMENTS-DISPLAY-NAV section 3.3).
+ */
+function mirrorRecord(record: DeviceSettings): void {
+  if (record.uiLocale !== undefined) writeMirror(UI_LOCALE_MIRROR_KEY, record.uiLocale);
+}
+
 /** Storage is best effort: a failed write keeps the in-memory choice for the session. */
 function persist(write: Promise<unknown>): void {
   write.catch(() => undefined);
@@ -196,6 +209,7 @@ async function writeRecord(decide: (stored: DeviceSettings) => DeviceSettingsPat
     return next;
   });
   if (wrote) postDeviceSettings(record);
+  mirrorRecord(record);
   return { record, wrote };
 }
 
@@ -238,6 +252,7 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
       readable = false;
     }
     let record = settingsOf(raw);
+    if (readable) mirrorRecord(record);
     const byProfile: Record<string, ProfileSettings> = {};
     const overrides: Record<string, UiLocale> = {};
     for (const id of profileIds) {
@@ -305,13 +320,16 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
 
   applyDeviceRecord: (record) => {
     set(fieldsOf(record));
+    mirrorRecord(record);
   },
 
   rereadDevice: async () => {
     const raw = await readJson<unknown>(DEVICE_KEY);
     // A missing or failed read (both null), or a damaged value, is not "never chose": keep what this tab already shows.
     if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return;
-    set(fieldsOf(settingsOf(raw)));
+    const record = settingsOf(raw);
+    set(fieldsOf(record));
+    mirrorRecord(record);
   },
 
   setRomanizationMode: (profileId, mode) => {

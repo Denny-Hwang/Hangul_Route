@@ -643,6 +643,16 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(index).toContain("register('/sw.js')");
   });
 
+  it('paints the static splash before the root, in every shipped locale (AMENDMENTS-FINISH-2026-11 FN-2)', () => {
+    const index = readFileSync(join(dist, 'index.html'), 'utf8');
+    expect(index.indexOf('<div id="hr-splash">')).toBeGreaterThan(index.indexOf('<body>'));
+    expect(index.indexOf('<div id="hr-splash">')).toBeLessThan(index.indexOf('<div id="root"></div>'));
+    expect(index).toContain('<p class="hr-splash-line" id="hr-splash-line">Loading</p>');
+    for (const locale of availableLocales(false)) expect(index, locale).toContain(JSON.stringify(getMessages(locale).common.splash.loading).slice(1, -1));
+    expect(index).toContain('hr:console:uiLocale');
+    expect(index.match(/id="hr-splash"/g)).toHaveLength(1);
+  });
+
   it('keeps overscroll-behavior: none on html and body, so a stage swipe never leaves the page (AMENDMENTS-PRESENTER-NAV section 6)', () => {
     // The presenter (/present) is this page too: the single-page fallback serves index.html.
     const index = readFileSync(join(dist, 'index.html'), 'utf8');
