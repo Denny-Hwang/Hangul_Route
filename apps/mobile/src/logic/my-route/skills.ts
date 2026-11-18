@@ -64,6 +64,23 @@ export function questSkills(quest: QuestSteps): Set<Skill> {
   return new Set(quest.steps.flatMap((s) => (s.minigameKind ? SKILL_OF_KIND[s.minigameKind] : [])));
 }
 
+/**
+ * Each steps list's skills, worked out once (AMENDMENTS-FOLLOWUPS-2026-11 FU-4). The route model runs `skillRows` over every
+ * quest on each Home, Learning Route and dashboard render, and `questSkills` built three sets per quest each time (about a
+ * third of the dashboard's first draw on a slow phone). Keyed by the steps array, which content never changes: a lesson
+ * quest's steps read its cell's chunk, so they are one shared empty list until the chunk loads and the chunk's own list
+ * after, and each is a different key.
+ */
+const skillsBySteps = new WeakMap<QuestSteps['steps'], ReadonlySet<Skill>>();
+
+export function questSkillsOnce(quest: QuestSteps): ReadonlySet<Skill> {
+  const known = skillsBySteps.get(quest.steps);
+  if (known !== undefined) return known;
+  const skills = questSkills(quest);
+  skillsBySteps.set(quest.steps, skills);
+  return skills;
+}
+
 const hasTiles = (quest: QuestSteps): boolean => quest.steps.some((s) => s.minigameKind !== undefined && TILE_KINDS.has(s.minigameKind));
 
 export function marksFor(count: number): SkillRow['marks'] {
@@ -81,8 +98,9 @@ export function skillRows(i: {
   open: ReadonlySet<string>;
   quests: readonly (QuestSteps & Pick<Quest, 'id'>)[];
 }): SkillRow[] {
+  const withSkills = i.quests.map((quest) => ({ quest, skills: questSkillsOnce(quest) }));
   return SKILLS.map((skill) => {
-    const counting = i.quests.filter((q) => questSkills(q).has(skill));
+    const counting = withSkills.filter((q) => q.skills.has(skill)).map((q) => q.quest);
     const quests = counting.filter((q) => i.finished.has(q.id)).length;
     const reachable = counting.filter((q) => i.finished.has(q.id) || i.open.has(q.id)).length;
     const marks = marksFor(quests);

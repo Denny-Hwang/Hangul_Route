@@ -20,13 +20,34 @@ export interface CompletionTransition {
   stageJustCompleted: boolean;
 }
 
+/**
+ * `completedEpisodes` of one episode list and one quest list, worked out once (AMENDMENTS-FOLLOWUPS-2026-11 FU-4): the
+ * route model asks `completionState` for every stage, twice (the stage rows and the latch), on each Home, Learning Route
+ * and dashboard render, and each call walked every episode against every quest. Keyed by the two arrays, which the
+ * stores replace and never change in place; the map is only read.
+ */
+const completedByEpisodes = new WeakMap<readonly Episode[], WeakMap<Pick<ProgressSnapshot, 'quests'>['quests'], ReadonlyMap<string, string>>>();
+
+export function completedEpisodesOnce(episodes: readonly Episode[], snapshot: Pick<ProgressSnapshot, 'quests'>): ReadonlyMap<string, string> {
+  let byQuests = completedByEpisodes.get(episodes);
+  if (byQuests === undefined) {
+    byQuests = new WeakMap();
+    completedByEpisodes.set(episodes, byQuests);
+  }
+  const known = byQuests.get(snapshot.quests);
+  if (known !== undefined) return known;
+  const completed = completedEpisodes({ episodes }, snapshot);
+  byQuests.set(snapshot.quests, completed);
+  return completed;
+}
+
 export function completionState(
   stage: StageKey,
   episodes: readonly Episode[],
   snapshot: Pick<ProgressSnapshot, 'quests'>,
 ): CompletionState {
   const world = { episodes };
-  const completed = completedEpisodes(world, snapshot);
+  const completed = completedEpisodesOnce(episodes, snapshot);
   return {
     completedEpisodeIds: gridEpisodes(stage, world)
       .filter((e) => completed.has(e.id))

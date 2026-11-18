@@ -174,7 +174,7 @@ Hangul_Route/
 - React: **함수형 컴포넌트 + hooks** 만. 클래스 컴포넌트 금지.
 - **상태 관리**: `zustand`
 - **서버 상태 / API**: `@tanstack/react-query`
-- **테스트**: `vitest`. E2E 는 Detox / Playwright (PWA offline e2e 는 PR 마다 `web-app.yml`, switch-on e2e 는 nightly `switch-on-e2e.yml`).
+- **테스트**: `vitest`. E2E 는 Detox / Playwright (PWA offline e2e 는 main 머지 때 `web-app.yml` (PR 은 릴리스 빌드만, 2026-11-18 오너 결정), switch-on e2e 는 nightly `switch-on-e2e.yml`).
 - **스타일**: `packages/design-system` 의 **토큰만** 사용.
   - 색상·간격·타이포·반경·그림자 하드코딩 금지.
   - 색상 리터럴(`#fff`, `rgb(...)`) 직접 사용 금지.

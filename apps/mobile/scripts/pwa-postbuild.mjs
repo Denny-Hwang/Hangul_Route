@@ -58,6 +58,7 @@ import {
   renderGrownUpsOffline,
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
+import { startPreloadUrls, withStartPreloads } from './pwa/start-preload.mjs';
 import { APPLE_TOUCH_ICON_FILE, installIconGlobIgnores, installIconProblems } from './pwa/install-icons.mjs';
 import {
   OFFLINE_PACKS_FILE,
@@ -262,6 +263,18 @@ const offlinePacks = offlinePacksIndex({
 writeFileSync(join(dist, OFFLINE_PACKS_FILE), `${JSON.stringify(offlinePacks)}\n`);
 const laterRule = laterRuntimeCaching([...later, ...AUDIO_PACK_CHUNKS]);
 
+// AMENDMENTS-FOLLOWUPS-2026-11 FU-4: the HTML shell preloads the chunks the first screen waits for in every locale (the
+// story shelf and the English lesson headers, pwa/start-preload.mjs), so they download beside the start bundle instead
+// of after it. Written before the precache is generated, so the precached index.html carries them; a chunk that is not
+// there exactly once is reported with the chunk checks below.
+let startPreloadProblem = null;
+try {
+  html = withStartPreloads(html, startPreloadUrls(bundles.map((b) => b.url)));
+  writeFileSync(indexPath, html);
+} catch (error) {
+  startPreloadProblem = error instanceof Error ? error.message : String(error);
+}
+
 const precache = {
   globDirectory: dist,
   globPatterns: ['**/*.{js,html,ico,png,json,webmanifest,svg,mp3,woff2}'],
@@ -369,6 +382,7 @@ const headersFile = join(dist, '_headers');
 for (const url of nosniffLessonChunks(existsSync(headersFile) ? readFileSync(headersFile, 'utf8') : '', lessonChunkUrls([...chunkManifest, ...LOCALE_CHUNKS, ...ROOT_CHUNKS, ...MEMORY_CHUNKS, ...REVIEW_CHUNKS, ...QUEST_REVIEW_CHUNKS, ...LEARNER_CHUNKS, ...SCREEN_CHUNKS, ...SCENE_CHUNKS, ...AUDIO_PACK_CHUNKS], bundles))) {
   chunkProblems.push(`${url} would be served with X-Content-Type-Options: nosniff (${headersFile}): keep nosniff off /_expo/static/js/`);
 }
+if (startPreloadProblem !== null) chunkProblems.push(startPreloadProblem);
 if (chunkProblems.length > 0) throw new Error(`pwa-postbuild: lesson, story, locale and root chunks:\n  ${chunkProblems.join('\n  ')}`);
 const report = precacheReport({
   manifest: lessonManifest,

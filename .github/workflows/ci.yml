@@ -107,7 +107,10 @@ jobs:
   unit:
     name: Unit tests · ${{ matrix.group }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 45: the repository is private since 2026-11-18, so its jobs run on GitHub's 2-core runners (public: 4 cores) and take
+    # about twice as long: the mobile group took 14 min before and 23 min to more than 30 after (packages 5 -> 13 min).
+    # Locally the suite takes the same time on this branch and on main (11 min). The limit only stops a hung run.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:

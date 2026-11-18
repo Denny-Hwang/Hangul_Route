@@ -146,6 +146,26 @@ describe("required checks", () => {
     assert.deepEqual([...gate.needs].sort(), expected);
   });
 
+  test("e2e runs on the push to main only; a pull request builds the release bundle and passes the required check (2026-11-18)", () => {
+    const text = read(".github/workflows/web-app.yml");
+    const all = jobs(text);
+    assert.equal(all.e2e.if, "needs.build.outputs.run == 'true' && github.event_name == 'push'");
+    assert.equal(all["billing-e2e"].if, "needs.changes.outputs.run == 'true' && github.event_name == 'push'");
+    // the release build and the dry run still run on a pull request; the e2e-only bundles and the uploads do not
+    assert.match(all.build.text, /- name: Build PWA \(expo export \+ service worker\)\n\s+if: needs\.changes\.outputs\.run == 'true'\n/);
+    assert.match(all.build.text, /- name: Validate wrangler config \(dry run, no upload\)\n\s+if: needs\.changes\.outputs\.run == 'true'\n/);
+    for (const step of ["Build the fixture bundle", "Build the gating fixture bundle", "Build the weekly plan bundle", "Upload the release build", "Upload the fixture build"]) {
+      const at = all.build.text.indexOf(`- name: ${step}`);
+      assert.ok(at >= 0, step);
+      assert.match(all.build.text.slice(at).split("\n")[1], /github\.event_name == 'push'/, step);
+    }
+    // the required check passes on a pull request once the build has, and still demands every e2e job on main
+    assert.match(all.pwa.text, /if \[ "\$EVENT" = pull_request \]; then[\s\S]*?exit 0/);
+    assert.match(all.pwa.text, /EVENT: \$\{\{ github\.event_name \}\}/);
+    assert.ok(all.pwa.text.indexOf('"$BUILD" != success') < all.pwa.text.indexOf('"$EVENT" = pull_request'), "the build must pass before a pull request is let through");
+    assert.ok(all.pwa.text.indexOf('"$EVENT" = pull_request') < all.pwa.text.indexOf('"$E2E" != success'));
+  });
+
   test("'Build PWA · offline e2e' needs every other job of web-app.yml", () => {
     const all = jobs(read(".github/workflows/web-app.yml"));
     const [id, gate] = Object.entries(all).find(([, j]) => j.name === REQUIRED[1]);
@@ -535,7 +555,8 @@ describe("billing and grown-up home e2e (F-BILL-002 B-14)", () => {
     // It waits only for the small change detection job, never for the build job, so its own cold build runs
     // beside the release build instead of after it (the required check's slowest path stays the build + shards).
     assert.deepEqual(lane.needs, ["changes"]);
-    assert.equal(lane.if, "needs.changes.outputs.run == 'true'");
+    // On the push to main only (owner decision 2026-11-18: the repository is private, Actions minutes are counted).
+    assert.equal(lane.if, "needs.changes.outputs.run == 'true' && github.event_name == 'push'");
     assert.match(lane.text, /^    timeout-minutes: \d+$/m);
     const [, gate] = Object.entries(all).find(([, j]) => j.name === REQUIRED[1]);
     assert.ok(gate.needs.includes("billing-e2e"));

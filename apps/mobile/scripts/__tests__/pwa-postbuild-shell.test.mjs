@@ -590,6 +590,16 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
     expect(run.stdout).toMatch(/ {2}learner precache {2}\d+ files {2}\d+ B {2}\(ceiling \d+ B\)/);
   });
 
+  it('preloads the story shelf and the English lesson headers from the shell, the bundles the export holds (FU-4)', () => {
+    const index = readFileSync(join(dist, 'index.html'), 'utf8');
+    const urls = /\[("[^"]+",?)+\]\.forEach\(function \(href\)/.exec(index);
+    expect(urls, 'the preload script').not.toBeNull();
+    const list = JSON.parse(urls[0].slice(0, urls[0].indexOf('.forEach')));
+    expect(list.map((url) => url.replace(/-[0-9a-f]{32}\.js$/, ''))).toEqual(['/_expo/static/js/web/stories-shelf', '/_expo/static/js/web/lessons-headers-en']);
+    for (const url of list) expect(existsSync(join(dist, url)), url).toBe(true);
+    expect(index).toContain("if (navigator.serviceWorker && navigator.serviceWorker.controller) return;");
+  });
+
   it('writes the denylist into sw.js, one literal per prefix, and never the learner roots', () => {
     for (const re of grownUpDenylist(GROWN_UP_PREFIXES)) expect(sw).toContain(String(re));
     expect(sw).not.toMatch(/\\\/present|\\\/browse/);
