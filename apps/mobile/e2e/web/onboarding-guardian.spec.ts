@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { answerForkNew, E2E_PIN, onboardChild, openForGrownUps, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin, WHO_CHILD } from './helpers';
+import { answerForkNew, E2E_PIN, onboardChild, openForGrownUps, openGrownUpZone, passResetCheck, readStored, seedRescueCode, typeDigits, unlockWithPin, WHO_CHILD } from './helpers';
 
 /**
  * F-LEARN-001 §3.3, §3.4, §3.14, §3.15: the "Someone I look after" path. On
@@ -188,6 +188,8 @@ for (const vp of VIEWPORTS) {
       // The right code in any case, with spaces: the PIN-setup screen opens.
       await code.fill('tiger moon river apple 482 139');
       await page.getByRole('button', { name: 'Continue' }).click();
+      // [FN] FN-1: the check before a new PIN.
+      await passResetCheck(page);
       await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
       await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Forgot PIN?' })).toHaveCount(0);

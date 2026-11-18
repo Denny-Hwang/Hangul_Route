@@ -334,6 +334,26 @@ export async function seedStoredAll(page: Page, entries: Record<string, unknown>
   await page.goto('/');
 }
 
+/**
+ * [FN] AMENDMENTS-FINISH-2026-11 FN-1: the check before a new PIN on the two offline reset ways. Reads the number in
+ * words as a person would (every number from 100 to 999 written out by the dictionary until one matches) and types
+ * its digits, then Continue.
+ */
+export async function numberOnResetCheck(page: Page): Promise<number> {
+  const words = page.getByTestId('pin-reset-check-words');
+  await expect(words).toBeVisible();
+  const shown = (await words.textContent())?.trim() ?? '';
+  const say = getMessages('en').caregiver.pin.reset.check.words;
+  for (let n = 100; n <= 999; n += 1) if (say(n) === shown) return n;
+  throw new Error(`no number reads "${shown}"`);
+}
+
+export async function passResetCheck(page: Page): Promise<void> {
+  const n = await numberOnResetCheck(page);
+  await page.getByTestId('pin-reset-check-input').fill(String(n));
+  await page.getByTestId('pin-reset-check-continue').click();
+}
+
 /** Give the (only) learner on the device a stored Rescue Code, as a synced profile has (`sync:<id>`). */
 export async function seedRescueCode(page: Page, code: string): Promise<void> {
   const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');

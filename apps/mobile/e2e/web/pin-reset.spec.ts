@@ -1,11 +1,12 @@
 import { expect, test } from './fixtures';
-import { answerForkNew, E2E_PIN, onboardChild, openForGrownUps, openGrownUpZone, readStored, seedRescueCode, seedStored, typeDigits, unlockWithPin, headerBack } from './helpers';
+import { answerForkNew, E2E_PIN, numberOnResetCheck, onboardChild, openForGrownUps, openGrownUpZone, passResetCheck, readStored, seedRescueCode, seedStored, typeDigits, unlockWithPin, headerBack } from './helpers';
 
 /**
  * F-LEARN-001 §3.5, §3.14: Forgot PIN. The Rescue Code path is covered in
  * onboarding-guardian.spec.ts; here the 24-hour wait (no code stored), the
  * Rescue Code's own attempt throttle ([OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.3, row OA-2), and the
- * PIN screen's titles by audience (§3.4).
+ * PIN screen's titles by audience (§3.4). [FN] AMENDMENTS-FINISH-2026-11 FN-1: both offline ways pass the check of a
+ * number in words before the new PIN.
  */
 const VIEWPORTS = [
   { width: 375, height: 667 },
@@ -54,6 +55,19 @@ for (const vp of VIEWPORTS) {
       await page.getByRole('button', { name: 'Forgot PIN?' }).click();
       await expect(page.getByText('The 24 hours are up.')).toBeVisible();
       await page.getByRole('button', { name: 'Set a new PIN' }).click();
+
+      // [FN] FN-1: the check before a new PIN. A miss gives a new number and the calm line, nothing else.
+      await expect(page.getByText('One more step')).toBeVisible();
+      await expect(page.getByText('Create a grown-up PIN')).toHaveCount(0);
+      const first = await numberOnResetCheck(page);
+      await page.getByTestId('pin-reset-check-input').fill(String(first === 999 ? 100 : first + 1));
+      await page.getByTestId('pin-reset-check-continue').click();
+      await expect(page.getByText('Not quite. Here is a new number.')).toBeVisible();
+      await expect(page.getByTestId('pin-reset-check-input')).toHaveValue('');
+      expect(await numberOnResetCheck(page)).not.toBe(first);
+      await expect(page.getByText('Create a grown-up PIN')).toHaveCount(0);
+      expect(await readStored<string>(page, 'account:parentPinHash')).toBe(oldHash);
+      await passResetCheck(page);
 
       await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
       for (const round of [0, 1]) {
@@ -119,6 +133,8 @@ for (const vp of VIEWPORTS) {
       await page.getByRole('button', { name: 'Forgot PIN?' }).click();
       await page.getByTestId('pin-reset-code-input').fill('tiger moon river apple 482139');
       await page.getByRole('button', { name: 'Continue' }).click();
+      // [FN] FN-1: the check before a new PIN (it works during a PIN pause too).
+      await passResetCheck(page);
       await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
       // [OA] OA-2 review round 2: choosing a new PIN is not a guess, so the creation pad is not paused.
       const before = await readStored<string>(page, 'account:parentPinHash');
