@@ -33,6 +33,7 @@ export {
 } from './resolve';
 export { lookup } from './tree';
 export { plural, type PluralForms } from './plural';
+export { numberInWords } from './number-words';
 export {
   compareNames,
   describeRelativeDay,
