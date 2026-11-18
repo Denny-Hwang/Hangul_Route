@@ -143,8 +143,9 @@ Fix: the background load runs at most 4 chunks at a time, in the same order, the
 Waterfall of a cold first open on the mobile profile: `index.html` 0 to 587 ms, the start bundle 616 to 8,269 ms
 (1,337,963 B), evaluated until about 9.4 s, then the story shelf (9,463 to 10,081 ms) and the English lesson headers
 (9,544 to 10,152 ms), then the first render at 10.7 s. Both chunks are needed in every locale and their names are known
-at build time. Fix: the post-build adds `<link rel="preload" as="script">` for both to `index.html`
-(`scripts/pwa/start-preload.mjs`), and fails the build if either is not there exactly once.
+at build time. Fix: the post-build adds to `index.html` a small head script that adds a `<link rel="preload"
+as="script">` for both when no service worker controls the page (`scripts/pwa/start-preload.mjs`; a worker answers them
+from the precache), and fails the build if either is not there exactly once.
 
 ### F3. The route model is rebuilt from scratch on Home, the Learning Route and the grown-up dashboard — fix now
 
@@ -242,4 +243,59 @@ route part is smaller. Deferring the redraw of a screen that is not focused touc
 
 ## 4. Measurements after the fixes
 
-(Filled in after the fixes land.)
+The same harness, machine and profiles on the release build of the four fix commits. A fifth commit then keeps the
+preload links off pages a service worker controls (under a worker Chromium asked the worker for both chunks twice, once
+for the preload and once for the script tag); the cold first open is unchanged by it (guest first quest re-checked once:
+hello at 11.5 s, the two chunks at 617 to 1,323 ms beside the start bundle), and warm opens no longer make the two extra
+worker requests. Build: start bundle 4,966,296 B raw /
+1,337,799 B gzip, 821 B more than before and under the 4,969,500 B line, which stays; learner precache 147 files,
+11,051,490 B. Median of 3.
+
+### 4.1 Page loads
+
+| Page | Profile | Ready before | Ready after | Change | Cold blocking before / after | Network JS in the window before / after |
+|---|---|---|---|---|---|---|
+| App: first open (Welcome) | mobile cold | 10,693 | 10,228 | **-465 ms (-4 %)** | 1,411 / 1,406 | 1,541,718 / 1,385,595 |
+| App: guest first quest | mobile cold | 16,765 | 11,266 | **-5,499 ms (-33 %)** | 1,316 / 1,332 | 2,095,619 / 1,390,812 |
+| App: presenter home | mobile cold | 22,215 | 21,502 | -713 ms (noise; F6 not changed) | 1,560 / 1,477 | 2,591,010 / 2,589,446 |
+| App: first open (Welcome) | desktop cold | 491 | 496 | none | 190 / 186 | 2,193,272 / 2,193,574 |
+| App: guest first quest | desktop cold | 638 | 537 | -101 ms | 203 / 191 | 2,210,169 / 2,210,468 |
+| App: presenter home | desktop cold | 710 | 692 | none | 216 / 202 | 2,699,346 / 2,699,665 |
+| App: first open (Welcome) | mobile warm | 1,026 | 1,085 | none (noise) | 576 / 610 | 0 / 0 |
+| App: guest first quest | mobile warm | 1,491 | 1,182 | -309 ms | 628 / 615 | 0 / 0 |
+| App: presenter home | mobile warm | 1,601 | 1,618 | none | 774 / 717 | 0 / 0 |
+| Site and console pages | both | see 2.1 | within 4 % of 2.1 | no change (not touched) | | |
+
+Waterfall of the guest's first open after the fixes (mobile profile): the story shelf and the English headers download
+at 597 to 1,298 ms beside the start bundle (599 to 8,356 ms); the guest chunk is asked for at 10,259 ms and arrives at
+10,970 ms (was 10,616 to 16,692 ms); hello at 11.5 s (was 17.4 s in the same single run). The background load now has at
+most 4 chunks in flight (8 requests finished over the network in the 3 s after Welcome showed, was 28).
+
+### 4.2 Taps and play
+
+Tap times are the same within the run-to-run spread (about +/-30 ms on the mobile profile): every tap is still under
+520 ms on the mobile profile and under 115 ms on desktop, no screen re-renders while idle, and storage reads per tap are
+unchanged. The table of section 2.2 holds for the build after the fixes; the rows the fixes aim at:
+
+| Step | desktop before / after | mobile before / after |
+|---|---|---|
+| Start my journey -> quest intro | 132 / 111 | 480 / 503 |
+| See results -> Results | 61 / 64 | 278 / 301 |
+| Profile: Account & backup -> grown-up dashboard | 45 / 38 | 195 / 200 |
+| Tab: Learning Route | 25 / 22 | 117 / 113 |
+
+The route model work moved off the critical frame rather than out of the tap's first frame, so the tap timer does not
+show it; the CPU profile does (mobile profile, two runs each, before / after):
+
+| Window | `buildMyRoute` | `skillRows` | `completionState` |
+|---|---|---|---|
+| Account & backup -> grown-up dashboard | 307 / 196 ms, 306 / 204 ms | 117 / 40 ms | 65 / 24 ms, 59 / 31 ms |
+| Start my journey -> quest intro | 51 / 49 ms, 55 / 40 ms | 8 / under 1 ms | 11 / 6 ms, 7 / 7 ms |
+| See results -> Results | 20 / 16 ms, 20 / 16 ms | 5 / 3 ms | 4 / under 1 ms |
+
+### 4.3 What is left
+
+F4 to F10 stand as written in section 3, with their sizes. In order of what they would give a learner on a slow phone:
+F4 (the start bundle, 7.6 s of the cold first open), F7 (a static splash, first paint from about 9.9 s to about 0.6 s),
+F5 (console pages, about 120 KB gzip each), F6 (the presenter on a phone), F8 (first-visit background download), F10 and
+F9.
