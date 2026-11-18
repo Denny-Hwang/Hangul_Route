@@ -95,6 +95,16 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/minigames/my-story-entry.tsx#MyStoryGame': 'screens/minigames/MyStoryGame.tsx#MyStoryGame',
   // Row CM-47: the Realia Read e2e screen's chunk (fixture builds only), with the fixtures of every realia kind.
   'navigation/realia-read-e2e.tsx#RealiaReadE2eBody': 'navigation/realia-read-e2e-screen.tsx#RealiaReadE2eBody',
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7: more learner screens, each drawn by its door once its chunk is in.
+  'screens/minigames/writing-entry.tsx#TypeHangul': 'screens/minigames/TypeHangulGame.tsx#TypeHangulGame',
+  'screens/minigames/writing-entry.tsx#WriteFrame': 'screens/minigames/WriteFrameGame.tsx#WriteFrameGame',
+  'screens/minigames/trace-word-entry.tsx#TraceWord': 'screens/minigames/TraceWordGame.tsx#TraceWordGame',
+  'screens/minigames/sentence-builder-entry.tsx#SentenceBuilder': 'screens/minigames/SentenceBuilderGame.tsx#SentenceBuilderGame',
+  'screens/story/reader-entry.tsx#Reader': 'screens/story/StoryReaderView.tsx#StoryReaderView',
+  'screens/vocab/speed-round-entry.tsx#SpeedRound': 'screens/vocab/VocabSpeedRoundScreen.tsx#VocabSpeedRoundScreen',
+  'screens/route/route-proposal-entry.tsx#RouteProposal': 'screens/route/RouteProposalScreen.tsx#RouteProposalScreen',
+  'screens/sync/join-space-entry.tsx#JoinSpace': 'screens/sync/JoinSpaceScreen.tsx#JoinSpaceScreen',
+  'screens/placement/placement-entry.tsx#Placement': 'screens/placement/PlacementScreen.tsx#PlacementScreen',
 };
 
 /**

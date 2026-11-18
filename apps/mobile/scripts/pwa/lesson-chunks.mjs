@@ -480,7 +480,7 @@ export const SCREEN_CHUNKS = Object.freeze([
   // through the literal `import()` of `src/screens/minigames/match-shape-entry.tsx`).
   Object.freeze({ name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' }),
   // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
-  // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
+  // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame is the writing chunk's (FN-7).
   Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
   // F-CURR-002 row CM-47: the eight added realia layouts and their dressings (`src/screens/minigames/realia-kinds-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/minigames/realia-kinds-entry.tsx` when a sheet has one
@@ -496,6 +496,19 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/route/practice-days-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/route/practice-days-load.ts` while `routeBlendEnabled` is on).
   Object.freeze({ name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' }),
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7: more learner screens out of the start bundle, each reached only through the
+  // literal `import()` of its door (`<name>-entry.tsx`, `src/screens/chunk-door.tsx`): the typing games (Type Hangul and
+  // Write Frame, `src/screens/minigames/writing-chunk.tsx`), Trace Word, Sentence Builder, the story reader
+  // (`src/screens/story/reader-chunk.tsx`), the vocabulary Speed Round, the route proposal, Join a class and the
+  // level check (`src/screens/placement/placement-chunk.tsx`; its bank is the learner chunk `placement-bank-chunk`).
+  Object.freeze({ name: 'writing-chunk', marker: 'screen-chunk:writing' }),
+  Object.freeze({ name: 'trace-word-chunk', marker: 'screen-chunk:trace-word' }),
+  Object.freeze({ name: 'sentence-builder-chunk', marker: 'screen-chunk:sentence-builder' }),
+  Object.freeze({ name: 'reader-chunk', marker: 'screen-chunk:story-reader' }),
+  Object.freeze({ name: 'speed-round-chunk', marker: 'screen-chunk:speed-round' }),
+  Object.freeze({ name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' }),
+  Object.freeze({ name: 'join-space-chunk', marker: 'screen-chunk:join-space' }),
+  Object.freeze({ name: 'placement-chunk', marker: 'screen-chunk:placement' }),
 ]);
 
 /**

@@ -7,7 +7,6 @@ import {
   Heading,
   Hoya,
   Icon,
-  KOREAN_LANGUAGE,
   KoreanText,
   Pill,
   Progress,
@@ -30,7 +29,7 @@ import {
 import { romanizationShown } from '@hangul-route/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, MutableRefObject, Ref } from 'react';
-import { Platform, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
+import { ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { useRomanizationMode } from '../../i18n/use-romanization-mode';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -39,12 +38,13 @@ import { fieldView, startFlow, stepFlow, type TypeHangulEffect, type TypeHangulE
 import type { BlockCompare } from '../../logic/type-hangul/score';
 import { keySound } from '../../logic/type-hangul/sounds';
 import { nudge, success } from '../../platform/haptics';
-import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
+import { announceForScreenReader } from '../../platform/screen-reader';
 import { switchedFromHear } from '../../logic/game-switches';
 import type { DictationKit } from './dictation-entry';
 import type { HearRound } from './dictation-chunk';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
+import { focusPanel, koreanSpeech, srOnly, type Focusable } from './korean-speech';
 
 /**
  * Type Hangul (F-CURR-001 §3.7 item 2, row G-3; design/wireframes/minigame/type-hangul.md,
@@ -71,27 +71,7 @@ interface Props {
 /** No dictation chunk: no round is heard. */
 const useNoHear = (): HearRound | null => null;
 
-/** Typed Korean is read with the Korean voice; react-native-web forwards `lang` (spread: native Text props lack it). */
-export const koreanSpeech = { accessibilityLanguage: KOREAN_LANGUAGE, lang: KOREAN_LANGUAGE };
-
-/** Visually hidden, still read (the field's polite live line). */
-export const srOnly = { position: 'absolute', width: 1, height: 1, margin: -1, overflow: 'hidden' } as const;
-
-/** Focus target for assistive tech when the result panel opens: `focus()` on the web, the native view elsewhere. */
-export interface Focusable {
-  focus?: () => void;
-}
-
-/**
- * Moves assistive-tech focus to the result panel's first line. On the web the element's own
- * `focus()` does it; on iOS and Android it does not move VoiceOver or TalkBack focus, so the
- * screen-reader helper does (platform/screen-reader.ts).
- */
-export function focusPanel(node: Focusable | null): void {
-  if (node === null) return;
-  if (Platform.OS === 'web') node.focus?.();
-  else focusForScreenReader(node);
-}
+export { focusPanel, koreanSpeech, srOnly, type Focusable } from './korean-speech';
 
 export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): ReactElement {
   const textScale = useTypeScale();

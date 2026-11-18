@@ -268,6 +268,15 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'reports-chunk', marker: 'screen-chunk:reports' },
       // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the placer.
       { name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' },
+      // [FN] AMENDMENTS-FINISH-2026-11 FN-7: more learner screens.
+      { name: 'writing-chunk', marker: 'screen-chunk:writing' },
+      { name: 'trace-word-chunk', marker: 'screen-chunk:trace-word' },
+      { name: 'sentence-builder-chunk', marker: 'screen-chunk:sentence-builder' },
+      { name: 'reader-chunk', marker: 'screen-chunk:story-reader' },
+      { name: 'speed-round-chunk', marker: 'screen-chunk:speed-round' },
+      { name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' },
+      { name: 'join-space-chunk', marker: 'screen-chunk:join-space' },
+      { name: 'placement-chunk', marker: 'screen-chunk:placement' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -341,6 +350,24 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-47: the added realia layouts' chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/realia-kinds-chunk.tsx')).toContain(`export const REALIA_KINDS_CHUNK = '${SCREEN_CHUNKS[14].marker}';`);
     expect(read('src/screens/minigames/realia-kinds-entry.tsx')).toContain("import('./realia-kinds-chunk')");
+    // [FN] FN-7: each new screen chunk exports its marker and is reached only through its door's literal import().
+    const doors = [
+      ['src/screens/minigames/writing-chunk.tsx', 'WRITING_CHUNK', 'src/screens/minigames/writing-entry.tsx'],
+      ['src/screens/minigames/trace-word-chunk.tsx', 'TRACE_WORD_CHUNK', 'src/screens/minigames/trace-word-entry.tsx'],
+      ['src/screens/minigames/sentence-builder-chunk.tsx', 'SENTENCE_BUILDER_CHUNK', 'src/screens/minigames/sentence-builder-entry.tsx'],
+      ['src/screens/story/reader-chunk.tsx', 'STORY_READER_CHUNK', 'src/screens/story/reader-entry.tsx'],
+      ['src/screens/vocab/speed-round-chunk.tsx', 'SPEED_ROUND_CHUNK', 'src/screens/vocab/speed-round-entry.tsx'],
+      ['src/screens/route/route-proposal-chunk.tsx', 'ROUTE_PROPOSAL_CHUNK', 'src/screens/route/route-proposal-entry.tsx'],
+      ['src/screens/sync/join-space-chunk.tsx', 'JOIN_SPACE_CHUNK', 'src/screens/sync/join-space-entry.tsx'],
+      ['src/screens/placement/placement-chunk.tsx', 'PLACEMENT_CHUNK', 'src/screens/placement/placement-entry.tsx'],
+    ];
+    doors.forEach(([chunk, name, entry], i) => {
+      const { marker } = SCREEN_CHUNKS[18 + i];
+      expect(read(chunk)).toContain(`export const ${name} = '${marker}';`);
+      const base = chunk.split('/').at(-1).replace(/\.tsx$/, '');
+      expect(read(entry)).toContain(`import('./${base}')`);
+      expect(read(entry)).not.toMatch(new RegExp(`^import [^t].*${base}`, 'm'));
+    });
     // Row CM-37 part 1: the Letters school room.
     expect(read('src/screens/minigames/scenes/scene-letters-school.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[1].marker}';`);
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-letters-school')");
@@ -512,6 +539,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
       'reports-chunk has no web bundle: the chunk is missing from the build',
       'practice-days-chunk has no web bundle: the chunk is missing from the build',
+      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement'].map(
+        (name) => `${name}-chunk has no web bundle: the chunk is missing from the build`,
+      ),
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([

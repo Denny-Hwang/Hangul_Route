@@ -34,4 +34,34 @@ describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
     expect(reached('packages/content-schema/src/lesson-cell-lint.ts')).toBeUndefined();
     expect(reached('packages/content-schema/src/lesson-lint.ts')).toBeUndefined();
   });
+
+  it('step 3: more learner screens are chunks of their own, reached through their doors', () => {
+    const screens: Record<string, string> = {
+      'apps/mobile/src/screens/minigames/writing-chunk.tsx': 'apps/mobile/src/screens/minigames/TypeHangulGame.tsx',
+      'apps/mobile/src/screens/minigames/trace-word-chunk.tsx': 'apps/mobile/src/screens/minigames/TraceWordGame.tsx',
+      'apps/mobile/src/screens/minigames/sentence-builder-chunk.tsx': 'apps/mobile/src/screens/minigames/SentenceBuilderGame.tsx',
+      'apps/mobile/src/screens/story/reader-chunk.tsx': 'apps/mobile/src/screens/story/StoryReaderView.tsx',
+      'apps/mobile/src/screens/vocab/speed-round-chunk.tsx': 'apps/mobile/src/screens/vocab/VocabSpeedRoundScreen.tsx',
+      'apps/mobile/src/screens/route/route-proposal-chunk.tsx': 'apps/mobile/src/screens/route/RouteProposalScreen.tsx',
+      'apps/mobile/src/screens/sync/join-space-chunk.tsx': 'apps/mobile/src/screens/sync/JoinSpaceScreen.tsx',
+      'apps/mobile/src/screens/placement/placement-chunk.tsx': 'apps/mobile/src/screens/placement/PlacementScreen.tsx',
+    };
+    for (const [chunk, screen] of Object.entries(screens)) {
+      expect(graph.chunks.has(chunk), chunk).toBe(true);
+      expect(reached(chunk), chunk).toBeUndefined();
+      expect(reached(screen), screen).toBeUndefined();
+    }
+    // Write Frame rides with Type Hangul; what only the games use leaves with them.
+    for (const file of [
+      'apps/mobile/src/screens/minigames/WriteFrameGame.tsx',
+      'apps/mobile/src/logic/type-hangul/flow.ts',
+      'apps/mobile/src/logic/trace-word/flow.ts',
+      'apps/mobile/src/logic/sentence-builder/reducer.ts',
+      'apps/mobile/src/logic/story/reader-state.ts',
+      'apps/mobile/src/screens/placement/ItemScreen.tsx',
+      'apps/mobile/src/screens/sync/JoinBatch.tsx',
+    ]) {
+      expect(reached(file), file).toBeUndefined();
+    }
+  });
 });

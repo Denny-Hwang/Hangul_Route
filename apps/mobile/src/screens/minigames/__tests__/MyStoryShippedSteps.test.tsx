@@ -6,6 +6,10 @@ import { useQuestRunStore } from '../../../store/quest-run-store';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { ALL_LESSON_SCOPES, ALL_LESSON_STEPS } from '../../../content/__tests__/helpers/lesson-stages';
 import { MinigameScreen } from '../MinigameScreen';
+import { writingDoor } from '../writing-entry';
+
+// AMENDMENTS-FINISH-2026-11 FN-7: the game is a chunk of its own; loaded first, its door draws it on the first render.
+await writingDoor.load();
 
 /**
  * F-CURR-002 §12.2 and the CM-38 hand-off (row CM-41 S7, the first shipped chain): every real My Story step of the

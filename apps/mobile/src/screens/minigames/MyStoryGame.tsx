@@ -31,8 +31,9 @@ import type { WrittenFrame } from '../../logic/write-frame/flow';
 import { playPrompt, type PlaySpec } from '../../platform/audio';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
-import { koreanSpeech, type Focusable } from './TypeHangulGame';
-import { WriteFrameGame, type WriteFrameChain } from './WriteFrameGame';
+import { koreanSpeech, type Focusable } from './korean-speech';
+import type { WriteFrameChain } from './WriteFrameGame';
+import { WriteFrameGame } from './writing-entry';
 
 /**
  * My Story (F-CURR-002 §7.1 F8, OD-13; row CM-38; design/wireframes/minigame/my-story.md,

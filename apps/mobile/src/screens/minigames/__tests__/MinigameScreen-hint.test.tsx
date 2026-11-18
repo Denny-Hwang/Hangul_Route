@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MinigameHost } from '../host';
 import { render, unmount } from '../../../test-support/render';
 import { MinigameScreen } from '../MinigameScreen';
+import { writingDoor } from '../writing-entry';
+
+// AMENDMENTS-FINISH-2026-11 FN-7: the game is a chunk of its own; loaded first, its door draws it on the first render.
+await writingDoor.load();
 
 /**
  * F-CURR-002 section 4.3 through the real quest host: what reaches the run store (and so the memory store) as hinted.

@@ -7,6 +7,10 @@ import { SENTENCE_PAUSE_MS } from '../../../logic/write-frame/flow';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { BrowseMinigameScreen } from '../../browse/BrowseLessonScreens';
 import { MinigameScreen } from '../MinigameScreen';
+import { writingDoor } from '../writing-entry';
+
+// AMENDMENTS-FINISH-2026-11 FN-7: the game is a chunk of its own; loaded first, its door draws it on the first render.
+await writingDoor.load();
 
 /**
  * F-CURR-001 G-5 through the real hosts: MinigameScreen on a Write Frame step and the All lessons

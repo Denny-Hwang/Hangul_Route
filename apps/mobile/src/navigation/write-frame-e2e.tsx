@@ -10,7 +10,7 @@ import { FIXTURE_ROUNDS, type WriteFrameFixture } from '../logic/write-frame/e2e
 import { addTelemetryListener, track, type TelemetryEvent } from '../platform/telemetry';
 import type { HostMode, MinigameHost } from '../screens/minigames/host';
 import { loadMyStoryChunk, MyStoryRoute } from '../screens/minigames/my-story-entry';
-import { WriteFrameGame } from '../screens/minigames/WriteFrameGame';
+import { WriteFrameGame } from '../screens/minigames/writing-entry';
 import { LessonWaiting } from '../screens/lesson-content';
 import type { RootStackParamList } from './types';
 

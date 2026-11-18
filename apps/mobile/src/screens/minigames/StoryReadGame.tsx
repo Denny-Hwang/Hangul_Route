@@ -7,7 +7,7 @@ import { readerStory } from '../../logic/story/reader-locale';
 import { sceneCountOf } from '../../logic/story/resume';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { StoryReaderView } from '../story/StoryReaderView';
+import { StoryReaderView } from '../story/reader-entry';
 import { useReaderBookmark } from '../story/use-reader-bookmark';
 import { useStoryNotesFound } from '../story/use-story-notes-found';
 

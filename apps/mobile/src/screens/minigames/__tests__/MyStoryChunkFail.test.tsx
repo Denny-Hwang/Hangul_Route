@@ -5,6 +5,10 @@ import { SENTENCE_PAUSE_MS } from '../../../logic/write-frame/flow';
 import { setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } from '../../../store/quest-run-store';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { MinigameScreen } from '../MinigameScreen';
+import { writingDoor } from '../writing-entry';
+
+// AMENDMENTS-FINISH-2026-11 FN-7: the game is a chunk of its own; loaded first, its door draws it on the first render.
+await writingDoor.load();
 
 /**
  * F-CURR-002 §7.1 F8 and §10 (row CM-38) through the real host: `game.my-story` is on but the game's chunk cannot

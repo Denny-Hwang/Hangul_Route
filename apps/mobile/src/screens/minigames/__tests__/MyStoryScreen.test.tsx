@@ -7,6 +7,10 @@ import { SENTENCE_PAUSE_MS } from '../../../logic/write-frame/flow';
 import { setFirstRoundAnswerListener, useQuestRunStore, type FirstRoundAnswer } from '../../../store/quest-run-store';
 import { byTestId, press, render, screenTexts, unmount } from '../../../test-support/render';
 import { MinigameScreen } from '../MinigameScreen';
+import { writingDoor } from '../writing-entry';
+
+// AMENDMENTS-FINISH-2026-11 FN-7: the game is a chunk of its own; loaded first, its door draws it on the first render.
+await writingDoor.load();
 
 /**
  * F-CURR-002 §12.2 and §7.1 F8 (row CM-38) through the real host: MinigameScreen on a My Story step. `game.my-story`

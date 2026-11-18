@@ -7,7 +7,7 @@ import { strokesForJamo, type JamoStrokePoint } from '../content/jamo-strokes';
 import type { MinigameScope } from '../logic/minigame-config';
 import { placeWordStrokes } from '../logic/trace-word/block-strokes';
 import type { MinigameHost } from '../screens/minigames/host';
-import { TraceWordGame } from '../screens/minigames/TraceWordGame';
+import { TraceWordGame } from '../screens/minigames/trace-word-entry';
 import type { RootStackParamList } from './types';
 
 /**

@@ -12,7 +12,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { LaterNeedsInternet, LessonWaiting } from '../lesson-content';
 import { useStoryState } from '../story-content';
 import { usePracticeSession } from '../use-practice-session';
-import { StoryReaderView } from './StoryReaderView';
+import { StoryReaderView } from './reader-entry';
 import { useStoryNotesFound } from './use-story-notes-found';
 import { useClipPacks } from '../../platform/audio-assets-store';
 
