@@ -5,7 +5,10 @@
 // one more round trip (about 0.7 s on a fast-3G-like link, docs/launch/performance-review-2026-11.md) before the first
 // screen. A `<link rel="preload" as="script">` lets the browser fetch them beside the start bundle; Metro's loader then
 // adds its script tag for the same URL (same origin, no crossorigin attribute) and the browser uses the preloaded
-// response. A worker in control answers both from the precache, as before.
+// response.
+// Only when no service worker controls the page: a worker answers both from the precache at once, and Chromium does not
+// reuse a preload a worker answered, so the script tag would ask the worker a second time. A small inline script in the
+// head adds the links, so the check runs before the parser reaches the start bundle.
 import { WEB_JS_DIR } from './lesson-chunks.mjs';
 
 /** The chunk names the first screen waits for in every locale, in the order they are asked for. */
@@ -30,12 +33,29 @@ export function startPreloadUrls(bundleUrls, names = START_PRELOAD_CHUNKS) {
 }
 
 /**
- * The HTML shell with one preload link per URL, at the end of `<head>`. Throws when the page has no `</head>`.
+ * The HTML shell with a script at the end of `<head>` that adds one preload link per URL when no service worker controls
+ * the page. Throws when the page has no `</head>`, or a URL is not a plain absolute path.
  * @param {string} html
  * @param {readonly string[]} urls
  */
 export function withStartPreloads(html, urls) {
   if (!html.includes('</head>')) throw new Error('pwa-postbuild: index.html has no </head> to add the start preloads to');
-  const links = urls.map((url) => `  <link rel="preload" as="script" href="${url}">`).join('\n');
-  return html.replace('</head>', `${links}\n</head>`);
+  for (const url of urls) {
+    if (!/^\/[A-Za-z0-9_./-]+$/.test(url)) throw new Error(`pwa-postbuild: not a plain path to preload: ${JSON.stringify(url)}`);
+  }
+  const script = `  <script>
+    // FU-4: the chunks the first screen waits for, fetched beside the start bundle (scripts/pwa/start-preload.mjs);
+    // not under a service worker, which answers them from the precache.
+    (function () {
+      try { if (navigator.serviceWorker && navigator.serviceWorker.controller) return; } catch (e) {}
+      ${JSON.stringify(urls)}.forEach(function (href) {
+        var link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'script';
+        link.href = href;
+        document.head.appendChild(link);
+      });
+    })();
+  </script>`;
+  return html.replace('</head>', `${script}\n</head>`);
 }

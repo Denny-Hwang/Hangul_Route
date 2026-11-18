@@ -592,12 +592,12 @@ describe('pwa-postbuild.mjs on a stand-in export', () => {
 
   it('preloads the story shelf and the English lesson headers from the shell, the bundles the export holds (FU-4)', () => {
     const index = readFileSync(join(dist, 'index.html'), 'utf8');
-    for (const name of ['stories-shelf', 'lessons-headers-en']) {
-      const link = new RegExp(`<link rel="preload" as="script" href="/_expo/static/js/web/${name}-([0-9a-f]{32})\\.js">`).exec(index);
-      expect(link, name).not.toBeNull();
-      expect(existsSync(join(dist, '_expo', 'static', 'js', 'web', `${name}-${link[1]}.js`)), name).toBe(true);
-    }
-    expect(index.match(/rel="preload"/g)).toHaveLength(2);
+    const urls = /\[("[^"]+",?)+\]\.forEach\(function \(href\)/.exec(index);
+    expect(urls, 'the preload script').not.toBeNull();
+    const list = JSON.parse(urls[0].slice(0, urls[0].indexOf('.forEach')));
+    expect(list.map((url) => url.replace(/-[0-9a-f]{32}\.js$/, ''))).toEqual(['/_expo/static/js/web/stories-shelf', '/_expo/static/js/web/lessons-headers-en']);
+    for (const url of list) expect(existsSync(join(dist, url)), url).toBe(true);
+    expect(index).toContain("if (navigator.serviceWorker && navigator.serviceWorker.controller) return;");
   });
 
   it('writes the denylist into sw.js, one literal per prefix, and never the learner roots', () => {

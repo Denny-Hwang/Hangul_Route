@@ -1,4 +1,5 @@
 // AMENDMENTS-FOLLOWUPS-2026-11 FU-4: the HTML shell preloads the chunks every learner waits for before the first screen.
+import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import { START_PRELOAD_CHUNKS, startPreloadUrls, withStartPreloads } from '../pwa/start-preload.mjs';
 
@@ -30,19 +31,42 @@ describe('startPreloadUrls', () => {
   });
 });
 
+/** Runs the shell's inline preload script against a stand-in document; returns the links it added. */
+function runShellScript(html, { controller }) {
+  const script = /<script>([\s\S]*?)<\/script>\n<\/head>/.exec(html)?.[1];
+  if (script === undefined) throw new Error('no preload script before </head>');
+  const added = [];
+  const document = { createElement: () => ({}), head: { appendChild: (el) => added.push(el) } };
+  const navigator = controller === undefined ? {} : { serviceWorker: { controller } };
+  runInNewContext(script, { document, navigator });
+  return added;
+}
+
 describe('withStartPreloads', () => {
   const html = '<!DOCTYPE html><html><head><title>Hangul Route</title></head><body><script src="/_expo/static/js/web/index-abc.js" defer></script></body></html>';
+  const out = withStartPreloads(html, [`/${SHELF}`, `/${HEADERS_EN}`]);
 
-  it('adds one preload link per URL at the end of <head>, before the start bundle', () => {
-    const out = withStartPreloads(html, [`/${SHELF}`, `/${HEADERS_EN}`]);
-    expect(out).toContain(`<link rel="preload" as="script" href="/${SHELF}">\n  <link rel="preload" as="script" href="/${HEADERS_EN}">\n</head>`);
-    expect(out.indexOf('rel="preload"')).toBeLessThan(out.indexOf('index-abc.js'));
-    // No crossorigin attribute: Metro's loader adds a plain same-origin script tag, which only then reuses the preload.
+  it('adds, at the end of <head> and before the start bundle, a script that preloads each URL as a script', () => {
+    expect(out.indexOf('<script>')).toBeLessThan(out.indexOf('</head>'));
+    expect(out.indexOf('</head>')).toBeLessThan(out.indexOf('index-abc.js'));
+    expect(runShellScript(out, { controller: null })).toEqual([
+      { rel: 'preload', as: 'script', href: `/${SHELF}` },
+      { rel: 'preload', as: 'script', href: `/${HEADERS_EN}` },
+    ]);
+    // No crossorigin: Metro's loader adds a plain same-origin script tag, which only then reuses the preload.
     expect(out).not.toContain('crossorigin');
-    expect(out.match(/rel="preload"/g)).toHaveLength(2);
   });
 
-  it('refuses a page with no head', () => {
+  it('adds nothing under a service worker (it answers from the precache; a preload would be asked for twice)', () => {
+    expect(runShellScript(out, { controller: {} })).toEqual([]);
+  });
+
+  it('preloads on a browser with no service worker support at all', () => {
+    expect(runShellScript(out, { controller: undefined })).toHaveLength(2);
+  });
+
+  it('refuses a page with no head, and a URL that is not a plain path', () => {
     expect(() => withStartPreloads('<html><body></body></html>', [`/${SHELF}`])).toThrow('no </head>');
+    expect(() => withStartPreloads(html, ['/x.js"]);alert(1);//'])).toThrow('not a plain path');
   });
 });
