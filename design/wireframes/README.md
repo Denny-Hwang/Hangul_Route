@@ -96,6 +96,7 @@
 | `shell/grown-up-lock.md` | R | F-APP-001 §3.9 |
 | `shell/offline.md` | R | F-APP-001 §3.12 |
 | `shell/display-sheet.md` · `shell/screen-header.md` | R | AMENDMENTS-DISPLAY-NAV §3.6, §4, §7 (2026-10-16, DN-0: one language and text size per device from an Aa button; a top-left Back on every non-root screen, the console PageBack and the Learner app exit on the right; mocks `design/screens/app-shell/display-sheet.md`, `adult-frame.md`, `design/components/ScreenHeader/`; rows DN-3 to DN-7) |
+| `shell/tab-bar.md` | R | AMENDMENTS-FINISH-2026-11 FN-8 (2026-11-18: the selected learner tab carries a shape mark as well as its colour; mock `design/screens/app-shell/tab-bar-selected.md`) |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).
