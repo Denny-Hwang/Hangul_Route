@@ -452,6 +452,24 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(precacheBudgetProblems({ ...report, start: { url: START, raw: 1, gzip: 1 }, clips: { count: 44, bytes: 520_001 } })[0]).toContain('the precached clips are 520001 B');
   });
 
+  it('[FN] FN-7: the level check\'s bank is a learner chunk of its own, whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[4]).toEqual({ name: 'placement-bank-chunk', marker: 'placement-bank-chunk:bank' });
+    expect(read('src/content/placement-bank-chunk.ts')).toContain(`export const PLACEMENT_BANK_CHUNK = '${LEARNER_CHUNKS[4].marker}';`);
+    // Reached only through the loader's literal import(): a static import would fold the bank back into the start bundle.
+    expect(read('src/content/placement-bank.ts')).toContain("import('./placement-bank-chunk')");
+    expect(read('src/content/placement-bank.ts')).not.toMatch(/^import [^t].*placement-bank-chunk/m);
+    expect(read('src/content/placement-bank-chunk.ts')).not.toMatch(/\bimport\(['"]/);
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[4].marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/placement-bank-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[4]], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[4]], bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+      `placement-bank-chunk is in the start bundle ${START}: a static import pulled it in`,
+      'placement-bank-chunk has no web bundle: the chunk is missing from the build',
+    ]);
+  });
+
   it('adaptive pacing in quests is a learner chunk of its own (row CM-24), whose module exports its marker', () => {
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
     expect(LEARNER_CHUNKS[2]).toEqual({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' });

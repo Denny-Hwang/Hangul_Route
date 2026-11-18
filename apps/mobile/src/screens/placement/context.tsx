@@ -1,4 +1,4 @@
-import type { PaceId, PlacementEvent, PlacementResult, PlacementRunState, RouteCatalog } from '@hangul-route/content-schema';
+import type { PaceId, PlacementEvent, PlacementResult, PlacementRunState, PlacementTemplate, RouteCatalog } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -43,6 +43,8 @@ export type ResultAction =
 export interface PlacementContextValue {
   profileId: string;
   flow: FlowState;
+  /** The bank's warm-up question, from the bank's chunk (AMENDMENTS-FINISH-2026-11 FN-7). */
+  warmup: PlacementTemplate;
   dispatch: (event: FlowEvent) => void;
   /** The messages of the test language (`getMessages(testLocale)`): the check speaks it, not the UI language. */
   m: Messages;

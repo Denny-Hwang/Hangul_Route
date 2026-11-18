@@ -12,8 +12,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "build-placement-bank.mjs");
 const OUT_REL = join("apps", "mobile", "src", "content", "placement.generated.ts");
+const META_REL = join("apps", "mobile", "src", "content", "placement-meta.generated.ts");
 
-const { GENERATED_HEADER, buildPlacementBank, renderBank, shapeTemplate } = await import(SCRIPT);
+const { GENERATED_HEADER, buildPlacementBank, renderBank, renderMeta, shapeTemplate } = await import(SCRIPT);
 
 const roots = [];
 function makeRoot() {
@@ -188,6 +189,17 @@ describe("build-placement-bank.mjs: shaping", () => {
     assert.ok(src.includes('"promptKo": "ㄱ"'));
   });
 
+  test("AMENDMENTS-FINISH-2026-11 FN-7: the meta module holds the version, the ready count and the warm-up id, and none of the bank", () => {
+    const files = FILES();
+    files["sentences.json"].templates[0].status = "draft";
+    const m = buildPlacementBank({ index: INDEX(), files });
+    const src = renderMeta(m);
+    assert.ok(src.startsWith(GENERATED_HEADER));
+    assert.match(src, /export const PLACEMENT_BANK_META = \{"version":3,"readyTemplates":2,"warmup":"pitem:warmup-rice"\} as const;\n$/);
+    assert.ok(!src.includes("import"), "the meta module imports nothing");
+    assert.ok(!src.includes("promptKo") && !src.includes("options"), "the meta module carries no question");
+  });
+
   test("leaf objects print on one line, so a template stays reviewable", () => {
     const src = renderBank(buildPlacementBank({ index: INDEX(), files: FILES() }));
     assert.ok(src.includes('{"id":"giyeok","ko":"ㄱ","romanization":"giyeok","en":"gloss giyeok","isCorrect":true}'));
@@ -270,11 +282,17 @@ describe("build-placement-bank.mjs: files and CLI", () => {
     writeTree(root);
     const first = run(root);
     assert.equal(first.status, 0, first.stdout + first.stderr);
-    assert.match(first.stdout, /wrote apps\/mobile\/src\/content\/placement\.generated\.ts: 3 templates, warm-up pitem:warmup-rice, bank version 3/);
+    assert.match(
+      first.stdout,
+      /wrote apps\/mobile\/src\/content\/placement\.generated\.ts and apps\/mobile\/src\/content\/placement-meta\.generated\.ts: 3 templates, warm-up pitem:warmup-rice, bank version 3/,
+    );
     const out = readFileSync(join(root, OUT_REL), "utf8");
+    const meta = readFileSync(join(root, META_REL), "utf8");
     assert.ok(out.endsWith("\n") && !out.endsWith("\n\n"));
+    assert.ok(meta.endsWith("\n") && !meta.endsWith("\n\n"));
     assert.equal(run(root).status, 0);
     assert.equal(readFileSync(join(root, OUT_REL), "utf8"), out);
+    assert.equal(readFileSync(join(root, META_REL), "utf8"), meta);
   });
 
   test("invalid JSON in a bank file fails with an annotation naming the file; nothing is written", () => {
@@ -285,6 +303,7 @@ describe("build-placement-bank.mjs: files and CLI", () => {
     assert.equal(r.status, 1);
     assert.match(r.stdout, /::error file=content\/placement\/sentences\.json::not valid JSON/);
     assert.ok(!existsSync(join(root, OUT_REL)));
+    assert.ok(!existsSync(join(root, META_REL)));
   });
 
   test("a shape error is annotated with the file that holds it", () => {
@@ -333,6 +352,21 @@ describe("build-placement-bank.mjs: --check", () => {
     assert.equal(r.status, 1);
     assert.match(r.stdout, /generated placement bank is missing; run node scripts\/build-placement-bank\.mjs/);
     assert.ok(!existsSync(join(root, OUT_REL)));
+  });
+
+  test("FN-7: a missing or stale meta module fails --check too", () => {
+    const root = makeRoot();
+    writeTree(root);
+    run(root);
+    const meta = join(root, META_REL);
+    writeFileSync(meta, readFileSync(meta, "utf8").replace('"version":3', '"version":2'));
+    const stale = run(root, ["--check"]);
+    assert.equal(stale.status, 1);
+    assert.match(stale.stdout, /placement-meta\.generated\.ts::generated placement bank meta is out of date/);
+    rmSync(meta);
+    const missing = run(root, ["--check"]);
+    assert.equal(missing.status, 1);
+    assert.match(missing.stdout, /generated placement bank meta is missing/);
   });
 
   test("a content change without a rebuild fails and names the first differing line", () => {

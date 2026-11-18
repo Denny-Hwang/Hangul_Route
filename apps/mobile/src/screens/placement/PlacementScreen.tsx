@@ -18,10 +18,10 @@ import type { ComponentType, ReactElement } from 'react';
 import { AppState } from 'react-native';
 import { flags, routeEnabledFor } from '../../config/flags';
 import { episodesWithVolumes, questsAll } from '../../content';
-import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { useLocale, useLocalePacks } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
 import { placementRouteCatalog } from '../../logic/placement/catalog';
+import { PLACEMENT_BANK_VERSION } from '../../logic/placement/entry';
 import { completeEvent, itemAnsweredEvent, startEvent } from '../../logic/placement/events';
 import {
   appStateEvent,
@@ -74,6 +74,8 @@ import { ResumeScreen } from './ResumeScreen';
 import { SoundNeededScreen } from './SoundNeededScreen';
 import { PICTURE_CONTEXT } from '../minigames/PictureArt';
 import { WarmupScreen } from './WarmupScreen';
+import { OopsScreen } from '../system/OopsScreen';
+import { usePlacementBank } from './use-placement-bank';
 import {
   PlacementProvider,
   flowRoute,
@@ -100,11 +102,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Placement'>;
 const Stack = createNativeStackNavigator<PlacementStackParamList>();
 const resolvesPicture = (ref: string): boolean => resolvePicture(ref, PICTURE_CONTEXT).kind !== 'text';
 /**
- * The bank's prompts are spoken by the Korean voice until it carries clips (section 3.11): its own `audioRef`s, or the
- * text-keyed clips of the `placement` pack (AMENDMENTS-AUDIO-CLIPS AC-B6), read when asked so a pack switched off counts.
+ * The bank's prompts are spoken by the Korean voice until it carries clips (section 3.11): its own `audioRef`s
+ * (`bankClips`, read once the bank's chunk is in), or the text-keyed clips of the `placement` pack (AMENDMENTS-AUDIO-CLIPS
+ * AC-B6), read when asked so a pack switched off counts.
  */
-const PLACEMENT_HAS_CLIPS = bankHasClips(PLACEMENT_BANK, PLACEMENT_WARMUP);
-const koreanAudioNow = (): boolean => placementKoreanAudio(getCapability(), PLACEMENT_HAS_CLIPS || hasPackClips('placement'));
+const koreanAudioNow = (bankClips: boolean): boolean => placementKoreanAudio(getCapability(), bankClips || hasPackClips('placement'));
 
 const ROUTES = {
   PlacementBoot: flowRoute('PlacementBoot', () => <Screen tone="canvas" testID="placement-boot">{null}</Screen>),
@@ -168,6 +170,10 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
   usePracticeSession(profileId, 'placement');
   const saved = usePlacementRunStore((s) => (profileId === null ? undefined : s.active[profileId]));
   const run = saved?.run ?? null;
+  // The bank is a chunk of its own (AMENDMENTS-FINISH-2026-11 FN-7): the check boots once it is in, on the boot screen.
+  const { bank: loadedBank, failed: bankFailed, retry: retryBank } = usePlacementBank();
+  const bankClips = useRef(false);
+  bankClips.current = useMemo(() => loadedBank !== null && bankHasClips(loadedBank.bank, loadedBank.warmup), [loadedBank]);
 
   const [phase, setPhase] = useState<Phase>('boot');
   const phaseRef = useRef<Phase>('boot');
@@ -187,7 +193,7 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
 
   const capability = useCallback(
     (testLocale: FlowState['testLocale']) =>
-      flowCapability({ koreanAudio: koreanAudioNow(), hasVoiceFor: (lang: SpeechLang) => hasVoiceFor(lang), testLocale }),
+      flowCapability({ koreanAudio: koreanAudioNow(bankClips.current), hasVoiceFor: (lang: SpeechLang) => hasVoiceFor(lang), testLocale }),
     [],
   );
 
@@ -210,12 +216,12 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
 
   // --- Boot: the snapshot, the screen reader, a saved run -------------------------------
   useEffect(() => {
-    if (profile === null) return;
+    if (profile === null || loadedBank === null) return;
     let alive = true;
     void (async () => {
       await useProgressStore.getState().hydrate(profile.id);
       const reader = await isScreenReaderEnabled();
-      const resume = await usePlacementRunStore.getState().resume(profile.id, Date.now(), PLACEMENT_BANK.version);
+      const resume = await usePlacementRunStore.getState().resume(profile.id, Date.now(), PLACEMENT_BANK_VERSION);
       if (!alive) return;
       const placements = useProgressStore.getState().byProfile[profile.id]?.placements ?? [];
       let base = startFlow({
@@ -248,9 +254,9 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
     return () => {
       alive = false;
     };
-    // Boot once per mount; later locale or profile changes do not restart a check.
+    // Boot once per mount, once the bank is in; later locale or profile changes do not restart a check.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, [profile?.id, loadedBank === null]);
 
   const dispatch = useCallback((event: FlowEvent): void => {
     setFlow((current) => (current === null ? current : flowReducer(current, event)));
@@ -280,18 +286,18 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
   // --- Start the run when the flow reaches the first scored question --------------------
   useEffect(() => {
     // Never again once a run has ended (a run stopped before any answer leaves with nothing recorded).
-    if (profile === null || flow === null || flow.screen !== 'item' || run !== null || finished !== null || finishing.current) return;
+    if (profile === null || loadedBank === null || flow === null || flow.screen !== 'item' || run !== null || finished !== null || finishing.current) return;
     const placements = useProgressStore.getState().byProfile[profile.id]?.placements ?? [];
     const now = Date.now();
     const config = runConfig(flow, {
       profileId: profile.id,
       startedAtMs: now,
-      koreanAudio: koreanAudioNow(),
+      koreanAudio: koreanAudioNow(bankClips.current),
       exclude: previousExclude(placements),
       resolvesPicture,
-      warmup: PLACEMENT_WARMUP,
+      warmup: loadedBank.warmup,
     });
-    const fresh = startRun(PLACEMENT_BANK, config, now);
+    const fresh = startRun(loadedBank.bank, config, now);
     usePlacementRunStore.getState().begin(
       profile.id,
       { testLocale: flow.testLocale, source: flow.source, ...(flow.motivation === null ? {} : { motivation: flow.motivation }) },
@@ -307,7 +313,7 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
         level: profile.ageGroup,
       }),
     );
-  }, [profile, flow, run, finished]);
+  }, [profile, loadedBank, flow, run, finished]);
 
   // --- Finish: record the result (never a completion), then the result screen -----------
   const finish = useCallback(
@@ -580,7 +586,7 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
     const base = baseFlow.current;
     if (offer === null || base === null || profileId === null) return;
     // Time spent on the offer is time away: the idle clock and the backstop start again now.
-    void usePlacementRunStore.getState().resume(profileId, Date.now(), PLACEMENT_BANK.version);
+    void usePlacementRunStore.getState().resume(profileId, Date.now(), PLACEMENT_BANK_VERSION);
     setNeedsGesture(true);
     setFlow(resumedFlow(base, offer));
     setOffer(null);
@@ -606,8 +612,11 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
   const initialRoute = useRef<PlacementRoute | null>(null);
   if (initialRoute.current === null && flow !== null) initialRoute.current = target;
 
-  if (profileId === null || flow === null) {
-    // No active profile (never reached through the app) or still booting.
+  // The bank's chunk could not load (offline before it was ever cached, or a build mismatch): Try again asks again.
+  if (bankFailed) return <OopsScreen onRetry={retryBank} />;
+
+  if (profileId === null || flow === null || loadedBank === null) {
+    // No active profile (never reached through the app), the bank still loading, or still booting.
     return (
       <Screen tone="canvas" testID="placement-boot">
         {null}
@@ -618,6 +627,7 @@ export function PlacementScreen({ route, navigation }: Props): ReactElement {
   const value: PlacementContextValue = {
     profileId,
     flow,
+    warmup: loadedBank.warmup,
     dispatch,
     m,
     screenReader: flow.screenReader,

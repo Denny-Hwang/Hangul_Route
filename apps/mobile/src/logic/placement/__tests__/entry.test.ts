@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { PLACEMENT_BANK_META } from '../../../content/placement-meta.generated';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../../content/placement.generated';
 import {
+  PLACEMENT_BANK_VERSION,
   afterProfileCreated,
+  bundledBankReady,
   profileCreatedNext,
   inviteOutcome,
   placementBankReady,
@@ -34,6 +37,19 @@ describe('the level check entry points (F-PLC-001 section 3.10, section 3.11)', 
     };
     expect(placementEntriesOn(false, ready)).toBe(false);
     expect(parsed).toBe(0);
+  });
+
+  it('FN-7: the start bundle reads the meta, which is the bank\'s own version, ready count and warm-up', () => {
+    expect(PLACEMENT_BANK_META).toEqual({
+      version: PLACEMENT_BANK.version,
+      readyTemplates: PLACEMENT_BANK.templates.filter((t) => t.status === 'ready').length,
+      warmup: PLACEMENT_WARMUP.id,
+    });
+    expect(PLACEMENT_BANK_VERSION).toBe(PLACEMENT_BANK.version);
+    // The meta says ready only for a bank that parses (the bank is checked when its chunk loads, too).
+    expect(bundledBankReady()).toBe(placementBankReady(PLACEMENT_BANK, PLACEMENT_WARMUP));
+    expect(bundledBankReady({ readyTemplates: 0 })).toBe(false);
+    expect(bundledBankReady({ readyTemplates: 1 })).toBe(true);
   });
 
   it('by default it checks the bundled bank, once', () => {

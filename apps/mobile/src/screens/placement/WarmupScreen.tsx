@@ -1,15 +1,12 @@
 import { Body, ChoiceCard, HoyaBubble, Screen, Spacer, touchTarget, useMediaSize } from '@hangul-route/design-system';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { optionViews, promptView } from '../../logic/placement/item-view';
 import { playPrompt } from '../../platform/audio';
 import { PictureArt } from '../minigames/PictureArt';
 import { usePlacement } from './context';
 import { ChoiceGrid, FootstepTrail, SpeakerButton } from './parts';
-
-const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question };
 
 /**
  * Warm-up (F-PLC-001 section 3.1 step 4, wireframe placement D): one
@@ -23,12 +20,13 @@ const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question 
  * route's ScreenHeader Close) leaves with nothing recorded (no run has begun). Nothing here is recorded.
  */
 export function WarmupScreen(): ReactElement {
-  const { m, flow, dispatch, markGesture, say, screenReader } = usePlacement();
+  const { m, flow, warmup, dispatch, markGesture, say, screenReader } = usePlacement();
+  const warmupQuestion = useMemo(() => ({ id: warmup.id, ...warmup.question }), [warmup]);
   const copy = m.learner.placement;
   const [busy, setBusy] = useState(false);
   const pictureSize = useMediaSize(touchTarget.hero);
-  const prompt = promptView(WARMUP_QUESTION, false);
-  const options = optionViews(WARMUP_QUESTION, { revealed: false, mode: flow.mode, testLocale: flow.testLocale, m });
+  const prompt = promptView(warmupQuestion, false);
+  const options = optionViews(warmupQuestion, { revealed: false, mode: flow.mode, testLocale: flow.testLocale, m });
   const checked = flow.audio !== null;
 
   useEffect(() => {

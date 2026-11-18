@@ -33,7 +33,6 @@ import type { SceneArt } from '@hangul-route/content-schema';
 import { welcomeCardIds } from '../../content/award-world';
 import { bundleOs, flags, gatingActive } from '../../config/flags';
 import { episodesAll, questsAll, stages } from '../../content';
-import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { formatNumber } from '@hangul-route/i18n';
 import { useLessonTitlesVersion, useLocale, useMessages } from '../../i18n/use-messages';
 import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
@@ -59,7 +58,7 @@ import { buildMyRoute } from '../../logic/my-route/model';
 import { localizedRouteContent, routeModelInput, routeWeekOf } from '../../logic/my-route/route-input';
 import { emptySnapshot } from '../../logic/my-route/view';
 import { lessonPlace } from '../../logic/my-route/next-lessons';
-import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
+import { PLACEMENT_BANK_VERSION, placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
 import { skippedEvent } from '../../logic/placement/events';
 import {
   homeNextLesson,
@@ -772,7 +771,7 @@ export function HomeScreen(): ReactElement {
       let alive = true;
       const store = usePlacementRunStore.getState();
       void store.loadUi(profileId);
-      void store.peekResumable(profileId, Date.now(), PLACEMENT_BANK.version).then((kind) => {
+      void store.peekResumable(profileId, Date.now(), PLACEMENT_BANK_VERSION).then((kind) => {
         if (alive) setResumable(kind !== null);
       });
       return () => {

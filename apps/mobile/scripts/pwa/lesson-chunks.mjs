@@ -416,6 +416,10 @@ export const LEARNER_CHUNKS = Object.freeze([
   // through the literal `import()` of `src/platform/audio-assets-store.ts` once the build holds a pack map chunk; it
   // loads the per-pack clip maps (`__generated__/audio-packs/`, checked as marked chunks of their own by the post-build).
   Object.freeze({ name: 'clip-packs-chunk', marker: 'clip-packs-chunk:loader' }),
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7: the level check's question bank (`src/content/placement-bank-chunk.ts`, about
+  // 150 KB), reached only through the literal `import()` of `src/content/placement-bank.ts` when the check (behind
+  // `placementEnabled`) or its report opens; the start bundle reads `placement-meta.generated.ts` (version, ready count).
+  Object.freeze({ name: 'placement-bank-chunk', marker: 'placement-bank-chunk:bank' }),
 ]);
 
 /**

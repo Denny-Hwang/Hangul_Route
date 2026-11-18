@@ -1,5 +1,5 @@
 import { PlacementBankSchema, PlacementTemplateSchema, type PlacementSource } from '@hangul-route/content-schema';
-import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../content/placement.generated';
+import { PLACEMENT_BANK_META } from '../../content/placement-meta.generated';
 import { skippedEvent } from './events';
 
 /**
@@ -10,18 +10,25 @@ import { skippedEvent } from './events';
  * changes). The parent report's entry arrives with P-8.
  */
 
-/** The generated bank and its warm-up parse (a failure is a development error; at runtime the check hides). */
+/**
+ * The generated bank and its warm-up parse (a failure is a development error): checked by the content tests on the
+ * generated module and by `content/placement-bank.ts` when the bank's chunk loads.
+ */
 export function placementBankReady(bank: unknown, warmup: unknown): boolean {
   return PlacementBankSchema.safeParse(bank).success && PlacementTemplateSchema.safeParse(warmup).success;
 }
 
-let bundledReady: boolean | null = null;
-
-/** The bundled bank, parsed once per app session on first use. */
-function bundledBankReady(): boolean {
-  if (bundledReady === null) bundledReady = placementBankReady(PLACEMENT_BANK, PLACEMENT_WARMUP);
-  return bundledReady;
+/**
+ * Whether the build carries a bank with questions to ask (AMENDMENTS-FINISH-2026-11 FN-7): read from the bank's meta, so
+ * the start bundle decides the fork without the bank, which is a chunk of its own. The meta's count is the bank's own
+ * (a test holds the two equal, and the bank's parse).
+ */
+export function bundledBankReady(meta: { readyTemplates: number } = PLACEMENT_BANK_META): boolean {
+  return meta.readyTemplates > 0;
 }
+
+/** The bank's version (a saved run of another version is not resumed), from the meta: no bank needed. */
+export const PLACEMENT_BANK_VERSION: number = PLACEMENT_BANK_META.version;
 
 /** Whether the entry points show: the flag first, so with it off the bank is never parsed. */
 export function placementEntriesOn(enabled: boolean, bankReady: () => boolean = bundledBankReady): boolean {
