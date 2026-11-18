@@ -106,7 +106,6 @@ import { PictureArt } from '../minigames/PictureArt';
 import { DeviceDisplaySheet } from '../../components/DeviceDisplaySheet';
 import { DisplayButton } from '../../components/DisplayButton';
 import { WhoSwitchButton } from '../../components/WhoSwitchButton';
-import { learnerProfiles, switchOffered } from '../../store/who-chooser';
 import { LinkButton } from '../placement/parts';
 import { NotesHomeCard } from '../notes/NotesHomeCard';
 import { PlanSlotCard, usePlanSlot } from '../route/PlanPromptCard';
@@ -383,8 +382,7 @@ export function HomeScreen(): ReactElement {
   const titles = useLessonTitlesVersion();
   const { copy, audience } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
-  // [OA] With the Switch button the trail is three controls: it wraps under the greeting, which keeps 8rem (OA-0b D7).
-  const switchShown = switchOffered(learnerProfiles(useProfileStore((s) => s.profiles)).length);
+  // [OA] The greeting keeps 8rem and the trail wraps under it when the row is narrow (OA-0b D7; [FN] with or without Switch).
   const greetingMin = GREETING_MIN_REM * REM * useEffectiveFontScale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const ensure = useProgressStore((s) => s.ensure);
@@ -995,10 +993,12 @@ export function HomeScreen(): ReactElement {
       <PinResetExpiredNotice />
       {/* F-CURR-002 section 4.8 step 7 (row CM-22): the one summary of Stages 2-7 finished earlier, opened once. */}
       <StageRecapSlot profileId={profile?.id ?? null} />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: switchShown ? 'wrap' : 'nowrap' }}>
+      {/* [FN] The trail wraps under the greeting whenever the row is narrow (a 320 phone, the Largest text), not only with
+          Switch: before, "Dani!" broke in the middle of the word at 320 with the Largest text. The greeting keeps 8rem. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' }}>
         {/* The catch-up card's cheering Hoya stands in for the greeting's while it shows. */}
         {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}
-        <View style={{ flex: 1, ...(switchShown ? { minWidth: greetingMin } : {}) }}>
+        <View style={{ flex: 1, minWidth: greetingMin }}>
           <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
           <Body tone="secondary">{m.learner.home.subtitle}</Body>
         </View>
