@@ -22,6 +22,11 @@ name: Web App (PWA)
 # API base at a mock host, the grown-up home flag on); the required check
 # stands for it too.
 # A failed shard can be re-run alone; it downloads the same bundles.
+# Pull requests (owner decision 2026-11-18, the repository is private and its
+# Actions minutes are counted): the release build and the wrangler dry run
+# only; the fixture bundles, the four shards and the billing job run on the
+# push to main, and the required check passes on a pull request once the
+# release build has. A nightly run of the switch-on e2e is unchanged.
 # scripts/__tests__/ci-workflows.test.mjs keeps this layout honest.
 
 on:
@@ -137,7 +142,7 @@ jobs:
       # dist-e2e/ (never dist/, never deployed; the script restores the real
       # story bundle and clip map).
       - name: Build the fixture bundle (dist-e2e, e2e only)
-        if: needs.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
         run: pnpm --filter @hangul-route/mobile build:web:fixtures
 
       # F-STORY-004 PR 4.8b: the same fixtures with content gating on
@@ -146,7 +151,7 @@ jobs:
       # own (a fresh TMPDIR), so the gating-on transforms never reach the cache
       # the other two builds read or the one main saves.
       - name: Build the gating fixture bundle (dist-e2e-gated, e2e only)
-        if: needs.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
         run: pnpm --filter @hangul-route/mobile build:web:fixtures:gated
 
       # F-PLAN-002 P2-8: the release content with the learner's weekly plan on
@@ -156,12 +161,12 @@ jobs:
       # exported on a Metro cache of its own, so no flag-on transform reaches
       # the cache the release build reads or the one main saves.
       - name: Build the weekly plan bundle (dist-e2e-route, e2e only)
-        if: needs.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
         run: pnpm --filter @hangul-route/mobile build:web:route
 
       # dist/ holds dot folders (audio clips), so hidden files are included.
       - name: Upload the release build
-        if: needs.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist
@@ -172,7 +177,7 @@ jobs:
           retention-days: 3
 
       - name: Upload the fixture build
-        if: needs.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist-e2e
@@ -183,7 +188,7 @@ jobs:
           retention-days: 3
 
       - name: Upload the gating fixture build
-        if: needs.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist-e2e-gated
@@ -194,7 +199,7 @@ jobs:
           retention-days: 3
 
       - name: Upload the weekly plan build
-        if: needs.changes.outputs.run == 'true'
+        if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: pwa-dist-e2e-route
@@ -221,7 +226,8 @@ jobs:
   e2e:
     name: PWA · offline e2e · shard ${{ matrix.shard }}/4
     needs: [build]
-    if: needs.build.outputs.run == 'true'
+    # e2e runs on the push to main only (owner decision 2026-11-18: the repository is private and Actions minutes are counted).
+    if: needs.build.outputs.run == 'true' && github.event_name == 'push'
     runs-on: ubuntu-latest
     # 40, not 30: a shard takes 19 to 22 min on main (2026-11-17); on 2026-11-18 slow runners stopped all four at 30 after
     # their release pass had passed with no failure (PR #1043). The limit only stops a hung run.
@@ -447,7 +453,8 @@ jobs:
   billing-e2e:
     name: PWA · billing and grown-up home e2e (app-host build, API base at a mock host)
     needs: [changes]
-    if: needs.changes.outputs.run == 'true'
+    # On the push to main only, like the shards above.
+    if: needs.changes.outputs.run == 'true' && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -559,6 +566,7 @@ jobs:
           RUN: ${{ needs.changes.outputs.run }}
           E2E: ${{ needs.e2e.result }}
           BILLING: ${{ needs.billing-e2e.result }}
+          EVENT: ${{ github.event_name }}
         run: |
           echo "build: $BUILD (PWA-relevant change: $RUN)"
           echo "e2e shards (release build + fixture bundle): $E2E"
@@ -573,6 +581,10 @@ jobs:
           fi
           if [ "$RUN" != true ]; then
             echo "Nothing the PWA depends on changed: build and e2e skipped on purpose."
+            exit 0
+          fi
+          if [ "$EVENT" = pull_request ]; then
+            echo "Pull request: the release build passed; the e2e jobs run on the push to main."
             exit 0
           fi
           if [ "$E2E" != success ]; then
