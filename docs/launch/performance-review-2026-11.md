@@ -249,7 +249,8 @@ for the preload and once for the script tag); the cold first open is unchanged b
 hello at 11.5 s, the two chunks at 617 to 1,323 ms beside the start bundle), and warm opens no longer make the two extra
 worker requests. Build: start bundle 4,966,296 B raw /
 1,337,799 B gzip, 821 B more than before and under the 4,969,500 B line, which stays; learner precache 147 files,
-11,051,490 B. Median of 3.
+11,051,490 B. Median of 3. Rebased on `main` with FU-3 (#1042): start bundle 4,968,234 B raw / 1,338,442 B gzip, still
+under the line; learner precache 147 files, 11,055,682 B.
 
 ### 4.1 Page loads
 
