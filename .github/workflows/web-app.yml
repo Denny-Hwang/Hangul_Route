@@ -223,7 +223,9 @@ jobs:
     needs: [build]
     if: needs.build.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 40, not 30: a shard takes 19 to 22 min on main (2026-11-17); on 2026-11-18 slow runners stopped all four at 30 after
+    # their release pass had passed with no failure (PR #1043). The limit only stops a hung run.
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
