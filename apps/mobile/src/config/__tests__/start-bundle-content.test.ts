@@ -1,5 +1,7 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { startGraph } from '../../test-support/start-graph';
+import { REPO, startGraph } from '../../test-support/start-graph';
 
 /**
  * AMENDMENTS-FINISH-2026-11 FN-7 (finding F4): what the web start bundle carries, read from the sources the way the
@@ -63,5 +65,28 @@ describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
     ]) {
       expect(reached(file), file).toBeUndefined();
     }
+  });
+
+  it('step 4: the public site\'s strings (`landing`) are not in it; the app reads none of them', () => {
+    expect(reached('packages/i18n/src/messages/en/landing.ts')).toBeUndefined();
+    expect(graph.files.has('packages/i18n/src/messages/en/index.web.ts')).toBe(true);
+    expect(graph.files.has('packages/i18n/src/messages/en/learner.ts')).toBe(true);
+    // The twin's `landing` is empty, so no source of the web build, start bundle or chunk, may read it (comments aside).
+    const APP = join(REPO, 'apps', 'mobile');
+    const sources = (dir: string): string[] =>
+      readdirSync(dir).flatMap((name) => {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) return name === '__tests__' || name === 'node_modules' ? [] : sources(path);
+        return /\.tsx?$/.test(name) && !/\.(test|native)\.tsx?$/.test(name) ? [path] : [];
+      });
+    const files = [...sources(join(APP, 'src')), ...['index.ts', 'App.tsx', 'PresenterApp.tsx', 'BrowseApp.tsx'].map((f) => join(APP, f))];
+    expect(files.length).toBeGreaterThan(1000);
+    const readers = files
+      .filter((file) => {
+        const code = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+        return /\.landing\b|\[['"]landing['"]\]/.test(code);
+      })
+      .map((file) => relative(APP, file));
+    expect(readers).toEqual([]);
   });
 });
