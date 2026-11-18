@@ -1,4 +1,4 @@
-import { BROWSE_EVENT_NAMES } from '@hangul-route/content-schema';
+import { BROWSE_EVENT_NAMES, UI_LOCALE_MIRROR_KEY } from '@hangul-route/content-schema';
 import { setWriteFence } from './storage-fence';
 import { configureTelemetryQueue, setTelemetryFence } from './telemetry';
 
@@ -18,9 +18,10 @@ export const BROWSE_TELEMETRY_QUEUE_KEY = 'browse:telemetry-queue';
  * settings (keep switch only), its telemetry queue, the device mute
  * (`AUDIO_PREFS_KEY`, the trade-off F-TCH-004 section 8 records) and the device
  * display record (`device:settings`: the one UI language and text size of the
- * device, owner items 6 and 7; never a learner's record).
+ * device, owner items 6 and 7; never a learner's record) with its synchronous language copy for the static splash
+ * (`UI_LOCALE_MIRROR_KEY`, AMENDMENTS-FINISH-2026-11 FN-2).
  */
-export const BROWSE_WRITABLE_KEYS = ['browse:pass', 'browse:prefs', BROWSE_TELEMETRY_QUEUE_KEY, 'device:audio', 'device:settings'] as const;
+export const BROWSE_WRITABLE_KEYS = ['browse:pass', 'browse:prefs', BROWSE_TELEMETRY_QUEUE_KEY, 'device:audio', 'device:settings', UI_LOCALE_MIRROR_KEY] as const;
 
 const WRITABLE: ReadonlySet<string> = new Set(BROWSE_WRITABLE_KEYS);
 const EVENT_NAMES: ReadonlySet<string> = new Set(BROWSE_EVENT_NAMES);

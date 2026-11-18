@@ -104,6 +104,14 @@ export type DeviceSettings = z.infer<typeof DeviceSettingsSchema>;
 /** The device record's storage key (the learner app's wrapper adds the `hr:` prefix). */
 export const DEVICE_SETTINGS_KEY = 'device:settings';
 
+/**
+ * A synchronous copy of the device record's language (`uiLocale`) in the browser's `localStorage`, under the same `hr:`
+ * prefix: absent when the record holds none. The grown-up pages and the learner app keep it in step with the record,
+ * and the static splash of the learner shell reads it before any app script runs (AMENDMENTS-FINISH-2026-11 FN-2),
+ * where IndexedDB cannot be read in time. A copy, never the source of truth.
+ */
+export const UI_LOCALE_MIRROR_KEY = 'console:uiLocale';
+
 /** A change to the device record: the fields to set, or `clearLocale` to forget the language (and its time). */
 export interface DeviceSettingsPatch {
   uiLocale?: UiLocale;

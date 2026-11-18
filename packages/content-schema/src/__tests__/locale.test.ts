@@ -8,6 +8,7 @@ import {
   AccountLocaleSchema,
   DEFAULT_TEXT_SIZE,
   DEVICE_SETTINGS_KEY,
+  UI_LOCALE_MIRROR_KEY,
   DeviceSettingsSchema,
   MIGRATED_AT,
   PREFS_CHANNEL,
@@ -175,6 +176,8 @@ describe('F-I18N-001 telemetry names (§3.12)', () => {
 describe('the display record across tabs (owner items 6 and 7)', () => {
   it('one key, one channel, one strict message shape', () => {
     expect(DEVICE_SETTINGS_KEY).toBe('device:settings');
+    // FN-2: the key the console's mirror always had (`hr:console:uiLocale`), now read by the static splash too.
+    expect(UI_LOCALE_MIRROR_KEY).toBe('console:uiLocale');
     expect(PREFS_CHANNEL).toBe('hr-prefs');
     const message = prefsMessage({ uiLocale: 'ko', textSize: 'large' });
     expect(message).toEqual({ ns: 'hr-prefs', v: 1, type: 'device-settings', settings: { uiLocale: 'ko', textSize: 'large' } });
