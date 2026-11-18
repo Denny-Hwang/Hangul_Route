@@ -44,6 +44,17 @@ const settle = async (): Promise<void> => {
     for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
   });
 };
+/** Waits until `ready` holds: a chunk arrives through a dynamic `import()`, an unknown number of ticks away (more under load). */
+async function until(ready: () => boolean): Promise<void> {
+  await vi.waitFor(
+    async () => {
+      await settle();
+      if (!ready()) throw new Error('not yet');
+    },
+    { timeout: 10_000, interval: 10 },
+  );
+}
+
 afterEach(async () => {
   for (const r of mounted.splice(0)) await unmount(r);
   chunks.props.length = 0;
@@ -85,7 +96,7 @@ describe('the route doors (FN-7)', () => {
       const given = props(route);
       const r = await render(createElement(Door as never, given as never));
       mounted.push(r);
-      await settle();
+      await until(() => byTestId(r.root, `${name}-stub`).length > 0);
       expect(byTestId(r.root, `${name}-stub`)).toHaveLength(1);
       expect(chunks.props.at(-1)).toEqual(given);
       // A second open draws at once from the loaded chunk.
@@ -115,11 +126,11 @@ describe('the route doors (FN-7)', () => {
     }
     const r = await render(createElement(Door));
     mounted.push(r);
-    await settle();
+    await until(() => buttonsNamed(r.root, 'Try again').length > 0);
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(0);
     expect(buttonsNamed(r.root, 'Try again')).toHaveLength(1);
     await press(buttonsNamed(r.root, 'Try again')[0]!);
-    await settle();
+    await until(() => byTestId(r.root, 'flaky-stub').length > 0);
     expect(byTestId(r.root, 'flaky-stub')).toHaveLength(1);
     expect(attempts).toBe(2);
   });

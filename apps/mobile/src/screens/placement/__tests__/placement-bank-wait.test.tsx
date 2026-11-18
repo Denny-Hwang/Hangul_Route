@@ -41,6 +41,17 @@ const settle = async (): Promise<void> => {
   });
 };
 
+/** Waits until `ready` holds (the loader settles an unknown number of ticks away, more under load). */
+async function until(ready: () => boolean): Promise<void> {
+  await vi.waitFor(
+    async () => {
+      await settle();
+      if (!ready()) throw new Error('not yet');
+    },
+    { timeout: 10_000, interval: 10 },
+  );
+}
+
 afterEach(async () => {
   for (const r of mounted.splice(0)) await unmount(r);
   seen.length = 0;
@@ -54,8 +65,7 @@ describe('usePlacementBank (FN-7)', () => {
     const r = await render(createElement(Probe));
     mounted.push(r);
     expect(seen[0]).toEqual({ bank: null, failed: false });
-    await settle();
-    expect(byTestId(r.root, 'ready')).toHaveLength(1);
+    await until(() => byTestId(r.root, 'ready').length > 0);
     expect(loader.calls).toBe(1);
   });
 
@@ -71,11 +81,9 @@ describe('usePlacementBank (FN-7)', () => {
     loader.next = ['fail'];
     const r = await render(createElement(Probe));
     mounted.push(r);
-    await settle();
-    expect(byTestId(r.root, 'failed')).toHaveLength(1);
+    await until(() => byTestId(r.root, 'failed').length > 0);
     await act(async () => retryNow());
-    await settle();
-    expect(byTestId(r.root, 'ready')).toHaveLength(1);
+    await until(() => byTestId(r.root, 'ready').length > 0);
     expect(loader.calls).toBe(2);
   });
 });
@@ -91,13 +99,13 @@ describe('the level-check report waits for the bank (FN-7)', () => {
     const r = await render(createElement(PlacementReportScreen, props));
     mounted.push(r);
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
-    await settle();
+    await until(() => buttonsNamed(r.root, 'Try again').length > 0);
     // It could not load: the crash screen, whose Try again asks again.
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(0);
     expect(buttonsNamed(r.root, 'Try again')).toHaveLength(1);
     expect(loader.calls).toBe(1);
     await press(buttonsNamed(r.root, 'Try again')[0]!);
-    await settle();
+    await until(() => screenTexts(r.root).includes('No check taken yet.'));
     expect(loader.calls).toBe(2);
     expect(buttonsNamed(r.root, 'Try again')).toHaveLength(0);
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(0);
