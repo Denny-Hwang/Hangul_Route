@@ -10,7 +10,10 @@ import { expect, test } from './fixtures';
 
 const START_BUNDLE = /\/_expo\/static\/js\/web\/index-[0-9a-f]{32}\.js$/;
 
-/** Holds the start bundle back, so the page shows what the HTML alone paints. */
+/**
+ * Holds the start bundle back, so the page shows what the HTML alone paints. The page's load (and DOMContentLoaded,
+ * which waits for deferred scripts) cannot happen while it is held, so these tests navigate with `waitUntil: 'commit'`.
+ */
 async function holdStartBundle(page: Page): Promise<() => void> {
   let release: () => void = () => undefined;
   const held = new Promise<void>((resolve) => {
@@ -25,7 +28,7 @@ async function holdStartBundle(page: Page): Promise<() => void> {
 
 test('the HTML alone paints the splash in English, and the first frame of the app removes it', async ({ page }) => {
   const release = await holdStartBundle(page);
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'commit' });
   const splash = page.locator('#hr-splash');
   await expect(splash).toBeVisible();
   await expect(splash.getByText('Hangul Route')).toBeVisible();
@@ -39,7 +42,7 @@ test('the HTML alone paints the splash in English, and the first frame of the ap
 test('the splash speaks the language the device chose before, over the browser language', async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem('hr:console:uiLocale', 'ko'));
   const release = await holdStartBundle(page);
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'commit' });
   await expect(page.locator('#hr-splash').getByText('불러오는 중')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.lang)).toBe('ko');
   release();
@@ -50,7 +53,7 @@ test.describe('a Spanish browser with no choice stored', () => {
 
   test('the splash detects Spanish', async ({ page }) => {
     const release = await holdStartBundle(page);
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'commit' });
     await expect(page.locator('#hr-splash').getByText('Cargando')).toBeVisible();
     release();
   });
@@ -59,7 +62,7 @@ test.describe('a Spanish browser with no choice stored', () => {
 test('reduced motion: nothing on the splash moves', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const release = await holdStartBundle(page);
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'commit' });
   const animation = await page.locator('#hr-splash .hr-splash-line').evaluate((el) => getComputedStyle(el).animationName);
   expect(animation).toBe('none');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
