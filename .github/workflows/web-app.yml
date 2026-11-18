@@ -229,9 +229,10 @@ jobs:
     # e2e runs on the push to main only (owner decision 2026-11-18: the repository is private and Actions minutes are counted).
     if: needs.build.outputs.run == 'true' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    # 40, not 30: a shard takes 19 to 22 min on main (2026-11-17); on 2026-11-18 slow runners stopped all four at 30 after
-    # their release pass had passed with no failure (PR #1043). The limit only stops a hung run.
-    timeout-minutes: 40
+    # 55: a shard took 19 to 22 min on the 4-core runners of a public repository (2026-11-17); since the repository went
+    # private (2-core runners, 2026-11-18) three shards finished in 35 to 39 min and one was stopped at 40 with no failure
+    # (PR #1043). The limit only stops a hung run.
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       matrix:

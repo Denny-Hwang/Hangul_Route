@@ -107,10 +107,10 @@ jobs:
   unit:
     name: Unit tests · ${{ matrix.group }}
     runs-on: ubuntu-latest
-    # 30, not 20: the mobile group takes about 14 min on a normal runner (main, 2026-11-17) and was cancelled at 20 twice
-    # on 2026-11-18 while every job ran 1.5 to 1.8 times slower (lint 5 min instead of 3); locally the suite took the
-    # same time on the branch and on main (11 min). The limit only stops a hung run; it is not a speed budget.
-    timeout-minutes: 30
+    # 45: the repository is private since 2026-11-18, so its jobs run on GitHub's 2-core runners (public: 4 cores) and take
+    # about twice as long: the mobile group took 14 min before and 23 min to more than 30 after (packages 5 -> 13 min).
+    # Locally the suite takes the same time on this branch and on main (11 min). The limit only stops a hung run.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
