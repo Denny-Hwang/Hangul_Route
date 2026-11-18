@@ -65,7 +65,6 @@ The selected tab in the learner tab bar shows a shape mark (for example a bar or
 
 ## As built
 
-_Filled in as the rows land._
 
 **FN-1.** **[FN]** The two offline ways of Forgot PIN? now ask a check before the new PIN. A Rescue Code that matches, or **Set a new PIN** after the finished 24-hour wait, replaces the reset cards with one card: **One more step**, "Type this number in digits.", a number from 100 to 999 written out in words in the UI language (en "three hundred forty-seven", es "trescientos cuarenta y siete", ko "삼백사십칠"), a number field and Continue. Only the right answer opens `PinEntry` setup, with that way's `via`. A miss shows a different number, clears the field and adds one calm line ("Not quite. Here is a new number.", polite live region). There is no count, pause, lock or red, and the PIN and Rescue Code attempt counters are not changed. **Sign in to the account** asks no check: its ticket still opens setup directly. The card does not say "grown-up", so a self-only device's reset screen still shows that word nowhere. The old math gate (`design/wireframes/parent/gate.md`) was retired in 2026-09 and its component deleted, so there was nothing to reuse.
 Design: wireframe `design/wireframes/onboarding/all-ages-onboarding.md` box G2 (`profiles/pin-entry.md` and `pin-entry-v2.md` Panel C point to it); mock `design/screens/profiles/pin-reset-check.md` with `mock/pin-reset-check.html` and `.css`, boards 1 to 7, and shots at 320, 1280 and 320 at 200 % text (no horizontal scroll; words wrap whole).
