@@ -55,6 +55,11 @@ export interface PresenterHomeProps {
   /** A preset resolved on this presenter (`resolveOnPresenter`: the resolver and Word review's word count). */
   resolve: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => ResolvedPreset;
   onPreset: (preset: LecturePreset, minutes: PresetMinutes, stage: StageKey) => void;
+  /**
+   * The content the ready-made lessons resolve over is in (Word review counts its lessons' words, [FN]
+   * AMENDMENTS-FINISH-2026-11 row FN-4); until then, as while Recent loads, every Start waits. True when omitted.
+   */
+  presetsReady?: boolean;
   /** Customize's chooser groups in the presenter language (`presenterChooserGroups`). */
   groups: readonly ChooserGroup[];
   onBuild: (deck: LectureDeck) => void;
@@ -230,7 +235,7 @@ export function PresenterHomeScreen(props: PresenterHomeProps): ReactElement {
   const pageWidth = Math.min(width, layout.maxWidth.full) - 2 * gutter;
   const presetsWidth = Math.max(0, wide ? pageWidth - Math.min(sideWidth, pageWidth * 0.4) - spacing.xl : pageWidth);
   const presets = (
-    <PresetCards messages={messages} ctx={props.presetCtx} resolve={props.resolve} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} ready={props.recent.status !== 'loading'} initialWidth={presetsWidth} />
+    <PresetCards messages={messages} ctx={props.presetCtx} resolve={props.resolve} stages={stages} state={state} onState={onState} onStart={leaving(props.onPreset)} ready={props.recent.status !== 'loading' && props.presetsReady !== false} initialWidth={presetsWidth} />
   );
   const recent = <RecentPanel {...props} onResume={leaving(props.onResume)} onStartOver={leaving(props.onStartOver)} />;
 

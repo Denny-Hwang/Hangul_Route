@@ -1,7 +1,7 @@
 import { TextSizeProvider, textSizeFactor, typeScale, useTypeScale, WORD_ART_KEYS, borderWidth, colors, layout, presenter, radii, spacing, supportedCardIds, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { DeviceDisplaySheet } from './src/components/DeviceDisplaySheet';
-import { useLocalePacks } from './src/i18n/use-messages';
+import { useLessonTitlesVersion, useLocalePacks } from './src/i18n/use-messages';
 import {
   CATALOG,
   decodeDeck,
@@ -23,6 +23,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { canPlayKorean, type AudioCapability } from './src/logic/audio/capability';
 import { lectureBundle, soundCheckSpec } from './src/logic/lecture/content';
+import { presenterListsEpisode } from './src/logic/lecture/manifest-listing';
 import { lectureStories } from './src/logic/lecture/sources/story';
 import { readToMePlan } from './src/logic/lecture/story-slides';
 import { createAudioRunner, type RunnerResult } from './src/logic/story/audio-runner';
@@ -136,6 +137,8 @@ import { PresenterViewProvider, type PresenterView } from './src/screens/present
 import { Stage, StageHint, StartHint } from './src/screens/presenter/Stage';
 import { StartScreen } from './src/screens/presenter/StartScreen';
 import { useSoundCheck } from './src/screens/presenter/use-sound-check';
+import { useDeckContent } from './src/screens/presenter/use-deck-content';
+import { OopsScreen } from './src/screens/system/OopsScreen';
 import { StatePage } from './src/screens/presenter/StatePage';
 import { useAudioStore } from './src/store/audio-store';
 import { activeLocale, followDeviceSettings, useLocaleStore } from './src/store/locale-store';
@@ -492,17 +495,32 @@ function Presenter(): ReactElement {
     setDocumentLang(LOCALE_META[locale].htmlLang);
   }, [messages, locale]);
 
-  // The slide content speaks the slide language (the deck's explicit one, else the device's).
-  const bundle = useMemo(() => lectureBundle(slidesIn), [slidesIn]);
+  // [FN] AMENDMENTS-FINISH-2026-11 row FN-4: the home lists from the manifests; a deck loads its own cells and stories
+  // (and its slide language's titles and text) when it is chosen or a link opens it, with the start screen's loading
+  // state until they are in. On the home, a Word review's lessons load for its card (section 4.2 W counts their words).
+  const deckContent = useDeckContent(deck?.blocks ?? null, slidesIn);
+  const reviewBlocks = useMemo((): LectureBlock[] | null => {
+    if (phase.kind !== 'home' || recentLoaded === null) return null;
+    const questIds = [...(presenterPresetContext(recentLoaded.list, new Date()).recentWords?.questIds ?? [])];
+    return questIds.length === 0 ? null : [{ kind: 'word-review', questIds, vocabIds: [], rounds: 1 }];
+  }, [phase.kind, recentLoaded]);
+  const reviewContent = useDeckContent(reviewBlocks, slidesIn);
+  // The slide content speaks the slide language (the deck's explicit one, else the device's); built again with what
+  // each load brought in, so nothing read before a chunk arrived (a story's placeholder) stays in it.
+  const bundle = useMemo(() => lectureBundle(slidesIn), [slidesIn, deckContent.version, reviewContent.version, packs]);
   // Story scenes for the story slides: art, theme, accessible name and Read-to-me's voice (PR 11).
-  const stories = useMemo(() => lectureStories(slidesIn), [slidesIn]);
+  const stories = useMemo(() => lectureStories(slidesIn), [slidesIn, deckContent.version, packs]);
   const narrator = useMemo(() => createAudioRunner({ playPrompt, stop: stopAudio }), []);
   const canPlay = canPlayKorean(capability);
   // The deck's switches, read once per deck once they can decide, so a copy fetched mid-lesson never swaps its slides
   // (row CM-35). A room has no profile, so it is in no experiment: a switch is on here once its ramp reaches everyone.
   const switchesKnown = configRead || configWaited;
   const switches = useMemo((): DeckSwitches | null => (deck && switchesKnown ? { rolePlay: currFlagOn('game.role-play', null) } : null), [deck, switchesKnown]);
-  const expanded = useMemo(() => (deck && switches ? expandDeck(deck, bundle, { canPlayKorean: canPlay }, switches) : null), [deck, bundle, canPlay, switches]);
+  const deckIn = deckContent.state === 'ready';
+  const expanded = useMemo(
+    () => (deck && switches && deckIn ? expandDeck(deck, bundle, { canPlayKorean: canPlay }, switches) : null),
+    [deck, bundle, canPlay, switches, deckIn],
+  );
   const run = useMemo(() => (deck && expanded ? runDeck(deck, expanded, SHELL_SLIDE_KINDS, supportedCardIds, WORD_ART_KEYS) : null), [deck, expanded]);
 
   // A link that does not decode, or a deck with nothing to show: the invalid screen, once per page.
@@ -1095,9 +1113,11 @@ function Presenter(): ReactElement {
   // A cell's Volume 2 (F-CURR-002 row CM-40) is offered only while `volumes` is on (a room has no profile: on once its
   // ramp reaches everyone), read when the copy can decide.
   const volumesOn = switchesKnown && currFlagOn('volumes', null);
+  // From the manifest (row FN-4): a row needs no body in; the titles follow the locale's title chunk as it arrives.
+  const titlesVersion = useLessonTitlesVersion();
   const groups = useMemo(
-    () => presenterChooserGroups(locale, { consonants: quickWords.consonants, vowels: quickWords.vowels }, { volumes: volumesOn }),
-    [locale, quickWords, volumesOn],
+    () => presenterChooserGroups(locale, { consonants: quickWords.consonants, vowels: quickWords.vowels }, { volumes: volumesOn, listed: (id) => presenterListsEpisode(id) }),
+    [locale, quickWords, volumesOn, titlesVersion, online],
   );
   const presetCtx = useMemo(() => presenterPresetContext(recentLoaded?.list ?? null, new Date()), [recentLoaded]);
   // Word review's second fallback (section 4.2 W) counts the words a block shows once expanded with the
@@ -1371,6 +1391,7 @@ function Presenter(): ReactElement {
           presetCtx={presetCtx}
           resolve={resolveHere}
           onPreset={onPreset}
+          presetsReady={reviewContent.state !== 'loading'}
           groups={groups}
           onBuild={(built) => openFromHome({ kind: 'quick', deck: built })}
           state={homeState}
@@ -1393,6 +1414,9 @@ function Presenter(): ReactElement {
         ) : null}
       </View>
     );
+  } else if (phase.kind === 'ready' && deckContent.state === 'failed') {
+    // A chunk of the deck that did not load (row FN-4): the crash screen, whose Try again asks for it again.
+    body = <OopsScreen onRetry={deckContent.retry} />;
   } else if (phase.kind === 'ready') {
     body =
       run === null || run.slides.length === 0 ? (

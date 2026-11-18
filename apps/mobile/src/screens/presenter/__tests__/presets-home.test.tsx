@@ -153,6 +153,20 @@ describe('Ready-made lessons (sections 4.1 and 10)', () => {
     expect(onPresetSpy).toHaveBeenCalledWith('hangul-week-1', 30, 'stage1');
   });
 
+  // [FN] AMENDMENTS-FINISH-2026-11 row FN-4: the home lists from the manifest; Word review's lessons load for its card.
+  it('holds every Start while the lessons a Word review counts are still loading, then lets it go', async () => {
+    const onPresetSpy = vi.fn();
+    const r = await render(<Harness onPresetSpy={onPresetSpy} presetsReady={false} />);
+    await press(one(r.root, 'presenter-preset-word-review'));
+    const held = one(r.root, 'presenter-preset-start-word-review');
+    expect(held.props['aria-disabled']).toBe(true);
+    await press(held);
+    expect(onPresetSpy).not.toHaveBeenCalled();
+    await act(async () => r.update(<Harness onPresetSpy={onPresetSpy} presetsReady />));
+    await press(one(r.root, 'presenter-preset-start-word-review'));
+    expect(onPresetSpy).toHaveBeenCalledTimes(1);
+  });
+
   // Codex review of #742: a Start pressed before the Recent read settles would build from no history for good.
   it('holds every Start until Recent has loaded; a finished read with storage off counts as empty', async () => {
     const onPresetSpy = vi.fn();

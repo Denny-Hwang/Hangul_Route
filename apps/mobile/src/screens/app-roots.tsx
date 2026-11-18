@@ -17,11 +17,13 @@ const PresenterRoot: LazyRoot<object> = { name: 'PresenterApp', load: () => impo
 const BrowseRoot: LazyRoot<object> = { name: 'BrowseApp', load: () => import('../../BrowseApp') };
 
 /**
- * The grown-up roots read the whole lesson catalogue (decks, lesson facts), so they mount once every lesson chunk
- * and their own code are in (F-CURR-002 §10); the learner app loads a lesson's chunk when it opens.
+ * All lessons reads the whole lesson catalogue (lesson facts), so it mounts once every lesson chunk and its own code
+ * are in (F-CURR-002 §10). The presenter lists its home from the manifests and a deck loads its own cells when chosen
+ * ([FN] AMENDMENTS-FINISH-2026-11 row FN-4), so it mounts on its code, the titles and the device locale's text. The
+ * learner app loads a lesson's chunk when it opens.
  */
 export function rootComponent(root: Exclude<AppRoot, 'grown-up-bounce'>): ComponentType<object> {
-  if (root === 'presenter') return withLessonContent(PresenterRoot);
+  if (root === 'presenter') return withLessonContent(PresenterRoot, { content: 'manifest' });
   if (root === 'browse') return withLessonContent(BrowseRoot);
   return App;
 }

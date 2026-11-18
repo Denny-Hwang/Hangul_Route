@@ -55,8 +55,9 @@ export interface LessonContentDeps {
   /**
    * The locale chunks (`content/locale-packs.ts`): the grown-up roots draw in any UI locale (the presenter's
    * slides in the deck's), so they mount with every one in; a failed one keeps that locale's text in English.
+   * A root on the manifest (`content: 'manifest'`) waits for the device locale's alone (`ensure`).
    */
-  locales?: { ensureAll: () => Promise<void> };
+  locales?: { ensureAll: () => Promise<void>; ensure?: (locale: UiLocale) => Promise<void> };
   /** Gives up a hung root chunk's pending script by its bundle name (`platform/lesson-chunk-abandon`); none when omitted. */
   abandon?: (bundleName: string) => void;
   /** A root chunk that has not loaded after this many ms fails (a hung request); 15 s when omitted. */
@@ -86,6 +87,16 @@ export const combinedChunkState = (a: ChunkState, b: ChunkState): ChunkState =>
 export interface LazyRoot<P extends object> {
   name: string;
   load: () => Promise<{ default: ComponentType<P> }>;
+}
+
+/**
+ * What a grown-up root waits for before it mounts. `all` (All lessons): every lesson and story chunk and every locale
+ * chunk. `manifest` (the presenter, [FN] AMENDMENTS-FINISH-2026-11 row FN-4): its home lists from the lesson and story
+ * manifests, so it waits for its code, the device locale's titles and that locale's text only; a deck loads its own
+ * cells and stories when it is chosen (`screens/presenter/use-deck-content.ts`).
+ */
+export interface RootContentOptions {
+  content?: 'all' | 'manifest';
 }
 
 /** A root chunk that did not arrive in time (a hung request); Try again asks again. */
@@ -254,16 +265,21 @@ export function lessonContentBindings({
   /**
    * Mounts `Root` once every lesson chunk, every story chunk, the device locale's titles and the locale chunks are
    * in, and, for a lazy root (`LazyRoot`), its own code; the crash screen if a lesson, story or root chunk fails.
+   * On the manifest (`content: 'manifest'`, row FN-4): once its code, the device locale's titles and that locale's
+   * text are in; no lesson or story chunk is asked for.
    */
-  function withLessonContent<P extends object>(Root: ComponentType<P> | LazyRoot<P>): ComponentType<P> {
+  function withLessonContent<P extends object>(Root: ComponentType<P> | LazyRoot<P>, options: RootContentOptions = {}): ComponentType<P> {
     const lazy = isLazyRoot(Root) ? Root : null;
     const eager = isLazyRoot(Root) ? null : Root;
+    const manifestOnly = options.content === 'manifest';
     const contentIn = (): boolean =>
-      scope === undefined
+      manifestOnly ||
+      (scope === undefined
         ? store.isAllReady() && stories.isAllReady()
-        : scope.core.cells.every((id) => store.isCellReady(id)) && scope.core.stories.every((id) => stories.isStoryReady?.(id) ?? stories.isAllReady());
+        : scope.core.cells.every((id) => store.isCellReady(id)) && scope.core.stories.every((id) => stories.isStoryReady?.(id) ?? stories.isAllReady()));
     /** Core chunks (a failure is the crash screen) and the later ones this root may show (a failure leaves them out). */
     const loadContent = (): { cells: Promise<void>; storyBodies: Promise<void>; later: Promise<void> } => {
+      if (manifestOnly) return { cells: Promise.resolve(), storyBodies: Promise.resolve(), later: Promise.resolve() };
       if (scope === undefined) return { cells: store.ensureAll(), storyBodies: stories.ensureAll(), later: Promise.resolve() };
       const later = scope.later(true);
       const ensureStories = (ids: readonly string[]): Promise<void> => (stories.ensureStories === undefined ? stories.ensureAll() : stories.ensureStories(ids));
@@ -283,7 +299,8 @@ export function lessonContentBindings({
         // tiers, and so its quests and episode) out of the catalogue; a root whose code fails cannot mount at all.
         const root = lazy === null ? Promise.resolve(eager) : loadRoot(lazy);
         const content = loadContent();
-        void Promise.allSettled([content.cells, content.storyBodies, store.ensureTitles(locale()), locales.ensureAll(), root, content.later]).then(
+        const text = manifestOnly && locales.ensure !== undefined ? locales.ensure(locale()) : locales.ensureAll();
+        void Promise.allSettled([content.cells, content.storyBodies, store.ensureTitles(locale()), text, root, content.later]).then(
           async ([cells, storyBodies, , , code, later]) => {
             if (!live) return;
             // A later volume that cannot load (offline and not saved) stays out of the root's lists; a newer build reloads.
