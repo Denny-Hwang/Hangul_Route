@@ -1,3 +1,4 @@
+import { numberInWords } from '../../number-words';
 import type { DeepPartial, Messages } from '../../types';
 
 /**
@@ -92,6 +93,13 @@ export const caregiver = {
         wrongCode: '이 기기에 저장된 코드와 달라요. 확인하고 다시 해 보세요.',
         noCode: '이 기기에는 저장된 복구 코드가 없어요. 대신 24시간 기다리기를 써 주세요.',
         badFormat: '낱말과 숫자를 모두 입력해 주세요. 예: TIGER-MOON-RIVER-APPLE-482139 (예전 코드: TIGER-MOON-4821)',
+      },
+      check: {
+        heading: '한 단계 더',
+        prompt: '이 수를 숫자로 적어 주세요.',
+        words: (n: number) => numberInWords('ko', n),
+        fieldLabel: '숫자로 적기',
+        again: '조금 달라요. 여기 새 수가 있어요.',
       },
       signIn: {
         heading: '계정으로 로그인하기',
