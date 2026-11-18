@@ -251,11 +251,12 @@ describe('package.json', () => {
   const scripts = JSON.parse(readFileSync(join(WEB, 'package.json'), 'utf8')).scripts;
 
   it('builds the console role from the same export (section 3.3), then leaves out/ pruned as the site role does', () => {
-    expect(scripts['build:console']).toBe('next build && node scripts/console-split.mjs out && node scripts/prune-hidden-locales.mjs out');
+    // FN-6: the console bundle check runs first, on the export both roles are cut from.
+    expect(scripts['build:console']).toBe('next build && node scripts/console-locale-check.mjs out && node scripts/console-split.mjs out && node scripts/prune-hidden-locales.mjs out');
   });
 
   it('keeps the site role apart: no console split, only the CONSOLE_ORIGIN redirect file at the end (section 3.13)', () => {
-    expect(scripts.build).toBe('next build && node scripts/prune-hidden-locales.mjs out && node scripts/site-redirects.mjs out');
+    expect(scripts.build).toBe('next build && node scripts/console-locale-check.mjs out && node scripts/prune-hidden-locales.mjs out && node scripts/site-redirects.mjs out');
   });
 });
 
