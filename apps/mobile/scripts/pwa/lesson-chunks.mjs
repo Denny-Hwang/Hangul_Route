@@ -219,7 +219,13 @@ export const PRECACHE_BUDGET = Object.freeze({
   // card, the number-in-words helper of packages/i18n (en, es, ko) and the English strings are too. The release
   // `build:web` (CI=1) of the FN-1 branch measures 4,973,489 B raw, 3,989 B over the line. The line is the measurement
   // plus a 4,011 B margin (one measured raise, 8,000 B over the previous line); FN-7 brings it down.
-  startBundleRaw: 4_977_500,
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7 (the start bundle gets smaller, finding F4), on the merged FN-1..FN-8 head that
+  // measured 4,976,006 B raw / 1,341,160 B gzip, release `build:web` (CI=1) after each step: the level check's bank as a
+  // chunk of its own 4,826,003 / 1,328,984 B; the content linters out of the content-schema barrel 4,805,079 /
+  // 1,321,200 B; eight more learner screen chunks 4,605,858 / 1,268,664 B; the site's `landing` strings out of the
+  // learner PWA's English 4,570,041 / 1,257,197 B (405,965 B raw, 83,963 B gzip less in all). The line is that
+  // measurement plus a 3,959 B margin (403,500 B under the previous line).
+  startBundleRaw: 4_574_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
