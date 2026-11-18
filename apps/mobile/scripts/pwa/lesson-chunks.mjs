@@ -215,7 +215,11 @@ export const PRECACHE_BUDGET = Object.freeze({
   // things) are in the start bundle, and the redrawn settings and props carry more shapes. The release `build:web`
   // (CI=1) measures 4,965,473 B raw, 3,473 B over the line. The line is the measurement plus a 4,027 B margin (one
   // measured raise, 7,500 B over the previous line).
-  startBundleRaw: 4_969_500,
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-1 (the check before a new PIN): PinResetScreen is in the start bundle, so its check
+  // card, the number-in-words helper of packages/i18n (en, es, ko) and the English strings are too. The release
+  // `build:web` (CI=1) of the FN-1 branch measures 4,973,489 B raw, 3,989 B over the line. The line is the measurement
+  // plus a 4,011 B margin (one measured raise, 8,000 B over the previous line); FN-7 brings it down.
+  startBundleRaw: 4_977_500,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
