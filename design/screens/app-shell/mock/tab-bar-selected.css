@@ -1,0 +1,36 @@
+/*
+ * FN-8: static design mock of the selected-tab mark (not shipped code). Spec: docs/specs/AMENDMENTS-FINISH-2026-11.md
+ * row FN-8 · wireframe design/wireframes/shell/tab-bar.md. Loaded after ../../learning-route/mock/learning-route.css,
+ * whose custom properties are the tokens of packages/design-system/src/tokens.ts (--spacing-xxl is spacing.xxl).
+ * No new token and no new constant: every value below is one of those properties.
+ */
+
+/*
+ * The mark sits in the bar's top padding (tabBarMetrics.paddingTop, spacing.xs), right under the top rule and over the
+ * selected item: outside the item's content box, so no label size, icon or width can move it or draw over it.
+ */
+.tab { position: relative; }
+/*
+ * The mark: spacing.xxl wide, spacing.xs tall (the bar's top padding, which it fills), radii.pill, in the selected tab's own colour (brand.primary,
+ * 5.9:1 on surface.paper, over the 3:1 of WCAG 1.4.11). It is drawn as a border filled with the same colour, so a
+ * forced-colours theme, which drops background fills, still draws it (as its border, in the system text colour).
+ */
+.tab[aria-selected="true"]::before {
+  content: "";
+  position: absolute;
+  top: calc(-1 * var(--spacing-xs));
+  left: 50%;
+  width: var(--spacing-xxl);
+  height: var(--spacing-xs);
+  margin-left: calc(-1 * var(--spacing-xxl) / 2);
+  border: var(--border-width-base) solid var(--colors-brand-primary);
+  background: var(--colors-brand-primary);
+  border-radius: var(--radii-pill);
+  pointer-events: none;
+}
+
+/* Wide window (from 600): the navigator puts each label beside its icon; the mark stays centred over the item. */
+.tab-bar-beside .tab { flex-direction: row; gap: var(--spacing-sm); }
+
+/* Design board only: the same bar with colour taken away, to show the selected tab still reads. */
+.board-greyscale { filter: grayscale(1); }
