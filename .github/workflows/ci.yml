@@ -107,7 +107,10 @@ jobs:
   unit:
     name: Unit tests · ${{ matrix.group }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 30, not 20: the mobile group takes about 14 min on a normal runner (main, 2026-11-17) and was cancelled at 20 twice
+    # on 2026-11-18 while every job ran 1.5 to 1.8 times slower (lint 5 min instead of 3); locally the suite took the
+    # same time on the branch and on main (11 min). The limit only stops a hung run; it is not a speed budget.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
