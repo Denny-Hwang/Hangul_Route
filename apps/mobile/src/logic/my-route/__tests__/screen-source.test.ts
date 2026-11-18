@@ -251,7 +251,8 @@ describe('the Route tab (LR-4)', () => {
 
   it('the tab bar takes its order from mainTabs(flags.myRouteEnabled), so the Route tab shows only behind the flag', () => {
     expect(tabs).toContain('mainTabs(flags.myRouteEnabled)');
-    expect(tabs).toContain('Route: MyRouteTabScreen');
+    // [FN] AMENDMENTS-FINISH-2026-11 row FN-5: frozen while it is not focused, as every learner tab.
+    expect(tabs).toContain('Route: frozenWhenBlurred(MyRouteTabScreen)');
     // No Tab.Screen is written out by hand: the order and the flag live in one place (logic/my-route/tab.ts).
     expect(tabs.match(/<Tab\.Screen/g)).toHaveLength(1);
     expect(types).toMatch(/MainTabParamList = \{[^}]*Route: undefined;/s);

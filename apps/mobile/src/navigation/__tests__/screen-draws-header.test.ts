@@ -44,6 +44,13 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
   withOwnSafeArea: { file: 'navigation/with-own-safe-area.tsx', delegate: 0, renders: /<SafeAreaProvider>\s*<Component \{\.\.\.props\} \/>\s*<\/SafeAreaProvider>/ },
   // The level check's routes: the screen while the run is on that route, null on a stale one (listed above).
   flowRoute: { file: 'screens/placement/context.tsx', delegate: 1, renders: /return target === name \? <Screen \/> : null;/ },
+  // [FN] AMENDMENTS-FINISH-2026-11 row FN-5: a learner tab, frozen while it is not focused (it draws its screen, or keeps
+  // the last one drawn while frozen; a tab first mounted unfocused draws once it is focused).
+  frozenWhenBlurred: {
+    file: 'navigation/freeze-when-blurred.tsx',
+    delegate: 0,
+    renders: /const screen = useMemo\(\(\) => <Screen \{\.\.\.props\} \/>, \[props\]\);\s*return <Freeze frozen=\{frozen\}>\{screen\}<\/Freeze>;/,
+  },
   // [GU] The guest stack's shared learner screen (the card page): the same component, typed for the guest stack's routes.
   shared: { file: 'navigation/guest-chunk.tsx', delegate: 0, renders: /return screen as unknown as ComponentType<GuestScreenProps<K>>;/ },
 };
