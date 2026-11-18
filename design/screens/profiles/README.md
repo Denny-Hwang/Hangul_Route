@@ -18,6 +18,7 @@ Built by:
 | `people-on-device.md` | the Grown-up area's new top, one person, the lock switch and hint, the face or fingerprint switch and warning, Remove in its checking, saved, unsaved and Remove anyway states |
 | `who-is-joining.md` | the checklist, the locked and class-only rows, offline, the results with the cap line, the network stop with Try again, the name step and the consent step |
 | `console-pin.md` | GrownUpLock with Use a passkey, the five `/account/pin-reset` states, the set-a-PIN card, the PIN-owner card |
+| `pin-reset-check.md` | **[FN]** FN-1 (AMENDMENTS-FINISH-2026-11): the check before a new PIN on the two offline reset ways; mock `mock/pin-reset-check.html` (+ `pin-reset-check.css`), boards 1 to 7, shots `shots/pin-reset-check-*` |
 | `mock/profiles.css` | the sheet of this pass, linked after `../../app-shell/mock/app-shell.css` (tokens, board) and `../../app-shell/mock/display-nav.css` (text size, ScreenHeader, Display control, ConfirmSheet) |
 | `mock/who-is-using.html` | boards 1 to 15 |
 | `mock/who-is-using-largest.html` | board 16, the whole page at the Largest text size (`html.ts-largest`) |
