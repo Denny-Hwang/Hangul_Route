@@ -204,10 +204,49 @@ Same as B for sections 2 to 4 with first-person wording ("Your name", "How do yo
 └──────────────────────────────────┘
         |  code ok  or  wait due + button
         v
+   G2. Check before a new PIN  ([FN] FN-1)
+        |  answer right
+        v
    PinEntry(mode: setup) -> create + confirm -> back to the invoking destination
 ```
 
 States: waiting (date shown, button disabled), ready (button live), code wrong (calm line, shares the PIN throttle: 5 tries/60 s then 30 s cooldown with countdown), no stored code (card hidden), already unlocked by remembering the PIN (request cleared on the next successful PIN).
+
+### G2. Check before a new PIN ([FN] AMENDMENTS-FINISH-2026-11 FN-1, audit SEC-7)
+
+The two offline ways (a Rescue Code this device holds, the finished 24-hour wait) no longer open the new-PIN screen
+directly. Same `PinReset` screen, same header; the cards give way to one check card. The online way (Sign in to the
+account, OA-6) is already a strong check and goes straight to the new PIN, as before.
+
+```
+┌──────────────────────────────────┐
+│ [<- back]  "Reset the PIN"       │
+│  "Your learners, cards and       │
+│   progress are kept."            │
+│                                  │
+│  ┌ One more step ─────────────┐  │
+│  │ "Type this number in       │  │
+│  │  digits."                  │  │
+│  │                            │  │
+│  │   three hundred forty-seven│  │  <- the number in words, in the UI language,
+│  │                            │  │     large; 100 to 999, new each time
+│  │  [        347        ]     │  │  <- number keyboard, up to 4 digits shown as typed
+│  │  [[ CONTINUE ]]            │  │  <- disabled until a digit is typed
+│  │  calm line slot            │  │  <- after a miss: "Not quite. Here is a new number."
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+        |  right: PinEntry(mode: setup, via)      wrong: a new number, field cleared
+```
+
+- Parent-gate pattern (Apple App Review 1.3, Google Families): a question someone who cannot read the UI language
+  well cannot pass by poking. The number is written out by the i18n layer in the UI language (en "three hundred
+  forty-seven", es "trescientos cuarenta y siete", ko "삼백사십칠"); never digits, never an image.
+- A miss gives a new number and clears the field. No count, no lock, no pause, no red; the line is the calm one
+  above (polite live region). The PIN's and the Rescue Code's throttles are not touched by the check.
+- No "grown-up" word on this card (a self-only device's reset screen says none; F-LEARN-001 §3.4).
+- Back leaves the whole reset (to the PIN screen, as today); a Rescue Code is asked again next time, a finished wait
+  stays finished.
+- Not on the sign-in way: the console's ticket opens the new-PIN screen with no check.
 
 ## H. Profile switcher
 
@@ -282,12 +321,13 @@ The ring and the cub use the colour the avatar's **name** says (`hoya-blue` is b
 - PIN pad 4th digit: advances create to confirm; mismatch clears and restarts with a calm line.
 - Continue: enabled only when valid; when disabled, the caption names the next missing step (who, name, agree box, PIN).
 - Forgot PIN?: opens G; Rescue Code field: submit on the keyboard's done key; wrong code uses the PIN throttle.
+- [FN] Rescue Code accepted, or Set a new PIN after the wait: opens G2; a right answer opens `PinEntry` setup, a wrong one shows a new number.
 - Edit: opens I behind the PIN gate only when the gate is required.
 
 ## Navigation graph
 
 Enter from: `onboarding/welcome` "Let's start" (A, first run) - `profile/settings` "+ Add a profile" (E) - `PinEntry` after a verified PIN with `next: AddProfile` (E)
-Exit to: `onboarding/first-quest-preview` (after first run) - `profile/settings` (after add) - `PinEntry` setup (from G) - `profile/settings` (from I)
+Exit to: `onboarding/first-quest-preview` (after first run) - `profile/settings` (after add) - `PinEntry` setup (from G, through the G2 check, [FN]) - `profile/settings` (from I)
 
 Enter F from: `profile/settings` grown-up actions (Grown-up zone, Add a profile, Unlock the journey, Save my progress, Restore) when the gate is required
 Exit F to: the invoking destination (`parent/dashboard`, `onboarding/create-profile`, `sync/restore`, `sync/save-progress`, `paywall/upgrade`) - `PinReset` (Forgot PIN) - back (Close or Cancel)
