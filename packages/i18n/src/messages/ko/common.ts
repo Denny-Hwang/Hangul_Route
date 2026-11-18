@@ -89,4 +89,8 @@ export const common = {
     someReading: { label: '조금 읽어요', description: '짧은 낱말과 짧은 문장을 읽어요.' },
     readsEasily: { label: '술술 읽어요', description: '더 긴 글과 이야기, 대화를 읽어요.' },
   },
+  /** 앱이 켜지기 전에 HTML 이 먼저 보여 주는 시작 화면 (FN-2). */
+  splash: {
+    loading: '불러오는 중',
+  },
 } satisfies DeepPartial<Messages['common']>;

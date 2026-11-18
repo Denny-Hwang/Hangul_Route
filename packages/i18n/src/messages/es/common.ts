@@ -84,4 +84,8 @@ export const common = {
     someReading: { label: 'Algo de lectura', description: 'Palabras cortas y oraciones cortas.' },
     readsEasily: { label: 'Lee con facilidad', description: 'Textos más largos, historias y conversaciones.' },
   },
+  /** La pantalla de inicio estática del HTML (FN-2), antes de que arranque la app. */
+  splash: {
+    loading: 'Cargando',
+  },
 } satisfies DeepPartial<Messages['common']>;
