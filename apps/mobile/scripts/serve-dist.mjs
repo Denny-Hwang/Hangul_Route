@@ -3,12 +3,15 @@
 // "auto-trailing-slash" (/teach/home and /teach/home/ → teach/home.html, the
 // console pages merged in by scripts/app-host/merge-console.mjs, F-APP-001 A-3),
 // not_found_handling = "single-page-application" (any other miss → index.html,
-// 200), and the rules of dist/_headers on every answer, so the e2e reads the
-// headers Workers would send. Not emulated: the 307 Workers sends for a `.html`
+// 200) except a missing app chunk that is not a navigation, which the app
+// host's Worker answers 404 (scripts/app-host/worker.mjs, AMENDMENTS-FINISH-2026-11
+// FN-3), and the rules of dist/_headers on every file answer, so the e2e reads
+// the headers Workers would send. Not emulated: the 307 Workers sends for a `.html`
 // or trailing-slash URL (served here as is), and the hiding of _headers itself.
 import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import { CHUNK_NOT_FOUND_HEADERS, isChunkPath } from './app-host/chunk-not-found.mjs';
 import { headersFor, parseHeaders } from './app-host/headers.mjs';
 
 const root = resolve(process.argv[2] ?? 'dist');
@@ -54,7 +57,14 @@ function resolveFile(pathname) {
 
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
-  const file = resolveFile(url.pathname) ?? join(root, 'index.html'); // SPA fallback
+  const found = resolveFile(url.pathname);
+  // The Worker's rule: the assets layer sends a navigation miss to the SPA fallback itself; any other chunk miss is 404.
+  if (found === undefined && isChunkPath(url.pathname) && req.headers['sec-fetch-mode'] !== 'navigate') {
+    res.writeHead(404, Object.fromEntries(CHUNK_NOT_FOUND_HEADERS));
+    res.end('Not found\n');
+    return;
+  }
+  const file = found ?? join(root, 'index.html'); // SPA fallback
   res.setHeader('Content-Type', types[extname(file)] ?? 'application/octet-stream');
   res.setHeader('Cache-Control', 'no-cache');
   for (const [name, value] of Object.entries(headersFor(currentRules(), url.pathname))) res.setHeader(name, value);

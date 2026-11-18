@@ -6,14 +6,24 @@
 #   Build command : pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web
 #   Deploy command: pnpm --filter @hangul-route/mobile exec wrangler deploy
 #
-# Assets-only Worker (no `main`): unlimited free requests, SPA fallback, and
-# the same `_headers` / `_redirects` conventions as Pages.
+# Static assets first: every file, and every navigation (SPA fallback), is
+# answered by the assets layer (free, unlimited), with the same `_headers` /
+# `_redirects` conventions as Pages. The Worker script (`main`) runs only for a
+# request no file matches that is not a navigation
+# (assets_navigation_prefers_asset_serving, on by default from compatibility
+# date 2025-04-01): a missing app chunk under /_expo/static/js/ gets 404, so the
+# chunks can be cached for a year; any other miss goes back to the assets and
+# gets index.html as before (AMENDMENTS-FINISH-2026-11 FN-3: the assets
+# configuration cannot scope the SPA fallback by path, so F-APP-001 AD-1's
+# assets-only host gains this one small script; scripts/app-host/chunk-not-found.mjs).
 name = "hangul-route-app"
+main = "scripts/app-host/worker.mjs"
 compatibility_date = "2025-09-01"
 workers_dev = true
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 # Deep links like /journey resolve to index.html; real files are served as-is.
 not_found_handling = "single-page-application"
 html_handling = "auto-trailing-slash"
