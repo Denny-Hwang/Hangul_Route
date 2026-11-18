@@ -59,6 +59,7 @@ import {
 } from './pwa/grown-ups.mjs';
 import { assertPresenterFontPrecached, presenterFontFace } from './pwa/presenter-font.mjs';
 import { startPreloadUrls, withStartPreloads } from './pwa/start-preload.mjs';
+import { staticSplash, withStaticSplash } from './pwa/static-splash.mjs';
 import { APPLE_TOUCH_ICON_FILE, installIconGlobIgnores, installIconProblems } from './pwa/install-icons.mjs';
 import {
   OFFLINE_PACKS_FILE,
@@ -107,9 +108,10 @@ if (typeof nodeModule.register !== 'function') {
 }
 nodeModule.register(pathToFileURL(join(repo, 'scripts', 'ts-loader.mjs')));
 const importSource = (path) => import(pathToFileURL(join(repo, path)).href);
-const [tokens, appShell, i18n, lessonBuild, storyBuild, reviewItemBuild, weekDropBuild] = await Promise.all([
+const [tokens, appShell, localeSchema, i18n, lessonBuild, storyBuild, reviewItemBuild, weekDropBuild] = await Promise.all([
   importSource('packages/design-system/src/tokens.ts'),
   importSource('packages/content-schema/src/schemas/app-shell.ts'),
+  importSource('packages/content-schema/src/schemas/locale.ts'),
   importSource('packages/i18n/src/index.ts'),
   importSource('scripts/build-lessons.mjs'),
   importSource('scripts/build-stories.mjs'),
@@ -196,6 +198,17 @@ let html = readFileSync(indexPath, 'utf8');
 // Expo's shell sets a fixed viewport; keep it but allow the safe-area env() vars.
 html = html.replace(/<meta name="viewport"[^>]*>/, '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">');
 html = html.replace('</head>', `${head}\n${sw}\n</head>`);
+// AMENDMENTS-FINISH-2026-11 FN-2: the static splash (pwa/static-splash.mjs): the brand mark, the app name and the
+// Loading line of every shipped UI locale (English first, the HTML's own text), painted before the start bundle runs.
+const splashLocales = [i18n.DEFAULT_LOCALE, ...i18n.availableLocales(false).filter((l) => l !== i18n.DEFAULT_LOCALE)].map((locale) => ({
+  locale,
+  lang: i18n.LOCALE_META[locale].htmlLang,
+  loading: i18n.getMessages(locale).common.splash.loading,
+}));
+html = withStaticSplash(
+  html,
+  staticSplash({ tokens, brand: i18n.getMessages(i18n.DEFAULT_LOCALE).landing.brand, locales: splashLocales, mirrorKey: localeSchema.UI_LOCALE_MIRROR_KEY }),
+);
 writeFileSync(indexPath, html);
 
 // The offline page of grown-up paths (wireframe shell/offline): every shipped UI

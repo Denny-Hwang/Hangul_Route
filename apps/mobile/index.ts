@@ -2,6 +2,7 @@
 import './src/async-bundles';
 import { registerRootComponent } from 'expo';
 import { bootRoot } from './src/platform/app-root';
+import { withStaticSplashRemoved } from './src/platform/static-splash';
 import { withStoryShelf } from './src/screens/story-shelf-gate';
 
 /**
@@ -24,10 +25,14 @@ function GrownUpBounce(): null {
  * that `withStoryShelf` calls once the shelf is in: Metro keeps them in the start bundle and runs them then. A static
  * import here would run them before the shelf (the shelf's reader throws, and
  * `src/content/__tests__/story-shelf-boot.test.ts` walks these imports). Native builds have the shelf from the start.
+ * The HTML shell paints a static splash before this bundle runs (AMENDMENTS-FINISH-2026-11 FN-2); whatever root mounts
+ * removes it with its first commit (`src/platform/static-splash.web.ts`).
  */
 const root = bootRoot();
 registerRootComponent(
-  root === 'grown-up-bounce'
-    ? GrownUpBounce
-    : withStoryShelf(() => (require('./src/screens/app-roots') as typeof import('./src/screens/app-roots')).rootComponent(root)),
+  withStaticSplashRemoved(
+    root === 'grown-up-bounce'
+      ? GrownUpBounce
+      : withStoryShelf(() => (require('./src/screens/app-roots') as typeof import('./src/screens/app-roots')).rootComponent(root)),
+  ),
 );
