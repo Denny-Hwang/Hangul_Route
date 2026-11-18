@@ -1,6 +1,6 @@
 import { CATALOG, cellIsReady, laterVolumeStoryIds, storyIsReady, type ChooserEpisodeRow, type ChooserGroup } from '@hangul-route/content-schema';
 import { OVERLAYS } from '@hangul-route/content-schema/overlays';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { episodeById, jamoConsonants, jamoVowels, questById } from '../../../content';
 import { localizeEpisode, localizeQuest } from '../../content-locale';
 import { lectureBundle } from '../content';
@@ -79,6 +79,46 @@ describe('presenterChooserGroups: what Customize offers', () => {
       expect(expanded.slides.length, row.key).toBeGreaterThan(1);
       expect(expanded.skipped.filter((s) => s.reason === 'unknown-id' || s.reason === 'not-ready'), row.key).toEqual([]);
     }
+  });
+});
+
+/**
+ * [FN] AMENDMENTS-FINISH-2026-11 row FN-4 (finding F6): the presenter home lists from the manifest, before any lesson
+ * cell or story body is in. The global setup preloads the app's stores, so this loads the modules afresh: their stores
+ * start cold, and the chooser must offer the same rows, with the same titles and minutes, as with everything loaded.
+ */
+describe('the chooser before any body is in (row FN-4)', () => {
+  type Shape = { id: string; rows: { key: string; title: string; minutes?: number; lessons?: string[] }[] }[];
+  const shape = (gs: readonly ChooserGroup[]): Shape =>
+    gs.map((g) => ({
+      id: g.id,
+      rows: g.rows.map((r) => ({ key: r.key, title: r.title, ...(r.kind === 'letters' ? {} : { minutes: r.minutes }), ...(r.kind === 'episode' ? { lessons: r.lessons.map((l) => l.key) } : {}) })),
+    }));
+
+  it('offers the same groups and rows from cold stores, Volume 2 included while it can load', async () => {
+    const warmVolumes = presenterChooserGroups('en', labels, { volumes: true });
+    vi.resetModules();
+    const { lessonContent } = await import('../../../content/lessons');
+    const { storyContent } = await import('../../../content/stories');
+    const cold = await import('../quick-source');
+    const { presenterListsEpisode } = await import('../manifest-listing');
+    expect(lessonContent.isAllReady()).toBe(false);
+    expect(storyContent.isAllReady()).toBe(false);
+    expect(shape(cold.presenterChooserGroups('en', labels, { listed: (id) => presenterListsEpisode(id) }))).toEqual(shape(groups));
+    expect(shape(cold.presenterChooserGroups('en', labels, { volumes: true, listed: (id) => presenterListsEpisode(id) }))).toEqual(shape(warmVolumes));
+    // Listing read nothing in: no cell or story body was loaded for it.
+    expect(lessonContent.isAllReady()).toBe(false);
+    expect(Object.keys(lessonContent.loadedScopes())).toEqual([]);
+  });
+
+  it('a later volume that cannot load now (offline, not saved) is not listed; a Volume 1 episode always is', async () => {
+    const { presenterListsEpisode } = await import('../manifest-listing');
+    const offline = { core: { cells: [], stories: [] }, later: () => ({ cells: [], stories: [] }) };
+    const v2 = CATALOG.cells.flatMap((c) => c.volumes ?? [])[0]!;
+    expect(presenterListsEpisode(v2.episodeId, offline)).toBe(false);
+    expect(presenterListsEpisode(v2.episodeId, { ...offline, later: () => ({ cells: [v2.episodeId], stories: [...(episodeById(v2.episodeId)?.storyIds ?? [])] }) })).toBe(true);
+    expect(presenterListsEpisode('episode:stage2-rites', offline)).toBe(true);
+    expect(presenterListsEpisode('episode:nowhere', offline)).toBe(false);
   });
 });
 

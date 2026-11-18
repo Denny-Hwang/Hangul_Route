@@ -82,7 +82,7 @@ function bindings(
   over: {
     reload?: () => boolean;
     answer?: (error: unknown) => Promise<boolean>;
-    locales?: { ensureAll: () => Promise<void> };
+    locales?: { ensureAll: () => Promise<void>; ensure?: (locale: 'en' | 'es' | 'ko') => Promise<void> };
     rootTimeoutMs?: number;
     scope?: ContentScope;
     isLaterCell?: (cellId: string) => boolean;
@@ -405,6 +405,65 @@ describe('withLessonContent with a lazy root (the presenter and All lessons are 
     await act(async () => lazy.loads[0]?.resolve({ default: Root }));
     await settle();
     expect(byTestId(r.root, 'root')).toHaveLength(0);
+  });
+});
+
+/**
+ * [FN] AMENDMENTS-FINISH-2026-11 row FN-4 (finding F6): the presenter lists its home from the manifest, so its root
+ * waits for its own code, the device locale's titles and that locale's text only, never for a lesson or story chunk.
+ */
+describe('withLessonContent on the manifest (the presenter home, row FN-4)', () => {
+  function Root(): ReactElement {
+    return <Text testID="root">root</Text>;
+  }
+
+  it('mounts on its code, the titles and the device locale before any lesson chunk arrives, and asks for none', async () => {
+    const asked: string[] = [];
+    let finishLocale!: () => void;
+    const t = bindings({
+      locales: {
+        ensureAll: () => {
+          asked.push('all');
+          return Promise.resolve();
+        },
+        ensure: (locale) => {
+          asked.push(locale);
+          return new Promise<void>((resolve) => (finishLocale = resolve));
+        },
+      },
+    });
+    const code = deferred<{ default: ComponentType<object> }>();
+    const Wrapped = t.withLessonContent({ name: 'PresenterApp', load: () => code.promise }, { content: 'manifest' });
+    const r = await render(<Wrapped />);
+    expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
+    await act(async () => code.resolve({ default: Root }));
+    await settle();
+    // The device locale's text is still on its way.
+    expect(byTestId(r.root, 'root')).toHaveLength(0);
+    await act(async () => finishLocale());
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+    // No lesson chunk was asked for: the cells and the stories load with the deck that holds them.
+    expect(t.asked).toEqual([]);
+    expect(asked).toEqual(['en']);
+  });
+
+  it('a device locale whose text fails still mounts the root, in English', async () => {
+    const t = bindings({ locales: { ensureAll: () => Promise.resolve(), ensure: () => Promise.reject(new Error('offline')) } });
+    const Wrapped = t.withLessonContent(Root, { content: 'manifest' });
+    const r = await render(<Wrapped />);
+    await settle();
+    expect(byTestId(r.root, 'root')).toHaveLength(1);
+    expect(t.asked).toEqual([]);
+  });
+
+  it('root code that fails is still the crash screen', async () => {
+    const t = bindings();
+    const code = deferred<{ default: ComponentType<object> }>();
+    const r = await render(<>{createElement(t.withLessonContent({ name: 'PresenterApp', load: () => code.promise }, { content: 'manifest' }))}</>);
+    await act(async () => code.reject(new Error('offline')));
+    await settle();
+    expect(buttonsNamed(r.root, TRY_AGAIN)).toHaveLength(1);
   });
 });
 
