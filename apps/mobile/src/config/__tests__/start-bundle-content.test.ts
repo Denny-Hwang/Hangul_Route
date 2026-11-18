@@ -28,4 +28,10 @@ describe('the start bundle (AMENDMENTS-FINISH-2026-11 FN-7)', () => {
     expect(graph.chunks.has('apps/mobile/src/content/placement-bank-chunk.ts')).toBe(true);
     expect(graph.files.has('apps/mobile/src/content/placement-meta.generated.ts')).toBe(true);
   });
+
+  it('step 2: the content linters are not in it (the content-schema barrel no longer carries them)', () => {
+    expect(reached('packages/content-schema/src/story-lint.ts')).toBeUndefined();
+    expect(reached('packages/content-schema/src/lesson-cell-lint.ts')).toBeUndefined();
+    expect(reached('packages/content-schema/src/lesson-lint.ts')).toBeUndefined();
+  });
 });

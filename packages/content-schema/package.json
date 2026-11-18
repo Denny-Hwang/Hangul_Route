@@ -9,6 +9,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./lint": "./src/lesson-lint.ts",
+    "./story-lint": "./src/story-lint.ts",
     "./crash-telemetry": "./src/schemas/crash-telemetry.ts",
     "./native-auth-telemetry": "./src/schemas/native-auth-telemetry.ts",
     "./review-items": "./src/review-items/review-item.ts",

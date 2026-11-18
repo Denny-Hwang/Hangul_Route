@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LESSON_MIN_SOURCES, isLessonPublicHost, lintLessonCell, type LessonLintContext } from '../index';
+import { LESSON_MIN_SOURCES, isLessonPublicHost, lintLessonCell, type LessonLintContext } from '../lesson-cell-lint';
 import { lessonCell, source, verification } from './helpers/lesson-fixtures';
 
 type Json = Record<string, any>;

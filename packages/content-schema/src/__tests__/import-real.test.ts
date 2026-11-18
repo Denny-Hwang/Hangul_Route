@@ -2,7 +2,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { HANGUL, lintStory, parseStory, type Finding } from '../index';
+import { HANGUL, parseStory } from '../index';
+import { lintStory, type Finding } from '../story-lint';
 import {
   mapEpisode,
   type ClusterRecord,
