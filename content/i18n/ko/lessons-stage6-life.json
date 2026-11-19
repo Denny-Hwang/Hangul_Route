@@ -275,9 +275,9 @@
     },
     "minigame:s6-life-q3-check": {
       "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요.",
-      "typeHangul.rounds.c1.target.gloss": "3,000원",
+      "typeHangul.rounds.c1.target.gloss": "한국 돈으로 3,000",
       "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요.",
-      "typeHangul.rounds.c2.target.gloss": "1,000원"
+      "typeHangul.rounds.c2.target.gloss": "한국 돈으로 1,000"
     }
   }
 }

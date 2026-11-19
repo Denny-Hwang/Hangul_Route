@@ -132,7 +132,7 @@
       "typeHangul.rounds.t2.prompt": "'접다'에 다음 동작으로 잇는 어미를 붙여 입력해 봐요.",
       "typeHangul.rounds.t3.prompt": "'접은 다음에 자른다'는 문장을 입력해 봐요.",
       "typeHangul.rounds.t4.prompt": "'접은 다음에 그린다'는 문장을 입력해 봐요.",
-      "typeHangul.rounds.t1.target.gloss": "글을 쓰거나 무언가를 만들 때 쓰는 얇은 재료",
+      "typeHangul.rounds.t1.target.gloss": "글을 쓰거나 접는 얇은 재료",
       "typeHangul.rounds.t2.target.gloss": "꺾어 포갠 뒤 다음 동작으로 이어 주는 말",
       "typeHangul.rounds.t3.target.gloss": "꺾어 포갠 다음에 끊어요",
       "typeHangul.rounds.t4.target.gloss": "꺾어 포갠 다음에 선을 그어요"
@@ -153,7 +153,7 @@
       "writeFrame.rounds.c1.slots.act.bank.jallayo.gloss": "가위나 칼로 끊어요",
       "writeFrame.rounds.c1.slots.act.bank.geuryeoyo.gloss": "선을 그어 모양을 나타내요",
       "writeFrame.rounds.c2.frame.gloss": "맨 처음에 꺾어 포개는 것: ___",
-      "writeFrame.rounds.c2.slots.thing.bank.jongi.gloss": "글을 쓰거나 무언가를 만들 때 쓰는 얇은 재료",
+      "writeFrame.rounds.c2.slots.thing.bank.jongi.gloss": "글을 쓰거나 접는 얇은 재료",
       "writeFrame.rounds.c2.slots.thing.bank.bihaenggi.gloss": "하늘을 나는 탈것 모양",
       "writeFrame.rounds.c2.slots.thing.bank.kkot.gloss": "줄기 끝에 피는 것의 모양"
     }

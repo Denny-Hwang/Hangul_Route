@@ -48,11 +48,11 @@
       "steps.s2.discover.pages.0.caption": "모습 말하기",
       "steps.s2.discover.pages.1.caption": "조그만 토끼와 사랑스러운 고양이",
       "steps.s2.discover.pages.0.items.0.note": "모습을 말하는 낱말은 맨 끝에 와요. {ko:커요}는 몸집이 우람한 모습, {ko:작아요}는 몸집이 조그만 모습이에요. 받침 뒤에는 {ko:이}, 모음 뒤에는 {ko:가}를 써요.",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "귀가 긴 동물이 몸집이 작다는 뜻",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "귀가 긴 동물이 몸집이 조그맣다는 뜻",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "야옹 하고 우는 동물이 사랑스럽다는 뜻",
-      "steps.s2.discover.pages.0.items.0.frame.gloss": "무엇이 몸집이 크다고 말하는 문장 틀",
-      "steps.s2.discover.pages.0.items.0.examples.horangiga-keoyo.gloss": "줄무늬 맹수가 몸집이 크다는 뜻",
-      "steps.s2.discover.pages.0.items.0.examples.gomi-keoyo.gloss": "털이 덥수룩한 들짐승이 몸집이 크다는 뜻"
+      "steps.s2.discover.pages.0.items.0.frame.gloss": "무엇이 몸집이 우람하다고 말하는 문장 틀",
+      "steps.s2.discover.pages.0.items.0.examples.horangiga-keoyo.gloss": "줄무늬 맹수가 몸집이 우람하다는 뜻",
+      "steps.s2.discover.pages.0.items.0.examples.gomi-keoyo.gloss": "털이 덥수룩한 들짐승이 몸집이 우람하다는 뜻"
     },
     "quest:stage3-nature-q3": {
       "title": "날고 뛰고 헤엄치고",
@@ -69,7 +69,7 @@
       "steps.s2.discover.pages.0.caption": "움직임 말하기",
       "steps.s2.discover.pages.1.caption": "하늘의 새, 물속의 물고기",
       "steps.s2.discover.pages.0.items.0.note": "움직임을 말하는 낱말은 맨 끝에 와요. {ko:뛰어요}는 달리거나 깡충거리는 모습이에요. 받침 뒤에는 {ko:이}, 모음 뒤에는 {ko:가}를 써요.",
-      "steps.s2.discover.pages.1.items.0.sentence.gloss": "깃털 달린 동물이 날개를 저어 하늘을 오간다는 뜻",
+      "steps.s2.discover.pages.1.items.0.sentence.gloss": "깃털 달린 동물이 하늘을 훨훨 오간다는 뜻",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 뜻",
       "steps.s2.discover.pages.0.items.0.frame.gloss": "어떤 동물이 달리는지 말하는 문장 틀",
       "steps.s2.discover.pages.0.items.0.examples.tokkiga-ttwieoyo.gloss": "귀가 긴 동물이 깡충깡충 달린다는 뜻",
@@ -104,13 +104,13 @@
       "clozePick.rounds.c2.tiles.eul.gloss": "받침 뒤에 쓰는 목적어 표시"
     },
     "minigame:s3-nature-q2-practice": {
-      "orderIt.rounds.r1.sentence.gloss": "줄무늬 맹수가 몸집이 크다는 뜻",
-      "orderIt.rounds.r2.sentence.gloss": "귀가 긴 동물이 몸집이 작다는 뜻",
+      "orderIt.rounds.r1.sentence.gloss": "줄무늬 맹수가 몸집이 우람하다는 뜻",
+      "orderIt.rounds.r2.sentence.gloss": "귀가 긴 동물이 몸집이 조그맣다는 뜻",
       "orderIt.rounds.r3.sentence.gloss": "야옹 하고 우는 동물이 사랑스럽다는 뜻",
-      "orderIt.rounds.r4.sentence.gloss": "털이 덥수룩한 들짐승이 몸집이 크다는 뜻",
-      "orderIt.rounds.r5.sentence.gloss": "깃털 달린 동물이 몸집이 작다는 뜻",
+      "orderIt.rounds.r4.sentence.gloss": "털이 덥수룩한 들짐승이 몸집이 우람하다는 뜻",
+      "orderIt.rounds.r5.sentence.gloss": "깃털 달린 동물이 몸집이 조그맣다는 뜻",
       "orderIt.rounds.r1.distractors.jagayo.gloss": "몸집이 조그맣다는 뜻",
-      "orderIt.rounds.r2.distractors.keoyo.gloss": "몸집이 크다는 뜻",
+      "orderIt.rounds.r2.distractors.keoyo.gloss": "몸집이 우람하다는 뜻",
       "orderIt.rounds.r3.distractors.mulgogiga.gloss": "지느러미가 있는 동물을 가리키는 말",
       "orderIt.rounds.r4.particle.choices.i.gloss": "받침 뒤에 쓰는 주어 표시",
       "orderIt.rounds.r4.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시",
@@ -118,26 +118,26 @@
       "orderIt.rounds.r5.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시"
     },
     "minigame:s3-nature-q2-apply": {
-      "listenPick.rounds.a1.prompt": "줄무늬 맹수가 몸집이 크다는 뜻",
-      "listenPick.rounds.a2.prompt": "귀가 긴 동물이 몸집이 작다는 뜻",
+      "listenPick.rounds.a1.prompt": "줄무늬 맹수가 몸집이 우람하다는 뜻",
+      "listenPick.rounds.a2.prompt": "귀가 긴 동물이 몸집이 조그맣다는 뜻",
       "listenPick.rounds.a3.prompt": "야옹 하고 우는 동물이 사랑스럽다는 뜻",
-      "listenPick.rounds.a4.prompt": "지느러미가 있는 동물이 몸집이 작다는 뜻"
+      "listenPick.rounds.a4.prompt": "지느러미가 있는 동물이 몸집이 조그맣다는 뜻"
     },
     "minigame:s3-nature-q2-check": {
       "orderIt.rounds.c1.sentence.gloss": "귀가 긴 동물이 사랑스럽다는 뜻",
-      "orderIt.rounds.c1.distractors.keoyo.gloss": "몸집이 크다는 뜻",
-      "orderIt.rounds.c2.sentence.gloss": "야옹 하고 우는 동물이 몸집이 작다는 뜻",
+      "orderIt.rounds.c1.distractors.keoyo.gloss": "몸집이 우람하다는 뜻",
+      "orderIt.rounds.c2.sentence.gloss": "야옹 하고 우는 동물이 몸집이 조그맣다는 뜻",
       "orderIt.rounds.c2.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시",
       "orderIt.rounds.c2.particle.choices.i.gloss": "받침 뒤에 쓰는 주어 표시"
     },
     "minigame:s3-nature-q3-practice": {
-      "orderIt.rounds.r1.sentence.gloss": "깃털 달린 동물이 날개를 저어 하늘을 오간다는 뜻",
+      "orderIt.rounds.r1.sentence.gloss": "깃털 달린 동물이 하늘을 훨훨 오간다는 뜻",
       "orderIt.rounds.r2.sentence.gloss": "귀가 긴 동물이 깡충깡충 달린다는 뜻",
       "orderIt.rounds.r3.sentence.gloss": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 뜻",
       "orderIt.rounds.r4.sentence.gloss": "줄무늬 맹수가 달린다는 뜻",
       "orderIt.rounds.r5.sentence.gloss": "털이 덥수룩한 들짐승이 물속에서 몸을 움직여 나아간다는 뜻",
       "orderIt.rounds.r1.distractors.mulgogiga.gloss": "지느러미가 있는 동물을 가리키는 말",
-      "orderIt.rounds.r2.distractors.narayo.gloss": "날개를 저어 하늘을 오간다는 뜻",
+      "orderIt.rounds.r2.distractors.narayo.gloss": "하늘을 훨훨 오간다는 뜻",
       "orderIt.rounds.r3.distractors.tokkiga.gloss": "귀가 긴 동물을 가리키는 말",
       "orderIt.rounds.r4.particle.choices.i.gloss": "받침 뒤에 쓰는 주어 표시",
       "orderIt.rounds.r4.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시",
@@ -145,7 +145,7 @@
       "orderIt.rounds.r5.particle.choices.ga.gloss": "모음 뒤에 쓰는 주어 표시"
     },
     "minigame:s3-nature-q3-apply": {
-      "listenPick.rounds.a1.prompt": "깃털 달린 동물이 날개를 저어 하늘을 오간다는 뜻",
+      "listenPick.rounds.a1.prompt": "깃털 달린 동물이 하늘을 훨훨 오간다는 뜻",
       "listenPick.rounds.a2.prompt": "지느러미가 있는 동물이 물속에서 몸을 움직여 나아간다는 뜻",
       "listenPick.rounds.a3.prompt": "귀가 긴 동물이 깡충깡충 달린다는 뜻",
       "listenPick.rounds.a4.prompt": "줄무늬 맹수가 달린다는 뜻"

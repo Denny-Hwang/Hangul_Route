@@ -155,14 +155,14 @@
     "minigame:s2-letters-v2-q3-practice": {
       "listenPick.rounds.hear-eumak.prompt": "소리로 아름다움을 나타내는 예술",
       "listenPick.rounds.hear-gungmul.prompt": "찌개나 탕에서 건더기를 뺀 부분",
-      "listenPick.rounds.hear-chaegi.prompt": "‘책’ 뒤에 조사 ‘이’가 붙은 말",
+      "listenPick.rounds.hear-chaegi.prompt": "읽을거리를 뜻하는 낱말 뒤에 조사가 붙은 말",
       "listenPick.rounds.hear-bangmulgwan.prompt": "오래된 것이나 귀한 자료를 모아 보여 주는 곳",
       "listenPick.rounds.hear-hangnyeon.prompt": "한 해 동안 배우는 과정의 단위",
       "listenPick.rounds.hear-son.prompt": "팔 끝에 있어 물건을 잡는 몸의 부분"
     },
     "minigame:s2-letters-v2-q3-apply": {
       "listenPick.rounds.spell-gungmul.prompt": "찌개나 탕에서 건더기를 뺀 부분",
-      "listenPick.rounds.spell-chaegi.prompt": "‘책’ 뒤에 조사 ‘이’가 붙은 말",
+      "listenPick.rounds.spell-chaegi.prompt": "읽을거리를 뜻하는 낱말 뒤에 조사가 붙은 말",
       "listenPick.rounds.spell-eumak.prompt": "소리로 아름다움을 나타내는 예술",
       "listenPick.rounds.spell-bangmulgwan.prompt": "오래된 것이나 귀한 자료를 모아 보여 주는 곳"
     },

@@ -183,12 +183,12 @@
     "minigame:s3-rites-v2-q3-check": {
       "listenPick.rounds.c1.prompt": "낮이 가장 짧은 절기에는 캄캄한 시간이 길다는 뜻",
       "listenPick.rounds.c2.prompt": "오늘이 겨울이 시작되는 절기라는 뜻",
-      "listenPick.rounds.c1.options.night.label": "길고 캄캄한 밤",
+      "listenPick.rounds.c1.options.night.label": "캄캄하고 긴 시간",
       "listenPick.rounds.c1.options.sun.label": "해가 쨍쨍한 날",
       "listenPick.rounds.c1.options.flower.label": "봄꽃",
       "listenPick.rounds.c2.options.winter.label": "겨울의 시작",
       "listenPick.rounds.c2.options.spring.label": "봄의 시작",
-      "listenPick.rounds.c2.options.moon.label": "둥근 달이 뜬 밤"
+      "listenPick.rounds.c2.options.moon.label": "보름달 뜬 밤"
     }
   }
 }

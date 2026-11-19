@@ -178,10 +178,10 @@
     "minigame:s3-letters-v2-q3-check": {
       "listenPick.rounds.c1.prompt": "여러 책을 모아 둔 곳에서 읽을거리를 본다는 뜻",
       "listenPick.rounds.c1.options.read.label": "글 읽기",
-      "listenPick.rounds.c1.options.write.label": "노트에 글씨 쓰기",
+      "listenPick.rounds.c1.options.write.label": "노트 필기하기",
       "listenPick.rounds.c1.options.school.label": "배우러 다니는 곳으로 가기",
       "listenPick.rounds.c2.prompt": "글씨를 쓰려고 묶은 종이에 적는다는 뜻",
-      "listenPick.rounds.c2.options.write.label": "노트에 글씨 쓰기",
+      "listenPick.rounds.c2.options.write.label": "노트 필기하기",
       "listenPick.rounds.c2.options.read.label": "글 읽기",
       "listenPick.rounds.c2.options.friend.label": "가깝게 지내는 사람 만나기"
     }

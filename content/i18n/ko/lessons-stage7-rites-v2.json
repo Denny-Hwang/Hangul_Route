@@ -75,7 +75,7 @@
       "steps.s2.discover.pages.0.caption": "누군가에게 좋은 하루를 바라는 틀이에요.",
       "steps.s2.discover.pages.1.caption": "설날, 추석 같은 큰 날을 두루 가리키는 낱말이에요.",
       "steps.s2.discover.pages.2.caption": "카드에 내 명절 이야기를 조금 적어도 좋아요.",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "설날, 추석처럼 해마다 돌아오는 큰 날",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "설날, 추석처럼 해마다 오는 큰 날",
       "steps.s2.discover.pages.0.items.0.note": "빈칸에 날을 넣어요. {ko:보내세요}는 공손한 말이라서 누구에게 써도 괜찮아요. 친한 친구에게는 {ko:잘 보내}라고도 해요.",
       "steps.s2.discover.pages.1.items.0.note": "{ko:설날}이나 {ko:추석} 같은 큰 날이에요.",
       "steps.s2.discover.pages.1.items.1.sentence.gloss": "명절을 즐겁게 지내라는 인사",
@@ -92,8 +92,8 @@
       "orderIt.rounds.r4.sentence.gloss": "설날에는 떡국을 먹는다는 말"
     },
     "minigame:s7-rites-v2-q2-apply": {
-      "typeHangul.rounds.y1.prompt": "설날, 추석처럼 해마다 돌아오는 큰 날을 뜻하는 낱말을 입력해요.",
-      "typeHangul.rounds.y1.target.gloss": "설날, 추석처럼 해마다 돌아오는 큰 날",
+      "typeHangul.rounds.y1.prompt": "설날, 추석처럼 해마다 오는 큰 날을 뜻하는 낱말을 입력해요.",
+      "typeHangul.rounds.y1.target.gloss": "설날, 추석처럼 해마다 오는 큰 날",
       "typeHangul.rounds.y2.prompt": "주말을 즐겁게 지내라는 인사를 입력해요.",
       "typeHangul.rounds.y2.target.gloss": "주말을 즐겁게 지내라는 인사",
       "typeHangul.rounds.y3.prompt": "설날을 즐겁게 지내라는 인사를 입력해요.",
@@ -108,7 +108,7 @@
       "writeFrame.rounds.w1.slots.food.bank.bap.gloss": "쌀로 지은 음식",
       "writeFrame.rounds.w2.frame.gloss": "즐겁게 지내기를 바라는 날: ___",
       "writeFrame.rounds.w2.slots.day.bank.seollal.gloss": "음력 새해 첫날 명절",
-      "writeFrame.rounds.w2.slots.day.bank.myeongjeol.gloss": "설날, 추석처럼 해마다 돌아오는 큰 날",
+      "writeFrame.rounds.w2.slots.day.bank.myeongjeol.gloss": "설날, 추석처럼 해마다 오는 큰 날",
       "writeFrame.rounds.w2.slots.day.bank.jumal.gloss": "토요일과 일요일"
     },
     "quest:stage7-rites-v2-q3": {
@@ -152,7 +152,7 @@
       "myStory.frames.f2.slots.food.bank.sagwa.gloss": "빨갛고 둥근 과일",
       "myStory.frames.f3.frame.gloss": "즐겁게 지내기를 바라는 날: ___",
       "myStory.frames.f3.slots.day.bank.seollal.gloss": "음력 새해 첫날 명절",
-      "myStory.frames.f3.slots.day.bank.myeongjeol.gloss": "설날, 추석처럼 해마다 돌아오는 큰 날",
+      "myStory.frames.f3.slots.day.bank.myeongjeol.gloss": "설날, 추석처럼 해마다 오는 큰 날",
       "myStory.frames.f3.slots.day.bank.jumal.gloss": "토요일과 일요일"
     },
     "minigame:s7-rites-v2-q3-check": {
