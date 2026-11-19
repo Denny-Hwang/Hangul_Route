@@ -18,7 +18,7 @@ The shipped `PinResetScreen` keeps its header (Back, **Reset the PIN**, Aa) and 
 | After a miss | Not quite. Here is a new number. (polite live region, `text.secondary`) | `caregiver.pin.reset.check.again` |
 
 es: Un paso más · Escribe este número con cifras. · trescientos cuarenta y siete · Número en cifras · Casi. Aquí tienes un número nuevo.
-ko: 한 단계 더 · 이 수를 숫자로 적어 주세요. · 삼백사십칠 · 숫자로 적기 · 조금 달라요. 여기 새 수가 있어요.
+ko: 한 단계 더 · 이 수를 숫자로 적어 주세요. · 삼백사십칠 · 숫자로 적기 · 번호가 달라요. 새 수를 보여 드릴게요.
 
 ## Boards
 

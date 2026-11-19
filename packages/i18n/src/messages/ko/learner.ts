@@ -93,7 +93,7 @@ export const learner = {
     privacyFallback: '브라우저에서 hangulroute.com/privacy를 열어 주세요.',
     ready: {
       heading: '준비됐어요!',
-      line: '이름과 선택한 내용은 이 기기에 저장되고, 우리 서버에도 백업돼요. 로그인은 필요 없어요.',
+      line: '이름과 선택한 내용은 이 기기에 저장되고, 저희 서버에도 백업돼요. 로그인은 필요 없어요.',
       lineDeviceOnly: '이름과 선택한 내용은 이 기기에 저장돼요.',
     },
     cta: '계속',
@@ -105,7 +105,7 @@ export const learner = {
       email: '이메일을 확인하거나 비워 두세요',
     },
     guest: {
-      title: '진도 간직하기',
+      title: '진도 저장하기',
       nameLabel: '이름',
       later: '호야와 읽기 수준은 나중에 프로필에서 고를 수 있어요.',
     },
@@ -303,10 +303,10 @@ export const learner = {
       bookRow: (title: string) => `${title} — 이 칸의 책`,
       empty: '아직 여기에는 아무것도 없어요',
       row: '이 칸의 문화 이야기',
-      rowLabel: (count: number) => `이 칸의 문화 이야기, 문화 이야기 ${count}개`,
+      rowLabel: (count: number) => `이 칸의 문화 이야기, ${count}개`,
       homePill: (stage: number, themeTitle: string) => `${stage}단계 · ${themeTitle}`,
       homePillLabel: (stage: number, stageTitle: string, themeTitle: string) =>
-        `${stage}단계 · ${themeTitle}. ${stage}단계 ${stageTitle}의 이 칸 문화 이야기`,
+        `${stage}단계 · ${themeTitle}. ${stage}단계 ${stageTitle}, 이 칸의 문화 이야기`,
     },
   },
 
@@ -338,7 +338,7 @@ export const learner = {
     },
     albums: {
       title: '앨범',
-      line: '테마마다 앨범이 있어요. 2단계부터 칸을 하나 끝내면 그 카드가 앨범에 들어가요.',
+      line: '주제마다 앨범이 있어요. 2단계부터 칸을 하나 끝내면 그 카드가 앨범에 들어가요.',
       names: ALBUM_NAMES,
       count: (n: number) => `카드 ${n}장`,
       fresh: '새로 시작',
@@ -542,7 +542,7 @@ export const learner = {
     comingSoon: '이 미니게임은 곧 열려요.',
     voiceSoon: '목소리 연습은 다음 베타에서 열려요.',
     backToQuest: { cta: '퀘스트로 돌아가기' },
-    noRounds: '판이 없어요.',
+    noRounds: '할 문제가 없어요.',
     progress: { pill: (round: number, total: number) => `${round} / ${total}` },
     skip: { cta: '건너뛰기' },
     buildLetter: {
@@ -621,7 +621,7 @@ export const learner = {
     oddOneOut: {
       heading: '다른 하나를 눌러요',
       instruction: '세 개는 같은 종류예요. 하나만 달라요.',
-      lookAgain: '다시 봐요 — 어떤 종류가 다를까요?',
+      lookAgain: '다시 봐요 — 어느 것이 다른 종류일까요?',
     },
     cultureQuiz: {
       heading: '무슨 뜻일까요?',
@@ -681,7 +681,7 @@ export const learner = {
         tabs: { blocks: '글자 덩어리', keyboard: '자판' },
         sounds: '소리',
         atTheEnd: '받침',
-        longest: '여기에 들어가는 가장 긴 이름이에요.',
+        longest: '여기에 들어갈 수 있는 가장 긴 이름이에요.',
         finishBlock: '마지막 글자를 완성해요.',
       },
     },
@@ -991,7 +991,7 @@ export const learner = {
         },
         deep: {
           label: '자세히',
-          help: '더 확실히 알려고 문제가 더 많아요. 중간에 호야가 한 번 쉬어요.',
+          help: '더 정확히 알아보려고 문제가 더 많아요. 중간에 호야와 한 번 쉬어요.',
           duration: '보통 20분 안에 끝나요.',
         },
       },
@@ -1198,7 +1198,7 @@ export const learner = {
     cell: { playing: '하는 중' },
     caption: {
       played: (n: number) => `퀘스트 ${n}개를 했어요`,
-      ready: '준비되면 언제든지',
+      ready: '준비되면 언제든 시작해요',
       explored: '지금 열린 것을 모두 둘러봤어요',
       newJoined: '새 퀘스트가 들어왔어요',
     },
@@ -1226,7 +1226,7 @@ export const learner = {
       quests: (n: number) => `끝낸 퀘스트 ${n}개에서 연습했어요`,
     },
     games: {
-      title: (skill: string) => `이 기술을 키우는 게임: ${skill}`,
+      title: (skill: string) => `이 실력을 키우는 게임: ${skill}`,
       note: '이 게임 가운데 하나가 들어 있는 퀘스트를 끝내면 여기에 포함돼요.',
       matchSound: '소리를 듣고 글자 찾기',
       tapRespond: '듣고 대답 누르기',
@@ -1457,7 +1457,7 @@ export const learner = {
     preview: { line: '이 레슨은 아직 안 열렸어요. 무엇을 배우는지는 볼 수 있어요.' },
     ask: { family: '어른에게 물어봐요', class: '선생님이나 어른에게 물어봐요', self: '여는 방법 보기' },
     back: { cta: '열린 레슨으로 돌아가기' },
-    freeEnd: { title: '첫 레슨들을 다 끝냈어요!' },
+    freeEnd: { title: '첫 레슨을 모두 끝냈어요!' },
     openForYou: '지금 열린 퀘스트를 모두 했어요.',
     practiceWords: { cta: '낱말 연습하기' },
     readStory: { cta: '이야기 읽기' },
@@ -1550,7 +1550,7 @@ export const learner = {
       preview: {
         lessonsAndStories: (stage: number, week: number) => `${stage}단계는 ${week}주 차쯤 끝나요. 그다음은 문화 이야기예요.`,
         cutShort: (weeks: number) => `레슨 앞부분이 ${weeks}주에 들어가요. 주를 늘리면 다 끝낼 수 있어요.`,
-        freePractice: (weeks: number) => `지금 준비된 레슨은 ${weeks}주쯤이에요. 나머지는 자유 연습이에요.`,
+        freePractice: (weeks: number) => `지금 준비된 레슨은 ${weeks}주 분량쯤이에요. 나머지는 자유 연습이에요.`,
         lessonsFill: (weeks: number) => `${weeks}주 내내 레슨이 있어요.`,
         storiesAndWords: (stories: number) => (stories === 0 ? '낱말 주제와 자유 연습이에요.' : `문화 이야기 ${stories}개와 낱말 주제예요.`),
         moreComing: '레슨이 더 나올 거예요.',
@@ -1623,7 +1623,7 @@ export const learner = {
         contentRunsOut: (week: number) => `새 레슨이 곧 나와요. ${week}주 차부터는 자유 연습과 낱말 주제를 해요.`,
         moreComing: '레슨이 더 나올 거예요.',
         didNotFit: (count: number) => `레슨과 이야기 ${count}개가 들어가지 않았어요. 주나 요일을 하나 늘려 봐요.`,
-        tooShort: (count: number) => `레슨 ${count}개는 하루보다 오래 걸릴 수 있어요.`,
+        tooShort: (count: number) => `레슨 ${count}개는 하루 학습 시간보다 오래 걸릴 수 있어요.`,
         alreadyKnown: (count: number) => `이미 아는 레슨 ${count}개는 계획에 넣지 않았어요.`,
       },
       empty: '이 시작점에는 아직 준비된 게 없어요. 조금 바꿔서 다시 해 봐요.',
@@ -1819,7 +1819,7 @@ export const learner = {
         practice: '집에서 Hangul Route로 연습해요',
         codeTitle: '이 코드로 들어와요',
         howToJoin: (cta: string) => `Hangul Route에서 ‘${cta}’ 버튼을 누르고 이 코드를 입력해요.`,
-        exitHint: '마치려면 마치기를 고르세요.',
+        exitHint: '마치려면 마치기를 눌러요.',
       },
       sentence: { label: '문장' },
       pattern: { label: '문장 틀' },
@@ -1949,7 +1949,7 @@ export const learner = {
   classUpdate: {
     moved: (name: string, cls: string) => `${name}, 새 반으로 옮겼어요: ${cls}`,
     ok: { cta: '확인' },
-    scopeChild: '어른에게 반에 관한 안내가 있어요.',
+    scopeChild: '어른이 알려 줄 반 안내가 있어요.',
     scopeSelf: '반에 관한 안내가 있어요.',
     open: { cta: '열기' },
   },
@@ -2059,22 +2059,22 @@ export const learner = {
     welcome: {
       waiting: '첫 퀘스트가 기다리고 있어요.',
       resume: '내 퀘스트로 돌아가기',
-      saveTitle: '이름을 넣으면 첫 퀘스트를 간직할 수 있어요.',
+      saveTitle: '이름을 넣으면 첫 퀘스트를 저장할 수 있어요.',
       save: '내 이름 넣기',
       keeps: '첫 퀘스트에서 한 것은 새로 만드는 프로필로 이어져요.',
     },
-    memoryOnly: '이 브라우저는 창을 닫으면 퀘스트를 간직하지 못해요. 끝나고 이름을 넣으면 간직할 수 있어요.',
+    memoryOnly: '이 브라우저에서는 창을 닫으면 퀘스트가 사라져요. 끝나고 이름을 넣으면 저장할 수 있어요.',
     // No particle attached to a variable: {name} is followed by a comma (section 16).
     results: {
       line: '이름을 넣으면 호야가 카드와 별을 간직해 줘요.',
       lineNoCard: '이름을 넣으면 호야가 첫 퀘스트를 간직해 줘요.',
-      keep: '내 진도 간직하기',
+      keep: '내 진도 저장하기',
       notNow: '나중에',
       askGrownUp: '이 기기의 어른이 PIN으로 추가해 줘요.',
       askOwner: '이 기기를 쓰는 사람이 추가해 줄 수 있어요.',
     },
     later: {
-      title: (days: number) => `호야가 이 브라우저에 퀘스트를 간직할 수 있어요. 퀘스트를 하지 않으면 최대 ${days}일까지예요.`,
+      title: (days: number) => `퀘스트를 하지 않아도 호야가 이 브라우저에 최대 ${days}일 동안 보관해 줘요.`,
       line: '아직 백업되지 않았어요. 이름을 넣으면 백업되고 계속할 수 있어요.',
       save: '내 이름 넣기',
       close: '닫기',

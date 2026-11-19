@@ -8,8 +8,8 @@
       "hoyaIntro": "한국의 국립공원은 대부분 산에 있어요. 산길 표지판을 읽어 봐요!",
       "culture.n1.text": "한국의 국립공원은 나라가 지정해 직접 관리하는 보호 지역으로, 자연과 경치를 지키고 사람들에게 쉴 곳을 마련해 줘요. 대부분은 산에 있는 국립공원이에요.",
       "culture.n2.text": "등산은 운동이나 놀이, 탐험을 하려고 산에 오르는 일이에요. 한국에서는 1960년대부터 많은 사람이 즐기는 여가 활동이 되었고, 지금은 국립공원을 찾는 사람이 해마다 수천만 명에 이르러요.",
-      "culture.n3.text": "한국 국립공원의 탐방로 안내에는 구간 길이와 편도로 걸리는 시간이 나와 있어요. 국립공원은 거리와 걷는 시간을 생각해서 탐방로마다 입산 시간을 정해 두어요.",
-      "culture.n4.text": "적은 시간을 말할 때는 고유어 수로 세고, '시간' 앞에서는 한, 두, 세 꼴로 바뀌어요(하나, 둘, 셋과 비교해 보세요)."
+      "culture.n3.text": "한국 국립공원의 탐방로 안내에는 구간 길이와 편도로 걸리는 시간이 나와 있어요. 국립공원은 거리와 걷는 시간을 생각해서 탐방로마다 입산 시간을 정해 둬요.",
+      "culture.n4.text": "몇 시간처럼 적은 시간을 셀 때는 고유어 수를 쓰고, '시간' 앞에서는 하나, 둘, 셋이 한, 두, 세로 바뀌어요."
     },
     "quest:stage6-nature-q1": {
       "title": "산길 표지판",
@@ -94,10 +94,10 @@
       "realiaRead.rounds.r1.options.ipgu.text.gloss": "들어가는 곳",
       "realiaRead.rounds.r2.options.chulgu.text.gloss": "나가는 곳",
       "realiaRead.rounds.r2.options.hwajangsil.text.gloss": "볼일 보는 곳",
-      "realiaRead.rounds.r3.options.bada.text.gloss": "넓고 짠 물",
+      "realiaRead.rounds.r3.options.bada.text.gloss": "짠물이 넓게 펼쳐진 곳",
       "realiaRead.rounds.r3.options.jeongsang.text.gloss": "산의 가장 높은 곳",
       "realiaRead.rounds.r3.options.ipgu.text.gloss": "들어가는 곳",
-      "realiaRead.rounds.r4.options.jip.text.gloss": "사는 곳",
+      "realiaRead.rounds.r4.options.jip.text.gloss": "가족과 함께 사는 곳",
       "realiaRead.rounds.r4.options.hwajangsil.text.gloss": "볼일 보는 곳",
       "realiaRead.rounds.r4.options.chulgu.text.gloss": "나가는 곳",
       "realiaRead.rounds.r2.options.jeongsang.text.gloss": "산의 가장 높은 곳"
@@ -201,11 +201,11 @@
       "realiaRead.rounds.r4.options.oreunjjok.text.gloss": "오른손이 있는 방향"
     },
     "minigame:s6-nature-q3-apply": {
-      "typeHangul.rounds.t1.prompt": "때의 길이를 60분씩 세는 단위를 쳐 봐요.",
+      "typeHangul.rounds.t1.prompt": "60분을 하나로 묶어 세는 단위를 쳐 봐요.",
       "typeHangul.rounds.t2.prompt": "60분 동안이라는 말을 쳐 봐요.",
       "typeHangul.rounds.t3.prompt": "120분 동안이라는 말을 쳐 봐요.",
-      "typeHangul.rounds.t4.prompt": "꼭대기로 가는 방향, 오른손이 있는 방향을 뜻하는 낱말을 쳐 봐요.",
-      "typeHangul.rounds.t1.target.gloss": "때의 길이를 60분씩 세는 단위",
+      "typeHangul.rounds.t4.prompt": "꼭대기로 가는 방향인 오른손 쪽을 뜻하는 낱말을 쳐 봐요.",
+      "typeHangul.rounds.t1.target.gloss": "60분을 하나로 묶어 세는 단위",
       "typeHangul.rounds.t2.target.gloss": "60분 동안",
       "typeHangul.rounds.t3.target.gloss": "120분 동안",
       "typeHangul.rounds.t4.target.gloss": "오른손이 있는 방향"

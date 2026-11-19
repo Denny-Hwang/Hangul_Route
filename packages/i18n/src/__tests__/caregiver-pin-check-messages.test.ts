@@ -25,7 +25,7 @@ describe('caregiver.pin.reset.check', () => {
     const es = getMessages('es').caregiver.pin.reset.check;
     const ko = getMessages('ko').caregiver.pin.reset.check;
     expect([es.heading, es.prompt, es.fieldLabel, es.again]).toEqual(['Un paso más', 'Escribe este número con cifras.', 'Número en cifras', 'Casi. Aquí tienes un número nuevo.']);
-    expect([ko.heading, ko.prompt, ko.fieldLabel, ko.again]).toEqual(['한 단계 더', '이 수를 숫자로 적어 주세요.', '숫자로 적기', '조금 달라요. 여기 새 수가 있어요.']);
+    expect([ko.heading, ko.prompt, ko.fieldLabel, ko.again]).toEqual(['한 단계 더', '이 수를 숫자로 적어 주세요.', '숫자로 적기', '번호가 달라요. 새 수를 보여 드릴게요.']);
     expect(es.words(347)).toBe('trescientos cuarenta y siete');
     expect(ko.words(347)).toBe('삼백사십칠');
     for (const locale of LOCALES) {

@@ -39,7 +39,7 @@ export const a11y = {
   }) => {
     const where = `${c.stage}단계 ${c.stageTitle}, ${c.themeTitle}`;
     const count = `문화 이야기 ${c.stories}개`;
-    const stories = c.stories === 0 ? '' : c.finished > 0 ? `${count}, ${c.finished}개 다 읽음` : count;
+    const stories = c.stories === 0 ? '' : c.finished > 0 ? `${count}, ${c.finished}개 읽음` : count;
     const holds = c.kind === 'book' ? '이야기책' : '레슨';
     const head =
       c.kind === 'placeholder'
@@ -47,7 +47,7 @@ export const a11y = {
         : c.kind === 'stories-only'
           ? `${where}: ${stories}`
           : `${where}: ${holds}${c.complete ? ', 끝냄' : ''}${stories === '' ? '' : `, ${stories}`}`;
-    const marks = `${c.start ? ' 여기에서 시작했어요.' : ''}${c.placedOut ? ' 여기는 건너뛰어도 되고, 계속 열려 있어서 해 볼 수 있어요.' : ''}`;
+    const marks = `${c.start ? ' 여기에서 시작했어요.' : ''}${c.placedOut ? ' 여기는 건너뛰어도 돼요. 그래도 언제든 해 볼 수 있어요.' : ''}`;
     return marks === '' ? head : `${head}.${marks}`;
   },
   episodeCard: (title: string) => `카드: ${title}`,
@@ -249,7 +249,7 @@ export const a11y = {
         .join(' '),
     labelled: (label: string, line: string) => `${label}: ${line}`,
     goalPips: {
-      none: '준비되면 언제든지',
+      none: '준비되면 언제든 시작해요',
       some: '끝낸 퀘스트가 있고, 할 수 있는 퀘스트가 더 있어요',
       someDone: '끝낸 퀘스트가 있어요',
       all: '여기 있는 퀘스트를 모두 끝냈어요',
@@ -303,7 +303,7 @@ export const a11y = {
     loading: '리포트를 불러오는 중',
   },
   notes: {
-    card: (sender: string, preset: string) => `새 쪽지, 보낸 사람: ${sender}. ${preset} 읽기.`,
+    card: (sender: string, preset: string) => `새 쪽지, 보낸 사람: ${sender}. ${preset} 눌러서 읽기.`,
     cardMany: (n: number, sender: string) => `새 쪽지 ${n}개. 가장 최근에 보낸 사람: ${sender}. 읽기.`,
     row: (sender: string, preset: string, date: string, isNew: boolean) =>
       `${isNew ? '새 쪽지. ' : ''}보낸 사람: ${sender}, ${date}. ${preset}`,
@@ -313,7 +313,7 @@ export const a11y = {
   },
   shell: {
     redirecting: '홈으로 이동하고 있어요…',
-    personaSwitch: '가족과 선생님 전환하기',
+    personaSwitch: '가족 화면과 선생님 화면 바꾸기',
   },
   access: {
     next: '다음',
@@ -384,7 +384,7 @@ export const a11y = {
   },
   route: {
     blend: {
-      fromClassMet: '반에서. 수업에서 배웠어요.',
+      fromClassMet: '반에서. 수업 시간에 배운 거예요.',
       practiceDay: (weekday: string) => `연습하는 날, ${weekday}`,
       refresh: '되짚기: 수업에서 배운 것을 다시 봐요',
     },
