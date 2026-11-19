@@ -1,4 +1,5 @@
 import { plural } from '../../plural';
+import { numberInWords } from '../../number-words';
 import type { DeepPartial, Messages } from '../../types';
 
 /**
@@ -93,6 +94,13 @@ export const caregiver = {
         wrongCode: 'Ese no es el código guardado en este dispositivo. Revísalo y reintenta.',
         noCode: 'No hay un código de rescate guardado en este dispositivo. Usa la espera de 24 horas.',
         badFormat: 'Escribe cada palabra y el número, como TIGER-MOON-RIVER-APPLE-482139 (códigos anteriores: TIGER-MOON-4821).',
+      },
+      check: {
+        heading: 'Un paso más',
+        prompt: 'Escribe este número con cifras.',
+        words: (n: number) => numberInWords('es', n),
+        fieldLabel: 'Número en cifras',
+        again: 'Casi. Aquí tienes un número nuevo.',
       },
       signIn: {
         heading: 'Entra a la cuenta',

@@ -172,8 +172,8 @@ describe('stage copy (F-CURR-002 OD-12)', () => {
     expect(es['stage:stage6']?.oneLiner).toBe('Lleva el coreano al mundo: menús, letreros y mensajes cortos.');
     expect(es['stage:stage7']?.anchorSkill).toBe('Escribe una presentación personal corta');
     expect(ko['stage:stage4']?.oneLiner).toBe('짧은 일상 대화를 읽고 답해요.');
-    expect(ko['stage:stage5']?.oneLiner).toBe('호야와 함께 문화 이야기와 짧은 이야기를 읽어요.');
-    expect(ko['stage:stage6']?.oneLiner).toBe('메뉴, 표지판, 짧은 메시지까지, 한국어를 밖에서 써 봐요.');
+    expect(ko['stage:stage5']?.oneLiner).toBe('호야와 함께 문화유산 이야기와 짧은 이야기를 읽어요.');
+    expect(ko['stage:stage6']?.oneLiner).toBe('메뉴, 표지판, 짧은 메시지로 한국어를 실제로 써 봐요.');
     expect(ko['stage:stage7']?.anchorSkill).toBe('짧은 자기소개 쓰기');
   });
 

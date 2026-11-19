@@ -28,7 +28,7 @@
       "steps.s2.discover.pages.2.caption": "이제 읽을 수 있는 낱말",
       "steps.s2.discover.pages.0.items.0.example.gloss": "사람과 함께 살며 멍멍 짖는 동물",
       "steps.s2.discover.pages.0.items.1.example.gloss": "단단한 껍데기를 쓰고 옆으로 걷는 바다 동물",
-      "steps.s2.discover.pages.1.items.0.example.gloss": "누군가에게 들려주는 말이나 일",
+      "steps.s2.discover.pages.1.items.0.example.gloss": "다른 사람과 주고받는 말이나 이야기",
       "steps.s2.discover.pages.1.items.1.example.gloss": "시간을 알려 주는 물건",
       "steps.s2.discover.pages.2.items.0.word.gloss": "가락에 맞춰 부르는 것",
       "steps.s2.discover.pages.2.items.1.word.gloss": "날개가 있어 하늘을 나는 동물"
@@ -129,7 +129,7 @@
     "minigame:s2-letters-q1-apply": {
       "cardPairs.gae.gloss": "사람과 함께 살며 멍멍 짖는 동물",
       "cardPairs.ge.gloss": "단단한 껍데기를 쓰고 옆으로 걷는 바다 동물",
-      "cardPairs.yaegi.gloss": "누군가에게 들려주는 말이나 일",
+      "cardPairs.yaegi.gloss": "다른 사람과 주고받는 말이나 이야기",
       "cardPairs.sigye.gloss": "시간을 알려 주는 물건"
     },
     "minigame:s2-letters-q1-check": {
@@ -219,7 +219,7 @@
       "picWord.boards.0.pairs.hae.word.gloss": "낮에 하늘에서 밝게 빛나는 것",
       "picWord.boards.0.pairs.namu.word.gloss": "줄기와 가지, 잎이 있는 키 큰 식물",
       "picWord.boards.1.pairs.norae.word.gloss": "가락에 맞춰 부르는 것",
-      "picWord.boards.1.pairs.bae.word.gloss": "물 위로 사람과 짐을 나르는 것",
+      "picWord.boards.1.pairs.bae.word.gloss": "물 위로 사람이나 짐을 실어 나르는 것",
       "picWord.boards.1.pairs.byeol.word.gloss": "밤하늘에 반짝이는 작은 빛",
       "picWord.boards.2.pairs.mujigae.word.gloss": "비 갠 뒤 하늘에 뜨는 여러 빛깔 띠",
       "picWord.boards.2.pairs.jiugae.word.gloss": "연필로 쓴 글씨를 문질러 없애는 물건",
@@ -306,7 +306,7 @@
       "picWord.boards.2.pairs.ramyeon.word.gloss": "꼬불꼬불한 국수",
       "picWord.boards.3.pairs.but.word.gloss": "털에 먹이나 물감을 묻혀 쓰는 도구",
       "picWord.boards.3.pairs.chaek.word.gloss": "글과 그림을 묶어 만든 읽을거리",
-      "picWord.boards.3.pairs.yeonpil.word.gloss": "나무 속 심으로 글씨를 쓰는 도구",
+      "picWord.boards.3.pairs.yeonpil.word.gloss": "나무 속에 든 심으로 글씨를 쓰는 도구",
       "picWord.boards.4.pairs.kkot.word.gloss": "식물에 피어나는 빛깔이 고운 부분",
       "picWord.boards.4.pairs.ttalgi.word.gloss": "겉에 작은 씨가 박힌 빨간 열매",
       "picWord.boards.4.pairs.sagwa.word.gloss": "아삭하고 둥근 과일",

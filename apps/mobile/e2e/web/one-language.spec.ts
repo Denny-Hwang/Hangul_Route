@@ -416,6 +416,23 @@ for (const viewport of [
   });
 }
 
+// [FN] At 320 wide with the Largest text the greeting was squeezed beside Hoya, Aa and Profile until "Dani!" broke in the
+// middle of the word (seen in the FN-8 screenshots). The trail now wraps under the greeting whenever the row is narrow,
+// as it already did when Switch was shown (design/screens/profiles/README.md D7): the greeting keeps 8rem.
+test.describe('text size Largest at 320 x 568', () => {
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  test('the Home greeting keeps its width: Aa and Profile wrap under it instead of splitting its words', async ({ page }) => {
+    await learnerAtLargest(page);
+    const greeting = page.getByText('Hi, Dani!');
+    const box = await greeting.boundingBox();
+    expect(box?.width ?? 0, 'the greeting is at least 8rem wide').toBeGreaterThanOrEqual(128);
+    const profile = await page.getByRole('button', { name: /profile/i }).first().boundingBox();
+    expect((profile?.y ?? 0) > (box?.y ?? 0), 'Profile wrapped under the greeting').toBe(true);
+    await expectNoSidewaysScroll(page, 'Home at 320 with the Largest text');
+  });
+});
+
 test.describe('text size Largest at 1180 x 820', () => {
   test.use({ viewport: { width: 1180, height: 820 } });
 

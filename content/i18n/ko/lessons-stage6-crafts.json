@@ -79,7 +79,7 @@
       "steps.s2.discover.pages.0.items.1.sentence.gloss": "돈이나 물건을 건네며 하는 말"
     },
     "minigame:s6-crafts-q1-practice": {
-      "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 바람을 일으키는 물건, 전통 종이, 한 묶음의 과일",
+      "realiaRead.realia.alt": "닷새마다 서는 장터 가게의 가격표 세 장: 바람을 부치는 물건, 전통 종이, 과일 한 묶음",
       "realiaRead.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
       "realiaRead.realia.entries.hanji.text.gloss": "한국 전통 방식으로 만든 종이",
       "realiaRead.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
@@ -112,7 +112,7 @@
       "typeHangul.rounds.t3.target.gloss": "닷새마다 서는 시장"
     },
     "minigame:s6-crafts-q1-check": {
-      "clozePick.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 바람을 일으키는 물건, 전통 종이, 한 묶음의 과일",
+      "clozePick.realia.alt": "닷새마다 서는 장터 가게의 가격표 세 장: 바람을 부치는 물건, 전통 종이, 과일 한 묶음",
       "clozePick.rounds.c1.sentence.gloss": "손으로 부쳐 바람을 일으키는 물건은 ___원이에요.",
       "clozePick.rounds.c1.tiles.ocheon.gloss": "5,000",
       "clozePick.rounds.c1.tiles.cheon.gloss": "1,000",
@@ -129,14 +129,14 @@
       "clozePick.realia.entries.apple.value.gloss": "2,000원"
     },
     "minigame:s6-crafts-q2-practice": {
-      "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 과일, 바람을 일으키는 물건, 전통 종이와 그 값",
+      "realiaRead.realia.alt": "닷새마다 서는 장터 가게의 가격표 세 장: 과일, 바람을 부치는 물건, 전통 종이와 각각의 값",
       "realiaRead.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
       "realiaRead.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
       "realiaRead.realia.entries.hanji.text.gloss": "한국 전통 방식으로 만든 종이",
       "realiaRead.realia.entries.apple.value.gloss": "3개에 2,000원",
       "realiaRead.realia.entries.fan.value.gloss": "5,000원",
       "realiaRead.realia.entries.hanji.value.gloss": "1,000원",
-      "realiaRead.rounds.r1.question": "가격표를 보면 과일을 몇 개씩 묶어 팔아요?",
+      "realiaRead.rounds.r1.question": "가격표를 보면 과일을 몇 개씩 묶어서 팔아요?",
       "realiaRead.rounds.r2.question": "이것은 얼마일까요?",
       "realiaRead.rounds.r3.question": "이것은 얼마일까요?",
       "realiaRead.rounds.r4.question": "가격표를 보면 과일은 얼마예요?",
@@ -153,7 +153,7 @@
       "typeHangul.rounds.t3.target.gloss": "값을 묻는 말"
     },
     "minigame:s6-crafts-q2-check": {
-      "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표 세 장: 과일, 바람을 일으키는 물건, 전통 종이와 그 값",
+      "realiaRead.realia.alt": "닷새마다 서는 장터 가게의 가격표 세 장: 과일, 바람을 부치는 물건, 전통 종이와 각각의 값",
       "realiaRead.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
       "realiaRead.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
       "realiaRead.realia.entries.hanji.text.gloss": "한국 전통 방식으로 만든 종이",
@@ -170,7 +170,7 @@
       "realiaRead.rounds.c2.options.c.text.gloss": "한국 전통 방식으로 만든 종이"
     },
     "minigame:s6-crafts-q3-practice": {
-      "realiaRead.realia.alt": "닷새마다 서는 장의 가게 가격표: 과일, 과일 하나를 더 준다는 표, 바람을 일으키는 물건",
+      "realiaRead.realia.alt": "닷새마다 서는 장터 가게의 가격표: 과일, 과일 하나를 더 준다는 표, 바람을 부치는 물건",
       "realiaRead.realia.entries.apple.text.gloss": "빨갛고 둥근 과일",
       "realiaRead.realia.entries.extra.text.gloss": "산 것에 더해 공짜로 받는 것",
       "realiaRead.realia.entries.fan.text.gloss": "손으로 부쳐 바람을 일으키는 물건",
@@ -218,7 +218,7 @@
       "rolePlay.scene.nodes.done.closing": "과일을 사고 덤을 주신 분께 고맙다고 말했어요."
     },
     "minigame:s6-crafts-q3-check": {
-      "clozePick.realia.alt": "닷새마다 서는 장의 가게 가격표: 과일, 과일 하나를 더 준다는 표, 바람을 일으키는 물건",
+      "clozePick.realia.alt": "닷새마다 서는 장터 가게의 가격표: 과일, 과일 하나를 더 준다는 표, 바람을 부치는 물건",
       "clozePick.rounds.c1.sentence.gloss": "산 것에 더해 공짜로 받는 것은 ___예요.",
       "clozePick.rounds.c1.tiles.sagwa-se-gae.gloss": "빨갛고 둥근 과일 셋",
       "clozePick.rounds.c1.tiles.sagwa-han-gae.gloss": "빨갛고 둥근 과일 하나",

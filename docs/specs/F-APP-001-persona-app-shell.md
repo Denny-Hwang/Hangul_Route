@@ -118,6 +118,8 @@ Options measured against the owner request, child safety, cost and production ri
 
 Consequences accepted: the learner Worker's build also runs `next build` (about 1-2 minutes); a console change redeploys the learner Worker but does **not** change `sw.js` (console files are not precached), so learners see no update banner for console-only changes.
 
+**[FN]** AMENDMENTS-FINISH-2026-11 row FN-3: the learner Worker is no longer assets-only. Workers static assets cannot scope the single-page fallback by path and a `_redirects` rule cannot answer 404, so `wrangler.toml` gains `main = "scripts/app-host/worker.mjs"` with the assets bound as `ASSETS`. The assets layer still answers every file and every navigation first (free, `assets_navigation_prefers_asset_serving`); the script runs only for a miss that is not a navigation: a missing `/_expo/static/js/` chunk gets 404 (`no-store`), anything else goes back to the assets and their fallback as before. Reason 2 above is narrowed accordingly; no dashboard routing is added, and console chunks (`/_next/`) are unchanged (they still revalidate, section 3.3 A-3).
+
 ### 3.2 Hosts and the route map
 
 **hangulroute.com (site role)**: landing, persona pages, About, Privacy, Terms, waitlist (F-SITE-002 owns the content; this spec's `site-redirects.mjs` forwards every old grown-up URL once owner step S-3b sets `CONSOLE_ORIGIN`, section 3.13). No sign-in, no billing, no grown-up page after S-3b.

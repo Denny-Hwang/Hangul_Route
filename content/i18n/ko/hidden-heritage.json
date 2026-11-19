@@ -13,7 +13,7 @@
       "round.others.sutgarak.word.gloss": "밥이나 국을 떠먹는 기구",
       "round.others.hangari.word.gloss": "흙으로 빚어 구운 배가 불룩한 그릇",
       "round.others.baguni.word.gloss": "가는 나무 줄기를 엮어 만든 그릇",
-      "note.subject": "장날은 조선 풍속화의 소재 가운데 하나예요. 파는 음식과, 밥과 국과 반찬을 차린 평소의 밥상이 있어요.",
+      "note.subject": "장날은 조선 풍속화의 소재 가운데 하나예요. 장에서 파는 음식, 그리고 밥, 국, 반찬을 차린 평소 밥상이 보여요.",
       "note.facts.f1.claim": "국립중앙박물관에 있는 김홍도의 풍속화첩 《단원 풍속도첩》은 일과 놀이 등 생활의 여러 모습을 보여 줘요. 스물다섯 번째 그림은 장터로 가는 길을 그린 〈장터길〉이에요.",
       "note.facts.f2.claim": "반찬은 밥에 곁들여 먹는 음식을 통틀어 이르는 말이에요."
     },
@@ -28,12 +28,12 @@
       "round.others.kkot.word.gloss": "식물에 피어나는 빛깔이 고운 부분",
       "note.subject": "옛날의 사설 학교인 서당은 조선 풍속화의 소재 가운데 하나예요. 방에는 낮은 책상, 실로 묶은 책, 붓이 있어요.",
       "note.facts.f1.claim": "국립중앙박물관의 조선 풍속화첩 《단원 풍속도첩》은 일과 놀이 등 생활의 여러 모습을 보여 줘요. 첫 번째 그림은 〈서당〉이에요.",
-      "note.facts.f2.claim": "서당은 예전에 한문을 사사로이 가르치던 곳이에요.",
+      "note.facts.f2.claim": "서당은 예전에 개인이 한문을 가르치던 곳이에요.",
       "note.facts.f3.claim": "붓은 주로 가는 대나무나 나무 자루 끝에 짐승의 털을 꽂아 만들고, 먹이나 물감을 찍어 써요."
     },
     "scene:seollal-room": {
-      "art.alt": "하늘이 보이는 창문이 열려 있는, 설날 아침의 한옥 방.",
-      "round.alt": "하늘이 보이는 창문이 열려 있는, 설날 아침의 한옥 방.",
+      "art.alt": "창문 너머로 하늘이 보이는 설날 아침의 한옥 방.",
+      "round.alt": "창문 너머로 하늘이 보이는 설날 아침의 한옥 방.",
       "round.targets.hanbok.word.gloss": "한국의 전통 옷",
       "round.targets.tteokguk.word.gloss": "설날에 먹는, 떡을 넣은 국",
       "round.targets.yeon.word.gloss": "바람에 날리는 종이 장난감",

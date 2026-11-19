@@ -14,7 +14,7 @@
     },
     "jamo:digeut": {
       "soundHint": "‘달’의 첫소리. d와 t 사이의 부드러운 소리예요.",
-      "exampleWord.gloss": "밤하늘에 뜨는 둥근 빛",
+      "exampleWord.gloss": "밤하늘에 둥글게 떠서 빛나는 것",
       "gloss": "d 소리: d와 t 사이의 부드러운 소리예요."
     },
     "jamo:rieul": {
@@ -104,7 +104,7 @@
     },
     "jamo:u": {
       "soundHint": "‘우유’의 우 소리. 입술을 앞으로 쭉 내밀어요.",
-      "exampleWord.gloss": "소에게서 얻는 하얀 마실 것",
+      "exampleWord.gloss": "소에게서 얻는 하얀 음료",
       "gloss": "u 소리: 입술을 앞으로 쭉 내미는 소리예요."
     },
     "jamo:yu": {

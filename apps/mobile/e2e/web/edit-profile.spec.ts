@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, openForGrownUps, readStored, seedStored, typeDigits, unlockWithPin, waitForSaved } from './helpers';
+import { onboardChild, onboardSelf, openForGrownUps, passResetCheck, readStored, seedStored, typeDigits, unlockWithPin, waitForSaved } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -251,6 +251,8 @@ test.describe('edge cases (375x667)', () => {
     await page.getByRole('button', { name: 'Edit Mina (PIN required)', exact: true }).click();
     await page.getByRole('button', { name: 'Forgot PIN?' }).click();
     await page.getByRole('button', { name: 'Set a new PIN' }).click();
+    // [FN] FN-1: the check before a new PIN.
+    await passResetCheck(page);
     await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
     for (const round of [0, 1]) {
       await typeDigits(page, '2468');

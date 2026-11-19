@@ -7,7 +7,8 @@ import type { MinigameHost } from '../host';
 
 /**
  * F-CURR-002 §7.1 F8 and §10 (row CM-38): My Story's chunk cannot load (offline before the precache filled). The step
- * is never a dead end: it plays the switch-off fallback, Write Frame on the first frame, from the start bundle.
+ * is never a dead end: it plays the switch-off fallback, Write Frame on the first frame, from the writing chunk
+ * ([FN] AMENDMENTS-FINISH-2026-11 FN-7; here already loaded, as the precache has it after the first visit).
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -33,6 +34,7 @@ afterEach(async () => {
 describe('My Story when its chunk cannot load (row CM-38)', () => {
   it('plays Write Frame on the first frame instead of a crash screen', async () => {
     const { MyStoryRoute } = await import('../my-story-entry');
+    await (await import('../writing-entry')).writingDoor.load();
     const onFallback = vi.fn();
     await act(async () => {
       mounted = TestRenderer.create(<MyStoryRoute scope={scope} host={host} onFallback={onFallback} />, {

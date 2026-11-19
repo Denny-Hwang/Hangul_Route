@@ -196,6 +196,19 @@ test.describe('app host: the learner app and the grown-up console (F-APP-001 A-3
     }
   });
 
+  test('the app chunks are cached for a year and a missing one is 404, never the shell (AMENDMENTS-FINISH-2026-11 FN-3)', async ({ request }) => {
+    const start = walk(join(dist, '_expo', 'static', 'js', 'web')).find((rel) => /\/index-[0-9a-f]{32}\.js$/.test(rel));
+    expect(start, 'the start bundle in dist').toBeDefined();
+    const real = await request.get(`/${start}`);
+    expect(real.status()).toBe(200);
+    expect(real.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
+
+    const miss = await request.get('/_expo/static/js/web/index-ffffffffffffffffffffffffffffffff.js');
+    expect(miss.status()).toBe(404);
+    expect(miss.headers()['content-type'] ?? '').not.toContain('text/html');
+    expect(miss.headers()['cache-control']).toBe('no-store');
+  });
+
   test('an unknown grown-up path bounces to its persona entry, a console page (A-6, section 3.4)', async ({ page }) => {
     await page.goto('/teach/zzz');
     // The /teach router (A-4b) sends a signed-out visitor on to /signin, a console page too.

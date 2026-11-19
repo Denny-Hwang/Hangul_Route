@@ -1,0 +1,9 @@
+/* [FN] AMENDMENTS-FINISH-2026-11 FN-1: the check card of PinReset (wireframe onboarding/all-ages-onboarding.md box G2).
+   Linked after profiles.css; tokens only, as custom properties named after them. */
+.rn-card .stack.check-stack { align-items: stretch; }
+/* The number in words: the thing to read, the largest line of the card (size.prompt; whole words wrap, never split at 320 with 200 % text). */
+.check-words { font-size: var(--size-prompt); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--colors-text-primary); text-align: center; overflow-wrap: break-word; }
+/* The shipped Rescue Code field's look (surface.sunken, border.shape, radii.lg), number keyboard, digits centred. */
+.check-input { min-height: var(--touch-child); padding: var(--spacing-sm) var(--spacing-md); border: var(--border-width-base) solid var(--colors-border-shape); border-radius: var(--radii-lg); background: var(--colors-surface-sunken); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-bold); text-align: center; width: 100%; box-sizing: border-box; }
+/* The calm line after a miss: secondary text, never a warning or danger colour. Empty until a miss. */
+.check-line { min-height: var(--size-bodySm); color: var(--colors-text-secondary); font-size: var(--size-bodySm); text-align: center; overflow-wrap: anywhere; }

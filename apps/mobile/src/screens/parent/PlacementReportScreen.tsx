@@ -23,7 +23,6 @@ import type { ComponentProps, ReactElement } from 'react';
 import { Modal, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { episodesWithVolumes, jamoAll, questsAll, stages } from '../../content';
-import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest, localizeStage } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
@@ -34,6 +33,7 @@ import {
   bankLookup,
   reportPage,
   symbolText,
+  type BankLookup,
   type ReportPageView,
   type StartChoice,
   type StrandExample,
@@ -47,6 +47,9 @@ import { useProgressStore } from '../../store/progress-store';
 import { useAccessTier } from '../../store/tier-store';
 import { LinkButton } from '../../components/LinkButton';
 import { RadioTile } from '../placement/parts';
+import { usePlacementBank } from '../placement/use-placement-bank';
+import { LessonWaiting } from '../lesson-content';
+import { OopsScreen } from '../system/OopsScreen';
 import { SuggestedPlanCard } from './SuggestedPlanCard';
 
 /**
@@ -72,7 +75,6 @@ type PillTone = NonNullable<ComponentProps<typeof Pill>['tone']>;
 
 // The cells' later volumes too (F-CURR-002 row CM-40): a level below a Volume 2's stage places it out like Volume 1.
 const CATALOG = placementRouteCatalog(questsAll, episodesWithVolumes);
-const LOOKUP = bankLookup(PLACEMENT_BANK);
 const STRAND_GATES = new Map<PlacementStrand, readonly ReportRung['gate'][]>();
 for (const spec of RUNG_TABLE) STRAND_GATES.set(spec.strand, [...(STRAND_GATES.get(spec.strand) ?? []), spec.gate]);
 
@@ -109,7 +111,20 @@ function rungLine(m: ReportMessages, rung: ReportRung): string {
   return `${name}: ${parts.join(', ')}`;
 }
 
-export function PlacementReportScreen({ route, navigation }: Props): ReactElement {
+/**
+ * The report once the level check's bank is in (AMENDMENTS-FINISH-2026-11 FN-7: the bank is a chunk of its own; the
+ * report looks the answered questions up in it). Until then the lesson waiting screen; the crash screen's Try again when
+ * it cannot load.
+ */
+export function PlacementReportScreen(props: Props): ReactElement {
+  const { bank, failed, retry } = usePlacementBank();
+  const lookup = useMemo(() => (bank === null ? null : bankLookup(bank.bank)), [bank]);
+  if (failed) return <OopsScreen onRetry={retry} />;
+  if (lookup === null) return <LessonWaiting />;
+  return <PlacementReport {...props} lookup={lookup} />;
+}
+
+function PlacementReport({ route, navigation, lookup }: Props & { lookup: BankLookup }): ReactElement {
   const { profileId } = route.params;
   const messages = useMessages();
   const m = messages.caregiver.placementReport;
@@ -133,9 +148,9 @@ export function PlacementReportScreen({ route, navigation }: Props): ReactElemen
       completedQuestIds: completed,
       isEntitled: (stage) => isStageEntitled(stage, tier),
       profileType: profile === null ? 'child' : effectiveLearnerType(profile),
-      lookup: LOOKUP,
+      lookup,
     });
-  }, [snapshot, profile, tier]);
+  }, [snapshot, profile, tier, lookup]);
 
   const questTitle = (id: string): string => {
     const quest = questsAll.find((q) => q.id === id);

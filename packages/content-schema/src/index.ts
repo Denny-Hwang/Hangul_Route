@@ -37,8 +37,8 @@ export * from './schemas/audio';
 export * from './audio/say-key';
 export * from './schemas/vocab';
 export * from './story-sources';
-export * from './story-lint';
-export * from './lesson-cell-lint';
+// [FN] AMENDMENTS-FINISH-2026-11 FN-7: the content linters are not in the barrel, which the learner app's start bundle
+// carries whole: `story-lint` is the `./story-lint` subpath, `lesson-cell-lint` rides in `./lint` (lesson-lint.ts).
 export * from './curriculum/dates';
 export * from './assessment';
 export * from './schemas/placement';

@@ -3,10 +3,10 @@
   "domain": "stage1-quests",
   "entries": {
     "quest:stage1-letters-q1": {
-      "steps.s2.discover.pages.0.items.0.example.gloss": "말하는 사람 자신",
-      "steps.s2.discover.pages.0.items.1.example.gloss": "말을 듣는 친구를 가리키는 말",
+      "steps.s2.discover.pages.0.items.0.example.gloss": "말하는 사람이 자기를 가리키는 말",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "말을 듣는 상대를 가리키는 말",
       "steps.s2.discover.pages.1.items.0.example.gloss": "ga 소리",
-      "steps.s2.discover.pages.1.items.1.example.gloss": "말하는 사람 자신",
+      "steps.s2.discover.pages.1.items.1.example.gloss": "말하는 사람이 자기를 가리키는 말",
       "title": "a, eo, g, n 만나기",
       "blurb": "모음 두 개, 자음 두 개를 배우고 첫 음절을 읽어요.",
       "steps.s1.title": "호야의 인사",
@@ -15,7 +15,7 @@
       "steps.s4.title": "글자 만들기",
       "steps.s5.title": "듣고 읽기",
       "steps.s6.title": "카드를 받았어요!",
-      "steps.s1.hoyaLine": "한글 글자는 모여서 블록이 돼요. 네 글자를 만나 봐요!",
+      "steps.s1.hoyaLine": "한글은 글자가 모여 블록 하나가 돼요. 네 글자를 만나 봐요!",
       "steps.s2.hoyaLine": "‘들어 보기’를 눌러 하나씩 들어 봐요.",
       "steps.s6.hoyaLine": "문화 카드를 받았어요!"
     },
@@ -109,8 +109,8 @@
     },
     "quest:stage1-rites-q1": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "드나들 때 여닫는 것",
-      "steps.s2.discover.pages.0.items.1.example.gloss": "밤하늘에 뜨는 둥근 빛",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "음력으로 새해 첫날",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "밤하늘에 둥글게 떠서 빛나는 것",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "음력 새해 첫날 명절",
       "steps.s2.discover.pages.1.items.1.word.gloss": "설날에 먹는, 떡을 넣은 국",
       "title": "세배하고 떡국 먹기",
       "blurb": "처음 배우는 받침 n과 l, 그리고 설날 낱말이에요.",
@@ -147,7 +147,7 @@
     },
     "quest:stage1-rites-q3": {
       "steps.s2.discover.pages.0.items.0.example.gloss": "부모님을 공경하고 잘 모시는 일",
-      "steps.s2.discover.pages.0.items.1.example.gloss": "소에게서 얻는 하얀 마실 것",
+      "steps.s2.discover.pages.0.items.1.example.gloss": "소에게서 얻는 하얀 음료",
       "steps.s2.discover.pages.1.items.0.example.gloss": "한국의 전통 옷",
       "steps.s2.discover.pages.1.items.1.example.gloss": "한반도에 있는 나라",
       "title": "한복과 세배",
@@ -185,7 +185,7 @@
     "quest:stage1-nature-q2": {
       "steps.s2.discover.pages.0.items.0.word.gloss": "땅이 높이 솟은 곳",
       "steps.s2.discover.pages.0.items.1.word.gloss": "길게 흐르는 큰 물줄기",
-      "steps.s2.discover.pages.1.items.0.word.gloss": "넓고 짠 물",
+      "steps.s2.discover.pages.1.items.0.word.gloss": "짠물이 넓게 펼쳐진 곳",
       "steps.s2.discover.pages.1.items.1.word.gloss": "머리 위로 보이는 높고 넓은 곳",
       "title": "산, 강, 바다",
       "blurb": "자연 낱말을 읽어요. 산, 강, 바다, 하늘이에요.",
@@ -200,7 +200,7 @@
       "steps.s6.hoyaLine": "산 카드가 라이브러리에 들어왔어요!"
     },
     "quest:stage1-nature-q3": {
-      "steps.s2.discover.pages.0.items.0.word.gloss": "밤하늘에 뜨는 둥근 빛",
+      "steps.s2.discover.pages.0.items.0.word.gloss": "밤하늘에 둥글게 떠서 빛나는 것",
       "steps.s2.discover.pages.0.items.1.word.gloss": "밤하늘에 반짝이는 작은 빛",
       "steps.s2.discover.pages.1.items.0.word.gloss": "해가 진 뒤 어두운 때",
       "steps.s2.discover.pages.1.items.1.word.gloss": "가장 둥글게 꽉 찬 달",
@@ -269,7 +269,7 @@
       "steps.s6.hoyaLine": "연 카드가 라이브러리에 들어왔어요!"
     },
     "quest:stage1-crafts-q4": {
-      "title": "모양은 어디서 왔을까",
+      "title": "모양은 어디서 왔을까요?",
       "blurb": "기본 글자가 무엇을 본떴는지 보고, 닮은 글자를 구별해요.",
       "steps.s1.title": "글자 모양",
       "steps.s1.hoyaLine": "어떤 글자는 입, 혀, 이, 목구멍의 모양을 본떴어요. 같이 봐요!",

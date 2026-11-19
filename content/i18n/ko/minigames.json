@@ -4,7 +4,7 @@
   "entries": {
     "minigame:s1-letters-q1-check": {
       "listenPick.rounds.lp-sym-jamo-eo.prompt": "글자 eo",
-      "listenPick.rounds.1.prompt": "말을 듣는 친구를 가리키는 말"
+      "listenPick.rounds.1.prompt": "말을 듣는 상대를 가리키는 말"
     },
     "minigame:s1-letters-q2-check": {
       "listenPick.rounds.lp-sym-jamo-u.prompt": "글자 u",
@@ -34,7 +34,7 @@
       "listenPick.rounds.1.prompt": "빨갛고 동그란 열매 채소"
     },
     "minigame:s1-rites-q1-play": {
-      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
+      "listenPick.rounds.0.prompt": "밤하늘에 둥글게 떠서 빛나는 것",
       "listenPick.rounds.1.prompt": "글자 dan",
       "listenPick.rounds.2.prompt": "마시거나 씻을 때 쓰는 맑은 액체",
       "listenPick.rounds.3.prompt": "드나들 때 여닫는 것",
@@ -42,8 +42,8 @@
       "listenPick.rounds.5.prompt": "글자 sal"
     },
     "minigame:s1-rites-q1-check": {
-      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
-      "listenPick.rounds.1.prompt": "음력으로 새해 첫날"
+      "listenPick.rounds.0.prompt": "밤하늘에 둥글게 떠서 빛나는 것",
+      "listenPick.rounds.1.prompt": "음력 새해 첫날 명절"
     },
     "minigame:s1-rites-q2-check": {
       "listenPick.rounds.0.prompt": "글자 song",
@@ -58,10 +58,10 @@
       "listenPick.rounds.5.prompt": "글자 hak"
     },
     "minigame:s1-rites-q3-apply": {
-      "storySteps.a.label": "전통 옷 차려입기",
-      "storySteps.b.label": "어른께 새해 큰절 올리기",
-      "storySteps.c.label": "새해 아침에 떡을 넣은 국 먹기",
-      "storySteps.d.label": "어른께 새해 용돈 받기"
+      "storySteps.a.label": "한복 차려입기",
+      "storySteps.b.label": "어른께 세배하기",
+      "storySteps.c.label": "설날 아침에 떡국 먹기",
+      "storySteps.d.label": "어른께 세뱃돈 받기"
     },
     "minigame:s1-rites-q3-check": {
       "listenPick.rounds.lp-sym-jamo-yo.prompt": "글자 yo",
@@ -82,7 +82,7 @@
     "minigame:s1-nature-q2-play": {
       "listenPick.rounds.0.prompt": "땅이 높이 솟은 곳",
       "listenPick.rounds.1.prompt": "길게 흐르는 큰 물줄기",
-      "listenPick.rounds.2.prompt": "넓고 짠 물",
+      "listenPick.rounds.2.prompt": "짠물이 넓게 펼쳐진 곳",
       "listenPick.rounds.3.prompt": "머리 위로 보이는 높고 넓은 곳",
       "listenPick.rounds.4.prompt": "밤하늘에 반짝이는 작은 빛",
       "listenPick.rounds.5.prompt": "몸집이 크고 털이 많은 동물"
@@ -92,7 +92,7 @@
       "listenPick.rounds.1.prompt": "길게 흐르는 큰 물줄기"
     },
     "minigame:s1-nature-q3-play": {
-      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
+      "listenPick.rounds.0.prompt": "밤하늘에 둥글게 떠서 빛나는 것",
       "listenPick.rounds.1.prompt": "밤하늘에 반짝이는 작은 빛",
       "listenPick.rounds.2.prompt": "해가 진 뒤 어두운 때",
       "listenPick.rounds.3.prompt": "가장 둥글게 꽉 찬 달",
@@ -100,7 +100,7 @@
       "listenPick.rounds.5.prompt": "땅이 높이 솟은 곳"
     },
     "minigame:s1-nature-q3-check": {
-      "listenPick.rounds.0.prompt": "밤하늘에 뜨는 둥근 빛",
+      "listenPick.rounds.0.prompt": "밤하늘에 둥글게 떠서 빛나는 것",
       "listenPick.rounds.1.prompt": "가장 둥글게 꽉 찬 달"
     },
     "minigame:s1-crafts-q1-check": {
@@ -140,7 +140,7 @@
     "minigame:s1-nature-q1-apply": {
       "picWord.boards.0.pairs.horangi.word.gloss": "줄무늬가 있는 크고 힘센 동물",
       "picWord.boards.0.pairs.kkachi.word.gloss": "검은색과 흰색 깃털의 새",
-      "picWord.boards.0.pairs.dal.word.gloss": "밤하늘에 뜨는 둥근 빛",
+      "picWord.boards.0.pairs.dal.word.gloss": "밤하늘에 둥글게 떠서 빛나는 것",
       "picWord.boards.0.pairs.san.word.gloss": "땅이 높이 솟은 곳"
     },
     "minigame:s1-crafts-q1-apply": {

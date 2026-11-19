@@ -17,6 +17,15 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   return { useConsoleLocale: view, useMessages: () => view().messages, useLocale: () => 'en', useSetLocale: () => () => undefined };
 });
 
+/** Another language's messages: in at once unless a test defers them (FN-6, the browser build's language chunks). */
+const overlay = vi.hoisted(() => ({ defer: false, queued: [] as Array<{ locale: string; then: () => void }> }));
+vi.mock('@/lib/i18n/message-overlays', () => ({
+  withMessages: (locale: string, then: () => void) => {
+    if (overlay.defer) overlay.queued.push({ locale, then });
+    else then();
+  },
+}));
+
 import { ConsentSheet, FamilyMoves, FamilyStartFlow, familyFailure, sheetFromView, type FamilyMovesApi } from '@/components/console/FamilyTransferParts';
 
 const t = getMessages('en').console.transfer;
@@ -200,6 +209,26 @@ describe('ConsentSheet (consent-sheet.md; spec 4.11)', () => {
     expect(byTestId('consent-yes').props['aria-disabled']).toBe(true);
     act(() => intersect());
     expect(byTestId('consent-yes').props['aria-disabled']).toBeUndefined();
+  });
+
+  it('a language whose words are still on the way: the sheet stays in its language until they are in; the last choice wins (FN-6)', () => {
+    overlay.defer = true;
+    try {
+      renderSheet();
+      const select = () => root().find((n) => n.type === 'select' && n.props.name === 'consentLocale');
+      act(() => select().props.onChange({ target: { value: 'ko' } }));
+      act(() => select().props.onChange({ target: { value: 'es' } }));
+      expect(overlay.queued.map((q) => q.locale)).toEqual(['ko', 'es']);
+      expect(select().props.value).toBe('en');
+      act(() => overlay.queued[0]!.then());
+      expect(select().props.value).toBe('en');
+      act(() => overlay.queued[1]!.then());
+      expect(select().props.value).toBe('es');
+      expect(root().find((n) => n.props.role === 'dialog').props.lang).toBe('es');
+    } finally {
+      overlay.defer = false;
+      overlay.queued = [];
+    }
   });
 
   it('the whole dialog reads in the sheet language: its lang, its heading and its Close label', () => {

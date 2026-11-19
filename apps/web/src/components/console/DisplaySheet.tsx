@@ -7,6 +7,7 @@ import { borderWidth, colors, layout, radii, shadows, spacing, touchTarget, typo
 import { LOCALE_META, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
+import { withMessages } from '@/lib/i18n/message-overlays';
 import { rem } from '@/lib/console/rem';
 
 /**
@@ -160,12 +161,19 @@ export function ConsoleDisplaySheet({ onClose }: { onClose: () => void }): JSX.E
     }
   };
 
+  /** The language last tapped: the confirm step is written in it, so it opens once that language's messages are in (FN-6). */
+  const tapped = useRef<UiLocale | null>(null);
   const chooseLanguage = (next: UiLocale): void => {
     if (next === locale) return;
-    focusNext.current = 'confirm';
-    setPending(next);
+    tapped.current = next;
+    withMessages(next, () => {
+      if (tapped.current !== next) return;
+      focusNext.current = 'confirm';
+      setPending(next);
+    });
   };
   const closeConfirm = (): void => {
+    tapped.current = null;
     focusNext.current = 'language';
     setPending(null);
   };

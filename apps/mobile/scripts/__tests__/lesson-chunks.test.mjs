@@ -268,6 +268,15 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       { name: 'reports-chunk', marker: 'screen-chunk:reports' },
       // AMENDMENTS-ROUTE-CLASS-BLEND row BL-8: My practice days and the placer.
       { name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' },
+      // [FN] AMENDMENTS-FINISH-2026-11 FN-7: more learner screens.
+      { name: 'writing-chunk', marker: 'screen-chunk:writing' },
+      { name: 'trace-word-chunk', marker: 'screen-chunk:trace-word' },
+      { name: 'sentence-builder-chunk', marker: 'screen-chunk:sentence-builder' },
+      { name: 'reader-chunk', marker: 'screen-chunk:story-reader' },
+      { name: 'speed-round-chunk', marker: 'screen-chunk:speed-round' },
+      { name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' },
+      { name: 'join-space-chunk', marker: 'screen-chunk:join-space' },
+      { name: 'placement-chunk', marker: 'screen-chunk:placement' },
     ]);
     // Row CM-36: one chunk per Hidden Heritage scene.
     expect(SCENE_CHUNKS).toEqual([
@@ -341,6 +350,24 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     // Row CM-47: the added realia layouts' chunk, reached only through the entry's literal import().
     expect(read('src/screens/minigames/realia-kinds-chunk.tsx')).toContain(`export const REALIA_KINDS_CHUNK = '${SCREEN_CHUNKS[14].marker}';`);
     expect(read('src/screens/minigames/realia-kinds-entry.tsx')).toContain("import('./realia-kinds-chunk')");
+    // [FN] FN-7: each new screen chunk exports its marker and is reached only through its door's literal import().
+    const doors = [
+      ['src/screens/minigames/writing-chunk.tsx', 'WRITING_CHUNK', 'src/screens/minigames/writing-entry.tsx'],
+      ['src/screens/minigames/trace-word-chunk.tsx', 'TRACE_WORD_CHUNK', 'src/screens/minigames/trace-word-entry.tsx'],
+      ['src/screens/minigames/sentence-builder-chunk.tsx', 'SENTENCE_BUILDER_CHUNK', 'src/screens/minigames/sentence-builder-entry.tsx'],
+      ['src/screens/story/reader-chunk.tsx', 'STORY_READER_CHUNK', 'src/screens/story/reader-entry.tsx'],
+      ['src/screens/vocab/speed-round-chunk.tsx', 'SPEED_ROUND_CHUNK', 'src/screens/vocab/speed-round-entry.tsx'],
+      ['src/screens/route/route-proposal-chunk.tsx', 'ROUTE_PROPOSAL_CHUNK', 'src/screens/route/route-proposal-entry.tsx'],
+      ['src/screens/sync/join-space-chunk.tsx', 'JOIN_SPACE_CHUNK', 'src/screens/sync/join-space-entry.tsx'],
+      ['src/screens/placement/placement-chunk.tsx', 'PLACEMENT_CHUNK', 'src/screens/placement/placement-entry.tsx'],
+    ];
+    doors.forEach(([chunk, name, entry], i) => {
+      const { marker } = SCREEN_CHUNKS[18 + i];
+      expect(read(chunk)).toContain(`export const ${name} = '${marker}';`);
+      const base = chunk.split('/').at(-1).replace(/\.tsx$/, '');
+      expect(read(entry)).toContain(`import('./${base}')`);
+      expect(read(entry)).not.toMatch(new RegExp(`^import [^t].*${base}`, 'm'));
+    });
     // Row CM-37 part 1: the Letters school room.
     expect(read('src/screens/minigames/scenes/scene-letters-school.ts')).toContain(`export const SCENE_CHUNK = '${SCENE_CHUNKS[1].marker}';`);
     expect(read('src/screens/minigames/hidden-heritage-scenes.ts')).toContain("import('./scenes/scene-letters-school')");
@@ -452,6 +479,24 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
     expect(precacheBudgetProblems({ ...report, start: { url: START, raw: 1, gzip: 1 }, clips: { count: 44, bytes: 520_001 } })[0]).toContain('the precached clips are 520001 B');
   });
 
+  it('[FN] FN-7: the level check\'s bank is a learner chunk of its own, whose module exports its marker', () => {
+    const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
+    expect(LEARNER_CHUNKS[4]).toEqual({ name: 'placement-bank-chunk', marker: 'placement-bank-chunk:bank' });
+    expect(read('src/content/placement-bank-chunk.ts')).toContain(`export const PLACEMENT_BANK_CHUNK = '${LEARNER_CHUNKS[4].marker}';`);
+    // Reached only through the loader's literal import(): a static import would fold the bank back into the start bundle.
+    expect(read('src/content/placement-bank.ts')).toContain("import('./placement-bank-chunk')");
+    expect(read('src/content/placement-bank.ts')).not.toMatch(/^import [^t].*placement-bank-chunk/m);
+    expect(read('src/content/placement-bank-chunk.ts')).not.toMatch(/\bimport\(['"]/);
+    const text = `__d(function(){var m="${LEARNER_CHUNKS[4].marker}"})`;
+    const chunk = { url: `${WEB_JS_DIR}/placement-bank-chunk-${md5(text)}.js`, text };
+    const start = { url: START, text: 'var g=1;' };
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[4]], bundles: [start, chunk], precached: all([start, chunk]) })).toEqual([]);
+    expect(markedChunkProblems({ chunks: [LEARNER_CHUNKS[4]], bundles: [{ url: START, text: `${text};` }], precached: [] })).toEqual([
+      `placement-bank-chunk is in the start bundle ${START}: a static import pulled it in`,
+      'placement-bank-chunk has no web bundle: the chunk is missing from the build',
+    ]);
+  });
+
   it('adaptive pacing in quests is a learner chunk of its own (row CM-24), whose module exports its marker', () => {
     const read = (rel) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
     expect(LEARNER_CHUNKS[2]).toEqual({ name: 'quest-pacing-chunk', marker: 'quest-pacing-chunk:adapt' });
@@ -494,6 +539,9 @@ describe('markedChunkProblems (the locale chunks and the grown-up roots)', () =>
       'week-drop-chunk has no web bundle: the chunk is missing from the build',
       'reports-chunk has no web bundle: the chunk is missing from the build',
       'practice-days-chunk has no web bundle: the chunk is missing from the build',
+      ...['writing', 'trace-word', 'sentence-builder', 'reader', 'speed-round', 'route-proposal', 'join-space', 'placement'].map(
+        (name) => `${name}-chunk has no web bundle: the chunk is missing from the build`,
+      ),
     ]);
     const other = localeChunk('locale-ko', 'locale-pack:ko ');
     expect(markedChunkProblems({ chunks: LOCALE_CHUNKS, bundles: [start, es, ko, other], precached: all([start, es, ko, other]) })).toEqual([
@@ -682,12 +730,18 @@ describe('precacheReport and its budget lines', () => {
     // [QB] AMENDMENTS-QUEST-SOUND-BACK QB-1 to QB-4 (a quest step can be taken back) measures 4,953,393 B (release build, CI=1): 4,957,400 B.
     // [QS] AMENDMENTS-QUEST-SOUND-BACK QS-1 to QS-5 (sounds get room at both ends) on top of QB measures 4,957,992 B (release build, CI=1): 4,962,000 B.
     // [PX] AMENDMENTS-PICTURES-2026-11 PX-4 and PX-5 (scenes, props, realia and Hoya) measures 4,965,473 B (release build, CI=1): 4,969,500 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_969_500);
-    for (const measured of [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473]) {
+    // [FN] AMENDMENTS-FINISH-2026-11 FN-1 (the check before a new PIN) measures 4,973,489 B (release build, CI=1): 4,977,500 B.
+    // [FN] AMENDMENTS-FINISH-2026-11 FN-7 (the start bundle gets smaller) brings it down: measured 4,570,041 B (release
+    // build, CI=1): 4,574,000 B. The measurements above held the line before FN-7; from here only the newer ones must fit.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_574_000);
+    const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
+    // FN-7 took about 400 KB out: the line is under every measurement before it.
+    for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(150_000);
+    for (const measured of [4_570_041]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_965_473).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_570_041).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

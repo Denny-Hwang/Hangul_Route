@@ -2,6 +2,7 @@
 // hangul-route-app does (apps/mobile/wrangler.toml), so the merged build's console pages and
 // headers are tested as Workers serve them.
 import { spawn } from 'node:child_process';
+import { get as httpGet } from 'node:http';
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -20,6 +21,7 @@ const DIST = {
   'teach/home.html': '<html>console home</html>',
   'teach/home.txt': 'rsc home',
   '_next/static/chunks/main-1.js': 'self.chunk=1;',
+  '_expo/static/js/web/index-0123456789abcdef0123456789abcdef.js': 'self.start=1;',
   _headers: '/sw.js\n  Cache-Control: no-cache\n/teach/*\n  X-Frame-Options: DENY\n  Cache-Control: no-store\n',
 };
 
@@ -62,6 +64,16 @@ afterAll(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
+/** A navigation's request (fetch() may not send Sec-Fetch-Mode itself, so node:http does). */
+const navigate = (path) =>
+  new Promise((resolve, reject) => {
+    httpGet(`${base}${path}`, { headers: { 'sec-fetch-mode': 'navigate' } }, (res) => {
+      let body = '';
+      res.on('data', (chunk) => (body += chunk));
+      res.on('end', () => resolve({ status: res.statusCode, body }));
+    }).on('error', reject);
+  });
+
 const get = async (path) => {
   const res = await fetch(`${base}${path}`);
   return { status: res.status, type: res.headers.get('content-type'), cache: res.headers.get('cache-control'), frame: res.headers.get('x-frame-options'), body: await res.text() };
@@ -80,6 +92,15 @@ describe('serve-dist.mjs answers like the Worker', () => {
       expect(await get(path), path).toMatchObject({ status: 200, type: 'text/html; charset=utf-8', body: '<html>learner shell</html>' });
     }
     expect(await get('/sw.js')).toMatchObject({ cache: 'no-cache', frame: null, body: 'self.sw=1;' });
+  });
+
+  it('answers a missing app chunk 404, as the app host\'s Worker does (AMENDMENTS-FINISH-2026-11 FN-3)', async () => {
+    expect(await get('/_expo/static/js/web/index-0123456789abcdef0123456789abcdef.js')).toMatchObject({ status: 200, body: 'self.start=1;' });
+    for (const path of ['/_expo/static/js/web/index-ffffffffffffffffffffffffffffffff.js', '/_expo/static/js/web/', '/_expo/static/js/x/..%2Fweb%2Fgone.js']) {
+      expect(await get(path), path).toMatchObject({ status: 404, type: 'text/plain; charset=utf-8', cache: 'no-store', body: 'Not found\n' });
+    }
+    // A navigation to a missing chunk URL still gets the shell, as the assets layer answers it before the Worker.
+    expect(await navigate('/_expo/static/js/web/gone.js')).toEqual({ status: 200, body: '<html>learner shell</html>' });
   });
 
   it('reads dist/_headers again after a rebuild, so a server left running never answers with old rules', async () => {

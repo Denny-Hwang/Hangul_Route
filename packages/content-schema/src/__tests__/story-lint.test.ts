@@ -4,13 +4,11 @@ import {
   SOURCE_HOST_ALLOWLIST,
   isAllowlistedHost,
   isAuthoritativeHost,
-  lintStory,
-  lintStoryCorpus,
   parseStory,
-  type Finding,
   type Story,
   type StoryScene,
 } from '../index';
+import { lintStory, lintStoryCorpus, type Finding } from '../story-lint';
 import draftJson from '../__fixtures__/story/valid.draft.json';
 import readyJson from '../__fixtures__/story/valid.ready.json';
 import taleJson from '../__fixtures__/story/valid.tale.json';

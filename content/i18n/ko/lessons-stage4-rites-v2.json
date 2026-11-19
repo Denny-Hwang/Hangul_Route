@@ -6,7 +6,7 @@
       "title": "설날 방문",
       "subtitle": "할머니와 할아버지께 세배하고 감사하다고 말씀드린 뒤 작별 인사를 해요.",
       "hoyaIntro": "설날이에요! 할머니와 할아버지 댁에 가 봐요.",
-      "culture.n1.text": "{ko:세배}는 집안 어른들께 웃어른부터 차례로 하는 새해 절이에요. 어른들은 새해에 잘되기를 바라는 말로 답하고, 아이들에게 약간의 돈을 주기도 해요. 이 돈을 {ko:세뱃돈}이라고 해요.",
+      "culture.n1.text": "{ko:세배}는 새해에 집안의 가장 웃어른부터 차례로 올리는 절이에요. 어른들은 새해에 잘되기를 바라는 말로 답하고, 아이들에게 약간의 돈을 주기도 해요. 이 돈을 {ko:세뱃돈}이라고 해요.",
       "culture.n2.text": "{ko:덕담}은 남이 잘되기를 비는 말로, 주로 새해에 나눠요. 어른은 상대의 형편에 맞게 말해요. 예를 들면 바라는 일이 이루어지기를 빌어요.",
       "culture.n3.text": "국립국어원은 {ko:새해 복 많이 받으십시오}를 누구에게나 쓸 수 있는 신년 인사의 표준으로 제시해요. {ko:새해 복 많이 받으세요}도 쓸 수 있고, 어른은 아랫사람에게 {ko:새해 복 많이 받아라}라고 할 수 있어요."
     },
@@ -143,7 +143,7 @@
       "dialogue.0.options.ne-jal-jinaesseoyo.gloss": "그동안 별일 없었다고 공손하게 대답하는 말",
       "dialogue.0.options.jal-gayo.gloss": "떠나는 사람에게 하는 인사",
       "dialogue.1.options.gamsahamnida.gloss": "고마운 마음을 공손하게 나타내는 말",
-      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "자기 이름이 호야라고 알려 주는 말",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "내 이름이 호야라고 알려 주는 말",
       "dialogue.1.options.olhae-sowon-seongchwihaera.gloss": "올해 바라는 일이 이루어지기를 비는 덕담",
       "dialogue.2.options.mannaseo-bangawoyo.gloss": "처음 보게 되어 기쁘다는 인사",
       "dialogue.2.options.saehae-bok-mani-badara.gloss": "어른이 아랫사람에게 새해에 좋은 일이 많기를 비는 말",
@@ -153,7 +153,7 @@
       "dialogue.3.options.ne-jal-jinaetda.gloss": "별일 없었다고 편하게 대답하는 말"
     },
     "minigame:s4-rites-v2-q2-apply": {
-      "rolePlay.scene.title.gloss": "음력으로 한 해의 첫날",
+      "rolePlay.scene.title.gloss": "음력으로 새해 첫날",
       "rolePlay.scene.partner.gloss": "아버지나 어머니의 아버지",
       "rolePlay.scene.nodes.t1.line.gloss": "아랫사람에게 그동안 별일 없었는지 편하게 묻는 말",
       "rolePlay.scene.nodes.t2.line.gloss": "별일 없었다고 편하게 답하고 올해 바라는 일이 이루어지기를 비는 덕담",
@@ -187,7 +187,7 @@
       "orderIt.rounds.c2.distractors.badara.gloss": "받으라고 편하게 하는 말"
     },
     "minigame:s4-rites-v2-q3-practice": {
-      "rolePlay.scene.title.gloss": "음력으로 한 해의 첫날",
+      "rolePlay.scene.title.gloss": "음력으로 새해 첫날",
       "rolePlay.scene.partner.gloss": "아버지나 어머니의 어머니",
       "rolePlay.scene.nodes.t1.line.gloss": "어른이 아랫사람에게 새해에 좋은 일이 많기를 비는 말",
       "rolePlay.scene.nodes.t2.line.gloss": "아랫사람에게 그동안 별일 없었는지 편하게 묻는 말",
@@ -224,7 +224,7 @@
       "dialogue.0.options.mannaseo-bangawoyo.gloss": "처음 보게 되어 기쁘다는 인사",
       "dialogue.1.options.seonsaengnim-annyeonghi-gyeseyo.gloss": "떠나면서 남으시는 선생님께 하는 인사",
       "dialogue.1.options.saehae-bok-mani-badara.gloss": "어른이 아랫사람에게 새해에 좋은 일이 많기를 비는 말",
-      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "자기 이름이 호야라고 알려 주는 말",
+      "dialogue.1.options.jeoneun-hoyayeyo.gloss": "내 이름이 호야라고 알려 주는 말",
       "dialogue.2.options.yeogi-sebaetdoniya.gloss": "세배한 아이에게 돈을 건네며 하는 말",
       "dialogue.2.options.halmeoni-annyeonghi-gyeseyo.gloss": "떠나면서 남으시는 할머니께 하는 인사",
       "dialogue.2.options.halmeoni-annyeonghi-gaseyo.gloss": "남는 사람이 떠나시는 할머니께 하는 인사",

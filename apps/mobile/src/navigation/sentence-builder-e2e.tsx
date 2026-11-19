@@ -7,7 +7,7 @@ import { useLocale } from '../i18n/use-messages';
 import { localizeScope } from '../logic/content-locale';
 import type { MinigameScope } from '../logic/minigame-config';
 import type { HostMode, MinigameHost } from '../screens/minigames/host';
-import { SentenceBuilderGame } from '../screens/minigames/SentenceBuilderGame';
+import { SentenceBuilderGame } from '../screens/minigames/sentence-builder-entry';
 import { CHECK, PATTERN_NOTE, PRACTICE } from './sentence-builder-e2e-fixtures';
 import type { RootStackParamList } from './types';
 

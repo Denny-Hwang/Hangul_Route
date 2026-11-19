@@ -46,6 +46,7 @@
 | `sync/save-progress.md` · `restore.md` · `join-space.md` · `merge-notice.md` | P | roadmap multi-persona §4–6 |
 | `paywall/upgrade.md` | R | F-SUB-001 · F-IAP-001 |
 | `pwa/install-guide.md` · `pwa/system-banners.md` | P | roadmap web-pwa-offline §3 |
+| `pwa/static-splash.md` | R | AMENDMENTS-FINISH-2026-11 FN-2 (the HTML shell's splash before the start bundle runs; mock `design/screens/static-splash/`) |
 | `classroom/projection-mode.md` | D | F-TCH-001 §3.4 (연기: 자원봉사 학생용 옵션; 교사 수업은 `classroom/lecture-presenter.md`, F-TCH-004) |
 | `vocab/topics.md` · `vocab/flashcards.md` · `vocab/speed-round.md` | D | F-VOC-003 · F-VOC-004 |
 | `placement/placement.md` (flow overview) · `placement/invite.md` · `language.md` · `options.md` · `handoff.md` · `warmup.md` · `item.md` · `item-short.md` · `pause.md` · `sound-needed.md` · `result.md` · `report.md` · `home-entry.md` | R | F-PLC-001 (promoted in P-0) |
@@ -96,6 +97,7 @@
 | `shell/grown-up-lock.md` | R | F-APP-001 §3.9 |
 | `shell/offline.md` | R | F-APP-001 §3.12 |
 | `shell/display-sheet.md` · `shell/screen-header.md` | R | AMENDMENTS-DISPLAY-NAV §3.6, §4, §7 (2026-10-16, DN-0: one language and text size per device from an Aa button; a top-left Back on every non-root screen, the console PageBack and the Learner app exit on the right; mocks `design/screens/app-shell/display-sheet.md`, `adult-frame.md`, `design/components/ScreenHeader/`; rows DN-3 to DN-7) |
+| `shell/tab-bar.md` | R | AMENDMENTS-FINISH-2026-11 FN-8 (2026-11-18: the selected learner tab carries a shape mark as well as its colour; mock `design/screens/app-shell/tab-bar-selected.md`) |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).

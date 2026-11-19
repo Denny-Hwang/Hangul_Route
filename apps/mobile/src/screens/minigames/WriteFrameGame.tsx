@@ -69,7 +69,8 @@ import {
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
-import { ResultPanel, focusPanel, koreanSpeech, srOnly, type Focusable } from './TypeHangulGame';
+import { focusPanel, koreanSpeech, srOnly, type Focusable } from './korean-speech';
+import { ResultPanel } from './TypeHangulGame';
 
 /**
  * Write Frame (F-CURR-001 §3.7, row G-5; design/wireframes/minigame/write-frame.md,

@@ -1,4 +1,5 @@
 import { plural } from '../../plural';
+import { numberInWords } from '../../number-words';
 
 /**
  * Grown-up surfaces (F-I18N-001 §3.4 rule 2): the PIN screens, the Family Dashboard, the Plan screen,
@@ -130,6 +131,19 @@ export const caregiver = {
         /** Also the Restore screen's invalid-code line (`claimErrorMessage('invalid')`): one message for both. */
         badFormat:
           'Type every word and the number, like TIGER-MOON-RIVER-APPLE-482139 (older codes: TIGER-MOON-4821).',
+      },
+      /**
+       * [FN] AMENDMENTS-FINISH-2026-11 FN-1: the check before a new PIN on the two offline ways (a Rescue Code, the
+       * finished wait; mock `design/screens/profiles/pin-reset-check.md`). No "grown-up" word: a self-only device's reset
+       * screen shows none. `again` follows a miss and comes with a new number: calm, no count.
+       */
+      check: {
+        heading: 'One more step',
+        prompt: 'Type this number in digits.',
+        /** The number to type (100 to 999), written out in words in this language. */
+        words: (n: number) => numberInWords('en', n),
+        fieldLabel: 'Number in digits',
+        again: 'Not quite. Here is a new number.',
       },
       /**
        * [OA] AMENDMENTS-ONE-ACCOUNT-MANY-USERS section 8.5 (row OA-6): the third way to a new PIN, first on the web while

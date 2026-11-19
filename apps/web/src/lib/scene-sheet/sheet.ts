@@ -3,7 +3,8 @@
  * one row per scene with its art, brief, narration chips, cited facts, layers
  * and findings. Pure: the page reads the files and renders what this returns.
  */
-import { lintStory, parseNarration, parseStory, type SceneArt, type Story, type StoryFact, type StoryLevel } from '@hangul-route/content-schema';
+import { parseNarration, parseStory, type SceneArt, type Story, type StoryFact, type StoryLevel } from '@hangul-route/content-schema';
+import { lintStory } from '@hangul-route/content-schema/story-lint';
 import { checkScene, type Registry } from '@hangul-route/design-system/scene-art';
 import type { StoryFile } from './read-stories';
 

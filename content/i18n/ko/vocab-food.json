@@ -5,7 +5,7 @@
     "vocab-topic:food": {
       "title": "음식",
       "blurb": "먹고 마시는 것을 나타내는 낱말이에요.",
-      "hoyaIntro": "배고파요? 맛있는 것들의 이름을 함께 말해 봐요."
+      "hoyaIntro": "배고파요? 맛있는 음식 이름을 함께 말해 봐요."
     },
     "vocab:sagwa-apple": {
       "gloss": "빨갛고 동그란 과일"
@@ -14,7 +14,7 @@
       "gloss": "길고 노란 껍질을 벗겨 먹는 과일"
     },
     "vocab:uyu": {
-      "gloss": "소에서 얻는 하얀 마실 것"
+      "gloss": "소에게서 얻는 하얀 음료"
     },
     "vocab:ppang": {
       "gloss": "밀가루 반죽을 구워 만든 음식"
@@ -38,7 +38,7 @@
     },
     "vocab:dalgyal": {
       "gloss": "닭이 낳은 알",
-      "senseNote": "계란이라고도 하는데, 똑같이 많이 써요."
+      "senseNote": "계란이라고도 하며, 두 말 모두 많이 써요."
     },
     "vocab:ttalgi": {
       "gloss": "겉에 작은 씨가 박힌 빨갛고 작은 과일"

@@ -7,6 +7,7 @@ import {
   LOCALE_META,
   availableLocales,
   getMessages,
+  hasMessageOverlay,
   type Messages,
   type UiLocale,
 } from '@hangul-route/i18n';
@@ -24,6 +25,7 @@ import {
 } from './console-locale';
 import { HEAD_RATIO_CSS_VAR, ROOT_FONT_SIZE, headRatio } from '../console/rem';
 import { followDeviceSettings, readDeviceSettings, writeDeviceSettings, type DeviceSettingsRead } from './device-settings';
+import { loadMessageOverlay } from './message-overlays';
 
 /**
  * A layout effect where there is a DOM, so the change lands before the browser paints the commit;
@@ -50,6 +52,11 @@ function useRootEffect(effect: () => void | (() => void), deps: readonly unknown
  * applies live, and the page re-reads it when it comes back to the front. `<html lang>` and the
  * `--hr-text-scale` the grown-up pages size their type by follow the choice. No telemetry: the
  * web console has no telemetry client.
+ *
+ * The browser build carries English only (FN-6): a language is shown once its messages are in
+ * (`loadMessageOverlay`, one chunk per language). Until the first one the page needs is in, `ready`
+ * stays false, as for the record; a later switch keeps the current language on screen until the
+ * new one has arrived, so no frame paints a mix.
  */
 export interface ConsoleLocale {
   locale: UiLocale;
@@ -119,6 +126,10 @@ export interface LocaleProviderDeps {
   now?: () => string;
   /** Takes `lang` out of the address bar (`history.replaceState`); the rest of the query stays as written. */
   dropLang?: () => void;
+  /** True when a language's messages are in (`hasMessageOverlay`); the browser build has English only from the start. */
+  hasMessages?: (locale: UiLocale) => boolean;
+  /** Loads a language's messages (`loadMessageOverlay`); settles true or false, never rejects. */
+  loadMessages?: (locale: UiLocale) => Promise<boolean>;
 }
 
 /** The address without `lang`, the rest of the query and the hash kept as written. */
@@ -144,8 +155,34 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
     follow: deps?.follow ?? followDeviceSettings,
     now: deps?.now ?? (() => new Date().toISOString()),
     dropLang: deps?.dropLang ?? browserDropLang,
+    hasMessages: deps?.hasMessages ?? hasMessageOverlay,
+    loadMessages: deps?.loadMessages ?? ((l: UiLocale) => loadMessageOverlay(l)),
   });
   const [locale, setLocaleState] = useState<UiLocale>(DEFAULT_LOCALE);
+  /** The language last asked for, and its load while its messages are on the way (null once shown). */
+  const wanted = useRef<UiLocale>(DEFAULT_LOCALE);
+  const arriving = useRef<Promise<void> | null>(null);
+  /**
+   * Shows `next` once its messages are in: at once when they are (English, or a language loaded
+   * before), else when its chunk arrives, unless another language was asked for meanwhile. Returns
+   * the wait, or null when it showed at once. A chunk that cannot load shows the language anyway,
+   * in English (`getMessages` falls back), rather than never.
+   */
+  const applyLocale = useCallback((next: UiLocale): Promise<void> | null => {
+    wanted.current = next;
+    if (io.current.hasMessages(next)) {
+      arriving.current = null;
+      setLocaleState(next);
+      return null;
+    }
+    const wait = io.current.loadMessages(next).then(() => {
+      if (wanted.current !== next) return;
+      arriving.current = null;
+      setLocaleState(next);
+    });
+    arriving.current = wait;
+    return wait;
+  }, []);
   const [textSize, setTextSizeState] = useState<TextSize>(DEFAULT_TEXT_SIZE);
   const [ready, setReady] = useState(false);
   const [recordSettled, setRecordSettled] = useState(false);
@@ -162,23 +199,32 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
     (value: DeviceSettings) => {
       keepRecord(value);
       const next = value.uiLocale !== undefined && offered.includes(value.uiLocale) ? value.uiLocale : null;
-      if (next !== null) setLocaleState(next);
+      if (next !== null) applyLocale(next);
       const size = value.textSize ?? DEFAULT_TEXT_SIZE;
       setTextSizeState(size);
       syncMirrors(next ?? 'clear', size);
     },
-    [offered, keepRecord],
+    [offered, keepRecord, applyLocale],
   );
 
   useEffect(() => {
     let live = true;
     const mirror = { locale: readStoredLocale(), textSize: readStoredTextSize() };
     const languages = browserLanguages();
-    // First paint: the mirror (the last record this page resolved), never the bare query.
-    setLocaleState(firstPaintLocale({ mirror: mirror.locale, languages, available: offered }));
+    // First paint: the mirror (the last record this page resolved), never the bare query. Its
+    // language's chunk starts loading now, beside the record read.
+    applyLocale(firstPaintLocale({ mirror: mirror.locale, languages, available: offered }));
     if (mirror.textSize !== null) setTextSizeState(mirror.textSize);
+    /** Ready once the language to show has its messages (at once when they are in). */
+    const readyWhenShown = (shown: Promise<void> | null): void => {
+      const markReady = (): void => {
+        if (live) setReady(true);
+      };
+      if (shown === null) markReady();
+      else void shown.then(markReady);
+    };
     const wait = setTimeout(() => {
-      if (live) setReady(true);
+      if (live) readyWhenShown(arriving.current);
     }, RECORD_WAIT_MS);
     const query = queryLocale(typeof window === 'undefined' ? '' : window.location.search);
     // The hand-off has been read: it leaves the address, so a reload or a bookmark never carries it.
@@ -189,12 +235,12 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
       .then((device) => {
         if (!live) return;
         const picked = resolveConsoleDisplay({ device, mirror, query, languages, available: offered });
-        setLocaleState(picked.locale);
+        const shown = applyLocale(picked.locale);
         setTextSizeState(picked.textSize);
         syncMirrors(picked.mirror, picked.textSize);
         keepRecord(device.readable ? device.value : null);
-        setReady(true);
         clearTimeout(wait);
+        readyWhenShown(shown);
         if (picked.seed === null) {
           setRecordSettled(true);
           return;
@@ -230,7 +276,7 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
       clearTimeout(wait);
       stop();
     };
-  }, [offered, show, keepRecord]);
+  }, [offered, show, keepRecord, applyLocale]);
 
   // Layout effects: `<html lang>` and the root text size are set before the browser paints the
   // commit that shows the page, so no frame paints at the old language or size.
@@ -261,14 +307,14 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
     (next: UiLocale) => {
       if (!offered.includes(next)) return;
       const at = io.current.now();
-      setLocaleState(next);
+      applyLocale(next);
       syncMirrors(next, null);
       setLastChoice({ uiLocale: next, uiLocaleAt: at });
       void io.current.writeDevice(() => ({ uiLocale: next, uiLocaleAt: at })).then((written) => {
         if (written) keepRecord(written);
       });
     },
-    [offered, keepRecord],
+    [offered, keepRecord, applyLocale],
   );
 
   const setTextSize = useCallback(
@@ -296,12 +342,12 @@ export function LocaleProvider({ children, available, deps }: { children: ReactN
           // The record cannot be written: the account's language applies to this tab only.
           const inTab = mergeAccountLocale(recordRef.current ?? {}, account).device;
           if (inTab && offered.includes(inTab.uiLocale)) {
-            setLocaleState(inTab.uiLocale);
+            applyLocale(inTab.uiLocale);
             syncMirrors(inTab.uiLocale, null);
           }
         });
     },
-    [show, offered],
+    [show, offered, applyLocale],
   );
 
   const value = useMemo<ConsoleLocale>(

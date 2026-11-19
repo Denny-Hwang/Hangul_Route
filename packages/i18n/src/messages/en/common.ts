@@ -106,4 +106,12 @@ export const common = {
     someReading: { label: 'Some reading', description: 'Short words and short sentences.' },
     readsEasily: { label: 'Reads easily', description: 'Longer text, stories and conversations.' },
   },
+  /**
+   * The static splash of the app host's HTML shell (AMENDMENTS-FINISH-2026-11 FN-2): painted before the start bundle
+   * runs, under the brand mark and the app name (`landing.brand`), and replaced by the app's first frame. The build
+   * writes every shipped locale's line into `index.html` (`apps/mobile/scripts/pwa/static-splash.mjs`).
+   */
+  splash: {
+    loading: 'Loading',
+  },
 } as const;

@@ -79,6 +79,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'caregiver.pin.entry.triesLeft': [[1], [4]],
   'caregiver.pin.cooldown': [[12]],
   'caregiver.pin.reset.wait.waiting.caption': [['Oct 11, 2026, 4:30 PM']],
+  'caregiver.pin.reset.check.words': [[347], [999]],
   'caregiver.spaces.leave.confirmTitle': [['Sunday Class A']],
   'a11y.pinDigit': [[7]],
   'a11y.pinDots': [[2, 4]],

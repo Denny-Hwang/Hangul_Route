@@ -215,7 +215,17 @@ export const PRECACHE_BUDGET = Object.freeze({
   // things) are in the start bundle, and the redrawn settings and props carry more shapes. The release `build:web`
   // (CI=1) measures 4,965,473 B raw, 3,473 B over the line. The line is the measurement plus a 4,027 B margin (one
   // measured raise, 7,500 B over the previous line).
-  startBundleRaw: 4_969_500,
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-1 (the check before a new PIN): PinResetScreen is in the start bundle, so its check
+  // card, the number-in-words helper of packages/i18n (en, es, ko) and the English strings are too. The release
+  // `build:web` (CI=1) of the FN-1 branch measures 4,973,489 B raw, 3,989 B over the line. The line is the measurement
+  // plus a 4,011 B margin (one measured raise, 8,000 B over the previous line); FN-7 brings it down.
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7 (the start bundle gets smaller, finding F4), on the merged FN-1..FN-8 head that
+  // measured 4,976,006 B raw / 1,341,160 B gzip, release `build:web` (CI=1) after each step: the level check's bank as a
+  // chunk of its own 4,826,003 / 1,328,984 B; the content linters out of the content-schema barrel 4,805,079 /
+  // 1,321,200 B; eight more learner screen chunks 4,605,858 / 1,268,664 B; the site's `landing` strings out of the
+  // learner PWA's English 4,570,041 / 1,257,197 B (405,965 B raw, 83,963 B gzip less in all). The line is that
+  // measurement plus a 3,959 B margin (403,500 B under the previous line).
+  startBundleRaw: 4_574_000,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
@@ -412,6 +422,10 @@ export const LEARNER_CHUNKS = Object.freeze([
   // through the literal `import()` of `src/platform/audio-assets-store.ts` once the build holds a pack map chunk; it
   // loads the per-pack clip maps (`__generated__/audio-packs/`, checked as marked chunks of their own by the post-build).
   Object.freeze({ name: 'clip-packs-chunk', marker: 'clip-packs-chunk:loader' }),
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7: the level check's question bank (`src/content/placement-bank-chunk.ts`, about
+  // 150 KB), reached only through the literal `import()` of `src/content/placement-bank.ts` when the check (behind
+  // `placementEnabled`) or its report opens; the start bundle reads `placement-meta.generated.ts` (version, ready count).
+  Object.freeze({ name: 'placement-bank-chunk', marker: 'placement-bank-chunk:bank' }),
 ]);
 
 /**
@@ -472,7 +486,7 @@ export const SCREEN_CHUNKS = Object.freeze([
   // through the literal `import()` of `src/screens/minigames/match-shape-entry.tsx`).
   Object.freeze({ name: 'match-shape-chunk', marker: 'screen-chunk:match-shape' }),
   // F-CURR-002 row CM-38: the My Story game and its My page (`src/screens/minigames/my-story-chunk.tsx`, reached only
-  // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame stays in the start bundle.
+  // through the literal `import()` of `src/screens/minigames/my-story-entry.tsx`); Write Frame is the writing chunk's (FN-7).
   Object.freeze({ name: 'my-story-chunk', marker: 'screen-chunk:my-story' }),
   // F-CURR-002 row CM-47: the eight added realia layouts and their dressings (`src/screens/minigames/realia-kinds-chunk.tsx`,
   // reached only through the literal `import()` of `src/screens/minigames/realia-kinds-entry.tsx` when a sheet has one
@@ -488,6 +502,19 @@ export const SCREEN_CHUNKS = Object.freeze([
   // (`src/screens/route/practice-days-chunk.tsx`, reached only through the literal `import()` of
   // `src/screens/route/practice-days-load.ts` while `routeBlendEnabled` is on).
   Object.freeze({ name: 'practice-days-chunk', marker: 'screen-chunk:practice-days' }),
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7: more learner screens out of the start bundle, each reached only through the
+  // literal `import()` of its door (`<name>-entry.tsx`, `src/screens/chunk-door.tsx`): the typing games (Type Hangul and
+  // Write Frame, `src/screens/minigames/writing-chunk.tsx`), Trace Word, Sentence Builder, the story reader
+  // (`src/screens/story/reader-chunk.tsx`), the vocabulary Speed Round, the route proposal, Join a class and the
+  // level check (`src/screens/placement/placement-chunk.tsx`; its bank is the learner chunk `placement-bank-chunk`).
+  Object.freeze({ name: 'writing-chunk', marker: 'screen-chunk:writing' }),
+  Object.freeze({ name: 'trace-word-chunk', marker: 'screen-chunk:trace-word' }),
+  Object.freeze({ name: 'sentence-builder-chunk', marker: 'screen-chunk:sentence-builder' }),
+  Object.freeze({ name: 'reader-chunk', marker: 'screen-chunk:story-reader' }),
+  Object.freeze({ name: 'speed-round-chunk', marker: 'screen-chunk:speed-round' }),
+  Object.freeze({ name: 'route-proposal-chunk', marker: 'screen-chunk:route-proposal' }),
+  Object.freeze({ name: 'join-space-chunk', marker: 'screen-chunk:join-space' }),
+  Object.freeze({ name: 'placement-chunk', marker: 'screen-chunk:placement' }),
 ]);
 
 /**

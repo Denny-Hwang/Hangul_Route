@@ -13,16 +13,22 @@ import { JourneyScreen } from '../screens/journey/JourneyScreen';
 import { LibraryScreen } from '../screens/library/LibraryScreen';
 import { MyRouteTabScreen } from '../screens/my-route/MyRouteScreen';
 import { useUiStore } from '../store/ui-store';
+import { frozenWhenBlurred } from './freeze-when-blurred';
 import { GuardedTabButton } from './tab-button';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+/**
+ * Each tab screen is frozen while it is not focused ([FN] AMENDMENTS-FINISH-2026-11 row FN-5, finding F10): the tabs
+ * stay mounted under a quest, its Results and every other root screen, and the progress a quest writes on each step
+ * no longer redraws them unseen; a tab renders once, up to date, when it is focused again (`freeze-when-blurred.tsx`).
+ */
 const SCREENS: Readonly<Record<MainTabName, ComponentType>> = {
-  Home: HomeScreen,
-  Route: MyRouteTabScreen,
-  Journey: JourneyScreen,
-  Library: LibraryScreen,
+  Home: frozenWhenBlurred(HomeScreen),
+  Route: frozenWhenBlurred(MyRouteTabScreen),
+  Journey: frozenWhenBlurred(JourneyScreen),
+  Library: frozenWhenBlurred(LibraryScreen),
 };
 
 const LABEL_STYLE: TextStyle = { fontSize: typography.size.caption, fontWeight: typography.weight.semibold };

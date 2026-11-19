@@ -3,7 +3,7 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import { myStoryToWriteFrame } from '../../logic/my-story/fallback';
 import { LessonWaiting } from '../lesson-content';
 import type { MinigameHost } from './host';
-import { WriteFrameGame } from './WriteFrameGame';
+import { WriteFrameGame } from './writing-entry';
 
 /*
  * The start bundle's door to My Story (F-CURR-002 §7.1 F8 and §10, row CM-38): the game is a chunk of its own
@@ -42,7 +42,8 @@ export interface MyStoryRouteProps {
 /**
  * My Story once its chunk is in, and the calm waiting state while it loads. If the chunk cannot load (offline before
  * the precache filled), the step is never a dead end: it plays the switch-off fallback, Write Frame on the first frame,
- * which is in the start bundle.
+ * from the writing chunk ([FN] AMENDMENTS-FINISH-2026-11 FN-7; while that chunk cannot load either, its door shows the
+ * crash screen's Try again).
  */
 export function MyStoryRoute(props: MyStoryRouteProps): ReactElement {
   const [chunk, setChunk] = useState<Chunk | null>(loaded);

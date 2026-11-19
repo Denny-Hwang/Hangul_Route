@@ -36,6 +36,15 @@ vi.mock('@/lib/i18n/locale-context', async () => {
   };
 });
 
+/** The messages of another language: in at once unless a test defers them (FN-6, the browser build's language chunks). */
+const overlay = vi.hoisted(() => ({ defer: false, queued: [] as Array<{ locale: string; then: () => void }> }));
+vi.mock('@/lib/i18n/message-overlays', () => ({
+  withMessages: (locale: string, then: () => void) => {
+    if (overlay.defer) overlay.queued.push({ locale, then });
+    else then();
+  },
+}));
+
 import { ConsoleDisplaySheet, DisplayButton } from '../DisplaySheet';
 
 beforeAll(() => {
@@ -49,6 +58,8 @@ beforeEach(() => {
   view.textSize = 'standard';
   view.locales = [];
   view.sizes = [];
+  overlay.defer = false;
+  overlay.queued = [];
 });
 afterEach(() => {
   act(() => mounted?.unmount());
@@ -132,6 +143,28 @@ describe('the sheet', () => {
     act(() => mounted?.update(<ConsoleDisplaySheet onClose={vi.fn()} />));
     act(() => byTestId(r, 'console-display-language-ko')[0]!.props.onClick());
     expect(byTestId(r, 'console-display-language-confirm')).toHaveLength(0);
+  });
+
+  it('the confirm step opens once the tapped language is in (FN-6); a language tapped meanwhile wins', () => {
+    overlay.defer = true;
+    const { r } = renderSheet();
+    act(() => byTestId(r, 'console-display-language-es')[0]!.props.onClick());
+    expect(overlay.queued.map((q) => q.locale)).toEqual(['es']);
+    // The radios stay until the Spanish words are in: no confirm step in English first.
+    expect(byTestId(r, 'console-display-language-confirm')).toHaveLength(0);
+    act(() => byTestId(r, 'console-display-language-ko')[0]!.props.onClick());
+    act(() => overlay.queued[0]!.then());
+    expect(byTestId(r, 'console-display-language-confirm')).toHaveLength(0);
+    act(() => overlay.queued[1]!.then());
+    const step = byTestId(r, 'console-display-language-confirm')[0]!;
+    expect(step.props.lang).toBe('ko');
+    expect(view.locales).toEqual([]);
+    // Back, then the other language: its confirm waits for its own words again.
+    act(() => byTestId(r, 'console-display-language-back')[0]!.props.onClick());
+    act(() => byTestId(r, 'console-display-language-es')[0]!.props.onClick());
+    expect(byTestId(r, 'console-display-language-confirm')).toHaveLength(0);
+    act(() => overlay.queued[2]!.then());
+    expect(byTestId(r, 'console-display-language-confirm')[0]!.props.lang).toBe('es');
   });
 
   it('arrow keys move and choose within a radio group', () => {

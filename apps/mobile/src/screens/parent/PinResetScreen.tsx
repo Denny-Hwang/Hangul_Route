@@ -21,7 +21,7 @@ import { flags } from '../../config/flags';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { pinResetRequested } from '../../logic/onboarding/onboarding-events';
 import { cooldownRemainingMs } from '../../logic/profiles/pin-hash';
-import type { PinResetMethod } from '../../logic/profiles/pin-flow';
+import { openGrownUpCheck, type GrownUpCheck, type OfflineResetMethod } from '../../logic/profiles/grown-up-check';
 import { pauseText } from '../../logic/profiles/pin-pause';
 import {
   collectRescueCodes,
@@ -40,6 +40,7 @@ import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useSyncStore } from '../../store/sync-store';
 import { useBackGuard } from '../use-back-guard';
+import { PinResetCheckCard } from './PinResetCheckCard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinReset'>;
 
@@ -57,6 +58,10 @@ const CODE_BORDER = 2;
  * boards 7 and 8): on the web, online, with `EXPO_PUBLIC_PIN_RESET_SIGNIN` on, **Sign in to the account** comes first.
  * Its Sign in opens `/signin?next=/account/pin-reset` in this tab and writes no unlock; the console checks that the
  * PIN owner signed in with a password or a code and sends the tab back with a ticket (`gate=pin-reset`).
+ *
+ * [FN] AMENDMENTS-FINISH-2026-11 FN-1 (audit SEC-7; wireframe box G2, mock `design/screens/profiles/pin-reset-check.md`):
+ * a matching Rescue Code and Set a new PIN after the wait open the check (`PinResetCheckCard`) instead of the new-PIN
+ * screen; only its right answer opens `PinEntry` setup. Sign in to the account needs none (its ticket opens setup).
  */
 export function PinResetScreen({ route, navigation }: Props): ReactElement {
   const textScale = useTypeScale();
@@ -83,6 +88,8 @@ export function PinResetScreen({ route, navigation }: Props): ReactElement {
   const online = useOnline();
   const signInShown = signInResetShown({ os: Platform.OS, online, flag: flags.pinResetSignInEnabled });
   const [leaving, setLeaving] = useState(false);
+  // [FN] FN-1: the check a passed offline way asks before the new PIN; null while the ways are shown.
+  const [check, setCheck] = useState<GrownUpCheck | null>(null);
 
   // The Rescue Codes live in the per-learner sync records; load them all before
   // choosing which cards to draw, so the layout does not jump.
@@ -113,7 +120,8 @@ export function PinResetScreen({ route, navigation }: Props): ReactElement {
     return () => clearInterval(id);
   }, [locked, wait.status]);
 
-  const goToSetup = (via: PinResetMethod): void => {
+  // [FN] FN-1: the only way on to setup from this screen is the check's right answer.
+  const goToSetup = (via: OfflineResetMethod): void => {
     navigation.replace('PinEntry', { next, profileId, mode: 'setup', via, ...(lockedFrom === undefined ? {} : { lockedFrom }) });
   };
 
@@ -128,7 +136,7 @@ export function PinResetScreen({ route, navigation }: Props): ReactElement {
           return;
         }
         void track(pinResetRequested('rescue_code'));
-        goToSetup('rescue_code');
+        setCheck(openGrownUpCheck('rescue_code'));
       })
       .catch(() => undefined)
       .finally(() => setBusy(false));
@@ -137,7 +145,7 @@ export function PinResetScreen({ route, navigation }: Props): ReactElement {
   const view = waitCardView(wait, (readyAt) => formatReadyAt(locale, readyAt), m);
   const pressWait = (): void => {
     if (wait.status === 'ready') {
-      goToSetup('wait');
+      setCheck(openGrownUpCheck('wait'));
       return;
     }
     if (wait.status === 'idle') {
@@ -179,7 +187,9 @@ export function PinResetScreen({ route, navigation }: Props): ReactElement {
       <Body tone="secondary">{m.reset.subtitle}</Body>
       <Spacer size="lg" />
 
-      {loaded ? (
+      {loaded && check !== null ? (
+        <PinResetCheckCard check={check} onMiss={setCheck} onPass={goToSetup} />
+      ) : loaded ? (
         <>
           {signInShown ? (
             <>

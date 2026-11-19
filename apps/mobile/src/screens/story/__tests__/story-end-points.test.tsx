@@ -7,6 +7,10 @@ import { recordActivityPointsLater } from '../../../store/goals-entry';
 import { useProfileStore } from '../../../store/profile-store';
 import { byTestId, press, render, unmount } from '../../../test-support/render';
 import { StoryReaderScreen } from '../StoryReaderScreen';
+import { storyReaderDoor } from '../reader-entry';
+
+// AMENDMENTS-FINISH-2026-11 FN-7: the game is a chunk of its own; loaded first, its door draws it on the first render.
+await storyReaderDoor.load();
 
 /**
  * A story read to its end page keeps its points however the reader leaves (F-TCH-004 section 3.5 amendment NB-1,

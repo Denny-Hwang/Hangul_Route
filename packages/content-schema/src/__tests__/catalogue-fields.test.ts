@@ -11,12 +11,12 @@ import {
   StoryObjectSchema,
   ThemeKeySchema,
   isPillarTag,
-  lintStory,
   parseStory,
   pillarTagRomanization,
   romanize,
   type Story,
 } from '../index';
+import { lintStory } from '../story-lint';
 import readyJson from '../__fixtures__/story/valid.ready.json';
 
 /** F-STORY-005 §3.2 / §3.8 (PR 5.1): the pillar registry, the episode merge and the tag lint. */

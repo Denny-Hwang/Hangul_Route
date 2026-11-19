@@ -18,7 +18,7 @@
       "steps.s2.title": "음식 네 가지",
       "steps.s2.discover.pages.0.caption": "메뉴판에는 음식 이름이 적혀 있어요. 한 글자씩 읽어 봐요.",
       "steps.s2.discover.pages.0.items.0.keyWords.gimbap.gloss": "김에 밥을 말아 썬 음식",
-      "steps.s2.discover.pages.0.items.0.keyWords.tteokbokki.gloss": "가래떡을 매콤하게 익힌 음식",
+      "steps.s2.discover.pages.0.items.0.keyWords.tteokbokki.gloss": "가래떡을 매콤하게 볶은 음식",
       "steps.s2.discover.pages.0.items.0.keyWords.ramyeon.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
       "steps.s2.discover.pages.0.items.0.keyWords.bibimbap.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
       "steps.s3.title": "메뉴판 읽기",
@@ -30,7 +30,7 @@
     "minigame:s6-letters-q1-practice": {
       "realiaRead.realia.alt": "음식 네 가지가 적힌 분식집 메뉴판",
       "realiaRead.realia.entries.e1.text.gloss": "김에 밥을 말아 썬 음식",
-      "realiaRead.realia.entries.e2.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.realia.entries.e2.text.gloss": "가래떡을 매콤하게 볶은 음식",
       "realiaRead.realia.entries.e3.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
       "realiaRead.realia.entries.e4.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
       "realiaRead.rounds.r1.question": "메뉴판에 있는 것은 무엇일까요?",
@@ -39,10 +39,10 @@
       "realiaRead.rounds.r1.options.c.label": "바나나",
       "realiaRead.rounds.r2.question": "국수는 어느 것일까요?",
       "realiaRead.rounds.r2.options.a.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
-      "realiaRead.rounds.r2.options.b.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.rounds.r2.options.b.text.gloss": "가래떡을 매콤하게 볶은 음식",
       "realiaRead.rounds.r3.question": "매콤한 떡 음식은 무엇일까요?",
       "realiaRead.rounds.r3.options.a.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
-      "realiaRead.rounds.r3.options.b.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.rounds.r3.options.b.text.gloss": "가래떡을 매콤하게 볶은 음식",
       "realiaRead.rounds.r4.question": "밥을 섞어 먹는 음식은 무엇일까요?",
       "realiaRead.rounds.r4.options.a.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
       "realiaRead.rounds.r4.options.b.text.gloss": "김에 밥을 말아 썬 음식"
@@ -58,7 +58,7 @@
     "minigame:s6-letters-q1-check": {
       "realiaRead.realia.alt": "음식 네 가지가 적힌 분식집 메뉴판",
       "realiaRead.realia.entries.e1.text.gloss": "김에 밥을 말아 썬 음식",
-      "realiaRead.realia.entries.e2.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.realia.entries.e2.text.gloss": "가래떡을 매콤하게 볶은 음식",
       "realiaRead.realia.entries.e3.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
       "realiaRead.realia.entries.e4.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
       "realiaRead.rounds.c1.question": "김에 밥을 말아 썬 음식은 어느 것일까요?",
@@ -67,7 +67,7 @@
       "realiaRead.rounds.c1.options.c.text.gloss": "밥에 나물을 넣고 섞어 먹는 음식",
       "realiaRead.rounds.c2.question": "메뉴판에서 이 음식을 찾아요. 어느 그림일까요?",
       "realiaRead.rounds.c2.options.a.label": "김에 밥을 말아 썬 음식",
-      "realiaRead.rounds.c2.options.b.label": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.rounds.c2.options.b.label": "가래떡을 매콤하게 볶은 음식",
       "realiaRead.rounds.c2.options.c.label": "금방 끓여 먹는 꼬불꼬불한 국수"
     },
     "quest:stage6-letters-q2": {
@@ -92,7 +92,7 @@
       "realiaRead.realia.alt": "음식 네 가지와 가격이 원으로 적힌 분식집 메뉴판",
       "realiaRead.realia.entries.e1.text.gloss": "김에 밥을 말아 썬 음식",
       "realiaRead.realia.entries.e1.value.gloss": "2,000원",
-      "realiaRead.realia.entries.e2.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.realia.entries.e2.text.gloss": "가래떡을 매콤하게 볶은 음식",
       "realiaRead.realia.entries.e2.value.gloss": "3,000원",
       "realiaRead.realia.entries.e3.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
       "realiaRead.realia.entries.e3.value.gloss": "4,000원",
@@ -122,13 +122,13 @@
       "clozePick.rounds.c1.tiles.sacheon.gloss": "4,000",
       "clozePick.rounds.c1.tiles.icheon.gloss": "2,000",
       "clozePick.rounds.c1.tiles.ocheon.gloss": "5,000",
-      "clozePick.rounds.c2.sentence.gloss": "가래떡을 매콤하게 익힌 음식은 ___원이에요.",
+      "clozePick.rounds.c2.sentence.gloss": "가래떡을 매콤하게 볶은 음식은 ___원이에요.",
       "clozePick.rounds.c2.tiles.icheon.gloss": "2,000",
       "clozePick.rounds.c2.tiles.sacheon.gloss": "4,000",
       "clozePick.rounds.c2.tiles.samcheon.gloss": "3,000",
       "clozePick.realia.entries.e1.text.gloss": "김에 밥을 말아 썬 음식",
       "clozePick.realia.entries.e1.value.gloss": "2,000원",
-      "clozePick.realia.entries.e2.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "clozePick.realia.entries.e2.text.gloss": "가래떡을 매콤하게 볶은 음식",
       "clozePick.realia.entries.e2.value.gloss": "3,000원",
       "clozePick.realia.entries.e3.text.gloss": "금방 끓여 먹는 꼬불꼬불한 국수",
       "clozePick.realia.entries.e3.value.gloss": "4,000원",
@@ -143,7 +143,7 @@
       "steps.s2.title": "더 큰 숫자, 매운맛, 마실 것",
       "steps.s2.discover.pages.0.caption": "한자어 수는 육, 칠, 팔, 구, 십으로 이어져요. 이 메뉴판에는 육과 칠이 나와요.",
       "steps.s2.discover.pages.0.items.0.keyWords.yuk-chil-pal-gu-sip.gloss": "6부터 10까지를 나타내는 한자어 수",
-      "steps.s2.discover.pages.1.caption": "고를 때 쓰는 말이에요. 매운맛, 물, 차.",
+      "steps.s2.discover.pages.1.caption": "매운맛, 물, 차처럼 고를 때 쓰는 말이에요.",
       "steps.s2.discover.pages.1.items.0.keyWords.maeunmat.gloss": "혀가 얼얼하고 화끈한 맛",
       "steps.s2.discover.pages.1.items.0.keyWords.mul.gloss": "목마를 때 마시는 맑고 투명한 것",
       "steps.s2.discover.pages.1.items.0.keyWords.cha.gloss": "잎을 뜨거운 물에 우려낸 마실 것",
@@ -155,7 +155,7 @@
     },
     "minigame:s6-letters-q3-practice": {
       "realiaRead.realia.alt": "매운맛 음식과 마실 것 두 가지가 적힌 다른 분식집 메뉴판",
-      "realiaRead.realia.entries.e1.text.gloss": "가래떡을 매콤하게 익힌 음식",
+      "realiaRead.realia.entries.e1.text.gloss": "가래떡을 매콤하게 볶은 음식",
       "realiaRead.realia.entries.e1.value.gloss": "6,000원",
       "realiaRead.realia.entries.e2.text.gloss": "더 맵게 만든 가래떡 볶음",
       "realiaRead.realia.entries.e2.value.gloss": "7,000원",
@@ -170,7 +170,7 @@
       "realiaRead.rounds.r4.question": "메뉴판에 있는 마실 것은 무엇일까요?",
       "realiaRead.rounds.r4.options.a.label": "우유",
       "realiaRead.rounds.r4.options.b.label": "딸기",
-      "realiaRead.rounds.r4.options.c.label": "맑은 마실 것"
+      "realiaRead.rounds.r4.options.c.label": "목마를 때 마시는 맑은 것"
     },
     "minigame:s6-letters-q3-apply": {
       "typeHangul.rounds.t1.prompt": "이 맛을 써 봐요",
@@ -182,9 +182,9 @@
     },
     "minigame:s6-letters-q3-check": {
       "typeHangul.rounds.c1.prompt": "들리는 가격을 써 봐요.",
-      "typeHangul.rounds.c1.target.gloss": "한국 돈 2,000",
+      "typeHangul.rounds.c1.target.gloss": "한국 돈으로 2,000",
       "typeHangul.rounds.c2.prompt": "들리는 가격을 써 봐요.",
-      "typeHangul.rounds.c2.target.gloss": "한국 돈 7,000"
+      "typeHangul.rounds.c2.target.gloss": "한국 돈으로 7,000"
     }
   }
 }

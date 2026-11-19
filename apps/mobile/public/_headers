@@ -12,13 +12,17 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
   Content-Security-Policy: frame-ancestors 'self'
-# The app's own script chunks are the one exception to nosniff (F-CURR-002 section 10,
-# pwa/lesson-chunks.mjs nosniffLessonChunks, which fails the build otherwise): a page
-# of an older build that asks for a chunk the host no longer has gets index.html, and
-# without nosniff the browser runs it and the page reloads onto the new build. The
-# other four headers stay.
+# The app's own script chunks: content-hashed names, so a file never changes at its URL and
+# is cached for a year (AMENDMENTS-FINISH-2026-11 FN-3). A chunk the host does not have is
+# answered 404 by the app host's Worker (scripts/app-host/worker.mjs), never with index.html,
+# so no page can be kept under a chunk URL; this rule is the only Cache-Control of these
+# paths. They also stay the one exception to nosniff (F-CURR-002 section 10,
+# pwa/lesson-chunks.mjs nosniffLessonChunks, which fails the build otherwise): should a chunk
+# URL of an older build ever get the fallback page again (a host without the Worker), the
+# browser runs it and the page reloads onto the new build. The other four headers stay.
 /_expo/static/js/*
   ! X-Content-Type-Options
+  Cache-Control: public, max-age=31536000, immutable
 # The service worker and manifest must never be served stale, or an update
 # could take up to a day to reach installed apps.
 /sw.js

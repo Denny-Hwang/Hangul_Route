@@ -13,7 +13,7 @@
 // The generators run in this order (none reads another's output):
 //
 //   build-vocab.mjs              content/vocab, content/i18n           -> vocab.ts, vocab-catalog.ts
-//   build-placement-bank.mjs     content/placement                      -> placement.generated.ts
+//   build-placement-bank.mjs     content/placement                      -> placement.generated.ts, placement-meta.generated.ts
 //   build-overlays.mjs           content/i18n                           -> i18n-overlays.generated.ts, i18n-overlays-<locale>.generated.ts
 //   build-stories.mjs            content/stories                        -> stories-index.ts, stories-shelf.ts, story-chunks/
 //   build-lessons.mjs            content/episodes, stories, vocab, i18n -> lessons-index.ts, lesson-chunks/,
@@ -52,7 +52,7 @@ const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 /** The generators in run order, each with the paths (files or folders, relative to the root) it writes. */
 export const GENERATORS = Object.freeze([
   { script: "build-vocab.mjs", outputs: ["apps/mobile/src/content/__generated__/vocab.ts", "apps/web/src/data/vocab-catalog.ts"] },
-  { script: "build-placement-bank.mjs", outputs: ["apps/mobile/src/content/placement.generated.ts"] },
+  { script: "build-placement-bank.mjs", outputs: ["apps/mobile/src/content/placement.generated.ts", "apps/mobile/src/content/placement-meta.generated.ts"] },
   {
     script: "build-overlays.mjs",
     outputs: [

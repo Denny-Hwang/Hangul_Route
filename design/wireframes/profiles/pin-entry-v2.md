@@ -69,6 +69,10 @@ Panel C — Forgot PIN? on the web, online (PinReset)
 +--------------------------------+
 ```
 
+[FN] FN-1: a Rescue Code that matches, and Set a new PIN after the wait, open the check of
+`onboarding/all-ages-onboarding.md` box G2 (a number in words, typed as digits) before the new PIN. Sign in to the
+account does not (the console's ticket goes straight to Panel F).
+
 Panel D — console `/account/pin-reset`, checks passed
 
 ```

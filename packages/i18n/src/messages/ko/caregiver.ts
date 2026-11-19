@@ -1,3 +1,4 @@
+import { numberInWords } from '../../number-words';
 import type { DeepPartial, Messages } from '../../types';
 
 /**
@@ -48,7 +49,7 @@ export const caregiver = {
   },
 
   pin: {
-    mismatch: '서로 달라요. 처음부터 다시 해 봐요.',
+    mismatch: '두 PIN이 서로 달라요. 처음부터 다시 해 봐요.',
     cooldown: (seconds: number) => `잠깐 쉬어요. ${seconds}초 뒤에 다시 해 보세요.`,
     cooldownMinutes: (n: number) => `잠깐 쉬어요. ${n}분 뒤에 다시 해 보세요.`,
     cooldownHelp: "'PIN을 잊었나요?'에서 새 PIN을 만들 수도 있어요.",
@@ -65,7 +66,7 @@ export const caregiver = {
       createAgain: '한 번 더 입력하기',
       verifySubtitle: '계속하려면 숫자 4자리 PIN을 입력해 주세요.',
       createAgainSubtitle: '같은 숫자 4개를 한 번 더 입력해 주세요.',
-      triesLeft: (left: number) => `조금 달라요. ${left}번 더 해 볼 수 있어요.`,
+      triesLeft: (left: number) => `번호가 달라요. ${left}번 더 해 볼 수 있어요.`,
       unlock: { cta: '열기' },
       forgot: { cta: 'PIN을 잊었나요?' },
     },
@@ -92,6 +93,13 @@ export const caregiver = {
         wrongCode: '이 기기에 저장된 코드와 달라요. 확인하고 다시 해 보세요.',
         noCode: '이 기기에는 저장된 복구 코드가 없어요. 대신 24시간 기다리기를 써 주세요.',
         badFormat: '낱말과 숫자를 모두 입력해 주세요. 예: TIGER-MOON-RIVER-APPLE-482139 (예전 코드: TIGER-MOON-4821)',
+      },
+      check: {
+        heading: '한 단계 더',
+        prompt: '이 수를 숫자로 적어 주세요.',
+        words: (n: number) => numberInWords('ko', n),
+        fieldLabel: '숫자로 적기',
+        again: '번호가 달라요. 새 수를 보여 드릴게요.',
       },
       signIn: {
         heading: '계정으로 로그인하기',
@@ -337,9 +345,9 @@ export const caregiver = {
       nameLocked: '이름은 프로필 편집에서 바꿀 수 있어요.',
       me: { cta: '나예요' },
       joining: { cta: '참여하는 중…' },
-      alreadyIn: { cta: '원래 이 반에 있었어요' },
+      alreadyIn: { cta: '이미 이 반에 있어요' },
       /** 참여는 반 옮기기가 아니에요: 다른 반에도 그대로 있어요. 이름 뒤에 조사를 붙이지 않고 콜론 형태로 써요. '옮기기'는 `transfer.actions.move.cta`. */
-      staysIn: (learner: string, classes: readonly string[]) => `${learner}: ${classes.join(', ')}에도 그대로 있어요. 대신 옮기려면 옮기기를 누르거나 선생님에게 물어봐요.`,
+      staysIn: (learner: string, classes: readonly string[]) => `${learner}: ${classes.join(', ')}에도 그대로 있어요. 반을 옮기려면 옮기기를 누르거나 선생님에게 물어봐요.`,
       notThis: { cta: '이 반이 아니에요' },
     },
     pick: {
@@ -373,7 +381,7 @@ export const caregiver = {
       /** 반 이름 뒤에는 받침과 상관없는 조사(에, 에도, 의)만 써요. `moved` (`반을 옮겼어요. …의 새 반: …`)와 같은 형태예요. */
       movedOut: (learner: string, to: string, from: string) => `${learner}의 새 반: ${to}. ${from}에도 있으려면 선생님에게 물어봐요.`,
       movedOutElsewhere: (learner: string, from: string) => `${learner}의 반이 바뀌었어요. ${from}에도 있으려면 선생님에게 물어봐요.`,
-      moveWaiting: (to: string) => `옮길 반: ${to}. 반 옮기기가 선생님의 답을 기다리고 있어요. 선생님이 좋다고 하면 끝나요.`,
+      moveWaiting: (to: string) => `옮길 반: ${to}. 선생님의 답을 기다리고 있어요. 선생님이 좋다고 하면 옮겨져요.`,
     },
     /** [OA] 누가 들어가나요? (AMENDMENTS-ONE-ACCOUNT-MANY-USERS 17.4, OA-7b): 이름 뒤에 조사를 붙이지 않고 콜론 형태로 써요. The consent step uses the shipped Join verb 참여 (`join.title`, `code.join.cta`); notNow is the transfer consent's words. */
     who: {
@@ -437,7 +445,7 @@ export const caregiver = {
       noSound: '듣기는 확인하지 않았어요: 이 기기에서 소리가 나지 않아요.',
       soundGuide: '읽기는 확인하지 않았어요: 소리 안내가 항상 보이게 설정되어 있었어요.',
       screenReader: '글자 모양은 확인하지 않았어요: 화면 읽기 기능이 켜져 있었어요.',
-      screenReaderPictures: '낱말과 문장은 확인하지 않았어요: 한글 그림 보기는 화면 읽기 기능으로 읽을 수 없어요.',
+      screenReaderPictures: '낱말과 문장은 확인하지 않았어요: 그림으로 된 한글 보기는 화면 읽기 기능이 읽어 주지 못해요.',
       endedEarly: '확인을 일찍 마쳐서 일부는 보지 못했어요.',
     },
     shortNotTested: '글자 모양과 문장은 짧은 확인에 들어 있지 않아요.',
@@ -536,7 +544,7 @@ export const caregiver = {
     },
   },
   skillsNote:
-    '수준 확인은 읽기와 듣기를 봐요. 쓰기는 따라 쓰기 게임으로 연습하고, 채점하지 않아요. 각 줄은 이 게임이 들어 있는 퀘스트 가운데 끝낸 것의 수예요. 퀘스트 안에서 게임을 건너뛰어도 수에 들어가요.',
+    '수준 확인은 읽기와 듣기를 봐요. 쓰기는 따라 쓰기 게임으로 연습하고, 채점하지 않아요. 각 줄의 수는 이 게임이 들어 있는 퀘스트 가운데 끝낸 퀘스트의 수예요. 퀘스트 안에서 게임을 건너뛰어도 세어요.',
   grownUpHome: {
     noPin: '이 기기에는 어른용 PIN이 없어요. 대신 어른용 페이지에서 로그인해 주세요.',
     continue: { cta: '계속' },
@@ -642,7 +650,7 @@ export const caregiver = {
       storyTileA11y: (title: string, minutes: number) => `${title}. 약 ${minutes}분.`,
     },
     keep: {
-      label: '이 기기에 레슨을 7일 동안 두기, 오프라인에서도',
+      label: '레슨을 이 기기에 7일 동안 두기 (오프라인에서도 보기)',
       failed: '이 기기에 레슨을 두지 못했어요.',
     },
     display: {
@@ -769,7 +777,7 @@ export const caregiver = {
       askConsole: '계정이 있는 어른에게 콘솔에서 답해 달라고 해 주세요.',
       needsPin: '먼저 어른이 PIN을 만들어야 해요. 프로필에서 어른용 설정을 펼치고 어른 공간을 열어 주세요.',
       pinTooNew: 'PIN을 만들고 하루가 지나면 이동할 수 있어요.',
-      sourceAsked: (source: string) => `${source}에서 반 이동을 물어봤어요.`,
+      sourceAsked: (source: string) => `${source}에서 반 이동을 요청했어요.`,
       learnerAsked: (destination: string) => `요청한 이동: ${destination}.`,
     },
     lines: {
@@ -782,7 +790,7 @@ export const caregiver = {
       ended: '이 요청은 끝났어요.',
       joinAgain: '새 반에 다시 참여해 주세요.',
       moved: (name: string, destination: string) => `반을 옮겼어요. ${name}의 새 반: ${destination}. 카드와 별은 ${name}에게 그대로 있어요.`,
-      askedMoving: (source: string, name: string, destination: string) => `${source}에서 ${name}의 반 이동을 물어봤어요. 새 반: ${destination}.`,
+      askedMoving: (source: string, name: string, destination: string) => `${source}에서 ${name}의 반 이동을 요청했어요. 새 반: ${destination}.`,
       consoleAnswers: '계정이 있는 어른이 콘솔에서 답해요.',
       notNowEnds: '"지금은 안 함"을 누르면 이 요청이 끝나요.',
     },
@@ -801,7 +809,7 @@ export const caregiver = {
       cooldown: '일주일쯤 뒤에 다시 요청할 수 있어요.',
       caregiverRequired: '계정이 있는 어른에게 콘솔에서 이 이동을 시작해 달라고 해 주세요.',
       deviceConsentLocked: '이 기기에서는 아직 이동을 시작할 수 없어요.',
-      alreadyOpenClass: (name: string) => `한 반에서 이미 ${name}의 이동을 물어봤어요. 반과 가족 카드를 봐 주세요.`,
+      alreadyOpenClass: (name: string) => `한 반에서 이미 ${name}의 이동을 요청했어요. 반과 가족 카드를 봐 주세요.`,
       alreadyOpenLearner: (name: string) => `${name}의 이동 요청이 이미 기다리고 있어요. 반과 가족 카드를 봐 주세요.`,
       sameSpace: (name: string) => `${name}: 지금 있는 반의 코드예요.`,
       notTransferable: '이 코드는 이동에 쓸 수 없어요.',
@@ -844,7 +852,7 @@ export const caregiver = {
   },
   people: {
     lock: '어른용 PIN으로 잠그기',
-    lockHint: '어른 본인 프로필에 좋아요. 다른 사람이 이 프로필로 하지 못해요.',
+    lockHint: '어른 본인의 프로필에 쓰면 좋아요. 다른 사람은 이 프로필을 쓸 수 없어요.',
     title: '이 기기를 쓰는 사람',
     remove: '이 기기에서 빼기',
     removeAsk: (name: string) => `${name}: 이 기기에서 뺄까요?`,
@@ -858,9 +866,9 @@ export const caregiver = {
     spacesStay: '가족이나 반 자리는 그대로예요. 어른이 계정 페이지에서 바꿀 수 있어요.',
     /** [GU] AMENDMENTS-GUEST-FIRST-LESSON 9.2, 16.3 (GU-5): 저장하지 않은 첫 퀘스트. */
     guestRow: '첫 퀘스트, 저장 전',
-    guestKeep: '학습자로 간직하기',
+    guestKeep: '학습자로 저장하기',
     guestRemove: '첫 퀘스트 지우기',
-    guestOnlyGate: '누군가 이 브라우저에서 첫 퀘스트를 해 보고 간직하지 않았어요. PIN을 만들거나 그 퀘스트를 지워요.',
+    guestOnlyGate: '이 브라우저에 저장하지 않은 첫 퀘스트가 있어요. PIN을 만들거나 그 퀘스트를 지워 주세요.',
     guestRemoveAsk: '첫 퀘스트를 지울까요?',
     guestConfirm: '이 퀘스트의 카드와 별이 이 브라우저에서 지워져요.',
   },
@@ -895,7 +903,7 @@ export const caregiver = {
     },
     lock: {
       cantCheck: '지금은 이 기기를 확인할 수 없어요. 잠시 뒤에 다시 해 보세요.',
-      retrustPassword: '지난번 로그인한 뒤에 어른용 PIN이 바뀌었어요. 쓰려면 비밀번호로 로그인해 주세요.',
+      retrustPassword: '지난번 로그인한 뒤에 어른용 PIN이 바뀌었어요. 계속하려면 비밀번호로 로그인해 주세요.',
     },
     card: {
       title: '어른 계정',

@@ -362,6 +362,6 @@ describe('the memory totals (F-CURR-002 CM-16)', () => {
     const ko = view({ data: body({ ...REPORT, memory }), locale: 'ko' }).moreDetail?.memory;
     expect(ko?.lines[0]).toBe('아는 낱말 합계: 120개');
     expect(ko?.lines[2]).toBe('에피소드: 완료 9개, 연습함 3개, 익힘 1개');
-    expect(ko?.from).toBe('이 숫자를 공유하는 학습자 3명의 합계예요.');
+    expect(ko?.from).toBe('앱에서 이 숫자를 보내 주는 학습자 3명의 합계예요.');
   });
 });

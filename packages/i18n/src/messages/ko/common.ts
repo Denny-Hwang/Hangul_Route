@@ -34,7 +34,7 @@ export const common = {
       progress_new_letters: '새 글자를 배웠네요. 정말 잘했어요!',
       progress_reading: '읽기 실력이 점점 늘고 있어요.',
       progress_writing: '글씨가 반듯하고 알아보기 쉬워요.',
-      progress_listening: '정말 귀 기울여 듣네요.',
+      progress_listening: '귀 기울여 잘 듣고 있네요.',
       progress_new_card: '새 카드를 받았네요. 잘했어요!',
       next_try_this: '다음에는 이 퀘스트를 해 봐요. 마음에 들 것 같아요.',
       next_look_again: '배운 글자를 같이 다시 봐요.',
@@ -88,5 +88,9 @@ export const common = {
     pictures: { label: '그림 먼저', description: '큰 타일과 그림으로 배우고, 읽을 글은 아주 적어요.' },
     someReading: { label: '조금 읽어요', description: '짧은 낱말과 짧은 문장을 읽어요.' },
     readsEasily: { label: '술술 읽어요', description: '더 긴 글과 이야기, 대화를 읽어요.' },
+  },
+  /** 앱이 켜지기 전에 HTML 이 먼저 보여 주는 시작 화면 (FN-2). */
+  splash: {
+    loading: '불러오는 중',
   },
 } satisfies DeepPartial<Messages['common']>;

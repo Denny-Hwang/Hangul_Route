@@ -1,4 +1,4 @@
-import { DEFAULT_TEXT_SIZE, TextSizeSchema, UiLocaleSchema, type TextSize } from '@hangul-route/content-schema';
+import { DEFAULT_TEXT_SIZE, TextSizeSchema, UI_LOCALE_MIRROR_KEY, UiLocaleSchema, type TextSize } from '@hangul-route/content-schema';
 import { detectLocale, type UiLocale } from '@hangul-route/i18n';
 import type { DeviceSettingsRead } from './device-settings';
 import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage } from './safe-storage';
@@ -16,9 +16,10 @@ import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage }
  * the record's language is (and nothing when the record holds none), read for the first paint and
  * where IndexedDB cannot be read. It is never the source of truth while the record can be read,
  * with one exception: the console's own stored choice from before the record existed is folded
- * into the record of a device with no learner profiles (`resolveConsoleDisplay`).
+ * into the record of a device with no learner profiles (`resolveConsoleDisplay`). The learner app keeps the same mirror,
+ * and the learner shell's static splash reads it (AMENDMENTS-FINISH-2026-11 FN-2, `UI_LOCALE_MIRROR_KEY`).
  */
-export const CONSOLE_LOCALE_KEY = 'hr:console:uiLocale';
+export const CONSOLE_LOCALE_KEY = `hr:${UI_LOCALE_MIRROR_KEY}`;
 /** The same mirror for the record's text size. */
 export const CONSOLE_TEXT_SIZE_KEY = 'hr:console:textSize';
 

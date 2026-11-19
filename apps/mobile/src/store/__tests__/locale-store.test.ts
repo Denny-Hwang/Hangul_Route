@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
+const mirror = vi.hoisted(() => new Map<string, string>());
 const storage = vi.hoisted(() => ({ failReads: false, failStrictReads: false, strictReadFailures: 0, failWrites: false, writeFails: [] as string[] }));
 /** A strict read that fails: every one while `failStrictReads`, else the next `strictReadFailures`. */
 const strictReadFails = (): boolean => {
@@ -36,6 +37,12 @@ vi.mock('../../platform/storage', () => ({
   }),
   removeKey: vi.fn(async (k: string) => {
     mem.delete(k);
+  }),
+}));
+// FN-2: the synchronous copy of the record's language for the static splash (written, never read).
+vi.mock('../../platform/storage-mirror', () => ({
+  writeMirror: vi.fn((k: string, v: string) => {
+    mirror.set(k, v);
   }),
 }));
 const track = vi.hoisted(() => vi.fn(async () => true));
@@ -85,6 +92,7 @@ const showAll = (on: boolean): void => {
 
 const reset = (): void => {
   mem.clear();
+  mirror.clear();
   posted.length = 0;
   storage.failReads = false;
   storage.failStrictReads = false;
@@ -798,11 +806,63 @@ describe('locale-store: a stored locale that is currently hidden is ignored', ()
 });
 
 /**
- * AMENDMENTS-DISPLAY-NAV sections 3.3 and 12: the learner app never reads or writes the console's old key
- * `hr:console:uiLocale` (the console folds it on a device with no learner profiles and keeps it as a mirror).
- * Its language comes from the device record, a `?lang=` seed or a choice, never from that key.
+ * AMENDMENTS-FINISH-2026-11 FN-2: the static splash of the HTML shell reads the device's language synchronously, from
+ * the copy the grown-up pages already keep (`UI_LOCALE_MIRROR_KEY`). The learner app copies the language of every record
+ * it reads or writes into it; a record with no language leaves it alone (the console's fold); it never reads it.
  */
-describe('locale-store: the learner app never touches hr:console:uiLocale', () => {
+describe("locale-store: the record's language is mirrored for the static splash", () => {
+  beforeEach(reset);
+  const MIRROR = 'console:uiLocale';
+
+  it('hydrate mirrors the language of the record it read; a record with none leaves the copy alone', async () => {
+    mem.set('device:settings', { uiLocale: 'ko', uiLocaleAt: '2026-11-01T00:00:00.000Z' });
+    await useLocaleStore.getState().hydrate([]);
+    expect(mirror.get(MIRROR)).toBe('ko');
+    mirror.set(MIRROR, 'es');
+    mem.set('device:settings', { textSize: 'large' });
+    await useLocaleStore.getState().hydrate([]);
+    expect(mirror.get(MIRROR)).toBe('es');
+  });
+
+  it('a record that cannot be read leaves the copy as it is', async () => {
+    mirror.set(MIRROR, 'es');
+    storage.failStrictReads = true;
+    await useLocaleStore.getState().hydrate([]);
+    expect(mirror.get(MIRROR)).toBe('es');
+  });
+
+  it('a choice, a seed and a record from another tab or a re-read are mirrored', async () => {
+    await useLocaleStore.getState().hydrate([]);
+    useLocaleStore.getState().setDeviceLocale('es', 'settings');
+    await settle();
+    expect(mirror.get(MIRROR)).toBe('es');
+    useLocaleStore.getState().applyDeviceRecord({ uiLocale: 'ko' });
+    expect(mirror.get(MIRROR)).toBe('ko');
+    mem.set('device:settings', { uiLocale: 'en', uiLocaleAt: '2026-11-02T00:00:00.000Z' });
+    await useLocaleStore.getState().rereadDevice();
+    expect(mirror.get(MIRROR)).toBe('en');
+    useLocaleStore.getState().applyDeviceRecord({ textSize: 'large' });
+    expect(mirror.get(MIRROR)).toBe('en');
+  });
+
+  it('a write that fails mirrors the record as stored, never the choice it could not store', async () => {
+    mem.set('device:settings', { uiLocale: 'ko', uiLocaleAt: '2026-11-01T00:00:00.000Z' });
+    await useLocaleStore.getState().hydrate([]);
+    storage.writeFails = ['device:settings'];
+    useLocaleStore.getState().setDeviceLocale('es', 'settings');
+    await settle();
+    expect(mirror.get(MIRROR)).toBe('ko');
+  });
+});
+
+/**
+ * AMENDMENTS-DISPLAY-NAV sections 3.3 and 12: the learner app never reads the console's old key
+ * `hr:console:uiLocale` (the console folds it on a device with no learner profiles and keeps it as a mirror).
+ * Its language comes from the device record, a `?lang=` seed or a choice, never from that key. [FN] Since FN-2 it
+ * writes that key only through `writeMirror` (mocked here; the block above), as a copy of the record, never folding
+ * or reading it: the checks below stay on the read, fold and removal paths of storage and localStorage.
+ */
+describe('locale-store: the learner app never reads hr:console:uiLocale', () => {
   const CONSOLE_KEY = 'hr:console:uiLocale';
   // The literal key, the web constant that holds it, a module named console-locale (the web one or a
   // future shared export) and the key built from parts ('…console:' + 'uiLocale') all count.

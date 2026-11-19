@@ -41,6 +41,11 @@ export interface PresenterChooserInput {
   bundle?: LectureBundle;
   /** List each cell's Volume 2 as its own row (F-CURR-002 row CM-40): only while `volumes` is on. */
   volumes?: boolean;
+  /**
+   * Whether an episode gets a row. Default: the bundle can expand it now. The presenter home lists from the manifest
+   * before any body is in ([FN] AMENDMENTS-FINISH-2026-11 row FN-4), so it passes `presenterListsEpisode`.
+   */
+  listed?: (episodeId: string) => boolean;
 }
 
 const MINUTES_DECK: Omit<LectureDeck, 'blocks'> = {
@@ -127,11 +132,12 @@ export function presenterChooserGroups(locale: UiLocale, labels: ChooserLabels, 
     });
   // A cell the bundle cannot expand is not offered (with the shipped bundle, every ready cell is there); nor is a
   // later volume of one (row CM-40).
+  const listed = input.listed ?? ((id: string): boolean => bundle.episodeById(id) !== undefined);
   const expandable = {
     ...catalog,
     cells: catalog.cells
-      .filter((c) => bundle.episodeById(c.episodeId) !== undefined)
-      .map((c) => (c.volumes === undefined ? c : { ...c, volumes: c.volumes.filter((v) => bundle.episodeById(v.episodeId) !== undefined) })),
+      .filter((c) => listed(c.episodeId))
+      .map((c) => (c.volumes === undefined ? c : { ...c, volumes: c.volumes.filter((v) => listed(v.episodeId)) })),
   };
   const groups = chooserGroups({
     catalog: expandable,

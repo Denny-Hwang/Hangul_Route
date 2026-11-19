@@ -44,6 +44,13 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
   withOwnSafeArea: { file: 'navigation/with-own-safe-area.tsx', delegate: 0, renders: /<SafeAreaProvider>\s*<Component \{\.\.\.props\} \/>\s*<\/SafeAreaProvider>/ },
   // The level check's routes: the screen while the run is on that route, null on a stale one (listed above).
   flowRoute: { file: 'screens/placement/context.tsx', delegate: 1, renders: /return target === name \? <Screen \/> : null;/ },
+  // [FN] AMENDMENTS-FINISH-2026-11 row FN-5: a learner tab, frozen while it is not focused (it draws its screen, or keeps
+  // the last one drawn while frozen; a tab first mounted unfocused draws once it is focused).
+  frozenWhenBlurred: {
+    file: 'navigation/freeze-when-blurred.tsx',
+    delegate: 0,
+    renders: /const screen = useMemo\(\(\) => <Screen \{\.\.\.props\} \/>, \[props\]\);\s*return <Freeze frozen=\{frozen\}>\{screen\}<\/Freeze>;/,
+  },
   // [GU] The guest stack's shared learner screen (the card page): the same component, typed for the guest stack's routes.
   shared: { file: 'navigation/guest-chunk.tsx', delegate: 0, renders: /return screen as unknown as ComponentType<GuestScreenProps<K>>;/ },
 };
@@ -88,6 +95,16 @@ const LAZY_SCREENS: Readonly<Record<string, string>> = {
   'screens/minigames/my-story-entry.tsx#MyStoryGame': 'screens/minigames/MyStoryGame.tsx#MyStoryGame',
   // Row CM-47: the Realia Read e2e screen's chunk (fixture builds only), with the fixtures of every realia kind.
   'navigation/realia-read-e2e.tsx#RealiaReadE2eBody': 'navigation/realia-read-e2e-screen.tsx#RealiaReadE2eBody',
+  // [FN] AMENDMENTS-FINISH-2026-11 FN-7: more learner screens, each drawn by its door once its chunk is in.
+  'screens/minigames/writing-entry.tsx#TypeHangul': 'screens/minigames/TypeHangulGame.tsx#TypeHangulGame',
+  'screens/minigames/writing-entry.tsx#WriteFrame': 'screens/minigames/WriteFrameGame.tsx#WriteFrameGame',
+  'screens/minigames/trace-word-entry.tsx#TraceWord': 'screens/minigames/TraceWordGame.tsx#TraceWordGame',
+  'screens/minigames/sentence-builder-entry.tsx#SentenceBuilder': 'screens/minigames/SentenceBuilderGame.tsx#SentenceBuilderGame',
+  'screens/story/reader-entry.tsx#Reader': 'screens/story/StoryReaderView.tsx#StoryReaderView',
+  'screens/vocab/speed-round-entry.tsx#SpeedRound': 'screens/vocab/VocabSpeedRoundScreen.tsx#VocabSpeedRoundScreen',
+  'screens/route/route-proposal-entry.tsx#RouteProposal': 'screens/route/RouteProposalScreen.tsx#RouteProposalScreen',
+  'screens/sync/join-space-entry.tsx#JoinSpace': 'screens/sync/JoinSpaceScreen.tsx#JoinSpaceScreen',
+  'screens/placement/placement-entry.tsx#Placement': 'screens/placement/PlacementScreen.tsx#PlacementScreen',
 };
 
 /**

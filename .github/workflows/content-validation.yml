@@ -27,6 +27,7 @@ on:
       - "scripts/build-placement-bank.mjs"
       - "scripts/placement-rules.mjs"
       - "apps/mobile/src/content/placement.generated.ts"
+      - "apps/mobile/src/content/placement-meta.generated.ts"
       # F-I18N-001 PR 12: content overlays (generator, allow-list, validator rules)
       - "scripts/build-overlays.mjs"
       - "scripts/overlay-fields.mjs"

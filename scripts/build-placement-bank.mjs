@@ -8,6 +8,10 @@
 //   apps/mobile/src/content/placement.generated.ts
 //       PLACEMENT_BANK     PlacementBank      { version, templates } in file order
 //       PLACEMENT_WARMUP   PlacementTemplate  the unscored warm-up question (not in the bank)
+//   apps/mobile/src/content/placement-meta.generated.ts
+//       PLACEMENT_BANK_META  { version, readyTemplates, warmup }: what the start bundle reads before the
+//                            level check opens (AMENDMENTS-FINISH-2026-11 FN-7: the bank itself is a chunk of its
+//                            own, `src/content/placement-bank-chunk.ts`, loaded when the check or its report opens)
 //
 // This is a shaper: it checks the JSON it must emit, maps the Korean `prompt` and
 // `spoken` objects of a template onto the question fields `promptKo`,
@@ -250,6 +254,19 @@ export function renderBank({ bank, warmup }) {
   );
 }
 
+/**
+ * The start bundle's view of the bank (FN-7): its version (a saved run of another version is not resumed), the count of
+ * ready templates (the check is offered only when there is one) and the warm-up's id. Nothing else of the bank.
+ */
+export function renderMeta({ bank, warmup }) {
+  const meta = { version: bank.version, readyTemplates: bank.templates.filter((t) => t.status === "ready").length, warmup: warmup.id };
+  return (
+    GENERATED_HEADER +
+    "// The start bundle's view of the bank (AMENDMENTS-FINISH-2026-11 FN-7); the bank is placement.generated.ts, a chunk of its own.\n" +
+    `export const PLACEMENT_BANK_META = ${JSON.stringify(meta)} as const;\n`
+  );
+}
+
 // ---- file system and CLI ---------------------------------------------------------
 
 function relOf(root, file) {
@@ -317,29 +334,33 @@ export function main(argv, root) {
     return 1;
   }
 
-  const file = join(root, "apps", "mobile", "src", "content", "placement.generated.ts");
-  const source = renderBank(model);
-  const rel = relOf(root, file);
+  const outputs = [
+    { file: join(root, "apps", "mobile", "src", "content", "placement.generated.ts"), source: renderBank(model), what: "generated placement bank" },
+    { file: join(root, "apps", "mobile", "src", "content", "placement-meta.generated.ts"), source: renderMeta(model), what: "generated placement bank meta" },
+  ];
   const summary = `${model.bank.templates.length} templates, warm-up ${model.warmup.id}, bank version ${model.bank.version}`;
 
   if (check) {
-    if (!existsSync(file)) {
-      process.stdout.write(`::error file=${rel}::generated placement bank is missing; run node scripts/build-placement-bank.mjs\n`);
-      return 1;
-    }
-    const found = readFileSync(file, "utf8");
-    if (found !== source) {
-      process.stdout.write(
-        `::error file=${rel}::generated placement bank is out of date with content/placement (${firstDifference(source, found)}); run pnpm generate (generators must be deterministic)\n`,
-      );
-      return 1;
+    for (const { file, source, what } of outputs) {
+      const rel = relOf(root, file);
+      if (!existsSync(file)) {
+        process.stdout.write(`::error file=${rel}::${what} is missing; run node scripts/build-placement-bank.mjs\n`);
+        return 1;
+      }
+      const found = readFileSync(file, "utf8");
+      if (found !== source) {
+        process.stdout.write(
+          `::error file=${rel}::${what} is out of date with content/placement (${firstDifference(source, found)}); run pnpm generate (generators must be deterministic)\n`,
+        );
+        return 1;
+      }
     }
     process.stdout.write(`placement bank is up to date (${summary})\n`);
     return 0;
   }
 
-  writeIfChanged(file, source);
-  process.stdout.write(`wrote ${rel}: ${summary}\n`);
+  for (const { file, source } of outputs) writeIfChanged(file, source);
+  process.stdout.write(`wrote ${outputs.map(({ file }) => relOf(root, file)).join(" and ")}: ${summary}\n`);
   return 0;
 }
 

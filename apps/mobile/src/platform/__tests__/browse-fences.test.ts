@@ -37,7 +37,7 @@ afterEach(() => {
 
 describe('browse fences', () => {
   it('lists exactly the five keys Browse may write', () => {
-    expect([...BROWSE_WRITABLE_KEYS]).toEqual(['browse:pass', 'browse:prefs', 'browse:telemetry-queue', 'device:audio', 'device:settings']);
+    expect([...BROWSE_WRITABLE_KEYS]).toEqual(['browse:pass', 'browse:prefs', 'browse:telemetry-queue', 'device:audio', 'device:settings', 'console:uiLocale']);
     expect(BROWSE_TELEMETRY_QUEUE_KEY).toBe('browse:telemetry-queue');
     expect(BROWSE_WRITABLE_KEYS).toContain(AUDIO_PREFS_KEY);
   });

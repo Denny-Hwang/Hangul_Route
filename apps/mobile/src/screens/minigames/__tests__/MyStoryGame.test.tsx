@@ -10,6 +10,10 @@ import { SENTENCE_PAUSE_MS } from '../../../logic/write-frame/flow';
 import { byTestId, press, resetPlatform, screenTexts } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
 import { MY_STORY_AUDIO_SOURCE, MyStoryGame } from '../MyStoryGame';
+import { writingDoor } from '../writing-entry';
+
+// AMENDMENTS-FINISH-2026-11 FN-7: the game is a chunk of its own; loaded first, its door draws it on the first render.
+await writingDoor.load();
 
 /**
  * F-CURR-002 §7.1 F8, OD-13 (row CM-38; design/wireframes/minigame/my-story.md, board Y): My Story through

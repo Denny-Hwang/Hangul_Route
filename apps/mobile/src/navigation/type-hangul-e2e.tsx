@@ -9,7 +9,7 @@ import { addTelemetryListener, track, type TelemetryEvent } from '../platform/te
 import type { MinigameHost } from '../screens/minigames/host';
 import { useSwitchedScope } from '../screens/minigames/dictation-entry';
 import { ListenPickGame } from '../screens/minigames/ListenPickGame';
-import { TypeHangulGame } from '../screens/minigames/TypeHangulGame';
+import { TypeHangulGame } from '../screens/minigames/writing-entry';
 import { LessonWaiting } from '../screens/lesson-content';
 import type { RootStackParamList } from './types';
 
