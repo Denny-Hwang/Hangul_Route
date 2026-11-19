@@ -57,7 +57,7 @@
       "listenPick.rounds.hear-yeon.options.yeon.label": "바람에 날리는 종이 장난감"
     },
     "minigame:s2-rites-v2-q1-apply": {
-      "hiddenHeritage.rounds.hh1.alt": "하늘이 보이는 창문이 열려 있는, 설날 아침의 한옥 방.",
+      "hiddenHeritage.rounds.hh1.alt": "창문 너머로 하늘이 보이는 설날 아침의 한옥 방.",
       "hiddenHeritage.rounds.hh1.targets.hanbok.word.gloss": "한국의 전통 옷",
       "hiddenHeritage.rounds.hh1.targets.tteokguk.word.gloss": "설날에 먹는, 떡을 넣은 국",
       "hiddenHeritage.rounds.hh1.targets.yeon.word.gloss": "바람에 날리는 종이 장난감",
@@ -79,7 +79,7 @@
     },
     "quest:stage2-rites-v2-q2": {
       "title": "여름, 가을, 겨울",
-      "blurb": "계절마다 맞는 명절 낱말을 읽어요: 단오, 송편, 동지, 차례.",
+      "blurb": "계절마다 돌아오는 명절 낱말을 읽어요: 단오, 송편, 동지, 차례.",
       "teaser": "다음: 첫 생일.",
       "steps.s1.title": "일 년 내내 명절이에요!",
       "steps.s1.hoyaLine": "여름엔 단오, 가을엔 송편, 겨울엔 팥죽! 같이 읽어 봐요!",
@@ -142,7 +142,7 @@
       "steps.s2.title": "첫 생일 낱말",
       "steps.s2.hoyaLine": "들어 보기를 누른 다음, 낱말을 하나씩 직접 읽어 봐요.",
       "steps.s3.title": "듣고 고르기",
-      "steps.s4.title": "글자 덩어리 만들기",
+      "steps.s4.title": "글자 만들기",
       "steps.s5.title": "낱말 쓰기",
       "steps.s6.title": "생일 낱말 척척!",
       "steps.s6.hoyaLine": "첫 생일 낱말을 읽었어요. 잘했어요!",
