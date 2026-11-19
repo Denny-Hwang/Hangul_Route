@@ -11,9 +11,9 @@
       "scenes.s2.narration": "나신걸은 조선 초기의 낮은 계급 군관이었어요. 멀리 북쪽에서 일하고 있어서, 집에 있는 아내에게 한글로 편지를 썼어요.",
       "scenes.s3.narration": "나신걸은 어머니와 아이들이 얼마나 보고 싶은지 썼어요. 그리고 아내에게 필요한 옷을 보내 주고 농사일을 살펴 달라고 부탁했어요.",
       "scenes.s4.narration": "이 편지는 오랜 세월이 지난 뒤 여러 번 접힌 채로 발견됐어요. 지금까지 찾은 한글 편지 가운데 가장 오래됐고, 오늘날 보물이에요.",
-      "scenes.s5.narration": "이 편지를 보면 한글이 먼 곳까지, 낮은 계급의 관리에게까지 퍼져 있었다는 것을 알 수 있어요. 남자들도 한글을 익숙하게 썼다는 것도 알 수 있어요.",
+      "scenes.s5.narration": "이 편지를 보면 한글이 먼 곳의 낮은 관리에게까지 퍼져 있었고, 남자들도 한글을 익숙하게 썼다는 것을 알 수 있어요.",
       "scenes.s6.narration": "정조 임금도 외숙모인 여흥 민씨에게 한글 편지를 썼어요. 어린아이였을 때 쓰기 시작해서 임금이 된 뒤에도 계속 썼어요.",
-      "scenes.s7.narration": "정조는 편지에 철마다 계절 인사를 적었어요. 외숙모가 잘 지내는지, 건강한지도 물었어요.",
+      "scenes.s7.narration": "정조는 철이 바뀔 때마다 편지에 계절 인사를 적었어요. 외숙모가 잘 지내는지, 건강한지도 물었어요.",
       "scenes.s8.narration": "정조의 편지는 국립한글박물관에 한 첩으로 모여 있고, 이 편지첩은 보물이에요. 이런 편지를 보면 조선 시대 가족들이 한글로 따뜻한 마음을 나누었다는 것을 알 수 있어요.",
       "scenes.s1.caption": "한글로 쓴 옛 편지",
       "scenes.s2.caption": "군관이 집에 편지를 써요",
@@ -34,7 +34,7 @@
       "keywords.sseosseoyo.gloss": "글자로 적었다는 말",
       "keywords.anae.gloss": "결혼한 남자의 짝인 여자",
       "keywords.bogo-sipeoyo.gloss": "만나고 싶어 그리워한다는 말",
-      "keywords.gajang-oraedoen.gloss": "무엇보다 오래전에 생긴",
+      "keywords.gajang-oraedoen.gloss": "어느 것보다 오래전에 만들어진",
       "keywords.wang.gloss": "나라를 다스리는 사람, 임금",
       "keywords.mureosseoyo.gloss": "알고 싶어서 질문했다는 말",
       "checks.c1.prompt": "나신걸은 누구에게 편지를 썼어요?",
@@ -69,7 +69,7 @@
       "tiers.read.scenes.s3.narration": "나신걸은 어머니와 아이들, 곧 {kw:gajok}이 얼마나 보고 싶은지 썼어요.",
       "tiers.read.scenes.s4.narration": "이 편지는 지금까지 찾은 한글 편지 가운데 가장 오래됐어요. 오늘날 {kw:bomul}이에요.",
       "tiers.read.scenes.s6.narration": "정조 임금은 어릴 때부터 임금이 된 뒤까지 {kw:oesungmo}에게 한글 편지를 썼어요.",
-      "tiers.read.scenes.s7.narration": "정조는 편지에서 외숙모의 {kw:anbu}를 물었어요. 잘 지내는지, 건강한지 물었어요.",
+      "tiers.read.scenes.s7.narration": "정조는 편지에서 외숙모의 {kw:anbu}를 물었어요. 잘 지내는지, 건강한지 말이에요.",
       "tiers.read.scenes.s1.caption": "한글로 쓴 옛 편지",
       "tiers.read.scenes.s2.caption": "군관이 집에 편지를 써요",
       "tiers.read.scenes.s3.caption": "가족이 보고 싶어요",
@@ -77,7 +77,7 @@
       "tiers.read.scenes.s6.caption": "정조가 외숙모에게 편지를 써요",
       "tiers.read.scenes.s7.caption": "철마다 보내는 인사",
       "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
-      "checks.r1.explain": "썼어요는 글자로 적었다는 말이에요. 조선 사람들은 한글로 편지를 썼어요.",
+      "checks.r1.explain": "'썼어요'는 글자로 적었다는 말이에요. 조선 사람들은 한글로 편지를 썼어요.",
       "checks.r1.options.a": "눈으로 글을 보았어요",
       "checks.r1.options.b": "글자로 적었어요",
       "checks.r1.options.c": "다른 사람에게 보냈어요",
@@ -99,10 +99,10 @@
       "title": "가족에게 보낸 한글 편지"
     },
     "story:hangul-name": {
-      "title": "한글은 어떻게 이름을 얻었을까요?",
-      "summary": "호야는 한글에 먼저 다른 이름들이 있었다는 것을 알게 돼요. 훈민정음, 언문, 국문이에요. 학자 주시경이 처음으로 한글이라고 부른 것으로 보이고, 그 뒤로 이 이름이 널리 쓰였어요.",
+      "title": "한글이라는 이름은 어떻게 생겼을까요?",
+      "summary": "호야는 한글이 예전에는 다른 이름으로 불렸다는 것을 알게 돼요. 훈민정음, 언문, 국문이에요. 학자 주시경이 처음으로 한글이라고 부른 것으로 보이고, 그 뒤로 이 이름이 널리 쓰였어요.",
       "hoyaIntro": "한글은 처음부터 한글이라고 불렸을까요? 알아봐요!",
-      "hoyaOutro": "이제 한글이 어떻게 이름을 얻었는지 알게 됐어요!",
+      "hoyaOutro": "이제 한글이라는 이름이 어떻게 생겼는지 알게 됐어요!",
       "scenes.s1.narration": "호야가 궁금해해요. 한글은 처음부터 한글이라고 불렸을까요? 이 이름이 어디에서 왔는지 알아봐요.",
       "scenes.s2.narration": "세종 임금은 새 글자를 만들고 이름을 훈민정음이라고 지었어요. 백성을 가르치는 데 쓰는 바른 소리라는 뜻이에요.",
       "scenes.s3.narration": "하지만 그때 많은 학자들은 새 글자를 낮잡아 보았어요. 한자로 쓴 글은 참된 글이라는 뜻으로 진서라고 부르고, 한글은 언문이라고 불렀어요.",
@@ -132,7 +132,7 @@
       "keywords.malmoi.gloss": "말을 모은 것, 곧 사전이라는 뜻의 우리말",
       "keywords.uri.gloss": "나와 다른 사람을 함께 이르는 말",
       "checks.c1.prompt": "세종 임금은 새 글자에 어떤 이름을 붙였어요?",
-      "checks.c2.prompt": "이 글자를 처음으로 한글이라고 부른 사람은 누구인 것 같아요?",
+      "checks.c2.prompt": "이 글자를 처음으로 한글이라고 부른 사람은 누구였을까요?",
       "checks.c3.prompt": "말모이는 무엇이에요?",
       "checks.c1.explain": "세종 임금은 백성을 가르치는 바른 소리라는 뜻으로 훈민정음이라고 이름을 지었어요.",
       "checks.c2.explain": "이 글자에 처음으로 한글이라는 이름을 붙인 사람은 주시경인 것 같아요.",
@@ -162,7 +162,7 @@
       "tiers.read.scenes.s4.narration": "개화기에 사람들은 이 글자를 나라의 글이라는 뜻으로 {kw:gungmun}이라고 불렀어요.",
       "tiers.read.scenes.s5.narration": "이 글자를 처음으로 {kw:hangeul}이라고 부른 사람은 주시경인 것 같아요.",
       "tiers.read.scenes.s7.narration": "주시경과 제자들은 {kw:sajeon}을 만들려고 말모이를 썼어요. 말모이는 말을 모은 것이라는 뜻이에요.",
-      "tiers.read.scenes.s8.narration": "그 뒤로 우리 {kw:geul}을 한글이라고 부르는 일이 널리 퍼졌어요.",
+      "tiers.read.scenes.s8.narration": "그 뒤로 많은 사람이 우리 {kw:geul}을 한글이라고 부르게 됐어요.",
       "tiers.read.scenes.s2.caption": "세종이 글자에 이름을 지어요",
       "tiers.read.scenes.s3.caption": "옛 이름, 언문",
       "tiers.read.scenes.s4.caption": "나라의 글, 국문",
@@ -170,7 +170,7 @@
       "tiers.read.scenes.s7.caption": "말을 모은 말모이",
       "tiers.read.scenes.s8.caption": "모두 한글이라고 해요",
       "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
-      "checks.r1.explain": "옛은 '아주 오래전의'라는 뜻이에요. 언문은 한글을 부르던 옛 이름이에요.",
+      "checks.r1.explain": "'옛'은 '아주 오래전의'라는 뜻이에요. 언문은 한글을 부르던 옛 이름이에요.",
       "checks.r1.options.a": "새로 생긴",
       "checks.r1.options.b": "아주 오래전의",
       "checks.r1.options.c": "길이가 짧은",
@@ -189,11 +189,11 @@
       "checks.r3.options.d": "말을 모은 것"
     },
     "quest:story-hangul-name-listen": {
-      "title": "한글은 어떻게 이름을 얻었을까요?"
+      "title": "한글이라는 이름은 어떻게 생겼을까요?"
     },
     "episode:stage5-letters-v2": {
       "title": "책과 기록과 편지",
-      "hoyaIntro": "옛 책과 기록과 편지 이야기를 짧은 문장 하나씩 한국어로 읽어 봐요."
+      "hoyaIntro": "옛 책과 기록과 편지 이야기를 짧은 한국어 문장으로 하나씩 읽어 봐요."
     },
     "quest:story-tripitaka-koreana-read": {
       "title": "나무판 팔만 장",
@@ -203,7 +203,7 @@
       "steps.s4.title": "이야기 순서대로 놓기",
       "steps.s5.title": "잘했어요!",
       "steps.s1.hoyaLine": "산에 올라 글자를 새긴 나무판이 가득한 절에 가 봐요!",
-      "steps.s5.hoyaLine": "그 많은 나무판을 아주 오래전에 새겼는데 지금도 안전해요. 같이 해인사를 둘러봐 줘서 고마워요!"
+      "steps.s5.hoyaLine": "그 많은 나무판을 아주 오래전에 새겼는데 지금도 무사히 남아 있어요. 같이 해인사를 둘러봐 줘서 고마워요!"
     },
     "quest:story-jikji-metal-type-read": {
       "title": "쇠 활자로 찍은 옛 책",
@@ -232,7 +232,7 @@
       "steps.s3.title": "몇 가지 질문",
       "steps.s4.title": "이야기 순서대로 놓기",
       "steps.s5.title": "잘했어요",
-      "steps.s1.hoyaLine": "실록은 안전하게 지내려고 어디로 갔을까요? 산으로 따라가 봐요!",
+      "steps.s1.hoyaLine": "실록을 안전하게 지키려고 어디로 옮겼을까요? 산으로 따라가 봐요!",
       "steps.s5.hoyaLine": "기록에서 책으로, 그리고 산속 사고까지! 실록이 간 길을 끝까지 따라왔어요!"
     },
     "quest:story-nanjung-ilgi-read": {
@@ -272,7 +272,7 @@
       "steps.s3.title": "몇 가지 질문",
       "steps.s4.title": "이야기 순서대로 놓기",
       "steps.s5.title": "잘했어요",
-      "steps.s1.hoyaLine": "옛 기록은 오늘날 우리에게 무슨 일을 해 줄까요? 가서 봐요!",
+      "steps.s1.hoyaLine": "옛 기록은 오늘날 우리에게 어떤 도움을 줄까요? 알아보러 가요!",
       "steps.s5.hoyaLine": "오래전에 쓴 기록이 지금도 우리를 도와요. 여러분은 무엇을 적어 볼래요?"
     }
   }

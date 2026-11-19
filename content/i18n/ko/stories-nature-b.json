@@ -3,7 +3,7 @@
   "domain": "stories-nature-b",
   "entries": {
     "story:jeju-volcanic-island": {
-      "title": "화산 활동으로 생겨난 제주 섬",
+      "title": "화산이 빚어낸 섬, 제주",
       "summary": "호야가 화산이 만든 섬, 제주에 가요. 한라산을 올려다보고, 해 뜨는 봉우리 성산일출봉을 보고, 땅속의 긴 용암동굴에 대해 알아봐요. 이곳들은 2007년부터 '제주 화산섬과 용암동굴'이라는 이름으로 함께 유네스코 세계유산이에요.",
       "hoyaIntro": "화산이 만든 섬이라고요? 제주에 가서 알아봐요!",
       "hoyaOutro": "화산이 제주의 산과 작은 언덕, 긴 동굴을 만들었어요. 정말 놀랍죠?",
@@ -29,7 +29,7 @@
       "tiers.read.scenes.s6.narration": "제주의 화산섬과 용암동굴은 {kw:segyeyusan}이에요.",
       "tiers.read.scenes.s1.caption": "화산이 만든 섬",
       "tiers.read.scenes.s2.caption": "가장 높은 산",
-      "tiers.read.scenes.s3.caption": "많은 작은 언덕",
+      "tiers.read.scenes.s3.caption": "수많은 작은 언덕",
       "tiers.read.scenes.s4.caption": "바다에서 생긴 봉우리",
       "tiers.read.scenes.s5.caption": "용암이 만든 긴 동굴",
       "tiers.read.scenes.s6.caption": "세계유산",
@@ -40,7 +40,7 @@
       "keywords.yongam.gloss": "화산에서 흘러나오는 뜨겁게 녹은 돌",
       "keywords.donggul.gloss": "땅속이나 바위에 깊게 난 큰 굴",
       "keywords.segyeyusan.gloss": "유네스코가 온 인류의 유산으로 정한 곳",
-      "checks.c1.prompt": "제주도는 무엇이 만들었을까요?",
+      "checks.c1.prompt": "제주도를 만든 것은 무엇일까요?",
       "checks.c1.options.a": "화산",
       "checks.c1.options.b": "큰 강",
       "checks.c1.options.c": "얼음",
@@ -89,7 +89,7 @@
       "tiers.read.storyOrder.rounds.lava.panels.p3.caption.gloss": "용암이 지나간 자리에 긴 굴이 만들어졌다는 말",
       "tiers.read.storyOrder.rounds.lava.panels.p4.caption.gloss": "끝으로 이곳이 세계유산으로 정해졌다는 말",
       "keywords.jejudo.gloss": "우리나라 남쪽 바다에 있는 가장 큰 섬",
-      "keywords.mandeun.gloss": "무엇을 지어 낸",
+      "keywords.mandeun.gloss": "없던 것을 생기게 한",
       "keywords.hallasan.gloss": "제주도 가운데에 솟은 높은 산",
       "keywords.namhan.gloss": "한반도의 남쪽, 대한민국",
       "keywords.gajang.gloss": "여럿 가운데 제일",
@@ -99,14 +99,14 @@
       "keywords.saenggyeosseoyo.gloss": "없던 것이 새로 나타났다는 말",
       "keywords.heulleoseo.gloss": "물처럼 움직여 가서",
       "keywords.gin.gloss": "한쪽 끝에서 다른 끝까지가 먼",
-      "keywords.igot.gloss": "말하는 사람 가까이 있는 장소"
+      "keywords.igot.gloss": "지금 말하고 있는 바로 이 장소"
     },
     "episode:shelf-jeju-volcanic-island": {
-      "title": "화산 활동으로 생겨난 제주 섬",
+      "title": "화산이 빚어낸 섬, 제주",
       "hoyaIntro": "화산이 만든 섬이라고요? 제주에 가서 알아봐요!"
     },
     "quest:story-jeju-volcanic-island-listen": {
-      "title": "화산 활동으로 생겨난 제주 섬",
+      "title": "화산이 빚어낸 섬, 제주",
       "steps.s1.title": "이야기 시간",
       "steps.s2.title": "이야기 읽기",
       "steps.s3.title": "몇 가지 질문",
@@ -116,7 +116,7 @@
       "steps.s5.hoyaLine": "화산이 제주의 산과 작은 언덕, 긴 동굴을 만들었어요. 정말 놀랍죠?"
     },
     "quest:story-jeju-volcanic-island-read": {
-      "title": "화산 활동으로 생겨난 제주 섬",
+      "title": "화산이 빚어낸 섬, 제주",
       "steps.s1.title": "이야기 시간",
       "steps.s2.title": "이야기 읽기",
       "steps.s3.title": "몇 가지 질문",
@@ -174,7 +174,7 @@
       "checks.c2.explain": "지리산에는 곰이 몇 마리밖에 남지 않아서, 곰을 다시 살게 하는 사업이 시작되었어요.",
       "checks.c3.prompt": "곰을 되살리는 사업은 결국 무엇을 위한 걸까요?",
       "checks.c3.options.a": "사람과 동물을 위한 지리산의 자연 전체",
-      "checks.c3.options.b": "공원에 오는 사람을 더 많게 하려고",
+      "checks.c3.options.b": "공원에 오는 더 많은 사람",
       "checks.c3.options.c": "더 큰 곰",
       "checks.c3.explain": "이 사업은 지리산의 자연을 되살려서 사람과 야생동물이 함께 살 수 있게 해요.",
       "checks.r1.prompt": "{target}의 뜻은 무엇일까요?",
@@ -261,7 +261,7 @@
       "scenes.s3.narration": "계절에 따라 옮겨 다니는 새는 {kw:cheolsae}예요. 순천만에는 200여 종의 새가 찾아와요.",
       "scenes.s4.narration": "저기 봐요! {kw:heukdurumi}예요. 이 두루미는 먼 북쪽에서 새끼를 키우고, 겨울이 되면 남쪽으로 날아와요. 순천만은 우리나라에서 흑두루미가 겨울을 나는 곳 가운데 하나예요.",
       "scenes.s5.narration": "여기에는 흑두루미, 먹황새, 노랑부리저어새, 개개비 같은 여러 가지 새가 와요.",
-      "scenes.s6.narration": "왜 여기로 올까요? 넓은 갯벌에는 갯지렁이, 게, 조개 같은 생물이 많아요. 이 {kw:meogi}가 흑두루미 같은 새들을 불러요.",
+      "scenes.s6.narration": "왜 여기로 올까요? 넓은 갯벌에는 갯지렁이, 게, 조개 같은 생물이 많아요. 이 {kw:meogi}를 찾아 흑두루미 같은 새들이 와요.",
       "scenes.s7.narration": "{kw:seupji}는 물새에게 중요한 집이에요. 2006년에 순천만은 이런 습지를 지키기로 한 나라들 사이의 약속, 람사르 협약에 등록되었어요.",
       "scenes.s1.caption": "순천만의 갯벌",
       "scenes.s2.caption": "넓은 갈대밭",
