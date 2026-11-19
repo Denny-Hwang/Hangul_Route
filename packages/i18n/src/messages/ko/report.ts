@@ -246,7 +246,7 @@ export const report = {
     planRow: (assigned: number, started: number, finished: number) => `배정 ${assigned}명, 시작 ${started}명, 완료 ${finished}명`,
     empty: '아직 학습자가 없어요.',
     afterUpdate: '학습자의 앱이 업데이트되면 보여요.',
-    memoryFrom: (count: number) => `앱이 이 숫자를 공유하는 학습자 ${count}명의 합계예요.`,
+    memoryFrom: (count: number) => `앱에서 이 숫자를 보내 주는 학습자 ${count}명의 합계예요.`,
     wordsKnown: (count: number) => `아는 낱말 합계: ${count}개`,
     readyToRefresh: (count: number) => `복습할 때가 된 항목 합계: ${count}개`,
     stageChecks: (count: number) => `통과한 단계 확인 합계: ${count}개`,
