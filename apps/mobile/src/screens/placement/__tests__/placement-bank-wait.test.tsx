@@ -11,12 +11,22 @@ import { buttonsNamed, byTestId, press, render, screenTexts, unmount } from '../
  */
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
-const loader = vi.hoisted(() => ({ calls: 0, next: [] as ('ok' | 'fail')[], now: null as unknown }));
+/**
+ * `gate`, when set, holds every load until the test opens it. `render` resolves only after React's async `act` yields a
+ * macrotask, and under CI load a 0 ms timer can fire in that gap, so a test that asserts the loading state right after
+ * `render` must hold the load open itself rather than race a timer.
+ */
+const loader = vi.hoisted(() => ({
+  calls: 0,
+  next: [] as ('ok' | 'fail')[],
+  now: null as unknown,
+  gate: null as Promise<void> | null,
+}));
 vi.mock('../../../content/placement-bank', () => ({
   placementBankNow: () => loader.now,
   loadPlacementBank: async () => {
     loader.calls += 1;
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await (loader.gate ?? new Promise((resolve) => setTimeout(resolve, 0)));
     if (loader.next.shift() === 'fail') throw new Error('offline');
     loader.now = { bank: PLACEMENT_BANK, warmup: PLACEMENT_WARMUP };
     return loader.now;
@@ -58,6 +68,7 @@ afterEach(async () => {
   loader.calls = 0;
   loader.next = [];
   loader.now = null;
+  loader.gate = null;
 });
 
 describe('usePlacementBank (FN-7)', () => {
@@ -96,9 +107,15 @@ describe('the level-check report waits for the bank (FN-7)', () => {
 
   it('shows the lesson waiting screen until the bank is in, then the report', async () => {
     loader.next = ['fail'];
+    let open: () => void = () => undefined;
+    loader.gate = new Promise<void>((resolve) => {
+      open = resolve;
+    });
     const r = await render(createElement(PlacementReportScreen, props));
     mounted.push(r);
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(1);
+    expect(loader.calls).toBe(1);
+    open();
     await until(() => buttonsNamed(r.root, 'Try again').length > 0);
     // It could not load: the crash screen, whose Try again asks again.
     expect(byTestId(r.root, 'lesson-waiting')).toHaveLength(0);
