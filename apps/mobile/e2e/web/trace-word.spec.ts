@@ -146,7 +146,11 @@ test.describe('Trace a Word, phone 320: gate, retry, letter mode, Skip', () => {
     await done(page).click();
     await expect(hoya(page)).toHaveText(RETRY);
     await shot(page, 'trace-word-320-retry');
-    await expect(hoya(page)).toHaveText(IDLE, { timeout: 5_000 });
+    // AMENDMENTS-TRACE-IDLE §3.3: the ink and the retry line stay until the learner draws again or taps Clear.
+    await page.waitForTimeout(2500);
+    await expect(hoya(page)).toHaveText(RETRY);
+    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    await expect(hoya(page)).toHaveText(IDLE);
     const [han] = await blocksOf(page, '한');
     await draw(page, han!.flat());
     await done(page).click();

@@ -3,8 +3,10 @@ import type { ReactNode } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { Path } from 'react-native-svg';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { strokesForJamo } from '../../../content/jamo-strokes';
 import { scopeFor, type MinigameScope } from '../../../logic/minigame-config';
 import { TRACE_IDLE_MS } from '../../../logic/trace-evaluator';
+import { placeBlockStrokes } from '../../../logic/trace-word/block-strokes';
 import { createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
 import { render, unmount } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
@@ -441,13 +443,14 @@ describe('Trace a Word: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     mounted.push(r);
     await layOut(r);
     const live = canvasBorder(r.root);
-    // Block mode checks by itself once every letter has ink: a line through each half of 호 (ㅎ over ㅗ).
-    const size = canvasSize(r.root);
-    for (const y of [0.15, 0.3, 0.45, 0.6, 0.75, 0.9]) await stroke({ x: size * 0.05, y: size * y }, { x: size * 0.95, y: size * y });
-    expect(ink(r.root)).toBe(6);
+    // Block mode checks by itself once every letter of the block is finished (AMENDMENTS-TRACE-IDLE §3.1): 호 traced
+    // over its placed ghost (ㅎ over ㅗ).
+    const ho = placeBlockStrokes('호', strokesForJamo)!.strokes;
+    for (const s of ho) await viewBoxStroke(r.root, s);
+    expect(ink(r.root)).toBe(ho.length);
     await wait(500);
     await dot({ x: 60, y: 60 });
-    expect(ink(r.root)).toBe(6);
+    expect(ink(r.root)).toBe(ho.length);
     await wait(TRACE_IDLE_MS - 10);
     expect(canvasBorder(r.root)).toBe(live);
     await wait(10);

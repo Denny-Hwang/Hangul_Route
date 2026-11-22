@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { TRACE_CANVAS_MAX, TRACE_CANVAS_MIN } from '../../trace-layout';
-import { TRACE_WORD_PAIR_MIN, TRACE_WORD_SHORT_HEIGHT, traceWordCanvases, traceWordHelperColumn, traceWordMessage, traceWordTone } from '../view';
+import { TRACE_WORD_PAIR_MIN, TRACE_WORD_SHORT_HEIGHT, traceWordCanvases, traceWordHelperColumn, traceWordMessage, traceWordTone, traceWordWaitsForNext } from '../view';
 
 const copy = getMessages('en').learner.minigame;
 const clean = { orderCorrect: true, directionNudge: 'none' as const };
@@ -76,5 +76,24 @@ describe('traceWordHelperColumn: Show me and Clear stand beside the canvas on a 
   it('gives them the width the canvas floor leaves on a short stacked phone', () => {
     expect(traceWordHelperColumn({ mode: 'compact', width: 288, height: TRACE_WORD_SHORT_HEIGHT - 1, gap: 8 })).toBe(288 - TRACE_CANVAS_MIN - 8);
     expect(traceWordHelperColumn({ mode: 'compact', width: 120, height: 300, gap: 8 })).toBe(0);
+  });
+});
+
+describe('traceWordWaitsForNext: a tip waits for Next (AMENDMENTS-TRACE-IDLE §3.4)', () => {
+  const order = { orderCorrect: false, directionNudge: 'none' as const };
+  const open = { orderCorrect: true, directionNudge: 'open' as const };
+
+  it('a letter or block pass with an order or direction tip waits', () => {
+    expect(traceWordWaitsForNext('letterDone', order)).toBe(true);
+    expect(traceWordWaitsForNext('letterDone', open)).toBe(true);
+    expect(traceWordWaitsForNext('blockDone', { orderCorrect: null, directionNudge: 'loop' })).toBe(true);
+  });
+
+  it('a clean pass, the word-done view, a retry and drawing never wait', () => {
+    expect(traceWordWaitsForNext('letterDone', clean)).toBe(false);
+    expect(traceWordWaitsForNext('blockDone', null)).toBe(false);
+    expect(traceWordWaitsForNext('wordDone', order)).toBe(false);
+    expect(traceWordWaitsForNext('retry', order)).toBe(false);
+    expect(traceWordWaitsForNext('drawing', open)).toBe(false);
   });
 });
