@@ -2,12 +2,14 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, openLettersEpisode, passDiscover } from './helpers';
 import { Finger, canvasBox, paths } from './trace-fingers';
+import { TRACE_IDLE_MS } from '../../src/logic/trace-evaluator';
 import { expectReachable } from './viewport';
 
 /**
  * AMENDMENTS-TOUCH KT-8 (6.8, KT-D9, R1) on Trace: a trace stroke starts after 4 px (`spacing.xs`)
  * instead of the gesture handler's 15 px, and a touch that never travelled 4 px leaves no ink and
- * re-arms the idle check. Real touches through CDP `Input.dispatchTouchEvent` (the Pixel 5 profile has
+ * re-arms the idle check, subject to the gate's ready(): an unfinished drawing is scored only by Done
+ * (AMENDMENTS-TRACE-IDLE TI-1, §3.1 / §3.5). Real touches through CDP `Input.dispatchTouchEvent` (the Pixel 5 profile has
  * `hasTouch`), at 320 px and on a tablet, on the release build. Trace a Word's touch tests need the
  * fixture bundle and are in `trace-word-touch.spec.ts`.
  *
@@ -44,7 +46,7 @@ for (const vp of [
   test.describe(`Trace touch, ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test('a dot leaves no ink, a 6 px stroke draws, and a dot after a stroke still lets the idle check score it', async ({ page }) => {
+    test('a dot leaves no ink, a 6 px stroke draws, a pause does not score it, and Done does', async ({ page }) => {
       await openTraceStroke(page);
       const finger = await Finger.on(page);
       const box = await canvasBox(page, STROKE_CANVAS);
@@ -61,11 +63,14 @@ for (const vp of [
       await finger.drag({ x: box.x + box.width * 0.2, y: mid.y }, { x: box.x + box.width * 0.2 + 6, y: mid.y + 6 }, 3);
       await expect.poll(() => paths(page, STROKE_CANVAS), { message: 'a 6 px stroke draws' }).toBe(ghosts + 1);
 
-      // A stray tap right after: no ink, and the drawing is still scored without Done.
+      // A stray tap right after: no ink. The 6 px stroke is not a finished letter, so a pause scores nothing.
       await finger.dot({ x: box.x + box.width * 0.8, y: box.y + box.height * 0.8 });
       await page.waitForTimeout(100);
       expect(await paths(page, STROKE_CANVAS)).toBe(ghosts + 1);
-      await expect.poll(border, { timeout: 5_000, message: 'the idle check scored the drawing' }).not.toBe(live);
+      await page.waitForTimeout(TRACE_IDLE_MS * 2);
+      expect(await border(), 'a pause does not score an unfinished letter').toBe(live);
+      await page.getByRole('button', { name: 'Done', exact: true }).click();
+      await expect.poll(border, { timeout: 5_000, message: 'Done scored the drawing' }).not.toBe(live);
     });
   });
 }

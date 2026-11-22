@@ -124,6 +124,74 @@ describe('createTraceEvaluator — one evaluation per Trace attempt (F-004 §3.3
   });
 });
 
+describe('createTraceEvaluator — ready(): a pause never scores an unfinished drawing (AMENDMENTS-TRACE-IDLE §3.1)', () => {
+  let onEvaluate: ReturnType<typeof vi.fn<() => void>>;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    onEvaluate = vi.fn<() => void>();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('ready() false: a lift and a long pause evaluate nothing', () => {
+    const gate = createTraceEvaluator({ idleMs: TRACE_IDLE_MS, onEvaluate, ready: () => false });
+    gate.strokeStarted();
+    gate.strokeEnded();
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 10);
+    expect(onEvaluate).not.toHaveBeenCalled();
+    gate.dispose();
+  });
+
+  it('ready() turns true on the last lift: evaluated once, TRACE_IDLE_MS after that lift', () => {
+    let ready = false;
+    const gate = createTraceEvaluator({ idleMs: TRACE_IDLE_MS, onEvaluate, ready: () => ready });
+    gate.strokeEnded();
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 3);
+    gate.strokeStarted();
+    ready = true;
+    gate.strokeEnded();
+    vi.advanceTimersByTime(TRACE_IDLE_MS - 1);
+    expect(onEvaluate).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 3);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+    gate.dispose();
+  });
+
+  it('a lift while not ready cancels a countdown already running', () => {
+    let ready = true;
+    const gate = createTraceEvaluator({ idleMs: TRACE_IDLE_MS, onEvaluate, ready: () => ready });
+    gate.strokeEnded();
+    ready = false;
+    gate.strokeEnded();
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 2);
+    expect(onEvaluate).not.toHaveBeenCalled();
+    gate.dispose();
+  });
+
+  it('ready omitted: today\'s behaviour, every lift arms the countdown', () => {
+    const gate = createTraceEvaluator({ idleMs: TRACE_IDLE_MS, onEvaluate });
+    gate.strokeEnded();
+    vi.advanceTimersByTime(TRACE_IDLE_MS);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+    gate.dispose();
+  });
+
+  it('done() with ready() false evaluates once', () => {
+    const gate = createTraceEvaluator({ idleMs: TRACE_IDLE_MS, onEvaluate, ready: () => false });
+    gate.strokeEnded();
+    expect(gate.done()).toBe(true);
+    expect(gate.done()).toBe(false);
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 3);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+    gate.dispose();
+  });
+});
+
 describe('the idle check follows the fingers (AMENDMENTS-TOUCH KT-D9, 6.8)', () => {
   let onEvaluate: ReturnType<typeof vi.fn<() => void>>;
   let gate: TraceEvaluator;
@@ -248,6 +316,18 @@ describe('the idle check follows the fingers (AMENDMENTS-TOUCH KT-D9, 6.8)', () 
     down(1, 50, 50);
     up(1);
     vi.advanceTimersByTime(TRACE_IDLE_MS * 3);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+  });
+
+  it('a dot re-arms the check subject to ready(): an unfinished drawing waits for Done (AMENDMENTS-TRACE-IDLE §3.5)', () => {
+    gate.dispose();
+    gate = createTraceEvaluator({ idleMs: TRACE_IDLE_MS, onEvaluate, ready: () => false });
+    line(0);
+    down(1, 50, 50);
+    up(1);
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 10);
+    expect(onEvaluate).not.toHaveBeenCalled();
+    expect(gate.done()).toBe(true);
     expect(onEvaluate).toHaveBeenCalledTimes(1);
   });
 

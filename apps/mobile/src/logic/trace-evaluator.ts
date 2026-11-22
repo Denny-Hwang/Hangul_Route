@@ -1,6 +1,7 @@
 /**
  * Trace Stroke evaluation gate — F-004 §3.3: a drawing is scored "on Done,
- * or after a 1.5 s idle timer past the last stroke".
+ * or after a 1.5 s idle timer past the last stroke" — the idle timer only for
+ * a finished drawing (`ready`, AMENDMENTS-TRACE-IDLE §3.1).
  *
  * Both triggers feed one gate, so an attempt is evaluated exactly once.
  * Before this gate, the idle timer kept running after Done and evaluated
@@ -20,7 +21,7 @@ export interface TraceScheduler {
 export interface TraceEvaluator {
   /** Finger down: the learner is still drawing, stop the idle countdown. */
   strokeStarted: () => void;
-  /** Finger up: (re)start the idle countdown unless this attempt is scored. */
+  /** Finger up: (re)start the idle countdown unless this attempt is scored or the drawing is not `ready()`. */
   strokeEnded: () => void;
   /** Done button. Evaluates now; returns false if this attempt was already scored. */
   done: () => boolean;
@@ -43,10 +44,17 @@ const defaultScheduler: TraceScheduler = {
 export function createTraceEvaluator({
   idleMs,
   onEvaluate,
+  ready = () => true,
   scheduler = defaultScheduler,
 }: {
   idleMs: number;
   onEvaluate: () => void;
+  /**
+   * AMENDMENTS-TRACE-IDLE §3.1: a finger lift starts the idle countdown only when this is true
+   * (the drawing is finished, `logic/trace-ready`); otherwise it cancels any running countdown, so a
+   * pause never scores an unfinished drawing. Done is not gated. Default: always ready.
+   */
+  ready?: () => boolean;
   scheduler?: TraceScheduler;
 }): TraceEvaluator {
   let idle: unknown = null;
@@ -72,7 +80,7 @@ export function createTraceEvaluator({
     strokeStarted: cancelIdle,
     strokeEnded: () => {
       cancelIdle();
-      if (locked || disposed) return;
+      if (locked || disposed || !ready()) return;
       idle = scheduler.setTimeout(() => {
         idle = null;
         evaluateOnce();
@@ -98,8 +106,9 @@ export function createTraceEvaluator({
 /**
  * AMENDMENTS-TOUCH 6.8 (KT-D9): the idle check follows the fingers (`logic/trace-pointers`). A finger
  * landing stops the countdown; the drawing finger lifting restarts it; a touch that never drew (a dot,
- * a graze under 4 px, a palm) leaves no ink and restarts it when ink is already there, so the drawing is
- * still scored without the Done button. Stroke effects (`start`, `point`) are the screen's own.
+ * a graze under 4 px, a palm) leaves no ink and restarts it when ink is already there, subject to the
+ * gate's `ready()` (AMENDMENTS-TRACE-IDLE §3.5): a finished drawing is still scored without the Done
+ * button, an unfinished one only by Done. Stroke effects (`start`, `point`) are the screen's own.
  */
 export function idleOnTouch(
   gate: Pick<TraceEvaluator, 'strokeStarted' | 'strokeEnded'> | null,
