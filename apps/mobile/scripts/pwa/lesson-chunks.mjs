@@ -227,9 +227,9 @@ export const PRECACHE_BUDGET = Object.freeze({
   // measurement plus a 3,959 B margin (403,500 B under the previous line).
   // [TI] AMENDMENTS-TRACE-IDLE TI-2 (keep-going line, ink kept after a miss, Next after a tip): TraceStrokeGame's
   // new states and their en strings are in the start bundle, on top of DURABLE-PROGRESS DP-1a / DP-1b. The release
-  // `build:web` (CI=1) of the TI-2 branch measures MEASURED_TBD B raw. The line is the measurement plus a ~4,000 B
-  // margin (one measured raise, 7,500 B over the previous line).
-  startBundleRaw: 4_581_500,
+  // `build:web` (CI=1) of the TI-2 branch measures 4,575,345 B raw / 1,259,019 B gzip, 1,345 B over the line.
+  // The line is the measurement plus a 3,955 B margin (one measured raise, 5,300 B over the previous line).
+  startBundleRaw: 4_579_300,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's
