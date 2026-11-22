@@ -162,6 +162,12 @@ export const caregiver = {
 
   /** The page is titled with the device's one grown-up name (`audience.*.zoneLabel`, owner request 2026-10-16, item 8). */
   dashboard: {
+    /**
+     * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): one quiet line under the title block while any learner's
+     * progress on this device could not be saved. The spec's `grownUp.saveTrouble`, in the namespace the Grown-up area
+     * reads (owner item O1, 2026-11-22).
+     */
+    saveTrouble: 'This device could not save some progress. Free up some space on it.',
     /** Under the title on a family device: who the page is for. A self-only device shows none. */
     persona: 'Parent or caregiver',
     /** The dashboard lists the learners saved on this device; their progress is also backed up (see `privacy.body`). */
@@ -390,6 +396,8 @@ export const caregiver = {
    */
   restore: {
     title: 'Bring back progress',
+    /** [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): in place of the notice when the restored learner's progress could not be saved yet. */
+    saveLater: 'We could not save this yet. Keep the app open and we will try again.',
     code: {
       cta: 'I have a rescue code',
       /** Greyed in the empty field. */

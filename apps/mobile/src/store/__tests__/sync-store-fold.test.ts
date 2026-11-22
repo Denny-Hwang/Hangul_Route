@@ -134,7 +134,7 @@ async function launch() {
     hydrated: true,
   });
   plans.usePlanStore.setState({ byLearner: {}, notReady: {} });
-  return { useProgressStore: progress.useProgressStore, useSyncStore: sync.useSyncStore, setSyncApiForTests: sync.setSyncApiForTests };
+  return { useProgressStore: progress.useProgressStore, useSyncStore: sync.useSyncStore, setSyncApiForTests: sync.setSyncApiForTests, followSaveRetries: progress.followSaveRetries };
 }
 
 beforeEach(() => {
@@ -278,7 +278,7 @@ describe('[DP] a damaged record keeps its cloud copy (test 3)', () => {
     idb.mem.set(KEPT, '{"first":');
     idb.mem.set(PROGRESS, TRUNCATED);
     idb.failingWrite = /^hr:progress:/;
-    const { useProgressStore, useSyncStore, setSyncApiForTests } = await launch();
+    const { useProgressStore, useSyncStore, setSyncApiForTests, followSaveRetries } = await launch();
     // A quest finished before the record was read: the fresh start has something to write, and that write is refused.
     useProgressStore.getState().recordQuestComplete(ID, { questId: 'quest:c', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
     await useProgressStore.getState().hydrate(ID);
@@ -294,6 +294,15 @@ describe('[DP] a damaged record keeps its cloud copy (test 3)', () => {
     expect(calls).toEqual(['get', 'put']);
     expect((api.putSnapshot.mock.calls[0]?.[1] as Body).baseRev).toBe(SERVER_REV);
     expect((api.putSnapshot.mock.calls[0]?.[1] as Body).snapshot.quests.map((q) => q.questId).sort()).toEqual(['quest:a', 'quest:b', 'quest:c']);
+    // [DP] Row DP-2: the refused write left a timed retry in this module; it lands now, so it never writes into a later
+    // test's record (the next test reloads the modules, not the timers).
+    idb.failingWrite = null;
+    followSaveRetries((listener) => {
+      listener(true);
+      return () => undefined;
+    });
+    await settle();
+    expect(useProgressStore.getState().saveFailedFor.has(ID)).toBe(false);
   });
 
   it('the copy read rejects (not a SyntaxError): no push in that run; the next run asks again', async () => {

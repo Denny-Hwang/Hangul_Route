@@ -1,4 +1,4 @@
-import { Button, Caption, Card, Heading, Hoya, HoyaBubble, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, Hoya, HoyaBubble, Screen, Spacer, colors, radii, spacing, touchTarget, useTypeScale } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { normalizeRescueCode } from '@hangul-route/content-schema';
 import { useState } from 'react';
@@ -43,10 +43,15 @@ export function RestoreScreen({ navigation, route }: Props): ReactElement {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<RestorePlan | null>(null);
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): the restored learner's progress could not be saved (or read) yet.
+  const [saveLater, setSaveLater] = useState(false);
   const cloudAvailable = !!apiBaseUrl();
 
+  /** Both paths call it only after the restore's write has run (`whenWritten`, section 3.2), so the line is true. */
   const finish = (plan: RestorePlan): void => {
+    const progress = useProgressStore.getState();
     setMessage(null);
+    setSaveLater(progress.saveFailedFor.has(plan.profile.id) || progress.loadFailedFor.has(plan.profile.id));
     setDone(plan);
   };
 
@@ -116,7 +121,17 @@ export function RestoreScreen({ navigation, route }: Props): ReactElement {
             <Hoya pose="cheering" size={96} />
           </View>
           <Spacer size="md" />
-          <HoyaBubble tone="cheering" message={restoreNotice(done, messages.caregiver)} />
+          {saveLater ? (
+            // [DP] Row DP-2 (design frame N, D7, D8; owner item O3: the spec's version): the quiet line in place of the
+            // notice text; the card, Hoya and Great stay. Announced as the notice appears.
+            <View accessibilityLiveRegion="polite" testID="restore-save-later">
+              <Body tone="secondary" align="center">
+                {m.saveLater}
+              </Body>
+            </View>
+          ) : (
+            <HoyaBubble tone="cheering" message={restoreNotice(done, messages.caregiver)} />
+          )}
           <Spacer size="lg" />
           <Button label={m.great.cta} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Home' })} />
         </Card>

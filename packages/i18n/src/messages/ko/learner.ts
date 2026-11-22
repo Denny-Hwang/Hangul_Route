@@ -131,6 +131,10 @@ export const learner = {
 
   profile: {
     title: '프로필과 설정',
+    saveTrouble: {
+      family: '이 기기에 저장하는 데 문제가 있어요. 어른에게 도와 달라고 해요.',
+      self: '이 기기에 저장하는 데 문제가 있어요. 저장 공간을 조금 비운 다음 앱을 다시 열어 주세요.',
+    },
     switchTo: (name: string) => `바꾸기: ${name}`,
     playingNow: '지금 하는 중',
     addProfile: '+ 프로필 추가',
@@ -404,6 +408,7 @@ export const learner = {
   },
 
   results: {
+    saveLater: '아직 저장하지 못했어요. 앱을 열어 두면 다시 저장해 볼게요.',
     headline: {
       allDone: '다 했어요!',
       wonderful: '정말 멋져요!',

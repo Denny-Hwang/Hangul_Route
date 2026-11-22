@@ -135,6 +135,13 @@ interface State {
    * `fresh`), until the sync store's cloud fold has pushed them (`clearFresh`).
    */
   freshFor: ReadonlySet<string>;
+  /**
+   * [DP] Section 3.7 (row DP-2): profiles whose last progress write did not land (`withStored` answered `unsaved`: the
+   * storage write rejected, as on a full disk), from that first failure until a write of them lands (`done` or
+   * `fresh`). The write is tried again meanwhile (`SAVE_RETRY_DELAYS_MS`, `followSaveRetries`, and every new write).
+   * A step that threw (`step-failed`) neither adds nor clears it.
+   */
+  saveFailedFor: ReadonlySet<string>;
 }
 
 /** The session running now and who began it. */
@@ -557,6 +564,7 @@ function writeStored(profileId: string, mode: WriteMode = 'merge'): void {
       seen.set(profileId, out.stored);
       if (out.wrote) postProgressChanged();
     }
+    afterWrite(profileId, outcome, turn);
     // Memory took the union even when the write did not land (it holds more, never less).
     if (out.merged === null) return;
     // The union holds what the other tab earned: it goes up with the next sync, the cards the rules added to it are
@@ -567,6 +575,76 @@ function writeStored(profileId: string, mode: WriteMode = 'merge'): void {
   };
   if (chains.has(profileId)) writeWaiting.set(profileId, mode);
   void enqueue(profileId, write).catch(() => undefined);
+}
+
+/**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): the waits before the timed retries of a write that did not
+ * land, one after each failure in turn. After the last one a write is tried again only when the app comes to the front
+ * or goes to the back (`followSaveRetries`) and with each new write.
+ */
+export const SAVE_RETRY_DELAYS_MS: readonly number[] = [1000, 4000, 15000];
+
+/**
+ * [DP] Row DP-2: per profile in `saveFailedFor`, the timed retries already run, the one waiting, if any, and the mode the
+ * retries write in: a reset (`replace`) that did not land is retried as a reset, never as a merge that would bring back
+ * what another tab stored meanwhile.
+ */
+const retries = new Map<string, { tried: number; timer: ReturnType<typeof setTimeout> | null; mode: WriteMode }>();
+
+function stopRetries(profileId: string): void {
+  const retry = retries.get(profileId);
+  if (retry?.timer) clearTimeout(retry.timer);
+  retries.delete(profileId);
+}
+
+/**
+ * [DP] Row DP-2: what a write's answer means for `saveFailedFor`. `unsaved` (the step ran, the storage write rejected)
+ * marks the profile and schedules the next timed retry, unless one is already waiting or all three have run; a write
+ * that lands (`done` or `fresh`) clears both. `step-failed` neither marks nor clears and schedules nothing: retrying a
+ * step that throws would throw again. (The spec logs a step that threw through a shared logger; the app has none yet.)
+ * A retry of a marked profile that meets a failed read (`unread`) or the write fence (`fenced`) keeps the mark and
+ * schedules the next slot, so "we will try again" stays true.
+ */
+function afterWrite(profileId: string, outcome: StoredOutcome, mode: WriteMode): void {
+  if (outcome === 'done' || outcome === 'fresh') {
+    stopRetries(profileId);
+    if (useProgressStore.getState().saveFailedFor.has(profileId)) {
+      useProgressStore.setState((s) => ({ saveFailedFor: without(s.saveFailedFor, profileId) }));
+    }
+    return;
+  }
+  if (outcome === 'step-failed' || removedNow(profileId)) return;
+  const marked = useProgressStore.getState().saveFailedFor.has(profileId);
+  if (outcome !== 'unsaved' && !marked) return;
+  if (!marked) {
+    // The first failure of a run starts the timed retries from the first wait.
+    stopRetries(profileId);
+    useProgressStore.setState((s) => ({ saveFailedFor: new Set([...s.saveFailedFor, profileId]) }));
+  }
+  const retry = retries.get(profileId) ?? { tried: 0, timer: null, mode };
+  if (mode === 'replace') retry.mode = 'replace';
+  retries.set(profileId, retry);
+  const delay = SAVE_RETRY_DELAYS_MS[retry.tried];
+  if (retry.timer !== null || delay === undefined) return;
+  retry.timer = setTimeout(() => {
+    retry.timer = null;
+    retry.tried += 1;
+    // An ordinary write: it stores the snapshot held when it runs, never an older one.
+    if (retries.get(profileId) === retry && useProgressStore.getState().saveFailedFor.has(profileId)) writeStored(profileId, retry.mode);
+  }, delay);
+}
+
+/**
+ * [DP] Row DP-2 (section 3.7): each time the app comes to the front, and before it goes to the back (best effort), every
+ * profile whose save did not land is written again. Bound once by App.tsx with `platform/app-state`'s
+ * `subscribeAppActive` (passed in, so this store never loads `react-native`); returns the unsubscribe. On the web a page
+ * back in front also writes every hydrated profile again (`followProgressChanges`): a failed profile is then tried twice in
+ * a row (one write runs, one waits), which is harmless.
+ */
+export function followSaveRetries(subscribeAppActive: (listener: (active: boolean) => void) => () => void): () => void {
+  return subscribeAppActive(() => {
+    for (const profileId of useProgressStore.getState().saveFailedFor) writeStored(profileId, retries.get(profileId)?.mode ?? 'merge');
+  });
 }
 
 function save(profileId: string, mode: WriteMode = 'merge'): void {
@@ -778,6 +856,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   openSession: null,
   loadFailedFor: new Set(),
   freshFor: new Set(),
+  saveFailedFor: new Set(),
 
   hydrate: (profileId) => {
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
@@ -829,6 +908,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         seen.set(profileId, wrote ? (writtenJson as string) : loadedJson);
         if (wrote) postProgressChanged();
       }
+      // [DP] Row DP-2: the profile is hydrated and only its merged write did not land: it is tried again like any write.
+      if (outcome === 'unsaved' && get().hydratedFor.has(profileId)) afterWrite(profileId, outcome, 'merge');
       // [AU] Row AU-3: a stored record that could not be read (or a damaged one that could not be kept aside) leaves
       // the profile un-hydrated, so nothing is written for it; the writes made meanwhile stay in memory and the next
       // `hydrate` reads again.
@@ -1187,9 +1268,11 @@ onProfileRemoved((profileId) => {
     pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
     loadFailedFor: without(s.loadFailedFor, profileId),
     freshFor: without(s.freshFor, profileId),
+    saveFailedFor: without(s.saveFailedFor, profileId),
   }));
   seen.delete(profileId);
   writeWaiting.delete(profileId);
+  stopRetries(profileId);
   removeKey(key(profileId)).catch(() => undefined);
   // [AU] Row AU-3: the copy of a damaged record goes with the learner.
   removeKey(PROGRESS_CORRUPT_KEY(profileId)).catch(() => undefined);

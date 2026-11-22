@@ -112,6 +112,7 @@ export const caregiver = {
   },
 
   dashboard: {
+    saveTrouble: '이 기기에 진도 일부를 저장하지 못했어요. 저장 공간을 조금 비워 주세요.',
     persona: '부모님 또는 보호자',
     readOnly: '보기 전용 — 이 기기의 학습자예요.',
     aboutRows: { cta: '이 항목 안내' },
@@ -262,6 +263,7 @@ export const caregiver = {
 
   restore: {
     title: '진도 되찾기',
+    saveLater: '아직 저장하지 못했어요. 앱을 열어 두면 다시 저장해 볼게요.',
     code: {
       cta: '복구 코드가 있어요',
       placeholder: '낱말, 그다음 숫자',
