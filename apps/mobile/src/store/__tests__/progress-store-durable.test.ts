@@ -248,6 +248,18 @@ describe('[DP] what hydrate and a write do with the answers', () => {
     expect(useProgressStore.getState().freshFor.has('p1')).toBe(false);
   });
 
+  it("a damaged record whose fresh write is 'unsaved' (a full disk) still puts the profile in freshFor: the damaged path ran", async () => {
+    idb.mem.set(KEY, TRUNCATED);
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:b');
+    await useProgressStore.getState().hydrate('p1');
+    await settle();
+    expect(idb.mem.get(KEPT)).toBe(TRUNCATED);
+    expect(idb.mem.get(KEY)).toBe(TRUNCATED);
+    expect(useProgressStore.getState().hydratedFor.has('p1')).toBe(true);
+    expect(useProgressStore.getState().freshFor.has('p1')).toBe(true);
+  });
+
   it('a record damaged after it was read, started fresh by the next write, puts the profile in freshFor', async () => {
     idb.mem.set(KEY, JSON.stringify(saved()));
     await useProgressStore.getState().hydrate('p1');

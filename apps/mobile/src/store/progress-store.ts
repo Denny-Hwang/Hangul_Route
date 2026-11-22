@@ -422,6 +422,11 @@ export async function withStored(profileId: string, step: StoredStep): Promise<S
       if (stepped) return 'unsaved';
       if (ran) return 'step-failed';
       return 'unread';
+    } finally {
+      // [DP] Row DP-1a: once the damaged-path step has run, the learner's memory is built on a fresh record, whatever the
+      // write did (a full disk often comes with the damage): the next push must fold the cloud copy in first. The
+      // answer may then be `unsaved` or `step-failed`, so the profile enters `freshFor` here, not in the callers.
+      if (ran) enterFresh(profileId);
     }
   }
 }
@@ -548,7 +553,6 @@ function writeStored(profileId: string, mode: WriteMode = 'merge'): void {
     writeWaiting.delete(profileId);
     const out: WriteOutcome = { stored: undefined, wrote: false, merged: null };
     const outcome = await withStored(profileId, writeStep(profileId, turn, out));
-    if (outcome === 'fresh') enterFresh(profileId);
     if ((outcome === 'done' || outcome === 'fresh') && out.stored !== undefined) {
       seen.set(profileId, out.stored);
       if (out.wrote) postProgressChanged();
@@ -820,7 +824,6 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         };
         return write ? snap : undefined;
       });
-      if (outcome === 'fresh') enterFresh(profileId);
       if (outcome !== 'unread' && outcome !== 'step-failed' && loadedJson !== undefined) {
         const wrote = (outcome === 'done' || outcome === 'fresh') && writtenJson !== undefined;
         seen.set(profileId, wrote ? (writtenJson as string) : loadedJson);

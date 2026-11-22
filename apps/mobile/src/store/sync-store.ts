@@ -377,6 +377,11 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
   // [DP] Section 3.2: a learner AU-3 just started fresh is marked unfolded in `hr:sync:<id>` at once, so a relaunch
   // before the next sync still folds (through the kept copy). A record that cannot be read is left as it is.
+  // Accepted window (spec section 4): this write lands after the fresh record. On a second damage after an earlier fold,
+  // an app killed between the two relaunches with `copyFolded: true` and the first copy unchanged, so that one fold is
+  // missed. Closing it would need a marker written before the fresh record from progress-store (a cycle the spec rules
+  // out) or a dated copy (a new platform export); AU-3 keeps only the first copy, so a second damage is already outside
+  // its guarantee.
   useProgressStore.subscribe((now, before) => {
     if (now.freshFor === before.freshFor) return;
     for (const learnerId of now.freshFor) {

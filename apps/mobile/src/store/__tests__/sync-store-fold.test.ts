@@ -12,6 +12,8 @@ const idb = vi.hoisted(() => ({
   mem: new Map<string, string>(),
   /** While set, every read and every transaction of a key that matches rejects. */
   failing: null as RegExp | null,
+  /** While set, a write of a key that matches rejects (the read before it works): a full disk. */
+  failingWrite: null as RegExp | null,
   /** While set, a transaction of a key that matches waits for it before it writes. */
   gate: null as { key: RegExp; until: Promise<void> } | null,
 }));
@@ -37,6 +39,7 @@ vi.mock('idb-keyval', () => {
       if (broken(k)) throw new Error('idb read failed');
       const value = next(idb.mem.get(k));
       if (idb.gate && idb.gate.key.test(k)) await idb.gate.until;
+      if (idb.failingWrite && idb.failingWrite.test(k)) throw new Error('idb write failed');
       idb.mem.set(k, value);
     }),
   };
@@ -137,6 +140,7 @@ async function launch() {
 beforeEach(() => {
   idb.mem.clear();
   idb.failing = null;
+  idb.failingWrite = null;
   idb.gate = null;
 });
 
@@ -267,6 +271,29 @@ describe('[DP] a damaged record keeps its cloud copy (test 3)', () => {
     await useSyncStore.getState().syncNow(ID);
     expect(calls).toEqual(['get', 'put']);
     expect((api.putSnapshot.mock.calls[0]?.[1] as Body).baseRev).toBe(SERVER_REV);
+  });
+
+  it('a second damage whose fresh write is rejected (a full disk), after an earlier fold: the next push still folds first', async () => {
+    storeSync({ copyFolded: true });
+    idb.mem.set(KEPT, '{"first":');
+    idb.mem.set(PROGRESS, TRUNCATED);
+    idb.failingWrite = /^hr:progress:/;
+    const { useProgressStore, useSyncStore, setSyncApiForTests } = await launch();
+    // A quest finished before the record was read: the fresh start has something to write, and that write is refused.
+    useProgressStore.getState().recordQuestComplete(ID, { questId: 'quest:c', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
+    await useProgressStore.getState().hydrate(ID);
+    // The damaged path ran, though its write did not land: the learner must fold before any push.
+    expect(useProgressStore.getState().freshFor.has(ID)).toBe(true);
+    await settle();
+    // Nothing fresh landed: the damaged bytes are still there, and the learner holds a near-blank record in memory.
+    expect(idb.mem.get(PROGRESS)).toBe(TRUNCATED);
+    expect(useProgressStore.getState().hydratedFor.has(ID)).toBe(true);
+    const { api, calls } = fakeApi();
+    setSyncApiForTests(api as never);
+    await useSyncStore.getState().syncAll();
+    expect(calls).toEqual(['get', 'put']);
+    expect((api.putSnapshot.mock.calls[0]?.[1] as Body).baseRev).toBe(SERVER_REV);
+    expect((api.putSnapshot.mock.calls[0]?.[1] as Body).snapshot.quests.map((q) => q.questId).sort()).toEqual(['quest:a', 'quest:b', 'quest:c']);
   });
 
   it('the copy read rejects (not a SyntaxError): no push in that run; the next run asks again', async () => {
