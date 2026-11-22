@@ -18,6 +18,7 @@ Built by:
 | `type-hangul.md` | the Type Hangul screen at 320 x 568, 375, tablet and a landscape phone; the result panel (pass, near, far); prompt modes |
 | `trace-word.md` | the Trace a Word screen: word strip, block canvas with the placed ghost, block by block, letter-by-letter fallback, two canvases on a tablet |
 | `write-frame.md` | pick, write (type or trace), the finished sentence, two slots, My page, the name round (Blocks and Keyboard tabs) |
+| `trace-stroke.md` | Trace Stroke's idle, pause, miss and pass states (AMENDMENTS-TRACE-IDLE row TI-0b, built in TI-2): the Keep going line, the miss that keeps the ink, Next after a tip; board `mock/trace-stroke-states.html` |
 | `mock/` | static HTML on one stylesheet, `writing.css`: pages `type-hangul.html`, `trace-word.html`, `write-frame.html` (each fills the window); boards `keyboard.html`, `type-hangul-states.html`, `trace-word-states.html`, `write-frame-states.html` |
 | `shots/` | the mocks rendered in Chromium: first screens at 320 x 568 and 375 x 667 at 2x, tablet and landscape pages and the boards at 1x; `-text200` is the browser text size at 200 % |
 
@@ -65,6 +66,8 @@ Values that are not tokens. G-3, G-4 and G-5 write them as named constants, neve
 | `shots/trace-word-states.png` | board | W1 to W6: idle, block passed, retry, word done, letter-by-letter, tablet |
 | `shots/write-frame-320.png`, `-768.png` | page | the pick phase (the phone page scrolls; Skip at the end) |
 | `shots/write-frame-states.png` | board | F1 to F9: pick, type, near miss, finished sentence, trace, two slots, My page, the name round's two tabs |
+| `shots/trace-stroke-states.png` | board | S1 to S11 (TI-0b): idle, keep going, miss with ink kept, a stroke added after a miss, Clear, pass with a tip and Next (compact, roomy, side), clean pass |
+| `shots/trace-stroke-320-text200.png` | 320 x 568, text 200 % | S12: the pass with a tip at 200 % text (open item: Next falls below the edge) |
 
 ## Checks made on the shots
 
