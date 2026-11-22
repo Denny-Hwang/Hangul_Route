@@ -24,6 +24,11 @@ vi.mock('../../platform/storage', () => ({
     if (disk.failing.has(k) || disk.damaged.has(k)) throw new Error('storage');
     return disk.mem.get(k) ?? null;
   }),
+  // [DP] The one retry on a fresh connection (AMENDMENTS-DURABLE-PROGRESS section 3.1): the same disk, the same switches.
+  readJsonExactFresh: vi.fn(async (k: string) => {
+    if (disk.failing.has(k) || disk.damaged.has(k)) throw new Error('storage');
+    return disk.mem.get(k) ?? null;
+  }),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     storeValue(k, v);
   }),
@@ -136,7 +141,8 @@ describe('account:subscriptionCovers (AMENDMENTS-ONE-ACCOUNT-MANY-USERS OA-D15, 
     disk.mem.set(PROFILES_KEY, learners);
     disk.failing.add(PROFILES_KEY);
     await start();
-    expect(useProfileStore.getState()).toMatchObject({ hydrated: true, profiles: [] });
+    // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.3: a list that could not be read is not hydrated (never first run).
+    expect(useProfileStore.getState()).toMatchObject({ hydrated: false, loadFailed: 'read', profiles: [] });
     await useAccountStore.getState().recordSubscriptionCovers(now);
     expect(record()).toBeUndefined();
 

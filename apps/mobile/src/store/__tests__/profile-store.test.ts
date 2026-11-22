@@ -3,7 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../platform/storage', () => {
   const readJson = vi.fn(async (_key: string): Promise<unknown> => null);
   // The list is read strictly (a failed read is not "no learners"); it answers what `readJson` is set to answer.
-  return { readJson, readJsonStrict: vi.fn((key: string) => readJson(key)), writeJson: vi.fn() };
+  // [DP] The profile records are read under the read contract (`durableRead`: `readJsonExact`, one retry on a fresh
+  // connection, AMENDMENTS-DURABLE-PROGRESS section 3.1); they answer the same.
+  return {
+    readJson,
+    readJsonStrict: vi.fn((key: string) => readJson(key)),
+    readJsonExact: vi.fn((key: string) => readJson(key)),
+    readJsonExactFresh: vi.fn((key: string) => readJson(key)),
+    writeJson: vi.fn(),
+  };
 });
 
 import { readJson, writeJson } from '../../platform/storage';
