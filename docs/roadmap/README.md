@@ -7,6 +7,7 @@
 - `multi-persona-sync-platform.md` — 개인·가정·학급·학교 페르소나, 교사 학습 계획, 동기화·복원, 결제 — 최소 DB 설계안 (proposal)
 - `speaking-later.md` — 말하기(speaking) 후속 계획 기록 (plan only; 현재 UI 범위 밖, owner decision 2026-10-10, F-ROUTE-001 §10)
 - `TELEMETRY-NAMES-2.md` — 스펙별 telemetry 이벤트 이름 통합 목록 (코드 원천은 `TELEMETRY_EVENT_NAMES`)
+- `review-2026-11/` — 2026-11-21 리뷰(UX/UI·접근성, 한글 교육학) 기반 개선 계획과 작업지시 WO-01 – WO-42 (proposal; 오너 결정 목록은 그 폴더 `README.md` §4)
 
 ### 예정
 - `2026-q2.md` — 분기 OKR / 마일스톤
