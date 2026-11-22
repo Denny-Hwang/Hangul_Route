@@ -1,0 +1,234 @@
+# AMENDMENTS-DURABLE-PROGRESS — a failed read is never "nothing saved"; a failed write is never silent
+
+Status: draft, revision 3 (2026-11-21, re-based on `d5ba0217c`; written for work order WO-01 of `docs/roadmap/review-2026-11/phase-1-safety.md`, row DP-0). Revision 2 was written on `5573e1072`; since then AMENDMENTS-AUDIT-2026-11 rows AU-3 and AU-11 (#1034, #1035) fixed the progress half of the read problem, and this revision builds on their mechanisms (§11). It becomes `ready` when the owner accepts §10 OD-DP1 and OD-DP3.
+
+**Amends**: F-PROF-001 §3.1 (cold launch: the list read at launch) · F-SYNC-002 §3.2 (the first push after a damaged record was kept) · F-RESTORE-001 (a restore over a record that could not be read says so) · AMENDMENTS-AUDIT-2026-11 AU-3 (the unread set becomes store state; a failed write is told apart from a failed read) · AMENDMENTS-ONE-ACCOUNT-MANY-USERS §13.4 (one new grown-up destination) · tag **[DP]**
+**Scope**: `apps/mobile` — `store/durable-read.ts` (new, built only from existing `platform/storage` exports), `store/progress-store.ts`, `store/profile-store.ts`, `store/sync-store.ts`, `App.tsx`, `screens/sync/RestoreScreen.tsx`, the chooser and Home (one check each), one system screen and one grown-up sheet; `packages/i18n` (en, es, ko); `packages/content-schema` and `packages/backend` (telemetry names and Worker rule). No change to `platform/storage(.web).ts`.
+**Owner**: solo dev
+**Rollout**: next release; no migration; Worker before app for telemetry (§3.9)
+**UI sketch**: §5
+
+---
+
+## 1. Context
+
+The charter promises that earned stars, cards and collection progress are never taken away (CLAUDE.md §1, anti-shame rules). Re-read on `d5ba0217c`. What upstream already fixed is marked; what is left is this amendment's work.
+
+**The storage helpers.** `readJson` still returns `null` for a missing key, a read that threw and bytes that do not parse (`apps/mobile/src/platform/storage.ts:11-18`; web `storage.web.ts:12`). Next to it: `readJsonStrict` (a failed read throws, unparsable is `null`, `storage.ts:25-33`), `readJsonExact` (both throw, `:40-44`), `readJsonExactFresh` (one retry on a fresh connection, `:50-52`; web `storage.web.ts:56`), `updateJson` with `{ exact }` (a read-modify-write that writes nothing over a value it could not read, `:72-82`; web `:85`), and, new in AU-3, `keepRawCopy(from, to, { onlyUnparsable })` (copies the raw stored string once, never over an existing copy, `storage.ts:91-98`; web `storage.web.ts:116`). Together these cover every read outcome this amendment needs; no new platform export is required.
+
+**A failed read looks like an empty device.**
+
+- **Progress — fixed by AU-3, one gap left.** Every read and write of `progress:<id>` is now one storage transaction, `withStored` (`store/progress-store.ts:349-387`, `updateJson(..., { exact: true })`). A read error leaves the profile out of `hydratedFor` and in the module-private set `unread` (`:414`, set at `:788`); writes are held in memory (`writeStep` refuses an un-hydrated profile, `:464`; `persist` keeps them in `pendingFor`, `:618-626`), `replaceSnapshot` holds a sync, restore or plan answer instead of making it final (`:1033-1036`), and the next `hydrate` reads again and merges (test `store/__tests__/progress-store-unreadable.test.ts:198-238`). Bytes that do not parse, or parse to a non-object, are copied to `progress-corrupt:<id>` (`PROGRESS_CORRUPT_KEY`, `:53`; registered in `PER_PROFILE_KEYS`, `profile-keys.ts`; removed with the learner, `:1132`) and the profile then **starts fresh** (`:374-382`); if the copy cannot be made, nothing is written and the profile stays unread. **Left:** the learner whose read failed sees an empty Home with no word of why (nothing reads `unread`; it is not store state), and what they earn meanwhile exists only in memory until a read succeeds.
+- **Sync — fixed by AU-3 for a failed read; open for a damaged one.** `runSync` returns before any registration or push while the learner is not in `hydratedFor` (`store/sync-store.ts:423-425`); `requestSync` goes through `runSync`, and the server adopt and `applyServerSnapshot` end in `replaceSnapshot`, which holds (above). **Left:** after AU-3 starts a damaged record fresh, the learner is hydrated, so the next `runSync` pushes the fresh snapshot with the stored `rev` (`sync-store.ts:443-452`). With no other device in between, `baseRev` matches and the Worker stores it (`packages/backend/src/routes/sync.ts:100-125`): the cloud copy is replaced by the fresh record. The conflict fold that would keep it (`logic/sync/engine.ts:52-58`) runs only on a 409.
+- **Plan derive — fixed by AU-3.** `derive` (`store/plan-store.ts:105-114`) hydrates, `ensure`s and calls `replaceSnapshot`, which holds while unread.
+- **Restore — data fixed by AU-3, message open.** File restore (`screens/sync/RestoreScreen.tsx:83-93`) and the server adopt (`sync-store.ts:559-603`) end in `replaceSnapshot`, which holds and later merges, so nothing is lost. **Left:** the screen still says "restored" for a learner whose record was not read, and the restore lives only in memory until a read succeeds.
+- **Profiles — still open (file unchanged since `5573e1072`).** `hydrate` reads the list, the active id and the tombstones with `readJson` (`store/profile-store.ts:353-358`) and sets `hydrated: true` whatever came back (`:366`), so a failed list read shows first-run Welcome. `persistList` → `flushLocked` (`:211-238`) re-reads with `readStored` (`readJsonStrict`, `:192-195`) and merges; on a read error it writes nothing, but **unparsable bytes read as `null`, so the stored list counts as empty and is overwritten** (the tombstones the same way, `:227`; `promoteGuest`'s confirm read, `:500`, likewise).
+- **Boot — still open, in a new form.** `progress.hydrate` no longer rejects (AU-3), so `hydrateLearnerData` (`store/bootstrap.ts:79-80`) throws only for other stores, and `App.tsx:155-156` drops that error anyway. Nothing at boot looks at the unread set or at a profile list that could not be read.
+
+**A failed write is silent.**
+
+- **Ordering — fixed by AU-11.** Writes for one profile run one after another (`enqueue`, `progress-store.ts:393-402`), a waiting write is not queued twice and stores the snapshot held when it runs (`writeWaiting`, `:408`; `writeStored`, `:506-531`), so an older snapshot never lands after a newer one. On the web a page that comes back to the front writes again every hydrated profile it holds (`followProgressChanges`, `:544-548`; `platform/progress-channel.web.ts:68-77`), and every new write stores the whole memory snapshot, so a failed write is retried by the next one.
+- **Still open.** A write that throws after its step ran ends as `'unread'` (`withStored`, `:371`), the same answer as a failed read, and `writeStored` then does nothing (`:515-519`): no retry on native, no flag, no line for the learner or a grown-up. `save` calls `notifyProgressPersisted` before the write runs (`:533-537`), and `replaceSnapshot` after starting it (`:1047-1048`); `memory-chunk.ts:92-93, 103-104, 200-201, 255-256` and `stage-ceremony-latch.ts:23-24` do the same. That notify only asks for a sync, and the push sends the snapshot in memory, so on a full disk it gives the learner a second copy; this revision keeps it (§3.7). On a full disk the learner keeps playing and loses what they earned at the next launch unless a sync went through.
+
+The profile-lock record already solved the read half (`AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` §13.2: unparsable counts as failed, one retry on a fresh connection, then fail closed). AU-3 applied a version of it to progress. This amendment surfaces AU-3's state to the learner, closes its sync gap, applies the rule to the profile list, and makes a failed progress write visible.
+
+## 2. User story
+
+> As a learner coming back to the app, I see my cards and stars, or I see that the app could not open them and can try again. I never see an empty app that then replaces what I had.
+>
+> As a parent, if the device could not save today's progress, I find that out on the device, in the Grown-up area, not weeks later.
+>
+> As an adult learning on my own phone, the message tells me what I can do, not to "ask a grown-up".
+
+## 3. Acceptance criteria
+
+### 3.1 One read contract (profile records)
+
+| Outcome | Meaning | How (existing exports only) |
+|---|---|---|
+| `missing` | the key is absent or `''` | `readJsonExact` returns `null` |
+| `value` | the bytes parse | `readJsonExact` returns the value |
+| `failed` / `read` | the read threw, and the one retry on a fresh connection threw too | `readJsonExact`, then `readJsonExactFresh`, both throw; `keepRawCopy(..., { onlyUnparsable: true })` then rejects or resolves `false` |
+| `failed` / `parse` | the bytes were read and do not parse | `keepRawCopy(key, copyKey, { onlyUnparsable: true })` resolves `true` (the copy now exists); `kept: false` when the copy write is fenced or rejects |
+
+- `store/durable-read.ts`: `durableRead(key, copyKey | null) → { kind: 'missing' } | { kind: 'value', value: unknown } | { kind: 'failed', cause: 'read' | 'parse', kept: boolean }`, composed from the three exports above. No raw-string export, no direct AsyncStorage or idb-keyval (CLAUDE.md §8).
+- Under the contract: `PROFILES_KEY` (copy key `profiles-corrupt`, the same naming as AU-3's `progress-corrupt:<id>`), `ACTIVE_KEY` and `PROFILE_TOMBSTONES_KEY` (copy key `null`: they hold nothing earned). `readStored` (`profile-store.ts:192-195`) and `promoteGuest`'s confirm read (`:500`) use it too, so damaged list or tombstone bytes are never merged as empty.
+- **Progress is not moved onto `durableRead`.** AU-3's `withStored` already is its contract (§1); this amendment only reads its outcome (§3.2).
+- `readJson` and `readJsonStrict` are unchanged; other stores keep them (§4). Schema repair is unchanged (`withSnapshotDefaults`, `storedProfileItems`).
+
+### 3.2 Progress: build on AU-3
+
+- **The unread set becomes store state.** AU-3's module set `unread` (`progress-store.ts:414`) is promoted to `loadFailedFor: ReadonlySet<string>` in the store's state (the same set, set and cleared at the same places, `:765`, `:788`, `:1127`), so boot, the chooser and Home can subscribe. No second structure.
+- **AU-3's re-read stays.** The next `hydrate` reads again, including the one `persist` and `ensure` start (`:625`, `:806`): a read that failed once heals at the next write. Try again (§3.5) is the learner's way to start that read on purpose. Telemetry fires on the transition into `loadFailedFor` only (§3.9), so repeated re-reads do not flood it.
+- **A damaged record keeps its cloud copy.** When AU-3 starts a learner fresh over a copy it kept in this hydrate (`:374-382`), the learner's next push must fold the server copy in first: `runSync` sends a `baseRev` that cannot match (or reads the server copy first), so `syncLearner` takes its conflict path and merges (`engine.ts:52-58`) before the push lands. The marker lives in the learner's sync record (`SYNC_KEY`, `sync-store.ts:123`) so it survives a relaunch while offline, and is cleared only after a push that went through the fold. A learner with no server copy is unchanged. (This replaces revision 2's "Get it back from the cloud save" action: for progress, the fold is automatic.)
+- **Restore says what happened.** A file restore or server adopt for a learner in `loadFailedFor` keeps AU-3's hold (no refusal, nothing written), and `RestoreScreen` shows `learner.restore.saveLater` instead of "restored" (§3.7).
+- `withStored` tells a failed write apart from a failed read (a new outcome, e.g. `'unsaved'`, where `:371` now returns `'unread'`); §3.7 uses it.
+- A `missing` record is a new learner: unchanged (blank record, welcome card in memory until the first real write, F-STORY-006 §3.3).
+- Not repeated here (already true upstream, with tests in `progress-store-unreadable.test.ts`): no write over an unreadable record, writes held and merged, sync and plan derive held, the damaged copy kept once and removed with the learner.
+
+### 3.3 Profiles: a list that could not be read never shows first run
+
+- **Given** the list read is `failed`, **when** `useProfileStore.hydrate` finishes, **then** `hydrated` stays `false`, `loadFailed: 'read' | 'parse'` is set, and `profiles` stays empty. While `loadFailed` is set nothing writes `PROFILES_KEY`, `ACTIVE_KEY` or the tombstones: `persistList`, `flushLocked`, `refresh`, `promoteGuest`, `persistActive` (from `followMerged` `:290` and `commitSet` `:334`), the tombstone sweep (`:363`) and the legacy-hash rewrite (`:367`) all check it. The device gate and the native gate already wait for `hydrated` (`store/device-gate.ts:111`, `store/native-gate-state.ts:50`).
+- **`PROFILE_TOMBSTONES_KEY` failed alone:** the list is shown **without** any profile whose per-profile keys are already gone (no `progress:<id>` key: it was swept), the sweep is skipped, and list writes are held as above until a tombstone read succeeds (Try again, or the next launch). A removed learner never comes back.
+- **`ACTIVE_KEY` failed alone:** with one profile, use it; with two or more, open the chooser (OA-D6), never a sibling's record. The active key may be written again after the learner picks (it holds nothing earned).
+
+### 3.4 Boot
+
+- `App.tsx` decides from store state, not from the thrown error: when `useProfileStore.loadFailed` is set, or the active profile is in `loadFailedFor`, it renders **ProgressReadFailedScreen** instead of the navigator. Other hydrate rejections are ignored as today (`App.tsx:155-156`).
+- The post-hydrate chain (`App.tsx:170-180`: `setReady`, `prefetchWhenIdle`, `rederiveAllLocal`, `activateMemory`, `syncAll`) runs once, after the first boot that is not blocked.
+- A failed progress read for a profile that is **not** active does not block boot. The chooser marks nothing; when that learner is chosen (chooser, or their Home), they get the screen in its learner variant.
+
+### 3.5 ProgressReadFailedScreen
+
+Layout and variants: the wireframe (§5). `OopsScreen`'s layout (`screens/system/OopsScreen.tsx`: Hoya `thinking`, title, body, bubble, hero button), same tokens, no `colors.feedback.danger`, no X or warning icon.
+
+| Button | Shown | Does |
+|---|---|---|
+| **Try again** (hero) | always | **List variant:** reruns `hydrateLearnerData` in full (the per-profile hydrates were built from an empty list, `bootstrap.ts:57-71`). **Learner variant:** reruns that learner's `progress.hydrate` (AU-3's re-read). Busy state; cannot be pressed twice during a try. On success the screen goes and held writes are merged and saved (AU-3). |
+| **Choose another learner** (secondary) | learner variant, when the device has 2 or more profiles | opens the chooser; locks still apply (OA-D9) |
+| **A grown-up can help** (ghost) | list variant, `parse` with `kept: true` only | opens the grown-up gate (AMENDMENTS-ONE-ACCOUNT-MANY-USERS §13.4) to the new destination `RecoverRecord` (appended to `GrownUpDestination`, `navigation/types.ts:37`) |
+
+- The learner variant is reached only by a read error (or by damaged bytes whose copy could not be kept, AU-3): AU-3 starts damaged progress fresh, so there is no learner-variant grown-up button.
+- After 3 tries in a session a line shows under the bubble (polite live region, announced once): `progressReadFailed.stillStuck`.
+- There is no "Start over" or "New learner" button on this screen.
+
+### 3.6 A damaged profile list: kept, then recoverable by a grown-up
+
+- When the list read is `failed/parse`, `durableRead` has already copied the raw bytes to `profiles-corrupt` with `keepRawCopy` (first copy kept, never overwritten; the AU-3 rule). If the copy cannot be made, `kept` is false, the list key is untouched, and **A grown-up can help** is not offered.
+- `profiles-corrupt` is removed 30 days after the list reads `value` again or a grown-up recovery replaced it, and by Remove from this device of any learner (it may hold their name).
+- **The grown-up sheet (`RecoverRecord`).** Default focus on **Not now** (the safe choice first).
+
+| Action | Does |
+|---|---|
+| **Start fresh on this device** | writes an empty list with `recoverProfileList()`; Welcome then shows with Restore, as on a new device (each learner with a Rescue Code comes back through it, and AU-3's records under `progress:<id>` are still on the device). Per-profile keys are left untouched. |
+| **Not now** | closes |
+
+- `recoverProfileList` is the only write past the §3.3 guards: it checks that `profiles-corrupt` exists, writes once, clears `loadFailed` and runs the post-hydrate chain.
+- If the gate's own record cannot be read, the sheet is not offered (fail closed; Try again stays).
+
+### 3.7 Writes: detect, retry, tell
+
+- Builds on AU-11's per-profile queue (§1): no new queue. When `withStored` answers `'unsaved'` (§3.2), `writeStored` schedules the same write again after 1 s, 4 s and 15 s; then on each app foreground (native; the web already does this through `followProgressChanges`), before backgrounding (best effort), and with each new write (already true). Each retry is an ordinary `writeStored`, so it stores the latest snapshot and never an older one.
+- `saveFailedFor: ReadonlySet<string>` in store state holds a profile from its first `'unsaved'` until a write of it lands.
+- `notifyProgressPersisted` keeps its present timing (§1): it asks for a sync of the snapshot in memory, which is a second copy when the disk is full. No change to `memory-chunk.ts` or `stage-ceremony-latch.ts`.
+- Where it shows (one quiet line, `tone="secondary"`, no error icon), while the learner is in `saveFailedFor` or `loadFailedFor`:
+  - Results (`screens/results/ResultsScreen.tsx`, under the headline `:504`): `results.saveLater`.
+  - Profile (`screens/profile/ProfileScreen.tsx`, above the grown-up section): `profile.saveTrouble` (`saveFailedFor` only).
+  - Grown-up area dashboard, at the top: `grownUp.saveTrouble`, while any learner on the device is in `saveFailedFor`.
+  - Restore (`RestoreScreen.tsx`): `restore.saveLater` in place of "restored" when the restored learner is in `loadFailedFor` or `saveFailedFor` after the restore's write.
+- Nothing is blocked while a save is failing.
+
+### 3.8 Strings (`packages/i18n/src/messages/{en,es,ko}/`)
+
+Spanish and Korean are **shipped** locales (`packages/i18n/src/locales.ts:32-34`), so each PR that adds a key carries reviewed es and ko values (R8 draft, F-I18N-001 §3.10 two-lens review, ledger re-signed). The persona-neutral wording serves children and adults on the same screen (CLAUDE.md §1).
+
+| Key | English | Row |
+|---|---|---|
+| `learner.progressReadFailed.title` | We could not open your progress. | DP-1c |
+| `learner.progressReadFailed.body` | Nothing was erased. Let's try again. | DP-1c |
+| `learner.progressReadFailed.bubble` | Hmm, the box is stuck. | DP-1c |
+| `learner.progressReadFailed.tryAgain` | Try again | DP-1c |
+| `learner.progressReadFailed.chooseAnother` | Choose another learner | DP-1c |
+| `learner.progressReadFailed.grownUpHelp` | A grown-up can help | DP-1d |
+| `learner.progressReadFailed.stillStuck` | Still stuck? Close the app and open it again. | DP-1c |
+| `grownUp.recoverRecord.title` | This record is damaged. | DP-1d |
+| `grownUp.recoverRecord.body` | We kept a copy of it on this device. | DP-1d |
+| `grownUp.recoverRecord.fresh` | Start fresh on this device | DP-1d |
+| `grownUp.recoverRecord.notNow` | Not now | DP-1d |
+| `learner.results.saveLater` | We could not save this yet. Keep the app open and we will try again. | DP-2 |
+| `learner.profile.saveTrouble` | This device is having trouble saving. Free up some space, then open the app again. | DP-2 |
+| `grownUp.saveTrouble` | This device could not save some progress. Free up some space on it. | DP-2 |
+| `learner.restore.saveLater` | We could not save this yet. Keep the app open and we will try again. | DP-2 |
+
+"Nothing was erased" is true on this screen: the list key is never written while it cannot be read, and a progress record reaches the screen only when it was not written (AU-3). No string promises recovery.
+
+### 3.9 Telemetry (Worker first)
+
+| Name | When | Payload |
+|---|---|---|
+| `storage.read_failed` | a profile record's `durableRead` ends `failed`; a progress profile enters `loadFailedFor`; AU-3 keeps a damaged progress copy (once per profile per launch) | `{ record: 'progress' \| 'profiles' \| 'active' \| 'tombstones', cause: 'read' \| 'parse', kept: boolean }` |
+| `storage.write_failed` | a progress write answers `'unsaved'` (first failure of a run only) | `{ record: 'progress' }` |
+| `storage.write_recovered` | a write lands after `write_failed` | `{ record: 'progress', tries: integer 1–4 }` |
+
+- DP-3 adds the names to `TELEMETRY_EVENT_NAMES` (append-only) and section W of `docs/roadmap/TELEMETRY-NAMES-2.md`, a strict `STORAGE_TELEMETRY_PAYLOADS` schema, and a Worker rule in `packages/backend/src/lib/server-events.ts` (`keptEventFields`) that drops `profileId` and any other key, with the exact-list test (`packages/content-schema/src/__tests__/telemetry.test.ts`) and a Worker test sending a smuggled `profileId`. The Worker deploys before the app build that sends them.
+- On a full disk the telemetry queue (`telemetry:queue`, `writeJson`) may itself fail; the event is then lost. Accepted.
+
+## 4. Out of scope
+
+- Every other store that calls `readJson` (stories, tiers, memberships, audio, layout, locale, account, memory, sync queue, the guest *record* of `hydrateGuest`). A later amendment takes them one by one; `hydrateGuest` first.
+- AU-3's choice to start damaged progress fresh after the copy is kept (owner-approved with the audit's stage 2, 2026-11-15): unchanged here. Reading a kept `progress-corrupt:<id>` back by hand is not a product path.
+- A one-time retry of the progress read on a fresh connection: AU-3 re-reads at the next write, which covers a passing failure.
+- Detecting low disk space before a write. Changing `readJson`'s signature.
+- Reads that keep failing (`read`, not `parse`) on a device that otherwise works: Try again only; telemetry will show if this happens (OD-DP3).
+
+## 5. UI sketch
+
+- Wireframe: `design/wireframes/shell/progress-read-failed.md` (revision 4: matches §3.5–§3.8 of this revision; the grown-up button and sheet are for the list variant only, and the sheet has no cloud action).
+- Row DP-0b: a design pass in `design/screens/system/progress-read-failed/` (screen, both variants, the sheet, the save lines), approved by multi-agent review (CLAUDE.md §5).
+
+## 6. Tests
+
+Unit (vitest, `apps/mobile/src/store/__tests__/`, `platform/storage` mocked through `test-support/storage-transactions.ts` `withTransactions` as `progress-store.test.ts:11` and `progress-store-unreadable.test.ts` do). AU-3's tests already pin the progress core (no write over an unreadable record, held writes merged, `replaceSnapshot` held, the copy kept once, removed with the learner); they stay green and are not repeated.
+
+1. `durableRead`: absent and `''` → `missing`; value → `value`; `readJsonExact` throws once, `readJsonExactFresh` succeeds → `value`; both throw → `failed/read`; unparsable → `failed/parse`, `kept: true`, copy equals the raw bytes; fenced or rejected copy → `kept: false`.
+2. `loadFailedFor` is store state: a subscriber sees the profile enter on a failed read and leave on the next successful `hydrate`.
+3. Damaged progress and the cloud: AU-3 starts fresh over a kept copy; the next `runSync` (mocked client, matching `rev`) gets a conflict, folds the server copy, and the pushed snapshot holds the server's cards and quests; the marker survives a relaunch before the sync and is cleared after it. A learner without a server copy pushes as before.
+4. Restore for a `loadFailedFor` learner: nothing written, `restore.saveLater` shown, the restored snapshot merged at the next successful read.
+5. `withStored` answers `'unsaved'` for a rejected write and `'unread'` for a rejected read.
+6. Profiles: list `failed` → `hydrated` false, `loadFailed` set; `persistList`, `flushLocked`, `refresh`, `promoteGuest`, `persistActive` and the sweep write nothing; creating a profile writes nothing.
+7. Profiles: unparsable list bytes and `flushLocked` → the damaged bytes are not overwritten (was: merged as empty); `profiles-corrupt` holds them.
+8. Tombstones `failed` alone → a swept learner is not shown; no list write; sweep skipped.
+9. Active `failed` alone, two profiles → chooser; one profile → that profile.
+10. `recoverProfileList`: refuses without `profiles-corrupt`; with it, writes once, clears `loadFailed`, runs the post-hydrate chain; Remove from this device deletes `profiles-corrupt` (`remove-from-device.test.ts`).
+11. Writes (DP-2): first write rejects, second resolves → `saveFailedFor` set then cleared; three newer snapshots during a retry → only the latest written; a retry on native foreground.
+12. Boot (testing-library): list `failed` → ProgressReadFailedScreen, not Welcome; active progress in `loadFailedFor` → the screen; Try again reruns `hydrateLearnerData` in full (list) or the one hydrate (learner); Choose another learner shown with 2 profiles only; A grown-up can help shown on list `parse` with `kept` only.
+
+Coverage: `apps/mobile` business logic stays at or above 90 %.
+
+**[On device, owner]** Fill an Android emulator's storage, finish a quest, see the Results and Grown-up lines; free space, finish another, the lines go and the record holds both. With a debug build, make a learner's progress read throw: the screen shows, Try again after the fault is removed brings the record back. Write garbage to `hr:profiles`: the screen shows, the copy exists, the grown-up sheet starts fresh only after the PIN. Write garbage to a synced learner's progress key: after the next sync the learner's cards are back from the cloud.
+
+## 7. Rollout
+
+Next release; nothing to migrate. If `storage.read_failed` is common on one platform, the out-of-scope stores (§4) come next.
+
+## 8. Dependencies
+
+- `platform/storage(.web).ts` (present, unchanged: `readJsonExact`, `readJsonExactFresh`, `keepRawCopy`).
+- AMENDMENTS-AUDIT-2026-11 AU-3 and AU-11 (shipped: `withStored`, `unread`, `progress-corrupt:<id>`, the per-profile write queue, `followProgressChanges`).
+- `OopsScreen` layout, the grown-up gate (present).
+- WO-07 (`AMENDMENTS-QUEST-LEAVE-RESUME.md`, not yet written): the quest run's own key already exists (AU-12, `quest-run:<id>`, `store/quest-run-saved.ts:50`); its read already treats a failure as "no saved run" and never touches progress, which is what WO-07 item 5 asks. No change from this amendment.
+
+## 9. Rows
+
+| Row | Model | Work | Tests | Depends on | Branch |
+|---|---|---|---|---|---|
+| DP-0b | Opus 5.5 | §5 wireframe revision 4 and design pass; multi-agent review | — | this spec `ready` | `design/durable-progress` |
+| DP-1a | Opus 5.5 | §3.2: `loadFailedFor` as store state, `'unsaved'` outcome, the cloud fold after a damaged record, the restore hold flag | 2–5 | this spec `ready` | `fix/durable-progress-read` |
+| DP-1b | Opus 5.5 | §3.1 `durableRead`; §3.3 profiles (list, tombstones, active), `readStored` and `promoteGuest` on the contract | 1, 6–9 | DP-1a | `fix/durable-progress-profiles` |
+| DP-1c | Sonnet 5.5 | §3.4 boot, §3.5 screen (Try again, Choose another learner, still-stuck line); its strings (en, es, ko) | 12 | DP-1b, DP-0b | `fix/durable-progress-boot` |
+| DP-1d | Opus 5.5 | §3.6 `profiles-corrupt`, `RecoverRecord` destination and sheet, `recoverProfileList`; its strings (en, es, ko) | 7, 10, 12 (grown-up button) | DP-1c | `fix/durable-progress-recover` |
+| DP-2 | Sonnet 5.5 | §3.7 retries on `'unsaved'`, `saveFailedFor`, the four lines; their strings (en, es, ko) | 4 (line), 11 | DP-1a | `fix/durable-progress-write` |
+| DP-3 | Sonnet 5.5 | §3.9 Worker rule and names first, then the client emits | Worker and exact-list tests | DP-1d, DP-2 | `fix/durable-progress-telemetry` |
+| DP-4 | Sonnet 5.5 | "Amended 2026-11-xx by AMENDMENTS-DURABLE-PROGRESS" lines in F-PROF-001, F-SYNC-002, F-RESTORE-001, AMENDMENTS-AUDIT-2026-11, AMENDMENTS-ONE-ACCOUNT-MANY-USERS; `docs/specs/README.md` index line; status `shipped` **after** the owner's on-device check (§6) | — | DP-3, owner check | `docs/durable-progress-shipped` |
+
+One commit = test + implementation (CLAUDE.md §5). WO-01 put damaged-value handling in its DP-3; for progress AU-3 already did it, and for the list it is DP-1d because the recovery sheet needs it.
+
+## 10. Owner decisions
+
+- **OD-DP1 — a damaged profile list: Start fresh only behind the grown-up gate.** For progress this decision is **moot**: AU-3 (owner-approved, 2026-11-15) already starts a damaged record fresh, automatically, once its copy is kept. For the list this spec does not follow AU-3's automatic rule: a fresh list hides every learner on the device and shows first-run Welcome, which is the "empty device" this amendment exists to prevent. So the list keeps its damaged bytes, shows the screen, and offers Start fresh behind the PIN only when the copy is kept. Without it, damaged list bytes leave a device stuck for good. Recommended: accept. (Alternative: AU-3's automatic rule for the list too — simpler, no sheet, no DP-1d.)
+- **OD-DP2 — the cloud action in the sheet: moot.** For progress the cloud copy is now folded in automatically on the next sync (§3.2); the profile list has no server copy of its own (its learners come back through Restore). The action is dropped.
+- **OD-DP3 — reads that keep failing (`read`)** get Try again only, no grown-up action, until telemetry shows how often it happens. AU-3 also re-reads at each write. Recommended: accept.
+
+## 11. Review log
+
+- 2026-11-21, multi-agent review (two lenses: code truth; charter, learner experience, child safety). Adjudicated in revision 2:
+  - Fixed, blockers: damaged bytes had no way out (Try again rereads the same bytes; the Grown-up area was unreachable; restore was refused by the new guard) → grown-up sheet behind the PIN with cloud and start-fresh actions after a kept copy (§3.6, OD-DP1, OD-DP2); write paths that skipped the guard (sync push/pull, plan derive, external `notifyProgressPersisted` callers, `flushLocked`/`refresh`/`promoteGuest`/`persistActive`, `readStored` reading damaged bytes as empty) → all named and gated (§3.2, §3.3); the damaged-copy key ended in a timestamp, so Remove from this device left a child's data behind, and copies piled up → one slot per record, id last, registered, never overwritten (§3.6); `readJsonExact` cannot return the raw bytes → `readRawExact`/`writeRaw` exports (§3.1); the wireframe contradicted the spec → the spec takes the wireframe's design, wireframe revision 3 aligns copy.
+  - Fixed, majors: one learner's failed read blocked siblings → Choose another learner; Try again after a failed list read reruns `hydrateLearnerData` in full and the post-hydrate chain runs once; boot decides from store state; tombstones failing alone no longer bring back removed learners; the active-key fallback opens the chooser on a shared device; "we will keep trying" made true (retries on foreground and before background) and a Grown-up area line added; strings move into the rows that use them, with es and ko (both shipped); a design row (DP-0b); one branch per row, DP-1 split into four; automatic re-reads removed so telemetry does not flood; telemetry follows the Worker-first house rules.
+  - Fixed, minors: copy is persona-neutral (adults use the same screens); "still on this device" → "Nothing was erased"; the bubble no longer repeats the body; `reset` has no production caller; guest progress is under the contract; restore waits for its write; §1's claim about the list overwrite corrected (only unparsable bytes); `remember` writes nothing (dropped from the list); profile reads span `:352-358`; section numbers in Amends; F-APP-001 dropped from Amends (no section describes `hydrateLearnerData`); `shipped` only after the owner's device check.
+  - Open: whether the grown-up gate's own record can be read when the list cannot — fail closed (§3.6) until DP-1d checks it.
+- 2026-11-21, revision 3: re-based from `5573e1072` to `d5ba0217c` (12 commits; every `file:line` re-read). What moved because of AMENDMENTS-AUDIT-2026-11:
+  - **AU-3** (`withStored`, `unread`, `progress-corrupt:<id>`, `keepRawCopy`, `runSync` guard) already does §3.2's core for progress: no write over an unreadable record, held writes merged at the next read, sync push/pull and plan derive held, restore held instead of lost, the damaged copy kept once, registered and swept. Dropped: `readRawExact` / `readRawExactFresh` / `writeRaw` (`durableRead` now composes `readJsonExact`, `readJsonExactFresh`, `keepRawCopy`, and covers the profile records only); the `loadFailedFor` Map (AU-3's `unread` set is promoted instead); "no automatic re-read" (reversed: AU-3's re-read stays, telemetry fires on the transition); the restore refusal and `restoreBlocked` (AU-3 holds the restore; the screen now says `restore.saveLater`); the progress damaged-copy slot `progress-damaged:<id>` (AU-3's `progress-corrupt:<id>` is it; the list copy is renamed `profiles-corrupt` to match); the learner-variant grown-up button, the cloud action, `grownUp.recoverRecord.cloud` and `recoverRecord` for progress (AU-3 starts damaged progress fresh); OD-DP1 narrowed to the list; OD-DP2 moot.
+  - **AU-3 gap found:** the fresh start after a kept copy is pushed with the stored `rev` and replaces the cloud copy; §3.2 adds the conflict fold before that push.
+  - **AU-11** (per-profile write queue, latest-snapshot coalescing, re-write on page foreground on the web) already does §3.7's ordering and part of its retry. Dropped: the new queue, `replaceSnapshot({ notify })` and the edits to `memory-chunk.ts` / `stage-ceremony-latch.ts` (the early notify only asks for a sync of what is in memory, a second copy on a full disk). Kept: telling a failed write from a failed read, timed and native-foreground retries, `saveFailedFor`, the lines.
+  - **AU-12** (`quest-run:<id>`) meets the WO-07 dependency of §8.
+  - Unchanged and still open: profiles (§3.3, `profile-store.ts` has not changed), boot (§3.4), the screen (§3.5), telemetry (§3.9). #1037 (quest Previous) and #1044 (AMENDMENTS-FINISH-2026-11) touch no path in this spec.
