@@ -1,0 +1,79 @@
+/*
+ * AMENDMENTS-DURABLE-PROGRESS row DP-0b: design mock of ProgressReadFailedScreen (list and learner variants), the
+ * grown-up RecoverRecord sheet and the four quiet save lines. Design mock, not shipped code.
+ *
+ * Loaded after ../../../app-shell/mock/app-shell.css (whose first :root block holds the token custom properties) and
+ * ../../../app-shell/mock/display-nav.css (text size, ScreenHeader, ConfirmSheet). The first block copies, once, the
+ * tokens of packages/design-system/src/tokens.ts those two sheets do not carry, named after them. The second block
+ * names the numbers that are not tokens; ../README.md "Constants" says what each derives from. Nothing here
+ * redefines a token, and no rule uses colors.feedback.danger.
+ */
+:root {
+  --colors-feedback-nudge: #F2B33D;   /* colors.feedback.nudge: the thinking bubble's border (amber, never danger) */
+  --radii-xl: 24px;                   /* radii.xl: HoyaBubble's corner */
+}
+:root {
+  --hoya-system: 140px;               /* OopsScreen.tsx Hoya size (unchanged) */
+  --hoya-restore: 96px;
+  --hoya-bubble: 72px;                /* HoyaBubble.tsx Hoya size (unchanged) */               /* RestoreScreen.tsx notice Hoya size (unchanged) */
+  --frame-phone: 320px;               /* design board only, not UI: the narrowest phone frame */
+  --frame-phone-h: 568px;             /* design board only, not UI: 320 x 568 */
+  --frame-tablet-h: 640px;            /* design board only, not UI: a tablet frame's drawn height */
+}
+
+/* ---------------------------------------------------------------- The screen: OopsScreen's layout */
+/* Screen tone canvas; the body column is centred; the buttons are the Screen footer, so they stay in view. */
+.sample .prf-screen, .prf-screen { min-height: var(--frame-phone-h); padding: var(--spacing-lg) var(--gutter-compact) var(--spacing-xl); gap: var(--spacing-lg); }
+.prf-body { flex: 1; display: flex; flex-direction: column; padding: 0 var(--spacing-lg); }
+.prf-inner { margin: auto 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+/* A fixed 320 x 568 frame: the body scrolls (to its end once the still-stuck line fills, D3); the footer is pinned. */
+.sample .prf-screen.fixed { height: var(--frame-phone-h); min-height: 0; }
+.prf-screen.fixed .prf-body { min-height: 0; overflow-y: auto; }
+.prf-screen.fixed .prf-foot { flex: none; }
+.prf-hoya { width: var(--hoya-system); height: var(--hoya-system); flex: none; }
+.prf-title { margin-top: var(--spacing-lg); }
+.prf-text { margin-top: var(--spacing-sm); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.prf-bubble { margin-top: var(--spacing-xl); }
+.prf-stuck:empty { margin-top: var(--spacing-none); } /* the live region stays mounted, empty until the third try */
+.prf-stuck { margin-top: var(--spacing-lg); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.prf-foot { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-sm); }
+.prf-foot .rn-btn { overflow-wrap: anywhere; }
+.prf-foot .rn-lg { width: 100%; min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+.prf-foot .rn-ghost { align-self: center; max-width: 100%; }
+/* Busy: Button softDisabled (drawn as disabled, stays focusable, a press does nothing). No spinner, no new words. */
+.rn-btn[aria-disabled="true"] { background: var(--colors-surface-sunken); border-color: transparent; color: var(--colors-text-muted); opacity: var(--disabled-opacity); cursor: default; }
+
+/* ---------------------------------------------------------------- HoyaBubble (tone thinking) */
+.bubble { width: 100%; display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-lg); border-radius: var(--radii-xl); border: var(--border-width-base) solid var(--colors-border-subtle); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodyLg); font-weight: var(--weight-semibold); text-align: left; overflow-wrap: anywhere; box-shadow: var(--shadow-card); }
+.bubble p { flex: 1; min-width: 0; }
+.bubble-hoya { width: var(--hoya-bubble); height: var(--hoya-bubble); flex: none; }
+.bubble.thinking { background: var(--colors-feedback-nudgeLight); border-color: var(--colors-feedback-nudge); }
+
+/* ---------------------------------------------------------------- Frames on the board */
+.phone { width: 100%; max-width: var(--frame-phone); }
+.tablet .sample .prf-screen, .prf-screen { min-height: var(--frame-tablet-h); }
+.frame-host { position: relative; }
+/* A drawn sheet over the screen: the backdrop is part of the frame, not fixed to the page. */
+.frame-host .sheet-backdrop { position: absolute; }
+.frame-host .sheet-backdrop.dialog { align-items: center; padding: var(--spacing-xl); }
+.frame-host .dialog .sheet { max-width: var(--sheet-max); border-radius: var(--radii-lg); }
+.sheet .confirm-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.dialog .sheet .confirm-actions { flex-direction: row; flex-wrap: wrap; }
+.sheet .confirm-actions .btn { width: 100%; min-height: var(--touch-min); overflow-wrap: anywhere; }
+.dialog .sheet .confirm-actions .btn { flex: 1 1 12rem; width: auto; }
+.focus-ring { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+
+/* ---------------------------------------------------------------- The quiet save lines */
+.save-line { color: var(--colors-text-secondary); font-size: var(--size-body); overflow-wrap: anywhere; }
+.center { text-align: center; }
+.results-top { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--spacing-sm); }
+.stars { display: flex; justify-content: center; gap: var(--spacing-xs); }
+.stars svg { width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
+.restore-card { display: flex; flex-direction: column; align-items: stretch; gap: var(--spacing-md); }
+.restore-card .prf-hoya { width: var(--hoya-restore); height: var(--hoya-restore); align-self: center; }
+.ls-col { display: flex; flex-direction: column; gap: var(--spacing-md); }
+
+/* ---------------------------------------------------------------- Lengths board: three languages side by side */
+.lengths { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--frame-phone)), 1fr)); gap: var(--spacing-xl); align-items: start; }
+[lang="ko"] { word-break: keep-all; } /* Korean breaks between words, never inside one (DP-1c: the same for RN Text) */
+.draft { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); }
