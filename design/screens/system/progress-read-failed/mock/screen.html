@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProgressReadFailedScreen: list and learner variants (DP-0b) - design mock</title>
+<link rel="stylesheet" href="../../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="progress-read-failed.css">
+</head>
+<body>
+<!-- Design mock (docs/specs/AMENDMENTS-DURABLE-PROGRESS.md row DP-0b), not shipped code. Written by ../tools/build-mocks.mjs: edit the tool, not this file. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="hoya-thinking" viewBox="0 0 128 128"><ellipse cx="64" cy="116" rx="38" ry="5" style="fill: var(--colors-hoya-furDark); opacity: 0.18"/><circle cx="64" cy="64" r="44" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="98" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><circle cx="98" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><path d="M26 54 Q30 58 26 62 M24 70 Q29 73 25 78 M28 84 Q33 86 30 90 M102 54 Q98 58 102 62 M104 70 Q99 73 103 78 M100 84 Q95 86 98 90 M64 24 Q66 30 64 36" style="fill: none; stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round"/><ellipse cx="64" cy="84" rx="26" ry="16" style="fill: var(--colors-hoya-belly)"/><ellipse cx="52" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><ellipse cx="80" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><path d="M54 94 H72" style="stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round; fill: none"/><circle cx="110" cy="18" r="7" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><circle cx="100" cy="32" r="3" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><path d="M58 84 H70 L64 90 Z" style="fill: var(--colors-hoya-nose)"/></symbol></svg>
+<div class="board">
+<h1 class="page-title">ProgressReadFailedScreen</h1>
+<p class="annot">AMENDMENTS-DURABLE-PROGRESS 3.4 and 3.5; wireframe design/wireframes/shell/progress-read-failed.md revision 4a. OopsScreen's layout and tokens: Hoya thinking 140, title, body (secondary), HoyaBubble thinking (amber, never danger), the buttons in the Screen footer. No X, no warning icon. Frames 320 x 568.</p>
+<div class="board-grid">
+<div class="board-item"><p class="board-label">A. list variant, read error (or parse with no copy kept)</p><p class="board-title">Try again only</p><div class="sample phone"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">B. list variant, parse with kept: true</p><p class="board-title">Try again, then A grown-up can help (ghost)</p><div class="sample phone"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-ghost" type="button">A grown-up can help</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">C. learner variant, 1 profile on the device</p><p class="board-title">Try again only</p><div class="sample phone"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">D. learner variant, 2 or more profiles</p><p class="board-title">Try again, then Choose another learner (secondary)</p><div class="sample phone"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-secondary rn-lg" type="button">Choose another learner</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">E. a try is running (D shown)</p><p class="board-title">Every button soft-disabled; same words; aria-busy on the screen</p><div class="sample phone"><div class="app-screen prf-screen" lang="en" aria-busy="true">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button" aria-disabled="true">Try again</button><button class="rn-btn rn-secondary rn-lg" type="button" aria-disabled="true">Choose another learner</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">F. after 3 tries in this session (B shown)</p><p class="board-title">The still-stuck line under the bubble, announced once (polite)</p><div class="sample phone"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite">Still stuck? Close the app and open it again.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-ghost" type="button">A grown-up can help</button></div>
+</div></div></div>
+</div>
+<div class="board-wide">
+<div class="board-item"><p class="board-label">G. tablet / wide (1024 wide, D with F)</p><p class="board-title">Same column, the Screen frame max width (maxWidth.reading); nothing moves to the side</p><div class="sample tablet"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite">Still stuck? Close the app and open it again.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-secondary rn-lg" type="button">Choose another learner</button></div>
+</div></div></div>
+</div>
+</div>
+<script>document.documentElement.dataset.ready = 'yes';</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RecoverRecord sheet (DP-0b) - design mock</title>
+<link rel="stylesheet" href="../../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="progress-read-failed.css">
+</head>
+<body>
+<!-- Design mock (docs/specs/AMENDMENTS-DURABLE-PROGRESS.md row DP-0b), not shipped code. Written by ../tools/build-mocks.mjs: edit the tool, not this file. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="hoya-thinking" viewBox="0 0 128 128"><ellipse cx="64" cy="116" rx="38" ry="5" style="fill: var(--colors-hoya-furDark); opacity: 0.18"/><circle cx="64" cy="64" r="44" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="98" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><circle cx="98" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><path d="M26 54 Q30 58 26 62 M24 70 Q29 73 25 78 M28 84 Q33 86 30 90 M102 54 Q98 58 102 62 M104 70 Q99 73 103 78 M100 84 Q95 86 98 90 M64 24 Q66 30 64 36" style="fill: none; stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round"/><ellipse cx="64" cy="84" rx="26" ry="16" style="fill: var(--colors-hoya-belly)"/><ellipse cx="52" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><ellipse cx="80" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><path d="M54 94 H72" style="stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round; fill: none"/><circle cx="110" cy="18" r="7" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><circle cx="100" cy="32" r="3" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><path d="M58 84 H70 L64 90 Z" style="fill: var(--colors-hoya-nose)"/></symbol></svg>
+<div class="board">
+<h1 class="page-title">RecoverRecord: the grown-up sheet</h1>
+<p class="annot">AMENDMENTS-DURABLE-PROGRESS 3.6. Reached only from frame B (list variant, damaged bytes, copy kept), through the grown-up gate (PIN, unchanged; not drawn). The gate's own record unreadable: the button opens nothing new and the sheet is not offered (fail closed), Try again stays. A ConfirmSheet: Not now first and focused (the safe choice), Start fresh on this device second, primary. No danger colour: nothing is erased (the per-profile keys and profiles-corrupt are kept). Escape, the backdrop and the system back are Not now.</p>
+<div class="board-grid">
+<div class="board-item"><p class="board-label">H. phone (compact): bottom sheet over frame B</p><p class="board-title">Not now has the initial focus; the two buttons stack full width</p><div class="sample phone"><div class="frame-host"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-ghost" type="button">A grown-up can help</button></div>
+</div><div class="sheet-backdrop"><div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="rr-title-en" aria-describedby="rr-msg-en" lang="en">
+<h2 id="rr-title-en">This record is damaged.</h2><p class="msg" id="rr-msg-en">We kept a copy of it on this device.</p>
+<div class="confirm-actions"><button class="btn focus-ring" type="button">Not now</button><button class="btn btn-primary" type="button">Start fresh on this device</button></div>
+</div></div></div></div></div>
+</div>
+<div class="board-wide">
+<div class="board-item"><p class="board-label">I. tablet / wide (regular): centred dialog</p><p class="board-title">Cancel-first row, each button at least 64 high</p><div class="sample tablet"><div class="frame-host"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-ghost" type="button">A grown-up can help</button></div>
+</div><div class="sheet-backdrop dialog"><div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="rr-title-en-w" aria-describedby="rr-msg-en-w" lang="en">
+<h2 id="rr-title-en-w">This record is damaged.</h2><p class="msg" id="rr-msg-en-w">We kept a copy of it on this device.</p>
+<div class="confirm-actions"><button class="btn focus-ring" type="button">Not now</button><button class="btn btn-primary" type="button">Start fresh on this device</button></div>
+</div></div></div></div></div>
+</div>
+</div>
+<script>document.documentElement.dataset.ready = 'yes';</script>
+</body>
+</html>
