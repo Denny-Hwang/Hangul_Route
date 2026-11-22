@@ -11,6 +11,8 @@ const device = vi.hoisted(() => ({ storage: new Map<string, unknown>(), id: 'dev
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => device.storage.get(k) ?? null),
   readJsonStrict: vi.fn(async (k: string) => device.storage.get(k) ?? null),
+  // [DP] DP-1a: the sync store asks whether a damaged progress copy was kept.
+  readJsonExact: vi.fn(async (k: string) => device.storage.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     device.storage.set(k, v);
   }),

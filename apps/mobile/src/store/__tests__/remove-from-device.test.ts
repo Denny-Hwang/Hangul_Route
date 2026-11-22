@@ -151,7 +151,7 @@ describe('[OA] sync first (10.4: a pending queue tries syncNow)', () => {
     const syncNow = vi.fn(async (id: string): Promise<LearnerSyncState> => {
       disk.set(`sync:${id}`, syncRecord({}));
       useSyncStore.setState({ byLearner: {} });
-      return { learnerId: id, secret: 'device-secret', rev: 1, lastSyncedAt: '2026-10-21T10:00:00.000Z', lastError: null, status: 'synced', rescueCode: null, pendingProfile: null, profileAt: null };
+      return { learnerId: id, secret: 'device-secret', rev: 1, lastSyncedAt: '2026-10-21T10:00:00.000Z', lastError: null, status: 'synced', rescueCode: null, pendingProfile: null, profileAt: null, copyFolded: false };
     });
     useSyncStore.setState({ syncNow });
     expect(await syncThenCheck(jun)).toEqual({ saved: true, rescueCode: 'TIGER-MOON-RIVER' });

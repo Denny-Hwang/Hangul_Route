@@ -291,7 +291,7 @@ describe("Home's trigger for the summary", () => {
     snapshot(stages, over);
     const snap = useProgressStore.getState().byProfile[ID]!;
     useProgressStore.setState({ byProfile: { [id]: { ...snap, profileId: id } }, hydratedFor: new Set([id]) });
-    useSyncStore.setState({ byLearner: status === null ? {} : { [id]: { learnerId: id, secret: 's', rev: 1, lastSyncedAt: null, lastError: null, status, rescueCode: null, pendingProfile: null, profileAt: null } } });
+    useSyncStore.setState({ byLearner: status === null ? {} : { [id]: { learnerId: id, secret: 's', rev: 1, lastSyncedAt: null, lastError: null, status, rescueCode: null, pendingProfile: null, profileAt: null, copyFolded: false } } });
     return id;
   }
 
