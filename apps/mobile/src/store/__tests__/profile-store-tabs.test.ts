@@ -13,6 +13,10 @@ async function readStored(key: string): Promise<unknown> {
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn((key: string) => readStored(key)),
   readJsonStrict: vi.fn((key: string) => readStored(key)),
+  // [DP] The profile records are read under the read contract (`durableRead`, AMENDMENTS-DURABLE-PROGRESS section
+  // 3.1): the read and its one retry on a fresh connection answer what the strict read is set to answer.
+  readJsonExact: vi.fn((key: string) => readJsonStrict(key)),
+  readJsonExactFresh: vi.fn((key: string) => readJsonStrict(key)),
   writeJson: vi.fn(async (key: string, value: unknown) => void stored.set(key, structuredClone(value))),
 }));
 const closeGrownUpSession = vi.fn();
@@ -196,12 +200,17 @@ describe('profile store across tabs (OA-D19)', () => {
     await settle();
     stored.set('profiles', [...(stored.get('profiles') as unknown[]), other('profile:sora3', 'Sora')]);
     vi.mocked(writeJson).mockClear();
-    vi.mocked(readJsonStrict).mockRejectedValueOnce(new Error('storage busy'));
+    // The read and its one retry on a fresh connection both fail.
+    vi.mocked(readJsonStrict).mockImplementation(async (key: string) => {
+      if (key === 'profiles') throw new Error('storage busy');
+      return readStored(key);
+    });
     useProfileStore.getState().updateProfile(mina.id, { displayName: 'Mimi' });
     await vi.waitFor(() => expect(readJsonStrict).toHaveBeenCalled());
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(vi.mocked(writeJson).mock.calls.map(([key]) => key)).not.toContain('profiles');
     expect(storedIds()).toEqual([mina.id, 'profile:sora3']);
+    vi.mocked(readJsonStrict).mockImplementation(readStored);
 
     await useProfileStore.getState().refresh();
     expect(stored.get('profiles')).toEqual([expect.objectContaining({ id: mina.id, displayName: 'Mimi' }), expect.objectContaining({ id: 'profile:sora3' })]);

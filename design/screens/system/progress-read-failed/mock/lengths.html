@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" class="ts-largest">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lengths: en, es, ko at 320 with Largest text (DP-0b) - design mock</title>
+<link rel="stylesheet" href="../../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="progress-read-failed.css">
+</head>
+<body>
+<!-- Design mock (docs/specs/AMENDMENTS-DURABLE-PROGRESS.md row DP-0b), not shipped code. Written by ../tools/build-mocks.mjs: edit the tool, not this file. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="hoya-thinking" viewBox="0 0 128 128"><ellipse cx="64" cy="116" rx="38" ry="5" style="fill: var(--colors-hoya-furDark); opacity: 0.18"/><circle cx="64" cy="64" r="44" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="98" cy="32" r="12" style="fill: var(--colors-hoya-fur)"/><circle cx="30" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><circle cx="98" cy="32" r="6" style="fill: var(--colors-hoya-cheek); opacity: 0.85"/><path d="M26 54 Q30 58 26 62 M24 70 Q29 73 25 78 M28 84 Q33 86 30 90 M102 54 Q98 58 102 62 M104 70 Q99 73 103 78 M100 84 Q95 86 98 90 M64 24 Q66 30 64 36" style="fill: none; stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round"/><ellipse cx="64" cy="84" rx="26" ry="16" style="fill: var(--colors-hoya-belly)"/><ellipse cx="52" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><ellipse cx="80" cy="70" rx="3.5" ry="4" style="fill: var(--colors-hoya-stripes)"/><path d="M54 94 H72" style="stroke: var(--colors-hoya-stripes); stroke-width: 3; stroke-linecap: round; fill: none"/><circle cx="110" cy="18" r="7" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><circle cx="100" cy="32" r="3" style="fill: var(--colors-surface-paper); stroke: var(--colors-border-strong); stroke-width: 2"/><path d="M58 84 H70 L64 90 Z" style="fill: var(--colors-hoya-nose)"/></symbol></svg>
+<div class="board">
+<h1 class="page-title">Lengths at 320, Largest text</h1>
+<p class="annot">The longest cases in three languages at 320 wide with Largest text (1.5). Spanish and Korean are length drafts for this board only, not dictionary values: DP-1c and DP-1d carry the reviewed es and ko (R8 draft, F-I18N-001 3.10 review). Each screen frame is 320 x 568 and fixed: the body scrolls (to its end once the still-stuck line fills, D3) and the footer is pinned. Nothing may scroll sideways; every button stays at least 64 high; tools/capture.mjs checks that the footer ends inside the frame.</p>
+<p class="board-title">English (spec 3.8)</p>
+<div class="lengths">
+<div class="board-item"><p class="board-label">en: list variant, damaged, after 3 tries</p><p class="board-title">B with F</p><div class="sample phone"><div class="app-screen prf-screen fixed" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite">Still stuck? Close the app and open it again.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-ghost" type="button">A grown-up can help</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">en: learner variant, 2 or more profiles, after 3 tries</p><p class="board-title">D with F</p><div class="sample phone"><div class="app-screen prf-screen fixed" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite">Still stuck? Close the app and open it again.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-secondary rn-lg" type="button">Choose another learner</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">en: the sheet</p><p class="board-title">H</p><div class="sample phone"><div class="frame-host"><div class="app-screen prf-screen" lang="en">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">We could not open your progress.</h1><p class="prf-text">Nothing was erased. Let's try again.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Hmm, the box is stuck.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Try again</button><button class="rn-btn rn-ghost" type="button">A grown-up can help</button></div>
+</div><div class="sheet-backdrop"><div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="rr-title-en" aria-describedby="rr-msg-en" lang="en">
+<h2 id="rr-title-en">This record is damaged.</h2><p class="msg" id="rr-msg-en">We kept a copy of it on this device.</p>
+<div class="confirm-actions"><button class="btn focus-ring" type="button">Not now</button><button class="btn btn-primary" type="button">Start fresh on this device</button></div>
+</div></div></div></div></div>
+</div>
+<p class="board-title">Spanish (length draft)</p>
+<div class="lengths">
+<div class="board-item"><p class="board-label">es: list variant, damaged, after 3 tries</p><p class="board-title">B with F</p><div class="sample phone"><div class="app-screen prf-screen fixed" lang="es">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">No pudimos abrir tu progreso.</h1><p class="prf-text">No se borró nada. Intentémoslo de nuevo.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Mmm, la caja está atascada.</p></div><p class="prf-stuck" aria-live="polite">¿Sigue sin abrirse? Cierra la app y ábrela de nuevo.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Reintentar</button><button class="rn-btn rn-ghost" type="button">Un adulto puede ayudar</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">es: learner variant, 2 or more profiles, after 3 tries</p><p class="board-title">D with F</p><div class="sample phone"><div class="app-screen prf-screen fixed" lang="es">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">No pudimos abrir tu progreso.</h1><p class="prf-text">No se borró nada. Intentémoslo de nuevo.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Mmm, la caja está atascada.</p></div><p class="prf-stuck" aria-live="polite">¿Sigue sin abrirse? Cierra la app y ábrela de nuevo.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Reintentar</button><button class="rn-btn rn-secondary rn-lg" type="button">Elegir otro estudiante</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">es: the sheet</p><p class="board-title">H</p><div class="sample phone"><div class="frame-host"><div class="app-screen prf-screen" lang="es">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">No pudimos abrir tu progreso.</h1><p class="prf-text">No se borró nada. Intentémoslo de nuevo.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>Mmm, la caja está atascada.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">Reintentar</button><button class="rn-btn rn-ghost" type="button">Un adulto puede ayudar</button></div>
+</div><div class="sheet-backdrop"><div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="rr-title-es" aria-describedby="rr-msg-es" lang="es">
+<h2 id="rr-title-es">Este registro está dañado.</h2><p class="msg" id="rr-msg-es">Guardamos una copia en este dispositivo.</p>
+<div class="confirm-actions"><button class="btn focus-ring" type="button">Ahora no</button><button class="btn btn-primary" type="button">Empezar de cero en este dispositivo</button></div>
+</div></div></div></div></div>
+</div>
+<p class="board-title">Korean (length draft)</p>
+<div class="lengths">
+<div class="board-item"><p class="board-label">ko: list variant, damaged, after 3 tries</p><p class="board-title">B with F</p><div class="sample phone"><div class="app-screen prf-screen fixed" lang="ko">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">진도를 열지 못했어요.</h1><p class="prf-text">지워진 건 없어요. 다시 해 봐요.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>음, 상자가 안 열려요.</p></div><p class="prf-stuck" aria-live="polite">그래도 안 되나요? 앱을 닫았다가 다시 열어 봐요.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">다시 해 보기</button><button class="rn-btn rn-ghost" type="button">어른이 도와줄 수 있어요</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">ko: learner variant, 2 or more profiles, after 3 tries</p><p class="board-title">D with F</p><div class="sample phone"><div class="app-screen prf-screen fixed" lang="ko">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">진도를 열지 못했어요.</h1><p class="prf-text">지워진 건 없어요. 다시 해 봐요.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>음, 상자가 안 열려요.</p></div><p class="prf-stuck" aria-live="polite">그래도 안 되나요? 앱을 닫았다가 다시 열어 봐요.</p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">다시 해 보기</button><button class="rn-btn rn-secondary rn-lg" type="button">다른 학습자 고르기</button></div>
+</div></div></div>
+<div class="board-item"><p class="board-label">ko: the sheet</p><p class="board-title">H</p><div class="sample phone"><div class="frame-host"><div class="app-screen prf-screen" lang="ko">
+<main class="prf-body"><div class="prf-inner"><svg class="prf-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><h1 class="rn-heading prf-title">진도를 열지 못했어요.</h1><p class="prf-text">지워진 건 없어요. 다시 해 봐요.</p><div class="bubble thinking prf-bubble" aria-live="polite"><svg class="bubble-hoya" viewBox="0 0 128 128" aria-hidden="true" focusable="false"><use href="#hoya-thinking"/></svg><p>음, 상자가 안 열려요.</p></div><p class="prf-stuck" aria-live="polite"></p></div></main>
+<div class="prf-foot"><button class="rn-btn rn-hero" type="button">다시 해 보기</button><button class="rn-btn rn-ghost" type="button">어른이 도와줄 수 있어요</button></div>
+</div><div class="sheet-backdrop"><div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="rr-title-ko" aria-describedby="rr-msg-ko" lang="ko">
+<h2 id="rr-title-ko">이 기록이 손상됐어요.</h2><p class="msg" id="rr-msg-ko">이 기기에 사본을 보관해 두었어요.</p>
+<div class="confirm-actions"><button class="btn focus-ring" type="button">나중에</button><button class="btn btn-primary" type="button">이 기기에서 새로 시작하기</button></div>
+</div></div></div></div></div>
+</div>
+</div>
+<script>document.documentElement.dataset.ready = 'yes';</script>
+</body>
+</html>

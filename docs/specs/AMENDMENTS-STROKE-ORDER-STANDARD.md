@@ -64,8 +64,9 @@ For a jamo (or unit) that is **not** taught:
   - Trace Word, for a unit that is not taught: `directionNudge` is `loopNudgeFor` over the same adjusted result `evaluate.ts:92-95` builds today (short strokes forgiven), instead of `directionNudgeFor`.
   - (WO-03 SO-1: "순서·방향을 채점하지 않고".)
 - **Show me** draws the letter as a **shape reveal**: all strokes fade in together over the same duration, with no per-stroke sequence and no moving dot. A caption **Shape guide** shows under the animation (placement per the SO-0c mock).
+  - *SO-0c design (2026-11-22, `design/wireframes/minigame/trace-stroke-shape-guide.md`):* the caption is a line of the game's Hoya strip, drawn by the game screen (not by `StrokeHint`), and replaces the **idle** line only (a miss or pass line always wins, `AMENDMENTS-TRACE-IDLE.md` §3.3); the ghost steps aside while the hint is up; the strokes are opaque in one group at opacity 0.6; the shape is held at least 1000 ms; the presenter panel hides its own letter while revealing.
 - **Reduced motion** (and the fallback when the reduced-motion query fails): the still diagram shows the letter with **no numbered badges and no arrows**.
-- **Screen readers**: the hint's region label is the shape label (`a11y.minigame.strokeOrder.shapeGuide`), and its description is `a11y.minigame.strokeOrder.shape(romanization)`, not `describeStrokeOrder`. Trace Word's `orderLabel` (`TraceWordGame.tsx:340-342`) uses the shape label for a unit that is not taught.
+- **Screen readers**: the hint's label is `a11y.minigame.strokeOrder.shape(romanization)` (romanization through `a11yRomanization`), not `describeStrokeOrder`; the still reads `strokeOrder.close(shape(romanization))`. (SO-0c: one label, so "shape guide" is not read twice; the separate `shapeGuide` a11y key is dropped.) Trace Word's `orderLabel` (`TraceWordGame.tsx:340-342`) uses the shape label for a unit that is not taught.
 - **The presenter** `StrokePanel` (`LetterSlide.tsx:162-204`) follows the same rule: shape reveal, unnumbered still, its own caption "Simplified stroke guide" unchanged. (OD-SO2.)
 - `StrokeHint` gains props `orderTaught: boolean` and `romanization: string`; every caller passes them.
 - **Learners already taught the data's order**: order never decided a pass and `orderCorrect` is not stored, so no star, card, meter or record changes. No migration and no "we changed something" note.
@@ -111,8 +112,7 @@ Rules:
 | Key | English | Row |
 |---|---|---|
 | `learner.minigame.trace.shapeGuide` | Shape guide | SO-1 |
-| `a11y.minigame.strokeOrder.shapeGuide` (`a11y.ts`) | Shape guide | SO-1 |
-| `a11y.minigame.strokeOrder.shape` (`a11y.ts`) | `(romanization: string) => \`${romanization}, shape guide\`` — the romanized letter name, never a Hangul glyph (`a11y.ts:100`) | SO-1 |
+| `a11y.minigame.strokeOrder.shape` (`a11y.ts`) | `(romanization: string) => \`${romanization}, shape guide.\`` — the romanized letter name, never a Hangul glyph (`a11y.ts:100`); ends with a full stop because `close` appends " Tap to close." | SO-1 |
 
 ## 4. Out of scope
 
@@ -135,7 +135,7 @@ SO-1:
 5. ㅁ drawn as one loop → `pass.clean` (no open-stroke nudge) while untaught; ㅇ drawn clockwise → `pass.loop` (loop nudge kept); final ㅇ the same.
 6. Strict mode on, ㅗ bar-first, full coverage → pass.
 7. Trace Word: 호 with ㅗ bar-first → the letter and block lines are not `pass.order`; a unit with one untaught jamo gets the shape label.
-8. StrokeHint, untaught: caption rendered; no per-stroke sequence in the animation (all strokes share one timing); reduced-motion still has no numerals or arrows; accessibility label is the shape label.
+8. StrokeHint, untaught: no per-stroke sequence in the animation (all strokes read one shared value); reduced-motion still has no numerals or arrows; accessibility label is `shape(romanization)`; StrokeHint renders no caption. Trace Stroke and Trace Word screens, untaught: the strip shows `trace.shapeGuide` while the hint is up and the strip is on its idle line, and keeps a miss or pass line (SO-0c).
 9. LetterSlide's StrokePanel, untaught: no numerals, shape reveal.
 
 SO-3 guard: 10. every id in `reviewedStrokeIds` has a filled review record (table parsed in the test).
@@ -155,7 +155,7 @@ SO-1 next release (it only removes coaching and the visible order). SO-2 per app
 
 | Row | Model | Work | Tests | Depends on |
 |---|---|---|---|---|
-| SO-0c | Opus 5.5 | §5 wireframe and mock; multi-agent review | — | this spec reviewed |
+| SO-0c | Opus 5.5 | §5 wireframe and mock; multi-agent review — **done 2026-11-22** (`design/wireframes/minigame/trace-stroke-shape-guide.md`, `design/screens/minigame-writing/trace-stroke-shape-guide.md`) | — | this spec reviewed |
 | SO-1 | Sonnet 5.5 | §3.1 gate, §3.2 all surfaces, SO-1 strings en + es + ko | 1–9 | SO-0c, TRACE-IDLE TI-2 merged |
 | SO-1d | Sonnet 5.5 | "Amended 2026-11-xx by AMENDMENTS-STROKE-ORDER-STANDARD" lines in F-004, F-005, F-006, F-007, F-008, F-TCH-004, F-CURR-001; `docs/specs/README.md` index line; CODEOWNERS lines | — | SO-1 |
 | SO-0b | Opus 5.5 (research) | §3.4 table with sources; no row filled without a source | — | — |
@@ -182,3 +182,4 @@ Branches: `fix/stroke-order-interim` (SO-1, SO-1d), `design/stroke-shape-guide` 
   - Cross-spec: half-drawn letters reaching the pass mark during a pause (ㅗ tick alone 0.67) is fixed in `AMENDMENTS-TRACE-IDLE.md` §3.1 (per-stroke floor 0.8 and the prefix test).
 - 2026-11-21, revision 3: re-based on `d5ba0217c` (main tip; 12 commits after `5573e1072`). AU-14 (`AMENDMENTS-AUDIT-2026-11.md`, #1035) rewrote `jamo-strokes.ts` to the audit's standard-order table and added `content/__tests__/jamo-stroke-order.test.ts`; QS-3 and FU-3 changed only the sound code of `TraceStrokeGame.tsx`. Verdicts: unreviewed hand-authored data **partly fixed** (order and counts changed to revision 2's hypothesis and the disclaimer removed, but still unsourced and unreviewed); `reviewedStrokeIds` empty **still open** (`:283`, deliberately left empty by AU-14); order/direction coaching lines **partly fixed** (`pass.order` no longer says "top line first"; the order and direction checks still run on unreviewed data, and the misfires moved to the other forms: 3-stroke ㅈ, horizontal-top ㅊ/ㅎ, ㅁ in fewer strokes get `pass.open`, 4-stroke ㅌ and bar-first ㅗ get `pass.order`, re-probed); StrokeHint, Trace Word coaching and labels, presenter **still open** (files unchanged). Changes: §1 rewritten on the new data with new probes and line numbers; §3.3 SO-2 rescoped to checking the AU-14 data against the sourced table, building on `jamo-stroke-order.test.ts` instead of a second table; the `pass.order` string row, the ㅂ / ㅜ / ㅠ notes and ㅁ's loop knock-on dropped; tests 2, 4–7 re-pointed at forms that misfire today; OD-SO4 note. OD-SO1 to OD-SO5 stand; none is moot. WO-03 is not solved upstream: no letter has a sourced, person-checked order, and every surface still teaches the data's order.
 - Revision 3 review (2026-11-22), adjudicated as revision 3a (re-checked on `5e84e0d85`). Fixed, major: §3.2 kept direction coaching for `jamo:hieut`, but `directionNudgeFor` returns `'open'` whenever an open target is unmatched (`logic/trace-copy.ts:31-33`), so ㅎ with a horizontal top stroke and a correct ring got `pass.open`, contradicting test 4's `pass.clean` (re-probed with the real `scoreTrace`: directions `[false, true, true]`, closed `[false, false, true]` → `'open'`) → untaught letters and units use a new `loopNudgeFor`, computed over the closed targets only, which never returns `'open'` (§3.2, Trace Word included); test 4 now pins ㅎ with a counter-clockwise ring → `pass.clean` and a clockwise ring → `pass.loop`, plus `loopNudgeFor` unit cases; test 5 adds final ㅇ; OD-SO1 describes the mechanism (the decision itself is unchanged); §4's F-006 note says why the rule no longer reaches untaught letters.
+- 2026-11-22, SO-0c design pass and its multi-agent review (`design/screens/minigame-writing/trace-stroke-shape-guide.md`, Review log). Spec changes it needs, made here: §3.2 caption placement and look note; §3.2 screen-reader line (one label, `a11yRomanization`); §3.6 `shape` ends with a full stop and the `shapeGuide` a11y key is dropped; §6 test 8 checks the caption at screen level (StrokeHint renders none) and keeps miss and pass lines. Open questions for the owner are in the wireframe §11 (Show me over the ghost; ㅇ arrow; the presenter caption wording; reveal contrast on the retry canvas).

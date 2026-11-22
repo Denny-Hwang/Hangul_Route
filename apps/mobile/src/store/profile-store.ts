@@ -24,12 +24,13 @@ import {
 import { closesSession } from '../logic/profiles/session';
 import { changedServerFields, hasFields, serverProfileChanges, type ServerLearnerFields } from '../logic/sync/learner-profile';
 import { postProfilesChanged, subscribeProfilesChanged } from '../platform/profiles-channel';
-import { readJson, readJsonStrict, writeJson } from '../platform/storage';
+import { listKeys, writeJson } from '../platform/storage';
 import { PROFILES_LOCK, withTabLock } from '../platform/tab-lock';
+import { durableRead, type DurableRead } from './durable-read';
 import { closeGrownUpSession } from './grown-up-session';
 import { notifyProfileEdited } from './profile-edits';
 import { dropProfileLock, hydrateProfileLocks, lockedIds } from './profile-locks';
-import { sweepProfileKeys } from './profile-key-sweep';
+import { keyOfProfile, sweepProfileKeys } from './profile-key-sweep';
 import { notifyProfileRemoved } from './profile-removal';
 
 /**
@@ -43,9 +44,25 @@ export const PROFILES_KEY = 'profiles';
 const ACTIVE_KEY = 'profiles:active';
 /** [OA] OA-D19: the removed ids, so no tab brings a removed learner back (`logic/profiles/profile-merge.ts`). */
 export const PROFILE_TOMBSTONES_KEY = 'profiles:tombstones';
+/**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.1: where the raw bytes of a profile list that does not parse are kept
+ * (first copy kept, never overwritten), named as AU-3's `progress-corrupt:<id>`.
+ */
+export const PROFILES_CORRUPT_KEY = 'profiles-corrupt';
 
 interface State extends ProfileSet {
   hydrated: boolean;
+  /**
+   * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.3: the profile list could not be read at `hydrate` (`read`: the read
+   * threw twice; `parse`: the bytes do not parse). `hydrated` stays false and nothing writes `hr:profiles`,
+   * `hr:profiles:active` or the tombstones until a `hydrate` reads it. `null` once a read worked.
+   */
+  loadFailed: 'read' | 'parse' | null;
+  /**
+   * [DP] Section 3.1: with `loadFailed` `parse`, whether this read kept the damaged bytes at `profiles-corrupt`
+   * (`durableRead`'s `kept`); the screen offers the grown-up's way out only then (section 3.5). False otherwise.
+   */
+  listCopyKept: boolean;
   /**
    * [OA] When the active learner's session on this device began (epoch ms, in memory only): the app start, then
    * every change of learner. `profile.switch` buckets the minutes since (`minutesIn`, G1).
@@ -132,7 +149,13 @@ function quietly(write: () => unknown): void {
     .catch(() => undefined);
 }
 
+/** [DP] Section 3.3: while the list could not be read, no profile record is written. */
+function listUnread(): boolean {
+  return useProfileStore.getState().loadFailed !== null;
+}
+
 function persistActive(activeId: string | null): void {
+  if (listUnread()) return;
   quietly(() => writeJson(ACTIVE_KEY, activeId));
 }
 
@@ -188,10 +211,18 @@ function enqueue(step: () => Promise<void>): Promise<void> {
   return run;
 }
 
-/** Both stored records, strictly: a failed read throws, so the caller writes nothing over data it could not see. */
+/** [DP] Section 3.1: what a profile record read under the contract held; `null` when missing. */
+const valueOf = (read: DurableRead): unknown => (read.kind === 'value' ? read.value : null);
+
+/**
+ * Both stored records, under the read contract (`durableRead`, AMENDMENTS-DURABLE-PROGRESS section 3.1): a failed
+ * read throws, and so do bytes that do not parse (the list's are kept at `profiles-corrupt`), so the caller writes
+ * nothing over data it could not see and never merges damaged bytes as an empty list.
+ */
 async function readStored(): Promise<{ storedRaw: unknown; tombstonesRaw: unknown }> {
-  const [storedRaw, tombstonesRaw] = await Promise.all([readJsonStrict<unknown>(PROFILES_KEY), readJsonStrict<unknown>(PROFILE_TOMBSTONES_KEY)]);
-  return { storedRaw, tombstonesRaw };
+  const [list, tombstones] = await Promise.all([durableRead(PROFILES_KEY, PROFILES_CORRUPT_KEY), durableRead(PROFILE_TOMBSTONES_KEY, null)]);
+  if (list.kind === 'failed' || tombstones.kind === 'failed') throw new Error('profile records could not be read');
+  return { storedRaw: valueOf(list), tombstonesRaw: valueOf(tombstones) };
 }
 
 /**
@@ -237,6 +268,9 @@ async function flushLocked(): Promise<void> {
 }
 
 function persistList(change: ListChange = unchanged, ids: ListIds = {}): void {
+  // [DP] Section 3.3: while the list could not be read nothing is written, and nothing waits to be: the list in
+  // memory was never read, so the next `hydrate` that reads the list replaces it.
+  if (listUnread()) return;
   pending.push({ change, ...ids });
   quietly(() => enqueue(flushStep));
 }
@@ -347,27 +381,81 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   profiles: [],
   activeId: null,
   hydrated: false,
+  loadFailed: null,
+  listCopyKept: false,
   activeSince: Date.now(),
 
   hydrate: async () => {
-    const storedRaw = await readJson<unknown>(PROFILES_KEY);
+    // [DP] AMENDMENTS-DURABLE-PROGRESS sections 3.1 and 3.3: each record is read under the read contract.
+    const [list, activeRead, tombstonesRead] = await Promise.all([
+      durableRead(PROFILES_KEY, PROFILES_CORRUPT_KEY),
+      durableRead(ACTIVE_KEY, null),
+      durableRead(PROFILE_TOMBSTONES_KEY, null),
+    ]);
+    // A list that could not be read never shows first run: not hydrated, and nothing writes the profile records.
+    // A later `hydrate` that fails (Try again) leaves nothing of an earlier read in memory either.
+    const unread = (cause: 'read' | 'parse', kept = false): void =>
+      set({ loadFailed: cause, listCopyKept: kept, hydrated: false, profiles: [], activeId: null });
+    if (list.kind === 'failed') {
+      unread(list.cause, list.kept);
+      return;
+    }
+    const storedRaw = valueOf(list);
     // [OA] Row OA-10 (section 13.1): a legacy per-profile `parentPinHash` is dropped here and written off the device.
     const stored = storedProfileItems<Profile>(storedRaw);
-    const activeId = await readJson<string | null>(ACTIVE_KEY);
-    // [OA] OA-D19: a learner removed in another tab (an older bundle may have written it back) stays removed.
-    const removed = new Set(parseTombstones(await readJson<unknown>(PROFILE_TOMBSTONES_KEY)).ids);
-    const profiles = removed.size === 0 ? stored : stored.filter((p) => !removed.has(p.id));
+    let profiles: Profile[];
+    /** The active key cannot pick the active learner: failed, or it names a learner hidden below. */
+    let activeUnknown = activeRead.kind === 'failed';
+    if (tombstonesRead.kind === 'failed') {
+      // [DP] Section 3.3: the tombstones failed alone. A learner whose per-profile keys are already all gone (it was
+      // swept) is not shown, the sweep is skipped, and every list write reads the tombstones again (`readStored`), so
+      // list writes are held until a tombstone read works. Any per-profile key counts (`keyOfProfile`, the sweep's own
+      // test), not only `progress:<id>`, so fewer kept learners are hidden. Fail closed (the list is treated as
+      // unread) when a removed learner cannot be told from a kept one: the keys cannot be listed, or no learner would
+      // be left of a list that holds some (that would show first run).
+      let keys: string[];
+      try {
+        keys = await listKeys();
+      } catch {
+        unread('read');
+        return;
+      }
+      profiles = stored.filter((p) => keys.some((key) => keyOfProfile(key, p.id)));
+      if (profiles.length === 0 && stored.length > 0) {
+        unread('read');
+        return;
+      }
+      // A stored active learner who is hidden here is never replaced by a sibling: the chooser decides (as below).
+      const storedActive = valueOf(activeRead);
+      if (stored.some((p) => p.id === storedActive) && !profiles.some((p) => p.id === storedActive)) activeUnknown = true;
+    } else {
+      // [OA] OA-D19: a learner removed in another tab (an older bundle may have written it back) stays removed.
+      const removed = new Set(parseTombstones(valueOf(tombstonesRead)).ids);
+      profiles = removed.size === 0 ? stored : stored.filter((p) => !removed.has(p.id));
+      // [OA] Row OA-7a (CS-20): what a removed learner left behind (a delete that failed, a key an older bundle wrote
+      // back) goes at launch. A learner restored since is no longer tombstoned, so its keys stay.
+      if (removed.size > 0) quietly(() => sweepProfileKeys([...removed].filter((id) => !profiles.some((p) => p.id === id))));
+    }
     remember(profiles);
-    // [OA] Row OA-7a (CS-20): what a removed learner left behind (a delete that failed, a key an older bundle wrote
-    // back) goes at launch. A learner restored since is no longer tombstoned, so its keys stay.
-    if (removed.size > 0) quietly(() => sweepProfileKeys([...removed].filter((id) => !profiles.some((p) => p.id === id))));
-    // An active id that is no longer in the list (removed in another tab) falls back as `followMerged` does.
-    const active = activeId === null || activeId === undefined ? null : profiles.some((p) => p.id === activeId) ? activeId : (profiles[0]?.id ?? null);
-    set({ profiles, activeId: active, hydrated: true, activeSince: Date.now() });
+    let active: string | null;
+    if (activeUnknown) {
+      // [DP] Section 3.3: the active key failed alone. One learner is that learner; with two or more nobody is active,
+      // so the chooser opens (OA-D6), never a sibling's record. The pick writes the active key again. Learners are
+      // counted, as the chooser counts them (a legacy grown-up row is not a second learner).
+      const learners = profiles.filter((p) => p.role === 'learner');
+      active = learners.length === 1 ? (learners[0]?.id ?? null) : null;
+    } else {
+      const activeId = valueOf(activeRead);
+      // An active id that is no longer in the list (removed in another tab) falls back as `followMerged` does.
+      active = activeId === null ? null : (profiles.find((p) => p.id === activeId)?.id ?? profiles[0]?.id ?? null);
+    }
+    set({ profiles, activeId: active, hydrated: true, loadFailed: null, listCopyKept: false, activeSince: Date.now() });
     if (holdsLegacyPinHash(storedRaw)) persistList();
   },
 
   refresh: () => {
+    // [DP] Section 3.3: nothing is read over, or written to, a list that could not be read at launch.
+    if (listUnread()) return Promise.resolve();
     // A change whose write did not land (a failed read) is written now, with the list it reads.
     if (pending.length > 0) return enqueue(flushStep);
     return enqueue(async () => {
@@ -438,6 +526,9 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   },
 
   remove: (id) => {
+    // [DP] Section 3.3: no removal (and no announcement that drops a learner's data in other stores) over a list that
+    // could not be read.
+    if (listUnread()) return;
     const { profiles, activeId } = get();
     const next = removeProfileReducer({ profiles, activeId }, id);
     const guarded = next.activeId === activeId ? next : { ...next, activeId: unlockedFallback(next.profiles, next.activeId) };
@@ -457,6 +548,8 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     // One step in this tab's queue and inside the `hr:profiles` lock: the duplicate check, the write and its read back.
     await enqueue(() =>
       withTabLock(PROFILES_LOCK, async () => {
+        // [DP] Section 3.3: no profile is saved over a list that could not be read (`failed`; `hr:guest` stays).
+        if (listUnread()) return;
         let storedRaw: unknown;
         try {
           ({ storedRaw } = await readStored());
@@ -495,12 +588,9 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
         persistActive(next.activeId);
         // [GU] Row GU-5 review: the owner's keep never closes the grown-up session that asked for it.
         if (changed && options.keepActive !== true) closeGrownUpSession('switch');
-        let confirmed = false;
-        try {
-          confirmed = storedProfileItems<Profile>(await readJsonStrict<unknown>(PROFILES_KEY)).some((p) => p.id === created.id);
-        } catch {
-          confirmed = false;
-        }
+        // [DP] Section 3.1: the confirm read is under the read contract too (damaged bytes are not a list: not confirmed).
+        const back = await durableRead(PROFILES_KEY, PROFILES_CORRUPT_KEY);
+        const confirmed = storedProfileItems<Profile>(valueOf(back)).some((p) => p.id === created.id);
         outcome = { kind: 'saved', profile: created, confirmed };
       }),
     );
