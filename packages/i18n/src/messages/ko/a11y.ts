@@ -102,6 +102,7 @@ export const a11y = {
         upRight: '오른쪽 위로',
       },
       close: (description: string) => `${description} 눌러서 닫기.`,
+      shape: (romanization: string) => `${romanization}, 모양 안내.`,
     },
     hearAgain: '소리 다시 듣기',
     dictation: { speaker: '낱말 듣기' },

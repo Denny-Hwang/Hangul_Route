@@ -594,6 +594,7 @@ export const learner = {
       idle: 'Dibuja cada línea despacio. Toca Listo cuando termines.',
       keepGoing: 'Sigue dibujando. Toca Listo cuando termines.',
       next: { cta: 'Siguiente' },
+      shapeGuide: 'Guía de la forma',
       pass: {
         order: '¡Lo lograste! La próxima vez, dibuja los trazos en orden. Toca Muéstrame para verlo.',
         open: '¡Bien! La próxima vez, dibuja de izquierda a derecha.',

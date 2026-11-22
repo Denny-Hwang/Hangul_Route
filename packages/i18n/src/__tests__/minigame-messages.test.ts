@@ -79,6 +79,8 @@ describe('Trace Stroke (English wording as shipped)', () => {
     expect(t.idle).toBe('Draw each line slowly. Tap Done when you finish.');
     expect(t.keepGoing).toBe('Keep going. Tap Done when you finish.');
     expect(t.next.cta).toBe('Next');
+    // [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.6: the strip's caption while Show me shows an untaught letter's shape.
+    expect(t.shapeGuide).toBe('Shape guide');
   });
 
   it('keeps the pass praise, the next-time nudges and the retry lines', () => {
@@ -118,6 +120,9 @@ describe('Trace Stroke (English wording as shipped)', () => {
       'up and right',
     ]);
     expect(s.close('Stroke order guide')).toBe('Stroke order guide Tap to close.');
+    // [SO] §3.6: one label for an untaught letter's shape guide; the full stop sits before close's " Tap to close.".
+    expect(s.shape('o')).toBe('o, shape guide.');
+    expect(s.close(s.shape('silent or ng'))).toBe('silent or ng, shape guide. Tap to close.');
   });
 });
 

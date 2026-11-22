@@ -101,6 +101,7 @@ export const a11y = {
         upRight: 'arriba a la derecha',
       },
       close: (description: string) => `${description} Toca para cerrar.`,
+      shape: (romanization: string) => `${romanization}, guía de la forma.`,
     },
     hearAgain: 'Escuchar el sonido otra vez',
     dictation: { speaker: 'Escuchar la palabra' },

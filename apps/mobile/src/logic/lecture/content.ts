@@ -3,7 +3,8 @@ import { cardById, episodeById, jamoAll, jamoKnown, questById } from '../../cont
 import type { AudioCapability } from '../audio/capability';
 import { clipRefsFor, type PlaySpec } from '../audio/controller';
 import { jamoVoice } from '../audio/jamo-voice';
-import { reviewedStrokeIds, strokesForJamo } from '../../content/jamo-strokes';
+import { strokesForJamo } from '../../content/jamo-strokes';
+import { strokeOrderTaught } from '../stroke-order-taught';
 import { localizeCard, localizeEpisode, localizeJamo, localizeQuest, localizeScope } from '../content-locale';
 import { scopeFor } from '../minigame-config';
 import type { LectureBundle } from './deck-builder';
@@ -75,7 +76,6 @@ export function soundCheckSpec(capability: AudioCapability, hasClip: (ref: strin
 }
 
 export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBundle {
-  const reviewed = new Set(reviewedStrokeIds);
   const stories = lectureStories(locale, overlays);
   const topics = lectureVocabTopics(locale, overlays);
   // The Stage 1 symbols, then the Word Builder ones (F-CURR-001 S2-1), so a Word Builder Discover gets its letter slides.
@@ -102,7 +102,8 @@ export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBun
       return card && localizeCard(card, locale, overlays);
     },
     hasStrokes: (id) => strokesForJamo(id) !== undefined,
-    strokeReviewed: (id) => reviewed.has(id),
+    // [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.1: the presenter asks the same gate as the learner screens.
+    strokeReviewed: (id) => strokeOrderTaught(id),
     story: stories.story,
     vocabTopic: topics.vocabTopic,
     vocabWord: topics.vocabWord,

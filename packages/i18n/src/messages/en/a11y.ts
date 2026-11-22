@@ -153,6 +153,12 @@ export const a11y = {
       },
       /** The diagram's label: its description, then how to close it. */
       close: (description: string) => `${description} Tap to close.`,
+      /**
+       * [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.2, §3.6: Show me on a letter whose stroke order nobody has checked yet shows
+       * its shape only. `romanization` is the romanized letter (never a Hangul glyph); the full stop is there because
+       * `close` appends " Tap to close." to the still's label.
+       */
+      shape: (romanization: string) => `${romanization}, shape guide.`,
     },
     /** Listen & Pick: the speaker button, and a picture option with no label. */
     hearAgain: 'Play the sound again',

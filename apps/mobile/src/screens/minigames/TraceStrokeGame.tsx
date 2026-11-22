@@ -31,7 +31,8 @@ import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round
 import { inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
 import { scoreTrace } from '../../logic/stroke-scoring';
 import { TRACE_KEEP_GOING_MS, isLetterFinished, wouldPass } from '../../logic/trace-ready';
-import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from '../../logic/trace-copy';
+import { failMessage, passMessage, traceCoaching, type DirectionNudge } from '../../logic/trace-copy';
+import { strokeOrderTaught } from '../../logic/stroke-order-taught';
 import {
   traceCanvasMax,
   traceCanvasSize,
@@ -77,6 +78,11 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * AMENDMENTS-TRACE-IDLE TI-2 (design: wireframes/minigame/families.md "Trace Stroke states"): a pause on an
  * unfinished letter shows the keep-going line and records nothing; a miss keeps the ink until the next stroke
  * (added to it) or Clear; a pass with a tip waits for Next. Only a clean pass moves on by itself.
+ *
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-1 (design: wireframes/minigame/trace-stroke-shape-guide.md): a letter whose
+ * stroke order nobody has checked (`strokeOrderTaught` false; every letter until SO-3) gets no order coaching and only
+ * the loop nudge, passes on coverage even in strict mode, and its Show me is a shape reveal: the ghost steps aside and
+ * the strip's idle line reads "Shape guide" while it is up.
  */
 export function TraceStrokeGame({
   scope,
@@ -154,8 +160,10 @@ export function TraceStrokeGame({
   // The gate is created once, so its ready() reads the letter and the mode through refs.
   const targetRef = useRef(target);
   targetRef.current = target;
-  const strictModeRef = useRef(strictMode);
-  strictModeRef.current = strictMode;
+  // [SO] §3.1: only a letter a person has checked teaches its order; strict mode asks for order only there.
+  const taught = round ? strokeOrderTaught(round.jamo.id) : false;
+  const strictModeRef = useRef(strictMode && taught);
+  strictModeRef.current = strictMode && taught;
 
   useEffect(() => {
     // AMENDMENTS-TRACE-IDLE §3.1: a pause scores only a finished letter; an unfinished one waits for Done.
@@ -288,16 +296,19 @@ export function TraceStrokeGame({
       checkOrder: true,
       checkDirection: true,
     });
-    setOrderCorrect(result.orderCorrect ?? null);
-    setDirectionNudge(directionNudgeFor(result));
+    // [SO] §3.2: an untaught letter coaches no order and only a loop's direction.
+    const coaching = traceCoaching(result, taught);
+    setOrderCorrect(coaching.orderCorrect);
+    setDirectionNudge(coaching.directionNudge);
     // F-008 — strict mode requires coverage AND order; default keeps coverage-only (one rule: logic/trace-ready).
-    const passed = wouldPass(result, strictMode);
+    // [SO] An untaught letter passes on coverage alone, so an order nobody checked never fails a round.
+    const passed = wouldPass(result, strictMode && taught);
     if (passed) {
       success();
       answerRound(roundIdx, true);
       showFeedback('pass');
       // §3.4: a clean pass moves on after 1.1 s; a pass with a tip waits for Next, so the tip can be read.
-      if (!passHasTip(result.orderCorrect ?? null, directionNudgeFor(result))) {
+      if (!passHasTip(coaching.orderCorrect, coaching.directionNudge)) {
         afterResult(advance, 1100);
       }
     } else {
@@ -380,6 +391,8 @@ export function TraceStrokeGame({
 
   const mode = box ? traceLayoutMode(box) : 'compact';
   const stacked = mode === 'roomy';
+  /** [SO] Show me is up on an untaught letter: the ghost steps aside and the strip's idle line reads "Shape guide". */
+  const shapeHintUp = hintPlaying && !taught;
 
   // The round's progress rides in the ScreenHeader, between Close and Display (AMENDMENTS-DISPLAY-NAV DN-4), so the
   // canvas keeps the height the header would otherwise take.
@@ -442,7 +455,8 @@ export function TraceStrokeGame({
           }}
         >
           <Svg width={canvasSize} height={canvasSize} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}>
-            {target.map((stroke, i) => (
+            {/* [SO] The ghost steps aside while the shape reveal is up, so the letter can be seen appearing. */}
+            {shapeHintUp ? null : target.map((stroke, i) => (
               <Path
                 key={`tgt-${i}`}
                 d={pointsToPathD(stroke)}
@@ -472,6 +486,8 @@ export function TraceStrokeGame({
               size={canvasSize}
               viewBox={VIEWBOX}
               playToken={hintToken}
+              orderTaught={taught}
+              romanization={round.jamo.romanization}
               onComplete={() => setHintPlaying(false)}
             />
           ) : null}
@@ -511,14 +527,17 @@ export function TraceStrokeGame({
     </View>
   );
 
+  // [SO] "Shape guide" takes the place of the idle line only: a miss, pass or keep-going line always wins (SO-0c).
   const feedbackMessage =
     feedback === 'fail'
-      ? failMessage(strictMode, orderCorrect, copy.trace)
+      ? failMessage(strictMode && taught, orderCorrect, copy.trace)
       : feedback === 'pass'
         ? passMessage(orderCorrect, directionNudge, copy.trace)
         : keepGoing
           ? copy.trace.keepGoing
-          : copy.trace.idle;
+          : shapeHintUp
+            ? copy.trace.shapeGuide
+            : copy.trace.idle;
   const feedbackTone: HoyaTone = feedback === 'fail' ? 'thinking' : feedback === 'pass' ? 'cheering' : 'idle';
   const feedbackLines = mode === 'side' ? 3 : 2;
 

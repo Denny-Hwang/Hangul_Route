@@ -1,5 +1,5 @@
 import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
-import { useMemo, Fragment } from 'react';
+import { useMemo, useState, Fragment } from 'react';
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
 import { Svg, Circle, Path, Text as SvgText } from 'react-native-svg';
@@ -72,7 +72,12 @@ export function LetterSlide({
       </View>
       {hasStrokeBuild ? (
         <View style={[{ alignItems: 'center', gap: units(unit, spacing.md), flexShrink: 0 }, reveal(shown.has('stroke'))]}>
-          <StrokePanel jamoId={slide.jamoId} playToken={shown.has('stroke') ? strokeToken : 0} />
+          <StrokePanel
+            jamoId={slide.jamoId}
+            playToken={shown.has('stroke') ? strokeToken : 0}
+            orderTaught={slide.strokeReviewed}
+            romanization={slide.romanization}
+          />
           {!slide.strokeReviewed ? (
             <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary }}>{m.slide.strokeCaption}</Text>
           ) : null}
@@ -158,12 +163,32 @@ export function LetterSlide({
  * Constants: stroke 14 on the 200 viewBox, start dots r 14 with a 4-unit `brand.secondaryDark`
  * ring and a `text.primary` numeral on paper), with `StrokeHint` playing over it when its build
  * arrives or on R. Under reduced motion `StrokeHint` draws its own still diagram.
+ *
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.2, OD-SO2 (design: presenter/slide-letter.md): a letter whose stroke order
+ * nobody has checked (`orderTaught` false; every letter until SO-3) shows the letter with no numbered start dots. On
+ * the stroke build or R the panel hides its own letter while `StrokeHint` plays the shape reveal, then the letter is
+ * back; under reduced motion the unnumbered panel letter stays alone (no still on top of it).
  */
-function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number }): ReactElement {
+function StrokePanel({
+  jamoId,
+  playToken,
+  orderTaught,
+  romanization,
+}: {
+  jamoId: string;
+  playToken: number;
+  orderTaught: boolean;
+  romanization: string;
+}): ReactElement {
   const { unit, messages } = usePresenterView();
   const target = useMemo(() => strokesForJamo(jamoId) ?? [], [jamoId]);
   const items = useMemo(() => buildStrokeDiagram(target), [target]);
   const panel = units(unit, STROKE_PANEL);
+  // [SO] The play token whose shape reveal is up (the panel letter steps aside), and the one whose still was dropped.
+  const [revealing, setRevealing] = useState(0);
+  const [stillDropped, setStillDropped] = useState(0);
+  const letterHidden = !orderTaught && playToken > 0 && revealing === playToken;
+  const showHint = playToken > 0 && (orderTaught || stillDropped !== playToken);
   return (
     <View
       style={{
@@ -177,10 +202,12 @@ function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number 
       }}
     >
       <Svg width={panel} height={panel} viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`} aria-hidden>
-        {items.map((item) => (
-          <Path key={`s${item.order}`} d={item.d} stroke={colors.text.primary} strokeWidth={STROKE_LINE} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        ))}
-        {items.map((item) => (
+        {letterHidden
+          ? null
+          : items.map((item) => (
+              <Path key={`s${item.order}`} d={item.d} stroke={colors.text.primary} strokeWidth={STROKE_LINE} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            ))}
+        {(orderTaught ? items : []).map((item) => (
           <Fragment key={`b${item.order}`}>
             <Circle cx={item.badge.x} cy={item.badge.y} r={STROKE_DOT_RADIUS} fill={colors.surface.paper} stroke={colors.brand.secondaryDark} strokeWidth={STROKE_DOT_RING} />
             <SvgText
@@ -198,7 +225,24 @@ function StrokePanel({ jamoId, playToken }: { jamoId: string; playToken: number 
           </Fragment>
         ))}
       </Svg>
-      {playToken > 0 ? <StrokeHint key={playToken} target={target} size={panel} viewBox={STROKE_VIEWBOX} playToken={playToken} strokeOrder={messages.a11y.minigame.strokeOrder} /> : null}
+      {showHint ? (
+        <StrokeHint
+          key={playToken}
+          target={target}
+          size={panel}
+          viewBox={STROKE_VIEWBOX}
+          playToken={playToken}
+          strokeOrder={messages.a11y.minigame.strokeOrder}
+          orderTaught={orderTaught}
+          romanization={romanization}
+          onShow={(mode) => {
+            if (orderTaught) return;
+            if (mode === 'animated') setRevealing(playToken);
+            else setStillDropped(playToken);
+          }}
+          onComplete={() => setRevealing(0)}
+        />
+      ) : null}
     </View>
   );
 }

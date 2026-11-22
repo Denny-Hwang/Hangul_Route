@@ -1,7 +1,8 @@
-import type { JamoStrokePoint } from '../../content/jamo-strokes';
+import { reviewedStrokeIds, type JamoStrokePoint } from '../../content/jamo-strokes';
+import { unitOrderTaught } from '../stroke-order-taught';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../stroke-scoring';
 import { createTraceEvaluator, type TraceEvaluator, type TraceScheduler } from '../trace-evaluator';
-import { directionNudgeFor, type DirectionNudge } from '../trace-copy';
+import { traceCoaching, type DirectionNudge } from '../trace-copy';
 import type { BlockRect, PlacedLetter } from './block-strokes';
 
 /**
@@ -20,8 +21,11 @@ export interface TraceUnitResult {
   directionNudge: DirectionNudge;
 }
 
-/** A letter of the unit to score: its placed strokes, and the letter itself (for the loop check). */
-export type UnitLetter = Pick<PlacedLetter, 'strokes'> & Partial<Pick<PlacedLetter, 'char'>>;
+/**
+ * A letter of the unit to score: its placed strokes, the letter itself (for the loop check) and its stroke-data jamo
+ * ids (for the stroke-order gate, [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.1; a letter without ids is untaught).
+ */
+export type UnitLetter = Pick<PlacedLetter, 'strokes'> & Partial<Pick<PlacedLetter, 'char' | 'jamoIds'>>;
 
 /**
  * The coverage tolerance at block size (viewBox units). The shipped 24 was set for one letter
@@ -71,9 +75,15 @@ export const LOOP_FILL_SPLIT = 0.88;
  *   stroke lies mostly off the ghost (`STROKE_ON_TARGET`);
  * - ㅁ against ㅇ: the outline's fill (`LOOP_FILL_SPLIT`).
  * Order and direction are read over the whole unit, in writing order, and only choose a
- * coaching line.
+ * coaching line. [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.2: only for a unit whose every jamo is in `reviewed`
+ * (`unitOrderTaught`); any other unit gets no order line (`orderCorrect` null) and only the loop nudge.
  */
-export function scoreTraceUnit(letters: readonly UnitLetter[], drawn: JamoStrokePoint[][], tolerance: number = BLOCK_TOLERANCE): TraceUnitResult {
+export function scoreTraceUnit(
+  letters: readonly UnitLetter[],
+  drawn: JamoStrokePoint[][],
+  tolerance: number = BLOCK_TOLERANCE,
+  reviewed: readonly string[] = reviewedStrokeIds,
+): TraceUnitResult {
   const target = letters.flatMap((l) => l.strokes);
   const whole = scoreTrace({ target, drawn, tolerance, checkOrder: true, checkDirection: true });
   const perLetter = letters.map((l) => scoreTrace({ target: l.strokes, drawn, tolerance }));
@@ -85,14 +95,14 @@ export function scoreTraceUnit(letters: readonly UnitLetter[], drawn: JamoStroke
     letters.every((l, i) => precisionOf(nearest[i]!, l.strokes, reach) >= PRECISION_THRESHOLD) &&
     drawn.every((stroke) => strokeLength(stroke) < STRAY_MIN_LENGTH || precisionOf(stroke, target, reach) >= STROKE_ON_TARGET);
   const loopsRight = letters.every((l, i) => loopMatches(l, nearest[i]!));
+  const coaching = traceCoaching(
+    { ...whole, directionsPerTarget: whole.directionsPerTarget?.map((ok, i) => ok || strokeLength(target[i]!) < SHORT_STROKE) },
+    unitOrderTaught(letters, reviewed),
+  );
   return {
     passed: coverage >= DEFAULT_PASS_THRESHOLD && strokesHeld && precise && loopsRight,
     coverage,
-    orderCorrect: whole.orderCorrect ?? null,
-    directionNudge: directionNudgeFor({
-      ...whole,
-      directionsPerTarget: whole.directionsPerTarget?.map((ok, i) => ok || strokeLength(target[i]!) < SHORT_STROKE),
-    }),
+    ...coaching,
   };
 }
 

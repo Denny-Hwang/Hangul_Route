@@ -42,6 +42,8 @@ import { NO_TRACE_POINTERS, type CanvasPoint, type TracePointers, type TraceTouc
 import { traceCanvasMax, traceLayoutMode, traceScreenWidth, traceSidePanelWidth } from '../../logic/trace-layout';
 import { BLOCK_VIEWBOX, type PlacedLetter } from '../../logic/trace-word/block-strokes';
 import { createTraceWordGate, everyLetterInked, scoreTraceUnit } from '../../logic/trace-word/evaluate';
+import { letterRomanization } from '../../logic/trace-word/letter-romanization';
+import { unitOrderTaught } from '../../logic/stroke-order-taught';
 import {
   answerOf,
   blocksPassed,
@@ -111,6 +113,10 @@ const borderOf: Record<Look, string> = {
  * Trace Stroke frame (canvas sizes, Hoya strip, Done and Skip always on screen, no scrolling)
  * with a word strip; letter-by-letter mode for a round whose ghost reads poorly at block size.
  * Order and direction coach, never fail; the round scores once, when the word is done.
+ *
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-1 (design: wireframes/minigame/trace-stroke-shape-guide.md): a unit whose
+ * jamo are not all checked by a person (`unitOrderTaught`; none is yet) gets no order coaching and only the loop
+ * nudge, and its Show me is a shape reveal: the unit's ghost steps aside and the strip's idle line reads "Shape guide".
  */
 export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const textScale = useTypeScale();
@@ -163,6 +169,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const block = round?.blocks[state.block];
   const letter = block?.placed.letters[state.letter];
   const unitLetters: PlacedLetter[] = round && block ? (round.mode === 'letter' && letter ? [letter] : block.placed.letters) : [];
+  // [SO] §3.1: the unit's order is taught only when every jamo of every letter in it is.
+  const taught = unitOrderTaught(unitLetters);
 
   const setStrokes = (next: JamoStrokePoint[][]): void => {
     strokesRef.current = next;
@@ -335,11 +343,17 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const liveLook: Look = phase === 'retry' ? 'retry' : phase === 'drawing' ? 'live' : 'pass';
   const done = blocksPassed(state);
   const unitStrokes = unitLetters.flatMap((l) => l.strokes);
-  // Show me's still diagram reads the unit letter by letter (wireframe "Accessibility").
+  // Show me's still diagram reads the unit letter by letter (wireframe "Accessibility"); an untaught unit reads its
+  // shape label instead ([SO] "ho, shape guide."; letter mode: the letter's own romanization).
   const firstLetter = round.mode === 'letter' ? state.letter : 0;
-  const orderLabel = unitLetters
-    .map((l, i) => a11y.traceWordLetterOrder(firstLetter + i + 1, block.placed.letters.length, describeStrokeOrder(l.strokes, a11y.strokeOrder)))
-    .join(' ');
+  const orderLabel = taught
+    ? unitLetters
+        .map((l, i) => a11y.traceWordLetterOrder(firstLetter + i + 1, block.placed.letters.length, describeStrokeOrder(l.strokes, a11y.strokeOrder)))
+        .join(' ')
+    : undefined;
+  const hintRomanization = round.mode === 'letter' && letter ? letterRomanization(letter, block.syllable, block.romanization) : block.romanization;
+  /** [SO] Show me is up on an untaught unit: its ghost steps aside and the strip's idle line reads "Shape guide". */
+  const shapeHintUp = hintPlaying && !taught;
 
   const liveCanvas = (
     <GestureDetector gesture={pan}>
@@ -365,6 +379,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
           focus={round.mode === 'letter' ? state.letter : null}
           ink={round.mode === 'letter' ? [...(traced[state.block] ?? []), ...strokes] : strokes}
           inkWidth={INK_WIDTH}
+          ghostHidden={shapeHintUp ? (round.mode === 'letter' ? state.letter : 'all') : null}
         />
         {hintPlaying ? (
           <StrokeHint
@@ -372,7 +387,9 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
             size={size}
             viewBox={BLOCK_VIEWBOX}
             playToken={hintToken}
-            orderLabel={orderLabel}
+            {...(orderLabel !== undefined ? { orderLabel } : {})}
+            orderTaught={taught}
+            romanization={hintRomanization}
             onComplete={() => setHintPlaying(false)}
           />
         ) : null}
@@ -534,7 +551,13 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const controls = (
     <View style={{ gap: spacing.sm }}>
       {helperColumn === null ? helpers : null}
-      <HoyaStrip tone={traceWordTone(phase)} message={traceWordMessage(phase, round.mode, coaching, copy)} lines={mode === 'side' ? 3 : 2} showHoya={stacked} />
+      {/* [SO] "Shape guide" takes the place of the idle (drawing) line only; a retry or pass line always wins (SO-0c). */}
+      <HoyaStrip
+        tone={traceWordTone(phase)}
+        message={shapeHintUp && phase === 'drawing' ? copy.trace.shapeGuide : traceWordMessage(phase, round.mode, coaching, copy)}
+        lines={mode === 'side' ? 3 : 2}
+        showHoya={stacked}
+      />
       {actions}
     </View>
   );
@@ -629,12 +652,15 @@ function BlockArt({
   focus,
   ink,
   inkWidth,
+  ghostHidden = null,
 }: {
   block: TraceWordBlock;
   size: number;
   focus: number | null;
   ink: JamoStrokePoint[][];
   inkWidth: number;
+  /** [SO] The ghost of this letter (or of every letter) steps aside while Show me reveals its shape. */
+  ghostHidden?: number | 'all' | null;
 }): ReactElement {
   const letters = block.placed.letters;
   return (
@@ -657,18 +683,20 @@ function BlockArt({
         )),
       )}
       {letters.flatMap((l, li) =>
-        l.strokes.map((stroke, si) => (
-          <Path
-            key={`ghost-${li}-${si}`}
-            d={pointsToPathD(stroke)}
-            stroke={colors.text.primary}
-            strokeOpacity={focus !== null && focus !== li ? GHOST_WAITING_OPACITY : GHOST_OPACITY}
-            strokeWidth={GHOST_WIDTH}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-        )),
+        ghostHidden === 'all' || ghostHidden === li
+          ? []
+          : l.strokes.map((stroke, si) => (
+              <Path
+                key={`ghost-${li}-${si}`}
+                d={pointsToPathD(stroke)}
+                stroke={colors.text.primary}
+                strokeOpacity={focus !== null && focus !== li ? GHOST_WAITING_OPACITY : GHOST_OPACITY}
+                strokeWidth={GHOST_WIDTH}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            )),
       )}
       {ink.map((stroke, i) => (
         <Path
