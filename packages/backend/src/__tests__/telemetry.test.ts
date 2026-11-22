@@ -4,6 +4,7 @@ import app from '../index';
 import { TELEMETRY_DAILY_WINDOW_MS, TELEMETRY_DAILY_WRITES_PER_MIN, flushTelemetryDaily, holdDailyCount, resetTelemetryDailyBudgetForTests } from '../lib/telemetry-daily';
 import { store } from '../store';
 import { testDb } from './helpers/db';
+import { eventText } from './helpers/event-text';
 
 /**
  * POST /api/telemetry — the one legacy v1 route a shipped client calls
@@ -270,7 +271,7 @@ describe('[OA] POST /api/telemetry · section 15 names and the daily counters', 
     const gate = await post({ name: 'parent.gate.opened', profileId: 'profile:suni', payload: { dest: 'area', via: 'pin', marker: 'pin', pinEpoch: 1_700_000_000_000 } });
     expect(gate.body.data?.event.profileId).toBeUndefined();
     expect(gate.body.data?.event.payload).toEqual({ dest: 'area', via: 'pin', marker: 'pin' });
-    expect(JSON.stringify(store.events)).not.toMatch(/suni|mina|1700000000000/);
+    expect(eventText(store.events)).not.toMatch(/suni|mina|1700000000000/);
   });
 
   it('adds one per event to its day, name and kept dims, never a profile id or a dropped value', async () => {
@@ -404,7 +405,7 @@ describe('[GU] POST /api/telemetry · guest.* names and the daily counters', () 
     // An out-of-range value is dropped: with no other key, nothing of the payload is kept.
     const off = await post({ name: 'guest.quest_done', profileId: GUEST_ID, payload: { stars: 7 } });
     expect(off.body.data?.event.payload).toBeUndefined();
-    expect(JSON.stringify(store.events)).not.toMatch(/k3x9|Mina|device:x|child|11:58/);
+    expect(eventText(store.events)).not.toMatch(/k3x9|Mina|device:x|child|11:58/);
   });
 
   it('counts each kept guest.* event and onboarding.started (firstRun, fromGuest only) by day, with codes only', async () => {
