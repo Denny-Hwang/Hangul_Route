@@ -17,8 +17,8 @@ export interface TraceWordRoundShape {
 /**
  * `drawing`: the current unit is live. `letterDone`: a letter passed, the next letter of the
  * block follows (letter mode). `blockDone`: a block passed, the next block follows.
- * `wordDone`: the word is whole (the strip shows it). `retry`: the unit did not pass and is
- * cleared after the pause. `finished`: every round is done.
+ * `wordDone`: the word is whole (the strip shows it). `retry`: the unit did not pass; its ink
+ * stays until the next stroke (added to it) or Clear (AMENDMENTS-TRACE-IDLE §3.3). `finished`: every round is done.
  */
 export type TraceWordPhase = 'drawing' | 'letterDone' | 'blockDone' | 'wordDone' | 'retry' | 'finished';
 
