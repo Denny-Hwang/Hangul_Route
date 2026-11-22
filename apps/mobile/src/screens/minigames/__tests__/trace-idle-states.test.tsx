@@ -66,7 +66,7 @@ vi.mock('../../../components/StrokeHint', () => ({ StrokeHint: () => null }));
 // [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-1: only a letter a person has checked coaches order and open-stroke direction
 // (none is yet). These TI-2 cases play letters as taught, the way they will be after SO-3, so the open-stroke tip is
 // still there to wait for Next; the untaught screen is checked in trace-shape-guide.test.tsx.
-vi.mock('../../../logic/stroke-order-taught', () => ({ strokeOrderTaught: () => true, unitOrderTaught: () => true }));
+vi.mock('../../../logic/stroke-order-taught', () => ({ strokeOrderTaught: () => true }));
 const announce = vi.hoisted(() => ({ calls: [] as string[] }));
 vi.mock('../../../platform/screen-reader', async (importOriginal) => ({
   ...(await importOriginal<object>()),

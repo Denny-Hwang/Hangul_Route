@@ -69,7 +69,7 @@ export function traceCoaching(
     : { orderCorrect: null, directionNudge: loopNudgeFor(result) };
 }
 
-export type TraceCopy =Messages['learner']['minigame']['trace'];
+export type TraceCopy = Messages['learner']['minigame']['trace'];
 
 export function passMessage(orderCorrect: boolean | null, nudge: DirectionNudge, copy: TraceCopy): string {
   if (orderCorrect === false) return copy.pass.order;

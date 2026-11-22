@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { Path } from 'react-native-svg';
@@ -75,6 +76,16 @@ vi.mock('../../../components/StrokeHint', () => ({
   },
 }));
 
+/** The reviewed list the gate reads: empty as shipped; a test may mark some jamo taught. */
+const gate = vi.hoisted(() => ({ reviewed: [] as string[] }));
+vi.mock('../../../logic/stroke-order-taught', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../../../logic/stroke-order-taught')>();
+  return {
+    strokeOrderTaught: (id: string) => real.strokeOrderTaught(id, gate.reviewed),
+    unitOrderTaught: (letters: readonly { jamoIds?: readonly string[] }[]) => real.unitOrderTaught(letters, gate.reviewed),
+  };
+});
+
 const GHOST_WIDTH = 18;
 const IDLE_LINE = 'Draw each line slowly. Tap Done when you finish.';
 const KEEP_GOING_LINE = 'Keep going. Tap Done when you finish.';
@@ -89,6 +100,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   useQuestRunStore.getState().reset();
   hint.last = null;
+  gate.reviewed = [];
 });
 afterEach(async () => {
   for (const r of mounted.splice(0)) await unmount(r);
@@ -146,8 +158,12 @@ async function draw(root: ReactTestInstance, points: readonly JamoStrokePoint[])
 }
 
 async function playStroke(...jamoIds: string[]): Promise<ReactTestRenderer> {
+  return playStrokeWith(false, ...jamoIds);
+}
+
+async function playStrokeWith(strictMode: boolean, ...jamoIds: string[]): Promise<ReactTestRenderer> {
   const scope: MinigameScope = { kind: 'trace-stroke', jamoIds, rounds: jamoIds.length };
-  const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} />);
+  const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} strictMode={strictMode} />);
   mounted.push(r);
   await layOut(r);
   return r;
@@ -210,6 +226,22 @@ describe('Trace Stroke, untaught letter: Show me is a shape guide (§6 test 8)',
     expect(texts(r.root)).not.toContain(SHAPE_GUIDE);
   });
 
+  it('strict mode on: ㅗ bar first passes on coverage while untaught (§6 test 6); taught, it asks for the order', async () => {
+    const [tick, bar] = strokesForJamo('jamo:o')!;
+    const r = await playStrokeWith(true, 'jamo:o');
+    await draw(r.root, bar!);
+    await draw(r.root, tick!);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(CLEAN);
+    gate.reviewed = ['jamo:o'];
+    const t = await playStrokeWith(true, 'jamo:o');
+    await draw(t.root, bar!);
+    await draw(t.root, tick!);
+    await press(t.root, 'Done');
+    expect(texts(t.root)).not.toContain(CLEAN);
+    expect(texts(t.root)).toContain(getMessages('en').learner.minigame.trace.retry.order);
+  });
+
   it('ㅇ drawn clockwise keeps the loop tip (and Next) while untaught', async () => {
     const r = await playStroke('jamo:ieung');
     const [ring] = strokesForJamo('jamo:ieung')!;
@@ -242,6 +274,38 @@ describe('Trace a Word, untaught unit: Show me is a shape guide (§6 tests 7, 8)
     await endHint();
     expect(texts(r.root)).not.toContain(SHAPE_GUIDE);
     expect(ghosts(r.root)).toBe(ghostCount);
+  });
+
+  it('a unit with one untaught jamo is untaught: shape label, no order label (§6 test 7)', async () => {
+    gate.reviewed = ['jamo:o'];
+    const r = await render(<TraceWordGame scope={scope()} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    await press(r.root, 'Show me');
+    expect(hint.last).toMatchObject({ orderTaught: false, romanization: 'ho' });
+    expect(hint.last!.orderLabel).toBeUndefined();
+    // Every jamo taught: the order label and today's demo come back.
+    await endHint();
+    gate.reviewed = ['jamo:o', 'jamo:hieut'];
+    const t = await render(<TraceWordGame scope={scope()} host={host()} />);
+    mounted.push(t);
+    await layOut(t);
+    await press(t.root, 'Show me');
+    expect(hint.last).toMatchObject({ orderTaught: true });
+    expect(hint.last!.orderLabel).toMatch(/^Letter 1 of 2\. Stroke order/);
+    expect(texts(t.root)).not.toContain(SHAPE_GUIDE);
+  });
+
+  it('the retry line wins over the caption', async () => {
+    const r = await render(<TraceWordGame scope={scope()} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    await press(r.root, 'Show me');
+    expect(texts(r.root)).toContain(SHAPE_GUIDE);
+    await draw(r.root, [{ x: 10, y: 190 }, { x: 30, y: 190 }]);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(RETRY_LINE);
+    expect(texts(r.root)).not.toContain(SHAPE_GUIDE);
   });
 
   it('letter mode: the one letter, labelled by its own romanization; only its ghost steps aside', async () => {

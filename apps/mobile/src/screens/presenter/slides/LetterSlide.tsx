@@ -1,3 +1,4 @@
+import { a11yRomanization } from '@hangul-route/content-schema';
 import { colors, koreanTextLabel, presenter, spacing, typography, KOREAN_LINE_BREAK } from '@hangul-route/design-system';
 import { useMemo, useState, Fragment } from 'react';
 import type { ReactElement } from 'react';
@@ -186,11 +187,15 @@ function StrokePanel({
   const panel = units(unit, STROKE_PANEL);
   // [SO] The play token whose shape reveal is up (the panel letter steps aside), and the one whose still was dropped.
   const [revealing, setRevealing] = useState(0);
-  const [stillDropped, setStillDropped] = useState(0);
+  const [hintDone, setHintDone] = useState(0);
   const letterHidden = !orderTaught && playToken > 0 && revealing === playToken;
-  const showHint = playToken > 0 && (orderTaught || stillDropped !== playToken);
+  // An untaught hint goes once its reveal ends (at once under reduced motion), so its label is up only while the shape
+  // is (SO-0c wireframe section 8); the panel itself carries the shape label.
+  const showHint = playToken > 0 && (orderTaught || hintDone !== playToken);
+  const shapeLabel = orderTaught || showHint ? undefined : messages.a11y.minigame.strokeOrder.shape(a11yRomanization(romanization));
   return (
     <View
+      {...(shapeLabel !== undefined ? { accessible: true, accessibilityRole: 'image' as const, accessibilityLabel: shapeLabel } : {})}
       style={{
         width: panel,
         height: panel,
@@ -238,9 +243,12 @@ function StrokePanel({
           onShow={(mode) => {
             if (orderTaught) return;
             if (mode === 'animated') setRevealing(playToken);
-            else setStillDropped(playToken);
+            else setHintDone(playToken);
           }}
-          onComplete={() => setRevealing(0)}
+          onComplete={() => {
+            setRevealing(0);
+            if (!orderTaught) setHintDone(playToken);
+          }}
         />
       ) : null}
     </View>

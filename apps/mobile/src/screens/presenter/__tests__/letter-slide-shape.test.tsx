@@ -87,6 +87,11 @@ describe('LetterSlide stroke panel, untaught letter (§6 test 9)', () => {
     await act(async () => hint.last!.onComplete?.());
     expect(panelStrokes(r.root)).toBe(n);
     expect(numerals(r.root)).toBe(0);
+    // The hint (and its label) is gone once the reveal ends; the panel carries the shape label.
+    const rendered = hint.mounted;
+    await act(async () => r.update(element(slide, 1)));
+    expect(hint.mounted).toBe(rendered);
+    expect(r.root.findAll((x) => x.props.accessibilityLabel === 'm, shape guide.').length).toBeGreaterThan(0);
     // R plays it again.
     await act(async () => r.update(element(slide, 2)));
     await act(async () => hint.last!.onShow?.('animated'));

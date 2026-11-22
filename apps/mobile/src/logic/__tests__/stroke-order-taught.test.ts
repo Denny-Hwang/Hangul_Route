@@ -37,7 +37,7 @@ function play(jamoId: string, drawn: Pt[][], reviewed: readonly string[] = revie
   return {
     result,
     passed,
-    line: passed ? passMessage(coaching.orderCorrect, coaching.directionNudge, COPY) : failMessage(strictMode, coaching.orderCorrect, COPY),
+    line: passed ? passMessage(coaching.orderCorrect, coaching.directionNudge, COPY) : failMessage(strictMode && taught, coaching.orderCorrect, COPY),
   };
 }
 

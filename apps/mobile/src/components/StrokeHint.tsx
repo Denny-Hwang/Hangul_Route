@@ -24,6 +24,7 @@ import {
   pointsToPathD,
   staticHintHoldMs,
 } from '../logic/stroke-diagram';
+import { cubicBezierPoints } from '../logic/flip';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -36,7 +37,7 @@ const HINT_WIDTH = 14;
 const FADE_OUT_MS = 400;
 const HOLD_AFTER_MS = 100;
 /** [SO] The reveal's easing: the `motion.easing.standard` token ("cubic-bezier(0.2, 0, 0, 1)") as Reanimated's bezier. */
-const STANDARD_BEZIER = (motion.easing.standard.match(/-?[\d.]+/g) ?? []).map(Number) as [number, number, number, number];
+const STANDARD_BEZIER = cubicBezierPoints(motion.easing.standard);
 
 /** [SO] The shape is up at least this long, so a one-stroke letter is not gone after 100 ms (SO-0c design). */
 export const SHAPE_HOLD_MIN_MS = 1000;
@@ -165,7 +166,7 @@ export function StrokeHint({
           opacity.value = 0;
           opacity.value = withTiming(
             HINT_OPACITY,
-            { duration: motion.duration.crawl, easing: Easing.bezier(...STANDARD_BEZIER) },
+            { duration: motion.duration.crawl, easing: STANDARD_BEZIER ? Easing.bezier(...STANDARD_BEZIER) : Easing.ease },
             (finished) => {
               if (!finished) return;
               opacity.value = withDelay(
