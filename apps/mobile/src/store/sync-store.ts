@@ -26,14 +26,14 @@ import { summarize } from '../logic/sync/summarize';
 import { TRANSFER_SCOPE_KEY, deviceScopeOf } from '../logic/transfers/device-scope';
 import { getDeviceId } from '../platform/device';
 import { onInboxRead } from '../platform/inbox-events';
-import { readJson, readJsonStrict, removeKey, writeJson } from '../platform/storage';
+import { readJson, readJsonExact, readJsonStrict, removeKey, writeJson } from '../platform/storage';
 import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-api';
 import { isLiveGuestId } from './guest-store';
 import { usePlanStore } from './plan-store';
 import { onProfileEdited } from './profile-edits';
 import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
-import { useProgressStore } from './progress-store';
+import { PROGRESS_CORRUPT_KEY, useProgressStore } from './progress-store';
 import { questOpenFor } from './tier-store';
 
 /**
@@ -59,6 +59,11 @@ export interface LearnerSyncState {
   pendingProfile: PendingProfile | null;
   /** When the server copy of those fields was last set from this device (sent or taken); older inbox rows are stale. */
   profileAt: string | null;
+  /**
+   * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.2 (row DP-1a): a push that went through the cloud fold landed after the
+   * learner's damaged progress record was kept (`hr:progress-corrupt:<id>`). False in a stored record without it.
+   */
+  copyFolded: boolean;
 }
 
 /** The server's learner row on the inbox of the learner's own device (null `profileUpdatedAt`: never edited). */
@@ -127,13 +132,26 @@ const key = SYNC_KEY;
 const removedHere = new Set<string>();
 
 function blank(learnerId: string): LearnerSyncState {
-  return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off', rescueCode: null, pendingProfile: null, profileAt: null };
+  return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off', rescueCode: null, pendingProfile: null, profileAt: null, copyFolded: false };
 }
 
-type Persisted = Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt' | 'rescueCode' | 'pendingProfile' | 'profileAt'>;
+type Persisted = Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt' | 'rescueCode' | 'pendingProfile' | 'profileAt' | 'copyFolded'>;
 
 function persistable(s: LearnerSyncState): Persisted {
-  return { secret: s.secret, rev: s.rev, lastSyncedAt: s.lastSyncedAt, rescueCode: s.rescueCode, pendingProfile: s.pendingProfile, profileAt: s.profileAt };
+  return { secret: s.secret, rev: s.rev, lastSyncedAt: s.lastSyncedAt, rescueCode: s.rescueCode, pendingProfile: s.pendingProfile, profileAt: s.profileAt, copyFolded: s.copyFolded };
+}
+
+/**
+ * [DP] Section 3.2: whether AU-3 kept a damaged progress record of the learner (`hr:progress-corrupt:<id>`), written
+ * before the fresh record that replaced it, so it marks a learner whose next push must fold the cloud copy in. A copy
+ * that does not parse is a copy. Null when the key could not be read: the run then pushes nothing and asks again.
+ */
+async function hasKeptCopy(learnerId: string): Promise<boolean | null> {
+  try {
+    return (await readJsonExact<unknown>(PROGRESS_CORRUPT_KEY(learnerId))) !== null;
+  } catch (error) {
+    return error instanceof SyntaxError ? true : null;
+  }
 }
 
 /** Now, or one millisecond past `previous`: every queued edit gets a later `at`, so "unchanged since the send" is exact. */
@@ -357,6 +375,18 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     return { ...blank(learnerId), status: 'error', lastError: 'storage_unavailable' };
   }
 
+  // [DP] Section 3.2: a learner AU-3 just started fresh is marked unfolded in `hr:sync:<id>` at once, so a relaunch
+  // before the next sync still folds (through the kept copy). A record that cannot be read is left as it is.
+  useProgressStore.subscribe((now, before) => {
+    if (now.freshFor === before.freshFor) return;
+    for (const learnerId of now.freshFor) {
+      if (before.freshFor.has(learnerId) || removedHere.has(learnerId)) continue;
+      void load(learnerId).then((state) => {
+        if (state?.copyFolded) update(learnerId, { copyFolded: false });
+      });
+    }
+  });
+
   /**
    * One-time repair (builds before profile edits reached the server kept a rename on the device): queue every
    * registered learner's current name, level and avatar once, then set the marker. Learners not registered yet send
@@ -423,6 +453,15 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     // [AU] AMENDMENTS-AUDIT-2026-11 row AU-3: the saved snapshot could not be read, so what is in memory was built on
     // a blank record: it is not uploaded, and no server answer is written over the record that could not be read.
     if (!useProgressStore.getState().hydratedFor.has(learnerId)) return state;
+    // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.2: AU-3 started a damaged record fresh (this session, or a kept copy not
+    // folded yet): the server copy is folded in before the first push, or the fresh record would replace it.
+    let fold = useProgressStore.getState().freshFor.has(learnerId);
+    if (!fold && !(get().byLearner[learnerId]?.copyFolded ?? state.copyFolded)) {
+      const kept = await hasKeptCopy(learnerId);
+      // Not known: like the guard above, nothing goes up in this run.
+      if (kept === null) return state;
+      fold = kept;
+    }
 
     update(learnerId, { status: 'syncing' });
     const registered = await ensureRegistered(profile, state, client);
@@ -440,10 +479,25 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     // The summary below carries the memory counts as they are now (row CM-16): the store answers within its timeout.
     await refreshMemorySummary(learnerId);
+    // [DP] The fold: the server copy is pulled and merged (the merge and plan reconcile a conflict uses), and the push
+    // goes from the server's own rev. A learner registered in this pass has no server copy. No server answer: no push.
+    let toPush = local;
+    let baseRev = registered.rev;
+    let folded = false;
+    if (fold && state.secret) {
+      const server = await client.getSnapshot(learnerId, creds);
+      if (removedHere.has(learnerId)) return state;
+      if (server.status === 'error') return update(learnerId, { status: 'error', lastError: server.code });
+      if (server.status === 'ok') {
+        toPush = usePlanStore.getState().reconcile(learnerId, mergeSnapshots(local, server.snapshot, { now: new Date() }));
+        baseRev = server.rev;
+        folded = true;
+      }
+    }
     const outcome = await syncLearner({
       learnerId,
-      local,
-      localRev: registered.rev,
+      local: toPush,
+      localRev: baseRev,
       now: new Date(),
       summarize: summarizeFor,
       // A merged copy is reconciled with the cached plans before it goes up (F-PLAN-002 section 3.6).
@@ -458,8 +512,16 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       // A dropped profile edit is the more lasting news: the conflict retries by itself.
       return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: profileError ?? 'conflict' });
     }
-    if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
-    const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: profileError });
+    // The fold is a merge even when the push itself saw no conflict.
+    if (outcome.merged || folded) applyServerSnapshot(learnerId, local, outcome.snapshot);
+    const synced = update(learnerId, {
+      status: 'synced',
+      rev: outcome.rev,
+      lastSyncedAt: new Date().toISOString(),
+      lastError: profileError,
+      ...(fold ? { copyFolded: true } : {}),
+    });
+    if (fold) useProgressStore.getState().clearFresh(learnerId);
     // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
     if (!synced.rescueCode && !removedHere.has(learnerId)) await get().issueRescueCode(learnerId);
     if (removedHere.has(learnerId)) return state;
@@ -596,11 +658,14 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       }
       if (!existingProfile) useProfileStore.getState().adoptProfile(profile);
       progress.replaceSnapshot(learnerId, plan.snapshot);
+      // [DP] Section 3.2: the caller chooses its line only after the restore's write has run.
+      const written = progress.whenWritten(learnerId);
       update(learnerId, { secret, rev: server?.rev ?? 0, status: 'idle', lastError: null, ...(rescueCode ? { rescueCode } : {}) });
       // Merging may have added local-only progress; push it back.
       get().requestSync(learnerId);
       // F-CURR-002 section 4.8: the memory store pulls the learner's shards with the new credentials (row CM-12).
       pullMemoryAfterAdopt(learnerId);
+      await written;
       return plan;
     },
 

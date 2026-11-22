@@ -85,6 +85,8 @@ export function RestoreScreen({ navigation, route }: Props): ReactElement {
     const plan = planRestore(file, existingProfile ? { profile: existingProfile, snapshot: progress.ensure(existingProfile.id) } : null, new Date());
     if (plan.action === 'create') useProfileStore.getState().adoptProfile(plan.profile);
     progress.replaceSnapshot(plan.profile.id, plan.snapshot);
+    // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.2: the line is chosen only after the restore's write has run.
+    await progress.whenWritten(plan.profile.id);
     // F-CURR-002 section 4.8: the file's memory states, merged into the store (none before row CM-12).
     await restoreMemory(plan.profile.id, file.memory);
     // The merge is a union: put the cached plans' answer back on derived homework (F-PLAN-002 section 3.6).

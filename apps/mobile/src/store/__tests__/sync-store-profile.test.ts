@@ -5,6 +5,8 @@ const mem = vi.hoisted(() => new Map<string, unknown>());
 vi.mock('../../platform/storage', () => ({
   readJson: vi.fn(async (k: string) => mem.get(k) ?? null),
   readJsonStrict: vi.fn(async (k: string) => mem.get(k) ?? null),
+  // [DP] DP-1a: the sync store asks whether a damaged progress copy was kept.
+  readJsonExact: vi.fn(async (k: string) => mem.get(k) ?? null),
   writeJson: vi.fn(async (k: string, v: unknown) => {
     mem.set(k, v);
   }),
