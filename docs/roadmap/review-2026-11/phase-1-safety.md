@@ -6,6 +6,8 @@
 
 ## WO-01 진도를 잃지 않는 읽기와 쓰기
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료 — 진도 쪽은 `AMENDMENTS-AUDIT-2026-11.md` AU-3 (#1034, `withStored` · `unread`, `progress-store.ts:349-387, 414, 464`) 와 AU-11 (#1035, 쓰기 순서) 이 끝냈다: 읽기 실패 뒤 덮어쓰기·동기화·계획 재계산이 막혔고, 손상본은 `progress-corrupt:<id>` 로 복사된 뒤 자동으로 새로 시작한다. 남은 것: 학습자에게 알리기(`unread` 를 읽는 곳 없음), 프로필 목록·tombstone·active id(`profile-store.ts` 그대로), 부팅 오류 무시(`App.tsx:155-156`), 쓰기 실패 구분, AU-3 이 새로 만든 틈(손상본을 새로 시작한 뒤 첫 push 가 서버 사본을 덮어씀). 사양 `AMENDMENTS-DURABLE-PROGRESS.md` revision 3 이 이 범위로 줄였다. 아래 근거의 줄 번호는 `5573e1072` 기준이며, 사양 §1 이 최신이다.
+
 **목표.** 저장소 읽기가 실패하거나 값이 손상됐을 때 "저장된 것이 없다"로 처리하지 않는다. 쓰기가 실패하면 알고, 다시 시도하고, 학습자에게 차분히 알린다.
 
 **왜.** 지금은 읽기 실패 한 번이 빈 프로필·빈 진도로 이어지고, 다음 쓰기가 원래 저장본을 덮어쓴다. "얻은 것은 빼앗지 않는다" 규칙이 조용히 깨진다.
@@ -63,6 +65,8 @@
 
 ## WO-02 따라 쓰기의 무입력 자동 채점을 없앤다
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 그대로 열려 있음, 범위는 넓어짐 — AU-14 (#1035) 가 `jamo-strokes.ts` 획 데이터를 바꿨고, 실제 `scoreTrace` 로 다시 재면 여러 획 자모 22개 중 19개가 마지막 획 전에 0.65 에 닿는다(이전 데이터 20개 중 17개). ㅁ 두 획 0.82, ㅗ 첫 획 0.67. 줄 번호와 수치는 사양 `AMENDMENTS-TRACE-IDLE.md` revision 3 §1 이 최신이다.
+
 **목표.** 낱자 따라 쓰기(Trace Stroke)에서 손을 떼고 1.5초가 지났다는 이유만으로 미완성 글자를 오답 처리하지 않는다.
 
 **근거.**
@@ -98,6 +102,8 @@
 ---
 
 ## WO-03 표준 획순으로 교정
+
+> 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료 — AU-14 (#1035) 가 감사표대로 획순을 고쳤고(ㅁ 3획, ㅌ 3획, ㅈ 2획, ㅊ 3획, ㅗ/ㅛ 짧은 획 먼저; `content/__tests__/jamo-stroke-order.test.ts`), "top line first" 문구를 없앴다. 남은 것: 출처 없는 데이터(교과서·검수자 기록 없음), 빈 `reviewedStrokeIds`(`:283`), 다른 필순에서의 잘못된 코칭, StrokeHint · Trace Word · 발표 화면. AU-14 가 ㅈ·ㅊ·ㅎ 를 한 가지 필순으로 정했으므로 OD-SO4(출처 있는 변형 모두 인정)가 더 중요해졌다. 사양 `AMENDMENTS-STROKE-ORDER-STANDARD.md` revision 3 이 최신이다.
 
 **목표.** 30개 자모의 획 수·순서·방향 데이터를 표준에 맞추고, 검수가 끝난 글자만 순서를 채점한다.
 
@@ -138,14 +144,16 @@
 
 ## WO-04 색 말고도 알 수 있는 정답·오답 피드백과 결과 알림
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료 — AF-5 는 `AMENDMENTS-AUDIT-2026-11.md` AU-17a (#1035) 가 끝냈다: Tile 의 wrong 상태가 `colors.text.primary` 와 ChoiceCard 의 replay mark 를 쓰고 리터럴이 없어졌다(`packages/design-system/src/components/Tile/style.ts:45-51`, `__tests__/contrast.test.ts` 의 Tile 상태 쌍). Culture Quiz 의 자동 진행은 QS-4 (#1038) 로 "700ms 고정" 이 아니라 `afterSound(…, { minMs: 700 })`(울리는 소리가 끝날 때까지, 최소 700ms)이 됐다 — AF-0 의 4번은 이 helper 위에서 정한다. 남은 것: AF-0 – AF-4. 아래 줄 번호는 고쳤다.
+
 **목표.** 모든 미니게임에서 결과가 (a) 색 외의 표시로 보이고 (b) 스크린리더에 한 번 전달된다. iOS·Android·웹 모두.
 
 **근거.**
-- 확인: `apps/mobile/src/screens/minigames/CultureQuizGame.tsx:150` — `tone = showCorrect ? 'success' : isWrongLocked ? 'nudge' : 'secondary'`. `packages/design-system/src/tokens.ts:28` secondary `#2672A6`, `:51` success `#397952`.
-- 보고: 두 채움의 대비 1.00:1. `TapRespondGame.tsx:172` 같은 패턴. `CultureQuizGame.tsx:83-92` 700ms 뒤 다음 라운드.
-- 보고: `CardMatchGame.tsx:69, 184-193, 202-219` — 오답이 600ms `nudgeLight` 깜빡임뿐, 레이블 `:250, :285` 고정.
+- 확인: `apps/mobile/src/screens/minigames/CultureQuizGame.tsx:155` — `tone = showCorrect ? 'success' : isWrongLocked ? 'nudge' : 'secondary'`. `packages/design-system/src/tokens.ts:28` secondary `#2672A6`, `:51` success `#397952`.
+- 보고: 두 채움의 대비 1.00:1. `TapRespondGame.tsx:179` 같은 패턴. `CultureQuizGame.tsx:80-95` 최소 700ms(소리가 끝날 때까지) 뒤 다음 라운드.
+- 보고: `CardMatchGame.tsx:70, 187-195, 205-221` — 오답이 600ms `nudgeLight` 깜빡임뿐, 레이블 `:253, :288` 고정.
 - 보고: `packages/design-system/src/components/HoyaBubble/HoyaBubble.tsx:55` `accessibilityLiveRegion="polite"` 만 사용(iOS 미지원). `announceForScreenReader` 호출처는 7개 파일뿐. `apps/mobile/src/components/PromptPanel.tsx` 주석이 "wrapper stays mounted" 패턴을 이미 설명한다.
-- 보고: `packages/design-system/src/components/Tile/Tile.tsx:28` `wrong: '#B5862A'` 리터럴, mark 없음. `ChoiceCard` 는 wrong 에 mark 가 필수다.
+- ~~보고: `packages/design-system/src/components/Tile/Tile.tsx:28` `wrong: '#B5862A'` 리터럴, mark 없음.~~ 해결됨(AU-17a, 위 재확인 줄). `ChoiceCard` 는 wrong 에 mark 가 필수다.
 
 **사양.** `docs/specs/F-A11Y-001-answer-feedback-and-announcements.md` (INBOX T-015 가 예고한 F-A11Y-001 을 이 범위로 시작한다).
 
@@ -157,7 +165,7 @@
 | AF-2 | Sonnet 5.5 | Culture Quiz, Tap & Respond: mark + 레이블 + 알림 |
 | AF-3 | Sonnet 5.5 | Card Match: mark, 오답 표시 유지, 맞춘 카드 레이블 |
 | AF-4 | Sonnet 5.5 | MatchSound, OddOneOut, BuildLetter 및 나머지 게임에 훅 적용 |
-| AF-5 | Sonnet 5.5 | `Tile` 에 상태 mark, 리터럴 제거 |
+| AF-5 | Sonnet 5.5 | `Tile` 에 상태 mark, 리터럴 제거 — **완료(AU-17a, #1035). 집행 불필요** |
 
 **사양이 정해야 할 것 (AF-0).**
 1. 결과 표시의 한 가지 규칙: 정답 = check mark + success, 다시 = replay(또는 기존 ChoiceCard 의 wrong mark) + nudge. 아이콘은 `packages/design-system` 아이콘 세트에 있는 것만.
@@ -215,11 +223,13 @@
 
 ## WO-06 미니게임에서 실수로 나가지 않게
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 줄 이동 — `root.tsx:165` 와 평가 화면들의 `gestureEnabled: false` 줄은 그대로. `MinigameScreen.tsx` 는 `:87, 142-158` 로 옮겨졌다(QB-3 (#1037) 의 `finishIsSent` 가 `close` 앞에 들어옴). 게임 안의 back 동작은 바뀌지 않았다: `AMENDMENTS-QUEST-SOUND-BACK.md` QB-2 는 "게임 중에는 Previous 없음, 게임의 Close 는 지금처럼 launcher 로" 라고 정했고, `useRouteBackGuard` 를 쓰는 게임은 여전히 `StoryCheckGame.tsx` 하나다.
+
 **목표.** 게임 중 뒤로가기(헤더 X, Android back, iOS edge swipe)가 확인 없이 진행을 버리지 않는다.
 
 **근거.**
 - 확인: `apps/mobile/src/navigation/root.tsx:165` 의 `Minigame` 화면에 `gestureEnabled` 가 없다. `:169-178`, `:208` 의 평가 화면들은 `gestureEnabled: false`.
-- 보고: `apps/mobile/src/navigation/screen-header-variants.ts:62` `Minigame: 'close'`. `apps/mobile/src/screens/minigames/MinigameScreen.tsx:88, 143-155` — step 별 key 로 remount, back 은 `navigation.goBack()`. `useRouteBackGuard` 를 쓰는 게임은 `StoryCheckGame.tsx` 하나.
+- 보고: `apps/mobile/src/navigation/screen-header-variants.ts:62` `Minigame: 'close'`. `apps/mobile/src/screens/minigames/MinigameScreen.tsx:87, 142-158` — step 별 key 로 remount, back 은 `navigation.goBack()`. `useRouteBackGuard` 를 쓰는 게임은 `StoryCheckGame.tsx` 하나.
 - 보고: 공통 가드 `apps/mobile/src/screens/use-back-guard.ts:26-40`.
 
 **사양.** `docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` (WO-07 과 한 파일. 행을 나눈다).
@@ -241,12 +251,14 @@
 
 ## WO-07 퀘스트와 긴 평가를 이어서 하기
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료 — LR-2 의 저장·복원은 `AMENDMENTS-AUDIT-2026-11.md` AU-12 (#1035) 와 `AMENDMENTS-QUEST-SOUND-BACK.md` QB-4 (#1037) 가 만들었다: `quest-run:<profileId>` 에 quest id, 단계 목록 서명, 단계 인덱스(가장 멀리 간 단계), tally, 채점된 라운드 키, 건너뛴 단계, 시작 시각을 단계가 바뀔 때마다 저장하고, 24시간 안에 같은 퀘스트를 다시 열면 그 단계부터(단계 자체는 처음부터) 이어진다. 완료와 Leave 에서 지운다. 게스트 run 은 제외(`apps/mobile/src/logic/quest-flow/saved-run.ts`, `store/quest-run-saved.ts`, `store/quest-run-store.ts`). 그래서 "사양이 정해야 할 것" 1·2·3·5 는 이미 정해졌다. 남은 것: (a) LR-2 의 Home hero "Continue" 와 "처음부터" 확인 시트. AU-12 가 "No new screen and no new string" 으로 뺐다. (b) LR-3(Hangul Check / Stage Check 청크 저장)과 LR-4(Daily Review / Stage Check 저장 실패 화면). 인용 파일은 그대로다. (c) LR-5: Leave 가 저장된 run 을 지우므로 지금 문구 "Stars from this try will not be saved." 는 사실과 맞다. 문구를 바꿀지는 (a) 와 함께 정한다. `QuestPlayerView.tsx:132` 의 "memory only" 주석은 이제 사실과 다르다(고치는 행에 넣는다).
+
 **선행.** WO-06 의 LR-0.
 
 **목표.** 퀘스트, Hangul Check, Stage Check 가 앱 종료나 전화 뒤에 이어진다. 저장 실패는 성공 화면으로 가리지 않는다.
 
 **근거.**
-- 보고: `apps/mobile/src/screens/quest/QuestPlayerView.tsx:126` "run kept in quest-run-store (memory only)", `:306-323` leave 가 run 을 reset. 문구 `learner.ts:712-717` "Stars from this try will not be saved."
+- 보고: `apps/mobile/src/screens/quest/QuestPlayerView.tsx:132` "run kept in quest-run-store (memory only)"(AU-12 뒤로 낡은 주석), `:321-340` leave 가 run 을 reset. 문구 `learner.ts:712-717` "Stars from this try will not be saved."
 - 보고: `apps/mobile/src/store/review-run-store.ts:6` "Ephemeral: it persists nothing". `screens/reviews/StageReviewScreen.tsx:160-161`.
 - 보고: `screens/reviews/DailyReviewScreen.tsx:299-301, 456-465` 와 `screens/stage-check/StageCheckScreen.tsx:167` 가 저장 실패 시 "All refreshed today" 로 간다. 올바른 예 `screens/cell-check/CellCheckScreen.tsx:168, 180-188`(`failed` phase + Try again).
 - 이미 재개되는 것: 스토리(bookmark), 레벨 체크(저장된 run). 그 구현을 본보기로 삼는다.
@@ -277,6 +289,8 @@
 ---
 
 ## WO-08 CI 에 접근성 검사를 넣는다
+
+> 재확인 2026-11-21 (main `d5ba0217c`): 충돌(일부) — 인용(`lint` 의 echo 세 곳, `ci.yml:65`)은 그대로다. 그러나 2026-11-18 오너 결정(저장소 비공개, Actions 분 제한)으로 `web-app.yml` 은 PR 에서 릴리스 빌드와 wrangler dry run 만 돌리고 Playwright 샤드는 `main` push 에서만 돈다(#1043, CLAUDE.md §4 도 고쳐짐). 그래서 AC-1/AC-2 의 axe 스모크를 `web-app.yml` 샤드에 넣으면 PR 을 막지 못한다. `AMENDMENTS-FINISH-2026-11.md` 도 "비공개인 동안 CI 는 돌지 않고, 로컬 검증 뒤 오너가 저장소를 잠시 공개해 한 번 돌린다" 고 적었다. AC-0 은 (a) axe 를 PR 에서 도는 가벼운 잡으로 둘지, (b) ESLint(AC-3, `ci.yml` 의 checks 잡)만 PR 게이트로 하고 axe 는 main 회귀 경보로 둘지 정해야 한다. (b) 라면 수용 기준의 "브랜치에서 CI 가 실패" 는 ESLint 로만 확인된다.
 
 **목표.** WO-04 류의 회귀가 CI 에서 걸린다.
 

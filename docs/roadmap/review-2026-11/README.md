@@ -1,6 +1,6 @@
 # 2026-11 리뷰 기반 개선 계획
 
-Status: proposal (오너 승인 전). 작성 2026-11-21, 기준 커밋 `5573e1072`.
+Status: proposal (오너 승인 전). 작성 2026-11-21, 기준 커밋 `5573e1072`; 같은 날 main `d5ba0217c`(#1033 – #1044) 에 맞춰 재확인했다. WO 마다 제목 아래 `> 재확인` 줄이 그 결과다(일부 완료·줄 이동·충돌). WO-01 – WO-03 은 사양 revision 3 이 최신 근거다.
 
 이 폴더는 2026-11-21 리뷰(UX/UI·접근성, 한글 교육학)에서 나온 103건을 **집행 가능한 작업지시(Work Order, WO)** 로 바꾼 것이다. 계획은 Fable 5.2 가 세웠고, 각 WO 는 Sonnet 5.5 또는 Opus 5.5 세션이 이 폴더의 문서만 읽고 시작할 수 있게 썼다.
 
@@ -44,15 +44,15 @@ Status: proposal (오너 승인 전). 작성 2026-11-21, 기준 커밋 `5573e107
 
 | ID | 결정할 것 | 권고 | 막히는 WO |
 |---|---|---|---|
-| OD-R1 | 로마자 기본 표시를 단계에 따라 줄일 것인가 (현재 전 단계 `always`) | Stage 1 q11 부터 배운 글자만으로 된 읽기 단어는 `tap`, Word Builder 완료 후 기본 `tap`. Check 계열은 항상 숨김 | WO-10, WO-11 |
-| OD-R2 | 글자 이름 우선 재생(AU-OD-1, 2026-10-29)을 유지하되 Discover 버튼 순서를 소리 먼저로 바꿀 것인가 | 바꾼다. 결정 자체는 유지, 사양의 옵션 B("one table change") 사용 | WO-13 |
+| OD-R1 | 로마자 기본 표시를 단계에 따라 줄일 것인가 (현재 전 단계 `always`. 단, 퀘스트 Check 선택지는 2026-11-15 오너 승인으로 이미 숨김 — AU-8, CLAUDE.md §1) | Stage 1 q11 부터 배운 글자만으로 된 읽기 단어는 `tap`, Word Builder 완료 후 기본 `tap`. Check 계열은 항상 숨김 | WO-10, WO-11 |
+| OD-R2 | 글자 이름 우선 재생(AU-OD-1, 2026-10-29)을 유지하되 Discover 버튼 순서를 소리 먼저로 바꿀 것인가 | 바꾼다. 결정 자체는 유지, 사양의 옵션 B("one table change") 사용. AU-10 (#1035) 이후 Discover 가 열리면 글자 이름이 자동 재생되므로 더 급해졌다 | WO-13 |
 | OD-R3 | 말하기 제외 결정(2026-10-10, `speaking-later.md`)을 유지할 것인가 | 유지하되 `speaking-later.md` 의 2번(어른이 확인하는 "같이 말하기")과 3번(honor-system Voice Echo)만 연다. 음성 수집·채점 없음 | WO-26 |
 | OD-R4 | Stage 2–7 의 수준 표기를 A1 안팎으로 낮출 것인가 | 낮춘다. 스토어·학부모 문구에 A2/TOPIK 2급을 쓰지 않는다 | WO-19 |
-| OD-R5 | 한국어 UI 에서 뜻풀이를 무엇으로 보여줄 것인가 | 그림 우선, 선택 시 en/es. 한국어 사전식 풀이는 보호자 도움말로. `LOCALE_STATUS` 16b 전에 결정 | WO-24 |
+| OD-R5 | 한국어 UI 에서 뜻풀이를 무엇으로 보여줄 것인가 | 그림 우선, 선택 시 en/es. 한국어 사전식 풀이는 보호자 도움말로. ko 는 이미 `'shipped'` 이므로 "16b 전" 조건은 지났다 — 가능한 한 빨리 결정 | WO-24 |
 | OD-R6 | iOS 무음 스위치: 학습자가 직접 누른 재생은 무음에서도 낼 것인가 | 내지 않는다(2026-10-10 결정 유지). 대신 안내와 "글자로 보기"를 붙인다 | WO-05 |
-| OD-R7 | 검증 가능한 부모 동의를 어느 시점에 받는가 (현재 콘솔 가입은 자기 선언 체크박스) | WO-34 의 조사 결과를 보고 결정. 법률 검토 필요 | WO-34, WO-31 의 15번(가족 링크·QR) |
+| OD-R7 | 검증 가능한 부모 동의를 어느 시점에 받는가 (현재 콘솔 가입은 자기 선언 체크박스) | WO-34 의 조사 결과를 보고 결정. 법률 검토 필요. 2026-11-18 오너는 기본값 유지(FN-0 b/e: 서버 동의 기록 없음)로 사실상 보류했고, AU-1 이 개인정보처리방침에서 "verifiable" 을 뺐다. CLAUDE.md §1 은 아직 "verifiable parental consent" 를 약속하므로 둘 중 하나를 맞춰야 한다 | WO-34, WO-31 의 15번(가족 링크·QR) |
 | OD-R8 | 간격 복습 계열 플래그(`currBuiltInPcts` 0%)의 출시 기준 | 운영 설정의 현재 값을 먼저 확인. 0% 라면 내부 프로필부터 단계적으로 | 없음(운영) |
-| OD-R9 | Stage 1 종성 범위: 7종성 퀘스트를 Stage 1 에 넣을 것인가, 완료 문구를 낮출 것인가 | 문구를 먼저 낮추고(WO-12), 7종성 퀘스트는 Stage 2 앞에 추가(WO-15) | WO-15 |
+| OD-R9 | Stage 1 종성 범위: 7종성 퀘스트를 Stage 1 에 넣을 것인가, 완료 문구를 낮출 것인가 | 문구 낮추기는 AU-15 (#1035) 가 끝냈다. 남은 것: 7종성 퀘스트를 Stage 2 앞에 추가(WO-15) | WO-15 |
 | OD-R10 | 네이티브에 게스트 첫 레슨을 열 것인가 (현재 웹 전용) | 연다. 스토어 설치 사용자의 퍼널이 웹보다 길다 | WO-35 |
 | OD-R11 | 한국어 교원 자격자 1회 통독(153퀘스트 + 이야기 210문장) | 진행한다. 모델이 대신할 수 없는 일이다 | WO-27 |
 
@@ -97,12 +97,14 @@ Status: proposal (오너 승인 전). 작성 2026-11-21, 기준 커밋 `5573e107
 | 파일 | WO |
 |---|---|
 | `apps/mobile/src/screens/minigames/TraceStrokeGame.tsx` | WO-02, WO-03, WO-14 |
-| `apps/mobile/src/screens/minigames/CultureQuizGame.tsx`, `TapRespondGame.tsx`, `CardMatchGame.tsx`, `MatchSoundGame.tsx` | WO-04, WO-06, WO-40 |
+| `apps/mobile/src/screens/minigames/CultureQuizGame.tsx`, `TapRespondGame.tsx`, `CardMatchGame.tsx`, `MatchSoundGame.tsx` | WO-04, WO-06, WO-40, WO-41(#6: `MatchSoundGame`, `TraceStrokeGame`) |
 | `apps/mobile/src/store/progress-store.ts`, `profile-store.ts`, `App.tsx` | WO-01, WO-37(foreground sync) |
-| `apps/mobile/src/screens/quest/QuestPlayerView.tsx`, `store/quest-run-store.ts` | WO-06, WO-07, WO-38(launcher) |
+| `apps/mobile/src/screens/quest/QuestPlayerView.tsx`, `store/quest-run-store.ts`, `store/quest-run-saved.ts`, `logic/quest-flow/saved-run.ts`, `check-launcher.ts`, `StepActions.tsx` | WO-06, WO-07, WO-38(launcher) |
+| `apps/mobile/src/screens/quest/DiscoverStep.tsx`, `logic/stage1/discover-flow.ts` | WO-12(#13), WO-13, WO-14(b) |
+| `apps/mobile/src/logic/audio/sound-pacing.ts`, `reply-advance.ts` | WO-04(결정 4), WO-41(#6) |
 | `apps/mobile/src/logic/minigame-config.ts`, `content/quests.ts` | WO-11, WO-12, WO-13, WO-14, WO-15 |
 | `apps/mobile/src/content/jamo.ts`, `content/episodes/stage-1/jamo.json` | WO-12 |
-| `packages/design-system/src/components/KoreanText/`, `Heading/`, `Tile/`, `HoyaBubble/` | WO-04, WO-39, WO-40, WO-41 |
+| `packages/design-system/src/components/KoreanText/`, `Heading/`, `Tile/`(`style.ts` 포함), `HoyaBubble/` | WO-39, WO-40, WO-41 (WO-04 의 AF-5 는 AU-17a 로 완료) |
 | `packages/design-system/src/tokens.ts`, `__tests__/contrast.test.ts`, `design/tokens/` | WO-41 (token sync CI 가 검사) |
 | `apps/web/src/app/(console)/teach/space/plan/page.tsx` | WO-28, WO-29 |
 | `apps/web/src/app/(console)/teach/space/page.tsx` | WO-30, WO-31 |

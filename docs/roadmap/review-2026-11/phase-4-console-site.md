@@ -10,6 +10,8 @@
 
 ## WO-28 콘솔 API 요청에 시간 제한을 둔다
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 줄 이동·맥락 변경 — `api.ts`, `GrownUpRouter.tsx`, `plan/page.tsx`, `NotesHub.tsx`, `billing/page.tsx`, `waitlist.ts`, `GrownUpLayout.tsx`, `GrownUpLock.tsx`, `signin-flow.ts` 는 바뀌지 않았다. `RECORD_WAIT_MS` 는 `W/lib/i18n/locale-context.tsx:113` 에서 `:120` 으로 옮겨졌다. `AMENDMENTS-FINISH-2026-11.md` FN-6 (#1044) 뒤로 `LocaleProvider` 의 `ready`(빈 캔버스)는 기록 읽기에 더해 고른 언어의 메시지 청크(`W/lib/i18n/message-overlays.ts` 의 `import()`)도 기다린다. 청크가 실패하면 영어로 넘어가지만, 멈춘(pending) 청크에는 시간 제한이 없다. CR-3 의 대기 목록에 이 청크 대기를 더한다.
+
 **목표.** 네트워크가 "끊김"이 아니라 "멈춤"일 때도 화면이 오류와 재시도로 간다.
 
 **근거.**
@@ -29,7 +31,7 @@
 **지침.**
 - 타임아웃 기본 12초. 쓰기(POST/PUT/DELETE)도 같은 값이지만, **타임아웃된 쓰기는 서버에서 성공했을 수 있다.** 재시도가 중복을 만들지 않는지 엔드포인트별로 확인한다(플랜 저장은 id 기반 upsert 인지, 초대·결제는 멱등 키가 있는지). 멱등하지 않은 쓰기는 자동 재시도하지 않고 "확인 중" 상태에서 재조회한다. 이 표를 사양에 넣는다.
 - 호출자가 넘긴 `init.signal` 이 있으면 합친다.
-- CR-3 근거(보고): `W/components/console/GrownUpLayout.tsx:33-35` 의 `aria-busy` 빈 div, `GrownUpLock.tsx:440`. 대기 상한 `RECORD_WAIT_MS = 1500`(`W/lib/i18n/locale-context.tsx:113`), `CLERK_LOAD_TIMEOUT_MS = 15_000`(`W/lib/console/signin-flow.ts:31`), `LOCK_READ_TIMEOUT_MS = 3_000`(`GrownUpLock.tsx:52`). Clerk 가 죽으면 15초 뒤 `/signin` 으로 가서 `ClerkSignIn.tsx:100` 의 시계가 다시 시작된다. 경과 시간을 넘겨 재시도 패널을 바로 띄운다.
+- CR-3 근거(보고): `W/components/console/GrownUpLayout.tsx:33-35` 의 `aria-busy` 빈 div, `GrownUpLock.tsx:440`. 대기 상한 `RECORD_WAIT_MS = 1500`(`W/lib/i18n/locale-context.tsx:120`; FN-6 의 언어 청크 대기도 함께 본다), `CLERK_LOAD_TIMEOUT_MS = 15_000`(`W/lib/console/signin-flow.ts:31`), `LOCK_READ_TIMEOUT_MS = 3_000`(`GrownUpLock.tsx:52`). Clerk 가 죽으면 15초 뒤 `/signin` 으로 가서 `ClerkSignIn.tsx:100` 의 시계가 다시 시작된다. 경과 시간을 넘겨 재시도 패널을 바로 띄운다.
 
 **테스트.** fetch 가 영원히 pending 인 mock + fake timers: 12초 뒤 `network` 반환. 네 화면 각각 재시도 버튼이 보임. 600ms 전에는 로딩 문구가 없고 뒤에는 있음.
 
@@ -148,12 +150,14 @@
 
 ## WO-33 PIN 재설정 흐름 (웹과 네이티브)
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 줄 이동·맥락 변경 — 웹 쪽 인용(`PinResetPage.tsx`, `pin-reset.ts`, `console.ts:2511`)과 `flags.ts:328` `pinResetSignInEnabled: false`, `PinEntryScreen.tsx` 는 그대로다. 네이티브 `PinResetScreen.tsx` 는 `AMENDMENTS-FINISH-2026-11.md` FN-1 (#1044, 오너 결정 2026-11-18 "Adult proof for the PIN reset: add it") 으로 바뀌었다: Rescue Code 가 맞거나 24시간 대기가 끝나면 바로 새 PIN 이 아니라 "One more step" 카드(말로 쓴 100–999 의 수를 숫자로 입력, `PinResetCheckCard.tsx`, `logic/profiles/grown-up-check.ts`)를 거친다. 틀리면 새 수, 횟수·잠금·빨강 없음. Sign in to the account 는 확인 없음. 재설정 방법 카드는 `:184-304` 에서 `:190-316` 으로 옮겨졌다. PR-0 의 상태 기계에는 이 확인 단계를 넣고, PR-3(네이티브 로그인 재설정)은 FN-1 이 정한 대로 확인을 묻지 않는다. 보안 주의의 "아이 우회" 걱정 중 오프라인 두 길은 FN-1 이 일부 막았다.
+
 **목표.** PIN 을 잊은 보호자가 막다른 길 없이 되찾는다.
 
 **근거 (보고, 표시된 것만 확인).**
 - 웹: `W/components/console/PinResetPage.tsx:142` `if (outcome !== 'done') return finish({ kind: 'refused', line: 'unavailable' });` — Clerk 창을 닫은 것(취소)을 장애와 같이 처리. `:108-109` `started.current` 가 재실행을 막음. 안내 문구(`packages/i18n/src/messages/en/console.ts:2511`)가 "앱에서 Forgot PIN? 을 쓰세요" 인데 그 경로가 방금 온 길이다.
 - 웹(추정): 재설정 자격이 로그인을 다 마친 뒤에야 판정(`W/lib/console/pin-reset.ts:69-72`). 이메일 코드까지 받고 나서 "Rescue Code 나 24시간 대기" 를 읽는다.
-- 네이티브: 확인 `apps/mobile/src/config/flags.ts:328` `pinResetSignInEnabled: false`. 보고 `apps/mobile/src/screens/parent/PinResetScreen.tsx:184-304` — Rescue Code 또는 24시간 대기뿐.
+- 네이티브: 확인 `apps/mobile/src/config/flags.ts:328` `pinResetSignInEnabled: false`. 보고 `apps/mobile/src/screens/parent/PinResetScreen.tsx:190-316` — Rescue Code 또는 24시간 대기뿐(FN-1 뒤로 둘 다 "One more step" 확인을 거친다).
 - 네이티브: 보고 `apps/mobile/src/screens/parent/PinEntryScreen.tsx:935-942` — 4자리를 넣어도 Unlock 을 눌러야 한다.
 
 **사양.** `AMENDMENTS-GROWNUP-UX.md` 에 절 추가 또는 `AMENDMENTS-PIN-RESET-FLOW.md`. F-AUTH-004(네이티브 로그인)와 맞춘다.
@@ -176,9 +180,11 @@
 
 ## WO-34 부모 동의: 현황 조사 (구현 아님)
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료·맥락 변경 — (1) 준비도 감사 `docs/launch/product-review-2026-11-15.md` (#1033) 의 PRIV-1, PRIV-2, PRIV-6 이 이 보고서의 1·2번 일부를 `파일:줄` 과 함께 이미 적었다(자기 확인 체크박스와 기기 안 PIN, 서버 `consent: null`, 미인증 `POST /api/sync/learners` 에 `displayName`·`ageGroup`·`avatar`·`deviceId`). CA-1 은 이것을 출발점으로 쓴다. (2) AU-1 (#1034) 이 개인정보 처리방침에서 "verifiable parental consent" 두 문장을 실제 동작(기기에서 어른이 동의하고 PIN 을 만든다, 13세 이상 본인 확인)으로 바꿨다(시행일 2026-11-16). (3) FN-0 (b)(e) (#1044, 오너 결정 2026-11-18): 온라인 백업은 그대로, 서버에 동의 기록을 보내지 않음, 수준 id 유지, 자문 패킷(`docs/legal/counsel-packet-2026-10.md`)은 결정 없음. 남은 것: 보고서 자체(3·4·5번). 새 질문 하나를 더한다: CLAUDE.md §1 은 아직 "verifiable parental consent before personal data is linked to an account" 라고 쓰는데 방침은 이제 그 말을 하지 않는다 — charter 문장을 어떻게 할지 오너에게 묻는다. 온보딩 Privacy 단계는 `CreateProfileScreen.tsx:743-780` 에서 `:748-785` 로 옮겨졌다(AU-17e 의 입력 테두리 변경).
+
 **목표.** "개인 데이터가 계정에 연결되기 전에 검증 가능한 부모 동의" (CLAUDE.md §1)가 지금 코드에서 어떻게 지켜지는지 사실을 정리해 오너와 법률 검토에 넘긴다.
 
-**근거 (보고).** 콘솔 가입의 유일한 관문은 자기 선언 체크박스("I am a parent, guardian or teacher", `W/components/console/SignInParts.tsx:235-246`). 설정 문구는 "A parent consents (email at join — coming later)"(`packages/i18n/src/messages/en/console.ts:1450`). 학습자 앱 쪽 동의 단계(온보딩의 Privacy 화면, `apps/mobile/src/screens/onboarding/CreateProfileScreen.tsx:743-780`)는 리뷰가 깊이 보지 못했다.
+**근거 (보고).** 콘솔 가입의 유일한 관문은 자기 선언 체크박스("I am a parent, guardian or teacher", `W/components/console/SignInParts.tsx:235-246`). 설정 문구는 "A parent consents (email at join — coming later)"(`packages/i18n/src/messages/en/console.ts:1450`). 학습자 앱 쪽 동의 단계(온보딩의 Privacy 화면, `apps/mobile/src/screens/onboarding/CreateProfileScreen.tsx:748-785`)는 리뷰가 깊이 보지 못했다.
 
 | 행 | 모델 | 내용 |
 |---|---|---|

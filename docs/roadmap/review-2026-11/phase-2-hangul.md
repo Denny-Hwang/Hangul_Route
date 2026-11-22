@@ -16,6 +16,8 @@ Stage 1 의 실제 위치(리뷰에서 확인):
 
 ## WO-10 Hangul Check 와 퀘스트 Check 가 해독을 측정하게
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료 — DC-1 의 "퀘스트 Check" 부분은 `AMENDMENTS-AUDIT-2026-11.md` AU-8 (#1035, 오너 결정 2026-11-15) 이 했다: 소리를 들려주는 퀘스트 Check(Listen and Pick 의 Quick check)에서 선택지의 로마자는 정답을 누를 때까지 그리지 않고(자리는 남김, opacity 0, 접근성 트리 밖), 접근성 이름은 그대로다(`apps/mobile/src/logic/listen-pick-flow.ts:304-317` 의 `heldRomanization`, `KoreanText`·`ChoiceCard` 의 `romanizationReserved`). CLAUDE.md §1 과 F-CNT-002 머리말에 이 예외 한 줄이 들어갔다. 남은 것: Hangul Check, Stage Check, Daily Review 의 read/produce 단계, 텍스트 프롬프트 Check, Read Pick Meaning Check 의 프롬프트 로마자(AU-8 As built 의 "Not covered"), 다른 게임으로 만든 Check, Build a Letter, 그리고 DC-2 · DC-3 전부. DC-1 은 새 override 를 만들지 말고 AU-8 의 `heldRomanization` 방식을 넓힌다. 아래 줄 번호는 고쳤다.
+
 **선행.** OD-R1 중 "Check 계열은 로마자 숨김" 부분.
 
 **목표.** Stage 1 의 평가가 "글자를 보고 소리를 안다"를 측정한다. 로마자 대조나 이름 맞히기로는 통과할 수 없다.
@@ -23,7 +25,7 @@ Stage 1 의 실제 위치(리뷰에서 확인):
 **근거.**
 - 확인: `packages/content-schema/src/schemas/locale.ts:39` `romanizationMode` 기본 `'always'`. `apps/mobile/src/logic/locale/romanization-mode.ts` 의 `resolveRomanizationMode` 가 override → 프로필 설정 → `always` 순.
 - 확인: 배치 평가에는 해독 문항이 이미 있다. `content/placement/syllable-reading.json:383` `pitem:syl-cv-see-geu` 등. `packages/content-schema/src/placement/run.ts:141-143` 은 `leaks` 플래그가 있는 문항을 `revealMode === 'always'` 일 때 건너뛴다.
-- 보고: `apps/mobile/src/logic/listen-pick-flow.ts:287` 글자 선택지에 로마자가 붙는다. `screens/minigames/BuildLetterGame.tsx:200, 320` 목표 음절과 타일에 로마자.
+- 보고: `apps/mobile/src/logic/listen-pick-flow.ts:309` 글자 선택지에 로마자가 붙는다(AU-8 뒤로 퀘스트 Check 에서는 `:316-317` 에서 보류). `screens/minigames/BuildLetterGame.tsx:210, 323-330` 목표 음절과 타일에 로마자.
 - 보고: `apps/mobile/src/logic/stage1/hangul-check.ts` — 글자 24문항이 "이름 듣고 글자 고르기", 단어 5문항이 "듣고 그림 고르기". 보호자용 판정 `stage1Anchor.met`(27/30)이 이 문항으로 계산된다.
 - 보고: F-QUEST-002 §3.8 Stage 완료는 "at any star count".
 
@@ -91,6 +93,8 @@ Stage 1 의 실제 위치(리뷰에서 확인):
 
 ## WO-12 Stage 1 콘텐츠 정확도 일괄 수정
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 일부 완료 — #8 의 그림은 `AMENDMENTS-PICTURES-2026-11.md` PX-2 (#1039) 가 방패연(직사각형, 가운데 구멍)으로 다시 그렸다(`docs/design/picture-review-2026-11/triage.md:40`, `HeritageCardArt/__tests__/stage1-art.test.ts`). 남은 것은 문구: `apps/mobile/src/content/heritage-cards.ts:65` 가 아직 "A diamond kite painted with a tiger's face.". #12 와 같은 방향의 일은 AU-15 (#1035) 가 했다: Stage 1 한 줄 소개, 완료 화면("You can read basic Hangul now!", "the basic letters and six final sounds"), 사전 6줄, Stage 2 Letters Volume 2 소개를 en/es/ko 에서 낮췄다(`apps/mobile/src/content/stages.ts`, `packages/i18n/src/__tests__/stage1-claims.test.ts`). 그러나 #12 가 가리키는 `quests.ts:595` 의 "Now you can read it too!" 는 그대로다. 나머지 행(#1–#7, #9–#11, #13)의 인용 파일(`jamo.json`, `jamo.ts`, `minigame-config.ts`, `quests.ts`)은 바뀌지 않았다. ko 오버레이 `content/i18n/ko/stage1-jamo.json` 은 #1044 의 한국어 다듬기로 일부 바뀌었지만 #1 의 ㅡ 설명("u와 i 사이")은 그대로다.
+
 **목표.** 리뷰가 찾은 작은 오류와 불일치를 한 번에 고친다. 결정이 필요 없는 것만 모았다.
 
 **사양.** `docs/specs/AMENDMENTS-STAGE1-CONTENT-FIXES.md`. 표 하나에 행마다 "현재 → 변경" 을 적는다.
@@ -112,7 +116,7 @@ Stage 1 의 실제 위치(리뷰에서 확인):
 | 5 | 보고: `minigame-config.ts:383` 첫 받침 퀘스트 Check 가 `lp.word(W.seollal, [W.seol, W.nal, W.dal])`. `quests.ts:283` 설날 `syllables: ['seol', 'lal']` | Check 단어를 달/물/문/산 조합으로. 설날은 주제어 페이지에만 두고 `noteEn`: "seol + nal sounds like seollal." |
 | 6 | 보고: `jamo.ts:160` ㄹ 의 IPA `'r'` | `'ɾ'` |
 | 7 | 보고: 받침 ㄹ 힌트 "like l in ball" | "a light l. The tip of your tongue stays up." |
-| 8 | 보고: `card:kite` 의 "diamond kite" 와 "Bangpaeyeon(방패연)" 불일치 | 방패연은 직사각형 방패 모양. 문구와 그림 중 사실에 맞는 쪽으로 통일(그림 변경이 필요하면 별도 design 행) |
+| 8 | 보고: `card:kite` 의 "diamond kite" 와 "Bangpaeyeon(방패연)" 불일치 | 방패연은 직사각형 방패 모양. **그림은 PX-2 (#1039) 로 방패연이 됐다.** 남은 것: `heritage-cards.ts:65` 의 "A diamond kite …" 문구를 그림에 맞춘다 |
 | 9 | 보고: `jamo.ts` 의 `exampleWordKo` 토끼(ㄲ), 책(ㅐ), 아빠(ㅃ), 으뜸(ㄸ) — Stage 1 에서 안 배운 글자. `deck-builder.ts:485` 와 ko 힌트에 노출 | Stage 1 기호만으로 된 단어로: ㅌ 토마토, ㅊ 차, ㅇ 아기, ㅡ 그림 등. 각 글자의 도입 퀘스트 시점에 해독 가능한 단어인지 표로 검산 |
 | 10 | 보고: q6(`life-q3`) 읽기 단어 4개가 모두 외래어(쿠키, 토마토, 코코아, 토스트) | 고유어·한자어를 절반 이상: 코, 키, 도토리, 기타 등. 해독 가능성 검산 필수 |
 | 11 | 보고: 연음 설명이 놀이(`quests.ts:535`) 한 번뿐 | q11–q15 읽기 통합 퀘스트에 연음 단어 2–3개와 같은 형식의 `noteEn` 추가(음악, 한국어, 목요일 중 해독 가능한 것) |
@@ -133,13 +137,15 @@ Stage 1 의 실제 위치(리뷰에서 확인):
 
 ## WO-13 Discover 에서 소리를 먼저 듣게
 
+> 재확인 2026-11-21 (main `d5ba0217c`): 줄 이동·맥락 변경 — `learner.ts:761` 은 `:765` 로 옮겨졌다. AU-10 (#1035) 이 Look and learn 페이지가 열릴 때 첫 글자의 `hear` 를 한 번 자동 재생하게 했고(QS-3 (#1038) 으로 350ms 뒤), 그 `hear` 는 지금 자음의 **이름**(기역)이다(`apps/mobile/src/logic/stage1/discover-flow.ts:214, 228` `loneLetterVoice`, `:417-420` `autoHearId`). 그래서 q1 학습자는 ㄱ 페이지에서 누르기도 전에 "기역" 을 듣는다. 이 WO 의 근거가 더 강해졌다. 자동 재생은 `item.hear` 를 따르므로 SF-1 이 버튼 순서를 바꾸면 자동 재생도 소리로 바뀐다(테스트로 고정). `design/wireframes/quest/discover.md` 에는 QB 절(Previous)이 추가됐다. SF-0 은 그 위에 고친다.
+
 **선행.** OD-R2.
 
 **목표.** 글자를 처음 만나는 화면에서 첫 번째 버튼이 소리(가, 나…)이고 이름(기역)은 두 번째다. 화면의 힌트 문구와 재생되는 소리가 일치한다.
 
 **근거.**
 - 확인: `docs/specs/AMENDMENTS-AUDIO-CLIPS.md:78` — AU-OD-1(2026-10-29) 이름 규칙, "option B … is one table change; tests are written against `jamoVoice`". `:507` 같은 내용.
-- 확인: `packages/i18n/src/messages/en/learner.ts:761` `soundWith: { cta: 'Hear it with a vowel' }` (두 번째 버튼).
+- 확인: `packages/i18n/src/messages/en/learner.ts:765` `soundWith: { cta: 'Hear it with a vowel' }` (두 번째 버튼).
 - 보고: 글자 아래 힌트는 소리를 설명("a soft, light g")하는데 메인 버튼은 이름을 재생한다.
 
 **사양.** `AMENDMENTS-AUDIO-CLIPS.md` 에 절 추가(오너 결정 날짜 인용).
