@@ -1,6 +1,7 @@
 import { GUEST_TELEMETRY_NAMES, LECTURE_DECODE_FAILURES, LECTURE_PRESETS, REPORT_TELEMETRY_PAYLOAD, TELEMETRY_EVENT_NAMES, type TelemetryEventName } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { store } from '../../store';
+import { eventText } from '../../__tests__/helpers/event-text';
 import { GUEST_PAYLOAD_RULES, MAX_EVENTS, OA_PAYLOAD_RULES, appendEvent, keptEventFields, recordServerEvent } from '../server-events';
 
 /**
@@ -355,7 +356,7 @@ describe('[SA] seat and rename events (AMENDMENTS-SEATS-ADMINS section 8: codes 
   it('space.renamed keeps kind and role only, never the name', () => {
     const event = recordServerEvent('space.renamed', { kind: 'school', role: 'admin', name: 'Maple School', spaceId: 'space:x', accountId: 'dean' });
     expect(event?.payload).toEqual({ kind: 'school', role: 'admin' });
-    expect(JSON.stringify(store.events)).not.toMatch(/Maple|space:x|dean/);
+    expect(eventText(store.events)).not.toMatch(/Maple|space:x|dean/);
     expect(keptEventFields('space.renamed', { kind: 'class', role: 'caregiver' }, undefined).payload).toEqual({ kind: 'class' });
   });
 });
@@ -374,7 +375,7 @@ describe('[SA] school administrator events (AMENDMENTS-SEATS-ADMINS section 6.8:
       expect(event?.payload, name).toBeUndefined();
       expect(event?.profileId, name).toBeUndefined();
     }
-    expect(JSON.stringify(store.events)).not.toMatch(/AAAA|Cho|@|dean|space:x|invite:1/);
+    expect(eventText(store.events)).not.toMatch(/AAAA|Cho|@|dean|space:x|invite:1/);
   });
 });
 

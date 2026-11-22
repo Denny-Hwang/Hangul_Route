@@ -6,6 +6,7 @@ import app from '../index';
 import { setDevFallbacksDefaultForTests } from '../lib/runtime';
 import { store } from '../store';
 import { clearRateHits, testDb as db } from './helpers/db';
+import { eventText } from './helpers/event-text';
 import { openSqliteD1 } from './helpers/sqlite';
 
 /**
@@ -281,7 +282,7 @@ describe('GET /api/spaces/:id/learners/:learnerId/report (F-REPORT-001 section 3
     ]);
     for (const event of viewed()) {
       expect(event.profileId).toBeUndefined();
-      const raw = JSON.stringify(event);
+      const raw = eventText(event);
       for (const id of [mina.learnerId, fam.space.id, cls.space.id, 'Mina', 'mom', 'teacher']) expect(raw).not.toContain(id);
     }
   });
@@ -658,7 +659,7 @@ describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, R
     ]);
     for (const event of viewed()) {
       expect(event.profileId).toBeUndefined();
-      const raw = JSON.stringify(event);
+      const raw = eventText(event);
       for (const id of [suni.learnerId, cls.space.id, 'Suni', 'teacher']) expect(raw).not.toContain(id);
     }
   });

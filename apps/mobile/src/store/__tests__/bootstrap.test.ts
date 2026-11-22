@@ -381,12 +381,15 @@ describe('cold start: account, tier cache and spaces before the first derivation
 
   it('App.tsx derives only after the bootstrap resolves, and leaves the account hydrate to it', () => {
     const app = readFileSync(join(__dirname, '../../../App.tsx'), 'utf8');
-    const boot = app.indexOf('hydrateLearnerData()');
-    const ready = app.indexOf('setReady(true)');
+    // [DP] Row DP-1c: BootGate waits for the first read (and opens only when nothing is held); the derivation is in the
+    // post-hydrate chain it runs once, on opening (`onOpen` → `afterOpen`).
+    const boot = app.indexOf('setFirstRead(hydrateLearnerData()');
+    const chain = app.indexOf('afterOpen.current = () =>');
     const derive = app.indexOf('await rederiveAllLocal()');
     expect(boot).toBeGreaterThan(-1);
-    expect(ready).toBeGreaterThan(boot);
-    expect(derive).toBeGreaterThan(ready);
+    expect(chain).toBeGreaterThan(boot);
+    expect(derive).toBeGreaterThan(chain);
+    expect(app).toMatch(/<BootGate[\s\S]*firstRead=\{firstRead\}[\s\S]*rereadAll=\{hydrateLearnerData\}[\s\S]*afterOpen\.current\(\)/);
     expect(app).not.toMatch(/hydrateAccount|useAccountStore/);
   });
 });

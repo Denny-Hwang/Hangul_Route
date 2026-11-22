@@ -117,6 +117,7 @@ Layout and variants: the wireframe (§5). `OopsScreen`'s layout (`screens/system
 - The learner variant is reached by a read error, and also by damaged progress bytes whose copy could not be kept (`withStored` answers `unread` when `keepRawCopy` resolves `false` or rejects, `progress-store.ts:374`; e.g. a full disk): nothing is written, so "Nothing was erased" holds, and Try again is the way out (it retries the copy, then AU-3 starts fresh). Damaged progress whose copy **was** kept never reaches the screen (AU-3 starts it fresh, §3.2 folds its cloud copy back in). So there is no learner-variant grown-up button.
 - After 3 tries in a session a line shows under the bubble (polite live region, announced once): `progressReadFailed.stillStuck`.
 - There is no "Start over" or "New learner" button on this screen.
+- **Note 2026-11-22 (DP-1c, as built):** "2 or more profiles" counts learner profiles, as the chooser does (a legacy grown-up row is not a learner), and the button is not drawn while `flags.whoChooserEnabled` is off (there is no chooser to open). Choose another learner at boot opens the app on the chooser (`manual`) unless the launch opens a chooser of its own. While the screen holds the boot it follows store state (a list or record read meanwhile, e.g. by another tab, opens the app). The design's D3 scroll-to-end when the still-stuck line fills is not built (the `Screen` component exposes no scroll handle); the line is in a polite live region and, on iOS, said with the bubble.
 
 ### 3.6 A damaged profile list: kept, then recoverable by a grown-up
 
@@ -175,6 +176,9 @@ Spanish and Korean are **shipped** locales (`packages/i18n/src/locales.ts:32-34`
 | `caregiver.restore.saveLater` | We could not save this yet. Keep the app open and we will try again. | DP-2 |
 
 "Nothing was erased" is true on this screen: the list key is never written while it cannot be read, and a progress record reaches the screen only when it was not written (AU-3). No string promises recovery.
+
+- **Note 2026-11-22 (DP-1c; DP-0b owner question O1, decided for now, pending the owner's confirmation):** `packages/i18n` has no `grownUp` namespace (the Grown-up area's strings live in `caregiver`). The `grownUp.*` keys above are built as DP-0b's README D9 proposes: `grownUp.recoverRecord.*` → `caregiver.recoverRecord.*` (DP-1d) and `grownUp.saveTrouble` → `caregiver.dashboard.saveTrouble` (DP-2). The English words do not change. DP-1c's own keys (`learner.progressReadFailed.*`) are unaffected.
+- **Note 2026-11-22 (DP-0b owner question O4, decided for now, pending the owner's confirmation):** a line a possibly-child learner reads never asks them to "free up some space"; it asks them to get a grown-up instead (applies to `learner.profile.saveTrouble`, DP-2). No DP-1c string is affected: the still-stuck line asks only to close and open the app.
 
 ### 3.9 Telemetry (Worker first)
 

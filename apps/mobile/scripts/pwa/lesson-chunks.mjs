@@ -225,7 +225,15 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 1,321,200 B; eight more learner screen chunks 4,605,858 / 1,268,664 B; the site's `landing` strings out of the
   // learner PWA's English 4,570,041 / 1,257,197 B (405,965 B raw, 83,963 B gzip less in all). The line is that
   // measurement plus a 3,959 B margin (403,500 B under the previous line).
-  startBundleRaw: 4_574_000,
+  // [TI] AMENDMENTS-TRACE-IDLE TI-2 (keep-going line, ink kept after a miss, Next after a tip): TraceStrokeGame's
+  // new states and their en strings are in the start bundle, on top of DURABLE-PROGRESS DP-1a / DP-1b. The release
+  // `build:web` (CI=1) of the TI-2 branch measures 4,575,345 B raw / 1,259,019 B gzip, 1,345 B over the line.
+  // The line is the measurement plus a 3,955 B margin (one measured raise, 5,300 B over the previous line).
+  // [DP] AMENDMENTS-DURABLE-PROGRESS DP-1c (the boot and the progress read failed screen): BootGate, the screen, the
+  // Home check, the read-hold rules and their en strings are boot code, so they are in the start bundle. On top of TI-2
+  // the release `build:web` (CI=1) of the merged DP-1c branch measures 4,581,661 B raw / 1,260,714 B gzip, 2,361 B over
+  // the line. The line is the measurement plus a 3,939 B margin (one measured raise, 6,300 B over the previous line).
+  startBundleRaw: 4_585_600,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

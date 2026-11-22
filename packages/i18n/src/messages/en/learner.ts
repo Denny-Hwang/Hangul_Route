@@ -845,7 +845,12 @@ export const learner = {
       showMe: { cta: 'Show me' },
       clear: { cta: 'Clear' },
       done: { cta: 'Done' },
-      idle: 'Slowly draw the letter. Lift your finger to finish.',
+      /** AMENDMENTS-TRACE-IDLE §3.6: Done is named from the first screen (a pause never scores an unfinished letter). */
+      idle: 'Draw each line slowly. Tap Done when you finish.',
+      /** After a pause on a letter that is not finished yet (§3.2): nothing is scored, the line only names Done. */
+      keepGoing: 'Keep going. Tap Done when you finish.',
+      /** After a pass with a tip (§3.4): the round waits for this button. */
+      next: { cta: 'Next' },
       /** After a pass: the order nudge wins, then an open-stroke direction nudge, then a loop one, else praise. */
       pass: {
         order: 'You got it! Next time, try the strokes in the right order. Tap Show me to see.',
@@ -1370,6 +1375,20 @@ export const learner = {
     title: 'Hoya tripped over a rock.',
     body: "Your cards and stars are safe. Let's hop back in.",
     bubble: 'Oops! That was not your fault. Tap the button and we go again.',
+  },
+
+  /**
+   * [DP] The screen shown when the profile list, or the active learner's progress, could not be read
+   * (AMENDMENTS-DURABLE-PROGRESS sections 3.5 and 3.8, row DP-1c; design/screens/system/progress-read-failed/).
+   * The same words for both variants (design D4); nothing here promises recovery. `stillStuck` shows after 3 tries.
+   */
+  progressReadFailed: {
+    title: 'We could not open your progress.',
+    body: "Nothing was erased. Let's try again.",
+    bubble: 'Hmm, the box is stuck.',
+    tryAgain: 'Try again',
+    chooseAnother: 'Choose another learner',
+    stillStuck: 'Still stuck? Close the app and open it again.',
   },
 
   /** The soft portrait guard on a phone held sideways (F-LAYOUT-001 §3.4, wireframe layout/wide E). */

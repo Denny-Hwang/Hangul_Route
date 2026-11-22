@@ -571,7 +571,9 @@ export const learner = {
       showMe: { cta: '보여 주기' },
       clear: { cta: '지우기' },
       done: { cta: '완료' },
-      idle: '천천히 글자를 써 봐요. 다 쓰면 손가락을 떼요.',
+      idle: '한 획씩 천천히 써 봐요. 다 쓰면 완료를 눌러요.',
+      keepGoing: '계속 써 봐요. 다 쓰면 완료를 눌러요.',
+      next: { cta: '다음' },
       pass: {
         order: '잘했어요! 다음에는 획을 차례대로 써 봐요. 보여 주기를 누르면 볼 수 있어요.',
         open: '좋아요! 다음에는 왼쪽에서 오른쪽으로 그어 봐요.',
@@ -953,6 +955,15 @@ export const learner = {
     title: '호야가 돌에 걸려 넘어졌어요.',
     body: '카드와 별은 안전해요. 다시 시작해 봐요.',
     bubble: '앗! 잘못한 건 아무것도 없어요. 버튼을 누르면 다시 시작해요.',
+  },
+
+  progressReadFailed: {
+    title: '진도를 열지 못했어요.',
+    body: '지워진 건 없어요. 다시 해 봐요.',
+    bubble: '음, 상자가 안 열려요.',
+    tryAgain: '다시 해 보기',
+    chooseAnother: '다른 학습자 고르기',
+    stillStuck: '그래도 안 되나요? 앱을 닫았다가 다시 열어 봐요.',
   },
 
   portraitGuard: {
