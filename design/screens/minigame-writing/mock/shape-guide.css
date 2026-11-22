@@ -1,0 +1,75 @@
+/*
+ * SO-0c: static design mock of the Trace shape guide (not shipped code). Spec:
+ * docs/specs/AMENDMENTS-STROKE-ORDER-STANDARD.md (sections 3.2, 5). Wireframe:
+ * design/wireframes/minigame/trace-stroke-shape-guide.md. Loaded after writing.css and uses only its token
+ * custom properties (each one a token of packages/design-system/src/tokens.ts, see writing.css). No new token and
+ * no colour literal. The few numbers that are not tokens are the shipped values listed in
+ * ../trace-stroke-shape-guide.md, "Constants".
+ */
+:root {
+  /* Constants (../trace-stroke-shape-guide.md, "Constants") */
+  --hint-opacity: 0.6;      /* StrokeHint trail and still: 0.6 (StrokeHint.tsx); untaught: on the group, not per stroke */
+  --hint-opacity-mid: 0.3;  /* board frame G2 only: the reveal half way through its fade-in */
+  --hint-stroke: 14;        /* StrokeHint strokeWidth (viewBox 200) */
+  --arrow-stroke: 3;        /* the still's arrow strokeWidth (StrokeHint.tsx), taught still only */
+  --badge-ring: 2.5;        /* the badge ring strokeWidth (StrokeHint.tsx), taught still only */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* The Trace Stroke screen as TraceStrokeGame.tsx lays it out: prompt, canvas slot (flex 1),     */
+/* controls (helpers, the fixed-height strip, Done and Skip). No scrolling.                      */
+/* ------------------------------------------------------------------------------------------ */
+.tscreen { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: var(--spacing-md); padding: var(--spacing-xs) var(--gutter-compact) var(--spacing-md); }
+.tscreen .topbar { gap: var(--spacing-sm); }
+.hdr-btn { flex: none; width: var(--touch-min); height: var(--touch-min); display: inline-flex; align-items: center; justify-content: center; font-size: var(--size-bodySm); font-weight: var(--weight-bold); color: var(--colors-text-primary); }
+.tprompt { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+.final-line { font-size: var(--size-body); color: var(--colors-text-secondary); }
+.instruction { font-size: var(--size-caption); color: var(--colors-text-muted); }
+.tscreen .canvas-row { flex: 1 1 auto; min-height: var(--trace-canvas-min); }
+.controls { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.actions.stacked { flex-direction: column; }
+.btn-lg { min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+.btn[aria-disabled="true"].btn-ghost { background: transparent; border-color: var(--colors-border-subtle); color: var(--colors-text-muted); }
+.side { flex: 1 1 auto; min-height: 0; display: flex; gap: var(--spacing-lg); }
+.side .canvas-row { flex: 1 1 auto; min-width: 0; }
+.side-col { width: 45%; min-width: 240px; max-width: 380px; display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-sm); }
+.trace-side .tscreen { padding-top: var(--spacing-xxs); }
+.trace-side .topbar { min-height: var(--spacing-jumbo); }
+
+/* The strip keeps its planned lines (2, or 3 beside the canvas) so the canvas never moves. */
+.strip.lines-2 { min-height: calc(2 * var(--size-bodySm) * var(--leading-normal) + 2 * var(--spacing-sm) + 2 * var(--border-width-base)); }
+.strip.lines-3 { min-height: calc(3 * var(--size-bodySm) * var(--leading-normal) + 2 * var(--spacing-sm) + 2 * var(--border-width-base)); }
+/* While the hint is up: the plain (idle) look and the one line "Shape guide". */
+.strip.shape { background: var(--colors-surface-paper); border-color: var(--colors-border-subtle); }
+
+/* Canvas drawing. The ghost and the ink are TraceStrokeGame's; the hint is StrokeHint's. */
+.canvas .ghost { fill: none; stroke: var(--colors-text-primary); stroke-opacity: var(--ghost-opacity); stroke-width: var(--ghost-stroke); stroke-linecap: round; stroke-linejoin: round; }
+.canvas .ink { fill: none; stroke: var(--colors-text-primary); stroke-width: var(--ink-stroke); stroke-linecap: round; stroke-linejoin: round; }
+.canvas .zone { fill: none; stroke: var(--colors-border-shape); stroke-width: var(--border-width-thin); stroke-dasharray: 3 5; opacity: 0.7; }
+.reveal path, .still-taught .hint { fill: none; stroke: var(--colors-feedback-nudge); stroke-width: var(--hint-stroke); stroke-linecap: round; stroke-linejoin: round; }
+/* Untaught: the strokes are opaque inside one group and the group carries the opacity, so crossings do not darken. */
+.reveal.held, .reveal.still { opacity: var(--hint-opacity); }
+.reveal.mid { opacity: var(--hint-opacity-mid); }
+.still-taught .hint { stroke-opacity: var(--hint-opacity); }
+.still-taught .arrow { fill: none; stroke: var(--colors-text-primary); stroke-width: var(--arrow-stroke); stroke-linecap: round; stroke-linejoin: round; }
+.still-taught .badge { fill: var(--colors-surface-paper); stroke: var(--colors-feedback-nudge); stroke-width: var(--badge-ring); }
+.still-taught .badge-n { font-size: var(--size-caption); font-weight: var(--weight-bold); fill: var(--colors-text-primary); text-anchor: middle; font-family: var(--font-stack); }
+/* The hint's own hit area / accessible region over the whole canvas (the still is a button: a tap closes it). */
+.hint-overlay { position: absolute; inset: 0; }
+
+/* Timing board (a design-board note, not UI) */
+.timing { width: 680px; background: var(--colors-surface-paper); border: var(--border-width-thin) solid var(--colors-border-subtle); border-radius: var(--radii-md); }
+.timing .t-head { font-family: var(--family-mono); font-size: var(--size-caption); font-weight: var(--weight-bold); fill: var(--colors-text-secondary); }
+.timing .t-label, .timing .t-ms { font-family: var(--family-mono); font-size: var(--size-caption); fill: var(--colors-text-secondary); }
+.timing .t-ms { text-anchor: middle; }
+.timing .t-seg { font-family: var(--font-stack); font-size: var(--size-caption); font-weight: var(--weight-semibold); fill: var(--colors-text-primary); }
+.timing .t-tick { stroke: var(--colors-border-strong); stroke-width: var(--border-width-thin); stroke-dasharray: 2 4; }
+.timing .seg-a { fill: var(--colors-feedback-nudgeLight); stroke: var(--colors-feedback-nudge); stroke-width: var(--border-width-thin); }
+.timing .seg-r { fill: var(--colors-feedback-nudgeLight); stroke: var(--colors-feedback-nudge); stroke-width: var(--border-width-thin); }
+.timing .seg-h { fill: var(--colors-surface-sunken); }
+.timing .seg-h2 { fill: var(--colors-feedback-nudgeLight); }
+.timing .seg-f { fill: var(--colors-surface-sunken); stroke: var(--colors-border-strong); stroke-width: var(--border-width-thin); }
+.timing .seg-s { fill: var(--colors-surface-canvas); stroke: var(--colors-border-subtle); stroke-width: var(--border-width-base); }
+/* Trace a Word: the word strip takes a row, so the rows sit closer (the D-3 mock's spacing.xs). */
+.tw .tscreen { gap: var(--spacing-xs); padding-bottom: var(--spacing-xs); }
+.tw .tprompt { gap: var(--spacing-none); }
