@@ -978,6 +978,15 @@ export const learner = {
     bubble: '¡Uy! No fue tu culpa. Toca el botón y seguimos.',
   },
 
+  progressReadFailed: {
+    title: 'No pudimos abrir tu progreso.',
+    body: 'No se borró nada. Intentémoslo de nuevo.',
+    bubble: 'Mmm, la caja está atascada.',
+    tryAgain: 'Reintentar',
+    chooseAnother: 'Elegir otro estudiante',
+    stillStuck: '¿Sigue sin abrirse? Cierra la app y ábrela de nuevo.',
+  },
+
   portraitGuard: {
     title: 'Pon el teléfono en vertical',
     keepSideways: { cta: 'Seguir en horizontal' },

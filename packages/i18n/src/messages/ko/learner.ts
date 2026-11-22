@@ -952,6 +952,15 @@ export const learner = {
     bubble: '앗! 잘못한 건 아무것도 없어요. 버튼을 누르면 다시 시작해요.',
   },
 
+  progressReadFailed: {
+    title: '진도를 열지 못했어요.',
+    body: '지워진 건 없어요. 다시 해 봐요.',
+    bubble: '음, 상자가 안 열려요.',
+    tryAgain: '다시 해 보기',
+    chooseAnother: '다른 학습자 고르기',
+    stillStuck: '그래도 안 되나요? 앱을 닫았다가 다시 열어 봐요.',
+  },
+
   portraitGuard: {
     title: '휴대폰을 세워 주세요',
     keepSideways: { cta: '가로로 계속 보기' },

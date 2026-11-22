@@ -1365,6 +1365,20 @@ export const learner = {
     bubble: 'Oops! That was not your fault. Tap the button and we go again.',
   },
 
+  /**
+   * [DP] The screen shown when the profile list, or the active learner's progress, could not be read
+   * (AMENDMENTS-DURABLE-PROGRESS sections 3.5 and 3.8, row DP-1c; design/screens/system/progress-read-failed/).
+   * The same words for both variants (design D4); nothing here promises recovery. `stillStuck` shows after 3 tries.
+   */
+  progressReadFailed: {
+    title: 'We could not open your progress.',
+    body: "Nothing was erased. Let's try again.",
+    bubble: 'Hmm, the box is stuck.',
+    tryAgain: 'Try again',
+    chooseAnother: 'Choose another learner',
+    stillStuck: 'Still stuck? Close the app and open it again.',
+  },
+
   /** The soft portrait guard on a phone held sideways (F-LAYOUT-001 §3.4, wireframe layout/wide E). */
   portraitGuard: {
     title: 'Turn your phone upright',
