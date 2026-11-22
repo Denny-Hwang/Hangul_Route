@@ -833,7 +833,12 @@ export const learner = {
       showMe: { cta: 'Show me' },
       clear: { cta: 'Clear' },
       done: { cta: 'Done' },
-      idle: 'Slowly draw the letter. Lift your finger to finish.',
+      /** AMENDMENTS-TRACE-IDLE §3.6: Done is named from the first screen (a pause never scores an unfinished letter). */
+      idle: 'Draw each line slowly. Tap Done when you finish.',
+      /** After a pause on a letter that is not finished yet (§3.2): nothing is scored, the line only names Done. */
+      keepGoing: 'Keep going. Tap Done when you finish.',
+      /** After a pass with a tip (§3.4): the round waits for this button. */
+      next: { cta: 'Next' },
       /** After a pass: the order nudge wins, then an open-stroke direction nudge, then a loop one, else praise. */
       pass: {
         order: 'You got it! Next time, try the strokes in the right order. Tap Show me to see.',

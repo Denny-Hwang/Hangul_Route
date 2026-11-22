@@ -301,25 +301,26 @@ describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     expect(canvasBorder(r.root)).toBe(colors.feedback.success);
   });
 
-  it('a finger still drawing when the canvas is cleared for the next try keeps drawing', async () => {
+  it('a finger drawing through a miss keeps drawing; its stroke adds to the ink the miss kept', async () => {
     const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} />);
     mounted.push(r);
     await layOut(r);
     await stroke({ x: 20, y: 20 }, { x: 40, y: 20 });
     // An unfinished letter is scored by Done only (AMENDMENTS-TRACE-IDLE §3.1).
     await pressDone(r.root);
-    expect(canvasBorder(r.root)).not.toBe(colors.brand.primary);
-    // The child keeps drawing through the result, past the moment the canvas clears.
+    expect(canvasBorder(r.root)).toBe(colors.feedback.nudge);
+    // The child keeps drawing through the result: nothing wipes the canvas (AMENDMENTS-TRACE-IDLE §3.3).
     await begin();
     await fire('touchesDown', { id: 0, x: 20, y: 60 });
     await fire('touchesMove', { id: 0, x: 40, y: 60 });
     await wait(2_500);
-    expect(ink(r.root)).toBe(0);
+    expect(ink(r.root)).toBe(2);
+    expect(canvasBorder(r.root)).toBe(colors.brand.primary);
     await fire('touchesMove', { id: 0, x: 60, y: 60 });
     await fire('touchesMove', { id: 0, x: 80, y: 60 });
-    expect(ink(r.root)).toBe(1);
+    expect(ink(r.root)).toBe(2);
     const scale = 200 / canvasSize(r.root);
-    expect(lastInk(r.root).map((p) => Math.round(p.x / scale))).toEqual([60, 80]);
+    expect(lastInk(r.root).map((p) => Math.round(p.x / scale))).toEqual([20, 40, 60, 80]);
     await fire('touchesUp', { id: 0, x: 80, y: 60 });
     await finalize();
   });
