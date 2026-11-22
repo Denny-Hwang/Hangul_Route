@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import { TRACE_IDLE_MS } from '../../trace-evaluator';
+import { isLetterFinished } from '../../trace-ready';
 import { placeBlockStrokes, type PlacedBlock } from '../block-strokes';
 import {
   BLOCK_TOLERANCE,
@@ -277,6 +278,23 @@ describe('createTraceWordGate: the idle gate of block mode (wireframe "Idle gate
     expect(gate.done()).toBe(true);
     expect(gate.done()).toBe(false);
     expect(onEvaluate).toHaveBeenCalledTimes(1);
+  });
+
+  it('on the letter rule (AMENDMENTS-TRACE-IDLE §3.1): a 2-of-4-stroke ㅂ never evaluates on idle; the full letter does', () => {
+    const bieup = strokesForJamo('jamo:bieup')!;
+    let strokes: JamoStrokePoint[][] = [];
+    const gate = createTraceWordGate({ idleMs: TRACE_IDLE_MS, onEvaluate, ready: () => isLetterFinished(bieup, strokes, false) });
+    strokes = trace(bieup.slice(0, 2));
+    gate.strokeStarted();
+    gate.strokeEnded();
+    vi.advanceTimersByTime(TRACE_IDLE_MS * 10);
+    expect(onEvaluate).not.toHaveBeenCalled();
+    strokes = trace(bieup);
+    gate.strokeStarted();
+    gate.strokeEnded();
+    vi.advanceTimersByTime(TRACE_IDLE_MS);
+    expect(onEvaluate).toHaveBeenCalledTimes(1);
+    gate.dispose();
   });
 });
 

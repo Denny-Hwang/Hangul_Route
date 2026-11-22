@@ -15,7 +15,8 @@ import { TraceWordGame } from '../TraceWordGame';
  * AMENDMENTS-TOUCH KT-D9 (6.8), on the screens: the trace pan starts at `spacing.xs` with no pointer
  * limit, and the stroke follows one finger by pointer id (the touch callbacks): a resting palm or a second
  * touch adds nothing and cancels nothing; a touch that never travelled 4 px (a dot) leaves no ink and
- * re-arms the idle check, so a drawing is still scored without the Done button (R1).
+ * re-arms the idle check, so a drawing is still scored without the Done button (R1) — subject to the
+ * gate's ready(): only a finished letter is scored on idle, an unfinished one by Done (AMENDMENTS-TRACE-IDLE §3.5).
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -221,6 +222,36 @@ async function cutOffStroke(from: { x: number; y: number }, to: { x: number; y: 
   await finalize();
 }
 
+/** One stroke through viewBox points (the canvas is 200 units across): down, the path walked in small moves. */
+async function viewBoxStroke(root: ReactTestInstance, points: Array<{ x: number; y: number }>, lift = true): Promise<void> {
+  const k = canvasSize(root) / 200;
+  const at = (p: { x: number; y: number }): { x: number; y: number } => ({ x: p.x * k, y: p.y * k });
+  await begin();
+  await fire('touchesDown', { id: 0, ...at(points[0]!) });
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1]!;
+    const b = points[i]!;
+    for (let j = 1; j <= 12; j += 1) await fire('touchesMove', { id: 0, ...at({ x: a.x + ((b.x - a.x) * j) / 12, y: a.y + ((b.y - a.y) * j) / 12 }) });
+  }
+  if (lift) await fire('touchesUp', { id: 0, ...at(points[points.length - 1]!) });
+  await finalize();
+}
+
+/** ㄱ (one stroke, `GIYEOK` in content/jamo-strokes): across, then down — a finished letter in one stroke. */
+const GIYEOK_PATH = [
+  { x: 40, y: 50 },
+  { x: 160, y: 50 },
+  { x: 160, y: 150 },
+];
+const giyeokScope: MinigameScope = { kind: 'trace-stroke', jamoIds: ['jamo:giyeok'], rounds: 1 };
+
+const pressDone = async (root: ReactTestInstance): Promise<void> => {
+  const done = root.find((n) => n.props.label === 'Done' && typeof n.props.onPress === 'function');
+  await act(async () => {
+    (done.props.onPress as () => void)();
+  });
+};
+
 const host = (): MinigameHost => ({ mode: 'quest', answer: () => undefined, complete: () => undefined });
 
 describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
@@ -258,16 +289,16 @@ describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     for (const p of points) expect(p.y).toBeCloseTo(fingerY * scale);
   });
 
-  it('a stroke cut off by the system (finalize with no lift) keeps its ink and is still scored', async () => {
-    const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} />);
+  it('a stroke cut off by the system (finalize with no lift) keeps its ink and a finished letter is still scored', async () => {
+    const r = await render(<TraceStrokeGame scope={giyeokScope} onFinish={() => undefined} />);
     mounted.push(r);
     await layOut(r);
-    await cutOffStroke({ x: 20, y: 20 }, { x: 120, y: 20 });
+    await viewBoxStroke(r.root, GIYEOK_PATH, false);
     expect(ink(r.root)).toBe(1);
     await wait(TRACE_IDLE_MS - 10);
     expect(canvasBorder(r.root)).toBe(colors.brand.primary);
     await wait(10);
-    expect(canvasBorder(r.root)).not.toBe(colors.brand.primary);
+    expect(canvasBorder(r.root)).toBe(colors.feedback.success);
   });
 
   it('a finger still drawing when the canvas is cleared for the next try keeps drawing', async () => {
@@ -275,7 +306,8 @@ describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     mounted.push(r);
     await layOut(r);
     await stroke({ x: 20, y: 20 }, { x: 40, y: 20 });
-    await wait(TRACE_IDLE_MS);
+    // An unfinished letter is scored by Done only (AMENDMENTS-TRACE-IDLE §3.1).
+    await pressDone(r.root);
     expect(canvasBorder(r.root)).not.toBe(colors.brand.primary);
     // The child keeps drawing through the result, past the moment the canvas clears.
     await begin();
@@ -322,11 +354,11 @@ describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     expect(canvasBorder(r.root)).toBe(colors.brand.primary);
   });
 
-  it('a dot after a stroke leaves no ink and the drawing is still scored after the idle wait', async () => {
-    const r = await render(<TraceStrokeGame scope={scope} onFinish={() => undefined} />);
+  it('a dot after a stroke leaves no ink and a finished letter is still scored after the idle wait', async () => {
+    const r = await render(<TraceStrokeGame scope={giyeokScope} onFinish={() => undefined} />);
     mounted.push(r);
     await layOut(r);
-    await stroke({ x: 20, y: 20 }, { x: 120, y: 20 });
+    await viewBoxStroke(r.root, GIYEOK_PATH);
     expect(ink(r.root)).toBe(1);
     await wait(500);
     await dot({ x: 60, y: 60 });
@@ -334,8 +366,8 @@ describe('Trace: the pan (AMENDMENTS-TOUCH 6.8)', () => {
     await wait(TRACE_IDLE_MS - 10);
     expect(canvasBorder(r.root)).toBe(colors.brand.primary);
     await wait(10);
-    // Scored: the canvas shows the pass or the nudge.
-    expect(canvasBorder(r.root)).not.toBe(colors.brand.primary);
+    // Scored: the finished letter passes.
+    expect(canvasBorder(r.root)).toBe(colors.feedback.success);
   });
 
   it('a stroke that activated keeps its ink after the finger lifts', async () => {

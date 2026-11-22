@@ -30,6 +30,7 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
+import { isLetterFinished, wouldPass } from '../../logic/trace-ready';
 import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from '../../logic/trace-copy';
 import {
   traceCanvasMax,
@@ -67,8 +68,8 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * F-004 Trace Stroke — real gesture-driven implementation.
  *
  * Replaces the v1 3-tap placeholder. Child draws the jamo with their
- * finger; PanGestureHandler captures stroke points; on Done / 1.5s idle,
- * scoreTrace() compares against the predefined skeleton; coverage ≥ 0.65
+ * finger; PanGestureHandler captures stroke points; on Done / 1.5s idle
+ * (idle only once the letter is finished, logic/trace-ready), scoreTrace() compares against the predefined skeleton; coverage ≥ 0.65
  * passes the round. Done and the idle timer share one gate
  * (logic/trace-evaluator), so a drawing is scored once.
  */
@@ -135,11 +136,18 @@ export function TraceStrokeGame({
     () => (round ? (strokesForJamo(round.jamo.id) ?? []) : []),
     [round],
   );
+  // The gate is created once, so its ready() reads the letter and the mode through refs.
+  const targetRef = useRef(target);
+  targetRef.current = target;
+  const strictModeRef = useRef(strictMode);
+  strictModeRef.current = strictMode;
 
   useEffect(() => {
+    // AMENDMENTS-TRACE-IDLE §3.1: a pause scores only a finished letter; an unfinished one waits for Done.
     const gate = createTraceEvaluator({
       idleMs: TRACE_IDLE_MS,
       onEvaluate: () => evaluateRef.current(),
+      ready: () => isLetterFinished(targetRef.current, strokesRef.current, strictModeRef.current),
     });
     gateRef.current = gate;
     return () => {
@@ -216,10 +224,8 @@ export function TraceStrokeGame({
     });
     setOrderCorrect(result.orderCorrect ?? null);
     setDirectionNudge(directionNudgeFor(result));
-    // F-008 — strict mode requires coverage AND order; default keeps coverage-only.
-    const passed = strictMode
-      ? result.passWithOrder === true
-      : result.coverage >= DEFAULT_PASS_THRESHOLD;
+    // F-008 — strict mode requires coverage AND order; default keeps coverage-only (one rule: logic/trace-ready).
+    const passed = wouldPass(result, strictMode);
     if (passed) {
       success();
       answerRound(roundIdx, true);

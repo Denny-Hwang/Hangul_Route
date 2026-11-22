@@ -212,9 +212,9 @@ export function everyLetterInked(letters: readonly Pick<PlacedLetter, 'zones'>[]
 }
 
 /**
- * The shared Done / idle gate of `trace-evaluator`, with one change: a finger lift starts the
- * idle countdown only when `ready()` (block mode: every letter inked; letter mode: always).
- * Before that, a pause never evaluates; Done still does at any time.
+ * The shared Done / idle gate of `trace-evaluator` with its `ready()` (AMENDMENTS-TRACE-IDLE §3.1): a
+ * finger lift starts the idle countdown only when `ready()` (block mode: every letter inked; letter
+ * mode: always). Before that, a pause never evaluates; Done still does at any time.
  */
 export function createTraceWordGate({
   idleMs,
@@ -227,12 +227,5 @@ export function createTraceWordGate({
   ready: () => boolean;
   scheduler?: TraceScheduler;
 }): TraceEvaluator {
-  const gate = createTraceEvaluator({ idleMs, onEvaluate, ...(scheduler ? { scheduler } : {}) });
-  return {
-    ...gate,
-    strokeEnded: () => {
-      if (ready()) gate.strokeEnded();
-      else gate.clear();
-    },
-  };
+  return createTraceEvaluator({ idleMs, onEvaluate, ready, ...(scheduler ? { scheduler } : {}) });
 }
