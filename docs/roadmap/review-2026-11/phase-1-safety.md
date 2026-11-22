@@ -120,7 +120,7 @@
 | SO-1 | Sonnet 5.5 | **당장 하는 임시 조치.** `reviewedStrokeIds` 에 없는 글자는 순서·방향을 채점하지 않고 순서 안내 문구도 내지 않는다 |
 | SO-0 | Opus 5.5 | 사양 + 30자 획순 표(글자, 획 수, 각 획의 시작점·방향, 출처) |
 | SO-2 | Opus 5.5 | `jamo-strokes.ts` 30자 교정, "Show me" 시연과 말로 하는 획순 설명 동기화 |
-| SO-3 | 오너 / 교사 | 표와 시연 화면 검수 → `reviewedStrokeIds` 채우기 |
+| SO-3 | 한국어 교원(WO-27 HR-3s, OD-SO5 2026-11-22) | 표와 시연 화면 검수 → `reviewedStrokeIds` 채우기 |
 
 **SO-1 을 먼저 하는 이유.** 교정과 검수에는 시간이 걸린다. 그동안 틀린 순서를 "가르치는" 것을 멈추는 것이 한 줄 변경으로 가능하다. `reviewedStrokeIds` 가 이미 그 용도로 있다. coverage(모양) 채점은 그대로 둔다.
 
