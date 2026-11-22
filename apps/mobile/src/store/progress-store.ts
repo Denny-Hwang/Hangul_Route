@@ -124,6 +124,17 @@ interface State {
    * a killed app or a closed tab (an orphan) is never joined.
    */
   openSession: OpenSession | null;
+  /**
+   * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.2 (row DP-1a): profiles whose stored snapshot the last `hydrate` could
+   * not read (AU-3's unread set, now store state so boot, the chooser and Home can subscribe). They stay un-hydrated:
+   * nothing is written for them, and the next `hydrate` reads again.
+   */
+  loadFailedFor: ReadonlySet<string>;
+  /**
+   * [DP] Section 3.2: profiles whose damaged record AU-3 started fresh in this session (`withStored` answered
+   * `fresh`), until the sync store's cloud fold has pushed them (`clearFresh`).
+   */
+  freshFor: ReadonlySet<string>;
 }
 
 /** The session running now and who began it. */
@@ -270,6 +281,13 @@ interface Actions {
    */
   replaceSnapshot: (profileId: string, snapshot: ProgressSnapshot) => void;
   /**
+   * [DP] Section 3.2: resolves once the profile's storage work queued so far (its write chain as it is now) has
+   * settled; at once when there is none. Never rejects. A restore awaits it before it chooses its line.
+   */
+  whenWritten: (profileId: string) => Promise<void>;
+  /** [DP] Section 3.2: the cloud fold after a fresh start has landed; the profile leaves `freshFor`. */
+  clearFresh: (profileId: string) => void;
+  /**
    * Fold word progress events into the profile's `vocab` slice (F-VOC-005
    * section 3.2) and save it; writes nothing when every event is ignored.
    * Before the saved snapshot is read the events are also queued, and
@@ -337,38 +355,58 @@ const NOT_A_SNAPSHOT = new Error('progress: the stored value is not a snapshot')
 type StoredStep = (stored: ProgressSnapshot | null) => ProgressSnapshot | undefined;
 
 /**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.2 (row DP-1a): what one storage transaction of `hr:progress:<id>` ended as.
+ * - `done`: the read worked, `step` returned, and its value was stored (or there was nothing to store).
+ * - `fresh`: the stored bytes were damaged, kept at `hr:progress-corrupt:<id>`, and `step` ran on null (AU-3's fresh start).
+ * - `fenced`: the write fence is up; `step` saw a plain read and nothing was stored.
+ * - `unread`: the read failed, the damaged copy could not be kept, or the learner was removed meanwhile.
+ * - `unsaved`: `step` returned and the storage write rejected (a full disk).
+ * - `step-failed`: `step` itself threw; retrying the same step would throw again.
+ */
+export type StoredOutcome = 'done' | 'fresh' | 'fenced' | 'unread' | 'unsaved' | 'step-failed';
+
+/**
  * [AU] AMENDMENTS-AUDIT-2026-11 row AU-3: every read and every write of `hr:progress:<id>` is one storage transaction
  * (`updateJson`) that reads the stored record first, so a record that cannot be read is never written over.
  * - The storage read fails: nothing is written and the answer is `unread` (`step` did not run).
  * - The stored value does not parse, or parses to something that is no snapshot: its raw bytes are first copied to
  *   `hr:progress-corrupt:<id>` (kept as it is when that key already holds a copy), and only then does `step` run, with
- *   null for "nothing usable stored". When the copy cannot be made, nothing is written (`unread`).
+ *   null for "nothing usable stored" (`fresh`). When the copy cannot be made, nothing is written (`unread`).
  * Under the write fence (All lessons) the transaction is not run at all; `step` then gets what a plain read finds,
- * its answer is not stored, and the outcome is `fenced`. Never throws.
+ * its answer is not stored, and the outcome is `fenced`. [DP] Row DP-1a: `ran` says `step` was called, `stepped` that it
+ * returned, so a storage write that rejected (`unsaved`) is told apart from a step that threw (`step-failed`). Never
+ * throws. Exported for its tests.
  */
-async function withStored(profileId: string, step: StoredStep): Promise<'done' | 'fenced' | 'unread'> {
+export async function withStored(profileId: string, step: StoredStep): Promise<StoredOutcome> {
   const storageKey = key(profileId);
   let ran = false;
+  let stepped = false;
+  /** `step`, with the two flags set around it. */
+  const run = (stored: ProgressSnapshot | null): ProgressSnapshot | undefined => {
+    ran = true;
+    const value = step(stored);
+    stepped = true;
+    return value;
+  };
   try {
     await updateJson<unknown>(
       storageKey,
       (stored) => {
         if (stored !== null && !isSnapshot(stored)) throw NOT_A_SNAPSHOT;
-        ran = true;
-        return step(stored);
+        return run(stored);
       },
       { exact: true },
     );
     if (!ran) {
       const stored = await readJsonStrict<unknown>(storageKey);
-      ran = true;
-      step(isSnapshot(stored) ? stored : null);
+      run(isSnapshot(stored) ? stored : null);
       return 'fenced';
     }
     return 'done';
   } catch (error) {
-    // `step` itself failed after it ran (a write that did not land, or a snapshot the merge cannot read): it does not run twice.
-    if (ran) return 'unread';
+    // `step` ran: it does not run twice. Its value did not land (`unsaved`), or it threw (`step-failed`).
+    if (stepped) return 'unsaved';
+    if (ran) return 'step-failed';
     try {
       // A read that failed has nothing to copy and stays unread; a damaged value is kept before anything replaces it.
       if (!(await keepRawCopy(storageKey, PROGRESS_CORRUPT_KEY(profileId), { onlyUnparsable: error !== NOT_A_SNAPSHOT }))) return 'unread';
@@ -378,9 +416,11 @@ async function withStored(profileId: string, step: StoredStep): Promise<'done' |
         await removeKey(PROGRESS_CORRUPT_KEY(profileId)).catch(() => undefined);
         return 'unread';
       }
-      await updateJson<unknown>(storageKey, (stored) => step(isSnapshot(stored) ? stored : null));
-      return 'done';
+      await updateJson<unknown>(storageKey, (stored) => run(isSnapshot(stored) ? stored : null));
+      return 'fresh';
     } catch {
+      if (stepped) return 'unsaved';
+      if (ran) return 'step-failed';
       return 'unread';
     }
   }
@@ -406,12 +446,6 @@ function enqueue<T>(profileId: string, job: () => Promise<T>): Promise<T> {
  * queued. `replace` (a reset) is kept over `merge`.
  */
 const writeWaiting = new Map<string, WriteMode>();
-
-/**
- * [AU] Profiles whose stored snapshot could not be read by the last `hydrate` (row AU-3). They stay un-hydrated:
- * nothing is written for them, and the next `hydrate` reads again.
- */
-const unread = new Set<string>();
 
 /**
  * [AU] AMENDMENTS-AUDIT-2026-11 row AU-11 (audit FUNC-1): the stored snapshot this tab last read or wrote, per
@@ -514,7 +548,8 @@ function writeStored(profileId: string, mode: WriteMode = 'merge'): void {
     writeWaiting.delete(profileId);
     const out: WriteOutcome = { stored: undefined, wrote: false, merged: null };
     const outcome = await withStored(profileId, writeStep(profileId, turn, out));
-    if (outcome === 'done' && out.stored !== undefined) {
+    if (outcome === 'fresh') enterFresh(profileId);
+    if ((outcome === 'done' || outcome === 'fresh') && out.stored !== undefined) {
       seen.set(profileId, out.stored);
       if (out.wrote) postProgressChanged();
     }
@@ -603,10 +638,16 @@ function withoutKey<T>(record: Record<string, T>, id: string): Record<string, T>
 /** One storage read per profile at a time: callers that overlap share it. */
 const inFlight = new Map<string, Promise<void>>();
 
-function without(ids: Set<string>, id: string): Set<string> {
+function without(ids: ReadonlySet<string>, id: string): Set<string> {
   const next = new Set(ids);
   next.delete(id);
   return next;
+}
+
+/** [DP] Row DP-1a: AU-3 started the profile's damaged record fresh; its next push folds the cloud copy in first. */
+function enterFresh(profileId: string): void {
+  if (useProgressStore.getState().freshFor.has(profileId)) return;
+  useProgressStore.setState((s) => ({ freshFor: new Set([...s.freshFor, profileId]) }));
 }
 
 /**
@@ -731,6 +772,8 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   catchUpFound: {},
   pendingVocabEvents: {},
   openSession: null,
+  loadFailedFor: new Set(),
+  freshFor: new Set(),
 
   hydrate: (profileId) => {
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
@@ -760,9 +803,9 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
           hydratedFor: new Set([...s.hydratedFor, profileId]),
           pendingFor: without(s.pendingFor, profileId),
           pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
+          loadFailedFor: s.loadFailedFor.has(profileId) ? without(s.loadFailedFor, profileId) : s.loadFailedFor,
           ...catchUpAfter(s, profileId, added),
         }));
-        unread.delete(profileId);
         // One write for the pending writes, an added latch and the cards they
         // earned. Cards are saved only onto a record that was read or written:
         // a blank record holding only the welcome card stays in memory until
@@ -777,15 +820,20 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         };
         return write ? snap : undefined;
       });
-      if (outcome !== 'unread' && loadedJson !== undefined) {
-        const wrote = outcome === 'done' && writtenJson !== undefined;
+      if (outcome === 'fresh') enterFresh(profileId);
+      if (outcome !== 'unread' && outcome !== 'step-failed' && loadedJson !== undefined) {
+        const wrote = (outcome === 'done' || outcome === 'fresh') && writtenJson !== undefined;
         seen.set(profileId, wrote ? (writtenJson as string) : loadedJson);
         if (wrote) postProgressChanged();
       }
       // [AU] Row AU-3: a stored record that could not be read (or a damaged one that could not be kept aside) leaves
       // the profile un-hydrated, so nothing is written for it; the writes made meanwhile stay in memory and the next
       // `hydrate` reads again.
-      if (outcome === 'unread' && !get().hydratedFor.has(profileId)) unread.add(profileId);
+      // [DP] Row DP-1a: the set is store state (`loadFailedFor`); a step that threw before the profile was hydrated is
+      // treated the same way.
+      if ((outcome === 'unread' || outcome === 'step-failed') && !get().hydratedFor.has(profileId) && !get().loadFailedFor.has(profileId)) {
+        set((s) => ({ loadFailedFor: new Set([...s.loadFailedFor, profileId]) }));
+      }
       after?.();
     })
       .catch(() => undefined)
@@ -1030,7 +1078,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (removedNow(profileId)) return;
     // [AU] Row AU-3: the stored record could not be read, so a replacement is not final here: it is held like any
     // write made before the saved copy loaded, and the next read merges the two (nothing is written until then).
-    if (unread.has(profileId) && !get().hydratedFor.has(profileId)) {
+    if (get().loadFailedFor.has(profileId) && !get().hydratedFor.has(profileId)) {
       set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snapshot } }));
       persist(profileId, snapshot);
       return;
@@ -1048,6 +1096,17 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (snap !== snapshot) notifyProgressPersisted(profileId);
     // The steady-weeks latch runs after every merge (F-CURR-002 row CM-17).
     emitGoalEvent({ type: 'merged', profileId });
+  },
+
+  whenWritten: (profileId) =>
+    (chains.get(profileId) ?? Promise.resolve()).then(
+      () => undefined,
+      () => undefined,
+    ),
+
+  clearFresh: (profileId) => {
+    if (!get().freshFor.has(profileId)) return;
+    set((s) => ({ freshFor: without(s.freshFor, profileId) }));
   },
 
   setSelfRoute: (profileId, route) => {
@@ -1123,8 +1182,9 @@ onProfileRemoved((profileId) => {
     hydratedFor: without(s.hydratedFor, profileId),
     pendingFor: without(s.pendingFor, profileId),
     pendingVocabEvents: withoutKey(s.pendingVocabEvents, profileId),
+    loadFailedFor: without(s.loadFailedFor, profileId),
+    freshFor: without(s.freshFor, profileId),
   }));
-  unread.delete(profileId);
   seen.delete(profileId);
   writeWaiting.delete(profileId);
   removeKey(key(profileId)).catch(() => undefined);
