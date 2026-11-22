@@ -7,6 +7,7 @@ import { ADMIN_INVITE_LIMIT, adminInviteLimiter, newInviteToken } from '../route
 import { store } from '../store';
 import { clerkTestKeys, type ClerkTestKeys } from './helpers/clerk-token';
 import { testDb as db } from './helpers/db';
+import { eventText } from './helpers/event-text';
 
 /**
  * [SA] AMENDMENTS-SEATS-ADMINS sections 6.1 to 6.4 and 6.8: school administrators through single-use invite links,
@@ -82,7 +83,7 @@ describe('[SA] POST /api/spaces/:id/admin-invites (section 6.3)', () => {
     expect(stored).toMatchObject({ id: data.invite.id, spaceId: school, createdBy: 'principal', acceptedAt: null, revokedAt: null });
     expect(JSON.stringify(stored)).not.toContain(token);
     expect(await db.adminInviteByHash(token)).toBeNull();
-    expect(JSON.stringify(store.events)).not.toContain(token);
+    expect(eventText(store.events)).not.toContain(token);
     expect(adminEvents()).toEqual([{ name: 'space.admin.invite_created' }]);
     // the list never carries the token again
     expect((await call('GET', `/api/spaces/${school}/admins`, bearer('principal'))).text).not.toContain(token);
@@ -309,7 +310,7 @@ describe('[SA] POST /api/admin-invites/accept (sections 6.3, 6.4)', () => {
     await accept('dean', token);
     expect((await accept('kim', token)).body.error?.code).toBe('invite_used');
     expect(store.events.filter((e) => e.name === 'space.admin.accept_refused').map((e) => e.payload?.reason)).toEqual(['owner', 'not_found', 'expired', 'revoked', 'full', 'used']);
-    const telemetry = JSON.stringify(store.events);
+    const telemetry = eventText(store.events);
     expect(telemetry).not.toContain('@');
     expect(telemetry).not.toContain(token);
     expect(telemetry).not.toContain(school);
