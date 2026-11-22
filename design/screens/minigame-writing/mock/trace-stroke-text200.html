@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" style="font-size: 200%">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trace Stroke states (AMENDMENTS-TRACE-IDLE TI-0b mock)</title>
+<link rel="stylesheet" href="writing.css">
+<style>
+/* Board-only helpers for this mock; every value is a token custom property of writing.css. */
+.ts-col { gap: var(--spacing-sm); padding-bottom: var(--spacing-sm); }
+.ts-col .canvas-row { min-height: var(--trace-canvas-min); }
+.ts-caption { font-size: var(--size-caption); color: var(--colors-text-muted); }
+.ts-icon { padding: 0; border-color: transparent; color: var(--colors-text-primary); }
+.ts-lines-2 { min-height: calc(2 * var(--size-bodySm) * var(--leading-normal) + 2 * var(--spacing-sm) + 2 * var(--border-width-base)); }
+.ts-lines-3 { min-height: calc(3 * var(--size-bodySm) * var(--leading-normal) + 2 * var(--spacing-sm) + 2 * var(--border-width-base)); }
+.ts-stacked { flex-direction: column; }
+.ts-lg { min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+.btn.is-focus { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+.ts-side { display: flex; flex-direction: column; height: 100%; padding: var(--spacing-xs) var(--gutter-regular) var(--spacing-sm); gap: var(--spacing-xs); }
+.ts-side-row { flex: 1 1 auto; min-height: 0; display: flex; gap: var(--spacing-lg); }
+.ts-side-row .canvas-row { flex: 1 1 auto; min-width: 0; }
+.ts-side { --trace-side-panel: 358px; /* traceSidePanelWidth(796) = max(240, min(380, floor(0.45 x 796))), logic/trace-layout.ts */ }
+.ts-panel { width: var(--trace-side-panel); flex: none; display: flex; flex-direction: column; justify-content: center; gap: var(--spacing-sm); }
+</style>
+</head>
+<body>
+<main class="board"><h1 class="board-title">Trace Stroke states: a pause, a miss, a tip (wireframe minigame/families.md "Trace Stroke states"; spec AMENDMENTS-TRACE-IDLE 3.2-3.4)</h1>
+<div class="board-row"><div class="board-item"><p class="board-label">S12. 320 x 568, browser text 200 %: a pass with a tip</p><div class="device" style="width: 320px; height: 568px"><div class="screen"><div class="screen-top ts-col"><div class="topbar"><span class="btn btn-ghost btn-sm ts-icon" role="button" aria-label="Close"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" style="fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round"/></svg></span><div class="bar" role="progressbar" aria-valuemin="0" aria-valuenow="2" aria-valuemax="4"><i style="width: 50%"></i></div><span class="pill">2 / 4</span></div><p class="heading">Trace the letter b</p><div class="canvas-row"><div class="canvas pass" role="img" aria-label="Draw the letter b with your finger"><svg viewBox="0 0 200 200" aria-hidden="true" focusable="false"><path d="M50.0 30.0 L50.0 150.0" style="fill: none; stroke: var(--colors-text-primary); stroke-opacity: var(--ghost-opacity); stroke-width: var(--ghost-stroke); stroke-linecap: round; stroke-linejoin: round"/><path d="M150.0 30.0 L150.0 150.0" style="fill: none; stroke: var(--colors-text-primary); stroke-opacity: var(--ghost-opacity); stroke-width: var(--ghost-stroke); stroke-linecap: round; stroke-linejoin: round"/><path d="M50.0 100.0 L150.0 100.0" style="fill: none; stroke: var(--colors-text-primary); stroke-opacity: var(--ghost-opacity); stroke-width: var(--ghost-stroke); stroke-linecap: round; stroke-linejoin: round"/><path d="M50.0 150.0 L150.0 150.0" style="fill: none; stroke: var(--colors-text-primary); stroke-opacity: var(--ghost-opacity); stroke-width: var(--ghost-stroke); stroke-linecap: round; stroke-linejoin: round"/><path d="M51.0 151.0 L149.0 149.0" style="fill: none; stroke: var(--colors-text-primary); stroke-width: var(--ink-stroke); stroke-linecap: round; stroke-linejoin: round"/><path d="M51.0 32.0 L49.0 90.0 L50.0 148.0" style="fill: none; stroke: var(--colors-text-primary); stroke-width: var(--ink-stroke); stroke-linecap: round; stroke-linejoin: round"/><path d="M149.0 31.0 L151.0 95.0 L150.0 149.0" style="fill: none; stroke: var(--colors-text-primary); stroke-width: var(--ink-stroke); stroke-linecap: round; stroke-linejoin: round"/><path d="M52.0 101.0 L100.0 99.0 L148.0 101.0" style="fill: none; stroke: var(--colors-text-primary); stroke-width: var(--ink-stroke); stroke-linecap: round; stroke-linejoin: round"/></svg></div></div><div class="helpers"><span class="btn btn-secondary btn-sm" role="button">Show me</span><span class="btn btn-ghost btn-sm" role="button">Clear</span></div><div class="strip ts-lines-2 cheering" role="status" aria-live="polite"><span>You got it! Next time, try the strokes in the right order. Tap Show me to see.</span></div><div class="actions"><span class="btn btn-primary is-focus" role="button">Next</span><span class="btn btn-ghost" role="button">Skip</span></div></div></div></div><p class="note">OPEN ITEM, not a proposal: with every text at 200 % and the canvas at TRACE_CANVAS_MIN (160), the column is about 60 px taller than the window, so Next and Skip fall below the edge. Today's screen has the same limit; a tip that now waits for Next makes it matter. TI-2 must keep Next on screen (see the wireframe).</p></div></div>
+</main>
+</body>
+</html>
