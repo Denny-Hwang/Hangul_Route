@@ -69,6 +69,7 @@ Who this hurts most: young children and anyone with a tremor or slow motor plann
 - A **clean** pass (`pass.clean`) keeps today's 1.1 s advance (`TraceStrokeGame.tsx:223-233`; Trace Word `PASS_MS`, `TraceWordGame.tsx:69`).
 - A pass that carries a tip (`pass.order`, `pass.open`, `pass.loop`; `logic/trace-copy.ts:40-45`) does **not** advance by itself: a **Next** button (same size as Done, `touchTarget.min`, focus moves to it) shows under the line, and the round advances when it is tapped. (WO-02 decision 5: coaching lines stay until the learner moves on; WCAG 2.2.1, reading speed.)
 - Trace Word: the same rule for its per-letter tips.
+- *Errata 2026-11-22 (TI-2; pending owner confirmation):* "same size as Done, `touchTarget.min`" cannot both hold: Done is `md` (`touchTarget.min`) in the compact and side layouts but `lg` (`touchTarget.child`) in the roomy layout. Following the TI-0b design (`design/wireframes/minigame/families.md`, "Trace Stroke states", decision 1 and open item 2), Next takes Done's slot **and Done's size** in every layout, so the button row never moves; it is never smaller than `touchTarget.min`.
 
 ### 3.5 KT-D9 (AMENDMENTS-TOUCH §6.8) restated
 

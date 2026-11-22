@@ -75,7 +75,10 @@ describe('Trace Stroke (English wording as shipped)', () => {
     expect(t.showMe.cta).toBe('Show me');
     expect(t.clear.cta).toBe('Clear');
     expect(t.done.cta).toBe('Done');
-    expect(t.idle).toBe('Slowly draw the letter. Lift your finger to finish.');
+    // AMENDMENTS-TRACE-IDLE §3.6: Done is named from the first screen; the keep-going line and Next are new.
+    expect(t.idle).toBe('Draw each line slowly. Tap Done when you finish.');
+    expect(t.keepGoing).toBe('Keep going. Tap Done when you finish.');
+    expect(t.next.cta).toBe('Next');
   });
 
   it('keeps the pass praise, the next-time nudges and the retry lines', () => {

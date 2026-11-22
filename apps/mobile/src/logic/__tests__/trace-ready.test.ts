@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { jamoStrokes, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace, type ScoreTraceResult } from '../stroke-scoring';
-import { TRACE_READY_STROKE_MIN, isFinished, isLetterFinished, wouldPass } from '../trace-ready';
+import { TRACE_KEEP_GOING_MS, TRACE_READY_STROKE_MIN, isFinished, isLetterFinished, wouldPass } from '../trace-ready';
 
 /**
  * AMENDMENTS-TRACE-IDLE §3.1 (TI-1): the one pass rule, and the "finished" rule the idle gate waits for.
@@ -52,6 +52,10 @@ describe('wouldPass: the one pass rule (§3.1)', () => {
 describe('isFinished: pass and every stroke at the floor (§3.1)', () => {
   it('uses a 0.8 per-stroke floor', () => {
     expect(TRACE_READY_STROKE_MIN).toBe(0.8);
+  });
+
+  it('waits 3 s before the keep-going line (§3.2)', () => {
+    expect(TRACE_KEEP_GOING_MS).toBe(3000);
   });
 
   it('a passing drawing with one stroke under the floor is not finished', () => {

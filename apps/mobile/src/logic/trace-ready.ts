@@ -11,6 +11,12 @@ import { DEFAULT_PASS_THRESHOLD, scoreTrace, type ScoreTraceResult } from './str
  */
 export const TRACE_READY_STROKE_MIN = 0.8;
 
+/**
+ * AMENDMENTS-TRACE-IDLE §3.2: how long the fingers stay off an unfinished drawing before the status line says
+ * "Keep going. Tap Done when you finish." Nothing is recorded; the line only names Done.
+ */
+export const TRACE_KEEP_GOING_MS = 3000;
+
 /** The one pass rule (F-008): strict mode needs coverage and order, otherwise coverage alone. */
 export function wouldPass(result: Pick<ScoreTraceResult, 'coverage' | 'passWithOrder'>, strictMode: boolean): boolean {
   return strictMode ? result.passWithOrder === true : result.coverage >= DEFAULT_PASS_THRESHOLD;

@@ -17,7 +17,7 @@ import {
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { Svg, Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
@@ -29,8 +29,8 @@ import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
-import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
-import { isLetterFinished, wouldPass } from '../../logic/trace-ready';
+import { scoreTrace } from '../../logic/stroke-scoring';
+import { TRACE_KEEP_GOING_MS, isLetterFinished, wouldPass } from '../../logic/trace-ready';
 import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from '../../logic/trace-copy';
 import {
   traceCanvasMax,
@@ -49,6 +49,7 @@ import { useHeldWhile } from '../../components/use-held-while';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useSoundPacing } from '../../components/use-sound-pacing';
 import { playJamo, stop } from '../../platform/audio';
+import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -72,6 +73,10 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * (idle only once the letter is finished, logic/trace-ready), scoreTrace() compares against the predefined skeleton; coverage ≥ 0.65
  * passes the round. Done and the idle timer share one gate
  * (logic/trace-evaluator), so a drawing is scored once.
+ *
+ * AMENDMENTS-TRACE-IDLE TI-2 (design: wireframes/minigame/families.md "Trace Stroke states"): a pause on an
+ * unfinished letter shows the keep-going line and records nothing; a miss keeps the ink until the next stroke
+ * (added to it) or Clear; a pass with a tip waits for Next. Only a clean pass moves on by itself.
  */
 export function TraceStrokeGame({
   scope,
@@ -114,8 +119,18 @@ export function TraceStrokeGame({
   // evaluate() so it sees the current strokes.
   const evaluateRef = useRef<() => void>(() => {});
   const gateRef = useRef<TraceEvaluator | null>(null);
-  // Pass-advance / fail-reset timer, and a guard so the step finishes once.
+  // The clean pass's advance timer, and a guard so the step finishes once.
   const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // AMENDMENTS-TRACE-IDLE §3.2: the keep-going line after a pause on an unfinished letter. Not a Feedback value, so
+  // Done stays enabled and the canvas keeps its idle look.
+  const [keepGoing, setKeepGoing] = useState(false);
+  const keepGoingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Read by the touch callbacks, which can run before React renders the latest result.
+  const feedbackRef = useRef<Feedback>('idle');
+  // Focus targets (§3.4): Next when it appears, the new round's heading after an advance.
+  const nextRef = useRef<View | null>(null);
+  const headingRef = useRef<View | null>(null);
+  const focusHeadingRef = useRef(false);
   const finishedRef = useRef(false);
   // F-005/F-006 — score result envelope for the most recent evaluate()
   const [orderCorrect, setOrderCorrect] = useState<boolean | null>(null);
@@ -154,6 +169,7 @@ export function TraceStrokeGame({
       gate.dispose();
       gateRef.current = null;
       if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+      if (keepGoingTimerRef.current) clearTimeout(keepGoingTimerRef.current);
     };
   }, []);
 
@@ -161,7 +177,16 @@ export function TraceStrokeGame({
     gateRef.current?.nextRound();
     strokesRef.current = [];
     setStrokesState([]);
+    feedbackRef.current = 'idle';
     setFeedback('idle');
+    if (keepGoingTimerRef.current) clearTimeout(keepGoingTimerRef.current);
+    keepGoingTimerRef.current = null;
+    setKeepGoing(false);
+    // After Next (or the clean pass's advance) focus goes to the new letter's heading (TI-0b wireframe decision 1).
+    if (focusHeadingRef.current) {
+      focusHeadingRef.current = false;
+      focusNode(headingRef.current);
+    }
     setOrderCorrect(null);
     setDirectionNudge('none');
     setHintToken(0);
@@ -179,6 +204,12 @@ export function TraceStrokeGame({
     }
   }, [roundIdx, round, soundReset, pacing]);
 
+  // §3.4: a pass that carries a tip waits for Next, in Done's place; Next takes focus when it appears.
+  const showNext = feedback === 'pass' && passHasTip(orderCorrect, directionNudge);
+  useEffect(() => {
+    if (showNext) focusNode(nextRef.current);
+  }, [showNext]);
+
   if (!round) {
     return (
       <Screen>
@@ -190,6 +221,30 @@ export function TraceStrokeGame({
   const setStrokes = (next: JamoStrokePoint[][]): void => {
     strokesRef.current = next;
     setStrokesState(next);
+  };
+
+  const showFeedback = (next: Feedback): void => {
+    feedbackRef.current = next;
+    setFeedback(next);
+  };
+
+  const stopKeepGoing = (): void => {
+    if (keepGoingTimerRef.current) clearTimeout(keepGoingTimerRef.current);
+    keepGoingTimerRef.current = null;
+  };
+
+  // §3.2: every finger is up on ink that is not a finished letter: after TRACE_KEEP_GOING_MS the line names Done.
+  // A finished letter needs no line: the idle check scores it.
+  const armKeepGoing = (): void => {
+    stopKeepGoing();
+    if (feedbackRef.current !== 'idle' || strokesRef.current.length === 0) return;
+    if (isLetterFinished(targetRef.current, strokesRef.current, strictModeRef.current)) return;
+    keepGoingTimerRef.current = setTimeout(() => {
+      keepGoingTimerRef.current = null;
+      setKeepGoing(true);
+      // iOS has no live regions: VoiceOver is told once per pause here (a no-op elsewhere).
+      announceForScreenReader(copy.trace.keepGoing);
+    }, TRACE_KEEP_GOING_MS);
   };
 
   const afterResult = (fn: () => void, ms: number): void => {
@@ -209,13 +264,24 @@ export function TraceStrokeGame({
     onFinish();
   };
 
+  const advance = (): void => {
+    if (roundIdx >= rounds.length - 1) {
+      finishStep();
+    } else {
+      focusHeadingRef.current = true;
+      setRoundIdx(roundIdx + 1);
+    }
+  };
+
   const evaluate = (): void => {
     if (strokes.length === 0) {
       // Nothing drawn (e.g. cleared just before the timer): not an answer.
       gateRef.current?.reopen();
       return;
     }
-    setFeedback('evaluating');
+    stopKeepGoing();
+    setKeepGoing(false);
+    showFeedback('evaluating');
     const result = scoreTrace({
       target,
       drawn: strokes,
@@ -229,27 +295,16 @@ export function TraceStrokeGame({
     if (passed) {
       success();
       answerRound(roundIdx, true);
-      setFeedback('pass');
-      afterResult(() => {
-        if (roundIdx >= rounds.length - 1) {
-          finishStep();
-        } else {
-          setRoundIdx(roundIdx + 1);
-        }
-      }, 1100);
+      showFeedback('pass');
+      // §3.4: a clean pass moves on after 1.1 s; a pass with a tip waits for Next, so the tip can be read.
+      if (!passHasTip(result.orderCorrect ?? null, directionNudgeFor(result))) {
+        afterResult(advance, 1100);
+      }
     } else {
       nudge();
       answerRound(roundIdx, false);
-      setFeedback('fail');
-      // F-008 — strict-mode fail gets a longer retry window (2000ms vs 1800ms)
-      const retryDelay = strictMode && result.coverage >= DEFAULT_PASS_THRESHOLD ? 2000 : 1800;
-      afterResult(() => {
-        setStrokes([]);
-        setFeedback('idle');
-        setOrderCorrect(null);
-        setDirectionNudge('none');
-        gateRef.current?.reopen();
-      }, retryDelay);
+      // §3.3: the ink stays (no wipe timer); the next stroke adds to it, Clear empties it.
+      showFeedback('fail');
     }
   };
   evaluateRef.current = evaluate;
@@ -268,7 +323,17 @@ export function TraceStrokeGame({
 
   // One finger draws; a dot or a resting palm leaves no ink (AMENDMENTS-TOUCH 6.8, logic/trace-pointers).
   const onTouchEffect = (effect: TraceTouchEffect): void => {
-    if (effect.kind === 'start') {
+    if (effect.kind === 'hold') {
+      stopKeepGoing();
+    } else if (effect.kind === 'start') {
+      setKeepGoing(false);
+      if (feedbackRef.current === 'fail') {
+        // §3.3: first real ink after a miss: back to idle and the check opens again; the new stroke adds to the ink.
+        showFeedback('idle');
+        setOrderCorrect(null);
+        setDirectionNudge('none');
+        gateRef.current?.reopen();
+      }
       setStrokes([...strokesRef.current, [toViewBoxPoint(effect.from), toViewBoxPoint(effect.to)]]);
     } else if (effect.kind === 'point') {
       appendStrokePoint(toViewBoxPoint(effect.at));
@@ -278,16 +343,26 @@ export function TraceStrokeGame({
       setStrokes(strokesRef.current.slice(0, -1));
     }
     idleOnTouch(gateRef.current, effect.kind, strokesRef.current.length > 0);
+    if (effect.kind === 'end' || (effect.kind === 'release' && strokesRef.current.length > 0)) armKeepGoing();
   };
   const fingerDown = (): void => setStroking(true);
   const fingerUp = (): void => setStroking(false);
 
   const panGesture = tracePanGesture(pointersRef, { onEffect: onTouchEffect, onFingerDown: fingerDown, onFingerUp: fingerUp });
 
+  // §3.3: Clear empties the canvas and resets the result; a canvas emptied after a result is open to the check again.
+  // A clean pass's pending advance is dropped too, so the round never changes under a learner who redraws.
   const handleClear = (): void => {
+    if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    resultTimerRef.current = null;
     setStrokes([]);
-    setFeedback('idle');
+    showFeedback('idle');
+    setOrderCorrect(null);
+    setDirectionNudge('none');
+    stopKeepGoing();
+    setKeepGoing(false);
     gateRef.current?.clear();
+    gateRef.current?.reopen();
   };
 
   const traceFillByFeedback: Record<Feedback, string> = {
@@ -320,7 +395,14 @@ export function TraceStrokeGame({
   const prompt = (
     <View>
       <View style={{ gap: spacing.xs }}>
-        <View accessible accessibilityRole="header" accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame)}>
+        <View
+          ref={headingRef}
+          accessible
+          accessibilityRole="header"
+          accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame)}
+          // Web: focusable by script only, so it is not a Tab stop (focus lands here after Next).
+          {...(Platform.OS === 'web' ? { tabIndex: -1 as const } : {})}
+        >
           <Heading level="prompt">{traceHeadingText(round.jamo, copy.trace)}</Heading>
         </View>
         {/* A final is said as its closed syllable, so the syllable heard is the syllable shown (M11). */}
@@ -434,11 +516,25 @@ export function TraceStrokeGame({
       ? failMessage(strictMode, orderCorrect, copy.trace)
       : feedback === 'pass'
         ? passMessage(orderCorrect, directionNudge, copy.trace)
-        : copy.trace.idle;
+        : keepGoing
+          ? copy.trace.keepGoing
+          : copy.trace.idle;
   const feedbackTone: HoyaTone = feedback === 'fail' ? 'thinking' : feedback === 'pass' ? 'cheering' : 'idle';
   const feedbackLines = mode === 'side' ? 3 : 2;
 
-  const doneButton = (
+  // Next takes Done's slot and size (TI-0b wireframe decision 1), so the button row never moves. It carries the tip
+  // as its hint, so a screen reader that lands on it still hears the tip.
+  const doneButton = showNext ? (
+    <Button
+      label={copy.trace.next.cta}
+      tone="primary"
+      size={stacked ? 'lg' : 'md'}
+      fullWidth
+      accessibilityHint={feedbackMessage}
+      pressableRef={nextRef}
+      onPress={advance}
+    />
+  ) : (
     <Button
       label={copy.trace.done.cta}
       tone="primary"
@@ -466,7 +562,14 @@ export function TraceStrokeGame({
   const controls = (
     <View style={{ gap: spacing.sm }}>
       {helpers}
-      <TraceFeedback tone={feedbackTone} message={feedbackMessage} lines={feedbackLines} showHoya={stacked} />
+      <TraceFeedback
+        tone={feedbackTone}
+        message={feedbackMessage}
+        lines={feedbackLines}
+        showHoya={stacked}
+        // TI-0b wireframe decision 5: the idle line is not announced (it comes back after every stroke).
+        live={feedbackMessage !== copy.trace.idle}
+      />
       {actions}
     </View>
   );
@@ -509,6 +612,21 @@ interface Size {
   height: number;
 }
 
+/** A pass that carries a coaching tip (order, then an open stroke's or a loop's direction): it waits for Next (§3.4). */
+function passHasTip(orderCorrect: boolean | null, nudge: DirectionNudge): boolean {
+  return orderCorrect === false || nudge !== 'none';
+}
+
+/**
+ * Moves focus to a mounted view: the element's own `focus()` on the web, the screen reader's focus on iOS and
+ * Android (a view's `focus()` does not move VoiceOver or TalkBack there).
+ */
+function focusNode(node: View | null): void {
+  if (node === null) return;
+  if (Platform.OS === 'web') (node as unknown as { focus?: () => void }).focus?.();
+  else focusForScreenReader(node);
+}
+
 /** The surface id of Trace Stroke for the audio telemetry (F-AUDIO-004 §3.14). */
 const TRACE_STROKE_AUDIO_SOURCE = 'trace-stroke';
 
@@ -535,16 +653,17 @@ function TraceFeedback({
   message,
   lines,
   showHoya,
+  live,
 }: {
   tone: HoyaTone;
   message: string;
   lines: number;
   showHoya: boolean;
+  live: boolean;
 }): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
-      accessibilityLiveRegion="polite"
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -564,9 +683,20 @@ function TraceFeedback({
     >
       {showHoya ? <Hoya pose={tone} size={40} /> : null}
       <View style={{ flex: 1 }}>
-        <Body weight="semibold" size="sm">
-          {message}
-        </Body>
+        {/* The live region is always mounted and always polite, so a line inserted into it is announced (a region
+            switched on in the same render as its text often is not). The idle line sits outside it, unannounced. */}
+        <View accessibilityLiveRegion="polite" testID="trace-stroke-live-line">
+          {live ? (
+            <Body weight="semibold" size="sm">
+              {message}
+            </Body>
+          ) : null}
+        </View>
+        {live ? null : (
+          <Body weight="semibold" size="sm">
+            {message}
+          </Body>
+        )}
       </View>
     </View>
   );
