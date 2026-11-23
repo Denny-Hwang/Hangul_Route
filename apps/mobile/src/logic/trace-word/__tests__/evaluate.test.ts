@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
+import { jamoStrokes, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
+import { getMessages } from '@hangul-route/i18n';
+import { traceWordMessage } from '../view';
 import { TRACE_IDLE_MS } from '../../trace-evaluator';
 import { isLetterFinished } from '../../trace-ready';
 import { placeBlockStrokes, type PlacedBlock } from '../block-strokes';
@@ -20,6 +22,8 @@ import {
 } from '../evaluate';
 
 const place = (s: string): PlacedBlock => placeBlockStrokes(s, strokesForJamo)!;
+/** [SO] Every jamo marked taught, so the order and direction coaching of a taught unit can be checked (the shipped list is empty). */
+const ALL_TAUGHT = jamoStrokes.map((j) => j.jamoId);
 const lettersOf = (b: PlacedBlock): UnitLetter[] => b.letters;
 
 /** A learner's line: the skeleton walked every 3 units or less, nudged off it by `dx`, `dy`. */
@@ -147,17 +151,17 @@ describe('scoreTraceUnit at block size (open question 2: pass rates and near mis
     expect(scoreTraceUnit([], trace(block.strokes)).passed).toBe(false);
   });
 
-  it('coaches order and direction on a pass, never failing for them', () => {
+  it('coaches order and direction on a pass of a taught unit, never failing for them', () => {
     const block = place('야');
     const target = block.strokes;
     const letters = lettersOf(block);
-    const reversed = scoreTraceUnit(letters, trace(target).map((s) => [...s].reverse()));
+    const reversed = scoreTraceUnit(letters, trace(target).map((s) => [...s].reverse()), BLOCK_TOLERANCE, ALL_TAUGHT);
     expect(reversed.passed).toBe(true);
     expect(reversed.directionNudge).toBe('open');
-    const backwards = scoreTraceUnit(letters, [...trace(target)].reverse());
+    const backwards = scoreTraceUnit(letters, [...trace(target)].reverse(), BLOCK_TOLERANCE, ALL_TAUGHT);
     expect(backwards.passed).toBe(true);
     expect(backwards.orderCorrect).toBe(false);
-    const clean = scoreTraceUnit(letters, trace(target));
+    const clean = scoreTraceUnit(letters, trace(target), BLOCK_TOLERANCE, ALL_TAUGHT);
     expect(clean.orderCorrect).toBe(true);
     expect(clean.directionNudge).toBe('none');
   });
@@ -167,7 +171,7 @@ describe('scoreTraceUnit at block size (open question 2: pass rates and near mis
     const tick = block.letters[0]!.strokes[0]!;
     const drawn = trace(block.strokes).map((s, i) => (i === 0 ? [...s].reverse() : s));
     expect(Math.hypot(tick[1]!.x - tick[0]!.x, tick[1]!.y - tick[0]!.y)).toBeLessThan(SHORT_STROKE);
-    expect(scoreTraceUnit(lettersOf(block), drawn).directionNudge).toBe('none');
+    expect(scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, ALL_TAUGHT).directionNudge).toBe('none');
   });
 
   it('takes a round\'s own tolerance', () => {
@@ -200,7 +204,8 @@ describe('the geometry under the precision and outline checks', () => {
     const square = [[{ x: final.zones[0]!.x, y: final.zones[0]!.y }, { x: final.zones[0]!.x + 100, y: final.zones[0]!.y + 50 }]];
     expect(scoreTraceUnit([{ strokes: final.strokes }], trace(final.strokes)).passed).toBe(true);
     expect(scoreTraceUnit([final], []).passed).toBe(false);
-    expect(scoreTraceUnit([final], []).orderCorrect).toBe(false);
+    expect(scoreTraceUnit([final], [], BLOCK_TOLERANCE, ALL_TAUGHT).orderCorrect).toBe(false);
+    expect(scoreTraceUnit([final], []).orderCorrect).toBeNull();
     expect(scoreTraceUnit([final], trace(square)).passed).toBe(false);
   });
 });
@@ -370,6 +375,49 @@ describe('round ㅇ and ㅎ loops score as the octagons did (NB-3 parity)', () =
     // squared-off ㅎ ring now covers the rounder loop. A rounded diamond, any ring, shaky
     // or not, and every trace score as before.
     expect(changed).toEqual(['호 square: retry -> pass', '아 diamond: pass -> retry', '이 diamond: pass -> retry']);
+  });
+});
+
+describe('[SO] an untaught unit gets no order and no open-stroke coaching (AMENDMENTS-STROKE-ORDER-STANDARD §3.2, §6 test 7)', () => {
+  const copy = getMessages('en').learner.minigame;
+  it('호 with ㅗ drawn bar first: neither the letter line nor the block line is the order line', () => {
+    const block = place('호');
+    const [h, o] = block.letters;
+    const oBarFirst = [...trace(o!.strokes)].reverse();
+    // Block mode: the whole block.
+    const whole = scoreTraceUnit(lettersOf(block), [...trace(h!.strokes), ...oBarFirst]);
+    expect(whole.passed).toBe(true);
+    expect(whole.orderCorrect).toBeNull();
+    expect(traceWordMessage('blockDone', 'block', whole, copy)).toBe(copy.traceWord.blockDone);
+    // Letter mode: ㅗ alone.
+    const letter = scoreTraceUnit([o!], oBarFirst);
+    expect(letter.passed).toBe(true);
+    expect(letter.orderCorrect).toBeNull();
+    expect(traceWordMessage('letterDone', 'letter', letter, copy)).toBe(copy.trace.pass.clean);
+    // Taught, the same drawings get the order line (today's behaviour returns with SO-3).
+    expect(traceWordMessage('blockDone', 'block', scoreTraceUnit(lettersOf(block), [...trace(h!.strokes), ...oBarFirst], BLOCK_TOLERANCE, ALL_TAUGHT), copy)).toBe(copy.trace.pass.order);
+    expect(traceWordMessage('letterDone', 'letter', scoreTraceUnit([o!], oBarFirst, BLOCK_TOLERANCE, ['jamo:o']), copy)).toBe(copy.trace.pass.order);
+  });
+
+  it('a unit with one untaught jamo is untaught', () => {
+    const block = place('호');
+    const drawn = [...trace(block.letters[0]!.strokes), ...[...trace(block.letters[1]!.strokes)].reverse()];
+    expect(scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, ['jamo:o']).orderCorrect).toBeNull();
+    expect(scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, ['jamo:o', 'jamo:hieut']).orderCorrect).toBe(false);
+  });
+
+  it('every open stroke backwards: no open-stroke line while untaught; a backwards ring keeps the loop line', () => {
+    // 토: no ring anywhere (ㅌ, ㅗ), every stroke drawn backwards.
+    const to = place('토');
+    const reversed = scoreTraceUnit(lettersOf(to), trace(to.strokes).map((s) => [...s].reverse()));
+    expect(reversed.passed).toBe(true);
+    expect(reversed.directionNudge).toBe('none');
+    expect(scoreTraceUnit(lettersOf(to), trace(to.strokes).map((s) => [...s].reverse()), BLOCK_TOLERANCE, ALL_TAUGHT).directionNudge).toBe('open');
+    const gom = place('곰');
+    const o = place('오');
+    const ringBack = scoreTraceUnit(lettersOf(o), trace(o.strokes).map((s, i) => (i === 0 ? [...s].reverse() : s)));
+    expect(ringBack.directionNudge).toBe('loop');
+    expect(scoreTraceUnit(lettersOf(gom), trace(gom.strokes)).directionNudge).toBe('none');
   });
 });
 

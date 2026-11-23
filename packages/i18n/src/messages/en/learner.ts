@@ -851,6 +851,11 @@ export const learner = {
       keepGoing: 'Keep going. Tap Done when you finish.',
       /** After a pass with a tip (§3.4): the round waits for this button. */
       next: { cta: 'Next' },
+      /**
+       * [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.2, §3.6: while Show me plays a letter whose stroke order nobody has checked
+       * yet, this caption takes the place of the idle line only (a miss, pass or keep-going line always wins).
+       */
+      shapeGuide: 'Shape guide',
       /** After a pass: the order nudge wins, then an open-stroke direction nudge, then a loop one, else praise. */
       pass: {
         order: 'You got it! Next time, try the strokes in the right order. Tap Show me to see.',

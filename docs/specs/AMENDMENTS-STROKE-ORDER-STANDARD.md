@@ -156,7 +156,7 @@ SO-1 next release (it only removes coaching and the visible order). SO-2 per app
 | Row | Model | Work | Tests | Depends on |
 |---|---|---|---|---|
 | SO-0c | Opus 5.5 | §5 wireframe and mock; multi-agent review — **done 2026-11-22** (`design/wireframes/minigame/trace-stroke-shape-guide.md`, `design/screens/minigame-writing/trace-stroke-shape-guide.md`) | — | this spec reviewed |
-| SO-1 | Sonnet 5.5 | §3.1 gate, §3.2 all surfaces, SO-1 strings en + es + ko | 1–9 | SO-0c, TRACE-IDLE TI-2 merged |
+| SO-1 | Sonnet 5.5 | §3.1 gate, §3.2 all surfaces, SO-1 strings en + es + ko — **built 2026-11-22** on `fix/stroke-order-interim` (`logic/stroke-order-taught.ts`, `loopNudgeFor` / `traceCoaching` in `logic/trace-copy.ts`; tests 1–6 `logic/__tests__/stroke-order-taught.test.ts`, 7 `trace-word/__tests__/evaluate.test.ts`, 8 `screens/minigames/__tests__/stroke-hint-shape.test.tsx` and `trace-shape-guide.test.tsx`, 9 `screens/presenter/__tests__/letter-slide-shape.test.tsx`); `reviewedStrokeIds` untouched | 1–9 | SO-0c, TRACE-IDLE TI-2 merged |
 | SO-1d | Sonnet 5.5 | "Amended 2026-11-xx by AMENDMENTS-STROKE-ORDER-STANDARD" lines in F-004, F-005, F-006, F-007, F-008, F-TCH-004, F-CURR-001; `docs/specs/README.md` index line; CODEOWNERS lines | — | SO-1 |
 | SO-0b | Opus 5.5 (research) | §3.4 table with sources; no row filled without a source | — | — |
 | SO-2 | Opus 5.5 | §3.3 check of the AU-14 data against approved rows, changes and `altStrokes` where they disagree, `STANDARD` tied to the table, knock-on tests and snapshots; never touches `reviewedStrokeIds` | SO-2 tests, 10 | SO-0b rows approved by the owner |

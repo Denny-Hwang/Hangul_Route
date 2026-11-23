@@ -35,6 +35,40 @@ export function directionNudgeFor(
   return loopWrong ? 'loop' : 'none';
 }
 
+/**
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.2: the direction nudge of a letter whose stroke order nobody has checked yet,
+ * read over the circles only. `'loop'` when a closed target (ㅇ, ㅎ's ring) went round the other way; open targets
+ * (bars, ticks) are ignored, matched or not, so it never returns `'open'`: a learner taught another stroke count or
+ * top-stroke form never hears "left-to-right".
+ */
+export function loopNudgeFor(
+  result: Pick<ScoreTraceResult, 'directionsPerTarget' | 'closedPerTarget'>,
+): DirectionNudge {
+  const dirs = result.directionsPerTarget;
+  if (!dirs) return 'none';
+  const closed = result.closedPerTarget ?? [];
+  return dirs.some((ok, i) => !ok && closed[i] === true) ? 'loop' : 'none';
+}
+
+/** What a scored drawing coaches: the order (null: say nothing) and the direction nudge. */
+export interface TraceCoaching {
+  orderCorrect: boolean | null;
+  directionNudge: DirectionNudge;
+}
+
+/**
+ * [SO] §3.2: a taught letter coaches its order and directions as before; an untaught one gets no order coaching
+ * (`orderCorrect` null) and only the loop nudge.
+ */
+export function traceCoaching(
+  result: Pick<ScoreTraceResult, 'orderCorrect' | 'directionsPerTarget' | 'closedPerTarget'>,
+  taught: boolean,
+): TraceCoaching {
+  return taught
+    ? { orderCorrect: result.orderCorrect ?? null, directionNudge: directionNudgeFor(result) }
+    : { orderCorrect: null, directionNudge: loopNudgeFor(result) };
+}
+
 export type TraceCopy = Messages['learner']['minigame']['trace'];
 
 export function passMessage(orderCorrect: boolean | null, nudge: DirectionNudge, copy: TraceCopy): string {
