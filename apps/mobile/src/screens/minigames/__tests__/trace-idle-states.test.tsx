@@ -1,15 +1,19 @@
 import { colors } from '@hangul-route/design-system';
+import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
+import { ScrollView } from 'react-native';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { Path } from 'react-native-svg';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { TRACE_IDLE_MS } from '../../../logic/trace-evaluator';
+import { TRACE_CANVAS_MIN } from '../../../logic/trace-layout';
 import { TRACE_KEEP_GOING_MS } from '../../../logic/trace-ready';
 import { useQuestRunStore } from '../../../store/quest-run-store';
 import { createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
 import { render, screenTexts, unmount } from '../../../test-support/render';
+import { GIVES_WAY_FIRST, TIP_AFTER_FOCUS_MS } from '../TraceControls';
 import { TraceStrokeGame } from '../TraceStrokeGame';
 
 /**
@@ -17,6 +21,10 @@ import { TraceStrokeGame } from '../TraceStrokeGame';
  * scores nothing; a miss keeps the ink until the learner draws again or taps Clear; a pass with a tip waits for
  * Next. Design: `design/wireframes/minigame/families.md` ("Trace Stroke states"),
  * `design/screens/minigame-writing/trace-stroke.md`.
+ *
+ * TI-3b (owner decisions 2026-11-23, §10): while a pass with Next shows, the controls under the canvas scroll so Next
+ * stays reachable at 200 % text (OD-TI7; `mock/trace-stroke-text200.html`); a tip is announced once (the live region
+ * carries it, Next has no hint repeating it).
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -80,15 +88,27 @@ const KEEP_GOING_LINE = 'Keep going. Tap Done when you finish.';
 const RETRY_LINE = 'Try again — start at the top!';
 const OPEN_TIP = 'Nice! Try drawing left-to-right next time.';
 
+/** The content height the controls' scroll node reports (react-test-renderer has no layout). */
+const CONTROLS_SCROLL_HEIGHT = 900;
+
 /** Every host node's focus() call, by the node's accessible name (react-test-renderer has no DOM). */
 const focused: string[] = [];
-const nodeMock = (element: { props: Record<string, unknown> }): object => ({
-  focus: () => void focused.push(String(element.props['aria-label'] ?? element.props.role ?? '')),
-  addEventListener: () => undefined,
-  removeEventListener: () => undefined,
-  nodeType: 1,
-  getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }),
-});
+/** Every scroll of a host node, by its test id: a ScrollView's scrollToEnd lands here on the web. */
+const scrolls: Array<{ id: string; top: number }> = [];
+/** Every host node made, by its test id: a live region made twice would be a new region (its first line unsaid). */
+const made: string[] = [];
+const nodeMock = (element: { props: Record<string, unknown> }): object => {
+  made.push(String(element.props['data-testid'] ?? ''));
+  return {
+    focus: () => void focused.push(String(element.props['aria-label'] ?? element.props.role ?? '')),
+    scroll: ({ top }: { top: number }) => void scrolls.push({ id: String(element.props['data-testid'] ?? ''), top }),
+    scrollHeight: CONTROLS_SCROLL_HEIGHT,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    nodeType: 1,
+    getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }),
+  };
+};
 
 type Answer = [string | number, boolean];
 const answers: Answer[] = [];
@@ -101,6 +121,8 @@ beforeEach(() => {
   useQuestRunStore.getState().reset();
   answers.length = 0;
   focused.length = 0;
+  scrolls.length = 0;
+  made.length = 0;
   announce.calls.length = 0;
   useQuestRunStore.setState({
     answerRound: (key, correct, asked, hinted) => {
@@ -377,7 +399,8 @@ describe('Trace Stroke: a tip waits for Next (§3.4, test 12)', () => {
     expect(button(r.root, 'Done')).toBeUndefined();
     const next = button(r.root, 'Next');
     expect(next).toBeDefined();
-    expect(next!.props.accessibilityHint).toBe(OPEN_TIP);
+    // TI-3b: the live region carries the tip; Next has no hint repeating it.
+    expect(next!.props.accessibilityHint).toBeUndefined();
     expect(focused).toContain('Next');
     await wait(10_000);
     expect(firstGhost(r.root)).toBe(first);
@@ -457,5 +480,168 @@ describe('Trace Stroke: a tip waits for Next (§3.4, test 12)', () => {
     focused.length = 0;
     await press(r.root, 'Next');
     expect(focused.some((f) => f.startsWith('Trace'))).toBe(true);
+  });
+});
+
+/** ㄱ drawn backwards: a pass with the open-stroke tip (the letter is played as taught here). */
+const drawGiyeokBackwards = async (r: ReactTestRenderer): Promise<void> => {
+  await draw(r.root, reversed(strokesOf('jamo:giyeok')[0]!));
+  await wait(TRACE_IDLE_MS);
+};
+const liveLine = (root: ReactTestInstance): ReactTestInstance =>
+  root.find((n) => typeof n.type === 'string' && n.props['data-testid'] === 'trace-stroke-live-line');
+
+describe('Trace Stroke: a tip is announced once, after Next takes focus (TI-3b)', () => {
+  it('Next takes focus first; then the live region carries the tip and VoiceOver is told, once; Next has no hint', async () => {
+    const r = await play(scopeOf('jamo:giyeok'));
+    await drawGiyeokBackwards(r);
+    // The tip shows at once, outside the region, and Next has focus: the focus move is said first.
+    expect(texts(r.root)).toContain(OPEN_TIP);
+    expect(focused).toContain('Next');
+    expect(screenTexts(liveLine(r.root))).toEqual([]);
+    expect(announce.calls).toEqual([]);
+    await wait(TIP_AFTER_FOCUS_MS);
+    expect(screenTexts(liveLine(r.root))).toEqual([OPEN_TIP]);
+    // iOS has no live regions: VoiceOver is told the tip once (a no-op elsewhere).
+    expect(announce.calls).toEqual([OPEN_TIP]);
+    expect(button(r.root, 'Next')!.props.accessibilityHint).toBeUndefined();
+    // Once on screen and to a screen reader: not again as a hint.
+    expect(texts(r.root).filter((t) => t === OPEN_TIP)).toHaveLength(1);
+    await wait(10_000);
+    expect(announce.calls).toEqual([OPEN_TIP]);
+    // The live region is the one made at mount: it was never made again, so the tip inserted into it is said.
+    expect(made.filter((id) => id === 'trace-stroke-live-line')).toHaveLength(1);
+  });
+
+  it('Clear and a second tip: said again, once, after focus again', async () => {
+    const r = await play(scopeOf('jamo:giyeok'));
+    await drawGiyeokBackwards(r);
+    await wait(TIP_AFTER_FOCUS_MS);
+    await press(r.root, 'Clear');
+    expect(screenTexts(liveLine(r.root))).toEqual([]);
+    focused.length = 0;
+    await drawGiyeokBackwards(r);
+    expect(focused).toContain('Next');
+    expect(screenTexts(liveLine(r.root))).toEqual([]);
+    await wait(TIP_AFTER_FOCUS_MS);
+    expect(screenTexts(liveLine(r.root))).toEqual([OPEN_TIP]);
+    expect(announce.calls).toEqual([OPEN_TIP, OPEN_TIP]);
+  });
+
+  it('Next before the tip is said: nothing is said late, on the next letter', async () => {
+    const r = await play(scopeOf('jamo:giyeok', 'jamo:nieun'));
+    const id = firstGhost(r.root).startsWith('M 40 50') ? 'jamo:giyeok' : 'jamo:nieun';
+    await draw(r.root, reversed(strokesOf(id)[0]!));
+    await wait(TRACE_IDLE_MS);
+    await press(r.root, 'Next');
+    await wait(10_000);
+    expect(announce.calls).toEqual([]);
+    expect(screenTexts(liveLine(r.root))).toEqual([]);
+  });
+
+  it('a clean pass tells VoiceOver nothing extra; its line is in the region at once', async () => {
+    const r = await play(scopeOf('jamo:giyeok'));
+    await draw(r.root, strokesOf('jamo:giyeok')[0]!);
+    await wait(TRACE_IDLE_MS);
+    expect(answers).toEqual([[0, true]]);
+    expect(screenTexts(liveLine(r.root))).toEqual([getMessages('en').learner.minigame.trace.pass.clean]);
+    expect(announce.calls).toEqual([]);
+  });
+});
+
+describe('Trace Stroke: the controls under the canvas scroll while Next shows (TI-3b, OD-TI7)', () => {
+  const controls = (root: ReactTestInstance): ReactTestInstance =>
+    root.find((n) => n.type === ScrollView && n.props.testID === 'trace-stroke-controls');
+  const flat = (style: unknown): Record<string, unknown> =>
+    Object.assign({}, ...[style].flat(Infinity as 1).filter((s): s is object => typeof s === 'object' && s !== null));
+  const slot = (root: ReactTestInstance): ReactTestInstance =>
+    root.find((n) => typeof n.type !== 'string' && n.props.testID === 'trace-stroke-canvas-slot');
+  const layOut = async (node: ReactTestInstance, height: number): Promise<void> => {
+    await act(async () => {
+      (node.props.onLayout as (e: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width: 300, height } } });
+    });
+  };
+
+  it.each([
+    ['roomy', { width: 390, height: 760 }],
+    ['compact', { width: 320, height: 568 }],
+    ['compact, short', { width: 320, height: 480 }],
+    ['side', { width: 568, height: 320 }],
+  ])('%s: a column that never shrinks while drawing; a pass with a tip lets them shrink and scroll to Next, Next and Skip inside', async (_name, size) => {
+    const r = await play(scopeOf('jamo:giyeok', 'jamo:nieun'), undefined, size);
+    const regionBefore = liveLine(r.root);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
+    expect(flat(slot(r.root).props.style).minHeight).toBe(0);
+    // Drawing: a layout of the controls scrolls nothing.
+    await layOut(controls(r.root), 100);
+    expect(scrolls).toEqual([]);
+
+    // The rounds are shuffled: draw whichever one-stroke letter is up, backwards (the open-stroke tip).
+    const id = firstGhost(r.root).startsWith('M 40 50') ? 'jamo:giyeok' : 'jamo:nieun';
+    await draw(r.root, reversed(strokesOf(id)[0]!));
+    await wait(TRACE_IDLE_MS);
+    expect(texts(r.root)).toContain(OPEN_TIP);
+    const c = controls(r.root);
+    expect(c.props.scrollEnabled).toBe(true);
+    expect(flat(c.props.style).flexShrink).toBe(1);
+    expect(c.findAll((n) => n.props.label === 'Next' && typeof n.props.onPress === 'function')).toHaveLength(1);
+    expect(c.findAll((n) => n.props.label === 'Skip' && typeof n.props.onPress === 'function')).toHaveLength(1);
+    expect(screenTexts(c)).toContain(OPEN_TIP);
+    // The canvas gives up height only down to its floor (wireframe decision 4); then the controls scroll.
+    expect(flat(slot(r.root).props.style).minHeight).toBe(TRACE_CANVAS_MIN);
+    // The controls scroll to their end (Next) when they lay out short, and when their content grows.
+    await layOut(c, 100);
+    expect(scrolls).toEqual([{ id: 'trace-stroke-controls', top: CONTROLS_SCROLL_HEIGHT }]);
+    await act(async () => {
+      (c.props.onContentSizeChange as (w: number, h: number) => void)(300, 400);
+    });
+    expect(scrolls).toHaveLength(2);
+    // The live region is the same node all along (the scroll container never remounts it).
+    expect(liveLine(r.root)).toBe(regionBefore);
+
+    // Next: a column that never shrinks again, scrolled back to the top.
+    await press(r.root, 'Next');
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
+    expect(flat(slot(r.root).props.style).minHeight).toBe(0);
+    expect(scrolls).toEqual([
+      { id: 'trace-stroke-controls', top: CONTROLS_SCROLL_HEIGHT },
+      { id: 'trace-stroke-controls', top: CONTROLS_SCROLL_HEIGHT },
+      { id: 'trace-stroke-controls', top: 0 },
+    ]);
+    await layOut(controls(r.root), 100);
+    expect(scrolls).toHaveLength(3);
+    expect(liveLine(r.root)).toBe(regionBefore);
+  });
+
+  it('side layout: the prompt beside the canvas gives up its height before the controls do', async () => {
+    const r = await play(scopeOf('jamo:giyeok'), undefined, { width: 568, height: 320 });
+    const promptScroll = r.root.find((n) => n.type === ScrollView && n.props.testID === 'trace-stroke-prompt-scroll');
+    expect(flat(promptScroll.props.style).flexShrink).toBe(GIVES_WAY_FIRST);
+    await drawGiyeokBackwards(r);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(1);
+    expect(GIVES_WAY_FIRST).toBeGreaterThanOrEqual(1000);
+  });
+
+  it('a clean pass and a miss do not let them shrink: only a pass with Next does', async () => {
+    const r = await play(scopeOf('jamo:giyeok'), undefined, { width: 320, height: 568 });
+    await draw(r.root, [{ x: 170, y: 170 }, { x: 190, y: 190 }]);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(RETRY_LINE);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
+    await press(r.root, 'Clear');
+    await draw(r.root, strokesOf('jamo:giyeok')[0]!);
+    await wait(TRACE_IDLE_MS);
+    expect(answers).toEqual([[0, false], [0, true]]);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
+  });
+
+  it('Clear during a tip: a column that never shrinks again, back at the top; Done is back, the check open again', async () => {
+    const r = await play(scopeOf('jamo:giyeok'), undefined, { width: 320, height: 568 });
+    await drawGiyeokBackwards(r);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(1);
+    await press(r.root, 'Clear');
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
+    expect(scrolls).toEqual([{ id: 'trace-stroke-controls', top: 0 }]);
+    expect(button(r.root, 'Done')).toBeDefined();
   });
 });

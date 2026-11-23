@@ -24,6 +24,9 @@ const coaches = (c: TraceWordCoaching | null): c is TraceWordCoaching =>
  * Hoya's line. A pass with an order or direction slip gets Trace Stroke's coaching line (it
  * never fails the block); a clean block pass says the block is done; the last block says the
  * word is whole. A unit that did not pass gets the retry line, never a "wrong".
+ *
+ * AMENDMENTS-TRACE-IDLE TI-3b (OD-TI6): a tip on the last letter or block of the word is the line
+ * until Next (which drops the coaching); the word-done line follows.
  */
 export function traceWordMessage(phase: TraceWordPhase, mode: TraceWordMode, coaching: TraceWordCoaching | null, copy: TraceWordCopy): string {
   switch (phase) {
@@ -34,6 +37,7 @@ export function traceWordMessage(phase: TraceWordPhase, mode: TraceWordMode, coa
     case 'blockDone':
       return coaches(coaching) ? passMessage(coaching.orderCorrect, coaching.directionNudge, copy.trace) : copy.traceWord.blockDone;
     case 'wordDone':
+      return coaches(coaching) ? passMessage(coaching.orderCorrect, coaching.directionNudge, copy.trace) : copy.traceWord.wordDone;
     case 'finished':
       return copy.traceWord.wordDone;
     default:
@@ -44,9 +48,18 @@ export function traceWordMessage(phase: TraceWordPhase, mode: TraceWordMode, coa
 /**
  * AMENDMENTS-TRACE-IDLE §3.4 (TI-3): a letter or block pass whose line is a coaching tip waits for
  * Next, so the tip can be read; a clean pass and the word-done view move on by themselves.
+ * TI-3b (OD-TI6): the last letter or block of the word too; the word-done view follows Next.
  */
 export function traceWordWaitsForNext(phase: TraceWordPhase, coaching: TraceWordCoaching | null): boolean {
-  return (phase === 'letterDone' || phase === 'blockDone') && coaches(coaching);
+  return (phase === 'letterDone' || phase === 'blockDone' || phase === 'wordDone') && coaches(coaching);
+}
+
+/**
+ * The word-done view (the strip shows the whole word traced, with the word-done line): the word is
+ * whole and no tip on its last unit is still waiting for Next (TI-3b, OD-TI6).
+ */
+export function traceWordShowsWord(phase: TraceWordPhase, coaching: TraceWordCoaching | null): boolean {
+  return phase === 'wordDone' && !coaches(coaching);
 }
 
 export function traceWordTone(phase: TraceWordPhase): TraceWordTone {

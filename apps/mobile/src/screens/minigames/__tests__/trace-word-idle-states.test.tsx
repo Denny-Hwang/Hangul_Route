@@ -1,17 +1,21 @@
 import { colors } from '@hangul-route/design-system';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactNode } from 'react';
+import { ScrollView } from 'react-native';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { Path } from 'react-native-svg';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { TRACE_IDLE_MS } from '../../../logic/trace-evaluator';
+import { TRACE_CANVAS_MIN } from '../../../logic/trace-layout';
 import { TRACE_KEEP_GOING_MS } from '../../../logic/trace-ready';
 import { BLOCK_VIEWBOX, placeBlockStrokes, type PlacedBlock } from '../../../logic/trace-word/block-strokes';
+import { TRACE_WORD_PAIR_MIN } from '../../../logic/trace-word/view';
 import { createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
 import { render, screenTexts, unmount } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
+import { GIVES_WAY_FIRST, TIP_AFTER_FOCUS_MS } from '../TraceControls';
 import { TraceWordGame } from '../TraceWordGame';
 
 /**
@@ -19,6 +23,10 @@ import { TraceWordGame } from '../TraceWordGame';
  * scores only a finished letter or block), the keep-going line (§3.2), a miss keeps the ink with no `RETRY_MS`
  * wipe (§3.3), a pass with a tip waits for Next (§3.4). Design: `design/wireframes/minigame/families.md`
  * ("Trace Stroke states": "TI-3 applies the same states to Trace a Word").
+ *
+ * TI-3b (owner decisions 2026-11-23, §10): a tip on the last letter or block of a word waits for Next too and the
+ * word-done line follows (OD-TI6); while Next shows, the controls under the canvas scroll (OD-TI7); a tip is
+ * announced once (the live region carries it, Next has no hint repeating it).
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -82,16 +90,34 @@ const LETTER_IDLE = copy.traceWord.letterIdle;
 const KEEP_GOING = copy.trace.keepGoing;
 const RETRY = copy.trace.retry.start;
 const ORDER_TIP = copy.trace.pass.order;
+const WORD_DONE = copy.traceWord.wordDone;
+/** The word-done view's pause before the next word (`WORD_DONE_MS`). */
+const WORD_DONE_MS = 1_600;
+/** The traced word drawn small in a done chip (`CHIP_INK_WIDTH`). */
+const CHIP_INK_WIDTH = 14;
+/** The content height the controls' scroll node reports (react-test-renderer has no layout). */
+const CONTROLS_SCROLL_HEIGHT = 900;
 
-/** Every host node's focus() call, by the node's accessible name (react-test-renderer has no DOM). */
+/** Every host node's focus() and blur() call, by the node's accessible name (react-test-renderer has no DOM). */
 const focused: string[] = [];
-const nodeMock = (element: { props: Record<string, unknown> }): object => ({
-  focus: () => void focused.push(String(element.props['aria-label'] ?? element.props.role ?? '')),
-  addEventListener: () => undefined,
-  removeEventListener: () => undefined,
-  nodeType: 1,
-  getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }),
-});
+const blurred: string[] = [];
+/** Every scroll of a host node, by its test id: a ScrollView's scrollToEnd lands here on the web. */
+const scrolls: Array<{ id: string; top: number }> = [];
+/** Every host node made, by its test id: a live region made twice would be a new region (its first line unsaid). */
+const made: string[] = [];
+const nodeMock = (element: { props: Record<string, unknown> }): object => {
+  made.push(String(element.props['data-testid'] ?? ''));
+  return {
+    focus: () => void focused.push(String(element.props['aria-label'] ?? element.props.role ?? '')),
+    blur: () => void blurred.push(String(element.props['aria-label'] ?? element.props.role ?? '')),
+    scroll: ({ top }: { top: number }) => void scrolls.push({ id: String(element.props['data-testid'] ?? ''), top }),
+    scrollHeight: CONTROLS_SCROLL_HEIGHT,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    nodeType: 1,
+    getBoundingClientRect: () => ({ width: 0, height: 0, top: 0, left: 0 }),
+  };
+};
 
 const answers: Array<[string | number, boolean]> = [];
 let completed = 0;
@@ -108,6 +134,9 @@ beforeEach(() => {
   answers.length = 0;
   completed = 0;
   focused.length = 0;
+  blurred.length = 0;
+  scrolls.length = 0;
+  made.length = 0;
   announce.calls.length = 0;
 });
 
@@ -368,7 +397,8 @@ describe('Trace a Word: a tip waits for Next (§3.4)', () => {
     expect(button(r.root, 'Done')).toBeUndefined();
     const next = button(r.root, 'Next');
     expect(next).toBeDefined();
-    expect(next!.props.accessibilityHint).toBe(ORDER_TIP);
+    // TI-3b: the live region carries the tip; Next has no hint repeating it.
+    expect(next!.props.accessibilityHint).toBeUndefined();
     expect(focused).toContain('Next');
     await wait(10_000);
     expect(canvasLabel(r.root)).toContain('letter 1 of 2');
@@ -396,7 +426,7 @@ describe('Trace a Word: a tip waits for Next (§3.4)', () => {
     expect(button(r.root, 'Next')!.props.size).toBe(expected);
   });
 
-  it('block mode, a two-block word: a block pass with a tip waits for Next; the last block\'s pass shows the word and moves on', async () => {
+  it('block mode, a two-block word: a block pass with a tip waits for Next; a clean last block shows the word and moves on', async () => {
     const r = await play(scopeOf('바바', 'block'));
     await drawAll(r.root, [...A, ...BIEUP]);
     await wait(TRACE_IDLE_MS);
@@ -405,11 +435,249 @@ describe('Trace a Word: a tip waits for Next (§3.4)', () => {
     expect(canvasLabel(r.root)).toContain('block 1 of 2');
     await press(r.root, 'Next');
     expect(canvasLabel(r.root)).toContain('block 2 of 2');
-    await drawAll(r.root, [...A, ...BIEUP]);
+    await drawAll(r.root, [...BIEUP, ...A]);
     await wait(TRACE_IDLE_MS);
     expect(answers).toEqual([[0, true]]);
+    expect(texts(r.root)).toContain(WORD_DONE);
     expect(button(r.root, 'Next')).toBeUndefined();
-    await wait(1_600);
+    await wait(WORD_DONE_MS);
     expect(completed).toBe(1);
+  });
+});
+
+/** Two one-block words in one step, so the word after the word-done view can be told apart by its heading. */
+const twoWords = (mode: 'block' | 'letter'): MinigameScope => ({
+  kind: 'trace-word',
+  rounds: 2,
+  traceWord: {
+    rounds: [
+      { id: 'w1', word: { ko: '바', romanization: 'ba', en: 'first' }, mode },
+      { id: 'w2', word: { ko: '바', romanization: 'ba', en: 'second' }, mode },
+    ],
+  },
+});
+/** The word heading's accessible name (it names the word's English gloss). */
+const heading = (root: ReactTestInstance): string =>
+  String(
+    root.findAll((n) => typeof n.type !== 'string' && n.props.accessibilityRole === 'header' && typeof n.props.accessibilityLabel === 'string')[0]!
+      .props.accessibilityLabel,
+  );
+/** The learner's strokes drawn small in the strip's done chips: only the word-done view shows them. */
+const chipInk = (root: ReactTestInstance): number => root.findAll((n) => n.type === Path && n.props.strokeWidth === CHIP_INK_WIDTH).length;
+
+describe('Trace a Word: a tip on the last letter or block also waits for Next (TI-3b, OD-TI6)', () => {
+  it('block mode: the last block passes with the order tip; Next, focused; no word-done line and no advance; Next → the word-done line, then the next word', async () => {
+    const r = await play(twoWords('block'));
+    expect(heading(r.root)).toContain('first');
+    await drawAll(r.root, [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS);
+    // The pass is recorded at once; the tip waits for Next.
+    expect(answers).toEqual([[0, true]]);
+    expect(texts(r.root)).toContain(ORDER_TIP);
+    expect(texts(r.root)).not.toContain(WORD_DONE);
+    expect(button(r.root, 'Next')).toBeDefined();
+    expect(button(r.root, 'Done')).toBeUndefined();
+    expect(focused).toContain('Next');
+    // The strip shows the word traced only with the word-done line.
+    expect(chipInk(r.root)).toBe(0);
+    expect(canvasBorder(r.root)).toBe(colors.feedback.success);
+    await wait(10_000);
+    expect(heading(r.root)).toContain('first');
+    expect(texts(r.root)).toContain(ORDER_TIP);
+    // OD-TI5 (a recorded departure): Clear stays off while Next shows in Trace a Word.
+    expect(button(r.root, 'Clear')!.props.disabled).toBe(true);
+
+    focused.length = 0;
+    await press(r.root, 'Next');
+    expect(texts(r.root)).toContain(WORD_DONE);
+    expect(texts(r.root)).not.toContain(ORDER_TIP);
+    expect(button(r.root, 'Next')).toBeUndefined();
+    expect(chipInk(r.root)).toBe(BIEUP.length + A.length);
+    // Next is gone: focus goes to the word's heading, not lost.
+    expect(focused.some((f) => f.startsWith('Trace the word'))).toBe(true);
+    await wait(WORD_DONE_MS - 10);
+    expect(heading(r.root)).toContain('first');
+    await wait(10);
+    expect(heading(r.root)).toContain('second');
+    // The heading keeps its node from word to word: it is blurred before each focus, so the second is a real focus
+    // move and the next word is said (the web says nothing for a focus() on the focused node).
+    expect(focused.filter((f) => f.startsWith('Trace the word'))).toHaveLength(2);
+    expect(blurred.filter((f) => f.startsWith('Trace the word'))).toHaveLength(2);
+    expect(texts(r.root)).toContain(BLOCK_IDLE);
+    expect(chipInk(r.root)).toBe(0);
+    // One answer for the first word: the tip and Next record nothing more.
+    expect(answers).toEqual([[0, true]]);
+  });
+
+  it('letter mode: a tip on the last letter of the word waits for Next; the word-done line follows; the last word then completes the step', async () => {
+    const r = await play(scopeOf('바', 'letter'));
+    await drawAll(r.root, BIEUP);
+    await wait(TRACE_IDLE_MS + 1_100);
+    expect(canvasLabel(r.root)).toContain('letter 2 of 2');
+    await drawAll(r.root, [...A].reverse());
+    await wait(TRACE_IDLE_MS);
+    expect(answers).toEqual([[0, true]]);
+    expect(texts(r.root)).toContain(ORDER_TIP);
+    expect(texts(r.root)).not.toContain(WORD_DONE);
+    expect(button(r.root, 'Next')).toBeDefined();
+    await wait(10_000);
+    expect(completed).toBe(0);
+
+    await press(r.root, 'Next');
+    expect(texts(r.root)).toContain(WORD_DONE);
+    await wait(WORD_DONE_MS - 10);
+    expect(completed).toBe(0);
+    await wait(10);
+    expect(completed).toBe(1);
+  });
+
+  it('Skip while the last tip shows ends the step; the word\'s answer is already recorded', async () => {
+    const r = await play(scopeOf('바', 'block'));
+    await drawAll(r.root, [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS);
+    expect(button(r.root, 'Next')).toBeDefined();
+    await press(r.root, copy.skip.cta);
+    expect(completed).toBe(1);
+    expect(answers).toEqual([[0, true]]);
+    await wait(10_000);
+    expect(completed).toBe(1);
+  });
+});
+
+describe('Trace a Word: a tip is announced once, after Next takes focus (TI-3b)', () => {
+  const region = (root: ReactTestInstance): ReactTestInstance =>
+    root.find((n) => typeof n.type === 'string' && n.props['data-testid'] === 'trace-word-live-line');
+
+  it.each([
+    ['a letter tip', 'letter' as const],
+    ['the last block\'s tip', 'block' as const],
+  ])('%s: Next takes focus first; then the live region carries it and VoiceOver is told, once; Next has no hint', async (_name, mode) => {
+    const r = await play(scopeOf('바', mode));
+    await drawAll(r.root, mode === 'letter' ? [...BIEUP].reverse() : [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS);
+    // The tip shows at once, outside the region, and Next has focus: the focus move is said first.
+    expect(texts(r.root)).toContain(ORDER_TIP);
+    expect(focused).toContain('Next');
+    expect(screenTexts(region(r.root))).toEqual([]);
+    expect(announce.calls).toEqual([]);
+    await wait(TIP_AFTER_FOCUS_MS);
+    expect(screenTexts(region(r.root))).toEqual([ORDER_TIP]);
+    // iOS has no live regions: VoiceOver is told the tip once (a no-op elsewhere).
+    expect(announce.calls).toEqual([ORDER_TIP]);
+    expect(button(r.root, 'Next')!.props.accessibilityHint).toBeUndefined();
+    // Once on screen and to a screen reader: not again as a hint.
+    expect(texts(r.root).filter((t) => t === ORDER_TIP)).toHaveLength(1);
+    await wait(10_000);
+    expect(announce.calls).toEqual([ORDER_TIP]);
+    // The live region is the one made at mount: it was never made again, so the tip inserted into it is said.
+    expect(made.filter((id) => id === 'trace-word-live-line')).toHaveLength(1);
+  });
+
+  it('Next on the last tip: the word-done line goes into the region at once, after focus moves to the heading', async () => {
+    const r = await play(scopeOf('바', 'block'));
+    await drawAll(r.root, [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS + TIP_AFTER_FOCUS_MS);
+    focused.length = 0;
+    await press(r.root, 'Next');
+    expect(focused.some((f) => f.startsWith('Trace the word'))).toBe(true);
+    expect(screenTexts(region(r.root))).toEqual([WORD_DONE]);
+  });
+
+  it('a clean pass tells VoiceOver nothing extra; its line is in the region at once', async () => {
+    const r = await play(scopeOf('바', 'letter'));
+    await drawAll(r.root, BIEUP);
+    await wait(TRACE_IDLE_MS);
+    expect(screenTexts(region(r.root))).toEqual([copy.trace.pass.clean]);
+    expect(announce.calls).toEqual([]);
+  });
+});
+
+describe('Trace a Word: the controls under the canvas scroll while Next shows (TI-3b, OD-TI7)', () => {
+  const controls = (root: ReactTestInstance): ReactTestInstance =>
+    root.find((n) => n.type === ScrollView && n.props.testID === 'trace-word-controls');
+  const flat = (style: unknown): Record<string, unknown> =>
+    Object.assign({}, ...[style].flat(Infinity as 1).filter((s): s is object => typeof s === 'object' && s !== null));
+  /** The canvas's place in the column: the slot, or the row of the slot and the helpers beside it on a short phone. */
+  const canvasRow = (root: ReactTestInstance): ReactTestInstance =>
+    root.findAll((n) => typeof n.type !== 'string' && n.props.testID === 'trace-word-canvas-row')[0] ??
+    root.find((n) => typeof n.type !== 'string' && n.props.testID === 'trace-word-canvas-slot');
+  const liveLine = (root: ReactTestInstance): ReactTestInstance =>
+    root.find((n) => typeof n.type === 'string' && n.props['data-testid'] === 'trace-word-live-line');
+  const layOut = async (node: ReactTestInstance, height: number): Promise<void> => {
+    await act(async () => {
+      (node.props.onLayout as (e: unknown) => void)({ nativeEvent: { layout: { x: 0, y: 0, width: 300, height } } });
+    });
+  };
+
+  it.each([
+    ['roomy', { width: 390, height: 760 }],
+    ['compact', { width: 320, height: 568 }],
+    ['compact, helpers beside the canvas', { width: 320, height: 480 }],
+    ['side', { width: 568, height: 320 }],
+  ])('%s: a column that never shrinks while drawing; a pass with a tip lets them shrink and scroll to Next, Next and Skip inside', async (_name, size) => {
+    const r = await play(scopeOf('바', 'letter'), size);
+    const regionBefore = liveLine(r.root);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
+    expect(flat(canvasRow(r.root).props.style).minHeight).toBe(0);
+    // Drawing: a layout of the controls scrolls nothing.
+    await layOut(controls(r.root), 100);
+    expect(scrolls).toEqual([]);
+
+    await drawAll(r.root, [...BIEUP].reverse());
+    await wait(TRACE_IDLE_MS);
+    const c = controls(r.root);
+    expect(c.props.scrollEnabled).toBe(true);
+    expect(flat(c.props.style).flexShrink).toBe(1);
+    expect(c.findAll((n) => n.props.label === 'Next' && typeof n.props.onPress === 'function')).toHaveLength(1);
+    expect(c.findAll((n) => n.props.label === copy.skip.cta && typeof n.props.onPress === 'function')).toHaveLength(1);
+    expect(screenTexts(c)).toContain(ORDER_TIP);
+    // The canvas gives up height only down to its floor (wireframe decision 4); then the controls scroll.
+    expect(flat(canvasRow(r.root).props.style).minHeight).toBe(TRACE_CANVAS_MIN);
+    // The controls scroll to their end (Next) when they lay out short, and when their content grows.
+    await layOut(c, 100);
+    expect(scrolls).toEqual([{ id: 'trace-word-controls', top: CONTROLS_SCROLL_HEIGHT }]);
+    await act(async () => {
+      (c.props.onContentSizeChange as (w: number, h: number) => void)(300, 400);
+    });
+    expect(scrolls).toHaveLength(2);
+    // The live region is the same node all along (the scroll container never remounts it).
+    expect(liveLine(r.root)).toBe(regionBefore);
+
+    // Next: a column that never shrinks again, scrolled back to the top.
+    await press(r.root, 'Next');
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
+    expect(flat(canvasRow(r.root).props.style).minHeight).toBe(0);
+    expect(scrolls[2]).toEqual({ id: 'trace-word-controls', top: 0 });
+    await layOut(controls(r.root), 100);
+    expect(scrolls).toHaveLength(3);
+    expect(liveLine(r.root)).toBe(regionBefore);
+  });
+
+  it('two blocks side by side on a tablet keep their pair size while the controls scroll', async () => {
+    const r = await play(scopeOf('바바', 'block'), { width: 820, height: 1000 });
+    expect(r.root.findAll((n) => typeof n.type !== 'string' && n.props.testID === 'trace-word-canvas-waiting')).toHaveLength(1);
+    await drawAll(r.root, [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS);
+    expect(button(r.root, 'Next')).toBeDefined();
+    expect(flat(canvasRow(r.root).props.style).minHeight).toBe(TRACE_WORD_PAIR_MIN);
+  });
+
+  it('side layout: the word beside the canvas gives up its height before the controls do', async () => {
+    const r = await play(scopeOf('바', 'letter'), { width: 568, height: 320 });
+    const wordScroll = r.root.find((n) => n.type === ScrollView && n.props.testID === 'trace-word-side-scroll');
+    expect(flat(wordScroll.props.style).flexShrink).toBe(GIVES_WAY_FIRST);
+    await drawAll(r.root, [...BIEUP].reverse());
+    await wait(TRACE_IDLE_MS);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(1);
+  });
+
+  it('the last unit\'s tip lets them scroll too; the word-done line after Next does not', async () => {
+    const r = await play(scopeOf('바', 'block'), { width: 320, height: 568 });
+    await drawAll(r.root, [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(1);
+    await press(r.root, 'Next');
+    expect(texts(r.root)).toContain(WORD_DONE);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
   });
 });
