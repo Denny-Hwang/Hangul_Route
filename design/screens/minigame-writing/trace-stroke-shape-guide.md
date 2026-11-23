@@ -18,7 +18,7 @@ Kept in its own files so it does not collide with the TRACE-IDLE design pass (TI
 | Caption | none | **Shape guide** in the Hoya strip, in place of the **idle** line only, while the hint is up; a miss or pass line always wins (wireframe §4) |
 | Screen reader | animated: nothing; still: "Stroke order. 2 strokes. 1: down. 2: right. Tap to close." | animated: one label "o, shape guide."; still: "o, shape guide. Tap to close." (romanization through `a11yRomanization`) |
 | Trace a Word | the unit's strokes walked letter by letter; order read letter by letter | the unit's strokes fade in together; "ho, shape guide." (letter mode: the one letter, its own gate and romanization) |
-| Presenter stroke panel | numbered start dots; the dot walk on the stroke build / R | the letter with **no dots**; on the stroke build / R the panel letter hides and the shape reveal fades it in; caption "Letter shape" (OD-SO8; the shots show the earlier "Simplified stroke guide", which a taught letter keeps), no "Shape guide" |
+| Presenter stroke panel | numbered start dots; the dot walk on the stroke build / R | the letter with **no dots**; on the stroke build / R the panel letter hides and the shape reveal fades it in; caption "Letter shape" (OD-SO8; the shots show the earlier "Simplified stroke guide"; a taught letter has no caption, OD-SO8 as corrected 2026-11-23), no "Shape guide" |
 
 Unchanged: the canvas, ink, sizes and modes (the ghost only steps aside while an untaught hint is up); Show me and its sound; Done, Skip, Clear; scoring; the hint's colour.
 

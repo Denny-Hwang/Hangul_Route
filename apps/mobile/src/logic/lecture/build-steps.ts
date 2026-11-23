@@ -225,8 +225,8 @@ export type SlideBody =
       /** A stroke skeleton exists for the guide panel. */
       hasStrokes: boolean;
       /**
-       * Stroke order checked by a person (`reviewedStrokeIds`, §3.6): the panel numbers the strokes, captioned "Simplified
-       * stroke guide"; otherwise it shows the letter's shape, captioned "Letter shape" (AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8).
+       * Stroke order checked by a person (`reviewedStrokeIds`, §3.6): the panel numbers the strokes, with no caption;
+       * otherwise it shows the letter's shape, captioned "Letter shape" (AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8, corrected 2026-11-23).
        */
       strokeReviewed: boolean;
       /** From a trace-stroke step: the stroke guide is the first build (§3.3 rule 2). */

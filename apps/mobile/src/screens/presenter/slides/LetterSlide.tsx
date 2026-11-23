@@ -22,9 +22,9 @@ type LetterBody = Extract<Slide, { kind: 'letter' }>;
  * Letter slide in three columns (design/screens/presenter/slide-letter.md, README D4): the glyph
  * in the presenter font with its romanization; the stroke guide panel (`StrokeHint` at 360 units
  * over the still diagram), captioned "Letter shape" while nobody has checked the letter's stroke
- * order and "Simplified stroke guide" once a person has (AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8);
- * then the speaker row, the letter name and sound hint, and the example word. A build that is not
- * reached keeps its space, so nothing shifts when it appears.
+ * order and with no caption once a person has (AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8 as corrected
+ * 2026-11-23, §8; F-TCH-004 §3.6); then the speaker row, the letter name and sound hint, and the
+ * example word. A build that is not reached keeps its space, so nothing shifts when it appears.
  *
  * AMENDMENTS-AUDIO-CLIPS JV-A1 / JV-A4: the main speaker says an initial's or a vowel's name (nieun),
  * and a consonant whose sound differs has a second speaker for its sound on a vowel (na = ㄴ + ㅏ),
@@ -80,10 +80,10 @@ export function LetterSlide({
             orderTaught={slide.strokeReviewed}
             romanization={slide.romanization}
           />
-          {/* [SO] OD-SO8: an untaught letter's panel shows its shape only; a taught one keeps the stroke guide's caption. */}
-          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary }}>
-            {slide.strokeReviewed ? m.slide.strokeCaption : m.slide.shapeCaption}
-          </Text>
+          {/* [SO] OD-SO8 (corrected 2026-11-23): an untaught letter's panel shows its shape only, captioned "Letter shape"; a taught one has no caption. */}
+          {!slide.strokeReviewed ? (
+            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary }}>{m.slide.shapeCaption}</Text>
+          ) : null}
         </View>
       ) : null}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>

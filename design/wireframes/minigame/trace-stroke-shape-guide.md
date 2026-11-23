@@ -113,7 +113,7 @@ No new screens. Entry: Trace Stroke (Stage 1 q2, q12), Trace a Word (Stage 7), p
 | `learner.minigame.trace.shapeGuide` | Shape guide |
 | `a11y.minigame.strokeOrder.shape` | `${romanization}, shape guide.` |
 
-`a11y.minigame.strokeOrder.shapeGuide` of spec §3.6 is not needed by this design (one label per hint, above); the spec now marks it dropped. The presenter keeps `strokeCaption` ("Simplified stroke guide") and shows no "Shape guide". Since OD-SO8 (2026-11-23, row SO-1b) an untaught letter's panel is captioned `learner.presenter.slide.shapeCaption` ("Letter shape"), a taught one `strokeCaption`.
+`a11y.minigame.strokeOrder.shapeGuide` of spec §3.6 is not needed by this design (one label per hint, above); the spec now marks it dropped. The presenter keeps `strokeCaption` ("Simplified stroke guide") and shows no "Shape guide". Since OD-SO8 (2026-11-23, row SO-1b) an untaught letter's panel is captioned `learner.presenter.slide.shapeCaption` ("Letter shape"); a taught one has no caption (OD-SO8 corrected 2026-11-23 to match the spec's §8 and F-TCH-004 §3.6).
 
 ## 10. States
 
