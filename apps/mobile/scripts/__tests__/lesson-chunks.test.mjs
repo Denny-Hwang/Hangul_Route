@@ -736,16 +736,16 @@ describe('precacheReport and its budget lines', () => {
     // [TI] AMENDMENTS-TRACE-IDLE TI-2 (keep going, ink kept after a miss, Next after a tip) measures 4,575,345 B (release build, CI=1): 4,579,300 B.
     // [DP] AMENDMENTS-DURABLE-PROGRESS DP-1c (the boot and the progress read failed screen) on top of TI-2 measures 4,581,661 B (release build, CI=1): 4,585,600 B.
     // [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-1 (shape guide for unchecked letters) on top of DP-2 and TI-3 measures 4,587,780 B (release build, CI=1): 4,591,800 B.
-    // [DP] AMENDMENTS-DURABLE-PROGRESS DP-1d (the RecoverRecord sheet behind the grown-up gate) on top of SO-1 measures 4,594,076 B (release build, CI=1): 4,598,100 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_598_100);
+    // [DP] AMENDMENTS-DURABLE-PROGRESS DP-1d (the RecoverRecord sheet behind the grown-up gate) on top of SO-1b (4,588,346 B) measures 4,594,642 B (release build, CI=1): 4,598,600 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_598_600);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
     // FN-7 took about 400 KB out: the line is under every measurement before it.
     for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(150_000);
-    for (const measured of [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_594_076]) {
+    for (const measured of [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_588_346, 4_594_642]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_594_076).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_594_642).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });
