@@ -34,6 +34,7 @@ import { TRACE_KEEP_GOING_MS, isLetterFinished, wouldPass } from '../../logic/tr
 import { failMessage, passMessage, traceCoaching, type DirectionNudge } from '../../logic/trace-copy';
 import { strokeOrderTaught } from '../../logic/stroke-order-taught';
 import {
+  TRACE_CANVAS_MIN,
   traceCanvasMax,
   traceCanvasSize,
   traceLayoutMode,
@@ -53,7 +54,7 @@ import { playJamo, stop } from '../../platform/audio';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { TraceControls } from './TraceControls';
+import { GIVES_WAY_FIRST, TraceControls, useTipAfterFocus } from './TraceControls';
 
 interface Props {
   scope: MinigameScope;
@@ -216,16 +217,11 @@ export function TraceStrokeGame({
     }
   }, [roundIdx, round, soundReset, pacing]);
 
-  // §3.4: a pass that carries a tip waits for Next, in Done's place; Next takes focus when it appears. The tip is said
-  // once (TI-3b): the live region carries it and Next has no hint repeating it; iOS has no live regions, so VoiceOver
-  // is told here, after focus moves (a no-op elsewhere).
+  // §3.4: a pass that carries a tip waits for Next, in Done's place; Next takes focus when it appears. TI-3b: the tip is
+  // said once, after the focus move (the live region carries it; Next has no hint).
   const showNext = feedback === 'pass' && passHasTip(orderCorrect, directionNudge);
   const tip = showNext ? passMessage(orderCorrect, directionNudge, copy.trace) : null;
-  useEffect(() => {
-    if (tip === null) return;
-    focusNode(nextRef.current);
-    announceForScreenReader(tip);
-  }, [tip]);
+  const tipSaid = useTipAfterFocus(tip, () => focusNode(nextRef.current));
 
   if (!round) {
     return (
@@ -505,7 +501,7 @@ export function TraceStrokeGame({
     ) : null;
 
   // flex:1 sizes the slot from what the controls leave, so its own content never feeds back into it. TI-3b (OD-TI7):
-  // while the controls scroll, the canvas keeps its size; they give up the room, not it.
+  // while Next shows, the canvas gives up height down to its floor (wireframe decision 4), then the controls scroll.
   const canvasSlot = (
     <View
       testID="trace-stroke-canvas-slot"
@@ -513,7 +509,7 @@ export function TraceStrokeGame({
         const { width, height } = e.nativeEvent.layout;
         setSlot((prev) => (prev && prev.width === width && prev.height === height ? prev : { width, height }));
       }}
-      style={{ flex: 1, minHeight: showNext ? canvasSize : 0, minWidth: 0, alignItems: 'center', justifyContent: 'center' }}
+      style={{ flex: 1, minHeight: showNext ? TRACE_CANVAS_MIN : 0, minWidth: 0, alignItems: 'center', justifyContent: 'center' }}
     >
       {canvas}
     </View>
@@ -590,8 +586,9 @@ export function TraceStrokeGame({
         message={feedbackMessage}
         lines={feedbackLines}
         showHoya={stacked}
-        // TI-0b wireframe decision 5: the idle line is not announced (it comes back after every stroke).
-        live={feedbackMessage !== copy.trace.idle}
+        // TI-0b wireframe decision 5: the idle line is not announced (it comes back after every stroke). A tip enters
+        // the region once Next has focus (TI-3b).
+        live={feedbackMessage !== copy.trace.idle && (tip === null || tipSaid)}
       />
       {actions}
     </TraceControls>
@@ -613,7 +610,9 @@ export function TraceStrokeGame({
             {canvasSlot}
             <View style={{ width: traceSidePanelWidth(box.width), justifyContent: 'center', gap: spacing.sm }}>
               {/* The prompt scrolls if a status row makes the column too tall: Done and Skip stay on screen. */}
-              <ScrollView style={{ flexGrow: 0, flexShrink: 1 }}>{prompt}</ScrollView>
+              <ScrollView testID="trace-stroke-prompt-scroll" style={{ flexGrow: 0, flexShrink: GIVES_WAY_FIRST }}>
+                {prompt}
+              </ScrollView>
               {controls}
             </View>
           </View>

@@ -8,11 +8,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import type { MinigameScope } from '../../../logic/minigame-config';
 import { TRACE_IDLE_MS } from '../../../logic/trace-evaluator';
+import { TRACE_CANVAS_MIN } from '../../../logic/trace-layout';
 import { TRACE_KEEP_GOING_MS } from '../../../logic/trace-ready';
 import { BLOCK_VIEWBOX, placeBlockStrokes, type PlacedBlock } from '../../../logic/trace-word/block-strokes';
+import { TRACE_WORD_PAIR_MIN } from '../../../logic/trace-word/view';
 import { createAudioRig, type AudioRig } from '../../../test-support/audio-rig';
 import { render, screenTexts, unmount } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
+import { GIVES_WAY_FIRST, TIP_AFTER_FOCUS_MS } from '../TraceControls';
 import { TraceWordGame } from '../TraceWordGame';
 
 /**
@@ -95,8 +98,9 @@ const CHIP_INK_WIDTH = 14;
 /** The content height the controls' scroll node reports (react-test-renderer has no layout). */
 const CONTROLS_SCROLL_HEIGHT = 900;
 
-/** Every host node's focus() call, by the node's accessible name (react-test-renderer has no DOM). */
+/** Every host node's focus() and blur() call, by the node's accessible name (react-test-renderer has no DOM). */
 const focused: string[] = [];
+const blurred: string[] = [];
 /** Every scroll of a host node, by its test id: a ScrollView's scrollToEnd lands here on the web. */
 const scrolls: Array<{ id: string; top: number }> = [];
 /** Every host node made, by its test id: a live region made twice would be a new region (its first line unsaid). */
@@ -105,6 +109,7 @@ const nodeMock = (element: { props: Record<string, unknown> }): object => {
   made.push(String(element.props['data-testid'] ?? ''));
   return {
     focus: () => void focused.push(String(element.props['aria-label'] ?? element.props.role ?? '')),
+    blur: () => void blurred.push(String(element.props['aria-label'] ?? element.props.role ?? '')),
     scroll: ({ top }: { top: number }) => void scrolls.push({ id: String(element.props['data-testid'] ?? ''), top }),
     scrollHeight: CONTROLS_SCROLL_HEIGHT,
     addEventListener: () => undefined,
@@ -129,6 +134,7 @@ beforeEach(() => {
   answers.length = 0;
   completed = 0;
   focused.length = 0;
+  blurred.length = 0;
   scrolls.length = 0;
   made.length = 0;
   announce.calls.length = 0;
@@ -493,6 +499,10 @@ describe('Trace a Word: a tip on the last letter or block also waits for Next (T
     expect(heading(r.root)).toContain('first');
     await wait(10);
     expect(heading(r.root)).toContain('second');
+    // The heading keeps its node from word to word: it is blurred before each focus, so the second is a real focus
+    // move and the next word is said (the web says nothing for a focus() on the focused node).
+    expect(focused.filter((f) => f.startsWith('Trace the word'))).toHaveLength(2);
+    expect(blurred.filter((f) => f.startsWith('Trace the word'))).toHaveLength(2);
     expect(texts(r.root)).toContain(BLOCK_IDLE);
     expect(chipInk(r.root)).toBe(0);
     // One answer for the first word: the tip and Next record nothing more.
@@ -534,34 +544,50 @@ describe('Trace a Word: a tip on the last letter or block also waits for Next (T
   });
 });
 
-describe('Trace a Word: a tip is announced once (TI-3b)', () => {
+describe('Trace a Word: a tip is announced once, after Next takes focus (TI-3b)', () => {
   const region = (root: ReactTestInstance): ReactTestInstance =>
     root.find((n) => typeof n.type === 'string' && n.props['data-testid'] === 'trace-word-live-line');
 
   it.each([
     ['a letter tip', 'letter' as const],
     ['the last block\'s tip', 'block' as const],
-  ])('%s: the live region carries it, Next has no hint, VoiceOver is told once', async (_name, mode) => {
+  ])('%s: Next takes focus first; then the live region carries it and VoiceOver is told, once; Next has no hint', async (_name, mode) => {
     const r = await play(scopeOf('바', mode));
     await drawAll(r.root, mode === 'letter' ? [...BIEUP].reverse() : [...A, ...BIEUP]);
     await wait(TRACE_IDLE_MS);
+    // The tip shows at once, outside the region, and Next has focus: the focus move is said first.
+    expect(texts(r.root)).toContain(ORDER_TIP);
+    expect(focused).toContain('Next');
+    expect(screenTexts(region(r.root))).toEqual([]);
+    expect(announce.calls).toEqual([]);
+    await wait(TIP_AFTER_FOCUS_MS);
     expect(screenTexts(region(r.root))).toEqual([ORDER_TIP]);
+    // iOS has no live regions: VoiceOver is told the tip once (a no-op elsewhere).
+    expect(announce.calls).toEqual([ORDER_TIP]);
     expect(button(r.root, 'Next')!.props.accessibilityHint).toBeUndefined();
     // Once on screen and to a screen reader: not again as a hint.
     expect(texts(r.root).filter((t) => t === ORDER_TIP)).toHaveLength(1);
-    // iOS has no live regions: VoiceOver is told the tip once (a no-op elsewhere).
-    expect(announce.calls).toEqual([ORDER_TIP]);
     await wait(10_000);
     expect(announce.calls).toEqual([ORDER_TIP]);
     // The live region is the one made at mount: it was never made again, so the tip inserted into it is said.
     expect(made.filter((id) => id === 'trace-word-live-line')).toHaveLength(1);
   });
 
-  it('a clean pass tells VoiceOver nothing extra', async () => {
+  it('Next on the last tip: the word-done line goes into the region at once, after focus moves to the heading', async () => {
+    const r = await play(scopeOf('바', 'block'));
+    await drawAll(r.root, [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS + TIP_AFTER_FOCUS_MS);
+    focused.length = 0;
+    await press(r.root, 'Next');
+    expect(focused.some((f) => f.startsWith('Trace the word'))).toBe(true);
+    expect(screenTexts(region(r.root))).toEqual([WORD_DONE]);
+  });
+
+  it('a clean pass tells VoiceOver nothing extra; its line is in the region at once', async () => {
     const r = await play(scopeOf('바', 'letter'));
     await drawAll(r.root, BIEUP);
     await wait(TRACE_IDLE_MS);
-    expect(texts(r.root)).toContain(copy.trace.pass.clean);
+    expect(screenTexts(region(r.root))).toEqual([copy.trace.pass.clean]);
     expect(announce.calls).toEqual([]);
   });
 });
@@ -588,10 +614,9 @@ describe('Trace a Word: the controls under the canvas scroll while Next shows (T
     ['compact', { width: 320, height: 568 }],
     ['compact, helpers beside the canvas', { width: 320, height: 480 }],
     ['side', { width: 568, height: 320 }],
-  ])('%s: still while drawing; a pass with a tip scrolls them, Next and Skip inside, the canvas keeps its size, a layout scrolls to Next', async (_name, size) => {
+  ])('%s: a column that never shrinks while drawing; a pass with a tip lets them shrink and scroll to Next, Next and Skip inside', async (_name, size) => {
     const r = await play(scopeOf('바', 'letter'), size);
     const regionBefore = liveLine(r.root);
-    expect(controls(r.root).props.scrollEnabled).toBe(false);
     expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
     expect(flat(canvasRow(r.root).props.style).minHeight).toBe(0);
     // Drawing: a layout of the controls scrolls nothing.
@@ -603,14 +628,11 @@ describe('Trace a Word: the controls under the canvas scroll while Next shows (T
     const c = controls(r.root);
     expect(c.props.scrollEnabled).toBe(true);
     expect(flat(c.props.style).flexShrink).toBe(1);
-    // Room for a focus ring the scroll container would clip at its edges; negative margins keep the column's size.
-    expect(flat(c.props.contentContainerStyle).padding).toBeGreaterThan(0);
-    expect(flat(c.props.style).margin).toBe(-(flat(c.props.contentContainerStyle).padding as number));
     expect(c.findAll((n) => n.props.label === 'Next' && typeof n.props.onPress === 'function')).toHaveLength(1);
     expect(c.findAll((n) => n.props.label === copy.skip.cta && typeof n.props.onPress === 'function')).toHaveLength(1);
     expect(screenTexts(c)).toContain(ORDER_TIP);
-    // The canvas does not give up its size to the controls: they scroll instead.
-    expect(flat(canvasRow(r.root).props.style).minHeight).toBe(canvasSize(r.root));
+    // The canvas gives up height only down to its floor (wireframe decision 4); then the controls scroll.
+    expect(flat(canvasRow(r.root).props.style).minHeight).toBe(TRACE_CANVAS_MIN);
     // The controls scroll to their end (Next) when they lay out short, and when their content grows.
     await layOut(c, 100);
     expect(scrolls).toEqual([{ id: 'trace-word-controls', top: CONTROLS_SCROLL_HEIGHT }]);
@@ -621,23 +643,41 @@ describe('Trace a Word: the controls under the canvas scroll while Next shows (T
     // The live region is the same node all along (the scroll container never remounts it).
     expect(liveLine(r.root)).toBe(regionBefore);
 
+    // Next: a column that never shrinks again, scrolled back to the top.
     await press(r.root, 'Next');
-    expect(controls(r.root).props.scrollEnabled).toBe(false);
     expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
     expect(flat(canvasRow(r.root).props.style).minHeight).toBe(0);
+    expect(scrolls[2]).toEqual({ id: 'trace-word-controls', top: 0 });
     await layOut(controls(r.root), 100);
-    expect(scrolls).toHaveLength(2);
+    expect(scrolls).toHaveLength(3);
     expect(liveLine(r.root)).toBe(regionBefore);
   });
 
-  it('the last unit\'s tip scrolls them too; the word-done line after Next does not', async () => {
+  it('two blocks side by side on a tablet keep their pair size while the controls scroll', async () => {
+    const r = await play(scopeOf('바바', 'block'), { width: 820, height: 1000 });
+    expect(r.root.findAll((n) => typeof n.type !== 'string' && n.props.testID === 'trace-word-canvas-waiting')).toHaveLength(1);
+    await drawAll(r.root, [...A, ...BIEUP]);
+    await wait(TRACE_IDLE_MS);
+    expect(button(r.root, 'Next')).toBeDefined();
+    expect(flat(canvasRow(r.root).props.style).minHeight).toBe(TRACE_WORD_PAIR_MIN);
+  });
+
+  it('side layout: the word beside the canvas gives up its height before the controls do', async () => {
+    const r = await play(scopeOf('바', 'letter'), { width: 568, height: 320 });
+    const wordScroll = r.root.find((n) => n.type === ScrollView && n.props.testID === 'trace-word-side-scroll');
+    expect(flat(wordScroll.props.style).flexShrink).toBe(GIVES_WAY_FIRST);
+    await drawAll(r.root, [...BIEUP].reverse());
+    await wait(TRACE_IDLE_MS);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(1);
+  });
+
+  it('the last unit\'s tip lets them scroll too; the word-done line after Next does not', async () => {
     const r = await play(scopeOf('바', 'block'), { width: 320, height: 568 });
     await drawAll(r.root, [...A, ...BIEUP]);
     await wait(TRACE_IDLE_MS);
-    expect(controls(r.root).props.scrollEnabled).toBe(true);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(1);
     await press(r.root, 'Next');
     expect(texts(r.root)).toContain(WORD_DONE);
-    expect(controls(r.root).props.scrollEnabled).toBe(false);
+    expect(flat(controls(r.root).props.style).flexShrink).toBe(0);
   });
 });
-

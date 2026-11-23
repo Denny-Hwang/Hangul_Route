@@ -40,7 +40,7 @@ import { describeStrokeOrder, inkPathD, pointsToPathD } from '../../logic/stroke
 import { TRACE_IDLE_MS, idleOnTouch, type TraceEvaluator } from '../../logic/trace-evaluator';
 import { TRACE_KEEP_GOING_MS } from '../../logic/trace-ready';
 import { NO_TRACE_POINTERS, type CanvasPoint, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
-import { traceCanvasMax, traceLayoutMode, traceScreenWidth, traceSidePanelWidth } from '../../logic/trace-layout';
+import { TRACE_CANVAS_MIN, traceCanvasMax, traceLayoutMode, traceScreenWidth, traceSidePanelWidth } from '../../logic/trace-layout';
 import { BLOCK_VIEWBOX, type PlacedLetter } from '../../logic/trace-word/block-strokes';
 import { createTraceWordGate, scoreTraceUnit, traceWordReady } from '../../logic/trace-word/evaluate';
 import { letterRomanization } from '../../logic/trace-word/letter-romanization';
@@ -57,6 +57,7 @@ import {
 } from '../../logic/trace-word/flow';
 import { buildTraceWordRounds, letterCounts, type TraceWordBlock, type TraceWordPlayRound } from '../../logic/trace-word/rounds';
 import {
+  TRACE_WORD_PAIR_MIN,
   traceWordCanvases,
   traceWordHelperColumn,
   traceWordMessage,
@@ -70,7 +71,7 @@ import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
-import { TraceControls } from './TraceControls';
+import { GIVES_WAY_FIRST, TraceControls, useTipAfterFocus } from './TraceControls';
 
 interface Props {
   scope: MinigameScope;
@@ -120,7 +121,7 @@ const borderOf: Record<Look, string> = {
  * Trace a Word (F-CURR-001 §3.7 item 3, row G-4; wireframe design/wireframes/minigame/trace-word.md,
  * mock design/screens/minigame-writing/trace-word.md): a one- or two-block word traced block by
  * block over a ghost drawn from the jamo stroke data, each letter in its zone of the block. The
- * Trace Stroke frame (canvas sizes, Hoya strip, Done and Skip always on screen, no scrolling)
+ * Trace Stroke frame (canvas sizes, Hoya strip, Done and Skip always on screen; the controls scroll only while Next shows)
  * with a word strip; letter-by-letter mode for a round whose ghost reads poorly at block size.
  * Order and direction coach, never fail; the round scores once, when the word is done.
  *
@@ -280,15 +281,10 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   }, [state.round, state.block]);
 
   // §3.4: a pass with a tip waits for Next, in Done's place (TI-3b: the word's last unit too); Next takes focus when it
-  // appears. The tip is said once: the live region carries it and Next has no hint repeating it; iOS has no live
-  // regions, so VoiceOver is told here, after focus moves (a no-op elsewhere).
+  // appears. TI-3b: the tip is said once, after the focus move (the live region carries it; Next has no hint).
   const showNext = traceWordWaitsForNext(state.phase, coaching);
   const tip = showNext && round ? traceWordMessage(state.phase, round.mode, coaching, copy) : null;
-  useEffect(() => {
-    if (tip === null) return;
-    focusNode(nextRef.current);
-    announceForScreenReader(tip);
-  }, [tip]);
+  const tipSaid = useTipAfterFocus(tip, () => focusNode(nextRef.current));
   // After an advance (Next, or a clean pass's pause) focus goes to the heading once the new unit has rendered
   // (TI-0b wireframe decision 1).
   useEffect(() => {
@@ -404,8 +400,9 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
       })
     : null;
   const size = canvases?.size ?? 0;
-  // TI-3b (OD-TI7): while the controls scroll, the canvas keeps its size; they give up the room, not it.
-  const canvasFloor = showNext ? size : 0;
+  // TI-3b (OD-TI7): while Next shows, the canvas gives up height down to its floor (wireframe decision 4; two blocks
+  // side by side keep theirs), then the controls scroll.
+  const canvasFloor = showNext ? (canvases?.count === 2 ? TRACE_WORD_PAIR_MIN : TRACE_CANVAS_MIN) : 0;
   const toViewBox = ({ x, y }: CanvasPoint): JamoStrokePoint => ({ x: (x * BLOCK_VIEWBOX) / size, y: (y * BLOCK_VIEWBOX) / size });
 
   // One finger draws; a dot or a resting palm leaves no ink (AMENDMENTS-TOUCH 6.8, logic/trace-pointers).
@@ -680,8 +677,9 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
         message={message}
         lines={mode === 'side' ? 3 : 2}
         showHoya={stacked}
-        // TI-0b wireframe decision 5: the idle line is not announced (it comes back after every stroke).
-        live={message !== idleLine}
+        // TI-0b wireframe decision 5: the idle line is not announced (it comes back after every stroke). A tip enters
+        // the region once Next has focus (TI-3b).
+        live={message !== idleLine && (tip === null || tipSaid)}
       />
       {actions}
     </TraceControls>
@@ -701,7 +699,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
             {canvasSlot}
             <View style={{ width: traceSidePanelWidth(box.width), justifyContent: 'center', gap: spacing.sm }}>
               {/* The word scrolls if a status row makes the column too tall: Done and Skip stay on screen. */}
-              <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} contentContainerStyle={{ gap: spacing.sm }}>
+              <ScrollView testID="trace-word-side-scroll" style={{ flexGrow: 0, flexShrink: GIVES_WAY_FIRST }} contentContainerStyle={{ gap: spacing.sm }}>
                 {heading}
                 <View>
                   {strip}
@@ -977,10 +975,15 @@ function liveUnitReady(rounds: readonly TraceWordPlayRound[], state: TraceWordSt
 
 /**
  * Moves focus to a mounted view: the element's own `focus()` on the web, the screen reader's focus on iOS and
- * Android (a view's `focus()` does not move VoiceOver or TalkBack there).
+ * Android (a view's `focus()` does not move VoiceOver or TalkBack there). On the web the node is blurred first: the
+ * heading keeps its node from word to word, and a `focus()` on the focused node is no focus move, so the next word's
+ * heading would go unsaid (TI-3b: Next on the last tip focuses the heading, the next word focuses it again).
  */
 function focusNode(node: View | null): void {
   if (node === null) return;
-  if (Platform.OS === 'web') (node as unknown as { focus?: () => void }).focus?.();
-  else focusForScreenReader(node);
+  if (Platform.OS === 'web') {
+    const el = node as unknown as { blur?: () => void; focus?: () => void };
+    el.blur?.();
+    el.focus?.();
+  } else focusForScreenReader(node);
 }
