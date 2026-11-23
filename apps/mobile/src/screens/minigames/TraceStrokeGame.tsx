@@ -53,6 +53,7 @@ import { playJamo, stop } from '../../platform/audio';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { TraceControls } from './TraceControls';
 
 interface Props {
   scope: MinigameScope;
@@ -78,6 +79,9 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * AMENDMENTS-TRACE-IDLE TI-2 (design: wireframes/minigame/families.md "Trace Stroke states"): a pause on an
  * unfinished letter shows the keep-going line and records nothing; a miss keeps the ink until the next stroke
  * (added to it) or Clear; a pass with a tip waits for Next. Only a clean pass moves on by itself.
+ *
+ * TI-3b (owner decision 2026-11-23, OD-TI7): while a pass with Next shows, the controls under the canvas scroll so Next
+ * stays reachable at 200 % text; the tip is said once (the live region carries it, Next has no hint).
  *
  * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-1 (design: wireframes/minigame/trace-stroke-shape-guide.md): a letter whose
  * stroke order nobody has checked (`strokeOrderTaught` false; every letter until SO-3) gets no order coaching and only
@@ -212,11 +216,16 @@ export function TraceStrokeGame({
     }
   }, [roundIdx, round, soundReset, pacing]);
 
-  // §3.4: a pass that carries a tip waits for Next, in Done's place; Next takes focus when it appears.
+  // §3.4: a pass that carries a tip waits for Next, in Done's place; Next takes focus when it appears. The tip is said
+  // once (TI-3b): the live region carries it and Next has no hint repeating it; iOS has no live regions, so VoiceOver
+  // is told here, after focus moves (a no-op elsewhere).
   const showNext = feedback === 'pass' && passHasTip(orderCorrect, directionNudge);
+  const tip = showNext ? passMessage(orderCorrect, directionNudge, copy.trace) : null;
   useEffect(() => {
-    if (showNext) focusNode(nextRef.current);
-  }, [showNext]);
+    if (tip === null) return;
+    focusNode(nextRef.current);
+    announceForScreenReader(tip);
+  }, [tip]);
 
   if (!round) {
     return (
@@ -495,14 +504,16 @@ export function TraceStrokeGame({
       </GestureDetector>
     ) : null;
 
-  // flex:1 sizes the slot from what the controls leave, so its own content never feeds back into it.
+  // flex:1 sizes the slot from what the controls leave, so its own content never feeds back into it. TI-3b (OD-TI7):
+  // while the controls scroll, the canvas keeps its size; they give up the room, not it.
   const canvasSlot = (
     <View
+      testID="trace-stroke-canvas-slot"
       onLayout={(e: LayoutChangeEvent) => {
         const { width, height } = e.nativeEvent.layout;
         setSlot((prev) => (prev && prev.width === width && prev.height === height ? prev : { width, height }));
       }}
-      style={{ flex: 1, minHeight: 0, minWidth: 0, alignItems: 'center', justifyContent: 'center' }}
+      style={{ flex: 1, minHeight: showNext ? canvasSize : 0, minWidth: 0, alignItems: 'center', justifyContent: 'center' }}
     >
       {canvas}
     </View>
@@ -541,18 +552,10 @@ export function TraceStrokeGame({
   const feedbackTone: HoyaTone = feedback === 'fail' ? 'thinking' : feedback === 'pass' ? 'cheering' : 'idle';
   const feedbackLines = mode === 'side' ? 3 : 2;
 
-  // Next takes Done's slot and size (TI-0b wireframe decision 1), so the button row never moves. It carries the tip
-  // as its hint, so a screen reader that lands on it still hears the tip.
+  // Next takes Done's slot and size (TI-0b wireframe decision 1), so the button row never moves. No hint: the tip is
+  // said once, by the live region (TI-3b).
   const doneButton = showNext ? (
-    <Button
-      label={copy.trace.next.cta}
-      tone="primary"
-      size={stacked ? 'lg' : 'md'}
-      fullWidth
-      accessibilityHint={feedbackMessage}
-      pressableRef={nextRef}
-      onPress={advance}
-    />
+    <Button label={copy.trace.next.cta} tone="primary" size={stacked ? 'lg' : 'md'} fullWidth pressableRef={nextRef} onPress={advance} />
   ) : (
     <Button
       label={copy.trace.done.cta}
@@ -578,8 +581,9 @@ export function TraceStrokeGame({
     </View>
   );
 
+  // TI-3b (OD-TI7): while Next shows, the controls scroll if large text makes them taller than the room left, to Next.
   const controls = (
-    <View style={{ gap: spacing.sm }}>
+    <TraceControls scrolls={showNext} testID="trace-stroke-controls">
       {helpers}
       <TraceFeedback
         tone={feedbackTone}
@@ -590,7 +594,7 @@ export function TraceStrokeGame({
         live={feedbackMessage !== copy.trace.idle}
       />
       {actions}
-    </View>
+    </TraceControls>
   );
 
   return (

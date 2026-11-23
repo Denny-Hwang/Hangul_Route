@@ -60,6 +60,7 @@ import {
   traceWordCanvases,
   traceWordHelperColumn,
   traceWordMessage,
+  traceWordShowsWord,
   traceWordTone,
   traceWordWaitsForNext,
   type TraceWordCoaching,
@@ -69,6 +70,7 @@ import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
+import { TraceControls } from './TraceControls';
 
 interface Props {
   scope: MinigameScope;
@@ -130,6 +132,10 @@ const borderOf: Record<Look, string> = {
  * finished letter (letter mode) or a block whose every letter is finished (block mode); a pause on unfinished ink
  * shows the keep-going line and records nothing; a miss keeps the ink until the next stroke (added to it) or Clear;
  * a letter or block pass with a tip waits for Next. Only a clean pass and the whole word move on by themselves.
+ *
+ * TI-3b (owner decisions 2026-11-23, OD-TI6 and OD-TI7): a tip on the last letter or block of the word waits for Next
+ * too, and the word-done view follows Next; while Next shows, the controls under the canvas scroll so Next stays
+ * reachable at 200 % text; the tip is said once (the live region carries it, Next has no hint).
  */
 export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const textScale = useTypeScale();
@@ -273,11 +279,16 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.round, state.block]);
 
-  // §3.4: a letter or block pass with a tip waits for Next, in Done's place; Next takes focus when it appears.
+  // §3.4: a pass with a tip waits for Next, in Done's place (TI-3b: the word's last unit too); Next takes focus when it
+  // appears. The tip is said once: the live region carries it and Next has no hint repeating it; iOS has no live
+  // regions, so VoiceOver is told here, after focus moves (a no-op elsewhere).
   const showNext = traceWordWaitsForNext(state.phase, coaching);
+  const tip = showNext && round ? traceWordMessage(state.phase, round.mode, coaching, copy) : null;
   useEffect(() => {
-    if (showNext) focusNode(nextRef.current);
-  }, [showNext]);
+    if (tip === null) return;
+    focusNode(nextRef.current);
+    announceForScreenReader(tip);
+  }, [tip]);
   // After an advance (Next, or a clean pass's pause) focus goes to the heading once the new unit has rendered
   // (TI-0b wireframe decision 1).
   useEffect(() => {
@@ -308,6 +319,18 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     focusHeadingRef.current = true;
     apply({ type: 'continue' });
     gateRef.current?.nextRound();
+  };
+
+  // Next. TI-3b (OD-TI6): on the last unit's tip it drops the tip, so the word-done view shows (focus goes to the word's
+  // heading, as Next leaves), and the word moves on after it as a clean last unit does.
+  const onNext = (): void => {
+    if (stateRef.current.phase !== 'wordDone') {
+      advance();
+      return;
+    }
+    setCoaching(null);
+    focusNode(headingRef.current);
+    after(WORD_DONE_MS, advance);
   };
 
   // §3.3: back from the retry look to drawing, the check open again (the caller keeps or clears the ink).
@@ -381,6 +404,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
       })
     : null;
   const size = canvases?.size ?? 0;
+  // TI-3b (OD-TI7): while the controls scroll, the canvas keeps its size; they give up the room, not it.
+  const canvasFloor = showNext ? size : 0;
   const toViewBox = ({ x, y }: CanvasPoint): JamoStrokePoint => ({ x: (x * BLOCK_VIEWBOX) / size, y: (y * BLOCK_VIEWBOX) / size });
 
   // One finger draws; a dot or a resting palm leaves no ink (AMENDMENTS-TOUCH 6.8, logic/trace-pointers).
@@ -415,6 +440,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const pan = tracePanGesture(pointersRef, { onEffect: onTouchEffect, onFingerDown: fingerDown, onFingerUp: fingerUp });
 
   const phase = state.phase;
+  // TI-3b (OD-TI6): the strip shows the word traced with the word-done line, after any tip on the last unit.
+  const wordView = traceWordShowsWord(phase, coaching);
   const liveLook: Look = phase === 'retry' ? 'retry' : phase === 'drawing' ? 'live' : 'pass';
   const done = blocksPassed(state);
   const unitStrokes = unitLetters.flatMap((l) => l.strokes);
@@ -484,11 +511,12 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
 
   const canvasSlot = (
     <View
+      testID="trace-word-canvas-slot"
       onLayout={(e: LayoutChangeEvent) => {
         const { width, height } = e.nativeEvent.layout;
         setSlot((prev) => (prev && prev.width === width && prev.height === height ? prev : { width, height }));
       }}
-      style={{ flex: 1, minHeight: 0, minWidth: 0, alignItems: 'center', justifyContent: 'center' }}
+      style={{ flex: 1, minHeight: helperColumn === null ? canvasFloor : 0, minWidth: 0, alignItems: 'center', justifyContent: 'center' }}
     >
       {size > 0 ? (
         canvases?.count === 2 ? (
@@ -539,7 +567,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
           key={b.syllable + i}
           block={b}
           state={i < done ? 'done' : i === state.block ? 'current' : 'waiting'}
-          ink={phase === 'wordDone' ? (traced[i] ?? null) : null}
+          ink={wordView ? (traced[i] ?? null) : null}
           label={i < done ? a11y.hearBlockDone(a11yRomanization(b.romanization)) : a11y.hear(a11yRomanization(b.romanization))}
           onPress={() => say(b.syllable)}
         />
@@ -613,18 +641,10 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
         : traceWordMessage(phase, round.mode, coaching, copy);
   const idleLine = round.mode === 'letter' ? copy.traceWord.letterIdle : copy.traceWord.idle;
 
-  // Next takes Done's slot and size (TI-0b wireframe decision 1), so the button row never moves. It carries the tip
-  // as its hint, so a screen reader that lands on it still hears the tip.
+  // Next takes Done's slot and size (TI-0b wireframe decision 1), so the button row never moves. No hint: the tip is
+  // said once, by the live region (TI-3b).
   const doneButton = showNext ? (
-    <Button
-      label={copy.trace.next.cta}
-      tone="primary"
-      size={stacked ? 'lg' : 'md'}
-      fullWidth
-      accessibilityHint={message}
-      pressableRef={nextRef}
-      onPress={advance}
-    />
+    <Button label={copy.trace.next.cta} tone="primary" size={stacked ? 'lg' : 'md'} fullWidth pressableRef={nextRef} onPress={onNext} />
   ) : (
     <Button
       label={copy.trace.done.cta}
@@ -650,8 +670,9 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     </View>
   );
 
+  // TI-3b (OD-TI7): while Next shows, the controls scroll if large text makes them taller than the room left, to Next.
   const controls = (
-    <View style={{ gap: spacing.sm }}>
+    <TraceControls scrolls={showNext} testID="trace-word-controls">
       {helperColumn === null ? helpers : null}
       {/* [SO] "Shape guide" takes the place of the idle (drawing) line only; keep-going, retry and pass lines win (SO-0c). */}
       <HoyaStrip
@@ -663,7 +684,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
         live={message !== idleLine}
       />
       {actions}
-    </View>
+    </TraceControls>
   );
 
   return (
@@ -700,7 +721,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
             {helperColumn === null ? (
               canvasSlot
             ) : (
-              <View style={{ flex: 1, minHeight: 0, flexDirection: 'row', gap: spacing.sm }}>
+              <View testID="trace-word-canvas-row" style={{ flex: 1, minHeight: canvasFloor, flexDirection: 'row', gap: spacing.sm }}>
                 {canvasSlot}
                 {helpers}
               </View>

@@ -1,7 +1,16 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { TRACE_CANVAS_MAX, TRACE_CANVAS_MIN } from '../../trace-layout';
-import { TRACE_WORD_PAIR_MIN, TRACE_WORD_SHORT_HEIGHT, traceWordCanvases, traceWordHelperColumn, traceWordMessage, traceWordTone, traceWordWaitsForNext } from '../view';
+import {
+  TRACE_WORD_PAIR_MIN,
+  TRACE_WORD_SHORT_HEIGHT,
+  traceWordCanvases,
+  traceWordHelperColumn,
+  traceWordMessage,
+  traceWordShowsWord,
+  traceWordTone,
+  traceWordWaitsForNext,
+} from '../view';
 
 const copy = getMessages('en').learner.minigame;
 const clean = { orderCorrect: true, directionNudge: 'none' as const };
@@ -27,8 +36,17 @@ describe('traceWordMessage: Hoya\'s line per phase', () => {
     expect(traceWordMessage('letterDone', 'letter', clean, copy)).toBe(copy.trace.pass.clean);
     expect(traceWordMessage('letterDone', 'letter', null, copy)).toBe(copy.trace.pass.clean);
     expect(traceWordMessage('letterDone', 'letter', { orderCorrect: true, directionNudge: 'loop' }, copy)).toBe(copy.trace.pass.loop);
-    expect(traceWordMessage('wordDone', 'block', { orderCorrect: false, directionNudge: 'open' }, copy)).toBe(copy.traceWord.wordDone);
+    expect(traceWordMessage('wordDone', 'block', clean, copy)).toBe(copy.traceWord.wordDone);
+    expect(traceWordMessage('wordDone', 'letter', null, copy)).toBe(copy.traceWord.wordDone);
     expect(traceWordMessage('finished', 'block', null, copy)).toBe(copy.traceWord.wordDone);
+  });
+
+  it('TI-3b (OD-TI6): a tip on the last letter or block is the line first; the word-done line follows once it is read', () => {
+    expect(traceWordMessage('wordDone', 'block', { orderCorrect: false, directionNudge: 'open' }, copy)).toBe(copy.trace.pass.order);
+    expect(traceWordMessage('wordDone', 'block', { orderCorrect: true, directionNudge: 'open' }, copy)).toBe(copy.trace.pass.open);
+    expect(traceWordMessage('wordDone', 'letter', { orderCorrect: null, directionNudge: 'loop' }, copy)).toBe(copy.trace.pass.loop);
+    // Next drops the tip (coaching null): the word-done line.
+    expect(traceWordMessage('wordDone', 'letter', null, copy)).toBe(copy.traceWord.wordDone);
   });
 
   it('reads in every UI language', () => {
@@ -89,11 +107,33 @@ describe('traceWordWaitsForNext: a tip waits for Next (AMENDMENTS-TRACE-IDLE §3
     expect(traceWordWaitsForNext('blockDone', { orderCorrect: null, directionNudge: 'loop' })).toBe(true);
   });
 
+  it('TI-3b (OD-TI6): a tip on the last letter or block of the word waits too', () => {
+    expect(traceWordWaitsForNext('wordDone', order)).toBe(true);
+    expect(traceWordWaitsForNext('wordDone', open)).toBe(true);
+    expect(traceWordWaitsForNext('wordDone', { orderCorrect: null, directionNudge: 'loop' })).toBe(true);
+  });
+
   it('a clean pass, the word-done view, a retry and drawing never wait', () => {
     expect(traceWordWaitsForNext('letterDone', clean)).toBe(false);
     expect(traceWordWaitsForNext('blockDone', null)).toBe(false);
-    expect(traceWordWaitsForNext('wordDone', order)).toBe(false);
+    expect(traceWordWaitsForNext('wordDone', clean)).toBe(false);
+    expect(traceWordWaitsForNext('wordDone', null)).toBe(false);
     expect(traceWordWaitsForNext('retry', order)).toBe(false);
     expect(traceWordWaitsForNext('drawing', open)).toBe(false);
+    expect(traceWordWaitsForNext('finished', order)).toBe(false);
+  });
+});
+
+describe('traceWordShowsWord: the word-done view (the strip shows the word traced) waits for the last tip (TI-3b, OD-TI6)', () => {
+  const order = { orderCorrect: false, directionNudge: 'none' as const };
+
+  it('the word is whole and no tip is waiting: the word-done view', () => {
+    expect(traceWordShowsWord('wordDone', clean)).toBe(true);
+    expect(traceWordShowsWord('wordDone', null)).toBe(true);
+  });
+
+  it('a tip on the last unit comes first; every other phase never shows the word', () => {
+    expect(traceWordShowsWord('wordDone', order)).toBe(false);
+    for (const phase of ['drawing', 'retry', 'letterDone', 'blockDone', 'finished'] as const) expect(traceWordShowsWord(phase, null)).toBe(false);
   });
 });
