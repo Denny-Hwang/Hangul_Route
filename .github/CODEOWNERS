@@ -5,3 +5,8 @@
 # and so that GitHub branch protection can enforce "owner approval before merge".
 
 *                                       @Denny-Hwang
+
+# AMENDMENTS-STROKE-ORDER-STANDARD §3.5: the stroke data and the sourced stroke-order table are the owner's.
+# Only a person marks a letter's stroke order checked (reviewedStrokeIds, row SO-3), with a review record.
+/apps/mobile/src/content/jamo-strokes.ts      @Denny-Hwang
+/docs/specs/assets/stroke-order-table.md      @Denny-Hwang

@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-11-23 by `AMENDMENTS-STROKE-ORDER-STANDARD.md` [SO]** (work order WO-03 of the 2026-11 review: never teach a stroke order nobody has checked): the order line of section 3.3 is shown only for a letter whose stroke order a person has checked (`strokeOrderTaught`, ids in `reviewedStrokeIds`, row SO-3; none yet). For every other letter the order is not coached (`orderCorrect` is passed on as `null`), so no learner is told to change an order nobody has checked. Row SO-2 (open) checks the stroke data against a sourced table and may accept more than one order per letter (`altStrokes`, OD-SO4) (sections 3.1 to 3.3; row SO-1).
+
 ## 1. Context
 
 F-004 scores trace coverage only — it ignores **stroke order**. A child can draw ㄷ by starting with the bottom horizontal first and still pass. Pedagogically OK for v1 ("just draw the shape") but Hangul has canonical stroke orders that, when followed, make writing flow easier.

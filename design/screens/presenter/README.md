@@ -322,7 +322,7 @@ Every UI string a mock draws. Values with `{x}` are functions; plural keys follo
 | `learner.presenter.slide.order` | What comes first? | ¿Qué va primero? | 무엇이 먼저일까요? |  |
 | `learner.presenter.slide.sayIt` | Say it: | Dilo así: | 이렇게 읽어요: | teacher-says text (no Korean voice or sound off) |
 | `learner.presenter.slide.shapeCaption` | Letter shape | Forma de la letra | 글자 모양 | under the stroke panel while nobody has checked the jamo's stroke order (AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8) |
-| `learner.presenter.slide.strokeCaption` | Simplified stroke guide | Guía de trazos simplificada | 간단한 획순 안내 | spec §3.6; under the stroke panel once a jamo's stroke order is checked (OD-SO8) |
+| `learner.presenter.slide.strokeCaption` | Simplified stroke guide | Guía de trazos simplificada | 간단한 획순 안내 | spec §3.6; not shown since OD-SO8 was corrected 2026-11-23 (AMENDMENTS-STROKE-ORDER-STANDARD SO-1d: a checked jamo's panel has no caption); kept in the catalogue |
 | `learner.presenter.slide.topic` | Word topics | Temas de palabras | 낱말 주제 | kind label above a topic title (PR 12); same values as `home.quick.group.topics` |
 | `learner.presenter.start.back.cta` | Back to lessons | Volver a las lecciones | 수업 목록으로 | start screen, above the title; returns to the home with nothing saved or sent (PR 8) |
 | `learner.presenter.start.awake` | The screen stays on during the lesson | La pantalla queda encendida durante la lección | 수업 중에는 화면이 꺼지지 않아요 |  |

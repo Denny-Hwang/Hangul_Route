@@ -20,8 +20,8 @@ import { LetterSlide } from '../slides/LetterSlide';
  * the unnumbered panel letter stays alone.
  *
  * Row SO-1b (owner decisions 2026-11-23): OD-SO8, the untaught panel's caption is "Letter shape" and a taught letter
- * keeps "Simplified stroke guide"; OD-SO10, the shape label reads a slash in the romanization with the deck language's
- * word for "or", and the hint is given the same word.
+ * has no caption (OD-SO8 as corrected 2026-11-23 to match spec §8 and F-TCH-004 §3.6, row SO-1d); OD-SO10, the shape
+ * label reads a slash in the romanization with the deck language's word for "or", and the hint is given the same word.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
@@ -145,11 +145,11 @@ describe('LetterSlide stroke panel, "or" in the shape label (OD-SO10)', () => {
 });
 
 describe('LetterSlide stroke panel, taught letter (after SO-3)', () => {
-  it('keeps the caption "Simplified stroke guide" (OD-SO8)', async () => {
+  it('has no caption: "Simplified stroke guide" goes away once a letter is reviewed (OD-SO8 as corrected, §8, F-TCH-004 §3.6)', async () => {
     const slide = { ...letter('jamo:mieum'), strokeReviewed: true };
     const r = await render(element(slide, 0));
     mounted.push(r);
-    expect(textOf(r.root)).toContain('Simplified stroke guide');
+    expect(textOf(r.root)).not.toContain('Simplified stroke guide');
     expect(textOf(r.root)).not.toContain('Letter shape');
   });
 

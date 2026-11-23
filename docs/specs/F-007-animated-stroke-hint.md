@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-11-23 by `AMENDMENTS-STROKE-ORDER-STANDARD.md` [SO]** (work order WO-03 of the 2026-11 review: never teach a stroke order nobody has checked): for a letter whose stroke order nobody has checked (every letter until row SO-3), **Show me** is a shape reveal instead of section 3.2's dot walk: the ghost steps aside and every stroke fades in together as one group (opacity 0.6; full opacity on the retry canvas, OD-SO9), held at least 1000 ms, with no dot and no sequence. The reduced-motion still of section 3.4 shows no numbered badges and no arrows. The accessible label is the shape label ("o, shape guide."), with the UI language's word for "or" between romanization alternatives (OD-SO10). Trace Stroke and Trace a Word show **Shape guide** in Hoya's strip in place of the idle line. A checked letter keeps sections 3.2 and 3.4 (section 3.2; rows SO-1 and SO-1b).
+
 ## 1. Context
 
 F-004 ships the trace experience with a static faint guide outline. When a child is stuck — or wants to see the "correct" stroke order + direction — they need a **demonstration**: an animated overlay showing where to start, which way to go, and in what sequence.
