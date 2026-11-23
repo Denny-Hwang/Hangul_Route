@@ -193,6 +193,7 @@ export const a11y = {
       soFar: (lines: number) => `지금까지 쓴 내 이야기, ${lines}줄`,
     },
   },
+  romanizationOr: '또는',
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,
   pinDigit: (digit: number) => `숫자 ${digit}`,

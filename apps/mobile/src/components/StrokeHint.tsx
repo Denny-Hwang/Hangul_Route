@@ -32,6 +32,11 @@ const AnimatedG = Animated.createAnimatedComponent(G);
 
 /** The hint look: `feedback.nudge` strokes at this opacity (today's value), 14 wide on the 200 viewBox. */
 const HINT_OPACITY = 0.6;
+/**
+ * [SO] OD-SO9 (row SO-1b): on the retry canvas (`feedback.nudgeLight`) the hint look is about 1.3:1, and the shape has no
+ * moving dot to follow, so the untaught shape guide draws at full group opacity while the canvas is in its retry look.
+ */
+const RETRY_SHAPE_OPACITY = 1;
 const HINT_WIDTH = 14;
 /** The demo's fade-out, and its hold after the last stroke (today's values). */
 const FADE_OUT_MS = 400;
@@ -80,6 +85,17 @@ interface Props {
   /** The romanized letter (never a Hangul glyph) for the shape label `strokeOrder.shape`, read through `a11yRomanization`. */
   romanization: string;
   /**
+   * [SO] OD-SO10: the word read between romanization alternatives in the shape label (ㅇ "silent/ng"), in the language of
+   * the labels; default the app's (`a11y.romanizationOr`). The presenter passes its deck language's, with `strokeOrder`.
+   */
+  romanizationOr?: string;
+  /**
+   * [SO] OD-SO9: the canvas under the hint is in its retry look (after a miss). The untaught shape guide (the reveal and
+   * its reduced-motion still) then draws at full group opacity instead of the hint look's 0.6; a reveal already up
+   * follows a change without starting again. A taught letter's demo is unchanged.
+   */
+  retryLook?: boolean;
+  /**
    * Told which look the hint settled on: `animated` (the demo or the shape reveal) or `static` (the still, under
    * reduced motion or when the query fails). The presenter hides its own letter while an untaught reveal plays.
    */
@@ -115,10 +131,15 @@ export function StrokeHint({
   orderLabel,
   orderTaught,
   romanization,
+  romanizationOr: romanizationOrOverride,
+  retryLook = false,
   onShow,
 }: Props): ReactElement | null {
-  const appStrokeOrder = useMessages().a11y.minigame.strokeOrder;
-  const strokeOrder = strokeOrderOverride ?? appStrokeOrder;
+  const appA11y = useMessages().a11y;
+  const strokeOrder = strokeOrderOverride ?? appA11y.minigame.strokeOrder;
+  const romanizationOr = romanizationOrOverride ?? appA11y.romanizationOr;
+  /** [SO] The shape guide's group opacity: the hint look, or full on the retry canvas (OD-SO9). */
+  const shapeOpacity = retryLook ? RETRY_SHAPE_OPACITY : HINT_OPACITY;
   // One progress shared value per stroke (0 → 1 along the path)
   // For simplicity, we use a single sweep value spanning all strokes.
   const sweep = useSharedValue(0);
@@ -161,11 +182,13 @@ export function StrokeHint({
         onShowRef.current?.('animated');
         if (!orderTaught) {
           // [SO] The shape reveal: one shared value fades the whole letter in, holds it, fades it out. The hold is
-          // worked out here, on the JS side: the timing callback runs on the UI thread.
+          // worked out here, on the JS side: the timing callback runs on the UI thread. The value is the reveal's
+          // progress (0 to 1); the group draws it times its look (`shapeOpacity`), so a change of canvas look while
+          // the shape is up changes its opacity without starting the reveal again (OD-SO9).
           const hold = shapeHoldMs(target.length);
           opacity.value = 0;
           opacity.value = withTiming(
-            HINT_OPACITY,
+            1,
             { duration: motion.duration.crawl, easing: STANDARD_BEZIER ? Easing.bezier(...STANDARD_BEZIER) : Easing.ease },
             (finished) => {
               if (!finished) return;
@@ -216,7 +239,7 @@ export function StrokeHint({
 
   if (target.length === 0) return null;
 
-  const shapeLabel = strokeOrder.shape(a11yRomanization(romanization));
+  const shapeLabel = strokeOrder.shape(a11yRomanization(romanization, romanizationOr));
 
   if (mode === 'static') {
     return (
@@ -226,7 +249,7 @@ export function StrokeHint({
         onPress={dismissStill}
         style={{ position: 'absolute', top: 0, left: 0, width: size, height: size }}
       >
-        <StrokeOrderDiagram target={target} size={size} viewBox={viewBox} numbered={orderTaught} />
+        <StrokeOrderDiagram target={target} size={size} viewBox={viewBox} numbered={orderTaught} shapeOpacity={shapeOpacity} />
       </Pressable>
     );
   }
@@ -240,7 +263,7 @@ export function StrokeHint({
         accessibilityLabel={shapeLabel}
         style={{ position: 'absolute', top: 0, left: 0, width: size, height: size }}
       >
-        <ShapeReveal target={target} size={size} viewBox={viewBox} opacity={opacity} />
+        <ShapeReveal target={target} size={size} viewBox={viewBox} progress={opacity} look={shapeOpacity} />
       </View>
     );
   }
@@ -268,21 +291,25 @@ export function StrokeHint({
 }
 
 /**
- * [SO] The shape reveal: every stroke in the hint look, opaque inside one group whose opacity is the one shared value,
- * so the strokes appear together and crossings (ㅗ's junction, ㅁ's corners) do not darken into dot-like marks.
+ * [SO] The shape reveal: every stroke in the hint look, opaque inside one group whose opacity is the one shared value
+ * (the reveal's progress) times the look (0.6, or 1 on the retry canvas: OD-SO9), so the strokes appear together and
+ * crossings (ㅗ's junction, ㅁ's corners) do not darken into dot-like marks.
  */
 function ShapeReveal({
   target,
   size,
   viewBox,
-  opacity,
+  progress,
+  look,
 }: {
   target: JamoStrokePoint[][];
   size: number;
   viewBox: number;
-  opacity: SharedValue<number>;
+  progress: SharedValue<number>;
+  look: number;
 }): ReactElement {
-  const groupProps = useAnimatedProps(() => ({ opacity: opacity.value }) as { opacity: number });
+  // The look is a plain number in the worklet's closure: listing it (and the progress) re-makes the mapper when it changes.
+  const groupProps = useAnimatedProps(() => ({ opacity: progress.value * look }) as { opacity: number }, [progress, look]);
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${viewBox} ${viewBox}`} style={{ position: 'absolute', top: 0, left: 0 }}>
       <AnimatedG animatedProps={groupProps}>
@@ -371,18 +398,21 @@ function StrokeTrail({
  * Reduced-motion "Show me" (F-007 §3.4): the whole letter at once — strokes
  * in the hint colour, a numbered badge at each start, an arrow for which way
  * each stroke goes. Nothing moves. [SO] Untaught (`numbered` false): the
- * letter only, in one group at the hint opacity, with no badges and no arrows.
+ * letter only, in one group at `shapeOpacity` (the hint look, or full on the
+ * retry canvas: OD-SO9), with no badges and no arrows.
  */
 function StrokeOrderDiagram({
   target,
   size,
   viewBox,
   numbered,
+  shapeOpacity,
 }: {
   target: JamoStrokePoint[][];
   size: number;
   viewBox: number;
   numbered: boolean;
+  shapeOpacity: number;
 }): ReactElement {
   if (!numbered) {
     return (
@@ -393,7 +423,7 @@ function StrokeOrderDiagram({
         viewBox={`0 0 ${viewBox} ${viewBox}`}
         style={{ position: 'absolute', top: 0, left: 0 }}
       >
-        <G opacity={HINT_OPACITY}>
+        <G opacity={shapeOpacity}>
           {target.map((stroke, idx) => (
             <Path
               key={idx}

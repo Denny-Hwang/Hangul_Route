@@ -191,6 +191,7 @@ export const a11y = {
       soFar: (lines: number) => plural('es', lines, { one: 'Mi historia hasta ahora, 1 línea', other: `Mi historia hasta ahora, ${lines} líneas` }),
     },
   },
+  romanizationOr: 'o',
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,
   pinDigit: (digit: number) => `Dígito ${digit}`,

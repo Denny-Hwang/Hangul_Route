@@ -245,12 +245,15 @@ export function sheetSummary(realia: Realia, a11y: MinigameA11y): string {
   return a11y.realia.summary(name, realia.entries.length);
 }
 
-/** Korean and romanization for a screen reader, the slash of a sound value read as "or". */
-const spoken = (text: KoText): string[] => [text.ko, a11yRomanization(text.romanization)];
+/**
+ * Korean and romanization for a screen reader, the slash of a sound value read as "or" in the UI locale (`or`,
+ * `a11y.romanizationOr`; AMENDMENTS-STROKE-ORDER-STANDARD OD-SO10).
+ */
+const spoken = (text: KoText, or: string): string[] => [text.ko, a11yRomanization(text.romanization, or)];
 
 /** A line's name without a mark: its Korean, romanization, value and direction. */
-export function lineBaseLabel(entry: RealiaEntry, a11y: MinigameA11y): string {
-  const parts = [...spoken(entry.text), ...(entry.value ? spoken(entry.value) : [])];
+export function lineBaseLabel(entry: RealiaEntry, a11y: MinigameA11y, or: string): string {
+  const parts = [...spoken(entry.text, or), ...(entry.value ? spoken(entry.value, or) : [])];
   if (entry.dir) parts.push(a11y.realia.dir[entry.dir]);
   return parts.join(', ');
 }
@@ -276,6 +279,8 @@ export interface RealiaLineView {
 
 export interface RealiaViewContext {
   romanizationMode: RomanizationMode;
+  /** The UI locale's word read between romanization alternatives (`a11y.romanizationOr`, OD-SO10). */
+  romanizationOr: string;
 }
 
 function markOf(entry: RealiaEntry, round: RealiaReadRound | undefined, state: RealiaReadState): RealiaLineMarkView {
@@ -295,7 +300,7 @@ export function lineViews(
   return realia.entries.map((entry) => {
     const mark = markOf(entry, round, state);
     const shown = context.romanizationMode === 'always' || state.revealed.includes(entry.id);
-    const base = lineBaseLabel(entry, a11y);
+    const base = lineBaseLabel(entry, a11y, context.romanizationOr);
     const gloss = mark === 'found' ? lineGloss(entry) : undefined;
     // The romanization setting hides a visual line, not information: the name always carries it.
     const accessibilityLabel =
@@ -320,7 +325,7 @@ export function titleView(realia: Realia, context: RealiaViewContext): { ko: str
   return {
     ko: title.ko,
     romanization: context.romanizationMode === 'always' ? title.romanization : '',
-    label: spoken(title).join(', '),
+    label: spoken(title, context.romanizationOr).join(', '),
   };
 }
 
@@ -373,7 +378,7 @@ export function realiaOptionView(
   if (option.text) {
     const romanization = context.romanizationMode === 'always' || touched ? option.text.romanization : '';
     view = { id: option.id, cardState, ko: option.text.ko, romanization, label: undefined, pictureRef: undefined };
-    base = koreanItem({ ko: option.text.ko, romanization: a11yRomanization(option.text.romanization) });
+    base = koreanItem({ ko: option.text.ko, romanization: a11yRomanization(option.text.romanization, context.romanizationOr) });
   } else if (option.pictureRef !== undefined) {
     const name = option.labelEn ?? a11y.picture;
     view = { id: option.id, cardState, ko: undefined, romanization: '', label: name, pictureRef: option.pictureRef };
@@ -391,8 +396,8 @@ export function realiaOptionView(
  * The accessible name of the question's key word: read the same way as that word on the sheet
  * and in the options (a slash in its romanization is read as "or").
  */
-export function realiaKeyLabel(key: KoText, koreanItem: Messages['a11y']['koreanItem']): string {
-  return koreanItem({ ko: key.ko, romanization: a11yRomanization(key.romanization) });
+export function realiaKeyLabel(key: KoText, koreanItem: Messages['a11y']['koreanItem'], or: string): string {
+  return koreanItem({ ko: key.ko, romanization: a11yRomanization(key.romanization, or) });
 }
 
 /** Narrow phones (below this width, dp) get one column. */
@@ -423,8 +428,9 @@ export function realiaStatus(
   mode: HostMode,
   copy: MinigameCopy,
   a11y: MinigameA11y,
+  or: string,
 ): RealiaStatusView {
   if (mode === 'review' || state.status !== 'asking' || state.wrongIds.length === 0) return { hoya: undefined, lookHere: undefined };
   const entry = state.lookHere && round?.answerEntryId !== undefined ? realia.entries.find((e) => e.id === round.answerEntryId) : undefined;
-  return { hoya: copy.realia.missHoya, lookHere: entry ? a11y.option.hint(lineBaseLabel(entry, a11y)) : undefined };
+  return { hoya: copy.realia.missHoya, lookHere: entry ? a11y.option.hint(lineBaseLabel(entry, a11y, or)) : undefined };
 }

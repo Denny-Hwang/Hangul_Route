@@ -295,6 +295,11 @@ export const a11y = {
       soFar: (lines: number) => plural('en', lines, { one: 'My story so far, 1 line', other: `My story so far, ${lines} lines` }),
     },
   },
+  /**
+   * [SO] AMENDMENTS-STROKE-ORDER-STANDARD OD-SO10: the word read between two romanizations of one letter (ㅇ "silent/ng"
+   * is read "silent or ng", never "slash"; `a11yRomanization` in content-schema). Read aloud, never drawn.
+   */
+  romanizationOr: 'or',
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined

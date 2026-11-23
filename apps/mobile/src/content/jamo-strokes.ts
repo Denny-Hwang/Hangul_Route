@@ -278,6 +278,7 @@ export function strokesForJamo(jamoId: string): JamoStrokePoint[][] | undefined 
 /**
  * Jamo whose stroke skeleton a native speaker has reviewed (F-TCH-004 §3.6).
  * Empty until a native-reviewed content PR adds ids; until then the presenter's
- * stroke guide panel says "Simplified stroke guide".
+ * stroke panel shows each letter's shape, captioned "Letter shape" (AMENDMENTS-
+ * STROKE-ORDER-STANDARD OD-SO8; a reviewed letter's caption is "Simplified stroke guide").
  */
 export const reviewedStrokeIds: readonly string[] = [];

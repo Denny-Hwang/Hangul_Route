@@ -24,6 +24,7 @@ import { RealiaSheetView } from '../realia-kinds-entry';
 
 const ADDED = ['recipe', 'receipt', 'label', 'forecast', 'calendar', 'timetable', 'map', 'poster'] as const;
 const a11y = getMessages('en').a11y.minigame;
+const OR = getMessages('en').a11y.romanizationOr;
 const host: MinigameHost = { mode: 'quest', answer: () => undefined, complete: () => undefined };
 type Node = ReactTestInstance;
 
@@ -61,7 +62,7 @@ describe('the door: a CM-47 sheet is the plain sheet until its chunk is in, a G-
     const realia = REALIA_KIND_FIXTURES.timetable.realiaRead.realia;
     const props = {
       kind: 'timetable' as const,
-      lines: realia.entries.map((e) => ({ id: e.id, text: { ko: e.text.ko, romanization: e.text.romanization }, mark: 'none' as const, accessibilityLabel: lineBaseLabel(e, a11y) })),
+      lines: realia.entries.map((e) => ({ id: e.id, text: { ko: e.text.ko, romanization: e.text.romanization }, mark: 'none' as const, accessibilityLabel: lineBaseLabel(e, a11y, OR) })),
       accessibilityLabel: sheetSummary(realia, a11y),
       lineHint: a11y.realia.lineHint,
       testID: 'door',
@@ -103,7 +104,7 @@ describe.each(ADDED)('Realia Read on a %s (row CM-47)', (kind) => {
       const line = carrying(r.root, `realia-read-sheet-line-${entry.id}`, 'accessibilityRole');
       expect(line, entry.id).toBeDefined();
       expect(line!.props.accessibilityRole).toBe('button');
-      expect(line!.props.accessibilityLabel).toBe(lineBaseLabel(entry, a11y));
+      expect(line!.props.accessibilityLabel).toBe(lineBaseLabel(entry, a11y, OR));
       expect(flat(line!.props.style).minHeight).toBeGreaterThanOrEqual(touchTarget.min);
     }
   });

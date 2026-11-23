@@ -412,7 +412,7 @@ export function TraceStrokeGame({
           ref={headingRef}
           accessible
           accessibilityRole="header"
-          accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame)}
+          accessibilityLabel={traceTargetA11yText(round.jamo, m.a11y.minigame, m.a11y.romanizationOr)}
           // Web: focusable by script only, so it is not a Tab stop (focus lands here after Next).
           {...(Platform.OS === 'web' ? { tabIndex: -1 as const } : {})}
         >
@@ -443,7 +443,7 @@ export function TraceStrokeGame({
       <GestureDetector gesture={panGesture}>
         <View
           nativeID="trace-canvas"
-          accessibilityLabel={traceCanvasA11yLabel(round.jamo.romanization, m.a11y.minigame.traceCanvas)}
+          accessibilityLabel={traceCanvasA11yLabel(round.jamo.romanization, m.a11y.minigame.traceCanvas, m.a11y.romanizationOr)}
           style={{
             width: canvasSize,
             height: canvasSize,
@@ -488,6 +488,7 @@ export function TraceStrokeGame({
               playToken={hintToken}
               orderTaught={taught}
               romanization={round.jamo.romanization}
+              retryLook={feedback === 'fail'}
               onComplete={() => setHintPlaying(false)}
             />
           ) : null}

@@ -207,11 +207,11 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
     );
   }
 
-  const context = { romanizationMode };
+  const context = { romanizationMode, romanizationOr: m.a11y.romanizationOr };
   const header = realiaHeaderView(host.mode, state, copy);
   const title = titleView(play.realia, context);
   const lines = lineViews(play.realia, round, state, context, a11y);
-  const status = realiaStatus(play.realia, round, state, host.mode, copy, a11y);
+  const status = realiaStatus(play.realia, round, state, host.mode, copy, a11y, m.a11y.romanizationOr);
   const arrangement = realiaArrangement(layoutClass.windowWidth, layout.sideBySideMin);
   const columns = arrangement === 'side' ? 1 : realiaOptionColumns(round, layoutClass.windowWidth);
   // D7 on native: the sheet stays put beside the options, so the screen does not scroll; each column does.
@@ -267,7 +267,7 @@ export function RealiaReadGame({ scope, host, onBack }: Props): ReactElement {
                   romanization={round.key.romanization}
                   romanizationShown={romanizationMode === 'always'}
                   size="sm"
-                  accessibilityLabel={realiaKeyLabel(round.key, m.a11y.koreanItem)}
+                  accessibilityLabel={realiaKeyLabel(round.key, m.a11y.koreanItem, m.a11y.romanizationOr)}
                 />
               </View>
             ) : null}
