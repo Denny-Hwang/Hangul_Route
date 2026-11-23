@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-11-23 by `AMENDMENTS-STROKE-ORDER-STANDARD.md` [SO]** (work order WO-03 of the 2026-11 review: never teach a stroke order nobody has checked): for a letter whose stroke order nobody has checked (every letter until row SO-3) the hint of section 3.4 is read over the closed targets only (`loopNudgeFor`): a loop that went round the other way still gets the loop line, but an open stroke, matched or not, never gets "left-to-right". Section 3.2's rule that an unmatched target counts as a wrong direction stays, and no longer reaches an unchecked letter. A checked letter keeps this spec's hints (section 3.2, OD-SO1; row SO-1).
+
 ## 1. Context
 
 F-004 scores coverage only. F-005 adds order awareness. F-006 closes the loop with **direction awareness**: for each stroke, did the child draw it from start-to-end (per the canonical skeleton) or end-to-start?

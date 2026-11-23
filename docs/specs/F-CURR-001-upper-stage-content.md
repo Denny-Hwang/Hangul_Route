@@ -2,6 +2,8 @@ Status: shipped (all 35 rows, #617 to #678, built 2026-10-14, C-0 to S7-5); foll
 
 > **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): Sentence Builder's tray locks for 400 ms after a placed tile and Skip waits for that lock (section 6.3); the Type Hangul keyboard takes each finger on its own, types the key under the finger at release, drops a repeat on the same key within 120 ms and guards Shift against a bounce (section 6.7); Trace a Word activates at 4 px and one moving finger draws (section 6.8). Rows KT-5, KT-7, KT-8.
 
+> **Amended 2026-11-23 by `AMENDMENTS-STROKE-ORDER-STANDARD.md` [SO]** (work order WO-03 of the 2026-11 review: never teach a stroke order nobody has checked): Trace a Word (section 3.7, item 3) coaches stroke order and open-stroke direction only for a unit whose every jamo a person has checked (`reviewedStrokeIds`, row SO-3; none yet). Any other unit gets no order line and only the loop nudge (`loopNudgeFor`), its Show me is a shape reveal with **Shape guide** in Hoya's strip, and its accessible label is the shape label instead of the stroke order (sections 3.1 and 3.2; rows SO-1 and SO-1b).
+
 # F-CURR-001 — Upper-stage content: the 22 "Coming later" cells of Stages 2, 3, 4, 6 and 7
 
 > **Owner decision 2026-10-13 (binding):** write the spec for the content of the 22 catalogue cells that still read "Coming later", based on what already ships, with a PR table ordered Stage 2 -> 3 -> 4 -> 6 -> 7. Production level: every row ships finished content, reviewed by the multi-agent review (owner decision 2026-10-12); no row waits on the owner. The decisions this spec needs are in section 8 with defaults that rows follow until the owner overrules them.

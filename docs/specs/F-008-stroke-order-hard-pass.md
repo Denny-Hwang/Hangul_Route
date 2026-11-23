@@ -7,6 +7,8 @@
 
 ---
 
+> **Amended 2026-11-23 by `AMENDMENTS-STROKE-ORDER-STANDARD.md` [SO]** (work order WO-03 of the 2026-11 review: never teach a stroke order nobody has checked): strict mode asks for order only on a letter whose stroke order a person has checked (`reviewedStrokeIds`, row SO-3; none yet). Any other letter passes on coverage alone even with `strictMode` on (`wouldPass(result, strictMode && taught)`), and its miss line is never section 3.3's order line, so an order nobody has checked can never fail a round (section 3.2; row SO-1).
+
 ## 1. Context
 
 F-005 added `orderCorrect` to the score envelope as an **auxiliary** signal — the post-pass hint *"next time try the top line first"* lands, but order didn't gate the pass.

@@ -9,6 +9,8 @@
 
 > **Amended 2026-10-31 by `AMENDMENTS-TOUCH.md` [KT]** (owner request: easy selection for children): the pan activates at 4 px (`spacing.xs`), the stroke follows the first finger that moves (a resting palm is ignored and never cancels a stroke), and a touch that never becomes a stroke leaves no ink and re-arms the idle check (section 6.8; row KT-8).
 
+> **Amended 2026-11-23 by `AMENDMENTS-STROKE-ORDER-STANDARD.md` [SO]** (work order WO-03 of the 2026-11 review: the stroke order in `jamo-strokes.ts` is hand-authored and nobody has checked it yet): a letter teaches its stroke order only once a person has checked it (`strokeOrderTaught`, ids in `reviewedStrokeIds`, added by a person with a review record in row SO-3; none yet). Until then pass or miss is still coverage alone, the learner gets no order line and no "left-to-right" line (only the loop nudge for ㅇ, final ㅇ and ㅎ's ring), and **Show me** fades the whole letter in as one shape with **Shape guide** in Hoya's strip; its reduced-motion still shows no numbers or arrows (sections 3.1 and 3.2; rows SO-1 and SO-1b).
+
 ## 1. Context
 
 Stage 1 Construction-family Game ⑤ "Trace Stroke" teaches the **shape** of each Korean jamo. The child draws the letter on screen; the app validates whether the drawn path matches the target shape's stroke skeleton.
