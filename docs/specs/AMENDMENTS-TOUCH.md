@@ -1,5 +1,7 @@
 Status: ready (KT-0 docs PR: this amendment, the component spec `design/components/TapBoard/spec.md`, and pointer lines in F-001, F-003, F-004, F-010, F-QUEST-002, F-CURR-001, F-CURR-002, F-PLC-001, F-STORY-003, F-TCH-004, the ChoiceCard component spec and the specs README; implementation rows in section 12; KT-4a first)
 
+> **Amended 2026-11-23 by `AMENDMENTS-TRACE-IDLE.md` [TI]** (work order WO-02 of the 2026-11 review: a pause must never score a letter as missed): KT-D9 and section 6.8 now read "a touch that never drew re-arms the idle check **subject to `ready()`**": the idle check scores only a finished letter, so an unfinished drawing is scored only by Done, in Trace Stroke and Trace a Word. The trace retry no longer clears the canvas (the ink stays after a miss until a new stroke adds to it or Clear), so the case of section 14's KT-8 review item 2, a finger still drawing when the retry cleared the canvas, no longer arises (sections 3.1, 3.3 and 3.5; rows TI-1, TI-2 and TI-3).
+
 # Amendment: one forgiving tap for children: a graze still counts, a bounce never counts twice, a selection is never undone by accident
 
 > Basis: `origin/main` `1bfda3fc8` (2026-10-31). Every `file:line` is at that commit. Paths are under `apps/mobile/src/` unless they start with `DS` (`packages/design-system/src/`), `RNW` (`node_modules/react-native-web/dist/`, 0.19.13) or `RNGH` (`node_modules/react-native-gesture-handler/lib/module/`, 2.20.2).

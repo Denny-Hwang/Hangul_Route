@@ -9,6 +9,8 @@
 
 > **Amended 2026-11-23 by `AMENDMENTS-STROKE-ORDER-STANDARD.md` [SO]** (work order WO-03 of the 2026-11 review: never teach a stroke order nobody has checked): strict mode asks for order only on a letter whose stroke order a person has checked (`reviewedStrokeIds`, row SO-3; none yet). Any other letter passes on coverage alone even with `strictMode` on (`wouldPass(result, strictMode && taught)`), and its miss line is never section 3.3's order line, so an order nobody has checked can never fail a round (section 3.2; row SO-1).
 
+> **Amended 2026-11-23 by `AMENDMENTS-TRACE-IDLE.md` [TI]** (work order WO-02 of the 2026-11 review: a pause must never score a letter as missed): section 3.3's "strokes auto-clear after 2000ms" is removed, and so is the auto-clear of section 1: after a miss the drawing stays until the learner adds a stroke to it or taps Clear. The strict pass rule is one helper, `wouldPass(result, strictMode)` in `logic/trace-ready.ts`, used by Done and by the idle check, which scores only a finished letter (sections 3.1 and 3.3; rows TI-1 and TI-2).
+
 ## 1. Context
 
 F-005 added `orderCorrect` to the score envelope as an **auxiliary** signal — the post-pass hint *"next time try the top line first"* lands, but order didn't gate the pass.
