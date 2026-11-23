@@ -117,6 +117,7 @@ Layout and variants: the wireframe (§5). `OopsScreen`'s layout (`screens/system
 - The learner variant is reached by a read error, and also by damaged progress bytes whose copy could not be kept (`withStored` answers `unread` when `keepRawCopy` resolves `false` or rejects, `progress-store.ts:374`; e.g. a full disk): nothing is written, so "Nothing was erased" holds, and Try again is the way out (it retries the copy, then AU-3 starts fresh). Damaged progress whose copy **was** kept never reaches the screen (AU-3 starts it fresh, §3.2 folds its cloud copy back in). So there is no learner-variant grown-up button.
 - After 3 tries in a session a line shows under the bubble (polite live region, announced once): `progressReadFailed.stillStuck`.
 - There is no "Start over" or "New learner" button on this screen.
+- **Note 2026-11-22 (DP-1c, as built):** "2 or more profiles" counts learner profiles, as the chooser does (a legacy grown-up row is not a learner), and the button is not drawn while `flags.whoChooserEnabled` is off (there is no chooser to open). Choose another learner at boot opens the app on the chooser (`manual`) unless the launch opens a chooser of its own. While the screen holds the boot it follows store state (a list or record read meanwhile, e.g. by another tab, opens the app). The design's D3 scroll-to-end when the still-stuck line fills is not built (the `Screen` component exposes no scroll handle); the line is in a polite live region and, on iOS, said with the bubble.
 
 ### 3.6 A damaged profile list: kept, then recoverable by a grown-up
 
@@ -140,9 +141,16 @@ Layout and variants: the wireframe (§5). `OopsScreen`'s layout (`screens/system
 - Where it shows (one quiet line, `tone="secondary"`, no error icon), while the learner is in `saveFailedFor` or `loadFailedFor`:
   - Results (`screens/results/ResultsScreen.tsx`, under the headline `:504`): `results.saveLater`.
   - Profile (`screens/profile/ProfileScreen.tsx`, above the grown-up section): `profile.saveTrouble` (`saveFailedFor` only).
-  - Grown-up area dashboard, at the top: `grownUp.saveTrouble`, while any learner on the device is in `saveFailedFor`.
+  - Grown-up area dashboard, at the top: `grownUp.saveTrouble` (`caregiver.dashboard.saveTrouble`, note below), while any learner on the device is in `saveFailedFor`.
   - Restore (`RestoreScreen.tsx`): `caregiver.restore.saveLater` (the namespace the screen reads, `messages.caregiver.restore`, `RestoreScreen.tsx:37`) in place of "restored" when the restored learner is in `loadFailedFor` or `saveFailedFor` once `whenWritten` has resolved (§3.2).
 - Nothing is blocked while a save is failing.
+- **Row DP-2 notes (2026-11-22, decided for now, pending the owner's confirmation; DP-0b owner items):**
+  - **O1:** there is no `grownUp` namespace in `packages/i18n`; the Grown-up area line is `caregiver.dashboard.saveTrouble` (DP-0b README D9).
+  - **O3:** Restore while the save is still waiting keeps this section's version (design frame N: the line in place of the notice text; card, Hoya and Great stay), not proposal N2.
+  - **O4:** Profile is a learner screen, possibly a child's: on a family device `learner.profile.saveTrouble.family` asks for a grown-up's help and never asks the learner to free up space; a self-only device (never "grown-up", F-LEARN-001 L7) gets the spec's line as `learner.profile.saveTrouble.self`. The Grown-up area line keeps the space ask.
+  - A reset that did not land is retried as a reset (`replace`), never as a merge. A retry of a marked profile that meets a failed read or the write fence keeps the mark and tries the next slot.
+  - Open for the owner: on Results the line usually appears just after the screen opens (Results writes the run on mount) and can go again about 1 s later when the first retry lands; a hold before showing it would stop the flicker but is not in the design (D8).
+  - The foreground and background retries bind `platform/app-state`'s `subscribeAppActive` on every platform (on the web it is `visibilitychange`; the writes coalesce with `followProgressChanges`'). A step that throws is not logged: the app has no shared logger yet (CLAUDE.md §8), so §3.2's "logged through the shared logger" waits for one.
 
 ### 3.8 Strings (`packages/i18n/src/messages/{en,es,ko}/`)
 
@@ -162,11 +170,15 @@ Spanish and Korean are **shipped** locales (`packages/i18n/src/locales.ts:32-34`
 | `grownUp.recoverRecord.fresh` | Start fresh on this device | DP-1d |
 | `grownUp.recoverRecord.notNow` | Not now | DP-1d |
 | `learner.results.saveLater` | We could not save this yet. Keep the app open and we will try again. | DP-2 |
-| `learner.profile.saveTrouble` | This device is having trouble saving. Free up some space, then open the app again. | DP-2 |
-| `grownUp.saveTrouble` | This device could not save some progress. Free up some space on it. | DP-2 |
+| `learner.profile.saveTrouble.family` | This device is having trouble saving. Ask a grown-up to help. | DP-2 (O4, §3.7 note) |
+| `learner.profile.saveTrouble.self` | This device is having trouble saving. Free up some space, then open the app again. | DP-2 (O4, §3.7 note) |
+| `caregiver.dashboard.saveTrouble` (was `grownUp.saveTrouble`) | This device could not save some progress. Free up some space on it. | DP-2 (O1, §3.7 note) |
 | `caregiver.restore.saveLater` | We could not save this yet. Keep the app open and we will try again. | DP-2 |
 
 "Nothing was erased" is true on this screen: the list key is never written while it cannot be read, and a progress record reaches the screen only when it was not written (AU-3). No string promises recovery.
+
+- **Note 2026-11-22 (DP-1c; DP-0b owner question O1, decided for now, pending the owner's confirmation):** `packages/i18n` has no `grownUp` namespace (the Grown-up area's strings live in `caregiver`). The `grownUp.*` keys above are built as DP-0b's README D9 proposes: `grownUp.recoverRecord.*` → `caregiver.recoverRecord.*` (DP-1d) and `grownUp.saveTrouble` → `caregiver.dashboard.saveTrouble` (DP-2). The English words do not change. DP-1c's own keys (`learner.progressReadFailed.*`) are unaffected.
+- **Note 2026-11-22 (DP-0b owner question O4, decided for now, pending the owner's confirmation):** a line a possibly-child learner reads never asks them to "free up some space"; it asks them to get a grown-up instead (applies to `learner.profile.saveTrouble`, DP-2). No DP-1c string is affected: the still-stuck line asks only to close and open the app.
 
 ### 3.9 Telemetry (Worker first)
 

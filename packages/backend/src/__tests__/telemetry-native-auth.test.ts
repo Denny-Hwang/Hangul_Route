@@ -6,6 +6,7 @@ import { NATIVE_AUTH_PAYLOAD_RULES, keptEventFields } from '../lib/server-events
 import { TELEMETRY_DAILY_WINDOW_MS, flushTelemetryDaily, resetTelemetryDailyBudgetForTests } from '../lib/telemetry-daily';
 import { store } from '../store';
 import { testDb } from './helpers/db';
+import { eventText } from './helpers/event-text';
 
 /**
  * POST /api/telemetry for the native grown-up sign-in names (F-AUTH-004 section 15, TELEMETRY-NAMES-2 section V, row
@@ -82,7 +83,7 @@ describe('auth.native.* telemetry (section 15)', () => {
 
   it('never stores the smuggled values through the route either', async () => {
     await post({ name: 'auth.native.signin', profileId: 'profile:suni', payload: { ...GOOD['auth.native.signin'], email: 'mom@example.org', error: 'Clerk: user_2abc' } });
-    expect(JSON.stringify(store.events)).not.toMatch(/suni|mom@|user_2abc|Clerk/);
+    expect(eventText(store.events)).not.toMatch(/suni|mom@|user_2abc|Clerk/);
   });
 
   it('counts each name in telemetry_daily with the codes its rules kept, never a dropped value', async () => {

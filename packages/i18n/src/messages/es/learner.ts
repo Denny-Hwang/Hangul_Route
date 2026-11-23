@@ -140,6 +140,10 @@ export const learner = {
 
   profile: {
     title: 'Perfiles y ajustes',
+    saveTrouble: {
+      family: 'Este dispositivo tiene problemas para guardar. Pide ayuda a un adulto.',
+      self: 'Este dispositivo tiene problemas para guardar. Libera algo de espacio y vuelve a abrir la app.',
+    },
     switchTo: (name: string) => `Cambiar a ${name}`,
     playingNow: 'Jugando ahora',
     addProfile: '+ Añadir un perfil',
@@ -427,6 +431,7 @@ export const learner = {
   },
 
   results: {
+    saveLater: 'Aún no pudimos guardar esto. Deja la app abierta y lo intentaremos de nuevo.',
     headline: {
       allDone: '¡Listo!',
       wonderful: '¡Maravilloso!',
@@ -977,6 +982,15 @@ export const learner = {
     title: 'Hoya tropezó con una piedra.',
     body: 'Tus tarjetas y estrellas están seguras. Volvamos a empezar.',
     bubble: '¡Uy! No fue tu culpa. Toca el botón y seguimos.',
+  },
+
+  progressReadFailed: {
+    title: 'No pudimos abrir tu progreso.',
+    body: 'No se borró nada. Intentémoslo de nuevo.',
+    bubble: 'Mmm, la caja está atascada.',
+    tryAgain: 'Reintentar',
+    chooseAnother: 'Elegir otro estudiante',
+    stillStuck: '¿Sigue sin abrirse? Cierra la app y ábrela de nuevo.',
   },
 
   portraitGuard: {

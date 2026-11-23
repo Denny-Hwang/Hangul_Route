@@ -41,6 +41,14 @@ export function traceWordMessage(phase: TraceWordPhase, mode: TraceWordMode, coa
   }
 }
 
+/**
+ * AMENDMENTS-TRACE-IDLE §3.4 (TI-3): a letter or block pass whose line is a coaching tip waits for
+ * Next, so the tip can be read; a clean pass and the word-done view move on by themselves.
+ */
+export function traceWordWaitsForNext(phase: TraceWordPhase, coaching: TraceWordCoaching | null): boolean {
+  return (phase === 'letterDone' || phase === 'blockDone') && coaches(coaching);
+}
+
 export function traceWordTone(phase: TraceWordPhase): TraceWordTone {
   if (phase === 'retry') return 'thinking';
   return phase === 'drawing' ? 'idle' : 'cheering';

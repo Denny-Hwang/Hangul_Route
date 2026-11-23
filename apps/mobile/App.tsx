@@ -17,11 +17,13 @@ import { PortraitGuard } from './src/components/PortraitGuard';
 import { PwaBanners } from './src/components/PwaBanners';
 import { reportCrash } from './src/platform/crash-report';
 import { OopsScreen } from './src/screens/system/OopsScreen';
+import { BootGate } from './src/screens/system/BootGate';
 import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { leaveGrownUpAreaOnClose, watchGrownUpAreaExit } from './src/navigation/grown-up-area-exit';
 import { followProfileChanges } from './src/store/profile-store';
-import { followProgressChanges } from './src/store/progress-store';
+import { followProgressChanges, followSaveRetries } from './src/store/progress-store';
+import { subscribeAppActive } from './src/platform/app-state';
 import { followGuestChanges } from './src/store/guest-store';
 import { bindChooserResume, bindRemovedElsewhere } from './src/store/who-chooser';
 import { bindGrownUpBackgroundRule } from './src/screens/parent/use-gate-lapse';
@@ -75,6 +77,23 @@ const prefetchContent = async (): Promise<void> => {
   ]);
 };
 
+/**
+ * What the first screen waits for once the learner data is in (and nothing is held, BootGate).
+ * The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen, waited
+ * for 2.5 s at most (TITLES_GRACE_MS); past that the first screen shows with English lesson titles until they arrive.
+ * On the web the locale's messages and content text are a chunk of their own too, waited for until in or failed,
+ * for 5 s at most (LOCALE_BOOT_GRACE_MS: a stalled request with no worker in control, the iOS 14 home-screen app or
+ * a first visit). Past that the first screen shows in English, whole, and changes to the locale when its chunk
+ * arrives (`useLocale`); a failed one keeps the screens in English until its next try, back online.
+ */
+const settleFirstScreen = async (): Promise<void> => {
+  const locale = activeLocale(useLocaleStore.getState());
+  const packGrace = new Promise<void>((resolve) => {
+    setTimeout(resolve, LOCALE_BOOT_GRACE_MS);
+  });
+  await Promise.all([lessonContent.untilTitlesSettled(locale), Promise.race([localePacks.untilSettled(locale), packGrace])]);
+};
+
 export default function App(): ReactElement {
   // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
   useDocumentLang();
@@ -86,7 +105,14 @@ export default function App(): ReactElement {
   // screen mounts, so nothing shows — or writes over — an empty record
   // (audit UX-01 / L16). The account and every cached tier load in the same
   // pass, before the first derivation (F-ENT-003 section 3.4).
-  const [ready, setReady] = useState(false);
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.4: the first read, started below; BootGate decides from store state
+  // whether the navigator mounts or ProgressReadFailedScreen shows (the list or the active learner could not be read).
+  const [firstRead, setFirstRead] = useState<Promise<void> | null>(null);
+  // Set once, when BootGate first opens the app; kept here, so Try again on the crash screen (which remounts BootGate)
+  // mounts the navigator again without a second read or a second post-hydrate chain.
+  const [opened, setOpened] = useState<{ chooseLearner: boolean } | null>(null);
+  // The post-hydrate chain, set by the effect below, run once when the app first opens.
+  const afterOpen = useRef<() => void>(() => undefined);
   // The web history bridge runs once the navigator is up, and again after Try again remounts it.
   const stopBridge = useRef<(() => void) | null>(null);
   const startBridge = useCallback(() => {
@@ -135,6 +161,8 @@ export default function App(): ReactElement {
     const unfollowProfiles = followProfileChanges();
     // [AU] AMENDMENTS-AUDIT-2026-11 row AU-11: a snapshot another tab stored is read again here (always on).
     const unfollowProgress = followProgressChanges();
+    // [DP] AMENDMENTS-DURABLE-PROGRESS row DP-2: a progress save that did not land is tried again on each foreground and background.
+    const unfollowSaveRetries = followSaveRetries(subscribeAppActive);
     // [GU] Row GU-2 (section 6.4): a guest record another tab wrote or saved is read again here (always on).
     const unfollowGuest = followGuestChanges();
     void countVisit();
@@ -152,33 +180,25 @@ export default function App(): ReactElement {
     // The memory store (F-CURR-002 row CM-12, shadow mode): records answers while `memoryRecord` is on for a learner.
     const stopMemory = startMemory();
     let stopPrefetch = (): void => {};
-    void hydrateLearnerData()
-      .catch(() => undefined)
-      // The device locale's lesson titles (F-CURR-002 §10): a chunk of their own, in before the first screen, waited
-      // for 2.5 s at most (TITLES_GRACE_MS); past that the first screen shows with English lesson titles until they arrive.
-      // On the web the locale's messages and content text are a chunk of their own too, waited for until in or failed,
-      // for 5 s at most (LOCALE_BOOT_GRACE_MS: a stalled request with no worker in control, the iOS 14 home-screen app or
-      // a first visit). Past that the first screen shows in English, whole, and changes to the locale when its chunk
-      // arrives (`useLocale`); a failed one keeps the screens in English until its next try, back online.
-      .then(() => {
-        const locale = activeLocale(useLocaleStore.getState());
-        const packGrace = new Promise<void>((resolve) => {
-          setTimeout(resolve, LOCALE_BOOT_GRACE_MS);
-        });
-        return Promise.all([lessonContent.untilTitlesSettled(locale), Promise.race([localePacks.untilSettled(locale), packGrace])]);
-      })
-      .then(async () => {
-        if (!live) return;
-        setReady(true);
-        // Then every lesson and story chunk, in the background on the web (F-CURR-002 §10), so the lessons and the
-        // stories stay when the network goes.
-        stopPrefetch = prefetchWhenIdle(prefetchContent);
+    // The first read; BootGate waits for it, then for `settleFirstScreen`, before the navigator mounts.
+    setFirstRead(hydrateLearnerData().catch(() => undefined));
+    // [DP] Section 3.4: runs once, after the first boot that is not held (BootGate): after a Try again that read, or
+    // Choose another learner. The foreground and back-online passes below may run while the screen holds; like this
+    // chain after Choose another learner, they write nothing for a learner that was not read (AU-3: sync, plan derive
+    // and memory skip a learner outside `hydratedFor`; DP-1b: nothing writes a list that was not read).
+    afterOpen.current = () => {
+      if (!live) return;
+      // Then every lesson and story chunk, in the background on the web (F-CURR-002 §10), so the lessons and the
+      // stories stay when the network goes.
+      stopPrefetch = prefetchWhenIdle(prefetchContent);
+      void (async () => {
         // A curriculum's horizon moves with the calendar, network or not (F-PLAN-002 section 3.6).
         await rederiveAllLocal().catch(() => undefined);
         // The one-time memory seeding and the last day's memory.daily of the active learner (row CM-12).
         activateMemory();
         void useSyncStore.getState().syncAll();
-      });
+      })();
+    };
     // Back in the foreground (possibly on a new day): derive the next days from the cached plans.
     const foreground = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
@@ -214,6 +234,7 @@ export default function App(): ReactElement {
       unbindBackground();
       unfollowProfiles();
       unfollowProgress();
+      unfollowSaveRetries();
       unfollowGuest();
       off();
       offInbox();
@@ -243,7 +264,18 @@ export default function App(): ReactElement {
               <ProgressLabelsHost>
                 <ScreenHeaderSlotContext.Provider value={LearnerScreenHeader}>
                   <NavigationContainer ref={navigation} onReady={startBridge}>
-                    {ready ? <RootNavigator /> : <Screen tone="canvas">{null}</Screen>}
+                    <BootGate
+                      firstRead={firstRead}
+                      rereadAll={hydrateLearnerData}
+                      settle={settleFirstScreen}
+                      opened={opened}
+                      onOpen={(open) => {
+                        setOpened(open);
+                        afterOpen.current();
+                      }}
+                    >
+                      {({ chooseLearner }) => <RootNavigator openChooser={chooseLearner} />}
+                    </BootGate>
                     <StatusBar style="dark" />
                   </NavigationContainer>
                 </ScreenHeaderSlotContext.Provider>

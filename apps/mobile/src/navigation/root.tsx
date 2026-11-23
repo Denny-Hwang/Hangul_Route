@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import type { WhoTrigger } from '../logic/profiles/who';
 import { useProfileStore } from '../store/profile-store';
 import { batchHandoffPending, chooserLaunchParams, chooserLaunchTrigger } from '../store/who-chooser';
+import { chooserAfterHold } from '../store/read-failed';
 import { endGuestRunOutside, takeGuestLaunch, type GuestRoute } from '../store/guest-launch';
 import { BootIntentHook, LaunchBatchJoinHook } from './boot-intent';
 import { MainTabs } from './tabs';
@@ -90,7 +91,15 @@ const cellStoriesRouteIdOf = ({ params }: { params: RootStackParamList['CellStor
 // route; any other root route taking focus ends a run still on, so no profile's quest is written under the guest's id.
 const guestRunGuard = ({ route }: { route: { name: string } }): { focus: () => void } => ({ focus: () => endGuestRunOutside(route.name) });
 
-export function RootNavigator(): ReactElement {
+export interface RootNavigatorProps {
+  /**
+   * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.5 (row DP-1c): the boot was left through Choose another learner on
+   * ProgressReadFailedScreen, so the launch opens "Who is using this?" (`manual`) when no other chooser opens.
+   */
+  openChooser?: boolean;
+}
+
+export function RootNavigator({ openChooser = false }: RootNavigatorProps = {}): ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
   const hydrated = useProfileStore((s) => s.hydrated);
   const hasProfile = profiles.length > 0;
@@ -101,7 +110,7 @@ export function RootNavigator(): ReactElement {
   // `try=1` on a device with no learner profile, or a reload within 30 minutes of the last play, opens the `Guest`
   // stack as the first route, so Welcome never shows first. With both flags off the launch is decided at once.
   const [launch, setLaunch] = useState<{ decided: boolean; trigger: WhoTrigger | null; batch: boolean; guest: GuestRoute | null }>(() => ({
-    decided: !flags.whoChooserEnabled && !flags.guestLessonEnabled,
+    decided: !openChooser && !flags.whoChooserEnabled && !flags.guestLessonEnabled,
     trigger: null,
     batch: false,
     guest: null,
@@ -110,7 +119,8 @@ export function RootNavigator(): ReactElement {
     if (launch.decided || !hydrated) return undefined;
     let live = true;
     void (async () => {
-      const trigger = flags.whoChooserEnabled ? await chooserLaunchTrigger().catch(() => null) : null;
+      const launchTrigger = flags.whoChooserEnabled ? await chooserLaunchTrigger().catch(() => null) : null;
+      const trigger = chooserAfterHold(launchTrigger, openChooser, batchHandoffPending());
       const batch = batchHandoffPending();
       // The `try` intent is always taken here (the switch off: dropped); the chooser, when it opens, comes first.
       const guest = trigger === null && !batch ? await takeGuestLaunch().catch(() => null) : null;

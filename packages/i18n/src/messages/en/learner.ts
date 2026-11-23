@@ -180,6 +180,16 @@ export const learner = {
 
   profile: {
     title: 'Profiles & settings',
+    /**
+     * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): one quiet line above the second group while the learner's
+     * progress could not be saved on this device. `family` asks for a grown-up's help and never asks a learner (possibly a
+     * child) to free up space (owner item O4, 2026-11-22); `self` (a self-only device never says "grown-up", F-LEARN-001
+     * L7) is the spec's line.
+     */
+    saveTrouble: {
+      family: 'This device is having trouble saving. Ask a grown-up to help.',
+      self: 'This device is having trouble saving. Free up some space, then open the app again.',
+    },
     switchTo: (name: string) => `Switch to ${name}`,
     playingNow: 'Playing now',
     addProfile: '+ Add a profile',
@@ -613,6 +623,8 @@ export const learner = {
   },
 
   results: {
+    /** [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): one quiet line under the stars while this run could not be saved yet. */
+    saveLater: 'We could not save this yet. Keep the app open and we will try again.',
     /** One word per tier, never a number or a percent (F-RVW-001 §3.1). */
     headline: {
       allDone: 'All done!',
@@ -1368,6 +1380,20 @@ export const learner = {
     title: 'Hoya tripped over a rock.',
     body: "Your cards and stars are safe. Let's hop back in.",
     bubble: 'Oops! That was not your fault. Tap the button and we go again.',
+  },
+
+  /**
+   * [DP] The screen shown when the profile list, or the active learner's progress, could not be read
+   * (AMENDMENTS-DURABLE-PROGRESS sections 3.5 and 3.8, row DP-1c; design/screens/system/progress-read-failed/).
+   * The same words for both variants (design D4); nothing here promises recovery. `stillStuck` shows after 3 tries.
+   */
+  progressReadFailed: {
+    title: 'We could not open your progress.',
+    body: "Nothing was erased. Let's try again.",
+    bubble: 'Hmm, the box is stuck.',
+    tryAgain: 'Try again',
+    chooseAnother: 'Choose another learner',
+    stillStuck: 'Still stuck? Close the app and open it again.',
   },
 
   /** The soft portrait guard on a phone held sideways (F-LAYOUT-001 §3.4, wireframe layout/wide E). */

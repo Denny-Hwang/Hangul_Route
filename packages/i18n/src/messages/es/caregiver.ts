@@ -113,6 +113,7 @@ export const caregiver = {
   },
 
   dashboard: {
+    saveTrouble: 'Este dispositivo no pudo guardar parte del progreso. Libera algo de espacio en él.',
     persona: 'Familia o quien cuida',
     readOnly: 'Solo lectura: estudiantes de este dispositivo.',
     aboutRows: { cta: 'Sobre estas filas' },
@@ -277,6 +278,7 @@ export const caregiver = {
 
   restore: {
     title: 'Recuperar el progreso',
+    saveLater: 'Aún no pudimos guardar esto. Deja la app abierta y lo intentaremos de nuevo.',
     code: {
       cta: 'Tengo un código de rescate',
       placeholder: 'Palabras y luego el número',

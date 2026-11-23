@@ -3,15 +3,17 @@ import { unitOrderTaught } from '../stroke-order-taught';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../stroke-scoring';
 import { createTraceEvaluator, type TraceEvaluator, type TraceScheduler } from '../trace-evaluator';
 import { traceCoaching, type DirectionNudge } from '../trace-copy';
+import { isFinished } from '../trace-ready';
 import type { BlockRect, PlacedLetter } from './block-strokes';
+import type { TraceWordMode } from './rounds';
 
 /**
  * Trace a Word evaluation (wireframe minigame/trace-word.md): the shipped `scoreTrace` at the
  * shipped coverage threshold, at a tolerance scaled to block size and with per-letter stroke,
  * precision and outline checks, plus the order and direction checks. Order and direction
- * only choose a coaching line, they never fail a block. In
- * block mode the idle timer waits until every letter of the block has ink, so a pause to look
- * at the next letter's ghost never scores a half-drawn block. Pure.
+ * only choose a coaching line, they never fail a block. The idle
+ * timer waits until every letter of the unit is finished (and, in block mode, inked), so a pause
+ * to look at the next stroke or letter never scores a half-drawn unit (AMENDMENTS-TRACE-IDLE). Pure.
  */
 
 export interface TraceUnitResult {
@@ -222,9 +224,42 @@ export function everyLetterInked(letters: readonly Pick<PlacedLetter, 'zones'>[]
 }
 
 /**
+ * AMENDMENTS-TRACE-IDLE §3.1 at block size: every letter of the unit is finished (`isFinished` of
+ * `logic/trace-ready`: it would pass and every target stroke is covered to `TRACE_READY_STROKE_MIN`),
+ * each against its own strokes at the unit's tolerance. No letters: not finished.
+ */
+export function unitLettersFinished(
+  letters: readonly Pick<PlacedLetter, 'strokes'>[],
+  drawn: readonly JamoStrokePoint[][],
+  tolerance: number = BLOCK_TOLERANCE,
+): boolean {
+  return (
+    letters.length > 0 &&
+    letters.every((l) => isFinished(scoreTrace({ target: [...l.strokes], drawn: [...drawn], tolerance }), false))
+  );
+}
+
+/**
+ * Trace a Word's `ready()` for the idle gate (AMENDMENTS-TRACE-IDLE §3.1). Letter mode: the live
+ * letter is finished. Block mode: every letter of the block has ink (the G-4 rule) and every letter
+ * is finished. Before that a pause never evaluates; Done still does.
+ */
+export function traceWordReady(
+  mode: TraceWordMode,
+  letters: readonly (UnitLetter & Pick<PlacedLetter, 'zones'>)[],
+  drawn: readonly JamoStrokePoint[][],
+  tolerance: number = BLOCK_TOLERANCE,
+): boolean {
+  if (mode === 'block' && !everyLetterInked(letters, drawn)) return false;
+  // Trace Word's pass rule is `scoreTraceUnit` (precision, stray strokes, outlines on top of coverage), so a finished
+  // drawing must also pass it: the idle path can only produce a pass; a miss is recorded only after Done (§3.1).
+  return unitLettersFinished(letters, drawn, tolerance) && scoreTraceUnit(letters, [...drawn], tolerance).passed;
+}
+
+/**
  * The shared Done / idle gate of `trace-evaluator` with its `ready()` (AMENDMENTS-TRACE-IDLE §3.1): a
- * finger lift starts the idle countdown only when `ready()` (block mode: every letter inked; letter
- * mode: always). Before that, a pause never evaluates; Done still does at any time.
+ * finger lift starts the idle countdown only when `ready()` (`traceWordReady`: every letter of the
+ * unit finished, and in block mode inked). Before that, a pause never evaluates; Done still does at any time.
  */
 export function createTraceWordGate({
   idleMs,

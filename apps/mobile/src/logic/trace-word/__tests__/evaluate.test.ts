@@ -16,6 +16,8 @@ import {
   hullFill,
   letterHasInk,
   scoreTraceUnit,
+  traceWordReady,
+  unitLettersFinished,
   type UnitLetter,
 } from '../evaluate';
 
@@ -416,5 +418,90 @@ describe('[SO] an untaught unit gets no order and no open-stroke coaching (AMEND
     const ringBack = scoreTraceUnit(lettersOf(o), trace(o.strokes).map((s, i) => (i === 0 ? [...s].reverse() : s)));
     expect(ringBack.directionNudge).toBe('loop');
     expect(scoreTraceUnit(lettersOf(gom), trace(gom.strokes)).directionNudge).toBe('none');
+  });
+});
+
+describe('traceWordReady: Trace a Word on the letter rule (AMENDMENTS-TRACE-IDLE §3.1, TI-3)', () => {
+  /** Every Stage 7 block and the ㅂ blocks of q2 / q12 words. */
+  const SYLLABLES = [...new Set([...STAGE7_SYLLABLES, '밥', '바', '봄'])];
+
+  it('letter mode: no proper prefix of any letter is finished; every whole letter is, traced on or a little off the line', () => {
+    for (const syllable of SYLLABLES) {
+      for (const l of place(syllable).letters) {
+        for (let n = 1; n < l.strokes.length; n++) {
+          expect(traceWordReady('letter', [l], trace(l.strokes.slice(0, n))), `${syllable} ${l.char} ${n}/${l.strokes.length}`).toBe(false);
+        }
+        expect(traceWordReady('letter', [l], trace(l.strokes)), `${syllable} ${l.char}`).toBe(true);
+        expect(traceWordReady('letter', [l], trace(l.strokes, 3, -3)), `${syllable} ${l.char} off by 3`).toBe(true);
+      }
+    }
+  });
+
+  it('block mode: no proper prefix of a block is ready (an unfinished letter with every zone inked included); the whole block is', () => {
+    for (const syllable of SYLLABLES) {
+      const block = place(syllable);
+      for (let n = 1; n < block.strokes.length; n++) {
+        expect(traceWordReady('block', block.letters, trace(block.strokes.slice(0, n))), `${syllable} ${n}/${block.strokes.length}`).toBe(false);
+      }
+      expect(traceWordReady('block', block.letters, trace(block.strokes)), syllable).toBe(true);
+    }
+    // 바: ㅂ's first 2 strokes and the whole ㅏ ink every zone, yet ㅂ is not finished.
+    const ba = place('바');
+    const [b, a] = ba.letters;
+    const partly = [...trace(b!.strokes.slice(0, 2)), ...trace(a!.strokes)];
+    expect(everyLetterInked(ba.letters, partly)).toBe(true);
+    expect(traceWordReady('block', ba.letters, partly)).toBe(false);
+  });
+
+  it('a finished letter that would not pass (a stray stroke beside it) is never ready: the idle path only ever passes', () => {
+    const ba = place('바');
+    const stray = trace([[{ x: 150, y: 175 }, { x: 195, y: 195 }]]);
+    for (const letters of [[ba.letters[0]!], ba.letters]) {
+      const drawn = [...trace(letters.flatMap((l) => l.strokes)), ...stray];
+      expect(unitLettersFinished(letters, drawn)).toBe(true);
+      expect(scoreTraceUnit(letters, drawn).passed).toBe(false);
+      expect(traceWordReady(letters.length === 1 ? 'letter' : 'block', letters, drawn)).toBe(false);
+    }
+  });
+
+  it('block mode still waits for ink in every zone; no letters is never finished', () => {
+    const ho = place('호');
+    expect(traceWordReady('block', ho.letters, trace(ho.letters[0]!.strokes))).toBe(false);
+    expect(unitLettersFinished([], [])).toBe(false);
+  });
+
+  it('takes the round\'s own tolerance', () => {
+    const block = place('호');
+    expect(traceWordReady('block', block.letters, trace(block.strokes, 10, 0), 4)).toBe(false);
+    expect(traceWordReady('block', block.letters, trace(block.strokes, 10, 0), 24)).toBe(true);
+  });
+
+  describe('through the gate (§6 test 7, letter mode)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('a 2-of-4-stroke ㅂ letter in 바 never evaluates on idle; the finished letter does, TRACE_IDLE_MS after the lift', () => {
+      const onEvaluate = vi.fn<() => void>();
+      const bieup = place('바').letters[0]!;
+      let strokes: JamoStrokePoint[][] = [];
+      const gate = createTraceWordGate({ idleMs: TRACE_IDLE_MS, onEvaluate, ready: () => traceWordReady('letter', [bieup], strokes) });
+      strokes = trace(bieup.strokes.slice(0, 2));
+      gate.strokeStarted();
+      gate.strokeEnded();
+      vi.advanceTimersByTime(TRACE_IDLE_MS * 10);
+      expect(onEvaluate).not.toHaveBeenCalled();
+      strokes = trace(bieup.strokes);
+      gate.strokeStarted();
+      gate.strokeEnded();
+      vi.advanceTimersByTime(TRACE_IDLE_MS - 1);
+      expect(onEvaluate).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(onEvaluate).toHaveBeenCalledTimes(1);
+      gate.dispose();
+    });
   });
 });

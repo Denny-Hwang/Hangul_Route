@@ -23,7 +23,7 @@ import {
 } from '@hangul-route/design-system';
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import type { ReactElement } from 'react';
-import { Pressable, ScrollView, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { Svg, Path, Rect } from 'react-native-svg';
 import { PromptPanel } from '../../components/PromptPanel';
@@ -38,10 +38,11 @@ import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { describeStrokeOrder, inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
 import { TRACE_IDLE_MS, idleOnTouch, type TraceEvaluator } from '../../logic/trace-evaluator';
+import { TRACE_KEEP_GOING_MS } from '../../logic/trace-ready';
 import { NO_TRACE_POINTERS, type CanvasPoint, type TracePointers, type TraceTouchEffect } from '../../logic/trace-pointers';
 import { traceCanvasMax, traceLayoutMode, traceScreenWidth, traceSidePanelWidth } from '../../logic/trace-layout';
 import { BLOCK_VIEWBOX, type PlacedLetter } from '../../logic/trace-word/block-strokes';
-import { createTraceWordGate, everyLetterInked, scoreTraceUnit } from '../../logic/trace-word/evaluate';
+import { createTraceWordGate, scoreTraceUnit, traceWordReady } from '../../logic/trace-word/evaluate';
 import { letterRomanization } from '../../logic/trace-word/letter-romanization';
 import { unitOrderTaught } from '../../logic/stroke-order-taught';
 import {
@@ -55,9 +56,18 @@ import {
   type TraceWordState,
 } from '../../logic/trace-word/flow';
 import { buildTraceWordRounds, letterCounts, type TraceWordBlock, type TraceWordPlayRound } from '../../logic/trace-word/rounds';
-import { traceWordCanvases, traceWordHelperColumn, traceWordMessage, traceWordTone, type TraceWordCoaching, type TraceWordTone } from '../../logic/trace-word/view';
+import {
+  traceWordCanvases,
+  traceWordHelperColumn,
+  traceWordMessage,
+  traceWordTone,
+  traceWordWaitsForNext,
+  type TraceWordCoaching,
+  type TraceWordTone,
+} from '../../logic/trace-word/view';
 import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
+import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
 import type { MinigameHost } from './host';
 
 interface Props {
@@ -67,10 +77,8 @@ interface Props {
   onBack?: () => void;
 }
 
-/** The pass look stays this long before the next letter or block (Trace Stroke's pass pause). */
+/** A clean pass's look stays this long before the next letter or block (Trace Stroke's pass pause). */
 const PASS_MS = 1100;
-/** The retry look stays this long, then the drawing clears (Trace Stroke's retry pause). */
-const RETRY_MS = 1800;
 /** The whole word shows in the strip this long before the next round. */
 const WORD_DONE_MS = 1600;
 
@@ -117,6 +125,11 @@ const borderOf: Record<Look, string> = {
  * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-1 (design: wireframes/minigame/trace-stroke-shape-guide.md): a unit whose
  * jamo are not all checked by a person (`unitOrderTaught`; none is yet) gets no order coaching and only the loop
  * nudge, and its Show me is a shape reveal: the unit's ghost steps aside and the strip's idle line reads "Shape guide".
+ *
+ * AMENDMENTS-TRACE-IDLE TI-3 (design: wireframes/minigame/families.md "Trace Stroke states"): a pause scores only a
+ * finished letter (letter mode) or a block whose every letter is finished (block mode); a pause on unfinished ink
+ * shows the keep-going line and records nothing; a miss keeps the ink until the next stroke (added to it) or Clear;
+ * a letter or block pass with a tip waits for Next. Only a clean pass and the whole word move on by themselves.
  */
 export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const textScale = useTypeScale();
@@ -144,6 +157,14 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const evaluateRef = useRef<() => void>(() => {});
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finishedRef = useRef(false);
+  // AMENDMENTS-TRACE-IDLE §3.2: the keep-going line after a pause on unfinished ink. Not a phase, so Done stays
+  // enabled and the canvas keeps its live look.
+  const [keepGoing, setKeepGoing] = useState(false);
+  const keepGoingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Focus targets (§3.4): Next when it appears, the heading after an advance.
+  const nextRef = useRef<View | null>(null);
+  const headingRef = useRef<View | null>(null);
+  const focusHeadingRef = useRef(false);
   const layoutClass = useLayoutClass();
   // The block's sound: the syllable is printed in the strip, so the panel only says why it is silent (A-5b).
   const sound = usePromptSlot({ source: TRACE_WORD_AUDIO_SOURCE, textOnScreen: true });
@@ -168,7 +189,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const round = rounds[state.round];
   const block = round?.blocks[state.block];
   const letter = block?.placed.letters[state.letter];
-  const unitLetters: PlacedLetter[] = round && block ? (round.mode === 'letter' && letter ? [letter] : block.placed.letters) : [];
+  const unitLetters = unitLettersOf(round, state);
   // [SO] §3.1: the unit's order is taught only when every jamo of every letter in it is.
   const taught = unitOrderTaught(unitLetters);
 
@@ -177,11 +198,21 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     setStrokesState(next);
   };
 
+  const stopKeepGoing = (): void => {
+    if (keepGoingTimerRef.current) clearTimeout(keepGoingTimerRef.current);
+    keepGoingTimerRef.current = null;
+  };
+  const hideKeepGoing = (): void => {
+    stopKeepGoing();
+    setKeepGoing(false);
+  };
+
   const finish = (): void => {
     if (finishedRef.current) return;
     finishedRef.current = true;
     gateRef.current?.dispose();
     if (timerRef.current) clearTimeout(timerRef.current);
+    stopKeepGoing();
     host.complete();
   };
 
@@ -211,18 +242,14 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     const gate = createTraceWordGate({
       idleMs: TRACE_IDLE_MS,
       onEvaluate: () => evaluateRef.current(),
-      ready: () => {
-        const s = stateRef.current;
-        const r = rounds[s.round];
-        if (!r || r.mode === 'letter') return true;
-        return everyLetterInked(r.blocks[s.block]?.placed.letters ?? [], strokesRef.current);
-      },
+      ready: () => liveUnitReady(rounds, stateRef.current, strokesRef.current),
     });
     gateRef.current = gate;
     return () => {
       gate.dispose();
       gateRef.current = null;
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (keepGoingTimerRef.current) clearTimeout(keepGoingTimerRef.current);
     };
     // The gate lives as long as the screen; it reads the live state through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -246,6 +273,19 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.round, state.block]);
 
+  // §3.4: a letter or block pass with a tip waits for Next, in Done's place; Next takes focus when it appears.
+  const showNext = traceWordWaitsForNext(state.phase, coaching);
+  useEffect(() => {
+    if (showNext) focusNode(nextRef.current);
+  }, [showNext]);
+  // After an advance (Next, or a clean pass's pause) focus goes to the heading once the new unit has rendered
+  // (TI-0b wireframe decision 1).
+  useEffect(() => {
+    if (!focusHeadingRef.current) return;
+    focusHeadingRef.current = false;
+    focusNode(headingRef.current);
+  }, [state.round, state.block, state.letter]);
+
   if (!round || !block) {
     return (
       <Screen>
@@ -257,24 +297,42 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
     );
   }
 
+  // The next letter, block or word after a pass: by the clean pass's timer, or by Next after a tip.
+  const advance = (): void => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    setStrokes([]);
+    setCoaching(null);
+    setHintToken(0);
+    if (stateRef.current.phase === 'wordDone') setTraced([]);
+    focusHeadingRef.current = true;
+    apply({ type: 'continue' });
+    gateRef.current?.nextRound();
+  };
+
+  // §3.3: back from the retry look to drawing, the check open again (the caller keeps or clears the ink).
+  const leaveRetry = (): void => {
+    if (stateRef.current.phase !== 'retry') return;
+    setCoaching(null);
+    apply({ type: 'continue' });
+    gateRef.current?.reopen();
+  };
+
   const evaluate = (): void => {
     const drawn = strokesRef.current;
     if (drawn.length === 0 || stateRef.current.phase !== 'drawing') {
       gateRef.current?.reopen();
       return;
     }
+    hideKeepGoing();
     const result = scoreTraceUnit(unitLetters, drawn, round.tolerance);
-    setCoaching({ orderCorrect: result.orderCorrect, directionNudge: result.directionNudge });
+    const coached: TraceWordCoaching = { orderCorrect: result.orderCorrect, directionNudge: result.directionNudge };
+    setCoaching(coached);
     setHintPlaying(false);
     const next = apply({ type: 'evaluated', passed: result.passed });
     if (!result.passed) {
       nudge();
-      after(RETRY_MS, () => {
-        setStrokes([]);
-        setCoaching(null);
-        apply({ type: 'continue' });
-        gateRef.current?.reopen();
-      });
+      // §3.3: the ink stays (no wipe timer); the next stroke adds to it, Clear empties it.
       return;
     }
     success();
@@ -285,18 +343,16 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
       out[blockIdx] = [...(out[blockIdx] ?? []), ...drawn];
       return out;
     });
-    after(next.phase === 'wordDone' ? WORD_DONE_MS : PASS_MS, () => {
-      setStrokes([]);
-      setCoaching(null);
-      setHintToken(0);
-      if (stateRef.current.phase === 'wordDone') setTraced([]);
-      apply({ type: 'continue' });
-      gateRef.current?.nextRound();
-    });
+    // §3.4: a pass with a tip waits for Next, so the tip can be read; a clean pass and the whole word move on.
+    if (traceWordWaitsForNext(next.phase, coached)) return;
+    after(next.phase === 'wordDone' ? WORD_DONE_MS : PASS_MS, advance);
   };
+
   evaluateRef.current = evaluate;
 
   const beginStroke = (from: JamoStrokePoint, to: JamoStrokePoint): void => {
+    // §3.3: the first real ink after a miss: back to drawing; the new stroke adds to the ink kept.
+    leaveRetry();
     if (stateRef.current.phase !== 'drawing') return;
     setStrokes([...strokesRef.current, [from, to]]);
   };
@@ -328,14 +384,33 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const toViewBox = ({ x, y }: CanvasPoint): JamoStrokePoint => ({ x: (x * BLOCK_VIEWBOX) / size, y: (y * BLOCK_VIEWBOX) / size });
 
   // One finger draws; a dot or a resting palm leaves no ink (AMENDMENTS-TOUCH 6.8, logic/trace-pointers).
+  // §3.2: every finger is up on ink that is not a finished unit: after TRACE_KEEP_GOING_MS the line names Done.
+  // A finished unit needs no line: the idle check scores it.
+  const armKeepGoing = (): void => {
+    stopKeepGoing();
+    if (stateRef.current.phase !== 'drawing' || strokesRef.current.length === 0) return;
+    if (liveUnitReady(rounds, stateRef.current, strokesRef.current)) return;
+    keepGoingTimerRef.current = setTimeout(() => {
+      keepGoingTimerRef.current = null;
+      setKeepGoing(true);
+      // iOS has no live regions: VoiceOver is told once per pause here (a no-op elsewhere).
+      announceForScreenReader(copy.trace.keepGoing);
+    }, TRACE_KEEP_GOING_MS);
+  };
+
   const onTouchEffect = (effect: TraceTouchEffect): void => {
-    if (effect.kind === 'start') beginStroke(toViewBox(effect.from), toViewBox(effect.to));
-    else if (effect.kind === 'point') appendPoint(toViewBox(effect.at));
+    if (effect.kind === 'hold') stopKeepGoing();
+    if (effect.kind === 'start') {
+      setKeepGoing(false);
+      beginStroke(toViewBox(effect.from), toViewBox(effect.to));
+    } else if (effect.kind === 'point') appendPoint(toViewBox(effect.at));
     if (stateRef.current.phase !== 'drawing') return;
     // A drifting palm had the stroke; the finger took it: the palm's few points go. In the drawing phase
-    // the last stroke is the owner's: every phase change clears the canvas before drawing resumes.
+    // the last stroke is the owner's: a pass clears the canvas before drawing resumes, and after a miss the
+    // first real ink returns to drawing before its stroke is added.
     if (effect.kind === 'drop') setStrokes(strokesRef.current.slice(0, -1));
     idleOnTouch(gateRef.current, effect.kind, strokesRef.current.length > 0);
+    if (effect.kind === 'end' || (effect.kind === 'release' && strokesRef.current.length > 0)) armKeepGoing();
   };
   const pan = tracePanGesture(pointersRef, { onEffect: onTouchEffect, onFingerDown: fingerDown, onFingerUp: fingerUp });
 
@@ -440,6 +515,9 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
 
   const heading = (
     <View
+      ref={headingRef}
+      // Web: focusable by script only, so it is not a Tab stop (focus lands here after Next).
+      {...(Platform.OS === 'web' ? { tabIndex: -1 as const } : {})}
       accessible
       accessibilityRole="header"
       accessibilityLabel={a11y.traceWord(a11yRomanization(round.word.romanization), round.word.en)}
@@ -502,7 +580,8 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
         tone="secondary"
         size="sm"
         fullWidth={helperColumn !== null}
-        disabled={hintPlaying || phase !== 'drawing'}
+        // Show me also works on the retry look (§3.3): the demo plays over the ghost, the kept ink stays.
+        disabled={hintPlaying || (phase !== 'drawing' && phase !== 'retry')}
         onPress={() => {
           setHintToken((t) => t + 1);
           setHintPlaying(true);
@@ -514,16 +593,39 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
         tone="ghost"
         size="sm"
         fullWidth={helperColumn !== null}
-        disabled={strokes.length === 0 || phase !== 'drawing'}
+        // §3.3: Clear also empties the retry look; a canvas emptied after a miss is open to the check again.
+        disabled={strokes.length === 0 || (phase !== 'drawing' && phase !== 'retry')}
         onPress={() => {
+          hideKeepGoing();
           setStrokes([]);
           gateRef.current?.clear();
+          leaveRetry();
         }}
       />
     </View>
   );
 
-  const doneButton = (
+  const message =
+    phase === 'drawing' && keepGoing
+      ? copy.trace.keepGoing
+      : phase === 'drawing' && shapeHintUp
+        ? copy.trace.shapeGuide
+        : traceWordMessage(phase, round.mode, coaching, copy);
+  const idleLine = round.mode === 'letter' ? copy.traceWord.letterIdle : copy.traceWord.idle;
+
+  // Next takes Done's slot and size (TI-0b wireframe decision 1), so the button row never moves. It carries the tip
+  // as its hint, so a screen reader that lands on it still hears the tip.
+  const doneButton = showNext ? (
+    <Button
+      label={copy.trace.next.cta}
+      tone="primary"
+      size={stacked ? 'lg' : 'md'}
+      fullWidth
+      accessibilityHint={message}
+      pressableRef={nextRef}
+      onPress={advance}
+    />
+  ) : (
     <Button
       label={copy.trace.done.cta}
       tone="primary"
@@ -551,12 +653,14 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const controls = (
     <View style={{ gap: spacing.sm }}>
       {helperColumn === null ? helpers : null}
-      {/* [SO] "Shape guide" takes the place of the idle (drawing) line only; a retry or pass line always wins (SO-0c). */}
+      {/* [SO] "Shape guide" takes the place of the idle (drawing) line only; keep-going, retry and pass lines win (SO-0c). */}
       <HoyaStrip
         tone={traceWordTone(phase)}
-        message={shapeHintUp && phase === 'drawing' ? copy.trace.shapeGuide : traceWordMessage(phase, round.mode, coaching, copy)}
+        message={message}
         lines={mode === 'side' ? 3 : 2}
         showHoya={stacked}
+        // TI-0b wireframe decision 5: the idle line is not announced (it comes back after every stroke).
+        live={message !== idleLine}
       />
       {actions}
     </View>
@@ -779,11 +883,22 @@ const stripBorder: Record<TraceWordTone, string> = {
 };
 
 /** Hoya's line in a strip of fixed height (Trace Stroke's), so a longer line never moves the canvas. */
-function HoyaStrip({ tone, message, lines, showHoya }: { tone: TraceWordTone; message: string; lines: number; showHoya: boolean }): ReactElement {
+function HoyaStrip({
+  tone,
+  message,
+  lines,
+  showHoya,
+  live,
+}: {
+  tone: TraceWordTone;
+  message: string;
+  lines: number;
+  showHoya: boolean;
+  live: boolean;
+}): ReactElement {
   const textScale = useTypeScale();
   return (
     <View
-      accessibilityLiveRegion="polite"
       testID="trace-word-hoya"
       style={{
         flexDirection: 'row',
@@ -804,10 +919,47 @@ function HoyaStrip({ tone, message, lines, showHoya }: { tone: TraceWordTone; me
     >
       {showHoya ? <Hoya pose={tone} size={40} /> : null}
       <View style={{ flex: 1 }}>
-        <Body weight="semibold" size="sm">
-          {message}
-        </Body>
+        {/* The live region is always mounted and always polite, so a line inserted into it is announced (a region
+            switched on in the same render as its text often is not). The idle line sits outside it, unannounced. */}
+        <View accessibilityLiveRegion="polite" testID="trace-word-live-line">
+          {live ? (
+            <Body weight="semibold" size="sm">
+              {message}
+            </Body>
+          ) : null}
+        </View>
+        {live ? null : (
+          <Body weight="semibold" size="sm">
+            {message}
+          </Body>
+        )}
       </View>
     </View>
   );
+}
+
+/** The letters of the live unit: the lit letter in letter mode, every letter of the block in block mode. */
+function unitLettersOf(round: TraceWordPlayRound | undefined, state: TraceWordState): PlacedLetter[] {
+  const block = round?.blocks[state.block];
+  if (!round || !block) return [];
+  if (round.mode === 'block') return block.placed.letters;
+  const letter = block.placed.letters[state.letter];
+  return letter ? [letter] : [];
+}
+
+/** The idle gate's `ready()` for the live unit (AMENDMENTS-TRACE-IDLE §3.1, `traceWordReady`). */
+function liveUnitReady(rounds: readonly TraceWordPlayRound[], state: TraceWordState, strokes: readonly JamoStrokePoint[][]): boolean {
+  const round = rounds[state.round];
+  if (!round) return false;
+  return traceWordReady(round.mode, unitLettersOf(round, state), strokes, round.tolerance);
+}
+
+/**
+ * Moves focus to a mounted view: the element's own `focus()` on the web, the screen reader's focus on iOS and
+ * Android (a view's `focus()` does not move VoiceOver or TalkBack there).
+ */
+function focusNode(node: View | null): void {
+  if (node === null) return;
+  if (Platform.OS === 'web') (node as unknown as { focus?: () => void }).focus?.();
+  else focusForScreenReader(node);
 }
