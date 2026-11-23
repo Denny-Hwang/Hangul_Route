@@ -121,13 +121,17 @@ describe('LearnerReadGate (Home)', () => {
   });
 });
 
-describe('HomeScreen holds a learner who was not read', () => {
-  it('HomeScreen draws LearnerReadFailedScreen for the held learner (tab edges, the manual chooser), else its body', () => {
-    const source = readFileSync(join(__dirname, '../../home/HomeScreen.tsx'), 'utf8');
-    const home = source.slice(source.indexOf('export function HomeScreen()'), source.indexOf('function HomeBody()'));
-    expect(home).toMatch(/const held = useLearnerReadHeld\(\);/);
-    expect(home).toMatch(/<LearnerReadFailedScreen key=\{held\} profileId=\{held\} edges=\{TAB_SCREEN_EDGES\}/);
-    expect(home).toMatch(/onChooseAnother=\{\(\) => navigation\.navigate\('WhoIsUsing', \{ trigger: 'manual' \}\)\}/);
-    expect(home).toMatch(/return <HomeBody \/>;/);
+/**
+ * [DP] Row DP-1e (OD-DP6): Home is held by the same gate as every learner tab (rendered per tab in
+ * `learner-tabs-held.test.tsx`); it keeps no gate of its own.
+ */
+describe('Home holds a learner who was not read through the tab gate', () => {
+  it('the tab navigator registers Home (and every tab) through learnerReadGated; HomeScreen has no gate of its own', () => {
+    const tabs = readFileSync(join(__dirname, '../../../navigation/tabs.tsx'), 'utf8');
+    for (const screen of ['HomeScreen', 'MyRouteTabScreen', 'JourneyScreen', 'LibraryScreen']) {
+      expect(tabs).toContain(`frozenWhenBlurred(learnerReadGated(${screen}))`);
+    }
+    const home = readFileSync(join(__dirname, '../../home/HomeScreen.tsx'), 'utf8');
+    expect(home).not.toMatch(/useLearnerReadHeld|LearnerReadFailedScreen/);
   });
 });

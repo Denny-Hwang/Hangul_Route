@@ -8,12 +8,14 @@ import { ProgressReadFailedScreen } from './ProgressReadFailedScreen';
 
 /**
  * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.4 (row DP-1c): a learner whose progress could not be read is not marked on
- * the chooser and does not hold the boot; when they are chosen, their Home shows ProgressReadFailedScreen in its learner
- * variant instead of an empty Home. Home's own body (and its `ensure`) mounts only once the read worked, so nothing on
- * it builds on an empty record. Try again reruns that learner's `progress.hydrate`; Choose another learner (2 or more
- * learners) opens the chooser, where locks still apply (OA-D9).
+ * the chooser and does not hold the boot; when they are chosen, their tabs show ProgressReadFailedScreen in its learner
+ * variant instead of an empty record. Owner decision OD-DP6 (row DP-1e): every learner tab, not only Home
+ * (`navigation/learner-read-gated.tsx`, registered for each tab by `navigation/tabs.tsx`). A tab's own screen (and its
+ * `ensure`) mounts only once the read worked, so nothing on it builds on an empty record. Try again reruns that
+ * learner's `progress.hydrate`; Choose another learner (2 or more learners) opens the chooser, where locks still apply
+ * (OA-D9).
  */
-/** The active learner whose progress could not be read, or `null`: Home shows `LearnerReadFailedScreen` for them. */
+/** The active learner whose progress could not be read, or `null`: every learner tab shows `LearnerReadFailedScreen`. */
 export function useLearnerReadHeld(): string | null {
   const activeId = useProfileStore((s) => s.activeId);
   const held = useProgressStore((s) => activeId !== null && s.loadFailedFor.has(activeId));
@@ -25,11 +27,13 @@ export interface LearnerReadFailedScreenProps {
   profileId: string;
   /** Opens "Who is using this?" (`manual`). */
   onChooseAnother: () => void;
-  /** The Screen's safe-area edges of the screen this stands in for (Home: a tab screen). */
+  /** The Screen's safe-area edges of the screen this stands in for (a tab screen). */
   edges?: readonly ScreenEdge[];
+  /** [DP] Row DP-1e: the screen is in front, so its title may take the screen reader's focus (a tab that is not waits). */
+  focusTitle?: boolean;
 }
 
-export function LearnerReadFailedScreen({ profileId, onChooseAnother, edges }: LearnerReadFailedScreenProps): ReactElement {
+export function LearnerReadFailedScreen({ profileId, onChooseAnother, edges, focusTitle }: LearnerReadFailedScreenProps): ReactElement {
   // Subscribed, so Choose another learner follows the profile list.
   const offered = useProfileStore((s) => chooseAnotherOffered(s.profiles));
   const onTryAgain = async (): Promise<boolean> => {
@@ -39,5 +43,5 @@ export function LearnerReadFailedScreen({ profileId, onChooseAnother, edges }: L
     if (worked) activateMemory(profileId);
     return worked;
   };
-  return <ProgressReadFailedScreen edges={edges} onTryAgain={onTryAgain} onChooseAnother={offered ? onChooseAnother : undefined} />;
+  return <ProgressReadFailedScreen edges={edges} focusTitle={focusTitle} onTryAgain={onTryAgain} onChooseAnother={offered ? onChooseAnother : undefined} />;
 }

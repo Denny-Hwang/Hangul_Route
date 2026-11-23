@@ -24,7 +24,8 @@ import { ProgressReadFailedScreen } from './ProgressReadFailedScreen';
  *   again that read (Welcome with Restore, as on a new device).
  *
  * `onOpen` (the post-hydrate chain: prefetch, plan derive, memory, sync) runs once, after the first boot that is not
- * held. A learner who is not active never holds the boot: Home shows them the screen when they are chosen.
+ * held. A learner who is not active never holds the boot: every learner tab shows them the screen when they are chosen
+ * (row DP-1e).
  */
 export interface BootGateProps {
   /** The first read, started by `App.tsx`; `null` until it starts. A rejection is ignored (other stores, as before). */

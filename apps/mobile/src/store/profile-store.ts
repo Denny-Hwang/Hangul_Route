@@ -17,6 +17,7 @@ import {
   mergeProfileLists,
   parseTombstones,
   pruneTombstones,
+  rebuiltTombstones,
   removeTombstone,
   sameProfileList,
   storedProfileItems,
@@ -55,6 +56,11 @@ export const PROFILES_CORRUPT_KEY = 'profiles-corrupt';
  * the list read again, or a grown-up recovery replaced it. The copy goes 30 days later.
  */
 export const PROFILES_COPY_SETTLED_KEY = 'profiles-corrupt:settled';
+/**
+ * [DP] Owner decision OD-DP5 (row DP-1e): where the raw bytes of a tombstone record that does not parse are kept (first
+ * copy kept, never overwritten) before the record is rebuilt from the device. Ids only, never a name, so it is kept.
+ */
+export const TOMBSTONES_CORRUPT_KEY = 'tombstones-corrupt';
 
 interface State extends ProfileSet {
   hydrated: boolean;
@@ -328,6 +334,79 @@ async function settleKeptListCopy(now: number): Promise<void> {
 }
 
 /**
+ * [DP] Sections 3.1 and 3.3: the three profile records, each under the read contract. Damaged list bytes are kept at
+ * `profiles-corrupt`, damaged tombstone bytes at `tombstones-corrupt` (OD-DP5); the active key keeps no copy.
+ */
+function readProfileRecords(): Promise<[list: DurableRead, active: DurableRead, tombstones: DurableRead]> {
+  return Promise.all([
+    durableRead(PROFILES_KEY, PROFILES_CORRUPT_KEY),
+    durableRead(ACTIVE_KEY, null),
+    durableRead(PROFILE_TOMBSTONES_KEY, TOMBSTONES_CORRUPT_KEY),
+  ]);
+}
+
+/**
+ * [DP] Owner decision OD-DP5 (row DP-1e): how long a `hydrate` waits for the `hr:profiles` lock before it rebuilds
+ * damaged tombstones (another tab may hold it, or a suspended tab may never give it back; as `GUEST_LOCK_WAIT_MS`).
+ * Past it this `hydrate` holds list writes as for a read that failed; the rebuild still runs once the lock is granted.
+ */
+export const TOMBSTONE_LOCK_WAIT_MS = 2_000;
+
+/** `step`'s answer, or `fallback` once `ms` have passed (the step runs on; it re-reads before it writes). */
+async function withinWait<T>(step: Promise<T>, fallback: T, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<T>((resolve) => {
+    timer = setTimeout(() => resolve(fallback), ms);
+  });
+  try {
+    return await Promise.race([step, late]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+/**
+ * [DP] Owner decision OD-DP5 (row DP-1e): tombstone bytes that do not parse never parse again, so holding list writes
+ * until they read (section 3.3) would hold them for good. In this tab's queue and inside the `hr:profiles` lock (as every
+ * list write), on what is stored then: the list must read (missing, or a list), the active key must read, and the
+ * tombstones must still not parse with their raw bytes kept at `tombstones-corrupt` (`keepRawCopy` answers `kept` only
+ * once the copy key holds a copy, so the copy is on disk before anything is written over them). The set is rebuilt from
+ * the device (`rebuiltTombstones`): a learner of the stored list with nothing left on the device is tombstoned now; a
+ * learner with any per-profile key (`keyOfProfile`) is kept, and so is the learner the active key names (a removal
+ * always moves the active key away, so that learner is in use, possibly in another tab, and not yet saved). It is
+ * written once, and the other tabs are told (`hr-profiles`), so their held list writes land. Answers the ids it
+ * tombstoned (empty when the tombstones read now: another tab wrote them), so the caller reads every record again;
+ * `null` when nothing was written and nothing changed: a record that does not read, the copy not kept, the keys not
+ * listable, no learner of the list left (fail closed, OD-DP8), or the write failed. Never rejects.
+ */
+async function rebuildDamagedTombstones(now: number): Promise<ReadonlySet<string> | null> {
+  let rebuilt = null as ReadonlySet<string> | null;
+  let wrote = false;
+  await locked(async () => {
+    const [list, active, tombstones] = await readProfileRecords();
+    const listValue = valueOf(list);
+    if (list.kind === 'failed' || active.kind === 'failed' || (listValue !== null && !Array.isArray(listValue))) return false;
+    if (tombstones.kind !== 'failed') {
+      // Another tab wrote them meanwhile: they are read as they are, never written over.
+      rebuilt = new Set<string>();
+      return true;
+    }
+    if (tombstones.cause !== 'parse' || !tombstones.kept) return false;
+    const keys = await listKeys();
+    const activeId = valueOf(active);
+    const kept = (id: string): boolean => id === activeId || keys.some((key) => keyOfProfile(key, id));
+    const record = rebuiltTombstones(storedProfileItems<Profile>(listValue), kept, now);
+    if (record === null) return false;
+    await writeJson(PROFILE_TOMBSTONES_KEY, record);
+    wrote = true;
+    rebuilt = new Set(record.ids);
+    return true;
+  });
+  if (wrote) postProfilesChanged();
+  return rebuilt;
+}
+
+/**
  * [OA] OA-D19, CS-16: one list write. `hr:profiles` is read, merged and written inside the `hr:profiles` Web Lock, and
  * every step of this tab runs one after another (`enqueue`). The merge is by id, the stored copy first (another tab's
  * newer write), an id only this tab holds kept, a removal in the tombstone set winning (`mergeProfileLists`); every
@@ -489,11 +568,18 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
 
   hydrate: async () => {
     // [DP] AMENDMENTS-DURABLE-PROGRESS sections 3.1 and 3.3: each record is read under the read contract.
-    const [list, activeRead, tombstonesRead] = await Promise.all([
-      durableRead(PROFILES_KEY, PROFILES_CORRUPT_KEY),
-      durableRead(ACTIVE_KEY, null),
-      durableRead(PROFILE_TOMBSTONES_KEY, null),
-    ]);
+    let [list, activeRead, tombstonesRead] = await readProfileRecords();
+    // [DP] OD-DP5 (row DP-1e): tombstone bytes that do not parse, once kept, are rebuilt from the device and written, then
+    // every record is read again (at most once per hydrate: a rebuild that did not land holds, below).
+    let rebuilt: ReadonlySet<string> = new Set();
+    if (list.kind !== 'failed' && tombstonesRead.kind === 'failed' && tombstonesRead.cause === 'parse' && tombstonesRead.kept) {
+      // The boot waits on the lock for a while only (a lock never given back holds this hydrate as a read failure).
+      const written = await withinWait(rebuildDamagedTombstones(Date.now()), null, TOMBSTONE_LOCK_WAIT_MS);
+      if (written !== null) {
+        rebuilt = written;
+        [list, activeRead, tombstonesRead] = await readProfileRecords();
+      }
+    }
     // A list that could not be read never shows first run: not hydrated, and nothing writes the profile records.
     // A later `hydrate` that fails (Try again) leaves nothing of an earlier read in memory either.
     const unread = (cause: 'read' | 'parse', kept = false): void =>
@@ -510,13 +596,17 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     let profiles: Profile[];
     /** The active key cannot pick the active learner: failed, or it names a learner hidden below. */
     let activeUnknown = activeRead.kind === 'failed';
+    /** [DP] Row DP-1e: the stored list holds a removed learner: a list write drops it. */
+    let rewrite = false;
     if (tombstonesRead.kind === 'failed') {
-      // [DP] Section 3.3: the tombstones failed alone. A learner whose per-profile keys are already all gone (it was
+      // [DP] Section 3.3: the tombstones failed alone (a read that threw, or damaged bytes OD-DP5 could not rebuild: no
+      // copy kept, or the rebuild failed closed). A learner whose per-profile keys are already all gone (it was
       // swept) is not shown, the sweep is skipped, and every list write reads the tombstones again (`readStored`), so
-      // list writes are held until a tombstone read works. Any per-profile key counts (`keyOfProfile`, the sweep's own
-      // test), not only `progress:<id>`, so fewer kept learners are hidden. Fail closed (the list is treated as
-      // unread) when a removed learner cannot be told from a kept one: the keys cannot be listed, or no learner would
-      // be left of a list that holds some (that would show first run).
+      // list writes are held until a tombstone read works (the next hydrate reads, or rebuilds, them again). Any
+      // per-profile key counts (`keyOfProfile`, the sweep's own test), not only `progress:<id>`, so fewer kept
+      // learners are hidden. Fail closed (the list is treated as unread) when a removed learner cannot be told from a
+      // kept one: the keys cannot be listed, or no learner would be left of a list that holds some (that would show
+      // first run; learners are counted, as the chooser counts them, OD-DP8).
       let keys: string[];
       try {
         keys = await listKeys();
@@ -525,7 +615,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
         return;
       }
       profiles = stored.filter((p) => keys.some((key) => keyOfProfile(key, p.id)));
-      if (profiles.length === 0 && stored.length > 0) {
+      if (stored.some((p) => p.role === 'learner') && !profiles.some((p) => p.role === 'learner')) {
         unread('read');
         return;
       }
@@ -536,9 +626,15 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
       // [OA] OA-D19: a learner removed in another tab (an older bundle may have written it back) stays removed.
       const removed = new Set(parseTombstones(valueOf(tombstonesRead)).ids);
       profiles = removed.size === 0 ? stored : stored.filter((p) => !removed.has(p.id));
+      // [DP] OD-DP5 (row DP-1e): a removed learner still in the stored list (written back) is written out of it now, by
+      // a list write that merges with the tombstones as they are, so it never comes back once they are pruned.
+      rewrite = profiles.length < stored.length;
       // [OA] Row OA-7a (CS-20): what a removed learner left behind (a delete that failed, a key an older bundle wrote
-      // back) goes at launch. A learner restored since is no longer tombstoned, so its keys stay.
-      if (removed.size > 0) quietly(() => sweepProfileKeys([...removed].filter((id) => !profiles.some((p) => p.id === id))));
+      // back) goes at launch. A learner restored since is no longer tombstoned, so its keys stay. [DP] Row DP-1e: a
+      // learner this hydrate's rebuild just tombstoned had no key when the keys were listed, so a key it has now was
+      // written since (by a tab where it is in use): it is not swept here.
+      const sweep = [...removed].filter((id) => !profiles.some((p) => p.id === id) && !rebuilt.has(id));
+      if (sweep.length > 0) quietly(() => sweepProfileKeys(sweep));
     }
     remember(profiles);
     let active: string | null;
@@ -554,7 +650,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
       active = activeId === null ? null : (profiles.find((p) => p.id === activeId)?.id ?? profiles[0]?.id ?? null);
     }
     set({ profiles, activeId: active, hydrated: true, loadFailed: null, listCopyKept: false, activeSince: Date.now() });
-    if (holdsLegacyPinHash(storedRaw)) persistList();
+    if (holdsLegacyPinHash(storedRaw) || rewrite) persistList();
     // [DP] Section 3.6 (row DP-1d): the list reads, so a damaged copy kept earlier has settled: its 30 days run.
     void settleKeptListCopy(Date.now());
   },

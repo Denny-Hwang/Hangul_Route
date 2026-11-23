@@ -87,6 +87,22 @@ function withoutLegacyPinHash<T extends object>(item: T): T {
 }
 
 /**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS owner decision OD-DP5 (row DP-1e): the tombstone record rebuilt from the device when
+ * its stored bytes do not parse. Every learner of the stored list with nothing left on the device (`kept` false: no
+ * per-profile key, so its keys were swept and it was written back) is tombstoned at `now`; every other item stays. Only
+ * learners (`role: 'learner'`) are tombstoned, and an id that is not a profile id never is (`parseTombstones` would drop
+ * it again). `null` when the list holds learners and none would be left: that would show first run, so the caller fails
+ * closed (OD-DP8). Never mutates its input.
+ */
+export function rebuiltTombstones(stored: readonly { id: string; role?: string }[], kept: (id: string) => boolean, now: number): ProfileTombstones | null {
+  const learners = stored.filter((item) => item.role === 'learner');
+  let record = EMPTY_TOMBSTONES;
+  for (const item of learners) if (PROFILE_ID.test(item.id) && !kept(item.id)) record = addTombstone(record, item.id, now);
+  if (learners.length > 0 && learners.every((item) => record.ids.includes(item.id))) return null;
+  return record;
+}
+
+/**
  * The record without the ids removed `TOMBSTONE_KEEP_MS` or more ago. A time in the future (a clock that ran back)
  * is kept until the clock passes it. Returns the same record when nothing goes.
  */

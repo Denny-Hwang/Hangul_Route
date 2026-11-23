@@ -132,7 +132,7 @@ describe('Home under a running quest (row FN-5)', () => {
 
   it('every learner tab screen is frozen while it is not focused (tabs.tsx)', () => {
     const source = readFileSync(join(__dirname, '..', '..', '..', 'navigation', 'tabs.tsx'), 'utf8');
-    for (const screen of ['HomeScreen', 'JourneyScreen', 'LibraryScreen', 'MyRouteTabScreen']) expect(source).toContain(`frozenWhenBlurred(${screen})`);
+    for (const screen of ['HomeScreen', 'JourneyScreen', 'LibraryScreen', 'MyRouteTabScreen']) expect(source).toContain(`frozenWhenBlurred(learnerReadGated(${screen}))`);
   });
 });
 

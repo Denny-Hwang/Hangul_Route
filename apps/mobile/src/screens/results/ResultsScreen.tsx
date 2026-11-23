@@ -116,7 +116,9 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const recordCatchUp = useProgressStore((s) => s.recordCatchUp);
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): this learner's progress could not be saved (or read) yet.
-  const saveLater = useProgressStore((s) => (profile ? s.saveFailedFor.has(profile.id) || s.loadFailedFor.has(profile.id) : false));
+  // Owner decision OD-DP7 (row DP-1e): a save that did not land shows the line only once its first retry (1 s) has not
+  // landed either, so a save that lands on its retry never flashes it.
+  const saveLater = useProgressStore((s) => (profile ? s.saveRetryFailedFor.has(profile.id) || s.loadFailedFor.has(profile.id) : false));
   // The access tier (F-ENT-003 section 3.4): re-renders when the inbox, the spaces or the subscription change it.
   const tier = useAccessTier(profile?.id ?? '');
   // May the active learner start a quest (F-ENT-003 sections 3.5 and 3.6): "Next up" and "Next story" offer open quests only.

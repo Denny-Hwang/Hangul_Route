@@ -76,11 +76,19 @@ describe('ProgressReadFailedScreen: what it shows (frames A, C)', () => {
 
   it('native: the first focus moves on the next tick, to the one header element', async () => {
     setPlatform('ios');
-    const r = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
-    expect(reader.focus).not.toHaveBeenCalled();
-    await flush();
-    expect(reader.focus).toHaveBeenCalledTimes(1);
-    expect(r.root.findAll((n) => typeof n.type === 'string' && n.props.role === 'heading').length).toBeGreaterThan(0);
+    // The fake clock holds the next tick, so a busy test run cannot let it pass before the first check.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const r = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+      expect(reader.focus).not.toHaveBeenCalled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(reader.focus).toHaveBeenCalledTimes(1);
+      expect(r.root.findAll((n) => typeof n.type === 'string' && n.props.role === 'heading').length).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('never uses the danger colour', async () => {
@@ -269,5 +277,73 @@ describe('the still-stuck line (frame F, D3)', () => {
       await flush();
     }
     expect(screenTexts(byTestId(r.root, 'read-failed-still-stuck')[0] as ReactTestInstance)).toEqual([]);
+  });
+});
+
+/**
+ * [DP] Row DP-1e (owner decision OD-DP6): every learner tab may hold a copy of the screen at once (native tabs stay
+ * mounted; web tabs are frozen with their state kept). The session's count of tries and the try running now are one
+ * for all of them: a try on one tab holds every copy, the still-stuck line shows on every copy once the session reaches
+ * three, and each copy says its bubble again after its own failed try.
+ */
+describe('[DP] several copies at once (row DP-1e)', () => {
+  it('a try on one copy holds every copy busy, and no second try starts from another copy', async () => {
+    const run = deferred();
+    const tryA = vi.fn(() => run.promise);
+    const tryB = vi.fn(async () => false);
+    const a = await render(<ProgressReadFailedScreen onTryAgain={tryA} minBusyMs={0} />);
+    const b = await render(<ProgressReadFailedScreen onTryAgain={tryB} minBusyMs={0} />);
+    await press(buttonsNamed(a.root, m.tryAgain)[0] as ReactTestInstance);
+    expect(buttonProps(b.root, m.tryAgain).softDisabled).toBe(true);
+    expect(byTestId(b.root, 'read-failed-body')[0]?.props['aria-busy']).toBe(true);
+    await press(buttonsNamed(b.root, m.tryAgain)[0] as ReactTestInstance);
+    expect(tryB).not.toHaveBeenCalled();
+    run.resolve(false);
+    await flush();
+    expect(buttonProps(b.root, m.tryAgain).softDisabled).toBe(false);
+    expect(buttonProps(a.root, m.tryAgain).softDisabled).toBe(false);
+  });
+
+  it('a try whose copy went away still ends: the other copies are not left busy', async () => {
+    const run = deferred();
+    const a = await render(<ProgressReadFailedScreen onTryAgain={() => run.promise} minBusyMs={0} />);
+    const b = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    await press(buttonsNamed(a.root, m.tryAgain)[0] as ReactTestInstance);
+    await unmount(a);
+    run.resolve(true);
+    await flush();
+    expect(buttonProps(b.root, m.tryAgain).softDisabled).toBe(false);
+  });
+
+  it('the still-stuck line shows on every copy once the session reaches three tries', async () => {
+    const a = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    const b = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    for (let i = 0; i < 3; i += 1) {
+      await press(buttonsNamed(a.root, m.tryAgain)[0] as ReactTestInstance);
+      await flush();
+    }
+    expect(screenTexts(byTestId(b.root, 'read-failed-still-stuck')[0] as ReactTestInstance)).toEqual([m.stillStuck]);
+  });
+
+  it('each failed try is said again on its own copy, whatever the other copies did (web, Android: the live region changes)', async () => {
+    const a = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    const b = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    await press(buttonsNamed(a.root, m.tryAgain)[0] as ReactTestInstance);
+    await flush();
+    const before = b.root.findByType(HoyaBubble).props.message as string;
+    await press(buttonsNamed(b.root, m.tryAgain)[0] as ReactTestInstance);
+    await flush();
+    expect(b.root.findByType(HoyaBubble).props.message).not.toBe(before);
+  });
+
+  it('iOS: the try that brings the session to three says the still-stuck line, on whichever copy it was made', async () => {
+    setPlatform('ios');
+    const a = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    const b = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    for (const copy of [a, b, a]) {
+      await press(buttonsNamed(copy.root, m.tryAgain)[0] as ReactTestInstance);
+      await flush();
+    }
+    expect(reader.announce.mock.calls.map((c) => c[0])).toEqual([m.bubble, m.bubble, `${m.bubble} ${m.stillStuck}`]);
   });
 });
