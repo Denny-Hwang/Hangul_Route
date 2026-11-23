@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { createElement, type ComponentType, type ReactNode } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { act, type ReactTestInstance } from 'react-test-renderer';
@@ -19,6 +20,7 @@ import { render, screenTexts } from '../../../test-support/render';
 const anim = vi.hoisted(() => ({ shared: [] as { value: unknown }[], timings: [] as unknown[] }));
 vi.mock('react-native-reanimated', async () => {
   const { View } = await import('react-native');
+  const { useRef } = await import('react');
   const easing = (): ((t: number) => number) => (t: number) => t;
   const Easing = new Proxy({}, { get: () => easing });
   const createAnimatedComponent = (Comp: ComponentType<Record<string, unknown>>) =>
@@ -30,11 +32,17 @@ vi.mock('react-native-reanimated', async () => {
     createAnimatedComponent,
     Easing,
     runOnJS: <F,>(fn: F) => fn,
+    // The worklet is called by the test; a dependency list (ShapeReveal's `[progress, look]`, read by Reanimated on the
+    // web without its Babel plugin) is not checked here.
     useAnimatedProps: (fn: () => object) => ({ worklet: fn }),
+    // One value per mounted hint, as Reanimated's: a re-render (a new canvas look) does not make a new one.
     useSharedValue: <T,>(value: T) => {
-      const v = { value };
-      anim.shared.push(v);
-      return v;
+      const ref = useRef<{ value: T } | null>(null);
+      if (ref.current === null) {
+        ref.current = { value };
+        anim.shared.push(ref.current);
+      }
+      return ref.current;
     },
     withDelay: <T,>(_ms: number, value: T) => value,
     withSequence: <T,>(...values: T[]) => values[values.length - 1],
@@ -103,6 +111,68 @@ describe('StrokeHint, untaught letter: the shape reveal', () => {
   it('reads a slash in the romanization as "or"', async () => {
     const r = await render(<StrokeHint target={strokesForJamo('jamo:ieung')!} size={200} playToken={1} orderTaught={false} romanization="silent/ng" />);
     expect(labels(r.root)).toEqual(['silent or ng, shape guide.']);
+  });
+});
+
+/**
+ * [SO] Row SO-1b, OD-SO9: on the retry canvas (`feedback.nudgeLight`) the hint look at 0.6 is about 1.3:1, so while the
+ * canvas is in its retry look the shape reveal (and its reduced-motion still) draws the group at full opacity.
+ */
+describe('StrokeHint, untaught letter: the reveal on the retry canvas (OD-SO9)', () => {
+  const groupOpacity = (root: ReactTestInstance): number =>
+    (animated(root)[0]!.props.animatedProps as { worklet: () => { opacity: number } }).worklet().opacity;
+
+  it('the group reaches full opacity in the retry look, and the hint look (0.6) otherwise', async () => {
+    const retry = await render(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught={false} romanization="m" retryLook />);
+    expect(groupOpacity(retry.root)).toBeCloseTo(1);
+    const idle = await render(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught={false} romanization="m" retryLook={false} />);
+    expect(groupOpacity(idle.root)).toBeCloseTo(0.6);
+  });
+
+  it('a reveal that is up when the canvas turns to (or leaves) the retry look follows it, without starting again', async () => {
+    const r = await render(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught={false} romanization="m" />);
+    expect(groupOpacity(r.root)).toBeCloseTo(0.6);
+    const timings = anim.timings.length;
+    await act(async () => r.update(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught={false} romanization="m" retryLook />));
+    expect(groupOpacity(r.root)).toBeCloseTo(1);
+    await act(async () => r.update(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught={false} romanization="m" retryLook={false} />));
+    expect(groupOpacity(r.root)).toBeCloseTo(0.6);
+    // No new fade-in: the reveal did not restart.
+    expect(anim.timings.length).toBe(timings);
+  });
+
+  it.each([true, 'fails'] as const)('the still letter is at full opacity in the retry look (reduced motion: %s)', async (mode) => {
+    reduced = mode;
+    const r = await render(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught={false} romanization="m" retryLook />);
+    expect(r.root.findAll((n) => n.type === G).map((g) => g.props.opacity)).toEqual([1]);
+    const idle = await render(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught={false} romanization="m" />);
+    expect(idle.root.findAll((n) => n.type === G).map((g) => g.props.opacity)).toEqual([0.6]);
+  });
+
+  it('a taught letter keeps today\'s demo: the retry look changes nothing in it', async () => {
+    const trails = async (retryLook: boolean): Promise<number[]> => {
+      const r = await render(<StrokeHint target={MIEUM} size={200} playToken={1} orderTaught romanization="m" retryLook={retryLook} />);
+      expect(r.root.findAll((n) => n.type === G)).toHaveLength(0);
+      return animated(r.root)
+        .filter((n) => n.type === Path)
+        .map((n) => (n.props.animatedProps as { worklet: () => { opacity: number } }).worklet().opacity);
+    };
+    expect(await trails(true)).toEqual(await trails(false));
+  });
+});
+
+/** [SO] Row SO-1b, OD-SO10: the label's "or" is the word of the labels' own language. */
+describe('StrokeHint, untaught letter: the "or" of the label (OD-SO10)', () => {
+  const IEUNG = strokesForJamo('jamo:ieung')!;
+  it.each([
+    ['es', 'silent o ng, guía de la forma.'],
+    ['ko', 'silent 또는 ng, 모양 안내.'],
+  ] as const)('%s labels read the alternatives with their own word', async (locale, want) => {
+    const m = getMessages(locale);
+    const r = await render(
+      <StrokeHint target={IEUNG} size={200} playToken={1} orderTaught={false} romanization="silent/ng" strokeOrder={m.a11y.minigame.strokeOrder} romanizationOr={m.a11y.romanizationOr} />,
+    );
+    expect(labels(r.root)).toEqual([want]);
   });
 });
 

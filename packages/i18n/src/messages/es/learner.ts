@@ -1888,6 +1888,7 @@ export const learner = {
       deckTitle: 'Lección',
       letterName: (name: string, _hangul: string) => `Nombre de la letra: ${name}`,
       strokeCaption: 'Guía de trazos simplificada',
+      shapeCaption: 'Forma de la letra',
       sayIt: 'Dilo así:',
       card: 'Tarjeta cultural',
       topic: 'Temas de palabras',

@@ -260,13 +260,23 @@ describe('checkJamoRomanization (R7)', () => {
 
 describe('a11yRomanization', () => {
   it('reads a slash as "or"', () => {
-    expect(a11yRomanization('silent/ng')).toBe('silent or ng');
-    expect(a11yRomanization('g/k')).toBe('g or k');
-    expect(a11yRomanization('silent / ng')).toBe('silent or ng');
+    expect(a11yRomanization('silent/ng', 'or')).toBe('silent or ng');
+    expect(a11yRomanization('g/k', 'or')).toBe('g or k');
+    expect(a11yRomanization('silent / ng', 'or')).toBe('silent or ng');
+  });
+
+  // [SO] AMENDMENTS-STROKE-ORDER-STANDARD OD-SO10 (row SO-1b): the word between the alternatives is the UI locale's
+  // (`a11y.romanizationOr` in packages/i18n), never the English word in every locale.
+  it('joins the alternatives with the word it is given', () => {
+    expect(a11yRomanization('silent/ng', 'o')).toBe('silent o ng');
+    expect(a11yRomanization('g/k', '또는')).toBe('g 또는 k');
+    expect(a11yRomanization('___eul/reul meogeoyo', 'o')).toBe('___eul o reul meogeoyo');
+    expect(a11yRomanization('a/b/c', 'o')).toBe('a o b o c');
   });
 
   it('leaves values without a slash alone', () => {
-    expect(a11yRomanization('eo')).toBe('eo');
-    expect(a11yRomanization('')).toBe('');
+    expect(a11yRomanization('eo', 'or')).toBe('eo');
+    expect(a11yRomanization('eo', '또는')).toBe('eo');
+    expect(a11yRomanization('', 'o')).toBe('');
   });
 });

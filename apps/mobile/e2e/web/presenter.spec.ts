@@ -226,7 +226,8 @@ test.describe('presenter at 1280 x 720', () => {
     for (let i = 0; i < 8 && (await page.getByTestId('presenter-next').getAttribute('aria-label')) === 'Reveal'; i++) await page.keyboard.press('PageDown');
     await expect(page.getByTestId('presenter-next')).toHaveAccessibleName('Next');
     expect(await counter(page)).toBe(`2 / ${total}`);
-    await expect(page.getByText('Simplified stroke guide')).toBeVisible();
+    // [SO] AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8: no letter's stroke order is checked yet, so the panel shows its shape.
+    await expect(page.getByText('Letter shape')).toBeVisible();
     await expect(page.getByText(/^Letter name: /)).toBeVisible();
     await shot(page, 'presenter-letter-1280x720');
     await expect(page.getByTestId('presenter-live')).toHaveText(/^Slide \d+ of \d+, Letter, /);

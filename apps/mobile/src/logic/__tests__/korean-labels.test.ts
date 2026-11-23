@@ -28,26 +28,48 @@ describe('replyOptionLabel (F-CNT-002 §3.5: TapRespond shows ko, romanization, 
 });
 
 describe('jamo screen-reader labels (F-CNT-002 §3.3: a11yRomanization)', () => {
+  const OR = getMessages('en').a11y.romanizationOr;
   it('reads silent/ng as "silent or ng" on a tile', () => {
-    expect(jamoTileA11yLabel('silent/ng', getMessages('en').a11y.tile)).toBe('Korean letter silent or ng, tap to select');
+    expect(jamoTileA11yLabel('silent/ng', getMessages('en').a11y.tile, OR)).toBe('Korean letter silent or ng, tap to select');
   });
 
   it('leaves a plain sound value alone', () => {
-    expect(jamoTileA11yLabel('eo', getMessages('en').a11y.tile)).toBe('Korean letter eo, tap to select');
+    expect(jamoTileA11yLabel('eo', getMessages('en').a11y.tile, OR)).toBe('Korean letter eo, tap to select');
   });
 
   it('reads the g/k pair as "g or k" in the trace prompt and canvas', () => {
     const a11y = getMessages('en').a11y.minigame;
-    expect(traceLetterA11yText('g/k', a11y.traceLetter)).toBe('Trace the letter g or k');
-    expect(traceCanvasA11yLabel('g/k', a11y.traceCanvas)).toBe('Draw the letter g or k with your finger');
+    expect(traceLetterA11yText('g/k', a11y.traceLetter, OR)).toBe('Trace the letter g or k');
+    expect(traceCanvasA11yLabel('g/k', a11y.traceCanvas, OR)).toBe('Draw the letter g or k with your finger');
   });
 
   it('names a final consonant as a final in the trace heading and its screen-reader text (F-QUEST-002 Q-8, quest 12)', () => {
     const m = getMessages('en');
     expect(traceHeadingText({ romanization: 'm', kind: 'batchim' }, m.learner.minigame.trace)).toBe('Trace the final m');
     expect(traceHeadingText({ romanization: 'm', kind: 'consonant' }, m.learner.minigame.trace)).toBe('Trace the letter m');
-    expect(traceTargetA11yText({ romanization: 'p', kind: 'batchim' }, m.a11y.minigame)).toBe('Trace the final p');
-    expect(traceTargetA11yText({ romanization: 'g/k', kind: 'consonant' }, m.a11y.minigame)).toBe('Trace the letter g or k');
+    expect(traceTargetA11yText({ romanization: 'p', kind: 'batchim' }, m.a11y.minigame, OR)).toBe('Trace the final p');
+    expect(traceTargetA11yText({ romanization: 'g/k', kind: 'consonant' }, m.a11y.minigame, OR)).toBe('Trace the letter g or k');
+  });
+
+  // [SO] AMENDMENTS-STROKE-ORDER-STANDARD row SO-1b, OD-SO10: the word between the alternatives is the UI locale's.
+  it.each([
+    ['es', ' o '],
+    ['ko', ' 또는 '],
+  ] as const)('%s: every label reads the slash with the locale word for "or", never the English one', (locale, word) => {
+    const m = getMessages(locale);
+    const or = m.a11y.romanizationOr;
+    const labels = [
+      jamoTileA11yLabel('silent/ng', m.a11y.tile, or),
+      traceLetterA11yText('g/k', m.a11y.minigame.traceLetter, or),
+      traceCanvasA11yLabel('g/k', m.a11y.minigame.traceCanvas, or),
+      traceTargetA11yText({ romanization: 'g/k', kind: 'consonant' }, m.a11y.minigame, or),
+      traceTargetA11yText({ romanization: 'kk/k', kind: 'batchim' }, m.a11y.minigame, or),
+    ];
+    for (const label of labels) {
+      expect(label).toContain(word);
+      expect(label).not.toMatch(/ or |\//);
+    }
+    expect(labels[0]).toBe(m.a11y.tile(`silent${word}ng`));
   });
 });
 

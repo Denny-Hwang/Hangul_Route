@@ -35,7 +35,7 @@ describe('JamoSchema romanization fields (F-CNT-002 §3.5)', () => {
   });
 
   it('reads silent/ng aloud as "silent or ng"', () => {
-    expect(a11yRomanization(jamo.romanization)).toBe('silent or ng');
+    expect(a11yRomanization(jamo.romanization, 'or')).toBe('silent or ng');
   });
 });
 

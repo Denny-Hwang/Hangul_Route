@@ -58,7 +58,7 @@ Presenter letter slide (untaught), middle column only:
 |           |           |   (stroke build / R: the panel letter steps aside
 |           |           |    and the shape reveal fades it in)
 +-----------------------+
-  Simplified stroke guide     caption (unchanged; no second caption)
+  Letter shape                caption (OD-SO8, 2026-11-23; was "Simplified stroke guide"; no second caption)
 ```
 
 Taught (after SO-3, not reachable in SO-1): today's screens exactly: sequenced dot over the ghost, numbered still with arrows, numbered presenter dots, no **Shape guide** line.
@@ -104,7 +104,7 @@ No new screens. Entry: Trace Stroke (Stage 1 q2, q12), Trace a Word (Stage 7), p
 - The strip is a polite live region on Android; iOS does not announce it (`accessibilityLiveRegion` is Android-only, as TRACE-IDLE §4 notes). Nothing extra is announced on iOS: the hint's label is there when the reader reaches the canvas, as today's still is.
 - Trace Word: `orderLabel` becomes `shape(romanization)` for an untaught unit ("ho, shape guide.").
 - The still never shows numerals or arrows, so there is no visual-only order information to describe.
-- Colours: the reveal is `feedback.nudge` (the colour Show me already uses) at group opacity 0.6, the strokes opaque inside the group so crossings do not darken (darker crossings read like start dots). It is help, not a miss: Hoya's pose never changes because of the hint, and `feedback.danger` is never used.
+- Colours: the reveal is `feedback.nudge` (the colour Show me already uses) at group opacity 0.6 (1 while the canvas is in its retry look: OD-SO9, 2026-11-23), the strokes opaque inside the group so crossings do not darken (darker crossings read like start dots). It is help, not a miss: Hoya's pose never changes because of the hint, and `feedback.danger` is never used.
 
 ## 9. Draft strings (SO-1 adds them with reviewed es and ko, spec §3.6)
 
@@ -113,7 +113,7 @@ No new screens. Entry: Trace Stroke (Stage 1 q2, q12), Trace a Word (Stage 7), p
 | `learner.minigame.trace.shapeGuide` | Shape guide |
 | `a11y.minigame.strokeOrder.shape` | `${romanization}, shape guide.` |
 
-`a11y.minigame.strokeOrder.shapeGuide` of spec §3.6 is not needed by this design (one label per hint, above); the spec now marks it dropped. The presenter keeps `strokeCaption` ("Simplified stroke guide") and shows no "Shape guide".
+`a11y.minigame.strokeOrder.shapeGuide` of spec §3.6 is not needed by this design (one label per hint, above); the spec now marks it dropped. The presenter keeps `strokeCaption` ("Simplified stroke guide") and shows no "Shape guide". Since OD-SO8 (2026-11-23, row SO-1b) an untaught letter's panel is captioned `learner.presenter.slide.shapeCaption` ("Letter shape"), a taught one `strokeCaption`.
 
 ## 10. States
 

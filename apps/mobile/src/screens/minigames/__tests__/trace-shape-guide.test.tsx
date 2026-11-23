@@ -63,9 +63,11 @@ vi.mock('react-native-gesture-handler', () => {
 });
 /** Show me stands in as a recorder of its props (the real one is checked in stroke-hint-shape.test.tsx). */
 interface HintProps {
+  target: unknown;
   orderTaught: boolean;
   romanization: string;
   orderLabel?: string;
+  retryLook?: boolean;
   onComplete?: () => void;
 }
 const hint = vi.hoisted(() => ({ last: null as HintProps | null }));
@@ -214,6 +216,24 @@ describe('Trace Stroke, untaught letter: Show me is a shape guide (§6 test 8)',
     expect(texts(r.root)).not.toContain(SHAPE_GUIDE);
   });
 
+  // [SO] Row SO-1b, OD-SO9: the reveal is told when the canvas is in its retry look (it then draws at full opacity).
+  it('Show me is told the canvas look: not the retry look while drawing, the retry look after a miss, and back', async () => {
+    const r = await playStroke('jamo:o');
+    await press(r.root, 'Show me');
+    expect(hint.last!.retryLook).toBe(false);
+    await endHint();
+    await draw(r.root, [{ x: 10, y: 190 }, { x: 30, y: 190 }]);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(RETRY_LINE);
+    await press(r.root, 'Show me');
+    expect(hint.last!.retryLook).toBe(true);
+    // The first real ink after a miss turns the canvas back to drawing; the reveal still up follows it.
+    const [tick] = strokesForJamo('jamo:o')!;
+    await draw(r.root, tick!);
+    expect(texts(r.root)).not.toContain(RETRY_LINE);
+    expect(hint.last!.retryLook).toBe(false);
+  });
+
   it('a pass line wins over the caption; ㅗ bar first passes clean (no order line)', async () => {
     const r = await playStroke('jamo:o');
     await press(r.root, 'Show me');
@@ -306,6 +326,39 @@ describe('Trace a Word, untaught unit: Show me is a shape guide (§6 tests 7, 8)
     await press(r.root, 'Done');
     expect(texts(r.root)).toContain(RETRY_LINE);
     expect(texts(r.root)).not.toContain(SHAPE_GUIDE);
+  });
+
+  // [SO] Row SO-1b, OD-SO9: Show me on the retry look is told so (the reveal then draws at full opacity).
+  it('Show me is told the canvas look: drawing, then the retry look after a miss', async () => {
+    const r = await render(<TraceWordGame scope={scope()} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    await press(r.root, 'Show me');
+    expect(hint.last!.retryLook).toBe(false);
+    await endHint();
+    await draw(r.root, [{ x: 10, y: 190 }, { x: 30, y: 190 }]);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(RETRY_LINE);
+    await press(r.root, 'Show me');
+    expect(hint.last!.retryLook).toBe(true);
+  });
+
+  // StrokeHint plays again when its target changes: the unit's strokes keep their identity across a re-render (ink
+  // drawn while the shape is up, the canvas leaving the retry look), so the reveal follows the look without restarting.
+  it.each([undefined, 'letter'] as const)('Show me keeps one target while the learner draws during it (mode: %s)', async (mode) => {
+    const r = await render(<TraceWordGame scope={scope(mode)} host={host()} />);
+    mounted.push(r);
+    await layOut(r);
+    await draw(r.root, [{ x: 10, y: 190 }, { x: 30, y: 190 }]);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(RETRY_LINE);
+    await press(r.root, 'Show me');
+    const target = hint.last!.target;
+    expect(hint.last!.retryLook).toBe(true);
+    await draw(r.root, [{ x: 100, y: 40 }, { x: 100, y: 80 }]);
+    expect(texts(r.root)).not.toContain(RETRY_LINE);
+    expect(hint.last!.retryLook).toBe(false);
+    expect(hint.last!.target).toBe(target);
   });
 
   it('letter mode: the one letter, labelled by its own romanization; only its ghost steps aside', async () => {

@@ -45,11 +45,12 @@ const en = getMessages('en');
 const COPY = en.learner.minigame;
 const A11Y = en.a11y.minigame;
 const KOREAN_ITEM = en.a11y.koreanItem;
+const OR = en.a11y.romanizationOr;
 
 const menu = playableRealia(REALIA_FIXTURES.menu)!;
 const q1 = menu.rounds[0]!;
-const always = { romanizationMode: 'always' as const };
-const tapMode = { romanizationMode: 'tap' as const };
+const always = { romanizationMode: 'always' as const, romanizationOr: OR };
+const tapMode = { romanizationMode: 'tap' as const, romanizationOr: OR };
 
 function run(state: RealiaReadState, events: RealiaReadEvent[]): { state: RealiaReadState; effects: unknown[] } {
   let s = state;
@@ -259,15 +260,15 @@ describe('the sheet', () => {
     expect(sheetSummary(REALIA_KIND_FIXTURES.timetable.realiaRead.realia, getMessages('es').a11y.minigame)).toBe('Horario, 3 líneas');
     expect(sheetSummary(REALIA_KIND_FIXTURES.receipt.realiaRead.realia, getMessages('ko').a11y.minigame)).toBe('영수증, 4줄');
     // A map place prints its way as its value (its legend draws no arrow), so the name reads the value (row CM-41 S6).
-    expect(lineBaseLabel(REALIA_KIND_FIXTURES.map.realiaRead.realia.entries[2]!, A11Y)).toBe('정상, jeongsang, 오른쪽, oreunjjok');
+    expect(lineBaseLabel(REALIA_KIND_FIXTURES.map.realiaRead.realia.entries[2]!, A11Y, OR)).toBe('정상, jeongsang, 오른쪽, oreunjjok');
   });
 
   it('names a line by its Korean, romanization, value and direction', () => {
     const [ramyeon] = menu.realia.entries.filter((e) => e.id === 'ramyeon');
-    expect(lineBaseLabel(ramyeon!, A11Y)).toBe('라면, ramyeon, 3,000원, samcheon won');
+    expect(lineBaseLabel(ramyeon!, A11Y, OR)).toBe('라면, ramyeon, 3,000원, samcheon won');
     const summit = REALIA_FIXTURES.sign.realiaRead.realia.entries[0]!;
-    expect(lineBaseLabel(summit, A11Y)).toBe('정상, jeongsang, 1시간, han sigan, to the right');
-    expect(lineBaseLabel({ id: 'x', text: { ko: 'ㅇ', romanization: 'silent/ng', en: 'x' } }, A11Y)).toBe('ㅇ, silent or ng');
+    expect(lineBaseLabel(summit, A11Y, OR)).toBe('정상, jeongsang, 1시간, han sigan, to the right');
+    expect(lineBaseLabel({ id: 'x', text: { ko: 'ㅇ', romanization: 'silent/ng', en: 'x' } }, A11Y, OR)).toBe('ㅇ, silent or ng');
     expect(lineGloss(ramyeon!)).toBe('instant noodles, 3,000 won');
     expect(lineGloss(REALIA_FIXTURES.sign.realiaRead.realia.entries[1]!)).toBe('entrance');
   });
@@ -371,12 +372,31 @@ describe('realiaOptionView', () => {
 
 describe('realiaKeyLabel', () => {
   it('reads the key word as the sheet and the options do: a slash is read as "or"', () => {
-    expect(realiaKeyLabel({ ko: '라면', romanization: 'ramyeon', en: 'instant noodles' }, KOREAN_ITEM)).toBe(
+    expect(realiaKeyLabel({ ko: '라면', romanization: 'ramyeon', en: 'instant noodles' }, KOREAN_ITEM, OR)).toBe(
       realiaOptionView(q1, { id: 'x', text: { ko: '라면', romanization: 'ramyeon', en: 'instant noodles' } }, startRealiaRead(3), always, A11Y, KOREAN_ITEM).accessibilityLabel,
     );
     const slash = { ko: '네', romanization: 'ne/nye', en: 'yes' };
-    expect(realiaKeyLabel(slash, KOREAN_ITEM)).toBe(KOREAN_ITEM({ ko: '네', romanization: a11yRomanization('ne/nye') }));
-    expect(realiaKeyLabel(slash, KOREAN_ITEM)).not.toContain('/');
+    expect(realiaKeyLabel(slash, KOREAN_ITEM, OR)).toBe(KOREAN_ITEM({ ko: '네', romanization: a11yRomanization('ne/nye', OR) }));
+    expect(realiaKeyLabel(slash, KOREAN_ITEM, OR)).not.toContain('/');
+  });
+
+  // [SO] AMENDMENTS-STROKE-ORDER-STANDARD row SO-1b, OD-SO10: the slash is read with the UI locale's word for "or".
+  it.each([
+    ['es', 'ne o nye', 'ㅇ, silent o ng'],
+    ['ko', 'ne 또는 nye', 'ㅇ, silent 또는 ng'],
+  ] as const)('%s: the key word, a line, an option and the title read the slash in the locale', (locale, key, line) => {
+    const m = getMessages(locale);
+    const or = m.a11y.romanizationOr;
+    const slash = { ko: '네', romanization: 'ne/nye', en: 'yes' };
+    expect(realiaKeyLabel(slash, m.a11y.koreanItem, or)).toBe(m.a11y.koreanItem({ ko: '네', romanization: key }));
+    const entry = { id: 'x', text: { ko: 'ㅇ', romanization: 'silent/ng', en: 'x' } };
+    expect(lineBaseLabel(entry, m.a11y.minigame, or)).toBe(line);
+    const context = { romanizationMode: 'always' as const, romanizationOr: or };
+    expect(lineViews({ ...menu.realia, entries: [entry] }, undefined, startRealiaRead(1), context, m.a11y.minigame)[0]!.accessibilityLabel).toBe(line);
+    expect(realiaOptionView(q1, { id: 'n', text: slash }, startRealiaRead(3), context, m.a11y.minigame, m.a11y.koreanItem).accessibilityLabel).toBe(
+      m.a11y.koreanItem({ ko: '네', romanization: key }),
+    );
+    expect(titleView({ ...menu.realia, title: slash }, context)!.label).toBe(`네, ${key}`);
   });
 });
 
@@ -395,21 +415,21 @@ describe('realiaOptionColumns', () => {
 
 describe('realiaStatus', () => {
   it('nothing until a miss; Hoya after a miss; the ringed line announced after the second', () => {
-    expect(realiaStatus(menu.realia, q1, startRealiaRead(3), 'quest', COPY, A11Y)).toEqual({ hoya: undefined, lookHere: undefined });
+    expect(realiaStatus(menu.realia, q1, startRealiaRead(3), 'quest', COPY, A11Y, OR)).toEqual({ hoya: undefined, lookHere: undefined });
     const one = run(startRealiaRead(3), [tap('icheon', 1)]).state;
-    expect(realiaStatus(menu.realia, q1, one, 'quest', COPY, A11Y)).toEqual({ hoya: 'Look again', lookHere: undefined });
+    expect(realiaStatus(menu.realia, q1, one, 'quest', COPY, A11Y, OR)).toEqual({ hoya: 'Look again', lookHere: undefined });
     const two = run(one, [tap('ocheon', 600)]).state;
-    expect(realiaStatus(menu.realia, q1, two, 'quest', COPY, A11Y)).toEqual({
+    expect(realiaStatus(menu.realia, q1, two, 'quest', COPY, A11Y, OR)).toEqual({
       hoya: 'Look again',
       lookHere: 'Look here: 라면, ramyeon, 3,000원, samcheon won',
     });
-    expect(realiaStatus(menu.realia, { ...q1, answerEntryId: undefined }, two, 'quest', COPY, A11Y).lookHere).toBeUndefined();
+    expect(realiaStatus(menu.realia, { ...q1, answerEntryId: undefined }, two, 'quest', COPY, A11Y, OR).lookHere).toBeUndefined();
   });
 
   it('says nothing in a review or once the question is answered', () => {
     const one = run(startRealiaRead(3), [tap('icheon', 1)]).state;
-    expect(realiaStatus(menu.realia, q1, one, 'review', COPY, A11Y).hoya).toBeUndefined();
+    expect(realiaStatus(menu.realia, q1, one, 'review', COPY, A11Y, OR).hoya).toBeUndefined();
     const hit = run(one, [tap('samcheon', 600)]).state;
-    expect(realiaStatus(menu.realia, q1, hit, 'quest', COPY, A11Y).hoya).toBeUndefined();
+    expect(realiaStatus(menu.realia, q1, hit, 'quest', COPY, A11Y, OR).hoya).toBeUndefined();
   });
 });
