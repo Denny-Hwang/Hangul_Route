@@ -23,9 +23,10 @@ const VALID: Record<(typeof NAMES)[number], Record<string, unknown>> = {
 };
 
 describe('auth.native.* names (section 15)', () => {
-  it('appends the four names, once each, at the end of the shared list (after app.crash)', () => {
+  it('appends the four names, once each, after app.crash (the [DP] storage.* names follow them)', () => {
     expect(NATIVE_AUTH_TELEMETRY_NAMES).toEqual([...NAMES]);
-    expect(TELEMETRY_EVENT_NAMES.slice(-5)).toEqual(['app.crash', ...NAMES]);
+    const at = TELEMETRY_EVENT_NAMES.indexOf('app.crash');
+    expect(TELEMETRY_EVENT_NAMES.slice(at, at + 5)).toEqual(['app.crash', ...NAMES]);
     for (const name of NAMES) {
       expect(isTelemetryEventName(name), name).toBe(true);
       expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name), name).toHaveLength(1);

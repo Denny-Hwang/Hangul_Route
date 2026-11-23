@@ -180,6 +180,9 @@ describe('telemetry event names (one list for the client type and the API whitel
         'guest.expired',
         'route.practice_days_changed',
         'route.refresh_started',
+        'storage.read_failed',
+        'storage.write_failed',
+        'storage.write_recovered',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);

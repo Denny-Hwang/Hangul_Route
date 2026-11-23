@@ -230,6 +230,12 @@ export const TELEMETRY_EVENT_NAMES = [
   'auth.native.signout',
   'auth.native.lock',
   'auth.native.home',
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.9, TELEMETRY-NAMES-2 section W (row DP-3, Worker first; payloads:
+  // STORAGE_TELEMETRY_PAYLOADS in storage-telemetry.ts: a record code, a cause code, one boolean and a count 1 to 4;
+  // stored without a profileId; never a key, a learner name, the damaged bytes or error text)
+  'storage.read_failed',
+  'storage.write_failed',
+  'storage.write_recovered',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

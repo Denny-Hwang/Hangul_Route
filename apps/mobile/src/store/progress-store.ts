@@ -39,6 +39,7 @@ import { track } from '../platform/telemetry';
 import { isLiveGuestId } from './guest-store';
 import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
+import { trackProgressReadFailed, trackProgressStartedFresh, trackSaveFailed, trackSaveLanded, trackSaveTried } from './storage-telemetry';
 import { upperCardsOnFor } from './upper-cards-switch';
 
 /** The learner's progress snapshot (`hr:progress:<id>`); exported for the removal sweep (row OA-7a). */
@@ -382,9 +383,11 @@ export type StoredOutcome = 'done' | 'fresh' | 'fenced' | 'unread' | 'unsaved' |
  * Under the write fence (All lessons) the transaction is not run at all; `step` then gets what a plain read finds,
  * its answer is not stored, and the outcome is `fenced`. [DP] Row DP-1a: `ran` says `step` was called, `stepped` that it
  * returned, so a storage write that rejected (`unsaved`) is told apart from a step that threw (`step-failed`). Never
- * throws. Exported for its tests.
+ * throws. Exported for its tests. [DP] Row DP-3: `failure.cause` says why a record that could not be used was not read
+ * (`parse`: bytes that do not parse, or parse to no snapshot; `read`: the read threw), and `failure.kept` that its
+ * bytes were kept aside, for `storage.read_failed`.
  */
-export async function withStored(profileId: string, step: StoredStep): Promise<StoredOutcome> {
+export async function withStored(profileId: string, step: StoredStep, failure?: { cause?: 'read' | 'parse'; kept?: boolean }): Promise<StoredOutcome> {
   const storageKey = key(profileId);
   let ran = false;
   let stepped = false;
@@ -414,9 +417,11 @@ export async function withStored(profileId: string, step: StoredStep): Promise<S
     // `step` ran: it does not run twice. Its value did not land (`unsaved`), or it threw (`step-failed`).
     if (stepped) return 'unsaved';
     if (ran) return 'step-failed';
+    if (failure) failure.cause = error instanceof SyntaxError || error === NOT_A_SNAPSHOT ? 'parse' : 'read';
     try {
       // A read that failed has nothing to copy and stays unread; a damaged value is kept before anything replaces it.
       if (!(await keepRawCopy(storageKey, PROGRESS_CORRUPT_KEY(profileId), { onlyUnparsable: error !== NOT_A_SNAPSHOT }))) return 'unread';
+      if (failure) failure.kept = true;
       // The learner was removed while the copy was being made (row OA-7a): the removal already deleted both keys, so
       // the copy that landed after it goes too, and nothing is written for a learner who is no longer here.
       if (removedNow(profileId)) {
@@ -424,6 +429,7 @@ export async function withStored(profileId: string, step: StoredStep): Promise<S
         return 'unread';
       }
       await updateJson<unknown>(storageKey, (stored) => run(isSnapshot(stored) ? stored : null));
+      if (!removedNow(profileId)) trackProgressStartedFresh(profileId);
       return 'fresh';
     } catch {
       if (stepped) return 'unsaved';
@@ -610,6 +616,7 @@ function afterWrite(profileId: string, outcome: StoredOutcome, mode: WriteMode):
     stopRetries(profileId);
     if (useProgressStore.getState().saveFailedFor.has(profileId)) {
       useProgressStore.setState((s) => ({ saveFailedFor: without(s.saveFailedFor, profileId) }));
+      trackSaveLanded(profileId);
     }
     return;
   }
@@ -620,6 +627,9 @@ function afterWrite(profileId: string, outcome: StoredOutcome, mode: WriteMode):
     // The first failure of a run starts the timed retries from the first wait.
     stopRetries(profileId);
     useProgressStore.setState((s) => ({ saveFailedFor: new Set([...s.saveFailedFor, profileId]) }));
+    trackSaveFailed(profileId);
+  } else {
+    trackSaveTried(profileId);
   }
   const retry = retries.get(profileId) ?? { tried: 0, timer: null, mode };
   if (mode === 'replace') retry.mode = 'replace';
@@ -866,6 +876,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       let after: (() => void) | undefined;
       let loadedJson: string | null | undefined;
       let writtenJson: string | undefined;
+      const failure: { cause?: 'read' | 'parse'; kept?: boolean } = {};
       const outcome = await withStored(profileId, (loaded) => {
         // A restore or a reset landed first; this read is stale.
         if (get().hydratedFor.has(profileId)) return undefined;
@@ -902,7 +913,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
           if (write) notifyProgressPersisted(profileId);
         };
         return write ? snap : undefined;
-      });
+      }, failure);
       if (outcome !== 'unread' && outcome !== 'step-failed' && loadedJson !== undefined) {
         const wrote = (outcome === 'done' || outcome === 'fresh') && writtenJson !== undefined;
         seen.set(profileId, wrote ? (writtenJson as string) : loadedJson);
@@ -917,6 +928,9 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       // treated the same way.
       if ((outcome === 'unread' || outcome === 'step-failed') && !get().hydratedFor.has(profileId) && !get().loadFailedFor.has(profileId)) {
         set((s) => ({ loadFailedFor: new Set([...s.loadFailedFor, profileId]) }));
+        // [DP] Row DP-3 (section 3.9): on the way in only, so a re-read that fails again sends nothing. A step that threw
+        // on a record that parsed counts as `parse`.
+        if (!removedNow(profileId)) trackProgressReadFailed(failure.cause ?? 'parse', failure.kept === true);
       }
       after?.();
     })

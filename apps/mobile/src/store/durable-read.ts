@@ -1,4 +1,5 @@
 import { keepRawCopy, readJsonExact, readJsonExactFresh } from '../platform/storage';
+import { trackProfileRecordReadFailed } from './storage-telemetry';
 
 /**
  * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.1 (row DP-1b): one read contract for a profile record (`hr:profiles`,
@@ -36,11 +37,18 @@ async function keep(key: string, copyKey: string | null): Promise<boolean> {
   }
 }
 
-export async function durableRead(key: string, copyKey: string | null): Promise<DurableRead> {
+async function readOnce(key: string, copyKey: string | null): Promise<DurableRead> {
   let answer = await attempt(() => readJsonExact<unknown>(key));
   // One retry on a fresh connection, only for a read that threw (bytes that do not parse would not parse again).
   if (!answer.ok && !answer.parse) answer = await attempt(() => readJsonExactFresh<unknown>(key));
   if (answer.ok) return answer.value === null || answer.value === undefined ? { kind: 'missing' } : { kind: 'value', value: answer.value };
   if (!answer.parse) return { kind: 'failed', cause: 'read', kept: false };
   return { kind: 'failed', cause: 'parse', kept: await keep(key, copyKey) };
+}
+
+export async function durableRead(key: string, copyKey: string | null): Promise<DurableRead> {
+  const read = await readOnce(key, copyKey);
+  // [DP] Row DP-3 (section 3.9): a profile record that could not be read is told, codes only (`storage.read_failed`).
+  if (read.kind === 'failed') trackProfileRecordReadFailed(key, read.cause, read.kept);
+  return read;
 }
