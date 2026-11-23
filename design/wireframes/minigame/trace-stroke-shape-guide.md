@@ -121,6 +121,8 @@ Trace Stroke: idle (unchanged) · reveal fading in · shape held · reduced-moti
 
 ## 11. Open questions (for the owner)
 
+> Decided by the owner 2026-11-23, all as recommended: see `docs/specs/AMENDMENTS-STROKE-ORDER-STANDARD.md` §10, OD-SO6 (question 1), OD-SO7 (2), OD-SO8 (3) and OD-SO9 (4).
+
 1. **Show me now adds little over the ghost.** The ghost already shows the shape; the reveal hides the ghost and fades the letter in, which reads as "here is the letter" but teaches no more than the ghost does. That is the point of SO-1 (show nothing unchecked), and order teaching comes back per letter with SO-3. Accept knowingly.
 2. **ㅇ and the loop nudge.** An untaught ㅇ still gets `pass.loop` ("try going around the other way", OD-SO1), but the shape guide shows no direction. The line does not send the learner to Show me, so nothing contradicts; whether the ring keeps one arrow is the owner's call.
 3. **The presenter caption.** "Simplified stroke guide" (OD-SO2: unchanged) now captions a panel that shows no strokes in order; "Letter shape" would be truer. Changing it is a string change outside this pass.
