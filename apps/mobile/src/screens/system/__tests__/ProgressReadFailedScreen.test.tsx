@@ -99,6 +99,77 @@ describe('Choose another learner (frame D)', () => {
   });
 });
 
+describe('[DP] A grown-up can help (frame B, row DP-1d)', () => {
+  it('shows when given, as a centred ghost button (md, 64) under Try again, and opens the grown-up gate', async () => {
+    const help = vi.fn();
+    const r = await render(<ProgressReadFailedScreen onTryAgain={async () => false} onGrownUpHelp={help} minBusyMs={0} />);
+    expect(buttonProps(r.root, m.grownUpHelp)).toMatchObject({ tone: 'ghost', size: 'md' });
+    expect((r.root.findAll((n) => n.type === Button && n.props.label === m.grownUpHelp)[0]?.props as { fullWidth?: boolean }).fullWidth).toBeFalsy();
+    // Centred: a Button without fullWidth aligns to the start, so it sits in a centring View (design Values).
+    const wrapper = r.root.findAll((n) => n.type === Button && n.props.label === m.grownUpHelp)[0]?.parent;
+    expect(wrapper?.props.style).toMatchObject({ alignItems: 'center' });
+    expect(screenTexts(r.root)).not.toContain(m.chooseAnother);
+    await press(buttonsNamed(r.root, m.grownUpHelp)[0] as ReactTestInstance);
+    expect(help).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(r.toJSON())).not.toContain(colors.feedback.danger);
+  });
+
+  it('not drawn without it (frame A: a failed read, or damaged bytes with no copy kept)', async () => {
+    const r = await render(<ProgressReadFailedScreen onTryAgain={async () => false} minBusyMs={0} />);
+    expect(screenTexts(r.root)).not.toContain(m.grownUpHelp);
+  });
+
+  it('soft-disabled while a try runs: a try never races the gate', async () => {
+    const run = deferred();
+    const help = vi.fn();
+    const r = await render(<ProgressReadFailedScreen onTryAgain={() => run.promise} onGrownUpHelp={help} minBusyMs={0} />);
+    await press(buttonsNamed(r.root, m.tryAgain)[0] as ReactTestInstance);
+    expect(buttonProps(r.root, m.grownUpHelp).softDisabled).toBe(true);
+    await press(buttonsNamed(r.root, m.grownUpHelp)[0] as ReactTestInstance);
+    expect(help).not.toHaveBeenCalled();
+    run.resolve(false);
+    await flush();
+    expect(buttonProps(r.root, m.grownUpHelp).softDisabled).toBe(false);
+  });
+
+  it('busy from the caller (Start fresh running): every button soft-disabled, the column busy, nothing starts', async () => {
+    const help = vi.fn();
+    const onTryAgain = vi.fn(async () => false);
+    const r = await render(<ProgressReadFailedScreen onTryAgain={onTryAgain} onGrownUpHelp={help} busy minBusyMs={0} />);
+    expect(buttonProps(r.root, m.tryAgain).softDisabled).toBe(true);
+    expect(buttonProps(r.root, m.grownUpHelp).softDisabled).toBe(true);
+    expect(byTestId(r.root, 'read-failed-body')[0]?.props['aria-busy']).toBe(true);
+    await press(buttonsNamed(r.root, m.tryAgain)[0] as ReactTestInstance);
+    await press(buttonsNamed(r.root, m.grownUpHelp)[0] as ReactTestInstance);
+    expect(onTryAgain).not.toHaveBeenCalled();
+    expect(help).not.toHaveBeenCalled();
+  });
+
+  it('retell: something the caller ran did not work, so the bubble is said again (as after a try, D2)', async () => {
+    setPlatform('ios');
+    const r = await render(<ProgressReadFailedScreen onTryAgain={async () => false} onGrownUpHelp={() => undefined} retell={0} minBusyMs={0} />);
+    const before = r.root.findByType(HoyaBubble).props.message as string;
+    expect(reader.announce).not.toHaveBeenCalled();
+    await act(async () => {
+      r.update(<ProgressReadFailedScreen onTryAgain={async () => false} onGrownUpHelp={() => undefined} retell={1} minBusyMs={0} />);
+    });
+    const after = r.root.findByType(HoyaBubble).props.message as string;
+    expect(after).not.toBe(before);
+    expect(after.replace(/\u200b/g, '')).toBe(m.bubble);
+    expect(reader.announce).toHaveBeenCalledWith(m.bubble);
+    // It is not a try: the still-stuck count is unchanged.
+    expect(screenTexts(byTestId(r.root, 'read-failed-still-stuck')[0] as ReactTestInstance)).toEqual([]);
+  });
+
+  it('hands its node to the caller, so focus can come back to it (design D5)', async () => {
+    const ref = { current: null as unknown };
+    await render(<ProgressReadFailedScreen onTryAgain={async () => false} onGrownUpHelp={() => undefined} grownUpRef={ref as never} minBusyMs={0} />, {
+      createNodeMock: () => ({ focus: vi.fn(), addEventListener: () => undefined, removeEventListener: () => undefined }),
+    });
+    expect(ref.current).not.toBeNull();
+  });
+});
+
 describe('a try (frame E, D2)', () => {
   it('every button is soft-disabled and the column busy while a try runs; Try again cannot start a second try', async () => {
     const run = deferred();

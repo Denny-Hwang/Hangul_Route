@@ -238,7 +238,12 @@ export const PRECACHE_BUDGET = Object.freeze({
   // On top of DP-2 and TI-3 the release `build:web` (CI=1) of the merged SO-1 branch measures 4,587,780 B raw /
   // 1,262,292 B gzip, 2,180 B over the line. The line is the measurement plus a 4,020 B margin (one measured raise,
   // 6,200 B over the previous line).
-  startBundleRaw: 4_591_800,
+  // [DP] AMENDMENTS-DURABLE-PROGRESS DP-1d (a damaged profile list: A grown-up can help, the RecoverRecord sheet): the
+  // held screen's own stack, its sheet and Start fresh, the copy's 30-day rules and their en strings are boot code, so
+  // they are in the start bundle. On top of SO-1 the release `build:web` (CI=1) of the DP-1d branch measures
+  // 4,594,076 B raw / 1,264,060 B gzip, 2,276 B over the line. The line is the measurement plus a 4,024 B margin (one
+  // measured raise, 6,300 B over the previous line).
+  startBundleRaw: 4_598_100,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

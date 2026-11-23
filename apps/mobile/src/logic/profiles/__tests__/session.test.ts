@@ -100,7 +100,8 @@ describe('[OA] needsFreshPin (GROWN_UP_FRESH_PIN_MS)', () => {
   const now = 1_800_000_000_000;
   it('asks unless a PIN was entered in the last 2 minutes', () => {
     expect(GROWN_UP_FRESH_PIN_MS).toBe(2 * 60_000);
-    for (const action of ['remove', 'lock', 'unlock', 'join_other', 'change_pin'] as const) {
+    // [DP] AMENDMENTS-DURABLE-PROGRESS row DP-1d: Start fresh on this device (the RecoverRecord sheet).
+    for (const action of ['remove', 'lock', 'unlock', 'join_other', 'change_pin', 'start_fresh'] as const) {
       expect(needsFreshPin(action, null, now), action).toBe(true);
       expect(needsFreshPin(action, now, now), action).toBe(false);
       expect(needsFreshPin(action, now - GROWN_UP_FRESH_PIN_MS + 1, now), action).toBe(false);

@@ -7,8 +7,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
 vi.mock('../../../platform/screen-reader', () => ({ announceForScreenReader: vi.fn(), focusForScreenReader: vi.fn() }));
+// [DP] Row DP-1d: the held screen's own stack (a navigation container, which does not load in Node) draws its screen
+// with a stand-in navigation; `BootGate-recover.test.tsx` runs the gate and the sheet through it.
+vi.mock('../../../navigation/recover-stack', async () => {
+  const { RecoverHoldScreen } = await import('../RecoverHoldScreen');
+  const navigation = { navigate: () => undefined, addListener: () => () => undefined };
+  return { RecoverStack: (props: { onTryAgain: () => Promise<boolean>; onStartFresh: () => Promise<boolean> }) => <RecoverHoldScreen navigation={navigation} {...props} /> };
+});
 
 import { flags } from '../../../config/flags';
+import { useAccountStore } from '../../../store/account-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useProgressStore } from '../../../store/progress-store';
 import { buttonsNamed, press, render, screenTexts, unmount } from '../../../test-support/render';
@@ -20,7 +28,8 @@ import { resetReadFailedTriesForTests } from '../ProgressReadFailedScreen';
  * A list that could not be read shows ProgressReadFailedScreen, never Welcome (the app's first route on a device with
  * no profile); the active learner's progress in `loadFailedFor` shows it too; Try again reruns the full read (list)
  * or that learner's hydrate (learner); Choose another learner shows with 2 learner profiles only; the post-hydrate
- * chain runs once, after the first boot that is not held. A grown-up can help is row DP-1d's (not drawn here).
+ * chain runs once, after the first boot that is not held. [DP] Row DP-1d: A grown-up can help shows on list `parse`
+ * with `kept` only, and not while the gate's own record cannot be read (its flow: `BootGate-recover.test.tsx`).
  */
 const m = getMessages('en').learner.progressReadFailed;
 const WELCOME = 'Welcome (the navigator)';
@@ -90,6 +99,7 @@ beforeEach(() => {
   flags.whoChooserEnabled = true;
   useProfileStore.setState({ profiles: [learner('p:a')], activeId: 'p:a', hydrated: true, loadFailed: null, listCopyKept: false });
   useProgressStore.setState({ loadFailedFor: new Set(), hydratedFor: new Set(['p:a']), hydrate: realHydrate });
+  useAccountStore.setState({ parentPinHash: 'h:1234', pinHashReadFailed: false });
 });
 
 afterEach(() => {
@@ -144,11 +154,45 @@ describe('BootGate (section 3.4)', () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it('list failed, damaged with a kept copy: still no Choose another learner (DP-1d adds the grown-up button)', async () => {
+  it('[DP] test 12: list damaged with a kept copy: A grown-up can help, and still no Choose another learner', async () => {
     listFailed('parse', true);
     const { r } = await boot();
     expect(screenTexts(r.root)).toContain(m.title);
+    expect(buttonsNamed(r.root, m.grownUpHelp)).toHaveLength(1);
     expect(screenTexts(r.root)).not.toContain(m.chooseAnother);
+  });
+
+  it('[DP] test 12: no grown-up button for a failed read, for damaged bytes with no copy kept, or for a learner', async () => {
+    listFailed('read');
+    let booted = await boot();
+    expect(screenTexts(booted.r.root)).toContain(m.title);
+    expect(screenTexts(booted.r.root)).not.toContain(m.grownUpHelp);
+    await unmount(booted.r);
+
+    listFailed('parse', false);
+    booted = await boot();
+    expect(screenTexts(booted.r.root)).not.toContain(m.grownUpHelp);
+    await unmount(booted.r);
+
+    useProfileStore.setState({ profiles: [learner('p:a'), learner('p:b')], activeId: 'p:a', hydrated: true, loadFailed: null, listCopyKept: false });
+    useProgressStore.setState({ loadFailedFor: new Set(['p:a']), hydratedFor: new Set() });
+    booted = await boot();
+    expect(screenTexts(booted.r.root)).toContain(m.chooseAnother);
+    expect(screenTexts(booted.r.root)).not.toContain(m.grownUpHelp);
+  });
+
+  it("[DP] section 3.6: not offered while the gate's own record cannot be read; a Try again that reads it offers it", async () => {
+    listFailed('parse', true);
+    useAccountStore.setState({ parentPinHash: null, pinHashReadFailed: true });
+    const rereadAll = vi.fn(async () => {
+      useAccountStore.setState({ parentPinHash: 'h:1234', pinHashReadFailed: false });
+    });
+    const { r } = await boot({ rereadAll });
+    expect(screenTexts(r.root)).toContain(m.title);
+    expect(screenTexts(r.root)).not.toContain(m.grownUpHelp);
+    await tryAgain(r.root);
+    expect(rereadAll).toHaveBeenCalledTimes(1);
+    expect(buttonsNamed(r.root, m.grownUpHelp)).toHaveLength(1);
   });
 
   it('list: Try again reruns the full read; when the list reads the app opens and the chain runs once', async () => {

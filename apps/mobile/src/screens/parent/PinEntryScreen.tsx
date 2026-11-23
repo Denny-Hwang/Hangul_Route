@@ -468,6 +468,10 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
     } else if (route.params.next === 'JoinSpace') {
       // [OA] CS-11 (row OA-7b): back to Who is joining?, which sees the fresh PIN and goes on to the name steps.
       back();
+    } else if (route.params.next === 'RecoverRecord') {
+      // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): back to the read-failed screen at boot, gate open,
+      // which shows the RecoverRecord sheet (`screens/system/RecoverHoldScreen.tsx`).
+      back();
     } else {
       navigation.replace('ParentDashboard');
     }
@@ -605,7 +609,9 @@ export function PinEntryScreen({ route, navigation }: Props): ReactElement {
         }
         // [OA] CS-11 (row OA-7b): a first PIN set just now for Who is joining? was entered twice this minute, so it is
         // fresh. A PIN set at the end of a reset (the 24-hour wait or the Rescue Code, `via`) is not: Join asks it again.
-        if (route.params.next === 'JoinSpace' && route.params.via === undefined) markPinVerified();
+        // [DP] AMENDMENTS-DURABLE-PROGRESS row DP-1d: the same for Start fresh on this device (RecoverRecord), which needs a
+        // fresh PIN; a reset's new PIN asks once more there too.
+        if ((route.params.next === 'JoinSpace' || route.params.next === 'RecoverRecord') && route.params.via === undefined) markPinVerified();
         proceed();
         return;
       }

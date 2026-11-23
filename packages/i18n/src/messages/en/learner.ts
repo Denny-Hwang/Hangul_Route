@@ -1393,6 +1393,11 @@ export const learner = {
     bubble: 'Hmm, the box is stuck.',
     tryAgain: 'Try again',
     chooseAnother: 'Choose another learner',
+    /**
+     * [DP] Row DP-1d (section 3.5): the list variant's ghost button, shown only when the list bytes do not parse and a
+     * copy was kept; it opens the grown-up gate to the RecoverRecord sheet (`caregiver.recoverRecord`).
+     */
+    grownUpHelp: 'A grown-up can help',
     stillStuck: 'Still stuck? Close the app and open it again.',
   },
 

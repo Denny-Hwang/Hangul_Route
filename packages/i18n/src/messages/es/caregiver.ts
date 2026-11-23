@@ -312,6 +312,14 @@ export const caregiver = {
     },
   },
 
+  recoverRecord: {
+    title: 'Este registro está dañado.',
+    body: 'Guardamos una copia en este dispositivo.',
+    comeBack: 'Después de esto, los estudiantes solo podrán volver con su código de rescate o un archivo guardado.',
+    fresh: 'Empezar de cero en este dispositivo',
+    notNow: 'Ahora no',
+  },
+
   saveProgress: {
     title: 'Guardar mi progreso',
     bubble: {

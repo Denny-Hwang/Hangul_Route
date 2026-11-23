@@ -8,6 +8,11 @@ import { Alert } from 'react-native';
 export interface ConfirmOptions {
   title: string;
   message?: string;
+  /**
+   * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d, owner item O2): a second line under the message (the
+   * ConfirmSheet's `detail` paragraph on the web; after a blank line in the native Alert's message).
+   */
+  detail?: string;
   confirmLabel: string;
   cancelLabel: string;
   /** Marks the confirm action as destructive on platforms that style it. */
@@ -22,11 +27,17 @@ export function setConfirmPresenter(_next: ConfirmPresenter | null): () => void 
   return () => undefined;
 }
 
+/** The message and the second line, as one text (a blank line between); `undefined` when there is neither. */
+function alertMessage(opts: ConfirmOptions): string | undefined {
+  const lines = [opts.message, opts.detail].filter((line): line is string => line !== undefined && line !== '');
+  return lines.length === 0 ? undefined : lines.join('\n\n');
+}
+
 export function confirm(opts: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
     Alert.alert(
       opts.title,
-      opts.message,
+      alertMessage(opts),
       [
         { text: opts.cancelLabel, style: 'cancel', onPress: () => resolve(false) },
         {

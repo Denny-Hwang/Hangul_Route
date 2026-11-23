@@ -40,6 +40,17 @@ describe('platform/dialog confirm', () => {
     await expect(b).resolves.toBe(false);
   });
 
+  it('[DP] a second line (`detail`) follows the message in the Alert, after a blank line', async () => {
+    const p = confirm({ title: 'Damaged', message: 'Kept a copy.', detail: 'Learners come back with a code.', confirmLabel: 'Start', cancelLabel: 'Not now' });
+    expect(lastCall().message).toBe('Kept a copy.\n\nLearners come back with a code.');
+    lastCall().buttons[0]?.onPress?.();
+    await expect(p).resolves.toBe(false);
+    const q = confirm({ title: 'Only a detail', detail: 'One line.', confirmLabel: 'Ok', cancelLabel: 'No' });
+    expect(lastCall().message).toBe('One line.');
+    lastCall().buttons[0]?.onPress?.();
+    await expect(q).resolves.toBe(false);
+  });
+
   it('native keeps the platform Alert: there is no sheet host to register', () => {
     expect(setConfirmPresenter(async () => true)()).toBeUndefined();
   });

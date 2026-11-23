@@ -36,6 +36,13 @@ describe('platform/dialog.web', () => {
     expect(c).toHaveBeenLastCalledWith('Only a title');
   });
 
+  it('[DP] before a host is mounted, a second line (`detail`) follows the message', async () => {
+    const c = vi.fn(() => false);
+    vi.stubGlobal('confirm', c);
+    await expect(confirm({ title: 'Damaged', message: 'Kept a copy.', detail: 'Learners come back.', confirmLabel: 'Start', cancelLabel: 'Not now' })).resolves.toBe(false);
+    expect(c).toHaveBeenCalledWith('Damaged\n\nKept a copy.\n\nLearners come back.');
+  });
+
   it('resolves false when confirm is unavailable', async () => {
     vi.stubGlobal('confirm', undefined);
     await expect(confirm({ title: 'A', confirmLabel: 'Ok', cancelLabel: 'No' })).resolves.toBe(false);

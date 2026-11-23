@@ -235,6 +235,20 @@ describe('[OA] removeFromDevice (OA-D13, CS-12)', () => {
     expect((parse('profiles:tombstones') as { ids: string[] }).ids).toEqual([jun]);
     expect((parse('profiles') as { id: string }[]).map((p) => p.id)).toEqual([mina]);
   });
+
+  it('[DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (test 10): the kept copy of a damaged list goes with any removal (it may hold their name)', async () => {
+    const { jun } = learners();
+    disk.set('profiles-corrupt', '[{"id":"profile:jun","displayName":"Ju');
+    disk.set('profiles-corrupt:settled', JSON.stringify({ v: 1, at: Date.now() }));
+    await removeFromDevice(jun, 'saved');
+    expect(disk.has('profiles-corrupt')).toBe(false);
+    expect(disk.has('profiles-corrupt:settled')).toBe(false);
+    // A step that removes nothing leaves it.
+    const { mina } = learners();
+    disk.set('profiles-corrupt', '[{"id"');
+    expect(await removeFromDevice(mina, 'checking')).toBeNull();
+    expect(disk.has('profiles-corrupt')).toBe(true);
+  });
 });
 
 describe('[OA] the key sweep (CS-20)', () => {
@@ -435,6 +449,21 @@ describe('[GU] the boot sweep of a never-saved guest (GU-D13), seeded with a gue
     expect(useGuestStore.getState()).toMatchObject({ record: null, running: false, hydrated: true });
     expect(sent).toEqual([{ name: 'guest.expired', payload: { questDone: true } }]);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('[DP] AMENDMENTS-DURABLE-PROGRESS section 3.6: while a copy of a damaged list is kept (after Start fresh), an expired record is not swept: its id may be a learner of that list', async () => {
+    seedAll(guest.id);
+    disk.set('guest', JSON.stringify(guest));
+    disk.set('profiles', '[]');
+    disk.set('profiles-corrupt', '[{"id":"profile:guest001","displayName":"Mi');
+    expect(await hydrateGuest(STARTED + 30 * DAY + 1)).toBe('unread');
+    await settle();
+    for (const template of Object.values(PER_PROFILE_KEYS)) expect(disk.has(template(guest.id)), template(guest.id)).toBe(true);
+    expect(disk.has('guest')).toBe(true);
+    expect(sent).toEqual([]);
+    // Once the copy has gone (its 30 days), the sweep runs as before.
+    disk.delete('profiles-corrupt');
+    expect(await hydrateGuest(STARTED + 30 * DAY + 1)).toBe('sweep');
   });
 
   it('7 days on a device with learner profiles; the learners keep every key, and a younger guest is kept', async () => {

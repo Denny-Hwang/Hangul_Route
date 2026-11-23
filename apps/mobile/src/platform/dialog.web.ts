@@ -25,6 +25,7 @@ export function confirm(opts: ConfirmOptions): Promise<boolean> {
   if (presenter !== null) return presenter(opts);
   const g = globalThis as { confirm?: (message?: string) => boolean };
   if (typeof g.confirm !== 'function') return Promise.resolve(false);
-  const message = opts.message ? `${opts.title}\n\n${opts.message}` : opts.title;
+  // The title, the message and the second line (`detail`), a blank line between each.
+  const message = [opts.title, opts.message, opts.detail].filter((line): line is string => line !== undefined && line !== '').join('\n\n');
   return Promise.resolve(g.confirm(message));
 }

@@ -436,6 +436,22 @@ export const caregiver = {
     },
   },
 
+  /**
+   * [DP] AMENDMENTS-DURABLE-PROGRESS sections 3.6 and 3.8 (row DP-1d): the RecoverRecord sheet, behind the grown-up
+   * gate, over the screen shown when the profile list's bytes do not parse and a copy of them was kept. The spec's
+   * `grownUp.recoverRecord.*`, in the namespace the Grown-up area reads (owner item O1, confirmed 2026-11-23). Not now
+   * comes first and takes focus; Start fresh writes an empty list and nothing is erased at that moment. `comeBack` is
+   * the second line (owner item O2, 2026-11-23): after Start fresh, learners come back only through Restore, whose
+   * working ways are the Rescue Code and a saved file (its account sign-in is not open yet: `restore.signIn.comingSoon`).
+   */
+  recoverRecord: {
+    title: 'This record is damaged.',
+    body: 'We kept a copy of it on this device.',
+    comeBack: 'After this, learners come back only with their Rescue Code or a saved file.',
+    fresh: 'Start fresh on this device',
+    notNow: 'Not now',
+  },
+
   /** sync/save-progress (PIN-gated): the rescue code shown as a block a parent writes down. */
   saveProgress: {
     title: 'Save my progress',

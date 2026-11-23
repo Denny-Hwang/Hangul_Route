@@ -214,6 +214,46 @@ describe('[OA] PinEntry hand-backs and Change PIN', () => {
     expect(none.navigation.replace).not.toHaveBeenCalledWith('PracticeDays', expect.anything());
   });
 
+  it('[DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): RecoverRecord goes back to the read-failed screen with the gate open and one return marked', async () => {
+    const { r, navigation } = await showWith({ next: 'RecoverRecord' });
+    expect(buttonsNamed(r.root, m.entry.unlock.cta)).toHaveLength(1);
+    await typePin(r.root, '1234');
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(useUiStore.getState().parentGateOpenedAt).not.toBeNull();
+    expect(useUiStore.getState().gateReturnPending).toBe(true);
+    const opened = tracked.find((e) => e.name === 'parent.gate.opened');
+    expect(opened?.payload).toMatchObject({ dest: 'action', via: 'pin' });
+    expect(opened && 'profileId' in opened).toBe(false);
+  });
+
+  it('[DP] RecoverRecord with no PIN stored makes the family PIN first (the gate as every grown-up action), then goes back the same way', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const { r, navigation } = await showWith({ next: 'RecoverRecord' });
+    for (let i = 0; i < 2; i += 1) {
+      for (const digit of '2468') await press(buttonsNamed(r.root, a11y.pinDigit(Number(digit)))[0] as ReactTestInstance);
+      await press(buttonsNamed(r.root, buttons.next)[0] as ReactTestInstance);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    expect(useAccountStore.getState().parentPinHash).toBe('h:2468');
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().gateReturnPending).toBe(true);
+    // Entered twice this minute: a fresh PIN, as for Who is joining? (CS-11), which Start fresh needs (CS-12).
+    expect(useUiStore.getState().lastPinVerifiedAt).not.toBeNull();
+  });
+
+  it('[DP] a PIN set at the end of a reset (Rescue Code, the wait) is no fresh PIN for RecoverRecord: Start fresh asks it again', async () => {
+    useAccountStore.setState({ parentPinHash: null });
+    const { r, navigation } = await showWith({ next: 'RecoverRecord', mode: 'setup', via: 'rescue_code' });
+    for (let i = 0; i < 2; i += 1) {
+      for (const digit of '2468') await press(buttonsNamed(r.root, a11y.pinDigit(Number(digit)))[0] as ReactTestInstance);
+      await press(buttonsNamed(r.root, buttons.next)[0] as ReactTestInstance);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    expect(navigation.goBack).toHaveBeenCalledTimes(1);
+    expect(useUiStore.getState().lastPinVerifiedAt).toBeNull();
+  });
+
   it('Cancel goes back without a return mark', async () => {
     const { r, navigation } = await showWith({ next: 'ExternalLink' });
     await press(buttonsNamed(r.root, buttons.cancel)[0] as ReactTestInstance);

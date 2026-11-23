@@ -964,6 +964,7 @@ export const learner = {
     bubble: '음, 상자가 안 열려요.',
     tryAgain: '다시 해 보기',
     chooseAnother: '다른 학습자 고르기',
+    grownUpHelp: '어른이 도와줄 수 있어요',
     stillStuck: '그래도 안 되나요? 앱을 닫았다가 다시 열어 봐요.',
   },
 
