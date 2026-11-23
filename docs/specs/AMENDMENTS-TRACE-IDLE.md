@@ -1,6 +1,6 @@
 # AMENDMENTS-TRACE-IDLE — a pause never scores a letter as missed
 
-Status: ready (owner decision 2026-11-22: D1 and D2 accepted; the revision-3 review of 2026-11-22 found no blockers, §11). Revision 3 (2026-11-21, re-based on `d5ba0217c`; revision 2 was written for work order WO-02 of `docs/roadmap/review-2026-11/phase-1-safety.md`, row TI-0, on `5573e1072`). The multi-agent review of 2026-11-21 (§11) is adjudicated in revision 2; revision 3 re-reads every citation on the main tip and re-measures §1 on the AU-14 stroke data (§11).
+Status: ready (owner decision 2026-11-22: D1 and D2 accepted; owner decisions 2026-11-23, OD-TI3 to OD-TI7 as recommended, §10, add row TI-3b; the revision-3 review of 2026-11-22 found no blockers, §11). Revision 3 (2026-11-21, re-based on `d5ba0217c`; revision 2 was written for work order WO-02 of `docs/roadmap/review-2026-11/phase-1-safety.md`, row TI-0, on `5573e1072`). The multi-agent review of 2026-11-21 (§11) is adjudicated in revision 2; revision 3 re-reads every citation on the main tip and re-measures §1 on the AU-14 stroke data (§11).
 
 **Amends**: F-004 §3.3 (Trace Stroke: "on Done, or after a 1.5 s idle timer past the last stroke"; "clear the drawn path") · F-008 §3.3 (retry window; "Strokes auto-clear after 2000ms") · AMENDMENTS-TOUCH §6.8 (KT-D9, "the drawing is still scored without the Done button") · F-CURR-001 §3.7 (Trace Word, letter mode and its retry pause) · tag **[TI]**
 **Not amended**: F-005 (stroke order). Order never decides a pass outside strict mode, and this amendment changes only *when* a drawing is scored, not how order is judged; WO-03 (`AMENDMENTS-STROKE-ORDER-STANDARD.md`) owns order.
@@ -69,7 +69,7 @@ Who this hurts most: young children and anyone with a tremor or slow motor plann
 - A **clean** pass (`pass.clean`) keeps today's 1.1 s advance (`TraceStrokeGame.tsx:223-233`; Trace Word `PASS_MS`, `TraceWordGame.tsx:69`).
 - A pass that carries a tip (`pass.order`, `pass.open`, `pass.loop`; `logic/trace-copy.ts:40-45`) does **not** advance by itself: a **Next** button (same size as Done, `touchTarget.min`, focus moves to it) shows under the line, and the round advances when it is tapped. (WO-02 decision 5: coaching lines stay until the learner moves on; WCAG 2.2.1, reading speed.)
 - Trace Word: the same rule for its per-letter tips.
-- *Errata 2026-11-22 (TI-2; pending owner confirmation):* "same size as Done, `touchTarget.min`" cannot both hold: Done is `md` (`touchTarget.min`) in the compact and side layouts but `lg` (`touchTarget.child`) in the roomy layout. Following the TI-0b design (`design/wireframes/minigame/families.md`, "Trace Stroke states", decision 1 and open item 2), Next takes Done's slot **and Done's size** in every layout, so the button row never moves; it is never smaller than `touchTarget.min`.
+- *Errata 2026-11-22 (TI-2; confirmed by the owner 2026-11-23, OD-TI4):* "same size as Done, `touchTarget.min`" cannot both hold: Done is `md` (`touchTarget.min`) in the compact and side layouts but `lg` (`touchTarget.child`) in the roomy layout. Following the TI-0b design (`design/wireframes/minigame/families.md`, "Trace Stroke states", decision 1 and open item 2), Next takes Done's slot **and Done's size** in every layout, so the button row never moves; it is never smaller than `touchTarget.min`.
 
 ### 3.5 KT-D9 (AMENDMENTS-TOUCH §6.8) restated
 
@@ -149,7 +149,8 @@ Next release. Effect to watch: quest stars on the trace-heavy quests (Stage 1 q2
 | TI-1 | Sonnet 5.5 | §3.1 `ready` option, `logic/trace-ready.ts`, Trace Stroke's gate, `createTraceWordGate` re-expressed; §3.5 comment | 1–7; the three `trace-touch.test.tsx` cases | this spec `ready` |
 | TI-2 | Sonnet 5.5 | §3.2 keep-going, idle line; §3.3 miss keeps ink, Clear reopens, timers removed; §3.4 Next after a tip; §3.6 strings en + es + ko | 8–12; e2e | TI-1, TI-0b |
 | TI-3 | Sonnet 5.5 | Trace Word letter and block mode on the §3.1 rule; `RETRY_MS` wipe removed; Next after a tip | 7 (letter mode), a Trace Word screen test for each | TI-1, TI-2 |
-| TI-4 | Sonnet 5.5 | "Amended 2026-11-xx by AMENDMENTS-TRACE-IDLE" lines in F-004, F-008, AMENDMENTS-TOUCH, F-CURR-001; `docs/specs/README.md` index line; status `shipped` | — | TI-1 – TI-3 |
+| TI-3b | Sonnet 5.5 | OD-TI6: in Trace Word a tip on the last letter or block of a word also waits for Next, and the word-done line follows after Next; OD-TI7: while a pass with Next is showing, the controls under the canvas scroll (both games) so Next stays reachable at 200 % text; a tip is announced once (the live region carries it, Next's accessibility hint does not repeat it) | a Trace Word last-unit screen test; a scroll-container test for each game; announce-once tests | TI-3 |
+| TI-4 | Sonnet 5.5 | "Amended 2026-11-xx by AMENDMENTS-TRACE-IDLE" lines in F-004, F-008, AMENDMENTS-TOUCH, F-CURR-001; `docs/specs/README.md` index line; OD-TI5 recorded as departure D3 in §10; `design/wireframes/minigame/trace-word.md` lines that still say the drawing clears after the retry pause; status `shipped` | — | TI-1 – TI-3b |
 
 Branch `fix/trace-idle`. One commit = test + implementation.
 
@@ -157,6 +158,14 @@ Branch `fix/trace-idle`. One commit = test + implementation.
 
 - **D1 — the "finished" rule.** WO-02 decision 1 asks for "stroke count ≥ expected count". This spec uses coverage plus a per-stroke floor (§3.1) instead, because learners join strokes (ㅁ in one or two, though the data has had three since AU-14; ㄹ in one) and a count rule would leave a correctly finished letter waiting forever. The table-driven test 5 gives the guarantee the count rule was for: no proper prefix of any letter is ever auto-scored.
 - **D2 — what stays after a miss.** WO-02 decision 4 asks to keep the correct strokes and highlight only the strokes to redraw. This spec keeps **all** the ink and lets the learner add to it (§3.3), which keeps the correct strokes; it does not yet highlight the missing target strokes. Reason: the highlight needs a new visual state on the guide and a design pass; `perStrokeCoverage` already holds the data, so it is a small follow-up row once the owner wants it.
+
+### Owner decisions 2026-11-23 (all as recommended)
+
+- **OD-TI3 — the miss line stays.** `learner.minigame.trace.miss` keeps "Try again — start at the top!" (§3.6 unchanged). TI-0b's proposal "Add the missing lines, or tap Clear." is not taken.
+- **OD-TI4 — Next takes Done's size.** The §3.4 errata of 2026-11-22 is confirmed: Next takes Done's slot and Done's size in every layout, never smaller than `touchTarget.min`.
+- **OD-TI5 — Trace Word: Clear is off while Next shows.** After a pass with a tip the Trace Word flow has already recorded the pass and has no way back, so Clear stays disabled until Next is tapped. A recorded departure from §3.3 / §3.4 for Trace Word only (TI-4 writes it as D3); Trace Stroke keeps Clear on during a pass.
+- **OD-TI6 — the last letter's tip waits too.** In Trace Word a tip on the last letter or block of a word is no longer replaced by the word-done line on a timer: it waits for Next like every other tip, and the word-done line follows (row TI-3b).
+- **OD-TI7 — 200 % text.** At 200 % text on a 320 x 568 screen, Next can fall below the screen edge. While a pass with Next is showing, the controls under the canvas scroll so Next stays reachable (TI-0b's recommended fix; row TI-3b); checked on a device in §3.7.
 
 ## 11. Review log
 
