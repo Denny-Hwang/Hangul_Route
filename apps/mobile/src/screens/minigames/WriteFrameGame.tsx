@@ -234,7 +234,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false, chain }
   const round = rounds[state.roundIdx];
   const words = pickedWords(state);
   const field = fieldView(state);
-  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text));
+  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text, m.a11y.romanizationOr));
   const readTypedRef = useRef(readTyped);
   readTypedRef.current = readTyped;
   const live = state.phase === 'typing' ? field.live : '';
@@ -580,7 +580,7 @@ export function WriteFrameGame({ scope, host, onBack, inPreview = false, chain }
       width={kbWidth}
       layoutClass={keyboardClass}
       soundOf={keySound}
-      speakSound={a11yRomanization}
+      speakSound={(sound) => a11yRomanization(sound, m.a11y.romanizationOr)}
       labels={{ key: k.key, shift: k.shift, delete: k.delete, space: k.space }}
       onKey={(jamo) => dispatch({ type: 'key', jamo })}
       onDelete={() => dispatch({ type: 'delete' })}
@@ -847,7 +847,7 @@ function SoundPanel({ table, width, height, gutter, onTile, onDelete }: SoundPan
   const tile = (ko: string, romanization: string, final: boolean): ReactElement => (
     <TapTarget
       key={ko}
-      accessibilityLabel={a.writeFrame.tile(ko, a11yRomanization(romanization))}
+      accessibilityLabel={a.writeFrame.tile(ko, a11yRomanization(romanization, m.a11y.romanizationOr))}
       onCommit={() => onTile(final ? [ko] : keysFor(ko))}
       lockMs={KEY_BOUNCE_MS}
       testID={`write-frame-tile-${ko}`}

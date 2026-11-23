@@ -17,8 +17,12 @@ export function ClozeRealia({ realia, testID }: { realia: Realia; testID?: strin
   const m = useMessages();
   const a11y = m.a11y.minigame;
   const romanizationMode = useRomanizationMode();
-  const context = { romanizationMode };
-  const lines = useMemo(() => lineViews(realia, undefined, startRealiaRead(0), { romanizationMode }, a11y), [realia, romanizationMode, a11y]);
+  const romanizationOr = m.a11y.romanizationOr;
+  const context = { romanizationMode, romanizationOr };
+  const lines = useMemo(
+    () => lineViews(realia, undefined, startRealiaRead(0), { romanizationMode, romanizationOr }, a11y),
+    [realia, romanizationMode, romanizationOr, a11y],
+  );
   const title = titleView(realia, context);
   const say = (entryId: string): void => {
     const entry = realia.entries.find((e) => e.id === entryId);

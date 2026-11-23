@@ -1820,6 +1820,7 @@ export const learner = {
       deckTitle: '수업',
       letterName: (name: string, hangul: string) => `글자 이름: ${hangul} (${name})`,
       strokeCaption: '간단한 획순 안내',
+      shapeCaption: '글자 모양',
       sayIt: '이렇게 읽어요:',
       card: '문화 카드',
       topic: '낱말 주제',

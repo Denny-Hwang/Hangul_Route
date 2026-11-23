@@ -232,7 +232,7 @@ export function HearPrompt({ hear, round, compact, first, testID = 'dictation-pr
             onPress={hear.reveal}
             disabled={hear.revealed}
             accessibilityRole="button"
-            accessibilityLabel={hear.revealed ? `${t.hear.meaning(gloss)}. ${a11yRomanization(round.target.romanization)}` : `${t.hear.meaning(gloss)}. ${t.hear.showSound}`}
+            accessibilityLabel={hear.revealed ? `${t.hear.meaning(gloss)}. ${a11yRomanization(round.target.romanization, m.a11y.romanizationOr)}` : `${t.hear.meaning(gloss)}. ${t.hear.showSound}`}
             style={{ flex: 1, minWidth: 0, minHeight: touchTarget.min, justifyContent: 'center', paddingHorizontal: spacing.sm, borderRadius: radii.md }}
           >
             <Text {...KOREAN_LINE_BREAK} numberOfLines={2} style={{ fontSize: textScale.size.body, fontWeight: typography.weight.bold, color: colors.text.primary }} testID={`${testID}-gloss`}>
@@ -292,8 +292,9 @@ export function SpellingCue({ round, testID = 'spelling-cue' }: { round: Pick<Li
 
 /**
  * A spelling option's screen-reader name: its Hangul block by block with the letter names (`spellByLetterNames`),
- * then its romanization, so two options that sound the same never read the same.
+ * then its romanization, so two options that sound the same never read the same. `or` is the UI locale's word read
+ * between romanization alternatives (`a11y.romanizationOr`; AMENDMENTS-STROKE-ORDER-STANDARD OD-SO10).
  */
-export function spellingOptionLabel(text: Pick<KoText, 'ko' | 'romanization'>): string {
-  return `${spellByLetterNames(text.ko)}. ${a11yRomanization(text.romanization)}`;
+export function spellingOptionLabel(text: Pick<KoText, 'ko' | 'romanization'>, or: string): string {
+  return `${spellByLetterNames(text.ko)}. ${a11yRomanization(text.romanization, or)}`;
 }

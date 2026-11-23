@@ -441,7 +441,12 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
   const wordView = traceWordShowsWord(phase, coaching);
   const liveLook: Look = phase === 'retry' ? 'retry' : phase === 'drawing' ? 'live' : 'pass';
   const done = blocksPassed(state);
-  const unitStrokes = unitLetters.flatMap((l) => l.strokes);
+  // [SO] SO-1b: Show me's target keeps its identity while the unit is the same (StrokeHint plays again on a new target),
+  // so ink drawn during the reveal or a change of canvas look (OD-SO9) does not start the reveal again.
+  const unitStrokes = useMemo(
+    () => unitLettersOf(round, { block: state.block, letter: state.letter }).flatMap((l) => l.strokes),
+    [round, state.block, state.letter],
+  );
   // Show me's still diagram reads the unit letter by letter (wireframe "Accessibility"); an untaught unit reads its
   // shape label instead ([SO] "ho, shape guide."; letter mode: the letter's own romanization).
   const firstLetter = round.mode === 'letter' ? state.letter : 0;
@@ -462,13 +467,13 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
         accessibilityLabel={
           round.mode === 'letter'
             ? a11y.traceBlockLetter(
-                a11yRomanization(block.romanization),
+                a11yRomanization(block.romanization, m.a11y.romanizationOr),
                 state.block + 1,
                 round.blocks.length,
                 state.letter + 1,
                 block.placed.letters.length,
               )
-            : a11y.traceBlock(a11yRomanization(block.romanization), state.block + 1, round.blocks.length)
+            : a11y.traceBlock(a11yRomanization(block.romanization, m.a11y.romanizationOr), state.block + 1, round.blocks.length)
         }
         style={canvasStyle(size, liveLook)}
       >
@@ -489,6 +494,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
             {...(orderLabel !== undefined ? { orderLabel } : {})}
             orderTaught={taught}
             romanization={hintRomanization}
+            retryLook={liveLook === 'retry'}
             onComplete={() => setHintPlaying(false)}
           />
         ) : null}
@@ -545,7 +551,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
       {...(Platform.OS === 'web' ? { tabIndex: -1 as const } : {})}
       accessible
       accessibilityRole="header"
-      accessibilityLabel={a11y.traceWord(a11yRomanization(round.word.romanization), round.word.en)}
+      accessibilityLabel={a11y.traceWord(a11yRomanization(round.word.romanization, m.a11y.romanizationOr), round.word.en)}
       style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: spacing.sm }}
     >
       <Heading level="prompt">{copy.traceWord.heading}</Heading>
@@ -565,7 +571,7 @@ export function TraceWordGame({ scope, host, onBack }: Props): ReactElement {
           block={b}
           state={i < done ? 'done' : i === state.block ? 'current' : 'waiting'}
           ink={wordView ? (traced[i] ?? null) : null}
-          label={i < done ? a11y.hearBlockDone(a11yRomanization(b.romanization)) : a11y.hear(a11yRomanization(b.romanization))}
+          label={i < done ? a11y.hearBlockDone(a11yRomanization(b.romanization, m.a11y.romanizationOr)) : a11y.hear(a11yRomanization(b.romanization, m.a11y.romanizationOr))}
           onPress={() => say(b.syllable)}
         />
       ))}
@@ -958,7 +964,7 @@ function HoyaStrip({
 }
 
 /** The letters of the live unit: the lit letter in letter mode, every letter of the block in block mode. */
-function unitLettersOf(round: TraceWordPlayRound | undefined, state: TraceWordState): PlacedLetter[] {
+function unitLettersOf(round: TraceWordPlayRound | undefined, state: Pick<TraceWordState, 'block' | 'letter'>): PlacedLetter[] {
   const block = round?.blocks[state.block];
   if (!round || !block) return [];
   if (round.mode === 'block') return block.placed.letters;

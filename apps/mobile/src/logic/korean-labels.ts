@@ -5,7 +5,8 @@ import type { Messages } from '@hangul-route/i18n';
 /**
  * Learner-facing and screen-reader text for taught Korean (F-CNT-002 §3.3, §3.5).
  * Taught Korean always shows its romanization (CLAUDE.md §1); a jamo sound value
- * such as 'silent/ng' is read aloud as 'silent or ng', not "slash".
+ * such as 'silent/ng' is read aloud as 'silent or ng', not "slash". `or` is the UI
+ * locale's word for it (`a11y.romanizationOr`; AMENDMENTS-STROKE-ORDER-STANDARD OD-SO10).
  */
 
 /** Button label for a Tap & Respond reply: `ko  ·  romanization  ·  gloss`. */
@@ -15,13 +16,13 @@ export function replyOptionLabel(option: { ko: string; romanization?: string; en
 }
 
 /** Screen-reader label of a jamo tile (`a11y.tile`). */
-export function jamoTileA11yLabel(romanization: string, tile: Messages['a11y']['tile']): string {
-  return tile(a11yRomanization(romanization));
+export function jamoTileA11yLabel(romanization: string, tile: Messages['a11y']['tile'], or: string): string {
+  return tile(a11yRomanization(romanization, or));
 }
 
 /** Screen-reader text of the trace prompt heading (`a11y.minigame.traceLetter`). */
-export function traceLetterA11yText(romanization: string, label: Messages['a11y']['minigame']['traceLetter']): string {
-  return label(a11yRomanization(romanization));
+export function traceLetterA11yText(romanization: string, label: Messages['a11y']['minigame']['traceLetter'], or: string): string {
+  return label(a11yRomanization(romanization, or));
 }
 
 /** The traced jamo as the trace prompt needs it: a final consonant is named as a final. */
@@ -42,15 +43,16 @@ export function traceHeadingText(
 export function traceTargetA11yText(
   target: TraceTarget,
   labels: Pick<Messages['a11y']['minigame'], 'traceLetter' | 'traceFinal'>,
+  or: string,
 ): string {
   return target.kind === 'batchim'
-    ? labels.traceFinal(a11yRomanization(target.romanization))
-    : traceLetterA11yText(target.romanization, labels.traceLetter);
+    ? labels.traceFinal(a11yRomanization(target.romanization, or))
+    : traceLetterA11yText(target.romanization, labels.traceLetter, or);
 }
 
 /** Screen-reader label of the trace canvas (`a11y.minigame.traceCanvas`). */
-export function traceCanvasA11yLabel(romanization: string, label: Messages['a11y']['minigame']['traceCanvas']): string {
-  return label(a11yRomanization(romanization));
+export function traceCanvasA11yLabel(romanization: string, label: Messages['a11y']['minigame']['traceCanvas'], or: string): string {
+  return label(a11yRomanization(romanization, or));
 }
 
 export interface NarrativeLine {
