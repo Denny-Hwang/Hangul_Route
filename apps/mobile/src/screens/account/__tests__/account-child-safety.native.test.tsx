@@ -642,7 +642,12 @@ beforeAll(async () => {
   // The chooser requires its native account entries on iOS and Android (folded away on the web): give Node's require them.
   provideForRequire(srcPath('screens/account/account-entries'), await import('../account-entries.native'));
   // The card's parts load with import() when first drawn: load them once here, so every state draws on its first pass.
-  await Promise.all([import('../AccountCardBody.native'), import('../AccountCardClerk.native')]);
+  const [body, withClerk] = await Promise.all([import('../AccountCardBody.native'), import('../AccountCardClerk.native')]);
+  // And pin these copies: a test below empties the module registry (vi.resetModules), and a part first drawn after it
+  // (the card with no Clerk) would load a fresh copy with its own react-native-web, whose AppState is not this file's
+  // stand-in (its addEventListener returns undefined in Node, so the card's unmount threw on `remove`).
+  vi.doMock('../AccountCardBody.native', () => body);
+  vi.doMock('../AccountCardClerk.native', () => withClerk);
 });
 
 beforeEach(async () => {
