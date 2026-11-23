@@ -19,6 +19,8 @@ describe('learner.progressReadFailed (DP-1c)', () => {
       bubble: 'Hmm, the box is stuck.',
       tryAgain: 'Try again',
       chooseAnother: 'Choose another learner',
+      // [DP] Row DP-1d: the list variant's ghost button (damaged bytes, copy kept); `recover-record-messages.test.ts`.
+      grownUpHelp: 'A grown-up can help',
       stillStuck: 'Still stuck? Close the app and open it again.',
     });
   });

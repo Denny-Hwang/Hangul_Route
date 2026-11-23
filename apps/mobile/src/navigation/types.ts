@@ -84,6 +84,8 @@ export type GrownUpDestination =
   | 'SaveGuest'
   /** AMENDMENTS-ROUTE-CLASS-BLEND section 9.4 (row BL-8): a child's My practice days on a gated device (`PinEntry.profileId`); back to the screen as the grown-up's view. */
   | 'PracticeDays'
+  /** [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): A grown-up can help on the read-failed screen at boot (a damaged profile list whose copy was kept); back to that screen, gate open, which shows the RecoverRecord sheet. Reached only in that screen's own stack (`RecoverStackParamList`). */
+  | 'RecoverRecord'
   // add new members above this line
 ;
 
@@ -520,6 +522,18 @@ export type AccountStackParamList = {
   AccountSchool: { spaceId: string; use?: GrownUpUse | 'account' };
   /** Section 8.7 (row NS-6): a class's report from the Worker's class statistics, opened by Class report. */
   AccountClassReport: { spaceId: string; period: 'day' | 'week' | 'month' | 'all'; use?: GrownUpUse | 'account' };
+};
+
+/**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): the read-failed screen's own stack at boot, while the profile
+ * list's bytes do not parse and a copy of them was kept (`navigation/recover-stack.tsx`, its own navigation
+ * container: the app's navigator is not mounted then). `RecoverHold` is the screen; the PIN screens are the root's, for
+ * the RecoverRecord destination only.
+ */
+export type RecoverStackParamList = {
+  RecoverHold: undefined;
+  PinEntry: RootStackParamList['PinEntry'];
+  PinReset: RootStackParamList['PinReset'];
 };
 
 /** The nested Grown-up area stack's routes: the dashboard under the root's name, then the account routes. */

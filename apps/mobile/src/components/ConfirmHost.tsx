@@ -64,6 +64,7 @@ export function ConfirmHost(): ReactElement {
       visible={current !== null}
       title={current?.opts.title ?? ''}
       message={current?.opts.message}
+      detail={current?.opts.detail}
       cancelLabel={current?.opts.cancelLabel ?? ''}
       confirmLabel={current?.opts.confirmLabel ?? ''}
       onCancel={cancel}

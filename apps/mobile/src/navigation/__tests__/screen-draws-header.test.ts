@@ -396,7 +396,7 @@ function registered(path: string): { route: string; decl: Decl | null }[] {
   return out;
 }
 
-const NAVIGATORS = ['navigation/root.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx', 'navigation/guest-chunk.tsx', 'navigation/grown-up-stack.native.tsx'];
+const NAVIGATORS = ['navigation/root.tsx', 'navigation/onboarding.tsx', 'navigation/tabs.tsx', 'navigation/browse.tsx', 'screens/placement/PlacementScreen.tsx', 'navigation/guest-chunk.tsx', 'navigation/grown-up-stack.native.tsx', 'navigation/recover-stack.tsx'];
 /** Containers: the nested navigators, whose own routes are in the list. */
 const CONTAINERS = new Set(['Onboarding', 'Main', 'Guest']);
 

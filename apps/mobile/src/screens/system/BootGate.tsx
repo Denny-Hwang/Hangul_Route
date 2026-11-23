@@ -1,8 +1,10 @@
 import { Screen } from '@hangul-route/design-system';
 import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { RecoverStack } from '../../navigation/recover-stack';
+import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { chooseAnotherOffered, readHold, tryReadAgain, type ReadHold } from '../../store/read-failed';
+import { chooseAnotherOffered, grownUpHelpOffered, readHold, startListFresh, tryReadAgain, type ReadHold } from '../../store/read-failed';
 import { ProgressReadFailedScreen } from './ProgressReadFailedScreen';
 
 /**
@@ -15,6 +17,11 @@ import { ProgressReadFailedScreen } from './ProgressReadFailedScreen';
  *   of the navigator, so first run (Welcome) never shows over a list that is there. Try again reruns the full read
  *   (list) or that learner's hydrate (learner); Choose another learner (learner variant, 2 or more learners) opens
  *   the app on the chooser.
+ *
+ * - [DP] row DP-1d (section 3.6): a list whose bytes do not parse and were kept (and a gate whose own record was read)
+ *   draws the screen in its own stack (`RecoverStack`) with **A grown-up can help**: the grown-up gate, then the
+ *   RecoverRecord sheet, whose Start fresh writes the empty list (`startListFresh`) and opens the app like a Try
+ *   again that read (Welcome with Restore, as on a new device).
  *
  * `onOpen` (the post-hydrate chain: prefetch, plan derive, memory, sync) runs once, after the first boot that is not
  * held. A learner who is not active never holds the boot: Home shows them the screen when they are chosen.
@@ -41,6 +48,8 @@ type Phase = { kind: 'reading' } | { kind: 'held'; hold: ReadHold } | { kind: 's
 
 export function BootGate({ firstRead, rereadAll, settle, opened, onOpen, children }: BootGateProps): ReactElement {
   const [phase, setPhase] = useState<Phase>({ kind: 'reading' });
+  // [DP] Section 3.6: the gate's own record (the PIN hash) could not be read: no grown-up way out (fail closed).
+  const gateRecordUnread = useAccountStore((s) => s.pinHashReadFailed);
   const live = useRef(true);
   const opening = useRef(opened !== null);
   // A try's read sets the stores step by step (the list, then each learner); the screen waits for its end.
@@ -108,11 +117,8 @@ export function BootGate({ firstRead, rereadAll, settle, opened, onOpen, childre
   if (phase.kind !== 'held') return <Screen tone="canvas">{null}</Screen>;
 
   const { hold } = phase;
-  const onTryAgain = async (): Promise<boolean> => {
-    trying.current = true;
-    const next = await tryReadAgain(hold, rereadAll).finally(() => {
-      trying.current = false;
-    });
+  /** After a try or a Start fresh: the app opens when nothing is held, else the screen shows the hold it left. */
+  const settleHold = (next: ReadHold | null): boolean => {
     if (!live.current || opening.current) return next === null;
     if (next === null) {
       open(false);
@@ -122,9 +128,27 @@ export function BootGate({ firstRead, rereadAll, settle, opened, onOpen, childre
     setPhase({ kind: 'held', hold: next });
     return false;
   };
+  const onTryAgain = async (): Promise<boolean> => {
+    trying.current = true;
+    const next = await tryReadAgain(hold, rereadAll).finally(() => {
+      trying.current = false;
+    });
+    return settleHold(next);
+  };
   const onChooseAnother = hold.variant === 'learner' && chooseAnotherOffered() ? () => open(true) : undefined;
   // Choose another learner opens the app with the held learner still active; nothing is written for them meanwhile
   // (AU-3: writes, sync and memory skip a learner outside `hydratedFor`), and the chooser picks who goes on.
-  // DP-1d adds A grown-up can help (list variant, `parse` with a kept copy) here.
+  if (grownUpHelpOffered(hold, gateRecordUnread)) {
+    // [DP] Section 3.6: Start fresh, confirmed behind the gate. The store writes the empty list, then every store is read
+    // again (the held boot's per-profile reads were built from no list); the screen does not follow the stores meanwhile.
+    const onStartFresh = async (): Promise<boolean> => {
+      trying.current = true;
+      const next = await startListFresh(rereadAll).finally(() => {
+        trying.current = false;
+      });
+      return settleHold(next);
+    };
+    return <RecoverStack onTryAgain={onTryAgain} onStartFresh={onStartFresh} />;
+  }
   return <ProgressReadFailedScreen onTryAgain={onTryAgain} onChooseAnother={onChooseAnother} />;
 }

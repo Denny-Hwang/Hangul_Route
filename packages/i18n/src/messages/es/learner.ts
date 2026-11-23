@@ -990,6 +990,7 @@ export const learner = {
     bubble: 'Mmm, la caja está atascada.',
     tryAgain: 'Reintentar',
     chooseAnother: 'Elegir otro estudiante',
+    grownUpHelp: 'Un adulto puede ayudar',
     stillStuck: '¿Sigue sin abrirse? Cierra la app y ábrela de nuevo.',
   },
 

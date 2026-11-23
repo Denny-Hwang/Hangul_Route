@@ -22,9 +22,10 @@ import {
   storedProfileItems,
 } from '../logic/profiles/profile-merge';
 import { closesSession } from '../logic/profiles/session';
+import { listCopySettledAt, listCopyStep, settledMark } from '../logic/profiles/list-copy';
 import { changedServerFields, hasFields, serverProfileChanges, type ServerLearnerFields } from '../logic/sync/learner-profile';
 import { postProfilesChanged, subscribeProfilesChanged } from '../platform/profiles-channel';
-import { listKeys, writeJson } from '../platform/storage';
+import { listKeys, removeKey, writeJson } from '../platform/storage';
 import { PROFILES_LOCK, withTabLock } from '../platform/tab-lock';
 import { durableRead, type DurableRead } from './durable-read';
 import { closeGrownUpSession } from './grown-up-session';
@@ -49,6 +50,11 @@ export const PROFILE_TOMBSTONES_KEY = 'profiles:tombstones';
  * (first copy kept, never overwritten), named as AU-3's `progress-corrupt:<id>`.
  */
 export const PROFILES_CORRUPT_KEY = 'profiles-corrupt';
+/**
+ * [DP] Section 3.6 (row DP-1d): when the kept copy's damage settled (`{ v: 1, at }`, `logic/profiles/list-copy.ts`):
+ * the list read again, or a grown-up recovery replaced it. The copy goes 30 days later.
+ */
+export const PROFILES_COPY_SETTLED_KEY = 'profiles-corrupt:settled';
 
 interface State extends ProfileSet {
   hydrated: boolean;
@@ -225,6 +231,102 @@ async function readStored(): Promise<{ storedRaw: unknown; tombstonesRaw: unknow
   return { storedRaw: valueOf(list), tombstonesRaw: valueOf(tombstones) };
 }
 
+/** [DP] Section 3.1: a key that could not be read (the read threw twice); bytes that do not parse were still read. */
+const unreadable = (read: DurableRead): boolean => read.kind === 'failed' && read.cause === 'read';
+
+/** [DP] Runs `step` in this tab's queue and inside the `hr:profiles` lock (as every list write), and answers its result; `false` when it could not run. */
+async function locked(step: () => Promise<boolean>): Promise<boolean> {
+  let answer = false;
+  await enqueue(() =>
+    withTabLock(PROFILES_LOCK, async () => {
+      answer = await step();
+    }),
+  ).catch(() => undefined);
+  return answer;
+}
+
+/**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): the kept copy of a damaged list goes, then its mark (the
+ * copy first: a stop in between leaves the mark, and the next step does the same again). Rejects when a removal fails.
+ */
+async function removeListCopy(): Promise<void> {
+  await removeKey(PROFILES_CORRUPT_KEY);
+  await removeKey(PROFILES_COPY_SETTLED_KEY);
+}
+
+/**
+ * [DP] Section 3.6 (row DP-1d), the grown-up's Start fresh only, inside the `hr:profiles` lock: whether the list's
+ * bytes do not parse **now** and `profiles-corrupt` holds those very bytes (`keepRawCopy` answers `kept` only once the
+ * copy key holds a copy). The list is read first: a list that reads (or cannot be read) answers false and the copy is
+ * never touched. A copy whose damage has settled (its mark is written: the list read again, or a recovery replaced it,
+ * since the copy was made) is of an earlier damage: it gives way, at this confirmed Start fresh only, so the copy is of
+ * the bytes Start fresh replaces (they are kept as the first copy of this damage, never overwritten). A mark that
+ * cannot be read, or a removal or a copy that fails: false (nothing is written over the list). Never rejects.
+ */
+async function keepCurrentListCopy(): Promise<boolean> {
+  const list = await durableRead(PROFILES_KEY, PROFILES_CORRUPT_KEY);
+  if (list.kind !== 'failed' || list.cause !== 'parse') return false;
+  const mark = await durableRead(PROFILES_COPY_SETTLED_KEY, null);
+  if (unreadable(mark)) return false;
+  if (mark.kind === 'missing') return list.kept;
+  try {
+    await removeListCopy();
+  } catch {
+    return false;
+  }
+  const again = await durableRead(PROFILES_KEY, PROFILES_CORRUPT_KEY);
+  return again.kind === 'failed' && again.cause === 'parse' && again.kept;
+}
+
+/**
+ * [DP] Section 3.6: removes the kept copy of a damaged list and its mark, inside the `hr:profiles` lock (so it never
+ * lands inside another tab's Start fresh). Run by Remove from this device of any learner: the copy may hold their name.
+ * Never rejects: a copy whose removal failed stays until the next removal or its 30 days.
+ */
+export async function dropListCopy(): Promise<void> {
+  await locked(async () => {
+    await removeListCopy().catch(() => undefined);
+    return true;
+  });
+}
+
+/**
+ * [DP] Section 3.6: whether a copy of a damaged list is kept on this device (or its key cannot be read). While it is,
+ * an id the list does not name may still be a learner of the damaged list (after a Start fresh): the guest sweep keeps
+ * such an id's keys (`guest-sweep.ts`). Never rejects.
+ */
+export async function holdsListCopy(): Promise<boolean> {
+  return (await durableRead(PROFILES_CORRUPT_KEY, null)).kind !== 'missing';
+}
+
+/**
+ * [DP] Section 3.6: after a `hydrate` that read the list, inside the `hr:profiles` lock (`locked`), never awaited by the
+ * boot. A copy still kept, while the list still reads, is marked settled now (its 30 days start: the list reads again,
+ * or a recovery just replaced it), kept while they run, then removed with its mark (`logic/profiles/list-copy.ts`). A
+ * copy, a list or a mark that cannot be read is left alone.
+ */
+async function settleListCopy(now: number): Promise<boolean> {
+  const copy = await durableRead(PROFILES_CORRUPT_KEY, null);
+  if (copy.kind === 'missing' || unreadable(copy)) return false;
+  // A list damaged again meanwhile (another tab) is not settled: its copy is the live one.
+  if ((await durableRead(PROFILES_KEY, null)).kind === 'failed') return false;
+  const mark = await durableRead(PROFILES_COPY_SETTLED_KEY, null);
+  if (unreadable(mark)) return false;
+  const step = listCopyStep(listCopySettledAt(valueOf(mark)), now);
+  if (step === 'mark') await writeJson(PROFILES_COPY_SETTLED_KEY, settledMark(now));
+  else if (step === 'drop') await removeListCopy();
+  return step !== 'wait';
+}
+
+/**
+ * [DP] Section 3.6: the step after a `hydrate` that read the list. The copy key is read first, outside the lock, so a
+ * device with no copy (nearly every launch) never queues or waits on the `hr:profiles` lock; with one, the step runs
+ * inside it. Never rejects.
+ */
+async function settleKeptListCopy(now: number): Promise<void> {
+  if (await holdsListCopy()) await locked(() => settleListCopy(now));
+}
+
 /**
  * [OA] OA-D19, CS-16: one list write. `hr:profiles` is read, merged and written inside the `hr:profiles` Web Lock, and
  * every step of this tab runs one after another (`enqueue`). The merge is by id, the stored copy first (another tab's
@@ -397,7 +499,9 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     const unread = (cause: 'read' | 'parse', kept = false): void =>
       set({ loadFailed: cause, listCopyKept: kept, hydrated: false, profiles: [], activeId: null });
     if (list.kind === 'failed') {
-      unread(list.cause, list.kept);
+      // [DP] Section 3.6 (row DP-1d): a grown-up's way out is offered only with a copy kept and its mark readable. The
+      // boot only reads: a copy of an earlier, settled damage gives way at a confirmed Start fresh, never here.
+      unread(list.cause, list.cause === 'parse' && list.kept && !unreadable(await durableRead(PROFILES_COPY_SETTLED_KEY, null)));
       return;
     }
     const storedRaw = valueOf(list);
@@ -451,6 +555,8 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     }
     set({ profiles, activeId: active, hydrated: true, loadFailed: null, listCopyKept: false, activeSince: Date.now() });
     if (holdsLegacyPinHash(storedRaw)) persistList();
+    // [DP] Section 3.6 (row DP-1d): the list reads, so a damaged copy kept earlier has settled: its 30 days run.
+    void settleKeptListCopy(Date.now());
   },
 
   refresh: () => {
@@ -599,6 +705,31 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     return outcome;
   },
 }));
+
+/**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): **Start fresh on this device**, the RecoverRecord sheet's
+ * action after the grown-up gate, and the one write past the section 3.3 guards. In this tab's queue and inside the
+ * `hr:profiles` lock: only while the list is held as damaged (`loadFailed: 'parse'`), and only when a read made now
+ * still finds bytes that do not parse and `profiles-corrupt` holds them (`keepCurrentListCopy`; `keepRawCopy` answers
+ * `kept` only once the copy key holds a copy), the empty list is written, once. The active key, the tombstones and
+ * every per-profile key are left as they are: learners come back through Restore, and their records under
+ * `progress:<id>` are still on the device. Then the list is read again (`hydrate`), which clears `loadFailed` and starts
+ * the copy's 30 days; the caller (BootGate) reruns the other stores' reads and the post-hydrate chain. A list that
+ * reads meanwhile (another tab wrote one) is never written over. Resolves whether the list was written and reads now;
+ * never rejects.
+ */
+export async function recoverProfileList(): Promise<boolean> {
+  const wrote = await locked(async () => {
+    if (useProfileStore.getState().loadFailed !== 'parse') return false;
+    if (!(await keepCurrentListCopy())) return false;
+    await writeJson(PROFILES_KEY, []);
+    return true;
+  });
+  if (!wrote) return false;
+  await useProfileStore.getState().hydrate();
+  postProfilesChanged();
+  return useProfileStore.getState().loadFailed === null;
+}
 
 export function activeProfileSelector(state: State): Profile | null {
   return activeProfile(state);

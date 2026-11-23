@@ -47,6 +47,8 @@ const routes = {
   browse: stackRoutes(read('navigation/browse.tsx')),
   // [GU] Row GU-3: the guest's first quest (its own stack; GU-4 adds the save's two routes).
   guest: stackRoutes(read('navigation/guest-chunk.tsx')),
+  // [DP] Row DP-1d: the read-failed screen's own stack at boot.
+  recover: stackRoutes(read('navigation/recover-stack.tsx')),
   tabs: [...mainTabs(true)],
   placement: placementRoutes(read('screens/placement/PlacementScreen.tsx')),
 };
@@ -61,6 +63,7 @@ describe('screen header registry (AMENDMENTS-DISPLAY-NAV section 7.1)', () => {
     expect(routes.placement).toEqual(expect.arrayContaining(['PlacementBoot', 'PlacementItem', 'PlacementResult']));
     expect(routes.guest).toEqual(['QuestPlayer', 'Minigame', 'Results', 'CardDetail', 'GuestLater', 'CreateProfile', 'PinEntry']);
     expect(routes.root).toContain('Guest');
+    expect(routes.recover).toEqual(['RecoverHold', 'PinEntry', 'PinReset']);
   });
 
   it('every registered route has a variant', () => {

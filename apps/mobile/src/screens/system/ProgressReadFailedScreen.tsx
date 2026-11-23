@@ -1,5 +1,5 @@
 import { Body, Button, Heading, Hoya, HoyaBubble, Screen, Spacer, motion, spacing, type ScreenEdge } from '@hangul-route/design-system';
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement, type Ref } from 'react';
 import { Platform, View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import { announceForScreenReader, focusForScreenReader } from '../../platform/screen-reader';
@@ -20,6 +20,11 @@ import { announceForScreenReader, focusForScreenReader } from '../../platform/sc
  * through VoiceOver; Android and the web through the bubble's polite live region, whose text changes by one zero-width
  * space, in place of D2's clear-and-fill, so the bubble never jumps). After 3 such tries in this app session the still-stuck line fills its polite live region (D3), and stays.
  *
+ * [DP] Row DP-1d (frame B): **A grown-up can help**, a centred ghost button (`touchTarget.min`), for the list variant
+ * whose bytes do not parse and were kept (`onGrownUpHelp`); it opens the grown-up gate to the RecoverRecord sheet
+ * (`RecoverHoldScreen`). Held with the others while a try runs. At most one button joins Try again (the two extra
+ * buttons belong to different variants).
+ *
  * There is no "Start over" or "New learner" button (section 3.5).
  */
 export interface ProgressReadFailedScreenProps {
@@ -27,6 +32,14 @@ export interface ProgressReadFailedScreenProps {
   onTryAgain: () => Promise<boolean>;
   /** Learner variant with 2 or more learner profiles: opens the chooser. Absent: no button. */
   onChooseAnother?: () => void;
+  /** [DP] Row DP-1d: list variant, bytes that do not parse with a copy kept: opens the grown-up gate. Absent: no button. */
+  onGrownUpHelp?: () => void;
+  /** [DP] The grown-up button's node, so focus can come back to it after the gate and the sheet (design D5). */
+  grownUpRef?: Ref<View>;
+  /** [DP] Something the caller runs (Start fresh) holds the screen as a try does (D2): every button soft-disabled. */
+  busy?: boolean;
+  /** [DP] Raised by the caller when what it ran did not work: the bubble is said again, as after a try (not a try). */
+  retell?: number;
   /** The Screen's safe-area edges (Home, a tab screen, drops `bottom`). Default: all four. */
   edges?: readonly ScreenEdge[];
   /** The shortest a try is shown as running, in ms; default `motion.duration.crawl`. */
@@ -46,9 +59,22 @@ export function resetReadFailedTriesForTests(): void {
 
 const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function ProgressReadFailedScreen({ onTryAgain, onChooseAnother, edges, minBusyMs = motion.duration.crawl }: ProgressReadFailedScreenProps): ReactElement {
+export function ProgressReadFailedScreen({
+  onTryAgain,
+  onChooseAnother,
+  onGrownUpHelp,
+  grownUpRef,
+  busy: held = false,
+  retell = 0,
+  edges,
+  minBusyMs = motion.duration.crawl,
+}: ProgressReadFailedScreenProps): ReactElement {
   const m = useMessages().learner.progressReadFailed;
-  const [busy, setBusy] = useState(false);
+  const [trying, setTrying] = useState(false);
+  const busy = trying || held;
+  // The caller's own `retell`s, so the bubble's line changes by one more step each time (its live region says it again).
+  const [retold, setRetold] = useState(0);
+  const retellSeen = useRef(retell);
   const [tries, setTries] = useState(failedTries);
   const running = useRef(false);
   const mounted = useRef(true);
@@ -66,19 +92,28 @@ export function ProgressReadFailedScreen({ onTryAgain, onChooseAnother, edges, m
     };
   }, []);
 
+  useEffect(() => {
+    if (retell === retellSeen.current) return;
+    retellSeen.current = retell;
+    setRetold((n) => n + 1);
+    announceForScreenReader(m.bubble);
+    // `m.bubble` is read when the caller raises `retell`, as after a try.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [retell]);
+
   const tryAgain = (): void => {
-    if (running.current) return;
+    if (running.current || held) return;
     running.current = true;
-    setBusy(true);
+    setTrying(true);
     void Promise.all([onTryAgain().catch(() => false), wait(minBusyMs)]).then(([worked]) => {
       running.current = false;
       if (worked) {
-        if (mounted.current) setBusy(false);
+        if (mounted.current) setTrying(false);
         return;
       }
       failedTries += 1;
       if (!mounted.current) return;
-      setBusy(false);
+      setTrying(false);
       setTries(failedTries);
       // iOS has no live regions: the still-stuck line is said with the bubble when it first fills (D3).
       announceForScreenReader(failedTries === STILL_STUCK_AFTER ? `${m.bubble} ${m.stillStuck}` : m.bubble);
@@ -103,10 +138,26 @@ export function ProgressReadFailedScreen({ onTryAgain, onChooseAnother, edges, m
               fullWidth
               softDisabled={busy}
               onPress={() => {
-                if (!running.current) onChooseAnother();
+                if (!running.current && !held) onChooseAnother();
               }}
               testID="read-failed-choose-another"
             />
+          ) : null}
+          {onGrownUpHelp ? (
+            // A Button without fullWidth aligns to the start: the View centres it (design Values).
+            <View style={{ alignItems: 'center' }}>
+              <Button
+                label={m.grownUpHelp}
+                tone="ghost"
+                size="md"
+                softDisabled={busy}
+                pressableRef={grownUpRef}
+                onPress={() => {
+                  if (!running.current && !held) onGrownUpHelp();
+                }}
+                testID="read-failed-grown-up"
+              />
+            </View>
           ) : null}
         </View>
       }
@@ -132,7 +183,7 @@ export function ProgressReadFailedScreen({ onTryAgain, onChooseAnother, edges, m
           {m.body}
         </Body>
         <Spacer size="xl" />
-        <HoyaBubble tone="thinking" message={tries % 2 === 1 ? `${m.bubble}${REANNOUNCE}` : m.bubble} />
+        <HoyaBubble tone="thinking" message={(tries + retold) % 2 === 1 ? `${m.bubble}${REANNOUNCE}` : m.bubble} />
         <Spacer size="lg" />
         {/* Always mounted and empty until the third try ends, so it is announced once, when it fills (D3). */}
         <View accessibilityLiveRegion="polite" testID="read-failed-still-stuck">

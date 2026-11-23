@@ -9,7 +9,7 @@ import { hideGuestIdWhile, readStoredGuest, useGuestStore } from './guest-store'
 import { sweepProfileKeys } from './profile-key-sweep';
 import './profile-keys';
 import { notifyProfileRemoved } from './profile-removal';
-import { PROFILES_KEY, PROFILE_TOMBSTONES_KEY, useProfileStore } from './profile-store';
+import { PROFILES_KEY, PROFILE_TOMBSTONES_KEY, holdsListCopy, useProfileStore } from './profile-store';
 
 /**
  * How long the boot waits for the `hr:profiles` lock before a repair or a sweep (another tab may hold it, or a
@@ -34,7 +34,8 @@ type HydrateResult = StoredGuestAction['kind'] | 'unread';
  *   every per-profile store forgets the id, then the OA-7a key sweep deletes every stored key of it, then the record
  *   goes and `guest.expired { questDone }` is sent (no profile id). The keys go only when `hr:profiles` and its
  *   tombstones, read again exactly inside the lock, both read and neither holds the id: a failed or damaged read
- *   decides nothing;
+ *   decides nothing; [DP] nor while a copy of a damaged profile list is kept (`holdsListCopy`, AMENDMENTS-DURABLE-
+ *   PROGRESS section 3.6): the id may be a learner of that list;
  * - a record that does not parse, younger than that, reads as no guest and is kept until a start overwrites it.
  * A repair or a sweep posts `hr-profiles` `changed`, so another tab's run of that record ends. Importing
  * `profile-keys` loads every store that keeps a per-profile key, so each has subscribed to `onProfileRemoved` before
@@ -115,6 +116,9 @@ async function settleStoredGuest(now: number): Promise<HydrateResult> {
     await removeGuestRecord();
     return 'repair';
   }
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): while a copy of a damaged list is kept (a Start fresh
+  // left the list empty), an id the list does not name may be a learner of that list, whose keys stay: nothing is swept.
+  if (action.kind === 'sweep' && action.id !== null && (await holdsListCopy())) return 'unread';
   if (action.kind === 'sweep') {
     await sweepGuest(action.id, action.questDone);
     return 'sweep';

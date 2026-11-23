@@ -2,7 +2,7 @@ import { afterRemoval, removalFacts, removedEvent, savedWithCode, type AfterRemo
 import { track } from '../platform/telemetry';
 import { sweepProfileKeys } from './profile-key-sweep';
 import './profile-keys';
-import { useProfileStore } from './profile-store';
+import { dropListCopy, useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 import { useSyncStore } from './sync-store';
 
@@ -80,7 +80,8 @@ export async function syncThenCheck(profileId: string, timeoutMs: number = SYNC_
  * unsaved learner). Any other step removes nothing (null). `profile-store.remove` drops the profile, records the
  * tombstone, takes the id out of the locks and tells every per-profile store (`notifyProfileRemoved`), which delete
  * their keys; a sweep then deletes any key of the id still stored (a delete that failed, a key written back meanwhile)
- * and looks again. `profile.removed { saved, wasActive, anyway }` is sent. Answers where the app goes next.
+ * and looks again. [DP] The kept copy of a damaged profile list (`profiles-corrupt`) goes too. `profile.removed
+ * { saved, wasActive, anyway }` is sent. Answers where the app goes next.
  */
 export async function removeFromDevice(profileId: string, step: RemoveStep): Promise<AfterRemoval | null> {
   const facts = removalFacts(step);
@@ -91,6 +92,8 @@ export async function removeFromDevice(profileId: string, step: RemoveStep): Pro
   useProfileStore.getState().remove(profileId);
   const learnersLeft = useProfileStore.getState().profiles.filter((p) => p.role === 'learner').length;
   await sweepProfileKeys([profileId]);
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.6 (row DP-1d): the kept copy of a damaged list may hold their name.
+  await dropListCopy();
   void track(removedEvent({ ...facts, wasActive }));
   return afterRemoval({ wasActive, learnersLeft });
 }

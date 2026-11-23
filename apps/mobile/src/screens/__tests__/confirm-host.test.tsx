@@ -35,6 +35,18 @@ describe('ConfirmHost (the web confirm step)', () => {
     await unmount(renderer);
   });
 
+  it('[DP] a second line (`detail`) is drawn as the sheet\'s detail paragraph', async () => {
+    const renderer = await render(<ConfirmHost />);
+    let answer: Promise<boolean> | null = null;
+    await act(async () => {
+      answer = dialog.confirm({ title: 'This record is damaged.', message: 'We kept a copy.', detail: 'Learners come back with a code.', confirmLabel: 'Start fresh', cancelLabel: 'Not now' });
+    });
+    expect(sheetOf(renderer)).toMatchObject({ visible: true, message: 'We kept a copy.', detail: 'Learners come back with a code.', cancelLabel: 'Not now' });
+    await act(async () => sheetOf(renderer).onCancel());
+    await expect(answer).resolves.toBe(false);
+    await unmount(renderer);
+  });
+
   it('cancel answers false; a second question waits for the first', async () => {
     const renderer = await render(<ConfirmHost />);
     let first: Promise<boolean> | null = null;

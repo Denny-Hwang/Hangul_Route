@@ -299,6 +299,14 @@ export const caregiver = {
     },
   },
 
+  recoverRecord: {
+    title: '이 기록이 손상됐어요.',
+    body: '이 기기에 사본을 보관해 두었어요.',
+    comeBack: '이후에는 학습자가 복구 코드나 저장한 파일로만 다시 돌아올 수 있어요.',
+    fresh: '이 기기에서 처음부터 시작하기',
+    notNow: '지금은 안 함',
+  },
+
   saveProgress: {
     title: '내 진도 저장하기',
     bubble: {

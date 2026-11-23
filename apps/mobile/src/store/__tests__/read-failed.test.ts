@@ -20,7 +20,8 @@ vi.mock('../../platform/device', () => ({ getDeviceId: vi.fn(async () => 'device
 import { flags } from '../../config/flags';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { chooseAnotherOffered, chooserAfterHold, readHold, tryReadAgain } from '../read-failed';
+import { useAccountStore } from '../account-store';
+import { chooseAnotherOffered, chooserAfterHold, grownUpHelpOffered, readHold, startListFresh, tryReadAgain } from '../read-failed';
 
 const learner = (id: string): Profile => ({ id, displayName: id, ageGroup: '8-9', avatar: 'hoya-orange', role: 'learner', createdAt: 't' });
 const chooserFlag = flags.whoChooserEnabled;
@@ -139,5 +140,43 @@ describe('chooserAfterHold (RootNavigator after Choose another learner)', () => 
   it('none with the chooser switched off', () => {
     flags.whoChooserEnabled = false;
     expect(chooserAfterHold(null, true, false)).toBeNull();
+  });
+});
+
+describe('[DP] grownUpHelpOffered (section 3.5, row DP-1d)', () => {
+  it('the list variant only, bytes that do not parse, a copy kept, and the gate record read', () => {
+    expect(grownUpHelpOffered({ variant: 'list', cause: 'parse', kept: true }, false)).toBe(true);
+    expect(grownUpHelpOffered({ variant: 'list', cause: 'parse', kept: false }, false)).toBe(false);
+    expect(grownUpHelpOffered({ variant: 'list', cause: 'read', kept: false }, false)).toBe(false);
+    expect(grownUpHelpOffered({ variant: 'learner', profileId: 'p:a' }, false)).toBe(false);
+  });
+
+  it("fails closed when the gate's own record (the PIN hash) could not be read (section 3.6)", () => {
+    expect(grownUpHelpOffered({ variant: 'list', cause: 'parse', kept: true }, true)).toBe(false);
+    useAccountStore.setState({ pinHashReadFailed: true });
+    expect(grownUpHelpOffered({ variant: 'list', cause: 'parse', kept: true })).toBe(false);
+    useAccountStore.setState({ pinHashReadFailed: false });
+    expect(grownUpHelpOffered({ variant: 'list', cause: 'parse', kept: true })).toBe(true);
+  });
+});
+
+describe('[DP] startListFresh (Start fresh on this device, section 3.6)', () => {
+  it('after the list is written, reruns the full read (as Try again); the hold goes when it reads', async () => {
+    useProfileStore.setState({ hydrated: false, profiles: [], activeId: null, loadFailed: 'parse', listCopyKept: true });
+    const recover = vi.fn(async () => {
+      useProfileStore.setState({ hydrated: true, loadFailed: null, listCopyKept: false });
+      return true;
+    });
+    const rereadAll = vi.fn(async () => undefined);
+    await expect(startListFresh(rereadAll, recover)).resolves.toBeNull();
+    expect(recover).toHaveBeenCalledTimes(1);
+    expect(rereadAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('a recovery that wrote nothing reruns nothing and keeps the hold', async () => {
+    useProfileStore.setState({ hydrated: false, profiles: [], activeId: null, loadFailed: 'parse', listCopyKept: true });
+    const rereadAll = vi.fn(async () => undefined);
+    await expect(startListFresh(rereadAll, async () => false)).resolves.toEqual({ variant: 'list', cause: 'parse', kept: true });
+    expect(rereadAll).not.toHaveBeenCalled();
   });
 });
