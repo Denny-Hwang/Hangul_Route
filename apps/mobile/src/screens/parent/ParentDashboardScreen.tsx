@@ -65,6 +65,8 @@ export function ParentDashboardScreen({ navigation, route }: Props): ReactElemen
   const locale = useLocale();
   const profiles = useProfileStore((s) => s.profiles);
   const byProfile = useProgressStore((s) => s.byProfile);
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): some learner's progress on this device could not be saved.
+  const saveTrouble = useProgressStore((s) => s.saveFailedFor.size > 0);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const { opensDirectly, audience, copy } = useAudience();
 
@@ -134,6 +136,16 @@ export function ParentDashboardScreen({ navigation, route }: Props): ReactElemen
         ) : null}
         <Caption tone="muted">{m.readOnly}</Caption>
       </View>
+
+      {/* [DP] Row DP-2 (design frame M, D8): one quiet line after the title block, while any learner's save did not land. */}
+      {saveTrouble ? (
+        <>
+          <Spacer size="sm" />
+          <Body tone="secondary" testID="dashboard-save-trouble">
+            {m.saveTrouble}
+          </Body>
+        </>
+      ) : null}
 
       {flags.whoChooserEnabled ? (
         <>

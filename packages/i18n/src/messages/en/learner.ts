@@ -180,6 +180,16 @@ export const learner = {
 
   profile: {
     title: 'Profiles & settings',
+    /**
+     * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): one quiet line above the second group while the learner's
+     * progress could not be saved on this device. `family` asks for a grown-up's help and never asks a learner (possibly a
+     * child) to free up space (owner item O4, 2026-11-22); `self` (a self-only device never says "grown-up", F-LEARN-001
+     * L7) is the spec's line.
+     */
+    saveTrouble: {
+      family: 'This device is having trouble saving. Ask a grown-up to help.',
+      self: 'This device is having trouble saving. Free up some space, then open the app again.',
+    },
     switchTo: (name: string) => `Switch to ${name}`,
     playingNow: 'Playing now',
     addProfile: '+ Add a profile',
@@ -613,6 +623,8 @@ export const learner = {
   },
 
   results: {
+    /** [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): one quiet line under the stars while this run could not be saved yet. */
+    saveLater: 'We could not save this yet. Keep the app open and we will try again.',
     /** One word per tier, never a number or a percent (F-RVW-001 §3.1). */
     headline: {
       allDone: 'All done!',

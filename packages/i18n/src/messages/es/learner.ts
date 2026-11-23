@@ -140,6 +140,10 @@ export const learner = {
 
   profile: {
     title: 'Perfiles y ajustes',
+    saveTrouble: {
+      family: 'Este dispositivo tiene problemas para guardar. Pide ayuda a un adulto.',
+      self: 'Este dispositivo tiene problemas para guardar. Libera algo de espacio y vuelve a abrir la app.',
+    },
     switchTo: (name: string) => `Cambiar a ${name}`,
     playingNow: 'Jugando ahora',
     addProfile: '+ Añadir un perfil',
@@ -427,6 +431,7 @@ export const learner = {
   },
 
   results: {
+    saveLater: 'Aún no pudimos guardar esto. Deja la app abierta y lo intentaremos de nuevo.',
     headline: {
       allDone: '¡Listo!',
       wonderful: '¡Maravilloso!',

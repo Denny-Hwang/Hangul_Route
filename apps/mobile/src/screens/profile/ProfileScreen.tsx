@@ -78,6 +78,8 @@ export function ProfileScreen(): ReactElement {
   // [OA] Row OA-5: locks are enforced on these tiles whatever the chooser flag says (fail safe, section 16).
   const locks = useLocks(profiles);
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): the active learner's progress could not be saved on this device.
+  const saveTrouble = useProgressStore((s) => (active ? s.saveFailedFor.has(active.id) : false));
   // Class days and practice days (AMENDMENTS-ROUTE-CLASS-BLEND sections 7 and 8, row BL-7): the weekly plan row's
   // resting line or proposal line while the class plan has practice days; nothing while the switch is off.
   const blendPlans = usePlanStore((s) => (active ? s.byLearner[active.id] : undefined));
@@ -433,8 +435,18 @@ export function ProfileScreen(): ReactElement {
         <MyNotesRow onOpen={() => navigation.navigate('Notes')} />
       </View>
 
-      {/* For grown-ups, collapsed: the plan, backup, install, the account pages, the grown-up area and the notices. */}
+      {/* [DP] Row DP-2 (design frame L, D8): one quiet line above the second group. A family device asks for a grown-up's
+          help, never the learner to free up space (owner item O4); a self-only device never says "grown-up". */}
       <Spacer size="xxl" />
+      {saveTrouble ? (
+        <>
+          <Body tone="secondary" testID="profile-save-trouble">
+            {audience === 'self' ? t.saveTrouble.self : t.saveTrouble.family}
+          </Body>
+          <Spacer size="md" />
+        </>
+      ) : null}
+      {/* For grown-ups, collapsed: the plan, backup, install, the account pages, the grown-up area and the notices. */}
       <View testID="profile-group-grown-ups" role="group" aria-labelledby="profile-group-grown-ups-title">
         {/* The heading holds the group's disclosure button (the accordion pattern): heading navigation still finds the
             group, and the button says whether it is open. A heading inside the button would lose its heading role. */}

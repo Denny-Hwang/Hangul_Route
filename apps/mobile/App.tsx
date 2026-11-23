@@ -22,7 +22,8 @@ import { installGestureUnlock } from './src/platform/audio';
 import { installHistoryBridge } from './src/platform/history-bridge';
 import { leaveGrownUpAreaOnClose, watchGrownUpAreaExit } from './src/navigation/grown-up-area-exit';
 import { followProfileChanges } from './src/store/profile-store';
-import { followProgressChanges } from './src/store/progress-store';
+import { followProgressChanges, followSaveRetries } from './src/store/progress-store';
+import { subscribeAppActive } from './src/platform/app-state';
 import { followGuestChanges } from './src/store/guest-store';
 import { bindChooserResume, bindRemovedElsewhere } from './src/store/who-chooser';
 import { bindGrownUpBackgroundRule } from './src/screens/parent/use-gate-lapse';
@@ -160,6 +161,8 @@ export default function App(): ReactElement {
     const unfollowProfiles = followProfileChanges();
     // [AU] AMENDMENTS-AUDIT-2026-11 row AU-11: a snapshot another tab stored is read again here (always on).
     const unfollowProgress = followProgressChanges();
+    // [DP] AMENDMENTS-DURABLE-PROGRESS row DP-2: a progress save that did not land is tried again on each foreground and background.
+    const unfollowSaveRetries = followSaveRetries(subscribeAppActive);
     // [GU] Row GU-2 (section 6.4): a guest record another tab wrote or saved is read again here (always on).
     const unfollowGuest = followGuestChanges();
     void countVisit();
@@ -231,6 +234,7 @@ export default function App(): ReactElement {
       unbindBackground();
       unfollowProfiles();
       unfollowProgress();
+      unfollowSaveRetries();
       unfollowGuest();
       off();
       offInbox();

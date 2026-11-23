@@ -115,6 +115,8 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
   const unlockCards = useProgressStore((s) => s.unlockCards);
   const recordCatchUp = useProgressStore((s) => s.recordCatchUp);
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  // [DP] AMENDMENTS-DURABLE-PROGRESS section 3.7 (row DP-2): this learner's progress could not be saved (or read) yet.
+  const saveLater = useProgressStore((s) => (profile ? s.saveFailedFor.has(profile.id) || s.loadFailedFor.has(profile.id) : false));
   // The access tier (F-ENT-003 section 3.4): re-renders when the inbox, the spaces or the subscription change it.
   const tier = useAccessTier(profile?.id ?? '');
   // May the active learner start a quest (F-ENT-003 sections 3.5 and 3.6): "Next up" and "Next story" offer open quests only.
@@ -504,6 +506,15 @@ export function ResultsScreen({ route, navigation }: Props): ReactElement {
         <Heading level="display">{resultsHeadline(stars, played, m.headline)}</Heading>
         <Spacer size="sm" />
         <StarRow stars={stars} size={48} accessibilityLabel={messages.a11y.stars(stars)} />
+        {/* [DP] Row DP-2 (design frame K, D6, D8): one quiet line under the headline block, before the bubble; not a live region. */}
+        {saveLater ? (
+          <>
+            <Spacer size="sm" />
+            <Body tone="secondary" align="center" testID="results-save-later">
+              {m.saveLater}
+            </Body>
+          </>
+        ) : null}
       </View>
 
       <Spacer size="lg" />
