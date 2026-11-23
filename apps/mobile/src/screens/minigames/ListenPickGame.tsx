@@ -347,7 +347,7 @@ export function ListenPickGame({ scope, host, onBack, hint, textPrompt: textProm
     romanizationMode,
     // AU-8: a quest Check that plays its prompt shows no romanization on its options until the answer.
     holdRomanization: checkHoldsRomanization(host.mode, textMode),
-    ...(spellingKit === null ? {} : { labelOf: spellingKit.spellingOptionLabel }),
+    ...(spellingKit === null ? {} : { labelOf: (text: { ko: string; romanization: string }) => spellingKit.spellingOptionLabel(text, m.a11y.romanizationOr) }),
   };
 
   return (

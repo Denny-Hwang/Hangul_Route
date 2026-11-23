@@ -226,7 +226,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
                     state={state}
                     size="lg"
                     dimension={tile}
-                    accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
+                    accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile, m.a11y.romanizationOr)}
                     disabled={state === 'wrong'}
                     testID={`match-sound-tile-${j.id}`}
                     onPress={() => handleTap(j.id)}

@@ -2512,8 +2512,16 @@ export const learner = {
       deckTitle: 'Lesson',
       /** `name` is the romanized letter name (nieun); `hangul` the name in Hangul, which only the Korean line shows. */
       letterName: (name: string, _hangul: string) => `Letter name: ${name}`,
-      /** Until a native speaker reviews the letter's strokes (section 3.6). */
+      /**
+       * Under the stroke panel of a letter whose stroke order a person has checked (section 3.6; AMENDMENTS-STROKE-ORDER-
+       * STANDARD OD-SO8): the numbered guide drawn from the simplified stroke data.
+       */
       strokeCaption: 'Simplified stroke guide',
+      /**
+       * [SO] AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8: under the stroke panel of a letter whose stroke order nobody has
+       * checked yet (every letter until SO-3): the panel shows the letter's shape only, with no order.
+       */
+      shapeCaption: 'Letter shape',
       /** The teacher-says text when the room cannot hear the Korean (section 3.7, PR 9). */
       sayIt: 'Say it:',
       /** The kind label above a heritage card's title (PR 7). */

@@ -155,7 +155,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
   );
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
-  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text));
+  const readTyped = (text: string): string => k.field(text, a11yRomanization(romanize(text).text, m.a11y.romanizationOr));
   const readTypedRef = useRef(readTyped);
   readTypedRef.current = readTyped;
 
@@ -367,7 +367,7 @@ export function TypeHangulGame({ scope, host, onBack, hear = null }: Props): Rea
           width={kbWidth}
           layoutClass={keyboardClass}
           soundOf={keySound}
-          speakSound={a11yRomanization}
+          speakSound={(sound) => a11yRomanization(sound, m.a11y.romanizationOr)}
           labels={{ key: k.key, shift: k.shift, delete: k.delete, space: k.space }}
           // While a hear round holds its opening (at most 1.5 s) a key types nothing and is not queued.
           onKey={(jamo) => (holding ? undefined : dispatch({ type: 'key', jamo }))}

@@ -21,9 +21,10 @@ type LetterBody = Extract<Slide, { kind: 'letter' }>;
 /**
  * Letter slide in three columns (design/screens/presenter/slide-letter.md, README D4): the glyph
  * in the presenter font with its romanization; the stroke guide panel (`StrokeHint` at 360 units
- * over the still numbered diagram, "Simplified stroke guide" until reviewed); then the speaker row,
- * the letter name and sound hint, and the example word. A build that is not reached keeps its
- * space, so nothing shifts when it appears.
+ * over the still diagram), captioned "Letter shape" while nobody has checked the letter's stroke
+ * order and "Simplified stroke guide" once a person has (AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8);
+ * then the speaker row, the letter name and sound hint, and the example word. A build that is not
+ * reached keeps its space, so nothing shifts when it appears.
  *
  * AMENDMENTS-AUDIO-CLIPS JV-A1 / JV-A4: the main speaker says an initial's or a vowel's name (nieun),
  * and a consonant whose sound differs has a second speaker for its sound on a vowel (na = ㄴ + ㅏ),
@@ -79,9 +80,10 @@ export function LetterSlide({
             orderTaught={slide.strokeReviewed}
             romanization={slide.romanization}
           />
-          {!slide.strokeReviewed ? (
-            <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary }}>{m.slide.strokeCaption}</Text>
-          ) : null}
+          {/* [SO] OD-SO8: an untaught letter's panel shows its shape only; a taught one keeps the stroke guide's caption. */}
+          <Text {...KOREAN_LINE_BREAK} style={{ fontSize: size(presenter.size.caption), color: colors.text.secondary }}>
+            {slide.strokeReviewed ? m.slide.strokeCaption : m.slide.shapeCaption}
+          </Text>
         </View>
       ) : null}
       <View style={{ flex: 1, gap: units(unit, STAGE_GAP_INNER) }}>
@@ -192,7 +194,9 @@ function StrokePanel({
   // An untaught hint goes once its reveal ends (at once under reduced motion), so its label is up only while the shape
   // is (SO-0c wireframe section 8); the panel itself carries the shape label.
   const showHint = playToken > 0 && (orderTaught || hintDone !== playToken);
-  const shapeLabel = orderTaught || showHint ? undefined : messages.a11y.minigame.strokeOrder.shape(a11yRomanization(romanization));
+  // [SO] OD-SO10: the "or" between romanization alternatives is the deck language's, like the label around it.
+  const shapeLabel =
+    orderTaught || showHint ? undefined : messages.a11y.minigame.strokeOrder.shape(a11yRomanization(romanization, messages.a11y.romanizationOr));
   return (
     <View
       {...(shapeLabel !== undefined ? { accessible: true, accessibilityRole: 'image' as const, accessibilityLabel: shapeLabel } : {})}
@@ -238,6 +242,7 @@ function StrokePanel({
           viewBox={STROKE_VIEWBOX}
           playToken={playToken}
           strokeOrder={messages.a11y.minigame.strokeOrder}
+          romanizationOr={messages.a11y.romanizationOr}
           orderTaught={orderTaught}
           romanization={romanization}
           onShow={(mode) => {

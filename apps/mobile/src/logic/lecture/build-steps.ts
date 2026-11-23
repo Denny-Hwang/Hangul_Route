@@ -224,7 +224,10 @@ export type SlideBody =
       example?: KoLine;
       /** A stroke skeleton exists for the guide panel. */
       hasStrokes: boolean;
-      /** Native-reviewed; otherwise the panel says "Simplified stroke guide" (§3.6). */
+      /**
+       * Stroke order checked by a person (`reviewedStrokeIds`, §3.6): the panel numbers the strokes, captioned "Simplified
+       * stroke guide"; otherwise it shows the letter's shape, captioned "Letter shape" (AMENDMENTS-STROKE-ORDER-STANDARD OD-SO8).
+       */
       strokeReviewed: boolean;
       /** From a trace-stroke step: the stroke guide is the first build (§3.3 rule 2). */
       strokeFirst?: true;

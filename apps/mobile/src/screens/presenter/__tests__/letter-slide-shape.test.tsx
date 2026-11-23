@@ -17,13 +17,18 @@ import { LetterSlide } from '../slides/LetterSlide';
  * [SO] AMENDMENTS-STROKE-ORDER-STANDARD §6 test 9, OD-SO2 (design: presenter/slide-letter.md): an untaught letter's
  * stroke panel has no numbered start dots; on the stroke build the panel letter steps aside while `StrokeHint` plays
  * the shape reveal (`orderTaught` false, the slide's romanization) and comes back when it ends; under reduced motion
- * the unnumbered panel letter stays alone. The caption "Simplified stroke guide" is unchanged.
+ * the unnumbered panel letter stays alone.
+ *
+ * Row SO-1b (owner decisions 2026-11-23): OD-SO8, the untaught panel's caption is "Letter shape" and a taught letter
+ * keeps "Simplified stroke guide"; OD-SO10, the shape label reads a slash in the romanization with the deck language's
+ * word for "or", and the hint is given the same word.
  */
 
 (globalThis as { __DEV__?: boolean }).__DEV__ = false;
 interface HintProps {
   orderTaught: boolean;
   romanization: string;
+  romanizationOr?: string;
   onShow?: (mode: 'animated' | 'static') => void;
   onComplete?: () => void;
 }
@@ -54,8 +59,8 @@ function letter(jamoId: string): LetterBody {
   return expandDeck(deck, bundle, { canPlayKorean: true }).slides.find((s): s is LetterBody => s.kind === 'letter')!;
 }
 
-const element = (slide: LetterBody, strokeToken: number) => (
-  <PresenterViewProvider value={{ messages: getMessages('en'), locale: 'en', unit: 1, reducedMotion: false }}>
+const element = (slide: LetterBody, strokeToken: number, locale: 'en' | 'es' | 'ko' = 'en') => (
+  <PresenterViewProvider value={{ messages: getMessages(locale), locale, unit: 1, reducedMotion: false }}>
     <LetterSlide slide={slide} shown={ALL} strokeToken={strokeToken} onPlaySound={() => undefined} />
   </PresenterViewProvider>
 );
@@ -67,15 +72,26 @@ describe('LetterSlide stroke panel, untaught letter (§6 test 9)', () => {
   const slide = letter('jamo:mieum');
   const n = strokesForJamo('jamo:mieum')!.length;
 
-  it('the slide is untaught and its panel shows the letter with no numbered start dots, captioned as before', async () => {
+  it('the slide is untaught and its panel shows the letter with no numbered start dots, captioned "Letter shape" (OD-SO8)', async () => {
     expect(slide.strokeReviewed).toBe(false);
     const r = await render(element(slide, 0));
     mounted.push(r);
     expect(panelStrokes(r.root)).toBe(n);
     expect(numerals(r.root)).toBe(0);
-    expect(textOf(r.root)).toContain('Simplified stroke guide');
+    expect(textOf(r.root)).toContain('Letter shape');
+    expect(textOf(r.root)).not.toContain('Simplified stroke guide');
     expect(textOf(r.root)).not.toContain('Shape guide');
     expect(hint.mounted).toBe(0);
+  });
+
+  it.each([
+    ['es', 'Forma de la letra', 'Guía de trazos simplificada'],
+    ['ko', '글자 모양', '간단한 획순 안내'],
+  ] as const)('%s deck: the untaught caption is in the deck language (OD-SO8)', async (locale, shape, stroke) => {
+    const r = await render(element(slide, 0, locale));
+    mounted.push(r);
+    expect(textOf(r.root)).toContain(shape);
+    expect(textOf(r.root)).not.toContain(stroke);
   });
 
   it('the stroke build: a shape reveal (orderTaught false, the romanization); the panel letter steps aside, then is back', async () => {
@@ -111,7 +127,32 @@ describe('LetterSlide stroke panel, untaught letter (§6 test 9)', () => {
   });
 });
 
+describe('LetterSlide stroke panel, "or" in the shape label (OD-SO10)', () => {
+  const ieung = letter('jamo:ieung');
+  it.each([
+    ['en', 'or', 'silent or ng, shape guide.'],
+    ['es', 'o', 'silent o ng, guía de la forma.'],
+    ['ko', '또는', 'silent 또는 ng, 모양 안내.'],
+  ] as const)('%s deck: the hint gets the deck word and the panel label reads it', async (locale, or, label) => {
+    expect(ieung.romanization).toBe('silent/ng');
+    const r = await render(element(ieung, 1, locale));
+    mounted.push(r);
+    expect(hint.last).toMatchObject({ orderTaught: false, romanization: 'silent/ng', romanizationOr: or });
+    await act(async () => hint.last!.onShow?.('animated'));
+    await act(async () => hint.last!.onComplete?.());
+    expect(r.root.findAll((x) => x.props.accessibilityLabel === label).length).toBeGreaterThan(0);
+  });
+});
+
 describe('LetterSlide stroke panel, taught letter (after SO-3)', () => {
+  it('keeps the caption "Simplified stroke guide" (OD-SO8)', async () => {
+    const slide = { ...letter('jamo:mieum'), strokeReviewed: true };
+    const r = await render(element(slide, 0));
+    mounted.push(r);
+    expect(textOf(r.root)).toContain('Simplified stroke guide');
+    expect(textOf(r.root)).not.toContain('Letter shape');
+  });
+
   it('keeps the numbered start dots and today\'s demo over the letter', async () => {
     const slide = { ...letter('jamo:mieum'), strokeReviewed: true };
     const r = await render(element(slide, 1));

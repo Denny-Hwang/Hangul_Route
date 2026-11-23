@@ -4,7 +4,8 @@ Spec: `docs/specs/AMENDMENTS-STROKE-ORDER-STANDARD.md` §3.1, §3.2, §5, OD-SO1
 Wireframe: `design/wireframes/minigame/trace-stroke-shape-guide.md`
 Mock: `mock/trace-stroke-shape-guide-states.html` (board G1 to G11 and the timing), `mock/trace-stroke-shape-guide.html` (G3 filling the window), `mock/shape-guide.css` (loaded after `writing.css`); presenter: `../presenter/mock/slide-letter-shape.html`, `slide-letter-shape-reveal.html`
 Shots: `shots/trace-stroke-shape-guide-states.png`, `shots/trace-stroke-shape-guide-320.png` (320 x 568 at 2x); `../presenter/shots/slide-letter-shape-1280x720.png`, `slide-letter-shape-reveal-1280x720.png`
-Code (SO-1): `components/StrokeHint.tsx` (props `orderTaught`, `romanization`), `screens/minigames/TraceStrokeGame.tsx`, `TraceWordGame.tsx`, `screens/presenter/slides/LetterSlide.tsx`
+Code (SO-1): `components/StrokeHint.tsx` (props `orderTaught`, `romanization`; SO-1b: `retryLook`, `romanizationOr`), `screens/minigames/TraceStrokeGame.tsx`, `TraceWordGame.tsx`, `screens/presenter/slides/LetterSlide.tsx`
+Owner decisions 2026-11-23 (spec §10, row SO-1b): OD-SO8 the presenter caption, OD-SO9 the reveal on the retry canvas, OD-SO10 "or" in the label's language; noted below where they change this pass
 
 Kept in its own files so it does not collide with the TRACE-IDLE design pass (TI-0b), which changes `families.md` and adds Trace Stroke states to this folder; the README of this folder gets its row when both have merged.
 
@@ -17,14 +18,14 @@ Kept in its own files so it does not collide with the TRACE-IDLE design pass (TI
 | Caption | none | **Shape guide** in the Hoya strip, in place of the **idle** line only, while the hint is up; a miss or pass line always wins (wireframe §4) |
 | Screen reader | animated: nothing; still: "Stroke order. 2 strokes. 1: down. 2: right. Tap to close." | animated: one label "o, shape guide."; still: "o, shape guide. Tap to close." (romanization through `a11yRomanization`) |
 | Trace a Word | the unit's strokes walked letter by letter; order read letter by letter | the unit's strokes fade in together; "ho, shape guide." (letter mode: the one letter, its own gate and romanization) |
-| Presenter stroke panel | numbered start dots; the dot walk on the stroke build / R | the letter with **no dots**; on the stroke build / R the panel letter hides and the shape reveal fades it in; caption "Simplified stroke guide" unchanged, no "Shape guide" |
+| Presenter stroke panel | numbered start dots; the dot walk on the stroke build / R | the letter with **no dots**; on the stroke build / R the panel letter hides and the shape reveal fades it in; caption "Letter shape" (OD-SO8; the shots show the earlier "Simplified stroke guide", which a taught letter keeps), no "Shape guide" |
 
 Unchanged: the canvas, ink, sizes and modes (the ghost only steps aside while an untaught hint is up); Show me and its sound; Done, Skip, Clear; scoring; the hint's colour.
 
 ## Look
 
-- **Reveal and still strokes**: `colors.feedback.nudge`, width 14 of the 200 viewBox, round caps and joins, opaque inside **one group** whose opacity is 0.6 (today's value), so crossings (ㅗ's junction, ㅁ's corners) do not darken into dot-like marks that would hint at where strokes break. In React Native: one `G`/`Svg` with `opacity` from the shared value.
-- **Reveal timing** (board, "Timing"): group opacity 0 → 0.6 over `motion.duration.crawl` (600) with `motion.easing.standard` (`Easing.bezier(0.2, 0, 0, 1)` in Reanimated; today's demo uses a literal bezier), **one** shared value; held for max(1000, (n - 1) x crawl + 100); fade-out 400 (today's). ㅇ: 2000 ms (today 1100); from 3 strokes the total equals today's. `hintPlaying` ends on `onComplete`, so the lock follows. Spec test 8 asserts the single shared value, not a total in ms.
+- **Reveal and still strokes**: `colors.feedback.nudge`, width 14 of the 200 viewBox, round caps and joins, opaque inside **one group** whose opacity is 0.6 (today's value; **1** while the canvas is in its retry look, OD-SO9: `feedback.nudge` on `feedback.nudgeLight` is about 1.3:1 at 0.6 and about 1.6:1 at 1, still under 3:1, so a darker retry stroke is an open owner question), so crossings (ㅗ's junction, ㅁ's corners) do not darken into dot-like marks that would hint at where strokes break. In React Native: one `G`/`Svg` with `opacity` from the shared value.
+- **Reveal timing** (board, "Timing"): group opacity 0 → 0.6 (1 on the retry canvas; in code one 0 → 1 progress value times the look) over `motion.duration.crawl` (600) with `motion.easing.standard` (`Easing.bezier(0.2, 0, 0, 1)` in Reanimated; today's demo uses a literal bezier), **one** shared value; held for max(1000, (n - 1) x crawl + 100); fade-out 400 (today's). ㅇ: 2000 ms (today 1100); from 3 strokes the total equals today's. `hintPlaying` ends on `onComplete`, so the lock follows. Spec test 8 asserts the single shared value, not a total in ms.
 - **Strip while the hint is up**: only when the strip would show the idle line, it shows `learner.minigame.trace.shapeGuide` instead, in the idle look it already has (`surface.paper`, `border.subtle`; roomy: Hoya `idle`). A miss or pass line, its tone and Hoya's pose are never replaced. Height: the strip's planned lines (2, 3 beside the canvas). Rule: `hintPlaying && !taught && feedback === 'idle' ? shapeGuide : feedbackMessage`; the caption is the game screen's, `StrokeHint` renders none.
 - **Presenter panel**: today's panel (`surface.paper`, `border.subtle`, stage radius) with the strokes in `text.primary` width 14 and no start dots. On the stroke build / R the panel hides its own strokes while `StrokeHint` reveals the letter in the hint look (a reveal over the black letter would only tint it, invisible on a projector), then the panel letter is back. Reduced motion: the unnumbered panel letter. Wiring: `StrokePanel` gets `orderTaught={slide.strokeReviewed}` and `romanization={slide.romanization}`.
 - No new token, no new colour. Nothing on a miss uses `feedback.danger`; Hoya is never `thinking` because of the hint.
@@ -35,7 +36,7 @@ Values that are not tokens; all are today's shipped values, unchanged.
 
 | Where | Value | From |
 |---|---|---|
-| Hint stroke opacity / width | 0.6 / 14 (viewBox 200) | `StrokeHint.tsx` |
+| Hint stroke opacity / width | 0.6 / 14 (viewBox 200); the untaught shape guide on the retry canvas: 1 (OD-SO9) | `StrokeHint.tsx` |
 | Reveal fade-out, hold after the last stroke | 400 / 100 ms | `StrokeHint.tsx` |
 | Shape hold floor | 1000 ms | new in this pass: a 1-stroke letter is otherwise at full opacity for 100 ms |
 | Still hold | `staticHintHoldMs(n)` = clamp(1400 + 700n, 2000, 5000) | `logic/stroke-diagram.ts` |
