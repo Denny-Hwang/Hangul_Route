@@ -13,6 +13,10 @@ const idb = vi.hoisted(() => ({
   mem: new Map<string, string>(),
   /** While set, a write of a key that matches rejects (the read before it works). */
   failingWrite: null as RegExp | null,
+  /** [DP] Row DP-1e: this many next writes of `hr:progress:p1` reject, whatever `failingWrite` says. */
+  failNext: 0,
+  /** [DP] Row DP-1e: while set, a transaction of `hr:progress:p1` waits for it before it writes (a write in flight). */
+  gate: null as Promise<void> | null,
   /** Transactions of `hr:progress:p1` that reached their write (landed or not). */
   attempts: 0,
   sets: 0,
@@ -36,6 +40,11 @@ vi.mock('idb-keyval', () => {
       await Promise.resolve();
       const value = next(idb.mem.get(k));
       if (k === 'hr:progress:p1') idb.attempts += 1;
+      if (k === 'hr:progress:p1' && idb.gate) await idb.gate;
+      if (k === 'hr:progress:p1' && idb.failNext > 0) {
+        idb.failNext -= 1;
+        throw new Error('idb write failed');
+      }
       if (brokenWrite(k)) throw new Error('idb write failed');
       idb.sets += 1;
       idb.mem.set(k, value);
@@ -78,6 +87,8 @@ const storedQuests = (): string[] => stored().quests.map((q) => q.questId).sort(
 const finish = (questId: string): void =>
   useProgressStore.getState().recordQuestComplete('p1', { questId, episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
 const failing = (): boolean => useProgressStore.getState().saveFailedFor.has('p1');
+/** [DP] OD-DP7 (row DP-1e): the first timed retry has not landed either. */
+const retryFailing = (): boolean => useProgressStore.getState().saveRetryFailedFor.has('p1');
 
 async function settle(): Promise<void> {
   for (let i = 0; i < 40; i += 1) await Promise.resolve();
@@ -99,6 +110,8 @@ beforeEach(() => {
   vi.useFakeTimers();
   idb.mem.clear();
   idb.failingWrite = null;
+  idb.failNext = 0;
+  idb.gate = null;
   idb.attempts = 0;
   idb.sets = 0;
   appState.listeners = [];
@@ -114,6 +127,7 @@ beforeEach(() => {
     loadFailedFor: new Set(),
     freshFor: new Set(),
     saveFailedFor: new Set(),
+    saveRetryFailedFor: new Set(),
   });
 });
 
@@ -122,6 +136,126 @@ afterEach(async () => {
   idb.failingWrite = null;
   await wait(60_000);
   vi.useRealTimers();
+});
+
+/**
+ * [DP] Owner decision OD-DP7 (row DP-1e): Results' save line waits for the first retry, so a save that lands on its retry
+ * never flashes it. `saveRetryFailedFor` holds a profile of `saveFailedFor` once a write answered after the first timed
+ * retry (1 s) ran has not landed either, and leaves with `saveFailedFor`.
+ */
+describe('[DP] OD-DP7: the first retry has not landed either (saveRetryFailedFor)', () => {
+  it('is not set by the first failure, nor by a new write that fails before the retry; it is set when the 1 s retry fails', async () => {
+    await hydrated();
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:b');
+    await settle();
+    expect(failing()).toBe(true);
+    expect(retryFailing()).toBe(false);
+    finish('quest:c');
+    await settle();
+    expect(retryFailing()).toBe(false);
+    await wait(999);
+    expect(retryFailing()).toBe(false);
+    await wait(1);
+    expect(retryFailing()).toBe(true);
+    expect(failing()).toBe(true);
+
+    // A write that lands clears both.
+    idb.failingWrite = null;
+    await wait(4000);
+    expect(failing()).toBe(false);
+    expect(retryFailing()).toBe(false);
+    expect(storedQuests()).toEqual(['quest:a', 'quest:b', 'quest:c']);
+  });
+
+  it('a first retry that lands never sets it', async () => {
+    await hydrated();
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:b');
+    await settle();
+    idb.failingWrite = null;
+    const seen: boolean[] = [];
+    const off = useProgressStore.subscribe((s) => seen.push(s.saveRetryFailedFor.has('p1')));
+    await wait(1000);
+    off();
+    expect(failing()).toBe(false);
+    expect(seen).not.toContain(true);
+  });
+
+  it('a later run of failures starts over: its own first retry decides', async () => {
+    await hydrated();
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:b');
+    await settle();
+    await wait(1000);
+    expect(retryFailing()).toBe(true);
+    idb.failingWrite = null;
+    finish('quest:c');
+    await settle();
+    expect(retryFailing()).toBe(false);
+
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:d');
+    await settle();
+    expect(failing()).toBe(true);
+    expect(retryFailing()).toBe(false);
+    await wait(1000);
+    expect(retryFailing()).toBe(true);
+  });
+
+  it('a retry that meets the write fence counts as not landed', async () => {
+    await hydrated();
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:b');
+    await settle();
+    idb.failingWrite = null;
+    setWriteFence(() => false);
+    await wait(1000);
+    expect(retryFailing()).toBe(true);
+    setWriteFence(null);
+    await wait(4000);
+    expect(retryFailing()).toBe(false);
+  });
+
+  it("a step that throws ('step-failed') never sets it", async () => {
+    await hydrated();
+    idb.mem.set(KEY, JSON.stringify({ profileId: 'p1', quests: 5 }));
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:b');
+    await settle();
+    // The step threw: not a failed save either.
+    expect(failing()).toBe(false);
+    await wait(60_000);
+    expect(retryFailing()).toBe(false);
+  });
+
+  it('a write already running when the retry fires answers for itself: its failure does not set it, and the retry that lands clears all', async () => {
+    await hydrated();
+    idb.failingWrite = /^hr:progress:p1$/;
+    finish('quest:b');
+    await settle();
+    expect(failing()).toBe(true);
+    // A new write starts just before the retry fires and is still running when it does; it fails, the retry lands.
+    idb.failingWrite = null;
+    idb.failNext = 1;
+    let release: () => void = () => undefined;
+    idb.gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const seen: boolean[] = [];
+    const off = useProgressStore.subscribe((s) => seen.push(s.saveRetryFailedFor.has('p1')));
+    await wait(900);
+    finish('quest:c');
+    await settle();
+    await wait(100);
+    idb.gate = null;
+    release();
+    await settle();
+    off();
+    expect(seen).not.toContain(true);
+    expect(failing()).toBe(false);
+    expect(storedQuests()).toEqual(['quest:a', 'quest:b', 'quest:c']);
+  });
 });
 
 describe('[DP] a write that does not land is tried again (test 11)', () => {
@@ -328,10 +462,13 @@ describe('[DP] a write that does not land is tried again (test 11)', () => {
     finish('quest:b');
     await settle();
     expect(failing()).toBe(true);
+    await wait(1000);
+    expect(retryFailing()).toBe(true);
     // Last in the file: the learner stays removed in this module for the rest of the run.
     notifyProfileRemoved('p1');
     await settle();
     expect(failing()).toBe(false);
+    expect(retryFailing()).toBe(false);
     const attempts = idb.attempts;
     await wait(60_000);
     expect(idb.attempts).toBe(attempts);

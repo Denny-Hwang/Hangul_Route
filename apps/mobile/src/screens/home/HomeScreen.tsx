@@ -127,7 +127,6 @@ import { PinResetExpiredNotice } from '../parent/PinResetExpiredNotice';
 import { useGoalsChunk } from '../../store/goals-entry';
 import { useCurrFlag } from '../../store/remote-config-store';
 import { WeekDropHomeSlot } from '../week-drop/week-drop-entry';
-import { LearnerReadFailedScreen, useLearnerReadHeld } from '../system/LearnerReadGate';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -376,20 +375,11 @@ function CatchUpCard({
 }
 
 /**
- * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.4 (row DP-1c): a learner whose progress could not be read gets
- * ProgressReadFailedScreen (learner variant) here, never an empty Home; the body (and its `ensure`) mounts once read.
+ * Home (the Today tab). [DP] AMENDMENTS-DURABLE-PROGRESS section 3.4 (rows DP-1c, DP-1e): a learner whose progress could
+ * not be read never sees an empty Home: the tab holds them (`navigation/learner-read-gated.tsx`, the learner variant of
+ * ProgressReadFailedScreen), so this screen (and its `ensure`) mounts only once the read worked.
  */
 export function HomeScreen(): ReactElement {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const held = useLearnerReadHeld();
-  if (held !== null) {
-    // A new screen (and its first focus) for each learner held here.
-    return <LearnerReadFailedScreen key={held} profileId={held} edges={TAB_SCREEN_EDGES} onChooseAnother={() => navigation.navigate('WhoIsUsing', { trigger: 'manual' })} />;
-  }
-  return <HomeBody />;
-}
-
-function HomeBody(): ReactElement {
   const m = useMessages();
   const locale = useLocale();
   // A title chunk that arrives late fills its titles in place, so the localized memos key on it too (F-CURR-002 §10).

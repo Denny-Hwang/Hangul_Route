@@ -6,6 +6,7 @@ import {
   mergeProfileLists,
   parseTombstones,
   pruneTombstones,
+  rebuiltTombstones,
   removeTombstone,
   sameProfileList,
   storedProfileItems,
@@ -104,6 +105,49 @@ describe('removeTombstone (OA-D13: a restore under the same id)', () => {
     const record = removeTombstone(addTombstone(EMPTY_TOMBSTONES, 'profile:a1', 10), 'profile:a1');
     const a = { id: 'profile:a1' };
     expect(mergeProfileLists({ stored: [a], local: [], seen: new Set(), removed: record.ids })).toEqual([a]);
+  });
+});
+
+/**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS owner decision OD-DP5 (row DP-1e): a tombstone record whose bytes do not parse is
+ * rebuilt from the device: a learner of the stored list with nothing left on the device (no per-profile key, and not the
+ * learner the active key names) is tombstoned; with no learner of the list left the rebuild fails closed (OD-DP8).
+ */
+describe('rebuiltTombstones (OD-DP5)', () => {
+  const learner = (id: string) => ({ ...p(id), role: 'learner' });
+  const kept = (...ids: string[]) => (id: string): boolean => ids.map((x) => `profile:${x}`).includes(id);
+
+  it('tombstones every learner of the stored list with nothing kept, at now; the rest stay', () => {
+    const record = rebuiltTombstones([learner('a'), learner('gone'), learner('b')], kept('a', 'b'), T0);
+    expect(record).toEqual({ v: 1, ids: ['profile:gone'], at: { 'profile:gone': T0 } });
+    // It reads back as itself.
+    expect(parseTombstones(JSON.parse(JSON.stringify(record)))).toEqual(record);
+  });
+
+  it('every learner is kept: an empty record', () => {
+    expect(rebuiltTombstones([learner('a')], kept('a'), T0)).toEqual(EMPTY_TOMBSTONES);
+  });
+
+  it('an empty stored list: an empty record (nothing to hide, first run is the truth)', () => {
+    expect(rebuiltTombstones([], kept(), T0)).toEqual(EMPTY_TOMBSTONES);
+  });
+
+  it('fails closed (null) when no learner of the list would be left', () => {
+    expect(rebuiltTombstones([learner('a'), learner('b')], kept(), T0)).toBeNull();
+    // A row that is not a learner (a legacy grown-up row) left over does not count as a learner left.
+    expect(rebuiltTombstones([learner('a'), { ...p('parent'), role: 'parent' }], kept('parent'), T0)).toBeNull();
+  });
+
+  it('only learners are tombstoned: a legacy grown-up row, or an item with no role, stays', () => {
+    expect(rebuiltTombstones([learner('a'), { ...p('parent'), role: 'parent' }, p('old')], kept('a'), T0)).toEqual(EMPTY_TOMBSTONES);
+  });
+
+  it('a learner whose id is not a profile id is never tombstoned (it would not read back), so it stays', () => {
+    expect(rebuiltTombstones([learner('a'), { id: 'legacy', role: 'learner' }], kept('a'), T0)).toEqual(EMPTY_TOMBSTONES);
+  });
+
+  it('an id listed twice is tombstoned once', () => {
+    expect(rebuiltTombstones([learner('a'), learner('x'), learner('x')], kept('a'), T0)?.ids).toEqual(['profile:x']);
   });
 });
 

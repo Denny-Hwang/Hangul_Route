@@ -143,6 +143,12 @@ interface State {
    * A step that threw (`step-failed`) neither adds nor clears it.
    */
   saveFailedFor: ReadonlySet<string>;
+  /**
+   * [DP] Owner decision OD-DP7 (row DP-1e): the profiles of `saveFailedFor` whose first timed retry (1 s) has not landed
+   * either: a write that started after it fired did not land. Results shows its save line only then, so a save that
+   * lands on its retry never flashes it. Leaves with `saveFailedFor`.
+   */
+  saveRetryFailedFor: ReadonlySet<string>;
 }
 
 /** The session running now and who began it. */
@@ -564,13 +570,16 @@ function writeStored(profileId: string, mode: WriteMode = 'merge'): void {
   const write = async (): Promise<void> => {
     const turn = writeWaiting.get(profileId) ?? mode;
     writeWaiting.delete(profileId);
+    // [DP] OD-DP7 (row DP-1e): this write starts after the first timed retry fired (writes of one profile run one after
+    // another, so its answer is its own, never that of a write already running when the retry fired).
+    const afterFirstRetry = (retries.get(profileId)?.tried ?? 0) > 0;
     const out: WriteOutcome = { stored: undefined, wrote: false, merged: null };
     const outcome = await withStored(profileId, writeStep(profileId, turn, out));
     if ((outcome === 'done' || outcome === 'fresh') && out.stored !== undefined) {
       seen.set(profileId, out.stored);
       if (out.wrote) postProgressChanged();
     }
-    afterWrite(profileId, outcome, turn);
+    afterWrite(profileId, outcome, turn, afterFirstRetry);
     // Memory took the union even when the write did not land (it holds more, never less).
     if (out.merged === null) return;
     // The union holds what the other tab earned: it goes up with the next sync, the cards the rules added to it are
@@ -611,11 +620,11 @@ function stopRetries(profileId: string): void {
  * A retry of a marked profile that meets a failed read (`unread`) or the write fence (`fenced`) keeps the mark and
  * schedules the next slot, so "we will try again" stays true.
  */
-function afterWrite(profileId: string, outcome: StoredOutcome, mode: WriteMode): void {
+function afterWrite(profileId: string, outcome: StoredOutcome, mode: WriteMode, afterFirstRetry = false): void {
   if (outcome === 'done' || outcome === 'fresh') {
     stopRetries(profileId);
     if (useProgressStore.getState().saveFailedFor.has(profileId)) {
-      useProgressStore.setState((s) => ({ saveFailedFor: without(s.saveFailedFor, profileId) }));
+      useProgressStore.setState((s) => ({ saveFailedFor: without(s.saveFailedFor, profileId), saveRetryFailedFor: without(s.saveRetryFailedFor, profileId) }));
       trackSaveLanded(profileId);
     }
     return;
@@ -634,6 +643,10 @@ function afterWrite(profileId: string, outcome: StoredOutcome, mode: WriteMode):
   const retry = retries.get(profileId) ?? { tried: 0, timer: null, mode };
   if (mode === 'replace') retry.mode = 'replace';
   retries.set(profileId, retry);
+  // [DP] OD-DP7 (row DP-1e): a write that started after the first timed retry fired did not land either.
+  if (afterFirstRetry && !useProgressStore.getState().saveRetryFailedFor.has(profileId)) {
+    useProgressStore.setState((s) => ({ saveRetryFailedFor: new Set([...s.saveRetryFailedFor, profileId]) }));
+  }
   const delay = SAVE_RETRY_DELAYS_MS[retry.tried];
   if (retry.timer !== null || delay === undefined) return;
   retry.timer = setTimeout(() => {
@@ -867,6 +880,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   loadFailedFor: new Set(),
   freshFor: new Set(),
   saveFailedFor: new Set(),
+  saveRetryFailedFor: new Set(),
 
   hydrate: (profileId) => {
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
@@ -1283,6 +1297,7 @@ onProfileRemoved((profileId) => {
     loadFailedFor: without(s.loadFailedFor, profileId),
     freshFor: without(s.freshFor, profileId),
     saveFailedFor: without(s.saveFailedFor, profileId),
+    saveRetryFailedFor: without(s.saveRetryFailedFor, profileId),
   }));
   seen.delete(profileId);
   writeWaiting.delete(profileId);

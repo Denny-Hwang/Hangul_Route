@@ -51,6 +51,13 @@ const WRAPPERS_HOC: Readonly<Record<string, { file: string; delegate: number; re
     delegate: 0,
     renders: /const screen = useMemo\(\(\) => <Screen \{\.\.\.props\} \/>, \[props\]\);\s*return <Freeze frozen=\{frozen\}>\{screen\}<\/Freeze>;/,
   },
+  // [DP] AMENDMENTS-DURABLE-PROGRESS OD-DP6 (row DP-1e): a learner tab, held for a learner whose progress could not be
+  // read: the read-failed screen (a Screen, `ProgressReadFailedScreen`), or the tab's own screen.
+  learnerReadGated: {
+    file: 'navigation/learner-read-gated.tsx',
+    delegate: 0,
+    renders: /if \(held !== null\) return <LearnerReadFailedScreen [^\n]*\/>;\s*return <Tab \{\.\.\.props\} \/>;/,
+  },
   // [GU] The guest stack's shared learner screen (the card page): the same component, typed for the guest stack's routes.
   shared: { file: 'navigation/guest-chunk.tsx', delegate: 0, renders: /return screen as unknown as ComponentType<GuestScreenProps<K>>;/ },
 };
@@ -282,9 +289,13 @@ function componentVerdict(decl: Decl, via: string): Verdict {
   return verdict;
 }
 
-/** What a higher-order wrapper's argument is: a component in the file or an inline one. */
+/** What a higher-order wrapper's argument is: a component in the file, an inline one, or another wrapper's call. */
 function delegateOf(src: Source, arg: ts.Expression, at: ts.Node): Decl | null {
   if (ts.isIdentifier(arg)) return declarationOf(src, arg.text);
+  if (ts.isCallExpression(arg)) {
+    const line = src.file.getLineAndCharacterOfPosition(arg.getStart(src.file)).line + 1;
+    return { kind: 'hoc', src, name: `${arg.expression.getText(src.file)}@${line}`, call: arg };
+  }
   if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) {
     const line = src.file.getLineAndCharacterOfPosition(at.getStart(src.file)).line + 1;
     return { kind: 'function', src, node: arg, name: `inline@${line}` };

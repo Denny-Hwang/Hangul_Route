@@ -146,10 +146,12 @@ describe('[DP] storage.read_failed: the profile records (section 3.1)', () => {
     idb.mem.set('hr:progress:profile:a', '{}');
     await useProfileStore.getState().hydrate();
     expect(useProfileStore.getState().hydrated).toBe(true);
+    // [DP] Row DP-1e (OD-DP5): the hydrate keeps damaged tombstone bytes at `tombstones-corrupt` before it rebuilds
+    // them (here the active key does not read, so nothing is rebuilt), so the tombstones say `kept`.
     expect(reads()).toEqual(
       expect.arrayContaining([
         { record: 'active', cause: 'parse', kept: false },
-        { record: 'tombstones', cause: 'parse', kept: false },
+        { record: 'tombstones', cause: 'parse', kept: true },
       ]),
     );
     expect(reads()).toHaveLength(2);

@@ -13,6 +13,12 @@ const idb = vi.hoisted(() => ({
   failing: new Set<string>(),
   /** Every key written or removed, in order. */
   writes: [] as string[],
+  /** [DP] Row DP-1e: told after each read of a key (another tab's write in between two reads). */
+  afterGet: null as ((k: string) => void) | null,
+  /** [DP] Row DP-1e: keys whose writes reject while their reads work (a full disk). */
+  failingWrites: new Set<string>(),
+  /** [DP] Row DP-1e: told after each write of a key. */
+  afterSet: null as ((k: string) => void) | null,
 }));
 vi.mock('idb-keyval', () => {
   const check = (k: string): void => {
@@ -21,12 +27,16 @@ vi.mock('idb-keyval', () => {
   return {
     get: vi.fn(async (k: string) => {
       check(k);
-      return idb.mem.get(k);
+      const value = idb.mem.get(k);
+      idb.afterGet?.(k);
+      return value;
     }),
     set: vi.fn(async (k: string, v: string) => {
       check(k);
+      if (idb.failingWrites.has(k)) throw new Error('idb write failed');
       idb.writes.push(k);
       idb.mem.set(k, v);
+      idb.afterSet?.(k);
     }),
     del: vi.fn(async (k: string) => {
       idb.writes.push(k);
@@ -52,6 +62,8 @@ import type * as ProfileStore from '../profile-store';
 /** A fresh store module per test: changes a test leaves waiting (a held write) never reach the next one. */
 let useProfileStore: typeof ProfileStore.useProfileStore;
 let PROFILES_CORRUPT_KEY: string;
+let TOMBSTONES_CORRUPT_KEY: string;
+let TOMBSTONE_LOCK_WAIT_MS: number;
 
 const LIST = 'hr:profiles';
 const ACTIVE = 'hr:profiles:active';
@@ -76,8 +88,11 @@ describe('[DP] profile records under the read contract (AMENDMENTS-DURABLE-PROGR
     idb.mem.clear();
     idb.failing.clear();
     idb.writes.length = 0;
+    idb.afterGet = null;
+    idb.failingWrites.clear();
+    idb.afterSet = null;
     vi.resetModules();
-    ({ useProfileStore, PROFILES_CORRUPT_KEY } = await import('../profile-store'));
+    ({ useProfileStore, PROFILES_CORRUPT_KEY, TOMBSTONES_CORRUPT_KEY, TOMBSTONE_LOCK_WAIT_MS } = await import('../profile-store'));
   });
 
   describe('test 6: a list that could not be read', () => {
@@ -318,6 +333,312 @@ describe('[DP] profile records under the read contract (AMENDMENTS-DURABLE-PROGR
       idb.failing.add(TOMBSTONES);
       await useProfileStore.getState().hydrate();
       expect(useProfileStore.getState()).toMatchObject({ hydrated: false, loadFailed: 'read', profiles: [] });
+    });
+  });
+
+  /**
+   * [DP] Owner decision OD-DP5 (row DP-1e): tombstone bytes that do not parse never parse again, so holding list writes
+   * until they read would hold them for good. Their raw bytes are kept at `tombstones-corrupt` first; the set is then
+   * rebuilt from the device (a learner of the stored list with no per-profile key left is tombstoned), written, and the
+   * hold is released. A read that failed keeps holding and is read again at the next hydrate.
+   */
+  describe('OD-DP5: tombstones whose bytes do not parse', () => {
+    const DAMAGED = '{"v":1,"ids":["profile:';
+    const storedTombstones = (): { v: number; ids: string[]; at: Record<string, number> } =>
+      JSON.parse(idb.mem.get(TOMBSTONES) as string) as { v: number; ids: string[]; at: Record<string, number> };
+    const storedIds = (): string[] => (JSON.parse(idb.mem.get(LIST) as string) as { id: string }[]).map((p) => p.id);
+
+    it('keeps the raw bytes first, tombstones the learners with no per-profile key, writes the set and releases the hold', async () => {
+      const played = id('played');
+      const synced = id('synced');
+      const swept = id('swept');
+      // `swept` was removed and its keys are gone; an older bundle wrote it back into the list. `synced` has only a sync record.
+      storeList([profile(played), profile(swept, 'Old'), profile(synced, 'Sy')]);
+      idb.mem.set(`hr:progress:${played}`, '{}');
+      idb.mem.set(`hr:sync:${synced}`, '{}');
+      idb.mem.set(ACTIVE, JSON.stringify(played));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+
+      const before = Date.now();
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null, activeId: played });
+      expect(shown()).toEqual([played, synced]);
+      // The copy holds the very bytes, and was written before the tombstones were.
+      expect(idb.mem.get(`hr:${TOMBSTONES_CORRUPT_KEY}`)).toBe(DAMAGED);
+      expect(idb.writes.indexOf(`hr:${TOMBSTONES_CORRUPT_KEY}`)).toBeGreaterThan(-1);
+      expect(idb.writes.indexOf(`hr:${TOMBSTONES_CORRUPT_KEY}`)).toBeLessThan(idb.writes.indexOf(TOMBSTONES));
+      const rebuilt = storedTombstones();
+      expect(rebuilt.v).toBe(1);
+      expect(rebuilt.ids).toEqual([swept]);
+      expect(rebuilt.at[swept]).toBeGreaterThanOrEqual(before);
+      // The other tabs are told, so their held list writes land.
+      const { postProfilesChanged } = await import('../../platform/profiles-channel');
+      expect(vi.mocked(postProfilesChanged)).toHaveBeenCalled();
+
+      // The hold is released: the list is written without the removed learner (a list write that merges with the new
+      // set), and the active key is left as it was.
+      await drain();
+      expect(profileWrites()).toEqual([TOMBSTONES, LIST]);
+      expect(storedIds()).toEqual([played, synced]);
+      const made = useProfileStore.getState().createProfile(input);
+      await drain();
+      expect(storedIds()).toEqual([played, synced, made.id]);
+      expect(shown()).toEqual([played, synced, made.id]);
+    });
+
+    it('a learner the rebuild tombstoned never comes back after its tombstone is pruned (31 days later)', async () => {
+      const a = id('a');
+      const swept = id('swept');
+      storeList([profile(a), profile(swept, 'Old')]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(ACTIVE, JSON.stringify(a));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      await useProfileStore.getState().hydrate();
+      await drain();
+      expect(storedIds()).toEqual([a]);
+
+      // 31 days on, the next launch: the tombstone is pruned at the next list write, and the learner stays out.
+      const later = Date.now() + 31 * 24 * 60 * 60_000;
+      const clock = vi.spyOn(Date, 'now').mockReturnValue(later);
+      try {
+        vi.resetModules();
+        ({ useProfileStore } = await import('../profile-store'));
+        await useProfileStore.getState().hydrate();
+        useProfileStore.getState().updateProfile(a, { displayName: 'Ana' });
+        await drain();
+        expect(storedIds()).toEqual([a]);
+        expect(storedTombstones().ids).toEqual([]);
+        expect(shown()).toEqual([a]);
+      } finally {
+        clock.mockRestore();
+      }
+    });
+
+    it('the learner the active key names is never tombstoned (a removal moves the active key away): it stays, and active', async () => {
+      const a = id('a');
+      const b = id('b');
+      const fresh = id('fresh');
+      const gone = id('gone');
+      // `fresh` was just made (no per-profile key yet) and is in use; `gone` has nothing left and is not active.
+      storeList([profile(a), profile(b, 'Bo'), profile(fresh, 'Fe'), profile(gone, 'Go')]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(`hr:progress:${b}`, '{}');
+      idb.mem.set(ACTIVE, JSON.stringify(fresh));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null, activeId: fresh });
+      expect(shown()).toEqual([a, b, fresh]);
+      expect(storedTombstones().ids).toEqual([gone]);
+    });
+
+    it('a key written for a learner after the rebuild listed the keys is not swept by this launch', async () => {
+      const a = id('a');
+      const gone = id('gone');
+      storeList([profile(a), profile(gone, 'Go')]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(ACTIVE, JSON.stringify(a));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      // A tab where `gone` is in use saves its first progress just after the rebuild wrote the tombstones.
+      idb.afterSet = (k) => {
+        if (k !== TOMBSTONES) return;
+        idb.afterSet = null;
+        idb.mem.set(`hr:progress:${gone}`, '{"saved":true}');
+      };
+      await useProfileStore.getState().hydrate();
+      await drain();
+      expect(storedTombstones().ids).toEqual([gone]);
+      expect(idb.mem.get(`hr:progress:${gone}`)).toBe('{"saved":true}');
+    });
+
+    it('nothing to tombstone: an empty set is written and the hold is released', async () => {
+      const a = id('a');
+      storeList([profile(a)]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(ACTIVE, JSON.stringify(a));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null, activeId: a });
+      expect(storedTombstones()).toEqual({ v: 1, ids: [], at: {} });
+      useProfileStore.getState().updateProfile(a, { displayName: 'Ana' });
+      await drain();
+      expect((JSON.parse(idb.mem.get(LIST) as string) as { displayName: string }[])[0]?.displayName).toBe('Ana');
+    });
+
+    it('the copy cannot be kept: nothing is rewritten and list writes stay held, as for a read that failed', async () => {
+      const a = id('a');
+      storeList([profile(a)]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(ACTIVE, JSON.stringify(a));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      idb.failing.add(`hr:${TOMBSTONES_CORRUPT_KEY}`);
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null, activeId: a });
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+      expect(idb.mem.has(`hr:${TOMBSTONES_CORRUPT_KEY}`)).toBe(false);
+      // The list write is held (the active key, which holds nothing earned, is not).
+      useProfileStore.getState().createProfile(input);
+      await drain();
+      expect(idb.writes).not.toContain(LIST);
+      expect(idb.writes).not.toContain(TOMBSTONES);
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+    });
+
+    it('fails closed, writing nothing over them, when no learner of a non-empty stored list would be left', async () => {
+      const keyless = id('keyless');
+      storeList([profile(keyless)]);
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: false, loadFailed: 'read', profiles: [] });
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+      expect(profileWrites()).toEqual([]);
+    });
+
+    it('learners are counted: a legacy grown-up row with a key left over does not stop it failing closed', async () => {
+      const keyless = id('keyless');
+      const parent = id('parent');
+      storeList([profile(keyless), { ...profile(parent, 'Pa'), role: 'parent' }]);
+      idb.mem.set(`hr:settings:${parent}`, '{}');
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: false, loadFailed: 'read', profiles: [] });
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+    });
+
+    it('a rebuild whose write fails changes nothing: the bytes stay and list writes stay held', async () => {
+      const a = id('a');
+      const gone = id('gone');
+      storeList([profile(a), profile(gone, 'Go')]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(ACTIVE, JSON.stringify(a));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      idb.failingWrites.add(TOMBSTONES);
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null, activeId: a });
+      expect(shown()).toEqual([a]);
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+      expect(idb.mem.get(`hr:${TOMBSTONES_CORRUPT_KEY}`)).toBe(DAMAGED);
+      useProfileStore.getState().updateProfile(a, { displayName: 'Ana' });
+      await drain();
+      expect(idb.writes).not.toContain(LIST);
+    });
+
+    it('the active key cannot be read: no rebuild (the learner in use cannot be told), list writes held', async () => {
+      const a = id('a');
+      storeList([profile(a)]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      idb.failing.add(ACTIVE);
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null, activeId: a });
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+    });
+
+    it('a stored list that is not a list is never a reason to forget the removed ids: nothing rewritten', async () => {
+      idb.mem.set(LIST, JSON.stringify({ not: 'a list' }));
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      await useProfileStore.getState().hydrate();
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+    });
+
+    it('a lock that is never given back does not hold the boot: after the wait, list writes are held for this launch', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      vi.stubGlobal('navigator', { locks: { request: () => new Promise(() => undefined) } });
+      try {
+        const a = id('a');
+        storeList([profile(a)]);
+        idb.mem.set(`hr:progress:${a}`, '{}');
+        idb.mem.set(ACTIVE, JSON.stringify(a));
+        idb.mem.set(TOMBSTONES, DAMAGED);
+        let done = false;
+        const hydrating = useProfileStore
+          .getState()
+          .hydrate()
+          .then(() => {
+            done = true;
+          });
+        await vi.advanceTimersByTimeAsync(TOMBSTONE_LOCK_WAIT_MS - 1);
+        expect(done).toBe(false);
+        await vi.advanceTimersByTimeAsync(1);
+        await hydrating;
+        expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null, activeId: a });
+        expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+      } finally {
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+      }
+    });
+
+    it('fails closed, writing nothing over them, when the keys cannot be listed', async () => {
+      const a = id('a');
+      storeList([profile(a)]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      const { keys } = await import('idb-keyval');
+      vi.mocked(keys).mockRejectedValueOnce(new Error('keys failed')).mockRejectedValueOnce(new Error('keys failed'));
+      await useProfileStore.getState().hydrate();
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: false, loadFailed: 'read', profiles: [] });
+      expect(idb.mem.get(TOMBSTONES)).toBe(DAMAGED);
+      expect(profileWrites()).toEqual([]);
+    });
+
+    it('tombstones another tab wrote meanwhile are read inside the lock and never written over', async () => {
+      const a = id('a');
+      const gone = id('gone');
+      storeList([profile(a), profile(gone, 'Go')]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(`hr:progress:${gone}`, '{}');
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      // Another tab rebuilt them (holding `gone` as removed) right after this tab read them and kept its copy (the
+      // second read of the key is the copy's).
+      const theirs = JSON.stringify({ v: 1, ids: [gone], at: { [gone]: Date.now() } });
+      let reads = 0;
+      idb.afterGet = (k) => {
+        if (k !== TOMBSTONES || (reads += 1) < 2) return;
+        idb.afterGet = null;
+        idb.mem.set(TOMBSTONES, theirs);
+      };
+      await useProfileStore.getState().hydrate();
+      expect(idb.mem.get(TOMBSTONES)).toBe(theirs);
+      expect(idb.writes).not.toContain(TOMBSTONES);
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null });
+      expect(shown()).toEqual([a]);
+    });
+
+    it('a second damage keeps the first copy (never overwritten) and is rebuilt again', async () => {
+      const a = id('a');
+      storeList([profile(a)]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(TOMBSTONES, DAMAGED);
+      await useProfileStore.getState().hydrate();
+      idb.mem.set(TOMBSTONES, '{second');
+      await useProfileStore.getState().hydrate();
+      expect(idb.mem.get(`hr:${TOMBSTONES_CORRUPT_KEY}`)).toBe(DAMAGED);
+      expect(storedTombstones()).toEqual({ v: 1, ids: [], at: {} });
+      expect(useProfileStore.getState()).toMatchObject({ hydrated: true, loadFailed: null });
+    });
+
+    it('a read that failed keeps holding (no copy, nothing rewritten) and the next hydrate reads them again', async () => {
+      const a = id('a');
+      const gone = id('gone');
+      storeList([profile(a), profile(gone, 'Go')]);
+      idb.mem.set(`hr:progress:${a}`, '{}');
+      idb.mem.set(`hr:progress:${gone}`, '{}');
+      const removed = JSON.stringify({ v: 1, ids: [gone], at: { [gone]: Date.now() } });
+      idb.mem.set(TOMBSTONES, removed);
+      idb.failing.add(TOMBSTONES);
+      await useProfileStore.getState().hydrate();
+      // `gone` still has keys, so the read path cannot tell it is removed: shown, and list writes held.
+      expect(shown()).toEqual([a, gone]);
+      useProfileStore.getState().updateProfile(a, { displayName: 'Ana' });
+      await drain();
+      expect(profileWrites()).toEqual([]);
+      expect(idb.mem.has(`hr:${TOMBSTONES_CORRUPT_KEY}`)).toBe(false);
+
+      // The fault passes: the next hydrate reads the tombstones, and the removed learner goes.
+      idb.failing.clear();
+      await useProfileStore.getState().hydrate();
+      expect(shown()).toEqual([a]);
+      expect(idb.mem.get(TOMBSTONES)).toBe(removed);
     });
   });
 

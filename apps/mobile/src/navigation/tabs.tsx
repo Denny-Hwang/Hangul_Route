@@ -14,6 +14,7 @@ import { LibraryScreen } from '../screens/library/LibraryScreen';
 import { MyRouteTabScreen } from '../screens/my-route/MyRouteScreen';
 import { useUiStore } from '../store/ui-store';
 import { frozenWhenBlurred } from './freeze-when-blurred';
+import { learnerReadGated } from './learner-read-gated';
 import { GuardedTabButton } from './tab-button';
 import type { MainTabParamList } from './types';
 
@@ -23,12 +24,14 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
  * Each tab screen is frozen while it is not focused ([FN] AMENDMENTS-FINISH-2026-11 row FN-5, finding F10): the tabs
  * stay mounted under a quest, its Results and every other root screen, and the progress a quest writes on each step
  * no longer redraws them unseen; a tab renders once, up to date, when it is focused again (`freeze-when-blurred.tsx`).
+ * [DP] AMENDMENTS-DURABLE-PROGRESS owner decision OD-DP6 (row DP-1e): every tab holds a learner whose progress could not
+ * be read (`learnerReadGated`: the learner variant of the read-failed screen, never an empty record).
  */
-const SCREENS: Readonly<Record<MainTabName, ComponentType>> = {
-  Home: frozenWhenBlurred(HomeScreen),
-  Route: frozenWhenBlurred(MyRouteTabScreen),
-  Journey: frozenWhenBlurred(JourneyScreen),
-  Library: frozenWhenBlurred(LibraryScreen),
+export const SCREENS: Readonly<Record<MainTabName, ComponentType>> = {
+  Home: frozenWhenBlurred(learnerReadGated(HomeScreen)),
+  Route: frozenWhenBlurred(learnerReadGated(MyRouteTabScreen)),
+  Journey: frozenWhenBlurred(learnerReadGated(JourneyScreen)),
+  Library: frozenWhenBlurred(learnerReadGated(LibraryScreen)),
 };
 
 const LABEL_STYLE: TextStyle = { fontSize: typography.size.caption, fontWeight: typography.weight.semibold };
