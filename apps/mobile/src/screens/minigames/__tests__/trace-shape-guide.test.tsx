@@ -145,15 +145,21 @@ const endHint = async (): Promise<void> => {
   });
 };
 
-async function draw(root: ReactTestInstance, points: readonly JamoStrokePoint[]): Promise<void> {
+/**
+ * One stroke through viewBox points: down, each segment walked in `movesPerSegment` moves, up. Every move is its own
+ * act() and re-renders the screen, so a sampled loop (ㅇ: 64 chords of about 5.6 units, `LOOP_SEGMENTS` in
+ * content/jamo-strokes) is drawn one move per chord: split twelve ways it is 768 renders, which timed out on a busy runner.
+ */
+async function draw(root: ReactTestInstance, points: readonly JamoStrokePoint[], movesPerSegment = 12): Promise<void> {
   const k = canvasSize(root) / 200;
   const at = (p: JamoStrokePoint): { x: number; y: number } => ({ x: p.x * k, y: p.y * k });
+  const n = movesPerSegment;
   await fire('begin');
   await fire('touchesDown', { id: 0, ...at(points[0]!) });
   for (let i = 1; i < points.length; i += 1) {
     const a = points[i - 1]!;
     const b = points[i]!;
-    for (let j = 1; j <= 12; j += 1) await fire('touchesMove', { id: 0, ...at({ x: a.x + ((b.x - a.x) * j) / 12, y: a.y + ((b.y - a.y) * j) / 12 }) });
+    for (let j = 1; j <= n; j += 1) await fire('touchesMove', { id: 0, ...at({ x: a.x + ((b.x - a.x) * j) / n, y: a.y + ((b.y - a.y) * j) / n }) });
   }
   await fire('touchesUp', { id: 0, ...at(points[points.length - 1]!) });
   await fire('finalize');
@@ -265,7 +271,7 @@ describe('Trace Stroke, untaught letter: Show me is a shape guide (§6 test 8)',
   it('ㅇ drawn clockwise keeps the loop tip (and Next) while untaught', async () => {
     const r = await playStroke('jamo:ieung');
     const [ring] = strokesForJamo('jamo:ieung')!;
-    await draw(r.root, [...ring!].reverse());
+    await draw(r.root, [...ring!].reverse(), 1);
     await wait(TRACE_IDLE_MS);
     expect(texts(r.root)).toContain(LOOP_TIP);
     expect(r.root.findAll((n) => n.props.label === 'Next' && typeof n.props.onPress === 'function')).toHaveLength(1);
