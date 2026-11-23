@@ -36,6 +36,7 @@ import {
 } from '@hangul-route/content-schema';
 import { CRASH_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema/crash-telemetry';
 import { NATIVE_AUTH_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema/native-auth-telemetry';
+import { STORAGE_TELEMETRY_PAYLOADS } from '@hangul-route/content-schema/storage-telemetry';
 import { id, store, type TelemetryEvent } from '../store';
 
 /**
@@ -325,6 +326,15 @@ export const CRASH_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string
 export const NATIVE_AUTH_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(NATIVE_AUTH_TELEMETRY_PAYLOADS);
 
 /**
+ * [DP] AMENDMENTS-DURABLE-PROGRESS section 3.9 (TELEMETRY-NAMES-2 section W, row DP-3, Worker first):
+ * `storage.read_failed`, `storage.write_failed` and `storage.write_recovered` keep per key only a value
+ * `STORAGE_TELEMETRY_PAYLOADS` accepts (a record code, a cause code, the `kept` boolean, `tries` 1 to 4) and are stored
+ * without a profile id, whatever a client sends: no key name, learner name, damaged bytes or error text can be kept.
+ * Checked beside `OA_PAYLOAD_RULES` in `keptEventFields`, before every prefix rule.
+ */
+export const STORAGE_PAYLOAD_RULES: Readonly<Record<string, Readonly<Record<string, FieldRule>>>> = rulesOfSchemas(STORAGE_TELEMETRY_PAYLOADS);
+
+/**
  * AMENDMENTS-ROUTE-CLASS-BLEND section 18 (TELEMETRY-NAMES-2 section T, row BL-W, Worker first):
  * `route.practice_days_changed` keeps `days` (1 to 7) and `by`, `route.refresh_started` keeps `via`, and both are
  * stored without a profile id. Any other key or value is dropped (a weekday list, a date, a plan or cell id), whatever
@@ -393,6 +403,7 @@ function sessionEndPayload(payload: Record<string, unknown> | undefined): Record
  * `audio.source_summary` (AMENDMENTS-AUDIO-CLIPS AC-B9) keeps its strict payload only, and never a profile id.
  * A section 18 name of AMENDMENTS-ROUTE-CLASS-BLEND keeps only its documented fields and never a profile id (`ROUTE_BLEND_PAYLOAD_RULES`).
  * So does an `auth.native.*` name of F-AUTH-004 section 15 (`NATIVE_AUTH_PAYLOAD_RULES`), and `app.crash` (`CRASH_PAYLOAD_RULES`).
+ * [DP] So does a `storage.*` name of AMENDMENTS-DURABLE-PROGRESS section 3.9 (`STORAGE_PAYLOAD_RULES`).
  */
 export function keptEventFields(
   name: TelemetryEventName,
@@ -402,6 +413,7 @@ export function keptEventFields(
   if (Object.hasOwn(OA_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(OA_PAYLOAD_RULES[name], payload) };
   if (Object.hasOwn(NATIVE_AUTH_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(NATIVE_AUTH_PAYLOAD_RULES[name], payload) };
   if (Object.hasOwn(CRASH_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(CRASH_PAYLOAD_RULES[name], payload) };
+  if (Object.hasOwn(STORAGE_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(STORAGE_PAYLOAD_RULES[name], payload) };
   if (Object.hasOwn(ROUTE_BLEND_PAYLOAD_RULES, name)) return { profileId: undefined, payload: ruledPayload(ROUTE_BLEND_PAYLOAD_RULES[name], payload) };
   if (name.startsWith(GUEST_EVENT_PREFIX)) return { profileId: undefined, payload: ruledPayload(Object.hasOwn(GUEST_PAYLOAD_RULES, name) ? GUEST_PAYLOAD_RULES[name] : undefined, payload) };
   if (isCurrTelemetryName(name)) {

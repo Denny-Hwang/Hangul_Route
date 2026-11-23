@@ -44,7 +44,10 @@ afterEach(() => vi.useRealTimers());
 describe('auth.native.* telemetry (section 15)', () => {
   it('appends the four names to the shared list, each with a rule for exactly its documented keys', () => {
     expect(NATIVE_AUTH_TELEMETRY_NAMES).toEqual(['auth.native.signin', 'auth.native.signout', 'auth.native.lock', 'auth.native.home']);
-    expect(TELEMETRY_EVENT_NAMES.slice(-4)).toEqual([...NATIVE_AUTH_TELEMETRY_NAMES]);
+    // Just before the three [DP] storage.* names (AMENDMENTS-DURABLE-PROGRESS row DP-3); the list is append-only.
+    const at = TELEMETRY_EVENT_NAMES.indexOf('auth.native.signin');
+    expect(TELEMETRY_EVENT_NAMES.slice(at, at + 4)).toEqual([...NATIVE_AUTH_TELEMETRY_NAMES]);
+    expect(TELEMETRY_EVENT_NAMES[at + 4]).toBe('storage.read_failed');
     for (const name of NATIVE_AUTH_TELEMETRY_NAMES) {
       expect(isTelemetryEventName(name), name).toBe(true);
       // A client sends them (the native app): never server-only.

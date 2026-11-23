@@ -31,7 +31,7 @@ describe('app.crash telemetry (section U)', () => {
     expect(CRASH_TELEMETRY_NAMES).toEqual(['app.crash']);
     expect(TELEMETRY_EVENT_NAMES.filter((n) => n === 'app.crash')).toHaveLength(1);
     // Just before the four auth.native.* names (F-AUTH-004 row NS-1); the list is append-only.
-    expect(TELEMETRY_EVENT_NAMES.at(-5)).toBe('app.crash');
+    expect(TELEMETRY_EVENT_NAMES[TELEMETRY_EVENT_NAMES.indexOf('auth.native.signin') - 1]).toBe('app.crash');
     expect(isTelemetryEventName('app.crash')).toBe(true);
     expect(Object.keys(CRASH_PAYLOAD_RULES['app.crash'] ?? {})).toEqual(['surface', 'route', 'errorName', 'message', 'chunk', 'appVersion']);
   });
