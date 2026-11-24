@@ -530,6 +530,20 @@ describe('scoreTraceForms (SO-2)', () => {
     },
   );
 
+  it('reads only the check asked for: order alone, or direction alone', () => {
+    const forms = formsOf('jamo:chieut');
+    const drawn = traced(forms[1]!);
+    const orderOnly = scoreTraceForms({ forms, drawn, checkOrder: true });
+    expect(orderOnly.orderCorrect).toBe(true);
+    expect(orderOnly.passWithOrder).toBe(true);
+    expect(orderOnly.directionsPerTarget).toBeUndefined();
+    const directionOnly = scoreTraceForms({ forms, drawn, checkDirection: true });
+    expect(directionOnly.form).toBe(1);
+    expect(directionOnly.directionsCorrect).toBe(true);
+    expect(directionOnly.orderCorrect).toBeUndefined();
+    expect(directionOnly.passWithOrder).toBeUndefined();
+  });
+
   it('ㅈ, ㅊ and ㅎ traced in their other form read as that form (the form shown has a stroke the wrong way)', () => {
     for (const id of ['jamo:jieut', 'jamo:chieut', 'jamo:hieut']) {
       const forms = formsOf(id);
