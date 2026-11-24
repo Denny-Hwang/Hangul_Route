@@ -143,8 +143,8 @@ One rule for every answer surface. Marks come from `packages/design-system` `Ico
 |---|---|---|---|---|---|
 | right | `check` | `feedback.success` on a light fill, `text.inverse` on a success fill | success family | no; **inactive**, never `disabled` | "Right answer: …" (§3.2) |
 | miss; the learner tries again on the same question | `replay` ("try another") | `text.primary` | nudge family | no (locked); **inactive**, still focusable, never `disabled` | "Not this one: …" |
-| look here (the second-miss hint, where a game has one) | as each game draws it today: `ChoiceCard` `hint` (thick `border.focus` ring); Hidden Heritage's dashed ring | — | as today | yes | "Look here: …" (`a11y.minigame.option.hint`, `a11y.ts:172`) |
-| tried here, still tappable for another place (Sentence Builder only, per OD-AF8 (c)) | `dash` | `text.primary` (was `text.secondary`) | nudge family | **yes** | "…, tried" (as today) |
+| look here (the second-miss hint, where a game has one) | a dashed ring, `borderWidth.thick` in `border.focus`, `spacing.xs` outside the answer, the same in every game (AF-0b D4; it replaces `ChoiceCard` `hint`'s thick border and the solid zone, key and tile rings); Hidden Heritage keeps its dashed ring inside the spot | — | as today | yes | "Look here: …" (`a11y.minigame.option.hint`, `a11y.ts:172`) |
+| tried here, still tappable for another place (Sentence Builder only, per OD-AF8 (c)) | `dash` on a 26 `nudgeLight` disc with a `text.primary` casing, straddling the tile's top-end corner (owner decision 2026-11-24, AF-0b Q5) | `text.primary` (was `text.secondary`) | nudge family | **yes** | "…, tried" (as today) |
 | not answered | none | — | as today | yes | plain name |
 
 - **Never** `colors.feedback.danger`, never the `close` (X) icon, never an X drawn any other way.
@@ -156,6 +156,7 @@ One rule for every answer surface. Marks come from `packages/design-system` `Ico
   - white `check` on a success fill: 5.21:1
   - `replay` in `text.primary` on `nudgeLight`: 14.02:1; on a nudge fill: 8.66:1
 - **Placement:** the mark sits out of the flow, as `TILE_MARK` does (`Tile/style.ts:65-71`), so it never covers the glyph, the romanization or the gloss at any text size.
+- **Design (AF-0b, decided):** `design/components/AnswerFeedback/spec.md` v2 sets the size (20 on a corner, 24 in the flow, a 26 disc) and decides each surface's placement and look-here ring; where it is more precise than this section, it governs. The AF-1, AF-3, AF-4a and AF-4c rows (§9) list the work it adds.
 - **Size:** AF-0b sets one minimum mark size. Aim for 20 to 24 dp where the surface has room; `Tile`'s 16 dp (`TILE_MARK`) is checked against it. Check it at a 320 width and at 200 % text.
   - On a tile the mark is the only greyscale cue.
   - `replay` also appears on action buttons (e.g. `SoundNeededScreen.tsx:38`). AF-0b checks that a learner does not read the mark as a button. The beta notes record how learners read it.
@@ -358,6 +359,7 @@ The size, corner and inset of each new mark come from the design pass (AF-0b). T
 **Build a Letter (OD-AF7, sub-option).** Today the wrong build empties after 900 ms and the hint goes with it.
 
 - (i), recommended: the wrong build stays in the slots, with the miss look and the hint, until the learner takes a tile back (a slot tap), taps Undo, or taps a tray tile. A tray tile empties the slots and starts a new build with that tile. The 900 ms timer and its tap lock (`WRONG_RESET_MS`) go.
+  - Owner decision 2026-11-24 (AF-0b Q2): the block-shape picture moves from under Hoya's bubble to directly under the slots, in a place kept empty in every state at the round's own block height (rows x `HINT_CELL` + (rows - 1) x `spacing.sm`: 40, 88 or 136), so its appearance is the cue and nothing moves. The order is: target, slots, the shape picture, Undo, the tray, Hoya's line.
 - (ii): the slots still empty after 900 ms, but the hint stays until the next tile is placed.
 
 If OD-AF7 is declined, only Card Match changes.
@@ -382,6 +384,8 @@ If OD-AF7 is declined, only Card Match changes.
 | Role Play | `replay` on a locked reply (OD-AF8) | add the state to the sent reply | right / missHint (why line, `spokenParts`); the existing iOS call moves onto the hook | `afterReply`, floor; reader: OD-AF9 | already | AF-4c |
 | Story Check, Type Hangul, Write Frame, My Story, Trace Stroke, Trace a Word, Story Read, Voice Echo | not changed (§4) | | | | | — |
 
+- **Owner decision 2026-11-24 (AF-0b review, Q1):** with a screen reader on, Next (§3.4, OD-AF9 (b)) shows after every right answer that ends a round, the last round and the last pair included, and the step moves on only when Next is pressed. Card Match's last-pair 800 ms (and Pic-Word Match's last-pair floor) apply only with the reader off. Design: `design/components/AnswerFeedback/spec.md` D9.
+
 ### 3.7 Strings (English; `packages/i18n/src/messages/en/`)
 
 | Key | English |
@@ -394,6 +398,7 @@ If OD-AF7 is declined, only Card Match changes.
 | `a11y.answer.notMatched` | Not a match: {word} and {meaning}. Try another. |
 | `a11y.answer.round` | Question {n} of {total}. {prompt} |
 | `learner.minigame.cardMatch.tryAnother` (drawn, Hoya) | Not a match. Try another meaning. |
+| `common.display.screenReaderHelp` (drawn, the Display sheet's screen-reader row, web only; owner decision 2026-11-24, AF-0b Q3) | Tap Next to go on. Sounds play when you tap them. |
 
 - Reused, not new:
   - `a11y.minigame.option.correct`, `.wrong` and `.hint`
@@ -401,7 +406,7 @@ If OD-AF7 is declined, only Card Match changes.
   - `learner.minigame.trace.next.cta` (Next, under OD-AF9 (b))
   - `learner.story.sequence.slotLabel`
   - each game's existing Hoya lines
-  - under OD-AF3 (d), the level check's "I use a screen reader" label and help (`learner.ts:1468`)
+  - under OD-AF3 (d), the level check's "I use a screen reader" label (`learner.ts:1468`); the row's help line is `common.display.screenReaderHelp` (above)
 - Dropped since revision 1: `a11y.answer.matched` and `a11y.minigame.option.paired` (both duplicated existing keys).
 - **es and ko:** this spec lists English only. Spanish and Korean are **shipped** locales (`packages/i18n/src/locales.ts`, `LOCALE_STATUS`), and `i18n-status.mjs` fails a PR that adds an English key without them. So AF-1 carries es and ko values in the same PR, drafted by R8 and reviewed under F-I18N-001 §3.10, with the ledger re-signed. No es or ko string is written ad hoc.
 - **Rebases:** `a11y.ts` and the `a11y` entry of `packages/i18n/src/messages/review-ledger.json` are also changed by WO-40 and WO-41. Every PR that touches `a11y.ts` re-signs the ledger, so expect mechanical rebases there.
@@ -575,12 +580,12 @@ If OD-AF7 is declined, only Card Match changes.
 |---|---|---|---|---|---|
 | AF-0 | Opus 5.5 | This spec and the wireframe `design/wireframes/minigame/answer-feedback.md` | — | — | `docs/answer-feedback-spec` |
 | AF-0b | Opus 5.5 | Design pass (§5): the new marks and their minimum size; the look-here state; the OD-AF1 surface; Card Match's states and picked cue; the Hidden Heritage rings; the OD-AF8 marks; Next (OD-AF9 (b)); the Display sheet switch (OD-AF3 (d)); the announcer and `HoyaBubble` `live` in `design/components/AnswerFeedback/spec.md`; greyscale captures; the ChoiceCard spec note. Multi-agent review | — | this spec `ready` | `design/answer-feedback` |
-| AF-1 | Opus 5.5 | Shared parts:<br>• `logic/answer-feedback.ts` (`answerAnnouncement`, `spokenParts`, `answerOptionLabel`, `resultLeastWait`, `readerPath`, and `announceWaitMs` under OD-AF9 (a))<br>• `platform/screen-reader.ts` (the queued announce, `announceAndWait(…, { queue })` matching its text, the iOS-only guard) and its `.web.ts`<br>• `screens/minigames/sr-only.ts`, `answer-announcer.tsx`, `use-answer-announcement.ts`<br>• the OD-AF3 (d) device flag (`store/locale-store.ts` `device:settings`, written by the level check and the Display sheet)<br>• `HoyaBubble` `live`; `Tile` correct `check` and `locked`; `ChoiceCard` `wrong` not `selected`<br>• the §3.7 keys, with R8 es and ko<br>• the start-bundle measurement | 1-10, 17 | AF-0b | `feat/answer-announcement` |
+| AF-1 | Opus 5.5 | Shared parts:<br>• `logic/answer-feedback.ts` (`answerAnnouncement`, `spokenParts`, `answerOptionLabel`, `resultLeastWait`, `readerPath`, and `announceWaitMs` under OD-AF9 (a))<br>• `platform/screen-reader.ts` (the queued announce, `announceAndWait(…, { queue })` matching its text, the iOS-only guard) and its `.web.ts`<br>• `screens/minigames/sr-only.ts`, `answer-announcer.tsx`, `use-answer-announcement.ts`<br>• the OD-AF3 (d) device flag (`store/locale-store.ts` `device:settings`, written by the level check and the Display sheet)<br>• `HoyaBubble` `live`; `Tile` correct `check` and `locked`; `ChoiceCard` `wrong` not `selected`<br>• the §3.7 keys, with R8 es and ko<br>• the start-bundle measurement<br>• the AF-0b v2 design (`design/components/AnswerFeedback/spec.md`, owner decisions 2026-11-24): `MARK_MIN` (20) and the 26 disc; `Tile`'s mark on a disc straddling its corner (rewrites `Tile.test.tsx:115-175` and the Tile pairs of `contrast.test.ts:203-266`); `ChoiceCard`'s 24 mark column kept in every state (36 dp less text width when not answered: the `text-size-fit` and `game-sizing` e2e move) and its `hint` drawn as the dashed look-here ring outside the card (the contrast test's hint cue moves); `DisplaySheet` `screenReader` (web only) with `common.display.screenReaderHelp` | 1-10, 17 | AF-0b | `feat/answer-announcement` |
 | AF-2 | Sonnet 5.5 | Culture Quiz and Tap & Respond (§3.6), on the OD-AF1 surface | 11, 12, 18 | AF-1, OD-AF1 | `fix/answer-feedback-quiz-respond` |
-| AF-3 | Sonnet 5.5 | Card Match (§3.5, §3.6): marks, full opacity, inactive matched cards, the miss that stays, Hoya `thinking`, names, announcer | 13 | AF-1, OD-AF6 | `fix/answer-feedback-card-match` |
-| AF-4a | Sonnet 5.5 | Match Sound, Odd One Out (onto `pacing.after`), Build a Letter | 14, 15 | AF-1, OD-AF7 | `fix/answer-feedback-tiles` |
+| AF-3 | Sonnet 5.5 | Card Match (§3.5, §3.6): marks, full opacity, inactive matched cards, the miss that stays, Hoya `thinking`, names, announcer (AF-0b D5: the top band, the solid pick ring) | 13 | AF-1, OD-AF6 | `fix/answer-feedback-card-match` |
+| AF-4a | Sonnet 5.5 | Match Sound, Odd One Out (onto `pacing.after`), Build a Letter (AF-0b D7: Build a Letter's shape picture kept under the slots at its block's height) | 14, 15 | AF-1, OD-AF7 | `fix/answer-feedback-tiles` |
 | AF-4b | Sonnet 5.5 | Listen & Pick, Pic-Word Match, Read Pick, Cloze Pick, Realia Read, Story Sequence, Story Order | 16 | AF-1, OD-AF7 | `fix/answer-feedback-choice-games` |
-| AF-4c | Sonnet 5.5 | Hidden Heritage, Syllable Build, Match Shape, Sentence Builder, Role Play | 16 | AF-1, AF-0b, OD-AF7, OD-AF8 | `fix/answer-feedback-boards` |
+| AF-4c | Sonnet 5.5 | Hidden Heritage, Syllable Build, Match Shape, Sentence Builder, Role Play (AF-0b D4, D6: the dashed look-here ring on zones, keys, Sentence Builder and Role Play; Sentence Builder's `dash` disc; Hidden Heritage's disc kept inside the scene) | 16 | AF-1, AF-0b, OD-AF7, OD-AF8 | `fix/answer-feedback-boards` |
 | AF-5 | — | `Tile` wrong-state mark and the literal removed: **done by AU-17a (#1035)**. Its `correct` mark and `locked` prop were not part of it and land in AF-1 | — | — | — |
 | AF-6 | Sonnet 5.5 | The "Amended 2026-xx-xx by F-A11Y-001" lines in every spec and design document under **Amends**; the `docs/specs/README.md` index line. Status `shipped` only after the VoiceOver and TalkBack lines of §3.8 pass. The web line may be recorded as open, with its reason | — | AF-1 to AF-4c | `docs/answer-feedback-finish` |
 

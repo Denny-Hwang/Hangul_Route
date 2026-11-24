@@ -82,10 +82,13 @@ There is never a red look or an X for a learner's miss. Every mark is the primar
 
 ```
 +----------------------------------+
-| :(Someone says)                : |  <- focus node: "Question 2 of 3. Someone says annyeonghaseyo, hello"
-| :  ~~ 안녕하세요 ~~               : |
-| :  (Hello)                     : |
-|                   [ Hear it ]    |
+| (Choose your reply)              |
+| +------------------------------+ |  <- the Card, as shipped (TapRespondGame.tsx:141-158), one column at every width
+| | :(Someone says)            : | |  <- focus node: the Card's text only, "Question 2 of 3. Someone says
+| | :  ~~ 안녕하세요 ~~           : | |     annyeonghaseyo, hello"
+| | :  (hello)                 : | |
+| | [ Hear it ]                  | |  <- inside the Card, a sibling of the focus node, never inside it
+| +------------------------------+ |
 |                                  |
 | [ ~~ 네 ~~ (yes)            (<)] |  <- the miss: nudge look, locked, "Not this one: …"
 | [ ~~ 안녕하세요 ~~ (hello)      ] |
