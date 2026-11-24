@@ -11,6 +11,12 @@ import { parseVocabSummary } from './vocab-summary';
 export const NOT_SYNCED_AFTER_DAYS = 7;
 export const CAP_WARNING_RATIO = 0.8;
 const DAY_MS = 86_400_000;
+/**
+ * [CO] AMENDMENTS-CLASS-CODE-OVERLAY CO-2c (OD-CO8 (a), owner decision 2026-11-24): in a class, "Jamo to revisit together",
+ * "Words to revisit together" and "Stage 1 first-try answers" show only when at least this many learners contribute to the
+ * line. Below it a line is one or two learners' own list or score on a screen the room can see.
+ */
+export const MIN_TOGETHER_LEARNERS = 3;
 
 export interface ClassRollup {
   students: number;
@@ -30,6 +36,11 @@ export interface ClassRollup {
    * week ago (GX-8 T7: a learner who joined today has not been away for a week).
    */
   notSynced: number;
+  /**
+   * How many learners are behind each line above: those with a first-try figure, with at least one jamo to revisit,
+   * with at least one word to revisit. `weekLines` holds a class's line back below `MIN_TOGETHER_LEARNERS`.
+   */
+  contributors: { anchor: number; revisit: number; vocabRevisit: number };
 }
 
 export function classRollup(learners: readonly RosterLearner[], now: Date): ClassRollup {
@@ -41,7 +52,12 @@ export function classRollup(learners: readonly RosterLearner[], now: Date): Clas
   const rank = (jamo: string): number => order.get(jamo) ?? Number.POSITIVE_INFINITY;
   const revisit = topThree(counts, (a, b) => rank(a) - rank(b) || a.localeCompare(b));
   const wordCounts = new Map<string, number>();
-  for (const l of withSummary) for (const id of wordsToRevisit(l.summary?.vocab)) wordCounts.set(id, (wordCounts.get(id) ?? 0) + 1);
+  let vocabContributors = 0;
+  for (const l of withSummary) {
+    const words = wordsToRevisit(l.summary?.vocab);
+    if (words.size > 0) vocabContributors += 1;
+    for (const id of words) wordCounts.set(id, (wordCounts.get(id) ?? 0) + 1);
+  }
   return {
     students: learners.length,
     practicedThisWeek: withSummary.filter((l) => (l.summary?.minutesLast7d ?? 0) > 0).length,
@@ -49,6 +65,11 @@ export function classRollup(learners: readonly RosterLearner[], now: Date): Clas
     revisit,
     vocabRevisit: topThree(wordCounts),
     notSynced: learners.filter((l) => !joinedThisWeek(l, now) && (!l.summary || now.getTime() - Date.parse(l.summary.lastActiveAt) > NOT_SYNCED_AFTER_DAYS * DAY_MS)).length,
+    contributors: {
+      anchor: accuracies.length,
+      revisit: withSummary.filter((l) => (l.summary?.needsPractice ?? []).length > 0).length,
+      vocabRevisit: vocabContributors,
+    },
   };
 }
 
@@ -62,17 +83,42 @@ function joinedThisWeek(learner: Pick<RosterLearner, 'joinedAt'>, now: Date): bo
 export interface WeekLines {
   /** "3 of 9 practiced this week"; a family's says "learners" (P4). */
   practiced: string;
-  /** "Stage 1 first-try answers: 75%"; null while no learner has a Stage 1 first-try figure (T8: never "–"). */
+  /**
+   * "Stage 1 first-try answers: 75%"; null while no learner has a Stage 1 first-try figure (T8: never "–"), and, in a
+   * class, below `MIN_TOGETHER_LEARNERS` learners with one (CO-2c).
+   */
   anchor: string | null;
+  /** The jamo of "Jamo to revisit together", up to three; empty in a class below `MIN_TOGETHER_LEARNERS` learners with a list (CO-2c). */
+  revisit: string[];
+  /** The word ids of "Words to revisit together", up to three; empty in a class below `MIN_TOGETHER_LEARNERS` learners with a list (CO-2c). */
+  vocabRevisit: string[];
   /** "2 haven't opened the app in over a week"; null at 0. */
   notSynced: string | null;
 }
 
+/**
+ * [CO] CO-2c and CO-2d (OD-CO8 (a)): the lists a screen shows for a space. A family keeps all of them (a family sees every
+ * learner's own lines, TV-D1); a class holds each back until `MIN_TOGETHER_LEARNERS` learners contribute to it, so a list
+ * is never one learner's own. The This week lines, the lecture page's Revisit block and the lecture presets (the letters
+ * of a warm-up, the class words of a word review) read these and never the roll-up's raw lists.
+ */
+export function togetherLists(kind: string, rollup: ClassRollup): { anchorAccuracy: number | null; revisit: string[]; vocabRevisit: string[] } {
+  const enough = (contributors: number): boolean => kind === 'family' || contributors >= MIN_TOGETHER_LEARNERS;
+  return {
+    anchorAccuracy: enough(rollup.contributors.anchor) ? rollup.anchorAccuracy : null,
+    revisit: enough(rollup.contributors.revisit) ? rollup.revisit : [],
+    vocabRevisit: enough(rollup.contributors.vocabRevisit) ? rollup.vocabRevisit : [],
+  };
+}
+
 export function weekLines(kind: string, rollup: ClassRollup, locale: UiLocale = DEFAULT_LOCALE): WeekLines {
   const w = getMessages(locale).console.space.week;
+  const lists = togetherLists(kind, rollup);
   return {
     practiced: kind === 'family' ? w.practicedFamily(rollup.practicedThisWeek, rollup.students) : w.practiced(rollup.practicedThisWeek, rollup.students),
-    anchor: rollup.anchorAccuracy === null ? null : w.anchor(percent(rollup.anchorAccuracy)),
+    anchor: lists.anchorAccuracy === null ? null : w.anchor(percent(lists.anchorAccuracy)),
+    revisit: lists.revisit,
+    vocabRevisit: lists.vocabRevisit,
     notSynced: rollup.notSynced > 0 ? w.notSynced(rollup.notSynced) : null,
   };
 }

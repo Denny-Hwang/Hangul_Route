@@ -346,6 +346,20 @@ export const learner = {
       where: (stage: number, episode: string, i: number, n: number) => `Stage ${stage} · ${episode} · lesson ${i} of ${n}`,
       /** Under the hero's button (AMENDMENTS-DISPLAY-NAV section 9.1): the Route tab, the whole Learning Route. */
       route: { cta: 'See your Learning Route' },
+      /**
+       * A lesson left in the middle (AMENDMENTS-QUEST-LEAVE-RESUME LR-2, section 3.2): under the hero's Continue, a line
+       * that says where it goes on (`step` is the step it opens, `total` the lesson's steps: a place in the lesson,
+       * never a count of answers), and a quiet Start again that asks first. The safe choice of the sheet is Keep my place.
+       */
+      resume: {
+        line: (step: number, total: number) => `You can go on from step ${step} of ${total}.`,
+        startAgain: { cta: 'Start again' },
+        sheet: {
+          title: 'Start this lesson again?',
+          message: 'You go back to the first step. Your stars and cards stay.',
+          keep: { cta: 'Keep my place' },
+        },
+      },
     },
     mission: {
       heading: 'Today with Hoya',

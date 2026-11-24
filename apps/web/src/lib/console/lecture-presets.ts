@@ -28,7 +28,7 @@ import type { PlanView, Roster } from './api';
 import { thisWeekOf, weekGroups } from './curriculum';
 import { routeBlendEnabled } from './config';
 import { classDayOf, planBlocks, planOutline, titleProblem, v2LinksAllowed, type LectureSource } from './lecture';
-import { classRollup } from './rollup';
+import { classRollup, togetherLists } from './rollup';
 import { parseVocabSummary } from './vocab-summary';
 
 /**
@@ -43,8 +43,10 @@ import { parseVocabSummary } from './vocab-summary';
  * - **position** (N2, S, T): `classPosition` over the roster rows' `summary.journey` (two numbers: the most common
  *   stage and the smallest done count in it; nobody is named, compared or counted on screen);
  * - **recent words** (W1): the quests of this week's and last week's plan items, and the class's words to revisit
- *   only when at least two learners carry `summary.vocab` (`consoleRecentWords`);
- * - **letters to revisit** (U): the roll-up's letters (at most 3), topped up from the plan's taught letters to 6.
+ *   only when at least two learners carry `summary.vocab` (`consoleRecentWords`); a class also needs 3 learners with words
+ *   to revisit (CO-2d, `togetherLists`);
+ * - **letters to revisit** (U): the roll-up's letters (at most 3; a class needs 3 learners with letters, CO-2d), topped up
+ *   from the plan's taught letters to 6.
  *
  * Nothing here returns a person: the context holds content ids, compatibility jamo and the two position numbers, and
  * a preset deck's title is a localized preset name or a plan title the roster check accepted.
@@ -152,7 +154,9 @@ export function consolePresetContext(input: ConsolePresetInput): ConsolePresetCo
   // `classMinutes` only for a blended plan's class-day outline (section 10.3): N1 then presents the whole day at its length.
   const day = blend && input.plan && outline.length > 0 ? classDayOf(input.plan, input.today) : null;
   const classDay: ConsoleClassDay | null = day ? { date: day.date, lessons: Math.min(outline.length, OUTLINE_MAX_LESSON_BLOCKS), minutes: day.minutes } : null;
-  const rollup = classRollup(learners, input.now);
+  // [CO] CO-2d (OD-CO8 (a)): a class's letters and words to revisit reach a deck only once 3 learners contribute to them,
+  // so a warm-up or a word review on the classroom screen is never one learner's own list. A family keeps them.
+  const rollup = togetherLists(input.roster?.space.kind ?? 'class', classRollup(learners, input.now));
   const weeks = planWeekQuests(input.plan, input.today);
   const roster = input.roster;
   return {

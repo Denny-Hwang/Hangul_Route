@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-polly": "3.1152.0",
+    "@axe-core/playwright": "4.14.0",
     "@hangul-route/test-utils": "workspace:*",
     "@playwright/test": "1.63.0",
     "@types/node": "22.19.19",

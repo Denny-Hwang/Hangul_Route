@@ -1,7 +1,7 @@
 import { formatDate, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner } from '../api';
-import { CAP_WARNING_RATIO, capState, classRollup, codeExpiry, familyCountLine, joinedLine, percent, questsLine, relativeDay, rosterHeading, rosterOrder, seatLine, weekLines } from '../rollup';
+import { CAP_WARNING_RATIO, MIN_TOGETHER_LEARNERS, capState, classRollup, codeExpiry, familyCountLine, joinedLine, percent, questsLine, relativeDay, rosterHeading, rosterOrder, seatLine, togetherLists, weekLines } from '../rollup';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 // relativeDay counts calendar days in the host time zone (describeRelativeDay reads local
@@ -52,8 +52,16 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
       ],
       now,
     );
-    expect(roll).toEqual({ students: 4, practicedThisWeek: 2, anchorAccuracy: 0.7, revisit: ['ㅂ', 'ㅈ', 'ㅅ'], vocabRevisit: [], notSynced: 2 });
-    expect(classRollup([], now)).toEqual({ students: 0, practicedThisWeek: 0, anchorAccuracy: null, revisit: [], vocabRevisit: [], notSynced: 0 });
+    expect(roll).toEqual({
+      students: 4,
+      practicedThisWeek: 2,
+      anchorAccuracy: 0.7,
+      revisit: ['ㅂ', 'ㅈ', 'ㅅ'],
+      vocabRevisit: [],
+      notSynced: 2,
+      contributors: { anchor: 2, revisit: 3, vocabRevisit: 0 },
+    });
+    expect(classRollup([], now)).toEqual({ students: 0, practicedThisWeek: 0, anchorAccuracy: null, revisit: [], vocabRevisit: [], notSynced: 0, contributors: { anchor: 0, revisit: 0, vocabRevisit: 0 } });
   });
 
   // F-REPORT-001 RP-8 (RP-2c review note): ties break in teaching order, as the class report's letters do.
@@ -228,6 +236,98 @@ describe('capState and seatLine from the roster seats (SA-3)', () => {
 });
 
 // GX-8 (AMENDMENTS-GROWNUP-UX section 8 T7, T8, T10; section 9 P4).
+// AMENDMENTS-CLASS-CODE-OVERLAY CO-2c (OD-CO8 (a), owner decision 2026-11-24): in a class the "together" lines and the first-try
+// line show only when at least 3 learners contribute, so a line never reads as one learner's own list or score.
+describe('the class lines need at least 3 contributing learners (CO-2c, OD-CO8)', () => {
+  const words = (needsPractice: string[]) => ({ vocab: { collected: 10, strong: 2, topicsStarted: 1, topicsPracticed7d: 1, needsPractice } });
+  const anchor = (value: number | null) => ({ stage1: { questsDone: 1, questsTotal: 11, anchorAccuracy: value } });
+  /** `n` learners, each with a letter, a word and a first-try figure, so all three lines have `n` contributors. */
+  const full = (n: number): RosterLearner[] =>
+    Array.from({ length: n }, (_, i) => learner(`l${i}`, {}, { needsPractice: ['ㅂ'], ...anchor(0.5), ...words(['vocab:uyu']) }));
+
+  it('the minimum is 3', () => {
+    expect(MIN_TOGETHER_LEARNERS).toBe(3);
+  });
+
+  it.each([1, 2])('a class with %i contributing learners: no jamo line, no words line, no first-try line', (n) => {
+    const lines = weekLines('class', classRollup(full(n), now), 'en');
+    expect(lines.revisit).toEqual([]);
+    expect(lines.vocabRevisit).toEqual([]);
+    expect(lines.anchor).toBeNull();
+  });
+
+  it.each([3, 4, 12])('a class with %i contributing learners: all three lines', (n) => {
+    const lines = weekLines('class', classRollup(full(n), now), 'en');
+    expect(lines.revisit).toEqual(['ㅂ']);
+    expect(lines.vocabRevisit).toEqual(['vocab:uyu']);
+    expect(lines.anchor).toBe('Stage 1 first-try answers: 50%');
+  });
+
+  it('each line counts its own contributors: three synced learners where one has letters, one has words, one has a figure show nothing', () => {
+    const roll = classRollup([learner('a', {}, { needsPractice: ['ㅂ'] }), learner('b', {}, words(['vocab:uyu'])), learner('c', {}, anchor(0.9))], now);
+    expect(roll.contributors).toEqual({ anchor: 1, revisit: 1, vocabRevisit: 1 });
+    const lines = weekLines('class', roll, 'en');
+    expect(lines).toMatchObject({ revisit: [], vocabRevisit: [], anchor: null });
+  });
+
+  it('the jamo line counts learners with letters, not learners with a first-try figure', () => {
+    const roll = classRollup([learner('a', {}, { needsPractice: ['ㅂ'], ...anchor(0.5) }), learner('b', {}, anchor(0.6)), learner('c', {}, anchor(0.7))], now);
+    expect(roll.contributors).toEqual({ anchor: 3, revisit: 1, vocabRevisit: 0 });
+    const lines = weekLines('class', roll, 'en');
+    expect(lines.revisit).toEqual([]);
+    expect(lines.anchor).not.toBeNull();
+  });
+
+  describe('togetherLists (CO-2d): the lists a screen shows, below, at and above 3 for each', () => {
+    const lists = (n: number, kind = 'class') => togetherLists(kind, classRollup(full(n), now));
+
+    it.each([1, 2])('a class with %i contributors: anchor, revisit and vocabRevisit are all held back', (n) => {
+      expect(lists(n)).toEqual({ anchorAccuracy: null, revisit: [], vocabRevisit: [] });
+    });
+
+    it.each([3, 4])('a class with %i contributors: all three are shown', (n) => {
+      expect(lists(n)).toEqual({ anchorAccuracy: 0.5, revisit: ['ㅂ'], vocabRevisit: ['vocab:uyu'] });
+    });
+
+    it('each list has its own count: 2 / 3 / 3 contributors hold back only the first', () => {
+      const roll = classRollup(
+        [
+          learner('a', {}, { needsPractice: ['ㅂ'], ...anchor(0.5), ...words(['vocab:uyu']) }),
+          learner('b', {}, { needsPractice: ['ㅂ'], ...anchor(0.5), ...words(['vocab:uyu']) }),
+          learner('c', {}, { ...anchor(0.5), ...words(['vocab:uyu']) }),
+        ],
+        now,
+      );
+      expect(roll.contributors).toEqual({ anchor: 3, revisit: 2, vocabRevisit: 3 });
+      expect(togetherLists('class', roll)).toEqual({ anchorAccuracy: 0.5, revisit: [], vocabRevisit: ['vocab:uyu'] });
+    });
+
+    it('a family keeps every list at 1 learner', () => {
+      expect(lists(1, 'family')).toEqual({ anchorAccuracy: 0.5, revisit: ['ㅂ'], vocabRevisit: ['vocab:uyu'] });
+    });
+  });
+
+  it('a learner with an empty list or no summary does not contribute', () => {
+    const roll = classRollup([...full(2), learner('x', {}, { needsPractice: [] }), learner('y', {}, null)], now);
+    expect(roll.contributors).toEqual({ anchor: 2, revisit: 2, vocabRevisit: 2 });
+    expect(weekLines('class', roll, 'en').revisit).toEqual([]);
+  });
+
+  it('a family keeps every line whatever its size (a family sees everything, TV-D1)', () => {
+    const lines = weekLines('family', classRollup(full(1), now), 'en');
+    expect(lines.revisit).toEqual(['ㅂ']);
+    expect(lines.vocabRevisit).toEqual(['vocab:uyu']);
+    expect(lines.anchor).toBe('Stage 1 first-try answers: 50%');
+  });
+
+  it('the roll-up itself still holds the lists (the lecture presets read them), only the week lines hold them back', () => {
+    const roll = classRollup(full(1), now);
+    expect(roll.revisit).toEqual(['ㅂ']);
+    expect(roll.vocabRevisit).toEqual(['vocab:uyu']);
+    expect(roll.anchorAccuracy).toBe(0.5);
+  });
+});
+
 describe('grown-up roster readouts (GX-8)', () => {
   const daysAgo = (days: number): string => new Date(now.getTime() - days * DAY_MS).toISOString();
 
@@ -249,7 +349,7 @@ describe('grown-up roster readouts (GX-8)', () => {
   it('T8: the anchor line is hidden while nobody has one, and says "first-try answers" when shown', () => {
     const none = classRollup([learner('a')], now);
     expect(weekLines('class', none, 'en').anchor).toBeNull();
-    const some = classRollup([learner('a', {}, { stage1: { questsDone: 1, questsTotal: 11, anchorAccuracy: 0.75 } })], now);
+    const some = classRollup(['a', 'b', 'c'].map((id) => learner(id, {}, { stage1: { questsDone: 1, questsTotal: 11, anchorAccuracy: 0.75 } })), now);
     expect(weekLines('class', some, 'en').anchor).toBe('Stage 1 first-try answers: 75%');
     for (const locale of ['en', 'es', 'ko'] as const) {
       expect(weekLines('class', none, locale).anchor).toBeNull();

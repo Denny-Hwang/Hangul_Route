@@ -32,6 +32,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.myRoute.nextLessons.row': [[null, 'Meet a, eo, g, n', 'Stage 1 · Meet the Letters · lesson 1 of 3'], ['Next', 'Meet a, eo, g, n', 'Stage 1 · Meet the Letters · lesson 1 of 3']],
   'learner.myRoute.nextLessons.where': [[1, 'Meet the Letters'], [2, 'Lunch Box Words']],
   'learner.home.next.where': [[1, 'Meet the Letters', 1, 3], [2, 'Lunch Box Words', 2, 4]],
+  'learner.home.next.resume.line': [[3, 5], [12, 12]],
   'learner.library.toFind.stage': [[1], [2]],
   'learner.library.toFind.a11y': [['Meet the Letters']],
   'learner.library.toFind.nextA11y': [['Finish the episode: Meet the Letters']],

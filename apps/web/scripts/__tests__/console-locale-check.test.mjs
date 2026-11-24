@@ -11,7 +11,7 @@ import { isGrownUpPath } from '@hangul-route/content-schema';
 import { en } from '@hangul-route/i18n';
 import { es } from '@hangul-route/i18n/messages-es';
 import { ko } from '@hangul-route/i18n/messages-ko';
-import { MIN_PROBE_LENGTH, PROBES_PER_LOCALE, checkConsoleLocales, localeProbes, startChunks, stringLeaves, verdict } from '../console-locale-check.mjs';
+import { MIN_PROBE_LENGTH, PROBES_PER_LOCALE, checkConsoleLocales, contentTexts, localeProbes, startChunks, stringLeaves, verdict } from '../console-locale-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SCRIPT = join(here, '..', 'console-locale-check.mjs');
@@ -47,6 +47,53 @@ describe('probes', () => {
     expect(localeProbes({ a: 'Una frase bastante larga', b: 'corta', c: 'Same as English text', d: 'Con "comillas" dentro' }, { c: 'Same as English text' })).toEqual([
       'Una frase bastante larga',
     ]);
+  });
+
+  it('contentTexts gathers every string of the content trees once', () => {
+    expect(contentTexts({ a: 'one', b: { c: 'two' } }, [{ d: 'one', e: 3 }, 'three'], null)).toEqual(['one', 'two', 'three']);
+    expect(contentTexts()).toEqual([]);
+  });
+
+  describe('a string the content data also holds is no probe', () => {
+    const overlay = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`k${String(i).padStart(2, '0')}`, `Una frase de la consola numero ${i}`]));
+    const inContent = { gloss: 'hangul (Una frase de la consola numero 3)' };
+
+    it('skips a probe inside a content string and picks the next candidate: the count holds', () => {
+      const plain = localeProbes(overlay, {}, 5);
+      expect(plain).toContain('Una frase de la consola numero 2');
+      expect(plain).toContain('Una frase de la consola numero 4');
+      const probes = localeProbes(overlay, {}, 5, contentTexts(inContent));
+      expect(probes).toHaveLength(5);
+      expect(probes).not.toContain('Una frase de la consola numero 3');
+      expect(new Set(probes).size).toBe(5);
+      for (const p of probes) expect(contentTexts(inContent).some((t) => t.includes(p))).toBe(false);
+    });
+
+    it('a probe that is the whole content string is skipped too, and a content string that holds none changes nothing', () => {
+      expect(localeProbes(overlay, {}, 20, ['Una frase de la consola numero 7'])).not.toContain('Una frase de la consola numero 7');
+      expect(localeProbes(overlay, {}, 5, ['nothing alike'])).toEqual(localeProbes(overlay, {}, 5));
+      expect(localeProbes(overlay, {}, 5, [])).toEqual(localeProbes(overlay, {}, 5));
+    });
+
+    it('is deterministic, whatever the order of the content', () => {
+      const content = ['x', 'hangul (Una frase de la consola numero 3)', 'Una frase de la consola numero 8 ya'];
+      expect(localeProbes(overlay, {}, 5, content)).toEqual(localeProbes(overlay, {}, 5, content));
+      expect(localeProbes(overlay, {}, 5, content)).toEqual(localeProbes(overlay, {}, 5, [...content].reverse()));
+    });
+
+    it('a small overlay gives what is left once the content ones are out', () => {
+      expect(localeProbes(overlay, {}, 20, contentTexts(inContent))).toHaveLength(9);
+    });
+
+    it('real dictionaries: every language still gives a full set when the content holds a probe of the first pick', () => {
+      for (const overlayOfLocale of [es, ko]) {
+        const first = localeProbes(overlayOfLocale, en);
+        const probes = localeProbes(overlayOfLocale, en, PROBES_PER_LOCALE, [`gloss (${first[0]}) and ${first[10]}`]);
+        expect(probes).toHaveLength(PROBES_PER_LOCALE);
+        expect(probes).not.toContain(first[0]);
+        expect(probes).not.toContain(first[10]);
+      }
+    });
   });
 
   it('startChunks reads the chunk scripts of a page, once each', () => {
