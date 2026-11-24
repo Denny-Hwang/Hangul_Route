@@ -9,6 +9,8 @@ Parent doc: `docs/blueprints/09-homework-review-profiles-addendum.md` §3.
 
 > **Amended 2026-10-21 by `AMENDMENTS-ONE-ACCOUNT-MANY-USERS.md` [OA]** (rows OA-0b to OA-10): the §3.1 picker becomes **Who is using this?**, one chooser for every learner profile and the account's grown-up uses (Family, Teacher, School, Grown-up area), shown at launch on a shared device, on return from the grown-up pages, after 30 minutes in the background and from a Switch button; grown-up uses come from the account, never from parent or teacher device profiles (§3.2's parent profile is dropped); the PIN is the device-level `account:parentPinHash` (not `parent.<profileId>.pin_hash`, §3.5) with growing pauses and a reset by signing in on the web; learner profiles can be locked with the grown-up PIN and removed from the device in the Grown-up area; optional face or fingerprint on native builds. In-body edits land with the rows named in that amendment's section 19.
 
+> **Amended 2026-11-23 by `AMENDMENTS-DURABLE-PROGRESS.md` [DP]** (work order WO-01 of the 2026-11 review: a failed read is never "nothing saved"; a failed write is never silent): section 3.1's cold launch no longer reads a profile list that could not be read as an empty device: a list, active-id or tombstone read that fails keeps the stored bytes untouched and shows **ProgressReadFailedScreen** (Try again) instead of first-run Welcome; damaged list bytes are kept at `profiles-corrupt`, and a grown-up can start the device fresh behind the PIN (`RecoverRecord`); damaged tombstones are rebuilt from the per-profile keys (`tombstones-corrupt`), and every learner tab holds an unread learner (rows DP-1b, DP-1c, DP-1d and DP-1e).
+
 ---
 
 ## 1. Context

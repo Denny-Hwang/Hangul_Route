@@ -1,5 +1,7 @@
 Status: ready; rows AU-1 to AU-17 done (stage 1 in #1034, stage 2 in the PR that adds this line)
 
+> **Amended 2026-11-23 by `AMENDMENTS-DURABLE-PROGRESS.md` [DP]** (work order WO-01 of the 2026-11 review: a failed read is never "nothing saved"; a failed write is never silent): AU-3's unread set becomes store state (`loadFailedFor`), so boot, the chooser and Home can show it; a write that failed after its step ran (`unsaved`) is told apart from a failed read (`unread`) and from a step that threw (`step-failed`), a record started fresh answers `fresh`, and a failed save is retried and said (`saveFailedFor`) (sections 3.2 and 3.7; rows DP-1a and DP-2).
+
 # Amendment: fixes from the 2026-11-15 readiness audit
 
 > **Owner decision of 2026-11-15 (in chat, translated):** "Do stage 1 and stage 2 of the code-fix list and merge."
