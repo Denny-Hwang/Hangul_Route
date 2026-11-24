@@ -83,7 +83,7 @@ Empty state: a step with no rounds has no speaker and no link. Error state: a fa
 - **Sheet**:
   - `surface.paper`, padding `spacing.lg`;
   - top corners `radii.xl`, max height 85 %;
-  - full width, as `VoiceHelpSheet`. *Proposed, pending the owner (mock MD6, README Q2): from window class `regular`, max width `layout.maxWidth.reading`, centred at the bottom; `DisplaySheet` caps at the same width but becomes a centred dialog.*
+  - full width, as `VoiceHelpSheet`. *Owner decision 2026-11-24 (mock MD6, README Q2): from window class `regular`, max width `layout.maxWidth.reading` (720), centred at the bottom; `DisplaySheet` caps at the same width but becomes a centred dialog.*
 - **Spacing**: `Spacer sm` between the title row and the line, `Spacer lg` between the line and the buttons, `spacing.sm` between the two buttons.
 - **Hear it glyph**: `Icon speaker` at `spacing.xl` (as `ClozePickGame.tsx:322`), in `text.onSecondary`, or `text.onPrimary` on a guidance-only sheet.
 - **Never used**: `feedback.danger`, `feedback.nudge` / `nudgeLight`, and Hoya.

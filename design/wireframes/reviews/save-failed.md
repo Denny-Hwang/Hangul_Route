@@ -28,8 +28,9 @@ Panel A — save failed (phone)
 |  We could not save this yet.   |  <- learner.dailyReview.saveFailed.title (takes focus)
 |  Your answers are still here.  |  <- learner.dailyReview.saveFailed.body
 |                                |
-|  Still stuck? You can stop for |  <- learner.dailyReview.saveFailed.stillStuck,
-|  now and try another time.     |     only after 3 failed tries in a row
+|  It still did not save. You    |  <- learner.dailyReview.saveFailed.stillStuck,
+|  can stop for now and try      |     only after 3 failed tries in a row
+|  another time.                 |
 +--------------------------------+
 |  [[        TRY AGAIN       ]]  |  <- footer, always in view; busy while trying
 +--------------------------------+
@@ -47,7 +48,8 @@ Panel F — a back on Panel A (Close, Android back, browser back): the screen's 
 ```
 |+------------------------------+|
 || Stop for now?                ||  <- Daily Review's title (Stage Check: Stop the check?)
-|| This is not saved yet.       ||  <- learner.dailyReview.saveFailed.leaveBody
+|| This is not saved yet. Your  ||  <- learner.dailyReview.saveFailed.leaveBody
+||  stars and cards stay.       ||
 || [[       BACK TO IT       ]] ||  <- stay: first (Stage Check: Keep going)
 || [          STOP            ] ||
 |+------------------------------+|

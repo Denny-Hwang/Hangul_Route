@@ -39,7 +39,7 @@ Tokens: existing `Card` (padding `md`, default tone), `Body` semibold for the la
 - *one device's section only;*
 - *the scrim leaves the accessibility tree;*
 - *focus starts on the title;*
-- *proposed, pending the owner: from window class `regular` the sheet's width is capped (mock MD6, README Q2).*
+- *owner decision 2026-11-24: from window class `regular` the sheet's width is capped at 720 (mock MD6, README Q2).*
 
 *Mock: `design/screens/audio-cant-hear/` (H1 to H3; mock decisions MD6 and MD11).*
 
@@ -70,7 +70,7 @@ A bottom sheet over a dimmed screen (`colors.surface.overlay`), plain text, scro
   On the web the family comes from the user agent, because `Platform.OS` is `'web'` in every browser. Title, note and footer do not change. *Before: all three families showed, so that a grown-up setting up another device read the right one. The cost of the change: that grown-up now reads that device's steps on that device.*
 - Closing: OK, the close icon, a tap on the dimmed area, or Escape / hardware back (`onRequestClose`). Focus returns to the control that opened it.
 - The dimmed area is **not** an accessibility element (revised 2026-11-24): it was a second "Close" button for a screen reader (`VoiceHelpSheet.tsx:26-32`). It stays a tap target for sight only, built as `ConfirmSheet.tsx`'s backdrop: `accessible={false}`, `focusable={false}`, `aria-hidden`, `importantForAccessibility="no-hide-descendants"`, `accessibilityElementsHidden` and `tabIndex -1`.
-- Width: full width, as today. *Proposed, pending the owner (mock MD6, README Q2): from window class `regular` (600), capped at `layout.maxWidth.reading` (720) and centred at the bottom, the same as the "Can't hear it?" sheet (`design/components/CantHear/spec.md`).*
+- Width: full width, as today. *Owner decision 2026-11-24 (mock MD6, README Q2): from window class `regular` (600), capped at `layout.maxWidth.reading` (720) and centred at the bottom, the same as the "Can't hear it?" sheet (`design/components/CantHear/spec.md`).*
 - Scroll (revised 2026-11-24): the title row, the note, the steps and the footer scroll as one, and OK stays under them. When they scroll, a `border.strong` rule is drawn over OK, with the native scroll cues (mock MD11).
 - Steps (verified against Apple, Google and Microsoft help pages on 2026-10-10; menu names still vary by OS version, which is why the sheet says so):
   - iPhone or iPad: Settings > Accessibility > Spoken Content > Voices > Korean > download a voice (Yuna, or one marked Enhanced or Premium). Then reopen the app.
