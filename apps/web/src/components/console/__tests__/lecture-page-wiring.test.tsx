@@ -293,7 +293,36 @@ describe('?from= preselects (section 4.6)', () => {
     const text = JSON.stringify(lastDeck().blocks);
     expect(text).not.toContain('ㅂ');
     expect(text).not.toContain('ㅅ');
+    expect(lastDeck().blocks[0]).toEqual({ kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㅏ', 'ㅓ', 'ㅗ'] });
     expect(lastDeck().source).not.toBe('revisit');
+  });
+
+  // CO-2d: Customize's "Revisit together" Source (lecture/page.tsx togetherLists) is a class's own letters only from 3 learners.
+  describe('the Revisit together source under Customize', () => {
+    const sourceRevisit = (root: ReactTestInstance): ReactTestInstance => root.findAll((n) => n.type === 'input' && n.props.name === 'source')[2] as ReactTestInstance;
+    const letters = (n: number) => Array.from({ length: n }, (_, i) => learner(`L${i}`, { needsPractice: ['ㅂ', 'ㅅ'] }));
+
+    it.each([1, 2])('a class with %i learner(s) with letters: the radio is disabled and reads the no-letters line', async (n) => {
+      state.learners = letters(n);
+      const root = await render();
+      await openCustomize(root);
+      const radio = sourceRevisit(root);
+      expect(radio.props.disabled).toBe(true);
+      const label = root.findAll((node) => node.type === 'label' && node.findAll((c) => c === radio).length > 0).at(-1) as ReactTestInstance;
+      expect(textOf(label)).toBe(l.source.noRevisit);
+      expect(textOf(label)).not.toContain('ㅂ');
+    });
+
+    it('3 learners with letters: the radio is enabled and shows the letters', async () => {
+      state.learners = letters(3);
+      const root = await render();
+      await openCustomize(root);
+      const radio = sourceRevisit(root);
+      expect(radio.props.disabled).toBe(false);
+      const label = root.findAll((node) => node.type === 'label' && node.findAll((c) => c === radio).length > 0).at(-1) as ReactTestInstance;
+      expect(textOf(label)).toContain('ㅂ');
+      expect(textOf(label)).not.toBe(l.source.noRevisit);
+    });
   });
 
   it('no ?from= with a plan this week: Next lesson first, the plan filled to the length', async () => {
