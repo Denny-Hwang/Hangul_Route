@@ -1,5 +1,5 @@
 import { NavigationContext } from '@react-navigation/native';
-import { useContext, useEffect, useRef } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { isBackAction } from '../logic/navigation/back-action';
 
@@ -39,11 +39,76 @@ export function useBackGuard(navigation: BackGuardNavigation | undefined, onBack
   }, [navigation, holds]);
 }
 
+/** A guard that sits inside a scope: what it answers and whether it would hold, read when a back arrives. */
+interface NestedGuard {
+  onBack: () => boolean;
+  holds: boolean | undefined;
+}
+
+/** What a scope's owner hands to the guards drawn inside it. */
+export interface BackGuardScope {
+  register(guard: NestedGuard): () => void;
+  /** A nested guard's `holds` changed: the owner works out the gesture again. */
+  refresh(): void;
+}
+
+/**
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-1 (section 3.1): nested guards on one route. Two `beforeRemove` listeners on a
+ * route depend on the order they were added, and two `setOptions({ gestureEnabled })` writers overwrite each other, so a
+ * route with more than one guard names one owner (`useBackGuardScope`), and a `useRouteBackGuard` drawn inside its
+ * scope registers with the owner instead of adding a listener of its own. Outside a scope nothing changes.
+ */
+export const BackGuardScopeContext = createContext<BackGuardScope | null>(null);
+
+/**
+ * The owner of a route's guards: one listener, one writer of the gesture. A back asks the nested guards first (the latest
+ * registered first) and the owner's own `onBack` only when none took it; the swipe is off when the owner or any nested
+ * guard holds. Provide the returned scope with `BackGuardScopeContext.Provider` around the guards that may nest.
+ */
+export function useBackGuardScope(onBack: () => boolean, holds: boolean): BackGuardScope {
+  const navigation = useContext(NavigationContext) as BackGuardNavigation | undefined;
+  const nested = useRef<NestedGuard[]>([]);
+  const [nestedHolds, setNestedHolds] = useState(false);
+  const refresh = useCallback((): void => setNestedHolds(nested.current.some((guard) => guard.holds === true)), []);
+  const scope = useMemo<BackGuardScope>(
+    () => ({
+      register: (guard) => {
+        nested.current.push(guard);
+        refresh();
+        return () => {
+          nested.current = nested.current.filter((one) => one !== guard);
+          refresh();
+        };
+      },
+      refresh,
+    }),
+    [refresh],
+  );
+  useBackGuard(
+    navigation,
+    () => {
+      for (let i = nested.current.length - 1; i >= 0; i -= 1) {
+        if (nested.current[i]!.onBack()) return true;
+      }
+      return onBack();
+    },
+    holds || nestedHolds,
+  );
+  return scope;
+}
+
 /**
  * `useBackGuard` on the route the component is drawn in, for a part that gets no navigation of its
- * own (a game, a quest body): outside a route (a render test, a fixture host) it does nothing.
+ * own (a game, a quest body): outside a route (a render test, a fixture host) it does nothing. [LR] Inside a
+ * `BackGuardScopeContext` it answers through the scope's owner (one listener, one gesture writer, section 3.1).
  */
 export function useRouteBackGuard(onBack: () => boolean, holds?: boolean): void {
   const navigation = useContext(NavigationContext) as BackGuardNavigation | undefined;
-  useBackGuard(navigation, onBack, holds);
+  const scope = useContext(BackGuardScopeContext);
+  const guard = useRef<NestedGuard>({ onBack, holds });
+  guard.current.onBack = onBack;
+  guard.current.holds = holds;
+  useEffect(() => scope?.register(guard.current), [scope]);
+  useEffect(() => scope?.refresh(), [scope, holds]);
+  useBackGuard(scope ? undefined : navigation, onBack, holds);
 }
