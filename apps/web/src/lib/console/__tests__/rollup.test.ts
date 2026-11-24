@@ -1,7 +1,7 @@
 import { formatDate, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner } from '../api';
-import { CAP_WARNING_RATIO, MIN_TOGETHER_LEARNERS, capState, classRollup, codeExpiry, familyCountLine, joinedLine, percent, questsLine, relativeDay, rosterHeading, rosterOrder, seatLine, weekLines } from '../rollup';
+import { CAP_WARNING_RATIO, MIN_TOGETHER_LEARNERS, capState, classRollup, codeExpiry, familyCountLine, joinedLine, percent, questsLine, relativeDay, rosterHeading, rosterOrder, seatLine, togetherLists, weekLines } from '../rollup';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 // relativeDay counts calendar days in the host time zone (describeRelativeDay reads local
@@ -276,6 +276,35 @@ describe('the class lines need at least 3 contributing learners (CO-2c, OD-CO8)'
     const lines = weekLines('class', roll, 'en');
     expect(lines.revisit).toEqual([]);
     expect(lines.anchor).not.toBeNull();
+  });
+
+  describe('togetherLists (CO-2d): the lists a screen shows, below, at and above 3 for each', () => {
+    const lists = (n: number, kind = 'class') => togetherLists(kind, classRollup(full(n), now));
+
+    it.each([1, 2])('a class with %i contributors: anchor, revisit and vocabRevisit are all held back', (n) => {
+      expect(lists(n)).toEqual({ anchorAccuracy: null, revisit: [], vocabRevisit: [] });
+    });
+
+    it.each([3, 4])('a class with %i contributors: all three are shown', (n) => {
+      expect(lists(n)).toEqual({ anchorAccuracy: 0.5, revisit: ['ㅂ'], vocabRevisit: ['vocab:uyu'] });
+    });
+
+    it('each list has its own count: 2 / 3 / 3 contributors hold back only the first', () => {
+      const roll = classRollup(
+        [
+          learner('a', {}, { needsPractice: ['ㅂ'], ...anchor(0.5), ...words(['vocab:uyu']) }),
+          learner('b', {}, { needsPractice: ['ㅂ'], ...anchor(0.5), ...words(['vocab:uyu']) }),
+          learner('c', {}, { ...anchor(0.5), ...words(['vocab:uyu']) }),
+        ],
+        now,
+      );
+      expect(roll.contributors).toEqual({ anchor: 3, revisit: 2, vocabRevisit: 3 });
+      expect(togetherLists('class', roll)).toEqual({ anchorAccuracy: 0.5, revisit: [], vocabRevisit: ['vocab:uyu'] });
+    });
+
+    it('a family keeps every list at 1 learner', () => {
+      expect(lists(1, 'family')).toEqual({ anchorAccuracy: 0.5, revisit: ['ㅂ'], vocabRevisit: ['vocab:uyu'] });
+    });
   });
 
   it('a learner with an empty list or no summary does not contribute', () => {

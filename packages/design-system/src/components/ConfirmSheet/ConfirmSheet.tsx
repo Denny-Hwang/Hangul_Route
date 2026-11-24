@@ -52,6 +52,8 @@ const webDocument = (): DocumentLike | undefined => (Platform.OS === 'web' ? (gl
  * design/components/ConfirmSheet/spec.md): a `detail` paragraph, `busy` (only the cancel, the message marked busy),
  * `confirmFirst` (the confirm is the main action and is drawn first; the cancel still takes focus), a quiet third action, and
  * `confirmTone: 'danger'` for a grown-up's destructive step only.
+ *
+ * [LR] `safeFilled` (AMENDMENTS-QUEST-LEAVE-RESUME LR-2): the safe cancel is the filled button, the confirm the plain one.
  */
 export function ConfirmSheet({
   visible,
@@ -69,6 +71,7 @@ export function ConfirmSheet({
   quietLabel,
   onQuiet,
   busy = false,
+  safeFilled = false,
 }: ConfirmSheetProps): ReactElement {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const titleId = `${testID}-title-${id}`;
@@ -137,9 +140,9 @@ export function ConfirmSheet({
       testID={`${testID}-${kind}`}
       accessibilityRole="button"
       onPress={kind === 'cancel' ? onCancel : onConfirm}
-      style={(state: PressState) => actionStyle(kind, dialog, state, confirmTone)}
+      style={(state: PressState) => actionStyle(kind, dialog, state, confirmTone, safeFilled)}
     >
-      <Text {...KOREAN_LINE_BREAK} style={actionTextStyle(kind, scale)}>
+      <Text {...KOREAN_LINE_BREAK} style={actionTextStyle(kind, scale, safeFilled)}>
         {kind === 'cancel' ? cancelLabel : confirmLabel}
       </Text>
     </Pressable>

@@ -1,5 +1,6 @@
 import { savedRunOf, type SavedQuestRun } from '../logic/quest-flow/saved-run';
-import { readJsonStrict, removeKey, writeJson } from '../platform/storage';
+import { removeKey, writeJson } from '../platform/storage';
+import { durableRead, type DurableRead } from './durable-read';
 import { onProfileRemoved } from './profile-removal';
 import { useProfileStore } from './profile-store';
 import { useQuestRunStore } from './quest-run-store';
@@ -37,9 +38,15 @@ function queued(work: () => Promise<unknown>): Promise<void> {
   return run;
 }
 
+/** What a read answers: the value, or null for nothing stored and for a read that failed (either cause). */
+const valueOf = (read: DurableRead): unknown => (read.kind === 'value' ? read.value : null);
+
 /**
  * The stored value for `profileId` as it is (`resumableRun` decides whether it may be resumed), or null: nothing
  * stored, storage that cannot be read, or no answer within `timeoutMs` (a stalled read never holds the quest back).
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-2 (section 3.3): read through `durableRead` (one retry on a fresh connection
+ * after a read that threw). A failed read means no resume and nothing else: the copy key is null (the run holds nothing
+ * earned, stars are written only by the finish), so damaged bytes are not kept and the next save writes over them.
  */
 export async function readSavedRun(profileId: string, timeoutMs: number = SAVED_RUN_READ_MS): Promise<unknown> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -47,7 +54,7 @@ export async function readSavedRun(profileId: string, timeoutMs: number = SAVED_
     timer = setTimeout(() => resolve(null), timeoutMs);
   });
   // After the writes already asked for, so a run saved a moment ago is the one read.
-  const read = queue.then(() => readJsonStrict<unknown>(QUEST_RUN_KEY(profileId))).catch(() => null);
+  const read = queue.then(() => durableRead(QUEST_RUN_KEY(profileId), null)).then(valueOf, () => null);
   try {
     return await Promise.race([read, timeout]);
   } finally {

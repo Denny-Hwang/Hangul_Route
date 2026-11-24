@@ -239,6 +239,15 @@ export const learner = {
       a11y: (cta: string, title: string) => `${cta}: ${title}`,
       where: (stage: number, episode: string, i: number, n: number) => `${stage}단계 · ${episode} · 레슨 ${n}개 중 ${i}번째`,
       route: { cta: '학습 루트 보기' },
+      resume: {
+        line: (step: number, total: number) => `${total}개 중 ${step}번째 활동부터 이어서 할 수 있어요.`,
+        startAgain: { cta: '처음부터 하기' },
+        sheet: {
+          title: '이 레슨을 처음부터 다시 할까요?',
+          message: '첫 번째 활동으로 돌아가요. 별과 카드는 그대로예요.',
+          keep: { cta: '하던 곳 그대로 두기' },
+        },
+      },
     },
     mission: {
       heading: '오늘 호야와 함께',

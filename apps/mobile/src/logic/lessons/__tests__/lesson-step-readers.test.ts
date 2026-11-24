@@ -38,6 +38,8 @@ const ALLOWED: Readonly<Record<string, string>> = {
   'logic/story/story-ref.ts': 'storyReadStep: browse (withLessonContent) and the story minigame refs',
   'screens/browse/BrowseItemScreen.tsx': 'All lessons: the browse root mounts through withLessonContent',
   'screens/guest/GuestQuestPlayer.tsx': 'reads quest 1 steps once its run began, which QuestPlayerView starts behind useLessonQuestReady',
+  'screens/home/use-hero-resume.ts':
+    "[LR] LR-2: reads the hero quest's steps only once the store says its chunk is in (isQuestReady, after a non-throwing ensureCells); never through useLessonQuestState, which throws a failed load",
   'screens/minigames/MinigameScreen.tsx': 'behind useLessonQuestReady',
   'screens/presenter/slides/SequenceSlide.tsx': 'not a quest: a lecture slide',
   'screens/presenter/use-deck-content.ts': '[FN] FN-4: reads a quest\'s steps for the tales it plays only after its cell is in (logic/lecture/deck-content.ts loads the cells first)',

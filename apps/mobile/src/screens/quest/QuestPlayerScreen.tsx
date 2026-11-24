@@ -31,7 +31,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
  * section 7.1), which name no route outside that stack.
  * [AU] AMENDMENTS-AUDIT-2026-11 row AU-12: the run is kept on the device at each step change, so a quest left by a
  * reload goes on from its step when it is started again within 24 hours (`store/quest-run-saved.ts`); finishing it or
- * choosing Leave forgets it. No screen and no word of its own.
+ * choosing Leave forgets it. The player itself has no screen and no word of its own for it.
+ * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-2: Home's hero now says that the lesson goes on and offers Start again
+ * (`screens/home/NextLessonCard.tsx`, `use-hero-resume.ts`); the saved run is read through `durableRead`.
  */
 export function QuestPlayerScreen({ route, navigation }: Props): ReactElement | null {
   const { questId, episodeId, resume } = route.params;
