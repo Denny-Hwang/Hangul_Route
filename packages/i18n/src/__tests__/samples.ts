@@ -190,6 +190,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.space.title.class': [['Class A', 1], ['Class A', 3]],
   'console.space.title.school': [['Seoul school', 1], ['Seoul school', 40]],
   'console.space.regenerateAsk': [['Class A']],
+  // AMENDMENTS-CLASS-CODE-OVERLAY CO-1: `cta` is the learner app's Join a class button.
+  'console.space.codeOverlay.howToJoin': [['Join a class']],
   'console.space.week.practiced': [[1, 3]],
   'console.space.week.anchor': [['82%']],
   // The two `revisit` arguments are taught jamo the page renders outside the message (lang="ko");

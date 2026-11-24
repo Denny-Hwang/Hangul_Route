@@ -354,6 +354,14 @@ export const consoleMsgs = {
     joinCodeLabel: 'Join code',
     codeLabel: { family: 'Family code', class: 'Class code', school: 'School code' },
     /**
+     * Show the code (AMENDMENTS-CLASS-CODE-OVERLAY, row CO-1): the class name, the code and a QR code on a full screen for
+     * a room, and nothing else. `howToJoin` takes the learner app's Join a class button (`caregiver.spaces.join.cta`).
+     */
+    codeOverlay: {
+      open: { cta: 'Show the code' },
+      howToJoin: (cta: string) => `Tap “${cta}” in Hangul Route and type this code.`,
+    },
+    /**
      * The class join link and its QR code under the class code (owner decision 2026-10-17): the link holds the code
      * alone, in the address fragment, and opens the learner app's Join a class with the code filled in.
      */

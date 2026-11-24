@@ -148,10 +148,10 @@ describe('a class with learners (T3)', () => {
     expect(orderOf(['space-head', 'this-week', 'class-actions', 'student-card', 'invite'])).toEqual(['space-head', 'this-week', 'class-actions', 'student-card', 'student-card', 'invite']);
   });
 
-  it('the bar shows Plan this week (primary), Term plan, Lecture mode and Class report; More holds Notes, New devices, Class moves and Settings', async () => {
+  it('the bar shows Plan this week (primary), Term plan, Lecture mode, Class report and Show the code; More holds Notes, New devices, Class moves and Settings', async () => {
     await render();
     const c = getMessages('en').console;
-    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'open-lecture', 'class-report-link', 'class-more-toggle']);
+    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'open-lecture', 'class-report-link', 'class-code-open', 'class-more-toggle']);
     expect(textOf(one('open-plan'))).toBe(c.planThisWeek);
     // Class report left This week for the bar.
     expect(byTestId('class-report-link', one('this-week'))).toHaveLength(0);
@@ -175,7 +175,7 @@ describe('a class with learners (T3)', () => {
     state.incoming = [MOVE_IN];
     await render();
     const c = getMessages('en').console;
-    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'open-lecture', 'class-report-link', 'class-moves', 'class-more-toggle']);
+    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'open-lecture', 'class-report-link', 'class-code-open', 'class-moves', 'class-more-toggle']);
     expect(textOf(one('class-moves'))).toBe(c.transfer.waiting(1));
     await press(one('class-more-toggle'));
     expect(controlsIn(one('class-more'))).toEqual(['roster-notes', 'relink-requests', 'space-settings']);
@@ -281,7 +281,7 @@ describe('an empty class (T5)', () => {
   it('a teacher move into the empty class: Class moves comes back, in the bar with its count', async () => {
     state.incoming = [MOVE_IN];
     await render();
-    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'class-moves', 'class-more-toggle']);
+    expect(controlsIn(one('class-actions'))).toEqual(['open-plan', 'plan-term', 'class-code-open', 'class-moves', 'class-more-toggle']);
     await press(one('class-more-toggle'));
     expect(controlsIn(one('class-more'))).toEqual(['space-settings']);
   });

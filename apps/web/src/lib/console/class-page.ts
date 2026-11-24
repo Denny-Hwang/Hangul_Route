@@ -9,9 +9,9 @@ import { DEFAULT_LOCALE, describeRelativeDay, getMessages, type UiLocale } from 
  * (Re-link, Class moves, Notes, Lecture mode, and the class report, which the roll-up only ever showed with learners),
  * except an entry that has something waiting: a move into an empty class is how a new class often fills. An entry with
  * something waiting (new devices, class moves) moves out of More into the bar, after the everyday buttons, until it is
- * answered.
+ * answered. Show the code (CO-1) is an everyday button of a class with a live code: in the bar, never under More, empty class or not.
  */
-export type ClassAction = 'plan' | 'termPlan' | 'lecture' | 'classReport' | 'notes' | 'relink' | 'moves' | 'settings';
+export type ClassAction = 'plan' | 'termPlan' | 'lecture' | 'classReport' | 'showCode' | 'notes' | 'relink' | 'moves' | 'settings';
 
 export interface ClassActionsInput {
   /** No learner on the roster yet. */
@@ -20,6 +20,8 @@ export interface ClassActionsInput {
   lecture: boolean;
   /** The class report is on for this build and console locale (`rosterClassReportLink`). */
   classReport: boolean;
+  /** The class has a live code to show (`codeOverlayShown`): Show the code stays in the bar, even on an empty class. */
+  code: boolean;
   /** The roster's Notes entry is offered (`rosterNotesLinks(...).header`). */
   notes: boolean;
   /** Class moves are shown in this build (`useTransfersShown`). */
@@ -38,6 +40,8 @@ export function classActions(input: ClassActionsInput): ClassActions {
   const bar: ClassAction[] = ['plan', 'termPlan'];
   if (input.lecture && learners) bar.push('lecture');
   if (input.classReport && learners) bar.push('classReport');
+  // AMENDMENTS-CLASS-CODE-OVERLAY CO-1: Show the code follows the everyday buttons and comes before any waiting entry.
+  if (input.code) bar.push('showCode');
   const more: ClassAction[] = [];
   if (input.notes && learners) more.push('notes');
   // A waiting entry stands in the bar, its count in words on the button, never folded behind More (GX-7 review: the

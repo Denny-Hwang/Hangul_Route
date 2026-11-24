@@ -67,25 +67,43 @@ export function JoinLinkPanel({ url, copy, centered = false }: { url: string; co
   );
 }
 
-/** The QR image of the join link: one SVG path of the dark modules, named for screen readers. */
-export function JoinLinkQr({ url, label, caption, centered = false }: { url: string; label: string; caption: string; centered?: boolean }): JSX.Element {
+/**
+ * The QR drawing of a join link, alone: one SVG path of the dark modules on a `surface.paper` square with the quiet
+ * zone, named for screen readers. The class page's panel (`JoinLinkQr`) and the Show the code overlay share it
+ * (AMENDMENTS-CLASS-CODE-OVERLAY section 3.5). `side` is a number for the panel's fixed square (the `width` and
+ * `height` attributes) or a CSS length for a drawing that follows its column (the overlay's `100%`); `framed` adds the
+ * panel's radius and border (the overlay's paper around it is the quiet zone); `testId` names the node for tests.
+ */
+export function JoinLinkQrImage({ url, label, side, framed, testId }: { url: string; label: string; side: number | string; framed: boolean; testId: string }): JSX.Element {
   const modules = useMemo(() => qrModules(url), [url]);
   const view = qrViewSize(modules.length);
+  const attributes = typeof side === 'number' ? { width: side, height: side } : {};
+  return (
+    <svg
+      data-testid={testId}
+      role="img"
+      aria-label={label}
+      viewBox={`0 0 ${view} ${view}`}
+      {...attributes}
+      shapeRendering="crispEdges"
+      style={{
+        maxWidth: '100%',
+        height: 'auto',
+        ...(typeof side === 'string' ? { width: side } : {}),
+        ...(framed ? { borderRadius: radii.md, border: `${borderWidth.thin}px solid ${colors.border.subtle}` } : {}),
+      }}
+    >
+      <rect width={view} height={view} fill={colors.surface.paper} />
+      <path d={qrPath(modules)} fill={colors.text.primary} />
+    </svg>
+  );
+}
+
+/** The QR image of the join link in the class page's panel: a fixed square, framed, with its caption. */
+export function JoinLinkQr({ url, label, caption, centered = false }: { url: string; label: string; caption: string; centered?: boolean }): JSX.Element {
   return (
     <figure style={{ margin: `${spacing.md}px 0 0`, display: 'flex', flexDirection: 'column', alignItems: centered ? 'center' : 'flex-start', gap: spacing.xs }}>
-      <svg
-        data-testid="join-link-qr"
-        role="img"
-        aria-label={label}
-        viewBox={`0 0 ${view} ${view}`}
-        width={QR_SIDE}
-        height={QR_SIDE}
-        shapeRendering="crispEdges"
-        style={{ maxWidth: '100%', height: 'auto', borderRadius: radii.md, border: `${borderWidth.thin}px solid ${colors.border.subtle}` }}
-      >
-        <rect width={view} height={view} fill={colors.surface.paper} />
-        <path d={qrPath(modules)} fill={colors.text.primary} />
-      </svg>
+      <JoinLinkQrImage url={url} label={label} side={QR_SIDE} framed testId="join-link-qr" />
       <figcaption style={{ color: colors.text.muted, fontSize: rem(typography.size.bodySm) }}>{caption}</figcaption>
     </figure>
   );

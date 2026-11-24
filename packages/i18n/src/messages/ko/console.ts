@@ -223,6 +223,10 @@ export const consoleMsgs = {
     regenerateFailed: '지금은 새 코드를 만들 수 없어요.',
     joinCodeLabel: '참여 코드',
     codeLabel: { family: '가족 코드', class: '반 코드', school: '학교 코드' },
+    codeOverlay: {
+      open: { cta: '코드 보여 주기' },
+      howToJoin: (cta: string) => `Hangul Route에서 ‘${cta}’ 버튼을 누르고 이 코드를 입력해요.`,
+    },
     joinLink: {
       title: '참여 링크',
       note: '반에 참여하기 화면이 이 코드가 채워진 채로 열려요. 링크에는 코드만 있고 이름은 없어요.',
