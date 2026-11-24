@@ -660,6 +660,28 @@ describe("billing and grown-up home e2e (F-BILL-002 B-14)", () => {
     assert.deepEqual(specArgs(run).sort(), flagOff.map((n) => `e2e/web/${n}`).sort());
   });
 
+  // AMENDMENTS-A11Y-CI AC-2 (section 6 AC-2 item 4, OD-AC8): the class page's axe smoke is a step of its own, with its own
+  // variable, so the "specs that read the billing flag" list above stays exactly the two billing specs.
+  test("the console axe step runs the class page's axe spec on the merged dist with AXE_CONSOLE_E2E, even after a billing failure", () => {
+    const run = step("Console axe (merged dist)");
+    assert.match(run, /^ {8}if: \$\{\{ !cancelled\(\) \}\}$/m, "runs even when the billing run failed");
+    assert.match(run, /working-directory: apps\/web/);
+    assert.match(run, /AXE_CONSOLE_E2E: "1"/);
+    assert.match(run, /E2E_OUT: \.\.\/mobile\/dist/);
+    assert.deepEqual(specArgs(run), ["e2e/axe-console.spec.ts"]);
+    assert.match(run, /--output test-results\/axe-console/);
+    assert.doesNotMatch(run, /BILLING_E2E/, "its own variable, not the billing one");
+    // On the app-host build, after the billing run and before the kill-switch build replaces dist/.
+    assert.ok(lane.text.indexOf("- name: Console axe (merged dist)") > lane.text.indexOf("- name: Billing e2e (web specs"));
+    assert.ok(lane.text.indexOf("- name: Console axe (merged dist)") < lane.text.indexOf("- name: Build the kill-switch bundle"));
+    // The spec gates on that variable (or the local one), and none of the axe files reads the billing flag.
+    const dir = join(ROOT, "apps", "web", "e2e");
+    assert.match(readFileSync(join(dir, "axe-console.spec.ts"), "utf8"), /process\.env\.AXE_CONSOLE_E2E !== '1' && process\.env\.GROWNUP_E2E !== '1'/);
+    for (const n of readdirSync(dir).filter((f) => f.startsWith("axe-"))) {
+      assert.ok(!readFileSync(join(dir, n), "utf8").includes("BILLING_E2E"), `${n} does not read BILLING_E2E`);
+    }
+  });
+
   test("apps/web and apps/mobile pin the same @playwright/test (the lane installs one Chromium for both runs)", () => {
     const pin = (dir) => JSON.parse(read(`${dir}/package.json`)).devDependencies?.["@playwright/test"];
     assert.ok(pin("apps/mobile"), "apps/mobile pins @playwright/test");
@@ -738,5 +760,39 @@ describe("lint is a real gate (AMENDMENTS-A11Y-CI AC-3)", () => {
     assert.equal(exportsMap["./eslint/touchable-has-name"], "./eslint/touchable-has-name.mjs");
     assert.ok(existsSync(join(ROOT, "packages/design-system/eslint/touchable-has-name.mjs")));
     assert.match(read("apps/mobile/eslint.config.mjs"), /@hangul-route\/design-system\/eslint\/touchable-has-name/);
+  });
+});
+
+// AMENDMENTS-A11Y-CI AC-2 (section 3.1 option (b), OD-AC4): the axe smoke on the site and the sign-in needs no workflow
+// change. preview-deploy.yml's one e2e step already runs apps/web's whole Playwright suite on the default export, so
+// axe-site.spec.ts rides along; the class page's spec skips itself there (no AXE_CONSOLE_E2E, no GROWNUP_E2E).
+describe("axe smoke on the site and the console (AMENDMENTS-A11Y-CI AC-2)", () => {
+  const preview = read(".github/workflows/preview-deploy.yml");
+
+  test("preview-deploy.yml's e2e step runs the whole apps/web suite on the default export, so axe-site.spec.ts is in it", () => {
+    assert.match(preview, /run: pnpm --filter @hangul-route\/web test:e2e$/m);
+    assert.equal(JSON.parse(read("apps/web/package.json")).scripts["test:e2e"], "playwright test", "no spec filter");
+    assert.ok(existsSync(join(ROOT, "apps/web/e2e/axe-site.spec.ts")));
+    // The step runs after the default export is built and the browsers are installed, with no E2E_OUT or axe variable.
+    const at = preview.indexOf("pnpm --filter @hangul-route/web test:e2e");
+    assert.ok(preview.indexOf("pnpm --filter @hangul-route/web build") < at);
+    assert.ok(preview.indexOf("playwright install --with-deps chromium") < at);
+    const step = preview.slice(preview.lastIndexOf("- name:", at), at + 80);
+    assert.doesNotMatch(step, /E2E_OUT|AXE_CONSOLE_E2E|GROWNUP_E2E|BILLING_E2E/);
+  });
+
+  test("the class page's spec runs in the billing lane only (and locally), never in preview-deploy.yml or the shards", () => {
+    for (const file of ["preview-deploy.yml", "web-app.yml"]) {
+      const text = read(`.github/workflows/${file}`);
+      const hits = text.split("\n").filter((l) => l.includes("AXE_CONSOLE_E2E"));
+      assert.equal(hits.length, file === "web-app.yml" ? 1 : 0, file);
+    }
+  });
+
+  test("apps/web pins @axe-core/playwright exactly, as a devDependency only", () => {
+    const pkg = JSON.parse(read("apps/web/package.json"));
+    assert.equal(pkg.devDependencies["@axe-core/playwright"], "4.14.0");
+    assert.equal(pkg.dependencies?.["@axe-core/playwright"], undefined);
+    assert.equal(JSON.parse(read("apps/mobile/package.json")).devDependencies["@axe-core/playwright"], "4.14.0");
   });
 });

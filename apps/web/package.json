@@ -30,6 +30,7 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@hangul-route/test-utils": "workspace:*",
     "@playwright/test": "1.63.0",
     "@types/node": "^22.10.0",
