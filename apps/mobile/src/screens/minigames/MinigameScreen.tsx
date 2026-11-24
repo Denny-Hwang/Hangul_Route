@@ -162,6 +162,8 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   // The screen's own exits (a game that ends, Back to quest on an empty game) pass the guard: set before each of them.
   const leaving = useRef(false);
   const exitBack = (): void => {
+    // One way out per body: a double tap on Leave, or a game's finish after Leave, goes back once.
+    if (leaving.current) return;
     leaving.current = true;
     exits.back();
   };
@@ -178,7 +180,9 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     ask(true);
     return true;
   };
-  const backScope = useBackGuardScope(gameBack, guarding && answered);
+  // Where the screen does not guard (the All lessons preview, a story-read step) it names no state, so the owner leaves the
+  // gesture alone; a guard a game adds (Story Check's recap) still answers through the owner.
+  const backScope = useBackGuardScope(gameBack, guarding ? answered : undefined);
   const leaveCopy = useMessages().learner.quest.leave;
 
   // [QB] AMENDMENTS-QUEST-SOUND-BACK QB-3: `minigame.finished` goes out once per step per run. A game played again on a

@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMessages } from '@hangul-route/i18n';
 import { useQuestRunStore } from '../../../store/quest-run-store';
 import { fakeNavigation } from '../../../test-support/fake-navigation';
-import { byTestId, press, render, resetPlatform, setPlatform, unmount } from '../../../test-support/render';
+import { buttonsNamed, byTestId, press, render, resetPlatform, setPlatform, unmount } from '../../../test-support/render';
 import type { MinigameHost } from '../host';
 import { MinigameScreen } from '../MinigameScreen';
 
@@ -47,7 +47,10 @@ vi.mock('../../lesson-content', () => ({
 }));
 vi.mock('../../story-content', () => ({ useStoryQuestState: () => 'ready' }));
 vi.mock('../../../content', () => ({
-  questById: (id: string) => ({ id, steps: [{ id: 's0', kind: 'minigame', minigameRef: `mg-${id}` }] }),
+  questById: (id: string) =>
+    id === 'missing'
+      ? undefined
+      : { id, steps: [0, 1].map((n) => ({ id: `s${n}`, kind: 'minigame', minigameRef: `mg-${id}` })) },
 }));
 vi.mock('../../../logic/minigame-config', () => ({
   scopeFor: (ref: string) => ({ ref, kind: ref.slice('mg-'.length), rounds: [] }),
@@ -129,35 +132,53 @@ vi.mock('../StoryCheckGame', async () => {
 const copy = getMessages('en').learner;
 const sheetId = 'minigame-leave';
 
-function route(kind: string): { key: string; name: 'Minigame'; params: { questId: string; episodeId: string; stepIndex: number } } {
-  return { key: `Minigame-${kind}`, name: 'Minigame', params: { questId: kind, episodeId: 'e', stepIndex: 0 } };
+function route(kind: string, stepIndex = 0): { key: string; name: 'Minigame'; params: { questId: string; episodeId: string; stepIndex: number } } {
+  return { key: `Minigame-${kind}`, name: 'Minigame', params: { questId: kind, episodeId: 'e', stepIndex } };
 }
 
 interface Setup {
   r: ReactTestRenderer;
   nav: ReturnType<typeof fakeNavigation>;
   goBack: ReturnType<typeof vi.fn>;
-  redraw: () => Promise<void>;
+  /** Draws the screen again, on another step of the quest when `stepIndex` is given (the quest player's Next). */
+  redraw: (stepIndex?: number) => Promise<void>;
 }
 
 const mounted: ReactTestRenderer[] = [];
 
+/**
+ * The screen as a route draws it. `guest` is the guest stack's shape (`GuestMinigameRoute`, `navigation/guest-chunk.tsx`): a
+ * wrapped navigation with a `goBack` and no `push`, and no Culture notes exit; `inPreview` is the All lessons host (exits, no
+ * navigation). The route's own navigation (the `beforeRemove` listeners) is the context, as on both stacks.
+ */
 async function open(kind: string, props: { inPreview?: boolean; guest?: boolean } = {}): Promise<Setup> {
   useQuestRunStore.getState().beginQuest(kind, 'e', 0);
   const nav = fakeNavigation();
   const goBack = vi.fn();
+  let step = 0;
   const tree = (): ReactElement => (
     <NavigationContext.Provider value={nav as never}>
       {props.inPreview ? (
-        <MinigameScreen route={route(kind)} inPreview onBack={goBack} />
+        <MinigameScreen route={route(kind, step)} inPreview onBack={goBack} />
+      ) : props.guest ? (
+        <MinigameScreen route={route(kind, step)} navigation={{ goBack: () => goBack(), push: () => undefined }} onOpenCultureNote={null} />
       ) : (
-        <MinigameScreen route={route(kind)} navigation={{ goBack, push: vi.fn() }} />
+        <MinigameScreen route={route(kind, step)} navigation={{ goBack, push: vi.fn() }} />
       )}
     </NavigationContext.Provider>
   );
   const r = await render(tree());
   mounted.push(r);
-  return { r, nav, goBack, redraw: () => act(async () => r.update(tree())) };
+  return {
+    r,
+    nav,
+    goBack,
+    redraw: (stepIndex) =>
+      act(async () => {
+        if (stepIndex !== undefined) step = stepIndex;
+        r.update(tree());
+      }),
+  };
 }
 
 const tap = async (r: ReactTestRenderer, id: string): Promise<void> => {
@@ -259,11 +280,62 @@ describe('a game with an answer asks before it is left (tests 4 and 5)', () => {
     expect(stopSound).toHaveBeenCalledTimes(1);
   });
 
-  it('the guest stack asks too: its route passes a navigation of its own, the route context holds the listener', async () => {
-    const { nav, r } = await open('listen-pick', { guest: true });
+  it('the guest stack asks too, in the shape its route draws the screen in (a wrapped navigation, no Culture notes exit)', async () => {
+    const { nav, r, goBack } = await open('listen-pick', { guest: true });
     await tap(r, 'game-right');
     expect(await back(nav, 'GO_BACK')).toBe(true);
     expect(asking(r)).toBe(true);
+    await answerSheet(r, 'onConfirm');
+    expect(goBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('a double tap on Leave goes back once', async () => {
+    const { nav, r, goBack } = await open('listen-pick');
+    await tap(r, 'game-right');
+    await back(nav, 'GO_BACK');
+    await answerSheet(r, 'onConfirm');
+    await answerSheet(r, 'onConfirm');
+    expect(goBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('Back to quest on the not-found page leaves with no sheet, with answers given', async () => {
+    const { nav, r, goBack } = await open('missing');
+    useQuestRunStore.getState().answerRound('r1', true);
+    expect(useQuestRunStore.getState().answersGiven).toBe(1);
+    // No game was drawn, so there is nothing to keep playing: the page's own Back to quest passes the guard.
+    expect(r.root.findAllByType(ConfirmSheet)[0]).toBeDefined();
+    await press(buttonsNamed(r.root, copy.minigame.backToQuest.cta)[0]!);
+    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(asking(r)).toBe(false);
+    expect(await back(nav, 'GO_BACK')).toBe(false);
+  });
+});
+
+describe('the route\'s guard across steps and hosts', () => {
+  it('a step change remounts the body: still one listener, the gesture is written again for the new step', async () => {
+    setPlatform('ios');
+    const { nav, r, redraw } = await open('listen-pick');
+    await tap(r, 'game-right');
+    expect(nav.setOptions).toHaveBeenLastCalledWith({ gestureEnabled: false });
+    await back(nav, 'GO_BACK');
+    expect(asking(r)).toBe(true);
+    // The next step: its body counts answers from now, so it has none yet; the open sheet does not follow the step.
+    await redraw(1);
+    expect(nav.listenerCount()).toBe(1);
+    expect(nav.setOptions).toHaveBeenLastCalledWith({ gestureEnabled: true });
+    expect(asking(r)).toBe(false);
+    expect(await back(nav, 'GO_BACK')).toBe(false);
+    await tap(r, 'game-right');
+    expect(nav.setOptions).toHaveBeenLastCalledWith({ gestureEnabled: false });
+    expect(await back(nav, 'GO_BACK')).toBe(true);
+    expect(nav.listenerCount()).toBe(1);
+  });
+
+  it('the All lessons preview never writes the gesture, answers or not', async () => {
+    setPlatform('ios');
+    const { nav, r } = await open('listen-pick', { inPreview: true });
+    await tap(r, 'game-right');
+    expect(nav.setOptions).not.toHaveBeenCalled();
   });
 });
 

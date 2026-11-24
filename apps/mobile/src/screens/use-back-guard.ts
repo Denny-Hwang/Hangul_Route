@@ -63,13 +63,17 @@ export const BackGuardScopeContext = createContext<BackGuardScope | null>(null);
 /**
  * The owner of a route's guards: one listener, one writer of the gesture. A back asks the nested guards first (the latest
  * registered first) and the owner's own `onBack` only when none took it; the swipe is off when the owner or any nested
- * guard holds. Provide the returned scope with `BackGuardScopeContext.Provider` around the guards that may nest.
+ * guard holds. An owner and nested guards that name no state leave the gesture alone, as `useBackGuard` does. Provide the returned scope with `BackGuardScopeContext.Provider` around the guards that may nest.
  */
-export function useBackGuardScope(onBack: () => boolean, holds: boolean): BackGuardScope {
+export function useBackGuardScope(onBack: () => boolean, holds?: boolean): BackGuardScope {
   const navigation = useContext(NavigationContext) as BackGuardNavigation | undefined;
   const nested = useRef<NestedGuard[]>([]);
-  const [nestedHolds, setNestedHolds] = useState(false);
-  const refresh = useCallback((): void => setNestedHolds(nested.current.some((guard) => guard.holds === true)), []);
+  // undefined: no nested guard names a state, so it adds nothing to what the gesture is told.
+  const [nestedHolds, setNestedHolds] = useState<boolean | undefined>(undefined);
+  const refresh = useCallback((): void => {
+    const named = nested.current.some((guard) => guard.holds !== undefined);
+    setNestedHolds(named ? nested.current.some((guard) => guard.holds === true) : undefined);
+  }, []);
   const scope = useMemo<BackGuardScope>(
     () => ({
       register: (guard) => {
@@ -92,7 +96,7 @@ export function useBackGuardScope(onBack: () => boolean, holds: boolean): BackGu
       }
       return onBack();
     },
-    holds || nestedHolds,
+    holds === undefined && nestedHolds === undefined ? undefined : holds === true || nestedHolds === true,
   );
   return scope;
 }

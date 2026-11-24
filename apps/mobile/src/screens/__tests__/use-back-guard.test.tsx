@@ -70,7 +70,7 @@ describe('useBackGuard', () => {
  * `beforeRemove` listener and writes `gestureEnabled` once; a `useRouteBackGuard` inside the scope registers with it,
  * so the order two guards mounted in never decides which one answers.
  */
-function ScopeOwner({ onBack, holds, children }: { onBack: () => boolean; holds: boolean; children?: ReactNode }): ReactElement {
+function ScopeOwner({ onBack, holds, children }: { onBack: () => boolean; holds?: boolean; children?: ReactNode }): ReactElement {
   const scope = useBackGuardScope(onBack, holds);
   return <BackGuardScopeContext.Provider value={scope}>{children}</BackGuardScopeContext.Provider>;
 }
@@ -189,6 +189,47 @@ describe('a back guard scope', () => {
     expect(navigation.setOptions).toHaveBeenLastCalledWith({ gestureEnabled: true });
     // One writer: the value never disagrees with "own or nested holds" at the end of a render (two writers overwrite each other).
     expect(navigation.setOptions.mock.calls.every(([options]) => Object.keys(options).join() === 'gestureEnabled')).toBe(true);
+    await unmount(r);
+  });
+
+  it('two nested guards with different holds: the gesture is off while either holds, and each change is one write', async () => {
+    setPlatform('ios');
+    const navigation = fakeNavigation();
+    const written = (): boolean[] => navigation.setOptions.mock.calls.map(([options]) => (options as { gestureEnabled: boolean }).gestureEnabled);
+    const drawn = (a: boolean, b: boolean): ReactElement =>
+      onRoute(
+        navigation,
+        <ScopeOwner onBack={() => false} holds={false}>
+          <Nested onBack={() => a} holds={a} />
+          <Nested onBack={() => b} holds={b} />
+        </ScopeOwner>,
+      );
+    const r = await render(drawn(false, false));
+    expect(written()).toEqual([true]);
+    await act(async () => r.update(drawn(true, false)));
+    expect(written()).toEqual([true, false]);
+    // The other guard takes over the hold: still off, and no write for a value that did not change.
+    await act(async () => r.update(drawn(false, true)));
+    expect(written()).toEqual([true, false]);
+    await act(async () => r.update(drawn(true, true)));
+    expect(written()).toEqual([true, false]);
+    await act(async () => r.update(drawn(false, false)));
+    expect(written()).toEqual([true, false, true]);
+    await unmount(r);
+  });
+
+  it('an owner that names no state and nested guards that name none leave the gesture alone', async () => {
+    setPlatform('ios');
+    const navigation = fakeNavigation();
+    const r = await render(
+      onRoute(
+        navigation,
+        <ScopeOwner onBack={() => false}>
+          <Nested onBack={() => false} />
+        </ScopeOwner>,
+      ),
+    );
+    expect(navigation.setOptions).not.toHaveBeenCalled();
     await unmount(r);
   });
 
