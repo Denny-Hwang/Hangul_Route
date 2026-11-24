@@ -1,0 +1,105 @@
+/*
+ * AMENDMENTS-QUEST-LEAVE-RESUME row LR-0b: design mock of the Home hero's resume variant and its sheet, the check's
+ * reading frame, resume page and stop sheet, the save-failed page and its stop sheet, and the save-later line on a
+ * check result. Design mock, not shipped code.
+ *
+ * Loaded after ../../app-shell/mock/app-shell.css (whose first :root block holds the token custom properties),
+ * ../../app-shell/mock/display-nav.css (text size, ScreenHeader, the sheets) and ../../learner-shell/mock/learner-shell.css
+ * (the Home screen). The first block copies, once, the tokens of packages/design-system/src/tokens.ts those sheets do
+ * not carry, named after them. The second block names the numbers that are not tokens; ../README.md "Constants" says
+ * what each derives from. Nothing here redefines a token, and no rule uses colors.feedback.danger.
+ */
+:root {
+  --radii-xl: 24px;                   /* radii.xl */
+}
+:root {
+  --hoya-face: 56px;                  /* the Home header's Hoya (learner-shell home-hero.html, unchanged) */
+  --hoya-check: 120px;                /* StageReviewScreen.tsx intro Hoya size (unchanged) */
+  --hoya-failed: 140px;               /* OopsScreen.tsx Hoya size, as the read-failed screen (unchanged) */
+  --frame-phone: 390px;               /* design board only, not UI: a phone frame on the boards */
+  --frame-tablet-h: 640px;            /* design board only, not UI: a tablet frame's drawn height */
+}
+
+/* ---------------------------------------------------------------- A frame page fills the window */
+.qlr-frame { min-height: 100vh; }
+.qlr-frame > .app-screen, .qlr-frame > .qlr-behind > .app-screen { min-height: 100vh; }
+.qlr-behind { min-height: 100%; }
+.qlr-close { padding: var(--spacing-none); justify-content: center; }
+
+/* ---------------------------------------------------------------- Home: the hero (as built, HomeScreen.tsx :300-339) */
+.qlr-hoya-face { width: var(--hoya-face); height: var(--hoya-face); }
+.qlr-hero { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-md); }
+.qlr-eyebrow { font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); }
+.qlr-hero-title { overflow-wrap: anywhere; }
+.qlr-caption-secondary { font-size: var(--size-caption); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.qlr-hero .rn-hero { margin-top: var(--spacing-md); overflow-wrap: anywhere; }
+/* The resume caption: under the button (so the button never moves when the read lands), Caption secondary. */
+.qlr-resume-line { margin-top: var(--spacing-sm); font-size: var(--size-caption); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+/* LinkButton (components/LinkButton.tsx): touchTarget.min high, Body semibold brand, start-aligned. */
+.qlr-quiet { align-self: flex-start; gap: var(--spacing-sm); padding: var(--spacing-none) var(--spacing-md); margin-left: calc(-1 * var(--spacing-md)); border: none; background: transparent; cursor: pointer; text-decoration: none; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+
+/* ---------------------------------------------------------------- The checks: reading, resume, intro, pause */
+.qlr-check { gap: var(--spacing-lg); }
+.qlr-check-top { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--spacing-sm); padding-top: var(--spacing-lg); }
+.qlr-check-top .rn-display, .qlr-check-top .rn-heading { overflow-wrap: anywhere; }
+.qlr-hoya-check { width: var(--hoya-check); height: var(--hoya-check); flex: none; }
+.qlr-resume-title { margin-top: var(--spacing-md); }
+.qlr-center { text-align: center; color: var(--colors-text-primary); overflow-wrap: anywhere; }
+.qlr-actions { display: flex; flex-direction: column; gap: var(--spacing-md); margin-top: var(--spacing-xl); }
+.qlr-actions .rn-btn { width: 100%; overflow-wrap: anywhere; }
+.qlr-lg { min-height: var(--touch-child); font-size: var(--size-bodyLg); }
+/* AttemptSwitch (StageReviewScreen.tsx :346): one row, the label and a switch, touchTarget.min. */
+.qlr-switch-row { display: flex; align-items: center; gap: var(--spacing-md); min-height: var(--touch-min); }
+.qlr-switch-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.qlr-switch { flex: none; display: inline-flex; align-items: center; width: var(--spacing-jumbo); height: var(--spacing-xxl); padding: var(--spacing-xs); border-radius: var(--radii-pill); background: var(--colors-surface-sunken); border: var(--border-width-base) solid var(--colors-border-shape); }
+.qlr-switch span { width: var(--spacing-xl); height: var(--spacing-xl); border-radius: var(--radii-circle); background: var(--colors-surface-paper); border: var(--border-width-base) solid var(--colors-border-shape); }
+
+/* ---------------------------------------------------------------- The failed page: OopsScreen's layout */
+/* The body scrolls and the footer is pinned (Screen footer), so Try again stays in view at 320 x 568 and 200 % text. */
+.qlr-failed { height: 100vh; min-height: 0; }
+.qlr-failed-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; padding: var(--spacing-none) var(--spacing-lg); }
+.qlr-failed-inner { margin: auto 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.qlr-hoya-failed { width: var(--hoya-failed); height: var(--hoya-failed); flex: none; }
+.qlr-failed-title { margin-top: var(--spacing-lg); overflow-wrap: anywhere; }
+.qlr-secondary { margin-top: var(--spacing-sm); color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.qlr-stuck { margin-top: var(--spacing-lg); }
+.qlr-stuck:empty { margin-top: var(--spacing-none); } /* the live region stays mounted, empty until the third try */
+.qlr-foot { flex: none; display: flex; flex-direction: column; padding-top: var(--spacing-lg); }
+.qlr-foot .rn-btn { overflow-wrap: anywhere; }
+/* Busy: Button softDisabled (drawn as disabled, stays focusable, a press does nothing). No spinner, no new words. */
+.rn-btn[aria-disabled="true"] { background: var(--colors-surface-sunken); border-color: transparent; color: var(--colors-text-muted); opacity: var(--disabled-opacity); cursor: default; }
+
+/* ---------------------------------------------------------------- A check result with the save-later line */
+.qlr-result-top { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--spacing-sm); }
+.qlr-stars { display: flex; gap: var(--spacing-xs); }
+.qlr-stars svg { width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
+.qlr-save-line { color: var(--colors-text-secondary); font-size: var(--size-body); overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------- The sheets (ConfirmSheet) */
+.sheet .confirm-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.sheet .confirm-actions .btn { width: 100%; min-height: var(--touch-min); overflow-wrap: anywhere; }
+.sheet h2, .sheet .msg { overflow-wrap: anywhere; }
+@media (min-width: 600px) { /* layout.breakpoint.regular: a centred dialog with a cancel-first row */
+  .sheet .confirm-actions { flex-direction: row; flex-wrap: wrap; }
+  .sheet .confirm-actions .btn { flex: 1 1 12rem; width: auto; }
+}
+.focus-ring { outline: var(--border-width-thick) solid var(--colors-border-focus); outline-offset: var(--spacing-xxs); }
+
+/* ---------------------------------------------------------------- Frames on the boards */
+.phone { width: 100%; max-width: var(--frame-phone); }
+.frame-host { position: relative; }
+.frame-host .app-screen { min-height: var(--frame-tablet-h); }
+.frame-host .qlr-failed { height: var(--frame-tablet-h); }
+/* A drawn sheet over a board frame: the backdrop is part of the frame, not fixed to the page. */
+.frame-host .sheet-backdrop { position: absolute; }
+.frame-host .sheet-backdrop.dialog { align-items: center; padding: var(--spacing-xl); }
+.frame-host .dialog .sheet { max-width: var(--sheet-max); border-radius: var(--radii-lg); }
+.frame-host .dialog .confirm-actions { flex-direction: row; flex-wrap: wrap; }
+.frame-host .dialog .confirm-actions .btn { flex: 1 1 12rem; width: auto; }
+/* Below 600 px of window the board's phone frames hold bottom sheets even on a wide board. */
+.board .phone .sheet { border-radius: var(--radii-lg) var(--radii-lg) var(--spacing-none) var(--spacing-none); }
+.board .phone .sheet-backdrop { align-items: flex-end; padding: var(--spacing-none); }
+.board .phone .sheet .confirm-actions { flex-direction: column; }
+.board .phone .sheet .confirm-actions .btn { width: 100%; flex: none; }
+.qlr-pair { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--frame-phone)), 1fr)); gap: var(--spacing-xl); }
+.unchanged { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-sm); padding: var(--spacing-xs) var(--spacing-sm); overflow-wrap: anywhere; }
