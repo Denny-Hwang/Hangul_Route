@@ -28,8 +28,10 @@
  * `strokes` is unchanged. Where the table accepts another form (ㅈ in 3
  * strokes; ㅊ and ㅎ with the top stroke left to right; ㅌ with the ㄴ shape
  * from the middle bar), the jamo lists it in `altStrokes`; the order and
- * direction checks accept any listed form. The same test parses the table,
- * so the data and the table cannot drift. Whether a letter's order is taught
+ * direction checks accept any listed form (and since OD-SO12 so does the
+ * pass). The same test parses the table, so stroke counts, order and leg
+ * directions cannot drift from it (coordinates are not in the table, and
+ * ㅌ's A and B share codes). Whether a letter's order is taught
  * at all is `reviewedStrokeIds` (below), a person's call (SO-3).
  */
 

@@ -19,8 +19,10 @@ import {
  *
  * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2: the table below is tied to the sourced, approved
  * rows of `docs/specs/assets/stroke-order-table.md` (parsed here, OD-SO11), and so is every
- * accepted other form the data holds (`altStrokes`), so the data, this test and the table
- * cannot drift. The table file also holds the review records `reviewedStrokeIds` needs (§6 test 10).
+ * accepted other form the data holds (`altStrokes`): stroke counts, order and each stroke's leg
+ * directions cannot drift from the table. What the codes do not pin: coordinates (the table gives
+ * none), and forms with the same codes (ㅌ A and B differ only in where stroke 3 starts; the shape
+ * tests below pin that). The table file also holds the review records `reviewedStrokeIds` needs (§6 test 10).
  *
  * A stroke is written as its legs: `right`, `down`, `downLeft`, `downRight`, joined with `>` at a
  * corner (`right>down` is the ㄱ shape). `loop` is the closed ring of ㅇ and ㅎ, from the top,
