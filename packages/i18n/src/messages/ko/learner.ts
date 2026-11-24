@@ -550,6 +550,10 @@ export const learner = {
     noRounds: '할 문제가 없어요.',
     progress: { pill: (round: number, total: number) => `${round} / ${total}` },
     skip: { cta: '건너뛰기' },
+    leave: {
+      title: '게임을 계속할까요?',
+      message: '나가면 다음에 게임이 처음부터 다시 시작돼요.',
+    },
     buildLetter: {
       heading: '이 글자를 만들어 봐요',
       slots: '자리:',

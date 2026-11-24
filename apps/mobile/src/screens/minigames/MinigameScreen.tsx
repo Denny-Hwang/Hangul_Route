@@ -1,4 +1,4 @@
-import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
+import { Body, Button, ConfirmSheet, Screen, Spacer } from '@hangul-route/design-system';
 import type { MinigameKind } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -19,6 +19,7 @@ import { track } from '../../platform/telemetry';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { useActiveLearnerId } from '../../store/active-learner';
 import { useCurrFlag, useFrozenCurrFlag } from '../../store/remote-config-store';
+import { BackGuardScopeContext, useBackGuardScope } from '../use-back-guard';
 import { usePracticeSession } from '../use-practice-session';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
@@ -146,6 +147,44 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     navigation ? (noteId: string): void => navigation.push('CultureNotes', { noteId, from: 'quest' }) : undefined,
   );
 
+  // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-1 (section 3.1): a back on a game that has an answer asks first. The learner and
+  // guest stacks only (they pass `navigation`), never the All lessons preview, never a story-read step (its bookmark keeps
+  // the scene). "Has an answer" is `answersGiven` now against what it was when this step's body mounted (one body per step).
+  const guarding = navigation !== undefined && !inPreview && scope?.kind !== 'story-read';
+  const [answersAtOpen] = useState(() => useQuestRunStore.getState().answersGiven);
+  const answered = useQuestRunStore((state) => state.answersGiven) > answersAtOpen;
+  const [asking, setAsking] = useState(false);
+  const askingNow = useRef(false);
+  const ask = useCallback((value: boolean): void => {
+    askingNow.current = value;
+    setAsking(value);
+  }, []);
+  // The screen's own exits (a game that ends, Back to quest on an empty game) pass the guard: set before each of them.
+  const leaving = useRef(false);
+  const exitBack = (): void => {
+    // One way out per body: a double tap on Leave, or a game's finish after Leave, goes back once.
+    if (leaving.current) return;
+    leaving.current = true;
+    exits.back();
+  };
+  const gameBack = (): boolean => {
+    if (!guarding || leaving.current) return false;
+    // A back while the sheet is open is Keep playing: it closes, never a second sheet.
+    if (askingNow.current) {
+      ask(false);
+      return true;
+    }
+    if (useQuestRunStore.getState().answersGiven <= answersAtOpen) return false;
+    // The sheet stops the game's sound as leaving does; Keep playing does not start it again (the speaker plays it).
+    stop();
+    ask(true);
+    return true;
+  };
+  // Where the screen does not guard (the All lessons preview, a story-read step) it names no state, so the owner leaves the
+  // gesture alone; a guard a game adds (Story Check's recap) still answers through the owner.
+  const backScope = useBackGuardScope(gameBack, guarding ? answered : undefined);
+  const leaveCopy = useMessages().learner.quest.leave;
+
   // [QB] AMENDMENTS-QUEST-SOUND-BACK QB-3: `minigame.finished` goes out once per step per run. A game played again on a
   // step shown after Previous sends nothing; a skipped game played after all sends it then, for the first time.
   const finishIsSent = (): boolean => gameFinishIsReported(useQuestRunStore.getState(), questId, stepIndex);
@@ -153,7 +192,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     if (scope && finishIsSent()) {
       void track(minigameFinishedEvent(fellBackTo.current?.kind ?? renderedKind.current ?? scope.kind, questId, stepIndex, activeProfileId));
     }
-    exits.back();
+    exitBack();
   };
   /**
    * A switch played another kind's rounds (Story Order's fallback, row CM-34; a switched-off format's fallback, Listen &
@@ -162,7 +201,7 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
   const closeAs = (played: MinigameKind): void => {
     if (played === scope?.kind) return close();
     if (finishIsSent()) void track(minigameFinishedEvent(played, questId, stepIndex, activeProfileId));
-    exits.back();
+    exitBack();
   };
 
   // Every non-game state keeps a way out (wireframe minigame/shell: no dead ends).
@@ -170,101 +209,123 @@ function MinigameBody({ route, navigation, onOpenCultureNote, inPreview = false,
     <Screen>
       <Body>{message}</Body>
       <Spacer size="lg" />
-      <Button label={copy.backToQuest.cta} tone="secondary" size="md" onPress={exits.back} />
+      <Button label={copy.backToQuest.cta} tone="secondary" size="md" onPress={exitBack} />
     </Screen>
   );
 
-  if (waitsForSwitch || switched?.kind === 'loading') return <LessonWaiting />;
-  if (!quest || !step || !scope) {
-    return fallback(copy.notFound);
-  }
+  // [LR] Every frame the screen draws (a waiting frame, Back to quest, the game) sits in the guard scope with the sheet, so
+  // a guard a game adds later (Story Check's recap) answers through the owner whatever mounted first.
+  const drawn = (): ReactElement => {
+    if (waitsForSwitch || switched?.kind === 'loading') return <LessonWaiting />;
+    if (!quest || !step || !scope) {
+      return fallback(copy.notFound);
+    }
 
-  // The quest host for the games that take one (F-QUEST-002 §3.12): answers go to the run store
-  // (first answer per round scores), `complete` ends the step as the older games do.
-  // `played` is the scope the game plays: the step's own, or a fallback's (rows CM-32 and CM-33), whose rounds name what was asked.
-  const hostFor = (played: typeof scope): MinigameHost => ({
-    mode: step.kind === 'check' ? 'check' : 'quest',
-    // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
-    answer: (roundKey, correct, meta) =>
-      useQuestRunStore
-        .getState()
-        .answerRound(
-          roundKey,
-          correct,
-          inPreview || meta?.itemId === undefined ? undefined : { scope: fellBackTo.current ?? played, itemId: meta.itemId, ...(meta.hinted === true ? { hinted: true } : {}) },
-          // F-CURR-002 section 4.3: Type Hangul's hint (Dictation's Show how it sounds, or a typed answer one letter off,
-          // row CM-31) is a hinted right answer whatever it scored; the other games' hints (Story Order's Show meanings,
-          // row CM-34; Role Play's, row CM-35; Syllable Build's Show how it sounds, row CM-32) are help shown, so a wrong
-          // answer with one is still a plain miss (row CM-3A S6).
-          meta?.hinted === true && (correct || (fellBackTo.current ?? played).kind === 'type-hangul'),
-        ),
-    complete: () => {
-      useQuestRunStore.getState().markStepComplete();
-      closeAs(played.kind);
-    },
-  });
-  const host = hostFor(scope);
+    // The quest host for the games that take one (F-QUEST-002 §3.12): answers go to the run store
+    // (first answer per round scores), `complete` ends the step as the older games do.
+    // `played` is the scope the game plays: the step's own, or a fallback's (rows CM-32 and CM-33), whose rounds name what was asked.
+    const hostFor = (played: typeof scope): MinigameHost => ({
+      mode: step.kind === 'check' ? 'check' : 'quest',
+      // What the round asked goes with the answer, for the memory store (F-CURR-002 row CM-12); a preview records nothing.
+      answer: (roundKey, correct, meta) =>
+        useQuestRunStore
+          .getState()
+          .answerRound(
+            roundKey,
+            correct,
+            inPreview || meta?.itemId === undefined ? undefined : { scope: fellBackTo.current ?? played, itemId: meta.itemId, ...(meta.hinted === true ? { hinted: true } : {}) },
+            // F-CURR-002 section 4.3: Type Hangul's hint (Dictation's Show how it sounds, or a typed answer one letter off,
+            // row CM-31) is a hinted right answer whatever it scored; the other games' hints (Story Order's Show meanings,
+            // row CM-34; Role Play's, row CM-35; Syllable Build's Show how it sounds, row CM-32) are help shown, so a wrong
+            // answer with one is still a plain miss (row CM-3A S6).
+            meta?.hinted === true && (correct || (fellBackTo.current ?? played).kind === 'type-hangul'),
+          ),
+      complete: () => {
+        useQuestRunStore.getState().markStepComplete();
+        closeAs(played.kind);
+      },
+    });
+    const host = hostFor(scope);
 
-  switch (scope.kind) {
-    case 'match-sound':
-      return <MatchSoundGame scope={scope} onFinish={close} />;
-    case 'build-letter':
-      return <BuildLetterGame scope={scope} onFinish={close} />;
-    case 'trace-stroke':
-      return <TraceStrokeGame scope={scope} onFinish={close} />;
-    case 'card-match':
-      return <CardMatchGame scope={scope} onFinish={close} />;
-    case 'story-sequence':
-      return <StorySequenceGame scope={scope} onFinish={close} sequenceId={ref} />;
-    case 'voice-echo':
-      if (!flags.voiceEchoEnabled) {
-        return fallback(copy.voiceSoon);
-      }
-      return <VoiceEchoGame scope={scope} onFinish={close} />;
-    case 'odd-one-out':
-      return <OddOneOutGame scope={scope} onFinish={close} />;
-    case 'culture-quiz':
-      return <CultureQuizGame scope={scope} onFinish={close} />;
-    case 'listen-pick':
-      return <ListenPickGame key={kit === null ? 'plain' : 'kit'} scope={scope} host={host} onBack={exits.back} spelling={kit} />;
-    case 'pic-word-match':
-      return <PicWordMatchGame scope={scope} host={host} onBack={exits.back} />;
-    case 'tap-respond':
-      return <TapRespondGame scope={scope} onFinish={close} />;
-    case 'story-read':
-      return <StoryReadGame scope={scope} onFinish={close} onBack={exits.back} onOpenCultureNote={openCultureNote} />;
-    case 'story-check':
-      return <StoryCheckGame scope={scope} onFinish={close} />;
-    case 'order-it':
-      return <SentenceBuilderGame scope={scope} host={host} patternNote={patternNote} onBack={exits.back} />;
-    case 'realia-read':
-      return <RealiaReadGame scope={scope} host={host} onBack={exits.back} />;
-    case 'type-hangul':
-      // Keyed on the chunk, so the game never changes its hooks while mounted (the chunk is fixed for its life).
-      return <TypeHangulGame key={kit === null ? 'plain' : 'kit'} scope={scope} host={host} onBack={exits.back} hear={kit} />;
-    case 'trace-word':
-      return <TraceWordGame scope={scope} host={host} onBack={exits.back} />;
-    case 'write-frame':
-      return <WriteFrameGame scope={scope} host={host} onBack={exits.back} inPreview={inPreview} />;
-    // F-CURR-002 row CM-30: the game behind `game.cloze-pick`, else its Listen & Pick fallback.
-    case 'cloze-pick':
-      return <ClozePickStep scope={scope} host={host} onBack={exits.back} onRendered={(kind) => (renderedKind.current = kind)} />;
-    // F-CURR-002 row CM-34: behind `game.story-order`; off, its rounds play as Story Sequence (text cards).
-    case 'story-order':
-      return <StoryOrderStep scope={scope} host={host} sequenceId={ref ?? ''} onFallbackFinish={() => closeAs('story-sequence')} />;
-    case 'role-play':
-      return <RolePlayStep scope={scope} host={host} onBack={exits.back} />;
-    case 'hidden-heritage':
-      return <HiddenHeritageStep scope={scope} host={host} onBack={exits.back} />;
-    // F-CURR-002 row CM-32: from its own chunk; Listen & Pick on the block while `game.syllable-build` is off.
-    case 'syllable-build':
-      return <SyllableBuildStep scope={scope} hostFor={hostFor} onBack={exits.back} />;
-    // F-CURR-002 row CM-33: from its own chunk; Read Pick while `game.match-shape` is off.
-    case 'match-shape':
-      return <MatchShapeStep scope={scope} hostFor={hostFor} onBack={exits.back} />;
-    case 'my-story':
-      return <MyStoryRoute scope={scope} host={host} onBack={exits.back} onFallback={onFallback} />;
-    default:
-      return fallback(copy.comingSoon);
-  }
+    switch (scope.kind) {
+      case 'match-sound':
+        return <MatchSoundGame scope={scope} onFinish={close} />;
+      case 'build-letter':
+        return <BuildLetterGame scope={scope} onFinish={close} />;
+      case 'trace-stroke':
+        return <TraceStrokeGame scope={scope} onFinish={close} />;
+      case 'card-match':
+        return <CardMatchGame scope={scope} onFinish={close} />;
+      case 'story-sequence':
+        return <StorySequenceGame scope={scope} onFinish={close} sequenceId={ref} />;
+      case 'voice-echo':
+        if (!flags.voiceEchoEnabled) {
+          return fallback(copy.voiceSoon);
+        }
+        return <VoiceEchoGame scope={scope} onFinish={close} />;
+      case 'odd-one-out':
+        return <OddOneOutGame scope={scope} onFinish={close} />;
+      case 'culture-quiz':
+        return <CultureQuizGame scope={scope} onFinish={close} />;
+      case 'listen-pick':
+        return <ListenPickGame key={kit === null ? 'plain' : 'kit'} scope={scope} host={host} onBack={exitBack} spelling={kit} />;
+      case 'pic-word-match':
+        return <PicWordMatchGame scope={scope} host={host} onBack={exitBack} />;
+      case 'tap-respond':
+        return <TapRespondGame scope={scope} onFinish={close} />;
+      case 'story-read':
+        return <StoryReadGame scope={scope} onFinish={close} onBack={exitBack} onOpenCultureNote={openCultureNote} />;
+      case 'story-check':
+        return <StoryCheckGame scope={scope} onFinish={close} />;
+      case 'order-it':
+        return <SentenceBuilderGame scope={scope} host={host} patternNote={patternNote} onBack={exitBack} />;
+      case 'realia-read':
+        return <RealiaReadGame scope={scope} host={host} onBack={exitBack} />;
+      case 'type-hangul':
+        // Keyed on the chunk, so the game never changes its hooks while mounted (the chunk is fixed for its life).
+        return <TypeHangulGame key={kit === null ? 'plain' : 'kit'} scope={scope} host={host} onBack={exitBack} hear={kit} />;
+      case 'trace-word':
+        return <TraceWordGame scope={scope} host={host} onBack={exitBack} />;
+      case 'write-frame':
+        return <WriteFrameGame scope={scope} host={host} onBack={exitBack} inPreview={inPreview} />;
+      // F-CURR-002 row CM-30: the game behind `game.cloze-pick`, else its Listen & Pick fallback.
+      case 'cloze-pick':
+        return <ClozePickStep scope={scope} host={host} onBack={exitBack} onRendered={(kind) => (renderedKind.current = kind)} />;
+      // F-CURR-002 row CM-34: behind `game.story-order`; off, its rounds play as Story Sequence (text cards).
+      case 'story-order':
+        return <StoryOrderStep scope={scope} host={host} sequenceId={ref ?? ''} onFallbackFinish={() => closeAs('story-sequence')} />;
+      case 'role-play':
+        return <RolePlayStep scope={scope} host={host} onBack={exitBack} />;
+      case 'hidden-heritage':
+        return <HiddenHeritageStep scope={scope} host={host} onBack={exitBack} />;
+      // F-CURR-002 row CM-32: from its own chunk; Listen & Pick on the block while `game.syllable-build` is off.
+      case 'syllable-build':
+        return <SyllableBuildStep scope={scope} hostFor={hostFor} onBack={exitBack} />;
+      // F-CURR-002 row CM-33: from its own chunk; Read Pick while `game.match-shape` is off.
+      case 'match-shape':
+        return <MatchShapeStep scope={scope} hostFor={hostFor} onBack={exitBack} />;
+      case 'my-story':
+        return <MyStoryRoute scope={scope} host={host} onBack={exitBack} onFallback={onFallback} />;
+      default:
+        return fallback(copy.comingSoon);
+    }
+  };
+
+  return (
+    <BackGuardScopeContext.Provider value={backScope}>
+      {drawn()}
+      {guarding ? (
+        <ConfirmSheet
+          visible={asking}
+          title={copy.leave.title}
+          message={copy.leave.message}
+          cancelLabel={leaveCopy.keep.cta}
+          confirmLabel={leaveCopy.confirm.cta}
+          onCancel={() => ask(false)}
+          onConfirm={exitBack}
+          testID="minigame-leave"
+        />
+      ) : null}
+    </BackGuardScopeContext.Provider>
+  );
 }
