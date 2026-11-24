@@ -503,12 +503,54 @@ Next release.
 | Row | Model | Contents | Tests | Depends on | Branch |
 |---|---|---|---|---|---|
 | AC-0 | Opus 5.5 | This spec; multi-agent review; `ready` 2026-11-24 with §10 decided | doc checks | — | `docs/a11y-ci-spec` |
-| AC-3 | Sonnet 5.5 | §3.2 configs and scripts, OD-AC1/OD-AC2 devDependencies, the peer exception; §3.3 with OD-AC5's method, each hit classified, the ceiling maps; OD-AC7's rule if taken, with its `exports` entry; local probes recorded. If 9.39.5 fails the per-rule tests, AC-3 may switch to 10.15.0 and records why. Any later change of major goes back to the owner | §6 AC-3 1–6 | AC-0 `ready`; OD-AC1, 2, 5, 6, 7 | `ci/a11y-lint` |
+| AC-3 **built 2026-11-24** (As built below) | Sonnet 5.5 | §3.2 configs and scripts, OD-AC1/OD-AC2 devDependencies, the peer exception; §3.3 with OD-AC5's method, each hit classified, the ceiling maps; OD-AC7's rule if taken, with its `exports` entry; local probes recorded. If 9.39.5 fails the per-rule tests, AC-3 may switch to 10.15.0 and records why. Any later change of major goes back to the owner | §6 AC-3 1–6 | AC-0 `ready`; OD-AC1, 2, 5, 6, 7 | `ci/a11y-lint` |
 | AC-1 | Sonnet 5.5 | §3.4 PWA screens, `axe-audit.ts`, `axe-baseline.json` measured on a release build of `main` with `expectedFix`, devDependency; under (a) also the §3.1 PR steps, the shard listing and their test pins | §6 AC-1 1–4 | AC-0 `ready`; OD-AC3, 4, 9; merges after AC-3 (same `package.json` and lockfile) | `ci/a11y-axe-pwa` |
 | AC-2 | Sonnet 5.5 | §3.4 web screens, `axe-audit.ts`, `axe-baseline.json`, devDependency; under OD-AC8 = lane, the "Console axe (merged dist)" step in the billing lane | §6 AC-2 1–5 | AC-0 `ready`; OD-AC3, 8, 9; merges after AC-3 and AC-1 (same lockfile) | `ci/a11y-axe-web` |
 | AC-4 | Sonnet 5.5 | "Amended YYYY-MM-DD by AMENDMENTS-A11Y-CI" in F-COV-001; the `docs/specs/README.md` index line; status `in-progress (AC-3b, AC-3c open)`; a proposed CLAUDE.md §4/§8 line for the owner's approval: "lint is real (accessibility rules); `eslint-disable` does nothing; never raise an ESLint suppression or an axe baseline line" | — | AC-1, AC-2, AC-3 | `docs/a11y-ci-amended` |
 | AC-3b | Sonnet 5.5 | apps/mobile and design-system: fix the remaining hits (today 4: the two descriptors hits, `apps/mobile/src/screens/minigames/role-play/RolePlayGame.tsx:377`, `apps/mobile/src/screens/account/AccountCover.tsx:25`, plus any in the entry roots). No disables; a new label means en, es and ko strings. Then delete the suppressions file (B) or flip `warn` to `error` (A) | AC-3's tests; `pnpm exec turbo run lint` | AC-3; the owner starts it | `fix/a11y-lint-mobile` |
 | AC-3c | Sonnet 5.5 | apps/web: the same for its 29 hits; the last of AC-3b and AC-3c sets the status `shipped` | same | AC-3; the owner starts it | `fix/a11y-lint-web` |
+
+**AC-3 as built (2026-11-24, branch `ci/a11y-lint`).**
+
+- **Versions.** `eslint@9.39.5`, `@typescript-eslint/parser@8.74.0` in the three workspaces; `eslint-plugin-jsx-a11y@6.10.2` in apps/web; `eslint-plugin-react-native-a11y@3.5.1` in apps/mobile and design-system. The fallback to 10.15.0 was not needed: every per-rule test passes on 9.39.5. Peer exception `eslint-plugin-react-native-a11y>eslint: "9"` in `pnpm-workspace.yaml`; `pnpm install --frozen-lockfile` prints 0 warnings.
+- **Rules enabled.** apps/mobile and design-system: 13 plugin rules plus `hangul-route/touchable-has-name` (the plugin has 14 rules; `has-accessibility-hint` is off, so §6's "14 rules" is 13 enabled plus the local rule). apps/web: 32 jsx-a11y rules (the 31 at `error` plus `control-has-associated-label`).
+- **Files.** `apps/mobile/eslint.config.mjs`, `apps/web/eslint.config.mjs`, `packages/design-system/eslint.config.mjs`; the rule `packages/design-system/eslint/touchable-has-name.mjs` (+ `.d.mts`, `exports` entry, CLAUDE.md §2 line dated 2026-11-24). Suppressions files: `apps/mobile/eslint-suppressions.json` (4), `apps/web/eslint-suppressions.json` (3); design-system has none.
+- **Tests.** `apps/mobile/src/config/__tests__/eslint-a11y-config.test.ts`, `packages/design-system/src/__tests__/eslint-a11y-config.test.ts`, `apps/web/src/app/__tests__/eslint-a11y-config.test.ts` (one invalid snippet per enabled rule, ceiling maps, disable comments inert, file-scoped `off`s pinned by name), `packages/design-system/src/__tests__/touchable-has-name.test.ts` (RuleTester), and "lint is a real gate" in `scripts/__tests__/ci-workflows.test.mjs`.
+- **Cost.** `eslint` alone: mobile 6.7 s (418 files), web 4.2 s (159 files), design-system 1.6 s (47 files), local, cold.
+- **Probes (§3.7), local.** A bare `<Pressable onPress>` in apps/mobile: `pnpm lint` exits 1 with `react-native-a11y/has-valid-accessibility-descriptors` (and `hangul-route/touchable-has-name`). A nameless `<button>` in apps/web: exits 1 with `jsx-a11y/control-has-associated-label`, and `turbo run lint` fails. The role-only Pressable fails with `hangul-route/touchable-has-name` (in the config test). Probe files removed; `turbo run lint` passes on the branch (10 of 10 tasks).
+
+**Measured hits (without suppressions or false-positive handling), and how each was classified.**
+
+| Workspace | Raw | Real, held in suppressions | False positive, handled in config |
+|---|---|---|---|
+| apps/mobile | 6 | 4 | 2 |
+| apps/web | 28 | 3 | 25 |
+| design-system | 0 | 0 | 0 |
+
+The spec's web count was 29; its own breakdown (18 + 5 + 4 + 1) sums to 28, and 28 is what ran.
+
+*apps/mobile, real (the four of §3.2, AC-3b's list; each is held in `eslint-suppressions.json`):*
+- `src/screens/account/AccountCover.tsx:25`, `has-valid-accessibility-ignores-invert-colors`.
+- `src/screens/minigames/role-play/RolePlayGame.tsx:377`, `no-nested-touchables`.
+- `src/screens/parent/BiometricShortcutCard.tsx:61`, `has-valid-accessibility-descriptors` (a Pressable hidden from assistive tech; the fix is `accessible={false}`).
+- `src/screens/reviews/StageReviewScreen.tsx:406`, `has-valid-accessibility-descriptors` (the `aria-hidden` dimmer; the same fix).
+
+*apps/mobile, false positive (2), by rule option:* `hangul-route/touchable-has-name` at `src/screens/notes/HideConfirmSheet.tsx:30` (`accessible={false}`) and `src/screens/reviews/StageReviewScreen.tsx:406` (`aria-hidden`). Both are dimmed-backdrop Pressables that assistive tech never reaches, so they need no name. The rule gained an option `ignoreHidden` (default off; the configs of apps/mobile and design-system set it to `true`): it skips an element with `accessible={false}`, `aria-hidden`, `accessibilityElementsHidden`, or `importantForAccessibility` of `no` / `no-hide-descendants`. Without it the AC-3b fix named above (`accessible={false}`) would not clear the local rule.
+
+*apps/web, real (3), held in suppressions:* `jsx-a11y/no-redundant-roles` for `<section role="region" aria-labelledby>` at `src/components/console/FamilyNeedsYou.tsx:340`, `GrownUpLock.tsx:659`, `PinResetPage.tsx:160`. Removing the role is the fix (AC-3c).
+
+*apps/web, false positive (25):*
+- **By rule option, 19.**
+  - `no-redundant-roles` option `ul: ['list'], ol: ['list']` (13): `<ul|ol role="list">` with `list-style: none`, which WebKit needs for VoiceOver (documented at `SiteFooter.tsx:63` and `LearningRouteParts.tsx:257`). Files: `HomePage.tsx` (160, 214, 246), `LanguageMenu.tsx:121`, `LearnersPage.tsx` (97, 132), `LicensesPage.tsx` (66, 91), `SiteFooter.tsx:72`, `TeachersPage.tsx:125`, `site-parts.tsx` (90, 107), `LearningRouteParts.tsx:258`.
+  - `no-redundant-roles` option `thead: ['rowgroup'], tbody: ['rowgroup']` (2) and `no-interactive-element-to-noninteractive-role` option `td: ['cell']` (4): the receipts table (`BillingHomeParts.tsx` 498, 515, 521, 525, 528, 531) sets `display: block` on its parts (`.hr-bill-table`), which drops table semantics the same way. The rule's default exception `nav: ['navigation']` is kept, because setting options replaces it.
+- **By file-scoped `off`, 6 (no option fits).**
+  - `no-noninteractive-element-interactions` (5): `AttentionParts.tsx:354`, `ConfirmSheet.tsx:154`, `DisplaySheet.tsx:189`, `StepUpDialog.tsx:184`, `TransferParts.tsx:207`. A modal dialog handles its own Escape and Tab keys on the dialog element (WAI-ARIA dialog pattern). The rule's options are keyed by element type (`div`), not role, so the only option that fits would exempt every `div`. The rule is off for those five files only.
+  - `interactive-supports-focus` (1): `src/app/(console)/teach/space/curriculum/page.tsx:285`, a `radiogroup` that holds the arrow-key handler of its radio chips (roving focus; the chips are the focusable parts). Off for that file only.
+- Every option and `off` carries a reason comment in `eslint.config.mjs` citing §3.3, and is pinned by `apps/web/src/app/__tests__/eslint-a11y-config.test.ts`.
+
+**Judgment calls to confirm (not spelled out in §3.2/§3.3).**
+- `ignoreHidden` on the local rule (above) is an addition to OD-AC7's four conditions. It is a rule option, off by default, as §3.3 allows.
+- The 19 option and 6 `off` entries reduce apps/web's held hits from 28 to 3, so AC-3c is much smaller than "29 hits". If the owner wants those 25 fixed in code instead, the option or `off` is removed and the entries are recorded in the suppressions file by `--suppress-all`, in a follow-up.
 
 **Same files.**
 - AC-1, AC-2 and AC-3 all change `pnpm-lock.yaml`. AC-1 and AC-3 change `apps/mobile/package.json`; AC-2 and AC-3 change `apps/web/package.json`. Merge them one after another, and rebuild the lockfile with `pnpm install`, never by hand.
