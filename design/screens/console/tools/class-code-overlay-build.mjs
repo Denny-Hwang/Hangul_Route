@@ -3,8 +3,11 @@
 // table, so every drawn word is checked in one place. A design tool (not shipped, not run by CI). Edit this file, not
 // the HTML, then run it and the capture tool:
 //
-//   NODE_PATH=<checkout>/apps/web/node_modules node design/screens/console/tools/class-code-overlay-build.mjs
-//   NODE_PATH=<checkout>/apps/web/node_modules node design/screens/console/tools/class-code-overlay-capture.mjs
+//   node design/screens/console/tools/class-code-overlay-build.mjs
+//   node design/screens/console/tools/class-code-overlay-capture.mjs
+//
+// Both need apps/web's install (`pnpm install`; the capture tool also a Playwright Chromium). In a worktree with no
+// install of its own, point NODE_PATH at a checkout's apps/web/node_modules.
 //
 // The QR code is drawn exactly as the console draws it (apps/web/src/lib/console/join-link.ts: qrcode-generator 2.0.4,
 // error correction M, the smallest version, one path of row runs, a 4-module quiet zone), from apps/web's install.
@@ -90,6 +93,10 @@ const S = {
   qrCaption: 'Scan it with the camera of a phone or tablet.', // console.space.joinLink.qr.caption
   howToJoin: 'Tap “Join a class” in Hangul Route and type this code.', // NEW console.space.codeOverlay.howToJoin(caregiver.spaces.join.cta), OD-CO5
   close: 'Close', // common.buttons.close
+  // teacher home class row (OD-CO7, awaiting owner)
+  homeOpen: 'Open →', // console.home.open.cta
+  homeReport: 'Class report', // console.home.classReport
+  homeNotes: 'Notes', // console.home.notes
 };
 
 /** Sample learners: what the class page behind the overlay holds, and what the overlay must never show. */
@@ -182,7 +189,8 @@ function card(l, { open = false, alias = false } = {}) {
   if (l.jamo) bodyLines.push(`<p>Revisit: ${ko(l.jamo)}</p>`);
   if (l.revisitWords.length) bodyLines.push(`<p>Words to revisit: ${wordList(l.revisitWords)}</p>`);
   if (!bodyLines.length) bodyLines.push(`<p>${S.revisitNothing}</p>`);
-  const fold = `<div class="fold"><button class="fold-toggle" type="button" aria-expanded="${open}"${open ? ` aria-controls="fold-${i}"` : ''} aria-describedby="name-${i}">${S.revisitToggle}${chev(open)}</button>${open ? `<div class="fold-body" id="fold-${i}">${bodyLines.join('')}</div>` : ''}</div>`;
+  // The build does not mount a closed body; the mock keeps it `hidden` so its small script can open it.
+  const fold = `<div class="fold"><button class="fold-toggle" type="button" data-body="fold-${i}" aria-expanded="${open}"${open ? ` aria-controls="fold-${i}"` : ''} aria-describedby="name-${i}">${S.revisitToggle}${chev(open)}</button><div class="fold-body" id="fold-${i}"${open ? '' : ' hidden'}>${bodyLines.join('')}</div></div>`;
   const plan = `<p class="line">${l.plan}</p>`;
   const actions = `<div class="card-row" data-testid="card-actions"><a class="btn" href="#">${S.seeReport}</a><a class="btn" href="#" aria-describedby="name-${i}">${S.sendNote}</a></div>`;
   return `<article class="student" data-testid="student-card">${headRow}${lines}${words}${fold}${plan}${actions}</article>`;
@@ -191,7 +199,7 @@ function card(l, { open = false, alias = false } = {}) {
 function classPage({ barKind = 'learners', cards = LEARNERS.map((l) => card(l)), invite = S.invite } = {}) {
   return `<div class="frame" data-co="page">${frameTop()}<main class="frame-main" id="content">
 <a class="page-back text-link" href="#">${S.back}</a>
-<div class="page-head"><h1>${S.space}</h1><span class="secondary">${S.count}</span></div>
+<div class="page-head"><h1 tabindex="-1">${S.space}</h1><span class="secondary">${S.count}</span></div>
 <div class="stack-lg">
 <section class="panel stack" aria-label="${S.week}"><h2 class="section-title">${S.week}</h2><ul class="week-list"><li>${S.practiced}</li><li>${S.weekJamo[0]}${ko(S.weekJamo[1])}</li><li>${S.weekWords[0]}${wordList(S.weekWords[1])}</li></ul></section>
 ${bar(barKind)}
@@ -200,10 +208,9 @@ ${bar(barKind)}
 </div></main></div>`;
 }
 
-function overlay({ howTo = false } = {}) {
+function overlay({ howTo = false, hidden = false } = {}) {
   const { view, d } = qr(LINK);
-  return `<div class="co-overlay" role="dialog" aria-modal="true" aria-labelledby="co-name" aria-describedby="co-caption co-spoken co-expiry" data-testid="class-code-overlay">
-<div class="co-top"><button class="btn" type="button" data-co="close">${S.close}</button></div>
+  return `<div class="co-overlay" role="dialog" aria-modal="true" aria-labelledby="co-name" aria-describedby="co-caption co-spoken co-expiry" data-testid="class-code-overlay"${hidden ? ' hidden' : ''}>
 <div class="co-body">
 <div class="co-text">
 <h2 class="co-name" id="co-name" tabindex="-1">${S.space}</h2>
@@ -215,24 +222,75 @@ ${howTo ? `<p class="co-how">${S.howToJoin}</p>` : ''}
 </div>
 <figure class="co-qr"><svg role="img" aria-label="${S.qrLabel}" viewBox="0 0 ${view} ${view}" shape-rendering="crispEdges" data-testid="class-code-qr" data-link="${LINK}"><rect width="${view}" height="${view}"/><path d="${d}"/></svg><figcaption class="co-qr-caption">${S.qrCaption}</figcaption></figure>
 </div>
+<div class="co-close"><button class="btn" type="button" data-co="close">${S.close}</button></div>
 </div>`;
 }
 
+/**
+ * The class page mock's behaviour, so keyboard and pointer use can be tried (spec sections 3.3 and 3.7): Show the code
+ * closes every open card, opens the overlay, makes the page inert, stops the page scrolling and focuses the class name;
+ * Tab stays on Close; Escape and Close undo it all and focus the opener, or the page heading when it is gone. A card's
+ * What to revisit opens and closes that card only. The build mounts no closed body; the mock uses `hidden`.
+ */
+const SCRIPT = `<script>
+(() => {
+  const root = document.documentElement;
+  const page = document.querySelector('[data-co="page"]');
+  const overlay = document.querySelector('.co-overlay');
+  const heading = overlay.querySelector('.co-name');
+  const close = overlay.querySelector('[data-co="close"]');
+  let opener = null;
+  const setFold = (button, open) => {
+    const body = document.getElementById(button.dataset.body);
+    body.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+    if (open) button.setAttribute('aria-controls', body.id); else button.removeAttribute('aria-controls');
+    button.querySelector('.chev').classList.toggle('open', open);
+  };
+  const folds = () => [...document.querySelectorAll('.fold-toggle')];
+  folds().forEach((b) => b.addEventListener('click', () => setFold(b, b.getAttribute('aria-expanded') !== 'true')));
+  const open = (button) => {
+    opener = button;
+    folds().forEach((b) => setFold(b, false));
+    overlay.hidden = false;
+    page.inert = true;
+    root.classList.add('co-open');
+    heading.focus();
+  };
+  const shut = () => {
+    overlay.hidden = true;
+    page.inert = false;
+    root.classList.remove('co-open');
+    (opener && opener.isConnected ? opener : document.querySelector('.page-head h1')).focus();
+  };
+  document.querySelectorAll('[data-co="open"]').forEach((b) => b.addEventListener('click', () => open(b)));
+  close.addEventListener('click', shut);
+  document.addEventListener('keydown', (event) => {
+    if (overlay.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); shut(); }
+    else if (event.key === 'Tab') { event.preventDefault(); close.focus(); }
+  });
+})();
+</script>`;
+
+/** OD-CO7 (awaiting owner), option (a): Show the code on a teacher home class row (counts only, no learner data). */
+function homeRow() {
+  return `<article class="gx-row"><div class="grow"><p class="gx-name">${S.space}</p><p class="line">${S.count}</p></div><a class="btn btn-small" href="#">${S.homeOpen}</a><div class="row-wrap row-full"><a class="btn btn-small" href="#">${S.homeReport}</a><a class="btn btn-small" href="#">${S.homeNotes}</a><button class="btn btn-small" type="button" aria-haspopup="dialog">${S.showCode}</button></div></article>`;
+}
+
 const pages = {
-  // The overlay open over the class page (the page is in the DOM, inert and covered), as the work order lists it.
+  // The overlay open over the class page (the page is in the DOM, inert and covered), with the how-to-join line of
+  // OD-CO5 (owner decision 2026-11-23).
   'class-code-overlay.html': `${head('Class code overlay, open over the class page (CO-0 mock)', 'co-open')}<div inert>${classPage()}</div>
-${overlay()}
-</body>
-</html>
-`,
-  // The same with the how-to-join line of OD-CO5 (recommended).
-  'class-code-overlay-howto.html': `${head('Class code overlay with the how-to-join line, OD-CO5 (CO-0 mock)', 'co-open')}<div inert>${classPage()}</div>
 ${overlay({ howTo: true })}
 </body>
 </html>
 `,
-  // The class page itself: Show the code in the bar, every card folded (the default).
+  // The class page itself: Show the code in the bar, every card folded (the default); the overlay ready behind
+  // Show the code, with a small script so the keyboard and pointer behaviour can be tried.
   'class-code-overlay-page.html': `${head('Class page with Show the code and the folded cards (CO-0 mock)')}${classPage()}
+${overlay({ howTo: true, hidden: true })}
+${SCRIPT}
 </body>
 </html>
 `,
@@ -248,6 +306,7 @@ ${boardItem('B1 · class with learners', 'Show the code after the everyday butto
 ${boardItem('B2 · empty class', 'Show the code with Plan this week and Plan this term', bar('empty'))}
 ${boardItem('B3 · something waiting', 'Show the code before the waiting entry', bar('waiting'))}
 ${boardItem('B4 · no live code', 'No Show the code; Invite students offers Create a code', `${bar('nocode')}<section class="panel invite after-bar"><h2><button class="invite-toggle" type="button" aria-expanded="false">${S.inviteNone}${chev()}</button></h2></section>`)}
+${boardItem('H1 · teacher home class row (OD-CO7, awaiting owner)', 'Option (a): Show the code from the home, which names no learner', homeRow())}
 </div>
 <div class="board-grid">
 ${boardItem('C1 · folded (default)', 'Every card starts folded', card(LEARNERS[0]))}

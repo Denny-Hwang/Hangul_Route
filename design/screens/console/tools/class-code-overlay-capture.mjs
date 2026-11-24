@@ -3,10 +3,12 @@
 // tool (not shipped, not run by CI). It opens every mock page in Chromium from disk, writes the shots and exits 1 when
 // a check fails, so a mock change that breaks a rule is seen before the shots are committed.
 //
-//   NODE_PATH=<checkout>/apps/web/node_modules node design/screens/console/tools/class-code-overlay-capture.mjs
-//   NODE_PATH=<checkout>/apps/web/node_modules node design/screens/console/tools/class-code-overlay-capture.mjs --no-shots
+//   node design/screens/console/tools/class-code-overlay-capture.mjs              # checks and shots
+//   node design/screens/console/tools/class-code-overlay-capture.mjs --no-shots   # checks only
 //
-// Playwright and jsQR come from apps/web (as design/screens/system/progress-read-failed/tools/capture.mjs).
+// Playwright and jsQR come from apps/web's install (`pnpm install` and a Playwright Chromium), as
+// design/screens/system/progress-read-failed/tools/capture.mjs; in a worktree with no install of its own, point
+// NODE_PATH at a checkout's apps/web/node_modules.
 //
 // Checks (each names the rule it holds):
 //   sideways   no page and no overlay scrolls sideways (F-LAYOUT-001)
@@ -17,10 +19,16 @@
 //   inert      the class page behind the overlay is inert (spec 3.3)
 //   covered    every point of a 12 x 8 grid over the window hits the overlay: nothing of the page shows (spec 3.2)
 //   no-learner the overlay's text and attribute values hold no learner name, initial, jamo or word of the page (spec 3.2)
-//   one-line   the code is on one line, inside its column and the window (spec 3.4)
-//   first      on 16:9 and 4:3 windows the code and the whole QR are in the first screen, with no scrolling (spec 3.4)
-//   qr         the QR is at least 256 px wide and reads back, with jsQR, as the join link (spec 3.5)
-//   folded     on the class page no card's What to revisit body is mounted and no card shows jamo (spec 3.7)
+//   one-line   the code is on one line, inside its column and the window, in Menlo and in the Courier New fallback
+//   first      on landscape windows (16:9 and 4:3 projectors, and both zoomed to 150 % and 200 %) the code and the whole
+//              QR are in the first screen, with no scrolling (spec 3.4)
+//   qr         the QR is at least 256 px wide (or, on a short landscape window, as tall as the window allows) and reads
+//              back, with jsQR, as the join link (spec 3.5)
+//   print      printed (print media), the page holds no learner name, jamo or card line: only the overlay prints (3.3)
+//   keyboard   on the class page mock: Enter on Show the code opens the overlay with focus on the class name and the
+//              page inert; Tab stays on Close; Escape and Close close it and focus Show the code; opening closes every
+//              open card (spec 3.3, 3.7)
+//   folded     on the class page no card's What to revisit body is shown and no card shows jamo (spec 3.7)
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -38,18 +46,25 @@ const SHOOT = !process.argv.includes('--no-shots');
 const BANNED = JSON.parse(readFileSync(join(REPO, 'packages/i18n/src/banned-words.json'), 'utf8'));
 const DANGER = 'rgb(200, 75, 61)'; // colors.feedback.danger #C84B3D, read only to check it is never drawn
 
+// Browser zoom shrinks the window in CSS px: 1024 x 768 at 150 % is 683 x 512, 1280 x 720 at 200 % is 640 x 360.
+// `qrMin`: the height-capped QR of a short landscape window (spec 3.4: 360 - gutters - Close row - gaps - 3 caption lines).
 const OVERLAY = [
-  { w: 1280, h: 720, first: true },
   { w: 1920, h: 1080, first: true },
+  { w: 1280, h: 720, first: true },
   { w: 1024, h: 768, first: true },
+  { w: 683, h: 512, first: true, note: '1024x768 at 150 % zoom' },
+  { w: 640, h: 360, first: true, qrMin: 150, note: '1280x720 at 200 % zoom' },
   { w: 768, h: 1024 },
   { w: 360, h: 740 },
   { w: 320, h: 568, text: 2, end: true },
 ];
+// The fallback a Windows or ChromeOS school PC draws `typography.family.mono` ('Menlo, Courier, monospace') in.
+const COURIER = '.co-code { font-family: "Courier New", Courier, monospace !important; }';
 const RUNS = [
   ...OVERLAY.map((v) => ({ file: 'class-code-overlay.html', ...v, overlay: true, shot: `class-code-overlay-${v.w}x${v.h}${v.text ? '-text200' : ''}` })),
-  { file: 'class-code-overlay-howto.html', w: 1280, h: 720, first: true, overlay: true, shot: 'class-code-overlay-howto-1280x720' },
-  { file: 'class-code-overlay-howto.html', w: 360, h: 740, overlay: true, shot: 'class-code-overlay-howto-360x740' },
+  { file: 'class-code-overlay.html', w: 1280, h: 720, first: true, overlay: true, style: COURIER, shot: 'class-code-overlay-1280x720-courier' },
+  { file: 'class-code-overlay.html', w: 1280, h: 720, print: true, shot: 'class-code-overlay-print' },
+  { file: 'class-code-overlay-page.html', w: 1280, h: 800, keyboard: true },
   { file: 'class-code-overlay-page.html', w: 1280, h: 800, full: true, page: true, shot: 'class-code-overlay-page-1280' },
   { file: 'class-code-overlay-page.html', w: 360, h: 740, full: true, page: true, shot: 'class-code-overlay-page-360' },
   { file: 'class-code-overlay-cards.html', w: 1280, h: 800, full: true, shot: 'class-code-overlay-cards-1280' },
@@ -184,36 +199,92 @@ async function overlayChecks(page, where, run) {
     const read = window.jsQR(data.data, side, side);
     return { width, read: read ? read.data : null, link: svg.dataset.link };
   });
-  if (qr.width < 256) fail('qr', where, `the QR is ${qr.width} px wide`);
+  if (qr.width < (run.qrMin ?? 256)) fail('qr', where, `the QR is ${qr.width} px wide`);
   if (qr.read !== qr.link) fail('qr', where, `the QR reads "${qr.read}", not the join link`);
   return { fontSize: fit.fontSize, qrWidth: qr.width };
 }
 
 async function pageChecks(page, where) {
-  const shown = await page.evaluate(() => ({
-    bodies: document.querySelectorAll('.fold-body').length,
-    jamo: [...document.querySelectorAll('.student [lang="ko"]')].length,
-    toggles: document.querySelectorAll('.student .fold-toggle').length,
-    withSummary: [...document.querySelectorAll('.student')].filter((s) => !s.querySelector('.reason')).length,
-  }));
-  if (shown.bodies || shown.jamo) fail('folded', where, `${shown.bodies} open bodies, ${shown.jamo} Korean runs on the cards`);
+  const shown = await page.evaluate(() => {
+    const seen = (n) => n.checkVisibility();
+    return {
+      bodies: [...document.querySelectorAll('.fold-body')].filter(seen).length,
+      jamo: [...document.querySelectorAll('.student [lang="ko"]')].filter(seen).length,
+      toggles: document.querySelectorAll('.student .fold-toggle').length,
+      withSummary: [...document.querySelectorAll('.student')].filter((s) => !s.querySelector('.reason')).length,
+    };
+  });
+  if (shown.bodies || shown.jamo) fail('folded', where, `${shown.bodies} open bodies, ${shown.jamo} Korean runs shown on the cards`);
   if (shown.toggles !== shown.withSummary) fail('folded', where, `${shown.toggles} buttons for ${shown.withSummary} cards with a summary`);
+}
+
+/** Printed, only the overlay is on the page: no learner name, Korean of a card, or card line (spec 3.3). */
+async function printChecks(page, where) {
+  await page.emulateMedia({ media: 'print' });
+  const leak = await page.evaluate(() => {
+    const p = document.querySelector('[data-co="page"]');
+    const names = [...p.querySelectorAll('.student-name')].map((n) => n.textContent.trim());
+    const korean = [...p.querySelectorAll('[lang="ko"]')].flatMap((n) => n.textContent.split(/[\s·]+/)).filter(Boolean);
+    const lines = [...p.querySelectorAll('.student .line')].map((n) => n.textContent.trim()).filter(Boolean);
+    const printed = document.body.innerText;
+    const words = printed.split(/[\s·,.:“”"()]+/).filter(Boolean);
+    return {
+      hits: [...names.filter((n) => words.includes(n)), ...korean.filter((k) => printed.includes(k)), ...lines.filter((l) => printed.includes(l))],
+      code: printed.includes('SUN234'),
+    };
+  });
+  for (const hit of leak.hits) fail('print', where, `prints "${hit}"`);
+  if (!leak.code) fail('print', where, 'the code is not printed');
+}
+
+/** The class page mock's behaviour with the keyboard (spec 3.3, 3.7). */
+async function keyboardChecks(page, where) {
+  const state = () =>
+    page.evaluate(() => ({
+      open: !document.querySelector('.co-overlay').hidden,
+      focus: document.activeElement?.dataset?.co ?? document.activeElement?.className ?? document.activeElement?.tagName,
+      inert: document.querySelector('[data-co="page"]').inert,
+      locked: document.documentElement.classList.contains('co-open'),
+      folds: [...document.querySelectorAll('.fold-body')].filter((b) => !b.hidden).length,
+    }));
+  await page.locator('.fold-toggle').first().click();
+  if ((await state()).folds !== 1) fail('keyboard', where, 'a card did not open');
+  await page.locator('[data-co="open"]').focus();
+  await page.keyboard.press('Enter');
+  let s = await state();
+  if (!s.open || s.focus !== 'co-name' || !s.inert || !s.locked) fail('keyboard', where, `after Enter: ${JSON.stringify(s)}`);
+  if (s.folds !== 0) fail('keyboard', where, 'Show the code left a card open');
+  await page.keyboard.press('Tab');
+  if ((await state()).focus !== 'close') fail('keyboard', where, 'Tab did not go to Close');
+  await page.keyboard.press('Tab');
+  if ((await state()).focus !== 'close') fail('keyboard', where, 'Tab left Close');
+  await page.keyboard.press('Escape');
+  s = await state();
+  if (s.open || s.focus !== 'open' || s.inert || s.locked) fail('keyboard', where, `after Escape: ${JSON.stringify(s)}`);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  s = await state();
+  if (s.open || s.focus !== 'open') fail('keyboard', where, `after Close: ${JSON.stringify(s)}`);
 }
 
 const browser = await chromium.launch();
 const measured = [];
 try {
   for (const run of RUNS) {
-    const where = `${run.file} ${run.w}x${run.h}${run.text ? ' text200' : ''}`;
+    const where = `${run.file} ${run.w}x${run.h}${run.text ? ' text200' : ''}${run.print ? ' print' : ''}${run.keyboard ? ' keyboard' : ''}`;
     const context = await browser.newContext({ viewport: { width: run.w, height: run.h }, deviceScaleFactor: 1 });
     const page = await context.newPage();
     await page.goto(pathToFileURL(join(MOCK, run.file)).href);
     if (run.text) await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    if (run.style) await page.addStyleTag({ content: run.style });
     await page.evaluate(() => document.fonts.ready);
-    await common(page, where);
-    if (run.overlay) measured.push({ where, ...(await overlayChecks(page, where, run)) });
+    if (run.print) await printChecks(page, where);
+    else await common(page, where);
+    if (run.overlay) measured.push({ where: `${where}${run.style ? ' Courier New' : ''}${run.note ? ` (${run.note})` : ''}`, ...(await overlayChecks(page, where, run)) });
     if (run.page) await pageChecks(page, where);
-    if (SHOOT) {
+    if (run.keyboard) await keyboardChecks(page, where);
+    if (SHOOT && run.shot) {
       await page.screenshot({ path: join(SHOTS, `${run.shot}.png`), fullPage: !!run.full });
       if (run.end) {
         await page.evaluate(() => {
