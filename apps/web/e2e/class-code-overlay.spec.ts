@@ -74,10 +74,13 @@ async function openClassPage(page: Page, size: { width: number; height: number }
 const activeTestId = (page: Page): Promise<string | null> => page.evaluate(() => (document.activeElement as HTMLElement | null)?.getAttribute('data-testid') ?? null);
 const activeTag = (page: Page): Promise<string | null> => page.evaluate(() => document.activeElement?.tagName ?? null);
 
-/** Tab until the element with `testId` has focus (at most 60 presses): the keyboard route to a control. */
-async function tabTo(page: Page, testId: string): Promise<void> {
+/**
+ * Tab until the element with `testId` has focus (at most 60 presses): the keyboard route to a control. `key` is
+ * Alt+Tab in WebKit on macOS, which (like Safari) skips buttons on a plain Tab.
+ */
+async function tabTo(page: Page, testId: string, key = 'Tab'): Promise<void> {
   for (let i = 0; i < 60; i += 1) {
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(key);
     if ((await activeTestId(page)) === testId) return;
   }
   throw new Error(`Tab never reached ${testId}`);
@@ -105,39 +108,52 @@ async function readQr(page: Page): Promise<string | null> {
   });
 }
 
-for (const browserName of ['chromium', 'webkit'] as const) {
-  test.describe(`${browserName}: Show the code with the keyboard only`, () => {
-    test.use({ browserName });
+/** Section 6 item 9, keyboard only: the round trip from Show the code to the dialog and back, by Escape and by Close. */
+async function keyboardRoundTrip(page: Page, tabKey = 'Tab'): Promise<void> {
+  await openClassPage(page, { width: 1280, height: 720 });
+  await tabTo(page, 'class-code-open', tabKey);
+  await page.keyboard.press('Enter');
+  const dialog = page.getByTestId('class-code-overlay');
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute('aria-modal', 'true');
+  expect(await activeTag(page)).toBe('H2');
+  await expect(page.locator('h2:focus')).toHaveText('Sunday Class A');
 
-    test('Tab to Show the code, Enter opens it on its heading; Escape and Tab then Enter on Close give focus back', async ({ page }) => {
-      await openClassPage(page, { width: 1280, height: 720 });
-      await tabTo(page, 'class-code-open');
-      await page.keyboard.press('Enter');
-      const dialog = page.getByTestId('class-code-overlay');
-      await expect(dialog).toBeVisible();
-      await expect(dialog).toHaveAttribute('aria-modal', 'true');
-      expect(await activeTag(page)).toBe('H2');
-      await expect(page.locator('h2:focus')).toHaveText('Sunday Class A');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  expect(await activeTestId(page)).toBe('class-code-open');
 
-      await page.keyboard.press('Escape');
-      await expect(dialog).toHaveCount(0);
-      expect(await activeTestId(page)).toBe('class-code-open');
-
-      await page.keyboard.press('Enter');
-      await expect(dialog).toBeVisible();
-      // Tab from the heading goes to Close, and Tab again stays on it.
-      await page.keyboard.press('Tab');
-      expect(await activeTestId(page)).toBe('class-code-close');
-      await page.keyboard.press('Tab');
-      expect(await activeTestId(page)).toBe('class-code-close');
-      await page.keyboard.press('Shift+Tab');
-      expect(await activeTestId(page)).toBe('class-code-close');
-      await page.keyboard.press('Enter');
-      await expect(dialog).toHaveCount(0);
-      expect(await activeTestId(page)).toBe('class-code-open');
-    });
-  });
+  await page.keyboard.press('Enter');
+  await expect(dialog).toBeVisible();
+  // Tab from the heading goes to Close, and Tab again (or Shift+Tab) stays on it.
+  await page.keyboard.press('Tab');
+  expect(await activeTestId(page)).toBe('class-code-close');
+  await page.keyboard.press('Tab');
+  expect(await activeTestId(page)).toBe('class-code-close');
+  await page.keyboard.press('Shift+Tab');
+  expect(await activeTestId(page)).toBe('class-code-close');
+  await page.keyboard.press('Enter');
+  await expect(dialog).toHaveCount(0);
+  expect(await activeTestId(page)).toBe('class-code-open');
 }
+
+test.describe('Show the code with the keyboard only', () => {
+  test('Chromium: Tab to Show the code, Enter opens it on its heading; Escape and Tab then Enter on Close give focus back', async ({ page }) => {
+    await keyboardRoundTrip(page);
+  });
+
+  // WebKit does not focus a button on a click, so this is the browser that proves focus returns from the opener's ref.
+  // It needs `playwright install webkit`; the Playwright config here runs Chromium only, so the browser is launched by hand.
+  test('WebKit: the same round trip', async ({ playwright }) => {
+    const browser = await playwright.webkit.launch();
+    try {
+      const context = await browser.newContext({ locale: 'en-US' });
+      await keyboardRoundTrip(await context.newPage(), process.platform === 'darwin' ? 'Alt+Tab' : 'Tab');
+    } finally {
+      await browser.close();
+    }
+  });
+});
 
 test.describe('the overlay shows no learner', () => {
   test('every point of a 12 x 8 grid hits the overlay, the roster is inert, and neither the overlay nor the print holds a name', async ({ page }) => {
