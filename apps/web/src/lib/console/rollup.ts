@@ -96,15 +96,29 @@ export interface WeekLines {
   notSynced: string | null;
 }
 
-export function weekLines(kind: string, rollup: ClassRollup, locale: UiLocale = DEFAULT_LOCALE): WeekLines {
-  const w = getMessages(locale).console.space.week;
-  // A family sees every learner's own lines (TV-D1); a class or any other space holds a line back until it is a group's.
+/**
+ * [CO] CO-2c and CO-2d (OD-CO8 (a)): the lists a screen shows for a space. A family keeps all of them (a family sees every
+ * learner's own lines, TV-D1); a class holds each back until `MIN_TOGETHER_LEARNERS` learners contribute to it, so a list
+ * is never one learner's own. The This week lines, the lecture page's Revisit block and the lecture presets (the letters
+ * of a warm-up, the class words of a word review) read these and never the roll-up's raw lists.
+ */
+export function togetherLists(kind: string, rollup: ClassRollup): { anchorAccuracy: number | null; revisit: string[]; vocabRevisit: string[] } {
   const enough = (contributors: number): boolean => kind === 'family' || contributors >= MIN_TOGETHER_LEARNERS;
   return {
-    practiced: kind === 'family' ? w.practicedFamily(rollup.practicedThisWeek, rollup.students) : w.practiced(rollup.practicedThisWeek, rollup.students),
-    anchor: rollup.anchorAccuracy === null || !enough(rollup.contributors.anchor) ? null : w.anchor(percent(rollup.anchorAccuracy)),
+    anchorAccuracy: enough(rollup.contributors.anchor) ? rollup.anchorAccuracy : null,
     revisit: enough(rollup.contributors.revisit) ? rollup.revisit : [],
     vocabRevisit: enough(rollup.contributors.vocabRevisit) ? rollup.vocabRevisit : [],
+  };
+}
+
+export function weekLines(kind: string, rollup: ClassRollup, locale: UiLocale = DEFAULT_LOCALE): WeekLines {
+  const w = getMessages(locale).console.space.week;
+  const lists = togetherLists(kind, rollup);
+  return {
+    practiced: kind === 'family' ? w.practicedFamily(rollup.practicedThisWeek, rollup.students) : w.practiced(rollup.practicedThisWeek, rollup.students),
+    anchor: lists.anchorAccuracy === null ? null : w.anchor(percent(lists.anchorAccuracy)),
+    revisit: lists.revisit,
+    vocabRevisit: lists.vocabRevisit,
     notSynced: rollup.notSynced > 0 ? w.notSynced(rollup.notSynced) : null,
   };
 }

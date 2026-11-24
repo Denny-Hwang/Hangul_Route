@@ -276,6 +276,40 @@ describe('the console context (sections 4.2 and 4.3)', () => {
     expect(presetFallbackLine(fallback.fallback, words())).toBe(words().fallback.warmUp);
   });
 
+  // AMENDMENTS-CLASS-CODE-OVERLAY CO-2d (OD-CO8 (a), owner decision 2026-11-24): what a class's roll-up gives a deck needs at
+  // least 3 contributing learners, as the This week lines do; a family keeps its own.
+  describe('a class holds its roll-up letters and words back below 3 learners (CO-2d)', () => {
+    const letters = (n: number, kind: 'class' | 'family' = 'class') => consolePresetContext({ roster: roster(Array.from({ length: n }, (_, i) => learner(`l${i}`, i, { needsPractice: ['ㅎ'] })), kind), plan: null, today: TODAY, now: NOW });
+    const withWords = (lists: string[][], kind: 'class' | 'family' = 'class') =>
+      consolePresetContext({ roster: roster(lists.map((ids, i) => learner(`l${i}`, i, { vocab: vocab(ids) })), kind), plan: null, today: TODAY, now: NOW });
+
+    it.each([1, 2])('%i learner(s) with letters: no roll-up letters, no revisit source on the warm-up', (n) => {
+      const ctx = letters(n);
+      expect(ctx.rollupRevisit).toBe(false);
+      expect(ctx.revisitChars).not.toContain('ㅎ');
+      expect(presetSource(resolveConsolePreset('warm-up', 10, 'stage1', ctx), ctx)).toBe('catalogue');
+    });
+
+    it('3 learners with letters: the letters and the revisit source', () => {
+      const ctx = letters(3);
+      expect(ctx.rollupRevisit).toBe(true);
+      expect(ctx.revisitChars).toEqual(['ㅎ']);
+    });
+
+    it('a family keeps its letters at one learner', () => {
+      const ctx = letters(1, 'family');
+      expect(ctx.rollupRevisit).toBe(true);
+      expect(ctx.revisitChars).toEqual(['ㅎ']);
+    });
+
+    it('W1 words: 2 learners with words give none, 3 give them; 3 vocab slices with words on only 2 give none; a family keeps its 2', () => {
+      expect(withWords([['vocab:uyu'], ['vocab:uyu', 'vocab:ppang']]).recentWords?.vocabIds).toEqual([]);
+      expect(withWords([['vocab:uyu'], ['vocab:uyu', 'vocab:ppang'], ['vocab:uyu']]).recentWords?.vocabIds).toEqual(['vocab:uyu', 'vocab:ppang']);
+      expect(withWords([['vocab:uyu'], ['vocab:uyu', 'vocab:ppang'], []]).recentWords?.vocabIds).toEqual([]);
+      expect(withWords([['vocab:uyu'], ['vocab:uyu', 'vocab:ppang']], 'family').recentWords?.vocabIds).toEqual(['vocab:uyu', 'vocab:ppang']);
+    });
+  });
+
   it('W1 on a route plan: this week\'s items first, then last week\'s', () => {
     const weeks: WeekMeta[] = [
       { index: 1, startDate: '2026-10-05', goals: [] },
@@ -303,7 +337,7 @@ describe('the console context (sections 4.2 and 4.3)', () => {
     expect(consoleRevisitChars([], [{ kind: 'episode', id: 'episode:stage1-life' }])).toEqual(['ㅈ', 'ㅊ', 'ㅂ', 'ㅅ', 'ㅋ', 'ㅌ']);
     expect(consoleRevisitChars(['ㄴ/final', 'ㄱ'], [])).toEqual(['ㄱ']);
     // A rollup of one letter and no plan: the warm-up tops up to four letters (section 4.2 U).
-    const ctx = consolePresetContext({ roster: roster([learner('a', 0, { needsPractice: ['ㅎ'] })]), plan: null, today: TODAY, now: NOW });
+    const ctx = consolePresetContext({ roster: roster([0, 1, 2].map((i) => learner(`l${i}`, i, { needsPractice: ['ㅎ'] }))), plan: null, today: TODAY, now: NOW });
     expect(ctx.revisitChars).toEqual(['ㅎ']);
     const warm = resolveConsolePreset('warm-up', 10, 'stage1', ctx);
     expect(warm.blocks[0]).toEqual({ kind: 'revisit', chars: ['ㅎ', 'ㄱ', 'ㄴ', 'ㄷ'] });

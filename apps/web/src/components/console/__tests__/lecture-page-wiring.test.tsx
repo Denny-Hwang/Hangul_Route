@@ -275,12 +275,25 @@ describe('?from= preselects (section 4.6)', () => {
 
   it('from=revisit: the warm-up open with the class\'s letters to revisit', async () => {
     nav.params = new URLSearchParams('id=space%3Ac1&from=revisit');
-    state.learners = [learner('Mina', { needsPractice: ['ㅂ', 'ㅅ'] }), learner('Jun', { needsPractice: ['ㅂ'] })];
+    state.learners = [learner('Mina', { needsPractice: ['ㅂ', 'ㅅ'] }), learner('Jun', { needsPractice: ['ㅂ'] }), learner('Ana', { needsPractice: ['ㅂ'] })];
     const root = await render();
     expect(openCards(root)).toEqual(['warm-up']);
     await act(async () => one(root, 'open-presenter').props.onClick());
     expect(lastDeck().blocks).toEqual([{ kind: 'revisit', chars: ['ㅂ', 'ㅅ'] }]);
     expect(lastDeck().source).toBe('revisit');
+  });
+
+  // CO-2d (OD-CO8 (a), owner decision 2026-11-24): a class's letters reach the lecture only once 3 learners have letters to revisit.
+  it('from=revisit in a class with fewer than 3 learners with letters: the warm-up has no revisit deck from the roll-up', async () => {
+    nav.params = new URLSearchParams('id=space%3Ac1&from=revisit');
+    state.learners = [learner('Mina', { needsPractice: ['ㅂ', 'ㅅ'] }), learner('Jun', { needsPractice: ['ㅂ'] })];
+    const root = await render();
+    await act(async () => one(root, 'open-presenter').props.onClick());
+    // The warm-up keeps its default letters (the first six); none of the two learners' letters is in the deck or its source.
+    const text = JSON.stringify(lastDeck().blocks);
+    expect(text).not.toContain('ㅂ');
+    expect(text).not.toContain('ㅅ');
+    expect(lastDeck().source).not.toBe('revisit');
   });
 
   it('no ?from= with a plan this week: Next lesson first, the plan filled to the length', async () => {
@@ -523,7 +536,7 @@ describe('review fixes (LV-4 second review)', () => {
 
   it('the open card is named by what it holds once that is not its own outline (?from=revisit)', async () => {
     nav.params = new URLSearchParams('id=space%3Ac1&from=revisit');
-    state.learners = [learner('Mina', { needsPractice: ['ㅂ', 'ㅅ'] }), learner('Jun', { needsPractice: ['ㅂ'] })];
+    state.learners = [learner('Mina', { needsPractice: ['ㅂ', 'ㅅ'] }), learner('Jun', { needsPractice: ['ㅂ'] }), learner('Ana', { needsPractice: ['ㅂ'] })];
     const root = await render();
     expect(openCards(root)).toEqual(['warm-up']);
     const minutes = aboutMinutes([{ kind: 'revisit', chars: ['ㅂ', 'ㅅ'] }]);
