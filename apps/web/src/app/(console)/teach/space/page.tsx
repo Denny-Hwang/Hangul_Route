@@ -266,8 +266,11 @@ function SpaceInner(): JSX.Element {
 
   // Show the code (CO-1): the entry and the overlay's model come from the roster's class, code and expiry only; the overlay
   // takes the model, never the roster. Opening reads the roster once more (the code may have changed on another device).
-  const codeShown = roster !== null && codeOverlayShown(roster, now);
-  const codeView = roster !== null && codeOpen ? codeOverlayView(roster, now, locale, appUrl()) : null;
+  // Only a roster that is this page's class counts: after the address moves to another class, the old roster stays in
+  // memory until the new read lands, and must neither offer the entry nor show its code.
+  const rosterHere = roster !== null && roster.space.id === spaceId ? roster : null;
+  const codeShown = rosterHere !== null && codeOverlayShown(rosterHere, now);
+  const codeView = rosterHere !== null && codeOpen ? codeOverlayView(rosterHere, now, locale, appUrl()) : null;
   const openCode = useCallback((): void => {
     setCodeOpen(true);
     void load(true);
@@ -283,17 +286,26 @@ function SpaceInner(): JSX.Element {
   useEffect(() => {
     if (!codeOpen) return;
     const storage = browserStorage('session');
-    if (rosterGone || (roster !== null && !codeShown)) {
+    if (rosterGone || (rosterHere !== null && !codeShown)) {
       setCodeOpen(false);
       forgetCodeOverlay(storage);
-    } else if (roster !== null) rememberCodeOverlay(storage, spaceId);
-  }, [codeOpen, codeShown, roster, rosterGone, spaceId]);
+    } else if (rosterHere !== null) rememberCodeOverlay(storage, spaceId);
+  }, [codeOpen, codeShown, rosterHere, rosterGone, spaceId]);
+  // A tab that closes, reloads or leaves does not keep the flag: it is for a lock, which unmounts the page and fires no
+  // pagehide, so a later visit never opens the overlay unasked.
+  useEffect(() => {
+    if (!codeOpen || typeof window === 'undefined' || typeof window.addEventListener !== 'function') return undefined;
+    const onHide = (): void => forgetCodeOverlay(browserStorage('session'));
+    window.addEventListener('pagehide', onHide);
+    return () => window.removeEventListener('pagehide', onHide);
+  }, [codeOpen]);
   // A page that stays mounted while the address names another class (the browser back between two classes) starts closed.
   const codeSpace = useRef(spaceId);
   useEffect(() => {
     if (codeSpace.current === spaceId) return;
     codeSpace.current = spaceId;
     setCodeOpen(false);
+    forgetCodeOverlay(browserStorage('session'));
   }, [spaceId]);
   // A lock unmounts the page with the address unchanged (the flag stays, and the overlay comes back); a navigation does
   // not: the flag goes once the address has changed (read after the navigation has settled).
@@ -548,6 +560,10 @@ function SpaceInner(): JSX.Element {
     >
       {confirmSheet}
       {codeView ? <ClassCodeOverlay view={codeView} onClose={closeCode} returnTo={codeReturnTo} /> : null}
+      {/* While Show the code is open the whole page content is one inert container (CO-1 section 3.3): a part that mounts
+          later (a learner asking to join, the attention banner, an error) is inert and leaves the print too, which the
+          overlay's own mount-time pass over the frame's siblings could not promise. */}
+      <div data-testid="class-page-content" {...(codeView ? ({ inert: '' } as Record<string, string>) : {})}>
       <RenameStyles />
       {renameLive}
       {roster ? (
@@ -807,6 +823,7 @@ function SpaceInner(): JSX.Element {
           {classPage && !empty ? invite : null}
         </>
       ) : null}
+      </div>
     </AdultFrame>
   );
 }

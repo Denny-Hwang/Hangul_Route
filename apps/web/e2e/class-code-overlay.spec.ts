@@ -44,10 +44,15 @@ const learner = (id: string, name: string, avatar: string) => ({
 const NAMES = ['Yuhan', 'Jaehan'];
 const LEARNERS = [learner('profile:yuhan', NAMES[0] as string, 'hoya-orange'), learner('profile:jaehan', NAMES[1] as string, 'hoya-blue')];
 
+// A class move into this class: its learner's alias is a name, shown by the page's Asking to join card once a re-read finds it.
+const MOVE_IN = { id: 'move:in1', kind: 'accept', status: 'waiting', from: { name: 'Class C' }, learner: { alias: 'J. K.', avatar: 'hoya-orange', level: '5-7' }, createdAt: at(-60), at: null };
+const late = { move: false };
+
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
 const json = (route: Route, status: number, data: unknown) => route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify({ data }) });
 
 async function mockClass(page: Page): Promise<void> {
+  late.move = false;
   await page.clock.install({ time: NOW });
   await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
   await page.route(`${API}/**`, async (route) => {
@@ -57,7 +62,7 @@ async function mockClass(page: Page): Promise<void> {
     if (path === '/api/spaces') return json(route, 200, { spaces: [{ space: CLASS, role: 'owner', counts: { learners: LEARNERS.length, accounts: 1, classes: 0 } }] });
     if (path.endsWith('/roster')) return json(route, 200, { space: CLASS, learners: LEARNERS, joinCode: CODE, joinCodeExpiresAt: at(60 * 24 * 18) });
     if (path.endsWith('/relink-requests')) return json(route, 200, { requests: [] });
-    if (path.endsWith('/class-moves')) return json(route, 200, { outgoing: [], incoming: [] });
+    if (path.endsWith('/class-moves')) return json(route, 200, { outgoing: [], incoming: late.move ? [MOVE_IN] : [] });
     if (path.endsWith('/transfer-requests')) return json(route, 200, { requests: [] });
     return json(route, 200, { plans: [], requests: [], entitlements: [] });
   });
@@ -195,6 +200,37 @@ test.describe('the overlay shows no learner', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.hasAttribute('data-hr-code-overlay'))).toBe(false);
+    expect(await page.evaluate(() => document.querySelector('[inert]'))).toBeNull();
+  });
+});
+
+test.describe('a part that mounts while the overlay is open', () => {
+  test('a learner asking to join, found by the 20 s re-read, is inert, off the screen reader\'s reach and out of the print', async ({ page }) => {
+    await openClassPage(page, { width: 1280, height: 720 });
+    await page.getByTestId('class-code-open').click();
+    await expect(page.getByTestId('class-code-overlay')).toBeVisible();
+    await expect(page.getByTestId('asking-to-join')).toHaveCount(0);
+
+    late.move = true;
+    await page.clock.runFor(21_000);
+    // It is in the page (the re-read mounted it) but behind the overlay and inert.
+    await expect(page.getByTestId('asking-to-join')).toHaveCount(1);
+    expect(await page.evaluate(() => document.querySelector('[data-testid="asking-to-join"]')?.closest('[inert]') !== null)).toBe(true);
+    expect(await page.evaluate(() => document.querySelector('[data-testid="attention-banner"]')?.closest('[inert]') !== null)).toBe(true);
+    expect(await page.getByTestId('class-code-overlay').innerText()).not.toContain('J. K.');
+
+    await page.emulateMedia({ media: 'print' });
+    const printed = await page.evaluate(() => document.body.innerText);
+    expect(printed).not.toContain('J. K.');
+    expect(printed).not.toContain('Class C');
+    for (const name of NAMES) expect(printed).not.toContain(name);
+    expect(printed).toContain(CODE);
+    await page.emulateMedia({ media: 'screen' });
+
+    // Closed, the page is whole again: the card is reachable and nothing is inert.
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('class-code-overlay')).toHaveCount(0);
+    await expect(page.getByTestId('asking-to-join')).toBeVisible();
     expect(await page.evaluate(() => document.querySelector('[inert]'))).toBeNull();
   });
 });

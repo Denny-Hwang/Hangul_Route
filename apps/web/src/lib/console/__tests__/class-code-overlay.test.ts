@@ -225,6 +225,12 @@ describe('the reopen flag (3.6)', () => {
     expect(s.items).toEqual({ 'hr:console:codeOverlay': 'space:sunday' });
   });
 
+  it('reaches storage only through the guarded wrapper (CLAUDE.md section 8): no direct getItem, setItem, removeItem, localStorage or sessionStorage', () => {
+    const code = readFileSync(join(__dirname, '..', 'class-code-overlay.ts'), 'utf8');
+    expect(code).toContain("from '../i18n/safe-storage'");
+    expect(code).not.toMatch(/\.(?:getItem|setItem|removeItem)\(|localStorage|sessionStorage/);
+  });
+
   it('names a space only when it holds that space\'s id; forgetting removes it', () => {
     const s = store();
     expect(codeOverlayFlagged(s.area, 'space:sunday')).toBe(false);
