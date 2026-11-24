@@ -5,6 +5,10 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { Roster, SpaceListItem } from '../api';
 import {
+  addressNamesClassPage,
+  codeOverlayFlagged,
+  forgetCodeOverlay,
+  rememberCodeOverlay,
   CLASS_CODE_OVERLAY_CSS,
   CODE_LETTER_SPACING_EM,
   CODE_OVERLAY_ATTR,
@@ -209,8 +213,58 @@ describe('the overlay CSS (3.3, 3.4)', () => {
 });
 
 describe('the reopen flag (3.6)', () => {
+  const store = (): { items: Record<string, string>; area: { getItem: (k: string) => string | null; setItem: (k: string, v: string) => void; removeItem: (k: string) => void } } => {
+    const items: Record<string, string> = {};
+    return { items, area: { getItem: (k) => items[k] ?? null, setItem: (k, v) => void (items[k] = v), removeItem: (k) => void delete items[k] } };
+  };
+
   it('is one session key that holds the space id only', () => {
     expect(CODE_OVERLAY_FLAG).toBe('hr:console:codeOverlay');
+    const s = store();
+    rememberCodeOverlay(s.area, 'space:sunday');
+    expect(s.items).toEqual({ 'hr:console:codeOverlay': 'space:sunday' });
+  });
+
+  it('names a space only when it holds that space\'s id; forgetting removes it', () => {
+    const s = store();
+    expect(codeOverlayFlagged(s.area, 'space:sunday')).toBe(false);
+    rememberCodeOverlay(s.area, 'space:sunday');
+    expect(codeOverlayFlagged(s.area, 'space:sunday')).toBe(true);
+    expect(codeOverlayFlagged(s.area, 'space:other')).toBe(false);
+    expect(codeOverlayFlagged(s.area, '')).toBe(false);
+    forgetCodeOverlay(s.area);
+    expect(codeOverlayFlagged(s.area, 'space:sunday')).toBe(false);
+  });
+
+  it('no storage, or storage that throws, is never an error and never a reopen', () => {
+    const broken = {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('blocked');
+      },
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    expect(codeOverlayFlagged(null, 'space:sunday')).toBe(false);
+    expect(codeOverlayFlagged(broken, 'space:sunday')).toBe(false);
+    expect(() => rememberCodeOverlay(null, 'space:sunday')).not.toThrow();
+    expect(() => rememberCodeOverlay(broken, 'space:sunday')).not.toThrow();
+    expect(() => forgetCodeOverlay(null)).not.toThrow();
+    expect(() => forgetCodeOverlay(broken)).not.toThrow();
+  });
+
+  it('the address names this class page only on /teach/space with this id (a lock keeps it, a navigation does not)', () => {
+    expect(addressNamesClassPage({ pathname: '/teach/space', search: '?id=space%3Asunday' }, 'space:sunday')).toBe(true);
+    expect(addressNamesClassPage({ pathname: '/teach/space/', search: '?id=space%3Asunday' }, 'space:sunday')).toBe(true);
+    expect(addressNamesClassPage({ pathname: '/teach/space.html', search: '?id=space%3Asunday' }, 'space:sunday')).toBe(true);
+    expect(addressNamesClassPage({ pathname: '/teach/space', search: '?id=space%3Aother' }, 'space:sunday')).toBe(false);
+    expect(addressNamesClassPage({ pathname: '/teach/space/plan', search: '?id=space%3Asunday' }, 'space:sunday')).toBe(false);
+    expect(addressNamesClassPage({ pathname: '/teach/home', search: '' }, 'space:sunday')).toBe(false);
+    expect(addressNamesClassPage({ pathname: '/teach/space', search: '' }, '')).toBe(false);
+    expect(addressNamesClassPage(null, 'space:sunday')).toBe(false);
   });
 });
 

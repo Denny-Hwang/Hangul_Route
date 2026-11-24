@@ -6,7 +6,7 @@ import { classActions, practicedLine, type ClassActionsInput } from '../class-pa
  * AMENDMENTS-GROWNUP-UX GX-7 (section 8 T3 to T5): which buttons the class page's action bar keeps in view, which fold
  * under More, and which an empty class leaves out; the roster card's one activity line.
  */
-const base: ClassActionsInput = { empty: false, lecture: true, classReport: true, notes: true, moves: true, relinksWaiting: 0, movesWaiting: 0 };
+const base: ClassActionsInput = { empty: false, lecture: true, classReport: true, code: false, notes: true, moves: true, relinksWaiting: 0, movesWaiting: 0 };
 
 describe('classActions (T3, T5)', () => {
   it('a class with learners: Plan, Term plan, Lecture mode and Class report in the bar; Notes, New devices, Class moves and Settings under More', () => {
@@ -35,6 +35,35 @@ describe('classActions (T3, T5)', () => {
     });
     expect(classActions({ ...base, movesWaiting: 3 })).toEqual({ bar: ['plan', 'termPlan', 'lecture', 'classReport', 'moves'], more: ['notes', 'relink', 'settings'] });
     expect(classActions({ ...base, relinksWaiting: 2 })).toEqual({ bar: ['plan', 'termPlan', 'lecture', 'classReport', 'relink'], more: ['notes', 'moves', 'settings'] });
+  });
+});
+
+describe('classActions: Show the code (AMENDMENTS-CLASS-CODE-OVERLAY CO-1, 3.1)', () => {
+  it('stays in the bar after Class report and before a waiting entry, never under More', () => {
+    expect(classActions({ ...base, code: true })).toEqual({ bar: ['plan', 'termPlan', 'lecture', 'classReport', 'showCode'], more: ['notes', 'relink', 'moves', 'settings'] });
+    expect(classActions({ ...base, code: true, relinksWaiting: 1, movesWaiting: 3 })).toEqual({
+      bar: ['plan', 'termPlan', 'lecture', 'classReport', 'showCode', 'relink', 'moves'],
+      more: ['notes', 'settings'],
+    });
+  });
+
+  it('is absent without a live code', () => {
+    expect(classActions({ ...base, code: false }).bar).not.toContain('showCode');
+    expect(classActions({ ...base, code: false, relinksWaiting: 1 }).more).not.toContain('showCode');
+  });
+
+  it('an empty class shows it too: it follows the buttons it keeps', () => {
+    expect(classActions({ ...base, empty: true, code: true })).toEqual({ bar: ['plan', 'termPlan', 'showCode'], more: ['settings'] });
+    expect(classActions({ ...base, empty: true, code: true, movesWaiting: 2 })).toEqual({ bar: ['plan', 'termPlan', 'showCode', 'moves'], more: ['settings'] });
+  });
+
+  it('is never in More, whatever else the build offers', () => {
+    for (const code of [true, false]) {
+      for (const empty of [true, false]) {
+        expect(classActions({ ...base, empty, code }).more).not.toContain('showCode');
+        expect(classActions({ ...base, empty, code, lecture: false, classReport: false, notes: false, moves: false }).more).not.toContain('showCode');
+      }
+    }
   });
 });
 

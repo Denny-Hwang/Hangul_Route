@@ -139,3 +139,48 @@ html[${CODE_OVERLAY_ATTR}] [inert]{display:none!important}
 .hr-co{position:static;overflow:visible;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 .hr-co-close{display:none}
 }`;
+
+/** The part of the session store the reopen flag uses (`KeyValueStorage` of `lib/i18n/safe-storage.ts`). */
+interface FlagStorage {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+}
+
+/** Whether the flag names `spaceId`: the class page opens the overlay in the render that first draws its roster. */
+export function codeOverlayFlagged(storage: FlagStorage | null, spaceId: string): boolean {
+  if (spaceId === '') return false;
+  try {
+    return storage?.getItem(CODE_OVERLAY_FLAG) === spaceId;
+  } catch {
+    return false;
+  }
+}
+
+/** Remembers an open overlay across a grown-up lock: the space id only, never a name or a code. */
+export function rememberCodeOverlay(storage: FlagStorage | null, spaceId: string): void {
+  try {
+    storage?.setItem(CODE_OVERLAY_FLAG, spaceId);
+  } catch {
+    // Blocked storage: the overlay simply does not come back after a lock.
+  }
+}
+
+/** Close, Escape, a self-close and a navigation away remove it. */
+export function forgetCodeOverlay(storage: FlagStorage | null): void {
+  try {
+    storage?.removeItem(CODE_OVERLAY_FLAG);
+  } catch {
+    // Nothing to remove.
+  }
+}
+
+/**
+ * Whether the address still names this class's page (`/teach/space?id=<id>`). A grown-up lock unmounts the page with the
+ * address unchanged (the flag stays); a navigation changes it (the flag goes).
+ */
+export function addressNamesClassPage(location: { pathname: string; search: string } | null | undefined, spaceId: string): boolean {
+  if (!location || spaceId === '') return false;
+  if (!/^\/teach\/space(?:\.html)?\/?$/.test(location.pathname)) return false;
+  return new URLSearchParams(location.search).get('id')?.trim() === spaceId;
+}

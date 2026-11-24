@@ -15,7 +15,11 @@ import { StartingSpot, SuggestStartLink } from '@/components/console/PlacementPa
 import { PlanUpdateLine } from '@/components/console/PlanUpdateParts';
 import { JourneyStrip } from '@/components/console/JourneyParts';
 import { ClassActionBar, FirstRunCard, InviteDisclosure } from '@/components/console/ClassPageParts';
+import { ClassCodeOverlay } from '@/components/console/ClassCodeOverlay';
 import { classActions, practicedLine, type ClassAction } from '@/lib/console/class-page';
+import { addressNamesClassPage, codeOverlayFlagged, codeOverlayShown, codeOverlayView, forgetCodeOverlay, rememberCodeOverlay } from '@/lib/console/class-code-overlay';
+import { announceRosterChange } from '@/lib/console/roster-broadcast';
+import { browserStorage } from '@/lib/i18n/safe-storage';
 import { journeyStrip } from '@/lib/console/journey-strip';
 import { startingSpotLine } from '@/lib/console/placement';
 import { FreeLessonsLine } from '@/components/console/FreeLessonsParts';
@@ -93,6 +97,11 @@ function SpaceInner(): JSX.Element {
   const [coverage, setCoverage] = useState<SpaceCoverage>('unknown');
   // A key, not text: the message is looked up at render time, so it follows the header language select.
   const [error, setError] = useState<SpaceError | null>(null);
+  // Show the code (AMENDMENTS-CLASS-CODE-OVERLAY CO-1): decided at the first client render, like `#attention`, so after a
+  // grown-up lock the overlay is drawn in the same render that first draws the roster and the roster is never painted.
+  const [codeOpen, setCodeOpen] = useState<boolean>(() => codeOverlayFlagged(browserStorage('session'), spaceId));
+  const codeOpener = useRef<HTMLButtonElement | null>(null);
+  const errorPanel = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const now = new Date();
@@ -106,6 +115,8 @@ function SpaceInner(): JSX.Element {
   const relinkSeq = useRef(0);
   const rosterHeading = useRef<HTMLHeadingElement>(null);
   const spaceHead = useRef<HTMLDivElement>(null);
+  // Where focus goes when Show the code closes: its button, else the page head, else the error panel (CO-1 section 3.3).
+  const codeReturnTo = [codeOpener, spaceHead, errorPanel];
   // GX-7 review: focus inside Invite students when it moves (empty class to first learner) lands on its new button.
   const inviteFocus = useRef(false);
   // [SA] A rename never drops a read: the renamed name is laid over each read that lands (section 5.3, `NameOverrides`).
@@ -188,8 +199,9 @@ function SpaceInner(): JSX.Element {
   useVisibleRefresh(() => void readRelinks(), relinkWatch, { pollMs: CLASS_RELINK_REFRESH_MS, gapMs: CLASS_RELINK_GAP_MS });
 
   // An open roster shows a renamed learner, a new practice day or a new member without a reload.
-  // A roster page also reads slowly while it stays in front (a classroom screen), never a report page.
-  useVisibleRefresh(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone', { poll: true });
+  // A roster page also reads slowly while it stays in front (a classroom screen), never a report page. While Show the
+  // code is open it reads every 20 s instead of every 90 s, so a code regenerated on another device shows within 20 s.
+  useVisibleRefresh(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone', codeOpen ? { pollMs: CLASS_RELINK_REFRESH_MS, gapMs: CLASS_RELINK_GAP_MS } : { poll: true });
   // A move, an accepted or cancelled ask or a removed learner in another console tab: read again at once, so this
   // roster never keeps a learner who moved to another class (owner report 2026-10-23).
   useRosterChanges(() => void load(true), !!api && error !== 'forbidden' && error !== 'gone');
@@ -244,12 +256,55 @@ function SpaceInner(): JSX.Element {
   const nameEls = useRef(new Map<string, HTMLElement>());
   const popup = useRelinkPopup({
     relinks: relinkList,
-    blocked: sheet !== null || confirmSheet !== null,
+    // Show the code (CO-1 section 3.6): a pop-up names a learner, so it waits until the classroom screen shows the code no more.
+    blocked: sheet !== null || confirmSheet !== null || codeOpen,
     enabled: popupOn,
     auto: popupOn && roster?.space.kind === 'class',
     listed: sheet !== null && relinkList ? relinkList.filter((r) => r.status === 'pending').map((r) => r.id) : [],
   });
   useTitleCount(waiting, locale);
+
+  // Show the code (CO-1): the entry and the overlay's model come from the roster's class, code and expiry only; the overlay
+  // takes the model, never the roster. Opening reads the roster once more (the code may have changed on another device).
+  const codeShown = roster !== null && codeOverlayShown(roster, now);
+  const codeView = roster !== null && codeOpen ? codeOverlayView(roster, now, locale, appUrl()) : null;
+  const openCode = useCallback((): void => {
+    setCodeOpen(true);
+    void load(true);
+  }, [load]);
+  const closeCode = useCallback((): void => {
+    setCodeOpen(false);
+    forgetCodeOverlay(browserStorage('session'));
+  }, []);
+  // The session flag (the space id only) keeps the overlay across a grown-up lock, which unmounts the page. It is written
+  // while the overlay shows a live code, and removed when the overlay closes or its code ends (a self-close, with the
+  // focus fallback in the overlay) or the roster goes (forbidden, gone).
+  const rosterGone = error === 'forbidden' || error === 'gone';
+  useEffect(() => {
+    if (!codeOpen) return;
+    const storage = browserStorage('session');
+    if (rosterGone || (roster !== null && !codeShown)) {
+      setCodeOpen(false);
+      forgetCodeOverlay(storage);
+    } else if (roster !== null) rememberCodeOverlay(storage, spaceId);
+  }, [codeOpen, codeShown, roster, rosterGone, spaceId]);
+  // A page that stays mounted while the address names another class (the browser back between two classes) starts closed.
+  const codeSpace = useRef(spaceId);
+  useEffect(() => {
+    if (codeSpace.current === spaceId) return;
+    codeSpace.current = spaceId;
+    setCodeOpen(false);
+  }, [spaceId]);
+  // A lock unmounts the page with the address unchanged (the flag stays, and the overlay comes back); a navigation does
+  // not: the flag goes once the address has changed (read after the navigation has settled).
+  useEffect(
+    () => () => {
+      setTimeout(() => {
+        if (!addressNamesClassPage(typeof window === 'undefined' ? null : window.location, spaceId)) forgetCodeOverlay(browserStorage('session'));
+      }, 0);
+    },
+    [spaceId],
+  );
   // The sheet's consent card offers "Agree for both classes" from the classes this account teaches itself: the roster
   // reads them only behind some switches, so an open sheet reads them once when they are not there yet.
   const spacesAsked = useRef(false);
@@ -275,8 +330,11 @@ function SpaceInner(): JSX.Element {
     setBusy(true);
     const result = await api.regenerateCode(spaceId);
     setBusy(false);
-    if (result.ok) setRoster({ ...roster, joinCode: result.data.joinCode, joinCodeExpiresAt: result.data.expiresAt });
-    else setError('regenerateFailed');
+    if (result.ok) {
+      setRoster({ ...roster, joinCode: result.data.joinCode, joinCodeExpiresAt: result.data.expiresAt });
+      // Another console tab of this browser may be showing the old code on a classroom screen: it reads at once.
+      announceRosterChange();
+    } else setError('regenerateFailed');
   };
 
   const copy = async (): Promise<void> => {
@@ -362,6 +420,7 @@ function SpaceInner(): JSX.Element {
     empty,
     lecture,
     classReport: classReport !== null,
+    code: codeShown,
     notes: !!notesLinks?.header,
     moves: movesShown,
     relinksWaiting,
@@ -395,6 +454,13 @@ function SpaceInner(): JSX.Element {
             {classReport.text}
           </Link>
         ) : null;
+      case 'showCode':
+        // A plain button with its own ref and aria-haspopup (the shared Button takes neither): the overlay gives focus back to it.
+        return (
+          <button key={action} ref={codeOpener} type="button" data-testid="class-code-open" aria-haspopup="dialog" onClick={openCode} style={buttonBase}>
+            {c.space.codeOverlay.open.cta}
+          </button>
+        );
       case 'notes':
         return notesLinks?.header ? <NotesLink key={action} href={notesLinks.header} testId="roster-notes" text={c.notes.roster.notes.cta} /> : null;
       case 'relink':
@@ -481,6 +547,7 @@ function SpaceInner(): JSX.Element {
       title={roster ? undefined : c.space.loading}
     >
       {confirmSheet}
+      {codeView ? <ClassCodeOverlay view={codeView} onClose={closeCode} returnTo={codeReturnTo} /> : null}
       <RenameStyles />
       {renameLive}
       {roster ? (
@@ -549,7 +616,7 @@ function SpaceInner(): JSX.Element {
         />
       ) : null}
       {error ? (
-        <div style={panelStyle}>
+        <div ref={errorPanel} tabIndex={-1} data-testid="space-error" style={panelStyle}>
           <p style={{ margin: 0 }}>{spaceErrorText(error, locale)}</p>
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>

@@ -63,7 +63,14 @@ export function ClassCodeOverlay({ view, onClose, returnTo }: { view: CodeOverla
       undoInert();
       root?.removeAttribute?.(CODE_OVERLAY_ATTR);
       if (root?.style) root.style.overflow = overflowBefore;
-      returnFocusTarget(latestReturn.current.map((ref) => ref.current))?.focus?.();
+      const back = (): FocusNode | null => {
+        const target = returnFocusTarget(latestReturn.current.map((ref) => ref.current));
+        target?.focus?.();
+        return target;
+      };
+      // Nothing to go back to yet: the read that ended the code may set the roster and the error in two renders (a root
+      // that does not batch), so the page head or the error panel is tried once more when the current task has ended.
+      if (back() === null) void Promise.resolve().then(back);
     };
     // Once per opening: the page mounts a new overlay each time.
   }, []);
