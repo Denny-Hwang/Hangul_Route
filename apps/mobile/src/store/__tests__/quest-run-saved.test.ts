@@ -261,6 +261,13 @@ describe('clearSavedRun', () => {
     expect(stored('p1')).toBeNull();
   });
 
+  it('[LR] a read asked right after a clear waits for it and reads nothing (Start again: the player opens on step 1)', async () => {
+    mem.set(QUEST_RUN_KEY('p1'), { v: 1, questId: 'quest:q1', stepIndex: 2 });
+    void clearSavedRun('p1');
+    expect(await readSavedRun('p1')).toBeNull();
+    expect(stored('p1')).toBeNull();
+  });
+
   it('clears that learner only', async () => {
     await saveRun('p1', { v: 1, questId: 'quest:q1', episodeId: 'e', steps: '', stepIndex: 0, correctCount: 0, totalCount: 0, retryCount: 0, scoredRounds: [], skippedSteps: [], startedAt: 'x' });
     await saveRun('p2', { v: 1, questId: 'quest:q1', episodeId: 'e', steps: '', stepIndex: 1, correctCount: 0, totalCount: 0, retryCount: 0, scoredRounds: [], skippedSteps: [], startedAt: 'x' });

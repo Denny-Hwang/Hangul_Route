@@ -346,7 +346,7 @@ describe('[LR] safeFilled (AMENDMENTS-QUEST-LEAVE-RESUME LR-2, owner decision 20
     const look = (id: string): Record<string, unknown> => (byTestId(tree, id)!.props.style as (s: { pressed: boolean }) => Record<string, unknown>)({ pressed: false });
     expect(look('confirm-sheet-cancel').backgroundColor).toBe(colors.brand.primary);
     expect(look('confirm-sheet-confirm').backgroundColor).toBe(colors.surface.paper);
-    const label = (id: string): Record<string, unknown> => byTestId(tree, id)!.props.children.props.style as Record<string, unknown>;
+    const label = (id: string): Record<string, unknown> => (byTestId(tree, id)!.props.children as El).props.style as Record<string, unknown>;
     expect(label('confirm-sheet-cancel').color).toBe(colors.text.onPrimary);
     expect(label('confirm-sheet-confirm').color).toBe(colors.text.primary);
     // The default sheet keeps its look.

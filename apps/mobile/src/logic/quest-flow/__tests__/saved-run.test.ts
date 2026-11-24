@@ -195,7 +195,7 @@ describe('[QB] the saved run follows the furthest step (AMENDMENTS-QUEST-SOUND-B
  * value alone, before any lesson chunk is asked for.
  */
 describe('resumeCandidate', () => {
-  type Quest = { id: string; steps: readonly { id: string; kind: 'intro'; minigameKind?: string }[] };
+  type Quest = Parameters<typeof resumeCandidate>[1];
   const hero: Quest = { id: 'quest:q1', steps: [] };
   const candidate = (value: unknown, q: Quest = hero): boolean => resumeCandidate(value, q, NOW);
 
