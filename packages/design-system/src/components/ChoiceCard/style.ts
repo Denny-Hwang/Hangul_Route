@@ -144,25 +144,36 @@ export function choiceCardTileWidth(artSize: number): number {
 }
 
 /**
- * The wrapper that draws the look-here ring (F-A11Y-001 AF-1; AnswerFeedback D4): a negative margin of the ring's reach,
- * so it takes no room and nothing moves when it shows. It is the same wrapper without a ring (its padding takes the
- * ring's width), so a card is never remounted when the hint turns on. Pure, for ChoiceCard and for a board that paints
- * the card's looks by hand (Cloze Pick).
+ * The look-here ring's own style (F-A11Y-001 AF-1; AnswerFeedback D4): an overlay drawn inside the card as an absolute
+ * child, reaching `gap` past the card's border, so it takes no room and nothing moves when it shows, and the drawn card
+ * stays the target's first child. `cardBorderWidth` is the border the card draws now (an absolute child is placed from
+ * the inside of that border). Pure, for ChoiceCard and for a board that paints the card's looks by hand (Cloze Pick).
  */
-export function choiceCardRingStyle(ring: ChoiceCardRing | null, borderRadius: number): {
-  margin: number;
-  padding: number;
+export function choiceCardRingStyle(
+  ring: ChoiceCardRing,
+  borderRadius: number,
+  cardBorderWidth: number,
+): {
+  position: 'absolute';
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
   borderRadius: number;
   borderWidth: number;
   borderStyle: 'dashed';
-  borderColor?: string;
+  borderColor: string;
 } {
+  const out = -(ring.gap + ring.width + cardBorderWidth);
   return {
-    margin: -CHOICE_CARD_RING_REACH,
-    padding: ring === null ? CHOICE_CARD_RING_REACH : ring.gap,
-    borderRadius: borderRadius + CHOICE_CARD_RING_REACH,
-    borderWidth: ring === null ? 0 : ring.width,
+    position: 'absolute',
+    top: out,
+    right: out,
+    bottom: out,
+    left: out,
+    borderRadius: borderRadius + ring.gap + ring.width,
+    borderWidth: ring.width,
     borderStyle: 'dashed',
-    ...(ring === null ? {} : { borderColor: ring.color }),
+    borderColor: ring.color,
   };
 }

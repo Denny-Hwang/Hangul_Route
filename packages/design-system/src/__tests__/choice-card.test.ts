@@ -87,19 +87,21 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
     expect(disabled).toEqual(['disabled']);
   });
 
-  it('choiceCardRingStyle: the ring takes no room (its reach is the negative margin), with or without a ring', () => {
-    const ring = choiceCardStyle('hint').ring;
-    expect(choiceCardRingStyle(ring, radii.lg)).toEqual({
-      margin: -CHOICE_CARD_RING_REACH,
-      padding: spacing.xs,
+  it('choiceCardRingStyle: an absolute overlay spacing.xs past the card\'s border, dashed, in border.focus', () => {
+    const ring = choiceCardStyle('hint').ring!;
+    const out = -(spacing.xs + borderWidth.thick + borderWidth.base);
+    expect(choiceCardRingStyle(ring, radii.lg, borderWidth.base)).toEqual({
+      position: 'absolute',
+      top: out,
+      right: out,
+      bottom: out,
+      left: out,
       borderRadius: radii.lg + CHOICE_CARD_RING_REACH,
       borderWidth: borderWidth.thick,
       borderStyle: 'dashed',
       borderColor: colors.border.focus,
     });
-    const none = choiceCardRingStyle(null, radii.lg);
-    expect(none).toEqual({ margin: -CHOICE_CARD_RING_REACH, padding: CHOICE_CARD_RING_REACH, borderRadius: radii.lg + CHOICE_CARD_RING_REACH, borderWidth: 0, borderStyle: 'dashed' });
-    for (const s of [choiceCardRingStyle(ring, radii.lg), none]) expect(s.padding + s.borderWidth).toBe(-s.margin);
+    expect(choiceCardRingStyle(ring, radii.lg, borderWidth.thick).top).toBe(-(spacing.xs + 2 * borderWidth.thick));
   });
 
   it('only hint has a ring; only correct is selected', () => {

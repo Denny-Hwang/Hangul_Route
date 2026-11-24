@@ -31,19 +31,14 @@ vi.mock('../../TextSize', async () => {
 type Props = Record<string, unknown>;
 type El = ReactElement<Props>;
 
-/** The look-here ring wrapper inside the TapTarget (its children are a render function of `{ pressed }`). */
-function ringOf(props: Partial<ChoiceCardProps>, pressed = false): El {
+/** The card body inside the TapTarget (its children are a render function of `{ pressed }`). */
+function body(props: Partial<ChoiceCardProps>, pressed = false): El {
   const target = ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', ...props }) as El;
   const render = target.props.children as (s: { pressed: boolean }) => El;
   return render({ pressed });
 }
 
 const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
-
-/** The drawn card inside the ring wrapper. */
-function body(props: Partial<ChoiceCardProps>, pressed = false): El {
-  return kids(ringOf(props, pressed))[0]!;
-}
 
 /** Every element of a tree, depth first. */
 function all(el: El): El[] {
@@ -242,29 +237,34 @@ describe('ChoiceCard mark column and look-here ring (F-A11Y-001 AF-1)', () => {
     expect(kids(body({ state: 'idle', art: createElement('View'), layout: 'tile' }))).toHaveLength(1);
   });
 
-  it('hint: a dashed border.focus ring, borderWidth.thick, spacing.xs outside the card, on a wrapper that takes no room', () => {
-    const style = ringOf({ state: 'hint', label: 'apple' }).props.style as Props;
-    expect(style).toEqual({
-      margin: -CHOICE_CARD_RING_REACH,
-      padding: spacing.xs,
+  /** The look-here ring: the card's absolute child with a dashed border. */
+  const ringIn = (card: El): El | undefined => kids(card).find((k) => (k.props.style as Props | undefined)?.borderStyle === 'dashed');
+
+  it('hint: a dashed border.focus ring, borderWidth.thick, spacing.xs outside the card, an absolute child that takes no room', () => {
+    const ring = ringIn(body({ state: 'hint', label: 'apple' }))!;
+    expect(ring.props.style).toEqual({
+      position: 'absolute',
+      top: -(spacing.xs + borderWidth.thick + borderWidth.base),
+      right: -(spacing.xs + borderWidth.thick + borderWidth.base),
+      bottom: -(spacing.xs + borderWidth.thick + borderWidth.base),
+      left: -(spacing.xs + borderWidth.thick + borderWidth.base),
       borderRadius: radii.lg + CHOICE_CARD_RING_REACH,
       borderWidth: borderWidth.thick,
       borderStyle: 'dashed',
       borderColor: colors.border.focus,
     });
-    // The ring's reach is all inside the negative margin: the card's own box is where it was.
-    expect((style.padding as number) + (style.borderWidth as number)).toBe(-(style.margin as number));
+    expect(ring.props['aria-hidden']).toBe(true);
+    expect(ring.props.pointerEvents).toBe('none');
   });
 
-  it.each(['idle', 'correct', 'wrong', 'disabled'] as const)('%s: the same wrapper with no ring, so the card is never remounted and nothing moves', (state) => {
-    const style = ringOf({ state, label: 'apple' }).props.style as Props;
-    expect(style).toMatchObject({ margin: -CHOICE_CARD_RING_REACH, padding: CHOICE_CARD_RING_REACH, borderWidth: 0 });
-    expect(style.borderColor).toBeUndefined();
+  it.each(['idle', 'correct', 'wrong', 'disabled'] as const)('%s: no ring, and the card\'s children keep their places', (state) => {
+    const card = body({ state, label: 'apple' });
+    expect(ringIn(card)).toBeUndefined();
+    expect(Children.toArray(card.props.children as ReactNode)).toHaveLength(2);
   });
 
-  it('the ring is never the press look: pressing a hint card changes the card, not the ring', () => {
-    const rest = ringOf({ state: 'hint', label: 'apple', onPress: () => undefined }, false).props.style;
-    const down = ringOf({ state: 'hint', label: 'apple', onPress: () => undefined }, true).props.style;
-    expect(down).toEqual(rest);
+  it('pressed: the ring still sits spacing.xs outside the thicker press outline', () => {
+    const ring = ringIn(body({ state: 'hint', label: 'apple', onPress: () => undefined }, true))!;
+    expect((ring.props.style as Props).top).toBe(-(spacing.xs + borderWidth.thick + borderWidth.thick));
   });
 });

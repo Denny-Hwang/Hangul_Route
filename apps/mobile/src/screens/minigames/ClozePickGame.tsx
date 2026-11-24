@@ -361,36 +361,37 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                           const p = pressed && look.interactive ? press : null;
                           const rest = card.cardState === 'wrong' ? borderWidth.thick : look.borderWidth;
                           return (
-                            // F-A11Y-001 AF-1 (AnswerFeedback D4): look-here is the card's dashed ring outside the tile.
-                            <View style={choiceCardRingStyle(look.ring, look.borderRadius)}>
-                              <View
-                                style={{
-                                  minHeight: touchTarget.min,
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                  paddingVertical: spacing.sm - pressInset(p, rest),
-                                  paddingHorizontal: spacing.xxl - pressInset(p, rest),
-                                  borderRadius: look.borderRadius,
-                                  borderWidth: p?.borderWidth ?? rest,
-                                  borderColor: p?.borderColor ?? look.borderColor,
-                                  backgroundColor: look.backgroundColor,
-                                  transform: pressTransform(p),
-                                }}
-                              >
-                                <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
-                                  {card.ko}
-                                </Text>
-                                {card.romanization !== '' ? (
-                                  <Body size="sm" tone="secondary">
-                                    {card.romanization}
-                                  </Body>
-                                ) : null}
-                                {look.mark ? (
-                                  <View style={{ position: 'absolute', right: spacing.md }}>
-                                    <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
-                                  </View>
-                                ) : null}
-                              </View>
+                            <View
+                              style={{
+                                minHeight: touchTarget.min,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                paddingVertical: spacing.sm - pressInset(p, rest),
+                                paddingHorizontal: spacing.xxl - pressInset(p, rest),
+                                borderRadius: look.borderRadius,
+                                borderWidth: p?.borderWidth ?? rest,
+                                borderColor: p?.borderColor ?? look.borderColor,
+                                backgroundColor: look.backgroundColor,
+                                transform: pressTransform(p),
+                              }}
+                            >
+                              {look.ring ? (
+                                // F-A11Y-001 AF-1 (AnswerFeedback D4): look-here is the card's dashed ring outside the tile.
+                                <View aria-hidden pointerEvents="none" style={choiceCardRingStyle(look.ring, look.borderRadius, p?.borderWidth ?? rest)} />
+                              ) : null}
+                              <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                                {card.ko}
+                              </Text>
+                              {card.romanization !== '' ? (
+                                <Body size="sm" tone="secondary">
+                                  {card.romanization}
+                                </Body>
+                              ) : null}
+                              {look.mark ? (
+                                <View style={{ position: 'absolute', right: spacing.md }}>
+                                  <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
+                                </View>
+                              ) : null}
                             </View>
                           );
                         }}
