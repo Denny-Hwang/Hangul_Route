@@ -5,6 +5,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STEADY } from '@/lib/console/__tests__/fixtures/report';
 import { resetTransferLockForTests } from '@/lib/console/transfer-lock';
+import { VISIBLE_POLL_MS } from '@/lib/console/visible-refresh';
 import TeachSpacePage from '@/app/(console)/teach/space/page';
 
 /**
@@ -297,5 +298,174 @@ describe('a family roster keeps its shipped order', () => {
     expect(orderOf(['join-code', 'this-week', 'student-card'])[0]).toBe('join-code');
     expect(byTestId('space-settings')).toHaveLength(1);
     expect(byTestId('practiced-line').length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * AMENDMENTS-CLASS-CODE-OVERLAY CO-2 (section 3.7; tests section 6 item 6): on a class roster a card with a summary shows
+ * a What to revisit button at line 4 and keeps the letters and words to revisit behind it, closed on every page load,
+ * so a shared classroom screen never shows them beside a name. The count line ("Words: N collected · M strong") stays
+ * with the card. A family card keeps today's lines.
+ */
+describe('What to revisit on a class card (CO-2)', () => {
+  const stamp = (day: string): string => `2026-10-${day}T09:30:00.000Z`;
+  const summaryWith = (day: string, needsPractice: string[], words: string[] | null): Record<string, unknown> => ({
+    ...STEADY,
+    lastActiveAt: stamp(day),
+    needsPractice,
+    ...(words ? { vocab: { collected: 12, strong: 4, topicsStarted: 2, topicsPracticed7d: 1, needsPractice: words } } : {}),
+  });
+  const cardOf = (name: string): ReactTestInstance => {
+    const card = byTestId('student-card').find((c) => c.findAll((n) => n.type === 'strong').some((s) => textOf(s) === name));
+    if (!card) throw new Error(`no card for ${name}`);
+    return card;
+  };
+  const cardNames = (): string[] => byTestId('student-card').map((c) => textOf(c.findAllByType('strong')[0] as ReactTestInstance));
+  const toggleOf = (name: string): ReactTestInstance => one('revisit-toggle', cardOf(name));
+  const advance = async (ms: number): Promise<void> => {
+    await act(async () => {
+      vi.advanceTimersByTime(ms);
+    });
+    await act(async () => undefined);
+  };
+
+  beforeEach(() => {
+    state.learners = [
+      member('profile:yuhan', 'Yuhan', { summary: summaryWith('30', ['ㅂ', 'ㅅ'], ['vocab:sagwa-apple', 'vocab:nun-eye']), lastActiveAt: stamp('30') }),
+      member('profile:jaehan', 'Jaehan', { summary: summaryWith('29', ['ㄱ'], null), lastActiveAt: stamp('29') }),
+      member('profile:ana', 'Ana', { summary: summaryWith('28', [], null), lastActiveAt: stamp('28') }),
+      member('profile:mina', 'Mina', { summary: null, lastSyncedAt: null, lastActiveAt: null, joinedAt: '2026-09-10T00:00:00.000Z' }),
+    ];
+  });
+
+  it('every page load starts closed: no jamo and no "Words to revisit" in any card, the count line stays', async () => {
+    await render();
+    const yuhan = cardOf('Yuhan');
+    expect(textOf(yuhan)).not.toContain('ㅂ');
+    expect(textOf(yuhan)).not.toContain(getMessages('en').console.space.learner.wordsRevisit('').trim());
+    expect(textOf(yuhan)).not.toContain('Revisit:');
+    expect(byTestId('revisit-body')).toHaveLength(0);
+    expect(textOf(one('student-words', yuhan))).toBe('Words: 12 collected · 4 strong');
+    expect(yuhan.findAll((n) => n.props.lang === 'ko')).toHaveLength(0);
+    for (const name of ['Yuhan', 'Jaehan', 'Ana']) expect(toggleOf(name).props['aria-expanded']).toBe(false);
+  });
+
+  it('the button is on every card with a summary and on none without one; it sits after the quests and the count line', async () => {
+    await render();
+    expect(byTestId('revisit-toggle')).toHaveLength(3);
+    expect(byTestId('revisit-toggle', cardOf('Mina'))).toHaveLength(0);
+    expect(textOf(toggleOf('Yuhan'))).toBe(getMessages('en').console.space.learner.revisitToggle);
+    const order = cardOf('Yuhan')
+      .findAll((n) => typeof n.type === 'string' && ['practiced-line', 'journey-strip', 'student-words', 'revisit-toggle', 'card-actions'].includes(String(n.props['data-testid'])))
+      .map((n) => String(n.props['data-testid']));
+    expect(order).toEqual(['practiced-line', 'journey-strip', 'student-words', 'revisit-toggle', 'card-actions']);
+    expect(toggleOf('Yuhan').props['aria-describedby']).toBe(cardOf('Yuhan').findAllByType('strong')[0]?.props.id);
+  });
+
+  it('pressing a card\'s button opens that card only: its letters and its words, with the Hangul marked Korean', async () => {
+    await render();
+    await press(toggleOf('Yuhan'));
+    const yuhan = cardOf('Yuhan');
+    expect(toggleOf('Yuhan').props['aria-expanded']).toBe(true);
+    expect(toggleOf('Yuhan').props['aria-controls']).toBe(one('revisit-body', yuhan).props.id);
+    expect(textOf(one('revisit-body', yuhan))).toContain('Revisit: ㅂ · ㅅ');
+    expect(textOf(one('revisit-body', yuhan))).toContain('Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)');
+    expect(byTestId('revisit-body')).toHaveLength(1);
+    expect(textOf(cardOf('Jaehan'))).not.toContain('ㄱ');
+    expect(toggleOf('Jaehan').props['aria-expanded']).toBe(false);
+    // Pressing again closes it.
+    await press(toggleOf('Yuhan'));
+    expect(byTestId('revisit-body')).toHaveLength(0);
+  });
+
+  it('a card with neither letters nor words says "Nothing to revisit yet." once opened', async () => {
+    await render();
+    await press(toggleOf('Ana'));
+    expect(textOf(one('revisit-body', cardOf('Ana')))).toBe(getMessages('en').console.space.learner.revisitNothing);
+  });
+
+  it.each(['es', 'ko'] as UiLocale[])('%s: the button and its words in the console language', async (locale) => {
+    lang.locale = locale;
+    await render();
+    expect(textOf(toggleOf('Ana'))).toBe(getMessages(locale).console.space.learner.revisitToggle);
+    await press(toggleOf('Ana'));
+    expect(textOf(one('revisit-body', cardOf('Ana')))).toBe(getMessages(locale).console.space.learner.revisitNothing);
+  });
+
+  it('the open state survives a quiet re-read and a new card order (it is kept by learner id)', async () => {
+    await render();
+    await press(toggleOf('Jaehan'));
+    expect(cardNames()).toEqual(['Yuhan', 'Jaehan', 'Ana', 'Mina']);
+    // Jaehan practices after Yuhan: the roster reads again in the new order.
+    state.learners = [
+      member('profile:jaehan', 'Jaehan', { summary: summaryWith('31', ['ㄱ'], null), lastActiveAt: '2026-10-31T09:30:00.000Z' }),
+      ...(state.learners as Array<Record<string, unknown>>).filter((l) => l.id !== 'profile:jaehan'),
+    ];
+    await advance(VISIBLE_POLL_MS);
+    expect(cardNames()).toEqual(['Jaehan', 'Yuhan', 'Ana', 'Mina']);
+    expect(toggleOf('Jaehan').props['aria-expanded']).toBe(true);
+    expect(textOf(one('revisit-body', cardOf('Jaehan')))).toContain('Revisit: ㄱ');
+    expect(toggleOf('Yuhan').props['aria-expanded']).toBe(false);
+  });
+
+  it('it is not stored: the next visit starts closed', async () => {
+    await render();
+    await press(toggleOf('Yuhan'));
+    act(() => mounted?.unmount());
+    mounted = null;
+    await render();
+    expect(byTestId('revisit-body')).toHaveLength(0);
+  });
+
+  it('the address moving to another class (the page stays mounted) starts every card closed', async () => {
+    await render();
+    await press(toggleOf('Yuhan'));
+    expect(byTestId('revisit-body')).toHaveLength(1);
+    nav.query = 'id=space%3Aother';
+    await act(async () => {
+      (mounted as ReactTestRenderer).update(<TeachSpacePage />);
+    });
+    await act(async () => undefined);
+    expect(byTestId('revisit-body')).toHaveLength(0);
+    expect(toggleOf('Yuhan').props['aria-expanded']).toBe(false);
+  });
+
+  it('Show the code closes every open card', async () => {
+    await render();
+    await press(toggleOf('Yuhan'));
+    await press(toggleOf('Ana'));
+    expect(byTestId('revisit-body')).toHaveLength(2);
+    await press(one('class-code-open'));
+    await press(one('class-code-close'));
+    expect(byTestId('class-code-overlay')).toHaveLength(0);
+    expect(byTestId('revisit-body')).toHaveLength(0);
+    expect(textOf(cardOf('Yuhan'))).not.toContain('ㅂ');
+  });
+
+  it('with initials instead of names the card folds the same', async () => {
+    state.learners = (state.learners as Array<Record<string, unknown>>).map((l, i) => ({ ...l, displayName: ['Y. K.', 'J. O.', 'A. P.', 'M. K.'][i] }));
+    await render();
+    expect(textOf(cardOf('Y. K.'))).not.toContain('ㅂ');
+    expect(byTestId('revisit-toggle')).toHaveLength(3);
+    await press(toggleOf('Y. K.'));
+    expect(textOf(one('revisit-body', cardOf('Y. K.')))).toContain('ㅂ · ㅅ');
+  });
+
+  it('a family card keeps today\'s lines in view: the letters and words, no button', async () => {
+    state.kind = 'family';
+    nav.query = 'id=space%3Akim-family';
+    await render();
+    expect(byTestId('revisit-toggle')).toHaveLength(0);
+    expect(byTestId('revisit-body')).toHaveLength(0);
+    const yuhan = cardOf('Yuhan');
+    expect(textOf(yuhan)).toContain('Revisit: ㅂ · ㅅ');
+    expect(textOf(one('student-words-revisit', yuhan))).toBe('Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)');
+  });
+
+  it('the card still has no <details>, and its one row of buttons is unchanged', async () => {
+    await render();
+    const yuhan = cardOf('Yuhan');
+    expect(yuhan.findAll((n) => n.type === 'details')).toHaveLength(0);
+    expect(controlsIn(one('card-actions', yuhan))).toEqual(['see-report', 'send-note', 'suggest-start']);
   });
 });

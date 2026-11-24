@@ -80,9 +80,10 @@ const learner = (id: string, displayName: string, vocab: ReturnType<typeof words
 });
 
 let learners: ReturnType<typeof learner>[] = [];
+const kindOf = { kind: 'class' as 'class' | 'family' };
 const ok = <T,>(data: T) => ({ ok: true as const, data });
 const api = {
-  roster: async () => ok({ space: SPACE, learners, joinCode: null, joinCodeExpiresAt: null }),
+  roster: async () => ok({ space: { ...SPACE, kind: kindOf.kind }, learners, joinCode: null, joinCodeExpiresAt: null }),
   listPlans: async () => ok([]),
   relinkRequests: async () => ok([]),
   // GX-1: the class page also reads the class's move lists (only while class moves are shown).
@@ -108,6 +109,7 @@ afterEach(() => {
   act(() => mounted?.unmount());
   mounted = null;
   learners = [];
+  kindOf.kind = 'class';
 });
 
 function textOf(node: ReactTestInstance | string): string {
@@ -121,6 +123,15 @@ async function roster(): Promise<ReactTestInstance> {
   });
   if (!mounted) throw new Error('not mounted');
   return mounted.root;
+}
+
+/** CO-2: a class card keeps its words to revisit behind its What to revisit button; this opens it. */
+async function openRevisit(card: ReactTestInstance): Promise<void> {
+  const [toggle] = byTestId(card, 'revisit-toggle');
+  if (!toggle) throw new Error('no What to revisit button');
+  await act(async () => {
+    (toggle.props.onClick as () => void)();
+  });
 }
 
 const byTestId = (root: ReactTestInstance, id: string): ReactTestInstance[] => root.findAll((node) => typeof node.type === 'string' && node.props['data-testid'] === id);
@@ -141,6 +152,10 @@ describe('the roster with word counts', () => {
     const [mina, sam] = byTestId(root, 'student-card');
     if (!mina || !sam) throw new Error('cards');
     expect(byTestId(mina, 'student-words').map(textOf)).toEqual(['Words: 12 collected · 4 strong']);
+    // CO-2: the words to revisit stay behind the card's button until it is pressed; the count line stays with the card.
+    expect(byTestId(mina, 'student-words-revisit')).toHaveLength(0);
+    expect(mina.findAll((node) => node.type === 'span' && node.props.lang === 'ko')).toHaveLength(0);
+    await openRevisit(mina);
     expect(byTestId(mina, 'student-words-revisit').map(textOf)).toEqual(['Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)']);
     expect(mina.findAll((node) => node.type === 'span' && node.props.lang === 'ko').map(textOf)).toEqual(['사과', '눈']);
     expect(byTestId(sam, 'student-words')).toHaveLength(0);
@@ -154,6 +169,7 @@ describe('the roster with word counts', () => {
     const [mina] = byTestId(root, 'student-card');
     if (!mina) throw new Error('cards');
     expect(byTestId(mina, 'student-words').map(textOf)).toEqual(['Words: 12 collected · 4 strong']);
+    await openRevisit(mina);
     expect(byTestId(mina, 'student-words-revisit').map(textOf)).toEqual(['Words to revisit: 우유 uyu (milk)']);
     expect(byTestId(root, 'week-words-revisit').map(textOf)).toEqual(['Words to revisit together: 우유 uyu (milk) · 빵 ppang (bread)']);
   });
@@ -168,5 +184,18 @@ describe('the roster with word counts', () => {
     expect(byTestId(root, 'week-words-revisit').map(textOf)).toEqual(['Words to revisit together: 우유 uyu (milk) · 사과 sagwa (apple) · 빵 ppang (bread)']);
     // Cards stay in the order the roster sent them, whatever the word counts.
     expect(byTestId(root, 'student-card').map((card) => card.findByType('strong').children.join(''))).toEqual(['Mina', 'Sam', 'Ana']);
+  });
+});
+
+describe('a family roster keeps its word lines in view (CO-2, section 3.7)', () => {
+  it('the words to revisit are on the card with no button: a family sees everything', async () => {
+    kindOf.kind = 'family';
+    learners = [learner('l:1', 'Mina', words(['vocab:sagwa-apple', 'vocab:nun-eye']))];
+    const root = await roster();
+    const [mina] = byTestId(root, 'student-card');
+    if (!mina) throw new Error('cards');
+    expect(byTestId(mina, 'revisit-toggle')).toHaveLength(0);
+    expect(byTestId(mina, 'student-words').map(textOf)).toEqual(['Words: 12 collected · 4 strong']);
+    expect(byTestId(mina, 'student-words-revisit').map(textOf)).toEqual(['Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)']);
   });
 });
