@@ -757,6 +757,15 @@ export const learner = {
     finalLine: (letter: string, syllable: string) => `받침 ${letter}: ${syllable}`,
     hearIt: { cta: '들어 보기' },
     tapToHear: '눌러서 듣기',
+    cantHear: {
+      cta: '소리가 안 들려요?',
+      lines: {
+        apple: '무음 모드를 꺼요. 그런 다음 볼륨을 올려요.',
+        android: '볼륨 버튼으로 미디어 볼륨을 올려요.',
+        computer: '볼륨을 올려요. 이 페이지가 음소거되어 있지 않은지 확인해요.',
+      },
+      showLetters: { cta: '글자 보기' },
+    },
     tapToReplay: '눌러서 다시 듣기',
     action: {
       turn_on: { cta: '소리 켜기' },
