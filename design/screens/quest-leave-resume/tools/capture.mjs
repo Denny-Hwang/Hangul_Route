@@ -17,13 +17,18 @@
 //   words      no emoji and no banned word (packages/i18n/src/banned-words.json, learner and caregiver) in drawn text
 //              or accessible names (board labels and annotations are not drawn UI and are skipped)
 //   no-count   no percent and no "n of m" on the check and save-failed frames (the review-copy rule, spec 3.7)
-//   sheet      every drawn sheet is role=alertdialog, aria-modal, named and described by ids that exist, its first
-//              button is the one focused (the safe choice), and the screen behind it is inert
+//   sheet      every drawn sheet is modal (a ConfirmSheet role=alertdialog; the Hangul Check's shipped LeaveSheet a
+//              dialog), named and described by ids that exist, its first button is the safe choice (on a ConfirmSheet
+//              also the one focused), and the screen behind it is inert
+//   open       on the frame pages, when a sheet opens its title and its safe choice are in the window
+//   body-line  on the save-failed frames, with the body at its top, the body line ("Your answers are still here.") is in
+//              the first screen above the pinned footer, at every size (review round 1; README D12)
 //   in-view    with the body scrolled to its end, the still-stuck line is in view (README D4); on the save-failed frames Try again ends inside the window at every size (the pinned footer, spec 3.5);
 //              on the frame pages the sheet's last button can be reached (inside the window, or inside the sheet's
 //              own scroll)
-//   button     on the Home frames the hero button's top is the same with and without the resume parts (spec 3.2: the
-//              caption and link come in under it, so it never moves)
+//   button     on the Home frames the hero button's top is the same with and without the resume parts. True by
+//              construction in a mock (the parts are drawn after it); it guards the mock only, and LR-2's test 14 is
+//              the real check (spec 3.2)
 import { createRequire } from 'node:module';
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -44,7 +49,7 @@ const DANGER = 'rgb(200, 75, 61)'; // colors.feedback.danger #C84B3D, read only 
 const VIEWPORTS = [
   { w: 360, h: 740, tag: '360x740' },
   { w: 390, h: 844, tag: '390x844' },
-  { w: 320, h: 568, text: 2, tag: '320x568-text200' },
+  { w: 320, h: 568, text: 2, tag: '320x568-text200' }, // html.ts-200: the app's text-size rule at f = 2
   { w: 1024, h: 768, tag: '1024x768' },
 ];
 const FRAMES = readdirSync(join(MOCK, 'frames')).filter((f) => f.endsWith('.html')).sort();
@@ -92,7 +97,7 @@ async function common(page, where) {
 
 async function sheets(page, where) {
   const found = await page.evaluate(() =>
-    [...document.querySelectorAll('.sheet')].map((s) => {
+    [...document.querySelectorAll('.sheet, .qlr-leave')].map((s) => {
       const ids = `${s.getAttribute('aria-labelledby') ?? ''} ${s.getAttribute('aria-describedby') ?? ''}`.trim().split(/\s+/);
       const btns = [...s.querySelectorAll('button')];
       const host = s.closest('.frame-host, .qlr-frame');
@@ -101,17 +106,20 @@ async function sheets(page, where) {
         role: s.getAttribute('role'),
         modal: s.getAttribute('aria-modal'),
         missing: ids.filter((id) => !document.getElementById(id)),
+        confirm: s.classList.contains('confirm'),
         rings: btns.filter((b) => b.classList.contains('focus-ring')).length,
-        first: btns[0]?.classList.contains('focus-ring') ?? false,
+        firstRing: btns[0]?.classList.contains('focus-ring') ?? false,
+        firstSafe: btns[0]?.hasAttribute('data-safe') ?? false,
         inert: !!behind && behind.hasAttribute('inert'),
       };
     }),
   );
   found.forEach((s, i) => {
     const at = `${where} sheet ${i + 1}`;
-    if (s.role !== 'alertdialog' || s.modal !== 'true') fail('sheet', at, 'not a modal alertdialog');
+    if (s.role !== (s.confirm ? 'alertdialog' : 'dialog') || s.modal !== 'true') fail('sheet', at, 'not modal, or the wrong role');
     if (s.missing.length) fail('sheet', at, `missing ids ${s.missing.join(', ')}`);
-    if (s.rings !== 1 || !s.first) fail('sheet', at, 'the safe choice is not the one focused button');
+    if (!s.firstSafe) fail('sheet', at, 'the first button is not the safe choice');
+    if (s.confirm && (s.rings !== 1 || !s.firstRing)) fail('sheet', at, 'the safe choice is not the one focused button');
     if (!s.inert) fail('sheet', at, 'the screen behind is not inert');
   });
 }
@@ -129,6 +137,15 @@ async function frameChecks(page, where, file, text) {
     });
     if (out > 1) fail('in-view', where, `the still-stuck line is ${out} px below the scrolled body`);
   }
+  if (file.startsWith('save-failed') && file !== 'save-failed-stop') {
+    const hidden = await page.evaluate(() => {
+      document.querySelector('.qlr-failed-body').scrollTop = 0;
+      const line = document.querySelector('.qlr-failed-inner > .qlr-secondary:not(.qlr-stuck)').getBoundingClientRect();
+      const body = document.querySelector('.qlr-failed-body').getBoundingClientRect();
+      return Math.round(line.bottom - body.bottom);
+    });
+    if (hidden > 1) fail('body-line', where, `the body line is ${hidden} px under the footer with the body at its top`);
+  }
   if (file.startsWith('save-failed')) {
     const out = await page.evaluate(() => {
       const b = document.querySelector('.qlr-foot .rn-btn').getBoundingClientRect();
@@ -136,12 +153,23 @@ async function frameChecks(page, where, file, text) {
     });
     if (out > 0) fail('in-view', where, `Try again ends ${out} px below the window`);
   }
+  const notOpen = await page.evaluate(() => {
+    const s = document.querySelector('.sheet, .qlr-leave');
+    if (!s) return null;
+    s.scrollTop = 0;
+    const t = s.querySelector('h2').getBoundingClientRect();
+    const b = s.querySelector('[data-safe]').getBoundingClientRect();
+    return t.top < 0 || b.bottom > window.innerHeight + 1 ? `title top ${Math.round(t.top)}, safe choice bottom ${Math.round(b.bottom)}` : null;
+  });
+  if (notOpen !== null) fail('open', where, `the sheet opens with its title or safe choice out of the window (${notOpen})`);
   const unreachable = await page.evaluate(() => {
-    const s = document.querySelector('.sheet');
+    const s = document.querySelector('.sheet, .qlr-leave');
     if (!s) return null;
     s.scrollTop = s.scrollHeight;
     const last = [...s.querySelectorAll('button')].pop().getBoundingClientRect();
-    return last.bottom > window.innerHeight + 1 ? Math.round(last.bottom - window.innerHeight) : null;
+    const out = last.bottom > window.innerHeight + 1 ? Math.round(last.bottom - window.innerHeight) : null;
+    s.scrollTop = 0; // the shot shows the sheet as it opens
+    return out;
   });
   if (unreachable !== null) fail('in-view', where, `the sheet's last button is ${unreachable} px out of reach`);
 }
@@ -155,12 +183,14 @@ try {
       const page = await ctx.newPage();
       await page.goto(pathToFileURL(join(MOCK, 'frames', file)).href);
       await page.waitForFunction(() => document.documentElement.dataset.ready === 'yes');
-      if (v.text) await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+      if (v.text) await page.evaluate(() => document.documentElement.classList.add('ts-200'));
       const name = file.replace('.html', '');
       const where = `${name} ${v.tag}`;
       const text = await common(page, where);
       await sheets(page, where);
       await frameChecks(page, where, name, text);
+      // README D4: the still-stuck frame is shot as it shows when the line fills (the body scrolled to its end).
+      if (name === 'save-failed-stuck') await page.evaluate(() => { const b = document.querySelector('.qlr-failed-body'); b.scrollTop = b.scrollHeight; });
       if (name === 'home-resume' || name === 'home-plain') {
         heroTop[`${name} ${v.tag}`] = await page.evaluate(() => Math.round(document.querySelector('.qlr-hero .rn-hero').getBoundingClientRect().top));
       }

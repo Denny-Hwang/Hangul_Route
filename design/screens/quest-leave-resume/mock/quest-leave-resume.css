@@ -10,15 +10,23 @@
  * what each derives from. Nothing here redefines a token, and no rule uses colors.feedback.danger.
  */
 :root {
-  --radii-xl: 24px;                   /* radii.xl */
+  --radii-xl: 24px;                   /* radii.xl: the Hangul Check LeaveSheet's top corners */
 }
 :root {
   --hoya-face: 56px;                  /* the Home header's Hoya (learner-shell home-hero.html, unchanged) */
   --hoya-check: 120px;                /* StageReviewScreen.tsx intro Hoya size (unchanged) */
   --hoya-failed: 140px;               /* OopsScreen.tsx Hoya size, as the read-failed screen (unchanged) */
+  --hoya-failed-compact: 72px;        /* README D12: at a text scale of 1.5 or more; HoyaBubble's Hoya size (unchanged) */
   --frame-phone: 390px;               /* design board only, not UI: a phone frame on the boards */
   --frame-tablet-h: 640px;            /* design board only, not UI: a tablet frame's drawn height */
 }
+
+/* ---------------------------------------------------------------- 200 % text (the shots' text200 size) */
+/* The app's own rule (packages/design-system text-size.ts): reading sizes scale by f, large type by 1 + (f - 1) / 2. */
+html.ts-200 { --hr-text-scale: 2; --hr-head-ratio: calc((1 + (2 - 1) / 2) / 2); }
+/* README D12: the save-failed page's compact rule at a text scale of 1.5 or more (Largest, or the OS size). */
+html.ts-largest .qlr-hoya-failed, html.ts-200 .qlr-hoya-failed { width: var(--hoya-failed-compact); height: var(--hoya-failed-compact); }
+html.ts-largest .qlr-failed-title, html.ts-200 .qlr-failed-title { margin-top: var(--spacing-sm); }
 
 /* ---------------------------------------------------------------- A frame page fills the window */
 .qlr-frame { min-height: 100vh; }
@@ -27,6 +35,9 @@
 .qlr-close { padding: var(--spacing-none); justify-content: center; }
 
 /* ---------------------------------------------------------------- Home: the hero (as built, HomeScreen.tsx :300-339) */
+/* The header is the shared learner-shell mock; here its title wraps by word and pushes Aa and Profile to a second row */
+/* rather than breaking "Hi, Mina!" one letter a line (review round 1; the shipped ScreenHeader is not redrawn here). */
+.qlr-home .sh-title { flex: 1 1 8rem; overflow-wrap: normal; }
 .qlr-hoya-face { width: var(--hoya-face); height: var(--hoya-face); }
 .qlr-hero { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-md); }
 .qlr-eyebrow { font-size: var(--size-caption); font-weight: var(--weight-semibold); color: var(--colors-text-secondary); }
@@ -74,6 +85,16 @@
 .qlr-stars { display: flex; gap: var(--spacing-xs); }
 .qlr-stars svg { width: var(--spacing-xxxl); height: var(--spacing-xxxl); }
 .qlr-save-line { color: var(--colors-text-secondary); font-size: var(--size-body); overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------- The Hangul Check's LeaveSheet (shipped, StageReviewScreen.tsx:390-425) */
+/* A bottom sheet at every width (no dialog form): paper, radii.xl top corners, padding spacing.lg, gap spacing.sm. */
+.qlr-leave-backdrop { position: fixed; inset: 0; z-index: var(--z-modal); background: var(--colors-surface-overlay); display: flex; flex-direction: column; justify-content: flex-end; }
+.frame-host .qlr-leave-backdrop { position: absolute; }
+.qlr-leave { max-height: 92vh; overflow: auto; background: var(--colors-surface-paper); border-radius: var(--radii-xl) var(--radii-xl) var(--spacing-none) var(--spacing-none); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.qlr-leave h2 { overflow-wrap: anywhere; }
+.qlr-leave-msg { color: var(--colors-text-secondary); overflow-wrap: anywhere; }
+.qlr-leave-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm); }
+.qlr-leave-actions .rn-btn { width: 100%; overflow-wrap: anywhere; }
 
 /* ---------------------------------------------------------------- The sheets (ConfirmSheet) */
 .sheet .confirm-actions { display: flex; flex-direction: column; gap: var(--spacing-sm); }

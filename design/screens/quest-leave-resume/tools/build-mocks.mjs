@@ -90,7 +90,7 @@ const routeHeader = () => `<header class="screen-header"><button class="sh-lead 
 function confirmSheet(id, { title, message, cancel, confirm }) {
   return `<div class="sheet-backdrop" data-qlr="backdrop"><div class="sheet confirm" role="alertdialog" aria-modal="true" aria-labelledby="${id}-t" aria-describedby="${id}-m">
 <h2 id="${id}-t">${esc(title)}</h2><p class="msg" id="${id}-m">${esc(message)}</p>
-<div class="confirm-actions"><button class="btn focus-ring" type="button">${esc(cancel)}</button><button class="btn btn-primary" type="button">${esc(confirm)}</button></div>
+<div class="confirm-actions"><button class="btn focus-ring" type="button" data-safe>${esc(cancel)}</button><button class="btn btn-primary" type="button">${esc(confirm)}</button></div>
 </div></div>`;
 }
 
@@ -126,10 +126,10 @@ const homeSheet = () => confirmSheet('home-sa', { title: T.sheetTitle, message: 
 /** The check's opening column (StageReviewScreen.tsx :323-339; StageCheckScreen.tsx :279-300). */
 function check(kind, state) {
   const title = kind === 'stage' ? T.stageCheck : T.hangulCheck;
-  const top = `<div class="qlr-check-top">${hoya('waving', 'qlr-hoya-check')}<h1 class="rn-display">${esc(title)}</h1>`;
+  const top = `<div class="qlr-check-top"${state === 'reading' ? ' aria-busy="true"' : ''}>${hoya('waving', 'qlr-hoya-check')}<h1 class="rn-display">${esc(title)}</h1>`;
   if (state === 'reading') {
     // Panel R: the intro's Hoya and title, no buttons, for at most the read's limit (800 ms). aria-busy on the column.
-    return `<div class="app-screen qlr-check" aria-busy="true">${routeHeader()}${top}</div></div>`;
+    return `<div class="app-screen qlr-check">${routeHeader()}${top}</div></div>`;
   }
   if (state === 'resume') {
     return `<div class="app-screen qlr-check">${routeHeader()}${top}<h2 class="rn-heading qlr-resume-title" tabindex="-1">${esc(T.resumeTitle)}</h2></div>
@@ -144,7 +144,21 @@ function check(kind, state) {
 /** The pause between parts (unchanged), drawn under the stop sheet. */
 const pause = () => `<div class="app-screen qlr-check">${routeHeader()}<div class="qlr-check-top">${hoya('waving', 'qlr-hoya-check')}<h1 class="rn-heading">${esc(T.pauseFourth)}</h1></div><div class="qlr-actions"><button class="rn-btn rn-hero" type="button">${esc(T.keepGoing)}</button></div></div>`;
 
-const stopSheet = (body) => confirmSheet(`stop-${body === T.stopBodyKept ? 'k' : 'a'}`, { title: T.stopTitle, message: body, cancel: T.keepGoing, confirm: T.stop });
+/**
+ * The Hangul Check's own stop sheet as shipped (StageReviewScreen.tsx:390-425, LeaveSheet): a Modal, a bottom sheet at
+ * every width, paper with radii.xl top corners, padding spacing.lg, gap spacing.sm; Heading prompt, Body secondary;
+ * Keep going Button primary md full width, Stop Button ghost md full width. The dimmed area stays (Keep going) and is
+ * hidden from assistive tech. It is not the ConfirmSheet; LR-3a changes only its body line (owner question O5).
+ */
+const leaveSheet = (body) => {
+  const id = `hc-stop-${body === T.stopBodyKept ? 'k' : 'a'}`;
+  return `<div class="qlr-leave-backdrop" data-qlr="backdrop"><div class="qlr-leave" role="dialog" aria-modal="true" aria-labelledby="${id}-t" aria-describedby="${id}-m">
+<h2 class="rn-prompt" id="${id}-t">${esc(T.stopTitle)}</h2><p class="qlr-leave-msg" id="${id}-m">${esc(body)}</p>
+<div class="qlr-leave-actions"><button class="rn-btn rn-primary" type="button" data-safe>${esc(T.keepGoing)}</button><button class="rn-btn rn-ghost" type="button">${esc(T.stop)}</button></div>
+</div></div>`;
+};
+/** The Stage Check's stop sheet as shipped (StageCheckScreen.tsx:180-194): the ConfirmSheet, Keep going first. */
+const stageStopSheet = (body) => confirmSheet(`sc-stop-${body === T.stopBodyKept ? 'k' : 'a'}`, { title: T.stopTitle, message: body, cancel: T.keepGoing, confirm: T.stop });
 
 // ------------------------------------------------------------------------------------------------ Save failed (LR-4)
 /**
@@ -153,8 +167,8 @@ const stopSheet = (body) => confirmSheet(`stop-${body === T.stopBodyKept ? 'k' :
  */
 function failed({ busy = false, stuck = false } = {}) {
   const soft = busy ? ' aria-disabled="true"' : '';
-  return `<div class="app-screen qlr-failed"${busy ? ' aria-busy="true"' : ''}>${routeHeader()}
-<main class="qlr-failed-body"><div class="qlr-failed-inner">${hoya('thinking', 'qlr-hoya-failed')}<h1 class="rn-heading qlr-failed-title" tabindex="-1">${esc(T.failedTitle)}</h1><p class="qlr-secondary">${esc(T.failedBody)}</p><p class="qlr-secondary qlr-stuck" aria-live="polite">${stuck ? esc(T.stillStuck) : ''}</p></div></main>
+  return `<div class="app-screen qlr-failed">${routeHeader()}
+<main class="qlr-failed-body"${busy ? ' aria-busy="true"' : ''}><div class="qlr-failed-inner">${hoya('thinking', 'qlr-hoya-failed')}<h1 class="rn-heading qlr-failed-title" tabindex="-1">${esc(T.failedTitle)}</h1><p class="qlr-secondary">${esc(T.failedBody)}</p><p class="qlr-secondary qlr-stuck" aria-live="polite">${stuck ? esc(T.stillStuck) : ''}</p></div></main>
 <div class="qlr-foot"><button class="rn-btn rn-hero" type="button"${soft}>${esc(T.tryAgain)}</button></div></div>`;
 }
 
@@ -198,7 +212,7 @@ const FRAMES = {
   'check-reading': { title: 'Hangul Check, reading the stored check (LR-3a, Panel R)', html: check('hangul', 'reading') },
   'check-resume': { title: 'Hangul Check, the resume page (LR-3a, Panel A)', html: check('hangul', 'resume') },
   'stage-check-resume': { title: 'Stage Check, the resume page (LR-3b, Panel A)', html: check('stage', 'resume') },
-  'check-stop': { title: 'The check stop sheet with OD-LR1 (c) (LR-3a, Panel E)', html: behind(pause()) + stopSheet(T.stopBodyKept) },
+  'check-stop': { title: 'The Hangul Check stop sheet with OD-LR1 (c) (LR-3a, Panel E)', html: behind(pause()) + leaveSheet(T.stopBodyKept) },
   'save-failed': { title: 'Daily Review, the finish could not be saved (LR-4, Panel A)', html: failed() },
   'save-failed-stuck': { title: 'Daily Review, after 3 tries in a row (LR-4, Panel A)', html: failed({ stuck: true }) },
   'save-failed-stop': { title: 'Daily Review, a back on the failed page (LR-4, Panel F)', html: behind(failed()) + drStop() },
@@ -236,8 +250,9 @@ ${item('R. reading (Hangul Check, at most 800 ms)', 'The intro\'s Hoya and title
 ${item('A. resume page, Hangul Check', 'Continue goes on at the item after the last one answered; Start again goes to the intro and clears nothing', check('hangul', 'resume'))}
 ${item('A. resume page, Stage Check (LR-3b)', 'The same page; read inside the Stage Check\'s existing loading frame', check('stage', 'resume'))}
 ${item('C. the intro after Start again (unchanged)', 'Let\'s go clears the stored check and begins a new one; Maybe later and Close keep it', check('hangul', 'intro'))}
-${item('E. the stop sheet, OD-LR1 (c) (recommended)', 'Stop keeps the stored check: "You can keep going later." (new)', behind(pause()) + stopSheet(T.stopBodyKept))}
-${item('E. the stop sheet, OD-LR1 (a) (today)', 'Stop clears the stored check: the shipped line stays', behind(pause()) + stopSheet(T.stopBodyToday))}
+${item('E. Hangul Check stop sheet, OD-LR1 (c) (recommended)', 'The shipped LeaveSheet (not the ConfirmSheet); Stop keeps the stored check: "You can keep going later." (new)', behind(pause()) + leaveSheet(T.stopBodyKept))}
+${item('E. Hangul Check stop sheet, OD-LR1 (a) (today)', 'The shipped LeaveSheet; Stop clears the stored check: the shipped line stays', behind(pause()) + leaveSheet(T.stopBodyToday))}
+${item('E. Stage Check stop sheet, OD-LR1 (c) (LR-3b)', 'The shipped ConfirmSheet (StageCheckScreen.tsx:180-194): Keep going first and focused, Stop primary', behind(pause()) + stageStopSheet(T.stopBodyKept))}
 </div>
 <div class="board-wide">
 ${item('A, wide (1024)', 'The same column at the Screen frame\'s reading width', check('hangul', 'resume'), 'tablet')}
@@ -251,7 +266,7 @@ pages['save-failed.html'] = `${head('A finish that could not be saved (LR-0b)')}
 <p class="annot">AMENDMENTS-QUEST-LEAVE-RESUME 3.5 (row LR-4). Wireframe design/wireframes/reviews/save-failed.md. The read-failed screen's layout (OopsScreen): Hoya thinking 140, title (first focus), body, the still-stuck line (a polite live region, empty until the third try), Try again pinned in the Screen footer. No bubble, no warning icon, no danger colour, no score. The Stage Check draws the same page with the same keys.</p>
 <div class="board-grid">
 ${item('A. Daily Review or Stage Check, the finish was rejected', 'One action: Try again on the same answers', failed())}
-${item('A, busy: a try is running', 'Try again soft-disabled (same words, no spinner); aria-busy on the screen', failed({ busy: true }))}
+${item('A, busy: a try is running', 'Try again soft-disabled (same words, no spinner); aria-busy on the body column (Close stays outside it)', failed({ busy: true }))}
 ${item('A, after 3 tries in a row', 'The still-stuck line fills, announced once', failed({ stuck: true }))}
 ${item('F. a back, Daily Review', 'The stop sheet with a true body: Back to it first', behind(failed()) + drStop())}
 ${item('F. a back, Stage Check', 'Stop the check?, the same body, Keep going first', behind(failed()) + scStop())}
@@ -278,7 +293,7 @@ const pair = (label, html) => `<div class="board-item"><p class="board-label">${
 pages['greyscale.html'] = `${head('Greyscale check (LR-0b)')}
 <div class="board">
 <h1 class="page-title">Greyscale: every state reads without colour</h1>
-<p class="annot">Left as drawn, right in luminance greyscale (the #grey feColorMatrix of design/screens/app-shell/mock/check.html). The states differ by words and shape, never by colour alone: the resume hero adds a caption and a link; the busy Try again is drawn sunken and muted; the sheet's focused safe choice has the focus ring; the resume page's two buttons differ in size and position.</p>
+<p class="annot">Left as drawn, right in luminance greyscale (the #grey feColorMatrix of design/screens/app-shell/mock/check.html). The states differ by words and shape, never by colour alone: the resume hero adds a caption and a link; the busy Try again is drawn sunken and muted; the sheet's focused safe choice has the focus ring; the resume page's two buttons differ in size and order (their tones come out a similar grey).</p>
 <div class="board-wide">
 ${pair('Home: plain hero on a first day', home('plain-start'))}
 ${pair('Home: resume variant', home('resume'))}
