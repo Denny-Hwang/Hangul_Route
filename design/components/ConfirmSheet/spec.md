@@ -35,3 +35,13 @@ The one confirm step of the web builds, replacing the browser's `confirm()`: its
 - **Initial focus.** Cancel on the checking, saved and unsaved sheets; Keep on the Remove anyway step. Never the first or last button by DOM order, never Save progress first and never Remove anyway, so no single activation from the opening focus removes anything (native: the same order of the platform `Alert` buttons, Cancel with style `cancel`).
 - **No PIN on the device.** Remove from this device is disabled before any sheet opens, with `caregiver.pin.needsPinFirst` as its description (spec 10.4, CS-12).
 - **`confirmTone: 'danger'`**, used only by the Remove anyway second step: **Keep** first and focused, **Remove** filled `feedback.danger` with `text.onPrimary` (4.64:1). `feedback.danger` is reserved for grown-up destructive confirmations (tokens.ts) and never appears on a learner screen or for a learner's miss; every other ConfirmSheet keeps `destructive` as wording only. Native builds map it to the platform `Alert` button style `destructive`.
+
+## [LR] `safeFilled`: the safe choice as the filled button (LR-2)
+
+`docs/specs/AMENDMENTS-QUEST-LEAVE-RESUME.md` section 3.2 (row LR-2; owner decision 2026-11-24, O4). Mock: `design/screens/quest-leave-resume/mock/home-resume.html`, panel B (Home's Start again sheet).
+
+- **Prop**: `safeFilled?: boolean`, default `false`. With it, the safe cancel is drawn as the filled button (`brand.primary` fill, `text.onPrimary` label, `brand.primaryDark` while pressed) and the confirm as the plain outlined one (`surface.paper` fill, `border.strong`, `text.primary` label, `surface.sunken` while pressed). The shipped look is the other way round and stays the default.
+- **Order and focus do not change**: the cancel is first and takes focus on the web; the confirm is second. `confirmFirst` and `busy` keep their meaning. The focus ring is the same on either look.
+- **Never red**: the confirm stays plain; `confirmTone: 'danger'` is unrelated and is not used with it.
+- **Used by**: Home's Start again sheet only ("Keep my place" filled, "Start again" plain). LR-6 (the two check stop sheets) is the other planned caller; every existing sheet keeps today's look.
+- **Tokens**: no new token. The looks are the two that already exist, swapped between the buttons (`style.ts`: `actionStyle(kind, dialog, state, tone, safeFilled)`, `actionTextStyle(kind, scale, safeFilled)`).
