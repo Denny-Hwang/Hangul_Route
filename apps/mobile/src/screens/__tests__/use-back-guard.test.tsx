@@ -2,6 +2,7 @@ import { NavigationContext } from '@react-navigation/native';
 import type { ReactElement, ReactNode } from 'react';
 import { act } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fakeNavigation } from '../../test-support/fake-navigation';
 import { render, resetPlatform, setPlatform, unmount } from '../../test-support/render';
 import { BackGuardScopeContext, useBackGuard, useBackGuardScope, useRouteBackGuard, type BackGuardNavigation } from '../use-back-guard';
 
@@ -15,36 +16,6 @@ vi.mock('@react-navigation/native', async () => {
   const { createContext } = await import('react');
   return { NavigationContext: createContext(undefined) };
 });
-
-type Listener = Parameters<BackGuardNavigation['addListener']>[1];
-
-/**
- * The fake navigation of the route-level tests: `fire(type)` runs the `beforeRemove` listeners with an event that carries
- * `defaultPrevented` as React Navigation's does (a listener after one that prevented sees it), and answers whether the
- * back was held. [LR] `listenerCount` says how many guards a route holds.
- */
-export function fakeNavigation(): BackGuardNavigation & { fire: (type: string) => boolean; setOptions: ReturnType<typeof vi.fn>; listenerCount: () => number } {
-  const listeners: Listener[] = [];
-  return {
-    addListener: (_type, listener) => {
-      listeners.push(listener);
-      return () => listeners.splice(listeners.indexOf(listener), 1);
-    },
-    setOptions: vi.fn(),
-    listenerCount: () => listeners.length,
-    fire: (type) => {
-      const event = {
-        data: { action: { type } },
-        defaultPrevented: false,
-        preventDefault: () => {
-          event.defaultPrevented = true;
-        },
-      };
-      for (const listener of [...listeners]) listener(event);
-      return event.defaultPrevented;
-    },
-  };
-}
 
 function Guarded({ navigation, onBack, holds }: { navigation: BackGuardNavigation; onBack: () => boolean; holds?: boolean }): null {
   useBackGuard(navigation, onBack, holds);
