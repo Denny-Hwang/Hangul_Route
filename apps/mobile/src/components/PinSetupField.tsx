@@ -77,6 +77,8 @@ export function PinSetupField({ heading, state, onChange, error = null, disabled
         {title}
       </Body>
       <View
+        accessible
+        accessibilityRole="image"
         accessibilityLabel={messages.a11y.pinDots(state.entry.length, PIN_LENGTH)}
         style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md, marginVertical: spacing.md }}
       >
