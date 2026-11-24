@@ -38,3 +38,12 @@ overrides:
   "@clerk/clerk-js>@coinbase/wallet-sdk": "-"
   "@clerk/clerk-js>@base-org/account": "-"
   "@clerk/clerk-js>@stripe/stripe-js": "-"
+
+# ESLint 9 for the accessibility lint gate (AMENDMENTS-A11Y-CI AC-3, OD-AC1/OD-AC2).
+# eslint-plugin-react-native-a11y@3.5.1 (last release 2024-11-04) declares
+# `eslint ^3 || ... || ^8`; it uses only rule APIs that ESLint 9 has
+# (context.options, context.report, context.sourceCode), and AC-3's config tests
+# prove every enabled rule fires. Without this entry pnpm only warns.
+peerDependencyRules:
+  allowedVersions:
+    "eslint-plugin-react-native-a11y>eslint": "9"
