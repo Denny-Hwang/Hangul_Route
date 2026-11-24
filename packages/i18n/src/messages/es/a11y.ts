@@ -198,7 +198,7 @@ export const a11y = {
     miss: (item: string) => `Esta no: ${item}. Prueba otra.`,
     missListen: (item: string) => `Esta no: ${item}. Escucha otra vez.`,
     missHint: (item: string, hint: string) => `Esta no: ${item}. ${hint}`,
-    notMatched: (word: string, meaning: string) => `No hacen pareja: ${word} y ${meaning}. Prueba otro significado.`,
+    notMatched: (word: string, meaning: string) => `No hacen pareja: ${word}, ${meaning}. Prueba otro significado.`,
     round: (n: number, total: number, prompt: string) => `Pregunta ${n} de ${total}. ${prompt}`,
   },
   romanizationOr: 'o',
