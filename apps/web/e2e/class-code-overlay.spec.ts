@@ -3,6 +3,10 @@ import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { STEADY } from './report-fixtures';
 
 /**
+ * [CO-1b] The same from the teacher home (OD-CO7 (a)): Show the code on a class row opens the overlay over the home, from
+ * the spaces list; no roster is read, no learner name is anywhere on the page, the page content is inert, the print holds
+ * the overlay only, and focus goes back to the row's button.
+ *
  * AMENDMENTS-CLASS-CODE-OVERLAY CO-1 (section 6 item 9, local lane): on a class page Show the code opens an opaque
  * full-window dialog with the class name, the code and a QR code, and nothing else, so a classroom screen shows no
  * learner. Keyboard only: Tab to Show the code, Enter opens it with focus on its heading, Escape (or Tab, Enter on Close)
@@ -46,20 +50,23 @@ const LEARNERS = [learner('profile:yuhan', NAMES[0] as string, 'hoya-orange'), l
 
 // A class move into this class: its learner's alias is a name, shown by the page's Asking to join card once a re-read finds it.
 const MOVE_IN = { id: 'move:in1', kind: 'accept', status: 'waiting', from: { name: 'Class C' }, learner: { alias: 'J. K.', avatar: 'hoya-orange', level: '5-7' }, createdAt: at(-60), at: null };
-const late = { move: false };
+const late = { move: false, rosterReads: 0 };
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
 const json = (route: Route, status: number, data: unknown) => route.fulfill({ status, contentType: 'application/json', headers: CORS, body: JSON.stringify({ data }) });
 
 async function mockClass(page: Page): Promise<void> {
   late.move = false;
+  late.rosterReads = 0;
   await page.clock.install({ time: NOW });
   await page.addInitScript(([key]) => window.sessionStorage.setItem(key as string, JSON.stringify({ token: 'acct-e2e', accountId: 'acct-e2e', displayName: 'Ms Kim' })), [SESSION_KEY]);
   await page.route(`${API}/**`, async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
     const path = decodeURIComponent(new URL(request.url()).pathname);
-    if (path === '/api/spaces') return json(route, 200, { spaces: [{ space: CLASS, role: 'owner', counts: { learners: LEARNERS.length, accounts: 1, classes: 0 } }] });
+    // The spaces list carries the live code and its expiry, as the Worker's list does (SpaceListItem); the teacher home reads them.
+    if (path === '/api/spaces') return json(route, 200, { spaces: [{ space: CLASS, role: 'owner', counts: { learners: LEARNERS.length, accounts: 1, classes: 0 }, joinCode: CODE, joinCodeExpiresAt: at(60 * 24 * 18) }] });
+    if (path.endsWith('/roster')) late.rosterReads += 1;
     if (path.endsWith('/roster')) return json(route, 200, { space: CLASS, learners: LEARNERS, joinCode: CODE, joinCodeExpiresAt: at(60 * 24 * 18) });
     if (path.endsWith('/relink-requests')) return json(route, 200, { requests: [] });
     if (path.endsWith('/class-moves')) return json(route, 200, { outgoing: [], incoming: late.move ? [MOVE_IN] : [] });
@@ -232,6 +239,74 @@ test.describe('a part that mounts while the overlay is open', () => {
     await expect(page.getByTestId('class-code-overlay')).toHaveCount(0);
     await expect(page.getByTestId('asking-to-join')).toBeVisible();
     expect(await page.evaluate(() => document.querySelector('[inert]'))).toBeNull();
+  });
+});
+
+async function openHome(page: Page, size: { width: number; height: number }): Promise<void> {
+  await page.setViewportSize(size);
+  await mockClass(page);
+  await page.goto('/teach/home');
+  await expect(page.getByTestId('space-row-space:a')).toBeVisible();
+}
+
+test.describe('Show the code from the teacher home (CO-1b, OD-CO7 (a))', () => {
+  test('keyboard only: Tab to the row\'s button, Enter opens it on its heading, Escape gives focus back; no roster is read and no name is on the page', async ({ page }) => {
+    await openHome(page, { width: 1280, height: 720 });
+    await tabTo(page, 'class-code-open-space:a');
+    await page.keyboard.press('Enter');
+    const dialog = page.getByTestId('class-code-overlay');
+    await expect(dialog).toBeVisible();
+    expect(await activeTag(page)).toBe('H2');
+    await expect(page.locator('h2:focus')).toHaveText('Sunday Class A');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    expect(await activeTestId(page)).toBe('class-code-open-space:a');
+    await page.keyboard.press('Enter');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Tab');
+    expect(await activeTestId(page)).toBe('class-code-close');
+    await page.keyboard.press('Enter');
+    await expect(dialog).toHaveCount(0);
+    expect(await activeTestId(page)).toBe('class-code-open-space:a');
+    expect(late.rosterReads).toBe(0);
+    for (const name of NAMES) expect(await page.evaluate(() => document.body.innerText)).not.toContain(name);
+  });
+
+  test('open: every point of a 12 x 8 grid hits the overlay, the home is inert, and neither the overlay nor the print holds a learner name', async ({ page }) => {
+    await openHome(page, { width: 1280, height: 720 });
+    await page.getByTestId('class-code-open-space:a').click();
+    const dialog = page.getByTestId('class-code-overlay');
+    await expect(dialog).toBeVisible();
+    const misses = await page.evaluate(() => {
+      const overlay = document.querySelector('[data-testid="class-code-overlay"]');
+      const out: string[] = [];
+      for (let col = 0; col < 12; col += 1) {
+        for (let row = 0; row < 8; row += 1) {
+          const hit = document.elementFromPoint(((col + 0.5) / 12) * window.innerWidth, ((row + 0.5) / 8) * window.innerHeight);
+          if (!hit || !overlay?.contains(hit)) out.push(`${col},${row}`);
+        }
+      }
+      return out;
+    });
+    expect(misses).toEqual([]);
+    expect(await page.evaluate(() => document.querySelector('[data-testid="teacher-home-content"]')?.hasAttribute('inert'))).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.hasAttribute('data-hr-code-overlay'))).toBe(true);
+    const text = await dialog.innerText();
+    expect(text).toContain(CODE);
+    expect(text).toContain('Sunday Class A');
+    for (const name of NAMES) expect(text).not.toContain(name);
+
+    await page.emulateMedia({ media: 'print' });
+    const printed = await page.evaluate(() => document.body.innerText);
+    expect(printed).toContain(CODE);
+    expect(printed).not.toContain(getMessages('en').console.home.open.cta);
+    for (const name of NAMES) expect(printed).not.toContain(name);
+    await page.emulateMedia({ media: 'screen' });
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    expect(await page.evaluate(() => document.querySelector('[inert]'))).toBeNull();
+    expect(late.rosterReads).toBe(0);
   });
 });
 
