@@ -177,7 +177,7 @@ describe('useHeroResume: no resume variant', () => {
   });
 });
 
-describe('useHeroResume: another learner', () => {
+describe('useHeroResume: another learner, and Home leaving focus', () => {
   const deferred = <T,>(): { promise: Promise<T>; resolve: (v: T) => void } => {
     let resolve: (v: T) => void = () => undefined;
     const promise = new Promise<T>((r) => {
@@ -206,6 +206,43 @@ describe('useHeroResume: another learner', () => {
     expect(log.filter((l) => l.startsWith('p2:'))).not.toContain('p2: 3/5');
     await act(async () => p2Read.resolve(savedAt(3)));
     expect(shown(r)).toBe('4/5');
+  });
+
+  it('leaving Home drops the line: back in focus, an old Continue is not said while the saved run is read again', async () => {
+    const second = deferred<unknown>();
+    const read = vi.fn().mockResolvedValueOnce(savedAt(2)).mockReturnValueOnce(second.promise);
+    const r = await render(<Probe profileId="p1" questId={QUEST} deps={depsOf(read)} />);
+    expect(shown(r)).toBe('3/5');
+    await act(async () => focus.set(false));
+    expect(shown(r)).toBe('none');
+    await act(async () => focus.set(true));
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(shown(r)).toBe('none');
+    // The lesson was finished in the player meanwhile: nothing is stored, so the hero stays plain.
+    await act(async () => second.resolve(null));
+    expect(shown(r)).toBe('none');
+  });
+
+  it('back in focus the line comes from the new read (the run went on to a later step)', async () => {
+    const read = vi.fn().mockResolvedValueOnce(savedAt(1)).mockResolvedValueOnce(savedAt(3));
+    const r = await render(<Probe profileId="p1" questId={QUEST} deps={depsOf(read)} />);
+    expect(shown(r)).toBe('2/5');
+    await act(async () => focus.set(false));
+    await act(async () => focus.set(true));
+    expect(shown(r)).toBe('4/5');
+  });
+
+  it('a chunk load that failed is asked for again the next time Home is focused', async () => {
+    const store = fakeStore(false, async () => {
+      throw new Error('chunk failed to load');
+    });
+    const read = vi.fn(async () => savedAt(2));
+    const r = await render(<Probe profileId="p1" questId={QUEST} deps={depsOf(read, store.store)} />);
+    expect(store.ensureCells).toHaveBeenCalledTimes(1);
+    await act(async () => focus.set(false));
+    await act(async () => focus.set(true));
+    expect(store.ensureCells).toHaveBeenCalledTimes(2);
+    expect(shown(r)).toBe('none');
   });
 });
 

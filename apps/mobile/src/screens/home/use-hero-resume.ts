@@ -9,7 +9,8 @@ import { clearSavedRun, readSavedRun } from '../../store/quest-run-saved';
 /**
  * [LR] AMENDMENTS-QUEST-LEAVE-RESUME row LR-2 (section 3.2): whether Home's hero lesson goes on from where a run stopped.
  *
- * Home reads the saved run each time it comes into focus (`readSavedRun`, section 3.3), then decides in two steps:
+ * Home reads the saved run each time it comes into focus (`readSavedRun`, section 3.3) and forgets it when it leaves focus,
+ * then decides in two steps:
  *
  * 1. A candidate, from the stored value alone (`resumeCandidate`): a run of the hero's quest, begun within a day, past
  *    its first step, not a story quest. No candidate: nothing else happens, and no lesson chunk is asked for.
@@ -65,6 +66,10 @@ export function useHeroResume(
       });
       return () => {
         alive = false;
+        // Leaving Home forgets what it read: coming back, no old Continue line shows while the saved run is read again
+        // (the run may have been finished or gone on in the player), and the candidate flips from none to one once the
+        // read is in, which is also what asks a chunk that failed to load again.
+        setSaved(null);
       };
     }, [profileId, read]),
   );
@@ -79,7 +84,8 @@ export function useHeroResume(
     if (!candidate || ready || questId === null) return;
     const cell = store.cellOfQuest(questId);
     if (cell === undefined) return;
-    // A failed load is not told: the hero stays plain, and the next time Home is focused it asks again.
+    // A failed load is not told: the hero stays plain. It asks again when Home comes back into focus (the saved run is
+    // read again, so the candidate flips off and on), not on a timer.
     store.ensureCells([cell]).catch(() => undefined);
   }, [candidate, ready, questId, store]);
 
