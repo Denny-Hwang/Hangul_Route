@@ -792,6 +792,15 @@ export const learner = {
     finalLine: (letter: string, syllable: string) => `${letter} abajo: ${syllable}`,
     hearIt: { cta: 'Escuchar' },
     tapToHear: 'Toca y escucha',
+    cantHear: {
+      cta: '¿No se oye?',
+      lines: {
+        apple: 'Desactiva el modo silencio. Luego sube el volumen.',
+        android: 'Sube el volumen multimedia con los botones de volumen.',
+        computer: 'Sube el volumen. Revisa que esta página no esté silenciada.',
+      },
+      showLetters: { cta: 'Mostrar las letras' },
+    },
     tapToReplay: 'Toca para repetir',
     action: {
       turn_on: { cta: 'Activar sonido' },

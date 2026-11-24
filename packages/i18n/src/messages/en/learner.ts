@@ -1158,6 +1158,21 @@ export const learner = {
     finalLine: (letter: string, syllable: string) => `${letter} at the bottom: ${syllable}`,
     hearIt: { cta: 'Hear it' },
     tapToHear: 'Tap to hear',
+    /**
+     * "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR section 3.10): the link in the speaker row of a sound-only round
+     * (its words are also the sheet's title), the one line for this device, and the button that shows the text
+     * fallback. The line is chosen by device family; the sheet's other button is `hearIt`. "Letters" means written
+     * characters of any script: in Syllable Build the text is the romanization (Latin letters).
+     */
+    cantHear: {
+      cta: "Can't hear it?",
+      lines: {
+        apple: 'Turn off silent mode. Then turn the volume up.',
+        android: 'Turn up the media volume with the volume buttons.',
+        computer: 'Turn the volume up. Check that this page is not muted.',
+      },
+      showLetters: { cta: 'Show the letters' },
+    },
     tapToReplay: 'Tap to replay',
     /** The panel's one button, keyed by `FallbackAction` (`none` has no button). */
     action: {

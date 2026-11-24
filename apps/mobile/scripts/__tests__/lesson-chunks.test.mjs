@@ -740,17 +740,19 @@ describe('precacheReport and its budget lines', () => {
     // [DP] AMENDMENTS-DURABLE-PROGRESS DP-1e (the tombstone rebuild, the gate on every learner tab, the Results line after the first retry) on top of TI-3b measures 4,598,325 B, merged with DP-3 4,600,099 B (release build, CI=1): 4,604,100 B.
     // [LR] AMENDMENTS-QUEST-LEAVE-RESUME LR-2 (Home tells the learner where they stopped) on origin/main e30badbac (4,603,925 B) measures 4,606,846 B (release build, CI=1): 4,610,900 B.
     // [AF] F-A11Y-001 AF-1 (answer feedback's shared parts) on top of LR-2 (4,606,846 B) measures 4,611,387 B (release build, CI=1): 4,615,400 B.
-    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_615_400);
+    // [CH] AMENDMENTS-AUDIO-CANT-HEAR CH-1a (the Can't hear it? link and sheet, SheetFrame, the one-section voice help, the cantHear strings) on top of AF-1 (4,611,387 B) measures 4,617,949 B (release build, CI=1): 4,621,900 B.
+    expect(PRECACHE_BUDGET.startBundleRaw).toBe(4_621_900);
     const beforeFn7 = [4_751_444, 4_751_600, 4_762_235, 4_757_612, 4_758_546, 4_758_450, 4_758_598, 4_815_388, 4_835_104, 4_840_751, 4_847_283, 4_849_712, 4_860_799, 4_860_944, 4_863_471, 4_864_709, 4_865_262, 4_870_372, 4_924_620, 4_928_160, 4_932_010, 4_859_564, 4_901_256, 4_902_157, 4_905_865, 4_909_799, 4_916_987, 4_948_154, 4_953_393, 4_957_992, 4_965_473, 4_973_489];
     // FN-7 took about 400 KB out: the line is under every measurement before it. [DP] Row DP-1e: the line has grown
     // about 30 KB since FN-7 (4,574,000 to 4,604,100 B), so it now stays at least 140 KB (was 150 KB) under each of them.
     // [AF] Row AF-1: 4,615,400 B, so at least 135 KB under each of them.
-    for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(135_000);
-    for (const measured of [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_588_346, 4_594_642, 4_598_325, 4_600_099, 4_603_925, 4_606_846, 4_611_387]) {
+    // [CH] Row CH-1a: 4,621,900 B, so it stays at least 125 KB (was 135 KB) under each of them: the closest old size, 4,751,444 B, is 129,544 B above it.
+    for (const measured of beforeFn7) expect(measured - PRECACHE_BUDGET.startBundleRaw).toBeGreaterThan(125_000);
+    for (const measured of [4_570_041, 4_575_345, 4_581_661, 4_587_780, 4_588_346, 4_594_642, 4_598_325, 4_600_099, 4_603_925, 4_606_846, 4_611_387, 4_617_949]) {
       expect(PRECACHE_BUDGET.startBundleRaw - measured).toBeGreaterThanOrEqual(0);
     }
     // The line stays a small margin over the latest measurement.
-    expect(PRECACHE_BUDGET.startBundleRaw - 4_611_387).toBeLessThan(10_000);
+    expect(PRECACHE_BUDGET.startBundleRaw - 4_617_949).toBeLessThan(10_000);
     expect(PRECACHE_BUDGET.startBundleRaw).toBeLessThan(6_518_688);
     expect(PRECACHE_BUDGET.learnerPrecacheRaw).toBe(8_787_329 + 2_500_000);
   });

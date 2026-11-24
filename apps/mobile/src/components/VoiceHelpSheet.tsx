@@ -1,15 +1,21 @@
-import { Body, Button, Caption, Heading, Icon, Spacer, colors, radii, spacing, touchTarget, GuardedPressable } from '@hangul-route/design-system';
+import { Body, Button, Caption, Spacer, spacing } from '@hangul-route/design-system';
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
-import { Modal, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { voiceHelpContent } from '../logic/audio/voice-help';
+import type { DeviceFamily } from '../logic/device-family';
+import { currentDeviceFamily } from '../platform/device-family';
+import { SheetFrame } from './SheetFrame';
 
 /**
  * "Add a Korean voice" bottom sheet (F-AUDIO-004 §3.7, wireframe
  * design/wireframes/minigame/audio-fallback.md W7, spec
- * design/components/VoiceHelp/spec.md). Plain static text per OS family; it is
- * help, never a gate, and returns to its caller. Opened from the Profile Sound
- * card and from the no-voice PromptPanel. Words: `learner.audio.voiceHelp`.
+ * design/components/VoiceHelp/spec.md). Plain static text for **this device's** family only
+ * (AMENDMENTS-AUDIO-CANT-HEAR section 3.9, review item P2-22; on the web the family comes from the user agent). It is
+ * help, never a gate, and returns to its caller. Opened from the Profile Sound card and from the no-voice
+ * PromptPanel. Words: `learner.audio.voiceHelp`. The frame (scrim, focus on the title, width cap, scroll cue) is
+ * `SheetFrame`, shared with the "Can't hear it?" sheet.
  */
 interface Props {
   visible: boolean;
@@ -19,61 +25,32 @@ interface Props {
 
 export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }: Props): ReactElement {
   const m = useMessages();
-  const help = voiceHelpContent(m.learner.audio.voiceHelp);
+  // Read when the sheet opens, not on every render; there is no stored value.
+  const [family, setFamily] = useState<DeviceFamily>(currentDeviceFamily);
+  useEffect(() => {
+    if (visible) setFamily(currentDeviceFamily());
+  }, [visible]);
+  const help = voiceHelpContent(m.learner.audio.voiceHelp, family);
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} accessibilityViewIsModal>
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: colors.surface.overlay }} testID={testID}>
-        <GuardedPressable
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel={m.common.buttons.close}
-          style={{ flex: 1 }}
-          testID={`${testID}-scrim`}
-        />
-        <View
-          accessibilityRole="none"
-          style={{
-            maxHeight: '85%',
-            backgroundColor: colors.surface.paper,
-            borderTopLeftRadius: radii.xl,
-            borderTopRightRadius: radii.xl,
-            padding: spacing.lg,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
-            <View style={{ flex: 1 }}>
-              <Heading level="prompt">{help.title}</Heading>
-            </View>
-            <GuardedPressable
-              onPress={onClose}
-              accessibilityRole="button"
-              accessibilityLabel={m.common.buttons.close}
-              // Native only (react-native-web drops it); the target is already at least touchTarget.min each way.
-              hitSlop={spacing.sm}
-              style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Icon name="close" size={22} color={colors.text.muted} />
-            </GuardedPressable>
-          </View>
-          <Caption tone="muted">{help.note}</Caption>
-          <Spacer size="md" />
-
-          <ScrollView style={{ flexShrink: 1 }}>
-            {help.sections.map((section) => (
-              <View key={section.id} style={{ marginBottom: spacing.md, gap: spacing.xs }} testID={`${testID}-${section.id}`}>
-                <Body weight="semibold">{section.title}</Body>
-                {section.steps.map((step, i) => (
-                  <Body key={step}>{`${i + 1}. ${step}`}</Body>
-                ))}
-              </View>
-            ))}
-            <Body tone="secondary">{help.footer}</Body>
-          </ScrollView>
-
-          <Spacer size="md" />
-          <Button label={m.common.buttons.ok} tone="primary" size="md" fullWidth onPress={onClose} testID={`${testID}-ok`} />
+    <SheetFrame
+      visible={visible}
+      onClose={onClose}
+      title={help.title}
+      closeLabel={m.common.buttons.close}
+      testID={testID}
+      footer={<Button label={m.common.buttons.ok} tone="primary" size="md" fullWidth onPress={onClose} testID={`${testID}-ok`} />}
+    >
+      <Caption tone="muted">{help.note}</Caption>
+      <Spacer size="md" />
+      {help.sections.map((section) => (
+        <View key={section.id} style={{ marginBottom: spacing.md, gap: spacing.xs }} testID={`${testID}-${section.id}`}>
+          <Body weight="semibold">{section.title}</Body>
+          {section.steps.map((step, i) => (
+            <Body key={step}>{`${i + 1}. ${step}`}</Body>
+          ))}
         </View>
-      </View>
-    </Modal>
+      ))}
+      <Body tone="secondary">{help.footer}</Body>
+    </SheetFrame>
   );
 }

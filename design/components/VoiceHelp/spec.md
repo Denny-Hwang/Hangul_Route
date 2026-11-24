@@ -1,7 +1,7 @@
 # VoiceHelp: Sound card voice status, help sheet, `speaker-off` glyph (component spec v1)
 
 Spec: `docs/specs/F-AUDIO-004-korean-voice-quality.md` §3.7 (Sound card second line), §3.13 (`speaker-off` goes through a design mock first), PR A-4b in §6 · wireframe: `design/wireframes/minigame/audio-fallback.md` W7 (Profile Sound card and the help sheet) and W3 (the "How to add a voice" link in the no-voice panel)
-Code: `apps/mobile/src/components/VoiceHelpSheet.tsx` (sheet paint) · `apps/mobile/src/screens/profile/ProfileScreen.tsx` (Sound card) · `apps/mobile/src/components/PromptPanel.tsx` (the link) · `apps/mobile/src/logic/audio/voice-help.ts` (pure view models and the steps, unit-tested) · copy in `logic/audio/copy.ts` · glyph in `packages/design-system/src/components/Icon/glyphs.ts`
+Code: `apps/mobile/src/components/VoiceHelpSheet.tsx` (sheet content) · `apps/mobile/src/components/SheetFrame.tsx` (the frame it shares with the "Can't hear it?" sheet: scrim, focus on the title, width cap, scroll cue) · `apps/mobile/src/screens/profile/ProfileScreen.tsx` (Sound card) · `apps/mobile/src/components/PromptPanel.tsx` (the link) · `apps/mobile/src/logic/audio/voice-help.ts` (pure view models and the steps, unit-tested) · copy in `logic/audio/copy.ts` · glyph in `packages/design-system/src/components/Icon/glyphs.ts`
 
 ## What it is
 

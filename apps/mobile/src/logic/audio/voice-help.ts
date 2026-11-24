@@ -55,12 +55,17 @@ export interface VoiceHelpContent {
 /** The OS families, in the order of the wireframe. */
 const SECTION_ORDER: readonly VoiceHelpSectionId[] = ['apple', 'android', 'computer'];
 
-/** The sheet's content from `learner.audio.voiceHelp`: static steps per OS family. */
-export function voiceHelpContent(copy: AudioCopy['voiceHelp']): VoiceHelpContent {
+/**
+ * The sheet's content from `learner.audio.voiceHelp`: static steps per OS family. With a `family` (this device's, from
+ * `platform/device-family.ts`) it holds that family's one section; without one, all three
+ * (AMENDMENTS-AUDIO-CANT-HEAR section 3.9, review item P2-22).
+ */
+export function voiceHelpContent(copy: AudioCopy['voiceHelp'], family?: VoiceHelpSectionId): VoiceHelpContent {
+  const ids = family === undefined ? SECTION_ORDER : [family];
   return {
     title: copy.title,
     note: copy.note,
-    sections: SECTION_ORDER.map((id) => ({ id, title: copy.sections[id].title, steps: copy.sections[id].steps })),
+    sections: ids.map((id) => ({ id, title: copy.sections[id].title, steps: copy.sections[id].steps })),
     footer: copy.footer,
   };
 }

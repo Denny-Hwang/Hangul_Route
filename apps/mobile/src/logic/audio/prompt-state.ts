@@ -7,7 +7,8 @@ import type { AudioCapability } from './capability';
  * Listen & Pick question). Text is shown proactively when sound is off or no
  * Korean voice exists, and reactively after a failed play. Once shown in a
  * round it stays (no flicker) and resets with the next round; the one
- * exception is a "no Korean voice" text when the voices then load (2026-10-17).
+ * exception is a "no Korean voice" text when the voices then load (2026-10-17),
+ * and not even that for a text the learner asked for (`asked`).
  */
 export type PlayResult = 'played' | 'muted' | 'unavailable';
 export type PromptPhase = 'idle' | 'playing' | 'ok' | 'text';
@@ -17,10 +18,17 @@ export interface PromptState {
   phase: PromptPhase;
   reason: FallbackReason | null;
   attempts: number;
+  /**
+   * The learner asked for the text ("Show the letters", AMENDMENTS-AUDIO-CANT-HEAR section 3.5). Absent until
+   * 'show_text' sets it, so INITIAL_PROMPT_STATE is unchanged. It is not a reason: a successful play clears a reason,
+   * and the learner's ask is not a failure. A text the learner asked for stays until 'reset'.
+   */
+  asked?: true;
 }
 
 export type PromptEvent =
   | 'play'
+  | 'show_text'
   | 'reset'
   | { result: PlayResult; failure?: FallbackReason }
   | { capability: AudioCapability }
@@ -30,8 +38,10 @@ export const INITIAL_PROMPT_STATE: PromptState = { phase: 'idle', reason: null, 
 
 export function promptReducer(s: PromptState, e: PromptEvent): PromptState {
   if (e === 'reset') return INITIAL_PROMPT_STATE;
+  // The learner's own ask: the text, with no reason; the phase and reason of a text already up are kept.
+  if (e === 'show_text') return { ...s, phase: 'text', asked: true };
   if (e === 'play') {
-    return { phase: s.phase === 'text' ? 'text' : 'playing', reason: s.phase === 'text' ? s.reason : null, attempts: s.attempts + 1 };
+    return { ...s, phase: s.phase === 'text' ? 'text' : 'playing', reason: s.phase === 'text' ? s.reason : null, attempts: s.attempts + 1 };
   }
   if ('result' in e) {
     if (e.result === 'played') {
@@ -47,6 +57,8 @@ export function promptReducer(s: PromptState, e: PromptEvent): PromptState {
       // Voices that load late (Chrome's empty first list) clear a "no Korean voice" text: it was never true.
       // Any other text (muted, blocked, error) stays for the round.
       if (s.phase !== 'text' || s.reason !== 'no_voice') return s;
+      // A text the learner asked for stays: only the reason, which was never true, goes.
+      if (s.asked) return { ...s, reason: null };
       return s.attempts === 0 ? { ...s, phase: INITIAL_PROMPT_STATE.phase, reason: null } : { ...s, phase: 'ok', reason: null };
     }
     if (cap.tts.state !== 'none') return s;

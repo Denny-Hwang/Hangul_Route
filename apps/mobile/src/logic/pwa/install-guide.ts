@@ -1,3 +1,5 @@
+import { ANDROID_UA, MAC_UA, isAppleUserAgent } from '../device-family';
+
 /**
  * Install-guide decisions — F-PWA-001 §3.1, §3.3. Pure: every input is
  * passed in so the rules are testable without a browser.
@@ -22,9 +24,8 @@ export interface InstallEnv {
 
 /** In-app browsers, which cannot install a web app: Facebook, Instagram, KakaoTalk, LINE, X, Snapchat, Naver, Daum, WeChat, TikTok. */
 const IN_APP_TOKENS = /FBAN|FBAV|Instagram|KAKAOTALK|Line\/|Twitter|Snapchat|NAVER\(inapp|DaumApps|MicroMessenger|BytedanceWebview|musical_ly/i;
-const IOS = /iPhone|iPad|iPod/i;
-const MAC = /Macintosh/i;
-const ANDROID = /Android/i;
+// The three device tests live in `logic/device-family.ts`, which the "Can't hear it?" help shares.
+const MAC = MAC_UA;
 const MOBILE = /Mobi|Android|iPhone|iPad|iPod/i;
 const FIREFOX = /Firefox\//i;
 /** Safari names itself `Version/… Safari/`; Chrome, Edge, Opera and Firefox on a Mac add their own token. */
@@ -38,8 +39,8 @@ export function installGuideVariant(env: InstallEnv): InstallGuideVariant {
   const ua = env.userAgent;
   if (IN_APP_TOKENS.test(ua)) return 'in-app-browser';
   if (env.hasPromptEvent) return 'prompt';
-  if (IOS.test(ua) || (MAC.test(ua) && env.maxTouchPoints > 1)) return 'ios-safari';
-  if (ANDROID.test(ua)) return 'desktop-hint';
+  if (isAppleUserAgent(ua, env.maxTouchPoints)) return 'ios-safari';
+  if (ANDROID_UA.test(ua)) return 'desktop-hint';
   if (MOBILE.test(ua)) return 'none';
   // Desktop Firefox has no way to install a web app: a hint would point at a menu item that is not there.
   if (FIREFOX.test(ua)) return 'none';

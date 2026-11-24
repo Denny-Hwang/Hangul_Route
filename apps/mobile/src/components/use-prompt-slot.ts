@@ -39,6 +39,15 @@ export interface PromptSlot {
    * here." never comes in above answers already on screen and moves them under a finger. Once true, stays true.
    */
   settled: boolean;
+  /**
+   * The "Can't hear it?" link shows (AMENDMENTS-AUDIO-CANT-HEAR section 3.2): the surface opted in (`cantHear`) and no text
+   * shows for any reason, the learner's own ask included.
+   */
+  cantHear: boolean;
+  /** `cantHear` and the voice check is over: until then the link is drawn but inactive, so it never comes in later and moves the screen. */
+  cantHearActive: boolean;
+  /** "Show the letters": the learner asks for this round's text (the `show_text` event). It stays until `reset()`. */
+  showLetters: () => void;
 }
 
 export interface PromptSlotOptions {
@@ -59,6 +68,11 @@ export interface PromptSlotOptions {
    * reports the fallback it does draw itself (the story check's "Say it yourself" chip). Default `true`.
    */
   reportFallback?: boolean;
+  /**
+   * A sound-only prompt that offers "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR section 3.1): the slot then says
+   * whether the link shows (`slot.cantHear`) and takes the learner's ask (`slot.showLetters()`). Default `false`.
+   */
+  cantHear?: boolean;
 }
 
 export function usePromptSlot({
@@ -66,6 +80,7 @@ export function usePromptSlot({
   hasClip = false,
   textOnScreen = false,
   reportFallback = true,
+  cantHear = false,
 }: PromptSlotOptions): PromptSlot {
   const [state, dispatch] = useReducer(promptReducer, INITIAL_PROMPT_STATE);
   // A pack chunk's clips arrive after the first render (AMENDMENTS-AUDIO-CLIPS AC-B6): the caller re-renders then, so
@@ -86,7 +101,8 @@ export function usePromptSlot({
   const capability = { tts, clips, unlocked };
   const clip = (said !== null ? recorded(said) : hasClip) && clips;
   const view = promptPanelView(state, capability, muted, clip, copy);
-  const settled = revealed.current || muted || clip || !voiceCheckPending;
+  // A text the learner asked for is already up, so nothing can come in above the answers: they are not held for the voice check.
+  const settled = revealed.current || muted || clip || !voiceCheckPending || state.asked === true;
   revealed.current = settled;
 
   // Mute and capability changes reach the slot as events, so text shown in a round stays (no flicker). An item whose
@@ -128,7 +144,10 @@ export function usePromptSlot({
     if (action !== 'none') replay();
   }, []);
 
-  return { view, play, reset, act, settled };
+  const showLetters = useCallback((): void => dispatch('show_text'), []);
+
+  const showLink = cantHear && !view.textShown;
+  return { view, play, reset, act, settled, cantHear: showLink, cantHearActive: showLink && settled, showLetters };
 }
 
 function isLookupList(says: ClipLookup | readonly ClipLookup[]): says is readonly ClipLookup[] {
