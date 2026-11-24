@@ -3,9 +3,9 @@ import type { ReactNode } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { Path } from 'react-native-svg';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
+import { altStrokesForJamo, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import type { MinigameScope } from '../../../logic/minigame-config';
-import { placeBlockStrokes } from '../../../logic/trace-word/block-strokes';
+import { placeBlockStrokes, placeWordStrokes } from '../../../logic/trace-word/block-strokes';
 import { TRACE_IDLE_MS } from '../../../logic/trace-evaluator';
 import { TRACE_KEEP_GOING_MS } from '../../../logic/trace-ready';
 import { useQuestRunStore } from '../../../store/quest-run-store';
@@ -334,6 +334,31 @@ describe('Trace Stroke and Trace a Word: another accepted form (SO-2)', () => {
     await press(r.root, 'Done');
     expect(texts(r.root)).toContain(getMessages('en').learner.minigame.traceWord.wordDone);
     expect(texts(r.root)).not.toContain(COPY.pass.open);
+  });
+
+  // OD-SO12: the pass reads the best-fitting accepted form, so the Variant B shape of ㅈ passes 지 (untaught: no tip).
+  it('Trace a Word, 돼지 with ㅈ written in its Variant B shape: the word is done, the shape guide and lines as before', async () => {
+    const scope: MinigameScope = {
+      kind: 'trace-word',
+      rounds: 1,
+      traceWord: { rounds: [{ id: 'dwaeji', word: { ko: '돼지', romanization: 'dwaeji', en: 'pig' } }] },
+    };
+    const r = await render(<TraceWordGame scope={scope} host={{ mode: 'quest', answer: () => undefined, complete: () => undefined }} />);
+    mounted.push(r);
+    await layOut(r);
+    const [dwae, ji] = placeWordStrokes('돼지', strokesForJamo, altStrokesForJamo)!;
+    for (const s of dwae!.strokes) await draw(r.root, s);
+    await press(r.root, 'Done');
+    await wait(2_000);
+    await press(r.root, 'Show me');
+    expect(hint.last).toMatchObject({ orderTaught: false });
+    expect(hint.last!.target).toEqual(ji!.strokes);
+    await endHint();
+    const [j, i] = ji!.letters;
+    for (const s of [...j!.altStrokes[0]!, ...i!.strokes]) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(getMessages('en').learner.minigame.traceWord.wordDone);
+    expect(texts(r.root)).not.toContain(RETRY_LINE);
   });
 
   it('ㅌ Variant C (ㄷ first, then the middle bar; not accepted), taught: the order line', async () => {

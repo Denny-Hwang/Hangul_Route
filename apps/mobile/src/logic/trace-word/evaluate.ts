@@ -1,10 +1,10 @@
 import { reviewedStrokeIds, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { unitOrderTaught } from '../stroke-order-taught';
-import { DEFAULT_PASS_THRESHOLD, bestFormIndex, scoreTrace } from '../stroke-scoring';
+import { DEFAULT_PASS_THRESHOLD, bestFormIndex, scoreTrace, type ScoreTraceResult } from '../stroke-scoring';
 import { createTraceEvaluator, type TraceEvaluator, type TraceScheduler } from '../trace-evaluator';
 import { traceCoaching, type DirectionNudge } from '../trace-copy';
 import { isFinished } from '../trace-ready';
-import { combineForms, type BlockRect, type PlacedLetter } from './block-strokes';
+import type { BlockRect, PlacedLetter } from './block-strokes';
 import type { TraceWordMode } from './rounds';
 
 /**
@@ -81,7 +81,7 @@ export const LOOP_FILL_SPLIT = 0.88;
  * coaching line. [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.2: only for a unit whose every jamo is in `reviewed`
  * (`unitOrderTaught`); any other unit gets no order line (`orderCorrect` null) and only the loop nudge.
  * [SO] SO-2: order and direction hold when the drawing follows any accepted form of the letters (`altStrokes`,
- * every combination); the checks above, and so the pass, stay on the forms shown.
+ * every combination), and since OD-SO12 so does the pass: every check above is read on the best-fitting combination.
  */
 export function scoreTraceUnit(
   letters: readonly UnitLetter[],
@@ -89,8 +89,35 @@ export function scoreTraceUnit(
   tolerance: number = BLOCK_TOLERANCE,
   reviewed: readonly string[] = reviewedStrokeIds,
 ): TraceUnitResult {
+  // [SO] SO-2, OD-SO12: every combination of the letters' accepted forms (the forms shown first) is checked. The pass
+  // and coverage are the best-fitting combination's (one it passes first, then the most coverage; a tie keeps the
+  // forms shown). Order and direction are read on the combination the drawing follows best (`bestFormIndex`), which
+  // may differ: ㅈ in three lifts over the ghost fits the ghost and follows the 3-stroke form. An untaught unit only
+  // needs its loop nudge, read on the best-fitting combination, so every combination's order and direction are read
+  // only for a taught unit (review of #1077).
+  const combos = letterCombinations(letters);
+  const checks = combos.map((combo) => checkUnit(combo, drawn, tolerance));
+  const fit = checks.reduce((b, c, i) => {
+    const best = checks[b]!;
+    return (c.passed && !best.passed) || (c.passed === best.passed && c.coverage > best.coverage) ? i : b;
+  }, 0);
+  const taught = unitOrderTaught(letters, reviewed);
+  const reads = taught ? combos.map((combo) => readUnit(combo, drawn, tolerance)) : [readUnit(combos[fit]!, drawn, tolerance)];
+  const coaching = traceCoaching(reads[bestFormIndex(reads)]!, taught);
+  return { passed: checks[fit]!.passed, coverage: checks[fit]!.coverage, ...coaching };
+}
+
+/** Every combination of the letters' accepted forms, the letters as shown first; each letter keeps its char and ids. */
+function letterCombinations(letters: readonly UnitLetter[]): UnitLetter[][] {
+  return letters.reduce<UnitLetter[][]>(
+    (combos, l) => combos.flatMap((head) => [l.strokes, ...(l.altStrokes ?? [])].map((strokes) => [...head, { ...l, strokes, altStrokes: [] }])),
+    [[]],
+  );
+}
+
+/** The pass checks of `scoreTraceUnit` on one combination of forms. */
+function checkUnit(letters: readonly UnitLetter[], drawn: JamoStrokePoint[][], tolerance: number): { passed: boolean; coverage: number } {
   const target = letters.flatMap((l) => l.strokes);
-  const whole = scoreTrace({ target, drawn, tolerance, checkOrder: true, checkDirection: true });
   const perLetter = letters.map((l) => scoreTrace({ target: l.strokes, drawn, tolerance }));
   const coverage = perLetter.length > 0 ? Math.min(...perLetter.map((r) => r.coverage)) : 0;
   const strokesHeld = perLetter.every((r) => r.perStrokeCoverage.every((c) => c >= STROKE_FLOOR));
@@ -100,18 +127,14 @@ export function scoreTraceUnit(
     letters.every((l, i) => precisionOf(nearest[i]!, l.strokes, reach) >= PRECISION_THRESHOLD) &&
     drawn.every((stroke) => strokeLength(stroke) < STRAY_MIN_LENGTH || precisionOf(stroke, target, reach) >= STROKE_ON_TARGET);
   const loopsRight = letters.every((l, i) => loopMatches(l, nearest[i]!));
-  // [SO] SO-2: order and direction are read on every combination of the letters' accepted forms (the forms shown
-  // first: `target`), each with its short strokes forgiven, and taken from the one the drawing follows best.
-  const read = combineForms(letters.map((l) => [l.strokes, ...(l.altStrokes ?? [])])).map((form, k) => {
-    const r = k === 0 ? whole : scoreTrace({ target: form, drawn, tolerance, checkOrder: true, checkDirection: true });
-    return { ...r, directionsPerTarget: r.directionsPerTarget?.map((ok, i) => ok || strokeLength(form[i]!) < SHORT_STROKE) };
-  });
-  const coaching = traceCoaching(read[bestFormIndex(read)]!, unitOrderTaught(letters, reviewed));
-  return {
-    passed: coverage >= DEFAULT_PASS_THRESHOLD && strokesHeld && precise && loopsRight,
-    coverage,
-    ...coaching,
-  };
+  return { passed: coverage >= DEFAULT_PASS_THRESHOLD && strokesHeld && precise && loopsRight, coverage };
+}
+
+/** Order and direction over the whole combination, in writing order, a stroke too short to read forgiven. */
+function readUnit(letters: readonly UnitLetter[], drawn: JamoStrokePoint[][], tolerance: number): ScoreTraceResult {
+  const target = letters.flatMap((l) => l.strokes);
+  const r = scoreTrace({ target, drawn, tolerance, checkOrder: true, checkDirection: true });
+  return { ...r, directionsPerTarget: r.directionsPerTarget?.map((ok, i) => ok || strokeLength(target[i]!) < SHORT_STROKE) };
 }
 
 /** Distance from a point to the nearest segment of the strokes. */
@@ -232,16 +255,19 @@ export function everyLetterInked(letters: readonly Pick<PlacedLetter, 'zones'>[]
 /**
  * AMENDMENTS-TRACE-IDLE §3.1 at block size: every letter of the unit is finished (`isFinished` of
  * `logic/trace-ready`: it would pass and every target stroke is covered to `TRACE_READY_STROKE_MIN`),
- * each against its own strokes at the unit's tolerance. No letters: not finished.
+ * each against its own strokes at the unit's tolerance; [SO] OD-SO12: or against one of its other accepted forms.
+ * No letters: not finished.
  */
 export function unitLettersFinished(
-  letters: readonly Pick<PlacedLetter, 'strokes'>[],
+  letters: readonly (Pick<PlacedLetter, 'strokes'> & Partial<Pick<PlacedLetter, 'altStrokes'>>)[],
   drawn: readonly JamoStrokePoint[][],
   tolerance: number = BLOCK_TOLERANCE,
 ): boolean {
   return (
     letters.length > 0 &&
-    letters.every((l) => isFinished(scoreTrace({ target: [...l.strokes], drawn: [...drawn], tolerance }), false))
+    letters.every((l) =>
+      [l.strokes, ...(l.altStrokes ?? [])].some((form) => isFinished(scoreTrace({ target: [...form], drawn: [...drawn], tolerance }), false)),
+    )
   );
 }
 

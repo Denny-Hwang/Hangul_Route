@@ -4,7 +4,7 @@ import { getMessages } from '@hangul-route/i18n';
 import { traceWordMessage } from '../view';
 import { TRACE_IDLE_MS } from '../../trace-evaluator';
 import { isLetterFinished } from '../../trace-ready';
-import { placeBlockStrokes, type PlacedBlock } from '../block-strokes';
+import { placeBlockStrokes, placeWordStrokes, type PlacedBlock } from '../block-strokes';
 import {
   BLOCK_TOLERANCE,
   INK_MARGIN,
@@ -473,7 +473,44 @@ describe('[SO] SO-2: a unit reads order and direction on any accepted form of it
     expect(r.directionNudge).toBe('open');
   });
 
-  it('the other forms change no pass, and nothing at all while the unit is untaught', () => {
+  // OD-SO12: the pass reads the best-fitting accepted form too.
+  it('지 with ㅈ written in its Variant B shape (left leg from the middle of the bar) passes, block and letter mode, untaught', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const drawn = trace([...j!.altStrokes[0]!, ...i!.strokes]);
+    expect(scoreTraceUnit(shownOnly(block), drawn).passed).toBe(false);
+    const r = scoreTraceUnit(lettersOf(block), drawn);
+    expect(r).toMatchObject({ passed: true, orderCorrect: null, directionNudge: 'none' });
+    expect(r.coverage).toBeGreaterThanOrEqual(0.9);
+    expect(scoreTraceUnit([j!], trace(j!.altStrokes[0]!))).toMatchObject({ passed: true, orderCorrect: null });
+    expect(scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, ALL_TAUGHT)).toMatchObject({ passed: true, orderCorrect: true, directionNudge: 'none' });
+  });
+
+  it('돼지: the 지 block with ㅈ in its Variant B shape passes, and is ready on idle; no proper prefix of it is', () => {
+    const blocks = placeWordStrokes('돼지', strokesForJamo, altStrokesForJamo)!;
+    const ji = blocks[1]!;
+    const [j, i] = ji.letters;
+    const form = [...j!.altStrokes[0]!, ...i!.strokes];
+    expect(scoreTraceUnit(lettersOf(ji), trace(form)).passed).toBe(true);
+    expect(traceWordReady('block', ji.letters, trace(form))).toBe(true);
+    expect(unitLettersFinished(ji.letters, trace(form))).toBe(true);
+    for (let k = 0; k < form.length; k++) expect(traceWordReady('block', ji.letters, trace(form.slice(0, k))), `first ${k}`).toBe(false);
+    expect(traceWordReady('letter', [j!], trace(j!.altStrokes[0]!))).toBe(true);
+    for (let k = 0; k < 3; k++) expect(traceWordReady('letter', [j!], trace(j!.altStrokes[0]!.slice(0, k)))).toBe(false);
+  });
+
+  it('a drawing that matches no accepted form still fails: 지 with ㅈ drawn as ㅅ (no bar), or ㅣ alone', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const [, left, right] = j!.altStrokes[0]!;
+    for (const drawn of [trace([left!, right!, ...i!.strokes]), trace(i!.strokes), trace(block.strokes, 30, 30)]) {
+      expect(scoreTraceUnit(lettersOf(block), drawn).passed).toBe(false);
+      expect(scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, ALL_TAUGHT).passed).toBe(false);
+      expect(traceWordReady('block', block.letters, drawn)).toBe(false);
+    }
+  });
+
+  it('the other forms never lose a pass, and while the unit is untaught change no coaching', () => {
     for (const syllable of ['지', '자', '차', '토', '호', '짜', '앉', '낮', '돼']) {
       const all = placeAll(syllable);
       const plain = placeBlockStrokes(syllable, strokesForJamo)!;
@@ -489,11 +526,14 @@ describe('[SO] SO-2: a unit reads order and direction on any accepted form of it
         ...otherForms.map((form) => trace(form).map((s) => [...s].reverse())),
       ];
       for (const drawn of drawings) {
-        expect(scoreTraceUnit(lettersOf(all), drawn), syllable).toEqual(scoreTraceUnit(lettersOf(plain), drawn));
-        const taught = scoreTraceUnit(lettersOf(all), drawn, BLOCK_TOLERANCE, ALL_TAUGHT);
-        const before = scoreTraceUnit(lettersOf(plain), drawn, BLOCK_TOLERANCE, ALL_TAUGHT);
-        expect(taught.passed, syllable).toBe(before.passed);
-        expect(taught.coverage, syllable).toBe(before.coverage);
+        const now = scoreTraceUnit(lettersOf(all), drawn);
+        const before = scoreTraceUnit(lettersOf(plain), drawn);
+        if (before.passed) expect(now.passed, syllable).toBe(true);
+        expect(now.orderCorrect).toBeNull();
+        expect(now.directionNudge, syllable).toBe(before.directionNudge);
+        if (scoreTraceUnit(lettersOf(plain), drawn, BLOCK_TOLERANCE, ALL_TAUGHT).passed) {
+          expect(scoreTraceUnit(lettersOf(all), drawn, BLOCK_TOLERANCE, ALL_TAUGHT).passed, syllable).toBe(true);
+        }
       }
     }
   });
