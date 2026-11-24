@@ -678,3 +678,65 @@ describe("billing and grown-up home e2e (F-BILL-002 B-14)", () => {
     assert.match(upload, /overwrite: true/);
   });
 });
+
+// AMENDMENTS-A11Y-CI AC-3 (section 6, item 5): `turbo run lint` is a real accessibility gate, not an echo.
+describe("lint is a real gate (AMENDMENTS-A11Y-CI AC-3)", () => {
+  const LINTED = ["apps/mobile", "apps/web", "packages/design-system"];
+  const lintScript = (dir) => JSON.parse(read(`${dir}/package.json`)).scripts.lint;
+
+  test("the three lint scripts run eslint, with inline config off and no warnings allowed (method B, OD-AC5)", () => {
+    for (const dir of LINTED) {
+      const script = lintScript(dir);
+      assert.match(script, /^eslint /, dir);
+      assert.match(script, /(^| )--no-inline-config( |$)/, dir);
+      assert.match(script, /(^| )--max-warnings=0( |$)/, dir);
+    }
+  });
+
+  test("no lint script ever fixes, suppresses or passes over a stale suppression", () => {
+    for (const dir of LINTED) {
+      for (const flag of ["--fix", "--fix-type", "--suppress-all", "--suppress-rule", "--pass-on-unpruned-suppressions", "--prune-suppressions", "--suppressions-location"]) {
+        assert.ok(!lintScript(dir).includes(flag), `${dir}: ${flag}`);
+      }
+    }
+    // the workspaces that run no ESLint keep an echo, and say so
+    for (const { dir, pkg } of workspaces()) {
+      if (LINTED.includes(dir)) continue;
+      assert.match(pkg.scripts.lint, /^echo /, dir);
+    }
+  });
+
+  test("the linted entry points are the ones the spec names", () => {
+    assert.equal(lintScript("apps/mobile"), 'eslint --no-inline-config --max-warnings=0 App.tsx BrowseApp.tsx PresenterApp.tsx "src/**/*.tsx"');
+    assert.equal(lintScript("apps/web"), 'eslint --no-inline-config --max-warnings=0 "src/**/*.tsx"');
+    assert.equal(lintScript("packages/design-system"), 'eslint --no-inline-config --max-warnings=0 "src/**/*.tsx"');
+  });
+
+  test("each linted workspace pins eslint, the parser and its plugins as exact devDependencies", () => {
+    const exact = (v) => /^\d+\.\d+\.\d+$/.test(v);
+    const dev = (dir) => JSON.parse(read(`${dir}/package.json`)).devDependencies;
+    for (const dir of LINTED) {
+      assert.equal(dev(dir).eslint, "9.39.5", dir);
+      assert.equal(dev(dir)["@typescript-eslint/parser"], "8.74.0", dir);
+    }
+    assert.equal(dev("apps/web")["eslint-plugin-jsx-a11y"], "6.10.2");
+    for (const dir of ["apps/mobile", "packages/design-system"]) assert.equal(dev(dir)["eslint-plugin-react-native-a11y"], "3.5.1", dir);
+    for (const dir of LINTED) for (const [name, version] of Object.entries(dev(dir))) if (/eslint/.test(name)) assert.ok(exact(version), `${dir}: ${name}`);
+  });
+
+  test("the peer exception for eslint-plugin-react-native-a11y (its range ends at ESLint 8) is in pnpm-workspace.yaml", () => {
+    assert.match(read("pnpm-workspace.yaml"), /peerDependencyRules:\n\s+allowedVersions:\n\s+"eslint-plugin-react-native-a11y>eslint": "9"/);
+  });
+
+  test("ci.yml's checks job still runs `turbo run lint` (the gate needs no workflow change)", () => {
+    const checks = jobs(read(".github/workflows/ci.yml")).checks;
+    assert.match(checks.text, /run: pnpm exec turbo run lint typecheck build/);
+  });
+
+  test("design-system exports the local rule that apps/mobile imports (OD-AC7)", () => {
+    const exportsMap = JSON.parse(read("packages/design-system/package.json")).exports;
+    assert.equal(exportsMap["./eslint/touchable-has-name"], "./eslint/touchable-has-name.mjs");
+    assert.ok(existsSync(join(ROOT, "packages/design-system/eslint/touchable-has-name.mjs")));
+    assert.match(read("apps/mobile/eslint.config.mjs"), /@hangul-route\/design-system\/eslint\/touchable-has-name/);
+  });
+});

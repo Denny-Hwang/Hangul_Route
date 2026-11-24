@@ -60,6 +60,12 @@ interface State {
    * `quest.check_completed` and `minigame.finished` go out once per step per run, however often the step is shown.
    */
   reported: readonly string[];
+  /**
+   * [LR] Answers given in this run, every `answerRound` call counted: a first try, a retry, a hinted answer and an
+   * answer on a revisit alike (AMENDMENTS-QUEST-LEAVE-RESUME LR-1, section 3.1). A game's back guard compares it with
+   * the value when the game mounted, so it knows the game has progress. Never saved, scored or sent.
+   */
+  answersGiven: number;
   pendingAdvance: boolean;
   /** What each round missed on the first try asked, in order: Try these again on the reward step (F-CURR-002 row CM-15). */
   missed: readonly RoundAsked[];
@@ -130,6 +136,7 @@ const blankRun = {
   scoredRounds: [],
   skippedSteps: [],
   reported: [],
+  answersGiven: 0,
   pendingAdvance: false,
   missed: [],
   tries: [],
@@ -163,6 +170,8 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
   },
 
   answerRound: (roundKey, correct, asked, hinted = false) => {
+    // [LR] Counted before QB-3's return for a revisit: an answer there is an answer, and a game that has one asks first.
+    set((s) => ({ answersGiven: s.answersGiven + 1 }));
     const before = get();
     // [QB] A step played again scores nothing new (QB-3); a skipped step was never played, so it scores.
     if (before.stepIndex < before.furthestStep && !before.skippedSteps.includes(before.stepIndex)) return;

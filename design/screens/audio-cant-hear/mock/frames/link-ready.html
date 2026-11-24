@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match Sound, a play that ended &quot;played&quot;: the link is active (CH-0b frame) - design mock</title>
+<link rel="stylesheet" href="../../../app-shell/mock/app-shell.css">
+<link rel="stylesheet" href="../../../app-shell/mock/display-nav.css">
+<link rel="stylesheet" href="../cant-hear.css">
+</head>
+<body class="fp">
+<!-- Design mock (docs/specs/AMENDMENTS-AUDIO-CANT-HEAR.md row CH-0b), not shipped code. Written by ../../tools/build-mocks.mjs: edit the tool, not this file. -->
+<div class="only-phone"><div class="ch-frame"><div class="scroll"><div class="ms" data-ch="screen">
+<div class="ms-top"><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Round 2 of 4"><i style="width: 50%"></i></div><span class="pill">2 / 4</span></div>
+<div class="ms-cols"><div class="ms-prompt" data-ch="prompt"><h1 class="ms-heading">Tap the letter you hear</h1>
+<div class="speaker-row"><button class="speaker" type="button" aria-label="Play sound" data-ch="speaker"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></button><span class="caption">Tap to replay</span><button class="rn-btn rn-ghost btn-sm ch-link" type="button" data-ch="link">Can't hear it?</button></div>
+<div class="panel-slot" aria-live="polite"></div></div>
+<div class="ms-answers"><div class="tiles" data-ch="tiles" role="group" aria-label="Answers"><button class="tile" type="button" aria-label="n"><span class="ko" lang="ko" aria-hidden="true">ㄴ</span><span class="rom" aria-hidden="true">n</span></button><button class="tile" type="button" aria-label="g/k"><span class="ko" lang="ko" aria-hidden="true">ㄱ</span><span class="rom" aria-hidden="true">g/k</span></button><button class="tile" type="button" aria-label="r/l"><span class="ko" lang="ko" aria-hidden="true">ㄹ</span><span class="rom" aria-hidden="true">r/l</span></button><button class="tile" type="button" aria-label="d/t"><span class="ko" lang="ko" aria-hidden="true">ㄷ</span><span class="rom" aria-hidden="true">d/t</span></button></div></div></div>
+</div></div></div></div><div class="only-tablet"><div class="ch-frame tablet"><div class="scroll"><div class="ms side" data-ch="screen">
+<div class="ms-top"><div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Round 2 of 4"><i style="width: 50%"></i></div><span class="pill">2 / 4</span></div>
+<div class="ms-cols"><div class="ms-prompt" data-ch="prompt"><h1 class="ms-heading">Tap the letter you hear</h1>
+<div class="speaker-row"><button class="speaker" type="button" aria-label="Play sound" data-ch="speaker"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9 H8 L13 5 V19 L8 15 H4 Z" style="fill: currentColor"/><path d="M16.5 9 Q18.5 12 16.5 15 M19 7 Q22 12 19 17" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"/></svg></button><span class="caption">Tap to replay</span><button class="rn-btn rn-ghost btn-sm ch-link" type="button" data-ch="link">Can't hear it?</button></div>
+<div class="panel-slot" aria-live="polite"></div></div>
+<div class="ms-answers"><div class="tiles" data-ch="tiles" role="group" aria-label="Answers"><button class="tile" type="button" aria-label="n"><span class="ko" lang="ko" aria-hidden="true">ㄴ</span><span class="rom" aria-hidden="true">n</span></button><button class="tile" type="button" aria-label="g/k"><span class="ko" lang="ko" aria-hidden="true">ㄱ</span><span class="rom" aria-hidden="true">g/k</span></button><button class="tile" type="button" aria-label="r/l"><span class="ko" lang="ko" aria-hidden="true">ㄹ</span><span class="rom" aria-hidden="true">r/l</span></button><button class="tile" type="button" aria-label="d/t"><span class="ko" lang="ko" aria-hidden="true">ㄷ</span><span class="rom" aria-hidden="true">d/t</span></button></div></div></div>
+</div></div></div></div>
+<script>
+function cue() { document.querySelectorAll('.bs-body').forEach((b) => b.closest('.bs').classList.toggle('scrolls', b.scrollHeight > b.clientHeight + 1)); }
+cue(); window.addEventListener('resize', cue); new MutationObserver(cue).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+document.documentElement.dataset.ready = 'yes';
+</script>
+</body>
+</html>

@@ -272,8 +272,8 @@ Exit to: none. The sheet always returns to the round that opened it.
 1. Link placement on phones: in the speaker row, wrapping under the caption when narrow (proposed), or always under the row?
 2. Does the sheet's Hear it carry the speaker glyph, like the wrong-answer bubble's Hear it (proposed: yes)?
 3. Is "Turn off silent mode" clear to a learner who has never opened that setting? A grown-up may help; the mock checks the line length at 200 % text.
-4. An iPad browser that asks for the desktop site and reports no touch points (rare), and a large Android tablet whose Chrome asks for the desktop site (a desktop Linux user agent), get the computer line. Acceptable (proposed: yes)?
+4. An iPad browser that asks for the desktop site and reports no touch points (rare), and a large Android tablet whose Chrome asks for the desktop site (a desktop Linux user agent), get the computer line. Acceptable (proposed: yes)? Owner decision 2026-11-24: yes, accepted.
 5. Headphones paired elsewhere are named by no line (one short line per device). Leave out (proposed: yes)?
 6. The "Always show the letters" switch (OD-CH1 approved, row CH-2) goes on Profile's Sound card (W7), under the Sound switch; the mock row draws it.
-7. Should the link carry the `speaker-off` glyph before its words (proposed: the mock tries it)?
+7. Should the link carry the `speaker-off` glyph before its words (proposed: the mock tries it)? Owner decision 2026-11-24: no glyph; the link is words only.
 8. Translators: "letters" means written characters of any script; in Syllable Build Show the letters shows the romanization.

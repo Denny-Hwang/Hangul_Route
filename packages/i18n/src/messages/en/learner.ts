@@ -816,6 +816,14 @@ export const learner = {
     /** The round counter pill: `round` of `total`. */
     progress: { pill: (round: number, total: number) => `${round} / ${total}` },
     skip: { cta: 'Skip' },
+    /**
+     * The sheet a back on a game that has an answer opens (AMENDMENTS-QUEST-LEAVE-RESUME LR-1, section 3.1; the safe choice
+     * is `learner.quest.leave.keep.cta`, the way out `learner.quest.leave.confirm.cta`).
+     */
+    leave: {
+      title: 'Keep playing?',
+      message: 'If you leave, the game starts again next time.',
+    },
     /** Build a Letter (F-QUEST-002 §3.7). */
     buildLetter: {
       heading: 'Build this letter',

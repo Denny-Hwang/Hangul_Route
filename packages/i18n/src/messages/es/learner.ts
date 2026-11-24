@@ -575,6 +575,10 @@ export const learner = {
     noRounds: 'No hay rondas.',
     progress: { pill: (round: number, total: number) => `${round} / ${total}` },
     skip: { cta: 'Saltar' },
+    leave: {
+      title: '¿Seguir jugando?',
+      message: 'Si sales, el juego empieza de nuevo la próxima vez.',
+    },
     buildLetter: {
       heading: 'Arma esta letra',
       slots: 'Espacios:',

@@ -32,7 +32,7 @@ Panel A — resume variant (phone)
 ||                              ||
 || [[        CONTINUE        ]] ||  <- same place as Start; opens the saved step;
 ||                              ||     its accessibility hint = the caption below
-|| You can go on from step 3    ||  <- one caption, UNDER the button
+|| You can go on from step 3    ||  <- one caption, UNDER the button, text.secondary (owner decision 2026-11-24)
 ||  of 5.                       ||
 || [ Start again ]              ||  <- quiet link, role button, >= touchTarget.min -> Panel B
 || See your Learning Route  >   ||  <- unchanged, last
@@ -50,8 +50,8 @@ Panel B — Start again asks first (ConfirmSheet, bottom sheet on a phone)
 || You go back to the first     ||
 ||  step. Your stars and cards  ||
 ||  stay.                       ||
-|| [[     KEEP MY PLACE      ]] ||  <- cancel: first
-|| [       START AGAIN        ] ||  <- confirm: plain tone
+|| [[     KEEP MY PLACE      ]] ||  <- cancel: first, filled (the safe choice; owner decision 2026-11-24)
+|| [       START AGAIN        ] ||  <- confirm: plain, outlined
 |+------------------------------+|
 ```
 
