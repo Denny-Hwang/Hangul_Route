@@ -13,7 +13,7 @@
  *
  * Option `ignoreHidden` (default false; AMENDMENTS-A11Y-CI section 3.3, the false-positive path "a rule option"):
  * skip an element that is hidden from assistive technology (`accessible={false}`, `aria-hidden`,
- * `accessibilityElementsHidden`, or `importantForAccessibility` of `no` / `no-hide-descendants`). A screen
+ * `accessibilityElementsHidden`, or `importantForAccessibility="no-hide-descendants"`; plain `no` is Android-only and does not count). A screen
  * reader never reaches it, so it needs no name; the repository's dimmed-backdrop Pressables are this case.
  * Plain ESM with no imports, so ESLint loads it from any workspace through the package `exports` entry
  * `@hangul-route/design-system/eslint/touchable-has-name`.
@@ -92,7 +92,8 @@ function isHiddenFromAssistiveTech(attributes) {
       case 'accessibilityElementsHidden':
         return value === true || value === 'true';
       case 'importantForAccessibility':
-        return value === 'no' || value === 'no-hide-descendants';
+        // `no` alone is Android-only (iOS ignores it), so it does not hide the element from VoiceOver.
+        return value === 'no-hide-descendants';
       default:
         return false;
     }

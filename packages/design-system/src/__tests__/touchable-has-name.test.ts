@@ -73,6 +73,8 @@ tester.run('touchable-has-name', rule, {
     { code: '<Pressable onPress={f} accessible={true} />', options: [{ ignoreHidden: true }], errors: missing },
     { code: '<Pressable onPress={f} aria-hidden={false} />', options: [{ ignoreHidden: true }], errors: missing },
     { code: '<Pressable onPress={f} importantForAccessibility="yes" />', options: [{ ignoreHidden: true }], errors: missing },
+    // `no` alone is Android-only: iOS ignores it, so a visible nameless control must still be reported
+    { code: '<Pressable onPress={f} importantForAccessibility="no" />', options: [{ ignoreHidden: true }], errors: missing },
     { code: '<Pressable onPress={f} accessible={flag} />', options: [{ ignoreHidden: true }], errors: missing },
   ],
 });
@@ -84,7 +86,6 @@ tester.run('touchable-has-name with ignoreHidden', rule, {
     { code: '<Pressable onPress={f} aria-hidden />', options: [{ ignoreHidden: true }] },
     { code: '<Pressable onPress={f} aria-hidden="true" />', options: [{ ignoreHidden: true }] },
     { code: '<Pressable onPress={f} accessibilityElementsHidden />', options: [{ ignoreHidden: true }] },
-    { code: '<Pressable onPress={f} importantForAccessibility="no" />', options: [{ ignoreHidden: true }] },
     { code: '<Pressable onPress={f} importantForAccessibility="no-hide-descendants" />', options: [{ ignoreHidden: true }] },
   ],
   invalid: [],

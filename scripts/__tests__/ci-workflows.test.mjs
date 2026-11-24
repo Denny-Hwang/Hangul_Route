@@ -695,7 +695,7 @@ describe("lint is a real gate (AMENDMENTS-A11Y-CI AC-3)", () => {
 
   test("no lint script ever fixes, suppresses or passes over a stale suppression", () => {
     for (const dir of LINTED) {
-      for (const flag of ["--fix", "--fix-type", "--suppress-all", "--suppress-rule", "--pass-on-unpruned-suppressions", "--prune-suppressions"]) {
+      for (const flag of ["--fix", "--fix-type", "--suppress-all", "--suppress-rule", "--pass-on-unpruned-suppressions", "--prune-suppressions", "--suppressions-location"]) {
         assert.ok(!lintScript(dir).includes(flag), `${dir}: ${flag}`);
       }
     }
