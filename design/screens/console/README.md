@@ -104,3 +104,12 @@ Two independent multi-agent reviews on #753 (CLAUDE.md section 5), adjudicated i
 - School page wireframe: the School settings link is back in the diagram. Wireframe index: the three new wireframes are listed. Spec header: "approved in #753".
 - es/ko: es `revoked` "Invitación anulada." (glossary `anular`); ko `left(school)` colon form; ko `stepUp.reason` "공유 기기", matching the shipped billing reason. No `packages/i18n` file changes in this PR, so the review ledger is untouched; SA-3 and SA-4 sign it when they land these values.
 - Not taken here: CI did not start on #753 because GitHub Actions billing stopped every job (an account setting for the owner, not a design change); the repo checks were run locally instead.
+
+## Also here: the class code overlay (CO-0)
+
+A later pass in this folder: `class-code-overlay.md` (spec `docs/specs/AMENDMENTS-CLASS-CODE-OVERLAY.md`, row CO-0;
+wireframe `design/wireframes/console/class-code-overlay.md`): Show the code in the class action bar, the full-screen
+overlay with the class name, the code, the QR and the expiry only, and the roster card's folded What to revisit. Its
+pages are `mock/class-code-overlay*.html` with their own sheet `mock/class-code-overlay.css`; unlike the passes above,
+its generator and checks are committed (`tools/class-code-overlay-build.mjs`, `tools/class-code-overlay-capture.mjs`),
+and its shots are `shots/class-code-overlay-*.png`.

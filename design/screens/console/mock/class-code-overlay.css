@@ -1,0 +1,162 @@
+/*
+ * AMENDMENTS-CLASS-CODE-OVERLAY design row CO-0 (revision 2): static design mock of the class page's Show the code, the
+ * full-screen class code overlay and the roster card's folded What to revisit lines (not shipped code). Wireframe:
+ * design/wireframes/console/class-code-overlay.md. Written by ../tools/class-code-overlay-build.mjs (edit the builder,
+ * not the pages); checked and shot by ../tools/class-code-overlay-capture.mjs.
+ *
+ * The pages link ../../app-shell/mock/app-shell.css (every token as a custom property named after it: --spacing-xl is
+ * spacing.xl; the adult frame, buttons, panels, the design board), ../../approvals/mock/approvals.css (the GX-0 roster
+ * card, page head and chips), then this sheet. The first block copies the tokens those sheets do not carry, each under
+ * its token's name; nothing redefines a token. The presenter tokens and a few spacing tokens are also copied as plain
+ * numbers (`-n`), because the overlay counts in presenter stage units the way the presenter does (`units(unit, n)`,
+ * apps/mobile/src/screens/presenter: a token's number times the window pixels per stage unit).
+ *
+ * Units: console text in rem (token / 16) so the browser text size raises every floor; the overlay's stage sizes in
+ * window units (vw, dvh), like the presenter stage, so its layout switch is in px (layout.breakpoint.regular), not em.
+ * Browser zoom shrinks the window in CSS px, so a zoomed projector lands in the same rules as a smaller window.
+ */
+:root {
+  --size-hero: 3rem;                     /* typography.size.hero (48) */
+  --z-modal: 40;                         /* z.modal */
+  --presenter-stage-width: 1280;         /* presenter.stage.width */
+  --presenter-stage-minHeight: 600;      /* presenter.stage.minHeight */
+  --presenter-size-display: 140;         /* presenter.size.display */
+  --presenter-size-prompt: 56;           /* presenter.size.prompt */
+  --presenter-size-caption: 28;          /* presenter.size.caption */
+  --presenter-size-glyph: 380;           /* presenter.size.glyph */
+  --spacing-sm-n: 8;                     /* spacing.sm as a number */
+  --spacing-lg-n: 16;                    /* spacing.lg as a number */
+  --spacing-xl-n: 24;                    /* spacing.xl as a number */
+  --spacing-xxxl-n: 48;                  /* spacing.xxxl as a number */
+  --spacing-jumbo-n: 64;                 /* spacing.jumbo as a number */
+}
+
+/* Constants: values that are not tokens (../class-code-overlay.md, "Constants"). */
+:root {
+  --code-width-em: 4.8; /* CODE_WIDTH_EM: six monospace characters at the 0.6 em advance of Menlo and Courier, plus seven
+                           letter spaces of spacing.xl / presenter.size.display (0.171 em: six after the letters, one
+                           before them to keep a centred code centred), rounded up: 3.6 + 1.2 = 4.8 */
+  --qr-caption-lines: 3; /* QR_CAPTION_LINES: the QR caption's lines kept free under a height-capped QR (the caption is
+                            as wide as the QR, and "Scan it with the camera of a phone or tablet." takes 3 lines at the
+                            narrowest landscape QR, 640 x 360) */
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Show the code in the class action bar (CO-1)                                                 */
+/* ------------------------------------------------------------------------------------------ */
+.bar { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.bar-row { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); align-items: center; }
+.btn-nudge { background: var(--colors-feedback-nudgeLight); border: var(--border-width-base) solid var(--colors-feedback-nudge); color: var(--colors-text-primary); }
+.chev { width: var(--spacing-lg); height: var(--spacing-lg); flex: none; fill: none; stroke: var(--colors-text-secondary); stroke-width: var(--border-width-base); stroke-linecap: round; stroke-linejoin: round; }
+.chev.open { transform: rotate(180deg); }
+.invite { padding: var(--spacing-none); overflow: hidden; }
+.invite.after-bar { margin-top: var(--spacing-md); }
+.invite-toggle { width: 100%; min-height: var(--touch-min); display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-lg); border: none; border-radius: var(--radii-lg); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-weight: var(--weight-bold); font-size: var(--size-bodyLg); text-align: start; cursor: pointer; }
+.week-list { display: flex; flex-direction: column; gap: var(--spacing-xxs); color: var(--colors-text-secondary); line-height: var(--leading-relaxed); padding-inline-start: var(--spacing-lg); list-style: disc; }
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr)); gap: var(--spacing-md); }
+.segs { display: inline-flex; gap: var(--spacing-xxs); vertical-align: middle; margin-inline-end: var(--spacing-xs); }
+.segs i { width: var(--spacing-md); height: var(--spacing-md); border-radius: var(--radii-circle); border: var(--border-width-base) solid var(--colors-border-shape); }
+.segs i.done { background: var(--colors-hoya-fur); }
+.row-full { width: 100%; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The roster card's What to revisit disclosure (CO-2)                                          */
+/* ------------------------------------------------------------------------------------------ */
+.fold { display: flex; flex-direction: column; }
+.fold-toggle { width: 100%; min-height: var(--touch-min); display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-xs) var(--spacing-sm); border: none; border-block: var(--border-width-thin) solid var(--colors-border-subtle); background: var(--colors-surface-paper); color: var(--colors-text-primary); font-size: var(--size-bodySm); font-weight: var(--weight-semibold); text-align: start; cursor: pointer; }
+.fold-toggle[aria-expanded="true"] { border-block-end-color: transparent; }
+.fold-body { display: flex; flex-direction: column; gap: var(--spacing-xxs); padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm); border-block-end: var(--border-width-thin) solid var(--colors-border-subtle); color: var(--colors-text-secondary); font-size: var(--size-bodySm); line-height: var(--leading-relaxed); overflow-wrap: anywhere; }
+.fold-body[hidden] { display: none; }
+.keep { white-space: nowrap; }
+
+/* ------------------------------------------------------------------------------------------ */
+/* The class code overlay (CO-1): opaque, over the whole window, sized by the presenter stage   */
+/* ------------------------------------------------------------------------------------------ */
+.co-overlay {
+  /* One stage unit: the window pixels per presenter stage unit (F-TCH-004 section 3.6, stage-scale.ts). */
+  --co-unit: min(calc(100vw / var(--presenter-stage-width)), calc(100vh / var(--presenter-stage-minHeight)));
+  --co-gutter: var(--gutter-compact);
+  --co-qr: max(calc(4 * var(--touch-min)), calc(var(--presenter-size-glyph) * var(--co-unit)));
+  --co-gap: max(var(--spacing-xl), calc(var(--spacing-xxxl-n) * var(--co-unit)));
+  --co-line: max(var(--size-body), calc(var(--presenter-size-caption) * var(--co-unit)));
+  /* Landscape: the tallest QR that leaves room for the gutters, the Close row, its gaps and the caption's lines. */
+  --co-qr-fit: calc(100vh - 2 * var(--co-gutter) - var(--touch-min) - 3 * var(--spacing-sm) - var(--qr-caption-lines) * var(--leading-normal) * var(--co-line));
+  position: fixed; inset: 0; z-index: var(--z-modal);
+  display: flex; flex-direction: column;
+  padding: var(--co-gutter);
+  overflow-x: hidden; overflow-y: auto;
+  background: var(--colors-surface-paper);
+  color: var(--colors-text-primary);
+}
+.co-overlay[hidden] { display: none; }
+@supports (height: 100dvh) {
+  .co-overlay {
+    --co-unit: min(calc(100vw / var(--presenter-stage-width)), calc(100dvh / var(--presenter-stage-minHeight)));
+    --co-qr-fit: calc(100dvh - 2 * var(--co-gutter) - var(--touch-min) - 3 * var(--spacing-sm) - var(--qr-caption-lines) * var(--leading-normal) * var(--co-line));
+  }
+}
+/* The window classes of F-LAYOUT-001 (px, they follow the window): layout.breakpoint.regular 600, .wide 900. */
+@media (min-width: 600px) { .co-overlay { --co-gutter: var(--gutter-regular); } }
+@media (min-width: 900px) { .co-overlay { --co-gutter: var(--gutter-wide); } }
+
+/* The body grows with its content (never smaller), so centring it never pushes anything above the top. */
+.co-body {
+  flex: 1 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  align-content: center; justify-items: center;
+  row-gap: var(--co-gap);
+  padding-block: var(--spacing-lg);
+  text-align: center;
+}
+/* Close comes last in the page order. One column: drawn at the top inline-end (order -1), where a phone user looks.   */
+/* Landscape: drawn at the bottom inline-end, in reach on a wall-mounted touch panel.                                   */
+.co-close { display: flex; justify-content: flex-end; flex: none; order: -1; }
+.co-text { width: 100%; display: flex; flex-direction: column; align-items: center; gap: max(var(--spacing-sm), calc(var(--spacing-lg-n) * var(--co-unit))); container-type: inline-size; }
+.co-name {
+  font-size: max(var(--size-title), calc(var(--presenter-size-prompt) * var(--co-unit)));
+  font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; max-width: 100%;
+}
+.co-name:focus { outline: none; }
+.co-caption, .co-expiry, .co-how, .co-qr-caption { font-size: var(--co-line); line-height: var(--leading-normal); color: var(--colors-text-secondary); }
+.co-caption { font-weight: var(--weight-semibold); }
+.co-code {
+  /* The stage size with the console floor, never wider than six letters fit on one line of the column (100cqi). */
+  font-size: min(max(var(--size-hero), calc(var(--presenter-size-display) * var(--co-unit))), calc(100cqi / var(--code-width-em)));
+  /* spacing.xl for every presenter.size.display of code: 8 px at 48 px, 24 px at 140 px. */
+  letter-spacing: calc(1em * var(--spacing-xl-n) / var(--presenter-size-display));
+  padding-inline-start: calc(1em * var(--spacing-xl-n) / var(--presenter-size-display));
+  font-family: var(--family-mono); font-weight: var(--weight-bold); line-height: var(--leading-tight);
+  white-space: nowrap; color: var(--colors-text-primary);
+}
+.co-qr { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); width: min(var(--co-qr), 100%); margin: var(--spacing-none); text-align: center; }
+.co-qr svg { display: block; width: 100%; height: auto; }
+/* Dark modules in text.primary on a surface.paper square with the quiet zone, as JoinLinkQr (JoinLinkParts.tsx:86-87). */
+.co-qr rect { fill: var(--colors-surface-paper); }
+.co-qr path { fill: var(--colors-text-primary); }
+
+/* Two columns on a landscape window at least layout.breakpoint.regular (600) wide: the words at the inline start, the */
+/* QR at the inline end, both centred in the height; the QR no taller than the window leaves room for (--co-qr-fit).   */
+@media (orientation: landscape) and (min-width: 600px) {
+  .co-body { grid-template-columns: minmax(0, 1fr) auto; column-gap: max(var(--spacing-xxxl), calc(var(--spacing-jumbo-n) * var(--co-unit))); justify-items: stretch; align-items: center; text-align: start; padding-block: var(--spacing-none); }
+  .co-text { align-items: flex-start; }
+  .co-code { padding-inline-start: var(--spacing-none); }
+  .co-qr { width: min(var(--co-qr), var(--co-qr-fit)); }
+  .co-close { order: 0; margin-block-start: var(--spacing-sm); }
+}
+
+/* The page behind while the overlay is open: inert, and the root does not scroll (spec section 3.3). */
+html.co-open { overflow: hidden; }
+
+/* Printing while the overlay is open prints the overlay only (spec section 3.3): the page behind (every inert element)  */
+/* leaves the print, the overlay prints in the page flow, and Close is not printed.                                      */
+@media print {
+  html.co-open { overflow: visible; }
+  html.co-open [inert] { display: none !important; }
+  .co-overlay { position: static; overflow: visible; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .co-close { display: none; }
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Board notes (not UI)                                                                         */
+/* ------------------------------------------------------------------------------------------ */
+.od-note { font-family: var(--family-mono); font-size: var(--size-caption); color: var(--colors-text-muted); border: var(--border-width-thin) dashed var(--colors-border-strong); border-radius: var(--radii-sm); padding: var(--spacing-xs) var(--spacing-sm); }

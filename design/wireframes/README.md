@@ -74,6 +74,7 @@
 | `parent/dashboard.md` · `learner-detail.md` · `voice-recorder.md` | S / R | F-PAR-001 |
 | `console/sign-in.md` · `onboarding-role.md` · `home.md` | P | F-AUTH-001 · roadmap §1–2 |
 | `console/roster.md` · `space-settings.md` · `relink-approval.md` | D / P | F-TCH-001 · roadmap §5 |
+| `console/class-code-overlay.md` | D | AMENDMENTS-CLASS-CODE-OVERLAY §3 (CO-0: Show the code over the class page, the roster card's what-to-revisit fold; mock `design/screens/console/class-code-overlay.md`) |
 | `console/plan-builder.md` | S | roadmap §6 · F-HW-001 §3.4 · F-PLAN-002 §3.7-3.8 (week groups, readout, re-pace; P2-8) |
 | `console/curriculum-wizard.md` | S | F-PLAN-002 §3.8 (P2-6, P2-6b; promoted in P2-8) |
 | `console/curriculum-free-days.md` · `console/free-lessons-line.md` | R | F-ENT-003 §3.9.2-3.9.3 (E3-0) |
