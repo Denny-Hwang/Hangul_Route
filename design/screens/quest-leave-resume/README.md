@@ -69,7 +69,7 @@ check.
 | Caption | `Spacer sm`, then `Caption tone="secondary"`, `learner.home.next.resume.line(step, total)`; also the button's `accessibilityHint` (web: `aria-describedby`) |
 | Start again | `LinkButton` (`components/LinkButton.tsx`: `touchTarget.min` high and wide, `Body` semibold `tone="brand"`, `paddingHorizontal: spacing.md`), no icon, in a `View style={{ alignSelf: 'flex-start' }}` as the route link |
 | Route link | unchanged, after Start again |
-| Sheet | `ConfirmSheet`: `title` = `.resume.sheet.title`, `message` = `.resume.sheet.message`, `cancelLabel` = `.resume.sheet.keep.cta` (first, initial focus on the web), `confirmLabel` = `.resume.startAgain.cta`, `confirmTone` primary; `testID` `home-start-again` |
+| Sheet | `ConfirmSheet`: `title` = `.resume.sheet.title`, `message` = `.resume.sheet.message`, `cancelLabel` = `.resume.sheet.keep.cta` (first, initial focus on the web), `confirmLabel` = `.resume.startAgain.cta`; the cancel is the filled button and the confirm the plain outlined one (owner decision 2026-11-24, O4: LR-2 adds the opt-in to the ConfirmSheet); `testID` `home-start-again` |
 
 ## The checks (LR-3a, LR-3b, spec 3.4; drawn with OD-LR1 (c) and OD-LR9 (b))
 
@@ -101,7 +101,7 @@ check.
               [Hoya thinking 140]
         We could not save this yet.           Heading title, centred (first focus)
         Your answers are still here.          Body secondary, centred
-   Still stuck? You can stop for now ...      Body secondary; after 3 tries; polite live region
+   It still did not save. You can stop ...    Body secondary; after 3 tries; polite live region
  ------------------------------------------  Screen footer (pinned)
  [[              Try again                ]]  Button primary hero, full width; softDisabled while a try runs
 ```
@@ -126,7 +126,7 @@ check.
   nothing moves when the read lands (spec 3.2). In the mock this holds by construction; LR-2's test 14 is the check
   that matters. The mock leaves out the hero's optional goal and week caption lines (`HomeScreen.tsx:319-328`): LR-2
   keeps them where they are, above the button. The caption is `Caption tone="secondary"` (as the where line) rather than muted, so it
-  reads as information, not as a footnote.
+  reads as information, not as a footnote. Owner decision 2026-11-24 (O2): secondary.
 - **D2. Start again on Home is a LinkButton, not a ghost Button.** The wireframe calls it "a quiet link"; the hero
   already has one link of that kind (the Learning Route). Same component, no icon, so Continue stays the one strong way
   on and the two links read as one family. It is placed before the route link (spec 3.2: "The Learning Route link stays
@@ -137,8 +137,8 @@ check.
   the shipped component, and the mocks follow the component and the spec (`confirmTone 'primary'`). The **Hangul
   Check's** stop sheet is its own shipped `LeaveSheet` (`StageReviewScreen.tsx:390-425`), whose Keep going **is** the
   filled primary and Stop a ghost, as the wireframe draws it; LR-3a changes only its body line and does not replace it
-  with the ConfirmSheet. The two check sheets therefore look different today; whether they should be made the same is
-  owner question O5.
+  with the ConfirmSheet. The two check sheets therefore look different today; whether they should be made the same was
+  owner question O5: yes, in a later row (LR-6), the safe choice filled (owner decision 2026-11-24).
 - **D4. The still-stuck line is in the body, not the footer** (as the read-failed screen's D3): the footer never grows
   past a 320 x 568 screen at 200 % text. When it fills, the body scrolls to its end so the line is in view
   (`save-failed-stuck-320x568-text200.png`, checked by `tools/capture.mjs`). Spec 3.5 says "a line shows above the
@@ -211,20 +211,30 @@ Values that are not tokens.
 
 ## Owner questions
 
+Owner decision 2026-11-24: O2 to O5 answered in session, "all as recommended" (spec section 10); each is marked below.
+
 - **O1. OD-LR1 and OD-LR9** (spec section 10) are still open; the mocks draw the recommendations ((c), (b)) and the
   stop sheet with both lines (D9). Nothing else in the mocks depends on them.
 - **O2. Home caption tone** (D1): secondary (drawn) or muted (as the minutes line). Secondary is proposed, because it
-  says what Continue will do.
-- **O3. Copy over a failed save** (spec strings, not changed here):
+  says what Continue will do. **Owner decision 2026-11-24: secondary** (as drawn).
+- **O3. Copy over a failed save** (spec strings; the owner decision below changes them):
   - (a) The stop sheet over the save-failed page says only "This is not saved yet." Suggested: add "Your stars and
     cards stay." (true: earned stars and cards are untouched), so stopping does not read as a loss.
   - (b) "Still stuck? You can stop for now and try another time." puts the trouble on the learner. Suggested: "It
     still did not save. You can stop for now and try another time."
+  - **Owner decision 2026-11-24: both, as suggested.** The mocks now draw "This is not saved yet. Your stars and cards
+    stay." and "It still did not save. You can stop for now and try another time." (spec 3.7 has the new English; the
+    implementing rows carry es and ko).
 - **O4. Home's Start again sheet:** Start again, which drops the saved place, is the filled button, and Keep my place
   is outlined (the ConfirmSheet's rule). Keep, or draw this sheet's cancel filled as the Hangul Check's LeaveSheet does?
+  **Owner decision 2026-11-24: the safe choice is filled and first.** Keep my place is the filled button and comes
+  first; Start again is the plain outlined one. The mock (`home-sheet`, the boards and the greyscale board) is redrawn
+  and the shots regenerated. The shipped ConfirmSheet cannot do this yet: LR-2 adds an opt-in (spec 3.2).
 - **O5. Two stop sheets on the two checks:** the Hangul Check's LeaveSheet (Keep going filled, Stop ghost, no dialog
   on wide) and the Stage Check's ConfirmSheet (Keep going outlined, Stop filled). Make them the same in a later row
   (not LR-3a's scope), or leave them?
+  **Owner decision 2026-11-24: make them the same, in a later row (spec row LR-6), with the safe choice filled.** This
+  pass keeps drawing both check sheets as shipped; LR-3a and LR-3b do not change them.
 
 ## Review log
 
