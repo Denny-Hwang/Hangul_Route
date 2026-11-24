@@ -10,6 +10,8 @@ Status: ready (spec, wireframes and mocks pass GX-0; amends F-SPACE-002 §4.2 an
 
 **Standing rules that apply here:** audience is anyone at any age (no age wording) · UI strings only through `packages/i18n` (`useMessages`), en + es + ko in the same PR, F-I18N-001 §3.10 style guide and glossary (Korean 해요체; never a particle on a variable); the es / ko values are re-signed in `review-ledger.json` only in a row's fix stage, after an independent reviewer passed them · design tokens only, no emoji · anti-shame (CLAUDE.md §1): no ranking, no comparison between learners, never `feedback.danger` for a learner's state, amber only · Worker first: a field or route ships in the Worker before a console build reads it · D1 additive only (this amendment adds no table and no column) · no PII in URLs, page titles or telemetry (opaque ids only; a count may go in the title, a name never) · `CLASS_TRANSFER` stays as it is (on, owner decision 2026-10-14) · Stripe sandbox only, no price added anywhere · production level: every row ships finished and passes the multi-agent review (MAR).
 
+> **Amended 2026-11-24 by `AMENDMENTS-CLASS-CODE-OVERLAY.md` [CO]** (work order WO-09 of the 2026-11 review: show the class code, not the class): section 8 T3: the class action bar gains **Show the code** (a secondary button that stays in the bar, never under More, after Class report and before the waiting entries; row CO-1). T4: card line 4, the revisit letters, becomes a closed **What to revisit** disclosure on every card with a summary, and the card's "Words to revisit" line goes into it; "Words: N collected · M strong" stays in view above the button (row CO-2).
+
 ---
 
 ## 0. Summary

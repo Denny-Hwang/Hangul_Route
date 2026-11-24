@@ -10,6 +10,8 @@ Status: ready
 
 > **Amended 2026-11-08 by `F-AUTH-004-native-sign-in.md` [AU]** (AMENDMENTS-ONE-ACCOUNT-MANY-USERS row OA-11): native iOS and Android builds get a grown-up sign-in of their own (Clerk Expo; email code, password, a second-step code; no account creation) and native Family, Teacher and School homes inside the Grown-up area, never the console in a web view, with no price, purchase or billing link anywhere. OD-6 ("Hidden until F-AUTH-004") holds until F-AUTH-004 row NS-8 turns `EXPO_PUBLIC_NATIVE_SIGNIN` on; the console, its sign-in, lock and billing page do not change.
 
+> **Amended 2026-11-24 by `AMENDMENTS-CLASS-CODE-OVERLAY.md` [CO]** (work order WO-09 of the 2026-11 review: show the class code, not the class) (section 3.8, teacher home): a class row with a live code (a class, not archived, code not expired) gets **Show the code**, which opens the same overlay over the home from the spaces list it already reads (no roster read, no learner field) and returns focus to the row's button; it does not reopen after a grown-up lock (row CO-1b).
+
 # F-APP-001 — One product app: app.hangulroute.com with persona sign-in (learner, family, teacher) and a home per persona
 
 > **Amendment 2026-10-15 (`AMENDMENTS-LECTURE-V2.md`).** Lecture mode gets a nav item for both personas (section 3.8 table, row `lecture`) and a card at the top of the teacher home and the family home; the learner app's grown-up area gains a Lecture mode card (web only, behind the grown-up gate and the learner app's own `EXPO_PUBLIC_LECTURE_MODE` kill switch). Rows LV-5 and LV-6 build them; the wireframe is `design/wireframes/classroom/lecture-entry-points.md`.
