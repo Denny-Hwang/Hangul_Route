@@ -41,20 +41,33 @@ export function answerItem(a11y: AnswerA11y, romanization: string, gloss?: strin
   return a11y.answer.item(romanization, gloss);
 }
 
+/** Punctuation that already ends a sentence: a template's own full stop after it would double it ("Hola!."). */
+const ENDS_SENTENCE = /[.!?\u2026\u3002]$/;
+
+/**
+ * Drops the template's full stop right after an argument that already ends a sentence (an item "Hola!" or a gloss
+ * "Really?"), in every locale: "Right answer: Hola!." becomes "Right answer: Hola!".
+ */
+function tidy(text: string, args: readonly string[]): string {
+  let out = text;
+  for (const arg of args) if (ENDS_SENTENCE.test(arg)) out = out.split(`${arg}.`).join(arg);
+  return out;
+}
+
 /** The line a result is announced with (§3.2, §3.7). */
 export function answerAnnouncement(result: AnswerResult, a11y: AnswerA11y): AnswerSegment[] {
   const t = a11y.answer;
   switch (result.kind) {
     case 'right':
-      return [{ text: t.right(result.item) }];
+      return [{ text: tidy(t.right(result.item), [result.item]) }];
     case 'miss':
-      return [{ text: t.miss(result.item) }];
+      return [{ text: tidy(t.miss(result.item), [result.item]) }];
     case 'missListen':
-      return [{ text: t.missListen(result.item) }];
+      return [{ text: tidy(t.missListen(result.item), [result.item]) }];
     case 'missHint':
-      return [{ text: t.missHint(result.item, result.hint) }];
+      return [{ text: tidy(t.missHint(result.item, result.hint), [result.item]) }];
     case 'notMatched':
-      return [{ text: t.notMatched(result.word, result.meaning) }];
+      return [{ text: tidy(t.notMatched(result.word, result.meaning), [result.word, result.meaning]) }];
     case 'line':
       return [{ text: result.text }];
   }

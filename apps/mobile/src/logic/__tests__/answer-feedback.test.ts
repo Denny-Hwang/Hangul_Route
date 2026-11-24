@@ -42,6 +42,19 @@ describe('answerAnnouncement (§3.2, test 1)', () => {
     expect(segmentsText(segments)).toBe(line);
   });
 
+  it('never doubles punctuation: an item that ends a sentence takes no extra full stop, in en, es and ko', () => {
+    const say = (result: AnswerResult, locale: 'en' | 'es' | 'ko' = 'en'): string => segmentsText(answerAnnouncement(result, getMessages(locale).a11y));
+    expect(say({ kind: 'right', item: 'annyeong, Hello!' })).toBe('Right answer: annyeong, Hello!');
+    expect(say({ kind: 'miss', item: 'Really?' })).toBe('Not this one: Really? Try another.');
+    expect(say({ kind: 'missListen', item: 'Wait...' })).toBe('Not this one: Wait... Listen again.');
+    expect(say({ kind: 'missHint', item: 'Hi!', hint: 'Look again.' })).toBe('Not this one: Hi! Look again.');
+    expect(say({ kind: 'notMatched', word: 'jinjja', meaning: 'Really?' })).toBe('Not a match: jinjja and Really? Try another.');
+    expect(say({ kind: 'right', item: 'annyeong, \u00a1Hola!' }, 'es')).toBe('Respuesta correcta: annyeong, \u00a1Hola!');
+    expect(say({ kind: 'miss', item: 'annyeong, Hello!' }, 'ko')).not.toContain('!.');
+    // An item that does not end a sentence keeps the template's full stop.
+    expect(say({ kind: 'right', item: 'sagwa, apple' })).toBe('Right answer: sagwa, apple.');
+  });
+
   it('returns UI-language segments only (no lang until LP-3)', () => {
     for (const [result] of RESULTS) {
       for (const segment of answerAnnouncement(result, a11y)) expect(segment.lang).toBeUndefined();
