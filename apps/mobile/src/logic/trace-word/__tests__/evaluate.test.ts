@@ -571,6 +571,78 @@ describe('traceWordReady: Trace a Word on the letter rule (AMENDMENTS-TRACE-IDLE
     expect(traceWordReady('block', ba.letters, partly)).toBe(false);
   });
 
+  /**
+   * [SO] OD-SO12 (re-review of #1077): the other accepted forms must never make an incomplete letter pass. A final ㅈ in
+   * its Variant B shape with the bar left out (ㅅ, a different letter) under ㅗ / ㅜ / ㅡ used to pass and be ready: the
+   * vowel's bar covered ㅈ's bar from the bag of all ink. For every block with a letter that has another form, every
+   * combination of forms drawn with one stroke left out, or cut to a proper prefix, is never ready nor passed where the
+   * letters as shown alone would not be.
+   */
+  describe('the other forms never complete an incomplete letter (OD-SO12)', () => {
+    const SWEEP = ['꽃', '윷', '낮', '붓', '지', '토', '차', '히', '돼', '곶', '뭊', '봊', '붖', '뽖', '뿢', '쁮', '작', '좇', '촞', '홓'];
+    const placeAll = (s: string): PlacedBlock => placeBlockStrokes(s, strokesForJamo, altStrokesForJamo)!;
+    type Zoned = PlacedBlock['letters'][number];
+    /**
+     * Every combination of the letters' forms, each as the letters with that form as their only one: the unit as it
+     * would be scored if the table listed that form alone (the baseline a missing stroke is judged against).
+     */
+    const combinations = (b: PlacedBlock): Zoned[][] =>
+      b.letters.reduce<Zoned[][]>(
+        (acc, l) => acc.flatMap((head) => [l.strokes, ...l.altStrokes].map((strokes) => [...head, { ...l, strokes, altStrokes: [] }])),
+        [[]],
+      );
+    const outcome = (letters: readonly Zoned[], drawn: JamoStrokePoint[][]) => ({
+      passed: scoreTraceUnit(letters, drawn).passed,
+      ready: traceWordReady('block', letters, drawn),
+    });
+
+    /**
+     * The baseline a drawing with strokes missing is judged against: the letters missing a stroke in their shown form
+     * only (the rule before OD-SO12, with its old leniency, e.g. ㅊ's short tick under ㅗ's bar), every other letter in
+     * the form it was drawn in. The other forms must add nothing to it: a letter drawn in another form with a stroke
+     * left out never passes or becomes ready through that form.
+     */
+    const expectNoGain = (b: PlacedBlock, only: Zoned[], missing: ReadonlySet<number>, drawn: JamoStrokePoint[][], label: string): void => {
+      const now = outcome(b.letters, drawn);
+      const baseline = outcome(only.map((l, i) => (missing.has(i) ? { ...b.letters[i]!, altStrokes: [] } : l)), drawn);
+      if (!baseline.passed) expect(now.passed, label).toBe(false);
+      if (!baseline.ready) expect(now.ready, `${label}, ready`).toBe(false);
+    };
+    /** Which letter of a combination each of its strokes, in writing order, belongs to. */
+    const letterOf = (only: Zoned[]): number[] => only.flatMap((l, i) => l.strokes.map(() => i));
+
+    it.each(SWEEP)('%s: one stroke left out of any combination of forms', (syllable) => {
+      const b = placeAll(syllable);
+      for (const only of combinations(b)) {
+        const form = only.flatMap((l) => l.strokes);
+        const owner = letterOf(only);
+        for (let k = 0; k < form.length; k++) {
+          expectNoGain(b, only, new Set([owner[k]!]), trace(form.filter((_, i) => i !== k)), `${syllable}: stroke ${k} of ${form.length} left out`);
+        }
+      }
+    });
+
+    it.each(SWEEP)('%s: no proper prefix of any combination of forms is ready', (syllable) => {
+      const b = placeAll(syllable);
+      for (const only of combinations(b)) {
+        const form = only.flatMap((l) => l.strokes);
+        const owner = letterOf(only);
+        for (let n = 1; n < form.length; n++) {
+          expectNoGain(b, only, new Set(owner.slice(n)), trace(form.slice(0, n)), `${syllable} ${n}/${form.length}`);
+        }
+        expect(outcome(b.letters, trace(form)).ready, syllable).toBe(true);
+      }
+    });
+
+    it('곶 with the final ㅈ drawn without its bar (ㅅ) fails and is not ready', () => {
+      const b = placeAll('곶');
+      const final = b.letters[2]!;
+      const [, left, right] = final.altStrokes[0]!;
+      const drawn = trace([...b.letters[0]!.strokes, ...b.letters[1]!.strokes, left!, right!]);
+      expect(outcome(b.letters, drawn)).toEqual({ passed: false, ready: false });
+    });
+  });
+
   it('a finished letter that would not pass (a stray stroke beside it) is never ready: the idle path only ever passes', () => {
     const ba = place('바');
     const stray = trace([[{ x: 150, y: 175 }, { x: 195, y: 195 }]]);

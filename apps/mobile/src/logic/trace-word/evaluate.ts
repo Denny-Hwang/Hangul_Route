@@ -96,7 +96,7 @@ export function scoreTraceUnit(
   // needs its loop nudge, read on the best-fitting combination, so every combination's order and direction are read
   // only for a taught unit (review of #1077).
   const combos = letterCombinations(letters);
-  const checks = combos.map((combo) => checkUnit(combo, drawn, tolerance));
+  const checks = combos.map((combo, k) => checkUnit(combo, drawn, tolerance, k > 0));
   const fit = checks.reduce((b, c, i) => {
     const best = checks[b]!;
     return (c.passed && !best.passed) || (c.passed === best.passed && c.coverage > best.coverage) ? i : b;
@@ -116,12 +116,19 @@ function letterCombinations(letters: readonly UnitLetter[]): UnitLetter[][] {
 }
 
 /** The pass checks of `scoreTraceUnit` on one combination of forms. */
-function checkUnit(letters: readonly UnitLetter[], drawn: JamoStrokePoint[][], tolerance: number): { passed: boolean; coverage: number } {
+function checkUnit(
+  letters: readonly UnitLetter[],
+  drawn: JamoStrokePoint[][],
+  tolerance: number,
+  ownInk = false,
+): { passed: boolean; coverage: number } {
   const target = letters.flatMap((l) => l.strokes);
-  const perLetter = letters.map((l) => scoreTrace({ target: l.strokes, drawn, tolerance }));
+  const nearest = inkByLetter(letters, drawn);
+  // [SO] OD-SO12 (re-review of #1077): a combination with another form covers each letter from the ink nearest that
+  // letter only, so another letter's stroke (ㅗ's bar under a final ㅈ) never stands in for a stroke left out.
+  const perLetter = letters.map((l, i) => scoreTrace({ target: l.strokes, drawn: ownInk ? [nearest[i]!] : drawn, tolerance }));
   const coverage = perLetter.length > 0 ? Math.min(...perLetter.map((r) => r.coverage)) : 0;
   const strokesHeld = perLetter.every((r) => r.perStrokeCoverage.every((c) => c >= STROKE_FLOOR));
-  const nearest = inkByLetter(letters, drawn);
   const reach = tolerance * PRECISION_SLACK;
   const precise =
     letters.every((l, i) => precisionOf(nearest[i]!, l.strokes, reach) >= PRECISION_THRESHOLD) &&
@@ -255,7 +262,8 @@ export function everyLetterInked(letters: readonly Pick<PlacedLetter, 'zones'>[]
 /**
  * AMENDMENTS-TRACE-IDLE §3.1 at block size: every letter of the unit is finished (`isFinished` of
  * `logic/trace-ready`: it would pass and every target stroke is covered to `TRACE_READY_STROKE_MIN`),
- * each against its own strokes at the unit's tolerance; [SO] OD-SO12: or against one of its other accepted forms.
+ * each against its own strokes at the unit's tolerance; [SO] OD-SO12: or against one of its other accepted forms,
+ * read on the ink nearest that letter only (re-review of #1077: another letter's stroke never finishes it).
  * No letters: not finished.
  */
 export function unitLettersFinished(
@@ -263,10 +271,17 @@ export function unitLettersFinished(
   drawn: readonly JamoStrokePoint[][],
   tolerance: number = BLOCK_TOLERANCE,
 ): boolean {
+  const finishedOn = (form: JamoStrokePoint[][], ink: readonly JamoStrokePoint[][]): boolean =>
+    isFinished(scoreTrace({ target: [...form], drawn: [...ink], tolerance }), false);
   return (
     letters.length > 0 &&
-    letters.every((l) =>
-      [l.strokes, ...(l.altStrokes ?? [])].some((form) => isFinished(scoreTrace({ target: [...form], drawn: [...drawn], tolerance }), false)),
+    letters.every(
+      (l, i) =>
+        finishedOn(l.strokes, drawn) ||
+        (l.altStrokes ?? []).some((form) => {
+          const own = inkByLetter(letters.map((m, j) => (j === i ? { strokes: form } : m)), drawn)[i]!;
+          return finishedOn(form, [own]);
+        }),
     )
   );
 }
