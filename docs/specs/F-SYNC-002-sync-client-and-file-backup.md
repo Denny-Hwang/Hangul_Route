@@ -7,6 +7,8 @@
 
 Parent: `docs/specs/F-SYNC-001-progress-sync.md` · wireframes `design/wireframes/sync/restore.md`, `sync/merge-notice.md`, `profile/settings.md`
 
+> **Amended 2026-11-23 by `AMENDMENTS-DURABLE-PROGRESS.md` [DP]** (work order WO-01 of the 2026-11 review: a failed read is never "nothing saved"; a failed write is never silent): section 3.2's first push after a damaged progress record was started fresh now folds the cloud copy in first (server pull, then a push from the server's `rev`, never an invented revision), so the fresh record no longer replaces it; a file restore waits for its write and says **save later** instead of "restored" when the record could not be read or written (rows DP-1a and DP-2).
+
 ---
 
 ## 1. Context

@@ -7,6 +7,8 @@
 
 Parent: F-SYNC-001 / F-SYNC-002 · wireframes `design/wireframes/sync/save-progress.md`, `sync/restore.md`, `sync/merge-notice.md`, `onboarding/welcome.md`
 
+> **Amended 2026-11-23 by `AMENDMENTS-DURABLE-PROGRESS.md` [DP]** (work order WO-01 of the 2026-11 review: a failed read is never "nothing saved"; a failed write is never silent): a restore over a learner whose progress record could not be read or written (an unread record, a full disk) says so: the adopt waits for the write (`whenWritten`) and the screen shows `caregiver.restore.saveLater` in place of "restored", and the restored snapshot is merged at the next successful read; nothing is written over the stored record (rows DP-1a, DP-2 and DP-1e).
+
 ---
 
 ## 1. Context
