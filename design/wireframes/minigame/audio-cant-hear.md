@@ -48,15 +48,18 @@ Then: without answering first, they tap one small link, see **one** line for the
 - The link is lighter and smaller than the speaker and the tiles: never the largest thing on the screen. It is still a full touch target.
 - It is on every round of the step while no text is up; the next round has it again.
 - Focus order: heading, speaker, link, tiles.
+- Loading: while the round holds (the voice check, at most 2 s; Dictation's `hold`, 1.5 s) the link is drawn but inactive, so it never comes in later and moves the tiles.
 
 ## C2 — The sheet (bottom sheet, like the W7 help sheet)
 
 ```
 +----------------------------------+
-|   (the round behind, dimmed)     |  <- scrim: a tap closes the sheet
+|   (the round behind, dimmed)     |  <- scrim: a tap closes the sheet; not an
+|                                  |     accessibility element (no second Close)
 |                                  |
 +----------------------------------+
-| (Can't hear it?)            [x]  |  <- title: the link's own words; close
+| (Can't hear it?)            [x]  |  <- title (focus starts here), then the close
+|                                  |     button at the end of the title row
 |                                  |
 |  (one line for THIS device)      |  <- exactly one of the three lines below
 |                                  |
@@ -68,10 +71,13 @@ The one line, by device (spec §3.4); only one is ever drawn:
 
   iPhone or iPad, in the app or the browser : (Turn off silent mode. Then turn the volume up.)
   Android, in the app or the browser        : (Turn up the media volume with the volume buttons.)
-  Computer                                  : (Turn the volume up. Check that this tab is not muted.)
+  Computer                                  : (Turn the volume up. Check that this page is not muted.)
 ```
 
-- The close button, the scrim and the back close the sheet; nothing else changes.
+- The close button, the scrim and the back close the sheet; nothing else changes; focus returns to the link.
+- **Guidance-only sheet** (the cue rule, C5; Discover, C6): no Show the letters, and Hear it is the primary action.
+- The sheet also closes when a text arrives while it is open (sound turned off, no Korean voice, a failed or blocked play): the panel then offers its own action.
+- Show the letters: the sheet closes, focus moves to the round's focus target (C5), and one beat later the text comes up, so a screen reader says it once. Hear it: focus returns to the link, and the prompt plays after the link's name is said.
 - If the round changes while it is open, the sheet closes (Show the letters always acts on the round on screen).
 - No Hoya, no amber, no red: a neutral sheet. This is not a miss.
 - Nothing is recorded: no answer, no attempt, no star.
@@ -99,7 +105,7 @@ The one line, by device (spec §3.4); only one is ever drawn:
 +----------------------------------+
 ```
 
-- This round only. The next round is C1 again (unless the owner adds "Always show the letters", OD-CH1).
+- This round only. The next round is C1 again (or every round opens with its text when the device has "Always show the letters" on, row CH-2).
 - A right tap scores as it does today with sound off. A wrong tap is the amber nudge with Hoya `thinking` (W1b), and the 800 ms replay still plays, so a learner who has just turned the sound on hears it.
 - Screen reader: focus goes to the speaker, then the letters are read once.
 
@@ -107,11 +113,12 @@ The one line, by device (spec §3.4); only one is ever drawn:
 
 | State (W8) | Already on screen | Link |
 |---|---|---|
+| `<idle>` while the round holds (voice check, Dictation `hold`) | the speaker | shown, **inactive** |
 | `<idle>`, `<playing>`, `<ok>` | the speaker | **shown** (C1) |
 | `<text: muted>` (W2) | the text and **Turn sound on** | hidden |
 | `<text: no_voice>` (W3) | the text and **How to add a voice** | hidden |
 | `<text: error>` (W4) | the text and **Try again** | hidden |
-| `<text: blocked>` (W4) | **Tap to hear** on the speaker | hidden |
+| `<text: blocked>` (W4) | the text, and **Tap to hear** on the speaker | hidden |
 | `<text: asked>` (C3) | the text | hidden |
 | answered right, waiting for the next round | the right tile | still shown (no flicker); a sheet left open closes when the round changes |
 
@@ -122,9 +129,11 @@ The one line, by device (spec §3.4); only one is ever drawn:
 
 | Round | Where the link goes | What Show the letters shows (the round's own text fallback) | No link when |
 |---|---|---|---|
-| Listen & Pick (quest steps, quest Check, Hangul Check, vocab, Browse preview) | after the speaker and Hear again | the word with its romanization in the prompt zone | the spelling round (its Korean is the answer); a text-prompt round |
-| Heard rounds of Daily Review, Keep going, Stage Check, Cell Check | after the speaker | the prompt Korean with its romanization, in the panel | read and write rounds (already printed) |
-| Quest warm-up, Try these again | after the speaker | the prompt Korean | — |
+| Listen & Pick (quest steps, vocab, Browse preview) | after the speaker and Hear again | the word with its romanization in the prompt zone; focus: the speaker | a text-prompt round. Spelling round: guidance only (cue rule) |
+| Listen & Pick in Checks (quest Check, Hangul Check) | as above | **waits for OD-CH6**: the romanization only where the options hold or hide theirs (spec §3.12) | until OD-CH6 is answered: no link |
+| Heard rounds of Daily Review, Keep going, This week in Korea | after Hear again | with a picture or meaning cue: guidance only; without: the prompt Korean with its romanization; focus: Hear again | read and write rounds (already printed) |
+| Heard rounds of Stage Check, Cell Check | after Hear again | **waits for OD-CH6** | until OD-CH6 is answered: no link |
+| Quest warm-up, Try these again (heard rounds) | after the speaker and Hear again | with a cue: guidance only; without (a syllable round): the prompt Korean; focus: the speaker | text rounds |
 | Syllable Build (quest step, review round) | after the speaker and the meaning button | the romanization only (the block is the answer) | inside the Decoding Sprint (OD-CH4) |
 | Speed round, sound question, Relaxed mode | under the large speaker | the word with its romanization (the options are pictures) | Challenge mode (a clock runs, OD-CH4) |
 | Dictation (Type Hangul, `hear`) | after the speaker | the round becomes the W11 `see` round | `see` rounds |
@@ -145,7 +154,9 @@ Listen & Pick, a quest Check                     Dictation, a hear round
  until answered (AU-8)
 ```
 
-## C6 — Discover: guidance only (OD-CH3, row CH-1d; only if the owner says yes)
+**The cue rule** (spec §3.1): a pick round that already has a picture or a meaning to answer from gets the guidance-only sheet, because showing its Korean would print the right option. Elsewhere a right answer after Show the letters is marked as help for memory, if the owner approves OD-CH7.
+
+## C6 — Discover: guidance only (OD-CH3 approved 2026-11-23, row CH-1d)
 
 ```
 +----------------------------------+
@@ -164,6 +175,7 @@ Its sheet:  (Can't hear it?) [x]  /  (one line for this device)  /  [[ (speaker)
             no Show the letters; Hear it is the primary action here
 ```
 
+- The Discover link is hidden while its status panel shows a reason (sound off, no Korean voice, a failed or blocked play): that panel already says what to do.
 - Why Discover: it is the first page that plays a sound in every quest (the first letter plays when the page opens), so a learner on silent can fix the sound before the first sound-only game.
 
 ## C7 — Add a Korean voice: this device only (P2-22, spec §3.9)
@@ -244,8 +256,8 @@ Exit to: none. The sheet always returns to the round that opened it.
 - The prompt slot's state (local, `logic/audio/prompt-state.ts`): phase, reason and the new `asked` flag. Per round, in memory, never stored.
 - The device family (local, computed): `Platform.OS` on native, the user agent and touch points on the web (`installEnv()`). Never stored, never sent.
 - Strings: `learner.audio.cantHear.*` (new, spec §3.10), `learner.audio.hearIt.cta`, `learner.audio.readHere`, `common.buttons.close`.
-- Telemetry: nothing new by default. OD-CH2 would add the reason `asked` to `audio.fallback_shown` (counts only).
-- Storage: nothing. OD-CH1 (b) would add one device setting next to mute (`device:audio`).
+- Telemetry: nothing new by default. If OD-CH2 (re-opened) is approved, row CH-4 adds the reason `asked` to `audio.fallback_shown` (counts only, no profile id).
+- Storage: nothing for the link and the sheet. Row CH-2 (OD-CH1 approved) adds one device setting next to mute (`device:audio`).
 
 ## Accessibility
 
@@ -260,6 +272,8 @@ Exit to: none. The sheet always returns to the round that opened it.
 1. Link placement on phones: in the speaker row, wrapping under the caption when narrow (proposed), or always under the row?
 2. Does the sheet's Hear it carry the speaker glyph, like the wrong-answer bubble's Hear it (proposed: yes)?
 3. Is "Turn off silent mode" clear to a learner who has never opened that setting? A grown-up may help; the mock checks the line length at 200 % text.
-4. An iPad browser that asks for the desktop site and reports no touch points (rare) gets the computer line. Acceptable (proposed: yes)?
+4. An iPad browser that asks for the desktop site and reports no touch points (rare), and a large Android tablet whose Chrome asks for the desktop site (a desktop Linux user agent), get the computer line. Acceptable (proposed: yes)?
 5. Headphones paired elsewhere are named by no line (one short line per device). Leave out (proposed: yes)?
-6. If the owner chooses OD-CH1 (b), the "Always show the letters" switch goes on Profile's Sound card (W7), under the Sound switch; it is mocked only then.
+6. The "Always show the letters" switch (OD-CH1 approved, row CH-2) goes on Profile's Sound card (W7), under the Sound switch; the mock row draws it.
+7. Should the link carry the `speaker-off` glyph before its words (proposed: the mock tries it)?
+8. Translators: "letters" means written characters of any script; in Syllable Build Show the letters shows the romanization.
