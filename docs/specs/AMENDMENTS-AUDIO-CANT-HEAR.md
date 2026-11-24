@@ -51,12 +51,12 @@ A **sound-only prompt** is a prompt that shows only a speaker until its text fal
 | Surface (hosts) | File | Prompt slot | What "Show the letters" shows (the surface's own text fallback, unchanged) | Row |
 |---|---|---|---|---|
 | Match Sound (quest Play steps, Browse preview) | `screens/minigames/MatchSoundGame.tsx` | `:74` | the letter's name in Hangul with its romanization (`PromptPanel` `:194-200`) | CH-1a |
-| Listen & Pick: every host (quest steps, quest Check, the Hangul Check in `screens/reviews/StageReviewScreen.tsx`, vocab, Browse preview; the Syllable Build and Cloze Pick fallbacks; quest pacing) | `screens/minigames/ListenPickGame.tsx` | `:186-191` | the prompt word and its romanization (`promptView` `:306-311`, live region `:418-428`). **Not in the spelling round**: its Korean is the answer, so it never shows the prompt text (`:303-311`), and the entry point is off there | CH-1b |
+| Listen & Pick: every host (quest steps, quest Check, the Hangul Check in `screens/reviews/StageReviewScreen.tsx`, vocab, Browse preview; the Syllable Build and Cloze Pick fallbacks; quest pacing) | `screens/minigames/ListenPickGame.tsx` | `:186-191` | the prompt word and its romanization (`promptView` `:306-311`, live region `:419-429`). **Not in the spelling round**: its Korean is the answer, so it never shows the prompt text (`:303-311`), and the entry point is off there | CH-1b |
 | Heard rounds of the Daily Review, Keep going, Stage Check and Cell Check | `screens/reviews/ReviewRounds.tsx` | `:94` (`useRoundSound`, `textOnScreen: !heard`) | the prompt Korean with its romanization (`:167`) | CH-1b |
 | Quest warm-up and Try these again | `screens/quest/quest-review-chunk.tsx` | `:311` | the prompt Korean (`:407-410`) | CH-1b |
 | Syllable Build (quest step `SyllableBuildGame`, review round `BuildRoundView`) | `screens/minigames/SyllableBuildBoard.tsx` | `:149` | the syllable's romanization only (the block is the answer, `:153`, `:350`); with the text up, a reveal is not counted as a hint (`voice: false`, `:210`) | CH-1b |
 | The vocab Speed round's sound question, **Relaxed** mode only (the default; no clock, F-VOC-004 S1) | `screens/vocab/VocabQuestionView.tsx` | `:153-158` (`textOnScreen: promptKind === 'word'`) | the word with its romanization, read in full (`readHere` and `textFallback`, `logic/vocab/question-view.ts:108, 115-117`); the options are pictures | CH-1b |
-| Dictation, Type Hangul `hear` (quest step, review round) | `screens/minigames/dictation-chunk.tsx` (`useHearRound` `:85-140`) | `:91` | the `see` round the no-voice fallback already draws (W11 of `design/wireframes/minigame/audio-fallback.md`) | CH-1c |
+| Dictation, Type Hangul `hear` (quest step, review round) | `screens/minigames/dictation-chunk.tsx` (`useHearRound` `:85-153`) | `:91` | the `see` round the no-voice fallback already draws (W11 of `design/wireframes/minigame/audio-fallback.md`) | CH-1c |
 | Discover, guidance only (text on screen) | `screens/quest/DiscoverStep.tsx` | `:407` | nothing new: the sheet has no **Show the letters**, only the line and **Hear it** | CH-1d, gated by OD-CH3 |
 
 Left out (each with its reason; ODs where the owner should decide):
@@ -178,7 +178,7 @@ How long it lasts: **one round** (WO-05: "that round's prompt state"). The next 
 - Reused, unchanged: `learner.audio.hearIt.cta` "Hear it" (`:1135`), `learner.audio.readHere` "No sound? Read it here." (`:1116`), `common.buttons.close`. The sheet's title is `cantHear.cta`.
 - The Apple line does not name a switch: recent iPhones set silent mode with the Action button or Control Center, and most iPads have no switch.
 - English is CEFR Pre-A1 and short (CLAUDE.md §1). "Silent mode", "media volume" and "muted" are the words the phones' own settings use.
-- Spanish and Korean are **shipped** locales (`packages/i18n/src/locales.ts:30-34`; a missing key fails `es-coverage.ts` / `ko-coverage.ts`), so the CH-1a PR carries the es and ko values as R8 drafts with the F-I18N-001 §3.10 review, in the same PR. This spec writes English only.
+- Spanish and Korean are **shipped** locales (`packages/i18n/src/locales.ts:31-35`; a missing key fails `es-coverage.ts` / `ko-coverage.ts`), so the CH-1a PR carries the es and ko values as R8 drafts with the F-I18N-001 §3.10 review, in the same PR. This spec writes English only.
 - Telemetry, if OD-CH2 says yes: no new string.
 
 ### 3.11 Touch, layout and anti-shame
