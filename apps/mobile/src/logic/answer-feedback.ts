@@ -136,7 +136,7 @@ const MS_PER_SYLLABLE = 160;
 const SYLLABLE_FIRST = 0xac00;
 const SYLLABLE_LAST = 0xd7af;
 const isSyllable = (ch: string): boolean => {
-  const code = ch.codePointAt(0) ?? 0;
+  const code = ch.charCodeAt(0);
   return code >= SYLLABLE_FIRST && code <= SYLLABLE_LAST;
 };
 
