@@ -1,6 +1,7 @@
 import { borderWidth, colors, layout, presenter, spacing, touchTarget, typography, z } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SpaceKind } from '@hangul-route/content-schema';
+import { readItem, removeItem, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
 import { rem } from './rem';
 import { rosterJoinLink } from './join-link';
 import { codeExpiry } from './rollup';
@@ -140,39 +141,20 @@ html[${CODE_OVERLAY_ATTR}] [inert]{display:none!important}
 .hr-co-close{display:none}
 }`;
 
-/** The part of the session store the reopen flag uses (`KeyValueStorage` of `lib/i18n/safe-storage.ts`). */
-interface FlagStorage {
-  getItem: (key: string) => string | null;
-  setItem: (key: string, value: string) => void;
-  removeItem: (key: string) => void;
-}
-
 /** Whether the flag names `spaceId`: the class page opens the overlay in the render that first draws its roster. */
-export function codeOverlayFlagged(storage: FlagStorage | null, spaceId: string): boolean {
+export function codeOverlayFlagged(storage: KeyValueStorage | null, spaceId: string): boolean {
   if (spaceId === '') return false;
-  try {
-    return storage?.getItem(CODE_OVERLAY_FLAG) === spaceId;
-  } catch {
-    return false;
-  }
+  return readItem(storage, CODE_OVERLAY_FLAG) === spaceId;
 }
 
 /** Remembers an open overlay across a grown-up lock: the space id only, never a name or a code. */
-export function rememberCodeOverlay(storage: FlagStorage | null, spaceId: string): void {
-  try {
-    storage?.setItem(CODE_OVERLAY_FLAG, spaceId);
-  } catch {
-    // Blocked storage: the overlay simply does not come back after a lock.
-  }
+export function rememberCodeOverlay(storage: KeyValueStorage | null, spaceId: string): void {
+  writeItem(storage, CODE_OVERLAY_FLAG, spaceId);
 }
 
-/** Close, Escape, a self-close and a navigation away remove it. */
-export function forgetCodeOverlay(storage: FlagStorage | null): void {
-  try {
-    storage?.removeItem(CODE_OVERLAY_FLAG);
-  } catch {
-    // Nothing to remove.
-  }
+/** Close, Escape, a self-close, a navigation away and a page hide remove it. */
+export function forgetCodeOverlay(storage: KeyValueStorage | null): void {
+  removeItem(storage, CODE_OVERLAY_FLAG);
 }
 
 /**

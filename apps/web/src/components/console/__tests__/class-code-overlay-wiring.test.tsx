@@ -84,7 +84,10 @@ const state = {
   expires: '2026-12-12T12:00:00.000Z' as string | null,
   rosterError: null as null | 'forbidden',
   rosterCalls: 0,
+  incoming: [] as unknown[],
+  hold: null as Promise<void> | null,
 };
+const MOVE_IN = { id: 'move:in1', kind: 'accept', status: 'waiting', from: { name: 'Class C' }, learner: { alias: 'J. K.', avatar: 'rabbit', level: '5-7' }, createdAt: '2026-11-23T12:00:00.000Z', at: null };
 
 const api = new Proxy(
   {},
@@ -94,6 +97,7 @@ const api = new Proxy(
       async () => {
         if (name === 'roster') {
           state.rosterCalls += 1;
+          if (state.hold) await state.hold;
           if (state.rosterError) return { ok: false, error: state.rosterError, status: 403 } satisfies Result;
           return ok({ space: spaceOf(state.kind), learners: state.learners, joinCode: state.code, joinCodeExpiresAt: state.expires });
         }
@@ -101,7 +105,7 @@ const api = new Proxy(
         if (name === 'listPlans') return ok([PLAN]);
         if (name === 'relinkRequests') return ok(state.relinks);
         if (name === 'transferRequests') return ok({ requests: [] });
-        if (name === 'classMoves') return ok({ outgoing: [], incoming: [] });
+        if (name === 'classMoves') return ok({ outgoing: [], incoming: state.incoming });
         if (name === 'listSpaces') return ok([{ space: spaceOf(state.kind), role: 'owner', counts: { learners: 3, accounts: 1, classes: 0 }, joinCode: null, joinCodeExpiresAt: null }]);
         return ok([]);
       },
@@ -131,6 +135,7 @@ const fakeDocument = {
   },
 };
 const session: Record<string, string> = {};
+const pagehide = new Set<() => void>();
 const fakeWindow = {
   location: { pathname: '/teach/space', search: '?id=space%3Asunflower', hash: '', origin: 'https://app.hangulroute.com' },
   sessionStorage: {
@@ -142,8 +147,12 @@ const fakeWindow = {
       delete session[k];
     },
   },
-  addEventListener: () => undefined,
-  removeEventListener: () => undefined,
+  addEventListener: (type: string, l: () => void) => {
+    if (type === 'pagehide') pagehide.add(l);
+  },
+  removeEventListener: (type: string, l: () => void) => {
+    if (type === 'pagehide') pagehide.delete(l);
+  },
 };
 
 beforeAll(() => {
@@ -166,6 +175,9 @@ beforeEach(() => {
   state.expires = '2026-12-12T12:00:00.000Z';
   state.rosterError = null;
   state.rosterCalls = 0;
+  state.incoming = [];
+  state.hold = null;
+  pagehide.clear();
   nav.query = 'id=space%3Asunflower';
   lang.locale = 'en';
   fakeWindow.location.pathname = '/teach/space';
@@ -180,6 +192,7 @@ afterEach(() => {
   mounted = null;
   keydown.clear();
   visibility.clear();
+  pagehide.clear();
   vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -513,5 +526,91 @@ describe('a family roster', () => {
     await render();
     expect(byTestId('class-code-open')).toHaveLength(0);
     expect(overlay()).toBeUndefined();
+  });
+});
+
+
+/** The nearest ancestor (or the node itself) that carries the `inert` attribute, or null. */
+const inertAncestor = (node: ReactTestInstance): ReactTestInstance | null => {
+  for (let n: ReactTestInstance | null = node; n; n = n.parent) if (typeof n.type === 'string' && n.props.inert !== undefined) return n;
+  return null;
+};
+
+describe('the page behind is inert as a whole, also for parts that mount later (3.3, review)', () => {
+  it('the page content is one container: inert while the overlay shows, not before and not after', async () => {
+    await render();
+    expect(one('class-page-content').props.inert).toBeUndefined();
+    await press(one('class-code-open'));
+    expect(one('class-page-content').props.inert).toBe('');
+    expect(inertAncestor(one('student-card'))).not.toBeNull();
+    expect(inertAncestor(overlay() as ReactTestInstance)).toBeNull();
+    await press(one('class-code-close'));
+    expect(one('class-page-content').props.inert).toBeUndefined();
+  });
+
+  it('a learner asking to join and the attention banner that arrive on a re-read while it is open are inert, so neither prints nor is reached by a screen reader', async () => {
+    await render();
+    expect(byTestId('asking-to-join')).toHaveLength(0);
+    await press(one('class-code-open'));
+    state.incoming = [MOVE_IN];
+    await advance(CLASS_RELINK_REFRESH_MS);
+    const asking = one('asking-to-join');
+    expect(textOf(asking)).toContain('J. K.');
+    expect(inertAncestor(asking)).not.toBeNull();
+    expect(inertAncestor(one('attention-banner'))).not.toBeNull();
+    // The overlay itself shows none of it.
+    expect(shown(overlay() as ReactTestInstance).join(' ')).not.toContain('J. K.');
+    expect(inertAncestor(overlay() as ReactTestInstance)).toBeNull();
+  });
+
+  it('a read error that closes the overlay leaves nothing held inert for the page that shows its error', async () => {
+    await render();
+    await press(one('class-code-open'));
+    state.rosterError = 'forbidden';
+    await advance(CLASS_RELINK_REFRESH_MS);
+    expect(overlay()).toBeUndefined();
+    expect(one('class-page-content').props.inert).toBeUndefined();
+    expect(inertAncestor(one('space-error'))).toBeNull();
+  });
+});
+
+describe('the flag follows the page, not a stale roster (review)', () => {
+  it('a pagehide (a closing, reloading or leaving tab) removes the flag; a lock, which fires none, keeps it', async () => {
+    await render();
+    await press(one('class-code-open'));
+    expect(session[CODE_OVERLAY_FLAG]).toBe('space:sunflower');
+    expect(pagehide.size).toBe(1);
+    await act(async () => {
+      for (const l of [...pagehide]) l();
+    });
+    expect(session[CODE_OVERLAY_FLAG]).toBeUndefined();
+  });
+
+  it("the address moving from class A to class B closes the overlay, offers no entry from A's roster and writes no flag for B", async () => {
+    await render();
+    await press(one('class-code-open'));
+    expect(session[CODE_OVERLAY_FLAG]).toBe('space:sunflower');
+    // B's read is slow: A's roster is still in memory when the address changes.
+    let release: () => void = () => undefined;
+    state.hold = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    nav.query = 'id=space%3Aother';
+    fakeWindow.location.search = '?id=space%3Aother';
+    await act(async () => {
+      (mounted as ReactTestRenderer).update(<TeachSpacePage />);
+    });
+    await act(async () => undefined);
+    expect(overlay()).toBeUndefined();
+    expect(byTestId('class-code-open')).toHaveLength(0);
+    expect(session[CODE_OVERLAY_FLAG]).toBeUndefined();
+    expect(one('class-page-content').props.inert).toBeUndefined();
+    state.hold = null;
+    release();
+    await act(async () => undefined);
+    await advance(1);
+    // B's roster lands: no overlay opened by itself, no flag.
+    expect(overlay()).toBeUndefined();
+    expect(session[CODE_OVERLAY_FLAG]).toBeUndefined();
   });
 });
