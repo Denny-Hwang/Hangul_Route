@@ -1,4 +1,4 @@
-import { CATALOG, FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, teachingOrder } from '@hangul-route/content-schema';
+import { CATALOG, FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, MIN_TOGETHER_LEARNERS, teachingOrder } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, describeRelativeDay, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { RosterLearner, RosterSeats, RosterSummary } from './api';
 import { joinOrder } from './parent-home';
@@ -14,9 +14,10 @@ const DAY_MS = 86_400_000;
 /**
  * [CO] AMENDMENTS-CLASS-CODE-OVERLAY CO-2c (OD-CO8 (a), owner decision 2026-11-24): in a class, "Jamo to revisit together",
  * "Words to revisit together" and "Stage 1 first-try answers" show only when at least this many learners contribute to the
- * line. Below it a line is one or two learners' own list or score on a screen the room can see.
+ * line. Below it a line is one or two learners' own list or score on a screen the room can see. The number is defined in
+ * content-schema (CO-2e: the class report builder applies it too) and re-exported here for the web's importers.
  */
-export const MIN_TOGETHER_LEARNERS = 3;
+export { MIN_TOGETHER_LEARNERS };
 
 export interface ClassRollup {
   students: number;

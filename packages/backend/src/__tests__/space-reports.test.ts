@@ -446,10 +446,8 @@ describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, R
       expect(body.report.class).toEqual({ learners: 3, withActivity: 1, olderApp: 1, notSaved7d: 0 });
       expect(body.report.headline).toMatchObject({ code: 'class_practiced', practiced: 1, learners: 3 });
       expect(body.report.wentWell.lettersNew).toEqual([{ letter: 'ㄱ', learners: 1 }]);
-      expect(body.report.revisit).toEqual([
-        { letter: 'ㅂ', learners: 2 },
-        { letter: 'ㅅ', learners: 1 },
-      ]);
+      // Two learners carry letters to revisit: under the minimum of 3 the line is empty (CO-2e).
+      expect(body.report.revisit).toEqual([]);
       expect(r.cacheControl).toBe('no-store');
 
       // The report is the class aggregate of the roster's own projection: never more than the roster's consent allows.
@@ -467,6 +465,21 @@ describe('GET /api/spaces/:id/class-report (F-REPORT-001 sections 3.7 and 3.8, R
       for (const hidden of [suni.learnerId, minho.learnerId, jiwoo.learnerId, outsider.learnerId, 'Suni', 'Minho', 'Jiwoo', 'Outsider', 'payload-only-1', 'joinCode', 'ownerAccountId', 'ageGroup', 'avatar', 'hoya-orange'])
         expect(raw, hidden).not.toContain(hidden);
     }
+  });
+
+  it('serves the letters to revisit together from 3 learners with letters, never below (CO-2e)', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const members = [await registerLearner('device-suni0001', 'Suni'), await registerLearner('device-minho001', 'Minho'), await registerLearner('device-jiwoo001', 'Jiwoo')];
+    for (const l of members) await join(cls.space.id, l.auth, { code: cls.joinCode, learnerId: l.learnerId });
+    const revisitOf = async (): Promise<unknown> => ClassReportResponseSchema.parse((await get(classReportPath(cls.space.id), bearer('teacher'))).body.data).report.revisit;
+    await upload(members[0] as (typeof members)[number], { ...baseSummary, needsPractice: ['ㅂ'] });
+    await upload(members[1] as (typeof members)[number], { ...baseSummary, needsPractice: ['ㅂ', 'ㅅ'] });
+    expect(await revisitOf()).toEqual([]);
+    await upload(members[2] as (typeof members)[number], { ...baseSummary, needsPractice: ['ㅅ'] });
+    expect(await revisitOf()).toEqual([
+      { letter: 'ㅂ', learners: 2 },
+      { letter: 'ㅅ', learners: 2 },
+    ]);
   });
 
   it('counts the class plans as homework rows, never a plan of another space', async () => {
