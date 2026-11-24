@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
-import type { Locator, Page } from '@playwright/test';
+import type { ElementHandle, Page } from '@playwright/test';
 import {
   AXE_EXCLUDE,
   AXE_TAGS,
@@ -64,7 +64,8 @@ async function auditScreen(page: Page, screen: AxeScreen): Promise<void> {
   const { failures, warnings } = verdict(screen, diff, ON_CI);
   for (const w of warnings) console.log(`::warning title=axe baseline::${w}`);
   const nodes = describeNodes(found.violations, changedRules(diff));
-  expect(failures, `${failures.join('\n')}${nodes ? `\n${nodes}` : ''}`).toEqual([]);
+  const where = `scanned ${page.url()}. If the counts look foreign, another checkout's server may be on port 4173 (the config reuses it): lsof -nP -iTCP:4173 -sTCP:LISTEN`;
+  expect(failures, `${failures.join('\n')}${nodes ? `\n${nodes}` : ''}${failures.length > 0 ? `\n${where}` : ''}`).toEqual([]);
 }
 
 /**
@@ -145,15 +146,21 @@ test.describe('axe smoke on the learner PWA (AMENDMENTS-A11Y-CI AC-1)', () => {
     await page.evaluate(() => {
       (window as Window & { __axeHold?: boolean }).__axeHold = true;
     });
-    const option = page.getByRole('button', { name: answer!, exact: true });
-    const other = page.getByRole('button', { name: new RegExp(`^(${Object.values(english).join('|')})$`) }).filter({ hasNotText: answer! }).first();
-    const fill = (b: Locator): Promise<string> => b.evaluate((el) => [el, ...Array.from(el.querySelectorAll('*'))].map((e) => getComputedStyle(e).backgroundColor).filter((c) => c !== 'rgba(0, 0, 0, 0)').join(' '));
-    const before = await fill(option);
-    await option.click();
+    // The option buttons by their visible English word. F-A11Y-001 AF-1 renames them ("Right answer: Tomato"), so the
+    // names allow its prefix and suffix, and the tapped option is held as an element handle, not looked up again.
+    const names = Object.values(english).join('|');
+    const options = page.getByRole('button', { name: new RegExp(`^(Right answer: )?(${names})(, correct)?$`) });
+    const tapped = await page.getByRole('button', { name: new RegExp(`^(Right answer: )?${answer}(, correct)?$`) }).elementHandle();
+    const untouched = await options.filter({ hasNotText: answer! }).first().elementHandle();
+    expect(tapped, `the option ${answer}`).not.toBeNull();
+    expect(untouched, 'an option that is not the answer').not.toBeNull();
+    const fill = (b: ElementHandle<Element>): Promise<string> => b.evaluate((el) => [el, ...Array.from(el.querySelectorAll('*'))].map((e) => getComputedStyle(e).backgroundColor).filter((c) => c !== 'rgba(0, 0, 0, 0)').join(' '));
+    const before = await fill(tapped!);
+    await tapped!.click();
     // The answered state: still round 1 of 4, and the tapped option shows its success fill (not the colour it had).
     await expect(page.getByText('1 / 4', { exact: true })).toBeVisible();
-    await expect.poll(() => fill(option)).not.toBe(before);
-    expect(await fill(option)).not.toBe(await fill(other));
+    await expect.poll(() => fill(tapped!)).not.toBe(before);
+    expect(await fill(tapped!)).not.toBe(await fill(untouched!));
     await auditScreen(page, 'culture-quiz-correct');
     // Still the answered round: the quiz has not moved on while it was scanned.
     await expect(page.getByText('1 / 4', { exact: true })).toBeVisible();

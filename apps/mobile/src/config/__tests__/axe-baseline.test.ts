@@ -210,9 +210,11 @@ describe('the baseline file', () => {
   });
 
   /**
-   * The ceiling (section 3.3's rule for every ratchet): the file as merged by AC-1. A key the map lacks, or a count
-   * above its entry, fails; so raising a line is a visible edit of this test that review must justify. Lowering a
-   * count or removing a line needs no edit here.
+   * The ceiling map (section 3.3's rule for every ratchet) is the file as merged, and the test below holds the two
+   * equal: a line the map lacks or a count above it fails (raising a line is a visible edit of this test that review
+   * must justify), and so does a count below it or a missing line, so lowering a count or clearing a rule also edits
+   * this map in the same PR as the JSON. Run the axe spec locally against a release build, shrink the JSON, then shrink
+   * this map to match.
    */
   const CEILING: Record<string, Record<string, number>> = {
     home: { region: 8 },
@@ -222,14 +224,16 @@ describe('the baseline file', () => {
     'pin-entry': { 'aria-prohibited-attr': 1, region: 3 },
   };
 
-  it('never gains a line or raises a count above the ceiling map', () => {
+  it('equals the ceiling map: no new line, no higher count, and a lowered count or cleared rule edits the map too', () => {
+    const found: Record<string, Record<string, number>> = {};
     for (const [screen, lines] of Object.entries(baseline.screens)) {
-      const ceiling = CEILING[screen] ?? {};
+      found[screen] = Object.fromEntries(lines.map((l) => [l.rule, l.nodes]));
       for (const l of lines) {
+        const ceiling = CEILING[screen] ?? {};
         expect(ceiling[l.rule], `${screen}: "${l.rule}" is not in the ceiling map; the baseline never gains a line`).toBeDefined();
         expect(l.nodes, `${screen}: "${l.rule}" is above the ceiling`).toBeLessThanOrEqual(ceiling[l.rule] ?? 0);
       }
     }
-    expect(Object.keys(CEILING)).toEqual(Object.keys(baseline.screens));
+    expect(found, 'the baseline JSON and the ceiling map differ: lower both in the same PR').toEqual(CEILING);
   });
 });
