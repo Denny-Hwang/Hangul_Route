@@ -21,6 +21,16 @@
  * in writing order (`logic/trace-word/block-strokes.ts`).
  * `content/__tests__/jamo-stroke-order.test.ts` pins every count and
  * direction.
+ *
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2 (OD-SO11, 2026-11-23): checked
+ * against the sourced rows of `docs/specs/assets/stroke-order-table.md`, which
+ * the owner approved for SO-2. Every AU-14 form is one the table accepts, so
+ * `strokes` is unchanged. Where the table accepts another form (ㅈ in 3
+ * strokes; ㅊ and ㅎ with the top stroke left to right; ㅌ with the ㄴ shape
+ * from the middle bar), the jamo lists it in `altStrokes`; the order and
+ * direction checks accept any listed form. The same test parses the table,
+ * so the data and the table cannot drift. Whether a letter's order is taught
+ * at all is `reviewedStrokeIds` (below), a person's call (SO-3).
  */
 
 export interface JamoStrokePoint {
@@ -30,7 +40,13 @@ export interface JamoStrokePoint {
 
 export interface JamoStrokes {
   jamoId: string;
+  /** The form shown (the ghost, Show me, the presenter): AU-14's. */
   strokes: JamoStrokePoint[][];
+  /**
+   * [SO] OD-SO4 / OD-SO11: the other forms the table accepts, each a whole stroke list in writing order, in the
+   * table's order. Each lies inside the box of `strokes`, so Trace a Word can place it with the same fit. Never shown.
+   */
+  altStrokes?: JamoStrokePoint[][][];
 }
 
 const p = (x: number, y: number): JamoStrokePoint => ({ x, y });
@@ -137,6 +153,15 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(40, 50), p(160, 50), p(50, 150)],
       [p(116, 90), p(160, 150)],
     ],
+    // Table row 9, Variant B (3 strokes): the bar, then ㅅ from the middle of the bar, its right leg
+    // leaving from the left leg (the order of the three is derived, not sourced: the reviewer confirms it)
+    altStrokes: [
+      [
+        [p(40, 50), p(160, 50)],
+        [p(100, 50), p(50, 150)],
+        [p(80, 90), p(160, 150)],
+      ],
+    ],
   },
   // ㅊ chieut — 3 strokes: the tick, then ㅈ's two strokes
   {
@@ -145,6 +170,14 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(100, 30), p(100, 55)],
       [p(40, 70), p(160, 70), p(50, 150)],
       [p(116, 102), p(160, 150)],
+    ],
+    // Table row 10, Order A: the top stroke left to right, slanting a little down, then ㅈ's two strokes
+    altStrokes: [
+      [
+        [p(88, 40), p(112, 44)],
+        [p(40, 70), p(160, 70), p(50, 150)],
+        [p(116, 102), p(160, 150)],
+      ],
     ],
   },
   // ㅋ kieuk — 2 strokes: the ㄱ shape, then the middle bar
@@ -162,6 +195,14 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(40, 40), p(160, 40)],
       [p(40, 95), p(160, 95)],
       [p(50, 40), p(50, 150), p(160, 150)],
+    ],
+    // Table row 12, Variant B (一 + ㄷ): the two bars, then the ㄴ shape from the middle bar, not from the top
+    altStrokes: [
+      [
+        [p(40, 40), p(160, 40)],
+        [p(40, 95), p(160, 95)],
+        [p(50, 95), p(50, 150), p(160, 150)],
+      ],
     ],
   },
   // ㅍ pieup — 4 strokes: the top bar, the left leg, the right leg, the bottom bar
@@ -182,6 +223,8 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(40, 65), p(160, 65)],
       HIEUT_LOOP,
     ],
+    // Table row 14, Order A: the top stroke left to right, slanting a little down, then the bar and the ring
+    altStrokes: [[[p(88, 38), p(112, 42)], ...copy([[p(40, 65), p(160, 65)], HIEUT_LOOP])]],
   },
 
   // ─────────────────────────────────────────
@@ -273,6 +316,18 @@ export const jamoStrokes: JamoStrokes[] = [
 
 export function strokesForJamo(jamoId: string): JamoStrokePoint[][] | undefined {
   return jamoStrokes.find((s) => s.jamoId === jamoId)?.strokes;
+}
+
+/** [SO] SO-2: the jamo's other accepted forms (`altStrokes`; none: an empty list), or undefined for a jamo the data does not hold. */
+export function altStrokesForJamo(jamoId: string): JamoStrokePoint[][][] | undefined {
+  const entry = jamoStrokes.find((s) => s.jamoId === jamoId);
+  return entry ? (entry.altStrokes ?? []) : undefined;
+}
+
+/** [SO] SO-2: every accepted form of the jamo, the form shown (`strokes`) first, for the order and direction checks. */
+export function strokeFormsForJamo(jamoId: string): JamoStrokePoint[][][] | undefined {
+  const entry = jamoStrokes.find((s) => s.jamoId === jamoId);
+  return entry ? [entry.strokes, ...(entry.altStrokes ?? [])] : undefined;
 }
 
 /**

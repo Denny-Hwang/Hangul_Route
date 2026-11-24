@@ -1,12 +1,26 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
-import { jamoStrokes, strokesForJamo, type JamoStrokePoint } from '../jamo-strokes';
+import {
+  altStrokesForJamo,
+  jamoStrokes,
+  reviewedStrokeIds,
+  strokeFormsForJamo,
+  strokesForJamo,
+  type JamoStrokePoint,
+} from '../jamo-strokes';
 
 /**
  * [AU] AMENDMENTS-AUDIT-2026-11 AU-14 (audit EDU-6): the stroke data follows the standard
  * school stroke order and stroke counts. This file pins, for every jamo in the data, how many
  * strokes it has and which way each stroke runs, against the table below, so an edit to
  * `jamo-strokes.ts` cannot change a count, an order or a direction without changing this table.
+ *
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2: the table below is tied to the sourced, approved
+ * rows of `docs/specs/assets/stroke-order-table.md` (parsed here, OD-SO11), and so is every
+ * accepted other form the data holds (`altStrokes`), so the data, this test and the table
+ * cannot drift. The table file also holds the review records `reviewedStrokeIds` needs (§6 test 10).
  *
  * A stroke is written as its legs: `right`, `down`, `downLeft`, `downRight`, joined with `>` at a
  * corner (`right>down` is the ㄱ shape). `loop` is the closed ring of ㅇ and ㅎ, from the top,
@@ -124,6 +138,221 @@ const strokes = (jamoId: string): JamoStrokePoint[][] => {
 };
 
 const IDS = Object.keys(STANDARD);
+
+// ---- The sourced table (SO-0b), as approved for SO-2 (OD-SO11) --------------------------------
+
+const TABLE_MD = readFileSync(join(__dirname, '../../../../../docs/specs/assets/stroke-order-table.md'), 'utf8');
+
+/** The lines from the heading `from` up to the heading `to`. */
+function section(from: string, to: string): string[] {
+  const start = TABLE_MD.indexOf(from);
+  const end = TABLE_MD.indexOf(to, start + from.length);
+  if (start < 0 || end < 0) throw new Error(`stroke-order-table.md: no section ${from} … ${to}`);
+  return TABLE_MD.slice(start, end).split('\n');
+}
+
+/** The body rows of the markdown tables in `lines` (a row starts with its number), as trimmed cells. */
+const rowsOf = (lines: readonly string[]): string[][] =>
+  lines.filter((l) => /^\| \d+ \|/.test(l)).map((l) => l.split('|').slice(1, -1).map((c) => c.trim()));
+
+function idIn(cell: string): string {
+  const id = /^`(jamo:[a-z-]+)`$/.exec(cell)?.[1];
+  if (!id) throw new Error(`stroke-order-table.md: not an id cell: ${cell}`);
+  return id;
+}
+
+/** Every form of a row's Codes cell: the one the data shows, the other accepted ones in order, and the not accepted. */
+interface RowForms {
+  strokes: string[];
+  altStrokes: string[][];
+  notAccepted: string[][];
+}
+
+/** A Codes cell: codes only (one form), or one `<label> (<where>): <codes>` line per form (`<br>`). */
+function formsIn(cell: string): RowForms {
+  const forms: RowForms = { strokes: [], altStrokes: [], notAccepted: [] };
+  let shown = 0;
+  for (const line of cell.split('<br>')) {
+    const labelled = /^[A-Z] \((`strokes`|`altStrokes`|not accepted)\): (.+)$/.exec(line.trim());
+    const codes = [...(labelled ? labelled[2]! : line).matchAll(/`([^`]+)`/g)].map((m) => m[1]!);
+    const where = labelled ? labelled[1] : '`strokes`';
+    if (where === '`strokes`') {
+      forms.strokes = codes;
+      shown++;
+    } else if (where === '`altStrokes`') forms.altStrokes.push(codes);
+    else forms.notAccepted.push(codes);
+  }
+  if (shown !== 1) throw new Error(`stroke-order-table.md: a Codes cell needs one \`strokes\` form: ${cell}`);
+  return forms;
+}
+
+interface TableRow extends RowForms {
+  count: number;
+}
+
+/** §3.1 and §3.2 (24 jamo; # | Jamo | Id | Strokes | Stroke order | Codes | …), then §3.3 (6 finals, inheriting a row). */
+const TABLE: ReadonlyMap<string, TableRow> = (() => {
+  const byNumber = new Map<string, TableRow>();
+  const out = new Map<string, TableRow>();
+  for (const cells of rowsOf(section('### 3.1 Consonants', '### 3.3 Finals'))) {
+    const row = { count: Number.parseInt(cells[3]!, 10), ...formsIn(cells[5]!) };
+    byNumber.set(cells[0]!, row);
+    out.set(idIn(cells[2]!), row);
+  }
+  // # | Jamo | Id | Inherits | Strokes | …: a final is written exactly like its consonant's row.
+  for (const cells of rowsOf(section('### 3.3 Finals', '### 3.4 Focus rows'))) {
+    const inherited = byNumber.get(/^row (\d+)$/.exec(cells[3]!)?.[1] ?? '');
+    if (!inherited) throw new Error(`stroke-order-table.md: final ${cells[2]} inherits no row`);
+    out.set(idIn(cells[2]!), { ...inherited, count: Number.parseInt(cells[4]!, 10) });
+  }
+  return out;
+})();
+
+/** §4: # | Id | Status | Reviewer | Role | Sources checked | Seen | Date | PR. */
+interface ReviewRecord {
+  status: string;
+  /** Reviewer, role, sources checked, seen, date, PR: the reviewer's SO-3 record. */
+  so3: string[];
+}
+const RECORDS: ReadonlyMap<string, ReviewRecord> = new Map(
+  rowsOf(section('## 4. Review records', '## 5. Sources')).map((cells) => [idIn(cells[1]!), { status: cells[2]!, so3: cells.slice(3) }]),
+);
+
+/** OD-SO11: the owner approved every row for SO-2 (the data may follow it); the reviewer's check is SO-3. */
+const SO2_APPROVED = 'approved by the owner for SO-2, 2026-11-23 (OD-SO11)';
+
+const forms = (jamoId: string): JamoStrokePoint[][][] => {
+  const found = strokeFormsForJamo(jamoId);
+  expect(found, jamoId).toBeDefined();
+  return found!;
+};
+const alternates = (jamoId: string): JamoStrokePoint[][][] => forms(jamoId).slice(1);
+
+describe('the data follows the approved rows of stroke-order-table.md (SO-2)', () => {
+  it('the table has one row and one review record per jamo in the data, and nothing else', () => {
+    expect([...TABLE.keys()].sort()).toEqual([...IDS].sort());
+    expect([...RECORDS.keys()].sort()).toEqual([...IDS].sort());
+  });
+
+  it.each(IDS)('%s: its row is approved for SO-2 by the owner (OD-SO11)', (jamoId) => {
+    expect(RECORDS.get(jamoId)!.status.startsWith(SO2_APPROVED)).toBe(true);
+  });
+
+  it.each(IDS)('%s: STANDARD is the row the data shows (`strokes`), with its stroke count', (jamoId) => {
+    expect(STANDARD[jamoId]).toEqual(TABLE.get(jamoId)!.strokes);
+    expect(STANDARD[jamoId]).toHaveLength(TABLE.get(jamoId)!.count);
+  });
+
+  it.each(IDS)('%s: its other forms (`altStrokes`) are the row\'s other accepted forms, in order', (jamoId) => {
+    expect(alternates(jamoId).map((form) => form.map(signature))).toEqual(TABLE.get(jamoId)!.altStrokes);
+  });
+
+  it.each(IDS)('%s: no form in the data is one the table does not accept', (jamoId) => {
+    for (const rejected of TABLE.get(jamoId)!.notAccepted) {
+      for (const form of forms(jamoId)) expect(form.map(signature)).not.toEqual(rejected);
+    }
+  });
+
+  it('ㅌ Variant C (ㄷ first, then the middle bar) is the one form the table does not accept', () => {
+    expect([...TABLE].filter(([, row]) => row.notAccepted.length > 0).map(([id, row]) => [id, row.notAccepted])).toEqual([
+      ['jamo:tieut', [['right', N, 'right']]],
+    ]);
+  });
+
+  it('the letters with another accepted form are ㅈ, ㅊ, ㅌ and ㅎ (OD-SO11), one other form each', () => {
+    expect(IDS.filter((id) => alternates(id).length > 0)).toEqual(['jamo:jieut', 'jamo:chieut', 'jamo:tieut', 'jamo:hieut']);
+    for (const id of IDS) expect(alternates(id).length).toBeLessThanOrEqual(1);
+  });
+
+  it('every id in reviewedStrokeIds has a filled review record (§6 test 10)', () => {
+    for (const id of reviewedStrokeIds) {
+      const record = RECORDS.get(id);
+      expect(record, id).toBeDefined();
+      expect(record!.so3, id).toHaveLength(6);
+      for (const field of record!.so3) expect(field, id).not.toBe('');
+    }
+  });
+
+  it('no SO-3 record is filled yet: the owner approved the rows for SO-2, no reviewer has checked them', () => {
+    for (const [id, record] of RECORDS) expect(record.so3.every((field) => field === ''), id).toBe(true);
+  });
+});
+
+describe('the other accepted forms (altStrokes, OD-SO11)', () => {
+  it('a jamo the data does not hold has no forms; strokesForJamo stays the form shown', () => {
+    expect(strokeFormsForJamo('jamo:none')).toBeUndefined();
+    expect(altStrokesForJamo('jamo:none')).toBeUndefined();
+    expect(altStrokesForJamo('jamo:giyeok')).toEqual([]);
+    for (const id of IDS) {
+      expect(forms(id)[0]).toBe(strokesForJamo(id));
+      expect(altStrokesForJamo(id)).toEqual(alternates(id));
+    }
+  });
+
+  it.each(IDS)('%s: no stroke of another form runs right to left or bottom to top', (jamoId) => {
+    for (const stroke of alternates(jamoId).flat()) {
+      if (isLoop(stroke)) continue;
+      for (let i = 1; i < stroke.length; i++) {
+        const [a, b] = [stroke[i - 1]!, stroke[i]!];
+        expect(b.y, 'top to bottom').toBeGreaterThanOrEqual(a.y);
+        if (b.y === a.y) expect(b.x, 'left to right').toBeGreaterThan(a.x);
+      }
+    }
+  });
+
+  it.each(IDS)('%s: another form lies inside the box of the form shown (Trace a Word places it the same way)', (jamoId) => {
+    const [minX, minY, maxX, maxY] = BOX[jamoId]!;
+    for (const q of alternates(jamoId).flat(2)) {
+      expect(q.x).toBeGreaterThanOrEqual(minX);
+      expect(q.x).toBeLessThanOrEqual(maxX);
+      expect(q.y).toBeGreaterThanOrEqual(minY);
+      expect(q.y).toBeLessThanOrEqual(maxY);
+    }
+  });
+
+  it.each([
+    ['jamo:giyeok-batchim', 'jamo:giyeok'],
+    ['jamo:nieun-batchim', 'jamo:nieun'],
+    ['jamo:rieul-batchim', 'jamo:rieul'],
+    ['jamo:mieum-batchim', 'jamo:mieum'],
+    ['jamo:bieup-batchim', 'jamo:bieup'],
+    ['jamo:ieung-batchim', 'jamo:ieung'],
+  ] as const)('%s has every form of %s, and none of its arrays', (batchim, base) => {
+    expect(forms(batchim)).toEqual(forms(base));
+    forms(batchim).forEach((form, i) => expect(form).not.toBe(forms(base)[i]));
+  });
+
+  it('ㅈ in 3 strokes: the bar, then ㅅ from the middle of the bar; its right leg leaves from the left leg', () => {
+    const [bar, left, right] = alternates('jamo:jieut')[0]!;
+    expect(bar).toEqual(strokes('jamo:jieut')[0]!.slice(0, 2));
+    expect(left![0]).toEqual({ x: (bar![0]!.x + bar![1]!.x) / 2, y: bar![0]!.y });
+    expect(left![1]).toEqual(strokes('jamo:jieut')[0]![2]);
+    expect(right![1]).toEqual(strokes('jamo:jieut')[1]![1]);
+    const t = (right![0]!.y - left![0]!.y) / (left![1]!.y - left![0]!.y);
+    expect(t).toBeGreaterThan(0);
+    expect(t).toBeLessThan(1);
+    expect(Math.abs(left![0]!.x + (left![1]!.x - left![0]!.x) * t - right![0]!.x)).toBeLessThan(1);
+  });
+
+  it.each(['jamo:chieut', 'jamo:hieut'])('%s with the top stroke left to right: a short stroke over the tick; the rest as shown', (jamoId) => {
+    const [top, ...rest] = alternates(jamoId)[0]!;
+    const [tick, ...shownRest] = strokes(jamoId);
+    expect(rest).toEqual(shownRest);
+    expect(top![1]!.x - top![0]!.x).toBeLessThanOrEqual(30);
+    // It crosses the tick, above the stroke under it.
+    expect(top![0]!.x).toBeLessThan(tick![0]!.x);
+    expect(top![1]!.x).toBeGreaterThan(tick![0]!.x);
+    expect(Math.max(top![0]!.y, top![1]!.y)).toBeLessThan(tick![1]!.y);
+  });
+
+  it('ㅌ Variant B: the two bars as shown, then the ㄴ shape from the middle bar, not from the top', () => {
+    const [top, middle, nieun] = alternates('jamo:tieut')[0]!;
+    const shown = strokes('jamo:tieut');
+    expect([top, middle]).toEqual(shown.slice(0, 2));
+    expect(nieun![0]).toEqual({ x: shown[2]![0]!.x, y: middle![0]!.y });
+    expect(nieun!.slice(1)).toEqual(shown[2]!.slice(1));
+  });
+});
 
 describe('stroke data follows the standard stroke order (AU-14)', () => {
   it('the table covers every jamo in the data, and nothing else', () => {
