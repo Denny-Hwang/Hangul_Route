@@ -1,8 +1,10 @@
 import { Body, Button, Caption, Spacer, spacing } from '@hangul-route/design-system';
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { voiceHelpContent } from '../logic/audio/voice-help';
+import type { DeviceFamily } from '../logic/device-family';
 import { currentDeviceFamily } from '../platform/device-family';
 import { SheetFrame } from './SheetFrame';
 
@@ -23,8 +25,12 @@ interface Props {
 
 export function VoiceHelpSheet({ visible, onClose, testID = 'voice-help-sheet' }: Props): ReactElement {
   const m = useMessages();
-  // Read when the sheet is drawn; there is no stored value.
-  const help = voiceHelpContent(m.learner.audio.voiceHelp, currentDeviceFamily());
+  // Read when the sheet opens, not on every render; there is no stored value.
+  const [family, setFamily] = useState<DeviceFamily>(currentDeviceFamily);
+  useEffect(() => {
+    if (visible) setFamily(currentDeviceFamily());
+  }, [visible]);
+  const help = voiceHelpContent(m.learner.audio.voiceHelp, family);
   return (
     <SheetFrame
       visible={visible}

@@ -3,7 +3,8 @@
 Spec: `docs/specs/AMENDMENTS-AUDIO-CANT-HEAR.md` sections 3.1 to 3.11 (row CH-1a builds it; CH-1b to CH-1d place it)
 · wireframe: `design/wireframes/minigame/audio-cant-hear.md` C1 to C9 · mock: `design/screens/audio-cant-hear/`
 (row CH-0b; values, mock decisions MD1 to MD12 and shots there)
-Code (to be written by CH-1a): `apps/mobile/src/components/CantHear.tsx` (paint and the focus order) ·
+Code (built by CH-1a): `apps/mobile/src/components/CantHear.tsx` (paint and the focus order) ·
+`components/SheetFrame.tsx` (the sheet frame it shares with `VoiceHelpSheet`: scrim, focus on the title, width cap, scroll cue) ·
 `logic/audio/cant-hear.ts` (`cantHearLine(family, copy)`, pure) · `logic/device-family.ts` /
 `platform/device-family.ts` (`deviceFamily`, `currentDeviceFamily()`) · the slot in `components/use-prompt-slot.ts`
 (`cantHear`, `cantHearActive`, `showLetters()`) · words `learner.audio.cantHear.*`, `learner.audio.hearIt.cta`,

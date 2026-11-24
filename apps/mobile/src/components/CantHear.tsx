@@ -35,7 +35,11 @@ interface FullProps extends CommonProps {
   onShowLetters: () => void;
   /** Where focus goes after Show the letters (the surface's target, spec 3.1 "Focus after"). */
   focusAfter: RefObject<View | null>;
-  /** The letters as a screen reader should say them (iOS has no live regions): said once after the beat. */
+  /**
+   * The letters as a screen reader should say them, said once after the beat (`announceForScreenReader`). iOS has no
+   * live regions, so **without it iOS says nothing** when the text comes up (the web and Android read the panel's live
+   * region instead). Pass it on every surface whose Show the letters brings text up.
+   */
   lettersText?: string;
 }
 
@@ -66,18 +70,28 @@ export function CantHear(props: CantHearProps): ReactElement {
   const linkRef = useRef<View | null>(null);
   const after = useRef<After | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // The wait for `onDismiss` (iOS and the web). One at a time: a sheet closed again within it drops the old one.
+  const fallback = useRef<ReturnType<typeof setTimeout> | null>(null);
   // A new round or an unmount drops whatever is still waiting (a beat before the letters, the readout before the sound).
   const epoch = useRef(0);
   const latest = useRef(props);
   latest.current = props;
 
+  const clearFallback = useCallback((): void => {
+    if (fallback.current !== null) clearTimeout(fallback.current);
+    fallback.current = null;
+  }, []);
+
   const forget = useCallback((): void => {
     epoch.current += 1;
     after.current = null;
     for (const t of timers.current.splice(0)) clearTimeout(t);
-  }, []);
+    clearFallback();
+  }, [clearFallback]);
 
   const run = useCallback((): void => {
+    // Whoever got here (onDismiss, the closed sheet or the fallback), the fallback has nothing left to do.
+    clearFallback();
     const kind = after.current;
     after.current = null;
     if (kind === null) return;
@@ -104,13 +118,14 @@ export function CantHear(props: CantHearProps): ReactElement {
     void announceAndWait(copy.cantHear.cta, motion.duration.slow).then(() => {
       if (mine === epoch.current) latest.current.onHear();
     });
-  }, [copy.cantHear.cta]);
+  }, [copy.cantHear.cta, clearFallback]);
 
   const finish = (kind: After): void => {
     after.current = kind;
     setOpen(false);
     // iOS and the web go on in `onDismiss` (the modal is really gone, so focus reaches the screen); Android, when the sheet is closed.
-    if (waitsForDismiss()) timers.current.push(setTimeout(run, DISMISS_FALLBACK_MS));
+    clearFallback();
+    if (waitsForDismiss()) fallback.current = setTimeout(run, DISMISS_FALLBACK_MS);
   };
 
   useEffect(() => {

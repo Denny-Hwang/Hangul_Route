@@ -15,7 +15,13 @@ import { byTestId, render, textOf, unmount } from '../../test-support/render';
  */
 
 const device = vi.hoisted(() => ({ family: 'computer' as DeviceFamily }));
-vi.mock('../../platform/device-family', () => ({ currentDeviceFamily: () => device.family }));
+const familyReads = vi.hoisted(() => ({ count: 0 }));
+vi.mock('../../platform/device-family', () => ({
+  currentDeviceFamily: () => {
+    familyReads.count += 1;
+    return device.family;
+  },
+}));
 const focused = vi.hoisted(() => [] as string[]);
 vi.mock('../../platform/screen-reader', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -33,6 +39,7 @@ const nodeMock = (el: { props?: Record<string, unknown> }): object | null =>
 
 beforeEach(() => {
   device.family = 'computer';
+  familyReads.count = 0;
   focused.length = 0;
 });
 
@@ -80,6 +87,30 @@ describe('VoiceHelpSheet', () => {
       });
     }
     expect(onClose.mock.calls.length).toBeGreaterThanOrEqual(2);
+    await unmount(r);
+  });
+
+  it('reads the device family when the sheet opens, not on every render', async () => {
+    device.family = 'apple';
+    const r = await render(<VoiceHelpSheet visible={false} onClose={() => undefined} />, { createNodeMock: nodeMock as never });
+    const afterMount = familyReads.count;
+    await act(async () => {
+      r.update(<VoiceHelpSheet visible={false} onClose={() => undefined} testID="voice-help-sheet" />);
+    });
+    expect(familyReads.count).toBe(afterMount);
+    device.family = 'android';
+    await act(async () => {
+      r.update(<VoiceHelpSheet visible onClose={() => undefined} />);
+    });
+    expect(byTestId(r.root, 'voice-help-sheet-android')).toHaveLength(1);
+    const afterOpen = familyReads.count;
+    // More renders while it is open read nothing again.
+    device.family = 'computer';
+    await act(async () => {
+      r.update(<VoiceHelpSheet visible onClose={() => undefined} testID="voice-help-sheet" />);
+    });
+    expect(familyReads.count).toBe(afterOpen);
+    expect(byTestId(r.root, 'voice-help-sheet-android')).toHaveLength(1);
     await unmount(r);
   });
 

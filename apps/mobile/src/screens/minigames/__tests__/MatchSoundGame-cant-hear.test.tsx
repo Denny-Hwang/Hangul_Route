@@ -473,6 +473,45 @@ describe('the step after the sheet waits for the modal to go (iOS and the web), 
     expect(reader.log).toEqual(['focus:cant-hear']);
   });
 
+  it('a sheet opened again within the wait drops the old fallback: it never fires the new action early', async () => {
+    setPlatform('ios');
+    modal.reportsDismiss = false;
+    const r = await open();
+    await openSheet(r);
+    await press(pressable(r.root, 'cant-hear-sheet-close'));
+    await tick(300);
+    expect(reader.log).toEqual([]);
+    // Opened again before the first wait is over, then Hear it: its own wait starts now.
+    await openSheet(r);
+    await press(pressable(r.root, 'cant-hear-hear'));
+    // The first wait would end here (600 ms after its close): it must not run Hear it.
+    await tick(300);
+    expect(reader.log).toEqual([]);
+    expect(reader.waited).toEqual([]);
+    // The second wait ends 600 ms after its own close.
+    await tick(300);
+    expect(reader.log).toEqual(['focus:cant-hear', 'wait', 'waited']);
+    expect(reader.waited).toEqual([T.cantHear.cta]);
+    // Run once: no second focus or wait from either timer.
+    await tick(2_000);
+    expect(reader.log).toEqual(['focus:cant-hear', 'wait', 'waited']);
+  });
+
+  it('a round that changes during the wait drops the fallback', async () => {
+    setPlatform('ios');
+    modal.reportsDismiss = false;
+    const r = await open();
+    await openSheet(r);
+    // A right tap: the next round opens 700 ms later.
+    await press(tile(r.root, 'jamo:nieun'));
+    await tick(400);
+    // Closed now, its wait would end at 1000 ms; the round changes at 700 ms and takes it away.
+    await press(pressable(r.root, 'cant-hear-sheet-close'));
+    await tick(300);
+    await tick(2_000);
+    expect(reader.log).toEqual([]);
+  });
+
   it('Android has no onDismiss: it goes on as soon as the sheet is closed', async () => {
     setPlatform('android');
     modal.reportsDismiss = false;
