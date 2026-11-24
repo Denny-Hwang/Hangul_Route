@@ -7,7 +7,8 @@ import { STEADY } from './report-fixtures';
  * reads title, This week, the action bar (Plan first, More holding Notes, New devices, Class moves and Settings), the
  * roster and, last, **Invite students · code {code}**, collapsed while the class has learners; a roster card is the
  * name row, "Practiced {when} · {n} min this week", the stage segments with the quests, the revisit line, the plan
- * lines, and Report and Note in one row; an empty class leads with the invite open and the code hero-size (on the first
+ * lines (CO-2: What to revisit is a closed button at line 4, with the letters and words behind it), and Report and Note in
+ * one row; an empty class leads with the invite open and the code hero-size (on the first
  * phone screen), then its three first steps. With something waiting (a new device, a learner asking to join, a class
  * move; the owner's request), the banner, the asking-to-join cards with Accept / Not now, This week, then the bar with
  * the waiting entries in view (their counts in words, never folded under More) and the action cards first with Needs
@@ -150,6 +151,14 @@ for (const { locale, browser } of LOCALES) {
         await expect(card.getByTestId('practiced-line')).toHaveText(c.space.learner.practiced(getMessages(locale).common.time.yesterday, SUMMARY.minutesLast7d));
         await expect(card.getByTestId('journey-strip')).toContainText(c.space.learner.questsCards(7, 15, 5));
         await expect(card.locator('details')).toHaveCount(0);
+        // CO-2 (AMENDMENTS-CLASS-CODE-OVERLAY section 3.7): line 4 is the What to revisit button, closed on load, so a shared
+        // classroom screen shows no learner's letters beside a name; the body is not in the page until it is opened.
+        const fold = card.getByTestId('revisit-toggle');
+        await expect(fold).toHaveText(c.space.learner.revisitToggle);
+        await expect(fold).toHaveAttribute('aria-expanded', 'false');
+        await expect(card.getByTestId('revisit-body')).toHaveCount(0);
+        expect(await card.innerText()).not.toContain('ㅂ');
+        expect(ascending(await tops(page, ['journey-strip', 'revisit-toggle', 'card-actions']))).toBe(true);
 
         // Invite students, collapsed, with the code in its name.
         const invite = page.getByTestId('invite-toggle');
@@ -159,6 +168,17 @@ for (const { locale, browser } of LOCALES) {
         if (label === '360') await noSidewaysScroll(page);
         await page.screenshot({ path: test.info().outputPath(`class-page-${locale}-${label}.png`), fullPage: true });
         if (SHOTS) await page.screenshot({ path: `${SHOTS}/class-${locale}-${label}.png`, fullPage: true });
+
+        // Opening it shows the card's letters (the Hangul is its own text, marked Korean); another card stays closed.
+        await fold.click();
+        await expect(fold).toHaveAttribute('aria-expanded', 'true');
+        await expect(card.getByTestId('revisit-body')).toContainText(c.space.learner.revisit('ㅂ · ㅅ'));
+        await expect(page.getByTestId('student-card').nth(1).getByTestId('revisit-body')).toHaveCount(0);
+        expect((await fold.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(64);
+        if (label === '360') await noSidewaysScroll(page);
+        if (SHOTS) await page.screenshot({ path: `${SHOTS}/class-revisit-${locale}-${label}.png`, fullPage: true });
+        await fold.click();
+        await expect(card.getByTestId('revisit-body')).toHaveCount(0);
 
         await more.click();
         await expect(more).toHaveAttribute('aria-expanded', 'true');

@@ -219,9 +219,12 @@ export function RevisitFold({
           justifyContent: 'space-between',
           gap: spacing.sm,
           padding: `${spacing.xs}px ${spacing.sm}px`,
-          border: 'none',
+          // Every side named, never the `border` shorthand with one side removed later: React clears a removed longhand
+          // by emptying it, which would hand the open button the browser's own button border on that side.
+          borderLeft: 'none',
+          borderRight: 'none',
           borderTop: rule,
-          ...(open ? {} : { borderBottom: rule }),
+          borderBottom: open ? 'none' : rule,
           borderRadius: radii.none,
           backgroundColor: colors.surface.paper,
           color: colors.text.primary,

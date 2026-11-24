@@ -256,6 +256,18 @@ describe('RevisitFold (CO-2)', () => {
     expect(toggle.props.style.minHeight).toBe(touchTarget.min);
   });
 
+  it('names every border side and never the shorthand, so opening it never drops a side to the browser\'s own button border', () => {
+    for (const open of [false, true]) {
+      const style = (byTestId(create(fold({ open })).root, 'revisit-toggle')[0] as ReactTestInstance).props.style as Record<string, unknown>;
+      expect(style.border).toBeUndefined();
+      for (const side of ['borderLeft', 'borderRight', 'borderTop', 'borderBottom']) expect(typeof style[side], `${side} when open is ${open}`).toBe('string');
+    }
+    const closed = (byTestId(create(fold()).root, 'revisit-toggle')[0] as ReactTestInstance).props.style as Record<string, string>;
+    const open = (byTestId(create(fold({ open: true })).root, 'revisit-toggle')[0] as ReactTestInstance).props.style as Record<string, string>;
+    expect(closed.borderBottom).toContain(colors.border.subtle);
+    expect(open.borderBottom).toBe('none');
+  });
+
   it.each(LOCALES)('%s: the new strings are caregiver-safe and inside the length budgets (CO-2, 8)', (locale) => {
     const words = getMessages(locale).console.space.learner;
     const english = getMessages('en').console.space.learner;
