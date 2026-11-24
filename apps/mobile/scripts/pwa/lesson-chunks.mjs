@@ -252,8 +252,8 @@ export const PRECACHE_BUDGET = Object.freeze({
   // help in en, the device's screen-reader flag in the locale store and the Display sheet's row, Tile's check and disc,
   // ChoiceCard's mark column and look-here ring, and HoyaBubble's live prop are boot code, so they are in the start
   // bundle (the announcer and its hook are not yet: no game imports them until AF-2 to AF-4c). On main 8317f0591 the
-  // release `build:web` (CI=1) measures 4,603,925 B raw / 1,267,076 B gzip; the AF-1 branch measures 4,608,564 B raw /
-  // 1,268,070 B gzip, 4,464 B over the line. The line is the measurement plus a 4,036 B margin (one measured raise,
+  // release `build:web` (CI=1) measures 4,603,925 B raw / 1,267,076 B gzip; the AF-1 branch measures 4,608,717 B raw /
+  // 1,268,082 B gzip, 4,617 B over the line. The line is the measurement plus a 3,883 B margin (one measured raise,
   // 8,500 B over the previous line).
   startBundleRaw: 4_612_600,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
