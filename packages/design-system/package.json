@@ -39,10 +39,11 @@
     "./src/components/RealiaSheet/RealiaKindSheet": "./src/components/RealiaSheet/RealiaKindSheet.tsx",
     "./src/components/RealiaSheet/kinds-style": "./src/components/RealiaSheet/kinds-style.ts",
     "./src/scene-art/realia-kinds-registry": "./src/scene-art/realia-kinds-registry.ts",
+    "./eslint/touchable-has-name": "./eslint/touchable-has-name.mjs",
     "./components/*": "./src/components/*/index.ts"
   },
   "scripts": {
-    "lint": "echo '(no lint yet — @hangul-route/design-system)'",
+    "lint": "eslint --no-inline-config --max-warnings=0 \"src/**/*.tsx\"",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",

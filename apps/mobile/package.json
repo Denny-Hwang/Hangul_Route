@@ -10,7 +10,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "echo '(no lint yet — @hangul-route/mobile)'",
+    "lint": "eslint --no-inline-config --max-warnings=0 App.tsx BrowseApp.tsx PresenterApp.tsx \"src/**/*.tsx\"",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit",

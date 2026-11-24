@@ -1,0 +1,22 @@
+{
+  "src/screens/account/AccountCover.tsx": {
+    "react-native-a11y/has-valid-accessibility-ignores-invert-colors": {
+      "count": 1
+    }
+  },
+  "src/screens/minigames/role-play/RolePlayGame.tsx": {
+    "react-native-a11y/no-nested-touchables": {
+      "count": 1
+    }
+  },
+  "src/screens/parent/BiometricShortcutCard.tsx": {
+    "react-native-a11y/has-valid-accessibility-descriptors": {
+      "count": 1
+    }
+  },
+  "src/screens/reviews/StageReviewScreen.tsx": {
+    "react-native-a11y/has-valid-accessibility-descriptors": {
+      "count": 1
+    }
+  }
+}
