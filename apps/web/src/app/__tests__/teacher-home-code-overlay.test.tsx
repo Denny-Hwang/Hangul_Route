@@ -210,7 +210,9 @@ describe('Show the code on a teacher home class row (3.1, OD-CO7 (a))', () => {
 describe('the overlay over the home (3.2, 3.3)', () => {
   it('shows the opened class name, code, expiry and the QR of the join link, and nothing else; no roster is read', async () => {
     await render();
+    const beforeOpen = calls.names.length;
     await press(one('class-code-open-sp_tue'));
+    const afterOpen = calls.names.slice(beforeOpen);
     const dialog = overlay() as ReactTestInstance;
     expect(dialog).toBeDefined();
     const m = getMessages('en');
@@ -233,8 +235,11 @@ describe('the overlay over the home (3.2, 3.3)', () => {
     // Another class's name, the learner counts and the rest of the home are not in it.
     const text = strings.join(' | ');
     for (const other of ['Sunday Class A', 'SUN234', 'No Code Class', 'Pine School', '12']) expect(text).not.toContain(other);
-    expect(calls.names).not.toContain('roster');
-    expect(calls.names.filter((n) => n !== 'listSpaces')).toEqual(expect.not.arrayContaining(['roster', 'learners']));
+    // The overlay is drawn from the list alone: opening it adds no call but the spaces list, and the page's own reads (the
+    // class rows' waiting counts) are exactly this set, never a roster. (The real AdultFrame, mocked here, may read
+    // `api.roster` for a one-learner family whatever the overlay does; that read is not drawn.)
+    expect(new Set(calls.names)).toEqual(new Set(['listSpaces', 'relinkRequests', 'classMoves', 'transferRequests', 'school']));
+    expect(new Set(afterOpen)).toEqual(new Set(['listSpaces']));
   });
 
   it('the page content is one inert container while it is open and not after Close', async () => {
@@ -299,6 +304,24 @@ describe('while the overlay is open (3.6)', () => {
     expect(overlay()).toBeUndefined();
     expect(opens()).toEqual(['class-code-open-sp_tue']);
     expect(focused).toEqual(['teacher-home-title']);
+  });
+
+  it('after the self-close, a re-read that brings a new code does not open it again', async () => {
+    await render();
+    await press(one('class-code-open-sp_sun'));
+    calls.list = [{ ...sunday(), joinCode: null, joinCodeExpiresAt: null }, tuesday()];
+    await advance(CLASS_RELINK_REFRESH_MS);
+    expect(overlay()).toBeUndefined();
+    // Nothing reads the list while it is closed; opening another class does, and brings the new code of the first.
+    calls.list = [{ ...sunday(), joinCode: 'NEW567' }, tuesday()];
+    await press(one('class-code-open-sp_tue'));
+    expect(textOf(one('class-code'))).toBe('TUE567');
+    expect(byTestId('class-code-overlay')).toHaveLength(1);
+    await press(one('class-code-close'));
+    expect(overlay()).toBeUndefined();
+    await advance(CLASS_RELINK_REFRESH_MS * 5);
+    expect(overlay()).toBeUndefined();
+    expect(opens()).toEqual(['class-code-open-sp_sun', 'class-code-open-sp_tue']);
   });
 
   it('a re-read that fails keeps the overlay and draws no error panel behind it', async () => {
