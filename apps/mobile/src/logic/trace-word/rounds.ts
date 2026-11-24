@@ -1,5 +1,5 @@
 import { romanizeWord, type KoText, type TraceWordRound } from '@hangul-route/content-schema';
-import { placeWordStrokes, type PlacedBlock, type StrokeLookup } from './block-strokes';
+import { placeWordStrokes, type AltStrokeLookup, type PlacedBlock, type StrokeLookup } from './block-strokes';
 
 /**
  * Trace a Word rounds (F-CURR-001 §3.7 item 3; wireframe minigame/trace-word.md): each
@@ -27,10 +27,15 @@ export interface TraceWordPlayRound {
   tolerance?: number;
 }
 
-export function buildTraceWordRounds(rounds: readonly TraceWordRound[], lookup: StrokeLookup): TraceWordPlayRound[] {
+/** `alternates`: the jamo's other accepted forms ([SO] SO-2), placed with each letter for the order and direction checks. */
+export function buildTraceWordRounds(
+  rounds: readonly TraceWordRound[],
+  lookup: StrokeLookup,
+  alternates?: AltStrokeLookup,
+): TraceWordPlayRound[] {
   const out: TraceWordPlayRound[] = [];
   for (const round of rounds) {
-    const placed = placeWordStrokes(round.word.ko, lookup);
+    const placed = placeWordStrokes(round.word.ko, lookup, alternates);
     if (!placed) continue;
     const blocks = placed.map((block) => ({
       syllable: block.syllable,

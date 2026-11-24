@@ -14,6 +14,10 @@ import type { JamoStrokePoint } from '../content/jamo-strokes';
  * gating progress. Direction is reported per target, with a closed-loop flag,
  * so the UI can word a loop going round the wrong way differently from an
  * open stroke drawn backwards (see logic/trace-copy.ts).
+ *
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2: a letter the stroke table accepts in more than one form
+ * (`altStrokes`, OD-SO11) is scored with `scoreTraceForms`: the pass on the listed form the drawing fits
+ * best (OD-SO12), the order and direction on the listed form it follows best.
  */
 
 const DEFAULT_TOLERANCE = 24; // dp at 200 viewBox scale
@@ -137,6 +141,16 @@ export interface ScoreTraceResult {
   directionsCorrect?: boolean;
   /** F-008: coverage ≥ 0.65 AND orderCorrect. Populated when checkOrder=true. */
   passWithOrder?: boolean;
+  /**
+   * [SO] SO-2, `scoreTraceForms` only: the accepted form order and direction were read from (0: the form shown).
+   * `directionsPerTarget` and `closedPerTarget` run parallel to that form's strokes.
+   */
+  form?: number;
+  /**
+   * [SO] OD-SO12, `scoreTraceForms` only: the accepted form coverage (and so the pass) was read from.
+   * `perStrokeCoverage` runs parallel to that form's strokes.
+   */
+  fitForm?: number;
 }
 
 export function scoreTrace({
@@ -225,6 +239,74 @@ export function scoreTrace({
   }
 
   return result;
+}
+
+/** The first index whose rank (compared element by element, lower first) is lowest: a tie keeps the earlier one. */
+function lowestRank<T>(items: readonly T[], rank: (item: T) => readonly number[]): number {
+  let best = 0;
+  items.forEach((item, i) => {
+    const [a, b] = [rank(item), rank(items[best]!)];
+    const k = a.findIndex((v, j) => v !== b[j]);
+    if (k >= 0 && a[k]! < b[k]!) best = i;
+  });
+  return best;
+}
+
+/**
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD §3.3 (SO-2; OD-SO4, OD-SO11): of a drawing's results against each accepted
+ * form of a letter (the form shown first), the one its order and direction are read from: the form the drawing
+ * follows best. In order first, then the fewest target strokes the wrong way; a tie keeps the earlier form, so the
+ * form shown (AU-14's) wins it. 0 when there is nothing to choose from.
+ * An unmatched target counts as the wrong way (F-006), which slightly favours a form with fewer strokes; harmless,
+ * since a drawing that follows a form fully has no wrong-way stroke on it, and a tie keeps the form shown.
+ */
+export function bestFormIndex(results: readonly Pick<ScoreTraceResult, 'orderCorrect' | 'directionsPerTarget'>[]): number {
+  return lowestRank(results, (r) => [r.orderCorrect === false ? 1 : 0, (r.directionsPerTarget ?? []).filter((ok) => !ok).length]);
+}
+
+/**
+ * [SO] OD-SO12: of a drawing's results against each accepted form, the best-fitting one, which coverage and so the
+ * pass are read from: a form the drawing passes first, then the most coverage; a tie keeps the form shown.
+ */
+export function fitFormIndex(results: readonly Pick<ScoreTraceResult, 'coverage'>[]): number {
+  return lowestRank(results, (r) => [r.coverage >= DEFAULT_PASS_THRESHOLD ? 0 : 1, -r.coverage]);
+}
+
+export interface ScoreTraceFormsInput extends Omit<ScoreTraceInput, 'target'> {
+  /** Every accepted form of the letter, the form shown (the ghost) first (`strokeFormsForJamo`). */
+  forms: readonly JamoStrokePoint[][][];
+}
+
+/**
+ * [SO] SO-2, OD-SO12: `scoreTrace` for a letter with more than one accepted form, so a drawing passes, and its order
+ * and direction hold, when it matches any listed form; a drawing that matches none still fails.
+ * - Coverage, and so the pass, `perStrokeCoverage` and `visitedDrawn`: the best-fitting form (`fitFormIndex`,
+ *   named by `fitForm`).
+ * - Order and direction (`orderCorrect`, `directionsPerTarget`, `closedPerTarget`, `directionsCorrect`): the form the
+ *   drawing follows best (`bestFormIndex`, named by `form`). The two may differ: ㅈ drawn in three lifts over the
+ *   2-stroke ghost fits the ghost best and follows the 3-stroke form.
+ * - `passWithOrder` (strict mode): some form is both passed and followed in order.
+ * With one form it is `scoreTrace` on it.
+ */
+export function scoreTraceForms({ forms, ...input }: ScoreTraceFormsInput): ScoreTraceResult {
+  const results = (forms.length > 0 ? forms : [[]]).map((target) => scoreTrace({ ...input, target }));
+  const fitForm = fitFormIndex(results);
+  const form = bestFormIndex(results);
+  const fit = results[fitForm]!;
+  const read = results[form]!;
+  return {
+    coverage: fit.coverage,
+    perStrokeCoverage: fit.perStrokeCoverage,
+    visitedDrawn: fit.visitedDrawn,
+    ...(input.checkOrder
+      ? { orderCorrect: read.orderCorrect, passWithOrder: results.some((r) => r.passWithOrder === true) }
+      : {}),
+    ...(input.checkDirection
+      ? { directionsPerTarget: read.directionsPerTarget, closedPerTarget: read.closedPerTarget, directionsCorrect: read.directionsCorrect }
+      : {}),
+    form,
+    fitForm,
+  };
 }
 
 function bestTargetIndex(

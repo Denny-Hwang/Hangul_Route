@@ -1,8 +1,8 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { reviewedStrokeIds, strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
+import { jamoStrokes, reviewedStrokeIds, strokeFormsForJamo, strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokeOrderTaught, unitOrderTaught } from '../stroke-order-taught';
-import { scoreTrace } from '../stroke-scoring';
+import { scoreTrace, scoreTraceForms } from '../stroke-scoring';
 import { failMessage, loopNudgeFor, passMessage, traceCoaching } from '../trace-copy';
 import { wouldPass } from '../trace-ready';
 
@@ -27,10 +27,13 @@ function walk(points: Pt[]): Pt[] {
   return out;
 }
 
-/** The whole result a learner sees after drawing `drawn` over `jamoId`: pass or not, and the line. */
+/**
+ * The whole result a learner sees after drawing `drawn` over `jamoId`: pass or not, and the line. As Trace Stroke
+ * scores it: against every accepted form of the letter (SO-2, `scoreTraceForms`).
+ */
 function play(jamoId: string, drawn: Pt[][], reviewed: readonly string[] = reviewedStrokeIds, strictMode = false) {
-  const target = strokesForJamo(jamoId)!;
-  const result = scoreTrace({ target, drawn, checkOrder: true, checkDirection: true });
+  const forms = strokeFormsForJamo(jamoId)!;
+  const result = scoreTraceForms({ forms, drawn, checkOrder: true, checkDirection: true });
   const taught = strokeOrderTaught(jamoId, reviewed);
   const coaching = traceCoaching(result, taught);
   const passed = wouldPass(result, strictMode && taught);
@@ -105,10 +108,13 @@ describe('other written forms never get order or open-stroke coaching while unta
     const r = play('jamo:tieut', drawn);
     expect(r.passed).toBe(true);
     expect(r.line).toBe(COPY.pass.clean);
-    // Today's rule (taught) coached it.
-    expect(play('jamo:tieut', drawn, ['jamo:tieut']).line).not.toBe(COPY.pass.clean);
+    // Against the form shown alone (AU-14, the rule before SO-2), taught, it was coached.
+    const target = strokesForJamo('jamo:tieut')!;
+    expect(scoreTrace({ target, drawn, checkOrder: true }).orderCorrect).toBe(false);
   });
-  it('ㅈ in 3 strokes (bar; left leg; right leg) → praise', () => {
+  // [SO] SO-2 (OD-SO11): ㅈ in 3 strokes and the left-to-right top stroke of ㅊ and ㅎ are accepted forms, so even
+  // taught they get the praise; before SO-2 (the form shown alone) taught, they got the "left-to-right" line.
+  it('ㅈ in 3 strokes (bar; left leg; right leg) → praise, taught or not (an accepted form)', () => {
     const drawn = [
       [p(40, 50), p(160, 50)],
       [p(160, 50), p(50, 150)],
@@ -117,32 +123,73 @@ describe('other written forms never get order or open-stroke coaching while unta
     const r = play('jamo:jieut', drawn);
     expect(r.passed).toBe(true);
     expect(r.line).toBe(COPY.pass.clean);
-    expect(play('jamo:jieut', drawn, ['jamo:jieut']).line).not.toBe(COPY.pass.clean);
+    expect(play('jamo:jieut', drawn, ['jamo:jieut']).line).toBe(COPY.pass.clean);
   });
-  it('ㅊ with a horizontal top stroke → praise', () => {
+  it('ㅊ with a horizontal top stroke → praise, taught or not (an accepted form)', () => {
     const [, bar, leg] = strokesForJamo('jamo:chieut')!.map(walk);
     const drawn = [walk([p(85, 42), p(115, 42)]), bar!, leg!];
     const r = play('jamo:chieut', drawn);
     expect(r.passed).toBe(true);
     expect(r.line).toBe(COPY.pass.clean);
-    expect(play('jamo:chieut', drawn, ['jamo:chieut']).line).toBe(COPY.pass.open);
+    expect(play('jamo:chieut', drawn, ['jamo:chieut']).line).toBe(COPY.pass.clean);
   });
   it('ㅎ with a horizontal top stroke and a counter-clockwise ring → praise (the unmatched tick is ignored)', () => {
     const [, bar] = strokesForJamo('jamo:hieut')!.map(walk);
     const drawn = [walk([p(85, 40), p(115, 40)]), bar!, ring(100, 120, 60, 35, false)];
+    // Against the form shown alone the tick is unmatched: loopNudgeFor must ignore it (the case of §3.2).
+    const shownOnly = scoreTrace({ target: strokesForJamo('jamo:hieut')!, drawn, checkDirection: true });
+    expect(shownOnly.directionsPerTarget).toEqual([false, true, true]);
+    expect(shownOnly.closedPerTarget).toEqual([false, false, true]);
+    expect(loopNudgeFor(shownOnly)).toBe('none');
     const r = play('jamo:hieut', drawn);
-    expect(r.result.directionsPerTarget).toEqual([false, true, true]);
-    expect(r.result.closedPerTarget).toEqual([false, false, true]);
+    expect(r.result.directionsPerTarget).toEqual([true, true, true]);
     expect(r.passed).toBe(true);
     expect(r.line).toBe(COPY.pass.clean);
-    // Taught, the same drawing earns the open-stroke line (the misfire this row removes).
-    expect(play('jamo:hieut', drawn, ['jamo:hieut']).line).toBe(COPY.pass.open);
+    // Taught, it is an accepted form (SO-2), so the praise too, not the open-stroke line.
+    expect(play('jamo:hieut', drawn, ['jamo:hieut']).line).toBe(COPY.pass.clean);
+  });
+  it('ㅌ Variant C (ㄷ first, then the middle bar; not accepted) → praise while untaught; the order line once taught', () => {
+    const [top, middle, nieun] = strokesForJamo('jamo:tieut')!.map(walk);
+    const drawn = [top!, nieun!, middle!];
+    expect(play('jamo:tieut', drawn).line).toBe(COPY.pass.clean);
+    expect(play('jamo:tieut', drawn, ['jamo:tieut']).line).toBe(COPY.pass.order);
   });
   it('ㅎ with a horizontal top stroke and a clockwise ring → the loop line, never the open-stroke one', () => {
     const [, bar] = strokesForJamo('jamo:hieut')!.map(walk);
     const r = play('jamo:hieut', [walk([p(85, 40), p(115, 40)]), bar!, ring(100, 120, 60, 35, true)]);
     expect(r.passed).toBe(true);
     expect(r.line).toBe(COPY.pass.loop);
+  });
+});
+
+/**
+ * [SO] SO-2: the other accepted forms only change what a taught letter coaches. While a letter is untaught (every
+ * letter, until SO-3) the learner still gets the shape guide and the SO-1 coaching: scoring against every form gives
+ * the same pass and the same line as scoring against the form shown alone.
+ */
+describe('an accepted other form changes no coaching while the letter is untaught (SO-1 holds after SO-2)', () => {
+  const withAlternates = jamoStrokes.filter((j) => (j.altStrokes ?? []).length > 0).map((j) => j.jamoId);
+
+  it('the letters with another form are the ones OD-SO11 accepts', () => {
+    expect(withAlternates).toEqual(['jamo:jieut', 'jamo:chieut', 'jamo:tieut', 'jamo:hieut']);
+  });
+
+  it.each(withAlternates)('%s: each form, in order, backwards, strokes reversed, and with a reversed ring', (jamoId) => {
+    const forms = strokeFormsForJamo(jamoId)!;
+    const drawings = forms.flatMap((form) => [
+      form.map(walk),
+      form.map(walk).reverse(),
+      form.map((s) => walk([...s].reverse())),
+      form.map((s) => walk(s.length > 3 ? [...s].reverse() : s)),
+    ]);
+    for (const drawn of drawings) {
+      const all = scoreTraceForms({ forms, drawn, checkOrder: true, checkDirection: true });
+      const shown = scoreTrace({ target: forms[0]!, drawn, checkOrder: true, checkDirection: true });
+      expect(traceCoaching(all, false)).toEqual(traceCoaching(shown, false));
+      expect(wouldPass(all, false)).toBe(wouldPass(shown, false));
+      expect(wouldPass(all, false)).toBe(true);
+      expect(play(jamoId, drawn).line).toBe(passMessage(null, loopNudgeFor(shown), COPY));
+    }
   });
 });
 

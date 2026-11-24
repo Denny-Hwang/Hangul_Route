@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { jamoStrokes, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
+import { altStrokesForJamo, jamoStrokes, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import { getMessages } from '@hangul-route/i18n';
 import { traceWordMessage } from '../view';
 import { TRACE_IDLE_MS } from '../../trace-evaluator';
 import { isLetterFinished } from '../../trace-ready';
-import { placeBlockStrokes, type PlacedBlock } from '../block-strokes';
+import { placeBlockStrokes, placeWordStrokes, type PlacedBlock } from '../block-strokes';
 import {
   BLOCK_TOLERANCE,
   INK_MARGIN,
@@ -421,6 +421,124 @@ describe('[SO] an untaught unit gets no order and no open-stroke coaching (AMEND
   });
 });
 
+/**
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2 (OD-SO11): a unit reads its order and direction on whichever accepted form
+ * of its letters the drawing follows (every combination of the letters' forms, the forms shown first). The pass does
+ * not change, and an untaught unit (every unit, until SO-3) coaches exactly as before.
+ */
+describe('[SO] SO-2: a unit reads order and direction on any accepted form of its letters', () => {
+  const placeAll = (s: string): PlacedBlock => placeBlockStrokes(s, strokesForJamo, altStrokesForJamo)!;
+  /** ㅈ's first stroke (the bar running into the slant) lifted at the corner: 3 lifts over the 2-stroke ghost. */
+  const liftAtCorner = ([barAndSlant, leg]: JamoStrokePoint[][]): JamoStrokePoint[][] => [
+    barAndSlant!.slice(0, 2),
+    barAndSlant!.slice(1),
+    leg!,
+  ];
+  /** The same letters with their other forms dropped: the unit as scored before SO-2. */
+  const shownOnly = (b: PlacedBlock): UnitLetter[] => b.letters.map((l) => ({ ...l, altStrokes: [] }));
+
+  it('지, ㅈ in 3 lifts over the ghost, taught: a pass with no direction line (before SO-2: the left-to-right line)', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const drawn = trace([...liftAtCorner(j!.strokes), ...i!.strokes]);
+    const taught = ['jamo:jieut', 'jamo:i'];
+    const r = scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, taught);
+    expect(r.passed).toBe(true);
+    expect(r.orderCorrect).toBe(true);
+    expect(r.directionNudge).toBe('none');
+    expect(scoreTraceUnit(shownOnly(block), drawn, BLOCK_TOLERANCE, taught).directionNudge).toBe('open');
+    // Letter mode: ㅈ alone.
+    expect(scoreTraceUnit([j!], trace(liftAtCorner(j!.strokes)), BLOCK_TOLERANCE, taught).directionNudge).toBe('none');
+  });
+
+  it('짜: either ㅈ of ㅉ in 3 lifts, the other as shown: no direction line (a double consonant has every pair of forms)', () => {
+    const block = placeAll('짜');
+    const [jj, a] = block.letters;
+    const half = jj!.strokes.length / 2;
+    const [left, right] = [jj!.strokes.slice(0, half), jj!.strokes.slice(half)];
+    for (const drawnJj of [[...liftAtCorner(left), ...right], [...left, ...liftAtCorner(right)], [...liftAtCorner(left), ...liftAtCorner(right)]]) {
+      const r = scoreTraceUnit(lettersOf(block), trace([...drawnJj, ...a!.strokes]), BLOCK_TOLERANCE, ALL_TAUGHT);
+      expect(r.passed).toBe(true);
+      expect(r.orderCorrect).toBe(true);
+      expect(r.directionNudge).toBe('none');
+    }
+  });
+
+  it('a form the drawing follows nowhere still coaches: 지 with ㅈ\'s slant drawn backwards, taught', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const [bar, slant, leg] = liftAtCorner(j!.strokes);
+    const r = scoreTraceUnit(lettersOf(block), trace([bar!, [...slant!].reverse(), leg!, ...i!.strokes]), BLOCK_TOLERANCE, ALL_TAUGHT);
+    expect(r.passed).toBe(true);
+    expect(r.directionNudge).toBe('open');
+  });
+
+  // OD-SO12: the pass reads the best-fitting accepted form too.
+  it('지 with ㅈ written in its Variant B shape (left leg from the middle of the bar) passes, block and letter mode, untaught', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const drawn = trace([...j!.altStrokes[0]!, ...i!.strokes]);
+    expect(scoreTraceUnit(shownOnly(block), drawn).passed).toBe(false);
+    const r = scoreTraceUnit(lettersOf(block), drawn);
+    expect(r).toMatchObject({ passed: true, orderCorrect: null, directionNudge: 'none' });
+    expect(r.coverage).toBeGreaterThanOrEqual(0.9);
+    expect(scoreTraceUnit([j!], trace(j!.altStrokes[0]!))).toMatchObject({ passed: true, orderCorrect: null });
+    expect(scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, ALL_TAUGHT)).toMatchObject({ passed: true, orderCorrect: true, directionNudge: 'none' });
+  });
+
+  it('돼지: the 지 block with ㅈ in its Variant B shape passes, and is ready on idle; no proper prefix of it is', () => {
+    const blocks = placeWordStrokes('돼지', strokesForJamo, altStrokesForJamo)!;
+    const ji = blocks[1]!;
+    const [j, i] = ji.letters;
+    const form = [...j!.altStrokes[0]!, ...i!.strokes];
+    expect(scoreTraceUnit(lettersOf(ji), trace(form)).passed).toBe(true);
+    expect(traceWordReady('block', ji.letters, trace(form))).toBe(true);
+    expect(unitLettersFinished(ji.letters, trace(form))).toBe(true);
+    for (let k = 0; k < form.length; k++) expect(traceWordReady('block', ji.letters, trace(form.slice(0, k))), `first ${k}`).toBe(false);
+    expect(traceWordReady('letter', [j!], trace(j!.altStrokes[0]!))).toBe(true);
+    for (let k = 0; k < 3; k++) expect(traceWordReady('letter', [j!], trace(j!.altStrokes[0]!.slice(0, k)))).toBe(false);
+  });
+
+  it('a drawing that matches no accepted form still fails: 지 with ㅈ drawn as ㅅ (no bar), or ㅣ alone', () => {
+    const block = placeAll('지');
+    const [j, i] = block.letters;
+    const [, left, right] = j!.altStrokes[0]!;
+    for (const drawn of [trace([left!, right!, ...i!.strokes]), trace(i!.strokes), trace(block.strokes, 30, 30)]) {
+      expect(scoreTraceUnit(lettersOf(block), drawn).passed).toBe(false);
+      expect(scoreTraceUnit(lettersOf(block), drawn, BLOCK_TOLERANCE, ALL_TAUGHT).passed).toBe(false);
+      expect(traceWordReady('block', block.letters, drawn)).toBe(false);
+    }
+  });
+
+  it('the other forms never lose a pass, and while the unit is untaught change no coaching', () => {
+    for (const syllable of ['지', '자', '차', '토', '호', '짜', '앉', '낮', '돼']) {
+      const all = placeAll(syllable);
+      const plain = placeBlockStrokes(syllable, strokesForJamo)!;
+      const otherForms = all.letters.flatMap((l, k) =>
+        l.altStrokes.map((alt) => all.letters.flatMap((m, n) => (n === k ? alt : m.strokes))),
+      );
+      const drawings = [
+        trace(all.strokes),
+        [...trace(all.strokes)].reverse(),
+        trace(all.strokes).map((s) => [...s].reverse()),
+        trace(all.strokes, 4, -3),
+        ...otherForms.map((form) => trace(form)),
+        ...otherForms.map((form) => trace(form).map((s) => [...s].reverse())),
+      ];
+      for (const drawn of drawings) {
+        const now = scoreTraceUnit(lettersOf(all), drawn);
+        const before = scoreTraceUnit(lettersOf(plain), drawn);
+        if (before.passed) expect(now.passed, syllable).toBe(true);
+        expect(now.orderCorrect).toBeNull();
+        expect(now.directionNudge, syllable).toBe(before.directionNudge);
+        if (scoreTraceUnit(lettersOf(plain), drawn, BLOCK_TOLERANCE, ALL_TAUGHT).passed) {
+          expect(scoreTraceUnit(lettersOf(all), drawn, BLOCK_TOLERANCE, ALL_TAUGHT).passed, syllable).toBe(true);
+        }
+      }
+    }
+  });
+});
+
 describe('traceWordReady: Trace a Word on the letter rule (AMENDMENTS-TRACE-IDLE §3.1, TI-3)', () => {
   /** Every Stage 7 block and the ㅂ blocks of q2 / q12 words. */
   const SYLLABLES = [...new Set([...STAGE7_SYLLABLES, '밥', '바', '봄'])];
@@ -451,6 +569,78 @@ describe('traceWordReady: Trace a Word on the letter rule (AMENDMENTS-TRACE-IDLE
     const partly = [...trace(b!.strokes.slice(0, 2)), ...trace(a!.strokes)];
     expect(everyLetterInked(ba.letters, partly)).toBe(true);
     expect(traceWordReady('block', ba.letters, partly)).toBe(false);
+  });
+
+  /**
+   * [SO] OD-SO12 (re-review of #1077): the other accepted forms must never make an incomplete letter pass. A final ㅈ in
+   * its Variant B shape with the bar left out (ㅅ, a different letter) under ㅗ / ㅜ / ㅡ used to pass and be ready: the
+   * vowel's bar covered ㅈ's bar from the bag of all ink. For every block with a letter that has another form, every
+   * combination of forms drawn with one stroke left out, or cut to a proper prefix, is never ready nor passed where the
+   * letters as shown alone would not be.
+   */
+  describe('the other forms never complete an incomplete letter (OD-SO12)', () => {
+    const SWEEP = ['꽃', '윷', '낮', '붓', '지', '토', '차', '히', '돼', '곶', '뭊', '봊', '붖', '뽖', '뿢', '쁮', '작', '좇', '촞', '홓'];
+    const placeAll = (s: string): PlacedBlock => placeBlockStrokes(s, strokesForJamo, altStrokesForJamo)!;
+    type Zoned = PlacedBlock['letters'][number];
+    /**
+     * Every combination of the letters' forms, each as the letters with that form as their only one: the unit as it
+     * would be scored if the table listed that form alone (the baseline a missing stroke is judged against).
+     */
+    const combinations = (b: PlacedBlock): Zoned[][] =>
+      b.letters.reduce<Zoned[][]>(
+        (acc, l) => acc.flatMap((head) => [l.strokes, ...l.altStrokes].map((strokes) => [...head, { ...l, strokes, altStrokes: [] }])),
+        [[]],
+      );
+    const outcome = (letters: readonly Zoned[], drawn: JamoStrokePoint[][]) => ({
+      passed: scoreTraceUnit(letters, drawn).passed,
+      ready: traceWordReady('block', letters, drawn),
+    });
+
+    /**
+     * The baseline a drawing with strokes missing is judged against: the letters missing a stroke in their shown form
+     * only (the rule before OD-SO12, with its old leniency, e.g. ㅊ's short tick under ㅗ's bar), every other letter in
+     * the form it was drawn in. The other forms must add nothing to it: a letter drawn in another form with a stroke
+     * left out never passes or becomes ready through that form.
+     */
+    const expectNoGain = (b: PlacedBlock, only: Zoned[], missing: ReadonlySet<number>, drawn: JamoStrokePoint[][], label: string): void => {
+      const now = outcome(b.letters, drawn);
+      const baseline = outcome(only.map((l, i) => (missing.has(i) ? { ...b.letters[i]!, altStrokes: [] } : l)), drawn);
+      if (!baseline.passed) expect(now.passed, label).toBe(false);
+      if (!baseline.ready) expect(now.ready, `${label}, ready`).toBe(false);
+    };
+    /** Which letter of a combination each of its strokes, in writing order, belongs to. */
+    const letterOf = (only: Zoned[]): number[] => only.flatMap((l, i) => l.strokes.map(() => i));
+
+    it.each(SWEEP)('%s: one stroke left out of any combination of forms', (syllable) => {
+      const b = placeAll(syllable);
+      for (const only of combinations(b)) {
+        const form = only.flatMap((l) => l.strokes);
+        const owner = letterOf(only);
+        for (let k = 0; k < form.length; k++) {
+          expectNoGain(b, only, new Set([owner[k]!]), trace(form.filter((_, i) => i !== k)), `${syllable}: stroke ${k} of ${form.length} left out`);
+        }
+      }
+    });
+
+    it.each(SWEEP)('%s: no proper prefix of any combination of forms is ready', (syllable) => {
+      const b = placeAll(syllable);
+      for (const only of combinations(b)) {
+        const form = only.flatMap((l) => l.strokes);
+        const owner = letterOf(only);
+        for (let n = 1; n < form.length; n++) {
+          expectNoGain(b, only, new Set(owner.slice(n)), trace(form.slice(0, n)), `${syllable} ${n}/${form.length}`);
+        }
+        expect(outcome(b.letters, trace(form)).ready, syllable).toBe(true);
+      }
+    });
+
+    it('곶 with the final ㅈ drawn without its bar (ㅅ) fails and is not ready', () => {
+      const b = placeAll('곶');
+      const final = b.letters[2]!;
+      const [, left, right] = final.altStrokes[0]!;
+      const drawn = trace([...b.letters[0]!.strokes, ...b.letters[1]!.strokes, left!, right!]);
+      expect(outcome(b.letters, drawn)).toEqual({ passed: false, ready: false });
+    });
   });
 
   it('a finished letter that would not pass (a stray stroke beside it) is never ready: the idle path only ever passes', () => {

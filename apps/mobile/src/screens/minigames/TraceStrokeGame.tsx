@@ -21,7 +21,7 @@ import { Platform, ScrollView, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { Svg, Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
-import { strokesForJamo } from '../../content/jamo-strokes';
+import { strokeFormsForJamo, strokesForJamo } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import { finalLine, loneLetterQuestion, loneLetterVoice } from '../../logic/audio/jamo-lines';
 import type { LayoutChangeEvent } from 'react-native';
@@ -29,8 +29,8 @@ import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
-import { scoreTrace } from '../../logic/stroke-scoring';
-import { TRACE_KEEP_GOING_MS, isLetterFinished, wouldPass } from '../../logic/trace-ready';
+import { scoreTraceForms } from '../../logic/stroke-scoring';
+import { TRACE_KEEP_GOING_MS, isLetterFinishedInForms, wouldPass } from '../../logic/trace-ready';
 import { failMessage, passMessage, traceCoaching, type DirectionNudge } from '../../logic/trace-copy';
 import { strokeOrderTaught } from '../../logic/stroke-order-taught';
 import {
@@ -88,6 +88,10 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * stroke order nobody has checked (`strokeOrderTaught` false; every letter until SO-3) gets no order coaching and only
  * the loop nudge, passes on coverage even in strict mode, and its Show me is a shape reveal: the ghost steps aside and
  * the strip's idle line reads "Shape guide" while it is up.
+ *
+ * [SO] SO-2 (OD-SO11, OD-SO12): the ghost and Show me keep the form shown; the pass, the idle gate and the order and
+ * direction checks read every form the stroke table accepts (`scoreTraceForms`, `isLetterFinishedInForms`), so a
+ * letter written in another accepted form passes, and once taught is not coached.
  */
 export function TraceStrokeGame({
   scope,
@@ -162,9 +166,12 @@ export function TraceStrokeGame({
     () => (round ? (strokesForJamo(round.jamo.id) ?? []) : []),
     [round],
   );
-  // The gate is created once, so its ready() reads the letter and the mode through refs.
-  const targetRef = useRef(target);
-  targetRef.current = target;
+  // [SO] SO-2: every accepted form of the letter, the form shown (`target`) first.
+  const forms = useMemo(() => (round ? (strokeFormsForJamo(round.jamo.id) ?? []) : []), [round]);
+  // The gate is created once, so its ready() reads the letter's forms and the mode through refs.
+  // [SO] OD-SO12: the letter is finished when it is finished on any accepted form.
+  const formsRef = useRef(forms);
+  formsRef.current = forms;
   // [SO] §3.1: only a letter a person has checked teaches its order; strict mode asks for order only there.
   const taught = round ? strokeOrderTaught(round.jamo.id) : false;
   const strictModeRef = useRef(strictMode && taught);
@@ -175,7 +182,7 @@ export function TraceStrokeGame({
     const gate = createTraceEvaluator({
       idleMs: TRACE_IDLE_MS,
       onEvaluate: () => evaluateRef.current(),
-      ready: () => isLetterFinished(targetRef.current, strokesRef.current, strictModeRef.current),
+      ready: () => isLetterFinishedInForms(formsRef.current, strokesRef.current, strictModeRef.current),
     });
     gateRef.current = gate;
     return () => {
@@ -251,7 +258,7 @@ export function TraceStrokeGame({
   const armKeepGoing = (): void => {
     stopKeepGoing();
     if (feedbackRef.current !== 'idle' || strokesRef.current.length === 0) return;
-    if (isLetterFinished(targetRef.current, strokesRef.current, strictModeRef.current)) return;
+    if (isLetterFinishedInForms(formsRef.current, strokesRef.current, strictModeRef.current)) return;
     keepGoingTimerRef.current = setTimeout(() => {
       keepGoingTimerRef.current = null;
       setKeepGoing(true);
@@ -295,8 +302,9 @@ export function TraceStrokeGame({
     stopKeepGoing();
     setKeepGoing(false);
     showFeedback('evaluating');
-    const result = scoreTrace({
-      target,
+    // [SO] SO-2, OD-SO12: the pass, the order and the direction on the accepted form the drawing fits best.
+    const result = scoreTraceForms({
+      forms,
       drawn: strokes,
       checkOrder: true,
       checkDirection: true,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
+import { altStrokesForJamo, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import {
   BLOCK_VIEWBOX,
   BLOCK_ZONES,
@@ -183,5 +183,98 @@ describe('placeWordStrokes', () => {
     expect(placeWordStrokes('호야', strokesForJamo)?.map((b) => b.syllable)).toEqual(['호', '야']);
     expect(placeWordStrokes('호a', strokesForJamo)).toBeNull();
     expect(placeWordStrokes('', strokesForJamo)).toBeNull();
+  });
+
+  it('passes the other accepted forms on to every block', () => {
+    const blocks = placeWordStrokes('돼지', strokesForJamo, altStrokesForJamo)!;
+    expect(blocks[1]!.letters[0]!.altStrokes).toHaveLength(1);
+    expect(placeWordStrokes('돼지', strokesForJamo)![1]!.letters[0]!.altStrokes).toEqual([]);
+  });
+});
+
+/**
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2 (OD-SO11): a letter whose jamo the stroke table accepts in another form
+ * (ㅈ ㅊ ㅌ ㅎ) carries that form, placed with the fit of the form shown, so the order and direction checks can read
+ * it. A final, a double consonant and a compound vowel inherit their parts' forms, in writing order.
+ */
+describe('placed letters carry their other accepted forms (SO-2)', () => {
+  const placeAll = (syllable: string): PlacedBlock => {
+    const placed = placeBlockStrokes(syllable, strokesForJamo, altStrokesForJamo);
+    expect(placed, syllable).not.toBeNull();
+    return placed!;
+  };
+  /**
+   * Another form of a jamo, placed with the fit its form shown gets in `zone`. Every other form lies inside the shown
+   * form's box (jamo-stroke-order.test.ts), so fitting the two together fits the form shown exactly as alone, and the
+   * other form's points come out where that fit puts them.
+   */
+  const placedLike = (shown: JamoStrokePoint[][], other: JamoStrokePoint[][], zone: BlockRect): JamoStrokePoint[][] => {
+    const together = fitStrokes([...shown, ...other], zone);
+    expect(together.slice(0, shown.length)).toEqual(fitStrokes(shown, zone));
+    return together.slice(shown.length);
+  };
+
+  it('the alternates change no placed stroke: every letter is placed as before', () => {
+    for (const syllable of ['지', '자', '차', '토', '호', '짜', '앉', '낮', '와', '돼', '닭']) {
+      const plain = placeBlockStrokes(syllable, strokesForJamo)!;
+      const all = placeAll(syllable);
+      expect(all.strokes, syllable).toEqual(plain.strokes);
+      expect(all.letters.map((l) => l.zones)).toEqual(plain.letters.map((l) => l.zones));
+      expect(plain.letters.every((l) => l.altStrokes.length === 0)).toBe(true);
+    }
+  });
+
+  it('지: ㅈ carries its 3-stroke form, placed with the fit of the form shown; ㅣ carries none', () => {
+    const [j, i] = placeAll('지').letters;
+    expect(j!.altStrokes).toHaveLength(1);
+    expect(j!.altStrokes[0]).toEqual(placedLike(strokesForJamo('jamo:jieut')!, altStrokesForJamo('jamo:jieut')![0]!, j!.zones[0]!));
+    expect(j!.altStrokes[0]).toHaveLength(3);
+    for (const p of j!.altStrokes[0]!.flat()) expect(within(p, j!.zones[0]!)).toBe(true);
+    expect(i!.altStrokes).toEqual([]);
+  });
+
+  it.each([
+    ['차', 'jamo:chieut'],
+    ['토', 'jamo:tieut'],
+    ['호', 'jamo:hieut'],
+  ])('%s: the initial carries its one other form (%s)', (syllable, id) => {
+    const [initial, vowel] = placeAll(syllable).letters;
+    expect(initial!.jamoIds).toEqual([id]);
+    expect(initial!.altStrokes).toEqual([placedLike(strokesForJamo(id)!, altStrokesForJamo(id)![0]!, initial!.zones[0]!)]);
+    expect(vowel!.altStrokes).toEqual([]);
+  });
+
+  it('낮: a final ㅈ (no own final entry) inherits ㅈ\'s forms', () => {
+    const final = placeAll('낮').letters[2]!;
+    expect(final.jamoIds).toEqual(['jamo:jieut']);
+    expect(final.altStrokes).toHaveLength(1);
+  });
+
+  it('짜: ㅉ is ㅈ then ㅈ, so its forms are every pair, the form shown twice first', () => {
+    const jj = placeAll('짜').letters[0]!;
+    const [left, right] = jj.zones;
+    const shown = strokesForJamo('jamo:jieut')!;
+    const other = altStrokesForJamo('jamo:jieut')![0]!;
+    const a = (zone: BlockRect): JamoStrokePoint[][] => fitStrokes(shown, zone);
+    const b = (zone: BlockRect): JamoStrokePoint[][] => placedLike(shown, other, zone);
+    expect(jj.strokes).toEqual([...a(left!), ...a(right!)]);
+    expect(jj.altStrokes).toEqual([
+      [...a(left!), ...b(right!)],
+      [...b(left!), ...a(right!)],
+      [...b(left!), ...b(right!)],
+    ]);
+  });
+
+  it('앉: the double final ㄵ is ㄴ then ㅈ: one other form, ㄴ as shown then ㅈ in 3 strokes', () => {
+    const final = placeAll('앉').letters[2]!;
+    expect(final.jamoIds).toEqual(['jamo:nieun-batchim', 'jamo:jieut']);
+    expect(final.altStrokes).toHaveLength(1);
+    expect(final.altStrokes[0]).toHaveLength(1 + 3);
+    expect(final.altStrokes[0]!.slice(0, 1)).toEqual(final.strokes.slice(0, 1));
+  });
+
+  it('a compound vowel and letters with one form carry none', () => {
+    for (const letter of placeAll('왜').letters) expect(letter.altStrokes).toEqual([]);
+    for (const letter of placeAll('닭').letters) expect(letter.altStrokes).toEqual([]);
   });
 });

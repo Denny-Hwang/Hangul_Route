@@ -3,8 +3,9 @@ import type { ReactNode } from 'react';
 import { act, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { Path } from 'react-native-svg';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
+import { altStrokesForJamo, strokesForJamo, type JamoStrokePoint } from '../../../content/jamo-strokes';
 import type { MinigameScope } from '../../../logic/minigame-config';
+import { placeBlockStrokes, placeWordStrokes } from '../../../logic/trace-word/block-strokes';
 import { TRACE_IDLE_MS } from '../../../logic/trace-evaluator';
 import { TRACE_KEEP_GOING_MS } from '../../../logic/trace-ready';
 import { useQuestRunStore } from '../../../store/quest-run-store';
@@ -275,6 +276,113 @@ describe('Trace Stroke, untaught letter: Show me is a shape guide (§6 test 8)',
     await wait(TRACE_IDLE_MS);
     expect(texts(r.root)).toContain(LOOP_TIP);
     expect(r.root.findAll((n) => n.props.label === 'Next' && typeof n.props.onPress === 'function')).toHaveLength(1);
+  });
+});
+
+/**
+ * [SO] SO-2 (OD-SO11): a letter the table accepts in another form. The ghost and Show me keep the form shown (AU-14's);
+ * the order and direction checks accept the other form, so a taught letter written that way gets the praise, not the
+ * "left-to-right" line. A form the table does not accept (ㅌ Variant C) still gets the order line once taught.
+ */
+describe('Trace Stroke and Trace a Word: another accepted form (SO-2)', () => {
+  const COPY = getMessages('en').learner.minigame.trace;
+  const chieutLeftToRight = (): JamoStrokePoint[][] => {
+    const [, bar, leg] = strokesForJamo('jamo:chieut')!;
+    return [[{ x: 86, y: 42 }, { x: 114, y: 42 }], bar!, leg!];
+  };
+
+  it.each([
+    ['untaught', [] as string[]],
+    ['taught', ['jamo:chieut']],
+  ])('ㅊ with the top stroke left to right, %s: the praise, never the left-to-right line', async (_case, reviewed) => {
+    gate.reviewed = reviewed;
+    const r = await playStroke('jamo:chieut');
+    for (const s of chieutLeftToRight()) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(CLEAN);
+    expect(texts(r.root)).not.toContain(COPY.pass.open);
+  });
+
+  it.each([
+    ['untaught', [] as string[], false],
+    ['taught', ['jamo:chieut'], true],
+  ])('ㅊ, %s: the ghost and Show me keep the form shown', async (_case, reviewed, taught) => {
+    gate.reviewed = reviewed;
+    const r = await playStroke('jamo:chieut');
+    expect(ghosts(r.root)).toBe(strokesForJamo('jamo:chieut')!.length);
+    await press(r.root, 'Show me');
+    expect(hint.last).toMatchObject({ orderTaught: taught });
+    expect(hint.last!.target).toBe(strokesForJamo('jamo:chieut'));
+  });
+
+  it.each([
+    ['untaught', [] as string[]],
+    ['taught', ['jamo:jieut', 'jamo:a']],
+  ])('Trace a Word, 자 with ㅈ in 3 lifts over the ghost, %s: the word is done, never the left-to-right line', async (_case, reviewed) => {
+    gate.reviewed = reviewed;
+    const scope: MinigameScope = {
+      kind: 'trace-word',
+      rounds: 1,
+      traceWord: { rounds: [{ id: 'ja', word: { ko: '자', romanization: 'ja', en: 'ruler' } }] },
+    };
+    const r = await render(<TraceWordGame scope={scope} host={{ mode: 'quest', answer: () => undefined, complete: () => undefined }} />);
+    mounted.push(r);
+    await layOut(r);
+    const [j, a] = placeBlockStrokes('자', strokesForJamo)!.letters;
+    const [barAndSlant, leg] = j!.strokes;
+    for (const s of [barAndSlant!.slice(0, 2), barAndSlant!.slice(1), leg!, ...a!.strokes]) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(getMessages('en').learner.minigame.traceWord.wordDone);
+    expect(texts(r.root)).not.toContain(COPY.pass.open);
+  });
+
+  // OD-SO12: the pass reads the best-fitting accepted form, so the Variant B shape of ㅈ passes 지 (untaught: no tip).
+  it('Trace a Word, 돼지 with ㅈ written in its Variant B shape: the word is done, the shape guide and lines as before', async () => {
+    const scope: MinigameScope = {
+      kind: 'trace-word',
+      rounds: 1,
+      traceWord: { rounds: [{ id: 'dwaeji', word: { ko: '돼지', romanization: 'dwaeji', en: 'pig' } }] },
+    };
+    const r = await render(<TraceWordGame scope={scope} host={{ mode: 'quest', answer: () => undefined, complete: () => undefined }} />);
+    mounted.push(r);
+    await layOut(r);
+    const [dwae, ji] = placeWordStrokes('돼지', strokesForJamo, altStrokesForJamo)!;
+    for (const s of dwae!.strokes) await draw(r.root, s);
+    await press(r.root, 'Done');
+    await wait(2_000);
+    await press(r.root, 'Show me');
+    expect(hint.last).toMatchObject({ orderTaught: false });
+    expect(hint.last!.target).toEqual(ji!.strokes);
+    await endHint();
+    const [j, i] = ji!.letters;
+    for (const s of [...j!.altStrokes[0]!, ...i!.strokes]) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(getMessages('en').learner.minigame.traceWord.wordDone);
+    expect(texts(r.root)).not.toContain(RETRY_LINE);
+  });
+
+  // OD-SO12: the idle gate reads every accepted form.
+  it('Trace Stroke, ㅈ in its Variant B shape: scored on idle with no Done, and a prefix of it never is', async () => {
+    const [bar, left, right] = altStrokesForJamo('jamo:jieut')![0]!;
+    const r = await playStroke('jamo:jieut');
+    await draw(r.root, bar!);
+    await draw(r.root, left!);
+    await wait(TRACE_IDLE_MS * 3);
+    expect(texts(r.root)).not.toContain(CLEAN);
+    expect(texts(r.root)).not.toContain(RETRY_LINE);
+    expect(texts(r.root)).toContain(KEEP_GOING_LINE);
+    await draw(r.root, right!);
+    await wait(TRACE_IDLE_MS);
+    expect(texts(r.root)).toContain(CLEAN);
+  });
+
+  it('ㅌ Variant C (ㄷ first, then the middle bar; not accepted), taught: the order line', async () => {
+    gate.reviewed = ['jamo:tieut'];
+    const [top, middle, nieun] = strokesForJamo('jamo:tieut')!;
+    const r = await playStroke('jamo:tieut');
+    for (const s of [top!, nieun!, middle!]) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(COPY.pass.order);
   });
 });
 
