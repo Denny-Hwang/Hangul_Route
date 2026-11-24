@@ -129,7 +129,7 @@ export function CultureQuizGame({ scope, onFinish }: Props): ReactElement {
                   tone="secondary"
                   size="md"
                   leading={<Icon name="speaker" size={20} color={colors.text.onSecondary} />}
-                  accessibilityLabel={m.a11y.minigame.hear(round.promptRomanization ?? round.promptKo)}
+                  accessibilityLabel={m.a11y.hearItLabel(round.promptRomanization ?? round.promptKo)}
                   onPress={hear}
                   testID="culture-quiz-hear"
                 />

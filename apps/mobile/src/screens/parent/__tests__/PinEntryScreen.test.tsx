@@ -41,7 +41,7 @@ import { flags } from '../../../config/flags';
 import { useAccountStore } from '../../../store/account-store';
 import { useProfileStore } from '../../../store/profile-store';
 import { useUiStore } from '../../../store/ui-store';
-import { buttonsNamed, byTestId, cleanup, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
+import { buttonsNamed, byTestId, cleanup, hostNodes, press, render, resetPlatform, screenTexts, setPlatform } from '../../../test-support/render';
 import { pinHasher } from '../../../platform/crypto';
 import { PinEntryScreen } from '../PinEntryScreen';
 
@@ -106,6 +106,17 @@ beforeEach(() => {
 afterEach(async () => {
   await cleanup();
   resetPlatform();
+});
+
+describe('PinEntry dots row (axe aria-prohibited-attr, AMENDMENTS-A11Y-CI AC-1)', () => {
+  it('names the dots with a role that allows a name, and the count follows the digits', async () => {
+    const { r } = await show('ParentDashboard');
+    const dots = (n: number) => hostNodes(r.root, (node) => node.props['aria-label'] === a11y.pinDots(n, 4));
+    expect(dots(0)).toHaveLength(1);
+    expect(dots(0)[0]?.props.role).toBe('img');
+    await press(buttonsNamed(r.root, a11y.pinDigit(1))[0] as ReactTestInstance);
+    expect(dots(1)[0]?.props.role).toBe('img');
+  });
 });
 
 describe('PinEntry during a pause', () => {

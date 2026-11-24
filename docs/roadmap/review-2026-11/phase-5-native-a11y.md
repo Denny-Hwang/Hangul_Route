@@ -163,6 +163,9 @@ UI 가 바뀌는 WO 는 와이어프레임 → 시안 → 구현 순서를 지�
 | LP-2 | Opus 5.5 | `KoreanText` 구조 변경 |
 | LP-3 | Sonnet 5.5 | `Heading`, `Button`, `HoyaBubble` 에 `lang` prop, 같은 계열 4곳 적용 |
 
+**LP-0 에 더할 것 (axe, 2026-11-24).**
+- Match Sound 낱자 타일의 보이는 글자 "ㄱ g/k" 와 접근성 이름 "Korean letter g or k, tap to select" 가 다르다(WCAG 2.5.3 `label-content-name-mismatch`, 4 노드). 낱자는 로마자 음가 레이블로 읽는다는 규칙과 부딪힌다. 음성 제어 사용자가 보이는 글자를 말할 수 있어야 하는지, 이름에 한글을 넣지 않는 규칙을 지킬지는 실기기 결과로 오너가 정한다. 근거: `apps/mobile/e2e/web/fixtures/axe-baseline.json` 의 `match-sound-round-1` · `label-content-name-mismatch` 항목(`expectedFix` `none`)과 `AMENDMENTS-A11Y-CI.md` "AC-1 as built".
+
 **전략(권고, LP-0 결과로 확정).**
 - 한 레이블로 뭉치지 않는다. 한글 Text(`lang="ko"` / `accessibilityLanguage="ko"`), 로마자, gloss 를 각각의 텍스트 노드로 두고, 누를 수 있는 부모는 웹에서 `aria-labelledby` 로 자식 id 들을 참조한다(각 자식의 `lang` 이 살아남는다).
 - iOS: 부모를 `accessible` 한 그룹으로 두면 자식의 언어 속성이 무시될 수 있다. LP-0 에서 확인하고, 필요하면 한글 부분만 별도 접근성 요소로 둔다(스와이프 한 번이 늘어나는 비용과 비교).

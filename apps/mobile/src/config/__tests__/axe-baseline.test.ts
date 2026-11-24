@@ -220,8 +220,8 @@ describe('the baseline file', () => {
     home: { region: 8 },
     discover: { region: 11 },
     'match-sound-round-1': { 'label-content-name-mismatch': 4, region: 3 },
-    'culture-quiz-correct': { 'label-content-name-mismatch': 1, region: 4 },
-    'pin-entry': { 'aria-prohibited-attr': 1, region: 3 },
+    'culture-quiz-correct': { region: 4 },
+    'pin-entry': { region: 3 },
   };
 
   it('equals the ceiling map: no new line, no higher count, and a lowered count or cleared rule edits the map too', () => {
