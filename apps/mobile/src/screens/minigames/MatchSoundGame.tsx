@@ -20,6 +20,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { CantHear } from '../../components/CantHear';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -71,7 +72,9 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
   // A letter question (AMENDMENTS-AUDIO-CLIPS JV-A1): the letter's name (ㄴ is nieun), or the same name as
   // text (§3.8). A final, never asked by name, says its closed syllable (an).
   const voice = round ? loneLetterVoice(round.promptJamo) : undefined;
-  const slot = usePromptSlot({ source: 'match-sound', hasClip: voice !== undefined && hasClipFor(voice) });
+  // `cantHear`: a sound-only round offers "Can't hear it?" (AMENDMENTS-AUDIO-CANT-HEAR CH-1a); Show the letters is the text below.
+  const slot = usePromptSlot({ source: 'match-sound', hasClip: voice !== undefined && hasClipFor(voice), cantHear: true });
+  const speakerRef = useRef<View | null>(null);
   const { view, play, reset } = slot;
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -175,8 +178,9 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
             <Heading level="prompt">{view.heading}</Heading>
             <Spacer size="md" />
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
               <GuardedPressable
+                ref={speakerRef}
                 setsLock={false}
                 onPress={() => void hear()}
                 accessibilityRole="button"
@@ -188,6 +192,16 @@ export function MatchSoundGame({ scope, onFinish }: Props): ReactElement {
                 <Icon name="speaker" size={48} />
               </GuardedPressable>
               <Caption tone="muted">{view.speakerCaption}</Caption>
+              {slot.cantHear ? (
+                <CantHear
+                  round={roundIdx}
+                  active={slot.cantHearActive}
+                  onHear={() => void hear()}
+                  onShowLetters={slot.showLetters}
+                  focusAfter={speakerRef}
+                  lettersText={m.a11y.koreanItem({ ko: spoken.shown, romanization: spoken.romanization })}
+                />
+              ) : null}
             </View>
 
             <Spacer size="md" />

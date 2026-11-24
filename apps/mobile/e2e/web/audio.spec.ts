@@ -260,9 +260,11 @@ test('a wrong tap names the letter: a letter question says the name, not a sylla
   const wrong = page.getByRole('button', { name: /^Korean letter / }).filter({ hasNotText: answer }).first();
   await wrong.click();
   await expect(page.getByText('Listen again. This letter is')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Hear it' })).toBeVisible();
+  // Hoya's Hear it (the "Can't hear it?" link also holds the words, so the bubble scopes it).
+  const hearIt = page.getByTestId('match-sound-bubble').getByRole('button', { name: 'Hear it' });
+  await expect(hearIt).toBeVisible();
   const before = (await utterances(page)).length;
-  await page.getByRole('button', { name: 'Hear it' }).click();
+  await hearIt.click();
   await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(before);
   expect((await utterances(page)).at(-1)!.text).toBe(first!.text);
 });
@@ -299,7 +301,9 @@ test('Profile Sound card with no Korean voice: says so and the how-to sheet list
   const sheet = page.getByTestId('voice-help-sheet');
   await expect(sheet.getByText('Add a Korean voice')).toBeVisible();
   await expect(sheet.getByText('Menu names can differ on your device.')).toBeVisible();
-  for (const family of ['iPhone or iPad', 'Android', 'Computer']) await expect(sheet.getByText(family, { exact: true })).toBeVisible();
+  // This device's steps only (AMENDMENTS-AUDIO-CANT-HEAR section 3.9): the project device is an Android phone.
+  await expect(sheet.getByText('Android', { exact: true })).toBeVisible();
+  for (const family of ['iPhone or iPad', 'Computer']) await expect(sheet.getByText(family, { exact: true })).toHaveCount(0);
   await expect(sheet.getByText('You can still play: the sound is written on screen.')).toBeVisible();
 
   // Help never changes the sound switch.
