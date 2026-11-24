@@ -50,9 +50,6 @@ export interface ChoiceCardRing {
   gap: number;
 }
 
-/** How far the look-here ring reaches outside the card: its gap and its width (7). */
-export const CHOICE_CARD_RING_REACH = spacing.xs + borderWidth.thick;
-
 const LOOK_HERE: ChoiceCardRing = { color: colors.border.focus, width: borderWidth.thick, gap: spacing.xs };
 
 type StateLook = Pick<ChoiceCardStyle, 'backgroundColor' | 'borderColor' | 'borderWidth' | 'mark' | 'ring' | 'interactive' | 'selected' | 'disabled'>;

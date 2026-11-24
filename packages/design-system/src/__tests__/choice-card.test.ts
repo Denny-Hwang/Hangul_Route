@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHOICE_CARD_RING_REACH, CHOICE_CARD_STATES, choiceCardRingStyle, choiceCardStyle, choiceCardTileWidth } from '../components/ChoiceCard/style';
+import { CHOICE_CARD_STATES, choiceCardRingStyle, choiceCardStyle, choiceCardTileWidth } from '../components/ChoiceCard/style';
 import type { ChoiceCardState } from '../components/ChoiceCard/types';
 import { borderWidth, colors, radii, spacing, touchTarget } from '../tokens';
 
@@ -63,7 +63,6 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
     expect(s.borderColor).toBe(colors.border.shape);
     expect(s.borderWidth).toBe(borderWidth.base);
     expect(s.ring).toEqual({ color: colors.border.focus, width: borderWidth.thick, gap: spacing.xs });
-    expect(CHOICE_CARD_RING_REACH).toBe(spacing.xs + borderWidth.thick);
     expect(s.interactive).toBe(true);
     expect(s.selected).toBe(false);
     expect(s.disabled).toBe(false);
@@ -96,7 +95,7 @@ describe('choiceCardStyle (F-STORY-003 PR 3.3)', () => {
       right: out,
       bottom: out,
       left: out,
-      borderRadius: radii.lg + CHOICE_CARD_RING_REACH,
+      borderRadius: radii.lg + spacing.xs + borderWidth.thick,
       borderWidth: borderWidth.thick,
       borderStyle: 'dashed',
       borderColor: colors.border.focus,

@@ -55,7 +55,7 @@ export const ANNOUNCE_TIMEOUT_MS = 3000;
  * The guard on a queued answer line (F-A11Y-001 §3.4): a queued line waits behind the control VoiceOver is reading, so a
  * lost `announcementFinished` is guarded by at least 8 s (`ANNOUNCE_TIMEOUT_MS` was sized for Discover's short labels).
  */
-export const ANNOUNCE_QUEUED_TIMEOUT_MS = 8000;
+const ANNOUNCE_QUEUED_TIMEOUT_MS = 8000;
 
 /**
  * Says a game's result line on iOS, queued (F-A11Y-001 §3.3): it neither cuts off nor is cut off by VoiceOver reading

@@ -42,7 +42,6 @@ vi.mock('react-native', () => ({
 }));
 
 import {
-  ANNOUNCE_QUEUED_TIMEOUT_MS,
   ANNOUNCE_TIMEOUT_MS,
   announceAndWait,
   announceQueued,
@@ -215,7 +214,6 @@ describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', 
     it('announceAndWait with queue: a lost event is guarded by a timeout of at least 8 s', async () => {
       vi.useFakeTimers();
       try {
-        expect(ANNOUNCE_QUEUED_TIMEOUT_MS).toBeGreaterThanOrEqual(8000);
         rn.enabled.mockResolvedValue(true);
         let resolved = false;
         const p = announceAndWait('Right answer: n.', 0, { queue: true }).then(() => {
@@ -223,7 +221,10 @@ describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', 
         });
         await vi.advanceTimersByTimeAsync(ANNOUNCE_TIMEOUT_MS);
         expect(resolved).toBe(false);
-        await vi.advanceTimersByTimeAsync(ANNOUNCE_QUEUED_TIMEOUT_MS - ANNOUNCE_TIMEOUT_MS);
+        // Still waiting just short of 8 s, then the guard ends it.
+        await vi.advanceTimersByTimeAsync(8000 - ANNOUNCE_TIMEOUT_MS - 1);
+        expect(resolved).toBe(false);
+        await vi.advanceTimersByTimeAsync(1);
         await p;
         expect(resolved).toBe(true);
       } finally {

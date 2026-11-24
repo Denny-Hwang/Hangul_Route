@@ -2,7 +2,6 @@ import { Children, isValidElement, createElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { borderWidth, colors, radii, spacing } from '../../../tokens';
-import { CHOICE_CARD_RING_REACH } from '../style';
 import { ChoiceCard } from '../ChoiceCard';
 import type { ChoiceCardProps } from '../types';
 
@@ -248,7 +247,7 @@ describe('ChoiceCard mark column and look-here ring (F-A11Y-001 AF-1)', () => {
       right: -(spacing.xs + borderWidth.thick + borderWidth.base),
       bottom: -(spacing.xs + borderWidth.thick + borderWidth.base),
       left: -(spacing.xs + borderWidth.thick + borderWidth.base),
-      borderRadius: radii.lg + CHOICE_CARD_RING_REACH,
+      borderRadius: radii.lg + spacing.xs + borderWidth.thick,
       borderWidth: borderWidth.thick,
       borderStyle: 'dashed',
       borderColor: colors.border.focus,

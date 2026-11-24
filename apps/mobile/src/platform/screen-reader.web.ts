@@ -30,9 +30,6 @@ export function announceForScreenReader(_text: string): void {
 /** The same constant as native; the web never waits on an announcement. */
 export const ANNOUNCE_TIMEOUT_MS = 3000;
 
-/** The same constant as native (F-A11Y-001 §3.4); the web never waits on an announcement. */
-export const ANNOUNCE_QUEUED_TIMEOUT_MS = 8000;
-
 /**
  * The web reads the answer announcer's polite live region (F-A11Y-001 §3.3); react-native-web 0.19 has no
  * `announceForAccessibilityWithOptions`, so nothing is called.

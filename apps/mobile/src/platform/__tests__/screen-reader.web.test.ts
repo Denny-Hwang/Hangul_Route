@@ -29,7 +29,6 @@ describe('platform/screen-reader.web', () => {
     expect(web.announceQueued('Right answer: n.')).toBeUndefined();
     await expect(web.announceAndWait('Right answer: n.', 0, { queue: true })).resolves.toBeUndefined();
     expect(withOptions).not.toHaveBeenCalled();
-    expect(web.ANNOUNCE_QUEUED_TIMEOUT_MS).toBe(native.ANNOUNCE_QUEUED_TIMEOUT_MS);
   });
 
   it('has the same surface as the native file', () => {
