@@ -45,7 +45,7 @@ Who this hurts: every learner in the room, whose letters to revisit are shown be
 >
 > As a learner, I never see on the classroom screen which letters another learner still needs to practise, and nobody sees mine.
 
-What rows CO-1 and CO-2 do not change: Show the code lives on the class page, so to reach it the teacher opens the class page, and if that page is already on the classroom screen the room sees the roster (names, level pills, minutes, quest counts, with the letters to revisit folded after CO-2) until the button is pressed. OD-CO7 (awaiting owner) puts the button on the teacher home, which names no learner, so the roster need never be on the screen.
+What rows CO-1 and CO-2 do not change: Show the code lives on the class page, so to reach it the teacher opens the class page, and if that page is already on the classroom screen the room sees the roster (names, level pills, minutes, quest counts, with the letters to revisit folded after CO-2) until the button is pressed. OD-CO7 (a) (owner decision 2026-11-24) puts the button on the teacher home, which names no learner, so the roster need never be on the screen.
 
 ## 3. Acceptance criteria
 
@@ -164,7 +164,7 @@ Reused unchanged: `console.space.codeLabel.class`, `console.codeExpiry.*`, `cons
 - **Printing as a feature.** There is no print button or print layout; Ctrl+P with the overlay open prints only the overlay (§3.3).
 - The class page's other open items: the copy feedback (WO-31 #2), the roster grid's `minmax(280px, 1fr)` (WO-31 #13), the error title (WO-31 #1). They touch the same file; WO-31 owns them.
 - The lecture presenter's End slide (F-TCH-004), unchanged.
-- Whatever OD-CO6, OD-CO7 and OD-CO8 add, until the owner answers (rows CO-1b, CO-2b, CO-2c).
+- Anything beyond what OD-CO6 (a), OD-CO7 (a) and OD-CO8 (a) decide (owner decisions 2026-11-24; rows CO-1b, CO-2b, CO-2c).
 
 ## 5. UI sketch
 
@@ -214,10 +214,10 @@ No flag. Show the code adds a button and takes nothing away (Invite students and
 |---|---|---|---|---|---|
 | CO-0 | Opus 5.5 | This spec, the wireframe and the mock (§5); multi-agent review — **revision 2 done 2026-11-23** | the mock's capture checks (`tools/class-code-overlay-capture.mjs`) | — | `docs/class-code-overlay-spec` |
 | CO-1 | Sonnet 5.5 | §3.1 to §3.6 on the class page: `lib/console/class-code-overlay.ts` (`codeOverlayShown`, `codeOverlayView`, `CODE_WIDTH_EM`, `QR_CAPTION_LINES`); `classActions` `code` input and `'showCode'`; the raw opener button with its ref; `ClassCodeOverlay.tsx` (its CSS string with the landscape switch and the print rule); `JoinLinkQrImage` split out of `JoinLinkQr`; the page's open state, action node, overlay, `blocked`, focus fallbacks (error panel ref), the re-read on open and the 20 s cadence while open, Regenerate's `announceRosterChange()`, the session flag; §3.8 CO-1 strings in en, es and ko | 1, 2, 3, 4, 8; 9 (local lane) | CO-0 `ready` | `feat/class-code-overlay` |
-| CO-1b | Sonnet 5.5 | **Waits for OD-CO7.** If (a): Show the code on each teacher home class row with a live code, opening the same overlay over the home from the spaces list (`classRowLinks`, `teach/home/page.tsx`), focus back to the row's button; if (b): the `#code` link | a home wiring test (no roster read; the overlay's allow-list as test 4; focus back); e2e 9 from the home | CO-1 | `feat/class-code-home` |
+| CO-1b | Sonnet 5.5 | **Ready (OD-CO7 (a), owner decision 2026-11-24).** Show the code on each teacher home class row with a live code, opening the same overlay over the home from the spaces list (`classRowLinks`, `teach/home/page.tsx`), focus back to the row's button | a home wiring test (no roster read; the overlay's allow-list as test 4; focus back); e2e 9 from the home | CO-1 | `feat/class-code-home` |
 | CO-2 | Sonnet 5.5 | §3.7: the What to revisit disclosure on class cards (in `ClassPageParts.tsx`), its open state by learner id in the page, closed by Show the code, `StudentWordsLines` split so the count line and the revisit line can sit apart; §3.8 CO-2 strings in en, es and ko | 5, 6, 7, 8; 10 (local lane) | CO-0 `ready`; merges after CO-1 (same file) | `feat/roster-revisit-folded` |
-| CO-2b | Sonnet 5.5 | **Waits for OD-CO6.** If (b): the lines the owner names join the fold; if (c): the presenting mode | per the answer | CO-2 | `feat/roster-presenting` |
-| CO-2c | Sonnet 5.5 | **Waits for OD-CO8.** If (a) or (b): `weekLines` / `classRollup` draw the together lines and the first-try line only when the minimum count of learners contributes | `rollup.test.ts` (extend): below, at and above the minimum | CO-2 | `fix/rollup-small-class` |
+| CO-2b | Sonnet 5.5 | **Ready (OD-CO6 (a), owner decision 2026-11-24).** The other card lines stay as they are, so nothing is built for this row beyond the fold of CO-2 | per the answer | CO-2 | `feat/roster-presenting` |
+| CO-2c | Sonnet 5.5 | **Ready (OD-CO8 (a), owner decision 2026-11-24: at least 3 learners).** `weekLines` / `classRollup` draw the together lines and the first-try line only when at least 3 learners contribute | `rollup.test.ts` (extend): below, at and above the minimum | CO-2 | `fix/rollup-small-class` |
 | CO-3 | Sonnet 5.5 | Finishing (roadmap README §5.1 step 6): "Amended YYYY-MM-DD by `AMENDMENTS-CLASS-CODE-OVERLAY.md` [CO]" lines in F-SPACE-001, `AMENDMENTS-TEACHER-VISIBILITY-TRANSFER.md`, `AMENDMENTS-GROWNUP-UX.md`, F-CONSOLE-001 and F-VOC-005 (and F-APP-001 if CO-1b ships); a pointer in `design/wireframes/console/roster.md`; the `docs/specs/README.md` index line; status `shipped` | — | CO-1, CO-2 and whichever of CO-1b, CO-2b, CO-2c the owner opens | `docs/class-code-overlay-amended` |
 
 One commit = test + implementation (CLAUDE.md §5). A row that meets a decision this spec does not make stops and reports (roadmap README §3).
