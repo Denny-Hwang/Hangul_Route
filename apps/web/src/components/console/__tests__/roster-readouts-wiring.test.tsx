@@ -123,9 +123,28 @@ describe('the roster readouts (GX-8)', () => {
     expect(byTestId(root, 'week-anchor')).toHaveLength(0);
     expect(textOf(root)).not.toMatch(/anchor|–/);
     act(() => mounted?.unmount());
-    learners = [learner('l:1', 'Mina', { summary: summary({ stage1: { questsDone: 3, questsTotal: 15, anchorAccuracy: 0.8 } }) })];
+    // CO-2c (OD-CO8 (a)): in a class the line needs at least 3 learners with a figure.
+    const figure = (id: string, name: string): ReturnType<typeof learner> => learner(id, name, { summary: summary({ stage1: { questsDone: 3, questsTotal: 15, anchorAccuracy: 0.8 } }) });
+    learners = [figure('l:1', 'Mina'), figure('l:2', 'Sam')];
+    root = await page();
+    expect(byTestId(root, 'week-anchor')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    learners = [figure('l:1', 'Mina'), figure('l:2', 'Sam'), figure('l:3', 'Ana')];
     root = await page();
     expect(byTestId(root, 'week-anchor').map(textOf)).toEqual(['Stage 1 first-try answers: 80%']);
+  });
+
+  // AMENDMENTS-CLASS-CODE-OVERLAY CO-2c (OD-CO8 (a)): the jamo line needs at least 3 learners with letters to revisit.
+  it('a class with fewer than 3 learners with letters to revisit has no "Jamo to revisit together" line; with 3 it shows', async () => {
+    const letters = (id: string, name: string): ReturnType<typeof learner> => learner(id, name, { summary: summary({ needsPractice: ['ㅂ'] }) });
+    learners = [letters('l:1', 'Mina'), letters('l:2', 'Sam')];
+    let root = await page();
+    expect(textOf(byTestId(root, 'this-week')[0] as ReactTestInstance)).not.toContain('Jamo to revisit together');
+    expect(byTestId(root, 'revisit-together')).toHaveLength(0);
+    act(() => mounted?.unmount());
+    learners = [letters('l:1', 'Mina'), letters('l:2', 'Sam'), letters('l:3', 'Ana')];
+    root = await page();
+    expect(textOf(byTestId(root, 'this-week')[0] as ReactTestInstance)).toContain('Jamo to revisit together');
   });
 
   it('T7: a learner who joined today, with nothing synced, is not counted as away for a week', async () => {
