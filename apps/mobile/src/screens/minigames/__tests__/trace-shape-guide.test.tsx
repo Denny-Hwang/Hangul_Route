@@ -361,6 +361,21 @@ describe('Trace Stroke and Trace a Word: another accepted form (SO-2)', () => {
     expect(texts(r.root)).not.toContain(RETRY_LINE);
   });
 
+  // OD-SO12: the idle gate reads every accepted form.
+  it('Trace Stroke, ㅈ in its Variant B shape: scored on idle with no Done, and a prefix of it never is', async () => {
+    const [bar, left, right] = altStrokesForJamo('jamo:jieut')![0]!;
+    const r = await playStroke('jamo:jieut');
+    await draw(r.root, bar!);
+    await draw(r.root, left!);
+    await wait(TRACE_IDLE_MS * 3);
+    expect(texts(r.root)).not.toContain(CLEAN);
+    expect(texts(r.root)).not.toContain(RETRY_LINE);
+    expect(texts(r.root)).toContain(KEEP_GOING_LINE);
+    await draw(r.root, right!);
+    await wait(TRACE_IDLE_MS);
+    expect(texts(r.root)).toContain(CLEAN);
+  });
+
   it('ㅌ Variant C (ㄷ first, then the middle bar; not accepted), taught: the order line', async () => {
     gate.reviewed = ['jamo:tieut'];
     const [top, middle, nieun] = strokesForJamo('jamo:tieut')!;
