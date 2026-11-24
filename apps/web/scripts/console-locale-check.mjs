@@ -9,6 +9,10 @@
 // A page's start chunks are the `<script src="/_next/static/chunks/...">` of its HTML. Probes are translated
 // strings of the es and ko overlays (`localeProbes`); the check fails when a start chunk holds one, and also when
 // no chunk of the export holds them (the language chunks are gone, or the probes no longer match the bundle).
+// A string the content data also holds is no probe: the grown-up start chunks legitimately carry the generated
+// content (the vocabulary catalogue's es / ko glosses, the catalogue titles, the content overlays), and a phrase
+// both a UI message and a gloss use ("alfabeto coreano") would fail the build for text that belongs there
+// (`contentTexts`; the picks move on to the next candidate, so the count stays).
 //
 // `build` and `build:console` run it after `next build`. The probes come from packages/i18n through
 // scripts/ts-loader.mjs, as console-split.mjs reads the R-1 list.
@@ -44,20 +48,37 @@ export function stringLeaves(tree, prefix = '') {
 }
 
 /**
+ * Every string of the content data the grown-up start chunks may hold (generated catalogues and overlays), one
+ * list for `localeProbes` to keep its probes out of.
+ * @param {...unknown} sources trees of strings, as the generated modules export them
+ * @returns {string[]}
+ */
+export function contentTexts(...sources) {
+  return [...new Set(sources.flatMap((tree) => stringLeaves(tree).map(([, text]) => text)))];
+}
+
+/**
  * Up to `count` translated strings of an overlay that only that language has: not an English string, at least
- * MIN_PROBE_LENGTH long, nothing a minifier would escape; picked evenly along the sorted paths.
+ * MIN_PROBE_LENGTH long, nothing a minifier would escape, and not inside any of the `content` strings (a start
+ * chunk may hold those); picked evenly along the sorted paths of what remains, so a skipped string is replaced by
+ * its neighbour and the count holds.
  * @param {unknown} overlay the es or ko overlay
  * @param {unknown} english the English dictionary
  * @param {number} [count]
+ * @param {readonly string[]} [content] strings of the content data (`contentTexts`)
  * @returns {string[]}
  */
-export function localeProbes(overlay, english, count = PROBES_PER_LOCALE) {
+export function localeProbes(overlay, english, count = PROBES_PER_LOCALE, content = []) {
   const englishText = new Set(stringLeaves(english).map(([, text]) => text));
+  const contentBlob = content.join('\n');
   const candidates = [
     ...new Set(
       stringLeaves(overlay)
         .map(([, text]) => text)
-        .filter((text) => text.length >= MIN_PROBE_LENGTH && !UNSAFE.test(text) && !englishText.has(text)),
+        .filter(
+          (text) =>
+            text.length >= MIN_PROBE_LENGTH && !UNSAFE.test(text) && !englishText.has(text) && !(contentBlob !== '' && contentBlob.includes(text)),
+        ),
     ),
   ];
   if (candidates.length <= count) return candidates;
@@ -155,7 +176,14 @@ if (isMain) {
     const { en } = await import(pathToFileURL(join(messages, 'en', 'index.ts')).href);
     const { es } = await import(pathToFileURL(join(messages, 'es', 'index.ts')).href);
     const { ko } = await import(pathToFileURL(join(messages, 'ko', 'index.ts')).href);
-    const report = checkConsoleLocales(process.argv[2] ?? 'out', isGrownUpPath, { es: localeProbes(es, en), ko: localeProbes(ko, en) });
+    // The content data the start chunks hold: the same generated modules the build bundles (`pnpm generate`).
+    const data = join(repo, 'apps', 'web', 'src', 'data');
+    const { VOCAB_CATALOG } = await import(pathToFileURL(join(data, 'vocab-catalog.ts')).href);
+    const { CATALOGUE_TITLES } = await import(pathToFileURL(join(data, 'catalogue-titles.generated.ts')).href);
+    const { LECTURE_STORIES, LECTURE_VOCAB_TOPICS } = await import(pathToFileURL(join(data, 'lecture-catalogue.generated.ts')).href);
+    const { OVERLAYS } = await import(pathToFileURL(join(repo, 'packages', 'content-schema', 'src', 'overlay-tables.ts')).href);
+    const content = contentTexts(VOCAB_CATALOG, CATALOGUE_TITLES, LECTURE_STORIES, LECTURE_VOCAB_TOPICS, OVERLAYS);
+    const report = checkConsoleLocales(process.argv[2] ?? 'out', isGrownUpPath, { es: localeProbes(es, en, PROBES_PER_LOCALE, content), ko: localeProbes(ko, en, PROBES_PER_LOCALE, content) });
     const failure = verdict(report);
     if (failure !== null) throw new Error(failure);
     const shared = report.shared === null ? '' : `; shared chunk ${report.shared.file} ${report.shared.bytes} B`;

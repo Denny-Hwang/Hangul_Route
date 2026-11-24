@@ -54,7 +54,7 @@ import {
 import { presentHref } from '@/lib/console/lecture-entry';
 import { openPresenter } from '@/lib/console/lecture-link';
 import { dateKey } from '@/lib/console/plans';
-import { classRollup } from '@/lib/console/rollup';
+import { classRollup, togetherLists } from '@/lib/console/rollup';
 import { type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { spaceSubPageBack } from '@/lib/console/page-back';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
@@ -132,7 +132,8 @@ function LectureInner(): JSX.Element {
   /** The space whose answer the page draws; another `?id=` on the same mounted page clears it before reading. */
   const drawnFor = useRef<string | null>(null);
 
-  const rollup = roster ? classRollup(roster.learners, now) : null;
+  // [CO] CO-2d: a class's Revisit block needs 3 learners with letters to revisit (a family keeps its own).
+  const rollup = roster ? togetherLists(roster.space.kind, classRollup(roster.learners, now)) : null;
   const revisit = rollup ? revisitBlock(rollup.revisit) : null;
   const ctx = useMemo(() => consolePresetContext({ roster, plan: presetPlan(plan, planParam), today, now }), [roster, plan, planParam, today, now]);
   const stages = useMemo(() => presetStages(), []);
@@ -187,7 +188,7 @@ function LectureInner(): JSX.Element {
       setStage(chip);
       setLengths({});
       touched.current = false;
-      const revisitNow = revisitBlock(classRollup(rosterData.learners, now).revisit);
+      const revisitNow = revisitBlock(togetherLists(rosterData.space.kind, classRollup(rosterData.learners, now)).revisit);
       if (preselected === 'plan' && chosen && context.plan) {
         // "Present this plan": Next lesson open, the plan's own blocks as the outline (section 4.6).
         const outline = planOutline(chosen, today);
