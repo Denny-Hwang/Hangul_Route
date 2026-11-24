@@ -25,7 +25,7 @@
 //   mark-size   every mark is at least 20 (spec 3.1 "Size", the minimum this pass sets)
 //   mark-clear  no mark overlaps any text of its answer, at any window and at 200 % text (spec 3.1 "Placement")
 //   corner      every corner mark's box lies inside its answer's rounded inner corner (review round 1, charter M2)
-//   overlap     no mark or disc overlaps another answer (owner Q5: the straddling disc)
+//   overlap     every mark and disc keeps at least spacing.xs (4) from any other answer (owner Q5; round 2)
 //   scene       every Hidden Heritage disc lies whole inside its scene, which clips (review round 1, code M1)
 //   reflow      a ChoiceCard row is as high answered as not answered: the mark column is kept (charter M6)
 //   mark-hidden every mark is aria-hidden (spec 3.1 "Decorative")
@@ -34,7 +34,10 @@
 //   cue         every right, miss and tried answer carries a mark (a tried one on its disc, owner Q5); every look-here
 //               a dashed ring; a pick a solid ring (spec 3.1 "Greyscale", charter M3)
 //   locked      no answered option is disabled (spec 3.1 "Locked is not disabled")
-//   reserved    the Build a Letter shape picture's place is under the slots and the same height in every frame (owner Q2)
+//   reserved    the Build a Letter shape picture's place is under the slots, at its block's height: rows x 40 + (rows - 1) x 8
+//               (owner Q2; review round 2)
+//   first-screen at 360 x 740 the shape picture ends inside the first screen (owner Q2); where Undo and the tray end is
+//               printed as a note
 //   body-floor  the Display row's help line is at least the 18 body floor at standard text (charter minor 13)
 //   said        no announcer line holds taught-Korean Hangul (spec 3.2, OD-AF5 (a))
 //   next        every Next is the one focused control of its frame (OD-AF9 (b): Next takes focus)
@@ -75,11 +78,12 @@ const fail = (rule, where, detail) => failures.push(`${rule} · ${where} · ${de
   if (px) fail('literals', 'answer-feedback.css', `bare px values: ${[...new Set(px)].join(', ')}`);
 }
 
-async function check(page, where, standardText) {
+const notes = [];
+async function check(page, where, standardText, firstScreen) {
   const sideways = await page.evaluate(() => document.scrollingElement.scrollWidth - window.innerWidth);
   if (sideways > 0) fail('sideways', where, `scrolls ${sideways} px sideways`);
 
-  const results = await page.evaluate((standard) => {
+  const results = await page.evaluate(([standard, firstScreen]) => {
     const out = [];
     const push = (rule, detail) => out.push({ rule, detail });
     const label = (n) => (n.getAttribute('aria-label') || n.textContent || '').trim().slice(0, 40);
@@ -167,9 +171,11 @@ async function check(page, where, standardText) {
         }
       }
       // overlap: no other answer under the mark
+      const pad = 4; // spacing.xs
+      const grown = { left: box.left - pad, top: box.top - pad, right: box.right + pad, bottom: box.bottom + pad };
       for (const a of answers) {
         if (a.contains(m) || m.contains(a) || a.contains(owner) || owner.contains(a)) continue;
-        if (area(box, a.getBoundingClientRect()) > 0.5) push('overlap', `a ${svg.dataset.icon} mark of "${label(owner)}" overlaps "${label(a)}"`);
+        if (area(grown, a.getBoundingClientRect()) > 0.25) push('overlap', `a ${svg.dataset.icon} mark of "${label(owner)}" is within 4 px of "${label(a)}"`);
       }
       // scene: a disc in a clipping scene is whole inside it
       const scene = m.closest('.scene');
@@ -216,8 +222,23 @@ async function check(page, where, standardText) {
     // reserved: the shape picture's place directly under the slots, one height on the page
     const places = [...document.querySelectorAll('.shape-place')];
     for (const p of places) if (!p.previousElementSibling?.classList.contains('slots')) push('reserved', 'the shape picture is not directly under the slots');
-    const heights = new Set(places.map((p) => Math.round(p.getBoundingClientRect().height)));
-    if (heights.size > 1) push('reserved', `the shape picture's place changes height: ${[...heights].join(', ')}`);
+    for (const p of places) {
+      const rows = Number(p.dataset.rows);
+      const want = rows * 40 + (rows - 1) * 8;
+      const h = p.getBoundingClientRect().height;
+      if (Math.abs(h - want) > 0.5) push('reserved', `a ${rows}-row shape place is ${h} px, not ${want}`);
+    }
+    if (firstScreen) {
+      for (const f of document.querySelectorAll('.screen')) {
+        const p = f.querySelector('.shape-place');
+        if (!p) continue;
+        const top = f.getBoundingClientRect().top;
+        const shapeEnd = p.getBoundingClientRect().bottom - top;
+        const tray = f.querySelector('.tray').getBoundingClientRect().bottom - top;
+        if (shapeEnd > firstScreen) push('first-screen', `frame ${f.dataset.frame}: the shape picture ends at ${Math.round(shapeEnd)}, below ${firstScreen}`);
+        out.push({ rule: 'note', detail: `frame ${f.dataset.frame}: shape picture ends at ${Math.round(shapeEnd)}, tray at ${Math.round(tray)} (first screen ${firstScreen})` });
+      }
+    }
 
     // Display row: the off track, and the help line's size
     for (const row of document.querySelectorAll('.sr-row:not(.sr-on)')) {
@@ -242,8 +263,8 @@ async function check(page, where, standardText) {
       if (nexts.length !== 1 || focused.length !== 1 || focused[0] !== nexts[0]) push('next', `frame ${f.dataset.frame}: Next is not the one focused control`);
     }
     return out;
-  }, standardText);
-  for (const r of results) fail(r.rule, where, r.detail);
+  }, [standardText, firstScreen]);
+  for (const r of results) (r.rule === 'note' ? notes.push(`${where} · ${r.detail}`) : fail(r.rule, where, r.detail));
 
   const text = await page.evaluate(() => {
     const c = document.body.cloneNode(true);
@@ -267,7 +288,7 @@ try {
       await page.waitForFunction(() => document.documentElement.dataset.ready === 'yes');
       await page.addStyleTag({ content: `:root { --fold: ${win.h}px;${win.text ? ` --text-f: ${win.text};` : ''} }${win.text ? ` html { font-size: ${win.text * 100}%; }` : ''}` });
       const where = `${file} @${win.tag}`;
-      await check(page, where, !win.text);
+      await check(page, where, !win.text, win.tag === '360' ? win.h : 0);
       if (SHOOT) {
         const base = join(SHOTS, `${file.replace('.html', '')}-${win.tag}`);
         await page.screenshot({ path: `${base}.png`, fullPage: true });
@@ -281,6 +302,7 @@ try {
   await browser.close();
 }
 
+if (notes.length > 0) console.log(notes.join('\n'));
 if (failures.length > 0) {
   console.error(failures.join('\n'));
   process.exit(1);

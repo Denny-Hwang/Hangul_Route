@@ -111,12 +111,12 @@ const NAME = {
 };
 
 /** ChoiceCard, row layout (design/components/ChoiceCard/spec.md). `art`: a picture option (Pic-Word Match). */
-function choiceCard({ label, korean, state = 'idle', base, art, picked = false, badge }) {
+function choiceCard({ label, korean, state = 'idle', base, art, picked = false, badge, cls = '' }) {
   const name = (picked ? (b) => `Selected: ${b}` : NAME[state])(base ?? label ?? korean.rom);
   const body = `${art ? `<span class="cc-art">${art}</span>` : ''}${korean ? kt(korean) : ''}${label ? `<span class="cc-label">${esc(label)}</span>` : ''}`;
   const m = STATE_MARK[state] ? mark(STATE_MARK[state], 'end') : markSlot();
   const badgeHtml = badge ? `<span class="pw-badge" aria-hidden="true">${badge}</span>` : '';
-  return `<button type="button" class="cc cc-${state}${picked ? ' cc-picked' : ''}${art ? ' cc-pic' : ''} mk-host" data-state="${picked ? 'picked' : state}" aria-label="${esc(name)}"${state === 'correct' || picked ? ' aria-selected="true"' : ''}><span class="cc-body">${body}</span>${m}${badgeHtml}</button>`;
+  return `<button type="button" class="cc cc-${state}${picked ? ' cc-picked' : ''}${art ? ' cc-pic' : ''} ${cls} mk-host" data-state="${picked ? 'picked' : state}" aria-label="${esc(name)}"${state === 'correct' || picked ? ' aria-selected="true"' : ''}><span class="cc-body">${body}</span>${m}${badgeHtml}</button>`;
 }
 
 /** Tile (Match Sound, Odd One Out, Build a Letter tray). `locked` (AF-1): a wrong tile is inactive, never disabled. */
@@ -148,8 +148,8 @@ const reply = (state, w, name) =>
 const word = (state, w, name) =>
   `<button type="button" class="word word-${state} mk-host" data-state="${state === 'ring' ? 'hint' : state}" aria-label="${esc(name)}">${kt(w)}${state === 'tried' ? mark('tried', 'disc', 'mark-straddle') : ''}</button>`;
 /** Build a Letter target box (the speaker). */
-const target = (state) =>
-  `<button type="button" class="target target-${state} mk-host" data-state="${state}" aria-label="Hear ga"><span class="target-glyph" lang="ko">가</span><span class="target-rom">ga</span>${state === 'correct' ? mark('correct', 'corner', 'mark-inset') : ''}</button>`;
+const target = (state, ko = '가', rom = 'ga') =>
+  `<button type="button" class="target target-${state} mk-host" data-state="${state}" aria-label="Hear ${rom}"><span class="target-glyph" lang="ko">${ko}</span><span class="target-rom">${rom}</span>${state === 'correct' ? mark('correct', 'corner', 'mark-inset') : ''}</button>`;
 
 /** Hoya, drawn as the other mocks draw him. */
 const HOYA_DEFS = `<svg width="0" height="0" class="defs" aria-hidden="true" focusable="false">
@@ -240,7 +240,7 @@ const J = {
   t: { ch: 'ㅌ', rom: 't', sound: 't' },
 };
 
-/** Hidden Heritage spot. `pos`: CSS for left and top inside the scene; `clamp`: the disc moved into the scene (D5). */
+/** Hidden Heritage spot. `pos`: CSS for left and top inside the scene; `clamp`: the disc moved into the scene (D6). */
 function spot(glyph, pos, state, name, clamp = '') {
   const m = state === 'found' ? mark('correct', 'disc', clamp) : state === 'miss' ? mark('wrong', 'disc', clamp) : '';
   const ds = state === 'found' ? 'correct' : state === 'miss' ? 'wrong' : 'hint';
@@ -251,10 +251,20 @@ const at = (x, y) => `--x: ${x}%; --y: ${y}%`;
 const EDGE = 'left: auto; right: var(--spacing-xs); top: var(--spacing-xs)';
 
 /** The shape picture's place under Build a Letter's slots, kept in every state (owner Q2). */
-const shapePlace = (shown) =>
-  shown
-    ? `<div class="shape-place" role="img" aria-label="Block shape: The vowel goes beside the first letter."><span class="hint-cell">1</span><span class="hint-cell">2</span></div>`
-    : `<div class="shape-place" aria-hidden="true"></div>`;
+const SHAPES = {
+  beside: { rows: [[1, 2]], line: 'The vowel goes beside the first letter.' },
+  under: { rows: [[1], [2]], line: 'The vowel goes under the first letter.' },
+  besideFinal: { rows: [[1, 2], [3]], line: 'The vowel goes beside the first letter. The last letter sits at the bottom.' },
+  underFinal: { rows: [[1], [2], [3]], line: 'The vowel goes under the first letter. The last letter sits at the bottom.' },
+}; // learner.minigame.buildLetter.shape; rows as SyllableBlock/layout.ts:35-39
+/** Its height is the round's own block: rows x HINT_CELL + (rows - 1) x spacing.sm (40, 88 or 136), known before a miss. */
+const shapePlace = (shape, shown) => {
+  const { rows, line } = SHAPES[shape];
+  const inner = rows.map((r) => `<span class="hint-row">${r.map((n) => `<span class="hint-cell">${n}</span>`).join('')}</span>`).join('');
+  return shown
+    ? `<div class="shape-place" data-rows="${rows.length}" style="--rows: ${rows.length}" role="img" aria-label="${esc(`Block shape: ${line}`)}">${inner}</div>`
+    : `<div class="shape-place" data-rows="${rows.length}" style="--rows: ${rows.length}" aria-hidden="true"></div>`;
+};
 
 // ================================================================================================= page 1: states
 function statesPage() {
@@ -279,8 +289,9 @@ function statesPage() {
       cell('Right', choiceCard({ label: 'apple', state: 'correct' }), NAME.correct('apple')),
       cell('Miss, try another', choiceCard({ label: 'pear', state: 'wrong' }), NAME.wrong('pear')),
       cell('Look here (dashed ring, new)', choiceCard({ label: 'apple', state: 'hint' }), NAME.hint('apple')),
+      cell('Look here with keyboard focus', choiceCard({ label: 'apple', state: 'hint', cls: 'focus-demo' }), NAME.hint('apple')),
     ],
-    'The 24 mark column is kept in every state (an empty 24 slot when not answered), so a card never grows on answering. Look-here becomes the one look-here shape of every game: a dashed <code>borderWidth.thick</code> <code>border.focus</code> ring <code>spacing.xs</code> outside the card (was the card\'s own thick border, 1.06:1 against <code>border.shape</code>). AF-1: <code>wrong</code> is no longer <code>selected</code>.',
+    'The 24 mark column is kept in every state (an empty 24 slot when not answered), so a card never grows on answering (36 dp less text width when not answered: the mark and the row\'s <code>spacing.md</code> gap). With keyboard focus the solid focus ring (<code>spacing.xxs</code> out) and the dashed ring (<code>spacing.xs</code> out) meet in one band with a dashed outer edge: still unlike a plain focus ring or a pick. Look-here becomes the one look-here shape of every game: a dashed <code>borderWidth.thick</code> <code>border.focus</code> ring <code>spacing.xs</code> outside the card (was the card\'s own thick border, 1.06:1 against <code>border.shape</code>). AF-1: <code>wrong</code> is no longer <code>selected</code>.',
   );
   const pw = (state, picked = false, badge) =>
     choiceCard({ label: 'rice bowl', art: icon('rice-bowl', 56, 'var(--colors-text-secondary)'), state, picked, badge, base: 'rice bowl' });
@@ -304,7 +315,7 @@ function statesPage() {
       cell('Miss, locked', tile({ ...J.d, state: 'wrong' }), NAME.wrong(J.d.sound)),
       cell('Used (Build a Letter tray)', tile({ ...J.a, state: 'disabled', size: 'md' }), J.a.sound),
     ],
-    'The mark grows from 16 to 20 and moves onto a 26 disc that straddles the tile\'s top-end corner (8 outside), as Sentence Builder\'s: at large text a tile shrinks to its jamo, and a mark inside the corner then covered it (the <code>mark-clear</code> check at 320 with 200 % text). <code>correct</code> gains <code>check</code>. A locked miss is <code>inactive</code>, never <code>disabled</code>; only Build a Letter\'s used tray tile is disabled.',
+    'The mark grows from 16 to 20 and moves onto a 26 disc that straddles the tile\'s top-end corner (<code>spacing.xs</code>, 4 outside), as Sentence Builder\'s: at large text a tile shrinks to its jamo, and a mark inside the corner then covered it (the <code>mark-clear</code> check at 320 with 200 % text). <code>correct</code> gains <code>check</code>. A locked miss is <code>inactive</code>, never <code>disabled</code>; only Build a Letter\'s used tray tile is disabled.',
   );
   const cmRow = row(
     'A3',
@@ -319,7 +330,7 @@ function statesPage() {
   );
   const zoneRow = row(
     'A4',
-    'Syllable Build and Match Shape: zones and tiles (OD-AF8 (c))',
+    'Syllable Build: zones and key tiles (OD-AF8 (c); Match Shape\'s tiles follow Tile, A2)',
     [
       cell('Empty zone', zone('empty', '', 'Vowel, empty'), 'Vowel, empty'),
       cell('Miss: the dot becomes replay', zone('marked', 'ㅗ', 'Not this one: o'), 'Not this one: o'),
@@ -346,7 +357,7 @@ function statesPage() {
       cell('Tried here, still tappable', word('tried', { ko: '이에요', rom: 'ieyo' }, 'ieyo, tried'), 'ieyo, tried'),
       cell('Look here (dashed ring)', word('ring', { ko: '저는', rom: 'jeoneun' }, 'Look here: jeoneun'), 'Look here: jeoneun'),
     ],
-    '<code>dash</code> stays (the tile is not locked: it may fit a later place), now on a 26 <code>nudgeLight</code> disc with a <code>text.primary</code> casing that straddles the tile\'s top-end corner (8 outside), so it reads as a badge, not as a dash or ㅡ after the word (owner Q5).',
+    '<code>dash</code> stays (the tile is not locked: it may fit a later place), now on a 26 <code>nudgeLight</code> disc with a <code>text.primary</code> casing that straddles the tile\'s top-end corner (4 outside), so it reads as a badge, not as a dash or ㅡ after the word (owner Q5).',
   );
   const targetRow = row(
     'A7',
@@ -365,7 +376,7 @@ function statesPage() {
       cell('Miss, look again', ringCell('miss', 'leaf', 'Not this one: leaf'), 'Not this one: leaf'),
       cell('Look here (dashed, as today)', ringCell('hint', 'lantern', 'Look here: deung'), 'Look here: deung'),
     ],
-    'Found and miss were the same solid ring in two colours. Each now carries its mark on a 26 disc of its own light fill with a <code>text.primary</code> casing, centred on the ring\'s top-end corner, and moved into the scene when that corner is near the scene\'s edge (H1). While the miss disc shows, the thing tapped is inactive: a tap on it is not a second miss.',
+    'Found and miss were the same solid ring in two colours. Each now carries its mark on a 26 disc of its own light fill with a <code>text.primary</code> casing, centred on the ring\'s top-end corner, and moved into the scene when that corner is near the scene\'s edge (H1); there the disc may cover the thing\'s own corner. While the miss disc shows, the thing tapped is inactive: a tap on it is not a second miss.',
   );
 
   const notButton = `<section class="spec-row" aria-labelledby="S2-t"><h2 class="frame-label" id="S2-t"><b>S2</b> A <code>replay</code> mark is not a replay button</h2>
@@ -552,33 +563,53 @@ function pairsPage() {
 
   const slot = (j, state) =>
     `<span class="slot slot-${state}" aria-label="${j ? esc(`Take back ${j.sound}`) : 'empty'}"${j ? ' role="button" tabindex="0"' : ''} lang="ko">${j ? esc(j.ch) : ''}</span>`;
+  /** The slots as SyllableBlock draws them: one row per block row. */
+  const slots = (shape, js, state) => {
+    let k = 0;
+    return `<div class="slots">${SHAPES[shape].rows.map((r) => `<div class="slot-row">${r.map(() => slot(js[k++], state)).join('')}</div>`).join('')}</div>`;
+  };
   const tray = (used) =>
-    `<p class="t-caption center">Tiles</p><div class="tray">${[J.g, J.a, J.n, J.o].map((j) => tile({ ...j, size: 'md', state: used.includes(j.ch) ? 'disabled' : 'idle' })).join('')}</div>`;
+    `<p class="t-caption center">Tiles</p><div class="tray">${[J.g, J.o, J.n, J.a].map((j) => tile({ ...j, size: 'md', state: used.includes(j.ch) ? 'disabled' : 'idle' })).join('')}</div>`;
   const undo = (on) => `<div class="center">${btn('Undo', { lead: icon('backspace', 24, on ? 'var(--colors-text-primary)' : 'var(--colors-text-muted)'), tone: on ? 'outline' : 'off' })}</div>`;
-  const blHead = (state) => `${topbar(2, 4)}<h3 class="t-prompt">Build this letter</h3><div class="center">${target(state)}</div><p class="t-caption center">Slots:</p>`;
+  const blHead = (state, ko, rom) => `${topbar(2, 4)}<h3 class="t-prompt">Build this letter</h3><div class="center">${target(state, ko, rom)}</div><p class="t-caption center">Slots:</p>`;
   const f1 = frame({
     id: 'F1',
-    title: 'Build a Letter, the right block',
-    body: blHead('correct') + `<div class="slots">${slot(J.g, 'filled')}${slot(J.a, 'filled')}</div>` + shapePlace(false) + undo(false) + tray(['ㄱ', 'ㅏ']),
-    said: ['Right answer: ga.'],
-    notes: ['<code>check</code> at 24 on the target box beside its success fill (was the fill alone). The shape picture\'s place under the slots is kept empty (owner Q2), so nothing moves when it appears.'],
+    title: 'Build a Letter, the right block (a two-row block)',
+    body: blHead('correct', '고', 'go') + slots('under', [J.g, J.o], 'filled') + shapePlace('under', false) + undo(false) + tray(['ㄱ', 'ㅗ']),
+    said: ['Right answer: go.'],
+    notes: ['<code>check</code> at 24 on the target box beside its success fill (was the fill alone). The shape picture\'s place under the slots is kept empty at the height of this round\'s block (two rows: 88), so nothing moves when it appears (owner Q2).'],
   });
   const f2 = frame({
     id: 'F2',
     title: 'Build a Letter, a miss that stays (OD-AF7 (i), owner Q2)',
     body:
-      blHead('idle') +
-      `<div class="slots">${slot(J.n, 'miss')}${slot(J.a, 'miss')}</div>` +
-      shapePlace(true) +
+      blHead('idle', '고', 'go') +
+      slots('under', [J.n, J.o], 'miss') +
+      shapePlace('under', true) +
       undo(true) +
-      tray(['ㄴ', 'ㅏ']) +
-      bubble('thinking', esc('Not quite. Try again. The vowel goes beside the first letter.'), false),
-    said: ['Not quite. Try again. The vowel goes beside the first letter.'],
+      tray(['ㄴ', 'ㅗ']) +
+      bubble('thinking', esc(`Not quite. Try again. ${SHAPES.under.line}`), false),
+    said: [`Not quite. Try again. ${SHAPES.under.line}`],
     notes: [
-      'No timer: the wrong build, the shape picture and Hoya\'s line stay until a slot tap (take back), Undo, or a tray tap (which starts a new build). The slots get the amber look and no mark: they stay tappable. Without colour, the miss is the shape picture appearing in its kept place right under the slots, in the first screen, then Hoya\'s <code>thinking</code> line.',
+      'No timer: the wrong build, the shape picture and Hoya\'s line stay until a slot tap (take back), Undo, or a tray tap (which starts a new build). The slots get the amber look and no mark: they stay tappable. Without colour, the miss is the shape picture appearing in its kept place right under the slots, in the first screen, then Hoya\'s <code>thinking</code> line. The picture moves from under Hoya\'s bubble (today) to under the slots.',
     ],
   });
-  page('answer-feedback-pairs.html', 'Answer feedback: Card Match, the letter tiles and Build a Letter', `F-A11Y-001 §3.1, §3.5, §3.6; OD-AF6 (a), OD-AF7 (i). ${PAGE_INTRO}`, [d1, d2, d3, d4, d5, e1, e2, e3, f1, f2]);
+  const f3 = frame({
+    id: 'F3',
+    title: 'Build a Letter, a miss on a three-row block',
+    body:
+      blHead('idle', '곤', 'gon') +
+      slots('underFinal', [J.g, J.a, J.n], 'miss') +
+      shapePlace('underFinal', true) +
+      undo(true) +
+      tray(['ㄱ', 'ㅏ', 'ㄴ']) +
+      bubble('thinking', esc(`Not quite. Try again. ${SHAPES.underFinal.line}`), false),
+    said: [`Not quite. Try again. ${SHAPES.underFinal.line}`],
+    notes: [
+      'The tallest case: three rows of slots and a 136 reserve. At 360 x 740 the shape picture still appears inside the first screen, under the slots; Undo and the tray start below it, and the screen scrolls to them (the <code>first-screen</code> check measures it). That is what owner Q2 keeps: the cue in the first screen, not the whole board.',
+    ],
+  });
+  page('answer-feedback-pairs.html', 'Answer feedback: Card Match, the letter tiles and Build a Letter', `F-A11Y-001 §3.1, §3.5, §3.6; OD-AF6 (a), OD-AF7 (i). ${PAGE_INTRO}`, [d1, d2, d3, d4, d5, e1, e2, e3, f1, f2, f3]);
 }
 
 // ================================================================================================= page 4: the board games
@@ -622,7 +653,7 @@ function boardsPage() {
       bubble('thinking', esc('Look again'), false),
     said: ['Not this one: leaf. Look again.'],
     notes: [
-      'The scene clips at its edge (<code>overflow: hidden</code>, as <code>HiddenHeritageGame.tsx:385</code>). The leaf sits at the top-end corner of the scene, as real spots do (<code>four-seasons.ts:241-250</code>), so its disc is moved in along each axis just far enough to stay whole (D5); elsewhere the disc is centred on the ring\'s corner.',
+      'The scene clips at its edge (<code>overflow: hidden</code>, as <code>HiddenHeritageGame.tsx:385</code>). The leaf sits at the top-end corner of the scene, as real spots do (<code>four-seasons.ts:241-250</code>), so its disc is moved in along each axis just far enough to stay whole (D6); elsewhere the disc is centred on the ring\'s corner.',
       'The miss disc stays until the next tap on the scene (was 600 ms); while it shows, the leaf is inactive (a tap on it is not a second miss). The visible caption stays; the live caption moves onto the announcer.',
     ],
   });
@@ -670,7 +701,7 @@ function boardsPage() {
       `<div class="tile-grid">${tile({ ...J.r, state: 'correct' })}${tile({ ...J.d, state: 'wrong' })}${tile({ ...J.r })}${tile({ ...J.t })}</div>` +
       bubble('thinking', esc('Look at the strokes again.'), false),
     said: ['Not this one: d or t. Look at the strokes again.'],
-    notes: ["Drawn with Tile's look for short; MatchShapeBoard's own tile (its <code>Mark</code>, <code>MatchShapeBoard.tsx:82</code>) takes the same marks: <code>check</code> grows from 16 to 20, the amber dot becomes <code>replay</code> at 20, both at inset <code>spacing.xs</code>."],
+    notes: ["Drawn with Tile's look for short; MatchShapeBoard's own tile (its <code>Mark</code>, <code>MatchShapeBoard.tsx:82</code>) follows Tile: <code>check</code> grows from 16 to 20, the amber dot becomes <code>replay</code> at 20, both on the disc straddling the corner (D2)."],
   });
 
   const j1 = frame({
