@@ -262,6 +262,10 @@ export const consoleMsgs = {
     regenerateFailed: 'Ahora no se pudo crear un código nuevo.',
     joinCodeLabel: 'Código',
     codeLabel: { family: 'Código familiar', class: 'Código de clase', school: 'Código escolar' },
+    codeOverlay: {
+      open: { cta: 'Mostrar el código' },
+      howToJoin: (cta: string) => `Toca «${cta}» en Hangul Route y escribe este código.`,
+    },
     joinLink: {
       title: 'Enlace para unirse',
       note: 'Abre Unirme a una clase con este código ya escrito. Solo lleva el código, nunca un nombre.',
