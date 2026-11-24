@@ -140,8 +140,8 @@ Mock decisions are numbered MD1 to MD12, so they are not confused with the spec'
 - **MD2. Inactive = `softDisabled`, not `disabled`.** The spec asks for "announced as disabled" (3.7). `softDisabled`
   keeps the link in the web tab order, so focus order (heading, speaker, link, answers) does not change when the hold
   ends. On native `Button` makes it plain `disabled` (`Button.tsx`), which VoiceOver and TalkBack still reach.
-- **MD3. No glyph on the link (open question 7; proposed).** The mock draws three variants (L7): (a) words only,
-  (b) `speaker-off`, and (c) `ear`. Proposal: (a).
+- **MD3. No glyph on the link (open question 7; Q1). Owner decision 2026-11-24: words only, no glyph, as proposed.** The mock draws three variants (L7): (a) words only,
+  (b) `speaker-off`, and (c) `ear`. Proposal: (a); the owner chose (a).
   - `speaker-off` is the app's sign for "Sound is off" (the Sound card when muted, `VoiceHelp/spec.md` section 4). On a round whose sound is on, it would say "the sound is off" or "tap to mute", which is false and might stop a learner from tapping it.
   - The words are the accessible name either way (WCAG 2.5.3).
   - A glyph also widens the link, so it wraps sooner.
@@ -152,12 +152,12 @@ Mock decisions are numbered MD1 to MD12, so they are not confused with the spec'
 - **MD5. Show the letters is primary, Hear it secondary (filled `brand.secondary`).** That is the order the spec gives
   (3.3). They are two different ways on, not "OK and cancel". So Hear it is a filled secondary button, as it is in the
   wrong-answer bubble, not a ghost.
-- **MD6. Width on wide windows: proposed, pending the owner (Q2).** VoiceHelpSheet is full width today; on a 1024
+- **MD6. Width on wide windows (Q2). Owner decision 2026-11-24: both sheets are capped at 720 px wide, as proposed.** VoiceHelpSheet is full width today; on a 1024
   tablet that is a 1024 wide sheet holding one sentence. Proposed: both sheets are capped at
   `layout.maxWidth.reading` (720) from window class `regular` and stay bottom sheets, centred at the bottom.
   - This goes beyond spec 3.3 ("built like VoiceHelpSheet") and 3.9.
   - Precedent: `DisplaySheet.tsx` also caps at `maxWidth.reading`, but it becomes a centred dialog instead.
-  - If the owner approves, a line goes into spec 3.3 before CH-1a; until then CH-1a builds the sheets full width, as today.
+  - The owner approved on 2026-11-24 and the line is in spec 3.3, so CH-1a builds both sheets capped.
 - **MD7. The line is plain `Body`, `text.primary`.** It is the one instruction on the sheet. The help sheet's note
   stays a muted caption; that is a different role.
 - **MD8. Link placement (open question 1): in the speaker row, wrapping (proposed in the wireframe).** At 360 and on a
@@ -222,12 +222,14 @@ Values that are not tokens.
 
 ## Open questions (for the owner and the review)
 
-- **Q1 (open question 7). A glyph on the link?** Proposed: none (MD3). Alternative: `ear`. Not `speaker-off`.
+Owner decision 2026-11-24: Q1 to Q6 answered in session, "all as recommended". Q1, Q2 and Q3 are decided; Q4, Q5 and Q6 stay notes.
+
+- **Q1 (open question 7). A glyph on the link?** Proposed: none (MD3). Alternative: `ear`. Not `speaker-off`. **Owner decision 2026-11-24: none; the link is words only.**
 - **Q2. The sheets' width on wide windows (MD6).** Capping both sheets at 720 is new to `VoiceHelpSheet`. CH-1a would
-  build it for both sheets.
+  build it for both sheets. **Owner decision 2026-11-24: yes, capped at 720 on both sheets (spec 3.3).**
 - **Q3 (wireframe open question 4).** An iPad that asks for the desktop site and reports no touch points, or an
   Android tablet whose Chrome asks for the desktop site, gets the computer line. Proposed: acceptable. The computer
-  line ("Turn the volume up. Check that this page is not muted.") is still true on those devices.
+  line ("Turn the volume up. Check that this page is not muted.") is still true on those devices. **Owner decision 2026-11-24: accepted.**
 - **Q4 (wireframe open question 5).** Headphones paired elsewhere are not named. Proposed: leave out (one short line).
 - **Q5 (wireframe open question 3).** Is "Turn off silent mode" clear? At 200 % text the Apple line takes three
   lines at 320 and fits. Device check 3.14 decides.
