@@ -3,8 +3,11 @@ Status: draft
 # F-A11Y-001 — Answer feedback you can see without colour, and hear once
 
 **Status**: `draft`. Revision 1 (2026-11-23). It is the AF-0 row of work order WO-04 (`docs/roadmap/review-2026-11/phase-1-safety.md`) and starts F-A11Y-001, the spec INBOX T-015 announced (`docs/tasks/INBOX.md:17`). It cannot go `ready` until the owner answers OD-AF1 to OD-AF8 (§10) and a multi-agent review has run (§11).
+
 **Later sections**: WO-08 (CI accessibility checks, rows AC-*), WO-39 (headings and focus, SS-*), WO-40 (Korean voice, LP-*) and WO-41 (accessibility polish) each add their own section to this file. This revision covers WO-04 only.
+
 **Amends** (each gets its "Amended by" line in row AF-6, not before):
+
 - F-001 (Match Sound)
 - F-002 (HoyaBubble: a `live` prop)
 - F-003 (Build a Letter)
@@ -20,7 +23,9 @@ Status: draft
 - the component spec `design/components/ChoiceCard/spec.md` (its Tile note)
 
 Tag **[AF]**.
+
 **Scope**:
+
 - `apps/mobile/src/logic/answer-feedback.ts` (new, pure)
 - `apps/mobile/src/platform/screen-reader.ts` and `.web.ts`
 - `apps/mobile/src/components/AnswerAnnouncer.tsx` and `use-answer-announcement.ts` (new)
@@ -28,8 +33,9 @@ Tag **[AF]**.
 - `packages/design-system` (`Tile` correct mark, `HoyaBubble` `live` prop)
 - `packages/i18n` (`a11y` namespace)
 - the tests of §6
-**Owner**: solo dev
-**Rollout**: next release; no switch (§7)
+
+**Owner**: solo dev · **Rollout**: next release; no switch (§7)
+
 **Basis**: `origin/main` `e72336a7d` (2026-11-23). Every `file:line` below is at that commit unless it says otherwise. WO-04 was written on `d5ba0217c`; §1.2 re-reads each of its citations.
 
 ---
@@ -234,7 +240,7 @@ An announcement is one line, built by `answerAnnouncement(result, a11y)` (pure).
   - The advance waits for the announcement **and** for the sound, with the least wait as above.
   - iOS waits for `announcementFinished`, at most `ANNOUNCE_TIMEOUT_MS` (3000, `screen-reader.ts:52`). It uses `announceAndWait`, extended with the `queue` option (AF-1).
   - Android cannot tell when TalkBack has finished. It waits `ANDROID_ANNOUNCE_WAIT_MS` = 2000 after writing the region: a named constant in `platform/screen-reader.ts`, tuned on a device in §3.8.
-  - An answer that plays a sound (Tap & Respond's reply, Listen & Pick's clip, Card Match's word) starts that sound after the announcement.
+  - An answer that plays a sound (Tap & Respond's reply, Listen & Pick's clip) starts that sound after the announcement. Card Match plays its word when a Korean card is picked, not on the answer; its last pair still waits for a word that is sounding (QS-4).
   - A sound the game plays by itself after a miss starts after the miss announcement: Match Sound's replay (`MatchSoundGame.tsx:151-154`, 800 ms), Listen & Pick's (`replayDelayMs` 800) and Syllable Build's (`REPLAY_AFTER_MS` 800). Round-start auto-play is WO-41 #6's, not this spec's.
 - **Focus after the advance.** When a round moves on, focus goes to the new round's prompt (the element that names the question). This is the same as placement's per-question move (`ItemScreen.tsx:166-168`), through `focusForScreenReader` (`screen-reader.ts:31-35`; DOM focus on the web).
   - Without it, the focused option is unmounted with its round and focus is lost. Culture Quiz and Tap & Respond key their options by text.
@@ -266,7 +272,7 @@ An announcement is one line, built by `answerAnnouncement(result, a11y)` (pure).
 | Card Match | `check` both cards, `replay` on the meaning tried | `option.paired`; `option.wrong` on the meaning tried | matched / notMatched | the last pair's 800 ms, floor | OD-AF6 | AF-3 |
 | Match Sound | `Tile` `check` (AF-1) | `option.correct` / `.wrong` (base = sound value) | right / missListen | floor; reader: miss replay after the announcement | already | AF-4a |
 | Odd One Out | `Tile` `check` | same | right / missHint (`oddOneOut.lookAgain`) | floor | already | AF-4a |
-| Build a Letter | `check` on the target box | target label gets `option.correct` once built | right (item = romanization) / the `notQuite` line | 900 ms, floor | OD-AF7 (the hint) | AF-4a |
+| Build a Letter | `check` on the target box | none: the target is the speaker and keeps its "Hear …" name; the slots keep their take-back names; the result is in the announcement | right (item = romanization) / the `notQuite` line | 900 ms, floor | OD-AF7 (the hint) | AF-4a |
 | Listen & Pick, Cloze Pick, Realia Read | none | none (they already name state) | right / missListen or miss | floor; reader wait | — | AF-4b |
 | Read Pick | none | add state (`answerOptionLabel`) | right / miss | floor (also covers reduced motion) | — | AF-4b |
 | Pic-Word Match | none | none | matched-pair right / miss | floor (last pair) | OD-AF7 | AF-4b |
