@@ -34,6 +34,12 @@ export interface ConfirmSheetProps {
   /** [OA] A third, quiet text action, last (Remove anyway); both or neither. */
   quietLabel?: string;
   onQuiet?: () => void;
+  /**
+   * [LR] The safe cancel is the filled button and the confirm the plain outlined one (AMENDMENTS-QUEST-LEAVE-RESUME LR-2,
+   * owner decision 2026-11-24: Home's Start again sheet, "Keep my place" first and filled). Order and focus are
+   * unchanged; the confirm is never `feedback.danger`. Default off: every other sheet keeps the shipped look.
+   */
+  safeFilled?: boolean;
   /** [OA] Working (the sync check): only the cancel is offered, and the message is marked busy. */
   busy?: boolean;
 }

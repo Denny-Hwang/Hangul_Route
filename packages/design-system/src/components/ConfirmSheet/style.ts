@@ -46,8 +46,10 @@ export function actionsStyle(dialog: boolean): Record<string, unknown> {
 /**
  * One button: the safe choice is paper with the strong border; the confirm is the primary fill, or, with `tone`
  * `danger` ([OA] a grown-up's destructive confirmation only, OA-0b addendum), `feedback.danger` with `text.onPrimary`.
+ * [LR] With `safeFilled` (AMENDMENTS-QUEST-LEAVE-RESUME LR-2, owner decision 2026-11-24) the two looks swap: the safe
+ * cancel is the filled button and the confirm is the plain outlined one (never danger).
  */
-export function actionStyle(kind: 'cancel' | 'confirm', dialog: boolean, state: PressState, tone: 'primary' | 'danger' = 'primary'): Record<string, unknown> {
+export function actionStyle(kind: 'cancel' | 'confirm', dialog: boolean, state: PressState, tone: 'primary' | 'danger' = 'primary', safeFilled = false): Record<string, unknown> {
   const focused = state.focused === true;
   const confirm = kind === 'confirm';
   if (confirm && tone === 'danger') {
@@ -64,6 +66,8 @@ export function actionStyle(kind: 'cancel' | 'confirm', dialog: boolean, state: 
       backgroundColor: colors.feedback.danger,
     };
   }
+  // The filled look is the confirm's by default and the cancel's with `safeFilled`.
+  const filled = confirm !== safeFilled;
   return {
     ...(dialog ? { flexGrow: 1, flexShrink: 1, flexBasis: spacing.xxxl * 4 } : { width: '100%' }),
     minHeight: touchTarget.min,
@@ -73,15 +77,15 @@ export function actionStyle(kind: 'cancel' | 'confirm', dialog: boolean, state: 
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
     borderWidth: focused ? borderWidth.thick : borderWidth.base,
-    borderColor: focused ? colors.border.focus : confirm ? (state.pressed ? colors.brand.primaryDark : colors.brand.primary) : colors.border.strong,
-    backgroundColor: confirm ? (state.pressed ? colors.brand.primaryDark : colors.brand.primary) : state.pressed ? colors.surface.sunken : colors.surface.paper,
+    borderColor: focused ? colors.border.focus : filled ? (state.pressed ? colors.brand.primaryDark : colors.brand.primary) : colors.border.strong,
+    backgroundColor: filled ? (state.pressed ? colors.brand.primaryDark : colors.brand.primary) : state.pressed ? colors.surface.sunken : colors.surface.paper,
   };
 }
 
-/** A button's label: body bold, at the chosen text size. */
-export function actionTextStyle(kind: 'cancel' | 'confirm', scale: TypeScale): Record<string, unknown> {
+/** A button's label: body bold, at the chosen text size; `text.onPrimary` on the filled button, `text.primary` on the plain one. */
+export function actionTextStyle(kind: 'cancel' | 'confirm', scale: TypeScale, safeFilled = false): Record<string, unknown> {
   const size = scale.size.body;
-  return { fontSize: size, lineHeight: scale.lineHeight(size, 'tight'), fontWeight: typography.weight.bold, textAlign: 'center', color: kind === 'confirm' ? colors.text.onPrimary : colors.text.primary };
+  return { fontSize: size, lineHeight: scale.lineHeight(size, 'tight'), fontWeight: typography.weight.bold, textAlign: 'center', color: (kind === 'confirm') !== safeFilled ? colors.text.onPrimary : colors.text.primary };
 }
 
 /** [OA] The quiet third action (Remove anyway): underlined secondary text, no fill, at least a touch target. */
