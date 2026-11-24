@@ -157,6 +157,13 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     expect(DeviceSettingsSchema.parse({ uiLocale: 7 }).uiLocale).toBeUndefined();
   });
 
+  it('DeviceSettings: the screen-reader flag (F-A11Y-001 OD-AF3 (d)) is optional and additive; anything but a boolean reads as absent', () => {
+    expect(DeviceSettingsSchema.parse({ textSize: 'large', screenReader: true })).toEqual({ textSize: 'large', screenReader: true });
+    expect(DeviceSettingsSchema.parse({ screenReader: false })).toEqual({ screenReader: false });
+    expect(DeviceSettingsSchema.parse({ uiLocale: 'es', screenReader: 'yes' })).toEqual({ uiLocale: 'es' });
+    expect(prefsMessage({ screenReader: true }).settings).toEqual({ screenReader: true });
+  });
+
   it('MIGRATED_AT is the epoch: older than any real choice', () => {
     expect(MIGRATED_AT).toBe('1970-01-01T00:00:00.000Z');
     expect(Date.parse(MIGRATED_AT)).toBe(0);
@@ -215,6 +222,14 @@ describe('mergeDeviceSettings: read-modify-write keeps what this version does no
     expect(mergeDeviceSettings(stored, { uiLocale: 'ko', uiLocaleAt: MIGRATED_AT })).toEqual({ ...stored, uiLocale: 'ko', uiLocaleAt: MIGRATED_AT });
     // The input is not changed.
     expect(stored.textSize).toBe('huge');
+  });
+
+  // F-A11Y-001 OD-AF3 (d): "I use a screen reader", kept for the device.
+  it('writes the screen-reader flag, on or off, and keeps the rest', () => {
+    const stored = { uiLocale: 'ko', textSize: 'large', later: 1 };
+    expect(mergeDeviceSettings(stored, { screenReader: true })).toEqual({ ...stored, screenReader: true });
+    expect(mergeDeviceSettings({ ...stored, screenReader: true }, { screenReader: false })).toEqual({ ...stored, screenReader: false });
+    expect(mergeDeviceSettings({ ...stored, screenReader: true }, { textSize: 'larger' })).toEqual({ ...stored, textSize: 'larger', screenReader: true });
   });
 
   it('clearing the language removes the language and its time only (the record is never removed)', () => {

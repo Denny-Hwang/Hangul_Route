@@ -1,17 +1,17 @@
 {
   "es": {
     "common": {
-      "enSha": "58b7f54ab8c1094b9eae236948accbe97b3720e51fe93f0d949fda1dcaf7a5b6",
+      "enSha": "c3cb2e71f7ee6287708ec222185001b6e4791fa6f9979db46c8d849f6e8fe448",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-11-18"
+      "reviewedAt": "2026-11-24"
     },
     "a11y": {
-      "enSha": "f7944103033043a7a611122b57752d621e4ccc2310881e186f386e4bffc8bd04",
+      "enSha": "43c60c8d7eb262f4b74e83a1f935db32171eb0caebfbe14eef24af848c3121d6",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-11-23"
+      "reviewedAt": "2026-11-24"
     },
     "learner": {
-      "enSha": "b65b2b93d7ae817e2afcf67256a8042c8fbde1e985b507f493c4e3971b7c86ba",
+      "enSha": "18671b91cc313c4f340879ae523d8121d76dcb34b48ae5f944a35fdd584a480b",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-11-24"
     },
@@ -38,17 +38,17 @@
   },
   "ko": {
     "common": {
-      "enSha": "58b7f54ab8c1094b9eae236948accbe97b3720e51fe93f0d949fda1dcaf7a5b6",
+      "enSha": "c3cb2e71f7ee6287708ec222185001b6e4791fa6f9979db46c8d849f6e8fe448",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-11-18"
+      "reviewedAt": "2026-11-24"
     },
     "a11y": {
-      "enSha": "f7944103033043a7a611122b57752d621e4ccc2310881e186f386e4bffc8bd04",
+      "enSha": "43c60c8d7eb262f4b74e83a1f935db32171eb0caebfbe14eef24af848c3121d6",
       "reviewedBy": "MAR",
-      "reviewedAt": "2026-11-23"
+      "reviewedAt": "2026-11-24"
     },
     "learner": {
-      "enSha": "b65b2b93d7ae817e2afcf67256a8042c8fbde1e985b507f493c4e3971b7c86ba",
+      "enSha": "18671b91cc313c4f340879ae523d8121d76dcb34b48ae5f944a35fdd584a480b",
       "reviewedBy": "MAR",
       "reviewedAt": "2026-11-24"
     },

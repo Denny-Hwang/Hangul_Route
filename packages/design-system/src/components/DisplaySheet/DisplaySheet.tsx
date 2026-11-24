@@ -28,6 +28,10 @@ const HANDLE_W = spacing.xxl;
 const HANDLE_H = spacing.xs;
 /** The dialog's width from the regular class (600, AMENDMENTS-DISPLAY-NAV section 3.6): the reading width. */
 const DIALOG_MAX = layout.maxWidth.reading;
+/** The screen-reader switch's track (52 x 32) and thumb (28), the platform switch's sizes, as sums of tokens (D10). */
+const TRACK_W = spacing.xxxl + spacing.xs;
+const TRACK_H = spacing.xxl;
+const THUMB = spacing.xl + spacing.xs;
 
 type Pressed = { pressed: boolean; focused?: boolean };
 
@@ -135,6 +139,7 @@ export function DisplaySheet({
   title,
   language,
   textSize,
+  screenReader,
   note,
   children,
   doneLabel,
@@ -142,7 +147,9 @@ export function DisplaySheet({
   onClose,
   testID = 'display-sheet',
 }: DisplaySheetProps): ReactElement {
-  const titleId = `${testID}-title-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const titleId = `${testID}-title-${uid}`;
+  const readerHelpId = `${testID}-screen-reader-help-${uid}`;
   const dialog = useLayoutClass().width !== 'compact';
   const scale = useTypeScale();
   const labelSize = scale.size.bodySm;
@@ -310,6 +317,62 @@ export function DisplaySheet({
             >
               <Body size="lg">{textSize.sample}</Body>
             </View>
+            {screenReader ? (
+              // F-A11Y-001 OD-AF3 (d), AnswerFeedback D10: one row after Text size and its preview, set apart by a divider.
+              // The whole row is the switch, named by the label and described by the help line.
+              <>
+                <Spacer size="md" />
+                <View style={{ height: borderWidth.thin, backgroundColor: colors.border.subtle }} testID={`${testID}-screen-reader-divider`} />
+                <Spacer size="sm" />
+                <Pressable
+                  testID={`${testID}-screen-reader`}
+                  role="switch"
+                  aria-checked={screenReader.value}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: screenReader.value }}
+                  accessibilityLabel={screenReader.label}
+                  accessibilityHint={screenReader.help}
+                  aria-describedby={readerHelpId}
+                  onPress={() => screenReader.onChange(!screenReader.value)}
+                  style={(state: Pressed) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.md,
+                    minHeight: touchTarget.min,
+                    paddingVertical: spacing.xs,
+                    paddingHorizontal: spacing.xs,
+                    borderRadius: radii.lg,
+                    borderWidth: borderWidth.base,
+                    borderColor: state.focused === true || state.pressed ? colors.border.focus : colors.surface.paper,
+                  })}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Body weight="semibold">{screenReader.label}</Body>
+                    <View nativeID={readerHelpId} {...{ id: readerHelpId }}>
+                      <Body tone="secondary">{screenReader.help}</Body>
+                    </View>
+                  </View>
+                  <View
+                    aria-hidden
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
+                    testID={`${testID}-screen-reader-track`}
+                    style={{
+                      width: TRACK_W,
+                      height: TRACK_H,
+                      padding: spacing.xxs,
+                      borderRadius: radii.pill,
+                      // Off: border.shape (4.55:1 on paper), not border.strong (1.95:1). On: brand.primary, the thumb at the end.
+                      backgroundColor: screenReader.value ? colors.brand.primary : colors.border.shape,
+                      alignItems: screenReader.value ? 'flex-end' : 'flex-start',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <View style={{ width: THUMB, height: THUMB, borderRadius: radii.circle, backgroundColor: colors.surface.paper }} />
+                  </View>
+                </Pressable>
+              </>
+            ) : null}
             {note ? (
               <>
                 <Spacer size="md" />

@@ -5,6 +5,8 @@ export * from './components/Card';
 export * from './components/Layout';
 export * from './components/Screen';
 export * from './components/Tile';
+// The result marks' sizes (F-A11Y-001 AF-1; design/components/AnswerFeedback/spec.md D1): named sums of tokens.
+export { MARK_DISC, MARK_MIN } from './answer-mark';
 export * from './components/Progress';
 export * from './components/HoyaBubble';
 export * from './components/StarRow';

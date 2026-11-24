@@ -72,6 +72,7 @@ export const common = {
     size: { standard: 'Normal', large: 'Grande', larger: 'Más grande', largest: 'Máximo' },
     preview: 'Así se ve el texto.',
     note: 'Para todos en este dispositivo. Cámbialo cuando quieras.',
+    screenReaderHelp: 'Toca «Siguiente» para continuar. Los sonidos se oyen cuando los tocas.',
     confirm: {
       question: (endonym: string) => `¿Usar ${endonym} en este dispositivo?`,
       use: (endonym: string) => `Usar ${endonym}`,

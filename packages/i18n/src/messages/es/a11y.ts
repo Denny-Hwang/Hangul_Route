@@ -191,6 +191,16 @@ export const a11y = {
       soFar: (lines: number) => plural('es', lines, { one: 'Mi historia hasta ahora, 1 línea', other: `Mi historia hasta ahora, ${lines} líneas` }),
     },
   },
+  /** F-A11Y-001 §3.7: a game's result, said once (R8 draft, for the multi-agent review). `item` keeps no Hangul. */
+  answer: {
+    item: (romanization: string, gloss?: string) => (gloss === undefined || gloss === '' ? romanization : `${romanization}, ${gloss}`),
+    right: (item: string) => `Respuesta correcta: ${item}.`,
+    miss: (item: string) => `Esta no: ${item}. Prueba otra.`,
+    missListen: (item: string) => `Esta no: ${item}. Escucha otra vez.`,
+    missHint: (item: string, hint: string) => `Esta no: ${item}. ${hint}`,
+    notMatched: (word: string, meaning: string) => `No hacen pareja: ${word}, ${meaning}. Prueba otro significado.`,
+    round: (n: number, total: number, prompt: string) => `Pregunta ${n} de ${total}. ${prompt}`,
+  },
   romanizationOr: 'o',
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `Coreano: ${item.ko}, ${item.romanization}` : `Coreano: ${item.ko}, ${item.romanization}, ${item.gloss}`,

@@ -3,6 +3,7 @@ import { LOCALE_META, availableLocales, dictionaryLocale, getMessages, type UiLo
 import type { TextSize } from '@hangul-route/content-schema';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
+import { Platform } from 'react-native';
 import { useLocale, useLocalePacks, useMessages } from '../i18n/use-messages';
 import { languageOptions } from '../logic/locale/language-picker';
 import { useHistorySheet } from '../platform/history-bridge';
@@ -36,6 +37,8 @@ export function DeviceDisplaySheet({ visible, onClose, testID, reportLocale = tr
   const textSize = useLocaleStore((s) => s.textSize);
   const setDeviceLocale = useLocaleStore((s) => s.setDeviceLocale);
   const setTextSize = useLocaleStore((s) => s.setTextSize);
+  const screenReader = useLocaleStore((s) => s.screenReader);
+  const setScreenReader = useLocaleStore((s) => s.setScreenReader);
   const [pending, setPending] = useState<UiLocale | null>(null);
   // One history level while open: the browser or phone back closes the sheet (AMENDMENTS-DISPLAY-NAV section 7.2).
   useHistorySheet(visible, onClose);
@@ -89,6 +92,13 @@ export function DeviceDisplaySheet({ visible, onClose, testID, reportLocale = tr
         sample: d.preview,
         glyph: d.button,
       }}
+      // F-A11Y-001 OD-AF3 (d), AnswerFeedback D10: "I use a screen reader" on the web only, where a screen reader cannot be
+      // told, and in the learner app only (the sheet that reports a language): the presenter runs no answer rounds.
+      screenReader={
+        Platform.OS === 'web' && reportLocale
+          ? { label: messages.learner.placement.options.screenReader.label, help: d.screenReaderHelp, value: screenReader, onChange: setScreenReader }
+          : null
+      }
       note={d.note}
       doneLabel={messages.common.buttons.done}
       closeLabel={messages.common.buttons.close}

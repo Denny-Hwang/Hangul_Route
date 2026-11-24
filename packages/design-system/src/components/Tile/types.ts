@@ -6,10 +6,17 @@ export interface TileProps {
   onPress?: () => void;
   state?: TileState;
   /**
-   * Takes no tap while keeping its state's look (AMENDMENTS-TOUCH R3, row KT-3: a locked wrong tile stays amber). Inside a
-   * `TapBoard` the board still claims a touch on it, so the touch reaches nothing else; it is announced as disabled.
+   * Takes no tap while keeping its state's look (AMENDMENTS-TOUCH R3, row KT-3). Inside a `TapBoard` the board still
+   * claims a touch on it, so the touch reaches nothing else; it is announced as disabled. Only for a tile that really is
+   * out of play (Build a Letter's used tray tiles); a locked answer is `locked`.
    */
   disabled?: boolean;
+  /**
+   * F-A11Y-001 §3.1 (row AF-1): an answered tile (a locked miss, a right answer) takes no tap but is not disabled. It
+   * reaches `TapTarget` as `inactive`: the board claims a touch on it, there is no press look, and it stays a focusable
+   * button that is never announced as dimmed or disabled. Its name says the state.
+   */
+  locked?: boolean;
   size?: 'sm' | 'md' | 'lg';
   /**
    * The tile's side when a screen scales it with the window (F-LAYOUT-001 LD4:

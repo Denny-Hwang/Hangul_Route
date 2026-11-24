@@ -39,12 +39,27 @@ export interface DisplaySheetTextSize {
   glyph: string;
 }
 
+/**
+ * The screen-reader row (F-A11Y-001 OD-AF3 (d); design/components/AnswerFeedback/spec.md D10): the level check's "I use a
+ * screen reader", kept for the device. The learner app passes it on the web only, where a screen reader cannot be told.
+ */
+export interface DisplaySheetScreenReader {
+  /** The row's label (the level check's `learner.placement.options.screenReader.label`). */
+  label: string;
+  /** The help line under it (`common.display.screenReaderHelp`); it also describes the switch. */
+  help: string;
+  value: boolean;
+  onChange: (on: boolean) => void;
+}
+
 export interface DisplaySheetProps {
   visible: boolean;
   title: string;
   /** null hides the Language row (only one language is offered). */
   language: DisplaySheetLanguage | null;
   textSize: DisplaySheetTextSize;
+  /** The screen-reader row, after Text size and its preview, before the note; absent or null draws nothing. */
+  screenReader?: DisplaySheetScreenReader | null;
   /** A line under the controls ("Every page on this device uses these."). */
   note?: string;
   /** Extra rows above Language (All lessons puts its Romanization row here). */

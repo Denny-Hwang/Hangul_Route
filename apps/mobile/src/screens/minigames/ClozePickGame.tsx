@@ -9,6 +9,7 @@ import {
   Screen,
   Spacer,
   borderWidth,
+  choiceCardRingStyle,
   choiceCardStyle,
   colors,
   motion,
@@ -374,6 +375,10 @@ export function ClozePickGame({ scope, host, onBack }: Props): ReactElement {
                                 transform: pressTransform(p),
                               }}
                             >
+                              {look.ring ? (
+                                // F-A11Y-001 AF-1 (AnswerFeedback D4): look-here is the card's dashed ring outside the tile.
+                                <View aria-hidden pointerEvents="none" style={choiceCardRingStyle(look.ring, look.borderRadius, p?.borderWidth ?? rest)} />
+                              ) : null}
                               <Text {...KOREAN_LINE_BREAK} {...koreanSpeech} style={{ fontFamily: typography.family.sansKr, fontSize: textScale.size.prompt, fontWeight: typography.weight.bold, color: colors.text.primary }}>
                                 {card.ko}
                               </Text>

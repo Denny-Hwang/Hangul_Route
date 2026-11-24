@@ -677,6 +677,7 @@ export const learner = {
       heading: 'Une el significado',
       instruction: 'Toca una palabra coreana y luego su significado.',
       nowMeaning: 'Ahora toca su significado a la derecha.',
+      tryAnother: 'No hacen pareja. Prueba otro significado.',
     },
     sentenceBuilder: {
       heading: 'Arma la oración',

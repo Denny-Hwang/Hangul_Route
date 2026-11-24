@@ -52,17 +52,47 @@ export function announceForScreenReader(text: string): void {
 export const ANNOUNCE_TIMEOUT_MS = 3000;
 
 /**
+ * The guard on a queued answer line (F-A11Y-001 §3.4): a queued line waits behind the control VoiceOver is reading, so a
+ * lost `announcementFinished` is guarded by at least 8 s (`ANNOUNCE_TIMEOUT_MS` was sized for Discover's short labels).
+ */
+const ANNOUNCE_QUEUED_TIMEOUT_MS = 8000;
+
+/**
+ * Says a game's result line on iOS, queued (F-A11Y-001 §3.3): it neither cuts off nor is cut off by VoiceOver reading
+ * the control just pressed. Android and the web read the answer announcer's polite live region, so nothing is called
+ * there (react-native-web has no `announceForAccessibilityWithOptions`). Never throws.
+ */
+export function announceQueued(text: string): void {
+  if (Platform.OS !== 'ios') return;
+  try {
+    AccessibilityInfo.announceForAccessibilityWithOptions(text, { queue: true });
+  } catch {
+    // Nothing to say it with: the result's mark and name still carry it.
+  }
+}
+
+/** What `announcementFinished` carries: the line VoiceOver finished. */
+interface AnnouncementFinished {
+  announcement?: string;
+}
+
+/**
  * Says `text` to a screen reader and resolves when it has been said, so audio that follows
  * never talks over the label (F-CURR-001 D-1 S3b, "announce, then play"). With no screen
  * reader it resolves at once. iOS waits for `announcementFinished` (or `ANNOUNCE_TIMEOUT_MS`);
  * Android reads the polite live region the screen renders, so it waits `gapMs`. Never throws.
+ *
+ * `queue` (F-A11Y-001 §3.3, §3.4: an answer line): iOS queues the line, ends only on the finish event that carries this
+ * very text (an event for another line, such as the control just read, does not end it), and is guarded by
+ * `ANNOUNCE_QUEUED_TIMEOUT_MS`.
  */
-export async function announceAndWait(text: string, gapMs: number): Promise<void> {
+export async function announceAndWait(text: string, gapMs: number, options: { queue?: boolean } = {}): Promise<void> {
   if (!(await isScreenReaderEnabled())) return;
   if (Platform.OS !== 'ios') {
     await new Promise<void>((resolve) => setTimeout(resolve, gapMs));
     return;
   }
+  const queue = options.queue === true;
   await new Promise<void>((resolve) => {
     let done = false;
     let subscription: { remove: () => void } | undefined;
@@ -73,10 +103,13 @@ export async function announceAndWait(text: string, gapMs: number): Promise<void
       subscription?.remove();
       resolve();
     };
-    const timer = setTimeout(finish, ANNOUNCE_TIMEOUT_MS);
+    const timer = setTimeout(finish, queue ? ANNOUNCE_QUEUED_TIMEOUT_MS : ANNOUNCE_TIMEOUT_MS);
     try {
-      subscription = AccessibilityInfo.addEventListener('announcementFinished', finish);
-      AccessibilityInfo.announceForAccessibility(text);
+      subscription = AccessibilityInfo.addEventListener('announcementFinished', (event: AnnouncementFinished) => {
+        if (!queue || event?.announcement === text) finish();
+      });
+      if (queue) AccessibilityInfo.announceForAccessibilityWithOptions(text, { queue: true });
+      else AccessibilityInfo.announceForAccessibility(text);
     } catch {
       finish();
     }

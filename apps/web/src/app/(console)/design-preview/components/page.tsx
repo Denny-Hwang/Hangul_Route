@@ -421,6 +421,8 @@ function ChoiceCardVariant({
         border: `${look.borderWidth}px solid ${look.borderColor}`,
         borderRadius: look.borderRadius,
         color: look.textColor,
+        // F-A11Y-001 AF-1 (AnswerFeedback D4): look-here is a dashed ring outside the card.
+        ...(look.ring ? { outline: `${look.ring.width}px dashed ${look.ring.color}`, outlineOffset: look.ring.gap } : {}),
       }}
     >
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: spacing.sm, textAlign: 'left' }}>
@@ -477,7 +479,10 @@ function ChoiceCardVariant({
             ),
           )}
         </svg>
-      ) : null}
+      ) : (
+        // The 24 mark column is kept in every state (AnswerFeedback D3).
+        <span aria-hidden="true" style={{ width: spacing.xl, flex: 'none' }} />
+      )}
     </div>
   );
 }

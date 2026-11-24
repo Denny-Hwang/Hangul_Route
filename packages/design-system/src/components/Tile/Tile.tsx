@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Text, View } from 'react-native';
-import { borderWidth, radii, shadows, spacing, typography } from '../../tokens';
+import { borderWidth, colors, radii, shadows, spacing, typography } from '../../tokens';
 import { pressInset, pressTransform } from '../../press-look';
 import { TapTarget, usePressLook } from '../TapBoard';
 import { useTypeScale } from '../TextSize';
@@ -16,6 +16,7 @@ export function Tile({
   onPress,
   state = 'idle',
   disabled = false,
+  locked = false,
   size = 'md',
   dimension,
   accessibilityLabel,
@@ -27,8 +28,9 @@ export function Tile({
   const press = usePressLook();
   const look = tileStyle(state);
 
-  // [AU] AU-17a: a miss is not told by colour alone. Out of the flow on the top corner, so the tile keeps its size and
-  // the mark never reaches the glyph or the romanization line (`TILE_MARK`). Decorative: the caller's name has the state.
+  // [AU] AU-17a, F-A11Y-001 AF-1: a result is not told by colour alone (`check` right, `replay` a miss). On a disc that
+  // straddles the top-end corner, out of the flow, so the tile keeps its size and the mark never covers the glyph or the
+  // romanization line at any text size (`TILE_MARK`, AnswerFeedback D2). Decorative: the caller's name has the state.
   const mark =
     look.mark === null ? null : (
       <View
@@ -36,7 +38,16 @@ export function Tile({
         importantForAccessibility="no-hide-descendants"
         accessibilityElementsHidden
         pointerEvents="none"
-        style={{ position: 'absolute', top: TILE_MARK.inset, right: TILE_MARK.inset }}
+        style={{
+          position: 'absolute',
+          top: TILE_MARK.offset,
+          right: TILE_MARK.offset,
+          padding: TILE_MARK.padding,
+          borderRadius: radii.circle,
+          borderWidth: TILE_MARK.casing,
+          borderColor: colors.text.primary,
+          backgroundColor: look.mark.disc,
+        }}
       >
         <Icon name={look.mark.icon} size={TILE_MARK.size} color={look.mark.color} />
       </View>
@@ -98,8 +109,9 @@ export function Tile({
     );
   }
 
-  // A `disabled` tile (a locked wrong one) stays a TapTarget, so a board still claims a touch on it and it keeps its
-  // state's look; the target is disabled, so it never commits (AMENDMENTS-TOUCH R3).
+  // A `disabled` or `locked` tile stays a TapTarget, so a board still claims a touch on it and it keeps its state's look;
+  // it never commits (AMENDMENTS-TOUCH R3). A locked one (an answered tile, F-A11Y-001 AF-1) is `inactive`: still a
+  // focusable button, never announced as disabled.
   // TapTarget (AMENDMENTS-TOUCH section 4.4): inside a TapBoard the board decides the tap; outside one it is a plain
   // button with the press guard. Its own box is the hit area; the press look (section 4.3: a thick border.shape outline
   // and a 0.97 shrink, none under reduced motion) goes on the drawn box inside it, which fills it.
@@ -108,11 +120,12 @@ export function Tile({
       testID={testID}
       onCommit={onPress}
       disabled={disabled}
+      inactive={locked}
       accessibilityLabel={accessibilityLabel ?? `Korean letter ${label}, tap to select`}
     >
       {({ pressed: touched }) => {
-        // A disabled tile never shows the press look (section 4.3): it takes no tap.
-        const pressed = touched && !disabled;
+        // A disabled or locked tile never shows the press look (section 4.3): it takes no tap.
+        const pressed = touched && !disabled && !locked;
         return (
             <View
               style={{

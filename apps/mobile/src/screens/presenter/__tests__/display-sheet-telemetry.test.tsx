@@ -26,7 +26,7 @@ vi.mock('../../../platform/telemetry', () => ({ track }));
 
 import { DeviceDisplaySheet } from '../../../components/DeviceDisplaySheet';
 import { useLocaleStore } from '../../../store/locale-store';
-import { render } from '../../../test-support/render';
+import { render, resetPlatform, setPlatform } from '../../../test-support/render';
 
 beforeEach(() => {
   sheet.props = null;
@@ -94,3 +94,41 @@ describe('the Display sheet reports a language only from the learner app (AMENDM
     expect(read(join(SRC, 'screens', 'browse', 'browse-ui.tsx'))).not.toContain('<DeviceDisplaySheet');
   });
 });
+
+/**
+ * F-A11Y-001 OD-AF3 (d) (row AF-1; AnswerFeedback D10): the learner app's sheet on the web carries "I use a screen
+ * reader", the level check's answer kept for the device. Native reads the platform screen reader instead, and the
+ * presenter runs no answer rounds.
+ */
+describe('the Display sheet\'s screen-reader row (F-A11Y-001 OD-AF3 (d))', () => {
+  afterEach(() => {
+    resetPlatform();
+    useLocaleStore.setState({ screenReader: false });
+  });
+
+  it('the learner app on the web: the level check\'s label, its own help line, and the device flag both ways', async () => {
+    useLocaleStore.setState({ screenReader: false });
+    await render(<DeviceDisplaySheet visible onClose={() => undefined} />);
+    const row = sheet.props!.screenReader!;
+    expect(row.label).toBe('I use a screen reader');
+    expect(row.help).toBe('Tap Next to go on. Sounds play when you tap them.');
+    expect(row.value).toBe(false);
+    await act(async () => {
+      row.onChange(true);
+    });
+    expect(useLocaleStore.getState().screenReader).toBe(true);
+    expect(sheet.props!.screenReader!.value).toBe(true);
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('native and the presenter draw no row', async () => {
+    await render(<DeviceDisplaySheet visible onClose={() => undefined} reportLocale={false} />);
+    expect(sheet.props!.screenReader).toBeNull();
+    for (const os of ['ios', 'android'] as const) {
+      setPlatform(os);
+      await render(<DeviceDisplaySheet visible onClose={() => undefined} />);
+      expect(sheet.props!.screenReader).toBeNull();
+    }
+  });
+});
+

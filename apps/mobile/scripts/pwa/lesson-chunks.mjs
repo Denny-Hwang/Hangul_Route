@@ -254,7 +254,14 @@ export const PRECACHE_BUDGET = Object.freeze({
   // 4,603,925 B raw / 1,267,076 B gzip; with LR-2 it measures 4,606,846 B raw / 1,268,066 B gzip, 2,746 B over the line
   // (+2,921 B raw, +990 B gzip). The line is the measurement plus a 4,054 B margin (one measured raise, 6,800 B over the
   // previous line).
-  startBundleRaw: 4_610_900,
+  // [AF] F-A11Y-001 AF-1 (answer feedback's shared parts): the a11y.answer strings and the Display sheet's screen-reader
+  // help in en, the device's screen-reader flag in the locale store and the Display sheet's row, Tile's check and disc,
+  // ChoiceCard's mark column and look-here ring, and HoyaBubble's live prop are boot code, so they are in the start
+  // bundle (the announcer and its hook are not yet: no game imports them until AF-2 to AF-4c). On top of LR-2 (main
+  // with #1089, which measured 4,606,846 B) the release `build:web` (CI=1) of the merged AF-1 branch measures
+  // 4,611,387 B raw / 1,268,989 B gzip, 487 B over the line. The line is the measurement plus a 4,013 B margin (one
+  // measured raise, 4,500 B over the previous line).
+  startBundleRaw: 4_615_400,
   // Each locale chunk (the es or ko UI messages and content overlays; src/content/locale-chunks): a Spanish or Korean
   // learner waits for theirs before the first screen, and every es / ko string and story overlay grows it. Measured at
   // the start bundle shrink: ko 901,191 B, es 527,438 B raw (ko 905,927 B, es 530,463 B with the final integration's

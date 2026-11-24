@@ -39,6 +39,7 @@ export function HoyaBubble({
   onDismiss,
   dismissLabel,
   autoDismissMs,
+  live = true,
   testID,
 }: HoyaBubbleProps): ReactElement {
   const textScale = useTypeScale();
@@ -52,7 +53,8 @@ export function HoyaBubble({
   return (
     <View
       testID={testID}
-      accessibilityLiveRegion="polite"
+      // F-A11Y-001 §3.3: a result bubble in a game that has the answer announcer is not live (the announcer says it once).
+      accessibilityLiveRegion={live ? 'polite' : 'none'}
       style={{
         flexDirection: 'row',
         alignItems: 'flex-start',

@@ -1,7 +1,9 @@
 import { isValidElement, cloneElement, Children, createElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { contrastRatio } from '../../../contrast';
 import type { TextSizeStep } from '../../../text-size';
+import { borderWidth, colors, touchTarget } from '../../../tokens';
 import { DisplaySheet } from '../DisplaySheet';
 import { radioAfter, segmentGlyphSize, showLanguageRow, textSizeOptions } from '../model';
 import type { DisplaySheetProps } from '../types';
@@ -373,6 +375,74 @@ describe('DisplaySheet element tree', () => {
       platform.OS = 'ios';
       vi.unstubAllGlobals();
     }
+  });
+});
+
+/**
+ * F-A11Y-001 OD-AF3 (d) (row AF-1; design/components/AnswerFeedback/spec.md D10, mock L1 and L2): the screen-reader row,
+ * the level check's "I use a screen reader" kept for the device. Drawn only when the caller passes it.
+ */
+describe('DisplaySheet screen-reader row (F-A11Y-001 AF-1)', () => {
+  const reader = (value: boolean, onChange = vi.fn()) => ({ label: 'I use a screen reader', help: 'Tap Next to go on. Sounds play when you tap them.', value, onChange });
+
+  it('absent or null draws nothing', () => {
+    for (const screenReader of [undefined, null]) {
+      const tree = render(props({ screenReader }));
+      expect(byTestId(tree, 'display-sheet-screen-reader')).toBeUndefined();
+      expect(byTestId(tree, 'display-sheet-screen-reader-divider')).toBeUndefined();
+    }
+  });
+
+  it('one row after Text size and its preview, before the note, set apart by a thin subtle divider', () => {
+    const tree = render(props({ screenReader: reader(false) }));
+    const at = (pred: (e: El) => boolean): number => tree.findIndex(pred);
+    const sample = at((e) => e.props.testID === 'display-sheet-sample');
+    const divider = at((e) => e.props.testID === 'display-sheet-screen-reader-divider');
+    const row = at((e) => e.props.testID === 'display-sheet-screen-reader');
+    const note = at((e) => e.type === 'Body' && textOf(e) === 'Every page on this device uses these.');
+    expect(sample).toBeLessThan(divider);
+    expect(divider).toBeLessThan(row);
+    expect(row).toBeLessThan(note);
+    expect(tree[divider]!.props.style).toEqual({ height: borderWidth.thin, backgroundColor: colors.border.subtle });
+  });
+
+  it('the whole row is the switch: named by the label, described by the help, checked as the flag, at least a touch target high', () => {
+    const tree = render(props({ screenReader: reader(true) }));
+    const row = byTestId(tree, 'display-sheet-screen-reader') as El;
+    expect(row.props).toMatchObject({ role: 'switch', accessibilityRole: 'switch', 'aria-checked': true, accessibilityState: { checked: true } });
+    expect(row.props.accessibilityLabel).toBe('I use a screen reader');
+    expect(row.props.accessibilityHint).toBe('Tap Next to go on. Sounds play when you tap them.');
+    const help = tree.find((e) => e.props.nativeID === row.props['aria-describedby']) as El;
+    expect(textOf(help)).toBe('Tap Next to go on. Sounds play when you tap them.');
+    const style = (row.props.style as (s: { pressed: boolean; focused?: boolean }) => Record<string, unknown>)({ pressed: false });
+    expect(style.minHeight).toBeGreaterThanOrEqual(touchTarget.min);
+    const label = tree.find((e) => e.type === 'Body' && textOf(e) === 'I use a screen reader') as El;
+    expect(label.props.weight).toBe('semibold');
+    const helpBody = tree.find((e) => e.type === 'Body' && textOf(e) === 'Tap Next to go on. Sounds play when you tap them.') as El;
+    expect(helpBody.props.tone).toBe('secondary');
+  });
+
+  it('a press turns the flag over', () => {
+    const onChange = vi.fn();
+    (byTestId(render(props({ screenReader: reader(false, onChange) })), 'display-sheet-screen-reader')!.props.onPress as () => void)();
+    (byTestId(render(props({ screenReader: reader(true, onChange) })), 'display-sheet-screen-reader')!.props.onPress as () => void)();
+    expect(onChange.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it('the track: border.shape off (≥ 3:1 on paper), brand.primary on with the thumb at the end; hidden from assistive tech', () => {
+    const track = (value: boolean): Record<string, unknown> => byTestId(render(props({ screenReader: reader(value) })), 'display-sheet-screen-reader-track')!.props;
+    const off = track(false);
+    expect(off['aria-hidden']).toBe(true);
+    expect(off.style).toMatchObject({ width: 52, height: 32, backgroundColor: colors.border.shape, alignItems: 'flex-start' });
+    expect(contrastRatio(colors.border.shape, colors.surface.paper)).toBeGreaterThanOrEqual(3);
+    expect(track(true).style).toMatchObject({ backgroundColor: colors.brand.primary, alignItems: 'flex-end' });
+  });
+
+  it('a keyboard focus shows a border.focus outline on the row', () => {
+    const row = byTestId(render(props({ screenReader: reader(false) })), 'display-sheet-screen-reader') as El;
+    const look = row.props.style as (s: { pressed: boolean; focused?: boolean }) => Record<string, unknown>;
+    expect(look({ pressed: false, focused: true }).borderColor).toBe(colors.border.focus);
+    expect(look({ pressed: false }).borderColor).toBe(colors.surface.paper);
   });
 });
 
