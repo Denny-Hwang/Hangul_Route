@@ -280,6 +280,9 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@axe-core/playwright':
+        specifier: 4.14.0
+        version: 4.14.0(playwright-core@1.63.0)
       '@hangul-route/test-utils':
         specifier: workspace:*
         version: link:../../packages/test-utils

@@ -506,6 +506,18 @@ jobs:
           E2E_OUT: ../mobile/dist
         run: pnpm exec playwright test --output test-results/billing e2e/billing.spec.ts e2e/billing-step-up.spec.ts
 
+      # AMENDMENTS-A11Y-CI AC-2 (OD-AC8): the axe smoke on the teacher class page, on the same merged dist. Its own
+      # step and its own variable (it does not read BILLING_E2E), and `!cancelled()` so a billing failure does not hide
+      # it. An alarm on main, like the PWA axe smoke in the shards: a new violation turns this step red, an improvement
+      # only prints a ::warning:: (OD-AC9). The site and sign-in scans run in preview-deploy.yml.
+      - name: Console axe (merged dist)
+        if: ${{ !cancelled() }}
+        working-directory: apps/web
+        env:
+          AXE_CONSOLE_E2E: "1"
+          E2E_OUT: ../mobile/dist
+        run: pnpm exec playwright test --output test-results/axe-console e2e/axe-console.spec.ts
+
       # The learner app's flag-on halves: Plan status and its hand-off to the
       # real billing page, the same-tab hand-off and the grown-up entries; and
       # the grown-up shell's API group (the family home with data, F-APP-001 A-10;
