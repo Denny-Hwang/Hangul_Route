@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { getMessages } from '@hangul-route/i18n';
 import type { ReactElement } from 'react';
 import { act } from 'react-test-renderer';
@@ -67,5 +69,14 @@ describe('the level check\'s screen-reader switch (F-A11Y-001 OD-AF3 (d))', () =
     expect(setScreenReader).toHaveBeenLastCalledWith(false);
     setScreenReader.mockRestore();
     await unmount(r);
+  });
+
+  it('the check starts from the same answer: on the web the device flag seeds it, native reads the platform (readerPath)', () => {
+    // The boot itself needs the whole level check; the rule is readerPath's (logic/__tests__/answer-feedback.test.ts).
+    const source = readFileSync(join(__dirname, '..', 'PlacementScreen.tsx'), 'utf8');
+    expect(source).toContain(
+      "const reader = readerPath({ platform: Platform.OS, nativeReader: await isScreenReaderEnabled(), webFlag: useLocaleStore.getState().screenReader }) === 'reader';",
+    );
+    expect(source).toMatch(/startFlow\(\{[\s\S]*?screenReader: reader,/);
   });
 });
