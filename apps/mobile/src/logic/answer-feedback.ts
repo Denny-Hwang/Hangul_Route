@@ -119,7 +119,13 @@ export const ANNOUNCE_WAIT_MAX_MS = 8000;
 /** Per letter, and per Hangul syllable of the Korean UI's own words (said slower). Tuned on a device (§3.8). */
 const MS_PER_LETTER = 70;
 const MS_PER_SYLLABLE = 160;
-const SYLLABLE = /[가-힯]/;
+/** The Hangul syllables block, U+AC00 to U+D7AF (by code point, so this file holds no Hangul). */
+const SYLLABLE_FIRST = 0xac00;
+const SYLLABLE_LAST = 0xd7af;
+const isSyllable = (ch: string): boolean => {
+  const code = ch.codePointAt(0) ?? 0;
+  return code >= SYLLABLE_FIRST && code <= SYLLABLE_LAST;
+};
 
 /**
  * How long a line takes to be said, for the platforms with no "finished" event (Android, and the web under OD-AF3 (d)):
@@ -129,7 +135,7 @@ const SYLLABLE = /[가-힯]/;
  */
 export function announceWaitMs(text: string): number {
   let ms = 0;
-  for (const ch of text) ms += SYLLABLE.test(ch) ? MS_PER_SYLLABLE : MS_PER_LETTER;
+  for (const ch of text) ms += isSyllable(ch) ? MS_PER_SYLLABLE : MS_PER_LETTER;
   return Math.min(ANNOUNCE_WAIT_MAX_MS, Math.max(ANNOUNCE_WAIT_MIN_MS, ms));
 }
 
