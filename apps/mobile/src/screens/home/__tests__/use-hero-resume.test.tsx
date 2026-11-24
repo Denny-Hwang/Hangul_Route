@@ -1,15 +1,34 @@
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { act, type ReactTestRenderer } from 'react-test-renderer';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { savedRunOf, stepsSignature, type RunToSave } from '../../../logic/quest-flow/saved-run';
 import { byTestId, render, textOf } from '../../../test-support/render';
 import { useHeroResume, type HeroResumeDeps, type LessonStepsStore } from '../use-hero-resume';
 
-// The native navigation package has no build that loads in Node: focus is the mount, as the Home tab's first focus.
+// The native navigation package has no build that loads in Node: focus is the mount (the Home tab's first focus), and a
+// test leaves and comes back with `focus.set`: the effect's cleanup runs on a blur, the effect again on a refocus.
+const focus = vi.hoisted(() => {
+  const listeners = new Set<() => void>();
+  const state = { on: true };
+  return {
+    get: (): boolean => state.on,
+    subscribe: (l: () => void): (() => void) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    set: (on: boolean): void => {
+      state.on = on;
+      for (const l of listeners) l();
+    },
+  };
+});
 vi.mock('@react-navigation/native', async () => ({
-  useFocusEffect: (effect: () => void | (() => void)) => useEffect(effect, [effect]),
+  useFocusEffect: (effect: () => void | (() => void)) => {
+    const on = useSyncExternalStore(focus.subscribe, focus.get);
+    useEffect(() => (on ? effect() : undefined), [effect, on]);
+  },
   useNavigation: () => ({ navigate: () => undefined }),
 }));
 
@@ -75,11 +94,13 @@ interface Setup {
   clear?: (profileId: string) => Promise<void>;
 }
 
-/** The hook's answer as text, so a render test can read it. */
-function Probe({ profileId, questId, deps, startAgainRef }: { profileId: string | null; questId: string | null; deps: HeroResumeDeps; startAgainRef?: Setup['startAgainRef'] }): ReactElement {
+/** The hook's answer as text, so a render test can read it. `log` collects every render as `profile: answer`. */
+function Probe({ profileId, questId, deps, startAgainRef, log }: { profileId: string | null; questId: string | null; deps: HeroResumeDeps; startAgainRef?: Setup['startAgainRef']; log?: string[] }): ReactElement {
   const { resume, startAgain } = useHeroResume(profileId, questId, deps);
   if (startAgainRef) startAgainRef.current = startAgain;
-  return <Text testID="resume">{resume === null ? 'none' : `${resume.step}/${resume.total}`}</Text>;
+  const text = resume === null ? 'none' : `${resume.step}/${resume.total}`;
+  log?.push(`${profileId}: ${text}`);
+  return <Text testID="resume">{text}</Text>;
 }
 
 async function mount({ saved, profileId = 'p1', questId = QUEST, store, steps = STEPS, startAgainRef, clear }: Setup): Promise<{ r: ReactTestRenderer; read: ReturnType<typeof vi.fn> }> {
@@ -97,6 +118,8 @@ async function mount({ saved, profileId = 'p1', questId = QUEST, store, steps = 
   return { r, read };
 }
 const shown = (r: ReactTestRenderer): string => textOf(byTestId(r.root, 'resume')[0]!);
+
+beforeEach(() => focus.set(true));
 
 describe('useHeroResume: a run of the hero lesson that can go on', () => {
   it('says the step it opens (the saved step + 1) of the lesson', async () => {
@@ -151,6 +174,38 @@ describe('useHeroResume: no resume variant', () => {
     expect(shown(none.r)).toBe('none');
     const noQuest = await mount({ saved: savedAt(2), questId: null });
     expect(shown(noQuest.r)).toBe('none');
+  });
+});
+
+describe('useHeroResume: another learner', () => {
+  const deferred = <T,>(): { promise: Promise<T>; resolve: (v: T) => void } => {
+    let resolve: (v: T) => void = () => undefined;
+    const promise = new Promise<T>((r) => {
+      resolve = r;
+    });
+    return { promise, resolve };
+  };
+  const lessons = (): { store: LessonStepsStore; ensureCells: ReturnType<typeof fakeStore>['ensureCells'] } => fakeStore(true);
+  const depsOf = (read: HeroResumeDeps['read'], store: LessonStepsStore = lessons().store): HeroResumeDeps => ({
+    store,
+    questOf: () => ({ id: QUEST, steps: STEPS } as never),
+    read,
+    now: () => NOW,
+  });
+
+  it("another learner's run is never said for this one: no render of p2 shows p1's step, the read of p2 still out", async () => {
+    const p2Read = deferred<unknown>();
+    const read = vi.fn(async (id: string) => (id === 'p1' ? savedAt(2) : p2Read.promise));
+    const deps = depsOf(read);
+    const log: string[] = [];
+    const r = await render(<Probe profileId="p1" questId={QUEST} deps={deps} log={log} />);
+    expect(shown(r)).toBe('3/5');
+    await act(async () => r.update(<Probe profileId="p2" questId={QUEST} deps={deps} log={log} />));
+    expect(read).toHaveBeenCalledWith('p2');
+    expect(shown(r)).toBe('none');
+    expect(log.filter((l) => l.startsWith('p2:'))).not.toContain('p2: 3/5');
+    await act(async () => p2Read.resolve(savedAt(3)));
+    expect(shown(r)).toBe('4/5');
   });
 });
 
