@@ -1,4 +1,5 @@
-import { colors, spacing } from '../../tokens';
+import { MARK_DISC } from '../../answer-mark';
+import { borderWidth, colors } from '../../tokens';
 import type { IconName } from '../Icon/types';
 import type { TileState } from './types';
 
@@ -13,10 +14,15 @@ import type { TileState } from './types';
 
 export const TILE_STATES = ['idle', 'correct', 'wrong', 'disabled'] as const satisfies readonly TileState[];
 
-/** Decorative status mark on the tile's top corner; the caller's accessible name carries the state. */
+/**
+ * Decorative status mark on a disc straddling the tile's top-end corner; the caller's accessible name carries the state.
+ * F-A11Y-001 AF-1: a right tile has `check` too, so right and miss are told apart without colour.
+ */
 export interface TileMark {
   icon: IconName;
   color: string;
+  /** The disc behind the mark: the state's light fill. */
+  disc: string;
 }
 
 export interface TileStyle {
@@ -40,14 +46,15 @@ const LOOKS: Record<TileState, Omit<TileStyle, 'romanizationColor'>> = {
     backgroundColor: colors.feedback.successLight,
     borderColor: colors.feedback.success,
     labelColor: colors.feedback.success,
-    mark: null,
+    // F-A11Y-001 §3.1 (row AF-1): the check of a right answer, in the success colour on its light disc (4.28:1).
+    mark: { icon: 'check', color: colors.feedback.success, disc: colors.feedback.successLight },
   },
   wrong: {
     backgroundColor: colors.feedback.nudgeLight,
     borderColor: colors.feedback.nudge,
     labelColor: colors.text.primary,
     // The mark ChoiceCard draws on a miss ("try another"), in the same colour.
-    mark: { icon: 'replay', color: colors.text.primary },
+    mark: { icon: 'replay', color: colors.text.primary, disc: colors.feedback.nudgeLight },
   },
   disabled: {
     backgroundColor: colors.surface.sunken,
@@ -63,9 +70,16 @@ export function tileStyle(state: TileState): TileStyle {
 }
 
 /**
- * Where the mark sits: on the top corner, out of the flow, so the tile keeps its size. The glyph and the romanization
- * line sit inside the tile's padding (`spacing.md`) and their own side padding (`spacing.sm`), 20 dp from the inner
- * edge; the mark ends 18 dp from it (`inset + size`), so it covers neither at any text size (a bigger glyph grows the
- * tile, the padding stays).
+ * Where the mark sits (F-A11Y-001 AF-1; design/components/AnswerFeedback/spec.md D2): a 20 mark (`MARK_MIN`) on a 26
+ * disc straddling the tile's top-end corner, out of the flow, so the tile keeps its size. The disc reaches
+ * `MARK_DISC.outside` (4) outside the border and about 20 inside it, where the glyph's column starts, so a tile that
+ * shrank to its jamo at a large text size is never covered (inside the corner, the 16 dp mark of AU-17a covered it at
+ * 200 %). `offset` is the disc's `top` and `right` from the tile's inner (padding) edge.
  */
-export const TILE_MARK = { size: spacing.lg, inset: spacing.xxs } as const;
+export const TILE_MARK = {
+  size: MARK_DISC.mark,
+  disc: MARK_DISC.size,
+  padding: MARK_DISC.padding,
+  casing: MARK_DISC.casing,
+  offset: -(MARK_DISC.outside + borderWidth.base),
+} as const;

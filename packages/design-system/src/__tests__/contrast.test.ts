@@ -221,6 +221,15 @@ describe('token contrast contract (WCAG AA)', () => {
     expect(contrastRatio(look.mark!.color, look.backgroundColor)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
   });
 
+  // F-A11Y-001 §3.1 (row AF-1; AnswerFeedback D2): right and miss each carry a mark, drawn on a disc of the state's
+  // light fill with a text.primary casing. The mark reads on its disc (≥ 3:1, WCAG 1.4.11): check 4.28:1, replay 14.02:1.
+  it.each(['correct', 'wrong'] as const)('Tile %s: a mark on its disc ≥ 3:1, and the disc casing ≥ 3:1 on the disc (non-text)', (state) => {
+    const mark = tileStyle(state).mark;
+    expect(mark).not.toBeNull();
+    expect(contrastRatio(mark!.color, mark!.disc)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    expect(contrastRatio(colors.text.primary, mark!.disc)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
   // [AU] AMENDMENTS-AUDIT-2026-11 AU-17e (audit A11Y-4, WCAG 1.4.11): the boundary of an idle answer tile and of an idle
   // option card is a UI graphic. It must read against its own fill and against each surface the tile sits on
   // (`border.subtle` was 1.32:1 on paper). Text inputs in the app use the same token on paper and sunken fills.
@@ -259,7 +268,7 @@ describe('token contrast contract (WCAG AA)', () => {
     const tokenValues = new Set(Object.values(colors).flatMap((group) => Object.values(group as Record<string, string>)));
     for (const state of TILE_STATES) {
       const look = tileStyle(state);
-      for (const value of [look.backgroundColor, look.borderColor, look.labelColor, look.romanizationColor, look.mark?.color]) {
+      for (const value of [look.backgroundColor, look.borderColor, look.labelColor, look.romanizationColor, look.mark?.color, look.mark?.disc]) {
         if (value !== undefined) expect(tokenValues.has(value), `${state}: ${value}`).toBe(true);
       }
     }
