@@ -82,6 +82,19 @@ describe('isLetterFinished over all of jamoStrokes (§6 test 5)', () => {
     });
   }
 
+  // [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2: the idle gate reads the form shown (the ghost). A learner writing
+  // another accepted form (OD-SO11) is still scored on idle once done, and never before.
+  for (const { jamoId, strokes, altStrokes } of jamoStrokes) {
+    for (const [i, form] of (altStrokes ?? []).entries()) {
+      it(`${jamoId}, accepted form ${i + 1}: no proper prefix of its ${form.length} strokes is finished on the ghost; the full form is`, () => {
+        for (let k = 0; k < form.length; k++) {
+          expect(isLetterFinished(strokes, drawn(form.slice(0, k)), false), `${jamoId}, first ${k} strokes`).toBe(false);
+        }
+        expect(isLetterFinished(strokes, drawn(form), false)).toBe(true);
+      });
+    }
+  }
+
   it('agrees with isFinished on scoreTrace', () => {
     const bieup = jamoStrokes.find((j) => j.jamoId === 'jamo:bieup')!.strokes;
     const half = drawn(bieup.slice(0, 2));

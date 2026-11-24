@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { jamoStrokes } from '../../content/jamo-strokes';
-import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../stroke-scoring';
+import { jamoStrokes, strokeFormsForJamo } from '../../content/jamo-strokes';
+import { DEFAULT_PASS_THRESHOLD, bestFormIndex, scoreTrace, scoreTraceForms } from '../stroke-scoring';
 
 describe('scoreTrace', () => {
   const target = [
@@ -466,4 +466,120 @@ describe('scoreTrace on every shipped jamo skeleton', () => {
       expect(r.directionsCorrect).toBe(true);
     },
   );
+});
+
+// ─────────────────────────────────────────
+// [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2 (OD-SO4, OD-SO11): a letter the table accepts in
+// more than one form. The pass stays the ghost's (coverage of the form shown); order and
+// direction are read from the form the drawing follows, so they hold for any listed form.
+// ─────────────────────────────────────────
+
+describe('bestFormIndex (SO-2)', () => {
+  it('is the first form with nothing to read, or with no form', () => {
+    expect(bestFormIndex([])).toBe(0);
+    expect(bestFormIndex([{}, {}])).toBe(0);
+  });
+  it('prefers a form the drawing follows in order, then the fewest strokes the wrong way', () => {
+    expect(bestFormIndex([{ orderCorrect: false, directionsPerTarget: [true] }, { orderCorrect: true, directionsPerTarget: [false, false] }])).toBe(1);
+    expect(bestFormIndex([{ orderCorrect: true, directionsPerTarget: [false, true] }, { orderCorrect: true, directionsPerTarget: [true, true, true] }])).toBe(1);
+    expect(bestFormIndex([{ orderCorrect: false, directionsPerTarget: [false, false] }, { orderCorrect: false, directionsPerTarget: [true, false] }])).toBe(1);
+  });
+  it('keeps the earlier form on a tie: the form shown (AU-14) wins', () => {
+    expect(bestFormIndex([{ orderCorrect: true, directionsPerTarget: [true, false] }, { orderCorrect: true, directionsPerTarget: [false, true] }])).toBe(0);
+    expect(bestFormIndex([{ directionsPerTarget: [false] }, { directionsPerTarget: [false] }, { directionsPerTarget: [true] }])).toBe(2);
+  });
+});
+
+describe('scoreTraceForms (SO-2)', () => {
+  const formsOf = (id: string): Pt[][][] => strokeFormsForJamo(id)!;
+  const traced = (form: Pt[][]): Pt[][] => form.map(walk);
+
+  it('with one form it is scoreTrace on that form', () => {
+    const [bieup] = formsOf('jamo:bieup');
+    const drawn = [walk(bieup![1]!), walk(bieup![0]!)];
+    const input = { drawn, checkOrder: true, checkDirection: true } as const;
+    expect(scoreTraceForms({ forms: [bieup!], ...input })).toEqual({ ...scoreTrace({ target: bieup!, ...input }), form: 0 });
+    expect(scoreTraceForms({ forms: [], drawn })).toEqual({ ...scoreTrace({ target: [], drawn }), form: 0 });
+  });
+
+  it('without order or direction checks it is the ghost\'s coverage only', () => {
+    const forms = formsOf('jamo:jieut');
+    const drawn = traced(forms[1]!);
+    expect(scoreTraceForms({ forms, drawn })).toEqual({ ...scoreTrace({ target: forms[0]!, drawn }), form: 0 });
+  });
+
+  it.each(['jamo:jieut', 'jamo:chieut', 'jamo:tieut', 'jamo:hieut'])(
+    '%s: every accepted form traced is in order, every stroke the right way; coverage is the ghost\'s',
+    (id) => {
+      const forms = formsOf(id);
+      expect(forms.length).toBeGreaterThan(1);
+      forms.forEach((form, i) => {
+        const drawn = traced(form);
+        const r = scoreTraceForms({ forms, drawn, checkOrder: true, checkDirection: true });
+        const ghost = scoreTrace({ target: forms[0]!, drawn });
+        // Read from this form, or from an earlier one the drawing follows as well (ㅌ B is clean on A too).
+        expect(r.form, `${id} form ${i}`).toBeLessThanOrEqual(i);
+        expect(r.orderCorrect).toBe(true);
+        expect(r.directionsCorrect).toBe(true);
+        expect(r.directionsPerTarget).toHaveLength(forms[r.form!]!.length);
+        expect(r.coverage).toBe(ghost.coverage);
+        expect(r.perStrokeCoverage).toEqual(ghost.perStrokeCoverage);
+        expect(r.passWithOrder).toBe(ghost.coverage >= DEFAULT_PASS_THRESHOLD);
+        expect(r.coverage).toBeGreaterThanOrEqual(DEFAULT_PASS_THRESHOLD);
+      });
+    },
+  );
+
+  it('ㅈ, ㅊ and ㅎ traced in their other form read as that form (the form shown has a stroke the wrong way)', () => {
+    for (const id of ['jamo:jieut', 'jamo:chieut', 'jamo:hieut']) {
+      const forms = formsOf(id);
+      expect(scoreTrace({ target: forms[0]!, drawn: traced(forms[1]!), checkDirection: true }).directionsCorrect, id).toBe(false);
+      expect(scoreTraceForms({ forms, drawn: traced(forms[1]!), checkOrder: true, checkDirection: true }).form, id).toBe(1);
+    }
+  });
+
+  it('the form shown, traced, reads as the form shown (no other form wins a tie)', () => {
+    for (const { jamoId } of jamoStrokes) {
+      const forms = formsOf(jamoId);
+      expect(scoreTraceForms({ forms, drawn: traced(forms[0]!), checkOrder: true, checkDirection: true }).form, jamoId).toBe(0);
+    }
+  });
+
+  it('ㅈ in 3 lifts over the 2-stroke ghost (bar; slant; right leg) reads as the 3-stroke form: no wrong-way stroke', () => {
+    const forms = formsOf('jamo:jieut');
+    const [barAndSlant, leg] = forms[0]!;
+    const [barStart, corner, foot] = barAndSlant!;
+    const drawn = [walk([barStart!, corner!]), walk([corner!, foot!]), walk(leg!)];
+    expect(scoreTrace({ target: forms[0]!, drawn, checkOrder: true, checkDirection: true }).directionsCorrect).toBe(false);
+    const r = scoreTraceForms({ forms, drawn, checkOrder: true, checkDirection: true });
+    expect(r.form).toBe(1);
+    expect(r.orderCorrect).toBe(true);
+    expect(r.directionsCorrect).toBe(true);
+  });
+
+  it('ㅎ with the top stroke left to right and the ring clockwise: only the ring is wrong (a loop nudge, never left-to-right)', () => {
+    const forms = formsOf('jamo:hieut');
+    const [top, bar, ring] = forms[1]!;
+    const r = scoreTraceForms({ forms, drawn: [walk(top!), walk(bar!), walk([...ring!].reverse())], checkOrder: true, checkDirection: true });
+    expect(r.form).toBe(1);
+    expect(r.directionsPerTarget).toEqual([true, true, false]);
+    expect(r.closedPerTarget).toEqual([false, false, true]);
+  });
+
+  it('ㅌ Variant C (ㄷ first, then the middle bar) is not accepted: still out of order', () => {
+    const forms = formsOf('jamo:tieut');
+    const [top, middle, nieun] = forms[0]!;
+    const r = scoreTraceForms({ forms, drawn: [walk(top!), walk(nieun!), walk(middle!)], checkOrder: true, checkDirection: true });
+    expect(r.orderCorrect).toBe(false);
+    expect(r.passWithOrder).toBe(false);
+    expect(r.coverage).toBeGreaterThanOrEqual(DEFAULT_PASS_THRESHOLD);
+  });
+
+  it('an out-of-order drawing is out of order on every form, and keeps the ghost\'s pass', () => {
+    const forms = formsOf('jamo:chieut');
+    const drawn = traced(forms[1]!).reverse();
+    const r = scoreTraceForms({ forms, drawn, checkOrder: true, checkDirection: true });
+    expect(r.orderCorrect).toBe(false);
+    expect(r.coverage).toBe(scoreTrace({ target: forms[0]!, drawn }).coverage);
+  });
 });

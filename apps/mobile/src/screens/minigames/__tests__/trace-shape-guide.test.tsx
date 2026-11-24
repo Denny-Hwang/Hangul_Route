@@ -278,6 +278,52 @@ describe('Trace Stroke, untaught letter: Show me is a shape guide (§6 test 8)',
   });
 });
 
+/**
+ * [SO] SO-2 (OD-SO11): a letter the table accepts in another form. The ghost and Show me keep the form shown (AU-14's);
+ * the order and direction checks accept the other form, so a taught letter written that way gets the praise, not the
+ * "left-to-right" line. A form the table does not accept (ㅌ Variant C) still gets the order line once taught.
+ */
+describe('Trace Stroke: another accepted form (SO-2)', () => {
+  const COPY = getMessages('en').learner.minigame.trace;
+  const chieutLeftToRight = (): JamoStrokePoint[][] => {
+    const [, bar, leg] = strokesForJamo('jamo:chieut')!;
+    return [[{ x: 86, y: 42 }, { x: 114, y: 42 }], bar!, leg!];
+  };
+
+  it.each([
+    ['untaught', [] as string[]],
+    ['taught', ['jamo:chieut']],
+  ])('ㅊ with the top stroke left to right, %s: the praise, never the left-to-right line', async (_case, reviewed) => {
+    gate.reviewed = reviewed;
+    const r = await playStroke('jamo:chieut');
+    for (const s of chieutLeftToRight()) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(CLEAN);
+    expect(texts(r.root)).not.toContain(COPY.pass.open);
+  });
+
+  it.each([
+    ['untaught', [] as string[], false],
+    ['taught', ['jamo:chieut'], true],
+  ])('ㅊ, %s: the ghost and Show me keep the form shown', async (_case, reviewed, taught) => {
+    gate.reviewed = reviewed;
+    const r = await playStroke('jamo:chieut');
+    expect(ghosts(r.root)).toBe(strokesForJamo('jamo:chieut')!.length);
+    await press(r.root, 'Show me');
+    expect(hint.last).toMatchObject({ orderTaught: taught });
+    expect(hint.last!.target).toBe(strokesForJamo('jamo:chieut'));
+  });
+
+  it('ㅌ Variant C (ㄷ first, then the middle bar; not accepted), taught: the order line', async () => {
+    gate.reviewed = ['jamo:tieut'];
+    const [top, middle, nieun] = strokesForJamo('jamo:tieut')!;
+    const r = await playStroke('jamo:tieut');
+    for (const s of [top!, nieun!, middle!]) await draw(r.root, s);
+    await press(r.root, 'Done');
+    expect(texts(r.root)).toContain(COPY.pass.order);
+  });
+});
+
 describe('Trace a Word, untaught unit: Show me is a shape guide (§6 tests 7, 8)', () => {
   const host = (): MinigameHost => ({ mode: 'quest', answer: () => undefined, complete: () => undefined });
   const scope = (mode?: 'letter'): MinigameScope => ({

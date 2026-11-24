@@ -21,7 +21,7 @@ import { Platform, ScrollView, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import { Svg, Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
-import { strokesForJamo } from '../../content/jamo-strokes';
+import { strokeFormsForJamo, strokesForJamo } from '../../content/jamo-strokes';
 import { useMessages } from '../../i18n/use-messages';
 import { finalLine, loneLetterQuestion, loneLetterVoice } from '../../logic/audio/jamo-lines';
 import type { LayoutChangeEvent } from 'react-native';
@@ -29,7 +29,7 @@ import { traceCanvasA11yLabel, traceHeadingText, traceTargetA11yText } from '../
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { inkPathD, pointsToPathD } from '../../logic/stroke-diagram';
-import { scoreTrace } from '../../logic/stroke-scoring';
+import { scoreTraceForms } from '../../logic/stroke-scoring';
 import { TRACE_KEEP_GOING_MS, isLetterFinished, wouldPass } from '../../logic/trace-ready';
 import { failMessage, passMessage, traceCoaching, type DirectionNudge } from '../../logic/trace-copy';
 import { strokeOrderTaught } from '../../logic/stroke-order-taught';
@@ -88,6 +88,9 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * stroke order nobody has checked (`strokeOrderTaught` false; every letter until SO-3) gets no order coaching and only
  * the loop nudge, passes on coverage even in strict mode, and its Show me is a shape reveal: the ghost steps aside and
  * the strip's idle line reads "Shape guide" while it is up.
+ *
+ * [SO] SO-2 (OD-SO11): the ghost and Show me keep the form shown; the order and direction checks read every form the
+ * stroke table accepts (`scoreTraceForms`), so a taught letter written in another accepted form is not coached.
  */
 export function TraceStrokeGame({
   scope,
@@ -162,6 +165,8 @@ export function TraceStrokeGame({
     () => (round ? (strokesForJamo(round.jamo.id) ?? []) : []),
     [round],
   );
+  // [SO] SO-2: every accepted form of the letter, the form shown (`target`) first.
+  const forms = useMemo(() => (round ? (strokeFormsForJamo(round.jamo.id) ?? []) : []), [round]);
   // The gate is created once, so its ready() reads the letter and the mode through refs.
   const targetRef = useRef(target);
   targetRef.current = target;
@@ -295,8 +300,9 @@ export function TraceStrokeGame({
     stopKeepGoing();
     setKeepGoing(false);
     showFeedback('evaluating');
-    const result = scoreTrace({
-      target,
+    // [SO] SO-2: the pass on the form shown; order and direction on whichever accepted form the drawing follows.
+    const result = scoreTraceForms({
+      forms,
       drawn: strokes,
       checkOrder: true,
       checkDirection: true,
