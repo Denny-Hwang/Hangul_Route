@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { CATALOG_2026_10 } from '../../__tests__/fixtures/catalog-2026-10';
 import { ClassReportSchema, type ActivityDay, type ActivitySummary, type ClassReport, type ReportPeriod } from '../../schemas/report';
 import type { ReportSummary } from '../../schemas/report-response';
-import { classAtOf, classReport, type ClassReportInput, type ClassReportLearner, type ClassReportPlan } from '../class-report';
+import { MIN_TOGETHER_LEARNERS, classAtOf, classReport, type ClassReportInput, type ClassReportLearner, type ClassReportPlan } from '../class-report';
 import { NOW, STEADY, GAP } from './fixtures/activity-2026-10';
 import { CLASS_20, CLASS_PLANS } from './fixtures/class-2026-10';
 
@@ -52,6 +52,60 @@ function member(rows: Readonly<Record<string, Partial<Omit<ActivityDay, 'd'>>>>,
     lastSyncedAt: '2026-10-15T11:00:00.000Z',
   };
 }
+
+describe('letters to revisit together need 3 learners (AMENDMENTS-CLASS-CODE-OVERLAY CO-2e)', () => {
+  const day = { '2026-10-14': {} };
+  const withLetters = (letters: string[]): ClassReportLearner => member(day, { needsPractice: letters });
+  const noLetters = (): ClassReportLearner => member(day);
+  const older = (letters: string[]): ClassReportLearner => ({ ...withLetters(letters), summary: { lastActiveAt: '2026-10-15T09:00:00.000Z', needsPractice: letters, planProgress: {} } });
+
+  it('the minimum is the roll-up and lecture minimum: 3', () => {
+    expect(MIN_TOGETHER_LEARNERS).toBe(3);
+  });
+
+  it('one and two learners with letters: the line is empty, whatever the letters', () => {
+    expect(report({ learners: [withLetters(['ㅂ'])] }).revisit).toEqual([]);
+    expect(report({ learners: [withLetters(['ㅂ', 'ㅅ']), withLetters(['ㅂ', 'ㅅ'])] }).revisit).toEqual([]);
+    expect(report({ learners: [withLetters(['ㅂ']), withLetters(['ㅅ']), noLetters(), noLetters()] }).revisit).toEqual([]);
+  });
+
+  it('exactly 3 contributors: the line is drawn, counts as before', () => {
+    const r = report({ learners: [withLetters(['ㅂ', 'ㅅ']), withLetters(['ㅂ']), withLetters(['ㅅ'])] });
+    expect(r.revisit).toEqual([
+      { letter: 'ㅂ', learners: 2 },
+      { letter: 'ㅅ', learners: 2 },
+    ]);
+  });
+
+  it('3 contributors with one letter each: each letter is still listed (the line holds the count of learners, not a minimum per letter)', () => {
+    expect(report({ learners: [withLetters(['ㅂ']), withLetters(['ㅅ']), withLetters(['ㄹ'])] }).revisit).toHaveLength(3);
+  });
+
+  it('above 3 contributors: drawn', () => {
+    expect(report({ learners: [withLetters(['ㅂ']), withLetters(['ㅂ']), withLetters(['ㅂ']), withLetters(['ㅂ']), noLetters()] }).revisit).toEqual([{ letter: 'ㅂ', learners: 4 }]);
+  });
+
+  it('strict: learners with no letters, no summary, or only letters the report cannot name do not contribute', () => {
+    const none: ClassReportLearner = { joinedAt: null, summary: null, lastSyncedAt: null };
+    expect(report({ learners: [withLetters(['ㅂ']), withLetters(['ㅂ']), noLetters(), none, withLetters(['x', 'ab'])] }).revisit).toEqual([]);
+    expect(report({ learners: [withLetters(['ㅂ']), withLetters(['ㅂ']), withLetters(['ㅂ', 'x'])] }).revisit).toEqual([{ letter: 'ㅂ', learners: 3 }]);
+  });
+
+  it('an older app counts as a contributor (its summary carries letters)', () => {
+    expect(report({ learners: [older(['ㅂ']), older(['ㅂ']), withLetters(['ㅂ'])] }).revisit).toEqual([{ letter: 'ㅂ', learners: 3 }]);
+  });
+
+  it('a learner who lists the same letter twice is one contributor', () => {
+    expect(report({ learners: [withLetters(['ㅂ', 'ㅂ']), withLetters(['ㅂ', 'ㅂ'])] }).revisit).toEqual([]);
+  });
+
+  it('other lines are not held back below 3 (the minimum is only for the revisit line)', () => {
+    const r = report({ learners: [withLetters(['ㅂ']), withLetters(['ㅂ'])] });
+    expect(r.class.learners).toBe(2);
+    expect(r.headline.practiced).toBe(2);
+    expect(ClassReportSchema.parse(r)).toEqual(r);
+  });
+});
 
 describe('the class of 20, this week (section 3.15 fixtures)', () => {
   const r = class20('week');
@@ -241,9 +295,9 @@ describe('behaviours', () => {
 
   it('all on an older app: revisit letters and level-check counts still render; day-by-day blocks hold nothing', () => {
     const legacy = CLASS_20[10] as ClassReportLearner;
-    const r = report({ learners: [legacy, legacy] });
-    expect(r.class).toEqual({ learners: 2, withActivity: 0, olderApp: 2, notSaved7d: 0 });
-    expect(r.revisit).toEqual([{ letter: 'ㄹ', learners: 2 }]);
+    const r = report({ learners: [legacy, legacy, legacy] });
+    expect(r.class).toEqual({ learners: 3, withActivity: 0, olderApp: 3, notSaved7d: 0 });
+    expect(r.revisit).toEqual([{ letter: 'ㄹ', learners: 3 }]);
     expect(r.levelCheck).toHaveLength(5);
     expect(r.practice.dayBands).toEqual([
       { band: '0', learners: 0 },
@@ -452,16 +506,18 @@ describe('details', () => {
       { needsPractice: ['ㅂ', 'ㅂ', 'sym:x', 'ㆎ', 'ㆍ'] },
       { milestones: [{ stage: 'stage9', on: '2026-10-14' }, { stage: 'stage2', on: '2026-10-14' }, { stage: 'stage1', on: '2026-10-13' }] },
     );
-    const r = report({ now: NOW_UTC, learners: [odd] });
+    // Two more learners with the same list, so the revisit line has its 3 contributors (CO-2e).
+    const same = member({}, { needsPractice: ['ㅂ', 'ㅂ', 'sym:x', 'ㆎ', 'ㆍ'] });
+    const r = report({ now: NOW_UTC, learners: [odd, same, same] });
     expect(r.wentWell.lettersNew).toEqual([
       { letter: 'ㄱ', learners: 1 },
       { letter: 'ㆍ', learners: 1 },
     ]);
     // Letters the catalogue does not teach come after the taught ones, by code point.
     expect(r.revisit).toEqual([
-      { letter: 'ㅂ', learners: 1 },
-      { letter: 'ㆍ', learners: 1 },
-      { letter: 'ㆎ', learners: 1 },
+      { letter: 'ㅂ', learners: 3 },
+      { letter: 'ㆍ', learners: 3 },
+      { letter: 'ㆎ', learners: 3 },
     ]);
     expect(r.wentWell.milestones).toEqual([
       { stage: 'stage1', count: 1 },
@@ -476,8 +532,8 @@ describe('details', () => {
 
   it('untaught letters tie by code point, whatever order they come in', () => {
     const odd = (letters: string[]): ClassReportLearner => member({}, { needsPractice: letters });
-    expect(report({ learners: [odd(['ㆎ', 'ㆍ', 'ㆌ'])] }).revisit.map((row) => row.letter)).toEqual(['ㆌ', 'ㆍ', 'ㆎ']);
-    expect(report({ learners: [odd(['ㆌ', 'ㆍ', 'ㆎ'])] }).revisit.map((row) => row.letter)).toEqual(['ㆌ', 'ㆍ', 'ㆎ']);
+    expect(report({ learners: [odd(['ㆎ', 'ㆍ', 'ㆌ']), odd(['ㆎ', 'ㆍ', 'ㆌ']), odd(['ㆎ', 'ㆍ', 'ㆌ'])] }).revisit.map((row) => row.letter)).toEqual(['ㆌ', 'ㆍ', 'ㆎ']);
+    expect(report({ learners: [odd(['ㆌ', 'ㆍ', 'ㆎ']), odd(['ㆌ', 'ㆍ', 'ㆎ']), odd(['ㆌ', 'ㆍ', 'ㆎ'])] }).revisit.map((row) => row.letter)).toEqual(['ㆌ', 'ㆍ', 'ㆎ']);
   });
 
   it('at most 5 letters in each block', () => {

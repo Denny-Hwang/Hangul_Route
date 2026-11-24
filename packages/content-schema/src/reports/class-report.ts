@@ -82,6 +82,13 @@ const LETTERS_MAX = 5;
 const PLANS_MAX = 3;
 /** The typical time hides under this many learners who practiced. */
 const MEDIAN_MIN_LEARNERS = 3;
+/**
+ * AMENDMENTS-CLASS-CODE-OVERLAY CO-2c, CO-2d and CO-2e (owner decision 2026-11-24): a class's "together" lines (the
+ * roster's jamo and word lines and first-try figure, lecture mode's lists, this report's letters to revisit) show
+ * only when at least this many learners contribute to the line. Below it a line is one or two learners' own list.
+ * A family is never held back. One number for every surface: `apps/web/src/lib/console/rollup.ts` re-exports it.
+ */
+export const MIN_TOGETHER_LEARNERS = 3;
 const STAGES = StageKeySchema.options;
 const ZERO: DaySums = { days: 0, min: 0, q: 0, c: 0, w: 0 };
 /** The widest learner offset either way (`activity.tz`, minutes). */
@@ -278,6 +285,8 @@ export function classReport(input: ClassReportInput): ClassReport {
   const cmpPrev = { practiced: 0, min: 0, q: 0 };
   const lettersNew = new Map<string, number>();
   const revisit = new Map<string, number>();
+  // Learners with at least one nameable letter in the revisit line (strict: only those with data in the line).
+  let revisitLearners = 0;
   const milestones = new Map<StageKey, number>();
   const strands = PlacementStrandSchema.options.map((strand) => ({ strand, secure: 0, gettingThere: 0, notYet: 0, notTested: 0 }));
   let checks = 0;
@@ -299,7 +308,9 @@ export function classReport(input: ClassReportInput): ClassReport {
       memory.levels = [memory.levels[0] + m.cellBestCounts[0], memory.levels[1] + m.cellBestCounts[1], memory.levels[2] + m.cellBestCounts[2]];
       memory.stageChecks += m.stageChecks;
     }
-    for (const letter of new Set(summary.needsPractice ?? [])) if (ReportLetterSchema.safeParse(letter).success) add(revisit, letter);
+    const letters = [...new Set(summary.needsPractice ?? [])].filter((letter) => ReportLetterSchema.safeParse(letter).success);
+    for (const letter of letters) add(revisit, letter);
+    if (letters.length > 0) revisitLearners += 1;
     const placement = summary.placement;
     if (placement) {
       checks += 1;
@@ -369,7 +380,7 @@ export function classReport(input: ClassReportInput): ClassReport {
       cardsNew: total.c,
       milestones: [...milestones.entries()].sort(([x], [y]) => STAGES.indexOf(x) - STAGES.indexOf(y)).map(([stage, count]) => ({ stage, count })),
     },
-    revisit: letterCounts(revisit, order),
+    revisit: revisitLearners >= MIN_TOGETHER_LEARNERS ? letterCounts(revisit, order) : [],
     practice: dayBands === undefined ? {} : { dayBands, notSaved },
     time: {
       minutesTotal: { count: total.min, ...up('min') },
