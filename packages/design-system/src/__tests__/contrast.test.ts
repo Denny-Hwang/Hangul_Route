@@ -249,9 +249,17 @@ describe('token contrast contract (WCAG AA)', () => {
     const idle = choiceCardStyle('idle');
     for (const state of CHOICE_CARD_STATES.filter((s) => s !== 'idle')) {
       const look = choiceCardStyle(state);
-      const cues = [look.backgroundColor !== idle.backgroundColor, look.mark !== null, look.borderWidth !== idle.borderWidth];
+      // F-A11Y-001 AF-1: hint's cue is its dashed look-here ring outside the card (AnswerFeedback D4), not its border width.
+      const cues = [look.backgroundColor !== idle.backgroundColor, look.mark !== null, look.ring !== null];
       expect(cues.some(Boolean), state).toBe(true);
     }
+  });
+
+  // F-A11Y-001 AF-1 (AnswerFeedback D4): the dashed look-here ring sits on the canvas or the paper around the card.
+  it('ChoiceCard hint: the look-here ring ≥ 3:1 on canvas and paper (non-text)', () => {
+    const ring = choiceCardStyle('hint').ring;
+    expect(ring).not.toBeNull();
+    for (const bg of [colors.surface.canvas, colors.surface.paper]) expect(contrastRatio(ring!.color, bg), bg).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
   });
 
   it('Tile: every other state differs from idle by more than its border colour', () => {

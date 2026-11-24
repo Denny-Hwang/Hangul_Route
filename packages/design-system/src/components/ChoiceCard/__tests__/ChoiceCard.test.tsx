@@ -2,6 +2,7 @@ import { Children, isValidElement, createElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { borderWidth, colors, radii, spacing } from '../../../tokens';
+import { CHOICE_CARD_RING_REACH } from '../style';
 import { ChoiceCard } from '../ChoiceCard';
 import type { ChoiceCardProps } from '../types';
 
@@ -30,14 +31,19 @@ vi.mock('../../TextSize', async () => {
 type Props = Record<string, unknown>;
 type El = ReactElement<Props>;
 
-/** The card body inside the TapTarget (its children are a render function of `{ pressed }`). */
-function body(props: Partial<ChoiceCardProps>, pressed = false): El {
+/** The look-here ring wrapper inside the TapTarget (its children are a render function of `{ pressed }`). */
+function ringOf(props: Partial<ChoiceCardProps>, pressed = false): El {
   const target = ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', ...props }) as El;
   const render = target.props.children as (s: { pressed: boolean }) => El;
   return render({ pressed });
 }
 
 const kids = (el: El): El[] => Children.toArray(el.props.children as ReactNode) as El[];
+
+/** The drawn card inside the ring wrapper. */
+function body(props: Partial<ChoiceCardProps>, pressed = false): El {
+  return kids(ringOf(props, pressed))[0]!;
+}
 
 /** Every element of a tree, depth first. */
 function all(el: El): El[] {
@@ -144,7 +150,8 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
     }
     expect(presses).toEqual(['x', 'x']);
     expect(target({ state: 'correct', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: false, selected: true } });
-    expect(target({ state: 'wrong', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: false, selected: true } });
+    // F-A11Y-001 AF-1: a miss is not selected ("Not this one: pear, selected" would sound like the answer).
+    expect(target({ state: 'wrong', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: false, selected: false } });
     expect(target({ state: 'disabled', onPress }).props).toMatchObject({ inactive: true, accessibilityState: { disabled: true, selected: false } });
     // A card with no handler is inactive too (no commit, no lock) and commits nothing if asked.
     expect(target({ state: 'idle' }).props.inactive).toBe(true);
@@ -165,12 +172,13 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
     }
   });
 
-  it('pressed: the thicker outline comes off the padding, so the card keeps its size (no layout shift); hint is already thick', () => {
-    const rest = body({ state: 'idle', label: 'apple' }).props.style as Props;
-    const down = body({ state: 'idle', label: 'apple', onPress: () => undefined }, true).props.style as Props;
-    expect((down.paddingVertical as number) + (down.borderWidth as number)).toBe((rest.paddingVertical as number) + (rest.borderWidth as number));
-    expect((down.paddingHorizontal as number) + (down.borderWidth as number)).toBe((rest.paddingHorizontal as number) + (rest.borderWidth as number));
-    expect(body({ state: 'hint', label: 'apple', onPress: () => undefined }, true).props.style).toMatchObject({ paddingVertical: spacing.md, paddingHorizontal: spacing.lg });
+  it('pressed: the thicker outline comes off the padding, so the card keeps its size (no layout shift), hint included', () => {
+    for (const state of ['idle', 'hint'] as const) {
+      const rest = body({ state, label: 'apple' }).props.style as Props;
+      const down = body({ state, label: 'apple', onPress: () => undefined }, true).props.style as Props;
+      expect((down.paddingVertical as number) + (down.borderWidth as number)).toBe((rest.paddingVertical as number) + (rest.borderWidth as number));
+      expect((down.paddingHorizontal as number) + (down.borderWidth as number)).toBe((rest.paddingHorizontal as number) + (rest.borderWidth as number));
+    }
   });
 
   it('pressed under reduced motion: the outline alone, no shrink', () => {
@@ -182,11 +190,11 @@ describe('ChoiceCard takes a touch through TapTarget (AMENDMENTS-TOUCH 4.4, row 
     motion.reduced = false;
   });
 
-  it('not pressed: the state\'s own border and no shrink (hint keeps its thick focus ring)', () => {
+  it('not pressed: the state\'s own border and no shrink (hint keeps idle\'s border; its ring is outside)', () => {
     const idle = body({ state: 'idle', label: 'apple' }).props.style as Props;
     expect(idle).toMatchObject({ borderColor: colors.border.shape, borderWidth: borderWidth.base });
     expect(idle.transform).toBeUndefined();
-    expect(body({ state: 'hint', label: 'apple' }).props.style).toMatchObject({ borderColor: colors.border.focus, borderWidth: borderWidth.thick });
+    expect(body({ state: 'hint', label: 'apple' }).props.style).toMatchObject({ borderColor: colors.border.shape, borderWidth: borderWidth.base });
   });
 
   it('an inactive card never paints the press look, whatever it is handed', () => {
@@ -209,5 +217,54 @@ describe('ChoiceCard targetStyle: a frame drawn by the caller is inside the hit 
   it('without it, the target keeps only the stretch (every other caller is unchanged)', () => {
     const el = ChoiceCard({ state: 'idle', accessibilityLabel: 'apple', label: 'apple' }) as El;
     expect(el.props.style).toEqual({ alignSelf: 'stretch' });
+  });
+});
+
+/**
+ * F-A11Y-001 row AF-1 (design/components/AnswerFeedback/spec.md D3, D4): the row keeps its 24 mark column in every
+ * state, and `hint` is the one look-here shape of every game, a dashed ring outside the card that takes no room.
+ */
+describe('ChoiceCard mark column and look-here ring (F-A11Y-001 AF-1)', () => {
+  it.each(['idle', 'hint', 'disabled'] as const)('row, %s: an empty 24 view where the mark goes, so answering never grows the card', (state) => {
+    const last = kids(body({ state, label: 'apple' })).at(-1)!;
+    expect(last.type).toBe('View');
+    expect(last.props.style).toEqual({ width: spacing.xl });
+    expect(icons(body({ state, label: 'apple' }))).toEqual([]);
+  });
+
+  it.each(['correct', 'wrong'] as const)('row, %s: the 24 mark takes that column', (state) => {
+    const last = kids(body({ state, label: 'apple' })).at(-1)!;
+    expect(last.type).toBe('Icon');
+    expect(last.props.size).toBe(spacing.xl);
+  });
+
+  it('tile layout keeps no column (its mark sits on the corner)', () => {
+    expect(kids(body({ state: 'idle', art: createElement('View'), layout: 'tile' }))).toHaveLength(1);
+  });
+
+  it('hint: a dashed border.focus ring, borderWidth.thick, spacing.xs outside the card, on a wrapper that takes no room', () => {
+    const style = ringOf({ state: 'hint', label: 'apple' }).props.style as Props;
+    expect(style).toEqual({
+      margin: -CHOICE_CARD_RING_REACH,
+      padding: spacing.xs,
+      borderRadius: radii.lg + CHOICE_CARD_RING_REACH,
+      borderWidth: borderWidth.thick,
+      borderStyle: 'dashed',
+      borderColor: colors.border.focus,
+    });
+    // The ring's reach is all inside the negative margin: the card's own box is where it was.
+    expect((style.padding as number) + (style.borderWidth as number)).toBe(-(style.margin as number));
+  });
+
+  it.each(['idle', 'correct', 'wrong', 'disabled'] as const)('%s: the same wrapper with no ring, so the card is never remounted and nothing moves', (state) => {
+    const style = ringOf({ state, label: 'apple' }).props.style as Props;
+    expect(style).toMatchObject({ margin: -CHOICE_CARD_RING_REACH, padding: CHOICE_CARD_RING_REACH, borderWidth: 0 });
+    expect(style.borderColor).toBeUndefined();
+  });
+
+  it('the ring is never the press look: pressing a hint card changes the card, not the ring', () => {
+    const rest = ringOf({ state: 'hint', label: 'apple', onPress: () => undefined }, false).props.style;
+    const down = ringOf({ state: 'hint', label: 'apple', onPress: () => undefined }, true).props.style;
+    expect(down).toEqual(rest);
   });
 });

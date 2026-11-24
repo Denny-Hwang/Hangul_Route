@@ -7,7 +7,7 @@ import { Icon } from '../Icon';
 import { KoreanText } from '../KoreanText';
 import { TapTarget, usePressLook } from '../TapBoard';
 import { useTypeScale } from '../TextSize';
-import { choiceCardStyle } from './style';
+import { choiceCardRingStyle, choiceCardStyle } from './style';
 import type { ChoiceCardProps } from './types';
 import { KOREAN_LINE_BREAK } from '../../line-break';
 
@@ -52,7 +52,7 @@ export function ChoiceCard({
   const hasLabel = label !== undefined && label.length > 0;
 
   // The press look goes on the drawn box, so the shrink never changes the hit area the board measures.
-  const content = (pressed: PressLook | null): ReactElement => (
+  const card = (pressed: PressLook | null): ReactElement => (
     <View
       style={{
         flexDirection: 'row',
@@ -99,7 +99,13 @@ export function ChoiceCard({
           </Text>
         ) : null}
       </View>
-      {look.mark && !tile ? <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} /> : null}
+      {tile ? null : look.mark ? (
+        <Icon name={look.mark.icon} size={spacing.xl} color={look.mark.color} />
+      ) : (
+        // F-A11Y-001 AF-1 (AnswerFeedback D3): the 24 mark column is kept in every state, so answering never rewraps the
+        // text or grows the card.
+        <View style={{ width: spacing.xl }} />
+      )}
       {look.mark && tile ? (
         // On the corner, on a disc of the state's fill, so it reads over the art (same contrast pairs as the row mark).
         <View
@@ -117,6 +123,12 @@ export function ChoiceCard({
       ) : null}
     </View>
   );
+
+  // F-A11Y-001 AF-1 (AnswerFeedback D4): the look-here ring, dashed, `spacing.xs` outside the card, on a wrapper with a
+  // negative margin, so it takes no room and nothing moves when it shows; it is always there (without a ring its padding
+  // takes the ring's width), so the card is never remounted. Outside the drawn card's press look, and no part of its hit
+  // area (the wrapper reaches past the target's own box).
+  const content = (pressed: PressLook | null): ReactElement => <View style={choiceCardRingStyle(look.ring, look.borderRadius)}>{card(pressed)}</View>;
 
   return (
     <TapTarget
