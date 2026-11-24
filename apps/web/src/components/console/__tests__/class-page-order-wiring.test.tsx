@@ -417,6 +417,19 @@ describe('What to revisit on a class card (CO-2)', () => {
     expect(byTestId('revisit-body')).toHaveLength(0);
   });
 
+  it('the address moving to another class (the page stays mounted) starts every card closed', async () => {
+    await render();
+    await press(toggleOf('Yuhan'));
+    expect(byTestId('revisit-body')).toHaveLength(1);
+    nav.query = 'id=space%3Aother';
+    await act(async () => {
+      (mounted as ReactTestRenderer).update(<TeachSpacePage />);
+    });
+    await act(async () => undefined);
+    expect(byTestId('revisit-body')).toHaveLength(0);
+    expect(toggleOf('Yuhan').props['aria-expanded']).toBe(false);
+  });
+
   it('Show the code closes every open card', async () => {
     await render();
     await press(toggleOf('Yuhan'));

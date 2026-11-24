@@ -310,12 +310,14 @@ function SpaceInner(): JSX.Element {
     window.addEventListener('pagehide', onHide);
     return () => window.removeEventListener('pagehide', onHide);
   }, [codeOpen]);
-  // A page that stays mounted while the address names another class (the browser back between two classes) starts closed.
+  // A page that stays mounted while the address names another class (the browser back between two classes) starts closed:
+  // the overlay and every What to revisit card.
   const codeSpace = useRef(spaceId);
   useEffect(() => {
     if (codeSpace.current === spaceId) return;
     codeSpace.current = spaceId;
     setCodeOpen(false);
+    setRevisitOpen(new Set());
     forgetCodeOverlay(browserStorage('session'));
   }, [spaceId]);
   // A lock unmounts the page with the address unchanged (the flag stays, and the overlay comes back); a navigation does
