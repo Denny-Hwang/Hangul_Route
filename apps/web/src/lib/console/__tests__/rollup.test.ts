@@ -270,6 +270,14 @@ describe('the class lines need at least 3 contributing learners (CO-2c, OD-CO8)'
     expect(lines).toMatchObject({ revisit: [], vocabRevisit: [], anchor: null });
   });
 
+  it('the jamo line counts learners with letters, not learners with a first-try figure', () => {
+    const roll = classRollup([learner('a', {}, { needsPractice: ['ㅂ'], ...anchor(0.5) }), learner('b', {}, anchor(0.6)), learner('c', {}, anchor(0.7))], now);
+    expect(roll.contributors).toEqual({ anchor: 3, revisit: 1, vocabRevisit: 0 });
+    const lines = weekLines('class', roll, 'en');
+    expect(lines.revisit).toEqual([]);
+    expect(lines.anchor).not.toBeNull();
+  });
+
   it('a learner with an empty list or no summary does not contribute', () => {
     const roll = classRollup([...full(2), learner('x', {}, { needsPractice: [] }), learner('y', {}, null)], now);
     expect(roll.contributors).toEqual({ anchor: 2, revisit: 2, vocabRevisit: 2 });
