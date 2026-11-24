@@ -77,6 +77,7 @@ Panel C — the overlay on a phone or a narrow window: one column
 |         Class code          |
 |        S U N 2 3 4          |  <- never wraps; shrinks to fit the column
 |     expires in 18 days      |
+|  (how-to-join line, OD-CO5) |  <- next to the code it talks about
 |  +-----------------------+  |
 |  |                       |  |
 |  |       [QR CODE]       |  |
@@ -84,7 +85,6 @@ Panel C — the overlay on a phone or a narrow window: one column
 |  +-----------------------+  |
 |  Scan it with the camera of |
 |  a phone or tablet.         |
-|  (how-to-join line, OD-CO5) |
 +-----------------------------+
    scrolls up and down when it does not fit (large text); never sideways
 ```

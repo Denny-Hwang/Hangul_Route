@@ -76,7 +76,7 @@ ConfirmSheet's focus rules (`AMENDMENTS-DISPLAY-NAV.md` §8), with the review sh
 - `role="dialog"`, `aria-modal="true"`, named by the heading (`aria-labelledby`) and described by the caption, the spoken code and the expiry (`aria-describedby`, in that order). A screen reader hears: "Sunday Class A, dialog. Class code, S U N 2 3 4, expires in 18 days."
 - On open, focus goes to the heading (`tabIndex={-1}`), as the review sheet's title (`AttentionParts.tsx:247-255`): the content is to be read, and the one control comes next. Tab and Shift+Tab stay on Close (`tabTarget`, `ConfirmSheet.tsx`).
 - **Escape** closes, caught for the whole document while the overlay is open (a click on the code takes focus off the button). **Close** closes. There is no backdrop to click.
-- While it is open every other element of the page is `inert` (`inertOthers`), undone when it closes.
+- While it is open every other element of the page is `inert` (`inertOthers`), undone when it closes, and the page does not scroll: the root element's `overflow` is hidden and restored on close, so no page scroll bar shows beside the overlay and the wheel over a short overlay does not move the page under it.
 - On close, focus goes back to the control that opened it (Show the code). When that control is gone (the code ended or was replaced and the bar drew again), focus goes to the page head (`spaceHead`, `page.tsx:108` and `:487`), the fallback `focusAfterIncoming` already uses (`:211-213`).
 - No address change, no history entry, no hash: the browser back leaves the page as it always has, and the overlay with it (the console has no history bridge, `AMENDMENTS-DISPLAY-NAV.md` §8).
 - No motion: it appears and goes at once, so `prefers-reduced-motion` needs no branch.
@@ -88,20 +88,20 @@ The overlay sizes its type by the window, as the lecture presenter does (F-TCH-0
 | Part | Size | 1280 x 720 | 1920 x 1080 | 360 x 740 |
 |---|---|---|---|---|
 | Code | `max(typography.size.hero, presenter.size.display units)`, at most what fits six characters on one line of its column (§3.4 "Fit") | 140 px | 210 px | 48 px |
-| Space between the letters | `max(spacing.sm, spacing.xl units)` | 24 px | 36 px | 8 px |
+| Space between the letters | `spacing.xl` for every `presenter.size.display` of code size (`spacing.xl / presenter.size.display` em, about 0.17 em), so it is `spacing.sm` at the floor | 24 px | 36 px | 8 px |
 | Class name | `max(typography.size.title, presenter.size.prompt units)` | 56 px | 84 px | 28 px |
 | Caption, expiry, QR caption (and how to join) | `max(typography.size.body, presenter.size.caption units)` | 28 px | 42 px | 18 px |
 | QR side | `max(4 x touchTarget.min, presenter.size.glyph units)`, at most its column | 380 px | 570 px | 256 px |
 | Close | the console button, `touchTarget.min` tall | 64 px | 64 px | 64 px |
 
 - **The code**: `typography.family.mono`, `typography.weight.bold`, `colors.text.primary`, on one line (`white-space: nowrap`), never broken. It is drawn `aria-hidden`, with a visually hidden copy of its characters separated by spaces (`spokenCode`), so a screen reader reads it letter by letter (the presenter's rule, `EndSlide.tsx:172-175`).
-- **Fit**: the code's column is a size container; its font size is at most `100cqi / CODE_WIDTH_EM`, where `CODE_WIDTH_EM = 4.7` is six monospace characters at the 0.6 em advance of Menlo and Courier plus the letter spacing (about 0.17 em), rounded up. The one constant of this spec; the mock lists it under Constants.
+- **Fit**: the code's column is a size container; its font size is at most `100cqi / CODE_WIDTH_EM`, where `CODE_WIDTH_EM = 4.8` is six monospace characters at the 0.6 em advance of Menlo and Courier (3.6 em) plus seven letter spaces of about 0.17 em (1.2 em: six after the letters, and one before them so a centred code stays centred). Because the letter spacing is a share of the code size, the fit holds at every size (measured at 320 x 568 with 200 % text: the code is 60 px, on one line). The one constant of this spec; the mock lists it under Constants.
 - **Floors grow with the text size.** The floors are in rem (`typography.size.*` / 16), so the browser text size and the Display sheet's text size raise them; the stage sizes follow the window.
-- **Two columns** when the window is landscape and at least `layout.sideBySideMin` (700 px) wide, the story reader's two-column rule (F-STORY-002): the class name, the caption, the code and the expiry at the inline start; the QR and its caption at the inline end; both centred in the height; Close in the top inline-end corner. The switch is in px, not em: like the presenter stage, the overlay follows the window, so 200 % text on a 1280-wide projector keeps two columns.
-- **One column** otherwise, centred: Close at the top inline-end, then the class name, the caption, the code, the expiry, the QR and its caption. The overlay scrolls (`overflow-y: auto`) when it does not fit (320 x 568 at 200 % text), never sideways.
+- **Two columns** when the window is landscape and at least `layout.sideBySideMin` (700 px) wide, the story reader's two-column rule (F-STORY-002): the class name, the caption, the code, the expiry and (OD-CO5) the how-to-join line at the inline start; the QR and its caption, centred under it, at the inline end; both centred in the height; Close in the top inline-end corner. The switch is in px, not em: like the presenter stage, the overlay follows the window, so 200 % text on a 1280-wide projector keeps two columns.
+- **One column** otherwise, centred: Close at the top inline-end, then the class name, the caption, the code, the expiry, (OD-CO5) the how-to-join line, the QR and its caption. The overlay scrolls (`overflow-y: auto`) when it does not fit (320 x 568 at 200 % text), never sideways.
 - **Space**: gutters `layout.gutter.compact` / `.regular` / `.wide` by the window class; gaps `spacing.*`, scaled by the stage unit like the type, with the console gap as the floor.
 - **Colour**: `colors.text.primary` for the heading, the code and the QR modules; `colors.text.secondary` (8.4:1 on paper) for the caption, the expiry and the QR caption, never `text.muted`, because a projector washes contrast out. No `feedback.*` colour anywhere.
-- At 1280 x 720 and 1024 x 768 (16:9 and 4:3 projectors) the code and the whole QR are in the first screen, with no scrolling.
+- At 1280 x 720 and 1024 x 768 (16:9 and 4:3 projectors) the code and the whole QR are in the first screen, with no scrolling. The mock measures this and the table above (`design/screens/console/class-code-overlay.md`, "Measured"): 1920 x 1080 code 210 px and QR 570 px, 1280 x 720 140 and 380, 1024 x 768 112 and 304, 360 x 740 48 and 256.
 
 ### 3.5 Reusing the QR
 
@@ -159,7 +159,7 @@ Reused unchanged: `console.space.codeLabel.class`, `console.codeExpiry.*`, `cons
 ## 5. UI sketch
 
 - Wireframe: `design/wireframes/console/class-code-overlay.md` (this PR, row CO-0).
-- Mock: `design/screens/console/class-code-overlay.md` with `mock/class-code-overlay*.html`, `mock/class-code-overlay.css`, `tools/class-code-overlay-capture.mjs` and `shots/class-code-overlay-*.png` (this PR; agent-made and approved by the multi-agent review, CLAUDE.md §5).
+- Mock: `design/screens/console/class-code-overlay.md` with `mock/class-code-overlay*.html` (the overlay, the overlay with OD-CO5's line, the class page, the board of bar and card states), `mock/class-code-overlay.css`, `tools/class-code-overlay-build.mjs` (writes the pages, draws the QR as the console does), `tools/class-code-overlay-capture.mjs` (the checks and the shots) and `shots/class-code-overlay-*.png` (this PR; agent-made and approved by the multi-agent review, CLAUDE.md §5).
 - Neighbours it follows: `design/wireframes/console/roster.md` ("Join link and QR code", "Class page order (GX-7)"), `design/screens/app-shell/join-link.md`, `design/screens/approvals/` (the roster card), `design/screens/class-page/` (shots of the built page).
 
 ## 6. Tests
@@ -220,4 +220,4 @@ One commit = test + implementation (CLAUDE.md §5). A row that meets a decision 
 
 ## 11. Review log
 
-- 2026-11-23, revision 1 (row CO-0): written on `e72336a7d`. Citations of WO-30 re-read (§1.1): #1 and #3 true as written; #2 true with its block one line longer (`:685-691`), and a second per-learner weak-point line found at `:692` (OD-CO1). Found and designed for: the frame's email (`AdultFrame.tsx:562`), the self-opening re-link pop-up (`page.tsx:245-251`), the live-code-only roster (`spaces.ts:78-80`), the existing QR drawing (`JoinLinkParts.tsx:71-92`), the card's no-`<details>` test. Multi-agent review pending.
+- 2026-11-23, revision 1 (row CO-0): written on `e72336a7d`. Citations of WO-30 re-read (§1.1): #1 and #3 true as written; #2 true with its block one line longer (`:685-691`), and a second per-learner weak-point line found at `:692` (OD-CO1). Found and designed for: the frame's email (`AdultFrame.tsx:562`), the self-opening re-link pop-up (`page.tsx:245-251`), the live-code-only roster (`spaces.ts:78-80`), the existing QR drawing (`JoinLinkParts.tsx:71-92`), the card's no-`<details>` test. Drawing the mock settled three details written back here: the letter spacing is a share of the code size, so the one-line fit holds at every size (`CODE_WIDTH_EM` 4.8, §3.4); the page behind does not scroll while the overlay is open (§3.3); the how-to-join line of OD-CO5 sits under the expiry (§3.4). Multi-agent review pending.
