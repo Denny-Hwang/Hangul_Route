@@ -1,8 +1,13 @@
-Status: draft (ready after OD-AF1 to OD-AF9 are answered and revision 2's review findings are confirmed adjudicated, §10, §11)
+Status: ready (owner decision 2026-11-24: OD-AF1 to OD-AF9 all as recommended, §10; AF-0 done; AF-5 done by AU-17a, #1035; AF-0b to AF-4c and AF-6 open)
 
 # F-A11Y-001 — Answer feedback you can see without colour, and hear once
 
-**Status**: `draft`. Revision 2 (2026-11-24): the two-lens review of revision 1 is adjudicated in §11. This spec is the AF-0 row of work order WO-04 (`docs/roadmap/review-2026-11/phase-1-safety.md`) and starts F-A11Y-001, which INBOX T-015 announced (`docs/tasks/INBOX.md:17`). It goes `ready` once the owner has answered OD-AF1 to OD-AF9 (§10).
+**Status**: `ready` (owner decision 2026-11-24, §10). Revision 2 (2026-11-24): the two-lens review of revision 1 is adjudicated in §11. This spec is the AF-0 row of work order WO-04 (`docs/roadmap/review-2026-11/phase-1-safety.md`) and starts F-A11Y-001, which INBOX T-015 announced (`docs/tasks/INBOX.md:17`). The owner answered OD-AF1 to OD-AF9 on 2026-11-24, all as recommended (§10).
+
+**Rows** (§9):
+
+- Done: AF-0 (this spec and its wireframe); AF-5, by AU-17a (#1035).
+- Open: AF-0b, AF-1, AF-2, AF-3, AF-4a, AF-4b, AF-4c and AF-6.
 
 **Later sections**: WO-08 (CI accessibility checks, rows AC-*), WO-39 (headings and focus, SS-*), WO-40 (Korean voice, LP-*) and WO-41 (accessibility polish) each add their own section to this file. This revision covers WO-04 only.
 
@@ -12,9 +17,9 @@ Status: draft (ready after OD-AF1 to OD-AF9 are answered and revision 2's review
   - F-001 (Match Sound), F-003 (Build a Letter), F-010 (Odd One Out and Culture Quiz, the feedback line `:43`), F-011 (Card Match), F-012 (Tap & Respond, "wrong picks lock + nudge", `:36`)
   - F-002 (HoyaBubble: a `live` prop)
   - F-QUEST-002 (Listen & Pick, Pic-Word Match), F-STORY-003 (Story Sequence), F-CURR-001 (Sentence Builder, Realia Read), F-CURR-002 (Cloze Pick, Story Order, Role Play, Hidden Heritage, Syllable Build, Match Shape, Read Pick)
-  - `AMENDMENTS-TOUCH.md` §6.2 (KT-4a, Card Match's flash timer), if OD-AF6 is accepted
-  - `AMENDMENTS-QUEST-SOUND-BACK.md` QS-4 (the least waits), if OD-AF2 (b) or (c) is accepted
-  - F-PLC-001 §3.12 and `AMENDMENTS-DISPLAY-NAV.md` (the Display sheet), if OD-AF3 (d) is accepted
+  - `AMENDMENTS-TOUCH.md` §6.2 (KT-4a, Card Match's flash timer), by OD-AF6 (a), decided 2026-11-24
+  - `AMENDMENTS-QUEST-SOUND-BACK.md` QS-4 (the least waits), by OD-AF2 (b), decided 2026-11-24
+  - F-PLC-001 §3.12 and `AMENDMENTS-DISPLAY-NAV.md` (the Display sheet), by OD-AF3 (d), decided 2026-11-24
 - Design documents:
   - `design/components/ChoiceCard/spec.md` (its `wrong` state is no longer `selected`; the Tile note)
   - `design/wireframes/minigame/shell.md` §7 (a miss) and §12 (screen readers: "nothing steals focus" gets the round-focus exception of §3.4)
@@ -583,21 +588,28 @@ If OD-AF7 is declined, only Card Match changes.
 - AF-4a, AF-4b and AF-4c may run in parallel after AF-1. They share no file except their own tests.
 - Every row that touches `a11y.ts` rebases over WO-40 and WO-41 on that file and the ledger (§3.7).
 
-## 10. Owner decisions (open)
+## 10. Owner decisions (decided 2026-11-24)
 
-None of these has been decided. Each has a recommendation, and the "Gates" column says what waits on it. The spec goes `ready` when all nine are answered.
+Owner decision 2026-11-24 (in session: "전부 권고대로 승인", all approved as recommended).
 
-| OD | Question | Options | Recommended | Gates |
-|---|---|---|---|---|
-| **OD-AF1** | The answer surface of Culture Quiz and Tap & Respond | (A) keep `Button` and add a result look: a `result` prop draws the mark, keeps the tone, and is locked but not disabled, which needs a new locked path because `softDisabled` and `disabled` both draw it disabled (`Button.tsx:111, 186`), and moves `Button.tsx:43` onto a token; (B) `ChoiceCard` in row layout, as Listen & Pick, Cloze Pick, Realia Read and Story Check use it: the same 80 dp height, marks, names and contrast tests already exist, and Tap & Respond's replies render through `KoreanText`, so WO-40's fix reaches them. The options change from blue pills to paper cards | **(B)** | AF-0b, AF-2, the e2e layout tests |
-| **OD-AF2** | The advance for a sighted learner (reader off). Today's least waits: 700 ms (Culture Quiz, Match Sound, Odd One Out, Listen & Pick, Pic-Word Match, Cloze Pick, Realia Read, Hidden Heritage); 800 (Card Match's last pair); 900 (Build a Letter, Read Pick with 0 under reduced motion, Syllable Build, Match Shape, and `afterReply` in Tap & Respond and Role Play); 600 (Sentence Builder) | (a) keep every value; (b) a floor of `RESULT_MARK_MIN_MS` = 1000 after every right answer, applied by the screen; (c) the same floor at 1200 | **(b)**: at most 0.3 s per right answer, and Read Pick's 0 goes | AF-1 (the constant), and the timing tests of AF-2 to AF-4c |
-| **OD-AF3** | The web, where a screen reader cannot be detected (`screen-reader.web.ts:10-12`), on the primary channel | (a) nothing extra: the web keeps the reader-off path, and the line may be cut off; (b) a **new** "screen reader" setting with new copy and design; (c) a fixed extra wait after every right answer, for everyone on the web; (d) keep the level check's existing answer, "I use a screen reader" (`learner.ts:1468`, `OptionsScreen.tsx:189-198`, already translated), as a device-level flag in `device:settings`, settable in the Display sheet with the same strings. When it is on, the web takes the reader-on path (OD-AF9) | **(d)**: it reuses reviewed strings and a question learners already meet. It only needs a row in the Display sheet (AF-0b) and the flag (AF-1). WO-41 #6 can read the same flag | AF-0b, AF-1, the web line of §3.8; adds F-PLC-001 and AMENDMENTS-DISPLAY-NAV to **Amends** |
-| **OD-AF4** | The words of an answered option's name | (a) reuse the prefixes already used by five games: "Right answer: …", "Not this one: …", "Look here: …" (`a11y.ts:170-172`), translated, with the state said first; (b) WO-04's suffixes ", correct" and ", try another" (new keys) | **(a)** | AF-1 (strings), AF-2 to AF-4c (names) |
-| **OD-AF5** | Taught-Korean Hangul in announcements | (a) none until WO-40's LP-0 reports, naming Korean by romanization and gloss as every spoken name does today (moved lines included, §3.2); (b) Hangul now, in a `lang="ko"` segment on the web and Android, and none on iOS | **(a)**: the segments of §3.2 make (b) a later change that only adds | AF-1 (builder, test 1), AF-4b and AF-4c (moved lines) |
-| **OD-AF6** | Card Match's miss (amends `AMENDMENTS-TOUCH.md` §6.2, KT-4a) | (a) as §3.5: the meanings tried stay marked while the same Korean word is picked, no timer lets the pick go, and Hoya shows `thinking`; (b) keep the pick release, and clear the mark on the next tap anywhere | **(a)**: one fewer tap to try again, and no timer on the board | AF-3 |
-| **OD-AF7** | The same rule in the other games with a timed miss: Pic-Word Match, Story Sequence and Story Order (600 ms), Hidden Heritage's ring (600 ms), and Build a Letter (900 ms) | yes / no. If yes, Build a Letter's sub-option: (i) the wrong build and its hint stay until a slot tap, Undo or a tray tap; (ii) the slots still empty after 900 ms and only the hint stays | **yes, with (i)** | AF-4a, AF-4b, AF-4c |
-| **OD-AF8** | Marks outside the rule of §3.1: Syllable Build's and Match Shape's drawn dot; Role Play's `dash` on a locked reply while the turn stays; Sentence Builder's `dash` on a tried tile that stays tappable | (a) all four become `replay`; (b) keep all four as their specs drew them; (c) the dots and Role Play's `dash` become `replay`, Sentence Builder keeps `dash` with §3.1's "tried here, still tappable" row, and every mark is `text.primary` | **(c)**: Role Play is the try-another case; Sentence Builder's tile is not locked, so `replay` would say the wrong thing | AF-0b, AF-4c |
-| **OD-AF9** | The advance with a screen reader on | (a) timed, as revision 1 drafted: line, then sound, then advance. iOS waits for its own `announcementFinished` (guard of at least 8 s); Android and the web under (d) wait a length-scaled guess, tuned on a device; (b) after a right answer a **Next** button appears and takes focus, the line is queued after it, and the round moves on when Next is pressed (Story Check and Trace precedent) | **(b)**: no timing guess, and the learner sets the pace (WCAG 2.2.1). The cost is one tap per round, for reader users only | AF-0b (Next), AF-1 (wait helpers), AF-2 to AF-4c |
+- The last column records each decision.
+- The "Gates" column says which rows it unblocks.
+- With all nine decided, the spec is `ready`, and each "if" under **Amends** now holds:
+  - OD-AF2 (b): QS-4's least waits are amended.
+  - OD-AF3 (d): F-PLC-001 §3.12 and `AMENDMENTS-DISPLAY-NAV.md` are amended.
+  - OD-AF6 (a): `AMENDMENTS-TOUCH.md` §6.2 is amended.
+
+| OD | Question | Options | Recommended | Gates | Owner decision 2026-11-24 |
+|---|---|---|---|---|---|
+| **OD-AF1** | The answer surface of Culture Quiz and Tap & Respond | (A) keep `Button` and add a result look: a `result` prop draws the mark, keeps the tone, and is locked but not disabled, which needs a new locked path because `softDisabled` and `disabled` both draw it disabled (`Button.tsx:111, 186`), and moves `Button.tsx:43` onto a token; (B) `ChoiceCard` in row layout, as Listen & Pick, Cloze Pick, Realia Read and Story Check use it: the same 80 dp height, marks, names and contrast tests already exist, and Tap & Respond's replies render through `KoreanText`, so WO-40's fix reaches them. The options change from blue pills to paper cards | **(B)** | AF-0b, AF-2, the e2e layout tests | **(B)**: `ChoiceCard` |
+| **OD-AF2** | The advance for a sighted learner (reader off). Today's least waits: 700 ms (Culture Quiz, Match Sound, Odd One Out, Listen & Pick, Pic-Word Match, Cloze Pick, Realia Read, Hidden Heritage); 800 (Card Match's last pair); 900 (Build a Letter, Read Pick with 0 under reduced motion, Syllable Build, Match Shape, and `afterReply` in Tap & Respond and Role Play); 600 (Sentence Builder) | (a) keep every value; (b) a floor of `RESULT_MARK_MIN_MS` = 1000 after every right answer, applied by the screen; (c) the same floor at 1200 | **(b)**: at most 0.3 s per right answer, and Read Pick's 0 goes | AF-1 (the constant), and the timing tests of AF-2 to AF-4c | **(b)**: 1000 ms floor |
+| **OD-AF3** | The web, where a screen reader cannot be detected (`screen-reader.web.ts:10-12`), on the primary channel | (a) nothing extra: the web keeps the reader-off path, and the line may be cut off; (b) a **new** "screen reader" setting with new copy and design; (c) a fixed extra wait after every right answer, for everyone on the web; (d) keep the level check's existing answer, "I use a screen reader" (`learner.ts:1468`, `OptionsScreen.tsx:189-198`, already translated), as a device-level flag in `device:settings`, settable in the Display sheet with the same strings. When it is on, the web takes the reader-on path (OD-AF9) | **(d)**: it reuses reviewed strings and a question learners already meet. It only needs a row in the Display sheet (AF-0b) and the flag (AF-1). WO-41 #6 can read the same flag | AF-0b, AF-1, the web line of §3.8; adds F-PLC-001 and AMENDMENTS-DISPLAY-NAV to **Amends** | **(d)**: the level check's flag, kept for the device, with a Display sheet row |
+| **OD-AF4** | The words of an answered option's name | (a) reuse the prefixes already used by five games: "Right answer: …", "Not this one: …", "Look here: …" (`a11y.ts:170-172`), translated, with the state said first; (b) WO-04's suffixes ", correct" and ", try another" (new keys) | **(a)** | AF-1 (strings), AF-2 to AF-4c (names) | **(a)**: reuse the prefixes |
+| **OD-AF5** | Taught-Korean Hangul in announcements | (a) none until WO-40's LP-0 reports, naming Korean by romanization and gloss as every spoken name does today (moved lines included, §3.2); (b) Hangul now, in a `lang="ko"` segment on the web and Android, and none on iOS | **(a)**: the segments of §3.2 make (b) a later change that only adds | AF-1 (builder, test 1), AF-4b and AF-4c (moved lines) | **(a)**: no Hangul until LP-0 |
+| **OD-AF6** | Card Match's miss (amends `AMENDMENTS-TOUCH.md` §6.2, KT-4a) | (a) as §3.5: the meanings tried stay marked while the same Korean word is picked, no timer lets the pick go, and Hoya shows `thinking`; (b) keep the pick release, and clear the mark on the next tap anywhere | **(a)**: one fewer tap to try again, and no timer on the board | AF-3 | **(a)**: as §3.5 |
+| **OD-AF7** | The same rule in the other games with a timed miss: Pic-Word Match, Story Sequence and Story Order (600 ms), Hidden Heritage's ring (600 ms), and Build a Letter (900 ms) | yes / no. If yes, Build a Letter's sub-option: (i) the wrong build and its hint stay until a slot tap, Undo or a tray tap; (ii) the slots still empty after 900 ms and only the hint stays | **yes, with (i)** | AF-4a, AF-4b, AF-4c | **yes, with (i)** |
+| **OD-AF8** | Marks outside the rule of §3.1: Syllable Build's and Match Shape's drawn dot; Role Play's `dash` on a locked reply while the turn stays; Sentence Builder's `dash` on a tried tile that stays tappable | (a) all four become `replay`; (b) keep all four as their specs drew them; (c) the dots and Role Play's `dash` become `replay`, Sentence Builder keeps `dash` with §3.1's "tried here, still tappable" row, and every mark is `text.primary` | **(c)**: Role Play is the try-another case; Sentence Builder's tile is not locked, so `replay` would say the wrong thing | AF-0b, AF-4c | **(c)** |
+| **OD-AF9** | The advance with a screen reader on | (a) timed, as revision 1 drafted: line, then sound, then advance. iOS waits for its own `announcementFinished` (guard of at least 8 s); Android and the web under (d) wait a length-scaled guess, tuned on a device; (b) after a right answer a **Next** button appears and takes focus, the line is queued after it, and the round moves on when Next is pressed (Story Check and Trace precedent) | **(b)**: no timing guess, and the learner sets the pace (WCAG 2.2.1). The cost is one tap per round, for reader users only | AF-0b (Next), AF-1 (wait helpers), AF-2 to AF-4c | **(b)**: Next |
 
 ## 11. Review log
 
@@ -663,3 +675,9 @@ I re-checked every finding against the tree before adjudicating.
 
 - Round-start auto-play with a reader (Match Sound's next round may still speak over the focus move) stays with WO-41 #6. That setting can read OD-AF3 (d)'s flag.
 - "A `lang="ko"` segment in a live region" and "romanization in the Korean voice" are passed to WO-40's LP-0 survey (§4).
+
+**2026-11-24, owner decisions.**
+
+- OD-AF1 to OD-AF9 are approved as recommended in revision 2 (§10).
+- The status is now `ready`.
+- No text in §3 changed: revision 2 already described each recommended option as the behaviour.

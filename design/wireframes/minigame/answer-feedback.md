@@ -304,7 +304,7 @@ tap ─┬─> mark + state in the name + announcer text (web, Android) / one qu
 - **Marks:** decorative to assistive tech; the name carries the state.
 - **Contrast:** each mark is 3:1 or more on its fill. In greyscale, right, miss, look-here and not-answered differ by the mark.
 
-## Open questions (for the owner; spec §10 holds the options, recommendations and gates)
+## Open questions (owner decisions of 2026-11-24, all as recommended, spec §10; the panels above show the chosen options)
 
 1. **OD-AF1:** option cards (B, drawn above) or pills with marks (A) for Culture Quiz and Tap & Respond.
 2. **OD-AF2:** a 1 s floor before the next round after a right answer, for every learner.
