@@ -259,6 +259,7 @@ const KO_LITERALLY_SHARED: readonly string[] = [
   // Format-only templates: arguments joined by punctuation, a colon, a middle dot or a slash.
   'a11y.homeworkRow',
   'a11y.access.row', // title, lines and tags joined by ". " (MAR re-review 2026-10-13)
+  'a11y.answer.item', // "{romanization}, {gloss}" (F-A11Y-001 §3.7)
   'a11y.planStatus',
   'a11y.myRoute.later',
   'a11y.myRoute.cell',

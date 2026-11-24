@@ -132,6 +132,8 @@ describe('Card Match (English wording as shipped)', () => {
       heading: 'Match the meaning',
       instruction: 'Tap a Korean word, then its English meaning.',
       nowMeaning: 'Now tap its meaning on the right.',
+      // F-A11Y-001 §3.5: Hoya (thinking) while a meaning that did not match stays marked.
+      tryAnother: 'Not a match. Try another meaning.',
     });
     expect(m.a11y.minigame.koreanWord('gimchi')).toBe('Korean word gimchi');
     expect(m.a11y.minigame.meaning('Kimchi')).toBe('English meaning Kimchi');

@@ -193,6 +193,19 @@ export const a11y = {
       soFar: (lines: number) => `지금까지 쓴 내 이야기, ${lines}줄`,
     },
   },
+  /**
+   * F-A11Y-001 §3.7: a game's result, said once (R8 draft, for the multi-agent review). The templates are UI language;
+   * `item` keeps the romanization as given (no taught-Korean Hangul, OD-AF5).
+   */
+  answer: {
+    item: (romanization: string, gloss?: string) => (gloss === undefined || gloss === '' ? romanization : `${romanization}, ${gloss}`),
+    right: (item: string) => `정답: ${item}.`,
+    miss: (item: string) => `이건 아니에요: ${item}. 다른 것을 골라 봐요.`,
+    missListen: (item: string) => `이건 아니에요: ${item}. 다시 들어 봐요.`,
+    missHint: (item: string, hint: string) => `이건 아니에요: ${item}. ${hint}`,
+    notMatched: (word: string, meaning: string) => `짝이 아니에요: ${word}, ${meaning}. 다른 것을 골라 봐요.`,
+    round: (n: number, total: number, prompt: string) => `${total}문제 중 ${n}번째 문제. ${prompt}`,
+  },
   romanizationOr: '또는',
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined ? `한글: ${item.ko}, ${item.romanization}` : `한글: ${item.ko}, ${item.romanization}, ${item.gloss}`,

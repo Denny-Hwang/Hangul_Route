@@ -949,6 +949,8 @@ export const learner = {
       heading: 'Match the meaning',
       instruction: 'Tap a Korean word, then its English meaning.',
       nowMeaning: 'Now tap its meaning on the right.',
+      /** F-A11Y-001 §3.5: Hoya (thinking) while a meaning that did not match stays marked. */
+      tryAnother: 'Not a match. Try another meaning.',
     },
     /**
      * Sentence Builder (`order-it`, F-CURR-001 §3.4, §3.7): word tiles tapped into order, or the particle
