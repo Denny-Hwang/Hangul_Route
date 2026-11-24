@@ -72,7 +72,10 @@
   "devDependencies": {
     "@hangul-route/test-utils": "workspace:*",
     "@types/react": "^18.3.12",
+    "@typescript-eslint/parser": "8.74.0",
     "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-native-a11y": "3.5.1",
     "react": "18.3.1",
     "react-native": "0.76.5",
     "react-native-reanimated": "~3.16.1",
