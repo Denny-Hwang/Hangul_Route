@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { jamoStrokes, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace, type ScoreTraceResult } from '../stroke-scoring';
-import { TRACE_KEEP_GOING_MS, TRACE_READY_STROKE_MIN, isFinished, isLetterFinished, wouldPass } from '../trace-ready';
+import { TRACE_KEEP_GOING_MS, TRACE_READY_STROKE_MIN, isFinished, isLetterFinished, isLetterFinishedInForms, wouldPass } from '../trace-ready';
 
 /**
  * AMENDMENTS-TRACE-IDLE §3.1 (TI-1): the one pass rule, and the "finished" rule the idle gate waits for.
@@ -82,18 +82,32 @@ describe('isLetterFinished over all of jamoStrokes (§6 test 5)', () => {
     });
   }
 
-  // [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2: the idle gate reads the form shown (the ghost). A learner writing
-  // another accepted form (OD-SO11) is still scored on idle once done, and never before.
+  // [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2, OD-SO12: the idle gate reads every accepted form. A drawing is finished
+  // when it is finished on one of them; no proper prefix of any form is finished on any form, so a learner writing
+  // another accepted form (OD-SO11) is scored on idle once done, and never before.
   for (const { jamoId, strokes, altStrokes } of jamoStrokes) {
-    for (const [i, form] of (altStrokes ?? []).entries()) {
-      it(`${jamoId}, accepted form ${i + 1}: no proper prefix of its ${form.length} strokes is finished on the ghost; the full form is`, () => {
+    const forms = [strokes, ...(altStrokes ?? [])];
+    it(`${jamoId}: no proper prefix of any of its ${forms.length} accepted forms is finished on any form; every full form is`, () => {
+      for (const form of forms) {
         for (let k = 0; k < form.length; k++) {
-          expect(isLetterFinished(strokes, drawn(form.slice(0, k)), false), `${jamoId}, first ${k} strokes`).toBe(false);
+          expect(isLetterFinishedInForms(forms, drawn(form.slice(0, k)), false), `${jamoId}, first ${k} strokes`).toBe(false);
+          expect(isLetterFinishedInForms(forms, drawn(form.slice(0, k)), true), `${jamoId}, first ${k} strokes, strict`).toBe(false);
         }
-        expect(isLetterFinished(strokes, drawn(form), false)).toBe(true);
-      });
-    }
+        expect(isLetterFinishedInForms(forms, drawn(form), false)).toBe(true);
+        expect(isLetterFinishedInForms(forms, drawn(form), true)).toBe(true);
+      }
+    });
   }
+
+  it('isLetterFinishedInForms: finished on a form other than the first; on one form it is isLetterFinished', () => {
+    const across: JamoStrokePoint[][] = [[{ x: 30, y: 100 }, { x: 170, y: 100 }]];
+    const down: JamoStrokePoint[][] = [[{ x: 100, y: 30 }, { x: 100, y: 170 }]];
+    expect(isLetterFinished(across, drawn(down), false)).toBe(false);
+    expect(isLetterFinishedInForms([across, down], drawn(down), false)).toBe(true);
+    expect(isLetterFinishedInForms([across], drawn(down), false)).toBe(false);
+    expect(isLetterFinishedInForms([across, down], drawn([[{ x: 30, y: 30 }, { x: 170, y: 170 }]]), false)).toBe(false);
+    expect(isLetterFinishedInForms([], drawn(down), false)).toBe(false);
+  });
 
   it('agrees with isFinished on scoreTrace', () => {
     const bieup = jamoStrokes.find((j) => j.jamoId === 'jamo:bieup')!.strokes;

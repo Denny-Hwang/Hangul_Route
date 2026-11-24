@@ -38,3 +38,15 @@ export function isLetterFinished(
 ): boolean {
   return isFinished(scoreTrace({ target: [...target], drawn: [...drawn], checkOrder: strictMode }), strictMode);
 }
+
+/**
+ * [SO] AMENDMENTS-STROKE-ORDER-STANDARD SO-2, OD-SO12: `isLetterFinished` for a letter with more than one accepted form
+ * (`strokeFormsForJamo`): finished when it is finished on one of them. No forms: not finished.
+ */
+export function isLetterFinishedInForms(
+  forms: readonly (readonly JamoStrokePoint[][])[],
+  drawn: readonly JamoStrokePoint[][],
+  strictMode: boolean,
+): boolean {
+  return forms.some((form) => isLetterFinished(form, drawn, strictMode));
+}
