@@ -1,6 +1,7 @@
 import { APP_ROUTES, SCHOOL_FOCUS, SCHOOL_FOCUS_QUERY } from '@hangul-route/content-schema';
 import type { SpaceListItem } from './api';
 import { lectureCardView, type LectureCardView } from './lecture-entry';
+import { codeOverlayShown } from './class-code-overlay';
 import { heldPersonas } from './personas';
 import { groupSpaces } from './routing';
 
@@ -45,12 +46,18 @@ export function teacherHomeView(items: readonly SpaceListItem[]): TeacherHomeVie
   };
 }
 
-/** The link line of a class row (section 3.8, design pass D8): Class report and Notes by flag; an archived class keeps Class report and has no Notes. */
-export function classRowLinks(item: SpaceListItem, flags: { reports: boolean; notes: boolean }): Array<'classReport' | 'notes'> {
+/**
+ * The link line of a class row (section 3.8, design pass D8): Class report and Notes by flag; an archived class keeps Class
+ * report and has no Notes. [CO] AMENDMENTS-CLASS-CODE-OVERLAY CO-1b (OD-CO7 (a)): a class with a live code at `now` also gets
+ * `showCode` last, which opens the code overlay over the home from this list's name, code and expiry (no roster read, no
+ * learner). Without a clock the entry is never offered.
+ */
+export function classRowLinks(item: SpaceListItem, flags: { reports: boolean; notes: boolean }, now: Date | null = null): Array<'classReport' | 'notes' | 'showCode'> {
   if (item.space.kind !== 'class') return [];
-  const links: Array<'classReport' | 'notes'> = [];
+  const links: Array<'classReport' | 'notes' | 'showCode'> = [];
   if (flags.reports) links.push('classReport');
   if (flags.notes && !item.space.archivedAt) links.push('notes');
+  if (now !== null && codeOverlayShown(item, now)) links.push('showCode');
   return links;
 }
 

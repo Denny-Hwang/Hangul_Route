@@ -75,6 +75,27 @@ describe('classRowLinks', () => {
   });
 });
 
+describe('classRowLinks: Show the code (AMENDMENTS-CLASS-CODE-OVERLAY CO-1b, OD-CO7 (a))', () => {
+  const NOW = new Date('2026-11-24T12:00:00.000Z');
+  const live = (over: SpaceListItem = classA): SpaceListItem => ({ ...over, joinCode: 'SUN234', joinCodeExpiresAt: '2026-12-12T12:00:00.000Z' });
+
+  it('a class with a live code gets showCode after Class report and Notes; the flags do not matter to it', () => {
+    expect(classRowLinks(live(), { reports: true, notes: true }, NOW)).toEqual(['classReport', 'notes', 'showCode']);
+    expect(classRowLinks(live(), { reports: false, notes: false }, NOW)).toEqual(['showCode']);
+  });
+
+  it('no code, an expired code, an archived class, a school: no showCode', () => {
+    expect(classRowLinks(classA, { reports: true, notes: true }, NOW)).toEqual(['classReport', 'notes']);
+    expect(classRowLinks({ ...live(), joinCodeExpiresAt: '2026-11-24T12:00:00.000Z' }, { reports: false, notes: false }, NOW)).toEqual([]);
+    expect(classRowLinks(live(archived), { reports: true, notes: true }, NOW)).toEqual(['classReport']);
+    expect(classRowLinks(live(school), { reports: true, notes: true }, NOW)).toEqual([]);
+  });
+
+  it('without a clock the entry is never offered', () => {
+    expect(classRowLinks(live(), { reports: true, notes: true })).toEqual(['classReport', 'notes']);
+  });
+});
+
 describe('start links', () => {
   it('preselect the role card of the persona', () => {
     expect(START_CLASS).toBe('/start?persona=teacher');

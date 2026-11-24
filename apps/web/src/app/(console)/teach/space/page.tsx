@@ -689,10 +689,10 @@ function SpaceInner(): JSX.Element {
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
                 <li>{week.practiced}</li>
                 {week.anchor ? <li data-testid="week-anchor">{week.anchor}</li> : null}
-                {rollup.revisit.length ? (
+                {week.revisit.length ? (
                   <li>
                     {weekRevisit.before}
-                    <RevisitLetterLinks chars={rollup.revisit} />
+                    <RevisitLetterLinks chars={week.revisit} />
                     {weekRevisit.after}{' '}
                     {lecture ? (
                       <Link
@@ -705,7 +705,7 @@ function SpaceInner(): JSX.Element {
                     ) : null}
                   </li>
                 ) : null}
-                <WeekWordsRevisit words={consoleWords(rollup.vocabRevisit, locale)} />
+                <WeekWordsRevisit words={consoleWords(week.vocabRevisit, locale)} />
                 {week.notSynced ? <li data-testid="week-not-synced">{week.notSynced}</li> : null}
               </ul>
             </section>
