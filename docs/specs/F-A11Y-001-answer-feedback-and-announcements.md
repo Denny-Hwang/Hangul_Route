@@ -382,6 +382,8 @@ If OD-AF7 is declined, only Card Match changes.
 | Role Play | `replay` on a locked reply (OD-AF8) | add the state to the sent reply | right / missHint (why line, `spokenParts`); the existing iOS call moves onto the hook | `afterReply`, floor; reader: OD-AF9 | already | AF-4c |
 | Story Check, Type Hangul, Write Frame, My Story, Trace Stroke, Trace a Word, Story Read, Voice Echo | not changed (§4) | | | | | — |
 
+- **Owner decision 2026-11-24 (AF-0b review, Q1):** with a screen reader on, Next (§3.4, OD-AF9 (b)) shows after every right answer that ends a round, the last round and the last pair included, and the step moves on only when Next is pressed. Card Match's last-pair 800 ms (and Pic-Word Match's last-pair floor) apply only with the reader off. Design: `design/components/AnswerFeedback/spec.md` D9.
+
 ### 3.7 Strings (English; `packages/i18n/src/messages/en/`)
 
 | Key | English |
@@ -394,6 +396,7 @@ If OD-AF7 is declined, only Card Match changes.
 | `a11y.answer.notMatched` | Not a match: {word} and {meaning}. Try another. |
 | `a11y.answer.round` | Question {n} of {total}. {prompt} |
 | `learner.minigame.cardMatch.tryAnother` (drawn, Hoya) | Not a match. Try another meaning. |
+| `common.display.screenReaderHelp` (drawn, the Display sheet's screen-reader row, web only; owner decision 2026-11-24, AF-0b Q3) | Tap Next to go on. Sounds play when you tap them. |
 
 - Reused, not new:
   - `a11y.minigame.option.correct`, `.wrong` and `.hint`
@@ -401,7 +404,7 @@ If OD-AF7 is declined, only Card Match changes.
   - `learner.minigame.trace.next.cta` (Next, under OD-AF9 (b))
   - `learner.story.sequence.slotLabel`
   - each game's existing Hoya lines
-  - under OD-AF3 (d), the level check's "I use a screen reader" label and help (`learner.ts:1468`)
+  - under OD-AF3 (d), the level check's "I use a screen reader" label (`learner.ts:1468`); the row's help line is `common.display.screenReaderHelp` (above)
 - Dropped since revision 1: `a11y.answer.matched` and `a11y.minigame.option.paired` (both duplicated existing keys).
 - **es and ko:** this spec lists English only. Spanish and Korean are **shipped** locales (`packages/i18n/src/locales.ts`, `LOCALE_STATUS`), and `i18n-status.mjs` fails a PR that adds an English key without them. So AF-1 carries es and ko values in the same PR, drafted by R8 and reviewed under F-I18N-001 §3.10, with the ledger re-signed. No es or ko string is written ad hoc.
 - **Rebases:** `a11y.ts` and the `a11y` entry of `packages/i18n/src/messages/review-ledger.json` are also changed by WO-40 and WO-41. Every PR that touches `a11y.ts` re-signs the ledger, so expect mechanical rebases there.
